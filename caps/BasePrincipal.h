@@ -125,6 +125,18 @@ public:
   inline bool FastSubsumesConsideringDomain(nsIPrincipal* aOther);
   inline bool FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther);
 
+  // Returns the principal to inherit when a caller with this principal loads
+  // the given URI.
+  //
+  // For most principal types, this returns the principal itself. For expanded
+  // principals, it returns the first sub-principal which subsumes the given URI
+  // (or, if no URI is given, the last whitelist principal).
+  //
+  // The aAllowIfInheritsPrincipal argument is passed through to CheckMayLoad()
+  // to determine which consistituent principals may load the requested URI.
+  nsIPrincipal* PrincipalToInherit(nsIURI* aRequestedURI = nullptr,
+                                   bool aAllowIfInheritsPrincipal = true);
+
   /**
    * Returns true if this principal's CSP should override a document's CSP for
    * loads that it triggers. Currently true only for expanded principals which

@@ -34,6 +34,11 @@
 #include "ssl.h"
 #include "sslproto.h"
 
+#include "TrustOverrideUtils.h"
+#include "TrustOverride-SymantecData.inc"
+#include "TrustOverride-AppleGoogleData.inc"
+
+
 using namespace mozilla;
 using namespace mozilla::pkix;
 using namespace mozilla::psm;
@@ -1260,6 +1265,72 @@ DetermineEVAndCTStatusAndSetNewCert(RefPtr<nsSSLStatus> sslStatus,
   }
 }
 
+static nsresult
+IsCertificateDistrustImminent(nsIX509CertList* aCertList,
+                              /* out */ bool& aResult) {
+  if (!aCertList) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+
+  nsCOMPtr<nsIX509Cert> rootCert;
+  nsCOMPtr<nsIX509CertList> intCerts;
+  nsCOMPtr<nsIX509Cert> eeCert;
+
+  RefPtr<nsNSSCertList> certList = aCertList->GetCertList();
+  nsresult rv = certList->SegmentCertificateChain(rootCert, intCerts, eeCert);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // We need to verify the age of the end entity
+  nsCOMPtr<nsIX509CertValidity> validity;
+  rv = eeCert->GetValidity(getter_AddRefs(validity));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  PRTime notBefore;
+  rv = validity->GetNotBefore(&notBefore);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // PRTime is microseconds since the epoch, whereas JS time is milliseconds.
+  // (new Date("2016-06-01T00:00:00Z")).getTime() * 1000
+  static const PRTime JUNE_1_2016 = 1464739200000000;
+
+  // If the end entity's notBefore date is after 2016-06-01, this algorithm
+  // doesn't apply, so exit false before we do any iterating
+  if (notBefore >= JUNE_1_2016) {
+    aResult = false;
+    return NS_OK;
+  }
+
+  // If the root is not one of the Symantec roots, exit false
+  if (!CertDNIsInList(rootCert->GetCert(), RootSymantecDNs)) {
+    aResult = false;
+    return NS_OK;
+  }
+
+  // Look for one of the intermediates to be in the whitelist
+  bool foundInWhitelist = false;
+  RefPtr<nsNSSCertList> intCertList = intCerts->GetCertList();
+
+  intCertList->ForEachCertificateInChain(
+    [&foundInWhitelist] (nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
+                         /* out */ bool& aContinue) {
+      if (CertDNIsInList(aCert->GetCert(), RootAppleAndGoogleDNs)) {
+        foundInWhitelist = true;
+        aContinue = false;
+      }
+      return NS_OK;
+  });
+
+  // If this chain did not match the whitelist, exit true
+  aResult = !foundInWhitelist;
+  return NS_OK;
+}
+
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   nsNSSShutDownPreventionLock locker;
   SECStatus rv;
@@ -1409,6 +1480,18 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
            ("HandshakeCallback KEEPING existing cert\n"));
   } else {
     DetermineEVAndCTStatusAndSetNewCert(status, fd, infoObject);
+  }
+
+  nsCOMPtr<nsIX509CertList> succeededCertChain;
+  // This always returns NS_OK, but the list could be empty. This is a
+  // best-effort check for now. Bug 731478 will reduce the incidence of empty
+  // succeeded cert chains through better caching.
+  Unused << status->GetSucceededCertChain(getter_AddRefs(succeededCertChain));
+  bool distrustImminent;
+  nsresult srv = IsCertificateDistrustImminent(succeededCertChain,
+                                               distrustImminent);
+  if (NS_SUCCEEDED(srv) && distrustImminent) {
+    state |= nsIWebProgressListener::STATE_CERT_DISTRUST_IMMINENT;
   }
 
   bool domainMismatch;

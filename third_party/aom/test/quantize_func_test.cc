@@ -157,8 +157,8 @@ class QuantizeTest : public ::testing::TestWithParam<QuantizeParam> {
             << " Q: " << q << " coeff: " << coeff_ptr[j];
       }
 
-      ASSERT_EQ(eob[0], eob[1]) << "eobs mismatch on test: " << i
-                                << " Q: " << q;
+      ASSERT_EQ(eob[0], eob[1])
+          << "eobs mismatch on test: " << i << " Q: " << q;
     }
   }
 

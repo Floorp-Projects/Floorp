@@ -14,10 +14,73 @@
 #include "nsIDOMWindow.h"
 #include "nsIHttpChannel.h"
 #include "nsError.h"
+#include "nsContentSecurityManager.h"
 #include "nsDocShellLoadTypes.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIMultiPartChannel.h"
 
 using namespace mozilla;
+
+NS_IMPL_ADDREF(MaybeCloseWindowHelper)
+NS_IMPL_RELEASE(MaybeCloseWindowHelper)
+
+NS_INTERFACE_MAP_BEGIN(MaybeCloseWindowHelper)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+MaybeCloseWindowHelper::MaybeCloseWindowHelper(nsIInterfaceRequestor* aContentContext)
+  : mContentContext(aContentContext)
+  , mWindowToClose(nullptr)
+  , mTimer(nullptr)
+  , mShouldCloseWindow(false)
+{
+}
+
+MaybeCloseWindowHelper::~MaybeCloseWindowHelper()
+{
+}
+
+void
+MaybeCloseWindowHelper::SetShouldCloseWindow(bool aShouldCloseWindow)
+{
+  mShouldCloseWindow = aShouldCloseWindow;
+}
+
+nsIInterfaceRequestor*
+MaybeCloseWindowHelper::MaybeCloseWindow()
+{
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(mContentContext);
+  NS_ENSURE_TRUE(window, mContentContext);
+
+  if (mShouldCloseWindow) {
+    // Reset the window context to the opener window so that the dependent
+    // dialogs have a parent
+    nsCOMPtr<nsPIDOMWindowOuter> opener = window->GetOpener();
+
+    if (opener && !opener->Closed()) {
+      mContentContext = do_GetInterface(opener);
+
+      // Now close the old window.  Do it on a timer so that we don't run
+      // into issues trying to close the window before it has fully opened.
+      NS_ASSERTION(!mTimer, "mTimer was already initialized once!");
+      NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, 0, nsITimer::TYPE_ONE_SHOT);
+      mWindowToClose = window;
+    }
+  }
+  return mContentContext;
+}
+
+NS_IMETHODIMP
+MaybeCloseWindowHelper::Notify(nsITimer* timer)
+{
+  NS_ASSERTION(mWindowToClose, "No window to close after timer fired");
+
+  mWindowToClose->Close();
+  mWindowToClose = nullptr;
+  mTimer = nullptr;
+
+  return NS_OK;
+}
 
 nsDSURIContentListener::nsDSURIContentListener(nsDocShell* aDocShell)
   : mDocShell(aDocShell)
@@ -86,6 +149,25 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
 
   if (aOpenedChannel) {
     aOpenedChannel->GetLoadFlags(&loadFlags);
+
+    // block top-level data URI navigations if triggered by the web
+    if (!nsContentSecurityManager::AllowTopLevelNavigationToDataURI(aOpenedChannel)) {
+      // logging to console happens within AllowTopLevelNavigationToDataURI
+      aRequest->Cancel(NS_ERROR_DOM_BAD_URI);
+      *aAbortProcess = true;
+      // close the window since the navigation to a data URI was blocked
+      if (mDocShell) {
+        nsCOMPtr<nsIInterfaceRequestor> contentContext =
+          do_QueryInterface(mDocShell->GetWindow());
+        if (contentContext) {
+          RefPtr<MaybeCloseWindowHelper> maybeCloseWindowHelper =
+            new MaybeCloseWindowHelper(contentContext);
+          maybeCloseWindowHelper->SetShouldCloseWindow(true);
+          maybeCloseWindowHelper->MaybeCloseWindow();
+        }
+      }
+      return NS_OK; 
+    }
   }
 
   if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI) {

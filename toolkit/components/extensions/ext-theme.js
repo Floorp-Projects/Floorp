@@ -135,13 +135,12 @@ class Theme {
           this.lwtStyles.toolbarColor = cssColor;
           break;
         case "toolbar_text":
-          this.lwtStyles.toolbar_text = cssColor;
-          break;
         case "toolbar_field":
-          this.lwtStyles.toolbar_field = cssColor;
-          break;
         case "toolbar_field_text":
-          this.lwtStyles.toolbar_field_text = cssColor;
+        case "toolbar_top_separator":
+        case "toolbar_bottom_separator":
+        case "toolbar_vertical_separator":
+          this.lwtStyles[color] = cssColor;
           break;
       }
     }

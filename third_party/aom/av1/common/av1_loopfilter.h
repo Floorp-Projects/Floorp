@@ -36,10 +36,12 @@ enum lf_path {
 };
 
 struct loopfilter {
-  int filter_level;
-#if CONFIG_UV_LVL
+#if CONFIG_LOOPFILTER_LEVEL
+  int filter_level[2];
   int filter_level_u;
   int filter_level_v;
+#else
+  int filter_level;
 #endif
 
   int sharpness_level;
@@ -49,14 +51,13 @@ struct loopfilter {
   uint8_t mode_ref_delta_update;
 
   // 0 = Intra, Last, Last2+Last3(CONFIG_EXT_REFS),
-  // GF, BRF(CONFIG_EXT_REFS),
-  // ARF2(CONFIG_EXT_REFS+CONFIG_ALTREF2), ARF
-  signed char ref_deltas[TOTAL_REFS_PER_FRAME];
-  signed char last_ref_deltas[TOTAL_REFS_PER_FRAME];
+  // GF, BRF(CONFIG_EXT_REFS), ARF2(CONFIG_EXT_REFS), ARF
+  int8_t ref_deltas[TOTAL_REFS_PER_FRAME];
+  int8_t last_ref_deltas[TOTAL_REFS_PER_FRAME];
 
   // 0 = ZERO_MV, MV
-  signed char mode_deltas[MAX_MODE_LF_DELTAS];
-  signed char last_mode_deltas[MAX_MODE_LF_DELTAS];
+  int8_t mode_deltas[MAX_MODE_LF_DELTAS];
+  int8_t last_mode_deltas[MAX_MODE_LF_DELTAS];
 };
 
 // Need to align this structure so when it is declared and
@@ -69,7 +70,11 @@ typedef struct {
 
 typedef struct {
   loop_filter_thresh lfthr[MAX_LOOP_FILTER + 1];
+#if CONFIG_LOOPFILTER_LEVEL
+  uint8_t lvl[MAX_SEGMENTS][2][TOTAL_REFS_PER_FRAME][MAX_MODE_LF_DELTAS];
+#else
   uint8_t lvl[MAX_SEGMENTS][TOTAL_REFS_PER_FRAME][MAX_MODE_LF_DELTAS];
+#endif
 } loop_filter_info_n;
 
 // This structure holds bit masks for all 8x8 blocks in a 64x64 region.
@@ -132,17 +137,42 @@ void av1_loop_filter_init(struct AV1Common *cm);
 // This should be called before av1_loop_filter_rows(),
 // av1_loop_filter_frame()
 // calls this function directly.
-void av1_loop_filter_frame_init(struct AV1Common *cm, int default_filt_lvl);
+void av1_loop_filter_frame_init(struct AV1Common *cm, int default_filt_lvl,
+                                int default_filt_lvl_r
+#if CONFIG_LOOPFILTER_LEVEL
+                                ,
+                                int plane
+#endif
+                                );
 
+#if CONFIG_LPF_SB
 void av1_loop_filter_frame(YV12_BUFFER_CONFIG *frame, struct AV1Common *cm,
                            struct macroblockd *mbd, int filter_level,
+                           int y_only, int partial_frame, int mi_row,
+                           int mi_col);
+
+// Apply the loop filter to [start, stop) macro block rows in frame_buffer.
+void av1_loop_filter_rows(YV12_BUFFER_CONFIG *frame_buffer,
+                          struct AV1Common *cm,
+                          struct macroblockd_plane *planes, int start, int stop,
+                          int col_start, int col_end, int y_only);
+
+void av1_loop_filter_sb_level_init(struct AV1Common *cm, int mi_row, int mi_col,
+                                   int lvl);
+#else
+void av1_loop_filter_frame(YV12_BUFFER_CONFIG *frame, struct AV1Common *cm,
+                           struct macroblockd *mbd, int filter_level,
+#if CONFIG_LOOPFILTER_LEVEL
+                           int filter_level_r,
+#endif
                            int y_only, int partial_frame);
 
 // Apply the loop filter to [start, stop) macro block rows in frame_buffer.
 void av1_loop_filter_rows(YV12_BUFFER_CONFIG *frame_buffer,
                           struct AV1Common *cm,
-                          struct macroblockd_plane planes[MAX_MB_PLANE],
-                          int start, int stop, int y_only);
+                          struct macroblockd_plane *planes, int start, int stop,
+                          int y_only);
+#endif  // CONFIG_LPF_SB
 
 typedef struct LoopFilterWorkerData {
   YV12_BUFFER_CONFIG *frame_buffer;
@@ -154,9 +184,10 @@ typedef struct LoopFilterWorkerData {
   int y_only;
 } LFWorkerData;
 
-void av1_loop_filter_data_reset(
-    LFWorkerData *lf_data, YV12_BUFFER_CONFIG *frame_buffer,
-    struct AV1Common *cm, const struct macroblockd_plane planes[MAX_MB_PLANE]);
+void av1_loop_filter_data_reset(LFWorkerData *lf_data,
+                                YV12_BUFFER_CONFIG *frame_buffer,
+                                struct AV1Common *cm,
+                                const struct macroblockd_plane *planes);
 
 // Operates on the rows described by 'lf_data'.
 int av1_loop_filter_worker(LFWorkerData *const lf_data, void *unused);

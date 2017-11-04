@@ -4,9 +4,10 @@ description = "Numeric traits for generic mathematics"
 documentation = "http://rust-num.github.io/num"
 homepage = "https://github.com/rust-num/num"
 keywords = ["mathematics", "numerics"]
+categories = [ "algorithms", "science" ]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-num/num"
 name = "num-traits"
-version = "0.1.39"
+version = "0.1.40"
 
 [dependencies]

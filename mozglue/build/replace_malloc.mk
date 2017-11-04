@@ -5,7 +5,7 @@
 ifeq (Darwin_1,$(OS_TARGET)_$(MOZ_REPLACE_MALLOC))
 # Technically, ) is not a necessary delimiter in the awk call, but make
 # doesn't like the opening ( there being alone...
-OS_LDFLAGS += \
+MK_LDFLAGS = \
   $(shell awk -F'[(),]' '/^MALLOC_DECL/{print "-Wl,-U,_replace_" $$2}' $(topsrcdir)/memory/build/malloc_decls.h) \
   $(NULL)
 

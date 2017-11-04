@@ -41,8 +41,8 @@ class WebMVideoSource : public CompressedVideoSource {
 
   virtual void Begin() {
     aom_ctx_->file = OpenTestDataFile(file_name_);
-    ASSERT_TRUE(aom_ctx_->file != NULL) << "Input file open failed. Filename: "
-                                        << file_name_;
+    ASSERT_TRUE(aom_ctx_->file != NULL)
+        << "Input file open failed. Filename: " << file_name_;
 
     ASSERT_EQ(file_is_webm(webm_ctx_, aom_ctx_), 1) << "file is not WebM";
 

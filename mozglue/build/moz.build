@@ -98,4 +98,7 @@ if CONFIG['OS_TARGET'] == 'Darwin':
     # for TLS.
     LDFLAGS += ['-Wl,-bind_at_load']
 
+if CONFIG['MOZ_LINKER'] and CONFIG['TARGET_CPU'] == 'arm':
+    LDFLAGS += ['-Wl,-version-script,%s/arm-eabi-filter' % SRCDIR]
+
 DIST_INSTALL = True

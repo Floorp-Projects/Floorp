@@ -890,24 +890,6 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
 
     rv = NS_NewArrayEnumerator(aResult, directories);
   }
-  else if (!strcmp(aProperty, NS_EXT_PREFS_DEFAULTS_DIR_LIST)) {
-    nsCOMArray<nsIFile> directories;
-
-    LoadDirsIntoArray(AddonManagerStartup::GetSingleton().ExtensionPaths(),
-                      kAppendPrefDir, directories);
-
-    if (mProfileDir) {
-      nsCOMPtr<nsIFile> overrideFile;
-      mProfileDir->Clone(getter_AddRefs(overrideFile));
-      overrideFile->AppendNative(NS_LITERAL_CSTRING(PREF_OVERRIDE_DIRNAME));
-
-      bool exists;
-      if (NS_SUCCEEDED(overrideFile->Exists(&exists)) && exists)
-        directories.AppendObject(overrideFile);
-    }
-
-    rv = NS_NewArrayEnumerator(aResult, directories);
-  }
   else if (!strcmp(aProperty, NS_APP_CHROME_DIR_LIST)) {
     // NS_APP_CHROME_DIR_LIST is only used to get default (native) icons
     // for OS window decoration.
@@ -1035,7 +1017,6 @@ nsXREDirProvider::DoStartup()
       NS_WARNING("Failed to create Addons Manager.");
     }
 
-    obsSvc->NotifyObservers(nullptr, "load-extension-defaults", nullptr);
     obsSvc->NotifyObservers(nullptr, "profile-after-change", kStartup);
 
     // Any component that has registered for the profile-after-change category

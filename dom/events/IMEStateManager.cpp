@@ -1365,6 +1365,14 @@ IMEStateManager::SetIMEState(const IMEState& aState,
     aAction.mCause = InputContextAction::CAUSE_UNKNOWN_CHROME;
   }
 
+  if ((aAction.mCause == InputContextAction::CAUSE_UNKNOWN ||
+       aAction.mCause == InputContextAction::CAUSE_UNKNOWN_CHROME) &&
+      EventStateManager::IsHandlingUserInput()) {
+    aAction.mCause = EventStateManager::IsHandlingKeyboardInput() ?
+      InputContextAction::CAUSE_UNKNOWN_DURING_KEYBOARD_INPUT :
+      InputContextAction::CAUSE_UNKNOWN_DURING_NON_KEYBOARD_INPUT;
+  }
+
   SetInputContext(aWidget, context, aAction);
 }
 

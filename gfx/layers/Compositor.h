@@ -467,6 +467,7 @@ public:
     return mLastCompositionEndTime;
   }
 
+  void UnlockAfterComposition(TextureHost* aTexture) override;
   bool NotifyNotUsedAfterComposition(TextureHost* aTextureHost) override;
 
   /**

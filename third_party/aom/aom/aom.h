@@ -45,9 +45,7 @@ extern "C" {
 enum aom_com_control_id {
   /*!\brief pass in an external frame into decoder to be used as reference frame
    */
-  AOM_SET_REFERENCE = 1,
-  AOM_COPY_REFERENCE = 2, /**< get a copy of reference frame from the decoder */
-  AOM_SET_POSTPROC = 3,   /**< set the decoder's post processing settings  */
+  AOM_SET_POSTPROC = 3, /**< set the decoder's post processing settings  */
   AOM_SET_DBG_COLOR_REF_FRAME =
       4, /**< set the reference frames to color for each macroblock */
   AOM_SET_DBG_COLOR_MB_MODES = 5, /**< set which macro block modes to color */
@@ -59,6 +57,9 @@ enum aom_com_control_id {
    * AOM_DECODER_CTRL_ID_START range next time we're ready to break the ABI.
    */
   AV1_GET_REFERENCE = 128, /**< get a pointer to a reference frame */
+  AV1_SET_REFERENCE = 129, /**< write a frame into a reference buffer */
+  AV1_COPY_REFERENCE =
+      130, /**< get a copy of reference frame from the decoder */
   AOM_COMMON_CTRL_ID_MAX,
 
   AV1_GET_NEW_FRAME_IMAGE = 192, /**< get a pointer to the new frame */
@@ -98,25 +99,6 @@ typedef struct aom_postproc_cfg {
   int noise_level; /**< the strength of additive noise, valid range [0, 16] */
 } aom_postproc_cfg_t;
 
-/*!\brief reference frame type
- *
- * The set of macros define the type of AOM reference frames
- */
-typedef enum aom_ref_frame_type {
-  AOM_LAST_FRAME = 1,
-  AOM_GOLD_FRAME = 2,
-  AOM_ALTR_FRAME = 4
-} aom_ref_frame_type_t;
-
-/*!\brief reference frame data struct
- *
- * Define the data struct to access aom reference frames.
- */
-typedef struct aom_ref_frame {
-  aom_ref_frame_type_t frame_type; /**< which reference frame */
-  aom_image_t img;                 /**< reference frame data in image format */
-} aom_ref_frame_t;
-
 /*!\brief AV1 specific reference frame data struct
  *
  * Define the data struct to access av1 reference frames.
@@ -131,10 +113,6 @@ typedef struct av1_ref_frame {
  *
  * defines the data type for each of AOM decoder control function requires
  */
-AOM_CTRL_USE_TYPE(AOM_SET_REFERENCE, aom_ref_frame_t *)
-#define AOM_CTRL_AOM_SET_REFERENCE
-AOM_CTRL_USE_TYPE(AOM_COPY_REFERENCE, aom_ref_frame_t *)
-#define AOM_CTRL_AOM_COPY_REFERENCE
 AOM_CTRL_USE_TYPE(AOM_SET_POSTPROC, aom_postproc_cfg_t *)
 #define AOM_CTRL_AOM_SET_POSTPROC
 AOM_CTRL_USE_TYPE(AOM_SET_DBG_COLOR_REF_FRAME, int)
@@ -147,6 +125,10 @@ AOM_CTRL_USE_TYPE(AOM_SET_DBG_DISPLAY_MV, int)
 #define AOM_CTRL_AOM_SET_DBG_DISPLAY_MV
 AOM_CTRL_USE_TYPE(AV1_GET_REFERENCE, av1_ref_frame_t *)
 #define AOM_CTRL_AV1_GET_REFERENCE
+AOM_CTRL_USE_TYPE(AV1_SET_REFERENCE, av1_ref_frame_t *)
+#define AOM_CTRL_AV1_SET_REFERENCE
+AOM_CTRL_USE_TYPE(AV1_COPY_REFERENCE, av1_ref_frame_t *)
+#define AOM_CTRL_AV1_COPY_REFERENCE
 AOM_CTRL_USE_TYPE(AV1_GET_NEW_FRAME_IMAGE, aom_image_t *)
 #define AOM_CTRL_AV1_GET_NEW_FRAME_IMAGE
 

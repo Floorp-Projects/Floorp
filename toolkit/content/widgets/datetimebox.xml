@@ -1244,8 +1244,6 @@
 
       <destructor>
       <![CDATA[
-        this.mInputElement = null;
-
         this.EVENTS.forEach((eventName) => {
           this.removeEventListener(eventName, this, { mozSystemGroup: true });
         });
@@ -1255,6 +1253,8 @@
         });
         this.mInputElement.removeEventListener("click", this,
                                                { mozSystemGroup: true });
+
+        this.mInputElement = null;
       ]]>
       </destructor>
 

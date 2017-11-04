@@ -4,6 +4,10 @@
   --blue-70: #003eaa;
   --blue-80: #002275;
   --grey-30: #d7d7db;
+  --grey-90: #0c0c0d;
+  --grey-90-alpha-10: rgba(12, 12, 13, 0.1);
+  --grey-90-alpha-20: rgba(12, 12, 13, 0.2);
+  --grey-90-alpha-30: rgba(12, 12, 13, 0.3);
   --white: #ffffff;
 }
 
@@ -108,9 +112,15 @@ p {
   line-height: 44px;
 }
 
-.installpage-button {
-  display: block;
+.buttons-container {
+  display: flex;
+}
 
+.buttons-container button:not(:last-child) {
+  margin-right: 10px;
+}
+
+button {
   margin: 2em 0 0 0;
   padding: 10px 20px;
 
@@ -120,26 +130,43 @@ p {
   font-size: 15px;
   font-weight: 400;
   line-height: 21px;
-
-  background-color: var(--blue-60);
-  color: var(--white);
-  box-shadow: 0 1px 0 rgba(0,0,0,0.23);
   cursor: pointer;
-}
 
-.installpage-button:enabled:hover {
-  background-color: var(--blue-70)
-}
-
-.installpage-button:active,
-.installpage-button:hover:active,
-.installpage-button:enabled:hover:active {
-  background-color: var(--blue-80);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.23);
 }
 
 /* Remove light gray outline when clicking on the button */
-.installpage-button::-moz-focus-inner {
+button::-moz-focus-inner {
   border: 0;
+}
+
+.primary-button {
+  background-color: var(--blue-60);
+  color: var(--white);
+}
+
+.primary-button:enabled:hover {
+  background-color: var(--blue-70)
+}
+
+.primary-button:active,
+.primary-button:hover:active,
+.primary-button:enabled:hover:active {
+  background-color: var(--blue-80);
+}
+
+.default-button {
+  background-color: var(--grey-90-alpha-10);
+}
+
+.default-button:enabled:hover {
+  background-color: var(--grey-90-alpha-20)
+}
+
+.default-button:active,
+.default-button:hover:active,
+.default-button:enabled:hover:active {
+  background-color: var(--grey-90-alpha-30);
 }
 
 [hidden="true"] {

@@ -22,11 +22,11 @@ public class GeckoHLSResourceWrapper {
         Callbacks() {}
 
         @Override
-        @WrapForJNI(dispatchTo = "gecko")
+        @WrapForJNI
         public native void onDataArrived();
 
         @Override
-        @WrapForJNI(dispatchTo = "gecko")
+        @WrapForJNI
         public native void onError(int errorCode);
 
         @Override // JNIObject

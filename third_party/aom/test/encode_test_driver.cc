@@ -149,11 +149,6 @@ static bool compare_img(const aom_image_t *img1, const aom_image_t *img2,
                         int *const mismatch_row, int *const mismatch_col,
                         int *const mismatch_plane, int *const mismatch_pix1,
                         int *const mismatch_pix2) {
-  const unsigned int w_y = img1->d_w;
-  const unsigned int h_y = img1->d_h;
-  const unsigned int w_uv = ROUND_POWER_OF_TWO(w_y, img1->x_chroma_shift);
-  const unsigned int h_uv = ROUND_POWER_OF_TWO(h_y, img1->y_chroma_shift);
-
   if (img1->fmt != img2->fmt || img1->cs != img2->cs ||
       img1->d_w != img2->d_w || img1->d_h != img2->d_h) {
     if (mismatch_row != NULL) *mismatch_row = -1;
@@ -161,28 +156,15 @@ static bool compare_img(const aom_image_t *img1, const aom_image_t *img2,
     return false;
   }
 
-  if (!compare_plane(img1->planes[AOM_PLANE_Y], img1->stride[AOM_PLANE_Y],
-                     img2->planes[AOM_PLANE_Y], img2->stride[AOM_PLANE_Y], w_y,
-                     h_y, mismatch_row, mismatch_col, mismatch_pix1,
-                     mismatch_pix2)) {
-    if (mismatch_plane != NULL) *mismatch_plane = AOM_PLANE_Y;
-    return false;
-  }
-
-  if (!compare_plane(img1->planes[AOM_PLANE_U], img1->stride[AOM_PLANE_U],
-                     img2->planes[AOM_PLANE_U], img2->stride[AOM_PLANE_U], w_uv,
-                     h_uv, mismatch_row, mismatch_col, mismatch_pix1,
-                     mismatch_pix2)) {
-    if (mismatch_plane != NULL) *mismatch_plane = AOM_PLANE_U;
-    return false;
-  }
-
-  if (!compare_plane(img1->planes[AOM_PLANE_V], img1->stride[AOM_PLANE_V],
-                     img2->planes[AOM_PLANE_V], img2->stride[AOM_PLANE_V], w_uv,
-                     h_uv, mismatch_row, mismatch_col, mismatch_pix1,
-                     mismatch_pix2)) {
-    if (mismatch_plane != NULL) *mismatch_plane = AOM_PLANE_U;
-    return false;
+  for (int plane = 0; plane < 3; plane++) {
+    if (!compare_plane(img1->planes[plane], img1->stride[plane],
+                       img2->planes[plane], img2->stride[plane],
+                       aom_img_plane_width(img1, plane),
+                       aom_img_plane_height(img1, plane), mismatch_row,
+                       mismatch_col, mismatch_pix1, mismatch_pix2)) {
+      if (mismatch_plane != NULL) *mismatch_plane = plane;
+      return false;
+    }
   }
 
   return true;

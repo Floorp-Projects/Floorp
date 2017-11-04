@@ -15,7 +15,7 @@
 interface DOMStringMap {
   getter DOMString (DOMString name);
   [CEReactions, Throws]
-  setter creator void (DOMString name, DOMString value);
+  setter void (DOMString name, DOMString value);
   [CEReactions]
   deleter void (DOMString name);
 };

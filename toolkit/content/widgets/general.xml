@@ -154,14 +154,6 @@
     </content>
   </binding>
 
-  <binding id="image" role="xul:image">
-    <implementation implements="nsIDOMXULImageElement">
-      <property name="src"
-                onget="return this.getAttribute('src');"
-                onset="this.setAttribute('src',val); return val;"/>
-    </implementation>
-  </binding>
-
   <binding id="deck">
     <implementation>
       <property name="selectedIndex"

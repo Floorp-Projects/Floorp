@@ -43,6 +43,13 @@ class FirefoxConnector {
 
     this.addListeners();
 
+    // Listener for `will-navigate` event is (un)registered outside
+    // of the `addListeners` and `removeListeners` methods since
+    // these are used to pause/resume the connector.
+    // Paused network panel should be automatically resumed when page
+    // reload, so `will-navigate` listener needs to be there all the time.
+    this.tabTarget.on("will-navigate", this.willNavigate);
+
     // Don't start up waiting for timeline markers if the server isn't
     // recent enough to emit the markers we're interested in.
     if (this.tabTarget.getTrait("documentLoadingMarkers")) {
@@ -66,6 +73,8 @@ class FirefoxConnector {
 
     this.removeListeners();
 
+    this.tabTarget.off("will-navigate");
+
     this.tabTarget = null;
     this.webConsoleClient = null;
     this.timelineFront = null;
@@ -81,7 +90,6 @@ class FirefoxConnector {
   }
 
   addListeners() {
-    this.tabTarget.on("will-navigate", this.willNavigate);
     this.tabTarget.on("close", this.disconnect);
     this.webConsoleClient.on("networkEvent",
       this.dataProvider.onNetworkEvent);
@@ -90,7 +98,6 @@ class FirefoxConnector {
   }
 
   removeListeners() {
-    this.tabTarget.off("will-navigate");
     this.tabTarget.off("close");
     this.webConsoleClient.off("networkEvent");
     this.webConsoleClient.off("networkEventUpdate");
@@ -103,6 +110,12 @@ class FirefoxConnector {
     } else {
       // If the log is persistent, just clear all accumulated timing markers.
       this.actions.clearTimingMarkers();
+    }
+
+    // Resume is done automatically on page reload/navigation.
+    let state = this.getState();
+    if (!state.requests.recording) {
+      this.actions.toggleRecording();
     }
   }
 

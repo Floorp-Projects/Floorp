@@ -11,6 +11,7 @@ This is a port of Skia gamma LUT logic into Rust, used by WebRender.
 #![allow(dead_code)]
 
 use api::ColorU;
+use std::cmp::max;
 
 /// Color space responsible for converting between lumas and luminances.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -295,82 +296,41 @@ impl GammaLut {
         table
     }
 
-    // Skia normally preblends based on what the text color is.
-    // If we can't do that, use Skia default colors.
-    pub fn preblend_default_colors_bgra(&self, pixels: &mut [u8], width: usize, height: usize) {
-        let preblend_color = ColorU::new(0x7f, 0x80, 0x7f, 0xff);
-        self.preblend_bgra(pixels, width, height, preblend_color);
-    }
-
-    fn replace_pixels_bgra(&self, pixels: &mut [u8], width: usize, height: usize,
-                           table_r: &[u8; 256], table_g: &[u8; 256], table_b: &[u8; 256]) {
-         for y in 0..height {
-            let current_height = y * width * 4;
-
-            for pixel in pixels[current_height..current_height + (width * 4)].chunks_mut(4) {
-                pixel[0] = table_b[pixel[0] as usize];
-                pixel[1] = table_g[pixel[1] as usize];
-                pixel[2] = table_r[pixel[2] as usize];
-                // Don't touch alpha
-            }
-        }
-    }
-
-    // Mostly used by windows and GlyphRunAnalysis::GetAlphaTexture
-    fn replace_pixels_rgb(&self, pixels: &mut [u8], width: usize, height: usize,
-                          table_r: &[u8; 256], table_g: &[u8; 256], table_b: &[u8; 256]) {
-         for y in 0..height {
-            let current_height = y * width * 3;
-
-            for pixel in pixels[current_height..current_height + (width * 3)].chunks_mut(3) {
-                pixel[0] = table_r[pixel[0] as usize];
-                pixel[1] = table_g[pixel[1] as usize];
-                pixel[2] = table_b[pixel[2] as usize];
-            }
-        }
-    }
-
     // Assumes pixels are in BGRA format. Assumes pixel values are in linear space already.
-    pub fn preblend_bgra(&self, pixels: &mut [u8], width: usize, height: usize, color: ColorU) {
+    pub fn preblend(&self, pixels: &mut [u8], color: ColorU) {
         let table_r = self.get_table(color.r);
         let table_g = self.get_table(color.g);
         let table_b = self.get_table(color.b);
 
-        self.replace_pixels_bgra(pixels, width, height, table_r, table_g, table_b);
-    }
-
-    // Assumes pixels are in RGB format. Assumes pixel values are in linear space already. NOTE:
-    // there is no alpha here.
-    pub fn preblend_rgb(&self, pixels: &mut [u8], width: usize, height: usize, color: ColorU) {
-        let table_r = self.get_table(color.r);
-        let table_g = self.get_table(color.g);
-        let table_b = self.get_table(color.b);
-
-        self.replace_pixels_rgb(pixels, width, height, table_r, table_g, table_b);
+        for pixel in pixels.chunks_mut(4) {
+            let (b, g, r) = (table_b[pixel[0] as usize], table_g[pixel[1] as usize], table_r[pixel[2] as usize]);
+            pixel[0] = b;
+            pixel[1] = g;
+            pixel[2] = r;
+            pixel[3] = max(max(b, g), r);
+        }
     }
 
     #[cfg(target_os="macos")]
-    pub fn coregraphics_convert_to_linear_bgra(&self, pixels: &mut [u8], width: usize, height: usize) {
-        self.replace_pixels_bgra(pixels, width, height,
-                                 &self.cg_inverse_gamma,
-                                 &self.cg_inverse_gamma,
-                                 &self.cg_inverse_gamma);
+    pub fn coregraphics_convert_to_linear(&self, pixels: &mut [u8]) {
+        for pixel in pixels.chunks_mut(4) {
+            pixel[0] = self.cg_inverse_gamma[pixel[0] as usize];
+            pixel[1] = self.cg_inverse_gamma[pixel[1] as usize];
+            pixel[2] = self.cg_inverse_gamma[pixel[2] as usize];
+        }
     }
 
     // Assumes pixels are in BGRA format. Assumes pixel values are in linear space already.
-    pub fn preblend_grayscale_bgra(&self, pixels: &mut [u8], width: usize, height: usize, color: ColorU) {
+    pub fn preblend_grayscale(&self, pixels: &mut [u8], color: ColorU) {
         let table_g = self.get_table(color.g);
 
-         for y in 0..height {
-            let current_height = y * width * 4;
-
-            for pixel in pixels[current_height..current_height + (width * 4)].chunks_mut(4) {
-                let luminance = compute_luminance(pixel[2], pixel[1], pixel[0]);
-                pixel[0] = table_g[luminance as usize];
-                pixel[1] = table_g[luminance as usize];
-                pixel[2] = table_g[luminance as usize];
-                pixel[3] = table_g[luminance as usize];
-            }
+        for pixel in pixels.chunks_mut(4) {
+            let luminance = compute_luminance(pixel[2], pixel[1], pixel[0]);
+            let alpha = table_g[luminance as usize];
+            pixel[0] = alpha;
+            pixel[1] = alpha;
+            pixel[2] = alpha;
+            pixel[3] = alpha;
         }
     }
 
@@ -378,7 +338,6 @@ impl GammaLut {
 
 #[cfg(test)]
 mod tests {
-    use std::cmp;
     use super::*;
 
     fn over(dst: u32, src: u32, alpha: u32) -> u32 {
@@ -414,7 +373,7 @@ mod tests {
                     let true_result = ((overf(lin_dst, lin_src, alpha as f32) / 255.).powf(1. / g) * 255.) as u32;
                     let diff = absdiff(preblend_result, true_result);
                     //println!("{} -- {} {} = {}", alpha, preblend_result, true_result, diff);
-                    max_diff = cmp::max(max_diff, diff);
+                    max_diff = max(max_diff, diff);
                 }
 
                 //println!("{} {} max {}", src, dst, max_diff);

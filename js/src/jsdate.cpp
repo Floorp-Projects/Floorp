@@ -429,17 +429,33 @@ EquivalentYearForDST(int year)
      *
      * yearStartingWith[1][i] is an example leap year where
      * Jan 1 appears on Sunday (i == 0), Monday (i == 1), etc.
+     *
+     * Keep two different mappings, one for past years (< 1970), and a
+     * different one for future years (> 2037).
      */
-    static const int yearStartingWith[2][7] = {
+    static const int pastYearStartingWith[2][7] = {
         {1978, 1973, 1974, 1975, 1981, 1971, 1977},
         {1984, 1996, 1980, 1992, 1976, 1988, 1972}
+    };
+    static const int futureYearStartingWith[2][7] = {
+        {2034, 2035, 2030, 2031, 2037, 2027, 2033},
+        {2012, 2024, 2036, 2020, 2032, 2016, 2028}
     };
 
     int day = int(DayFromYear(year) + 4) % 7;
     if (day < 0)
         day += 7;
 
+    const auto& yearStartingWith = year < 1970 ? pastYearStartingWith : futureYearStartingWith;
     return yearStartingWith[IsLeapYear(year)][day];
+}
+
+// Return true if |t| is representable as a 32-bit time_t variable, that means
+// the year is in [1970, 2038).
+static bool
+IsRepresentableAsTime32(double t)
+{
+    return 0.0 <= t && t < 2145916800000.0;
 }
 
 /* ES5 15.9.1.8. */
@@ -453,7 +469,7 @@ DaylightSavingTA(double t)
      * If earlier than 1970 or after 2038, potentially beyond the ken of
      * many OSes, map it to an equivalent year before asking.
      */
-    if (t < 0.0 || t > 2145916800000.0) {
+    if (!IsRepresentableAsTime32(t)) {
         int year = EquivalentYearForDST(int(YearFromTime(t)));
         double day = MakeDay(year, MonthFromTime(t), DateFromTime(t));
         t = MakeDate(day, TimeWithinDay(t));
@@ -2621,6 +2637,18 @@ ToPRMJTime(double localTime, double utcTime)
     return prtm;
 }
 
+static size_t
+FormatTime(char* buf, int buflen, const char* fmt, double utcTime, double localTime)
+{
+    PRMJTime prtm = ToPRMJTime(localTime, utcTime);
+    int eqivalentYear = IsRepresentableAsTime32(utcTime)
+                        ? prtm.tm_year
+                        : EquivalentYearForDST(prtm.tm_year);
+    int offsetInSeconds = (int) floor((localTime - utcTime) / msPerSecond);
+
+    return PRMJ_FormatTime(buf, buflen, fmt, &prtm, eqivalentYear, offsetInSeconds);
+}
+
 enum class FormatSpec {
     DateTime,
     Date,
@@ -2663,8 +2691,7 @@ FormatDate(JSContext* cx, double utcTime, FormatSpec format, MutableHandleValue 
              */
 
             /* get a time zone string from the OS to include as a comment. */
-            PRMJTime prtm = ToPRMJTime(localTime, utcTime);
-            size_t tzlen = PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &prtm);
+            size_t tzlen = FormatTime(tzbuf, sizeof tzbuf, "(%Z)", utcTime, localTime);
             if (tzlen != 0) {
                 /*
                  * Decide whether to use the resulting time zone string.
@@ -2744,10 +2771,9 @@ ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, Mutabl
         strcpy(buf, js_NaN_date_str);
     } else {
         double localTime = LocalTime(utcTime);
-        PRMJTime prtm = ToPRMJTime(localTime, utcTime);
 
         /* Let PRMJTime format it. */
-        size_t result_len = PRMJ_FormatTime(buf, sizeof buf, format, &prtm);
+        size_t result_len = FormatTime(buf, sizeof buf, format, utcTime, localTime);
 
         /* If it failed, default to toString. */
         if (result_len == 0)

@@ -62,20 +62,6 @@ XPCOMUtils.defineLazyGetter(this, "SyncPingValidator", function() {
   return ajv.compile(SyncPingSchema);
 });
 
-var provider = {
-  getFile(prop, persistent) {
-    persistent.value = true;
-    switch (prop) {
-      case "ExtPrefDL":
-        return [Services.dirsvc.get("CurProcD", Ci.nsIFile)];
-      default:
-        throw Cr.NS_ERROR_FAILURE;
-    }
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider])
-};
-Services.dirsvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-
 // This is needed for loadAddonTestFunctions().
 var gGlobalScope = this;
 

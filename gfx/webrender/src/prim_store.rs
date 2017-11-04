@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, BuiltDisplayList, ColorF, ComplexClipRegion, DeviceIntRect};
-use api::{DevicePoint, ExtendMode, FontInstance, FontRenderMode, GlyphInstance, GlyphKey};
+use api::{DevicePoint, ExtendMode, FontInstance, GlyphInstance, GlyphKey};
 use api::{GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag, LayerPoint, LayerRect};
 use api::{ClipMode, LayerSize, LayerVector2D, LineOrientation, LineStyle};
 use api::{TileOffset, YuvColorSpace, YuvFormat};
@@ -554,26 +554,10 @@ pub struct TextRunPrimitiveCpu {
     pub glyph_gpu_blocks: Vec<GpuBlockData>,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum TextRunMode {
-    Normal,
-    Shadow,
-}
 
 impl TextRunPrimitiveCpu {
-    pub fn get_font(&self,
-                    run_mode: TextRunMode,
-                    device_pixel_ratio: f32,
-    ) -> FontInstance {
+    pub fn get_font(&self, device_pixel_ratio: f32) -> FontInstance {
         let mut font = self.font.clone();
-        match run_mode {
-            TextRunMode::Normal => {}
-            TextRunMode::Shadow => {
-                // Shadows never use subpixel AA, but need to respect the alpha/mono flag
-                // for reftests.
-                font.render_mode = font.render_mode.limit_by(FontRenderMode::Alpha);
-            }
-        };
         font.size = font.size.scale_by(device_pixel_ratio);
         font
     }
@@ -583,10 +567,9 @@ impl TextRunPrimitiveCpu {
         resource_cache: &mut ResourceCache,
         device_pixel_ratio: f32,
         display_list: &BuiltDisplayList,
-        run_mode: TextRunMode,
         gpu_cache: &mut GpuCache,
     ) {
-        let font = self.get_font(run_mode, device_pixel_ratio);
+        let font = self.get_font(device_pixel_ratio);
 
         // Cache the glyph positions, if not in the cache already.
         // TODO(gw): In the future, remove `glyph_instances`
@@ -628,6 +611,7 @@ impl TextRunPrimitiveCpu {
 
     fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
         request.push(ColorF::from(self.font.color).premultiplied());
+        request.push(ColorF::from(self.font.bg_color));
         request.push([
             self.offset.x,
             self.offset.y,
@@ -1097,7 +1081,6 @@ impl PrimitiveStore {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
-        text_run_mode: TextRunMode,
     ) {
         let metadata = &mut self.cpu_metadata[prim_index.0];
         match metadata.prim_kind {
@@ -1116,7 +1099,6 @@ impl PrimitiveStore {
                     resource_cache,
                     prim_context.device_pixel_ratio,
                     prim_context.display_list,
-                    text_run_mode,
                     gpu_cache,
                 );
             }
@@ -1357,7 +1339,6 @@ impl PrimitiveStore {
                     resource_cache,
                     gpu_cache,
                     render_tasks,
-                    TextRunMode::Shadow,
                 );
             }
         }
@@ -1380,7 +1361,6 @@ impl PrimitiveStore {
             resource_cache,
             gpu_cache,
             render_tasks,
-            TextRunMode::Normal,
         );
 
         Some(geometry)

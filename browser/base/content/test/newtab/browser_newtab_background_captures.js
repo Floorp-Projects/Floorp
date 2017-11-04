@@ -8,16 +8,17 @@
 
 const CAPTURE_PREF = "browser.pagethumbnails.capturing_disabled";
 
-add_task(async function() {
-  let imports = {};
-  Cu.import("resource://gre/modules/PageThumbs.jsm", imports);
+XPCOMUtils.defineLazyServiceGetter(this, "PageThumbsStorageService",
+  "@mozilla.org/thumbnails/pagethumbs-service;1",
+  "nsIPageThumbsStorageService");
 
+add_task(async function() {
   // Disable captures.
   await pushPrefs([CAPTURE_PREF, false]);
 
   // Make sure the thumbnail doesn't exist yet.
   let url = "http://example.com/";
-  let path = imports.PageThumbsStorage.getFilePathForURL(url);
+  let path = PageThumbsStorageService.getFilePathForURL(url);
   let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(path);
   try {

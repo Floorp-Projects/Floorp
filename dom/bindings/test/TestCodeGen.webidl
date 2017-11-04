@@ -1211,7 +1211,7 @@ interface TestNamedGetterInterface {
 interface TestIndexedGetterAndSetterAndNamedGetterInterface {
   getter DOMString (DOMString myName);
   getter long (unsigned long index);
-  setter creator void (unsigned long index, long arg);
+  setter void (unsigned long index, long arg);
   readonly attribute unsigned long length;
 };
 
@@ -1222,29 +1222,29 @@ interface TestIndexedAndNamedGetterInterface {
 };
 
 interface TestIndexedSetterInterface {
-  setter creator void setItem(unsigned long idx, DOMString item);
+  setter void setItem(unsigned long idx, DOMString item);
   getter DOMString (unsigned long idx);
   readonly attribute unsigned long length;
 };
 
 interface TestNamedSetterInterface {
-  setter creator void (DOMString myName, TestIndexedSetterInterface item);
+  setter void (DOMString myName, TestIndexedSetterInterface item);
   getter TestIndexedSetterInterface (DOMString name);
 };
 
 interface TestIndexedAndNamedSetterInterface {
-  setter creator void (unsigned long index, TestIndexedSetterInterface item);
+  setter void (unsigned long index, TestIndexedSetterInterface item);
   getter TestIndexedSetterInterface (unsigned long index);
   readonly attribute unsigned long length;
-  setter creator void setNamedItem(DOMString name, TestIndexedSetterInterface item);
+  setter void setNamedItem(DOMString name, TestIndexedSetterInterface item);
   getter TestIndexedSetterInterface (DOMString name);
 };
 
 interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterface {
   getter long item(unsigned long index);
   getter DOMString namedItem(DOMString name);
-  setter creator void (unsigned long index, long item);
-  setter creator void (DOMString name, DOMString item);
+  setter void (unsigned long index, long item);
+  setter void (DOMString name, DOMString item);
   stringifier DOMString ();
   readonly attribute unsigned long length;
 };
@@ -1310,8 +1310,8 @@ interface TestHTMLConstructorInterface {
 };
 
 interface TestCEReactionsInterface {
-  [CEReactions] setter creator void (unsigned long index, long item);
-  [CEReactions] setter creator void (DOMString name, DOMString item);
+  [CEReactions] setter void (unsigned long index, long item);
+  [CEReactions] setter void (DOMString name, DOMString item);
   [CEReactions] deleter void (DOMString name);
   getter long item(unsigned long index);
   getter DOMString (DOMString name);

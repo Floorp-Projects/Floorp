@@ -316,10 +316,20 @@ class MachCommands(MachCommandBase):
         # Android tools expect UTF-8: see
         # http://tools.android.com/knownissues/encoding.  See
         # http://stackoverflow.com/a/21267635 for discussion of this approach.
+        #
+        # It's not even enough to set the encoding just for Gradle; it
+        # needs to be for JVMs spawned by Gradle as well.  This
+        # happens during the maven deployment generating the GeckoView
+        # documents; this works around "error: unmappable character
+        # for encoding ASCII" in exoplayer2.  See
+        # https://discuss.gradle.org/t/unmappable-character-for-encoding-ascii-when-building-a-utf-8-project/10692/11
+        # and especially https://stackoverflow.com/a/21755671.
+
         return self.run_process([self.substs['GRADLE']] + gradle_flags + ['--console=plain'] + args,
             append_env={
                 'GRADLE_OPTS': '-Dfile.encoding=utf-8',
                 'JAVA_HOME': java_home,
+                'JAVA_TOOL_OPTIONS': '-Dfile.encoding=utf-8',
             },
             pass_thru=True, # Allow user to run gradle interactively.
             ensure_exit_code=False, # Don't throw on non-zero exit code.

@@ -10,9 +10,19 @@
  */
 
 #include "./av1_rtcd.h"
-#include "./cdef_simd.h"
 #include "aom_ports/bitops.h"
 #include "aom_ports/mem.h"
+
+// sign(a-b) * min(abs(a-b), max(0, threshold - (abs(a-b) >> adjdamp)))
+SIMD_INLINE v128 constrain16(v128 a, v128 b, unsigned int threshold,
+                             unsigned int adjdamp) {
+  v128 diff = v128_sub_16(a, b);
+  const v128 sign = v128_shr_n_s16(diff, 15);
+  diff = v128_abs_s16(diff);
+  const v128 s =
+      v128_ssub_u16(v128_dup_16(threshold), v128_shr_u16(diff, adjdamp));
+  return v128_xor(v128_add_16(sign, v128_min_s16(diff, s)), sign);
+}
 
 // sign(a - b) * min(abs(a - b), max(0, strength - (abs(a - b) >> adjdamp)))
 SIMD_INLINE v128 constrain(v256 a, v256 b, unsigned int strength,

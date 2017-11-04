@@ -19,9 +19,28 @@
 #include "av1/common/entropymv.h"
 #include "av1/common/onyxc_int.h"
 
+int av1_get_MBs(int width, int height) {
+  const int aligned_width = ALIGN_POWER_OF_TWO(width, 3);
+  const int aligned_height = ALIGN_POWER_OF_TWO(height, 3);
+  const int mi_cols = aligned_width >> MI_SIZE_LOG2;
+  const int mi_rows = aligned_height >> MI_SIZE_LOG2;
+
+#if CONFIG_CB4X4
+  const int mb_cols = (mi_cols + 2) >> 2;
+  const int mb_rows = (mi_rows + 2) >> 2;
+#else
+  const int mb_cols = (mi_cols + 1) >> 1;
+  const int mb_rows = (mi_rows + 1) >> 1;
+#endif
+  return mb_rows * mb_cols;
+}
+
 void av1_set_mb_mi(AV1_COMMON *cm, int width, int height) {
-  // TODO(jingning): Fine tune the loop filter operations and bring this
-  // back to integer multiple of 4 for cb4x4.
+  // Ensure that the decoded width and height are both multiples of
+  // 8 luma pixels (note: this may only be a multiple of 4 chroma pixels if
+  // subsampling is used).
+  // This simplifies the implementation of various experiments,
+  // eg. cdef, which operates on units of 8x8 luma pixels.
   const int aligned_width = ALIGN_POWER_OF_TWO(width, 3);
   const int aligned_height = ALIGN_POWER_OF_TWO(height, 3);
 
@@ -72,6 +91,36 @@ static void free_seg_map(AV1_COMMON *cm) {
   if (!cm->frame_parallel_decode) {
     cm->last_frame_seg_map = NULL;
   }
+  cm->seg_map_alloc_size = 0;
+}
+
+static void free_scratch_buffers(AV1_COMMON *cm) {
+  (void)cm;
+#if CONFIG_NCOBMC && CONFIG_NCOBMC_ADAPT_WEIGHT
+  for (int i = 0; i < 4; ++i) {
+    if (cm->ncobmcaw_buf[i]) {
+      aom_free(cm->ncobmcaw_buf[i]);
+      cm->ncobmcaw_buf[i] = NULL;
+    }
+  }
+#endif  // CONFIG_NCOBMC && CONFIG_NCOBMC_ADAPT_WEIGHT
+}
+
+static int alloc_scratch_buffers(AV1_COMMON *cm) {
+  (void)cm;
+#if CONFIG_NCOBMC && CONFIG_NCOBMC_ADAPT_WEIGHT
+  // If not allocated already, allocate
+  if (!cm->ncobmcaw_buf[0] && !cm->ncobmcaw_buf[1] && !cm->ncobmcaw_buf[2] &&
+      !cm->ncobmcaw_buf[3]) {
+    for (int i = 0; i < 4; ++i) {
+      CHECK_MEM_ERROR(
+          cm, cm->ncobmcaw_buf[i],
+          (uint8_t *)aom_memalign(
+              16, (1 + CONFIG_HIGHBITDEPTH) * MAX_MB_PLANE * MAX_SB_SQUARE));
+    }
+  }
+#endif  // CONFIG_NCOBMC && CONFIG_NCOBMC_ADAPT_WEIGHT
+  return 0;
 }
 
 void av1_free_ref_frame_buffers(BufferPool *pool) {
@@ -85,7 +134,14 @@ void av1_free_ref_frame_buffers(BufferPool *pool) {
     }
     aom_free(pool->frame_bufs[i].mvs);
     pool->frame_bufs[i].mvs = NULL;
+#if CONFIG_MFMV
+    aom_free(pool->frame_bufs[i].tpl_mvs);
+    pool->frame_bufs[i].tpl_mvs = NULL;
+#endif
     aom_free_frame_buffer(&pool->frame_bufs[i].buf);
+#if CONFIG_HASH_ME
+    av1_hash_table_destroy(&pool->frame_bufs[i].hash_table);
+#endif
   }
 }
 
@@ -108,6 +164,33 @@ void av1_alloc_restoration_buffers(AV1_COMMON *cm) {
   aom_free(cm->rst_internal.tmpbuf);
   CHECK_MEM_ERROR(cm, cm->rst_internal.tmpbuf,
                   (int32_t *)aom_memalign(16, RESTORATION_TMPBUF_SIZE));
+
+#if CONFIG_STRIPED_LOOP_RESTORATION
+  // Allocate internal storage for the loop restoration stripe boundary lines
+  for (p = 0; p < MAX_MB_PLANE; ++p) {
+    int w = p == 0 ? width : ROUND_POWER_OF_TWO(width, cm->subsampling_x);
+    int align_bits = 5;  // align for efficiency
+    int stride = ALIGN_POWER_OF_TWO(w, align_bits);
+    int num_stripes = (height + 63) / 64;
+    // for each processing stripe: 2 lines above, 2 below
+    int buf_size = num_stripes * 2 * stride;
+    uint8_t *above_buf, *below_buf;
+
+    aom_free(cm->rst_internal.stripe_boundary_above[p]);
+    aom_free(cm->rst_internal.stripe_boundary_below[p]);
+
+#if CONFIG_HIGHBITDEPTH
+    if (cm->use_highbitdepth) buf_size = buf_size * 2;
+#endif
+    CHECK_MEM_ERROR(cm, above_buf,
+                    (uint8_t *)aom_memalign(1 << align_bits, buf_size));
+    CHECK_MEM_ERROR(cm, below_buf,
+                    (uint8_t *)aom_memalign(1 << align_bits, buf_size));
+    cm->rst_internal.stripe_boundary_above[p] = above_buf;
+    cm->rst_internal.stripe_boundary_below[p] = below_buf;
+    cm->rst_internal.stripe_boundary_stride[p] = stride;
+  }
+#endif  // CONFIG_STRIPED_LOOP_RESTORATION
 }
 
 void av1_free_restoration_buffers(AV1_COMMON *cm) {
@@ -123,12 +206,14 @@ void av1_free_context_buffers(AV1_COMMON *cm) {
   int i;
   cm->free_mi(cm);
   free_seg_map(cm);
+  free_scratch_buffers(cm);
   for (i = 0; i < MAX_MB_PLANE; i++) {
     aom_free(cm->above_context[i]);
     cm->above_context[i] = NULL;
   }
   aom_free(cm->above_seg_context);
   cm->above_seg_context = NULL;
+  cm->above_context_alloc_cols = 0;
 #if CONFIG_VAR_TX
   aom_free(cm->above_txfm_context);
   cm->above_txfm_context = NULL;
@@ -155,6 +240,7 @@ int av1_alloc_context_buffers(AV1_COMMON *cm, int width, int height) {
     free_seg_map(cm);
     if (alloc_seg_map(cm, cm->mi_rows * cm->mi_cols)) goto fail;
   }
+  if (alloc_scratch_buffers(cm)) goto fail;
 
   if (cm->above_context_alloc_cols < cm->mi_cols) {
     // TODO(geza.lore): These are bigger than they need to be.

@@ -37,9 +37,6 @@ aom_codec_err_t aom_codec_dec_init_ver(aom_codec_ctx_t *ctx,
   else if ((flags & AOM_CODEC_USE_POSTPROC) &&
            !(iface->caps & AOM_CODEC_CAP_POSTPROC))
     res = AOM_CODEC_INCAPABLE;
-  else if ((flags & AOM_CODEC_USE_ERROR_CONCEALMENT) &&
-           !(iface->caps & AOM_CODEC_CAP_ERROR_CONCEALMENT))
-    res = AOM_CODEC_INCAPABLE;
   else if ((flags & AOM_CODEC_USE_INPUT_FRAGMENTS) &&
            !(iface->caps & AOM_CODEC_CAP_INPUT_FRAGMENTS))
     res = AOM_CODEC_INCAPABLE;

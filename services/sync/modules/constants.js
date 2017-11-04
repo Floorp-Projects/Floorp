@@ -54,12 +54,6 @@ MASTER_PASSWORD_LOCKED_RETRY_INTERVAL: 15 * 60 * 1000,   // 15 minutes
 // identifiers are shorter.
 DEFAULT_GUID_FETCH_BATCH_SIZE:         50,
 
-// Default batch size for applying incoming records.
-DEFAULT_STORE_BATCH_SIZE:              1,
-HISTORY_STORE_BATCH_SIZE:              50,
-FORMS_STORE_BATCH_SIZE:                50,
-PASSWORDS_STORE_BATCH_SIZE:            50,
-
 // Default batch size for download batching
 // (how many records are fetched at a time from the server when batching is used).
 DEFAULT_DOWNLOAD_BATCH_SIZE:           1000,
@@ -130,12 +124,6 @@ ENGINE_UNKNOWN_FAIL:                   "error.engine.reason.unknown_fail",
 ENGINE_APPLY_FAIL:                     "error.engine.reason.apply_fail",
 // an upload failure where the batch was interrupted with a 412
 ENGINE_BATCH_INTERRUPTED:              "error.engine.reason.batch_interrupted",
-
-// info types for Service.getStorageInfo
-INFO_COLLECTIONS:                      "collections",
-INFO_COLLECTION_USAGE:                 "collection_usage",
-INFO_COLLECTION_COUNTS:                "collection_counts",
-INFO_QUOTA:                            "quota",
 
 // Ways that a sync can be disabled (messages only to be printed in debug log)
 kSyncMasterPasswordLocked:             "User elected to leave Master Password locked",

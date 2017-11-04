@@ -22,6 +22,17 @@
 //   GMT+0
 //   GMT-0
 //   GMT0
+//
+// Also supported on Windows even though they don't match the format listed
+// above.
+//
+// From tzdata's "backward" file:
+//   UCT
+//   UTC
+//
+// From tzdata's "etcetera" file:
+//   GMT
+
 
 // Perform the following replacements:
 //   America/New_York    -> EST5EDT

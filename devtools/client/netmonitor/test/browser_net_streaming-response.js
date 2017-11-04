@@ -35,6 +35,14 @@ add_task(function* () {
   }
   yield wait;
 
+  let requestItems = document.querySelectorAll(".request-list-item");
+  for (let requestItem of requestItems) {
+    requestItem.scrollIntoView();
+    let requestsListStatus = requestItem.querySelector(".requests-list-status");
+    EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+    yield waitUntil(() => requestsListStatus.title);
+  }
+
   REQUESTS.forEach(([ fmt ], i) => {
     verifyRequestItemTarget(
       document,

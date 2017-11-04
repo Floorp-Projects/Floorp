@@ -32,7 +32,6 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/policies.js',
     'modules/record.js',
     'modules/resource.js',
-    'modules/rest.js',
     'modules/service.js',
     'modules/status.js',
     'modules/SyncedTabs.jsm',

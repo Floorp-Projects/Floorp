@@ -2,9 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# LLVM_CXXFLAGS comes with its own optimization flags.
-MOZ_OPTIMIZE =
-
 include $(topsrcdir)/config/config.mk
 
 # In the current moz.build world, we need to override essentially every
@@ -12,7 +9,6 @@ include $(topsrcdir)/config/config.mk
 ifneq ($(HOST_OS_ARCH),WINNT)
 DSO_LDOPTS := -shared
 endif
-OS_LDFLAGS := $(LLVM_LDFLAGS) $(CLANG_LDFLAGS)
 
 ifeq ($(HOST_OS_ARCH)_$(OS_ARCH),Linux_Darwin)
 # Use the host compiler instead of the target compiler.
@@ -21,8 +17,6 @@ CXX := $(HOST_CXX)
 # and on cross linux/darwin builds, the options to give to the linker for file
 # lists differ between both, so don't use file lists.
 EXPAND_MKSHLIB_ARGS :=
-# Don't pass OSX linker arguments.
-MOZ_FIX_LINK_PATHS :=
 endif
 
 # Use the default OS X deployment target to enable using the libc++ headers

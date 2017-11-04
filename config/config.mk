@@ -136,7 +136,6 @@ PYTHON_PATH = $(PYTHON) $(topsrcdir)/config/pythonpath.py
 
 # determine debug-related options
 _DEBUG_ASFLAGS :=
-_DEBUG_LDFLAGS :=
 
 ifneq (,$(MOZ_DEBUG)$(MOZ_DEBUG_SYMBOLS))
   ifeq ($(AS),$(YASM))
@@ -150,37 +149,9 @@ ifneq (,$(MOZ_DEBUG)$(MOZ_DEBUG_SYMBOLS))
   else
     _DEBUG_ASFLAGS += $(MOZ_DEBUG_FLAGS)
   endif
-  _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)
 endif
 
 ASFLAGS += $(_DEBUG_ASFLAGS)
-OS_LDFLAGS += $(_DEBUG_LDFLAGS)
-
-# XXX: What does this? Bug 482434 filed for better explanation.
-ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
-ifndef MOZ_DEBUG
-
-# MOZ_DEBUG_SYMBOLS generates debug symbols in separate PDB files.
-# Used for generating an optimized build with debugging symbols.
-# Used in the Windows nightlies to generate symbols for crash reporting.
-ifdef MOZ_DEBUG_SYMBOLS
-OS_LDFLAGS += -DEBUG
-endif
-
-#
-# Handle DMD in optimized builds.
-#
-ifdef MOZ_DMD
-OS_LDFLAGS = -DEBUG
-endif # MOZ_DMD
-
-ifdef MOZ_OPTIMIZE
-OS_LDFLAGS += -OPT:REF,ICF
-endif # MOZ_OPTIMIZE
-
-endif # MOZ_DEBUG
-
-endif # WINNT && !GNU_CC
 
 #
 # Build using PIC by default
@@ -202,7 +173,7 @@ endif
 ifneq (1,$(NO_PROFILE_GUIDED_OPTIMIZE))
 ifdef MOZ_PROFILE_GENERATE
 PGO_CFLAGS += $(if $(filter $(notdir $<),$(notdir $(NO_PROFILE_GUIDED_OPTIMIZE))),,$(PROFILE_GEN_CFLAGS))
-OS_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
+PGO_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
 ifeq (WINNT,$(OS_ARCH))
 AR_FLAGS += -LTCG
 endif
@@ -210,15 +181,12 @@ endif # MOZ_PROFILE_GENERATE
 
 ifdef MOZ_PROFILE_USE
 PGO_CFLAGS += $(if $(filter $(notdir $<),$(notdir $(NO_PROFILE_GUIDED_OPTIMIZE))),,$(PROFILE_USE_CFLAGS))
-OS_LDFLAGS += $(PROFILE_USE_LDFLAGS)
+PGO_LDFLAGS += $(PROFILE_USE_LDFLAGS)
 ifeq (WINNT,$(OS_ARCH))
 AR_FLAGS += -LTCG
 endif
 endif # MOZ_PROFILE_USE
 endif # NO_PROFILE_GUIDED_OPTIMIZE
-
-# linker
-OS_LDFLAGS += $(LINKER_LDFLAGS)
 
 MAKE_JARS_FLAGS = \
 	-t $(topsrcdir) \
@@ -251,11 +219,7 @@ INCLUDES = \
 
 include $(MOZILLA_DIR)/config/static-checking-config.mk
 
-LDFLAGS		= $(OS_LDFLAGS) $(MOZBUILD_LDFLAGS) $(MOZ_FIX_LINK_PATHS)
-
-ifdef MOZ_OPTIMIZE
-LDFLAGS		+= $(MOZ_OPTIMIZE_LDFLAGS)
-endif # MOZ_OPTIMIZE
+LDFLAGS		= $(COMPUTED_LDFLAGS) $(PGO_LDFLAGS) $(MK_LDFLAGS)
 
 COMPILE_CFLAGS	= $(COMPUTED_CFLAGS) $(PGO_CFLAGS) $(_DEPEND_CFLAGS) $(MK_COMPILE_DEFINES)
 COMPILE_CXXFLAGS = $(COMPUTED_CXXFLAGS) $(PGO_CFLAGS) $(_DEPEND_CFLAGS) $(MK_COMPILE_DEFINES)

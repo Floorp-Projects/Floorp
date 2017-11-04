@@ -147,8 +147,7 @@ interface nsIPrefService : nsISupports
 
 /**
  * Notification sent when after reading app-provided default
- * preferences, but before user profile override defaults or extension
- * defaults are loaded.
+ * preferences, but before user profile override defaults are loaded.
  */
 #define NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID "prefservice:after-app-defaults"
 

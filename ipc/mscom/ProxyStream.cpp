@@ -343,7 +343,7 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
       return;
     }
 
-#if defined(MOZ_CRASHREPORTER)
+#if defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
     ActivationContext::GetCurrentManifestPath(manifestPath);
 #endif // defined(MOZ_CRASHREPORTER)
 

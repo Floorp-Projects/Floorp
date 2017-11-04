@@ -269,16 +269,9 @@ INSTANTIATE_TEST_CASE_P(
 #ifndef __clang_analyzer__
 TEST(AV1ConvolveTest, av1_highbd_convolve) {
   ACMRandom rnd(ACMRandom::DeterministicSeed());
-#if CONFIG_DUAL_FILTER
-  InterpFilter interp_filter[4] = { EIGHTTAP_REGULAR, EIGHTTAP_REGULAR,
-                                    EIGHTTAP_REGULAR, EIGHTTAP_REGULAR };
+  InterpFilters interp_filters = av1_broadcast_interp_filter(EIGHTTAP_REGULAR);
   InterpFilterParams filter_params =
-      av1_get_interp_filter_params(interp_filter[0]);
-#else
-  InterpFilter interp_filter = EIGHTTAP_REGULAR;
-  InterpFilterParams filter_params =
-      av1_get_interp_filter_params(interp_filter);
-#endif
+      av1_get_interp_filter_params(EIGHTTAP_REGULAR);
   int filter_size = filter_params.taps;
   int filter_center = filter_size / 2 - 1;
   uint16_t src[12 * 12];
@@ -303,7 +296,7 @@ TEST(AV1ConvolveTest, av1_highbd_convolve) {
     for (subpel_y_q4 = 0; subpel_y_q4 < SUBPEL_SHIFTS; subpel_y_q4++) {
       av1_highbd_convolve(
           CONVERT_TO_BYTEPTR(src + src_stride * filter_center + filter_center),
-          src_stride, CONVERT_TO_BYTEPTR(dst), dst_stride, w, h, interp_filter,
+          src_stride, CONVERT_TO_BYTEPTR(dst), dst_stride, w, h, interp_filters,
           subpel_x_q4, x_step_q4, subpel_y_q4, y_step_q4, avg, bd);
 
       const int16_t *x_filter =
@@ -331,16 +324,9 @@ TEST(AV1ConvolveTest, av1_highbd_convolve) {
 
 TEST(AV1ConvolveTest, av1_highbd_convolve_avg) {
   ACMRandom rnd(ACMRandom::DeterministicSeed());
-#if CONFIG_DUAL_FILTER
-  InterpFilter interp_filter[4] = { EIGHTTAP_REGULAR, EIGHTTAP_REGULAR,
-                                    EIGHTTAP_REGULAR, EIGHTTAP_REGULAR };
+  InterpFilters interp_filters = av1_broadcast_interp_filter(EIGHTTAP_REGULAR);
   InterpFilterParams filter_params =
-      av1_get_interp_filter_params(interp_filter[0]);
-#else
-  InterpFilter interp_filter = EIGHTTAP_REGULAR;
-  InterpFilterParams filter_params =
-      av1_get_interp_filter_params(interp_filter);
-#endif
+      av1_get_interp_filter_params(EIGHTTAP_REGULAR);
   int filter_size = filter_params.taps;
   int filter_center = filter_size / 2 - 1;
   uint16_t src0[12 * 12];
@@ -373,23 +359,23 @@ TEST(AV1ConvolveTest, av1_highbd_convolve_avg) {
       avg = 0;
       av1_highbd_convolve(CONVERT_TO_BYTEPTR(src0 + offset), src_stride,
                           CONVERT_TO_BYTEPTR(dst0), dst_stride, w, h,
-                          interp_filter, subpel_x_q4, x_step_q4, subpel_y_q4,
+                          interp_filters, subpel_x_q4, x_step_q4, subpel_y_q4,
                           y_step_q4, avg, bd);
       avg = 0;
       av1_highbd_convolve(CONVERT_TO_BYTEPTR(src1 + offset), src_stride,
                           CONVERT_TO_BYTEPTR(dst1), dst_stride, w, h,
-                          interp_filter, subpel_x_q4, x_step_q4, subpel_y_q4,
+                          interp_filters, subpel_x_q4, x_step_q4, subpel_y_q4,
                           y_step_q4, avg, bd);
 
       avg = 0;
       av1_highbd_convolve(CONVERT_TO_BYTEPTR(src0 + offset), src_stride,
                           CONVERT_TO_BYTEPTR(dst), dst_stride, w, h,
-                          interp_filter, subpel_x_q4, x_step_q4, subpel_y_q4,
+                          interp_filters, subpel_x_q4, x_step_q4, subpel_y_q4,
                           y_step_q4, avg, bd);
       avg = 1;
       av1_highbd_convolve(CONVERT_TO_BYTEPTR(src1 + offset), src_stride,
                           CONVERT_TO_BYTEPTR(dst), dst_stride, w, h,
-                          interp_filter, subpel_x_q4, x_step_q4, subpel_y_q4,
+                          interp_filters, subpel_x_q4, x_step_q4, subpel_y_q4,
                           y_step_q4, avg, bd);
 
       EXPECT_EQ(dst[0], ROUND_POWER_OF_TWO(dst0[0] + dst1[0], 1));

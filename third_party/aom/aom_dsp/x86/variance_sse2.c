@@ -382,6 +382,28 @@ unsigned int aom_variance32x8_sse2(const uint8_t *src, int src_stride,
   assert(sum >= -255 * 32 * 8);
   return *sse - (unsigned int)(((int64_t)sum * sum) >> 8);
 }
+
+unsigned int aom_variance16x64_sse2(const uint8_t *src, int src_stride,
+                                    const uint8_t *ref, int ref_stride,
+                                    unsigned int *sse) {
+  int sum;
+  variance_sse2(src, src_stride, ref, ref_stride, 16, 64, sse, &sum,
+                aom_get16x16var_sse2, 16);
+  assert(sum <= 255 * 16 * 64);
+  assert(sum >= -255 * 16 * 64);
+  return *sse - (unsigned int)(((int64_t)sum * sum) >> 10);
+}
+
+unsigned int aom_variance64x16_sse2(const uint8_t *src, int src_stride,
+                                    const uint8_t *ref, int ref_stride,
+                                    unsigned int *sse) {
+  int sum;
+  variance_sse2(src, src_stride, ref, ref_stride, 64, 16, sse, &sum,
+                aom_get16x16var_sse2, 16);
+  assert(sum <= 255 * 64 * 16);
+  assert(sum >= -255 * 64 * 16);
+  return *sse - (unsigned int)(((int64_t)sum * sum) >> 10);
+}
 #endif
 
 // The 2 unused parameters are place holders for PIC enabled build.
@@ -451,7 +473,9 @@ DECLS(ssse3);
   FN(4, 16, 4, 2, 4, opt, (int32_t), (int32_t));    \
   FN(16, 4, 16, 4, 2, opt, (int32_t), (int32_t));   \
   FN(8, 32, 8, 3, 5, opt, (int32_t), (int32_t));    \
-  FN(32, 8, 16, 5, 3, opt, (int32_t), (int32_t))
+  FN(32, 8, 16, 5, 3, opt, (int32_t), (int32_t));   \
+  FN(16, 64, 16, 4, 6, opt, (int32_t), (int32_t));  \
+  FN(64, 16, 16, 6, 4, opt, (int32_t), (int32_t))
 #else
 #define FNS(opt)                                    \
   FN(64, 64, 16, 6, 6, opt, (int64_t), (int64_t));  \
@@ -543,7 +567,9 @@ DECLS(ssse3);
   FN(4, 16, 4, 2, 4, opt, (int32_t), (int32_t));    \
   FN(16, 4, 16, 4, 2, opt, (int32_t), (int32_t));   \
   FN(8, 32, 8, 3, 5, opt, (int32_t), (int32_t));    \
-  FN(32, 8, 16, 5, 3, opt, (int32_t), (int32_t))
+  FN(32, 8, 16, 5, 3, opt, (int32_t), (int32_t));   \
+  FN(16, 64, 16, 4, 6, opt, (int32_t), (int32_t));  \
+  FN(64, 16, 16, 6, 4, opt, (int32_t), (int32_t))
 #else
 #define FNS(opt)                                    \
   FN(64, 64, 16, 6, 6, opt, (int64_t), (int64_t));  \

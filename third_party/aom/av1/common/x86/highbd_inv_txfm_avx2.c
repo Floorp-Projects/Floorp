@@ -599,7 +599,7 @@ static void idct32_avx2(__m256i *in, __m256i *out, int bit) {
 }
 
 void av1_inv_txfm2d_add_32x32_avx2(const int32_t *coeff, uint16_t *output,
-                                   int stride, int tx_type, int bd) {
+                                   int stride, TX_TYPE tx_type, int bd) {
   __m256i in[128], out[128];
   const TXFM_1D_CFG *row_cfg = NULL;
   const TXFM_1D_CFG *col_cfg = NULL;

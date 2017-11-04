@@ -3,11 +3,12 @@ authors = ["The Rust Project Developers"]
 description = "A collection of numeric types and traits for Rust, including bigint,\ncomplex, rational, range iterators, generic integers, and more!\n"
 documentation = "http://rust-num.github.io/num"
 homepage = "https://github.com/rust-num/num"
-keywords = ["mathematics", "numerics"]
+keywords = ["mathematics", "numerics", "bignum"]
+categories = [ "algorithms", "data-structures", "science" ]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-num/num"
 name = "num"
-version = "0.1.37"
+version = "0.1.40"
 
 [[bench]]
 name = "bigint"
@@ -21,30 +22,30 @@ name = "shootout-pidigits"
 [dependencies.num-bigint]
 optional = true
 path = "bigint"
-version = "0.1.36"
+version = "0.1.40"
 
 [dependencies.num-complex]
 optional = true
 path = "complex"
-version = "0.1.36"
+version = "0.1.39"
 
 [dependencies.num-integer]
 path = "./integer"
-version = "0.1.33"
+version = "0.1.35"
 
 [dependencies.num-iter]
 optional = false
 path = "iter"
-version = "0.1.33"
+version = "0.1.34"
 
 [dependencies.num-rational]
 optional = true
 path = "rational"
-version = "0.1.36"
+version = "0.1.39"
 
 [dependencies.num-traits]
 path = "./traits"
-version = "0.1.37"
+version = "0.1.40"
 
 [dev-dependencies]
 

@@ -213,12 +213,6 @@ popupnotification {
   display: none;
 }
 
-/********** image **********/
-
-image {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#image");
-}
-
 /********** checkbox **********/
 
 checkbox {
@@ -481,6 +475,7 @@ panel[type="arrow"][side][animate="cancel"] {
 
 panel[type="arrow"][side]:not([animate="false"]) {
   opacity: 0;
+  will-change: transform; /* workaround for bug 1414033 */
   transform: translateY(-70px);
   transition-property: transform, opacity;
   transition-duration: 0.18s, 0.18s;

@@ -7,6 +7,7 @@
 #include "mozilla/LoadInfo.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsFrameLoader.h"
@@ -68,6 +69,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsThirdPartyContext(false)
   , mForcePreflight(false)
   , mIsPreflight(false)
+  , mLoadTriggeredFromExternal(false)
   , mForceHSTSPriming(false)
   , mMixedContentWouldBlock(false)
   , mIsHSTSPriming(false)
@@ -250,6 +252,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mIsThirdPartyContext(false) // NB: TYPE_DOCUMENT implies not third-party.
   , mForcePreflight(false)
   , mIsPreflight(false)
+  , mLoadTriggeredFromExternal(false)
   , mForceHSTSPriming(false)
   , mMixedContentWouldBlock(false)
   , mIsHSTSPriming(false)
@@ -324,6 +327,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders)
   , mForcePreflight(rhs.mForcePreflight)
   , mIsPreflight(rhs.mIsPreflight)
+  , mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal)
   , mForceHSTSPriming(rhs.mForceHSTSPriming)
   , mMixedContentWouldBlock(rhs.mMixedContentWouldBlock)
   , mIsHSTSPriming(rhs.mIsHSTSPriming)
@@ -359,6 +363,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    const nsTArray<nsCString>& aCorsUnsafeHeaders,
                    bool aForcePreflight,
                    bool aIsPreflight,
+                   bool aLoadTriggeredFromExternal,
                    bool aForceHSTSPriming,
                    bool aMixedContentWouldBlock,
                    bool aIsHSTSPriming,
@@ -388,6 +393,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mCorsUnsafeHeaders(aCorsUnsafeHeaders)
   , mForcePreflight(aForcePreflight)
   , mIsPreflight(aIsPreflight)
+  , mLoadTriggeredFromExternal(aLoadTriggeredFromExternal)
   , mForceHSTSPriming (aForceHSTSPriming)
   , mMixedContentWouldBlock(aMixedContentWouldBlock)
   , mIsHSTSPriming(aIsHSTSPriming)
@@ -500,6 +506,26 @@ nsIPrincipal*
 LoadInfo::PrincipalToInherit()
 {
   return mPrincipalToInherit;
+}
+
+nsIPrincipal*
+LoadInfo::FindPrincipalToInherit(nsIChannel* aChannel)
+{
+  if (mPrincipalToInherit) {
+    return mPrincipalToInherit;
+  }
+
+  nsCOMPtr<nsIURI> uri = mResultPrincipalURI;
+  if (!uri) {
+    Unused << aChannel->GetOriginalURI(getter_AddRefs(uri));
+  }
+
+  bool dataInherits = mSecurityFlags & (SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS |
+                                        SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+                                        SEC_REQUIRE_CORS_DATA_INHERITS);
+
+  auto prin = BasePrincipal::Cast(mTriggeringPrincipal);
+  return prin->PrincipalToInherit(uri, dataInherits);
 }
 
 NS_IMETHODIMP
@@ -979,6 +1005,23 @@ NS_IMETHODIMP
 LoadInfo::GetIsPreflight(bool* aIsPreflight)
 {
   *aIsPreflight = mIsPreflight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetLoadTriggeredFromExternal(bool aLoadTriggeredFromExternal)
+{
+  MOZ_ASSERT(!aLoadTriggeredFromExternal ||
+             mInternalContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT,
+             "can only set load triggered from external for TYPE_DOCUMENT");
+  mLoadTriggeredFromExternal = aLoadTriggeredFromExternal;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetLoadTriggeredFromExternal(bool* aLoadTriggeredFromExternal)
+{
+  *aLoadTriggeredFromExternal = mLoadTriggeredFromExternal;
   return NS_OK;
 }
 

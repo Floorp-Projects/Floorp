@@ -3064,8 +3064,11 @@ void nsCacheService::GetAppCacheDirectory(nsIFile ** result)
 void
 nsCacheService::LogCacheStatistics()
 {
-    uint32_t hitPercentage = (uint32_t)((((double)mCacheHits) /
-        ((double)(mCacheHits + mCacheMisses))) * 100);
+    uint32_t hitPercentage = 0;
+    if (!mCacheHits || !mCacheMisses) {
+        hitPercentage = (uint32_t)((((double)mCacheHits) /
+            ((double)(mCacheHits + mCacheMisses))) * 100);
+    }
     CACHE_LOG_INFO(("\nCache Service Statistics:\n\n"));
     CACHE_LOG_INFO(("    TotalEntries   = %d\n", mTotalEntries));
     CACHE_LOG_INFO(("    Cache Hits     = %d\n", mCacheHits));

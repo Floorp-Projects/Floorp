@@ -45,26 +45,63 @@ Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
 ## What's New
 
-Here's the highlights for v2.25.0
+Here's whats new in 2.27.1:
 
-* use textwrap crate for wrapping help texts 
-* suggests to use flag after subcommand when applicable 
+** This release also contains a very minor breaking change to fix a bug **
+
+The only CLIs affected will be those using unrestrained multiple values and subcommands where the
+subcommand name can coincide with one of the multiple values.
+
+See the commit [0c223f54](https://github.com/kbknapp/clap-rs/commit/0c223f54ed46da406bc8b43a5806e0b227863b31) for full details.
+
+*    Adds `term_size` as an optional dependency (with feature `wrap_help`) to fix compile bug
+*   **The minimum required version of Rust is now 1.18.0 (Stable)**
+*   Values from global args are now propagated UP and DOWN!
+*   fixes a bug where using AppSettings::AllowHyphenValues would allow invalid arguments even when there is no way for them to be valid
+*   when an argument requires a value and that value happens to match a subcommand name, its parsed as a value
+*   fixes a bug that prevented number_of_values and default_values to be used together
+*   fixes a bug that didn't allow args with default values to have conflicts
+*   fixes a panic when using global args and calling App::get_matches_from_safe_borrow multiple times
+*   fixes issues and potential regressions with global args values not being propagated properly or at all
+*   fixes a bug where default values are not applied if the option supports zero values
+*   adds addtional blurbs about using multiples with subcommands
+*   updates the docs to reflect changes to global args and that global args values can now be propagated back up the stack
+*   add html_root_url attribute
+*   sync README version numbers with crate version
+*   args that have require_delimiter(true) is now reflected in help and usage strings
+*   if all subcommands are hidden, the subcommands section of the help message is no longer displayed
+*   fixes when an argument requires a value and that value happens to match a subcommand name, its parsed as a value
+* **AppSettings::PropagateGlobalValuesDown:**  this setting deprecated and is no longer required to propagate values down or up
+
+Here's the highlights for v2.21.0 to v2.26.2
+
+*   if all subcommands are hidden, the subcommands section of the help message is no longer displayed
+*   fixes a bug where default values are not applied if the option supports zero values
+*   fixes using require_equals(true) and min_values(0) together
+*   escape special characters in zsh and fish completions
+*   avoid panic generating default help msg if term width set to 0 due to bug in textwrap 0.7.0
+*   Change `who's` -> `whose` in documentation
+* **Help Message:**  fixes `App::long_about` not being displayed
+* **Suggestions:**  output for flag after subcommand
+*   **The minimum required version of Rust is now 1.13.0 (Stable)**
+*   bumps unicode-segmentation to v1.2
+*   update textwrap to version 0.7.0 which increases the performance of writing help strings
+* impl Default for Values + OsValues for any lifetime.
+* use textwrap crate for wrapping help texts
+* suggests to use flag after subcommand when applicable
 * Bumps bitflags crate to v0.9
-
-Here's the highlights for v2.21.0 to v2.24.2
-
-* fixes a bug where args that allow values to start with a hyphen couldnt contain a double hyphen -- as a value 
-* fixes a bug where positional argument help text is misaligned 
-* **App::template docs:**  adds details about the necessity to use AppSettings::UnifiedHelpMessage when using {unified} tags in the help template 
-* **Arg::allow_hyphen_values docs:**  updates the docs to include warnings for allow_hyphen_values and multiple(true) used together 
-* **clap_app! docs:**  adds using the @group specifier to the macro docs 
-* adds a debug assertion to ensure all args added to groups actually exist 
-* fixes a bug where args with last(true) and required(true) set were not being printed in the usage string 
-* fixes a bug that was printing the arg name, instead of value name when Arg::last(true) was used 
-* fixes a bug where flags were parsed as flags AND positional values when specific combinations of settings were used 
-* **README.md:**  fix some typos 
-* **Arg:**  add `default_value_os` 
-* **arg_matches.rs:**  Added a Default implementation for Values and OsValues iterators. 
+* fixes a bug where args that allow values to start with a hyphen couldnt contain a double hyphen -- as a value
+* fixes a bug where positional argument help text is misaligned
+* **App::template docs:**  adds details about the necessity to use AppSettings::UnifiedHelpMessage when using {unified} tags in the help template
+* **Arg::allow_hyphen_values docs:**  updates the docs to include warnings for allow_hyphen_values and multiple(true) used together
+* **clap_app! docs:**  adds using the @group specifier to the macro docs
+* adds a debug assertion to ensure all args added to groups actually exist
+* fixes a bug where args with last(true) and required(true) set were not being printed in the usage string
+* fixes a bug that was printing the arg name, instead of value name when Arg::last(true) was used
+* fixes a bug where flags were parsed as flags AND positional values when specific combinations of settings were used
+* **README.md:**  fix some typos
+* **Arg:**  add `default_value_os`
+* **arg_matches.rs:**  Added a Default implementation for Values and OsValues iterators.
 * **PowerShell Completions:**
   * fixes a bug where powershells completions cant be used if no subcommands are defined
   * massively dedups subcommand names in the generate script to make smaller scripts that are still functionally equiv
@@ -139,7 +176,7 @@ I first want to say I'm a big a fan of BurntSushi's work, the creator of `Docopt
 
 `docopt` is also excellent at translating arguments into Rust types automatically. There is even a syntax extension which will do all this for you, if you're willing to use a nightly compiler (use of a stable compiler requires you to somewhat manually translate from arguments to Rust types). To use BurntSushi's words, `docopt` is also a sort of black box. You get what you get, and it's hard to tweak implementation or customize the experience for your use case.
 
-Because `docopt` is doing a ton of work to parse your help messages and determine what you were trying to communicate as valid arguments, it's also one of the more heavy weight parsers performance-wise. For most applications this isn't a concern and this isn't to say `docopt` is slow, in fact from it. This is just something to keep in mind while comparing.
+Because `docopt` is doing a ton of work to parse your help messages and determine what you were trying to communicate as valid arguments, it's also one of the more heavy weight parsers performance-wise. For most applications this isn't a concern and this isn't to say `docopt` is slow, in fact far from it. This is just something to keep in mind while comparing.
 
 #### All else being equal, what are some reasons to use `clap`?
 
@@ -340,7 +377,7 @@ subcommands:
 
 Since this feature requires additional dependencies that not everyone may want, it is *not* compiled in by default and we need to enable a feature flag in Cargo.toml:
 
-Simply change your `clap = "2.19"` to `clap = {version = "2.19", features = ["yaml"]}`.
+Simply change your `clap = "2.27"` to `clap = {version = "2.27", features = ["yaml"]}`.
 
 At last we create our `main.rs` file just like we would have with the previous two examples:
 
@@ -459,7 +496,7 @@ For full usage, add `clap` as a dependency in your `Cargo.toml` () to use from c
 
 ```toml
 [dependencies]
-clap = "~2.19.0"
+clap = "~2.27"
 ```
 
 (**note**: If you are concerned with supporting a minimum version of Rust that is *older* than the current stable Rust minus 2 stable releases, it's recommended to use the `~major.minor.patch` style versions in your `Cargo.toml` which will only update the patch version automatically. For more information see the [Compatibility Policy](#compatibility-policy))
@@ -477,12 +514,13 @@ Then run `cargo build` or `cargo update && cargo build` for your project.
 * **"suggestions"**: Turns on the `Did you mean '--myoption'?` feature for when users make typos. (builds dependency `strsim`)
 * **"color"**: Turns on colored error messages. This feature only works on non-Windows OSs. (builds dependency `ansi-term`)
 * **"wrap_help"**: Wraps the help at the actual terminal width when available, instead of 120 characters. (builds dependency `term_size`)
+* **"vec_map"**: Use [`VecMap`](https://crates.io/crates/vec_map) internally instead of a [`BTreeMap`](https://doc.rust-lang.org/stable/std/collections/struct.BTreeMap.html). This feature provides a _slight_ performance improvement. (builds dependency `vec_map`)
 
 To disable these, add this to your `Cargo.toml`:
 
 ```toml
 [dependencies.clap]
-version = "2.19"
+version = "2.27"
 default-features = false
 ```
 
@@ -490,7 +528,7 @@ You can also selectively enable only the features you'd like to include, by addi
 
 ```toml
 [dependencies.clap]
-version = "2.19"
+version = "2.27"
 default-features = false
 
 # Cherry-pick the features you'd like to use
@@ -616,7 +654,7 @@ In order to keep from being surprised of breaking changes, it is **highly** reco
 
 ```toml
 [dependencies]
-clap = "~2.19.0"
+clap = "~2.27"
 ```
 
 This will cause *only* the patch version to be updated upon a `cargo update` call, and therefore cannot break due to new features, or bumped minimum versions of Rust.
@@ -629,15 +667,15 @@ From @alexcrichton:
 
 Right now Cargo's version resolution is pretty naive, it's just a brute-force search of the solution space, returning the first resolvable graph. This also means that it currently won't terminate until it proves there is not possible resolvable graph. This leads to situations where workspaces with multiple binaries, for example, have two different dependencies such as:
 
-```toml
+```toml,no_sync
 
 # In one Cargo.toml
 [dependencies]
-clap = "~2.19.0"
+clap = "~2.27.0"
 
 # In another Cargo.toml
 [dependencies]
-clap = "2.22"
+clap = "2.27"
 
 ```
 
@@ -645,8 +683,9 @@ This is inherently an unresolvable crate graph in Cargo right now. Cargo require
 
 #### Minimum Version of Rust
 
-`clap` will officially support current stable Rust, minus two releases, but may work with prior releases as well. For example, current stable Rust at the time of this writing is 1.13.0, meaning `clap` is guaranteed to compile with 1.11.0 and beyond.
-At the 1.14.0 release, `clap` will be guaranteed to compile with 1.12.0 and beyond, etc.
+`clap` will officially support current stable Rust, minus two releases, but may work with prior releases as well. For example, current stable Rust at the time of this writing is 1.21.0, meaning `clap` is guaranteed to compile with 1.19.0 and beyond.
+
+At the 1.22.0 stable release, `clap` will be guaranteed to compile with 1.20.0 and beyond, etc.
 
 Upon bumping the minimum version of Rust (assuming it's within the stable-2 range), it *must* be clearly annotated in the `CHANGELOG.md`
 
@@ -710,6 +749,6 @@ As of 2.0.0 (From 1.x)
 
 Old method names will be left around for several minor version bumps, or one major version bump.
 
-As of 2.19.0:
+As of 2.27.0:
 
- * None!
+* **AppSettings::PropagateGlobalValuesDown:**  this setting deprecated and is no longer required to propagate values down or up

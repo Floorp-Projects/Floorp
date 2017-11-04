@@ -19,11 +19,7 @@
 extern const uint16_t EXP_CDF_TABLE[][16];
 extern const uint16_t LAPLACE_OFFSET[];
 
-#if CONFIG_DAALA_DIST
-#define AV1_PVQ_ENABLE_ACTIVITY_MASKING (1)
-#else
 #define AV1_PVQ_ENABLE_ACTIVITY_MASKING (0)
-#endif
 
 # define PVQ_MAX_PARTITIONS (1 + 3*(OD_TXSIZES-1))
 

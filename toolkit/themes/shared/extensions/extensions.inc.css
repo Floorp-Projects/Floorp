@@ -669,7 +669,7 @@ button.warning {
 
 /*** detail view ***/
 
-#detail-view > .box-inherit {
+#detail-view .scrollbox-innerbox {
   margin-right: 48px;
   margin-left: 48px;
 }

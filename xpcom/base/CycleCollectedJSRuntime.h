@@ -247,6 +247,34 @@ public:
   void OnLargeAllocationFailure();
 
   JSRuntime* Runtime() { return mJSRuntime; }
+  const JSRuntime* Runtime() const { return mJSRuntime; }
+
+  bool HasPendingIdleGCTask() const
+  {
+    // Idle GC task associates with JSRuntime.
+    MOZ_ASSERT_IF(mHasPendingIdleGCTask, Runtime());
+    return mHasPendingIdleGCTask;
+  }
+  void SetPendingIdleGCTask()
+  {
+    // Idle GC task associates with JSRuntime.
+    MOZ_ASSERT(Runtime());
+    mHasPendingIdleGCTask = true;
+  }
+  void ClearPendingIdleGCTask() { mHasPendingIdleGCTask = false; }
+
+  void RunIdleTimeGCTask()
+  {
+    if (HasPendingIdleGCTask()) {
+      JS::RunIdleTimeGCTask(Runtime());
+      ClearPendingIdleGCTask();
+    }
+  }
+
+  bool IsIdleGCTaskNeeded()
+  {
+    return !HasPendingIdleGCTask() && Runtime() && JS::IsIdleGCTaskNeeded(Runtime());
+  }
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
@@ -308,6 +336,7 @@ private:
   JSZoneParticipant mJSZoneCycleCollectorGlobal;
 
   JSRuntime* mJSRuntime;
+  bool mHasPendingIdleGCTask;
 
   JS::GCSliceCallback mPrevGCSliceCallback;
   JS::GCNurseryCollectionCallback mPrevGCNurseryCollectionCallback;

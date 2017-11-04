@@ -193,8 +193,8 @@ struct nsCSSRendering {
                        const nsRect& aDirtyRect,
                        const nsRect& aBorderArea,
                        nsStyleContext* aStyleContext,
-                       Sides aSkipSides = Sides(),
-                       bool* aOutBorderIsEmpty = nullptr);
+                       bool* aOutBorderIsEmpty,
+                       Sides aSkipSides = Sides());
 
   static mozilla::Maybe<nsCSSBorderRenderer>
   CreateBorderRendererWithStyleBorder(nsPresContext* aPresContext,
@@ -204,8 +204,8 @@ struct nsCSSRendering {
                                       const nsRect& aBorderArea,
                                       const nsStyleBorder& aBorderStyle,
                                       nsStyleContext* aStyleContext,
-                                      Sides aSkipSides = Sides(),
-                                      bool* aOutBorderIsEmpty = nullptr);
+                                      bool* aOutBorderIsEmpty,
+                                      Sides aSkipSides = Sides());
 
   static mozilla::Maybe<nsCSSBorderRenderer>
   CreateBorderRendererForOutline(nsPresContext* aPresContext,

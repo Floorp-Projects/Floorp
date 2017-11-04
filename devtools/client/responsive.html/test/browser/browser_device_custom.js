@@ -12,8 +12,6 @@ const device = {
   pixelRatio: 1.5,
   userAgent: "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
   touch: true,
-  firefoxOS: false,
-  os: "android",
 };
 
 const unicodeDevice = {
@@ -23,8 +21,6 @@ const unicodeDevice = {
   pixelRatio: 1.5,
   userAgent: "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
   touch: true,
-  firefoxOS: false,
-  os: "android",
 };
 
 const TEST_URL = "data:text/html;charset=utf-8,";
@@ -58,11 +54,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   });
 
   info("Fill out device adder form and save");
-  setDeviceAdder(ui, device);
-  let adderSave = document.querySelector("#device-adder-save");
-  let saved = waitUntilState(store, state => state.devices.custom.length == 1);
-  Simulate.click(adderSave);
-  yield saved;
+  yield addDeviceInModal(ui, device);
 
   info("Verify device defaults to enabled in modal");
   let deviceCb = [...document.querySelectorAll(".device-input-checkbox")].find(cb => {
@@ -106,7 +98,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   let deviceRemoveButton = document.querySelector(".device-remove-button");
   let removed = Promise.all([
     waitUntilState(store, state => state.devices.custom.length == 0),
-    once(ui, "device-removed")
+    once(ui, "device-association-removed")
   ]);
   Simulate.click(deviceRemoveButton);
   yield removed;
@@ -142,11 +134,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   Simulate.click(adderShow);
 
   info("Fill out device adder form by setting details to unicode device and save");
-  setDeviceAdder(ui, unicodeDevice);
-  let adderSave = document.querySelector("#device-adder-save");
-  let saved = waitUntilState(store, state => state.devices.custom.length == 1);
-  Simulate.click(adderSave);
-  yield saved;
+  yield addDeviceInModal(ui, unicodeDevice);
 
   info("Verify unicode device defaults to enabled in modal");
   let deviceCb = [...document.querySelectorAll(".device-input-checkbox")].find(cb => {
@@ -197,32 +185,4 @@ function testDeviceAdder(ui, expected) {
      "devicePixelRatio matches");
   is(userAgentInput.value, expected.userAgent, "User agent matches");
   is(touchInput.checked, expected.touch, "Touch matches");
-}
-
-function setDeviceAdder(ui, value) {
-  let { toolWindow } = ui;
-  let { document } = ui.toolWindow;
-  let React = toolWindow.require("devtools/client/shared/vendor/react");
-  let { Simulate } = React.addons.TestUtils;
-
-  let nameInput = document.querySelector("#device-adder-name input");
-  let [ widthInput, heightInput ] = document.querySelectorAll("#device-adder-size input");
-  let pixelRatioInput = document.querySelector("#device-adder-pixel-ratio input");
-  let userAgentInput = document.querySelector("#device-adder-user-agent input");
-  let touchInput = document.querySelector("#device-adder-touch input");
-
-  nameInput.value = value.name;
-  Simulate.change(nameInput);
-  widthInput.value = value.width;
-  Simulate.change(widthInput);
-  Simulate.blur(widthInput);
-  heightInput.value = value.height;
-  Simulate.change(heightInput);
-  Simulate.blur(heightInput);
-  pixelRatioInput.value = value.pixelRatio;
-  Simulate.change(pixelRatioInput);
-  userAgentInput.value = value.userAgent;
-  Simulate.change(userAgentInput);
-  touchInput.checked = value.touch;
-  Simulate.change(touchInput);
 }

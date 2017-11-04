@@ -80,8 +80,7 @@ add_task(async function() {
 
 
   do_print("Change locale to 'fr' and restart");
-  Preferences.set("intl.locale.matchOS", false);
-  Preferences.set("general.useragent.locale", "fr");
+  Services.locale.setRequestedLocales(["fr"]);
   await AddonTestUtils.promiseRestartManager();
   await extension.awaitStartup();
 
@@ -99,7 +98,7 @@ add_task(async function() {
 
 
   do_print("Change locale to 'en-US' and restart");
-  Preferences.set("general.useragent.locale", "en-US");
+  Services.locale.setRequestedLocales(["en-US"]);
   await AddonTestUtils.promiseRestartManager();
   await extension.awaitStartup();
 

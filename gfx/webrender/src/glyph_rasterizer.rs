@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[cfg(test)]
-use api::{ColorF, IdNamespace, LayoutPoint, SubpixelDirection};
+use api::{ColorF, ColorU, IdNamespace, LayoutPoint, SubpixelDirection};
 use api::{DevicePoint, DeviceUintSize, FontInstance, FontRenderMode};
 use api::{FontKey, FontTemplate, GlyphDimensions, GlyphKey};
 use api::{ImageData, ImageDescriptor, ImageFormat};
@@ -447,6 +447,7 @@ fn raterize_200_glyphs() {
         font_key,
         Au::from_px(32),
         ColorF::new(0.0, 0.0, 0.0, 1.0),
+        ColorU::new(0, 0, 0, 0),
         FontRenderMode::Subpixel,
         SubpixelDirection::Horizontal,
         None,

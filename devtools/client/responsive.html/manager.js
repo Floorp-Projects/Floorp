@@ -533,7 +533,7 @@ ResponsiveUI.prototype = {
     yield this.updateDPPX();
     yield this.updateTouchSimulation();
     // Used by tests
-    this.emit("device-removed");
+    this.emit("device-association-removed");
   }),
 
   updateDPPX: Task.async(function* (dppx) {

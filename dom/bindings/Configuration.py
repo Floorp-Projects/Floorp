@@ -393,11 +393,9 @@ class Descriptor(DescriptorProvider):
         self.operations = {
             'IndexedGetter': None,
             'IndexedSetter': None,
-            'IndexedCreator': None,
             'IndexedDeleter': None,
             'NamedGetter': None,
             'NamedSetter': None,
-            'NamedCreator': None,
             'NamedDeleter': None,
             'Stringifier': None,
             'LegacyCaller': None,
@@ -454,8 +452,6 @@ class Descriptor(DescriptorProvider):
                         addIndexedOrNamedOperation('Getter', m)
                     if m.isSetter():
                         addIndexedOrNamedOperation('Setter', m)
-                    if m.isCreator():
-                        addIndexedOrNamedOperation('Creator', m)
                     if m.isDeleter():
                         addIndexedOrNamedOperation('Deleter', m)
                     if m.isLegacycaller() and iface != self.interface:
@@ -474,15 +470,13 @@ class Descriptor(DescriptorProvider):
             if self.proxy:
                 if (not self.operations['IndexedGetter'] and
                     (self.operations['IndexedSetter'] or
-                     self.operations['IndexedDeleter'] or
-                     self.operations['IndexedCreator'])):
+                     self.operations['IndexedDeleter'])):
                     raise SyntaxError("%s supports indexed properties but does "
                                       "not have an indexed getter.\n%s" %
                                       (self.interface, self.interface.location))
                 if (not self.operations['NamedGetter'] and
                     (self.operations['NamedSetter'] or
-                     self.operations['NamedDeleter'] or
-                     self.operations['NamedCreator'])):
+                     self.operations['NamedDeleter'])):
                     raise SyntaxError("%s supports named properties but does "
                                       "not have a named getter.\n%s" %
                                       (self.interface, self.interface.location))

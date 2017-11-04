@@ -15,8 +15,8 @@ interface MozStorageAsyncStatementParams
   getter any(DOMString name);
 
   [Throws]
-  setter creator void(unsigned long index, any arg);
+  setter void(unsigned long index, any arg);
 
   [Throws]
-  setter creator void(DOMString name, any arg);
+  setter void(DOMString name, any arg);
 };

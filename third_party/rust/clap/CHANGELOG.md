@@ -1,4 +1,119 @@
-<a name="v2.24.2"></a>
+<a name="v2.27.1"></a>
+## v2.27.1 (2017-10-24)
+
+
+#### Bug Fixes
+
+* Adds `term_size` as an optional dependency (with feature `wrap_help`) to fix compile bug
+
+<a name="v2.27.0"></a>
+## v2.27.0 (2017-10-24)
+
+** This release raises the minimum required version of Rust to 1.18 **
+
+** This release also contains a very minor breaking change to fix a bug **
+
+The only CLIs affected will be those using unrestrained multiple values and subcommands where the
+subcommand name can coincide with one of the multiple values.
+
+See the commit [0c223f54](https://github.com/kbknapp/clap-rs/commit/0c223f54ed46da406bc8b43a5806e0b227863b31) for full details.
+
+
+#### Bug Fixes
+
+*   Values from global args are now propagated UP and DOWN!
+*   fixes a bug where using AppSettings::AllowHyphenValues would allow invalid arguments even when there is no way for them to be valid ([77ed4684](https://github.com/kbknapp/clap-rs/commit/77ed46841fc0263d7aa32fcc5cc49ef703b37c04), closes [#1066](https://github.com/kbknapp/clap-rs/issues/1066))
+*   when an argument requires a value and that value happens to match a subcommand name, its parsed as a value ([0c223f54](https://github.com/kbknapp/clap-rs/commit/0c223f54ed46da406bc8b43a5806e0b227863b31), closes [#1031](https://github.com/kbknapp/clap-rs/issues/1031), breaks [#](https://github.com/kbknapp/clap-rs/issues/), [#](https://github.com/kbknapp/clap-rs/issues/))
+*   fixes a bug that prevented number_of_values and default_values to be used together ([5eb342a9](https://github.com/kbknapp/clap-rs/commit/5eb342a99dde07b0f011048efde3e283bc1110fc), closes [#1050](https://github.com/kbknapp/clap-rs/issues/1050), [#1056](https://github.com/kbknapp/clap-rs/issues/1056))
+*   fixes a bug that didn't allow args with default values to have conflicts ([58b5b4be](https://github.com/kbknapp/clap-rs/commit/58b5b4be315280888d50d9b15119b91a9028f050), closes [#1071](https://github.com/kbknapp/clap-rs/issues/1071))
+*   fixes a panic when using global args and calling App::get_matches_from_safe_borrow multiple times ([d86ec797](https://github.com/kbknapp/clap-rs/commit/d86ec79742c77eb3f663fb30e225954515cf25bb), closes [#1076](https://github.com/kbknapp/clap-rs/issues/1076))
+*   fixes issues and potential regressions with global args values not being propagated properly or at all ([a43f9dd4](https://github.com/kbknapp/clap-rs/commit/a43f9dd4aaf1864dd14a3c28dec89ccdd70c61e5), closes [#1010](https://github.com/kbknapp/clap-rs/issues/1010), [#1061](https://github.com/kbknapp/clap-rs/issues/1061), [#978](https://github.com/kbknapp/clap-rs/issues/978))
+*   fixes a bug where default values are not applied if the option supports zero values ([9c248cbf](https://github.com/kbknapp/clap-rs/commit/9c248cbf7d8a825119bc387c23e9a1d1989682b0), closes [#1047](https://github.com/kbknapp/clap-rs/issues/1047))
+
+#### Documentation
+
+*   adds addtional blurbs about using multiples with subcommands ([03455b77](https://github.com/kbknapp/clap-rs/commit/03455b7751a757e7b2f6ffaf2d16168539c99661))
+*   updates the docs to reflect changes to global args and that global args values can now be propagated back up the stack ([ead076f0](https://github.com/kbknapp/clap-rs/commit/ead076f03ada4c322bf3e34203925561ec496d87))
+*   add html_root_url attribute ([e67a061b](https://github.com/kbknapp/clap-rs/commit/e67a061bcf567c6518d6c2f58852e01f02764b22))
+*   sync README version numbers with crate version ([5536361b](https://github.com/kbknapp/clap-rs/commit/5536361bcda29887ed86bb68e43d0b603cbc423f))
+
+#### Improvements
+
+*   args that have require_delimiter(true) is now reflected in help and usage strings ([dce61699](https://github.com/kbknapp/clap-rs/commit/dce616998ed9bd95e8ed3bec1f09a4883da47b85), closes [#1052](https://github.com/kbknapp/clap-rs/issues/1052))
+*   if all subcommands are hidden, the subcommands section of the help message is no longer displayed ([4ae7b046](https://github.com/kbknapp/clap-rs/commit/4ae7b0464750bc07ec80ece38e43f003fdd1b8ae), closes [#1046](https://github.com/kbknapp/clap-rs/issues/1046))
+
+#### Breaking Changes
+
+*   when an argument requires a value and that value happens to match a subcommand name, its parsed as a value ([0c223f54](https://github.com/kbknapp/clap-rs/commit/0c223f54ed46da406bc8b43a5806e0b227863b31), closes [#1031](https://github.com/kbknapp/clap-rs/issues/1031), breaks [#](https://github.com/kbknapp/clap-rs/issues/), [#](https://github.com/kbknapp/clap-rs/issues/))
+
+#### Deprecations
+
+* **AppSettings::PropagateGlobalValuesDown:**  this setting is no longer required to propagate values down or up ([2bb5ddce](https://github.com/kbknapp/clap-rs/commit/2bb5ddcee61c791ca1aaca494fbeb4bd5e277488))
+
+
+
+<a name="v2.26.2"></a>
+### v2.26.2 (2017-09-14)
+
+
+#### Improvements
+
+*   if all subcommands are hidden, the subcommands section of the help message is no longer displayed ([4ae7b046](https://github.com/kbknapp/clap-rs/commit/4ae7b0464750bc07ec80ece38e43f003fdd1b8ae), closes [#1046](https://github.com/kbknapp/clap-rs/issues/1046))
+
+#### Bug Fixes
+
+*   fixes a bug where default values are not applied if the option supports zero values ([9c248cbf](https://github.com/kbknapp/clap-rs/commit/9c248cbf7d8a825119bc387c23e9a1d1989682b0), closes [#1047](https://github.com/kbknapp/clap-rs/issues/1047))
+
+
+
+<a name="v2.26.1"></a>
+### v2.26.1 (2017-09-14)
+
+
+#### Bug Fixes
+
+*   fixes using require_equals(true) and min_values(0) together ([10ae208f](https://github.com/kbknapp/clap-rs/commit/10ae208f68518eff6e98166724065745f4083174), closes [#1044](https://github.com/kbknapp/clap-rs/issues/1044))
+*   escape special characters in zsh and fish completions ([87e019fc](https://github.com/kbknapp/clap-rs/commit/87e019fc84ba6193a8c4ddc26c61eb99efffcd25))
+*   avoid panic generating default help msg if term width set to 0 due to bug in textwrap 0.7.0 ([b3eadb0d](https://github.com/kbknapp/clap-rs/commit/b3eadb0de516106db4e08f078ad32e8f6d6e7a57))
+*   Change `who's` -> `whose` ([53c1ffe8](https://github.com/kbknapp/clap-rs/commit/53c1ffe87f38b05d8804a0f7832412a952845349))
+*   adds a debug assertion to ensure all args added to groups actually exist ([7ad123e2](https://github.com/kbknapp/clap-rs/commit/7ad123e2c02577e3ca30f7e205181e896b157d11), closes [#917](https://github.com/kbknapp/clap-rs/issues/917))
+*   fixes a bug where args that allow values to start with a hyphen couldnt contain a double hyphen -- as a value ([ab2f4c9e](https://github.com/kbknapp/clap-rs/commit/ab2f4c9e563e36ec739a4b55d5a5b76fdb9e9fa4), closes [#960](https://github.com/kbknapp/clap-rs/issues/960))
+*   fixes a bug where positional argument help text is misaligned ([54c16836](https://github.com/kbknapp/clap-rs/commit/54c16836dea4651806a2cfad53146a83fa3abf21))
+* **Help Message:**  fixes long_about not being usable ([a8257ea0](https://github.com/kbknapp/clap-rs/commit/a8257ea0ffb812e552aca256c4a3d2aebfd8065b), closes [#1043](https://github.com/kbknapp/clap-rs/issues/1043))
+* **Suggestions:**  output for flag after subcommand ([434ea5ba](https://github.com/kbknapp/clap-rs/commit/434ea5ba71395d8c1afcf88e69f0b0d8339b01a1))
+
+
+
+<a name="v2.26.0"></a>
+## v2.26.0 (2017-07-29)
+
+Minimum version of Rust is now v1.13.0 (Stable)
+
+
+#### Improvements
+
+*   bumps unicode-segmentation to v1.2 ([cd7b40a2](https://github.com/kbknapp/clap-rs/commit/cd7b40a21c77bae17ba453c5512cb82b7d1ce474))
+
+
+#### Performance
+
+*   update textwrap to version 0.7.0 ([c2d4e637](https://github.com/kbknapp/clap-rs/commit/c2d4e63756a6f070e38c16dff846e9b0a53d6f93))
+
+
+
+
+<a name="v2.25.1"></a>
+### v2.25.1 (2017-07-21)
+
+#### Improvements
+
+* impl Default for Values + OsValues for any lifetime. ([fb7d6231f1](https://github.com/kbknapp/clap-rs/commit/fb7d6231f13a2f79f411e62dca210b7dc9994c18))
+
+#### Documentation
+
+* Various documentation typos and grammar fixes
+
+<a name="v2.25.0"></a>
 ### v2.25.0 (2017-06-20)
 
 
@@ -21,7 +136,6 @@
 * **Arg::allow_hyphen_values:**  updates the docs to include warnings for allow_hyphen_values and multiple(true) used together ([f9b0d657](https://github.com/kbknapp/clap-rs/commit/f9b0d657835d3f517f313d70962177dc30acf4a7))
 * **README.md:**
   *  added a warning about using ~ deps ([821929b5](https://github.com/kbknapp/clap-rs/commit/821929b51bd60213955705900a436c9a64fcb79f), closes [#964](https://github.com/kbknapp/clap-rs/issues/964))
-  *  added a warning about using ~ deps ([667697b0](https://github.com/kbknapp/clap-rs/commit/667697b0018369b71da41d02d567ab57df0f4887))
 * **clap_app!:**  adds using the @group specifier to the macro docs ([826048cb](https://github.com/kbknapp/clap-rs/commit/826048cb3cbc0280169303f1498ff0a2b7395883), closes [#932](https://github.com/kbknapp/clap-rs/issues/932))
 
 

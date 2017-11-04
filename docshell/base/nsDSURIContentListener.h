@@ -10,9 +10,54 @@
 #include "nsCOMPtr.h"
 #include "nsIURIContentListener.h"
 #include "nsWeakReference.h"
+#include "nsITimer.h"
 
 class nsDocShell;
+class nsIInterfaceRequestor;
 class nsIWebNavigationInfo;
+class nsPIDOMWindowOuter;
+
+// Helper Class to eventually close an already openend window
+class MaybeCloseWindowHelper final
+  : public nsITimerCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITIMERCALLBACK
+
+  explicit MaybeCloseWindowHelper(nsIInterfaceRequestor* aContentContext);
+
+  /**
+   * Closes the provided window async (if mShouldCloseWindow is true)
+   * and returns its opener if the window was just openend.
+   */
+  nsIInterfaceRequestor* MaybeCloseWindow();
+
+  void SetShouldCloseWindow(bool aShouldCloseWindow);
+
+protected:
+  ~MaybeCloseWindowHelper();
+
+private:
+  /**
+   * The dom window associated to handle content.
+   */
+  nsCOMPtr<nsIInterfaceRequestor> mContentContext;
+
+  /**
+   * Used to close the window on a timer, to avoid any exceptions that are
+   * thrown if we try to close the window before it's fully loaded.
+   */
+  nsCOMPtr<nsPIDOMWindowOuter> mWindowToClose;
+  nsCOMPtr<nsITimer> mTimer;
+
+  /**
+   * This is set based on whether the channel indicates that a new window
+   * was opened, e.g. for a download, or was blocked. If so, then we
+   * close it.
+   */
+  bool mShouldCloseWindow;
+};
 
 class nsDSURIContentListener final
   : public nsIURIContentListener

@@ -34,31 +34,59 @@ extern "C" {
 #define AOM_BORDER_IN_PIXELS 160
 
 typedef struct yv12_buffer_config {
-  int y_width;
-  int y_height;
-  int y_crop_width;
-  int y_crop_height;
-  int y_stride;
-
-  int uv_width;
-  int uv_height;
-  int uv_crop_width;
-  int uv_crop_height;
-  int uv_stride;
-
-  int alpha_width;
-  int alpha_height;
-  int alpha_stride;
-
-  uint8_t *y_buffer;
-  uint8_t *u_buffer;
-  uint8_t *v_buffer;
-  uint8_t *alpha_buffer;
+  union {
+    struct {
+      int y_width;
+      int uv_width;
+      int alpha_width;
+    };
+    int widths[3];
+  };
+  union {
+    struct {
+      int y_height;
+      int uv_height;
+      int alpha_height;
+    };
+    int heights[3];
+  };
+  union {
+    struct {
+      int y_crop_width;
+      int uv_crop_width;
+    };
+    int crop_widths[2];
+  };
+  union {
+    struct {
+      int y_crop_height;
+      int uv_crop_height;
+    };
+    int crop_heights[2];
+  };
+  union {
+    struct {
+      int y_stride;
+      int uv_stride;
+      int alpha_stride;
+    };
+    int strides[3];
+  };
+  union {
+    struct {
+      uint8_t *y_buffer;
+      uint8_t *u_buffer;
+      uint8_t *v_buffer;
+      uint8_t *alpha_buffer;
+    };
+    uint8_t *buffers[4];
+  };
 
 #if CONFIG_HIGHBITDEPTH && CONFIG_GLOBAL_MOTION
   // If the frame is stored in a 16-bit buffer, this stores an 8-bit version
   // for use in global motion detection. It is allocated on-demand.
   uint8_t *y_buffer_8bit;
+  int buf_8bit_valid;
 #endif
 
   uint8_t *buffer_alloc;
@@ -69,10 +97,8 @@ typedef struct yv12_buffer_config {
   int subsampling_y;
   unsigned int bit_depth;
   aom_color_space_t color_space;
-#if CONFIG_COLORSPACE_HEADERS
   aom_transfer_function_t transfer_function;
   aom_chroma_sample_position_t chroma_sample_position;
-#endif
   aom_color_range_t color_range;
   int render_width;
   int render_height;

@@ -2538,20 +2538,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
     if (NS_SUCCEEDED(rv)) {
       // Debugging to see why we end up with very long strings here with
       // some addons, see bug 836263.
-      nsAutoString wdata;
-      if (!AppendUTF8toUTF16(utf8String, wdata, mozilla::fallible)) {
-#ifdef MOZ_CRASHREPORTER
-        nsCOMPtr<nsICrashReporter> cr =
-          do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-        if (cr) {
-          cr->AnnotateCrashReport(NS_LITERAL_CSTRING("bug836263-size"),
-                                  nsPrintfCString("%x", utf8String.Length()));
-          cr->RegisterAppMemory(uint64_t(utf8String.BeginReading()),
-                                std::min(0x1000U, utf8String.Length()));
-        }
-#endif
-        MOZ_CRASH("bug836263");
-      }
+      NS_ConvertUTF8toUTF16 wdata(utf8String);
       theString->SetData(wdata);
       theString.forget(reinterpret_cast<nsISupportsString**>(aRetVal));
     }
@@ -3168,7 +3155,7 @@ Preferences::HandleDirty()
       static const int PREF_DELAY_MS = 500;
       NS_DelayedDispatchToCurrentThread(
         mozilla::NewRunnableMethod("Preferences::SavePrefFileAsynchronous",
-                                   sPreferences,
+                                   sPreferences.get(),
                                    &Preferences::SavePrefFileAsynchronous),
         PREF_DELAY_MS);
     }
@@ -3211,9 +3198,7 @@ static const char kPrefFileHeader[] =
   NS_LINEBREAK;
 // clang-format on
 
-Preferences* Preferences::sPreferences = nullptr;
-nsIPrefBranch* Preferences::sRootBranch = nullptr;
-nsIPrefBranch* Preferences::sDefaultRootBranch = nullptr;
+StaticRefPtr<Preferences> Preferences::sPreferences;
 bool Preferences::sShutdown = false;
 
 // This globally enables or disables OMT pref writing, both sync and async.
@@ -3546,13 +3531,13 @@ Preferences::SizeOfIncludingThisAndOtherStuff(
     }
   }
 
-  if (sRootBranch) {
-    n += reinterpret_cast<nsPrefBranch*>(sRootBranch)
+  if (sPreferences->mRootBranch) {
+    n += static_cast<nsPrefBranch*>(sPreferences->mRootBranch.get())
            ->SizeOfIncludingThis(aMallocSizeOf);
   }
 
-  if (sDefaultRootBranch) {
-    n += reinterpret_cast<nsPrefBranch*>(sDefaultRootBranch)
+  if (sPreferences->mDefaultRootBranch) {
+    n += static_cast<nsPrefBranch*>(sPreferences->mDefaultRootBranch.get())
            ->SizeOfIncludingThis(aMallocSizeOf);
   }
 
@@ -3709,19 +3694,11 @@ Preferences::GetInstanceForService()
     return nullptr;
   }
 
-  sRootBranch = new nsPrefBranch("", false);
-  NS_ADDREF(sRootBranch);
-  sDefaultRootBranch = new nsPrefBranch("", true);
-  NS_ADDREF(sDefaultRootBranch);
-
   sPreferences = new Preferences();
-  NS_ADDREF(sPreferences);
-
   Result<Ok, const char*> res = sPreferences->Init();
   if (res.isErr()) {
-    // The singleton instance will delete sRootBranch and sDefaultRootBranch.
+    sPreferences = nullptr;
     gCacheDataDesc = res.unwrapErr();
-    NS_RELEASE(sPreferences);
     return nullptr;
   }
 
@@ -3766,13 +3743,7 @@ Preferences::Shutdown()
 {
   if (!sShutdown) {
     sShutdown = true; // Don't create the singleton instance after here.
-
-    // Don't set sPreferences to nullptr here. The instance may be grabbed by
-    // other modules. The utility methods of Preferences should be available
-    // until the singleton instance actually released.
-    if (sPreferences) {
-      sPreferences->Release();
-    }
+    sPreferences = nullptr;
   }
 }
 
@@ -3782,22 +3753,21 @@ Preferences::Shutdown()
 // Constructor/Destructor
 //
 
-Preferences::Preferences() = default;
+Preferences::Preferences()
+  : mRootBranch(new nsPrefBranch("", false))
+  , mDefaultRootBranch(new nsPrefBranch("", true))
+{
+}
 
 Preferences::~Preferences()
 {
-  NS_ASSERTION(sPreferences == this, "Isn't this the singleton instance?");
+  MOZ_ASSERT(!sPreferences);
 
   delete gObserverTable;
   gObserverTable = nullptr;
 
   delete gCacheData;
   gCacheData = nullptr;
-
-  NS_RELEASE(sRootBranch);
-  NS_RELEASE(sDefaultRootBranch);
-
-  sPreferences = nullptr;
 
   PREF_Cleanup();
 }
@@ -3872,7 +3842,6 @@ Preferences::Init()
   observerService->AddObserver(this, "profile-before-change-telemetry", true);
   rv = observerService->AddObserver(this, "profile-before-change", true);
 
-  observerService->AddObserver(this, "load-extension-defaults", true);
   observerService->AddObserver(this, "suspend_process_notification", true);
 
   if (NS_FAILED(rv)) {
@@ -3935,9 +3904,6 @@ Preferences::Observe(nsISupports* aSubject,
     SavePrefFileBlocking();
     MOZ_ASSERT(!mDirty, "Preferences should not be dirty");
     mProfileShutdown = true;
-
-  } else if (!strcmp(aTopic, "load-extension-defaults")) {
-    pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
 
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
     // Reload the default prefs from file.
@@ -4044,54 +4010,6 @@ Preferences::SavePrefFile(nsIFile* aFile)
   return SavePrefFileInternal(aFile, SaveMethod::Asynchronous);
 }
 
-static nsresult
-ReadExtensionPrefs(nsIFile* aFile)
-{
-  nsresult rv;
-  nsCOMPtr<nsIZipReader> reader = do_CreateInstance(kZipReaderCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = reader->Open(aFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIUTF8StringEnumerator> files;
-  rv = reader->FindEntries(
-    nsDependentCString("defaults/preferences/*.(J|j)(S|s)$"),
-    getter_AddRefs(files));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  char buffer[4096];
-
-  bool more;
-  while (NS_SUCCEEDED(rv = files->HasMore(&more)) && more) {
-    nsAutoCString entry;
-    rv = files->GetNext(entry);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIInputStream> stream;
-    rv = reader->GetInputStream(entry, getter_AddRefs(stream));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint64_t avail;
-    uint32_t read;
-
-    PrefParseState ps;
-    PREF_InitParseState(&ps, PREF_ReaderCallback, ReportToConsole, nullptr);
-    while (NS_SUCCEEDED(rv = stream->Available(&avail)) && avail) {
-      rv = stream->Read(buffer, 4096, &read);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Pref stream read failed");
-        break;
-      }
-
-      PREF_ParseBuf(&ps, buffer, read);
-    }
-    PREF_FinalizeParseState(&ps);
-  }
-
-  return rv;
-}
-
 void
 Preferences::SetPreference(const PrefSetting& aPref)
 {
@@ -4170,7 +4088,7 @@ Preferences::GetBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal)
     prefBranch.forget(aRetVal);
   } else {
     // Special case: caching the default root.
-    nsCOMPtr<nsIPrefBranch> root(sRootBranch);
+    nsCOMPtr<nsIPrefBranch> root(sPreferences->mRootBranch);
     root.forget(aRetVal);
   }
 
@@ -4181,7 +4099,7 @@ NS_IMETHODIMP
 Preferences::GetDefaultBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal)
 {
   if (!aPrefRoot || !aPrefRoot[0]) {
-    nsCOMPtr<nsIPrefBranch> root(sDefaultRootBranch);
+    nsCOMPtr<nsIPrefBranch> root(sPreferences->mDefaultRootBranch);
     root.forget(aRetVal);
     return NS_OK;
   }
@@ -4566,15 +4484,8 @@ pref_LoadPrefsInDirList(const char* aListId)
       continue;
     }
 
-    nsAutoCString leaf;
-    path->GetNativeLeafName(leaf);
-
     // Do we care if a file provided by this process fails to load?
-    if (Substring(leaf, leaf.Length() - 4).EqualsLiteral(".xpi")) {
-      ReadExtensionPrefs(path);
-    } else {
-      pref_LoadPrefsInDir(path, nullptr, 0);
-    }
+    pref_LoadPrefsInDir(path, nullptr, 0);
   }
 
   return NS_OK;
@@ -4790,10 +4701,6 @@ pref_InitInitialObjects()
   observerService->NotifyObservers(
     nullptr, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID, nullptr);
 
-  rv = pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
-  NS_ENSURE_SUCCESS(
-    rv, Err("pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST) failed"));
-
   return Ok();
 }
 
@@ -4865,7 +4772,7 @@ Preferences::GetLocalizedString(const char* aPref, nsAString& aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
-  nsresult rv = sRootBranch->GetComplexValue(
+  nsresult rv = sPreferences->mRootBranch->GetComplexValue(
     aPref, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
@@ -4878,7 +4785,7 @@ Preferences::GetLocalizedString(const char* aPref, nsAString& aResult)
 Preferences::GetComplex(const char* aPref, const nsIID& aType, void** aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sRootBranch->GetComplexValue(aPref, aType, aResult);
+  return sPreferences->mRootBranch->GetComplexValue(aPref, aType, aResult);
 }
 
 /* static */ nsresult
@@ -4941,7 +4848,7 @@ Preferences::SetComplex(const char* aPref,
                         nsISupports* aValue)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sRootBranch->SetComplexValue(aPref, aType, aValue);
+  return sPreferences->mRootBranch->SetComplexValue(aPref, aType, aValue);
 }
 
 /* static */ nsresult
@@ -4964,7 +4871,7 @@ Preferences::GetType(const char* aPref)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
   int32_t result;
-  return NS_SUCCEEDED(sRootBranch->GetPrefType(aPref, &result))
+  return NS_SUCCEEDED(sPreferences->mRootBranch->GetPrefType(aPref, &result))
            ? result
            : nsIPrefBranch::PREF_INVALID;
 }
@@ -4974,7 +4881,7 @@ Preferences::AddStrongObserver(nsIObserver* aObserver, const char* aPref)
 {
   MOZ_ASSERT(aObserver);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sRootBranch->AddObserver(aPref, aObserver, false);
+  return sPreferences->mRootBranch->AddObserver(aPref, aObserver, false);
 }
 
 /* static */ nsresult
@@ -4982,7 +4889,7 @@ Preferences::AddWeakObserver(nsIObserver* aObserver, const char* aPref)
 {
   MOZ_ASSERT(aObserver);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sRootBranch->AddObserver(aPref, aObserver, true);
+  return sPreferences->mRootBranch->AddObserver(aPref, aObserver, true);
 }
 
 /* static */ nsresult
@@ -4993,7 +4900,7 @@ Preferences::RemoveObserver(nsIObserver* aObserver, const char* aPref)
     return NS_OK; // Observers have been released automatically.
   }
   NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
-  return sRootBranch->RemoveObserver(aPref, aObserver);
+  return sPreferences->mRootBranch->RemoveObserver(aPref, aObserver);
 }
 
 /* static */ nsresult
@@ -5340,7 +5247,7 @@ Preferences::GetDefaultLocalizedString(const char* aPref, nsAString& aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
-  nsresult rv = sDefaultRootBranch->GetComplexValue(
+  nsresult rv = sPreferences->mDefaultRootBranch->GetComplexValue(
     aPref, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
@@ -5355,7 +5262,8 @@ Preferences::GetDefaultComplex(const char* aPref,
                                void** aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sDefaultRootBranch->GetComplexValue(aPref, aType, aResult);
+  return sPreferences->mDefaultRootBranch->GetComplexValue(
+    aPref, aType, aResult);
 }
 
 /* static */ int32_t
@@ -5363,7 +5271,8 @@ Preferences::GetDefaultType(const char* aPref)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
   int32_t result;
-  return NS_SUCCEEDED(sDefaultRootBranch->GetPrefType(aPref, &result))
+  return NS_SUCCEEDED(
+           sPreferences->mDefaultRootBranch->GetPrefType(aPref, &result))
            ? result
            : nsIPrefBranch::PREF_INVALID;
 }
@@ -5400,8 +5309,6 @@ static mozilla::Module::ContractIDEntry kPrefContracts[] = {
   { NS_PREFSERVICE_CONTRACTID, &kPrefServiceCID },
   { NS_PREFLOCALIZEDSTRING_CONTRACTID, &kPrefLocalizedStringCID },
   { NS_RELATIVEFILEPREF_CONTRACTID, &kRelativeFilePrefCID },
-  // compatibility for extension that uses old service
-  { "@mozilla.org/preferences;1", &kPrefServiceCID },
   { nullptr }
 };
 

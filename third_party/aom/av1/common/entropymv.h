@@ -66,6 +66,9 @@ typedef enum {
 #define CLASS0_BITS 1 /* bits at integer precision for class 0 */
 #define CLASS0_SIZE (1 << CLASS0_BITS)
 #define MV_OFFSET_BITS (MV_CLASSES + CLASS0_BITS - 2)
+#if CONFIG_NEW_MULTISYMBOL
+#define MV_BITS_CONTEXTS 6
+#endif
 #define MV_FP_SIZE 4
 
 #define MV_MAX_BITS (MV_CLASSES + CLASS0_BITS + 2)
@@ -97,6 +100,7 @@ typedef struct {
   aom_cdf_prob class0_hp_cdf[CDF_SIZE(2)];
   aom_cdf_prob hp_cdf[CDF_SIZE(2)];
   aom_cdf_prob class0_cdf[CDF_SIZE(CLASS0_SIZE)];
+  aom_cdf_prob bits_cdf[MV_BITS_CONTEXTS][CDF_SIZE(2)];
 #endif
 } nmv_component;
 
@@ -133,7 +137,7 @@ typedef struct {
 } nmv_context_counts;
 
 typedef enum {
-#if CONFIG_INTRABC
+#if CONFIG_INTRABC || CONFIG_AMVR
   MV_SUBPEL_NONE = -1,
 #endif
   MV_SUBPEL_LOW_PRECISION = 0,

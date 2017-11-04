@@ -12,12 +12,16 @@ use ffi;
 /// Raw in-memory compression stream for blocks of data.
 ///
 /// This type is the building block for the I/O streams in the rest of this
-/// crate. It requires more management than the `Read`/`Write` API but is
+/// crate. It requires more management than the [`Read`]/[`Write`] API but is
 /// maximally flexible in terms of accepting input from any source and being
 /// able to produce output to any memory location.
 ///
 /// It is recommended to use the I/O stream adaptors over this type as they're
 /// easier to use.
+///
+/// [`Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
+/// [`Write`]: https://doc.rust-lang.org/std/io/trait.Write.html
+#[derive(Debug)]
 pub struct Compress {
     inner: Stream<DirCompress>,
 }
@@ -25,16 +29,21 @@ pub struct Compress {
 /// Raw in-memory decompression stream for blocks of data.
 ///
 /// This type is the building block for the I/O streams in the rest of this
-/// crate. It requires more management than the `Read`/`Write` API but is
+/// crate. It requires more management than the [`Read`]/[`Write`] API but is
 /// maximally flexible in terms of accepting input from any source and being
 /// able to produce output to any memory location.
 ///
 /// It is recommended to use the I/O stream adaptors over this type as they're
 /// easier to use.
+///
+/// [`Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
+/// [`Write`]: https://doc.rust-lang.org/std/io/trait.Write.html
+#[derive(Debug)]
 pub struct Decompress {
     inner: Stream<DirDecompress>,
 }
 
+#[derive(Debug)]
 struct Stream<D: Direction> {
     stream_wrapper: ffi::StreamWrapper,
     total_in: u64,
@@ -49,11 +58,14 @@ trait Direction {
     unsafe fn destroy(stream: *mut ffi::mz_stream) -> c_int;
 }
 
+#[derive(Debug)]
 enum DirCompress {}
+#[derive(Debug)]
 enum DirDecompress {}
 
 /// Values which indicate the form of flushing to be used when compressing or
 /// decompressing in-memory data.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Flush {
     /// A typical parameter for passing to compression/decompression functions,
     /// this indicates that the underlying stream to decide how much data to
@@ -112,6 +124,7 @@ pub struct DataError(());
 
 /// Possible status results of compressing some data or successfully
 /// decompressing a block of data.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Status {
     /// Indicates success.
     ///
@@ -308,6 +321,12 @@ impl Decompress {
     ///
     /// To learn how much data was consumed or how much output was produced, use
     /// the `total_in` and `total_out` functions before/after this is called.
+    ///
+    /// # Errors
+    ///
+    /// If the input data to this instance of `Decompress` is not a valid
+    /// zlib/deflate stream then this function may return an instance of
+    /// `DataError` to indicate that the stream of input bytes is corrupted.
     pub fn decompress(&mut self,
                       input: &[u8],
                       output: &mut [u8],
@@ -346,6 +365,12 @@ impl Decompress {
     /// the vector provided or attempt to grow it, so space for the output must
     /// be reserved in the output vector by the caller before calling this
     /// function.
+    ///
+    /// # Errors
+    ///
+    /// If the input data to this instance of `Decompress` is not a valid
+    /// zlib/deflate stream then this function may return an instance of
+    /// `DataError` to indicate that the stream of input bytes is corrupted.
     pub fn decompress_vec(&mut self,
                           input: &[u8],
                           output: &mut Vec<u8>,

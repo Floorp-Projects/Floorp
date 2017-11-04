@@ -47,3 +47,8 @@ for flags_var in ('OS_CFLAGS', 'OS_CXXFLAGS'):
         f for f in COMPILE_FLAGS.get(flags_var, [])
         if not f.startswith('-fsanitize')
     ]
+
+LINK_FLAGS['OS'] = [
+    f for f in LINK_FLAGS.get('OS', [])
+    if not f.startswith('-fsanitize')
+]

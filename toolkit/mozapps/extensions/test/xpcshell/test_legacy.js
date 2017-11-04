@@ -43,12 +43,6 @@ add_task(async function test_disable() {
       multiprocessCompatible: true,
     },
     {
-      id: "langpack@tests.mozilla.org",
-      name: "Test Langpack",
-      version: "1.0",
-      type: "8",
-    },
-    {
       id: "dictionary@tests.mozilla.org",
       name: "Test Dictionary",
       version: "1.0",

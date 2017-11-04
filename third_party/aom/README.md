@@ -63,6 +63,35 @@ CMake built in variable `BUILD_SHARED_LIBS`:
 
 This is currently only supported on non-Windows targets.
 
+### Debugging
+
+Depending on the generator used there are multiple ways of going about
+debugging AV1 components. For single configuration generators like the Unix
+Makefiles generator, setting `CMAKE_BUILD_TYPE` to Debug is sufficient:
+
+~~~
+    $ cmake path/to/aom -DCMAKE_BUILD_TYPE=Debug
+~~~
+
+For Xcode, mainly because configuration controls for Xcode builds are buried two
+configuration windows deep and must be set for each subproject within the Xcode
+IDE individually, `CMAKE_CONFIGURATION_TYPES` should be set to Debug:
+
+~~~
+    $ cmake path/to/aom -G Xcode -DCMAKE_CONFIGURATION_TYPES=Debug
+~~~
+
+For Visual Studio the in-IDE configuration controls should be used. Simply set
+the IDE project configuration to Debug to allow for stepping through the code.
+
+In addition to the above it can sometimes be useful to debug only C and C++
+code. To disable all assembly code and intrinsics set `AOM_TARGET_CPU` to
+generic at generation time:
+
+~~~
+    $ cmake path/to/aom -DAOM_TARGET_CPU=generic
+~~~
+
 ### Cross compiling
 
 For the purposes of building the AV1 codec and applications and relative to the
@@ -81,7 +110,9 @@ The toolchain files available at the time of this writing are:
  - x86-ios-simulator.cmake
  - x86-linux.cmake
  - x86-macos.cmake
+ - x86-mingw-gcc.cmake
  - x86\_64-ios-simulator.cmake
+ - x86\_64-mingw-gcc.cmake
 
 The following example demonstrates use of the x86-macos.cmake toolchain file on
 a x86\_64 MacOS host:
@@ -108,6 +139,20 @@ and C++ sources can be produced using the following commands:
 In addition to the above it's important to note that the toolchain files
 suffixed with gcc behave differently than the others. These toolchain files
 attempt to obey the $CROSS environment variable.
+
+### Sanitizers
+
+Sanitizer integration is built-in to the CMake build system. To enable a
+sanitizer, add `-DSANITIZE=<type>` to the CMake command line. For example, to
+enable address sanitizer:
+
+~~~
+    $ cmake path/to/aom -DSANITIZE=address
+    $ make
+~~~
+
+Sanitizers available vary by platform, target, and compiler. Consult your
+compiler documentation to determine which, if any, are available.
 
 ### Microsoft Visual Studio builds
 
@@ -249,11 +294,8 @@ test jobs. Sharded test runs can be achieved in a couple of ways.
    # Set the environment variable GTEST_TOTAL_SHARDS to 9 to run 10 test shards
    # (GTEST shard indexing is 0 based).
    $ export GTEST_TOTAL_SHARDS=9
-   $ for shard in $(seq 0 ${GTEST_TOTAL_SHARDS}); do \
-       [ ${shard} -lt ${GTEST_TOTAL_SHARDS} ] \
-         && GTEST_SHARD_INDEX=${shard} ./test_libaom & \
-     done
-
+   $ seq 0 $(( $GTEST_TOTAL_SHARDS - 1 )) \
+       | xargs -n 1 -P 0 -I{} env GTEST_SHARD_INDEX={} ./test_libaom
 ~~~
 
 To create a test shard for each CPU core available on the current system set

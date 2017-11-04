@@ -31,6 +31,7 @@ typedef struct TxbInfo {
   int shift;
   TX_SIZE tx_size;
   TX_SIZE txs_ctx;
+  TX_TYPE tx_type;
   int bwl;
   int stride;
   int height;
@@ -39,20 +40,21 @@ typedef struct TxbInfo {
   const SCAN_ORDER *scan_order;
   TXB_CTX *txb_ctx;
   int64_t rdmult;
+  const LV_MAP_CTX_TABLE *coeff_ctx_table;
 } TxbInfo;
 
 typedef struct TxbCache {
   int nz_count_arr[MAX_TX_SQUARE];
-  int nz_ctx_arr[MAX_TX_SQUARE][2];
+  int nz_ctx_arr[MAX_TX_SQUARE];
   int base_count_arr[NUM_BASE_LEVELS][MAX_TX_SQUARE];
   int base_mag_arr[MAX_TX_SQUARE]
                   [2];  // [0]: max magnitude [1]: num of max magnitude
-  int base_ctx_arr[NUM_BASE_LEVELS][MAX_TX_SQUARE][2];  // [1]: not used
+  int base_ctx_arr[NUM_BASE_LEVELS][MAX_TX_SQUARE];
 
   int br_count_arr[MAX_TX_SQUARE];
   int br_mag_arr[MAX_TX_SQUARE]
                 [2];  // [0]: max magnitude [1]: num of max magnitude
-  int br_ctx_arr[MAX_TX_SQUARE][2];  // [1]: not used
+  int br_ctx_arr[MAX_TX_SQUARE];
 } TxbCache;
 
 typedef struct TxbProbs {
@@ -62,11 +64,14 @@ typedef struct TxbProbs {
   const aom_prob *coeff_lps;
   const aom_prob *eob_flag;
   const aom_prob *txb_skip;
+#if BR_NODE
+  const aom_prob *coeff_br;
+#endif
 } TxbProbs;
 
 void av1_alloc_txb_buf(AV1_COMP *cpi);
 void av1_free_txb_buf(AV1_COMP *cpi);
-int av1_cost_coeffs_txb(const AV1_COMP *const cpi, MACROBLOCK *x, int plane,
+int av1_cost_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCK *x, int plane,
                         int blk_row, int blk_col, int block, TX_SIZE tx_size,
                         TXB_CTX *txb_ctx);
 void av1_write_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCKD *xd,
@@ -90,6 +95,9 @@ void av1_update_and_record_txb_context(int plane, int block, int blk_row,
                                        int blk_col, BLOCK_SIZE plane_bsize,
                                        TX_SIZE tx_size, void *arg);
 
+void av1_set_coeff_buffer(const AV1_COMP *const cpi, MACROBLOCK *const x,
+                          int mi_row, int mi_col);
+
 #if CONFIG_TXK_SEL
 int64_t av1_search_txk_type(const AV1_COMP *cpi, MACROBLOCK *x, int plane,
                             int block, int blk_row, int blk_col,
@@ -99,7 +107,7 @@ int64_t av1_search_txk_type(const AV1_COMP *cpi, MACROBLOCK *x, int plane,
 #endif
 int av1_optimize_txb(const AV1_COMMON *cm, MACROBLOCK *x, int plane,
                      int blk_row, int blk_col, int block, TX_SIZE tx_size,
-                     TXB_CTX *txb_ctx);
+                     TXB_CTX *txb_ctx, int fast_mode);
 #ifdef __cplusplus
 }
 #endif

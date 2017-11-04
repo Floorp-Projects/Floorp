@@ -191,6 +191,13 @@ task_description_schema = Schema({
         'size': int,
     },
 
+    # The `always-target` attribute will cause the task to be included in the
+    # target_task_graph regardless of filtering. Tasks included in this manner
+    # will be candidates for optimization even when `optimize_target_tasks` is
+    # False, unless the task was also explicitly chosen by the target_tasks
+    # method.
+    Required('always-target', default=False): bool,
+
     # Optimization to perform on this task during the optimization phase.
     # Optimizations are defined in taskcluster/taskgraph/optimize.py.
     Required('optimization', default=None): Any(
@@ -1322,6 +1329,7 @@ def build_task(config, tasks):
 
         attributes = task.get('attributes', {})
         attributes['run_on_projects'] = task.get('run-on-projects', ['all'])
+        attributes['always_target'] = task['always-target']
 
         # Set MOZ_AUTOMATION on all jobs.
         if task['worker']['implementation'] in (

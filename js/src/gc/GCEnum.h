@@ -72,13 +72,14 @@ enum class AbortReason {
     D(Compact, 14)                     \
     D(CheckHeapAfterGC, 15)            \
     D(CheckNursery, 16)                \
-    D(IncrementalSweepThenFinish, 17)
+    D(IncrementalSweepThenFinish, 17)  \
+    D(CheckGrayMarking, 18)
 
 enum class ZealMode {
 #define ZEAL_MODE(name, value) name = value,
     JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
 #undef ZEAL_MODE
-    Limit = 17
+    Limit = 18
 };
 
 } /* namespace gc */

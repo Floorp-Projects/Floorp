@@ -12,6 +12,8 @@
 #ifndef AV1_ENCODER_FIRSTPASS_H_
 #define AV1_ENCODER_FIRSTPASS_H_
 
+#include "av1/common/enums.h"
+#include "av1/common/onyxc_int.h"
 #include "av1/encoder/lookahead.h"
 #include "av1/encoder/ratectrl.h"
 
@@ -45,19 +47,24 @@ typedef struct {
 // NOTE: Currently each BFG contains one backward ref (BWF) frame plus a certain
 //       number of bi-predictive frames.
 #define BFG_INTERVAL 2
-// The maximum number of extra ALT_REF's
-// NOTE: This number cannot be greater than 2 or the reference frame buffer will
-//       overflow.
-#define MAX_EXT_ARFS 2
-#define MIN_EXT_ARF_INTERVAL 4
-#endif  // CONFIG_EXT_REFS
+// The maximum number of extra ALTREF's except ALTREF_FRAME
+// NOTE: REF_FRAMES indicates the maximum number of frames that may be buffered
+//       to serve as references. Currently REF_FRAMES == 8.
+#define USE_GF16_MULTI_LAYER 0
 
-#if CONFIG_FLEX_REFS
+#if USE_GF16_MULTI_LAYER
+#define MAX_EXT_ARFS (REF_FRAMES - BWDREF_FRAME)
+#else  // !USE_GF16_MULTI_LAYER
+#define MAX_EXT_ARFS (REF_FRAMES - BWDREF_FRAME - 1)
+#endif  // USE_GF16_MULTI_LAYER
+
+#define MIN_EXT_ARF_INTERVAL 4
+
 #define MIN_ZERO_MOTION 0.95
 #define MAX_SR_CODED_ERROR 40
 #define MAX_RAW_ERR_VAR 2000
 #define MIN_MV_IN_OUT 0.4
-#endif  // CONFIG_FLEX_REFS
+#endif  // CONFIG_EXT_REFS
 
 #define VLOW_MOTION_THRESHOLD 950
 
@@ -84,10 +91,10 @@ typedef struct {
   double new_mv_count;
   double duration;
   double count;
-#if CONFIG_FLEX_REFS
+#if CONFIG_EXT_REFS || CONFIG_BGSPRITE
   // standard deviation for (0, 0) motion prediction error
   double raw_error_stdev;
-#endif  // CONFIG_FLEX_REFS
+#endif  // CONFIG_EXT_REFS
 } FIRSTPASS_STATS;
 
 typedef enum {
@@ -101,8 +108,9 @@ typedef enum {
   LAST_BIPRED_UPDATE = 6,    // Last Bi-predictive Frame
   BIPRED_UPDATE = 7,         // Bi-predictive Frame, but not the last one
   INTNL_OVERLAY_UPDATE = 8,  // Internal Overlay Frame
-  FRAME_UPDATE_TYPES = 9
-#else
+  INTNL_ARF_UPDATE = 9,      // Internal Altref Frame (candidate for ALTREF2)
+  FRAME_UPDATE_TYPES = 10
+#else   // !CONFIG_EXT_REFS
   FRAME_UPDATE_TYPES = 5
 #endif  // CONFIG_EXT_REFS
 } FRAME_UPDATE_TYPE;
@@ -124,6 +132,9 @@ typedef struct {
 #if CONFIG_EXT_REFS
   unsigned char brf_src_offset[(MAX_LAG_BUFFERS * 2) + 1];
   unsigned char bidir_pred_enabled[(MAX_LAG_BUFFERS * 2) + 1];
+  unsigned char ref_fb_idx_map[(MAX_LAG_BUFFERS * 2) + 1][REF_FRAMES];
+  unsigned char refresh_idx[(MAX_LAG_BUFFERS * 2) + 1];
+  unsigned char refresh_flag[(MAX_LAG_BUFFERS * 2) + 1];
 #endif  // CONFIG_EXT_REFS
   int bit_allocation[(MAX_LAG_BUFFERS * 2) + 1];
 } GF_GROUP;
@@ -183,12 +194,15 @@ void av1_end_first_pass(struct AV1_COMP *cpi);
 
 void av1_init_second_pass(struct AV1_COMP *cpi);
 void av1_rc_get_second_pass_params(struct AV1_COMP *cpi);
-void av1_twopass_postencode_update(struct AV1_COMP *cpi);
 
 // Post encode update of the rate control parameters for 2-pass
 void av1_twopass_postencode_update(struct AV1_COMP *cpi);
 
 #if CONFIG_EXT_REFS
+#if USE_GF16_MULTI_LAYER
+void av1_ref_frame_map_idx_updates(struct AV1_COMP *cpi, int gf_frame_index);
+#endif  // USE_GF16_MULTI_LAYER
+
 static INLINE int get_number_of_extra_arfs(int interval, int arf_pending) {
   if (arf_pending && MAX_EXT_ARFS > 0)
     return interval >= MIN_EXT_ARF_INTERVAL * (MAX_EXT_ARFS + 1)

@@ -143,13 +143,13 @@ const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
 const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
 const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
 
-// Map new string type identifiers to old style nsIUpdateItem types
-// Type 32 was previously used for multipackage xpi files so it should
-// not be re-used since old files with that type may be floating around.
+// Map new string type identifiers to old style nsIUpdateItem types.
+// Retired values:
+// 32 = multipackage xpi file
+// 8 = locale
 const TYPES = {
   extension: 2,
   theme: 4,
-  locale: 8,
   dictionary: 64,
   experiment: 128,
   apiextension: 256,
@@ -164,7 +164,6 @@ const RESTARTLESS_TYPES = new Set([
   "apiextension",
   "dictionary",
   "experiment",
-  "locale",
   "webextension",
   "webextension-theme",
 ]);

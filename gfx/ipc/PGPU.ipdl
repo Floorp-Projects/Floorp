@@ -80,6 +80,10 @@ parent:
   // one is available (i.e., Init has completed).
   sync GetDeviceStatus() returns (GPUDeviceData status);
 
+  // Request to simulate device reset and to get the updated DeviceStatus from
+  // the GPU process. This blocks until one is available (i.e., Init has completed).
+  sync SimulateDeviceReset() returns (GPUDeviceData status);
+
   // Have a message be broadcasted to the GPU process by the GPU process
   // observer service.
   async NotifyGpuObservers(nsCString aTopic);

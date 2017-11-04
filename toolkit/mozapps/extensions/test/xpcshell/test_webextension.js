@@ -6,8 +6,6 @@ Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 const ID = "webextension1@tests.mozilla.org";
 
-const PREF_SELECTED_LOCALE = "general.useragent.locale";
-
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
@@ -148,7 +146,7 @@ add_task(async function test_manifest_localization() {
   equal(addon.name, "Web Extensiøn foo ☹");
   equal(addon.description, "Descriptïon bar ☹ of add-on");
 
-  Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "fr-FR");
+  Services.locale.setRequestedLocales(["fr-FR"]);
   await promiseRestartManager();
 
   addon = await promiseAddonByID(extensionId);
@@ -156,7 +154,7 @@ add_task(async function test_manifest_localization() {
   equal(addon.name, "Web Extensiøn le foo ☺");
   equal(addon.description, "Descriptïon le bar ☺ of add-on");
 
-  Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "de");
+  Services.locale.setRequestedLocales(["de"]);
   await promiseRestartManager();
 
   addon = await promiseAddonByID(extensionId);

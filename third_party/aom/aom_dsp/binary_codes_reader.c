@@ -53,6 +53,15 @@ uint16_t aom_read_primitive_quniform_(aom_reader *r,
   return v < m ? v : (v << 1) - m + aom_read_bit(r, ACCT_STR_NAME);
 }
 
+static uint16_t aom_rb_read_primitive_quniform(struct aom_read_bit_buffer *rb,
+                                               uint16_t n) {
+  if (n <= 1) return 0;
+  const int l = get_msb(n - 1) + 1;
+  const int m = (1 << l) - n;
+  const int v = aom_rb_read_literal(rb, l - 1);
+  return v < m ? v : (v << 1) - m + aom_rb_read_bit(rb);
+}
+
 uint16_t aom_read_primitive_refbilevel_(aom_reader *r, uint16_t n, uint16_t p,
                                         uint16_t ref ACCT_STR_PARAM) {
   if (n <= 1) return 0;
@@ -101,13 +110,40 @@ uint16_t aom_read_primitive_subexpfin_(aom_reader *r, uint16_t n,
   return v;
 }
 
-// Decode finite subexponential code that for a symbol v in [0, n-1] with
-// parameter k
-// based on a reference ref also in [0, n-1].
+static uint16_t aom_rb_read_primitive_subexpfin(struct aom_read_bit_buffer *rb,
+                                                uint16_t n, uint16_t k) {
+  int i = 0;
+  int mk = 0;
+  uint16_t v;
+  while (1) {
+    int b = (i ? k + i - 1 : k);
+    int a = (1 << b);
+    if (n <= mk + 3 * a) {
+      v = aom_rb_read_primitive_quniform(rb, n - mk) + mk;
+      break;
+    } else {
+      if (aom_rb_read_bit(rb)) {
+        i = i + 1;
+        mk += a;
+      } else {
+        v = aom_rb_read_literal(rb, b) + mk;
+        break;
+      }
+    }
+  }
+  return v;
+}
+
 uint16_t aom_read_primitive_refsubexpfin_(aom_reader *r, uint16_t n, uint16_t k,
                                           uint16_t ref ACCT_STR_PARAM) {
   return inv_recenter_finite_nonneg(
       n, ref, aom_read_primitive_subexpfin(r, n, k, ACCT_STR_NAME));
+}
+
+static uint16_t aom_rb_read_primitive_refsubexpfin(
+    struct aom_read_bit_buffer *rb, uint16_t n, uint16_t k, uint16_t ref) {
+  return inv_recenter_finite_nonneg(n, ref,
+                                    aom_rb_read_primitive_subexpfin(rb, n, k));
 }
 
 // Decode finite subexponential code that for a symbol v in [-(n-1), n-1] with
@@ -119,4 +155,11 @@ int16_t aom_read_signed_primitive_refsubexpfin_(aom_reader *r, uint16_t n,
   const uint16_t scaled_n = (n << 1) - 1;
   return aom_read_primitive_refsubexpfin(r, scaled_n, k, ref, ACCT_STR_NAME) -
          n + 1;
+}
+
+int16_t aom_rb_read_signed_primitive_refsubexpfin(
+    struct aom_read_bit_buffer *rb, uint16_t n, uint16_t k, int16_t ref) {
+  ref += n - 1;
+  const uint16_t scaled_n = (n << 1) - 1;
+  return aom_rb_read_primitive_refsubexpfin(rb, scaled_n, k, ref) - n + 1;
 }

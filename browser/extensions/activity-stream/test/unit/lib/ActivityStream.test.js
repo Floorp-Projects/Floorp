@@ -13,7 +13,6 @@ describe("ActivityStream", () => {
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     ({ActivityStream, PREFS_CONFIG} = injector({
-      "lib/LocalizationFeed.jsm": {LocalizationFeed: Fake},
       "lib/ManualMigration.jsm": {ManualMigration: Fake},
       "lib/NewTabInit.jsm": {NewTabInit: Fake},
       "lib/PlacesFeed.jsm": {PlacesFeed: Fake},
@@ -100,10 +99,6 @@ describe("ActivityStream", () => {
     });
   });
   describe("feeds", () => {
-    it("should create a Localization feed", () => {
-      const feed = as.feeds.get("feeds.localization")();
-      assert.instanceOf(feed, Fake);
-    });
     it("should create a NewTabInit feed", () => {
       const feed = as.feeds.get("feeds.newtabinit")();
       assert.instanceOf(feed, Fake);

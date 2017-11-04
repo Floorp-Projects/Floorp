@@ -47,15 +47,49 @@ static INLINE ConvolveParams get_conv_params(int ref, int do_average,
   conv_params.do_post_rounding = 0;
   return conv_params;
 }
+
+#if CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
+static INLINE void av1_convolve_filter_params_fixup_1212(
+    const InterpFilterParams *params_x, InterpFilterParams *params_y) {
+  if (params_x->interp_filter == MULTITAP_SHARP &&
+      params_y->interp_filter == MULTITAP_SHARP) {
+    // Avoid two directions both using 12-tap filter.
+    // This will reduce hardware implementation cost.
+    *params_y = av1_get_interp_filter_params(EIGHTTAP_SHARP);
+  }
+}
+#endif
+
+static INLINE void av1_get_convolve_filter_params(
+    InterpFilters interp_filters, int avoid_1212, InterpFilterParams *params_x,
+    InterpFilterParams *params_y) {
+#if CONFIG_DUAL_FILTER
+  InterpFilter filter_x = av1_extract_interp_filter(interp_filters, 1);
+  InterpFilter filter_y = av1_extract_interp_filter(interp_filters, 0);
+#else
+  InterpFilter filter_x = av1_extract_interp_filter(interp_filters, 0);
+  InterpFilter filter_y = av1_extract_interp_filter(interp_filters, 0);
+#endif
+
+  *params_x = av1_get_interp_filter_params(filter_x);
+  *params_y = av1_get_interp_filter_params(filter_y);
+
+  if (avoid_1212) {
+#if CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
+    convolve_filter_params_fixup_1212(params_x, params_y);
+#endif
+  }
+}
+
 struct AV1Common;
 void av1_convolve_init(struct AV1Common *cm);
+
 #if CONFIG_CONVOLVE_ROUND
 void av1_convolve_2d_facade(const uint8_t *src, int src_stride, uint8_t *dst,
                             int dst_stride, int w, int h,
-                            const InterpFilter *interp_filter,
-                            const int subpel_x_q4, int x_step_q4,
-                            const int subpel_y_q4, int y_step_q4,
-                            ConvolveParams *conv_params);
+                            InterpFilters interp_filters, const int subpel_x_q4,
+                            int x_step_q4, const int subpel_y_q4, int y_step_q4,
+                            int scaled, ConvolveParams *conv_params);
 
 static INLINE ConvolveParams get_conv_params_no_round(int ref, int do_average,
                                                       int plane, int32_t *dst,
@@ -80,63 +114,42 @@ static INLINE ConvolveParams get_conv_params_no_round(int ref, int do_average,
 #if CONFIG_HIGHBITDEPTH
 void av1_highbd_convolve_2d_facade(const uint8_t *src8, int src_stride,
                                    uint8_t *dst, int dst_stride, int w, int h,
-                                   const InterpFilter *interp_filter,
+                                   InterpFilters interp_filters,
                                    const int subpel_x_q4, int x_step_q4,
                                    const int subpel_y_q4, int y_step_q4,
-                                   ConvolveParams *conv_params, int bd);
+                                   int scaled, ConvolveParams *conv_params,
+                                   int bd);
 #endif
 #endif  // CONFIG_CONVOLVE_ROUND
 
 void av1_convolve(const uint8_t *src, int src_stride, uint8_t *dst,
-                  int dst_stride, int w, int h,
-#if CONFIG_DUAL_FILTER
-                  const InterpFilter *interp_filter,
-#else
-                  const InterpFilter interp_filter,
-#endif
+                  int dst_stride, int w, int h, InterpFilters interp_filters,
                   const int subpel_x, int xstep, const int subpel_y, int ystep,
                   ConvolveParams *conv_params);
 
 void av1_convolve_c(const uint8_t *src, int src_stride, uint8_t *dst,
-                    int dst_stride, int w, int h,
-#if CONFIG_DUAL_FILTER
-                    const InterpFilter *interp_filter,
-#else
-                    const InterpFilter interp_filter,
-#endif
+                    int dst_stride, int w, int h, InterpFilters interp_filters,
                     const int subpel_x, int xstep, const int subpel_y,
                     int ystep, ConvolveParams *conv_params);
 
 void av1_convolve_scale(const uint8_t *src, int src_stride, uint8_t *dst,
                         int dst_stride, int w, int h,
-#if CONFIG_DUAL_FILTER
-                        const InterpFilter *interp_filter,
-#else
-                        const InterpFilter interp_filter,
-#endif
-                        const int subpel_x, int xstep, const int subpel_y,
-                        int ystep, ConvolveParams *conv_params);
+                        InterpFilters interp_filters, const int subpel_x,
+                        int xstep, const int subpel_y, int ystep,
+                        ConvolveParams *conv_params);
 
 #if CONFIG_HIGHBITDEPTH
 void av1_highbd_convolve(const uint8_t *src, int src_stride, uint8_t *dst,
                          int dst_stride, int w, int h,
-#if CONFIG_DUAL_FILTER
-                         const InterpFilter *interp_filter,
-#else
-                         const InterpFilter interp_filter,
-#endif
-                         const int subpel_x, int xstep, const int subpel_y,
-                         int ystep, int avg, int bd);
+                         InterpFilters interp_filters, const int subpel_x,
+                         int xstep, const int subpel_y, int ystep, int avg,
+                         int bd);
 
 void av1_highbd_convolve_scale(const uint8_t *src, int src_stride, uint8_t *dst,
                                int dst_stride, int w, int h,
-#if CONFIG_DUAL_FILTER
-                               const InterpFilter *interp_filter,
-#else
-                               const InterpFilter interp_filter,
-#endif  // CONFIG_DUAL_FILTER
-                               const int subpel_x, int xstep,
-                               const int subpel_y, int ystep, int avg, int bd);
+                               InterpFilters interp_filters, const int subpel_x,
+                               int xstep, const int subpel_y, int ystep,
+                               int avg, int bd);
 #endif  // CONFIG_HIGHBITDEPTH
 
 #ifdef __cplusplus

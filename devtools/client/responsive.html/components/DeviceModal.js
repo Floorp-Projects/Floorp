@@ -162,7 +162,7 @@ module.exports = createClass({
           devices.types.map(type => {
             return dom.div(
               {
-                className: "device-type",
+                className: `device-type device-type-${type}`,
                 key: type,
               },
               dom.header(

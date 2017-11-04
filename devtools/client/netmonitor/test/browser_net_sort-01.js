@@ -62,13 +62,13 @@ add_task(function* () {
     "The network details panel should be visible after toggle button was pressed.");
 
   testHeaders();
-  testContents([0, 2, 4, 3, 1], 0);
+  yield testContents([0, 2, 4, 3, 1], 0);
 
   info("Testing status sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-status-button"));
   testHeaders("status", "ascending");
-  testContents([0, 1, 2, 3, 4], 0);
+  yield testContents([0, 1, 2, 3, 4], 0);
 
   info("Performing more requests.");
   wait = waitForNetworkEvents(monitor, 5);
@@ -77,13 +77,13 @@ add_task(function* () {
 
   info("Testing status sort again, ascending.");
   testHeaders("status", "ascending");
-  testContents([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 0);
+  yield testContents([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 0);
 
   info("Testing status sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-status-button"));
   testHeaders("status", "descending");
-  testContents([9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 9);
+  yield testContents([9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 9);
 
   info("Performing more requests.");
   wait = waitForNetworkEvents(monitor, 5);
@@ -92,19 +92,19 @@ add_task(function* () {
 
   info("Testing status sort again, descending.");
   testHeaders("status", "descending");
-  testContents([14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 14);
+  yield testContents([14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 14);
 
   info("Testing status sort yet again, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-status-button"));
   testHeaders("status", "ascending");
-  testContents([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], 0);
+  yield testContents([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], 0);
 
   info("Testing status sort yet again, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-status-button"));
   testHeaders("status", "descending");
-  testContents([14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 14);
+  yield testContents([14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 14);
 
   return teardown(monitor);
 
@@ -141,7 +141,7 @@ add_task(function* () {
     return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
   }
 
-  function testContents(order, selection) {
+  function* testContents(order, selection) {
     isnot(getSelectedRequest(store.getState()), undefined,
       "There should still be a selected item after sorting.");
     is(getSelectedIndex(store.getState()), selection,
@@ -155,6 +155,14 @@ add_task(function* () {
       "There should be a specific number of visbile items in the requests menu.");
     is(document.querySelectorAll(".request-list-item").length, order.length,
       "The visible items in the requests menu are, in fact, visible!");
+
+    let requestItems = document.querySelectorAll(".request-list-item");
+    for (let requestItem of requestItems) {
+      requestItem.scrollIntoView();
+      let requestsListStatus = requestItem.querySelector(".requests-list-status");
+      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+      yield waitUntil(() => requestsListStatus.title);
+    }
 
     for (let i = 0, len = order.length / 5; i < len; i++) {
       verifyRequestItemTarget(

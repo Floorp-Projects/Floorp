@@ -67,6 +67,7 @@ const APP_SEARCH_PREFIX = "resource://search-plugins/";
 
 // See documentation in nsIBrowserSearchService.idl.
 const SEARCH_ENGINE_TOPIC        = "browser-search-engine-modified";
+const REQ_LOCALES_CHANGED_TOPIC  = "intl:requested-locales-changed";
 const QUIT_APPLICATION_TOPIC     = "quit-application";
 
 const SEARCH_ENGINE_REMOVED      = "engine-removed";
@@ -137,7 +138,6 @@ const URLTYPE_SEARCH_HTML  = "text/html";
 const URLTYPE_OPENSEARCH   = "application/opensearchdescription+xml";
 
 const BROWSER_SEARCH_PREF = "browser.search.";
-const LOCALE_PREF = "general.useragent.locale";
 
 const USER_DEFINED = "searchTerms";
 
@@ -2290,7 +2290,7 @@ Engine.prototype = {
     // we'll accept as a 'default' engine anything that has been registered at
     // resource://search-plugins/ even if the file doesn't come from the
     // application folder.  If not, skip costly additional checks.
-    if (!Services.prefs.prefHasUserValue(LOCALE_PREF) &&
+    if (Services.locale.defaultLocale !== Services.locale.getRequestedLocale() &&
         !gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR"))
       return false;
 
@@ -4666,13 +4666,11 @@ SearchService.prototype = {
         this._removeObservers();
         break;
 
-      case "nsPref:changed":
-        if (aVerb == LOCALE_PREF) {
-          // Locale changed. Re-init. We rely on observers, because we can't
-          // return this promise to anyone.
-          this._asyncReInit();
-          break;
-        }
+      case REQ_LOCALES_CHANGED_TOPIC:
+        // Locale changed. Re-init. We rely on observers, because we can't
+        // return this promise to anyone.
+        this._asyncReInit();
+        break;
     }
   },
 
@@ -4727,7 +4725,7 @@ SearchService.prototype = {
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC);
 
     if (AppConstants.MOZ_BUILD_APP == "mobile/android") {
-      Services.prefs.addObserver(LOCALE_PREF, this);
+      Services.obs.addObserver(this, REQ_LOCALES_CHANGED_TOPIC);
     }
 
     // The current stage of shutdown. Used to help analyze crash
@@ -4772,7 +4770,7 @@ SearchService.prototype = {
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
 
     if (AppConstants.MOZ_BUILD_APP == "mobile/android") {
-      Services.prefs.removeObserver(LOCALE_PREF, this);
+      Services.obs.removeObserver(this, REQ_LOCALES_CHANGED_TOPIC);
     }
   },
 

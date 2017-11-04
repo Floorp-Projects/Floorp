@@ -31,6 +31,7 @@ describe("Top Sites Feed", () => {
   let fakeScreenshot;
   let filterAdultStub;
   let shortURLStub;
+  let fakePageThumbs;
 
   beforeEach(() => {
     globals = new GlobalOverrider();
@@ -63,6 +64,11 @@ describe("Top Sites Feed", () => {
     filterAdultStub = sinon.stub().returns([]);
     shortURLStub = sinon.stub().callsFake(site => site.url);
     const fakeDedupe = function() {};
+    fakePageThumbs = {
+      addExpirationFilter: sinon.stub(),
+      removeExpirationFilter: sinon.stub()
+    };
+    globals.set("PageThumbs", fakePageThumbs);
     globals.set("NewTabUtils", fakeNewTabUtils);
     FakePrefs.prototype.prefs["default.sites"] = "https://foo.com/";
     ({TopSitesFeed, DEFAULT_TOP_SITES} = injector({
@@ -126,6 +132,18 @@ describe("Top Sites Feed", () => {
       feed.refreshDefaults("");
 
       assert.equal(DEFAULT_TOP_SITES.length, 0);
+    });
+  });
+  describe("#filterForThumbnailExpiration", () => {
+    it("should pass rows.urls to the callback provided", () => {
+      const rows = [{url: "foo.com"}, {"url": "bar.com"}];
+      feed.store.state.TopSites = {rows};
+      const stub = sinon.stub();
+
+      feed.filterForThumbnailExpiration(stub);
+
+      assert.calledOnce(stub);
+      assert.calledWithExactly(stub, rows.map(r => r.url));
     });
   });
   describe("#getLinksWithDefaults", () => {
@@ -561,6 +579,11 @@ describe("Top Sites Feed", () => {
       feed.onAction(addAction);
       assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, addAction.data.site, 0);
+    });
+    it("should remove the expiration filter on UNINIT", () => {
+      feed.onAction({type: "UNINIT"});
+
+      assert.calledOnce(fakePageThumbs.removeExpirationFilter);
     });
   });
   describe("#add", () => {

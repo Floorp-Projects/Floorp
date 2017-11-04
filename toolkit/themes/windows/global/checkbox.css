@@ -20,7 +20,7 @@ checkbox {
   padding-inline-end: 2px;
 }
 
-.checkbox-icon {
+.checkbox-icon[src] {
   margin-inline-end: 2px;
 }
 

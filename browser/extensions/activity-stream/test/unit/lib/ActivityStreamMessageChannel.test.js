@@ -90,12 +90,14 @@ describe("ActivityStreamMessageChannel", () => {
         RPmessagePorts.push({
           url: "about:monkeys",
           loaded: false,
-          portID: "inited"
+          portID: "inited",
+          simulated: true
         });
         RPmessagePorts.push({
           url: "about:sheep",
           loaded: true,
-          portID: "loaded"
+          portID: "loaded",
+          simulated: true
         });
 
         mm.simulateMessagesForExistingTabs();

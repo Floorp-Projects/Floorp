@@ -14,7 +14,7 @@
 :root {
   --titlebar-text-color: currentColor;
 
-  --tabs-border: threedshadow;
+  --tabs-border-color: threedshadow;
   --tab-line-color: highlight;
 
   --toolbar-non-lwt-bgcolor: -moz-dialog;
@@ -39,7 +39,7 @@
 
 @media (-moz-windows-default-theme) {
   :root {
-    --tabs-border: rgba(0,0,0,.3);
+    --tabs-border-color: rgba(0,0,0,.3);
     --tab-line-color: #0a84ff;
 
     --toolbar-non-lwt-bgcolor: #f9f9fa;
@@ -55,7 +55,7 @@
 }
 
 :root:-moz-lwtheme {
-  --tabs-border: rgba(0,0,0,.3);
+  --tabs-border-color: rgba(0,0,0,.3);
 
   --toolbar-bgcolor: rgba(255,255,255,.4);
   --toolbar-bgimage: none;
@@ -114,7 +114,7 @@
 @media (-moz-os-version: windows-win7) {
   @media (-moz-windows-default-theme) {
     :root:not(:-moz-lwtheme) {
-      --tabs-border: @glassShadowColor@;
+      --tabs-border-color: @glassShadowColor@;
     }
 
     #TabsToolbar:not(:-moz-lwtheme) {
@@ -131,20 +131,20 @@
      * show the tabs toolbar background color inside tabs. */
     .tabbrowser-tab:not(:-moz-lwtheme) {
       background-color: hsl(235,33%,19%) !important;
-      border-top: 1px solid var(--tabs-border);
+      border-top: 1px solid var(--tabs-border-color);
       background-clip: padding-box;
     }
 
     /* The top border on top of the tab background is replaced
-     * by the slightly transparent outside tabs-border. */
+     * by the slightly transparent outside tabs-border-color. */
     .tab-background:not(:-moz-lwtheme) {
       border-top-style: none !important;
     }
 
     /* The border at the end of the tab strip is replaced
-     * by the slightly transparent outside tabs-border. */
+     * by the slightly transparent outside tabs-border-color. */
     .tabbrowser-tab[last-visible-tab]:not(:-moz-lwtheme) {
-      border-inline-end: 1px solid var(--tabs-border);
+      border-inline-end: 1px solid var(--tabs-border-color);
     }
 
     .tabbrowser-tab[last-visible-tab]:not(:-moz-lwtheme)::after {
@@ -258,7 +258,7 @@
 }
 
 #nav-bar {
-  box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border);
+  box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border-color);
 }
 @media (-moz-windows-compositor: 0) {
   #TabsToolbar[collapsed="true"] + #nav-bar {
@@ -966,7 +966,11 @@ notification[value="translation"] {
 
   notification[value="translation"] button[type="menu"] > .button-box > .button-menu-dropmarker,
   notification[value="translation"] menulist > .menulist-dropmarker {
-    list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow.png");
+    list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+  }
+  notification[value="translation"] menulist > .menulist-dropmarker > .dropmarker-icon {
+    width: 11px;
+    height: 11px;
   }
 
   notification[value="translation"] button > .button-box,

@@ -28,7 +28,5 @@ add_task(async function() {
   for (let toolbar of customizableToolbars) {
     ok(!toolbar.hasAttribute("customizing"), "Toolbar " + toolbar.id + " is no longer customizing");
   }
-  let menuitem = document.getElementById("PanelUI-customize");
-  isnot(menuitem.getAttribute("label"), menuitem.getAttribute("exitLabel"), "Should have exited successfully");
 });
 

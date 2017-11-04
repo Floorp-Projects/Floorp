@@ -55,14 +55,12 @@ function asyncInit() {
 }
 
 function asyncReInit() {
-  const kLocalePref = "general.useragent.locale";
-
   let promise = new Promise(resolve => {
     waitForSearchNotification("reinit-complete", resolve);
   });
 
   Services.search.QueryInterface(Ci.nsIObserver)
-          .observe(null, "nsPref:changed", kLocalePref);
+          .observe(null, "intl:requested-locales-changed", null);
 
   return promise;
 }
