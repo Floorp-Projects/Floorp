@@ -104,7 +104,7 @@ function withNewDialogFrame(requestId, taskFn) {
     await spawnPaymentDialogTask(paymentRequestFrame, async function ensureLoaded() {
       await ContentTaskUtils.waitForCondition(() => content.document.readyState == "complete",
                                               "Waiting for the unprivileged frame to load");
-    })
+    });
     await taskFn(paymentRequestFrame);
   }
 
