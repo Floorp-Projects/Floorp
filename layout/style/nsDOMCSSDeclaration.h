@@ -49,7 +49,8 @@ public:
   // Require subclasses to implement |GetParentRule|.
   //NS_DECL_NSIDOMCSSSTYLEDECLARATION
   NS_IMETHOD GetCssText(nsAString & aCssText) override;
-  NS_IMETHOD SetCssText(const nsAString & aCssText) override;
+  NS_IMETHOD SetCssText(const nsAString & aCssText,
+                        nsIPrincipal* aSubjectPrincipal) override;
   NS_IMETHOD GetPropertyValue(const nsAString & propertyName,
                               nsAString & _retval) override;
   virtual already_AddRefed<mozilla::dom::CSSValue>
@@ -60,8 +61,10 @@ public:
                             nsAString & _retval) override;
   NS_IMETHOD GetPropertyPriority(const nsAString & propertyName,
                                  nsAString & _retval) override;
-  NS_IMETHOD SetProperty(const nsAString & propertyName,
-                         const nsAString & value, const nsAString & priority) override;
+  NS_IMETHOD SetProperty(const nsAString& propertyName,
+                         const nsAString& value,
+                         const nsAString& priority,
+                         nsIPrincipal* aSubjectPrincipal) override;
   NS_IMETHOD GetLength(uint32_t *aLength) override;
   NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) override = 0;
 
@@ -70,15 +73,17 @@ public:
 #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,          \
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)      \
   void                                                                       \
-  Get##method_(nsAString& aValue, mozilla::ErrorResult& rv)                  \
+  Get##method_(nsAString& aValue, nsIPrincipal& aSubjectPrincipal,           \
+               mozilla::ErrorResult& rv)                                     \
   {                                                                          \
     rv = GetPropertyValue(eCSSProperty_##id_, aValue);                       \
   }                                                                          \
                                                                              \
   void                                                                       \
-  Set##method_(const nsAString& aValue, mozilla::ErrorResult& rv)            \
+  Set##method_(const nsAString& aValue, nsIPrincipal& aSubjectPrincipal,     \
+               mozilla::ErrorResult& rv)                                     \
   {                                                                          \
-    rv = SetPropertyValue(eCSSProperty_##id_, aValue);                       \
+    rv = SetPropertyValue(eCSSProperty_##id_, aValue, &aSubjectPrincipal);   \
   }
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
@@ -187,11 +192,13 @@ protected:
 
   nsresult ParsePropertyValue(const nsCSSPropertyID aPropID,
                               const nsAString& aPropValue,
-                              bool aIsImportant);
+                              bool aIsImportant,
+                              nsIPrincipal* aSubjectPrincipal);
 
   nsresult ParseCustomPropertyValue(const nsAString& aPropertyName,
                                     const nsAString& aPropValue,
-                                    bool aIsImportant);
+                                    bool aIsImportant,
+                                    nsIPrincipal* aSubjectPrincipal);
 
   nsresult RemovePropertyInternal(nsCSSPropertyID aPropID);
   nsresult RemovePropertyInternal(const nsAString& aProperty);
