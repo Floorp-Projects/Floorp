@@ -171,7 +171,9 @@ PrintTargetEMF::ConvertToEMFDone(const nsresult& aResult,
   mPDFFileForOnePage->Remove(/* aRecursive */ false);
   mPDFFileForOnePage = nullptr;
 
-  // TBD: We should call RemotePrintJobChild::SendPageProcessed here.
+  if (mPageDoneCallback) {
+    mPageDoneCallback(aResult);
+  }
 }
 
 } // namespace gfx
