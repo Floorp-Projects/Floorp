@@ -800,8 +800,13 @@ WebRenderBridgeParent::RecvAddPipelineIdForCompositable(const wr::PipelineId& aP
   if (!host) {
     return IPC_FAIL_NO_REASON(this);
   }
-  MOZ_ASSERT(host->AsWebRenderImageHost());
+
   WebRenderImageHost* wrHost = host->AsWebRenderImageHost();
+  MOZ_ASSERT(wrHost);
+  if (!wrHost) {
+    gfxCriticalNote << "Incompatible CompositableHost at WebRenderBridgeParent.";
+  }
+
   if (!wrHost) {
     return IPC_OK();
   }
@@ -843,6 +848,12 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const ExternalImage
 
   RefPtr<CompositableHost> host = FindCompositable(aHandle);
   WebRenderImageHost* wrHost = host->AsWebRenderImageHost();
+
+  MOZ_ASSERT(wrHost);
+  if (!wrHost) {
+    gfxCriticalNote << "Incompatible CompositableHost for external image at WebRenderBridgeParent.";
+  }
+
   if (!wrHost) {
     return IPC_OK();
   }

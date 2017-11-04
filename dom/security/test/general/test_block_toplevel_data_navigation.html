@@ -21,16 +21,12 @@ function test1() {
   // simple data: URI click navigation should be prevented
   let TEST_FILE = "file_block_toplevel_data_navigation.html";
   let win1 = window.open(TEST_FILE);
-  var readyStateCheckInterval = setInterval(function() {
-    let state = win1.document.readyState;
-    if (state === "interactive" || state === "complete") {
-      clearInterval(readyStateCheckInterval);
-      ok(win1.document.body.innerHTML.indexOf("test1:") !== -1,
-         "toplevel data: URI navigation through click() should be blocked");
-      win1.close();
-      test2();
-    }
-  }, 200);
+  setTimeout(function () {
+    ok(SpecialPowers.wrap(win1).document.body.innerHTML.indexOf("test1:") !== -1,
+      "toplevel data: URI navigation through click() should be blocked");
+    win1.close();
+    test2();
+  }, 1000);
 }
 
 function test2() {
