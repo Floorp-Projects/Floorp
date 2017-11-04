@@ -2123,6 +2123,10 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
 
   mPendingViewportChange = false;
 
+  if (!mShell || !mShell->DidInitialize()) {
+    return;
+  }
+
   if (mDocument->IsBeingUsedAsImage()) {
     MOZ_ASSERT(mDocument->MediaQueryLists().isEmpty());
     return;
@@ -2130,7 +2134,7 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
 
   mDocument->NotifyMediaFeatureValuesChanged();
 
-  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+  MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsSafeToRunScript());
 
   // Media query list listeners should be notified from a queued task
   // (in HTML5 terms), although we also want to notify them on certain
