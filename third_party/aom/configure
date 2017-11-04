@@ -44,8 +44,6 @@ Advanced options:
   ${toggle_multithread}           multithreaded encoding and decoding
   ${toggle_spatial_resampling}    spatial sampling (scaling) support
   ${toggle_realtime_only}         enable this option while building for real-time encoding
-  ${toggle_onthefly_bitpacking}   enable on-the-fly bitpacking in real-time encoding
-  ${toggle_error_concealment}     enable this option to get a decoder which is able to conceal losses
   ${toggle_coefficient_range_checking}
                                   enable decoder to check if intermediate
                                   transform coefficients are in valid range
@@ -157,6 +155,10 @@ for t in ${all_targets}; do
     [ -f "${source_path}/${t}.mk" ] && enable_feature ${t}
 done
 
+if ! diff --version >/dev/null; then
+  die "diff missing: Try installing diffutils via your package manager."
+fi
+
 if ! perl --version >/dev/null; then
     die "Perl is required to build"
 fi
@@ -246,6 +248,7 @@ HAVE_LIST="
 EXPERIMENT_LIST="
     fp_mb_stats
     cdef
+    cdef_singlepass
     var_tx
     rect_tx
     rect_tx_ext
@@ -254,57 +257,53 @@ EXPERIMENT_LIST="
     convolve_round
     compound_round
     ext_tx
-    dpcm_intra
     tx64x64
     ext_intra
     intra_interp
     filter_intra
     intra_edge
     intrabc
-    ext_inter
     interintra
     wedge
     compound_segment
     ext_refs
-    altref2
-    speed_refs
-    gf_groups
-    flex_refs
     global_motion
     new_quant
     supertx
     ans
     loop_restoration
+    striped_loop_restoration
     ext_partition
     ext_partition_types
+    ext_partition_types_ab
     unpoison_partition_ctx
     ext_tile
     motion_var
     ncobmc
     warped_motion
     q_adapt_probs
-    bitstream_debug
     inter_stats_only
-    alt_intra
-    palette
     palette_delta_encoding
     rawbits
-    ec_smallmul
+    kf_ctx
     pvq
     cfl
     xiphrc
     dct_only
+    daala_tx
     daala_dct4
     daala_dct8
+    daala_dct16
+    daala_dct32
+    daala_dct64
     cb4x4
     chroma_2x2
     chroma_sub8x8
     frame_size
-    delta_q
     ext_delta_q
     adapt_scan
-    filter_7bit
     parallel_deblocking
+    deblock_13tap
     loopfiltering_across_tiles
     tempmv_signaling
     rd_debug
@@ -314,13 +313,13 @@ EXPERIMENT_LIST="
     masked_tx
     dependent_horztiles
     dist_8x8
-    daala_dist
-    tripred
     palette_throughput
     ref_adapt
     lv_map
+    ctx1d
     txk_sel
     mv_compress
+    segment_zeromv
     frame_superres
     new_multisymbol
     compound_singleref
@@ -329,15 +328,32 @@ EXPERIMENT_LIST="
     ext_comp_refs
     smooth_hv
     var_refs
-    rect_intra_pred
     lgt
+    lgt_from_pred
     sbl_symbol
     ncobmc_adapt_weight
     bgsprite
     var_tx_no_tx_mode
     mrc_tx
     lpf_direct
-    uv_lvl
+    loopfilter_level
+    no_frame_context_signaling
+    txmg
+    max_tile
+    hash_me
+    colorspace_headers
+    mfmv
+    frame_marker
+    jnt_comp
+    frame_sign_bias
+    ext_skip
+    obu
+    amvr
+    lpf_sb
+    opt_ref_mv
+    tmv
+    restrict_compressed_hdr
+    horzonly_frame_superres
 "
 CONFIG_LIST="
     dependency_tracking
@@ -367,8 +383,6 @@ CONFIG_LIST="
     static_msvcrt
     spatial_resampling
     realtime_only
-    onthefly_bitpacking
-    error_concealment
     shared
     static
     small
@@ -381,12 +395,13 @@ CONFIG_LIST="
     inspection
     decode_perf_tests
     encode_perf_tests
+    bitstream_debug
+    symbolrate
     coefficient_range_checking
     lowbitdepth
     highbitdepth
     experimental
     size_limit
-    colorspace_headers
     ${EXPERIMENT_LIST}
     analyzer
 "
@@ -427,8 +442,6 @@ CMDLINE_SELECT="
     static_msvcrt
     spatial_resampling
     realtime_only
-    onthefly_bitpacking
-    error_concealment
     shared
     static
     small
@@ -441,10 +454,12 @@ CMDLINE_SELECT="
     decode_perf_tests
     encode_perf_tests
     coefficient_range_checking
+    bitstream_debug
+    symbolrate
     lowbitdepth
-    aom_highbitdepth
     highbitdepth
     experimental
+    adopted_experiments
     colorspace_headers
 "
 
@@ -491,48 +506,52 @@ post_process_cmdline() {
         enabled ${c} && enable_feature ${c##*_}s
     done
 
-    # Enable adopted experiments by default
-    soft_enable cb4x4
-    soft_enable chroma_sub8x8
-    soft_enable filter_7bit
-    soft_enable reference_buffer
-    soft_enable delta_q
-    soft_enable rect_tx
-    soft_enable global_motion
-    soft_enable ext_tx
-    soft_enable cdef
-    soft_enable ext_intra
-    soft_enable mv_compress
-    soft_enable ext_refs
-    soft_enable dual_filter
-    soft_enable motion_var
-    soft_enable warped_motion
-    soft_enable ext_delta_q
-    soft_enable loopfiltering_across_tiles
-    soft_enable ec_smallmul
-    soft_enable var_tx
-    soft_enable ext_inter
-    soft_enable wedge
-    soft_enable compound_segment
-    soft_enable interintra
-    soft_enable one_sided_compound
-    soft_enable smooth_hv
-    soft_enable parallel_deblocking
-    soft_enable rect_intra_pred
+    enable_feature cb4x4
 
-    # Backwards/jenkins compatibility with --enable-aom-highbitdepth
-    enabled aom_highbitdepth && enable_feature highbitdepth
+    # Enable adopted experiments by default
+    soft_enable adopted_experiments
+    if enabled adopted_experiments; then
+      soft_enable chroma_sub8x8
+      soft_enable rect_tx
+      soft_enable global_motion
+      soft_enable ext_tx
+      soft_enable cdef
+      soft_enable ext_intra
+      soft_enable intra_edge
+      soft_enable mv_compress
+      soft_enable ext_refs
+      soft_enable dual_filter
+      soft_enable motion_var
+      soft_enable warped_motion
+      soft_enable var_tx
+      soft_enable wedge
+      soft_enable compound_segment
+      soft_enable interintra
+      soft_enable one_sided_compound
+      soft_enable convolve_round
+      soft_enable aom_qm
+      soft_enable dist_8x8
+      soft_enable cdef_singlepass
+      soft_enable loop_restoration
+
+      # Provisional adopted
+      soft_enable reference_buffer
+      soft_enable loopfiltering_across_tiles
+      soft_enable palette_throughput
+      soft_enable smooth_hv
+      soft_enable tempmv_signaling
+      soft_enable ext_comp_refs
+      soft_enable ext_delta_q
+      soft_enable parallel_deblocking
+    fi
 
     # Enable low-bitdepth pixel pipeline by default
     soft_enable lowbitdepth
 
-    soft_enable palette
-    soft_enable alt_intra
-    soft_enable palette_throughput
-    soft_enable tempmv_signaling
+    # Enable LBD/HBD txfm consistency tool
+    soft_enable txmg
 
     # Fix up experiment dependencies
-    enabled daala_dist && enable_feature dist_8x8
     enabled pvq && disable_feature chroma_2x2
     enabled pvq && disable_feature rect_tx
     enabled pvq && disable_feature ext_tx
@@ -540,48 +559,54 @@ post_process_cmdline() {
     enabled pvq && disable_feature highbitdepth
     enabled pvq && disable_feature lgt
     enabled pvq && disable_feature mrc_tx
-    enabled palette_throughput && soft_enable palette
-    enabled ext_delta_q && soft_enable delta_q
+    enabled lv_map && disable_feature mrc_tx
+    enabled supertx && disable_feature mrc_tx
+    enabled coef_interleave && disable_feature mrc_tx
+    enabled pvq && disable_feature palette_throughput
+    enabled mrc_tx && enable_feature ext_tx
+    enabled mrc_tx && enable_feature var_tx
     enabled txk_sel && soft_enable lv_map
+    enabled ctx1d && soft_enable lv_map
+    enabled ctx1d && soft_enable ext_tx
     enabled compound_round && soft_enable convolve_round
-    enabled smooth_hv && soft_enable alt_intra
     enabled intra_edge && enable_feature ext_intra
     enabled chroma_2x2 && disable_feature chroma_sub8x8
-    enabled dpcm_intra && enable_feature ext_tx
     enabled chroma_sub8x8 && enable_feature cb4x4
-    enabled compound_singleref && enable_feature ext_inter
-    enabled warped_motion && disable_feature ncobmc_adapt_weight
     enabled ncobmc_adapt_weight && enable_feature motion_var
     enabled bgsprite && enable_feature global_motion
-    enabled ext_comp_refs && enable_feature var_refs
-    enabled ext_comp_refs && disable_feature one_sided_compound
-    enabled altref2 && enable_feature ext_refs
+    enabled ext_comp_refs && enable_feature ext_refs
+    enabled ext_comp_refs && enable_feature one_sided_compound
     enabled rect_tx_ext && enable_feature rect_tx
+    enabled lgt_from_pred && enable_feature ext_tx
+    enabled lgt_from_pred && disable_feature mrc_tx
+    enabled cfl && enable_feature smooth_hv
+    enabled cdef_singlepass && enable_feature cdef
+    enabled new_multisymbol && enable_feature restrict_compressed_hdr
+    enabled mfmv && enable_feature frame_marker
+    enabled jnt_comp && enable_feature frame_marker
+    enabled frame_sign_bias && enable_feature frame_marker
+    enabled txmg && enable_feature highbitdepth
+    enabled ext_skip && enable_feature frame_marker
+    enabled ext_skip && enable_feature ext_refs
+    enabled horzonly_frame_superres && enable_feature frame_superres
 
-    if ! enabled delta_q && enabled ext_delta_q; then
-      log_echo "ext_delta_q requires delta_q, so disabling ext_delta_q"
-      disable_feature ext_delta_q
-    fi
     if enabled rawbits && enabled ans; then
       log_echo "rawbits requires not ans, so disabling rawbits"
       disable_feature rawbits
     fi
-    if enabled ec_smallmul && enabled ans; then
-      log_echo "ec_smallmul requires not ans, so disabling ec_smallmul"
-      disable_feature ec_smallmul
+    if enabled daala_tx; then
+      enable_feature daala_dct4
+      enable_feature daala_dct8
+      enable_feature daala_dct16
+      enable_feature daala_dct32
+      enable_feature daala_dct64
     fi
-    if enabled daala_dct4; then
-      enable_feature dct_only
-      disable_feature mmx
-      disable_feature rect_tx
-      disable_feature var_tx
-      disable_feature lgt
-      enable_feature lowbitdepth
+    if enabled daala_dct64 && ! enabled tx64x64; then
+      log_echo "daala_dct64 requires tx64x64, so disabling daala_dct64"
+      disable_feature daala_dct64
     fi
-    if enabled daala_dct8; then
-      disable_feature mmx
-      disable_feature rect_tx
-      disable_feature var_tx
+    if enabled daala_dct4 || enabled daala_dct8 || enabled daala_dct16 ||
+        enabled daala_dct32 || enabled daala_dct64; then
       disable_feature lgt
       enable_feature lowbitdepth
     fi
@@ -600,11 +625,32 @@ post_process_cmdline() {
         log_echo "disabling supertx"
         disable_feature supertx
       fi
+      if ! enabled rect_tx; then
+        log_echo "ext_partition_types requires rect_tx;"
+        log_echo "enabling rect_tx;"
+        enable_feature rect_tx
+      fi
     fi
     # Enable accounting and inspection when building the analyzer
     if enabled analyzer; then
       soft_enable accounting
       soft_enable inspection
+    fi
+    # Enable hash_me if amvr is enabled
+    if enabled amvr; then
+      log_echo "amvr requires hash_me"
+      enable_feature hash_me
+    fi
+
+    if enabled striped_loop_restoration && ! enabled loop_restoration ; then
+      log_echo "striped_loop_restoration requires loop_restoration"
+      log_echo "enable loop_restoration"
+      enable_feature loop_restoration
+    fi
+    if enabled striped_loop_restoration && enabled frame_superres ; then
+      log_echo "striped_loop_restoration not compatible with frame_superres"
+      log_echo "disabling striped_loop_restoration"
+      disable_feature striped_loop_restoration
     fi
 }
 

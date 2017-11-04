@@ -121,7 +121,7 @@ var dialog = {
         elm.setAttribute("image", "moz-icon://" + uri.spec + "?size=32");
       } else if (app instanceof Ci.nsIWebHandlerApp) {
         let uri = ios.newURI(app.uriTemplate);
-        if (/^https?/.test(uri.scheme)) {
+        if (/^https?$/.test(uri.scheme)) {
           // Unfortunately we can't use the favicon service to get the favicon,
           // because the service looks for a record with the exact URL we give
           // it, and users won't have such records for URLs they don't visit,

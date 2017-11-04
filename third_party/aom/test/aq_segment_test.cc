@@ -90,7 +90,7 @@ TEST_P(AqSegmentTestLarge, TestNoMisMatchAQ2) { DoTest(2); }
 
 TEST_P(AqSegmentTestLarge, TestNoMisMatchAQ3) { DoTest(3); }
 
-#if CONFIG_DELTA_Q & !CONFIG_EXT_DELTA_Q
+#if !CONFIG_EXT_DELTA_Q
 // Validate that this AQ mode (AQ=4, delta q)
 // encodes and decodes without a mismatch.
 TEST_P(AqSegmentTest, TestNoMisMatchAQ4) {

@@ -19,6 +19,7 @@
 #include "MediaShutdownManager.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 
 using namespace mozilla::java;
 
@@ -40,42 +41,64 @@ public:
 
 private:
   ~HLSResourceCallbacksSupport() {}
+  Mutex mMutex;
   HLSDecoder* mDecoder;
 };
 
 HLSResourceCallbacksSupport::HLSResourceCallbacksSupport(HLSDecoder* aDecoder)
+  : mMutex("HLSResourceCallbacksSupport")
+  , mDecoder(aDecoder)
 {
-  MOZ_ASSERT(aDecoder);
-  mDecoder = aDecoder;
+  MOZ_ASSERT(mDecoder);
 }
 
 void
 HLSResourceCallbacksSupport::Detach()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
   mDecoder = nullptr;
 }
 
 void
 HLSResourceCallbacksSupport::OnDataArrived()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mDecoder) {
-    HLS_DEBUG("HLSResourceCallbacksSupport", "OnDataArrived");
-    mDecoder->NotifyDataArrived();
-  }
+  HLS_DEBUG("HLSResourceCallbacksSupport", "OnDataArrived.");
+  MutexAutoLock lock(mMutex);
+  if (!mDecoder) { return; }
+  RefPtr<HLSResourceCallbacksSupport> self = this;
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction(
+      "HLSResourceCallbacksSupport::OnDataArrived",
+      [self]() -> void {
+        MutexAutoLock lock(self->mMutex);
+        if (self->mDecoder) {
+          self->mDecoder->NotifyDataArrived();
+        }
+      }
+    )
+  );
 }
 
 void
 HLSResourceCallbacksSupport::OnError(int aErrorCode)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mDecoder) {
-    HLS_DEBUG("HLSResourceCallbacksSupport", "onError(%d)", aErrorCode);
-    // Since HLS source should be from the Internet, we treat all resource errors
-    // from GeckoHlsPlayer as network errors.
-    mDecoder->NetworkError();
-  }
+  HLS_DEBUG("HLSResourceCallbacksSupport", "onError(%d)", aErrorCode);
+  MutexAutoLock lock(mMutex);
+  if (!mDecoder) { return; }
+  RefPtr<HLSResourceCallbacksSupport> self = this;
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction(
+      "HLSResourceCallbacksSupport::OnDataArrived",
+      [self]() -> void {
+        MutexAutoLock lock(self->mMutex);
+        if (self->mDecoder) {
+          // Since HLS source should be from the Internet, we treat all resource errors
+          // from GeckoHlsPlayer as network errors.
+          self->mDecoder->NetworkError();
+        }
+      }
+    )
+  );
 }
 
 HLSDecoder::HLSDecoder(MediaDecoderInit& aInit)
@@ -205,7 +228,6 @@ HLSDecoder::Shutdown()
   HLS_DEBUG("HLSDecoder", "Shutdown");
   if (mCallbackSupport) {
     mCallbackSupport->Detach();
-    mCallbackSupport = nullptr;
   }
   if (mHLSResourceWrapper) {
     mHLSResourceWrapper->Destroy();

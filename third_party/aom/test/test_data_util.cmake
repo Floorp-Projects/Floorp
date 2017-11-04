@@ -9,6 +9,47 @@
 ## PATENTS file, you can obtain it at www.aomedia.org/license/patent.
 ##
 
+set(AOM_TEST_DATA_FILE_NAMES
+    "hantro_collage_w352h288.yuv"
+    "hantro_odd.yuv"
+    "park_joy_90p_10_420.y4m"
+    "park_joy_90p_10_422.y4m"
+    "park_joy_90p_10_444.y4m"
+    "park_joy_90p_10_440.yuv"
+    "park_joy_90p_12_420.y4m"
+    "park_joy_90p_12_422.y4m"
+    "park_joy_90p_12_444.y4m"
+    "park_joy_90p_12_440.yuv"
+    "park_joy_90p_8_420_a10-1.y4m"
+    "park_joy_90p_8_420.y4m"
+    "park_joy_90p_8_422.y4m"
+    "park_joy_90p_8_444.y4m"
+    "park_joy_90p_8_440.yuv"
+    "desktop_credits.y4m"
+    "niklas_1280_720_30.y4m"
+    "rush_hour_444.y4m"
+    "screendata.y4m"
+    "niklas_640_480_30.yuv")
+
+if (CONFIG_DECODE_PERF_TESTS AND CONFIG_AV1_ENCODER)
+  set(AOM_TEST_DATA_FILE_NAMES
+      ${AOM_TEST_DATA_FILE_NAMES}
+      "niklas_1280_720_30.yuv")
+endif ()
+
+if (CONFIG_ENCODE_PERF_TESTS AND CONFIG_AV1_ENCODER)
+  set(AOM_TEST_DATA_FILE_NAMES
+      ${AOM_TEST_DATA_FILE_NAMES}
+      "desktop_640_360_30.yuv"
+      "kirland_640_480_30.yuv"
+      "macmarcomoving_640_480_30.yuv"
+      "macmarcostationary_640_480_30.yuv"
+      "niklas_1280_720_30.yuv"
+      "tacomanarrows_640_480_30.yuv"
+      "tacomasmallcameramovement_640_480_30.yuv"
+      "thaloundeskmtg_640_480_30.yuv")
+endif ()
+
 # Parses test/test-data.sha1 and writes captured file names and checksums to
 # $out_files and $out_checksums as lists.
 function (make_test_data_lists test_data_file out_files out_checksums)
@@ -28,8 +69,12 @@ function (make_test_data_lists test_data_file out_files out_checksums)
     string(SUBSTRING "${line}" 0 ${delim_pos} checksum)
     string(SUBSTRING "${line}" ${filename_pos} -1 filename)
 
-    set(checksums ${checksums} ${checksum})
-    set(filenames ${filenames} ${filename})
+    list(FIND AOM_TEST_DATA_FILE_NAMES ${filename} list_index)
+    if (NOT ${list_index} EQUAL -1)
+      # Include the name and checksum in output only when the file is needed.
+      set(checksums ${checksums} ${checksum})
+      set(filenames ${filenames} ${filename})
+    endif ()
   endforeach ()
 
   list(LENGTH filenames num_files)

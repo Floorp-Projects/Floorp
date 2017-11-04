@@ -331,6 +331,15 @@ public:
 
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   }
+
+  bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                               mozilla::wr::IpcResourceUpdateQueue& aResources,
+                               const StackingContextHelper& aSc,
+                               mozilla::layers::WebRenderLayerManager* aManager,
+                               nsDisplayListBuilder* aDisplayListBuilder) override
+  {
+    return false;
+  }
 };
 
 #ifdef DEBUG

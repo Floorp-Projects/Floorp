@@ -3,7 +3,7 @@
 A collection of numeric types and traits for Rust.
 
 This includes new types for big integers, rationals, and complex numbers,
-new traits for generic programming on numeric properties like `Integer,
+new traits for generic programming on numeric properties like `Integer`,
 and generic range iterators.
 
 [Documentation](http://rust-num.github.io/num)

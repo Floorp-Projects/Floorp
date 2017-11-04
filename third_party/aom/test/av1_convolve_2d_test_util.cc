@@ -23,9 +23,9 @@ namespace AV1Convolve2D {
 ::testing::internal::ParamGenerator<Convolve2DParam> BuildParams(
     convolve_2d_func filter) {
   const Convolve2DParam params[] = {
-    make_tuple(4, 4, 20, filter),  make_tuple(8, 8, 10, filter),
-    make_tuple(64, 64, 1, filter), make_tuple(4, 16, 10, filter),
-    make_tuple(32, 8, 5, filter),
+    make_tuple(4, 4, filter),   make_tuple(8, 8, filter),
+    make_tuple(64, 64, filter), make_tuple(4, 16, filter),
+    make_tuple(32, 8, filter),
   };
   return ::testing::ValuesIn(params);
 }
@@ -38,7 +38,6 @@ void AV1Convolve2DTest::TearDown() { libaom_test::ClearSystemState(); }
 void AV1Convolve2DTest::RunCheckOutput(convolve_2d_func test_impl) {
   const int w = 128, h = 128;
   const int out_w = GET_PARAM(0), out_h = GET_PARAM(1);
-  const int num_iters = GET_PARAM(2);
   int i, j, k;
 
   uint8_t *input = new uint8_t[h * w];
@@ -50,9 +49,6 @@ void AV1Convolve2DTest::RunCheckOutput(convolve_2d_func test_impl) {
   for (i = 0; i < h; ++i)
     for (j = 0; j < w; ++j) input[i * w + j] = rnd_.Rand8();
 
-  memset(output, 0, output_n * sizeof(CONV_BUF_TYPE));
-  memset(output2, 0, output_n * sizeof(CONV_BUF_TYPE));
-
   int hfilter, vfilter, subx, suby;
   for (hfilter = EIGHTTAP_REGULAR; hfilter < INTERP_FILTERS_ALL; ++hfilter) {
     for (vfilter = EIGHTTAP_REGULAR; vfilter < INTERP_FILTERS_ALL; ++vfilter) {
@@ -60,13 +56,20 @@ void AV1Convolve2DTest::RunCheckOutput(convolve_2d_func test_impl) {
           av1_get_interp_filter_params((InterpFilter)hfilter);
       InterpFilterParams filter_params_y =
           av1_get_interp_filter_params((InterpFilter)vfilter);
+      const int do_average = rnd_.Rand8() & 1;
       ConvolveParams conv_params1 =
-          get_conv_params_no_round(0, 0, 0, output, MAX_SB_SIZE);
+          get_conv_params_no_round(0, do_average, 0, output, MAX_SB_SIZE);
       ConvolveParams conv_params2 =
-          get_conv_params_no_round(0, 0, 0, output2, MAX_SB_SIZE);
+          get_conv_params_no_round(0, do_average, 0, output2, MAX_SB_SIZE);
 
       for (subx = 0; subx < 16; ++subx)
         for (suby = 0; suby < 16; ++suby) {
+          // av1_convolve_2d is designed for accumulate two predicted blocks for
+          // compound mode, so we set num_iter to two here.
+          // A larger number may introduce overflow
+          const int num_iters = 2;
+          memset(output, 0, output_n * sizeof(*output));
+          memset(output2, 0, output_n * sizeof(*output2));
           for (i = 0; i < num_iters; ++i) {
             // Choose random locations within the source block
             int offset_r = 3 + rnd_.PseudoUniform(h - out_h - 7);
@@ -102,14 +105,14 @@ namespace AV1HighbdConvolve2D {
 ::testing::internal::ParamGenerator<HighbdConvolve2DParam> BuildParams(
     highbd_convolve_2d_func filter) {
   const HighbdConvolve2DParam params[] = {
-    make_tuple(4, 4, 20, 8, filter),   make_tuple(8, 8, 10, 8, filter),
-    make_tuple(64, 64, 1, 8, filter),  make_tuple(4, 16, 10, 8, filter),
-    make_tuple(32, 8, 10, 8, filter),  make_tuple(4, 4, 20, 10, filter),
-    make_tuple(8, 8, 10, 10, filter),  make_tuple(64, 64, 1, 10, filter),
-    make_tuple(4, 16, 10, 10, filter), make_tuple(32, 8, 10, 10, filter),
-    make_tuple(4, 4, 20, 12, filter),  make_tuple(8, 8, 10, 12, filter),
-    make_tuple(64, 64, 1, 12, filter), make_tuple(4, 16, 10, 12, filter),
-    make_tuple(32, 8, 10, 12, filter),
+    make_tuple(4, 4, 8, filter),    make_tuple(8, 8, 8, filter),
+    make_tuple(64, 64, 8, filter),  make_tuple(4, 16, 8, filter),
+    make_tuple(32, 8, 8, filter),   make_tuple(4, 4, 10, filter),
+    make_tuple(8, 8, 10, filter),   make_tuple(64, 64, 10, filter),
+    make_tuple(4, 16, 10, filter),  make_tuple(32, 8, 10, filter),
+    make_tuple(4, 4, 12, filter),   make_tuple(8, 8, 12, filter),
+    make_tuple(64, 64, 12, filter), make_tuple(4, 16, 12, filter),
+    make_tuple(32, 8, 12, filter),
   };
   return ::testing::ValuesIn(params);
 }
@@ -125,8 +128,7 @@ void AV1HighbdConvolve2DTest::RunCheckOutput(
     highbd_convolve_2d_func test_impl) {
   const int w = 128, h = 128;
   const int out_w = GET_PARAM(0), out_h = GET_PARAM(1);
-  const int num_iters = GET_PARAM(2);
-  const int bd = GET_PARAM(3);
+  const int bd = GET_PARAM(2);
   int i, j, k;
 
   uint16_t *input = new uint16_t[h * w];
@@ -137,9 +139,6 @@ void AV1HighbdConvolve2DTest::RunCheckOutput(
 
   for (i = 0; i < h; ++i)
     for (j = 0; j < w; ++j) input[i * w + j] = rnd_.Rand16() & ((1 << bd) - 1);
-
-  memset(output, 0, output_n * sizeof(CONV_BUF_TYPE));
-  memset(output2, 0, output_n * sizeof(CONV_BUF_TYPE));
 
   int hfilter, vfilter, subx, suby;
   for (hfilter = EIGHTTAP_REGULAR; hfilter < INTERP_FILTERS_ALL; ++hfilter) {
@@ -155,6 +154,12 @@ void AV1HighbdConvolve2DTest::RunCheckOutput(
 
       for (subx = 0; subx < 16; ++subx)
         for (suby = 0; suby < 16; ++suby) {
+          // av1_convolve_2d is designed for accumulate two predicted blocks for
+          // compound mode, so we set num_iter to two here.
+          // A larger number may introduce overflow
+          const int num_iters = 2;
+          memset(output, 0, output_n * sizeof(*output));
+          memset(output2, 0, output_n * sizeof(*output2));
           for (i = 0; i < num_iters; ++i) {
             // Choose random locations within the source block
             int offset_r = 3 + rnd_.PseudoUniform(h - out_h - 7);

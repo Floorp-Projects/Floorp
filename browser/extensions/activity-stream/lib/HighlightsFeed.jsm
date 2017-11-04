@@ -21,6 +21,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
   "resource://activity-stream/lib/Screenshots.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
+  "resource://gre/modules/PageThumbs.jsm");
 
 const HIGHLIGHTS_MAX_LENGTH = 9;
 const MANY_EXTRA_LENGTH = HIGHLIGHTS_MAX_LENGTH * 5 + TOP_SITES_SHOWMORE_LENGTH;
@@ -31,6 +33,7 @@ this.HighlightsFeed = class HighlightsFeed {
     this.dedupe = new Dedupe(this._dedupeKey);
     this.linksCache = new LinksCache(NewTabUtils.activityStreamLinks,
       "getHighlights", ["image"]);
+    PageThumbs.addExpirationFilter(this);
   }
 
   _dedupeKey(site) {
@@ -49,6 +52,22 @@ this.HighlightsFeed = class HighlightsFeed {
 
   uninit() {
     SectionsManager.disableSection(SECTION_ID);
+    PageThumbs.removeExpirationFilter(this);
+  }
+
+  filterForThumbnailExpiration(callback) {
+    const sectionIndex = SectionsManager.sections.get(SECTION_ID).order;
+    const state = this.store.getState().Sections[sectionIndex];
+
+    callback(state && state.initialized ? state.rows.reduce((acc, site) => {
+      // Screenshots call in `fetchImage` will search for preview_image_url or
+      // fallback to URL, so we prevent both from being expired.
+      acc.push(site.url);
+      if (site.preview_image_url) {
+        acc.push(site.preview_image_url);
+      }
+      return acc;
+    }, []) : []);
   }
 
   /**

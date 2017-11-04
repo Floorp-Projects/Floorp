@@ -128,13 +128,11 @@ class EndToEndTest
       encoder->Control(AV1E_SET_FRAME_PARALLEL_DECODING, 1);
       encoder->Control(AV1E_SET_TILE_COLUMNS, 4);
       encoder->Control(AOME_SET_CPUUSED, cpu_used_);
-#if CONFIG_PALETTE
       // Test screen coding tools at cpu_used = 1 && encoding mode is two-pass.
       if (cpu_used_ == 1 && encoding_mode_ == ::libaom_test::kTwoPassGood)
         encoder->Control(AV1E_SET_TUNE_CONTENT, AOM_CONTENT_SCREEN);
       else
         encoder->Control(AV1E_SET_TUNE_CONTENT, AOM_CONTENT_DEFAULT);
-#endif  // CONFIG_PALETTE
       if (encoding_mode_ != ::libaom_test::kRealTime) {
         encoder->Control(AOME_SET_ENABLEAUTOALTREF, 1);
         encoder->Control(AOME_SET_ARNR_MAXFRAMES, 7);

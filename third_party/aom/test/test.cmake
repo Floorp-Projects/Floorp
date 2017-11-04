@@ -103,6 +103,7 @@ set(AOM_UNIT_TEST_ENCODER_SOURCES
     "${AOM_ROOT}/test/encode_test_driver.h"
     "${AOM_ROOT}/test/error_resilience_test.cc"
     "${AOM_ROOT}/test/i420_video_source.h"
+    "${AOM_ROOT}/test/resize_test.cc"
     "${AOM_ROOT}/test/y4m_test.cc"
     "${AOM_ROOT}/test/y4m_video_source.h"
     "${AOM_ROOT}/test/yuv_video_source.h")
@@ -133,23 +134,34 @@ if (NOT BUILD_SHARED_LIBS)
         "${AOM_ROOT}/test/av1_txfm_test.h"
         "${AOM_ROOT}/test/intrapred_test.cc"
         "${AOM_ROOT}/test/lpf_8_test.cc"
-        "${AOM_ROOT}/test/motion_vector_test.cc"
         "${AOM_ROOT}/test/simd_cmp_impl.h")
 
-    if (CONFIG_CDEF)
-      set(AOM_UNIT_TEST_COMMON_SOURCES
-          ${AOM_UNIT_TEST_COMMON_SOURCES}
-          "${AOM_ROOT}/test/clpf_test.cc"
-          "${AOM_ROOT}/test/dering_test.cc")
-    endif ()
+    set(AOM_UNIT_TEST_ENCODER_SOURCES
+        ${AOM_UNIT_TEST_ENCODER_SOURCES}
+        "${AOM_ROOT}/test/motion_vector_test.cc")
 
-    if (CONFIG_FILTER_INTRA)
-      if (HAVE_SSE4_1)
+    if (CONFIG_CDEF)
+      if (CONFIG_CDEF_SINGLEPASS)
         set(AOM_UNIT_TEST_COMMON_SOURCES
             ${AOM_UNIT_TEST_COMMON_SOURCES}
-            "${AOM_ROOT}/test/filterintra_predictors_test.cc")
+            "${AOM_ROOT}/test/cdef_test.cc")
+      else ()
+        set(AOM_UNIT_TEST_COMMON_SOURCES
+            ${AOM_UNIT_TEST_COMMON_SOURCES}
+            "${AOM_ROOT}/test/clpf_test.cc"
+            "${AOM_ROOT}/test/dering_test.cc")
       endif ()
     endif ()
+
+    # Omit 4-tap filter intra predictor test-- currently a 3-tap filter is in
+    # use.
+    #if (CONFIG_FILTER_INTRA)
+    #  if (HAVE_SSE4_1)
+    #    set(AOM_UNIT_TEST_COMMON_SOURCES
+    #        ${AOM_UNIT_TEST_COMMON_SOURCES}
+    #        "${AOM_ROOT}/test/filterintra_predictors_test.cc")
+    #  endif ()
+    #endif ()
 
     if (CONFIG_INTRABC)
         set(AOM_UNIT_TEST_COMMON_SOURCES
@@ -160,10 +172,15 @@ if (NOT BUILD_SHARED_LIBS)
     if (CONFIG_LOOP_RESTORATION)
       set(AOM_UNIT_TEST_COMMON_SOURCES
           ${AOM_UNIT_TEST_COMMON_SOURCES}
-           "${AOM_ROOT}/test/hiprec_convolve_test.cc"
+          "${AOM_ROOT}/test/selfguided_filter_test.cc")
+
+      if (HAVE_SSE2)
+        set(AOM_UNIT_TEST_COMMON_SOURCES
+            ${AOM_UNIT_TEST_COMMON_SOURCES}
+            "${AOM_ROOT}/test/hiprec_convolve_test.cc"
             "${AOM_ROOT}/test/hiprec_convolve_test_util.cc"
-            "${AOM_ROOT}/test/hiprec_convolve_test_util.h"
-            "${AOM_ROOT}/test/selfguided_filter_test.cc")
+            "${AOM_ROOT}/test/hiprec_convolve_test_util.h")
+      endif ()
     endif ()
 
     set(AOM_UNIT_TEST_COMMON_INTRIN_NEON
@@ -202,11 +219,12 @@ if (CONFIG_AV1_ENCODER)
         "${AOM_ROOT}/test/av1_fht16x16_test.cc"
         "${AOM_ROOT}/test/av1_fht32x32_test.cc"
         "${AOM_ROOT}/test/av1_fht8x8_test.cc"
-        "${AOM_ROOT}/test/av1_inv_txfm_test.cc"
         "${AOM_ROOT}/test/av1_fwd_txfm1d_test.cc"
         "${AOM_ROOT}/test/av1_fwd_txfm2d_test.cc"
         "${AOM_ROOT}/test/av1_inv_txfm1d_test.cc"
         "${AOM_ROOT}/test/av1_inv_txfm2d_test.cc"
+        "${AOM_ROOT}/test/av1_inv_txfm_test.cc"
+        "${AOM_ROOT}/test/av1_wedge_utils_test.cc"
         "${AOM_ROOT}/test/avg_test.cc"
         "${AOM_ROOT}/test/blend_a64_mask_1d_test.cc"
         "${AOM_ROOT}/test/blend_a64_mask_test.cc"
@@ -214,27 +232,37 @@ if (CONFIG_AV1_ENCODER)
         "${AOM_ROOT}/test/fdct4x4_test.cc"
         "${AOM_ROOT}/test/fdct8x8_test.cc"
         "${AOM_ROOT}/test/hadamard_test.cc"
+        "${AOM_ROOT}/test/masked_sad_test.cc"
+        "${AOM_ROOT}/test/masked_variance_test.cc"
         "${AOM_ROOT}/test/minmax_test.cc"
-        "${AOM_ROOT}/test/quantize_func_test.cc"
         "${AOM_ROOT}/test/subtract_test.cc"
         "${AOM_ROOT}/test/sum_squares_test.cc"
         "${AOM_ROOT}/test/variance_test.cc")
 
+    if (NOT CONFIG_AOM_QM AND NOT CONFIG_NEW_QUANT)
+      set(AOM_UNIT_TEST_ENCODER_SOURCES
+          ${AOM_UNIT_TEST_ENCODER_SOURCES}
+          "${AOM_ROOT}/test/quantize_func_test.cc")
+    endif ()
+
     if (CONFIG_CONVOLVE_ROUND)
       set(AOM_UNIT_TEST_ENCODER_SOURCES
           ${AOM_UNIT_TEST_ENCODER_SOURCES}
-          "${AOM_ROOT}/test/av1_convolve_2d_test.cc"
-          "${AOM_ROOT}/test/av1_convolve_2d_test_util.cc"
-          "${AOM_ROOT}/test/av1_convolve_2d_test_util.h"
           "${AOM_ROOT}/test/convolve_round_test.cc")
+      if (HAVE_SSE2)
+        set(AOM_UNIT_TEST_ENCODER_SOURCES
+            ${AOM_UNIT_TEST_ENCODER_SOURCES}
+            "${AOM_ROOT}/test/av1_convolve_2d_test.cc"
+            "${AOM_ROOT}/test/av1_convolve_2d_test_util.cc"
+            "${AOM_ROOT}/test/av1_convolve_2d_test_util.h")
       endif ()
-
-    if (CONFIG_EXT_INTER)
-      set(AOM_UNIT_TEST_ENCODER_SOURCES
-          ${AOM_UNIT_TEST_ENCODER_SOURCES}
-          "${AOM_ROOT}/test/av1_wedge_utils_test.cc"
-          "${AOM_ROOT}/test/masked_sad_test.cc"
-          "${AOM_ROOT}/test/masked_variance_test.cc")
+      if (NOT CONFIG_COMPOUND_ROUND)
+        if (HAVE_SSE4_1)
+          set(AOM_UNIT_TEST_ENCODER_SOURCES
+              ${AOM_UNIT_TEST_ENCODER_SOURCES}
+              "${AOM_ROOT}/test/av1_convolve_scale_test.cc")
+        endif ()
+      endif ()
     endif ()
 
     if (CONFIG_EXT_TX)
@@ -274,9 +302,9 @@ if (NOT BUILD_SHARED_LIBS)
   if (CONFIG_AV1_DECODER AND CONFIG_AV1_ENCODER)
     set(AOM_UNIT_TEST_COMMON_SOURCES
         ${AOM_UNIT_TEST_COMMON_SOURCES}
-        "${AOM_ROOT}/test/binary_codes_test.cc"
         "${AOM_ROOT}/test/divu_small_test.cc"
         "${AOM_ROOT}/test/ethread_test.cc"
+        "${AOM_ROOT}/test/coding_path_sync.cc"
         "${AOM_ROOT}/test/idct8x8_test.cc"
         "${AOM_ROOT}/test/partial_idct_test.cc"
         "${AOM_ROOT}/test/superframe_test.cc"
@@ -290,6 +318,7 @@ if (NOT BUILD_SHARED_LIBS)
     else ()
       set(AOM_UNIT_TEST_COMMON_SOURCES
           ${AOM_UNIT_TEST_COMMON_SOURCES}
+          "${AOM_ROOT}/test/binary_codes_test.cc"
           "${AOM_ROOT}/test/boolcoder_test.cc")
     endif ()
 
@@ -327,22 +356,25 @@ if (CONFIG_UNIT_TESTS)
     # Force static run time to avoid collisions with googletest.
     include("${AOM_ROOT}/build/cmake/msvc_runtime.cmake")
   endif ()
-  include_directories(
-    "${AOM_ROOT}/third_party/googletest/src/googletest/src"
-    "${AOM_ROOT}/third_party/googletest/src/googletest/include")
 
   if (BUILD_SHARED_LIBS AND APPLE)
     # Silence an RPATH warning.
     set(CMAKE_MACOSX_RPATH 1)
   endif ()
-  add_subdirectory("${AOM_ROOT}/third_party/googletest/src/googletest"
-                   EXCLUDE_FROM_ALL)
 
-  # Generate a stub file containing the C function usage_exit(); this is
-  # required because of the test dependency on aom_common_app_util.
-  # Specifically, the function die() in tools_common.c calls usage_exit() to
-  # terminate the program on the caller's behalf.
-  file(WRITE "${AOM_CONFIG_DIR}/usage_exit.c" "void usage_exit(void) {}")
+  include_directories(
+    "${AOM_ROOT}/third_party/googletest/src/googletest/src"
+    "${AOM_ROOT}/third_party/googletest/src/googletest/include")
+
+  if (AOM_DISABLE_GTEST_CMAKE)
+    include_directories("${AOM_ROOT}/third_party/googletest/src/googletest")
+    add_library(gtest STATIC
+      "${AOM_ROOT}/third_party/googletest/src/googletest/src/gtest-all.cc")
+  else ()
+    add_subdirectory("${AOM_ROOT}/third_party/googletest/src/googletest"
+                     EXCLUDE_FROM_ALL)
+  endif ()
+
 endif ()
 
 # Setup the targets for CONFIG_UNIT_TESTS. The libaom and app util targets must
@@ -364,6 +396,7 @@ function (setup_aom_test_targets)
   add_executable(test_libaom ${AOM_UNIT_TEST_WRAPPER_SOURCES}
                  $<TARGET_OBJECTS:aom_common_app_util>
                  $<TARGET_OBJECTS:test_aom_common>)
+  set(AOM_APP_TARGETS ${AOM_APP_TARGETS} test_libaom)
 
   if (CONFIG_AV1_DECODER)
     target_sources(test_libaom PRIVATE
@@ -390,6 +423,7 @@ function (setup_aom_test_targets)
                      $<TARGET_OBJECTS:aom_common_app_util>)
       target_link_libraries(test_intra_pred_speed ${AOM_LIB_LINK_TYPE}
                             aom gtest)
+      set(AOM_APP_TARGETS ${AOM_APP_TARGETS} test_intra_pred_speed)
     endif ()
   endif ()
 
@@ -483,6 +517,8 @@ function (setup_aom_test_targets)
   endforeach ()
   add_custom_target(runtests)
   add_dependencies(runtests ${test_targets})
+
+  set(AOM_APP_TARGETS ${AOM_APP_TARGETS} PARENT_SCOPE)
 endfunction ()
 
 endif ()  # AOM_TEST_TEST_CMAKE_

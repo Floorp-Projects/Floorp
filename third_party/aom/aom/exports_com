@@ -12,5 +12,7 @@ text aom_codec_version_str
 text aom_img_alloc
 text aom_img_flip
 text aom_img_free
+text aom_img_plane_width
+text aom_img_plane_height
 text aom_img_set_rect
 text aom_img_wrap

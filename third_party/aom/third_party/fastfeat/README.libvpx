@@ -36,3 +36,4 @@ functions.  To see how to use the individual functions, see fast.c
 Local Modifications:
 Add lines to turn off clang formatting for these files
 Remove Fast 10, 11 and 12
+Convert tabs to spaces

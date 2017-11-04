@@ -24,8 +24,8 @@ use std::slice;
 use time::precise_time_ns;
 
 // We don't want to push a long text-run. If a text-run is too long, split it into several parts.
-// Please check the renderer::MAX_VERTEX_TEXTURE_WIDTH for the detail.
-pub const MAX_TEXT_RUN_LENGTH: usize = 2040;
+// This needs to be set to (renderer::MAX_VERTEX_TEXTURE_WIDTH - VECS_PER_PRIM_HEADER - VECS_PER_TEXT_RUN) * 2
+pub const MAX_TEXT_RUN_LENGTH: usize = 2038;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -657,7 +657,7 @@ impl DisplayListBuilder {
             data: Vec::with_capacity(capacity),
             pipeline_id,
             clip_stack: vec![
-                ClipAndScrollInfo::simple(ClipId::root_reference_frame(pipeline_id)),
+                ClipAndScrollInfo::simple(ClipId::root_scroll_node(pipeline_id)),
             ],
             next_clip_id: FIRST_CLIP_ID,
             builder_start_time: start_time,

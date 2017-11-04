@@ -68,6 +68,12 @@ static const nmv_context default_nmv_context = {
         { AOM_ICDF(160 * 128), AOM_ICDF(32768), 0 },
         { AOM_ICDF(128 * 128), AOM_ICDF(32768), 0 },
         { AOM_ICDF(216 * 128), AOM_ICDF(32768), 0 },
+        { { AOM_ICDF(128 * 196), AOM_ICDF(32768), 0 },
+          { AOM_ICDF(128 * 198), AOM_ICDF(32768), 0 },
+          { AOM_ICDF(128 * 208), AOM_ICDF(32768), 0 },
+          { AOM_ICDF(128 * 224), AOM_ICDF(32768), 0 },
+          { AOM_ICDF(128 * 245), AOM_ICDF(32768), 0 },
+          { AOM_ICDF(128 * 240), AOM_ICDF(32768), 0 } },  // bits_cdf
 #endif
     },
     {
@@ -93,6 +99,12 @@ static const nmv_context default_nmv_context = {
         { AOM_ICDF(160 * 128), AOM_ICDF(32768), 0 },
         { AOM_ICDF(128 * 128), AOM_ICDF(32768), 0 },
         { AOM_ICDF(216 * 128), AOM_ICDF(32768), 0 },
+        { { AOM_ICDF(128 * 196), AOM_ICDF(32768), 0 },
+          { AOM_ICDF(128 * 198), AOM_ICDF(32768), 0 },
+          { AOM_ICDF(128 * 208), AOM_ICDF(32768), 0 },
+          { AOM_ICDF(128 * 224), AOM_ICDF(32768), 0 },
+          { AOM_ICDF(128 * 245), AOM_ICDF(32768), 0 },
+          { AOM_ICDF(128 * 240), AOM_ICDF(32768), 0 } },  // bits_cdf
 #endif
     } },
 };
@@ -169,7 +181,7 @@ static void inc_mv_component(int v, nmv_component_counts *comp_counts, int incr,
 
   if (c == MV_CLASS_0) {
     comp_counts->class0[d] += incr;
-#if CONFIG_INTRABC
+#if CONFIG_INTRABC || CONFIG_AMVR
     if (precision > MV_SUBPEL_NONE)
 #endif
       comp_counts->class0_fp[d][f] += incr;
@@ -178,7 +190,7 @@ static void inc_mv_component(int v, nmv_component_counts *comp_counts, int incr,
     int i;
     int b = c + CLASS0_BITS - 1;  // number of bits
     for (i = 0; i < b; ++i) comp_counts->bits[i][((d >> i) & 1)] += incr;
-#if CONFIG_INTRABC
+#if CONFIG_INTRABC || CONFIG_AMVR
     if (precision > MV_SUBPEL_NONE)
 #endif
       comp_counts->fp[f] += incr;
@@ -222,18 +234,23 @@ void av1_adapt_mv_probs(AV1_COMMON *cm, int allow_hp) {
 
       for (j = 0; j < MV_OFFSET_BITS; ++j)
         comp->bits[j] = av1_mode_mv_merge_probs(pre_comp->bits[j], c->bits[j]);
+#if CONFIG_AMVR
+      if (cm->cur_frame_mv_precision_level == 0) {
+#endif
+        for (j = 0; j < CLASS0_SIZE; ++j)
+          aom_tree_merge_probs(av1_mv_fp_tree, pre_comp->class0_fp[j],
+                               c->class0_fp[j], comp->class0_fp[j]);
 
-      for (j = 0; j < CLASS0_SIZE; ++j)
-        aom_tree_merge_probs(av1_mv_fp_tree, pre_comp->class0_fp[j],
-                             c->class0_fp[j], comp->class0_fp[j]);
+        aom_tree_merge_probs(av1_mv_fp_tree, pre_comp->fp, c->fp, comp->fp);
 
-      aom_tree_merge_probs(av1_mv_fp_tree, pre_comp->fp, c->fp, comp->fp);
-
-      if (allow_hp) {
-        comp->class0_hp =
-            av1_mode_mv_merge_probs(pre_comp->class0_hp, c->class0_hp);
-        comp->hp = av1_mode_mv_merge_probs(pre_comp->hp, c->hp);
+        if (allow_hp) {
+          comp->class0_hp =
+              av1_mode_mv_merge_probs(pre_comp->class0_hp, c->class0_hp);
+          comp->hp = av1_mode_mv_merge_probs(pre_comp->hp, c->hp);
+        }
+#if CONFIG_AMVR
       }
+#endif
     }
   }
 }

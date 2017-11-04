@@ -48,16 +48,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 XPCOMUtils.defineLazyServiceGetter(this, "gUpdateTimerManager",
   "@mozilla.org/updates/timer-manager;1", "nsIUpdateTimerManager");
 
-XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function() {
-  return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
-});
-
-XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function() {
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "utf8";
-  return converter;
-});
+XPCOMUtils.defineLazyServiceGetter(this, "PageThumbsStorageService",
+  "@mozilla.org/thumbnails/pagethumbs-service;1", "nsIPageThumbsStorageService");
 
 /**
  * Utilities for dealing with promises and Task.jsm
@@ -159,7 +151,7 @@ this.PageThumbs = {
     * @return The path of the thumbnail file.
     */
    getThumbnailPath: function PageThumbs_getThumbnailPath(aUrl) {
-     return PageThumbsStorage.getFilePathForURL(aUrl);
+     return PageThumbsStorageService.getFilePathForURL(aUrl);
    },
 
   /**
@@ -507,14 +499,6 @@ this.PageThumbs = {
 };
 
 this.PageThumbsStorage = {
-  // The path for the storage
-  _path: null,
-  get path() {
-    if (!this._path) {
-      this._path = OS.Path.join(OS.Constants.Path.localProfileDir, THUMBNAIL_DIRECTORY);
-    }
-    return this._path;
-  },
 
   ensurePath: function Storage_ensurePath() {
     // Create the directory (ignore any error if the directory
@@ -523,21 +507,9 @@ this.PageThumbsStorage = {
     // future operations can proceed without having to check whether
     // the directory exists.
     return PageThumbsWorker.post("makeDir",
-      [this.path, {ignoreExisting: true}]).catch(function onError(aReason) {
+      [PageThumbsStorageService.path, {ignoreExisting: true}]).catch(function onError(aReason) {
           Components.utils.reportError("Could not create thumbnails directory" + aReason);
         });
-  },
-
-  getLeafNameForURL: function Storage_getLeafNameForURL(aURL) {
-    if (typeof aURL != "string") {
-      throw new TypeError("Expecting a string");
-    }
-    let hash = this._calculateMD5Hash(aURL);
-    return hash + ".png";
-  },
-
-  getFilePathForURL: function Storage_getFilePathForURL(aURL) {
-    return OS.Path.join(this.path, this.getLeafNameForURL(aURL));
   },
 
   _revisionTable: {},
@@ -591,7 +563,7 @@ this.PageThumbsStorage = {
    * @return {Promise}
    */
   writeData: function Storage_writeData(aURL, aData, aNoOverwrite) {
-    let path = this.getFilePathForURL(aURL);
+    let path = PageThumbsStorageService.getFilePathForURL(aURL);
     this.ensurePath();
     aData = new Uint8Array(aData);
     let msg = [
@@ -622,8 +594,8 @@ this.PageThumbsStorage = {
    */
   copy: function Storage_copy(aSourceURL, aTargetURL, aNoOverwrite) {
     this.ensurePath();
-    let sourceFile = this.getFilePathForURL(aSourceURL);
-    let targetFile = this.getFilePathForURL(aTargetURL);
+    let sourceFile = PageThumbsStorageService.getFilePathForURL(aSourceURL);
+    let targetFile = PageThumbsStorageService.getFilePathForURL(aTargetURL);
     let options = { noOverwrite: aNoOverwrite };
     return PageThumbsWorker.post("copy", [sourceFile, targetFile, options]).
       then(() => this._updateRevision(aTargetURL), this._eatNoOverwriteError(aNoOverwrite));
@@ -635,7 +607,7 @@ this.PageThumbsStorage = {
    * @return {Promise}
    */
   remove: function Storage_remove(aURL) {
-    return PageThumbsWorker.post("remove", [this.getFilePathForURL(aURL)]);
+    return PageThumbsWorker.post("remove", [PageThumbsStorageService.getFilePathForURL(aURL)]);
   },
 
   /**
@@ -667,7 +639,7 @@ this.PageThumbsStorage = {
     // Start the work only now that `profileBeforeChange` has had
     // a chance to throw an error.
 
-    let promise = PageThumbsWorker.post("wipe", [this.path]);
+    let promise = PageThumbsWorker.post("wipe", [PageThumbsStorageService.path]);
     try {
       await promise;
     } finally {
@@ -683,29 +655,13 @@ this.PageThumbsStorage = {
   },
 
   fileExistsForURL: function Storage_fileExistsForURL(aURL) {
-    return PageThumbsWorker.post("exists", [this.getFilePathForURL(aURL)]);
+    return PageThumbsWorker.post("exists", [PageThumbsStorageService.getFilePathForURL(aURL)]);
   },
 
   isFileRecentForURL: function Storage_isFileRecentForURL(aURL) {
     return PageThumbsWorker.post("isFileRecent",
-                                 [this.getFilePathForURL(aURL),
+                                 [PageThumbsStorageService.getFilePathForURL(aURL),
                                   MAX_THUMBNAIL_AGE_SECS]);
-  },
-
-  _calculateMD5Hash: function Storage_calculateMD5Hash(aValue) {
-    let hash = gCryptoHash;
-    let value = gUnicodeConverter.convertToByteArray(aValue);
-
-    hash.init(hash.MD5);
-    hash.update(value, value.length);
-    return this._convertToHexString(hash.finish(false));
-  },
-
-  _convertToHexString: function Storage_convertToHexString(aData) {
-    let hex = "";
-    for (let i = 0; i < aData.length; i++)
-      hex += ("0" + aData.charCodeAt(i).toString(16)).slice(-2);
-    return hex;
   },
 
   /**
@@ -733,7 +689,7 @@ this.PageThumbsStorage = {
     Deprecated.warning("PageThumbs.getFileForURL is deprecated. Please use PageThumbs.getFilePathForURL and OS.File",
                        "https://developer.mozilla.org/docs/JavaScript_OS.File");
     // Note: Once this method has been removed, we can get rid of the dependency towards FileUtils
-    return new FileUtils.File(PageThumbsStorage.getFilePathForURL(aURL));
+    return new FileUtils.File(PageThumbsStorageService.getFilePathForURL(aURL));
   }
 };
 
@@ -842,9 +798,9 @@ var PageThumbsExpiration = {
   },
 
   expireThumbnails: function Expiration_expireThumbnails(aURLsToKeep) {
-    let keep = aURLsToKeep.map(url => PageThumbsStorage.getLeafNameForURL(url));
+    let keep = aURLsToKeep.map(url => PageThumbsStorageService.getLeafNameForURL(url));
     let msg = [
-      PageThumbsStorage.path,
+      PageThumbsStorageService.path,
       keep,
       EXPIRATION_MIN_CHUNK_SIZE
     ];

@@ -47,6 +47,8 @@ int64_t aom_get_v_sse_part(const YV12_BUFFER_CONFIG *a,
                            const YV12_BUFFER_CONFIG *b, int hstart, int width,
                            int vstart, int height);
 int64_t aom_get_v_sse(const YV12_BUFFER_CONFIG *a, const YV12_BUFFER_CONFIG *b);
+int64_t aom_get_sse_plane(const YV12_BUFFER_CONFIG *a,
+                          const YV12_BUFFER_CONFIG *b, int plane, int highbd);
 #if CONFIG_HIGHBITDEPTH
 int64_t aom_highbd_get_y_sse_part(const YV12_BUFFER_CONFIG *a,
                                   const YV12_BUFFER_CONFIG *b, int hstart,

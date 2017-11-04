@@ -1913,6 +1913,18 @@ impl Device {
     pub fn set_blend_mode_subpixel_pass1(&self) {
         self.gl.blend_func(gl::ONE, gl::ONE);
     }
+    pub fn set_blend_mode_subpixel_with_bg_color_pass0(&self) {
+        self.gl.blend_func_separate(gl::ZERO, gl::ONE_MINUS_SRC_COLOR, gl::ZERO, gl::ONE);
+        self.gl.blend_equation(gl::FUNC_ADD);
+    }
+    pub fn set_blend_mode_subpixel_with_bg_color_pass1(&self) {
+        self.gl.blend_func_separate(gl::ONE_MINUS_DST_ALPHA, gl::ONE, gl::ZERO, gl::ONE);
+        self.gl.blend_equation(gl::FUNC_ADD);
+    }
+    pub fn set_blend_mode_subpixel_with_bg_color_pass2(&self) {
+        self.gl.blend_func_separate(gl::ONE, gl::ONE, gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
+        self.gl.blend_equation(gl::FUNC_ADD);
+    }
 }
 
 /// return (gl_internal_format, gl_format)

@@ -21,7 +21,6 @@ const modules = [
   "policies.js",
   "record.js",
   "resource.js",
-  "rest.js",
   "service.js",
   "stages/declined.js",
   "stages/enginesync.js",

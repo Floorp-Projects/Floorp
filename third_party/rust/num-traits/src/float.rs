@@ -323,8 +323,26 @@ pub trait Float
     /// ```
     fn signum(self) -> Self;
 
-    /// Returns `true` if `self` is positive, including `+0.0` and
-    /// `Float::infinity()`.
+    /// Returns `true` if `self` is positive, including `+0.0`,
+    /// `Float::infinity()`, and with newer versions of Rust `f64::NAN`.
+    ///
+    /// ```
+    /// use num_traits::Float;
+    /// use std::f64;
+    ///
+    /// let neg_nan: f64 = -f64::NAN;
+    ///
+    /// let f = 7.0;
+    /// let g = -7.0;
+    ///
+    /// assert!(f.is_sign_positive());
+    /// assert!(!g.is_sign_positive());
+    /// assert!(!neg_nan.is_sign_positive());
+    /// ```
+    fn is_sign_positive(self) -> bool;
+
+    /// Returns `true` if `self` is negative, including `-0.0`,
+    /// `Float::neg_infinity()`, and with newer versions of Rust `-f64::NAN`.
     ///
     /// ```
     /// use num_traits::Float;
@@ -335,29 +353,9 @@ pub trait Float
     /// let f = 7.0;
     /// let g = -7.0;
     ///
-    /// assert!(f.is_sign_positive());
-    /// assert!(!g.is_sign_positive());
-    /// // Requires both tests to determine if is `NaN`
-    /// assert!(!nan.is_sign_positive() && !nan.is_sign_negative());
-    /// ```
-    fn is_sign_positive(self) -> bool;
-
-    /// Returns `true` if `self` is negative, including `-0.0` and
-    /// `Float::neg_infinity()`.
-    ///
-    /// ```
-    /// use num_traits::Float;
-    /// use std::f64;
-    ///
-    /// let nan = f64::NAN;
-    ///
-    /// let f = 7.0;
-    /// let g = -7.0;
-    ///
     /// assert!(!f.is_sign_negative());
     /// assert!(g.is_sign_negative());
-    /// // Requires both tests to determine if is `NaN`.
-    /// assert!(!nan.is_sign_positive() && !nan.is_sign_negative());
+    /// assert!(!nan.is_sign_negative());
     /// ```
     fn is_sign_negative(self) -> bool;
 

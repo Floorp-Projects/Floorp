@@ -17,6 +17,10 @@ var {PageThumbs, BackgroundPageThumbs, NewTabUtils, PageThumbsStorage, SessionSt
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "PageThumbsStorageService",
+  "@mozilla.org/thumbnails/pagethumbs-service;1",
+  "nsIPageThumbsStorageService");
+
 var oldEnabledPref = Services.prefs.getBoolPref("browser.pagethumbnails.capturing_disabled");
 Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", false);
 
@@ -173,7 +177,7 @@ function retrieveImageDataForURL(aURL, aCallback) {
  * @param aURL The URL of the thumbnail.
  */
 function thumbnailFile(aURL) {
-  return new FileUtils.File(PageThumbsStorage.getFilePathForURL(aURL));
+  return new FileUtils.File(PageThumbsStorageService.getFilePathForURL(aURL));
 }
 
 /**
