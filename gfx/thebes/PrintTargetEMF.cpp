@@ -7,8 +7,13 @@
 #include "nsAnonymousTemporaryFile.h"
 #include "nsIFile.h"
 #include "mozilla/widget/PDFiumProcessParent.h"
+#include "mozilla/widget/PDFiumParent.h"
+#include "mozilla/widget/WindowsEMF.h"
+#include "mozilla/ipc/FileDescriptor.h"
+#include "private/pprio.h"
 
 using mozilla::gfx::DrawTarget;
+using mozilla::ipc::FileDescriptor;
 
 namespace mozilla {
 namespace gfx {
@@ -60,7 +65,7 @@ PrintTargetEMF::BeginPrinting(const nsAString& aTitle,
   ::StartDocW(mPrinterDC, &docinfo);
 
   mPDFiumProcess = new PDFiumProcessParent();
-  NS_ENSURE_TRUE(mPDFiumProcess->Launch(), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mPDFiumProcess->Launch(this), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
@@ -111,13 +116,15 @@ PrintTargetEMF::EndPage()
   mTargetForCurrentPage->Finish();
   mTargetForCurrentPage = nullptr;
 
-  // TODO: pass mPDFFileForOnePage to the PDFium process.
-
-  mPDFFileForOnePage->Remove(/* aRecursive */ false);
-  mPDFFileForOnePage = nullptr;
-
-  // TODO: we should call EndPage(mPrinterDC), but not here. We should call it
-  // after the PDFium process calls Send ConvertToEMFDone.
+  PRFileDesc* prfile;
+  nsresult rv = mPDFFileForOnePage->OpenNSPRFileDesc(PR_RDONLY, PR_IRWXU,
+                                                     &prfile);
+  NS_ENSURE_SUCCESS(rv, rv);
+  FileDescriptor descriptor(FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(prfile)));
+  mPDFiumProcess->GetActor()->SendConvertToEMF(descriptor,
+                                        ::GetDeviceCaps(mPrinterDC, HORZRES),
+                                        ::GetDeviceCaps(mPrinterDC, VERTRES));
+  PR_Close(prfile);
 
   return NS_OK;
 }
@@ -142,6 +149,29 @@ PrintTargetEMF::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
   }
 
   return mRefDT.forget();
+}
+
+void
+PrintTargetEMF::ConvertToEMFDone(const nsresult& aResult,
+                                 mozilla::ipc::Shmem&& aEMF)
+{
+  if (::StartPage(mPrinterDC) > 0) {
+    mozilla::widget::WindowsEMF emf;
+    emf.InitFromFileContents(aEMF.get<BYTE>(), aEMF.Size<BYTE>());
+    RECT printRect = {0, 0, ::GetDeviceCaps(mPrinterDC, HORZRES),
+                      ::GetDeviceCaps(mPrinterDC, VERTRES)};
+    DebugOnly<bool> ret = emf.Playback(mPrinterDC, printRect);
+    MOZ_ASSERT(ret);
+
+    ::EndPage(mPrinterDC);
+  }
+
+  mPDFiumProcess->GetActor()->DeallocShmem(aEMF);
+
+  mPDFFileForOnePage->Remove(/* aRecursive */ false);
+  mPDFFileForOnePage = nullptr;
+
+  // TBD: We should call RemotePrintJobChild::SendPageProcessed here.
 }
 
 } // namespace gfx
