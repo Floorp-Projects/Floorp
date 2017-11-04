@@ -4,6 +4,7 @@
   <title>Video controls test - Error</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -16,50 +17,40 @@
 
 <pre id="test">
 <script clas="testbody" type="application/javascript">
-  SimpleTest.waitForExplicitFinish();
-
   const video = document.getElementById("video");
   const statusOverlay = getAnonElementWithinVideoByAttribute(video, "anonid", "statusOverlay");
   const statusIcon = getAnonElementWithinVideoByAttribute(video, "anonid", "statusIcon");
+  const clickToPlay = getAnonElementWithinVideoByAttribute(video, "anonid", "clickToPlay");
 
-  const testCases = [];
+  add_task(async function setup() {
+    await new Promise(resolve => window.addEventListener("load", resolve, {once: true}));
+    await SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]});
+  });
 
-  testCases.push(() => new Promise(resolve => {
+  add_task(async function check_normal_status() {
+    await new Promise(resolve => {
+      video.src = "seek_with_sound.ogg";
+      video.addEventListener("loadedmetadata", resolve);
+    });
+
     ok(statusOverlay.hidden, "statusOverlay shoud not present without error");
     ok(!statusOverlay.hasAttribute("error"), "statusOverlay should not in error state");
     isnot(statusIcon.getAttribute("type"), "error", "should not show error icon");
+  });
 
-    resolve();
-  }));
-
-  testCases.push(() => new Promise(resolve => {
-    video.src = "invalid-path.ogg";
-    video.addEventListener("error", resolve);
-  }));
-
-  testCases.push(() => new Promise(resolve => {
+  add_task(async function invalid_source() {
     const errorType = "errorNoSource";
 
+    await new Promise(resolve => {
+      video.src = "invalid_source.ogg";
+      video.addEventListener("error", resolve)
+    });
+
+    ok(clickToPlay.hasAttribute("hidden"), `click to play button should hide`);
     ok(!statusOverlay.hidden, `statusOverlay should show when ${errorType}`);
     is(statusOverlay.getAttribute("error"), errorType, `statusOverlay should have correct error state: ${errorType}`);
     is(statusIcon.getAttribute("type"), "error", `should show error icon when ${errorType}`);
-
-    resolve();
-  }));
-
-  function executeTestCases(tasks) {
-    return tasks.reduce((promise, task) => promise.then(task), Promise.resolve());
-  }
-
-  function startTest() {
-    executeTestCases(testCases).then(SimpleTest.finish);
-  }
-
-  function loadevent() {
-    SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startTest);
-  }
-
-  window.addEventListener("load", loadevent);
+  });
 </script>
 </pre>
 </body>

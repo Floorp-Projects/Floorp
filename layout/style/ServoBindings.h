@@ -717,6 +717,10 @@ void Gecko_ContentList_AppendAll(nsSimpleContentList* aContentList,
                                  const RawGeckoElement** aElements,
                                  size_t aLength);
 
+const nsTArray<mozilla::dom::Element*>* Gecko_GetElementsWithId(
+    const nsIDocument* aDocument,
+    nsAtom* aId);
+
 } // extern "C"
 
 #endif // mozilla_ServoBindings_h

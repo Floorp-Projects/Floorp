@@ -2866,7 +2866,17 @@ Gecko_ContentList_AppendAll(
   MOZ_ASSERT(aList);
 
   aList->SetCapacity(aLength);
+
   for (size_t i = 0; i < aLength; ++i) {
     aList->AppendElement(const_cast<Element*>(aElements[i]));
   }
+}
+
+const nsTArray<Element*>*
+Gecko_GetElementsWithId(const nsIDocument* aDocument, nsAtom* aId)
+{
+  MOZ_ASSERT(aDocument);
+  MOZ_ASSERT(aId);
+
+  return aDocument->GetAllElementsForId(nsDependentAtomString(aId));
 }
