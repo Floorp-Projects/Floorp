@@ -1392,7 +1392,6 @@ private:
   const OpenMode mOpenMode;
   enum State {
     eInitial, // Just created, waiting to be dispatched to the main thread
-    eBackgroundChildPending, // Waiting for the background child to be created
     eOpening, // Waiting for the parent process to respond
     eOpened, // Parent process opened the entry and sent it back
     eClosing, // Waiting to be dispatched to the main thread to Send__delete__
@@ -1474,7 +1473,6 @@ ChildRunnable::Run()
       return NS_OK;
     }
 
-    case eBackgroundChildPending:
     case eOpening:
     case eOpened:
     case eFinished: {
