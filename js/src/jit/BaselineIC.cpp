@@ -1702,7 +1702,7 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
         op == JSOP_INITLOCKEDPROP ||
         op == JSOP_INITHIDDENPROP)
     {
-        if (!InitPropertyOperation(cx, op, obj, id, rhs))
+        if (!InitPropertyOperation(cx, op, obj, name, rhs))
             return false;
     } else if (op == JSOP_SETNAME ||
                op == JSOP_STRICTSETNAME ||

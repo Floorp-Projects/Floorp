@@ -2652,7 +2652,13 @@ toolbar#nav-bar {
             elif options.debugger or not options.autorun:
                 timeout = None
             else:
-                timeout = 330.0  # default JS harness timeout is 300 seconds
+                # We generally want the JS harness or marionette to handle
+                # timeouts if they can.
+                # The default JS harness timeout is currently 300 seconds.
+                # The default Marionette socket timeout is currently 360 seconds.
+                # Wait a little (10 seconds) more before timing out here.
+                # See bug 479518 and bug 1414063.
+                timeout = 370.0
 
             # Detect shutdown leaks for m-bc runs if
             # code coverage is not enabled.

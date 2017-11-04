@@ -19,22 +19,16 @@
 #include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
 #include "nsIImageLoadingContent.h"
-#include "NullPrincipal.h"
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/TabChild.h"
 
 NS_IMPL_ISUPPORTS(nsContentSecurityManager,
                   nsIContentSecurityManager,
                   nsIChannelEventSink)
 
 /* static */ bool
-nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
-  nsIURI* aURI,
-  nsContentPolicyType aContentPolicyType,
-  nsIPrincipal* aTriggeringPrincipal,
-  nsIDocument* aDoc,
-  bool aLoadFromExternal,
-  bool aIsDownLoad)
+nsContentSecurityManager::AllowTopLevelNavigationToDataURI(nsIChannel* aChannel)
 {
   // Let's block all toplevel document navigations to a data: URI.
   // In all cases where the toplevel document is navigated to a
@@ -47,40 +41,56 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   if (!mozilla::net::nsIOService::BlockToplevelDataUriNavigations()) {
     return true;
   }
-  if (aContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT || aIsDownLoad) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (!loadInfo) {
     return true;
   }
+  if (loadInfo->GetExternalContentPolicyType() != nsIContentPolicy::TYPE_DOCUMENT) {
+    return true;
+  }
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, true);
   bool isDataURI =
-    (NS_SUCCEEDED(aURI->SchemeIs("data", &isDataURI)) && isDataURI);
+    (NS_SUCCEEDED(uri->SchemeIs("data", &isDataURI)) && isDataURI);
   if (!isDataURI) {
     return true;
   }
   // Whitelist data: images as long as they are not SVGs
   nsAutoCString filePath;
-  aURI->GetFilePath(filePath);
+  uri->GetFilePath(filePath);
   if (StringBeginsWith(filePath, NS_LITERAL_CSTRING("image/")) &&
       !StringBeginsWith(filePath, NS_LITERAL_CSTRING("image/svg+xml"))) {
     return true;
   }
-  // Whitelist data: PDFs
-  if (StringBeginsWith(filePath, NS_LITERAL_CSTRING("application/pdf"))) {
+  // Whitelist data: PDFs and JSON
+  if (StringBeginsWith(filePath, NS_LITERAL_CSTRING("application/pdf")) ||
+      StringBeginsWith(filePath, NS_LITERAL_CSTRING("application/json"))) {
     return true;
   }
-  if (!aLoadFromExternal &&
-      nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal)) {
+  // Redirecting to a toplevel data: URI is not allowed, hence we make
+  // sure the RedirectChain is empty.
+  if (!loadInfo->GetLoadTriggeredFromExternal() &&
+      nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal()) &&
+      loadInfo->RedirectChain().IsEmpty()) {
     return true;
   }
   nsAutoCString dataSpec;
-  aURI->GetSpec(dataSpec);
+  uri->GetSpec(dataSpec);
   if (dataSpec.Length() > 50) {
     dataSpec.Truncate(50);
     dataSpec.AppendLiteral("...");
+  }
+  nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(loadInfo->ContextForTopLevelLoad());
+  nsCOMPtr<nsIDocument> doc;
+  if (tabChild) {
+    doc = static_cast<mozilla::dom::TabChild*>(tabChild.get())->GetDocument();
   }
   NS_ConvertUTF8toUTF16 specUTF16(NS_UnescapeURL(dataSpec));
   const char16_t* params[] = { specUTF16.get() };
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("DATA_URI_BLOCKED"),
-                                  aDoc,
+                                  doc,
                                   nsContentUtils::eSECURITY_PROPERTIES,
                                   "BlockTopLevelDataURINavigation",
                                   params, ArrayLength(params));
@@ -573,29 +583,6 @@ nsContentSecurityManager::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     if (NS_FAILED(rv)) {
       aOldChannel->Cancel(rv);
       return rv;
-    }
-  }
-
-  // Redirecting to a toplevel data: URI is not allowed, hence we pass
-  // a NullPrincipal as the TriggeringPrincipal to
-  // AllowTopLevelNavigationToDataURI() which definitely blocks any
-  // data: URI load.
-  nsCOMPtr<nsILoadInfo> newLoadInfo = aNewChannel->GetLoadInfo();
-  if (newLoadInfo) {
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_GetFinalChannelURI(aNewChannel, getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIPrincipal> nullTriggeringPrincipal = NullPrincipal::Create();
-    if (!nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
-          uri,
-          newLoadInfo->GetExternalContentPolicyType(),
-          nullTriggeringPrincipal,
-          nullptr, // no doc available, log to browser console
-          false,
-          false)) {
-        // logging to console happens within AllowTopLevelNavigationToDataURI
-      aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
-      return NS_ERROR_DOM_BAD_URI;
     }
   }
 

@@ -33,10 +33,6 @@ EXPORTS += [
     'nsPluginTags.h',
 ]
 
-EXPORTS.mozilla += [
-    'PluginPRLibrary.h',
-]
-
 UNIFIED_SOURCES += [
     'nsJSNPRuntime.cpp',
     'nsNPAPIPluginInstance.cpp',
@@ -45,7 +41,6 @@ UNIFIED_SOURCES += [
     'nsPluginModule.cpp',
     'nsPluginStreamListenerPeer.cpp',
     'nsPluginTags.cpp',
-    'PluginPRLibrary.cpp',
 ]
 
 SOURCES += [

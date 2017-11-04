@@ -88,7 +88,7 @@ TestRunner._lastAssertionCount = 0;
 TestRunner._expectedMinAsserts = 0;
 TestRunner._expectedMaxAsserts = 0;
 
-TestRunner.timeout = 5 * 60 * 1000; // 5 minutes.
+TestRunner.timeout = 300 * 1000; // 5 minutes.
 TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
 TestRunner.runSlower = false;
 TestRunner.dumpOutputDirectory = "";

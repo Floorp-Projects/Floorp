@@ -80,6 +80,10 @@ interface XULElement : Element {
   [SetterThrows]
   attribute DOMString statusText;
 
+  // Properties for images
+  [SetterThrows]
+  attribute DOMString src;
+
   attribute boolean allowEvents;
 
   readonly attribute MozRDFCompositeDataSource? database;
