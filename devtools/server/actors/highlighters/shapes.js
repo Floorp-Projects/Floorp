@@ -225,14 +225,17 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // For events on highlighted nodes in an iframe, when the event takes place
     // outside the iframe. Check if event target belongs to the iframe. If it doesn't,
     // adjust pageX/pageY to be relative to the iframe rather than the parent.
-    if (target.ownerDocument !== this.currentNode.ownerDocument) {
+    let nodeDocument = this.currentNode.ownerDocument;
+    if (target !== nodeDocument && target.ownerDocument !== nodeDocument) {
       let [xOffset, yOffset] = getFrameOffsets(target.ownerGlobal, this.currentNode);
       // xOffset/yOffset are relative to the viewport, so first find the top/left
       // edges of the viewport relative to the page.
       let viewportLeft = pageX - event.clientX;
       let viewportTop = pageY - event.clientY;
-      pageX -= viewportLeft + xOffset;
-      pageY -= viewportTop + yOffset;
+      // Also adjust for scrolling in the iframe.
+      let { scrollTop, scrollLeft } = nodeDocument.documentElement;
+      pageX -= viewportLeft + xOffset - scrollLeft;
+      pageY -= viewportTop + yOffset - scrollTop;
     }
 
     switch (type) {
@@ -1130,7 +1133,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   convertPageCoordsToPercent(pageX, pageY) {
     // If the current node is in an iframe, we get dimensions relative to the frame.
-    let dims = (this.highlighterEnv.window.document === this.currentNode.ownerDocument) ?
+    let dims = this.highlighterEnv.window.document === this.currentNode.ownerDocument ?
                this.zoomAdjustedDimensions : this.frameDimensions;
     let { top, left, width, height } = dims;
     pageX -= left;
@@ -1151,7 +1154,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @memberof ShapesHighlighter
    */
   convertPercentToPageCoords(x, y) {
-    let { top, left, width, height } = this.zoomAdjustedDimensions;
+    let dims = this.highlighterEnv.window.document === this.currentNode.ownerDocument ?
+               this.zoomAdjustedDimensions : this.frameDimensions;
+    let { top, left, width, height } = dims;
     x = x * width / 100;
     y = y * height / 100;
     x += left;

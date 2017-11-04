@@ -2929,15 +2929,28 @@ struct ElementHolder {
 Element*
 nsINode::QuerySelector(const nsAString& aSelector, ErrorResult& aResult)
 {
-  nsCSSSelectorList* selectorList = ParseSelectorList(aSelector, aResult);
-  if (!selectorList) {
-    // Either we failed (and aResult already has the exception), or this
-    // is a pseudo-element-only selector that matches nothing.
-    return nullptr;
-  }
-  ElementHolder holder;
-  FindMatchingElements<true, ElementHolder>(this, selectorList, holder, aResult);
-  return holder.mElement;
+  return WithSelectorList<Element*>(
+    aSelector,
+    aResult,
+    [&](const RawServoSelectorList* aList) -> Element* {
+      if (!aList) {
+        return nullptr;
+      }
+      const bool useInvalidation = false;
+      return const_cast<Element*>(
+          Servo_SelectorList_QueryFirst(this, aList, useInvalidation));
+    },
+    [&](nsCSSSelectorList* aList) -> Element* {
+      if (!aList) {
+        // Either we failed (and aResult already has the exception), or this
+        // is a pseudo-element-only selector that matches nothing.
+        return nullptr;
+      }
+      ElementHolder holder;
+      FindMatchingElements<true, ElementHolder>(this, aList, holder, aResult);
+      return holder.mElement;
+    }
+  );
 }
 
 already_AddRefed<nsINodeList>
@@ -2945,16 +2958,25 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
 {
   RefPtr<nsSimpleContentList> contentList = new nsSimpleContentList(this);
 
-  nsCSSSelectorList* selectorList = ParseSelectorList(aSelector, aResult);
-  if (selectorList) {
-    FindMatchingElements<false, AutoTArray<Element*, 128>>(this,
-                                                             selectorList,
-                                                             *contentList,
-                                                             aResult);
-  } else {
-    // Either we failed (and aResult already has the exception), or this
-    // is a pseudo-element-only selector that matches nothing.
-  }
+  WithSelectorList<void>(
+    aSelector,
+    aResult,
+    [&](const RawServoSelectorList* aList) {
+      if (!aList) {
+        return;
+      }
+      const bool useInvalidation = false;
+      Servo_SelectorList_QueryAll(
+        this, aList, contentList.get(), useInvalidation);
+    },
+    [&](nsCSSSelectorList* aList) {
+      if (!aList) {
+        return;
+      }
+      FindMatchingElements<false, AutoTArray<Element*, 128>>(
+        this, aList, *contentList, aResult);
+    }
+  );
 
   return contentList.forget();
 }
