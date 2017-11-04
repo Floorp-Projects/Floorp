@@ -228,8 +228,7 @@ void RunWriter(void* arg)
 
   // Setup destinationPath and tmpFilePath
 
-  nsCString destinationPath;
-  destinationPath.Adopt(static_cast<char*>(arg));
+  nsCString destinationPath(static_cast<char*>(arg));
   nsAutoCString tmpFilePath;
   tmpFilePath.Append(destinationPath);
   tmpFilePath.AppendLiteral(".tmp");
@@ -362,12 +361,12 @@ nsTerminator::Start()
 {
   MOZ_ASSERT(!mInitialized);
   StartWatchdog();
-#if !defined(NS_FREE_PERMANENT_DATA)
-  // Only allow nsTerminator to write on non-leak-checked builds so we don't
-  // get leak warnings on shutdown for intentional leaks (see bug 1242084).
-  // This will be enabled again by bug 1255484 when 1255478 lands.
+#if !defined(DEBUG)
+  // Only allow nsTerminator to write on non-debug builds so we don't get leak warnings on
+  // shutdown for intentional leaks (see bug 1242084). This will be enabled again by bug
+  // 1255484 when 1255478 lands.
   StartWriter();
-#endif // !defined(NS_FREE_PERMANENT_DATA)
+#endif // !defined(DEBUG)
   mInitialized = true;
 }
 
