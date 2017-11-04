@@ -446,9 +446,9 @@ static INLINE void setup_pred_plane(struct buf_2d *dst, BLOCK_SIZE bsize,
   dst->stride = stride;
 }
 
-void av1_setup_dst_planes(struct macroblockd_plane planes[MAX_MB_PLANE],
-                          BLOCK_SIZE bsize, const YV12_BUFFER_CONFIG *src,
-                          int mi_row, int mi_col);
+void av1_setup_dst_planes(struct macroblockd_plane *planes, BLOCK_SIZE bsize,
+                          const YV12_BUFFER_CONFIG *src, int mi_row,
+                          int mi_col);
 
 void av1_setup_pre_planes(MACROBLOCKD *xd, int idx,
                           const YV12_BUFFER_CONFIG *src, int mi_row, int mi_col,
