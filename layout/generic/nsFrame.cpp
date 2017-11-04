@@ -243,11 +243,12 @@ nsReflowStatus::UpdateTruncated(const ReflowInput& aReflowInput,
   }
 }
 
-void
-nsIFrame::DestroyAnonymousContent(already_AddRefed<nsIContent> aContent)
+/* static */ void
+nsIFrame::DestroyAnonymousContent(nsPresContext* aPresContext,
+                                  already_AddRefed<nsIContent>&& aContent)
 {
-  PresContext()->PresShell()->FrameConstructor()
-               ->DestroyAnonymousContent(mozilla::Move(aContent));
+  aPresContext->PresShell()->FrameConstructor()
+              ->DestroyAnonymousContent(Move(aContent));
 }
 
 // Formerly the nsIFrameDebug interface
@@ -726,7 +727,7 @@ nsFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
     "destroy called on frame while scripts not blocked");

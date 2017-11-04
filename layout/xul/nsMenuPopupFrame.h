@@ -225,7 +225,7 @@ public:
                                     nsAtom* aAttribute,
                                     int32_t aModType) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   bool HasRemoteContent() const;
 
