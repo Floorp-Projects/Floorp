@@ -253,23 +253,28 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
 
     // If we have an existing front buffer, copy it into the new back buffer
     if (RefPtr<RotatedBuffer> frontBuffer = GetFrontBuffer()) {
-      RefPtr<CapturedBufferState> bufferState = new CapturedBufferState();
+      nsIntRegion updateRegion = newBuffer->BufferRect();
+      updateRegion.Sub(updateRegion, result.mRegionToDraw);
 
-      bufferState->mBufferCopy = Some(CapturedBufferState::Copy {
-        frontBuffer->ShallowCopy(),
-        newBuffer->ShallowCopy(),
-        newBuffer->BufferRect(),
-      });
+      if (!updateRegion.IsEmpty()) {
+        RefPtr<CapturedBufferState> bufferState = new CapturedBufferState();
 
-      // If we're async painting then return the buffer state to
-      // be dispatched to the paint thread, otherwise do it now
-      if (asyncPaint) {
-        MOZ_ASSERT(!result.mBufferState);
-        result.mBufferState = bufferState;
-      } else {
-        if (!bufferState->PrepareBuffer()) {
-          gfxCriticalNote << "Failed to copy front buffer to back buffer.";
-          return result;
+        bufferState->mBufferCopy = Some(CapturedBufferState::Copy {
+          frontBuffer->ShallowCopy(),
+          newBuffer->ShallowCopy(),
+          updateRegion.GetBounds(),
+        });
+
+        // If we're async painting then return the buffer state to
+        // be dispatched to the paint thread, otherwise do it now
+        if (asyncPaint) {
+          MOZ_ASSERT(!result.mBufferState);
+          result.mBufferState = bufferState;
+        } else {
+          if (!bufferState->PrepareBuffer()) {
+            gfxCriticalNote << "Failed to copy front buffer to back buffer.";
+            return result;
+          }
         }
       }
 
