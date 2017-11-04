@@ -3,19 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* CSS Variables specific to this panel that aren't defined by the themes */
-.theme-light {
+:root {
   --rule-highlight-background-color: var(--theme-highlight-yellow);
   --rule-overridden-item-border-color: var(--theme-content-color3);
   --rule-header-background-color: var(--theme-toolbar-background);
+  --rule-shape-toggle-color: var(--grey-90);
 }
 
-.theme-dark {
+:root.theme-dark {
   --rule-highlight-background-color: #521C76;
   --rule-overridden-item-border-color: var(--theme-content-color1);
   --rule-header-background-color: #141416;
+  --rule-shape-toggle-color: var(--grey-10);
 }
 
-.theme-firebug {
+:root.theme-firebug {
   --rule-highlight-background-color: var(--theme-highlight-yellow);
   --rule-property-name: darkgreen;
   --rule-property-value: darkblue;
@@ -472,6 +474,8 @@
 
 .ruleview-shape {
   background: url("chrome://devtools/skin/images/tool-shadereditor.svg");
+  -moz-context-properties: fill;
+  fill: var(--rule-shape-toggle-color);
   border-radius: 0;
   background-size: 1em;
 }

@@ -24,10 +24,16 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
+});
+
+function ensureDirectory(path) {
+  let basename = OS.Path.dirname(path);
+  return OS.File.makeDir(basename, { from: OS.Constants.Path.profileDir });
+}
 
 /*
  * Trackers are associated with a single engine and deal with
@@ -57,8 +63,6 @@ this.Tracker = function Tracker(name, engine) {
   this._ignored = [];
   this._storage = new JSONFile({
     path: Utils.jsonFilePath("changes/" + this.file),
-    // We use arrow functions instead of `.bind(this)` so that tests can
-    // easily override these hooks.
     dataPostProcessor: json => this._dataPostProcessor(json),
     beforeSave: () => this._beforeSave(),
   });
@@ -92,8 +96,7 @@ Tracker.prototype = {
 
   // Ensure the Weave storage directory exists before writing the file.
   _beforeSave() {
-    let basename = OS.Path.dirname(this._storage.path);
-    return OS.File.makeDir(basename, { from: OS.Constants.Path.profileDir });
+    return ensureDirectory(this._storage.path);
   },
 
   get changedIDs() {
@@ -764,6 +767,18 @@ Engine.prototype = {
 this.SyncEngine = function SyncEngine(name, service) {
   Engine.call(this, name || "SyncEngine", service);
 
+  this._toFetchStorage = new JSONFile({
+    path: Utils.jsonFilePath("toFetch/" + this.name),
+    dataPostProcessor: json => this._metadataPostProcessor(json),
+    beforeSave: () => this._beforeSaveMetadata(),
+  });
+
+  this._previousFailedStorage = new JSONFile({
+    path: Utils.jsonFilePath("failed/" + this.name),
+    dataPostProcessor: json => this._metadataPostProcessor(json),
+    beforeSave: () => this._beforeSaveMetadata(),
+  });
+
   // Async initializations can be made in the initialize() method.
 
   // The map of ids => metadata for records needing a weak upload.
@@ -811,6 +826,23 @@ SyncEngine.prototype = {
   // Which sortindex to use when retrieving records for this engine.
   _defaultSort: undefined,
 
+  _metadataPostProcessor(json) {
+    if (Array.isArray(json)) {
+      // Pre-`JSONFile` storage stored an array, but `JSONFile` defaults to
+      // an object, so we wrap the array for consistency.
+      return { ids: json };
+    }
+    if (!json.ids) {
+      json.ids = [];
+    }
+    return json;
+  },
+
+  async _beforeSaveMetadata() {
+    await ensureDirectory(this._toFetchStorage.path);
+    await ensureDirectory(this._previousFailedStorage.path);
+  },
+
   // A relative priority to use when computing an order
   // for engines to be synced. Higher-priority engines
   // (lower numbers) are synced first.
@@ -826,12 +858,11 @@ SyncEngine.prototype = {
   // URI length limitations.
   guidFetchBatchSize: DEFAULT_GUID_FETCH_BATCH_SIZE,
 
-  // How many records to process in a single batch.
-  applyIncomingBatchSize: DEFAULT_STORE_BATCH_SIZE,
+  downloadBatchSize: DEFAULT_DOWNLOAD_BATCH_SIZE,
 
   async initialize() {
-    await this.loadToFetch();
-    await this.loadPreviousFailed();
+    await this._toFetchStorage.load();
+    await this._previousFailedStorage.load();
     this._log.debug("SyncEngine initialized", this.name);
   },
 
@@ -880,64 +911,22 @@ SyncEngine.prototype = {
   },
 
   get toFetch() {
-    return this._toFetch;
-  },
-  set toFetch(val) {
-    // Coerce the array to a string for more efficient comparison.
-    if (val + "" == this._toFetch) {
-      return;
-    }
-    this._toFetch = val;
-    CommonUtils.namedTimer(function() {
-      try {
-        Async.promiseSpinningly(Utils.jsonSave("toFetch/" + this.name, this, this._toFetch));
-      } catch (error) {
-        this._log.error("Failed to read JSON records to fetch", error);
-      }
-      // Notify our tests that we finished writing the file.
-      Observers.notify("sync-testing:file-saved:toFetch", null, this.name);
-    }, 0, this, "_toFetchDelay");
+    this._toFetchStorage.ensureDataReady();
+    return this._toFetchStorage.data.ids;
   },
 
-  async loadToFetch() {
-    // Initialize to empty if there's no file.
-    this._toFetch = [];
-    let toFetch = await Utils.jsonLoad("toFetch/" + this.name, this);
-    if (toFetch) {
-      this._toFetch = toFetch;
-    }
+  set toFetch(ids) {
+    this._toFetchStorage.data = { ids };
+    this._toFetchStorage.saveSoon();
   },
 
   get previousFailed() {
-    return this._previousFailed;
+    this._previousFailedStorage.ensureDataReady();
+    return this._previousFailedStorage.data.ids;
   },
-  set previousFailed(val) {
-    // Coerce the array to a string for more efficient comparison.
-    if (val + "" == this._previousFailed) {
-      return;
-    }
-    this._previousFailed = val;
-    CommonUtils.namedTimer(function() {
-      Utils.jsonSave("failed/" + this.name, this, this._previousFailed).then(() => {
-        this._log.debug("Successfully wrote previousFailed.");
-      })
-      .catch((error) => {
-        this._log.error("Failed to set previousFailed", error);
-      })
-      .then(() => {
-        // Notify our tests that we finished writing the file.
-        Observers.notify("sync-testing:file-saved:previousFailed", null, this.name);
-      });
-    }, 0, this, "_previousFailedDelay");
-  },
-
-  async loadPreviousFailed() {
-    // Initialize to empty if there's no file
-    this._previousFailed = [];
-    let previousFailed = await Utils.jsonLoad("failed/" + this.name, this);
-    if (previousFailed) {
-      this._previousFailed = previousFailed;
-    }
+  set previousFailed(ids) {
+    this._previousFailedStorage.data = { ids };
+    this._previousFailedStorage.saveSoon();
   },
 
   /*
@@ -1063,187 +1052,67 @@ SyncEngine.prototype = {
   },
 
   /**
-   * Process incoming records.
-   * In the most awful and untestable way possible.
-   * This now accepts something that makes testing vaguely less impossible.
+   * Download and apply remote records changed since the last sync. This
+   * happens in three stages.
+   *
+   * In the first stage, we fetch full records for all changed items, newest
+   * first, up to the download limit. The limit lets us make progress for large
+   * collections, where the sync is likely to be interrupted before we
+   * can fetch everything.
+   *
+   * In the second stage, we fetch the IDs of any remaining records changed
+   * since the last sync, add them to our backlog, and fast-forward our last
+   * sync time.
+   *
+   * In the third stage, we fetch and apply records for all backlogged IDs,
+   * as well as any records that failed to apply during the last sync. We
+   * request records for the IDs in chunks, to avoid exceeding URL length
+   * limits, then remove successfully applied records from the backlog, and
+   * record IDs of any records that failed to apply to retry on the next sync.
    */
-  async _processIncoming(newitems) {
+  async _processIncoming() {
     this._log.trace("Downloading & applying server changes");
 
-    // Figure out how many total items to fetch this sync; do less on mobile.
-    let batchSize = this.downloadLimit || Infinity;
-
-    if (!newitems) {
-      newitems = this.itemSource();
-    }
-
-    if (this._defaultSort) {
-      newitems.sort = this._defaultSort;
-    }
+    let newitems = this.itemSource();
 
     newitems.newer = this.lastSync;
     newitems.full  = true;
-    newitems.limit = batchSize;
+
+    let downloadLimit = Infinity;
+    if (this.downloadLimit) {
+      // Fetch new records up to the download limit. Currently, only the history
+      // engine sets a limit, since the history collection has the highest volume
+      // of changed records between syncs. The other engines fetch all records
+      // changed since the last sync.
+      if (this._defaultSort) {
+        // A download limit with a sort order doesn't make sense: we won't know
+        // which records to backfill.
+        throw new Error("Can't specify download limit with default sort order");
+      }
+      newitems.sort = "newest";
+      downloadLimit = newitems.limit = this.downloadLimit;
+    } else if (this._defaultSort) {
+      // The bookmarks engine fetches records by sort index; other engines leave
+      // the order unspecified. We can remove `_defaultSort` entirely after bug
+      // 1305563: the sort index won't matter because we'll buffer all bookmarks
+      // before applying.
+      newitems.sort = this._defaultSort;
+    }
 
     // applied    => number of items that should be applied.
     // failed     => number of items that failed in this sync.
     // newFailed  => number of items that failed for the first time in this sync.
     // reconciled => number of items that were reconciled.
     let count = {applied: 0, failed: 0, newFailed: 0, reconciled: 0};
-    let handled = [];
-    let applyBatch = [];
-    let failed = [];
-    let failedInPreviousSync = this.previousFailed;
-    let fetchBatch = Utils.arrayUnion(this.toFetch, failedInPreviousSync);
-    // Reset previousFailed for each sync since previously failed items may not fail again.
-    this.previousFailed = [];
+    let recordsToApply = [];
+    let failedInCurrentSync = [];
 
-    // Used (via exceptions) to allow the record handler/reconciliation/etc.
-    // methods to signal that they would like processing of incoming records to
-    // cease.
-    let aborting = undefined;
+    let oldestModified = this.lastModified;
+    let downloadedIDs = new Set();
 
-    async function doApplyBatch() {
-      this._tracker.ignoreAll = true;
-      try {
-        failed = failed.concat((await this._store.applyIncomingBatch(applyBatch)));
-      } catch (ex) {
-        if (Async.isShutdownException(ex)) {
-          throw ex;
-        }
-        // Catch any error that escapes from applyIncomingBatch. At present
-        // those will all be abort events.
-        this._log.warn("Got exception, aborting processIncoming", ex);
-        aborting = ex;
-      }
-      this._tracker.ignoreAll = false;
-      applyBatch = [];
-    }
-
-    async function doApplyBatchAndPersistFailed() {
-      // Apply remaining batch.
-      if (applyBatch.length) {
-        await doApplyBatch.call(this);
-      }
-      // Persist failed items so we refetch them.
-      if (failed.length) {
-        this.previousFailed = Utils.arrayUnion(failed, this.previousFailed);
-        count.failed += failed.length;
-        this._log.debug("Records that failed to apply: " + failed);
-        failed = [];
-      }
-    }
-
-    let key = this.service.collectionKeys.keyForCollection(this.name);
-
-    // Not binding this method to 'this' for performance reasons. It gets
-    // called for every incoming record.
-    let self = this;
-
-    let recordHandler = async function(item) {
-      if (aborting) {
-        return;
-      }
-
-      // Grab a later last modified if possible
-      if (self.lastModified == null || item.modified > self.lastModified)
-        self.lastModified = item.modified;
-
-      // Track the collection for the WBO.
-      item.collection = self.name;
-
-      // Remember which records were processed
-      handled.push(item.id);
-
-      try {
-        try {
-          await item.decrypt(key);
-        } catch (ex) {
-          if (!Utils.isHMACMismatch(ex)) {
-            throw ex;
-          }
-          let strategy = await self.handleHMACMismatch(item, true);
-          if (strategy == SyncEngine.kRecoveryStrategy.retry) {
-            // You only get one retry.
-            try {
-              // Try decrypting again, typically because we've got new keys.
-              self._log.info("Trying decrypt again...");
-              key = self.service.collectionKeys.keyForCollection(self.name);
-              await item.decrypt(key);
-              strategy = null;
-            } catch (ex) {
-              if (!Utils.isHMACMismatch(ex)) {
-                throw ex;
-              }
-              strategy = await self.handleHMACMismatch(item, false);
-            }
-          }
-
-          switch (strategy) {
-            case null:
-              // Retry succeeded! No further handling.
-              break;
-            case SyncEngine.kRecoveryStrategy.retry:
-              self._log.debug("Ignoring second retry suggestion.");
-              // Fall through to error case.
-            case SyncEngine.kRecoveryStrategy.error:
-              self._log.warn("Error decrypting record", ex);
-              failed.push(item.id);
-              return;
-            case SyncEngine.kRecoveryStrategy.ignore:
-              self._log.debug("Ignoring record " + item.id +
-                              " with bad HMAC: already handled.");
-              return;
-          }
-        }
-      } catch (ex) {
-        if (Async.isShutdownException(ex)) {
-          throw ex;
-        }
-        self._log.warn("Error decrypting record", ex);
-        failed.push(item.id);
-        return;
-      }
-
-      if (self._shouldDeleteRemotely(item)) {
-        self._log.trace("Deleting item from server without applying", item);
-        self._deleteId(item.id);
-        return;
-      }
-
-      let shouldApply;
-      try {
-        shouldApply = await self._reconcile(item);
-      } catch (ex) {
-        if (ex.code == Engine.prototype.eEngineAbortApplyIncoming) {
-          self._log.warn("Reconciliation failed: aborting incoming processing.");
-          failed.push(item.id);
-          aborting = ex.cause;
-        } else if (!Async.isShutdownException(ex)) {
-          self._log.warn("Failed to reconcile incoming record " + item.id, ex);
-          failed.push(item.id);
-          return;
-        } else {
-          throw ex;
-        }
-      }
-
-      if (shouldApply) {
-        count.applied++;
-        applyBatch.push(item);
-      } else {
-        count.reconciled++;
-        self._log.trace("Skipping reconciled incoming item " + item.id);
-      }
-
-      if (applyBatch.length == self.applyIncomingBatchSize) {
-        await doApplyBatch.call(self);
-      }
-    };
-
-    // Only bother getting data from the server if there's new things
+    // Stage 1: Fetch new records from the server, up to the download limit.
     if (this.lastModified == null || this.lastModified > this.lastSync) {
-      let { response, records } = await newitems.getBatched();
+      let { response, records } = await newitems.getBatched(this.downloadBatchSize);
       if (!response.success) {
         response.failureCode = ENGINE_DOWNLOAD_FAIL;
         throw response;
@@ -1252,98 +1121,129 @@ SyncEngine.prototype = {
       let maybeYield = Async.jankYielder();
       for (let record of records) {
         await maybeYield();
-        await recordHandler(record);
-      }
-      await doApplyBatchAndPersistFailed.call(this);
+        downloadedIDs.add(record.id);
 
-      if (aborting) {
-        throw aborting;
+        if (record.modified < oldestModified) {
+          oldestModified = record.modified;
+        }
+
+        let { shouldApply, error } = await this._maybeReconcile(record);
+        if (error) {
+          failedInCurrentSync.push(record.id);
+          count.failed++;
+          continue;
+        }
+        if (!shouldApply) {
+          count.reconciled++;
+          continue;
+        }
+        recordsToApply.push(record);
       }
+
+      let failedToApply = await this._applyRecords(recordsToApply);
+      failedInCurrentSync.push(...failedToApply);
+
+      // `applied` is a bit of a misnomer: it counts records that *should* be
+      // applied, so it also includes records that we tried to apply and failed.
+      // `recordsToApply.length - failedToApply.length` is the number of records
+      // that we *successfully* applied.
+      count.failed += failedToApply.length;
+      count.applied += recordsToApply.length;
     }
 
-    // History: check if we got the maximum that we requested; get the rest if so.
-    if (handled.length == newitems.limit) {
-      // XXX - this block appears to have no test coverage (eg, throwing here,
-      // or commenting the entire block causes no tests to fail.)
-      // See bug 1368951 comment 3 for some insightful analysis of why this
-      // might not be doing what we expect anyway, so it may be the case that
-      // this needs both fixing *and* tests.
-      let guidColl = new Collection(this.engineURL, null, this.service);
+    // Stage 2: If we reached our download limit, we might still have records
+    // on the server that changed since the last sync. Fetch the IDs for the
+    // remaining records, and add them to the backlog. Note that this stage
+    // only runs for engines that set a download limit.
+    if (downloadedIDs.size == downloadLimit) {
+      let guidColl = this.itemSource();
 
-      // Sort and limit so that we only get the last X records.
-      guidColl.limit = this.downloadLimit;
       guidColl.newer = this.lastSync;
-
-      // index: Orders by the sortindex descending (highest weight first).
-      guidColl.sort  = "index";
+      guidColl.older = oldestModified;
+      guidColl.sort  = "oldest";
 
       let guids = await guidColl.get();
       if (!guids.success)
         throw guids;
 
-      // Figure out which guids weren't just fetched then remove any guids that
-      // were already waiting and prepend the new ones
-      let extra = Utils.arraySub(guids.obj, handled);
-      if (extra.length > 0) {
-        fetchBatch = Utils.arrayUnion(extra, fetchBatch);
-        this.toFetch = Utils.arrayUnion(extra, this.toFetch);
+      // Filtering out already downloaded IDs here isn't necessary. We only do
+      // that in case the Sync server doesn't support `older` (bug 1316110).
+      let remainingIDs = guids.obj.filter(id => !downloadedIDs.has(id));
+      if (remainingIDs.length > 0) {
+        this.toFetch = Utils.arrayUnion(this.toFetch, remainingIDs);
       }
     }
 
-    // Fast-foward the lastSync timestamp since we have stored the
-    // remaining items in toFetch.
+    // Fast-foward the lastSync timestamp since we have backlogged the
+    // remaining items.
     if (this.lastSync < this.lastModified) {
       this.lastSync = this.lastModified;
     }
 
-    // Process any backlog of GUIDs.
-    // At this point we impose an upper limit on the number of items to fetch
-    // in a single request, even for desktop, to avoid hitting URI limits.
-    batchSize = this.guidFetchBatchSize;
+    // Stage 3: Backfill records from the backlog, and those that failed to
+    // decrypt or apply during the last sync. We only backfill up to the
+    // download limit, to prevent a large backlog for one engine from blocking
+    // the others. We'll keep processing the backlog on subsequent engine syncs.
+    let failedInPreviousSync = this.previousFailed;
+    let idsToBackfill = Utils.arrayUnion(this.toFetch.slice(0, downloadLimit),
+      failedInPreviousSync);
 
-    while (fetchBatch.length && !aborting) {
-      // Reuse the original query, but get rid of the restricting params
-      // and batch remaining records.
-      newitems.limit = 0;
-      newitems.newer = 0;
-      newitems.ids = fetchBatch.slice(0, batchSize);
+    // Note that we intentionally overwrite the previously failed list here.
+    // Records that fail to decrypt or apply in two consecutive syncs are likely
+    // corrupt; we remove them from the list because retrying and failing on
+    // every subsequent sync just adds noise.
+    this.previousFailed = failedInCurrentSync;
 
-      let resp = await newitems.get();
+    let backfilledItems = this.itemSource();
+
+    backfilledItems.sort = "newest";
+    backfilledItems.full = true;
+
+    // `get` includes the list of IDs as a query parameter, so we need to fetch
+    // records in chunks to avoid exceeding URI length limits.
+    for (let ids of PlacesSyncUtils.chunkArray(idsToBackfill, this.guidFetchBatchSize)) {
+      backfilledItems.ids = ids;
+
+      let resp = await backfilledItems.get();
       if (!resp.success) {
         resp.failureCode = ENGINE_DOWNLOAD_FAIL;
         throw resp;
       }
 
       let maybeYield = Async.jankYielder();
+      let backfilledRecordsToApply = [];
+      let failedInBackfill = [];
+
       for (let json of resp.obj) {
         await maybeYield();
         let record = new this._recordObj();
         record.deserialize(json);
-        await recordHandler(record);
-      }
 
-      // This batch was successfully applied. Not using
-      // doApplyBatchAndPersistFailed() here to avoid writing toFetch twice.
-      fetchBatch = fetchBatch.slice(batchSize);
-      this.toFetch = Utils.arraySub(this.toFetch, newitems.ids);
-      this.previousFailed = Utils.arrayUnion(this.previousFailed, failed);
-      if (failed.length) {
-        count.failed += failed.length;
-        this._log.debug("Records that failed to apply: " + failed);
+        let { shouldApply, error } = await this._maybeReconcile(record);
+        if (error) {
+          failedInBackfill.push(record.id);
+          count.failed++;
+          continue;
+        }
+        if (!shouldApply) {
+          count.reconciled++;
+          continue;
+        }
+        backfilledRecordsToApply.push(record);
       }
-      failed = [];
+      let failedToApply = await this._applyRecords(backfilledRecordsToApply);
+      failedInBackfill.push(...failedToApply);
 
-      if (aborting) {
-        throw aborting;
-      }
+      count.failed += failedToApply.length;
+      count.applied += backfilledRecordsToApply.length;
+
+      this.toFetch = Utils.arraySub(this.toFetch, ids);
+      this.previousFailed = Utils.arrayUnion(this.previousFailed, failedInBackfill);
 
       if (this.lastSync < this.lastModified) {
         this.lastSync = this.lastModified;
       }
     }
-
-    // Apply remaining items.
-    await doApplyBatchAndPersistFailed.call(this);
 
     count.newFailed = this.previousFailed.reduce((count, engine) => {
       if (failedInPreviousSync.indexOf(engine) == -1) {
@@ -1359,6 +1259,105 @@ SyncEngine.prototype = {
                     count.newFailed, "newly failed to apply,",
                     count.reconciled, "reconciled."].join(" "));
     Observers.notify("weave:engine:sync:applied", count, this.name);
+  },
+
+  async _maybeReconcile(item) {
+    let key = this.service.collectionKeys.keyForCollection(this.name);
+
+    // Grab a later last modified if possible
+    if (this.lastModified == null || item.modified > this.lastModified) {
+      this.lastModified = item.modified;
+    }
+
+    try {
+      try {
+        await item.decrypt(key);
+      } catch (ex) {
+        if (!Utils.isHMACMismatch(ex)) {
+          throw ex;
+        }
+        let strategy = await this.handleHMACMismatch(item, true);
+        if (strategy == SyncEngine.kRecoveryStrategy.retry) {
+          // You only get one retry.
+          try {
+            // Try decrypting again, typically because we've got new keys.
+            this._log.info("Trying decrypt again...");
+            key = this.service.collectionKeys.keyForCollection(this.name);
+            await item.decrypt(key);
+            strategy = null;
+          } catch (ex) {
+            if (!Utils.isHMACMismatch(ex)) {
+              throw ex;
+            }
+            strategy = await this.handleHMACMismatch(item, false);
+          }
+        }
+
+        switch (strategy) {
+          case null:
+            // Retry succeeded! No further handling.
+            break;
+          case SyncEngine.kRecoveryStrategy.retry:
+            this._log.debug("Ignoring second retry suggestion.");
+            // Fall through to error case.
+          case SyncEngine.kRecoveryStrategy.error:
+            this._log.warn("Error decrypting record", ex);
+            return { shouldApply: false, error: ex };
+          case SyncEngine.kRecoveryStrategy.ignore:
+            this._log.debug("Ignoring record " + item.id +
+                            " with bad HMAC: already handled.");
+            return { shouldApply: false, error: null };
+        }
+      }
+    } catch (ex) {
+      if (Async.isShutdownException(ex)) {
+        throw ex;
+      }
+      this._log.warn("Error decrypting record", ex);
+      return { shouldApply: false, error: ex };
+    }
+
+    if (this._shouldDeleteRemotely(item)) {
+      this._log.trace("Deleting item from server without applying", item);
+      this._deleteId(item.id);
+      return { shouldApply: false, error: null };
+    }
+
+    let shouldApply;
+    try {
+      shouldApply = await this._reconcile(item);
+    } catch (ex) {
+      if (ex.code == Engine.prototype.eEngineAbortApplyIncoming) {
+        this._log.warn("Reconciliation failed: aborting incoming processing.");
+        throw ex.cause;
+      } else if (!Async.isShutdownException(ex)) {
+        this._log.warn("Failed to reconcile incoming record " + item.id, ex);
+        return { shouldApply: false, error: ex };
+      } else {
+        throw ex;
+      }
+    }
+
+    if (!shouldApply) {
+      this._log.trace("Skipping reconciled incoming item " + item.id);
+    }
+
+    return { shouldApply, error: null };
+  },
+
+  async _applyRecords(records) {
+    this._tracker.ignoreAll = true;
+    try {
+      let failedIDs = await this._store.applyIncomingBatch(records);
+      return failedIDs;
+    } catch (ex) {
+      // Catch any error that escapes from applyIncomingBatch. At present
+      // those will all be abort events.
+      this._log.warn("Got exception, aborting processIncoming", ex);
+      throw ex;
+    } finally {
+      this._tracker.ignoreAll = false;
+    }
   },
 
   // Indicates whether an incoming item should be deleted from the server at
@@ -1442,7 +1441,7 @@ SyncEngine.prototype = {
     let locallyModified = this._modified.has(item.id);
 
     // TODO Handle clock drift better. Tracked in bug 721181.
-    let remoteAge = AsyncResource.serverTime - item.modified;
+    let remoteAge = Resource.serverTime - item.modified;
     let localAge  = locallyModified ?
       (Date.now() / 1000 - this._modified.getModifiedTimestamp(item.id)) : null;
     let remoteIsNewer = remoteAge < localAge;
@@ -1895,6 +1894,12 @@ SyncEngine.prototype = {
     for (let [id, change] of this._modified.entries()) {
       this._tracker.addChangedID(id, change);
     }
+  },
+
+  async finalize() {
+    await super.finalize();
+    await this._toFetchStorage.finalize();
+    await this._previousFailedStorage.finalize();
   },
 };
 

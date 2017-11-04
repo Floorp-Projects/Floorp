@@ -188,8 +188,10 @@ Structure:
 .. code-block:: js
 
     "js" : {
-      "setProto": <unsigned integer>, // Number of times __proto__ is set
+      // ...
     }
+
+As of Firefox 59 this section no longer contains any entries.
 
 maximalNumberOfConcurrentThreads
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -467,6 +469,8 @@ Structure:
     "gc": {
       "random": [
         {
+          // "completed" or "aborted" if an OOM occured.
+          "status": "completed",
           // Timestamps are in milliseconds since startup. All the times here
           // are wall-clock times, which may not be monotonically increasing.
           "timestamp": 294872.2,
@@ -486,15 +490,17 @@ Structure:
           // "ZoneChange", "CompartmentRevived".
           "nonincremental_reason": "None",
           "allocated": 37, // In megabytes.
+          "allocated_bytes": 38853696 // in bytes
           "added_chunks": 54,
           "removed_chunks": 12,
           // Total number of slices (some of which may not appear
           // in the "slices" array).
-          "num_slices": 15,
+          "slices": 15,
           // We record at most 4 slices.
-          "slices": [
+          "slice_number": 218, // The first slice number for this GC event.
+          "slices_list": [
             {
-              "slice": 0,  // The index of this slice.
+              "slice": 218,  // The global index of this slice.
               "pause": 23.221,  // How long the slice took.
               "when": 0,  // Milliseconds since the start of the GC.
               "reason": "SET_NEW_DOCUMENT",

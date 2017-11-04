@@ -75,3 +75,8 @@ OS_LIBS += CONFIG['REALTIME_LIBS']
 NO_EXPAND_LIBS = True
 
 DIST_INSTALL = True
+
+# Ensure symbol versions of shared library on Linux do not conflict
+# with those in libxul.
+if CONFIG['OS_TARGET'] == 'Linux':
+    LDFLAGS += ['-Wl,-version-script,symverscript']

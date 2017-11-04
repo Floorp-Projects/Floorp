@@ -275,11 +275,106 @@ add_task(async function testExtensionControlledNewTab() {
   await waitForMessageHidden("browserNewTabExtensionContent");
 
   ok(!aboutNewTabService.newTabURL.startsWith("moz-extension:"), "new tab page is set back to default");
-  is(controlledContent.hidden, true, "The extension controlled row is hidden");
+  is(controlledContent.hidden, true, "The extension controlled row is shown");
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   let addon = await AddonManager.getAddonByID("@set_newtab");
   addon.uninstall();
+});
+
+add_task(async function testExtensionControlledDefaultSearch() {
+  await openPreferencesViaOpenPreferencesAPI("paneSearch", {leaveOpen: true});
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
+  let doc = gBrowser.contentDocument;
+  let extensionId = "@set_default_search";
+  let manifest = {
+    manifest_version: 2,
+    name: "set_default_search",
+    applications: {gecko: {id: extensionId}},
+    description: "set_default_search description",
+    permissions: [],
+    chrome_settings_overrides: {
+      search_provider: {
+        name: "Yahoo",
+        search_url: "https://search.yahoo.com/yhs/search?p=%s&ei=UTF-8&hspart=mozilla&hsimp=yhs-002",
+        is_default: true,
+      },
+    }
+  };
+
+  function setEngine(engine) {
+    doc.querySelector(`#defaultEngine menuitem[label="${engine.name}"]`)
+       .doCommand();
+  }
+
+  is(gBrowser.currentURI.spec, "about:preferences#search",
+     "#search should be in the URI for about:preferences");
+
+  let controlledContent = doc.getElementById("browserDefaultSearchExtensionContent");
+  let initialEngine = Services.search.currentEngine;
+
+  // Ensure the controlled content is hidden when not controlled.
+  is(controlledContent.hidden, true, "The extension controlled row is hidden");
+
+  // Install an extension that will set the default search engine.
+  let originalExtension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: Object.assign({}, manifest, {version: "1.0"}),
+  });
+
+  let messageShown = waitForMessageShown("browserDefaultSearchExtensionContent");
+  await originalExtension.startup();
+  await messageShown;
+
+  let addon = await AddonManager.getAddonByID(extensionId);
+  is(addon.version, "1.0", "The addon has the expected version.");
+
+  // The default search engine has been set by the extension and the user is notified.
+  let controlledLabel = controlledContent.querySelector("description");
+  let extensionEngine = Services.search.currentEngine;
+  ok(initialEngine != extensionEngine, "The default engine has changed.");
+  // There are two spaces before "set_default_search" because it's " <image /> set_default_search".
+  is(controlledLabel.textContent,
+     "An extension,  set_default_search, has set your default search engine.",
+     "The user is notified that an extension is controlling the default search engine");
+  is(controlledContent.hidden, false, "The extension controlled row is shown");
+
+  // Set the engine back to the initial one, ensure the message is hidden.
+  setEngine(initialEngine);
+  await waitForMessageHidden(controlledContent.id);
+
+  is(initialEngine, Services.search.currentEngine,
+     "default search engine is set back to default");
+  is(controlledContent.hidden, true, "The extension controlled row is hidden");
+
+  // Setting the engine back to the extension's engine does not show the message.
+  setEngine(extensionEngine);
+
+  is(extensionEngine, Services.search.currentEngine,
+     "default search engine is set back to extension");
+  is(controlledContent.hidden, true, "The extension controlled row is still hidden");
+
+  // Set the engine to the initial one and verify an upgrade doesn't change it.
+  setEngine(initialEngine);
+  await waitForMessageHidden(controlledContent.id);
+
+  // Update the extension and wait for "ready".
+  let updatedExtension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: Object.assign({}, manifest, {version: "2.0"}),
+  });
+  await updatedExtension.startup();
+  addon = await AddonManager.getAddonByID(extensionId);
+
+  // Verify the extension is updated and search engine didn't change.
+  is(addon.version, "2.0", "The updated addon has the expected version");
+  is(controlledContent.hidden, true, "The extension controlled row is hidden after update");
+  is(initialEngine, Services.search.currentEngine,
+     "default search engine is still the initial engine after update");
+
+  await originalExtension.unload();
+  await updatedExtension.unload();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testExtensionControlledHomepageUninstalledAddon() {

@@ -28,7 +28,7 @@ typedef void (*IhtFunc)(const tran_low_t *in, uint8_t *out, int stride,
                         const TxfmParam *txfm_param);
 using std::tr1::tuple;
 using libaom_test::FhtFunc;
-typedef tuple<FhtFunc, IhtFunc, int, aom_bit_depth_t, int> Ht32x32Param;
+typedef tuple<FhtFunc, IhtFunc, TX_TYPE, aom_bit_depth_t, int> Ht32x32Param;
 
 void fht32x32_ref(const int16_t *in, tran_low_t *out, int stride,
                   TxfmParam *txfm_param) {
@@ -37,20 +37,20 @@ void fht32x32_ref(const int16_t *in, tran_low_t *out, int stride,
 
 #if CONFIG_HIGHBITDEPTH
 typedef void (*IHbdHtFunc)(const tran_low_t *in, uint8_t *out, int stride,
-                           int tx_type, int bd);
+                           TX_TYPE tx_type, int bd);
 typedef void (*HbdHtFunc)(const int16_t *input, int32_t *output, int stride,
-                          int tx_type, int bd);
+                          TX_TYPE tx_type, int bd);
 
 // Target optimized function, tx_type, bit depth
-typedef tuple<HbdHtFunc, int, int> HighbdHt32x32Param;
+typedef tuple<HbdHtFunc, TX_TYPE, int> HighbdHt32x32Param;
 
 void highbd_fht32x32_ref(const int16_t *in, int32_t *out, int stride,
-                         int tx_type, int bd) {
+                         TX_TYPE tx_type, int bd) {
   av1_fwd_txfm2d_32x32_c(in, out, stride, tx_type, bd);
 }
 #endif  // CONFIG_HIGHBITDEPTH
 
-#if HAVE_SSE2 || HAVE_AVX2
+#if (HAVE_SSE2 || HAVE_AVX2) && !CONFIG_DAALA_DCT32
 void dummy_inv_txfm(const tran_low_t *in, uint8_t *out, int stride,
                     const TxfmParam *txfm_param) {
   (void)in;
@@ -129,7 +129,7 @@ class AV1HighbdTrans32x32HT
  private:
   HbdHtFunc fwd_txfm_;
   HbdHtFunc fwd_txfm_ref_;
-  int tx_type_;
+  TX_TYPE tx_type_;
   int bit_depth_;
   int mask_;
   int num_coeffs_;
@@ -165,53 +165,63 @@ TEST_P(AV1HighbdTrans32x32HT, HighbdCoeffCheck) { RunBitexactCheck(); }
 
 using std::tr1::make_tuple;
 
-#if HAVE_SSE2
+#if HAVE_SSE2 && !CONFIG_DAALA_DCT32
 const Ht32x32Param kArrayHt32x32Param_sse2[] = {
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 0, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 1, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 2, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 3, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, DCT_DCT, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, ADST_DCT, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, DCT_ADST, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, ADST_ADST, AOM_BITS_8, 1024),
 #if CONFIG_EXT_TX
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 4, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 5, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 6, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 7, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 8, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 9, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 10, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 11, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 12, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 13, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 14, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, 15, AOM_BITS_8, 1024)
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, FLIPADST_DCT, AOM_BITS_8,
+             1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, DCT_FLIPADST, AOM_BITS_8,
+             1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, FLIPADST_FLIPADST, AOM_BITS_8,
+             1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, ADST_FLIPADST, AOM_BITS_8,
+             1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, FLIPADST_ADST, AOM_BITS_8,
+             1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, IDTX, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, V_DCT, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, H_DCT, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, V_ADST, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, H_ADST, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, V_FLIPADST, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_sse2, &dummy_inv_txfm, H_FLIPADST, AOM_BITS_8, 1024)
 #endif  // CONFIG_EXT_TX
 };
 INSTANTIATE_TEST_CASE_P(SSE2, AV1Trans32x32HT,
                         ::testing::ValuesIn(kArrayHt32x32Param_sse2));
-#endif  // HAVE_SSE2
+#endif  // HAVE_SSE2 && !CONFIG_DAALA_DCT32
 
-#if HAVE_AVX2
+#if HAVE_AVX2 && !CONFIG_DAALA_DCT32
 const Ht32x32Param kArrayHt32x32Param_avx2[] = {
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 0, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 1, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 2, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 3, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, DCT_DCT, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, ADST_DCT, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, DCT_ADST, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, ADST_ADST, AOM_BITS_8, 1024),
 #if CONFIG_EXT_TX
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 4, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 5, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 6, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 7, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 8, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 9, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 10, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 11, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 12, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 13, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 14, AOM_BITS_8, 1024),
-  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, 15, AOM_BITS_8, 1024)
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, FLIPADST_DCT, AOM_BITS_8,
+             1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, DCT_FLIPADST, AOM_BITS_8,
+             1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, FLIPADST_FLIPADST, AOM_BITS_8,
+             1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, ADST_FLIPADST, AOM_BITS_8,
+             1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, FLIPADST_ADST, AOM_BITS_8,
+             1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, IDTX, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, V_DCT, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, H_DCT, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, V_ADST, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, H_ADST, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, V_FLIPADST, AOM_BITS_8, 1024),
+  make_tuple(&av1_fht32x32_avx2, &dummy_inv_txfm, H_FLIPADST, AOM_BITS_8, 1024)
 #endif  // CONFIG_EXT_TX
 };
 INSTANTIATE_TEST_CASE_P(AVX2, AV1Trans32x32HT,
                         ::testing::ValuesIn(kArrayHt32x32Param_avx2));
-#endif  // HAVE_AVX2
+#endif  // HAVE_AVX2 && !CONFIG_DAALA_DCT32
 }  // namespace

@@ -1,0 +1,4 @@
+cryptography >= 1.8
+requests >= 2.0
+pyasn1 >= 0.3
+pyasn1_modules >= 0.1

@@ -27,6 +27,13 @@ add_task(function* () {
   });
   yield wait;
 
+  for (let requestItem of document.querySelectorAll(".request-list-item")) {
+    let requestsListStatus = requestItem.querySelector(".requests-list-status");
+    requestItem.scrollIntoView();
+    EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+    yield waitUntil(() => requestsListStatus.title);
+  }
+
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),

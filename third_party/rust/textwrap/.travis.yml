@@ -7,6 +7,15 @@ rust:
 
 cache: cargo
 
+before_install:
+  # We need Rust 1.15 or later for version-sync
+  - |
+      if [[ "$TRAVIS_RUST_VERSION" =~ 1\.(8|13)\.0 ]]; then
+          echo "Old Rust detected, removing version-sync dependency"
+          sed -i "/^version-sync =/d" Cargo.toml
+          rm "tests/version-numbers.rs"
+      fi
+
 script:
   - cargo build --verbose --features "$FEATURES"
   - cargo test --verbose --features "$FEATURES"

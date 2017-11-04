@@ -528,22 +528,6 @@ js::SetPreserveWrapperCallback(JSContext* cx, PreserveWrapperCallback callback)
     cx->runtime()->preserveWrapperCallback = callback;
 }
 
-/*
- * The below code is for temporary telemetry use. It can be removed when
- * sufficient data has been harvested.
- */
-
-namespace js {
-// Defined in vm/GlobalObject.cpp.
-extern size_t sSetProtoCalled;
-} // namespace js
-
-JS_FRIEND_API(size_t)
-JS_SetProtoCalled(JSContext*)
-{
-    return sSetProtoCalled;
-}
-
 JS_FRIEND_API(unsigned)
 JS_PCToLineNumber(JSScript* script, jsbytecode* pc, unsigned* columnp)
 {

@@ -231,6 +231,12 @@ function test() {
       is(requestItem.headersSize, 330,
         "The headersSize data has an incorrect value.");
 
+      let requestListItem = document.querySelector(".request-list-item");
+      requestListItem.scrollIntoView();
+      let requestsListStatus = requestListItem.querySelector(".requests-list-status");
+      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+      await waitUntil(() => requestsListStatus.title);
+
       verifyRequestItemTarget(
         document,
         getDisplayedRequests(store.getState()),

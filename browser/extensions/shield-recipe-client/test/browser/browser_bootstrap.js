@@ -1,6 +1,7 @@
 "use strict";
 
 Cu.import("resource://shield-recipe-client/lib/ShieldRecipeClient.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
 
 // We can't import bootstrap.js directly since it isn't in the jar manifest, but
 // we can use Addon.getResourceURI to get a path to the file and import using
@@ -23,6 +24,12 @@ function withBootstrap(testFunction) {
 const initPref1 = "test.initShieldPrefs1";
 const initPref2 = "test.initShieldPrefs2";
 const initPref3 = "test.initShieldPrefs3";
+
+const experimentPref1 = "test.initExperimentPrefs1";
+const experimentPref2 = "test.initExperimentPrefs2";
+const experimentPref3 = "test.initExperimentPrefs3";
+const experimentPref4 = "test.initExperimentPrefs4";
+
 decorate_task(
   withPrefEnv({
     clear: [[initPref1], [initPref2], [initPref3]],
@@ -80,9 +87,6 @@ decorate_task(
   },
 );
 
-const experimentPref1 = "test.initExperimentPrefs1";
-const experimentPref2 = "test.initExperimentPrefs2";
-const experimentPref3 = "test.initExperimentPrefs3";
 decorate_task(
   withPrefEnv({
     set: [
@@ -169,30 +173,82 @@ decorate_task(
 
 decorate_task(
   withBootstrap,
-  withStub(ShieldRecipeClient, "startup"),
-  async function testStartupDelayed(Bootstrap, startupStub) {
-    Bootstrap.startup(undefined, 1); // 1 == APP_STARTUP
-    ok(
-      !startupStub.called,
-      "When started at app startup, do not call ShieldRecipeClient.startup immediately.",
-    );
+  async function testStartupDelayed(Bootstrap) {
+    const finishStartupStub = sinon.stub(Bootstrap, "finishStartup");
+    try {
+      Bootstrap.startup(undefined, 1); // 1 == APP_STARTUP
+      ok(
+        !finishStartupStub.called,
+        "When started at app startup, do not call ShieldRecipeClient.startup immediately.",
+      );
 
-    Bootstrap.observe(null, "sessionstore-windows-restored");
-    ok(
-      startupStub.called,
-      "Once the sessionstore-windows-restored event is observed, call ShieldRecipeClient.startup.",
-    );
+      Bootstrap.observe(null, "sessionstore-windows-restored");
+      ok(
+        finishStartupStub.called,
+        "Once the sessionstore-windows-restored event is observed, call ShieldRecipeClient.startup.",
+      );
+    } finally {
+      finishStartupStub.restore();
+    }
   },
 );
 
 decorate_task(
   withBootstrap,
-  withStub(ShieldRecipeClient, "startup"),
-  async function testStartupDelayed(Bootstrap, startupStub) {
-    Bootstrap.startup(undefined, 3); // 1 == ADDON_ENABLED
-    ok(
-      startupStub.called,
-      "When the add-on is enabled outside app startup, call ShieldRecipeClient.startup immediately.",
+  async function testStartupDelayed(Bootstrap) {
+    const finishStartupStub = sinon.stub(Bootstrap, "finishStartup");
+    try {
+      Bootstrap.startup(undefined, 3); // 3 == ADDON_ENABLED
+      ok(
+        finishStartupStub.called,
+        "When the add-on is enabled outside app startup, call ShieldRecipeClient.startup immediately.",
+      );
+    } finally {
+      finishStartupStub.restore();
+    }
+  },
+);
+
+// During startup, preferences that are changed for experiments should
+// be record by calling PreferenceExperiments.recordOriginalValues.
+decorate_task(
+  withPrefEnv({
+    set: [
+      [`extensions.shield-recipe-client.startupExperimentPrefs.${experimentPref1}`, true],
+      [`extensions.shield-recipe-client.startupExperimentPrefs.${experimentPref2}`, 2],
+      [`extensions.shield-recipe-client.startupExperimentPrefs.${experimentPref3}`, "string"],
+      [`extensions.shield-recipe-client.startupExperimentPrefs.${experimentPref4}`, "another string"],
+    ],
+    clear: [
+      [experimentPref1],
+      [experimentPref2],
+      [experimentPref3],
+      [experimentPref4],
+      ["extensions.shield-recipe-client.startupExperimentPrefs.existingPref"],
+    ],
+  }),
+  withBootstrap,
+  withStub(PreferenceExperiments, "recordOriginalValues"),
+  async function testInitExperimentPrefs(Bootstrap, recordOriginalValuesStub) {
+    const defaultBranch = Services.prefs.getDefaultBranch("");
+
+    defaultBranch.setBoolPref(experimentPref1, false);
+    defaultBranch.setIntPref(experimentPref2, 1);
+    defaultBranch.setCharPref(experimentPref3, "original string");
+    // experimentPref4 is left unset
+
+    Bootstrap.initExperimentPrefs();
+    await Bootstrap.finishStartup();
+
+    Assert.deepEqual(
+      recordOriginalValuesStub.getCall(0).args,
+      [{
+        [experimentPref1]: false,
+        [experimentPref2]: 1,
+        [experimentPref3]: "original string",
+        [experimentPref4]: null,  // null because it was not initially set.
+      }],
+      "finishStartup should record original values of the prefs initExperimentPrefs changed",
     );
   },
 );

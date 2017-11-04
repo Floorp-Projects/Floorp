@@ -18,17 +18,17 @@
 #include "aom_dsp/x86/txfm_common_avx2.h"
 
 static INLINE void load_coeff(const tran_low_t *coeff, __m256i *in) {
-#if CONFIG_HIGHBITDEPTH
-  *in = _mm256_setr_epi16(
-      (int16_t)coeff[0], (int16_t)coeff[1], (int16_t)coeff[2],
-      (int16_t)coeff[3], (int16_t)coeff[4], (int16_t)coeff[5],
-      (int16_t)coeff[6], (int16_t)coeff[7], (int16_t)coeff[8],
-      (int16_t)coeff[9], (int16_t)coeff[10], (int16_t)coeff[11],
-      (int16_t)coeff[12], (int16_t)coeff[13], (int16_t)coeff[14],
-      (int16_t)coeff[15]);
-#else
-  *in = _mm256_loadu_si256((const __m256i *)coeff);
-#endif
+  if (sizeof(tran_low_t) == 4) {
+    *in = _mm256_setr_epi16(
+        (int16_t)coeff[0], (int16_t)coeff[1], (int16_t)coeff[2],
+        (int16_t)coeff[3], (int16_t)coeff[4], (int16_t)coeff[5],
+        (int16_t)coeff[6], (int16_t)coeff[7], (int16_t)coeff[8],
+        (int16_t)coeff[9], (int16_t)coeff[10], (int16_t)coeff[11],
+        (int16_t)coeff[12], (int16_t)coeff[13], (int16_t)coeff[14],
+        (int16_t)coeff[15]);
+  } else {
+    *in = _mm256_loadu_si256((const __m256i *)coeff);
+  }
 }
 
 static INLINE void load_buffer_16x16(const tran_low_t *coeff, __m256i *in) {

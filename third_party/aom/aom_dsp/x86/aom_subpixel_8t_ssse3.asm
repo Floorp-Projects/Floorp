@@ -346,9 +346,15 @@ cglobal filter_block1d16_%1, 6, 6, 14, LOCAL_VARS_SIZE, \
     psraw         m0, 7
     psraw         m4, 7
 %ifidn %1, h8_add_src
+%if ARCH_X86=1 && CONFIG_PIC=1
+    pcmpeqb       m2, m2                  ;all ones
+    psrlw         m2, 8                   ;even_byte_mask
+%else
+    mova          m2, [GLOBAL(even_byte_mask)]
+%endif
     movu          m5, [srcq]
     mova          m7, m5
-    pand          m5, [even_byte_mask]
+    pand          m5, m2
     psrlw         m7, 8
     paddsw        m0, m5
     paddsw        m4, m7

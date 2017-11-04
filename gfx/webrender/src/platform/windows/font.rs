@@ -253,46 +253,46 @@ impl FontContext {
             })
     }
 
-    // DWRITE gives us values in RGB. WR doesn't really touch it after. Note, CG returns in BGR
-    // TODO: Decide whether all fonts should return RGB or BGR
-    fn convert_to_rgba(&self, pixels: &[u8], render_mode: FontRenderMode) -> Vec<u8> {
+    // DWrite ClearType gives us values in RGB, but WR expects BGRA.
+    fn convert_to_bgra(&self, pixels: &[u8], render_mode: FontRenderMode) -> Vec<u8> {
         match render_mode {
             FontRenderMode::Bitmap => {
                 unreachable!("TODO: bitmap fonts");
             }
             FontRenderMode::Mono => {
-                let mut rgba_pixels: Vec<u8> = vec![0; pixels.len() * 4];
+                let mut bgra_pixels: Vec<u8> = vec![0; pixels.len() * 4];
                 for i in 0 .. pixels.len() {
-                    rgba_pixels[i * 4 + 0] = pixels[i];
-                    rgba_pixels[i * 4 + 1] = pixels[i];
-                    rgba_pixels[i * 4 + 2] = pixels[i];
-                    rgba_pixels[i * 4 + 3] = pixels[i];
+                    let alpha = pixels[i];
+                    bgra_pixels[i * 4 + 0] = alpha;
+                    bgra_pixels[i * 4 + 1] = alpha;
+                    bgra_pixels[i * 4 + 2] = alpha;
+                    bgra_pixels[i * 4 + 3] = alpha;
                 }
-                rgba_pixels
+                bgra_pixels
             }
             FontRenderMode::Alpha => {
                 let length = pixels.len() / 3;
-                let mut rgba_pixels: Vec<u8> = vec![0; length * 4];
+                let mut bgra_pixels: Vec<u8> = vec![0; length * 4];
                 for i in 0 .. length {
                     // Only take the G channel, as its closest to D2D
                     let alpha = pixels[i * 3 + 1] as u8;
-                    rgba_pixels[i * 4 + 0] = alpha;
-                    rgba_pixels[i * 4 + 1] = alpha;
-                    rgba_pixels[i * 4 + 2] = alpha;
-                    rgba_pixels[i * 4 + 3] = alpha;
+                    bgra_pixels[i * 4 + 0] = alpha;
+                    bgra_pixels[i * 4 + 1] = alpha;
+                    bgra_pixels[i * 4 + 2] = alpha;
+                    bgra_pixels[i * 4 + 3] = alpha;
                 }
-                rgba_pixels
+                bgra_pixels
             }
             FontRenderMode::Subpixel => {
                 let length = pixels.len() / 3;
-                let mut rgba_pixels: Vec<u8> = vec![0; length * 4];
+                let mut bgra_pixels: Vec<u8> = vec![0; length * 4];
                 for i in 0 .. length {
-                    rgba_pixels[i * 4 + 0] = pixels[i * 3 + 0];
-                    rgba_pixels[i * 4 + 1] = pixels[i * 3 + 1];
-                    rgba_pixels[i * 4 + 2] = pixels[i * 3 + 2];
-                    rgba_pixels[i * 4 + 3] = 0xff;
+                    bgra_pixels[i * 4 + 0] = pixels[i * 3 + 0];
+                    bgra_pixels[i * 4 + 1] = pixels[i * 3 + 1];
+                    bgra_pixels[i * 4 + 2] = pixels[i * 3 + 2];
+                    bgra_pixels[i * 4 + 3] = 0xff;
                 }
-                rgba_pixels
+                bgra_pixels
             }
         }
     }
@@ -328,8 +328,8 @@ impl FontContext {
         let texture_type = dwrite_texture_type(font.render_mode);
 
         let bounds = analysis.get_alpha_texture_bounds(texture_type);
-        let width = (bounds.right - bounds.left) as usize;
-        let height = (bounds.bottom - bounds.top) as usize;
+        let width = (bounds.right - bounds.left) as u32;
+        let height = (bounds.bottom - bounds.top) as u32;
 
         // Alpha texture bounds can sometimes return an empty rect
         // Such as for spaces
@@ -337,7 +337,8 @@ impl FontContext {
             return None;
         }
 
-        let mut pixels = analysis.create_alpha_texture(texture_type, bounds);
+        let pixels = analysis.create_alpha_texture(texture_type, bounds);
+        let mut bgra_pixels = self.convert_to_bgra(&pixels, font.render_mode);
 
         match font.render_mode {
             FontRenderMode::Mono | FontRenderMode::Bitmap => {}
@@ -351,25 +352,18 @@ impl FontContext {
                     None => &self.gamma_lut,
                 };
 
-                lut_correction.preblend_rgb(
-                    &mut pixels,
-                    width,
-                    height,
-                    font.color,
-                );
+                lut_correction.preblend(&mut bgra_pixels, font.color);
             }
         }
-
-        let rgba_pixels = self.convert_to_rgba(&mut pixels, font.render_mode);
 
         Some(RasterizedGlyph {
             left: bounds.left as f32,
             top: -bounds.top as f32,
-            width: width as u32,
-            height: height as u32,
+            width,
+            height,
             scale: 1.0,
             format: GlyphFormat::from(font.render_mode),
-            bytes: rgba_pixels,
+            bytes: bgra_pixels,
         })
     }
 }

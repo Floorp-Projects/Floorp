@@ -100,9 +100,9 @@ void AV1HiprecConvolveTest::RunCheckOutput(hiprec_convolve_func test_impl) {
               vkernel, 16, out_w, out_h);
 
     for (j = 0; j < out_w * out_h; ++j)
-      ASSERT_EQ(output[j], output2[j]) << "Pixel mismatch at index " << j
-                                       << " = (" << (j % out_w) << ", "
-                                       << (j / out_w) << ") on iteration " << i;
+      ASSERT_EQ(output[j], output2[j])
+          << "Pixel mismatch at index " << j << " = (" << (j % out_w) << ", "
+          << (j / out_w) << ") on iteration " << i;
   }
   delete[] input_;
   delete[] output;
@@ -175,9 +175,9 @@ void AV1HighbdHiprecConvolveTest::RunCheckOutput(
               hkernel, 16, vkernel, 16, out_w, out_h, bd);
 
     for (j = 0; j < out_w * out_h; ++j)
-      ASSERT_EQ(output[j], output2[j]) << "Pixel mismatch at index " << j
-                                       << " = (" << (j % out_w) << ", "
-                                       << (j / out_w) << ") on iteration " << i;
+      ASSERT_EQ(output[j], output2[j])
+          << "Pixel mismatch at index " << j << " = (" << (j % out_w) << ", "
+          << (j / out_w) << ") on iteration " << i;
   }
   delete[] input;
   delete[] output;

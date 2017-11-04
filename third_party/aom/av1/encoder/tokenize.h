@@ -37,15 +37,12 @@ typedef struct {
 typedef struct {
   aom_cdf_prob (*tail_cdf)[CDF_SIZE(ENTROPY_TOKENS)];
   aom_cdf_prob (*head_cdf)[CDF_SIZE(ENTROPY_TOKENS)];
-#if CONFIG_PALETTE
-  aom_cdf_prob *palette_cdf;
-#endif  // CONFIG_PALETTE
+  aom_cdf_prob *color_map_cdf;
   int eob_val;
   int first_val;
   const aom_prob *context_tree;
   EXTRABIT extra;
   uint8_t token;
-  uint8_t skip_eob_node;
 } TOKENEXTRA;
 
 extern const aom_tree_index av1_coef_tree[];
@@ -77,12 +74,14 @@ void av1_tokenize_sb_vartx(const struct AV1_COMP *cpi, struct ThreadData *td,
                            TOKENEXTRA **t, RUN_TYPE dry_run, int mi_row,
                            int mi_col, BLOCK_SIZE bsize, int *rate);
 #endif
-#if CONFIG_PALETTE
-void av1_tokenize_palette_sb(const struct AV1_COMP *cpi,
-                             const struct ThreadData *const td, int plane,
-                             TOKENEXTRA **t, RUN_TYPE dry_run, BLOCK_SIZE bsize,
-                             int *rate);
-#endif  // CONFIG_PALETTE
+
+int av1_cost_color_map(const MACROBLOCK *const x, int plane, int block,
+                       BLOCK_SIZE bsize, TX_SIZE tx_size, COLOR_MAP_TYPE type);
+
+void av1_tokenize_color_map(const MACROBLOCK *const x, int plane, int block,
+                            TOKENEXTRA **t, BLOCK_SIZE bsize, TX_SIZE tx_size,
+                            COLOR_MAP_TYPE type);
+
 void av1_tokenize_sb(const struct AV1_COMP *cpi, struct ThreadData *td,
                      TOKENEXTRA **t, RUN_TYPE dry_run, BLOCK_SIZE bsize,
                      int *rate, const int mi_row, const int mi_col);
@@ -139,13 +138,11 @@ static INLINE int av1_get_token_cost(int v, int16_t *token, int cat6_bits) {
   return av1_dct_cat_lt_10_value_cost[v];
 }
 
-#if !CONFIG_PVQ || CONFIG_VAR_TX
-static INLINE int get_tx_eob(const struct segmentation *seg, int segment_id,
-                             TX_SIZE tx_size) {
+static INLINE int av1_get_tx_eob(const struct segmentation *seg, int segment_id,
+                                 TX_SIZE tx_size) {
   const int eob_max = tx_size_2d[tx_size];
   return segfeature_active(seg, segment_id, SEG_LVL_SKIP) ? 0 : eob_max;
 }
-#endif
 
 #ifdef __cplusplus
 }  // extern "C"

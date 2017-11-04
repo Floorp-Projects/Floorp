@@ -233,22 +233,17 @@ public:
                      bool aHaveHotspot, float aHotspotX, float aHotspotY,
                      nsIWidget* aWidget, bool aLockCursor);
 
-  static void StartHandlingUserInput()
-  {
-    ++sUserInputEventDepth;
-    ++sUserInputCounter;
-    if (sUserInputEventDepth == 1) {
-      sLatestUserInputStart = sHandlingInputStart = TimeStamp::Now();
-    }
-  }
-
-  static void StopHandlingUserInput()
-  {
-    --sUserInputEventDepth;
-    if (sUserInputEventDepth == 0) {
-      sHandlingInputStart = TimeStamp();
-    }
-  }
+  /**
+   * StartHandlingUserInput() is called when we start to handle a user input.
+   * StopHandlingUserInput() is called when we finish handling a user input.
+   * If the caller knows which input event caused that, it should set
+   * aMessage to the event message.  Otherwise, set eVoidEvent.
+   * Note that StopHandlingUserInput() caller should call it with exactly same
+   * event message as its corresponding StartHandlingUserInput() call because
+   * these methods may count the number of specific event message.
+   */
+  static void StartHandlingUserInput(EventMessage aMessage);
+  static void StopHandlingUserInput(EventMessage aMessage);
 
   static TimeStamp GetHandlingInputStart() {
     return sHandlingInputStart;
@@ -256,12 +251,14 @@ public:
 
   /**
    * Returns true if the current code is being executed as a result of
-   * user input.  This includes anything that is initiated by user,
-   * with the exception of page load events or mouse over events. If
-   * this method is called from asynchronously executed code, such as
-   * during layout reflows, it will return false.
+   * user input or keyboard input.  The former includes anything that is
+   * initiated by user, with the exception of page load events or mouse
+   * over events.  And the latter returns true when one of the user inputs
+   * is an input from keyboard.  If these methods are called from asynchronously
+   * executed code, such as during layout reflows, it will return false.
    */
   static bool IsHandlingUserInput();
+  static bool IsHandlingKeyboardInput();
 
   /**
    * Get the number of user inputs handled since process start. This
@@ -1092,12 +1089,14 @@ public:
   // of page load events or mouse over events.
   static uint64_t sUserInputCounter;
 
-  // The current depth of user inputs. This includes anything that is
-  // initiated by user, with the exception of page load events or
-  // mouse over events. Incremented whenever we start handling a user
-  // input, decremented when we have finished handling a user
-  // input. This depth is *not* reset in case of nested event loops.
+  // The current depth of user and keyboard inputs. sUserInputEventDepth
+  // is the number of any user input events, page load events and mouse over
+  // events.  sUserKeyboardEventDepth is the number of keyboard input events.
+  // Incremented whenever we start handling a user input, decremented when we
+  // have finished handling a user input. This depth is *not* reset in case
+  // of nested event loops.
   static int32_t sUserInputEventDepth;
+  static int32_t sUserKeyboardEventDepth;
 
   static bool sNormalLMouseEventInProcess;
 
@@ -1130,11 +1129,14 @@ public:
   ~AutoHandlingUserInputStatePusher();
 
 protected:
-  bool mIsHandlingUserInput;
-  bool mIsMouseDown;
-  bool mResetFMMouseButtonHandlingState;
-
   nsCOMPtr<nsIDocument> mMouseButtonEventHandlingDocument;
+  EventMessage mMessage;
+  bool mIsHandlingUserInput;
+
+  bool NeedsToResetFocusManagerMouseButtonHandlingState() const
+  {
+    return mMessage == eMouseDown || mMessage == eMouseUp;
+  }
 
 private:
   // Hide so that this class can only be stack-allocated

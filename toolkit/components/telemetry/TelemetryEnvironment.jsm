@@ -271,7 +271,6 @@ const PREF_PARTNER_ID = "mozilla.partner.id";
 const PREF_UPDATE_ENABLED = "app.update.enabled";
 const PREF_UPDATE_AUTODOWNLOAD = "app.update.auto";
 const PREF_SEARCH_COHORT = "browser.search.cohort";
-const PREF_E10S_COHORT = "e10s.rollout.cohort";
 
 const COMPOSITOR_CREATED_TOPIC = "compositor:created";
 const COMPOSITOR_PROCESS_ABORTED_TOPIC = "compositor:process-aborted";
@@ -1367,7 +1366,6 @@ EnvironmentCache.prototype = {
       blocklistEnabled: Services.prefs.getBoolPref(PREF_BLOCKLIST_ENABLED, true),
       e10sEnabled: Services.appinfo.browserTabsRemoteAutostart,
       e10sMultiProcesses: Services.appinfo.maxWebProcessCount,
-      e10sCohort: Services.prefs.getStringPref(PREF_E10S_COHORT, "unknown"),
       telemetryEnabled: Utils.isTelemetryEnabled,
       locale: getBrowserLocale(),
       update: {

@@ -24,10 +24,12 @@ extern "C" {
 #endif
 
 #if HAVE_DSPR2
+/* Note: this macro expects a local int32_t named out to exist, and will write
+ * to that variable. */
 #define DCT_CONST_ROUND_SHIFT_TWICE_COSPI_16_64(input)                         \
   ({                                                                           \
                                                                                \
-    int32_t tmp, out;                                                          \
+    int32_t tmp;                                                               \
     int dct_cost_rounding = DCT_CONST_ROUNDING;                                \
     int in = input;                                                            \
                                                                                \

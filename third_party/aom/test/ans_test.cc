@@ -51,7 +51,8 @@ PvVec abs_encode_build_vals(int iters) {
 
 bool check_rabs(const PvVec &pv_vec, uint8_t *buf) {
   BufAnsCoder a;
-  aom_buf_ans_alloc(&a, NULL, kBufAnsSize);
+  a.size = kBufAnsSize;
+  aom_buf_ans_alloc(&a, NULL);
   buf_ans_write_init(&a, buf);
 
   std::clock_t start = std::clock();
@@ -125,7 +126,8 @@ void rans_build_dec_tab(const struct rans_sym sym_tab[],
 bool check_rans(const std::vector<int> &sym_vec, const rans_sym *const tab,
                 uint8_t *buf) {
   BufAnsCoder a;
-  aom_buf_ans_alloc(&a, NULL, kBufAnsSize);
+  a.size = kBufAnsSize;
+  aom_buf_ans_alloc(&a, NULL);
   buf_ans_write_init(&a, buf);
   aom_cdf_prob dec_tab[kRansSymbols];
   rans_build_dec_tab(tab, dec_tab);

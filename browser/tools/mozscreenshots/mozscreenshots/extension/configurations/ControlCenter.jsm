@@ -33,7 +33,7 @@ this.ControlCenter = {
     about: {
       selectors: ["#identity-popup"],
       async applyConfig() {
-        await loadPage("about:home");
+        await loadPage("about:rights");
         await openIdentityPopup();
       },
     },

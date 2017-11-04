@@ -87,8 +87,6 @@ static const arg_def_t frameparallelarg =
     ARG_DEF(NULL, "frame-parallel", 0, "Frame parallel decode");
 static const arg_def_t verbosearg =
     ARG_DEF("v", "verbose", 0, "Show version string");
-static const arg_def_t error_concealment =
-    ARG_DEF(NULL, "error-concealment", 0, "Enable decoder error-concealment");
 static const arg_def_t scalearg =
     ARG_DEF("S", "scale", 0, "Scale output frames uniformly");
 static const arg_def_t continuearg =
@@ -131,7 +129,6 @@ static const arg_def_t *all_args[] = { &codecarg,
                                        &fb_arg,
                                        &md5arg,
                                        &framestatsarg,
-                                       &error_concealment,
                                        &continuearg,
 #if CONFIG_HIGHBITDEPTH
                                        &outbitdeptharg,
@@ -507,7 +504,6 @@ static int main_loop(int argc, const char **argv_) {
   int do_md5 = 0, progress = 0, frame_parallel = 0;
   int stop_after = 0, postproc = 0, summary = 0, quiet = 1;
   int arg_skip = 0;
-  int ec_enabled = 0;
   int keep_going = 0;
   const AvxInterface *interface = NULL;
   const AvxInterface *fourcc_interface = NULL;
@@ -719,7 +715,6 @@ static int main_loop(int argc, const char **argv_) {
   if (!interface) interface = get_aom_decoder_by_index(0);
 
   dec_flags = (postproc ? AOM_CODEC_USE_POSTPROC : 0) |
-              (ec_enabled ? AOM_CODEC_USE_ERROR_CONCEALMENT : 0) |
               (frame_parallel ? AOM_CODEC_USE_FRAME_THREADING : 0);
   if (aom_codec_dec_init(&decoder, interface->codec_interface(), &cfg,
                          dec_flags)) {

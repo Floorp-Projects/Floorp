@@ -177,5 +177,31 @@ const AV1FwdTxfm2dParam av1_fwd_txfm2d_param_c[] = {
 INSTANTIATE_TEST_CASE_P(C, AV1FwdTxfm2d,
                         ::testing::ValuesIn(av1_fwd_txfm2d_param_c));
 
+TEST(AV1FwdTxfm2d, CfgTest) {
+  for (int bd_idx = 0; bd_idx < BD_NUM; ++bd_idx) {
+    int bd = libaom_test::bd_arr[bd_idx];
+    int8_t low_range = libaom_test::low_range_arr[bd_idx];
+    int8_t high_range = libaom_test::high_range_arr[bd_idx];
+    // TODO(angiebird): include rect txfm in this test
+    for (int tx_size = 0; tx_size < TX_SIZES; ++tx_size) {
+      for (int tx_type = 0; tx_type < TX_TYPES; ++tx_type) {
+        TXFM_2D_FLIP_CFG cfg = av1_get_fwd_txfm_cfg(
+            static_cast<TX_TYPE>(tx_type), static_cast<TX_SIZE>(tx_size));
+        int8_t stage_range_col[MAX_TXFM_STAGE_NUM];
+        int8_t stage_range_row[MAX_TXFM_STAGE_NUM];
+        av1_gen_fwd_stage_range(stage_range_col, stage_range_row, &cfg, bd);
+        const TXFM_1D_CFG *col_cfg = cfg.col_cfg;
+        const TXFM_1D_CFG *row_cfg = cfg.row_cfg;
+        libaom_test::txfm_stage_range_check(stage_range_col, col_cfg->stage_num,
+                                            col_cfg->cos_bit, low_range,
+                                            high_range);
+        libaom_test::txfm_stage_range_check(stage_range_row, row_cfg->stage_num,
+                                            row_cfg->cos_bit, low_range,
+                                            high_range);
+      }
+    }
+  }
+}
+
 #endif  // CONFIG_HIGHBITDEPTH
 }  // namespace

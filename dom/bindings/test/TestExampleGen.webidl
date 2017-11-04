@@ -819,12 +819,12 @@ interface TestExampleInterface {
 
 interface TestExampleProxyInterface {
   getter long longIndexedGetter(unsigned long ix);
-  setter creator void longIndexedSetter(unsigned long y, long z);
+  setter void longIndexedSetter(unsigned long y, long z);
   readonly attribute unsigned long length;
   stringifier DOMString myStringifier();
   getter short shortNameGetter(DOMString nom);
   deleter void (DOMString nomnom);
-  setter creator void shortNamedSetter(DOMString me, short value);
+  setter void shortNamedSetter(DOMString me, short value);
 };
 
 [Exposed=(Window,Worker)]

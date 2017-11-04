@@ -523,7 +523,7 @@ function* simulateNodeDrag(inspector, selector, xOffset = 10, yOffset = 10) {
   }
 
   info("Simulate mouseMove on element " + selector);
-  container._onMouseMove({
+  container.onMouseMove({
     pageX: scrollX + rect.x + xOffset,
     pageY: scrollY + rect.y + yOffset
   });
@@ -541,7 +541,7 @@ function* simulateNodeDrop(inspector, selector) {
   let container = typeof selector === "string"
                   ? yield getContainerForSelector(selector, inspector)
                   : selector;
-  container._onMouseUp();
+  container.onMouseUp();
   inspector.markup._onMouseUp();
 }
 

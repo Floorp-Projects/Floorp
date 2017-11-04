@@ -15,7 +15,7 @@ the [Python textwrap module][py-textwrap].
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-textwrap = "0.6"
+textwrap = "0.9"
 ```
 
 and this to your crate root:
@@ -27,7 +27,15 @@ If you would like to have automatic hyphenation, specify the
 dependency as:
 ```toml
 [dependencies]
-textwrap = { version: "0.6", features: ["hyphenation"] }
+textwrap = { version = "0.9", features = ["hyphenation"] }
+```
+
+To conveniently wrap text at the current terminal width, enable the
+`term_size` feature:
+
+```toml
+[dependencies]
+textwrap = { version = "0.9", features = ["term_size"] }
 ```
 
 ## Documentation
@@ -65,7 +73,7 @@ use textwrap::Wrapper;
 
 fn main() {
     let corpus = hyphenation::load(Language::English_US).unwrap();
-    let wrapper = Wrapper::new(18).word_splitter(Box::new(corpus));
+    let wrapper = Wrapper::with_splitter(18, corpus);
     let text = "textwrap: a small library for wrapping text.";
     println!("{}", wrapper.fill(text))
 }
@@ -82,7 +90,7 @@ The hyphenation uses high-quality TeX hyphenation patterns.
 
 ## Examples
 
-The library comes with a small example programs that shows various
+The library comes with some small example programs that shows various
 features.
 
 ### Layout Example
@@ -173,6 +181,61 @@ cost abstractions.
 
 This section lists the largest changes per release.
 
+### Version 0.9.0 — October 5th, 2017
+
+The dependency on `term_size` is now optional, and by default this
+feature is not enabled. This is a *breaking change* for users of
+`Wrapper::with_termwidth`. Enable the `term_size` feature to restore
+the old functionality.
+
+Added a regression test for case where width is set to usize::MAX.
+Thanks @Fraser999! All public structs now implement `Debug`.
+
+Issues closed:
+
+* Fixed [#101][issue-101]: Remove `term_size` as a (hard required)
+  dependency.
+
+### Version 0.8.0 — September 4th, 2017
+
+The `Wrapper` stuct is now generic over the type of word splitter
+being used. This means less boxing and a nicer API. The
+`Wrapper::word_splitter` method has been removed. This is a *breaking
+API change* if you used the method to change the word splitter.
+
+The `Wrapper` struct has two new methods that will wrap the input text
+lazily: `Wrapper::wrap_iter` and `Wrapper::into_wrap_iter`. Use those
+if you will be iterating over the wrapped lines one by one.
+
+Issues closed:
+
+* Fixed [#59][issue-59]: `wrap` could return an iterator. Thanks
+  @hcpl!
+
+* Fixed [#81][issue-81]: Set `html_root_url`
+
+### Version 0.7.0 — July 20th, 2017
+
+Version 0.7.0 changes the return type of `Wrapper::wrap` from
+`Vec<String>` to `Vec<Cow<'a, str>>`. This means that the output lines
+borrow data from the input string. This is a *breaking API change* if
+you relied on the exact return type of `Wrapper::wrap`. Callers of the
+`textwrap::fill` convenience function will see no breakage.
+
+The above change and other optimizations makes version 0.7.0 roughly
+15-30% faster than version 0.6.0.
+
+The `squeeze_whitespace` option has been removed since it was
+complicating the above optimization. Let us know if this option is
+important for you so we can provide a work around.
+
+Issues closed:
+
+* Fixed [#58][issue-58]: Add a "fast_wrap" function that reuses the
+  input string
+
+* Fixed [#61][issue-61]: Documentation errors
+
 ### Version 0.6.0 — May 22nd, 2017
 
 Version 0.6.0 adds builder methods to `Wrapper` for easy one-line
@@ -200,7 +263,7 @@ wrapper.corpus = Some(&corpus);
 ```
 to
 ```rust
-wrapper.splitter = corpus;
+wrapper.splitter = Box::new(corpus);
 ```
 
 Other changes include optimizations, so version 0.5.0 is roughly
@@ -244,12 +307,17 @@ Contributions will be accepted under the same license.
 [py-textwrap]: https://docs.python.org/library/textwrap
 [patterns]: https://github.com/tapeinosyne/hyphenation/tree/master/patterns-tex
 [api-docs]: https://docs.rs/textwrap/
-[issue-13]: ../../issues/13
-[issue-14]: ../../issues/14
-[issue-19]: ../../issues/19
-[issue-25]: ../../issues/25
-[issue-26]: ../../issues/26
-[issue-28]: ../../issues/28
-[issue-36]: ../../issues/36
-[issue-39]: ../../issues/39
+[issue-13]: https://github.com/mgeisler/textwrap/issues/13
+[issue-14]: https://github.com/mgeisler/textwrap/issues/14
+[issue-19]: https://github.com/mgeisler/textwrap/issues/19
+[issue-25]: https://github.com/mgeisler/textwrap/issues/25
+[issue-26]: https://github.com/mgeisler/textwrap/issues/26
+[issue-28]: https://github.com/mgeisler/textwrap/issues/28
+[issue-36]: https://github.com/mgeisler/textwrap/issues/36
+[issue-39]: https://github.com/mgeisler/textwrap/issues/39
+[issue-58]: https://github.com/mgeisler/textwrap/issues/58
+[issue-59]: https://github.com/mgeisler/textwrap/issues/59
+[issue-61]: https://github.com/mgeisler/textwrap/issues/61
+[issue-81]: https://github.com/mgeisler/textwrap/issues/81
+[issue-101]: https://github.com/mgeisler/textwrap/issues/101
 [mit]: LICENSE

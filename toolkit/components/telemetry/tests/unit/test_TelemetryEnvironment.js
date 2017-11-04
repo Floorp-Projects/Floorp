@@ -411,7 +411,6 @@ function checkSettingsSection(data) {
   const EXPECTED_FIELDS_TYPES = {
     blocklistEnabled: "boolean",
     e10sEnabled: "boolean",
-    e10sCohort: "string",
     telemetryEnabled: "boolean",
     locale: "string",
     update: "object",

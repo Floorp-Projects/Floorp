@@ -13,7 +13,7 @@
 %include ../shared/browser.inc.css
 
 :root {
-  --tabs-border: rgba(0,0,0,.3);
+  --tabs-border-color: rgba(0,0,0,.3);
   --tab-line-color: #0a84ff;
 
   --toolbar-non-lwt-bgcolor: #f9f9fa;
@@ -131,21 +131,21 @@
 #main-window:-moz-any([sizemode="fullscreen"],[customize-entered]) #TabsToolbar:not([collapsed="true"]) + #nav-bar,
 #main-window:not([tabsintitlebar]) #TabsToolbar:not([collapsed="true"]) + #nav-bar,
 #TabsToolbar:not([collapsed="true"]) + #nav-bar:-moz-lwtheme {
-  box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border);
+  box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border-color);
 }
 
 /* Always draw a border on Yosemite to ensure the border is well-defined there
  * (the default border is too light). */
 @media (-moz-mac-yosemite-theme) {
   :root:not(:-moz-lwtheme) {
-    --tabs-border: rgba(0,0,0,.2);
+    --tabs-border-color: rgba(0,0,0,.2);
   }
   :root:not(:-moz-lwtheme):-moz-window-inactive {
-    --tabs-border: rgba(0,0,0,.05);
+    --tabs-border-color: rgba(0,0,0,.05);
   }
 
   #main-window[tabsintitlebar] #TabsToolbar:not([collapsed="true"]) + #nav-bar:not(:-moz-lwtheme) {
-    box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border);
+    box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border-color);
   }
 }
 

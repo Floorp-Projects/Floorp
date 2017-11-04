@@ -9,7 +9,6 @@
 #include "mozilla/Unused.h"
 #include "nsPagePrintTimer.h"
 #include "nsPrintEngine.h"
-#include "private/pprio.h"
 
 namespace mozilla {
 namespace layout {
@@ -37,37 +36,26 @@ RemotePrintJobChild::InitializePrint(const nsString& aDocumentTitle,
 }
 
 mozilla::ipc::IPCResult
-RemotePrintJobChild::RecvPrintInitializationResult(const nsresult& aRv,
-                                                   const mozilla::ipc::FileDescriptor& aFd)
+RemotePrintJobChild::RecvPrintInitializationResult(const nsresult& aRv)
 {
   mPrintInitialized = true;
   mInitializationResult = aRv;
-  if (NS_SUCCEEDED(aRv)) {
-    SetNextPageFD(aFd);
-  }
   return IPC_OK();
 }
 
-void RemotePrintJobChild::SetNextPageFD(const mozilla::ipc::FileDescriptor& aFd)
-{
-  auto handle = aFd.ClonePlatformHandle();
-  mNextPageFD = PR_ImportFile(PROsfd(handle.release()));
-}
-
 void
-RemotePrintJobChild::ProcessPage()
+RemotePrintJobChild::ProcessPage(const nsCString& aPageFileName)
 {
   MOZ_ASSERT(mPagePrintTimer);
 
   mPagePrintTimer->WaitForRemotePrint();
-  Unused << SendProcessPage();
+  Unused << SendProcessPage(aPageFileName);
 }
 
 mozilla::ipc::IPCResult
-RemotePrintJobChild::RecvPageProcessed(const mozilla::ipc::FileDescriptor& aFd)
+RemotePrintJobChild::RecvPageProcessed()
 {
   MOZ_ASSERT(mPagePrintTimer);
-  SetNextPageFD(aFd);
 
   mPagePrintTimer->RemotePrintFinished();
   return IPC_OK();

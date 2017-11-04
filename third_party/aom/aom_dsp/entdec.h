@@ -47,10 +47,8 @@ struct od_ec_dec {
   const unsigned char *end;
   /*The read pointer for the entropy-coded bits.*/
   const unsigned char *bptr;
-  /*The difference between the coded value and the low end of the current
-     range.
-    {EC_SMALLMUL} The difference between the high end of the current range,
-     (low + rng), and the coded value, minus 1.
+  /*The difference between the high end of the current range, (low + rng), and
+     the coded value, minus 1.
     This stores up to OD_EC_WINDOW_SIZE bits of that difference, but the
      decoder only uses the top 16 bits of the window to decode the next symbol.
     As we shift up during renormalization, if we don't have enough bits left in

@@ -12,13 +12,13 @@
 #include <assert.h>
 
 #include "./av1_rtcd.h"
+#include "aom/aom_integer.h"
+#include "aom_ports/aom_timer.h"
 #include "test/acm_random.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
-#include "aom/aom_integer.h"
-#include "aom_ports/aom_timer.h"
 
 using libaom_test::ACMRandom;
 
@@ -68,12 +68,18 @@ class ConvolveRoundTest : public ::testing::TestWithParam<ConvolveRoundParam> {
   virtual void SetUp() {
     const size_t block_size = 128 * 128;
     src_ = reinterpret_cast<int32_t *>(
-        aom_memalign(16, 3 * block_size * sizeof(int32_t)));
-    dst_ref_ = reinterpret_cast<uint16_t *>(src_ + block_size);
-    dst_ = dst_ref_ + block_size;
+        aom_memalign(16, block_size * sizeof(*src_)));
+    dst_ref_ = reinterpret_cast<uint16_t *>(
+        aom_memalign(16, block_size * sizeof(*dst_ref_)));
+    dst_ = reinterpret_cast<uint16_t *>(
+        aom_memalign(16, block_size * sizeof(*dst_)));
   }
 
-  virtual void TearDown() { aom_free(src_); }
+  virtual void TearDown() {
+    aom_free(src_);
+    aom_free(dst_ref_);
+    aom_free(dst_);
+  }
 
   void ConvolveRoundingRun() {
     int test_num = 0;
@@ -82,7 +88,6 @@ class ConvolveRoundTest : public ::testing::TestWithParam<ConvolveRoundParam> {
     int bits = 13;
     uint8_t *dst = 0;
     uint8_t *dst_ref = 0;
-    int diff_wide;
 
     if (data_path_ == LOWBITDEPTH_TEST) {
       dst = reinterpret_cast<uint8_t *>(dst_);
@@ -109,14 +114,24 @@ class ConvolveRoundTest : public ::testing::TestWithParam<ConvolveRoundParam> {
       GenerateBufferWithRandom(src_, src_stride, bits, w, h);
 
       func_ref_(src_, src_stride, dst_ref, dst_stride, w, h, bits);
-      func_(src_, src_stride, dst, dst_stride, w, h, bits);
+      ASM_REGISTER_STATE_CHECK(
+          func_(src_, src_stride, dst, dst_stride, w, h, bits));
 
-      diff_wide = w;
-      if (data_path_ == LOWBITDEPTH_TEST) diff_wide >>= 1;
-      for (int r = 0; r < h; ++r) {
-        for (int c = 0; c < diff_wide; ++c) {
-          ASSERT_EQ(dst_ref_[r * dst_stride + c], dst_[r * dst_stride + c])
-              << "Mismatch at r: " << r << " c: " << c << " test: " << test_num;
+      if (data_path_ == LOWBITDEPTH_TEST) {
+        for (int r = 0; r < h; ++r) {
+          for (int c = 0; c < w; ++c) {
+            ASSERT_EQ(dst_ref[r * dst_stride + c], dst[r * dst_stride + c])
+                << "Mismatch at r: " << r << " c: " << c << " w: " << w
+                << " h: " << h << " test: " << test_num;
+          }
+        }
+      } else {
+        for (int r = 0; r < h; ++r) {
+          for (int c = 0; c < w; ++c) {
+            ASSERT_EQ(dst_ref_[r * dst_stride + c], dst_[r * dst_stride + c])
+                << "Mismatch at r: " << r << " c: " << c << " w: " << w
+                << " h: " << h << " test: " << test_num;
+          }
         }
       }
 

@@ -29,21 +29,21 @@ function* runTests() {
   let roaming = FileUtils.getDir("ProfD", [THUMBNAIL_DIRECTORY], true);
 
   // Set up some data in the roaming profile.
-  let name = PageThumbsStorage.getLeafNameForURL(URL);
+  let name = PageThumbsStorageService.getLeafNameForURL(URL);
   let file = FileUtils.getFile("ProfD", [THUMBNAIL_DIRECTORY, name]);
   writeDummyFile(file);
 
-  name = PageThumbsStorage.getLeafNameForURL(URL2);
+  name = PageThumbsStorageService.getLeafNameForURL(URL2);
   file = FileUtils.getFile("ProfD", [THUMBNAIL_DIRECTORY, name]);
   writeDummyFile(file);
 
-  name = PageThumbsStorage.getLeafNameForURL(URL3);
+  name = PageThumbsStorageService.getLeafNameForURL(URL3);
   file = FileUtils.getFile("ProfD", [THUMBNAIL_DIRECTORY, name]);
   writeDummyFile(file);
 
   // Pretend to have one of the thumbnails
   // already in place at the new storage site.
-  name = PageThumbsStorage.getLeafNameForURL(URL3);
+  name = PageThumbsStorageService.getLeafNameForURL(URL3);
   file = FileUtils.getFile("ProfLD", [THUMBNAIL_DIRECTORY, name]);
   writeDummyFile(file, "no-overwrite-plz");
 
@@ -71,7 +71,7 @@ function* runTests() {
   // |getFilePathForURL|.
   if ("getFileForURL" in PageThumbsStorage) {
     file = PageThumbsStorage.getFileForURL(URL);
-    is(file.path, PageThumbsStorage.getFilePathForURL(URL),
+    is(file.path, PageThumbsStorageService.getFilePathForURL(URL),
        "Deprecated getFileForURL and getFilePathForURL return the same path");
   }
 }

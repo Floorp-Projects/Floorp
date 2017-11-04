@@ -298,10 +298,10 @@ TEST_P(ResizeTest, TestExternalResizeWorks) {
     unsigned int expected_h;
     ScaleForFrameNumber(frame, kInitialWidth, kInitialHeight, &expected_w,
                         &expected_h, 0);
-    EXPECT_EQ(expected_w, info->w) << "Frame " << frame
-                                   << " had unexpected width";
-    EXPECT_EQ(expected_h, info->h) << "Frame " << frame
-                                   << " had unexpected height";
+    EXPECT_EQ(expected_w, info->w)
+        << "Frame " << frame << " had unexpected width";
+    EXPECT_EQ(expected_h, info->h)
+        << "Frame " << frame << " had unexpected height";
   }
 }
 
@@ -351,11 +351,11 @@ class ResizeInternalTest : public ResizeTest {
         encoder->Config(&cfg_);
       }
     } else {
-      if (video->frame() == kStepDownFrame) {
+      if (video->frame() >= kStepDownFrame && video->frame() < kStepUpFrame) {
         struct aom_scaling_mode mode = { AOME_FOURFIVE, AOME_THREEFIVE };
         encoder->Control(AOME_SET_SCALEMODE, &mode);
       }
-      if (video->frame() == kStepUpFrame) {
+      if (video->frame() >= kStepUpFrame) {
         struct aom_scaling_mode mode = { AOME_NORMAL, AOME_NORMAL };
         encoder->Control(AOME_SET_SCALEMODE, &mode);
       }
@@ -364,7 +364,7 @@ class ResizeInternalTest : public ResizeTest {
 
   virtual void PSNRPktHook(const aom_codec_cx_pkt_t *pkt) {
     if (frame0_psnr_ == 0.) frame0_psnr_ = pkt->data.psnr.psnr[0];
-    EXPECT_NEAR(pkt->data.psnr.psnr[0], frame0_psnr_, 2.0);
+    EXPECT_NEAR(pkt->data.psnr.psnr[0], frame0_psnr_, 2.5);
   }
 
 #if WRITE_COMPRESSED_STREAM
@@ -404,6 +404,9 @@ TEST_P(ResizeInternalTest, TestInternalResizeWorks) {
   cfg_.g_lag_in_frames = 0;
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 
+  for (std::vector<FrameInfo>::const_iterator info = frame_info_list_.begin();
+       info != frame_info_list_.end(); ++info) {
+  }
   for (std::vector<FrameInfo>::const_iterator info = frame_info_list_.begin();
        info != frame_info_list_.end(); ++info) {
     const aom_codec_pts_t pts = info->pts;
@@ -509,10 +512,10 @@ TEST_P(ResizeRealtimeTest, TestExternalResizeWorks) {
     unsigned int expected_h;
     ScaleForFrameNumber(frame, kInitialWidth, kInitialHeight, &expected_w,
                         &expected_h, 1);
-    EXPECT_EQ(expected_w, info->w) << "Frame " << frame
-                                   << " had unexpected width";
-    EXPECT_EQ(expected_h, info->h) << "Frame " << frame
-                                   << " had unexpected height";
+    EXPECT_EQ(expected_w, info->w)
+        << "Frame " << frame << " had unexpected width";
+    EXPECT_EQ(expected_h, info->h)
+        << "Frame " << frame << " had unexpected height";
     EXPECT_EQ(static_cast<unsigned int>(0), GetMismatchFrames());
   }
 }
@@ -520,7 +523,7 @@ TEST_P(ResizeRealtimeTest, TestExternalResizeWorks) {
 // Verify the dynamic resizer behavior for real time, 1 pass CBR mode.
 // Run at low bitrate, with resize_allowed = 1, and verify that we get
 // one resize down event.
-TEST_P(ResizeRealtimeTest, TestInternalResizeDown) {
+TEST_P(ResizeRealtimeTest, DISABLED_TestInternalResizeDown) {
   ::libaom_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
                                        30, 1, 0, 299);
   DefaultConfig();
@@ -558,7 +561,7 @@ TEST_P(ResizeRealtimeTest, TestInternalResizeDown) {
 // Verify the dynamic resizer behavior for real time, 1 pass CBR mode.
 // Start at low target bitrate, raise the bitrate in the middle of the clip,
 // scaling-up should occur after bitrate changed.
-TEST_P(ResizeRealtimeTest, TestInternalResizeDownUpChangeBitRate) {
+TEST_P(ResizeRealtimeTest, DISABLED_TestInternalResizeDownUpChangeBitRate) {
   ::libaom_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
                                        30, 1, 0, 359);
   DefaultConfig();
@@ -693,7 +696,11 @@ class ResizingCspVideoSource : public ::libaom_test::DummyVideoSource {
   }
 };
 
+#if (defined(DISABLE_TRELLISQ_SEARCH) && DISABLE_TRELLISQ_SEARCH)
+TEST_P(ResizeCspTest, DISABLED_TestResizeCspWorks) {
+#else
 TEST_P(ResizeCspTest, TestResizeCspWorks) {
+#endif
   ResizingCspVideoSource video;
   init_flags_ = AOM_CODEC_USE_PSNR;
   cfg_.rc_min_quantizer = cfg_.rc_max_quantizer = 48;
@@ -704,7 +711,7 @@ TEST_P(ResizeCspTest, TestResizeCspWorks) {
 AV1_INSTANTIATE_TEST_CASE(ResizeTest,
                           ::testing::Values(::libaom_test::kRealTime));
 AV1_INSTANTIATE_TEST_CASE(ResizeInternalTest,
-                          ::testing::Values(::libaom_test::kOnePassBest));
+                          ::testing::Values(::libaom_test::kOnePassGood));
 AV1_INSTANTIATE_TEST_CASE(ResizeRealtimeTest,
                           ::testing::Values(::libaom_test::kRealTime),
                           ::testing::Range(5, 9));

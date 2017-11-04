@@ -180,6 +180,21 @@ ExpandedPrincipal::AddonHasPermission(const nsAtom* aPerm)
   return false;
 }
 
+nsIPrincipal*
+ExpandedPrincipal::PrincipalToInherit(nsIURI* aRequestedURI,
+                                      bool aAllowIfInheritsPrincipal)
+{
+  if (aRequestedURI) {
+    for (const auto& principal : mPrincipals) {
+      if (NS_SUCCEEDED(principal->CheckMayLoad(aRequestedURI, false,
+                                               aAllowIfInheritsPrincipal))) {
+        return principal;
+      }
+    }
+  }
+  return mPrincipals.LastElement();
+}
+
 nsresult
 ExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 {

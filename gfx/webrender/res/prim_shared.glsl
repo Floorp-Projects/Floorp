@@ -74,7 +74,7 @@ vec4[2] fetch_from_resource_cache_2(int address) {
 #define VECS_PER_LAYER              9
 #define VECS_PER_RENDER_TASK        3
 #define VECS_PER_PRIM_HEADER        2
-#define VECS_PER_TEXT_RUN           2
+#define VECS_PER_TEXT_RUN           3
 #define VECS_PER_GRADIENT           3
 #define VECS_PER_GRADIENT_STOP      2
 
@@ -717,13 +717,14 @@ Rectangle fetch_rectangle(int address) {
 
 struct TextRun {
     vec4 color;
+    vec4 bg_color;
     vec2 offset;
     int subpx_dir;
 };
 
 TextRun fetch_text_run(int address) {
-    vec4 data[2] = fetch_from_resource_cache_2(address);
-    return TextRun(data[0], data[1].xy, int(data[1].z));
+    vec4 data[3] = fetch_from_resource_cache_3(address);
+    return TextRun(data[0], data[1], data[2].xy, int(data[2].z));
 }
 
 struct Image {

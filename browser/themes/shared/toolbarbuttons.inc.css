@@ -55,12 +55,10 @@ toolbar[brighttext] {
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up[disabled=true],
 .tabbrowser-arrowscrollbox > .scrollbutton-down[disabled=true],
+:root:not([customizing]) .toolbarbutton-1[disabled=true],
 /* specialcase the overflow and the hamburger button so they show up disabled in customize mode. */
-#nav-bar-overflow-button[disabled=true] > .toolbarbutton-icon,
-#PanelUI-menu-button[disabled=true] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-text,
-#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+#nav-bar-overflow-button[disabled=true],
+#PanelUI-menu-button[disabled=true] {
   opacity: 0.4;
 }
 

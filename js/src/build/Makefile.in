@@ -7,7 +7,6 @@
 # Ensure symbol versions of shared library on Linux do not conflict
 # with those in libxul.
 ifeq (Linux,$(OS_TARGET))
-OS_LDFLAGS += -Wl,-version-script,symverscript
 
 symverscript: symverscript.in
 	$(call py_action,preprocessor, \
@@ -29,7 +28,7 @@ check-vanilla-allocations-aggressive:
 	$(PYTHON) $(topsrcdir)/config/check_vanilla_allocations.py --aggressive $(REAL_LIBRARY)
 
 ifeq ($(OS_ARCH),Linux)
-ifeq (,$(filter -flto,$(COMPUTED_CFLAGS) $(COMPUTED_CXXFLAGS) $(LDFLAGS)))
+ifeq (,$(filter -flto,$(COMPUTED_CFLAGS) $(COMPUTED_CXXFLAGS) $(COMPUTED_LDFLAGS)))
 check:: check-vanilla-allocations
 endif
 endif

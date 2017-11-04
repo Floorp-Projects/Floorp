@@ -3437,6 +3437,7 @@ protected:
   mozilla::Maybe<nsCSSBorderImageRenderer> mBorderImageRenderer;
 
   nsRect mBounds;
+  bool mBorderIsEmpty;
 };
 
 /**

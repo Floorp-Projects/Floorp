@@ -24,9 +24,5 @@ void aom_daala_stop_encode(daala_writer *br) {
   daala_data = od_ec_enc_done(&br->ec, &daala_bytes);
   memcpy(br->buffer, daala_data, daala_bytes);
   br->pos = daala_bytes;
-  /* Prevent ec bitstream from being detected as a superframe marker.
-     Must always be added, so that rawbits knows the exact length of the
-      bitstream. */
-  br->buffer[br->pos++] = 0;
   od_ec_enc_clear(&br->ec);
 }

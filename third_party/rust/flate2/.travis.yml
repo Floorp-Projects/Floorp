@@ -9,13 +9,13 @@ before_script:
 script:
   - export CARGO_TARGET_DIR=`pwd`/target
   - cargo build --verbose
+  - rustdoc --test README.md -L target/debug/deps --extern flate2=target/debug/libflate2.rlib
   - cargo test --verbose
   - cargo test --verbose --features zlib
   - cargo test --verbose --features tokio
   - cargo test --verbose --features 'tokio zlib'
   - cargo test --verbose --features zlib --no-default-features
   - cargo clean && cargo build
-  - rustdoc --test README.md -L target/debug -L target/debug/deps
   - cargo doc --no-deps
   - cargo doc --no-deps --manifest-path=miniz-sys/Cargo.toml
 after_success:

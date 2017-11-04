@@ -177,177 +177,94 @@ static void subtract_8x8(int16_t *diff, ptrdiff_t diff_stride,
   _mm_storeu_si128((__m128i *)(diff + 7 * diff_stride), x7);
 }
 
-static void subtract_8x16(int16_t *diff, ptrdiff_t diff_stride,
-                          const uint16_t *src, ptrdiff_t src_stride,
-                          const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_8x8(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += diff_stride << 3;
-  src += src_stride << 3;
-  pred += pred_stride << 3;
-  subtract_8x8(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
+#define STACK_V(h, fun)                                                        \
+  do {                                                                         \
+    fun(diff, diff_stride, src, src_stride, pred, pred_stride);                \
+    fun(diff + diff_stride * h, diff_stride, src + src_stride * h, src_stride, \
+        pred + pred_stride * h, pred_stride);                                  \
+  } while (0)
 
-static void subtract_16x8(int16_t *diff, ptrdiff_t diff_stride,
-                          const uint16_t *src, ptrdiff_t src_stride,
-                          const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_8x8(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += 8;
-  src += 8;
-  pred += 8;
-  subtract_8x8(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
+#define STACK_H(w, fun)                                                     \
+  do {                                                                      \
+    fun(diff, diff_stride, src, src_stride, pred, pred_stride);             \
+    fun(diff + w, diff_stride, src + w, src_stride, pred + w, pred_stride); \
+  } while (0)
 
-static void subtract_16x16(int16_t *diff, ptrdiff_t diff_stride,
-                           const uint16_t *src, ptrdiff_t src_stride,
-                           const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_16x8(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += diff_stride << 3;
-  src += src_stride << 3;
-  pred += pred_stride << 3;
-  subtract_16x8(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
+#define SUBTRACT_FUN(size)                                               \
+  static void subtract_##size(int16_t *diff, ptrdiff_t diff_stride,      \
+                              const uint16_t *src, ptrdiff_t src_stride, \
+                              const uint16_t *pred, ptrdiff_t pred_stride)
 
-static void subtract_16x32(int16_t *diff, ptrdiff_t diff_stride,
-                           const uint16_t *src, ptrdiff_t src_stride,
-                           const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_16x16(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += diff_stride << 4;
-  src += src_stride << 4;
-  pred += pred_stride << 4;
-  subtract_16x16(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
-
-static void subtract_32x16(int16_t *diff, ptrdiff_t diff_stride,
-                           const uint16_t *src, ptrdiff_t src_stride,
-                           const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_16x16(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += 16;
-  src += 16;
-  pred += 16;
-  subtract_16x16(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
-
-static void subtract_32x32(int16_t *diff, ptrdiff_t diff_stride,
-                           const uint16_t *src, ptrdiff_t src_stride,
-                           const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_32x16(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += diff_stride << 4;
-  src += src_stride << 4;
-  pred += pred_stride << 4;
-  subtract_32x16(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
-
-static void subtract_32x64(int16_t *diff, ptrdiff_t diff_stride,
-                           const uint16_t *src, ptrdiff_t src_stride,
-                           const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_32x32(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += diff_stride << 5;
-  src += src_stride << 5;
-  pred += pred_stride << 5;
-  subtract_32x32(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
-
-static void subtract_64x32(int16_t *diff, ptrdiff_t diff_stride,
-                           const uint16_t *src, ptrdiff_t src_stride,
-                           const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_32x32(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += 32;
-  src += 32;
-  pred += 32;
-  subtract_32x32(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
-
-static void subtract_64x64(int16_t *diff, ptrdiff_t diff_stride,
-                           const uint16_t *src, ptrdiff_t src_stride,
-                           const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_64x32(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += diff_stride << 5;
-  src += src_stride << 5;
-  pred += pred_stride << 5;
-  subtract_64x32(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
-
-static void subtract_64x128(int16_t *diff, ptrdiff_t diff_stride,
-                            const uint16_t *src, ptrdiff_t src_stride,
-                            const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_64x64(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += diff_stride << 6;
-  src += src_stride << 6;
-  pred += pred_stride << 6;
-  subtract_64x64(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
-
-static void subtract_128x64(int16_t *diff, ptrdiff_t diff_stride,
-                            const uint16_t *src, ptrdiff_t src_stride,
-                            const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_64x64(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += 64;
-  src += 64;
-  pred += 64;
-  subtract_64x64(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
-
-static void subtract_128x128(int16_t *diff, ptrdiff_t diff_stride,
-                             const uint16_t *src, ptrdiff_t src_stride,
-                             const uint16_t *pred, ptrdiff_t pred_stride) {
-  subtract_128x64(diff, diff_stride, src, src_stride, pred, pred_stride);
-  diff += diff_stride << 6;
-  src += src_stride << 6;
-  pred += pred_stride << 6;
-  subtract_128x64(diff, diff_stride, src, src_stride, pred, pred_stride);
-}
+SUBTRACT_FUN(8x16) { STACK_V(8, subtract_8x8); }
+SUBTRACT_FUN(16x8) { STACK_H(8, subtract_8x8); }
+SUBTRACT_FUN(16x16) { STACK_V(8, subtract_16x8); }
+SUBTRACT_FUN(16x32) { STACK_V(16, subtract_16x16); }
+SUBTRACT_FUN(32x16) { STACK_H(16, subtract_16x16); }
+SUBTRACT_FUN(32x32) { STACK_V(16, subtract_32x16); }
+SUBTRACT_FUN(32x64) { STACK_V(32, subtract_32x32); }
+SUBTRACT_FUN(64x32) { STACK_H(32, subtract_32x32); }
+SUBTRACT_FUN(64x64) { STACK_V(32, subtract_64x32); }
+#if CONFIG_EXT_PARTITION
+SUBTRACT_FUN(64x128) { STACK_V(64, subtract_64x64); }
+SUBTRACT_FUN(128x64) { STACK_H(64, subtract_64x64); }
+SUBTRACT_FUN(128x128) { STACK_V(64, subtract_128x64); }
+#endif
+SUBTRACT_FUN(4x16) { STACK_V(8, subtract_4x8); }
+SUBTRACT_FUN(16x4) { STACK_H(8, subtract_8x4); }
+SUBTRACT_FUN(8x32) { STACK_V(16, subtract_8x16); }
+SUBTRACT_FUN(32x8) { STACK_H(16, subtract_16x8); }
+SUBTRACT_FUN(16x64) { STACK_V(32, subtract_16x32); }
+SUBTRACT_FUN(64x16) { STACK_H(32, subtract_32x16); }
+#if CONFIG_EXT_PARTITION
+SUBTRACT_FUN(32x128) { STACK_V(64, subtract_32x64); }
+SUBTRACT_FUN(128x32) { STACK_H(64, subtract_64x32); }
+#endif
 
 static SubtractWxHFuncType getSubtractFunc(int rows, int cols) {
-  SubtractWxHFuncType ret_func_ptr = NULL;
   if (rows == 4) {
-    if (cols == 4) {
-      ret_func_ptr = subtract_4x4;
-    } else if (cols == 8) {
-      ret_func_ptr = subtract_8x4;
-    }
-  } else if (rows == 8) {
-    if (cols == 4) {
-      ret_func_ptr = subtract_4x8;
-    } else if (cols == 8) {
-      ret_func_ptr = subtract_8x8;
-    } else if (cols == 16) {
-      ret_func_ptr = subtract_16x8;
-    }
-  } else if (rows == 16) {
-    if (cols == 8) {
-      ret_func_ptr = subtract_8x16;
-    } else if (cols == 16) {
-      ret_func_ptr = subtract_16x16;
-    } else if (cols == 32) {
-      ret_func_ptr = subtract_32x16;
-    }
-  } else if (rows == 32) {
-    if (cols == 16) {
-      ret_func_ptr = subtract_16x32;
-    } else if (cols == 32) {
-      ret_func_ptr = subtract_32x32;
-    } else if (cols == 64) {
-      ret_func_ptr = subtract_64x32;
-    }
-  } else if (rows == 64) {
-    if (cols == 32) {
-      ret_func_ptr = subtract_32x64;
-    } else if (cols == 64) {
-      ret_func_ptr = subtract_64x64;
-    } else if (cols == 128) {
-      ret_func_ptr = subtract_128x64;
-    }
-  } else if (rows == 128) {
-    if (cols == 64) {
-      ret_func_ptr = subtract_64x128;
-    } else if (cols == 128) {
-      ret_func_ptr = subtract_128x128;
-    }
+    if (cols == 4) return subtract_4x4;
+    if (cols == 8) return subtract_8x4;
+    if (cols == 16) return subtract_16x4;
   }
-  if (!ret_func_ptr) {
-    assert(0);
+  if (rows == 8) {
+    if (cols == 4) return subtract_4x8;
+    if (cols == 8) return subtract_8x8;
+    if (cols == 16) return subtract_16x8;
+    if (cols == 32) return subtract_32x8;
   }
-  return ret_func_ptr;
+  if (rows == 16) {
+    if (cols == 4) return subtract_4x16;
+    if (cols == 8) return subtract_8x16;
+    if (cols == 16) return subtract_16x16;
+    if (cols == 32) return subtract_32x16;
+    if (cols == 64) return subtract_64x16;
+  }
+  if (rows == 32) {
+    if (cols == 8) return subtract_8x32;
+    if (cols == 16) return subtract_16x32;
+    if (cols == 32) return subtract_32x32;
+    if (cols == 64) return subtract_64x32;
+#if CONFIG_EXT_PARTITION
+    if (cols == 128) return subtract_128x32;
+#endif  // CONFIG_EXT_PARTITION
+  }
+  if (rows == 64) {
+    if (cols == 16) return subtract_16x64;
+    if (cols == 32) return subtract_32x64;
+    if (cols == 64) return subtract_64x64;
+#if CONFIG_EXT_PARTITION
+    if (cols == 128) return subtract_128x64;
+#endif  // CONFIG_EXT_PARTITION
+  }
+#if CONFIG_EXT_PARTITION
+  if (rows == 128) {
+    if (cols == 32) return subtract_32x128;
+    if (cols == 64) return subtract_64x128;
+    if (cols == 128) return subtract_128x128;
+  }
+#endif  // CONFIG_EXT_PARTITION
+  assert(0);
+  return NULL;
 }
 
 void aom_highbd_subtract_block_sse2(int rows, int cols, int16_t *diff,

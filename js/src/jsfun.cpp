@@ -1740,20 +1740,6 @@ JSFunction::maybeRelazify(JSRuntime* rt)
     comp->scheduleDelazificationForDebugger();
 }
 
-static bool
-fun_isGenerator(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    JSFunction* fun;
-    if (!IsFunctionObject(args.thisv(), &fun)) {
-        args.rval().setBoolean(false);
-        return true;
-    }
-
-    args.rval().setBoolean(fun->isGenerator());
-    return true;
-}
-
 const JSFunctionSpec js::function_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,   fun_toSource,   0,0),
@@ -1761,7 +1747,6 @@ const JSFunctionSpec js::function_methods[] = {
     JS_FN(js_toString_str,   fun_toString,   0,0),
     JS_FN(js_apply_str,      fun_apply,      2,0),
     JS_FN(js_call_str,       fun_call,       1,0),
-    JS_FN("isGenerator",     fun_isGenerator,0,0),
     JS_SELF_HOSTED_FN("bind", "FunctionBind", 2, 0),
     JS_SYM_FN(hasInstance, fun_symbolHasInstance, 1, JSPROP_READONLY | JSPROP_PERMANENT),
     JS_FS_END

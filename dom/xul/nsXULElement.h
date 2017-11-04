@@ -664,6 +664,14 @@ public:
     {
         SetXULAttr(nsGkAtoms::statustext, aValue, rv);
     }
+    void GetSrc(DOMString& aValue) const
+    {
+        GetXULAttr(nsGkAtoms::src, aValue);
+    }
+    void SetSrc(const nsAString& aValue, mozilla::ErrorResult& rv)
+    {
+        SetXULAttr(nsGkAtoms::src, aValue, rv);
+    }
     bool AllowEvents() const
     {
         return BoolAttrIsTrue(nsGkAtoms::allowevents);

@@ -474,15 +474,24 @@ js::Nursery::calcPromotionRate(bool *validForTenuring) const {
     float used = float(previousGC.nurseryUsedBytes);
     float capacity = float(previousGC.nurseryCapacity);
     float tenured = float(previousGC.tenuredBytes);
+    float rate;
 
-    if (validForTenuring) {
-        /*
-         * We can only use promotion rates if they're likely to be valid,
-         * they're only valid if the nursury was at least 90% full.
-         */
-        *validForTenuring = used > capacity * 0.9f;
+    if (previousGC.nurseryUsedBytes > 0) {
+        if (validForTenuring) {
+            /*
+             * We can only use promotion rates if they're likely to be valid,
+             * they're only valid if the nursury was at least 90% full.
+             */
+            *validForTenuring = used > capacity * 0.9f;
+        }
+        rate = tenured / used;
+    } else {
+        if (validForTenuring)
+            *validForTenuring = false;
+        rate = 0.0f;
     }
-    return tenured / used;
+
+    return rate;
 }
 
 void
@@ -501,20 +510,22 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
         // requested. (And as a public API, this function should not crash in
         // such a case.)
         json.beginObject();
-        json.property("status", "no collection");
+        json.property("status", "nursery empty");
         json.endObject();
         return;
     }
 
     json.beginObject();
 
+    json.property("status", "complete");
+
     json.property("reason", JS::gcreason::ExplainReason(previousGC.reason));
     json.property("bytes_tenured", previousGC.tenuredBytes);
-    json.floatProperty("promotion_rate", calcPromotionRate(nullptr), 0);
-    json.property("nursery_bytes", previousGC.nurseryUsedBytes);
-    json.property("new_nursery_bytes", numChunks() * ChunkSize);
+    json.property("bytes_used", previousGC.nurseryUsedBytes);
+    json.property("cur_capacity", previousGC.nurseryCapacity);
+    json.property("new_capacity", spaceToEnd());
 
-    json.beginObjectProperty("timings");
+    json.beginObjectProperty("phase_times");
 
 #define EXTRACT_NAME(name, text) #name,
     static const char* names[] = {

@@ -6,6 +6,13 @@
 
 #ifndef MOZ_FFVPX_CONFIG_H
 #define MOZ_FFVPX_CONFIG_H
+#if defined(MOZ_FFVPX_FLACONLY)
+#if defined(MOZ_WIDGET_ANDROID) && !defined(HAVE_64BIT_BUILD)
+#include "config_android32.h"
+#else
+#include "config_flac.h"
+#endif
+#else // MOZ_FFVPX_FLACONLY
 #if defined(XP_WIN)
 // Avoid conflicts with mozilla-config.h
 #if !defined(_MSC_VER)
@@ -27,11 +34,7 @@
 #define HAVE_LIBC_MSVCRT 0
 #endif
 #elif defined(XP_DARWIN)
-#if defined(HAVE_64BIT_BUILD)
 #include "config_darwin64.h"
-#else
-#include "config_darwin32.h"
-#endif
 #elif defined(XP_UNIX)
 #if defined(HAVE_64BIT_BUILD)
 #include "config_unix64.h"
@@ -39,5 +42,6 @@
 #include "config_unix32.h"
 #endif
 #endif
+#endif // else MOZ_FFVPX_FLACONLY
 #include "config_common.h"
 #endif // MOZ_FFVPX_CONFIG_H

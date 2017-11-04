@@ -17,6 +17,7 @@
 
 #include "av1/encoder/ransac.h"
 #include "av1/encoder/mathutils.h"
+#include "av1/encoder/random.h"
 
 #define MAX_MINPTS 4
 #define MAX_DEGENERATE_ITER 10
@@ -585,12 +586,6 @@ static int find_homography(int np, double *pts1, double *pts2, double *mat) {
     for (i = 0; i < 8; i++) mat[i] = f * H[i];
   }
   return 0;
-}
-
-// Generate a random number in the range [0, 32768).
-static unsigned int lcg_rand16(unsigned int *state) {
-  *state = (unsigned int)(*state * 1103515245ULL + 12345);
-  return *state / 65536 % 32768;
 }
 
 static int get_rand_indices(int npoints, int minpts, int *indices,

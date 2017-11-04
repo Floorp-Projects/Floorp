@@ -605,7 +605,8 @@
 
 :-moz-native-anonymous .shapes-polygon,
 :-moz-native-anonymous .shapes-ellipse,
-:-moz-native-anonymous .shapes-rect {
+:-moz-native-anonymous .shapes-rect,
+:-moz-native-anonymous .shapes-bounding-box {
   fill: transparent;
   stroke: var(--highlighter-guide-color);
   shape-rendering: geometricPrecision;

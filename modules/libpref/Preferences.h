@@ -13,6 +13,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"
@@ -64,7 +65,7 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPREFSERVICE
-  NS_FORWARD_NSIPREFBRANCH(sRootBranch->)
+  NS_FORWARD_NSIPREFBRANCH(mRootBranch->)
   NS_DECL_NSIOBSERVER
 
   Preferences();
@@ -94,14 +95,14 @@ public:
   static nsIPrefBranch* GetRootBranch()
   {
     NS_ENSURE_TRUE(InitStaticMembers(), nullptr);
-    return sRootBranch;
+    return sPreferences->mRootBranch;
   }
 
   // Returns shared default pref branch instance. NOTE: not addreffed.
   static nsIPrefBranch* GetDefaultRootBranch()
   {
     NS_ENSURE_TRUE(InitStaticMembers(), nullptr);
-    return sDefaultRootBranch;
+    return sPreferences->mDefaultRootBranch;
   }
 
   // Gets int or bool type pref value with default value if failed to get the
@@ -403,9 +404,10 @@ private:
   // mDirty and mSavePending will both be true.
   bool mSavePending = false;
 
-  static Preferences* sPreferences;
-  static nsIPrefBranch* sRootBranch;
-  static nsIPrefBranch* sDefaultRootBranch;
+  nsCOMPtr<nsIPrefBranch> mRootBranch;
+  nsCOMPtr<nsIPrefBranch> mDefaultRootBranch;
+
+  static StaticRefPtr<Preferences> sPreferences;
   static bool sShutdown;
 
   // Init static members. Returns true on success.

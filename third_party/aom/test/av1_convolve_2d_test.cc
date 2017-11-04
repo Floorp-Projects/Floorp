@@ -22,14 +22,14 @@ using libaom_test::AV1HighbdConvolve2D::AV1HighbdConvolve2DTest;
 
 namespace {
 
-TEST_P(AV1Convolve2DTest, CheckOutput) { RunCheckOutput(GET_PARAM(3)); }
+TEST_P(AV1Convolve2DTest, CheckOutput) { RunCheckOutput(GET_PARAM(2)); }
 
 INSTANTIATE_TEST_CASE_P(
     SSE2, AV1Convolve2DTest,
     libaom_test::AV1Convolve2D::BuildParams(av1_convolve_2d_sse2));
 
 #if CONFIG_HIGHBITDEPTH && HAVE_SSSE3
-TEST_P(AV1HighbdConvolve2DTest, CheckOutput) { RunCheckOutput(GET_PARAM(4)); }
+TEST_P(AV1HighbdConvolve2DTest, CheckOutput) { RunCheckOutput(GET_PARAM(3)); }
 
 INSTANTIATE_TEST_CASE_P(SSSE3, AV1HighbdConvolve2DTest,
                         libaom_test::AV1HighbdConvolve2D::BuildParams(

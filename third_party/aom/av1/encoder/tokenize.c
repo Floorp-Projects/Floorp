@@ -315,36 +315,30 @@ static INLINE void add_token(TOKENEXTRA **t,
   (*t)->eob_val = eob_val;
   (*t)->first_val = first_val;
   (*t)++;
+
+  if (token == BLOCK_Z_TOKEN) {
+    update_cdf(*head_cdf, 0, HEAD_TOKENS + 1);
+  } else {
+    if (eob_val != LAST_EOB) {
+      const int symb = 2 * AOMMIN(token, TWO_TOKEN) - eob_val + first_val;
+      update_cdf(*head_cdf, symb, HEAD_TOKENS + first_val);
+    }
+    if (token > ONE_TOKEN)
+      update_cdf(*tail_cdf, token - TWO_TOKEN, TAIL_TOKENS);
+  }
 }
 #endif  // !CONFIG_PVQ || CONFIG_VAR_TX
 
-#if CONFIG_PALETTE
-void av1_tokenize_palette_sb(const AV1_COMP *cpi,
-                             const struct ThreadData *const td, int plane,
-                             TOKENEXTRA **t, RUN_TYPE dry_run, BLOCK_SIZE bsize,
-                             int *rate) {
-  assert(plane == 0 || plane == 1);
-  const MACROBLOCK *const x = &td->mb;
-  const MACROBLOCKD *const xd = &x->e_mbd;
-  const MB_MODE_INFO *const mbmi = &xd->mi[0]->mbmi;
-  const uint8_t *const color_map = xd->plane[plane].color_index_map;
-  const PALETTE_MODE_INFO *const pmi = &mbmi->palette_mode_info;
-  aom_cdf_prob(
-      *palette_cdf)[PALETTE_COLOR_INDEX_CONTEXTS][CDF_SIZE(PALETTE_COLORS)] =
-      plane ? xd->tile_ctx->palette_uv_color_index_cdf
-            : xd->tile_ctx->palette_y_color_index_cdf;
-  int plane_block_width, rows, cols;
-  av1_get_block_dimensions(bsize, plane, xd, &plane_block_width, NULL, &rows,
-                           &cols);
+static int cost_and_tokenize_map(Av1ColorMapParam *param, TOKENEXTRA **t,
+                                 int calc_rate) {
+  const uint8_t *const color_map = param->color_map;
+  MapCdf map_cdf = param->map_cdf;
+  ColorCost color_cost = param->color_cost;
+  const int plane_block_width = param->plane_width;
+  const int rows = param->rows;
+  const int cols = param->cols;
+  const int n = param->n_colors;
 
-  // The first color index does not use context or entropy.
-  (*t)->token = color_map[0];
-  (*t)->palette_cdf = NULL;
-  (*t)->skip_eob_node = 0;
-  ++(*t);
-
-  const int n = pmi->palette_size[plane];
-  const int calc_rate = rate && dry_run == DRY_RUN_COSTCOEFFS;
   int this_rate = 0;
   uint8_t color_order[PALETTE_MAX_SIZE];
 #if CONFIG_PALETTE_THROUGHPUT
@@ -360,18 +354,99 @@ void av1_tokenize_palette_sb(const AV1_COMP *cpi,
           color_map, plane_block_width, i, j, n, color_order, &color_new_idx);
       assert(color_new_idx >= 0 && color_new_idx < n);
       if (calc_rate) {
-        this_rate += cpi->palette_y_color_cost[n - PALETTE_MIN_SIZE][color_ctx]
-                                              [color_new_idx];
+        this_rate +=
+            (*color_cost)[n - PALETTE_MIN_SIZE][color_ctx][color_new_idx];
+      } else {
+        (*t)->token = color_new_idx;
+        (*t)->color_map_cdf = map_cdf[n - PALETTE_MIN_SIZE][color_ctx];
+        ++(*t);
       }
-      (*t)->token = color_new_idx;
-      (*t)->palette_cdf = palette_cdf[n - PALETTE_MIN_SIZE][color_ctx];
-      (*t)->skip_eob_node = 0;
-      ++(*t);
     }
   }
-  if (rate) *rate += this_rate;
+  if (calc_rate) return this_rate;
+  return 0;
 }
-#endif  // CONFIG_PALETTE
+
+static void get_palette_params(const MACROBLOCK *const x, int plane,
+                               BLOCK_SIZE bsize, Av1ColorMapParam *params) {
+  const MACROBLOCKD *const xd = &x->e_mbd;
+  const MB_MODE_INFO *const mbmi = &xd->mi[0]->mbmi;
+  const PALETTE_MODE_INFO *const pmi = &mbmi->palette_mode_info;
+  params->color_map = xd->plane[plane].color_index_map;
+  params->map_cdf = plane ? xd->tile_ctx->palette_uv_color_index_cdf
+                          : xd->tile_ctx->palette_y_color_index_cdf;
+  params->color_cost =
+      plane ? &x->palette_uv_color_cost : &x->palette_y_color_cost;
+  params->n_colors = pmi->palette_size[plane];
+  av1_get_block_dimensions(bsize, plane, xd, &params->plane_width, NULL,
+                           &params->rows, &params->cols);
+}
+
+#if CONFIG_MRC_TX && SIGNAL_ANY_MRC_MASK
+static void get_mrc_params(const MACROBLOCK *const x, int block,
+                           TX_SIZE tx_size, Av1ColorMapParam *params) {
+  memset(params, 0, sizeof(*params));
+  const MACROBLOCKD *const xd = &x->e_mbd;
+  const MB_MODE_INFO *const mbmi = &xd->mi[0]->mbmi;
+  const int is_inter = is_inter_block(mbmi);
+  params->color_map = BLOCK_OFFSET(xd->mrc_mask, block);
+  params->map_cdf = is_inter ? xd->tile_ctx->mrc_mask_inter_cdf
+                             : xd->tile_ctx->mrc_mask_intra_cdf;
+  params->color_cost =
+      is_inter ? &x->mrc_mask_inter_cost : &x->mrc_mask_intra_cost;
+  params->n_colors = 2;
+  params->plane_width = tx_size_wide[tx_size];
+  params->rows = tx_size_high[tx_size];
+  params->cols = tx_size_wide[tx_size];
+}
+#endif  // CONFIG_MRC_TX && SIGNAL_ANY_MRC_MASK
+
+static void get_color_map_params(const MACROBLOCK *const x, int plane,
+                                 int block, BLOCK_SIZE bsize, TX_SIZE tx_size,
+                                 COLOR_MAP_TYPE type,
+                                 Av1ColorMapParam *params) {
+  (void)block;
+  (void)tx_size;
+  memset(params, 0, sizeof(*params));
+  switch (type) {
+    case PALETTE_MAP: get_palette_params(x, plane, bsize, params); break;
+#if CONFIG_MRC_TX && SIGNAL_ANY_MRC_MASK
+    case MRC_MAP: get_mrc_params(x, block, tx_size, params); break;
+#endif  // CONFIG_MRC_TX && SIGNAL_ANY_MRC_MASK
+    default: assert(0 && "Invalid color map type"); return;
+  }
+}
+
+int av1_cost_color_map(const MACROBLOCK *const x, int plane, int block,
+                       BLOCK_SIZE bsize, TX_SIZE tx_size, COLOR_MAP_TYPE type) {
+  assert(plane == 0 || plane == 1);
+  Av1ColorMapParam color_map_params;
+  get_color_map_params(x, plane, block, bsize, tx_size, type,
+                       &color_map_params);
+  return cost_and_tokenize_map(&color_map_params, NULL, 1);
+}
+
+void av1_tokenize_color_map(const MACROBLOCK *const x, int plane, int block,
+                            TOKENEXTRA **t, BLOCK_SIZE bsize, TX_SIZE tx_size,
+                            COLOR_MAP_TYPE type) {
+  assert(plane == 0 || plane == 1);
+#if CONFIG_MRC_TX
+  if (type == MRC_MAP) {
+    const int is_inter = is_inter_block(&x->e_mbd.mi[0]->mbmi);
+    if ((is_inter && !SIGNAL_MRC_MASK_INTER) ||
+        (!is_inter && !SIGNAL_MRC_MASK_INTRA))
+      return;
+  }
+#endif  // CONFIG_MRC_TX
+  Av1ColorMapParam color_map_params;
+  get_color_map_params(x, plane, block, bsize, tx_size, type,
+                       &color_map_params);
+  // The first color index does not use context or entropy.
+  (*t)->token = color_map_params.color_map[0];
+  (*t)->color_map_cdf = NULL;
+  ++(*t);
+  cost_and_tokenize_map(&color_map_params, t, 0);
+}
 
 #if CONFIG_PVQ
 static void add_pvq_block(AV1_COMMON *const cm, MACROBLOCK *const x,
@@ -410,7 +485,7 @@ static void tokenize_pvq(int plane, int block, int blk_row, int blk_col,
 
   assert(block < MAX_PVQ_BLOCKS_IN_SB);
   pvq_info = &x->pvq[block][plane];
-  add_pvq_block((AV1_COMMON * const)cm, x, pvq_info);
+  add_pvq_block((AV1_COMMON * const) cm, x, pvq_info);
 }
 #endif  // CONFIG_PVQ
 
@@ -444,8 +519,6 @@ static void tokenize_b(int plane, int block, int blk_row, int blk_col,
       av1_get_tx_type(type, xd, blk_row, blk_col, block, tx_size);
   const SCAN_ORDER *const scan_order = get_scan(cm, tx_size, tx_type, mbmi);
   const int ref = is_inter_block(mbmi);
-  unsigned int(*const counts)[COEFF_CONTEXTS][ENTROPY_TOKENS] =
-      td->rd_counts.coef_counts[txsize_sqr_map[tx_size]][type][ref];
   FRAME_CONTEXT *ec_ctx = xd->tile_ctx;
   aom_cdf_prob(
       *const coef_head_cdfs)[COEFF_CONTEXTS][CDF_SIZE(ENTROPY_TOKENS)] =
@@ -453,13 +526,9 @@ static void tokenize_b(int plane, int block, int blk_row, int blk_col,
   aom_cdf_prob(
       *const coef_tail_cdfs)[COEFF_CONTEXTS][CDF_SIZE(ENTROPY_TOKENS)] =
       ec_ctx->coef_tail_cdfs[txsize_sqr_map[tx_size]][type][ref];
-  unsigned int(*const blockz_count)[2] =
-      td->counts->blockz_count[txsize_sqr_map[tx_size]][type][ref];
   int eob_val;
   int first_val = 1;
-  const int seg_eob = get_tx_eob(&cpi->common.seg, segment_id, tx_size);
-  unsigned int(*const eob_branch)[COEFF_CONTEXTS] =
-      td->counts->eob_branch[txsize_sqr_map[tx_size]][type][ref];
+  const int seg_eob = av1_get_tx_eob(&cpi->common.seg, segment_id, tx_size);
   const uint8_t *const band = get_band_translate(tx_size);
   int16_t token;
   EXTRABIT extra;
@@ -470,11 +539,14 @@ static void tokenize_b(int plane, int block, int blk_row, int blk_col,
   nb = scan_order->neighbors;
   c = 0;
 
+#if CONFIG_MRC_TX && SIGNAL_ANY_MRC_MASK
+  if (tx_type == MRC_DCT)
+    av1_tokenize_color_map(x, plane, block, &t, plane_bsize, tx_size, MRC_MAP);
+#endif  // CONFIG_MRC_TX && SIGNAL_ANY_MRC_MASK
+
   if (eob == 0)
     add_token(&t, &coef_tail_cdfs[band[c]][pt], &coef_head_cdfs[band[c]][pt], 1,
               1, 0, BLOCK_Z_TOKEN);
-
-  ++blockz_count[pt][eob != 0];
 
   while (c < eob) {
     int v = qcoeff[scan[c]];
@@ -483,23 +555,13 @@ static void tokenize_b(int plane, int block, int blk_row, int blk_col,
     if (!v) {
       add_token(&t, &coef_tail_cdfs[band[c]][pt], &coef_head_cdfs[band[c]][pt],
                 0, first_val, 0, ZERO_TOKEN);
-      ++counts[band[c]][pt][ZERO_TOKEN];
       token_cache[scan[c]] = 0;
     } else {
       eob_val =
           (c + 1 == eob) ? (c + 1 == seg_eob ? LAST_EOB : EARLY_EOB) : NO_EOB;
-
       av1_get_token_extra(v, &token, &extra);
-
       add_token(&t, &coef_tail_cdfs[band[c]][pt], &coef_head_cdfs[band[c]][pt],
                 eob_val, first_val, extra, (uint8_t)token);
-
-      if (eob_val != LAST_EOB) {
-        ++counts[band[c]][pt][token];
-        ++eob_branch[band[c]][pt];
-        counts[band[c]][pt][EOB_TOKEN] += eob_val != NO_EOB;
-      }
-
       token_cache[scan[c]] = av1_pt_energy_class[token];
     }
     ++c;
@@ -673,7 +735,7 @@ void av1_tokenize_sb_vartx(const AV1_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
     if (!is_chroma_reference(mi_row, mi_col, bsize,
                              xd->plane[plane].subsampling_x,
                              xd->plane[plane].subsampling_y)) {
-#if !CONFIG_PVQ || !CONFIG_LV_MAP
+#if !CONFIG_PVQ && !CONFIG_LV_MAP
       if (!dry_run) {
         (*t)->token = EOSB_TOKEN;
         (*t)++;
@@ -691,7 +753,8 @@ void av1_tokenize_sb_vartx(const AV1_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
 #endif
     const int mi_width = block_size_wide[plane_bsize] >> tx_size_wide_log2[0];
     const int mi_height = block_size_high[plane_bsize] >> tx_size_wide_log2[0];
-    const TX_SIZE max_tx_size = get_vartx_max_txsize(mbmi, plane_bsize);
+    const TX_SIZE max_tx_size = get_vartx_max_txsize(
+        mbmi, plane_bsize, pd->subsampling_x || pd->subsampling_y);
     const BLOCK_SIZE txb_size = txsize_to_bsize[max_tx_size];
     int bw = block_size_wide[txb_size] >> tx_size_wide_log2[0];
     int bh = block_size_high[txb_size] >> tx_size_wide_log2[0];

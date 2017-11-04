@@ -44,6 +44,11 @@
     <groupbox id="defaultEngineGroup" data-category="paneSearch">
       <caption><label>&defaultSearchEngine.label;</label></caption>
       <description>&chooseYourDefaultSearchEngine2.label;</description>
+
+      <hbox id="browserDefaultSearchExtensionContent" align="center" hidden="true">
+        <description control="disableDefaultSearchExtension" flex="1"/>
+      </hbox>
+
       <hbox>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
@@ -52,6 +57,7 @@
           </menulist>
         </hbox>
       </hbox>
+
       <checkbox id="suggestionsInSearchFieldsCheckbox"
                 label="&provideSearchSuggestions.label;"
                 accesskey="&provideSearchSuggestions.accesskey;"

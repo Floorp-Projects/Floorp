@@ -52,6 +52,14 @@ add_task(function* () {
   });
   yield wait;
 
+  let requestItems = document.querySelectorAll(".request-list-item");
+  for (let requestItem of requestItems) {
+    requestItem.scrollIntoView();
+    let requestsListStatus = requestItem.querySelector(".requests-list-status");
+    EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+    yield waitUntil(() => requestsListStatus.title);
+  }
+
   let index = 0;
   for (let request of REQUEST_DATA) {
     let item = getSortedRequests(store.getState()).get(index);

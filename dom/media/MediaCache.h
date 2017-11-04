@@ -275,6 +275,10 @@ public:
   // reset variables such as |mDidNotifyDataEnded|.
   void NotifyChannelRecreated();
 
+  // Notifies the stream that the suspend status of the client has changed.
+  // Main thread only.
+  void NotifyClientSuspended(bool aSuspended);
+
   // These methods can be called on any thread.
   // Cached blocks associated with this stream will not be evicted
   // while the stream is pinned.
@@ -456,7 +460,9 @@ private:
   // This is a unique ID representing the resource we're loading.
   // All streams with the same mResourceID are loading the same
   // underlying resource and should share data.
-  int64_t mResourceID;
+  // Initialized to 0 as invalid. Will be allocated a valid ID (always positive)
+  // from the cache.
+  int64_t mResourceID = 0;
   // The last reported seekability state for the underlying channel
   bool mIsTransportSeekable;
   // True if the cache has suspended our channel because the cache is
@@ -518,6 +524,9 @@ private:
 
   // True if associated with a private browsing window.
   const bool mIsPrivateBrowsing;
+
+  // True if the client is suspended. Accessed on the owner thread only.
+  bool mClientSuspended = false;
 };
 
 } // namespace mozilla

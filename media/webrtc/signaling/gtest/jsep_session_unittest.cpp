@@ -83,8 +83,29 @@ protected:
   struct TransportData {
     std::string mIceUfrag;
     std::string mIcePwd;
+    int iceCredentialSerial;
     std::map<std::string, std::vector<uint8_t> > mFingerprints;
   };
+
+  void
+  GenerateNewIceCredentials(const JsepSessionImpl& session,
+                            TransportData& tdata)
+  {
+    std::ostringstream ostr;
+    ostr << session.GetName() << "-" << ++tdata.iceCredentialSerial;
+
+    // Values here semi-borrowed from JSEP draft.
+    tdata.mIceUfrag = ostr.str() + "-ufrag";
+    tdata.mIcePwd = ostr.str() + "-1234567890";
+  }
+
+  void
+  ModifyOffererIceCredentials()
+  {
+    GenerateNewIceCredentials(*mSessionOff, *mOffererTransport);
+    mSessionOff->SetIceCredentials(mOffererTransport->mIceUfrag,
+                                   mOffererTransport->mIcePwd);
+  }
 
   void
   AddDtlsFingerprint(const std::string& alg, JsepSessionImpl& session,
@@ -100,9 +121,8 @@ protected:
   void
   AddTransportData(JsepSessionImpl& session, TransportData& tdata)
   {
-    // Values here semi-borrowed from JSEP draft.
-    tdata.mIceUfrag = session.GetName() + "-ufrag";
-    tdata.mIcePwd = session.GetName() + "-1234567890";
+    tdata.iceCredentialSerial = 0;
+    GenerateNewIceCredentials(session, tdata);
     session.SetIceCredentials(tdata.mIceUfrag, tdata.mIcePwd);
     AddDtlsFingerprint("sha-1", session, tdata);
     AddDtlsFingerprint("sha-256", session, tdata);
@@ -524,6 +544,14 @@ protected:
   {
     JsepAnswerOptions options;
     std::string answer;
+
+    // detect ice restart and generate new ice credentials (like
+    // PeerConnectionImpl does).
+    if (mSessionAns->RemoteIceIsRestarting()) {
+      GenerateNewIceCredentials(*mSessionAns, *mAnswererTransport);
+      mSessionAns->SetIceCredentials(mAnswererTransport->mIceUfrag,
+                                     mAnswererTransport->mIcePwd);
+    }
     nsresult rv = mSessionAns->CreateAnswer(options, &answer);
     EXPECT_EQ(NS_OK, rv);
 
@@ -4101,6 +4129,93 @@ TEST_F(JsepSessionTest, TestIceOptions)
 
   ASSERT_EQ(1U, mSessionAns->GetIceOptions().size());
   ASSERT_EQ("trickle", mSessionAns->GetIceOptions()[0]);
+}
+
+TEST_F(JsepSessionTest, TestIceRestart)
+{
+  AddTracks(*mSessionOff, "audio");
+  AddTracks(*mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer, CHECK_SUCCESS);
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+
+  JsepOfferOptions options;
+  options.mIceRestart = Some(true);
+  ModifyOffererIceCredentials();
+
+  std::string reoffer = CreateOffer(Some(options));
+  SetLocalOffer(reoffer, CHECK_SUCCESS);
+  SetRemoteOffer(reoffer, CHECK_SUCCESS);
+  std::string reanswer = CreateAnswer();
+  SetLocalAnswer(reanswer, CHECK_SUCCESS);
+  SetRemoteAnswer(reanswer, CHECK_SUCCESS);
+
+  UniquePtr<Sdp> parsedOffer(Parse(offer));
+  ASSERT_EQ(1U, parsedOffer->GetMediaSectionCount());
+  UniquePtr<Sdp> parsedReoffer(Parse(reoffer));
+  ASSERT_EQ(1U, parsedReoffer->GetMediaSectionCount());
+
+  UniquePtr<Sdp> parsedAnswer(Parse(answer));
+  ASSERT_EQ(1U, parsedAnswer->GetMediaSectionCount());
+  UniquePtr<Sdp> parsedReanswer(Parse(reanswer));
+  ASSERT_EQ(1U, parsedReanswer->GetMediaSectionCount());
+
+  // verify ice pwd/ufrag are present in offer/answer and reoffer/reanswer
+  auto& offerMediaAttrs = parsedOffer->GetMediaSection(0).GetAttributeList();
+  ASSERT_TRUE(offerMediaAttrs.HasAttribute(SdpAttribute::kIcePwdAttribute));
+  ASSERT_TRUE(offerMediaAttrs.HasAttribute(SdpAttribute::kIceUfragAttribute));
+
+  auto& reofferMediaAttrs = parsedReoffer->GetMediaSection(0).GetAttributeList();
+  ASSERT_TRUE(reofferMediaAttrs.HasAttribute(SdpAttribute::kIcePwdAttribute));
+  ASSERT_TRUE(reofferMediaAttrs.HasAttribute(SdpAttribute::kIceUfragAttribute));
+
+  auto& answerMediaAttrs = parsedAnswer->GetMediaSection(0).GetAttributeList();
+  ASSERT_TRUE(answerMediaAttrs.HasAttribute(SdpAttribute::kIcePwdAttribute));
+  ASSERT_TRUE(answerMediaAttrs.HasAttribute(SdpAttribute::kIceUfragAttribute));
+
+  auto& reanswerMediaAttrs = parsedReanswer->GetMediaSection(0).GetAttributeList();
+  ASSERT_TRUE(reanswerMediaAttrs.HasAttribute(SdpAttribute::kIcePwdAttribute));
+  ASSERT_TRUE(reanswerMediaAttrs.HasAttribute(SdpAttribute::kIceUfragAttribute));
+
+  // make sure offer/reoffer ice pwd/ufrag changed on ice restart
+  ASSERT_NE(offerMediaAttrs.GetIcePwd().c_str(),
+            reofferMediaAttrs.GetIcePwd().c_str());
+  ASSERT_NE(offerMediaAttrs.GetIceUfrag().c_str(),
+            reofferMediaAttrs.GetIceUfrag().c_str());
+
+  // make sure answer/reanswer ice pwd/ufrag changed on ice restart
+  ASSERT_NE(answerMediaAttrs.GetIcePwd().c_str(),
+            reanswerMediaAttrs.GetIcePwd().c_str());
+  ASSERT_NE(answerMediaAttrs.GetIceUfrag().c_str(),
+            reanswerMediaAttrs.GetIceUfrag().c_str());
+}
+
+TEST_F(JsepSessionTest, TestAnswererIndicatingIceRestart)
+{
+  AddTracks(*mSessionOff, "audio");
+  AddTracks(*mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer, CHECK_SUCCESS);
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+
+  // reoffer, but we'll improperly indicate an ice restart in the answer by
+  // modifying the ice pwd and ufrag
+  std::string reoffer = CreateOffer();
+  SetLocalOffer(reoffer, CHECK_SUCCESS);
+  SetRemoteOffer(reoffer, CHECK_SUCCESS);
+  std::string reanswer = CreateAnswer();
+
+  // change the ice pwd and ufrag
+  ReplaceInSdp(&reanswer, "Answerer-1-", "bad-2-");
+  SetLocalAnswer(reanswer, CHECK_SUCCESS);
+  nsresult rv = mSessionOff->SetRemoteDescription(kJsepSdpAnswer, reanswer);
+  ASSERT_NE(NS_OK, rv); // NS_ERROR_INVALID_ARG
 }
 
 TEST_F(JsepSessionTest, TestExtmap)

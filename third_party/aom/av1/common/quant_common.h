@@ -48,9 +48,7 @@ int av1_get_qindex(const struct segmentation *seg, int segment_id,
 // Reduce the large number of quantizers to a smaller number of levels for which
 // different matrices may be defined
 static INLINE int aom_get_qmlevel(int qindex, int first, int last) {
-  int qmlevel = (qindex * (last + 1 - first) + QINDEX_RANGE / 2) / QINDEX_RANGE;
-  qmlevel = AOMMIN(qmlevel + first, NUM_QM_LEVELS - 1);
-  return qmlevel;
+  return first + (qindex * (last + 1 - first)) / QINDEX_RANGE;
 }
 void aom_qm_init(struct AV1Common *cm);
 qm_val_t *aom_iqmatrix(struct AV1Common *cm, int qindex, int comp,
@@ -99,7 +97,7 @@ static INLINE int get_dq_profile_from_ctx(int qindex, int q_ctx, int is_inter,
 }
 #endif  // CONFIG_NEW_QUANT
 
-#if CONFIG_PVQ || CONFIG_DAALA_DIST
+#if CONFIG_PVQ
 extern const int OD_QM8_Q4_FLAT[];
 extern const int OD_QM8_Q4_HVS[];
 #endif

@@ -86,11 +86,7 @@ TEST(AV1, TestBitIO) {
   }
 }
 
-#if CONFIG_EC_SMALLMUL
 #define FRAC_DIFF_TOTAL_ERROR 0.16
-#else
-#define FRAC_DIFF_TOTAL_ERROR 0.07
-#endif
 
 TEST(AV1, TestTell) {
   const int kBufferSize = 10000;
@@ -116,8 +112,8 @@ TEST(AV1, TestTell) {
       aom_read(&br, p, NULL);
       uint32_t tell = aom_reader_tell(&br);
       uint32_t tell_frac = aom_reader_tell_frac(&br);
-      GTEST_ASSERT_GE(tell, last_tell) << "tell: " << tell
-                                       << ", last_tell: " << last_tell;
+      GTEST_ASSERT_GE(tell, last_tell)
+          << "tell: " << tell << ", last_tell: " << last_tell;
       GTEST_ASSERT_GE(tell_frac, last_tell_frac)
           << "tell_frac: " << tell_frac
           << ", last_tell_frac: " << last_tell_frac;

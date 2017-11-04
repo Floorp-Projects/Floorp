@@ -26,8 +26,10 @@ const RequestListContextMenu = require("../request-list-context-menu");
 
 const { div } = DOM;
 
-// tooltip show/hide delay in ms
+// Tooltip show / hide delay in ms
 const REQUESTS_TOOLTIP_TOGGLE_DELAY = 500;
+// Gecko's scrollTop is int32_t, so the maximum value is 2^31 - 1 = 2147483647
+const MAX_SCROLL_HEIGHT = 2147483647;
 
 /**
  * Renders the actual contents of the request list.
@@ -99,10 +101,11 @@ class RequestListContent extends Component {
     // Update the CSS variables for waterfall scaling after props change
     this.setScalingStyles(prevProps);
 
+    let node = this.refs.contentEl;
     // Keep the list scrolled to bottom if a new row was added
-    if (this.shouldScrollBottom) {
-      let node = this.refs.contentEl;
-      node.scrollTop = node.scrollHeight;
+    if (this.shouldScrollBottom && node.scrollTop !== MAX_SCROLL_HEIGHT) {
+      // Using maximum scroll height rather than node.scrollHeight to avoid sync reflow.
+      node.scrollTop = MAX_SCROLL_HEIGHT;
     }
   }
 

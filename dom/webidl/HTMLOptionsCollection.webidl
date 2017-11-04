@@ -14,7 +14,7 @@ interface HTMLOptionsCollection : HTMLCollection {
   [CEReactions]
            attribute unsigned long length;
   [CEReactions, Throws]
-  setter creator void (unsigned long index, HTMLOptionElement? option);
+  setter void (unsigned long index, HTMLOptionElement? option);
   [CEReactions, Throws]
   void add((HTMLOptionElement or HTMLOptGroupElement) element, optional (HTMLElement or long)? before = null);
   [CEReactions, Throws]

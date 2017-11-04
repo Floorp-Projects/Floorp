@@ -156,8 +156,10 @@ AndroidDecoderModule::SupportsMimeType(
 
   // Prefer the gecko decoder for opus and vorbis; stagefright crashes
   // on content demuxed from mp4.
+  // Not all android devices support FLAC even when they say they do.
   if (OpusDataDecoder::IsOpus(aMimeType) ||
-      VorbisDataDecoder::IsVorbis(aMimeType)) {
+      VorbisDataDecoder::IsVorbis(aMimeType) ||
+      aMimeType.EqualsLiteral("audio/flac")) {
     LOG("Rejecting audio of type %s", aMimeType.Data());
     return false;
   }

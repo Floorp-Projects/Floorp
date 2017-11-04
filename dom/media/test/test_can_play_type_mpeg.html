@@ -84,10 +84,8 @@ function check_mp4(v, enabled) {
   check("audio/mp4; codecs=opus", "probably");
 
   // Flac.
-  // Not available on Android yet.
-  var expectedResult = IsSupportedAndroid() ? "" : "probably";
-  check("audio/mp4; codecs=\"flac\"", expectedResult);
-  check("audio/mp4; codecs=flac", expectedResult);
+  check("audio/mp4; codecs=\"flac\"", "probably");
+  check("audio/mp4; codecs=flac", "probably");
 
   // VP9.
   // Note: canPlayType assumes non-fragmented MP4. Once we support VP9 in

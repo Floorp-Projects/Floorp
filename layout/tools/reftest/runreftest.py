@@ -795,10 +795,18 @@ class RefTest(object):
                 status, startAfter = self.runApp(profile,
                                                  binary=options.app,
                                                  cmdargs=cmdargs,
-                                                 # give the JS harness 30 seconds to deal with
-                                                 # its own timeouts
                                                  env=browserEnv,
-                                                 timeout=options.timeout + 30.0,
+                                                 # We generally want the JS harness or marionette
+                                                 # to handle timeouts if they can.
+                                                 # The default JS harness timeout is currently
+                                                 # 300 seconds (default options.timeout).
+                                                 # The default Marionette socket timeout is
+                                                 # currently 360 seconds.
+                                                 # Give the JS harness extra time to deal with
+                                                 # its own timeouts and try to usually exceed
+                                                 # the 360 second marionette socket timeout.
+                                                 # See bug 479518 and bug 1414063.
+                                                 timeout=options.timeout + 70.0,
                                                  symbolsPath=options.symbolsPath,
                                                  options=options,
                                                  debuggerInfo=debuggerInfo)

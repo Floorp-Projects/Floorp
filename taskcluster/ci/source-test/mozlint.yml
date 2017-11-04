@@ -1,4 +1,5 @@
 job-defaults:
+    always-target: true
     treeherder:
         kind: test
         tier: 1

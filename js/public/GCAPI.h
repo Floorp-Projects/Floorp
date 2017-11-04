@@ -67,7 +67,7 @@ namespace JS {
     D(EVICT_NURSERY)                            \
     D(DELAYED_ATOMS_GC)                         \
     D(SHARED_MEMORY_LIMIT)                      \
-    D(UNUSED1)                                  \
+    D(IDLE_TIME_COLLECTION)                     \
     D(INCREMENTAL_TOO_SLOW)                     \
     D(ABORT_GC)                                 \
     D(FULL_WHOLE_CELL_BUFFER)                   \

@@ -36,11 +36,7 @@ void aom_daala_start_encode(daala_writer *w, uint8_t *buffer);
 void aom_daala_stop_encode(daala_writer *w);
 
 static INLINE void aom_daala_write(daala_writer *w, int bit, int prob) {
-#if CONFIG_EC_SMALLMUL
   int p = (0x7FFFFF - (prob << 15) + prob) >> 8;
-#else
-  int p = ((prob << 15) + 256 - prob) >> 8;
-#endif
 #if CONFIG_BITSTREAM_DEBUG
   aom_cdf_prob cdf[2] = { (aom_cdf_prob)p, 32767 };
   /*int queue_r = 0;

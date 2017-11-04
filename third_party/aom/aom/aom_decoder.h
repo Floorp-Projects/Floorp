@@ -55,8 +55,6 @@ extern "C" {
 #define AOM_CODEC_CAP_PUT_SLICE 0x10000 /**< Will issue put_slice callbacks */
 #define AOM_CODEC_CAP_PUT_FRAME 0x20000 /**< Will issue put_frame callbacks */
 #define AOM_CODEC_CAP_POSTPROC 0x40000  /**< Can postprocess decoded frame */
-/*!\brief Can conceal errors due to packet loss */
-#define AOM_CODEC_CAP_ERROR_CONCEALMENT 0x80000
 /*!\brief Can receive encoded frames one fragment at a time */
 #define AOM_CODEC_CAP_INPUT_FRAGMENTS 0x100000
 
@@ -73,8 +71,6 @@ extern "C" {
 #define AOM_CODEC_CAP_EXTERNAL_FRAME_BUFFER 0x400000
 
 #define AOM_CODEC_USE_POSTPROC 0x10000 /**< Postprocess decoded frame */
-/*!\brief Conceal errors in decoded frames */
-#define AOM_CODEC_USE_ERROR_CONCEALMENT 0x20000
 /*!\brief The input frame should be passed to the decoder one fragment at a
  * time */
 #define AOM_CODEC_USE_INPUT_FRAGMENTS 0x40000

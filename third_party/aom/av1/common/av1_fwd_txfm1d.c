@@ -1547,6 +1547,16 @@ void av1_fidentity32_c(const int32_t *input, int32_t *output,
   for (int i = 0; i < 32; ++i) output[i] = input[i] * 4;
   range_check(0, input, output, 32, stage_range[0]);
 }
+
+#if CONFIG_TX64X64
+void av1_fidentity64_c(const int32_t *input, int32_t *output,
+                       const int8_t *cos_bit, const int8_t *stage_range) {
+  (void)cos_bit;
+  for (int i = 0; i < 64; ++i)
+    output[i] = (int32_t)dct_const_round_shift(input[i] * 4 * Sqrt2);
+  range_check(0, input, output, 64, stage_range[0]);
+}
+#endif  // CONFIG_TX64X64
 #endif  // CONFIG_EXT_TX
 
 #if CONFIG_TX64X64

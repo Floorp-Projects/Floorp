@@ -14,6 +14,13 @@ Debugging
 
 Set the pref ``dom.payments.loglevel`` to "Debug".
 
+To open a debugger in the context of the remote payment frame, run the following while the dialog is the most recent window:
+``
+gDevToolsBrowser.openContentProcessToolbox({
+  selectedBrowser: Services.wm.getMostRecentWindow(null).document.getElementById("paymentRequestFrame").frameLoader,
+})
+``
+
 
 Communication with the DOM
 ==========================
@@ -32,7 +39,7 @@ This is because the unprivileged document cannot access message managers.
 Instead, all communication across the privileged/unprivileged boundary is done via custom DOM events:
 
 * A ``paymentContentToChrome`` event is dispatched when the dialog contents want to communicate with the privileged dialog wrapper.
-* A ``paymentChromeToContent`` event is dispatched on the ``document`` with the ``detail`` property populated when the privileged dialog wrapper communicates with the unprivileged dialog.
+* A ``paymentChromeToContent`` event is dispatched on the ``window`` with the ``detail`` property populated when the privileged dialog wrapper communicates with the unprivileged dialog.
 
 These events are converted to/from message manager messages of the same name to communicate to the other process.
 The purpose of `paymentDialogFrameScript.js` is to simply convert unprivileged DOM events to/from messages from the other process.

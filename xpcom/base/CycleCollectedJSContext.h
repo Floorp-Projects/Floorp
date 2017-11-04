@@ -194,6 +194,9 @@ public:
   // microtask processor entry point
   void AfterProcessMicrotask();
 
+  // Check whether we need an idle GC task.
+  void IsIdleGCTaskNeeded();
+
   uint32_t RecursionDepth();
 
   // Run in stable state (call through nsContentUtils)

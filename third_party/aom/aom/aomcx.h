@@ -341,7 +341,6 @@ enum aome_enc_control_id {
    */
   AV1E_SET_COLOR_SPACE,
 
-#if CONFIG_COLORSPACE_HEADERS
   /*!\brief Codec control function to set transfer function info.
    * \note Valid ranges: 0..4, default is "UNKNOWN".
    *                     0 = UNKNOWN,
@@ -360,7 +359,6 @@ enum aome_enc_control_id {
    *                     3 = RESERVED
    */
   AV1E_SET_CHROMA_SAMPLE_POSITION,
-#endif
 
   /*!\brief Codec control function to set minimum interval between GF/ARF frames
    *
@@ -457,6 +455,21 @@ enum aome_enc_control_id {
    * Experiment: AOM_QM
    */
   AV1E_SET_QM_MAX,
+
+  /*!\brief Codec control function to encode with dist_8x8.
+   *
+   *  The dist_8x8 is enabled automatically for model tuning parameters that
+   *  require measuring distortion at the 8x8 level. This control also allows
+   *  measuring distortion at the 8x8 level for other tuning options
+   *  (e.g., PSNR), for testing purposes.
+   *                          0 = do not use dist_8x8
+   *                          1 = use dist_8x8
+   *
+   *  By default, the encoder does not use dist_8x8
+   *
+   * Experiment: DIST_8X8
+   */
+  AV1E_SET_ENABLE_DIST_8X8,
 
   /*!\brief Codec control function to set a maximum number of tile groups.
    *
@@ -567,24 +580,31 @@ typedef enum aom_scaling_mode_1d {
   AOME_ONETWO = 3
 } AOM_SCALING_MODE;
 
+/*!\brief Max number of segments
+ *
+ * This is the limit of number of segments allowed within a frame.
+ *
+ * Currently same as "MAX_SEGMENTS" in AV1, the maximum that AV1 supports.
+ *
+ */
+#define AOM_MAX_SEGMENTS 8
+
 /*!\brief  aom region of interest map
  *
  * These defines the data structures for the region of interest map
  *
+ * TODO(yaowu): create a unit test for ROI map related APIs
+ *
  */
-
 typedef struct aom_roi_map {
-  /*! An id between 0 and 3 for each 16x16 region within a frame. */
+  /*! An id between 0 and 7 for each 8x8 region within a frame. */
   unsigned char *roi_map;
-  unsigned int rows; /**< Number of rows. */
-  unsigned int cols; /**< Number of columns. */
-  // TODO(paulwilkins): broken for AV1 which has 8 segments
-  // q and loop filter deltas for each segment
-  // (see MAX_MB_SEGMENTS)
-  int delta_q[4];  /**< Quantizer deltas. */
-  int delta_lf[4]; /**< Loop filter deltas. */
+  unsigned int rows;              /**< Number of rows. */
+  unsigned int cols;              /**< Number of columns. */
+  int delta_q[AOM_MAX_SEGMENTS];  /**< Quantizer deltas. */
+  int delta_lf[AOM_MAX_SEGMENTS]; /**< Loop filter deltas. */
   /*! Static breakout threshold for each segment. */
-  unsigned int static_threshold[4];
+  unsigned int static_threshold[AOM_MAX_SEGMENTS];
 } aom_roi_map_t;
 
 /*!\brief  aom active region map
@@ -622,7 +642,14 @@ typedef enum {
  * Changes the encoder to tune for certain types of input material.
  *
  */
-typedef enum { AOM_TUNE_PSNR, AOM_TUNE_SSIM } aom_tune_metric;
+typedef enum {
+  AOM_TUNE_PSNR,
+  AOM_TUNE_SSIM,
+#ifdef CONFIG_DIST_8X8
+  AOM_TUNE_CDEF_DIST,
+  AOM_TUNE_DAALA_DIST
+#endif
+} aom_tune_metric;
 
 /*!\cond */
 /*!\brief Encoder control function parameter type
@@ -632,7 +659,7 @@ typedef enum { AOM_TUNE_PSNR, AOM_TUNE_SSIM } aom_tune_metric;
  *
  */
 
-AOM_CTRL_USE_TYPE_DEPRECATED(AOME_USE_REFERENCE, int)
+AOM_CTRL_USE_TYPE(AOME_USE_REFERENCE, int)
 #define AOM_CTRL_AOME_USE_REFERENCE
 AOM_CTRL_USE_TYPE(AOME_SET_ROI_MAP, aom_roi_map_t *)
 #define AOM_CTRL_AOME_SET_ROI_MAP
@@ -693,6 +720,9 @@ AOM_CTRL_USE_TYPE(AV1E_SET_LOSSLESS, unsigned int)
 AOM_CTRL_USE_TYPE(AV1E_SET_ENABLE_QM, unsigned int)
 #define AOM_CTRL_AV1E_SET_ENABLE_QM
 
+AOM_CTRL_USE_TYPE(AV1E_SET_ENABLE_DIST_8X8, unsigned int)
+#define AOM_CTRL_AV1E_SET_ENABLE_DIST_8X8
+
 AOM_CTRL_USE_TYPE(AV1E_SET_QM_MIN, unsigned int)
 #define AOM_CTRL_AV1E_SET_QM_MIN
 
@@ -728,13 +758,11 @@ AOM_CTRL_USE_TYPE(AV1E_SET_TUNE_CONTENT, int) /* aom_tune_content */
 AOM_CTRL_USE_TYPE(AV1E_SET_COLOR_SPACE, int)
 #define AOM_CTRL_AV1E_SET_COLOR_SPACE
 
-#if CONFIG_COLORSPACE_HEADERS
 AOM_CTRL_USE_TYPE(AV1E_SET_TRANSFER_FUNCTION, int)
 #define AOM_CTRL_AV1E_SET_TRANSFER_FUNCTION
 
 AOM_CTRL_USE_TYPE(AV1E_SET_CHROMA_SAMPLE_POSITION, int)
 #define AOM_CTRL_AV1E_SET_CHROMA_SAMPLE_POSITION
-#endif
 
 AOM_CTRL_USE_TYPE(AV1E_SET_MIN_GF_INTERVAL, unsigned int)
 #define AOM_CTRL_AV1E_SET_MIN_GF_INTERVAL

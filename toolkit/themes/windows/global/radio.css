@@ -20,16 +20,18 @@ radio {
   padding-inline-end: 2px;
 }
 
-.radio-label-box {
-  margin-inline-start: 2px;
-  border: 1px solid transparent;
-  padding-top: 0px;
-  padding-bottom: 1px;
-  padding-inline-start: 1px;
-  padding-inline-end: 0px;
+.radio-check {
+  -moz-appearance: radio;
+  margin: 1px 0;
 }
 
-.radio-icon {
+.radio-label-box {
+  margin-inline-start: 2px;
+  padding-bottom: 1px;
+  padding-inline-start: 1px;
+}
+
+.radio-icon[src] {
   margin-inline-end: 2px;
 }
 
@@ -40,14 +42,10 @@ radio {
 /* ..... focused state ..... */
 
 radio[focused="true"] > .radio-label-box {
-  border: 1px dotted ThreeDDarkShadow;
+  outline: 1px dotted;
 }
 
 /* ..... disabled state ..... */
-
-radio[disabled="true"] > .radio-check-box1 {
-  background-color: -moz-Dialog;
-}
 
 radio[disabled="true"] {
   color: GrayText;
@@ -58,45 +56,4 @@ radio[disabled="true"] {
     color: ThreeDShadow;
     text-shadow: 1px 1px ThreeDHighlight;
   }
-}
-
-/* ::::: checkmark image ::::: */
-
-.radio-check-box1 {
-  -moz-appearance: radio;
-  margin: 1px 0px;
-  border-top: 1px solid ThreeDShadow;
-  border-right: 1px solid ThreeDHighlight;
-  border-bottom: 1px solid ThreeDHighlight;
-  border-left: 1px solid ThreeDShadow;
-  border-radius: 50%;
-  width: 12px;
-  height: 12px;
-  background-color: -moz-Field;
-}
-
-.radio-check-box2 {
-  border-top: 1px solid ThreeDDarkShadow;
-  border-right: 1px solid ThreeDLightShadow;
-  border-bottom: 1px solid ThreeDLightShadow;
-  border-left: 1px solid ThreeDDarkShadow;
-  border-radius: 50%;
-  padding: 2px;
-  width: 4px;
-  height: 4px;
-  list-style-image: none;
-}
-
-radio:hover:active > .radio-check-box1 {
-  background-color: -moz-Dialog;
-}
-
-/* ..... selected state ..... */
-
-radio[selected="true"] > .radio-check-box1 > .radio-check-box2 {
-  list-style-image: url("chrome://global/skin/radio/radio-check.gif");
-}
-
-radio[selected="true"][disabled="true"] > .radio-check-box1 > .radio-check-box2 {
-  list-style-image: url("chrome://global/skin/radio/radio-check-dis.gif") !important
 }

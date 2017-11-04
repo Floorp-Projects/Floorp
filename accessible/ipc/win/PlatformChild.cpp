@@ -16,6 +16,7 @@
 #include "AccessibleTable2.h"
 #include "AccessibleTableCell.h"
 
+#include "AccessibleDocument_i.c"
 #include "AccessibleHypertext2_i.c"
 
 namespace mozilla {
