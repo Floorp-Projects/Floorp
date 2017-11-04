@@ -198,10 +198,14 @@ MarkupView.prototype = {
   },
 
   isDragging: false,
+  _draggedContainer: null,
 
   _onMouseMove: function (event) {
     let target = event.target;
 
+    if (this._draggedContainer) {
+      this._draggedContainer.onMouseMove(event);
+    }
     // Auto-scroll if we're dragging.
     if (this.isDragging) {
       event.preventDefault();
@@ -329,7 +333,11 @@ MarkupView.prototype = {
     }
   },
 
-  _onMouseUp: function () {
+  _onMouseUp: function (event) {
+    if (this._draggedContainer) {
+      this._draggedContainer.onMouseUp(event);
+    }
+
     this.indicateDropTarget(null);
     this.indicateDragTarget(null);
     if (this._autoScrollAnimationFrame) {

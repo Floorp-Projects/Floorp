@@ -16,20 +16,20 @@ fi
 ./build/src/mach artifact toolchain -v --authentication-file="${TOOLTOOL_AUTH_FILE}" --tooltool-manifest "build/src/${TOOLTOOL_MANIFEST}"${TOOLTOOL_CACHE:+ --cache-dir ${TOOLTOOL_CACHE}}${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}}
 
 # Set up all the Visual Studio paths.
-MSVC_DIR=vs2015u3
+MSVC_DIR=vs2017_15.4.2
 VSWINPATH="$(cd ${MSVC_DIR} && pwd)"
 
 echo vswinpath ${VSWINPATH}
 
 export WINDOWSSDKDIR="${VSWINPATH}/SDK"
-export WIN32_REDIST_DIR="${VSWINPATH}/VC/redist/x86/Microsoft.VC140.CRT"
+export WIN32_REDIST_DIR="${VSWINPATH}/VC/redist/x86/Microsoft.VC141.CRT"
 export WIN_UCRT_REDIST_DIR="${VSWINPATH}/SDK/Redist/ucrt/DLLs/x86"
 
-export PATH="${VSWINPATH}/VC/bin/amd64_x86:${VSWINPATH}/VC/bin/amd64:${VSWINPATH}/VC/bin:${VSWINPATH}/SDK/bin/x86:${VSWINPATH}/SDK/bin/x64:${VSWINPATH}/DIA SDK/bin:${PATH}"
-export PATH="${VSWINPATH}/VC/redist/x86/Microsoft.VC140.CRT:${VSWINPATH}/VC/redist/x64/Microsoft.VC140.CRT:${VSWINPATH}/SDK/Redist/ucrt/DLLs/x86:${VSWINPATH}/SDK/Redist/ucrt/DLLs/x64:${PATH}"
+export PATH="${VSWINPATH}/VC/bin/Hostx64/x86:${VSWINPATH}/VC/bin/Hostx64/x64:${VSWINPATH}/SDK/bin/10.0.15063.0/x64:${VSWINPATH}/DIA SDK/bin:${PATH}"
+export PATH="${VSWINPATH}/VC/redist/x86/Microsoft.VC141.CRT:${VSWINPATH}/SDK/Redist/ucrt/DLLs/x86:${PATH}"
 
-export INCLUDE="${VSWINPATH}/VC/include:${VSWINPATH}/VC/atlmfc/include:${VSWINPATH}/SDK/Include/10.0.14393.0/ucrt:${VSWINPATH}/SDK/Include/10.0.14393.0/shared:${VSWINPATH}/SDK/Include/10.0.14393.0/um:${VSWINPATH}/SDK/Include/10.0.14393.0/winrt:${VSWINPATH}/DIA SDK/include"
-export LIB="${VSWINPATH}/VC/lib:${VSWINPATH}/VC/atlmfc/lib:${VSWINPATH}/SDK/lib/10.0.14393.0/ucrt/x86:${VSWINPATH}/SDK/lib/10.0.14393.0/um/x86:${VSWINPATH}/DIA SDK/lib"
+export INCLUDE="${VSWINPATH}/VC/include:${VSWINPATH}/VC/atlmfc/include:${VSWINPATH}/SDK/Include/10.0.15063.0/ucrt:${VSWINPATH}/SDK/Include/10.0.15063.0/shared:${VSWINPATH}/SDK/Include/10.0.15063.0/um:${VSWINPATH}/SDK/Include/10.0.15063.0/winrt:${VSWINPATH}/DIA SDK/include"
+export LIB="${VSWINPATH}/VC/lib/x86:${VSWINPATH}/VC/atlmfc/lib/x86:${VSWINPATH}/SDK/Lib/10.0.15063.0/ucrt/x86:${VSWINPATH}/SDK/Lib/10.0.15063.0/um/x86:${VSWINPATH}/DIA SDK/lib"
 
 export PATH="$(cd svn && pwd)/bin:${PATH}"
 export PATH="$(cd cmake && pwd)/bin:${PATH}"

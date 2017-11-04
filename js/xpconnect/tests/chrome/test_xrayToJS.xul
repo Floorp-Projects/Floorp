@@ -235,7 +235,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
   gPrototypeProperties['Function'] =
     ["constructor", "toSource", "toString", "apply", "call", "bind",
-     "isGenerator", "length", "name", "arguments", "caller", Symbol.hasInstance];
+     "length", "name", "arguments", "caller", Symbol.hasInstance];
   gConstructorProperties['Function'] = constructorProps([])
 
   gPrototypeProperties['RegExp'] =
