@@ -33,7 +33,7 @@ PDFiumProcessParent::~PDFiumProcessParent()
 }
 
 bool
-PDFiumProcessParent::Launch()
+PDFiumProcessParent::Launch(PrintTargetEMF* aTarget)
 {
   mLaunchThread = NS_GetCurrentThread();
 
@@ -43,7 +43,7 @@ PDFiumProcessParent::Launch()
 
   // Open the top level protocol for PDFium process.
   MOZ_ASSERT(!mPDFiumParentActor);
-  mPDFiumParentActor = new PDFiumParent();
+  mPDFiumParentActor = new PDFiumParent(aTarget);
   return mPDFiumParentActor->Init(GetChannel(),
                             base::GetProcId(GetChildProcessHandle()));
 }
