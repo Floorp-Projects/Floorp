@@ -2,3 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+html {
+  background: -moz-dialog;
+}
+
+#total {
+  border: 1px solid black;
+  margin: 5px;
+  text-align: center;
+}
+
+#total .label {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+#cancel {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+}

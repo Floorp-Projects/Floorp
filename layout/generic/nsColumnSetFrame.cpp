@@ -284,12 +284,16 @@ nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRe
                   MOZ_ASSERT(border.mBorderImageSource.GetType() == eStyleImageType_Null);
 
                   gfx::DrawTarget* dt = aCtx ? aCtx->GetDrawTarget() : nullptr;
+                  bool borderIsEmpty = false;
                   Maybe<nsCSSBorderRenderer> br =
                     nsCSSRendering::CreateBorderRendererWithStyleBorder(presContext, dt,
                                                                         this, aDirtyRect,
                                                                         aLineRect, border,
-                                                                        StyleContext(), skipSides);
+                                                                        StyleContext(),
+                                                                        &borderIsEmpty,
+                                                                        skipSides);
                   if (br.isSome()) {
+                    MOZ_ASSERT(!borderIsEmpty);
                     aBorderRenderers.AppendElement(br.value());
                   }
                 }, aPt);

@@ -41,7 +41,6 @@ void av1_update_tx_type_count(const struct AV1Common *cm, MACROBLOCKD *xd,
 #endif
                               BLOCK_SIZE bsize, TX_SIZE tx_size,
                               FRAME_COUNTS *counts);
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif

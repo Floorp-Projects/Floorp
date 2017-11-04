@@ -48,7 +48,6 @@ ac_add_options --disable-stylo # Bug 1390583
 
 # These aren't supported on mingw at this time
 ac_add_options --disable-webrtc # Bug 1393901
-ac_add_options --disable-crashreporter # Bug 1391685
 ac_add_options --disable-maintenance-service
 
 # Find our toolchain

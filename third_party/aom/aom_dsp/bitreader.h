@@ -50,6 +50,11 @@
 #define aom_read_symbol(r, cdf, nsymbs, ACCT_STR_NAME) \
   aom_read_symbol_(r, cdf, nsymbs ACCT_STR_ARG(ACCT_STR_NAME))
 
+#if CONFIG_LV_MAP
+#define aom_read_bin(r, cdf, nsymbs, ACCT_STR_NAME) \
+  aom_read_bin_(r, cdf, nsymbs ACCT_STR_ARG(ACCT_STR_NAME))
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -197,6 +202,16 @@ static INLINE int aom_read_symbol_(aom_reader *r, aom_cdf_prob *cdf,
   update_cdf(cdf, ret, nsymbs);
   return ret;
 }
+
+#if CONFIG_LV_MAP
+static INLINE int aom_read_bin_(aom_reader *r, aom_cdf_prob *cdf,
+                                int nsymbs ACCT_STR_PARAM) {
+  int ret;
+  ret = aom_read_cdf(r, cdf, nsymbs, ACCT_STR_NAME);
+  update_cdf(cdf, ret, nsymbs);
+  return ret;
+}
+#endif
 
 static INLINE int aom_read_tree_as_cdf(aom_reader *r,
                                        const aom_tree_index *tree,

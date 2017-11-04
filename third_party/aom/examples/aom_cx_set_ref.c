@@ -270,18 +270,18 @@ int main(int argc, char **argv) {
   while (aom_img_read(&raw, infile)) {
     if (limit && frame_in >= limit) break;
     if (update_frame_num > 1 && frame_out + 1 == update_frame_num) {
-      aom_ref_frame_t ref;
-      ref.frame_type = AOM_LAST_FRAME;
+      av1_ref_frame_t ref;
+      ref.idx = 0;
       ref.img = raw;
       // Set reference frame in encoder.
-      if (aom_codec_control(&ecodec, AOM_SET_REFERENCE, &ref))
+      if (aom_codec_control(&ecodec, AV1_SET_REFERENCE, &ref))
         die_codec(&ecodec, "Failed to set reference frame");
       printf(" <SET_REF>");
 
       // If set_reference in decoder is commented out, the enc/dec mismatch
       // would be seen.
       if (test_decode) {
-        if (aom_codec_control(&dcodec, AOM_SET_REFERENCE, &ref))
+        if (aom_codec_control(&dcodec, AV1_SET_REFERENCE, &ref))
           die_codec(&dcodec, "Failed to set reference frame");
       }
     }

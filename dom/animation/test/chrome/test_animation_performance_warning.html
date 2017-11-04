@@ -31,8 +31,10 @@ var gStringBundle;
 
 W3CTest.runner.requestLongerTimeout(2);
 
+const { Services } = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
+Services.locale.setRequestedLocales(["en-US"]);
+
 SpecialPowers.pushPrefEnv({ "set": [
-                            ["general.useragent.locale", "en-US"],
                             // Need to set devPixelsPerPx explicitly to gain
                             // consistent pixel values in warning messages
                             // regardless of platform DPIs.

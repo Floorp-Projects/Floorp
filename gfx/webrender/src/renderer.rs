@@ -223,7 +223,10 @@ enum TextShaderMode {
     Alpha = 0,
     SubpixelPass0 = 1,
     SubpixelPass1 = 2,
-    ColorBitmap = 3,
+    SubpixelWithBgColorPass0 = 3,
+    SubpixelWithBgColorPass1 = 4,
+    SubpixelWithBgColorPass2 = 5,
+    ColorBitmap = 6,
 }
 
 impl Into<ShaderMode> for TextShaderMode {
@@ -638,6 +641,7 @@ pub enum BlendMode {
     PremultipliedAlpha,
     PremultipliedDestOut,
     Subpixel,
+    SubpixelWithBgColor,
 }
 
 // Tracks the state of each row in the GPU cache texture.
@@ -1009,7 +1013,8 @@ impl BrushShader {
             BlendMode::Alpha |
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
-            BlendMode::Subpixel => {
+            BlendMode::Subpixel |
+            BlendMode::SubpixelWithBgColor => {
                 self.alpha.bind(device, projection, mode, renderer_errors)
             }
         }
@@ -1212,6 +1217,7 @@ pub struct Renderer {
     ps_rectangle: PrimitiveShader,
     ps_rectangle_clip: PrimitiveShader,
     ps_text_run: PrimitiveShader,
+    ps_text_run_subpx_bg_pass1: PrimitiveShader,
     ps_image: Vec<Option<PrimitiveShader>>,
     ps_yuv_image: Vec<Option<PrimitiveShader>>,
     ps_border_corner: PrimitiveShader,
@@ -1478,6 +1484,13 @@ impl Renderer {
             PrimitiveShader::new("ps_text_run",
                                  &mut device,
                                  &[],
+                                 options.precache_shaders)
+        };
+
+        let ps_text_run_subpx_bg_pass1 = try!{
+            PrimitiveShader::new("ps_text_run",
+                                 &mut device,
+                                 &["SUBPX_BG_PASS1"],
                                  options.precache_shaders)
         };
 
@@ -1824,6 +1837,7 @@ impl Renderer {
             ps_rectangle,
             ps_rectangle_clip,
             ps_text_run,
+            ps_text_run_subpx_bg_pass1,
             ps_image,
             ps_yuv_image,
             ps_border_corner,
@@ -2478,7 +2492,8 @@ impl Renderer {
                             BlendMode::Alpha |
                             BlendMode::PremultipliedAlpha |
                             BlendMode::PremultipliedDestOut |
-                            BlendMode::Subpixel => true,
+                            BlendMode::Subpixel |
+                            BlendMode::SubpixelWithBgColor => true,
                             BlendMode::None => false,
                         }
                     );
@@ -2822,6 +2837,7 @@ impl Renderer {
                         BlendMode::PremultipliedAlpha => ColorF::new(0.0, 0.3, 0.7, 1.0),
                         BlendMode::PremultipliedDestOut => ColorF::new(0.6, 0.2, 0.0, 1.0),
                         BlendMode::Subpixel => ColorF::new(0.5, 0.0, 0.4, 1.0),
+                        BlendMode::SubpixelWithBgColor => ColorF::new(0.6, 0.0, 0.5, 1.0),
                     }.into();
                     for item_rect in &batch.item_rects {
                         self.debug.add_rect(item_rect, color);
@@ -2897,6 +2913,58 @@ impl Renderer {
                                 self.device
                                     .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
                             }
+                            BlendMode::SubpixelWithBgColor => {
+                                // Using the three pass "component alpha with font smoothing
+                                // background color" rendering technique:
+                                //
+                                // /webrender/doc/text-rendering.md
+                                //
+                                self.device.set_blend_mode_subpixel_with_bg_color_pass0();
+
+                                self.ps_text_run.bind(
+                                    &mut self.device,
+                                    transform_kind,
+                                    projection,
+                                    TextShaderMode::SubpixelWithBgColorPass0,
+                                    &mut self.renderer_errors,
+                                );
+
+                                self.draw_instanced_batch(
+                                    &batch.instances,
+                                    VertexArrayKind::Primitive,
+                                    &batch.key.textures
+                                );
+
+                                self.device.set_blend_mode_subpixel_with_bg_color_pass1();
+
+                                self.ps_text_run_subpx_bg_pass1.bind(
+                                    &mut self.device,
+                                    transform_kind,
+                                    projection,
+                                    TextShaderMode::SubpixelWithBgColorPass1,
+                                    &mut self.renderer_errors,
+                                );
+
+                                // When drawing the 2nd and 3rd passes, we know that the VAO, textures etc
+                                // are all set up from the previous draw_instanced_batch call,
+                                // so just issue a draw call here to avoid re-uploading the
+                                // instances and re-binding textures etc.
+                                self.device
+                                    .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+
+                                self.device.set_blend_mode_subpixel_with_bg_color_pass2();
+
+                                self.ps_text_run.bind(
+                                    &mut self.device,
+                                    transform_kind,
+                                    projection,
+                                    TextShaderMode::SubpixelWithBgColorPass2,
+                                    &mut self.renderer_errors,
+                                );
+
+                                self.device
+                                    .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+                            }
                             BlendMode::Alpha | BlendMode::PremultipliedDestOut | BlendMode::None => {
                                 unreachable!("bug: bad blend mode for text");
                             }
@@ -2923,7 +2991,7 @@ impl Renderer {
                                     self.device.set_blend(true);
                                     self.device.set_blend_mode_premultiplied_dest_out();
                                 }
-                                BlendMode::Subpixel => {
+                                BlendMode::Subpixel | BlendMode::SubpixelWithBgColor => {
                                     unreachable!("bug: subpx text handled earlier");
                                 }
                             }

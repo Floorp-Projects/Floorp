@@ -18,11 +18,17 @@
 #include "av1/common/cfl.h"
 #endif
 
-void ifd_init(insp_frame_data *fd, int frame_width, int frame_height) {
-  fd->mi_cols = ALIGN_POWER_OF_TWO(frame_width, 3) >> MI_SIZE_LOG2;
-  fd->mi_rows = ALIGN_POWER_OF_TWO(frame_height, 3) >> MI_SIZE_LOG2;
+static void ifd_init_mi_rc(insp_frame_data *fd, int mi_cols, int mi_rows) {
+  fd->mi_cols = mi_cols;
+  fd->mi_rows = mi_rows;
   fd->mi_grid = (insp_mi_data *)aom_malloc(sizeof(insp_mi_data) * fd->mi_rows *
                                            fd->mi_cols);
+}
+
+void ifd_init(insp_frame_data *fd, int frame_width, int frame_height) {
+  int mi_cols = ALIGN_POWER_OF_TWO(frame_width, 3) >> MI_SIZE_LOG2;
+  int mi_rows = ALIGN_POWER_OF_TWO(frame_height, 3) >> MI_SIZE_LOG2;
+  ifd_init_mi_rc(fd, mi_cols, mi_rows);
 }
 
 void ifd_clear(insp_frame_data *fd) {
@@ -35,9 +41,9 @@ void ifd_clear(insp_frame_data *fd) {
 int ifd_inspect(insp_frame_data *fd, void *decoder) {
   struct AV1Decoder *pbi = (struct AV1Decoder *)decoder;
   AV1_COMMON *const cm = &pbi->common;
-  // TODO(negge): Should this function just call ifd_clear() and ifd_init()?
   if (fd->mi_rows != cm->mi_rows || fd->mi_cols != cm->mi_cols) {
-    return 0;
+    ifd_clear(fd);
+    ifd_init_mi_rc(fd, cm->mi_rows, cm->mi_cols);
   }
   fd->show_frame = cm->show_frame;
   fd->frame_type = cm->frame_type;
@@ -85,26 +91,26 @@ int ifd_inspect(insp_frame_data *fd, void *decoder) {
       // Skip Flag
       mi->skip = mbmi->skip;
 #if CONFIG_DUAL_FILTER
-      mi->filter[0] = mbmi->interp_filter[0];
-      mi->filter[1] = mbmi->interp_filter[1];
+      mi->filter[0] = av1_extract_interp_filter(mbmi->interp_filters, 0);
+      mi->filter[1] = av1_extract_interp_filter(mbmi->interp_filters, 1);
 #else
-      mi->filter = mbmi->interp_filter;
+      mi->filter = av1_extract_interp_filter(mbmi->interp_filters, 0);
 #endif
       // Transform
       mi->tx_type = mbmi->tx_type;
       mi->tx_size = mbmi->tx_size;
 
 #if CONFIG_CDEF
-      mi->cdef_level = cm->cdef_strengths[mbmi->cdef_strength] / CLPF_STRENGTHS;
+      mi->cdef_level =
+          cm->cdef_strengths[mbmi->cdef_strength] / CDEF_SEC_STRENGTHS;
       mi->cdef_strength =
-          cm->cdef_strengths[mbmi->cdef_strength] % CLPF_STRENGTHS;
+          cm->cdef_strengths[mbmi->cdef_strength] % CDEF_SEC_STRENGTHS;
       mi->cdef_strength += mi->cdef_strength == 3;
 #endif
 #if CONFIG_CFL
-      if (mbmi->uv_mode == UV_DC_PRED) {
+      if (mbmi->uv_mode == UV_CFL_PRED) {
         mi->cfl_alpha_idx = mbmi->cfl_alpha_idx;
-        mi->cfl_alpha_sign = (mbmi->cfl_alpha_signs[CFL_PRED_V] << CFL_PRED_V) +
-                             mbmi->cfl_alpha_signs[CFL_PRED_U];
+        mi->cfl_alpha_sign = mbmi->cfl_alpha_signs;
       } else {
         mi->cfl_alpha_idx = 0;
         mi->cfl_alpha_sign = 0;

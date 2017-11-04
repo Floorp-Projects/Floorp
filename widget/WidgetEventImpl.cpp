@@ -272,10 +272,11 @@ WidgetEvent::HasDragEventMessage() const
   }
 }
 
+/* static */
 bool
-WidgetEvent::HasKeyEventMessage() const
+WidgetEvent::IsKeyEventMessage(EventMessage aMessage)
 {
-  switch (mMessage) {
+  switch (aMessage) {
     case eKeyDown:
     case eKeyPress:
     case eKeyUp:

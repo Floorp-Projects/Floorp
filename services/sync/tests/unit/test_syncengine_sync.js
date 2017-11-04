@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/main.js");
@@ -665,131 +666,28 @@ add_task(async function test_processIncoming_resume_toFetch() {
 });
 
 
-add_task(async function test_processIncoming_applyIncomingBatchSize_smaller() {
-  _("Ensure that a number of incoming items less than applyIncomingBatchSize is still applied.");
-
-  // Engine that doesn't like the first and last record it's given.
-  const APPLY_BATCH_SIZE = 10;
-  let engine = makeRotaryEngine();
-  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
-  engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
-  engine._store.applyIncomingBatch = async function(records) {
-    let failed1 = records.shift();
-    let failed2 = records.pop();
-    await this._applyIncomingBatch(records);
-    return [failed1.id, failed2.id];
-  };
-
-  // Let's create less than a batch worth of server side records.
-  let collection = new ServerCollection();
-  for (let i = 0; i < APPLY_BATCH_SIZE - 1; i++) {
-    let id = "record-no-" + i;
-    let payload = encryptPayload({id, denomination: "Record No. " + id});
-    collection.insert(id, payload);
-  }
-
-  let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
-  });
-
-  await SyncTestingInfrastructure(server);
-
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
-  try {
-
-    // Confirm initial environment
-    do_check_empty(engine._store.items);
-
-    await engine._syncStartup();
-    await engine._processIncoming();
-
-    // Records have been applied and the expected failures have failed.
-    do_check_attribute_count(engine._store.items, APPLY_BATCH_SIZE - 1 - 2);
-    do_check_eq(engine.toFetch.length, 0);
-    do_check_eq(engine.previousFailed.length, 2);
-    do_check_eq(engine.previousFailed[0], "record-no-0");
-    do_check_eq(engine.previousFailed[1], "record-no-8");
-
-  } finally {
-    await cleanAndGo(engine, server);
-  }
-});
-
-
-add_task(async function test_processIncoming_applyIncomingBatchSize_multiple() {
-  _("Ensure that incoming items are applied according to applyIncomingBatchSize.");
-
-  const APPLY_BATCH_SIZE = 10;
-
-  // Engine that applies records in batches.
-  let engine = makeRotaryEngine();
-  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
-  let batchCalls = 0;
-  engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
-  engine._store.applyIncomingBatch = async function(records) {
-    batchCalls += 1;
-    do_check_eq(records.length, APPLY_BATCH_SIZE);
-    await this._applyIncomingBatch.apply(this, arguments);
-  };
-
-  // Let's create three batches worth of server side records.
-  let collection = new ServerCollection();
-  for (let i = 0; i < APPLY_BATCH_SIZE * 3; i++) {
-    let id = "record-no-" + i;
-    let payload = encryptPayload({id, denomination: "Record No. " + id});
-    collection.insert(id, payload);
-  }
-
-  let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
-  });
-
-  await SyncTestingInfrastructure(server);
-
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
-  try {
-
-    // Confirm initial environment
-    do_check_empty(engine._store.items);
-
-    await engine._syncStartup();
-    await engine._processIncoming();
-
-    // Records have been applied in 3 batches.
-    do_check_eq(batchCalls, 3);
-    do_check_attribute_count(engine._store.items, APPLY_BATCH_SIZE * 3);
-
-  } finally {
-    await cleanAndGo(engine, server);
-  }
-});
-
-
 add_task(async function test_processIncoming_notify_count() {
   _("Ensure that failed records are reported only once.");
 
-  const APPLY_BATCH_SIZE = 5;
   const NUMBER_OF_RECORDS = 15;
 
-  // Engine that fails the first record.
+  // Engine that fails every 5 records.
   let engine = makeRotaryEngine();
-  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
   engine._store.applyIncomingBatch = async function(records) {
-    await engine._store._applyIncomingBatch(records.slice(1));
-    return [records[0].id];
+    let sortedRecords = records.sort((a, b) => a.id > b.id ? 1 : -1);
+    let recordsToApply = [], recordsToFail = [];
+    for (let i = 0; i < sortedRecords.length; i++) {
+      (i % 5 === 0 ? recordsToFail : recordsToApply).push(sortedRecords[i]);
+    }
+    await engine._store._applyIncomingBatch(recordsToApply);
+    return recordsToFail.map(record => record.id);
   };
 
   // Create a batch of server side records.
   let collection = new ServerCollection();
   for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
-    let id = "record-no-" + i;
+    let id = "record-no-" + i.toString(10).padStart(2, "0");
     let payload = encryptPayload({id, denomination: "Record No. " + id});
     collection.insert(id, payload);
   }
@@ -826,10 +724,8 @@ add_task(async function test_processIncoming_notify_count() {
 
     // Confirm failures.
     do_check_attribute_count(engine._store.items, 12);
-    do_check_eq(engine.previousFailed.length, 3);
-    do_check_eq(engine.previousFailed[0], "record-no-0");
-    do_check_eq(engine.previousFailed[1], "record-no-5");
-    do_check_eq(engine.previousFailed[2], "record-no-10");
+    do_check_matches(engine.previousFailed, ["record-no-00", "record-no-05",
+      "record-no-10"]);
 
     // There are newly failed records and they are reported.
     do_check_eq(called, 1);
@@ -843,8 +739,7 @@ add_task(async function test_processIncoming_notify_count() {
 
     // Confirming removed failures.
     do_check_attribute_count(engine._store.items, 14);
-    do_check_eq(engine.previousFailed.length, 1);
-    do_check_eq(engine.previousFailed[0], "record-no-0");
+    do_check_matches(engine.previousFailed, ["record-no-00"]);
 
     do_check_eq(called, 2);
     do_check_eq(counts.failed, 1);
@@ -861,24 +756,27 @@ add_task(async function test_processIncoming_notify_count() {
 
 add_task(async function test_processIncoming_previousFailed() {
   _("Ensure that failed records are retried.");
-  Svc.Prefs.set("client.type", "mobile");
 
-  const APPLY_BATCH_SIZE = 4;
   const NUMBER_OF_RECORDS = 14;
 
-  // Engine that fails the first 2 records.
+  // Engine that alternates between failing and applying every 2 records.
   let engine = makeRotaryEngine();
-  engine.mobileGUIDFetchBatchSize = engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
   engine._store.applyIncomingBatch = async function(records) {
-    await engine._store._applyIncomingBatch(records.slice(2));
-    return [records[0].id, records[1].id];
+    let sortedRecords = records.sort((a, b) => a.id > b.id ? 1 : -1);
+    let recordsToApply = [], recordsToFail = [];
+    let chunks = Array.from(PlacesSyncUtils.chunkArray(sortedRecords, 2));
+    for (let i = 0; i < chunks.length; i++) {
+      (i % 2 === 0 ? recordsToFail : recordsToApply).push(...chunks[i]);
+    }
+    await engine._store._applyIncomingBatch(recordsToApply);
+    return recordsToFail.map(record => record.id);
   };
 
   // Create a batch of server side records.
   let collection = new ServerCollection();
   for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
-    let id = "record-no-" + i;
+    let id = "record-no-" + i.toString(10).padStart(2, "0");
     let payload = encryptPayload({id, denomination: "Record No. " + i});
     collection.insert(id, payload);
   }
@@ -911,15 +809,9 @@ add_task(async function test_processIncoming_previousFailed() {
 
     // Expected result: 4 sync batches with 2 failures each => 8 failures
     do_check_attribute_count(engine._store.items, 6);
-    do_check_eq(engine.previousFailed.length, 8);
-    do_check_eq(engine.previousFailed[0], "record-no-0");
-    do_check_eq(engine.previousFailed[1], "record-no-1");
-    do_check_eq(engine.previousFailed[2], "record-no-4");
-    do_check_eq(engine.previousFailed[3], "record-no-5");
-    do_check_eq(engine.previousFailed[4], "record-no-8");
-    do_check_eq(engine.previousFailed[5], "record-no-9");
-    do_check_eq(engine.previousFailed[6], "record-no-12");
-    do_check_eq(engine.previousFailed[7], "record-no-13");
+    do_check_matches(engine.previousFailed, ["record-no-00", "record-no-01",
+      "record-no-04", "record-no-05", "record-no-08", "record-no-09",
+      "record-no-12", "record-no-13"]);
 
     // Sync again with the same failed items (records 0, 1, 8, 9).
     await engine._processIncoming();
@@ -927,15 +819,12 @@ add_task(async function test_processIncoming_previousFailed() {
     // A second sync with the same failed items should not add the same items again.
     // Items that did not fail a second time should no longer be in previousFailed.
     do_check_attribute_count(engine._store.items, 10);
-    do_check_eq(engine.previousFailed.length, 4);
-    do_check_eq(engine.previousFailed[0], "record-no-0");
-    do_check_eq(engine.previousFailed[1], "record-no-1");
-    do_check_eq(engine.previousFailed[2], "record-no-8");
-    do_check_eq(engine.previousFailed[3], "record-no-9");
+    do_check_matches(engine.previousFailed, ["record-no-00", "record-no-01",
+      "record-no-08", "record-no-09"]);
 
     // Refetched items that didn't fail the second time are in engine._store.items.
-    do_check_eq(engine._store.items["record-no-4"], "Record No. 4");
-    do_check_eq(engine._store.items["record-no-5"], "Record No. 5");
+    do_check_eq(engine._store.items["record-no-04"], "Record No. 4");
+    do_check_eq(engine._store.items["record-no-05"], "Record No. 5");
     do_check_eq(engine._store.items["record-no-12"], "Record No. 12");
     do_check_eq(engine._store.items["record-no-13"], "Record No. 13");
   } finally {
@@ -971,7 +860,6 @@ add_task(async function test_processIncoming_failed_records() {
                          "record-no-" + (2 + APPLY_BATCH_SIZE * 3),
                          "record-no-" + (1 + APPLY_BATCH_SIZE * 3)];
   let engine = makeRotaryEngine();
-  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
 
   engine.__reconcile = engine._reconcile;
   engine._reconcile = async function _reconcile(record) {
@@ -1035,11 +923,7 @@ add_task(async function test_processIncoming_failed_records() {
 
     // Ensure that the bogus records will be fetched again on the next sync.
     do_check_eq(engine.previousFailed.length, BOGUS_RECORDS.length);
-    engine.previousFailed.sort();
-    BOGUS_RECORDS.sort();
-    for (let i = 0; i < engine.previousFailed.length; i++) {
-      do_check_eq(engine.previousFailed[i], BOGUS_RECORDS[i]);
-    }
+    do_check_matches(engine.previousFailed.sort(), BOGUS_RECORDS.sort());
 
     // Ensure the observer was notified
     do_check_eq(observerData, engine.name);

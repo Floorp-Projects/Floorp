@@ -34,12 +34,11 @@ public:
                            const int32_t& aStartPage,
                            const int32_t& aEndPage);
 
-  mozilla::ipc::IPCResult RecvPrintInitializationResult(const nsresult& aRv,
-                                                        const FileDescriptor& aFd) final;
+  mozilla::ipc::IPCResult RecvPrintInitializationResult(const nsresult& aRv) final;
 
-  void ProcessPage();
+  void ProcessPage(const nsCString& aPageFileName);
 
-  mozilla::ipc::IPCResult RecvPageProcessed(const FileDescriptor& aFd) final;
+  mozilla::ipc::IPCResult RecvPageProcessed() final;
 
   mozilla::ipc::IPCResult RecvAbortPrint(const nsresult& aRv) final;
 
@@ -47,19 +46,13 @@ public:
 
   void SetPrintEngine(nsPrintEngine* aPrintEngine);
 
-  PRFileDesc *GetNextPageFD() {
-    return mNextPageFD;
-  }
-
 private:
   ~RemotePrintJobChild() final;
-  void SetNextPageFD(const mozilla::ipc::FileDescriptor& aFd);
 
   bool mPrintInitialized = false;
   nsresult mInitializationResult = NS_OK;
   RefPtr<nsPagePrintTimer> mPagePrintTimer;
   RefPtr<nsPrintEngine> mPrintEngine;
-  PRFileDesc* mNextPageFD;
 };
 
 } // namespace layout

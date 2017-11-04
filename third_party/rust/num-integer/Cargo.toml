@@ -4,10 +4,11 @@ description = "Integer traits and functions"
 documentation = "http://rust-num.github.io/num"
 homepage = "https://github.com/rust-num/num"
 keywords = ["mathematics", "numerics"]
+categories = [ "algorithms", "science" ]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-num/num"
 name = "num-integer"
-version = "0.1.33"
+version = "0.1.35"
 
 [dependencies.num-traits]
 path = "../traits"

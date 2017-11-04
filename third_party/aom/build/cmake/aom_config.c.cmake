@@ -10,6 +10,4 @@
  */
 #include "aom/aom_codec.h"
 static const char* const cfg = "${AOM_CMAKE_CONFIG}";
-static const char* const aom_git_hash = "${AOM_GIT_HASH}";
 const char *aom_codec_build_config(void) {return cfg;}
-const char *aom_codec_git_hash(void) {return aom_git_hash;}

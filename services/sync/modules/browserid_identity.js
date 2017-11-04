@@ -779,13 +779,6 @@ this.BrowserIDManager.prototype = {
   },
 
   /**
-   * Obtain a function to be used for adding auth to RESTRequest instances.
-   */
-  getRESTRequestAuthenticator() {
-    return this._addAuthenticationHeader.bind(this);
-  },
-
-  /**
    * @return a Hawk HTTP Authorization Header, lightly wrapped, for the .uri
    * of a RESTRequest or AsyncResponse object.
    */
@@ -824,15 +817,6 @@ this.BrowserIDManager.prototype = {
 
     let headerValue = CryptoUtils.computeHAWK(httpObject.uri, method, options);
     return {headers: {authorization: headerValue.field}};
-  },
-
-  _addAuthenticationHeader(request, method) {
-    let header = this._getAuthenticationHeader(request, method);
-    if (!header) {
-      return null;
-    }
-    request.setHeader("authorization", header.headers.authorization);
-    return request;
   },
 
   createClusterManager(service) {

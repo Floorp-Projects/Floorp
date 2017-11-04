@@ -101,6 +101,23 @@ const ADDRESS_TESTCASES = [
       name: "Timothy",
     },
   },
+  {
+    description: "The migration shouldn't be invoked on tombstones.",
+    record: {
+      guid: "test-guid",
+      timeLastModified: 12345,
+      deleted: true,
+    },
+    expectedResult: {
+      guid: "test-guid",
+      timeLastModified: 12345,
+      deleted: true,
+
+      // Make sure no new fields are appended.
+      version: undefined,
+      name: undefined,
+    },
+  },
 ];
 
 const CREDIT_CARD_TESTCASES = [
@@ -192,6 +209,23 @@ const CREDIT_CARD_TESTCASES = [
       version: CREDIT_CARD_SCHEMA_VERSION,
       "cc-name": "Timothy",
       "cc-given-name": "Timothy",
+    },
+  },
+  {
+    description: "The migration shouldn't be invoked on tombstones.",
+    record: {
+      guid: "test-guid",
+      timeLastModified: 12345,
+      deleted: true,
+    },
+    expectedResult: {
+      guid: "test-guid",
+      timeLastModified: 12345,
+      deleted: true,
+
+      // Make sure no new fields are appended.
+      version: undefined,
+      "cc-given-name": undefined,
     },
   },
 ];

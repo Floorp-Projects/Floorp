@@ -4026,7 +4026,7 @@ HandlingUserInputHelper::HandlingUserInputHelper(bool aHandlingUserInput)
     mDestructCalled(false)
 {
   if (aHandlingUserInput) {
-    EventStateManager::StartHandlingUserInput();
+    EventStateManager::StartHandlingUserInput(eVoidEvent);
   }
 }
 
@@ -4048,7 +4048,7 @@ HandlingUserInputHelper::Destruct()
 
   mDestructCalled = true;
   if (mHandlingUserInput) {
-    EventStateManager::StopHandlingUserInput();
+    EventStateManager::StopHandlingUserInput(eVoidEvent);
   }
 
   return NS_OK;

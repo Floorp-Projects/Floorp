@@ -7,18 +7,18 @@
 # Due to duplicate file names, we compile libavutil/x86 in its own
 # moz.build file.
 if CONFIG['FFVPX_ASFLAGS']:
-    DIRS += ['x86']
+    if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64':
+        DIRS += ['x86']
+    elif CONFIG['CPU_ARCH'] == 'arm':
+        DIRS += ['arm']
 
 SharedLibrary('mozavutil')
 SOURCES += [
-    'adler32.c',
     'atomic.c',
     'avstring.c',
-    'base64.c',
     'bprint.c',
     'buffer.c',
     'channel_layout.c',
-    'color_utils.c',
     'cpu.c',
     'crc.c',
     'dict.c',
@@ -30,9 +30,6 @@ SOURCES += [
     'float_dsp.c',
     'frame.c',
     'imgutils.c',
-    'integer.c',
-    'intmath.c',
-    'lls.c',
     'log.c',
     'log2_tab.c',
     'mathematics.c',
@@ -40,16 +37,26 @@ SOURCES += [
     'opt.c',
     'parseutils.c',
     'pixdesc.c',
-    'pixelutils.c',
     'rational.c',
     'reverse.c',
     'samplefmt.c',
     'slicethread.c',
-    'threadmessage.c',
     'time.c',
-    'timecode.c',
-    'utils.c',
+    'utils.c'
 ]
+
+if not CONFIG['MOZ_FFVPX_FLACONLY']:
+    SOURCES += [
+        'adler32.c',
+        'base64.c',
+        'color_utils.c',
+        'integer.c',
+        'intmath.c',
+        'lls.c',
+        'pixelutils.c',
+        'threadmessage.c',
+        'timecode.c'
+    ]
 
 SYMBOLS_FILE =  'avutil.symbols'
 NoVisibilityFlags()

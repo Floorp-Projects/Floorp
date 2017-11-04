@@ -73,9 +73,10 @@ this.Screenshots = {
    @ @param onScreenshot {function} Callback for when the screenshot loads
    */
   async maybeCacheScreenshot(link, url, property, onScreenshot) {
-    // Nothing to do if we already have a pending screenshot
+    // Nothing to do if we already have a pending screenshot or
+    // if a previous request failed and returned null.
     const cache = link.__sharedCache;
-    if (cache.fetchingScreenshot) {
+    if (cache.fetchingScreenshot || link[property] !== undefined) {
       return;
     }
 
@@ -87,9 +88,7 @@ this.Screenshots = {
     delete cache.fetchingScreenshot;
 
     // Update the cache for future links and call back for existing content
-    if (screenshot) {
-      cache.updateLink(property, screenshot);
-      onScreenshot(screenshot);
-    }
+    cache.updateLink(property, screenshot);
+    onScreenshot(screenshot);
   }
 };

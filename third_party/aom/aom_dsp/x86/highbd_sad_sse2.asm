@@ -158,7 +158,10 @@ HIGH_SAD64XN 64 ; highbd_sad64x64_sse2
 HIGH_SAD64XN 32 ; highbd_sad64x32_sse2
 HIGH_SAD64XN 64, 1 ; highbd_sad64x64_avg_sse2
 HIGH_SAD64XN 32, 1 ; highbd_sad64x32_avg_sse2
-
+%if CONFIG_EXT_PARTITION_TYPES
+HIGH_SAD64XN 16 ; highbd_sad_64x16_sse2
+HIGH_SAD64XN 16, 1 ; highbd_sad_64x16_avg_sse2
+%endif
 
 ; unsigned int aom_highbd_sad32x{16,32,64}_sse2(uint8_t *src, int src_stride,
 ;                                    uint8_t *ref, int ref_stride);
@@ -302,6 +305,8 @@ HIGH_SAD16XN  8, 1 ; highbd_sad16x8_avg_sse2
 %if CONFIG_EXT_PARTITION_TYPES
 HIGH_SAD16XN 4 ; highbd_sad_16x4_sse2
 HIGH_SAD16XN 4, 1 ; highbd_sad_16x4_avg_sse2
+HIGH_SAD16XN 64 ; highbd_sad_16x64_sse2
+HIGH_SAD16XN 64, 1 ; highbd_sad_16x64_avg_sse2
 %endif
 
 ; unsigned int aom_highbd_sad8x{4,8,16}_sse2(uint8_t *src, int src_stride,

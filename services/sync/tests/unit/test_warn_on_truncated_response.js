@@ -5,7 +5,6 @@
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://services-sync/resource.js");
-Cu.import("resource://services-sync/rest.js");
 
 function run_test() {
   initTestLogging("Trace");
@@ -56,7 +55,7 @@ add_task(async function test_resource_logs_content_length_mismatch() {
 add_task(async function test_async_resource_logs_content_length_mismatch() {
   _("Issuing request.");
   let httpServer = httpd_setup({"/content": contentHandler});
-  let asyncResource = new AsyncResource(httpServer.baseURI + "/content");
+  let asyncResource = new Resource(httpServer.baseURI + "/content");
 
   let warnMessages = getWarningMessages(asyncResource._log);
 
@@ -65,29 +64,4 @@ add_task(async function test_async_resource_logs_content_length_mismatch() {
   notEqual(warnMessages.length, 0, "test that warning was logged");
   notEqual(content.length, contentLength);
   await promiseStopServer(httpServer);
-});
-
-add_test(function test_sync_storage_request_logs_content_length_mismatch() {
-  _("Issuing request.");
-  let httpServer = httpd_setup({"/content": contentHandler});
-  let request = new SyncStorageRequest(httpServer.baseURI + "/content");
-  let warnMessages = getWarningMessages(request._log);
-
-  // Setting this affects how received data is read from the underlying
-  // nsIHttpChannel in rest.js.  If it's left as UTF-8 (the default) an
-  // nsIConverterInputStream is used and the data read from channel's stream
-  // isn't truncated at the null byte mark (\u0000). Therefore the
-  // content-length mismatch being tested for doesn't occur.  Setting it to
-  // a falsy value results in an nsIScriptableInputStream being used to read
-  // the stream, which stops reading at the null byte mark resulting in a
-  // content-length mismatch.
-  request.charset = "";
-
-  request.get(function(error) {
-    equal(error, null);
-    equal(this.response.body, BODY);
-    notEqual(warnMessages.length, 0, "test that a warning was logged");
-    notEqual(BODY.length, contentLength);
-    httpServer.stop(run_next_test);
-  });
 });

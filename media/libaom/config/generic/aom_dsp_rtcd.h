@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+void aom_blend_a64_d32_mask_c(int32_t *dst, uint32_t dst_stride, const int32_t *src0, uint32_t src0_stride, const int32_t *src1, uint32_t src1_stride, const uint8_t *mask, uint32_t mask_stride, int h, int w, int suby, int subx);
+#define aom_blend_a64_d32_mask aom_blend_a64_d32_mask_c
+
 void aom_blend_a64_hmask_c(uint8_t *dst, uint32_t dst_stride, const uint8_t *src0, uint32_t src0_stride, const uint8_t *src1, uint32_t src1_stride, const uint8_t *mask, int h, int w);
 #define aom_blend_a64_hmask aom_blend_a64_hmask_c
 
@@ -43,6 +46,24 @@ void aom_comp_mask_upsampled_pred_c(uint8_t *comp_pred, const uint8_t *pred, int
 
 void aom_convolve8_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
 #define aom_convolve8 aom_convolve8_c
+
+void aom_convolve8_add_src_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src aom_convolve8_add_src_c
+
+void aom_convolve8_add_src_hip_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src_hip aom_convolve8_add_src_hip_c
+
+void aom_convolve8_add_src_horiz_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src_horiz aom_convolve8_add_src_horiz_c
+
+void aom_convolve8_add_src_horiz_hip_c(const uint8_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src_horiz_hip aom_convolve8_add_src_horiz_hip_c
+
+void aom_convolve8_add_src_vert_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src_vert aom_convolve8_add_src_vert_c
+
+void aom_convolve8_add_src_vert_hip_c(const uint16_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src_vert_hip aom_convolve8_add_src_vert_hip_c
 
 void aom_convolve8_avg_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
 #define aom_convolve8_avg aom_convolve8_avg_c
@@ -1210,6 +1231,24 @@ void aom_highbd_comp_mask_upsampled_pred_c(uint16_t *comp_pred, const uint8_t *p
 
 void aom_highbd_convolve8_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
 #define aom_highbd_convolve8 aom_highbd_convolve8_c
+
+void aom_highbd_convolve8_add_src_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src aom_highbd_convolve8_add_src_c
+
+void aom_highbd_convolve8_add_src_hip_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src_hip aom_highbd_convolve8_add_src_hip_c
+
+void aom_highbd_convolve8_add_src_horiz_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src_horiz aom_highbd_convolve8_add_src_horiz_c
+
+void aom_highbd_convolve8_add_src_horiz_hip_c(const uint8_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src_horiz_hip aom_highbd_convolve8_add_src_horiz_hip_c
+
+void aom_highbd_convolve8_add_src_vert_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src_vert aom_highbd_convolve8_add_src_vert_c
+
+void aom_highbd_convolve8_add_src_vert_hip_c(const uint16_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src_vert_hip aom_highbd_convolve8_add_src_vert_hip_c
 
 void aom_highbd_convolve8_avg_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
 #define aom_highbd_convolve8_avg aom_highbd_convolve8_avg_c

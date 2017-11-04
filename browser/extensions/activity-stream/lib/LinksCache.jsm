@@ -98,7 +98,7 @@ this.LinksCache = class LinksCache {
           if (oldLink) {
             for (const property of this.migrateProperties) {
               const oldValue = oldLink[property];
-              if (oldValue) {
+              if (oldValue !== undefined) {
                 newLink[property] = oldValue;
               }
             }

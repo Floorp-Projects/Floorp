@@ -485,7 +485,7 @@ tabbrowser {
 }
 
 .tab-background[selected=true] {
-  border-top-color: var(--tabs-border);
+  border-top-color: var(--tabs-border-color);
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
   background-repeat: repeat-x;
@@ -621,7 +621,7 @@ tabbrowser {
 #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab[beforeselected-visible]::after,
 #tabbrowser-tabs[movingtab] > .tabbrowser-tab[visuallyselected]::before,
 .tabbrowser-tab[visuallyselected]::after {
-  border-color: var(--tabs-border);
+  border-color: var(--tabs-border-color);
   margin-top: 0;
   margin-bottom: @navbarTabsShadowSize@;
   opacity: 1;

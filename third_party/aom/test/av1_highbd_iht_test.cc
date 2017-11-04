@@ -26,10 +26,10 @@ using std::tr1::tuple;
 using libaom_test::ACMRandom;
 
 typedef void (*HbdHtFunc)(const int16_t *input, int32_t *output, int stride,
-                          int tx_type, int bd);
+                          TX_TYPE tx_type, int bd);
 
 typedef void (*IHbdHtFunc)(const int32_t *coeff, uint16_t *output, int stride,
-                           int tx_type, int bd);
+                           TX_TYPE tx_type, int bd);
 
 // Test parameter argument list:
 //   <transform reference function,
@@ -38,7 +38,7 @@ typedef void (*IHbdHtFunc)(const int32_t *coeff, uint16_t *output, int stride,
 //    num_coeffs,
 //    tx_type,
 //    bit_depth>
-typedef tuple<HbdHtFunc, IHbdHtFunc, IHbdHtFunc, int, int, int> IHbdHtParam;
+typedef tuple<HbdHtFunc, IHbdHtFunc, IHbdHtFunc, int, TX_TYPE, int> IHbdHtParam;
 
 class AV1HighbdInvHTNxN : public ::testing::TestWithParam<IHbdHtParam> {
  public:
@@ -97,7 +97,7 @@ class AV1HighbdInvHTNxN : public ::testing::TestWithParam<IHbdHtParam> {
   IHbdHtFunc inv_txfm_;
   IHbdHtFunc inv_txfm_ref_;
   int num_coeffs_;
-  int tx_type_;
+  TX_TYPE tx_type_;
   int bit_depth_;
 
   int16_t *input_;
@@ -135,21 +135,26 @@ TEST_P(AV1HighbdInvHTNxN, InvTransResultCheck) { RunBitexactCheck(); }
 
 using std::tr1::make_tuple;
 
-#if HAVE_SSE4_1 && CONFIG_HIGHBITDEPTH
+#if HAVE_SSE4_1 && CONFIG_HIGHBITDEPTH && \
+    !(CONFIG_DAALA_DCT4 && CONFIG_DAALA_DCT8 && CONFIG_DAALA_DCT16)
+#if !CONFIG_DAALA_DCT4
 #define PARAM_LIST_4X4                                   \
   &av1_fwd_txfm2d_4x4_c, &av1_inv_txfm2d_add_4x4_sse4_1, \
       &av1_inv_txfm2d_add_4x4_c, 16
-
+#endif
+#if !CONFIG_DAALA_DCT8
 #define PARAM_LIST_8X8                                   \
   &av1_fwd_txfm2d_8x8_c, &av1_inv_txfm2d_add_8x8_sse4_1, \
       &av1_inv_txfm2d_add_8x8_c, 64
-
+#endif
+#if !CONFIG_DAALA_DCT16
 #define PARAM_LIST_16X16                                     \
   &av1_fwd_txfm2d_16x16_c, &av1_inv_txfm2d_add_16x16_sse4_1, \
       &av1_inv_txfm2d_add_16x16_c, 256
-
+#endif
 const IHbdHtParam kArrayIhtParam[] = {
-  // 16x16
+// 16x16
+#if !CONFIG_DAALA_DCT16
   make_tuple(PARAM_LIST_16X16, DCT_DCT, 10),
   make_tuple(PARAM_LIST_16X16, DCT_DCT, 12),
   make_tuple(PARAM_LIST_16X16, ADST_DCT, 10),
@@ -170,7 +175,9 @@ const IHbdHtParam kArrayIhtParam[] = {
   make_tuple(PARAM_LIST_16X16, FLIPADST_ADST, 10),
   make_tuple(PARAM_LIST_16X16, FLIPADST_ADST, 12),
 #endif
-  // 8x8
+#endif
+// 8x8
+#if !CONFIG_DAALA_DCT8
   make_tuple(PARAM_LIST_8X8, DCT_DCT, 10),
   make_tuple(PARAM_LIST_8X8, DCT_DCT, 12),
   make_tuple(PARAM_LIST_8X8, ADST_DCT, 10),
@@ -191,7 +198,9 @@ const IHbdHtParam kArrayIhtParam[] = {
   make_tuple(PARAM_LIST_8X8, FLIPADST_ADST, 10),
   make_tuple(PARAM_LIST_8X8, FLIPADST_ADST, 12),
 #endif
-  // 4x4
+#endif
+// 4x4
+#if !CONFIG_DAALA_DCT4
   make_tuple(PARAM_LIST_4X4, DCT_DCT, 10),
   make_tuple(PARAM_LIST_4X4, DCT_DCT, 12),
   make_tuple(PARAM_LIST_4X4, ADST_DCT, 10),
@@ -212,13 +221,15 @@ const IHbdHtParam kArrayIhtParam[] = {
   make_tuple(PARAM_LIST_4X4, FLIPADST_ADST, 10),
   make_tuple(PARAM_LIST_4X4, FLIPADST_ADST, 12),
 #endif
+#endif
 };
 
 INSTANTIATE_TEST_CASE_P(SSE4_1, AV1HighbdInvHTNxN,
                         ::testing::ValuesIn(kArrayIhtParam));
-#endif  // HAVE_SSE4_1 && CONFIG_HIGHBITDEPTH
+#endif  // HAVE_SSE4_1 && CONFIG_HIGHBITDEPTH &&
+        //  !(CONFIG_DAALA_DCT4 && CONFIG_DAALA_DCT8 && CONFIG_DAALA_DCT16)
 
-#if HAVE_AVX2 && CONFIG_HIGHBITDEPTH
+#if HAVE_AVX2 && CONFIG_HIGHBITDEPTH && !CONFIG_DAALA_DCT32
 #define PARAM_LIST_32X32                                   \
   &av1_fwd_txfm2d_32x32_c, &av1_inv_txfm2d_add_32x32_avx2, \
       &av1_inv_txfm2d_add_32x32_c, 1024

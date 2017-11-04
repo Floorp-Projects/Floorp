@@ -618,25 +618,33 @@ Collection.prototype = {
     this.uri.QueryInterface(Ci.nsIURL);
 
     let args = [];
-    if (this.older)
+    if (this.older) {
       args.push("older=" + this.older);
-    else if (this.newer) {
+    }
+    if (this.newer) {
       args.push("newer=" + this.newer);
     }
-    if (this.full)
+    if (this.full) {
       args.push("full=1");
-    if (this.sort)
+    }
+    if (this.sort) {
       args.push("sort=" + this.sort);
-    if (this.ids != null)
+    }
+    if (this.ids != null) {
       args.push("ids=" + this.ids);
-    if (this.limit > 0 && this.limit != Infinity)
+    }
+    if (this.limit > 0 && this.limit != Infinity) {
       args.push("limit=" + this.limit);
-    if (this._batch)
+    }
+    if (this._batch) {
       args.push("batch=" + encodeURIComponent(this._batch));
-    if (this._commit)
+    }
+    if (this._commit) {
       args.push("commit=true");
-    if (this._offset)
+    }
+    if (this._offset) {
       args.push("offset=" + encodeURIComponent(this._offset));
+    }
 
     this.uri.query = (args.length > 0) ? "?" + args.join("&") : "";
   },
@@ -721,7 +729,7 @@ Collection.prototype = {
       throw new Error("getBatched is unimplemented for guid-only GETs");
     }
 
-    // _onComplete and _onProgress are reset after each `get` by AsyncResource.
+    // _onComplete and _onProgress are reset after each `get` by Resource.
     let { _onComplete, _onProgress } = this;
     let recordBuffer = [];
     let resp;

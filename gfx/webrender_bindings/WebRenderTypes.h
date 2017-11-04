@@ -259,6 +259,16 @@ static inline wr::ColorF ToColorF(const gfx::Color& color)
   return c;
 }
 
+static inline wr::ColorU ToColorU(const gfx::Color& color)
+{
+  wr::ColorU c;
+  c.r = uint8_t(color.r * 255.0f);
+  c.g = uint8_t(color.g * 255.0f);
+  c.b = uint8_t(color.b * 255.0f);
+  c.a = uint8_t(color.a * 255.0f);
+  return c;
+}
+
 static inline wr::LayoutPoint ToLayoutPoint(const mozilla::LayoutDevicePoint& point)
 {
   wr::LayoutPoint p;
