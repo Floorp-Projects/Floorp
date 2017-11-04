@@ -17,16 +17,8 @@
   content/vendor/redux.js (./vendor/redux.js)
   content/vendor/react-redux.js (./vendor/react-redux.js)
   content/data/ (./data/*)
-#ifdef XP_MACOSX
-  content/css/activity-stream.css (./css/activity-stream-mac.css)
-#elifdef XP_WIN
-  content/css/activity-stream.css (./css/activity-stream-windows.css)
-#else
-  content/css/activity-stream.css (./css/activity-stream-linux.css)
-#endif
-  content/prerendered/static/activity-stream-initial-state.js (./prerendered/static/activity-stream-initial-state.js)
 #ifndef RELEASE_OR_BETA
-  content/prerendered/static/activity-stream-debug.html (./prerendered/static/activity-stream-debug.html)
-  content/prerendered/static/activity-stream-prerendered-debug.html (./prerendered/static/activity-stream-prerendered-debug.html)
+#  content/prerendered/static/activity-stream-debug.html (./prerendered/en-US/activity-stream-debug.html)
+#  content/prerendered/static/activity-stream-prerendered-debug.html (./prerendered/en-US/activity-stream-prerendered-debug.html)
 #endif
-  content/prerendered/ (./prerendered/locales/*)
+  content/prerendered/ (./prerendered/*)

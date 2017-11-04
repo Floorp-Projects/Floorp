@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "rm",
+    "strings": {
+      "newtab_page_title": "Nov tab",
+      "default_label_loading": "Chargiar…",
+      "header_top_sites": "Paginas preferidas",
+      "header_stories": "Artitgels populars",
+      "header_highlights": "Accents",
+      "header_visit_again": "Turnar a visitar",
+      "header_bookmarks": "Segnapaginas novs",
+      "header_recommended_by": "Recumandà da {provider}",
+      "header_bookmarks_placeholder": "Ti n'has anc nagins segnapaginas.",
+      "header_stories_from": "da",
+      "type_label_visited": "Visità",
+      "type_label_bookmarked": "Cun segnapagina",
+      "type_label_synced": "Sincronisà dad auters apparats",
+      "type_label_recommended": "Popular",
+      "type_label_open": "Avert",
+      "type_label_topic": "Tema",
+      "type_label_now": "Ussa",
+      "menu_action_bookmark": "Marcar sco segnapagina",
+      "menu_action_remove_bookmark": "Allontanar il segnapagina",
+      "menu_action_copy_address": "Copiar l'adressa",
+      "menu_action_email_link": "Trametter la colliaziun per e-mail…",
+      "menu_action_open_new_window": "Avrir en ina nova fanestra",
+      "menu_action_open_private_window": "Avrir en ina nova fanestra privata",
+      "menu_action_dismiss": "Sbittar",
+      "menu_action_delete": "Stizzar da la cronologia",
+      "menu_action_pin": "Fixar",
+      "menu_action_unpin": "Betg pli fixar",
+      "confirm_history_delete_p1": "Vuls ti propi stizzar mintga instanza da questa pagina ord la cronologia?",
+      "confirm_history_delete_notice_p2": "Questa acziun na po betg vegnir revocada.",
+      "menu_action_save_to_pocket": "Memorisar en Pocket",
+      "search_for_something_with": "Tschertgar {search_term} cun:",
+      "search_button": "Tschertgar",
+      "search_header": "Tschertga da {search_engine_name}",
+      "search_web_placeholder": "Tschertgar en il Web",
+      "search_settings": "Midar las preferenzas per tschertgar",
+      "section_info_option": "Info",
+      "section_info_send_feedback": "Trametter in resun",
+      "section_info_privacy_notice": "Infurmaziuns davart la protecziun da datas",
+      "welcome_title": "Bainvegni sin in nov tab",
+      "welcome_body": "Firefox utilisescha quest plaz per ta mussar ils segnapaginas, ils artitgels, ils videos e las paginas las pli relevantas che ti has visità dacurt, uschè che ti pos turnar a moda simpla tar quellas.",
+      "welcome_label": "Identifitgar tes accents",
+      "time_label_less_than_minute": "< 1 min",
+      "time_label_minute": "{number} min",
+      "time_label_hour": "{number} uras",
+      "time_label_day": "{number} dis",
+      "settings_pane_button_label": "Persunalisar tia pagina per novs tabs",
+      "settings_pane_header": "Preferenzas per novs tabs",
+      "settings_pane_body2": "Tscherna tge che vegn mussà sin questa pagina.",
+      "settings_pane_search_header": "Tschertgar",
+      "settings_pane_search_body": "Tschertgar en l'internet da tes nov tab.",
+      "settings_pane_topsites_header": "Paginas preferidas",
+      "settings_pane_topsites_body": "Acceder las websites che ti visitas il pli savens.",
+      "settings_pane_topsites_options_showmore": "Mussar duas colonnas",
+      "settings_pane_bookmarks_header": "Novs segnapaginas",
+      "settings_pane_bookmarks_body": "Tes novs segnapaginas en in lieu pratic.",
+      "settings_pane_visit_again_header": "Turnar a visitar",
+      "settings_pane_visit_again_body": "Firefox ta mussa parts da tia cronologia da navigaziun che pudessan esser interessantas per turnar.",
+      "settings_pane_highlights_header": "Accents",
+      "settings_pane_highlights_body2": "Chatta svelt puspè paginas interessantas che ti has visità u marcà sco segnapagina.",
+      "settings_pane_highlights_options_bookmarks": "Segnapaginas",
+      "settings_pane_highlights_options_visited": "Paginas visitadas",
+      "settings_pane_snippets_header": "Zinslas",
+      "settings_pane_snippets_body": "Legia infurmaziuns curtas da Mozilla davart Firefox, la cultura da l'internet e da temp en temp in meme.",
+      "settings_pane_done_button": "Finì",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "Modifitgar",
+      "edit_topsites_button_label": "Persunalisar la secziun da paginas preferidas",
+      "edit_topsites_showmore_button": "Mussar dapli",
+      "edit_topsites_showless_button": "Mussar pli pauc",
+      "edit_topsites_done_button": "Finì",
+      "edit_topsites_pin_button": "Fixar questa pagina",
+      "edit_topsites_unpin_button": "Betg pli fixar questa pagina",
+      "edit_topsites_edit_button": "Modifitgar questa pagina",
+      "edit_topsites_dismiss_button": "Allontanar questa pagina",
+      "edit_topsites_add_button": "Agiuntar",
+      "topsites_form_add_header": "Nova pagina populara",
+      "topsites_form_edit_header": "Modifitgar la pagina populara",
+      "topsites_form_title_placeholder": "Endatar in titel",
+      "topsites_form_url_placeholder": "Tippar u encollar ina URL",
+      "topsites_form_add_button": "Agiuntar",
+      "topsites_form_save_button": "Memorisar",
+      "topsites_form_cancel_button": "Interrumper",
+      "topsites_form_url_validation": "In URL valid è necessari",
+      "pocket_read_more": "Temas populars:",
+      "pocket_read_even_more": "Mussar dapli artitgels",
+      "pocket_feedback_header": "Il meglier ord il web, selecziunà da dapli che 25 milliuns umans.",
+      "pocket_description": "Scuvra cuntegn dad auta qualitad cun agid da Pocket che fa ussa part da Mozilla.",
+      "highlights_empty_state": "Cumenza a navigar e nus ta mussain qua artitgels, videos ed autras paginas che ti has visità dacurt u che ti has agiuntà dacurt sco segnapagina.",
+      "topstories_empty_state": "Ussa has ti legì tut las novitads. Turna pli tard per ulteriuras novitads da {provider}. Na pos betg spetgar? Tscherna in tema popular per chattar ulteriuras istorgias ord il web.",
+      "manual_migration_explanation2": "Emprova Firefox cun ils segnapaginas, la cronologia ed ils pleds-clav importads d'in auter navigatur.",
+      "manual_migration_cancel_button": "Na, grazia",
+      "manual_migration_import_button": "Importar ussa"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};

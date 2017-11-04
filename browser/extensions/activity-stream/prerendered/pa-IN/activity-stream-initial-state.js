@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "pa-IN",
+    "strings": {
+      "newtab_page_title": "ਨਵੀਂ ਟੈਬ",
+      "default_label_loading": "…ਲੋਡ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ",
+      "header_top_sites": "ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ",
+      "header_stories": "ਸਿਖਰਲੇ ਕਿੱਸੇ",
+      "header_highlights": "ਸੁਰਖੀਆਂ",
+      "header_visit_again": "ਮੁੜ ਦੌਰਾ ਕਰੋ",
+      "header_bookmarks": "ਤਾਜ਼ਾ ਬੁੱਕਮਾਰਕ",
+      "header_recommended_by": "{provider} ਵਲੋਂ ਸਿਫਾਰਸ਼ੀ",
+      "header_bookmarks_placeholder": "You don’t have any bookmarks yet.",
+      "header_stories_from": "from",
+      "type_label_visited": "ਖੋਲ੍ਹੀਆਂ",
+      "type_label_bookmarked": "ਬੁੱਕਮਾਰਕ ਕੀਤੀਆਂ",
+      "type_label_synced": "ਹੋਰ ਡਿਵਾਈਸ ਤੋਂ ਸਿੰਕ ਕੀਤੀਆਂ",
+      "type_label_recommended": "Trending",
+      "type_label_open": "ਖੋਲ੍ਹੋ",
+      "type_label_topic": "ਵਿਸ਼ੇ",
+      "type_label_now": "ਹੁਣ",
+      "menu_action_bookmark": "ਬੁੱਕਮਾਰਕ",
+      "menu_action_remove_bookmark": "ਬੁੱਕਮਾਰਕ ਨੂੰ ਹਟਾਓ",
+      "menu_action_copy_address": "ਸਿਰਨਾਵੇਂ ਨੂੰ ਕਾਪੀ ਕਰੋ",
+      "menu_action_email_link": "…ਲਿੰਕ ਨੂੰ ਈਮੇਲ ਕਰੋ",
+      "menu_action_open_new_window": "ਨਵੀਂ ਵਿੰਡੋ ਵਿੱਚ ਖੋਲ੍ਹੋ",
+      "menu_action_open_private_window": "ਨਵੀਂ ਪ੍ਰਾਈਵੇਟ ਵਿੰਡੋ ਵਿੱਚ ਖੋਲ੍ਹੋ",
+      "menu_action_dismiss": "ਰੱਦ ਕਰੋ",
+      "menu_action_delete": "ਅਤੀਤ ਵਿੱਚੋਂ ਹਟਾਓ",
+      "menu_action_pin": "ਟੰਗੋ",
+      "menu_action_unpin": "Unpin",
+      "confirm_history_delete_p1": "Are you sure you want to delete every instance of this page from your history?",
+      "confirm_history_delete_notice_p2": "This action cannot be undone.",
+      "menu_action_save_to_pocket": "Save to Pocket",
+      "search_for_something_with": "{search_term} ਨੂੰ ਇਸ ਨਾਲ ਖੋਜੋ:",
+      "search_button": "ਖੋਜੋ",
+      "search_header": "{search_engine_name} ਖੋਜ",
+      "search_web_placeholder": "ਵੈੱਬ ਨੂੰ ਖੋਜੋ",
+      "search_settings": "ਖੋਜ ਸੈਟਿੰਗਾਂ ਨੂੰ ਬਦਲੋ",
+      "section_info_option": "ਜਾਣਕਾਰੀ",
+      "section_info_send_feedback": "ਫੀਡਬੈਕ ਭੇਜੋ",
+      "section_info_privacy_notice": "ਪਰਦੇਦਾਰੀ ਨੋਟਿਸ",
+      "welcome_title": "ਨਵੀਂ ਟੈਬ ਉੱਤੇ ਜੀ ਆਇਆਂ ਨੂੰ",
+      "welcome_body": "ਫਾਇਰਫਾਕਸ ਇਸ ਥਾਂ ਨੂੰ ਤੁਹਾਡੇ ਲਈ ਸਭ ਤੋਂ ਵੱਧ ਢੁੱਕਵੇਂ ਬੁੱਕਮਾਰਕ, ਲੇਖ, ਵੀਡੀਓ ਅਤੇ ਸਫ਼ੇ ਵਿਖਾਉਣ ਲਈ ਵਰਤੇਗਾ, ਜਿਹਨਾਂ ਨੂੰ ਤੁਸੀਂ ਹਾਲ ਵਿੱਚ ਹੀ ਖੋਲ੍ਹਿਆ ਹੈ ਤਾਂ ਕਿ ਤੁਸੀਂ ਉਹਨਾਂ ਉੱਤੇ ਸੌਖੀ ਤਰ੍ਹਾਂ ਵਾਪਸ ਜਾ ਸਕੋ।",
+      "welcome_label": "ਤੁਹਾਡੇ ਹਾਈਲਾਈਟ ਨੂੰ ਪਛਾਣਿਆ ਜਾ ਰਿਹਾ ਹੈ",
+      "time_label_less_than_minute": "<1ਮਿੰ",
+      "time_label_minute": "{number}ਮਿੰ",
+      "time_label_hour": "{number}ਘੰ",
+      "time_label_day": "{number}ਦਿ",
+      "settings_pane_button_label": "ਆਪਣੇ ਨਵੀਂ ਟੈਬ ਸਫ਼ੇ ਨੂੰ ਆਪਣੇ ਮੁਤਾਬਕ ਢਾਲੋ",
+      "settings_pane_header": "ਨਵੀਂ ਟੈਬ ਲਈ ਪਸੰਦਾਂ",
+      "settings_pane_body2": "Choose what you see on this page.",
+      "settings_pane_search_header": "ਖੋਜੋ",
+      "settings_pane_search_body": "ਆਪਣੀ ਨਵੀਂ ਟੈਬ ਤੋਂ ਵੈੱਬ ਨੂੰ ਖੋਜੋ।",
+      "settings_pane_topsites_header": "ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ",
+      "settings_pane_topsites_body": "ਵੈੱਬਸਾਈਟਾਂ, ਜਿਹਨਾਂ ਨੂੰ ਤੁਸੀਂ ਸਭ ਤੋਂ ਵੱਧ ਖੋਲ੍ਹਿਆ ਹੈ, ਲਈ ਪਹੁੰਚ।",
+      "settings_pane_topsites_options_showmore": "ਦੋ ਕਤਾਰਾਂ ਵੇਖਾਓ",
+      "settings_pane_bookmarks_header": "Recent Bookmarks",
+      "settings_pane_bookmarks_body": "Your newly created bookmarks in one handy location.",
+      "settings_pane_visit_again_header": "Visit Again",
+      "settings_pane_visit_again_body": "Firefox will show you parts of your browsing history that you might want to remember or get back to.",
+      "settings_pane_highlights_header": "ਹਾਈਲਾਈਟ",
+      "settings_pane_highlights_body2": "Find your way back to interesting things you’ve recently visited or bookmarked.",
+      "settings_pane_highlights_options_bookmarks": "ਬੁੱਕਮਾਰਕ",
+      "settings_pane_highlights_options_visited": "Visited Sites",
+      "settings_pane_snippets_header": "Snippets",
+      "settings_pane_snippets_body": "Read short and sweet updates from Mozilla about Firefox, internet culture, and the occasional random meme.",
+      "settings_pane_done_button": "ਮੁਕੰਮਲ",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "ਸੋਧੋ",
+      "edit_topsites_button_label": "ਆਪਣੇ ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਭਾਗ ਨੂੰ ਲੋੜ ਮੁਤਾਬਕ ਢਾਲੋ",
+      "edit_topsites_showmore_button": "ਹੋਰ ਵੇਖਾਓ",
+      "edit_topsites_showless_button": "ਘੱਟ ਵੇਖਾਓ",
+      "edit_topsites_done_button": "ਮੁਕੰਮਲ",
+      "edit_topsites_pin_button": "ਇਸ ਸਾਈਟ ਨੂੰ ਟੰਗੋ",
+      "edit_topsites_unpin_button": "Unpin this site",
+      "edit_topsites_edit_button": "ਇਹ ਸਾਈਟ ਨੂੰ ਸੋਧੋ",
+      "edit_topsites_dismiss_button": "ਇਸ ਸਾਈਟ ਰੱਦ ਕਰੋ",
+      "edit_topsites_add_button": "ਜੋੜੋ",
+      "topsites_form_add_header": "New Top Site",
+      "topsites_form_edit_header": "Edit Top Site",
+      "topsites_form_title_placeholder": "Enter a title",
+      "topsites_form_url_placeholder": "Type or paste a URL",
+      "topsites_form_add_button": "ਜੋੜੋ",
+      "topsites_form_save_button": "ਸੰਭਾਲੋ",
+      "topsites_form_cancel_button": "ਰੱਦ ਕਰੋ",
+      "topsites_form_url_validation": "Valid URL required",
+      "pocket_read_more": "Popular Topics:",
+      "pocket_read_even_more": "View More Stories",
+      "pocket_feedback_header": "The best of the web, curated by over 25 million people.",
+      "pocket_description": "Discover high-quality content you might otherwise miss, with help from Pocket, now part of Mozilla.",
+      "highlights_empty_state": "Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.",
+      "topstories_empty_state": "You’ve caught up. Check back later for more top stories from {provider}. Can’t wait? Select a popular topic to find more great stories from around the web.",
+      "manual_migration_explanation2": "Try Firefox with the bookmarks, history and passwords from another browser.",
+      "manual_migration_cancel_button": "ਨਹੀਂ, ਧੰਨਵਾਦ",
+      "manual_migration_import_button": "ਹੁਣੇ ਇੰਪੋਰਟ ਕਰੋ"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};
