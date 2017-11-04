@@ -445,7 +445,6 @@ public:
     mWriteParams(aWriteParams),
     mState(eInitial),
     mResult(JS::AsmJSCache_InternalError),
-    mDeleteReceived(false),
     mActorDestroyed(false),
     mOpened(false)
   {
@@ -493,12 +492,17 @@ private:
   {
     AssertIsOnOwningThread();
     MOZ_ASSERT(mState == eOpened);
+    MOZ_ASSERT(mResult == JS::AsmJSCache_Success);
 
     mState = eFinished;
 
     MOZ_ASSERT(mOpened);
 
     FinishOnOwningThread();
+
+    if (!mActorDestroyed) {
+      Unused << Send__delete__(this, mResult);
+    }
   }
 
   // This method is called upon any failure that prevents the eventual opening
@@ -508,6 +512,7 @@ private:
   {
     AssertIsOnOwningThread();
     MOZ_ASSERT(mState != eFinished);
+    MOZ_ASSERT(mResult != JS::AsmJSCache_Success);
 
     mState = eFinished;
 
@@ -515,7 +520,7 @@ private:
 
     FinishOnOwningThread();
 
-    if (!mDeleteReceived && !mActorDestroyed) {
+    if (!mActorDestroyed) {
       Unused << Send__delete__(this, mResult);
     }
   }
@@ -579,26 +584,6 @@ private:
   DirectoryLockFailed() override;
 
   // IPDL methods.
-  mozilla::ipc::IPCResult
-  Recv__delete__(const JS::AsmJSCacheResult& aResult) override
-  {
-    AssertIsOnOwningThread();
-    MOZ_ASSERT(mState != eFinished);
-    MOZ_ASSERT(!mDeleteReceived);
-
-    mDeleteReceived = true;
-
-    if (mOpened) {
-      Close();
-    } else {
-      Fail();
-    }
-
-    MOZ_ASSERT(mState == eFinished);
-
-    return IPC_OK();
-  }
-
   void
   ActorDestroy(ActorDestroyReason why) override
   {
@@ -624,17 +609,59 @@ private:
   }
 
   mozilla::ipc::IPCResult
-  RecvSelectCacheFileToRead(const uint32_t& aModuleIndex) override
+  RecvSelectCacheFileToRead(const OpenMetadataForReadResponse& aResponse)
+                            override
   {
     AssertIsOnOwningThread();
     MOZ_ASSERT(mState == eWaitingToOpenCacheFileForRead);
     MOZ_ASSERT(mOpenMode == eOpenForRead);
+    MOZ_ASSERT(!mOpened);
 
-    // A cache entry has been selected to open.
+    switch (aResponse.type()) {
+      case OpenMetadataForReadResponse::TAsmJSCacheResult: {
+        MOZ_ASSERT(aResponse.get_AsmJSCacheResult() != JS::AsmJSCache_Success);
 
-    mModuleIndex = aModuleIndex;
-    mState = eReadyToOpenCacheFileForRead;
-    DispatchToIOThread();
+        mResult = aResponse.get_AsmJSCacheResult();
+
+        // This ParentRunnable can only be held alive by the IPDL. Fail()
+        // clears that last reference. So we need to add a self reference here.
+        RefPtr<ParentRunnable> kungFuDeathGrip = this;
+
+        Fail();
+
+        break;
+      }
+
+      case OpenMetadataForReadResponse::Tuint32_t:
+        // A cache entry has been selected to open.
+        mModuleIndex = aResponse.get_uint32_t();
+
+        mState = eReadyToOpenCacheFileForRead;
+
+        DispatchToIOThread();
+
+        break;
+
+      default:
+        MOZ_CRASH("Should never get here!");
+    }
+
+    return IPC_OK();
+  }
+
+  mozilla::ipc::IPCResult
+  RecvClose() override
+  {
+    AssertIsOnOwningThread();
+    MOZ_ASSERT(mState == eOpened);
+
+    // This ParentRunnable can only be held alive by the IPDL. Close() clears
+    // that last reference. So we need to add a self reference here.
+    RefPtr<ParentRunnable> kungFuDeathGrip = this;
+
+    Close();
+
+    MOZ_ASSERT(mState == eFinished);
 
     return IPC_OK();
   }
@@ -675,7 +702,6 @@ private:
   State mState;
   JS::AsmJSCacheResult mResult;
 
-  bool mDeleteReceived;
   bool mActorDestroyed;
   bool mOpened;
 };
@@ -1021,16 +1047,18 @@ ParentRunnable::Run()
 
       mState = eOpened;
 
-      // The entry is now open.
-      MOZ_ASSERT(!mOpened);
-      mOpened = true;
-
       FileDescriptor::PlatformHandleType handle =
         FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(mFileDesc));
       if (!SendOnOpenCacheFile(mFileSize, FileDescriptor(handle))) {
         Fail();
         return NS_OK;
       }
+
+      // The entry is now open.
+      MOZ_ASSERT(!mOpened);
+      mOpened = true;
+
+      mResult = JS::AsmJSCache_Success;
 
       return NS_OK;
     }
@@ -1291,15 +1319,16 @@ private:
     MOZ_ASSERT(mState == eOpening);
 
     uint32_t moduleIndex;
-    if (!FindHashMatch(aMetadata, mReadParams, &moduleIndex)) {
-      Fail(JS::AsmJSCache_InternalError);
-      Send__delete__(this, JS::AsmJSCache_InternalError);
-      return IPC_OK();
+    bool ok;
+    if (FindHashMatch(aMetadata, mReadParams, &moduleIndex)) {
+      ok = SendSelectCacheFileToRead(moduleIndex);
+    } else {
+      ok = SendSelectCacheFileToRead(JS::AsmJSCache_InternalError);
     }
-
-    if (!SendSelectCacheFileToRead(moduleIndex)) {
+    if (!ok) {
       return IPC_FAIL_NO_REASON(this);
     }
+
     return IPC_OK();
   }
 
@@ -1327,9 +1356,20 @@ private:
   Recv__delete__(const JS::AsmJSCacheResult& aResult) override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mState == eOpening);
+    MOZ_ASSERT(mState == eOpening || mState == eFinishing);
+    MOZ_ASSERT_IF(mState == eOpening, aResult != JS::AsmJSCache_Success);
+    MOZ_ASSERT_IF(mState == eFinishing, aResult == JS::AsmJSCache_Success);
 
-    Fail(aResult);
+    if (mState == eOpening) {
+      Fail(aResult);
+    } else {
+      // Match the AddRef in BlockUntilOpen(). The IPDL still holds an
+      // outstanding ref which will keep 'this' alive until ActorDestroy()
+      // is executed.
+      Release();
+
+      mState = eFinished;
+    }
     return IPC_OK();
   }
 
@@ -1395,6 +1435,7 @@ private:
     eOpening, // Waiting for the parent process to respond
     eOpened, // Parent process opened the entry and sent it back
     eClosing, // Waiting to be dispatched to the main thread to Send__delete__
+    eFinishing, // Waiting for the parent process to close
     eFinished // Terminal state
   };
   State mState;
@@ -1454,27 +1495,31 @@ ChildRunnable::Run()
 
       // Per FileDescriptorHolder::Finish()'s comment, call before
       // releasing the directory lock (which happens in the parent upon receipt
-      // of the Send__delete__ message).
+      // of the Close message).
       FileDescriptorHolder::Finish();
 
       MOZ_ASSERT(mOpened);
       mOpened = false;
 
-      // Match the AddRef in BlockUntilOpen(). The main thread event loop still
-      // holds an outstanding ref which will keep 'this' alive until returning to
-      // the event loop.
-      Release();
+      if (mActorDestroyed) {
+        // Match the AddRef in BlockUntilOpen(). The main thread event loop
+        // still holds an outstanding ref which will keep 'this' alive until
+        // returning to the event loop.
+        Release();
 
-      if (!mActorDestroyed) {
-        Unused << Send__delete__(this, JS::AsmJSCache_Success);
+        mState = eFinished;
+      } else {
+        Unused << SendClose();
+
+        mState = eFinishing;
       }
 
-      mState = eFinished;
       return NS_OK;
     }
 
     case eOpening:
     case eOpened:
+    case eFinishing:
     case eFinished: {
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Shouldn't Run() in this state");
     }
