@@ -1161,9 +1161,6 @@ public:
 
   nsPoint GetPositionIgnoringScrolling();
 
-  typedef AutoTArray<nsIContent*, 2> ContentArray;
-  static void DestroyContentArray(ContentArray* aArray);
-
   typedef AutoTArray<nsDisplayItem*, 4> DisplayItemArray;
 
   typedef mozilla::layers::WebRenderUserData WebRenderUserData;
@@ -1259,9 +1256,6 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(IBaselinePadProperty, nscoord)
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BBaselinePadProperty, nscoord)
-
-  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(GenConProperty, ContentArray,
-                                      DestroyContentArray)
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ModifiedFrameList, std::vector<WeakFrame>)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(DisplayItems, DisplayItemArray)
