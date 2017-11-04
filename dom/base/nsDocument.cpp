@@ -8172,6 +8172,8 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
 nsViewportInfo
 nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
 {
+  MOZ_ASSERT(mPresShell);
+
   // Compute the CSS-to-LayoutDevice pixel scale as the product of the
   // widget scale and the full zoom.
   nsPresContext* context = mPresShell->GetPresContext();
