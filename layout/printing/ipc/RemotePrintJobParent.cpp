@@ -88,6 +88,10 @@ RemotePrintJobParent::InitializePrintDevice(const nsString& aDocumentTitle,
     return rv;
   }
 
+  if (!mPrintDeviceContext->IsSyncPagePrinting()) {
+    mPrintDeviceContext->RegisterPageDoneCallback([this](nsresult aResult) { PageDone(aResult); });
+  }
+
   return NS_OK;
 }
 
@@ -116,19 +120,10 @@ RemotePrintJobParent::RecvProcessPage()
   nsresult rv = PrintPage(mCurrentPageStream);
   mCurrentPageStream.Close();
 
-  if (NS_FAILED(rv)) {
-    Unused << SendAbortPrint(rv);
-    return IPC_OK();
+  if (mPrintDeviceContext->IsSyncPagePrinting()) {
+    PageDone(rv);
   }
 
-  FileDescriptor fd;
-  rv = PrepareNextPageFD(&fd);
-  if (NS_FAILED(rv)) {
-    Unused << SendAbortPrint(rv);
-    return IPC_OK();
-  }
-
-  Unused << SendPageProcessed(fd);
   return IPC_OK();
 }
 
@@ -153,6 +148,22 @@ RemotePrintJobParent::PrintPage(PRFileDescStream& aRecording)
   return NS_OK;
 }
 
+void
+RemotePrintJobParent::PageDone(nsresult aResult)
+{
+  if (NS_FAILED(aResult)) {
+    Unused << SendAbortPrint(aResult);
+  } else {
+    FileDescriptor fd;
+    aResult = PrepareNextPageFD(&fd);
+    if (NS_FAILED(aResult)) {
+      Unused << SendAbortPrint(aResult);
+    }
+
+    Unused << SendPageProcessed(fd);
+  }
+}
+
 mozilla::ipc::IPCResult
 RemotePrintJobParent::RecvFinalizePrint()
 {
@@ -163,8 +174,12 @@ RemotePrintJobParent::RecvFinalizePrint()
 
     // Too late to abort the child just log.
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EndDocument failed");
-  }
 
+    // Since RecvFinalizePrint is called after all page printed, there should
+    // be no more page-done callbacks after that, in theory. Unregistering
+    // page-done callback is not must have, but we still do this for safety.
+    mPrintDeviceContext->UnregisterPageDoneCallback();
+  }
 
   Unused << Send__delete__(this);
   return IPC_OK();
@@ -175,6 +190,7 @@ RemotePrintJobParent::RecvAbortPrint(const nsresult& aRv)
 {
   if (mPrintDeviceContext) {
     Unused << mPrintDeviceContext->AbortDocument();
+    mPrintDeviceContext->UnregisterPageDoneCallback();
   }
 
   Unused << Send__delete__(this);
@@ -246,6 +262,9 @@ RemotePrintJobParent::~RemotePrintJobParent()
 void
 RemotePrintJobParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  if (mPrintDeviceContext) {
+    mPrintDeviceContext->UnregisterPageDoneCallback();
+  }
 }
 
 } // namespace layout

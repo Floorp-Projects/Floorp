@@ -55,6 +55,7 @@ public:
   GetReferenceDrawTarget(DrawEventRecorder* aRecorder) final;
 
   void ConvertToEMFDone(const nsresult& aResult, mozilla::ipc::Shmem&& aEMF);
+  bool IsSyncPagePrinting() const final { return false; }
 
 private:
   PrintTargetEMF(HDC aDC, const IntSize& aSize);
