@@ -48,10 +48,10 @@ nsTreeColFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsTreeColFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsTreeColFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   InvalidateColumns(false);
-  nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 class nsDisplayXULTreeColSplitterTarget final : public nsDisplayItem

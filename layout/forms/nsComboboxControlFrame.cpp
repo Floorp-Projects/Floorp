@@ -1394,7 +1394,7 @@ nsComboboxControlFrame::CreateFrameForDisplayNode()
 }
 
 void
-nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (sFocused == this) {
     sFocused = nullptr;
@@ -1416,10 +1416,10 @@ nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aP
   }
 
   // Cleanup frames in popup child list
-  mPopupFrames.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
-  aPostDestroyData.AddAnonymousContent(mDisplayContent.forget());
-  aPostDestroyData.AddAnonymousContent(mButtonContent.forget());
-  nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  mPopupFrames.DestroyFramesFrom(aDestructRoot);
+  DestroyAnonymousContent(mDisplayContent.forget());
+  DestroyAnonymousContent(mButtonContent.forget());
+  nsBlockFrame::DestroyFrom(aDestructRoot);
 }
 
 const nsFrameList&

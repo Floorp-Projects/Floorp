@@ -211,7 +211,7 @@ nsSplitterFrame::nsSplitterFrame(nsStyleContext* aContext)
 }
 
 void
-nsSplitterFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsSplitterFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (mInner) {
     mInner->RemoveListener();
@@ -219,7 +219,7 @@ nsSplitterFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDest
     mInner->Release();
     mInner = nullptr;
   }
-  nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 

@@ -61,7 +61,7 @@ public:
                       PeekOffsetCharacterOptions aOptions =
                         PeekOffsetCharacterOptions()) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual nsresult StealFrame(nsIFrame* aChild) override;
 
   // nsIHTMLReflow overrides

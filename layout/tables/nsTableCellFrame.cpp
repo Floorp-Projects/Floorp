@@ -122,13 +122,13 @@ nsTableCellFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsTableCellFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsTableCellFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (HasAnyStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
     nsTableFrame::UnregisterPositionedTablePart(this, aDestructRoot);
   }
 
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 // nsIPercentBSizeObserver methods

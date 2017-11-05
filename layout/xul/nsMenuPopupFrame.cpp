@@ -2336,7 +2336,7 @@ nsMenuPopupFrame::MoveToAttributePosition()
 }
 
 void
-nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (mReflowCallbackData.mPosted) {
     PresContext()->PresShell()->CancelReflowCallback(this);
@@ -2362,7 +2362,7 @@ nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDes
     rootBox->SetDefaultTooltip(nullptr);
   }
 
-  nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 

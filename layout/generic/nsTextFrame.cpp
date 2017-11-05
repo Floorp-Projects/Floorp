@@ -4414,7 +4414,7 @@ nsTextFrame::ClearFrameOffsetCache()
 }
 
 void
-nsTextFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsTextFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   ClearFrameOffsetCache();
 
@@ -4426,7 +4426,7 @@ nsTextFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyD
     mNextContinuation->SetPrevInFlow(nullptr);
   }
   // Let the base class destroy the frame
-  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsFrame::DestroyFrom(aDestructRoot);
 }
 
 class nsContinuingTextFrame final : public nsTextFrame
@@ -4440,7 +4440,7 @@ public:
             nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
-  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   nsTextFrame* GetPrevContinuation() const override
   {
@@ -4547,7 +4547,7 @@ nsContinuingTextFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsContinuingTextFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsContinuingTextFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   ClearFrameOffsetCache();
 
@@ -4572,7 +4572,7 @@ nsContinuingTextFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPo
   }
   nsSplittableFrame::RemoveFromFlow(this);
   // Let the base class destroy the frame
-  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIFrame*

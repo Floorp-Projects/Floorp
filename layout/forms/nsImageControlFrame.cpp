@@ -23,7 +23,7 @@ public:
   explicit nsImageControlFrame(nsStyleContext* aContext);
   ~nsImageControlFrame();
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
@@ -68,12 +68,12 @@ nsImageControlFrame::~nsImageControlFrame()
 }
 
 void
-nsImageControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsImageControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (!GetPrevInFlow()) {
     nsCheckboxRadioFrame::RegUnRegAccessKey(this, false);
   }
-  nsImageFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsImageFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIFrame*

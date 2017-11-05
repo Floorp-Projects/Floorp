@@ -41,7 +41,7 @@ public:
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
@@ -77,7 +77,7 @@ NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEImageFrame)
 
 /* virtual */ void
-SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   DecApproximateVisibleCount();
 
@@ -87,7 +87,7 @@ SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDest
     imageLoader->FrameDestroyed(this);
   }
 
-  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsFrame::DestroyFrom(aDestructRoot);
 }
 
 void

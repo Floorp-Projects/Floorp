@@ -173,12 +173,12 @@ nsVideoFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 }
 
 void
-nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  aPostDestroyData.AddAnonymousContent(mCaptionDiv.forget());
-  aPostDestroyData.AddAnonymousContent(mVideoControls.forget());
-  aPostDestroyData.AddAnonymousContent(mPosterImage.forget());
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  DestroyAnonymousContent(mCaptionDiv.forget());
+  DestroyAnonymousContent(mVideoControls.forget());
+  DestroyAnonymousContent(mPosterImage.forget());
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 already_AddRefed<Layer>

@@ -198,7 +198,7 @@ protected:
     virtual bool GetInitialVAlignment(Valignment& aValign);
     virtual bool GetInitialAutoStretch(bool& aStretch);
 
-    virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+    virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
     nsSize mPrefSize;
     nsSize mMinSize;

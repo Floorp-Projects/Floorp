@@ -272,7 +272,7 @@ nsTreeBodyFrame::CalcMaxRowWidth()
 }
 
 void
-nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (mScrollbarActivity) {
     mScrollbarActivity->Destroy();
@@ -314,7 +314,7 @@ nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDest
     mView = nullptr;
   }
 
-  nsLeafBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsLeafBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 void

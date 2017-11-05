@@ -23,7 +23,7 @@ public:
   friend nsIFrame* NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell,
                                             nsStyleContext* aContext);
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                                     nsAtom* aAttribute,
@@ -168,12 +168,12 @@ nsAutoRepeatBoxFrame::Notify()
 }
 
 void
-nsAutoRepeatBoxFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsAutoRepeatBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
   // from under you while you're in the process of scrolling.
   StopRepeat();
-  nsButtonBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsButtonBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 bool

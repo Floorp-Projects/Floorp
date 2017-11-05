@@ -70,8 +70,7 @@ public:
   void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32_t aFilter);
   nsresult FireScrollPortEvent();
   void PostOverflowEvent();
-  using PostDestroyData = nsIFrame::PostDestroyData;
-  void Destroy(PostDestroyData& aPostDestroyData);
+  void Destroy();
 
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                         const nsDisplayListSet& aLists);
@@ -761,7 +760,7 @@ public:
   virtual void RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   virtual nsIScrollableFrame* GetScrollTargetFrame() override {
     return this;
@@ -1169,7 +1168,7 @@ public:
   virtual void RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
 
   virtual nsIScrollableFrame* GetScrollTargetFrame() override {

@@ -276,12 +276,6 @@ nsBindingManager::ClearBinding(Element* aElement)
   // ChangeDocument?
   nsCOMPtr<nsIDocument> doc = aElement->OwnerDoc();
 
-  // Destroy the frames here before the UnbindFromTree happens.
-  nsIPresShell* presShell = doc->GetShell();
-  if (presShell) {
-    presShell->DestroyFramesForAndRestyle(aElement);
-  }
-
   // Finally remove the binding...
   // XXXbz this doesn't remove the implementation!  Should fix!  Until
   // then we need the explicit UnhookEventHandlers here.
@@ -294,7 +288,7 @@ nsBindingManager::ClearBinding(Element* aElement)
   // been removed and style may have changed due to the removal of the
   // anonymous children.
   // XXXbz this should be using the current doc (if any), not the owner doc.
-  presShell = doc->GetShell(); // get the shell again, just in case it changed
+  nsIPresShell *presShell = doc->GetShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   presShell->PostRecreateFramesFor(aElement);

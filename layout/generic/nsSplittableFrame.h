@@ -27,7 +27,7 @@ public:
 
   virtual nsSplittableType GetSplittableType() const override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   /*
    * Frame continuations can be either fluid or not:
