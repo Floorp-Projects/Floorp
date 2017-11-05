@@ -9,3 +9,7 @@ UNIFIED_SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
+
+LOCAL_INCLUDES += [
+    '../build',
+]
