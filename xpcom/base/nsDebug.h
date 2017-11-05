@@ -106,10 +106,9 @@ inline void MOZ_PretendNoReturn()
 #endif
 
 /**
- * NS_PRECONDITION/POSTCONDITION are synonyms for NS_ASSERTION.
+ * NS_PRECONDITION is a synonym for NS_ASSERTION.
  */
 #define NS_PRECONDITION(expr, str) NS_ASSERTION(expr, str)
-#define NS_POSTCONDITION(expr, str) NS_ASSERTION(expr, str)
 
 /**
  * This macros triggers a program failure if executed. It indicates that

@@ -1627,7 +1627,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
   if (!found) {
     found = parent->GetChildList(nsIFrame::kOverflowList)
               .ContainsFrame(aChildFrame);
-    NS_POSTCONDITION(found, "not in child list");
+    MOZ_ASSERT(found, "not in child list");
   }
 #endif
 
