@@ -71,6 +71,12 @@ interface nsIDocShellLoadInfo : nsISupports
      */
     attribute boolean forceAllowDataURI;
 
+    /**
+     * If this attribute is true, this load corresponds to a frame
+     * element loading its original src (or srcdoc) attribute.
+     */
+    attribute boolean originalFrameSrc;
+
     /* these are load type enums... */
     const long loadNormal = 0;                     // Normal Load
     const long loadNormalReplace = 1;              // Normal Load but replaces current history slot

@@ -1311,6 +1311,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
   nsString target;
   nsAutoString srcdoc;
   bool forceAllowDataURI = false;
+  bool originalFrameSrc = false;
   nsCOMPtr<nsIDocShell> sourceDocShell;
   nsCOMPtr<nsIURI> baseURI;
 
@@ -1348,6 +1349,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
     aLoadInfo->GetSourceDocShell(getter_AddRefs(sourceDocShell));
     aLoadInfo->GetBaseURI(getter_AddRefs(baseURI));
     aLoadInfo->GetForceAllowDataURI(&forceAllowDataURI);
+    aLoadInfo->GetOriginalFrameSrc(&originalFrameSrc);
   }
 
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
@@ -1613,6 +1615,10 @@ nsDocShell::LoadURI(nsIURI* aURI,
 
   if (forceAllowDataURI) {
     flags |= INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
+  }
+
+  if (originalFrameSrc) {
+    flags |= INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC;
   }
 
   return InternalLoad(aURI,
@@ -10896,6 +10902,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   rv = DoURILoad(aURI, aOriginalURI, aResultPrincipalURI, aLoadReplace,
                  loadFromExternal,
                  (aFlags & INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI),
+                 (aFlags & INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC),
                  aReferrer,
                  !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
                  aReferrerPolicy,
@@ -11035,6 +11042,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                       bool aLoadReplace,
                       bool aLoadFromExternal,
                       bool aForceAllowDataURI,
+                      bool aOriginalFrameSrc,
                       nsIURI* aReferrerURI,
                       bool aSendReferrer,
                       uint32_t aReferrerPolicy,
@@ -11216,6 +11224,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   }
   loadInfo->SetLoadTriggeredFromExternal(aLoadFromExternal);
   loadInfo->SetForceAllowDataURI(aForceAllowDataURI);
+  loadInfo->SetOriginalFrameSrcLoad(aOriginalFrameSrc);
 
   // We have to do this in case our OriginAttributes are different from the
   // OriginAttributes of the parent document. Or in case there isn't a
