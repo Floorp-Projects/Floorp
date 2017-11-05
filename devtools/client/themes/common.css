@@ -494,7 +494,9 @@ checkbox:-moz-focusring {
   top: 100%;
   width: 100%;
   line-height: initial !important;
-  z-index: 999;
+  /* See bug - 1414609. z-index is greater than 1000 so that searchbox's z-index
+  is more than z-index of requests-list-headers-wrapper in netmonitor */
+  z-index: 1001;
 }
 
 /* Don't add 'double spacing' for inputs that are at beginning / end
