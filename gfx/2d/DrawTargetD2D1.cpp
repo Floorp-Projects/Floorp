@@ -611,8 +611,7 @@ void
 DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
                            const GlyphBuffer &aBuffer,
                            const Pattern &aPattern,
-                           const DrawOptions &aOptions,
-                           const GlyphRenderingOptions*)
+                           const DrawOptions &aOptions)
 {
   if (aFont->GetType() != FontType::DWRITE) {
     gfxDebug() << *this << ": Ignoring drawing call for incompatible font.";

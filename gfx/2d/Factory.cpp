@@ -664,9 +664,12 @@ already_AddRefed<ScaledFont>
 Factory::CreateScaledFontForMacFont(CGFontRef aCGFont,
                                     const RefPtr<UnscaledFont>& aUnscaledFont,
                                     Float aSize,
+                                    const Color& aFontSmoothingBackgroundColor,
                                     bool aUseFontSmoothing)
 {
-  return MakeAndAddRef<ScaledFontMac>(aCGFont, aUnscaledFont, aSize, aUseFontSmoothing);
+  return MakeAndAddRef<ScaledFontMac>(
+    aCGFont, aUnscaledFont, aSize,
+    aFontSmoothingBackgroundColor, aUseFontSmoothing);
 }
 #endif
 
@@ -1052,14 +1055,6 @@ Factory::CreateWrappingDataSourceSurface(uint8_t *aData,
 
   return newSurf.forget();
 }
-
-#ifdef XP_DARWIN
-already_AddRefed<GlyphRenderingOptions>
-Factory::CreateCGGlyphRenderingOptions(const Color &aFontSmoothingBackgroundColor)
-{
-  return MakeAndAddRef<GlyphRenderingOptionsCG>(aFontSmoothingBackgroundColor);
-}
-#endif
 
 already_AddRefed<DataSourceSurface>
 Factory::CreateDataSourceSurface(const IntSize &aSize,

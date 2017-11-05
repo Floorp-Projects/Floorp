@@ -751,19 +751,6 @@ gfxContext::GetPattern()
   return pat.forget();
 }
 
-void
-gfxContext::SetFontSmoothingBackgroundColor(const Color& aColor)
-{
-  CURRENTSTATE_CHANGED()
-  CurrentState().fontSmoothingBackgroundColor = aColor;
-}
-
-Color
-gfxContext::GetFontSmoothingBackgroundColor()
-{
-  return CurrentState().fontSmoothingBackgroundColor;
-}
-
 // masking
 void
 gfxContext::Mask(SourceSurface* aSurface, Float aAlpha, const Matrix& aTransform)
