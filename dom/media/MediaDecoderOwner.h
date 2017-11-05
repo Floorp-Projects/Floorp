@@ -118,12 +118,6 @@ public:
     NEXT_FRAME_UNINITIALIZED
   };
 
-  // Check if the decoder owner is active.
-  virtual bool IsActive() const = 0;
-
-  // Check if the decoder owner is hidden.
-  virtual bool IsHidden() const = 0;
-
   // Called by media decoder when the audible state changed
   virtual void SetAudibleState(bool aAudible) = 0;
 
