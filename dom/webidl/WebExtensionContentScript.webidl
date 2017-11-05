@@ -147,6 +147,8 @@ dictionary WebExtensionContentScriptInit {
 
   unsigned long long? frameID = null;
 
+  boolean hasActiveTabPermission = false;
+
   required MatchPatternSet matches;
 
   MatchPatternSet? excludeMatches = null;

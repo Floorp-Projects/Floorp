@@ -171,6 +171,7 @@ private:
   bool                             mVerifySignedContent;
   bool                             mEnforceSRI;
   bool                             mForceAllowDataURI;
+  bool                             mOriginalFrameSrcLoad;
   bool                             mForceInheritPrincipalDropped;
   uint64_t                         mInnerWindowID;
   uint64_t                         mOuterWindowID;

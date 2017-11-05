@@ -10,6 +10,7 @@
 #include "mozilla/AddonManagerWebAPI.h"
 #include "mozilla/ResultExtensions.h"
 #include "nsEscape.h"
+#include "nsIDocShell.h"
 #include "nsISubstitutingProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
@@ -88,6 +89,13 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
 
   mContentScripts.SetCapacity(aInit.mContentScripts.Length());
   for (const auto& scriptInit : aInit.mContentScripts) {
+    // The activeTab permission is only for dynamically injected scripts,
+    // it cannot be used for declarative content scripts.
+    if (scriptInit.mHasActiveTabPermission) {
+      aRv.Throw(NS_ERROR_INVALID_ARG);
+      return;
+    }
+
     RefPtr<WebExtensionContentScript> contentScript =
       new WebExtensionContentScript(*this, scriptInit, aRv);
     if (aRv.Failed()) {
@@ -336,6 +344,7 @@ WebExtensionContentScript::WebExtensionContentScript(WebExtensionPolicy& aExtens
                                                      const ContentScriptInit& aInit,
                                                      ErrorResult& aRv)
   : mExtension(&aExtension)
+  , mHasActiveTabPermission(aInit.mHasActiveTabPermission)
   , mMatches(aInit.mMatches)
   , mExcludeMatches(aInit.mExcludeMatches)
   , mCssPaths(aInit.mCssPaths)
@@ -386,6 +395,16 @@ WebExtensionContentScript::Matches(const DocInfo& aDoc) const
   // including those with null principals or system principals.
   if (aDoc.Principal() && !aDoc.Principal()->GetIsCodebasePrincipal()) {
     return false;
+  }
+
+  // Content scripts are not allowed on pages that have elevated
+  // privileges via mozAddonManager (see bug 1280234)
+  if (AddonManagerWebAPI::IsValidSite(aDoc.PrincipalURL().URI())) {
+    return false;
+  }
+
+  if (mHasActiveTabPermission && aDoc.ShouldMatchActiveTabPermission()) {
+    return true;
   }
 
   return MatchesURI(aDoc.PrincipalURL());
@@ -465,6 +484,54 @@ DocInfo::IsTopLevel() const
     mIsTopLevel.emplace(mObj.match(Matcher()));
   }
   return mIsTopLevel.ref();
+}
+
+bool
+WindowShouldMatchActiveTab(nsPIDOMWindowOuter* aWin)
+{
+  if (aWin->IsTopLevelWindow()) {
+    return true;
+  }
+
+  nsIDocShell* docshell = aWin->GetDocShell();
+  if (!docshell || docshell->GetCreatedDynamically()) {
+    return false;
+  }
+
+  nsIDocument* doc = aWin->GetExtantDoc();
+  if (!doc) {
+    return false;
+  }
+
+  nsIChannel* channel = doc->GetChannel();
+  if (!channel) {
+    return false;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+
+  if (!loadInfo) {
+    return false;
+  }
+
+  if (!loadInfo->GetOriginalFrameSrcLoad()) {
+    return false;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> parent = aWin->GetParent();
+  MOZ_ASSERT(parent != nullptr);
+  return WindowShouldMatchActiveTab(parent);
+}
+
+bool
+DocInfo::ShouldMatchActiveTabPermission() const
+{
+  struct Matcher
+  {
+    bool match(Window aWin) { return WindowShouldMatchActiveTab(aWin); }
+    bool match(LoadInfo aLoadInfo) { return false; }
+  };
+  return mObj.match(Matcher());
 }
 
 uint64_t

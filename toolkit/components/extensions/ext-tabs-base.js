@@ -592,13 +592,8 @@ class TabBase {
       return Promise.reject({message: `'frameId' and 'allFrames' are mutually exclusive`});
     }
 
-    if (this.hasActiveTabPermission) {
-      // If we have the "activeTab" permission for this tab, ignore
-      // the host whitelist.
-      options.matches = ["<all_urls>"];
-    } else {
-      options.matches = this.extension.whiteListedHosts.patterns.map(host => host.pattern);
-    }
+    options.hasActiveTabPermission = this.hasActiveTabPermission;
+    options.matches = this.extension.whiteListedHosts.patterns.map(host => host.pattern);
 
     if (details.code !== null) {
       options[`${kind}Code`] = details.code;
