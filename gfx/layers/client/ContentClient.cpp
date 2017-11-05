@@ -502,10 +502,19 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
     // If we have an existing buffer, but the content type has changed or we
     // have transitioned into/out of component alpha, then we need to recreate it.
     bool needsComponentAlpha = (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA);
-    bool changedSurfaceOrContent = frontBuffer &&
-                                   (contentType != frontBuffer->GetContentType() ||
-                                    needsComponentAlpha != frontBuffer->HaveBufferOnWhite());
-    if (canKeepBufferContents && changedSurfaceOrContent) {
+    bool backBufferChangedSurface = mBuffer &&
+                                    (contentType != mBuffer->GetContentType() ||
+                                     needsComponentAlpha != mBuffer->HaveBufferOnWhite());
+    if (canKeepBufferContents && backBufferChangedSurface) {
+      // We cannot reuse the back buffer if the surface type or content type
+      // changed. We may have to also invalidate, but only if the front buffer
+      // also changed.
+      canReuseBuffer = false;
+    }
+    bool frontBufferChangedSurface = frontBuffer &&
+                                     (contentType != frontBuffer->GetContentType() ||
+                                      needsComponentAlpha != frontBuffer->HaveBufferOnWhite());
+    if (canKeepBufferContents && frontBufferChangedSurface) {
       // Restart the decision process; we won't re-enter since we guard on
       // being able to keep the buffer contents.
       canReuseBuffer = false;
