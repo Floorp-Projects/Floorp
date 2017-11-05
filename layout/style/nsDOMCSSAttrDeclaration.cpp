@@ -164,22 +164,25 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
 }
 
 void
-nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv)
+nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
+                                                       nsIPrincipal* aSubjectPrincipal)
 {
   NS_ASSERTION(mElement, "Something is severely broken -- there should be an Element here!");
 
   nsIDocument* doc = mElement->OwnerDoc();
   aCSSParseEnv.mSheetURI = doc->GetDocumentURI();
   aCSSParseEnv.mBaseURI = mElement->GetBaseURIForStyleAttr();
-  aCSSParseEnv.mPrincipal = mElement->NodePrincipal();
+  aCSSParseEnv.mPrincipal = (aSubjectPrincipal ? aSubjectPrincipal
+                                               : mElement->NodePrincipal());
   aCSSParseEnv.mCSSLoader = doc->CSSLoader();
 }
 
 nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-nsDOMCSSAttributeDeclaration::GetServoCSSParsingEnvironment() const
+nsDOMCSSAttributeDeclaration::GetServoCSSParsingEnvironment(
+    nsIPrincipal* aSubjectPrincipal) const
 {
   return {
-    mElement->GetURLDataForStyleAttr(),
+    mElement->GetURLDataForStyleAttr(aSubjectPrincipal),
     mElement->OwnerDoc()->GetCompatibilityMode(),
     mElement->OwnerDoc()->CSSLoader(),
   };

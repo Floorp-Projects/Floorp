@@ -89,7 +89,8 @@ ServoPageRuleDeclaration::DocToUpdate()
 
 void
 ServoPageRuleDeclaration::GetCSSParsingEnvironment(
-  CSSParsingEnvironment& aCSSParseEnv)
+  CSSParsingEnvironment& aCSSParseEnv,
+  nsIPrincipal* aSubjectPrincipal)
 {
   MOZ_ASSERT_UNREACHABLE("GetCSSParsingEnvironment "
                          "shouldn't be calling for a Servo rule");
@@ -97,7 +98,8 @@ ServoPageRuleDeclaration::GetCSSParsingEnvironment(
 }
 
 nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-ServoPageRuleDeclaration::GetServoCSSParsingEnvironment() const
+ServoPageRuleDeclaration::GetServoCSSParsingEnvironment(
+  nsIPrincipal* aSubjectPrincipal) const
 {
   return GetServoCSSParsingEnvironmentForRule(Rule());
 }
