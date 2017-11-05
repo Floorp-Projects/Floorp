@@ -870,13 +870,15 @@ nsComputedDOMStyle::DocToUpdate()
 }
 
 void
-nsComputedDOMStyle::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv)
+nsComputedDOMStyle::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
+                                             nsIPrincipal* aSubjectPrincipal)
 {
   MOZ_CRASH("called nsComputedDOMStyle::GetCSSParsingEnvironment");
 }
 
 nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-nsComputedDOMStyle::GetServoCSSParsingEnvironment() const
+nsComputedDOMStyle::GetServoCSSParsingEnvironment(
+  nsIPrincipal* aSubjectPrincipal) const
 {
   MOZ_CRASH("called nsComputedDOMStyle::GetServoCSSParsingEnvironment");
 }
