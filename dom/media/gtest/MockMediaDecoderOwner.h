@@ -14,10 +14,7 @@ namespace mozilla
 class MockMediaDecoderOwner : public MediaDecoderOwner
 {
 public:
-  nsresult DispatchAsyncEvent(const nsAString& aName) override
-  {
-    return NS_OK;
-  }
+  void DispatchAsyncEvent(const nsAString& aName) override {}
   void FireTimeUpdate(bool aPeriodic) override {}
   bool GetPaused() override { return false; }
   void MetadataLoaded(const MediaInfo* aInfo,
