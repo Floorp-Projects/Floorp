@@ -22,13 +22,14 @@ PrintTargetEMF::PrintTargetEMF(HDC aDC, const IntSize& aSize)
   : PrintTarget(/* not using cairo_surface_t */ nullptr, aSize)
   , mPDFiumProcess(nullptr)
   , mPrinterDC(aDC)
+  , mWaitingForEMFConversion(false)
 {
 }
 
 PrintTargetEMF::~PrintTargetEMF()
 {
   if (mPDFiumProcess) {
-    mPDFiumProcess->Delete();
+    mPDFiumProcess->Delete(mWaitingForEMFConversion);
   }
 }
 
@@ -126,6 +127,7 @@ PrintTargetEMF::EndPage()
                                         ::GetDeviceCaps(mPrinterDC, HORZRES),
                                         ::GetDeviceCaps(mPrinterDC, VERTRES));
   PR_Close(prfile);
+  mWaitingForEMFConversion = true;
 
   return NS_OK;
 }
@@ -158,6 +160,7 @@ PrintTargetEMF::ConvertToEMFDone(const nsresult& aResult,
 {
   MOZ_ASSERT_IF(NS_FAILED(aResult), aEMF.Size<uint8_t>() == 0);
 
+  mWaitingForEMFConversion = false;
   if (NS_SUCCEEDED(aResult)) {
     if (::StartPage(mPrinterDC) > 0) {
       mozilla::widget::WindowsEMF emf;
