@@ -29,6 +29,11 @@ PDFiumParent::Init(IPC::Channel* aChannel, base::ProcessId aPid)
 void
 PDFiumParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  if (mConversionDoneCallback) {
+    // Since this printing job was aborted, we do not need to report EMF buffer
+    // back to mTarget.
+    mConversionDoneCallback();
+  }
 }
 
 mozilla::ipc::IPCResult
@@ -36,9 +41,22 @@ PDFiumParent::RecvConvertToEMFDone(const nsresult& aResult,
                                    mozilla::ipc::Shmem&& aEMFContents)
 {
   MOZ_ASSERT(aEMFContents.IsReadable());
-  mTarget->ConvertToEMFDone(aResult, Move(aEMFContents));
+
+  if (mTarget) {
+    MOZ_ASSERT(!mConversionDoneCallback);
+    mTarget->ConvertToEMFDone(aResult, Move(aEMFContents));
+  }
 
   return IPC_OK();
+}
+
+void
+PDFiumParent::AbortConversion(ConversionDoneCallback aCallback)
+{
+  // There is no need to report EMF contents back to mTarget since the print
+  // job was aborted, unset mTarget.
+  mTarget = nullptr;
+  mConversionDoneCallback = aCallback;
 }
 
 void
