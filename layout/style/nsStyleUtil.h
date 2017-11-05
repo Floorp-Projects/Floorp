@@ -189,6 +189,9 @@ public:
    *      The principal of the of the document (*not* of the style sheet).
    *      The document's principal is where any Content Security Policy that
    *      should be used to block or allow inline styles will be located.
+   *  @param aTriggeringPrincipal
+   *      The principal of the scripted caller which added the inline
+   *      stylesheet, or null if no scripted caller can be identified.
    *  @param aSourceURI
    *      URI of document containing inline style (for reporting violations)
    *  @param aLineNumber
@@ -203,6 +206,7 @@ public:
    */
   static bool CSPAllowsInlineStyle(nsIContent* aContent,
                                    nsIPrincipal* aPrincipal,
+                                   nsIPrincipal* aTriggeringPrincipal,
                                    nsIURI* aSourceURI,
                                    uint32_t aLineNumber,
                                    const nsAString& aStyleText,

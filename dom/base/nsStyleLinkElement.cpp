@@ -540,6 +540,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
                "<link> is not 'inline', and needs different CSP checks");
     if (!nsStyleUtil::CSPAllowsInlineStyle(thisContent,
                                            thisContent->NodePrincipal(),
+                                           nullptr,
                                            doc->GetDocumentURI(),
                                            mLineNumber, text, &rv))
       return rv;

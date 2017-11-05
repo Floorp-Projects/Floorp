@@ -835,6 +835,7 @@ nsStyleUtil::ObjectPropsMightCauseOverflow(const nsStylePosition* aStylePos)
 /* static */ bool
 nsStyleUtil::CSPAllowsInlineStyle(nsIContent* aContent,
                                   nsIPrincipal* aPrincipal,
+                                  nsIPrincipal* aTriggeringPrincipal,
                                   nsIURI* aSourceURI,
                                   uint32_t aLineNumber,
                                   const nsAString& aStyleText,
@@ -850,8 +851,14 @@ nsStyleUtil::CSPAllowsInlineStyle(nsIContent* aContent,
       "aContent passed to CSPAllowsInlineStyle "
       "for an element that is not <style>");
 
+  nsIPrincipal* principal = aPrincipal;
+  if (aTriggeringPrincipal &&
+      BasePrincipal::Cast(aTriggeringPrincipal)->OverridesCSP(aPrincipal)) {
+    principal = aTriggeringPrincipal;
+  }
+
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = aPrincipal->GetCsp(getter_AddRefs(csp));
+  rv = principal->GetCsp(getter_AddRefs(csp));
 
   if (NS_FAILED(rv)) {
     if (aRv)
