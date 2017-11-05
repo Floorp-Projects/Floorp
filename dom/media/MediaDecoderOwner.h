@@ -28,7 +28,7 @@ public:
   virtual void DownloadProgressed() = 0;
 
   // Dispatch an asynchronous event to the decoder owner
-  virtual nsresult DispatchAsyncEvent(const nsAString& aName) = 0;
+  virtual void DispatchAsyncEvent(const nsAString& aName) = 0;
 
   // Triggers a recomputation of readyState.
   virtual void UpdateReadyState() = 0;

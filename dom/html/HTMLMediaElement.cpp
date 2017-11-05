@@ -6305,7 +6305,8 @@ nsresult HTMLMediaElement::DispatchEvent(const nsAString& aName)
                                               false);
 }
 
-nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
+void
+HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
 {
   LOG_EVENT(LogLevel::Debug, ("%p Queuing event %s", this,
             NS_ConvertUTF16toUTF8(aName).get()));
@@ -6314,7 +6315,7 @@ nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
   // if the page comes out of the bfcache.
   if (mEventDeliveryPaused) {
     mPendingEvents.AppendElement(aName);
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsIRunnable> event;
@@ -6339,8 +6340,6 @@ nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
     mPlayTime.Pause();
     HiddenVideoStop();
   }
-
-  return NS_OK;
 }
 
 nsresult HTMLMediaElement::DispatchPendingMediaEvents()
