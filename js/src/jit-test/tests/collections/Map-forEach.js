@@ -49,11 +49,10 @@ assertThrowsInstanceOf(function() {
     initialMap.forEach(fn);
 }, TypeError, "Map.prototype.forEach should raise TypeError if callback is not a function");
 
-// testing that Map#forEach uses internal next() function and does not stop when
-// StopIteration exception is thrown
+// testing that Map#forEach uses internal next() function.
 
 var m = new Map([["one", 1]]);
 Object.getPrototypeOf(m[Symbol.iterator]()).next = function () { throw "FAIL"; };
-assertThrowsInstanceOf(function () {
-  m.forEach(function () { throw StopIteration; });
-}, StopIteration, "Map.prototype.forEach should use intrinsic next method.");
+assertThrowsValue(function () {
+  m.forEach(function () { throw Math; });
+}, Math, "Map.prototype.forEach should use intrinsic next method.");

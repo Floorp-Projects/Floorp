@@ -88,9 +88,6 @@ const EXCEPTION_CONSTRUCTORS = {
     result.stack = error.stack;
     return result;
   },
-  StopIteration() {
-    return StopIteration;
-  }
 };
 
 /**
@@ -124,7 +121,7 @@ this.BasePromiseWorker = function(url) {
    * }
    *
    * By default, this covers EvalError, InternalError, RangeError,
-   * ReferenceError, SyntaxError, TypeError, URIError, StopIteration.
+   * ReferenceError, SyntaxError, TypeError, URIError.
    */
   this.ExceptionHandlers = Object.create(EXCEPTION_CONSTRUCTORS);
 
