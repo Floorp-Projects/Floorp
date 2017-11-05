@@ -7,5 +7,6 @@
         "JITTEST_EXTRA_ARGS": "--jitflags=none",
         "JSTESTS_EXTRA_ARGS": "--jitflags=none",
         "LLVM_SYMBOLIZER": "{TOOLTOOL_CHECKOUT}/clang/bin/llvm-symbolizer"
-    }
+    },
+    "use_minidump": false
 }
