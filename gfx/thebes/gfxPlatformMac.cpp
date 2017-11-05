@@ -30,7 +30,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-using mozilla::dom::SystemFontListEntry;
+using mozilla::dom::FontFamilyListEntry;
 
 // cribbed from CTFontManager.h
 enum {
@@ -113,10 +113,11 @@ gfxPlatformMac::CreatePlatformFontList()
 }
 
 void
-gfxPlatformMac::ReadSystemFontList(
-    InfallibleTArray<SystemFontListEntry>* aFontList)
+gfxPlatformMac::GetSystemFontFamilyList(
+    InfallibleTArray<FontFamilyListEntry>* aFontFamilies)
 {
-    gfxMacPlatformFontList::PlatformFontList()->ReadSystemFontList(aFontList);
+    gfxMacPlatformFontList::PlatformFontList()->
+        GetSystemFontFamilyList(aFontFamilies);
 }
 
 already_AddRefed<gfxASurface>

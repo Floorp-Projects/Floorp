@@ -64,7 +64,7 @@ BackendTypeBit(BackendType b)
 
 } // namespace gfx
 namespace dom {
-class SystemFontListEntry;
+class FontFamilyListEntry;
 }
 } // namespace mozilla
 
@@ -337,12 +337,12 @@ public:
                                  nsTArray<nsString>& aListOfFonts);
 
     /**
-     * Fill aFontList with a list of SystemFontListEntry records for the
+     * Fill aFontFamilies with a list of FontFamilyListEntry records for the
      * available fonts on the platform; used to pass the list from chrome to
-     * content process. Currently implemented only on MacOSX and Linux.
+     * content process. Currently implemented only on MacOSX.
      */
-    virtual void ReadSystemFontList(
-      InfallibleTArray<mozilla::dom::SystemFontListEntry>* aFontList)
+    virtual void GetSystemFontFamilyList(
+      InfallibleTArray<mozilla::dom::FontFamilyListEntry>* aFontFamilies)
     { }
 
     /**
