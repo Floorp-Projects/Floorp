@@ -216,13 +216,6 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-flash-button"));
-  testFilterButtons(monitor, "flash");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 1, 0]);
-
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-all-button"));
-  EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-ws-button"));
   testFilterButtons(monitor, "ws");
   yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 1]);
@@ -265,25 +258,20 @@ add_task(function* () {
     document.querySelector(".requests-list-filter-html-button"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-css-button"));
-  testFilterButtonsCustom(monitor, [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testFilterButtonsCustom(monitor, [0, 1, 1, 0, 0, 0, 0, 0, 0, 0]);
   yield testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
 
   // Html and css filter enabled and text filter should show just the html and css match.
   // Should not show both the items matching the button plus the items matching the text.
   setFreetextFilter("sample");
   yield testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
-
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-flash-button"));
   setFreetextFilter("");
-  testFilterButtonsCustom(monitor, [0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0]);
-  yield testContents([1, 1, 0, 0, 0, 0, 0, 1, 0]);
+  testFilterButtonsCustom(monitor, [0, 1, 1, 0, 0, 0, 0, 0, 0, 0]);
+  yield testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
 
   // Disable some filters. Only one left active.
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-css-button"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-flash-button"));
   testFilterButtons(monitor, "html");
   yield testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
@@ -300,7 +288,7 @@ add_task(function* () {
     document.querySelector(".requests-list-filter-css-button"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-ws-button"));
-  testFilterButtonsCustom(monitor, [0, 1, 1, 0, 0, 0, 0, 0, 0, 1]);
+  testFilterButtonsCustom(monitor, [0, 1, 1, 0, 0, 0, 0, 0, 1, 0]);
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   testFilterButtons(monitor, "all");

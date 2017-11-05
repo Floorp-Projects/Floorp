@@ -38,7 +38,7 @@ add_task(function* () {
 
     testStatus();
 
-    let buttons = ["html", "css", "js", "xhr", "fonts", "images", "media", "flash"];
+    let buttons = ["html", "css", "js", "xhr", "fonts", "images", "media"];
     for (let button of buttons) {
       let buttonEl = document.querySelector(`.requests-list-filter-${button}-button`);
       EventUtils.sendMouseEvent({ type: "click" }, buttonEl);
