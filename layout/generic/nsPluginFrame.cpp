@@ -192,7 +192,7 @@ nsPluginFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsPluginFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsPluginFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (mReflowCallbackPosted) {
     PresContext()->PresShell()->CancelReflowCallback(this);
@@ -217,7 +217,7 @@ nsPluginFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestro
     mBackgroundSink->Destroy();
   }
 
-  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsFrame::DestroyFrom(aDestructRoot);
 }
 
 /* virtual */ void

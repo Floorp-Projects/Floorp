@@ -30,7 +30,7 @@ class nsDocElementBoxFrame final : public nsBoxFrame
                                  , public nsIAnonymousContentCreator
 {
 public:
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                                   nsStyleContext* aContext);
@@ -73,11 +73,11 @@ NS_NewDocElementBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsDocElementBoxFrame)
 
 void
-nsDocElementBoxFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsDocElementBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  aPostDestroyData.AddAnonymousContent(mPopupgroupContent.forget());
-  aPostDestroyData.AddAnonymousContent(mTooltipContent.forget());
-  nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  DestroyAnonymousContent(mPopupgroupContent.forget());
+  DestroyAnonymousContent(mTooltipContent.forget());
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 nsresult

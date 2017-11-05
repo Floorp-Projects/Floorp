@@ -102,9 +102,9 @@ nsPopupSetFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 }
 
 void
-nsPopupSetFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsPopupSetFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  mPopupList.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
+  mPopupList.DestroyFramesFrom(aDestructRoot);
 
   // Normally the root box is our grandparent, but in case of wrapping
   // it can be our great-grandparent.
@@ -113,7 +113,7 @@ nsPopupSetFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDest
     rootBox->SetPopupSetFrame(nullptr);
   }
 
-  nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_IMETHODIMP

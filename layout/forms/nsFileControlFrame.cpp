@@ -56,7 +56,7 @@ nsFileControlFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   ENSURE_TRUE(mContent);
 
@@ -68,11 +68,11 @@ nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostD
                                         mMouseListener, false);
   }
 
-  aPostDestroyData.AddAnonymousContent(mTextContent.forget());
-  aPostDestroyData.AddAnonymousContent(mBrowseFilesOrDirs.forget());
+  DestroyAnonymousContent(mTextContent.forget());
+  DestroyAnonymousContent(mBrowseFilesOrDirs.forget());
 
   mMouseListener->ForgetFrame();
-  nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsBlockFrame::DestroyFrom(aDestructRoot);
 }
 
 static already_AddRefed<Element>

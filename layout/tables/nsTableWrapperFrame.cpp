@@ -64,11 +64,11 @@ nsTableWrapperFrame::AccessibleType()
 #endif
 
 void
-nsTableWrapperFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsTableWrapperFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  DestroyAbsoluteFrames(aDestructRoot, aPostDestroyData);
-  mCaptionFrames.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  DestroyAbsoluteFrames(aDestructRoot);
+  mCaptionFrames.DestroyFramesFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 const nsFrameList&

@@ -290,10 +290,10 @@ nsScrollbarButtonFrame::GetParentWithTag(nsAtom* toFind, nsIFrame* start,
 }
 
 void
-nsScrollbarButtonFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsScrollbarButtonFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
   // from under you while you're in the process of scrolling.
   StopRepeat();
-  nsButtonBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsButtonBoxFrame::DestroyFrom(aDestructRoot);
 }

@@ -79,7 +79,7 @@ public:
                       const ReflowInput& aReflowInput,
                       nsReflowStatus&      aStatus) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   // new behavior
 

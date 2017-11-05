@@ -6193,7 +6193,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   item->mIsAnonymousContentCreatorContent =
     aFlags & ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT;
   if (isGeneratedContent) {
-    // We need to keep this alive until the frame takes ownership.
     NS_ADDREF(item->mContent);
   }
   item->mIsRootPopupgroup =
@@ -6281,6 +6280,22 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     item->mIsLineParticipant = true;
     aItems.LineParticipantItemAdded();
   }
+}
+
+static void
+AddGenConPseudoToFrame(nsIFrame* aOwnerFrame, nsIContent* aContent)
+{
+  // FIXME(emilio): Remove this property, and use the frame of the generated
+  // content itself to tear the content down? It should be quite simpler.
+
+  aOwnerFrame = nsLayoutUtils::FirstContinuationOrIBSplitSibling(aOwnerFrame);
+  nsIFrame::ContentArray* value =
+    aOwnerFrame->GetProperty(nsIFrame::GenConProperty());
+  if (!value) {
+    value = new nsIFrame::ContentArray;
+    aOwnerFrame->AddProperty(nsIFrame::GenConProperty(), value);
+  }
+  value->AppendElement(aContent);
 }
 
 /**
@@ -6378,20 +6393,21 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
     // Ensure that frames created here are all tagged with
     // NS_FRAME_GENERATED_CONTENT.
     aState.mAdditionalStateBits |= NS_FRAME_GENERATED_CONTENT;
-  }
 
-  // XXXbz maybe just inline ConstructFrameFromItemInternal here or something?
-  ConstructFrameFromItemInternal(item, aState, adjParentFrame, aFrameItems);
-
-  if (item.mIsGeneratedContent) {
-    // This corresponds to the AddRef in AddFrameConstructionItemsInternal.
-    // The frame owns the generated content now.
-    item.mContent->Release();
+    // Note that we're not necessarily setting this property on the primary
+    // frame for the content for which this is generated content.  We might be
+    // setting it on a table pseudo-frame inserted under that instead.  That's
+    // OK, though; we just need to do the property set so that the content will
+    // get cleaned up when the frame is destroyed.
+    ::AddGenConPseudoToFrame(aParentFrame, item.mContent);
 
     // Now that we've passed ownership of item.mContent to the frame, unset
     // our generated content flag so we don't release or unbind it ourselves.
     item.mIsGeneratedContent = false;
   }
+
+  // XXXbz maybe just inline ConstructFrameFromItemInternal here or something?
+  ConstructFrameFromItemInternal(item, aState, adjParentFrame, aFrameItems);
 
   aState.mAdditionalStateBits = savedStateBits;
 }
@@ -6527,17 +6543,18 @@ AdjustAppendParentForAfterContent(nsFrameManager* aFrameManager,
                                   nsIContent* aChild,
                                   nsIFrame** aAfterFrame)
 {
-  // If the parent frame may have an ::after pseudo or aContainer is a
-  // display:contents node or aContainer have display:contents children
-  // then we need to walk through the child frames to find the first one
-  // that is either a ::after frame for an ancestor of aChild or a frame
-  // that is for a node later in the document than aChild and return that
-  // in aAfterFrame.
-  if (nsLayoutUtils::HasPseudoStyle(aContainer, aParentFrame->StyleContext(),
+  // If the parent frame has any pseudo-elements or aContainer is a
+  // display:contents node then we need to walk through the child
+  // frames to find the first one that is either a ::after frame for an
+  // ancestor of aChild or a frame that is for a node later in the
+  // document than aChild and return that in aAfterFrame.
+  nsIFrame* afterBeforeOwnerFrame =
+    nsLayoutUtils::FirstContinuationOrIBSplitSibling(aParentFrame);
+  if (afterBeforeOwnerFrame->GetProperty(nsIFrame::GenConProperty()) ||
+      nsLayoutUtils::HasPseudoStyle(aContainer, aParentFrame->StyleContext(),
                                     CSSPseudoElementType::after,
                                     aParentFrame->PresContext()) ||
-      aFrameManager->GetDisplayContentsStyleFor(aContainer) ||
-      aFrameManager->GetAllRegisteredDisplayContentsStylesIn(aContainer)) {
+      aFrameManager->GetDisplayContentsStyleFor(aContainer)) {
     nsIFrame* afterFrame = nullptr;
     nsContainerFrame* parent =
       static_cast<nsContainerFrame*>(aParentFrame->LastContinuation());

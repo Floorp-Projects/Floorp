@@ -212,7 +212,7 @@ nsListBoxBodyFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsListBoxBodyFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsListBoxBodyFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // make sure we cancel any posted callbacks.
   if (mReflowCallbackPosted)
@@ -228,7 +228,7 @@ nsListBoxBodyFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostD
     mBoxObject->ClearCachedValues();
   }
 
-  nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 nsresult

@@ -30,10 +30,10 @@ NS_NewLegendFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsLegendFrame)
 
 void
-nsLegendFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsLegendFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
-  nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsBlockFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_QUERYFRAME_HEAD(nsLegendFrame)

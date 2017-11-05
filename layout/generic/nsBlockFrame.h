@@ -136,7 +136,7 @@ public:
                                  BaselineSharingGroup aBaselineGroup,
                                  nscoord*             aBaseline) const override;
   nscoord GetCaretBaseline() const override;
-  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  void DestroyFrom(nsIFrame* aDestructRoot) override;
   nsSplittableType GetSplittableType() const override;
   bool IsFloatContainingBlock() const override;
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,

@@ -132,7 +132,7 @@ nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32
 }
 
 void
-nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   nsIScrollableFrame* sf =
     PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
@@ -155,9 +155,9 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestro
       content->SetContentNode(clonedElement->AsElement());
     }
   }
-  aPostDestroyData.AddAnonymousContent(mCustomContentContainer.forget());
+  DestroyAnonymousContent(mCustomContentContainer.forget());
 
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 void

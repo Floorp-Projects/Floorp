@@ -39,7 +39,7 @@ public:
                                               nsStyleContext* aContext);
 
   void ContentStatesChanged(mozilla::EventStates aStates) override;
-  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsDateTimeControlFrame)

@@ -60,7 +60,7 @@ public:
 
   virtual const nsFrameList& GetChildList(ChildListID aList) const override;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual void ChildIsDirty(nsIFrame* aChild) override;
 
   virtual FrameSearchResult PeekOffsetNoAmount(bool aForward, int32_t* aOffset) override;
@@ -557,8 +557,7 @@ protected:
    * Derived classes must do that too, if they destroy such frame lists.
    * See nsBlockFrame::DestroyFrom for an example.
    */
-  void DestroyAbsoluteFrames(nsIFrame*        aDestructRoot,
-                             PostDestroyData& aPostDestroyData);
+  void DestroyAbsoluteFrames(nsIFrame* aDestructRoot);
 
   /**
    * Helper for StealFrame.  Returns true if aChild was removed from its list.
@@ -732,9 +731,8 @@ protected:
    * frame then remove the property and delete the frame list.
    * Nothing happens if the property doesn't exist.
    */
-  void SafelyDestroyFrameListProp(nsIFrame*        aDestructRoot,
-                                  PostDestroyData& aPostDestroyData,
-                                  nsIPresShell*    aPresShell,
+  void SafelyDestroyFrameListProp(nsIFrame* aDestructRoot,
+                                  nsIPresShell* aPresShell,
                                   FrameListPropertyDescriptor aProp);
 
   // ==========================================================================
