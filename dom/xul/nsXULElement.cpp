@@ -1440,7 +1440,7 @@ nsXULElement::LoadSrc()
         }
     }
 
-    return frameLoader->LoadFrame();
+    return frameLoader->LoadFrame(false);
 }
 
 nsresult

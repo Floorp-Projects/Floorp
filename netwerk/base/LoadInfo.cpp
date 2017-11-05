@@ -61,6 +61,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mVerifySignedContent(false)
   , mEnforceSRI(false)
   , mForceAllowDataURI(false)
+  , mOriginalFrameSrcLoad(false)
   , mForceInheritPrincipalDropped(false)
   , mInnerWindowID(0)
   , mOuterWindowID(0)
@@ -251,6 +252,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mVerifySignedContent(false)
   , mEnforceSRI(false)
   , mForceAllowDataURI(false)
+  , mOriginalFrameSrcLoad(false)
   , mForceInheritPrincipalDropped(false)
   , mInnerWindowID(0)
   , mOuterWindowID(0)
@@ -326,6 +328,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mVerifySignedContent(rhs.mVerifySignedContent)
   , mEnforceSRI(rhs.mEnforceSRI)
   , mForceAllowDataURI(rhs.mForceAllowDataURI)
+  , mOriginalFrameSrcLoad(rhs.mOriginalFrameSrcLoad)
   , mForceInheritPrincipalDropped(rhs.mForceInheritPrincipalDropped)
   , mInnerWindowID(rhs.mInnerWindowID)
   , mOuterWindowID(rhs.mOuterWindowID)
@@ -399,6 +402,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mVerifySignedContent(aVerifySignedContent)
   , mEnforceSRI(aEnforceSRI)
   , mForceAllowDataURI(aForceAllowDataURI)
+  , mOriginalFrameSrcLoad(false)
   , mForceInheritPrincipalDropped(aForceInheritPrincipalDropped)
   , mInnerWindowID(aInnerWindowID)
   , mOuterWindowID(aOuterWindowID)
@@ -783,6 +787,20 @@ NS_IMETHODIMP
 LoadInfo::GetForceAllowDataURI(bool* aForceAllowDataURI)
 {
   *aForceAllowDataURI = mForceAllowDataURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetOriginalFrameSrcLoad(bool aOriginalFrameSrcLoad)
+{
+  mOriginalFrameSrcLoad = aOriginalFrameSrcLoad;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetOriginalFrameSrcLoad(bool* aOriginalFrameSrcLoad)
+{
+  *aOriginalFrameSrcLoad = mOriginalFrameSrcLoad;
   return NS_OK;
 }
 

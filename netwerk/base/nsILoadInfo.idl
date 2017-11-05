@@ -527,6 +527,11 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean forceAllowDataURI;
 
   /**
+   * If true, this is the load of a frame's original src attribute
+   */
+  [infallible] attribute boolean originalFrameSrcLoad;
+
+  /**
    * The SEC_FORCE_INHERIT_PRINCIPAL flag may be dropped when a load info
    * object is created.  Specifically, it will be dropped if the SEC_SANDBOXED
    * flag is also present.  This flag is set if SEC_FORCE_INHERIT_PRINCIPAL was
