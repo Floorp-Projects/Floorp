@@ -208,19 +208,16 @@ class StatisticsPanel extends Component {
       } else if (Filters.media(request)) {
         // "media"
         type = 6;
-      } else if (Filters.flash(request)) {
-        // "flash"
-        type = 7;
       } else if (Filters.ws(request)) {
         // "ws"
-        type = 8;
+        type = 7;
       } else if (Filters.xhr(request)) {
         // Verify XHR last, to categorize other mime types in their own blobs.
         // "xhr"
         type = 3;
       } else {
         // "other"
-        type = 9;
+        type = 8;
       }
 
       if (emptyCache || !this.responseIsFresh(request)) {
