@@ -45,13 +45,13 @@ interface nsIFrameLoader : nsISupports
    * Start loading the frame. This method figures out what to load
    * from the owner content in the frame loader.
    */
-  void loadFrame();
+  void loadFrame(in boolean originalSrc);
 
   /**
    * Loads the specified URI in this frame. Behaves identically to loadFrame,
    * except that this method allows specifying the URI to load.
    */
-  void loadURI(in nsIURI aURI);
+  void loadURI(in nsIURI aURI, in boolean originalSrc);
 
   /**
    * Puts the frameloader in prerendering mode.

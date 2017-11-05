@@ -460,6 +460,7 @@ protected:
                      bool aLoadReplace,
                      bool aLoadFromExternal,
                      bool aForceAllowDataURI,
+                     bool aOriginalFrameSrc,
                      nsIURI* aReferrer,
                      bool aSendReferrer,
                      uint32_t aReferrerPolicy,

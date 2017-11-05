@@ -41,14 +41,14 @@ interface FrameLoader {
    * from the owner content in the frame loader.
    */
   [Throws]
-  void loadFrame();
+  void loadFrame(optional boolean originalSrc = false);
 
   /**
    * Loads the specified URI in this frame. Behaves identically to loadFrame,
    * except that this method allows specifying the URI to load.
    */
   [Throws]
-  void loadURI(URI aURI);
+  void loadURI(URI aURI, optional boolean originalSrc = false);
 
   /**
    * Puts the frameloader in prerendering mode.

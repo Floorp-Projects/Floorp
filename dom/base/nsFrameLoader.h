@@ -109,9 +109,9 @@ public:
 
   already_AddRefed<nsILoadContext> LoadContext();
 
-  void LoadFrame(mozilla::ErrorResult& aRv);
+  void LoadFrame(bool aOriginalSrc, mozilla::ErrorResult& aRv);
 
-  void LoadURI(nsIURI* aURI, mozilla::ErrorResult& aRv);
+  void LoadURI(nsIURI* aURI, bool aOriginalSrc, mozilla::ErrorResult& aRv);
 
   /**
    * Triggers a load of the given URI.
@@ -121,7 +121,8 @@ public:
    *        null, in which case the node principal of the owner content will be
    *        used.
    */
-  nsresult LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal);
+  nsresult LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
+                   bool aOriginalSrc);
 
   void SetIsPrerendered(mozilla::ErrorResult& aRv);
 
@@ -502,6 +503,10 @@ private:
   // created using NS_FROM_PARSER_NETWORK flag. If the element is modified,
   // it may lose the flag.
   bool mNetworkCreated : 1;
+
+  // True if a pending load corresponds to the original src (or srcdoc)
+  // attribute of the frame element.
+  bool mLoadingOriginalSrc : 1;
 
   bool mRemoteBrowserShown : 1;
   bool mRemoteFrame : 1;
