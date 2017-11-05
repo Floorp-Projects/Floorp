@@ -1,5 +1,6 @@
 == move-to-background-1.html move-to-background-1-ref.html
 fuzzy-if(cocoaWidget,2,6) random-if(Android) == component-alpha-exit-1.html component-alpha-exit-1-ref.html # bug 760275
+fuzzy-if(cocoaWidget,2,6) random-if(Android) == component-alpha-enter-1.html component-alpha-enter-1-ref.html
 
 != pull-background-1.html about:blank
 skip-if(styloVsGecko) != pull-background-2.html about:blank # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
