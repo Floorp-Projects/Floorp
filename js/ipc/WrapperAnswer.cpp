@@ -62,11 +62,6 @@ WrapperAnswer::fail(AutoJSAPI& jsapi, ReturnStatus* rs)
     if (!jsapi.StealException(&exn))
         return true;
 
-    if (JS_IsStopIteration(exn)) {
-        *rs = ReturnStatus(ReturnStopIteration());
-        return true;
-    }
-
     // If this fails, we still don't want to exit. Just return an invalid
     // exception.
     (void) toVariant(cx, exn, &rs->get_ReturnException().exn());

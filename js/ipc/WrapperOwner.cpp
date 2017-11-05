@@ -1076,9 +1076,6 @@ WrapperOwner::ok(JSContext* cx, const ReturnStatus& status)
     if (status.type() == ReturnStatus::TReturnSuccess)
         return true;
 
-    if (status.type() == ReturnStatus::TReturnStopIteration)
-        return JS_ThrowStopIteration(cx);
-
     if (status.type() == ReturnStatus::TReturnDeadCPOW) {
         JS_ReportErrorASCII(cx, "operation not possible on dead CPOW");
         return false;
