@@ -49,8 +49,16 @@ PDFiumProcessParent::Launch(PrintTargetEMF* aTarget)
 }
 
 void
-PDFiumProcessParent::Delete()
+PDFiumProcessParent::Delete(bool aWaitingForEMFConversion)
 {
+  if (aWaitingForEMFConversion) {
+    // Can not kill the PDFium process yet since we are still waiting for a
+    // EMF conversion response.
+    mPDFiumParentActor->AbortConversion([this]() { Delete(false); });
+    mPDFiumParentActor->Close();
+    return;
+  }
+
   // PDFiumProcessParent::Launch is not called, protocol is not created.
   // It is safe to destroy this object on any thread.
   if (!mLaunchThread) {
@@ -64,9 +72,10 @@ PDFiumProcessParent::Delete()
   }
 
   mLaunchThread->Dispatch(
-    NewNonOwningRunnableMethod("PDFiumProcessParent::Delete",
-                               this,
-                               &PDFiumProcessParent::Delete));
+    NewNonOwningRunnableMethod<bool>("PDFiumProcessParent::Delete",
+                                     this,
+                                     &PDFiumProcessParent::Delete,
+                                     false));
 }
 
 } // namespace widget
