@@ -1024,7 +1024,10 @@ public:
   nsIURI* GetBaseURIForStyleAttr() const;
 
   // Returns the URL data for style attribute.
-  mozilla::URLExtraData* GetURLDataForStyleAttr() const;
+  // If aSubjectPrincipal is passed, it should be the scripted principal
+  // responsible for generating the URL data.
+  already_AddRefed<mozilla::URLExtraData>
+  GetURLDataForStyleAttr(nsIPrincipal* aSubjectPrincipal = nullptr) const;
 
   virtual nsresult GetEventTargetParent(
                      mozilla::EventChainPreVisitor& aVisitor) override;

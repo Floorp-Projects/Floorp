@@ -157,11 +157,19 @@ protected:
   // Information neded to parse a declaration for Servo side.
   struct MOZ_STACK_CLASS ServoCSSParsingEnvironment
   {
-    mozilla::URLExtraData* mUrlExtraData;
+    RefPtr<mozilla::URLExtraData> mUrlExtraData;
     nsCompatibility mCompatMode;
     mozilla::css::Loader* mLoader;
 
     ServoCSSParsingEnvironment(mozilla::URLExtraData* aUrlData,
+                               nsCompatibility aCompatMode,
+                               mozilla::css::Loader* aLoader)
+      : mUrlExtraData(aUrlData)
+      , mCompatMode(aCompatMode)
+      , mLoader(aLoader)
+    {}
+
+    ServoCSSParsingEnvironment(already_AddRefed<mozilla::URLExtraData> aUrlData,
                                nsCompatibility aCompatMode,
                                mozilla::css::Loader* aLoader)
       : mUrlExtraData(aUrlData)
@@ -173,12 +181,18 @@ protected:
   // On failure, mPrincipal should be set to null in aCSSParseEnv.
   // If mPrincipal is null, the other members may not be set to
   // anything meaningful.
-  virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) = 0;
+  // If aSubjectPrincipal is passed, it should be the subject principal of the
+  // scripted caller that initiated the parser.
+  virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
+                                        nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
 
   // mUrlExtraData returns URL data for parsing url values in
   // CSS. Returns nullptr on failure. If mUrlExtraData is nullptr,
   // mCompatMode may not be set to anything meaningful.
-  virtual ServoCSSParsingEnvironment GetServoCSSParsingEnvironment() const = 0;
+  // If aSubjectPrincipal is passed, it should be the subject principal of the
+  // scripted caller that initiated the parser.
+  virtual ServoCSSParsingEnvironment
+  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal = nullptr) const = 0;
 
   // An implementation for GetCSSParsingEnvironment for callers wrapping
   // an css::Rule.
@@ -208,7 +222,8 @@ protected:
 
 private:
   template<typename GeckoFunc, typename ServoFunc>
-  inline nsresult ModifyDeclaration(GeckoFunc aGeckoFunc, ServoFunc aServoFunc);
+  inline nsresult ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
+                                    GeckoFunc aGeckoFunc, ServoFunc aServoFunc);
 };
 
 #endif // nsDOMCSSDeclaration_h___

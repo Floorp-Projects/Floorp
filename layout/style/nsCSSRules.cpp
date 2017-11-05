@@ -1421,13 +1421,15 @@ nsCSSKeyframeStyleDeclaration::GetCSSDeclaration(Operation aOperation)
 }
 
 void
-nsCSSKeyframeStyleDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv)
+nsCSSKeyframeStyleDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
+                                                        nsIPrincipal* aSubjectPrincipal)
 {
   GetCSSParsingEnvironmentForRule(mRule, aCSSParseEnv);
 }
 
 nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-nsCSSKeyframeStyleDeclaration::GetServoCSSParsingEnvironment() const
+nsCSSKeyframeStyleDeclaration::GetServoCSSParsingEnvironment(
+  nsIPrincipal* aSubjectPrincipal) const
 {
   MOZ_CRASH("GetURLData shouldn't be calling on a Gecko rule");
 }
@@ -1867,13 +1869,15 @@ nsCSSPageStyleDeclaration::GetCSSDeclaration(Operation aOperation)
 }
 
 void
-nsCSSPageStyleDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv)
+nsCSSPageStyleDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
+                                                    nsIPrincipal* aSubjectPrincipal)
 {
   GetCSSParsingEnvironmentForRule(mRule, aCSSParseEnv);
 }
 
 nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-nsCSSPageStyleDeclaration::GetServoCSSParsingEnvironment() const
+nsCSSPageStyleDeclaration::GetServoCSSParsingEnvironment(
+  nsIPrincipal* aSubjectPrincipal) const
 {
   MOZ_CRASH("GetURLData shouldn't be calling on a Gecko rule");
 }
