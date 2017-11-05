@@ -756,6 +756,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
   nsIDocument* doc = aTargetElement->GetUncomposedDoc();
   if (doc && !nsStyleUtil::CSPAllowsInlineStyle(nullptr,
                                                 doc->NodePrincipal(),
+                                                nullptr,
                                                 doc->GetDocumentURI(),
                                                 0, aString, nullptr)) {
     return;
@@ -811,6 +812,7 @@ nsSMILCSSValueType::ValueFromAnimationValue(nsCSSPropertyID aPropID,
     NS_LITERAL_STRING("[SVG animation of CSS]");
   if (doc && !nsStyleUtil::CSPAllowsInlineStyle(nullptr,
                                                 doc->NodePrincipal(),
+                                                nullptr,
                                                 doc->GetDocumentURI(),
                                                 0, kPlaceholderText, nullptr)) {
     return result;
