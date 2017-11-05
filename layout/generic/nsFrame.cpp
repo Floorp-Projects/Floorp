@@ -6526,7 +6526,8 @@ nsIFrame* nsIFrame::GetTailContinuation()
        next = frame->GetNextContinuation())  {
     frame = next;
   }
-  NS_POSTCONDITION(frame, "illegal state in continuation chain.");
+
+  MOZ_ASSERT(frame, "illegal state in continuation chain.");
   return frame;
 }
 

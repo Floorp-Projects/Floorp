@@ -3110,12 +3110,12 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, GeckoStyleContext* aCon
  * @param data_ Variable holding the result of this function.
  */
 #define COMPUTE_END_INHERITED(type_, data_)                                   \
-  NS_POSTCONDITION(!conditions.CacheableWithoutDependencies() ||              \
-                   aRuleDetail == eRuleFullReset ||                           \
-                   (aStartStruct && aRuleDetail == eRulePartialReset),        \
-                   "conditions.CacheableWithoutDependencies() must be false " \
-                   "for inherited structs unless all properties have been "   \
-                   "specified with values other than inherit");               \
+  MOZ_ASSERT(!conditions.CacheableWithoutDependencies() ||                    \
+             aRuleDetail == eRuleFullReset ||                                 \
+             (aStartStruct && aRuleDetail == eRulePartialReset),              \
+             "conditions.CacheableWithoutDependencies() must be false "       \
+             "for inherited structs unless all properties have been "         \
+             "specified with values other than inherit");                     \
   if (conditions.CacheableWithoutDependencies()) {                            \
     /* We were fully specified and can therefore be cached right on the */    \
     /* rule node. */                                                          \
@@ -3145,13 +3145,13 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, GeckoStyleContext* aCon
  * @param data_ Variable holding the result of this function.
  */
 #define COMPUTE_END_RESET(type_, data_)                                       \
-  NS_POSTCONDITION(!conditions.CacheableWithoutDependencies() ||              \
-                   aRuleDetail == eRuleNone ||                                \
-                   aRuleDetail == eRulePartialReset ||                        \
-                   aRuleDetail == eRuleFullReset,                             \
-                   "conditions.CacheableWithoutDependencies() must be false " \
-                   "for reset structs if any properties were specified as "   \
-                   "inherit");                                                \
+  MOZ_ASSERT(!conditions.CacheableWithoutDependencies() ||                    \
+             aRuleDetail == eRuleNone ||                                      \
+             aRuleDetail == eRulePartialReset ||                              \
+             aRuleDetail == eRuleFullReset,                                   \
+             "conditions.CacheableWithoutDependencies() must be false "       \
+             "for reset structs if any properties were specified as "         \
+             "inherit");                                                      \
   if (conditions.CacheableWithoutDependencies()) {                            \
     /* We were fully specified and can therefore be cached right on the */    \
     /* rule node. */                                                          \
