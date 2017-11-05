@@ -72,9 +72,6 @@ struct gfxTextRunDrawCallbacks;
 
 namespace mozilla {
 class SVGContextPaint;
-namespace gfx {
-class GlyphRenderingOptions;
-} // namespace gfx
 } // namespace mozilla
 
 struct gfxFontStyle {
@@ -134,6 +131,10 @@ struct gfxFontStyle {
     // use font-language-override to request the Serbian option in the font
     // in order to get correct glyph shapes.)
     uint32_t languageOverride;
+
+    // The estimated background color behind the text. Enables a special
+    // rendering mode when NS_GET_A(.) > 0. Only used for text in the chrome.
+    nscolor fontSmoothingBackgroundColor;
 
     // The weight of the font: 100, 200, ... 900.
     uint16_t weight;
@@ -217,7 +218,8 @@ struct gfxFontStyle {
             (alternateValues == other.alternateValues) &&
             (featureValueLookup == other.featureValueLookup) &&
             (variationSettings == other.variationSettings) &&
-            (languageOverride == other.languageOverride);
+            (languageOverride == other.languageOverride) &&
+            (fontSmoothingBackgroundColor == other.fontSmoothingBackgroundColor);
     }
 };
 
@@ -1580,11 +1582,6 @@ public:
     // Return the horizontal advance of a glyph.
     gfxFloat GetGlyphHAdvance(DrawTarget* aDrawTarget, uint16_t aGID);
 
-    // Return Azure GlyphRenderingOptions for drawing this font.
-    virtual already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
-      GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr)
-    { return nullptr; }
-
     gfxFloat SynthesizeSpaceWidth(uint32_t aCh);
 
     // Work out whether cairo will snap inter-glyph spacing to pixels
@@ -2274,7 +2271,6 @@ protected:
     bool RenderColorGlyph(DrawTarget* aDrawTarget,
                           gfxContext* aContext,
                           mozilla::gfx::ScaledFont* scaledFont,
-                          mozilla::gfx::GlyphRenderingOptions* renderingOptions,
                           mozilla::gfx::DrawOptions drawOptions,
                           const mozilla::gfx::Point& aPoint,
                           uint32_t aGlyphId) const;
@@ -2302,7 +2298,6 @@ struct MOZ_STACK_CLASS TextRunDrawParams {
     gfxFont::Spacing        *spacing;
     gfxTextRunDrawCallbacks *callbacks;
     mozilla::SVGContextPaint *runContextPaint;
-    mozilla::gfx::Color      fontSmoothingBGColor;
     mozilla::gfx::Float      direction;
     double                   devPerApp;
     nscolor                  textStrokeColor;
@@ -2317,7 +2312,6 @@ struct MOZ_STACK_CLASS TextRunDrawParams {
 
 struct MOZ_STACK_CLASS FontDrawParams {
     RefPtr<mozilla::gfx::ScaledFont>            scaledFont;
-    RefPtr<mozilla::gfx::GlyphRenderingOptions> renderingOptions;
     mozilla::SVGContextPaint *contextPaint;
     mozilla::gfx::Matrix     *passedInvMatrix;
     mozilla::gfx::Matrix      matInv;
