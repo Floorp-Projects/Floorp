@@ -64,13 +64,13 @@ nsTableRowGroupFrame::~nsTableRowGroupFrame()
 }
 
 void
-nsTableRowGroupFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsTableRowGroupFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (HasAnyStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
     nsTableFrame::UnregisterPositionedTablePart(this, aDestructRoot);
   }
 
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_QUERYFRAME_HEAD(nsTableRowGroupFrame)

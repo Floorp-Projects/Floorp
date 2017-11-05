@@ -149,11 +149,11 @@ nsHTMLScrollFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 }
 
 void
-nsHTMLScrollFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsHTMLScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  DestroyAbsoluteFrames(aDestructRoot, aPostDestroyData);
-  mHelper.Destroy(aPostDestroyData);
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  DestroyAbsoluteFrames(aDestructRoot);
+  mHelper.Destroy();
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 void
@@ -1478,10 +1478,10 @@ nsXULScrollFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 }
 
 void
-nsXULScrollFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsXULScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  mHelper.Destroy(aPostDestroyData);
-  nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  mHelper.Destroy();
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 void
@@ -4645,18 +4645,18 @@ ScrollFrameHelper::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 }
 
 void
-ScrollFrameHelper::Destroy(PostDestroyData& aPostDestroyData)
+ScrollFrameHelper::Destroy()
 {
   if (mScrollbarActivity) {
     mScrollbarActivity->Destroy();
     mScrollbarActivity = nullptr;
   }
 
-  // Unbind the content created in CreateAnonymousContent later...
-  aPostDestroyData.AddAnonymousContent(mHScrollbarContent.forget());
-  aPostDestroyData.AddAnonymousContent(mVScrollbarContent.forget());
-  aPostDestroyData.AddAnonymousContent(mScrollCornerContent.forget());
-  aPostDestroyData.AddAnonymousContent(mResizerContent.forget());
+  // Unbind any content created in CreateAnonymousContent from the tree
+  mOuter->DestroyAnonymousContent(mHScrollbarContent.forget());
+  mOuter->DestroyAnonymousContent(mVScrollbarContent.forget());
+  mOuter->DestroyAnonymousContent(mScrollCornerContent.forget());
+  mOuter->DestroyAnonymousContent(mResizerContent.forget());
 
   if (mPostedReflowCallback) {
     mOuter->PresContext()->PresShell()->CancelReflowCallback(this);

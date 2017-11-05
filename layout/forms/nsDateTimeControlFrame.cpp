@@ -48,10 +48,10 @@ nsDateTimeControlFrame::nsDateTimeControlFrame(nsStyleContext* aContext)
 }
 
 void
-nsDateTimeControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsDateTimeControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  aPostDestroyData.AddAnonymousContent(mInputAreaContent.forget());
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  DestroyAnonymousContent(mInputAreaContent.forget());
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 void

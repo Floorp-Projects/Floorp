@@ -48,8 +48,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     *aDidPrettyPrint = false;
 
     // Check for iframe with display:none. Such iframes don't have presshells
-    nsIPresShell* shell = aDocument->GetShell();
-    if (!shell) {
+    if (!aDocument->GetShell()) {
         return NS_OK;
     }
 
@@ -151,11 +150,6 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     nsCOMPtr<nsIPrincipal> sysPrincipal;
     nsContentUtils::GetSecurityManager()->
         GetSystemPrincipal(getter_AddRefs(sysPrincipal));
-
-    // Destroy any existing frames before we unbind anonymous content.
-    if (rootCont->IsElement()) {
-        shell->DestroyFramesForAndRestyle(rootCont->AsElement());
-    }
 
     // Load the bindings.
     RefPtr<nsXBLBinding> unused;

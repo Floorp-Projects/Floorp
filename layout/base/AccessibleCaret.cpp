@@ -14,7 +14,6 @@
 #include "nsCaret.h"
 #include "nsDOMTokenList.h"
 #include "nsIFrame.h"
-#include "nsPlaceholderFrame.h"
 
 namespace mozilla {
 using namespace dom;
@@ -262,13 +261,6 @@ AccessibleCaret::RemoveCaretElement(nsIDocument* aDocument)
 {
   CaretElement()->RemoveEventListener(NS_LITERAL_STRING("touchstart"),
                                       mDummyTouchListener, false);
-
-  if (nsIFrame* frame = CaretElement()->GetPrimaryFrame()) {
-    if (frame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
-      frame = frame->GetPlaceholderFrame();
-    }
-    frame->GetParent()->RemoveFrame(nsIFrame::kPrincipalList, frame);
-  }
 
   ErrorResult rv;
   aDocument->RemoveAnonymousContent(*mCaretElementHolder, rv);

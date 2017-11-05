@@ -182,19 +182,17 @@ nsContainerFrame::RemoveFrame(ChildListID aListID,
 }
 
 void
-nsContainerFrame::DestroyAbsoluteFrames(nsIFrame* aDestructRoot,
-                                        PostDestroyData& aPostDestroyData)
+nsContainerFrame::DestroyAbsoluteFrames(nsIFrame* aDestructRoot)
 {
   if (IsAbsoluteContainer()) {
-    GetAbsoluteContainingBlock()->DestroyFrames(this, aDestructRoot, aPostDestroyData);
+    GetAbsoluteContainingBlock()->DestroyFrames(this, aDestructRoot);
     MarkAsNotAbsoluteContainingBlock();
   }
 }
 
 void
-nsContainerFrame::SafelyDestroyFrameListProp(nsIFrame*        aDestructRoot,
-                                             PostDestroyData& aPostDestroyData,
-                                             nsIPresShell*    aPresShell,
+nsContainerFrame::SafelyDestroyFrameListProp(nsIFrame* aDestructRoot,
+                                             nsIPresShell* aPresShell,
                                              FrameListPropertyDescriptor aProp)
 {
   // Note that the last frame can be removed through another route and thus
@@ -203,7 +201,7 @@ nsContainerFrame::SafelyDestroyFrameListProp(nsIFrame*        aDestructRoot,
   while (nsFrameList* frameList = GetProperty(aProp)) {
     nsIFrame* frame = frameList->RemoveFirstChild();
     if (MOZ_LIKELY(frame)) {
-      frame->DestroyFrom(aDestructRoot, aPostDestroyData);
+      frame->DestroyFrom(aDestructRoot);
     } else {
       RemoveProperty(aProp);
       frameList->Delete(aPresShell);
@@ -213,17 +211,17 @@ nsContainerFrame::SafelyDestroyFrameListProp(nsIFrame*        aDestructRoot,
 }
 
 void
-nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Prevent event dispatch during destruction.
   if (HasView()) {
     GetView()->SetFrame(nullptr);
   }
 
-  DestroyAbsoluteFrames(aDestructRoot, aPostDestroyData);
+  DestroyAbsoluteFrames(aDestructRoot);
 
   // Destroy frames on the principal child list.
-  mFrames.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
+  mFrames.DestroyFramesFrom(aDestructRoot);
 
   // If we have any IB split siblings, clear their references to us.
   if (HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
@@ -271,19 +269,18 @@ nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDes
     nsPresContext* pc = PresContext();
     nsIPresShell* shell = pc->PresShell();
     if (hasO) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
-                                 OverflowProperty());
+      SafelyDestroyFrameListProp(aDestructRoot, shell, OverflowProperty());
     }
 
     MOZ_ASSERT(IsFrameOfType(eCanContainOverflowContainers) ||
                !(hasOC || hasEOC),
                "this type of frame shouldn't have overflow containers");
     if (hasOC) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
+      SafelyDestroyFrameListProp(aDestructRoot, shell,
                                  OverflowContainersProperty());
     }
     if (hasEOC) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
+      SafelyDestroyFrameListProp(aDestructRoot, shell,
                                  ExcessOverflowContainersProperty());
     }
 
@@ -291,12 +288,11 @@ nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDes
                StyleDisplay()->mTopLayer != NS_STYLE_TOP_LAYER_NONE,
                "only top layer frame may have backdrop");
     if (hasBackdrop) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
-                                 BackdropProperty());
+      SafelyDestroyFrameListProp(aDestructRoot, shell, BackdropProperty());
     }
   }
 
-  nsSplittableFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsSplittableFrame::DestroyFrom(aDestructRoot);
 }
 
 /////////////////////////////////////////////////////////////////////////////

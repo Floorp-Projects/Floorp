@@ -34,15 +34,9 @@ nsIContent::SetPrimaryFrame(nsIFrame* aFrame)
                   "Losing track of existing primary frame");
 
   if (aFrame) {
-    if (MOZ_LIKELY(!IsHTMLElement(nsGkAtoms::area)) ||
-        aFrame->GetContent() == this) {
-      aFrame->SetIsPrimaryFrame(true);
-    }
+    aFrame->SetIsPrimaryFrame(true);
   } else if (nsIFrame* currentPrimaryFrame = GetPrimaryFrame()) {
-    if (MOZ_LIKELY(!IsHTMLElement(nsGkAtoms::area)) ||
-        currentPrimaryFrame->GetContent() == this) {
-      currentPrimaryFrame->SetIsPrimaryFrame(false);
-    }
+    currentPrimaryFrame->SetIsPrimaryFrame(false);
   }
 
   mPrimaryFrame = aFrame;

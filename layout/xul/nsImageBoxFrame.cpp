@@ -182,7 +182,7 @@ nsImageBoxFrame::MarkIntrinsicISizesDirty()
 }
 
 void
-nsImageBoxFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
+nsImageBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (mImageRequest) {
     nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
@@ -195,7 +195,7 @@ nsImageBoxFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDest
   if (mListener)
     reinterpret_cast<nsImageBoxListener*>(mListener.get())->SetFrame(nullptr); // set the frame to null so we don't send messages to a dead object.
 
-  nsLeafBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsLeafBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 
