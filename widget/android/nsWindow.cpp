@@ -232,14 +232,14 @@ public:
 };
 
 class nsWindow::GeckoViewSupport final
-    : public GeckoView::Window::Natives<GeckoViewSupport>
+    : public GeckoSession::Window::Natives<GeckoViewSupport>
     , public SupportsWeakPtr<GeckoViewSupport>
 {
     nsWindow& window;
-    GeckoView::Window::GlobalRef mGeckoViewWindow;
+    GeckoSession::Window::GlobalRef mGeckoViewWindow;
 
 public:
-    typedef GeckoView::Window::Natives<GeckoViewSupport> Base;
+    typedef GeckoSession::Window::Natives<GeckoViewSupport> Base;
     typedef SupportsWeakPtr<GeckoViewSupport> SupportsWeakPtr;
 
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GeckoViewSupport);
@@ -258,7 +258,7 @@ public:
     }
 
     GeckoViewSupport(nsWindow* aWindow,
-                     const GeckoView::Window::LocalRef& aInstance)
+                     const GeckoSession::Window::LocalRef& aInstance)
         : window(*aWindow)
         , mGeckoViewWindow(aInstance)
     {
@@ -278,7 +278,7 @@ private:
 public:
     // Create and attach a window.
     static void Open(const jni::Class::LocalRef& aCls,
-                     GeckoView::Window::Param aWindow,
+                     GeckoSession::Window::Param aWindow,
                      jni::Object::Param aDispatcher,
                      jni::Object::Param aSettings,
                      jni::String::Param aChromeURI,
@@ -289,9 +289,8 @@ public:
     void Close();
 
     // Reattach this nsWindow to a new GeckoView.
-    void Attach(const GeckoView::Window::LocalRef& inst,
-                GeckoView::Param aView, jni::Object::Param aCompositor,
-                jni::Object::Param aDispatcher);
+    void Attach(const GeckoSession::Window::LocalRef& inst,
+                jni::Object::Param aView, jni::Object::Param aCompositor);
 
     void EnableEventDispatcher();
 };
@@ -1261,7 +1260,7 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport()
 
 /* static */ void
 nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
-                                 GeckoView::Window::Param aWindow,
+                                 GeckoSession::Window::Param aWindow,
                                  jni::Object::Param aDispatcher,
                                  jni::Object::Param aSettings,
                                  jni::String::Param aChromeURI,
@@ -1311,7 +1310,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
 
     // Attach a new GeckoView support object to the new window.
     window->mGeckoViewSupport = mozilla::MakeUnique<GeckoViewSupport>(
-        window, (GeckoView::Window::LocalRef(aCls.Env(), aWindow)));
+        window, (GeckoSession::Window::LocalRef(aCls.Env(), aWindow)));
 
     window->mGeckoViewSupport->mDOMWindow = pdomWindow;
 
@@ -1355,10 +1354,9 @@ nsWindow::GeckoViewSupport::Close()
 }
 
 void
-nsWindow::GeckoViewSupport::Attach(const GeckoView::Window::LocalRef& inst,
-                                   GeckoView::Param aView,
-                                   jni::Object::Param aCompositor,
-                                   jni::Object::Param aDispatcher)
+nsWindow::GeckoViewSupport::Attach(const GeckoSession::Window::LocalRef& inst,
+                                   jni::Object::Param aView,
+                                   jni::Object::Param aCompositor)
 {
     // Associate our previous GeckoEditable with the new GeckoView.
     MOZ_ASSERT(window.mEditable);
@@ -1374,16 +1372,12 @@ nsWindow::GeckoViewSupport::Attach(const GeckoView::Window::LocalRef& inst,
         window.mLayerViewSupport.Detach();
     }
 
-    auto compositor = LayerView::Compositor::LocalRef(
-            inst.Env(), LayerView::Compositor::Ref::From(aCompositor));
-    window.mLayerViewSupport.Attach(compositor, &window, compositor);
-    compositor->Reattach();
-
-    MOZ_ASSERT(window.mAndroidView);
-    window.mAndroidView->mEventDispatcher->Attach(
-            java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
-
-    mGeckoViewWindow->OnAttach(aView);
+    if (aCompositor) {
+        auto compositor = LayerView::Compositor::LocalRef(
+                inst.Env(), LayerView::Compositor::Ref::From(aCompositor));
+        window.mLayerViewSupport.Attach(compositor, &window, compositor);
+        compositor->Reattach();
+    }
 }
 
 void
@@ -2118,7 +2112,7 @@ nsWindow::GeckoViewSupport::EnableEventDispatcher()
     if (!mGeckoViewWindow) {
         return;
     }
-    mGeckoViewWindow->SetState(GeckoView::State::READY());
+    mGeckoViewWindow->OnReady();
 }
 
 void
