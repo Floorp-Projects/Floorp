@@ -39,16 +39,6 @@ if (Services.appinfo.OS == "Linux") {
   }
 }
 
-if (Services.appinfo.OS == "Darwin") {
-  EXPECTED_REFLOWS.push({
-    stack: [
-      "handleEvent@chrome://browser/content/tabbrowser.xml",
-      "inferFromText@chrome://browser/content/browser.js",
-      "handleEvent@chrome://browser/content/browser.js",
-    ],
-  });
-}
-
 if (Services.appinfo.OS == "WINNT") {
   EXPECTED_REFLOWS.push(
     {
@@ -59,14 +49,6 @@ if (Services.appinfo.OS == "WINNT") {
         "handleEvent@chrome://browser/content/tabbrowser.xml",
       ],
       times: 2, // This number should only ever go down - never up.
-    },
-
-    {
-      stack: [
-        "handleEvent@chrome://browser/content/tabbrowser.xml",
-        "inferFromText@chrome://browser/content/browser.js",
-        "handleEvent@chrome://browser/content/browser.js",
-      ],
     },
   );
 }
@@ -81,16 +63,6 @@ if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
         "handleEvent@chrome://browser/content/tabbrowser.xml",
       ],
       times: 4, // This number should only ever go down - never up.
-    },
-  );
-}
-
-if (Services.appinfo.OS == "WINNT" && screen.width <= 1280) {
-  EXPECTED_REFLOWS.push(
-    {
-      stack: [
-        "handleEvent@chrome://browser/content/tabbrowser.xml",
-      ],
     },
   );
 }
