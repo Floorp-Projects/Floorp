@@ -45,11 +45,11 @@ git checkout $SCCACHE_REVISION
 # story in https://bugzilla.mozilla.org/show_bug.cgi?id=1163171#c26.
 case "$(uname -s)" in
 Linux)
-    OPENSSL_TARBALL=openssl-1.1.0f.tar.gz
+    OPENSSL_TARBALL=openssl-1.1.0g.tar.gz
 
     curl -O https://www.openssl.org/source/$OPENSSL_TARBALL
 cat >$OPENSSL_TARBALL.sha256sum <<EOF
-12f746f3f2493b2f39da7ecf63d7ee19c6ac9ec6a4fcd8c229da8a522cb12765  openssl-1.1.0f.tar.gz
+de4d501267da39310905cb6dc8c6121f7a2cad45a7707f76df828fe1b85073af  openssl-1.1.0g.tar.gz
 EOF
     cat $OPENSSL_TARBALL.sha256sum
     sha256sum -c $OPENSSL_TARBALL.sha256sum
