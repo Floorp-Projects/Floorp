@@ -102,6 +102,24 @@ function addEntry(name, value, then) {
   }, then);
 }
 
+function promiseCountEntries(name, value) {
+  return new Promise(res => {
+    countEntries(name, value, res);
+  });
+}
+
+function promiseUpdateEntry(op, name, value) {
+  return new Promise(res => {
+    updateEntry(op, name, value, res);
+  });
+}
+
+function promiseAddEntry(name, value) {
+  return new Promise(res => {
+    addEntry(name, value, res);
+  });
+}
+
 // Wrapper around FormHistory.update which handles errors. Calls then() when done.
 function updateFormHistory(changes, then) {
   FormHistory.update(changes, {
