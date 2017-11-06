@@ -29,6 +29,10 @@ PDFiumParent::Init(IPC::Channel* aChannel, base::ProcessId aPid)
 void
 PDFiumParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  if (mTarget) {
+    mTarget->ChannelIsBroken();
+  }
+
   if (mConversionDoneCallback) {
     // Since this printing job was aborted, we do not need to report EMF buffer
     // back to mTarget.
@@ -57,6 +61,12 @@ PDFiumParent::AbortConversion(ConversionDoneCallback aCallback)
   // job was aborted, unset mTarget.
   mTarget = nullptr;
   mConversionDoneCallback = aCallback;
+}
+
+void PDFiumParent::EndConversion()
+{
+  // The printing job is finished correctly, mTarget is no longer needed.
+  mTarget = nullptr;
 }
 
 void

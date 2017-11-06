@@ -22,6 +22,7 @@ PrintTargetEMF::PrintTargetEMF(HDC aDC, const IntSize& aSize)
   : PrintTarget(/* not using cairo_surface_t */ nullptr, aSize)
   , mPrinterDC(aDC)
   , mWaitingForEMFConversion(false)
+  , mChannelBroken(false)
 {
 }
 
@@ -68,12 +69,15 @@ PrintTargetEMF::BeginPrinting(const nsAString& aTitle,
   mPDFiumProcess = new PDFiumProcessParent();
   NS_ENSURE_TRUE(mPDFiumProcess->Launch(this), NS_ERROR_FAILURE);
 
+  mChannelBroken = false;
+
   return NS_OK;
 }
 
 nsresult
 PrintTargetEMF::EndPrinting()
 {
+  mPDFiumProcess->GetActor()->EndConversion();
   return (::EndDoc(mPrinterDC) <= 0) ? NS_ERROR_FAILURE : NS_OK;
 }
 
@@ -87,7 +91,7 @@ nsresult
 PrintTargetEMF::BeginPage()
 {
   MOZ_ASSERT(!mPDFFileForOnePage && !mTargetForCurrentPage);
-
+  NS_ENSURE_TRUE(!mChannelBroken, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(::StartPage(mPrinterDC) >0, NS_ERROR_FAILURE);
 
   // We create a new file for each page so that we can make sure each new
@@ -112,6 +116,8 @@ PrintTargetEMF::BeginPage()
 nsresult
 PrintTargetEMF::EndPage()
 {
+  NS_ENSURE_TRUE(!mChannelBroken, NS_ERROR_FAILURE);
+
   mTargetForCurrentPage->EndPage();
   mTargetForCurrentPage->EndPrinting();
   mTargetForCurrentPage->Finish();
@@ -122,9 +128,13 @@ PrintTargetEMF::EndPage()
                                                      &prfile);
   NS_ENSURE_SUCCESS(rv, rv);
   FileDescriptor descriptor(FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(prfile)));
-  mPDFiumProcess->GetActor()->SendConvertToEMF(descriptor,
+  if (!mPDFiumProcess->GetActor()->SendConvertToEMF(descriptor,
                                         ::GetDeviceCaps(mPrinterDC, HORZRES),
-                                        ::GetDeviceCaps(mPrinterDC, VERTRES));
+                                        ::GetDeviceCaps(mPrinterDC, VERTRES)))
+  {
+    return NS_ERROR_FAILURE;
+  }
+
   PR_Close(prfile);
   mWaitingForEMFConversion = true;
 
@@ -135,6 +145,7 @@ already_AddRefed<DrawTarget>
 PrintTargetEMF::MakeDrawTarget(const IntSize& aSize,
                                DrawEventRecorder* aRecorder)
 {
+  MOZ_ASSERT(!mChannelBroken);
   return mTargetForCurrentPage->MakeDrawTarget(aSize, aRecorder);
 }
 
@@ -157,6 +168,8 @@ void
 PrintTargetEMF::ConvertToEMFDone(const nsresult& aResult,
                                  mozilla::ipc::Shmem&& aEMF)
 {
+  MOZ_ASSERT(!mChannelBroken, "It is not possible to get conversion callback "
+                              "after the channel was broken.");
   mWaitingForEMFConversion = false;
 
   if (::StartPage(mPrinterDC) > 0) {
