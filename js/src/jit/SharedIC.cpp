@@ -226,10 +226,16 @@ ICStub::trace(JSTracer* trc)
     // because the regular monitored stubs will always have a monitored fallback stub
     // that references the same stub chain.
     if (isMonitoredFallback()) {
-        ICTypeMonitor_Fallback* lastMonStub = toMonitoredFallbackStub()->fallbackMonitorStub();
-        for (ICStubConstIterator iter(lastMonStub->firstMonitorStub()); !iter.atEnd(); iter++) {
-            MOZ_ASSERT_IF(iter->next() == nullptr, *iter == lastMonStub);
-            iter->trace(trc);
+        ICTypeMonitor_Fallback* lastMonStub =
+            toMonitoredFallbackStub()->maybeFallbackMonitorStub();
+        if (lastMonStub) {
+            for (ICStubConstIterator iter(lastMonStub->firstMonitorStub());
+                 !iter.atEnd();
+                 iter++)
+            {
+                MOZ_ASSERT_IF(iter->next() == nullptr, *iter == lastMonStub);
+                iter->trace(trc);
+            }
         }
     }
 
@@ -366,7 +372,9 @@ ICFallbackStub::unlinkStub(Zone* zone, ICStub* prev, ICStub* stub)
         // We just have to reset its firstMonitorStub_ field to avoid a stale
         // pointer when purgeOptimizedStubs destroys all optimized monitor
         // stubs (unlinked stubs won't be updated).
-        ICTypeMonitor_Fallback* monitorFallback = toMonitoredFallbackStub()->fallbackMonitorStub();
+        ICTypeMonitor_Fallback* monitorFallback =
+            toMonitoredFallbackStub()->maybeFallbackMonitorStub();
+        MOZ_ASSERT(monitorFallback);
         stub->toMonitoredStub()->resetFirstMonitorStub(monitorFallback);
     }
 
@@ -457,11 +465,12 @@ ICMonitoredStub::ICMonitoredStub(Kind kind, JitCode* stubCode, ICStub* firstMoni
 }
 
 bool
-ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx, ICStubSpace* space)
+ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx, JSScript* script)
 {
     MOZ_ASSERT(fallbackMonitorStub_ == nullptr);
 
     ICTypeMonitor_Fallback::Compiler compiler(cx, this);
+    ICStubSpace* space = script->baselineScript()->fallbackStubSpace();
     ICTypeMonitor_Fallback* stub = compiler.getStub(space);
     if (!stub)
         return false;
@@ -473,7 +482,10 @@ bool
 ICMonitoredFallbackStub::addMonitorStubForValue(JSContext* cx, BaselineFrame* frame,
                                                 StackTypeSet* types, HandleValue val)
 {
-    return fallbackMonitorStub_->addMonitorStubForValue(cx, frame, types, val);
+    ICTypeMonitor_Fallback* typeMonitorFallback = getFallbackMonitorStub(cx, frame->script());
+    if (!typeMonitorFallback)
+        return false;
+    return typeMonitorFallback->addMonitorStubForValue(cx, frame, types, val);
 }
 
 bool
@@ -2162,7 +2174,8 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
     // When we get here, ICStubReg contains the ICGetProp_Fallback stub,
     // which we can't use to enter the TypeMonitor IC, because it's a MonitoredFallbackStub
-    // instead of a MonitoredStub. So, we cheat.
+    // instead of a MonitoredStub. So, we cheat. Note that we must have a
+    // non-null fallbackMonitorStub here because InitFromBailout delazifies.
     masm.loadPtr(Address(ICStubReg, ICMonitoredFallbackStub::offsetOfFallbackMonitorStub()),
                  ICStubReg);
     EmitEnterTypeMonitorIC(masm, ICTypeMonitor_Fallback::offsetOfFirstMonitorStub());
