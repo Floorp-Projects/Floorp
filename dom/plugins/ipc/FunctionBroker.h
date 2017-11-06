@@ -350,6 +350,13 @@ public:
     aBuf = tempBuf;
   }
 
+  // Run the given destructor on the given memory, for special cases where
+  // memory is allocated elsewhere but must still be freed.
+  void PostDestructor(void* aMem, DestructorType* aDestructor)
+  {
+    mList.AppendElement(FreeItem(aMem, aDestructor));
+  }
+
 #if defined(XP_WIN)
   // Allocate memory and a DWORD block-length, storing them in the
   // corresponding parameters.
@@ -751,6 +758,20 @@ inline void EndpointHandler<SERVER>::Copy(ServerCallData* aScd, PSCHANNEL_CRED& 
   MOZ_ASSERT(!aDest);
   aDest = aScd->Allocate<SCHANNEL_CRED>();
   Copy(aDest, aSrc);
+}
+
+template<>
+inline void EndpointHandler<SERVER>::Copy(ServerCallData* aScd, LPINTERNET_BUFFERSA& aDest, const IPCInternetBuffers& aSrc)
+{
+  MOZ_ASSERT(!aDest);
+  aSrc.CopyTo(aDest);
+  ServerCallData::DestructorType* destructor =
+    [](void* aObj) {
+      LPINTERNET_BUFFERSA inetBuf = static_cast<LPINTERNET_BUFFERSA>(aObj);
+      IPCInternetBuffers::FreeBuffers(inetBuf);
+      FreeDestructor(inetBuf);
+    };
+  aScd->PostDestructor(aDest, destructor);
 }
 
 #endif // defined(XP_WIN)
