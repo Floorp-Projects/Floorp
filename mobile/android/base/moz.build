@@ -818,7 +818,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'preferences/SetHomepagePreference.java',
     'preferences/SyncPreference.java',
     'preferences/TopSitesPanelsPreference.java',
-    'PresentationView.java',
     'PrintHelper.java',
     'PrivateTab.java',
     'promotion/AddToHomeScreenPromotion.java',
