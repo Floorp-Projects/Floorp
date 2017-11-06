@@ -343,8 +343,6 @@ public class GeckoSession implements Parcelable {
 
     protected Window mWindow;
     private GeckoViewSettings mSettings;
-    private String mChromeUri;
-    private int mScreenId = 0; // default to the primary screen
 
     public GeckoSession() {
         this(/* settings */ null);
@@ -352,9 +350,9 @@ public class GeckoSession implements Parcelable {
 
     public GeckoSession(final GeckoViewSettings settings) {
         if (settings == null) {
-            mSettings = new GeckoViewSettings(mEventDispatcher);
+            mSettings = new GeckoViewSettings(this);
         } else {
-            mSettings = new GeckoViewSettings(settings, mEventDispatcher);
+            mSettings = new GeckoViewSettings(settings, this);
         }
 
         mListener.registerListeners();
@@ -364,12 +362,10 @@ public class GeckoSession implements Parcelable {
         if (isOpen()) {
             throw new IllegalStateException("Session is open");
         }
-        mWindow = session.mWindow;
-        session.mWindow = null;
 
-        mSettings = new GeckoViewSettings(session.mSettings, getEventDispatcher());
-        mChromeUri = session.mChromeUri;
-        mScreenId = session.mScreenId;
+        mWindow = session.mWindow;
+        mSettings = new GeckoViewSettings(session.mSettings, this);
+        session.mWindow = null;
     }
 
     @Override // Parcelable
@@ -381,8 +377,6 @@ public class GeckoSession implements Parcelable {
     public void writeToParcel(Parcel out, int flags) {
         out.writeStrongInterface(mWindow);
         out.writeParcelable(mSettings, flags);
-        out.writeString(mChromeUri);
-        out.writeInt(mScreenId);
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -402,10 +396,7 @@ public class GeckoSession implements Parcelable {
 
         final GeckoViewSettings settings =
                 source.readParcelable(getClass().getClassLoader());
-        mSettings = new GeckoViewSettings(settings, getEventDispatcher());
-
-        mChromeUri = source.readString();
-        mScreenId = source.readInt();
+        mSettings = new GeckoViewSettings(settings, this);
     }
 
     public static final Creator<GeckoSession> CREATOR = new Creator<GeckoSession>() {
@@ -452,41 +443,6 @@ public class GeckoSession implements Parcelable {
         }
     }
 
-    /**
-     * Return the URI of the underlying chrome window opened or to be opened, or null if
-     * using the default GeckoSession URI.
-     *
-     * @return Current chrome URI or null.
-     */
-    public String getChromeUri() {
-        return mChromeUri;
-    }
-
-    /**
-     * Set the URI of the underlying chrome window to be opened, or null to use the
-     * default GeckoSession URI. Can only be called before the chrome window is opened during
-     * {@link #onAttachedToWindow}.
-     *
-     * @param uri New chrome URI or null.
-     */
-    public void setChromeUri(final String uri) {
-        if (isOpen()) {
-            throw new IllegalStateException("Session is open");
-        }
-        mChromeUri = uri;
-    }
-
-    public int getScreenId() {
-        return mScreenId;
-    }
-
-    public void setScreenId(final int id) {
-        if (isOpen()) {
-            throw new IllegalStateException("Session is open");
-        }
-        mScreenId = id;
-    }
-
     public boolean isOpen() {
         return mWindow != null;
     }
@@ -502,17 +458,20 @@ public class GeckoSession implements Parcelable {
             preload(appContext, /* geckoArgs */ null, multiprocess);
         }
 
-        if (mSettings.getString(GeckoViewSettings.DEBUGGER_SOCKET_DIR) == null) {
-            mSettings.setString(GeckoViewSettings.DEBUGGER_SOCKET_DIR,
+        if (mSettings.getString(GeckoViewSettings.DATA_DIR) == null) {
+            mSettings.setString(GeckoViewSettings.DATA_DIR,
                                 appContext.getApplicationInfo().dataDir);
         }
+
+        final String chromeUri = mSettings.getString(GeckoViewSettings.CHROME_URI);
+        final int screenId = mSettings.getInt(GeckoViewSettings.SCREEN_ID);
+        final boolean isPrivate = mSettings.getBoolean(GeckoViewSettings.USE_PRIVATE_MODE);
 
         mWindow = new Window(mNativeQueue);
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(mWindow, mEventDispatcher, mSettings.asBundle(),
-                        mChromeUri, mScreenId,
-                        mSettings.getBoolean(GeckoViewSettings.USE_PRIVATE_MODE));
+                        chromeUri, screenId, isPrivate);
         } else {
             GeckoThread.queueNativeCallUntil(
                 GeckoThread.State.PROFILE_READY,
@@ -520,8 +479,8 @@ public class GeckoSession implements Parcelable {
                 Window.class, mWindow,
                 EventDispatcher.class, mEventDispatcher,
                 GeckoBundle.class, mSettings.asBundle(),
-                String.class, mChromeUri,
-                mScreenId, mSettings.getBoolean(GeckoViewSettings.USE_PRIVATE_MODE));
+                String.class, chromeUri,
+                screenId, isPrivate);
         }
     }
 
