@@ -49,6 +49,14 @@ PaintedLayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion)
 {
   mRenderRegion = Move(aRegion);
 
+  LayerIntRect bounds(mRenderRegion.GetBounds().TopLeft(),
+                      ViewAs<LayerPixel>(mTexture->GetSize()));
+  mRenderRegion.AndWith(bounds);
+}
+
+const LayerIntRegion&
+PaintedLayerMLGPU::GetDrawRects()
+{
 #ifndef MOZ_IGNORE_PAINT_WILL_RESAMPLE
   // Note: we don't set PaintWillResample on our ContentTextureHost. The old
   // compositor must do this since ContentHost is responsible for issuing
@@ -58,13 +66,11 @@ PaintedLayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion)
   // behavior), we might break up the visible region again. If that turns
   // out to be a problem, we can factor this into ForEachDrawRect instead.
   if (MayResample()) {
-    mRenderRegion = mRenderRegion.GetBounds();
+    mDrawRects = mRenderRegion.GetBounds();
+    return mDrawRects;
   }
 #endif
-
-  LayerIntRect bounds(mRenderRegion.GetBounds().TopLeft(),
-                      ViewAs<LayerPixel>(mTexture->GetSize()));
-  mRenderRegion.AndWith(bounds);
+  return mRenderRegion;
 }
 
 bool
