@@ -6,7 +6,7 @@
 /* exported WCUL10n, openNewTabAndConsole, waitForMessages, waitForMessage, waitFor,
    findMessage, openContextMenu, hideContextMenu, loadDocument, hasFocus,
    waitForNodeMutation, testOpenInDebugger, checkClickOnNode, jstermSetValueAndComplete,
-   openDebugger */
+   openDebugger, openConsole */
 
 "use strict";
 
@@ -349,3 +349,18 @@ async function openDebugger(options = {}) {
   await panel.panelWin.DebuggerController.waitForSourcesLoaded();
   return {target, toolbox, panel};
 }
+
+/**
+ * Open the Web Console for the given tab, or the current one if none given.
+ *
+ * @param nsIDOMElement tab
+ *        Optional tab element for which you want open the Web Console.
+ *        Defaults to current selected tab.
+ * @return Promise
+ *         A promise that is resolved with the console hud once the web console is open.
+ */
+async function openConsole(tab) {
+  let target = TargetFactory.forTab(tab || gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target, "webconsole");
+  return toolbox.getCurrentPanel().hud;
+};
