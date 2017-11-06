@@ -43,6 +43,7 @@
 #include "mozilla/plugins/PluginSurfaceParent.h"
 #include "mozilla/widget/AudioSession.h"
 #include "PluginHangUIParent.h"
+#include "FunctionBrokerParent.h"
 #include "PluginUtilsWin.h"
 #endif
 
@@ -486,6 +487,23 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
         parent->mShutdown = true;
         return nullptr;
     }
+
+#if defined(XP_WIN)
+    Endpoint<PFunctionBrokerParent> brokerParentEnd;
+    Endpoint<PFunctionBrokerChild> brokerChildEnd;
+    rv = PFunctionBroker::CreateEndpoints(base::GetCurrentProcId(), parent->OtherPid(),
+                                        &brokerParentEnd, &brokerChildEnd);
+    if (NS_FAILED(rv)) {
+        parent->mShutdown = true;
+        return nullptr;
+    }
+
+    parent->mBrokerParent =
+      FunctionBrokerParent::Create(Move(brokerParentEnd));
+    if (parent->mBrokerParent) {
+      parent->SendInitPluginFunctionBroker(Move(brokerChildEnd));
+    }
+#endif
     return parent.forget();
 }
 
@@ -622,6 +640,7 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
     , mHangUIParent(nullptr)
     , mHangUIEnabled(true)
     , mIsTimerReset(true)
+    , mBrokerParent(nullptr)
 #endif
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     , mFlashProcess1(0)
@@ -1595,6 +1614,13 @@ PluginModuleChromeParent::ActorDestroy(ActorDestroyReason why)
 
     // We can't broadcast settings changes anymore.
     UnregisterSettingsCallbacks();
+
+#if defined(XP_WIN)
+    if (mBrokerParent) {
+        FunctionBrokerParent::Destroy(mBrokerParent);
+        mBrokerParent = nullptr;
+    }
+#endif
 
     PluginModuleParent::ActorDestroy(why);
 }

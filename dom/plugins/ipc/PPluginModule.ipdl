@@ -7,6 +7,7 @@ include protocol PPluginInstance;
 include protocol PPluginScriptableObject;
 include protocol PContent;
 include protocol PProfiler;
+include protocol PFunctionBroker;
 
 using NPError from "npapi.h";
 using NPNVariable from "npapi.h";
@@ -97,6 +98,8 @@ child:
   async NPP_SetValue_NPNVaudioDeviceChangeDetails(NPAudioDeviceChangeDetailsIPC changeDetails);
 
   async InitPluginModuleChild(Endpoint<PPluginModuleChild> endpoint);
+
+  async InitPluginFunctionBroker(Endpoint<PFunctionBrokerChild> endpoint);
 
 parent:
   /**
