@@ -6,27 +6,28 @@
  * Checks that we don't encodeURI twice when creating bookmarks.html.
  */
 add_task(async function() {
-  let uri = NetUtil.newURI("http://bt.ktxp.com/search.php?keyword=%E5%A6%84%E6%83%B3%E5%AD%A6%E7%94%9F%E4%BC%9A");
-  let bm = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                                uri,
-                                                PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                                "bookmark");
+  let url = "http://bt.ktxp.com/search.php?keyword=%E5%A6%84%E6%83%B3%E5%AD%A6%E7%94%9F%E4%BC%9A";
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "bookmark",
+    url,
+  });
 
-  let file =  OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.exported.997030.html");
+  let file = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.exported.997030.html");
   if ((await OS.File.exists(file))) {
     await OS.File.remove(file);
   }
   await BookmarkHTMLUtils.exportToFile(file);
 
   // Remove the bookmarks, then restore the backup.
-  PlacesUtils.bookmarks.removeItem(bm);
+  await PlacesUtils.bookmarks.remove(bm);
   await BookmarkHTMLUtils.importFromFile(file, true);
 
   do_print("Checking first level");
   let root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
   let node = root.getChild(0);
-  do_check_eq(node.uri, uri.spec);
+  do_check_eq(node.uri, url);
 
   root.containerOpen = false;
-  PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+  await PlacesUtils.bookmarks.eraseEverything();
 });
