@@ -395,10 +395,10 @@ async function onHistoryReady() {
   // should not wait for a download removal notification.
   if (minutesSinceMidnight > 250) {
     downloadPromise = promiseDownloadRemoved(publicList);
+    formHistoryPromise = promiseFormHistoryRemoved();
   } else {
-    downloadPromise = Promise.resolve();
+    downloadPromise = formHistoryPromise = Promise.resolve();
   }
-  formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear Today
   Sanitizer.prefs.setIntPref("timeSpan", 4);
