@@ -1841,7 +1841,8 @@ ICSetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
 
 static bool
 TryAttachFunApplyStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsbytecode* pc,
-                      HandleValue thisv, uint32_t argc, Value* argv, bool* attached)
+                      HandleValue thisv, uint32_t argc, Value* argv,
+                      ICTypeMonitor_Fallback* typeMonitorFallback, bool* attached)
 {
     if (argc != 2)
         return true;
@@ -1858,7 +1859,7 @@ TryAttachFunApplyStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script,
             JitSpew(JitSpew_BaselineIC, "  Generating Call_ScriptedApplyArguments stub");
 
             ICCall_ScriptedApplyArguments::Compiler compiler(
-                cx, stub->fallbackMonitorStub()->firstMonitorStub(), script->pcToOffset(pc));
+                cx, typeMonitorFallback->firstMonitorStub(), script->pcToOffset(pc));
             ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
             if (!newStub)
                 return false;
@@ -1876,7 +1877,7 @@ TryAttachFunApplyStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script,
             JitSpew(JitSpew_BaselineIC, "  Generating Call_ScriptedApplyArray stub");
 
             ICCall_ScriptedApplyArray::Compiler compiler(
-                cx, stub->fallbackMonitorStub()->firstMonitorStub(), script->pcToOffset(pc));
+                cx, typeMonitorFallback->firstMonitorStub(), script->pcToOffset(pc));
             ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
             if (!newStub)
                 return false;
@@ -1891,7 +1892,8 @@ TryAttachFunApplyStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script,
 
 static bool
 TryAttachFunCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsbytecode* pc,
-                     HandleValue thisv, bool* attached)
+                     HandleValue thisv, ICTypeMonitor_Fallback* typeMonitorFallback,
+                     bool* attached)
 {
     // Try to attach a stub for Function.prototype.call with scripted |this|.
 
@@ -1908,7 +1910,7 @@ TryAttachFunCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, 
     {
         JitSpew(JitSpew_BaselineIC, "  Generating Call_ScriptedFunCall stub");
 
-        ICCall_ScriptedFunCall::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+        ICCall_ScriptedFunCall::Compiler compiler(cx, typeMonitorFallback->firstMonitorStub(),
                                                   script->pcToOffset(pc));
         ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
@@ -2155,6 +2157,10 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
     if (!callee.isObject())
         return true;
 
+    ICTypeMonitor_Fallback* typeMonitorFallback = stub->getFallbackMonitorStub(cx, script);
+    if (!typeMonitorFallback)
+        return false;
+
     RootedObject obj(cx, &callee.toObject());
     if (!obj->is<JSFunction>()) {
         // Try to attach a stub for a call/construct hook on the object.
@@ -2169,7 +2175,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                     return false;
 
                 JitSpew(JitSpew_BaselineIC, "  Generating Call_ClassHook stub");
-                ICCall_ClassHook::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+                ICCall_ClassHook::Compiler compiler(cx, typeMonitorFallback->firstMonitorStub(),
                                                     obj->getClass(), hook, templateObject,
                                                     script->pcToOffset(pc), constructing);
                 ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
@@ -2217,7 +2223,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
             // Create a Call_AnyScripted stub.
             JitSpew(JitSpew_BaselineIC, "  Generating Call_AnyScripted stub (cons=%s, spread=%s)",
                     constructing ? "yes" : "no", isSpread ? "yes" : "no");
-            ICCallScriptedCompiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+            ICCallScriptedCompiler compiler(cx, typeMonitorFallback->firstMonitorStub(),
                                             constructing, isSpread, script->pcToOffset(pc));
             ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
             if (!newStub)
@@ -2286,7 +2292,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                 "  Generating Call_Scripted stub (fun=%p, %s:%zu, cons=%s, spread=%s)",
                 fun.get(), fun->nonLazyScript()->filename(), fun->nonLazyScript()->lineno(),
                 constructing ? "yes" : "no", isSpread ? "yes" : "no");
-        ICCallScriptedCompiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+        ICCallScriptedCompiler compiler(cx, typeMonitorFallback->firstMonitorStub(),
                                         fun, templateObject,
                                         constructing, isSpread, script->pcToOffset(pc));
         ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
@@ -2304,8 +2310,10 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
 
         // Check for JSOP_FUNAPPLY
         if (op == JSOP_FUNAPPLY) {
-            if (fun->native() == fun_apply)
-                return TryAttachFunApplyStub(cx, stub, script, pc, thisv, argc, vp + 2, handled);
+            if (fun->native() == fun_apply) {
+                return TryAttachFunApplyStub(cx, stub, script, pc, thisv, argc, vp + 2,
+                                             typeMonitorFallback, handled);
+            }
 
             // Don't try to attach a "regular" optimized call stubs for FUNAPPLY ops,
             // since MagicArguments may escape through them.
@@ -2313,7 +2321,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
         }
 
         if (op == JSOP_FUNCALL && fun->native() == fun_call) {
-            if (!TryAttachFunCallStub(cx, stub, script, pc, thisv, handled))
+            if (!TryAttachFunCallStub(cx, stub, script, pc, thisv, typeMonitorFallback, handled))
                 return false;
             if (*handled)
                 return true;
@@ -2362,7 +2370,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
 
         JitSpew(JitSpew_BaselineIC, "  Generating Call_Native stub (fun=%p, cons=%s, spread=%s)",
                 fun.get(), constructing ? "yes" : "no", isSpread ? "yes" : "no");
-        ICCall_Native::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+        ICCall_Native::Compiler compiler(cx, typeMonitorFallback->firstMonitorStub(),
                                          fun, templateObject, constructing, ignoresReturnValue,
                                          isSpread, script->pcToOffset(pc));
         ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
@@ -2430,7 +2438,11 @@ TryAttachConstStringSplit(JSContext* cx, ICCall_Fallback* stub, HandleScript scr
         arrObj->setDenseElementWithType(cx, i, StringValue(str));
     }
 
-    ICCall_ConstStringSplit::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+    ICTypeMonitor_Fallback* typeMonitorFallback = stub->getFallbackMonitorStub(cx, script);
+    if (!typeMonitorFallback)
+        return false;
+
+    ICCall_ConstStringSplit::Compiler compiler(cx, typeMonitorFallback->firstMonitorStub(),
                                                script->pcToOffset(pc), str, sep, arrObj);
     ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
     if (!newStub)
@@ -3027,7 +3039,9 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     // At this point, ICStubReg points to the ICCall_Fallback stub, which is NOT
     // a MonitoredStub, but rather a MonitoredFallbackStub.  To use EmitEnterTypeMonitorIC,
     // first load the ICTypeMonitor_Fallback stub into ICStubReg.  Then, use
-    // EmitEnterTypeMonitorIC with a custom struct offset.
+    // EmitEnterTypeMonitorIC with a custom struct offset. Note that we must
+    // have a non-null fallbackMonitorStub here because InitFromBailout
+    // delazifies.
     masm.loadPtr(Address(ICStubReg, ICMonitoredFallbackStub::offsetOfFallbackMonitorStub()),
                  ICStubReg);
     EmitEnterTypeMonitorIC(masm, ICTypeMonitor_Fallback::offsetOfFirstMonitorStub());
