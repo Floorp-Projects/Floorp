@@ -3541,7 +3541,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
        disp->mIsolation != NS_STYLE_ISOLATION_AUTO ||
        (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_STACKING_CONTEXT) ||
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
-    // If you change this, also change IsPseudoStackingContextFromStyle()
     pseudoStackingContext = true;
     awayFromCommonPath = true;
   }
@@ -10862,19 +10861,6 @@ nsIFrame::DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable)
     iter.UserData()->RemoveFromTable();
   }
   delete aTable;
-}
-
-bool
-nsIFrame::IsPseudoStackingContextFromStyle() {
-  // If you change this, also change the computation of pseudoStackingContext
-  // in BuildDisplayListForChild()
-  if (StyleEffects()->mOpacity != 1.0f) {
-    return true;
-  }
-  const nsStyleDisplay* disp = StyleDisplay();
-  return disp->IsAbsPosContainingBlock(this) ||
-         disp->IsFloating(this) ||
-         (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_STACKING_CONTEXT);
 }
 
 bool

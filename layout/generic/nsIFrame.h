@@ -3488,14 +3488,6 @@ public:
   virtual bool IsVisibleInSelection(nsISelection* aSelection);
 
   /**
-   * Determines whether this frame is a pseudo stacking context, looking
-   * only as style --- i.e., assuming that it's in-flow and not a replaced
-   * element and not an SVG element.
-   * XXX maybe check IsTransformed()?
-   */
-  bool IsPseudoStackingContextFromStyle();
-
-  /**
    * Determines if this frame has a container effect that requires
    * it to paint as a visually atomic unit.
    */
