@@ -60,64 +60,8 @@ xhtml|link {
   -moz-user-select: element;
 }
 
-setting, row[unsupported="true"] {
+row[unsupported="true"] {
   display: none;
-}
-
-setting[type="bool"] {
-  display: -moz-grid-line;
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-bool");
-}
-
-setting[type="bool"][localized="true"] {
-  display: -moz-grid-line;
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-localized-bool");
-}
-
-setting[type="bool"]:not([learnmore]) .preferences-learnmore,
-setting[type="boolint"]:not([learnmore]) .preferences-learnmore {
-  visibility: collapse;
-}
-
-setting[type="boolint"] {
-  display: -moz-grid-line;
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-boolint");
-}
-
-setting[type="integer"] {
-  display: -moz-grid-line;
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-integer");
-}
-
-setting[type="integer"]:not([size]) textbox {
-  -moz-box-flex: 1;
-}
-
-setting[type="control"] {
-  display: -moz-grid-line;
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-control");
-}
-
-setting[type="string"] {
-  display: -moz-grid-line;
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-string");
-}
-
-setting[type="color"] {
-  display: -moz-grid-line;
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-color");
-}
-
-setting[type="file"],
-setting[type="directory"] {
-  display: -moz-grid-line;
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-path");
-}
-
-setting[type="radio"],
-setting[type="menulist"] {
-  display: -moz-grid-line;
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-multi");
 }
 
 #addonitem-popup > menuitem[disabled="true"] {

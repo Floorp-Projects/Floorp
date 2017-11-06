@@ -1010,7 +1010,7 @@ add_test(function() {
 
     is_element_hidden(get("detail-downloads"), "Downloads should be hidden");
 
-    is_element_visible(get("detail-prefs-btn"), "Preferences button should be visible");
+    is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
     is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
     is_element_visible(get("detail-disable-btn"), "Disable button should be visible");
     is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
