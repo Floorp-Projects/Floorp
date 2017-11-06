@@ -429,6 +429,8 @@ public:
   virtual const char* Name() override { return "SurfaceTextureHost"; }
 
 protected:
+  bool EnsureAttached();
+
   mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
   const gfx::IntSize mSize;
   const gfx::SurfaceFormat mFormat;

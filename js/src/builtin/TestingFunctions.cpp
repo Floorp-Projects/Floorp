@@ -2776,8 +2776,11 @@ class CloneBufferObject : public NativeObject {
         }
 
         auto buf = js::MakeUnique<JSStructuredCloneData>(0, 0, nbytes);
-        if (!buf->Init(nbytes, nbytes))
+        if (!buf || !buf->Init(nbytes, nbytes)) {
+            ReportOutOfMemory(cx);
             return false;
+        }
+
         js_memcpy(buf->Start(), data, nbytes);
         obj->discard();
         obj->setData(buf.release(), true);
