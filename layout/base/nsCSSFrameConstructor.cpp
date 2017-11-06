@@ -7478,30 +7478,11 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
   }
 
   if (insertionPoint.mMultiple || aStartChild->GetXBLInsertionPoint()) {
-    // We have an insertion point.  There are some additional tests we need to do
-    // in order to ensure that an append is a safe operation.
-    uint32_t childCount = 0;
-
-    if (!insertionPoint.mMultiple) {
-      // We may need to make multiple ContentInserted calls instead.  A
-      // reasonable heuristic to employ (in order to maintain good performance)
-      // is to find out if the insertion point's content node contains any
-      // explicit children.  If it does not, then it is highly likely that
-      // an append is occurring.  (Note it is not definite, and there are insane
-      // cases we will not deal with by employing this heuristic, but it beats
-      // always falling back to multiple ContentInserted calls).
-      //
-      // In the multiple insertion point case, we know we're going to need to do
-      // multiple ContentInserted calls anyway.
-      // XXXndeakin This test doesn't work in the new world. Or rather, it works, but
-      // it's slow
-      childCount = insertionPoint.mParentFrame->GetContent()->GetChildCount();
-    }
-
     // If we have multiple insertion points or if we have an insertion point
     // and the operation is not a true append or if the insertion point already
     // has explicit children, then we must fall back.
-    if (insertionPoint.mMultiple || aEndChild != nullptr || childCount > 0) {
+    if (insertionPoint.mMultiple || aEndChild ||
+        insertionPoint.mParentFrame->GetContent()->HasChildren()) {
       // Now comes the fun part.  For each inserted child, make a
       // ContentInserted call as if it had just gotten inserted and
       // let ContentInserted handle the mess.
