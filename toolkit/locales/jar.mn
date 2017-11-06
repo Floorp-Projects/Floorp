@@ -70,8 +70,6 @@
   locale/@AB_CD@/global/notification.dtd                (%chrome/global/notification.dtd)
   locale/@AB_CD@/global/preferences.dtd                 (%chrome/global/preferences.dtd)
 #ifndef MOZ_FENNEC
-  locale/@AB_CD@/global/printdialog.dtd                 (%chrome/global/printdialog.dtd)
-  locale/@AB_CD@/global/printjoboptions.dtd             (%chrome/global/printjoboptions.dtd)
   locale/@AB_CD@/global/printPageSetup.dtd              (%chrome/global/printPageSetup.dtd)
   locale/@AB_CD@/global/printPreview.dtd                (%chrome/global/printPreview.dtd)
   locale/@AB_CD@/global/printPreviewProgress.dtd        (%chrome/global/printPreviewProgress.dtd)
