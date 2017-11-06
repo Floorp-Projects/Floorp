@@ -84,7 +84,7 @@ void
 TouchEvent::InitTouchEvent(const nsAString& aType,
                            bool aCanBubble,
                            bool aCancelable,
-                           nsGlobalWindow* aView,
+                           nsGlobalWindowInner* aView,
                            int32_t aDetail,
                            bool aCtrlKey,
                            bool aAltKey,

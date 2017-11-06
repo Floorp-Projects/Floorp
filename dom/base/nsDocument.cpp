@@ -6378,7 +6378,7 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
 
   JS::Rooted<JSObject*> global(aCx,
     JS_GetGlobalForObject(aCx, &args.callee()));
-  RefPtr<nsGlobalWindow> window;
+  RefPtr<nsGlobalWindowInner> window;
   UNWRAP_OBJECT(Window, global, window);
   MOZ_ASSERT(window, "Should have a non-null window");
 
@@ -10886,7 +10886,7 @@ nsDocument::NotifyMediaFeatureValuesChanged()
 }
 
 already_AddRefed<Touch>
-nsIDocument::CreateTouch(nsGlobalWindow* aView,
+nsIDocument::CreateTouch(nsGlobalWindowInner* aView,
                          EventTarget* aTarget,
                          int32_t aIdentifier,
                          int32_t aPageX, int32_t aPageY,

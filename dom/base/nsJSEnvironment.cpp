@@ -520,8 +520,9 @@ JSObject2Win(JSObject *obj)
   return xpc::WindowOrNull(obj);
 }
 
+template<typename T>
 void
-PrintWinURI(nsGlobalWindow *win)
+PrintWinURI(T *win)
 {
   if (!win) {
     printf("No window passed in.\n");
@@ -544,7 +545,20 @@ PrintWinURI(nsGlobalWindow *win)
 }
 
 void
-PrintWinCodebase(nsGlobalWindow *win)
+PrintWinURIInner(nsGlobalWindowInner* aWin)
+{
+  return PrintWinURI(aWin);
+}
+
+void
+PrintWinURIOuter(nsGlobalWindowOuter* aWin)
+{
+  return PrintWinURI(aWin);
+}
+
+template<typename T>
+void
+PrintWinCodebase(T *win)
 {
   if (!win) {
     printf("No window passed in.\n");
@@ -565,6 +579,18 @@ PrintWinCodebase(nsGlobalWindow *win)
   }
 
   printf("%s\n", uri->GetSpecOrDefault().get());
+}
+
+void
+PrintWinCodebaseInner(nsGlobalWindowInner* aWin)
+{
+  return PrintWinCodebase(aWin);
+}
+
+void
+PrintWinCodebaseOuter(nsGlobalWindowOuter* aWin)
+{
+  return PrintWinCodebase(aWin);
 }
 
 void

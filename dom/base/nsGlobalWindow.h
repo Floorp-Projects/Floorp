@@ -790,8 +790,8 @@ public:
   static JSObject*
     CreateNamedPropertiesObject(JSContext *aCx, JS::Handle<JSObject*> aProto);
 
-  nsGlobalWindow* Window();
-  nsGlobalWindow* Self();
+  nsGlobalWindowInner* Window();
+  nsGlobalWindowInner* Self();
   nsIDocument* GetDocument()
   {
     return GetDoc();
