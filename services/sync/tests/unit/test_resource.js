@@ -129,7 +129,7 @@ function server_quota_error(request, response) {
 function server_headers(metadata, response) {
   let ignore_headers = ["host", "user-agent", "accept", "accept-language",
                         "accept-encoding", "accept-charset", "keep-alive",
-                        "connection", "pragma", "cache-control",
+                        "connection", "pragma", "origin", "cache-control",
                         "content-length"];
   let headers = metadata.headers;
   let header_names = [];
@@ -249,9 +249,6 @@ add_test(function test_members() {
   do_check_eq(res.spec, uri);
   do_check_eq(typeof res.headers, "object");
   do_check_eq(typeof res.authenticator, "object");
-  // Initially res.data is null since we haven't performed a GET or
-  // PUT/POST request yet.
-  do_check_eq(res.data, null);
 
   run_next_test();
 });
@@ -263,8 +260,6 @@ add_task(async function test_get() {
   do_check_eq(content, "This path exists");
   do_check_eq(content.status, 200);
   do_check_true(content.success);
-  // res.data has been updated with the result from the request
-  do_check_eq(res.data, content);
 
   // Observe logging messages.
   let resLogger = res._log;
@@ -344,7 +339,6 @@ add_task(async function test_put_string() {
   let content = await res_upload.put(JSON.stringify(sample_data));
   do_check_eq(content, "Valid data upload via PUT");
   do_check_eq(content.status, 200);
-  do_check_eq(res_upload.data, content);
 });
 
 add_task(async function test_put_object() {
@@ -353,27 +347,6 @@ add_task(async function test_put_object() {
   let content = await res_upload.put(sample_data);
   do_check_eq(content, "Valid data upload via PUT");
   do_check_eq(content.status, 200);
-  do_check_eq(res_upload.data, content);
-});
-
-add_task(async function test_put_data_string() {
-  _("PUT without data arg (uses resource.data) (string)");
-  let res_upload = new Resource(server.baseURI + "/upload");
-  res_upload.data = JSON.stringify(sample_data);
-  let content = await res_upload.put();
-  do_check_eq(content, "Valid data upload via PUT");
-  do_check_eq(content.status, 200);
-  do_check_eq(res_upload.data, content);
-});
-
-add_task(async function test_put_data_object() {
-  _("PUT without data arg (uses resource.data) (object)");
-  let res_upload = new Resource(server.baseURI + "/upload");
-  res_upload.data = sample_data;
-  let content = await res_upload.put();
-  do_check_eq(content, "Valid data upload via PUT");
-  do_check_eq(content.status, 200);
-  do_check_eq(res_upload.data, content);
 });
 
 add_task(async function test_post_string() {
@@ -382,7 +355,6 @@ add_task(async function test_post_string() {
   let content = await res_upload.post(JSON.stringify(sample_data));
   do_check_eq(content, "Valid data upload via POST");
   do_check_eq(content.status, 200);
-  do_check_eq(res_upload.data, content);
 });
 
 add_task(async function test_post_object() {
@@ -391,27 +363,6 @@ add_task(async function test_post_object() {
   let content = await res_upload.post(sample_data);
   do_check_eq(content, "Valid data upload via POST");
   do_check_eq(content.status, 200);
-  do_check_eq(res_upload.data, content);
-});
-
-add_task(async function test_post_data_string() {
-  _("POST without data arg (uses resource.data) (string)");
-  let res_upload = new Resource(server.baseURI + "/upload");
-  res_upload.data = JSON.stringify(sample_data);
-  let content = await res_upload.post();
-  do_check_eq(content, "Valid data upload via POST");
-  do_check_eq(content.status, 200);
-  do_check_eq(res_upload.data, content);
-});
-
-add_task(async function test_post_data_object() {
-  _("POST without data arg (uses resource.data) (object)");
-  let res_upload = new Resource(server.baseURI + "/upload");
-  res_upload.data = sample_data;
-  let content = await res_upload.post();
-  do_check_eq(content, "Valid data upload via POST");
-  do_check_eq(content.status, 200);
-  do_check_eq(res_upload.data, content);
 });
 
 add_task(async function test_delete() {
@@ -483,14 +434,6 @@ add_task(async function test_setHeader_overwrite() {
                                        "x-what-is-weave": "more awesomer"}));
 });
 
-add_task(async function test_headers_object() {
-  _("Setting headers object");
-  let res_headers = new Resource(server.baseURI + "/headers");
-  res_headers.headers = {};
-  let content = await res_headers.get();
-  do_check_eq(content, "{}");
-});
-
 add_task(async function test_put_override_content_type() {
   _("PUT: override default Content-Type");
   let res_headers = new Resource(server.baseURI + "/headers");
@@ -537,57 +480,14 @@ add_task(async function test_quota_notice() {
 });
 
 add_task(async function test_preserve_exceptions() {
-  _("Error handling in ChannelListener etc. preserves exception information");
+  _("Error handling preserves exception information");
   let res11 = new Resource("http://localhost:12345/does/not/exist");
   await Assert.rejects(res11.get(), error => {
     do_check_neq(error, null);
     do_check_eq(error.result, Cr.NS_ERROR_CONNECTION_REFUSED);
-    do_check_eq(error.message, "NS_ERROR_CONNECTION_REFUSED");
+    do_check_eq(error.name, "NS_ERROR_CONNECTION_REFUSED");
     return true;
   });
-});
-
-add_task(async function test_xpc_exception_handling() {
-  _("Exception handling inside fetches.");
-  let res14 = new Resource(server.baseURI + "/json");
-  res14._onProgress = function(rec) {
-    // Provoke an XPC exception without a Javascript wrapper.
-    Services.io.newURI("::::::::");
-  };
-  let warnings = [];
-  res14._log.warn = function(msg) { warnings.push(msg); };
-
-  await Assert.rejects(res14.get(), error => {
-    do_check_eq(error.result, Cr.NS_ERROR_MALFORMED_URI);
-    do_check_eq(error.message, "NS_ERROR_MALFORMED_URI");
-    return true;
-  });
-  do_check_eq(warnings.pop(),
-              "${action} request to ${url} failed: ${ex}");
-  do_check_eq(warnings.pop(),
-              "Got exception calling onProgress handler during fetch of " +
-              server.baseURI + "/json");
-});
-
-add_task(async function test_js_exception_handling() {
-  _("JS exception handling inside fetches.");
-  let res15 = new Resource(server.baseURI + "/json");
-  res15._onProgress = function(rec) {
-    throw new Error("BOO!");
-  };
-  let warnings = [];
-  res15._log.warn = function(msg) { warnings.push(msg); };
-
-  await Assert.rejects(res15.get(), error => {
-    do_check_eq(error.result, Cr.NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS);
-    do_check_eq(error.message, "NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS");
-    return true;
-  });
-  do_check_eq(warnings.pop(),
-              "${action} request to ${url} failed: ${ex}");
-  do_check_eq(warnings.pop(),
-              "Got exception calling onProgress handler during fetch of " +
-              server.baseURI + "/json");
 });
 
 add_task(async function test_timeout() {
