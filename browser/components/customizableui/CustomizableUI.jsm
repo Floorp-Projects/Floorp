@@ -2769,6 +2769,10 @@ var CustomizableUIInternal = {
     if (typeof aWidget == "string") {
       widgetId = aWidget;
     } else {
+      // Skipped items could just not have ids.
+      if (!aWidget.id && aWidget.getAttribute("skipintoolbarset") == "true") {
+        return false;
+      }
       if (!aWidget.id &&
           !["toolbarspring", "toolbarspacer", "toolbarseparator"].includes(aWidget.nodeName)) {
         throw new Error("No nodes without ids that aren't special widgets should ever come into contact with CUI");
