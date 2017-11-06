@@ -1846,11 +1846,10 @@ public:
         typedef GeckoEditable Owner;
         typedef GeckoEditable::LocalRef ReturnType;
         typedef GeckoEditable::Param SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param> Args;
+        typedef mozilla::jni::Args<> Args;
         static constexpr char name[] = "<init>";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView;)V";
+                "()V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -1860,7 +1859,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto New(mozilla::jni::Object::Param) -> GeckoEditable::LocalRef;
+    static auto New() -> GeckoEditable::LocalRef;
 
     struct OnViewChange_t {
         typedef GeckoEditable Owner;
@@ -2900,6 +2899,26 @@ public:
 
     explicit Window(const Context& ctx) : ObjectBase<Window>(ctx) {}
 
+    struct Attach_t {
+        typedef Window Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                GeckoView::Param,
+                mozilla::jni::Object::Param,
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "attach";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoView;Ljava/lang/Object;Lorg/mozilla/gecko/EventDispatcher;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::PROXY;
+    };
+
     struct Close_t {
         typedef Window Owner;
         typedef void ReturnType;
@@ -2934,13 +2953,13 @@ public:
                 mozilla::jni::DispatchTarget::PROXY;
     };
 
-    struct OnReattach_t {
+    struct OnAttach_t {
         typedef Window Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 GeckoView::Param> Args;
-        static constexpr char name[] = "onReattach";
+        static constexpr char name[] = "onAttach";
         static constexpr char signature[] =
                 "(Lorg/mozilla/gecko/GeckoView;)V";
         static const bool isStatic = false;
@@ -2952,7 +2971,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    auto OnReattach(GeckoView::Param) const -> void;
+    auto OnAttach(GeckoView::Param) const -> void;
 
     struct Open_t {
         typedef Window Owner;
@@ -2960,37 +2979,15 @@ public:
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 Window::Param,
-                GeckoView::Param,
                 mozilla::jni::Object::Param,
                 mozilla::jni::Object::Param,
                 mozilla::jni::String::Param,
-                mozilla::jni::Object::Param,
                 int32_t,
                 bool> Args;
         static constexpr char name[] = "open";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;Ljava/lang/Object;Lorg/mozilla/gecko/EventDispatcher;Ljava/lang/String;Lorg/mozilla/gecko/util/GeckoBundle;IZ)V";
+                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/EventDispatcher;Lorg/mozilla/gecko/util/GeckoBundle;Ljava/lang/String;IZ)V";
         static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::PROXY;
-    };
-
-    struct Reattach_t {
-        typedef Window Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                GeckoView::Param,
-                mozilla::jni::Object::Param,
-                mozilla::jni::Object::Param> Args;
-        static constexpr char name[] = "reattach";
-        static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView;Ljava/lang/Object;Lorg/mozilla/gecko/EventDispatcher;)V";
-        static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
         static const mozilla::jni::CallingThread callingThread =

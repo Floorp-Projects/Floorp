@@ -279,10 +279,9 @@ public:
     // Create and attach a window.
     static void Open(const jni::Class::LocalRef& aCls,
                      GeckoView::Window::Param aWindow,
-                     GeckoView::Param aView, jni::Object::Param aCompositor,
                      jni::Object::Param aDispatcher,
-                     jni::String::Param aChromeURI,
                      jni::Object::Param aSettings,
+                     jni::String::Param aChromeURI,
                      int32_t aScreenId,
                      bool aPrivateMode);
 
@@ -290,9 +289,9 @@ public:
     void Close();
 
     // Reattach this nsWindow to a new GeckoView.
-    void Reattach(const GeckoView::Window::LocalRef& inst,
-                  GeckoView::Param aView, jni::Object::Param aCompositor,
-                  jni::Object::Param aDispatcher);
+    void Attach(const GeckoView::Window::LocalRef& inst,
+                GeckoView::Param aView, jni::Object::Param aCompositor,
+                jni::Object::Param aDispatcher);
 
     void EnableEventDispatcher();
 };
@@ -1263,11 +1262,9 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport()
 /* static */ void
 nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  GeckoView::Window::Param aWindow,
-                                 GeckoView::Param aView,
-                                 jni::Object::Param aCompositor,
                                  jni::Object::Param aDispatcher,
-                                 jni::String::Param aChromeURI,
                                  jni::Object::Param aSettings,
+                                 jni::String::Param aChromeURI,
                                  int32_t aScreenId,
                                  bool aPrivateMode)
 {
@@ -1319,16 +1316,11 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     window->mGeckoViewSupport->mDOMWindow = pdomWindow;
 
     // Attach a new GeckoEditable support object to the new window.
-    auto editable = GeckoEditable::New(aView);
+    auto editable = GeckoEditable::New();
     auto editableChild = GeckoEditableChild::New(editable);
     editable->SetDefaultEditableChild(editableChild);
     window->mEditable = editable;
     window->mEditableSupport.Attach(editableChild, window, editableChild);
-
-    // Attach the Compositor to the new window.
-    auto compositor = LayerView::Compositor::LocalRef(
-            aCls.Env(), LayerView::Compositor::Ref::From(aCompositor));
-    window->mLayerViewSupport.Attach(compositor, window, compositor);
 
     // Attach again using the new window.
     androidView->mEventDispatcher->Attach(
@@ -1363,10 +1355,10 @@ nsWindow::GeckoViewSupport::Close()
 }
 
 void
-nsWindow::GeckoViewSupport::Reattach(const GeckoView::Window::LocalRef& inst,
-                                     GeckoView::Param aView,
-                                     jni::Object::Param aCompositor,
-                                     jni::Object::Param aDispatcher)
+nsWindow::GeckoViewSupport::Attach(const GeckoView::Window::LocalRef& inst,
+                                   GeckoView::Param aView,
+                                   jni::Object::Param aCompositor,
+                                   jni::Object::Param aDispatcher)
 {
     // Associate our previous GeckoEditable with the new GeckoView.
     MOZ_ASSERT(window.mEditable);
@@ -1378,8 +1370,9 @@ nsWindow::GeckoViewSupport::Reattach(const GeckoView::Window::LocalRef& inst,
         window.mNPZCSupport.Detach();
     }
 
-    MOZ_ASSERT(window.mLayerViewSupport);
-    window.mLayerViewSupport.Detach();
+    if (window.mLayerViewSupport) {
+        window.mLayerViewSupport.Detach();
+    }
 
     auto compositor = LayerView::Compositor::LocalRef(
             inst.Env(), LayerView::Compositor::Ref::From(aCompositor));
@@ -1390,7 +1383,7 @@ nsWindow::GeckoViewSupport::Reattach(const GeckoView::Window::LocalRef& inst,
     window.mAndroidView->mEventDispatcher->Attach(
             java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
 
-    mGeckoViewWindow->OnReattach(aView);
+    mGeckoViewWindow->OnAttach(aView);
 }
 
 void

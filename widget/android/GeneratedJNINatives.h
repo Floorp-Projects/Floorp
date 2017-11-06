@@ -267,6 +267,10 @@ public:
 template<class Impl>
 const JNINativeMethod GeckoView::Window::Natives<Impl>::methods[] = {
 
+    mozilla::jni::MakeNativeMethod<GeckoView::Window::Attach_t>(
+            mozilla::jni::NativeStub<GeckoView::Window::Attach_t, Impl>
+            ::template Wrap<&Impl::Attach>),
+
     mozilla::jni::MakeNativeMethod<GeckoView::Window::Close_t>(
             mozilla::jni::NativeStub<GeckoView::Window::Close_t, Impl>
             ::template Wrap<&Impl::Close>),
@@ -277,11 +281,7 @@ const JNINativeMethod GeckoView::Window::Natives<Impl>::methods[] = {
 
     mozilla::jni::MakeNativeMethod<GeckoView::Window::Open_t>(
             mozilla::jni::NativeStub<GeckoView::Window::Open_t, Impl>
-            ::template Wrap<&Impl::Open>),
-
-    mozilla::jni::MakeNativeMethod<GeckoView::Window::Reattach_t>(
-            mozilla::jni::NativeStub<GeckoView::Window::Reattach_t, Impl>
-            ::template Wrap<&Impl::Reattach>)
+            ::template Wrap<&Impl::Open>)
 };
 
 template<class Impl>
