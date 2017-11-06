@@ -470,7 +470,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 // Show browser UI and web content again
                 browserContainer.setVisibility(View.VISIBLE);
 
-                exitImmersiveMode();
+                exitImmersiveModeIfNeeded();
 
                 // Notify renderer that we left fullscreen mode.
                 if (fullscreenCallback != null) {
@@ -538,9 +538,14 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     /**
      * Show the system bars again.
      */
-    private void exitImmersiveMode() {
+    private void exitImmersiveModeIfNeeded() {
         final Activity activity = getActivity();
         if (activity == null) {
+            return;
+        }
+
+        if ((WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON & activity.getWindow().getAttributes().flags) == 0) {
+            // We left immersive mode already.
             return;
         }
 
@@ -549,6 +554,15 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         window.getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        // This fragment might get destroyed before the user left immersive mode (e.g. by opening another URL from an app).
+        // In this case let's leave immersive mode now when the fragment gets destroyed.
+        exitImmersiveModeIfNeeded();
     }
 
     @Override
