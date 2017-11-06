@@ -1423,15 +1423,18 @@ MediaDecoder::CanPlayThrough()
   return val;
 }
 
-RefPtr<SetCDMPromise>
+void
 MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return InvokeAsync<RefPtr<CDMProxy>>(mReader->OwnerThread(),
-                                       mReader.get(),
-                                       __func__,
-                                       &MediaFormatReader::SetCDMProxy,
-                                       aProxy);
+  RefPtr<CDMProxy> proxy = aProxy;
+  RefPtr<MediaFormatReader> reader = mReader;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaFormatReader::SetCDMProxy",
+    [reader, proxy]() {
+    reader->SetCDMProxy(proxy);
+    });
+  mReader->OwnerThread()->Dispatch(r.forget());
 }
 
 bool
@@ -1550,7 +1553,7 @@ MediaDecoder::GetDebugInfo()
     PlayStateStr());
 }
 
-void
+RefPtr<GenericPromise>
 MediaDecoder::DumpDebugInfo()
 {
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
@@ -1565,17 +1568,20 @@ MediaDecoder::DumpDebugInfo()
 
   if (!GetStateMachine()) {
     DUMP("%s", str.get());
-    return;
+    return GenericPromise::CreateAndResolve(true, __func__);
   }
 
-  GetStateMachine()->RequestDebugInfo()->Then(
-    SystemGroup::AbstractMainThreadFor(TaskCategory::Other), __func__,
-    [str] (const nsACString& aString) {
+  return GetStateMachine()->RequestDebugInfo()->Then(
+    SystemGroup::AbstractMainThreadFor(TaskCategory::Other),
+    __func__,
+    [str](const nsACString& aString) {
       DUMP("%s", str.get());
       DUMP("%s", aString.Data());
+      return GenericPromise::CreateAndResolve(true, __func__);
     },
-    [str] () {
+    [str]() {
       DUMP("%s", str.get());
+      return GenericPromise::CreateAndResolve(true, __func__);
     });
 }
 

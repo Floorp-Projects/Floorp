@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>writing-mode-ref</title>
+    <style>
+      p {
+        display: inline-block;
+        margin: 10px;
+      }
+      .line-through {
+        text-decoration: line-through wavy rgba(0, 0, 0, 0.3);
+      }
+      .wm-vertical-lr {
+        writing-mode: vertical-lr;
+      }
+      .wm-vertical-rl {
+        writing-mode: vertical-rl;
+      }
+      .wm-sideways-lr {
+        writing-mode: sideways-lr;
+      }
+      .wm-sideways-rl {
+        writing-mode: sideways-rl;
+      }
+    </style>
+  </head>
+  <body>
+    <p lang="zh" dir="ltr" class="wm-vertical-lr line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="ltr" class="wm-vertical-rl line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="ltr" class="wm-sideways-lr line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="ltr" class="wm-sideways-rl line-through">你好世界！Hello World!</p>
+    <br/>
+    <p lang="zh" dir="rtl" class="wm-vertical-lr line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="rtl" class="wm-vertical-rl line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="rtl" class="wm-sideways-lr line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="rtl" class="wm-sideways-rl line-through">你好世界！Hello World!</p>
+  </body>
+</html>

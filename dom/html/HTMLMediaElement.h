@@ -12,7 +12,6 @@
 #include "MediaEventSource.h"
 #include "SeekTarget.h"
 #include "MediaDecoderOwner.h"
-#include "MediaPromiseDefs.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
 #include "mozilla/CORSMode.h"
@@ -221,9 +220,9 @@ public:
   // suspended the channel.
   virtual void NotifySuspendedByCache(bool aSuspendedByCache) final override;
 
-  virtual bool IsActive() const final override;
+  bool IsActive() const;
 
-  virtual bool IsHidden() const final override;
+  bool IsHidden() const;
 
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
@@ -247,7 +246,7 @@ public:
                                                     const PrincipalHandle& aNewPrincipalHandle);
 
   // Dispatch events
-  virtual nsresult DispatchAsyncEvent(const nsAString& aName) final override;
+  virtual void DispatchAsyncEvent(const nsAString& aName) final override;
 
   // Triggers a recomputation of readyState.
   void UpdateReadyState() override { UpdateReadyStateInternal(); }
@@ -625,7 +624,7 @@ public:
   // data from decoder/reader/MDSM. Used for debugging purposes.
   already_AddRefed<Promise> MozRequestDebugInfo(ErrorResult& aRv);
 
-  void MozDumpDebugInfo();
+  already_AddRefed<Promise> MozDumpDebugInfo();
 
   // For use by mochitests. Enabling pref "media.test.video-suspend"
   void SetVisible(bool aVisible);
@@ -1333,15 +1332,6 @@ protected:
                                           const nsAttrValueOrString& aValue,
                                           bool aNotify) override;
 
-  bool DetachExistingMediaKeys();
-  bool TryRemoveMediaKeysAssociation();
-  void RemoveMediaKeys();
-  bool AttachNewMediaKeys();
-  bool TryMakeAssociationWithCDM(CDMProxy* aProxy);
-  void MakeAssociationWithCDMResolved();
-  void SetCDMProxyFailure(const MediaResult& aResult);
-  void ResetSetMediaKeysTempVariables();
-
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;
@@ -1544,12 +1534,6 @@ protected:
 
   // Encrypted Media Extension media keys.
   RefPtr<MediaKeys> mMediaKeys;
-  RefPtr<MediaKeys> mIncomingMediaKeys;
-  // The dom promise is used for HTMLMediaElement::SetMediaKeys.
-  RefPtr<DetailedPromise> mSetMediaKeysDOMPromise;
-  // Used to indicate if the MediaKeys attaching operation is on-going or not.
-  bool mAttachingMediaKey;
-  MozPromiseRequestHolder<SetCDMPromise> mSetCDMRequest;
 
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart;

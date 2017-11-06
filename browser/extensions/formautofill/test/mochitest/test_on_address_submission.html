@@ -119,6 +119,24 @@ add_task(async function check_storage_after_form_submitted() {
   ok(matching, "Updated address merged as expected");
 });
 
+// Submit a subset address manually.
+add_task(async function submit_subset_manually() {
+  document.querySelector("form").reset();
+  for (let key in TEST_ADDRESSES[0]) {
+    await setInput("#" + key, TEST_ADDRESSES[0][key]);
+  }
+
+  // Set organization field to empty
+  await setInput("#organization", "");
+  clickOnElement("input[type=submit]");
+
+  let expectedAddresses = TEST_ADDRESSES.slice(0);
+
+  await sleep(1000);
+  let matching = await checkAddresses(expectedAddresses);
+  ok(matching, "The storage is still the same after submitting a subset");
+});
+
 </script>
 
 <div>

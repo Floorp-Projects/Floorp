@@ -108,7 +108,7 @@ partial interface HTMLMediaElement {
   Promise<DOMString> mozRequestDebugInfo();
 
   [Pref="media.test.dumpDebugInfo"]
-  void mozDumpDebugInfo();
+  Promise<void> mozDumpDebugInfo();
 
   attribute MediaStream? srcObject;
 
