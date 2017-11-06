@@ -3151,7 +3151,7 @@ ConvertExceptionToPromise(JSContext* cx,
 
 /* static */
 void
-CreateGlobalOptions<nsGlobalWindow>::TraceGlobal(JSTracer* aTrc, JSObject* aObj)
+CreateGlobalOptions<nsGlobalWindowInner>::TraceGlobal(JSTracer* aTrc, JSObject* aObj)
 {
   xpc::TraceXPCGlobal(aTrc, aObj);
 }
@@ -3181,8 +3181,8 @@ RegisterDOMNames()
 
 /* static */
 bool
-CreateGlobalOptions<nsGlobalWindow>::PostCreateGlobal(JSContext* aCx,
-                                                      JS::Handle<JSObject*> aGlobal)
+CreateGlobalOptions<nsGlobalWindowInner>::PostCreateGlobal(JSContext* aCx,
+                                                           JS::Handle<JSObject*> aGlobal)
 {
   nsresult rv = RegisterDOMNames();
   if (NS_FAILED(rv)) {
