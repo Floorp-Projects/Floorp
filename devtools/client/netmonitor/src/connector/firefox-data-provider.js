@@ -9,7 +9,6 @@ const { EVENTS } = require("../constants");
 const { CurlUtils } = require("devtools/client/shared/curl");
 const {
   fetchHeaders,
-  formDataURI,
 } = require("../utils/request-utils");
 
 /**
@@ -128,13 +127,8 @@ class FirefoxDataProvider {
   async fetchResponseContent(mimeType, responseContent) {
     let payload = {};
     if (mimeType && responseContent && responseContent.content) {
-      let { encoding, text } = responseContent.content;
+      let { text } = responseContent.content;
       let response = await this.getLongString(text);
-
-      if (mimeType.includes("image/")) {
-        payload.responseContentDataUri = formDataURI(mimeType, encoding, response);
-      }
-
       responseContent.content.text = response;
       payload.responseContent = responseContent;
     }
