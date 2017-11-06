@@ -26,11 +26,20 @@ public:
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  mozilla::ipc::IPCResult
+  RecvBrokerFunction(const FunctionHookId &aFunctionId, const IpdlTuple &aInTuple,
+                   IpdlTuple *aOutTuple) override;
+
 private:
   explicit FunctionBrokerParent(FunctionBrokerThread* aThread,
                                 Endpoint<PFunctionBrokerParent>&& aParentEnd);
   void ShutdownOnBrokerThread();
   void Bind(Endpoint<PFunctionBrokerParent>&& aEnd);
+
+  static bool RunBrokeredFunction(base::ProcessId aClientId,
+                                  const FunctionHookId &aFunctionId,
+                                  const IPC::IpdlTuple &aInTuple,
+                                  IPC::IpdlTuple *aOutTuple);
 
   nsAutoPtr<FunctionBrokerThread> mThread;
   Monitor mMonitor;
