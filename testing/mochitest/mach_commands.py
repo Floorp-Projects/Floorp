@@ -107,7 +107,7 @@ class MochitestRunner(MozbuildObject):
         if test_objects:
             return test_objects
 
-        from mozbuild.testing import TestResolver
+        from moztest.resolve import TestResolver
         resolver = self._spawn(TestResolver)
         tests = list(resolver.resolve_tests(paths=test_paths, cwd=cwd))
         return tests
@@ -447,7 +447,7 @@ class RobocopCommands(MachCommandBase):
         test_paths = kwargs['test_paths']
         kwargs['test_paths'] = []
 
-        from mozbuild.testing import TestResolver
+        from moztest.resolve import TestResolver
         resolver = self._spawn(TestResolver)
         tests = list(resolver.resolve_tests(paths=test_paths, cwd=self._mach_context.cwd,
                                             flavor='instrumentation', subsuite='robocop'))
