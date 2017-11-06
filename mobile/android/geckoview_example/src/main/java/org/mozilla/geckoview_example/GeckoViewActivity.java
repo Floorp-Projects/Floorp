@@ -19,8 +19,8 @@ import android.view.WindowManager;
 import java.util.Locale;
 
 import org.mozilla.gecko.GeckoSession;
+import org.mozilla.gecko.GeckoSessionSettings;
 import org.mozilla.gecko.GeckoView;
-import org.mozilla.gecko.GeckoViewSettings;
 import org.mozilla.gecko.util.GeckoBundle;
 
 public class GeckoViewActivity extends Activity {
@@ -79,7 +79,7 @@ public class GeckoViewActivity extends Activity {
         permission.androidPermissionRequestCode = REQUEST_PERMISSIONS;
         mGeckoSession.setPermissionDelegate(permission);
 
-        mGeckoView.getSettings().setBoolean(GeckoViewSettings.USE_MULTIPROCESS,
+        mGeckoView.getSettings().setBoolean(GeckoSessionSettings.USE_MULTIPROCESS,
                                             useMultiprocess);
         loadSettings(getIntent());
         loadFromIntent(getIntent());
@@ -103,7 +103,7 @@ public class GeckoViewActivity extends Activity {
 
     private void loadSettings(final Intent intent) {
         mGeckoView.getSettings().setBoolean(
-            GeckoViewSettings.USE_REMOTE_DEBUGGER,
+            GeckoSessionSettings.USE_REMOTE_DEBUGGER,
             intent.getBooleanExtra(USE_REMOTE_DEBUGGER_EXTRA, false));
     }
 

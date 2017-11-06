@@ -63,8 +63,8 @@ public class GeckoSession implements Parcelable {
     private final EventDispatcher mEventDispatcher =
         new EventDispatcher(mNativeQueue);
 
-    private final GeckoViewHandler<ContentListener> mContentHandler =
-        new GeckoViewHandler<ContentListener>(
+    private final GeckoSessionHandler<ContentListener> mContentHandler =
+        new GeckoSessionHandler<ContentListener>(
             "GeckoViewContent", this,
             new String[]{
                 "GeckoView:ContextMenu",
@@ -96,8 +96,8 @@ public class GeckoSession implements Parcelable {
             }
         };
 
-    private final GeckoViewHandler<NavigationListener> mNavigationHandler =
-        new GeckoViewHandler<NavigationListener>(
+    private final GeckoSessionHandler<NavigationListener> mNavigationHandler =
+        new GeckoSessionHandler<NavigationListener>(
             "GeckoViewNavigation", this,
             new String[]{
                 "GeckoView:LocationChange",
@@ -128,8 +128,8 @@ public class GeckoSession implements Parcelable {
             }
         };
 
-    private final GeckoViewHandler<ProgressListener> mProgressHandler =
-        new GeckoViewHandler<ProgressListener>(
+    private final GeckoSessionHandler<ProgressListener> mProgressHandler =
+        new GeckoSessionHandler<ProgressListener>(
             "GeckoViewProgress", this,
             new String[]{
                 "GeckoView:PageStart",
@@ -155,8 +155,8 @@ public class GeckoSession implements Parcelable {
             }
         };
 
-    private final GeckoViewHandler<ScrollListener> mScrollHandler =
-        new GeckoViewHandler<ScrollListener>(
+    private final GeckoSessionHandler<ScrollListener> mScrollHandler =
+        new GeckoSessionHandler<ScrollListener>(
             "GeckoViewScroll", this,
             new String[]{ "GeckoView:ScrollChanged" }
         ) {
@@ -174,8 +174,8 @@ public class GeckoSession implements Parcelable {
             }
         };
 
-    private final GeckoViewHandler<PermissionDelegate> mPermissionHandler =
-        new GeckoViewHandler<PermissionDelegate>(
+    private final GeckoSessionHandler<PermissionDelegate> mPermissionHandler =
+        new GeckoSessionHandler<PermissionDelegate>(
             "GeckoViewPermission", this,
             new String[] {
                 "GeckoView:AndroidPermission",
@@ -342,17 +342,17 @@ public class GeckoSession implements Parcelable {
     }
 
     protected Window mWindow;
-    private GeckoViewSettings mSettings;
+    private GeckoSessionSettings mSettings;
 
     public GeckoSession() {
         this(/* settings */ null);
     }
 
-    public GeckoSession(final GeckoViewSettings settings) {
+    public GeckoSession(final GeckoSessionSettings settings) {
         if (settings == null) {
-            mSettings = new GeckoViewSettings(this);
+            mSettings = new GeckoSessionSettings(this);
         } else {
-            mSettings = new GeckoViewSettings(settings, this);
+            mSettings = new GeckoSessionSettings(settings, this);
         }
 
         mListener.registerListeners();
@@ -364,7 +364,7 @@ public class GeckoSession implements Parcelable {
         }
 
         mWindow = session.mWindow;
-        mSettings = new GeckoViewSettings(session.mSettings, this);
+        mSettings = new GeckoSessionSettings(session.mSettings, this);
         session.mWindow = null;
     }
 
@@ -394,9 +394,9 @@ public class GeckoSession implements Parcelable {
             mWindow = null;
         }
 
-        final GeckoViewSettings settings =
+        final GeckoSessionSettings settings =
                 source.readParcelable(getClass().getClassLoader());
-        mSettings = new GeckoViewSettings(settings, this);
+        mSettings = new GeckoSessionSettings(settings, this);
     }
 
     public static final Creator<GeckoSession> CREATOR = new Creator<GeckoSession>() {
@@ -454,18 +454,18 @@ public class GeckoSession implements Parcelable {
 
         if (!GeckoThread.isLaunched()) {
             final boolean multiprocess =
-                    mSettings.getBoolean(GeckoViewSettings.USE_MULTIPROCESS);
+                    mSettings.getBoolean(GeckoSessionSettings.USE_MULTIPROCESS);
             preload(appContext, /* geckoArgs */ null, multiprocess);
         }
 
-        if (mSettings.getString(GeckoViewSettings.DATA_DIR) == null) {
-            mSettings.setString(GeckoViewSettings.DATA_DIR,
+        if (mSettings.getString(GeckoSessionSettings.DATA_DIR) == null) {
+            mSettings.setString(GeckoSessionSettings.DATA_DIR,
                                 appContext.getApplicationInfo().dataDir);
         }
 
-        final String chromeUri = mSettings.getString(GeckoViewSettings.CHROME_URI);
-        final int screenId = mSettings.getInt(GeckoViewSettings.SCREEN_ID);
-        final boolean isPrivate = mSettings.getBoolean(GeckoViewSettings.USE_PRIVATE_MODE);
+        final String chromeUri = mSettings.getString(GeckoSessionSettings.CHROME_URI);
+        final int screenId = mSettings.getInt(GeckoSessionSettings.SCREEN_ID);
+        final boolean isPrivate = mSettings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE);
 
         mWindow = new Window(mNativeQueue);
 
@@ -571,7 +571,7 @@ public class GeckoSession implements Parcelable {
         mEventDispatcher.dispatch("GeckoView:SetActive", msg);
     }
 
-    public GeckoViewSettings getSettings() {
+    public GeckoSessionSettings getSettings() {
         return mSettings;
     }
 

@@ -1050,7 +1050,7 @@ public abstract class GeckoApp extends GeckoActivity
         mLayerView.setSession(session);
         mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
-        session.getSettings().setString(GeckoViewSettings.CHROME_URI,
+        session.getSettings().setString(GeckoSessionSettings.CHROME_URI,
                                         "chrome://browser/content/browser.xul");
         session.setContentListener(this);
 
