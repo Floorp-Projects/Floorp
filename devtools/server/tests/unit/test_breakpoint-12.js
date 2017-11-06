@@ -55,7 +55,7 @@ function test_child_skip_breakpoint() {
     });
   });
 
-  /* eslint-disable */
+  /* eslint-disable no-multi-spaces */
   Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
                    "function foo() {\n" + // line0 + 1
                    "  this.a = 1;\n" +    // line0 + 2
@@ -65,7 +65,7 @@ function test_child_skip_breakpoint() {
                    "debugger;\n" +        // line0 + 6
                    "foo();\n",            // line0 + 7
                    gDebuggee);
-  /* eslint-enable */
+  /* eslint-enable no-multi-spaces */
 }
 
 // Set many breakpoints at the same location.
