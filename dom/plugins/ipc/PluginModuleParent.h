@@ -27,9 +27,6 @@
 #include "nsIObserver.h"
 #ifdef XP_WIN
 #include "nsWindowsHelpers.h"
-#if defined(MOZ_SANDBOX)
-#include "sandboxPermissions.h"
-#endif
 #endif
 
 class nsPluginTag;
@@ -169,20 +166,6 @@ protected:
                                         const bool& shouldRegister,
                                         NPError* result) override;
 
-    virtual mozilla::ipc::IPCResult
-    AnswerGetFileName(const GetFileNameFunc& aFunc,
-                      const OpenFileNameIPC& aOfnIn,
-                      OpenFileNameRetIPC* aOfnOut, bool* aResult) override
-    {
-      return IPC_FAIL_NO_REASON(this);
-    }
-
-    virtual mozilla::ipc::IPCResult
-    AnswerSetCursorPos(const int &x, const int &y, bool* aResult) override
-    {
-      return IPC_FAIL_NO_REASON(this);
-    }
-
 protected:
     void SetChildTimeout(const int32_t aChildTimeout);
     static void TimeoutChanged(const char* aPref, void* aModule);
@@ -190,8 +173,6 @@ protected:
     virtual void UpdatePluginTimeout() {}
 
     virtual mozilla::ipc::IPCResult RecvNotifyContentModuleDestroyed() override { return IPC_OK(); }
-
-    virtual mozilla::ipc::IPCResult AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
 
     virtual mozilla::ipc::IPCResult RecvReturnClearSiteData(const NPError& aRv,
                                                             const uint64_t& aCallbackId) override;
@@ -485,19 +466,6 @@ class PluginModuleChromeParent
 
     void CachedSettingChanged();
 
-    virtual mozilla::ipc::IPCResult
-    AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
-
-    // Proxy GetOpenFileName/GetSaveFileName on Windows.
-    virtual mozilla::ipc::IPCResult
-    AnswerGetFileName(const GetFileNameFunc& aFunc,
-                      const OpenFileNameIPC& aOfnIn,
-                      OpenFileNameRetIPC* aOfnOut, bool* aResult) override;
-
-    // Proxy SetCursorPos on Windows.
-    virtual mozilla::ipc::IPCResult
-    AnswerSetCursorPos(const int &x, const int &y, bool* aResult) override;
-
 private:
     virtual void
     EnteredCxxStack() override;
@@ -632,9 +600,6 @@ private:
 
     nsCOMPtr<nsIObserver> mPluginOfflineObserver;
     bool mIsBlocklisted;
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-    mozilla::SandboxPermissions mSandboxPermissions;
-#endif
 
     nsCOMPtr<nsIFile> mBrowserDumpFile;
     TakeFullMinidumpCallback mTakeFullMinidumpCallback;
