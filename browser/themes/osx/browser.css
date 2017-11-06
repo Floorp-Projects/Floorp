@@ -229,9 +229,8 @@
 
 /* On Mac, native buttons keep their full opacity when they become disabled
  * and only the glyph or text on top of them becomes less opaque. */
-#main-window:not([customizing]) #back-button[disabled="true"] > .toolbarbutton-icon {
+:root:not([customizing]) #back-button[disabled="true"] {
   opacity: 1 !important;
-  -moz-context-properties: fill, fill-opacity;
   /* Disabled toolbar buttons get an opacity of 0.4 which multiplies
    * their fill-opacity of 0.7. calc() doesn't work here - we'd need
    * to multiply two unitless numbers and that's invalid in CSS, so
