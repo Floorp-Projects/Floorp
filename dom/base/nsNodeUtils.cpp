@@ -650,6 +650,18 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     }
   }
 
+  if (aDeep && !aClone && aNode->IsElement()) {
+    if (ShadowRoot* shadowRoot = aNode->AsElement()->GetShadowRoot()) {
+      nsCOMPtr<nsINode> child =
+        CloneAndAdopt(shadowRoot, aClone, aDeep, nodeInfoManager,
+                      aReparentScope, aNodesWithProperties, clone,
+                      aError);
+      if (NS_WARN_IF(aError.Failed())) {
+        return nullptr;
+      }
+    }
+  }
+
   // Cloning template element.
   if (aDeep && aClone && IsTemplateElement(aNode)) {
     DocumentFragment* origContent =
