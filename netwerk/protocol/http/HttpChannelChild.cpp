@@ -384,7 +384,7 @@ class AssociateApplicationCacheEvent : public NeckoTargetChannelEvent<HttpChanne
     , groupID(aGroupID)
     , clientID(aClientID) {}
 
-    void Run() { mChild->AssociateApplicationCache(groupID, clientID); }
+    void Run() override { mChild->AssociateApplicationCache(groupID, clientID); }
 
   private:
     nsCString groupID;
@@ -454,7 +454,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   , mAltDataLen(altDataLen)
   {}
 
-  void Run()
+  void Run() override
   {
     LOG(("StartRequestEvent [this=%p]\n", mChild));
     mChild->OnStartRequest(mChannelStatus, mResponseHead, mUseResponseHead,
@@ -756,13 +756,13 @@ class TransportAndDataEvent : public ChannelEvent
   , mOffset(offset)
   , mCount(count) {}
 
-  void Run()
+  void Run() override
   {
     mChild->OnTransportAndData(mChannelStatus, mTransportStatus,
                                mOffset, mCount, mData);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
+  already_AddRefed<nsIEventTarget> GetEventTarget() override
   {
     MOZ_ASSERT(mChild);
     nsCOMPtr<nsIEventTarget> target = mChild->GetODATarget();
@@ -806,7 +806,7 @@ class MaybeDivertOnDataHttpEvent : public NeckoTargetChannelEvent<HttpChannelChi
   , mOffset(offset)
   , mCount(count) {}
 
-  void Run()
+  void Run() override
   {
     mChild->MaybeDivertOnData(mData, mOffset, mCount);
   }
@@ -1003,7 +1003,7 @@ class StopRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   , mTiming(timing)
   , mResponseTrailers(aResponseTrailers) {}
 
-  void Run() { mChild->OnStopRequest(mChannelStatus, mTiming, mResponseTrailers); }
+  void Run() override { mChild->OnStopRequest(mChannelStatus, mTiming, mResponseTrailers); }
 
  private:
   nsresult mChannelStatus;
@@ -1035,7 +1035,7 @@ class MaybeDivertOnStopHttpEvent : public NeckoTargetChannelEvent<HttpChannelChi
   , mChannelStatus(channelStatus)
   {}
 
-  void Run()
+  void Run() override
   {
     mChild->MaybeDivertOnStop(mChannelStatus);
   }
@@ -1274,7 +1274,7 @@ class ProgressEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   , mProgress(progress)
   , mProgressMax(progressMax) {}
 
-  void Run() { mChild->OnProgress(mProgress, mProgressMax); }
+  void Run() override { mChild->OnProgress(mProgress, mProgressMax); }
 
  private:
   int64_t mProgress, mProgressMax;
@@ -1323,7 +1323,7 @@ class StatusEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   : NeckoTargetChannelEvent<HttpChannelChild>(child)
   , mStatus(status) {}
 
-  void Run() { mChild->OnStatus(mStatus); }
+  void Run() override { mChild->OnStatus(mStatus); }
 
  private:
   nsresult mStatus;
@@ -1371,7 +1371,7 @@ class FailedAsyncOpenEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   : NeckoTargetChannelEvent<HttpChannelChild>(child)
   , mStatus(status) {}
 
-  void Run() { mChild->FailedAsyncOpen(mStatus); }
+  void Run() override { mChild->FailedAsyncOpen(mStatus); }
 
  private:
   nsresult mStatus;
@@ -1467,7 +1467,7 @@ class DeleteSelfEvent : public NeckoTargetChannelEvent<HttpChannelChild>
  public:
   explicit DeleteSelfEvent(HttpChannelChild* child)
   : NeckoTargetChannelEvent<HttpChannelChild>(child) {}
-  void Run() { mChild->DeleteSelf(); }
+  void Run() override { mChild->DeleteSelf(); }
 };
 
 mozilla::ipc::IPCResult
@@ -1621,7 +1621,7 @@ class Redirect1Event : public NeckoTargetChannelEvent<HttpChannelChild>
   , mSecurityInfoSerialization(securityInfoSerialization)
   , mChannelId(channelId) {}
 
-  void Run()
+  void Run() override
   {
     mChild->Redirect1Begin(mRegistrarId, mNewURI, mRedirectFlags,
                            mResponseHead, mSecurityInfoSerialization,
@@ -1828,7 +1828,7 @@ class Redirect3Event : public NeckoTargetChannelEvent<HttpChannelChild>
  public:
   explicit Redirect3Event(HttpChannelChild* child)
   : NeckoTargetChannelEvent<HttpChannelChild>(child) {}
-  void Run() { mChild->Redirect3Complete(nullptr); }
+  void Run() override { mChild->Redirect3Complete(nullptr); }
 };
 
 mozilla::ipc::IPCResult
@@ -1848,7 +1848,7 @@ class HttpFlushedForDiversionEvent : public NeckoTargetChannelEvent<HttpChannelC
     MOZ_RELEASE_ASSERT(aChild);
   }
 
-  void Run()
+  void Run() override
   {
     mChild->FlushedForDiversion();
   }
@@ -3668,7 +3668,8 @@ public:
     MOZ_ASSERT(aChild);
   }
 
-  void Run() {
+  void Run() override
+  {
     MOZ_ASSERT(NS_IsMainThread());
     mChild->Cancel(mRv);
   }

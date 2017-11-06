@@ -19,9 +19,9 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
     nsMIMEInfoWin(const nsACString& aType, HandlerClass aClass) :
       nsMIMEInfoBase(aType, aClass) {}
 
-    NS_IMETHOD LaunchWithFile(nsIFile* aFile);
-    NS_IMETHOD GetHasDefaultHandler(bool * _retval);
-    NS_IMETHOD GetPossibleLocalHandlers(nsIArray **_retval);
+    NS_IMETHOD LaunchWithFile(nsIFile* aFile) override;
+    NS_IMETHOD GetHasDefaultHandler(bool * _retval) override;
+    NS_IMETHOD GetPossibleLocalHandlers(nsIArray **_retval) override;
 
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIPROPERTYBAG

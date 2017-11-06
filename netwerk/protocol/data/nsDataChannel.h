@@ -20,9 +20,10 @@ public:
     }
 
 protected:
-    virtual MOZ_MUST_USE nsresult OpenContentStream(bool async,
-                                                    nsIInputStream **result,
-                                                    nsIChannel** channel);
+    virtual MOZ_MUST_USE
+    nsresult OpenContentStream(bool async,
+                               nsIInputStream **result,
+                               nsIChannel** channel) override;
 };
 
 #endif /* nsDataChannel_h___ */

@@ -37,7 +37,7 @@ static mozilla::LazyLogModule sLogAEC("AEC");
 class WebRtcTraceCallback: public webrtc::TraceCallback
 {
 public:
-  void Print(webrtc::TraceLevel level, const char* message, int length)
+  void Print(webrtc::TraceLevel level, const char* message, int length) override
   {
     MOZ_LOG(sWebRtcLog, LogLevel::Debug, ("%s", message));
   }

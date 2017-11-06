@@ -286,7 +286,7 @@ public:
     virtual double          GetDefaultScaleInternal() override;
     virtual int32_t         RoundsWidgetCoordinatesTo() override;
 
-    mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final {
+    mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final override {
       return mozilla::DesktopToLayoutDeviceScale(BackingScaleFactor());
     }
 

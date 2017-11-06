@@ -17,9 +17,9 @@ public:
 
     /** Processes input, adding it to the digest.
         Calling this after finish is undefined.  */
-    bool write(const void* buffer, size_t size) final;
+    bool write(const void* buffer, size_t size) final override;
 
-    size_t bytesWritten() const final { return SkToSizeT(this->byteCount); }
+    size_t bytesWritten() const final override { return SkToSizeT(this->byteCount); }
 
     struct Digest {
         uint8_t data[16];

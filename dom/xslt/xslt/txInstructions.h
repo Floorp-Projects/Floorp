@@ -38,7 +38,7 @@ public:
 };
 
 #define TX_DECL_TXINSTRUCTION  \
-    virtual nsresult execute(txExecutionState& aEs);
+    virtual nsresult execute(txExecutionState& aEs) override;
 
 
 class txApplyDefaultElementTemplate : public txInstruction

@@ -1085,7 +1085,7 @@ class SSLErrorRunnable : public SyncRunnableBase
   {
   }
 
-  virtual void RunOnTargetThread()
+  virtual void RunOnTargetThread() override
   {
     nsHandleSSLError(mInfoObject, mErrType, mErrorCode);
   }
@@ -2143,7 +2143,7 @@ public:
   CERTCertificate** const mPRetCert;    // in/out
   SECKEYPrivateKey** const mPRetKey;    // in/out
 protected:
-  virtual void RunOnTargetThread();
+  virtual void RunOnTargetThread() override;
 private:
   CERTDistNames* const mCANames;        // in
   nsNSSSocketInfo* const mSocketInfo;   // in

@@ -134,17 +134,17 @@ public:
  */
 class GrNoClip final : public GrClip {
 private:
-    bool quickContains(const SkRect&) const final { return true; }
-    bool quickContains(const SkRRect&) const final { return true; }
+    bool quickContains(const SkRect&) const final override { return true; }
+    bool quickContains(const SkRRect&) const final override { return true; }
     void getConservativeBounds(int width, int height, SkIRect* devResult,
-                               bool* isIntersectionOfRects) const final {
+                               bool* isIntersectionOfRects) const final override {
         devResult->setXYWH(0, 0, width, height);
         if (isIntersectionOfRects) {
             *isIntersectionOfRects = true;
         }
     }
     bool apply(GrContext*, GrRenderTargetContext*, bool, bool, GrAppliedClip*,
-               SkRect*) const final {
+               SkRect*) const final override {
         return true;
     }
     bool isRRect(const SkRect&, SkRRect*, GrAA*) const override { return false; }

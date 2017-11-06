@@ -177,7 +177,7 @@ protected:
 
   // Since we're templated on a binding, we need to possibly CC it, but can't do
   // that through macros. So it happens here.
-  virtual void UnlinkHelper() final
+  virtual void UnlinkHelper() final override
   {
     mIterableObj = nullptr;
   }

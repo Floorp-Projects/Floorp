@@ -276,10 +276,10 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // Overrides of base implementation.
-    NS_IMETHOD Start( bool *aResult );
-    NS_IMETHOD Stop( bool *aResult );
-    NS_IMETHOD Quit();
-    NS_IMETHOD Enable();
+    NS_IMETHOD Start( bool *aResult ) override;
+    NS_IMETHOD Stop( bool *aResult ) override;
+    NS_IMETHOD Quit() override;
+    NS_IMETHOD Enable() override;
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
     // Utility function to handle a Win32-specific command line

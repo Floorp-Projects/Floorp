@@ -498,7 +498,7 @@ public:
     , mCue(aCue)
   {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     WEBVTT_LOGV("SimpleTextTrackEvent cue %p mName %s mTime %lf",
       mCue.get(), NS_ConvertUTF16toUTF8(mName).get(), mTime);
     mCue->DispatchTrustedEvent(mName);

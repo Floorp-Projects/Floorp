@@ -33,7 +33,7 @@ class LUnbox : public LUnboxBase
       : LUnboxBase(input)
     { }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return StringFromMIRType(mir()->type());
     }
 };
@@ -53,7 +53,7 @@ class LUnboxFloatingPoint : public LUnboxBase
     MIRType type() const {
         return type_;
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return StringFromMIRType(type_);
     }
 };

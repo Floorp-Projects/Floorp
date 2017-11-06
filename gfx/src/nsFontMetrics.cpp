@@ -84,26 +84,26 @@ private:
 class StubPropertyProvider final : public gfxTextRun::PropertyProvider {
 public:
     void GetHyphenationBreaks(gfxTextRun::Range aRange,
-                              gfxTextRun::HyphenType* aBreakBefore) const {
+                              gfxTextRun::HyphenType* aBreakBefore) const override {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
     }
-    mozilla::StyleHyphens GetHyphensOption() const {
+    mozilla::StyleHyphens GetHyphensOption() const override {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
         return mozilla::StyleHyphens::None;
     }
-    gfxFloat GetHyphenWidth() const {
+    gfxFloat GetHyphenWidth() const override {
         NS_ERROR("This shouldn't be called because we never enable hyphens");
         return 0;
     }
-    already_AddRefed<mozilla::gfx::DrawTarget> GetDrawTarget() const {
+    already_AddRefed<mozilla::gfx::DrawTarget> GetDrawTarget() const override {
         NS_ERROR("This shouldn't be called because we never enable hyphens");
         return nullptr;
     }
-    uint32_t GetAppUnitsPerDevUnit() const {
+    uint32_t GetAppUnitsPerDevUnit() const override {
         NS_ERROR("This shouldn't be called because we never enable hyphens");
         return 60;
     }
-    void GetSpacing(gfxTextRun::Range aRange, Spacing* aSpacing) const {
+    void GetSpacing(gfxTextRun::Range aRange, Spacing* aSpacing) const override {
         NS_ERROR("This shouldn't be called because we never enable spacing");
     }
 };
@@ -445,4 +445,3 @@ nsFontMetrics::GetInkBoundsForVisualOverflow(const char16_t *aString, uint32_t a
   return GetTextBoundingMetrics(this, aString, aLength, aDrawTarget,
                                 gfxFont::LOOSE_INK_EXTENTS);
 }
-

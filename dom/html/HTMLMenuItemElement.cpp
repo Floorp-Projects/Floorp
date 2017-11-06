@@ -63,7 +63,7 @@ public:
   explicit GetCheckedVisitor(HTMLMenuItemElement** aResult)
     : mResult(aResult)
     { }
-  virtual bool Visit(HTMLMenuItemElement* aMenuItem)
+  virtual bool Visit(HTMLMenuItemElement* aMenuItem) override
   {
     if (aMenuItem->IsChecked()) {
       *mResult = aMenuItem;
@@ -82,7 +82,7 @@ public:
   explicit ClearCheckedVisitor(HTMLMenuItemElement* aExcludeMenuItem)
     : mExcludeMenuItem(aExcludeMenuItem)
     { }
-  virtual bool Visit(HTMLMenuItemElement* aMenuItem)
+  virtual bool Visit(HTMLMenuItemElement* aMenuItem) override
   {
     if (aMenuItem != mExcludeMenuItem && aMenuItem->IsChecked()) {
       aMenuItem->ClearChecked();
@@ -103,7 +103,7 @@ public:
     : mCheckedDirty(aCheckedDirty),
       mExcludeMenuItem(aExcludeMenuItem)
     { }
-  virtual bool Visit(HTMLMenuItemElement* aMenuItem)
+  virtual bool Visit(HTMLMenuItemElement* aMenuItem) override
   {
     if (aMenuItem == mExcludeMenuItem) {
       return true;
@@ -122,7 +122,7 @@ class SetCheckedDirtyVisitor : public Visitor
 public:
   SetCheckedDirtyVisitor()
     { }
-  virtual bool Visit(HTMLMenuItemElement* aMenuItem)
+  virtual bool Visit(HTMLMenuItemElement* aMenuItem) override
   {
     aMenuItem->SetCheckedDirty();
     return true;
@@ -138,7 +138,7 @@ public:
     : mVisitor1(aVisitor1), mVisitor2(aVisitor2),
       mContinue1(true), mContinue2(true)
     { }
-  virtual bool Visit(HTMLMenuItemElement* aMenuItem)
+  virtual bool Visit(HTMLMenuItemElement* aMenuItem) override
   {
     if (mContinue1) {
       mContinue1 = mVisitor1->Visit(aMenuItem);

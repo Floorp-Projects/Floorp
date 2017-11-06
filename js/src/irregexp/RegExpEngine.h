@@ -659,11 +659,11 @@ class SeqRegExpNode : public RegExpNode
 
     RegExpNode* on_success() { return on_success_; }
     void set_on_success(RegExpNode* node) { on_success_ = node; }
-    virtual RegExpNode* FilterLATIN1(int depth, bool ignore_case, bool unicode);
+    virtual RegExpNode* FilterLATIN1(int depth, bool ignore_case, bool unicode) override;
     virtual bool FillInBMInfo(int offset,
                               int budget,
                               BoyerMooreLookahead* bm,
-                              bool not_at_start);
+                              bool not_at_start) override;
 
   protected:
     RegExpNode* FilterSuccessor(int depth, bool ignore_case, bool unicode);
@@ -708,23 +708,23 @@ class ActionNode : public SeqRegExpNode
                                        int repetition_register,
                                        int repetition_limit,
                                        RegExpNode* on_success);
-    virtual void Accept(NodeVisitor* visitor);
-    virtual void Emit(RegExpCompiler* compiler, Trace* trace);
-    virtual int EatsAtLeast(int still_to_find, int budget, bool not_at_start);
+    virtual void Accept(NodeVisitor* visitor) override;
+    virtual void Emit(RegExpCompiler* compiler, Trace* trace) override;
+    virtual int EatsAtLeast(int still_to_find, int budget, bool not_at_start) override;
     virtual void GetQuickCheckDetails(QuickCheckDetails* details,
                                       RegExpCompiler* compiler,
                                       int filled_in,
-                                      bool not_at_start) {
-        return on_success()->GetQuickCheckDetails(
-                                                  details, compiler, filled_in, not_at_start);
+                                      bool not_at_start) override {
+        return on_success()->GetQuickCheckDetails(details, compiler, filled_in,
+                                                  not_at_start);
     }
     virtual bool FillInBMInfo(int offset,
                               int budget,
                               BoyerMooreLookahead* bm,
-                              bool not_at_start);
+                              bool not_at_start) override;
     ActionType action_type() { return action_type_; }
     // TODO(erikcorry): We should allow some action nodes in greedy loops.
-    virtual int GreedyLoopTextLength() { return kNodeIsTooComplexForGreedyLoops; }
+    virtual int GreedyLoopTextLength() override { return kNodeIsTooComplexForGreedyLoops; }
 
   private:
     union {
@@ -776,24 +776,23 @@ class TextNode : public SeqRegExpNode
         elements_->append(TextElement::CharClass(that));
     }
 
-    virtual void Accept(NodeVisitor* visitor);
-    virtual void Emit(RegExpCompiler* compiler, Trace* trace);
-    virtual int EatsAtLeast(int still_to_find, int budget, bool not_at_start);
+    virtual void Accept(NodeVisitor* visitor) override;
+    virtual void Emit(RegExpCompiler* compiler, Trace* trace) override;
+    virtual int EatsAtLeast(int still_to_find, int budget, bool not_at_start) override;
     virtual void GetQuickCheckDetails(QuickCheckDetails* details,
                                       RegExpCompiler* compiler,
                                       int characters_filled_in,
-                                      bool not_at_start);
+                                      bool not_at_start) override;
     TextElementVector& elements() { return *elements_; }
     void MakeCaseIndependent(bool is_latin1, bool unicode);
-    virtual int GreedyLoopTextLength();
-    virtual RegExpNode* GetSuccessorOfOmnivorousTextNode(
-                                                         RegExpCompiler* compiler);
+    virtual int GreedyLoopTextLength() override;
+    virtual RegExpNode* GetSuccessorOfOmnivorousTextNode(RegExpCompiler* compiler) override;
     virtual bool FillInBMInfo(int offset,
                               int budget,
                               BoyerMooreLookahead* bm,
-                              bool not_at_start);
+                              bool not_at_start) override;
     void CalculateOffsets();
-    virtual RegExpNode* FilterLATIN1(int depth, bool ignore_case, bool unicode);
+    virtual RegExpNode* FilterLATIN1(int depth, bool ignore_case, bool unicode) override;
 
   private:
     enum TextEmitPassType {
@@ -856,17 +855,17 @@ class AssertionNode : public SeqRegExpNode
         return on_success->alloc()->newInfallible<AssertionNode>(NOT_IN_SURROGATE_PAIR,
                                                                  on_success);
     }
-    virtual void Accept(NodeVisitor* visitor);
-    virtual void Emit(RegExpCompiler* compiler, Trace* trace);
-    virtual int EatsAtLeast(int still_to_find, int budget, bool not_at_start);
+    virtual void Accept(NodeVisitor* visitor) override;
+    virtual void Emit(RegExpCompiler* compiler, Trace* trace) override;
+    virtual int EatsAtLeast(int still_to_find, int budget, bool not_at_start) override;
     virtual void GetQuickCheckDetails(QuickCheckDetails* details,
                                       RegExpCompiler* compiler,
                                       int filled_in,
-                                      bool not_at_start);
+                                      bool not_at_start) override;
     virtual bool FillInBMInfo(int offset,
                               int budget,
                               BoyerMooreLookahead* bm,
-                              bool not_at_start);
+                              bool not_at_start) override;
     AssertionType assertion_type() { return assertion_type_; }
 
   private:
@@ -889,22 +888,22 @@ class BackReferenceNode : public SeqRegExpNode
         end_reg_(end_reg)
     {}
 
-    virtual void Accept(NodeVisitor* visitor);
+    virtual void Accept(NodeVisitor* visitor) override;
     int start_register() { return start_reg_; }
-    int end_register() { return end_reg_; }
-    virtual void Emit(RegExpCompiler* compiler, Trace* trace);
+    virtual int end_register() { return end_reg_; }
+    virtual void Emit(RegExpCompiler* compiler, Trace* trace) override;
     virtual int EatsAtLeast(int still_to_find,
                             int recursion_depth,
-                            bool not_at_start);
+                            bool not_at_start) override;
     virtual void GetQuickCheckDetails(QuickCheckDetails* details,
                                       RegExpCompiler* compiler,
                                       int characters_filled_in,
-                                      bool not_at_start) {
+                                      bool not_at_start) override {
     }
     virtual bool FillInBMInfo(int offset,
                               int budget,
                               BoyerMooreLookahead* bm,
-                              bool not_at_start);
+                              bool not_at_start) override;
 
   private:
     int start_reg_;
@@ -920,15 +919,15 @@ class EndNode : public RegExpNode
       : RegExpNode(alloc), action_(action)
     {}
 
-    virtual void Accept(NodeVisitor* visitor);
-    virtual void Emit(RegExpCompiler* compiler, Trace* trace);
+    virtual void Accept(NodeVisitor* visitor) override;
+    virtual void Emit(RegExpCompiler* compiler, Trace* trace) override;
     virtual int EatsAtLeast(int still_to_find,
                             int recursion_depth,
-                            bool not_at_start) { return 0; }
+                            bool not_at_start) override { return 0; }
     virtual void GetQuickCheckDetails(QuickCheckDetails* details,
                                       RegExpCompiler* compiler,
                                       int characters_filled_in,
-                                      bool not_at_start)
+                                      bool not_at_start) override
     {
         // Returning 0 from EatsAtLeast should ensure we never get here.
         MOZ_CRASH("Bad call");
@@ -936,7 +935,7 @@ class EndNode : public RegExpNode
     virtual bool FillInBMInfo(int offset,
                               int budget,
                               BoyerMooreLookahead* bm,
-                              bool not_at_start) {
+                              bool not_at_start) override {
         // Returning 0 from EatsAtLeast should ensure we never get here.
         MOZ_CRASH("Bad call");
     }
@@ -960,7 +959,7 @@ class NegativeSubmatchSuccess : public EndNode
         clear_capture_start_(clear_capture_start)
     {}
 
-    virtual void Emit(RegExpCompiler* compiler, Trace* trace);
+    virtual void Emit(RegExpCompiler* compiler, Trace* trace) override;
 
   private:
     int stack_pointer_register_;
@@ -1025,34 +1024,34 @@ class ChoiceNode : public RegExpNode
         alternatives_.reserve(expected_size);
     }
 
-    virtual void Accept(NodeVisitor* visitor);
+    virtual void Accept(NodeVisitor* visitor) override;
     void AddAlternative(GuardedAlternative node) {
         alternatives_.append(node);
     }
 
     GuardedAlternativeVector& alternatives() { return alternatives_; }
     DispatchTable* GetTable(bool ignore_case);
-    virtual void Emit(RegExpCompiler* compiler, Trace* trace);
-    virtual int EatsAtLeast(int still_to_find, int budget, bool not_at_start);
-    int EatsAtLeastHelper(int still_to_find,
-                          int budget,
-                          RegExpNode* ignore_this_node,
-                          bool not_at_start);
+    virtual void Emit(RegExpCompiler* compiler, Trace* trace) override;
+    virtual int EatsAtLeast(int still_to_find, int budget, bool not_at_start) override;
+    virtual int EatsAtLeastHelper(int still_to_find,
+                                  int budget,
+                                  RegExpNode* ignore_this_node,
+                                  bool not_at_start);
     virtual void GetQuickCheckDetails(QuickCheckDetails* details,
                                       RegExpCompiler* compiler,
                                       int characters_filled_in,
-                                      bool not_at_start);
+                                      bool not_at_start) override;
     virtual bool FillInBMInfo(int offset,
                               int budget,
                               BoyerMooreLookahead* bm,
-                              bool not_at_start);
+                              bool not_at_start) override;
 
     bool being_calculated() { return being_calculated_; }
     bool not_at_start() { return not_at_start_; }
     void set_not_at_start() { not_at_start_ = true; }
     void set_being_calculated(bool b) { being_calculated_ = b; }
     virtual bool try_to_emit_quick_check_for_alternative(int i) { return true; }
-    virtual RegExpNode* FilterLATIN1(int depth, bool ignore_case, bool unicode);
+    virtual RegExpNode* FilterLATIN1(int depth, bool ignore_case, bool unicode) override;
 
   protected:
     int GreedyLoopTextLengthForAlternative(GuardedAlternative* alternative);
@@ -1089,23 +1088,23 @@ class NegativeLookaheadChoiceNode : public ChoiceNode
         AddAlternative(this_must_fail);
         AddAlternative(then_do_this);
     }
-    virtual int EatsAtLeast(int still_to_find, int budget, bool not_at_start);
+    virtual int EatsAtLeast(int still_to_find, int budget, bool not_at_start) override;
     virtual void GetQuickCheckDetails(QuickCheckDetails* details,
                                       RegExpCompiler* compiler,
                                       int characters_filled_in,
-                                      bool not_at_start);
+                                      bool not_at_start) override;
     virtual bool FillInBMInfo(int offset,
                               int budget,
                               BoyerMooreLookahead* bm,
-                              bool not_at_start);
+                              bool not_at_start) override;
 
     // For a negative lookahead we don't emit the quick check for the
     // alternative that is expected to fail.  This is because quick check code
     // starts by loading enough characters for the alternative that takes fewest
     // characters, but on a negative lookahead the negative branch did not take
     // part in that calculation (EatsAtLeast) so the assumptions don't hold.
-    virtual bool try_to_emit_quick_check_for_alternative(int i) { return i != 0; }
-    virtual RegExpNode* FilterLATIN1(int depth, bool ignore_case, bool unicode);
+    virtual bool try_to_emit_quick_check_for_alternative(int i) override { return i != 0; }
+    virtual RegExpNode* FilterLATIN1(int depth, bool ignore_case, bool unicode) override;
 };
 
 class LoopChoiceNode : public ChoiceNode
@@ -1119,22 +1118,22 @@ class LoopChoiceNode : public ChoiceNode
     {}
 
     void AddLoopAlternative(GuardedAlternative alt);
-    void AddContinueAlternative(GuardedAlternative alt);
-    virtual void Emit(RegExpCompiler* compiler, Trace* trace);
-    virtual int EatsAtLeast(int still_to_find,  int budget, bool not_at_start);
+    virtual void AddContinueAlternative(GuardedAlternative alt);
+    virtual void Emit(RegExpCompiler* compiler, Trace* trace) override;
+    virtual int EatsAtLeast(int still_to_find,  int budget, bool not_at_start) override;
     virtual void GetQuickCheckDetails(QuickCheckDetails* details,
                                       RegExpCompiler* compiler,
                                       int characters_filled_in,
-                                      bool not_at_start);
+                                      bool not_at_start) override;
     virtual bool FillInBMInfo(int offset,
                               int budget,
                               BoyerMooreLookahead* bm,
-                              bool not_at_start);
+                              bool not_at_start) override;
     RegExpNode* loop_node() { return loop_node_; }
     RegExpNode* continue_node() { return continue_node_; }
     bool body_can_be_zero_length() { return body_can_be_zero_length_; }
-    virtual void Accept(NodeVisitor* visitor);
-    virtual RegExpNode* FilterLATIN1(int depth, bool ignore_case, bool unicode);
+    virtual void Accept(NodeVisitor* visitor) override;
+    virtual RegExpNode* FilterLATIN1(int depth, bool ignore_case, bool unicode) override;
 
   private:
     // AddAlternative is made private for loop nodes because alternatives
@@ -1520,10 +1519,10 @@ class Analysis : public NodeVisitor
     void EnsureAnalyzed(RegExpNode* node);
 
 #define DECLARE_VISIT(Type)                     \
-    virtual void Visit##Type(Type##Node* that);
+    virtual void Visit##Type(Type##Node* that) override;
     FOR_EACH_NODE_TYPE(DECLARE_VISIT)
 #undef DECLARE_VISIT
-    virtual void VisitLoopChoice(LoopChoiceNode* that);
+    virtual void VisitLoopChoice(LoopChoiceNode* that) override;
 
     bool has_failed() { return error_message_ != nullptr; }
     const char* errorMessage() {

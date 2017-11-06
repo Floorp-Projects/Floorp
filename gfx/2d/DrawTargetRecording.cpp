@@ -80,7 +80,8 @@ EnsureSurfaceStoredRecording(DrawEventRecorderPrivate *aRecorder, SourceSurface 
 class SourceSurfaceRecording : public SourceSurface
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceRecording)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceRecording, override)
+
   SourceSurfaceRecording(IntSize aSize, SurfaceFormat aFormat, DrawEventRecorderPrivate *aRecorder)
     : mSize(aSize), mFormat(aFormat), mRecorder(aRecorder)
   {
@@ -93,10 +94,10 @@ public:
     mRecorder->RecordEvent(RecordedSourceSurfaceDestruction(ReferencePtr(this)));
   }
 
-  virtual SurfaceType GetType() const { return SurfaceType::RECORDING; }
-  virtual IntSize GetSize() const { return mSize; }
-  virtual SurfaceFormat GetFormat() const { return mFormat; }
-  virtual already_AddRefed<DataSourceSurface> GetDataSurface() { return nullptr; }
+  virtual SurfaceType GetType() const override { return SurfaceType::RECORDING; }
+  virtual IntSize GetSize() const override { return mSize; }
+  virtual SurfaceFormat GetFormat() const override { return mFormat; }
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface() override { return nullptr; }
 
   IntSize mSize;
   SurfaceFormat mFormat;
@@ -149,7 +150,8 @@ public:
 class GradientStopsRecording : public GradientStops
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStopsRecording)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStopsRecording, override)
+
   explicit GradientStopsRecording(DrawEventRecorderPrivate *aRecorder)
     : mRecorder(aRecorder)
   {
@@ -162,7 +164,7 @@ public:
     mRecorder->RecordEvent(RecordedGradientStopsDestruction(ReferencePtr(this)));
   }
 
-  virtual BackendType GetBackendType() const { return BackendType::RECORDING; }
+  virtual BackendType GetBackendType() const override { return BackendType::RECORDING; }
 
   RefPtr<DrawEventRecorderPrivate> mRecorder;
 };

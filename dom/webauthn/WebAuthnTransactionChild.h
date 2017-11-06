@@ -28,17 +28,17 @@ public:
 
   mozilla::ipc::IPCResult
   RecvConfirmRegister(const uint64_t& aTransactionId,
-                      nsTArray<uint8_t>&& aRegBuffer);
+                      nsTArray<uint8_t>&& aRegBuffer) override;
 
   mozilla::ipc::IPCResult
   RecvConfirmSign(const uint64_t& aTransactionId,
                   nsTArray<uint8_t>&& aCredentialId,
-                  nsTArray<uint8_t>&& aBuffer);
+                  nsTArray<uint8_t>&& aBuffer) override;
 
   mozilla::ipc::IPCResult
-  RecvAbort(const uint64_t& aTransactionId, const nsresult& aError);
+  RecvAbort(const uint64_t& aTransactionId, const nsresult& aError) override;
 
-  void ActorDestroy(ActorDestroyReason why);
+  void ActorDestroy(ActorDestroyReason why) override;
 
   void Disconnect();
 

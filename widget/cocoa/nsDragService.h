@@ -26,15 +26,15 @@ public:
   // nsBaseDragService
   virtual nsresult InvokeDragSessionImpl(nsIArray* anArrayTransferables,
                                          nsIScriptableRegion* aRegion,
-                                         uint32_t aActionType);
+                                         uint32_t aActionType) override;
   // nsIDragService
-  NS_IMETHOD EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers);
-  NS_IMETHOD UpdateDragImage(nsIDOMNode* aImage, int32_t aImageX, int32_t aImageY);
+  NS_IMETHOD EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) override;
+  NS_IMETHOD UpdateDragImage(nsIDOMNode* aImage, int32_t aImageX, int32_t aImageY) override;
 
   // nsIDragSession
-  NS_IMETHOD GetData(nsITransferable * aTransferable, uint32_t aItemIndex);
-  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, bool *_retval);
-  NS_IMETHOD GetNumDropItems(uint32_t * aNumItems);
+  NS_IMETHOD GetData(nsITransferable * aTransferable, uint32_t aItemIndex) override;
+  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, bool *_retval) override;
+  NS_IMETHOD GetNumDropItems(uint32_t * aNumItems) override;
 
   void DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoint);
 

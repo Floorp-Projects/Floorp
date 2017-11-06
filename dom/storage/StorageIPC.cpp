@@ -658,15 +658,15 @@ public:
     *mRv = NS_ERROR_UNEXPECTED;
   }
 
-  virtual const nsCString Origin() const
+  virtual const nsCString Origin() const override
   {
     return LocalStorageManager::CreateOrigin(mSuffix, mOrigin);
   }
-  virtual const nsCString& OriginNoSuffix() const { return mOrigin; }
-  virtual const nsCString& OriginSuffix() const { return mSuffix; }
-  virtual bool Loaded() { return mLoaded; }
-  virtual uint32_t LoadedCount() { return mLoadedCount; }
-  virtual bool LoadItem(const nsAString& aKey, const nsString& aValue)
+  virtual const nsCString& OriginNoSuffix() const override { return mOrigin; }
+  virtual const nsCString& OriginSuffix() const override { return mSuffix; }
+  virtual bool Loaded() override { return mLoaded; }
+  virtual uint32_t LoadedCount() override { return mLoadedCount; }
+  virtual bool LoadItem(const nsAString& aKey, const nsString& aValue) override
   {
     // Called on the aCache background thread
     MOZ_ASSERT(!mLoaded);
@@ -680,7 +680,7 @@ public:
     return true;
   }
 
-  virtual void LoadDone(nsresult aRv)
+  virtual void LoadDone(nsresult aRv) override
   {
     // Called on the aCache background thread
     MonitorAutoLock monitor(mMonitor);
@@ -693,7 +693,7 @@ public:
     monitor.Notify();
   }
 
-  virtual void LoadWait()
+  virtual void LoadWait() override
   {
     // Called on the main thread, exits after LoadDone() call
     MonitorAutoLock monitor(mMonitor);

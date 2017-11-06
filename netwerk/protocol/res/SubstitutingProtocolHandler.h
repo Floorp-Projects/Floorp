@@ -123,9 +123,9 @@ class SubstitutingURL : public nsStandardURL
 {
 public:
   SubstitutingURL() : nsStandardURL(true) {}
-  virtual nsStandardURL* StartClone();
-  virtual MOZ_MUST_USE nsresult EnsureFile();
-  NS_IMETHOD GetClassIDNoAlloc(nsCID *aCID);
+  virtual nsStandardURL* StartClone() override;
+  virtual MOZ_MUST_USE nsresult EnsureFile() override;
+  NS_IMETHOD GetClassIDNoAlloc(nsCID *aCID) override;
 };
 
 } // namespace net

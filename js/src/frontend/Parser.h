@@ -320,7 +320,7 @@ class ParserBase
         return pc->isGenerator();
     }
 
-    virtual bool strictMode() { return pc->sc()->strict(); }
+    virtual bool strictMode() override { return pc->sc()->strict(); }
     bool setLocalStrictMode(bool strict) {
         MOZ_ASSERT(anyChars.debugHasNoLookahead());
         return pc->sc()->setLocalStrictMode(strict);

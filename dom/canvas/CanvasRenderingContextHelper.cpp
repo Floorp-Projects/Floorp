@@ -37,7 +37,7 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
       , mBlobCallback(aCallback) {}
 
     // This is called on main thread.
-    nsresult ReceiveBlob(already_AddRefed<Blob> aBlob)
+    nsresult ReceiveBlob(already_AddRefed<Blob> aBlob) override
     {
       RefPtr<Blob> blob = aBlob;
 

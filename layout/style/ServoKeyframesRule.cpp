@@ -49,7 +49,7 @@ public:
     }
   }
 
-  ServoStyleSheet* GetParentObject() final { return mStyleSheet; }
+  ServoStyleSheet* GetParentObject() final override { return mStyleSheet; }
 
   ServoKeyframeRule* GetRule(uint32_t aIndex) {
     if (!mRules[aIndex]) {
@@ -66,7 +66,7 @@ public:
     return static_cast<ServoKeyframeRule*>(mRules[aIndex]);
   }
 
-  ServoKeyframeRule* IndexedGetter(uint32_t aIndex, bool& aFound) final
+  ServoKeyframeRule* IndexedGetter(uint32_t aIndex, bool& aFound) final override
   {
     if (aIndex >= mRules.Length()) {
       aFound = false;
@@ -84,7 +84,7 @@ public:
     mRules.RemoveObjectAt(aIndex);
   }
 
-  uint32_t Length() final { return mRules.Length(); }
+  uint32_t Length() final override { return mRules.Length(); }
 
   void DropReference()
   {
