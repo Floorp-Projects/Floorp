@@ -2992,7 +2992,7 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
            try_reg0_offset);
 
   // mRunSize expansion loop.
-  do {
+  while (true) {
     // Copy valid settings before trying more aggressive settings.
     good_run_size = try_run_size;
     good_nregs = try_nregs;
@@ -3011,9 +3011,22 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
       try_reg0_offset = try_run_size - (try_nregs * bin->mSizeClass);
     } while (sizeof(arena_run_t) + (sizeof(unsigned) * (try_mask_nelms - 1)) >
              try_reg0_offset);
-  } while (try_run_size <= gMaxLargeClass &&
-           RUN_MAX_OVRHD * (bin->mSizeClass << 3) > RUN_MAX_OVRHD_RELAX &&
-           (try_reg0_offset << RUN_BFP) > RUN_MAX_OVRHD * try_run_size);
+
+    // Don't allow runs larger than the largest possible large size class.
+    if (try_run_size > gMaxLargeClass) {
+      break;
+    }
+
+    // This doesn't match the comment above RUN_MAX_OVRHD_RELAX.
+    if (RUN_MAX_OVRHD * (bin->mSizeClass << 3) <= RUN_MAX_OVRHD_RELAX) {
+      break;
+    }
+
+    // Try to keep the run overhead below RUN_MAX_OVRHD.
+    if ((try_reg0_offset << RUN_BFP) <= RUN_MAX_OVRHD * try_run_size) {
+      break;
+    }
+  }
 
   MOZ_ASSERT(sizeof(arena_run_t) + (sizeof(unsigned) * (good_mask_nelms - 1)) <=
              good_reg0_offset);
