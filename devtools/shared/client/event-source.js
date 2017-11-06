@@ -48,13 +48,20 @@ function eventSource(proto) {
    *        The event to listen for.
    * @param listener function
    *        Called when the event is fired.
+   * @returns Promise
+   *          Resolved with an array of the arguments of the event.
    */
   proto.addOneTimeListener = function (name, listener) {
-    let l = (...args) => {
-      this.removeListener(name, l);
-      listener.apply(null, args);
-    };
-    this.addListener(name, l);
+    return new Promise(resolve => {
+      let l = (eventName, ...rest) => {
+        this.removeListener(name, l);
+        if (listener) {
+          listener(eventName, ...rest);
+        }
+        resolve(rest[0]);
+      };
+      this.addListener(name, l);
+    });
   };
 
   /**
