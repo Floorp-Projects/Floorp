@@ -585,7 +585,7 @@ class TokenStreamAnyChars: public ErrorReporter
     virtual const char* getFilename() const override { return filename; }
     virtual bool hasTokenizationStarted() const override;
     virtual void lineNumAndColumnIndex(size_t offset, uint32_t* line, uint32_t* column) const override;
-    virtual void reportErrorNoOffset(unsigned errorNumber, ...) override;
+    virtual void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) override;
     virtual size_t offset() const override;
 
   protected:
