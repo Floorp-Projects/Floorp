@@ -49,20 +49,20 @@ class RingbufferDumper : public ::testing::EmptyTestEventListener {
       ClearRingBuffer_s();
     }
 
-    virtual void OnTestStart(const ::testing::TestInfo& testInfo) {
+    virtual void OnTestStart(const ::testing::TestInfo& testInfo) override {
       mozilla::SyncRunnable::DispatchToThread(
           test_utils_->sts_target(),
           WrapRunnable(this, &RingbufferDumper::ClearRingBuffer_s));
     }
 
-    virtual void OnTestEnd(const ::testing::TestInfo& testInfo) {
+    virtual void OnTestEnd(const ::testing::TestInfo& testInfo) override {
       mozilla::SyncRunnable::DispatchToThread(
           test_utils_->sts_target(),
           WrapRunnable(this, &RingbufferDumper::DestroyRingBuffer_s));
     }
 
     // Called after a failed assertion or a SUCCEED() invocation.
-    virtual void OnTestPartResult(const ::testing::TestPartResult& testResult) {
+    virtual void OnTestPartResult(const ::testing::TestPartResult& testResult) override {
       if (testResult.failed()) {
         // Dump (and empty) the RLogConnector
         mozilla::SyncRunnable::DispatchToThread(
@@ -78,6 +78,3 @@ class RingbufferDumper : public ::testing::EmptyTestEventListener {
 } // namespace test
 
 #endif // gtest_ringbuffer_dumper_h__
-
-
-

@@ -766,7 +766,7 @@ class nsNavHistorySeparatorResultNode : public nsNavHistoryResultNode
 public:
   nsNavHistorySeparatorResultNode();
 
-  NS_IMETHOD GetType(uint32_t* type)
+  NS_IMETHOD GetType(uint32_t* type) override
     { *type = nsNavHistoryResultNode::RESULT_TYPE_SEPARATOR; return NS_OK; }
 };
 

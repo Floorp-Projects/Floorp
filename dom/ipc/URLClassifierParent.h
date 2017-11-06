@@ -23,7 +23,7 @@ public:
   NS_IMETHOD OnClassifyComplete(nsresult aErrorCode,
                                 const nsACString& aList,
                                 const nsACString& aProvider,
-                                const nsACString& aFullHash)
+                                const nsACString& aFullHash) override
   {
     if (mIPCOpen) {
       ClassifierInfo info = ClassifierInfo(nsCString(aList),

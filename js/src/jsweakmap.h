@@ -374,7 +374,7 @@ class ObjectValueMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>,
                 MovableCellHasher<HeapPtr<JSObject*>>>(cx, obj)
     {}
 
-    virtual bool findZoneEdges();
+    bool findZoneEdges() override;
 };
 
 

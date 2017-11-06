@@ -581,7 +581,7 @@ public:
   {
   }
 
-  virtual nsStaticAtom* GetStyleName() const final;
+  virtual nsStaticAtom* GetStyleName() const final override;
   virtual void GetPrefix(nsAString& aResult) override;
   virtual void GetSuffix(nsAString& aResult) override;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,

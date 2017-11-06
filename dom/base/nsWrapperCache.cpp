@@ -67,30 +67,30 @@ public:
   }
 
   NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt aRefCount,
-                                           const char* aObjName)
+                                           const char* aObjName) override
   {
   }
   NS_IMETHOD_(void) DescribeGCedNode(bool aIsMarked,
                                      const char* aObjName,
-                                     uint64_t aCompartmentAddress)
+                                     uint64_t aCompartmentAddress) override
   {
   }
 
-  NS_IMETHOD_(void) NoteJSChild(const JS::GCCellPtr& aChild)
+  NS_IMETHOD_(void) NoteJSChild(const JS::GCCellPtr& aChild) override
   {
     if (aChild == mWrapper) {
       mFound = true;
     }
   }
-  NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild)
+  NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild) override
   {
   }
   NS_IMETHOD_(void) NoteNativeChild(void* aChild,
-                                    nsCycleCollectionParticipant* aHelper)
+                                    nsCycleCollectionParticipant* aHelper) override
   {
   }
 
-  NS_IMETHOD_(void) NoteNextEdgeName(const char* aName)
+  NS_IMETHOD_(void) NoteNextEdgeName(const char* aName) override
   {
   }
 

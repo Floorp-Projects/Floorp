@@ -1536,7 +1536,7 @@ public:
   }
 
   void
-  JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus)
+  JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus) override
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aJob);
@@ -1552,7 +1552,7 @@ public:
     mCallback->UnregisterSucceeded(unregisterJob->GetResult());
   }
 
-  NS_INLINE_DECL_REFCOUNTING(UnregisterJobCallback)
+  NS_INLINE_DECL_REFCOUNTING(UnregisterJobCallback, override)
 };
 
 } // anonymous namespace
@@ -2788,7 +2788,7 @@ public:
   }
 
   void
-  JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus)
+  JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus) override
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aJob);
@@ -2805,7 +2805,7 @@ public:
     mCallback->UpdateSucceeded(reg);
   }
 
-  NS_INLINE_DECL_REFCOUNTING(UpdateJobCallback)
+  NS_INLINE_DECL_REFCOUNTING(UpdateJobCallback, override)
 };
 
 } // anonymous namespace

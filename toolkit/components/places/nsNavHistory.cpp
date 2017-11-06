@@ -1042,7 +1042,7 @@ public:
   {
   }
 
-  NS_IMETHOD HandleCompletion(uint16_t aReason)
+  NS_IMETHOD HandleCompletion(uint16_t aReason) override
   {
     if (aReason == REASON_FINISHED) {
       nsNavHistory *navHistory = nsNavHistory::GetHistoryService();
@@ -3051,7 +3051,7 @@ public:
   {
   }
 
-  NS_IMETHOD HandleCompletion(uint16_t aReason)
+  NS_IMETHOD HandleCompletion(uint16_t aReason) override
   {
     (void)AsyncStatementTelemetryTimer::HandleCompletion(aReason);
     if (aReason == REASON_FINISHED) {
@@ -4390,7 +4390,7 @@ public:
   {
   }
 
-  NS_IMETHOD HandleCompletion(uint16_t aReason)
+  NS_IMETHOD HandleCompletion(uint16_t aReason) override
   {
     nsresult rv = AsyncStatementCallbackNotifier::HandleCompletion(aReason);
     NS_ENSURE_SUCCESS(rv, rv);

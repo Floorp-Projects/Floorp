@@ -147,7 +147,7 @@ public:
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
                                         nsIPrincipal* aSubjectPrincipal) override;
   nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
+  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final override;
 
   static already_AddRefed<nsROCSSPrimitiveValue>
     MatrixToCSSValue(const mozilla::gfx::Matrix4x4& aMatrix);

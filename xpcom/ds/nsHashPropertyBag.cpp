@@ -270,7 +270,7 @@ public:
   {}
 
   NS_IMETHODIMP
-  Run()
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     HashtableType table(mozilla::Move(mPropertyHash));

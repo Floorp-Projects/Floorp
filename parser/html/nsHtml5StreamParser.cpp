@@ -879,7 +879,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsJSContext::MaybeRunNextCollectorSlice(mDocShell, JS::gcreason::HTML_PARSER);
     return NS_OK;

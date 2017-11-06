@@ -185,4 +185,3 @@ protected:
 } // namespace mozilla
 
 #endif // mozilla_dom_shadowroot_h__
-

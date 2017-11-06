@@ -81,7 +81,7 @@ public:
                         mozilla::gfx::ExtendMode aExtendMode,
                         const mozilla::gfx::SamplingFilter aSamplingFilter,
                         gfxFloat aOpacity = 1.0,
-                        const gfxMatrix& aTransform = gfxMatrix());
+                        const gfxMatrix& aTransform = gfxMatrix()) override;
 
     virtual bool DrawWithSamplingRect(DrawTarget* aDrawTarget,
                                       CompositionOp aOp,
@@ -90,7 +90,7 @@ public:
                                       const gfxRect& aSamplingRect,
                                       mozilla::gfx::ExtendMode aExtendMode,
                                       const mozilla::gfx::SamplingFilter aSamplingFilter,
-                                      gfxFloat aOpacity = 1.0);
+                                      gfxFloat aOpacity = 1.0) override;
 
 protected:
     void DrawInternal(DrawTarget* aDrawTarget,
@@ -146,7 +146,7 @@ public:
                       mozilla::gfx::ExtendMode aExtendMode,
                       const mozilla::gfx::SamplingFilter aSamplingFilter,
                       gfxFloat aOpacity = 1.0,
-                      const gfxMatrix& aTransform = gfxMatrix());
+                      const gfxMatrix& aTransform = gfxMatrix()) override;
 
 protected:
     already_AddRefed<gfxSurfaceDrawable>
@@ -173,8 +173,7 @@ public:
                       mozilla::gfx::ExtendMode aExtendMode,
                       const mozilla::gfx::SamplingFilter aSamplingFilter,
                       gfxFloat aOpacity = 1.0,
-                      const gfxMatrix& aTransform = gfxMatrix());
-
+                      const gfxMatrix& aTransform = gfxMatrix()) override;
 
 protected:
     already_AddRefed<gfxCallbackDrawable> MakeCallbackDrawable();

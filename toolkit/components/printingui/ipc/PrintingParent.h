@@ -33,38 +33,38 @@ public:
     RecvShowProgress(PBrowserParent* parent,
                      PPrintProgressDialogParent* printProgressDialog,
                      PRemotePrintJobParent* remotePrintJob,
-                     const bool& isForPrinting);
+                     const bool& isForPrinting) override;
     virtual mozilla::ipc::IPCResult
     RecvShowPrintDialog(PPrintSettingsDialogParent* aDialog,
                         PBrowserParent* aParent,
-                        const PrintData& aData);
+                        const PrintData& aData) override;
 
     virtual mozilla::ipc::IPCResult
     RecvSavePrintSettings(const PrintData& data,
                           const bool& usePrinterNamePrefix,
                           const uint32_t& flags,
-                          nsresult* rv);
+                          nsresult* rv) override;
 
     virtual PPrintProgressDialogParent*
-    AllocPPrintProgressDialogParent();
+    AllocPPrintProgressDialogParent() override;
 
     virtual bool
-    DeallocPPrintProgressDialogParent(PPrintProgressDialogParent* aActor);
+    DeallocPPrintProgressDialogParent(PPrintProgressDialogParent* aActor) override;
 
     virtual PPrintSettingsDialogParent*
-    AllocPPrintSettingsDialogParent();
+    AllocPPrintSettingsDialogParent() override;
 
     virtual bool
-    DeallocPPrintSettingsDialogParent(PPrintSettingsDialogParent* aActor);
+    DeallocPPrintSettingsDialogParent(PPrintSettingsDialogParent* aActor) override;
 
     virtual PRemotePrintJobParent*
-    AllocPRemotePrintJobParent();
+    AllocPRemotePrintJobParent() override;
 
     virtual bool
-    DeallocPRemotePrintJobParent(PRemotePrintJobParent* aActor);
+    DeallocPRemotePrintJobParent(PRemotePrintJobParent* aActor) override;
 
     virtual void
-    ActorDestroy(ActorDestroyReason aWhy);
+    ActorDestroy(ActorDestroyReason aWhy) override;
 
     MOZ_IMPLICIT PrintingParent();
 

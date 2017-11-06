@@ -25,17 +25,17 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 #ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final override;
 #endif
-  already_AddRefed<Rule> Clone() const final;
+  already_AddRefed<Rule> Clone() const final override;
 
-  nsAtom* GetPrefix() const final;
-  void GetURLSpec(nsString& aURLSpec) const final;
+  nsAtom* GetPrefix() const final override;
+  void GetURLSpec(nsString& aURLSpec) const final override;
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetCssTextImpl(nsAString& aCssText) const final override;
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final override;
 
 private:
   ~ServoNamespaceRule();

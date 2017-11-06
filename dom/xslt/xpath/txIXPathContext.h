@@ -106,11 +106,12 @@ public:
 
 #define TX_DECL_MATCH_CONTEXT \
     nsresult getVariable(int32_t aNamespace, nsAtom* aLName, \
-                         txAExprResult*& aResult); \
-    nsresult isStripSpaceAllowed(const txXPathNode& aNode, bool& aAllowed); \
-    void* getPrivateContext(); \
-    txResultRecycler* recycler(); \
-    void receiveError(const nsAString& aMsg, nsresult aRes)
+                         txAExprResult*& aResult) override; \
+    nsresult isStripSpaceAllowed(const txXPathNode& aNode, \
+                                 bool& aAllowed) override; \
+    void* getPrivateContext() override; \
+    txResultRecycler* recycler() override; \
+    void receiveError(const nsAString& aMsg, nsresult aRes) override
 
 class txIEvalContext : public txIMatchContext
 {
@@ -134,8 +135,8 @@ public:
 
 #define TX_DECL_EVAL_CONTEXT \
     TX_DECL_MATCH_CONTEXT; \
-    const txXPathNode& getContextNode(); \
-    uint32_t size(); \
-    uint32_t position()
+    const txXPathNode& getContextNode() override; \
+    uint32_t size() override; \
+    uint32_t position() override
 
 #endif // __TX_I_XPATH_CONTEXT

@@ -34,42 +34,42 @@ public:
 
   bool TranslateRecording(char *, size_t len);
 
-  DrawTarget* LookupDrawTarget(ReferencePtr aRefPtr) final
+  DrawTarget* LookupDrawTarget(ReferencePtr aRefPtr) final override
   {
     DrawTarget* result = mDrawTargets.GetWeak(aRefPtr);
     MOZ_ASSERT(result);
     return result;
   }
 
-  Path* LookupPath(ReferencePtr aRefPtr) final
+  Path* LookupPath(ReferencePtr aRefPtr) final override
   {
     Path* result = mPaths.GetWeak(aRefPtr);
     MOZ_ASSERT(result);
     return result;
   }
 
-  SourceSurface* LookupSourceSurface(ReferencePtr aRefPtr) final
+  SourceSurface* LookupSourceSurface(ReferencePtr aRefPtr) final override
   {
     SourceSurface* result = mSourceSurfaces.GetWeak(aRefPtr);
     MOZ_ASSERT(result);
     return result;
   }
 
-  FilterNode* LookupFilterNode(ReferencePtr aRefPtr) final
+  FilterNode* LookupFilterNode(ReferencePtr aRefPtr) final override
   {
     FilterNode* result = mFilterNodes.GetWeak(aRefPtr);
     MOZ_ASSERT(result);
     return result;
   }
 
-  GradientStops* LookupGradientStops(ReferencePtr aRefPtr) final
+  GradientStops* LookupGradientStops(ReferencePtr aRefPtr) final override
   {
     GradientStops* result =  mGradientStops.GetWeak(aRefPtr);
     MOZ_ASSERT(result);
     return result;
   }
 
-  ScaledFont* LookupScaledFont(ReferencePtr aRefPtr) final
+  ScaledFont* LookupScaledFont(ReferencePtr aRefPtr) final override
   {
     ScaledFont* result = mScaledFonts.GetWeak(aRefPtr);
     MOZ_ASSERT(result);
@@ -89,86 +89,86 @@ public:
     return result;
   }
 
-  NativeFontResource* LookupNativeFontResource(uint64_t aKey) final
+  NativeFontResource* LookupNativeFontResource(uint64_t aKey) final override
   {
     NativeFontResource* result = mNativeFontResources.GetWeak(aKey);
     MOZ_ASSERT(result);
     return result;
   }
 
-  void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) final
+  void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) final override
   {
     mDrawTargets.Put(aRefPtr, aDT);
   }
 
-  void AddPath(ReferencePtr aRefPtr, Path *aPath) final
+  void AddPath(ReferencePtr aRefPtr, Path *aPath) final override
   {
     mPaths.Put(aRefPtr, aPath);
   }
 
-  void AddSourceSurface(ReferencePtr aRefPtr, SourceSurface *aSurface) final
+  void AddSourceSurface(ReferencePtr aRefPtr, SourceSurface *aSurface) final override
   {
     mSourceSurfaces.Put(aRefPtr, aSurface);
   }
 
-  void AddFilterNode(ReferencePtr aRefPtr, FilterNode *aFilter) final
+  void AddFilterNode(ReferencePtr aRefPtr, FilterNode *aFilter) final override
   {
     mFilterNodes.Put(aRefPtr, aFilter);
   }
 
-  void AddGradientStops(ReferencePtr aRefPtr, GradientStops *aStops) final
+  void AddGradientStops(ReferencePtr aRefPtr, GradientStops *aStops) final override
   {
     mGradientStops.Put(aRefPtr, aStops);
   }
 
-  void AddScaledFont(ReferencePtr aRefPtr, ScaledFont *aScaledFont) final
+  void AddScaledFont(ReferencePtr aRefPtr, ScaledFont *aScaledFont) final override
   {
     mScaledFonts.Put(aRefPtr, aScaledFont);
   }
 
-  void AddUnscaledFont(ReferencePtr aRefPtr, UnscaledFont *aUnscaledFont) final
+  void AddUnscaledFont(ReferencePtr aRefPtr, UnscaledFont *aUnscaledFont) final override
   {
     mUnscaledFontTable.push_back(aUnscaledFont);
     mUnscaledFonts.Put(aRefPtr, aUnscaledFont);
   }
 
   void AddNativeFontResource(uint64_t aKey,
-                             NativeFontResource *aScaledFontResouce) final
+                             NativeFontResource *aScaledFontResouce) final override
   {
     mNativeFontResources.Put(aKey, aScaledFontResouce);
   }
 
-  void RemoveDrawTarget(ReferencePtr aRefPtr) final
+  void RemoveDrawTarget(ReferencePtr aRefPtr) final override
   {
     mDrawTargets.Remove(aRefPtr);
   }
 
-  void RemovePath(ReferencePtr aRefPtr) final
+  void RemovePath(ReferencePtr aRefPtr) final override
   {
     mPaths.Remove(aRefPtr);
   }
 
-  void RemoveSourceSurface(ReferencePtr aRefPtr) final
+  void RemoveSourceSurface(ReferencePtr aRefPtr) final override
   {
     mSourceSurfaces.Remove(aRefPtr);
   }
 
-  void RemoveFilterNode(ReferencePtr aRefPtr) final
+  void RemoveFilterNode(ReferencePtr aRefPtr) final override
   {
     mFilterNodes.Remove(aRefPtr);
   }
 
-  void RemoveGradientStops(ReferencePtr aRefPtr) final
+  void RemoveGradientStops(ReferencePtr aRefPtr) final override
   {
     mGradientStops.Remove(aRefPtr);
   }
 
-  void RemoveScaledFont(ReferencePtr aRefPtr) final
+  void RemoveScaledFont(ReferencePtr aRefPtr) final override
   {
     mScaledFonts.Remove(aRefPtr);
   }
 
-  void RemoveUnscaledFont(ReferencePtr aRefPtr) final
+  void RemoveUnscaledFont(ReferencePtr aRefPtr) final override
   {
     mUnscaledFonts.Remove(aRefPtr);
   }
@@ -176,11 +176,11 @@ public:
 
   already_AddRefed<DrawTarget> CreateDrawTarget(ReferencePtr aRefPtr,
                                                 const gfx::IntSize &aSize,
-                                                gfx::SurfaceFormat aFormat) final;
+                                                gfx::SurfaceFormat aFormat) final override;
 
-  mozilla::gfx::DrawTarget* GetReferenceDrawTarget() final { return mBaseDT; }
+  mozilla::gfx::DrawTarget* GetReferenceDrawTarget() final override { return mBaseDT; }
 
-  void* GetFontContext() final { return mFontContext; }
+  void* GetFontContext() final override { return mFontContext; }
 
 private:
   RefPtr<DrawTarget> mBaseDT;

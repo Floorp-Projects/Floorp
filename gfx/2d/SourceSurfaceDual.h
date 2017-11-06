@@ -18,20 +18,21 @@ class DualPattern;
 class SourceSurfaceDual : public SourceSurface
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceDual)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceDual, override)
+
   SourceSurfaceDual(DrawTarget *aDTA, DrawTarget *aDTB)
     : mA(aDTA->Snapshot())
     , mB(aDTB->Snapshot())
   { }
 
-  virtual SurfaceType GetType() const { return SurfaceType::DUAL_DT; }
-  virtual IntSize GetSize() const { return mA->GetSize(); }
-  virtual SurfaceFormat GetFormat() const { return mA->GetFormat(); }
+  virtual SurfaceType GetType() const override { return SurfaceType::DUAL_DT; }
+  virtual IntSize GetSize() const override { return mA->GetSize(); }
+  virtual SurfaceFormat GetFormat() const override { return mA->GetFormat(); }
 
   // TODO: This is probably wrong as this was originally only
   // used for debugging purposes, but now has legacy relying on
   // giving the first type only.
-  virtual already_AddRefed<DataSourceSurface> GetDataSurface() {
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface() override {
     return mA->GetDataSurface();
   }
 

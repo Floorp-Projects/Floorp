@@ -30,7 +30,7 @@ public:
     NS_ASSERTION(o, "no release null objects");
   }
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() override;
 
 private:
   const NPNetscapeFuncs* mFuncs;

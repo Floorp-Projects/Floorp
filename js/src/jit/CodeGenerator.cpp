@@ -86,7 +86,7 @@ class OutOfLineICFallback : public OutOfLineCodeBase<CodeGenerator>
         cacheInfoIndex_(cacheInfoIndex)
     { }
 
-    void bind(MacroAssembler* masm) {
+    void bind(MacroAssembler* masm) override {
         // The binding of the initial jump is done in
         // CodeGenerator::visitOutOfLineICFallback.
     }
@@ -101,7 +101,7 @@ class OutOfLineICFallback : public OutOfLineCodeBase<CodeGenerator>
         return lir_;
     }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineICFallback(this);
     }
 };
@@ -1935,7 +1935,7 @@ class OutOfLineRegExpMatcher : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineRegExpMatcher(this);
     }
 
@@ -2092,7 +2092,7 @@ class OutOfLineRegExpSearcher : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineRegExpSearcher(this);
     }
 
@@ -2240,7 +2240,7 @@ class OutOfLineRegExpTester : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineRegExpTester(this);
     }
 
@@ -2304,7 +2304,7 @@ class OutOfLineRegExpPrototypeOptimizable : public OutOfLineCodeBase<CodeGenerat
       : ins_(ins)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineRegExpPrototypeOptimizable(this);
     }
     LRegExpPrototypeOptimizable* ins() const {
@@ -2365,7 +2365,7 @@ class OutOfLineRegExpInstanceOptimizable : public OutOfLineCodeBase<CodeGenerato
       : ins_(ins)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineRegExpInstanceOptimizable(this);
     }
     LRegExpInstanceOptimizable* ins() const {
@@ -2690,7 +2690,7 @@ class OutOfLineLambdaArrow : public OutOfLineCodeBase<CodeGenerator>
       : lir(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineLambdaArrow(this);
     }
 
@@ -2865,7 +2865,7 @@ class OutOfLineInterruptCheckImplicit : public OutOfLineCodeBase<CodeGenerator>
       : block(block), lir(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineInterruptCheckImplicit(this);
     }
 };
@@ -3721,7 +3721,7 @@ class OutOfLineCallPostWriteBarrier : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir), object_(object)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineCallPostWriteBarrier(this);
     }
 
@@ -3933,7 +3933,7 @@ class OutOfLineCallPostWriteElementBarrier : public OutOfLineCodeBase<CodeGenera
         index_(index)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineCallPostWriteElementBarrier(this);
     }
 
@@ -4954,7 +4954,7 @@ class CheckOverRecursedFailure : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitCheckOverRecursedFailure(this);
     }
 
@@ -5556,7 +5556,7 @@ class OutOfLineNewArray : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineNewArray(this);
     }
 
@@ -5874,7 +5874,7 @@ class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineNewObject(this);
     }
 
@@ -8541,7 +8541,7 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator>
                    ins->isFallibleStoreElementV() || ins->isFallibleStoreElementT());
     }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineStoreElementHole(this);
     }
     LInstruction* ins() const {
@@ -9993,7 +9993,7 @@ class OutOfLineUnboxFloatingPoint : public OutOfLineCodeBase<CodeGenerator>
       : unboxFloatingPoint_(unboxFloatingPoint)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineUnboxFloatingPoint(this);
     }
 
@@ -10511,7 +10511,7 @@ class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator>
       : ins_(ins)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineTypeOfV(this);
     }
     LTypeOfV* ins() const {
@@ -11004,7 +11004,7 @@ class OutOfLineSwitch : public OutOfLineCodeBase<CodeGenerator>
     CodeLabel start_;
     bool isOutOfLine_;
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineSwitch(this);
     }
 
@@ -11789,7 +11789,7 @@ class OutOfLineIsCallable : public OutOfLineCodeBase<CodeGenerator>
       : object_(object), output_(output)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineIsCallable(this);
     }
     Register object() const {
@@ -11939,7 +11939,7 @@ class OutOfLineIsConstructor : public OutOfLineCodeBase<CodeGenerator>
       : ins_(ins)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineIsConstructor(this);
     }
     LIsConstructor* ins() const {
@@ -12723,7 +12723,7 @@ class OutOfLineNaNToZero : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     {}
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineNaNToZero(this);
     }
     LNaNToZero* lir() const {

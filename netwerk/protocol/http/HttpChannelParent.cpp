@@ -406,7 +406,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     RefPtr<HttpChannelParent> channel = do_QueryObject(mChannel.get());
     channel->TryInvokeAsyncOpen(mStatus);
@@ -1147,7 +1147,7 @@ public:
   {
   }
 
-  void Run()
+  void Run() override
   {
     mParent->DivertOnDataAvailable(mData, mOffset, mCount);
   }
@@ -1238,7 +1238,8 @@ public:
   {
   }
 
-  void Run() {
+  void Run() override
+  {
     mParent->DivertOnStopRequest(mStatusCode);
   }
 
@@ -1297,7 +1298,8 @@ public:
   {
   }
 
-  void Run() {
+  void Run() override
+  {
     mParent->DivertComplete();
   }
 

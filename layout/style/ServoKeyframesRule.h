@@ -23,24 +23,24 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoKeyframesRule,
                                            dom::CSSKeyframesRule)
-  bool IsCCLeaf() const final;
+  bool IsCCLeaf() const final override;
 
-  already_AddRefed<css::Rule> Clone() const final;
+  already_AddRefed<css::Rule> Clone() const final override;
 #ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final override;
 #endif
-  void SetStyleSheet(StyleSheet* aSheet) final;
+  void SetStyleSheet(StyleSheet* aSheet) final override;
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final;
-  void GetName(nsAString& aName) const final;
-  void SetName(const nsAString& aName) final;
-  dom::CSSRuleList* CssRules() final;
-  void AppendRule(const nsAString& aRule) final;
-  void DeleteRule(const nsAString& aKey) final;
-  dom::CSSKeyframeRule* FindRule(const nsAString& aKey) final;
+  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetName(nsAString& aName) const final override;
+  void SetName(const nsAString& aName) final override;
+  dom::CSSRuleList* CssRules() final override;
+  void AppendRule(const nsAString& aRule) final override;
+  void DeleteRule(const nsAString& aKey) final override;
+  dom::CSSKeyframeRule* FindRule(const nsAString& aKey) final override;
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final override;
 
 private:
   uint32_t FindRuleIndexForKey(const nsAString& aKey);
