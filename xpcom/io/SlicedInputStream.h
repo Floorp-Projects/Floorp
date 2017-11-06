@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_SlicedInputStream_h
-#define mozilla_SlicedInputStream_h
+#ifndef SlicedInputStream_h
+#define SlicedInputStream_h
 
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
@@ -13,8 +13,6 @@
 #include "nsICloneableInputStream.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsISeekableStream.h"
-
-namespace mozilla {
 
 // A wrapper for a slice of an underlying input stream.
 
@@ -80,6 +78,4 @@ private:
   uint32_t mAsyncWaitRequestedCount;
 };
 
-} // mozilla namespace
-
-#endif // mozilla_SlicedInputStream_h
+#endif // SlicedInputStream_h

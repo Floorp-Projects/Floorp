@@ -9,7 +9,6 @@
 #include "nsISeekableStream.h"
 #include "nsStreamUtils.h"
 
-using namespace mozilla;
 using namespace mozilla::ipc;
 
 NS_IMPL_ADDREF(SlicedInputStream);
