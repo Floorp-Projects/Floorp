@@ -22,6 +22,8 @@ echo "running as" $(id)
 
 : NEED_XVFB                     ${NEED_XVFB:=false}
 
+: MOZ_SCM_LEVEL                 ${MOZ_SCM_LEVEL:=1}
+
 : WORKSPACE                     ${WORKSPACE:=/builds/worker/workspace}
 
 set -v
@@ -95,4 +97,5 @@ python2.7 $WORKSPACE/build/src/testing/${MOZHARNESS_SCRIPT} \
   $options \
   ${config_cmds} \
   --log-level=debug \
+  --scm-level=$MOZ_SCM_LEVEL \
   --work-dir=$WORKSPACE/build \
