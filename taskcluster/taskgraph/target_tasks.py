@@ -225,7 +225,7 @@ def target_tasks_graphics(full_task_graph, parameters, graph_config):
        filter does, also remove artifact builds because we have csets on
        the graphics branch that aren't on the candidate branches of artifact
        builds"""
-    filtered_for_project = target_tasks_default(full_task_graph, parameters)
+    filtered_for_project = target_tasks_default(full_task_graph, parameters, graph_config)
 
     def filter(task):
         if task.attributes['kind'] == 'artifact-build':
@@ -353,7 +353,7 @@ def target_tasks_publish_firefox(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to publish a candidates build of firefox.
     Previous build deps will be optimized out via action task."""
     filtered_for_candidates = target_tasks_mozilla_beta_desktop_promotion(
-        full_task_graph, parameters
+        full_task_graph, parameters, graph_config,
     )
 
     def filter(task):
@@ -379,7 +379,7 @@ def target_tasks_candidates_fennec(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a candidates build of fennec. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filtered_for_project = target_tasks_nightly_fennec(full_task_graph, parameters)
+    filtered_for_project = target_tasks_nightly_fennec(full_task_graph, parameters, graph_config)
 
     def filter(task):
         attr = task.attributes.get
@@ -406,7 +406,9 @@ def target_tasks_candidates_fennec(full_task_graph, parameters, graph_config):
 def target_tasks_publish_fennec(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to publish a candidates build of fennec.
     Previous build deps will be optimized out via action task."""
-    filtered_for_candidates = target_tasks_candidates_fennec(full_task_graph, parameters)
+    filtered_for_candidates = target_tasks_candidates_fennec(
+        full_task_graph, parameters, graph_config,
+    )
 
     def filter(task):
         # Include candidates build tasks; these will be optimized out
@@ -497,10 +499,10 @@ def target_tasks_nightly_desktop(full_task_graph, parameters, graph_config):
     windows."""
     # Avoid duplicate tasks.
     return list(
-        set(target_tasks_nightly_win32(full_task_graph, parameters))
-        | set(target_tasks_nightly_win64(full_task_graph, parameters))
-        | set(target_tasks_nightly_macosx(full_task_graph, parameters))
-        | set(target_tasks_nightly_linux(full_task_graph, parameters))
+        set(target_tasks_nightly_win32(full_task_graph, parameters, graph_config))
+        | set(target_tasks_nightly_win64(full_task_graph, parameters, graph_config))
+        | set(target_tasks_nightly_macosx(full_task_graph, parameters, graph_config))
+        | set(target_tasks_nightly_linux(full_task_graph, parameters, graph_config))
     )
 
 
