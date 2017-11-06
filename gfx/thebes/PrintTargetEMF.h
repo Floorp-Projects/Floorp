@@ -56,6 +56,7 @@ public:
 
   void ConvertToEMFDone(const nsresult& aResult, mozilla::ipc::Shmem&& aEMF);
   bool IsSyncPagePrinting() const final { return false; }
+  void ChannelIsBroken() { mChannelBroken = true; }
 
 private:
   PrintTargetEMF(HDC aDC, const IntSize& aSize);
@@ -68,6 +69,7 @@ private:
   PDFiumProcessParent*     mPDFiumProcess;
   HDC mPrinterDC;
   bool mWaitingForEMFConversion;
+  bool mChannelBroken;
 };
 
 } // namespace gfx
