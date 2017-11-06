@@ -650,9 +650,9 @@ const char GeckoEditable::name[] =
 constexpr char GeckoEditable::New_t::name[];
 constexpr char GeckoEditable::New_t::signature[];
 
-auto GeckoEditable::New(mozilla::jni::Object::Param a0) -> GeckoEditable::LocalRef
+auto GeckoEditable::New() -> GeckoEditable::LocalRef
 {
-    return mozilla::jni::Constructor<New_t>::Call(GeckoEditable::Context(), nullptr, a0);
+    return mozilla::jni::Constructor<New_t>::Call(GeckoEditable::Context(), nullptr);
 }
 
 constexpr char GeckoEditable::OnViewChange_t::name[];
@@ -975,25 +975,25 @@ auto GeckoView::State::READY() -> State::LocalRef
 const char GeckoView::Window::name[] =
         "org/mozilla/gecko/GeckoView$Window";
 
+constexpr char GeckoView::Window::Attach_t::name[];
+constexpr char GeckoView::Window::Attach_t::signature[];
+
 constexpr char GeckoView::Window::Close_t::name[];
 constexpr char GeckoView::Window::Close_t::signature[];
 
 constexpr char GeckoView::Window::DisposeNative_t::name[];
 constexpr char GeckoView::Window::DisposeNative_t::signature[];
 
-constexpr char GeckoView::Window::OnReattach_t::name[];
-constexpr char GeckoView::Window::OnReattach_t::signature[];
+constexpr char GeckoView::Window::OnAttach_t::name[];
+constexpr char GeckoView::Window::OnAttach_t::signature[];
 
-auto GeckoView::Window::OnReattach(GeckoView::Param a0) const -> void
+auto GeckoView::Window::OnAttach(GeckoView::Param a0) const -> void
 {
-    return mozilla::jni::Method<OnReattach_t>::Call(Window::mCtx, nullptr, a0);
+    return mozilla::jni::Method<OnAttach_t>::Call(Window::mCtx, nullptr, a0);
 }
 
 constexpr char GeckoView::Window::Open_t::name[];
 constexpr char GeckoView::Window::Open_t::signature[];
-
-constexpr char GeckoView::Window::Reattach_t::name[];
-constexpr char GeckoView::Window::Reattach_t::signature[];
 
 constexpr char GeckoView::Window::SetState_t::name[];
 constexpr char GeckoView::Window::SetState_t::signature[];
