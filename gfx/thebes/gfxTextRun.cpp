@@ -679,8 +679,6 @@ gfxTextRun::Draw(Range aRange, gfx::Point aPt, const DrawParams& aParams) const
     params.paintSVGGlyphs = !aParams.callbacks ||
         aParams.callbacks->mShouldPaintSVGGlyphs;
     params.dt = aParams.context->GetDrawTarget();
-    params.fontSmoothingBGColor =
-        aParams.context->GetFontSmoothingBackgroundColor();
 
     GlyphRunIterator iter(this, aRange);
     gfxFloat advance = 0.0;

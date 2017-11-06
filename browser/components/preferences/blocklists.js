@@ -112,37 +112,16 @@ var gBlocklistManager = {
     }
 
     if (activeList !== selected.id) {
-      const Cc = Components.classes, Ci = Components.interfaces;
-      let msg = this._bundle.getFormattedString("blocklistChangeRequiresRestart",
-                                                [this._brandShortName]);
-      let title = this._bundle.getFormattedString("shouldRestartTitle",
-                                                  [this._brandShortName]);
-      let shouldProceed = Services.prompt.confirm(window, title, msg);
-      if (shouldProceed) {
-        let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
-                           .createInstance(Ci.nsISupportsPRBool);
-        Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
-                                     "restart");
-        shouldProceed = !cancelQuit.data;
-
-        if (shouldProceed) {
-          let trackingTable = Services.prefs.getCharPref(TRACKING_TABLE_PREF);
-          if (selected.id != CONTENT_LIST_ID) {
-            trackingTable = trackingTable.replace("," + CONTENT_LIST_ID + TRACK_SUFFIX, "");
-          } else {
-            trackingTable += "," + CONTENT_LIST_ID + TRACK_SUFFIX;
-          }
-          Services.prefs.setCharPref(TRACKING_TABLE_PREF, trackingTable);
-          Services.prefs.setCharPref(UPDATE_TIME_PREF, 42);
-
-          Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |
-                                Ci.nsIAppStartup.eRestart);
-        }
+      let trackingTable = Services.prefs.getCharPref(TRACKING_TABLE_PREF);
+      if (selected.id != CONTENT_LIST_ID) {
+        trackingTable = trackingTable.replace("," + CONTENT_LIST_ID + TRACK_SUFFIX, "");
+      } else {
+        trackingTable += "," + CONTENT_LIST_ID + TRACK_SUFFIX;
       }
-
-      // Don't close the dialog in case we didn't quit.
-      return;
+      Services.prefs.setCharPref(TRACKING_TABLE_PREF, trackingTable);
+      Services.prefs.setCharPref(UPDATE_TIME_PREF, 42);
     }
+
     window.close();
   },
 

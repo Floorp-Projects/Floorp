@@ -539,13 +539,11 @@ public:
   FillGlyphsCommand(ScaledFont* aFont,
                     const GlyphBuffer& aBuffer,
                     const Pattern& aPattern,
-                    const DrawOptions& aOptions,
-                    const GlyphRenderingOptions* aRenderingOptions)
+                    const DrawOptions& aOptions)
     : DrawingCommand(CommandType::FILLGLYPHS)
     , mFont(aFont)
     , mPattern(aPattern)
     , mOptions(aOptions)
-    , mRenderingOptions(const_cast<GlyphRenderingOptions*>(aRenderingOptions))
   {
     mGlyphs.resize(aBuffer.mNumGlyphs);
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
@@ -556,7 +554,7 @@ public:
       mGlyphs.data(),
       (uint32_t)mGlyphs.size(),
     };
-    CLONE_INTO(FillGlyphsCommand)(mFont, glyphs, mPattern, mOptions, mRenderingOptions);
+    CLONE_INTO(FillGlyphsCommand)(mFont, glyphs, mPattern, mOptions);
   }
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
@@ -564,7 +562,7 @@ public:
     GlyphBuffer buf;
     buf.mNumGlyphs = mGlyphs.size();
     buf.mGlyphs = &mGlyphs.front();
-    aDT->FillGlyphs(mFont, buf, mPattern, mOptions, mRenderingOptions);
+    aDT->FillGlyphs(mFont, buf, mPattern, mOptions);
   }
 
   static const bool AffectsSnapshot = true;
@@ -574,7 +572,6 @@ private:
   std::vector<Glyph> mGlyphs;
   StoredPattern mPattern;
   DrawOptions mOptions;
-  RefPtr<GlyphRenderingOptions> mRenderingOptions;
 };
 
 class StrokeGlyphsCommand : public StrokeOptionsCommand
@@ -585,13 +582,11 @@ public:
                       const GlyphBuffer& aBuffer,
                       const Pattern& aPattern,
                       const StrokeOptions& aStrokeOptions,
-                      const DrawOptions& aOptions,
-                      const GlyphRenderingOptions* aRenderingOptions)
+                      const DrawOptions& aOptions)
     : StrokeOptionsCommand(CommandType::STROKEGLYPHS, aStrokeOptions)
     , mFont(aFont)
     , mPattern(aPattern)
     , mOptions(aOptions)
-    , mRenderingOptions(const_cast<GlyphRenderingOptions*>(aRenderingOptions))
   {
     mGlyphs.resize(aBuffer.mNumGlyphs);
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
@@ -602,7 +597,7 @@ public:
       mGlyphs.data(),
       (uint32_t)mGlyphs.size(),
     };
-    CLONE_INTO(StrokeGlyphsCommand)(mFont, glyphs, mPattern, mStrokeOptions, mOptions, mRenderingOptions);
+    CLONE_INTO(StrokeGlyphsCommand)(mFont, glyphs, mPattern, mStrokeOptions, mOptions);
   }
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
@@ -610,7 +605,7 @@ public:
     GlyphBuffer buf;
     buf.mNumGlyphs = mGlyphs.size();
     buf.mGlyphs = &mGlyphs.front();
-    aDT->StrokeGlyphs(mFont, buf, mPattern, mStrokeOptions, mOptions, mRenderingOptions);
+    aDT->StrokeGlyphs(mFont, buf, mPattern, mStrokeOptions, mOptions);
   }
 
   static const bool AffectsSnapshot = true;
@@ -620,7 +615,6 @@ private:
   std::vector<Glyph> mGlyphs;
   StoredPattern mPattern;
   DrawOptions mOptions;
-  RefPtr<GlyphRenderingOptions> mRenderingOptions;
 };
 
 class MaskCommand : public DrawingCommand

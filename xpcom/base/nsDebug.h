@@ -165,7 +165,7 @@ inline void MOZ_PretendNoReturn()
 /**
  * Trigger an debug-only abort.
  *
- * @see NS_RUNTIMEABORT for release-mode asserts.
+ * @see MOZ_RELEASE_ASSERT or MOZ_CRASH for release-mode asserts.
  */
 #ifdef DEBUG
 #define NS_ABORT()                                            \
@@ -246,15 +246,6 @@ inline void MOZ_PretendNoReturn()
 ** Macros for terminating execution when an unrecoverable condition is
 ** reached.  These need to be compiled regardless of the DEBUG flag.
 ******************************************************************************/
-
-/**
- * Terminate execution <i>immediately</i>, and if possible on the current
- * platform, in such a way that execution can't be continued by other
- * code (e.g., by intercepting a signal).
- */
-#define NS_RUNTIMEABORT(msg)                                    \
-  NS_DebugBreak(NS_DEBUG_ABORT, msg, nullptr, __FILE__, __LINE__)
-
 
 /* Macros for checking the trueness of an expression passed in within an
  * interface implementation.  These need to be compiled regardless of the

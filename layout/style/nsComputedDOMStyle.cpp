@@ -1901,7 +1901,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetFontSmoothingBackgroundColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetToRGBAColor(val, StyleUserInterface()->mFontSmoothingBackgroundColor);
+  SetToRGBAColor(val, StyleFont()->mFont.fontSmoothingBackgroundColor);
   return val.forget();
 }
 

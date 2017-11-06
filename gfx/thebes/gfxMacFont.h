@@ -55,9 +55,6 @@ public:
     already_AddRefed<mozilla::gfx::ScaledFont>
     GetScaledFont(mozilla::gfx::DrawTarget *aTarget) override;
 
-    already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
-      GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr) override;
-
     void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontCacheSizes* aSizes) const override;
     void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
@@ -109,6 +106,7 @@ protected:
 
     Metrics               mMetrics;
     uint32_t              mSpaceGlyph;
+    nscolor               mFontSmoothingBackgroundColor;
 
     bool                  mVariationFont; // true if font has OpenType variations
 };

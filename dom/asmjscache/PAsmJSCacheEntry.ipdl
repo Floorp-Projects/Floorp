@@ -11,6 +11,12 @@ namespace mozilla {
 namespace dom {
 namespace asmjscache {
 
+union OpenMetadataForReadResponse
+{
+  AsmJSCacheResult;
+  uint32_t;
+};
+
 protocol PAsmJSCacheEntry
 {
   manager PBackground;
@@ -21,14 +27,24 @@ protocol PAsmJSCacheEntry
 child:
   async OnOpenMetadataForRead(Metadata metadata);
 parent:
-  async SelectCacheFileToRead(uint32_t moduleIndex);
+  async SelectCacheFileToRead(OpenMetadataForReadResponse response);
 
 child:
   // Once the cache file has been opened, the child is notified and sent an
   // open file descriptor.
   async OnOpenCacheFile(int64_t fileSize, FileDescriptor fileDesc);
 
-both:
+parent:
+  // When the child process is done with the cache entry, the parent process
+  // is notified (via Close).
+  async Close();
+
+child:
+  // When there's an error during the opening phase, the child process is
+  // notified (via __delete__) and sent an error result.
+  // When the parent process receives the Close message, it closes the cache
+  // entry on the parent side and the child is notified (via __delete__).
+  // The protocol is destroyed in both cases.
   async __delete__(AsmJSCacheResult result);
 };
 

@@ -8,6 +8,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozmemory.h"
+#include "Utils.h"
 
 #include "gtest/gtest.h"
 
@@ -35,9 +36,6 @@ TestThree(size_t size)
   ASSERT_NO_FATAL_FAILURE(TestOne(size + 1));
 }
 
-#define K   * 1024
-#define M   * 1024 * 1024
-
 TEST(Jemalloc, UsableSizeInAdvance)
 {
   /*
@@ -45,13 +43,13 @@ TEST(Jemalloc, UsableSizeInAdvance)
    * various sizes beyond that.
    */
 
-  for (size_t n = 0; n < 16 K; n++)
+  for (size_t n = 0; n < 16_KiB; n++)
     ASSERT_NO_FATAL_FAILURE(TestOne(n));
 
-  for (size_t n = 16 K; n < 1 M; n += 4 K)
+  for (size_t n = 16_KiB; n < 1_MiB; n += 4_KiB)
     ASSERT_NO_FATAL_FAILURE(TestThree(n));
 
-  for (size_t n = 1 M; n < 8 M; n += 128 K)
+  for (size_t n = 1_MiB; n < 8_MiB; n += 128_KiB)
     ASSERT_NO_FATAL_FAILURE(TestThree(n));
 }
 
@@ -99,7 +97,7 @@ TEST(Jemalloc, PtrInfo)
   }
 
   // Similar for large (2KiB + 1 KiB .. 1MiB - 8KiB) allocations.
-  for (size_t n = small_max + 1 K; n <= stats.large_max; n += 1 K) {
+  for (size_t n = small_max + 1_KiB; n <= stats.large_max; n += 1_KiB) {
     auto p = (char*)malloc(n);
     size_t usable = moz_malloc_size_of(p);
     ASSERT_TRUE(large.append(p));
@@ -110,7 +108,7 @@ TEST(Jemalloc, PtrInfo)
   }
 
   // Similar for huge (> 1MiB - 8KiB) allocations.
-  for (size_t n = stats.chunksize; n <= 10 M; n += 512 K) {
+  for (size_t n = stats.chunksize; n <= 10_MiB; n += 512_KiB) {
     auto p = (char*)malloc(n);
     size_t usable = moz_malloc_size_of(p);
     ASSERT_TRUE(huge.append(p));
@@ -225,6 +223,3 @@ TEST(Jemalloc, PtrInfo)
 
   jemalloc_thread_local_arena(false);
 }
-
-#undef K
-#undef M

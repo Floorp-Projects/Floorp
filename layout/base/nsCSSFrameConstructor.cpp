@@ -6869,115 +6869,147 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
   return true;
 }
 
+// FIXME(emilio): If we ever kill IsValidSibling() we can simplify this quite a
+// bit (no need to pass aTargetContent or aTargetContentDisplay, and the
+// adjust() calls can be responsibility of the caller).
+template<nsCSSFrameConstructor::SiblingDirection aDirection>
 nsIFrame*
-nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
-                                                  nsIContent* aTargetContent,
-                                                  StyleDisplay& aTargetContentDisplay,
-                                                  nsContainerFrame* aParentFrame,
-                                                  bool aPrevSibling)
+nsCSSFrameConstructor::FindSiblingInternal(
+  FlattenedChildIterator aIter,
+  nsIContent* aTargetContent,
+  StyleDisplay& aTargetContentDisplay)
 {
-  nsIFrame* sibling = aContent->GetPrimaryFrame();
-  if (!sibling && GetDisplayContentsStyleFor(aContent)) {
-    // A display:contents node - check if it has a ::before / ::after frame...
-    sibling = aPrevSibling ? nsLayoutUtils::GetAfterFrame(aContent)
-                           : nsLayoutUtils::GetBeforeFrame(aContent);
-    if (!sibling) {
-      // ... then recurse into children ...
-      const bool forward = !aPrevSibling;
-      FlattenedChildIterator iter(aContent, forward);
-      sibling = aPrevSibling ?
-        FindPreviousSibling(iter, aTargetContent, aTargetContentDisplay, aParentFrame) :
-        FindNextSibling(iter, aTargetContent, aTargetContentDisplay, aParentFrame);
+  auto adjust = [&](nsIFrame* aPotentialSiblingFrame) -> nsIFrame* {
+    return AdjustSiblingFrame(
+      aPotentialSiblingFrame, aTargetContent, aTargetContentDisplay,
+      aDirection);
+  };
 
-      // The recursion above has already done all the placeholder and
-      // continuation fixups.
+  auto nextDomSibling = [](FlattenedChildIterator& aIter) -> nsIContent* {
+    return aDirection == SiblingDirection::Forward
+      ? aIter.GetNextChild() : aIter.GetPreviousChild();
+  };
+
+  auto getNearPseudo = [](const nsIContent* aContent) -> nsIFrame* {
+    return aDirection == SiblingDirection::Forward
+      ? nsLayoutUtils::GetBeforeFrame(aContent)
+      : nsLayoutUtils::GetAfterFrame(aContent);
+  };
+
+  auto getFarPseudo = [](const nsIContent* aContent) -> nsIFrame* {
+    return aDirection == SiblingDirection::Forward
+      ? nsLayoutUtils::GetAfterFrame(aContent)
+      : nsLayoutUtils::GetBeforeFrame(aContent);
+  };
+
+  while (nsIContent* sibling = nextDomSibling(aIter)) {
+    if (nsIFrame* primaryFrame = sibling->GetPrimaryFrame()) {
+      // XXX the GetContent() == sibling check is needed due to bug 135040.
+      // Remove it once that's fixed.
+      if (primaryFrame->GetContent() == sibling) {
+        if (nsIFrame* frame = adjust(primaryFrame)) {
+          return frame;
+        }
+      }
+    }
+
+    if (GetDisplayContentsStyleFor(sibling)) {
+      if (nsIFrame* frame = adjust(getNearPseudo(sibling))) {
+        return frame;
+      }
+
+      const bool startFromBeginning = aDirection == SiblingDirection::Forward;
+      FlattenedChildIterator iter(sibling, startFromBeginning);
+      nsIFrame* sibling = FindSiblingInternal<aDirection>(
+        iter, aTargetContent, aTargetContentDisplay);
       if (sibling) {
         return sibling;
       }
     }
-    if (!sibling) {
-      // ... then ::after / ::before on the opposite end.
-      sibling = aPrevSibling ? nsLayoutUtils::GetAfterFrame(aContent)
-                             : nsLayoutUtils::GetBeforeFrame(aContent);
-    }
-    if (!sibling) {
-      return nullptr;
-    }
-  } else if (!sibling || sibling->GetContent() != aContent) {
-    // XXX the GetContent() != aContent check is needed due to bug 135040.
-    // Remove it once that's fixed.
+  }
+
+  return adjust(getFarPseudo(aIter.Parent()));
+}
+
+nsIFrame*
+nsCSSFrameConstructor::AdjustSiblingFrame(
+  nsIFrame* aSibling,
+  nsIContent* aTargetContent,
+  mozilla::StyleDisplay& aTargetContentDisplay,
+  SiblingDirection aDirection)
+{
+  if (!aSibling) {
     return nullptr;
   }
 
-  // If the frame is out-of-flow, GetPrimaryFrame() will have returned the
-  // out-of-flow frame; we want the placeholder.
-  if (sibling->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-    nsIFrame* placeholderFrame = sibling->GetPlaceholderFrame();
-    NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
-    sibling = placeholderFrame;
+  if (aSibling->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+    aSibling = aSibling->GetPlaceholderFrame();
+    MOZ_ASSERT(aSibling);
   }
 
-  // The frame we have now should never be a continuation.
-  NS_ASSERTION(!sibling->GetPrevContinuation(), "How did that happen?");
-
-  if (aPrevSibling) {
-    // The frame may be a ib-split frame (a split inline frame that
-    // contains a block).  Get the last part of that split.
-    if (IsFramePartOfIBSplit(sibling)) {
-      sibling = GetLastIBSplitSibling(sibling, true);
+  MOZ_ASSERT(!aSibling->GetPrevContinuation(), "How?");
+  if (aDirection == SiblingDirection::Backward) {
+    // The frame may be a ib-split frame (a split inline frame that contains a
+    // block).  Get the last part of that split.
+    if (IsFramePartOfIBSplit(aSibling)) {
+      aSibling = GetLastIBSplitSibling(aSibling, true);
     }
 
     // The frame may have a continuation. If so, we want the last
     // non-overflow-container continuation as our previous sibling.
-    sibling = sibling->GetTailContinuation();
+    aSibling = aSibling->GetTailContinuation();
   }
 
-  if (aTargetContent &&
-      !IsValidSibling(sibling, aTargetContent, aTargetContentDisplay)) {
-    sibling = nullptr;
+  if (!IsValidSibling(aSibling, aTargetContent, aTargetContentDisplay)) {
+    return nullptr;
   }
 
-  return sibling;
+  return aSibling;
 }
 
 nsIFrame*
-nsCSSFrameConstructor::FindPreviousSibling(FlattenedChildIterator aIter,
-                                           nsIContent* aTargetContent,
-                                           StyleDisplay& aTargetContentDisplay,
-                                           nsContainerFrame* aParentFrame)
+nsCSSFrameConstructor::FindPreviousSibling(const FlattenedChildIterator& aIter,
+                                           StyleDisplay& aTargetContentDisplay)
 {
-  // Note: not all content objects are associated with a frame (e.g., if it's
-  // `display: none') so keep looking until we find a previous frame.
-  while (nsIContent* sibling = aIter.GetPreviousChild()) {
-    MOZ_ASSERT(sibling != aTargetContent);
-    nsIFrame* prevSibling =
-      FindFrameForContentSibling(sibling, aTargetContent, aTargetContentDisplay,
-                                 aParentFrame, true);
-    if (prevSibling) {
-      // Found a previous sibling, we're done!
-      return prevSibling;
-    }
-  }
-
-  return nullptr;
+  return FindSibling<SiblingDirection::Backward>(aIter, aTargetContentDisplay);
 }
 
 nsIFrame*
-nsCSSFrameConstructor::FindNextSibling(FlattenedChildIterator aIter,
-                                       nsIContent* aTargetContent,
-                                       StyleDisplay& aTargetContentDisplay,
-                                       nsContainerFrame* aParentFrame)
+nsCSSFrameConstructor::FindNextSibling(const FlattenedChildIterator& aIter,
+                                       StyleDisplay& aTargetContentDisplay)
 {
-  while (nsIContent* sibling = aIter.GetNextChild()) {
-    MOZ_ASSERT(sibling != aTargetContent);
-    nsIFrame* nextSibling =
-      FindFrameForContentSibling(sibling, aTargetContent, aTargetContentDisplay,
-                                 aParentFrame, false);
+  return FindSibling<SiblingDirection::Forward>(aIter, aTargetContentDisplay);
+}
 
-    if (nextSibling) {
-      // We found a next sibling, we're done!
-      return nextSibling;
+template<nsCSSFrameConstructor::SiblingDirection aDirection>
+nsIFrame*
+nsCSSFrameConstructor::FindSibling(const FlattenedChildIterator& aIter,
+                                   StyleDisplay& aTargetContentDisplay)
+{
+  nsIContent* targetContent = aIter.Get();
+  nsIFrame* sibling =
+    FindSiblingInternal<aDirection>(aIter, targetContent, aTargetContentDisplay);
+  if (sibling) {
+    return sibling;
+  }
+
+  // Our siblings (if any) do not have a frame to guide us. The frame for the
+  // target content should be inserted whereever a frame for the container would
+  // be inserted. This is needed when inserting into display: contents nodes.
+  const nsIContent* current = aIter.Parent();
+  while (GetDisplayContentsStyleFor(current)) {
+    const nsIContent* parent = current->GetFlattenedTreeParent();
+    MOZ_ASSERT(parent, "No display: contents on the root");
+
+    FlattenedChildIterator iter(parent);
+    iter.Seek(current);
+    sibling = FindSiblingInternal<aDirection>(
+        iter, targetContent, aTargetContentDisplay);
+    if (sibling) {
+      return sibling;
     }
+
+    current = parent;
   }
 
   return nullptr;
@@ -7042,8 +7074,7 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
   // Note that FindPreviousSibling is passed the iterator by value, so that
   // the later usage of the iterator starts from the same place.
   StyleDisplay childDisplay = UNSET_DISPLAY;
-  nsIFrame* prevSibling =
-    FindPreviousSibling(iter, iter.Get(), childDisplay, aInsertion->mParentFrame);
+  nsIFrame* prevSibling = FindPreviousSibling(iter, childDisplay);
 
   // Now, find the geometric parent so that we can handle
   // continuations properly. Use the prev sibling if we have it;
@@ -7052,36 +7083,13 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
     aInsertion->mParentFrame = prevSibling->GetParent()->GetContentInsertionFrame();
   } else {
     // If there is no previous sibling, then find the frame that follows
+    //
+    // FIXME(emilio): This is really complex and probably shouldn't be.
     if (aEndSkipChild) {
       iter.Seek(aEndSkipChild);
       iter.GetPreviousChild();
     }
-    nsIFrame* nextSibling =
-      FindNextSibling(iter, iter.Get(), childDisplay, aInsertion->mParentFrame);
-    if (GetDisplayContentsStyleFor(aInsertion->mContainer)) {
-      if (!nextSibling) {
-        // Our siblings (if any) does not have a frame to guide us.
-        // The frame for aChild should be inserted whereever a frame for
-        // the container would be inserted.  This is needed when inserting
-        // into nested display:contents nodes.
-        nsIContent* child = aInsertion->mContainer;
-        nsIContent* parent = child->GetParent();
-        aInsertion->mParentFrame =
-          ::GetAdjustedParentFrame(aInsertion->mParentFrame, parent);
-        InsertionPoint fakeInsertion(aInsertion->mParentFrame, parent);
-        nsIFrame* result = GetInsertionPrevSibling(&fakeInsertion, child, aIsAppend,
-                                                   aIsRangeInsertSafe, nullptr, nullptr);
-        MOZ_ASSERT(aInsertion->mParentFrame->GetContent() ==
-                   fakeInsertion.mParentFrame->GetContent());
-        // fakeInsertion.mParentFrame may now be a continuation of the frame
-        // we started with in the ctor above.
-        aInsertion->mParentFrame = fakeInsertion.mParentFrame;
-        return result;
-      }
-
-      prevSibling = nextSibling->GetPrevSibling();
-    }
-
+    nsIFrame* nextSibling = FindNextSibling(iter, childDisplay);
     if (nextSibling) {
       aInsertion->mParentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
     } else {
@@ -8336,22 +8344,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
 
       container = insertion.mParentFrame->GetContent();
       frameType = insertion.mParentFrame->Type();
-    }
-  }
-
-  if (!prevSibling) {
-    // We're inserting the new frames as the first child. See if the
-    // parent has a :before pseudo-element
-    nsIFrame* firstChild = insertion.mParentFrame->PrincipalChildList().FirstChild();
-
-    if (firstChild &&
-        nsLayoutUtils::IsGeneratedContentFor(container, firstChild,
-                                             nsCSSPseudoElements::before)) {
-      // Insert the new frames after the last continuation of the :before
-      prevSibling = firstChild->GetTailContinuation();
-      insertion.mParentFrame = prevSibling->GetParent()->GetContentInsertionFrame();
-      // Don't change isAppend here; we'll can call AppendFrames as needed, and
-      // the change to our prevSibling doesn't affect that.
     }
   }
 

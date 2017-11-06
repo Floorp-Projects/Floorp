@@ -28,7 +28,7 @@ public:
   virtual void DownloadProgressed() = 0;
 
   // Dispatch an asynchronous event to the decoder owner
-  virtual nsresult DispatchAsyncEvent(const nsAString& aName) = 0;
+  virtual void DispatchAsyncEvent(const nsAString& aName) = 0;
 
   // Triggers a recomputation of readyState.
   virtual void UpdateReadyState() = 0;
@@ -117,12 +117,6 @@ public:
     // Sentinel value
     NEXT_FRAME_UNINITIALIZED
   };
-
-  // Check if the decoder owner is active.
-  virtual bool IsActive() const = 0;
-
-  // Check if the decoder owner is hidden.
-  virtual bool IsHidden() const = 0;
 
   // Called by media decoder when the audible state changed
   virtual void SetAudibleState(bool aAudible) = 0;

@@ -1740,7 +1740,8 @@
            (clickToPlayScaledSize + this.controlBarMinHeight / 2 >= videoHeight / 2 )) {
           this.clickToPlay.hideByAdjustment = true;
         } else {
-          if (this.clickToPlay.hidden && !this.video.played.length && this.video.paused) {
+          if (this.clickToPlay.hidden && !this.video.played.length &&
+              this.video.paused && this.clickToPlay.hideByAdjustment) {
             this.clickToPlay.hideByAdjustment = false;
           }
           this.clickToPlay.style.width = `${clickToPlayScaledSize}px`;

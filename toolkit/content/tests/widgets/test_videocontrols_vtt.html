@@ -22,7 +22,6 @@
   const video = document.getElementById("video");
   const ccBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "closedCaptionButton");
   const ttList = getAnonElementWithinVideoByAttribute(video, "anonid", "textTrackList");
-  const testCases = [];
 
   add_task(async function wait_for_media_ready() {
     await new Promise(resolve => window.addEventListener("load", resolve, {once: true}));
