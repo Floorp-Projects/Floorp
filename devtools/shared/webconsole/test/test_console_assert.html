@@ -20,12 +20,7 @@ window.onload = async function () {
     const {dbgClient} = state;
 
     const consoleAPICall = consoleCall => {
-      const onConsoleAPICall = new Promise((resolve, reject) => {
-        dbgClient.addOneTimeListener(
-          "consoleAPICall",
-          (type, packet) => resolve({type, packet})
-        );
-      });
+      const onConsoleAPICall = dbgClient.addOneTimeListener("consoleAPICall");
       consoleCall();
       return onConsoleAPICall;
     };
@@ -45,7 +40,7 @@ window.onload = async function () {
 
 async function testFalseAssert(consoleAPICall) {
   info(`Testing console.assert(false)`);
-  let {packet} = await consoleAPICall(() =>
+  const packet = await consoleAPICall(() =>
     top.console.assert(false, "assertion is false"));
 
   checkConsoleAPICall(packet.message, {
@@ -55,7 +50,7 @@ async function testFalseAssert(consoleAPICall) {
 
 async function testFalsyAssert(consoleAPICall) {
   info(`Testing console.assert(0")`);
-  let {packet} = await consoleAPICall(() =>
+  const packet = await consoleAPICall(() =>
     top.console.assert(0, "assertion is false"));
 
   checkConsoleAPICall(packet.message, {
@@ -65,7 +60,7 @@ async function testFalsyAssert(consoleAPICall) {
 
 async function testUndefinedAssert(consoleAPICall) {
   info(`Testing console.assert(undefined)`);
-  let {packet} = await consoleAPICall(() =>
+  const packet = await consoleAPICall(() =>
     top.console.assert(undefined, "assertion is false"));
 
   checkConsoleAPICall(packet.message, {
@@ -75,7 +70,7 @@ async function testUndefinedAssert(consoleAPICall) {
 
 async function testNullAssert(consoleAPICall) {
   info(`Testing console.assert(null)`);
-  let {packet} = await consoleAPICall(() =>
+  const packet = await consoleAPICall(() =>
     top.console.assert(null, "assertion is false"));
 
   checkConsoleAPICall(packet.message, {
