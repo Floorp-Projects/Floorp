@@ -255,8 +255,6 @@ nsMultiplexInputStream::Close()
     }
   }
 
-  mAsyncWaitCallback = nullptr;
-
   return rv;
 }
 
