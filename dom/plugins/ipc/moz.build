@@ -16,6 +16,8 @@ EXPORTS.mozilla.plugins += [
     'BrowserStreamChild.h',
     'BrowserStreamParent.h',
     'ChildTimer.h',
+    'FunctionBrokerIPCUtils.h',
+    'IpdlTuple.h',
     'NPEventAndroid.h',
     'NPEventOSX.h',
     'NPEventUnix.h',
@@ -64,9 +66,15 @@ UNIFIED_SOURCES += [
     'BrowserStreamChild.cpp',
     'BrowserStreamParent.cpp',
     'ChildTimer.cpp',
+    'FunctionBroker.cpp',
+    'FunctionBrokerChild.cpp',
+    'FunctionBrokerIPCUtils.cpp',
+    'FunctionBrokerParent.cpp',
+    'FunctionHook.cpp',
     'PluginBackgroundDestroyer.cpp',
     'PluginInstanceParent.cpp',
     'PluginMessageUtils.cpp',
+    'PluginModuleChild.cpp',
     'PluginModuleParent.cpp',
     'PluginProcessChild.cpp',
     'PluginProcessParent.cpp',
@@ -77,7 +85,6 @@ UNIFIED_SOURCES += [
 
 SOURCES += [
     'PluginInstanceChild.cpp', # 'PluginThreadCallback' : ambiguous symbol
-    'PluginModuleChild.cpp',   # Redefinition of mozilla::WindowsDllInterceptor sUser32Intercept
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
@@ -102,6 +109,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 IPDL_SOURCES += [
     'PBrowserStream.ipdl',
+    'PFunctionBroker.ipdl',
     'PluginTypes.ipdlh',
     'PPluginBackgroundDestroyer.ipdl',
     'PPluginInstance.ipdl',
@@ -117,6 +125,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../base',
     '/xpcom/base/',
+    '/xpcom/threads/',
 ]
 
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
