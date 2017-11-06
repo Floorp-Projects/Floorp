@@ -4740,7 +4740,7 @@ nsContentUtils::GetSubdocumentWithOuterWindowId(nsIDocument *aDocument,
   }
 
   RefPtr<nsGlobalWindowOuter> window =
-    nsGlobalWindow::GetOuterWindowWithId(aOuterWindowId);
+    nsGlobalWindowOuter::GetOuterWindowWithId(aOuterWindowId);
   if (!window) {
     return nullptr;
   }
@@ -10735,7 +10735,7 @@ nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, TaskCategory aC
       return nullptr;
     }
     RefPtr<nsGlobalWindowOuter> window =
-      nsGlobalWindow::GetOuterWindowWithId(outerWindowId);
+      nsGlobalWindowOuter::GetOuterWindowWithId(outerWindowId);
     if (!window) {
       return nullptr;
     }

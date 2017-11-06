@@ -3784,7 +3784,8 @@ ServiceWorkerManager::ShouldReportToWindow(mozIDOMWindowProxy* aWindow,
         continue;
       }
 
-      nsCOMPtr<nsPIDOMWindowInner> win = nsGlobalWindow::GetInnerWindowWithId(id)->AsInner();
+      nsCOMPtr<nsPIDOMWindowInner> win =
+        nsGlobalWindowInner::GetInnerWindowWithId(id)->AsInner();
       if (!win) {
         continue;
       }

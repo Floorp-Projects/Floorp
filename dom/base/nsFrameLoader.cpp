@@ -3841,7 +3841,7 @@ nsFrameLoader::Print(uint64_t aOuterWindowID,
   }
 
   nsGlobalWindowOuter* outerWindow =
-    nsGlobalWindow::GetOuterWindowWithId(aOuterWindowID);
+    nsGlobalWindowOuter::GetOuterWindowWithId(aOuterWindowID);
   if (NS_WARN_IF(!outerWindow)) {
     return NS_ERROR_FAILURE;
   }
