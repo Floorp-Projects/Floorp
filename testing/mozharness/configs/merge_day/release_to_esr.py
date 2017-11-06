@@ -1,7 +1,7 @@
 import os
 
 ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
-NEW_ESR_REPO = "ssh://hg.mozilla.org/releases/mozilla-esr59"
+NEW_ESR_REPO = "https://hg.mozilla.org/releases/mozilla-esr59"
 # ESR-specific branding (logo) lives in the old repo:
 OLD_ESR_REPO = "https://hg.mozilla.org/releases/mozilla-esr52"
 OLD_ESR_CHANGESET = "df0931ac8b02"
@@ -38,7 +38,7 @@ config = {
     # "hg_share_base": None,
     "tools_repo_url": "https://hg.mozilla.org/build/tools",
     "tools_repo_branch": "default",
-    "from_repo_url": "ssh://hg.mozilla.org/releases/mozilla-release",
+    "from_repo_url": "https://hg.mozilla.org/releases/mozilla-release",
     "to_repo_url": NEW_ESR_REPO,
 
     "base_tag": "FIREFOX_ESR_%(major_version)s_BASE",
