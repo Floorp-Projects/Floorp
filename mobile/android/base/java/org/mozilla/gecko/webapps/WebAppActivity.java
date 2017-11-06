@@ -35,9 +35,9 @@ import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoSession;
+import org.mozilla.gecko.GeckoSessionSettings;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.GeckoView;
-import org.mozilla.gecko.GeckoViewSettings;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
@@ -108,10 +108,10 @@ public class WebAppActivity extends AppCompatActivity
         mTextSelection = TextSelection.Factory.create(mGeckoView, this);
         mTextSelection.create();
 
-        final GeckoViewSettings settings = mGeckoView.getSettings();
-        settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
+        final GeckoSessionSettings settings = mGeckoView.getSettings();
+        settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
         settings.setBoolean(
-            GeckoViewSettings.USE_REMOTE_DEBUGGER,
+            GeckoSessionSettings.USE_REMOTE_DEBUGGER,
             GeckoSharedPrefs.forApp(this).getBoolean(
                 GeckoPreferences.PREFS_DEVTOOLS_REMOTE_USB_ENABLED, false));
 
@@ -254,21 +254,21 @@ public class WebAppActivity extends AppCompatActivity
         int mode;
         switch (displayMode) {
             case "standalone":
-                mode = GeckoViewSettings.DISPLAY_MODE_STANDALONE;
+                mode = GeckoSessionSettings.DISPLAY_MODE_STANDALONE;
                 break;
             case "fullscreen":
-                mode = GeckoViewSettings.DISPLAY_MODE_FULLSCREEN;
+                mode = GeckoSessionSettings.DISPLAY_MODE_FULLSCREEN;
                 break;
             case "minimal-ui":
-                mode = GeckoViewSettings.DISPLAY_MODE_MINIMAL_UI;
+                mode = GeckoSessionSettings.DISPLAY_MODE_MINIMAL_UI;
                 break;
             case "browser":
             default:
-                mode = GeckoViewSettings.DISPLAY_MODE_BROWSER;
+                mode = GeckoSessionSettings.DISPLAY_MODE_BROWSER;
                 break;
         }
 
-        mGeckoView.getSettings().setInt(GeckoViewSettings.DISPLAY_MODE, mode);
+        mGeckoView.getSettings().setInt(GeckoSessionSettings.DISPLAY_MODE, mode);
     }
 
     @Override // GeckoSession.NavigationListener

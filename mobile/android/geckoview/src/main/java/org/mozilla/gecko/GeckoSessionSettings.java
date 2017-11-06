@@ -15,8 +15,8 @@ import android.util.Log;
 import java.util.Arrays;
 import java.util.Collection;
 
-public final class GeckoViewSettings implements Parcelable {
-    private static final String LOGTAG = "GeckoViewSettings";
+public final class GeckoSessionSettings implements Parcelable {
+    private static final String LOGTAG = "GeckoSessionSettings";
     private static final boolean DEBUG = false;
 
     // This needs to match nsIDocShell.idl
@@ -93,11 +93,11 @@ public final class GeckoViewSettings implements Parcelable {
     private final GeckoSession mSession;
     private final GeckoBundle mBundle;
 
-    public GeckoViewSettings() {
+    public GeckoSessionSettings() {
         this(null);
     }
 
-    /* package */ GeckoViewSettings(final GeckoSession session) {
+    /* package */ GeckoSessionSettings(final GeckoSession session) {
         mSession = session;
         mBundle = new GeckoBundle();
 
@@ -111,8 +111,8 @@ public final class GeckoViewSettings implements Parcelable {
         mBundle.putString(DEBUGGER_SOCKET_DIR.name, null);
     }
 
-    /* package */ GeckoViewSettings(final GeckoViewSettings settings,
-                                    final GeckoSession session) {
+    /* package */ GeckoSessionSettings(final GeckoSessionSettings settings,
+                                       final GeckoSession session) {
         mSession = session;
         mBundle = new GeckoBundle(settings.mBundle);
     }
@@ -198,18 +198,18 @@ public final class GeckoViewSettings implements Parcelable {
         mBundle.readFromParcel(source);
     }
 
-    public static final Parcelable.Creator<GeckoViewSettings> CREATOR
-            = new Parcelable.Creator<GeckoViewSettings>() {
+    public static final Parcelable.Creator<GeckoSessionSettings> CREATOR
+            = new Parcelable.Creator<GeckoSessionSettings>() {
         @Override
-        public GeckoViewSettings createFromParcel(final Parcel in) {
-            final GeckoViewSettings settings = new GeckoViewSettings();
+        public GeckoSessionSettings createFromParcel(final Parcel in) {
+            final GeckoSessionSettings settings = new GeckoSessionSettings();
             settings.readFromParcel(in);
             return settings;
         }
 
         @Override
-        public GeckoViewSettings[] newArray(final int size) {
-            return new GeckoViewSettings[size];
+        public GeckoSessionSettings[] newArray(final int size) {
+            return new GeckoSessionSettings[size];
         }
     };
 }
