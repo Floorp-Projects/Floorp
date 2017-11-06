@@ -32,9 +32,6 @@
 namespace mac_plugin_interposing { class NSCursorInfo { }; }
 #endif
 using mac_plugin_interposing::NSCursorInfo;
-#ifdef XP_WIN
-#include "commdlg.h"
-#endif
 
 namespace mozilla {
 namespace plugins {
@@ -126,59 +123,9 @@ typedef intptr_t NativeWindowHandle; // never actually used, will always be 0
 #ifdef XP_WIN
 typedef base::SharedMemoryHandle WindowsSharedMemoryHandle;
 typedef HANDLE DXGISharedSurfaceHandle;
-
-// Values indicate GetOpenFileNameW and GetSaveFileNameW.
-enum GetFileNameFunc { OPEN_FUNC, SAVE_FUNC };
-
-// IPC-capable version of the Windows OPENFILENAMEW struct.
-typedef struct _OpenFileNameIPC
-{
-  // Allocates memory for the strings in this object.  This should usually
-  // be used with a zeroed out OPENFILENAMEW structure.
-  void AllocateOfnStrings(LPOPENFILENAMEW aLpofn) const;
-  void FreeOfnStrings(LPOPENFILENAMEW aLpofn) const;
-  void AddToOfn(LPOPENFILENAMEW aLpofn) const;
-  void CopyFromOfn(LPOPENFILENAMEW aLpofn);
-
-  NativeWindowHandle mHwndOwner;
-  std::wstring mFilter;    // Double-NULL terminated (i.e. L"\0\0") if mHasFilter is true
-  bool mHasFilter;
-  std::wstring mCustomFilterIn;
-  bool mHasCustomFilter;
-  uint32_t mNMaxCustFilterOut;
-  uint32_t mFilterIndex;
-  std::wstring mFile;
-  uint32_t mNMaxFile;
-  uint32_t mNMaxFileTitle;
-  std::wstring mInitialDir;
-  bool mHasInitialDir;
-  std::wstring mTitle;
-  bool mHasTitle;
-  uint32_t mFlags;
-  std::wstring mDefExt;
-  bool mHasDefExt;
-  uint32_t mFlagsEx;
-} OpenFileNameIPC;
-
-// GetOpenFileNameW and GetSaveFileNameW overwrite fields of their OPENFILENAMEW
-// parameter.  This represents those values so that they can be returned via IPC.
-typedef struct _OpenFileNameRetIPC
-{
-  void CopyFromOfn(LPOPENFILENAMEW aLpofn);
-  void AddToOfn(LPOPENFILENAMEW aLpofn) const;
-
-  std::wstring mCustomFilterOut;
-  std::wstring mFile;    // Double-NULL terminated (i.e. L"\0\0")
-  std::wstring mFileTitle;
-  uint16_t mFileOffset;
-  uint16_t mFileExtension;
-} OpenFileNameRetIPC;
 #else  // XP_WIN
 typedef mozilla::null_t WindowsSharedMemoryHandle;
 typedef mozilla::null_t DXGISharedSurfaceHandle;
-typedef mozilla::null_t GetFileNameFunc;
-typedef mozilla::null_t OpenFileNameIPC;
-typedef mozilla::null_t OpenFileNameRetIPC;
 #endif
 
 // XXX maybe not the best place for these. better one?
@@ -706,109 +653,6 @@ struct ParamTraits<mozilla::plugins::NPAudioDeviceChangeDetailsIPC>
                               aParam.defaultDevice.c_str()));
   }
 };
-
-#ifdef XP_WIN
-template <>
-struct ParamTraits<mozilla::plugins::_OpenFileNameIPC>
-{
-  typedef mozilla::plugins::_OpenFileNameIPC paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mHwndOwner);
-    WriteParam(aMsg, aParam.mFilter);
-    WriteParam(aMsg, aParam.mHasFilter);
-    WriteParam(aMsg, aParam.mCustomFilterIn);
-    WriteParam(aMsg, aParam.mHasCustomFilter);
-    WriteParam(aMsg, aParam.mNMaxCustFilterOut);
-    WriteParam(aMsg, aParam.mFilterIndex);
-    WriteParam(aMsg, aParam.mFile);
-    WriteParam(aMsg, aParam.mNMaxFile);
-    WriteParam(aMsg, aParam.mNMaxFileTitle);
-    WriteParam(aMsg, aParam.mInitialDir);
-    WriteParam(aMsg, aParam.mHasInitialDir);
-    WriteParam(aMsg, aParam.mTitle);
-    WriteParam(aMsg, aParam.mHasTitle);
-    WriteParam(aMsg, aParam.mFlags);
-    WriteParam(aMsg, aParam.mDefExt);
-    WriteParam(aMsg, aParam.mHasDefExt);
-    WriteParam(aMsg, aParam.mFlagsEx);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    if (ReadParam(aMsg, aIter, &aResult->mHwndOwner) &&
-        ReadParam(aMsg, aIter, &aResult->mFilter) &&
-        ReadParam(aMsg, aIter, &aResult->mHasFilter) &&
-        ReadParam(aMsg, aIter, &aResult->mCustomFilterIn) &&
-        ReadParam(aMsg, aIter, &aResult->mHasCustomFilter) &&
-        ReadParam(aMsg, aIter, &aResult->mNMaxCustFilterOut) &&
-        ReadParam(aMsg, aIter, &aResult->mFilterIndex) &&
-        ReadParam(aMsg, aIter, &aResult->mFile) &&
-        ReadParam(aMsg, aIter, &aResult->mNMaxFile) &&
-        ReadParam(aMsg, aIter, &aResult->mNMaxFileTitle) &&
-        ReadParam(aMsg, aIter, &aResult->mInitialDir) &&
-        ReadParam(aMsg, aIter, &aResult->mHasInitialDir) &&
-        ReadParam(aMsg, aIter, &aResult->mTitle) &&
-        ReadParam(aMsg, aIter, &aResult->mHasTitle) &&
-        ReadParam(aMsg, aIter, &aResult->mFlags) &&
-        ReadParam(aMsg, aIter, &aResult->mDefExt) &&
-        ReadParam(aMsg, aIter, &aResult->mHasDefExt) &&
-        ReadParam(aMsg, aIter, &aResult->mFlagsEx)) {
-      return true;
-    }
-    return false;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"[%S, %S, %S, %S]", aParam.mFilter.c_str(),
-                              aParam.mCustomFilterIn.c_str(), aParam.mFile.c_str(),
-                              aParam.mTitle.c_str()));
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::plugins::_OpenFileNameRetIPC>
-{
-  typedef mozilla::plugins::_OpenFileNameRetIPC paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mCustomFilterOut);
-    WriteParam(aMsg, aParam.mFile);
-    WriteParam(aMsg, aParam.mFileTitle);
-    WriteParam(aMsg, aParam.mFileOffset);
-    WriteParam(aMsg, aParam.mFileExtension);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    if (ReadParam(aMsg, aIter, &aResult->mCustomFilterOut) &&
-        ReadParam(aMsg, aIter, &aResult->mFile) &&
-        ReadParam(aMsg, aIter, &aResult->mFileTitle) &&
-        ReadParam(aMsg, aIter, &aResult->mFileOffset) &&
-        ReadParam(aMsg, aIter, &aResult->mFileExtension)) {
-      return true;
-    }
-    return false;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"[%S, %S, %S, %d, %d]", aParam.mCustomFilterOut.c_str(),
-                              aParam.mFile.c_str(), aParam.mFileTitle.c_str(),
-                              aParam.mFileOffset, aParam.mFileExtension));
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::plugins::GetFileNameFunc> :
-  public ContiguousEnumSerializerInclusive<mozilla::plugins::GetFileNameFunc,
-                                           mozilla::plugins::OPEN_FUNC,
-                                           mozilla::plugins::SAVE_FUNC>
-{};
-#endif  // XP_WIN
 
 } /* namespace IPC */
 
