@@ -741,7 +741,7 @@ WebGLContext::DrawElements(GLenum mode, GLsizei indexCount, GLenum type,
                 errorScope.reset(new gl::GLContext::LocalErrorScope(*gl));
             }
 
-            if (lastVert) {
+            if (indexCount) {
                 AUTO_PROFILER_LABEL("glDrawElements", GRAPHICS);
                 gl->fDrawElements(mode, indexCount, type,
                                   reinterpret_cast<GLvoid*>(byteOffset));
@@ -793,7 +793,7 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei indexCount, GLenum type
                 errorScope.reset(new gl::GLContext::LocalErrorScope(*gl));
             }
 
-            if (lastVert && instanceCount) {
+            if (indexCount && instanceCount) {
                 AUTO_PROFILER_LABEL("glDrawElementsInstanced", GRAPHICS);
                 gl->fDrawElementsInstanced(mode, indexCount, type,
                                            reinterpret_cast<GLvoid*>(byteOffset),
