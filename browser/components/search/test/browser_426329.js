@@ -249,7 +249,10 @@ add_task(async function testClearHistory() {
 
   let controller = searchBar.textbox.controllers.getControllerForCommand("cmd_clearhistory");
   ok(controller.isCommandEnabled("cmd_clearhistory"), "Clear history command enabled");
+
+  let historyCleared = promiseObserver("satchel-storage-changed");
   controller.doCommand("cmd_clearhistory");
+  await historyCleared;
   let count = await countEntries();
   ok(count == 0, "History cleared");
 });
@@ -262,3 +265,13 @@ add_task(async function asyncCleanup() {
   gBrowser.selectedBrowser.loadURI("about:blank");
   await promiseRemoveEngine();
 });
+
+function promiseObserver(topic) {
+  return new Promise(resolve => {
+    let obs = (aSubject, aTopic, aData) => {
+      Services.obs.removeObserver(obs, aTopic);
+      resolve(aSubject);
+    };
+    Services.obs.addObserver(obs, topic);
+  });
+}
