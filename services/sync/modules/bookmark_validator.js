@@ -292,7 +292,7 @@ class BookmarkValidator {
         synced = false;
       }
       let localId = treeNode.id;
-      let guid = PlacesSyncUtils.bookmarks.guidToSyncId(treeNode.guid);
+      let guid = PlacesSyncUtils.bookmarks.guidToRecordId(treeNode.guid);
       let itemType = "item";
       treeNode.ignored = !synced;
       treeNode.id = guid;
@@ -443,7 +443,7 @@ class BookmarkValidator {
         // serverside bookmark info stores it as the special value ('menu').
         record.childGUIDs = record.children;
         record.children = record.children.map(childID => {
-          return PlacesSyncUtils.bookmarks.guidToSyncId(childID);
+          return PlacesSyncUtils.bookmarks.guidToRecordId(childID);
         });
       }
     }
