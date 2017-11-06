@@ -13,6 +13,7 @@
 #include "AccessibleHandlerControl.h"
 #include "AccessibleText_i.c"
 #include "AccessibleHypertext_i.c"
+#include "AccessibleHypertext2_i.c"
 #include "Factory.h"
 
 #include "mozilla/Assertions.h"
@@ -38,13 +39,14 @@ AccessibleTextTearoff::ResolveAccHypertext()
     return E_UNEXPECTED;
   }
 
-  return proxy->QueryInterface(IID_IAccessibleHypertext,
+  return proxy->QueryInterface(IID_IAccessibleHypertext2,
                                getter_AddRefs(mAccHypertextProxy));
 }
 
 IMPL_IUNKNOWN_QUERY_HEAD(AccessibleTextTearoff)
 IMPL_IUNKNOWN_QUERY_IFACE(IAccessibleText)
 IMPL_IUNKNOWN_QUERY_IFACE(IAccessibleHypertext)
+IMPL_IUNKNOWN_QUERY_IFACE(IAccessibleHypertext2)
 IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mHandler)
 
 HRESULT
@@ -338,6 +340,17 @@ AccessibleTextTearoff::get_hyperlinkIndex(long charIndex, long *hyperlinkIndex)
   return mAccHypertextProxy->get_hyperlinkIndex(charIndex, hyperlinkIndex);
 }
 
+HRESULT
+AccessibleTextTearoff::get_hyperlinks(IAccessibleHyperlink*** hyperlinks,
+                                      long* nHyperlinks)
+{
+  HRESULT hr = ResolveAccHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mAccHypertextProxy->get_hyperlinks(hyperlinks, nHyperlinks);
+}
 
 } // namespace a11y
 } // namespace mozilla

@@ -1601,12 +1601,23 @@ HTMLMediaElement::MozRequestDebugInfo(ErrorResult& aRv)
   return promise.forget();
 }
 
-void
+already_AddRefed<Promise>
 HTMLMediaElement::MozDumpDebugInfo()
 {
-  if (mDecoder) {
-    mDecoder->DumpDebugInfo();
+  ErrorResult rv;
+  RefPtr<Promise> promise = CreateDOMPromise(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return nullptr;
   }
+  if (mDecoder) {
+    mDecoder->DumpDebugInfo()->Then(mAbstractMainThread,
+                                    __func__,
+                                    promise.get(),
+                                    &Promise::MaybeResolveWithUndefined);
+  } else {
+    promise->MaybeResolveWithUndefined();
+  }
+  return promise.forget();
 }
 
 void
@@ -6288,7 +6299,8 @@ nsresult HTMLMediaElement::DispatchEvent(const nsAString& aName)
                                               false);
 }
 
-nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
+void
+HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
 {
   LOG_EVENT(LogLevel::Debug, ("%p Queuing event %s", this,
             NS_ConvertUTF16toUTF8(aName).get()));
@@ -6297,7 +6309,7 @@ nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
   // if the page comes out of the bfcache.
   if (mEventDeliveryPaused) {
     mPendingEvents.AppendElement(aName);
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsIRunnable> event;
@@ -6322,8 +6334,6 @@ nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
     mPlayTime.Pause();
     HiddenVideoStop();
   }
-
-  return NS_OK;
 }
 
 nsresult HTMLMediaElement::DispatchPendingMediaEvents()
