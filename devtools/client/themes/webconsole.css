@@ -1134,7 +1134,6 @@ a.learn-more-link.webconsole-learn-more-link {
 
 html,
 body {
-  display: block !important; /* Until Bug 1409413 removes the accidental display: flex */
   height: 100%;
   margin: 0;
   padding: 0;
