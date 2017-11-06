@@ -1014,6 +1014,7 @@ ErrorHandler.prototype = {
    * This method also looks for "side-channel" warnings.
    */
   checkServerError(resp) {
+    // In this case we were passed a resolved value of Resource#_doRequest.
     switch (resp.status) {
       case 200:
       case 404:
@@ -1083,6 +1084,7 @@ ErrorHandler.prototype = {
         break;
     }
 
+    // In this other case we were passed a rejection value.
     switch (resp.result) {
       case Cr.NS_ERROR_UNKNOWN_HOST:
       case Cr.NS_ERROR_CONNECTION_REFUSED:
