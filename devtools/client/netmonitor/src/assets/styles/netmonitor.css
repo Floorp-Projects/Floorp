@@ -13,14 +13,48 @@
 @import "chrome://devtools/content/sourceeditor/codemirror/addon/dialog/dialog.css";
 @import "chrome://devtools/content/sourceeditor/codemirror/mozilla.css";
 
-/* Network panel components & styles */
-@import "chrome://devtools/content/netmonitor/src/assets/styles/variables.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/MdnLink.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/RequestList.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/Toolbar.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/StatusBar.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/NetworkDetailsPanel.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/StatisticsPanel.css";
+:root.theme-dark {
+  --table-splitter-color: rgba(255,255,255,0.15);
+  --table-zebra-background: rgba(255,255,255,0.05);
+
+  --timing-blocked-color: rgba(235, 83, 104, 0.8);
+  --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
+  --timing-ssl-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-send-color: rgba(70, 175, 227, 0.8); /* light blue */
+  --timing-wait-color: rgba(94, 136, 176, 0.8); /* blue grey */
+  --timing-receive-color: rgba(112, 191, 83, 0.8); /* green */
+
+  --sort-ascending-image: url(chrome://devtools/skin/images/sort-ascending-arrow.svg);
+  --sort-descending-image: url(chrome://devtools/skin/images/sort-descending-arrow.svg);
+}
+
+:root.theme-light {
+  --table-splitter-color: rgba(0,0,0,0.15);
+  --table-zebra-background: rgba(0,0,0,0.05);
+
+  --timing-blocked-color: rgba(235, 83, 104, 0.8);
+  --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
+  --timing-ssl-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-send-color: rgba(0, 136, 204, 0.8); /* blue */
+  --timing-wait-color: rgba(95, 136, 176, 0.8); /* blue grey */
+  --timing-receive-color: rgba(44, 187, 15, 0.8); /* green */
+
+  --sort-ascending-image: url(chrome://devtools/skin/images/sort-ascending-arrow.svg);
+  --sort-descending-image: url(chrome://devtools/skin/images/sort-descending-arrow.svg);
+}
+
+:root.theme-firebug {
+  --sort-ascending-image: url(chrome://devtools/skin/images/firebug/arrow-up.svg);
+  --sort-descending-image: url(chrome://devtools/skin/images/firebug/arrow-down.svg);
+}
+
+/* Icons */
+:root {
+  --play-icon-url: url("chrome://devtools/skin/images/play.svg");
+  --pause-icon-url: url("chrome://devtools/skin/images/pause.svg");
+}
 
 /* General */
 
@@ -44,3 +78,1374 @@ body,
 .split-box {
   overflow: hidden;
 }
+
+/* Toolbar */
+
+.devtools-toolbar {
+  display: flex;
+}
+
+.devtools-toolbar-container {
+  height: auto;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.devtools-toolbar-group {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.requests-list-filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.devtools-button.devtools-pause-icon::before {
+  background-image: var(--pause-icon-url);
+}
+
+.devtools-button.devtools-play-icon::before {
+  background-image: var(--play-icon-url);
+}
+
+/* Learn more links */
+
+.learn-more-link::before {
+  background-image: url(chrome://devtools/skin/images/help.svg);
+}
+
+.tree-container .treeTable tr .learn-more-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0;
+}
+
+.tree-container .treeTable tr:not(:hover) .learn-more-link {
+  opacity: 0.1;
+}
+
+/* Status bar */
+
+.devtools-status-bar-label {
+  flex: 0;
+}
+
+.status-bar-label {
+  display: inline-flex;
+  margin-inline-end: 10px;
+  /* Status bar has just one line so, don't wrap labels */
+  white-space: nowrap;
+}
+
+.status-bar-label:not(:first-of-type)::before {
+  content: "";
+  display: inline-block;
+  margin-inline-end: 10px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  width: 1px;
+  background: var(--theme-splitter-color);
+}
+
+.status-bar-label.dom-content-loaded {
+  color: var(--theme-highlight-blue);
+}
+
+.status-bar-label.load {
+  color: var(--theme-highlight-red);
+}
+
+/* Request list empty panel */
+
+.request-list-empty-notice {
+  margin: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.empty-notice-element {
+  padding-top: 12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  font-size: 1.2rem;
+}
+
+.notice-perf-message {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.requests-list-perf-notice-button {
+  min-width: 30px;
+  min-height: 26px;
+  margin: 0 5px;
+  vertical-align: middle;
+}
+
+.requests-list-perf-notice-button::before {
+  background-image: url(chrome://devtools/skin/images/profiler-stopwatch.svg);
+}
+
+.requests-list-reload-notice-button {
+  font-size: inherit;
+  min-height: 26px;
+  margin: 0 5px;
+}
+
+/* Requests list table */
+
+.request-list-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.requests-list-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.requests-list-table {
+  display: table;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.requests-list-contents {
+  display: table-row-group;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  --timings-scale: 1;
+  --timings-rev-scale: 1;
+}
+
+.requests-list-column {
+  display: table-cell;
+  cursor: default;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  max-width: 50px;
+  min-width: 50px;
+}
+
+.requests-list-column > * {
+  display: inline-block;
+}
+
+.theme-firebug .requests-list-column {
+  padding: 1px;
+}
+
+/* Requests list headers */
+
+.requests-list-headers-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  padding: 0;
+}
+
+.requests-list-headers {
+  display: table-header-group;
+  height: 24px;
+  padding: 0;
+  width: 100%;
+}
+
+.requests-list-headers .requests-list-column:first-child .requests-list-header-button {
+  border-width: 0;
+}
+
+.requests-list-header-button {
+  background-color: transparent;
+  border-image: linear-gradient(transparent 15%,
+                                var(--theme-splitter-color) 15%,
+                                var(--theme-splitter-color) 85%,
+                                transparent 85%) 1 1;
+  border-width: 0;
+  border-inline-start-width: 1px;
+  padding-inline-start: 16px;
+  width: 100%;
+  min-height: 23px;
+  text-align: center;
+  color: inherit;
+}
+
+.requests-list-header-button::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+.requests-list-header-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.requests-list-header-button > .button-text {
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  /* Align button text to center */
+  width: calc(100% - 8px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.requests-list-header-button > .button-icon {
+  display: inline-block;
+  width: 7px;
+  height: 4px;
+  margin-inline-start: 3px;
+  margin-inline-end: 6px;
+  vertical-align: middle;
+}
+
+.requests-list-header-button[data-sorted=ascending] > .button-icon {
+  background-image: var(--sort-ascending-image);
+}
+
+.requests-list-header-button[data-sorted=descending] > .button-icon {
+  background-image: var(--sort-descending-image);
+}
+
+.requests-list-header-button[data-sorted],
+.requests-list-header-button[data-sorted]:hover {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.requests-list-header-button[data-sorted],
+.requests-list-column[data-active] + .requests-list-column .requests-list-header-button {
+  border-image: linear-gradient(var(--theme-splitter-color), var(--theme-splitter-color)) 1 1;
+}
+
+.theme-firebug .requests-list-headers {
+  padding: 0 !important;
+  font-weight: bold;
+  background: linear-gradient(rgba(255, 255, 255, 0.05),
+                              rgba(0, 0, 0, 0.05)),
+                              #C8D2DC;
+}
+
+.theme-firebug .requests-list-header-button {
+  min-height: 17px;
+}
+
+.theme-firebug .requests-list-header-button > .button-icon {
+  height: 7px;
+}
+
+.theme-firebug .requests-list-header-button[data-sorted] {
+  background-color: #AAC3DC;
+}
+
+:root[platform="linux"].theme-firebug .requests-list-header-button[data-sorted] {
+  background-color: #FAC8AF !important;
+  color: inherit !important;
+}
+
+.theme-firebug .requests-list-header-button:hover:active {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.1),
+                                    transparent);
+}
+
+/* Requests list column */
+
+/* Status column */
+
+.requests-list-status {
+  width: 8%;
+   /* Don't ellipsize status codes */
+  text-overflow: initial;
+}
+
+.theme-firebug .requests-list-status {
+  font-weight: bold;
+}
+
+.requests-list-status-code {
+  margin-inline-start: 3px;
+  width: 3em;
+}
+
+.requests-list-status-icon {
+  background: #fff;
+  height: 10px;
+  width: 10px;
+  margin-inline-start: 5px;
+  margin-inline-end: 5px;
+  border-radius: 10px;
+  transition: box-shadow 0.5s ease-in-out;
+}
+
+.request-list-item.selected .requests-list-status-icon {
+  filter: brightness(1.3);
+}
+
+.requests-list-status-icon:not([data-code]) {
+  background-color: var(--theme-content-color2);
+}
+
+.requests-list-status-icon[data-code="cached"] {
+  border: 2px solid var(--theme-content-color2);
+  background-color: transparent;
+}
+
+.requests-list-status-icon[data-code^="1"] {
+  background-color: var(--theme-highlight-blue);
+}
+
+.requests-list-status-icon[data-code^="2"] {
+  background-color: var(--theme-highlight-green);
+}
+
+/* 3xx are triangles */
+.requests-list-status-icon[data-code^="3"] {
+  background-color: transparent;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 10px solid var(--theme-highlight-lightorange);
+  border-radius: 0;
+}
+
+/* 4xx and 5xx are squares - error codes */
+.requests-list-status-icon[data-code^="4"] {
+  background-color: var(--theme-highlight-red);
+  border-radius: 0; /* squares */
+}
+
+.requests-list-status-icon[data-code^="5"] {
+  background-color: var(--theme-highlight-pink);
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+
+/* Method column */
+
+.requests-list-method {
+  width: 8%;
+}
+
+.theme-firebug .requests-list-method {
+  color: rgb(128, 128, 128);
+}
+
+/* File column */
+
+.requests-list-file {
+  width: 22%;
+}
+
+.requests-list-file.requests-list-column {
+  text-align: start;
+}
+
+.requests-list-icon {
+  background: transparent;
+  width: 15px;
+  height: 15px;
+  margin: 0 4px;
+  outline: 1px solid var(--table-splitter-color);
+  vertical-align: top;
+}
+
+/* Protocol column */
+
+.requests-list-protocol {
+  width: 8%;
+}
+
+/* Cookies column */
+
+.requests-list-cookies {
+  width: 6%;
+}
+
+/* Set Cookies column */
+
+.requests-list-set-cookies {
+  width: 8%;
+}
+
+/* Scheme column */
+
+.requests-list-scheme {
+  width: 8%;
+}
+
+/* Domain column */
+
+.requests-list-domain {
+  width: 13%;
+}
+
+/* Start Time column */
+
+.requests-list-start-time {
+  width: 8%;
+}
+
+/* End Time column */
+
+.requests-list-end-time {
+  width: 8%;
+}
+
+/* Response Time column */
+
+.requests-list-response-time {
+  width: 10%;
+}
+
+/* Duration column */
+
+.requests-list-duration {
+  width: 8%;
+}
+
+/* Latency column */
+
+.requests-list-latency {
+  width: 8%;
+}
+
+.requests-list-response-header {
+  width: 13%;
+}
+
+.requests-list-domain.requests-list-column {
+  text-align: start;
+}
+
+.requests-security-state-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0 4px;
+  vertical-align: top;
+}
+
+.request-list-item.selected .requests-security-state-icon {
+  filter: brightness(1.3);
+}
+
+.security-state-insecure {
+  background-image: url(chrome://devtools/skin/images/security-state-insecure.svg);
+}
+
+.security-state-secure {
+  background-image: url(chrome://devtools/skin/images/security-state-secure.svg);
+}
+
+.security-state-weak {
+  background-image: url(chrome://devtools/skin/images/security-state-weak.svg);
+}
+
+.security-state-broken {
+  background-image: url(chrome://devtools/skin/images/security-state-broken.svg);
+}
+
+.security-state-local {
+  background-image: url(chrome://devtools/skin/images/globe.svg);
+}
+
+/* RemoteIP column */
+
+.requests-list-remoteip {
+  width: 9%;
+}
+
+/* Cause column */
+
+.requests-list-cause {
+  width: 9%;
+}
+
+.requests-list-cause-stack {
+  display: inline-block;
+  background-color: var(--theme-body-color-alt);
+  color: var(--theme-body-background);
+  font-size: 8px;
+  font-weight: bold;
+  line-height: 10px;
+  border-radius: 3px;
+  padding: 0 2px;
+  margin: 0;
+  margin-inline-end: 3px;
+}
+
+/* Type column */
+
+.requests-list-type {
+  width: 6%;
+}
+
+/* Transferred column */
+
+.requests-list-transferred {
+  width: 9%;
+}
+
+/* Size column */
+
+.requests-list-size {
+  width: 7%;
+}
+
+.theme-firebug .requests-list-size {
+  justify-content: end;
+  padding-inline-end: 4px;
+}
+
+/* Waterfall column */
+
+.requests-list-waterfall {
+  width: 20vw;
+  max-width: 20vw;
+  min-width: 20vw;
+  background-repeat: repeat-y;
+  background-position: left center;
+  /* Background created on a <canvas> in js. */
+  /* @see devtools/client/netmonitor/src/waterfall-background.js */
+  background-image: -moz-element(#waterfall-background);
+}
+
+.requests-list-waterfall:dir(rtl) {
+  background-position: right center;
+}
+
+.requests-list-waterfall > .requests-list-header-button {
+  padding-inline-start: 0;
+}
+
+.requests-list-waterfall > .requests-list-header-button > .button-text {
+  width: auto;
+}
+
+.requests-list-waterfall-label-wrapper:not(.requests-list-waterfall-visible) {
+  padding-inline-start: 16px;
+}
+
+.requests-list-timings-division {
+  display: inline-block;
+  padding-inline-start: 4px;
+  font-size: 75%;
+  pointer-events: none;
+  text-align: start;
+}
+
+:root[platform="win"] .requests-list-timings-division {
+  padding-top: 1px;
+  font-size: 90%;
+}
+
+.requests-list-timings-division:not(:first-child) {
+  border-inline-start: 1px dashed;
+}
+
+.requests-list-timings-division:dir(ltr) {
+  transform-origin: left center;
+}
+
+.requests-list-timings-division:dir(rtl) {
+  transform-origin: right center;
+}
+
+.theme-dark .requests-list-timings-division {
+  border-inline-start-color: #5a6169 !important;
+}
+
+.theme-light .requests-list-timings-division {
+  border-inline-start-color: #585959 !important;
+}
+
+.requests-list-timings-division[data-division-scale=second],
+.requests-list-timings-division[data-division-scale=minute] {
+  font-weight: 600;
+}
+
+.requests-list-timings {
+  display: flex;
+  flex: none;
+  align-items: center;
+  transform: scaleX(var(--timings-scale));
+}
+
+.requests-list-timings:dir(ltr) {
+  transform-origin: left center;
+}
+
+.requests-list-timings:dir(rtl) {
+  transform-origin: right center;
+}
+
+.requests-list-timings-box {
+  display: inline-block;
+  height: 9px;
+}
+
+.theme-firebug .requests-list-timings-box {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0.2));
+  height: 16px;
+}
+
+.requests-list-timings-box.blocked {
+  background-color: var(--timing-blocked-color);
+}
+
+.requests-list-timings-box.dns {
+  background-color: var(--timing-dns-color);
+}
+
+.requests-list-timings-box.connect {
+  background-color: var(--timing-connect-color);
+}
+
+.requests-list-timings-box.ssl {
+  background-color: var(--timing-ssl-color);
+}
+
+.requests-list-timings-box.send {
+  background-color: var(--timing-send-color);
+}
+
+.requests-list-timings-box.wait {
+  background-color: var(--timing-wait-color);
+}
+
+.requests-list-timings-box.receive {
+  background-color: var(--timing-receive-color);
+}
+
+.requests-list-timings-total {
+  display: inline-block;
+  padding-inline-start: 4px;
+  font-size: 85%;
+  font-weight: 600;
+  white-space: nowrap;
+  /* This node should not be scaled - apply a reversed transformation */
+  transform: scaleX(var(--timings-rev-scale));
+}
+
+.requests-list-timings-total:dir(ltr) {
+  transform-origin: left center;
+}
+
+.requests-list-timings-total:dir(rtl) {
+  transform-origin: right center;
+}
+
+/* Request list item */
+
+.request-list-item {
+  position: relative;
+  display: table-row;
+  height: 24px;
+}
+
+.request-list-item.selected {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.request-list-item:not(.selected).odd {
+  background-color: var(--table-zebra-background);
+}
+
+.request-list-item:not(.selected):hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.request-list-item.fromCache > .requests-list-column:not(.requests-list-waterfall) {
+  opacity: 0.6;
+}
+
+.theme-firebug .request-list-item:not(.selected):hover {
+  background: #EFEFEF;
+}
+
+/* Network details panel toggle */
+
+.network-details-panel-toggle:dir(ltr)::before,
+.network-details-panel-toggle.pane-collapsed:dir(rtl)::before {
+  background-image: var(--theme-pane-collapse-image);
+}
+
+.network-details-panel-toggle.pane-collapsed:dir(ltr)::before,
+.network-details-panel-toggle:dir(rtl)::before {
+  background-image: var(--theme-pane-expand-image);
+}
+
+/* Network details panel */
+
+.network-details-panel {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.panel-container {
+  height: 100%;
+}
+
+.panel-container,
+.properties-view {
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.panel-container .tree-container .objectBox {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.properties-view {
+  flex-grow: 1;
+}
+
+.properties-view .searchbox-section {
+  flex: 0 1 auto;
+}
+
+.properties-view .devtools-searchbox {
+  padding: 0;
+}
+
+.properties-view .devtools-searchbox input {
+  margin: 1px 3px;
+}
+
+.devtools-checkbox {
+  position: relative;
+  vertical-align: middle;
+  bottom: 1px;
+}
+
+.devtools-checkbox-label {
+  margin-inline-start: 10px;
+  margin-inline-end: 3px;
+  white-space: nowrap;
+}
+
+/* Empty notices in tab panels */
+
+.empty-notice {
+  color: var(--theme-body-color-inactive);
+  padding: 3px 8px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 24px;
+}
+
+/* Text inputs in tab panels */
+
+.textbox-input {
+  text-overflow: ellipsis;
+  border: none;
+  background: none;
+  color: inherit;
+  width: 100%;
+}
+
+.textbox-input:focus {
+  outline: 0;
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+}
+
+/* Tree table in tab panels */
+
+.tree-container, .tree-container .treeTable {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  flex: 1;
+}
+
+.tree-container .treeTable,
+.tree-container .treeTable tbody {
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-container .treeTable tbody {
+  /* Apply flex to table will create an anonymous table element outside of tbody
+   * See also http://stackoverflow.com/a/30851678
+   * Therefore, we set height with this magic number in order to remove the
+   * redundant scrollbar when source editor appears.
+   */
+  height: calc(100% - 4px);
+}
+
+.tree-container .treeTable tr {
+  display: block;
+  position: relative;
+}
+
+/* Make right td fill available horizontal space */
+.tree-container .treeTable td:last-child {
+  width: 100%;
+}
+
+.properties-view .devtools-searchbox,
+.tree-container .treeTable .tree-section {
+  width: 100%;
+  background-color: var(--theme-toolbar-background);
+}
+
+.tree-container .treeTable tr.tree-section:not(:first-child) td:not([class=""]) {
+  border-top: 1px solid var(--theme-splitter-color);
+}
+
+.properties-view .devtools-searchbox,
+.tree-container .treeTable tr.tree-section:not(:last-child) td:not([class=""]) {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.tree-container .treeTable .tree-section > * {
+  vertical-align: middle;
+}
+
+.tree-container .treeTable .treeRow.tree-section > .treeLabelCell > .treeLabel,
+.tree-container .treeTable .treeRow.tree-section > .treeLabelCell > .treeLabel:hover,
+.tree-container .treeTable .treeRow.tree-section > .treeValueCell:not(:hover) * {
+  color: var(--theme-toolbar-color);
+}
+
+.tree-container .treeTable .treeValueCell {
+  /* FIXME: Make value cell can be reduced to shorter width */
+  max-width: 0;
+  padding-inline-end: 5px;
+}
+
+/* Source editor in tab panels */
+
+/* If there is a source editor shows up in the last row of TreeView,
+ * it should occupy the available vertical space.
+ */
+.tree-container .treeTable .editor-row-container,
+.tree-container .treeTable tr:last-child td[colspan="2"] {
+  display: block;
+  height: 100%;
+}
+
+.source-editor-mount {
+  width: 100%;
+  height: 100%;
+}
+
+.headers-summary-label,
+.tree-container .objectBox {
+  white-space: nowrap;
+}
+
+/* Summary tabpanel */
+
+.tabpanel-summary-container {
+  padding: 1px;
+}
+
+.tabpanel-summary-label {
+  display: inline-block;
+  padding-inline-start: 4px;
+  padding-inline-end: 3px;
+  font-weight: 600;
+}
+
+.tabpanel-summary-value {
+  color: inherit;
+  padding-inline-start: 3px;
+}
+
+.theme-dark .tabpanel-summary-value {
+  color: var(--theme-selection-color);
+}
+
+/* Headers tabpanel */
+
+.headers-overview {
+  background: var(--theme-toolbar-background);
+}
+
+.headers-summary,
+.response-summary {
+  display: flex;
+  align-items: center;
+}
+
+.headers-summary .devtools-button {
+  margin-inline-end: 6px;
+}
+
+.headers-summary .requests-list-status-icon {
+  min-width: 10px;
+}
+
+.headers-summary .raw-headers-container {
+  display: flex;
+  width: 100%;
+}
+
+.headers-summary .raw-headers {
+  width: 50%;
+  padding: 0 4px;
+}
+
+.headers-summary .raw-headers textarea {
+  width: 100%;
+  height: 50vh;
+  font: message-box;
+  resize: none;
+}
+
+.headers-summary .raw-headers .tabpanel-summary-label {
+  padding: 0 0 4px 0;
+}
+
+.headers-summary .textbox-input {
+  margin-inline-end: 2px;
+}
+
+.headers-summary .status-text {
+    width: auto!important;
+}
+
+/* Response tabpanel */
+
+.response-error-header {
+  margin: 0;
+  padding: 3px 8px;
+  background-color: var(--theme-highlight-red);
+  color: var(--theme-selection-color);
+}
+
+.response-image-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.response-image {
+  background: #fff;
+  border: 1px dashed GrayText;
+  margin-bottom: 10px;
+  max-width: 300px;
+  max-height: 100px;
+}
+
+/* Timings tabpanel */
+
+.timings-container {
+  display: flex;
+}
+
+.timings-label {
+  width: 10em;
+}
+
+.requests-list-timings-container {
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+.requests-list-timings-offset {
+  transition: width 0.2s ease-out;
+}
+
+.requests-list-timings-box {
+  border: none;
+  min-width: 1px;
+  transition: width 0.2s ease-out;
+}
+
+.theme-firebug .requests-list-timings-total {
+  color: var(--theme-body-color);
+}
+
+/* Stack trace panel */
+
+.stack-trace {
+  font-family: var(--monospace-font-family);
+  /* The markup contains extra whitespace to improve formatting of clipboard text.
+     Make sure this whitespace doesn't affect the HTML rendering */
+  white-space: normal;
+  padding: 5px;
+}
+
+.stack-trace .frame-link-source,
+.message-location .frame-link-source {
+  /* Makes the file name truncated (and ellipsis shown) on the left side */
+  direction: rtl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stack-trace .frame-link-source-inner,
+.message-location .frame-link-source-inner {
+  /* Enforce LTR direction for the file name - fixes bug 1290056 */
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+.stack-trace .frame-link-function-display-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-inline-end: 1ch;
+}
+
+/* Security tabpanel */
+
+/* Overwrite tree-view cell colon `:` for security panel and tree section */
+.security-panel .treeTable .treeLabelCell::after,
+.treeTable .tree-section .treeLabelCell::after {
+  content: "";
+}
+
+/* Layout additional warning icon in tree value cell  */
+.security-info-value {
+  display: flex;
+}
+
+.security-warning-icon {
+  background-image: url(chrome://devtools/skin/images/alerticon-warning.png);
+  background-size: 13px 12px;
+  margin-inline-start: 5px;
+  vertical-align: top;
+  width: 13px;
+  height: 12px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .security-warning-icon {
+    background-image: url(chrome://devtools/skin/images/alerticon-warning@2x.png);
+  }
+}
+
+/* Custom request panel */
+
+.custom-request-panel {
+  height: 100%;
+  overflow: auto;
+  padding: 0 4px;
+  background-color: var(--theme-sidebar-background);
+}
+
+.theme-dark .custom-request-panel {
+  color: var(--theme-selection-color);
+}
+
+.custom-request-label {
+  font-weight: 600;
+}
+
+.custom-request-panel textarea {
+  resize: none;
+  font: message-box;
+}
+
+.custom-header,
+.custom-method-and-url,
+.custom-request,
+.custom-section {
+  display: flex;
+}
+
+.custom-header {
+  flex-grow: 1;
+  font-size: 1.1em;
+  padding-top: 4px;
+}
+
+.custom-section {
+  flex-direction: column;
+  margin-top: 0.5em;
+}
+
+.custom-method-value {
+  width: 4.5em;
+}
+
+.custom-url-value {
+  flex-grow: 1;
+  margin-inline-start: 6px;
+}
+
+/* Statistics panel buttons */
+
+.requests-list-network-summary-button {
+  display: inline-flex;
+  cursor: pointer;
+  height: 18px;
+  background: none;
+  box-shadow: none;
+  border-color: transparent;
+  padding-inline-end: 0;
+  margin-top: 3px;
+  margin-bottom: 3px;
+  margin-inline-end: 1em;
+}
+
+.requests-list-network-summary-button > .summary-info-icon {
+  background: url(chrome://devtools/skin/images/profiler-stopwatch.svg) no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-color);
+  width: 16px;
+  height: 16px;
+  opacity: 0.8;
+}
+
+.requests-list-network-summary-button:hover > .summary-info-icon {
+  opacity: 1;
+}
+
+/* Statistics panel */
+
+.statistics-panel {
+  display: flex;
+  height: 100vh;
+}
+
+.statistics-panel .devtools-toolbarbutton.back-button {
+  min-width: 4em;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  border-top: none;
+  border-bottom: none;
+  border-inline-start: none;
+}
+
+.statistics-panel .splitter {
+  border-color: rgba(0,0,0,0.2);
+  cursor: default;
+  pointer-events: none;
+  height: 100%;
+}
+
+.statistics-panel .charts-container {
+  display: flex;
+  width: 100%;
+}
+
+.statistics-panel .charts,
+.statistics-panel .pie-table-chart-container {
+  width: 100%;
+  height: 100%;
+}
+
+.statistics-panel .learn-more-link {
+  font-weight: 400;
+}
+
+.statistics-panel .table-chart-title {
+  display: flex;
+}
+
+.pie-table-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.statistics-panel .pie-chart-container {
+  margin-inline-start: 3vw;
+  margin-inline-end: 1vw;
+}
+
+.statistics-panel .table-chart-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 240px;
+  margin-inline-start: 1vw;
+  margin-inline-end: 3vw;
+}
+
+.chart-colored-blob[name=html] {
+  fill: var(--theme-highlight-bluegrey);
+  background: var(--theme-highlight-bluegrey);
+}
+
+.chart-colored-blob[name=css] {
+  fill: var(--theme-highlight-blue);
+  background: var(--theme-highlight-blue);
+}
+
+.chart-colored-blob[name=js] {
+  fill: var(--theme-highlight-lightorange);
+  background: var(--theme-highlight-lightorange);
+}
+
+.chart-colored-blob[name=xhr] {
+  fill: var(--theme-highlight-orange);
+  background: var(--theme-highlight-orange);
+}
+
+.chart-colored-blob[name=fonts] {
+  fill: var(--theme-highlight-purple);
+  background: var(--theme-highlight-purple);
+}
+
+.chart-colored-blob[name=images] {
+  fill: var(--theme-highlight-pink);
+  background: var(--theme-highlight-pink);
+}
+
+.chart-colored-blob[name=media] {
+  fill: var(--theme-highlight-green);
+  background: var(--theme-highlight-green);
+}
+
+.chart-colored-blob[name=flash] {
+  fill: var(--theme-highlight-red);
+  background: var(--theme-highlight-red);
+}
+
+.table-chart-row {
+  display: flex;
+}
+
+.table-chart-row-label[name=cached] {
+  display: none;
+}
+
+.table-chart-row-label[name=count] {
+  width: 3em;
+  text-align: end;
+}
+
+.table-chart-row-label[name=label] {
+  width: 7em;
+  text-align: start;
+}
+
+.table-chart-row-label[name=size] {
+  width: 7em;
+  text-align: start;
+}
+
+.table-chart-row-label[name=time] {
+  width: 7em;
+  text-align: start;
+}
+
+.table-chart-totals {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Firebug theme support for statistics panel charts */
+
+.theme-firebug .chart-colored-blob[name=html] {
+  fill: rgba(94, 136, 176, 0.8); /* Blue-Grey highlight */
+  background: rgba(94, 136, 176, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=css] {
+  fill: rgba(70, 175, 227, 0.8); /* light blue */
+  background: rgba(70, 175, 227, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=js] {
+  fill: rgba(235, 83, 104, 0.8); /* red */
+  background: rgba(235, 83, 104, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=xhr] {
+  fill: rgba(217, 102, 41, 0.8); /* orange  */
+  background: rgba(217, 102, 41, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=fonts] {
+  fill: rgba(223, 128, 255, 0.8); /* pink */
+  background: rgba(223, 128, 255, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=images] {
+  fill: rgba(112, 191, 83, 0.8); /* pink */
+  background: rgba(112, 191, 83, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=media] {
+  fill: rgba(235, 235, 84, 0.8); /* yellow */
+  background: rgba(235, 235, 84, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=flash] {
+  fill: rgba(84, 235, 159, 0.8); /* cyan */
+  background: rgba(84, 235, 159, 0.8);
+}
+
+/* Responsive web design support */
+
+@media (max-width: 700px) {
+  .requests-list-header-button {
+    padding-inline-start: 8px;
+  }
+
+  .requests-list-status-code {
+    width: auto;
+  }
+
+  .requests-list-size {
+    /* Given a fix max-width to display all columns in RWD mode */
+    max-width: 7%;
+  }
+
+  .requests-list-waterfall {
+    display: none;
+  }
+
+  .statistics-panel .charts-container {
+    flex-direction: column;
+    /* Minus 4em for statistics back button width */
+    width: calc(100% - 4em);
+  }
+
+  .statistics-panel .splitter {
+    width: 100%;
+    height: 1px;
+  }
+
+  :root[platform="linux"] .requests-list-header-button {
+    font-size: 85%;
+  }
+
+  .network-details-panel-toggle:dir(ltr)::before {
+    transform: rotate(90deg);
+  }
+
+  .network-details-panel-toggle:dir(rtl)::before {
+    transform: rotate(-90deg);
+  }
+}
+

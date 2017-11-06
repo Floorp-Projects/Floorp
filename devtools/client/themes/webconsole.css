@@ -416,7 +416,6 @@ html #webconsole-notificationbox {
   background-size: 16px 16px;
   background-position: 4px 50%;
   color: var(--theme-content-color1);
-  box-sizing: border-box;
 }
 
 .jsterm-complete-node {
@@ -1135,6 +1134,7 @@ a.learn-more-link.webconsole-learn-more-link {
 
 html,
 body {
+  display: block !important; /* Until Bug 1409413 removes the accidental display: flex */
   height: 100%;
   margin: 0;
   padding: 0;
