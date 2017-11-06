@@ -664,10 +664,6 @@ public:
     return mSerial;
   }
 
-  static nsGlobalWindowOuter* GetOuterWindowWithId(uint64_t aWindowID);
-
-  static nsGlobalWindowInner* GetInnerWindowWithId(uint64_t aInnerWindowID);
-
   static WindowByIdTable* GetWindowsTable() {
     AssertIsOnMainThread();
 
@@ -2057,6 +2053,21 @@ public:
     return Cast(nsPIDOMWindowOuter::From(aWin));
   }
 
+  static nsGlobalWindowOuter*
+  GetOuterWindowWithId(uint64_t aWindowID);
+  {
+    AssertIsOnMainThread();
+
+    if (!sWindowsById) {
+      return nullptr;
+    }
+
+    nsGlobalWindow* outerWindow = sWindowsById->Get(aWindowID);
+    return outerWindow && !outerWindow->IsInnerWindow()
+      ? static_cast<nsGlobalWindowOuter*>(outerWindow)
+      : nullptr;
+  }
+
 private:
   nsGlobalWindowOuter();
 };
@@ -2076,6 +2087,21 @@ public:
   }
   static nsGlobalWindowInner* Cast(mozIDOMWindow* aWin) {
     return Cast(nsPIDOMWindowInner::From(aWin));
+  }
+
+  static nsGlobalWindowInner*
+  GetInnerWindowWithId(uint64_t aInnerWindowID)
+  {
+    AssertIsOnMainThread();
+
+    if (!sWindowsById) {
+      return nullptr;
+    }
+
+    nsGlobalWindow* innerWindow = sWindowsById->Get(aInnerWindowID);
+    return innerWindow && innerWindow->IsInnerWindow()
+      ? static_cast<nsGlobalWindowInner*>(innerWindow)
+      : nullptr;
   }
 
 private:
@@ -2147,35 +2173,8 @@ nsGlobalWindow::IsTopLevelWindow()
   return parentWindow == this->AsOuter();
 }
 
-inline nsGlobalWindowOuter*
-nsGlobalWindow::GetOuterWindowWithId(uint64_t aWindowID)
-{
-  AssertIsOnMainThread();
-
-  if (!sWindowsById) {
-    return nullptr;
-  }
-
-  nsGlobalWindow* outerWindow = sWindowsById->Get(aWindowID);
-  return outerWindow && !outerWindow->IsInnerWindow()
-    ? static_cast<nsGlobalWindowOuter*>(outerWindow)
-    : nullptr;
-}
-
 inline nsGlobalWindowInner*
-nsGlobalWindow::GetInnerWindowWithId(uint64_t aInnerWindowID)
-{
-  AssertIsOnMainThread();
-
-  if (!sWindowsById) {
-    return nullptr;
-  }
-
-  nsGlobalWindow* innerWindow = sWindowsById->Get(aInnerWindowID);
-  return innerWindow && innerWindow->IsInnerWindow()
-    ? static_cast<nsGlobalWindowInner*>(innerWindow)
-    : nullptr;
-}
+nsGlobalWindowInner::GetInnerWindowWithId(uint64_t aInnerWindowID)
 
 inline bool
 nsGlobalWindow::IsPopupSpamWindow()
