@@ -152,7 +152,7 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    nsGlobalWindowInner* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);
+    nsGlobalWindowInner* window = nsGlobalWindowInner::GetInnerWindowWithId(mWindowId);
     if (!window) {
       return NS_ERROR_FAILURE;
     }

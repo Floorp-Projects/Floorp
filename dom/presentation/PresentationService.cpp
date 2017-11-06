@@ -1123,7 +1123,7 @@ PresentationService::UntrackSessionInfo(const nsAString& aSessionId,
         "dom::PresentationService::UntrackSessionInfo", [windowId]() -> void {
           PRES_DEBUG("Attempt to close window[%" PRIu64 "]\n", windowId);
 
-          if (auto* window = nsGlobalWindow::GetInnerWindowWithId(windowId)) {
+          if (auto* window = nsGlobalWindowInner::GetInnerWindowWithId(windowId)) {
             window->Close();
           }
         }));

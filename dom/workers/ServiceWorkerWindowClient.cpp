@@ -122,7 +122,8 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    nsGlobalWindowInner* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);
+    nsGlobalWindowInner* window =
+      nsGlobalWindowInner::GetInnerWindowWithId(mWindowId);
     UniquePtr<ServiceWorkerClientInfo> clientInfo;
 
     if (window) {
@@ -475,7 +476,8 @@ private:
   {
     MOZ_ASSERT(aWindow);
 
-    nsGlobalWindowInner* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);
+    nsGlobalWindowInner* window =
+      nsGlobalWindowInner::GetInnerWindowWithId(mWindowId);
     if (NS_WARN_IF(!window)) {
       return NS_ERROR_TYPE_ERR;
     }
