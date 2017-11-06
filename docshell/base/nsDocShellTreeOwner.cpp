@@ -24,8 +24,6 @@
 
 // Interfaces needed to be included
 #include "nsPresContext.h"
-#include "nsIContextMenuListener.h"
-#include "nsIContextMenuListener2.h"
 #include "nsITooltipListener.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
@@ -59,7 +57,6 @@
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIContent.h"
 #include "imgIContainer.h"
-#include "nsContextMenuInfo.h"
 #include "nsPresContext.h"
 #include "nsViewManager.h"
 #include "nsView.h"
@@ -898,19 +895,6 @@ nsDocShellTreeOwner::AddChromeListeners()
     }
   }
 
-  // install context menus
-  if (!mChromeContextMenuListener) {
-    nsCOMPtr<nsIContextMenuListener2> contextListener2(
-      do_QueryInterface(webBrowserChrome));
-    nsCOMPtr<nsIContextMenuListener> contextListener(
-      do_QueryInterface(webBrowserChrome));
-    if (contextListener2 || contextListener) {
-      mChromeContextMenuListener =
-        new ChromeContextMenuListener(mWebBrowser, webBrowserChrome);
-      rv = mChromeContextMenuListener->AddChromeListeners();
-    }
-  }
-
   // register dragover and drop event listeners with the listener manager
   nsCOMPtr<EventTarget> target;
   GetDOMEventTarget(mWebBrowser, getter_AddRefs(target));
@@ -932,10 +916,6 @@ nsDocShellTreeOwner::RemoveChromeListeners()
   if (mChromeTooltipListener) {
     mChromeTooltipListener->RemoveChromeListeners();
     mChromeTooltipListener = nullptr;
-  }
-  if (mChromeContextMenuListener) {
-    mChromeContextMenuListener->RemoveChromeListeners();
-    mChromeContextMenuListener = nullptr;
   }
 
   nsCOMPtr<EventTarget> piTarget;
@@ -1405,277 +1385,4 @@ ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
     // release tooltip target if there is one, NO MATTER WHAT
     self->mPossibleTooltipNode = nullptr;
   }
-}
-
-NS_IMPL_ISUPPORTS(ChromeContextMenuListener, nsIDOMEventListener)
-
-ChromeContextMenuListener::ChromeContextMenuListener(
-      nsWebBrowser* aInBrowser,
-      nsIWebBrowserChrome* aInChrome)
-  : mContextMenuListenerInstalled(false)
-  , mWebBrowser(aInBrowser)
-  , mWebBrowserChrome(aInChrome)
-{
-}
-
-ChromeContextMenuListener::~ChromeContextMenuListener()
-{
-}
-
-// Subscribe to the events that will allow us to track context menus. Bascially,
-// this is just the context-menu DOM event.
-NS_IMETHODIMP
-ChromeContextMenuListener::AddContextMenuListener()
-{
-  if (mEventTarget) {
-    nsresult rv = mEventTarget->AddEventListener(
-      NS_LITERAL_STRING("contextmenu"), this, false, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mContextMenuListenerInstalled = true;
-  }
-
-  return NS_OK;
-}
-
-// Unsubscribe from all the various context menu events that we were listening
-// to.
-NS_IMETHODIMP
-ChromeContextMenuListener::RemoveContextMenuListener()
-{
-  if (mEventTarget) {
-    nsresult rv = mEventTarget->RemoveEventListener(
-      NS_LITERAL_STRING("contextmenu"), this, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mContextMenuListenerInstalled = false;
-  }
-
-  return NS_OK;
-}
-
-// Hook up things to the chrome like context menus and tooltips, if the chrome
-// has implemented the right interfaces.
-NS_IMETHODIMP
-ChromeContextMenuListener::AddChromeListeners()
-{
-  if (!mEventTarget) {
-    GetDOMEventTarget(mWebBrowser, getter_AddRefs(mEventTarget));
-  }
-
-  // Register the appropriate events for context menus, but only if
-  // the embedding chrome cares.
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIContextMenuListener2> contextListener2(
-    do_QueryInterface(mWebBrowserChrome));
-  nsCOMPtr<nsIContextMenuListener> contextListener(
-    do_QueryInterface(mWebBrowserChrome));
-  if ((contextListener || contextListener2) && !mContextMenuListenerInstalled) {
-    rv = AddContextMenuListener();
-  }
-
-  return rv;
-}
-
-// Unsubscribe from the various things we've hooked up to the window root.
-NS_IMETHODIMP
-ChromeContextMenuListener::RemoveChromeListeners()
-{
-  if (mContextMenuListenerInstalled) {
-    RemoveContextMenuListener();
-  }
-
-  mEventTarget = nullptr;
-
-  // it really doesn't matter if these fail...
-  return NS_OK;
-}
-
-// We're on call to show the context menu. Dig around in the DOM to find the
-// type of object we're dealing with and notify the front end chrome.
-NS_IMETHODIMP
-ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
-{
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
-  NS_ENSURE_TRUE(mouseEvent, NS_ERROR_UNEXPECTED);
-
-  bool isDefaultPrevented = false;
-  aMouseEvent->GetDefaultPrevented(&isDefaultPrevented);
-  if (isDefaultPrevented) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<EventTarget> targetNode =
-    aMouseEvent->InternalDOMEvent()->GetTarget();
-  if (!targetNode) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsCOMPtr<nsIDOMNode> targetDOMnode;
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(targetNode);
-  if (!node) {
-    return NS_OK;
-  }
-
-  // Stop the context menu event going to other windows (bug 78396)
-  aMouseEvent->PreventDefault();
-
-  // If the listener is a nsIContextMenuListener2, create the info object
-  nsCOMPtr<nsIContextMenuListener2> menuListener2(
-    do_QueryInterface(mWebBrowserChrome));
-  nsContextMenuInfo* menuInfoImpl = nullptr;
-  nsCOMPtr<nsIContextMenuInfo> menuInfo;
-  if (menuListener2) {
-    menuInfoImpl = new nsContextMenuInfo;
-    menuInfo = menuInfoImpl;
-  }
-
-  uint32_t flags = nsIContextMenuListener::CONTEXT_NONE;
-  uint32_t flags2 = nsIContextMenuListener2::CONTEXT_NONE;
-
-  // XXX test for selected text
-
-  uint16_t nodeType;
-  nsresult res = node->GetNodeType(&nodeType);
-  NS_ENSURE_SUCCESS(res, res);
-
-  // First, checks for nodes that never have children.
-  if (nodeType == nsIDOMNode::ELEMENT_NODE) {
-    nsCOMPtr<nsIImageLoadingContent> imageContent(do_QueryInterface(node));
-    if (imageContent) {
-      nsCOMPtr<nsIURI> imgUri;
-      imageContent->GetCurrentURI(getter_AddRefs(imgUri));
-      if (imgUri) {
-        flags |= nsIContextMenuListener::CONTEXT_IMAGE;
-        flags2 |= nsIContextMenuListener2::CONTEXT_IMAGE;
-        targetDOMnode = node;
-      }
-    }
-
-    nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(node));
-    if (formControl) {
-      if (formControl->ControlType() == NS_FORM_TEXTAREA) {
-        flags |= nsIContextMenuListener::CONTEXT_TEXT;
-        flags2 |= nsIContextMenuListener2::CONTEXT_TEXT;
-        targetDOMnode = node;
-      } else {
-        nsCOMPtr<nsIDOMHTMLInputElement> inputElement(
-          do_QueryInterface(formControl));
-        if (inputElement) {
-          flags |= nsIContextMenuListener::CONTEXT_INPUT;
-          flags2 |= nsIContextMenuListener2::CONTEXT_INPUT;
-
-          if (menuListener2) {
-            if (formControl->IsSingleLineTextControl(false)) {
-              flags2 |= nsIContextMenuListener2::CONTEXT_TEXT;
-            }
-          }
-
-          targetDOMnode = node;
-        }
-      }
-    }
-
-    // always consume events for plugins who may throw their own context menus
-    // but not for image objects. Document objects will never be targets or
-    // ancestors of targets, so that's OK.
-    nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-    if (content &&
-        (content->IsHTMLElement(nsGkAtoms::embed) ||
-         (!(flags & nsIContextMenuListener::CONTEXT_IMAGE) &&
-          content->IsHTMLElement(nsGkAtoms::object)))) {
-      return NS_OK;
-    }
-  }
-
-  // Bubble out, looking for items of interest
-  do {
-    uint16_t nodeType;
-    res = node->GetNodeType(&nodeType);
-    NS_ENSURE_SUCCESS(res, res);
-
-    if (nodeType == nsIDOMNode::ELEMENT_NODE) {
-
-      // Test if the element has an associated link
-      nsCOMPtr<nsIDOMElement> element(do_QueryInterface(node));
-
-      bool hasAttr = false;
-      res = element->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
-
-      if (NS_SUCCEEDED(res) && hasAttr) {
-        flags |= nsIContextMenuListener::CONTEXT_LINK;
-        flags2 |= nsIContextMenuListener2::CONTEXT_LINK;
-        if (!targetDOMnode) {
-          targetDOMnode = node;
-        }
-        if (menuInfoImpl) {
-          menuInfoImpl->SetAssociatedLink(node);
-        }
-        break; // exit do-while
-      }
-    }
-
-    // walk-up-the-tree
-    nsCOMPtr<nsIDOMNode> parentNode;
-    node->GetParentNode(getter_AddRefs(parentNode));
-    node = parentNode;
-  } while (node);
-
-  if (!flags && !flags2) {
-    // We found nothing of interest so far, check if we
-    // have at least an html document.
-    nsCOMPtr<nsIDOMDocument> document;
-    node = do_QueryInterface(targetNode);
-    node->GetOwnerDocument(getter_AddRefs(document));
-    nsCOMPtr<nsIDOMHTMLDocument> htmlDocument(do_QueryInterface(document));
-    if (htmlDocument) {
-      flags |= nsIContextMenuListener::CONTEXT_DOCUMENT;
-      flags2 |= nsIContextMenuListener2::CONTEXT_DOCUMENT;
-      targetDOMnode = node;
-      if (!(flags & nsIContextMenuListener::CONTEXT_IMAGE)) {
-        // check if this is a background image that the user was trying to click
-        // on and if the listener is ready for that (only
-        // nsIContextMenuListener2 and up)
-        if (menuInfoImpl && menuInfoImpl->HasBackgroundImage(targetDOMnode)) {
-          flags2 |= nsIContextMenuListener2::CONTEXT_BACKGROUND_IMAGE;
-          // For the embedder to get the correct background image
-          // targetDOMnode must point to the original node.
-          targetDOMnode = do_QueryInterface(targetNode);
-        }
-      }
-    }
-  }
-
-  // we need to cache the event target into the focus controller's popupNode
-  // so we can get at it later from command code, etc.:
-
-  // get the dom window
-  nsCOMPtr<mozIDOMWindowProxy> win;
-  res = mWebBrowser->GetContentDOMWindow(getter_AddRefs(win));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
-
-  auto* window = nsPIDOMWindowOuter::From(win);
-  nsCOMPtr<nsPIWindowRoot> root = window->GetTopWindowRoot();
-  NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
-  if (root) {
-    // set the window root's popup node to the event target
-    root->SetPopupNode(targetDOMnode);
-  }
-
-  // Tell the listener all about the event
-  if (menuListener2) {
-    menuInfoImpl->SetMouseEvent(aMouseEvent);
-    menuInfoImpl->SetDOMNode(targetDOMnode);
-    menuListener2->OnShowContextMenu(flags2, menuInfo);
-  } else {
-    nsCOMPtr<nsIContextMenuListener> menuListener(
-      do_QueryInterface(mWebBrowserChrome));
-    if (menuListener) {
-      menuListener->OnShowContextMenu(flags, aMouseEvent, targetDOMnode);
-    }
-  }
-
-  return NS_OK;
 }
