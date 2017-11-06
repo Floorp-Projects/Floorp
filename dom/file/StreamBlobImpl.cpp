@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "StreamBlobImpl.h"
-#include "mozilla/SlicedInputStream.h"
 #include "nsStringStream.h"
 #include "nsICloneableInputStream.h"
 
