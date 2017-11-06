@@ -95,6 +95,16 @@ ReadRequestedLocales(nsTArray<nsCString>& aRetVal)
   // At the moment we just take a single locale, but in the future
   // we'll want to allow user to specify a list of requested locales.
   aRetVal.AppendElement(locale);
+
+  // en-US is a LastResort locale. LastResort locale is a fallback locale
+  // for the requested locale chain. In the future we'll want to make the
+  // fallback chain differ per-locale. For now, it'll always fallback on en-US.
+  //
+  // Notice: This is not the same as DefaultLocale,
+  // which follows the default locale the build is in.
+  if (!locale.Equals("en-US")) {
+    aRetVal.AppendElement("en-US");
+  }
   return true;
 }
 
@@ -293,15 +303,6 @@ LocaleService::GetRequestedLocales(nsTArray<nsCString>& aRetVal)
   if (mRequestedLocales.IsEmpty()) {
     ReadRequestedLocales(mRequestedLocales);
 
-    // en-US is a LastResort locale. LastResort locale is a fallback locale
-    // for the requested locale chain. In the future we'll want to make the
-    // fallback chain differ per-locale. For now, it'll always fallback on en-US.
-    //
-    // Notice: This is not the same as DefaultLocale,
-    // which follows the default locale the build is in.
-    if (!mRequestedLocales.Contains("en-US")) {
-      mRequestedLocales.AppendElement("en-US");
-    }
   }
 
   aRetVal = mRequestedLocales;
