@@ -12,14 +12,14 @@
 #define mozilla_a11y_AccessibleTextTearoff_h
 
 #include "AccessibleHandler.h"
-#include "AccessibleHypertext.h"
+#include "AccessibleHypertext2.h"
 #include "IUnknownImpl.h"
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
 namespace a11y {
 
-class AccessibleTextTearoff final : public IAccessibleHypertext
+class AccessibleTextTearoff final : public IAccessibleHypertext2
 {
 public:
   explicit AccessibleTextTearoff(AccessibleHandler* aHandler);
@@ -72,12 +72,16 @@ public:
                              IAccessibleHyperlink **hyperlink) override;
   STDMETHODIMP get_hyperlinkIndex(long charIndex, long *hyperlinkIndex) override;
 
+  // IAccessibleHypertext2
+  STDMETHODIMP get_hyperlinks(IAccessibleHyperlink*** hyperlinks,
+                              long* nHyperlinks) override;
+
 private:
   ~AccessibleTextTearoff() = default;
   HRESULT ResolveAccHypertext();
 
   RefPtr<AccessibleHandler>     mHandler;
-  RefPtr<IAccessibleHypertext>  mAccHypertextProxy;
+  RefPtr<IAccessibleHypertext2>  mAccHypertextProxy;
 };
 
 } // namespace a11y
