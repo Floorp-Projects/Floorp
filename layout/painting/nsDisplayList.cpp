@@ -2939,7 +2939,8 @@ nsDisplayItem::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 bool
 nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion) {
+                                   nsRegion* aVisibleRegion,
+                                   bool aUseClipBounds) {
   if (mForceNotVisible && !GetSameCoordinateSystemChildren()) {
     // mForceNotVisible wants to ensure that this display item doesn't render
     // anything itself. If this item has contents, then we obviously want to
@@ -2947,7 +2948,13 @@ nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
     NS_ASSERTION(mVisibleRect.IsEmpty(),
       "invisible items without children should have empty vis rect");
   } else {
-    nsRect bounds = GetClippedBounds(aBuilder);
+    nsRect bounds;
+    if (aUseClipBounds) {
+      bounds = GetClippedBounds(aBuilder);
+    } else {
+      bool snap;
+      bounds = GetBounds(aBuilder, &snap);
+    }
 
     nsRegion itemVisible;
     itemVisible.And(*aVisibleRegion, bounds);
