@@ -57,12 +57,12 @@ def yasm_version(yasm):
     return Version(version)
 
 
-@depends(yasm_version)
+@depends_if(yasm_version)
 def yasm_major_version(yasm_version):
     return str(yasm_version.major)
 
 
-@depends(yasm_version)
+@depends_if(yasm_version)
 def yasm_minor_version(yasm_version):
     return str(yasm_version.minor)
 
