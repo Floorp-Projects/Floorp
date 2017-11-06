@@ -3969,7 +3969,7 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
                           nsCOMPtr<nsIContent>* ioChildAtSplitPointOffset)
 {
   MOZ_ASSERT(&aSplitPointParent == &aNode ||
-             EditorUtils::IsDescendantOf(&aSplitPointParent, &aNode));
+             EditorUtils::IsDescendantOf(aSplitPointParent, aNode));
   int32_t offset = aSplitPointOffset;
 
   nsCOMPtr<nsIContent> leftNode, rightNode;
