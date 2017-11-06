@@ -6,6 +6,7 @@
 package org.mozilla.gecko.customtabs;
 
 import android.app.PendingIntent;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
@@ -607,16 +608,35 @@ public class CustomTabsActivity extends AppCompatActivity
             return false;
         }
 
-        final Uri url = Uri.parse(urlStr);
-        if (url == null) {
+        final Uri uri = Uri.parse(urlStr);
+        if (uri == null) {
             // We can't handle this, so deny it.
             Log.w(LOGTAG, "Failed to parse URL for navigation: " + urlStr);
             return true;
         }
 
-        final Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(url);
-        startActivity(intent);
+        // Always use Fennec for these schemes.
+        if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()) ||
+            "data".equals(uri.getScheme()) || "blob".equals(uri.getScheme())) {
+            final Intent intent = new Intent(this, BrowserApp.class);
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setData(uri);
+            intent.setPackage(getPackageName());
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                Log.w(LOGTAG, "No activity handler found for: " + urlStr);
+            }
+        } else {
+            final Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(uri);
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                Log.w(LOGTAG, "No activity handler found for: " + urlStr);
+            }
+        }
+
         return true;
     }
 
