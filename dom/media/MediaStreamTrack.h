@@ -57,9 +57,10 @@ class MediaStreamTrackSource : public nsISupports
   NS_DECL_CYCLE_COLLECTION_CLASS(MediaStreamTrackSource)
 
 public:
-  class Sink
+  class Sink : public SupportsWeakPtr<Sink>
   {
   public:
+    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MediaStreamTrackSource::Sink)
     virtual void PrincipalChanged() = 0;
   };
 
@@ -150,6 +151,9 @@ public:
       return;
     }
     mSinks.AppendElement(aSink);
+    while(mSinks.RemoveElement(nullptr)) {
+      MOZ_ASSERT_UNREACHABLE("Sink was not explicitly removed");
+    }
   }
 
   /**
@@ -159,6 +163,9 @@ public:
   void UnregisterSink(Sink* aSink)
   {
     MOZ_ASSERT(NS_IsMainThread());
+    while(mSinks.RemoveElement(nullptr)) {
+      MOZ_ASSERT_UNREACHABLE("Sink was not explicitly removed");
+    }
     if (mSinks.RemoveElement(aSink) && mSinks.IsEmpty()) {
       MOZ_ASSERT(!mStopped);
       Stop();
@@ -177,7 +184,14 @@ protected:
    */
   void PrincipalChanged()
   {
-    for (Sink* sink : mSinks) {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsTArray<WeakPtr<Sink>> sinks(mSinks);
+    for (auto& sink : sinks) {
+      if (!sink) {
+        MOZ_ASSERT_UNREACHABLE("Sink was not explicitly removed");
+        mSinks.RemoveElement(sink);
+        continue;
+      }
       sink->PrincipalChanged();
     }
   }
@@ -186,7 +200,7 @@ protected:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   // Currently registered sinks.
-  nsTArray<Sink*> mSinks;
+  nsTArray<WeakPtr<Sink>> mSinks;
 
   // The label of the track we are the source of per the MediaStreamTrack spec.
   const nsString mLabel;
