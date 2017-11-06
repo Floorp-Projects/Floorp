@@ -86,7 +86,6 @@ class RequestListItem extends Component {
       onFocusedNodeChange: PropTypes.func,
       onMouseDown: PropTypes.func.isRequired,
       onSecurityIconMouseDown: PropTypes.func.isRequired,
-      onThumbnailMouseDown: PropTypes.func.isRequired,
       onWaterfallMouseDown: PropTypes.func.isRequired,
       waterfallWidth: PropTypes.number,
     };
@@ -125,7 +124,6 @@ class RequestListItem extends Component {
       onMouseDown,
       onCauseBadgeMouseDown,
       onSecurityIconMouseDown,
-      onThumbnailMouseDown,
       onWaterfallMouseDown,
     } = this.props;
 
@@ -144,7 +142,7 @@ class RequestListItem extends Component {
       },
         columns.get("status") && RequestListColumnStatus({ item }),
         columns.get("method") && RequestListColumnMethod({ item }),
-        columns.get("file") && RequestListColumnFile({ item, onThumbnailMouseDown }),
+        columns.get("file") && RequestListColumnFile({ item }),
         columns.get("protocol") && RequestListColumnProtocol({ item }),
         columns.get("scheme") && RequestListColumnScheme({ item }),
         columns.get("domain") && RequestListColumnDomain({ item,
