@@ -3263,7 +3263,7 @@ class ValueObserver final
   : public nsIObserver
   , public ValueObserverHashKey
 {
-  ~ValueObserver() { Preferences::RemoveObserver(this, mPrefName.get()); }
+  ~ValueObserver() = default;
 
 public:
   NS_DECL_ISUPPORTS
@@ -4681,8 +4681,7 @@ pref_InitInitialObjects()
 
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "nightly") ||
       !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "aurora") ||
-      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") ||
-      developerBuild) {
+      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") || developerBuild) {
     PREF_SetBoolPref(kTelemetryPref, true, true);
   } else {
     PREF_SetBoolPref(kTelemetryPref, false, true);
@@ -4951,13 +4950,13 @@ NotifyObserver(const char* aPref, void* aClosure)
 }
 
 static void
-RegisterPriorityCallback(PrefChangedFunc aCallback,
-                         const char* aPref,
-                         void* aClosure)
+RegisterCallbackHelper(PrefChangedFunc aCallback,
+                       const char* aPref,
+                       void* aClosure,
+                       Preferences::MatchKind aMatchKind,
+                       bool aIsPriority)
 {
-  MOZ_ASSERT(Preferences::IsServiceAvailable());
-
-  ValueObserverHashKey hashKey(aPref, aCallback, Preferences::ExactMatch);
+  ValueObserverHashKey hashKey(aPref, aCallback, aMatchKind);
   RefPtr<ValueObserver> observer;
   gObserverTable->Get(&hashKey, getter_AddRefs(observer));
   if (observer) {
@@ -4965,13 +4964,25 @@ RegisterPriorityCallback(PrefChangedFunc aCallback,
     return;
   }
 
-  observer = new ValueObserver(aPref, aCallback, Preferences::ExactMatch);
+  observer = new ValueObserver(aPref, aCallback, aMatchKind);
   observer->AppendClosure(aClosure);
-  PREF_RegisterCallback(aPref,
-                        NotifyObserver,
-                        static_cast<nsIObserver*>(observer),
-                        /* isPriority */ true);
+  PREF_RegisterCallback(
+    aPref, NotifyObserver, static_cast<nsIObserver*>(observer), aIsPriority);
   gObserverTable->Put(observer, observer);
+}
+
+// RegisterVarCacheCallback uses high priority callbacks to ensure that cache
+// observers are called prior to ordinary pref observers. Doing this ensures
+// that ordinary observers will never get stale values from cache variables.
+static void
+RegisterVarCacheCallback(PrefChangedFunc aCallback,
+                         const char* aPref,
+                         void* aClosure)
+{
+  MOZ_ASSERT(Preferences::IsServiceAvailable());
+
+  RegisterCallbackHelper(
+    aCallback, aPref, aClosure, Preferences::ExactMatch, /* isPriority */ true);
 }
 
 /* static */ nsresult
@@ -4983,20 +4994,8 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
   MOZ_ASSERT(aCallback);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  ValueObserverHashKey hashKey(aPref, aCallback, aMatchKind);
-  RefPtr<ValueObserver> observer;
-  gObserverTable->Get(&hashKey, getter_AddRefs(observer));
-  if (observer) {
-    observer->AppendClosure(aClosure);
-    return NS_OK;
-  }
-
-  observer = new ValueObserver(aPref, aCallback, aMatchKind);
-  observer->AppendClosure(aClosure);
-  nsresult rv = AddStrongObserver(observer, aPref);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  gObserverTable->Put(observer, observer);
+  RegisterCallbackHelper(
+    aCallback, aPref, aClosure, aMatchKind, /* isPriority */ false);
   return NS_OK;
 }
 
@@ -5037,14 +5036,13 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
   observer->RemoveClosure(aClosure);
   if (observer->HasNoClosures()) {
     // Delete the callback since its list of closures is empty.
+    MOZ_ALWAYS_SUCCEEDS(
+      PREF_UnregisterCallback(aPref, NotifyObserver, observer));
+
     gObserverTable->Remove(observer);
   }
   return NS_OK;
 }
-
-// We insert cache observers using RegisterPriorityCallback to ensure they are
-// called prior to ordinary pref observers. Doing this ensures that ordinary
-// observers will never get stale values from cache variables.
 
 static void
 BoolVarChanged(const char* aPref, void* aClosure)
@@ -5076,7 +5074,7 @@ Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
   data->mCacheLocation = aCache;
   data->mDefaultValueBool = aDefault;
   CacheDataAppendElement(data);
-  RegisterPriorityCallback(BoolVarChanged, aPref, data);
+  RegisterVarCacheCallback(BoolVarChanged, aPref, data);
   return NS_OK;
 }
 
@@ -5103,7 +5101,7 @@ Preferences::AddIntVarCache(int32_t* aCache,
   data->mCacheLocation = aCache;
   data->mDefaultValueInt = aDefault;
   CacheDataAppendElement(data);
-  RegisterPriorityCallback(IntVarChanged, aPref, data);
+  RegisterVarCacheCallback(IntVarChanged, aPref, data);
   return NS_OK;
 }
 
@@ -5130,7 +5128,7 @@ Preferences::AddUintVarCache(uint32_t* aCache,
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
   CacheDataAppendElement(data);
-  RegisterPriorityCallback(UintVarChanged, aPref, data);
+  RegisterVarCacheCallback(UintVarChanged, aPref, data);
   return NS_OK;
 }
 
@@ -5159,7 +5157,7 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
   CacheDataAppendElement(data);
-  RegisterPriorityCallback(AtomicUintVarChanged<Order>, aPref, data);
+  RegisterVarCacheCallback(AtomicUintVarChanged<Order>, aPref, data);
   return NS_OK;
 }
 
@@ -5192,7 +5190,7 @@ Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
   data->mCacheLocation = aCache;
   data->mDefaultValueFloat = aDefault;
   CacheDataAppendElement(data);
-  RegisterPriorityCallback(FloatVarChanged, aPref, data);
+  RegisterVarCacheCallback(FloatVarChanged, aPref, data);
   return NS_OK;
 }
 

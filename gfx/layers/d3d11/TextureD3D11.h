@@ -478,7 +478,7 @@ class SyncObjectD3D11Client : public SyncObjectClient
 public:
   explicit SyncObjectD3D11Client(SyncHandle aSyncHandle, ID3D11Device* aDevice);
 
-  virtual void Synchronize() override;
+  virtual bool Synchronize(bool aFallible) override;
 
   virtual bool IsSyncObjectValid() override;
 
@@ -487,7 +487,7 @@ public:
   void RegisterTexture(ID3D11Texture2D* aTexture);
 
 private:
-  bool Init();
+  bool Init(bool aFallible);
 
   SyncHandle mSyncHandle;
   RefPtr<ID3D11Device> mDevice;
