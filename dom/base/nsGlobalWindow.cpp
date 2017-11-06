@@ -10641,7 +10641,7 @@ void nsGlobalWindow::SetIsBackground(bool aIsBackground)
   if (aIsBackground) {
     // Notify gamepadManager we are at the background window,
     // we need to stop vibrate.
-    if (inner) {
+    if (inner && changed) {
       inner->StopGamepadHaptics();
     }
     return;
