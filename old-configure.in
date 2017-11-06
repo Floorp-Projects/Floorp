@@ -3219,7 +3219,14 @@ case "$CPU_ARCH" in
   x86|x86_64)
       MOZ_FFVPX=1
       dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.
-      FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
+      if test -n "$LIBAV_FFT_ASFLAGS"; then
+          FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
+      else
+          dnl On x86 system with assembly optimizations disabled, the ffvp9 and
+          dnl ffvp8 decoders give worse performance than libvpx ones. So we only
+          dnl enable the FFmpeg FLAC decoder on those machines.
+          MOZ_FFVPX_FLACONLY=1
+      fi
   ;;
   arm*|aarch64)
       MOZ_FFVPX=1
