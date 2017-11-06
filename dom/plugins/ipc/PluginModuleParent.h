@@ -48,6 +48,7 @@ class PluginInstanceParent;
 
 #ifdef XP_WIN
 class PluginHangUIParent;
+class FunctionBrokerParent;
 #endif
 #ifdef MOZ_CRASHREPORTER_INJECTOR
 class FinishInjectorInitTask;
@@ -588,6 +589,8 @@ private:
      */
     void
     FinishHangUI();
+
+    FunctionBrokerParent* mBrokerParent;
 #endif
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
