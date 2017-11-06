@@ -60,10 +60,6 @@ var whitelist = [
   {file: "chrome://global/locale/printPreviewProgress.dtd",
    platforms: ["macosx"]},
   {file: "chrome://global/locale/printProgress.dtd", platforms: ["macosx"]},
-  {file: "chrome://global/locale/printdialog.dtd",
-   platforms: ["macosx", "win"]},
-  {file: "chrome://global/locale/printjoboptions.dtd",
-   platforms: ["macosx", "win"]},
 
   // devtools/client/inspector/bin/dev-server.js
   {file: "chrome://devtools/content/inspector/markup/markup.xhtml",
