@@ -2794,6 +2794,7 @@ nsPrintEngine::PrintPage(nsPrintObject*    aPO,
   bool isCancelled = false;
   printData->mPrintSettings->GetIsCancelled(&isCancelled);
   if (isCancelled || printData->mIsAborted) {
+    DonePrintingPages(aPO, NS_OK);
     return true;
   }
 
