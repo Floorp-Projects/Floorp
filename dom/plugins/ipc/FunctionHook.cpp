@@ -81,6 +81,82 @@ FunctionHook::ClearDllInterceptorCache()
   sDllInterceptorCache = nullptr;
 }
 
+/* GetWindowInfo */
+
+typedef BasicFunctionHook<ID_GetWindowInfo, decltype(GetWindowInfo)> GetWindowInfoFH;
+
+template<>
+ShouldHookFunc* const
+GetWindowInfoFH::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_GETWINDOWINFO>;
+
+static const wchar_t * kMozillaWindowClass = L"MozillaWindowClass";
+static HWND sBrowserHwnd = nullptr;
+
+
+BOOL WINAPI
+GetWindowInfoHook(HWND hWnd, PWINDOWINFO pwi)
+{
+  if (!pwi) {
+    return FALSE;
+  }
+
+  MOZ_ASSERT(ID_GetWindowInfo < FunctionHook::GetHooks()->Length());
+  GetWindowInfoFH* functionHook =
+    static_cast<GetWindowInfoFH*>(FunctionHook::GetHooks()->ElementAt(ID_GetWindowInfo));
+  if (!functionHook->OriginalFunction()) {
+    NS_ASSERTION(FALSE, "Something is horribly wrong in PHGetWindowInfoHook!");
+    return FALSE;
+  }
+
+  if (!sBrowserHwnd) {
+    wchar_t szClass[20];
+    // GetClassNameW returns the length it copied w/o null terminator.
+    // Therefore, if the name and null-terminator fit then it returns a
+    // value less than the buffer's length.
+    int nameLen = GetClassNameW(hWnd, szClass, ArrayLength(szClass));
+    if ((nameLen < (int)ArrayLength(szClass)) &&
+        !wcscmp(szClass, kMozillaWindowClass)) {
+      sBrowserHwnd = hWnd;
+    }
+  }
+
+  // Oddity: flash does strange rect comparisons for mouse input destined for
+  // it's internal settings window. Post removing sub widgets for tabs, touch
+  // this up so they get the rect they expect.
+  // XXX potentially tie this to a specific major version?
+  typedef BOOL (WINAPI *GetWindowInfoPtr)(HWND hwnd, PWINDOWINFO pwi);
+  GetWindowInfoPtr gwiFunc =
+    static_cast<GetWindowInfoPtr>(functionHook->OriginalFunction());
+  BOOL result = gwiFunc(hWnd, pwi);
+  if (sBrowserHwnd && sBrowserHwnd == hWnd) {
+    pwi->rcWindow = pwi->rcClient;
+  }
+  return result;
+}
+
+/* PrintDlgW */
+
+typedef BasicFunctionHook<ID_PrintDlgW, decltype(PrintDlgW)> PrintDlgWFH;
+
+template<>
+ShouldHookFunc* const
+PrintDlgWFH::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_PRINTDLGW>;
+
+BOOL WINAPI PrintDlgWHook(LPPRINTDLGW aDlg)
+{
+  // Zero out the HWND supplied by the plugin.  We are sacrificing window
+  // parentage for the ability to run in the NPAPI sandbox.
+  HWND hwnd = aDlg->hwndOwner;
+  aDlg->hwndOwner = 0;
+  MOZ_ASSERT(ID_PrintDlgW < FunctionHook::GetHooks()->Length());
+  PrintDlgWFH* functionHook =
+    static_cast<PrintDlgWFH*>(FunctionHook::GetHooks()->ElementAt(ID_PrintDlgW));
+  MOZ_ASSERT(functionHook);
+  BOOL ret = functionHook->OriginalFunction()(aDlg);
+  aDlg->hwndOwner = hwnd;
+  return ret;
+}
+
 // Hooking CreateFileW for protected-mode magic
 static WindowsDllInterceptor sKernel32Intercept;
 typedef HANDLE (WINAPI *CreateFileWPtr)(LPCWSTR aFname, DWORD aAccess,
@@ -239,6 +315,15 @@ void FunctionHook::HookProtectedMode()
 void
 FunctionHook::AddFunctionHooks(FunctionHookArray& aHooks)
 {
+  // We transfer ownership of the FunctionHook objects to the array.
+#if defined(XP_WIN)
+  aHooks[ID_GetWindowInfo] =
+    FUN_HOOK(new GetWindowInfoFH("user32.dll", "GetWindowInfo",
+                                 &GetWindowInfo, &GetWindowInfoHook));
+  aHooks[ID_PrintDlgW] =
+    FUN_HOOK(new PrintDlgWFH("comdlg32.dll", "PrintDlgW", &PrintDlgW,
+                             PrintDlgWHook));
+#endif // defined(XP_WIN)
 }
 
 #undef FUN_HOOK
