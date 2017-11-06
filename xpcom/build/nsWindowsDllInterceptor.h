@@ -1401,10 +1401,15 @@ class WindowsDllInterceptor
   int mNHooks;
 
 public:
-  WindowsDllInterceptor()
+  explicit WindowsDllInterceptor(const char* aModuleName = nullptr,
+                                 int aNumHooks = 0)
     : mModuleName(nullptr)
     , mNHooks(0)
-  {}
+  {
+    if (aModuleName) {
+      Init(aModuleName, aNumHooks);
+    }
+  }
 
   void Init(const char* aModuleName, int aNumHooks = 0)
   {
