@@ -387,6 +387,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'GeckoSession.java',
     'GeckoSharedPrefs.java',
     'GeckoThread.java',
+    'GeckoView.java',
     'GeckoViewHandler.java',
     'GeckoViewSettings.java',
     'gfx/BitmapUtils.java',
