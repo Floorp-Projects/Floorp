@@ -28,14 +28,15 @@ public:
 
   static already_AddRefed<SyncObjectHost> CreateSyncObjectHost(
 #ifdef XP_WIN
-                                                                       ID3D11Device* aDevice = nullptr
+                                                               ID3D11Device* aDevice = nullptr
 #endif
-                                                                      );
+                                                              );
 
   virtual bool Init() = 0;
 
   virtual SyncHandle GetSyncHandle() = 0;
 
+  // Return false for failed synchronization.
   virtual bool Synchronize() = 0;
 
 protected:
@@ -50,9 +51,9 @@ public:
 
   static already_AddRefed<SyncObjectClient> CreateSyncObjectClient(SyncHandle aHandle
 #ifdef XP_WIN
-                                                                     , ID3D11Device* aDevice = nullptr
+                                                                   , ID3D11Device* aDevice = nullptr
 #endif
-                                                                    );
+                                                                  );
 
   enum class SyncType {
     D3D11,
@@ -60,7 +61,8 @@ public:
 
   virtual SyncType GetSyncType() = 0;
 
-  virtual void Synchronize() = 0;
+  // Return false for failed synchronization.
+  virtual bool Synchronize(bool aFallible = false) = 0;
 
   virtual bool IsSyncObjectValid() = 0;
 
