@@ -17,7 +17,6 @@ loader.lazyRequireGetter(this, "FlexboxInspector", "devtools/client/inspector/fl
 loader.lazyRequireGetter(this, "GridInspector", "devtools/client/inspector/grids/grid-inspector");
 
 class LayoutView {
-
   constructor(inspector, window) {
     this.document = window.document;
     this.inspector = inspector;
@@ -100,7 +99,6 @@ class LayoutView {
     this.inspector = null;
     this.store = null;
   }
-
 }
 
 module.exports = LayoutView;
