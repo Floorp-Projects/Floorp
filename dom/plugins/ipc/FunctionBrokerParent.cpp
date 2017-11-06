@@ -11,6 +11,13 @@
 namespace mozilla {
 namespace plugins {
 
+#if defined(XP_WIN)
+UlongPairToIdMap sPairToIdMap;
+IdToUlongPairMap sIdToPairMap;
+PtrToIdMap sPtrToIdMap;
+IdToPtrMap sIdToPtrMap;
+#endif // defined(XP_WIN)
+
 /* static */ FunctionBrokerParent*
 FunctionBrokerParent::Create(Endpoint<PFunctionBrokerParent>&& aParentEnd)
 {
@@ -18,6 +25,11 @@ FunctionBrokerParent::Create(Endpoint<PFunctionBrokerParent>&& aParentEnd)
   if (!thread) {
     return nullptr;
   }
+
+  // We get the FunctionHooks so that they are created here, not on the
+  // message thread.
+  FunctionHook::GetHooks();
+
   return new FunctionBrokerParent(thread, Move(aParentEnd));
 }
 
@@ -78,6 +90,40 @@ void
 FunctionBrokerParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   MOZ_RELEASE_ASSERT(mThread->IsOnThread());
+}
+
+mozilla::ipc::IPCResult
+FunctionBrokerParent::RecvBrokerFunction(const FunctionHookId &aFunctionId,
+                                         const IpdlTuple &aInTuple,
+                                         IpdlTuple *aOutTuple)
+{
+#if defined(XP_WIN)
+  MOZ_ASSERT(mThread->IsOnThread());
+  if (RunBrokeredFunction(OtherPid(), aFunctionId, aInTuple, aOutTuple)) {
+    return IPC_OK();
+  }
+  return IPC_FAIL_NO_REASON(this);
+#else
+  MOZ_ASSERT_UNREACHABLE("BrokerFunction is currently only implemented on Windows.");
+  return IPC_FAIL_NO_REASON(this);
+#endif
+}
+
+// static
+bool
+FunctionBrokerParent::RunBrokeredFunction(base::ProcessId aClientId,
+                                        const FunctionHookId &aFunctionId,
+                                        const IPC::IpdlTuple &aInTuple,
+                                        IPC::IpdlTuple *aOutTuple)
+{
+  if ((size_t)aFunctionId >= FunctionHook::GetHooks()->Length()) {
+    MOZ_ASSERT_UNREACHABLE("Invalid function ID");
+    return false;
+  }
+
+  FunctionHook* hook = FunctionHook::GetHooks()->ElementAt(aFunctionId);
+  MOZ_ASSERT(hook->FunctionId() == aFunctionId);
+  return hook->RunOriginalFunction(aClientId, aInTuple, aOutTuple);
 }
 
 } // namespace plugins
