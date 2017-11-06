@@ -12,7 +12,6 @@ import org.mozilla.gecko.util.GeckoBundle;
 
 import android.util.Log;
 
-
 /* package */ abstract class GeckoViewHandler<Listener>
     implements BundleEventListener {
 
@@ -25,19 +24,19 @@ import android.util.Log;
     private final String[] mEvents;
 
 
-    GeckoViewHandler(final String module, final GeckoView view,
+    GeckoViewHandler(final String module, final GeckoSession session,
                      final String[] events) {
-        this(module, view, events, /* alwaysListen */ false);
+        this(module, session, events, /* alwaysListen */ false);
     }
 
-    GeckoViewHandler(final String module, final GeckoView view,
+    GeckoViewHandler(final String module, final GeckoSession session,
                      final String[] events, final boolean alwaysListen) {
         mAlwaysListen = alwaysListen;
         mModuleName = module;
         mEvents = events;
 
         if (alwaysListen) {
-            register(view.getEventDispatcher());
+            register(session.getEventDispatcher());
         }
     }
 
@@ -45,8 +44,8 @@ import android.util.Log;
         return mListener;
     }
 
-    public void setListener(final Listener listener, final GeckoView view) {
-        final EventDispatcher eventDispatcher = view.getEventDispatcher();
+    public void setListener(final Listener listener, final GeckoSession session) {
+        final EventDispatcher eventDispatcher = session.getEventDispatcher();
         if (mListener == listener) {
             return;
         }

@@ -48,24 +48,19 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import org.mozilla.gecko.GeckoView;
+import org.mozilla.gecko.GeckoSession;
 import org.mozilla.gecko.util.GeckoBundle;
 
-final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
+final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
     protected static final String LOGTAG = "BasicGeckoViewPrompt";
 
+    private final Activity mActivity;
     public int filePickerRequestCode = 1;
     private int mFileType;
     private FileCallback mFileCallback;
 
-    private static Activity getActivity(final GeckoView view) {
-        if (view != null) {
-            final Context context = view.getContext();
-            if (context instanceof Activity) {
-                return (Activity) context;
-            }
-        }
-        return null;
+    public BasicGeckoViewPrompt(final Activity activity) {
+        mActivity = activity;
     }
 
     private AlertDialog.Builder addCheckbox(final AlertDialog.Builder builder,
@@ -97,9 +92,9 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
         return builder;
     }
 
-    public void alert(final GeckoView view, final String title, final String msg,
+    public void alert(final GeckoSession session, final String title, final String msg,
                       final AlertCallback callback) {
-        final Activity activity = getActivity(view);
+        final Activity activity = mActivity;
         if (activity == null) {
             callback.dismiss();
             return;
@@ -112,10 +107,10 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
                              callback).show();
     }
 
-    public void promptForButton(final GeckoView view, final String title, final String msg,
-                                final String[] btnMsg, final ButtonCallback callback)
-    {
-        final Activity activity = getActivity(view);
+    public void promptForButton(final GeckoSession session, final String title,
+                                final String msg, final String[] btnMsg,
+                                final ButtonCallback callback) {
+        final Activity activity = mActivity;
         if (activity == null) {
             callback.dismiss();
             return;
@@ -187,10 +182,10 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
         return dialog;
     }
 
-    public void promptForText(final GeckoView view, final String title, final String msg,
-                              final String value, final TextCallback callback)
-    {
-        final Activity activity = getActivity(view);
+    public void promptForText(final GeckoSession session, final String title,
+                              final String msg, final String value,
+                              final TextCallback callback) {
+        final Activity activity = mActivity;
         if (activity == null) {
             callback.dismiss();
             return;
@@ -213,10 +208,10 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
         createStandardDialog(addCheckbox(builder, container, callback), callback).show();
     }
 
-    public void promptForAuth(final GeckoView view, final String title, final String msg,
-                              final GeckoBundle options, final AuthCallback callback)
-    {
-        final Activity activity = getActivity(view);
+    public void promptForAuth(final GeckoSession session, final String title,
+                              final String msg, final GeckoBundle options,
+                              final AuthCallback callback) {
+        final Activity activity = mActivity;
         if (activity == null) {
             callback.dismiss();
             return;
@@ -291,11 +286,10 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
         }
     }
 
-    public void promptForChoice(final GeckoView view, final String title, final String msg,
-                                final int type, final GeckoBundle[] choices,
-                                final ChoiceCallback callback)
-    {
-        final Activity activity = getActivity(view);
+    public void promptForChoice(final GeckoSession session, final String title,
+                                final String msg, final int type,
+                                final GeckoBundle[] choices, final ChoiceCallback callback) {
+        final Activity activity = mActivity;
         if (activity == null) {
             callback.dismiss();
             return;
@@ -423,7 +417,7 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
                             // Show sub-menu.
                             dialog.setOnDismissListener(null);
                             dialog.dismiss();
-                            promptForChoice(view, item.getString("label"), /* msg */ null,
+                            promptForChoice(session, item.getString("label"), /* msg */ null,
                                             type, children, callback);
                             return;
                         }
@@ -473,10 +467,10 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
         }
     }
 
-    public void promptForColor(final GeckoView view, final String title,
+    public void promptForColor(final GeckoSession session, final String title,
                                final String value, final TextCallback callback)
     {
-        final Activity activity = getActivity(view);
+        final Activity activity = mActivity;
         if (activity == null) {
             callback.dismiss();
             return;
@@ -581,11 +575,10 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
         }
     }
 
-    public void promptForDateTime(final GeckoView view, final String title, final int type,
-                                  final String value, final String min, final String max,
-                                  final TextCallback callback)
-    {
-        final Activity activity = getActivity(view);
+    public void promptForDateTime(final GeckoSession session, final String title,
+                                  final int type, final String value, final String min,
+                                  final String max, final TextCallback callback) {
+        final Activity activity = mActivity;
         if (activity == null) {
             callback.dismiss();
             return;
@@ -698,10 +691,10 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
     }
 
     @TargetApi(19)
-    public void promptForFile(GeckoView view, String title, int type,
+    public void promptForFile(GeckoSession session, String title, int type,
                               String[] mimeTypes, FileCallback callback)
     {
-        final Activity activity = getActivity(view);
+        final Activity activity = mActivity;
         if (activity == null) {
             callback.dismiss();
             return;
@@ -753,8 +746,7 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
         }
     }
 
-    public void onFileCallbackResult(final Context context, final int resultCode,
-                                     final Intent data) {
+    public void onFileCallbackResult(final int resultCode, final Intent data) {
         if (mFileCallback == null) {
             return;
         }
@@ -772,7 +764,7 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
 
         if (mFileType == FILE_TYPE_SINGLE ||
             (mFileType == FILE_TYPE_MULTIPLE && clip == null)) {
-            callback.confirm(context, uri);
+            callback.confirm(mActivity, uri);
 
         } else if (mFileType == FILE_TYPE_MULTIPLE) {
             if (clip == null) {
@@ -785,13 +777,13 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
             for (int i = 0; i < count; i++) {
                 uris.add(clip.getItemAt(i).getUri());
             }
-            callback.confirm(context, uris.toArray(new Uri[uris.size()]));
+            callback.confirm(mActivity, uris.toArray(new Uri[uris.size()]));
         }
     }
 
-    public void promptForPermission(final GeckoView view, final String title,
-                                    final GeckoView.PermissionDelegate.Callback callback) {
-        final Activity activity = getActivity(view);
+    public void promptForPermission(final GeckoSession session, final String title,
+                                    final GeckoSession.PermissionDelegate.Callback callback) {
+        final Activity activity = mActivity;
         if (activity == null) {
             callback.reject();
             return;
@@ -850,10 +842,10 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
         return spinner;
     }
 
-    public void promptForMedia(final GeckoView view, final String title,
+    public void promptForMedia(final GeckoSession session, final String title,
                                final GeckoBundle[] video, final GeckoBundle[] audio,
-                               final GeckoView.PermissionDelegate.MediaCallback callback) {
-        final Activity activity = getActivity(view);
+                               final GeckoSession.PermissionDelegate.MediaCallback callback) {
+        final Activity activity = mActivity;
         if (activity == null || (video == null && audio == null)) {
             callback.reject();
             return;
