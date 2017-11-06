@@ -4,7 +4,13 @@
 #include "PluginMessageUtils.h"
 
 #if defined(XP_WIN)
+
+#define SECURITY_WIN32
+#include <security.h>
+#include <wininet.h>
+#include <schannel.h>
 #include <commdlg.h>
+
 #endif // defined(XP_WIN)
 
 namespace mozilla {
@@ -22,6 +28,24 @@ enum FunctionHookId
   , ID_SetCursorPos
   , ID_GetSaveFileNameW
   , ID_GetOpenFileNameW
+  , ID_InternetOpenA
+  , ID_InternetConnectA
+  , ID_InternetCloseHandle
+  , ID_InternetQueryDataAvailable
+  , ID_InternetReadFile
+  , ID_InternetWriteFile
+  , ID_InternetSetOptionA
+  , ID_HttpAddRequestHeadersA
+  , ID_HttpOpenRequestA
+  , ID_HttpQueryInfoA
+  , ID_HttpSendRequestA
+  , ID_HttpSendRequestExA
+  , ID_InternetQueryOptionA
+  , ID_InternetErrorDlg
+  , ID_AcquireCredentialsHandleA
+  , ID_QueryCredentialsAttributesA
+  , ID_FreeCredentialsHandle
+  , ID_PrintDlgW
   , ID_FunctionHookCount
 #else // defined(XP_WIN)
     ID_FunctionHookCount
@@ -59,6 +83,8 @@ inline nsCString FormatBlob(const nsACString& aParam)
 
 // Values indicate GetOpenFileNameW and GetSaveFileNameW.
 enum GetFileNameFunc { OPEN_FUNC, SAVE_FUNC };
+
+typedef nsTArray<nsCString> StringArray;
 
 // IPC-capable version of the Windows OPENFILENAMEW struct.
 typedef struct _OpenFileNameIPC
@@ -133,6 +159,60 @@ typedef struct _OpenFileNameRetIPC
   uint16_t mFileExtension;
 } OpenFileNameRetIPC;
 
+typedef struct _IPCSchannelCred
+{
+  void CopyFrom(const PSCHANNEL_CRED& aSCred);
+  void CopyTo(PSCHANNEL_CRED& aSCred) const;
+  bool operator==(const _IPCSchannelCred& o) const
+  {
+    return (o.mEnabledProtocols == mEnabledProtocols) &&
+           (o.mMinStrength == mMinStrength) &&
+           (o.mMaxStrength == mMaxStrength) &&
+           (o.mFlags == mFlags);
+  }
+
+
+  DWORD mEnabledProtocols;
+  DWORD mMinStrength;
+  DWORD mMaxStrength;
+  DWORD mFlags;
+} IPCSchannelCred;
+
+typedef struct _IPCInternetBuffers
+{
+  void CopyFrom(const LPINTERNET_BUFFERSA& aBufs);
+  void CopyTo(LPINTERNET_BUFFERSA& aBufs) const;
+  bool operator==(const _IPCInternetBuffers& o) const
+  {
+    return o.mBuffers == mBuffers;
+  }
+  static void FreeBuffers(LPINTERNET_BUFFERSA& aBufs);
+
+  struct Buffer
+  {
+    nsCString mHeader;
+    uint32_t mHeaderTotal;
+    nsCString mBuffer;
+    uint32_t mBufferTotal;
+    bool operator==(const Buffer& o) const
+    {
+      return (o.mHeader == mHeader) && (o.mHeaderTotal == mHeaderTotal) &&
+             (o.mBuffer == mBuffer) && (o.mBufferTotal == mBufferTotal);
+    }
+  };
+  nsTArray<Buffer> mBuffers;
+} IPCInternetBuffers;
+
+typedef struct _IPCPrintDlg
+{
+  void CopyFrom(const LPPRINTDLGW& aDlg);
+  void CopyTo(LPPRINTDLGW& aDlg) const;
+  bool operator==(const _IPCPrintDlg& o) const
+  {
+    MOZ_ASSERT_UNREACHABLE("DLP: TODO:"); return false;
+  }
+} IPCPrintDlg;
+
 #endif // defined(XP_WIN)
 
 } // namespace plugins
@@ -146,6 +226,9 @@ using mozilla::plugins::FunctionHookId;
 
 using mozilla::plugins::OpenFileNameIPC;
 using mozilla::plugins::OpenFileNameRetIPC;
+using mozilla::plugins::IPCSchannelCred;
+using mozilla::plugins::IPCInternetBuffers;
+using mozilla::plugins::IPCPrintDlg;
 using mozilla::plugins::NativeWindowHandle;
 using mozilla::plugins::StringArray;
 
@@ -249,6 +332,118 @@ struct ParamTraits<mozilla::plugins::GetFileNameFunc> :
                                            mozilla::plugins::OPEN_FUNC,
                                            mozilla::plugins::SAVE_FUNC>
 {};
+
+template <>
+struct ParamTraits<IPCSchannelCred>
+{
+  typedef mozilla::plugins::IPCSchannelCred paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<uint32_t>(aParam.mEnabledProtocols));
+    WriteParam(aMsg, static_cast<uint32_t>(aParam.mMinStrength));
+    WriteParam(aMsg, static_cast<uint32_t>(aParam.mMaxStrength));
+    WriteParam(aMsg, static_cast<uint32_t>(aParam.mFlags));
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    uint32_t proto, minStr, maxStr, flags;
+    if (!ReadParam(aMsg, aIter, &proto) ||
+        !ReadParam(aMsg, aIter, &minStr) ||
+        !ReadParam(aMsg, aIter, &maxStr) ||
+        !ReadParam(aMsg, aIter, &flags)) {
+      return false;
+    }
+    aResult->mEnabledProtocols = proto;
+    aResult->mMinStrength = minStr;
+    aResult->mMaxStrength = maxStr;
+    aResult->mFlags = flags;
+    return true;
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    aLog->append(StringPrintf(L"[%d,%d,%d,%d]",
+                              aParam.mEnabledProtocols, aParam.mMinStrength,
+                              aParam.mMaxStrength, aParam.mFlags));
+  }
+};
+
+template <>
+struct ParamTraits<IPCInternetBuffers::Buffer>
+{
+  typedef mozilla::plugins::IPCInternetBuffers::Buffer paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mHeader);
+    WriteParam(aMsg, aParam.mHeaderTotal);
+    WriteParam(aMsg, aParam.mBuffer);
+    WriteParam(aMsg, aParam.mBufferTotal);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mHeader) &&
+           ReadParam(aMsg, aIter, &aResult->mHeaderTotal) &&
+           ReadParam(aMsg, aIter, &aResult->mBuffer) &&
+           ReadParam(aMsg, aIter, &aResult->mBufferTotal);
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    nsCString head = mozilla::plugins::FormatBlob(aParam.mHeader);
+    nsCString buffer = mozilla::plugins::FormatBlob(aParam.mBuffer);
+    std::string msg = StringPrintf("[%s, %d, %s, %d]",
+                                   head.Data(), aParam.mHeaderTotal,
+                                   buffer.Data(), aParam.mBufferTotal);
+    aLog->append(msg.begin(), msg.end());
+  }
+};
+
+template <>
+struct ParamTraits<IPCInternetBuffers>
+{
+  typedef mozilla::plugins::IPCInternetBuffers paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mBuffers);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mBuffers);
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    ParamTraits<nsTArray<IPCInternetBuffers::Buffer>>::Log(aParam.mBuffers, aLog);
+  }
+};
+
+template <>
+struct ParamTraits<IPCPrintDlg>
+{
+  typedef mozilla::plugins::IPCPrintDlg paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    MOZ_ASSERT_UNREACHABLE("TODO: DLP:");
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    MOZ_ASSERT_UNREACHABLE("TODO: DLP:");
+    return true;
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    MOZ_ASSERT_UNREACHABLE("TODO: DLP:");
+  }
+};
 
 #endif // defined(XP_WIN)
 
