@@ -127,6 +127,16 @@ public:
     mScroll = aScroll;
   }
 
+  void GetId(nsAString& aId) const
+  {
+    aId = mId;
+  }
+
+  void SetId(const nsAString& aId)
+  {
+    mId = aId;
+  }
+
   /** end WebIDL Methods. */
 
 
@@ -139,11 +149,16 @@ public:
   {
     return mScroll;
   }
+  const nsAString& Id() const
+  {
+    return mId;
+  }
 
 private:
   ~TextTrackRegion() {}
 
   nsCOMPtr<nsISupports> mParent;
+  nsString mId;
   double mWidth;
   long mLines;
   double mRegionAnchorX;

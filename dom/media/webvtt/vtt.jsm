@@ -1116,6 +1116,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
         if (settings.has("id")) {
           try {
             var region = new self.window.VTTRegion();
+            region.id = settings.get("id", "");
             region.width = settings.get("width", 100);
             region.lines = settings.get("lines", 3);
             region.regionAnchorX = settings.get("regionanchorX", 0);
