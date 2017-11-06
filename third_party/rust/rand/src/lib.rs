@@ -254,6 +254,7 @@ use std::mem;
 use std::io;
 use std::rc::Rc;
 use std::num::Wrapping as w;
+use std::time;
 
 pub use os::OsRng;
 
@@ -354,8 +355,9 @@ pub trait Rng {
     /// See:
     /// A PRNG specialized in double precision floating point numbers using
     /// an affine transition
-    /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf
-    /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf
+    ///
+    /// * <http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf>
+    /// * <http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf>
     ///
     /// By default this is implemented in terms of `next_u32`, but a
     /// random number generator which can generate numbers satisfying
@@ -890,13 +892,9 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
 /// seeded `Rng` for consistency over time you should pick one algorithm and
 /// create the `Rng` yourself.
 ///
-/// This will read randomness from the operating system to seed the
-/// generator.
+/// This will seed the generator with randomness from thread_rng.
 pub fn weak_rng() -> XorShiftRng {
-    match OsRng::new() {
-        Ok(mut r) => r.gen(),
-        Err(e) => panic!("weak_rng: failed to create seeded RNG: {:?}", e)
-    }
+    thread_rng().gen()
 }
 
 /// Controls how the thread-local RNG is reseeded.
@@ -905,9 +903,9 @@ struct ThreadRngReseeder;
 
 impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
     fn reseed(&mut self, rng: &mut StdRng) {
-        *rng = match StdRng::new() {
-            Ok(r) => r,
-            Err(e) => panic!("could not reseed thread_rng: {}", e)
+        match StdRng::new() {
+            Ok(r) => *rng = r,
+            Err(_) => rng.reseed(&weak_seed())
         }
     }
 }
@@ -924,8 +922,9 @@ pub struct ThreadRng {
 /// generator, seeded by the system. Intended to be used in method
 /// chaining style, e.g. `thread_rng().gen::<i32>()`.
 ///
-/// The RNG provided will reseed itself from the operating system
-/// after generating a certain amount of randomness.
+/// After generating a certain amount of randomness, the RNG will reseed itself
+/// from the operating system or, if the operating system RNG returns an error,
+/// a seed based on the current system time.
 ///
 /// The internal RNG used is platform and architecture dependent, even
 /// if the operating system random number generator is rigged to give
@@ -936,7 +935,7 @@ pub fn thread_rng() -> ThreadRng {
     thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
         let r = match StdRng::new() {
             Ok(r) => r,
-            Err(e) => panic!("could not initialize thread_rng: {}", e)
+            Err(_) => StdRng::from_seed(&weak_seed())
         };
         let rng = reseeding::ReseedingRng::new(r,
                                                THREAD_RNG_RESEED_THRESHOLD,
@@ -945,6 +944,14 @@ pub fn thread_rng() -> ThreadRng {
     });
 
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
+}
+
+fn weak_seed() -> [usize; 2] {
+    let now = time::SystemTime::now();
+    let unix_time = now.duration_since(time::UNIX_EPOCH).unwrap();
+    let seconds = unix_time.as_secs() as usize;
+    let nanoseconds = unix_time.subsec_nanos() as usize;
+    [seconds, nanoseconds]
 }
 
 impl Rng for ThreadRng {
@@ -1041,7 +1048,8 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 
 #[cfg(test)]
 mod test {
-    use super::{Rng, thread_rng, random, SeedableRng, StdRng, sample};
+    use super::{Rng, thread_rng, random, SeedableRng, StdRng, sample,
+                weak_rng};
     use std::iter::repeat;
 
     pub struct MyRng<R> { inner: R }
@@ -1284,5 +1292,14 @@ mod test {
 
         let string2 = r.gen_ascii_chars().take(100).collect::<String>();
         assert_eq!(string1, string2);
+    }
+
+    #[test]
+    fn test_weak_rng() {
+        let s = weak_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
+        let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
+        let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
+        assert!(iter_eq(ra.gen_ascii_chars().take(100),
+                        rb.gen_ascii_chars().take(100)));
     }
 }
