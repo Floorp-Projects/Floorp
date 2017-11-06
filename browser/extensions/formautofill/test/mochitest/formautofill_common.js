@@ -15,6 +15,7 @@ async function sleep(ms = 500, reason = "Intentionally wait for UI ready") {
 }
 
 async function focusAndWaitForFieldsIdentified(input, mustBeIdentified = false) {
+  info("expecting the target input being focused and indentified");
   if (typeof input === "string") {
     input = document.querySelector(input);
   }
@@ -66,6 +67,7 @@ function clickOnElement(selector) {
 }
 
 async function onStorageChanged(type) {
+  info(`expecting the storage changed: ${type}`);
   return new Promise(resolve => {
     formFillChromeScript.addMessageListener("formautofill-storage-changed", function onChanged(data) {
       formFillChromeScript.removeMessageListener("formautofill-storage-changed", onChanged);
@@ -87,6 +89,7 @@ function checkMenuEntries(expectedValues, isFormAutofillResult = true) {
 }
 
 function invokeAsyncChromeTask(message, response, payload = {}) {
+  info(`expecting the chrome task finished: ${message}`);
   return new Promise(resolve => {
     formFillChromeScript.sendAsyncMessage(message, payload);
     formFillChromeScript.addMessageListener(response, function onReceived(data) {
@@ -192,6 +195,7 @@ function formAutoFillCommonSetup() {
 
   SimpleTest.registerCleanupFunction(async () => {
     formFillChromeScript.sendAsyncMessage("cleanup");
+    info(`expecting the storage cleanup`);
     await formFillChromeScript.promiseOneMessage("cleanup-finished");
 
     formFillChromeScript.destroy();

@@ -73,6 +73,7 @@ function checkFormFilledFields(address) {
 }
 
 function confirmAllFieldsFilled(address) {
+  info("expecting form filled");
   const pendingPromises = [];
 
   for (const prop in address) {
