@@ -3209,6 +3209,16 @@ public:
     MediaStreamTrackSource::PrincipalChanged();
   }
 
+  void MutedChanged(bool aNewState) override
+  {
+    if (!mCapturedTrackSource) {
+      // This could happen during shutdown.
+      return;
+    }
+
+    MediaStreamTrackSource::MutedChanged(aNewState);
+  }
+
 private:
   virtual ~StreamCaptureTrackSource() {}
 

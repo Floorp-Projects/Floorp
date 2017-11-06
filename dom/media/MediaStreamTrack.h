@@ -62,6 +62,7 @@ public:
   public:
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MediaStreamTrackSource::Sink)
     virtual void PrincipalChanged() = 0;
+    virtual void MutedChanged(bool aNewState) = 0;
   };
 
   MediaStreamTrackSource(nsIPrincipal* aPrincipal,
@@ -196,6 +197,25 @@ protected:
     }
   }
 
+  /**
+   * Called by a sub class when the source's muted state has changed. Note that
+   * the source is responsible for making the content black/silent during mute.
+   * Notifies all sinks.
+   */
+  void MutedChanged(bool aNewState)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsTArray<WeakPtr<Sink>> sinks(mSinks);
+    for (auto& sink : sinks) {
+      if (!sink) {
+        MOZ_ASSERT_UNREACHABLE("Sink was not explicitly removed");
+        mSinks.RemoveElement(sink);
+        continue;
+      }
+      sink->MutedChanged(aNewState);
+    }
+  }
+
   // Principal identifying who may access the contents of this source.
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
@@ -298,6 +318,7 @@ public:
   virtual void GetLabel(nsAString& aLabel, CallerType /* aCallerType */) { GetSource().GetLabel(aLabel); }
   bool Enabled() { return mEnabled; }
   void SetEnabled(bool aEnabled);
+  bool Muted() { return mMuted; }
   void Stop();
   void GetConstraints(dom::MediaTrackConstraints& aResult);
   void GetSettings(dom::MediaTrackSettings& aResult, CallerType aCallerType);
@@ -308,6 +329,8 @@ public:
   already_AddRefed<MediaStreamTrack> Clone();
   MediaStreamTrackState ReadyState() { return mReadyState; }
 
+  IMPL_EVENT_HANDLER(mute)
+  IMPL_EVENT_HANDLER(unmute)
   IMPL_EVENT_HANDLER(ended)
 
   /**
@@ -373,6 +396,16 @@ public:
 
   // Implementation of MediaStreamTrackSource::Sink
   void PrincipalChanged() override;
+  /**
+   * 4.3.1 Life-cycle and Media flow - Media flow
+   * To set a track's muted state to newState, the User Agent MUST run the
+   * following steps:
+   *  1. Let track be the MediaStreamTrack in question.
+   *  2. Set track's muted attribute to newState.
+   *  3. If newState is true let eventName be mute, otherwise unmute.
+   *  4. Fire a simple event named eventName on track.
+   */
+  void MutedChanged(bool aNewState) override;
 
   /**
    * Add a PrincipalChangeObserver to this track.
@@ -442,6 +475,11 @@ public:
 protected:
   virtual ~MediaStreamTrack();
 
+  /**
+   * Sets this track's muted state without raising any events.
+   */
+  void SetMuted(bool aMuted) { mMuted = aMuted; }
+
   void Destroy();
 
   // Returns the original DOMMediaStream's underlying input stream.
@@ -486,6 +524,7 @@ protected:
   nsString mID;
   MediaStreamTrackState mReadyState;
   bool mEnabled;
+  bool mMuted;
   dom::MediaTrackConstraints mConstraints;
 };
 
