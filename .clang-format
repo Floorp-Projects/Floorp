@@ -1,8 +1,5 @@
 BasedOnStyle: Mozilla
 
-# Ignore all comments because they aren't reflowed properly.
-CommentPragmas: "^"
-
 # Prevent the loss of indentation with these macros
 MacroBlockBegin: "^\
 NS_INTERFACE_MAP_BEGIN|\
@@ -22,9 +19,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END_INHERITED|\
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED$"
 
 SortIncludes: false
-
-
-ReflowComments: false
 
 
 BreakBeforeBraces: Custom
