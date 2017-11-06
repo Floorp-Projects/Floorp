@@ -205,7 +205,7 @@ class TrySelect(MachCommandBase):
         (available at https://github.com/glandium/git-cinnabar).
 
         """
-        from mozbuild.testing import TestResolver
+        from moztest.resolve import TestResolver
         from tryselect.selectors.syntax import AutoTry
 
         try:
