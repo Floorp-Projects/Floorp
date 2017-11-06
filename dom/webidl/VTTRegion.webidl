@@ -9,6 +9,7 @@
 
 [Constructor, Pref="media.webvtt.regions.enabled"]
 interface VTTRegion {
+           attribute DOMString id;
            [SetterThrows]
            attribute double width;
 
