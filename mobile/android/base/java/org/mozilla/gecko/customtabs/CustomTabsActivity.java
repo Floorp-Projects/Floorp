@@ -343,7 +343,9 @@ public class CustomTabsActivity extends AppCompatActivity
     private void performPendingIntent(@NonNull PendingIntent pendingIntent) {
         // bug 1337771: If intent-creator haven't set data url, call send() directly won't work.
         final Intent additional = new Intent();
-        additional.setData(Uri.parse(mCurrentUrl));
+        if (!TextUtils.isEmpty(mCurrentUrl)) {
+            additional.setData(Uri.parse(mCurrentUrl));
+        }
         try {
             pendingIntent.send(this, 0, additional);
         } catch (PendingIntent.CanceledException e) {
