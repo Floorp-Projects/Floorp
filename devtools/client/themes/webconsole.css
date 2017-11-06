@@ -416,6 +416,7 @@ html #webconsole-notificationbox {
   background-size: 16px 16px;
   background-position: 4px 50%;
   color: var(--theme-content-color1);
+  box-sizing: border-box;
 }
 
 .jsterm-complete-node {
