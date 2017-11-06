@@ -447,6 +447,9 @@ XRE_API(bool,
 XRE_API(bool,
         XRE_IsGPUProcess, ())
 
+XRE_API(bool,
+        XRE_IsPluginProcess, ())
+
 /**
  * Returns true if the appshell should run its own native event loop. Returns
  * false if we should rely solely on the Gecko event loop.
