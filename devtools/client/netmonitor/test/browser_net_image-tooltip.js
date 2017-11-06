@@ -11,7 +11,6 @@ const IMAGE_TOOLTIP_REQUESTS = 1;
  */
 add_task(function* test() {
   let { tab, monitor } = yield initNetMonitor(IMAGE_TOOLTIP_URL);
-  const SELECTOR = ".requests-list-icon[src]";
   info("Starting test... ");
 
   let { document, store, windowRequire, connector } = monitor.panelWin;
@@ -25,7 +24,6 @@ add_task(function* test() {
   let onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS);
   yield performRequests();
   yield onEvents;
-  yield waitUntil(() => !!document.querySelector(SELECTOR));
 
   info("Checking the image thumbnail after a few requests were made...");
   yield showTooltipAndVerify(document.querySelectorAll(".request-list-item")[0]);
@@ -42,7 +40,6 @@ add_task(function* test() {
   yield triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
   yield performRequests();
   yield onEvents;
-  yield waitUntil(() => !!document.querySelector(SELECTOR));
 
   info("Checking the image thumbnail after a reload.");
   yield showTooltipAndVerify(document.querySelectorAll(".request-list-item")[1]);
@@ -66,7 +63,7 @@ add_task(function* test() {
    * with the expected content.
    */
   function* showTooltipAndVerify(target) {
-    let anchor = target.querySelector(".requests-list-icon");
+    let anchor = target.querySelector(".requests-list-file");
     yield showTooltipOn(anchor);
 
     info("Tooltip was successfully opened for the image request.");
