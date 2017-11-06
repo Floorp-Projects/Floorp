@@ -1204,6 +1204,7 @@ DOMMediaStream::CloneDOMTrack(MediaStreamTrack& aTrack,
   NotifyTrackAdded(newTrack);
 
   newTrack->SetEnabled(aTrack.Enabled());
+  newTrack->SetMuted(aTrack.Muted());
   newTrack->SetReadyState(aTrack.ReadyState());
 
   if (aTrack.Ended()) {
