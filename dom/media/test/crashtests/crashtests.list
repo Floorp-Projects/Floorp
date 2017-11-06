@@ -108,6 +108,6 @@ load oscillator-ended-1.html
 load oscillator-ended-2.html
 skip-if(Android&&AndroidVersion=='22') load video-replay-after-audio-end.html # bug 1315125, bug 1358876
 # This needs to run at the end to avoid leaking busted state into other tests.
-load 691096-1.html
+skip-if(Android) load 691096-1.html # Bug 1365451
 load 1236639.html
 test-pref(media.navigator.permission.disabled,true) load 1388372.html

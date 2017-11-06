@@ -1697,7 +1697,7 @@ SyncObjectD3D11Client::SyncObjectD3D11Client(SyncHandle aSyncHandle, ID3D11Devic
 }
 
 bool
-SyncObjectD3D11Client::Init()
+SyncObjectD3D11Client::Init(bool aFallible)
 {
   if (mKeyedMutex) {
     return true;
@@ -1709,7 +1709,7 @@ SyncObjectD3D11Client::Init()
     (void**)(ID3D11Texture2D**)getter_AddRefs(mSyncTexture));
   if (FAILED(hr) || !mSyncTexture) {
     gfxCriticalNote << "Failed to OpenSharedResource for SyncObjectD3D11: " << hexa(hr);
-    if (ShouldDevCrashOnSyncInitFailure()) {
+    if (!aFallible && ShouldDevCrashOnSyncInitFailure()) {
       gfxDevCrash(LogReason::D3D11FinalizeFrame) << "Without device reset: " << hexa(hr);
     }
     return false;
@@ -1719,8 +1719,13 @@ SyncObjectD3D11Client::Init()
   if (FAILED(hr) || !mKeyedMutex) {
     // Leave both the critical error and MOZ_CRASH for now; the critical error lets
     // us "save" the hr value.  We will probably eventually replace this with gfxDevCrash.
-    gfxCriticalError() << "Failed to get KeyedMutex (2): " << hexa(hr);
-    MOZ_CRASH("GFX: Cannot get D3D11 KeyedMutex");
+    if (!aFallible) {
+      gfxCriticalError() << "Failed to get KeyedMutex (2): " << hexa(hr);
+      MOZ_CRASH("GFX: Cannot get D3D11 KeyedMutex");
+    } else {
+      gfxCriticalNote << "Failed to get KeyedMutex (3): " << hexa(hr);
+    }
+    return false;
   }
 
   return true;
@@ -1747,8 +1752,8 @@ SyncObjectD3D11Client::IsSyncObjectValid()
 // into our sync object and only use a lock for this sync object.
 // This way, we don't have to sync every texture we send to the compositor.
 // We only have to do this once per transaction.
-void
-SyncObjectD3D11Client::Synchronize()
+bool
+SyncObjectD3D11Client::Synchronize(bool aFallible)
 {
   // Since this can be called from either the Paint or Main thread.
   // We don't want this to race since we initialize the sync texture here
@@ -1756,10 +1761,10 @@ SyncObjectD3D11Client::Synchronize()
   MutexAutoLock syncLock(mSyncLock);
 
   if (!mSyncedTextures.size()) {
-    return;
+    return true;
   }
-  if (!Init()) {
-    return;
+  if (!Init(aFallible)) {
+    return false;
   }
 
   HRESULT hr;
@@ -1768,9 +1773,14 @@ SyncObjectD3D11Client::Synchronize()
   if (hr == WAIT_TIMEOUT) {
     if (DeviceManagerDx::Get()->HasDeviceReset()) {
       gfxWarning() << "AcquireSync timed out because of device reset.";
-      return;
+      return false;
     }
-    gfxDevCrash(LogReason::D3D11SyncLock) << "Timeout on the D3D11 sync lock";
+    if (aFallible) {
+      gfxWarning() << "Timeout on the D3D11 sync lock.";
+    } else {
+      gfxDevCrash(LogReason::D3D11SyncLock) << "Timeout on the D3D11 sync lock.";
+    }
+    return false;
   }
 
   D3D11_BOX box;
@@ -1782,13 +1792,13 @@ SyncObjectD3D11Client::Synchronize()
 
   if (dev == DeviceManagerDx::Get()->GetContentDevice()) {
     if (DeviceManagerDx::Get()->HasDeviceReset()) {
-      return;
+      return false;
     }
   }
 
   if (dev != mDevice) {
     gfxWarning() << "Attempt to sync texture from invalid device.";
-    return;
+    return false;
   }
 
   RefPtr<ID3D11DeviceContext> ctx;
@@ -1799,6 +1809,8 @@ SyncObjectD3D11Client::Synchronize()
   }
 
   mSyncedTextures.clear();
+
+  return true;
 }
 
 uint32_t

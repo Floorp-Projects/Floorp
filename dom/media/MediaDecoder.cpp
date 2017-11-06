@@ -1423,15 +1423,18 @@ MediaDecoder::CanPlayThrough()
   return val;
 }
 
-RefPtr<SetCDMPromise>
+void
 MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return InvokeAsync<RefPtr<CDMProxy>>(mReader->OwnerThread(),
-                                       mReader.get(),
-                                       __func__,
-                                       &MediaFormatReader::SetCDMProxy,
-                                       aProxy);
+  RefPtr<CDMProxy> proxy = aProxy;
+  RefPtr<MediaFormatReader> reader = mReader;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaFormatReader::SetCDMProxy",
+    [reader, proxy]() {
+    reader->SetCDMProxy(proxy);
+    });
+  mReader->OwnerThread()->Dispatch(r.forget());
 }
 
 bool

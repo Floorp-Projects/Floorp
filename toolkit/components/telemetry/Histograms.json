@@ -4426,6 +4426,15 @@
     "n_buckets": 10,
     "description": "Time spent on SQLite read() (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
+  "MOZ_SQLITE_COOKIES_OLD_SCHEMA": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "62",
+    "kind": "enumerated",
+    "n_values": 10,
+    "bug_numbers": [1412218],
+    "alert_emails": ["necko@mozilla.com", "junior@mozilla.com"],
+    "description": "Old schema version of the cookie database. 0 for having legacy cookies.txt."
+  },
   "MOZ_SQLITE_COOKIES_BLOCK_MAIN_THREAD_MS": {
     "record_in_processes": ["main"],
     "expires_in_version": "never",
