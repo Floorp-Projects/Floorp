@@ -7,9 +7,11 @@
 #ifndef __Helpers_h
 #define __Helpers_h
 
+#include "nsCOMPtr.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsString.h"
+#include "nsStringStream.h"
 #include "nsTArrayForwardDeclare.h"
 #include <stdint.h>
 
@@ -66,6 +68,28 @@ private:
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINPUTSTREAMCALLBACK
+};
+
+class AsyncStringStream final : public nsIAsyncInputStream
+{
+  nsCOMPtr<nsIInputStream> mStream;
+
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIINPUTSTREAM
+  NS_DECL_NSIASYNCINPUTSTREAM
+
+  explicit AsyncStringStream(const nsACString& aBuffer);
+
+private:
+  ~AsyncStringStream() = default;
+
+  void
+  MaybeExecCallback(nsIInputStreamCallback* aCallback,
+                    nsIEventTarget* aEventTarget);
+
+  nsCOMPtr<nsIInputStreamCallback> mCallback;
+  nsCOMPtr<nsIEventTarget> mCallbackEventTarget;
 };
 
 } // namespace testing
