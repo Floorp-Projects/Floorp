@@ -818,14 +818,12 @@ button.warning {
 }
 
 .detail-row[first-row="true"],
-.detail-row-complex[first-row="true"],
-setting[first-row="true"] {
+.detail-row-complex[first-row="true"] {
   border-top: none;
 }
 
 .detail-row,
-.detail-row-complex,
-setting {
+.detail-row-complex {
   border-top: 1px solid var(--in-content-box-border-color);
   -moz-box-align: center;
   min-height: 35px;
@@ -837,13 +835,8 @@ setting {
   margin-bottom: 1em;
 }
 
-.inline-options-browser,
-setting[first-row="true"] {
+.inline-options-browser {
   margin-top: 2em;
-}
-
-setting {
-  -moz-box-align: start;
 }
 
 .preferences-alignment {
@@ -861,10 +854,6 @@ setting {
 
 .preferences-description:empty {
   display: none;
-}
-
-setting[type="radio"] > radiogroup {
-  -moz-box-orient: horizontal;
 }
 
 
