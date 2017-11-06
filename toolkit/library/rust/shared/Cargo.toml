@@ -19,8 +19,8 @@ cubeb = { path = "../../../../media/cubeb-rs/cubeb-api", optional = true }
 cubeb-backend = { path = "../../../../media/cubeb-rs/cubeb-backend", optional = true }
 encoding_c = "0.8.0"
 encoding_glue = { path = "../../../../intl/encoding_glue" }
-audioipc-client = { path = "../../../../media/audioipc/client", optional = true }
-audioipc-server = { path = "../../../../media/audioipc/server", optional = true }
+audioipc-client = { path = "../../../../media/audioipc/client", version = "0.2", optional = true }
+audioipc-server = { path = "../../../../media/audioipc/server", version = "0.2", optional = true }
 u2fhid = { path = "../../../../dom/webauthn/u2f-hid-rs" }
 # We have these to enforce common feature sets for said crates.
 log = {version = "0.3", features = ["release_max_level_info"]}
