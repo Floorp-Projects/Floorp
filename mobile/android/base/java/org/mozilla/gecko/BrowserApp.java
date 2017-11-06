@@ -3498,8 +3498,8 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override // GeckoView.ContentListener
-    public void onFullScreen(final GeckoView view, final boolean fullscreen) {
-        super.onFullScreen(view, fullscreen);
+    public void onFullScreen(final GeckoSession session, final boolean fullscreen) {
+        super.onFullScreen(session, fullscreen);
 
         if (fullscreen) {
             mDynamicToolbar.setVisible(false, VisibilityTransition.IMMEDIATE);
@@ -3509,10 +3509,6 @@ public class BrowserApp extends GeckoApp
             mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
         }
     }
-
-    @Override
-    public void onContextMenu(GeckoView view, int screenX, int screenY,
-                              String uri, String elementSrc) {}
 
     @Override
     public boolean onPrepareOptionsMenu(Menu aMenu) {
