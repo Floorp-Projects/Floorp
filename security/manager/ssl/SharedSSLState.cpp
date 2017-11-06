@@ -33,7 +33,7 @@ class MainThreadClearer : public SyncRunnableBase
 public:
   MainThreadClearer() : mShouldClearSessionCache(false) {}
 
-  void RunOnTargetThread() {
+  void RunOnTargetThread() override {
     // In some cases it's possible to cause PSM/NSS to initialize while XPCOM shutdown
     // is in progress. We want to avoid this, since they do not handle the situation well,
     // hence the flags to avoid instantiating the services if they don't already exist.

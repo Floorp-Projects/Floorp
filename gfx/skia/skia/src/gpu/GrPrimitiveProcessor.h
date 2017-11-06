@@ -117,7 +117,7 @@ private:
     void addPendingIOs() const override { GrResourceIOProcessor::addPendingIOs(); }
     void removeRefs() const override { GrResourceIOProcessor::removeRefs(); }
     void pendingIOComplete() const override { GrResourceIOProcessor::pendingIOComplete(); }
-    void notifyRefCntIsZero() const final {}
+    void notifyRefCntIsZero() const final override {}
     virtual bool hasExplicitLocalCoords() const = 0;
 
     typedef GrProcessor INHERITED;

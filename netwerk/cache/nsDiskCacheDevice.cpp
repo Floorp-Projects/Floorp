@@ -122,7 +122,7 @@ public:
         mClientIDSize = clientID ? strlen(clientID) : 0;
     }
 
-    virtual int32_t  VisitRecord(nsDiskCacheRecord *  mapRecord);
+    virtual int32_t  VisitRecord(nsDiskCacheRecord *  mapRecord) override;
 
 private:
         nsDiskCacheMap *     mCacheMap;
@@ -867,7 +867,7 @@ public:
         , mVisitor(visitor)
     {}
 
-    virtual int32_t  VisitRecord(nsDiskCacheRecord *  mapRecord)
+    virtual int32_t  VisitRecord(nsDiskCacheRecord *  mapRecord) override
     {
         // XXX optimization: do we have this record in memory?
 

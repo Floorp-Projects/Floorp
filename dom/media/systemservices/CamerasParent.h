@@ -63,7 +63,8 @@ public:
 
   explicit InputObserver(CamerasParent* aParent)
     : mParent(aParent) {};
-  virtual void OnDeviceChange();
+
+  virtual void OnDeviceChange() override;
 
   friend CamerasParent;
 

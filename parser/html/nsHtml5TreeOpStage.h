@@ -22,8 +22,8 @@ class nsHtml5TreeOpStage : public nsAHtml5TreeOpSink {
      * Flush the operations from the tree operations from the argument
      * queue unconditionally.
      */
-    virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue);
-    
+    virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue) override;
+
     /**
      * Retrieve the staged operations and speculative loads into the arguments.
      */

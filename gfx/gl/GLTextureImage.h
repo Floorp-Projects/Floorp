@@ -194,14 +194,14 @@ public:
                       GLContext* aContext,
                       TextureImage::Flags aFlags = TextureImage::NoFlags);
 
-    virtual void BindTexture(GLenum aTextureUnit);
+    virtual void BindTexture(GLenum aTextureUnit) override;
 
-    virtual bool DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom = gfx::IntPoint(0,0));
-    virtual GLuint GetTextureID() { return mTexture; }
+    virtual bool DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom = gfx::IntPoint(0,0)) override;
+    virtual GLuint GetTextureID() override { return mTexture; }
 
-    virtual void MarkValid() { mTextureState = Valid; }
+    virtual void MarkValid() override { mTextureState = Valid; }
 
-    virtual void Resize(const gfx::IntSize& aSize);
+    virtual void Resize(const gfx::IntSize& aSize) override;
 
 protected:
     GLuint mTexture;
@@ -225,21 +225,21 @@ public:
                       TextureImage::ImageFormat aImageFormat = gfx::SurfaceFormat::UNKNOWN);
     ~TiledTextureImage();
     void DumpDiv();
-    virtual void Resize(const gfx::IntSize& aSize);
-    virtual uint32_t GetTileCount();
-    virtual void BeginBigImageIteration();
-    virtual bool NextTile();
+    virtual void Resize(const gfx::IntSize& aSize) override;
+    virtual uint32_t GetTileCount() override;
+    virtual void BeginBigImageIteration() override;
+    virtual bool NextTile() override;
     virtual void SetIterationCallback(BigImageIterationCallback aCallback,
-                                      void* aCallbackData);
-    virtual gfx::IntRect GetTileRect();
-    virtual GLuint GetTextureID() {
+                                      void* aCallbackData) override;
+    virtual gfx::IntRect GetTileRect() override;
+    virtual GLuint GetTextureID() override {
         return mImages[mCurrentImage]->GetTextureID();
     }
-    virtual bool DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom = gfx::IntPoint(0,0));
-    virtual void BindTexture(GLenum);
+    virtual bool DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom = gfx::IntPoint(0,0)) override;
+    virtual void BindTexture(GLenum) override;
 
 protected:
-    virtual gfx::IntRect GetSrcTileRect();
+    virtual gfx::IntRect GetSrcTileRect() override;
 
     unsigned int mCurrentImage;
     BigImageIterationCallback mIterationCallback;

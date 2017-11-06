@@ -58,7 +58,7 @@ public:
         return p;
     }
 
-    bool WriteRaw(const void* data, size_t length) {
+    bool WriteRaw(const void* data, size_t length) override {
         if ((mOff + length > mLength) ||
             (mLength > std::numeric_limits<size_t>::max() - mOff)) {
             if (mLength == mLimit) {
@@ -80,7 +80,7 @@ public:
         return true;
     }
 
-    bool Seek(off_t position) {
+    bool Seek(off_t position) override {
         if (position < 0) {
             return false;
         }
@@ -91,7 +91,7 @@ public:
         return true;
     }
 
-    off_t Tell() const {
+    off_t Tell() const override {
         return mOff;
     }
 

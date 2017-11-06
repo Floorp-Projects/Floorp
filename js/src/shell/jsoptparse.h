@@ -106,7 +106,7 @@ struct ValuedOption : public Option
     {}
 
     virtual ~ValuedOption() = 0;
-    virtual bool isValued() const { return true; }
+    virtual bool isValued() const override { return true; }
 };
 
 inline ValuedOption::~ValuedOption() {}
@@ -152,7 +152,7 @@ struct MultiStringOption : public ValuedOption
 
     virtual ~MultiStringOption() {}
 
-    virtual bool isVariadic() const { return true; }
+    virtual bool isVariadic() const override { return true; }
 };
 
 } /* namespace detail */

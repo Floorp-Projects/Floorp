@@ -340,28 +340,28 @@ class LinearHistogram : public Histogram {
                                const int* buckets);
 
   // Overridden from Histogram:
-  virtual ClassType histogram_type() const;
+  virtual ClassType histogram_type() const override;
 
-  virtual void Accumulate(Sample value, Count count, size_t index);
+  virtual void Accumulate(Sample value, Count count, size_t index) override;
 
   // Store a list of number/text values for use in rendering the histogram.
   // The last element in the array has a null in its "description" slot.
-  virtual void SetRangeDescriptions(const DescriptionPair descriptions[]);
+  virtual void SetRangeDescriptions(const DescriptionPair descriptions[]) override;
 
  protected:
   LinearHistogram(Sample minimum, Sample maximum, size_t bucket_count);
 
   LinearHistogram(TimeDelta minimum, TimeDelta maximum, size_t bucket_count);
 
-  virtual double GetBucketSize(Count current, size_t i) const;
+  virtual double GetBucketSize(Count current, size_t i) const override;
 
   // If we have a description for a bucket, then return that.  Otherwise
   // let parent class provide a (numeric) description.
-  virtual const std::string GetAsciiBucketRange(size_t i) const;
+  virtual const std::string GetAsciiBucketRange(size_t i) const override;
 
   // Skip printing of name for numeric range if we have a name (and if this is
   // an empty bucket).
-  virtual bool PrintEmptyBucket(size_t index) const;
+  virtual bool PrintEmptyBucket(size_t index) const override;
 
  private:
   // For some ranges, we store a printable description of a bucket range.
@@ -381,11 +381,11 @@ class BooleanHistogram : public LinearHistogram {
   static Histogram* FactoryGet(Flags flags,
                                const int* buckets);
 
-  virtual ClassType histogram_type() const;
+  virtual ClassType histogram_type() const override;
 
-  virtual void AddBoolean(bool value);
+  virtual void AddBoolean(bool value) override;
 
-  virtual void Accumulate(Sample value, Count count, size_t index);
+  virtual void Accumulate(Sample value, Count count, size_t index) override;
 
  protected:
   explicit BooleanHistogram();
@@ -402,13 +402,13 @@ public:
   static Histogram *FactoryGet(Flags flags,
                                const int* buckets);
 
-  virtual ClassType histogram_type() const;
+  virtual ClassType histogram_type() const override;
 
-  virtual void Accumulate(Sample value, Count count, size_t index);
+  virtual void Accumulate(Sample value, Count count, size_t index) override;
 
-  virtual void AddSampleSet(const SampleSet& sample);
+  virtual void AddSampleSet(const SampleSet& sample) override;
 
-  virtual void Clear();
+  virtual void Clear() override;
 
 private:
   explicit FlagHistogram();
@@ -424,11 +424,11 @@ public:
   static Histogram *FactoryGet(Flags flags,
                                const int* buckets);
 
-  virtual ClassType histogram_type() const;
+  virtual ClassType histogram_type() const override;
 
-  virtual void Accumulate(Sample value, Count count, size_t index);
+  virtual void Accumulate(Sample value, Count count, size_t index) override;
 
-  virtual void AddSampleSet(const SampleSet& sample);
+  virtual void AddSampleSet(const SampleSet& sample) override;
 
 private:
   explicit CountHistogram();

@@ -21,17 +21,18 @@ class DrawTargetD2D1;
 class SourceSurfaceD2D1 : public SourceSurface
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceD2D1)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceD2D1, override)
+
   SourceSurfaceD2D1(ID2D1Image* aImage, ID2D1DeviceContext *aDC,
                     SurfaceFormat aFormat, const IntSize &aSize,
                     DrawTargetD2D1 *aDT = nullptr);
   ~SourceSurfaceD2D1();
 
-  virtual SurfaceType GetType() const { return SurfaceType::D2D1_1_IMAGE; }
-  virtual IntSize GetSize() const { return mSize; }
-  virtual SurfaceFormat GetFormat() const { return mFormat; }
-  virtual bool IsValid() const;
-  virtual already_AddRefed<DataSourceSurface> GetDataSurface();
+  virtual SurfaceType GetType() const override { return SurfaceType::D2D1_1_IMAGE; }
+  virtual IntSize GetSize() const override { return mSize; }
+  virtual SurfaceFormat GetFormat() const override { return mFormat; }
+  virtual bool IsValid() const override;
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface() override;
 
   ID2D1Image *GetImage() { return mImage; }
 
@@ -68,18 +69,19 @@ private:
 class DataSourceSurfaceD2D1 : public DataSourceSurface
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceD2D1)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceD2D1, override)
+
   DataSourceSurfaceD2D1(ID2D1Bitmap1 *aMappableBitmap, SurfaceFormat aFormat);
   ~DataSourceSurfaceD2D1();
 
-  virtual SurfaceType GetType() const { return SurfaceType::DATA; }
-  virtual IntSize GetSize() const;
-  virtual SurfaceFormat GetFormat() const { return mFormat; }
-  virtual bool IsValid() const { return !!mBitmap; }
-  virtual uint8_t *GetData();
-  virtual int32_t Stride();
-  virtual bool Map(MapType, MappedSurface *aMappedSurface);
-  virtual void Unmap();
+  virtual SurfaceType GetType() const  override{ return SurfaceType::DATA; }
+  virtual IntSize GetSize() const override;
+  virtual SurfaceFormat GetFormat() const override { return mFormat; }
+  virtual bool IsValid() const override { return !!mBitmap; }
+  virtual uint8_t *GetData() override;
+  virtual int32_t Stride() override;
+  virtual bool Map(MapType, MappedSurface *aMappedSurface) override;
+  virtual void Unmap() override;
 
 private:
   friend class SourceSurfaceD2DTarget;

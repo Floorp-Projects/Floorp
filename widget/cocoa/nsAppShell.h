@@ -27,17 +27,17 @@
 class nsAppShell : public nsBaseAppShell
 {
 public:
-  NS_IMETHOD ResumeNative(void);
+  NS_IMETHOD ResumeNative(void) override;
 
   nsAppShell();
 
   nsresult Init();
 
-  NS_IMETHOD Run(void);
-  NS_IMETHOD Exit(void);
-  NS_IMETHOD OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait);
+  NS_IMETHOD Run(void) override;
+  NS_IMETHOD Exit(void) override;
+  NS_IMETHOD OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait) override;
   NS_IMETHOD AfterProcessNextEvent(nsIThreadInternal *aThread,
-                                   bool aEventWasProcessed);
+                                   bool aEventWasProcessed) override;
 
   // public only to be visible to Objective-C code that must call it
   void WillTerminate();
@@ -45,8 +45,8 @@ public:
 protected:
   virtual ~nsAppShell();
 
-  virtual void ScheduleNativeEventCallback();
-  virtual bool ProcessNextNativeEvent(bool aMayWait);
+  virtual void ScheduleNativeEventCallback() override;
+  virtual bool ProcessNextNativeEvent(bool aMayWait) override;
 
   static void ProcessGeckoEvents(void* aInfo);
 

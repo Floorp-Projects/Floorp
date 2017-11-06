@@ -348,21 +348,21 @@ struct variant_blob_traits<uint8_t[], true>
 class NullVariant : public Variant_base
 {
 public:
-  NS_IMETHOD GetDataType(uint16_t *_type)
+  NS_IMETHOD GetDataType(uint16_t *_type) override
   {
     NS_ENSURE_ARG_POINTER(_type);
     *_type = nsIDataType::VTYPE_EMPTY;
     return NS_OK;
   }
 
-  NS_IMETHOD GetAsAUTF8String(nsACString &_str)
+  NS_IMETHOD GetAsAUTF8String(nsACString &_str) override
   {
     // Return a void string.
     _str.SetIsVoid(true);
     return NS_OK;
   }
 
-  NS_IMETHOD GetAsAString(nsAString &_str)
+  NS_IMETHOD GetAsAString(nsAString &_str) override
   {
     // Return a void string.
     _str.SetIsVoid(true);
@@ -387,32 +387,32 @@ public:
     variant_storage_traits<DataType, Adopting>::storage_conversion(aData, &mData);
   }
 
-  NS_IMETHOD GetDataType(uint16_t *_type)
+  NS_IMETHOD GetDataType(uint16_t *_type) override
   {
     *_type = variant_traits<DataType>::type();
     return NS_OK;
   }
-  NS_IMETHOD GetAsInt32(int32_t *_integer)
+  NS_IMETHOD GetAsInt32(int32_t *_integer) override
   {
     return variant_integer_traits<DataType, Adopting>::asInt32(mData, _integer);
   }
 
-  NS_IMETHOD GetAsInt64(int64_t *_integer)
+  NS_IMETHOD GetAsInt64(int64_t *_integer) override
   {
     return variant_integer_traits<DataType, Adopting>::asInt64(mData, _integer);
   }
 
-  NS_IMETHOD GetAsDouble(double *_double)
+  NS_IMETHOD GetAsDouble(double *_double) override
   {
     return variant_float_traits<DataType, Adopting>::asDouble(mData, _double);
   }
 
-  NS_IMETHOD GetAsAUTF8String(nsACString &_str)
+  NS_IMETHOD GetAsAUTF8String(nsACString &_str) override
   {
     return variant_text_traits<DataType, Adopting>::asUTF8String(mData, _str);
   }
 
-  NS_IMETHOD GetAsAString(nsAString &_str)
+  NS_IMETHOD GetAsAString(nsAString &_str) override
   {
     return variant_text_traits<DataType, Adopting>::asString(mData, _str);
   }
@@ -420,7 +420,7 @@ public:
   NS_IMETHOD GetAsArray(uint16_t *_type,
                         nsIID *,
                         uint32_t *_size,
-                        void **_data)
+                        void **_data) override
   {
     return variant_blob_traits<DataType, Adopting>::asArray(mData, _type, _size, _data);
   }

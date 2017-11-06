@@ -260,7 +260,8 @@ public:
     , mURI(aURI)
   {
   }
-  void Run()
+
+  void Run() override
   {
     mChild->DoOnStartRequest(mChannelStatus, mContentLength, mContentType,
                              mLastModified, mEntityID, mURI);
@@ -369,7 +370,8 @@ public:
     , mCount(aCount)
   {
   }
-  void Run()
+
+  void Run() override
   {
     mChild->DoOnDataAvailable(mChannelStatus, mData, mOffset, mCount);
   }
@@ -411,7 +413,7 @@ class MaybeDivertOnDataFTPEvent : public NeckoTargetChannelEvent<FTPChannelChild
   , mOffset(offset)
   , mCount(count) {}
 
-  void Run()
+  void Run() override
   {
     mChild->MaybeDivertOnData(mData, mOffset, mCount);
   }
@@ -496,7 +498,8 @@ public:
     , mUseUTF8(aUseUTF8)
   {
   }
-  void Run()
+
+  void Run() override
   {
     mChild->DoOnStopRequest(mChannelStatus, mErrorMsg, mUseUTF8);
   }
@@ -557,7 +560,7 @@ class MaybeDivertOnStopFTPEvent : public NeckoTargetChannelEvent<FTPChannelChild
   : NeckoTargetChannelEvent<FTPChannelChild>(child)
   , mChannelStatus(aChannelStatus) {}
 
-  void Run()
+  void Run() override
   {
     mChild->MaybeDivertOnStop(mChannelStatus);
   }
@@ -639,7 +642,8 @@ class FTPFailedAsyncOpenEvent : public NeckoTargetChannelEvent<FTPChannelChild>
   FTPFailedAsyncOpenEvent(FTPChannelChild* aChild, nsresult aStatus)
   : NeckoTargetChannelEvent<FTPChannelChild>(aChild)
   , mStatus(aStatus) {}
-  void Run() { mChild->DoFailedAsyncOpen(mStatus); }
+
+  void Run() override { mChild->DoFailedAsyncOpen(mStatus); }
 
  private:
   nsresult mStatus;
@@ -688,7 +692,7 @@ class FTPFlushedForDiversionEvent : public NeckoTargetChannelEvent<FTPChannelChi
     MOZ_RELEASE_ASSERT(aChild);
   }
 
-  void Run()
+  void Run() override
   {
     mChild->FlushedForDiversion();
   }
@@ -738,7 +742,7 @@ class FTPDeleteSelfEvent : public NeckoTargetChannelEvent<FTPChannelChild>
  public:
   explicit FTPDeleteSelfEvent(FTPChannelChild* aChild)
   : NeckoTargetChannelEvent<FTPChannelChild>(aChild) {}
-  void Run() { mChild->DoDeleteSelf(); }
+  void Run() override { mChild->DoDeleteSelf(); }
 };
 
 mozilla::ipc::IPCResult
@@ -959,4 +963,3 @@ FTPChannelChild::SetupNeckoTarget()
 
 } // namespace net
 } // namespace mozilla
-

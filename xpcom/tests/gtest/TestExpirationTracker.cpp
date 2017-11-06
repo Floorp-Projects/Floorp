@@ -111,7 +111,7 @@ public:
   }
 
 protected:
-  void NotifyExpired(Object* aObj) {
+  void NotifyExpired(Object* aObj) override {
     LogAction(aObj, "Expired");
     PRIntervalTime now = PR_IntervalNow();
     uint32_t timeDiffMS = (now - aObj->mLastUsed)*1000/PR_TicksPerSecond();

@@ -57,8 +57,8 @@ class Debugger : public Simulator {
   explicit Debugger(JSContext* cx, Decoder* decoder, FILE* stream = stdout);
   ~Debugger();
 
-  virtual void Run();
-  virtual void VisitException(const Instruction* instr);
+  virtual void Run() override;
+  virtual void VisitException(const Instruction* instr) override;
 
   int debug_parameters() const { return debug_parameters_; }
   void set_debug_parameters(int parameters) {

@@ -494,13 +494,13 @@ namespace sigslot {
 			}
 		}
 
-		void signal_connect(_signal_base_interface* sender)
+		void signal_connect(_signal_base_interface* sender) override
 		{
 			lock_block<mt_policy> lock(this);
 			m_senders.insert(sender);
 		}
 
-		void signal_disconnect(_signal_base_interface* sender)
+		void signal_disconnect(_signal_base_interface* sender) override
 		{
 			lock_block<mt_policy> lock(this);
 			m_senders.erase(sender);
@@ -511,7 +511,7 @@ namespace sigslot {
 			disconnect_all();
 		}
 
-		void disconnect_all()
+		void disconnect_all() override
 		{
 			lock_block<mt_policy> lock(this);
 			const_iterator it = m_senders.begin();
@@ -694,7 +694,7 @@ namespace sigslot {
 			}
 		}
 
-		void slot_duplicate(const has_slots_interface* oldtarget, has_slots_interface* newtarget)
+		void slot_duplicate(const has_slots_interface* oldtarget, has_slots_interface* newtarget) override
 		{
 			lock_block<mt_policy> lock(this);
 			typename connections_list::iterator it = m_connected_slots.begin();
@@ -779,7 +779,7 @@ namespace sigslot {
 			}
 		}
 
-		void slot_disconnect(has_slots_interface* pslot)
+		void slot_disconnect(has_slots_interface* pslot) override
 		{
 			lock_block<mt_policy> lock(this);
 			typename connections_list::iterator it = m_connected_slots.begin();
@@ -833,7 +833,7 @@ namespace sigslot {
 			}
 		}
 
-		void slot_duplicate(const has_slots_interface* oldtarget, has_slots_interface* newtarget)
+		void slot_duplicate(const has_slots_interface* oldtarget, has_slots_interface* newtarget) override
 		{
 			lock_block<mt_policy> lock(this);
 			typename connections_list::iterator it = m_connected_slots.begin();
@@ -918,7 +918,7 @@ namespace sigslot {
 			}
 		}
 
-		void slot_disconnect(has_slots_interface* pslot)
+		void slot_disconnect(has_slots_interface* pslot) override
 		{
 			lock_block<mt_policy> lock(this);
 			typename connections_list::iterator it = m_connected_slots.begin();
@@ -971,7 +971,7 @@ namespace sigslot {
 			}
 		}
 
-		void slot_duplicate(const has_slots_interface* oldtarget, has_slots_interface* newtarget)
+		void slot_duplicate(const has_slots_interface* oldtarget, has_slots_interface* newtarget) override
 		{
 			lock_block<mt_policy> lock(this);
 			typename connections_list::iterator it = m_connected_slots.begin();
@@ -1056,7 +1056,7 @@ namespace sigslot {
 			}
 		}
 
-		void slot_disconnect(has_slots_interface* pslot)
+		void slot_disconnect(has_slots_interface* pslot) override
 		{
 			lock_block<mt_policy> lock(this);
 			typename connections_list::iterator it = m_connected_slots.begin();
@@ -1109,7 +1109,7 @@ namespace sigslot {
 			}
 		}
 
-		void slot_duplicate(const has_slots_interface* oldtarget, has_slots_interface* newtarget)
+		void slot_duplicate(const has_slots_interface* oldtarget, has_slots_interface* newtarget) override
 		{
 			lock_block<mt_policy> lock(this);
 			typename connections_list::iterator it = m_connected_slots.begin();
@@ -1194,7 +1194,7 @@ namespace sigslot {
 			}
 		}
 
-		void slot_disconnect(has_slots_interface* pslot)
+		void slot_disconnect(has_slots_interface* pslot) override
 		{
 			lock_block<mt_policy> lock(this);
 			typename connections_list::iterator it = m_connected_slots.begin();
@@ -1846,22 +1846,22 @@ namespace sigslot {
 		{
                 }
 
-		virtual _connection_base1<arg1_type, mt_policy>* clone()
+		virtual _connection_base1<arg1_type, mt_policy>* clone() override
 		{
 			return new _connection1<dest_type, arg1_type, mt_policy>(*this);
 		}
 
-		virtual _connection_base1<arg1_type, mt_policy>* duplicate(has_slots_interface* pnewdest)
+		virtual _connection_base1<arg1_type, mt_policy>* duplicate(has_slots_interface* pnewdest) override
 		{
 			return new _connection1<dest_type, arg1_type, mt_policy>((dest_type *)pnewdest, m_pmemfun);
 		}
 
-		virtual void emit(arg1_type a1)
+		virtual void emit(arg1_type a1) override
 		{
 			(m_pobject->*m_pmemfun)(a1);
 		}
 
-		virtual has_slots_interface* getdest() const
+		virtual has_slots_interface* getdest() const override
 		{
 			return m_pobject;
 		}
@@ -1892,22 +1892,22 @@ namespace sigslot {
 		{
                 }
 
-		virtual _connection_base2<arg1_type, arg2_type, mt_policy>* clone()
+		virtual _connection_base2<arg1_type, arg2_type, mt_policy>* clone() override
 		{
 			return new _connection2<dest_type, arg1_type, arg2_type, mt_policy>(*this);
 		}
 
-		virtual _connection_base2<arg1_type, arg2_type, mt_policy>* duplicate(has_slots_interface* pnewdest)
+		virtual _connection_base2<arg1_type, arg2_type, mt_policy>* duplicate(has_slots_interface* pnewdest) override
 		{
 			return new _connection2<dest_type, arg1_type, arg2_type, mt_policy>((dest_type *)pnewdest, m_pmemfun);
 		}
 
-		virtual void emit(arg1_type a1, arg2_type a2)
+		virtual void emit(arg1_type a1, arg2_type a2) override
 		{
 			(m_pobject->*m_pmemfun)(a1, a2);
 		}
 
-		virtual has_slots_interface* getdest() const
+		virtual has_slots_interface* getdest() const override
 		{
 			return m_pobject;
 		}
@@ -1938,22 +1938,22 @@ namespace sigslot {
 		{
                 }
 
-		virtual _connection_base3<arg1_type, arg2_type, arg3_type, mt_policy>* clone()
+		virtual _connection_base3<arg1_type, arg2_type, arg3_type, mt_policy>* clone() override
 		{
 			return new _connection3<dest_type, arg1_type, arg2_type, arg3_type, mt_policy>(*this);
 		}
 
-		virtual _connection_base3<arg1_type, arg2_type, arg3_type, mt_policy>* duplicate(has_slots_interface* pnewdest)
+		virtual _connection_base3<arg1_type, arg2_type, arg3_type, mt_policy>* duplicate(has_slots_interface* pnewdest) override
 		{
 			return new _connection3<dest_type, arg1_type, arg2_type, arg3_type, mt_policy>((dest_type *)pnewdest, m_pmemfun);
 		}
 
-		virtual void emit(arg1_type a1, arg2_type a2, arg3_type a3)
+		virtual void emit(arg1_type a1, arg2_type a2, arg3_type a3) override
 		{
 			(m_pobject->*m_pmemfun)(a1, a2, a3);
 		}
 
-		virtual has_slots_interface* getdest() const
+		virtual has_slots_interface* getdest() const override
 		{
 			return m_pobject;
 		}
@@ -1986,23 +1986,23 @@ namespace sigslot {
 		{
                 }
 
-		virtual _connection_base4<arg1_type, arg2_type, arg3_type, arg4_type, mt_policy>* clone()
+		virtual _connection_base4<arg1_type, arg2_type, arg3_type, arg4_type, mt_policy>* clone() override
 		{
 			return new _connection4<dest_type, arg1_type, arg2_type, arg3_type, arg4_type, mt_policy>(*this);
 		}
 
-		virtual _connection_base4<arg1_type, arg2_type, arg3_type, arg4_type, mt_policy>* duplicate(has_slots_interface* pnewdest)
+		virtual _connection_base4<arg1_type, arg2_type, arg3_type, arg4_type, mt_policy>* duplicate(has_slots_interface* pnewdest) override
 		{
 			return new _connection4<dest_type, arg1_type, arg2_type, arg3_type, arg4_type, mt_policy>((dest_type *)pnewdest, m_pmemfun);
 		}
 
 		virtual void emit(arg1_type a1, arg2_type a2, arg3_type a3,
-			arg4_type a4)
+			arg4_type a4) override
 		{
 			(m_pobject->*m_pmemfun)(a1, a2, a3, a4);
 		}
 
-		virtual has_slots_interface* getdest() const
+		virtual has_slots_interface* getdest() const override
 		{
 			return m_pobject;
 		}

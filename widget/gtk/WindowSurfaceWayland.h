@@ -108,7 +108,7 @@ public:
   ~WindowSurfaceWayland();
 
   already_AddRefed<gfx::DrawTarget> Lock(const LayoutDeviceIntRegion& aRegion) override;
-  void                      Commit(const LayoutDeviceIntRegion& aInvalidRegion) final;
+  void                      Commit(const LayoutDeviceIntRegion& aInvalidRegion) final override;
   void                      FrameCallbackHandler();
 
 private:

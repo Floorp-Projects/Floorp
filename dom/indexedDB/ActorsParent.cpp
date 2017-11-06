@@ -7553,7 +7553,7 @@ protected:
 
   // Common nsIRunnable implementation that subclasses may not override.
   NS_IMETHOD
-  Run() final;
+  Run() final override;
 
   // OpenDirectoryListener overrides.
   void
@@ -7896,7 +7896,7 @@ protected:
 
   // Common nsIRunnable implementation that subclasses may not override.
   NS_IMETHOD
-  Run() final;
+  Run() final override;
 
   // IPDL methods.
   void

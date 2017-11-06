@@ -312,7 +312,7 @@ private:
 
    class MyAsyncMessage : public nsSameProcessAsyncMessageBase, public Runnable
    {
-     NS_IMETHOD Run() override {
+     NS_IMETHOD Run() {
        ReceiveMessage(..., ...);
        return NS_OK;
      }
