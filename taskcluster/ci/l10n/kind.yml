@@ -46,10 +46,6 @@ job-template:
          android-api-16-l10n:
            in-tree: android-build
          win.*: null
-   secrets:
-      by-build-platform:
-         default: false
-         android-api-16-l10n: true
    toolchains:
       by-build-platform:
          default: []
@@ -114,8 +110,7 @@ job-template:
       actions:
          by-build-platform:
             default: [clone-locales list-locales setup repack summary]
-            android-api-16-l10n: [get-secrets
-                                  clone-locales list-locales setup repack
+            android-api-16-l10n: [clone-locales list-locales setup repack
                                   upload-repacks summary]
       script:
          by-build-platform:
