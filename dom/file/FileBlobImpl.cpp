@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileBlobImpl.h"
+#include "mozilla/SlicedInputStream.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "nsCExternalHandlerService.h"
@@ -13,7 +14,6 @@
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
-#include "SlicedInputStream.h"
 
 namespace mozilla {
 namespace dom {
