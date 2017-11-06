@@ -966,9 +966,9 @@ StackFrames.prototype = {
   /**
    * Evaluate an expression in the context of the selected frame.
    *
-   * @param string aExpression
+   * @param string expression
    *        The expression to evaluate.
-   * @param object aOptions [optional]
+   * @param object options [optional]
    *        Additional options for this client evaluation:
    *          - depth: the frame depth used for evaluation, 0 being the topmost.
    *          - meta: some meta-description for what this evaluation represents.
@@ -977,29 +977,31 @@ StackFrames.prototype = {
    *         or rejected if there was no stack frame available or some
    *         other error occurred.
    */
-  evaluate: function (aExpression, aOptions = {}) {
-    let depth = "depth" in aOptions ? aOptions.depth : this.currentFrameDepth;
+  evaluate: async function (expression, options = {}) {
+    let depth = "depth" in options
+      ? options.depth
+      : this.currentFrameDepth;
     let frame = this.activeThread.cachedFrames[depth];
     if (frame == null) {
-      return promise.reject(new Error("No stack frame available."));
+      throw new Error("No stack frame available.");
     }
 
-    let deferred = promise.defer();
+    const onThreadPaused = this.activeThread.addOneTimeListener("paused");
 
-    this.activeThread.addOneTimeListener("paused", (aEvent, aPacket) => {
-      let { type, frameFinished } = aPacket.why;
-      if (type == "clientEvaluated") {
-        deferred.resolve(frameFinished);
-      } else {
-        deferred.reject(new Error("Active thread paused unexpectedly."));
-      }
-    });
-
-    let meta = "meta" in aOptions ? aOptions.meta : FRAME_TYPE.PUBLIC_CLIENT_EVAL;
+    let meta = "meta" in options
+      ? options.meta
+      : FRAME_TYPE.PUBLIC_CLIENT_EVAL;
     this._currentFrameDescription = meta;
-    this.activeThread.eval(frame.actor, aExpression);
+    this.activeThread.eval(frame.actor, expression);
 
-    return deferred.promise;
+    const packet = await onThreadPaused;
+
+    let { type, frameFinished } = packet.why;
+    if (type !== "clientEvaluated") {
+      throw new Error("Active thread paused unexpectedly.");
+    }
+
+    return frameFinished;
   },
 
   /**
