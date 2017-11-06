@@ -168,7 +168,7 @@ var TabsInTitlebar = {
       let fullTabsHeight = rect($("TabsToolbar")).height;
 
       // Buttons first:
-      let captionButtonsBoxWidth = rect($("titlebar-buttonbox-container")).width;
+      let captionButtonsBoxWidth = rect($("titlebar-buttonbox")).width;
 
       let secondaryButtonsWidth, menuHeight, fullMenuHeight, menuStyles;
       if (AppConstants.platform == "macosx") {
