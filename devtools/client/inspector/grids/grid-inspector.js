@@ -44,7 +44,6 @@ const GRID_COLORS = [
 ];
 
 class GridInspector {
-
   constructor(inspector, window) {
     this.document = window.document;
     this.highlighters = inspector.highlighters;
@@ -665,7 +664,6 @@ class GridInspector {
       }
     }
   }
-
 }
 
 module.exports = GridInspector;
