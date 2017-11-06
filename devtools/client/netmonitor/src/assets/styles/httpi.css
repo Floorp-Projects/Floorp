@@ -16,31 +16,4 @@
 /* Network panel components & styles */
 @import "chrome://devtools/content/netmonitor/src/assets/styles/variables.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/MdnLink.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/RequestList.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/Toolbar.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/StatusBar.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/NetworkDetailsPanel.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/StatisticsPanel.css";
-
-/* General */
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#mount,
-.launchpad-root,
-.network-monitor,
-.monitor-panel {
-  flex: initial;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-.split-box {
-  overflow: hidden;
-}

@@ -1,0 +1,396 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Network details panel */
+
+.network-details-panel {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.panel-container {
+  height: 100%;
+}
+
+.panel-container,
+.properties-view {
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.panel-container .tree-container .objectBox {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.properties-view {
+  flex-grow: 1;
+}
+
+.properties-view .searchbox-section {
+  flex: 0 1 auto;
+}
+
+.properties-view .devtools-searchbox {
+  padding: 0;
+}
+
+.properties-view .devtools-searchbox input {
+  margin: 1px 3px;
+}
+
+/* Empty notices in tab panels */
+
+.empty-notice {
+  color: var(--theme-body-color-inactive);
+  padding: 3px 8px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 24px;
+}
+
+/* Text inputs in tab panels */
+
+.textbox-input {
+  text-overflow: ellipsis;
+  border: none;
+  background: none;
+  color: inherit;
+  width: 100%;
+}
+
+.textbox-input:focus {
+  outline: 0;
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+}
+
+/* Tree table in tab panels */
+
+.tree-container, .tree-container .treeTable {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  flex: 1;
+}
+
+.tree-container .treeTable,
+.tree-container .treeTable tbody {
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-container .treeTable tbody {
+  /* Apply flex to table will create an anonymous table element outside of tbody
+   * See also http://stackoverflow.com/a/30851678
+   * Therefore, we set height with this magic number in order to remove the
+   * redundant scrollbar when source editor appears.
+   */
+  height: calc(100% - 4px);
+}
+
+.tree-container .treeTable tr {
+  display: block;
+  position: relative;
+}
+
+/* Make right td fill available horizontal space */
+.tree-container .treeTable td:last-child {
+  width: 100%;
+}
+
+.properties-view .devtools-searchbox,
+.tree-container .treeTable .tree-section {
+  width: 100%;
+  background-color: var(--theme-toolbar-background);
+}
+
+.tree-container .treeTable tr.tree-section:not(:first-child) td:not([class=""]) {
+  border-top: 1px solid var(--theme-splitter-color);
+}
+
+.properties-view .devtools-searchbox,
+.tree-container .treeTable tr.tree-section:not(:last-child) td:not([class=""]) {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.tree-container .treeTable .tree-section > * {
+  vertical-align: middle;
+}
+
+.tree-container .treeTable .treeRow.tree-section > .treeLabelCell > .treeLabel,
+.tree-container .treeTable .treeRow.tree-section > .treeLabelCell > .treeLabel:hover,
+.tree-container .treeTable .treeRow.tree-section > .treeValueCell:not(:hover) * {
+  color: var(--theme-toolbar-color);
+}
+
+.tree-container .treeTable .treeValueCell {
+  /* FIXME: Make value cell can be reduced to shorter width */
+  max-width: 0;
+  padding-inline-end: 5px;
+}
+
+/* Source editor in tab panels */
+
+/* If there is a source editor shows up in the last row of TreeView,
+ * it should occupy the available vertical space.
+ */
+.tree-container .treeTable .editor-row-container,
+.tree-container .treeTable tr:last-child td[colspan="2"] {
+  display: block;
+  height: 100%;
+}
+
+.source-editor-mount {
+  width: 100%;
+  height: 100%;
+}
+
+.headers-summary-label,
+.tree-container .objectBox {
+  white-space: nowrap;
+}
+
+/* Summary tabpanel */
+
+.tabpanel-summary-container {
+  padding: 1px;
+}
+
+.tabpanel-summary-label {
+  display: inline-block;
+  padding-inline-start: 4px;
+  padding-inline-end: 3px;
+  font-weight: 600;
+}
+
+.tabpanel-summary-value {
+  color: inherit;
+  padding-inline-start: 3px;
+}
+
+.theme-dark .tabpanel-summary-value {
+  color: var(--theme-selection-color);
+}
+
+/* Headers tabpanel */
+
+.headers-overview {
+  background: var(--theme-toolbar-background);
+}
+
+.headers-summary,
+.response-summary {
+  display: flex;
+  align-items: center;
+}
+
+.headers-summary .devtools-button {
+  margin-inline-end: 6px;
+}
+
+.headers-summary .requests-list-status-icon {
+  min-width: 10px;
+}
+
+.headers-summary .raw-headers-container {
+  display: flex;
+  width: 100%;
+}
+
+.headers-summary .raw-headers {
+  width: 50%;
+  padding: 0 4px;
+}
+
+.headers-summary .raw-headers textarea {
+  width: 100%;
+  height: 50vh;
+  font: message-box;
+  resize: none;
+}
+
+.headers-summary .raw-headers .tabpanel-summary-label {
+  padding: 0 0 4px 0;
+}
+
+.headers-summary .textbox-input {
+  margin-inline-end: 2px;
+}
+
+.headers-summary .status-text {
+    width: auto!important;
+}
+
+/* Response tabpanel */
+
+.response-error-header {
+  margin: 0;
+  padding: 3px 8px;
+  background-color: var(--theme-highlight-red);
+  color: var(--theme-selection-color);
+}
+
+.response-image-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.response-image {
+  background: #fff;
+  border: 1px dashed GrayText;
+  margin-bottom: 10px;
+  max-width: 300px;
+  max-height: 100px;
+}
+
+/* Timings tabpanel */
+
+.timings-container {
+  display: flex;
+}
+
+.timings-label {
+  width: 10em;
+}
+
+.requests-list-timings-container {
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+.requests-list-timings-offset {
+  transition: width 0.2s ease-out;
+}
+
+.requests-list-timings-box {
+  border: none;
+  min-width: 1px;
+  transition: width 0.2s ease-out;
+}
+
+.theme-firebug .requests-list-timings-total {
+  color: var(--theme-body-color);
+}
+
+/* Stack trace panel */
+
+.stack-trace {
+  font-family: var(--monospace-font-family);
+  /* The markup contains extra whitespace to improve formatting of clipboard text.
+     Make sure this whitespace doesn't affect the HTML rendering */
+  white-space: normal;
+  padding: 5px;
+}
+
+.stack-trace .frame-link-source,
+.message-location .frame-link-source {
+  /* Makes the file name truncated (and ellipsis shown) on the left side */
+  direction: rtl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stack-trace .frame-link-source-inner,
+.message-location .frame-link-source-inner {
+  /* Enforce LTR direction for the file name - fixes bug 1290056 */
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+.stack-trace .frame-link-function-display-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-inline-end: 1ch;
+}
+
+/* Security tabpanel */
+
+/* Overwrite tree-view cell colon `:` for security panel and tree section */
+.security-panel .treeTable .treeLabelCell::after,
+.treeTable .tree-section .treeLabelCell::after {
+  content: "";
+}
+
+/* Layout additional warning icon in tree value cell  */
+.security-info-value {
+  display: flex;
+}
+
+.security-warning-icon {
+  background-image: url(chrome://devtools/skin/images/alerticon-warning.png);
+  background-size: 13px 12px;
+  margin-inline-start: 5px;
+  vertical-align: top;
+  width: 13px;
+  height: 12px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .security-warning-icon {
+    background-image: url(chrome://devtools/skin/images/alerticon-warning@2x.png);
+  }
+}
+
+/* Custom request panel */
+
+.custom-request-panel {
+  height: 100%;
+  overflow: auto;
+  padding: 0 4px;
+  background-color: var(--theme-sidebar-background);
+}
+
+.theme-dark .custom-request-panel {
+  color: var(--theme-selection-color);
+}
+
+.custom-request-label {
+  font-weight: 600;
+}
+
+.custom-request-panel textarea {
+  resize: none;
+  font: message-box;
+}
+
+.custom-header,
+.custom-method-and-url,
+.custom-request,
+.custom-section {
+  display: flex;
+}
+
+.custom-header {
+  flex-grow: 1;
+  font-size: 1.1em;
+  padding-top: 4px;
+}
+
+.custom-section {
+  flex-direction: column;
+  margin-top: 0.5em;
+}
+
+.custom-method-value {
+  width: 4.5em;
+}
+
+.custom-url-value {
+  flex-grow: 1;
+  margin-inline-start: 6px;
+}
