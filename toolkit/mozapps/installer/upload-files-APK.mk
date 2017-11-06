@@ -94,7 +94,6 @@ repackage_fennec = \
       $(UNPACKAGE) \
       $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ \
     --omnijar $(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
-    --classes-dex $(GECKO_APP_AP_PATH)/classes.dex \
     --output $(PACKAGE:.apk=-unsigned-unaligned.apk) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(PACKAGE:.apk=-unsigned-unaligned.apk),$(PACKAGE))
 
