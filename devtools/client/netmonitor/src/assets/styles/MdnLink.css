@@ -4,17 +4,17 @@
 
 /* Learn more links */
 
-.learn-more-link::before {
+.network-monitor .learn-more-link::before {
   background-image: url(chrome://devtools/skin/images/help.svg);
 }
 
-.tree-container .treeTable tr .learn-more-link {
+.network-monitor .tree-container .treeTable tr .learn-more-link {
   position: absolute;
   top: 0;
   left: 0;
   padding: 0;
 }
 
-.tree-container .treeTable tr:not(:hover) .learn-more-link {
+.network-monitor .tree-container .treeTable tr:not(:hover) .learn-more-link {
   opacity: 0.1;
 }
