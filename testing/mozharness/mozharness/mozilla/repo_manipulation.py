@@ -1,3 +1,4 @@
+import ConfigParser
 import os
 
 from mozharness.base.errors import HgErrorList
@@ -161,4 +162,17 @@ the script (--clean-repos --pull --migrate).  The second run will be faster."""
             elif status:
                 self.fatal(error_message)
 
+    def edit_repo_hg_rc(self, cwd, section, key, value):
+        hg_rc = self.read_repo_hg_rc(cwd)
+        hg_rc.set(section, key, value)
 
+        with open(self._get_hg_rc_path(cwd), 'wb') as f:
+            hg_rc.write(f)
+
+    def read_repo_hg_rc(self, cwd):
+        hg_rc = ConfigParser.ConfigParser()
+        hg_rc.read(self._get_hg_rc_path(cwd))
+        return hg_rc
+
+    def _get_hg_rc_path(self, cwd):
+        return os.path.join(cwd, '.hg', 'hgrc')
