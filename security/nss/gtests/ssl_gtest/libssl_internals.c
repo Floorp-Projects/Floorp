@@ -40,12 +40,12 @@ SECStatus SSLInt_UpdateSSLv2ClientRandom(PRFileDesc *fd, uint8_t *rnd,
   // Ensure we don't overrun hs.client_random.
   rnd_len = PR_MIN(SSL3_RANDOM_LENGTH, rnd_len);
 
-  // Zero the client_random struct.
-  PORT_Memset(&ss->ssl3.hs.client_random, 0, SSL3_RANDOM_LENGTH);
+  // Zero the client_random.
+  PORT_Memset(ss->ssl3.hs.client_random, 0, SSL3_RANDOM_LENGTH);
 
   // Copy over the challenge bytes.
   size_t offset = SSL3_RANDOM_LENGTH - rnd_len;
-  PORT_Memcpy(&ss->ssl3.hs.client_random.rand[offset], rnd, rnd_len);
+  PORT_Memcpy(ss->ssl3.hs.client_random + offset, rnd, rnd_len);
 
   // Rehash the SSLv2 client hello message.
   return ssl3_UpdateHandshakeHashes(ss, msg, msg_len);
