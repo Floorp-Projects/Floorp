@@ -32,11 +32,12 @@
 
 #endif
 
-#include "MinidumpAnalyzerUtils.h"
+// Path of the minidump to be analyzed.
+static string gMinidumpPath;
 
-#if XP_WIN && HAVE_64BIT_BUILD
-#include "MozStackFrameSymbolizer.h"
-#endif
+// When set to true print out the full minidump analysis, otherwise only
+// include the crashing thread in the output.
+static bool gFullMinidump = false;
 
 namespace CrashReporter {
 
@@ -61,10 +62,77 @@ using google_breakpad::ProcessResult;
 using google_breakpad::ProcessState;
 using google_breakpad::StackFrame;
 
-MinidumpAnalyzerOptions gMinidumpAnalyzerOptions;
+#ifdef XP_WIN
 
-// Path of the minidump to be analyzed.
-static string gMinidumpPath;
+#if !defined(_MSC_VER)
+static string WideToMBCP(const wstring& wide,
+                         unsigned int cp,
+                         bool* success = nullptr)
+{
+  char* buffer = nullptr;
+  int buffer_size = WideCharToMultiByte(cp, 0, wide.c_str(),
+                                        -1, nullptr, 0, nullptr, nullptr);
+  if(buffer_size == 0) {
+    if (success)
+      *success = false;
+    return "";
+  }
+
+  buffer = new char[buffer_size];
+  if(buffer == nullptr) {
+    if (success)
+      *success = false;
+    return "";
+  }
+
+  WideCharToMultiByte(cp, 0, wide.c_str(),
+                      -1, buffer, buffer_size, nullptr, nullptr);
+  string mb = buffer;
+  delete [] buffer;
+
+  if (success)
+    *success = true;
+
+  return mb;
+}
+#endif /* !defined(_MSC_VER) */
+
+static wstring UTF8ToWide(const string& aUtf8Str, bool *aSuccess = nullptr)
+{
+  wchar_t* buffer = nullptr;
+  int buffer_size = MultiByteToWideChar(CP_UTF8, 0, aUtf8Str.c_str(),
+                                        -1, nullptr, 0);
+  if (buffer_size == 0) {
+    if (aSuccess) {
+      *aSuccess = false;
+    }
+
+    return L"";
+  }
+
+  buffer = new wchar_t[buffer_size];
+
+  if (buffer == nullptr) {
+    if (aSuccess) {
+      *aSuccess = false;
+    }
+
+    return L"";
+  }
+
+  MultiByteToWideChar(CP_UTF8, 0, aUtf8Str.c_str(),
+                      -1, buffer, buffer_size);
+  wstring str = buffer;
+  delete [] buffer;
+
+  if (aSuccess) {
+    *aSuccess = true;
+  }
+
+  return str;
+}
+
+#endif
 
 struct ModuleCompare {
   bool operator() (const CodeModule* aLhs, const CodeModule* aRhs) const {
@@ -249,8 +317,7 @@ ConvertProcessStateToJSON(const ProcessState& aProcessState, Json::Value& aRoot)
       // Record the crashing thread index only if this is a full minidump
       // and all threads' stacks are present, otherwise only the crashing
       // thread stack is written out and this field is set to 0.
-      crashInfo["crashing_thread"] =
-        gMinidumpAnalyzerOptions.fullMinidump ? requestingThread : 0;
+      crashInfo["crashing_thread"] = gFullMinidump ? requestingThread : 0;
     }
   } else {
     crashInfo["type"] = Json::Value(Json::nullValue);
@@ -278,7 +345,7 @@ ConvertProcessStateToJSON(const ProcessState& aProcessState, Json::Value& aRoot)
   Json::Value threads(Json::arrayValue);
   int threadCount = aProcessState.threads()->size();
 
-  if (!gMinidumpAnalyzerOptions.fullMinidump && (requestingThread != -1)) {
+  if (!gFullMinidump && (requestingThread != -1)) {
     // Only add the crashing thread
     Json::Value thread;
     Json::Value stack(Json::arrayValue);
@@ -307,14 +374,9 @@ ConvertProcessStateToJSON(const ProcessState& aProcessState, Json::Value& aRoot)
 
 static bool
 ProcessMinidump(Json::Value& aRoot, const string& aDumpFile) {
-#if XP_WIN && HAVE_64BIT_BUILD
-  MozStackFrameSymbolizer symbolizer;
-  MinidumpProcessor minidumpProcessor(&symbolizer, false);
-#else
   BasicSourceLineResolver resolver;
   // We don't have a valid symbol resolver so we pass nullptr instead.
   MinidumpProcessor minidumpProcessor(nullptr, &resolver);
-#endif
 
   // Process the minidump.
   Minidump dump(aDumpFile);
@@ -351,6 +413,25 @@ OpenAppend(const string& aFilename)
   ofstream* file = new ofstream(aFilename.c_str(), mode);
 #endif // XP_WIN
   return file;
+}
+
+// Check if a file exists at the specified path
+
+static bool
+FileExists(const string& aPath)
+{
+#if defined(XP_WIN)
+  DWORD attrs = GetFileAttributes(UTF8ToWide(aPath).c_str());
+  return (attrs != INVALID_FILE_ATTRIBUTES);
+#else // Non-Windows
+  struct stat sb;
+  int ret = stat(aPath.c_str(), &sb);
+  if (ret == -1 || !(sb.st_mode & S_IFREG)) {
+    return false;
+  }
+
+  return true;
+#endif // XP_WIN
 }
 
 // Update the extra data file by adding the StackTraces field holding the
@@ -392,10 +473,7 @@ ParseArguments(int argc, char** argv) {
 
   for (int i = 1; i < argc - 1; i++) {
     if (strcmp(argv[i], "--full") == 0) {
-      gMinidumpAnalyzerOptions.fullMinidump = true;
-    } else if ((strcmp(argv[i], "--force-use-module") == 0) && (i < argc - 2)) {
-      gMinidumpAnalyzerOptions.forceUseModule = argv[i + 1];
-      ++i;
+      gFullMinidump = true;
     } else {
       exit(EXIT_FAILURE);
     }
