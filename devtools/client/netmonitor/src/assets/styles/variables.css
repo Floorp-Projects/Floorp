@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root.theme-dark {
+  --table-splitter-color: rgba(255,255,255,0.15);
+  --table-zebra-background: rgba(255,255,255,0.05);
+
+  --timing-blocked-color: rgba(235, 83, 104, 0.8);
+  --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
+  --timing-ssl-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-send-color: rgba(70, 175, 227, 0.8); /* light blue */
+  --timing-wait-color: rgba(94, 136, 176, 0.8); /* blue grey */
+  --timing-receive-color: rgba(112, 191, 83, 0.8); /* green */
+
+  --sort-ascending-image: url(chrome://devtools/skin/images/sort-ascending-arrow.svg);
+  --sort-descending-image: url(chrome://devtools/skin/images/sort-descending-arrow.svg);
+}
+
+:root.theme-light {
+  --table-splitter-color: rgba(0,0,0,0.15);
+  --table-zebra-background: rgba(0,0,0,0.05);
+
+  --timing-blocked-color: rgba(235, 83, 104, 0.8);
+  --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
+  --timing-ssl-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-send-color: rgba(0, 136, 204, 0.8); /* blue */
+  --timing-wait-color: rgba(95, 136, 176, 0.8); /* blue grey */
+  --timing-receive-color: rgba(44, 187, 15, 0.8); /* green */
+
+  --sort-ascending-image: url(chrome://devtools/skin/images/sort-ascending-arrow.svg);
+  --sort-descending-image: url(chrome://devtools/skin/images/sort-descending-arrow.svg);
+}
+
+:root.theme-firebug {
+  --sort-ascending-image: url(chrome://devtools/skin/images/firebug/arrow-up.svg);
+  --sort-descending-image: url(chrome://devtools/skin/images/firebug/arrow-down.svg);
+}
+
+/* Icons */
+:root {
+  --play-icon-url: url("chrome://devtools/skin/images/play.svg");
+  --pause-icon-url: url("chrome://devtools/skin/images/pause.svg");
+}
