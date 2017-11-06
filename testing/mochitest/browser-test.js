@@ -738,8 +738,13 @@ Tester.prototype = {
           while (entries.hasMoreElements()) {
             let entry = entries.getNext().QueryInterface(Ci.nsIFile);
             if (entry.isFile()) {
-              entry.remove(false);
-              let msg = "this test left a pending crash report; deleted " + entry.path;
+              let msg = "this test left a pending crash report; ";
+              try {
+                entry.remove(false);
+                msg += "deleted " + entry.path;
+              } catch (e) {
+                msg += "could not delete " + entry.path;
+              }
               this.structuredLogger.info(msg);
             }
           }
