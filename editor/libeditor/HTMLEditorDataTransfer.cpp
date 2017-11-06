@@ -442,7 +442,11 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
       if (insertedContextParent) {
         // if we had to insert something higher up in the paste hierarchy, we want to
         // skip any further paste nodes that descend from that.  Else we will paste twice.
-        if (EditorUtils::IsDescendantOf(curNode, insertedContextParent)) {
+        nsCOMPtr<nsINode> insertedContextParentNode =
+          do_QueryInterface(insertedContextParent);
+        if (NS_WARN_IF(!insertedContextParentNode) ||
+            EditorUtils::IsDescendantOf(*nodeList[j],
+                                        *insertedContextParentNode)) {
           continue;
         }
       }
@@ -2380,7 +2384,7 @@ HTMLEditor::ReplaceOrphanedStructure(
       (i - removedCount) : (originalLength - i - 1);
     OwningNonNull<nsINode> endpoint = aNodeArray[idx];
     if (endpoint == replaceNode ||
-        EditorUtils::IsDescendantOf(endpoint, replaceNode)) {
+        EditorUtils::IsDescendantOf(*endpoint, *replaceNode)) {
       aNodeArray.RemoveElementAt(idx);
       removedCount++;
     }
