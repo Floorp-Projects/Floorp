@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/Selection.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/GuardObjects.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -378,13 +379,19 @@ public:
 class EditorUtils final
 {
 public:
-  // Note that aChild isn't a normal XPCOM outparam and won't get AddRef'ed.
-  static bool IsDescendantOf(nsINode* aNode, nsINode* aParent,
-                             nsIContent** aChild);
-  static bool IsDescendantOf(nsINode* aNode, nsINode* aParent,
-                             int32_t* aOffset = nullptr);
-  static bool IsDescendantOf(nsIDOMNode* aNode, nsIDOMNode* aParent,
-                             int32_t* aOffset = nullptr);
+  /**
+   * IsDescendantOf() checks if aNode is a child or a descendant of aParent.
+   * aOutPoint is set to the child of aParent.
+   *
+   * @return            true if aNode is a child or a descendant of aParent.
+   */
+  static bool IsDescendantOf(const nsINode& aNode,
+                             const nsINode& aParent,
+                             EditorRawDOMPoint* aOutPoint = nullptr);
+  static bool IsDescendantOf(const nsINode& aNode,
+                             const nsINode& aParent,
+                             EditorDOMPoint* aOutPoint);
+
   static bool IsLeafNode(nsIDOMNode* aNode);
 };
 
