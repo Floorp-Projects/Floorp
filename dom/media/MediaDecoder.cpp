@@ -1553,7 +1553,7 @@ MediaDecoder::GetDebugInfo()
     PlayStateStr());
 }
 
-void
+RefPtr<GenericPromise>
 MediaDecoder::DumpDebugInfo()
 {
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
@@ -1568,17 +1568,20 @@ MediaDecoder::DumpDebugInfo()
 
   if (!GetStateMachine()) {
     DUMP("%s", str.get());
-    return;
+    return GenericPromise::CreateAndResolve(true, __func__);
   }
 
-  GetStateMachine()->RequestDebugInfo()->Then(
-    SystemGroup::AbstractMainThreadFor(TaskCategory::Other), __func__,
-    [str] (const nsACString& aString) {
+  return GetStateMachine()->RequestDebugInfo()->Then(
+    SystemGroup::AbstractMainThreadFor(TaskCategory::Other),
+    __func__,
+    [str](const nsACString& aString) {
       DUMP("%s", str.get());
       DUMP("%s", aString.Data());
+      return GenericPromise::CreateAndResolve(true, __func__);
     },
-    [str] () {
+    [str]() {
       DUMP("%s", str.get());
+      return GenericPromise::CreateAndResolve(true, __func__);
     });
 }
 

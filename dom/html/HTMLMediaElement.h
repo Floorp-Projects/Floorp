@@ -220,9 +220,9 @@ public:
   // suspended the channel.
   virtual void NotifySuspendedByCache(bool aSuspendedByCache) final override;
 
-  virtual bool IsActive() const final override;
+  bool IsActive() const;
 
-  virtual bool IsHidden() const final override;
+  bool IsHidden() const;
 
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
@@ -246,7 +246,7 @@ public:
                                                     const PrincipalHandle& aNewPrincipalHandle);
 
   // Dispatch events
-  virtual nsresult DispatchAsyncEvent(const nsAString& aName) final override;
+  virtual void DispatchAsyncEvent(const nsAString& aName) final override;
 
   // Triggers a recomputation of readyState.
   void UpdateReadyState() override { UpdateReadyStateInternal(); }
@@ -624,7 +624,7 @@ public:
   // data from decoder/reader/MDSM. Used for debugging purposes.
   already_AddRefed<Promise> MozRequestDebugInfo(ErrorResult& aRv);
 
-  void MozDumpDebugInfo();
+  already_AddRefed<Promise> MozDumpDebugInfo();
 
   // For use by mochitests. Enabling pref "media.test.video-suspend"
   void SetVisible(bool aVisible);

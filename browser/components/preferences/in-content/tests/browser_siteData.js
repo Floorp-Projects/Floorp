@@ -15,12 +15,15 @@ const TEST_QUOTA_USAGE_URL = TEST_QUOTA_USAGE_ORIGIN + "/browser/browser/compone
 const TEST_OFFLINE_HOST = "example.org";
 const TEST_OFFLINE_ORIGIN = "https://" + TEST_OFFLINE_HOST;
 const TEST_OFFLINE_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/offline/offline.html";
+const TEST_SERVICE_WORKER_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/service_worker_test.html";
 const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const { DownloadUtils } = Cu.import("resource://gre/modules/DownloadUtils.jsm", {});
 const { SiteDataManager } = Cu.import("resource:///modules/SiteDataManager.jsm", {});
 const { OfflineAppCacheHelper } = Cu.import("resource:///modules/offlineAppCache.jsm", {});
+
+XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager", "@mozilla.org/serviceworkers/manager;1", "nsIServiceWorkerManager");
 
 const mockOfflineAppCacheHelper = {
   clear: null,
@@ -85,6 +88,40 @@ function promiseCookiesCleared() {
   return TestUtils.topicObserved("cookie-changed", (subj, data) => {
     return data === "cleared";
   });
+}
+
+async function loadServiceWorkerTestPage(url) {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await BrowserTestUtils.waitForCondition(() => {
+    return ContentTask.spawn(tab.linkedBrowser, {}, () =>
+      content.document.body.getAttribute("data-test-service-worker-registered") === "true");
+  }, `Fail to load service worker test ${url}`);
+  await BrowserTestUtils.removeTab(tab);
+}
+
+function promiseServiceWorkerRegisteredFor(url) {
+  return BrowserTestUtils.waitForCondition(() => {
+    try {
+      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(url);
+      let sw = serviceWorkerManager.getRegistrationByPrincipal(principal, principal.URI.spec);
+      if (sw) {
+        ok(true, `Found the service worker registered for ${url}`);
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }, `Should register service worker for ${url}`);
+}
+
+function promiseServiceWorkersCleared() {
+  return BrowserTestUtils.waitForCondition(() => {
+    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+    if (serviceWorkers.length == 0) {
+      ok(true, "Cleared all service workers");
+      return true;
+    }
+    return false;
+  }, "Should clear all service workers");
 }
 
 registerCleanupFunction(function() {
@@ -250,120 +287,55 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-// Test sorting
+// Test clearing service wroker through the "Clear All" button
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-  mockSiteDataManager.register(SiteDataManager);
-  mockSiteDataManager.fakeSites = [
-    {
-      usage: 1024,
-      principal: Services.scriptSecurityManager
-                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
-      persisted: true
-    },
-    {
-      usage: 1024 * 2,
-      principal: Services.scriptSecurityManager
-                         .createCodebasePrincipalFromOrigin("https://books.foo.com"),
-      persisted: false
-    },
-    {
-      usage: 1024 * 3,
-      principal: Services.scriptSecurityManager
-                         .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
-      persisted: true
-    },
-  ];
-
-  let updatePromise = promiseSiteDataManagerSitesUpdated();
+  // Register a test service
+  await loadServiceWorkerTestPage(TEST_SERVICE_WORKER_URL);
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  // Test the initial states
+  await promiseServiceWorkerRegisteredFor(TEST_SERVICE_WORKER_URL);
+  // Click the "Clear All" button
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let clearBtn = doc.getElementById("clearSiteDataButton");
+  let acceptPromise = promiseAlertDialogOpen("accept");
+  let updatePromise = promiseSiteDataManagerSitesUpdated();
+  clearBtn.doCommand();
+  await acceptPromise;
   await updatePromise;
-  await openSiteDataSettingsDialog();
-
-  let dialog = content.gSubDialog._topDialog;
-  let dialogFrame = dialog._frame;
-  let frameDoc = dialogFrame.contentDocument;
-  let hostCol = frameDoc.getElementById("hostCol");
-  let usageCol = frameDoc.getElementById("usageCol");
-  let statusCol = frameDoc.getElementById("statusCol");
-  let sitesList = frameDoc.getElementById("sitesList");
-
-  // Test default sorting
-  assertSortByUsage("descending");
-
-  // Test sorting on the usage column
-  usageCol.click();
-  assertSortByUsage("ascending");
-  usageCol.click();
-  assertSortByUsage("descending");
-
-  // Test sorting on the host column
-  hostCol.click();
-  assertSortByHost("ascending");
-  hostCol.click();
-  assertSortByHost("descending");
-
-  // Test sorting on the permission status column
-  statusCol.click();
-  assertSortByStatus("ascending");
-  statusCol.click();
-  assertSortByStatus("descending");
-
-  mockSiteDataManager.unregister();
+  await promiseServiceWorkersCleared();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
 
-  function assertSortByHost(order) {
-    let siteItems = sitesList.getElementsByTagName("richlistitem");
-    for (let i = 0; i < siteItems.length - 1; ++i) {
-      let aHost = siteItems[i].getAttribute("host");
-      let bHost = siteItems[i + 1].getAttribute("host");
-      let result = aHost.localeCompare(bHost);
-      if (order == "ascending") {
-        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by host");
-      } else {
-        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by host");
-      }
+// Test clearing service wroker through the settings panel
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+  // Register a test service worker
+  await loadServiceWorkerTestPage(TEST_SERVICE_WORKER_URL);
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  // Test the initial states
+  await promiseServiceWorkerRegisteredFor(TEST_SERVICE_WORKER_URL);
+  // Open the Site Data Settings panel and remove the site
+  await openSiteDataSettingsDialog();
+  let acceptRemovePromise = promiseAlertDialogOpen("accept");
+  let updatePromise = promiseSiteDataManagerSitesUpdated();
+  ContentTask.spawn(gBrowser.selectedBrowser, { TEST_OFFLINE_HOST }, args => {
+    let host = args.TEST_OFFLINE_HOST;
+    let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
+    let sitesList = frameDoc.getElementById("sitesList");
+    let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
+    if (site) {
+      let removeBtn = frameDoc.getElementById("removeSelected");
+      let saveBtn = frameDoc.getElementById("save");
+      site.click();
+      removeBtn.doCommand();
+      saveBtn.doCommand();
+    } else {
+      ok(false, `Should have one site of ${host}`);
     }
-  }
-
-  function assertSortByStatus(order) {
-    let siteItems = sitesList.getElementsByTagName("richlistitem");
-    for (let i = 0; i < siteItems.length - 1; ++i) {
-      let aHost = siteItems[i].getAttribute("host");
-      let bHost = siteItems[i + 1].getAttribute("host");
-      let a = findSiteByHost(aHost);
-      let b = findSiteByHost(bHost);
-      let result = 0;
-      if (a.persisted && !b.persisted) {
-        result = 1;
-      } else if (!a.persisted && b.persisted) {
-        result = -1;
-      }
-      if (order == "ascending") {
-        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by permission status");
-      } else {
-        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by permission status");
-      }
-    }
-  }
-
-  function assertSortByUsage(order) {
-    let siteItems = sitesList.getElementsByTagName("richlistitem");
-    for (let i = 0; i < siteItems.length - 1; ++i) {
-      let aHost = siteItems[i].getAttribute("host");
-      let bHost = siteItems[i + 1].getAttribute("host");
-      let a = findSiteByHost(aHost);
-      let b = findSiteByHost(bHost);
-      let result = a.usage - b.usage;
-      if (order == "ascending") {
-        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by usage");
-      } else {
-        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by usage");
-      }
-    }
-  }
-
-  function findSiteByHost(host) {
-    return mockSiteDataManager.fakeSites.find(site => site.principal.URI.host == host);
-  }
+  });
+  await acceptRemovePromise;
+  await updatePromise;
+  await promiseServiceWorkersCleared();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

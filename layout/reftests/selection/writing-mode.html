@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>writing-mode</title>
+    <style>
+      p {
+        display: inline-block;
+        margin: 10px;
+      }
+      .line-through {
+        text-decoration: line-through wavy rgba(0, 0, 0, 0.3);
+      }
+      ::-moz-selection {
+        background-color: white;
+        color: black;
+      }
+      .wm-vertical-lr {
+        writing-mode: vertical-lr;
+        display: inline-block;
+      }
+      .wm-vertical-rl {
+        writing-mode: vertical-rl;
+      }
+      .wm-sideways-lr {
+        writing-mode: sideways-lr;
+      }
+      .wm-sideways-rl {
+        writing-mode: sideways-rl;
+      }
+    </style>
+    <script type="text/javascript" charset="utf-8">
+      function select() {
+        window.getSelection().removeAllRanges();
+        var elems = document.getElementsByTagName('p');
+        for (var i = 0; i < elems.length; ++i) {
+          var range = document.createRange();
+          range.setStart(elems[i].firstChild, 2);
+          range.setEnd(elems[i].firstChild, 9);
+          window.getSelection().addRange(range);
+        }
+      }
+    </script>
+  </head>
+  <body onload="select()">
+    <p lang="zh" dir="ltr" class="wm-vertical-lr line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="ltr" class="wm-vertical-rl line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="ltr" class="wm-sideways-lr line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="ltr" class="wm-sideways-rl line-through">你好世界！Hello World!</p>
+    <br/>
+    <p lang="zh" dir="rtl" class="wm-vertical-lr line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="rtl" class="wm-vertical-rl line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="rtl" class="wm-sideways-lr line-through">你好世界！Hello World!</p>
+    <p lang="zh" dir="rtl" class="wm-sideways-rl line-through">你好世界！Hello World!</p>
+  </body>
+</html>
