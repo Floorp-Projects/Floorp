@@ -2902,7 +2902,7 @@ SelectZoneGroup(nsGlobalWindow* aNewInner,
  */
 static nsresult
 CreateNativeGlobalForInner(JSContext* aCx,
-                           nsGlobalWindow* aNewInner,
+                           nsGlobalWindowInner* aNewInner,
                            nsIURI* aURI,
                            nsIPrincipal* aPrincipal,
                            JS::MutableHandle<JSObject*> aGlobal,
@@ -3142,7 +3142,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       mCreatingInnerWindow = true;
       // Every script context we are initialized with must create a
       // new global.
-      rv = CreateNativeGlobalForInner(cx, newInnerWindow,
+      rv = CreateNativeGlobalForInner(cx, newInnerWindow->AssertInner(),
                                       aDocument->GetDocumentURI(),
                                       aDocument->NodePrincipal(),
                                       &newInnerGlobal,
@@ -4206,16 +4206,16 @@ nsPIDOMWindowInner::UnmuteAudioContexts()
   }
 }
 
-nsGlobalWindow*
+nsGlobalWindowInner*
 nsGlobalWindow::Window()
 {
-  return this;
+  return AssertInner();
 }
 
-nsGlobalWindow*
+nsGlobalWindowInner*
 nsGlobalWindow::Self()
 {
-  return this;
+  return AssertInner();
 }
 
 Navigator*
@@ -5174,7 +5174,7 @@ nsGlobalWindow::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
     return true;
   }
 
-  nsresult rv = nsWindowSH::GlobalResolve(this, aCx, aObj, aId, aDesc);
+  nsresult rv = nsWindowSH::GlobalResolve(AssertInner(), aCx, aObj, aId, aDesc);
   if (NS_FAILED(rv)) {
     return Throw(aCx, rv);
   }
@@ -5265,7 +5265,7 @@ nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aNames,
 
     for (auto i = nameSpaceManager->GlobalNameIter(); !i.Done(); i.Next()) {
       const GlobalNameMapEntry* entry = i.Get();
-      if (nsWindowSH::NameStructEnabled(aCx, this, entry->mKey,
+      if (nsWindowSH::NameStructEnabled(aCx, AssertInner(), entry->mKey,
                                         entry->mGlobalName)) {
         // Just append all of these; even if they get deleted our resolve hook
         // just goes ahead and recreates them.
@@ -8789,6 +8789,7 @@ nsGlobalWindow::FirePopupBlockedEvent(nsIDocument* aDoc,
                                       const nsAString& aPopupWindowName,
                                       const nsAString& aPopupWindowFeatures)
 {
+  MOZ_ASSERT(IsOuterWindow(), "All callers seem to assume we're an outer window?");
   MOZ_ASSERT(aDoc);
 
   // Fire a "DOMPopupBlocked" event so that the UI can hear about
@@ -8796,7 +8797,9 @@ nsGlobalWindow::FirePopupBlockedEvent(nsIDocument* aDoc,
   PopupBlockedEventInit init;
   init.mBubbles = true;
   init.mCancelable = true;
-  init.mRequestingWindow = this;
+  // XXX: This is a different object, but webidl requires an inner window here
+  // now.
+  init.mRequestingWindow = GetCurrentInnerWindowInternal();
   init.mPopupWindowURI = aPopupURI;
   init.mPopupWindowName = aPopupWindowName;
   init.mPopupWindowFeatures = aPopupWindowFeatures;
@@ -8894,6 +8897,7 @@ nsGlobalWindow::FireAbuseEvents(const nsAString &aPopupURL,
                                 const nsAString &aPopupWindowName,
                                 const nsAString &aPopupWindowFeatures)
 {
+  MOZ_ASSERT(IsOuterWindow());
   // fetch the URI of the window requesting the opened window
 
   nsCOMPtr<nsPIDOMWindowOuter> window = GetTop();
@@ -14520,8 +14524,8 @@ nsGlobalWindow::ClearDocumentDependentSlots(JSContext* aCx)
   MOZ_ASSERT(IsInnerWindow());
 
   // If JSAPI OOMs here, there is basically nothing we can do to recover safely.
-  if (!WindowBinding::ClearCachedDocumentValue(aCx, this) ||
-      !WindowBinding::ClearCachedPerformanceValue(aCx, this)) {
+  if (!WindowBinding::ClearCachedDocumentValue(aCx, AssertInner()) ||
+      !WindowBinding::ClearCachedPerformanceValue(aCx, AssertInner())) {
     MOZ_CRASH("Unhandlable OOM while clearing document dependent slots.");
   }
 }

@@ -5501,7 +5501,7 @@ CanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& aOp,
 }
 
 void
-CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
+CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow, double aX,
                                      double aY, double aW, double aH,
                                      const nsAString& aBgColor,
                                      uint32_t aFlags, ErrorResult& aError)

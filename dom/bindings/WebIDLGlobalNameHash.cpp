@@ -228,7 +228,7 @@ WebIDLGlobalNameHash::DefineIfEnabled(JSContext* aCx,
     // appearance of mutating things that opt code uses.
 #ifdef DEBUG
     JS::Rooted<JSObject*> temp(aCx, global);
-    DebugOnly<nsGlobalWindow*> win;
+    DebugOnly<nsGlobalWindowInner*> win;
     MOZ_ASSERT(NS_SUCCEEDED(UNWRAP_OBJECT(Window, &temp, win)));
 #endif
   }

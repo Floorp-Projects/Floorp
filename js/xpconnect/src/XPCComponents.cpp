@@ -2338,7 +2338,7 @@ nsXPCComponents_Utils::ImportGlobalProperties(HandleValue aPropertyList,
     MOZ_ASSERT(global);
 
     // Don't allow doing this if the global is a Window
-    nsGlobalWindow* win;
+    nsGlobalWindowInner* win;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, &global, win))) {
         return NS_ERROR_NOT_AVAILABLE;
     }

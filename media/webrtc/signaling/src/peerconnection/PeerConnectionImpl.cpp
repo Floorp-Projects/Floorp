@@ -727,7 +727,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
 void
 PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
-                               nsGlobalWindow& aWindow,
+                               nsGlobalWindowInner& aWindow,
                                const RTCConfiguration& aConfiguration,
                                nsISupports* aThread,
                                ErrorResult &rv)
