@@ -13,6 +13,5 @@ scripts
     mobile_l10n.rst
     mobile_partner_repack.rst
     multil10n.rst
-    spidermonkey_build.rst
     talos_script.rst
     web_platform_tests.rst
