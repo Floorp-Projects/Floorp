@@ -78,6 +78,9 @@ protected:
     virtual mozilla::ipc::IPCResult
     RecvInitPluginModuleChild(Endpoint<PPluginModuleChild>&& endpoint) override;
 
+    virtual mozilla::ipc::IPCResult
+    RecvInitPluginFunctionBroker(Endpoint<PFunctionBrokerChild>&& endpoint) override;
+
     virtual PPluginInstanceChild*
     AllocPPluginInstanceChild(const nsCString& aMimeType,
                               const InfallibleTArray<nsCString>& aNames,
@@ -232,10 +235,6 @@ private:
     void InitQuirksModes(const nsCString& aMimeType);
     bool InitGraphics();
     void DeinitGraphics();
-
-#if defined(OS_WIN)
-    void HookProtectedMode();
-#endif
 
 #if defined(MOZ_WIDGET_GTK)
     static gboolean DetectNestedEventLoop(gpointer data);

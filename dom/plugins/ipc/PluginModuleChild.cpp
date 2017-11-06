@@ -37,6 +37,8 @@
 #include "mozilla/Unused.h"
 
 #include "nsNPAPIPlugin.h"
+#include "FunctionHook.h"
+#include "FunctionBrokerChild.h"
 
 #ifdef XP_WIN
 #include "nsWindowsDllInterceptor.h"
@@ -744,6 +746,21 @@ PluginModuleChild::RecvInitPluginModuleChild(Endpoint<PPluginModuleChild>&& aEnd
     return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+PluginModuleChild::RecvInitPluginFunctionBroker(Endpoint<PFunctionBrokerChild>&& aEndpoint)
+{
+#if defined(XP_WIN)
+    MOZ_ASSERT(mIsChrome);
+    if (!FunctionBrokerChild::Initialize(Move(aEndpoint))) {
+      return IPC_FAIL(this,
+                      "InitPluginFunctionBroker failed to initialize broker child.");
+    }
+    return IPC_OK();
+#else
+    return IPC_FAIL(this, "InitPluginFunctionBroker not supported on this platform.");
+#endif
+}
+
 
 mozilla::ipc::IPCResult
 PluginModuleChild::AnswerInitCrashReporter(Shmem&& aShmem, mozilla::dom::NativeThreadId* aOutId)
@@ -786,6 +803,11 @@ PluginModuleChild::ActorDestroy(ActorDestroyReason why)
         MOZ_ASSERT(gChromeInstance == this);
         NP_Shutdown();
     }
+
+#if defined(XP_WIN)
+    FunctionBrokerChild::Destroy();
+    FunctionHook::ClearDllInterceptorCache();
+#endif
 
     // doesn't matter why we're being destroyed; it's up to us to
     // initiate (clean) shutdown
