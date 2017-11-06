@@ -78,12 +78,12 @@ EXPORTS += [
     'nsStringStream.h',
     'nsUnicharInputStream.h',
     'nsWildCard.h',
-    'SlicedInputStream.h',
     'SpecialSystemDirectory.h',
 ]
 
 EXPORTS.mozilla += [
     'Base64.h',
+    'SlicedInputStream.h',
     'SnappyCompressOutputStream.h',
     'SnappyFrameUtils.h',
     'SnappyUncompressInputStream.h',
