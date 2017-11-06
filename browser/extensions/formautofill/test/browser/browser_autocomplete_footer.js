@@ -28,8 +28,13 @@ add_task(async function test_click_on_footer() {
     // Click on the footer
     const optionButton = itemsBox.querySelector(".autocomplete-richlistitem:last-child")._optionButton;
     const prefTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, PRIVACY_PREF_URL);
+    // Wait for dropdown animation finished to continue mouse synthesizing.
+    await sleep(1000);
     await EventUtils.synthesizeMouseAtCenter(optionButton, {});
-    await BrowserTestUtils.removeTab(await prefTabPromise);
+    info(`expecting tab: about:preferences#privacy opened`);
+    const prefTab = await prefTabPromise;
+    info(`expecting tab: about:preferences#privacy removed`);
+    await BrowserTestUtils.removeTab(prefTab);
     ok(true, "Tab: preferences#privacy was successfully opened by clicking on the footer");
 
     await closePopup(browser);
@@ -48,7 +53,10 @@ add_task(async function test_press_enter_on_footer() {
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     }
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-    await BrowserTestUtils.removeTab(await prefTabPromise);
+    info(`expecting tab: about:preferences#privacy opened`);
+    const prefTab = await prefTabPromise;
+    info(`expecting tab: about:preferences#privacy removed`);
+    await BrowserTestUtils.removeTab(prefTab);
     ok(true, "Tab: preferences#privacy was successfully opened by pressing enter on the footer");
 
     await closePopup(browser);

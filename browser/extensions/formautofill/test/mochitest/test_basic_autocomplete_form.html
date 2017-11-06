@@ -61,6 +61,7 @@ function checkAutoCompleteInputFilled(element, expectedvalue) {
 }
 
 function checkFormFilled(address) {
+  info("expecting form filled");
   let promises = [];
   for (let prop in address) {
     let element = document.getElementById(prop);

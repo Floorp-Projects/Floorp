@@ -30,6 +30,7 @@ add_task(async function test_detach_tab_marked() {
     await closePopup(browser);
 
     // Detach the tab to a new window
+    info("expecting tab replaced with new window");
     let newWin = gBrowser.replaceTabWithWindow(gBrowser.getTabForBrowser(browser));
     await TestUtils.topicObserved("browser-delayed-startup-finished", subject => {
       return subject == newWin;

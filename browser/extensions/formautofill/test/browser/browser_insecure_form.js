@@ -53,10 +53,9 @@ add_task(async function test_insecure_form() {
     expectedResultLength: 1,
   }];
 
-  await runTest(testSets[0]);
-  await runTest(testSets[1]);
-  await runTest(testSets[2]);
-  await runTest(testSets[3]);
+  for (const test of testSets) {
+    await runTest(test);
+  }
 });
 
 add_task(async function test_click_on_insecure_warning() {
