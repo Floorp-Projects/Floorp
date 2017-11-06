@@ -7,8 +7,6 @@ Support for running toolchain-building jobs via dedicated scripts
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import hashlib
-
 from mozbuild.shellutil import quote as shell_quote
 
 from taskgraph.util.schema import Schema
@@ -23,9 +21,10 @@ from taskgraph.transforms.job.common import (
 )
 from taskgraph.util.hash import hash_paths
 from taskgraph import GECKO
+from taskgraph.util.cached_tasks import add_optimization
 
 
-TOOLCHAIN_INDEX = 'gecko.cache.level-{level}.toolchains.v1.{name}.{digest}'
+CACHE_TYPE = 'toolchains.v1'
 
 toolchain_run_schema = Schema({
     Required('using'): 'toolchain-script',
@@ -66,7 +65,7 @@ toolchain_run_schema = Schema({
 })
 
 
-def add_optimization(config, run, taskdesc):
+def get_digest_data(config, run, taskdesc):
     files = list(run.get('resources', []))
     # This file
     files.append('taskcluster/taskgraph/transforms/job/toolchain.py')
@@ -92,24 +91,7 @@ def add_optimization(config, run, taskdesc):
     args = run.get('arguments')
     if args:
         data.extend(args)
-
-    label = taskdesc['label']
-    subs = {
-        'name': label.replace('%s-' % config.kind, ''),
-        'digest': hashlib.sha256('\n'.join(data)).hexdigest()
-    }
-
-    # We'll try to find a cached version of the toolchain at levels above
-    # and including the current level, starting at the highest level.
-    index_routes = []
-    for level in reversed(range(int(config.params['level']), 4)):
-        subs['level'] = level
-        index_routes.append(TOOLCHAIN_INDEX.format(**subs))
-    taskdesc['optimization'] = {'index-search': index_routes}
-
-    # ... and cache at the lowest level.
-    taskdesc.setdefault('routes', []).append(
-        'index.{}'.format(TOOLCHAIN_INDEX.format(**subs)))
+    return data
 
 
 @run_job_using("docker-worker", "toolchain-script", schema=toolchain_run_schema)
@@ -173,7 +155,13 @@ def docker_worker_toolchain(config, job, taskdesc):
     if 'toolchain-alias' in run:
         attributes['toolchain-alias'] = run['toolchain-alias']
 
-    add_optimization(config, run, taskdesc)
+    name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
+    add_optimization(
+        config, taskdesc,
+        cache_type=CACHE_TYPE,
+        cache_name=name,
+        digest_data=get_digest_data(config, run, taskdesc),
+    )
 
 
 @run_job_using("generic-worker", "toolchain-script", schema=toolchain_run_schema)
@@ -229,4 +217,10 @@ def windows_toolchain(config, job, taskdesc):
     if 'toolchain-alias' in run:
         attributes['toolchain-alias'] = run['toolchain-alias']
 
-    add_optimization(config, run, taskdesc)
+    name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
+    add_optimization(
+        config, taskdesc,
+        cache_type=CACHE_TYPE,
+        cache_name=name,
+        digest_data=get_digest_data(config, run, taskdesc),
+    )
