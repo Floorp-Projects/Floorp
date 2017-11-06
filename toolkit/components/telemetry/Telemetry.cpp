@@ -162,8 +162,6 @@ public:
                                   const bool success);
   static bool CanRecordBase();
   static bool CanRecordExtended();
-  static bool CanRecordReleaseData();
-  static bool CanRecordPrereleaseData();
 private:
   TelemetryImpl();
   ~TelemetryImpl();
@@ -1176,17 +1174,6 @@ TelemetryImpl::SetCanRecordExtended(bool canRecord) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TelemetryImpl::GetCanRecordReleaseData(bool* ret) {
-  *ret = mCanRecordBase;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TelemetryImpl::GetCanRecordPrereleaseData(bool* ret) {
-  *ret = mCanRecordExtended;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 TelemetryImpl::GetIsOfficialTelemetry(bool *ret) {
@@ -1579,18 +1566,6 @@ TelemetryImpl::CanRecordExtended()
   bool canRecordExtended;
   nsresult rv = sTelemetry->GetCanRecordExtended(&canRecordExtended);
   return NS_SUCCEEDED(rv) && canRecordExtended;
-}
-
-bool
-TelemetryImpl::CanRecordReleaseData()
-{
-  return CanRecordBase();
-}
-
-bool
-TelemetryImpl::CanRecordPrereleaseData()
-{
-  return CanRecordExtended();
 }
 
 NS_IMPL_ISUPPORTS(TelemetryImpl, nsITelemetry, nsIMemoryReporter)

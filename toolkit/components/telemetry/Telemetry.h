@@ -259,21 +259,6 @@ bool CanRecordBase();
 bool CanRecordExtended();
 
 /**
- * Indicates whether Telemetry release data recording is turned on. Usually true.
- *
- * @see nsITelemetry.canRecordReleaseData
- */
-bool CanRecordReleaseData();
-
-/**
- * Indicates whether Telemetry pre-release data recording is turned on. Tends
- * to be true on pre-release channels.
- *
- * @see nsITelemetry.canRecordPrereleaseData
- */
-bool CanRecordPrereleaseData();
-
-/**
  * Records slow SQL statements for Telemetry reporting.
  *
  * @param statement - offending SQL statement to record

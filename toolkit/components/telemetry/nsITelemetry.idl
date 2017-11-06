@@ -275,34 +275,6 @@ interface nsITelemetry : nsISupports
   attribute boolean canRecordExtended;
 
   /**
-   * A flag indicating whether Telemetry is recording release data, which is a
-   * smallish subset of our usage data that we're prepared to handle from our
-   * largish release population.
-   *
-   * This is true most of the time.
-   *
-   * This does not indicate whether Telemetry will send any data. That is
-   * governed by user preference and other mechanisms.
-   *
-   * You may use this to determine if it's okay to record your data.
-   */
-  readonly attribute boolean canRecordReleaseData;
-
-  /**
-   * A flag indicating whether Telemetry is recording prerelease data, which is
-   * a largish amount of usage data that we're prepared to handle from our
-   * smallish pre-release population.
-   *
-   * This is true on pre-release branches of Firefox.
-   *
-   * This does not indicate whether Telemetry will send any data. That is
-   * governed by user preference and other mechanisms.
-   *
-   * You may use this to determine if it's okay to record your data.
-   */
-  readonly attribute boolean canRecordPrereleaseData;
-
-  /**
    * A flag indicating whether Telemetry can submit official results (for base or extended
    * data). This is true on official, non-debug builds with built in support for Mozilla
    * Telemetry reporting.
