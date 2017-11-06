@@ -1508,8 +1508,8 @@ def select_linker(linker, c_compiler, developer_options, build_env, toolchain_fl
         version_check = ['-Wl,--version']
         cmd_base = c_compiler.wrapper + \
             [c_compiler.compiler] + c_compiler.flags
-        lld = "-fuse-ld=" + linker
-        cmd = cmd_base + [lld] + version_check
+        lld = ["-fuse-ld=" + linker]
+        cmd = cmd_base + lld + version_check
         if 'LLD' in check_cmd_output(*cmd).decode('utf-8'):
             return namespace(
                 KIND='lld',
