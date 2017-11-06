@@ -858,17 +858,12 @@ TokenStream::reportError(unsigned errorNumber, ...)
 }
 
 void
-TokenStreamAnyChars::reportErrorNoOffset(unsigned errorNumber, ...)
+TokenStreamAnyChars::reportErrorNoOffsetVA(unsigned errorNumber, va_list args)
 {
-    va_list args;
-    va_start(args, errorNumber);
-
     ErrorMetadata metadata;
     computeErrorMetadataNoOffset(&metadata);
 
     ReportCompileError(cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
-
-    va_end(args);
 }
 
 bool
