@@ -1338,6 +1338,8 @@ nsCookieService::TryInitDB(bool aRecreateDB)
       // No more upgrades. Update the schema version.
       rv = mDefaultDBState->syncConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
       NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+      Telemetry::Accumulate(Telemetry::MOZ_SQLITE_COOKIES_OLD_SCHEMA, dbSchemaVersion);
       MOZ_FALLTHROUGH;
 
     case COOKIES_SCHEMA_VERSION:
@@ -1429,6 +1431,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
       gCookieService->ImportCookies(oldCookieFile);
       oldCookieFile->Remove(false);
       gCookieService->mDBState = initialState;
+      Telemetry::Accumulate(Telemetry::MOZ_SQLITE_COOKIES_OLD_SCHEMA, 0);
     });
 
   NS_DispatchToMainThread(runnable);

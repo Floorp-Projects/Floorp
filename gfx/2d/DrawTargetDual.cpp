@@ -179,12 +179,11 @@ DrawTargetDual::Fill(const Path *aPath, const Pattern &aPattern, const DrawOptio
 
 void
 DrawTargetDual::FillGlyphs(ScaledFont *aScaledFont, const GlyphBuffer &aBuffer,
-                           const Pattern &aPattern, const DrawOptions &aOptions,
-                           const GlyphRenderingOptions *aRenderingOptions)
+                           const Pattern &aPattern, const DrawOptions &aOptions)
 {
   DualPattern pattern(aPattern);
-  mA->FillGlyphs(aScaledFont, aBuffer, *pattern.mA, aOptions, aRenderingOptions);
-  mB->FillGlyphs(aScaledFont, aBuffer, *pattern.mB, aOptions, aRenderingOptions);
+  mA->FillGlyphs(aScaledFont, aBuffer, *pattern.mA, aOptions);
+  mB->FillGlyphs(aScaledFont, aBuffer, *pattern.mB, aOptions);
 }
 
 void

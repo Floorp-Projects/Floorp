@@ -443,9 +443,9 @@ public:
     mPrincipalInfo(aPrincipalInfo),
     mOpenMode(aOpenMode),
     mWriteParams(aWriteParams),
+    mOperationMayProceed(true),
     mState(eInitial),
     mResult(JS::AsmJSCache_InternalError),
-    mDeleteReceived(false),
     mActorDestroyed(false),
     mOpened(false)
   {
@@ -486,6 +486,22 @@ private:
     MOZ_ASSERT(!IsOnOwningThread());
   }
 
+  bool
+  IsActorDestroyed() const
+  {
+    AssertIsOnOwningThread();
+
+    return mActorDestroyed;
+  }
+
+  // May be called on any thread, but you should call IsActorDestroyed() if
+  // you know you're on the background thread because it is slightly faster.
+  bool
+  OperationMayProceed() const
+  {
+    return mOperationMayProceed;
+  }
+
   // This method is called on the owning thread when the JS engine is finished
   // reading/writing the cache entry.
   void
@@ -493,12 +509,18 @@ private:
   {
     AssertIsOnOwningThread();
     MOZ_ASSERT(mState == eOpened);
+    MOZ_ASSERT(mResult == JS::AsmJSCache_Success);
 
     mState = eFinished;
 
     MOZ_ASSERT(mOpened);
+    mOpened = false;
 
     FinishOnOwningThread();
+
+    if (!mActorDestroyed) {
+      Unused << Send__delete__(this, mResult);
+    }
   }
 
   // This method is called upon any failure that prevents the eventual opening
@@ -508,6 +530,7 @@ private:
   {
     AssertIsOnOwningThread();
     MOZ_ASSERT(mState != eFinished);
+    MOZ_ASSERT(mResult != JS::AsmJSCache_Success);
 
     mState = eFinished;
 
@@ -515,7 +538,7 @@ private:
 
     FinishOnOwningThread();
 
-    if (!mDeleteReceived && !mActorDestroyed) {
+    if (!mActorDestroyed) {
       Unused << Send__delete__(this, mResult);
     }
   }
@@ -557,16 +580,18 @@ private:
   {
     AssertIsOnOwningThread();
 
-    // If shutdown just started, the QuotaManager may have been deleted.
-    QuotaManager* qm = QuotaManager::Get();
-    if (!qm) {
-      FailOnNonOwningThread();
+    if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread()) ||
+        IsActorDestroyed()) {
+      Fail();
       return;
     }
 
+    QuotaManager* qm = QuotaManager::Get();
+    MOZ_ASSERT(qm);
+
     nsresult rv = qm->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
-      FailOnNonOwningThread();
+      Fail();
       return;
     }
   }
@@ -579,62 +604,96 @@ private:
   DirectoryLockFailed() override;
 
   // IPDL methods.
-  mozilla::ipc::IPCResult
-  Recv__delete__(const JS::AsmJSCacheResult& aResult) override
-  {
-    AssertIsOnOwningThread();
-    MOZ_ASSERT(mState != eFinished);
-    MOZ_ASSERT(!mDeleteReceived);
-
-    mDeleteReceived = true;
-
-    if (mOpened) {
-      Close();
-    } else {
-      Fail();
-    }
-
-    MOZ_ASSERT(mState == eFinished);
-
-    return IPC_OK();
-  }
-
   void
   ActorDestroy(ActorDestroyReason why) override
   {
     AssertIsOnOwningThread();
     MOZ_ASSERT(!mActorDestroyed);
+    MOZ_ASSERT(mOperationMayProceed);
 
     mActorDestroyed = true;
+    mOperationMayProceed = false;
 
-    // Assume ActorDestroy can happen at any time, so probe the current state to
-    // determine what needs to happen.
-
-    if (mState == eFinished) {
-      return;
-    }
+    // Assume ActorDestroy can happen at any time, so we can't probe the
+    // current state since mState can be modified on any thread (only one
+    // thread at a time based on the state machine).
+    // However we can use mOpened which is only touched on the owning thread.
+    // If mOpened is true, we can also modify mState since we are guaranteed
+    // that there are no pending runnables which would probe mState to decide
+    // what code needs to run (there shouldn't be any running runnables on
+    // other threads either).
 
     if (mOpened) {
       Close();
-    } else {
-      Fail();
+
+      MOZ_ASSERT(mState == eFinished);
     }
 
-    MOZ_ASSERT(mState == eFinished);
+    // We don't have to call Fail() if mOpened is not true since it means that
+    // either nothing has been initialized yet, so nothing to cleanup or there
+    // are pending runnables that will detect that the actor has been destroyed
+    // and call Fail().
   }
 
   mozilla::ipc::IPCResult
-  RecvSelectCacheFileToRead(const uint32_t& aModuleIndex) override
+  RecvSelectCacheFileToRead(const OpenMetadataForReadResponse& aResponse)
+                            override
   {
     AssertIsOnOwningThread();
     MOZ_ASSERT(mState == eWaitingToOpenCacheFileForRead);
     MOZ_ASSERT(mOpenMode == eOpenForRead);
+    MOZ_ASSERT(!mOpened);
 
-    // A cache entry has been selected to open.
+    if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread())) {
+      Fail();
+      return IPC_OK();
+    }
 
-    mModuleIndex = aModuleIndex;
-    mState = eReadyToOpenCacheFileForRead;
-    DispatchToIOThread();
+    switch (aResponse.type()) {
+      case OpenMetadataForReadResponse::TAsmJSCacheResult: {
+        MOZ_ASSERT(aResponse.get_AsmJSCacheResult() != JS::AsmJSCache_Success);
+
+        mResult = aResponse.get_AsmJSCacheResult();
+
+        // This ParentRunnable can only be held alive by the IPDL. Fail()
+        // clears that last reference. So we need to add a self reference here.
+        RefPtr<ParentRunnable> kungFuDeathGrip = this;
+
+        Fail();
+
+        break;
+      }
+
+      case OpenMetadataForReadResponse::Tuint32_t:
+        // A cache entry has been selected to open.
+        mModuleIndex = aResponse.get_uint32_t();
+
+        mState = eReadyToOpenCacheFileForRead;
+
+        DispatchToIOThread();
+
+        break;
+
+      default:
+        MOZ_CRASH("Should never get here!");
+    }
+
+    return IPC_OK();
+  }
+
+  mozilla::ipc::IPCResult
+  RecvClose() override
+  {
+    AssertIsOnOwningThread();
+    MOZ_ASSERT(mState == eOpened);
+
+    // This ParentRunnable can only be held alive by the IPDL. Close() clears
+    // that last reference. So we need to add a self reference here.
+    RefPtr<ParentRunnable> kungFuDeathGrip = this;
+
+    Close();
+
+    MOZ_ASSERT(mState == eFinished);
 
     return IPC_OK();
   }
@@ -654,6 +713,8 @@ private:
   nsCOMPtr<nsIFile> mDirectory;
   nsCOMPtr<nsIFile> mMetadataFile;
   Metadata mMetadata;
+
+  Atomic<bool> mOperationMayProceed;
 
   // State initialized during eWaitingToOpenCacheFileForRead
   unsigned mModuleIndex;
@@ -675,7 +736,6 @@ private:
   State mState;
   JS::AsmJSCacheResult mResult;
 
-  bool mDeleteReceived;
   bool mActorDestroyed;
   bool mOpened;
 };
@@ -916,6 +976,12 @@ ParentRunnable::Run()
     case eInitial: {
       MOZ_ASSERT(NS_IsMainThread());
 
+      if (NS_WARN_IF(Client::IsShuttingDownOnNonBackgroundThread()) ||
+          !OperationMayProceed()) {
+        FailOnNonOwningThread();
+        return NS_OK;
+      }
+
       rv = InitOnMainThread();
       if (NS_FAILED(rv)) {
         FailOnNonOwningThread();
@@ -931,7 +997,8 @@ ParentRunnable::Run()
     case eWaitingToFinishInit: {
       AssertIsOnOwningThread();
 
-      if (QuotaManager::IsShuttingDown()) {
+      if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread()) ||
+          IsActorDestroyed()) {
         Fail();
         return NS_OK;
       }
@@ -950,6 +1017,12 @@ ParentRunnable::Run()
     case eWaitingToOpenDirectory: {
       AssertIsOnOwningThread();
 
+      if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread()) ||
+          IsActorDestroyed()) {
+        Fail();
+        return NS_OK;
+      }
+
       if (NS_WARN_IF(!QuotaManager::Get())) {
         Fail();
         return NS_OK;
@@ -961,6 +1034,12 @@ ParentRunnable::Run()
 
     case eReadyToReadMetadata: {
       AssertIsOnIOThread();
+
+      if (NS_WARN_IF(Client::IsShuttingDownOnNonBackgroundThread()) ||
+          !OperationMayProceed()) {
+        FailOnNonOwningThread();
+        return NS_OK;
+      }
 
       rv = ReadMetadata();
       if (NS_FAILED(rv)) {
@@ -990,6 +1069,12 @@ ParentRunnable::Run()
       AssertIsOnOwningThread();
       MOZ_ASSERT(mOpenMode == eOpenForRead);
 
+      if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread()) ||
+          IsActorDestroyed()) {
+        Fail();
+        return NS_OK;
+      }
+
       mState = eWaitingToOpenCacheFileForRead;
 
       // Metadata is now open.
@@ -1005,6 +1090,12 @@ ParentRunnable::Run()
       AssertIsOnIOThread();
       MOZ_ASSERT(mOpenMode == eOpenForRead);
 
+      if (NS_WARN_IF(Client::IsShuttingDownOnNonBackgroundThread()) ||
+          !OperationMayProceed()) {
+        FailOnNonOwningThread();
+        return NS_OK;
+      }
+
       rv = OpenCacheFileForRead();
       if (NS_FAILED(rv)) {
         FailOnNonOwningThread();
@@ -1019,11 +1110,13 @@ ParentRunnable::Run()
     case eSendingCacheFile: {
       AssertIsOnOwningThread();
 
-      mState = eOpened;
+      if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread()) ||
+          IsActorDestroyed()) {
+        Fail();
+        return NS_OK;
+      }
 
-      // The entry is now open.
-      MOZ_ASSERT(!mOpened);
-      mOpened = true;
+      mState = eOpened;
 
       FileDescriptor::PlatformHandleType handle =
         FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(mFileDesc));
@@ -1031,6 +1124,12 @@ ParentRunnable::Run()
         Fail();
         return NS_OK;
       }
+
+      // The entry is now open.
+      MOZ_ASSERT(!mOpened);
+      mOpened = true;
+
+      mResult = JS::AsmJSCache_Success;
 
       return NS_OK;
     }
@@ -1291,15 +1390,16 @@ private:
     MOZ_ASSERT(mState == eOpening);
 
     uint32_t moduleIndex;
-    if (!FindHashMatch(aMetadata, mReadParams, &moduleIndex)) {
-      Fail(JS::AsmJSCache_InternalError);
-      Send__delete__(this, JS::AsmJSCache_InternalError);
-      return IPC_OK();
+    bool ok;
+    if (FindHashMatch(aMetadata, mReadParams, &moduleIndex)) {
+      ok = SendSelectCacheFileToRead(moduleIndex);
+    } else {
+      ok = SendSelectCacheFileToRead(JS::AsmJSCache_InternalError);
     }
-
-    if (!SendSelectCacheFileToRead(moduleIndex)) {
+    if (!ok) {
       return IPC_FAIL_NO_REASON(this);
     }
+
     return IPC_OK();
   }
 
@@ -1327,9 +1427,20 @@ private:
   Recv__delete__(const JS::AsmJSCacheResult& aResult) override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mState == eOpening);
+    MOZ_ASSERT(mState == eOpening || mState == eFinishing);
+    MOZ_ASSERT_IF(mState == eOpening, aResult != JS::AsmJSCache_Success);
+    MOZ_ASSERT_IF(mState == eFinishing, aResult == JS::AsmJSCache_Success);
 
-    Fail(aResult);
+    if (mState == eOpening) {
+      Fail(aResult);
+    } else {
+      // Match the AddRef in BlockUntilOpen(). The IPDL still holds an
+      // outstanding ref which will keep 'this' alive until ActorDestroy()
+      // is executed.
+      Release();
+
+      mState = eFinished;
+    }
     return IPC_OK();
   }
 
@@ -1392,10 +1503,10 @@ private:
   const OpenMode mOpenMode;
   enum State {
     eInitial, // Just created, waiting to be dispatched to the main thread
-    eBackgroundChildPending, // Waiting for the background child to be created
     eOpening, // Waiting for the parent process to respond
     eOpened, // Parent process opened the entry and sent it back
     eClosing, // Waiting to be dispatched to the main thread to Send__delete__
+    eFinishing, // Waiting for the parent process to close
     eFinished // Terminal state
   };
   State mState;
@@ -1455,28 +1566,31 @@ ChildRunnable::Run()
 
       // Per FileDescriptorHolder::Finish()'s comment, call before
       // releasing the directory lock (which happens in the parent upon receipt
-      // of the Send__delete__ message).
+      // of the Close message).
       FileDescriptorHolder::Finish();
 
       MOZ_ASSERT(mOpened);
       mOpened = false;
 
-      // Match the AddRef in BlockUntilOpen(). The main thread event loop still
-      // holds an outstanding ref which will keep 'this' alive until returning to
-      // the event loop.
-      Release();
+      if (mActorDestroyed) {
+        // Match the AddRef in BlockUntilOpen(). The main thread event loop
+        // still holds an outstanding ref which will keep 'this' alive until
+        // returning to the event loop.
+        Release();
 
-      if (!mActorDestroyed) {
-        Unused << Send__delete__(this, JS::AsmJSCache_Success);
+        mState = eFinished;
+      } else {
+        Unused << SendClose();
+
+        mState = eFinishing;
       }
 
-      mState = eFinished;
       return NS_OK;
     }
 
-    case eBackgroundChildPending:
     case eOpening:
     case eOpened:
+    case eFinishing:
     case eFinished: {
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Shouldn't Run() in this state");
     }

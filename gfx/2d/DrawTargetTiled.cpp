@@ -111,7 +111,7 @@ TILED_COMMAND(Flush)
 TILED_COMMAND4(DrawFilter, FilterNode*, const Rect&, const Point&, const DrawOptions&)
 TILED_COMMAND1(ClearRect, const Rect&)
 TILED_COMMAND4(MaskSurface, const Pattern&, SourceSurface*, Point, const DrawOptions&)
-TILED_COMMAND5(FillGlyphs, ScaledFont*, const GlyphBuffer&, const Pattern&, const DrawOptions&, const GlyphRenderingOptions*)
+TILED_COMMAND4(FillGlyphs, ScaledFont*, const GlyphBuffer&, const Pattern&, const DrawOptions&)
 TILED_COMMAND3(Mask, const Pattern&, const Pattern&, const DrawOptions&)
 
 void

@@ -385,8 +385,7 @@ void
 DrawTargetWrapAndRecord::FillGlyphs(ScaledFont *aFont,
                                 const GlyphBuffer &aBuffer,
                                 const Pattern &aPattern,
-                                const DrawOptions &aOptions,
-                                const GlyphRenderingOptions *aRenderingOptions)
+                                const DrawOptions &aOptions)
 {
   EnsurePatternDependenciesStored(aPattern);
 
@@ -427,7 +426,7 @@ DrawTargetWrapAndRecord::FillGlyphs(ScaledFont *aFont,
   }
 
   mRecorder->RecordEvent(RecordedFillGlyphs(this, aFont, aPattern, aOptions, aBuffer.mGlyphs, aBuffer.mNumGlyphs));
-  mFinalDT->FillGlyphs(aFont, aBuffer, *AdjustedPattern(aPattern), aOptions, aRenderingOptions);
+  mFinalDT->FillGlyphs(aFont, aBuffer, *AdjustedPattern(aPattern), aOptions);
 }
 
 void

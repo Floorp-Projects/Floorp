@@ -31,7 +31,7 @@
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "mozilla/Telemetry.h"
 #include "nsAutoPtr.h"
-#include "nsDebug.h"                    // for NS_RUNTIMEABORT
+#include "nsDebug.h"                    // for NS_WARNING
 #include "nsIObserver.h"                // for nsIObserver
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl

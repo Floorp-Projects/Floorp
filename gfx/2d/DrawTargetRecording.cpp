@@ -324,8 +324,7 @@ void
 DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
                                 const GlyphBuffer &aBuffer,
                                 const Pattern &aPattern,
-                                const DrawOptions &aOptions,
-                                const GlyphRenderingOptions *aRenderingOptions)
+                                const DrawOptions &aOptions)
 {
   EnsurePatternDependenciesStored(aPattern);
 
