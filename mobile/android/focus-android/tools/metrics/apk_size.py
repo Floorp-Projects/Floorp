@@ -7,7 +7,7 @@
 from os import path, listdir, stat
 from sys import exit
 
-SIZE_LIMIT = 4500000
+SIZE_LIMIT = 5242880
 PATH = path.join(path.dirname(path.abspath(__file__)), '../../app/build/outputs/apk/')
 
 files = []
