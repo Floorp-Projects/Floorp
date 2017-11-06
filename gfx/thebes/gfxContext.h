@@ -282,13 +282,6 @@ public:
     void SetPattern(gfxPattern *pattern);
 
     /**
-     * Set the color that text drawn on top of transparent pixels should be
-     * anti-aliased into.
-     */
-    void SetFontSmoothingBackgroundColor(const mozilla::gfx::Color& aColor);
-    mozilla::gfx::Color GetFontSmoothingBackgroundColor();
-
-    /**
      * Get the source pattern (solid color, normal pattern, surface, etc)
      */
     already_AddRefed<gfxPattern> GetPattern();

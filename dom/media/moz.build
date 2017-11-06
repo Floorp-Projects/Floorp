@@ -121,7 +121,6 @@ EXPORTS += [
     'MediaMetadataManager.h',
     'MediaMIMETypes.h',
     'MediaPrefs.h',
-    'MediaPromiseDefs.h',
     'MediaQueue.h',
     'MediaRecorder.h',
     'MediaResource.h',

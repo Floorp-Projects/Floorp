@@ -71,7 +71,7 @@ const MERGE_TESTCASES = [
     },
   },
   {
-    description: "Merge a subset",
+    description: "Loose merge a subset",
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
@@ -89,6 +89,29 @@ const MERGE_TESTCASES = [
       "tel": "+16509030800",
       country: "US",
     },
+    noNeedToUpdate: true,
+  },
+  {
+    description: "Strict merge a subset without empty string",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "+16509030800",
+      country: "US",
+    },
+    addressToMerge: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "+16509030800",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "+16509030800",
+      country: "US",
+    },
+    strict: true,
+    noNeedToUpdate: true,
   },
   {
     description: "Merge an address with partial overlaps",
@@ -444,16 +467,27 @@ MERGE_TESTCASES.forEach((testcase) => {
     profileStorage.addresses.pullSyncChanges();
     do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
-    Assert.ok(profileStorage.addresses.mergeIfPossible(guid, testcase.addressToMerge));
-    await onMerged;
+    Assert.ok(profileStorage.addresses.mergeIfPossible(guid,
+                                                       testcase.addressToMerge,
+                                                       testcase.strict));
+    if (!testcase.noNeedToUpdate) {
+      await onMerged;
+    }
 
     addresses = profileStorage.addresses.getAll();
     Assert.equal(addresses.length, 1);
-    Assert.notEqual(addresses[0].timeLastModified, timeLastModified);
     do_check_record_matches(addresses[0], testcase.expectedAddress);
+    if (testcase.noNeedToUpdate) {
+      Assert.equal(addresses[0].timeLastModified, timeLastModified);
 
-    // Record merging should bump the change counter.
-    do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 2);
+      // No need to bump the change counter if the data is unchanged.
+      do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
+    } else {
+      Assert.notEqual(addresses[0].timeLastModified, timeLastModified);
+
+      // Record merging should bump the change counter.
+      do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 2);
+    }
   });
 });
 
@@ -492,6 +526,11 @@ add_task(async function test_merge_unable_merge() {
   // Unable to merge because no overlap
   do_check_eq(profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_4), false);
 
+  // Unable to strict merge because subset with empty string
+  let subset = Object.assign({}, TEST_ADDRESS_1);
+  subset.organization = "";
+  do_check_eq(profileStorage.addresses.mergeIfPossible(guid, subset, true), false);
+
   // Shouldn't bump the change counter
   do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 });
@@ -506,4 +545,14 @@ add_task(async function test_mergeToStorage() {
   do_check_eq(profileStorage.addresses.mergeToStorage(anotherAddress).length, 2);
   do_check_eq(profileStorage.addresses.getAll()[1].email, anotherAddress.email);
   do_check_eq(profileStorage.addresses.getAll()[2].email, anotherAddress.email);
+});
+
+add_task(async function test_mergeToStorage_strict() {
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+  // Try to merge a subset with empty string
+  let anotherAddress = profileStorage.addresses._clone(TEST_ADDRESS_1);
+  anotherAddress.email = "";
+  do_check_eq(profileStorage.addresses.mergeToStorage(anotherAddress, true).length, 0);
+  do_check_eq(profileStorage.addresses.getAll()[0].email, TEST_ADDRESS_1.email);
 });

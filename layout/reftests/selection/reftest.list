@@ -34,7 +34,7 @@ fuzzy-if(skiaContent,1,1200) == addrange-2.html addrange-ref.html
 == splitText-normalize.html splitText-normalize-ref.html
 == modify-range.html modify-range-ref.html
 == dom-mutations.html dom-mutations-ref.html
-fuzzy-if(OSX==1010,9,1) fuzzy-if(OSX&&skiaContent,6,1) fuzzy-if(skiaContent&&!OSX,1,2138) == trailing-space-1.html trailing-space-1-ref.html
+fuzzy-if(OSX==1010,9,1) fuzzy-if(OSX&&skiaContent,6,1) fuzzy-if(skiaContent&&!OSX,1,2138) fails-if(webrender) == trailing-space-1.html trailing-space-1-ref.html # Bug 1414125
 != invalidation-1-ref.html invalidation-2-ref.html
 == invalidation-1a.html invalidation-1-ref.html
 == invalidation-1b.html invalidation-1-ref.html
@@ -48,3 +48,6 @@ fuzzy-if(OSX==1010,9,1) fuzzy-if(OSX&&skiaContent,6,1) fuzzy-if(skiaContent&&!OS
 == invalidation-2d.html invalidation-2-ref.html
 == invalidation-2e.html invalidation-2-ref.html
 == invalidation-2f.html invalidation-2-ref.html
+fuzzy(7,2) fuzzy-if(OSX,1,1) fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&isDebugBuild&&!browserIsRemote) fails-if(Android) needs-focus == rtl-selection-with-decoration.html rtl-selection-with-decoration-ref.html
+fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&isDebugBuild&&!browserIsRemote) fails-if(Android) needs-focus == semitransparent-decoration-line.html semitransparent-decoration-line-ref.html
+fuzzy-if(OSX,1,6) fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&isDebugBuild&&!browserIsRemote) fails-if(Android) needs-focus == writing-mode.html writing-mode-ref.html

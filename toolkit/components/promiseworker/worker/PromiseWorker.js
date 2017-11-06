@@ -169,14 +169,6 @@ AbstractWorker.prototype = {
         stack: exn.moduleStack
       };
       this.postMessage({fail: error, id, durationMs});
-    } else if (exn == StopIteration) {
-      // StopIteration is a well-known singleton, and requires a
-      // slightly different treatment.
-      this.log("Sending back StopIteration, id is", id);
-      let error = {
-        exn: "StopIteration"
-      };
-      this.postMessage({fail: error, id, durationMs});
     } else if ("toMsg" in exn) {
       // Extension mechanism for exception [de]serialization. We
       // assume that any exception with a method `toMsg()` knows how

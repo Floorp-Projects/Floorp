@@ -82,7 +82,6 @@
 #include "vm/SavedStacks.h"
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
-#include "vm/StopIterationObject.h"
 #include "vm/String.h"
 #include "vm/StringBuffer.h"
 #include "vm/Symbol.h"
@@ -7120,19 +7119,6 @@ JS_PUBLIC_API(JSErrorNotes::iterator)
 JSErrorNotes::end()
 {
     return iterator(notes_.end());
-}
-
-JS_PUBLIC_API(bool)
-JS_ThrowStopIteration(JSContext* cx)
-{
-    AssertHeapIsIdle();
-    return ThrowStopIteration(cx);
-}
-
-JS_PUBLIC_API(bool)
-JS_IsStopIteration(const Value& v)
-{
-    return v.isObject() && v.toObject().is<StopIterationObject>();
 }
 
 extern MOZ_NEVER_INLINE JS_PUBLIC_API(void)

@@ -204,9 +204,6 @@ SuppressDeletedElement(JSContext* cx, HandleObject obj, uint32_t index);
 extern bool
 IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval);
 
-extern bool
-ThrowStopIteration(JSContext* cx);
-
 /*
  * Create an object of the form { value: VALUE, done: DONE }.
  * ES 2017 draft 7.4.7.
@@ -216,9 +213,6 @@ CreateIterResultObject(JSContext* cx, HandleValue value, bool done);
 
 bool
 IsPropertyIterator(HandleValue v);
-
-extern JSObject*
-InitStopIterationClass(JSContext* cx, HandleObject obj);
 
 enum class IteratorKind { Sync, Async };
 

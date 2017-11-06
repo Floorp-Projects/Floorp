@@ -3760,12 +3760,28 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, GeckoStyleContext* aContext,
            SETVAL_ENUMERATED | SETVAL_UNSET_INHERIT,
            aParentFont->mMathDisplay, NS_MATHML_DISPLAYSTYLE_INLINE);
 
-  // font-smoothing: enum, inherit, initial
+  // -moz-osx-font-smoothing: enum, inherit, initial
   SetValue(*aRuleData->ValueForOsxFontSmoothing(),
            aFont->mFont.smoothing, aConditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INHERIT,
            aParentFont->mFont.smoothing,
            defaultVariableFont->smoothing);
+
+  // -moz-font-smoothing-background-color: color, inherit, initial
+  const nsCSSValue* fsbColorValue =
+    aRuleData->ValueForFontSmoothingBackgroundColor();
+  if (eCSSUnit_Initial == fsbColorValue->GetUnit()) {
+    aFont->mFont.fontSmoothingBackgroundColor = NS_RGBA(0, 0, 0, 0);
+  } else if (eCSSUnit_Inherit == fsbColorValue->GetUnit() ||
+             eCSSUnit_Unset == fsbColorValue->GetUnit()) {
+    aConditions.SetUncacheable();
+    aFont->mFont.fontSmoothingBackgroundColor =
+      aParentFont->mFont.fontSmoothingBackgroundColor;
+  } else {
+    SetColor(*fsbColorValue, aParentFont->mFont.fontSmoothingBackgroundColor,
+             aPresContext, aContext, aFont->mFont.fontSmoothingBackgroundColor,
+             aConditions);
+  }
 
   // font-style: enum, inherit, initial, -moz-system-font
   if (aFont->mMathVariant != NS_MATHML_MATHVARIANT_NONE) {
@@ -5325,18 +5341,6 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
                                  StyleComplexColor::Auto(),
                                  mPresContext,
                                  ui->mCaretColor, conditions);
-
-  // -moz-font-smoothing-background-color:
-  const nsCSSValue* fsbColorValue =
-    aRuleData->ValueForFontSmoothingBackgroundColor();
-  if (eCSSUnit_Initial == fsbColorValue->GetUnit() ||
-      eCSSUnit_Unset == fsbColorValue->GetUnit()) {
-    ui->mFontSmoothingBackgroundColor = NS_RGBA(0, 0, 0, 0);
-  } else {
-    SetColor(*fsbColorValue, parentUI->mFontSmoothingBackgroundColor,
-             mPresContext, aContext, ui->mFontSmoothingBackgroundColor,
-             conditions);
-  }
 
   COMPUTE_END_INHERITED(UserInterface, ui)
 }

@@ -962,14 +962,16 @@ H264::HasSPS(const mozilla::MediaByteBuffer* aExtraData)
 /* static */ uint8_t
 H264::NumSPS(const mozilla::MediaByteBuffer* aExtraData)
 {
-  if (!aExtraData) {
+  if (!aExtraData || aExtraData->IsEmpty()) {
     return 0;
   }
 
   BufferReader reader(aExtraData);
-  const uint8_t* ptr = reader.Read(5);
+  if (!reader.Read(5)) {
+    return 0;
+  }
   auto res = reader.ReadU8();
-  if (!ptr || res.isErr()) {
+  if (res.isErr()) {
     return 0;
   }
   return res.unwrap() & 0x1f;

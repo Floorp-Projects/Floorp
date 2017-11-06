@@ -1507,24 +1507,14 @@ public:
     return mFontSizeInflationDisabledInMasterProcess;
   }
 
-  /**
-   * Determine if font size inflation is enabled. This value is cached until
-   * it becomes dirty.
-   *
-   * @returns true, if font size inflation is enabled; false otherwise.
-   */
-  bool FontSizeInflationEnabled();
+  bool FontSizeInflationEnabled() const {
+    return mFontSizeInflationEnabled;
+  }
 
   /**
-   * Notify the pres shell that an event occurred making the current value of
-   * mFontSizeInflationEnabled invalid. This will schedule a recomputation of
-   * whether font size inflation is enabled on the next call to
-   * FontSizeInflationEnabled().
+   * Recomputes whether font-size inflation is enabled.
    */
-  void NotifyFontSizeInflationEnabledIsDirty()
-  {
-    mFontSizeInflationEnabledIsDirty = true;
-  }
+  void RecomputeFontSizeInflationEnabled();
 
   /**
    * Return true if the most recent interruptible reflow was interrupted.
@@ -1590,22 +1580,10 @@ protected:
   void DoObserveLayoutFlushes();
 
   /**
-   * Do computations necessary to determine if font size inflation is enabled.
-   * This value is cached after computation, as the computation is somewhat
-   * expensive.
-   */
-  void RecomputeFontSizeInflationEnabled();
-
-  /**
-   * Does the actual work of figuring out the current state of font size inflation.
+   * Does the actual work of figuring out the current state of font size
+   * inflation.
    */
   bool DetermineFontSizeInflationState();
-
-  /**
-   * Apply the system font scale from the corresponding pref to the PresContext,
-   * taking into account the current state of font size inflation.
-   */
-  void HandleSystemFontScale();
 
   void RecordAlloc(void* aPtr) {
 #ifdef DEBUG

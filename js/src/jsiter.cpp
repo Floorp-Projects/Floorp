@@ -31,7 +31,6 @@
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
-#include "vm/StopIterationObject.h"
 #include "vm/TypedArrayObject.h"
 
 #include "jsscriptinlines.h"
@@ -537,8 +536,6 @@ js::GetPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
                     props);
 }
 
-static bool property_iterator_next(JSContext* cx, unsigned argc, Value* vp);
-
 static inline PropertyIteratorObject*
 NewPropertyIteratorObject(JSContext* cx, unsigned flags)
 {
@@ -569,26 +566,7 @@ NewPropertyIteratorObject(JSContext* cx, unsigned flags)
         return res;
     }
 
-    Rooted<PropertyIteratorObject*> res(cx, NewBuiltinClassInstance<PropertyIteratorObject>(cx));
-    if (!res)
-        return nullptr;
-
-    if (flags == 0) {
-        // Redefine next as an own property. This ensure that deleting the
-        // next method on the prototype doesn't break cross-global for .. in.
-        // We don't have to do this for JSITER_ENUMERATE because that object always
-        // takes an optimized path.
-        RootedFunction next(cx, NewNativeFunction(cx, property_iterator_next, 0,
-                                                  HandlePropertyName(cx->names().next)));
-        if (!next)
-            return nullptr;
-
-        RootedValue value(cx, ObjectValue(*next));
-        if (!DefineDataProperty(cx, res, cx->names().next, value))
-            return nullptr;
-    }
-
-    return res;
+    return NewBuiltinClassInstance<PropertyIteratorObject>(cx);
 }
 
 NativeIterator*
@@ -1055,28 +1033,13 @@ JSCompartment::getOrCreateIterResultTemplateObject(JSContext* cx)
     return iterResultTemplate_;
 }
 
-bool
-js::ThrowStopIteration(JSContext* cx)
-{
-    MOZ_ASSERT(!JS_IsExceptionPending(cx));
-
-    // StopIteration isn't a constructor, but it's stored in GlobalObject
-    // as one, out of laziness. Hence the GetBuiltinConstructor call here.
-    RootedObject ctor(cx);
-    if (GetBuiltinConstructor(cx, JSProto_StopIteration, &ctor))
-        cx->setPendingException(ObjectValue(*ctor));
-    return false;
-}
-
 /*** Iterator objects ****************************************************************************/
 
 MOZ_ALWAYS_INLINE bool
-NativeIteratorNext(JSContext* cx, NativeIterator* ni, MutableHandleValue rval, bool* done)
+NativeIteratorNext(JSContext* cx, NativeIterator* ni, MutableHandleValue rval)
 {
-    *done = false;
-
     if (ni->props_cursor >= ni->props_end) {
-        *done = true;
+        rval.setMagic(JS_NO_ITER_VALUE);
         return true;
     }
 
@@ -1103,36 +1066,6 @@ bool
 js::IsPropertyIterator(HandleValue v)
 {
     return v.isObject() && v.toObject().is<PropertyIteratorObject>();
-}
-
-MOZ_ALWAYS_INLINE bool
-property_iterator_next_impl(JSContext* cx, const CallArgs& args)
-{
-    MOZ_ASSERT(IsPropertyIterator(args.thisv()));
-
-    RootedObject thisObj(cx, &args.thisv().toObject());
-
-    NativeIterator* ni = thisObj.as<PropertyIteratorObject>()->getNativeIterator();
-    RootedValue value(cx);
-    bool done;
-    if (!NativeIteratorNext(cx, ni, &value, &done))
-         return false;
-
-    // Use old iterator protocol for compatibility reasons.
-    if (done) {
-        ThrowStopIteration(cx);
-        return false;
-    }
-
-    args.rval().set(value);
-    return true;
-}
-
-static bool
-property_iterator_next(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsPropertyIterator, property_iterator_next_impl>(cx, args);
 }
 
 size_t
@@ -1489,71 +1422,31 @@ bool
 js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
 {
     // Fast path for native iterators.
-    if (iterobj->is<PropertyIteratorObject>()) {
+    if (MOZ_LIKELY(iterobj->is<PropertyIteratorObject>())) {
         NativeIterator* ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
-        bool done;
-        if (!NativeIteratorNext(cx, ni, rval, &done))
-            return false;
-
-        if (done)
-            rval.setMagic(JS_NO_ITER_VALUE);
-        return true;
+        return NativeIteratorNext(cx, ni, rval);
     }
 
-    // We're reentering below and can call anything.
-    if (!CheckRecursionLimit(cx))
+    if (JS_IsDeadWrapper(iterobj)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
         return false;
-
-    // Call the iterator object's .next method.
-    if (!GetProperty(cx, iterobj, iterobj, cx->names().next, rval))
-        return false;
-
-    // Call the .next method.  Fall through to the error-handling cases in the
-    // unlikely event that either one of the fallible operations performed
-    // during the call process fails.
-    FixedInvokeArgs<0> args(cx);
-    RootedValue iterval(cx, ObjectValue(*iterobj));
-    if (!js::Call(cx, rval, iterval, args, rval)) {
-        // Check for StopIteration.
-        if (!cx->isExceptionPending())
-            return false;
-        RootedValue exception(cx);
-        if (!cx->getPendingException(&exception))
-            return false;
-        if (!JS_IsStopIteration(exception))
-            return false;
-
-        cx->clearPendingException();
-        rval.setMagic(JS_NO_ITER_VALUE);
     }
 
-    return true;
+    MOZ_ASSERT(IsWrapper(iterobj));
+
+    RootedObject obj(cx, CheckedUnwrap(iterobj));
+    if (!obj)
+        return false;
+
+    MOZ_RELEASE_ASSERT(obj->is<PropertyIteratorObject>());
+    {
+        AutoCompartment ac(cx, obj);
+        NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
+        if (!NativeIteratorNext(cx, ni, rval))
+            return false;
+    }
+    return cx->compartment()->wrap(cx, rval);
 }
-
-static bool
-stopiter_hasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v, bool* bp)
-{
-    *bp = JS_IsStopIteration(v);
-    return true;
-}
-
-static const ClassOps StopIterationObjectClassOps = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    nullptr, /* finalize */
-    nullptr, /* call */
-    stopiter_hasInstance
-};
-
-const Class StopIterationObject::class_ = {
-    "StopIteration",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration),
-    &StopIterationObjectClassOps
-};
 
 static const JSFunctionSpec iterator_proto_methods[] = {
     JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0),
@@ -1620,24 +1513,4 @@ GlobalObject::initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> globa
 
     global->setReservedSlot(STRING_ITERATOR_PROTO, ObjectValue(*proto));
     return true;
-}
-
-JSObject*
-js::InitStopIterationClass(JSContext* cx, HandleObject obj)
-{
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
-    if (!global->getPrototype(JSProto_StopIteration).isObject()) {
-        RootedObject proto(cx, GlobalObject::createBlankPrototype(cx, global,
-                                                                  &StopIterationObject::class_));
-        if (!proto || !FreezeObject(cx, proto))
-            return nullptr;
-
-        // This should use a non-JSProtoKey'd slot, but this is easier for now.
-        if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_StopIteration, proto, proto))
-            return nullptr;
-
-        global->setConstructor(JSProto_StopIteration, ObjectValue(*proto));
-    }
-
-    return &global->getPrototype(JSProto_StopIteration).toObject();
 }

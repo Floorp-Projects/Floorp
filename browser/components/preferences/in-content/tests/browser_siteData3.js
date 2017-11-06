@@ -106,3 +106,121 @@ add_task(async function() {
   mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
+
+// Test sorting
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+  mockSiteDataManager.register(SiteDataManager);
+  mockSiteDataManager.fakeSites = [
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      persisted: true
+    },
+    {
+      usage: 1024 * 2,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://books.foo.com"),
+      persisted: false
+    },
+    {
+      usage: 1024 * 3,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
+      persisted: true
+    },
+  ];
+
+  let updatePromise = promiseSiteDataManagerSitesUpdated();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatePromise;
+  await openSiteDataSettingsDialog();
+
+  let dialog = content.gSubDialog._topDialog;
+  let dialogFrame = dialog._frame;
+  let frameDoc = dialogFrame.contentDocument;
+  let hostCol = frameDoc.getElementById("hostCol");
+  let usageCol = frameDoc.getElementById("usageCol");
+  let statusCol = frameDoc.getElementById("statusCol");
+  let sitesList = frameDoc.getElementById("sitesList");
+
+  // Test default sorting
+  assertSortByUsage("descending");
+
+  // Test sorting on the usage column
+  usageCol.click();
+  assertSortByUsage("ascending");
+  usageCol.click();
+  assertSortByUsage("descending");
+
+  // Test sorting on the host column
+  hostCol.click();
+  assertSortByHost("ascending");
+  hostCol.click();
+  assertSortByHost("descending");
+
+  // Test sorting on the permission status column
+  statusCol.click();
+  assertSortByStatus("ascending");
+  statusCol.click();
+  assertSortByStatus("descending");
+
+  mockSiteDataManager.unregister();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  function assertSortByHost(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let result = aHost.localeCompare(bHost);
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by host");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by host");
+      }
+    }
+  }
+
+  function assertSortByStatus(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
+      let result = 0;
+      if (a.persisted && !b.persisted) {
+        result = 1;
+      } else if (!a.persisted && b.persisted) {
+        result = -1;
+      }
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by permission status");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by permission status");
+      }
+    }
+  }
+
+  function assertSortByUsage(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
+      let result = a.usage - b.usage;
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by usage");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by usage");
+      }
+    }
+  }
+
+  function findSiteByHost(host) {
+    return mockSiteDataManager.fakeSites.find(site => site.principal.URI.host == host);
+  }
+});

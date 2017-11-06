@@ -63,7 +63,8 @@ bool nsFont::Equals(const nsFont& aOther) const
       (variantWidth == aOther.variantWidth) &&
       (alternateValues == aOther.alternateValues) &&
       (featureValueLookup == aOther.featureValueLookup) &&
-      (smoothing == aOther.smoothing)) {
+      (smoothing == aOther.smoothing) &&
+      (fontSmoothingBackgroundColor == aOther.fontSmoothingBackgroundColor)) {
     return true;
   }
   return false;
@@ -274,6 +275,8 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle,
   if (smoothing == NS_FONT_SMOOTHING_GRAYSCALE) {
     aStyle->useGrayscaleAntialiasing = true;
   }
+
+  aStyle->fontSmoothingBackgroundColor = fontSmoothingBackgroundColor;
 }
 
 void nsFont::AddFontVariationsToStyle(gfxFontStyle *aStyle) const

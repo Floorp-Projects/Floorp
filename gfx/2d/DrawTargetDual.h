@@ -104,8 +104,7 @@ public:
   virtual void Fill(const Path *aPath, const Pattern &aPattern, const DrawOptions &aOptions) override;
 
   virtual void FillGlyphs(ScaledFont *aScaledFont, const GlyphBuffer &aBuffer,
-                          const Pattern &aPattern, const DrawOptions &aOptions,
-                          const GlyphRenderingOptions *aRenderingOptions) override;
+                          const Pattern &aPattern, const DrawOptions &aOptions) override;
   
   virtual void Mask(const Pattern &aSource, const Pattern &aMask, const DrawOptions &aOptions) override;
 

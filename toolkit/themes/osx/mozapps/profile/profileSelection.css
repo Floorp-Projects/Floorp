@@ -15,7 +15,7 @@
   list-style-image: url("chrome://mozapps/skin/profile/profileicon-selected.png");
 }
 
-#profiles > listitem > listcell > image {
+#profiles > listitem image {
   width: 16px;
   height: 16px;
 }

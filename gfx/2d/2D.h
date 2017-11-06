@@ -876,24 +876,6 @@ public:
   virtual ~NativeFontResource() {}
 };
 
-/** This class is designed to allow passing additional glyph rendering
- * parameters to the glyph drawing functions. This is an empty wrapper class
- * merely used to allow holding on to and passing around platform specific
- * parameters. This is because different platforms have unique rendering
- * parameters.
- */
-class GlyphRenderingOptions : public RefCounted<GlyphRenderingOptions>
-{
-public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptions)
-  virtual ~GlyphRenderingOptions() {}
-
-  virtual FontType GetType() const = 0;
-
-protected:
-  GlyphRenderingOptions() {}
-};
-
 class DrawTargetCapture;
 
 /** This is the main class used for all the drawing. It is created through the
@@ -1106,8 +1088,7 @@ public:
   virtual void FillGlyphs(ScaledFont *aFont,
                           const GlyphBuffer &aBuffer,
                           const Pattern &aPattern,
-                          const DrawOptions &aOptions = DrawOptions(),
-                          const GlyphRenderingOptions *aRenderingOptions = nullptr) = 0;
+                          const DrawOptions &aOptions = DrawOptions()) = 0;
 
   /**
    * Stroke a series of glyphs on the draw target with a certain source pattern.
@@ -1116,8 +1097,7 @@ public:
                             const GlyphBuffer& aBuffer,
                             const Pattern& aPattern,
                             const StrokeOptions& aStrokeOptions = StrokeOptions(),
-                            const DrawOptions& aOptions = DrawOptions(),
-                            const GlyphRenderingOptions* aRenderingOptions = nullptr);
+                            const DrawOptions& aOptions = DrawOptions());
 
   /**
    * This takes a source pattern and a mask, and composites the source pattern
@@ -1564,7 +1544,7 @@ public:
 #ifdef XP_DARWIN
   static already_AddRefed<ScaledFont>
     CreateScaledFontForMacFont(CGFontRef aCGFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-                               bool aUseFontSmoothing = true);
+                               const Color& aFontSmoothingBackgroundColor, bool aUseFontSmoothing = true);
 #endif
 
   /**
@@ -1682,11 +1662,6 @@ public:
 
 #ifdef USE_SKIA
   static already_AddRefed<DrawTarget> CreateDrawTargetWithSkCanvas(SkCanvas* aCanvas);
-#endif
-
-#ifdef XP_DARWIN
-  static already_AddRefed<GlyphRenderingOptions>
-    CreateCGGlyphRenderingOptions(const Color &aFontSmoothingBackgroundColor);
 #endif
 
 #ifdef MOZ_ENABLE_FREETYPE

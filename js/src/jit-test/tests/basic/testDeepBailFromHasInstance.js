@@ -1,4 +1,4 @@
-var arr = [StopIteration, StopIteration, StopIteration, StopIteration, {}];
+var arr = [Math, Math, Math, Math, {}];
 var obj = {};
 var x;
 var result = 'no error';
