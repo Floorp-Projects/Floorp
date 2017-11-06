@@ -12,7 +12,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/IPCBlobInputStream.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
-#include "mozilla/SlicedInputStream.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
 #include "nsID.h"
@@ -22,6 +21,7 @@
 #include "nsNetCID.h"
 #include "nsStringStream.h"
 #include "nsXULAppAPI.h"
+#include "SlicedInputStream.h"
 
 using namespace mozilla::dom;
 
@@ -97,7 +97,7 @@ InputStreamHelper::DeserializeInputStream(const InputStreamParams& aParams,
       break;
 
     case InputStreamParams::TSlicedInputStreamParams:
-      serializable = new mozilla::SlicedInputStream();
+      serializable = new SlicedInputStream();
       break;
 
     default:
