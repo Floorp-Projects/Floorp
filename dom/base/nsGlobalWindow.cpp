@@ -288,7 +288,8 @@ using mozilla::dom::cache::CacheStorage;
 
 static LazyLogModule gDOMLeakPRLog("DOMLeak");
 
-nsGlobalWindow::WindowByIdTable *nsGlobalWindow::sWindowsById = nullptr;
+nsGlobalWindowInner::InnerWindowByIdTable *nsGlobalWindowInner::sInnerWindowsById = nullptr;
+nsGlobalWindowOuter::OuterWindowByIdTable *nsGlobalWindowOuter::sOuterWindowsById = nullptr;
 bool nsGlobalWindow::sIdleObserversAPIFuzzTimeDisabled = false;
 
 static int32_t              gRefCnt                    = 0;
@@ -1672,14 +1673,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
   MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug,
           ("DOMWINDOW %p created outer=%p", this, aOuterWindow));
-
-  NS_ASSERTION(sWindowsById, "Windows hash table must be created!");
-  NS_ASSERTION(!sWindowsById->Get(mWindowID),
-               "This window shouldn't be in the hash table yet!");
-  // We seem to see crashes in release builds because of null |sWindowsById|.
-  if (sWindowsById) {
-    sWindowsById->Put(mWindowID, this);
-  }
 }
 
 #ifdef DEBUG
@@ -1701,7 +1694,10 @@ nsGlobalWindow::Init()
 
   NS_ASSERTION(gDOMLeakPRLog, "gDOMLeakPRLog should have been initialized!");
 
-  sWindowsById = new WindowByIdTable();
+  nsGlobalWindowOuter::sOuterWindowsById =
+    new nsGlobalWindowOuter::OuterWindowByIdTable();
+  nsGlobalWindowInner::sInnerWindowsById =
+    new nsGlobalWindowInner::InnerWindowByIdTable();
 }
 
 nsGlobalWindow::~nsGlobalWindow()
@@ -1724,12 +1720,18 @@ nsGlobalWindow::~nsGlobalWindow()
 
   DisconnectEventTargetObjects();
 
-  // We have to check if sWindowsById isn't null because ::Shutdown might have
-  // been called.
-  if (sWindowsById) {
-    NS_ASSERTION(sWindowsById->Get(mWindowID),
+  if (IsOuterWindow()) {
+    if (nsGlobalWindowOuter::sOuterWindowsById) {
+      MOZ_ASSERT(nsGlobalWindowOuter::sOuterWindowsById->Get(mWindowID),
                  "This window should be in the hash table");
-    sWindowsById->Remove(mWindowID);
+      nsGlobalWindowOuter::sOuterWindowsById->Remove(mWindowID);
+    }
+  } else {
+    if (nsGlobalWindowInner::sInnerWindowsById) {
+      MOZ_ASSERT(nsGlobalWindowInner::sInnerWindowsById->Get(mWindowID),
+                 "This window should be in the hash table");
+      nsGlobalWindowInner::sInnerWindowsById->Remove(mWindowID);
+    }
   }
 
   --gRefCnt;
@@ -1858,8 +1860,10 @@ nsGlobalWindow::ShutDown()
   }
   gDumpFile = nullptr;
 
-  delete sWindowsById;
-  sWindowsById = nullptr;
+  delete nsGlobalWindowInner::sInnerWindowsById;
+  nsGlobalWindowInner::sInnerWindowsById = nullptr;
+  delete nsGlobalWindowOuter::sOuterWindowsById;
+  nsGlobalWindowOuter::sOuterWindowsById = nullptr;
 }
 
 // static
@@ -2064,7 +2068,7 @@ nsGlobalWindow::FreeInnerObjects()
   // re-create.
   NotifyDOMWindowDestroyed(this);
   if (auto* reporter = nsWindowMemoryReporter::Get()) {
-    reporter->ObserveDOMWindowDetached(this);
+    reporter->ObserveDOMWindowDetached(AssertInner());
   }
 
   mInnerObjectsFreed = true;
@@ -15072,11 +15076,48 @@ nsGlobalWindow::GetIntlUtils(ErrorResult& aError)
 
 nsGlobalWindowOuter::nsGlobalWindowOuter()
   : nsGlobalWindow(nullptr)
-{}
+{
+  // Add ourselves to the outer windows list.
+  MOZ_ASSERT(sOuterWindowsById, "Outer Windows hash table must be created!");
+
+  // |this| is an outer window, add to the outer windows list.
+  MOZ_ASSERT(!sOuterWindowsById->Get(mWindowID),
+             "This window shouldn't be in the hash table yet!");
+  // We seem to see crashes in release builds because of null |sOuterWindowsById|.
+  if (sOuterWindowsById) {
+    sOuterWindowsById->Put(mWindowID, AssertOuter());
+  }
+}
+
+nsGlobalWindowOuter::~nsGlobalWindowOuter()
+{
+  // NOTE: We remove ourselves from the sOuterWindowsById table in
+  // nsGlobalWindow::~nsGlobalWindow. We can't do it here because we have to
+  // remove ourselves before running some cleanup in that function.
+}
 
 nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow)
   : nsGlobalWindow(aOuterWindow)
-{}
+{
+  // Add ourselves to the inner windows list.
+  MOZ_ASSERT(sInnerWindowsById, "Inner Windows hash table must be created!");
+  MOZ_ASSERT(!sInnerWindowsById->Get(mWindowID),
+             "This window shouldn't be in the hash table yet!");
+  // We seem to see crashes in release builds because of null |sInnerWindowsById|.
+  if (sInnerWindowsById) {
+    sInnerWindowsById->Put(mWindowID, AssertInner());
+    // NOTE: We remove ourselves from this table in
+    // nsGlobalWindow::~nsGlobalWindow. We can't do it here because we have to
+    // remove ourselves before running some cleanup in that function.
+  }
+}
+
+nsGlobalWindowInner::~nsGlobalWindowInner()
+{
+  // NOTE: We remove ourselves from the sInnerWindowsById table in
+  // nsGlobalWindow::~nsGlobalWindow. We can't do it here because we have to
+  // remove ourselves before running some cleanup in that function.
+}
 
 template class nsPIDOMWindow<mozIDOMWindowProxy>;
 template class nsPIDOMWindow<mozIDOMWindow>;

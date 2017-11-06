@@ -275,7 +275,6 @@ class nsGlobalWindow : public mozilla::dom::EventTarget,
 public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
-  typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindow*> WindowByIdTable;
 
   static void
   AssertIsOnMainThread()
@@ -662,12 +661,6 @@ public:
 
   virtual uint32_t GetSerial() override {
     return mSerial;
-  }
-
-  static WindowByIdTable* GetWindowsTable() {
-    AssertIsOnMainThread();
-
-    return sWindowsById;
   }
 
   void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const;
@@ -2020,8 +2013,6 @@ protected:
   friend class DesktopNotification;
   friend class mozilla::dom::TimeoutManager;
   friend class IdleRequestExecutor;
-
-  static WindowByIdTable* sWindowsById;
 };
 
 inline nsISupports*
@@ -2039,6 +2030,8 @@ ToCanonicalSupports(nsGlobalWindow *p)
 class nsGlobalWindowOuter : public nsGlobalWindow
 {
 public:
+  typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindowOuter*> OuterWindowByIdTable;
+
   friend class nsGlobalWindow;
 
   static nsGlobalWindowOuter* Cast(nsPIDOMWindowOuter* aPIWin) {
@@ -2054,27 +2047,38 @@ public:
   }
 
   static nsGlobalWindowOuter*
-  GetOuterWindowWithId(uint64_t aWindowID);
+  GetOuterWindowWithId(uint64_t aWindowID)
   {
     AssertIsOnMainThread();
 
-    if (!sWindowsById) {
+    if (!sOuterWindowsById) {
       return nullptr;
     }
 
-    nsGlobalWindow* outerWindow = sWindowsById->Get(aWindowID);
-    return outerWindow && !outerWindow->IsInnerWindow()
-      ? static_cast<nsGlobalWindowOuter*>(outerWindow)
-      : nullptr;
+    nsGlobalWindowOuter* outerWindow = sOuterWindowsById->Get(aWindowID);
+    MOZ_ASSERT(!outerWindow || outerWindow->IsOuterWindow(),
+               "Inner window in sOuterWindowsById?");
+    return outerWindow;
+  }
+
+  static OuterWindowByIdTable* GetWindowsTable() {
+    AssertIsOnMainThread();
+
+    return sOuterWindowsById;
   }
 
 private:
   nsGlobalWindowOuter();
+  ~nsGlobalWindowOuter();
+
+  static OuterWindowByIdTable* sOuterWindowsById;
 };
 
 class nsGlobalWindowInner : public nsGlobalWindow
 {
 public:
+  typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindowInner*> InnerWindowByIdTable;
+
   friend class nsGlobalWindow;
 
   static nsGlobalWindowInner* Cast(nsPIDOMWindowInner* aPIWin) {
@@ -2094,18 +2098,28 @@ public:
   {
     AssertIsOnMainThread();
 
-    if (!sWindowsById) {
+    if (!sInnerWindowsById) {
       return nullptr;
     }
 
-    nsGlobalWindow* innerWindow = sWindowsById->Get(aInnerWindowID);
-    return innerWindow && innerWindow->IsInnerWindow()
-      ? static_cast<nsGlobalWindowInner*>(innerWindow)
-      : nullptr;
+    nsGlobalWindowInner* innerWindow =
+      sInnerWindowsById->Get(aInnerWindowID);
+    MOZ_ASSERT(!innerWindow || innerWindow->IsInnerWindow(),
+               "Outer window in sInnerWindowsById?");
+    return innerWindow;
+  }
+
+  static InnerWindowByIdTable* GetWindowsTable() {
+    AssertIsOnMainThread();
+
+    return sInnerWindowsById;
   }
 
 private:
   explicit nsGlobalWindowInner(nsGlobalWindowOuter* aOuter);
+  ~nsGlobalWindowInner();
+
+  static InnerWindowByIdTable* sInnerWindowsById;
 };
 
 inline nsIGlobalObject*
@@ -2172,9 +2186,6 @@ nsGlobalWindow::IsTopLevelWindow()
   nsPIDOMWindowOuter* parentWindow = GetScriptableTop();
   return parentWindow == this->AsOuter();
 }
-
-inline nsGlobalWindowInner*
-nsGlobalWindowInner::GetInnerWindowWithId(uint64_t aInnerWindowID)
 
 inline bool
 nsGlobalWindow::IsPopupSpamWindow()
