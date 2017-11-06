@@ -75,7 +75,7 @@ namespace {
 //          0 means no override 1->4 are 1.0, 1.1, 1.2, 1.3, 4->7 unused
 // bits 3-5 (mask 0x38) specify the tls fallback limit
 //          0 means no override, values 1->4 match prefs
-// bit    6 (mask 0x40) specifies use of SSL_AltServerHelloType on handshake
+// bit    6 (mask 0x40) specifies use of SSL_AltHandshakeType on handshake
 
 enum {
   kTLSProviderFlagMaxVersion10   = 0x01,
@@ -94,7 +94,7 @@ static uint32_t getTLSProviderFlagFallbackLimit(uint32_t flags)
   return (flags & 0x38) >> 3;
 }
 
-static bool getTLSProviderFlagAltServerHello(uint32_t flags)
+static bool getTLSProviderFlagAltHandshake(uint32_t flags)
 {
   return (flags & 0x40);
 }
@@ -2601,13 +2601,13 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     }
   }
 
-  // enabling alternative server hello
-  if (getTLSProviderFlagAltServerHello(infoObject->GetProviderTlsFlags())) {
+  // enabling alternative handshake
+  if (getTLSProviderFlagAltHandshake(infoObject->GetProviderTlsFlags())) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("[%p] nsSSLIOLayerSetOptions: Use AltServerHello\n", fd));
-    if (SECSuccess != SSL_UseAltServerHelloType(fd, PR_TRUE)) {
+            ("[%p] nsSSLIOLayerSetOptions: Use AltHandshake\n", fd));
+    if (SECSuccess != SSL_UseAltHandshakeType(fd, PR_TRUE)) {
           MOZ_LOG(gPIPNSSLog, LogLevel::Error,
-                  ("[%p] nsSSLIOLayerSetOptions: Use AltServerHello failed\n", fd));
+                  ("[%p] nsSSLIOLayerSetOptions: Use AltHandshake failed\n", fd));
           // continue on default path
     }
   }

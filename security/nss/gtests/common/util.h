@@ -10,7 +10,7 @@
 #include <cassert>
 #include <vector>
 
-std::vector<uint8_t> hex_string_to_bytes(std::string s) {
+static inline std::vector<uint8_t> hex_string_to_bytes(std::string s) {
   std::vector<uint8_t> bytes;
   for (size_t i = 0; i < s.length(); i += 2) {
     bytes.push_back(std::stoul(s.substr(i, 2), nullptr, 16));
