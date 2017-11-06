@@ -637,8 +637,8 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
     let engine = this.service.engineManager.get("bookmarks");
     // Determine every item that may be impacted by the requested IDs - eg,
     // this may include children if a requested ID is a folder.
-    // Turn an array of { syncId, syncable } into a map of syncId -> syncable.
-    let repairable = await PlacesSyncUtils.bookmarks.fetchSyncIdsForRepair(request.ids);
+    // Turn an array of { recordId, syncable } into a map of recordId -> syncable.
+    let repairable = await PlacesSyncUtils.bookmarks.fetchRecordIdsForRepair(request.ids);
     if (repairable.length == 0) {
       // server will get upset if we request an empty set, and we can't do
       // anything in that case, so bail now.
@@ -647,7 +647,7 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
 
     // which of these items exist on the server?
     let itemSource = engine.itemSource();
-    itemSource.ids = repairable.map(item => item.syncId);
+    itemSource.ids = repairable.map(item => item.recordId);
     log.trace(`checking the server for items`, itemSource.ids);
     let itemsResponse = await itemSource.get();
     // If the response failed, don't bother trying to parse the output.
@@ -667,7 +667,7 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
     //   children which don't exist on the server. (Note that we assume the
     //   parents *do* exist)
     // Bug 1343101 covers additional issues we might repair in the future.
-    for (let { syncId: id, syncable } of repairable) {
+    for (let { recordId: id, syncable } of repairable) {
       if (requested.has(id)) {
         if (syncable) {
           log.debug(`repair request to upload item '${id}' which exists locally; uploading`);

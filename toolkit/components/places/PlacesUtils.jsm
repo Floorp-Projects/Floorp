@@ -257,10 +257,9 @@ const BOOKMARK_VALIDATORS = Object.freeze({
 // Sync bookmark records can contain additional properties.
 const SYNC_BOOKMARK_VALIDATORS = Object.freeze({
   // Sync uses Places GUIDs for all records except roots.
-  syncId: simpleValidateFunc(v => typeof v == "string" && (
-                                  (PlacesSyncUtils.bookmarks.ROOTS.includes(v) ||
-                                   PlacesUtils.isValidGuid(v)))),
-  parentSyncId: v => SYNC_BOOKMARK_VALIDATORS.syncId(v),
+  recordId: simpleValidateFunc(v => typeof v == "string" && (
+                                (PlacesSyncUtils.bookmarks.ROOTS.includes(v) || PlacesUtils.isValidGuid(v)))),
+  parentRecordId: v => SYNC_BOOKMARK_VALIDATORS.recordId(v),
   // Sync uses kinds instead of types, which distinguish between livemarks,
   // queries, and smart bookmarks.
   kind: simpleValidateFunc(v => typeof v == "string" &&
