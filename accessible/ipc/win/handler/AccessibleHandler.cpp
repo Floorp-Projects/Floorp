@@ -25,6 +25,7 @@
 #include <winreg.h>
 
 #include "AccessibleHypertext.h"
+#include "AccessibleHypertext2.h"
 #include "Accessible2_i.c"
 #include "Accessible2_2_i.c"
 #include "Accessible2_3_i.c"
@@ -209,8 +210,9 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
     return S_OK;
   }
 
-  if (aIid == IID_IAccessibleText || aIid == IID_IAccessibleHypertext) {
-    RefPtr<IAccessibleHypertext> textTearoff(new AccessibleTextTearoff(this));
+  if (aIid == IID_IAccessibleText || aIid == IID_IAccessibleHypertext ||
+      aIid == IID_IAccessibleHypertext2) {
+    RefPtr<IAccessibleHypertext2> textTearoff(new AccessibleTextTearoff(this));
     textTearoff.forget(aOutInterface);
     return S_OK;
   }
