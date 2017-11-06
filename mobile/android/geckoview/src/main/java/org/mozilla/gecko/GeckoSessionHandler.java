@@ -12,10 +12,10 @@ import org.mozilla.gecko.util.GeckoBundle;
 
 import android.util.Log;
 
-/* package */ abstract class GeckoViewHandler<Listener>
+/* package */ abstract class GeckoSessionHandler<Listener>
     implements BundleEventListener {
 
-    private static final String LOGTAG = "GeckoViewHandler";
+    private static final String LOGTAG = "GeckoSessionHandler";
     private static final boolean DEBUG = false;
 
     private Listener mListener;
@@ -24,13 +24,13 @@ import android.util.Log;
     private final String[] mEvents;
 
 
-    GeckoViewHandler(final String module, final GeckoSession session,
-                     final String[] events) {
+    GeckoSessionHandler(final String module, final GeckoSession session,
+                        final String[] events) {
         this(module, session, events, /* alwaysListen */ false);
     }
 
-    GeckoViewHandler(final String module, final GeckoSession session,
-                     final String[] events, final boolean alwaysListen) {
+    GeckoSessionHandler(final String module, final GeckoSession session,
+                        final String[] events, final boolean alwaysListen) {
         mAlwaysListen = alwaysListen;
         mModuleName = module;
         mEvents = events;

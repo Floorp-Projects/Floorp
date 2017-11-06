@@ -86,7 +86,7 @@ public class GeckoView extends LayerView {
         return mSession.getEventDispatcher();
     }
 
-    public GeckoViewSettings getSettings() {
+    public GeckoSessionSettings getSettings() {
         return mSession.getSettings();
     }
 

@@ -7,8 +7,8 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.GeckoSession;
+import org.mozilla.gecko.GeckoSessionSettings;
 import org.mozilla.gecko.GeckoView;
-import org.mozilla.gecko.GeckoViewSettings;
 import org.mozilla.gecko.ScreenManagerHelper;
 
 import com.google.android.gms.cast.CastMediaControlIntent;
@@ -128,9 +128,9 @@ class VirtualPresentation extends CastPresentation {
         view = new GeckoView(getContext());
 
         final GeckoSession session = new GeckoSession();
-        session.getSettings().setString(GeckoViewSettings.CHROME_URI,
+        session.getSettings().setString(GeckoSessionSettings.CHROME_URI,
                                         PRESENTATION_VIEW_URI + "#" + deviceId);
-        session.getSettings().setInt(GeckoViewSettings.SCREEN_ID, screenId);
+        session.getSettings().setInt(GeckoSessionSettings.SCREEN_ID, screenId);
 
         view.setSession(session);
         view.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
