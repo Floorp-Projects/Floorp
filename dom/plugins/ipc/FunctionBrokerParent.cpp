@@ -44,6 +44,15 @@ FunctionBrokerParent::FunctionBrokerParent(FunctionBrokerThread* aThread,
           "FunctionBrokerParent::Bind", this, &FunctionBrokerParent::Bind, Move(aParentEnd)));
 }
 
+FunctionBrokerParent::~FunctionBrokerParent()
+{
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  // Clean up any file permissions that we granted to the child process.
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  RemovePermissionsForProcess(OtherPid());
+#endif
+}
+
 void
 FunctionBrokerParent::Bind(Endpoint<PFunctionBrokerParent>&& aEnd)
 {
@@ -125,6 +134,19 @@ FunctionBrokerParent::RunBrokeredFunction(base::ProcessId aClientId,
   MOZ_ASSERT(hook->FunctionId() == aFunctionId);
   return hook->RunOriginalFunction(aClientId, aInTuple, aOutTuple);
 }
+
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+
+mozilla::SandboxPermissions FunctionBrokerParent::sSandboxPermissions;
+
+// static
+void
+FunctionBrokerParent::RemovePermissionsForProcess(base::ProcessId aClientId)
+{
+  sSandboxPermissions.RemovePermissionsForProcess(aClientId);
+}
+
+#endif // defined(XP_WIN) && defined(MOZ_SANDBOX)
 
 } // namespace plugins
 } // namespace mozilla
