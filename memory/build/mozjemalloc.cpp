@@ -903,6 +903,8 @@ struct arena_bin_t
 
   // Current number of runs in this bin, full or otherwise.
   unsigned long mNumRuns;
+
+  static constexpr long double kRunOverhead = 1.5_percent;
 };
 
 struct arena_t
@@ -2957,7 +2959,7 @@ arena_t::MallocBinHard(arena_bin_t* aBin)
 //   *) bin->mRunSize >= min_run_size
 //   *) bin->mRunSize <= gMaxLargeClass
 //   *) bin->mRunSize <= gMaxBinClass
-//   *) run header overhead <= RUN_MAX_OVRHD (or header overhead relaxed).
+//   *) run header overhead <= kRunOverhead
 //
 // bin->mRunNumRegions, bin->mRunNumRegionsMask, and bin->mRunFirstRegionOffset are
 // also calculated here, since these settings are all interdependent.
@@ -3022,8 +3024,8 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
       break;
     }
 
-    // Try to keep the run overhead below RUN_MAX_OVRHD.
-    if ((try_reg0_offset << RUN_BFP) <= RUN_MAX_OVRHD * try_run_size) {
+    // Try to keep the run overhead below kRunOverhead.
+    if (Fraction(try_reg0_offset, try_run_size) <= arena_bin_t::kRunOverhead) {
       break;
     }
   }
