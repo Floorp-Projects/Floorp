@@ -30,6 +30,7 @@ class PDFiumParent final : public PPDFiumParent,
   bool Init(IPC::Channel* aChannel, base::ProcessId aPid);
 
   void AbortConversion(ConversionDoneCallback aCallback);
+  void EndConversion();
 
   FORWARD_SHMEM_ALLOCATOR_TO(PPDFiumParent)
 private:
