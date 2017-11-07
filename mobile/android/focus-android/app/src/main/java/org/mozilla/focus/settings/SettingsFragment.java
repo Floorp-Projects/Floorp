@@ -1,5 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -29,7 +28,6 @@ import org.mozilla.focus.widget.DefaultBrowserPreference;
 import java.util.Locale;
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
-    public static final String FRAGMENT_CLASS_INTENT_EXTRA = "extra_fragment_class";
     public static final String PREFERENCES_RESID_INTENT_EXTRA = "extra_preferences_resid";
     public static final String TITLE_RESID_INTENT_EXTRA = "extra_title_resid";
 
@@ -42,23 +40,30 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         void updateIcon(int iconResId);
     }
 
+    public static SettingsFragment newInstance(Bundle intentArgs, int prefsResId, int titleResId) {
+        SettingsFragment f = new SettingsFragment();
+        f.setArguments(makeArgumentBundle(intentArgs, prefsResId, titleResId));
+        return f;
+    }
+
+    protected static Bundle makeArgumentBundle(Bundle intentArgs, int prefsResId, int titleResId) {
+        final Bundle args = intentArgs != null ? intentArgs : new Bundle();
+        args.putInt(PREFERENCES_RESID_INTENT_EXTRA, prefsResId);
+        args.putInt(TITLE_RESID_INTENT_EXTRA, titleResId);
+        return args;
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // We've checked that this cast is legal in onAttach.
-        final ActionBarUpdater updater = (ActionBarUpdater) getActivity();
-
         final Bundle args = getArguments();
         int prefResId = R.xml.settings;
-        int titleResId = R.string.menu_settings;
 
         if (args != null) {
             prefResId = args.getInt(PREFERENCES_RESID_INTENT_EXTRA, R.xml.settings);
-            titleResId = args.getInt(TITLE_RESID_INTENT_EXTRA, R.string.menu_settings);
         }
 
-        updater.updateTitle(titleResId);
         addPreferencesFromResource(prefResId);
     }
 
@@ -90,33 +95,36 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             final Intent intent = InfoActivity.getPrivacyNoticeIntent(getActivity());
             startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_search_engine))) {
-            final Intent intent = getSettingsIntent(getActivity(),
-                    AppConstants.FLAG_MANUAL_SEARCH_ENGINE ? R.xml.search_engine_settings_featureflag_manual : R.xml.search_engine_settings,
+            showSettingsFragment( AppConstants.FLAG_MANUAL_SEARCH_ENGINE ? R.xml.search_engine_settings_featureflag_manual : R.xml.search_engine_settings,
                     R.string.preference_search_installed_search_engines);
-            startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_manual_add_search_engine))) {
-            final Intent intent = getSettingsIntent(getActivity(), ManualAddSearchEngineSettingsFragment.FRAGMENT_CLASS_TYPE,
+            showSettingsFragment(ManualAddSearchEngineSettingsFragment.FRAGMENT_CLASS_TYPE,
                     R.xml.manual_add_search_engine,
                     R.string.tutorial_search_title);
-            startActivity(intent);
         }
 
         return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
 
-    private static Intent getSettingsIntent(Context context, int prefsResId, int titleResId) {
-        return getSettingsIntent(context, EXTRA_VALUE_NONE, prefsResId, titleResId);
+    private void showSettingsFragment(int prefsResId, int titleResId) {
+        showSettingsFragment(EXTRA_VALUE_NONE, prefsResId, titleResId);
     }
 
-    private static Intent getSettingsIntent(Context context, int fragmentClassType, int prefsResId, int titleResId) {
-        final Intent intent = new Intent(context, SettingsActivity.class);
-        intent.putExtra(PREFERENCES_RESID_INTENT_EXTRA, prefsResId);
-        intent.putExtra(TITLE_RESID_INTENT_EXTRA, titleResId);
+    private void showSettingsFragment(int fragmentClassType, int prefsResId, int titleResId) {
+        final SettingsFragment fragment;
+        switch (fragmentClassType) {
+            case ManualAddSearchEngineSettingsFragment.FRAGMENT_CLASS_TYPE:
+                fragment = ManualAddSearchEngineSettingsFragment.newInstance(null, prefsResId, titleResId);
+                break;
 
-        if (fragmentClassType != EXTRA_VALUE_NONE) {
-            intent.putExtra(FRAGMENT_CLASS_INTENT_EXTRA, fragmentClassType);
+            default:
+                fragment = SettingsFragment.newInstance(null, prefsResId, titleResId);
         }
-        return intent;
+
+        getFragmentManager().beginTransaction()
+                .replace(R.id.container, fragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override
@@ -129,6 +137,11 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         if (preference != null) {
             preference.update();
         }
+
+        // Update title and icons when returning to fragments.
+        final ActionBarUpdater updater = (ActionBarUpdater) getActivity();
+        updater.updateTitle(getArguments().getInt(TITLE_RESID_INTENT_EXTRA));
+        updater.updateIcon(R.drawable.ic_back);
     }
 
     @Override

@@ -9,11 +9,10 @@ import android.preference.PreferenceFragment;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
+import android.view.MenuItem;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
-import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment;
 import org.mozilla.focus.settings.SettingsFragment;
 
 public class SettingsActivity extends LocaleAwareAppCompatActivity implements SettingsFragment.ActionBarUpdater {
@@ -33,27 +32,7 @@ public class SettingsActivity extends LocaleAwareAppCompatActivity implements Se
 
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-
-        final Bundle extras = getIntent().getExtras();
-        final PreferenceFragment fragment;
-        if (extras != null && extras.containsKey(SettingsFragment.FRAGMENT_CLASS_INTENT_EXTRA)) {
-            switch (extras.getInt(SettingsFragment.FRAGMENT_CLASS_INTENT_EXTRA)) {
-                case ManualAddSearchEngineSettingsFragment.FRAGMENT_CLASS_TYPE:
-                    fragment = new ManualAddSearchEngineSettingsFragment();
-                    break;
-                default:
-                    fragment = new SettingsFragment();
-            }
-        } else {
-            fragment = new SettingsFragment();
-        }
-        fragment.setArguments(getIntent().getExtras());
+        final PreferenceFragment fragment = SettingsFragment.newInstance(getIntent().getExtras(), R.xml.settings, R.string.menu_settings);
 
         getFragmentManager().beginTransaction()
                 .replace(R.id.container, fragment)
@@ -63,6 +42,16 @@ public class SettingsActivity extends LocaleAwareAppCompatActivity implements Se
         // anywhere before now (the title can only be set via AndroidManifest, and ensuring
         // that that loads the correct locale string is tricky).
         applyLocale();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
