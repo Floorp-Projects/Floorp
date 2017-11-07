@@ -139,7 +139,7 @@ OBJDIR_TARGETS = install export libs clean realclean distclean upload sdk instal
 
 # The default rule is build
 build::
-	$(MAKE) -f $(TOPSRCDIR)/client.mk $(if $(MOZ_PGO),profiledbuild,realbuild) CREATE_MOZCONFIG_JSON=
+	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild CREATE_MOZCONFIG_JSON=
 
 # Include baseconfig.mk for its $(MAKE) validation.
 include $(TOPSRCDIR)/config/baseconfig.mk
@@ -172,29 +172,6 @@ clobber clobber_all: clean
 
 # helper target for mobile
 build_and_deploy: build package install
-
-####################################
-# Profile-Guided Optimization
-#  This is up here so that this is usable in multi-pass builds, where you
-# might not have a runnable application until all the build passes have run.
-profiledbuild::
-	$(call BUILDSTATUS,TIERS pgo_profile_generate pgo_package pgo_profile pgo_clobber pgo_profile_use)
-	$(call BUILDSTATUS,TIER_START pgo_profile_generate)
-	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_GENERATE=1 MOZ_PGO_INSTRUMENTED=1 CREATE_MOZCONFIG_JSON=
-	$(call BUILDSTATUS,TIER_FINISH pgo_profile_generate)
-	$(call BUILDSTATUS,TIER_START pgo_package)
-	$(MAKE) -C $(OBJDIR) package MOZ_PGO_INSTRUMENTED=1 MOZ_INTERNAL_SIGNING_FORMAT= MOZ_EXTERNAL_SIGNING_FORMAT=
-	rm -f $(OBJDIR)/jarlog/en-US.log
-	$(call BUILDSTATUS,TIER_FINISH pgo_package)
-	$(call BUILDSTATUS,TIER_START pgo_profile)
-	MOZ_PGO_INSTRUMENTED=1 JARLOG_FILE=jarlog/en-US.log EXTRA_TEST_ARGS=10 $(MAKE) -C $(OBJDIR) pgo-profile-run
-	$(call BUILDSTATUS,TIER_FINISH pgo_profile)
-	$(call BUILDSTATUS,TIER_START pgo_clobber)
-	$(MAKE) -C $(OBJDIR) maybe_clobber_profiledbuild
-	$(call BUILDSTATUS,TIER_FINISH pgo_clobber)
-	$(call BUILDSTATUS,TIER_START pgo_profile_use)
-	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_USE=1 CREATE_MOZCONFIG_JSON=
-	$(call BUILDSTATUS,TIER_FINISH pgo_profile_use)
 
 #####################################################
 # Preflight, before building any project
@@ -314,7 +291,7 @@ endif
 # Build it
 
 realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	+$(MOZ_MAKE)
+	+$(MOZ_MAKE) $(if $(MOZ_PGO),profiledbuild)
 
 ####################################
 # Other targets
@@ -327,7 +304,7 @@ $(OBJDIR_TARGETS):: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Postflight, after building all projects
 
 ifdef MOZ_AUTOMATION
-$(if $(MOZ_PGO),profiledbuild,realbuild)::
+realbuild::
 	$(MAKE) -f $(TOPSRCDIR)/client.mk automation/build
 endif
 
@@ -350,7 +327,6 @@ echo-variable-%:
 .PHONY: \
     realbuild \
     build \
-    profiledbuild \
     build_all \
     clobber \
     clobber_all \
