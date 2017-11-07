@@ -5,8 +5,8 @@
 use api::{BorderRadiusKind, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint, ImageKey};
 use api::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize};
 use api::{ExternalImageType, FilterOp, FontRenderMode, ImageRendering, LayerRect};
-use api::{LayerToWorldTransform, MixBlendMode, PipelineId, PropertyBinding, TransformStyle};
-use api::{LayerVector2D, TileOffset, WorldToLayerTransform, YuvColorSpace, YuvFormat};
+use api::{MixBlendMode, PipelineId, PropertyBinding, TransformStyle};
+use api::{LayerVector2D, TileOffset, YuvColorSpace, YuvFormat};
 use border::{BorderCornerInstance, BorderCornerSide};
 use clip::{ClipSource, ClipStore};
 use clip_scroll_tree::CoordinateSystemId;
@@ -15,7 +15,7 @@ use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuCacheUpdateList};
 use gpu_types::{BlurDirection, BlurInstance, BrushInstance, BrushImageKind, ClipMaskInstance};
 use gpu_types::{CompositePrimitiveInstance, PrimitiveInstance, SimplePrimitiveInstance};
-use gpu_types::{BRUSH_FLAG_USES_PICTURE};
+use gpu_types::{BRUSH_FLAG_USES_PICTURE, ClipScrollNodeIndex, ClipScrollNodeData};
 use internal_types::{FastHashMap, SourceTexture};
 use internal_types::BatchTextures;
 use picture::PictureKind;
@@ -30,8 +30,7 @@ use renderer::ImageBufferKind;
 use resource_cache::{GlyphFetchResult, ResourceCache};
 use std::{cmp, usize, f32, i32};
 use texture_allocator::GuillotineAllocator;
-use util::{MatrixHelpers, TransformedRect, TransformedRectKind};
-use euclid::rect;
+use util::{MatrixHelpers, TransformedRectKind};
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -59,11 +58,15 @@ impl AlphaBatchHelpers for PrimitiveStore {
             PrimitiveKind::TextRun => {
                 let font = &self.cpu_text_runs[metadata.cpu_prim_index.0].font;
                 match font.render_mode {
-                    FontRenderMode::Subpixel => if font.bg_color.a != 0 {
-                        BlendMode::SubpixelWithBgColor
-                    } else {
-                        BlendMode::Subpixel
-                    },
+                    FontRenderMode::Subpixel => {
+                        if font.bg_color.a != 0 {
+                            BlendMode::SubpixelWithBgColor
+                        } else if font.color.a != 255 || metadata.clip_task_id.is_some() {
+                            BlendMode::SubpixelWithAlpha
+                        } else {
+                            BlendMode::SubpixelOpaque(font.color)
+                        }
+                    }
                     FontRenderMode::Alpha |
                     FontRenderMode::Mono |
                     FontRenderMode::Bitmap => BlendMode::PremultipliedAlpha,
@@ -157,14 +160,15 @@ impl AlphaBatchList {
     ) -> &mut Vec<PrimitiveInstance> {
         let mut selected_batch_index = None;
 
-        match key.kind {
-            BatchKind::Composite { .. } => {
+        match (key.kind, key.blend_mode) {
+            (BatchKind::Composite { .. }, _) => {
                 // Composites always get added to their own batch.
                 // This is because the result of a composite can affect
                 // the input to the next composite. Perhaps we can
                 // optimize this in the future.
             }
-            BatchKind::Transformable(_, TransformBatchKind::TextRun(_)) => {
+            (BatchKind::Transformable(_, TransformBatchKind::TextRun(_)), BlendMode::SubpixelWithBgColor) |
+            (BatchKind::Transformable(_, TransformBatchKind::TextRun(_)), BlendMode::SubpixelWithAlpha) => {
                 'outer_text: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10) {
                     // Subpixel text is drawn in two passes. Because of this, we need
                     // to check for overlaps with every batch (which is a bit different
@@ -281,7 +285,9 @@ impl BatchList {
         match key.blend_mode {
             BlendMode::None => self.opaque_batch_list.get_suitable_batch(key),
             BlendMode::Alpha | BlendMode::PremultipliedAlpha |
-            BlendMode::PremultipliedDestOut | BlendMode::Subpixel |
+            BlendMode::PremultipliedDestOut |
+            BlendMode::SubpixelOpaque(..) |
+            BlendMode::SubpixelWithAlpha |
             BlendMode::SubpixelWithBgColor => {
                 self.alpha_batch_list
                     .get_suitable_batch(key, item_bounding_rect)
@@ -346,6 +352,8 @@ impl AlphaRenderItem {
                     filter_mode,
                     amount,
                     z,
+                    0,
+                    0,
                 );
 
                 batch.push(PrimitiveInstance::from(instance));
@@ -356,6 +364,7 @@ impl AlphaRenderItem {
                 composite_op,
                 screen_origin,
                 z,
+                dest_rect,
             ) => {
                 let stacking_context = &ctx.stacking_context_store[stacking_context_index.0];
                 let src_task_address = render_tasks.get_task_address(src_id);
@@ -365,6 +374,11 @@ impl AlphaRenderItem {
                     BatchTextures::no_texture(),
                 );
                 let batch = batch_list.get_suitable_batch(key, &stacking_context.screen_bounds);
+                let dest_rect = if dest_rect.width > 0 && dest_rect.height > 0 {
+                    dest_rect
+                } else {
+                    render_tasks.get(src_id).get_dynamic_size()
+                };
 
                 let instance = CompositePrimitiveInstance::new(
                     task_address,
@@ -373,6 +387,8 @@ impl AlphaRenderItem {
                     screen_origin.x,
                     screen_origin.y,
                     z,
+                    dest_rect.width,
+                    dest_rect.height,
                 );
 
                 batch.push(PrimitiveInstance::from(instance));
@@ -399,20 +415,19 @@ impl AlphaRenderItem {
                     mode as u32 as i32,
                     0,
                     z,
+                    0,
+                    0,
                 );
 
                 batch.push(PrimitiveInstance::from(instance));
             }
-            AlphaRenderItem::Primitive(clip_scroll_group_index_opt, prim_index, z) => {
+            AlphaRenderItem::Primitive(clip_id, scroll_id, prim_index, z) => {
                 let prim_metadata = ctx.prim_store.get_metadata(prim_index);
-                let (transform_kind, packed_layer_index) = match clip_scroll_group_index_opt {
-                    Some(group_index) => {
-                        let group = &ctx.clip_scroll_group_store[group_index.0];
-                        let bounding_rect = group.screen_bounding_rect.as_ref().unwrap();
-                        (bounding_rect.0, group.packed_layer_index)
-                    }
-                    None => (TransformedRectKind::AxisAligned, PackedLayerIndex(0)),
-                };
+                let scroll_node = &ctx.node_data[scroll_id.0 as usize];
+                // TODO(gw): Calculating this for every primitive is a bit
+                //           wasteful. We should probably cache this in
+                //           the scroll node...
+                let transform_kind = scroll_node.transform.transform_kind();
                 let item_bounding_rect = prim_metadata.screen_rect.as_ref().unwrap();
                 let prim_cache_address = gpu_cache.get_address(&prim_metadata.gpu_location);
                 let no_textures = BatchTextures::no_texture();
@@ -423,7 +438,8 @@ impl AlphaRenderItem {
                     prim_cache_address,
                     task_address,
                     clip_task_address,
-                    packed_layer_index.into(),
+                    clip_id,
+                    scroll_id,
                     z,
                 );
 
@@ -631,7 +647,8 @@ impl AlphaRenderItem {
                         let instance = BrushInstance {
                             picture_address: task_address,
                             prim_address: prim_cache_address,
-                            layer_address: packed_layer_index.into(),
+                            clip_id,
+                            scroll_id,
                             clip_task_address,
                             z,
                             flags: 0,
@@ -773,6 +790,8 @@ impl AlphaRenderItem {
                     gpu_address,
                     0,
                     z,
+                    0,
+                    0,
                 );
 
                 batch.push(PrimitiveInstance::from(instance));
@@ -864,7 +883,7 @@ impl ClipBatcher {
         for work_item in clips.iter() {
             let instance = ClipMaskInstance {
                 render_task_address: task_address,
-                layer_address: work_item.layer_index.into(),
+                scroll_node_id: work_item.scroll_node_id,
                 segment: 0,
                 clip_data_address: GpuCacheAddress::invalid(),
                 resource_address: GpuCacheAddress::invalid(),
@@ -956,9 +975,9 @@ impl ClipBatcher {
 pub struct RenderTargetContext<'a> {
     pub device_pixel_ratio: f32,
     pub stacking_context_store: &'a [StackingContext],
-    pub clip_scroll_group_store: &'a [ClipScrollGroup],
     pub prim_store: &'a PrimitiveStore,
     pub resource_cache: &'a ResourceCache,
+    pub node_data: &'a [ClipScrollNodeData],
 }
 
 struct TextureAllocator {
@@ -1109,6 +1128,11 @@ pub struct FrameOutput {
     pub pipeline_id: PipelineId,
 }
 
+pub struct ScalingInfo {
+    pub src_task_id: RenderTaskId,
+    pub dest_task_id: RenderTaskId,
+}
+
 /// A render target represents a number of rendering operations on a surface.
 pub struct ColorRenderTarget {
     pub alpha_batcher: AlphaBatcher,
@@ -1119,6 +1143,7 @@ pub struct ColorRenderTarget {
     pub vertical_blurs: Vec<BlurInstance>,
     pub horizontal_blurs: Vec<BlurInstance>,
     pub readbacks: Vec<DeviceIntRect>,
+    pub scalings: Vec<ScalingInfo>,
     // List of frame buffer outputs for this render target.
     pub outputs: Vec<FrameOutput>,
     allocator: Option<TextureAllocator>,
@@ -1141,6 +1166,7 @@ impl RenderTarget for ColorRenderTarget {
             vertical_blurs: Vec::new(),
             horizontal_blurs: Vec::new(),
             readbacks: Vec::new(),
+            scalings: Vec::new(),
             allocator: size.map(|size| TextureAllocator::new(size)),
             glyph_fetch_buffer: Vec::new(),
             outputs: Vec::new(),
@@ -1228,7 +1254,8 @@ impl RenderTarget for ColorRenderTarget {
                                     sub_prim_address,
                                     task_index,
                                     RenderTaskAddress(0),
-                                    PackedLayerIndex(0).into(),
+                                    ClipScrollNodeIndex(0),
+                                    ClipScrollNodeIndex(0),
                                     0,
                                 ); // z is disabled for rendering cache primitives
 
@@ -1286,6 +1313,12 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::Readback(device_rect) => {
                 self.readbacks.push(device_rect);
             }
+            RenderTaskKind::Scaling(..) => {
+                self.scalings.push(ScalingInfo {
+                    src_task_id: task.children[0],
+                    dest_task_id: task_id,
+                });
+            }
         }
     }
 }
@@ -1297,6 +1330,7 @@ pub struct AlphaRenderTarget {
     // List of blur operations to apply for this render target.
     pub vertical_blurs: Vec<BlurInstance>,
     pub horizontal_blurs: Vec<BlurInstance>,
+    pub scalings: Vec<ScalingInfo>,
     pub zero_clears: Vec<RenderTaskId>,
     allocator: TextureAllocator,
 }
@@ -1313,6 +1347,7 @@ impl RenderTarget for AlphaRenderTarget {
             brush_mask_rounded_rects: Vec::new(),
             vertical_blurs: Vec::new(),
             horizontal_blurs: Vec::new(),
+            scalings: Vec::new(),
             zero_clears: Vec::new(),
             allocator: TextureAllocator::new(size.expect("bug: alpha targets need size")),
         }
@@ -1395,7 +1430,8 @@ impl RenderTarget for AlphaRenderTarget {
                                             //           tasks support clip masks and
                                             //           transform primitives, these
                                             //           will need to be filled out!
-                                            layer_address: PackedLayerIndex(0).into(),
+                                            clip_id: ClipScrollNodeIndex(0),
+                                            scroll_id: ClipScrollNodeIndex(0),
                                             clip_task_address: RenderTaskAddress(0),
                                             z: 0,
                                             flags: BRUSH_FLAG_USES_PICTURE,
@@ -1437,6 +1473,12 @@ impl RenderTarget for AlphaRenderTarget {
                     task_info.geometry_kind,
                     clip_store,
                 );
+            }
+            RenderTaskKind::Scaling(..) => {
+                self.scalings.push(ScalingInfo {
+                    src_task_id: task.children[0],
+                    dest_task_id: task_id,
+                });
             }
         }
     }
@@ -1701,9 +1743,6 @@ impl OpaquePrimitiveBatch {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct PackedLayerIndex(pub usize);
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct StackingContextIndex(pub usize);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
@@ -1808,73 +1847,6 @@ impl StackingContext {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub struct ClipScrollGroupIndex(pub usize, pub ClipAndScrollInfo);
-
-#[derive(Debug)]
-pub struct ClipScrollGroup {
-    pub scroll_node_id: ClipId,
-    pub clip_node_id: ClipId,
-    pub packed_layer_index: PackedLayerIndex,
-    pub screen_bounding_rect: Option<(TransformedRectKind, DeviceIntRect)>,
-    pub coordinate_system_id: CoordinateSystemId,
-}
-
-impl ClipScrollGroup {
-    pub fn is_visible(&self) -> bool {
-        self.screen_bounding_rect.is_some()
-    }
-}
-
-#[derive(Debug, Clone)]
-#[repr(C)]
-pub struct PackedLayer {
-    pub transform: LayerToWorldTransform,
-    pub inv_transform: WorldToLayerTransform,
-    pub local_clip_rect: LayerRect,
-}
-
-impl PackedLayer {
-    pub fn empty() -> PackedLayer {
-        PackedLayer {
-            transform: LayerToWorldTransform::identity(),
-            inv_transform: WorldToLayerTransform::identity(),
-            local_clip_rect: LayerRect::zero(),
-        }
-    }
-
-    pub fn set_transform(&mut self, transform: LayerToWorldTransform) -> bool {
-        self.transform = transform;
-        match self.transform.inverse() {
-            Some(inv) => {
-                self.inv_transform = inv;
-                true
-            }
-            None => false,
-        }
-    }
-
-    pub fn set_rect(
-        &mut self,
-        local_rect: &LayerRect,
-        screen_rect: &DeviceIntRect,
-        device_pixel_ratio: f32,
-    ) -> Option<(TransformedRectKind, DeviceIntRect)> {
-        self.local_clip_rect = if self.transform.has_perspective_component() {
-            // Given a very large rect which means any rect would be inside this rect.
-            // That is, nothing would be clipped.
-            rect(f32::MIN / 2.0, f32::MIN / 2.0, f32::MAX, f32::MAX)
-        } else {
-            *local_rect
-        };
-        let xf_rect = TransformedRect::new(local_rect, &self.transform, device_pixel_ratio);
-        xf_rect
-            .bounding_rect
-            .intersection(screen_rect)
-            .map(|rect| (xf_rect.kind, rect))
-    }
-}
-
 #[derive(Debug, Clone, Default)]
 pub struct CompositeOps {
     // Requires only a single texture as input (e.g. most filters)
@@ -1915,8 +1887,7 @@ pub struct Frame {
     pub passes: Vec<RenderPass>,
     pub profile_counters: FrameProfileCounters,
 
-    pub layer_texture_data: Vec<PackedLayer>,
-
+    pub node_data: Vec<ClipScrollNodeData>,
     pub render_tasks: RenderTaskTree,
 
     // List of updates that need to be pushed to the

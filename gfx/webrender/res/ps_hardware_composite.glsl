@@ -18,7 +18,7 @@ void main(void) {
                        vec2(ci.user_data0, ci.user_data1);
 
     vec2 local_pos = mix(dest_origin,
-                         dest_origin + src_task.size,
+                         dest_origin + vec2(ci.user_data2, ci.user_data3),
                          aPosition.xy);
 
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
