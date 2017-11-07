@@ -44,7 +44,6 @@ var gBrowserThumbnails = {
   _tabEvents: ["TabClose", "TabSelect"],
 
   init: function Thumbnails_init() {
-    PageThumbs.addExpirationFilter(this);
     gBrowser.addTabsProgressListener(this);
     Services.prefs.addObserver(this.PREF_DISK_CACHE_SSL, this);
     Services.prefs.addObserver(this.PREF_ACTIVITY_STREAM_ENABLED, this);
@@ -62,7 +61,6 @@ var gBrowserThumbnails = {
   },
 
   uninit: function Thumbnails_uninit() {
-    PageThumbs.removeExpirationFilter(this);
     gBrowser.removeTabsProgressListener(this);
     Services.prefs.removeObserver(this.PREF_DISK_CACHE_SSL, this);
     Services.prefs.removeObserver(this.PREF_ACTIVITY_STREAM_ENABLED, this);
@@ -104,16 +102,11 @@ var gBrowserThumbnails = {
         this._activityStreamEnabled =
           Services.prefs.getBoolPref(this.PREF_ACTIVITY_STREAM_ENABLED);
         // Get the new top sites
-        XPCOMUtils.defineLazyGetter(this, "_topSiteURLs", getTopSiteURLs);
+        this.clearTopSiteURLCache();
         break;
     }
   },
 
-  /**
-   * clearTopSiteURLCache is only ever called if we've created an nsITimer,
-   * which only happens if we've loaded the tiles top sites. Therefore we only
-   * need to clear the tiles top sites (and not activity stream's top sites)
-   */
   clearTopSiteURLCache: function Thumbnails_clearTopSiteURLCache() {
     if (this._topSiteURLsRefreshTimer) {
       this._topSiteURLsRefreshTimer.cancel();
@@ -127,11 +120,6 @@ var gBrowserThumbnails = {
   notify: function Thumbnails_notify(timer) {
     gBrowserThumbnails._topSiteURLsRefreshTimer = null;
     gBrowserThumbnails.clearTopSiteURLCache();
-  },
-
-  async filterForThumbnailExpiration(aCallback) {
-    const topSites = await this._topSiteURLs;
-    aCallback(topSites);
   },
 
   /**
@@ -212,18 +200,23 @@ var gBrowserThumbnails = {
 };
 
 async function getTopSiteURLs() {
+  // The _topSiteURLs getter can be expensive to run, but its return value can
+  // change frequently on new profiles, so as a compromise we cache its return
+  // value as a lazy getter for 1 minute every time it's called.
+  gBrowserThumbnails._topSiteURLsRefreshTimer =
+    Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  gBrowserThumbnails._topSiteURLsRefreshTimer.initWithCallback(gBrowserThumbnails,
+                                                               60 * 1000,
+                                                               Ci.nsITimer.TYPE_ONE_SHOT);
   let sites = [];
   if (gBrowserThumbnails._activityStreamEnabled) {
-    sites = await NewTabUtils.activityStreamLinks.getTopSites();
+    // Get both the top sites returned by the query, and also any pinned sites
+    // that the user might have added manually that also need a screenshot.
+    // Also include top sites that don't have rich icons
+    let topSites = await NewTabUtils.activityStreamLinks.getTopSites();
+    sites.push(...topSites.filter(link => !(link.faviconSize >= 96)));
+    sites.push(...NewTabUtils.pinnedLinks.links);
   } else {
-    // The _topSiteURLs getter can be expensive to run, but its return value can
-    // change frequently on new profiles, so as a compromise we cache its return
-    // value as a lazy getter for 1 minute every time it's called.
-    gBrowserThumbnails._topSiteURLsRefreshTimer =
-      Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    gBrowserThumbnails._topSiteURLsRefreshTimer.initWithCallback(gBrowserThumbnails,
-                                                                 60 * 1000,
-                                                                 Ci.nsITimer.TYPE_ONE_SHOT);
     sites = NewTabUtils.links.getLinks();
   }
   return sites.reduce((urls, link) => {
