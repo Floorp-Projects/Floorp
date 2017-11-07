@@ -140,11 +140,21 @@ public:
   /**
    * Returns true if this principal's CSP should override a document's CSP for
    * loads that it triggers. Currently true only for expanded principals which
-   * subsume the document principal.
+   * subsume the document principal, and add-on codebase principals regardless
+   * of whether they subsume the document principal.
    */
   bool OverridesCSP(nsIPrincipal* aDocumentPrincipal)
   {
-    return mKind == eExpandedPrincipal && FastSubsumes(aDocumentPrincipal);
+    // Expanded principals override CSP if and only if they subsume the document
+    // principal.
+    if (mKind == eExpandedPrincipal) {
+      return FastSubsumes(aDocumentPrincipal);
+    }
+    // Extension principals always override the CSP non-extension principals.
+    // This is primarily for the sake of their stylesheets, which are usually
+    // loaded from channels and cannot have expanded principals.
+    return (AddonPolicy() &&
+            !BasePrincipal::Cast(aDocumentPrincipal)->AddonPolicy());
   }
 
 protected:
