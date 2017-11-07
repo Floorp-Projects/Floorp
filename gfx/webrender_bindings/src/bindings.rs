@@ -982,6 +982,18 @@ pub extern "C" fn wr_resource_updates_add_raw_font(
     resources.add_raw_font(key, bytes.flush_into_vec(), index);
 }
 
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+fn read_font_descriptor(
+    bytes: &mut WrVecU8,
+    index: u32
+) -> NativeFontHandle {
+    let cstr = CString::new(bytes.flush_into_vec()).unwrap();
+    NativeFontHandle {
+        pathname: String::from(cstr.to_str().unwrap()),
+        index,
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_add_font_descriptor(
     resources: &mut ResourceUpdates,

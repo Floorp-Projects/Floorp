@@ -479,5 +479,18 @@ UnscaledFontFontconfig::CreateFromFontDescriptor(const uint8_t* aData, uint32_t 
   return unscaledFont.forget();
 }
 
+bool
+UnscaledFontFontconfig::GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton)
+{
+  if (mFile.empty()) {
+    return false;
+  }
+
+  const char* path = mFile.c_str();
+  size_t pathLength = strlen(path);
+  aCb(reinterpret_cast<const uint8_t*>(path), pathLength, 0, aBaton);
+  return true;
+}
+
 } // namespace gfx
 } // namespace mozilla
