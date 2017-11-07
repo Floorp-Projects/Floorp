@@ -82,12 +82,12 @@
           <xul:button anonid="preferencesButton"
                       label="&preferencesButton.label;"
                       xbl:inherits="value=userContextId"
-                      onclick="gContainersPane.onPreferenceClick(event.originalTarget)">
+                      oncommand="gContainersPane.onPreferenceCommand(event.originalTarget)">
           </xul:button>
           <xul:button anonid="removeButton"
                       label="&removeButton.label;"
                       xbl:inherits="value=userContextId"
-                      onclick="gContainersPane.onRemoveClick(event.originalTarget)">
+                      oncommand="gContainersPane.onRemoveCommand(event.originalTarget)">
           </xul:button>
         </xul:hbox>
       </xul:hbox>
