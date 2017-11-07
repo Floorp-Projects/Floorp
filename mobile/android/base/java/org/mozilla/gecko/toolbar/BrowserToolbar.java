@@ -464,6 +464,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
             // Progress-related handling
             switch (msg) {
                 case START:
+                    flags.add(UpdateFlags.PROGRESS);
                     updateProgressVisibility(tab, Tab.LOAD_PROGRESS_INIT);
                     break;
                 case ADDED:

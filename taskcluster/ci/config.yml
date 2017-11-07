@@ -78,3 +78,6 @@ try:
             - 'sm-msan'
             - 'sm-fuzzing'
             - 'sm-rust-bindings'
+        'win32':
+            - 'sm-plain'
+            - 'sm-compacting'
