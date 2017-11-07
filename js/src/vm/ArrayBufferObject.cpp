@@ -718,6 +718,18 @@ ArrayBufferObject::createForWasm(JSContext* cx, uint32_t initialSize,
         maxSize = Some(Min(clamp, maybeMaxSize.value()));
     }
 
+#ifndef WASM_HUGE_MEMORY
+    if (sizeof(void*) == 8 && maybeMaxSize && maybeMaxSize.value() == UINT32_MAX) {
+        // On 64-bit platforms that don't define WASM_HUGE_MEMORY
+        // clamp maxSize to smaller value that satisfies the 32-bit invariants
+        // maxSize + wasm::PageSize < UINT32_MAX and maxSize % wasm::PageSize == 0
+        uint32_t clamp = (wasm::MaxMemoryMaximumPages - 2) * wasm::PageSize;
+        MOZ_ASSERT(clamp < UINT32_MAX);
+        MOZ_ASSERT(initialSize <= clamp);
+        maxSize = Some(clamp);
+    }
+#endif
+
     RootedArrayBufferObject buffer(cx, ArrayBufferObject::createEmpty(cx));
     if (!buffer)
         return nullptr;
