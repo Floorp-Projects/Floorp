@@ -129,6 +129,10 @@ class PublishBalrog(MercurialScript, BuildbotMixin):
                    error_level=FATAL)
 
     def _submit_to_balrog_bz2(self, channel_config):
+        if "bz2_blob_suffix" not in channel_config:
+            self.info("No need to generate BZ2 blob")
+            return
+
         dirs = self.query_abs_dirs()
         # Use env varialbe instead of command line to avoid issues with blob
         # names starting with "-", e.g. "-bz2"
