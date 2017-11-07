@@ -42,10 +42,6 @@ protected:
                            const IntSize& aSize,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) override;
-#elif defined(MOZ_ANDROID_GOOGLE_VR)
-  virtual bool SubmitFrame(const mozilla::layers::EGLImageDescriptor* aDescriptor,
-                           const gfx::Rect& aLeftEyeRect,
-                           const gfx::Rect& aRightEyeRect) override;
 #endif
 
 public:

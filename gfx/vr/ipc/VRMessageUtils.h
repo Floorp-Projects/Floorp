@@ -45,7 +45,6 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
     WriteParam(aMsg, aParam.mStageSize);
     WriteParam(aMsg, aParam.mSittingToStandingTransform);
     WriteParam(aMsg, aParam.mFrameId);
-    WriteParam(aMsg, aParam.mPresentingGeneration);
     for (int i = 0; i < mozilla::gfx::VRDisplayInfo::NumEyes; i++) {
       WriteParam(aMsg, aParam.mEyeFOV[i]);
       WriteParam(aMsg, aParam.mEyeTranslation[i]);
@@ -68,8 +67,7 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
         !ReadParam(aMsg, aIter, &(aResult->mGroupMask)) ||
         !ReadParam(aMsg, aIter, &(aResult->mStageSize)) ||
         !ReadParam(aMsg, aIter, &(aResult->mSittingToStandingTransform)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mFrameId)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mPresentingGeneration))) {
+        !ReadParam(aMsg, aIter, &(aResult->mFrameId))) {
       return false;
     }
     for (int i = 0; i < mozilla::gfx::VRDisplayInfo::NumEyes; i++) {

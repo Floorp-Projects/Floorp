@@ -44,9 +44,6 @@ public:
   void NotifyDisconnected();
   void SetGroupMask(uint32_t aGroupMask);
 
-  bool IsPresentationGenerationCurrent() const;
-  void MakePresentationGenerationCurrent();
-
 protected:
   virtual ~VRDisplayClient();
 
@@ -59,7 +56,6 @@ protected:
 
   int mPresentationCount;
   uint64_t mLastEventFrameId;
-  uint32_t mLastPresentingGeneration;
 private:
   VRSubmitFrameResultInfo mSubmitFrameResult;
 };
