@@ -30,9 +30,6 @@ namespace mozilla {
 
 struct ActiveScrolledRoot;
 
-namespace dom {
-class TabGroup;
-}
 
 namespace layers {
 
@@ -122,9 +119,6 @@ public:
   virtual void SetIsFirstPaint() override { mIsFirstPaint = true; }
   virtual void SetFocusTarget(const FocusTarget& aFocusTarget) override;
 
-  virtual already_AddRefed<PersistentBufferProvider>
-  CreatePersistentBufferProvider(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) override;
-
   bool AsyncPanZoomEnabled() const override;
 
   // adds an imagekey to a list of keys that will be discarded on the next
@@ -162,8 +156,6 @@ public:
 
   void WrUpdated();
   void WindowOverlayChanged() { mWindowOverlayChanged = true; }
-
-  dom::TabGroup* GetTabGroup();
 
 private:
   /**

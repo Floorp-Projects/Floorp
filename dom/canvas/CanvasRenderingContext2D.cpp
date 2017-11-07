@@ -1884,9 +1884,7 @@ CanvasRenderingContext2D::TrySharedTarget(RefPtr<gfx::DrawTarget>& aOutDT,
     return false;
   }
 
-  if (mBufferProvider &&
-      (mBufferProvider->GetType() == LayersBackend::LAYERS_CLIENT ||
-       mBufferProvider->GetType() == LayersBackend::LAYERS_WR)) {
+  if (mBufferProvider && mBufferProvider->GetType() == LayersBackend::LAYERS_CLIENT) {
     // we are already using a shared buffer provider, we are allocating a new one
     // because the current one failed so let's just fall back to the basic provider.
     return false;
@@ -5600,9 +5598,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
     }
   }
   if (op == CompositionOp::OP_OVER &&
-      (!mBufferProvider ||
-       (mBufferProvider->GetType() != LayersBackend::LAYERS_CLIENT &&
-        mBufferProvider->GetType() != LayersBackend::LAYERS_WR)))
+      (!mBufferProvider || mBufferProvider->GetType() != LayersBackend::LAYERS_CLIENT))
   {
     thebes = gfxContext::CreateOrNull(mTarget);
     MOZ_ASSERT(thebes); // already checked the draw target above

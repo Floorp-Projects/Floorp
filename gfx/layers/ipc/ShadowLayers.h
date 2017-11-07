@@ -26,6 +26,7 @@
 #include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
 #include "nsIWidget.h"
 #include <vector>
+#include "nsExpirationTracker.h"
 
 namespace mozilla {
 namespace layers {
@@ -43,6 +44,37 @@ class TextureClient;
 class ThebesBuffer;
 class ThebesBufferData;
 class Transaction;
+
+/**
+ * See ActiveResourceTracker below.
+ */
+class ActiveResource
+{
+public:
+ virtual void NotifyInactive() = 0;
+  nsExpirationState* GetExpirationState() { return &mExpirationState; }
+  bool IsActivityTracked() { return mExpirationState.IsTracked(); }
+private:
+  nsExpirationState mExpirationState;
+};
+
+/**
+ * A convenience class on top of nsExpirationTracker
+ */
+class ActiveResourceTracker : public nsExpirationTracker<ActiveResource, 3>
+{
+public:
+  ActiveResourceTracker(uint32_t aExpirationCycle, const char* aName,
+                        nsIEventTarget* aEventTarget)
+  : nsExpirationTracker(aExpirationCycle, aName, aEventTarget)
+  {}
+
+  virtual void NotifyExpired(ActiveResource* aResource) override
+  {
+    RemoveObject(aResource);
+    aResource->NotifyInactive();
+  }
+};
 
 /**
  * We want to share layer trees across thread contexts and address
@@ -377,12 +409,20 @@ public:
   // Returns true if aSurface wraps a Shmem.
   static bool IsShmem(SurfaceDescriptor* aSurface);
 
-  void SyncWithCompositor() override;
+  /**
+   * Sends a synchronous ping to the compsoitor.
+   *
+   * This is bad for performance and should only be called as a last resort if the
+   * compositor may be blocked for a long period of time, to avoid that the content
+   * process accumulates resource allocations that the compositor is not consuming
+   * and releasing.
+   */
+  void SyncWithCompositor();
 
   TextureForwarder* GetTextureForwarder() override { return GetCompositorBridgeChild(); }
   LayersIPCActor* GetLayersIPCActor() override { return this; }
 
-  ActiveResourceTracker* GetActiveResourceTracker() override { return mActiveResourceTracker.get(); }
+  ActiveResourceTracker& GetActiveResourceTracker() { return *mActiveResourceTracker.get(); }
 
   CompositorBridgeChild* GetCompositorBridgeChild();
 
