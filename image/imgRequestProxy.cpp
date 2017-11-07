@@ -515,12 +515,12 @@ imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
   LOG_SCOPE(gImgLog, "imgRequestProxy::CancelAndForgetObserver");
 
   mCanceled = true;
+  mForceDispatchLoadGroup = true;
 
   if (GetOwner()) {
     GetOwner()->RemoveProxy(this, aStatus);
   }
 
-  mForceDispatchLoadGroup = true;
   RemoveFromLoadGroup();
   mForceDispatchLoadGroup = false;
 

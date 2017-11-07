@@ -114,7 +114,7 @@ void
 nsWrapperCache::CheckCCWrapperTraversal(void* aScriptObjectHolder,
                                         nsScriptObjectTracer* aTracer)
 {
-  JSObject* wrapper = GetWrapper();
+  JSObject* wrapper = GetWrapperPreserveColor();
   if (!wrapper) {
     return;
   }
