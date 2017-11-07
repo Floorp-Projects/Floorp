@@ -100,10 +100,10 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 void
-nsSVGUseFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsSVGUseFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
-  DestroyAnonymousContent(mContentClone.forget());
-  nsSVGGFrame::DestroyFrom(aDestructRoot);
+  aPostDestroyData.AddAnonymousContent(mContentClone.forget());
+  nsSVGGFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 

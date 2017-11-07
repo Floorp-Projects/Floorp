@@ -97,6 +97,8 @@ public:
 
   void AddRawFont(wr::FontKey aKey, wr::Vec_u8& aBytes, uint32_t aIndex);
 
+  void AddFontDescriptor(wr::FontKey aKey, wr::Vec_u8& aBytes, uint32_t aIndex);
+
   void DeleteFont(wr::FontKey aKey);
 
   void AddFontInstance(wr::FontInstanceKey aKey,

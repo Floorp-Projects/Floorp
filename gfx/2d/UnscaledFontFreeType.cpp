@@ -71,15 +71,7 @@ UnscaledFontFreeType::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
 
   const char* path = mFile.c_str();
   size_t pathLength = strlen(path) + 1;
-  size_t dataLength = sizeof(FontDescriptor) + pathLength;
-  uint8_t* data = new uint8_t[dataLength];
-  FontDescriptor* desc = reinterpret_cast<FontDescriptor*>(data);
-  desc->mPathLength = pathLength;
-  desc->mIndex = mIndex;
-  memcpy(data + sizeof(FontDescriptor), path, pathLength);
-
-  aCb(data, dataLength, aBaton);
-  delete[] data;
+  aCb(reinterpret_cast<const uint8_t*>(path), pathLength, 0, aBaton);
   return true;
 }
 

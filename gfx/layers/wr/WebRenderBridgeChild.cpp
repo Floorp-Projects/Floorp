@@ -259,6 +259,17 @@ WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
   sink->mResources->AddRawFont(*sink->mFontKey, Range<uint8_t>(const_cast<uint8_t*>(aData), aLength), aIndex);
 }
 
+static void
+WriteFontDescriptor(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
+                  void* aBaton)
+{
+  FontFileDataSink* sink = static_cast<FontFileDataSink*>(aBaton);
+
+  *sink->mFontKey = sink->mWrBridge->GetNextFontKey();
+
+  sink->mResources->AddFontDescriptor(*sink->mFontKey, Range<uint8_t>(const_cast<uint8_t*>(aData), aLength), aIndex);
+}
+
 void
 WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<wr::GlyphInstance>& aGlyphs,
                                  gfx::ScaledFont* aFont, const wr::ColorF& aColor, const StackingContextHelper& aSc,
@@ -329,7 +340,12 @@ WebRenderBridgeChild::GetFontKeyForUnscaledFont(gfx::UnscaledFont* aUnscaled)
   if (!mFontKeys.Get(aUnscaled, &fontKey)) {
     wr::IpcResourceUpdateQueue resources(GetShmemAllocator());
     FontFileDataSink sink = { &fontKey, this, &resources };
-    if (!aUnscaled->GetFontFileData(WriteFontFileData, &sink)) {
+    // First try to retrieve a descriptor for the font, as this is much cheaper
+    // to send over IPC than the full raw font data. If this is not possible, then
+    // and only then fall back to getting the raw font file data. If that fails,
+    // then the only thing left to do is signal failure by returning a null font key.
+    if (!aUnscaled->GetWRFontDescriptor(WriteFontDescriptor, &sink) &&
+        !aUnscaled->GetFontFileData(WriteFontFileData, &sink)) {
       return fontKey;
     }
     UpdateResources(resources);

@@ -30,7 +30,7 @@ nsSplittableFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsSplittableFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsSplittableFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   // Disconnect from the flow list
   if (mPrevContinuation || mNextContinuation) {
@@ -38,7 +38,7 @@ nsSplittableFrame::DestroyFrom(nsIFrame* aDestructRoot)
   }
 
   // Let the base class destroy the frame
-  nsFrame::DestroyFrom(aDestructRoot);
+  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsSplittableType

@@ -135,7 +135,7 @@ nsTextControlFrame::~nsTextControlFrame()
 }
 
 void
-nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   mScrollEvent.Revoke();
 
@@ -155,11 +155,11 @@ nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   }
 
   // FIXME(emilio, bug 1400618): Do this after the child frames are destroyed.
-  DestroyAnonymousContent(mRootNode.forget());
-  DestroyAnonymousContent(mPlaceholderDiv.forget());
-  DestroyAnonymousContent(mPreviewDiv.forget());
+  aPostDestroyData.AddAnonymousContent(mRootNode.forget());
+  aPostDestroyData.AddAnonymousContent(mPlaceholderDiv.forget());
+  aPostDestroyData.AddAnonymousContent(mPreviewDiv.forget());
 
-  nsContainerFrame::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 LogicalSize

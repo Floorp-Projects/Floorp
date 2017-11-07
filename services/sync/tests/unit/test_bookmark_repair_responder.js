@@ -407,7 +407,7 @@ add_task(async function test_folder_descendants() {
   _("Initial sync to upload roots and parent folder");
   await Service.sync();
 
-  let initialSyncIds = [
+  let initialRecordIds = [
     "menu",
     "mobile",
     "toolbar",
@@ -417,7 +417,7 @@ add_task(async function test_folder_descendants() {
     childFolder.guid,
     childSiblingBmk.guid,
   ].sort();
-  deepEqual(getServerBookmarks(server).keys().sort(), initialSyncIds,
+  deepEqual(getServerBookmarks(server).keys().sort(), initialRecordIds,
     "Should upload roots and partial folder contents on first sync");
 
   _("Insert missing bookmarks locally to request later");
@@ -426,29 +426,29 @@ add_task(async function test_folder_descendants() {
   // considered "changed" locally so never get uploaded.
   let childBmk = await PlacesSyncUtils.bookmarks.insert({
     kind: "bookmark",
-    syncId: Utils.makeGUID(),
-    parentSyncId: parentFolder.guid,
+    recordId: Utils.makeGUID(),
+    parentRecordId: parentFolder.guid,
     title: "Get Firefox",
     url: "http://getfirefox.com",
   });
   let grandChildBmk = await PlacesSyncUtils.bookmarks.insert({
     kind: "bookmark",
-    syncId: Utils.makeGUID(),
-    parentSyncId: childFolder.guid,
+    recordId: Utils.makeGUID(),
+    parentRecordId: childFolder.guid,
     title: "Bugzilla",
     url: "https://bugzilla.mozilla.org",
   });
   let grandChildSiblingBmk = await PlacesSyncUtils.bookmarks.insert({
     kind: "bookmark",
-    syncId: Utils.makeGUID(),
-    parentSyncId: childFolder.guid,
+    recordId: Utils.makeGUID(),
+    parentRecordId: childFolder.guid,
     title: "Mozilla",
     url: "https://mozilla.org",
   });
 
   _("Sync again; server contents shouldn't change");
   await Service.sync();
-  deepEqual(getServerBookmarks(server).keys().sort(), initialSyncIds,
+  deepEqual(getServerBookmarks(server).keys().sort(), initialRecordIds,
     "Second sync should not upload missing bookmarks");
 
   // This assumes the parent record on the server is correct, and the server
@@ -464,8 +464,8 @@ add_task(async function test_folder_descendants() {
       // Explicitly upload these. We should also upload `grandChildBmk`,
       // since it's a descendant of `parentFolder` and we requested its
       // ancestor.
-      childBmk.syncId,
-      grandChildSiblingBmk.syncId],
+      childBmk.recordId,
+      grandChildSiblingBmk.recordId],
     flowID: Utils.makeGUID(),
   };
   let responder = new BookmarkRepairResponder();
@@ -482,10 +482,10 @@ add_task(async function test_folder_descendants() {
   _("Sync after requesting repair; should upload missing records");
   await Service.sync();
   deepEqual(getServerBookmarks(server).keys().sort(), [
-    ...initialSyncIds,
-    childBmk.syncId,
-    grandChildBmk.syncId,
-    grandChildSiblingBmk.syncId,
+    ...initialRecordIds,
+    childBmk.recordId,
+    grandChildBmk.recordId,
+    grandChildSiblingBmk.recordId,
   ].sort(), "Third sync should upload requested items");
 
   checkRecordedEvents([

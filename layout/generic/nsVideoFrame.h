@@ -67,7 +67,7 @@ public:
               ComputeSizeFlags aFlags) override;
   nscoord GetMinISize(gfxContext *aRenderingContext) override;
   nscoord GetPrefISize(gfxContext *aRenderingContext) override;
-  void DestroyFrom(nsIFrame* aDestructRoot) override;
+  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   void Reflow(nsPresContext*     aPresContext,
               ReflowOutput&      aDesiredSize,

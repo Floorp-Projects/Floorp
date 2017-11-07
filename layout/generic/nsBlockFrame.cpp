@@ -321,18 +321,18 @@ nsBlockFrame::~nsBlockFrame()
 }
 
 void
-nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   ClearLineCursor();
-  DestroyAbsoluteFrames(aDestructRoot);
-  mFloats.DestroyFramesFrom(aDestructRoot);
+  DestroyAbsoluteFrames(aDestructRoot, aPostDestroyData);
+  mFloats.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
   nsPresContext* presContext = PresContext();
   nsIPresShell* shell = presContext->PresShell();
   nsLineBox::DeleteLineList(presContext, mLines, aDestructRoot,
-                            &mFrames);
+                            &mFrames, aPostDestroyData);
 
   if (HasPushedFloats()) {
-    SafelyDestroyFrameListProp(aDestructRoot, shell,
+    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
                                PushedFloatProperty());
     RemoveStateBits(NS_BLOCK_HAS_PUSHED_FLOATS);
   }
@@ -341,23 +341,24 @@ nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot)
   FrameLines* overflowLines = RemoveOverflowLines();
   if (overflowLines) {
     nsLineBox::DeleteLineList(presContext, overflowLines->mLines,
-                              aDestructRoot, &overflowLines->mFrames);
+                              aDestructRoot, &overflowLines->mFrames,
+                              aPostDestroyData);
     delete overflowLines;
   }
 
   if (GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS) {
-    SafelyDestroyFrameListProp(aDestructRoot, shell,
+    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
                                OverflowOutOfFlowsProperty());
     RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
 
   if (HasOutsideBullet()) {
-    SafelyDestroyFrameListProp(aDestructRoot, shell,
+    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
                                OutsideBulletProperty());
     RemoveStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 
-  nsContainerFrame::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 /* virtual */ nsILineIterator*

@@ -3875,7 +3875,7 @@ struct {
     void *function;
 } ssl_experimental_functions[] = {
 #ifndef SSL_DISABLE_EXPERIMENTAL_API
-    EXP(UseAltServerHelloType),
+    EXP(UseAltHandshakeType),
 #endif
     { "", NULL }
 };

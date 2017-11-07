@@ -133,9 +133,6 @@ const char keylogLabelExporterSecret[] = "EXPORTER_SECRET";
                                            ? ss->ssl3.hs.client##name \
                                            : ss->ssl3.hs.server##name)
 
-const SSL3ProtocolVersion kTlsRecordVersion = SSL_LIBRARY_VERSION_TLS_1_0;
-const SSL3ProtocolVersion kDtlsRecordVersion = SSL_LIBRARY_VERSION_TLS_1_1;
-
 /* Belt and suspenders in case we ever add a TLS 1.4. */
 PR_STATIC_ASSERT(SSL_LIBRARY_VERSION_MAX_SUPPORTED <=
                  SSL_LIBRARY_VERSION_TLS_1_3);
@@ -1728,7 +1725,9 @@ tls13_HandleHelloRetryRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
     /* Version. */
     rv = ssl_ClientReadVersion(ss, &b, &length, &version);
     if (rv != SECSuccess) {
-        return SECFailure; /* alert already sent */
+        FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST,
+                    protocol_version);
+        return SECFailure;
     }
     if (version > ss->vrange.max || version < SSL_LIBRARY_VERSION_TLS_1_3) {
         FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST,
@@ -1939,6 +1938,13 @@ tls13_SendServerHelloSequence(sslSocket *ss)
     rv = ssl3_SendServerHello(ss);
     if (rv != SECSuccess) {
         return rv; /* err code is set. */
+    }
+
+    if (ss->ssl3.hs.altHandshakeType) {
+        rv = ssl3_SendChangeCipherSpecsInt(ss);
+        if (rv != SECSuccess) {
+            return rv;
+        }
     }
 
     rv = tls13_SendEncryptedServerSequence(ss);
@@ -2704,27 +2710,61 @@ loser:
     return SECFailure;
 }
 
-static SECStatus
-tls13_SetupPendingCipherSpec(sslSocket *ss)
+void
+tls13_SetSpecRecordVersion(sslSocket *ss, ssl3CipherSpec *spec)
 {
-    ssl3CipherSpec *pSpec;
+    const SSL3ProtocolVersion kTlsRecordVersion = SSL_LIBRARY_VERSION_TLS_1_0;
+    const SSL3ProtocolVersion kTlsAltRecordVersion = SSL_LIBRARY_VERSION_TLS_1_2;
+    const SSL3ProtocolVersion kDtlsRecordVersion = SSL_LIBRARY_VERSION_DTLS_1_0_WIRE;
+
+    /* Set the record version. */
+    if (IS_DTLS(ss)) {
+        spec->recordVersion = kDtlsRecordVersion;
+    } else if (spec->epoch == TrafficKeyEarlyApplicationData) {
+        /* For early data, the previous session determines the record type that
+         * is used (and not what this session might negotiate). */
+        if (ss->sec.ci.sid && ss->sec.ci.sid->u.ssl3.altHandshakeType) {
+            spec->recordVersion = kTlsAltRecordVersion;
+        } else {
+            spec->recordVersion = kTlsRecordVersion;
+        }
+    } else if (ss->ssl3.hs.altHandshakeType) {
+        spec->recordVersion = kTlsAltRecordVersion;
+    } else {
+        spec->recordVersion = kTlsRecordVersion;
+    }
+    SSL_TRC(10, ("%d: TLS13[%d]: Set record version to 0x%04x",
+                 SSL_GETPID(), ss->fd, spec->recordVersion));
+}
+
+static SECStatus
+tls13_SetupPendingCipherSpec(sslSocket *ss, ssl3CipherSpec *spec)
+{
     ssl3CipherSuite suite = ss->ssl3.hs.cipher_suite;
-    const ssl3BulkCipherDef *bulk = ssl_GetBulkCipherDef(
-        ssl_LookupCipherSuiteDef(suite));
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
-    ssl_GetSpecWriteLock(ss); /*******************************/
-
-    pSpec = ss->ssl3.pwSpec;
     /* Version isn't set when we send 0-RTT data. */
-    pSpec->version = PR_MAX(SSL_LIBRARY_VERSION_TLS_1_3, ss->version);
+    spec->version = PR_MAX(SSL_LIBRARY_VERSION_TLS_1_3, ss->version);
 
     SSL_TRC(3, ("%d: TLS13[%d]: Set Pending Cipher Suite to 0x%04x",
                 SSL_GETPID(), ss->fd, suite));
-    pSpec->cipher_def = bulk;
 
-    ssl_ReleaseSpecWriteLock(ss); /*******************************/
+    spec->cipher_def = ssl_GetBulkCipherDef(ssl_LookupCipherSuiteDef(suite));
+    switch (spec->cipher_def->calg) {
+        case ssl_calg_aes_gcm:
+            spec->aead = tls13_AESGCM;
+            break;
+        case ssl_calg_chacha20:
+            spec->aead = tls13_ChaCha20Poly1305;
+            break;
+        default:
+            PORT_Assert(0);
+            return SECFailure;
+            break;
+    }
+
+    tls13_SetSpecRecordVersion(ss, spec);
     return SECSuccess;
 }
 
@@ -2754,29 +2794,6 @@ tls13_SetCipherSpec(sslSocket *ss, TrafficKeyType type,
     PR_APPEND_LINK(&spec->link, &ss->ssl3.hs.cipherSpecs);
     ss->ssl3.pwSpec = ss->ssl3.prSpec = spec;
 
-    rv = tls13_SetupPendingCipherSpec(ss);
-    if (rv != SECSuccess)
-        return SECFailure;
-
-    switch (spec->cipher_def->calg) {
-        case calg_aes_gcm:
-            spec->aead = tls13_AESGCM;
-            break;
-        case calg_chacha20:
-            spec->aead = tls13_ChaCha20Poly1305;
-            break;
-        default:
-            PORT_Assert(0);
-            return SECFailure;
-            break;
-    }
-
-    rv = tls13_DeriveTrafficKeys(ss, spec, type, direction,
-                                 deleteSecret);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-
     /* We use the epoch for cipher suite identification, so increment
      * it in both TLS and DTLS. */
     if ((*specp)->epoch == PR_UINT16_MAX) {
@@ -2792,6 +2809,17 @@ tls13_SetCipherSpec(sslSocket *ss, TrafficKeyType type,
             (sslSequenceNumber)spec->epoch << 48;
 
         dtls_InitRecvdRecords(&spec->recvdRecords);
+    }
+
+    /* This depends on spec having a valid direction and epoch. */
+    rv = tls13_SetupPendingCipherSpec(ss, spec);
+    if (rv != SECSuccess)
+        return SECFailure;
+
+    rv = tls13_DeriveTrafficKeys(ss, spec, type, direction,
+                                 deleteSecret);
+    if (rv != SECSuccess) {
+        return SECFailure;
     }
 
     if (type == TrafficKeyEarlyApplicationData) {
@@ -3745,6 +3773,14 @@ tls13_SendClientSecondRound(sslSocket *ss)
         if (rv != SECSuccess) {
             return SECFailure; /* Error code already set. */
         }
+    } else if (ss->ssl3.hs.zeroRttState == ssl_0rtt_none &&
+               ss->ssl3.hs.altHandshakeType) {
+        ssl_GetXmitBufLock(ss); /*******************************/
+        rv = ssl3_SendChangeCipherSpecsInt(ss);
+        ssl_ReleaseXmitBufLock(ss); /*******************************/
+        if (rv != SECSuccess) {
+            return rv;
+        }
     }
 
     rv = tls13_SetCipherSpec(ss, TrafficKeyHandshake,
@@ -4046,7 +4082,8 @@ static const struct {
     { ssl_cert_status_xtn, ExtensionSendCertificate },
     { ssl_tls13_ticket_early_data_info_xtn, ExtensionNewSessionTicket },
     { ssl_tls13_cookie_xtn, ExtensionSendHrr },
-    { ssl_tls13_short_header_xtn, ExtensionSendClear }
+    { ssl_tls13_short_header_xtn, ExtensionSendClear },
+    { ssl_tls13_supported_versions_xtn, ExtensionSendClear }
 };
 
 PRBool
@@ -4239,9 +4276,8 @@ tls13_UnprotectRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *plaintext
         return SECFailure;
     }
 
-    /* Check the version number in the record */
-    if ((IS_DTLS(ss) && cText->version != kDtlsRecordVersion) ||
-        (!IS_DTLS(ss) && cText->version != kTlsRecordVersion)) {
+    /* Check the version number in the record. */
+    if (cText->version != crSpec->recordVersion) {
         /* Do we need a better error here? */
         SSL_TRC(3,
                 ("%d: TLS13[%d]: record has bogus version",
@@ -4364,8 +4400,21 @@ tls13_MaybeDo0RTTHandshake(sslSocket *ss)
         ss->xtnData.nextProtoState = SSL_NEXT_PROTO_EARLY_VALUE;
         rv = SECITEM_CopyItem(NULL, &ss->xtnData.nextProto,
                               &ss->sec.ci.sid->u.ssl3.alpnSelection);
-        if (rv != SECSuccess)
-            return rv;
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+    }
+
+    /* If the alternative handshake type option is enabled and the last session
+     * had the alternative handshake type, then send CCS. */
+    if (ss->opt.enableAltHandshaketype &&
+        ss->sec.ci.sid->u.ssl3.altHandshakeType) {
+        ssl_GetXmitBufLock(ss);
+        rv = ssl3_SendChangeCipherSpecsInt(ss);
+        ssl_ReleaseXmitBufLock(ss);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
     }
 
     /* Cipher suite already set in tls13_SetupClientHello. */
@@ -4377,13 +4426,14 @@ tls13_MaybeDo0RTTHandshake(sslSocket *ss)
                             keylogLabelClientEarlyTrafficSecret,
                             NULL,
                             &ss->ssl3.hs.clientEarlyTrafficSecret);
-    if (rv != SECSuccess)
+    if (rv != SECSuccess) {
         return SECFailure;
+    }
 
     rv = tls13_SetCipherSpec(ss, TrafficKeyEarlyApplicationData,
                              CipherSpecWrite, PR_TRUE);
     if (rv != SECSuccess) {
-        return rv;
+        return SECFailure;
     }
 
     return SECSuccess;
@@ -4504,7 +4554,7 @@ tls13_EncodeAltDraftVersion(SSL3ProtocolVersion version)
 {
 #ifdef TLS_1_3_DRAFT_VERSION
     if (version == SSL_LIBRARY_VERSION_TLS_1_3) {
-        return 0x7a00 | TLS_1_3_DRAFT_VERSION;
+        return 0x7e02;
     }
 #endif
     return (PRUint16)version;
@@ -4541,10 +4591,17 @@ tls13_NegotiateVersion(sslSocket *ss, const TLSExtension *supported_versions)
                 ss->version = version;
                 return SECSuccess;
             }
-            if (ss->opt.enableAltHandshaketype && !IS_DTLS(ss) &&
+            if (ss->opt.enableAltHandshaketype &&
+                !IS_DTLS(ss) &&
                 supported == alt_wire) {
-                ss->version = version;
+                rv = ssl3_RegisterExtensionSender(ss, &ss->xtnData,
+                                                  ssl_tls13_supported_versions_xtn,
+                                                  tls13_ServerSendSupportedVersionsXtn);
+                if (rv != SECSuccess) {
+                    return SECFailure;
+                }
                 ss->ssl3.hs.altHandshakeType = PR_TRUE;
+                ss->version = version;
                 return SECSuccess;
             }
         }
@@ -4555,13 +4612,13 @@ tls13_NegotiateVersion(sslSocket *ss, const TLSExtension *supported_versions)
 }
 
 SECStatus
-SSLExp_UseAltServerHelloType(PRFileDesc *fd, PRBool enable)
+SSLExp_UseAltHandshakeType(PRFileDesc *fd, PRBool enable)
 {
     sslSocket *ss;
 
     ss = ssl_FindSocket(fd);
-    if (!ss) {
-        SSL_DBG(("%d: SSL[%d]: bad socket in SSLExp_UseAltServerHelloType",
+    if (!ss || IS_DTLS(ss)) {
+        SSL_DBG(("%d: SSL[%d]: bad socket in SSLExp_UseAltHandshakeType",
                  SSL_GETPID(), fd));
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;

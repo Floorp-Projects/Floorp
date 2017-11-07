@@ -13,6 +13,14 @@ extern crate rayon;
 extern crate thread_profiler;
 extern crate log;
 
+#[cfg(target_os = "windows")]
+extern crate dwrote;
+
+#[cfg(target_os = "macos")]
+extern crate core_foundation;
+#[cfg(target_os = "macos")]
+extern crate core_graphics;
+
 #[allow(non_snake_case)]
 pub mod bindings;
 pub mod moz2d_renderer;
