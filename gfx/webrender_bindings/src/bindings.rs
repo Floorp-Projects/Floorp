@@ -18,6 +18,9 @@ use rayon;
 use euclid::SideOffsets2D;
 use log::{set_logger, shutdown_logger, LogLevelFilter, Log, LogLevel, LogMetadata, LogRecord};
 
+#[cfg(target_os = "windows")]
+use dwrote::{FontDescriptor, FontWeight, FontStretch, FontStyle};
+
 extern crate webrender_api;
 
 /// cbindgen:field-names=[mNamespace, mHandle]
@@ -980,6 +983,20 @@ pub extern "C" fn wr_resource_updates_add_raw_font(
     index: u32
 ) {
     resources.add_raw_font(key, bytes.flush_into_vec(), index);
+}
+
+#[cfg(target_os = "windows")]
+fn read_font_descriptor(
+    bytes: &mut WrVecU8,
+    index: u32
+) -> NativeFontHandle {
+    let wchars = bytes.convert_into_vec::<u16>();
+    FontDescriptor {
+        family_name: String::from_utf16(&wchars).unwrap(),
+        weight: FontWeight::from_u32(index & 0xffff),
+        stretch: FontStretch::from_u32((index >> 16) & 0xff),
+        style: FontStyle::from_u32((index >> 24) & 0xff),
+    }
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
