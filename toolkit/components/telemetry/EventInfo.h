@@ -25,6 +25,9 @@ struct CommonEventInfo {
   uint32_t extra_index;
   uint32_t extra_count;
 
+  // The day since UNIX epoch that this probe expires on.
+  uint32_t expiration_day;
+
   // The dataset this event is recorded in.
   uint32_t dataset;
 
