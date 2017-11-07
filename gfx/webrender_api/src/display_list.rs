@@ -1264,6 +1264,8 @@ impl DisplayListBuilder {
         margins: SideOffsets2D<Option<f32>>,
         vertical_offset_bounds: StickyOffsetBounds,
         horizontal_offset_bounds: StickyOffsetBounds,
+        previously_applied_offset: LayoutVector2D,
+
     ) -> ClipId {
         let id = self.generate_clip_id(id);
         let item = SpecificDisplayItem::StickyFrame(StickyFrameDisplayItem {
@@ -1271,6 +1273,7 @@ impl DisplayListBuilder {
             margins,
             vertical_offset_bounds,
             horizontal_offset_bounds,
+            previously_applied_offset,
         });
 
         let info = LayoutPrimitiveInfo::new(frame_rect);

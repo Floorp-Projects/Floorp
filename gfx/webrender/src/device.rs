@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::shader_source;
-use api::ImageFormat;
+use api::{ColorF, ImageFormat};
 use api::{DeviceIntRect, DeviceUintSize};
 use euclid::Transform3D;
 use gleam::gl;
@@ -1923,6 +1923,12 @@ impl Device {
     }
     pub fn set_blend_mode_subpixel_with_bg_color_pass2(&self) {
         self.gl.blend_func_separate(gl::ONE, gl::ONE, gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
+        self.gl.blend_equation(gl::FUNC_ADD);
+    }
+    pub fn set_blend_mode_subpixel_opaque(&self, color: ColorF) {
+        self.gl.blend_color(color.r, color.g, color.b, color.a);
+        self.gl
+            .blend_func(gl::CONSTANT_COLOR, gl::ONE_MINUS_SRC_COLOR);
         self.gl.blend_equation(gl::FUNC_ADD);
     }
 }

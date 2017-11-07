@@ -7,6 +7,7 @@
 varying vec3 vUv;
 flat varying int vImageKind;
 flat varying vec4 vUvBounds;
+flat varying vec4 vUvBounds_NoClamp;
 flat varying vec4 vParams;
 
 #if defined WR_FEATURE_ALPHA_TARGET
@@ -42,8 +43,8 @@ void brush_vs(
 #endif
 
     vec2 uv0 = task.target_rect.p0;
-    vec2 src_size = task.target_rect.size;
-    vec2 uv1 = uv0 + src_size;
+    vec2 src_size = task.target_rect.size * task.scale_factor;
+    vec2 uv1 = uv0 + task.target_rect.size;
 
     // TODO(gw): In the future we'll probably draw these as segments
     //           with the brush shader. When that occurs, we can
@@ -74,6 +75,7 @@ void brush_vs(
     }
 
     vUvBounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) / texture_size.xyxy;
+    vUvBounds_NoClamp = vec4(uv0, uv1) / texture_size.xyxy;
 }
 #endif
 
@@ -89,7 +91,8 @@ vec4 brush_fs() {
         case BRUSH_IMAGE_NINEPATCH: {
             uv = clamp(vUv.xy, vec2(0.0), vParams.xy);
             uv += max(vec2(0.0), vUv.xy - vParams.zw);
-            uv = mix(vUvBounds.xy, vUvBounds.zw, uv);
+            uv = mix(vUvBounds_NoClamp.xy, vUvBounds_NoClamp.zw, uv);
+            uv = clamp(uv, vUvBounds.xy, vUvBounds.zw);
             break;
         }
         case BRUSH_IMAGE_MIRROR: {
@@ -101,7 +104,8 @@ vec4 brush_fs() {
             // shadow corner. This can happen, for example, when
             // drawing the outer parts of an inset box shadow.
             uv = clamp(uv, vec2(0.0), vec2(1.0));
-            uv = mix(vUvBounds.xy, vUvBounds.zw, uv);
+            uv = mix(vUvBounds_NoClamp.xy, vUvBounds_NoClamp.zw, uv);
+            uv = clamp(uv, vUvBounds.xy, vUvBounds.zw);
             break;
         }
     }

@@ -22,6 +22,7 @@ pub trait MatrixHelpers<Src, Dst> {
     fn has_perspective_component(&self) -> bool;
     fn inverse_project(&self, target: &TypedPoint2D<f32, Dst>) -> Option<TypedPoint2D<f32, Src>>;
     fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> TypedRect<f32, Src>;
+    fn transform_kind(&self) -> TransformedRectKind;
 }
 
 impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
@@ -97,6 +98,14 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
             self.inverse_project(&rect.bottom_right())
                 .unwrap_or(TypedPoint2D::zero()),
         ])
+    }
+
+    fn transform_kind(&self) -> TransformedRectKind {
+        if self.preserves_2d_axis_alignment() {
+            TransformedRectKind::AxisAligned
+        } else {
+            TransformedRectKind::Complex
+        }
     }
 }
 

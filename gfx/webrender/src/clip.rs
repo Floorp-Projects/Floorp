@@ -21,7 +21,6 @@ pub type ClipSourcesWeakHandle = WeakFreeListHandle<ClipSources>;
 
 #[derive(Clone, Debug)]
 pub struct ClipRegion {
-    pub origin: LayerPoint,
     pub main: LayerRect,
     pub image_mask: Option<ImageMask>,
     pub complex_clips: Vec<ComplexClipRegion>,
@@ -32,32 +31,39 @@ impl ClipRegion {
         rect: LayerRect,
         mut complex_clips: Vec<ComplexClipRegion>,
         mut image_mask: Option<ImageMask>,
+        reference_frame_relative_offset: &LayoutVector2D,
     ) -> ClipRegion {
-        // All the coordinates we receive are relative to the stacking context, but we want
-        // to convert them to something relative to the origin of the clip.
-        let negative_origin = -rect.origin.to_vector();
+        let rect = rect.translate(reference_frame_relative_offset);
+
         if let Some(ref mut image_mask) = image_mask {
-            image_mask.rect = image_mask.rect.translate(&negative_origin);
+            image_mask.rect = image_mask.rect.translate(reference_frame_relative_offset);
         }
 
         for complex_clip in complex_clips.iter_mut() {
-            complex_clip.rect = complex_clip.rect.translate(&negative_origin);
+            complex_clip.rect = complex_clip.rect.translate(reference_frame_relative_offset);
         }
 
         ClipRegion {
-            origin: rect.origin,
-            main: LayerRect::new(LayerPoint::zero(), rect.size),
+            main: rect,
             image_mask,
             complex_clips,
         }
     }
 
-    pub fn create_for_clip_node_with_local_clip(local_clip: &LocalClip) -> ClipRegion {
+    pub fn create_for_clip_node_with_local_clip(
+        local_clip: &LocalClip,
+        reference_frame_relative_offset: &LayoutVector2D
+    ) -> ClipRegion {
         let complex_clips = match local_clip {
             &LocalClip::Rect(_) => Vec::new(),
             &LocalClip::RoundedRect(_, ref region) => vec![region.clone()],
         };
-        ClipRegion::create_for_clip_node(*local_clip.clip_rect(), complex_clips, None)
+        ClipRegion::create_for_clip_node(
+            *local_clip.clip_rect(),
+            complex_clips,
+            None,
+            reference_frame_relative_offset
+        )
     }
 }
 
