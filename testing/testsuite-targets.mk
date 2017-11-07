@@ -91,9 +91,6 @@ REMOTE_CPPUNITTESTS = \
 cppunittests-remote:
 	$(call REMOTE_CPPUNITTESTS);
 
-pgo-profile-run:
-	$(PYTHON) $(topsrcdir)/build/pgo/profileserver.py $(EXTRA_TEST_ARGS)
-
 # Package up the tests and test harnesses
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 

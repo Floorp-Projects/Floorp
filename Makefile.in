@@ -233,7 +233,7 @@ profiledbuild::
 	rm -f jarlog/en-US.log
 	$(call BUILDSTATUS,TIER_FINISH pgo_package)
 	$(call BUILDSTATUS,TIER_START pgo_profile)
-	$(MAKE) pgo-profile-run MOZ_PGO_INSTRUMENTED=1 JARLOG_FILE=jarlog/en-US.log EXTRA_TEST_ARGS=10
+	MOZ_PGO_INSTRUMENTED=1 JARLOG_FILE=jarlog/en-US.log $(PYTHON) $(topsrcdir)/build/pgo/profileserver.py 10
 	$(call BUILDSTATUS,TIER_FINISH pgo_profile)
 	$(call BUILDSTATUS,TIER_START pgo_clobber)
 	$(MAKE) maybe_clobber_profiledbuild
