@@ -17,6 +17,7 @@ if (typeof Services !== "undefined") {
   usablePerfObj = Services.appShell.hiddenDOMWindow.performance;
 } else if (typeof performance !== "undefined") {
   // we must be running in content space
+  // eslint-disable-next-line no-undef
   usablePerfObj = performance;
 } else {
   // This is a dummy object so this file doesn't crash in the node prerendering
