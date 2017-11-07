@@ -279,16 +279,6 @@ UniqueEventName(const DynamicEventInfo& info)
                          info.object);
 }
 
-bool
-IsExpiredDate(uint32_t expires_days_since_epoch) {
-  if (expires_days_since_epoch == 0) {
-    return false;
-  }
-
-  const uint32_t days_since_epoch = PR_Now() / (PRTime(PR_USEC_PER_SEC) * 24 * 60 * 60);
-  return expires_days_since_epoch <= days_since_epoch;
-}
-
 void
 TruncateToByteLength(nsCString& str, uint32_t length)
 {
@@ -698,8 +688,7 @@ TelemetryEvent::InitializeGlobalState(bool aCanRecordBase, bool aCanRecordExtend
     // If this event is expired or not recorded in this process, mark it with
     // a special event id.
     // This avoids doing repeated checks at runtime.
-    if (IsExpiredVersion(info.common_info.expiration_version().get()) ||
-        IsExpiredDate(info.common_info.expiration_day)) {
+    if (IsExpiredVersion(info.common_info.expiration_version().get())) {
       eventId = kExpiredEventId;
     }
 
