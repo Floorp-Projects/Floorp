@@ -29,6 +29,7 @@ public:
 
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) override;
   virtual void SetInnerHTML(const nsAString& aInnerHTML,
+                            nsIPrincipal& aSubjectPrincipal,
                             mozilla::ErrorResult& aError) override;
 
   // nsIScriptElement
