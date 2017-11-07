@@ -892,7 +892,7 @@ public:
 
   nsresult Call() override
   {
-    return nsGlobalWindow::Cast(mWindow)->RunIdleRequest(mIdleRequest, 0.0, true);
+    return nsGlobalWindowInner::Cast(mWindow)->RunIdleRequest(mIdleRequest, 0.0, true);
   }
 
 private:
@@ -1427,7 +1427,7 @@ nsOuterWindowProxy::GetSubframeWindow(JSContext *cx,
 
   found = true;
   // Just return the window's global
-  nsGlobalWindow* global = nsGlobalWindow::Cast(frame);
+  nsGlobalWindowOuter* global = nsGlobalWindowOuter::Cast(frame);
   frame->EnsureInnerWindow();
   JSObject* obj = global->FastGetGlobalJSObject();
   // This null check fixes a hard-to-reproduce crash that occurs when we
@@ -1749,7 +1749,7 @@ nsGlobalWindow::~nsGlobalWindow()
       }
     }
 
-    nsGlobalWindow* outer = nsGlobalWindow::Cast(mOuterWindow);
+    nsGlobalWindowOuter* outer = nsGlobalWindowOuter::Cast(mOuterWindow);
     printf_stderr("--DOMWINDOW == %d (%p) [pid = %d] [serial = %d] [outer = %p] [url = %s]\n",
                   gRefCnt,
                   static_cast<void*>(ToCanonicalSupports(this)),
@@ -2358,7 +2358,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
 #endif
 
   if (tmp->mOuterWindow) {
-    nsGlobalWindow::Cast(tmp->mOuterWindow)->MaybeClearInnerWindow(tmp);
+    nsGlobalWindowOuter::Cast(tmp->mOuterWindow)->MaybeClearInnerWindow(tmp);
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mOuterWindow)
   }
 
@@ -2795,7 +2795,7 @@ nsGlobalWindow::ComputeIsSecureContext(nsIDocument* aDocument, SecureContextFlag
 
   nsPIDOMWindowOuter* parentOuterWin = GetScriptableParent();
   MOZ_ASSERT(parentOuterWin, "How can we get here? No docShell somehow?");
-  if (nsGlobalWindow::Cast(parentOuterWin) != this) {
+  if (nsGlobalWindowOuter::Cast(parentOuterWin) != this) {
     // There may be a small chance that parentOuterWin has navigated in
     // the time that it took us to start loading this sub-document.  If that
     // were the case then parentOuterWin->GetCurrentInnerWindow() wouldn't
@@ -2807,13 +2807,13 @@ nsGlobalWindow::ComputeIsSecureContext(nsIDocument* aDocument, SecureContextFlag
     if (!creatorDoc) {
       return false; // we must be tearing down
     }
-    nsGlobalWindow* parentWin =
-      nsGlobalWindow::Cast(creatorDoc->GetInnerWindow());
+    nsGlobalWindowInner* parentWin =
+      nsGlobalWindowInner::Cast(creatorDoc->GetInnerWindow());
     if (!parentWin) {
       return false; // we must be tearing down
     }
     MOZ_ASSERT(parentWin ==
-               nsGlobalWindow::Cast(parentOuterWin->GetCurrentInnerWindow()),
+               nsGlobalWindowInner::Cast(parentOuterWin->GetCurrentInnerWindow()),
                "Creator window mismatch while setting Secure Context state");
     if (aFlags != SecureContextFlags::eIgnoreOpener) {
       hadNonSecureContextCreator = !parentWin->IsSecureContext();
@@ -2886,7 +2886,7 @@ SelectZoneGroup(nsGlobalWindow* aNewInner,
   // go through one iteration of this loop.
   RefPtr<TabGroup> tabGroup = aNewInner->TabGroup();
   for (nsPIDOMWindowOuter* outer : tabGroup->GetWindows()) {
-    nsGlobalWindow* window = nsGlobalWindow::Cast(outer);
+    nsGlobalWindowOuter* window = nsGlobalWindowOuter::Cast(outer);
     if (JSObject* global = window->GetGlobalJSObject()) {
       return aOptions.setNewZoneInExistingZoneGroup(global);
     }
@@ -3493,7 +3493,8 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
   mDocShell = aDocShell; // Weak Reference
 
   nsCOMPtr<nsPIDOMWindowOuter> parentWindow = GetScriptableParentOrNull();
-  MOZ_RELEASE_ASSERT(!parentWindow || !mTabGroup || mTabGroup == Cast(parentWindow)->mTabGroup);
+  MOZ_RELEASE_ASSERT(!parentWindow || !mTabGroup ||
+                     mTabGroup == nsGlobalWindowOuter::Cast(parentWindow)->mTabGroup);
 
   mTopLevelOuterContentWindow =
     !mIsChrome && GetScriptableTopInternal() == this;
@@ -3625,7 +3626,7 @@ nsGlobalWindow::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
   // contentOpener is not used when the DIAGNOSTIC_ASSERT is compiled out.
   mozilla::Unused << contentOpener;
   MOZ_DIAGNOSTIC_ASSERT(!contentOpener || !mTabGroup ||
-    mTabGroup == Cast(contentOpener)->mTabGroup);
+    mTabGroup == nsGlobalWindowOuter::Cast(contentOpener)->mTabGroup);
 
   if (aOriginalOpener) {
     MOZ_ASSERT(!mHadOriginalOpener,
@@ -4327,43 +4328,43 @@ nsPIDOMWindowInner::CreatePerformanceObjectIfNeeded()
 bool
 nsPIDOMWindowInner::IsSecureContext() const
 {
-  return nsGlobalWindow::Cast(this)->IsSecureContext();
+  return nsGlobalWindowInner::Cast(this)->IsSecureContext();
 }
 
 bool
 nsPIDOMWindowInner::IsSecureContextIfOpenerIgnored() const
 {
-  return nsGlobalWindow::Cast(this)->IsSecureContextIfOpenerIgnored();
+  return nsGlobalWindowInner::Cast(this)->IsSecureContextIfOpenerIgnored();
 }
 
 void
 nsPIDOMWindowInner::Suspend()
 {
-  nsGlobalWindow::Cast(this)->Suspend();
+  nsGlobalWindowInner::Cast(this)->Suspend();
 }
 
 void
 nsPIDOMWindowInner::Resume()
 {
-  nsGlobalWindow::Cast(this)->Resume();
+  nsGlobalWindowInner::Cast(this)->Resume();
 }
 
 void
 nsPIDOMWindowInner::Freeze()
 {
-  nsGlobalWindow::Cast(this)->Freeze();
+  nsGlobalWindowInner::Cast(this)->Freeze();
 }
 
 void
 nsPIDOMWindowInner::Thaw()
 {
-  nsGlobalWindow::Cast(this)->Thaw();
+  nsGlobalWindowInner::Cast(this)->Thaw();
 }
 
 void
 nsPIDOMWindowInner::SyncStateFromParentWindow()
 {
-  nsGlobalWindow::Cast(this)->SyncStateFromParentWindow();
+  nsGlobalWindowInner::Cast(this)->SyncStateFromParentWindow();
 }
 
 void
@@ -4456,7 +4457,7 @@ nsPIDOMWindowInner::TryToCacheTopInnerWindow()
 
   mHasTriedToCacheTopInnerWindow = true;
 
-  nsGlobalWindow* window = nsGlobalWindow::Cast(AsInner());
+  nsGlobalWindow* window = nsGlobalWindowInner::Cast(AsInner());
 
   MOZ_ASSERT(window);
 
@@ -4798,7 +4799,7 @@ nsGlobalWindow::GetScriptableParentOrNull()
   FORWARD_TO_OUTER(GetScriptableParentOrNull, (), nullptr);
 
   nsPIDOMWindowOuter* parent = GetScriptableParent();
-  return (Cast(parent) == this) ? nullptr : parent;
+  return (nsGlobalWindowOuter::Cast(parent) == this) ? nullptr : parent;
 }
 
 /**
@@ -5430,7 +5431,7 @@ nsGlobalWindow::GetSanitizedOpener(nsPIDOMWindowOuter* aOpener)
     return nullptr;
   }
 
-  nsGlobalWindow* win = nsGlobalWindow::Cast(aOpener);
+  nsGlobalWindow* win = nsGlobalWindowOuter::Cast(aOpener);
 
   // First, ensure that we're not handing back a chrome window to content:
   if (win->IsChromeWindow()) {
@@ -5473,7 +5474,7 @@ nsGlobalWindow::GetOpenerWindowOuter()
   if (nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     // Catch the case where we're chrome but the opener is not...
     if (GetPrincipal() == nsContentUtils::GetSystemPrincipal() &&
-        nsGlobalWindow::Cast(opener)->GetPrincipal() != nsContentUtils::GetSystemPrincipal()) {
+        nsGlobalWindowOuter::Cast(opener)->GetPrincipal() != nsContentUtils::GetSystemPrincipal()) {
       return nullptr;
     }
     return opener;
@@ -6272,7 +6273,7 @@ nsGlobalWindow::GetDevicePixelRatio(CallerType aCallerType, ErrorResult& aError)
 float
 nsPIDOMWindowOuter::GetDevicePixelRatio(CallerType aCallerType)
 {
-  return nsGlobalWindow::Cast(this)->GetDevicePixelRatioOuter(aCallerType);
+  return nsGlobalWindowOuter::Cast(this)->GetDevicePixelRatioOuter(aCallerType);
 }
 
 uint64_t
@@ -6545,7 +6546,7 @@ nsGlobalWindow::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop,
     nsContentUtils::HidePopupsInDocument(mDoc);
 #endif
 
-    if (nsGlobalWindow* rootWindow = nsGlobalWindow::Cast(GetPrivateRoot())) {
+    if (nsGlobalWindowOuter* rootWindow = nsGlobalWindowOuter::Cast(GetPrivateRoot())) {
       rootWindow->FlushPendingNotifications(FlushType::Layout);
     }
 
@@ -7115,7 +7116,7 @@ FullscreenTransitionTask::Observer::Observe(nsISupports* aSubject,
   if (strcmp(aTopic, FullscreenTransitionTask::kPaintedTopic) == 0) {
     nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(aSubject));
     nsCOMPtr<nsIWidget> widget = win ?
-      nsGlobalWindow::Cast(win)->GetMainWidget() : nullptr;
+      nsGlobalWindowInner::Cast(win)->GetMainWidget() : nullptr;
     if (widget == mTask->mWidget) {
       // The paint notification arrives first. Cancel the timer.
       mTask->mTimer->Cancel();
@@ -7398,7 +7399,7 @@ nsGlobalWindow::FullScreen() const
   nsCOMPtr<nsPIDOMWindowOuter> window = rootItem->GetWindow();
   NS_ENSURE_TRUE(window, mFullScreen);
 
-  return nsGlobalWindow::Cast(window)->FullScreen();
+  return nsGlobalWindowOuter::Cast(window)->FullScreen();
 }
 
 bool
@@ -8841,7 +8842,7 @@ nsGlobalWindow::PopupWhitelisted()
     return false;
   }
 
-  return nsGlobalWindow::Cast(parent)->PopupWhitelisted();
+  return nsGlobalWindowOuter::Cast(parent)->PopupWhitelisted();
 }
 
 /*
@@ -11222,7 +11223,7 @@ nsGlobalWindow::GetComputedStyleHelperOuter(Element& aElt,
   if (!presShell) {
     // Try flushing frames on our parent in case there's a pending
     // style change that will create the presshell.
-    auto* parent = nsGlobalWindow::Cast(GetPrivateParent());
+    auto* parent = nsGlobalWindowOuter::Cast(GetPrivateParent());
     if (!parent) {
       return nullptr;
     }
@@ -12628,8 +12629,8 @@ nsGlobalWindow::SyncStateFromParentWindow()
   nsCOMPtr<Element> frame = outer->GetFrameElementInternal();
   nsPIDOMWindowOuter* parentOuter = frame ? frame->OwnerDoc()->GetWindow()
                                           : nullptr;
-  nsGlobalWindow* parentInner =
-    parentOuter ? nsGlobalWindow::Cast(parentOuter->GetCurrentInnerWindow())
+  nsGlobalWindowInner* parentInner =
+    parentOuter ? nsGlobalWindowInner::Cast(parentOuter->GetCurrentInnerWindow())
                 : nullptr;
 
   // If our outer is in a modal state, but our parent is not in a modal
@@ -12685,8 +12686,8 @@ nsGlobalWindow::CallOnChildren(Method aMethod)
       continue;
     }
 
-    auto* win = nsGlobalWindow::Cast(pWin);
-    nsGlobalWindow* inner = win->GetCurrentInnerWindowInternal();
+    auto* win = nsGlobalWindowOuter::Cast(pWin);
+    nsGlobalWindowInner* inner = win->GetCurrentInnerWindowInternal();
 
     // This is a bit hackish. Only freeze/suspend windows which are truly our
     // subwindows.
@@ -12732,7 +12733,7 @@ nsGlobalWindow::FireDelayedDOMEvents()
       NS_ASSERTION(childShell, "null child shell");
 
       if (nsCOMPtr<nsPIDOMWindowOuter> pWin = childShell->GetWindow()) {
-        auto* win = nsGlobalWindow::Cast(pWin);
+        auto* win = nsGlobalWindowOuter::Cast(pWin);
         win->FireDelayedDOMEvents();
       }
     }
@@ -13359,7 +13360,7 @@ nsGlobalWindow::SecurityCheckURL(const char *aURL)
     sourceWindow = AsOuter()->GetCurrentInnerWindow();
   }
   AutoJSContext cx;
-  nsGlobalWindow* sourceWin = nsGlobalWindow::Cast(sourceWindow);
+  nsGlobalWindowInner* sourceWin = nsGlobalWindowInner::Cast(sourceWindow);
   JSAutoCompartment ac(cx, sourceWin->GetGlobalJSObject());
 
   // Resolve the baseURI, which could be relative to the calling window.
@@ -13411,7 +13412,7 @@ nsGlobalWindow::EnsureSizeAndPositionUpToDate()
   // If we're a subframe, make sure our size is up to date.  It's OK that this
   // crosses the content/chrome boundary, since chrome can have pending reflows
   // too.
-  nsGlobalWindow *parent = nsGlobalWindow::Cast(GetPrivateParent());
+  nsGlobalWindow *parent = nsGlobalWindowOuter::Cast(GetPrivateParent());
   if (parent) {
     parent->FlushPendingNotifications(FlushType::Layout);
   }
@@ -14555,13 +14556,13 @@ nsPIDOMWindowOuter::SetLargeAllocStatus(LargeAllocStatus aStatus)
 bool
 nsPIDOMWindowOuter::IsTopLevelWindow()
 {
-  return nsGlobalWindow::Cast(this)->IsTopLevelWindow();
+  return nsGlobalWindowOuter::Cast(this)->IsTopLevelWindow();
 }
 
 bool
 nsPIDOMWindowOuter::HadOriginalOpener() const
 {
-  return nsGlobalWindow::Cast(this)->HadOriginalOpener();
+  return nsGlobalWindowOuter::Cast(this)->HadOriginalOpener();
 }
 
 void
@@ -14894,7 +14895,8 @@ nsGlobalWindow::TabGroupOuter()
       MOZ_ASSERT_IF(parent, parent->TabGroup() == mTabGroup);
       nsCOMPtr<nsPIDOMWindowOuter> piOpener = do_QueryReferent(mOpener);
       nsPIDOMWindowOuter* opener = GetSanitizedOpener(piOpener);
-      MOZ_ASSERT_IF(opener && Cast(opener) != this, opener->TabGroup() == mTabGroup);
+      MOZ_ASSERT_IF(opener && nsGlobalWindowOuter::Cast(opener) != this,
+                    opener->TabGroup() == mTabGroup);
     }
     mIsValidatingTabGroup = false;
   }
