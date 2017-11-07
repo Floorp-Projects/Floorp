@@ -62,6 +62,11 @@ public:
 
   void SetRenderRegion(LayerIntRegion&& aRegion) override;
 
+  // To avoid sampling issues with complex regions and transforms, we
+  // squash the visible region for PaintedLayers into a single draw
+  // rect. RenderPasses should use this method instead of GetRenderRegion.
+  const LayerIntRegion& GetDrawRects();
+
   MOZ_LAYER_DECL_NAME("PaintedLayerMLGPU", TYPE_PAINTED)
 
   void CleanupCachedResources();
@@ -76,8 +81,9 @@ private:
   RefPtr<ContentHostTexture> mHost;
   RefPtr<TextureSource> mTexture;
   RefPtr<TextureSource> mTextureOnWhite;
-  gfx::IntRegion mLocalDrawRegion;
-  gfx::IntRegion mTextureRegion;
+#ifndef MOZ_IGNORE_PAINT_WILL_RESAMPLE
+  LayerIntRegion mDrawRects;
+#endif
 };
 
 } // namespace layers

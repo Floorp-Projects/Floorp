@@ -57,8 +57,9 @@ CompositorThreadHolder::CompositorThreadHolder()
 CompositorThreadHolder::~CompositorThreadHolder()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  DestroyCompositorThread(mCompositorThread);
+  if (mCompositorThread) {
+    DestroyCompositorThread(mCompositorThread);
+  }
 }
 
 /* static */ void
@@ -117,14 +118,26 @@ CompositorThreadHolder::Start()
   MOZ_ASSERT(NS_IsMainThread(), "Should be on the main Thread!");
   MOZ_ASSERT(!sCompositorThreadHolder, "The compositor thread has already been started!");
 
+  // We unset the holder instead of asserting because failing to start the
+  // compositor thread may not be a fatal error. As long as this succeeds in
+  // either the GPU process or the UI process, the user will have a usable
+  // browser. If we get neither, it will crash as soon as we try to post to the
+  // compositor thread for the first time.
   sCompositorThreadHolder = new CompositorThreadHolder();
+  if (!sCompositorThreadHolder->GetCompositorThread()) {
+    gfxCriticalNote << "Compositor thread not started (" << XRE_IsParentProcess() << ")";
+    sCompositorThreadHolder = nullptr;
+  }
 }
 
 void
 CompositorThreadHolder::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on the main Thread!");
-  MOZ_ASSERT(sCompositorThreadHolder, "The compositor thread has already been shut down!");
+  if (!sCompositorThreadHolder) {
+    // We've already shutdown or never started.
+    return;
+  }
 
   ImageBridgeParent::Shutdown();
   gfx::ReleaseVRManagerParentSingleton();

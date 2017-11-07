@@ -35,11 +35,11 @@ nsCheckboxRadioFrame::~nsCheckboxRadioFrame()
 }
 
 void
-nsCheckboxRadioFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsCheckboxRadioFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   // Unregister the access key registered in reflow
   nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
-  nsAtomicContainerFrame::DestroyFrom(aDestructRoot);
+  nsAtomicContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsCheckboxRadioFrame)

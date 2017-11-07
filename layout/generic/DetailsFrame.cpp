@@ -82,10 +82,10 @@ DetailsFrame::CheckValidMainSummary(const nsFrameList& aFrameList) const
 #endif
 
 void
-DetailsFrame::DestroyFrom(nsIFrame* aDestructRoot)
+DetailsFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
-  DestroyAnonymousContent(mDefaultSummary.forget());
-  nsBlockFrame::DestroyFrom(aDestructRoot);
+  aPostDestroyData.AddAnonymousContent(mDefaultSummary.forget());
+  nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsresult

@@ -614,16 +614,16 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize, BackendType aB
 }
 
 already_AddRefed<UnscaledFont>
-Factory::CreateUnscaledFontFromFontDescriptor(FontType aType, const uint8_t* aData, uint32_t aDataLength)
+Factory::CreateUnscaledFontFromFontDescriptor(FontType aType, const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex)
 {
   switch (aType) {
 #ifdef WIN32
   case FontType::GDI:
-    return UnscaledFontGDI::CreateFromFontDescriptor(aData, aDataLength);
+    return UnscaledFontGDI::CreateFromFontDescriptor(aData, aDataLength, aIndex);
 #endif
 #ifdef MOZ_WIDGET_GTK
   case FontType::FONTCONFIG:
-    return UnscaledFontFontconfig::CreateFromFontDescriptor(aData, aDataLength);
+    return UnscaledFontFontconfig::CreateFromFontDescriptor(aData, aDataLength, aIndex);
 #endif
   default:
     gfxWarning() << "Invalid type specified for UnscaledFont font descriptor";

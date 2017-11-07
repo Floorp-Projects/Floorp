@@ -28,7 +28,7 @@ public:
     nsButtonBoxFrame(aContext, kClassID), mCursorOnThis(false) {}
 
   // Overrides
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   friend nsIFrame* NS_NewScrollbarButtonFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 

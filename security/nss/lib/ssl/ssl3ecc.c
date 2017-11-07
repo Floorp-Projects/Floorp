@@ -111,7 +111,7 @@ ssl_ECPubKey2NamedGroup(const SECKEYPublicKey *pubKey)
 static SECStatus
 ssl3_ComputeECDHKeyHash(SSLHashType hashAlg,
                         SECItem ec_params, SECItem server_ecpoint,
-                        SSL3Random *client_rand, SSL3Random *server_rand,
+                        PRUint8 *client_rand, PRUint8 *server_rand,
                         SSL3Hashes *hashes)
 {
     PRUint8 *hashBuf;
@@ -597,8 +597,8 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, PRUint8 *b, PRUint32 length)
      *  check to make sure the hash is signed by right guy
      */
     rv = ssl3_ComputeECDHKeyHash(hashAlg, ec_params, ec_point,
-                                 &ss->ssl3.hs.client_random,
-                                 &ss->ssl3.hs.server_random,
+                                 ss->ssl3.hs.client_random,
+                                 ss->ssl3.hs.server_random,
                                  &hashes);
 
     if (rv != SECSuccess) {
@@ -711,8 +711,8 @@ ssl3_SendECDHServerKeyExchange(sslSocket *ss)
     }
     rv = ssl3_ComputeECDHKeyHash(hashAlg, ec_params,
                                  pubKey->u.ec.publicValue,
-                                 &ss->ssl3.hs.client_random,
-                                 &ss->ssl3.hs.server_random,
+                                 ss->ssl3.hs.client_random,
+                                 ss->ssl3.hs.server_random,
                                  &hashes);
     if (rv != SECSuccess) {
         ssl_MapLowLevelError(SSL_ERROR_SERVER_KEY_EXCHANGE_FAILURE);

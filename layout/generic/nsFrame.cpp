@@ -243,11 +243,12 @@ nsReflowStatus::UpdateTruncated(const ReflowInput& aReflowInput,
   }
 }
 
-void
-nsIFrame::DestroyAnonymousContent(already_AddRefed<nsIContent> aContent)
+/* static */ void
+nsIFrame::DestroyAnonymousContent(nsPresContext* aPresContext,
+                                  already_AddRefed<nsIContent>&& aContent)
 {
-  PresContext()->PresShell()->FrameConstructor()
-               ->DestroyAnonymousContent(mozilla::Move(aContent));
+  aPresContext->PresShell()->FrameConstructor()
+              ->DestroyAnonymousContent(Move(aContent));
 }
 
 // Formerly the nsIFrameDebug interface
@@ -726,7 +727,7 @@ nsFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
     "destroy called on frame while scripts not blocked");
@@ -762,14 +763,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     }
   }
 
-  // XXXneerja All instances of 'mContent->GetPrimaryFrame() == this' have been
-  // replaced with IsPrimaryFrame() except for this one.  The reason is that
-  // for native anonymous content our subclass Destroy method has already
-  // called UnbindFromTree so nsINode::mSubtreeRoot might be in use here and
-  // we don't want to call mContent->SetPrimaryFrame(nullptr) in that case.
-  // (bug 1400618 will fix that order)
-  bool isPrimaryFrame = (mContent && mContent->GetPrimaryFrame() == this);
-  if (isPrimaryFrame) {
+  if (IsPrimaryFrame()) {
     // This needs to happen before we clear our Properties() table.
     ActiveLayerTracker::TransferActivityToContent(this, mContent);
 
@@ -824,8 +818,15 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
   }
 
   // Make sure that our deleted frame can't be returned from GetPrimaryFrame()
-  if (isPrimaryFrame) {
+  if (IsPrimaryFrame()) {
     mContent->SetPrimaryFrame(nullptr);
+
+    // Pass the root of a generated content subtree (e.g. ::after/::before) to
+    // aPostDestroyData to unbind it after frame destruction is done.
+    if (HasAnyStateBits(NS_FRAME_GENERATED_CONTENT) &&
+        mContent->IsRootOfNativeAnonymousSubtree()) {
+      aPostDestroyData.AddGeneratedContent(mContent.forget());
+    }
   }
 
   // Delete all properties attached to the frame, to ensure any property
@@ -10842,16 +10843,6 @@ nsIFrame::IsSelected() const
 {
   return (GetContent() && GetContent()->IsSelectionDescendant()) ?
     IsFrameSelected() : false;
-}
-
-/*static*/ void
-nsIFrame::DestroyContentArray(ContentArray* aArray)
-{
-  for (nsIContent* content : *aArray) {
-    content->UnbindFromTree();
-    NS_RELEASE(content);
-  }
-  delete aArray;
 }
 
 /*static*/ void

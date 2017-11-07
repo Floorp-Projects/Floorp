@@ -44,7 +44,7 @@ public:
             nsContainerFrame* aParent,
             nsIFrame*         aPrevInFlow) override;
 
-  void DestroyFrom(nsIFrame* aDestructRoot) override;
+  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   nscoord GetMinISize(gfxContext *aRenderingContext) override;
   nscoord GetPrefISize(gfxContext *aRenderingContext) override;

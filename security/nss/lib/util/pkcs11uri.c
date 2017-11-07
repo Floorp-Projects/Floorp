@@ -242,7 +242,7 @@ static int
 pk11uri_CompareByPosition(const char *a, const char *b,
                           const char **attr_names, size_t num_attr_names)
 {
-    int i, j;
+    size_t i, j;
 
     for (i = 0; i < num_attr_names; i++) {
         if (strcmp(a, attr_names[i]) == 0) {

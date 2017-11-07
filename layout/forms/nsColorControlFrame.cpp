@@ -41,11 +41,11 @@ NS_QUERYFRAME_HEAD(nsColorControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLButtonControlFrame)
 
 
-void nsColorControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
+void nsColorControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
-  DestroyAnonymousContent(mColorContent.forget());
-  nsHTMLButtonControlFrame::DestroyFrom(aDestructRoot);
+  aPostDestroyData.AddAnonymousContent(mColorContent.forget());
+  nsHTMLButtonControlFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 #ifdef DEBUG_FRAME_DUMP

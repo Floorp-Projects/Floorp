@@ -667,7 +667,19 @@ public:
    * If the frame is a placeholder, it also ensures the out-of-flow frame's
    * removal and destruction.
    */
-  void Destroy() { DestroyFrom(this); }
+  using PostDestroyData = mozilla::layout::PostFrameDestroyData;
+  void Destroy() {
+    nsPresContext* presContext = PresContext();
+    PostDestroyData data;
+    DestroyFrom(this, data);
+    // Note that |this| is deleted at this point.
+    for (auto& content : mozilla::Reversed(data.mAnonymousContent)) {
+      DestroyAnonymousContent(presContext, content.forget());
+    }
+    for (auto& content : mozilla::Reversed(data.mGeneratedContent)) {
+      content->UnbindFromTree();
+    }
+  }
 
   /** Flags for PeekOffsetCharacter, PeekOffsetNoAmount, PeekOffsetWord return values.
     */
@@ -718,7 +730,7 @@ protected:
    *
    * @param  aDestructRoot is the root of the subtree being destroyed
    */
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) = 0;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) = 0;
   friend class nsFrameList; // needed to pass aDestructRoot through to children
   friend class nsLineBox;   // needed to pass aDestructRoot through to children
   friend class nsContainerFrame; // needed to pass aDestructRoot through to children
@@ -1149,9 +1161,6 @@ public:
 
   nsPoint GetPositionIgnoringScrolling();
 
-  typedef AutoTArray<nsIContent*, 2> ContentArray;
-  static void DestroyContentArray(ContentArray* aArray);
-
   typedef AutoTArray<nsDisplayItem*, 4> DisplayItemArray;
 
   typedef mozilla::layers::WebRenderUserData WebRenderUserData;
@@ -1247,9 +1256,6 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(IBaselinePadProperty, nscoord)
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BBaselinePadProperty, nscoord)
-
-  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(GenConProperty, ContentArray,
-                                      DestroyContentArray)
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ModifiedFrameList, std::vector<WeakFrame>)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(DisplayItems, DisplayItemArray)
@@ -4107,8 +4113,6 @@ public:
   bool HasDisplayItems();
   bool HasDisplayItem(nsDisplayItem* aItem);
 
-  void DestroyAnonymousContent(already_AddRefed<nsIContent> aContent);
-
   bool ForceDescendIntoIfVisible() { return mForceDescendIntoIfVisible; }
   void SetForceDescendIntoIfVisible(bool aForce) { mForceDescendIntoIfVisible = aForce; }
 
@@ -4128,6 +4132,8 @@ public:
   void SetBuiltBlendContainer(bool aBuilt) { mBuiltBlendContainer = aBuilt; }
 
 protected:
+  static void DestroyAnonymousContent(nsPresContext* aPresContext,
+                                      already_AddRefed<nsIContent>&& aContent);
 
   /**
    * Reparent this frame's view if it has one.

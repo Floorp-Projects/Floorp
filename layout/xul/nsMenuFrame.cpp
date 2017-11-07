@@ -315,7 +315,7 @@ nsMenuFrame::SetInitialChildList(ChildListID     aListID,
 }
 
 void
-nsMenuFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsMenuFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   if (mReflowCallbackPosted) {
     PresContext()->PresShell()->CancelReflowCallback(this);
@@ -348,11 +348,11 @@ nsMenuFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
   nsFrameList* popupList = GetPopupList();
   if (popupList) {
-    popupList->DestroyFramesFrom(aDestructRoot);
+    popupList->DestroyFramesFrom(aDestructRoot, aPostDestroyData);
     DestroyPopupList();
   }
 
-  nsBoxFrame::DestroyFrom(aDestructRoot);
+  nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 void
