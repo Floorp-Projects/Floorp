@@ -3210,7 +3210,7 @@ var IndexedCS = function IndexedCSClosure() {
       for (var i = 0; i < length; ++i) {
         this.lookup[i] = lookup.charCodeAt(i);
       }
-    } else if (lookup instanceof Uint8Array || lookup instanceof Array) {
+    } else if (lookup instanceof Uint8Array) {
       this.lookup = lookup;
     } else {
       throw new _util.FormatError(`Unrecognized lookup table: ${lookup}`);
@@ -4255,7 +4255,7 @@ var Parser = function ParserClosure() {
     makeFilter: function Parser_makeFilter(stream, name, maybeLength, params) {
       if (maybeLength === 0) {
         (0, _util.warn)('Empty "' + name + '" stream.');
-        return new _stream.NullStream(stream);
+        return new _stream.NullStream();
       }
       try {
         var xrefStreamStats = this.xref.stats.streamTypes;
@@ -4312,7 +4312,7 @@ var Parser = function ParserClosure() {
           throw ex;
         }
         (0, _util.warn)('Invalid stream: \"' + ex + '\"');
-        return new _stream.NullStream(stream);
+        return new _stream.NullStream();
       }
     }
   };
@@ -14166,7 +14166,7 @@ var AES128Cipher = function AES128CipherClosure() {
     return state;
   }
   function encrypt128(input, key) {
-    var t, u, v, k;
+    var t, u, v, j, k;
     var state = new Uint8Array(16);
     state.set(input);
     for (j = 0; j < 16; ++j) {
@@ -14194,7 +14194,7 @@ var AES128Cipher = function AES128CipherClosure() {
       state[7] = v;
       state[11] = u;
       state[15] = t;
-      for (var j = 0; j < 16; j += 4) {
+      for (j = 0; j < 16; j += 4) {
         var s0 = state[j + 0],
             s1 = state[j + 1];
         var s2 = state[j + 2],
@@ -14370,16 +14370,17 @@ var AES256Cipher = function AES256CipherClosure() {
     var r = 1;
     result.set(cipherKey);
     for (var j = 32, i = 1; j < b; ++i) {
+      var t1, t2, t3, t4;
       if (j % 32 === 16) {
         t1 = s[t1];
         t2 = s[t2];
         t3 = s[t3];
         t4 = s[t4];
       } else if (j % 32 === 0) {
-        var t1 = result[j - 3],
-            t2 = result[j - 2],
-            t3 = result[j - 1],
-            t4 = result[j - 4];
+        t1 = result[j - 3];
+        t2 = result[j - 2];
+        t3 = result[j - 1];
+        t4 = result[j - 4];
         t1 = s[t1];
         t2 = s[t2];
         t3 = s[t3];
@@ -14472,7 +14473,7 @@ var AES256Cipher = function AES256CipherClosure() {
     return state;
   }
   function encrypt256(input, key) {
-    var t, u, v, k;
+    var t, u, v, i, j, k;
     var state = new Uint8Array(16);
     state.set(input);
     for (j = 0; j < 16; ++j) {
@@ -14500,7 +14501,7 @@ var AES256Cipher = function AES256CipherClosure() {
       state[7] = v;
       state[11] = u;
       state[15] = t;
-      for (var j = 0; j < 16; j += 4) {
+      for (j = 0; j < 16; j += 4) {
         var s0 = state[j + 0],
             s1 = state[j + 1];
         var s2 = state[j + 2],
@@ -23283,8 +23284,8 @@ exports.PostScriptCompiler = PostScriptCompiler;
 "use strict";
 
 
-var pdfjsVersion = '2.0.87';
-var pdfjsBuild = 'b46443f0';
+var pdfjsVersion = '2.0.104';
+var pdfjsBuild = '012d0756';
 var pdfjsCoreWorker = __w_pdfjs_require__(18);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -23479,7 +23480,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.87';
+    let workerVersion = '2.0.104';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -30793,14 +30794,14 @@ var BinaryCMapReader = function BinaryCMapReaderClosure() {
             stream.readHex(start, dataSize);
             stream.readHexNumber(end, dataSize);
             addHex(end, start, dataSize);
-            code = stream.readNumber();
+            stream.readNumber();
             for (i = 1; i < subitemsCount; i++) {
               incHex(end, dataSize);
               stream.readHexNumber(start, dataSize);
               addHex(start, end, dataSize);
               stream.readHexNumber(end, dataSize);
               addHex(end, start, dataSize);
-              code = stream.readNumber();
+              stream.readNumber();
             }
             break;
           case 2:
@@ -32958,7 +32959,6 @@ var Font = function FontClosure() {
               }
               if (glyphId > 0 && hasGlyph(glyphId)) {
                 charCodeToGlyphId[charCode] = glyphId;
-                found = true;
               }
             }
           }
@@ -33396,7 +33396,6 @@ var Type1Font = function Type1FontClosure() {
       headerBlockLength = pfbHeader[5] << 24 | pfbHeader[4] << 16 | pfbHeader[3] << 8 | pfbHeader[2];
     }
     var headerBlock = getHeaderBlock(file, headerBlockLength);
-    headerBlockLength = headerBlock.length;
     var headerBlockParser = new _type1_parser.Type1Parser(headerBlock.stream, false, SEAC_ANALYSIS_ENABLED);
     headerBlockParser.extractFontHeader(properties);
     if (pfbHeaderPresent) {
@@ -33404,7 +33403,6 @@ var Type1Font = function Type1FontClosure() {
       eexecBlockLength = pfbHeader[5] << 24 | pfbHeader[4] << 16 | pfbHeader[3] << 8 | pfbHeader[2];
     }
     var eexecBlock = getEexecBlock(file, eexecBlockLength);
-    eexecBlockLength = eexecBlock.length;
     var eexecBlockParser = new _type1_parser.Type1Parser(eexecBlock.stream, true, SEAC_ANALYSIS_ENABLED);
     var data = eexecBlockParser.extractFontProgram();
     for (var info in data.properties) {
@@ -34831,7 +34829,7 @@ var Type1Parser = function Type1ParserClosure() {
           case 'Subrs':
             this.readInt();
             this.getToken();
-            while ((token = this.getToken()) === 'dup') {
+            while (this.getToken() === 'dup') {
               var index = this.readInt();
               length = this.readInt();
               this.getToken();
@@ -39154,6 +39152,10 @@ exports.PostScriptParser = PostScriptParser;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.MurmurHash3_64 = undefined;
+
+var _util = __w_pdfjs_require__(0);
+
 var MurmurHash3_64 = function MurmurHash3_64Closure(seed) {
   var MASK_HIGH = 0xffff0000;
   var MASK_LOW = 0xffff;
@@ -39164,11 +39166,11 @@ var MurmurHash3_64 = function MurmurHash3_64Closure(seed) {
   }
   MurmurHash3_64.prototype = {
     update: function MurmurHash3_64_update(input) {
-      var i;
-      if (typeof input === 'string') {
-        var data = new Uint8Array(input.length * 2);
-        var length = 0;
-        for (i = 0; i < input.length; i++) {
+      let data, length;
+      if ((0, _util.isString)(input)) {
+        data = new Uint8Array(input.length * 2);
+        length = 0;
+        for (let i = 0, ii = input.length; i < ii; i++) {
           var code = input.charCodeAt(i);
           if (code <= 0xff) {
             data[length++] = code;
@@ -39177,7 +39179,7 @@ var MurmurHash3_64 = function MurmurHash3_64Closure(seed) {
             data[length++] = code & 0xff;
           }
         }
-      } else if (typeof input === 'object' && 'byteLength' in input) {
+      } else if ((0, _util.isArrayBuffer)(input)) {
         data = input;
         length = data.byteLength;
       } else {
@@ -39194,7 +39196,7 @@ var MurmurHash3_64 = function MurmurHash3_64Closure(seed) {
       var C2 = 0x1b873593;
       var C1_LOW = C1 & MASK_LOW;
       var C2_LOW = C2 & MASK_LOW;
-      for (i = 0; i < blockCounts; i++) {
+      for (let i = 0; i < blockCounts; i++) {
         if (i & 1) {
           k1 = dataUint32[i];
           k1 = k1 * C1 & MASK_HIGH | k1 * C1_LOW & MASK_LOW;
