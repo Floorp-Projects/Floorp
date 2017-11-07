@@ -1394,6 +1394,7 @@ FragmentOrElement::GetTextContentInternal(nsAString& aTextContent,
 
 void
 FragmentOrElement::SetTextContentInternal(const nsAString& aTextContent,
+                                          nsIPrincipal* aSubjectPrincipal,
                                           ErrorResult& aError)
 {
   aError = nsContentUtils::SetNodeTextContent(this, aTextContent, false);
