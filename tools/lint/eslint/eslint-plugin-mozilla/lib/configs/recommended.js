@@ -62,6 +62,13 @@ module.exports = {
     "rules": {
       "mozilla/use-services": "off"
     }
+  }, {
+    // Turn off browser env for all *.jsm files, and turn on the jsm environment.
+    "env": {
+      "browser": false,
+      "mozilla/jsm": true
+    },
+    "files": "**/*.jsm"
   }],
 
   "parserOptions": {
