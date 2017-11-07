@@ -5,9 +5,19 @@ use rayon::ThreadPool;
 
 use std::collections::hash_map::{HashMap, Entry};
 use std::mem;
+use std::os::raw::c_void;
 use std::ptr;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::sync::Arc;
+
+#[cfg(target_os = "windows")]
+use dwrote;
+
+#[cfg(target_os = "macos")]
+use core_foundation::base::TCFType;
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+use std::ffi::CString;
 
 pub struct Moz2dImageRenderer {
     blob_commands: HashMap<ImageKey, (Arc<BlobImageData>, Option<TileSize>)>,
@@ -104,14 +114,37 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         let tile_size = blob.1;
         let commands = Arc::clone(&blob.0);
 
+        #[cfg(target_os = "windows")]
+        fn process_native_font_handle(key: FontKey, handle: &NativeFontHandle) {
+            let system_fc = dwrote::FontCollection::system();
+            let font = system_fc.get_font_from_descriptor(handle).unwrap();
+            let face = font.create_font_face();
+            unsafe { AddNativeFontHandle(key, face.as_ptr() as *mut c_void, 0) };
+        }
+
+        #[cfg(target_os = "macos")]
+        fn process_native_font_handle(key: FontKey, handle: &NativeFontHandle) {
+            unsafe { AddNativeFontHandle(key, handle.0.as_concrete_TypeRef() as *mut c_void, 0) };
+        }
+
+        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+        fn process_native_font_handle(key: FontKey, handle: &NativeFontHandle) {
+            let cstr = CString::new(handle.pathname.clone()).unwrap();
+            unsafe { AddNativeFontHandle(key, cstr.as_ptr() as *mut c_void, handle.index) };
+        }
 
         fn process_fonts(mut extra_data: BufReader, resources: &BlobImageResources) {
             let font_count = extra_data.read_usize();
             for _ in 0..font_count {
                 let key = extra_data.read_font_key();
                 let template = resources.get_font_data(key);
-                if let &FontTemplate::Raw(ref data, ref index) = template {
-                    unsafe { AddFontData(key, data.as_ptr(), data.len(), *index, data); }
+                match template {
+                    &FontTemplate::Raw(ref data, ref index) => {
+                        unsafe { AddFontData(key, data.as_ptr(), data.len(), *index, data); }
+                    }
+                    &FontTemplate::Native(ref handle) => {
+                        process_native_font_handle(key, handle);
+                    }
                 }
                 resources.get_font_data(key);
             }
@@ -199,6 +232,7 @@ use bindings::WrFontKey;
 extern "C" {
     #[allow(improper_ctypes)]
     fn AddFontData(key: WrFontKey, data: *const u8, size: usize, index: u32, vec: &ArcVecU8);
+    fn AddNativeFontHandle(key: WrFontKey, handle: *mut c_void, index: u32);
     fn DeleteFontData(key: WrFontKey);
 }
 
