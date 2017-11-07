@@ -63,6 +63,17 @@ const TEST_CREDIT_CARD_WITH_SPACES_BETWEEN_DIGITS = {
   "cc-number": "1111 2222 3333 4444",
 };
 
+const TEST_CREDIT_CARD_EMPTY_AFTER_NORMALIZE = {
+  "cc-exp-month": 13,
+};
+
+const TEST_CREDIT_CARD_EMPTY_AFTER_UPDATE_CREDIT_CARD_1 = {
+  "cc-name": "",
+  "cc-number": "",
+  "cc-exp-month": 13,
+  "cc-exp-year": "",
+};
+
 const MERGE_TESTCASES = [
   {
     description: "Merge a superset",
@@ -251,6 +262,12 @@ add_task(async function test_add() {
 
   Assert.throws(() => profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./);
+
+  Assert.throws(() => profileStorage.creditCards.add({}),
+    /Record contains no valid field\./);
+
+  Assert.throws(() => profileStorage.creditCards.add(TEST_CREDIT_CARD_EMPTY_AFTER_NORMALIZE),
+    /Record contains no valid field\./);
 });
 
 add_task(async function test_update() {
@@ -295,6 +312,22 @@ add_task(async function test_update() {
   Assert.throws(
     () => profileStorage.creditCards.update(guid, TEST_CREDIT_CARD_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./
+  );
+
+  Assert.throws(
+    () => profileStorage.creditCards.update(guid, {}),
+    /Record contains no valid field\./
+  );
+
+  Assert.throws(
+    () => profileStorage.creditCards.update(guid, TEST_CREDIT_CARD_EMPTY_AFTER_NORMALIZE),
+    /Record contains no valid field\./
+  );
+
+  profileStorage.creditCards.update(guid, TEST_CREDIT_CARD_1);
+  Assert.throws(
+    () => profileStorage.creditCards.update(guid, TEST_CREDIT_CARD_EMPTY_AFTER_UPDATE_CREDIT_CARD_1),
+    /Record contains no valid field\./
   );
 });
 
