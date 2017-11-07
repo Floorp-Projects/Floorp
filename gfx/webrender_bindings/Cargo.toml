@@ -21,3 +21,7 @@ default-features = false
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.4"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.4"
+core-graphics = "0.9"
+

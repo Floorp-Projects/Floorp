@@ -21,6 +21,11 @@ use log::{set_logger, shutdown_logger, LogLevelFilter, Log, LogLevel, LogMetadat
 #[cfg(target_os = "windows")]
 use dwrote::{FontDescriptor, FontWeight, FontStretch, FontStyle};
 
+#[cfg(target_os = "macos")]
+use core_foundation::string::CFString;
+#[cfg(target_os = "macos")]
+use core_graphics::font::CGFont;
+
 extern crate webrender_api;
 
 /// cbindgen:field-names=[mNamespace, mHandle]
@@ -997,6 +1002,17 @@ fn read_font_descriptor(
         stretch: FontStretch::from_u32((index >> 16) & 0xff),
         style: FontStyle::from_u32((index >> 24) & 0xff),
     }
+}
+
+#[cfg(target_os = "macos")]
+fn read_font_descriptor(
+    bytes: &mut WrVecU8,
+    _index: u32
+) -> NativeFontHandle {
+    let chars = bytes.flush_into_vec();
+    let name = String::from_utf8(chars).unwrap();
+    let font = CGFont::from_name(&CFString::new(&*name)).unwrap();
+    NativeFontHandle(font)
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
