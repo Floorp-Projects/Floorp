@@ -13,6 +13,7 @@ from mozbuild.backend.base import PartialBackend, HybridBackend
 from mozbuild.backend.recursivemake import RecursiveMakeBackend
 from mozbuild.shellutil import quote as shell_quote
 from mozbuild.util import OrderedDefaultDict
+from collections import defaultdict
 
 from mozpack.files import (
     FileFinder,
@@ -21,17 +22,22 @@ from mozpack.files import (
 from .common import CommonBackend
 from ..frontend.data import (
     ChromeManifestEntry,
+    ComputedFlags,
     ContextDerived,
     Defines,
     FinalTargetFiles,
     FinalTargetPreprocessedFiles,
     GeneratedFile,
+    GeneratedSources,
     HostDefines,
     JARManifest,
     ObjdirFiles,
+    PerSourceFlag,
+    Sources,
 )
 from ..util import (
     FileAvoidWrite,
+    expand_variables,
 )
 from ..frontend.context import (
     AbsolutePath,
@@ -55,6 +61,9 @@ class BackendTupfile(object):
         self.defines = []
         self.host_defines = []
         self.delayed_generated_files = []
+        self.per_source_flags = defaultdict(list)
+        self.local_flags = defaultdict(list)
+        self.sources = defaultdict(list)
 
         self.fh = FileAvoidWrite(self.name, capture_diff=True)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
@@ -68,7 +77,8 @@ class BackendTupfile(object):
             self.write('include_rules\n')
             self.rules_included = True
 
-    def rule(self, cmd, inputs=None, outputs=None, display=None, extra_outputs=None, check_unchanged=False):
+    def rule(self, cmd, inputs=None, outputs=None, display=None,
+             extra_inputs=None, extra_outputs=None, check_unchanged=False):
         inputs = inputs or []
         outputs = outputs or []
         display = display or ""
@@ -85,8 +95,9 @@ class BackendTupfile(object):
         else:
             caret_text = flags
 
-        self.write(': %(inputs)s |> %(display)s%(cmd)s |> %(outputs)s%(extra_outputs)s\n' % {
+        self.write(': %(inputs)s%(extra_inputs)s |> %(display)s%(cmd)s |> %(outputs)s%(extra_outputs)s\n' % {
             'inputs': ' '.join(inputs),
+            'extra_inputs': ' | ' + ' '.join(extra_inputs) if extra_inputs else '',
             'display': '^%s^ ' % caret_text if caret_text else '',
             'cmd': ' '.join(cmd),
             'outputs': ' '.join(outputs),
@@ -105,6 +116,29 @@ class BackendTupfile(object):
             inputs=[source],
             outputs=outputs,
         )
+
+    def gen_sources_rules(self, extra_inputs):
+        compilers = [
+            ('.S', 'AS', 'ASFLAGS'),
+            ('.cpp', 'CXX', 'CXXFLAGS'),
+            ('.c', 'CC', 'CFLAGS'),
+        ]
+        for extension, compiler, flags in compilers:
+            srcs = sorted(self.sources[extension])
+            for src in srcs:
+                # AS can be set to $(CC), so we need to call expand_variables on
+                # the compiler to get the real value.
+                cmd = [expand_variables(self.environment.substs[compiler], self.environment.substs)]
+                cmd.extend(self.local_flags[flags])
+                cmd.extend(self.per_source_flags[src])
+                cmd.extend(['-c', '%f', '-o', '%o'])
+                self.rule(
+                    cmd=cmd,
+                    inputs=[src],
+                    extra_inputs=extra_inputs,
+                    outputs=['%B.o'],
+                    display='%s %%f' % compiler,
+                )
 
     def export_shell(self):
         if not self.shell_exported:
@@ -218,6 +252,13 @@ class TupOnly(CommonBackend, PartialBackend):
             self._process_final_target_pp_files(obj, backend_file)
         elif isinstance(obj, JARManifest):
             self._consume_jar_manifest(obj)
+        elif isinstance(obj, PerSourceFlag):
+            backend_file.per_source_flags[obj.file_name].extend(obj.flags)
+        elif isinstance(obj, ComputedFlags):
+            self._process_computed_flags(obj, backend_file)
+        elif isinstance(obj, (Sources, GeneratedSources)):
+            if obj.relobjdir.startswith('xpcom'):
+                backend_file.sources[obj.canonical_suffix].extend(obj.files)
 
         return True
 
@@ -234,6 +275,7 @@ class TupOnly(CommonBackend, PartialBackend):
         for objdir, backend_file in sorted(self._backend_files.items()):
             for obj in backend_file.delayed_generated_files:
                 self._process_generated_file(backend_file, obj)
+            backend_file.gen_sources_rules([self._installed_files])
             with self._write_file(fh=backend_file):
                 pass
 
@@ -384,6 +426,16 @@ class TupOnly(CommonBackend, PartialBackend):
             for f in files:
                 self._preprocess(backend_file, f.full_path,
                                  destdir=mozpath.join(self.environment.topobjdir, obj.install_target, path))
+
+    def _process_computed_flags(self, obj, backend_file):
+        for var, flags in obj.get_flags():
+            backend_file.local_flags[var] = flags
+
+    def _process_unified_sources(self, obj):
+        backend_file = self._get_backend_file_for(obj)
+        if obj.relobjdir.startswith('xpcom'):
+            files = [f[0] for f in obj.unified_source_mapping]
+            backend_file.sources[obj.canonical_suffix].extend(files)
 
     def _handle_idl_manager(self, manager):
         if self.environment.is_artifact_build:
