@@ -54,6 +54,7 @@ Structure:
           CrashTime: <time>, // Seconds since the Epoch
           ContainsMemoryReport: 1, // Optional
           EventLoopNestingLevel: <levels>, // Optional, present only if >0
+          ipc_channel_error: <error string>, // Optional, contains the string processing error reason for an ipc-based content crash
           IsGarbageCollecting: 1, // Optional, present only if set to 1
           MozCrashReason: <reason>, // Optional, contains the string passed to MOZ_CRASH()
           OOMAllocationSize: <size>, // Size of the allocation that caused an OOM
@@ -201,3 +202,8 @@ The trust levels are (from least trusted to most trusted):
 The ``code_id`` field holds a unique ID used to distinguish between different
 versions and builds of the same module. See `breakpad <https://chromium.googlesource.com/breakpad/breakpad/+/24f5931c5e0120982c0cbf1896641e3ef2bdd52f/src/google_breakpad/processor/code_module.h#60>`__'s
 description for further information. This field is populated only on Windows.
+
+Version History
+===============
+
+- Firefox 58: Added ipc_channel_error (`bug 1410143 <https://bugzilla.mozilla.org/show_bug.cgi?id=1410143>`_).

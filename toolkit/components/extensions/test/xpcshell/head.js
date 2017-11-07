@@ -68,9 +68,7 @@ if (AppConstants.platform === "android") {
  * Clears the HTTP and content image caches.
  */
 function clearCache() {
-  let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-      .getService(Ci.nsICacheStorageService);
-  cache.clear();
+  Services.cache2.clear();
 
   let imageCache = Cc["@mozilla.org/image/tools;1"]
       .getService(Ci.imgITools)

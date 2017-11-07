@@ -1,5 +1,4 @@
 Cu.import("resource://testing-common/AppInfo.jsm", this);
-Cu.import("resource://gre/modules/Services.jsm");
 
 function updateVersion(version) {
   updateAppInfo({ version });

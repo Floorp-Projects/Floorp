@@ -1334,9 +1334,10 @@ class TestEmitterBasic(unittest.TestCase):
                                                BIN_SUFFIX='.exe'))
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], RustProgram)
-        self.assertEqual(objs[0].name, 'some')
+        ldflags, prog = objs
+        self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertIsInstance(prog, RustProgram)
+        self.assertEqual(prog.name, 'some')
 
     def test_host_rust_programs(self):
         '''Test HOST_RUST_PROGRAMS emission.'''

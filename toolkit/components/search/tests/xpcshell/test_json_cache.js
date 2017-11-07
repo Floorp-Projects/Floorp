@@ -12,17 +12,12 @@
  * @param aKey
  *        The directory service key indicating the directory to get.
  */
-var _dirSvc = null;
 function getDir(aKey, aIFace) {
   if (!aKey) {
     do_throw("getDir requires a directory key!");
   }
 
-  if (!_dirSvc) {
-    _dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-               getService(Ci.nsIProperties);
-  }
-  return _dirSvc.get(aKey, aIFace || Ci.nsIFile);
+  return Services.dirsvc.get(aKey, aIFace || Ci.nsIFile);
 }
 
 function makeURI(uri) {

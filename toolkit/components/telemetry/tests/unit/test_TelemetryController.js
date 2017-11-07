@@ -599,6 +599,13 @@ add_task(async function test_pingRejection() {
           () => Assert.ok(true, "Ping submitted after shutdown correctly rejected."));
 });
 
+add_task(async function test_newCanRecordsMatchTheOld() {
+  Assert.equal(Telemetry.canRecordBase, Telemetry.canRecordReleaseData,
+               "Release Data is the new way to say Base Collection");
+  Assert.equal(Telemetry.canRecordExtended, Telemetry.canRecordPrereleaseData,
+               "Prerelease Data is the new way to say Extended Collection");
+});
+
 add_task(async function stopServer() {
   await PingServer.stop();
 });

@@ -1,5 +1,4 @@
 Cu.import("resource://gre/modules/SafeBrowsing.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://testing-common/AppInfo.jsm");
 
 // 'Cc["@mozilla.org/xre/app-info;1"]' for xpcshell has no nsIXULAppInfo

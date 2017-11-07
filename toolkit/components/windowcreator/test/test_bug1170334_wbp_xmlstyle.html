@@ -29,11 +29,7 @@ iframe.onload = function iframe_onload1() {
 
   let wbp = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
             .createInstance(Ci.nsIWebBrowserPersist);
-  let ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
-  let tmp = Cc["@mozilla.org/file/directory_service;1"]
-            .getService(Ci.nsIProperties)
-            .get("TmpD", Ci.nsIFile);
+  let tmp = SpecialPowers.Services.dirsvc.get("TmpD", Ci.nsIFile);
   let tmpFile = tmp.clone();
   tmpFile.append(nameStem + "_iframe.xml");
   let tmpDir = tmp.clone();
@@ -60,7 +56,7 @@ iframe.onload = function iframe_onload1() {
         cleanUp();
         SimpleTest.finish();
       };
-      iframe.src = ios.newFileURI(tmpFile).spec;
+      iframe.src = SpecialPowers.Services.io.newFileURI(tmpFile).spec;
     }
   };
   wbp.saveDocument(doc, tmpFile, tmpDir, null, 0, 0);

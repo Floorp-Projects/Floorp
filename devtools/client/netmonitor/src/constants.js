@@ -275,7 +275,6 @@ const FILTER_TAGS = [
   "fonts",
   "images",
   "media",
-  "flash",
   "ws",
   "other",
 ];

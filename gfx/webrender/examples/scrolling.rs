@@ -111,7 +111,8 @@ impl Example for App {
                 (50, 350).by(50, 50),
                 SideOffsets2D::new(Some(10.0), None, Some(10.0), None),
                 StickyOffsetBounds::new(-40.0, 60.0),
-                StickyOffsetBounds::new(0.0, 0.0)
+                StickyOffsetBounds::new(0.0, 0.0),
+                LayoutVector2D::new(0.0, 0.0)
             );
 
             builder.push_clip_id(sticky_id);

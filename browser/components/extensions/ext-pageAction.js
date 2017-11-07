@@ -91,7 +91,11 @@ this.pageAction = class extends ExtensionAPI {
 
     this.tabContext.shutdown();
 
-    if (this.browserPageAction) {
+    // Removing the browser page action causes PageActions to forget about it
+    // across app restarts, so don't remove it on app shutdown, but do remove
+    // it on all other shutdowns since there's no guarantee the action will be
+    // coming back.
+    if (reason != "APP_SHUTDOWN" && this.browserPageAction) {
       this.browserPageAction.remove();
       this.browserPageAction = null;
     }

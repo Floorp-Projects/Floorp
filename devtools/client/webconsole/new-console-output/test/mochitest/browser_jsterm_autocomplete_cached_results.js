@@ -18,7 +18,8 @@ add_task(async function () {
     inputNode: input,
   } = jsterm;
 
-  const jstermComplete = (value, delta) => complete(jsterm, input, value, delta);
+  const jstermComplete = (value, offset) =>
+    jstermSetValueAndComplete(jsterm, value, offset);
 
   // Test if 'doc' gives 'document'
   await jstermComplete("doc");
@@ -64,16 +65,6 @@ add_task(async function () {
   ok(!getPopupLabels(popup).includes("docfoobar"),
     "autocomplete cached results do not contain docfoobar. list has not been updated");
 });
-
-function complete(jsterm, input, value, caretIndexDelta = 0) {
-  input.value = value;
-  let index = value.length + caretIndexDelta;
-  input.setSelectionRange(index, index);
-
-  const updated = jsterm.once("autocomplete-updated");
-  jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
-  return updated;
-}
 
 function getPopupLabels(popup) {
   return popup.getItems().map(item => item.label);

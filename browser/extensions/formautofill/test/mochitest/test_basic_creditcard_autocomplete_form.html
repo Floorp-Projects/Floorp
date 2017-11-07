@@ -62,6 +62,7 @@ function checkElementFilled(element, expectedvalue) {
 }
 
 function checkFormFilled(creditCard) {
+  info("expecting form filled");
   let promises = [];
   for (let prop in creditCard) {
     let element = document.getElementById(prop);

@@ -34,7 +34,7 @@ using mozilla::media::TimeUnit;
 namespace mp4_demuxer
 {
 
-static LazyLogModule sLog("MP4Metadata");
+LazyLogModule gMP4MetadataLog("MP4Metadata");
 
 class DataSourceAdapter : public DataSource
 {
@@ -180,7 +180,7 @@ bool
 IndiceWrapperStagefright::GetIndice(size_t aIndex, Index::Indice& aIndice) const
 {
   if (aIndex >= mIndice.Length()) {
-    MOZ_LOG(sLog, LogLevel::Error, ("Index overflow in indice"));
+    MOZ_LOG(gMP4MetadataLog, LogLevel::Error, ("Index overflow in indice"));
     return false;
   }
 
@@ -220,7 +220,7 @@ bool
 IndiceWrapperRust::GetIndice(size_t aIndex, Index::Indice& aIndice) const
 {
   if (aIndex >= mIndice->length) {
-    MOZ_LOG(sLog, LogLevel::Error, ("Index overflow in indice"));
+    MOZ_LOG(gMP4MetadataLog, LogLevel::Error, ("Index overflow in indice"));
    return false;
   }
 
@@ -279,12 +279,12 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 
   MP4Metadata::ResultAndTrackCount numTracksRust =
     mRust->GetNumberTracks(aType);
-  MOZ_LOG(sLog, LogLevel::Info, ("%s tracks found: stagefright=(%s)%u rust=(%s)%u",
-                                 TrackTypeToString(aType),
-                                 numTracks.Result().Description().get(),
-                                 numTracks.Ref(),
-                                 numTracksRust.Result().Description().get(),
-                                 numTracksRust.Ref()));
+  MOZ_LOG(gMP4MetadataLog, LogLevel::Info, ("%s tracks found: stagefright=(%s)%u rust=(%s)%u",
+                                            TrackTypeToString(aType),
+                                            numTracks.Result().Description().get(),
+                                            numTracks.Ref(),
+                                            numTracksRust.Result().Description().get(),
+                                            numTracksRust.Ref()));
 
 
   // Consider '0' and 'error' the same for comparison purposes.
@@ -479,9 +479,10 @@ ConvertIndex(FallibleTArray<Index::Indice>& aDest,
     indice.sync = s_indice.sync;
     // FIXME: Make this infallible after bug 968520 is done.
     MOZ_ALWAYS_TRUE(aDest.AppendElement(indice, mozilla::fallible));
-    MOZ_LOG(sLog, LogLevel::Debug, ("s_o: %" PRIu64 ", e_o: %" PRIu64 ", s_c: %" PRIu64 ", e_c: %" PRIu64 ", s_d: %" PRIu64 ", sync: %d\n",
-                                    indice.start_offset, indice.end_offset, indice.start_composition, indice.end_composition,
-                                    indice.start_decode, indice.sync));
+    MOZ_LOG(gMP4MetadataLog, LogLevel::Debug,
+      ("s_o: %" PRIu64 ", e_o: %" PRIu64 ", s_c: %" PRIu64 ", e_c: %" PRIu64 ", s_d: %" PRIu64 ", sync: %d\n",
+      indice.start_offset, indice.end_offset, indice.start_composition,
+      indice.end_composition, indice.start_decode, indice.sync));
   }
   return NS_OK;
 }
@@ -715,7 +716,7 @@ bool
 RustStreamAdaptor::Read(uint8_t* buffer, uintptr_t size, size_t* bytes_read)
 {
   if (!mOffset.isValid()) {
-    MOZ_LOG(sLog, LogLevel::Error, ("Overflow in source stream offset"));
+    MOZ_LOG(gMP4MetadataLog, LogLevel::Error, ("Overflow in source stream offset"));
     return false;
   }
   bool rv = mSource->ReadAt(mOffset.value(), buffer, size, bytes_read);
@@ -736,7 +737,7 @@ read_source(uint8_t* buffer, uintptr_t size, void* userdata)
   size_t bytes_read = 0;
   bool rv = source->Read(buffer, size, &bytes_read);
   if (!rv) {
-    MOZ_LOG(sLog, LogLevel::Warning, ("Error reading source data"));
+    MOZ_LOG(gMP4MetadataLog, LogLevel::Warning, ("Error reading source data"));
     return -1;
   }
   return bytes_read;
@@ -759,16 +760,16 @@ MP4MetadataRust::Init()
   mRustParser.reset(mp4parse_new(&io));
   MOZ_ASSERT(mRustParser);
 
-  if (MOZ_LOG_TEST(sLog, LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(gMP4MetadataLog, LogLevel::Debug)) {
     mp4parse_log(true);
   }
 
   mp4parse_status rv = mp4parse_read(mRustParser.get());
-  MOZ_LOG(sLog, LogLevel::Debug, ("rust parser returned %d\n", rv));
+  MOZ_LOG(gMP4MetadataLog, LogLevel::Debug, ("rust parser returned %d\n", rv));
   Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_SUCCESS,
                         rv == mp4parse_status_OK);
   if (rv != mp4parse_status_OK && rv != mp4parse_status_OOM) {
-    MOZ_LOG(sLog, LogLevel::Info, ("Rust mp4 parser fails to parse this stream."));
+    MOZ_LOG(gMP4MetadataLog, LogLevel::Info, ("Rust mp4 parser fails to parse this stream."));
     MOZ_ASSERT(rv > 0);
     Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_ERROR_CODE, rv);
     return false;
@@ -813,13 +814,13 @@ MP4MetadataRust::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
   uint32_t tracks;
   auto rv = mp4parse_get_track_count(mRustParser.get(), &tracks);
   if (rv != mp4parse_status_OK) {
-    MOZ_LOG(sLog, LogLevel::Warning,
+    MOZ_LOG(gMP4MetadataLog, LogLevel::Warning,
         ("rust parser error %d counting tracks", rv));
     return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                         RESULT_DETAIL("Rust parser error %d", rv)),
             MP4Metadata::NumberTracksError()};
   }
-  MOZ_LOG(sLog, LogLevel::Info, ("rust parser found %u tracks", tracks));
+  MOZ_LOG(gMP4MetadataLog, LogLevel::Info, ("rust parser found %u tracks", tracks));
 
   uint32_t total = 0;
   for (uint32_t i = 0; i < tracks; ++i) {
@@ -885,7 +886,7 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
   mp4parse_track_info info;
   auto rv = mp4parse_get_track_info(mRustParser.get(), trackIndex.value(), &info);
   if (rv != mp4parse_status_OK) {
-    MOZ_LOG(sLog, LogLevel::Warning, ("mp4parse_get_track_info returned %d", rv));
+    MOZ_LOG(gMP4MetadataLog, LogLevel::Warning, ("mp4parse_get_track_info returned %d", rv));
     return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                         RESULT_DETAIL("Cannot find %s track #%zu",
                                       TrackTypeToStr(aType),
@@ -907,8 +908,8 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     case mp4parse_codec_AC3: codec_string = "ac-3"; break;
     case mp4parse_codec_EC3: codec_string = "ec-3"; break;
   }
-  MOZ_LOG(sLog, LogLevel::Debug, ("track codec %s (%u)\n",
-        codec_string, info.codec));
+  MOZ_LOG(gMP4MetadataLog, LogLevel::Debug,
+    ("track codec %s (%u)\n", codec_string, info.codec));
 #endif
 
   // This specialization interface is crazy.
@@ -918,7 +919,7 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
       mp4parse_track_audio_info audio;
       auto rv = mp4parse_get_track_audio_info(mRustParser.get(), trackIndex.value(), &audio);
       if (rv != mp4parse_status_OK) {
-        MOZ_LOG(sLog, LogLevel::Warning, ("mp4parse_get_track_audio_info returned error %d", rv));
+        MOZ_LOG(gMP4MetadataLog, LogLevel::Warning, ("mp4parse_get_track_audio_info returned error %d", rv));
         return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                             RESULT_DETAIL("Cannot parse %s track #%zu",
                                           TrackTypeToStr(aType),
@@ -934,7 +935,7 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
       mp4parse_track_video_info video;
       auto rv = mp4parse_get_track_video_info(mRustParser.get(), trackIndex.value(), &video);
       if (rv != mp4parse_status_OK) {
-        MOZ_LOG(sLog, LogLevel::Warning, ("mp4parse_get_track_video_info returned error %d", rv));
+        MOZ_LOG(gMP4MetadataLog, LogLevel::Warning, ("mp4parse_get_track_video_info returned error %d", rv));
         return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                             RESULT_DETAIL("Cannot parse %s track #%zu",
                                           TrackTypeToStr(aType),
@@ -947,7 +948,7 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     }
     break;
     default:
-      MOZ_LOG(sLog, LogLevel::Warning, ("unhandled track type %d", aType));
+      MOZ_LOG(gMP4MetadataLog, LogLevel::Warning, ("unhandled track type %d", aType));
       return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                           RESULT_DETAIL("Cannot handle %s track #%zu",
                                         TrackTypeToStr(aType),
@@ -967,7 +968,7 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
   if (e && e->IsValid()) {
     return {NS_OK, Move(e)};
   }
-  MOZ_LOG(sLog, LogLevel::Debug, ("TrackInfo didn't validate"));
+  MOZ_LOG(gMP4MetadataLog, LogLevel::Debug, ("TrackInfo didn't validate"));
 
   return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                       RESULT_DETAIL("Invalid %s track #%zu",

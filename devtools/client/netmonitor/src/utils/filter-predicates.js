@@ -61,15 +61,6 @@ function isMedia({ mimeType }) {
     mimeType.includes("model/"));
 }
 
-function isFlash({ url, mimeType }) {
-  // Flash is a mess.
-  return (mimeType && (
-      mimeType.includes("/x-flv") ||
-      mimeType.includes("/x-shockwave-flash"))) ||
-    url.includes(".swf") ||
-    url.includes(".flv");
-}
-
 function isWS({ requestHeaders, responseHeaders }) {
   // Detect a websocket upgrade if request has an Upgrade header with value 'websocket'
   if (!requestHeaders || !Array.isArray(requestHeaders.headers)) {
@@ -100,7 +91,7 @@ function isWS({ requestHeaders, responseHeaders }) {
 }
 
 function isOther(item) {
-  let tests = [isHtml, isCss, isJs, isXHR, isFont, isImage, isMedia, isFlash, isWS];
+  let tests = [isHtml, isCss, isJs, isXHR, isFont, isImage, isMedia, isWS];
   return tests.every(is => !is(item));
 }
 
@@ -114,7 +105,6 @@ module.exports = {
     fonts: isFont,
     images: isImage,
     media: isMedia,
-    flash: isFlash,
     ws: isWS,
     other: isOther,
   },
