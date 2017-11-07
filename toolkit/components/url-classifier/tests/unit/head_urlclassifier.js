@@ -12,39 +12,31 @@ var Cu = Components.utils;
 var Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 do_get_profile();
-
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
 // Ensure PSM is initialized before the test
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
-var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
-var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-               .getService(Ci.nsIScriptSecurityManager);
-
 // Disable hashcompleter noise for tests
-var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                 getService(Ci.nsIPrefBranch);
-prefBranch.setIntPref("urlclassifier.gethashnoise", 0);
+Services.prefs.setIntPref("urlclassifier.gethashnoise", 0);
 
 // Enable malware/phishing checking for tests
-prefBranch.setBoolPref("browser.safebrowsing.malware.enabled", true);
-prefBranch.setBoolPref("browser.safebrowsing.blockedURIs.enabled", true);
-prefBranch.setBoolPref("browser.safebrowsing.phishing.enabled", true);
+Services.prefs.setBoolPref("browser.safebrowsing.malware.enabled", true);
+Services.prefs.setBoolPref("browser.safebrowsing.blockedURIs.enabled", true);
+Services.prefs.setBoolPref("browser.safebrowsing.phishing.enabled", true);
 
 // Enable all completions for tests
-prefBranch.setCharPref("urlclassifier.disallow_completions", "");
+Services.prefs.setCharPref("urlclassifier.disallow_completions", "");
 
 // Hash completion timeout
-prefBranch.setIntPref("urlclassifier.gethash.timeout_ms", 5000);
+Services.prefs.setIntPref("urlclassifier.gethash.timeout_ms", 5000);
 
 function delFile(name) {
   try {
     // Delete a previously created sqlite file
-    var file = dirSvc.get("ProfLD", Ci.nsIFile);
+    var file = Services.dirsvc.get("ProfLD", Ci.nsIFile);
     file.append(name);
     if (file.exists())
       file.remove(false);
@@ -233,7 +225,7 @@ checkUrls(urls, expected, cb, useMoz = false) {
     if (urls.length > 0) {
       var tables = useMoz ? mozTables : allTables;
       var fragment = urls.shift();
-      var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + fragment), {});
+      var principal = Services.scriptSecurityManager.createCodebasePrincipal(Services.io.newURI("http://" + fragment), {});
       dbservice.lookup(principal, tables,
                                 function(arg) {
                                   do_check_eq(expected, arg);
@@ -247,7 +239,7 @@ checkUrls(urls, expected, cb, useMoz = false) {
 },
 
 checkTables(url, expected, cb) {
-  var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + url), {});
+  var principal = Services.scriptSecurityManager.createCodebasePrincipal(Services.io.newURI("http://" + url), {});
   dbservice.lookup(principal, allTables, function(tables) {
     // Rebuild tables in a predictable order.
     var parts = tables.split(",");

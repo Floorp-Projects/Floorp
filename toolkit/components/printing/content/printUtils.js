@@ -72,10 +72,8 @@ var PrintUtils = {
   },
 
   get bundle() {
-    let stringService = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                  .getService(Components.interfaces.nsIStringBundleService);
     delete this.bundle;
-    return this.bundle = stringService.createBundle("chrome://global/locale/printing.properties");
+    return this.bundle = Services.strings.createBundle("chrome://global/locale/printing.properties");
   },
 
   /**
@@ -402,9 +400,7 @@ var PrintUtils = {
     title = this.bundle.GetStringFromName(isPrinting ? "print_error_dialog_title"
                                                      : "printpreview_error_dialog_title");
 
-    let promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                              .getService(Components.interfaces.nsIPromptService);
-    promptSvc.alert(window, title, msg);
+    Services.prompt.alert(window, title, msg);
   },
 
   receiveMessage(aMessage) {
@@ -470,12 +466,8 @@ var PrintUtils = {
   },
 
   getPrintSettings() {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    if (pref) {
-      gPrintSettingsAreGlobal = pref.getBoolPref("print.use_global_printsettings");
-      gSavePrintSettings = pref.getBoolPref("print.save_print_settings");
-    }
+    gPrintSettingsAreGlobal = Services.prefs.getBoolPref("print.use_global_printsettings");
+    gSavePrintSettings = Services.prefs.getBoolPref("print.save_print_settings");
 
     var printSettings;
     try {
@@ -714,10 +706,8 @@ var PrintUtils = {
     printPreviewTB.destroy();
     printPreviewTB.remove();
 
-    let fm = Components.classes["@mozilla.org/focus-manager;1"]
-                       .getService(Components.interfaces.nsIFocusManager);
     if (gFocusedElement)
-      fm.setFocus(gFocusedElement, fm.FLAG_NOSCROLL);
+      Services.focus.setFocus(gFocusedElement, Services.focus.FLAG_NOSCROLL);
     else
       this._sourceBrowser.focus();
     gFocusedElement = null;

@@ -120,11 +120,12 @@ H264Converter::Decode(MediaRawData* aSample)
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   }
 
-  if (!*mNeedAVCC &&
-      mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe).isErr()) {
+  auto res = !*mNeedAVCC
+             ? mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)
+             : Ok();
+  if (res.isErr()) {
     return DecodePromise::CreateAndReject(
-      MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                  RESULT_DETAIL("ConvertSampleToAnnexB")),
+      MediaResult(res.unwrapErr(), RESULT_DETAIL("ConvertSampleToAnnexB")),
       __func__);
   }
 
@@ -374,11 +375,13 @@ H264Converter::DecodeFirstSample(MediaRawData* aSample)
     return;
   }
 
-  if (!*mNeedAVCC &&
-      mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe).isErr()) {
-    mDecodePromise.Reject(MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                                      RESULT_DETAIL("ConvertSampleToAnnexB")),
-                          __func__);
+  auto res = !*mNeedAVCC
+             ? mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)
+             : Ok();
+  if (res.isErr()) {
+    mDecodePromise.Reject(
+      MediaResult(res.unwrapErr(), RESULT_DETAIL("ConvertSampleToAnnexB")),
+      __func__);
     return;
   }
 
