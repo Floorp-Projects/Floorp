@@ -194,7 +194,7 @@ nsImageFrame::DisconnectMap()
 }
 
 void
-nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   if (mReflowCallbackPosted) {
     PresContext()->PresShell()->CancelReflowCallback(this);
@@ -226,7 +226,7 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (mDisplayingIcon)
     gIconLoad->RemoveIconObserver(this);
 
-  nsAtomicContainerFrame::DestroyFrom(aDestructRoot);
+  nsAtomicContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 void

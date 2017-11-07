@@ -74,11 +74,11 @@ nsXULLabelFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsXULLabelFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsXULLabelFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   // unregister access key
   RegUnregAccessKey(false);
-  nsBlockFrame::DestroyFrom(aDestructRoot);
+  nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsresult
