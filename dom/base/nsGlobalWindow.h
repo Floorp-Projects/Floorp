@@ -773,6 +773,10 @@ public:
   // Enable/disable updates for VR
   void EnableVRUpdates();
   void DisableVRUpdates();
+  // Reset telemetry data when switching windows.
+  // aUpdate, true for accumulating the result to the histogram.
+  // false for only resetting the timestamp.
+  void ResetVRTelemetry(bool aUpdate);
 
   // Update the VR displays for this window
   bool UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDisplays);
