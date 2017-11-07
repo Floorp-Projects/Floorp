@@ -2,30 +2,19 @@
 
 load(libdir + "asserts.js");
 
-// ES6 treating yield as an identifier except in ES6 generators introduces a
-// syntax conflict with permissible JS >= 1.7 legacy generator syntax.  Is
-// |yield /a/g| inside a function an attempt to convert the function into a
-// legacy generator, yielding a RegExp instance?  Or does it instead read as
-// |(yield / a) / g|?  Similar ambiguities exist for different textual content
-// in place of |a| -- |yield /x+17/g| or |(yield / x) + 17 / g|, and so on.
-// (And, much less importantly, is |yield /a/g| a syntax error in global code
-// as in JS >= 1.7, or is it |(yield / a) / g|.)
-//
-// For now, in JS >= 1.7, we preserve the old behavior.  In all other JS we
-// conform to ES6: |yield /a/g| is a YieldExpression inside an ES6 generator,
-// and it's an IdentifierReference divided twice when not in an ES6 generator.
-// This test will need changes if we change our JS >= 1.7 parsing to be
-// ES6-compatible.
+// Parses as IDENT(yield) DIV IDENT(abc) DIV IDENT(g).
+eval(`function f1() { yield /abc/g; }`);
 
-// TODO: fix yield in non-generator functions.
+// Throws a ReferenceError because no global "yield" variable is defined.
 var ex;
 try {
-  eval(`function f1() { yield /abc/g; }`);
+  f1();
 } catch(e) {
   ex = e;
 }
-assertEq(ex.message.includes("reserved identifier"), true);
+assertEq(ex instanceof ReferenceError, true);
 
+// Parses as YIELD REGEXP(/abc/g).
 function* f2() {
   yield /abc/g;
 }
