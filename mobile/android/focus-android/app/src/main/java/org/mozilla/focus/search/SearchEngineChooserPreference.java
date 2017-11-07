@@ -79,7 +79,7 @@ public class SearchEngineChooserPreference extends Preference implements RadioGr
         final int iconSize = (int) res.getDimension(R.dimen.preference_icon_drawable_size);
         final BitmapDrawable engineIcon = new BitmapDrawable(res, engine.getIcon());
         engineIcon.setBounds(0, 0, iconSize, iconSize);
-        radioButton.setCompoundDrawablesWithIntrinsicBounds(engineIcon, null, null, null);
+        radioButton.setCompoundDrawables(engineIcon, null, null, null);
         return radioButton;
     }
 }
