@@ -203,7 +203,8 @@ toolbarpaletteitem[notransition][place="panel"] {
 
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon,
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-toolbarpaletteitem > toolbaritem.panel-wide-item {
+toolbarpaletteitem > #search-container,
+toolbarpaletteitem > toolbaritem.toolbaritem-combined-buttons {
   transition: transform var(--drag-drop-transition-duration) cubic-bezier(.6, 2, .75, 1.5) !important;
 }
 
@@ -212,7 +213,8 @@ toolbarpaletteitem[mousedown] > toolbarbutton > .toolbarbutton-badge-stack > .to
   transform: scale(1.3);
 }
 
-toolbarpaletteitem[mousedown] > toolbaritem.panel-wide-item {
+toolbarpaletteitem[mousedown] > #search-container,
+toolbarpaletteitem[mousedown] > toolbaritem.toolbaritem-combined-buttons {
   transform: scale(1.1);
 }
 

@@ -34,7 +34,6 @@ XPCOMUtils.defineLazyGetter(this, "BrandBundle", function() {
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
-const kWidePanelItemClass = "panel-wide-item";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let scope = {};
@@ -626,7 +625,6 @@ const CustomizableWidgets = [
       node.setAttribute("removable", "true");
       node.classList.add("chromeclass-toolbar-additional");
       node.classList.add("toolbaritem-combined-buttons");
-      node.classList.add(kWidePanelItemClass);
 
       buttons.forEach(function(aButton, aIndex) {
         if (aIndex != 0)
@@ -674,7 +672,6 @@ const CustomizableWidgets = [
       node.setAttribute("removable", "true");
       node.classList.add("chromeclass-toolbar-additional");
       node.classList.add("toolbaritem-combined-buttons");
-      node.classList.add(kWidePanelItemClass);
 
       buttons.forEach(function(aButton, aIndex) {
         if (aIndex != 0)
