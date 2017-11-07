@@ -551,6 +551,8 @@ class TreeMetadataEmitter(LoggingMixin):
             if not programs:
                 continue
 
+            if kind == 'RUST_PROGRAMS':
+                self._rust_compile_dirs.add(context.objdir)
             all_rust_programs.append((programs, kind, cls))
 
         # Verify Rust program definitions.
