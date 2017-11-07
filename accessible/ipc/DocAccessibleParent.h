@@ -29,10 +29,10 @@ class DocAccessibleParent : public ProxyAccessible,
 public:
   DocAccessibleParent() :
     ProxyAccessible(this), mParentDoc(kNoParentDoc),
-    mTopLevel(false), mShutdown(false)
 #if defined(XP_WIN)
-                                      , mEmulatedWindowHandle(nullptr)
+    mEmulatedWindowHandle(nullptr),
 #endif // defined(XP_WIN)
+    mTopLevel(false), mShutdown(false)
   {
     MOZ_COUNT_CTOR_INHERITED(DocAccessibleParent, ProxyAccessible);
     sMaxDocID++;
@@ -40,6 +40,7 @@ public:
     MOZ_ASSERT(!LiveDocs().Get(mActorID));
     LiveDocs().Put(mActorID, this);
   }
+
   ~DocAccessibleParent()
   {
     LiveDocs().Remove(mActorID);

@@ -19,8 +19,8 @@ static StaticAutoPtr<PlatformChild> sPlatformChild;
 
 DocAccessibleChild::DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager)
   : DocAccessibleChildBase(aDoc)
-  , mEmulatedWindowHandle(nullptr)
   , mIsRemoteConstructed(false)
+  , mEmulatedWindowHandle(nullptr)
 {
   MOZ_COUNT_CTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
   if (!sPlatformChild) {
@@ -318,4 +318,3 @@ DocAccessibleChild::RecvRestoreFocus()
 
 } // namespace a11y
 } // namespace mozilla
-
