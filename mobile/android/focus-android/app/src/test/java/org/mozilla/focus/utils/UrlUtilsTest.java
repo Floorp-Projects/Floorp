@@ -13,6 +13,19 @@ import static org.junit.Assert.assertTrue;
 @RunWith(RobolectricTestRunner.class)
 public class UrlUtilsTest {
     @Test
+    public void isValidSearchQueryUrl() {
+        assertTrue(UrlUtils.isValidSearchQueryUrl("https://example.com/search/?q=%s"));
+        assertTrue(UrlUtils.isValidSearchQueryUrl("http://example.com/search/?q=%s"));
+        assertTrue(UrlUtils.isValidSearchQueryUrl("http-test-site.com/search/?q=%s"));
+        assertFalse(UrlUtils.isValidSearchQueryUrl("httpss://example.com/search/?q=%s"));
+
+        assertTrue(UrlUtils.isValidSearchQueryUrl("example.com/search/?q=%s"));
+        assertTrue(UrlUtils.isValidSearchQueryUrl(" example.com/search/?q=%s "));
+
+        assertFalse(UrlUtils.isValidSearchQueryUrl("htps://example.com/search/?q=%s"));
+    }
+
+    @Test
     public void urlsMatchExceptForTrailingSlash() throws Exception {
         assertTrue(UrlUtils.urlsMatchExceptForTrailingSlash("http://www.mozilla.org", "http://www.mozilla.org"));
         assertTrue(UrlUtils.urlsMatchExceptForTrailingSlash("http://www.mozilla.org/", "http://www.mozilla.org"));

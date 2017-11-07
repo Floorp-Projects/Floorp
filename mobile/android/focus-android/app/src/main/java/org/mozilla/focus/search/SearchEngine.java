@@ -7,14 +7,32 @@ package org.mozilla.focus.search;
 
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.util.Log;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class SearchEngine {
+    private static final String LOGTAG = "SearchEngine";
+
     // Parameters copied from nsSearchService.js
     private static final String MOZ_PARAM_LOCALE = "\\{moz:locale\\}";
     private static final String MOZ_PARAM_DIST_ID = "\\{moz:distributionID\\}";
@@ -100,5 +118,53 @@ public class SearchEngine {
         template = template.replaceAll(OS_PARAM_OPTIONAL, "");
 
         return template;
+    }
+
+    public static String buildSearchEngineXML(String engineName, String searchString) {
+        Document document = null;
+        try {
+            document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+            final Element rootElement = document.createElement("OpenSearchDescription");
+            rootElement.setAttribute("xmlns", "http://a9.com/-/spec/opensearch/1.1/");
+            document.appendChild(rootElement);
+
+            final Element shortNameElement = document.createElement("ShortName");
+            shortNameElement.setTextContent(engineName);
+            rootElement.appendChild(shortNameElement);
+
+            final Element descriptionElement = document.createElement("Description");
+            descriptionElement.setTextContent(engineName);
+            rootElement.appendChild(descriptionElement);
+
+            final Element urlElement = document.createElement("Url");
+            urlElement.setAttribute("type", "text/html");
+            final String templateSearchString = searchString.substring(0, searchString.length() - 2) + "{searchTerms}";
+            urlElement.setAttribute("template", templateSearchString);
+            rootElement.appendChild(urlElement);
+
+        } catch (ParserConfigurationException e) {
+            Log.e(LOGTAG, "Couldn't create new Document for building search engine XML", e);
+            return null;
+        }
+        return XMLtoString(document);
+    }
+
+    private static String XMLtoString(Document doc) {
+        if (doc == null) {
+            return null;
+        }
+
+        final Writer writer = new StringWriter();
+        try {
+            final Transformer tf = TransformerFactory.newInstance().newTransformer();
+            tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            tf.setOutputProperty(OutputKeys.INDENT, "yes");
+            tf.transform(new DOMSource(doc), new StreamResult(writer));
+        } catch (TransformerConfigurationException e) {
+            return null;
+        } catch (TransformerException e) {
+            return null;
+        }
+        return writer.toString();
     }
 }

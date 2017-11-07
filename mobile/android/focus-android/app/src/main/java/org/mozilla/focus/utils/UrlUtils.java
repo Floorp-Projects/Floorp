@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.webkit.URLUtil;
 
 import org.mozilla.focus.search.SearchEngine;
 import org.mozilla.focus.search.SearchEngineManager;
@@ -41,6 +42,24 @@ public class UrlUtils {
         }
 
         return trimmedUrl.contains(".") || trimmedUrl.contains(":");
+    }
+
+    public static boolean isValidSearchQueryUrl(String url) {
+        String trimmedUrl = url.trim();
+        if (!trimmedUrl.matches("^.+?://.+?")) {
+            // UI hint url doesn't have http scheme, so add it if necessary
+            trimmedUrl = "http://" + trimmedUrl;
+        }
+
+        if (!URLUtil.isNetworkUrl(trimmedUrl)) {
+            return false;
+        }
+
+        if (!trimmedUrl.matches(".*%s$")) {
+            return false;
+        }
+
+        return true;
     }
 
     public static boolean isHttpOrHttps(String url) {
