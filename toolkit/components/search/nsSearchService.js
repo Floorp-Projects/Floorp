@@ -2375,8 +2375,7 @@ Engine.prototype = {
   get _defaultMobileResponseType() {
     let type = URLTYPE_SEARCH_HTML;
 
-    let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-    let isTablet = sysInfo.get("tablet");
+    let isTablet = Services.sysinfo.get("tablet");
     if (isTablet && this.supportsResponseType("application/x-moz-tabletsearch")) {
       // Check for a tablet-specific search URL override
       type = "application/x-moz-tabletsearch";

@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
+
 // dialog is just an array we'll use to store various properties from the dialog document...
 var dialog;
 
@@ -57,9 +61,7 @@ var progressListener = {
         percentPrint = replaceInsert( percentPrint, 1, 100 );
         dialog.progressText.setAttribute("value", percentPrint);
 
-        var fm = Components.classes["@mozilla.org/focus-manager;1"]
-                     .getService(Components.interfaces.nsIFocusManager);
-        if (fm && fm.activeWindow == window) {
+        if (Services.focus.activeWindow == window) {
           // This progress dialog is the currently active window. In
           // this case we need to make sure that some other window
           // gets focus before we close this dialog to work around the

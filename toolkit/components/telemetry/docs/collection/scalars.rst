@@ -61,6 +61,8 @@ After registration, the scalars can be recorded through the usual scalar JS API.
 
 New scalars registered here are subject to the same :ref:`limitations <scalar-limitations>` as the ones registered through ``Scalars.yaml``, e.g. the length of the category name or the allowed characters.
 
+When add-ons are updated, they may re-register all of their scalars. In that case, any changes to scalars that are already registered are ignored. The only exception is expiry; a scalar that is re-registered with ``expired: true`` will not be recorded anymore.
+
 Example:
 
 .. code-block:: js
@@ -284,4 +286,7 @@ Version History
 - Firefox 50: Initial scalar support (`bug 1276195 <https://bugzilla.mozilla.org/show_bug.cgi?id=1276195>`_).
 - Firefox 51: Added keyed scalars (`bug 1277806 <https://bugzilla.mozilla.org/show_bug.cgi?id=1277806>`_).
 - Firefox 53: Added child process scalars (`bug 1278556 <https://bugzilla.mozilla.org/show_bug.cgi?id=1278556>`_).
-- Firefox 58: Added support for recording new scalars from add-ons (`bug 1393801 <bug https://bugzilla.mozilla.org/show_bug.cgi?id=1393801>`_).
+- Firefox 58
+
+  - Added support for recording new scalars from add-ons (`bug 1393801 <bug https://bugzilla.mozilla.org/show_bug.cgi?id=1393801>`_).
+  - Ignore re-registering existing scalars for a category instead of failing (`bug 1409323 <https://bugzilla.mozilla.org/show_bug.cgi?id=1409323>`_).

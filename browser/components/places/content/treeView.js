@@ -1453,7 +1453,7 @@ PlacesTreeView.prototype = {
     // since this information is specific to the tree view.
     let ip = this._getInsertionPoint(aRow, aOrientation);
     if (ip) {
-      PlacesControllerDragHelper.onDrop(ip, aDataTransfer, this)
+      PlacesControllerDragHelper.onDrop(ip, aDataTransfer, this._tree.element)
                                 .catch(Components.utils.reportError)
                                 .then(() => {
                                   // We should only clear the drop target once

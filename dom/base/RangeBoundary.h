@@ -203,12 +203,40 @@ public:
     return mOffset.value();
   }
 
+  /**
+   * Set() sets a point to aOffset or aChild.
+   * If it's set with offset, mRef is invalidated.  If it's set with aChild,
+   * mOffset may be invalidated unless the offset can be computed simply.
+   */
   void
   Set(nsINode* aContainer, int32_t aOffset)
   {
     mParent = aContainer;
     mRef = nullptr;
     mOffset = mozilla::Some(aOffset);
+  }
+  void
+  Set(const nsIContent* aChild)
+  {
+    MOZ_ASSERT(aChild);
+    mParent = aChild->GetParentNode();
+    mRef = aChild->GetPreviousSibling();
+    if (!mRef) {
+      mOffset = mozilla::Some(0);
+    } else {
+      mOffset.reset();
+    }
+  }
+
+  /**
+   * Clear() makes the instance not point anywhere.
+   */
+  void
+  Clear()
+  {
+    mParent = nullptr;
+    mRef = nullptr;
+    mOffset.reset();
   }
 
   /**

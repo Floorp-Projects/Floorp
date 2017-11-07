@@ -11,12 +11,6 @@ function waitForPageShow(browser = gBrowser.selectedBrowser) {
   return BrowserTestUtils.waitForContentEvent(browser, "pageshow", true);
 }
 
-function makeURI(url) {
-  return Cc["@mozilla.org/network/io-service;1"].
-         getService(Ci.nsIIOService).
-         newURI(url);
-}
-
 // Tests that loadURI accepts a referrer and it is included in the load.
 add_task(async function test_referrer() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
@@ -24,7 +18,7 @@ add_task(async function test_referrer() {
 
   browser.webNavigation.loadURI(DUMMY1,
                                 Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                makeURI(DUMMY2), null, null,
+                                Services.io.newURI(DUMMY2), null, null,
                                 SYSTEMPRINCIPAL);
   await waitForLoad(DUMMY1);
 

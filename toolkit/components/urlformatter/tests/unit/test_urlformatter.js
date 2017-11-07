@@ -1,20 +1,16 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+Cu.import("resource://gre/modules/Services.jsm");
+
 function run_test() {
-  var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-                  getService(Ci.nsIURLFormatter);
-  var locale = Cc["@mozilla.org/intl/localeservice;1"].
-               getService(Ci.mozILocaleService).
-               getAppLocaleAsLangTag();
-  var prefs = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-  var sysInfo = Cc["@mozilla.org/system-info;1"].
-                getService(Ci.nsIPropertyBag2);
-  var OSVersion = sysInfo.getProperty("name") + " " +
-                  sysInfo.getProperty("version");
+  var formatter = Services.urlFormatter;
+  var locale = Services.locale.getAppLocaleAsLangTag();
+  var OSVersion = Services.sysinfo.getProperty("name") + " " +
+                  Services.sysinfo.getProperty("version");
   try {
-    OSVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
+    OSVersion += " (" + Services.sysinfo.getProperty("secondaryLibrary") + ")";
   } catch (e) {}
   OSVersion = encodeURIComponent(OSVersion);
   var macutils = null;
@@ -22,12 +18,9 @@ function run_test() {
     macutils = Cc["@mozilla.org/xpcom/mac-utils;1"].
                getService(Ci.nsIMacUtils);
   } catch (e) {}
-  var appInfo = Cc["@mozilla.org/xre/app-info;1"].
-                getService(Ci.nsIXULAppInfo).
-                QueryInterface(Ci.nsIXULRuntime);
-  var abi = macutils && macutils.isUniversalBinary ? "Universal-gcc3" : appInfo.XPCOMABI;
+  var abi = macutils && macutils.isUniversalBinary ? "Universal-gcc3" : Services.appinfo.XPCOMABI;
 
-  let defaults = prefs.QueryInterface(Ci.nsIPrefService).getDefaultBranch(null);
+  let defaults = Services.prefs.getDefaultBranch(null);
   let channel = defaults.getCharPref("app.update.channel", "default");
 
   // Set distribution values.
@@ -46,7 +39,7 @@ function run_test() {
   var advancedUrlRef = "http://test.mozilla.com/Url Formatter Test/1/" + gAppInfo.appBuildID + "/XPCShell_" + abi + "/" + locale + "/" + channel + "/" + OSVersion + "/bacon/1.0/";
 
   var pref = "xpcshell.urlformatter.test";
-  prefs.setStringPref(pref, upperUrlRaw);
+  Services.prefs.setStringPref(pref, upperUrlRaw);
 
   do_check_eq(formatter.formatURL(upperUrlRaw), ulUrlRef);
   do_check_eq(formatter.formatURLPref(pref), ulUrlRef);
