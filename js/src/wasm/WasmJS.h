@@ -31,25 +31,6 @@ class WasmInstanceScope;
 
 namespace wasm {
 
-// Creates a testing-only NaN JS object with fields as described above, for
-// T=float or T=double.
-
-template<typename T>
-JSObject*
-CreateCustomNaNObject(JSContext* cx, T* addr);
-
-// Converts a testing-only NaN JS object with a nan_low field to a float32 NaN
-// with nan_low as the payload.
-
-bool
-ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret);
-
-// Converts a testing-only NaN JS object with nan_{low,high} components to a
-// double NaN with nan_low|(nan_high)>>32 as the payload.
-
-bool
-ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, uint64_t* ret);
-
 // Creates a JS object containing two fields (low: low 32 bits; high: high 32
 // bits) of a given Int64 value. For testing purposes only.
 
