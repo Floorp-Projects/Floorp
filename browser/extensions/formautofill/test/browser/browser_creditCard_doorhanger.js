@@ -421,3 +421,105 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
   is(creditCards[0]["cc-name"], "User 3", "Verify the name field");
   await removeAllRecords();
 });
+
+add_task(async function test_update_autofill_form() {
+  await saveCreditCard(TEST_CREDIT_CARD_1);
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "1 credit card in storage");
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
+                                                       "popupshown");
+      await openPopupOn(browser, "form #cc-name");
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.setUserInput("User 1");
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      await clickDoorhangerButton(MAIN_BUTTON);
+    }
+  );
+
+  creditCards = await getCreditCards();
+  is(creditCards.length, 1, "Still 1 credit card");
+  is(creditCards[0]["cc-name"], "User 1", "cc-name field is updated");
+  await removeAllRecords();
+});
+
+add_task(async function test_create_new_autofill_form() {
+  await saveCreditCard(TEST_CREDIT_CARD_1);
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "1 credit card in storage");
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
+                                                       "popupshown");
+      await openPopupOn(browser, "form #cc-name");
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.setUserInput("User 1");
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      await clickDoorhangerButton(SECONDARY_BUTTON);
+    }
+  );
+
+  creditCards = await getCreditCards();
+  is(creditCards.length, 2, "2 credit cards in storage");
+  is(creditCards[0]["cc-name"], TEST_CREDIT_CARD_1["cc-name"],
+     "Original record's cc-name field is unchanged");
+  is(creditCards[1]["cc-name"], "User 1", "cc-name field in the new record");
+  await removeAllRecords();
+});
+
+add_task(async function test_update_duplicate_autofill_form() {
+  await saveCreditCard({
+    "cc-number": "1234123412341234",
+  });
+  await saveCreditCard({
+    "cc-number": "1111222233334444",
+  });
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 2, "2 credit card in storage");
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      await openPopupOn(browser, "form #cc-number");
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+        let number = form.querySelector("#cc-number");
+        is(number.value, "1234123412341234", "Should be the first credit card number");
+        // Change number to the second credit card number
+        number.setUserInput("1111222233334444");
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await sleep(1000);
+      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
+    }
+  );
+
+  creditCards = await getCreditCards();
+  is(creditCards.length, 2, "Still 2 credit card");
+  await removeAllRecords();
+});

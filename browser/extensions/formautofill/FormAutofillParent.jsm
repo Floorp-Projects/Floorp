@@ -375,7 +375,7 @@ FormAutofillParent.prototype = {
       if (!this.profileStorage.addresses.mergeIfPossible(address.guid, address.record, true)) {
         this._recordFormFillingTime("address", "autofill-update", timeStartedFillingMS);
 
-        FormAutofillDoorhanger.show(target, "update").then((state) => {
+        FormAutofillDoorhanger.show(target, "updateAddress").then((state) => {
           let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record, true);
           switch (state) {
             case "create":
@@ -469,7 +469,7 @@ FormAutofillParent.prototype = {
       return;
     }
 
-    let state = await FormAutofillDoorhanger.show(target, "creditCard");
+    let state = await FormAutofillDoorhanger.show(target, creditCard.guid ? "updateCreditCard" : "addCreditCard");
     if (state == "cancel") {
       return;
     }
@@ -487,10 +487,13 @@ FormAutofillParent.prototype = {
     }
 
     let changedGUIDs = [];
-    // TODO: Autofill(with guid) case should show update doorhanger with update/create new.
-    // It'll be implemented in bug 1403881 and only avoid mergering for now.
     if (creditCard.guid) {
-      changedGUIDs.push(this.profileStorage.creditCards.add(creditCard.record));
+      if (state == "update") {
+        this.profileStorage.creditCards.update(creditCard.guid, creditCard.record, true);
+        changedGUIDs.push(creditCard.guid);
+      } else if ("create") {
+        changedGUIDs.push(this.profileStorage.creditCards.add(creditCard.record));
+      }
     } else {
       changedGUIDs.push(...this.profileStorage.creditCards.mergeToStorage(creditCard.record));
       if (!changedGUIDs.length) {
