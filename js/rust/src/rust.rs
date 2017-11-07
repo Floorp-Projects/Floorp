@@ -35,27 +35,7 @@ const DEFAULT_HEAPSIZE: u32 = 32_u32 * 1024_u32 * 1024_u32;
 const STACK_QUOTA: usize = 128 * 8 * 1024;
 
 // From Gecko:
-// The JS engine permits us to set different stack limits for system code,
-// trusted script, and untrusted script. We have tests that ensure that
-// we can always execute 10 "heavy" (eval+with) stack frames deeper in
-// privileged code. Our stack sizes vary greatly in different configurations,
-// so satisfying those tests requires some care. Manual measurements of the
-// number of heavy stack frames achievable gives us the following rough data,
-// ordered by the effective categories in which they are grouped in the
-// JS_SetNativeStackQuota call (which predates this analysis).
-//
-// (NB: These numbers may have drifted recently - see bug 938429)
-// OSX 64-bit Debug: 7MB stack, 636 stack frames => ~11.3k per stack frame
-// OSX64 Opt: 7MB stack, 2440 stack frames => ~3k per stack frame
-//
-// Linux 32-bit Debug: 2MB stack, 426 stack frames => ~4.8k per stack frame
-// Linux 64-bit Debug: 4MB stack, 455 stack frames => ~9.0k per stack frame
-//
-// Windows (Opt+Debug): 900K stack, 235 stack frames => ~3.4k per stack frame
-//
-// Linux 32-bit Opt: 1MB stack, 272 stack frames => ~3.8k per stack frame
-// Linux 64-bit Opt: 2MB stack, 316 stack frames => ~6.5k per stack frame
-//
+// (See js/xpconnect/src/XPCJSContext.cpp)
 // We tune the trusted/untrusted quotas for each configuration to achieve our
 // invariants while attempting to minimize overhead. In contrast, our buffer
 // between system code and trusted script is a very unscientific 10k.
