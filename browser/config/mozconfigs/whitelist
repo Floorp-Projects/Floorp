@@ -74,19 +74,19 @@ for platform in all_platforms:
         'MOZ_AUTOMATION_UPDATE_PACKAGING=1',
         'fi',
     ]
-whitelist['release']['win32'] += ['mk_add_options MOZ_PGO=1']
-whitelist['release']['win64'] += ['mk_add_options MOZ_PGO=1']
+whitelist['release']['win32'] += ['ac_add_options MOZ_PGO=1']
+whitelist['release']['win64'] += ['ac_add_options MOZ_PGO=1']
 
 whitelist['release']['linux32'] += [
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
-    'mk_add_options MOZ_PGO=1',
+    'ac_add_options MOZ_PGO=1',
     "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
 ]
 whitelist['release']['linux64'] += [
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
-    'mk_add_options MOZ_PGO=1',
+    'ac_add_options MOZ_PGO=1',
     "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
 ]
 
