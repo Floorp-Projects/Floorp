@@ -85,6 +85,7 @@ AudioTimelineEvent::AudioTimelineEvent(MediaStream* aStream)
 #ifdef DEBUG
   , mTimeIsInTicks(false)
 #endif
+  , mTime(0.0)
 {
 }
 
