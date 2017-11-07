@@ -358,10 +358,17 @@ const CustomizableWidgets = [
     _showTabs(paginationInfo) {
       this._showTabsPromise = this._showTabsPromise.then(() => {
         return this.__showTabs(paginationInfo);
+      }, e => {
+        Cu.reportError(e);
       });
     },
     // Return a new promise to update the tab list.
     __showTabs(paginationInfo) {
+      if (!this._tabsList) {
+        // Closed between the previous `this._showTabsPromise`
+        // resolving and now.
+        return undefined;
+      }
       let doc = this._tabsList.ownerDocument;
       return SyncedTabs.getTabClients().then(clients => {
         // The view may have been hidden while the promise was resolving.

@@ -19,7 +19,7 @@ import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoView;
-import org.mozilla.gecko.GeckoView.ProgressListener.SecurityInformation;
+import org.mozilla.gecko.GeckoSession.ProgressListener.SecurityInformation;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;

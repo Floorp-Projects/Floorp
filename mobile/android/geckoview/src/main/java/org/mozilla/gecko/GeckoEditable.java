@@ -598,7 +598,7 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private GeckoEditable(final GeckoView v) {
+    private GeckoEditable() {
         if (DEBUG) {
             // Called by nsWindow.
             ThreadUtils.assertOnGeckoThread();
@@ -613,8 +613,6 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
                 PROXY_INTERFACES, this);
 
         mIcRunHandler = mIcPostHandler = ThreadUtils.getUiHandler();
-
-        onViewChange(v);
     }
 
     @WrapForJNI(calledFrom = "gecko")

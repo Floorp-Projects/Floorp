@@ -35,9 +35,10 @@ import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoScreenOrientation;
+import org.mozilla.gecko.GeckoSession;
+import org.mozilla.gecko.GeckoSessionSettings;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.GeckoView;
-import org.mozilla.gecko.GeckoViewSettings;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
@@ -50,13 +51,15 @@ import org.mozilla.gecko.widget.ActionModePresenter;
 
 public class WebAppActivity extends AppCompatActivity
                             implements ActionModePresenter,
-                                       GeckoView.NavigationListener {
+                                       GeckoSession.ContentListener,
+                                       GeckoSession.NavigationListener {
     private static final String LOGTAG = "WebAppActivity";
 
     public static final String MANIFEST_PATH = "MANIFEST_PATH";
     public static final String MANIFEST_URL = "MANIFEST_URL";
     private static final String SAVED_INTENT = "savedIntent";
 
+    private GeckoSession mGeckoSession;
     private GeckoView mGeckoView;
     private PromptService mPromptService;
     private DoorHangerPopup mDoorHangerPopup;
@@ -92,28 +95,11 @@ public class WebAppActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         mGeckoView = new GeckoView(this);
-        mGeckoView.setNavigationListener(this);
-        mGeckoView.setContentListener(new GeckoView.ContentListener() {
-            public void onTitleChange(GeckoView view, String title) {}
-            public void onContextMenu(GeckoView view, int screenX, int screenY,
-                               String uri, String elementSrc) {
-                final String content = uri != null ? uri : elementSrc != null ? elementSrc : "";
-                final Uri validUri = WebApps.getValidURL(content);
-                if (validUri == null) {
-                    return;
-                }
+        mGeckoSession = new GeckoSession();
+        mGeckoView.setSession(mGeckoSession);
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        WebApps.openInFennec(validUri, WebAppActivity.this);
-                    }
-                });
-            }
-            public void onFullScreen(GeckoView view, boolean fullScreen) {
-                updateFullScreenContent(fullScreen);
-            }
-        });
+        mGeckoSession.setNavigationListener(this);
+        mGeckoSession.setContentListener(this);
 
         GeckoAccessibility.setDelegate(mGeckoView);
 
@@ -123,10 +109,10 @@ public class WebAppActivity extends AppCompatActivity
         mTextSelection = TextSelection.Factory.create(mGeckoView, this);
         mTextSelection.create();
 
-        final GeckoViewSettings settings = mGeckoView.getSettings();
-        settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
+        final GeckoSessionSettings settings = mGeckoView.getSettings();
+        settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
         settings.setBoolean(
-            GeckoViewSettings.USE_REMOTE_DEBUGGER,
+            GeckoSessionSettings.USE_REMOTE_DEBUGGER,
             GeckoSharedPrefs.forApp(this).getBoolean(
                 GeckoPreferences.PREFS_DEVTOOLS_REMOTE_USB_ENABLED, false));
 
@@ -150,20 +136,20 @@ public class WebAppActivity extends AppCompatActivity
 
         updateFromManifest();
 
-        mGeckoView.loadUri(mManifest.getStartUri().toString());
+        mGeckoSession.loadUri(mManifest.getStartUri().toString());
 
         setContentView(mGeckoView);
     }
 
     @Override
     public void onResume() {
-        mGeckoView.setActive(true);
+        mGeckoSession.setActive(true);
         super.onResume();
     }
 
     @Override
     public void onPause() {
-        mGeckoView.setActive(false);
+        mGeckoSession.setActive(false);
         super.onPause();
     }
 
@@ -206,9 +192,9 @@ public class WebAppActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         if (mIsFullScreenContent) {
-            mGeckoView.exitFullScreen();
+            mGeckoSession.exitFullScreen();
         } else if (mCanGoBack) {
-            mGeckoView.goBack();
+            mGeckoSession.goBack();
         } else {
             super.onBackPressed();
         }
@@ -266,42 +252,62 @@ public class WebAppActivity extends AppCompatActivity
 
         updateFullScreenMode(displayMode.equals("fullscreen"));
 
-        GeckoViewSettings.DisplayMode mode;
+        int mode;
         switch (displayMode) {
             case "standalone":
-                mode = GeckoViewSettings.DisplayMode.STANDALONE;
+                mode = GeckoSessionSettings.DISPLAY_MODE_STANDALONE;
                 break;
             case "fullscreen":
-                mode = GeckoViewSettings.DisplayMode.FULLSCREEN;
+                mode = GeckoSessionSettings.DISPLAY_MODE_FULLSCREEN;
                 break;
             case "minimal-ui":
-                mode = GeckoViewSettings.DisplayMode.MINIMAL_UI;
+                mode = GeckoSessionSettings.DISPLAY_MODE_MINIMAL_UI;
                 break;
             case "browser":
             default:
-                mode = GeckoViewSettings.DisplayMode.BROWSER;
+                mode = GeckoSessionSettings.DISPLAY_MODE_BROWSER;
                 break;
         }
 
-        mGeckoView.getSettings().setInt(GeckoViewSettings.DISPLAY_MODE, mode.value());
+        mGeckoView.getSettings().setInt(GeckoSessionSettings.DISPLAY_MODE, mode);
     }
 
-    /* GeckoView.NavigationListener */
-    @Override
-    public void onLocationChange(GeckoView view, String url) {
+    @Override // GeckoSession.NavigationListener
+    public void onLocationChange(GeckoSession session, String url) {
     }
 
-    @Override
-    public void onCanGoBack(GeckoView view, boolean canGoBack) {
+    @Override // GeckoSession.NavigationListener
+    public void onCanGoBack(GeckoSession session, boolean canGoBack) {
         mCanGoBack = canGoBack;
     }
 
-    @Override
-    public void onCanGoForward(GeckoView view, boolean canGoForward) {
+    @Override // GeckoSession.NavigationListener
+    public void onCanGoForward(GeckoSession session, boolean canGoForward) {
+    }
+
+    @Override // GeckoSession.ContentListener
+    public void onTitleChange(GeckoSession session, String title) {
+    }
+
+    @Override // GeckoSession.ContentListener
+    public void onContextMenu(GeckoSession session, int screenX, int screenY,
+                              String uri, String elementSrc) {
+        final String content = uri != null ? uri : elementSrc != null ? elementSrc : "";
+        final Uri validUri = WebApps.getValidURL(content);
+        if (validUri == null) {
+            return;
+        }
+
+        WebApps.openInFennec(validUri, WebAppActivity.this);
+    }
+
+    @Override // GeckoSession.ContentListener
+    public void onFullScreen(GeckoSession session, boolean fullScreen) {
+        updateFullScreenContent(fullScreen);
     }
 
     @Override
-    public boolean onLoadUri(final GeckoView view, final String urlStr,
+    public boolean onLoadUri(final GeckoSession session, final String urlStr,
                              final TargetWindow where) {
         final Uri uri = Uri.parse(urlStr);
         if (uri == null) {
