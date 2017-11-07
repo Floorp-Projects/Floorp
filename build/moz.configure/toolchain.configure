@@ -1224,8 +1224,6 @@ set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
 set_config('VISIBILITY_FLAGS', visibility_flags)
 
 
-
-
 @depends(c_compiler)
 @imports('multiprocessing')
 @imports(_from='__builtin__', _import='min')
