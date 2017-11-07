@@ -190,6 +190,7 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   : MediaEngineAudioSource(kReleased)
   , mAudioInput(aAudioInput)
   , mAudioProcessing(AudioProcessing::Create())
+  , mAudioOutputObserver(new AudioOutputObserver())
   , mMonitor("WebRTCMic.Monitor")
   , mCapIndex(aIndex)
   , mDelayAgnostic(aDelayAgnostic)
@@ -514,7 +515,6 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
     config.Set<webrtc::DelayAgnostic>(new webrtc::DelayAgnostic(mDelayAgnostic));
     mAudioProcessing->SetExtraOptions(config);
   }
-
   SetLastPrefs(prefs);
   return NS_OK;
 }
