@@ -2066,9 +2066,6 @@ GK_ATOM(ondevicelight, "ondevicelight")
 // MediaDevices device change event
 GK_ATOM(ondevicechange, "ondevicechange")
 
-// HTML element attributes that only exposed to XBL and chrome content
-GK_ATOM(mozinputrangeignorepreventdefault, "mozinputrangeignorepreventdefault")
-
 // WebExtensions
 GK_ATOM(moz_extension, "moz-extension")
 GK_ATOM(all_urlsPermission, "<all_urls>")
