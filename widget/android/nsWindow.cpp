@@ -288,6 +288,11 @@ public:
     // Close and destroy the nsWindow.
     void Close();
 
+    // Transfer this nsWindow to new GeckoSession objects.
+    void Transfer(const GeckoSession::Window::LocalRef& inst,
+                  jni::Object::Param aDispatcher,
+                  jni::Object::Param aSettings);
+
     // Reattach this nsWindow to a new GeckoView.
     void Attach(const GeckoSession::Window::LocalRef& inst,
                 jni::Object::Param aView, jni::Object::Param aCompositor);
@@ -1351,6 +1356,22 @@ nsWindow::GeckoViewSupport::Close()
     mDOMWindow->ForceClose();
     mDOMWindow = nullptr;
     mGeckoViewWindow = nullptr;
+}
+
+void
+nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
+                                     jni::Object::Param aDispatcher,
+                                     jni::Object::Param aSettings)
+{
+    if (!window.mAndroidView) {
+        return;
+    }
+
+    window.mAndroidView->mEventDispatcher->Attach(
+            java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
+    window.mAndroidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
+
+    inst->OnTransfer(aDispatcher);
 }
 
 void
