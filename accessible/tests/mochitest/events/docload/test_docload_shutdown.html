@@ -110,7 +110,10 @@
     function closeWndShutdownDoc() {
       this.eventSeq = [ new invokerChecker(EVENT_FOCUS, getAccessible(document)) ];
 
-      this.invoke = () => gDialog.close();
+      this.invoke = () => {
+        gDialog.close()
+        window.focus();
+      };
 
       this.finalCheck = () => {
         ok(!isAccessibleInCache(gDialogDoc),
