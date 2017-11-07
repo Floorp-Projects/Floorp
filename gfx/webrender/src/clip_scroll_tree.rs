@@ -8,11 +8,11 @@ use api::{ScrollLayerState, ScrollLocation, WorldPoint};
 use clip::ClipStore;
 use clip_scroll_node::{ClipScrollNode, NodeType, ScrollingState, StickyFrameInfo};
 use gpu_cache::GpuCache;
+use gpu_types::ClipScrollNodeData;
 use internal_types::{FastHashMap, FastHashSet};
 use print_tree::{PrintTree, PrintTreePrinter};
 use render_task::ClipChain;
 use resource_cache::ResourceCache;
-use tiling::PackedLayer;
 
 pub type ScrollStates = FastHashMap<ClipId, ScrollingState>;
 
@@ -329,11 +329,11 @@ impl ClipScrollTree {
         &mut self,
         screen_rect: &DeviceIntRect,
         device_pixel_ratio: f32,
-        packed_layers: &mut Vec<PackedLayer>,
         clip_store: &mut ClipStore,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         pan: LayerPoint,
+        node_data: &mut Vec<ClipScrollNodeData>,
     ) {
         if self.nodes.is_empty() {
             return;
@@ -360,12 +360,11 @@ impl ClipScrollTree {
         self.update_node_transform(
             root_reference_frame_id,
             &mut state,
-            &screen_rect,
             device_pixel_ratio,
-            packed_layers,
             clip_store,
             resource_cache,
             gpu_cache,
+            node_data,
         );
     }
 
@@ -373,12 +372,11 @@ impl ClipScrollTree {
         &mut self,
         layer_id: ClipId,
         state: &mut TransformUpdateState,
-        screen_rect: &DeviceIntRect,
         device_pixel_ratio: f32,
-        packed_layers: &mut Vec<PackedLayer>,
         clip_store: &mut ClipStore,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
+        node_data: &mut Vec<ClipScrollNodeData>,
     ) {
         // TODO(gw): This is an ugly borrow check workaround to clone these.
         //           Restructure this to avoid the clones!
@@ -389,12 +387,13 @@ impl ClipScrollTree {
                 None => return,
             };
 
-            node.update_transform(&mut state);
+            node.update_transform(
+                &mut state,
+                node_data
+            );
             node.update_clip_work_item(
                 &mut state,
-                screen_rect,
                 device_pixel_ratio,
-                packed_layers,
                 clip_store,
                 resource_cache,
                 gpu_cache,
@@ -407,12 +406,11 @@ impl ClipScrollTree {
             self.update_node_transform(
                 child_layer_id,
                 &mut state,
-                screen_rect,
                 device_pixel_ratio,
-                packed_layers,
                 clip_store,
                 resource_cache,
                 gpu_cache,
+                node_data,
             );
         }
     }

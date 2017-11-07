@@ -119,3 +119,8 @@ addMessageListener("Test:JsonView:Eval", function (msg) {
   let result = content.eval(msg.data.code);
   sendAsyncMessage(msg.name, {result});
 });
+
+Components.utils.exportFunction(content.document.querySelector.bind(content.document),
+  content, {defineAs: "$"});
+Components.utils.exportFunction(content.document.querySelectorAll.bind(content.document),
+  content, {defineAs: "$$"});

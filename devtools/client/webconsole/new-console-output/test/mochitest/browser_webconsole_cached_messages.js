@@ -9,51 +9,41 @@
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-webconsole-error-observer.html";
+                 "new-console-output/test/mochitest/test-webconsole-error-observer.html";
 
-// On e10s, the exception is triggered in child process
-// and is ignored by test harness
-if (!Services.appinfo.browserTabsRemoteAutostart) {
-  expectUncaughtException();
-}
+add_task(async function() {
+  // On e10s, the exception is triggered in child process
+  // and is ignored by test harness
+  if (!Services.appinfo.browserTabsRemoteAutostart) {
+    expectUncaughtException();
+  }
+  // Enable CSS filter for the test.
+  await pushPref("devtools.webconsole.filter.css", true);
 
-function test() {
-  waitForExplicitFinish();
+  await addTab(TEST_URI);
 
-  loadTab(TEST_URI).then(testOpenUI);
-}
+  info("Open the console");
+  let hud = await openConsole();
+  testMessagesVisibility(hud);
 
-function testOpenUI(aTestReopen) {
-  openConsole().then((hud) => {
-    waitForMessages({
-      webconsole: hud,
-      messages: [
-        {
-          text: "log Bazzle",
-          category: CATEGORY_WEBDEV,
-          severity: SEVERITY_LOG,
-        },
-        {
-          text: "error Bazzle",
-          category: CATEGORY_WEBDEV,
-          severity: SEVERITY_ERROR,
-        },
-        {
-          text: "bazBug611032",
-          category: CATEGORY_JS,
-          severity: SEVERITY_ERROR,
-        },
-        {
-          text: "cssColorBug611032",
-          category: CATEGORY_CSS,
-          severity: SEVERITY_WARNING,
-        },
-      ],
-    }).then(() => {
-      closeConsole(gBrowser.selectedTab).then(() => {
-        aTestReopen && info("will reopen the Web Console");
-        executeSoon(aTestReopen ? testOpenUI : finishTest);
-      });
-    });
-  });
+  info("Close the toolbox");
+  await closeToolbox();
+
+  info("Open the console again");
+  hud = await openConsole();
+  testMessagesVisibility(hud);
+});
+
+function testMessagesVisibility(hud) {
+  let message = findMessage(hud, "log Bazzle", ".message.log");
+  ok(message, "console.log message is visible");
+
+  message = findMessage(hud, "error Bazzle", ".message.error");
+  ok(message, "console.error message is visible");
+
+  message = findMessage(hud, "bazBug611032", ".message.error");
+  ok(message, "exception message is visible");
+
+  message = findMessage(hud, "cssColorBug611032", ".message.warn.css");
+  ok(message, "css warning message is visible");
 }

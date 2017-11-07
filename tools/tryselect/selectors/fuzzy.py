@@ -52,13 +52,6 @@ editor integrations, download the appropriate binary and put it on your $PATH:
     https://github.com/junegunn/fzf-bin/releases
 """.lstrip()
 
-FZF_RUN_INSTALL_WIZARD = """
-{t.bold}Running the fzf installation wizard.{t.normal}
-
-Only the fzf binary is required, if you do not wish to install the shell
-integrations, {t.bold}feel free to press 'n' at each of the prompts.{t.normal}
-""".format(t=terminal)
-
 FZF_HEADER = """
 For more shortcuts, see {t.italic_white}mach help try fuzzy{t.normal} and {t.italic_white}man fzf
 {shortcuts}
@@ -116,18 +109,11 @@ def run(cmd, cwd=None):
     return subprocess.call(cmd, cwd=cwd, shell=True if is_win else False)
 
 
-def run_fzf_install_script(fzf_path, bin_only=False):
-    # We could run this without installing the shell integrations on all
-    # platforms, but those integrations are actually really useful so give user
-    # the choice.
+def run_fzf_install_script(fzf_path):
     if platform.system() == 'Windows':
         cmd = ['bash', '-c', './install --bin']
     else:
-        cmd = ['./install']
-        if bin_only:
-            cmd.append('--bin')
-        else:
-            print(FZF_RUN_INSTALL_WIZARD)
+        cmd = ['./install', '--bin']
 
     if run(cmd, cwd=fzf_path):
         print(FZF_INSTALL_FAILED)
@@ -159,7 +145,7 @@ def fzf_bootstrap(update=False):
             print("Update fzf failed.")
             sys.exit(1)
 
-        run_fzf_install_script(fzf_path, bin_only=True)
+        run_fzf_install_script(fzf_path)
         return get_fzf()
 
     if os.path.isdir(fzf_path):

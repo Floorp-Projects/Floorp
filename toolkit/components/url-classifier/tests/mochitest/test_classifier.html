@@ -139,10 +139,6 @@ function testService() {
   return new Promise(resolve => {
     let service = Cc["@mozilla.org/url-classifier/dbservice;1"].
                     getService(Ci.nsIURIClassifier);
-    let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                getService(Ci.nsIScriptSecurityManager);
-    let ios = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
     function runNextTest() {
       if (!testURLs.length) {
         resolve();
@@ -150,8 +146,8 @@ function testService() {
       }
       let test = testURLs.shift();
       let tables = "test-malware-simple,test-unwanted-simple,test-phish-simple,test-track-simple,test-block-simple,test-harmful-simple";
-      let uri = ios.newURI(test.url);
-      let prin = ssm.createCodebasePrincipal(uri, {});
+      let uri = SpecialPowers.Services.io.newURI(test.url);
+      let prin = SpecialPowers.Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
       is(service.classifyLocal(uri, tables), test.table,
          `Successful synchronous classification of ${test.url} with TP=${test.trackingProtection}`);
       SpecialPowers.doUrlClassify(prin, null, test.trackingProtection, function(errorCode) {

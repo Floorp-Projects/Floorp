@@ -31,6 +31,7 @@ add_task(async function test_back_forward() {
     // Now navigate forward and make sure autofill autocomplete results are still attached
     let loadPromise = BrowserTestUtils.browserLoaded(browser);
     await BrowserTestUtils.loadURI(browser, `${URL}?load=2`);
+    info("expecting browser loaded");
     await loadPromise;
 
     // Check the second page
@@ -40,6 +41,7 @@ add_task(async function test_back_forward() {
     // Check after hitting back to the first page
     let stoppedPromise = BrowserTestUtils.browserStopped(browser);
     browser.goBack();
+    info("expecting browser stopped");
     await stoppedPromise;
     await openPopupOn(browser, "#street-address");
     checkPopup(autoCompletePopup);
@@ -47,6 +49,7 @@ add_task(async function test_back_forward() {
     // Check after hitting forward to the second page
     stoppedPromise = BrowserTestUtils.browserStopped(browser);
     browser.goForward();
+    info("expecting browser stopped");
     await stoppedPromise;
     await openPopupOn(browser, "#street-address");
     checkPopup(autoCompletePopup);

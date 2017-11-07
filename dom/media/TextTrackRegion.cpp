@@ -51,6 +51,7 @@ TextTrackRegion::TextTrackRegion(nsISupports* aGlobal)
 void
 TextTrackRegion::CopyValues(TextTrackRegion& aRegion)
 {
+  mId = aRegion.Id();
   mWidth = aRegion.Width();
   mLines = aRegion.Lines();
   mRegionAnchorX = aRegion.RegionAnchorX();

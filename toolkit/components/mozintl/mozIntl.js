@@ -3,14 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 const mozIntlHelper =
   Cc["@mozilla.org/mozintlhelper;1"].getService(Ci.mozIMozIntlHelper);
-const localeSvc =
-  Cc["@mozilla.org/intl/localeservice;1"].getService(Ci.mozILocaleService);
 const osPrefs =
   Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
 
@@ -21,7 +20,7 @@ const osPrefs =
  */
 function getLocales(locales) {
   if (!locales) {
-    return localeSvc.getRegionalPrefsLocales();
+    return Services.locale.getRegionalPrefsLocales();
   }
   return locales;
 }

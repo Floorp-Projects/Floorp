@@ -1341,7 +1341,8 @@ pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
             unsafe { bottom_margin.as_ref() }.cloned(),
             unsafe { left_margin.as_ref() }.cloned()
         ),
-        vertical_bounds, horizontal_bounds);
+        vertical_bounds, horizontal_bounds,
+        LayoutVector2D::new(0.0, 0.0));
     match clip_id {
         ClipId::Clip(id, pipeline_id) => {
             assert!(pipeline_id == state.pipeline_id);

@@ -254,6 +254,8 @@ class TabTracker extends TabTrackerBase {
 
     // Keep track of the extension popup tab.
     this._extensionPopupTabWeak = null;
+    // Keep track of the selected tabId
+    this._selectedTabId = null;
   }
 
   init() {
@@ -371,6 +373,8 @@ class TabTracker extends TabTrackerBase {
 
     switch (event) {
       case "Tab:Selected": {
+        this._selectedTabId = data.id;
+
         // If a new tab has been selected while an extension popup tab is still open,
         // close it immediately.
         const nativeTab = BrowserApp.getTabForId(data.id);
@@ -412,6 +416,12 @@ class TabTracker extends TabTrackerBase {
 
     if (this.extensionPopupTab && this.extensionPopupTab === nativeTab) {
       this._extensionPopupTabWeak = null;
+
+      // Do not switch to the parent tab of the extension popup tab
+      // if the popup tab is not the selected tab.
+      if (this._selectedTabId !== tabId) {
+        return;
+      }
 
       // Select the parent tab when the closed tab was an extension popup tab.
       const {BrowserApp} = windowTracker.topWindow;

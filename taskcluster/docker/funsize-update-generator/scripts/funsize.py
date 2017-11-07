@@ -31,6 +31,7 @@ ALLOWED_URL_PREFIXES = [
     "http://ftp.mozilla.org/",
     "http://download.mozilla.org/",
     "https://archive.mozilla.org/",
+    "http://archive.mozilla.org/",
     "https://queue.taskcluster.net/v1/task/",
 ]
 

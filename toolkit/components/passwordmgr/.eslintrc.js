@@ -9,6 +9,5 @@ module.exports = {
 
     "no-unused-vars": ["error", {"args": "none", "vars": "local", "varsIgnorePattern": "^(ids|ignored|unused)$"}],
     "semi": ["error", "always"],
-    "mozilla/use-services": "error",
   }
 };
