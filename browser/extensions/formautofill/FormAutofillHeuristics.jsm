@@ -39,6 +39,7 @@ class FieldScanner {
     this._elementsWeakRef = Cu.getWeakReference(elements);
     this.fieldDetails = [];
     this._parsingIndex = 0;
+    this._sections = [];
   }
 
   get _elements() {
@@ -98,6 +99,31 @@ class FieldScanner {
     return this.parsingIndex >= this._elements.length;
   }
 
+  _pushToSection(name, fieldDetail) {
+    for (let section of this._sections) {
+      if (section.name == name) {
+        section.fieldDetails.push(fieldDetail);
+        return;
+      }
+    }
+    this._sections.push({
+      name,
+      fieldDetails: [fieldDetail],
+    });
+  }
+
+  getSectionFieldDetails(allowDuplicates) {
+    // TODO: [Bug 1416664] If there is only one section which is not defined by
+    // `autocomplete` attribute, the sections should be classified by the
+    // heuristics.
+    return this._sections.map(section => {
+      if (allowDuplicates) {
+        return section.fieldDetails;
+      }
+      return this._trimFieldDetails(section.fieldDetails);
+    });
+  }
+
   /**
    * This function will prepare an autocomplete info object with getInfo
    * function and push the detail to fieldDetails property. Any duplicated
@@ -136,6 +162,18 @@ class FieldScanner {
     }
 
     this.fieldDetails.push(fieldInfo);
+    this._pushToSection(this._getSectionName(fieldInfo), fieldInfo);
+  }
+
+  _getSectionName(info) {
+    let names = [];
+    if (info.section) {
+      names.push(info.section);
+    }
+    if (info.addressType) {
+      names.push(info.addressType);
+    }
+    return names.length ? names.join(" ") : "-moz-section-default";
   }
 
   /**
@@ -170,12 +208,18 @@ class FieldScanner {
   /**
    * Provide the field details without invalid field name and duplicated fields.
    *
+   * @param   {Array<Object>} fieldDetails
+   *          The field details for trimming.
    * @returns {Array<Object>}
    *          The array with the field details without invalid field name and
    *          duplicated fields.
    */
-  get trimmedFieldDetail() {
-    return this.fieldDetails.filter(f => f.fieldName && !f._duplicated);
+  _trimFieldDetails(fieldDetails) {
+    return fieldDetails.filter(f => f.fieldName && !f._duplicated);
+  }
+
+  getFieldDetails(allowDuplicates) {
+    return allowDuplicates ? this.fieldDetails : this._trimFieldDetails(this.fieldDetails);
   }
 
   elementExisting(index) {
@@ -626,16 +670,10 @@ this.FormAutofillHeuristics = {
     if (!this._sectionEnabled) {
       // When the section feature is disabled, `getFormInfo` should provide a
       // single section result.
-      return [allowDuplicates ? fieldScanner.fieldDetails : fieldScanner.trimmedFieldDetail];
+      return [fieldScanner.getFieldDetails(allowDuplicates)];
     }
 
-    return this._groupingFields(fieldScanner, allowDuplicates);
-  },
-
-  _groupingFields(fieldScanner, allowDuplicates) {
-    // TODO [Bug 1415077] This function should be able to handle the section
-    // part of autocomplete attr.
-    return [allowDuplicates ? fieldScanner.fieldDetails : fieldScanner.trimmedFieldDetail];
+    return fieldScanner.getSectionFieldDetails(allowDuplicates);
   },
 
   _regExpTableHashValue(...signBits) {
