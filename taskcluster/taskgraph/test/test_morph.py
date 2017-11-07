@@ -138,7 +138,12 @@ class TestApplyJSONeTemplates(MorphTestCase):
             t['label']: Task(**t) for t in self.tasks[:]
         })
 
-        fn = morph.apply_jsone_templates({'artifact': {'enabled': 1}})
+        try_task_config = {
+            'templates': {
+                'artifact': {'enabled': 1}
+            },
+        }
+        fn = morph.apply_jsone_templates(try_task_config)
         morphed = fn(tg, label_to_taskid)[0]
 
         self.assertEqual(len(morphed.tasks), 2)
@@ -158,7 +163,15 @@ class TestApplyJSONeTemplates(MorphTestCase):
             t['label']: Task(**t) for t in self.tasks[:]
         })
 
-        fn = morph.apply_jsone_templates({'env': {'ENABLED': 1, 'FOO': 'BAZ'}})
+        try_task_config = {
+            'templates': {
+                'env': {
+                    'ENABLED': 1,
+                    'FOO': 'BAZ',
+                }
+            },
+        }
+        fn = morph.apply_jsone_templates(try_task_config)
         morphed = fn(tg, label_to_taskid)[0]
 
         self.assertEqual(len(morphed.tasks), 2)
@@ -167,7 +180,10 @@ class TestApplyJSONeTemplates(MorphTestCase):
             self.assertEqual(t.task['payload']['env']['ENABLED'], 1)
             self.assertEqual(t.task['payload']['env']['FOO'], 'BAZ')
 
-        fn = morph.apply_jsone_templates({'env': {'ENABLED': 0}})
+        try_task_config['templates']['env'] = {
+            'ENABLED': 0,
+        }
+        fn = morph.apply_jsone_templates(try_task_config)
         morphed = fn(tg, label_to_taskid)[0]
 
         self.assertEqual(len(morphed.tasks), 2)
@@ -175,6 +191,28 @@ class TestApplyJSONeTemplates(MorphTestCase):
             self.assertEqual(len(t.task['payload']['env']), 2)
             self.assertEqual(t.task['payload']['env']['ENABLED'], 0)
             self.assertEqual(t.task['payload']['env']['FOO'], 'BAZ')
+
+    def test_template_rebuild(self):
+        tg, label_to_taskid = self.make_taskgraph({
+            t['label']: Task(**t) for t in self.tasks[:]
+        })
+
+        try_task_config = {
+            'tasks': ['b'],
+            'templates': {
+                'rebuild': 4,
+            },
+        }
+        fn = morph.apply_jsone_templates(try_task_config)
+        tasks = fn(tg, label_to_taskid)[0].tasks.values()
+        self.assertEqual(len(tasks), 2)
+
+        for t in tasks:
+            if t.label == 'a':
+                self.assertNotIn('task_duplicates', t.attributes)
+            elif t.label == 'b':
+                self.assertIn('task_duplicates', t.attributes)
+                self.assertEqual(t.attributes['task_duplicates'], 4)
 
 
 if __name__ == '__main__':
