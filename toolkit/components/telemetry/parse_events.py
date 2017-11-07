@@ -5,6 +5,7 @@
 import re
 import yaml
 import itertools
+import datetime
 import string
 import shared_telemetry_utils as utils
 
@@ -17,6 +18,7 @@ MAX_EXTRA_KEYS_COUNT = 10
 MAX_EXTRA_KEY_NAME_LENGTH = 15
 
 IDENTIFIER_PATTERN = r'^[a-zA-Z][a-zA-Z0-9_.]*[a-zA-Z0-9]$'
+DATE_PATTERN = r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
 
 
 def nice_type_name(t):
@@ -119,6 +121,7 @@ def type_check_event_fields(identifier, name, definition):
     OPTIONAL_FIELDS = {
         'methods': ListTypeChecker(basestring),
         'release_channel_collection': AtomicTypeChecker(basestring),
+        'expiry_date': MultiTypeChecker(basestring, datetime.date),
         'expiry_version': AtomicTypeChecker(basestring),
         'extra_keys': DictTypeChecker(basestring, basestring),
     }
@@ -200,9 +203,16 @@ class EventData:
                          regex=IDENTIFIER_PATTERN)
 
         # Check expiry.
-        if 'expiry_version' not in definition:
-            raise ParserError("%s: event is missing required field expiry_version"
-                              % (self.identifier))
+        if 'expiry_version' not in definition and 'expiry_date' not in definition:
+            raise ParserError("%s: event is missing an expiration - either expiry_version or"
+                              " expiry_date is required" % (self.identifier))
+        expiry_date = definition.get('expiry_date')
+        if expiry_date and isinstance(expiry_date, basestring) and expiry_date != 'never':
+            if not re.match(DATE_PATTERN, expiry_date):
+                raise ParserError("%s: Event has invalid expiry_date, it should be either 'never'"
+                                  " or match this format: %s" % (self.identifier, DATE_PATTERN))
+            # Parse into date.
+            definition['expiry_date'] = datetime.datetime.strptime(expiry_date, '%Y-%m-%d')
 
         # Finish setup.
         expiry_version = definition.get('expiry_version', 'never')
@@ -248,6 +258,19 @@ class EventData:
     @property
     def expiry_version(self):
         return self._definition.get('expiry_version')
+
+    @property
+    def expiry_day(self):
+        date = self._definition.get('expiry_date')
+        if not date:
+            return 0
+        if isinstance(date, basestring) and date == 'never':
+            return 0
+
+        # Convert date to days since UNIX epoch.
+        epoch = datetime.date(1970, 1, 1)
+        days = (date - epoch).total_seconds() / (24 * 60 * 60)
+        return round(days)
 
     @property
     def cpp_guard(self):
