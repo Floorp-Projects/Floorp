@@ -8,7 +8,7 @@
   --drag-drop-transition-duration: .3s;
 }
 
-#main-window[customizing] .customization-target:not(#PanelUI-contents):not(#widget-overflow-fixed-list) {
+#main-window[customizing] .customization-target:not(#widget-overflow-fixed-list) {
   min-width: 100px;
 }
 
@@ -174,7 +174,6 @@ toolbarpaletteitem[mousedown] {
   cursor: -moz-grabbing;
 }
 
-.panel-customization-placeholder,
 toolbarpaletteitem[place="palette"],
 toolbarpaletteitem[place="panel"] {
   transition: transform var(--drag-drop-transition-duration) ease-in-out;
@@ -194,7 +193,6 @@ toolbarpaletteitem toolbarbutton[disabled] {
 }
 
 #widget-overflow-fixed-list > toolbarpaletteitem[notransition][place="panel"],
-toolbarpaletteitem[notransition].panel-customization-placeholder,
 toolbarpaletteitem[notransition][place="toolbar"],
 toolbarpaletteitem[notransition][place="palette"],
 toolbarpaletteitem[notransition][place="panel"] {
