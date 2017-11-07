@@ -25,9 +25,7 @@ const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
 function getTempDir() {
-    return Cc["@mozilla.org/file/directory_service;1"]
-            .getService(Ci.nsIProperties)
-            .get("TmpD", Ci.nsIFile);
+  return SpecialPowers.Services.dirsvc.get("TmpD", Ci.nsIFile);
 }
 
 // STATE_STOP from nsIWebProgressListener.idl
@@ -64,9 +62,6 @@ function persistDocument(aDoc) {
     const encodingFlags =
                   nsIWBP.ENCODE_FLAGS_ENCODE_BASIC_ENTITIES;
 
-    var ioService = Cc["@mozilla.org/network/io-service;1"]
-                    .getService(Ci.nsIIOService);
-
     var id = Math.round(Math.random() * 10000);
     var dirName = "bug449141_serialized" + id;
     progressListener.dirName = dirName;
@@ -83,7 +78,7 @@ function persistDocument(aDoc) {
     folder.append(dirName);
     progressListener.folder = folder;
     progressListener.file = file;
-    persist.saveDocument(aDoc, ioService.newFileURI(file),
+    persist.saveDocument(aDoc, SpecialPowers.Services.io.newFileURI(file),
                          folder,
                          aDoc.contentType,
                          encodingFlags, kWrapColumn);

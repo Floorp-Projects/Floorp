@@ -12,7 +12,7 @@ fuzzy-if(webrender,9-9,4780-4780) == blur-em-radius.html blur-em-radius-ref.html
 == blur-invalid-radius.html blur-invalid-radius-ref.html
 fuzzy-if(webrender,9-9,4780-4780) == blur-rem-radius.html blur-rem-radius-ref.html
 == blur-zero-radius.html blur-zero-radius-ref.html
-fuzzy-if(webrender,7-7,21784-21784) == blur-zoomed-page.html blur-zoomed-page-ref.html
+fuzzy-if(webrender,6-6,21308-21308) == blur-zoomed-page.html blur-zoomed-page-ref.html
 == brightness.html brightness-ref.html
 == brightness-darken.html brightness-darken-ref.html
 == brightness-extreme.html brightness-extreme-ref.html

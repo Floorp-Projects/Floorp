@@ -1,5 +1,7 @@
 /* global ThreadSafeChromeUtils */
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 try {
   // We might be running without privileges, in which case it's up to the
   // harness to give us the 'ctypes' object.
@@ -128,5 +130,5 @@ function must_throw(f, expected) {
 }
 
 function get_os() {
-  return Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULRuntime).OS;
+  return Services.appinfo.OS;
 }

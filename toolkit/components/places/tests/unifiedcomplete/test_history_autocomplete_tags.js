@@ -157,10 +157,8 @@ async function tagURI(url, tags) {
  */
 add_task(async function test_history_autocomplete_tags() {
   // always search in history + bookmarks, no matter what the default is
-  var prefs = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-  prefs.setIntPref("browser.urlbar.search.sources", 3);
-  prefs.setIntPref("browser.urlbar.default.behavior", 0);
+  Services.prefs.setIntPref("browser.urlbar.search.sources", 3);
+  Services.prefs.setIntPref("browser.urlbar.default.behavior", 0);
 
   await tagURI(uri1, ["foo"]);
   await tagURI(uri2, ["bar"]);

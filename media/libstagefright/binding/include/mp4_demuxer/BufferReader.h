@@ -9,9 +9,12 @@
 #include "nscore.h"
 #include "nsTArray.h"
 #include "MediaData.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Result.h"
 
 namespace mp4_demuxer {
+
+extern mozilla::LazyLogModule gMP4MetadataLog;
 
 class MOZ_RAII BufferReader
 {
@@ -57,7 +60,7 @@ public:
   {
     auto ptr = Read(1);
     if (!ptr) {
-      NS_WARNING("Failed to read data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return *ptr;
@@ -67,7 +70,7 @@ public:
   {
     auto ptr = Read(2);
     if (!ptr) {
-      NS_WARNING("Failed to read data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readUint16(ptr);
@@ -77,7 +80,7 @@ public:
   {
     auto ptr = Read(2);
     if (!ptr) {
-      NS_WARNING("Failed to read data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::LittleEndian::readInt16(ptr);
@@ -87,7 +90,7 @@ public:
   {
     auto ptr = Read(3);
     if (!ptr) {
-      NS_WARNING("Failed to read data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return ptr[0] << 16 | ptr[1] << 8 | ptr[2];
@@ -102,7 +105,7 @@ public:
   {
     auto ptr = Read(3);
     if (!ptr) {
-      NS_WARNING("Failed to read data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     int32_t result = int32_t(ptr[2] << 16 | ptr[1] << 8 | ptr[0]);
@@ -116,7 +119,7 @@ public:
   {
     auto ptr = Read(4);
     if (!ptr) {
-      NS_WARNING("Failed to read data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readUint32(ptr);
@@ -126,7 +129,7 @@ public:
   {
     auto ptr = Read(4);
     if (!ptr) {
-      NS_WARNING("Failed to read data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readInt32(ptr);
@@ -136,7 +139,7 @@ public:
   {
     auto ptr = Read(8);
     if (!ptr) {
-      NS_WARNING("Failed to read data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readUint64(ptr);
@@ -146,7 +149,7 @@ public:
   {
     auto ptr = Read(8);
     if (!ptr) {
-      NS_WARNING("Failed to read data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readInt64(ptr);
@@ -182,7 +185,7 @@ public:
   {
     auto ptr = Peek(1);
     if (!ptr) {
-      NS_WARNING("Failed to peek data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return *ptr;
@@ -192,7 +195,7 @@ public:
   {
     auto ptr = Peek(2);
     if (!ptr) {
-      NS_WARNING("Failed to peek data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readUint16(ptr);
@@ -202,7 +205,7 @@ public:
   {
     auto ptr = Peek(3);
     if (!ptr) {
-      NS_WARNING("Failed to peek data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return ptr[0] << 16 | ptr[1] << 8 | ptr[2];
@@ -217,7 +220,7 @@ public:
   {
     auto ptr = Peek(4);
     if (!ptr) {
-      NS_WARNING("Failed to peek data");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readUint32(ptr);
@@ -234,7 +237,7 @@ public:
   const uint8_t* Seek(size_t aOffset)
   {
     if (aOffset >= mLength) {
-      NS_WARNING("Seek failed");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure, offset: %zu", __func__, aOffset));
       return nullptr;
     }
 
@@ -261,7 +264,7 @@ public:
   {
     auto ptr = Read(sizeof(T));
     if (!ptr) {
-      NS_WARNING("ReadType failed");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return 0;
     }
     return *reinterpret_cast<const T*>(ptr);
@@ -272,7 +275,7 @@ public:
   {
     auto ptr = Read(aLength * sizeof(T));
     if (!ptr) {
-      NS_WARNING("ReadArray failed");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return false;
     }
 
@@ -286,7 +289,7 @@ public:
   {
     auto ptr = Read(aLength * sizeof(T));
     if (!ptr) {
-      NS_WARNING("ReadArray failed");
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error, ("%s: failure", __func__));
       return false;
     }
 

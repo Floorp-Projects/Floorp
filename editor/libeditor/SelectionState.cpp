@@ -287,7 +287,7 @@ RangeUpdater::SelAdjDeleteNode(nsINode* aNode)
 
     // check for range endpoints that are in descendants of aNode
     nsCOMPtr<nsINode> oldStart;
-    if (EditorUtils::IsDescendantOf(item->mStartContainer, aNode)) {
+    if (EditorUtils::IsDescendantOf(*item->mStartContainer, *aNode)) {
       oldStart = item->mStartContainer;  // save for efficiency hack below.
       item->mStartContainer = parent;
       item->mStartOffset = offset;
@@ -295,7 +295,7 @@ RangeUpdater::SelAdjDeleteNode(nsINode* aNode)
 
     // avoid having to call IsDescendantOf() for common case of range startnode == range endnode.
     if (item->mEndContainer == oldStart ||
-        EditorUtils::IsDescendantOf(item->mEndContainer, aNode)) {
+        EditorUtils::IsDescendantOf(*item->mEndContainer, *aNode)) {
       item->mEndContainer = parent;
       item->mEndOffset = offset;
     }

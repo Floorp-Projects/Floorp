@@ -391,6 +391,14 @@ this.PageActions = {
     }
   },
 
+  // For tests.  See Bug 1413692.
+  _reset() {
+    PageActions._purgeUnregisteredPersistedActions();
+    PageActions._builtInActions = [];
+    PageActions._nonBuiltInActions = [];
+    PageActions._actionsByID = new Map();
+  },
+
   _storePersistedActions() {
     let json = JSON.stringify(this._persistedActions);
     Services.prefs.setStringPref(PREF_PERSISTED_ACTIONS, json);

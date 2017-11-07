@@ -5,6 +5,7 @@
 
 #include "mozilla/EditorUtils.h"
 
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/Selection.h"
 #include "nsComponentManagerUtils.h"
@@ -135,19 +136,23 @@ DOMSubtreeIterator::~DOMSubtreeIterator()
  *****************************************************************************/
 
 bool
-EditorUtils::IsDescendantOf(nsINode* aNode,
-                            nsINode* aParent,
-                            int32_t* aOffset)
+EditorUtils::IsDescendantOf(const nsINode& aNode,
+                            const nsINode& aParent,
+                            EditorRawDOMPoint* aOutPoint /* = nullptr */)
 {
-  MOZ_ASSERT(aNode && aParent);
-  if (aNode == aParent) {
+  if (aOutPoint) {
+    aOutPoint->Clear();
+  }
+
+  if (&aNode == &aParent) {
     return false;
   }
 
-  for (nsCOMPtr<nsINode> node = aNode; node; node = node->GetParentNode()) {
-    if (node->GetParentNode() == aParent) {
-      if (aOffset) {
-        *aOffset = aParent->IndexOf(node);
+  for (const nsINode* node = &aNode; node; node = node->GetParentNode()) {
+    if (node->GetParentNode() == &aParent) {
+      if (aOutPoint) {
+        MOZ_ASSERT(node->IsContent());
+        aOutPoint->Set(node->AsContent());
       }
       return true;
     }
@@ -157,35 +162,25 @@ EditorUtils::IsDescendantOf(nsINode* aNode,
 }
 
 bool
-EditorUtils::IsDescendantOf(nsINode* aNode,
-                            nsINode* aParent,
-                            nsIContent** aChild)
+EditorUtils::IsDescendantOf(const nsINode& aNode,
+                            const nsINode& aParent,
+                            EditorDOMPoint* aOutPoint)
 {
-  MOZ_ASSERT(aNode && aParent && aChild);
-  *aChild = nullptr;
-  if (aNode == aParent) {
+  MOZ_ASSERT(aOutPoint);
+  aOutPoint->Clear();
+  if (&aNode == &aParent) {
     return false;
   }
 
-  for (nsCOMPtr<nsINode> node = aNode; node; node = node->GetParentNode()) {
-    if (node->GetParentNode() == aParent) {
-      *aChild = node->AsContent();
+  for (const nsINode* node = &aNode; node; node = node->GetParentNode()) {
+    if (node->GetParentNode() == &aParent) {
+      MOZ_ASSERT(node->IsContent());
+      aOutPoint->Set(node->AsContent());
       return true;
     }
   }
 
   return false;
-}
-
-bool
-EditorUtils::IsDescendantOf(nsIDOMNode* aNode,
-                            nsIDOMNode* aParent,
-                            int32_t* aOffset)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
-  NS_ENSURE_TRUE(node && parent, false);
-  return IsDescendantOf(node, parent, aOffset);
 }
 
 bool
