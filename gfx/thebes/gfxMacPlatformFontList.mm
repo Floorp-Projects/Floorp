@@ -270,7 +270,7 @@ MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBo
         if (!baseFont) {
             return nullptr;
         }
-        unscaledFont = new UnscaledFontMac(baseFont);
+        unscaledFont = new UnscaledFontMac(baseFont, mIsDataUserFont);
         mUnscaledFont = unscaledFont;
     }
 
