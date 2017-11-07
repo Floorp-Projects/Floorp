@@ -935,6 +935,10 @@ extern void AddFontData(WrFontKey aKey,
                         uint32_t aIndex,
                         const ArcVecU8 *aVec);
 
+extern void AddNativeFontHandle(WrFontKey aKey,
+                                void *aHandle,
+                                uint32_t aIndex);
+
 extern void DeleteFontData(WrFontKey aKey);
 
 extern void gecko_printf_stderr_output(const char *aMsg);
@@ -1422,6 +1426,13 @@ void wr_resource_updates_add_external_image(ResourceUpdates *aResources,
 WR_FUNC;
 
 WR_INLINE
+void wr_resource_updates_add_font_descriptor(ResourceUpdates *aResources,
+                                             WrFontKey aKey,
+                                             WrVecU8 *aBytes,
+                                             uint32_t aIndex)
+WR_FUNC;
+
+WR_INLINE
 void wr_resource_updates_add_font_instance(ResourceUpdates *aResources,
                                            WrFontInstanceKey aKey,
                                            WrFontKey aFontKey,
@@ -1443,13 +1454,6 @@ void wr_resource_updates_add_raw_font(ResourceUpdates *aResources,
                                       WrFontKey aKey,
                                       WrVecU8 *aBytes,
                                       uint32_t aIndex)
-WR_FUNC;
-
-WR_INLINE
-void wr_resource_updates_add_font_descriptor(ResourceUpdates *aResources,
-                                             WrFontKey aKey,
-                                             WrVecU8 *aBytes,
-                                             uint32_t aIndex)
 WR_FUNC;
 
 WR_INLINE

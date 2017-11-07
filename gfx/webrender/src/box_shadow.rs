@@ -170,7 +170,6 @@ impl FrameBuilder {
                                                     LayerSize::new(width, height));
                     let brush_info = LayerPrimitiveInfo::new(brush_rect);
                     let brush_prim_index = self.create_primitive(
-                        clip_and_scroll,
                         &brush_info,
                         Vec::new(),
                         PrimitiveContainer::Brush(brush_prim),
@@ -239,7 +238,6 @@ impl FrameBuilder {
                     };
                     let brush_info = LayerPrimitiveInfo::new(brush_rect);
                     let brush_prim_index = self.create_primitive(
-                        clip_and_scroll,
                         &brush_info,
                         Vec::new(),
                         PrimitiveContainer::Brush(brush_prim),

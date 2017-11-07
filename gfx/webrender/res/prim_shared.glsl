@@ -71,14 +71,14 @@ vec4[2] fetch_from_resource_cache_2(int address) {
 
 #ifdef WR_VERTEX_SHADER
 
-#define VECS_PER_LAYER              9
+#define VECS_PER_LAYER              10
 #define VECS_PER_RENDER_TASK        3
 #define VECS_PER_PRIM_HEADER        2
 #define VECS_PER_TEXT_RUN           3
 #define VECS_PER_GRADIENT           3
 #define VECS_PER_GRADIENT_STOP      2
 
-uniform HIGHP_SAMPLER_FLOAT sampler2D sLayers;
+uniform HIGHP_SAMPLER_FLOAT sampler2D sClipScrollNodes;
 uniform HIGHP_SAMPLER_FLOAT sampler2D sRenderTasks;
 
 // Instanced attributes
@@ -143,14 +143,16 @@ vec4 fetch_from_resource_cache_1(int address) {
     return texelFetch(sResourceCache, uv, 0);
 }
 
-struct Layer {
+struct ClipScrollNode {
     mat4 transform;
     mat4 inv_transform;
-    RectWithSize local_clip_rect;
+    vec4 local_clip_rect;
+    vec2 reference_frame_relative_scroll_offset;
+    vec2 scroll_offset;
 };
 
-Layer fetch_layer(int index) {
-    Layer layer;
+ClipScrollNode fetch_clip_scroll_node(int index) {
+    ClipScrollNode node;
 
     // Create a UV base coord for each 8 texels.
     // This is required because trying to use an offset
@@ -160,18 +162,46 @@ Layer fetch_layer(int index) {
     ivec2 uv0 = ivec2(uv.x + 0, uv.y);
     ivec2 uv1 = ivec2(uv.x + 8, uv.y);
 
-    layer.transform[0] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(0, 0));
-    layer.transform[1] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(1, 0));
-    layer.transform[2] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(2, 0));
-    layer.transform[3] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(3, 0));
+    node.transform[0] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(0, 0));
+    node.transform[1] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(1, 0));
+    node.transform[2] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(2, 0));
+    node.transform[3] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(3, 0));
 
-    layer.inv_transform[0] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(4, 0));
-    layer.inv_transform[1] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(5, 0));
-    layer.inv_transform[2] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(6, 0));
-    layer.inv_transform[3] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(7, 0));
+    node.inv_transform[0] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(4, 0));
+    node.inv_transform[1] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(5, 0));
+    node.inv_transform[2] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(6, 0));
+    node.inv_transform[3] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(7, 0));
 
-    vec4 clip_rect = TEXEL_FETCH(sLayers, uv1, 0, ivec2(0, 0));
-    layer.local_clip_rect = RectWithSize(clip_rect.xy, clip_rect.zw);
+    vec4 clip_rect = TEXEL_FETCH(sClipScrollNodes, uv1, 0, ivec2(0, 0));
+    node.local_clip_rect = clip_rect;
+
+    vec4 offsets = TEXEL_FETCH(sClipScrollNodes, uv1, 0, ivec2(1, 0));
+    node.reference_frame_relative_scroll_offset = offsets.xy;
+    node.scroll_offset = offsets.zw;
+
+    return node;
+}
+
+struct Layer {
+    mat4 transform;
+    mat4 inv_transform;
+    RectWithSize local_clip_rect;
+};
+
+Layer fetch_layer(int clip_node_id, int scroll_node_id) {
+    ClipScrollNode clip_node = fetch_clip_scroll_node(clip_node_id);
+    ClipScrollNode scroll_node = fetch_clip_scroll_node(scroll_node_id);
+
+    Layer layer;
+    layer.transform = scroll_node.transform;
+    layer.inv_transform = scroll_node.inv_transform;
+
+    vec4 local_clip_rect = clip_node.local_clip_rect;
+    local_clip_rect.xy += clip_node.reference_frame_relative_scroll_offset;
+    local_clip_rect.xy -= scroll_node.reference_frame_relative_scroll_offset;
+    local_clip_rect.xy -= scroll_node.scroll_offset;
+
+    layer.local_clip_rect = RectWithSize(local_clip_rect.xy, local_clip_rect.zw);
 
     return layer;
 }
@@ -228,6 +258,7 @@ struct BlurTask {
     RectWithSize target_rect;
     float render_target_layer_index;
     float blur_radius;
+    float scale_factor;
     vec4 color;
 };
 
@@ -238,6 +269,7 @@ BlurTask fetch_blur_task(int address) {
         RectWithSize(task_data.data0.xy, task_data.data0.zw),
         task_data.data1.x,
         task_data.data1.y,
+        task_data.data1.z,
         task_data.data2
     );
 }
@@ -358,7 +390,8 @@ struct PrimitiveInstance {
     int specific_prim_address;
     int render_task_index;
     int clip_task_index;
-    int layer_index;
+    int scroll_node_id;
+    int clip_node_id;
     int z;
     int user_data0;
     int user_data1;
@@ -372,7 +405,8 @@ PrimitiveInstance fetch_prim_instance() {
     pi.specific_prim_address = pi.prim_address + VECS_PER_PRIM_HEADER;
     pi.render_task_index = aData0.y;
     pi.clip_task_index = aData0.z;
-    pi.layer_index = aData0.w;
+    pi.clip_node_id = aData0.w / 65536;
+    pi.scroll_node_id = aData0.w % 65536;
     pi.z = aData1.x;
     pi.user_data0 = aData1.y;
     pi.user_data1 = aData1.z;
@@ -388,6 +422,8 @@ struct CompositeInstance {
     int user_data0;
     int user_data1;
     float z;
+    int user_data2;
+    int user_data3;
 };
 
 CompositeInstance fetch_composite_instance() {
@@ -400,6 +436,8 @@ CompositeInstance fetch_composite_instance() {
 
     ci.user_data0 = aData1.x;
     ci.user_data1 = aData1.y;
+    ci.user_data2 = aData1.z;
+    ci.user_data3 = aData1.w;
 
     return ci;
 }
@@ -437,7 +475,7 @@ Primitive load_primitive() {
 
     Primitive prim;
 
-    prim.layer = fetch_layer(pi.layer_index);
+    prim.layer = fetch_layer(pi.clip_node_id, pi.scroll_node_id);
     prim.clip_area = fetch_clip_area(pi.clip_task_index);
 #ifdef PRIMITIVE_HAS_PICTURE_TASK
     prim.task = fetch_picture_task(pi.render_task_index);
@@ -546,8 +584,7 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     vec2 local_pos = instance_rect.p0 + instance_rect.size * aPosition.xy;
 
     // Clamp to the two local clip rects.
-    vec2 clamped_local_pos = clamp_rect(clamp_rect(local_pos, local_clip_rect),
-                                        layer.local_clip_rect);
+    vec2 clamped_local_pos = clamp_rect(clamp_rect(local_pos, local_clip_rect), layer.local_clip_rect);
 
     /// Compute the snapping offset.
     vec2 snap_offset = compute_snap_offset(clamped_local_pos, local_clip_rect, layer, snap_rect);
@@ -739,10 +776,9 @@ Image fetch_image(int address) {
 }
 
 void write_clip(vec2 global_pos, ClipArea area) {
-    vec2 texture_size = vec2(textureSize(sSharedCacheA8, 0).xy);
     vec2 uv = global_pos + area.task_bounds.xy - area.screen_origin_target_index.xy;
-    vClipMaskUvBounds = area.task_bounds / texture_size.xyxy;
-    vClipMaskUv = vec3(uv / texture_size, area.screen_origin_target_index.z);
+    vClipMaskUvBounds = area.task_bounds;
+    vClipMaskUv = vec3(uv, area.screen_origin_target_index.z);
 }
 #endif //WR_VERTEX_SHADER
 
@@ -807,7 +843,7 @@ float do_clip() {
         vec4(vClipMaskUv.xy, vClipMaskUvBounds.zw));
     // check for the dummy bounds, which are given to the opaque objects
     return vClipMaskUvBounds.xy == vClipMaskUvBounds.zw ? 1.0:
-        all(inside) ? textureLod(sSharedCacheA8, vClipMaskUv, 0.0).r : 0.0;
+        all(inside) ? texelFetch(sSharedCacheA8, ivec3(vClipMaskUv), 0).r : 0.0;
 }
 
 #ifdef WR_FEATURE_DITHERING
