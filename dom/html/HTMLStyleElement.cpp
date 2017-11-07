@@ -174,6 +174,7 @@ HTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML)
 
 void
 HTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML,
+                               nsIPrincipal& aScriptedPrincipal,
                                ErrorResult& aError)
 {
   SetEnableUpdates(false);
