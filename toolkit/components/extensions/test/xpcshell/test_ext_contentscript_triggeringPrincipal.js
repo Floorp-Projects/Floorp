@@ -97,8 +97,8 @@ const AUTOCLOSE_TAGS = new Set(["img", "input", "link", "source"]);
  * @typedef {object} ElementTestOptions
  * @property {string} origin
  *        The origin with which the content is expected to load. This
- *        may be either "page" or "extension". The actual load of the
- *        URL will be tested against the computed origin strings for
+ *        may be one of "page", "contentScript", or "extension". The actual load
+ *        of the URL will be tested against the computed origin strings for
  *        those two contexts.
  * @property {string} source
  *        An arbitrary string which uniquely identifies the source of
@@ -315,7 +315,7 @@ function testInlineCSS() {
 
   {
     let li = document.createElement("li");
-    li.setAttribute("style", source("extension", `background: ${url("extension", "li.style-first")}`));
+    li.setAttribute("style", source("contentScript", `background: ${url("contentScript", "li.style-first")}`));
     li.style.wrappedJSObject.listStyleImage = url("page", "li.style.listStyleImage-second");
     document.body.appendChild(li);
   }
@@ -323,14 +323,14 @@ function testInlineCSS() {
   {
     let li = document.createElement("li");
     li.wrappedJSObject.setAttribute("style", source("page", `background: ${url("page", "li.style-first", {inline: true})}`));
-    li.style.listStyleImage = url("extension", "li.style.listStyleImage-second");
+    li.style.listStyleImage = url("contentScript", "li.style.listStyleImage-second");
     document.body.appendChild(li);
   }
 
   {
     let li = document.createElement("li");
     document.body.appendChild(li);
-    li.setAttribute("style", source("extension", `background: ${url("extension", "li.style-first")}`));
+    li.setAttribute("style", source("contentScript", `background: ${url("contentScript", "li.style-first")}`));
     later(() => li.wrappedJSObject.setAttribute("style", source("page", `background: ${url("page", "li.style-second", {inline: true})}`)));
   }
 
@@ -338,17 +338,89 @@ function testInlineCSS() {
     let li = document.createElement("li");
     document.body.appendChild(li);
     li.wrappedJSObject.setAttribute("style", source("page", `background: ${url("page", "li.style-first", {inline: true})}`));
-    later(() => li.setAttribute("style", source("extension", `background: ${url("extension", "li.style-second")}`)));
+    later(() => li.setAttribute("style", source("contentScript", `background: ${url("contentScript", "li.style-second")}`)));
   }
 
   {
     let li = document.createElement("li");
     document.body.appendChild(li);
-    li.style.cssText = source("extension", `background: ${url("extension", "li.style.cssText-first")}`);
+    li.style.cssText = source("contentScript", `background: ${url("contentScript", "li.style.cssText-first")}`);
 
     // TODO: This inline style should be blocked, since our style-src does not
     // include 'unsafe-eval', but that is currently unimplemented.
     later(() => { li.style.wrappedJSObject.cssText = `background: ${url("page", "li.style.cssText-second")}`; });
+  }
+
+  // Creates a new element, inserts it into the page, and returns its CSS selector.
+  let divNum = 0;
+  function getSelector() {
+    let div = document.createElement("div");
+    div.id = `generated-div-${divNum++}`;
+    document.body.appendChild(div);
+    return `#${div.id}`;
+  }
+
+  for (let prop of ["textContent", "innerHTML"]) {
+    // Test creating <style> element from the extension side and then replacing
+    // its contents from the content side.
+    {
+      let sel = getSelector();
+      let style = document.createElement("style");
+      style[prop] = source("extension", `${sel} { background: ${url("extension", `style-${prop}-first`)}; }`);
+      document.head.appendChild(style);
+
+      later(() => {
+        style.wrappedJSObject[prop] = source("page", `${sel} { background: ${url("page", `style-${prop}-second`, {inline: true})}; }`);
+      });
+    }
+
+    // Test creating <style> element from the extension side and then appending
+    // a text node to it. Regardless of whether the append happens from the
+    // content or extension side, this should cause the principal to be
+    // forgotten.
+    let testModifyAfterInject = (name, modifyFunc) => {
+      let sel = getSelector();
+      let style = document.createElement("style");
+      style[prop] = source("extension", `${sel} { background: ${url("extension", `style-${name}-${prop}-first`)}; }`);
+      document.head.appendChild(style);
+
+      later(() => {
+        modifyFunc(style, `${sel} { background: ${url("page", `style-${name}-${prop}-second`, {inline: true})}; }`);
+        source("page", style.textContent);
+      });
+    };
+
+    testModifyAfterInject("appendChild", (style, css) => {
+      style.appendChild(document.createTextNode(css));
+    });
+
+    // Test creating <style> element from the extension side and then appending
+    // to it using insertAdjacentHTML, with the same rules as above.
+    testModifyAfterInject("insertAdjacentHTML", (style, css) => {
+      // eslint-disable-next-line no-unsanitized/method
+      style.insertAdjacentHTML("beforeend", css);
+    });
+
+    // And again using insertAdjacentText.
+    testModifyAfterInject("insertAdjacentText", (style, css) => {
+      style.insertAdjacentText("beforeend", css);
+    });
+
+    // Test creating a style element and then accessing its CSSStyleSheet object.
+    {
+      let sel = getSelector();
+      let style = document.createElement("style");
+      style[prop] = source("extension", `${sel} { background: ${url("extension", `style-${prop}-sheet`)}; }`);
+      document.head.appendChild(style);
+
+      browser.test.assertThrows(
+        () => style.sheet.wrappedJSObject.cssRules,
+        /operation is insecure/,
+        "Page content should not be able to access extension-generated CSS rules");
+
+      style.sheet.insertRule(
+        source("extension", `${sel} { border-image: ${url("extension", `style-${prop}-sheet-insertRule`)}; }`));
+    }
   }
 
   setTimeout(() => {
@@ -391,16 +463,22 @@ function injectElements(tests, baseOpts) {
 
     // Basic smoke test to check that we don't try to create stylesheets with an
     // expanded principal, which would cause a crash when loading font sets.
-    let link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "data:text/css;base64," + btoa(`
+    let cssText = `
       @font-face {
           font-family: "DoesNotExist${rand}";
           src: url("fonts/DoesNotExist.${rand}.woff") format("woff");
           font-weight: normal;
           font-style: normal;
-      }`);
+      }`;
+
+    let link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "data:text/css;base64," + btoa(cssText);
     document.head.appendChild(link);
+
+    let style = document.createElement("style");
+    style.textContent = cssText;
+    document.head.appendChild(style);
 
     let overrideOpts = opts => Object.assign({}, baseOpts, opts);
     let opts = baseOpts;
@@ -614,7 +692,7 @@ function computeBaseURLs(tests, expectedSources, forbiddenSources = {}) {
  * @param {Array<object>} message.urls
  *        A list of URLs present in styles injected by the content script.
  * @param {string} message.urls.*.origin
- *        The origin of the URL, either "page" or "extension".
+ *        The origin of the URL, one of "page", "contentScript", or "extension".
  * @param {string} message.urls.*.href
  *        The URL string.
  * @param {boolean} message.urls.*.inline
@@ -623,7 +701,7 @@ function computeBaseURLs(tests, expectedSources, forbiddenSources = {}) {
  * @param {Array<object>} message.sources
  *        A list of inline CSS sources injected by the content script.
  * @param {string} message.sources.*.origin
- *        The origin of the CSS, either "page" or "extension".
+ *        The origin of the CSS, one of "page", "contentScript", or "extension".
  * @param {string} message.sources.*.css
  *        The CSS source text.
  * @param {boolean} [cspEnabled = false]
@@ -926,7 +1004,7 @@ const EXTENSION_DATA = {
   },
 
   files: {
-    "content_script.js": getInjectionScript(TESTS, {source: "contentScript", origin: "extension"}),
+    "content_script.js": getInjectionScript(TESTS, {source: "contentScript", origin: "contentScript"}),
   },
 };
 
@@ -944,6 +1022,16 @@ function mergeSources(a, b) {
   };
 }
 
+// Returns a set of origin strings for the given extension and content page, for
+// use in verifying request triggering principals.
+function getOrigins(extension) {
+  return {
+    page: Services.scriptSecurityManager.createCodebasePrincipal(pageURI, {}).origin,
+    contentScript: Cu.getObjectPrincipal(Cu.Sandbox([extension.principal, pageURL])).origin,
+    extension: extension.principal.origin,
+  };
+}
+
 /**
  * Tests that various types of inline content elements initiate requests
  * with the triggering pringipal of the caller that requested the load.
@@ -958,10 +1046,7 @@ add_task(async function test_contentscript_triggeringPrincipals() {
       computeBaseURLs(TESTS, SOURCES));
   });
 
-  let origins = {
-    page: Services.scriptSecurityManager.createCodebasePrincipal(pageURI, {}).origin,
-    extension: Cu.getObjectPrincipal(Cu.Sandbox([extension.extension.principal, pageURL])).origin,
-  };
+  let origins = getOrigins(extension.extension);
   let finished = awaitLoads(urlsPromise, origins);
 
   let contentPage = await ExtensionTestUtils.loadContentPage(pageURL);
@@ -997,10 +1082,7 @@ add_task(async function test_contentscript_csp() {
       computeBaseURLs(TESTS, EXTENSION_SOURCES, PAGE_SOURCES));
   });
 
-  let origins = {
-    page: Services.scriptSecurityManager.createCodebasePrincipal(pageURI, {}).origin,
-    extension: Cu.getObjectPrincipal(Cu.Sandbox([extension.extension.principal, pageURL])).origin,
-  };
+  let origins = getOrigins(extension.extension);
 
   let finished = Promise.all([
     awaitLoads(urlsPromise, origins),
