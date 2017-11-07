@@ -73,7 +73,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsImageFrame)
   NS_DECL_QUERYFRAME
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
   virtual void Init(nsIContent*       aContent,

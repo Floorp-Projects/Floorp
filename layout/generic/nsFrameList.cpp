@@ -50,12 +50,13 @@ nsFrameList::DestroyFrames()
 }
 
 void
-nsFrameList::DestroyFramesFrom(nsIFrame* aDestructRoot)
+nsFrameList::DestroyFramesFrom(nsIFrame* aDestructRoot,
+                               layout::PostFrameDestroyData& aPostDestroyData)
 {
   NS_PRECONDITION(aDestructRoot, "Missing destruct root");
 
   while (nsIFrame* frame = RemoveFirstChild()) {
-    frame->DestroyFrom(aDestructRoot);
+    frame->DestroyFrom(aDestructRoot, aPostDestroyData);
   }
   mLastChild = nullptr;
 }
