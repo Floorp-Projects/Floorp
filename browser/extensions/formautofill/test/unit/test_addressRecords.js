@@ -49,6 +49,15 @@ const TEST_ADDRESS_WITH_INVALID_FIELD = {
   invalidField: "INVALID",
 };
 
+const TEST_ADDRESS_EMPTY_AFTER_NORMALIZE = {
+  country: "XXXXXX",
+};
+
+const TEST_ADDRESS_EMPTY_AFTER_UPDATE_ADDRESS_2 = {
+  "street-address": "",
+  country: "XXXXXX",
+};
+
 const MERGE_TESTCASES = [
   {
     description: "Merge a superset",
@@ -330,6 +339,12 @@ add_task(async function test_add() {
 
   Assert.throws(() => profileStorage.addresses.add(TEST_ADDRESS_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./);
+
+  Assert.throws(() => profileStorage.addresses.add({}),
+    /Record contains no valid field\./);
+
+  Assert.throws(() => profileStorage.addresses.add(TEST_ADDRESS_EMPTY_AFTER_NORMALIZE),
+    /Record contains no valid field\./);
 });
 
 add_task(async function test_update() {
@@ -391,6 +406,22 @@ add_task(async function test_update() {
   Assert.throws(
     () => profileStorage.addresses.update(guid, TEST_ADDRESS_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./
+  );
+
+  Assert.throws(
+    () => profileStorage.addresses.update(guid, {}),
+    /Record contains no valid field\./
+  );
+
+  Assert.throws(
+    () => profileStorage.addresses.update(guid, TEST_ADDRESS_EMPTY_AFTER_NORMALIZE),
+    /Record contains no valid field\./
+  );
+
+  profileStorage.addresses.update(guid, TEST_ADDRESS_2);
+  Assert.throws(
+    () => profileStorage.addresses.update(guid, TEST_ADDRESS_EMPTY_AFTER_UPDATE_ADDRESS_2),
+    /Record contains no valid field\./
   );
 });
 
