@@ -120,8 +120,6 @@ enum class ScalarResult : uint8_t {
   // Unsigned Scalar Errors
   UnsignedNegativeValue,
   UnsignedTruncatedValue,
-  // Dynamic Scalar Errors
-  AlreadyRegistered,
 };
 
 // A common identifier for both built-in and dynamic scalars.
@@ -1122,10 +1120,22 @@ internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
 
   // Check if the scalar is already allocated in the parent or in the child storage.
   if (scalarStorage->Get(aId.id, &scalar)) {
+    // Dynamic scalars can expire at any time during the session (e.g. an
+    // add-on was updated). Check if it expired.
+    if (aId.dynamic) {
+      const DynamicScalarInfo& dynInfo = static_cast<const DynamicScalarInfo&>(info);
+      if (dynInfo.mDynamicExpiration) {
+        // The Dynamic scalar is expired.
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+    }
+    // This was not a dynamic scalar or was not expired.
     *aRet = scalar;
     return NS_OK;
   }
 
+  // The scalar storage wasn't already allocated. Check if the scalar is expired and
+  // then allocate the storage, if needed.
   if (IsExpiredVersion(info.expiration())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1401,30 +1411,32 @@ internal_BroadcastDefinitions(const StaticMutexAutoLock& lock,
   }
 }
 
-ScalarResult
+void
 internal_RegisterScalars(const StaticMutexAutoLock& lock,
                          const nsTArray<DynamicScalarInfo>& scalarInfos)
 {
-  // Check that none of the events are already registered.
-  for (auto& info : scalarInfos) {
-    if (gScalarNameIDMap.GetEntry(info.name())) {
-      return ScalarResult::AlreadyRegistered;
-    }
-  }
-
   // Register the new scalars.
   if (!gDynamicScalarInfo) {
     gDynamicScalarInfo = new nsTArray<DynamicScalarInfo>();
   }
 
   for (auto scalarInfo : scalarInfos) {
+    // Allow expiring scalars that were already registered.
+    CharPtrEntryType *existingKey = gScalarNameIDMap.GetEntry(scalarInfo.name());
+    if (existingKey) {
+      // Change the scalar to expired if needed.
+      if (scalarInfo.mDynamicExpiration) {
+        DynamicScalarInfo& scalarData = (*gDynamicScalarInfo)[existingKey->mData.id];
+        scalarData.mDynamicExpiration = true;
+      }
+      continue;
+    }
+
     gDynamicScalarInfo->AppendElement(scalarInfo);
     uint32_t scalarId = gDynamicScalarInfo->Length() - 1;
     CharPtrEntryType *entry = gScalarNameIDMap.PutEntry(scalarInfo.name());
     entry->mData = ScalarKey{scalarId, true};
   }
-
-  return ScalarResult::Ok;
 }
 
 } // namespace
@@ -2424,16 +2436,9 @@ TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
   }
 
   // Register the dynamic definition on the parent process.
-  ScalarResult res = ScalarResult::Ok;
   {
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-    res = ::internal_RegisterScalars(locker, newScalarInfos);
-
-
-    if (res == ScalarResult::AlreadyRegistered) {
-      JS_ReportErrorASCII(cx, "Attempt to register a scalar that is already registered.");
-      return NS_ERROR_INVALID_ARG;
-    }
+    ::internal_RegisterScalars(locker, newScalarInfos);
 
     // Propagate the registration to all the content-processes. Please note that
     // this does not require to hold the mutex.
@@ -2740,7 +2745,10 @@ TelemetryScalar::GetDynamicScalarDefinitions(
 
 /**
  * This adds the dynamic scalar definitions coming from
- * the parent process to this child process.
+ * the parent process to this child process. If a dynamic
+ * scalar definition is already defined, check if the new definition
+ * makes the scalar expired and eventually update the expiration
+ * state.
  */
 void
 TelemetryScalar::AddDynamicScalarDefinitions(

@@ -22,9 +22,7 @@ function test() {
   Services.prefs.setIntPref("network.proxy.type", 0);
 
   // Clear network cache.
-  Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-            .getService(Components.interfaces.nsICacheStorageService)
-            .clear();
+  Services.cache2.clear();
 
   // Go offline, expecting the error page.
   Services.io.offline = true;

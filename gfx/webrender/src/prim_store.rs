@@ -18,7 +18,7 @@ use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use resource_cache::{ImageProperties, ResourceCache};
 use std::{mem, usize};
 use std::rc::Rc;
-use util::{MatrixHelpers, pack_as_float, recycle_vec, TransformedRect};
+use util::{pack_as_float, recycle_vec, MatrixHelpers, TransformedRect, TransformedRectKind};
 
 #[derive(Debug, Copy, Clone)]
 pub struct PrimitiveOpacity {
@@ -1209,8 +1209,10 @@ impl PrimitiveStore {
         clip_store: &mut ClipStore,
     ) -> bool {
         let metadata = &mut self.cpu_metadata[prim_index.0];
+        let transform = &prim_context.scroll_node.world_content_transform;
+
         clip_store.get_mut(&metadata.clip_sources).update(
-            &prim_context.packed_layer.transform,
+            transform,
             gpu_cache,
             resource_cache,
             prim_context.device_pixel_ratio,
@@ -1218,8 +1220,9 @@ impl PrimitiveStore {
 
         // Try to create a mask if we may need to.
         let prim_clips = clip_store.get(&metadata.clip_sources);
-        let is_axis_aligned = prim_context.packed_layer.transform.preserves_2d_axis_alignment();
-        let clip_task = if prim_context.clip_chain.is_some() || prim_clips.is_masking() {
+        let is_axis_aligned = transform.transform_kind() == TransformedRectKind::AxisAligned;
+
+        let clip_task = if prim_context.clip_node.clip_chain_node.is_some() || prim_clips.is_masking() {
             // Take into account the actual clip info of the primitive, and
             // mutate the current bounds accordingly.
             let mask_rect = match prim_clips.bounds.outer {
@@ -1236,9 +1239,9 @@ impl PrimitiveStore {
             let extra_clip = if prim_clips.is_masking() {
                 Some(Rc::new(ClipChainNode {
                     work_item: ClipWorkItem {
-                        layer_index: prim_context.packed_layer_index,
+                        scroll_node_id: prim_context.scroll_node.id,
                         clip_sources: metadata.clip_sources.weak(),
-                        coordinate_system_id: prim_context.coordinate_system_id,
+                        coordinate_system_id: prim_context.scroll_node.coordinate_system_id,
                     },
                     prev: None,
                 }))
@@ -1249,12 +1252,12 @@ impl PrimitiveStore {
             RenderTask::new_mask(
                 None,
                 mask_rect,
-                prim_context.clip_chain.clone(),
+                prim_context.clip_node.clip_chain_node.clone(),
                 extra_clip,
                 prim_screen_rect,
                 clip_store,
                 is_axis_aligned,
-                prim_context.coordinate_system_id,
+                prim_context.scroll_node.coordinate_system_id,
             )
         } else {
             None
@@ -1284,14 +1287,13 @@ impl PrimitiveStore {
             }
 
             if !metadata.is_backface_visible &&
-               prim_context.packed_layer.transform.is_backface_visible() {
+               prim_context.scroll_node.world_content_transform.is_backface_visible() {
                 return None;
             }
 
             let local_rect = metadata
                 .local_rect
-                .intersection(&metadata.local_clip_rect)
-                .and_then(|rect| rect.intersection(&prim_context.packed_layer.local_clip_rect));
+                .intersection(&metadata.local_clip_rect);
 
             let local_rect = match local_rect {
                 Some(local_rect) => local_rect,
@@ -1300,13 +1302,13 @@ impl PrimitiveStore {
 
             let xf_rect = TransformedRect::new(
                 &local_rect,
-                &prim_context.packed_layer.transform,
+                &prim_context.scroll_node.world_content_transform,
                 prim_context.device_pixel_ratio
             );
 
-            metadata.screen_rect = xf_rect
-                .bounding_rect
-                .intersection(&prim_context.clip_bounds);
+            let clip_bounds = &prim_context.clip_node.combined_clip_outer_bounds;
+            metadata.screen_rect = xf_rect.bounding_rect
+                                          .intersection(clip_bounds);
 
             let geometry = match metadata.screen_rect {
                 Some(device_rect) => Geometry {

@@ -20,13 +20,13 @@ Prompter tests: modal prompts
 /* import-globals-from prompt_common.js */
 async function runTests() {
     const { NetUtil } = SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm");
+    const { Services } = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
     let state, action, promptDone;
     ok(true, "Running tests (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
 
     let prompter, promptArgs;
     if (usePromptService) {
-        prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                   getService(Ci.nsIPromptService);
+        prompter = Services.prompt;
     } else {
         prompter = Cc["@mozilla.org/prompter;1"].
                    getService(Ci.nsIPromptFactory).
