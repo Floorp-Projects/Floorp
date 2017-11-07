@@ -33,7 +33,7 @@ namespace mozilla {
 
 mozilla::LazyLogModule sAndroidDecoderModuleLog("AndroidDecoderModule");
 
-static const char*
+const char*
 TranslateMimeType(const nsACString& aMimeType)
 {
   if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8)) {
@@ -56,66 +56,6 @@ GetFeatureStatus(int32_t aFeature)
   }
   return status == nsIGfxInfo::FEATURE_STATUS_OK;
 };
-
-CryptoInfo::LocalRef
-GetCryptoInfoFromSample(const MediaRawData* aSample)
-{
-  auto& cryptoObj = aSample->mCrypto;
-
-  if (!cryptoObj.mValid) {
-    return nullptr;
-  }
-
-  CryptoInfo::LocalRef cryptoInfo;
-  nsresult rv = CryptoInfo::New(&cryptoInfo);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  uint32_t numSubSamples = std::min<uint32_t>(
-    cryptoObj.mPlainSizes.Length(), cryptoObj.mEncryptedSizes.Length());
-
-  uint32_t totalSubSamplesSize = 0;
-  for (auto& size : cryptoObj.mEncryptedSizes) {
-    totalSubSamplesSize += size;
-  }
-
-  // mPlainSizes is uint16_t, need to transform to uint32_t first.
-  nsTArray<uint32_t> plainSizes;
-  for (auto& size : cryptoObj.mPlainSizes) {
-    totalSubSamplesSize += size;
-    plainSizes.AppendElement(size);
-  }
-
-  uint32_t codecSpecificDataSize = aSample->Size() - totalSubSamplesSize;
-  // Size of codec specific data("CSD") for Android MediaCodec usage should be
-  // included in the 1st plain size.
-  plainSizes[0] += codecSpecificDataSize;
-
-  static const int kExpectedIVLength = 16;
-  auto tempIV(cryptoObj.mIV);
-  auto tempIVLength = tempIV.Length();
-  MOZ_ASSERT(tempIVLength <= kExpectedIVLength);
-  for (size_t i = tempIVLength; i < kExpectedIVLength; i++) {
-    // Padding with 0
-    tempIV.AppendElement(0);
-  }
-
-  auto numBytesOfPlainData = mozilla::jni::IntArray::New(
-                              reinterpret_cast<int32_t*>(&plainSizes[0]),
-                              plainSizes.Length());
-
-  auto numBytesOfEncryptedData = mozilla::jni::IntArray::New(
-    reinterpret_cast<const int32_t*>(&cryptoObj.mEncryptedSizes[0]),
-    cryptoObj.mEncryptedSizes.Length());
-  auto iv = mozilla::jni::ByteArray::New(reinterpret_cast<int8_t*>(&tempIV[0]),
-                                         tempIV.Length());
-  auto keyId = mozilla::jni::ByteArray::New(
-    reinterpret_cast<const int8_t*>(&cryptoObj.mKeyId[0]),
-    cryptoObj.mKeyId.Length());
-  cryptoInfo->Set(numSubSamples, numBytesOfPlainData, numBytesOfEncryptedData,
-                  keyId, iv, MediaCodec::CRYPTO_MODE_AES_CTR);
-
-  return cryptoInfo;
-}
 
 AndroidDecoderModule::AndroidDecoderModule(CDMProxy* aProxy)
 {

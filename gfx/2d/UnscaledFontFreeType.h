@@ -44,17 +44,11 @@ public:
   const char* GetFile() const { return mFile.c_str(); }
   uint32_t GetIndex() const { return mIndex; }
 
-  struct FontDescriptor
-  {
-    uint32_t mPathLength;
-    uint32_t mIndex;
-  };
-
   bool GetFontFileData(FontFileDataOutput aDataCallback, void* aBaton) override;
 
   bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
 
-private:
+protected:
   FT_Face mFace;
   bool mOwnsFace;
   std::string mFile;
@@ -83,7 +77,7 @@ public:
   FontType GetType() const override { return FontType::FONTCONFIG; }
 
   static already_AddRefed<UnscaledFont>
-    CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength);
+    CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex);
 
   already_AddRefed<ScaledFont>
     CreateScaledFont(Float aGlyphSize,
@@ -91,6 +85,8 @@ public:
                      uint32_t aInstanceDataLength,
                      const FontVariation* aVariations,
                      uint32_t aNumVariations) override;
+
+  bool GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton) override;
 
 private:
   RefPtr<NativeFontResource> mNativeFontResource;

@@ -758,7 +758,7 @@ HTMLEditor::GetBlockNodeParent(nsINode* aNode,
   MOZ_ASSERT(aNode);
   MOZ_ASSERT(!aAncestorLimiter ||
              aNode == aAncestorLimiter ||
-             EditorUtils::IsDescendantOf(aNode, aAncestorLimiter),
+             EditorUtils::IsDescendantOf(*aNode, *aAncestorLimiter),
              "aNode isn't in aAncestorLimiter");
 
   // The caller has already reached the limiter.
@@ -791,7 +791,7 @@ HTMLEditor::GetBlock(nsINode& aNode,
 {
   MOZ_ASSERT(!aAncestorLimiter ||
              &aNode == aAncestorLimiter ||
-             EditorUtils::IsDescendantOf(&aNode, aAncestorLimiter),
+             EditorUtils::IsDescendantOf(aNode, *aAncestorLimiter),
              "aNode isn't in aAncestorLimiter");
 
   if (NodeIsBlockStatic(&aNode)) {

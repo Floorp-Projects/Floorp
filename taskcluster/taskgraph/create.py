@@ -64,7 +64,9 @@ def create_tasks(taskgraph, label_to_taskid, params, decision_task_id=None):
         task_def['taskGroupId'] = task_group_id
         task_def['schedulerId'] = scheduler_id
 
-    with futures.ThreadPoolExecutor(CONCURRENCY) as e:
+    # If `testing` is True, then run without parallelization
+    concurrency = CONCURRENCY if not testing else 1
+    with futures.ThreadPoolExecutor(concurrency) as e:
         fs = {}
 
         # We can't submit a task until its dependencies have been submitted.
@@ -129,6 +131,8 @@ def create_task(session, task_id, label, task_def):
     if testing:
         json.dump([task_id, task_def], sys.stdout,
                   sort_keys=True, indent=4, separators=(',', ': '))
+        # add a newline
+        print("")
         return
 
     logger.debug("Creating task with taskId {} for {}".format(task_id, label))

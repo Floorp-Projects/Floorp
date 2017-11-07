@@ -2,21 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::LayerRect;
+use api::{LayerVector2D, LayerRect, LayerToWorldTransform, WorldToLayerTransform};
 use gpu_cache::GpuCacheAddress;
 use render_task::RenderTaskAddress;
-use tiling::PackedLayerIndex;
 
 // Contains type that must exactly match the same structures declared in GLSL.
-
-#[derive(Debug, Copy, Clone)]
-pub struct PackedLayerAddress(i32);
-
-impl From<PackedLayerIndex> for PackedLayerAddress {
-    fn from(index: PackedLayerIndex) -> PackedLayerAddress {
-        PackedLayerAddress(index.0 as i32)
-    }
-}
 
 #[repr(i32)]
 #[derive(Debug, Copy, Clone)]
@@ -41,7 +31,7 @@ pub struct BlurInstance {
 #[repr(C)]
 pub struct ClipMaskInstance {
     pub render_task_address: RenderTaskAddress,
-    pub layer_address: PackedLayerAddress,
+    pub scroll_node_id: ClipScrollNodeIndex,
     pub segment: i32,
     pub clip_data_address: GpuCacheAddress,
     pub resource_address: GpuCacheAddress,
@@ -57,7 +47,8 @@ pub struct SimplePrimitiveInstance {
     pub specific_prim_address: GpuCacheAddress,
     pub task_address: RenderTaskAddress,
     pub clip_task_address: RenderTaskAddress,
-    pub layer_address: PackedLayerAddress,
+    pub clip_id: ClipScrollNodeIndex,
+    pub scroll_id: ClipScrollNodeIndex,
     pub z_sort_index: i32,
 }
 
@@ -66,14 +57,16 @@ impl SimplePrimitiveInstance {
         specific_prim_address: GpuCacheAddress,
         task_address: RenderTaskAddress,
         clip_task_address: RenderTaskAddress,
-        layer_address: PackedLayerAddress,
+        clip_id: ClipScrollNodeIndex,
+        scroll_id: ClipScrollNodeIndex,
         z_sort_index: i32,
     ) -> SimplePrimitiveInstance {
         SimplePrimitiveInstance {
             specific_prim_address,
             task_address,
             clip_task_address,
-            layer_address,
+            clip_id,
+            scroll_id,
             z_sort_index,
         }
     }
@@ -84,7 +77,7 @@ impl SimplePrimitiveInstance {
                 self.specific_prim_address.as_int(),
                 self.task_address.0 as i32,
                 self.clip_task_address.0 as i32,
-                self.layer_address.0,
+                ((self.clip_id.0 as i32) << 16) | self.scroll_id.0 as i32,
                 self.z_sort_index,
                 data0,
                 data1,
@@ -101,6 +94,8 @@ pub struct CompositePrimitiveInstance {
     pub data0: i32,
     pub data1: i32,
     pub z: i32,
+    pub data2: i32,
+    pub data3: i32,
 }
 
 impl CompositePrimitiveInstance {
@@ -111,6 +106,8 @@ impl CompositePrimitiveInstance {
         data0: i32,
         data1: i32,
         z: i32,
+        data2: i32,
+        data3: i32,
     ) -> CompositePrimitiveInstance {
         CompositePrimitiveInstance {
             task_address,
@@ -119,6 +116,8 @@ impl CompositePrimitiveInstance {
             data0,
             data1,
             z,
+            data2,
+            data3,
         }
     }
 }
@@ -133,8 +132,8 @@ impl From<CompositePrimitiveInstance> for PrimitiveInstance {
                 instance.z,
                 instance.data0,
                 instance.data1,
-                0,
-                0,
+                instance.data2,
+                instance.data3,
             ],
         }
     }
@@ -156,7 +155,8 @@ pub const BRUSH_FLAG_USES_PICTURE: i32 = (1 << 0);
 pub struct BrushInstance {
     pub picture_address: RenderTaskAddress,
     pub prim_address: GpuCacheAddress,
-    pub layer_address: PackedLayerAddress,
+    pub clip_id: ClipScrollNodeIndex,
+    pub scroll_id: ClipScrollNodeIndex,
     pub clip_task_address: RenderTaskAddress,
     pub z: i32,
     pub flags: i32,
@@ -170,7 +170,7 @@ impl From<BrushInstance> for PrimitiveInstance {
             data: [
                 instance.picture_address.0 as i32,
                 instance.prim_address.as_int(),
-                instance.layer_address.0,
+                ((instance.clip_id.0 as i32) << 16) | instance.scroll_id.0 as i32,
                 instance.clip_task_address.0 as i32,
                 instance.z,
                 instance.flags,
@@ -189,4 +189,30 @@ pub enum BrushImageKind {
     Simple = 0,     // A normal rect
     NinePatch = 1,  // A nine-patch image (stretch inside segments)
     Mirror = 2,     // A top left corner only (mirror across x/y axes)
+}
+
+#[derive(Copy, Debug, Clone)]
+#[repr(C)]
+pub struct ClipScrollNodeIndex(pub u32);
+
+#[derive(Debug)]
+#[repr(C)]
+pub struct ClipScrollNodeData {
+    pub transform: LayerToWorldTransform,
+    pub inv_transform: WorldToLayerTransform,
+    pub local_clip_rect: LayerRect,
+    pub reference_frame_relative_scroll_offset: LayerVector2D,
+    pub scroll_offset: LayerVector2D,
+}
+
+impl ClipScrollNodeData {
+    pub fn invalid() -> ClipScrollNodeData {
+        ClipScrollNodeData {
+            transform: LayerToWorldTransform::identity(),
+            inv_transform: WorldToLayerTransform::identity(),
+            local_clip_rect: LayerRect::zero(),
+            reference_frame_relative_scroll_offset: LayerVector2D::zero(),
+            scroll_offset: LayerVector2D::zero(),
+        }
+    }
 }

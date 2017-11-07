@@ -40,9 +40,11 @@ public:
      * \param aFamily IDWriteFontFamily object representing the directwrite
      * family object.
      */
-    gfxDWriteFontFamily(const nsAString& aName, 
-                        IDWriteFontFamily *aFamily)
-      : gfxFontFamily(aName), mDWFamily(aFamily), mForceGDIClassic(false) {}
+    gfxDWriteFontFamily(const nsAString& aName,
+                        IDWriteFontFamily *aFamily,
+                        bool aIsSystemFontFamily = false)
+      : gfxFontFamily(aName), mDWFamily(aFamily),
+        mIsSystemFontFamily(aIsSystemFontFamily), mForceGDIClassic(false) {}
     virtual ~gfxDWriteFontFamily();
     
     void FindStyleVariations(FontInfoData *aFontInfoData = nullptr) final;
@@ -71,6 +73,7 @@ protected:
 
     /** This font family's directwrite fontfamily object */
     RefPtr<IDWriteFontFamily> mDWFamily;
+    bool mIsSystemFontFamily;
     bool mForceGDIClassic;
 };
 
@@ -87,9 +90,10 @@ public:
      * \param aFont DirectWrite font object
      */
     gfxDWriteFontEntry(const nsAString& aFaceName,
-                              IDWriteFont *aFont) 
+                       IDWriteFont *aFont,
+                       bool aIsSystemFont = false)
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
-        mForceGDIClassic(false)
+        mIsSystemFont(aIsSystemFont), mForceGDIClassic(false)
     {
         DWRITE_FONT_STYLE dwriteStyle = aFont->GetStyle();
         mStyle = (dwriteStyle == DWRITE_FONT_STYLE_ITALIC ?
@@ -123,7 +127,7 @@ public:
                               int16_t aStretch,
                               uint8_t aStyle)
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
-        mForceGDIClassic(false)
+        mIsSystemFont(false), mForceGDIClassic(false)
     {
         mWeight = aWeight;
         mStretch = aStretch;
@@ -148,8 +152,9 @@ public:
                               uint16_t aWeight,
                               int16_t aStretch,
                               uint8_t aStyle)
-      : gfxFontEntry(aFaceName), mFont(nullptr), mFontFile(aFontFile),
-        mFontFileStream(aFontFileStream), mForceGDIClassic(false)
+      : gfxFontEntry(aFaceName), mFont(nullptr),
+        mFontFile(aFontFile), mFontFileStream(aFontFileStream),
+        mIsSystemFont(false), mForceGDIClassic(false)
     {
         mWeight = aWeight;
         mStretch = aStretch;
@@ -210,6 +215,7 @@ protected:
     DWRITE_FONT_FACE_TYPE mFaceType;
 
     int8_t mIsCJK;
+    bool mIsSystemFont;
     bool mForceGDIClassic;
 
     mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontDWrite> mUnscaledFont;

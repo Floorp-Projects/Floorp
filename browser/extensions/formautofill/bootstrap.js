@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillParent",
                                   "resource://formautofill/FormAutofillParent.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillUtils",
+                                  "resource://formautofill/FormAutofillUtils.jsm");
 
 function insertStyleSheet(domWindow, url) {
   let doc = domWindow.document;
@@ -68,6 +70,7 @@ function startup(data) {
     // reset the sync related prefs incase the feature was previously available
     // but isn't now.
     Services.prefs.clearUserPref("services.sync.engine.addresses.available");
+    Services.prefs.clearUserPref("services.sync.engine.creditcards.available");
     Services.telemetry.scalarSet("formautofill.availability", false);
     return;
   }
@@ -92,10 +95,15 @@ function startup(data) {
   Services.prefs.setBoolPref("dom.forms.autocomplete.formautofill", true);
   Services.telemetry.scalarSet("formautofill.availability", true);
 
-  // This pref determines whether the "addresses" sync engine is available
-  // (ie, whether it is shown in any UI etc) - it *does not* determine whether
-  // the engine is actually enabled or not.
+  // This pref determines whether the "addresses"/"creditcards" sync engine is
+  // available (ie, whether it is shown in any UI etc) - it *does not* determine
+  // whether the engine is actually enabled or not.
   Services.prefs.setBoolPref("services.sync.engine.addresses.available", true);
+  if (FormAutofillUtils.isAutofillCreditCardsAvailable) {
+    Services.prefs.setBoolPref("services.sync.engine.creditcards.available", true);
+  } else {
+    Services.prefs.clearUserPref("services.sync.engine.creditcards.available");
+  }
 
   // Listen for the autocomplete popup message to lazily append our stylesheet related to the popup.
   Services.mm.addMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);

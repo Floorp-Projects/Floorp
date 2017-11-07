@@ -177,7 +177,7 @@ ChildListIDForOutOfFlow(nsFrameState aPlaceholderState, const nsIFrame* aChild)
 }
 
 void
-nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   nsIFrame* oof = mOutOfFlowFrame;
   if (oof) {
@@ -196,7 +196,7 @@ nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot)
     // else oof will be destroyed by its parent
   }
 
-  nsFrame::DestroyFrom(aDestructRoot);
+  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 /* virtual */ bool

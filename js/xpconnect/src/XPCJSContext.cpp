@@ -65,6 +65,12 @@
 #include "ExpandedPrincipal.h"
 #include "SystemPrincipal.h"
 
+#if defined(XP_LINUX) && !defined(ANDROID)
+// For getrlimit and min/max.
+#include <algorithm>
+#include <sys/resource.h>
+#endif
+
 #ifdef XP_WIN
 #include <windows.h>
 #endif
@@ -1018,17 +1024,26 @@ XPCJSContext::Initialize(XPCJSContext* aPrimaryContext)
     // ordered by the effective categories in which they are grouped in the
     // JS_SetNativeStackQuota call (which predates this analysis).
     //
-    // (NB: These numbers may have drifted recently - see bug 938429)
-    // OSX 64-bit Debug: 7MB stack, 636 stack frames => ~11.3k per stack frame
-    // OSX64 Opt: 7MB stack, 2440 stack frames => ~3k per stack frame
+    // The following "Stack Frames" numbers come from `chromeLimit` in
+    // js/xpconnect/tests/chrome/test_bug732665.xul
     //
-    // Linux 32-bit Debug: 2MB stack, 426 stack frames => ~4.8k per stack frame
-    // Linux 64-bit Debug: 4MB stack, 455 stack frames => ~9.0k per stack frame
-    //
-    // Windows (Opt+Debug): 900K stack, 235 stack frames => ~3.4k per stack frame
-    //
-    // Linux 32-bit Opt: 1MB stack, 272 stack frames => ~3.8k per stack frame
-    // Linux 64-bit Opt: 2MB stack, 316 stack frames => ~6.5k per stack frame
+    //  Platform   | Build | Stack Quota | Stack Frames | Stack Frame Size
+    // ------------+-------+-------------+--------------+------------------
+    //  OSX 64     | Opt   | 7MB         | 1331         | ~5.4k
+    //  OSX 64     | Debug | 7MB         | 1202         | ~6.0k
+    // ------------+-------+-------------+--------------+------------------
+    //  Linux 32   | Opt   | 7.875MB     | 2513         | ~3.2k
+    //  Linux 32   | Debug | 7.875MB     | 2146         | ~3.8k
+    // ------------+-------+-------------+--------------+------------------
+    //  Linux 64   | Opt   | 7.875MB     | 1360         | ~5.9k
+    //  Linux 64   | Debug | 7.875MB     | 1180         | ~6.8k
+    //  Linux 64   | ASan  | 7.875MB     | 473          | ~17.0k
+    // ------------+-------+-------------+--------------+------------------
+    //  Windows 32 | Opt   | 984k        | 188          | ~5.2k
+    //  Windows 32 | Debug | 984k        | 208          | ~4.7k
+    // ------------+-------+-------------+--------------+------------------
+    //  Windows 64 | Opt   | 1.922MB     | 189          | ~10.4k
+    //  Windows 64 | Debug | 1.922MB     | 175          | ~11.2k
     //
     // We tune the trusted/untrusted quotas for each configuration to achieve our
     // invariants while attempting to minimize overhead. In contrast, our buffer
@@ -1049,6 +1064,35 @@ XPCJSContext::Initialize(XPCJSContext* aPrimaryContext)
     // and give trusted script 180k extra. The stack is huge on mac anyway.
     const size_t kStackQuota = 7 * 1024 * 1024;
     const size_t kTrustedScriptBuffer = 180 * 1024;
+#elif defined(XP_LINUX) && !defined(ANDROID)
+    // Most Linux distributions set default stack size to 8MB.  Use it as the
+    // maximum value.
+    const size_t kStackQuotaMax = 8 * 1024 * 1024;
+#  if defined(MOZ_ASAN) || defined(DEBUG)
+    // Bug 803182: account for the 4x difference in the size of js::Interpret
+    // between optimized and debug builds.  We use 2x since the JIT part
+    // doesn't increase much.
+    // See the standalone MOZ_ASAN branch below for the ASan case.
+    const size_t kStackQuotaMin = 2 * kDefaultStackQuota;
+#  else
+    const size_t kStackQuotaMin = kDefaultStackQuota;
+#  endif
+    // Allocate 128kB margin for the safe space.
+    const size_t kStackSafeMargin = 128 * 1024;
+
+    struct rlimit rlim;
+    const size_t kStackQuota =
+        getrlimit(RLIMIT_STACK, &rlim) == 0
+        ? std::max(std::min(size_t(rlim.rlim_cur - kStackSafeMargin),
+                            kStackQuotaMax - kStackSafeMargin),
+                   kStackQuotaMin)
+        : kStackQuotaMin;
+#  if defined(MOZ_ASAN)
+    // See the standalone MOZ_ASAN branch below for the ASan case.
+    const size_t kTrustedScriptBuffer = 450 * 1024;
+#  else
+    const size_t kTrustedScriptBuffer = 180 * 1024;
+#  endif
 #elif defined(MOZ_ASAN)
     // ASan requires more stack space due to red-zones, so give it double the
     // default (1MB on 32-bit, 2MB on 64-bit). ASAN stack frame measurements
@@ -1056,30 +1100,33 @@ XPCJSContext::Initialize(XPCJSContext* aPrimaryContext)
     // ASAN builds have roughly thrice the stack overhead as normal builds.
     // On normal builds, the largest stack frame size we might encounter is
     // 9.0k (see above), so let's use a buffer of 9.0 * 5 * 10 = 450k.
+    //
+    // FIXME: Does this branch make sense for Windows and Android?
+    // (See bug 1415195)
     const size_t kStackQuota =  2 * kDefaultStackQuota;
     const size_t kTrustedScriptBuffer = 450 * 1024;
 #elif defined(XP_WIN)
-    // 1MB is the default stack size on Windows. We use the /STACK linker flag
-    // to request a larger stack, so we determine the stack size at runtime.
+    // 1MB is the default stack size on Windows. We use the -STACK linker flag
+    // (see WIN32_EXE_LDFLAGS in config/config.mk) to request a larger stack,
+    // so we determine the stack size at runtime.
     const size_t kStackQuota = GetWindowsStackSize();
     const size_t kTrustedScriptBuffer = (sizeof(size_t) == 8) ? 180 * 1024   //win64
                                                               : 120 * 1024;  //win32
-    // The following two configurations are linux-only. Given the numbers above,
-    // we use 50k and 100k trusted buffers on 32-bit and 64-bit respectively.
 #elif defined(ANDROID)
     // Android appears to have 1MB stacks. Allow the use of 3/4 of that size
     // (768KB on 32-bit), since otherwise we can crash with a stack overflow
     // when nearing the 1MB limit.
     const size_t kStackQuota = kDefaultStackQuota + kDefaultStackQuota / 2;
     const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;
-#elif defined(DEBUG)
-    // Bug 803182: account for the 4x difference in the size of js::Interpret
-    // between optimized and debug builds.
-    // XXXbholley - Then why do we only account for 2x of difference?
-    const size_t kStackQuota = 2 * kDefaultStackQuota;
-    const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;
 #else
+    // Catch-all configuration for other environments.
+#  if defined(DEBUG)
+    const size_t kStackQuota = 2 * kDefaultStackQuota;
+#  else
     const size_t kStackQuota = kDefaultStackQuota;
+#  endif
+    // Given the numbers above, we use 50k and 100k trusted buffers on 32-bit
+    // and 64-bit respectively.
     const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;
 #endif
 

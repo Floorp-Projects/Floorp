@@ -72,6 +72,8 @@ add_task(async function clearURLBarAfterManuallyLoadingAboutHome() {
  * default content principal are different).
  */
 add_task(async function dontTemporarilyShowAboutHome() {
+  requestLongerTimeout(2);
+
   await SpecialPowers.pushPrefEnv({set: [["browser.startup.page", 1]]});
   let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
   let win = OpenBrowserWindow();
@@ -79,6 +81,7 @@ add_task(async function dontTemporarilyShowAboutHome() {
   let promiseTabSwitch = BrowserTestUtils.switchTab(win.gBrowser, () => {});
   win.BrowserOpenTab();
   await promiseTabSwitch;
+  is(win.gBrowser.visibleTabs.length, 2, "2 tabs opened");
   await TabStateFlusher.flush(win.gBrowser.selectedBrowser);
   await BrowserTestUtils.closeWindow(win);
   ok(SessionStore.getClosedWindowCount(), "Should have a closed window");
@@ -94,6 +97,10 @@ add_task(async function dontTemporarilyShowAboutHome() {
     },
   };
   win.gBrowser.addProgressListener(wpl);
+
+  if (win.gBrowser.visibleTabs.length < 2) {
+    await BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
+  }
   let otherTab = win.gBrowser.selectedTab.previousSibling;
   let tabLoaded = BrowserTestUtils.browserLoaded(otherTab.linkedBrowser, false, "about:home");
   await BrowserTestUtils.switchTab(win.gBrowser, otherTab);

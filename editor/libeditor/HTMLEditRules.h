@@ -7,6 +7,7 @@
 #define HTMLEditRules_h
 
 #include "TypeInState.h"
+#include "mozilla/EditorDOMPoint.h" // for EditorDOMPoint
 #include "mozilla/SelectionState.h"
 #include "mozilla/TextEditRules.h"
 #include "nsCOMPtr.h"
@@ -32,7 +33,6 @@ class EditActionResult;
 class HTMLEditor;
 class RulesInfo;
 class TextEditor;
-struct EditorDOMPoint;
 namespace dom {
 class Element;
 class Selection;
@@ -189,8 +189,8 @@ protected:
    */
   nsresult InsertBRIfNeededInternal(nsINode& aNode, bool aInsertMozBR);
 
-  mozilla::EditorDOMPoint GetGoodSelPointForNode(nsINode& aNode,
-                                                 nsIEditor::EDirection aAction);
+  EditorDOMPoint GetGoodSelPointForNode(nsINode& aNode,
+                                        nsIEditor::EDirection aAction);
 
   /**
    * TryToJoinBlocks() tries to join two block elements.  The right element is
@@ -355,7 +355,7 @@ protected:
   void GetChildNodesForOperation(
          nsINode& aNode,
          nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
-  nsresult GetNodesFromPoint(EditorDOMPoint aPoint,
+  nsresult GetNodesFromPoint(const EditorDOMPoint& aPoint,
                              EditAction aOperation,
                              nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
                              TouchContent aTouchContent);

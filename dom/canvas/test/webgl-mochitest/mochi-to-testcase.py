@@ -1,3 +1,4 @@
+#!python2
 import sys
 import os.path
 import re
@@ -58,6 +59,13 @@ SimpleTest = {
   waitForExplicitFinish: function() {},
   finish: function() {},
   requestFlakyTimeout: function() {},
+};
+
+SpecialPowers = {
+  pushPrefEnv: function(env, func) {
+    console.log('SpecialPowers.pushPrefEnv: ' + JSON.stringify(env));
+    setTimeout(func, 0);
+  },
 };
 </script>
 <div id='mochi-to-testcase-output'></div>

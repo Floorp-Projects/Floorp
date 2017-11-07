@@ -650,9 +650,9 @@ const char GeckoEditable::name[] =
 constexpr char GeckoEditable::New_t::name[];
 constexpr char GeckoEditable::New_t::signature[];
 
-auto GeckoEditable::New(mozilla::jni::Object::Param a0) -> GeckoEditable::LocalRef
+auto GeckoEditable::New() -> GeckoEditable::LocalRef
 {
-    return mozilla::jni::Constructor<New_t>::Call(GeckoEditable::Context(), nullptr, a0);
+    return mozilla::jni::Constructor<New_t>::Call(GeckoEditable::Context(), nullptr);
 }
 
 constexpr char GeckoEditable::OnViewChange_t::name[];
@@ -768,6 +768,43 @@ const char GeckoScreenOrientation::name[] =
 
 constexpr char GeckoScreenOrientation::OnOrientationChange_t::name[];
 constexpr char GeckoScreenOrientation::OnOrientationChange_t::signature[];
+
+const char GeckoSession::name[] =
+        "org/mozilla/gecko/GeckoSession";
+
+const char GeckoSession::Window::name[] =
+        "org/mozilla/gecko/GeckoSession$Window";
+
+constexpr char GeckoSession::Window::Attach_t::name[];
+constexpr char GeckoSession::Window::Attach_t::signature[];
+
+constexpr char GeckoSession::Window::Close_t::name[];
+constexpr char GeckoSession::Window::Close_t::signature[];
+
+constexpr char GeckoSession::Window::DisposeNative_t::name[];
+constexpr char GeckoSession::Window::DisposeNative_t::signature[];
+
+constexpr char GeckoSession::Window::OnReady_t::name[];
+constexpr char GeckoSession::Window::OnReady_t::signature[];
+
+auto GeckoSession::Window::OnReady() const -> void
+{
+    return mozilla::jni::Method<OnReady_t>::Call(Window::mCtx, nullptr);
+}
+
+constexpr char GeckoSession::Window::OnTransfer_t::name[];
+constexpr char GeckoSession::Window::OnTransfer_t::signature[];
+
+auto GeckoSession::Window::OnTransfer(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Method<OnTransfer_t>::Call(Window::mCtx, nullptr, a0);
+}
+
+constexpr char GeckoSession::Window::Open_t::name[];
+constexpr char GeckoSession::Window::Open_t::signature[];
+
+constexpr char GeckoSession::Window::Transfer_t::name[];
+constexpr char GeckoSession::Window::Transfer_t::signature[];
 
 const char GeckoThread::name[] =
         "org/mozilla/gecko/GeckoThread";
@@ -948,59 +985,6 @@ constexpr char GeckoThread::State::RUNNING_t::signature[];
 auto GeckoThread::State::RUNNING() -> State::LocalRef
 {
     return mozilla::jni::Field<RUNNING_t>::Get(State::Context(), nullptr);
-}
-
-const char GeckoView::name[] =
-        "org/mozilla/gecko/GeckoView";
-
-const char GeckoView::State::name[] =
-        "org/mozilla/gecko/GeckoView$State";
-
-constexpr char GeckoView::State::INITIAL_t::name[];
-constexpr char GeckoView::State::INITIAL_t::signature[];
-
-auto GeckoView::State::INITIAL() -> State::LocalRef
-{
-    return mozilla::jni::Field<INITIAL_t>::Get(State::Context(), nullptr);
-}
-
-constexpr char GeckoView::State::READY_t::name[];
-constexpr char GeckoView::State::READY_t::signature[];
-
-auto GeckoView::State::READY() -> State::LocalRef
-{
-    return mozilla::jni::Field<READY_t>::Get(State::Context(), nullptr);
-}
-
-const char GeckoView::Window::name[] =
-        "org/mozilla/gecko/GeckoView$Window";
-
-constexpr char GeckoView::Window::Close_t::name[];
-constexpr char GeckoView::Window::Close_t::signature[];
-
-constexpr char GeckoView::Window::DisposeNative_t::name[];
-constexpr char GeckoView::Window::DisposeNative_t::signature[];
-
-constexpr char GeckoView::Window::OnReattach_t::name[];
-constexpr char GeckoView::Window::OnReattach_t::signature[];
-
-auto GeckoView::Window::OnReattach(GeckoView::Param a0) const -> void
-{
-    return mozilla::jni::Method<OnReattach_t>::Call(Window::mCtx, nullptr, a0);
-}
-
-constexpr char GeckoView::Window::Open_t::name[];
-constexpr char GeckoView::Window::Open_t::signature[];
-
-constexpr char GeckoView::Window::Reattach_t::name[];
-constexpr char GeckoView::Window::Reattach_t::signature[];
-
-constexpr char GeckoView::Window::SetState_t::name[];
-constexpr char GeckoView::Window::SetState_t::signature[];
-
-auto GeckoView::Window::SetState(mozilla::jni::Object::Param a0) const -> void
-{
-    return mozilla::jni::Method<SetState_t>::Call(Window::mCtx, nullptr, a0);
 }
 
 const char PrefsHelper::name[] =

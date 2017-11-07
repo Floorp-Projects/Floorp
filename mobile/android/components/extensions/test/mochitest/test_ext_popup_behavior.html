@@ -1,0 +1,180 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>PageAction Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+var {BrowserActions} = SpecialPowers.Cu.import("resource://gre/modules/BrowserActions.jsm", {});
+var {Services} = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm", {});
+
+function promiseDispatchedWindowEvent(eventName) {
+  return new Promise(resolve => {
+    let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+    let WindowEventDispatcher = chromeWin.WindowEventDispatcher;
+
+    let listener = (event) => {
+      WindowEventDispatcher.unregisterListener(listener, eventName);
+      resolve();
+    };
+
+    WindowEventDispatcher.registerListener(listener, eventName);
+  });
+}
+
+async function closeTabAndWaitTabClosed({BrowserApp, tab}) {
+  let onceTabClosed = promiseDispatchedWindowEvent("Tab:Closed");
+  BrowserApp.closeTab(tab);
+  await onceTabClosed;
+}
+
+async function selectTabAndWaitTabSelected({BrowserApp, tab}) {
+  let onceTabSelected = promiseDispatchedWindowEvent("Tab:Selected");
+  BrowserApp.selectTab(tab);
+  await onceTabSelected;
+}
+
+add_task(async function test_popup_behavior() {
+  const chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  const BrowserApp = chromeWin.BrowserApp;
+
+  async function background() {
+    const tab1 = await browser.tabs.create({url: "http://example.com#test_popup_behavior_1"});
+    const tab2 = await browser.tabs.create({url: "http://example.com#test_popup_behavior_2"});
+    const tab3 = await browser.tabs.create({url: "http://example.com#test_popup_behavior_3"});
+
+    browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+      if (![tab1.id, tab2.id, tab3.id].includes(tabId) ||
+          changeInfo.status !== "complete") {
+        return;
+      }
+
+      browser.test.sendMessage("page-loaded", tabId);
+    });
+
+    browser.test.sendMessage("background_page.ready", {
+      tabId1: tab1.id,
+      tabId2: tab2.id,
+      tabId3: tab3.id,
+    });
+  }
+
+  async function popupScript() {
+    browser.test.sendMessage("popup_script.loaded");
+  }
+
+  let popupHtml = `<!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+      </head>
+      <body>
+        <h1>Extension Popup</h1>
+        <script src="popup.js"><\/script>
+      </body>
+    </html>
+  `;
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "name": "BrowserAction Extension",
+      "browser_action": {
+        "default_title": "Browser Action",
+        "default_popup": "popup.html",
+        "default_icon": {
+          "18": "extension.png",
+        },
+      },
+      "permissions": ["activeTab"],
+    },
+    files: {
+      "popup.html": popupHtml,
+      "popup.js": popupScript,
+    },
+  });
+
+  await extension.startup();
+
+  const {
+    tabId1,
+    tabId2,
+    tabId3,
+  } = await extension.awaitMessage("background_page.ready");
+
+  const uuid = `{${extension.uuid}}`;
+
+  ok(BrowserActions.isShown(uuid), "browser action is shown");
+
+  info("Wait the new tabs to be loaded");
+
+  await extension.awaitMessage("page-loaded");
+  await extension.awaitMessage("page-loaded");
+  await extension.awaitMessage("page-loaded");
+
+  is(BrowserApp.selectedTab.id, tabId3, "The third of the new tabs has been selected");
+
+  BrowserActions.synthesizeClick(uuid);
+  await extension.awaitMessage("popup_script.loaded");
+
+  // Check that while the extension popup tab is selected the active tab is still the tab
+  // from which the user has opened the extension popup.
+  ok(BrowserApp.selectedBrowser.currentURI.spec.endsWith("popup.html"),
+     "The first popup tab has been selected");
+
+  let popupParentTabId = BrowserApp.selectedTab.parentId;
+  is(popupParentTabId, tabId3, "The parent of the first popup tab is the third tab");
+
+  // Close the popup and test that its parent tab is selected.
+  await closeTabAndWaitTabClosed({BrowserApp, tab: BrowserApp.selectedTab});
+
+  const tab1 = BrowserApp.getTabForId(tabId1);
+  const tab2 = BrowserApp.getTabForId(tabId2);
+  const tab3 = BrowserApp.getTabForId(tabId3);
+
+  BrowserActions.synthesizeClick(uuid);
+  await extension.awaitMessage("popup_script.loaded");
+
+  ok(BrowserApp.selectedBrowser.currentURI.spec.endsWith("popup.html"),
+     "The second popup tab has been selected");
+
+  popupParentTabId = BrowserApp.selectedTab.parentId;
+  is(popupParentTabId, tabId3, "The parent of the second popup tab is the third tab");
+
+  // Switch to the second tab and expect the popup tab to be closed.
+  let onceTabClosed = promiseDispatchedWindowEvent("Tab:Closed");
+  await Promise.all([
+    selectTabAndWaitTabSelected({BrowserApp, tab: tab2}),
+    onceTabClosed,
+  ]);
+
+  // Switch to the first tab and expect it to be the next selected tab.
+  // (which ensure that Bug 1373170 has been fixed and the closed popup tab
+  // has not selected its parent tab).
+  await selectTabAndWaitTabSelected({BrowserApp, tab: tab1});
+
+  is(BrowserApp.selectedTab.id, tabId1,
+     "The first tab is the currently selected tab");
+
+  // Close all the tabs before exiting the test.
+  await Promise.all([
+    closeTabAndWaitTabClosed({BrowserApp, tab: tab1}),
+    closeTabAndWaitTabClosed({BrowserApp, tab: tab2}),
+    closeTabAndWaitTabClosed({BrowserApp, tab: tab3}),
+  ]);
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

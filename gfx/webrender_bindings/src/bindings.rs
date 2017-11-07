@@ -18,6 +18,14 @@ use rayon;
 use euclid::SideOffsets2D;
 use log::{set_logger, shutdown_logger, LogLevelFilter, Log, LogLevel, LogMetadata, LogRecord};
 
+#[cfg(target_os = "windows")]
+use dwrote::{FontDescriptor, FontWeight, FontStretch, FontStyle};
+
+#[cfg(target_os = "macos")]
+use core_foundation::string::CFString;
+#[cfg(target_os = "macos")]
+use core_graphics::font::CGFont;
+
 extern crate webrender_api;
 
 /// cbindgen:field-names=[mNamespace, mHandle]
@@ -982,6 +990,54 @@ pub extern "C" fn wr_resource_updates_add_raw_font(
     resources.add_raw_font(key, bytes.flush_into_vec(), index);
 }
 
+#[cfg(target_os = "windows")]
+fn read_font_descriptor(
+    bytes: &mut WrVecU8,
+    index: u32
+) -> NativeFontHandle {
+    let wchars = bytes.convert_into_vec::<u16>();
+    FontDescriptor {
+        family_name: String::from_utf16(&wchars).unwrap(),
+        weight: FontWeight::from_u32(index & 0xffff),
+        stretch: FontStretch::from_u32((index >> 16) & 0xff),
+        style: FontStyle::from_u32((index >> 24) & 0xff),
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn read_font_descriptor(
+    bytes: &mut WrVecU8,
+    _index: u32
+) -> NativeFontHandle {
+    let chars = bytes.flush_into_vec();
+    let name = String::from_utf8(chars).unwrap();
+    let font = CGFont::from_name(&CFString::new(&*name)).unwrap();
+    NativeFontHandle(font)
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+fn read_font_descriptor(
+    bytes: &mut WrVecU8,
+    index: u32
+) -> NativeFontHandle {
+    let cstr = CString::new(bytes.flush_into_vec()).unwrap();
+    NativeFontHandle {
+        pathname: String::from(cstr.to_str().unwrap()),
+        index,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_resource_updates_add_font_descriptor(
+    resources: &mut ResourceUpdates,
+    key: WrFontKey,
+    bytes: &mut WrVecU8,
+    index: u32
+) {
+    let native_font_handle = read_font_descriptor(bytes, index);
+    resources.add_native_font(key, native_font_handle);
+}
+
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_delete_font(
     resources: &mut ResourceUpdates,
@@ -1285,7 +1341,8 @@ pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
             unsafe { bottom_margin.as_ref() }.cloned(),
             unsafe { left_margin.as_ref() }.cloned()
         ),
-        vertical_bounds, horizontal_bounds);
+        vertical_bounds, horizontal_bounds,
+        LayoutVector2D::new(0.0, 0.0));
     match clip_id {
         ClipId::Clip(id, pipeline_id) => {
             assert!(pipeline_id == state.pipeline_id);

@@ -447,7 +447,7 @@ Moof::Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& 
       int64_t endDecodeTime = decodeOffset.isOk() & offsetOffset.isOk() ?
                               decodeOffset.unwrap() + offsetOffset.unwrap() : 0;
       int64_t decodeDuration = endDecodeTime - mIndex[0].mDecodeTime;
-      double adjust = (double)decodeDuration / presentationDuration;
+      double adjust = !!presentationDuration ? (double)decodeDuration / presentationDuration : 0;
       int64_t dtsOffset = mIndex[0].mDecodeTime;
       int64_t compositionDuration = 0;
       // Adjust the dts, ensuring that the new adjusted dts will never be greater

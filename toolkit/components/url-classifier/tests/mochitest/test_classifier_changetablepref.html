@@ -22,9 +22,6 @@ const UPDATE_URL = "http://mochi.test:8888/tests/toolkit/components/url-classifi
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 
-var prefService = Cc["@mozilla.org/preferences-service;1"]
-                  .getService(Ci.nsIPrefService);
-
 var timer = Cc["@mozilla.org/timer;1"]
             .createInstance(Ci.nsITimer);
 

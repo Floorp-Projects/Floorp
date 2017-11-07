@@ -387,7 +387,7 @@ void TlsAgent::SetShortHeadersEnabled() {
 void TlsAgent::SetAltHandshakeTypeEnabled() {
   EXPECT_TRUE(EnsureTlsSetup());
 
-  SECStatus rv = SSL_UseAltServerHelloType(ssl_fd(), true);
+  SECStatus rv = SSL_UseAltHandshakeType(ssl_fd(), PR_TRUE);
   EXPECT_EQ(SECSuccess, rv);
 }
 

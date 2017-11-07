@@ -125,8 +125,8 @@ PlacesItem.prototype = {
   toSyncBookmark() {
     let result = {
       kind: this.type,
-      syncId: this.id,
-      parentSyncId: this.parentid,
+      recordId: this.id,
+      parentRecordId: this.parentid,
     };
     let dateAdded = PlacesSyncUtils.bookmarks.ratchetTimestampBackwards(
       this.dateAdded, +this.modified * 1000);
@@ -139,7 +139,7 @@ PlacesItem.prototype = {
   // Populates the record from a Sync bookmark object returned from
   // `PlacesSyncUtils.bookmarks.fetch`.
   fromSyncBookmark(item) {
-    this.parentid = item.parentSyncId;
+    this.parentid = item.parentRecordId;
     this.parentName = item.parentTitle;
     if (item.dateAdded) {
       this.dateAdded = item.dateAdded;
@@ -228,7 +228,7 @@ BookmarkFolder.prototype = {
     PlacesItem.prototype.fromSyncBookmark.call(this, item);
     this.title = item.title;
     this.description = item.description;
-    this.children = item.childSyncIds;
+    this.children = item.childRecordIds;
   },
 };
 
@@ -323,7 +323,7 @@ BookmarksEngine.prototype = {
     for (let [node, parent] of walkBookmarksRoots(tree)) {
       await maybeYield();
       let {guid, type: placeType} = node;
-      guid = PlacesSyncUtils.bookmarks.guidToSyncId(guid);
+      guid = PlacesSyncUtils.bookmarks.guidToRecordId(guid);
       let key;
       switch (placeType) {
         case PlacesUtils.TYPE_X_MOZ_PLACE:
@@ -701,10 +701,10 @@ BookmarksStore.prototype = {
     // without aborting further processing.
     let item = await PlacesSyncUtils.bookmarks.insert(info);
     if (item) {
-      this._log.trace(`Created ${item.kind} ${item.syncId} under ${
-        item.parentSyncId}`, item);
+      this._log.trace(`Created ${item.kind} ${item.recordId} under ${
+        item.parentRecordId}`, item);
       if (item.dateAdded != record.dateAdded) {
-        this.engine.addForWeakUpload(item.syncId);
+        this.engine.addForWeakUpload(item.recordId);
       }
     }
   },
@@ -718,21 +718,21 @@ BookmarksStore.prototype = {
     let info = record.toSyncBookmark();
     let item = await PlacesSyncUtils.bookmarks.update(info);
     if (item) {
-      this._log.trace(`Updated ${item.kind} ${item.syncId} under ${
-        item.parentSyncId}`, item);
+      this._log.trace(`Updated ${item.kind} ${item.recordId} under ${
+        item.parentRecordId}`, item);
       if (item.dateAdded != record.dateAdded) {
-        this.engine.addForWeakUpload(item.syncId);
+        this.engine.addForWeakUpload(item.recordId);
       }
     }
   },
 
   async _orderChildren() {
-    for (let syncID in this._childrenToOrder) {
-      let children = this._childrenToOrder[syncID];
+    for (let id in this._childrenToOrder) {
+      let children = this._childrenToOrder[id];
       try {
-        await PlacesSyncUtils.bookmarks.order(syncID, children);
+        await PlacesSyncUtils.bookmarks.order(id, children);
       } catch (ex) {
-        this._log.debug(`Could not order children for ${syncID}`, ex);
+        this._log.debug(`Could not order children for ${id}`, ex);
       }
     }
   },
@@ -804,12 +804,12 @@ BookmarksStore.prototype = {
 
   async GUIDForId(id) {
     let guid = await PlacesUtils.promiseItemGuid(id);
-    return PlacesSyncUtils.bookmarks.guidToSyncId(guid);
+    return PlacesSyncUtils.bookmarks.guidToRecordId(guid);
   },
 
   async idForGUID(guid) {
     // guid might be a String object rather than a string.
-    guid = PlacesSyncUtils.bookmarks.syncIdToGuid(guid.toString());
+    guid = PlacesSyncUtils.bookmarks.recordIdToGuid(guid.toString());
 
     try {
       return await PlacesUtils.promiseItemId(guid);
@@ -941,13 +941,13 @@ BookmarksTracker.prototype = {
     // (though it may be empty), and we've synced before.
     this._log.debug("migrateOldEntries: Migrating old tracker entries");
     let entries = [];
-    for (let syncID in existingIDs) {
-      let change = existingIDs[syncID];
+    for (let id in existingIDs) {
+      let change = existingIDs[id];
       // Allow raw timestamps for backward-compatibility with changed IDs
       // persisted before bug 1274496.
       let timestamp = typeof change == "number" ? change : change.modified;
       entries.push({
-        syncId: syncID,
+        recordId: id,
         modified: timestamp * 1000,
       });
     }

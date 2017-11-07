@@ -23,8 +23,9 @@ class UnscaledFontMac final : public UnscaledFont
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFontMac, override)
-  explicit UnscaledFontMac(CGFontRef aFont)
+  explicit UnscaledFontMac(CGFontRef aFont, bool aIsDataFont = false)
     : mFont(aFont)
+    , mIsDataFont(aIsDataFont)
   {
     CFRetain(mFont);
   }
@@ -51,8 +52,11 @@ public:
                                uint32_t aVariationCount,
                                const FontVariation* aVariations);
 
+  bool GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton) override;
+
 private:
   CGFontRef mFont;
+  bool mIsDataFont;
 };
 
 } // namespace gfx

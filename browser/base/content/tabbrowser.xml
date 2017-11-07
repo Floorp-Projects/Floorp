@@ -6440,8 +6440,6 @@
         document.getElementById("tabContextMenu");
       </field>
 
-      <field name="mTabstripWidth">0</field>
-
       <field name="mTabstrip">
         document.getAnonymousElementByAttribute(this, "anonid", "arrowscrollbox");
       </field>
@@ -6473,13 +6471,15 @@
 
       <method name="updateSessionRestoreVisibility">
         <body><![CDATA[
-          let {restoreTabsButton, restoreTabsButtonWrapperWidth, windowUtils, mTabstripWidth} = this;
+          let {restoreTabsButton, restoreTabsButtonWrapperWidth, windowUtils} = this;
           let restoreTabsButtonWrapper = restoreTabsButton.parentNode;
 
           if (!restoreTabsButtonWrapper.getAttribute("session-exists")) {
             restoreTabsButtonWrapper.removeAttribute("shown");
             return;
           }
+
+          let tabstripWidth = this.mTabstrip.clientWidth;
 
           let newTabButton = document.getAnonymousElementByAttribute(
             this, "anonid", "tabs-newtab-button");
@@ -6495,7 +6495,7 @@
 
           // Subtract the elements' widths from the available space to ensure
           // that showing the restoreTabsButton won't cause any overflow.
-          if ((mTabstripWidth - tabbarUsedSpace) > restoreTabsButtonWrapperWidth) {
+          if (tabstripWidth - tabbarUsedSpace > restoreTabsButtonWrapperWidth) {
             restoreTabsButtonWrapper.setAttribute("shown", "true");
           } else {
             restoreTabsButtonWrapper.removeAttribute("shown");
@@ -7000,14 +7000,9 @@
                 break;
 
               TabsInTitlebar.updateAppearance();
-
-              var width = this.mTabstrip.boxObject.width;
-              if (width != this.mTabstripWidth) {
-                this.adjustTabstrip();
-                this._handleTabSelect(true);
-                this.mTabstripWidth = width;
-                this.updateSessionRestoreVisibility();
-              }
+              this.adjustTabstrip();
+              this._handleTabSelect(true);
+              this.updateSessionRestoreVisibility();
               break;
             case "mouseout":
               // If the "related target" (the node to which the pointer went) is not

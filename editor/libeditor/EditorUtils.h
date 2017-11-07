@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/Selection.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/GuardObjects.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -375,49 +376,22 @@ public:
   }
 };
 
-/******************************************************************************
- * general dom point utility struct
- *****************************************************************************/
-struct MOZ_STACK_CLASS EditorDOMPoint final
-{
-  nsCOMPtr<nsINode> node;
-  int32_t offset;
-
-  EditorDOMPoint()
-    : node(nullptr)
-    , offset(-1)
-  {}
-  EditorDOMPoint(nsINode* aNode, int32_t aOffset)
-    : node(aNode)
-    , offset(aOffset)
-  {}
-  EditorDOMPoint(nsIDOMNode* aNode, int32_t aOffset)
-    : node(do_QueryInterface(aNode))
-    , offset(aOffset)
-  {}
-
-  void SetPoint(nsINode* aNode, int32_t aOffset)
-  {
-    node = aNode;
-    offset = aOffset;
-  }
-  void SetPoint(nsIDOMNode* aNode, int32_t aOffset)
-  {
-    node = do_QueryInterface(aNode);
-    offset = aOffset;
-  }
-};
-
 class EditorUtils final
 {
 public:
-  // Note that aChild isn't a normal XPCOM outparam and won't get AddRef'ed.
-  static bool IsDescendantOf(nsINode* aNode, nsINode* aParent,
-                             nsIContent** aChild);
-  static bool IsDescendantOf(nsINode* aNode, nsINode* aParent,
-                             int32_t* aOffset = nullptr);
-  static bool IsDescendantOf(nsIDOMNode* aNode, nsIDOMNode* aParent,
-                             int32_t* aOffset = nullptr);
+  /**
+   * IsDescendantOf() checks if aNode is a child or a descendant of aParent.
+   * aOutPoint is set to the child of aParent.
+   *
+   * @return            true if aNode is a child or a descendant of aParent.
+   */
+  static bool IsDescendantOf(const nsINode& aNode,
+                             const nsINode& aParent,
+                             EditorRawDOMPoint* aOutPoint = nullptr);
+  static bool IsDescendantOf(const nsINode& aNode,
+                             const nsINode& aParent,
+                             EditorDOMPoint* aOutPoint);
+
   static bool IsLeafNode(nsIDOMNode* aNode);
 };
 

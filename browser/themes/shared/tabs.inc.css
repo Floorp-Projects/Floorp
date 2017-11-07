@@ -199,7 +199,7 @@ tabbrowser {
 }
 
 #TabsToolbar[brighttext] .tabbrowser-tab:not([visuallyselected=true]) {
-  --tab-loading-fill: #fff;
+  --tab-loading-fill: #bbbbff;
 }
 
 #tabbrowser-tabs[schedulepressure] .tab-throbber,

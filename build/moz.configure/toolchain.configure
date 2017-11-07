@@ -57,12 +57,12 @@ def yasm_version(yasm):
     return Version(version)
 
 
-@depends(yasm_version)
+@depends_if(yasm_version)
 def yasm_major_version(yasm_version):
     return str(yasm_version.major)
 
 
-@depends(yasm_version)
+@depends_if(yasm_version)
 def yasm_minor_version(yasm_version):
     return str(yasm_version.minor)
 
@@ -199,8 +199,8 @@ set_config('XCODE_PATH', xcode_path)
 option('--with-compiler-wrapper', env='COMPILER_WRAPPER', nargs=1,
        help='Enable compiling with wrappers such as distcc and ccache')
 
-js_option('--with-ccache', env='CCACHE', nargs='?',
-          help='Enable compiling with ccache')
+option('--with-ccache', env='CCACHE', nargs='?',
+       help='Enable compiling with ccache')
 
 
 @depends_if('--with-ccache')
@@ -1224,19 +1224,6 @@ set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
 set_config('VISIBILITY_FLAGS', visibility_flags)
 
 
-@depends(c_compiler, using_sccache)
-def depend_cflags(info, using_sccache):
-    if info.type not in ('clang-cl', 'msvc'):
-        return '-MD -MP -MF $(MDDEPDIR)/$(@F).pp'
-    elif using_sccache:
-        # sccache supports a special flag to create depfiles
-        # by parsing MSVC's -showIncludes output.
-        return '-deps$(MDDEPDIR)/$(@F).pp'
-
-
-set_config('_DEPEND_CFLAGS', depend_cflags)
-
-
 @depends(c_compiler)
 @imports('multiprocessing')
 @imports(_from='__builtin__', _import='min')
@@ -1508,8 +1495,8 @@ def select_linker(linker, c_compiler, developer_options, build_env, toolchain_fl
         version_check = ['-Wl,--version']
         cmd_base = c_compiler.wrapper + \
             [c_compiler.compiler] + c_compiler.flags
-        lld = "-fuse-ld=" + linker
-        cmd = cmd_base + [lld] + version_check
+        lld = ["-fuse-ld=" + linker]
+        cmd = cmd_base + lld + version_check
         if 'LLD' in check_cmd_output(*cmd).decode('utf-8'):
             return namespace(
                 KIND='lld',

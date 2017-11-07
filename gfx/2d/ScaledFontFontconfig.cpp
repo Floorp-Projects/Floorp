@@ -463,26 +463,33 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
 }
 
 already_AddRefed<UnscaledFont>
-UnscaledFontFontconfig::CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength)
+UnscaledFontFontconfig::CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex)
 {
-  if (aDataLength < sizeof(FontDescriptor)) {
+  if (aDataLength <= 1) {
     gfxWarning() << "Fontconfig font descriptor is truncated.";
     return nullptr;
   }
-  const FontDescriptor* desc = reinterpret_cast<const FontDescriptor*>(aData);
-  if (desc->mPathLength < 1 ||
-      desc->mPathLength > aDataLength - sizeof(FontDescriptor)) {
-    gfxWarning() << "Pathname in Fontconfig font descriptor has invalid size.";
-    return nullptr;
-  }
-  const char* path = reinterpret_cast<const char*>(aData + sizeof(FontDescriptor));
-  if (path[desc->mPathLength - 1] != '\0') {
+  const char* path = reinterpret_cast<const char*>(aData);
+  if (path[aDataLength - 1] != '\0') {
     gfxWarning() << "Pathname in Fontconfig font descriptor is not terminated.";
     return nullptr;
   }
 
-  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontFontconfig(path, desc->mIndex);
+  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontFontconfig(path, aIndex);
   return unscaledFont.forget();
+}
+
+bool
+UnscaledFontFontconfig::GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton)
+{
+  if (mFile.empty()) {
+    return false;
+  }
+
+  const char* path = mFile.c_str();
+  size_t pathLength = strlen(path);
+  aCb(reinterpret_cast<const uint8_t*>(path), pathLength, 0, aBaton);
+  return true;
 }
 
 } // namespace gfx

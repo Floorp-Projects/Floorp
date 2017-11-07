@@ -1524,7 +1524,11 @@ class CreditCards extends AutofillRecords {
   }
 
   _normalizeFields(creditCard) {
-    // Normalize name
+    this._normalizeCCName(creditCard);
+    this._normalizeCCExpirationDate(creditCard);
+  }
+
+  _normalizeCCName(creditCard) {
     if (creditCard["cc-given-name"] || creditCard["cc-additional-name"] || creditCard["cc-family-name"]) {
       if (!creditCard["cc-name"]) {
         creditCard["cc-name"] = FormAutofillNameUtils.joinNameParts({
@@ -1538,8 +1542,9 @@ class CreditCards extends AutofillRecords {
       delete creditCard["cc-additional-name"];
       delete creditCard["cc-family-name"];
     }
+  }
 
-    // Validate expiry date
+  _normalizeCCExpirationDate(creditCard) {
     if (creditCard["cc-exp-month"]) {
       let expMonth = parseInt(creditCard["cc-exp-month"], 10);
       if (isNaN(expMonth) || expMonth < 1 || expMonth > 12) {
@@ -1548,6 +1553,7 @@ class CreditCards extends AutofillRecords {
         creditCard["cc-exp-month"] = expMonth;
       }
     }
+
     if (creditCard["cc-exp-year"]) {
       let expYear = parseInt(creditCard["cc-exp-year"], 10);
       if (isNaN(expYear) || expYear < 0) {
@@ -1559,6 +1565,65 @@ class CreditCards extends AutofillRecords {
         creditCard["cc-exp-year"] = expYear;
       }
     }
+
+    if (creditCard["cc-exp"] && (!creditCard["cc-exp-month"] || !creditCard["cc-exp-year"])) {
+      let rules = [
+        {
+          regex: "(\\d{4})[-/](\\d{1,2})",
+          yearIndex: 1,
+          monthIndex: 2,
+        },
+        {
+          regex: "(\\d{1,2})[-/](\\d{4})",
+          yearIndex: 2,
+          monthIndex: 1,
+        },
+        {
+          regex: "(\\d{1,2})[-/](\\d{1,2})",
+        },
+        {
+          regex: "(\\d{2})(\\d{2})",
+        },
+      ];
+
+      for (let rule of rules) {
+        let result = new RegExp(`(?:^|\\D)${rule.regex}(?!\\d)`).exec(creditCard["cc-exp"]);
+        if (!result) {
+          continue;
+        }
+
+        let expYear, expMonth;
+
+        if (!rule.yearIndex || !rule.monthIndex) {
+          expMonth = parseInt(result[1], 10);
+          if (expMonth > 12) {
+            expYear = parseInt(result[1], 10);
+            expMonth = parseInt(result[2], 10);
+          } else {
+            expYear = parseInt(result[2], 10);
+          }
+        } else {
+          expYear = parseInt(result[rule.yearIndex], 10);
+          expMonth = parseInt(result[rule.monthIndex], 10);
+        }
+
+        if (expMonth < 1 || expMonth > 12) {
+          continue;
+        }
+
+        if (expYear < 100) {
+          expYear += 2000;
+        } else if (expYear < 2000) {
+          continue;
+        }
+
+        creditCard["cc-exp-month"] = expMonth;
+        creditCard["cc-exp-year"] = expYear;
+        break;
+      }
+    }
+
+    delete creditCard["cc-exp"];
   }
 }
 
