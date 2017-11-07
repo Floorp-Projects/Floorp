@@ -1086,10 +1086,18 @@ HTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
   rv = CreateBR(selNode, selOffset, outBRNode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // position selection after br
-  selNode = GetNodeLocation(*outBRNode, &selOffset);
   selection->SetInterlinePosition(true);
-  return selection->Collapse(selNode, selOffset+1);
+
+  // position selection after br
+  nsCOMPtr<nsINode> brNode = do_QueryInterface(*outBRNode);
+  if (NS_WARN_IF(!brNode)) {
+    return NS_ERROR_FAILURE;
+  }
+  EditorRawDOMPoint afterBrNode(brNode);
+  if (NS_WARN_IF(!afterBrNode.AdvanceOffset())) {
+    return NS_ERROR_FAILURE;
+  }
+  return selection->Collapse(afterBrNode);
 }
 
 void
@@ -1692,9 +1700,12 @@ HTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
   nsresult rv = aElement->GetParentNode(getter_AddRefs(parent));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
-  int32_t offsetInParent = GetChildOffset(aElement, parent);
   // Collapse selection to just after desired element,
-  return selection->Collapse(parent, offsetInParent + 1);
+  EditorRawDOMPoint afterElement(element);
+  if (NS_WARN_IF(!afterElement.AdvanceOffset())) {
+    return NS_ERROR_FAILURE;
+  }
+  return selection->Collapse(afterElement);
 }
 
 NS_IMETHODIMP
