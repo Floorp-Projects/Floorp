@@ -229,8 +229,6 @@ struct sslSocketOpsStr {
 #define ssl_SEND_FLAG_FORCE_INTO_BUFFER 0x40000000
 #define ssl_SEND_FLAG_NO_BUFFER 0x20000000
 #define ssl_SEND_FLAG_NO_RETRANSMIT 0x08000000 /* DTLS only */
-#define ssl_SEND_FLAG_CAP_RECORD_VERSION \
-    0x04000000 /* TLS only */
 #define ssl_SEND_FLAG_MASK 0x7f000000
 
 /*
@@ -500,6 +498,7 @@ struct ssl3CipherSpecStr {
     sslSequenceNumber write_seq_num;
     sslSequenceNumber read_seq_num;
     SSL3ProtocolVersion version;
+    SSL3ProtocolVersion recordVersion;
     ssl3KeyMaterial client;
     ssl3KeyMaterial server;
     SECItem msItem;
@@ -608,6 +607,8 @@ struct sslSessionIDStr {
             /* The NPN/ALPN value negotiated in the original connection.
              * Used for TLS 1.3. */
             SECItem alpnSelection;
+
+            PRBool altHandshakeType;
 
             /* This lock is lazily initialized by CacheSID when a sid is first
              * cached. Before then, there is no need to lock anything because
@@ -886,7 +887,8 @@ typedef struct SSL3HandshakeStateStr {
     ssl3KEADef kea_def_mutable;     /* Used to hold the writable kea_def
                                      * we use for TLS 1.3 */
     PRBool shortHeaders;            /* Assigned if we are doing short headers. */
-    PRBool altHandshakeType;        /* Assigned if we are doing the wrapped handshake. */
+    PRBool altHandshakeType;        /* Alternative ServerHello content type. */
+    SECItem fakeSid;                /* ... (server) the SID the client used. */
 } SSL3HandshakeState;
 
 /*
@@ -1022,6 +1024,7 @@ typedef struct SessionTicketStr {
     PRUint32 flags;
     SECItem srvName; /* negotiated server name */
     SECItem alpnSelection;
+    PRBool altHandshakeType;
     PRUint32 maxEarlyData;
 } SessionTicket;
 
@@ -1653,6 +1656,10 @@ extern SECStatus ssl_ClientReadVersion(sslSocket *ss, PRUint8 **b,
 extern SECStatus ssl3_NegotiateVersion(sslSocket *ss,
                                        SSL3ProtocolVersion peerVersion,
                                        PRBool allowLargerPeerVersion);
+extern SECStatus ssl_ClientSetCipherSuite(sslSocket *ss,
+                                          SSL3ProtocolVersion version,
+                                          ssl3CipherSuite suite,
+                                          PRBool initHashes);
 
 extern SECStatus ssl_GetPeerInfo(sslSocket *ss);
 
@@ -1826,6 +1833,7 @@ SECStatus ssl3_CompleteHandleCertificateRequest(
     sslSocket *ss, const SSLSignatureScheme *signatureSchemes,
     unsigned int signatureSchemeCount, CERTDistNames *ca_list);
 SECStatus ssl3_SendServerHello(sslSocket *ss);
+SECStatus ssl3_SendChangeCipherSpecsInt(sslSocket *ss);
 SECStatus ssl3_ComputeHandshakeHashes(sslSocket *ss,
                                       ssl3CipherSpec *spec,
                                       SSL3Hashes *hashes,
