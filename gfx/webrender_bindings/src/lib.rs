@@ -13,6 +13,9 @@ extern crate rayon;
 extern crate thread_profiler;
 extern crate log;
 
+#[cfg(target_os = "windows")]
+extern crate dwrote;
+
 #[allow(non_snake_case)]
 pub mod bindings;
 pub mod moz2d_renderer;
