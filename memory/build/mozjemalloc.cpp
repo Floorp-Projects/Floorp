@@ -514,25 +514,6 @@ static Atomic<size_t, ReleaseAcquire> gRecycledSize;
 
 static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
 
-// RUN_MAX_OVRHD indicates maximum desired run header overhead.  Runs are sized
-// as small as possible such that this setting is still honored, without
-// violating other constraints.  The goal is to make runs as small as possible
-// without exceeding a per run external fragmentation threshold.
-//
-// We use binary fixed point math for overhead computations, where the binary
-// point is implicitly RUN_BFP bits to the left.
-//
-// Note that it is possible to set RUN_MAX_OVRHD low enough that it cannot be
-// honored for some/all object sizes, since there is one bit of header overhead
-// per object (plus a constant).  This constraint is relaxed (ignored) for runs
-// that are so small that the per-region overhead is greater than:
-//
-//   (RUN_MAX_OVRHD / (reg_size << (3+RUN_BFP))
-#define RUN_BFP 12
-//                                    \/   Implicit binary fixed point.
-#define RUN_MAX_OVRHD 0x0000003dU
-#define RUN_MAX_OVRHD_RELAX 0x00001800U
-
 // Return the smallest chunk multiple that is >= s.
 #define CHUNK_CEILING(s) (((s) + kChunkSizeMask) & ~kChunkSizeMask)
 
@@ -3019,15 +3000,23 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
       break;
     }
 
-    // This doesn't match the comment above RUN_MAX_OVRHD_RELAX.
-    if (RUN_MAX_OVRHD * (bin->mSizeClass << 3) <= RUN_MAX_OVRHD_RELAX) {
-      break;
-    }
-
     // Try to keep the run overhead below kRunOverhead.
     if (Fraction(try_reg0_offset, try_run_size) <= arena_bin_t::kRunOverhead) {
       break;
     }
+
+    // The run header includes one bit per region of the given size. For sizes
+    // small enough, the number of regions is large enough that growing the run
+    // size barely moves the needle for the overhead because of all those bits.
+    // For example, for a size of 8 bytes, adding 4KiB to the run size adds
+    // close to 512 bits to the header, which is 64 bytes.
+    // With such overhead, there is no way to get to the wanted overhead above,
+    // so we give up if the required size for regs_mask more than doubles the
+    // size of the run header.
+    if (try_mask_nelms * sizeof(unsigned) >= sizeof(arena_run_t)) {
+      break;
+    }
+
   }
 
   MOZ_ASSERT(sizeof(arena_run_t) + (sizeof(unsigned) * (good_mask_nelms - 1)) <=
