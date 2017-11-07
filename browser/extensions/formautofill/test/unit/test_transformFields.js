@@ -567,6 +567,35 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
 
+  // Card Number
+  {
+    description: "Regular number",
+    creditCard: {
+      "cc-number": "1234123412341234",
+    },
+    expectedResult: {
+      "cc-number": "1234123412341234",
+    },
+  },
+  {
+    description: "Number with spaces",
+    creditCard: {
+      "cc-number": "1234 1234  1234 1234",
+    },
+    expectedResult: {
+      "cc-number": "1234123412341234",
+    },
+  },
+  {
+    description: "Number with hyphens",
+    creditCard: {
+      "cc-number": "1234-1234-1234-1234",
+    },
+    expectedResult: {
+      "cc-number": "1234123412341234",
+    },
+  },
+
   // Expiration Date
   {
     description: "Has \"cc-exp\" formatted \"yyyy-mm\"",
