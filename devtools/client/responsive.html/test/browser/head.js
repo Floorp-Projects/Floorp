@@ -261,7 +261,7 @@ const selectDevice = (ui, value) => Promise.all([
 ]);
 
 const selectDPR = (ui, value) =>
-  changeSelectValue(ui, "#global-dpr-selector > select", value);
+  changeSelectValue(ui, "#global-dpr-selector", value);
 
 const selectNetworkThrottling = (ui, value) => Promise.all([
   once(ui, "network-throttling-changed"),
