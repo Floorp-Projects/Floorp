@@ -701,7 +701,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     'abs_res_dir': abs_res_dir,
                 }
                 options_list = []
-                env = {}
+                env = {
+                    'TEST_SUITE': suite
+                }
                 if isinstance(suites[suite], dict):
                     options_list = suites[suite].get('options', [])
                     if self.config.get('verify') is True:
