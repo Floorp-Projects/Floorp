@@ -9,6 +9,7 @@ import json
 import os
 import platform
 import re
+import shutil
 import subprocess
 import sys
 from distutils.version import LooseVersion
@@ -53,7 +54,15 @@ CARET_VERSION_RANGE_RE = re.compile(r"^\^((\d+)\.\d+\.\d+)$")
 project_root = None
 
 
-def eslint_setup():
+def eslint_maybe_setup():
+    """Setup ESLint only if it is needed."""
+    has_issues, needs_clobber = eslint_module_needs_setup()
+
+    if has_issues:
+        eslint_setup(needs_clobber)
+
+
+def eslint_setup(should_clobber=False):
     """Ensure eslint is optimally configured.
 
     This command will inspect your eslint configuration and
@@ -65,7 +74,13 @@ def eslint_setup():
 
     # npm sometimes fails to respect cwd when it is run using check_call so
     # we manually switch folders here instead.
-    os.chdir(get_project_root())
+    project_root = get_project_root()
+    os.chdir(project_root)
+
+    if should_clobber:
+        node_modules_path = os.path.join(project_root, "node_modules")
+        print("Clobbering node_modules...")
+        shutil.rmtree(node_modules_path)
 
     npm_path = get_node_or_npm_path("npm")
     if not npm_path:
@@ -151,6 +166,7 @@ def check_eslint_files(node_modules_path, name):
 
 def eslint_module_needs_setup():
     has_issues = False
+    needs_clobber = False
     node_modules_path = os.path.join(get_project_root(), "node_modules")
 
     for name, expected_data in expected_eslint_modules().iteritems():
@@ -176,12 +192,18 @@ def eslint_module_needs_setup():
             # these are symlinked, so we'll always pick up the latest.
             continue
 
+        if name == "eslint" and LooseVersion("4.0.0") > LooseVersion(data["version"]):
+            print("ESLint is an old version, clobbering node_modules directory")
+            needs_clobber = True
+            has_issues = True
+            continue
+
         if not version_in_range(data["version"], version_range):
             print("%s v%s should be v%s." % (name, data["version"], version_range))
             has_issues = True
             continue
 
-    return has_issues
+    return has_issues, needs_clobber
 
 
 def version_in_range(version, version_range):
