@@ -66,6 +66,7 @@ InsertNodeTransaction::DoTransaction()
 
   ErrorResult rv;
   mParent->InsertBefore(*mNode, ref, rv);
+  rv.WouldReportJSException();
   NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
 
   // Only set selection to insertion point if editor gives permission
