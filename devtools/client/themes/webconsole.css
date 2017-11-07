@@ -23,6 +23,10 @@ a {
  * assertion when loading HTML page with links in XUL iframe */
 *:visited { }
 
+* {
+  box-sizing: border-box;
+}
+
 .message {
   display: flex;
   padding: 0 7px;
