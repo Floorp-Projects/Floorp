@@ -1523,12 +1523,11 @@ class CreditCards extends AutofillRecords {
 
     // Encrypt credit card number
     if (!("cc-number-encrypted" in creditCard)) {
-      let ccNumber = (creditCard["cc-number"] || "").replace(/\s/g, "");
-      if (FormAutofillUtils.isCCNumber(ccNumber)) {
+      if ("cc-number" in creditCard) {
+        let ccNumber = creditCard["cc-number"];
         creditCard["cc-number"] = this._getMaskedCCNumber(ccNumber);
         creditCard["cc-number-encrypted"] = MasterPassword.encryptSync(ccNumber);
       } else {
-        delete creditCard["cc-number"];
         creditCard["cc-number-encrypted"] = "";
       }
     }
@@ -1545,6 +1544,7 @@ class CreditCards extends AutofillRecords {
 
   _normalizeFields(creditCard) {
     this._normalizeCCName(creditCard);
+    this._normalizeCCNumber(creditCard);
     this._normalizeCCExpirationDate(creditCard);
   }
 
@@ -1561,6 +1561,15 @@ class CreditCards extends AutofillRecords {
       delete creditCard["cc-given-name"];
       delete creditCard["cc-additional-name"];
       delete creditCard["cc-family-name"];
+    }
+  }
+
+  _normalizeCCNumber(creditCard) {
+    if (creditCard["cc-number"]) {
+      creditCard["cc-number"] = FormAutofillUtils.normalizeCCNumber(creditCard["cc-number"]);
+      if (!creditCard["cc-number"]) {
+        delete creditCard["cc-number"];
+      }
     }
   }
 
