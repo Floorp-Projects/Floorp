@@ -268,12 +268,17 @@ class apply_jsone_templates(object):
                     'taskId': task.task_id,
                     'kind': task.kind,
                     'input': self.templates[template],
+                    # The following context differs from action tasks
+                    'attributes': task.attributes,
                 }
 
                 template_path = os.path.join(self.template_dir, template + '.yml')
                 with open(template_path) as f:
                     template = yaml.load(f)
-                task.task = jsone.render(template, context)
+                result = jsone.render(template, context) or {}
+                for attr in ('task', 'attributes'):
+                    if attr in result:
+                        setattr(task, attr, result[attr])
 
         return taskgraph, label_to_taskid
 
