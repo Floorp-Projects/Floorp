@@ -264,7 +264,9 @@ public:
   // the starting offset is known via NotifyDataStarted or because
   // the cache requested the offset in
   // ChannelMediaResource::CacheClientSeek, or because it defaulted to 0.
-  void NotifyDataReceived(uint32_t aLoadID, int64_t aSize, const char* aData);
+  void NotifyDataReceived(uint32_t aLoadID,
+                          uint32_t aCount,
+                          const uint8_t* aData);
   // Notifies the cache that the current bytes should be written to disk.
   // Called on the main thread.
   void FlushPartialBlock();

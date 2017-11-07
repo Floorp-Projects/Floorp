@@ -133,14 +133,11 @@ const loadListener = {
     }
 
     if (waitForUnloaded) {
-      addEventListener("hashchange", this, false);
-      addEventListener("pagehide", this, false);
-      addEventListener("popstate", this, false);
-
-      // The events can only be received when the event listeners are
-      // added to the currently selected frame.
-      curContainer.frame.addEventListener("beforeunload", this);
-      curContainer.frame.addEventListener("unload", this);
+      addEventListener("beforeunload", this, true);
+      addEventListener("hashchange", this, true);
+      addEventListener("pagehide", this, true);
+      addEventListener("popstate", this, true);
+      addEventListener("unload", this, true);
 
       Services.obs.addObserver(this, "outer-window-destroyed");
 
@@ -160,8 +157,8 @@ const loadListener = {
         return;
       }
 
-      addEventListener("DOMContentLoaded", loadListener);
-      addEventListener("pageshow", loadListener);
+      addEventListener("DOMContentLoaded", loadListener, true);
+      addEventListener("pageshow", loadListener, true);
     }
 
     this.timerPageLoad.initWithCallback(
@@ -180,22 +177,13 @@ const loadListener = {
       this.timerPageUnload.cancel();
     }
 
-    removeEventListener("hashchange", this);
-    removeEventListener("pagehide", this);
-    removeEventListener("popstate", this);
-    removeEventListener("DOMContentLoaded", this);
-    removeEventListener("pageshow", this);
-
-    // If the original content window, where the navigation was triggered,
-    // doesn't exist anymore, exceptions can be silently ignored.
-    try {
-      curContainer.frame.removeEventListener("beforeunload", this);
-      curContainer.frame.removeEventListener("unload", this);
-    } catch (e) {
-      if (e.name != "TypeError") {
-        throw e;
-      }
-    }
+    removeEventListener("beforeunload", this, true);
+    removeEventListener("hashchange", this, true);
+    removeEventListener("pagehide", this, true);
+    removeEventListener("popstate", this, true);
+    removeEventListener("DOMContentLoaded", this, true);
+    removeEventListener("pageshow", this, true);
+    removeEventListener("unload", this, true);
 
     // In case the observer was added before the frame script has been
     // reloaded, it will no longer be available. Exceptions can be ignored.
@@ -230,13 +218,13 @@ const loadListener = {
       case "pagehide":
         this.seenUnload = true;
 
-        removeEventListener("hashchange", this);
-        removeEventListener("pagehide", this);
-        removeEventListener("popstate", this);
+        removeEventListener("hashchange", this, true);
+        removeEventListener("pagehide", this, true);
+        removeEventListener("popstate", this, true);
 
         // Now wait until the target page has been loaded
-        addEventListener("DOMContentLoaded", this, false);
-        addEventListener("pageshow", this, false);
+        addEventListener("DOMContentLoaded", this, true);
+        addEventListener("pageshow", this, true);
         break;
 
       case "hashchange":

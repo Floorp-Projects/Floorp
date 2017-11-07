@@ -73,6 +73,10 @@
                 "type": "string",
                 "optional": true
               },
+              "bookmark_text": {
+                "type": "string",
+                "optional": true
+              },
               "toolbar_field": {
                 "type": "string",
                 "optional": true

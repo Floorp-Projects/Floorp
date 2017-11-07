@@ -48,14 +48,17 @@ class FakeKind(Kind):
 
 class WithFakeKind(TaskGraphGenerator):
 
-    def _load_kinds(self):
+    def _load_kinds(self, graph_config):
         for kind_name, cfg in self.parameters['_kinds']:
             config = {
                 'transforms': [],
             }
             if cfg:
                 config.update(cfg)
-            yield FakeKind(kind_name, '/fake', config)
+            yield FakeKind(kind_name, '/fake', config, graph_config)
+
+    def _load_graph_config(self):
+        return {}
 
 
 class FakeParameters(dict):
@@ -88,7 +91,7 @@ class TestGenerator(unittest.TestCase):
         FakeKind.loaded_kinds = []
         self.target_tasks = target_tasks or []
 
-        def target_tasks_method(full_task_graph, parameters):
+        def target_tasks_method(full_task_graph, parameters, graph_config):
             return self.target_tasks
 
         def make_fake_strategies():

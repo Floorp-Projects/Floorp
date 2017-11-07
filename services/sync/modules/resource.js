@@ -173,6 +173,8 @@ Resource.prototype = {
   _doRequest(action, data) {
     this._log.trace("In _doRequest.");
     return new Promise((resolve, reject) => {
+      // Don't bother starting a network request if we're shutting down.
+      Async.checkAppReady();
       this._deferred = { resolve, reject };
       let channel = this._createRequest(action);
 

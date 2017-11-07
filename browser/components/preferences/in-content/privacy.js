@@ -1056,7 +1056,7 @@ var gPrivacyPane = {
     let blockUncommonPref = document.getElementById("browser.safebrowsing.downloads.remote.block_uncommon");
 
     let learnMoreLink = document.getElementById("enableSafeBrowsingLearnMore");
-    let phishingUrl = "https://support.mozilla.org/kb/how-does-phishing-and-malware-protection-work";
+    let phishingUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "phishing-malware";
     learnMoreLink.setAttribute("href", phishingUrl);
 
     enableSafeBrowsing.addEventListener("command", function() {

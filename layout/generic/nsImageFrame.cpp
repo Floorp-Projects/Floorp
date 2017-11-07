@@ -1443,7 +1443,8 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
     uint32_t imageStatus = 0;
     if (request)
       request->GetImageStatus(&imageStatus);
-    if (imageStatus & imgIRequest::STATUS_LOAD_COMPLETE) {
+    if (imageStatus & imgIRequest::STATUS_LOAD_COMPLETE &&
+        !(imageStatus & imgIRequest::STATUS_ERROR)) {
       nsCOMPtr<imgIContainer> imgCon;
       request->GetImage(getter_AddRefs(imgCon));
       MOZ_ASSERT(imgCon, "Load complete, but no image container?");

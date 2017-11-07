@@ -135,6 +135,9 @@ class Theme {
           this.lwtStyles.toolbarColor = cssColor;
           break;
         case "toolbar_text":
+        case "bookmark_text":
+          this.lwtStyles.toolbar_text = cssColor;
+          break;
         case "toolbar_field":
         case "toolbar_field_text":
         case "toolbar_top_separator":
