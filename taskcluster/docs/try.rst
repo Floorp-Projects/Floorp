@@ -114,6 +114,8 @@ The context available to the JSON-e render contains attributes from the
     {
       "attributes": task.attributes,
       "kind": task.kind,
+      "label": task.label,
+      "target_tasks": [<tasks from try_task_config.json>],
       "task": task.task,
       "taskId": task.task_id,
       "input": ...
