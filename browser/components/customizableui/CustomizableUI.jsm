@@ -159,8 +159,6 @@ var gUIStateBeforeReset = {
   autoTouchMode: null,
 };
 
-var gDefaultPanelPlacements = null;
-
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let scope = {};
   Cu.import("resource://gre/modules/Console.jsm", scope);
@@ -1648,10 +1646,7 @@ var CustomizableUIInternal = {
   },
 
   _getPanelForNode(aNode) {
-    let panel = aNode;
-    while (panel && panel.localName != "panel")
-      panel = panel.parentNode;
-    return panel;
+    return aNode.closest("panel");
   },
 
   /*
@@ -2960,11 +2955,6 @@ var CustomizableUIInternal = {
 Object.freeze(CustomizableUIInternal);
 
 this.CustomizableUI = {
-  /**
-   * Constant reference to the ID of the menu panel.
-   * DEPRECATED.
-   */
-  AREA_PANEL: "PanelUI-contents",
   /**
    * Constant reference to the ID of the navigation toolbar.
    */
