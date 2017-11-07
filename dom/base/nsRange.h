@@ -220,7 +220,11 @@ public:
    */
   nsresult CollapseTo(nsINode* aContainer, uint32_t aOffset)
   {
-    return SetStartAndEnd(aContainer, aOffset, aContainer, aOffset);
+    return CollapseTo(RawRangeBoundary(aContainer, aOffset));
+  }
+  nsresult CollapseTo(const RawRangeBoundary& aPoint)
+  {
+    return SetStartAndEnd(aPoint, aPoint);
   }
 
   /**
