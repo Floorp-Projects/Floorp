@@ -69,7 +69,6 @@
 #include "GeckoNetworkManager.h"
 #include "GeckoProcessManager.h"
 #include "GeckoScreenOrientation.h"
-#include "GeckoVRManager.h"
 #include "PrefsHelper.h"
 #include "fennec/MemoryMonitor.h"
 #include "fennec/Telemetry.h"
@@ -408,7 +407,6 @@ nsAppShell::nsAppShell()
         mozilla::GeckoProcessManager::Init();
         mozilla::GeckoScreenOrientation::Init();
         mozilla::PrefsHelper::Init();
-        mozilla::GeckoVRManager::Init();
         nsWindow::InitNatives();
 
         if (jni::IsFennec()) {
