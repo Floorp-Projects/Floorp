@@ -116,6 +116,7 @@ public:
     GetNodeValue(aTextContent);
   }
   virtual void SetTextContentInternal(const nsAString& aTextContent,
+                                      nsIPrincipal* aSubjectPrincipal,
                                       mozilla::ErrorResult& aError) override
   {
     // Batch possible DOMSubtreeModified events.
