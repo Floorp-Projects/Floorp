@@ -71,6 +71,10 @@ public final class EventDispatcher extends JNIObject {
         mNativeQueue = queue;
     }
 
+    public NativeQueue getNativeQueue() {
+        return mNativeQueue;
+    }
+
     private boolean isReadyForDispatchingToGecko() {
         return mNativeQueue.isReady();
     }
