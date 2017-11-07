@@ -8,7 +8,6 @@
 #define mozilla_dom_HTMLSourceElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMHTMLSourceElement.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 
@@ -19,8 +18,7 @@ namespace dom {
 
 class MediaList;
 
-class HTMLSourceElement final : public nsGenericHTMLElement,
-                                public nsIDOMHTMLSourceElement
+class HTMLSourceElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLSourceElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -31,9 +29,6 @@ public:
                                            nsGenericHTMLElement)
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLSourceElement, source)
-
-  // nsIDOMHTMLSourceElement
-  NS_DECL_NSIDOMHTMLSOURCEELEMENT
 
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
                          bool aPreallocateChildren) const override;
