@@ -1446,6 +1446,13 @@ void wr_resource_updates_add_raw_font(ResourceUpdates *aResources,
 WR_FUNC;
 
 WR_INLINE
+void wr_resource_updates_add_font_descriptor(ResourceUpdates *aResources,
+                                             WrFontKey aKey,
+                                             WrVecU8 *aBytes,
+                                             uint32_t aIndex)
+WR_FUNC;
+
+WR_INLINE
 void wr_resource_updates_clear(ResourceUpdates *aResources)
 WR_FUNC;
 

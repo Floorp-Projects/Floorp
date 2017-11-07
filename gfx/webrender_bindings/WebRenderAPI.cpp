@@ -568,6 +568,12 @@ ResourceUpdateQueue::AddRawFont(wr::FontKey aKey, wr::Vec_u8& aBytes, uint32_t a
 }
 
 void
+ResourceUpdateQueue::AddFontDescriptor(wr::FontKey aKey, wr::Vec_u8& aBytes, uint32_t aIndex)
+{
+  wr_resource_updates_add_font_descriptor(mUpdates, aKey, &aBytes.inner, aIndex);
+}
+
+void
 ResourceUpdateQueue::DeleteFont(wr::FontKey aKey)
 {
   wr_resource_updates_delete_font(mUpdates, aKey);
