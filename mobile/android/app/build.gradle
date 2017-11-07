@@ -173,7 +173,6 @@ android {
                 if (mozconfig.substs.MOZ_ANDROID_DISTRIBUTION_DIRECTORY) {
                     srcDir "${mozconfig.substs.MOZ_ANDROID_DISTRIBUTION_DIRECTORY}/assets"
                 }
-                srcDir "${topsrcdir}/mobile/android/app/assets"
             }
         }
 
