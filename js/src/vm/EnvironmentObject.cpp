@@ -1034,7 +1034,7 @@ LexicalEnvironmentObject::clone(JSContext* cx, Handle<LexicalEnvironmentObject*>
 {
     Rooted<LexicalScope*> scope(cx, &env->scope());
     RootedObject enclosing(cx, &env->enclosingEnvironment());
-    Rooted<LexicalEnvironmentObject*> copy(cx, create(cx, scope, enclosing, gc::TenuredHeap));
+    Rooted<LexicalEnvironmentObject*> copy(cx, create(cx, scope, enclosing, gc::DefaultHeap));
     if (!copy)
         return nullptr;
 
@@ -1052,7 +1052,7 @@ LexicalEnvironmentObject::recreate(JSContext* cx, Handle<LexicalEnvironmentObjec
 {
     Rooted<LexicalScope*> scope(cx, &env->scope());
     RootedObject enclosing(cx, &env->enclosingEnvironment());
-    return create(cx, scope, enclosing, gc::TenuredHeap);
+    return create(cx, scope, enclosing, gc::DefaultHeap);
 }
 
 bool
