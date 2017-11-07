@@ -20,9 +20,7 @@ let windowData, testWindow;
 
 add_task(async function setup() {
   let chromeScript = SpecialPowers.loadChromeScript(function() {
-    let cache = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-                          .getService(Components.interfaces.nsICacheStorageService);
-    cache.clear();
+    Services.cache2.clear();
   });
   chromeScript.destroy();
 

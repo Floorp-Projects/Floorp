@@ -175,7 +175,7 @@ SyncScheduler.prototype = {
 
         let sync_interval;
         this.updateGlobalScore();
-        if (this.globalScore > 0) {
+        if (this.globalScore > 0 && Status.service == STATUS_OK) {
           // The global score should be 0 after a sync. If it's not, items were
           // changed during the last sync, and we should schedule an immediate
           // follow-up sync.

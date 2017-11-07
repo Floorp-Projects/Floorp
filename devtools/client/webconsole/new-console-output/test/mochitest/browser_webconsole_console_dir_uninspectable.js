@@ -8,40 +8,31 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,test for bug 773466";
+const TEST_URI = "data:text/html;charset=utf8,test console.dir on uninspectable object";
+const FIRST_LOG_MESSAGE = "fooBug773466a";
+const SECOND_LOG_MESSAGE = "fooBug773466b";
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
+add_task(async function () {
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = hud;
 
-  let hud = yield openConsole();
+  info("Logging a first message to make sure everything is working");
+  let onLogMessage = waitForMessage(hud, FIRST_LOG_MESSAGE);
+  jsterm.execute(`console.log("${FIRST_LOG_MESSAGE}")`);
+  await onLogMessage;
 
-  hud.jsterm.clearOutput(true);
+  info("console.dir on an uninspectable object");
+  const onDirMessage = waitForMessage(hud, "Object {  }");
+  jsterm.execute("console.dir(Object.create(null))");
+  await onDirMessage;
 
-  hud.jsterm.execute("console.log('fooBug773466a')");
-  hud.jsterm.execute("myObj = Object.create(null)");
-  hud.jsterm.execute("console.dir(myObj)");
-
-  yield waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "fooBug773466a",
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-    },
-    {
-      name: "console.dir output",
-      consoleDir: "[object Object]",
-    }],
+  info("Logging a second message to make sure the console is not broken");
+  onLogMessage = waitForMessage(hud, SECOND_LOG_MESSAGE);
+  // Logging from content to make sure the console API is working.
+  ContentTask.spawn(gBrowser.selectedBrowser, SECOND_LOG_MESSAGE, (string) => {
+    content.console.log(string);
   });
+  await onLogMessage;
 
-  content.console.log("fooBug773466b");
-
-  yield waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "fooBug773466b",
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-    }],
-  });
+  ok(true, "The console.dir call on an uninspectable object did not break the console");
 });

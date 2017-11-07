@@ -13,6 +13,7 @@
 #include "WSRunObject.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CSSEditUtils.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/MathAlgorithms.h"
@@ -2304,9 +2305,11 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
       if (startNode == stepbrother && startNode->GetAsText() &&
           sibling->GetAsText()) {
         EditorDOMPoint pt = JoinNodesSmart(*sibling, *startNode->AsContent());
-        NS_ENSURE_STATE(pt.node);
+        if (NS_WARN_IF(!pt.IsSet())) {
+          return NS_ERROR_FAILURE;
+        }
         // Fix up selection
-        rv = aSelection->Collapse(pt.node, pt.offset);
+        rv = aSelection->Collapse(pt.Container(), pt.Offset());
         NS_ENSURE_SUCCESS(rv, rv);
       }
       rv = InsertBRIfNeeded(aSelection);
@@ -2374,8 +2377,10 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         // Put selection at edge of block and we are done.
         NS_ENSURE_STATE(leafNode);
         EditorDOMPoint newSel = GetGoodSelPointForNode(*leafNode, aAction);
-        NS_ENSURE_STATE(newSel.node);
-        aSelection->Collapse(newSel.node, newSel.offset);
+        if (NS_WARN_IF(!newSel.IsSet())) {
+          return NS_ERROR_FAILURE;
+        }
+        aSelection->Collapse(newSel.Container(), newSel.Offset());
         return NS_OK;
       }
 
@@ -2563,9 +2568,11 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
           NS_ENSURE_STATE(mHTMLEditor);
           EditorDOMPoint pt =
             mHTMLEditor->JoinNodeDeep(*leftParent, *rightParent);
-          NS_ENSURE_STATE(pt.node);
+          if (NS_WARN_IF(!pt.IsSet())) {
+            return NS_ERROR_FAILURE;
+          }
           // Fix up selection
-          rv = aSelection->Collapse(pt.node, pt.offset);
+          rv = aSelection->Collapse(pt.Container(), pt.Offset());
           NS_ENSURE_SUCCESS(rv, rv);
           return NS_OK;
         }
@@ -2772,19 +2779,23 @@ HTMLEditRules::GetGoodSelPointForNode(nsINode& aNode,
                            aAction == nsIEditor::ePreviousWord ||
                            aAction == nsIEditor::eToBeginningOfLine);
 
-  NS_ENSURE_TRUE(mHTMLEditor, EditorDOMPoint());
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return EditorDOMPoint();
+  }
   if (aNode.GetAsText() || mHTMLEditor->IsContainer(&aNode) ||
       NS_WARN_IF(!aNode.GetParentNode())) {
     return EditorDOMPoint(&aNode, isPreviousAction ? aNode.Length() : 0);
   }
 
-  EditorDOMPoint ret;
-  ret.node = aNode.GetParentNode();
-  ret.offset = ret.node ? ret.node->IndexOf(&aNode) : -1;
-  NS_ENSURE_TRUE(mHTMLEditor, EditorDOMPoint());
+  if (NS_WARN_IF(!mHTMLEditor) ||
+      NS_WARN_IF(!aNode.IsContent())) {
+    return EditorDOMPoint();
+  }
+
+  EditorDOMPoint ret(aNode.GetParentNode(), aNode.AsContent());
   if ((!aNode.IsHTMLElement(nsGkAtoms::br) ||
        mHTMLEditor->IsVisibleBRElement(&aNode)) && isPreviousAction) {
-    ret.offset++;
+    ret.AdvanceOffset();
   }
   return ret;
 }
@@ -2847,19 +2858,20 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
   // different lists, join the lists instead.
   bool mergeLists = false;
   nsAtom* existingList = nsGkAtoms::_empty;
-  nsIContent* childInBlock = nullptr;
+  EditorDOMPoint childInBlock;
   nsCOMPtr<Element> leftList, rightList;
   if (HTMLEditUtils::IsListItem(leftBlock) &&
       HTMLEditUtils::IsListItem(rightBlock)) {
     leftList = leftBlock->GetParentElement();
     rightList = rightBlock->GetParentElement();
     if (leftList && rightList && leftList != rightList &&
-        !EditorUtils::IsDescendantOf(leftList, rightBlock, &childInBlock) &&
-        !EditorUtils::IsDescendantOf(rightList, leftBlock, &childInBlock)) {
+        !EditorUtils::IsDescendantOf(*leftList, *rightBlock, &childInBlock) &&
+        !EditorUtils::IsDescendantOf(*rightList, *leftBlock, &childInBlock)) {
       // There are some special complications if the lists are descendants of
       // the other lists' items.  Note that it is okay for them to be
       // descendants of the other lists themselves, which is the usual case for
       // sublists in our implementation.
+      MOZ_DIAGNOSTIC_ASSERT(!childInBlock.IsSet());
       leftBlock = leftList;
       rightBlock = rightList;
       mergeLists = true;
@@ -2869,15 +2881,13 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
 
   AutoTransactionsConserveSelection dontChangeMySelection(htmlEditor);
 
-  int32_t rightOffset = 0;
-  int32_t leftOffset = -1;
-
   // offset below is where you find yourself in rightBlock when you traverse
   // upwards from leftBlock
-  if (EditorUtils::IsDescendantOf(leftBlock, rightBlock, &rightOffset)) {
+  EditorDOMPoint rightBlockChild;
+  if (EditorUtils::IsDescendantOf(*leftBlock, *rightBlock, &rightBlockChild)) {
     // Tricky case.  Left block is inside right block.  Do ws adjustment.  This
     // just destroys non-visible ws at boundaries we will be joining.
-    rightOffset++;
+    rightBlockChild.AdvanceOffset();
     nsresult rv = WSRunObject::ScrubBlockBoundary(htmlEditor,
                                                   WSRunObject::kBlockEnd,
                                                   leftBlock);
@@ -2887,23 +2897,25 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
 
     {
       // We can't just track rightBlock because it's an Element.
-      nsCOMPtr<nsINode> trackingRightBlock(rightBlock);
-      AutoTrackDOMPoint tracker(htmlEditor->mRangeUpdater,
-                                address_of(trackingRightBlock), &rightOffset);
+      AutoTrackDOMPoint tracker(htmlEditor->mRangeUpdater, &rightBlockChild);
       rv = WSRunObject::ScrubBlockBoundary(htmlEditor,
                                            WSRunObject::kAfterBlock,
-                                           rightBlock, rightOffset);
+                                           rightBlock,
+                                           rightBlockChild.Offset());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return EditActionIgnored(rv);
       }
 
-      if (trackingRightBlock->IsElement()) {
-        rightBlock = trackingRightBlock->AsElement();
+      // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
+      //     Do we really need to do update rightBlock here??
+      MOZ_ASSERT(rightBlock == rightBlockChild.Container());
+      if (rightBlockChild.Container()->IsElement()) {
+        rightBlock = rightBlockChild.Container()->AsElement();
       } else {
-        if (NS_WARN_IF(!trackingRightBlock->GetParentElement())) {
+        if (NS_WARN_IF(!rightBlockChild.Container()->GetParentElement())) {
           return EditActionIgnored(NS_ERROR_UNEXPECTED);
         }
-        rightBlock = trackingRightBlock->GetParentElement();
+        rightBlock = rightBlockChild.Container()->GetParentElement();
       }
     }
     // Do br adjustment.
@@ -2913,8 +2925,12 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     if (mergeLists) {
       // The idea here is to take all children in rightList that are past
       // offset, and pull them into leftlist.
-      for (nsCOMPtr<nsIContent> child = childInBlock;
-           child; child = rightList->GetChildAt(rightOffset)) {
+      // XXX Looks like that when mergeLists is true, childInBlock has never
+      //     been set.  So, this block must be dead code.
+      MOZ_DIAGNOSTIC_ASSERT(childInBlock.IsSet());
+      uint32_t offset = rightBlockChild.Offset();
+      for (nsCOMPtr<nsIContent> child = childInBlock.GetChildAtOffset();
+           child; child = rightList->GetChildAt(offset)) {
         rv = htmlEditor->MoveNode(child, leftList, -1);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return EditActionIgnored(rv);
@@ -2922,13 +2938,21 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
       }
       // XXX Should this set to true only when above for loop moves the node?
       ret.MarkAsHandled();
+      // childInBlock and rightBlockChild were moved to leftList.  So, they
+      // are now invalid.
+      rightBlockChild.Clear();
+      childInBlock.Clear();
     } else {
       // XXX Why do we ignore the result of MoveBlock()?
       EditActionResult retMoveBlock =
-        MoveBlock(*leftBlock, *rightBlock, leftOffset, rightOffset);
+        MoveBlock(*leftBlock, *rightBlock,
+                  -1, rightBlockChild.Offset());
       if (retMoveBlock.Handled()) {
         ret.MarkAsHandled();
       }
+      // Now, all children of rightBlock were moved to leftBlock.  So,
+      // rightBlockChild is now invalid.
+      rightBlockChild.Clear();
     }
     if (brNode && NS_SUCCEEDED(htmlEditor->DeleteNode(brNode))) {
       ret.MarkAsHandled();
@@ -2936,9 +2960,12 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     return ret;
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(!rightBlockChild.IsSet());
+
   // Offset below is where you find yourself in leftBlock when you traverse
   // upwards from rightBlock
-  if (EditorUtils::IsDescendantOf(rightBlock, leftBlock, &leftOffset)) {
+  EditorDOMPoint leftBlockChild;
+  if (EditorUtils::IsDescendantOf(*rightBlock, *leftBlock, &leftBlockChild)) {
     // Tricky case.  Right block is inside left block.  Do ws adjustment.  This
     // just destroys non-visible ws at boundaries we will be joining.
     nsresult rv = WSRunObject::ScrubBlockBoundary(htmlEditor,
@@ -2951,50 +2978,51 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     {
       // We can't just track leftBlock because it's an Element, so track
       // something else.
-      nsCOMPtr<nsINode> trackingLeftBlock(leftBlock);
-      AutoTrackDOMPoint tracker(htmlEditor->mRangeUpdater,
-                                address_of(trackingLeftBlock), &leftOffset);
+      AutoTrackDOMPoint tracker(htmlEditor->mRangeUpdater, &leftBlockChild);
       rv = WSRunObject::ScrubBlockBoundary(htmlEditor,
                                            WSRunObject::kBeforeBlock,
-                                           leftBlock, leftOffset);
+                                           leftBlock, leftBlockChild.Offset());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return EditActionIgnored(rv);
       }
-
-      if (trackingLeftBlock->IsElement()) {
-        leftBlock = trackingLeftBlock->AsElement();
+      // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
+      //     Do we really need to do update rightBlock here??
+      MOZ_DIAGNOSTIC_ASSERT(leftBlock == leftBlockChild.Container());
+      if (leftBlockChild.Container()->IsElement()) {
+        leftBlock = leftBlockChild.Container()->AsElement();
       } else {
-        if (NS_WARN_IF(!trackingLeftBlock->GetParentElement())) {
+        if (NS_WARN_IF(!leftBlockChild.Container()->GetParentElement())) {
           return EditActionIgnored(NS_ERROR_UNEXPECTED);
         }
-        leftBlock = trackingLeftBlock->GetParentElement();
+        leftBlock = leftBlockChild.Container()->GetParentElement();
       }
     }
     // Do br adjustment.
     nsCOMPtr<Element> brNode =
-      CheckForInvisibleBR(*leftBlock, BRLocation::beforeBlock, leftOffset);
+      CheckForInvisibleBR(*leftBlock, BRLocation::beforeBlock,
+                          leftBlockChild.Offset());
     EditActionResult ret(NS_OK);
     if (mergeLists) {
       // XXX Why do we ignore the result of MoveContents()?
+      int32_t offset = leftBlockChild.Offset();
       EditActionResult retMoveContents =
-        MoveContents(*rightList, *leftList, &leftOffset);
+        MoveContents(*rightList, *leftList, &offset);
       if (retMoveContents.Handled()) {
         ret.MarkAsHandled();
       }
+      // leftBlockChild was moved to rightList.  So, it's invalid now.
+      leftBlockChild.Clear();
     } else {
       // Left block is a parent of right block, and the parent of the previous
       // visible content.  Right block is a child and contains the contents we
       // want to move.
 
-      int32_t previousContentOffset;
-      nsCOMPtr<nsINode> previousContentParent;
-
+      EditorDOMPoint previousContent;
       if (&aLeftNode == leftBlock) {
         // We are working with valid HTML, aLeftNode is a block node, and is
         // therefore allowed to contain rightBlock.  This is the simple case,
         // we will simply move the content in rightBlock out of its block.
-        previousContentParent = leftBlock;
-        previousContentOffset = leftOffset;
+        previousContent = leftBlockChild;
       } else {
         // We try to work as well as possible with HTML that's already invalid.
         // Although "right block" is a block, and a block must not be contained
@@ -3005,13 +3033,10 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
         // However, in some situations this strategy moves the content to an
         // unexpected position.  (see bug 200416) The new idea is to make the
         // moving content a sibling, next to the previous visible content.
-
-        previousContentParent = aLeftNode.GetParentNode();
-        previousContentOffset = previousContentParent ?
-          previousContentParent->IndexOf(&aLeftNode) : -1;
+        previousContent.Set(&aLeftNode);
 
         // We want to move our content just after the previous visible node.
-        previousContentOffset++;
+        previousContent.AdvanceOffset();
       }
 
       // Because we don't want the moving content to receive the style of the
@@ -3020,6 +3045,8 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
       nsCOMPtr<Element> editorRoot = htmlEditor->GetEditorRoot();
       if (!editorRoot || &aLeftNode != editorRoot) {
         nsCOMPtr<nsIContent> splittedPreviousContent;
+        nsCOMPtr<nsINode> previousContentParent = previousContent.Container();
+        int32_t previousContentOffset = previousContent.Offset();
         rv = htmlEditor->SplitStyleAbovePoint(
                            address_of(previousContentParent),
                            &previousContentOffset,
@@ -3030,18 +3057,18 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
         }
 
         if (splittedPreviousContent) {
-          previousContentParent = splittedPreviousContent->GetParentNode();
-          previousContentOffset = previousContentParent ?
-            previousContentParent->IndexOf(splittedPreviousContent) : -1;
+          previousContent.Set(splittedPreviousContent);
+        } else {
+          previousContent.Set(previousContentParent, previousContentOffset);
         }
       }
 
-      if (NS_WARN_IF(!previousContentParent)) {
+      if (NS_WARN_IF(!previousContent.IsSet())) {
         return EditActionIgnored(NS_ERROR_NULL_POINTER);
       }
 
-      ret |= MoveBlock(*previousContentParent->AsElement(), *rightBlock,
-                       previousContentOffset, rightOffset);
+      ret |= MoveBlock(*previousContent.Container()->AsElement(), *rightBlock,
+                       previousContent.Offset(), 0);
       if (NS_WARN_IF(ret.Failed())) {
         return ret;
       }
@@ -3051,6 +3078,9 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     }
     return ret;
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(!rightBlockChild.IsSet());
+  MOZ_DIAGNOSTIC_ASSERT(!leftBlockChild.IsSet());
 
   // Normal case.  Blocks are siblings, or at least close enough.  An example
   // of the latter is <p>paragraph</p><ul><li>one<li>two<li>three</ul>.  The
@@ -3071,14 +3101,14 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
                     rightBlock->NodeInfo()->NameAtom()) {
     // Nodes are same type.  merge them.
     EditorDOMPoint pt = JoinNodesSmart(*leftBlock, *rightBlock);
-    if (pt.node && mergeLists) {
+    if (pt.IsSet() && mergeLists) {
       RefPtr<Element> newBlock =
         ConvertListType(rightBlock, existingList, nsGkAtoms::li);
     }
     ret.MarkAsHandled();
   } else {
     // Nodes are dissimilar types.
-    ret |= MoveBlock(*leftBlock, *rightBlock, leftOffset, rightOffset);
+    ret |= MoveBlock(*leftBlock, *rightBlock, -1, 0);
     if (NS_WARN_IF(ret.Failed())) {
       return ret;
     }
@@ -3427,7 +3457,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
 
     if (HTMLEditUtils::IsList(curNode)) {
       // do we have a curList already?
-      if (curList && !EditorUtils::IsDescendantOf(curNode, curList)) {
+      if (curList && !EditorUtils::IsDescendantOf(*curNode, *curList)) {
         // move all of our children into curList.  cheezy way to do it: move
         // whole list and then RemoveContainer() on the list.  ConvertListType
         // first: that routine handles converting the list item types, if
@@ -3458,7 +3488,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
       if (!curParent->IsHTMLElement(listType)) {
         // list item is in wrong type of list. if we don't have a curList,
         // split the old list and make a new list of correct type.
-        if (!curList || EditorUtils::IsDescendantOf(curNode, curList)) {
+        if (!curList || EditorUtils::IsDescendantOf(*curNode, *curList)) {
           NS_ENSURE_STATE(mHTMLEditor);
           NS_ENSURE_STATE(curParent->IsContent());
           ErrorResult rv;
@@ -4394,7 +4424,7 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
       // Do we have a blockquote that we are already committed to removing?
       if (curBlockQuote) {
         // If so, is this node a descendant?
-        if (EditorUtils::IsDescendantOf(curNode, curBlockQuote)) {
+        if (EditorUtils::IsDescendantOf(*curNode, *curBlockQuote)) {
           lastBQChild = curNode;
           // Then we don't need to do anything different for this node
           continue;
@@ -4521,7 +4551,7 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
       int32_t startOffset = aSelection.GetRangeAt(0)->StartOffset();
       if (rememberedLeftBQ &&
           (startNode == rememberedLeftBQ ||
-           EditorUtils::IsDescendantOf(startNode, rememberedLeftBQ))) {
+           EditorUtils::IsDescendantOf(*startNode, *rememberedLeftBQ))) {
         // Selection is inside rememberedLeftBQ - push it past it.
         startNode = rememberedLeftBQ->GetParentNode();
         startOffset = startNode ? 1 + startNode->IndexOf(rememberedLeftBQ) : 0;
@@ -4532,7 +4562,7 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
       startOffset = aSelection.GetRangeAt(0)->StartOffset();
       if (rememberedRightBQ &&
           (startNode == rememberedRightBQ ||
-           EditorUtils::IsDescendantOf(startNode, rememberedRightBQ))) {
+           EditorUtils::IsDescendantOf(*startNode, *rememberedRightBQ))) {
         // Selection is inside rememberedRightBQ - push it before it.
         startNode = rememberedRightBQ->GetParentNode();
         startOffset = startNode ? startNode->IndexOf(rememberedRightBQ) : -1;
@@ -4573,8 +4603,8 @@ HTMLEditRules::SplitBlock(Element& aBlock,
                           nsIContent** aOutMiddleNode)
 {
   // aStartChild and aEndChild must be exclusive descendants of aBlock
-  MOZ_ASSERT(EditorUtils::IsDescendantOf(&aStartChild, &aBlock) &&
-             EditorUtils::IsDescendantOf(&aEndChild, &aBlock));
+  MOZ_ASSERT(EditorUtils::IsDescendantOf(aStartChild, aBlock) &&
+             EditorUtils::IsDescendantOf(aEndChild, aBlock));
   NS_ENSURE_TRUE_VOID(mHTMLEditor);
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
@@ -5164,7 +5194,7 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
           htmlEditor->GetNextNode(blockParent, offset + 1, child, true);
         if (nextNode) {
           EditorDOMPoint pt = GetGoodSelPointForNode(*nextNode, aAction);
-          nsresult rv = aSelection->Collapse(pt.node, pt.offset);
+          nsresult rv = aSelection->Collapse(pt.Container(), pt.Offset());
           NS_ENSURE_SUCCESS(rv, rv);
         } else {
           // Adjust selection to be right after it.
@@ -5181,7 +5211,7 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
                                                                   true);
         if (priorNode) {
           EditorDOMPoint pt = GetGoodSelPointForNode(*priorNode, aAction);
-          nsresult rv = aSelection->Collapse(pt.node, pt.offset);
+          nsresult rv = aSelection->Collapse(pt.Container(), pt.Offset());
           NS_ENSURE_SUCCESS(rv, rv);
         } else {
           nsresult rv = aSelection->Collapse(blockParent, offset + 1);
@@ -5853,22 +5883,27 @@ HTMLEditRules::PromoteRange(nsRange& aRange,
   // This is tricky.  The basic idea is to push out the range endpoints to
   // truly enclose the blocks that we will affect.
 
-  EditorDOMPoint opStart =
-    GetPromotedPoint(kStart, *startNode, startOffset, aOperationType);
-  EditorDOMPoint opEnd =
-    GetPromotedPoint(kEnd, *endNode, endOffset, aOperationType);
-
   // Make sure that the new range ends up to be in the editable section.
+  // XXX Looks like that this check wastes the time.  Perhaps, we should
+  //     implement a method which checks both two DOM points in the editor
+  //     root.
+  EditorDOMPoint startPoint =
+    GetPromotedPoint(kStart, *startNode, startOffset, aOperationType);
   if (!htmlEditor->IsDescendantOfEditorRoot(
-        EditorBase::GetNodeAtRangeOffsetPoint(opStart.node, opStart.offset)) ||
-      !htmlEditor->IsDescendantOfEditorRoot(
-        EditorBase::GetNodeAtRangeOffsetPoint(opEnd.node, opEnd.offset - 1))) {
+         EditorBase::GetNodeAtRangeOffsetPoint(startPoint.AsRaw()))) {
+    return;
+  }
+  EditorDOMPoint endPoint =
+    GetPromotedPoint(kEnd, *endNode, endOffset, aOperationType);
+  EditorRawDOMPoint lastRawPoint(endPoint.AsRaw());
+  lastRawPoint.RewindOffset();
+  if (!htmlEditor->IsDescendantOfEditorRoot(
+         EditorBase::GetNodeAtRangeOffsetPoint(lastRawPoint))) {
     return;
   }
 
   DebugOnly<nsresult> rv =
-    aRange.SetStartAndEnd(opStart.node, opStart.offset,
-                          opEnd.node, opEnd.offset);
+    aRange.SetStartAndEnd(startPoint.AsRaw(), endPoint.AsRaw());
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
@@ -6380,7 +6415,7 @@ HTMLEditRules::GetHighestInlineParent(nsINode& aNode)
   // such elements for now.
   // XXX This should be MOZ_ASSERT after fixing bug 1413131 for avoiding
   //     calling this expensive method.
-  if (NS_WARN_IF(!EditorUtils::IsDescendantOf(&aNode, host))) {
+  if (NS_WARN_IF(!EditorUtils::IsDescendantOf(aNode, *host))) {
     return nullptr;
   }
 
@@ -6400,14 +6435,16 @@ HTMLEditRules::GetHighestInlineParent(nsINode& aNode)
  */
 nsresult
 HTMLEditRules::GetNodesFromPoint(
-                 EditorDOMPoint aPoint,
+                 const EditorDOMPoint& aPoint,
                  EditAction aOperation,
                  nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
                  TouchContent aTouchContent)
 {
-  NS_ENSURE_STATE(aPoint.node);
-  RefPtr<nsRange> range = new nsRange(aPoint.node);
-  nsresult rv = range->SetStart(aPoint.node, aPoint.offset);
+  if (NS_WARN_IF(!aPoint.IsSet())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  RefPtr<nsRange> range = new nsRange(aPoint.Container());
+  DebugOnly<nsresult> rv = range->SetStart(aPoint.Container(), aPoint.Offset());
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Expand the range to include adjacent inlines
@@ -6420,9 +6457,12 @@ HTMLEditRules::GetNodesFromPoint(
   arrayOfRanges.AppendElement(range);
 
   // Use these ranges to contruct a list of nodes to act on
-  rv = GetNodesForOperation(arrayOfRanges, outArrayOfNodes, aOperation,
-                            aTouchContent);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv2 =
+    GetNodesForOperation(arrayOfRanges, outArrayOfNodes, aOperation,
+                         aTouchContent);
+  if (NS_WARN_IF(NS_FAILED(rv2))) {
+    return rv2;
+  }
 
   return NS_OK;
 }
@@ -7067,7 +7107,7 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
     } else if (IsInlineNode(curNode)) {
       if (curBlock) {
         // If so, is this node a descendant?
-        if (EditorUtils::IsDescendantOf(curNode, curBlock)) {
+        if (EditorUtils::IsDescendantOf(*curNode, *curBlock)) {
           // Then we don't need to do anything different for this node
           lastNode = curNode->AsContent();
           continue;
@@ -7325,16 +7365,22 @@ HTMLEditRules::JoinNodesSmart(nsIContent& aNodeLeft,
 {
   // Caller responsible for left and right node being the same type
   nsCOMPtr<nsINode> parent = aNodeLeft.GetParentNode();
-  NS_ENSURE_TRUE(parent, EditorDOMPoint());
+  if (NS_WARN_IF(!parent)) {
+    return EditorDOMPoint();
+  }
   int32_t parOffset = parent->IndexOf(&aNodeLeft);
   nsCOMPtr<nsINode> rightParent = aNodeRight.GetParentNode();
 
   // If they don't have the same parent, first move the right node to after the
   // left one
   if (parent != rightParent) {
-    NS_ENSURE_TRUE(mHTMLEditor, EditorDOMPoint());
+    if (NS_WARN_IF(!mHTMLEditor)) {
+      return EditorDOMPoint();
+    }
     nsresult rv = mHTMLEditor->MoveNode(&aNodeRight, parent, parOffset);
-    NS_ENSURE_SUCCESS(rv, EditorDOMPoint());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorDOMPoint();
+    }
   }
 
   EditorDOMPoint ret(&aNodeRight, aNodeLeft.Length());
@@ -7343,23 +7389,37 @@ HTMLEditRules::JoinNodesSmart(nsIContent& aNodeLeft,
   if (HTMLEditUtils::IsList(&aNodeLeft) || aNodeLeft.GetAsText()) {
     // For lists, merge shallow (wouldn't want to combine list items)
     nsresult rv = mHTMLEditor->JoinNodes(aNodeLeft, aNodeRight);
-    NS_ENSURE_SUCCESS(rv, EditorDOMPoint());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorDOMPoint();
+    }
     return ret;
   }
 
   // Remember the last left child, and first right child
-  NS_ENSURE_TRUE(mHTMLEditor, EditorDOMPoint());
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return EditorDOMPoint();
+  }
   nsCOMPtr<nsIContent> lastLeft = mHTMLEditor->GetLastEditableChild(aNodeLeft);
-  NS_ENSURE_TRUE(lastLeft, EditorDOMPoint());
+  if (NS_WARN_IF(!lastLeft)) {
+    return EditorDOMPoint();
+  }
 
-  NS_ENSURE_TRUE(mHTMLEditor, EditorDOMPoint());
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return EditorDOMPoint();
+  }
   nsCOMPtr<nsIContent> firstRight = mHTMLEditor->GetFirstEditableChild(aNodeRight);
-  NS_ENSURE_TRUE(firstRight, EditorDOMPoint());
+  if (NS_WARN_IF(!firstRight)) {
+    return EditorDOMPoint();
+  }
 
   // For list items, divs, etc., merge smart
-  NS_ENSURE_TRUE(mHTMLEditor, EditorDOMPoint());
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return EditorDOMPoint();
+  }
   nsresult rv = mHTMLEditor->JoinNodes(aNodeLeft, aNodeRight);
-  NS_ENSURE_SUCCESS(rv, EditorDOMPoint());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorDOMPoint();
+  }
 
   if (lastLeft && firstRight && mHTMLEditor &&
       mHTMLEditor->AreNodesSameType(lastLeft, firstRight) &&
@@ -7367,7 +7427,9 @@ HTMLEditRules::JoinNodesSmart(nsIContent& aNodeLeft,
        (lastLeft->IsElement() && firstRight->IsElement() &&
         mHTMLEditor->mCSSEditUtils->ElementsSameStyle(lastLeft->AsElement(),
                                                   firstRight->AsElement())))) {
-    NS_ENSURE_TRUE(mHTMLEditor, EditorDOMPoint());
+    if (NS_WARN_IF(!mHTMLEditor)) {
+      return EditorDOMPoint();
+    }
     return JoinNodesSmart(*lastLeft, *firstRight);
   }
   return ret;
@@ -7838,7 +7900,7 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
     return NS_OK;
   }
   EditorDOMPoint pt = GetGoodSelPointForNode(*nearNode, aAction);
-  rv = aSelection->Collapse(pt.node, pt.offset);
+  rv = aSelection->Collapse(pt.Container(), pt.Offset());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8117,7 +8179,7 @@ HTMLEditRules::SelectionEndpointInNode(nsINode* aNode,
         *aResult = true;
         return NS_OK;
       }
-      if (EditorUtils::IsDescendantOf(startContainer, aNode)) {
+      if (EditorUtils::IsDescendantOf(*startContainer, *aNode)) {
         *aResult = true;
         return NS_OK;
       }
@@ -8131,7 +8193,7 @@ HTMLEditRules::SelectionEndpointInNode(nsINode* aNode,
         *aResult = true;
         return NS_OK;
       }
-      if (EditorUtils::IsDescendantOf(endContainer, aNode)) {
+      if (EditorUtils::IsDescendantOf(*endContainer, *aNode)) {
         *aResult = true;
         return NS_OK;
       }

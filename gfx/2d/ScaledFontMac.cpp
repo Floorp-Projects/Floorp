@@ -325,6 +325,31 @@ UnscaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     return true;
 }
 
+bool
+UnscaledFontMac::GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton)
+{
+  if (mIsDataFont) {
+    return false;
+  }
+
+  CFStringRef psname = CGFontCopyPostScriptName(mFont);
+  if (!psname) {
+    return false;
+  }
+
+  char buf[256];
+  const char* cstr = CFStringGetCStringPtr(psname, kCFStringEncodingUTF8);
+  if (!cstr) {
+    if (!CFStringGetCString(psname, buf, sizeof(buf), kCFStringEncodingUTF8)) {
+      return false;
+    }
+    cstr = buf;
+  }
+
+  aCb(reinterpret_cast<const uint8_t*>(cstr), strlen(cstr), 0, aBaton);
+  return true;
+}
+
 static void
 CollectVariationsFromDictionary(const void* aKey, const void* aValue, void* aContext)
 {

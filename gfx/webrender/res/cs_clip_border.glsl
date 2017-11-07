@@ -64,7 +64,7 @@ BorderClipDot fetch_border_clip_dot(ivec2 address, int segment) {
 void main(void) {
     ClipMaskInstance cmi = fetch_clip_item();
     ClipArea area = fetch_clip_area(cmi.render_task_address);
-    Layer layer = fetch_layer(cmi.layer_address);
+    Layer layer = fetch_layer(cmi.layer_address, cmi.layer_address);
 
     // Fetch the header information for this corner clip.
     BorderCorner corner = fetch_border_corner(cmi.clip_data_address);

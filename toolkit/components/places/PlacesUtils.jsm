@@ -257,10 +257,9 @@ const BOOKMARK_VALIDATORS = Object.freeze({
 // Sync bookmark records can contain additional properties.
 const SYNC_BOOKMARK_VALIDATORS = Object.freeze({
   // Sync uses Places GUIDs for all records except roots.
-  syncId: simpleValidateFunc(v => typeof v == "string" && (
-                                  (PlacesSyncUtils.bookmarks.ROOTS.includes(v) ||
-                                   PlacesUtils.isValidGuid(v)))),
-  parentSyncId: v => SYNC_BOOKMARK_VALIDATORS.syncId(v),
+  recordId: simpleValidateFunc(v => typeof v == "string" && (
+                                (PlacesSyncUtils.bookmarks.ROOTS.includes(v) || PlacesUtils.isValidGuid(v)))),
+  parentRecordId: v => SYNC_BOOKMARK_VALIDATORS.recordId(v),
   // Sync uses kinds instead of types, which distinguish between livemarks,
   // queries, and smart bookmarks.
   kind: simpleValidateFunc(v => typeof v == "string" &&
@@ -2024,9 +2023,7 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "transactionManager", function() {
 
 XPCOMUtils.defineLazyGetter(this, "bundle", function() {
   const PLACES_STRING_BUNDLE_URI = "chrome://places/locale/places.properties";
-  return Cc["@mozilla.org/intl/stringbundle;1"].
-         getService(Ci.nsIStringBundleService).
-         createBundle(PLACES_STRING_BUNDLE_URI);
+  return Services.strings.createBundle(PLACES_STRING_BUNDLE_URI);
 });
 
 // This is just used as a reasonably-random value for copy & paste / drag operations.

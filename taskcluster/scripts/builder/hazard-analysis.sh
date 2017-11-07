@@ -97,7 +97,7 @@ function run_analysis () {
 
     (
         cd "$analysis_dir"
-        $PYTHON "$ANALYSIS_SRCDIR/analyze.py" --buildcommand="$GECKO_DIR/testing/mozharness/scripts/spidermonkey/build.${build_type}"
+        $PYTHON "$ANALYSIS_SRCDIR/analyze.py" --buildcommand="$GECKO_DIR/taskcluster/scripts/builder/hazard-${build_type}.sh"
     )
 }
 

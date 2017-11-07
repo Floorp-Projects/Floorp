@@ -168,7 +168,7 @@ public:
   bool IsDecoded() const { return !IsPlaceholder() && mProvider->IsFinished(); }
 
   ImageKey GetImageKey() const { return mProvider->GetImageKey(); }
-  SurfaceKey GetSurfaceKey() const { return mProvider->GetSurfaceKey(); }
+  const SurfaceKey& GetSurfaceKey() const { return mProvider->GetSurfaceKey(); }
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
 
   CostEntry GetCostEntry()

@@ -20,11 +20,11 @@ MINGW*)
     WIN_WORKSPACE="$(pwd -W)"
     COMPRESS_EXT=bz2
 
-    export INCLUDE="$WIN_WORKSPACE/build/src/vs2015u3/VC/include;$WIN_WORKSPACE/build/src/vs2015u3/VC/atlmfc/include;$WIN_WORKSPACE/build/src/vs2015u3/SDK/Include/10.0.14393.0/ucrt;$WIN_WORKSPACE/build/src/vs2015u3/SDK/Include/10.0.14393.0/shared;$WIN_WORKSPACE/build/src/vs2015u3/SDK/Include/10.0.14393.0/um;$WIN_WORKSPACE/build/src/vs2015u3/SDK/Include/10.0.14393.0/winrt;$WIN_WORKSPACE/build/src/vs2015u3/DIA SDK/include"
+    export INCLUDE="$WIN_WORKSPACE/build/src/vs2017_15.4.2/VC/include;$WIN_WORKSPACE/build/src/vs2017_15.4.2/VC/atlmfc/include;$WIN_WORKSPACE/build/src/vs2017_15.4.2/SDK/Include/10.0.15063.0/ucrt;$WIN_WORKSPACE/build/src/vs2017_15.4.2/SDK/Include/10.0.15063.0/shared;$WIN_WORKSPACE/build/src/vs2017_15.4.2/SDK/Include/10.0.15063.0/um;$WIN_WORKSPACE/build/src/vs2017_15.4.2/SDK/Include/10.0.15063.0/winrt;$WIN_WORKSPACE/build/src/vs2017_15.4.2/DIA SDK/include"
 
-    export LIB="$WIN_WORKSPACE/build/src/vs2015u3/VC/lib/amd64;$WIN_WORKSPACE/build/src/vs2015u3/VC/atlmfc/lib/amd64;$WIN_WORKSPACE/build/src/vs2015u3/SDK/lib/10.0.14393.0/um/x64;$WIN_WORKSPACE/build/src/vs2015u3/SDK/lib/10.0.14393.0/ucrt/x64;$WIN_WORKSPACE/build/src/vs2015u3/DIA SDK/lib/amd64"
+    export LIB="$WIN_WORKSPACE/build/src/vs2017_15.4.2/VC/lib/x64;$WIN_WORKSPACE/build/src/vs2017_15.4.2/VC/atlmfc/lib/x64;$WIN_WORKSPACE/build/src/vs2017_15.4.2/SDK/lib/10.0.15063.0/um/x64;$WIN_WORKSPACE/build/src/vs2017_15.4.2/SDK/lib/10.0.15063.0/ucrt/x64;$WIN_WORKSPACE/build/src/vs2017_15.4.2/DIA SDK/lib/amd64"
 
-    PATH="$WORKSPACE/build/src/vs2015u3/VC/bin/amd64:$WORKSPACE/build/src/vs2015u3/VC/bin:$WORKSPACE/build/src/vs2015u3/SDK/bin/x64:$WORKSPACE/build/src/vs2015u3/redist/x64/Microsoft.VC140.CRT:$WORKSPACE/build/src/vs2015u3/SDK/Redist/ucrt/DLLs/x64:$WORKSPACE/build/src/vs2015u3/DIA SDK/bin/amd64:$WORKSPACE/build/src/mingw64/bin:$PATH"
+    PATH="$WORKSPACE/build/src/vs2017_15.4.2/VC/bin/Hostx64/x64:$WORKSPACE/build/src/vs2017_15.4.2/VC/bin/Hostx86/x86:$WORKSPACE/build/src/vs2017_15.4.2/SDK/bin/10.0.15063.0/x64:$WORKSPACE/build/src/vs2017_15.4.2/redist/x64/Microsoft.VC141.CRT:$WORKSPACE/build/src/vs2017_15.4.2/SDK/Redist/ucrt/DLLs/x64:$WORKSPACE/build/src/vs2017_15.4.2/DIA SDK/bin/amd64:$WORKSPACE/build/src/mingw64/bin:$PATH"
     ;;
 esac
 
@@ -45,11 +45,11 @@ git checkout $SCCACHE_REVISION
 # story in https://bugzilla.mozilla.org/show_bug.cgi?id=1163171#c26.
 case "$(uname -s)" in
 Linux)
-    OPENSSL_TARBALL=openssl-1.1.0f.tar.gz
+    OPENSSL_TARBALL=openssl-1.1.0g.tar.gz
 
     curl -O https://www.openssl.org/source/$OPENSSL_TARBALL
 cat >$OPENSSL_TARBALL.sha256sum <<EOF
-12f746f3f2493b2f39da7ecf63d7ee19c6ac9ec6a4fcd8c229da8a522cb12765  openssl-1.1.0f.tar.gz
+de4d501267da39310905cb6dc8c6121f7a2cad45a7707f76df828fe1b85073af  openssl-1.1.0g.tar.gz
 EOF
     cat $OPENSSL_TARBALL.sha256sum
     sha256sum -c $OPENSSL_TARBALL.sha256sum

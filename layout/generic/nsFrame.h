@@ -160,7 +160,7 @@ public:
   void Init(nsIContent*       aContent,
             nsContainerFrame* aParent,
             nsIFrame*         aPrevInFlow) override;
-  void DestroyFrom(nsIFrame* aDestructRoot) override;
+  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
   nsStyleContext* GetAdditionalStyleContext(int32_t aIndex) const override;
   void SetAdditionalStyleContext(int32_t aIndex,
                                  nsStyleContext* aStyleContext) override;

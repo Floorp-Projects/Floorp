@@ -53,6 +53,10 @@ SECStatus tls13_ClientHandleTicketEarlyDataInfoXtn(
 PRInt32 tls13_ClientSendSupportedVersionsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                                              PRBool append,
                                              PRUint32 maxBytes);
+PRInt32 tls13_ServerSendSupportedVersionsXtn(const sslSocket *ss,
+                                             TLSExtensionData *xtnData,
+                                             PRBool append,
+                                             PRUint32 maxBytes);
 SECStatus tls13_ClientHandleHrrCookie(const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type,
                                       SECItem *data);
 PRInt32 tls13_ClientSendHrrCookieXtn(const sslSocket *ss, TLSExtensionData *xtnData,

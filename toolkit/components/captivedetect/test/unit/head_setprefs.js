@@ -25,13 +25,10 @@ var gServer;
 var gServerURL;
 
 function setupPrefs() {
-  let prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                .getService(Components.interfaces.nsIPrefService)
-                .QueryInterface(Components.interfaces.nsIPrefBranch);
-  prefs.setCharPref(kPrefsCanonicalURL, gServerURL + kCanonicalSitePath);
-  prefs.setCharPref(kPrefsCanonicalContent, kCanonicalSiteContent);
-  prefs.setIntPref(kPrefsMaxWaitingTime, 0);
-  prefs.setIntPref(kPrefsPollingTime, 1);
+  Services.prefs.setCharPref(kPrefsCanonicalURL, gServerURL + kCanonicalSitePath);
+  Services.prefs.setCharPref(kPrefsCanonicalContent, kCanonicalSiteContent);
+  Services.prefs.setIntPref(kPrefsMaxWaitingTime, 0);
+  Services.prefs.setIntPref(kPrefsPollingTime, 1);
 }
 
 function run_captivedetect_test(xhr_handler, fakeUIResponse, testfun) {

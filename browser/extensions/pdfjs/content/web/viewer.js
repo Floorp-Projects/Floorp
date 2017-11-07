@@ -120,6 +120,9 @@ function formatL10nValue(text, args) {
   });
 }
 let NullL10n = {
+  getDirection() {
+    return Promise.resolve('ltr');
+  },
   get(property, args, fallback) {
     return Promise.resolve(formatL10nValue(fallback, args));
   },
@@ -553,7 +556,7 @@ exports.waitOnEventOrTimeout = waitOnEventOrTimeout;
 "use strict";
 
 
-var pdfjsLib;
+let pdfjsLib;
 if (typeof window !== 'undefined' && window['pdfjs-dist/build/pdf']) {
   pdfjsLib = window['pdfjs-dist/build/pdf'];
 } else {
@@ -836,15 +839,17 @@ var _pdf_outline_viewer = __webpack_require__(17);
 
 var _pdf_presentation_mode = __webpack_require__(18);
 
-var _pdf_thumbnail_viewer = __webpack_require__(19);
+var _pdf_sidebar_resizer = __webpack_require__(19);
 
-var _pdf_viewer = __webpack_require__(21);
+var _pdf_thumbnail_viewer = __webpack_require__(20);
 
-var _secondary_toolbar = __webpack_require__(26);
+var _pdf_viewer = __webpack_require__(22);
 
-var _toolbar = __webpack_require__(27);
+var _secondary_toolbar = __webpack_require__(27);
 
-var _view_history = __webpack_require__(28);
+var _toolbar = __webpack_require__(28);
+
+var _view_history = __webpack_require__(29);
 
 const DEFAULT_SCALE_DELTA = 1.1;
 const DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000;
@@ -892,6 +897,7 @@ let PDFViewerApplication = {
   pdfLinkService: null,
   pdfHistory: null,
   pdfSidebar: null,
+  pdfSidebarResizer: null,
   pdfOutlineViewer: null,
   pdfAttachmentViewer: null,
   pdfCursorTools: null,
@@ -1104,6 +1110,7 @@ let PDFViewerApplication = {
       sidebarConfig.eventBus = eventBus;
       this.pdfSidebar = new _pdf_sidebar.PDFSidebar(sidebarConfig, this.l10n);
       this.pdfSidebar.onToggled = this.forceRendering.bind(this);
+      this.pdfSidebarResizer = new _pdf_sidebar_resizer.PDFSidebarResizer(appConfig.sidebarResizer, eventBus, this.l10n);
       resolve(undefined);
     });
   },
@@ -1697,7 +1704,7 @@ let PDFViewerApplication = {
   bindWindowEvents() {
     let { eventBus, _boundEvents } = this;
     _boundEvents.windowResize = () => {
-      eventBus.dispatch('resize');
+      eventBus.dispatch('resize', { source: window });
     };
     _boundEvents.windowHashChange = () => {
       eventBus.dispatch('hashchange', { hash: document.location.hash.substring(1) });
@@ -1865,9 +1872,9 @@ function webViewerInitialized() {
   if (PDFViewerApplication.supportsIntegratedFind) {
     appConfig.toolbar.viewFind.classList.add('hidden');
   }
-  appConfig.sidebar.mainContainer.addEventListener('transitionend', function (evt) {
+  appConfig.mainContainer.addEventListener('transitionend', function (evt) {
     if (evt.target === this) {
-      PDFViewerApplication.eventBus.dispatch('resize');
+      PDFViewerApplication.eventBus.dispatch('resize', { source: this });
     }
   }, true);
   appConfig.sidebar.toggleButton.addEventListener('click', function () {
@@ -3185,8 +3192,8 @@ let pdfjsWebApp;
   pdfjsWebApp = __webpack_require__(4);
 }
 {
-  __webpack_require__(29);
-  __webpack_require__(32);
+  __webpack_require__(30);
+  __webpack_require__(33);
 }
 ;
 ;
@@ -3239,8 +3246,8 @@ function getViewerConfiguration() {
       contextPageRotateCcw: document.getElementById('contextPageRotateCcw')
     },
     sidebar: {
-      mainContainer: document.getElementById('mainContainer'),
       outerContainer: document.getElementById('outerContainer'),
+      viewerContainer: document.getElementById('viewerContainer'),
       toggleButton: document.getElementById('sidebarToggle'),
       thumbnailButton: document.getElementById('viewThumbnail'),
       outlineButton: document.getElementById('viewOutline'),
@@ -3248,6 +3255,10 @@ function getViewerConfiguration() {
       thumbnailView: document.getElementById('thumbnailView'),
       outlineView: document.getElementById('outlineView'),
       attachmentsView: document.getElementById('attachmentsView')
+    },
+    sidebarResizer: {
+      outerContainer: document.getElementById('outerContainer'),
+      resizer: document.getElementById('sidebarResizer')
     },
     findBar: {
       bar: document.getElementById('findbar'),
@@ -3486,8 +3497,8 @@ class PDFSidebar {
     this.pdfViewer = options.pdfViewer;
     this.pdfThumbnailViewer = options.pdfThumbnailViewer;
     this.pdfOutlineViewer = options.pdfOutlineViewer;
-    this.mainContainer = options.mainContainer;
     this.outerContainer = options.outerContainer;
+    this.viewerContainer = options.viewerContainer;
     this.eventBus = options.eventBus;
     this.toggleButton = options.toggleButton;
     this.thumbnailButton = options.thumbnailButton;
@@ -3703,8 +3714,8 @@ class PDFSidebar {
     });
   }
   _addEventListeners() {
-    this.mainContainer.addEventListener('transitionend', evt => {
-      if (evt.target === this.mainContainer) {
+    this.viewerContainer.addEventListener('transitionend', evt => {
+      if (evt.target === this.viewerContainer) {
         this.outerContainer.classList.remove('sidebarMoving');
       }
     });
@@ -5209,11 +5220,128 @@ exports.PDFPresentationMode = PDFPresentationMode;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.PDFSidebarResizer = undefined;
+
+var _ui_utils = __webpack_require__(0);
+
+const SIDEBAR_WIDTH_VAR = '--sidebar-width';
+const SIDEBAR_MIN_WIDTH = 200;
+const SIDEBAR_RESIZING_CLASS = 'sidebarResizing';
+class PDFSidebarResizer {
+  constructor(options, eventBus, l10n = _ui_utils.NullL10n) {
+    this.enabled = false;
+    this.isRTL = false;
+    this.sidebarOpen = false;
+    this.doc = document.documentElement;
+    this._width = null;
+    this._outerContainerWidth = null;
+    this._boundEvents = Object.create(null);
+    this.outerContainer = options.outerContainer;
+    this.resizer = options.resizer;
+    this.eventBus = eventBus;
+    this.l10n = l10n;
+    if (typeof CSS === 'undefined' || typeof CSS.supports !== 'function' || !CSS.supports(SIDEBAR_WIDTH_VAR, `calc(-1 * ${SIDEBAR_MIN_WIDTH}px)`)) {
+      console.warn('PDFSidebarResizer: ' + 'The browser does not support resizing of the sidebar.');
+      return;
+    }
+    this.enabled = true;
+    this.resizer.classList.remove('hidden');
+    this.l10n.getDirection().then(dir => {
+      this.isRTL = dir === 'rtl';
+    });
+    this._addEventListeners();
+  }
+  get outerContainerWidth() {
+    if (!this._outerContainerWidth) {
+      this._outerContainerWidth = this.outerContainer.clientWidth;
+    }
+    return this._outerContainerWidth;
+  }
+  _updateWidth(width = 0) {
+    if (!this.enabled) {
+      return false;
+    }
+    const maxWidth = Math.floor(this.outerContainerWidth / 2);
+    if (width > maxWidth) {
+      width = maxWidth;
+    }
+    if (width < SIDEBAR_MIN_WIDTH) {
+      width = SIDEBAR_MIN_WIDTH;
+    }
+    if (width === this._width) {
+      return false;
+    }
+    this._width = width;
+    this.doc.style.setProperty(SIDEBAR_WIDTH_VAR, `${width}px`);
+    return true;
+  }
+  _mouseMove(evt) {
+    let width = evt.clientX;
+    if (this.isRTL) {
+      width = this.outerContainerWidth - width;
+    }
+    this._updateWidth(width);
+  }
+  _mouseUp(evt) {
+    this.outerContainer.classList.remove(SIDEBAR_RESIZING_CLASS);
+    this.eventBus.dispatch('resize', { source: this });
+    let _boundEvents = this._boundEvents;
+    window.removeEventListener('mousemove', _boundEvents.mouseMove);
+    window.removeEventListener('mouseup', _boundEvents.mouseUp);
+  }
+  _addEventListeners() {
+    if (!this.enabled) {
+      return;
+    }
+    let _boundEvents = this._boundEvents;
+    _boundEvents.mouseMove = this._mouseMove.bind(this);
+    _boundEvents.mouseUp = this._mouseUp.bind(this);
+    this.resizer.addEventListener('mousedown', evt => {
+      this.outerContainer.classList.add(SIDEBAR_RESIZING_CLASS);
+      window.addEventListener('mousemove', _boundEvents.mouseMove);
+      window.addEventListener('mouseup', _boundEvents.mouseUp);
+    });
+    this.eventBus.on('sidebarviewchanged', evt => {
+      this.sidebarOpen = !!(evt && evt.view);
+    });
+    this.eventBus.on('resize', evt => {
+      if (evt && evt.source === window) {
+        this._outerContainerWidth = null;
+        if (this._width) {
+          if (this.sidebarOpen) {
+            this.outerContainer.classList.add(SIDEBAR_RESIZING_CLASS);
+            let updated = this._updateWidth(this._width);
+            Promise.resolve().then(() => {
+              this.outerContainer.classList.remove(SIDEBAR_RESIZING_CLASS);
+              if (updated) {
+                this.eventBus.dispatch('resize', { source: this });
+              }
+            });
+          } else {
+            this._updateWidth(this._width);
+          }
+        }
+      }
+    });
+  }
+}
+exports.PDFSidebarResizer = PDFSidebarResizer;
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.PDFThumbnailViewer = undefined;
 
 var _ui_utils = __webpack_require__(0);
 
-var _pdf_thumbnail_view = __webpack_require__(20);
+var _pdf_thumbnail_view = __webpack_require__(21);
 
 const THUMBNAIL_SCROLL_MARGIN = -19;
 class PDFThumbnailViewer {
@@ -5367,7 +5495,7 @@ class PDFThumbnailViewer {
 exports.PDFThumbnailViewer = PDFThumbnailViewer;
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5678,7 +5806,7 @@ class PDFThumbnailView {
 exports.PDFThumbnailView = PDFThumbnailView;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5691,7 +5819,7 @@ exports.PDFViewer = undefined;
 
 var _ui_utils = __webpack_require__(0);
 
-var _base_viewer = __webpack_require__(22);
+var _base_viewer = __webpack_require__(23);
 
 var _pdfjsLib = __webpack_require__(1);
 
@@ -5754,7 +5882,7 @@ class PDFViewer extends _base_viewer.BaseViewer {
 exports.PDFViewer = PDFViewer;
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5771,15 +5899,15 @@ var _ui_utils = __webpack_require__(0);
 
 var _pdf_rendering_queue = __webpack_require__(3);
 
-var _annotation_layer_builder = __webpack_require__(23);
+var _annotation_layer_builder = __webpack_require__(24);
 
 var _dom_events = __webpack_require__(2);
 
-var _pdf_page_view = __webpack_require__(24);
+var _pdf_page_view = __webpack_require__(25);
 
 var _pdf_link_service = __webpack_require__(5);
 
-var _text_layer_builder = __webpack_require__(25);
+var _text_layer_builder = __webpack_require__(26);
 
 const DEFAULT_CACHE_SIZE = 10;
 function PDFPageViewBuffer(size) {
@@ -6431,7 +6559,7 @@ class BaseViewer {
 exports.BaseViewer = BaseViewer;
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6513,7 +6641,7 @@ exports.AnnotationLayerBuilder = AnnotationLayerBuilder;
 exports.DefaultAnnotationLayerFactory = DefaultAnnotationLayerFactory;
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6962,7 +7090,7 @@ class PDFPageView {
 exports.PDFPageView = PDFPageView;
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7231,7 +7359,7 @@ exports.TextLayerBuilder = TextLayerBuilder;
 exports.DefaultTextLayerFactory = DefaultTextLayerFactory;
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7411,7 +7539,7 @@ class SecondaryToolbar {
 exports.SecondaryToolbar = SecondaryToolbar;
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7596,7 +7724,7 @@ class Toolbar {
 exports.Toolbar = Toolbar;
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7679,7 +7807,7 @@ class ViewHistory {
 exports.ViewHistory = ViewHistory;
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7690,11 +7818,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.FirefoxCom = exports.DownloadManager = undefined;
 
-__webpack_require__(30);
+__webpack_require__(31);
 
 var _pdfjsLib = __webpack_require__(1);
 
-var _preferences = __webpack_require__(31);
+var _preferences = __webpack_require__(32);
 
 var _app = __webpack_require__(4);
 
@@ -7920,7 +8048,7 @@ exports.DownloadManager = DownloadManager;
 exports.FirefoxCom = FirefoxCom;
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8018,7 +8146,7 @@ exports.FirefoxCom = FirefoxCom;
 })(undefined);
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8143,7 +8271,7 @@ class BasePreferences {
 exports.BasePreferences = BasePreferences;
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

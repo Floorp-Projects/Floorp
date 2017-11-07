@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint mozilla/use-services:off */
+
 this.EXPORTED_SYMBOLS = ["Services"];
 
 const Ci = Components.interfaces;

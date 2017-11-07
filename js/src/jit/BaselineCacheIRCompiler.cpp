@@ -2262,8 +2262,13 @@ js::jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
         return newStub;
       }
       case BaselineCacheIRStubKind::Monitored: {
-        ICStub* monitorStub =
-            stub->toMonitoredFallbackStub()->fallbackMonitorStub()->firstMonitorStub();
+        ICTypeMonitor_Fallback* typeMonitorFallback =
+            stub->toMonitoredFallbackStub()->getFallbackMonitorStub(cx, outerScript);
+        if (!typeMonitorFallback) {
+            cx->recoverFromOutOfMemory();
+            return nullptr;
+        }
+        ICStub* monitorStub = typeMonitorFallback->firstMonitorStub();
         auto newStub = new(newStubMem) ICCacheIR_Monitored(code, monitorStub, stubInfo);
         writer.copyStubData(newStub->stubDataStart());
         stub->addNewStub(newStub);

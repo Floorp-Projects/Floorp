@@ -47,6 +47,7 @@ function addInputField(form, className) {
 }
 
 async function checkFormChangeHappened(formId) {
+  info("expecting form changed");
   await focusAndWaitForFieldsIdentified(`#${formId} input[name=tel]`);
   doKey("down");
   await expectPopup();

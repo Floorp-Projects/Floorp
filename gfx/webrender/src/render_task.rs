@@ -8,11 +8,12 @@ use api::{LayerRect, PipelineId};
 use clip::{ClipSource, ClipSourcesWeakHandle, ClipStore};
 use clip_scroll_tree::CoordinateSystemId;
 use gpu_cache::GpuCacheHandle;
+use gpu_types::{ClipScrollNodeIndex};
 use internal_types::HardwareCompositeOp;
 use prim_store::PrimitiveIndex;
 use std::{cmp, usize, f32, i32};
 use std::rc::Rc;
-use tiling::{ClipScrollGroupIndex, PackedLayerIndex, RenderPass, RenderTargetIndex};
+use tiling::{RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind, StackingContextIndex};
 
 const FLOATS_PER_RENDER_TASK_INFO: usize = 12;
@@ -151,7 +152,7 @@ pub enum RenderTaskLocation {
 
 #[derive(Debug)]
 pub enum AlphaRenderItem {
-    Primitive(Option<ClipScrollGroupIndex>, PrimitiveIndex, i32),
+    Primitive(ClipScrollNodeIndex, ClipScrollNodeIndex, PrimitiveIndex, i32),
     Blend(StackingContextIndex, RenderTaskId, FilterOp, i32),
     Composite(
         StackingContextIndex,
@@ -167,6 +168,7 @@ pub enum AlphaRenderItem {
         HardwareCompositeOp,
         DeviceIntPoint,
         i32,
+        DeviceIntSize,
     ),
 }
 
@@ -200,7 +202,7 @@ pub enum MaskGeometryKind {
 
 #[derive(Debug, Clone)]
 pub struct ClipWorkItem {
-    pub layer_index: PackedLayerIndex,
+    pub scroll_node_id: ClipScrollNodeIndex,
     pub clip_sources: ClipSourcesWeakHandle,
     pub coordinate_system_id: CoordinateSystemId,
 }
@@ -268,6 +270,7 @@ pub struct BlurTask {
     pub target_kind: RenderTargetKind,
     pub regions: Vec<LayerRect>,
     pub color: ColorF,
+    pub scale_factor: f32,
 }
 
 #[derive(Debug)]
@@ -284,6 +287,7 @@ pub enum RenderTaskKind {
     HorizontalBlur(BlurTask),
     Readback(DeviceIntRect),
     Alias(RenderTaskId),
+    Scaling(RenderTargetKind),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -447,13 +451,16 @@ impl RenderTask {
         })
     }
 
-    // Construct a render task to apply a blur to a primitive. For now,
-    // this is only used for text runs, but we can probably extend this
-    // to handle general blurs to any render task in the future.
+    // Construct a render task to apply a blur to a primitive. 
     // The render task chain that is constructed looks like:
     //
-    //    PrimitiveCacheTask: Draw the text run.
+    //    PrimitiveCacheTask: Draw the primitives.
     //           ^
+    //           |
+    //    DownscalingTask(s): Each downscaling task reduces the size of render target to
+    //           ^            half. Also reduce the std deviation to half until the std
+    //           |            deviation less than 4.0.
+    //           |
     //           |
     //    VerticalBlurTask: Apply the separable vertical blur to the primitive.
     //           ^
@@ -471,17 +478,41 @@ impl RenderTask {
         clear_mode: ClearMode,
         color: ColorF,
     ) -> RenderTask {
+        // Adjust large std deviation value.
+        const MAX_BLUR_STD_DEVIATION: f32 = 4.0;
+        const MIN_DOWNSCALING_RT_SIZE: i32 = 128;
+        let mut adjusted_blur_std_deviation = blur_std_deviation;
         let blur_target_size = render_tasks.get(src_task_id).get_dynamic_size();
+        let mut adjusted_blur_target_size = blur_target_size;
+        let mut downscaling_src_task_id = src_task_id;
+        let mut scale_factor = 1.0;
+        while adjusted_blur_std_deviation > MAX_BLUR_STD_DEVIATION {
+            if adjusted_blur_target_size.width < MIN_DOWNSCALING_RT_SIZE ||
+               adjusted_blur_target_size.height < MIN_DOWNSCALING_RT_SIZE {
+                break;
+            }
+            adjusted_blur_std_deviation *= 0.5;
+            scale_factor *= 2.0;
+            adjusted_blur_target_size = (blur_target_size.to_f32() / scale_factor).to_i32();
+            let downscaling_task = RenderTask::new_scaling(
+                target_kind,
+                downscaling_src_task_id,
+                adjusted_blur_target_size
+            );
+            downscaling_src_task_id = render_tasks.add(downscaling_task);
+        }
+        scale_factor = blur_target_size.width as f32 / adjusted_blur_target_size.width as f32;
 
         let blur_task_v = RenderTask {
             cache_key: None,
-            children: vec![src_task_id],
-            location: RenderTaskLocation::Dynamic(None, blur_target_size),
+            children: vec![downscaling_src_task_id],
+            location: RenderTaskLocation::Dynamic(None, adjusted_blur_target_size),
             kind: RenderTaskKind::VerticalBlur(BlurTask {
-                blur_std_deviation,
+                blur_std_deviation: adjusted_blur_std_deviation,
                 target_kind,
                 regions: regions.to_vec(),
                 color,
+                scale_factor,
             }),
             clear_mode,
         };
@@ -491,17 +522,35 @@ impl RenderTask {
         let blur_task_h = RenderTask {
             cache_key: None,
             children: vec![blur_task_v_id],
-            location: RenderTaskLocation::Dynamic(None, blur_target_size),
+            location: RenderTaskLocation::Dynamic(None, adjusted_blur_target_size),
             kind: RenderTaskKind::HorizontalBlur(BlurTask {
-                blur_std_deviation,
+                blur_std_deviation: adjusted_blur_std_deviation,
                 target_kind,
                 regions: regions.to_vec(),
                 color,
+                scale_factor,
             }),
             clear_mode,
         };
 
         blur_task_h
+    }
+
+    pub fn new_scaling(
+        target_kind: RenderTargetKind,
+        src_task_id: RenderTaskId,
+        target_size: DeviceIntSize,
+    ) -> RenderTask {
+        RenderTask {
+            cache_key: None,
+            children: vec![src_task_id],
+            location: RenderTaskLocation::Dynamic(None, target_size),
+            kind: RenderTaskKind::Scaling(target_kind),
+            clear_mode: match target_kind {
+                RenderTargetKind::Color => ClearMode::Transparent,
+                RenderTargetKind::Alpha => ClearMode::One,
+            },
+        }
     }
 
     pub fn as_alpha_batch_mut<'a>(&'a mut self) -> &'a mut AlphaRenderTask {
@@ -512,7 +561,8 @@ impl RenderTask {
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::HorizontalBlur(..) |
-            RenderTaskKind::Alias(..) => unreachable!(),
+            RenderTaskKind::Alias(..) |
+            RenderTaskKind::Scaling(..) => unreachable!(),
         }
     }
 
@@ -524,7 +574,8 @@ impl RenderTask {
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::HorizontalBlur(..) |
-            RenderTaskKind::Alias(..) => unreachable!(),
+            RenderTaskKind::Alias(..) |
+            RenderTaskKind::Scaling(..) => unreachable!(),
         }
     }
 
@@ -609,7 +660,7 @@ impl RenderTask {
                         target_rect.size.height as f32,
                         target_index.0 as f32,
                         task_info.blur_std_deviation,
-                        0.0,
+                        task_info.scale_factor,
                         0.0,
                         task_info.color.r,
                         task_info.color.g,
@@ -618,7 +669,8 @@ impl RenderTask {
                     ],
                 }
             }
-            RenderTaskKind::Readback(..) => {
+            RenderTaskKind::Readback(..) |
+            RenderTaskKind::Scaling(..) => {
                 let (target_rect, target_index) = self.get_target_rect();
                 RenderTaskData {
                     data: [
@@ -662,7 +714,8 @@ impl RenderTask {
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::HorizontalBlur(..) |
             RenderTaskKind::Picture(..) |
-            RenderTaskKind::Alias(..) => {
+            RenderTaskKind::Alias(..) |
+            RenderTaskKind::Scaling(..) => {
                 panic!("bug: inflate only supported for alpha tasks");
             }
         }
@@ -700,6 +753,10 @@ impl RenderTask {
                 task_info.target_kind
             }
 
+            RenderTaskKind::Scaling(target_kind) => {
+                target_kind
+            }
+
             RenderTaskKind::Picture(ref task_info) => {
                 task_info.target_kind
             }
@@ -722,7 +779,8 @@ impl RenderTask {
             RenderTaskKind::Picture(..) |
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
-            RenderTaskKind::HorizontalBlur(..) => false,
+            RenderTaskKind::HorizontalBlur(..) |
+            RenderTaskKind::Scaling(..) => false,
 
             RenderTaskKind::CacheMask(..) => true,
 

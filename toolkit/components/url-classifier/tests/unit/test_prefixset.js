@@ -160,7 +160,7 @@ function testLoadSaveLargeSet() {
   checkContents(pset, arr);
 
   // Now try to save, restore, and redo the lookups
-  var file = dirSvc.get("ProfLD", Ci.nsIFile);
+  var file = Services.dirsvc.get("ProfLD", Ci.nsIFile);
   file.append("testLarge.pset");
 
   pset.storeToFile(file);
@@ -205,7 +205,7 @@ function testLoadSaveNoDelta() {
 
   doExpectedLookups(pset, arr, 1);
 
-  var file = dirSvc.get("ProfLD", Ci.nsIFile);
+  var file = Services.dirsvc.get("ProfLD", Ci.nsIFile);
   file.append("testNoDelta.pset");
 
   pset.storeToFile(file);

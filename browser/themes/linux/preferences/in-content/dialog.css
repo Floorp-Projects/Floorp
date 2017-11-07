@@ -8,7 +8,7 @@ label:not(.menu-text),
 textbox,
 description,
 .tab-text,
-caption > label {
+caption label {
   font-size: 1.11rem;
 }
 

@@ -757,7 +757,10 @@ CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t ent
     ICStub* firstMonitorStub;
     if (fallbackStub->isMonitoredFallback()) {
         ICMonitoredFallbackStub* monitored = fallbackStub->toMonitoredFallbackStub();
-        firstMonitorStub = monitored->fallbackMonitorStub()->firstMonitorStub();
+        ICTypeMonitor_Fallback* fallback = monitored->getFallbackMonitorStub(cx, entry.script);
+        if (!fallback)
+            return false;
+        firstMonitorStub = fallback->firstMonitorStub();
     } else {
         firstMonitorStub = nullptr;
     }

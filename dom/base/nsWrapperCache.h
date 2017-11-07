@@ -312,6 +312,7 @@ public:
       return;
     }
 
+    GetWrapper(); // Read barrier for incremental GC.
     HoldJSObjects(aScriptObjectHolder, aTracer);
     SetPreservingWrapper(true);
 #ifdef DEBUG

@@ -23,14 +23,14 @@ add_task(async function test_ignore_specials() {
   let record = new BookmarkFolder("bookmarks", "toolbar", "folder");
   record.deleted = true;
   do_check_neq(null, (await PlacesUtils.promiseItemId(
-    PlacesSyncUtils.bookmarks.syncIdToGuid("toolbar"))));
+    PlacesSyncUtils.bookmarks.recordIdToGuid("toolbar"))));
 
   await store.applyIncoming(record);
   await store.deletePending();
 
   // Ensure that the toolbar exists.
   do_check_neq(null, (await PlacesUtils.promiseItemId(
-    PlacesSyncUtils.bookmarks.syncIdToGuid("toolbar"))));
+    PlacesSyncUtils.bookmarks.recordIdToGuid("toolbar"))));
 
   // This will fail painfully in getItemType if the deletion worked.
   await engine._buildGUIDMap();
@@ -39,7 +39,7 @@ add_task(async function test_ignore_specials() {
   await store.remove(record);
   await store.deletePending();
   do_check_neq(null, (await PlacesUtils.promiseItemId(
-    PlacesSyncUtils.bookmarks.syncIdToGuid("toolbar"))));
+    PlacesSyncUtils.bookmarks.recordIdToGuid("toolbar"))));
   await engine._buildGUIDMap();
 
   await store.wipe();
@@ -69,7 +69,7 @@ add_task(async function test_bookmark_create() {
     await store.applyIncoming(fxrecord);
 
     _("Verify it has been created correctly.");
-    let id = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(fxrecord.id));
+    let id = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.recordIdToGuid(fxrecord.id));
     do_check_eq((await PlacesUtils.promiseItemGuid(id)), fxrecord.id);
     do_check_eq(PlacesUtils.bookmarks.getItemType(id),
                 PlacesUtils.bookmarks.TYPE_BOOKMARK);
@@ -102,7 +102,7 @@ add_task(async function test_bookmark_create() {
     await store.applyIncoming(tbrecord);
 
     _("Verify it has been created correctly.");
-    id = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(tbrecord.id));
+    id = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.recordIdToGuid(tbrecord.id));
     do_check_eq((await PlacesUtils.promiseItemGuid(id)), tbrecord.id);
     do_check_eq(PlacesUtils.bookmarks.getItemType(id),
                 PlacesUtils.bookmarks.TYPE_BOOKMARK);
@@ -199,7 +199,7 @@ add_task(async function test_folder_create() {
     await store.applyIncoming(folder);
 
     _("Verify it has been created correctly.");
-    let id = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(folder.id));
+    let id = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.recordIdToGuid(folder.id));
     do_check_eq(PlacesUtils.bookmarks.getItemType(id),
                 PlacesUtils.bookmarks.TYPE_FOLDER);
     do_check_eq(PlacesUtils.bookmarks.getItemTitle(id), folder.title);
@@ -502,9 +502,9 @@ add_task(async function test_delete_buffering() {
     await store.applyIncoming(fxRecord);
     await store.applyIncoming(tbRecord);
 
-    let folderId = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(folder.id));
-    let fxRecordId = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(fxRecord.id));
-    let tbRecordId = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(tbRecord.id));
+    let folderId = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.recordIdToGuid(folder.id));
+    let fxRecordId = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.recordIdToGuid(fxRecord.id));
+    let tbRecordId = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.recordIdToGuid(tbRecord.id));
 
     _("Check everything was created correctly.");
 

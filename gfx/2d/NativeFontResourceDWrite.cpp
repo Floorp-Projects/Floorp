@@ -283,6 +283,7 @@ NativeFontResourceDWrite::CreateUnscaledFont(uint32_t aIndex,
 
   RefPtr<UnscaledFont> unscaledFont =
     new UnscaledFontDWrite(fontFace,
+                           nullptr,
                            DWRITE_FONT_SIMULATIONS_NONE,
                            mNeedsCairo);
 

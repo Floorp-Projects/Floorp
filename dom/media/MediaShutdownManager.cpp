@@ -6,7 +6,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPtr.h"
-#include "nsContentUtils.h"
+#include "mozilla/Services.h"
 
 #include "MediaDecoder.h"
 #include "MediaShutdownManager.h"

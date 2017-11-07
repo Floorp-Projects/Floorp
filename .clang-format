@@ -1,12 +1,5 @@
 BasedOnStyle: Mozilla
 
-# Ignore all comments because they aren't reflowed properly.
-CommentPragmas: "^"
-
-# Force pointers to the type for C++.
-DerivePointerAlignment: false
-PointerAlignment: Left
-
 # Prevent the loss of indentation with these macros
 MacroBlockBegin: "^\
 NS_INTERFACE_MAP_BEGIN|\
@@ -26,15 +19,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END_INHERITED|\
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED$"
 
 SortIncludes: false
-
-
-# All of the following items are default
-# in the Mozila coding style from clang format 4.0
-AlwaysBreakAfterReturnType: TopLevel
-BinPackArguments: false
-BinPackParameters: false
-SpaceAfterTemplateKeyword: false
-ReflowComments: false
 
 
 BreakBeforeBraces: Custom

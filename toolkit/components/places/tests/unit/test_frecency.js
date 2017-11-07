@@ -268,12 +268,9 @@ add_task(async function test_frecency() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
   do_register_cleanup(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
   // always search in history + bookmarks, no matter what the default is
-  var prefs = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-
-  prefs.setBoolPref("browser.urlbar.suggest.history", true);
-  prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
-  prefs.setBoolPref("browser.urlbar.suggest.openpage", false);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.openpage", false);
   for (let test of tests) {
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesTestUtils.clearHistory();
@@ -281,6 +278,6 @@ add_task(async function test_frecency() {
     await test();
   }
   for (let type of ["history", "bookmark", "openpage"]) {
-    prefs.clearUserPref("browser.urlbar.suggest." + type);
+    Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
   }
 });

@@ -110,7 +110,7 @@ impl SpecNewSessionParameters {
                 x => {
                     if !x.contains(":") {
                         return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                       format!("{} is not a the name of a known capability or a valid extension capability", x)))
+                                                       format!("{} is not the name of a known capability or a valid extension capability", x)))
                     } else {
                         try!(browser_capabilities.validate_custom(x, value));
                     }
@@ -130,7 +130,7 @@ impl SpecNewSessionParameters {
                     x => {
                         return Err(WebDriverError::new(
                             ErrorStatus::InvalidArgument,
-                            format!("\"{}\" not a valid page load strategy", x)))
+                            format!("\"{}\" is not a valid page load strategy", x)))
                     }
                 }
             }

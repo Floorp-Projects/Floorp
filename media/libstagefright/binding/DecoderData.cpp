@@ -87,27 +87,27 @@ FindData(const MetaData* aMetaData, uint32_t aKey, mozilla::MediaByteBuffer* aDe
   return FindData(aMetaData, aKey, static_cast<nsTArray<uint8_t>*>(aDest));
 }
 
-Result<Ok, nsresult>
+mozilla::Result<mozilla::Ok, nsresult>
 CryptoFile::DoUpdate(const uint8_t* aData, size_t aLength)
 {
   BufferReader reader(aData, aLength);
   while (reader.Remaining()) {
     PsshInfo psshInfo;
     if (!reader.ReadArray(psshInfo.uuid, 16)) {
-      return Err(NS_ERROR_FAILURE);
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
 
     if (!reader.CanReadType<uint32_t>()) {
-      return Err(NS_ERROR_FAILURE);
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     auto length = reader.ReadType<uint32_t>();
 
     if (!reader.ReadArray(psshInfo.data, length)) {
-      return Err(NS_ERROR_FAILURE);
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     pssh.AppendElement(psshInfo);
   }
-  return Ok();
+  return mozilla::Ok();
 }
 
 static void

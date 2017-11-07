@@ -52,10 +52,6 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
                                       Layer layer,
                                       ClipArea area,
                                       int segment) {
-
-    RectWithSize clipped_local_rect = intersect_rect(local_clip_rect,
-                                                     layer.local_clip_rect);
-
     vec2 outer_p0 = area.screen_origin_target_index.xy;
     vec2 outer_p1 = outer_p0 + area.task_bounds.zw - area.task_bounds.xy;
     vec2 inner_p0 = area.inner_rect.xy;
@@ -94,9 +90,9 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
 
     gl_Position = uTransform * vec4(vertex_pos, 0.0, 1);
 
-    vLocalBounds = vec4(clipped_local_rect.p0, clipped_local_rect.p0 + clipped_local_rect.size);
+    vLocalBounds = vec4(local_clip_rect.p0, local_clip_rect.p0 + local_clip_rect.size);
 
-    ClipVertexInfo vi = ClipVertexInfo(layer_pos.xyw, actual_pos, clipped_local_rect);
+    ClipVertexInfo vi = ClipVertexInfo(layer_pos.xyw, actual_pos, local_clip_rect);
     return vi;
 }
 

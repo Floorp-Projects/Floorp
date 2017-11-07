@@ -1255,14 +1255,8 @@ IonScript::purgeOptimizedStubs(Zone* zone)
 
             lastStub->toFallbackStub()->setInvalid();
 
-            if (lastStub->isMonitoredFallback()) {
-                // Monitor stubs can't make calls, so are always in the
-                // optimized stub space.
-                ICTypeMonitor_Fallback* lastMonStub =
-                    lastStub->toMonitoredFallbackStub()->fallbackMonitorStub();
-                lastMonStub->resetMonitorStubChain(zone);
-                lastMonStub->setInvalid();
-            }
+            MOZ_ASSERT(!lastStub->isMonitoredFallback(),
+                       "None of the shared stubs used in Ion are monitored");
         } else if (lastStub->isTypeMonitor_Fallback()) {
             lastStub->toTypeMonitor_Fallback()->resetMonitorStubChain(zone);
             lastStub->toTypeMonitor_Fallback()->setInvalid();

@@ -48,7 +48,7 @@ ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
   while (remainingBytesToCopy > 0) {
     if (dstCursor >= mSmallAllocs.Length() * mChunkSize) {
       if (!AllocChunk()) {
-        for (size_t i = mSmallAllocs.Length() ; currAllocLen <= i ; i--) {
+        for (size_t i = mSmallAllocs.Length() ; currAllocLen < i ; i--) {
           ipc::Shmem shm = mSmallAllocs.ElementAt(i);
           mShmAllocator->DeallocShmem(shm);
           mSmallAllocs.RemoveElementAt(i);
@@ -306,6 +306,17 @@ IpcResourceUpdateQueue::AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint
     return false;
   }
   mUpdates.AppendElement(layers::OpAddRawFont(bytes, aIndex, aKey));
+  return true;
+}
+
+bool
+IpcResourceUpdateQueue::AddFontDescriptor(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex)
+{
+  auto bytes = mWriter.Write(aBytes);
+  if (!bytes.length()) {
+    return false;
+  }
+  mUpdates.AppendElement(layers::OpAddFontDescriptor(bytes, aIndex, aKey));
   return true;
 }
 

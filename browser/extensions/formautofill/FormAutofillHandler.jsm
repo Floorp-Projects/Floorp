@@ -339,7 +339,7 @@ FormAutofillHandler.prototype = {
         return;
       }
     } else if (element.maxLength) {
-      if (profile.tel.length <= element.maxLength) {
+      if (detail._reason == "autocomplete" && profile.tel.length <= element.maxLength) {
         return;
       }
     }

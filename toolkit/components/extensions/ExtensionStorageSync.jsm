@@ -338,19 +338,26 @@ global.KeyRingEncryptionRemoteTransformer = KeyRingEncryptionRemoteTransformer;
  */
 async function storageSyncInit() {
   // Memoize the result to share the connection.
-  if (storageSyncInit.result === undefined) {
+  if (storageSyncInit.promise === undefined) {
     const path = "storage-sync.sqlite";
-    const connection = await FirefoxAdapter.openConnection({path});
-    storageSyncInit.result = {
-      connection,
-      kinto: new Kinto({
-        adapter: FirefoxAdapter,
-        adapterOptions: {sqliteHandle: connection},
-        timeout: KINTO_REQUEST_TIMEOUT,
-      }),
-    };
+    storageSyncInit.promise = FirefoxAdapter.openConnection({path})
+    .then(connection => {
+      return {
+        connection,
+        kinto: new Kinto({
+          adapter: FirefoxAdapter,
+          adapterOptions: {sqliteHandle: connection},
+          timeout: KINTO_REQUEST_TIMEOUT,
+        }),
+      };
+    }).catch(e => {
+      // Ensure one failure doesn't break us forever.
+      Cu.reportError(e);
+      storageSyncInit.promise = undefined;
+      throw e;
+    });
   }
-  return storageSyncInit.result;
+  return storageSyncInit.promise;
 }
 
 // Kinto record IDs have two condtions:

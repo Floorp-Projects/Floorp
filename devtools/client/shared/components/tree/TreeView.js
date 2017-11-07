@@ -9,6 +9,7 @@
 define(function (require, exports, module) {
   const { cloneElement, Component, createFactory, DOM: dom, PropTypes } =
     require("devtools/client/shared/vendor/react");
+  const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 
   // Reps
   const { ObjectProvider } = require("./ObjectProvider");
@@ -153,7 +154,7 @@ define(function (require, exports, module) {
         // TODO: Do better than just selecting the first row again. We want to
         // select (in order) previous, next or parent in case when selected
         // row is removed.
-        this.selectRow(this.rows[0].props.member.path);
+        this.selectRow(this.rows[0]);
       }
     }
 
@@ -255,13 +256,13 @@ define(function (require, exports, module) {
         case "ArrowDown":
           let nextRow = this.rows[index + 1];
           if (nextRow) {
-            this.selectRow(nextRow.props.member.path);
+            this.selectRow(nextRow);
           }
           break;
         case "ArrowUp":
           let previousRow = this.rows[index - 1];
           if (previousRow) {
-            this.selectRow(previousRow.props.member.path);
+            this.selectRow(previousRow);
           }
           break;
         default:
@@ -277,7 +278,7 @@ define(function (require, exports, module) {
       if (cell && cell.classList.contains("treeLabelCell")) {
         this.toggle(nodePath);
       }
-      this.selectRow(nodePath);
+      this.selectRow(event.currentTarget);
     }
 
     getSelectedRow(rows) {
@@ -287,10 +288,12 @@ define(function (require, exports, module) {
       return rows.find(row => this.isSelected(row.props.member.path));
     }
 
-    selectRow(nodePath) {
+    selectRow(row) {
+      row = findDOMNode(row);
       this.setState(Object.assign({}, this.state, {
-        selected: nodePath
+        selected: row.id
       }));
+      row.scrollIntoView({block: "nearest"});
     }
 
     isSelected(nodePath) {

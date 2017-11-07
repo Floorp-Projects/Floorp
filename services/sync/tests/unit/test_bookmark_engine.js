@@ -16,7 +16,7 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 
 initTestLogging("Trace");
 
-async function fetchAllSyncIds() {
+async function fetchAllRecordIds() {
   let db = await PlacesUtils.promiseDBConnection();
   let rows = await db.executeCached(`
     WITH RECURSIVE
@@ -29,13 +29,13 @@ async function fetchAllSyncIds() {
       JOIN syncedItems s ON b.parent = s.id
     )
     SELECT guid FROM syncedItems`);
-  let syncIds = new Set();
+  let recordIds = new Set();
   for (let row of rows) {
-    let syncId = PlacesSyncUtils.bookmarks.guidToSyncId(
+    let recordId = PlacesSyncUtils.bookmarks.guidToRecordId(
       row.getResultByName("guid"));
-    syncIds.add(syncId);
+    recordIds.add(recordId);
   }
-  return syncIds;
+  return recordIds;
 }
 add_task(async function setup() {
   initTestLogging("Trace");
@@ -124,7 +124,7 @@ add_task(async function bad_record_allIDs() {
   _("Type: " + PlacesUtils.bookmarks.getItemType(badRecordID));
 
   _("Fetching all IDs.");
-  let all = await fetchAllSyncIds();
+  let all = await fetchAllRecordIds();
 
   _("All IDs: " + JSON.stringify([...all]));
   do_check_true(all.has("menu"));
@@ -301,7 +301,7 @@ async function test_restoreOrImport(aReplace) {
     }
 
     _("Ensure we have the bookmarks we expect locally.");
-    let guids = await fetchAllSyncIds();
+    let guids = await fetchAllRecordIds();
     _("GUIDs: " + JSON.stringify([...guids]));
     let bookmarkGuids = new Map();
     let count = 0;
@@ -560,23 +560,23 @@ add_task(async function test_bookmark_tag_but_no_uri() {
 
   await PlacesSyncUtils.bookmarks.insert({
     kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
-    syncId: Utils.makeGUID(),
-    parentSyncId: "toolbar",
+    recordId: Utils.makeGUID(),
+    parentRecordId: "toolbar",
     url: "http://example.com",
     tags: ["foo"],
   });
   await PlacesSyncUtils.bookmarks.insert({
     kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
-    syncId: Utils.makeGUID(),
-    parentSyncId: "toolbar",
+    recordId: Utils.makeGUID(),
+    parentRecordId: "toolbar",
     url: "http://example.org",
     tags: null,
   });
   await PlacesSyncUtils.bookmarks.insert({
     kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
-    syncId: Utils.makeGUID(),
+    recordId: Utils.makeGUID(),
     url: "about:fake",
-    parentSyncId: "toolbar",
+    parentRecordId: "toolbar",
     tags: null,
   });
 

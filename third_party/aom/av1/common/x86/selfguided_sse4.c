@@ -10,9 +10,11 @@
    av1_selfguided_restoration)
 */
 static void calc_block(__m128i sum, __m128i sum_sq, __m128i n,
-                       __m128i one_over_n, __m128i s, int bit_depth, int idx,
-                       int32_t *A, int32_t *B) {
+                       __m128i *one_over_n_, __m128i *s_, int bit_depth,
+                       int idx, int32_t *A, int32_t *B) {
   __m128i a, b, p;
+  __m128i one_over_n = *one_over_n_;
+  __m128i s = *s_;
 #if CONFIG_HIGHBITDEPTH
   if (bit_depth > 8) {
     __m128i rounding_a = _mm_set1_epi32((1 << (2 * (bit_depth - 8))) >> 1);
@@ -147,7 +149,7 @@ static void selfguided_restoration_1_h(int32_t *A, int32_t *B, int width,
     __m128i s = _mm_set_epi32(
         sgrproj_mtable[eps - 1][3 * h - 1], sgrproj_mtable[eps - 1][3 * h - 1],
         sgrproj_mtable[eps - 1][3 * h - 1], sgrproj_mtable[eps - 1][2 * h - 1]);
-    calc_block(sum_, sum_sq_, n, one_over_n, s, bit_depth, i * buf_stride, A,
+    calc_block(sum_, sum_sq_, n, &one_over_n, &s, bit_depth, i * buf_stride, A,
                B);
 
     n = _mm_set1_epi32(3 * h);
@@ -178,8 +180,8 @@ static void selfguided_restoration_1_h(int32_t *A, int32_t *B, int width,
                                              _mm_alignr_epi8(b2, b1, 8)));
       sum_sq_ = _mm_add_epi32(a1, _mm_add_epi32(_mm_alignr_epi8(a2, a1, 4),
                                                 _mm_alignr_epi8(a2, a1, 8)));
-      calc_block(sum_, sum_sq_, n, one_over_n, s, bit_depth, i * buf_stride + j,
-                 A, B);
+      calc_block(sum_, sum_sq_, n, &one_over_n, &s, bit_depth,
+                 i * buf_stride + j, A, B);
     }
     __m128i a3 = _mm_loadu_si128((__m128i *)&A[i * buf_stride + j + 3]);
     __m128i b3 = _mm_loadu_si128((__m128i *)&B[i * buf_stride + j + 3]);
@@ -227,7 +229,7 @@ static void selfguided_restoration_1_h(int32_t *A, int32_t *B, int width,
     s = _mm_set_epi32(
         sgrproj_mtable[eps - 1][2 * h - 1], sgrproj_mtable[eps - 1][3 * h - 1],
         sgrproj_mtable[eps - 1][3 * h - 1], sgrproj_mtable[eps - 1][3 * h - 1]);
-    calc_block(sum_, sum_sq_, n, one_over_n, s, bit_depth, i * buf_stride + j,
+    calc_block(sum_, sum_sq_, n, &one_over_n, &s, bit_depth, i * buf_stride + j,
                A, B);
   }
 }
@@ -342,7 +344,7 @@ static void selfguided_restoration_2_h(int32_t *A, int32_t *B, int width,
     __m128i s = _mm_set_epi32(
         sgrproj_mtable[eps - 1][5 * h - 1], sgrproj_mtable[eps - 1][5 * h - 1],
         sgrproj_mtable[eps - 1][4 * h - 1], sgrproj_mtable[eps - 1][3 * h - 1]);
-    calc_block(sum_, sum_sq_, n, one_over_n, s, bit_depth, i * buf_stride, A,
+    calc_block(sum_, sum_sq_, n, &one_over_n, &s, bit_depth, i * buf_stride, A,
                B);
 
     // Re-align a1 and b1 so that they start at index i * buf_stride + 2
@@ -372,8 +374,8 @@ static void selfguided_restoration_2_h(int32_t *A, int32_t *B, int width,
                                           _mm_alignr_epi8(a2, a1, 8))),
           _mm_add_epi32(_mm_alignr_epi8(a2, a1, 12), a2));
 
-      calc_block(sum_, sum_sq_, n, one_over_n, s, bit_depth, i * buf_stride + j,
-                 A, B);
+      calc_block(sum_, sum_sq_, n, &one_over_n, &s, bit_depth,
+                 i * buf_stride + j, A, B);
     }
     // If the width is not a multiple of 4, we need to reset j to width - 4
     // and adjust a1, a2, b1, b2 so that the loop invariant above is maintained
@@ -428,7 +430,7 @@ static void selfguided_restoration_2_h(int32_t *A, int32_t *B, int width,
     s = _mm_set_epi32(
         sgrproj_mtable[eps - 1][3 * h - 1], sgrproj_mtable[eps - 1][4 * h - 1],
         sgrproj_mtable[eps - 1][5 * h - 1], sgrproj_mtable[eps - 1][5 * h - 1]);
-    calc_block(sum_, sum_sq_, n, one_over_n, s, bit_depth, i * buf_stride + j,
+    calc_block(sum_, sum_sq_, n, &one_over_n, &s, bit_depth, i * buf_stride + j,
                A, B);
   }
 }
@@ -562,7 +564,7 @@ static void selfguided_restoration_3_h(int32_t *A, int32_t *B, int width,
     __m128i s = _mm_set_epi32(
         sgrproj_mtable[eps - 1][7 * h - 1], sgrproj_mtable[eps - 1][6 * h - 1],
         sgrproj_mtable[eps - 1][5 * h - 1], sgrproj_mtable[eps - 1][4 * h - 1]);
-    calc_block(sum_, sum_sq_, n, one_over_n, s, bit_depth, i * buf_stride, A,
+    calc_block(sum_, sum_sq_, n, &one_over_n, &s, bit_depth, i * buf_stride, A,
                B);
 
     // Re-align a1 and b1 so that they start at index i * buf_stride + 1
@@ -599,8 +601,8 @@ static void selfguided_restoration_3_h(int32_t *A, int32_t *B, int width,
           _mm_add_epi32(_mm_add_epi32(a2, _mm_alignr_epi8(a3, a2, 4)),
                         _mm_alignr_epi8(a3, a2, 8)));
 
-      calc_block(sum_, sum_sq_, n, one_over_n, s, bit_depth, i * buf_stride + j,
-                 A, B);
+      calc_block(sum_, sum_sq_, n, &one_over_n, &s, bit_depth,
+                 i * buf_stride + j, A, B);
     }
     __m128i a3 = _mm_loadu_si128((__m128i *)&A[i * buf_stride + j + 1]);
     __m128i b3 = _mm_loadu_si128((__m128i *)&B[i * buf_stride + j + 1]);
@@ -657,7 +659,7 @@ static void selfguided_restoration_3_h(int32_t *A, int32_t *B, int width,
     s = _mm_set_epi32(
         sgrproj_mtable[eps - 1][4 * h - 1], sgrproj_mtable[eps - 1][5 * h - 1],
         sgrproj_mtable[eps - 1][6 * h - 1], sgrproj_mtable[eps - 1][7 * h - 1]);
-    calc_block(sum_, sum_sq_, n, one_over_n, s, bit_depth, i * buf_stride + j,
+    calc_block(sum_, sum_sq_, n, &one_over_n, &s, bit_depth, i * buf_stride + j,
                A, B);
   }
 }

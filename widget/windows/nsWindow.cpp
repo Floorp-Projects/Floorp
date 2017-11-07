@@ -4286,6 +4286,47 @@ bool nsWindow::DispatchPluginEvent(UINT aMessage,
   return ret;
 }
 
+bool nsWindow::TouchEventShouldStartDrag(EventMessage aEventMessage,
+                                         LayoutDeviceIntPoint aEventPoint)
+{
+  // Allow users to start dragging by double-tapping.
+  if (aEventMessage == eMouseDoubleClick) {
+    return true;
+  }
+
+  // In chrome UI, allow touchdownstartsdrag attributes
+  // to cause any touchdown event to trigger a drag.
+  if (aEventMessage == eMouseDown) {
+    WidgetMouseEvent hittest(true, eMouseHitTest, this,
+                             WidgetMouseEvent::eReal);
+    hittest.mRefPoint = aEventPoint;
+    hittest.mIgnoreRootScrollFrame = true;
+    hittest.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+    DispatchInputEvent(&hittest);
+
+    EventTarget* target = hittest.GetDOMEventTarget();
+    if (target) {
+      nsCOMPtr<nsIContent> node = do_QueryInterface(target);
+
+      // Check if the element or any parent element has the
+      // attribute we're looking for.
+      while (node) {
+        if (node->IsElement()) {
+          nsAutoString startDrag;
+          node->AsElement()->GetAttribute(
+            NS_LITERAL_STRING("touchdownstartsdrag"), startDrag);
+          if (!startDrag.IsEmpty()) {
+            return true;
+          }
+        }
+        node = node->GetParent();
+      }
+    }
+  }
+
+  return false;
+}
+
 // Deal with all sort of mouse event
 bool
 nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
@@ -4337,12 +4378,13 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
 
     if (mTouchWindow) {
       // If mTouchWindow is true, then we must have APZ enabled and be
-      // feeding it raw touch events. In that case we don't need to
-      // send touch-generated mouse events to content. The only exception is
-      // the touch-generated mouse double-click, which is used to start off the
-      // touch-based drag-and-drop gesture.
+      // feeding it raw touch events. In that case we only want to
+      // send touch-generated mouse events to content if they should
+      // start a touch-based drag-and-drop gesture, such as on
+      // double-tapping or when tapping elements marked with the
+      // touchdownstartsdrag attribute in chrome UI.
       MOZ_ASSERT(mAPZC);
-      if (aEventMessage == eMouseDoubleClick) {
+      if (TouchEventShouldStartDrag(aEventMessage, eventPoint)) {
         aEventMessage = eMouseTouchDrag;
       } else {
         return result;

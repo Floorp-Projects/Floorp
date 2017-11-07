@@ -363,6 +363,15 @@ PacketFilter::Action TlsInspectorReplaceHandshakeMessage::FilterHandshake(
   return KEEP;
 }
 
+PacketFilter::Action TlsRecordRecorder::FilterRecord(
+    const TlsRecordHeader& header, const DataBuffer& input,
+    DataBuffer* output) {
+  if (!filter_ || (header.content_type() == ct_)) {
+    records_.push_back({header, input});
+  }
+  return KEEP;
+}
+
 PacketFilter::Action TlsConversationRecorder::FilterRecord(
     const TlsRecordHeader& header, const DataBuffer& input,
     DataBuffer* output) {

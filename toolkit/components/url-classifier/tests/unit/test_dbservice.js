@@ -109,7 +109,8 @@ function checkNoHost() {
   // Looking up a no-host uri such as a data: uri should throw an exception.
   var exception;
   try {
-    let principal = secMan.createCodebasePrincipal(iosvc.newURI("data:text/html,<b>test</b>"), {});
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      Services.io.newURI("data:text/html,<b>test</b>"), {});
     dbservice.lookup(principal, allTables);
 
     exception = false;
@@ -218,31 +219,36 @@ function checkState() {
 
 
   for (let key in phishExpected) {
-    let principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key), {});
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      Services.io.newURI("http://" + key), {});
     dbservice.lookup(principal, allTables, phishExists, true);
     numExpecting++;
   }
 
   for (let key in phishUnexpected) {
-    let principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key), {});
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      Services.io.newURI("http://" + key), {});
     dbservice.lookup(principal, allTables, phishDoesntExist, true);
     numExpecting++;
   }
 
   for (let key in malwareExpected) {
-    let principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key), {});
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      Services.io.newURI("http://" + key), {});
     dbservice.lookup(principal, allTables, malwareExists, true);
     numExpecting++;
   }
 
   for (let key in unwantedExpected) {
-    let principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key), {});
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      Services.io.newURI("http://" + key), {});
     dbservice.lookup(principal, allTables, unwantedExists, true);
     numExpecting++;
   }
 
   for (let key in blockedExpected) {
-    let principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key), {});
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      Services.io.newURI("http://" + key), {});
     dbservice.lookup(principal, allTables, blockedExists, true);
     numExpecting++;
   }

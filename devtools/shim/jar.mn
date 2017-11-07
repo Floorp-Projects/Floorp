@@ -21,8 +21,8 @@ devtools-shim.jar:
     content/aboutdevtools/images/feature-debugger.svg (aboutdevtools/images/feature-debugger.svg)
     content/aboutdevtools/images/feature-network.svg (aboutdevtools/images/feature-network.svg)
     content/aboutdevtools/images/feature-memory.svg (aboutdevtools/images/feature-memory.svg)
-    content/aboutdevtools/images/feature-visual-editing.svg (aboutdevtools/images/feature-visual-editing.svg)
-    content/aboutdevtools/images/feature-responsive-mode.svg (aboutdevtools/images/feature-responsive-mode.svg)
+    content/aboutdevtools/images/feature-visualediting.svg (aboutdevtools/images/feature-visualediting.svg)
+    content/aboutdevtools/images/feature-responsive.svg (aboutdevtools/images/feature-responsive.svg)
     content/aboutdevtools/images/feature-storage.svg (aboutdevtools/images/feature-storage.svg)
     content/aboutdevtools/images/feature-performance.svg (aboutdevtools/images/feature-performance.svg)
 

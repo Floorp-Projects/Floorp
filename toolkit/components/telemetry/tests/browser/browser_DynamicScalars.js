@@ -39,7 +39,14 @@ add_task(async function test_recording() {
       keyed: false,
       record_on_release: true
     },
+    "pre_content_spawn_expiration": {
+      kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+      keyed: false,
+      release_channel_collection: true
+    },
   });
+
+  Services.telemetry.scalarSet("telemetry.test.dynamic.pre_content_spawn_expiration", 3);
 
   let processCreated = TestUtils.topicObserved(CONTENT_CREATED);
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank", forceNewProcess: true },
@@ -50,8 +57,10 @@ add_task(async function test_recording() {
       let newPid = browser.frameLoader.tabParent.osPid;
       ok(currentPid != newPid, "The new tab must spawn its own process");
 
-      // Register a test scalar after spawning the content process: the scalar
+      // Register test scalars after spawning the content process: the scalar
       // definitions will propagate to it.
+      // Also attempt to register again "pre_content_spawn_expiration" and set
+      // it to expired.
       Services.telemetry.registerScalars("telemetry.test.dynamic", {
         "post_content_spawn": {
           kind: Ci.nsITelemetry.SCALAR_TYPE_BOOLEAN,
@@ -63,10 +72,17 @@ add_task(async function test_recording() {
           keyed: true,
           release_channel_collection: true
         },
+        "pre_content_spawn_expiration": {
+          kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+          keyed: false,
+          release_channel_collection: true,
+          expired: true
+        },
       });
 
       // Accumulate from the content process into both dynamic scalars.
       await ContentTask.spawn(browser, {}, async function() {
+        Services.telemetry.scalarAdd("telemetry.test.dynamic.pre_content_spawn_expiration", 1);
         Services.telemetry.scalarSet("telemetry.test.dynamic.pre_content_spawn", 3);
         Services.telemetry.scalarSet("telemetry.test.dynamic.post_content_spawn", true);
         Services.telemetry.keyedScalarSet("telemetry.test.dynamic.post_content_spawn_keyed",
@@ -75,7 +91,10 @@ add_task(async function test_recording() {
   });
 
   // Wait for the dynamic scalars to appear non-keyed snapshots.
-  await waitForProcessesScalars(["dynamic"], false);
+  await waitForProcessesScalars(["dynamic"], false, scalars => {
+    // Wait for the scalars set in the content process to be available.
+    return "telemetry.test.dynamic.pre_content_spawn" in scalars.dynamic;
+  });
 
   // Verify the content of the snapshots.
   const scalars =
@@ -86,6 +105,8 @@ add_task(async function test_recording() {
      "Dynamic scalars registered before a process spawns must be present.");
   is(scalars.dynamic["telemetry.test.dynamic.pre_content_spawn"], 3,
     "The dynamic scalar must contain the expected value.");
+  is(scalars.dynamic["telemetry.test.dynamic.pre_content_spawn_expiration"], 3,
+    "The dynamic scalar must not be updated after being expired.");
   ok("telemetry.test.dynamic.post_content_spawn" in scalars.dynamic,
      "Dynamic scalars registered after a process spawns must be present.");
   is(scalars.dynamic["telemetry.test.dynamic.post_content_spawn"], true,

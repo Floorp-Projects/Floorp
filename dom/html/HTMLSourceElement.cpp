@@ -35,20 +35,9 @@ HTMLSourceElement::~HTMLSourceElement()
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLSourceElement, nsGenericHTMLElement,
                                    mSrcMediaSource)
 
-NS_IMPL_ADDREF_INHERITED(HTMLSourceElement, nsGenericHTMLElement)
-NS_IMPL_RELEASE_INHERITED(HTMLSourceElement, nsGenericHTMLElement)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLSourceElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLSourceElement)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLSourceElement, nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLSourceElement)
-
-NS_IMPL_URI_ATTR(HTMLSourceElement, Src, src)
-NS_IMPL_STRING_ATTR(HTMLSourceElement, Type, type)
-NS_IMPL_STRING_ATTR(HTMLSourceElement, Srcset, srcset)
-NS_IMPL_STRING_ATTR(HTMLSourceElement, Sizes, sizes)
-NS_IMPL_STRING_ATTR(HTMLSourceElement, Media, media)
 
 bool
 HTMLSourceElement::MatchesCurrentMedia()

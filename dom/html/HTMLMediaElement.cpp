@@ -18,7 +18,6 @@
 
 #include "base/basictypes.h"
 #include "nsIDOMHTMLMediaElement.h"
-#include "nsIDOMHTMLSourceElement.h"
 #include "TimeRanges.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"

@@ -36,9 +36,7 @@ iframe.onload = function iframe_onload1() {
 
   let wbp = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
             .createInstance(Ci.nsIWebBrowserPersist);
-  let tmp = Cc["@mozilla.org/file/directory_service;1"]
-            .getService(Ci.nsIProperties)
-            .get("TmpD", Ci.nsIFile);
+  let tmp = SpecialPowers.Services.dirsvc.get("TmpD", Ci.nsIFile);
   let tmpFile = tmp.clone();
   tmpFile.append(nameStem + "_iframe.xml");
   let tmpDir = tmp.clone();
