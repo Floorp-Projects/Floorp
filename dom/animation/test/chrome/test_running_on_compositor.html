@@ -68,7 +68,7 @@ promise_test(t => {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
        'Animation reports that it is running on the compositor'
        + ' during playback');
@@ -87,7 +87,7 @@ promise_test(t => {
   var div = addDiv(t, { style: 'animation: background 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_not_running_on_compositor(animation,
        'Animation reports that it is NOT running on the compositor'
        + ' for animation of "background"');
@@ -98,7 +98,7 @@ promise_test(t => {
   var div = addDiv(t, { style: 'animation: background_and_translate 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
        'Animation reports that it is running on the compositor'
         + ' when the animation has two properties, where one can run'
@@ -111,7 +111,7 @@ promise_test(t => {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     animation.pause();
     return animation.ready;
   }).then(() => {
@@ -125,7 +125,7 @@ promise_test(t => {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     animation.finish();
     assert_animation_is_not_running_on_compositor(animation,
        'Animation reports that it is NOT running on the compositor'
@@ -143,7 +143,7 @@ promise_test(t => {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     animation.currentTime = 100 * MS_PER_SEC;
     assert_animation_is_not_running_on_compositor(animation,
        'Animation reports that it is NOT running on the compositor'
@@ -162,7 +162,7 @@ promise_test(t => {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     animation.cancel();
     assert_animation_is_not_running_on_compositor(animation,
        'Animation reports that it is NOT running on the compositor'
@@ -182,7 +182,7 @@ promise_test(t => {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     return new Promise(resolve => {
       window.requestAnimationFrame(() => {
         t.step(() => {
@@ -201,7 +201,7 @@ promise_test(t => {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     return new Promise(resolve => {
       var observer = new MutationObserver(records => {
         var changedAnimation;
@@ -242,7 +242,7 @@ promise_test(t => {
     var div = addDiv(t, { style: 'animation: rotate 100s' });
     var animation = div.getAnimations()[0];
 
-    return animation.ready.then(() => {
+    return waitForPaints().then(() => {
       return new Promise(resolve => {
         var timeAtStart = window.performance.now();
         function handleFrame() {
@@ -276,7 +276,7 @@ promise_test(t => {
   div.style.opacity = 0;
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
        'Transition reports that it is running on the compositor'
        + ' during playback for opacity transition');
@@ -289,7 +289,7 @@ promise_test(t => {
                                'transform: none !important;' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
        'If an animation has a property that can run on the compositor and a '
        + 'property that cannot (due to Gecko limitations) but where the latter'
@@ -304,7 +304,7 @@ promise_test(t => {
                                    {},
                                    { opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
       'Animation reports that it is running on the compositor');
 
@@ -323,7 +323,7 @@ promise_test(t => {
                                    {},
                                    { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
       'Animation reports that it is running on the compositor');
 
@@ -348,7 +348,7 @@ promise_test(t => {
                                    {},
                                    { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
       'Animation reports that it is running on the compositor');
 
@@ -373,7 +373,7 @@ promise_test(t => {
                                    {},
                                    { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
       'Animation reports that it is running on the compositor');
 
@@ -392,7 +392,7 @@ promise_test(t => {
                                    {},
                                    { opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
       'Animation reports that it is running on the compositor');
 
@@ -421,7 +421,7 @@ promise_test(t => {
 
   var div = addDiv(t);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_not_running_on_compositor(animation,
                   'Animation with null target reports that it is not running ' +
                   'on the compositor');
@@ -439,7 +439,7 @@ promise_test(t => {
   var div = addDiv(t);
   var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
                   'Animation reports that it is running on the compositor');
 
@@ -457,7 +457,7 @@ promise_test(t => {
                                 delay: 100 * MS_PER_SEC,
                                 fill: 'backwards' });
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
                   'Animation with fill:backwards in delay phase reports ' +
                   'that it is running on the compositor');
@@ -480,7 +480,7 @@ promise_test(t => {
 
   var another = addDiv(t);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
                   'Opacity animation on a 100% opacity keyframe reports ' +
                   'that it is running on the compositor from the begining');
@@ -500,7 +500,7 @@ promise_test(t => {
   var div = addDiv(t);
   var animation = div.animate({ color: ['red', 'black'] }, 100 * MS_PER_SEC);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_not_running_on_compositor(animation,
                   'Color animation reports that it is not running on the ' +
                   'compositor');
@@ -526,7 +526,7 @@ promise_test(t => {
                                    { opacity: 0, offset: 1 }],
                                   100 * MS_PER_SEC);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_not_running_on_compositor(animation,
                   'Color animation reports that it is not running on the ' +
                   'compositor');
@@ -547,7 +547,7 @@ promise_test(t => {
 
   var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_not_running_on_compositor(animation,
       'Opacity animation on an element which has 100% opacity style with ' +
       '!important flag reports that it is not running on the compositor');
@@ -567,7 +567,7 @@ promise_test(t => {
   var lowerAnimation = div.animate({ opacity: [1, 0] }, 100 * MS_PER_SEC);
   var higherAnimation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
 
-  return Promise.all([lowerAnimation.ready, higherAnimation.ready]).then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(higherAnimation,
                   'A higher-priority opacity animation on an element ' +
                   'reports that it is running on the compositor');
@@ -588,7 +588,7 @@ promise_test(t => {
   var transition = div.getAnimations()[0];
   var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
 
-  return Promise.all([transition.ready, animation.ready]).then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
                   'An opacity animation on an element reports that' +
                   'that it is running on the compositor');
@@ -605,7 +605,7 @@ promise_test(t => {
 
   var animation = div.animate({ opacity: [1, 0] }, 100 * MS_PER_SEC);
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
                   'Opacity animation on an element reports ' +
                   'that it is running on the compositor');
@@ -635,7 +635,7 @@ promise_test(t => {
   var lowerAnimation = div.animate({ opacity: [1, 0] }, 100 * MS_PER_SEC);
   var higherAnimation = another.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
 
-  return Promise.all([lowerAnimation.ready, higherAnimation.ready]).then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(lowerAnimation,
                   'An opacity animation on an element reports that ' +
                   'it is running on the compositor');
@@ -672,7 +672,7 @@ promise_test(t => {
   var lowerAnimation = div.animate({ opacity: [1, 0] }, 100 * MS_PER_SEC);
   var higherAnimation = another.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
 
-  return Promise.all([lowerAnimation.ready, higherAnimation.ready]).then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(lowerAnimation,
                   'An opacity animation on an element reports that ' +
                   'it is running on the compositor');
@@ -758,7 +758,7 @@ delayPhaseTests.forEach(test => {
   promise_test(t => {
     var animation = test.setupAnimation(t);
 
-    return animation.ready.then(() => {
+    return waitForPaints().then(() => {
       assert_animation_is_running_on_compositor(animation,
          test.desc + ' reports that it is running on the '
          + 'compositor even though it is in the delay phase');
@@ -804,7 +804,7 @@ delayPhaseWithTransformStyleTests.forEach(test => {
   promise_test(t => {
     var animation = test.setupAnimation(t);
 
-    return animation.ready.then(() => {
+    return waitForPaints().then(() => {
       assert_animation_is_running_on_compositor(animation,
          test.desc + ' reports that it is running on the '
          + 'compositor even though it is in the delay phase');
@@ -843,7 +843,7 @@ startsWithNoneTests.forEach(test => {
   promise_test(t => {
     var animation = test.setupAnimation(t);
 
-    return animation.ready.then(() => {
+    return waitForPaints().then(() => {
       assert_animation_is_running_on_compositor(animation,
          test.desc + ' reports that it is running on the '
          + 'compositor even though it is in transform:none segment');
@@ -859,7 +859,7 @@ promise_test(t => {
     { opacity: [0, 1] },
     { delay: 100 * MS_PER_SEC, duration: 100 * MS_PER_SEC });
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_not_running_on_compositor(animation,
       'Opacity animation on an element which has opacity:1 important style'
       + 'reports that it is not running on the compositor');
@@ -882,7 +882,7 @@ promise_test(t => {
     { opacity: [0, 1] },
     { delay: 100 * MS_PER_SEC, duration: 100 * MS_PER_SEC });
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_not_running_on_compositor(animation,
       'Opacity animation on an element which has opacity:1 important style'
       + 'reports that it is not running on the compositor');
@@ -905,7 +905,7 @@ promise_test(t => {
                      { width: ['100px', '200px'] },
                      { duration: 100 * MS_PER_SEC, delay: 100 * MS_PER_SEC });
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_not_running_on_compositor(animation,
       'Width animation reports that it is not running on the compositor '
       + 'in the delay phase');
@@ -930,7 +930,7 @@ promise_test(t => {
 
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_running_on_compositor(animation,
        'Transition reports that it is running on the compositor even if the ' +
        'property is overridden by an !important rule');
@@ -949,7 +949,7 @@ promise_test(t => {
 
   var [transition, animation] = div.getAnimations();
 
-  return Promise.all([transition.ready, animation.ready]).then(() => {
+  return waitForPaints().then(() => {
     assert_animation_is_not_running_on_compositor(transition,
        'Transition suppressed by an animation which is overridden by an ' +
        '!important rule reports that it is NOT running on the compositor');
