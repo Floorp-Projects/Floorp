@@ -106,32 +106,23 @@ be applied to every task no matter what. If the template should only be applied
 to certain kinds of tasks, this needs to be specified in the template itself
 using JSON-e `condition statements`_.
 
-The context available to the JSON-e render aims to match that of ``actions``.
-It looks like this:
+The context available to the JSON-e render contains attributes from the
+:py:class:`taskgraph.task.Task` class. It looks like this:
 
 .. parsed-literal::
 
     {
-      "task": {
-        "payload": {
-          "env": { ... },
-          ...
-        }
-        "extra": {
-          "treeherder": { ... },
-          ...
-        },
-        "tags": { "kind": "<kind>", ... },
-        ...
-      },
-      "input": {
-        "enabled": 1,
-        ...
-      },
-      "taskId": "<task id>"
+      "attributes": task.attributes,
+      "kind": task.kind,
+      "task": task.task,
+      "taskId": task.task_id,
+      "input": ...
     }
 
-See the `existing templates`_ for examples.
+The ``input`` context can be any arbitrary value or object. What it contains
+depends on each specific template. Templates must return objects that have have
+either ``attributes`` or ``task`` as a top level key. All other top level keys
+will be ignored. See the `existing templates`_ for examples.
 
 Empty Try
 :::::::::
