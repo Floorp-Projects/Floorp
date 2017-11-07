@@ -22,6 +22,7 @@ UNSUPPORTED_FEATURES = set([
                             "tail-call-optimization",
                             "BigInt",
                             "class-fields",
+                            "Promise.prototype.finally",
                             "optional-catch-binding",
                             "regexp-dotall",
                             "regexp-lookbehind",
