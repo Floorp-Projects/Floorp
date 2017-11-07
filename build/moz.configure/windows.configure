@@ -447,6 +447,3 @@ def alter_path(sdk_bin_path):
 set_config('PATH', alter_path)
 
 check_prog('MAKECAB', ('makecab.exe',))
-
-
-
