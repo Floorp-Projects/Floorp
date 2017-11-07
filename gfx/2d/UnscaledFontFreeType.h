@@ -86,6 +86,8 @@ public:
                      const FontVariation* aVariations,
                      uint32_t aNumVariations) override;
 
+  bool GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton) override;
+
 private:
   RefPtr<NativeFontResource> mNativeFontResource;
 };
