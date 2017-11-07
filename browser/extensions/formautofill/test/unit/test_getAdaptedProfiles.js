@@ -316,7 +316,28 @@ const TESTCASES = [
     }],
   },
   {
-    description: "`tel` field with `maxlength` can be filled with `tel` value.",
+    description: "autocomplete=\"tel\" field with `maxlength` can be filled with `tel` value.",
+    document: `<form>
+               <input id="telephone" autocomplete="tel" maxlength="12">
+               <input id="line1" autocomplete="address-line1">
+               <input id="line2" autocomplete="address-line2">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_ADDRESS_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "street-address": "2 Harrison St\nline2\nline3",
+      "-moz-street-address-one-line": "2 Harrison St line2 line3",
+      "address-line1": "2 Harrison St",
+      "address-line2": "line2 line3",
+      "address-line3": "line3",
+      "address-level1": "CA",
+      "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
+    }],
+  },
+  {
+    description: "Still fill `tel-national` in a `tel` field with `maxlength` can be filled with `tel` value.",
     document: `<form>
                <input id="telephone" maxlength="12">
                <input id="line1" autocomplete="address-line1">
@@ -332,7 +353,7 @@ const TESTCASES = [
       "address-line3": "line3",
       "address-level1": "CA",
       "country": "US",
-      "tel": "+19876543210",
+      "tel": "9876543210",
       "tel-national": "9876543210",
     }],
   },

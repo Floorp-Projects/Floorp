@@ -1157,9 +1157,12 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 
 %elifndef MOZ_WIDGET_GTK
 
+#BMB_bookmarksPopup {
+  will-change: transform, opacity; /* workaround for bug 1414033 */
+}
+
 #BMB_bookmarksPopup:not([animate="false"]) {
   opacity: 0;
-  will-change: transform; /* workaround for bug 1414033 */
   transform: translateY(-70px);
   transition-property: transform, opacity;
   transition-duration: 0.18s, 0.18s;

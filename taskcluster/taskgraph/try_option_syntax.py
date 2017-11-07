@@ -152,35 +152,6 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
     # 'win64': [..TODO..],
 }
 
-# We have a few platforms for which we want to do some "extra" builds, or at
-# least build-ish things.  Sort of.  Anyway, these other things are implemented
-# as different "platforms".  These do *not* automatically ride along with "-p
-# all"
-RIDEALONG_BUILDS = {
-    'android-api-16': [
-        'android-api-16-l10n',
-    ],
-    'linux': [
-        'linux-l10n',
-    ],
-    'linux64': [
-        'linux64-l10n',
-        'sm-plain',
-        'sm-nonunified',
-        'sm-arm-sim',
-        'sm-arm64-sim',
-        'sm-compacting',
-        'sm-rootanalysis',
-        'sm-package',
-        'sm-tsan',
-        'sm-asan',
-        'sm-mozjs-sys',
-        'sm-msan',
-        'sm-fuzzing',
-        'sm-rust-bindings',
-    ],
-}
-
 TEST_CHUNK_SUFFIX = re.compile('(.*)-([0-9]+)$')
 
 
@@ -262,7 +233,7 @@ def parse_message(message):
 
 class TryOptionSyntax(object):
 
-    def __init__(self, parameters, full_task_graph):
+    def __init__(self, parameters, full_task_graph, graph_config):
         """
         Apply the try options in parameters.
 
@@ -289,6 +260,7 @@ class TryOptionSyntax(object):
             'only_chunks': set([..chunk numbers..]), # to limit only to certain chunks
         }
         """
+        self.graph_config = graph_config
         self.jobs = []
         self.build_types = []
         self.platforms = []
@@ -352,6 +324,7 @@ class TryOptionSyntax(object):
         if platform_arg == 'all':
             return None
 
+        RIDEALONG_BUILDS = self.graph_config['try']['ridealong-builds']
         results = []
         for build in platform_arg.split(','):
             results.append(build)

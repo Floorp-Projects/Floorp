@@ -1761,12 +1761,16 @@ SyncEngine.prototype = {
 
   async _sync() {
     try {
+      Async.checkAppReady();
       await this._syncStartup();
+      Async.checkAppReady();
       Observers.notify("weave:engine:sync:status", "process-incoming");
       await this._processIncoming();
+      Async.checkAppReady();
       Observers.notify("weave:engine:sync:status", "upload-outgoing");
       try {
         await this._uploadOutgoing();
+        Async.checkAppReady();
         await this._syncFinish();
       } catch (ex) {
         if (!ex.status || ex.status != 412) {

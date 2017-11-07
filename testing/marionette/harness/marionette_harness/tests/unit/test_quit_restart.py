@@ -198,8 +198,8 @@ class TestQuitRestart(MarionetteTestCase):
                             "about:")
 
     def test_in_app_restart_safe_mode(self):
-        if self.marionette.session_capabilities["platformName"] != "linux":
-            raise unittest.SkipTest("Bug 1397612 - Hang of Marionette client after the restart.")
+        if self.marionette.session_capabilities["moz:headless"]:
+            raise unittest.SkipTest("Bug 1390848 - Hang of Marionette client after the restart.")
 
         def restart_in_safe_mode():
             with self.marionette.using_context("chrome"):
