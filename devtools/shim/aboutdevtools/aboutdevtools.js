@@ -156,8 +156,11 @@ function createFeatureEl(feature) {
 window.addEventListener("load", function () {
   const inspectorShortcut = getToolboxShortcut();
   const welcomeMessage = document.getElementById("welcome-message");
-  welcomeMessage.textContent = welcomeMessage.textContent.replace(
-    "##INSPECTOR_SHORTCUT##", inspectorShortcut);
+
+  // Set the welcome message content with the correct keyboard sortcut for the current
+  // platform.
+  welcomeMessage.textContent = aboutDevtoolsBundle.formatStringFromName("welcome.message",
+    [inspectorShortcut], 1);
 
   // Set the appropriate title message.
   if (reason == "ContextMenu") {
