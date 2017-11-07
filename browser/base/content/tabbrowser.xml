@@ -260,7 +260,7 @@
           aTab.setAttribute("pinned", "true");
           this.tabContainer._unlockTabSizing();
           this.tabContainer._positionPinnedTabs();
-          this.tabContainer.adjustTabstrip();
+          this.tabContainer._updateCloseButtons();
 
           this.getBrowserForTab(aTab).messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: true })
 
@@ -284,7 +284,7 @@
           aTab.style.marginInlineStart = "";
           this.tabContainer._unlockTabSizing();
           this.tabContainer._positionPinnedTabs();
-          this.tabContainer.adjustTabstrip();
+          this.tabContainer._updateCloseButtons();
 
           this.getBrowserForTab(aTab).messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: false })
 
@@ -3393,7 +3393,7 @@
                 this.tabContainer._positionPinnedTabs();
 
               // update tab close buttons state
-              this.tabContainer.adjustTabstrip();
+              this.tabContainer._updateCloseButtons();
 
               setTimeout(function(tabs) {
                 tabs._lastTabClosedByMouse = false;
@@ -3867,7 +3867,7 @@
             aTab.removeAttribute("hidden");
             this._visibleTabs = null; // invalidate cache
 
-            this.tabContainer.adjustTabstrip();
+            this.tabContainer._updateCloseButtons();
 
             this.tabContainer._setPositionalAttributes();
 
@@ -3888,7 +3888,7 @@
             aTab.setAttribute("hidden", "true");
             this._visibleTabs = null; // invalidate cache
 
-            this.tabContainer.adjustTabstrip();
+            this.tabContainer._updateCloseButtons();
 
             this.tabContainer._setPositionalAttributes();
 
@@ -6403,7 +6403,7 @@
     <implementation implements="nsIDOMEventListener, nsIObserver">
       <constructor>
         <![CDATA[
-          this.mTabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
+          this._tabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
 
           let { restoreTabsButton } = this;
           restoreTabsButton.setAttribute("label", gTabBrowserBundle.GetStringFromName("tabs.restoreLastTabs"));
@@ -6671,7 +6671,7 @@
       </method>
 
       <field name="_closeButtonsUpdatePending">false</field>
-      <method name="adjustTabstrip">
+      <method name="_updateCloseButtons">
         <body><![CDATA[
           // If we're overflowing, tabs are at their minimum widths.
           if (this.getAttribute("overflow") == "true") {
@@ -6706,7 +6706,7 @@
                              .getBoundsWithoutFlushing(ele);
               };
               let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
-              if (tab && rect(tab).width <= this.mTabClipWidth) {
+              if (tab && rect(tab).width <= this._tabClipWidth) {
                 this.setAttribute("closebuttons", "activetab");
               } else {
                 this.removeAttribute("closebuttons");
@@ -7000,7 +7000,7 @@
                 break;
 
               TabsInTitlebar.updateAppearance();
-              this.adjustTabstrip();
+              this._updateCloseButtons();
               this._handleTabSelect(true);
               this.updateSessionRestoreVisibility();
               break;
@@ -7142,7 +7142,7 @@
           tab._fullyOpen = true;
           this.tabbrowser.tabAnimationsInProgress--;
 
-          this.adjustTabstrip();
+          this._updateCloseButtons();
 
           if (tab.getAttribute("selected") == "true") {
             this._handleTabSelect();
@@ -7198,7 +7198,7 @@
 
         if (tab.getAttribute("fadein") == "true") {
           if (tab._fullyOpen)
-            this.adjustTabstrip();
+            this._updateCloseButtons();
           else
             this._handleNewTab(tab);
         } else if (tab.closing) {
