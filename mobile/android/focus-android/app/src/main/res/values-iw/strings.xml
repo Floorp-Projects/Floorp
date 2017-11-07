@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">פתיחה באמצעות %1$s</string>
   <string name="menu_open_with_a_browser">פתיחה באמצעות…</string>
   <string name="menu_add_to_home_screen">הוספה למסך הבית</string>
+  <string name="menu_whats_new">מה חדש</string>
   <string name="menu_settings">הגדרות</string>
   <string name="menu_about">אודות</string>
   <string name="menu_help">עזרה</string>
@@ -30,22 +31,57 @@
   <string name="preference_dialog_title_search_engine">חיפוש בררת מחדל</string>
   <string name="preference_category_privacy">פרטיות</string>
   <string name="preference_privacy_block_ads">חסימת רכיבי מעקב</string>
+  <string name="preference_privacy_block_ads_summary">חלק מהפרסומות עוקבות אחר הביקורים באתרים, אפילו אם לא לחצת על הפרסומות</string>
   <string name="preference_privacy_block_analytics">חסימת מעקב של כלי ניתוח</string>
+  <string name="preference_privacy_block_analytics_summary">משמשות לאיסוף ניתוח ומדידת פעילויות כגון לחיצה וגלילה</string>
   <string name="preference_privacy_block_social">חסימת רכיבי מעקב חברתיים</string>
+  <string name="preference_privacy_block_social_summary">מוטמעות באתרים לצורך מעקב אחר הביקורים שלך והצגת רכיבים כגון כפתורי שיתוף</string>
   <string name="preference_privacy_block_content">חסימת כלי מעקב אחרים</string>
+  <string name="preference_privacy_block_content_summary2">הפעלת התכונה עשויה לגרום לחלק מהאתרים להתנהג שלא כצפוי</string>
   <string name="preference_privacy_secure_mode">חשאיות</string>
   <string name="preference_privacy_stealth_summary">הסתרת דפי אינטרנט בעת מעבר בין יישומונים</string>
   <string name="preference_category_performance">ביצועים</string>
   <string name="preference_performance_block_webfonts">חסימת גופני רשת</string>
   <string name="preference_performance_block_webfonts_summary">עשוי לגרום לסמלים או תמונות חסרים</string>
   <string name="preference_performance_block_images">חסימת תמונות</string>
+  <string name="preference_default_browser2">הגדרת %1$s כדפדפן ברירת המחדל</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">שליחת נתוני שימוש</string>
   <string name="preference_mozilla_telemetry_summary">מידע נוסף</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla חותרת לאיסוף המידע שנדרש לצורך שיפור %1$s לטובת הכלל.</string>
+  <string name="preference_privacy_notice">הצהרת פרטיות</string>
   <string name="preference_about">על אודות %1$s</string>
+  <string name="preference_search_installed_search_engines">מנועי חיפוש מותקנים</string>
+  <string name="preference_search_restore">שחזור מנועי חיפוש ברירת מחדל</string>
+  <string name="preference_search_add2">+ הוספת מנוע חיפוש אחר</string>
+  <string name="preference_search_remove_title">הסרת מנועי חיפוש</string>
+  <string name="preference_search_remove">הסרה</string>
+  <string name="tutorial_search_manually_add">הוספה ידנית</string>
+  <string name="tutorial_search_title">הוספת מנוע חיפוש</string>
+  <string name="tutorial_search_step1">1. לעבור לעמוד הבית של מנוע החיפוש.</string>
+  <string name="tutorial_search_step2">2. ללחוץ על שדה החיפוש של מנוע החיפוש.</string>
+  <string name="tutorial_search_step2_alternative">2. ללחוץ לחיצה ארוכה על שדה החיפוש של מנוע החיפוש.</string>
+  <string name="tutorial_search_step3">3. ללחוץ על סמל זכוכית המגדלת שמעל למקלדת כדי להוסיף את מנוע החיפוש.</string>
+  <string name="action_option_add_search_engine">הוספת מנוע חיפוש</string>
+  <string name="tutorial_search_step3_alternative">3. ללחוץ על %1$s</string>
+  <string name="tutorial_search_step4">4. אם זכוכית המגדלת לא מופיעה, כדאי לנסות להוסיף מנוע חיפוש ידנית.</string>
+  <string name="tutorial_search_step4_alternative">4. אם %1$s לא ומפיע, כדי לנסות להוסיף מנוע חיפוש ידנית.</string>
+  <string name="tutorial_search_finish">יסודות</string>
+  <string name="search_add_hint">יש ללחוץ על סמל הזכוכית המגדלת שמעל למקלדת כדי להוסיף את מנוע החיפוש הזה.</string>
+  <string name="search_add_manually_name">שם לתצוגה</string>
+  <string name="search_add_manually_name_hint">שם מנוע החיפוש</string>
+  <string name="search_add_manually_string">מחרוזת חיפוש לשימוש</string>
+  <string name="search_add_manually_save">שמירה</string>
+  <string name="search_add_manually_string_hint">יש להדביק או להקליד מחרוזת לחיפוש. במידת הצורך, יש להחליף את הביטוי לחיפוש ב־: %s.</string>
+  <string name="search_add_manually_example">דוגמה: example.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">הוספת מנוע חיפוש</string>
+  <string name="search_add_confirmation">מנוע חיפוש חדש התווסף.</string>
+  <string name="search_add_error">נא לבדוק את מחרוזת החיפוש ולנסות שוב</string>
   <string name="content_description_clear_input">מחיקת קלט</string>
   <string name="content_description_dismiss_input">התעלמות</string>
   <string name="content_description_erase">מחיקת היסטורית גלישה</string>
   <string name="content_description_fab_expand">הרחבה</string>
+  <string name="content_description_tab_counter">לשוניות פתוחות: %1$s</string>
   <string name="content_description_open_tab">פתיחת לשונית</string>
   <string name="content_description_close_tab">סגירת לשונית</string>
   <string name="content_description_lock">חיבור מאובטח</string>
@@ -96,8 +132,13 @@
   <string name="contextmenu_open_in_new_tab">פתיחת קישור בלשונית חדשה</string>
   <string name="contextmenu_image_warning"><![CDATA["תמונות שמורות ומשותפות "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1500;&#1488; &#1497;&#1497;&#1502;&#1495;&#1511;&#1493;</b>" בעת מחיקת ההיסטוריה של %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">חיזוק הפרטיות שלך</string>
+  <string name="firstrun_defaultbrowser_text2">לקחת את הגלישה המאובטחת לרמה הבאה. ניתן לחסום פרסומות ותוכן אחר שעשוי לסייע במעקב אחריך בין אתרים שונים ולהפריע לזמני טעינת עמודים.</string>
   <string name="firstrun_search_title">החיפוש שלך, בדרך שלך</string>
+  <string name="firstrun_search_text">לא מה שחיפשת? ניתן לבחור במנוע חיפוש אחר כברירת מחדל בהגדרות.</string>
   <string name="firstrun_shortcut_title">הוספת קיצורי דרך למסך הבית שלך</string>
+  <string name="firstrun_shortcut_text">ניתן לחזור לאתרים המועדפים עליך ב־%1$s בקלות. עליך פשוט לבחור באפשרות „הוספה למסך הבית” מהתפריט %1$s.</string>
+  <string name="firstrun_privacy_title">להפוך את הפרטיות להרגל</string>
+  <string name="firstrun_privacy_text">ניתן להגדיר את %1$s בתור דפדפן ברירת המחדל שלך ולקבל את היתרונות של גלישה פרטים בעת פתיחת עמודי אינטרנט מיישומונים אחרים.</string>
   <string name="firstrun_close_button">בסדר, הבנתי!</string>
   <string name="firstrun_skip_button">דילוג</string>
   <string name="firstrun_next_button">הבא</string>
@@ -105,6 +146,16 @@
   <string name="dialog_addtohomescreen_title">הוספה למסך הבית</string>
   <string name="dialog_addtohomescreen_action_add">הוספה</string>
   <string name="dialog_addtohomescreen_action_cancel">ביטול</string>
+  <string name="dialog_addtohomescreen_tracking_protection">קיצור הדרך ייפתח ללא הגנת מעקב</string>
   <string name="dialog_opentab_title">פתיחת קישור בלשונית שנבחרה</string>
   <string name="dialog_opentab_action_open">פתיחה</string>
+  <string name="notification_browsing_session_channel_name">הפעלה בגלישה פרטית</string>
+  <string name="notification_browsing_session_channel_description">התרעות מאפשרות לך למחוק את ההפעלה של %1$s בנגיעה קלה. אין צורך לפתוח את היישומון או לראות מה פועל בדפדפן שלך.</string>
+  <string name="tabs_tray_action_erase">מחיקת היסטורית גלישה</string>
+  <string name="download_firefox">הורדת Firefox</string>
+  <string name="your_rights_content1">%1$s היא תכנית חופשית ובקוד פתוח שפותחה על ידי Mozilla ותורמים נוספים.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s זמין לשימושך תחת תנאי "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1492;&#1512;&#1513;&#1497;&#1493;&#1503; &#1492;&#1510;&#1497;&#1489;&#1493;&#1512;&#1497; &#1513;&#1500;Mozilla</a>" ורשיונות קוד פתוח אחרים."]]></string>
+  <string name="your_rights_content3"><![CDATA["אין לך כל זכות או רשיונות על סימני המסחר של קרן Mozilla או לכל גוף שהוא, לרבות Mozilla,‏ Firefox או השמות והלוגואים של %1$s. ניתן למצוא מידע נוסף "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1499;&#1488;&#1503;</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["קוד מקור נוסף עבור %1$s זמין תחת מגוון "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1512;&#1497;&#1513;&#1497;&#1493;&#1504;&#1493;&#1514;</a>" קוד פתוח נוספים."]]></string>
+  <string name="your_rights_content5"><![CDATA["ב־%1$s נעשה גם שימוש ברשימות חסימה מאת Disconnect בע״מ כעבודות נפרדות ועצמריות תחת "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1490;&#1512;&#1505;&#1492; 3 &#1513;&#1500; &#1492;&#1512;&#1513;&#1497;&#1493;&#1503; &#1492;&#1510;&#1497;&#1489;&#1493;&#1512;&#1497; &#1492;&#1499;&#1500;&#1500;&#1497; &#1513;&#1500;GNU</a>", והוא זמין "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1499;&#1488;&#1503;</a>.]]></string>
 </resources>

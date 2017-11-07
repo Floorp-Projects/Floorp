@@ -37,6 +37,7 @@
   <string name="preference_privacy_block_social">Blokir pelacak sosial</string>
   <string name="preference_privacy_block_social_summary">Disematkan pada situs untuk melacak kunjungan Anda dan menampilkan fungsi seperti tombol berbagi</string>
   <string name="preference_privacy_block_content">Blokir pelacak konten lainnya</string>
+  <string name="preference_privacy_block_content_summary2">Mengaktifkan fitur ini mungkin menyebabkan beberapa laman bertindak tidak terduga</string>
   <string name="preference_privacy_secure_mode">Mode Siluman</string>
   <string name="preference_privacy_stealth_summary">Sembunyikan laman web saat berpindah aplikasi</string>
   <string name="preference_category_performance">Kinerja</string>
@@ -150,6 +151,7 @@
   <string name="download_firefox">Unduh Firefox</string>
   <string name="your_rights_content1">%1$s adalah perangkat lunak bebas dan sumber terbuka yang dibuat oleh Mozilla dan kontributor lainnya.</string>
   <string name="your_rights_content2"><![CDATA["%1$s tersedia untuk Anda di bawah persyaratan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Lisensi Publik Mozilla</a>" dan lisensi sumber terbuka lainnya."]]></string>
+  <string name="your_rights_content3"><![CDATA["Anda tidak diberi izin atau lisensi apa pun atas merek dagang Mozilla Foundation atau pihak mana pun, termasuk nama atau logo Mozilla, Firefox, atau %1$s. Informasi lebih lanjut bisa ditemukan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">di sini</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Kode sumber tambahan untuk %1$s tersedia dengan berbagai "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisensi</a>" bebas dan sumber terbuka lainnya."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s juga menggunakan daftar blokir yang disediakan oleh Disconnect, Inc. sebagai pekerjaan terpisah dan independen di bawah "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", dan tersedia "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">di sini</a>.]]></string>
 </resources>

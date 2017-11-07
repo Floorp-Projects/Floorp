@@ -33,9 +33,9 @@
   <string name="preference_privacy_block_ads">Bloquer les traqueurs publicitaires</string>
   <string name="preference_privacy_block_ads_summary">Certaines publicités pistent vos visites sur les sites, même sans cliquer sur les publicités</string>
   <string name="preference_privacy_block_analytics">Bloquer les traqueurs de statistiques</string>
-  <string name="preference_privacy_block_analytics_summary">Servent à collecter, analyser et mesurer les actions telles qu’appuyer sur l’écran ou faire défiler la page</string>
+  <string name="preference_privacy_block_analytics_summary">Ils servent à collecter, analyser et mesurer les actions telles qu’appuyer sur l’écran ou faire défiler la page</string>
   <string name="preference_privacy_block_social">Bloquer les traqueurs de réseaux sociaux</string>
-  <string name="preference_privacy_block_social_summary">Inséré sur certains sites pour pister vos visites et afficher des fonctionnalités comme des boutons de partage</string>
+  <string name="preference_privacy_block_social_summary">Ils sont insérés sur certains sites pour pister vos visites et afficher des fonctionnalités comme des boutons de partage</string>
   <string name="preference_privacy_block_content">Bloquer les autres traqueurs de contenu</string>
   <string name="preference_privacy_block_content_summary2">Activer cette option peut provoquer des problèmes sur certaines pages</string>
   <string name="preference_privacy_secure_mode">Mode furtif</string>

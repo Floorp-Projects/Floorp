@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Motor de recerca predefinite</string>
   <string name="preference_category_privacy">Confidentialitate</string>
   <string name="preference_privacy_block_ads">Blocar le traciatores de publicitate</string>
+  <string name="preference_privacy_block_ads_summary">Alcun publicitates tracia le visitas al sitos, anque si tu non los clicca</string>
   <string name="preference_privacy_block_analytics">Blocar le traciatores analytic</string>
+  <string name="preference_privacy_block_analytics_summary">Usate pro colliger, analysar e mensurar activitates como toccar e rolar</string>
   <string name="preference_privacy_block_social">Blocar le traciatores social</string>
+  <string name="preference_privacy_block_social_summary">Integrate al sitos pro traciar tu visitas e monstrar functionalitates como buttones de compartir</string>
   <string name="preference_privacy_block_content">Blocar le altere traciatores de contento</string>
+  <string name="preference_privacy_block_content_summary2">Activar isto pote facer le paginas se comportar de maniera inexpectate</string>
   <string name="preference_privacy_secure_mode">Invisibile</string>
   <string name="preference_privacy_stealth_summary">Celar le paginas web quando on cambia de applicationes</string>
   <string name="preference_category_performance">Rendimento</string>
@@ -49,7 +53,7 @@
   <string name="preference_about">A proposito de %1$s</string>
   <string name="preference_search_installed_search_engines">Motores de recerca installate</string>
   <string name="preference_search_restore">Restaurar le motores de recerca predefinite</string>
-  <string name="preference_search_add2">Adder un altere motor de recerca</string>
+  <string name="preference_search_add2">+ Adder un altere motor de recerca</string>
   <string name="preference_search_remove_title">Remover le motores de recerca</string>
   <string name="preference_search_remove">Remover</string>
   <string name="tutorial_search_manually_add">Adder manualmente</string>

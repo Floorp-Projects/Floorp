@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Standard-søgetjeneste</string>
   <string name="preference_category_privacy">Privatliv</string>
   <string name="preference_privacy_block_ads">Bloker sporing via reklamer</string>
+  <string name="preference_privacy_block_ads_summary">Nogle reklamer sporer dine besøg på websteder, selvom du ikke klikker på dem</string>
   <string name="preference_privacy_block_analytics">Bloker analytisk sporing</string>
+  <string name="preference_privacy_block_analytics_summary">Bruges til at indsamle, analysere og måle aktiviteter som tryk og scrolling</string>
   <string name="preference_privacy_block_social">Bloker sporing via sociale medier</string>
+  <string name="preference_privacy_block_social_summary">Indlejret på websteder for at spore dine besøg og vise funktionalitet som dele-knapper</string>
   <string name="preference_privacy_block_content">Bloker andre former for indholdssporing</string>
+  <string name="preference_privacy_block_content_summary2">Aktivering kan medføre, at visse sider opfører sig uventet</string>
   <string name="preference_privacy_secure_mode">Usynlig</string>
   <string name="preference_privacy_stealth_summary">Skjul indhold på listen over senest brugte apps</string>
   <string name="preference_category_performance">Ydelse</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Om %1$s</string>
   <string name="preference_search_installed_search_engines">Installerede søgetjenester</string>
   <string name="preference_search_restore">Gendan standard-søgetjenester</string>
+  <string name="preference_search_add2">+ Tilføj en ny søgetjeneste</string>
   <string name="preference_search_remove_title">Fjern søgetjenester</string>
   <string name="preference_search_remove">Fjern</string>
   <string name="tutorial_search_manually_add">Tilføj manuelt</string>
