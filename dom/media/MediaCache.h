@@ -329,8 +329,6 @@ public:
   // because it doesn't know when the decoder was paused, buffering, etc.
   // Do not pass zero.
   void SetPlaybackRate(uint32_t aBytesPerSecond);
-  // Returns the last set value of SetTransportSeekable.
-  bool IsTransportSeekable();
 
   // Returns true when all streams for this resource are suspended or their
   // channel has ended.

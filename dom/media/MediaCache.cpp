@@ -2201,13 +2201,6 @@ MediaCacheStream::~MediaCacheStream()
 }
 
 bool
-MediaCacheStream::IsTransportSeekable()
-{
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  return mIsTransportSeekable;
-}
-
-bool
 MediaCacheStream::AreAllStreamsForResourceSuspended()
 {
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
