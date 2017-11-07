@@ -132,7 +132,7 @@ CONFIGURES := $(TOPSRCDIR)/configure
 CONFIGURES += $(TOPSRCDIR)/js/src/configure
 
 # Make targets that are going to be passed to the real build system
-OBJDIR_TARGETS = install export libs clean realclean distclean maybe_clobber_profiledbuild upload sdk installer package package-compare stage-package source-package l10n-check automation/build
+OBJDIR_TARGETS = install export libs clean realclean distclean upload sdk installer package package-compare stage-package source-package l10n-check automation/build
 
 #######################################################################
 # Rules
@@ -190,7 +190,7 @@ profiledbuild::
 	MOZ_PGO_INSTRUMENTED=1 JARLOG_FILE=jarlog/en-US.log EXTRA_TEST_ARGS=10 $(MAKE) -C $(OBJDIR) pgo-profile-run
 	$(call BUILDSTATUS,TIER_FINISH pgo_profile)
 	$(call BUILDSTATUS,TIER_START pgo_clobber)
-	$(MAKE) -f $(TOPSRCDIR)/client.mk maybe_clobber_profiledbuild CREATE_MOZCONFIG_JSON=
+	$(MAKE) -C $(OBJDIR) maybe_clobber_profiledbuild
 	$(call BUILDSTATUS,TIER_FINISH pgo_clobber)
 	$(call BUILDSTATUS,TIER_START pgo_profile_use)
 	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_USE=1 CREATE_MOZCONFIG_JSON=
