@@ -58,11 +58,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         super.onCreate(savedInstanceState);
 
         final Bundle args = getArguments();
-        int prefResId = R.xml.settings;
-
-        if (args != null) {
-            prefResId = args.getInt(PREFERENCES_RESID_INTENT_EXTRA, R.xml.settings);
-        }
+        final int prefResId = args != null ?
+                args.getInt(PREFERENCES_RESID_INTENT_EXTRA, R.xml.settings) :
+                R.xml.settings;
 
         addPreferencesFromResource(prefResId);
     }
@@ -140,7 +138,11 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
         // Update title and icons when returning to fragments.
         final ActionBarUpdater updater = (ActionBarUpdater) getActivity();
-        updater.updateTitle(getArguments().getInt(TITLE_RESID_INTENT_EXTRA));
+        final Bundle args = getArguments();
+        final int titleResId = args != null ?
+                args.getInt(TITLE_RESID_INTENT_EXTRA, R.string.menu_settings) :
+                R.string.menu_settings;
+        updater.updateTitle(titleResId);
         updater.updateIcon(R.drawable.ic_back);
     }
 
@@ -185,7 +187,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
             // The easiest way to ensure we update the language is by replacing the entire fragment:
             getFragmentManager().beginTransaction()
-                    .replace(R.id.container, new SettingsFragment())
+                    .replace(R.id.container, SettingsFragment.newInstance(null, R.xml.settings, R.string.menu_settings))
                     .commit();
         }
     }
