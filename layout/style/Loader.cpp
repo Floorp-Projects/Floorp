@@ -1848,6 +1848,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
 nsresult
 Loader::LoadInlineStyle(nsIContent* aElement,
                         const nsAString& aBuffer,
+                        nsIPrincipal* aTriggeringPrincipal,
                         uint32_t aLineNumber,
                         const nsAString& aTitle,
                         const nsAString& aMedia,
@@ -1900,12 +1901,22 @@ Loader::LoadInlineStyle(nsIContent* aElement,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  nsIPrincipal* principal = aElement->NodePrincipal();
+  if (aTriggeringPrincipal) {
+    // The triggering principal may be an expanded principal, which is safe to
+    // use for URL security checks, but not as the loader principal for a
+    // stylesheet. So treat this as principal inheritance, and downgrade if
+    // necessary.
+    principal = BasePrincipal::Cast(aTriggeringPrincipal)->PrincipalToInherit();
+  }
+
   SheetLoadData* data = new SheetLoadData(this, aTitle, nullptr, sheet,
                                           owningElement, *aIsAlternate,
-                                          aObserver, nullptr, static_cast<nsINode*>(aElement));
+                                          aObserver, nullptr,
+                                          static_cast<nsINode*>(aElement));
 
   // We never actually load this, so just set its principal directly
-  sheet->SetPrincipal(aElement->NodePrincipal());
+  sheet->SetPrincipal(principal);
 
   NS_ADDREF(data);
   data->mLineNumber = aLineNumber;

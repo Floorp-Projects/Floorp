@@ -227,6 +227,9 @@ public:
    * @param aElement the element linking to the stylesheet.  This must not be
    *                 null and must implement nsIStyleSheetLinkingElement.
    * @param aBuffer the stylesheet data
+   * @param aTriggeringPrincipal The principal of the scripted caller that
+   *                             initiated the load, if available. Otherwise
+   *                             null.
    * @param aLineNumber the line number at which the stylesheet data started.
    * @param aTitle the title of the sheet.
    * @param aMedia the media string for the sheet.
@@ -239,6 +242,7 @@ public:
    */
   nsresult LoadInlineStyle(nsIContent* aElement,
                            const nsAString& aBuffer,
+                           nsIPrincipal* aTriggeringPrincipal,
                            uint32_t aLineNumber,
                            const nsAString& aTitle,
                            const nsAString& aMedia,
