@@ -5210,25 +5210,6 @@ pref("dom.netinfo.enabled", true);
 pref("dom.netinfo.enabled", false);
 #endif
 
-#ifdef XP_WIN
-// On 32-bit Windows, fire a low-memory notification if we have less than this
-// many mb of virtual address space available.
-pref("memory.low_virtual_memory_threshold_mb", 128);
-
-// On Windows 32-bit, fire a low-memory notification if we have less
-// than this many mb of commit space (physical memory plus page file) left.
-pref("memory.low_commit_space_threshold_mb", 128);
-
-// On Windows 32-bit, fire a low-memory notification if we have less
-// than this many mb of physical memory available on the whole machine.
-pref("memory.low_physical_memory_threshold_mb", 0);
-
-// On Windows 32-bit, don't fire a low-memory notification because of
-// low available physical memory or low commit space more than once every
-// low_memory_notification_interval_ms.
-pref("memory.low_memory_notification_interval_ms", 10000);
-#endif
-
 // How long must we wait before declaring that a window is a "ghost" (i.e., a
 // likely leak)?  This should be longer than it usually takes for an eligible
 // window to be collected via the GC/CC.
