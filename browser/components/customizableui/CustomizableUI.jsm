@@ -1630,7 +1630,7 @@ var CustomizableUIInternal = {
         }
       }
 
-      ownerWindow.PanelUI.showSubView(aWidget.viewId, anchor, area, aEvent);
+      ownerWindow.PanelUI.showSubView(aWidget.viewId, anchor, aEvent);
     }
   },
 
