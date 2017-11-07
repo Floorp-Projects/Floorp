@@ -1152,7 +1152,7 @@
       </toolbarbutton>
 
       <toolbaritem id="search-container"
-                   class="chromeclass-toolbar-additional panel-wide-item"
+                   class="chromeclass-toolbar-additional"
                    title="&searchItem.title;"
                    align="center"
                    flex="100"
