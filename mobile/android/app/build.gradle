@@ -567,3 +567,14 @@ android.applicationVariants.all { variant ->
 
     assembleTask.dependsOn dumpTask
 }
+
+// Bug 1415298: make Robolectric find assets.  Fix adapted from
+// https://github.com/robolectric/robolectric/issues/2647.
+android.applicationVariants.all { variant ->
+    def productFlavor = ""
+    variant.productFlavors.each {
+        productFlavor += "${it.name.capitalize()}"
+    }
+    def buildType = "${variant.buildType.name.capitalize()}"
+    tasks["compile${productFlavor}${buildType}UnitTestSources"].dependsOn(tasks["merge${productFlavor}${buildType}Assets"])
+}
