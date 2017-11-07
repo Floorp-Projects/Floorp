@@ -1,4 +1,4 @@
-// |jit-test| error:SyntaxError
+// |jit-test| error:ReferenceError
 try {
     eval("}");
 } catch (exc) {}
