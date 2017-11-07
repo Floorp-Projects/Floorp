@@ -66,7 +66,7 @@ nsBulletFrame::~nsBulletFrame()
 }
 
 void
-nsBulletFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsBulletFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   // Stop image loading first.
   DeregisterAndCancelImageRequest();
@@ -76,7 +76,7 @@ nsBulletFrame::DestroyFrom(nsIFrame* aDestructRoot)
   }
 
   // Let base class do the rest
-  nsFrame::DestroyFrom(aDestructRoot);
+  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 #ifdef DEBUG_FRAME_DUMP

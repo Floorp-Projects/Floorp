@@ -381,7 +381,8 @@ nsLineBox::CachedIsEmpty()
 
 void
 nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
-                          nsIFrame* aDestructRoot, nsFrameList* aFrames)
+                          nsIFrame* aDestructRoot, nsFrameList* aFrames,
+                          PostDestroyData& aPostDestroyData)
 {
   nsIPresShell* shell = aPresContext->PresShell();
 
@@ -398,7 +399,7 @@ nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
       MOZ_ASSERT(child == line->mFirstChild, "Lines out of sync");
       line->mFirstChild = aFrames->FirstChild();
       line->NoteFrameRemoved(child);
-      child->DestroyFrom(aDestructRoot);
+      child->DestroyFrom(aDestructRoot, aPostDestroyData);
     }
 
     aLines.pop_front();

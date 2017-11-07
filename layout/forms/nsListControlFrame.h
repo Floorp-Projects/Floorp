@@ -81,7 +81,7 @@ public:
   virtual void DidReflow(nsPresContext*            aPresContext,
                          const ReflowInput*  aReflowInput,
                          nsDidReflowStatus         aStatus) override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsDisplayListSet& aLists) override;
