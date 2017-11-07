@@ -46,11 +46,9 @@ DEFAULTS = dict(
         userready=False,
         testeventmap=[],
         base_vs_ref=False,
-        tpnoisy=True,
         tppagecycles=1,
         tploadnocache=False,
         tpscrolltest=False,
-        tprender=False,
         win_counters=[],
         w7_counters=[],
         linux_counters=[],
@@ -58,6 +56,7 @@ DEFAULTS = dict(
         xperf_counters=[],
         setup=None,
         cleanup=None,
+        preferences={},
     ),
     # default preferences to run with
     # these are updated with --extraPrefs from the commandline
@@ -219,7 +218,6 @@ GLOBAL_OVERRIDES = (
     'gecko_profile_entries',
     'shutdown',
     'tpcycles',
-    'tpdelay',
     'tppagecycles',
     'tpmanifest',
     'tptimeout',
@@ -333,11 +331,6 @@ def get_global_overrides(config):
             global_overrides[key] = value
         if key != 'gecko_profile':
             config.pop(key)
-
-    # add noChrome to global overrides (HACK)
-    noChrome = config.pop('noChrome')
-    if noChrome:
-        global_overrides['tpchrome'] = False
 
     # HACK: currently xperf tests post results to graph server and
     # we want to ensure we don't publish shutdown numbers
