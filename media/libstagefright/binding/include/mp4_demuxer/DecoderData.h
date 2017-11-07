@@ -7,9 +7,10 @@
 
 #include "MediaData.h"
 #include "MediaInfo.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Result.h"
 #include "mozilla/Types.h"
 #include "mozilla/Vector.h"
-#include "mozilla/RefPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsString.h"

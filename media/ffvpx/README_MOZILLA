@@ -7,23 +7,23 @@ Currently, we only use the vp8 and vp9 portion of the library, and only on x86
 based platforms. If this changes, configuration files will most likely
 need to be updated.
 
-AVX2 must be disabled on Linux due to the use of yasm 1.1 on the build bots.
+AVX2 must be disabled on Linux 32 bits due to the use of yasm 1.1 on the build bots.
 Once yasm is upgraded to 1.2 or later, AVX2 code could be re-enabled.
 Add --disable-avx2 to configure on those platforms.
 
 configuration files were generated as follow using the configure script:
-./configure --disable-everything --disable-protocols --disable-demuxers --disable-muxers --disable-filters --disable-programs --disable-doc --disable-parsers --enable-parser=vp8 --enable-parser=vp9 --enable-decoder=vp8 --enable-decoder=vp9 --disable-static --enable-shared --disable-debug --disable-sdl2 --disable-libxcb --disable-securetransport --disable-iconv --disable-swresample --disable-swscale --disable-avdevice --disable-avfilter --disable-avformat --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vda --disable-vdpau --disable-videotoolbox --enable-decoder=flac --enable-asm --enable-yasm
+./configure --disable-everything --disable-protocols --disable-demuxers --disable-muxers --disable-filters --disable-programs --disable-doc --disable-parsers --enable-parser=vp8 --enable-parser=vp9 --enable-decoder=vp8 --enable-decoder=vp9 --disable-static --enable-shared --disable-debug --disable-sdl2 --disable-libxcb --disable-securetransport --disable-iconv --disable-swresample --disable-swscale --disable-avdevice --disable-avfilter --disable-avformat --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vda --disable-vdpau --disable-videotoolbox --enable-decoder=flac --enable-asm --enable-x86asm
 
 config*:
 replace: /HAVE_(MALLOC_H|ARC4RANDOM|LOCALTIME_R|MEMALIGN|POSIX_MEMALIGN)/d
 
 config_unix32.h:
-add to configure command: --disable-asm --disable-yasm --cc='clang -m32'
+add to configure command: --disable-asm --disable-x86asm --cc='clang -m32'
 
 config_android.h:
 ./configure --disable-everything --disable-protocols --disable-demuxers --disable-muxers --disable-filters --disable-programs --disable-doc --disable-parsers --disable-static --enable-shared --disable-debug --disable-sdl2 --disable-libxcb --disable-securetransport --disable-iconv --disable-swresample --disable-swscale --disable-avdevice --disable-avfilter --disable-avformat --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vda --disable-vdpau --disable-videotoolbox --enable-decoder=flac --disable-asm --cross-prefix=~/.mozbuild/android-ndk-r15c/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/arm-linux-androideabi- --target-os=linux --arch=arm --enable-cross-compile --sysroot=~/.mozbuild/android-ndk-r15c/platforms/android-24/arch-arm
 
-config_unix64.h/config_unix64.asm:
+config_unix32.h/config_unix64.h/config_unix64.asm:
 replace: s/HAVE_SYSCTL 1/HAVE_SYSCTL 0
 
 config_win32/64.h/asm:

@@ -57,14 +57,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
         'gfxVROculus.cpp',
     ]
 
-if CONFIG['MOZ_ANDROID_GOOGLE_VR']:
-    SOURCES += [
-        'gfxVRGVR.cpp',
-        'jni/gfxGVRJNI.cpp',
-    ]
-    CXXFLAGS += ['-I%s' % CONFIG['MOZ_ANDROID_GOOGLE_VR_INCLUDE']]
-    LOCAL_INCLUDES += ['/widget/android']
-
 IPDL_SOURCES = [
     'ipc/PVRLayer.ipdl',
     'ipc/PVRManager.ipdl',

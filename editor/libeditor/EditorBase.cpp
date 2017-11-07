@@ -28,11 +28,13 @@
 #include "TextEditUtils.h"              // for TextEditUtils
 #include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
 #include "mozilla/CheckedInt.h"         // for CheckedInt
+#include "mozilla/EditorDOMPoint.h"     // for EditorDOMPoint
 #include "mozilla/EditorUtils.h"        // for AutoRules, etc.
 #include "mozilla/EditTransactionBase.h" // for EditTransactionBase
 #include "mozilla/FlushType.h"          // for FlushType::Frames
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
 #include "mozilla/Preferences.h"        // for Preferences
+#include "mozilla/RangeBoundary.h"      // for RawRangeBoundary, RangeBoundary
 #include "mozilla/dom/Selection.h"      // for Selection, etc.
 #include "mozilla/Services.h"           // for GetObserverService
 #include "mozilla/TextComposition.h"    // for TextComposition
@@ -3764,22 +3766,17 @@ EditorBase::IsTextNode(nsIDOMNode* aNode)
   return (nodeType == nsIDOMNode::TEXT_NODE);
 }
 
-/**
- * GetNodeAtRangeOffsetPoint() returns the node at this position in a range,
- * assuming that aParentOrNode is the node itself if it's a text node, or
- * the node's parent otherwise.
- */
+// static
 nsIContent*
-EditorBase::GetNodeAtRangeOffsetPoint(nsINode* aParentOrNode,
-                                      int32_t aOffset)
+EditorBase::GetNodeAtRangeOffsetPoint(const RawRangeBoundary& aPoint)
 {
-  if (NS_WARN_IF(!aParentOrNode)) {
+  if (NS_WARN_IF(!aPoint.IsSet())) {
     return nullptr;
   }
-  if (aParentOrNode->GetAsText()) {
-    return aParentOrNode->AsContent();
+  if (aPoint.Container()->GetAsText()) {
+    return aPoint.Container()->AsContent();
   }
-  return aParentOrNode->GetChildAt(aOffset);
+  return aPoint.GetChildAtOffset();
 }
 
 /**
@@ -4047,17 +4044,17 @@ EditorBase::JoinNodeDeep(nsIContent& aLeftNode,
   nsCOMPtr<nsINode> parentNode = aRightNode.GetParentNode();
 
   EditorDOMPoint ret;
-
   while (leftNodeToJoin && rightNodeToJoin && parentNode &&
          AreNodesSameType(leftNodeToJoin, rightNodeToJoin)) {
     uint32_t length = leftNodeToJoin->Length();
 
-    ret.node = rightNodeToJoin;
-    ret.offset = length;
+    ret.Set(rightNodeToJoin, length);
 
     // Do the join
     nsresult rv = JoinNodes(*leftNodeToJoin, *rightNodeToJoin);
-    NS_ENSURE_SUCCESS(rv, EditorDOMPoint());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorDOMPoint();
+    }
 
     if (parentNode->GetAsText()) {
       // We've joined all the way down to text nodes, we're done!
@@ -4087,6 +4084,10 @@ EditorBase::JoinNodeDeep(nsIContent& aLeftNode,
     if (!rightNodeToJoin) {
       return ret;
     }
+  }
+
+  if (NS_WARN_IF(!ret.IsSet())) {
+    return EditorDOMPoint();
   }
 
   return ret;
