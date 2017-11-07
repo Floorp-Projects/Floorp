@@ -201,9 +201,11 @@ public:
 
     (void) new XPCWrappedNativeScope(cx, globalObj);
 
+    NS_ConvertUTF16toUTF8(mURL) url;
+
     JS::CompileOptions compileOptions(cx);
     compileOptions.setIntroductionType("Worklet");
-    compileOptions.setFileAndLine(NS_ConvertUTF16toUTF8(mURL).get(), 0);
+    compileOptions.setFileAndLine(url, 0);
     compileOptions.setVersion(JSVERSION_DEFAULT);
     compileOptions.setIsRunOnce(true);
     compileOptions.setNoScriptRval(true);
