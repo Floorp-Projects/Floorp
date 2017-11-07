@@ -126,13 +126,6 @@ class ProcessCodeSegmentMap
         MOZ_ASSERT(segments2_.empty());
     }
 
-    void freeAll() {
-        MOZ_ASSERT(segments1_.empty());
-        MOZ_ASSERT(segments2_.empty());
-        segments1_.clearAndFree();
-        segments2_.clearAndFree();
-    }
-
     bool insert(const CodeSegment* cs) {
         LockGuard<Mutex> lock(mutatorsMutex_);
 
@@ -236,10 +229,4 @@ wasm::LookupCode(const void* pc)
 {
     const CodeSegment* found = LookupCodeSegment(pc);
     return found ? found->code() : nullptr;
-}
-
-void
-wasm::ShutDownProcessStaticData()
-{
-    processCodeSegmentMap.freeAll();
 }
