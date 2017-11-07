@@ -113,14 +113,11 @@
               Promise.all(test.track.fragments.map(fragment => DownloadMedia(fragment, test.track.type, ms)))
                 .then(() => {
                   ms.endOfStream();
-                  LoadEME();
-                })
-                .then(() => {
                   video.play();
                 });
             });
 
-            video.addEventListener("ended", SimpleTest.finish);
+            once(video, "ended", SimpleTest.finish);
           });
       }
 
