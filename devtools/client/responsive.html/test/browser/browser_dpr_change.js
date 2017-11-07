@@ -94,7 +94,7 @@ function* testChangingDPR(ui) {
 function testViewportDPRSelect(ui, expected) {
   info("Test viewport's DPR Select");
 
-  let select = ui.toolWindow.document.querySelector("#global-dpr-selector > select");
+  let select = ui.toolWindow.document.querySelector("#global-dpr-selector");
   is(select.value, expected.value,
      `DPR Select value should be: ${expected.value}`);
   is(select.disabled, expected.disabled,

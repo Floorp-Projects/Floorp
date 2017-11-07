@@ -11,23 +11,28 @@ const { DOM: dom, createClass, PropTypes, addons } =
 
 const Types = require("../types");
 const { getStr, getFormatStr } = require("../utils/l10n");
+const labelForOption = value => getFormatStr("responsive.devicePixelRatioOption", value);
 
 const PIXEL_RATIO_PRESET = [1, 2, 3];
 
-const createVisibleOption = value =>
-  dom.option({
+const createVisibleOption = value => {
+  let label = labelForOption(value);
+  return dom.option({
     value,
-    title: value,
+    title: label,
     key: value,
-  }, value);
+  }, label);
+};
 
-const createHiddenOption = value =>
-  dom.option({
+const createHiddenOption = value => {
+  let label = labelForOption(value);
+  return dom.option({
     value,
-    title: value,
+    title: label,
     hidden: true,
     disabled: true,
-  }, value);
+  }, label);
+};
 
 module.exports = createClass({
   displayName: "DPRSelector",
@@ -108,23 +113,18 @@ module.exports = createClass({
       listContent = listContent.concat(hiddenOptions.map(createHiddenOption));
     }
 
-    return dom.label(
+    return dom.select(
       {
         id: "global-dpr-selector",
+        value: selectedPixelRatio.value || displayPixelRatio,
+        disabled: isDisabled,
+        onChange: this.onSelectChange,
+        onFocus: this.onFocusChange,
+        onBlur: this.onFocusChange,
         className: selectorClass,
-        title,
+        title: title
       },
-      "DPR",
-      dom.select(
-        {
-          value: selectedPixelRatio.value || displayPixelRatio,
-          disabled: isDisabled,
-          onChange: this.onSelectChange,
-          onFocus: this.onFocusChange,
-          onBlur: this.onFocusChange,
-        },
-        ...listContent
-      )
+      ...listContent
     );
   },
 

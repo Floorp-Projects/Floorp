@@ -148,6 +148,10 @@ select > option.divider {
   padding: 1px 6px 0 2px;
 }
 
+#global-toolbar > .toolbar-button:first-of-type {
+  margin-inline-start: 8px;
+}
+
 #global-toolbar > .toolbar-button::before {
   width: 12px;
   height: 12px;
@@ -176,17 +180,13 @@ select > option.divider {
   width: 103px;
 }
 
-#global-dpr-selector > select {
-  padding: 0 8px 0 0;
-  margin-left: 2px;
-  max-width: 5em;
-}
-
 #global-dpr-selector {
-  margin: 0 8px;
   -moz-user-select: none;
   color: var(--viewport-color);
   height: 15px;
+  /* `max-width` is here to keep the UI compact if the DPR changes to a repeating decimal value.
+  This can happen if you try to zoom the UI (Cmd + Plus / Minus on macOS for example) */
+  max-width: 8em;
 }
 
 #global-dpr-selector.focused,
@@ -194,20 +194,15 @@ select > option.divider {
   color: var(--viewport-hover-color);
 }
 
-#global-dpr-selector:not(.disabled):hover > select {
-  color: var(--viewport-hover-color);
-}
-
-#global-dpr-selector:focus > select {
+#global-dpr-selector:focus {
   color: var(--viewport-active-color);
 }
 
-#global-dpr-selector.selected,
-#global-dpr-selector.selected > select {
+#global-dpr-selector.selected {
   color: var(--viewport-active-color);
 }
 
-#global-dpr-selector > select > option {
+#global-dpr-selector > option {
   padding: 5px;
 }
 
