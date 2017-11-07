@@ -282,7 +282,7 @@ public class GeckoSession implements Parcelable {
     private final Listener mListener = new Listener();
 
     protected static final class Window extends JNIObject implements IInterface {
-        private final NativeQueue mNativeQueue;
+        private NativeQueue mNativeQueue;
         private Binder mBinder;
 
         public Window(final NativeQueue nativeQueue) {
@@ -308,6 +308,18 @@ public class GeckoSession implements Parcelable {
 
         @WrapForJNI(dispatchTo = "proxy")
         native void close();
+
+        @WrapForJNI(dispatchTo = "proxy")
+        native void transfer(EventDispatcher dispatcher, GeckoBundle settings);
+
+        @WrapForJNI(calledFrom = "gecko")
+        private synchronized void onTransfer(final EventDispatcher dispatcher) {
+            final NativeQueue nativeQueue = dispatcher.getNativeQueue();
+            if (mNativeQueue != nativeQueue) {
+                nativeQueue.setState(mNativeQueue.getState());
+                mNativeQueue = nativeQueue;
+            }
+        }
 
         @WrapForJNI(dispatchTo = "proxy")
         native void attach(GeckoView view, Object compositor);
@@ -358,13 +370,28 @@ public class GeckoSession implements Parcelable {
         mListener.registerListeners();
     }
 
-    /* package */ void transferFrom(final GeckoSession session) {
+    private void transferFrom(final Window window, final GeckoSessionSettings settings) {
         if (isOpen()) {
             throw new IllegalStateException("Session is open");
         }
 
-        mWindow = session.mWindow;
-        mSettings = new GeckoSessionSettings(session.mSettings, this);
+        mWindow = window;
+        mSettings = new GeckoSessionSettings(settings, this);
+
+        if (mWindow != null) {
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                mWindow.transfer(mEventDispatcher, mSettings.asBundle());
+            } else {
+                GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
+                        mWindow, "transfer",
+                        EventDispatcher.class, mEventDispatcher,
+                        GeckoBundle.class, mSettings.asBundle());
+            }
+        }
+    }
+
+    /* package */ void transferFrom(final GeckoSession session) {
+        transferFrom(session.mWindow, session.mSettings);
         session.mWindow = null;
     }
 
@@ -381,22 +408,13 @@ public class GeckoSession implements Parcelable {
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
     public void readFromParcel(final Parcel source) {
-        if (isOpen()) {
-            throw new IllegalStateException("Session is open");
-        }
-
         final IBinder binder = source.readStrongBinder();
-        final IInterface window = (binder != null) ?
+        final IInterface ifce = (binder != null) ?
                 binder.queryLocalInterface(Window.class.getName()) : null;
-        if (window instanceof Window) {
-            mWindow = (Window) window;
-        } else {
-            mWindow = null;
-        }
-
+        final Window window = (ifce instanceof Window) ? (Window) ifce : null;
         final GeckoSessionSettings settings =
                 source.readParcelable(getClass().getClassLoader());
-        mSettings = new GeckoSessionSettings(settings, this);
+        transferFrom(window, settings);
     }
 
     public static final Creator<GeckoSession> CREATOR = new Creator<GeckoSession>() {

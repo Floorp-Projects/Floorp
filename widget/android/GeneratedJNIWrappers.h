@@ -2420,6 +2420,26 @@ public:
 
     auto OnReady() const -> void;
 
+    struct OnTransfer_t {
+        typedef Window Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "onTransfer";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/EventDispatcher;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto OnTransfer(mozilla::jni::Object::Param) const -> void;
+
     struct Open_t {
         typedef Window Owner;
         typedef void ReturnType;
@@ -2435,6 +2455,25 @@ public:
         static constexpr char signature[] =
                 "(Lorg/mozilla/gecko/GeckoSession$Window;Lorg/mozilla/gecko/EventDispatcher;Lorg/mozilla/gecko/util/GeckoBundle;Ljava/lang/String;IZ)V";
         static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::PROXY;
+    };
+
+    struct Transfer_t {
+        typedef Window Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param,
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "transfer";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/EventDispatcher;Lorg/mozilla/gecko/util/GeckoBundle;)V";
+        static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
         static const mozilla::jni::CallingThread callingThread =
