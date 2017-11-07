@@ -30,6 +30,7 @@ public:
   void NotifyVRDisplayPresentChange(uint32_t aDisplayID);
 
   void DisconnectFromOwner();
+  void UpdateSpentTimeIn2DTelemetry(bool aUpdate);
 
 private:
   ~VREventObserver();
@@ -39,6 +40,7 @@ private:
   // in the 2D view.
   TimeStamp mSpendTimeIn2DView;
   bool mIs2DView;
+  bool mHasReset;
 };
 
 } // namespace dom

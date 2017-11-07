@@ -7,9 +7,11 @@
 #define mozilla_EditorBase_h
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
+#include "mozilla/EditorDOMPoint.h"     // for EditorDOMPoint
 #include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
 #include "mozilla/PresShell.h"          // for PresShell
+#include "mozilla/RangeBoundary.h"      // for RawRangeBoundary, RangeBoundary
 #include "mozilla/SelectionState.h"     // for RangeUpdater, etc.
 #include "mozilla/StyleSheet.h"         // for StyleSheet
 #include "mozilla/WeakPtr.h"            // for WeakPtr
@@ -123,7 +125,6 @@ class RemoveStyleSheetTransaction;
 class SplitNodeTransaction;
 class TextComposition;
 class TextEditor;
-struct EditorDOMPoint;
 
 namespace dom {
 class DataTransfer;
@@ -886,8 +887,17 @@ public:
     return aNode->NodeType() == nsIDOMNode::TEXT_NODE;
   }
 
-  static nsIContent* GetNodeAtRangeOffsetPoint(nsINode* aParentOrNode,
-                                               int32_t aOffset);
+  /**
+   * GetNodeAtRangeOffsetPoint() returns the node at this position in a range,
+   * assuming that the container is the node itself if it's a text node, or
+   * the node's parent otherwise.
+   */
+  static nsIContent* GetNodeAtRangeOffsetPoint(nsINode* aContainer,
+                                               int32_t aOffset)
+  {
+    return GetNodeAtRangeOffsetPoint(RawRangeBoundary(aContainer, aOffset));
+  }
+  static nsIContent* GetNodeAtRangeOffsetPoint(const RawRangeBoundary& aPoint);
 
   static nsresult GetStartNodeAndOffset(Selection* aSelection,
                                         nsIDOMNode** outStartNode,

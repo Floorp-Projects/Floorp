@@ -5,6 +5,9 @@
 #ifndef MP4_DEMUXER_ANNEX_B_H_
 #define MP4_DEMUXER_ANNEX_B_H_
 
+#include "mozilla/Result.h"
+#include "ErrorList.h"
+
 template <class T> struct already_AddRefed;
 
 namespace mozilla {

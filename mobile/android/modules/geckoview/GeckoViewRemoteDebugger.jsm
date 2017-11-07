@@ -56,7 +56,7 @@ class GeckoViewRemoteDebugger extends GeckoViewModule {
     let windowId = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIDOMWindowUtils)
                               .outerWindowID;
-    let portOrPath = this.settings.debuggerSocketDir +
+    let portOrPath = (this.settings.debuggerSocketDir || this.settings.dataDir) +
                      "/firefox-debugger-socket-" +
                      windowId;
     this._usbDebugger.start(portOrPath);

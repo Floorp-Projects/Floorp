@@ -6,6 +6,8 @@
 
 #include "AudioSink.h"
 #include "AudioSinkWrapper.h"
+#include "nsPrintfCString.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 namespace media {

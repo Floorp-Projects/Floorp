@@ -1020,6 +1020,14 @@ nsRange::DoSetRange(const RawRangeBoundary& aStart,
   // sure to not use it here to determine our "old" current ancestor.
   mStart = aStart;
   mEnd = aEnd;
+
+  // If RangeBoundary is initialized with a container node and offset in it,
+  // its mRef may not have been initialized yet.  However, nsRange will need to
+  // adjust the offset when the node position is changed.  In such case,
+  // RangeBoundary::mRef needs to be initialized for recomputing offset later.
+  mStart.EnsureRef();
+  mEnd.EnsureRef();
+
   mIsPositioned = !!mStart.Container();
   if (checkCommonAncestor) {
     nsINode* oldCommonAncestor = mRegisteredCommonAncestor;

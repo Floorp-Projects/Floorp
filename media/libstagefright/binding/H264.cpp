@@ -4,6 +4,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/ResultExtensions.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/BitReader.h"
 #include "mp4_demuxer/BufferReader.h"

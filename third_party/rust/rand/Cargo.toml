@@ -12,7 +12,7 @@
 
 [package]
 name = "rand"
-version = "0.3.17"
+version = "0.3.18"
 authors = ["The Rust Project Developers"]
 description = "Random number generators and other randomness functionality.\n"
 homepage = "https://github.com/rust-lang-nursery/rand"

@@ -375,39 +375,6 @@ public:
   }
 };
 
-/******************************************************************************
- * general dom point utility struct
- *****************************************************************************/
-struct MOZ_STACK_CLASS EditorDOMPoint final
-{
-  nsCOMPtr<nsINode> node;
-  int32_t offset;
-
-  EditorDOMPoint()
-    : node(nullptr)
-    , offset(-1)
-  {}
-  EditorDOMPoint(nsINode* aNode, int32_t aOffset)
-    : node(aNode)
-    , offset(aOffset)
-  {}
-  EditorDOMPoint(nsIDOMNode* aNode, int32_t aOffset)
-    : node(do_QueryInterface(aNode))
-    , offset(aOffset)
-  {}
-
-  void SetPoint(nsINode* aNode, int32_t aOffset)
-  {
-    node = aNode;
-    offset = aOffset;
-  }
-  void SetPoint(nsIDOMNode* aNode, int32_t aOffset)
-  {
-    node = do_QueryInterface(aNode);
-    offset = aOffset;
-  }
-};
-
 class EditorUtils final
 {
 public:

@@ -6,15 +6,10 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.PresentationView;
-import org.mozilla.gecko.R;
+import org.mozilla.gecko.GeckoSession;
+import org.mozilla.gecko.GeckoSessionSettings;
+import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.ScreenManagerHelper;
-import org.mozilla.gecko.annotation.JNITarget;
-import org.mozilla.gecko.annotation.ReflectionTarget;
-import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.gfx.LayerView;
 
 import com.google.android.gms.cast.CastMediaControlIntent;
 import com.google.android.gms.cast.CastPresentation;
@@ -104,9 +99,11 @@ public class RemotePresentationService extends CastRemoteDisplayLocalService {
 }
 
 class VirtualPresentation extends CastPresentation {
-    private final String LOGTAG = "VirtualPresentation";
+    private static final String LOGTAG = "VirtualPresentation";
+    private static final String PRESENTATION_VIEW_URI = "chrome://browser/content/PresentationView.xul";
+
     private RelativeLayout layout;
-    private PresentationView view;
+    private GeckoView view;
     private String deviceId;
     private int screenId;
 
@@ -127,8 +124,15 @@ class VirtualPresentation extends CastPresentation {
          * resources.
          */
 
-        // Create new PresentationView
-        view = new PresentationView(getContext(), deviceId, screenId);
+        // Create new GeckoView
+        view = new GeckoView(getContext());
+
+        final GeckoSession session = new GeckoSession();
+        session.getSettings().setString(GeckoSessionSettings.CHROME_URI,
+                                        PRESENTATION_VIEW_URI + "#" + deviceId);
+        session.getSettings().setInt(GeckoSessionSettings.SCREEN_ID, screenId);
+
+        view.setSession(session);
         view.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
                                               LayoutParams.MATCH_PARENT));
 

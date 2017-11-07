@@ -29,7 +29,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.mozilla.gecko.GeckoView;
-import org.mozilla.gecko.GeckoView.ProgressListener.SecurityInformation;
+import org.mozilla.gecko.GeckoSession.ProgressListener.SecurityInformation;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.Tab;

@@ -18,8 +18,9 @@ import android.view.WindowManager;
 
 import java.util.Locale;
 
+import org.mozilla.gecko.GeckoSession;
+import org.mozilla.gecko.GeckoSessionSettings;
 import org.mozilla.gecko.GeckoView;
-import org.mozilla.gecko.GeckoViewSettings;
 import org.mozilla.gecko.util.GeckoBundle;
 
 public class GeckoViewActivity extends Activity {
@@ -31,6 +32,7 @@ public class GeckoViewActivity extends Activity {
     /* package */ static final int REQUEST_FILE_PICKER = 1;
     private static final int REQUEST_PERMISSIONS = 2;
 
+    private GeckoSession mGeckoSession;
     private GeckoView mGeckoView;
 
     @Override
@@ -57,24 +59,27 @@ public class GeckoViewActivity extends Activity {
 
         final boolean useMultiprocess = getIntent().getBooleanExtra(USE_MULTIPROCESS_EXTRA,
                                                                     true);
-        GeckoView.preload(this, geckoArgs, useMultiprocess);
+        GeckoSession.preload(this, geckoArgs, useMultiprocess);
 
         setContentView(R.layout.geckoview_activity);
 
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
-        mGeckoView.setContentListener(new MyGeckoViewContent());
-        mGeckoView.setProgressListener(new MyGeckoViewProgress());
-        mGeckoView.setNavigationListener(new Navigation());
+        mGeckoSession = new GeckoSession();
+        mGeckoView.setSession(mGeckoSession);
 
-        final BasicGeckoViewPrompt prompt = new BasicGeckoViewPrompt();
+        mGeckoSession.setContentListener(new MyGeckoViewContent());
+        mGeckoSession.setProgressListener(new MyGeckoViewProgress());
+        mGeckoSession.setNavigationListener(new Navigation());
+
+        final BasicGeckoViewPrompt prompt = new BasicGeckoViewPrompt(this);
         prompt.filePickerRequestCode = REQUEST_FILE_PICKER;
-        mGeckoView.setPromptDelegate(prompt);
+        mGeckoSession.setPromptDelegate(prompt);
 
         final MyGeckoViewPermission permission = new MyGeckoViewPermission();
         permission.androidPermissionRequestCode = REQUEST_PERMISSIONS;
-        mGeckoView.setPermissionDelegate(permission);
+        mGeckoSession.setPermissionDelegate(permission);
 
-        mGeckoView.getSettings().setBoolean(GeckoViewSettings.USE_MULTIPROCESS,
+        mGeckoView.getSettings().setBoolean(GeckoSessionSettings.USE_MULTIPROCESS,
                                             useMultiprocess);
         loadSettings(getIntent());
         loadFromIntent(getIntent());
@@ -93,12 +98,12 @@ public class GeckoViewActivity extends Activity {
 
     private void loadFromIntent(final Intent intent) {
         final Uri uri = intent.getData();
-        mGeckoView.loadUri(uri != null ? uri.toString() : DEFAULT_URL);
+        mGeckoSession.loadUri(uri != null ? uri.toString() : DEFAULT_URL);
     }
 
     private void loadSettings(final Intent intent) {
         mGeckoView.getSettings().setBoolean(
-            GeckoViewSettings.USE_REMOTE_DEBUGGER,
+            GeckoSessionSettings.USE_REMOTE_DEBUGGER,
             intent.getBooleanExtra(USE_REMOTE_DEBUGGER_EXTRA, false));
     }
 
@@ -107,8 +112,8 @@ public class GeckoViewActivity extends Activity {
                                     final Intent data) {
         if (requestCode == REQUEST_FILE_PICKER) {
             final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
-                    mGeckoView.getPromptDelegate();
-            prompt.onFileCallbackResult(this, resultCode, data);
+                    mGeckoSession.getPromptDelegate();
+            prompt.onFileCallbackResult(resultCode, data);
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
@@ -120,21 +125,21 @@ public class GeckoViewActivity extends Activity {
                                            final int[] grantResults) {
         if (requestCode == REQUEST_PERMISSIONS) {
             final MyGeckoViewPermission permission = (MyGeckoViewPermission)
-                    mGeckoView.getPermissionDelegate();
+                    mGeckoSession.getPermissionDelegate();
             permission.onRequestPermissionsResult(permissions, grantResults);
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
-    private class MyGeckoViewContent implements GeckoView.ContentListener {
+    private class MyGeckoViewContent implements GeckoSession.ContentListener {
         @Override
-        public void onTitleChange(GeckoView view, String title) {
+        public void onTitleChange(GeckoSession session, String title) {
             Log.i(LOGTAG, "Content title changed to " + title);
         }
 
         @Override
-        public void onFullScreen(final GeckoView view, final boolean fullScreen) {
+        public void onFullScreen(final GeckoSession session, final boolean fullScreen) {
             getWindow().setFlags(fullScreen ? WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
                                  WindowManager.LayoutParams.FLAG_FULLSCREEN);
             if (fullScreen) {
@@ -145,7 +150,7 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void onContextMenu(GeckoView view, int screenX, int screenY,
+        public void onContextMenu(GeckoSession session, int screenX, int screenY,
                                   String uri, String elementSrc) {
             Log.d(LOGTAG, "onContextMenu screenX=" + screenX +
                           " screenY=" + screenY + " uri=" + uri +
@@ -153,28 +158,28 @@ public class GeckoViewActivity extends Activity {
         }
     }
 
-    private class MyGeckoViewProgress implements GeckoView.ProgressListener {
+    private class MyGeckoViewProgress implements GeckoSession.ProgressListener {
         @Override
-        public void onPageStart(GeckoView view, String url) {
+        public void onPageStart(GeckoSession session, String url) {
             Log.i(LOGTAG, "Starting to load page at " + url);
             Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
                   " - page load start");
         }
 
         @Override
-        public void onPageStop(GeckoView view, boolean success) {
+        public void onPageStop(GeckoSession session, boolean success) {
             Log.i(LOGTAG, "Stopping page load " + (success ? "successfully" : "unsuccessfully"));
             Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
                   " - page load stop");
         }
 
         @Override
-        public void onSecurityChange(GeckoView view, SecurityInformation securityInfo) {
+        public void onSecurityChange(GeckoSession session, SecurityInformation securityInfo) {
             Log.i(LOGTAG, "Security status changed to " + securityInfo.securityMode);
         }
     }
 
-    private class MyGeckoViewPermission implements GeckoView.PermissionDelegate {
+    private class MyGeckoViewPermission implements GeckoSession.PermissionDelegate {
 
         public int androidPermissionRequestCode = 1;
         private Callback mCallback;
@@ -198,7 +203,7 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void requestAndroidPermissions(final GeckoView view, final String[] permissions,
+        public void requestAndroidPermissions(final GeckoSession session, final String[] permissions,
                                               final Callback callback) {
             if (Build.VERSION.SDK_INT < 23) {
                 // requestPermissions was introduced in API 23.
@@ -210,7 +215,7 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void requestContentPermission(final GeckoView view, final String uri,
+        public void requestContentPermission(final GeckoSession session, final String uri,
                                              final String type, final String access,
                                              final Callback callback) {
             final int resId;
@@ -226,8 +231,8 @@ public class GeckoViewActivity extends Activity {
 
             final String title = getString(resId, Uri.parse(uri).getAuthority());
             final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
-                    mGeckoView.getPromptDelegate();
-            prompt.promptForPermission(view, title, callback);
+                    mGeckoSession.getPromptDelegate();
+            prompt.promptForPermission(session, title, callback);
         }
 
         private void normalizeMediaName(final GeckoBundle[] sources) {
@@ -255,7 +260,7 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void requestMediaPermission(final GeckoView view, final String uri,
+        public void requestMediaPermission(final GeckoSession session, final String uri,
                                            final GeckoBundle[] video,
                                            final GeckoBundle[] audio,
                                            final MediaCallback callback) {
@@ -273,33 +278,33 @@ public class GeckoViewActivity extends Activity {
             normalizeMediaName(audio);
 
             final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
-                    mGeckoView.getPromptDelegate();
-            prompt.promptForMedia(view, title, video, audio, callback);
+                    mGeckoSession.getPromptDelegate();
+            prompt.promptForMedia(session, title, video, audio, callback);
         }
     }
 
-    private class Navigation implements GeckoView.NavigationListener {
+    private class Navigation implements GeckoSession.NavigationListener {
         @Override
-        public void onLocationChange(GeckoView view, final String url) {
+        public void onLocationChange(GeckoSession session, final String url) {
         }
 
         @Override
-        public void onCanGoBack(GeckoView view, boolean canGoBack) {
+        public void onCanGoBack(GeckoSession session, boolean canGoBack) {
         }
 
         @Override
-        public void onCanGoForward(GeckoView view, boolean value) {
+        public void onCanGoForward(GeckoSession session, boolean value) {
         }
 
         @Override
-        public boolean onLoadUri(final GeckoView view, final String uri,
+        public boolean onLoadUri(final GeckoSession session, final String uri,
                                  final TargetWindow where) {
             Log.d(LOGTAG, "onLoadUri=" + uri +
                           " where=" + where);
             if (where != TargetWindow.NEW) {
                 return false;
             }
-            view.loadUri(uri);
+            session.loadUri(uri);
             return true;
         }
     }
