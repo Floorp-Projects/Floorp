@@ -983,6 +983,17 @@ pub extern "C" fn wr_resource_updates_add_raw_font(
 }
 
 #[no_mangle]
+pub extern "C" fn wr_resource_updates_add_font_descriptor(
+    resources: &mut ResourceUpdates,
+    key: WrFontKey,
+    bytes: &mut WrVecU8,
+    index: u32
+) {
+    let native_font_handle = read_font_descriptor(bytes, index);
+    resources.add_native_font(key, native_font_handle);
+}
+
+#[no_mangle]
 pub extern "C" fn wr_resource_updates_delete_font(
     resources: &mut ResourceUpdates,
     key: WrFontKey

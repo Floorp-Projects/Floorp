@@ -309,6 +309,17 @@ IpcResourceUpdateQueue::AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint
   return true;
 }
 
+bool
+IpcResourceUpdateQueue::AddFontDescriptor(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex)
+{
+  auto bytes = mWriter.Write(aBytes);
+  if (!bytes.length()) {
+    return false;
+  }
+  mUpdates.AppendElement(layers::OpAddFontDescriptor(bytes, aIndex, aKey));
+  return true;
+}
+
 void
 IpcResourceUpdateQueue::DeleteFont(wr::FontKey aKey)
 {

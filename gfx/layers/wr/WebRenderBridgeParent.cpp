@@ -315,6 +315,15 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
         aUpdates.AddRawFont(op.key(), bytes, op.fontIndex());
         break;
       }
+      case OpUpdateResource::TOpAddFontDescriptor: {
+        const auto& op = cmd.get_OpAddFontDescriptor();
+        wr::Vec_u8 bytes;
+        if (!reader.Read(op.bytes(), bytes)) {
+          return false;
+        }
+        aUpdates.AddFontDescriptor(op.key(), bytes, op.fontIndex());
+        break;
+      }
       case OpUpdateResource::TOpAddFontInstance: {
         const auto& op = cmd.get_OpAddFontInstance();
         wr::Vec_u8 variations;
