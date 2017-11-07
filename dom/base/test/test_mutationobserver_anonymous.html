@@ -156,11 +156,11 @@ function testRemovedDueToDisplay() {
 
     is(records[0].addedNodes.length, 0, "Shouldn't have got addedNodes");
     is(records[0].removedNodes.length, 1, "Should have got removedNodes");
-    assertSamePseudoElement("before", records[0].removedNodes[0], originalBeforeElement);
+    assertSamePseudoElement("after", records[0].removedNodes[0], originalAfterElement);
 
     is(records[1].addedNodes.length, 0, "Shouldn't have got addedNodes");
     is(records[1].removedNodes.length, 1, "Should have got removedNodes");
-    assertSamePseudoElement("after", records[1].removedNodes[0], originalAfterElement);
+    assertSamePseudoElement("before", records[1].removedNodes[0], originalBeforeElement);
 
     observer.disconnect();
     testAddedDueToDisplay();
