@@ -42,14 +42,6 @@ SpecialPowers.pushPrefEnv({ "set": [
                           ] },
                           start);
 
-// a fake function waiting for a paint.
-function waitForPaints() {
-  // FIXME: Bug 1415065 Instead waiting for two requestAnimationFrames, we
-  // should wait for MozAfterPaint once after MozAfterPaint is fired properly
-  // (bug 1341294).
-  return waitForAnimationFrames(2);
-}
-
 function compare_property_state(a, b) {
   if (a.property > b.property) {
     return -1;
