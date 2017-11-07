@@ -139,7 +139,6 @@ OBJDIR_TARGETS = install export libs clean realclean distclean upload sdk instal
 
 # The default rule is build
 build::
-	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild CREATE_MOZCONFIG_JSON=
 
 # Include baseconfig.mk for its $(MAKE) validation.
 include $(TOPSRCDIR)/config/baseconfig.mk
@@ -160,7 +159,7 @@ $(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG) $(call mkdir_
 include $(OBJDIR)/.mozconfig.mk
 
 # Print out any options loaded from mozconfig.
-all realbuild clean distclean export libs install realclean::
+all build clean distclean export libs install realclean::
 ifneq (,$(strip $(MOZCONFIG_OUT_FILTERED)))
 	$(info Adding client.mk options from $(FOUND_MOZCONFIG):)
 	$(foreach line,$(MOZCONFIG_OUT_FILTERED),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
@@ -177,7 +176,7 @@ build_and_deploy: build package install
 # Preflight, before building any project
 
 ifdef MOZ_PREFLIGHT_ALL
-realbuild preflight_all::
+build preflight_all::
 	set -e; \
 	for mkfile in $(MOZ_PREFLIGHT_ALL); do \
 	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile preflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
@@ -290,7 +289,7 @@ endif
 ####################################
 # Build it
 
-realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
+build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	+$(MOZ_MAKE) $(if $(MOZ_PGO),profiledbuild)
 
 ####################################
@@ -304,12 +303,12 @@ $(OBJDIR_TARGETS):: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Postflight, after building all projects
 
 ifdef MOZ_AUTOMATION
-realbuild::
+build::
 	$(MAKE) -f $(TOPSRCDIR)/client.mk automation/build
 endif
 
 ifdef MOZ_POSTFLIGHT_ALL
-realbuild postflight_all::
+build postflight_all::
 	set -e; \
 	for mkfile in $(MOZ_POSTFLIGHT_ALL); do \
 	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile postflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
@@ -325,7 +324,6 @@ echo-variable-%:
 .NOTPARALLEL:
 
 .PHONY: \
-    realbuild \
     build \
     build_all \
     clobber \
