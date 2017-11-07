@@ -81,72 +81,6 @@ wasm::HasSupport(JSContext* cx)
 // ============================================================================
 // Imports
 
-template<typename T>
-JSObject*
-wasm::CreateCustomNaNObject(JSContext* cx, T* addr)
-{
-    MOZ_ASSERT(IsNaN(*addr));
-
-    RootedObject obj(cx, JS_NewPlainObject(cx));
-    if (!obj)
-        return nullptr;
-
-    int32_t* i32 = (int32_t*)addr;
-    RootedValue intVal(cx, Int32Value(i32[0]));
-    if (!JS_DefineProperty(cx, obj, "nan_low", intVal, JSPROP_ENUMERATE))
-        return nullptr;
-
-    if (IsSame<double, T>::value) {
-        intVal = Int32Value(i32[1]);
-        if (!JS_DefineProperty(cx, obj, "nan_high", intVal, JSPROP_ENUMERATE))
-            return nullptr;
-    }
-
-    return obj;
-}
-
-template JSObject* wasm::CreateCustomNaNObject(JSContext* cx, float* addr);
-template JSObject* wasm::CreateCustomNaNObject(JSContext* cx, double* addr);
-
-bool
-wasm::ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret)
-{
-    RootedObject obj(cx, &v.toObject());
-    RootedValue val(cx);
-
-    int32_t i32;
-    if (!JS_GetProperty(cx, obj, "nan_low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-
-    *ret = i32;
-    return true;
-}
-
-bool
-wasm::ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, uint64_t* ret)
-{
-    RootedObject obj(cx, &v.toObject());
-    RootedValue val(cx);
-
-    int32_t i32;
-    if (!JS_GetProperty(cx, obj, "nan_high", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-    *ret = uint32_t(i32);
-    *ret <<= 32;
-
-    if (!JS_GetProperty(cx, obj, "nan_low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-    *ret |= uint32_t(i32);
-
-    return true;
-}
-
 JSObject*
 wasm::CreateI64Object(JSContext* cx, int64_t i64)
 {
@@ -299,15 +233,6 @@ GetImports(JSContext* cx,
                 break;
               }
               case ValType::F32: {
-                if (JitOptions.wasmTestMode && v.isObject()) {
-                    uint32_t bits;
-                    if (!ReadCustomFloat32NaNObject(cx, v, &bits))
-                        return false;
-                    float f;
-                    BitwiseCast(bits, &f);
-                    val = Val(f);
-                    break;
-                }
                 if (!v.isNumber())
                     return ThrowBadImportType(cx, import.field.get(), "Number");
                 double d;
@@ -317,15 +242,6 @@ GetImports(JSContext* cx,
                 break;
               }
               case ValType::F64: {
-                if (JitOptions.wasmTestMode && v.isObject()) {
-                    uint64_t bits;
-                    if (!ReadCustomDoubleNaNObject(cx, v, &bits))
-                        return false;
-                    double d;
-                    BitwiseCast(bits, &d);
-                    val = Val(d);
-                    break;
-                }
                 if (!v.isNumber())
                     return ThrowBadImportType(cx, import.field.get(), "Number");
                 double d;
