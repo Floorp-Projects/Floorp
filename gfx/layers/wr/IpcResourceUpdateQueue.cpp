@@ -48,7 +48,7 @@ ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
   while (remainingBytesToCopy > 0) {
     if (dstCursor >= mSmallAllocs.Length() * mChunkSize) {
       if (!AllocChunk()) {
-        for (size_t i = mSmallAllocs.Length() ; currAllocLen <= i ; i--) {
+        for (size_t i = mSmallAllocs.Length() ; currAllocLen < i ; i--) {
           ipc::Shmem shm = mSmallAllocs.ElementAt(i);
           mShmAllocator->DeallocShmem(shm);
           mSmallAllocs.RemoveElementAt(i);
