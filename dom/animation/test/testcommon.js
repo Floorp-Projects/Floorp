@@ -367,3 +367,13 @@ function getDistance(target, prop, v1, v2) {
   return SpecialPowers.DOMWindowUtils
            .computeAnimationDistance(target, prop, v1, v2);
 }
+
+/*
+ * A promise wrapper for waiting MozAfterPaint.
+ */
+function waitForPaints() {
+  // FIXME: Bug 1415065. Instead waiting for two requestAnimationFrames, we
+  // should wait for MozAfterPaint once after MozAfterPaint is fired properly
+  // (bug 1341294).
+  return waitForAnimationFrames(2);
+}
