@@ -701,19 +701,24 @@ class Deflater(object):
         else:
             assert compress == JAR_STORED
             self._deflater = None
+        self.crc32 = 0
 
     def write(self, data):
         '''
         Append a buffer to the Deflater.
         '''
         self._data.write(data)
+
+        if isinstance(data, memoryview):
+            data = data.tobytes()
+
         if self.compress:
             if self._deflater:
-                if isinstance(data, memoryview):
-                    data = data.tobytes()
                 self._deflated.write(self._deflater.compress(data))
             else:
                 raise JarWriterError("Can't write after flush")
+
+        self.crc32 = zlib.crc32(data, self.crc32) & 0xffffffff
 
     def close(self):
         '''
@@ -770,13 +775,6 @@ class Deflater(object):
         Return the size of the data written to the Deflater.
         '''
         return self._data.tell()
-
-    @property
-    def crc32(self):
-        '''
-        Return the crc32 of the data written to the Deflater.
-        '''
-        return zlib.crc32(self._data.getvalue()) & 0xffffffff
 
     @property
     def compressed_data(self):
