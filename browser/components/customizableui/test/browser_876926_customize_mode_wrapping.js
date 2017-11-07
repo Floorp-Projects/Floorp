@@ -9,7 +9,6 @@ const kAPIWidgetId = "feed-button";
 const kPanel = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
 const kToolbar = CustomizableUI.AREA_NAVBAR;
 const kVisiblePalette = "customization-palette";
-const kPlaceholderClass = "panel-customization-placeholder";
 
 function checkWrapper(id) {
   is(document.querySelectorAll("#wrapper-" + id).length, 1, "There should be exactly 1 wrapper for " + id + " in the customizing window.");
@@ -43,7 +42,7 @@ var move = {
     if (targetNode.customizationTarget) {
       targetNode = targetNode.customizationTarget;
     }
-    let items = targetNode.querySelectorAll("toolbarpaletteitem:not(." + kPlaceholderClass + ")");
+    let items = targetNode.querySelectorAll("toolbarpaletteitem");
     if (target == kPanel) {
       targetNode = items[items.length - 1];
     } else {
@@ -124,7 +123,7 @@ async function checkToolbar(id, method) {
 async function checkPanel(id, method) {
   let panelPlacements = getAreaWidgetIds(kPanel);
   await move[method](id, kPanel);
-  let children = document.getElementById(kPanel).querySelectorAll("toolbarpaletteitem:not(." + kPlaceholderClass + ")");
+  let children = document.getElementById(kPanel).querySelectorAll("toolbarpaletteitem");
   let otherChildren = otherWin.document.getElementById(kPanel).children;
   let newPlacements = panelPlacements.concat([id]);
   // Relative position of the new item from the end:
