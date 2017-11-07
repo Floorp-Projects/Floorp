@@ -468,9 +468,9 @@ SSL_ExportKeyingMaterial(PRFileDesc *fd,
         return SECFailure;
     }
     i = 0;
-    PORT_Memcpy(val + i, &ss->ssl3.hs.client_random.rand, SSL3_RANDOM_LENGTH);
+    PORT_Memcpy(val + i, ss->ssl3.hs.client_random, SSL3_RANDOM_LENGTH);
     i += SSL3_RANDOM_LENGTH;
-    PORT_Memcpy(val + i, &ss->ssl3.hs.server_random.rand, SSL3_RANDOM_LENGTH);
+    PORT_Memcpy(val + i, ss->ssl3.hs.server_random, SSL3_RANDOM_LENGTH);
     i += SSL3_RANDOM_LENGTH;
     if (hasContext) {
         val[i++] = contextLen >> 8;
