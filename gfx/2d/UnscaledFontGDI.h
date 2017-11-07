@@ -32,7 +32,7 @@ public:
   bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;
 
   static already_AddRefed<UnscaledFont>
-    CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength);
+    CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex);
 
   already_AddRefed<ScaledFont>
     CreateScaledFont(Float aGlyphSize,

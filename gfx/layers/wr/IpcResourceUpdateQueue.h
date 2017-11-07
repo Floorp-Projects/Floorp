@@ -98,6 +98,8 @@ public:
 
   bool AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex);
 
+  bool AddFontDescriptor(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex);
+
   void DeleteFont(wr::FontKey aKey);
 
   void AddFontInstance(wr::FontInstanceKey aKey,
