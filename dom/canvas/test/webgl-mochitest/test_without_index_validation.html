@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>WebGL test: Drawing without index validation</title>
+<script src='/tests/SimpleTest/SimpleTest.js'></script>
+<link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+
+<script id='vertSource' type='none'>
+void main(void) {
+  gl_PointSize = 1.0;
+  gl_Position = vec4(0, 0, 0, 1);
+}
+</script>
+
+<script id='fragSource' type='none'>
+precision mediump float;
+
+void main(void) {
+  gl_FragColor = vec4(0, 1, 0, 1);
+}
+</script>
+</head>
+<body>
+<script>
+
+function test() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 1;
+  const gl = c.getContext('webgl');
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    return;
+  }
+  document.body.appendChild(c);
+
+  const vs = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vs, vertSource.innerHTML.trim());
+  gl.compileShader(vs);
+  const fs = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fs, fragSource.innerHTML.trim());
+  gl.compileShader(fs);
+  const prog = gl.createProgram();
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  gl.clearColor(1,0,0,1);
+  const pixel = new Uint32Array(1);
+  const pixelData = new Uint8Array(pixel.buffer);
+
+  function expectPixel(expected, info) {
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelData);
+    ok(pixel[0] == expected,
+       '[' + info + '] Expected 0x' + expected.toString(16) + ', was 0x' + pixel[0].toString(16));
+  }
+
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  expectPixel(0xFF0000FF, 'Clear');
+
+  gl.drawArrays(gl.POINTS, 0, 1);
+  expectPixel(0xFF00FF00, 'DrawArrays');
+
+  const indexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0]), gl.STATIC_DRAW);
+
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawElements(gl.POINTS, 1, gl.UNSIGNED_SHORT, 0);
+  expectPixel(0xFF00FF00, 'DrawElements');
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+const prefArrArr = [
+  ['webgl.force-index-validation', -1]
+];
+const prefEnv = {'set': prefArrArr};
+SpecialPowers.pushPrefEnv(prefEnv, test);
+
+</script>
+</body>
+</html>
