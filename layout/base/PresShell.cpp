@@ -742,6 +742,7 @@ nsIPresShell::nsIPresShell()
     , mAutoWeakFrames(nullptr)
     , mCanvasBackgroundColor(NS_RGBA(0,0,0,0))
     , mSelectionFlags(0)
+    , mChangeNestCount(0)
     , mRenderFlags(0)
     , mDidInitialize(false)
     , mIsDestroying(false)
@@ -787,7 +788,6 @@ PresShell::PresShell()
   , mLastReflowStart(0.0)
   , mLastAnchorScrollPositionY(0)
   , mAPZFocusSequenceNumber(0)
-  , mChangeNestCount(0)
   , mDocumentLoading(false)
   , mIgnoreFrameDestruction(false)
   , mHaveShutDown(false)
@@ -4038,25 +4038,23 @@ PresShell::HandlePostedReflowCallbacks(bool aInterruptible)
 }
 
 bool
-PresShell::IsSafeToFlush() const
+nsIPresShell::IsSafeToFlush() const
 {
   // Not safe if we are reflowing or in the middle of frame construction
-  bool isSafeToFlush = !mIsReflowing &&
-                         !mChangeNestCount;
+  if (mIsReflowing || mChangeNestCount) {
+    return false;
+  }
 
-  if (isSafeToFlush) {
     // Not safe if we are painting
-    nsViewManager* viewManager = GetViewManager();
-    if (viewManager) {
-      bool isPainting = false;
-      viewManager->IsPainting(isPainting);
-      if (isPainting) {
-        isSafeToFlush = false;
-      }
+  if (nsViewManager* viewManager = GetViewManager()) {
+    bool isPainting = false;
+    viewManager->IsPainting(isPainting);
+    if (isPainting) {
+      return false;
     }
   }
 
-  return isSafeToFlush;
+  return true;
 }
 
 
