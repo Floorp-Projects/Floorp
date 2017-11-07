@@ -181,7 +181,6 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "media.wmf.enabled",
   "media.wmf.skip-blacklist",
   "media.wmf.vp9.enabled",
-  "memory.free_dirty_pages",
   "memory.low_commit_space_threshold_mb",
   "memory.low_memory_notification_interval_ms",
   "memory.low_physical_memory_threshold_mb",

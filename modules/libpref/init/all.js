@@ -5234,10 +5234,6 @@ pref("memory.low_memory_notification_interval_ms", 10000);
 // window to be collected via the GC/CC.
 pref("memory.ghost_window_timeout_seconds", 60);
 
-// On memory pressure, release dirty but unused pages held by jemalloc
-// back to the system.
-pref("memory.free_dirty_pages", true);
-
 // Don't dump memory reports on OOM, by default.
 pref("memory.dump_reports_on_oom", false);
 
