@@ -756,6 +756,37 @@ add_task(async function test_sync_failed_partial_500s() {
   await cleanUpAndGo(server);
 });
 
+add_task(async function test_sync_failed_partial_noresync() {
+  enableValidationPrefs();
+  let server = sync_httpd_setup();
+
+  let engine = Service.engineManager.get("catapult");
+  engine.enabled = true;
+  engine.exception = "Bad news";
+  engine._tracker._score = 10;
+
+  do_check_eq(Status.sync, SYNC_SUCCEEDED);
+
+  do_check_true(await setUp(server));
+
+  let resyncDoneObserver = promiseOneObserver("weave:service:resyncs-finished");
+
+  await Service.sync();
+
+  do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
+
+  function onSyncStarted() {
+    do_throw("Should not start resync when previous sync failed");
+  }
+
+  Svc.Obs.add("weave:service:sync:start", onSyncStarted);
+  await resyncDoneObserver;
+
+  Svc.Obs.remove("weave:service:sync:start", onSyncStarted);
+  engine._tracker._store = 0;
+  await cleanUpAndGo(server);
+});
+
 add_task(async function test_sync_failed_partial_400s() {
   enableValidationPrefs();
 
