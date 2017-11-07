@@ -339,16 +339,6 @@ endif
 endif
 endif
 
-#
-# Linux: add -Bsymbolic flag for components
-#
-ifeq ($(OS_ARCH),Linux)
-ifdef LD_VERSION_SCRIPT
-EXTRA_DSO_LDOPTS += -Wl,--version-script,$(LD_VERSION_SCRIPT)
-EXTRA_DEPS += $(LD_VERSION_SCRIPT)
-endif
-endif
-
 ifdef SYMBOLS_FILE
 ifeq ($(OS_TARGET),WINNT)
 ifndef GNU_CC
