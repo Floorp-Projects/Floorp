@@ -11,6 +11,7 @@ import java.util.List;
 
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
@@ -321,7 +322,8 @@ public class WebAppActivity extends AppCompatActivity
             return false;
         }
 
-        if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
+        if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()) ||
+            "data".equals(uri.getScheme()) || "blob".equals(uri.getScheme())) {
             final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder()
                 .addDefaultShareMenuItem()
                 .setStartAnimations(this, R.anim.slide_in_right, R.anim.slide_out_left)
@@ -339,7 +341,11 @@ public class WebAppActivity extends AppCompatActivity
             final Intent intent = new Intent();
             intent.setAction(Intent.ACTION_VIEW);
             intent.setData(uri);
-            startActivity(intent);
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                Log.w(LOGTAG, "No activity handler found for: " + urlStr);
+            }
         }
         return true;
     }

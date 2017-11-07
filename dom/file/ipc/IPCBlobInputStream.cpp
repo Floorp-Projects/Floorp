@@ -8,13 +8,13 @@
 #include "IPCBlobInputStreamChild.h"
 #include "IPCBlobInputStreamStorage.h"
 #include "mozilla/ipc/InputStreamParams.h"
+#include "mozilla/SlicedInputStream.h"
 #include "IPCBlobInputStreamThread.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIPipe.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
-#include "SlicedInputStream.h"
 
 namespace mozilla {
 namespace dom {

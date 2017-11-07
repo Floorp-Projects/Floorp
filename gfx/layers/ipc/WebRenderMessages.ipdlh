@@ -110,6 +110,12 @@ struct OpAddRawFont {
   FontKey key;
 };
 
+struct OpAddFontDescriptor {
+  OffsetRange bytes;
+  uint32_t fontIndex;
+  FontKey key;
+};
+
 struct OpDeleteFont {
   FontKey key;
 };
@@ -134,6 +140,7 @@ union OpUpdateResource {
   OpUpdateBlobImage;
   OpDeleteImage;
   OpAddRawFont;
+  OpAddFontDescriptor;
   OpDeleteFont;
   OpAddFontInstance;
   OpDeleteFontInstance;

@@ -201,10 +201,10 @@ nsTableFrame::~nsTableFrame()
 }
 
 void
-nsTableFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsTableFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
-  mColGroups.DestroyFramesFrom(aDestructRoot);
-  nsContainerFrame::DestroyFrom(aDestructRoot);
+  mColGroups.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 // Make sure any views are positioned properly

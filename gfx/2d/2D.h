@@ -746,10 +746,15 @@ public:
 
   typedef void (*FontFileDataOutput)(const uint8_t *aData, uint32_t aLength, uint32_t aIndex,
                                      void *aBaton);
+  typedef void (*WRFontDescriptorOutput)(const uint8_t *aData, uint32_t aLength, uint32_t aIndex,
+                                         void *aBaton);
   typedef void (*FontInstanceDataOutput)(const uint8_t* aData, uint32_t aLength, void* aBaton);
-  typedef void (*FontDescriptorOutput)(const uint8_t* aData, uint32_t aLength, void* aBaton);
+  typedef void (*FontDescriptorOutput)(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
+                                       void* aBaton);
 
   virtual bool GetFontFileData(FontFileDataOutput, void *) { return false; }
+
+  virtual bool GetWRFontDescriptor(WRFontDescriptorOutput, void *) { return false; }
 
   virtual bool GetFontInstanceData(FontInstanceDataOutput, void *) { return false; }
 
@@ -1565,7 +1570,7 @@ public:
    * data retrieved from ScaledFont::GetFontDescriptor.
    */
   static already_AddRefed<UnscaledFont>
-    CreateUnscaledFontFromFontDescriptor(FontType aType, const uint8_t* aData, uint32_t aDataLength);
+    CreateUnscaledFontFromFontDescriptor(FontType aType, const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex);
 
   /**
    * This creates a scaled font with an associated cairo_scaled_font_t, and

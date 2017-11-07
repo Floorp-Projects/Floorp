@@ -151,9 +151,7 @@ typedef struct {
     PRUint8 empty;
 } SSL3HelloRequest;
 
-typedef struct {
-    PRUint8 rand[SSL3_RANDOM_LENGTH];
-} SSL3Random;
+typedef PRUint8 SSL3Random[SSL3_RANDOM_LENGTH];
 
 typedef struct {
     PRUint8 id[32];

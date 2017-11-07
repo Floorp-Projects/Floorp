@@ -9,7 +9,8 @@
 
 #include <stdio.h> /* for FILE* */
 #include "nsDebug.h"
-#include "nsTArrayForwardDeclare.h"
+#include "nsTArray.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/ReverseIterator.h"
 
 #if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
@@ -19,6 +20,7 @@
 #endif
 
 class nsContainerFrame;
+class nsIContent;
 class nsIFrame;
 class nsIPresShell;
 class nsPresContext;
@@ -46,6 +48,19 @@ namespace layout {
       // A special alias for kPrincipalList that suppress the reflow request that
       // is normally done when manipulating child lists.
       kNoReflowPrincipalList        = 0x8000
+  };
+
+  // A helper class for nsIFrame::Destroy[From].  It's defined here because
+  // nsFrameList needs it and we can't use nsIFrame here.
+  struct PostFrameDestroyData {
+    AutoTArray<RefPtr<nsIContent>, 50> mAnonymousContent;
+    AutoTArray<RefPtr<nsIContent>, 50> mGeneratedContent;
+    void AddAnonymousContent(already_AddRefed<nsIContent>&& aContent) {
+      mAnonymousContent.AppendElement(aContent);
+    }
+    void AddGeneratedContent(already_AddRefed<nsIContent>&& aContent) {
+      mGeneratedContent.AppendElement(aContent);
+    }
   };
 } // namespace layout
 } // namespace mozilla
@@ -93,9 +108,10 @@ public:
 
   /**
    * For each frame in this list: remove it from the list then call
-   * DestroyFrom(aDestructRoot) on it.
+   * DestroyFrom(aDestructRoot, aPostDestroyData) on it.
    */
-  void DestroyFramesFrom(nsIFrame* aDestructRoot);
+  void DestroyFramesFrom(nsIFrame* aDestructRoot,
+                         mozilla::layout::PostFrameDestroyData& aPostDestroyData);
 
   void Clear() { mFirstChild = mLastChild = nullptr; }
 

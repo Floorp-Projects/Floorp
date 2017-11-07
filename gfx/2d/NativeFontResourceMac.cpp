@@ -57,7 +57,7 @@ NativeFontResourceMac::CreateUnscaledFont(uint32_t aIndex,
                                           const uint8_t* aInstanceData,
                                           uint32_t aInstanceDataLength)
 {
-  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontMac(mFontRef);
+  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontMac(mFontRef, true);
 
   return unscaledFont.forget();
 }

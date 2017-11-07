@@ -195,7 +195,7 @@ gfxDWriteFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
             continue;
         }
 
-        gfxDWriteFontEntry *fe = new gfxDWriteFontEntry(fullID, font);
+        gfxDWriteFontEntry *fe = new gfxDWriteFontEntry(fullID, font, mIsSystemFontFamily);
         fe->SetForceGDIClassic(mForceGDIClassic);
         AddFontEntry(fe);
 
@@ -605,7 +605,7 @@ gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle,
             return nullptr;
         }
 
-        unscaledFont = new UnscaledFontDWrite(fontFace, sims);
+        unscaledFont = new UnscaledFontDWrite(fontFace, mIsSystemFont ? mFont : nullptr, sims);
         unscaledFontPtr = unscaledFont;
     }
 
@@ -1117,7 +1117,7 @@ gfxDWriteFontList::GetFontsFromCollection(IDWriteFontCollection* aCollection)
 
         nsDependentString familyName(enName.Elements());
 
-        fam = new gfxDWriteFontFamily(familyName, family);
+        fam = new gfxDWriteFontFamily(familyName, family, aCollection == mSystemFonts);
         if (!fam) {
             continue;
         }

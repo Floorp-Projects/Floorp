@@ -624,7 +624,7 @@ SingleTexturePass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
   // base LayerMLGPU class.
   if (PaintedLayerMLGPU* layer = aLayer->AsPaintedLayerMLGPU()) {
     Info info(aItem, layer);
-    if (!AddItems(txn, info, layer->GetRenderRegion())) {
+    if (!AddItems(txn, info, layer->GetDrawRects())) {
       return false;
     }
   } else if (TexturedLayerMLGPU* layer = aLayer->AsTexturedLayerMLGPU()) {
@@ -700,7 +700,7 @@ ComponentAlphaPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
   Txn txn(this);
 
   Info info(aItem, layer);
-  if (!AddItems(txn, info, layer->GetRenderRegion())) {
+  if (!AddItems(txn, info, layer->GetDrawRects())) {
     return false;
   }
   return txn.Commit();

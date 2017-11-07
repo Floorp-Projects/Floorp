@@ -921,16 +921,17 @@ private:
 class RecordedFontDescriptor : public RecordedEventDerived<RecordedFontDescriptor> {
 public:
 
-  static void FontDescCb(const uint8_t* aData, uint32_t aSize,
+  static void FontDescCb(const uint8_t* aData, uint32_t aSize, uint32_t aIndex,
                          void* aBaton)
   {
     auto recordedFontDesc = static_cast<RecordedFontDescriptor*>(aBaton);
-    recordedFontDesc->SetFontDescriptor(aData, aSize);
+    recordedFontDesc->SetFontDescriptor(aData, aSize, aIndex);
   }
 
   explicit RecordedFontDescriptor(UnscaledFont* aUnscaledFont)
     : RecordedEventDerived(FONTDESC)
     , mType(aUnscaledFont->GetType())
+    , mIndex(0)
     , mRefPtr(aUnscaledFont)
   {
     mHasDesc = aUnscaledFont->GetFontDescriptor(FontDescCb, this);
@@ -951,12 +952,13 @@ public:
 private:
   friend class RecordedEvent;
 
-  void SetFontDescriptor(const uint8_t* aData, uint32_t aSize);
+  void SetFontDescriptor(const uint8_t* aData, uint32_t aSize, uint32_t aIndex);
 
   bool mHasDesc;
 
   FontType mType;
   std::vector<uint8_t> mData;
+  uint32_t mIndex;
   ReferencePtr mRefPtr;
 
   template<class S>
@@ -2810,7 +2812,7 @@ inline bool
 RecordedFontDescriptor::PlayEvent(Translator *aTranslator) const
 {
   RefPtr<UnscaledFont> font =
-    Factory::CreateUnscaledFontFromFontDescriptor(mType, mData.data(), mData.size());
+    Factory::CreateUnscaledFontFromFontDescriptor(mType, mData.data(), mData.size(), mIndex);
   if (!font) {
     gfxDevCrash(LogReason::InvalidFont) <<
       "Failed creating UnscaledFont of type " << int(mType) << " from font descriptor";
@@ -2828,6 +2830,7 @@ RecordedFontDescriptor::Record(S &aStream) const
   MOZ_ASSERT(mHasDesc);
   WriteElement(aStream, mType);
   WriteElement(aStream, mRefPtr);
+  WriteElement(aStream, mIndex);
   WriteElement(aStream, (size_t)mData.size());
   aStream.write((char*)mData.data(), mData.size());
 }
@@ -2839,9 +2842,10 @@ RecordedFontDescriptor::OutputSimpleEventInfo(std::stringstream &aStringStream) 
 }
 
 inline void
-RecordedFontDescriptor::SetFontDescriptor(const uint8_t* aData, uint32_t aSize)
+RecordedFontDescriptor::SetFontDescriptor(const uint8_t* aData, uint32_t aSize, uint32_t aIndex)
 {
   mData.assign(aData, aData + aSize);
+  mIndex = aIndex;
 }
 
 template<class S>
@@ -2850,6 +2854,7 @@ RecordedFontDescriptor::RecordedFontDescriptor(S &aStream)
 {
   ReadElement(aStream, mType);
   ReadElement(aStream, mRefPtr);
+  ReadElement(aStream, mIndex);
 
   size_t size;
   ReadElement(aStream, size);

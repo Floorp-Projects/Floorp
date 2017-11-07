@@ -316,10 +316,13 @@ let urlbarListener = {
 };
 
 let BrowserUsageTelemetry = {
+  _inited: false,
+
   init() {
     this._lastRecordTabCount = 0;
     urlbarListener.init();
     this._setupAfterRestore();
+    this._inited = true;
   },
 
   /**
@@ -337,7 +340,13 @@ let BrowserUsageTelemetry = {
     URICountListener.reset();
   },
 
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
+
   uninit() {
+    if (!this._inited) {
+      return;
+    }
     Services.obs.removeObserver(this, DOMWINDOW_OPENED_TOPIC);
     Services.obs.removeObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC);
     urlbarListener.uninit();
@@ -555,8 +564,8 @@ let BrowserUsageTelemetry = {
    */
   _setupAfterRestore() {
     // Make sure to catch new chrome windows and subsession splits.
-    Services.obs.addObserver(this, DOMWINDOW_OPENED_TOPIC);
-    Services.obs.addObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC);
+    Services.obs.addObserver(this, DOMWINDOW_OPENED_TOPIC, true);
+    Services.obs.addObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC, true);
 
     // Attach the tabopen handlers to the existing Windows.
     let browserEnum = Services.wm.getEnumerator("navigator:browser");

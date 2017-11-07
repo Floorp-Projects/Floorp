@@ -47,15 +47,15 @@ async function cleanup(engine, server) {
   await engine.finalize();
 }
 
-async function syncIdToId(syncId) {
-  let guid = PlacesSyncUtils.bookmarks.syncIdToGuid(syncId);
+async function recordIdToId(recordId) {
+  let guid = PlacesSyncUtils.bookmarks.recordIdToGuid(recordId);
   return PlacesUtils.promiseItemId(guid);
 }
 
 async function getFolderChildrenIDs(folderId) {
-  let folderSyncId = PlacesSyncUtils.bookmarks.guidToSyncId(await PlacesUtils.promiseItemGuid(folderId));
-  let syncIds = await PlacesSyncUtils.bookmarks.fetchChildSyncIds(folderSyncId);
-  return Promise.all(syncIds.map((syncId) => syncIdToId(syncId)));
+  let folderRecordId = PlacesSyncUtils.bookmarks.guidToRecordId(await PlacesUtils.promiseItemGuid(folderId));
+  let recordIds = await PlacesSyncUtils.bookmarks.fetchChildRecordIds(folderRecordId);
+  return Promise.all(recordIds.map((recordId) => recordIdToId(recordId)));
 }
 
 async function createFolder(parentId, title) {

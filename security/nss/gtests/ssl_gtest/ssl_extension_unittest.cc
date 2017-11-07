@@ -1079,10 +1079,6 @@ TEST_P(TlsBogusExtensionTest13, AddBogusExtensionHelloRetryRequest) {
   Run(kTlsHandshakeHelloRetryRequest);
 }
 
-TEST_P(TlsBogusExtensionTest13, AddVersionExtensionServerHello) {
-  Run(kTlsHandshakeServerHello, ssl_tls13_supported_versions_xtn);
-}
-
 TEST_P(TlsBogusExtensionTest13, AddVersionExtensionEncryptedExtensions) {
   Run(kTlsHandshakeEncryptedExtensions, ssl_tls13_supported_versions_xtn);
 }

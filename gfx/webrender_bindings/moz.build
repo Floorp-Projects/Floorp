@@ -48,6 +48,11 @@ if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
         'RenderD3D11TextureHostOGL.cpp',
     ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3'):
+    DEFINES['MOZ_ENABLE_FREETYPE'] = True
+    CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+    CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

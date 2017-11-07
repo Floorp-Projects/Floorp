@@ -997,7 +997,7 @@ static nsView*
 BeginSwapDocShellsForViews(nsView* aSibling);
 
 void
-nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   if (mPostedReflowCallback) {
     PresContext()->PresShell()->CancelReflowCallback(this);
@@ -1031,7 +1031,7 @@ nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
     }
   }
 
-  nsAtomicContainerFrame::DestroyFrom(aDestructRoot);
+  nsAtomicContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 CSSIntSize

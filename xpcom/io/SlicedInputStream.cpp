@@ -9,7 +9,9 @@
 #include "nsISeekableStream.h"
 #include "nsStreamUtils.h"
 
-using namespace mozilla::ipc;
+namespace mozilla {
+
+using namespace ipc;
 
 NS_IMPL_ADDREF(SlicedInputStream);
 NS_IMPL_RELEASE(SlicedInputStream);
@@ -511,3 +513,5 @@ SlicedInputStream::SetEOF()
   mClosed = true;
   return mWeakSeekableInputStream->SetEOF();
 }
+
+} // namespace mozilla
