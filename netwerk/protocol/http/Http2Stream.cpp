@@ -958,7 +958,7 @@ Http2Stream::TransmitFrame(const char *buf,
   }
 
   if (!mAttempting0RTT) {
-    mSession->FlushOutputQueue();
+    mSession->MaybeFlushOutputQueue();
   }
 
   // calling this will trigger waiting_for if mRequestBodyLenRemaining is 0

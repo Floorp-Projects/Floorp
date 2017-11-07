@@ -40,7 +40,7 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                         const nsDisplayListSet& aLists) override;

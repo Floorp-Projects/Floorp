@@ -9,6 +9,7 @@
 # tree Gradle wrapper.  The wrapper downloads and installs Gradle, which is
 # good for local developers but not good in automation.
 option('--with-gradle', nargs='?',
+       default=True,
        help='Enable building mobile/android with Gradle '
             '(argument: location of binary or wrapper (gradle/gradlew))')
 

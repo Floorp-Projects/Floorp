@@ -829,7 +829,6 @@ class CompareCodecPriority {
 class ConfigureCodec {
   public:
     explicit ConfigureCodec(nsCOMPtr<nsIPrefBranch>& branch) :
-      mHardwareH264Enabled(false),
       mHardwareH264Supported(false),
       mSoftwareH264Enabled(false),
       mH264Enabled(false),
@@ -963,7 +962,6 @@ class ConfigureCodec {
     }
 
   private:
-    bool mHardwareH264Enabled;
     bool mHardwareH264Supported;
     bool mSoftwareH264Enabled;
     bool mH264Enabled;

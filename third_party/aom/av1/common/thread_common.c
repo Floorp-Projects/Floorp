@@ -86,7 +86,7 @@ static INLINE void sync_write(AV1LfSync *const lf_sync, int r, int c,
 
 #if !CONFIG_EXT_PARTITION_TYPES
 static INLINE enum lf_path get_loop_filter_path(
-    int y_only, struct macroblockd_plane planes[MAX_MB_PLANE]) {
+    int y_only, struct macroblockd_plane *planes) {
   if (y_only)
     return LF_PATH_444;
   else if (planes[1].subsampling_y == 1 && planes[1].subsampling_x == 1)
@@ -98,7 +98,7 @@ static INLINE enum lf_path get_loop_filter_path(
 }
 
 static INLINE void loop_filter_block_plane_ver(
-    AV1_COMMON *cm, struct macroblockd_plane planes[MAX_MB_PLANE], int plane,
+    AV1_COMMON *cm, struct macroblockd_plane *planes, int plane,
     MODE_INFO **mi, int mi_row, int mi_col, enum lf_path path,
     LOOP_FILTER_MASK *lfm) {
   if (plane == 0) {
@@ -120,7 +120,7 @@ static INLINE void loop_filter_block_plane_ver(
 }
 
 static INLINE void loop_filter_block_plane_hor(
-    AV1_COMMON *cm, struct macroblockd_plane planes[MAX_MB_PLANE], int plane,
+    AV1_COMMON *cm, struct macroblockd_plane *planes, int plane,
     MODE_INFO **mi, int mi_row, int mi_col, enum lf_path path,
     LOOP_FILTER_MASK *lfm) {
   if (plane == 0) {
@@ -286,10 +286,9 @@ static int loop_filter_row_worker(AV1LfSync *const lf_sync,
 #endif  //  CONFIG_PARALLEL_DEBLOCKING
 
 static void loop_filter_rows_mt(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
-                                struct macroblockd_plane planes[MAX_MB_PLANE],
-                                int start, int stop, int y_only,
-                                AVxWorker *workers, int nworkers,
-                                AV1LfSync *lf_sync) {
+                                struct macroblockd_plane *planes, int start,
+                                int stop, int y_only, AVxWorker *workers,
+                                int nworkers, AV1LfSync *lf_sync) {
 #if CONFIG_EXT_PARTITION
   printf(
       "STOPPING: This code has not been modified to work with the "
@@ -415,7 +414,7 @@ static void loop_filter_rows_mt(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
 }
 
 void av1_loop_filter_frame_mt(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
-                              struct macroblockd_plane planes[MAX_MB_PLANE],
+                              struct macroblockd_plane *planes,
                               int frame_filter_level,
 #if CONFIG_LOOPFILTER_LEVEL
                               int frame_filter_level_r,

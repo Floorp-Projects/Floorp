@@ -175,13 +175,13 @@ nsTableRowFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsTableRowFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsTableRowFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   if (HasAnyStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
     nsTableFrame::UnregisterPositionedTablePart(this, aDestructRoot);
   }
 
-  nsContainerFrame::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 /* virtual */ void

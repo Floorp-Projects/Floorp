@@ -10641,13 +10641,21 @@ void nsGlobalWindow::SetIsBackground(bool aIsBackground)
   if (aIsBackground) {
     // Notify gamepadManager we are at the background window,
     // we need to stop vibrate.
-    if (inner) {
+    // Stop the vr telemery time spent when it switches to
+    // the background window.
+    if (inner && changed) {
       inner->StopGamepadHaptics();
+      // true is for asking to set the delta time to
+      // the telemetry.
+      inner->ResetVRTelemetry(true);
     }
     return;
   }
 
   if (inner) {
+    // When switching to be as a top tab, restart the telemetry.
+    // false is for only resetting the timestamp.
+    inner->ResetVRTelemetry(false);
     inner->SyncGamepadState();
   }
 }
@@ -10720,6 +10728,14 @@ nsGlobalWindow::DisableVRUpdates()
   if (mVREventObserver) {
     mVREventObserver->DisconnectFromOwner();
     mVREventObserver = nullptr;
+  }
+}
+
+void
+nsGlobalWindow::ResetVRTelemetry(bool aUpdate)
+{
+  if (mVREventObserver) {
+    mVREventObserver->UpdateSpentTimeIn2DTelemetry(aUpdate);
   }
 }
 

@@ -13,7 +13,10 @@ const NS_FILEVIEW_CONTRACTID = "@mozilla.org/filepicker/fileview;1";
 const nsITreeView = Components.interfaces.nsITreeView;
 const nsIFile = Components.interfaces.nsIFile;
 const NS_LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
-const NS_PROMPTSERVICE_CONTRACTID = "@mozilla.org/embedcomp/prompt-service;1";
+
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
 
 var sfile = Components.classes[NS_LOCAL_FILE_CONTRACTID].createInstance(nsIFile);
 var retvals;
@@ -174,10 +177,7 @@ function showErrorDialog(titleStrName, messageStrName, file) {
     gFilePickerBundle.getFormattedString(titleStrName, [file.path]);
   var errorMessage =
     gFilePickerBundle.getFormattedString(messageStrName, [file.path]);
-  var promptService =
-    Components.classes[NS_PROMPTSERVICE_CONTRACTID].getService(Components.interfaces.nsIPromptService);
-
-  promptService.alert(window, errorTitle, errorMessage);
+  Services.prompt.alert(window, errorTitle, errorMessage);
 }
 
 function openOnOK() {
@@ -189,7 +189,7 @@ function openOnOK() {
 }
 
 function selectOnOK() {
-  var errorTitle, errorMessage, promptService;
+  var errorTitle, errorMessage;
   var ret = nsIFilePicker.returnOK;
 
   var isDir = false;
@@ -200,8 +200,7 @@ function selectOnOK() {
 
   if (allowURLs) {
     try {
-      var ios = Components.classes[NS_IOSERVICE_CONTRACTID].getService(Components.interfaces.nsIIOService);
-      retvals.fileURL = ios.newURI(textInput.value);
+      retvals.fileURL = Services.io.newURI(textInput.value);
       let fileList = [];
       if (retvals.fileURL instanceof Components.interfaces.nsIFileURL)
         fileList.push(retvals.fileURL.file);
@@ -234,7 +233,7 @@ function selectOnOK() {
     try {
       file.normalize();
     } catch (e) {
-      // promptService.alert(window, "Problem", "normalize failed, continuing");
+      // Services.prompt.alert(window, "Problem", "normalize failed, continuing");
     }
 
     var fileExists = file.exists();
@@ -294,8 +293,7 @@ function selectOnOK() {
             gFilePickerBundle.getFormattedString("confirmFileReplacing",
                                                  [file.path]);
 
-          promptService = Components.classes[NS_PROMPTSERVICE_CONTRACTID].getService(Components.interfaces.nsIPromptService);
-          var rv = promptService.confirm(window, confirmTitle, message);
+          var rv = Services.prompt.confirm(window, confirmTitle, message);
           if (rv) {
             ret = nsIFilePicker.returnReplace;
             retvals.directory = file.parent.path;
@@ -336,8 +334,7 @@ function selectOnOK() {
             errorMessage =
               gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_dir", [parent.path]);
           }
-          promptService = Components.classes[NS_PROMPTSERVICE_CONTRACTID].getService(Components.interfaces.nsIPromptService);
-          promptService.alert(window, errorTitle, errorMessage);
+          Services.prompt.alert(window, errorTitle, errorMessage);
           ret = nsIFilePicker.returnCancel;
         }
       }
@@ -624,13 +621,11 @@ function goHome() {
 
 function newDir() {
   var file;
-  var promptService =
-    Components.classes[NS_PROMPTSERVICE_CONTRACTID].getService(Components.interfaces.nsIPromptService);
   var dialogTitle =
     gFilePickerBundle.getString("promptNewDirTitle");
   var dialogMsg =
     gFilePickerBundle.getString("promptNewDirMessage");
-  var ret = promptService.prompt(window, dialogTitle, dialogMsg, gNewDirName, null, {value: 0});
+  var ret = Services.prompt.prompt(window, dialogTitle, dialogMsg, gNewDirName, null, {value: 0});
 
   if (ret) {
     file = processPath(gNewDirName.value);

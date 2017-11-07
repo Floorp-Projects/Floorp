@@ -6,6 +6,7 @@
 #ifndef mozilla_SelectionState_h
 #define mozilla_SelectionState_h
 
+#include "mozilla/EditorDOMPoint.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 #include "nsINode.h"
@@ -180,6 +181,7 @@ private:
   nsCOMPtr<nsINode>* mNode;
   nsCOMPtr<nsIDOMNode>* mDOMNode;
   int32_t* mOffset;
+  EditorDOMPoint* mPoint;
   RefPtr<RangeItem> mRangeItem;
 
 public:
@@ -189,6 +191,7 @@ public:
     , mNode(aNode)
     , mDOMNode(nullptr)
     , mOffset(aOffset)
+    , mPoint(nullptr)
   {
     mRangeItem = new RangeItem();
     mRangeItem->mStartContainer = *mNode;
@@ -204,6 +207,7 @@ public:
     , mNode(nullptr)
     , mDOMNode(aNode)
     , mOffset(aOffset)
+    , mPoint(nullptr)
   {
     mRangeItem = new RangeItem();
     mRangeItem->mStartContainer = do_QueryInterface(*mDOMNode);
@@ -213,9 +217,29 @@ public:
     mRangeUpdater.RegisterRangeItem(mRangeItem);
   }
 
+  AutoTrackDOMPoint(RangeUpdater& aRangeUpdater,
+                    EditorDOMPoint* aPoint)
+    : mRangeUpdater(aRangeUpdater)
+    , mNode(nullptr)
+    , mDOMNode(nullptr)
+    , mOffset(nullptr)
+    , mPoint(aPoint)
+  {
+    mRangeItem = new RangeItem();
+    mRangeItem->mStartContainer = mPoint->Container();
+    mRangeItem->mEndContainer = mPoint->Container();
+    mRangeItem->mStartOffset = mPoint->Offset();
+    mRangeItem->mEndOffset = mPoint->Offset();
+    mRangeUpdater.RegisterRangeItem(mRangeItem);
+  }
+
   ~AutoTrackDOMPoint()
   {
     mRangeUpdater.DropRangeItem(mRangeItem);
+    if (mPoint) {
+      mPoint->Set(mRangeItem->mStartContainer, mRangeItem->mStartOffset);
+      return;
+    }
     if (mNode) {
       *mNode = mRangeItem->mStartContainer;
     } else {

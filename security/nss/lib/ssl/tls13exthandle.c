@@ -873,7 +873,12 @@ tls13_ClientHandleTicketEarlyDataInfoXtn(const sslSocket *ss, TLSExtensionData *
 
 /*
  *     struct {
+ *       select (Handshake.msg_type) {
+ *       case client_hello:
  *          ProtocolVersion versions<2..254>;
+ *       case server_hello:
+ *          ProtocolVersion version;
+ *       };
  *     } SupportedVersions;
  */
 PRInt32
@@ -888,7 +893,7 @@ tls13_ClientSendSupportedVersionsXtn(const sslSocket *ss, TLSExtensionData *xtnD
         return 0;
     }
 
-    SSL_TRC(3, ("%d: TLS13[%d]: send supported_versions extension",
+    SSL_TRC(3, ("%d: TLS13[%d]: client send supported_versions extension",
                 SSL_GETPID(), ss->fd));
 
     /* Extension type, extension len fiels, vector len field,
@@ -938,6 +943,50 @@ tls13_ClientSendSupportedVersionsXtn(const sslSocket *ss, TLSExtensionData *xtnD
             ssl_tls13_supported_versions_xtn;
     }
 
+    return extensions_len;
+}
+
+PRInt32
+tls13_ServerSendSupportedVersionsXtn(const sslSocket *ss,
+                                     TLSExtensionData *xtnData,
+                                     PRBool append, PRUint32 maxBytes)
+{
+    SECStatus rv;
+    PRInt32 extensions_len;
+
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        PORT_Assert(0); /* Can't happen. */
+        return SECSuccess;
+    }
+    if (!ss->ssl3.hs.altHandshakeType) {
+        PORT_Assert(0); /* Can't happen. */
+        return SECSuccess;
+    }
+
+    SSL_TRC(3, ("%d: TLS13[%d]: server send supported_versions extension",
+                SSL_GETPID(), ss->fd));
+
+    extensions_len = 2 + 2 + 2; /* type, len, version */
+    if (maxBytes < (PRUint32)extensions_len) {
+        PORT_Assert(0);
+        return 0;
+    }
+
+    if (append) {
+        rv = ssl3_ExtAppendHandshakeNumber(ss, ssl_tls13_supported_versions_xtn, 2);
+        if (rv != SECSuccess)
+            return -1;
+
+        rv = ssl3_ExtAppendHandshakeNumber(ss, 2, 2);
+        if (rv != SECSuccess)
+            return -1;
+
+        rv = ssl3_ExtAppendHandshakeNumber(
+            ss, tls13_EncodeAltDraftVersion(SSL_LIBRARY_VERSION_TLS_1_3), 2);
+        if (rv != SECSuccess) {
+            return -1;
+        }
+    }
     return extensions_len;
 }
 

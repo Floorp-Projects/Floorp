@@ -30,10 +30,10 @@ function ContentPrefService2() {
   // was due to a temporary condition (like being out of disk space).
   this._dbInit();
 
-  this._observerSvc.addObserver(this, "last-pb-context-exited");
+  Services.obs.addObserver(this, "last-pb-context-exited");
 
   // Observe shutdown so we can shut down the database connection.
-  this._observerSvc.addObserver(this, "xpcom-shutdown");
+  Services.obs.addObserver(this, "xpcom-shutdown");
 }
 
 const cache = new ContentPrefStore();
@@ -58,32 +58,11 @@ ContentPrefService2.prototype = {
 
   classID: Components.ID("{e3f772f3-023f-4b32-b074-36cf0fd5d414}"),
 
-  // Convenience Getters
-
-  // Observer Service
-  __observerSvc: null,
-  get _observerSvc() {
-    if (!this.__observerSvc)
-      this.__observerSvc = Cc["@mozilla.org/observer-service;1"].
-                           getService(Ci.nsIObserverService);
-    return this.__observerSvc;
-  },
-
-  // Preferences Service
-  __prefSvc: null,
-  get _prefSvc() {
-    if (!this.__prefSvc)
-      this.__prefSvc = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefBranch);
-    return this.__prefSvc;
-  },
-
-
   // Destruction
 
   _destroy: function ContentPrefService__destroy() {
-    this._observerSvc.removeObserver(this, "xpcom-shutdown");
-    this._observerSvc.removeObserver(this, "last-pb-context-exited");
+    Services.obs.removeObserver(this, "xpcom-shutdown");
+    Services.obs.removeObserver(this, "last-pb-context-exited");
 
     this.destroy();
 
@@ -98,8 +77,6 @@ ContentPrefService2.prototype = {
     delete this._observers;
     delete this._genericObservers;
     delete this.__grouper;
-    delete this.__observerSvc;
-    delete this.__prefSvc;
   },
 
 
@@ -1034,28 +1011,22 @@ ContentPrefService2.prototype = {
   // initialized, since it won't be initialized until at the end of _dbInit.
 
   _dbInit: function ContentPrefService__dbInit() {
-    var dirService = Cc["@mozilla.org/file/directory_service;1"].
-                     getService(Ci.nsIProperties);
-    var dbFile = dirService.get("ProfD", Ci.nsIFile);
+    var dbFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
     dbFile.append("content-prefs.sqlite");
-
-    var dbService = Cc["@mozilla.org/storage/service;1"].
-                    getService(Ci.mozIStorageService);
 
     var dbConnection;
 
     if (!dbFile.exists())
-      dbConnection = this._dbCreate(dbService, dbFile);
+      dbConnection = this._dbCreate(dbFile);
     else {
       try {
-        dbConnection = dbService.openDatabase(dbFile);
+        dbConnection = Services.storage.openDatabase(dbFile);
       } catch (e) {
         // If the connection isn't ready after we open the database, that means
         // the database has been corrupted, so we back it up and then recreate it.
         if (e.result != Cr.NS_ERROR_FILE_CORRUPTED)
           throw e;
-        dbConnection = this._dbBackUpAndRecreate(dbService, dbFile,
-                                                 dbConnection);
+        dbConnection = this._dbBackUpAndRecreate(dbFile, dbConnection);
       }
 
       // Get the version of the schema in the file.
@@ -1068,7 +1039,7 @@ ContentPrefService2.prototype = {
           this._dbMigrate(dbConnection, version, this._dbVersion);
         } catch (ex) {
           Cu.reportError("error migrating DB: " + ex + "; backing up and recreating");
-          dbConnection = this._dbBackUpAndRecreate(dbService, dbFile, dbConnection);
+          dbConnection = this._dbBackUpAndRecreate(dbFile, dbConnection);
         }
       }
     }
@@ -1085,14 +1056,14 @@ ContentPrefService2.prototype = {
     // toolkit.storage.synchronous pref to 1 (NORMAL synchronization) or 2
     // (FULL synchronization), in which case mozStorageConnection::Initialize
     // will use that value, and we won't override it here.
-    if (!this._prefSvc.prefHasUserValue("toolkit.storage.synchronous"))
+    if (!Services.prefs.prefHasUserValue("toolkit.storage.synchronous"))
       dbConnection.executeSimpleSQL("PRAGMA synchronous = OFF");
 
     this._dbConnection = dbConnection;
   },
 
-  _dbCreate: function ContentPrefService__dbCreate(aDBService, aDBFile) {
-    var dbConnection = aDBService.openDatabase(aDBFile);
+  _dbCreate: function ContentPrefService__dbCreate(aDBFile) {
+    var dbConnection = Services.storage.openDatabase(aDBFile);
 
     try {
       this._dbCreateSchema(dbConnection);
@@ -1130,10 +1101,9 @@ ContentPrefService2.prototype = {
     }
   },
 
-  _dbBackUpAndRecreate: function ContentPrefService__dbBackUpAndRecreate(aDBService,
-                                                                         aDBFile,
+  _dbBackUpAndRecreate: function ContentPrefService__dbBackUpAndRecreate(aDBFile,
                                                                          aDBConnection) {
-    aDBService.backupDatabaseFile(aDBFile, "content-prefs.sqlite.corrupt");
+    Services.storage.backupDatabaseFile(aDBFile, "content-prefs.sqlite.corrupt");
 
     // Close the database, ignoring the "already closed" exception, if any.
     // It'll be open if we're here because of a migration failure but closed
@@ -1142,7 +1112,7 @@ ContentPrefService2.prototype = {
 
     aDBFile.remove(false);
 
-    let dbConnection = this._dbCreate(aDBService, aDBFile);
+    let dbConnection = this._dbCreate(aDBFile);
 
     return dbConnection;
   },

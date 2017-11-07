@@ -322,8 +322,10 @@ impl<'a> FlattenContext<'a> {
             None => return,
         };
 
-        let mut clip_region = ClipRegion::create_for_clip_node_with_local_clip(local_clip);
-        clip_region.origin += reference_frame_relative_offset;
+        let clip_region = ClipRegion::create_for_clip_node_with_local_clip(
+            local_clip,
+            &reference_frame_relative_offset
+        );
         let parent_pipeline_id = parent_id.pipeline_id();
         let clip_id = self.clip_scroll_tree
             .generate_new_clip_id(parent_pipeline_id);
@@ -552,13 +554,12 @@ impl<'a> FlattenContext<'a> {
             }
             SpecificDisplayItem::Clip(ref info) => {
                 let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip().0);
-                let mut clip_region = ClipRegion::create_for_clip_node(
+                let clip_region = ClipRegion::create_for_clip_node(
                     *item.local_clip().clip_rect(),
                     complex_clips,
                     info.image_mask,
+                    &reference_frame_relative_offset,
                 );
-                clip_region.origin += reference_frame_relative_offset;
-
                 self.flatten_clip(
                     pipeline_id,
                     &clip_and_scroll.scroll_node_id,
@@ -568,13 +569,12 @@ impl<'a> FlattenContext<'a> {
             }
             SpecificDisplayItem::ScrollFrame(ref info) => {
                 let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip().0);
-                let mut clip_region = ClipRegion::create_for_clip_node(
+                let clip_region = ClipRegion::create_for_clip_node(
                     *item.local_clip().clip_rect(),
                     complex_clips,
                     info.image_mask,
+                    &reference_frame_relative_offset,
                 );
-                clip_region.origin += reference_frame_relative_offset;
-
                 // Just use clip rectangle as the frame rect for this scroll frame.
                 // This is useful when calculating scroll extents for the
                 // ClipScrollNode::scroll(..) API as well as for properly setting sticky
@@ -599,6 +599,7 @@ impl<'a> FlattenContext<'a> {
                     info.margins,
                     info.vertical_offset_bounds,
                     info.horizontal_offset_bounds,
+                    info.previously_applied_offset,
                 );
                 self.clip_scroll_tree.add_sticky_frame(
                     info.id,

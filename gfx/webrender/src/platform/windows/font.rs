@@ -287,9 +287,9 @@ impl FontContext {
                 let length = pixels.len() / 3;
                 let mut bgra_pixels: Vec<u8> = vec![0; length * 4];
                 for i in 0 .. length {
-                    bgra_pixels[i * 4 + 0] = pixels[i * 3 + 0];
+                    bgra_pixels[i * 4 + 0] = pixels[i * 3 + 2];
                     bgra_pixels[i * 4 + 1] = pixels[i * 3 + 1];
-                    bgra_pixels[i * 4 + 2] = pixels[i * 3 + 2];
+                    bgra_pixels[i * 4 + 2] = pixels[i * 3 + 0];
                     bgra_pixels[i * 4 + 3] = 0xff;
                 }
                 bgra_pixels

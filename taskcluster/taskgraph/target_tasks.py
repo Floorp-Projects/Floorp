@@ -93,15 +93,15 @@ def standard_filter(task, parameters):
     )
 
 
-def _try_task_config(full_task_graph, parameters):
+def _try_task_config(full_task_graph, parameters, graph_config):
     requested_tasks = parameters['try_task_config']['tasks']
     return list(set(requested_tasks) & full_task_graph.graph.nodes)
 
 
-def _try_option_syntax(full_task_graph, parameters):
+def _try_option_syntax(full_task_graph, parameters, graph_config):
     """Generate a list of target tasks based on try syntax in
     parameters['message'] and, for context, the full task graph."""
-    options = try_option_syntax.TryOptionSyntax(parameters, full_task_graph)
+    options = try_option_syntax.TryOptionSyntax(parameters, full_task_graph, graph_config)
     target_tasks_labels = [t.label for t in full_task_graph.tasks.itervalues()
                            if options.task_matches(t)]
 
@@ -147,12 +147,12 @@ def _try_option_syntax(full_task_graph, parameters):
 
 
 @_target_task('try_tasks')
-def target_tasks_try(full_task_graph, parameters):
+def target_tasks_try(full_task_graph, parameters, graph_config):
     try_mode = parameters['try_mode']
     if try_mode == 'try_task_config':
-        return _try_task_config(full_task_graph, parameters)
+        return _try_task_config(full_task_graph, parameters, graph_config)
     elif try_mode == 'try_option_syntax':
-        return _try_option_syntax(full_task_graph, parameters)
+        return _try_option_syntax(full_task_graph, parameters, graph_config)
     else:
         # With no try mode, we schedule nothing, allowing the user to add tasks
         # later via treeherder.
@@ -160,7 +160,7 @@ def target_tasks_try(full_task_graph, parameters):
 
 
 @_target_task('default')
-def target_tasks_default(full_task_graph, parameters):
+def target_tasks_default(full_task_graph, parameters, graph_config):
     """Target the tasks which have indicated they should be run on this project
     via the `run_on_projects` attributes."""
     return [l for l, t in full_task_graph.tasks.iteritems()
@@ -168,7 +168,7 @@ def target_tasks_default(full_task_graph, parameters):
 
 
 @_target_task('ash_tasks')
-def target_tasks_ash(full_task_graph, parameters):
+def target_tasks_ash(full_task_graph, parameters, graph_config):
     """Target tasks that only run on the ash branch."""
     def filter(task):
         platform = task.attributes.get('build_platform')
@@ -204,7 +204,7 @@ def target_tasks_ash(full_task_graph, parameters):
 
 
 @_target_task('cedar_tasks')
-def target_tasks_cedar(full_task_graph, parameters):
+def target_tasks_cedar(full_task_graph, parameters, graph_config):
     """Target tasks that only run on the cedar branch."""
     def filter(task):
         platform = task.attributes.get('build_platform')
@@ -220,12 +220,12 @@ def target_tasks_cedar(full_task_graph, parameters):
 
 
 @_target_task('graphics_tasks')
-def target_tasks_graphics(full_task_graph, parameters):
+def target_tasks_graphics(full_task_graph, parameters, graph_config):
     """In addition to doing the filtering by project that the 'default'
        filter does, also remove artifact builds because we have csets on
        the graphics branch that aren't on the candidate branches of artifact
        builds"""
-    filtered_for_project = target_tasks_default(full_task_graph, parameters)
+    filtered_for_project = target_tasks_default(full_task_graph, parameters, graph_config)
 
     def filter(task):
         if task.attributes['kind'] == 'artifact-build':
@@ -235,7 +235,7 @@ def target_tasks_graphics(full_task_graph, parameters):
 
 
 @_target_task('mochitest_valgrind')
-def target_tasks_valgrind(full_task_graph, parameters):
+def target_tasks_valgrind(full_task_graph, parameters, graph_config):
     """Target tasks that only run on the cedar branch."""
     def filter(task):
         platform = task.attributes.get('test_platform', '').split('/')[0]
@@ -251,7 +251,7 @@ def target_tasks_valgrind(full_task_graph, parameters):
 
 
 @_target_task('nightly_fennec')
-def target_tasks_nightly_fennec(full_task_graph, parameters):
+def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of fennec. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
@@ -270,7 +270,7 @@ def target_tasks_nightly_fennec(full_task_graph, parameters):
 
 
 @_target_task('nightly_linux')
-def target_tasks_nightly_linux(full_task_graph, parameters):
+def target_tasks_nightly_linux(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of linux. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
@@ -282,7 +282,7 @@ def target_tasks_nightly_linux(full_task_graph, parameters):
 
 
 @_target_task('mozilla_beta_tasks')
-def target_tasks_mozilla_beta(full_task_graph, parameters):
+def target_tasks_mozilla_beta(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a promotable beta or release build
     of desktop, plus android CI. The candidates build process involves a pipeline
     of builds and signing, but does not include beetmover or balrog jobs."""
@@ -292,7 +292,7 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
 
 
 @_target_task('mozilla_release_tasks')
-def target_tasks_mozilla_release(full_task_graph, parameters):
+def target_tasks_mozilla_release(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a promotable beta or release build
     of desktop, plus android CI. The candidates build process involves a pipeline
     of builds and signing, but does not include beetmover or balrog jobs."""
@@ -304,7 +304,7 @@ def target_tasks_mozilla_release(full_task_graph, parameters):
 @_target_task('maple_desktop_promotion')
 @_target_task('mozilla-beta_desktop_promotion')
 @_target_task('mozilla-release_desktop_promotion')
-def target_tasks_mozilla_beta_desktop_promotion(full_task_graph, parameters):
+def target_tasks_mozilla_beta_desktop_promotion(full_task_graph, parameters, graph_config):
     """Select the superset of tasks required to promote a beta or release build
     of desktop. This should include all non-android mozilla_beta tasks, plus
     l10n, beetmover, balrog, etc."""
@@ -349,11 +349,11 @@ def target_tasks_mozilla_beta_desktop_promotion(full_task_graph, parameters):
 
 
 @_target_task('publish_firefox')
-def target_tasks_publish_firefox(full_task_graph, parameters):
+def target_tasks_publish_firefox(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to publish a candidates build of firefox.
     Previous build deps will be optimized out via action task."""
     filtered_for_candidates = target_tasks_mozilla_beta_desktop_promotion(
-        full_task_graph, parameters
+        full_task_graph, parameters, graph_config,
     )
 
     def filter(task):
@@ -375,11 +375,11 @@ def target_tasks_publish_firefox(full_task_graph, parameters):
 
 
 @_target_task('candidates_fennec')
-def target_tasks_candidates_fennec(full_task_graph, parameters):
+def target_tasks_candidates_fennec(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a candidates build of fennec. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filtered_for_project = target_tasks_nightly_fennec(full_task_graph, parameters)
+    filtered_for_project = target_tasks_nightly_fennec(full_task_graph, parameters, graph_config)
 
     def filter(task):
         attr = task.attributes.get
@@ -403,10 +403,12 @@ def target_tasks_candidates_fennec(full_task_graph, parameters):
 
 
 @_target_task('publish_fennec')
-def target_tasks_publish_fennec(full_task_graph, parameters):
+def target_tasks_publish_fennec(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to publish a candidates build of fennec.
     Previous build deps will be optimized out via action task."""
-    filtered_for_candidates = target_tasks_candidates_fennec(full_task_graph, parameters)
+    filtered_for_candidates = target_tasks_candidates_fennec(
+        full_task_graph, parameters, graph_config,
+    )
 
     def filter(task):
         # Include candidates build tasks; these will be optimized out
@@ -435,7 +437,7 @@ def target_tasks_publish_fennec(full_task_graph, parameters):
 
 
 @_target_task('pine_tasks')
-def target_tasks_pine(full_task_graph, parameters):
+def target_tasks_pine(full_task_graph, parameters, graph_config):
     """Bug 1339179 - no mobile automation needed on pine"""
     def filter(task):
         platform = task.attributes.get('build_platform')
@@ -452,7 +454,7 @@ def target_tasks_pine(full_task_graph, parameters):
 
 
 @_target_task('nightly_macosx')
-def target_tasks_nightly_macosx(full_task_graph, parameters):
+def target_tasks_nightly_macosx(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of macosx. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
@@ -464,7 +466,7 @@ def target_tasks_nightly_macosx(full_task_graph, parameters):
 
 
 @_target_task('nightly_win32')
-def target_tasks_nightly_win32(full_task_graph, parameters):
+def target_tasks_nightly_win32(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of win32 and win64.
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
@@ -478,7 +480,7 @@ def target_tasks_nightly_win32(full_task_graph, parameters):
 
 
 @_target_task('nightly_win64')
-def target_tasks_nightly_win64(full_task_graph, parameters):
+def target_tasks_nightly_win64(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of win32 and win64.
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
@@ -492,21 +494,21 @@ def target_tasks_nightly_win64(full_task_graph, parameters):
 
 
 @_target_task('nightly_desktop')
-def target_tasks_nightly_desktop(full_task_graph, parameters):
+def target_tasks_nightly_desktop(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of linux, mac,
     windows."""
     # Avoid duplicate tasks.
     return list(
-        set(target_tasks_nightly_win32(full_task_graph, parameters))
-        | set(target_tasks_nightly_win64(full_task_graph, parameters))
-        | set(target_tasks_nightly_macosx(full_task_graph, parameters))
-        | set(target_tasks_nightly_linux(full_task_graph, parameters))
+        set(target_tasks_nightly_win32(full_task_graph, parameters, graph_config))
+        | set(target_tasks_nightly_win64(full_task_graph, parameters, graph_config))
+        | set(target_tasks_nightly_macosx(full_task_graph, parameters, graph_config))
+        | set(target_tasks_nightly_linux(full_task_graph, parameters, graph_config))
     )
 
 
 # Opt DMD builds should only run nightly
 @_target_task('nightly_dmd')
-def target_tasks_dmd(full_task_graph, parameters):
+def target_tasks_dmd(full_task_graph, parameters, graph_config):
     """Target DMD that run nightly on the m-c branch."""
     def filter(task):
         platform = task.attributes.get('build_platform', '')
@@ -515,7 +517,7 @@ def target_tasks_dmd(full_task_graph, parameters):
 
 
 @_target_task('file_update')
-def target_tasks_file_update(full_task_graph, parameters):
+def target_tasks_file_update(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to perform nightly in-tree file updates
     """
     def filter(task):

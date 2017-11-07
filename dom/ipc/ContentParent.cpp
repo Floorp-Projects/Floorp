@@ -2316,34 +2316,31 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     // PBrowsers are created, because they rely on the Compositor
     // already being around.  (Creation is async, so can't happen
     // on demand.)
-    bool useOffMainThreadCompositing = !!CompositorThreadHolder::Loop();
-    if (useOffMainThreadCompositing) {
-      GPUProcessManager* gpm = GPUProcessManager::Get();
+    GPUProcessManager* gpm = GPUProcessManager::Get();
 
-      Endpoint<PCompositorManagerChild> compositor;
-      Endpoint<PImageBridgeChild> imageBridge;
-      Endpoint<PVRManagerChild> vrBridge;
-      Endpoint<PVideoDecoderManagerChild> videoManager;
-      AutoTArray<uint32_t, 3> namespaces;
+    Endpoint<PCompositorManagerChild> compositor;
+    Endpoint<PImageBridgeChild> imageBridge;
+    Endpoint<PVRManagerChild> vrBridge;
+    Endpoint<PVideoDecoderManagerChild> videoManager;
+    AutoTArray<uint32_t, 3> namespaces;
 
-      DebugOnly<bool> opened = gpm->CreateContentBridges(
-        OtherPid(),
-        &compositor,
-        &imageBridge,
-        &vrBridge,
-        &videoManager,
-        &namespaces);
-      MOZ_ASSERT(opened);
+    DebugOnly<bool> opened = gpm->CreateContentBridges(
+      OtherPid(),
+      &compositor,
+      &imageBridge,
+      &vrBridge,
+      &videoManager,
+      &namespaces);
+    MOZ_ASSERT(opened);
 
-      Unused << SendInitRendering(
-        Move(compositor),
-        Move(imageBridge),
-        Move(vrBridge),
-        Move(videoManager),
-        namespaces);
+    Unused << SendInitRendering(
+      Move(compositor),
+      Move(imageBridge),
+      Move(vrBridge),
+      Move(videoManager),
+      namespaces);
 
-      gpm->AddListener(this);
-    }
+    gpm->AddListener(this);
   }
 
   nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();

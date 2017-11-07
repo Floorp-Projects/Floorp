@@ -1265,8 +1265,8 @@ class TestEmitterBasic(unittest.TestCase):
                              extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 1)
-        lib = objs[0]
+        ldflags, lib = objs
+        self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
         self.assertRegexpMatches(lib.lib_name, "random_crate")
         self.assertRegexpMatches(lib.import_name, "random_crate")
@@ -1285,8 +1285,8 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('rust-library-features',
                              extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
         objs = self.read_topsrcdir(reader)
-        self.assertEqual(len(objs), 1)
-        lib = objs[0]
+        ldflags, lib = objs
+        self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
         self.assertEqual(lib.features, ['musthave', 'cantlivewithout'])
 
@@ -1334,9 +1334,10 @@ class TestEmitterBasic(unittest.TestCase):
                                                BIN_SUFFIX='.exe'))
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], RustProgram)
-        self.assertEqual(objs[0].name, 'some')
+        ldflags, prog = objs
+        self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertIsInstance(prog, RustProgram)
+        self.assertEqual(prog.name, 'some')
 
     def test_host_rust_programs(self):
         '''Test HOST_RUST_PROGRAMS emission.'''
@@ -1366,8 +1367,9 @@ class TestEmitterBasic(unittest.TestCase):
                              extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], RustLibrary)
+        ldflags, lib = objs
+        self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertIsInstance(lib, RustLibrary)
 
     def test_android_res_dirs(self):
         """Test that ANDROID_RES_DIRS works properly."""

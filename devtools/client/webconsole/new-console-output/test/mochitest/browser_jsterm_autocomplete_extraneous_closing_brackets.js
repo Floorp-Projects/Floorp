@@ -10,20 +10,13 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,test for bug 592442";
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
-  let hud = yield openConsole();
-  hud.jsterm.clearOutput();
-  let jsterm = hud.jsterm;
+add_task(async function () {
+  let { jsterm } = await openNewTabAndConsole(TEST_URI);
 
-  jsterm.setInputValue("document.getElementById)");
-
-  let error = false;
   try {
-    jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
+    await jstermSetValueAndComplete(jsterm, "document.getElementById)");
+    ok(true, "no error was thrown when an extraneous bracket was inserted");
   } catch (ex) {
-    error = true;
+    ok(false, "an error was thrown when an extraneous bracket was inserted")
   }
-
-  ok(!error, "no error was thrown when an extraneous bracket was inserted");
 });

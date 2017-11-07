@@ -1,9 +1,9 @@
 function checkErr(f, className) {
     var expected;
     if (className !== "")
-        expected = "|this| used uninitialized in " + className + " class constructor";
+        expected = "must call super constructor before using |this| in " + className + " class constructor";
     else
-        expected = "|this| used uninitialized in arrow function in class constructor";
+        expected = "must call super constructor before using |this| in arrow function in derived class constructor";
     try {
         f();
         assertEq(0, 1);

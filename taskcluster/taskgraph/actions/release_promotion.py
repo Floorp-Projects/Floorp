@@ -41,7 +41,7 @@ RELEASE_PROMOTION_CONFIG = {
         'do_not_optimize': [],
     },
     'promote_firefox': {
-        'target_tasks_method': '%(project)s_desktop_promotion',
+        'target_tasks_method': '{project}_desktop_promotion',
         'previous_graph_kinds': [
             'build', 'build-signing', 'repackage', 'repackage-signing',
         ],
@@ -155,7 +155,8 @@ def release_promotion_action(parameters, input, task_group_id, task_id, task):
     promotion_config = RELEASE_PROMOTION_CONFIG[release_promotion_flavor]
 
     target_tasks_method = input.get(
-        'target_tasks_method', promotion_config['target_tasks_method']
+        'target_tasks_method',
+        promotion_config['target_tasks_method'].format(project=parameters['project'])
     )
     previous_graph_kinds = input.get(
         'previous_graph_kinds', promotion_config['previous_graph_kinds']

@@ -15,8 +15,13 @@
 #include <iostream>
 #include <unordered_map>
 
-#ifdef MOZ_ENABLE_FREETYPE
+#ifdef XP_MACOSX
+#include "mozilla/gfx/UnscaledFontMac.h"
+#elif defined(XP_WIN)
+#include "mozilla/gfx/UnscaledFontDWrite.h"
+#elif defined(MOZ_ENABLE_FREETYPE)
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/gfx/UnscaledFontFreeType.h"
 #endif
 
 namespace std {
@@ -68,10 +73,34 @@ AddFontData(WrFontKey aKey, const uint8_t *aData, size_t aSize, uint32_t aIndex,
 }
 
 void
+AddNativeFontHandle(WrFontKey aKey, void* aHandle, uint32_t aIndex) {
+  auto i = sFontDataTable.find(aKey);
+  if (i == sFontDataTable.end()) {
+    FontTemplate font;
+    font.mData = nullptr;
+    font.mSize = 0;
+    font.mIndex = 0;
+    font.mVec = nullptr;
+#ifdef XP_MACOSX
+    font.mUnscaledFont = new UnscaledFontMac(reinterpret_cast<CGFontRef>(aHandle), true);
+#elif defined(XP_WIN)
+    font.mUnscaledFont = new UnscaledFontDWrite(reinterpret_cast<IDWriteFontFace*>(aHandle), nullptr);
+#elif defined(ANDROID)
+    font.mUnscaledFont = new UnscaledFontFreeType(reinterpret_cast<const char*>(aHandle), aIndex);
+#else
+    font.mUnscaledFont = new UnscaledFontFontconfig(reinterpret_cast<const char*>(aHandle), aIndex);
+#endif
+    sFontDataTable[aKey] = font;
+  }
+}
+
+void
 DeleteFontData(WrFontKey aKey) {
   auto i = sFontDataTable.find(aKey);
   if (i != sFontDataTable.end()) {
-    wr_dec_ref_arc(i->second.mVec);
+    if (i->second.mVec) {
+      wr_dec_ref_arc(i->second.mVec);
+    }
     sFontDataTable.erase(i);
   }
 }
@@ -84,12 +113,13 @@ GetUnscaledFont(Translator *aTranslator, wr::FontKey key) {
   if (data.mUnscaledFont) {
     return data.mUnscaledFont;
   }
+  MOZ_ASSERT(data.mData);
   FontType type =
 #ifdef XP_MACOSX
     FontType::MAC;
-#elif XP_WIN
+#elif defined(XP_WIN)
     FontType::DWRITE;
-#elif ANDROID
+#elif defined(ANDROID)
     FontType::FREETYPE;
 #else
     FontType::FONTCONFIG;

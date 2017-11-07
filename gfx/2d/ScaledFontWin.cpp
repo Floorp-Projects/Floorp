@@ -79,12 +79,12 @@ UnscaledFontGDI::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
 bool
 UnscaledFontGDI::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
 {
-  aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), aBaton);
+  aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), 0, aBaton);
   return true;
 }
 
 already_AddRefed<UnscaledFont>
-UnscaledFontGDI::CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength)
+UnscaledFontGDI::CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex)
 {
   if (aDataLength < sizeof(LOGFONT)) {
     gfxWarning() << "GDI font descriptor is truncated.";

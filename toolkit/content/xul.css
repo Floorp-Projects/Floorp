@@ -473,9 +473,12 @@ panel[type="arrow"][side][animate="cancel"] {
 
 %elifndef MOZ_WIDGET_GTK
 
+panel[type="arrow"][side] {
+  will-change: transform, opacity; /* workaround for bug 1414033 */
+}
+
 panel[type="arrow"][side]:not([animate="false"]) {
   opacity: 0;
-  will-change: transform; /* workaround for bug 1414033 */
   transform: translateY(-70px);
   transition-property: transform, opacity;
   transition-duration: 0.18s, 0.18s;

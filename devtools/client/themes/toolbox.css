@@ -191,7 +191,7 @@
   fill: var(--theme-toolbar-selected-color);
 }
 
-.devtools-tab:not(.selected).highlighted > img {
+.devtools-tab.highlighted > img {
   fill: var(--theme-toolbar-highlighted-color);
 }
 

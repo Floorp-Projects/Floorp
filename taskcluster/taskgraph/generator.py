@@ -20,16 +20,18 @@ from .util.verify import (
     verify_docs,
     verifications,
 )
+from .config import validate_graph_config
 
 logger = logging.getLogger(__name__)
 
 
 class Kind(object):
 
-    def __init__(self, name, path, config):
+    def __init__(self, name, path, config, graph_config):
         self.name = name
         self.path = path
         self.config = config
+        self.graph_config = graph_config
 
     def _get_loader(self):
         try:
@@ -55,7 +57,7 @@ class Kind(object):
 
         # perform the transformations on the loaded inputs
         trans_config = TransformConfig(self.name, self.path, config, parameters,
-                                       kind_dependencies_tasks)
+                                       kind_dependencies_tasks, self.graph_config)
         tasks = [Task(self.name,
                       label=task_dict['label'],
                       attributes=task_dict['attributes'],
@@ -179,7 +181,7 @@ class TaskGraphGenerator(object):
         """
         return self._run_until('morphed_task_graph')
 
-    def _load_kinds(self):
+    def _load_kinds(self, graph_config):
         for path in os.listdir(self.root_dir):
             path = os.path.join(self.root_dir, path)
             if not os.path.isdir(path):
@@ -194,13 +196,27 @@ class TaskGraphGenerator(object):
             with open(kind_yml) as f:
                 config = yaml.load(f)
 
-            yield Kind(kind_name, path, config)
+            yield Kind(kind_name, path, config, graph_config)
+
+    def _load_graph_config(self):
+        config_yml = os.path.join(self.root_dir, "config.yml")
+        if not os.path.exists(config_yml):
+            raise Exception("Couldn't find taskgraph configuration: {}".format(config_yml))
+
+        logger.debug("loading config from `{}`".format(config_yml))
+        with open(config_yml) as f:
+            config = yaml.load(f)
+
+        return validate_graph_config(config)
 
     def _run(self):
+        logger.info("Loading graph configuration.")
+        graph_config = self._load_graph_config()
+
         logger.info("Loading kinds")
         # put the kinds into a graph and sort topologically so that kinds are loaded
         # in post-order
-        kinds = {kind.name: kind for kind in self._load_kinds()}
+        kinds = {kind.name: kind for kind in self._load_kinds(graph_config)}
         self.verify_kinds(kinds)
 
         edges = set()
@@ -242,7 +258,7 @@ class TaskGraphGenerator(object):
                                     Graph(set(all_tasks.keys()), set()))
         for fltr in self.filters:
             old_len = len(target_task_set.graph.nodes)
-            target_tasks = set(fltr(target_task_set, self.parameters))
+            target_tasks = set(fltr(target_task_set, self.parameters, graph_config))
             target_task_set = TaskGraph(
                 {l: all_tasks[l] for l in target_tasks},
                 Graph(target_tasks, set()))

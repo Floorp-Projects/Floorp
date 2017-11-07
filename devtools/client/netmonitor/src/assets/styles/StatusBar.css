@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Status bar */
+
+.devtools-status-bar-label {
+  flex: 0;
+}
+
+.status-bar-label {
+  display: inline-flex;
+  margin-inline-end: 10px;
+  /* Status bar has just one line so, don't wrap labels */
+  white-space: nowrap;
+}
+
+.status-bar-label:not(:first-of-type)::before {
+  content: "";
+  display: inline-block;
+  margin-inline-end: 10px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  width: 1px;
+  background: var(--theme-splitter-color);
+}
+
+.status-bar-label.dom-content-loaded {
+  color: var(--theme-highlight-blue);
+}
+
+.status-bar-label.load {
+  color: var(--theme-highlight-red);
+}
+
+.requests-list-network-summary-button {
+  display: inline-flex;
+  cursor: pointer;
+  height: 18px;
+  background: none;
+  box-shadow: none;
+  border-color: transparent;
+  padding-inline-end: 0;
+  margin-top: 3px;
+  margin-bottom: 3px;
+  margin-inline-end: 1em;
+}
+
+.requests-list-network-summary-button > .summary-info-icon {
+  background: url(chrome://devtools/skin/images/profiler-stopwatch.svg) no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-color);
+  width: 16px;
+  height: 16px;
+  opacity: 0.8;
+}
+
+.requests-list-network-summary-button:hover > .summary-info-icon {
+  opacity: 1;
+}

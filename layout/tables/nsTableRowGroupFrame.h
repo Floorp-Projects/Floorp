@@ -60,7 +60,7 @@ public:
     }
   }
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;

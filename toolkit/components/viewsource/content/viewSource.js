@@ -531,10 +531,7 @@ ViewSourceChrome.prototype = {
         event.preventDefault();
     }
 
-    let linkHandler = Cc["@mozilla.org/content/dropped-link-handler;1"]
-                        .getService(Ci.nsIDroppedLinkHandler);
-
-    if (linkHandler.canDropLink(event, false)) {
+    if (Services.droppedLinkHandler.canDropLink(event, false)) {
       event.preventDefault();
     }
   },
@@ -547,12 +544,10 @@ ViewSourceChrome.prototype = {
       return;
 
     let name = { };
-    let linkHandler = Cc["@mozilla.org/content/dropped-link-handler;1"]
-                        .getService(Ci.nsIDroppedLinkHandler);
     let uri;
     try {
       // Pass true to prevent the dropping of javascript:/data: URIs
-      uri = linkHandler.dropLink(event, name, true);
+      uri = Services.droppedLinkHandler.dropLink(event, name, true);
     } catch (e) {
       return;
     }

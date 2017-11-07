@@ -1034,7 +1034,8 @@ Sync11Service.prototype = {
   _shouldLogin: function _shouldLogin() {
     return this.enabled &&
            !Services.io.offline &&
-           !this.isLoggedIn;
+           !this.isLoggedIn &&
+           Async.isAppReady();
   },
 
   /**
@@ -1061,6 +1062,8 @@ Sync11Service.prototype = {
       reason = kSyncMasterPasswordLocked;
     else if (Svc.Prefs.get("firstSync") == "notReady")
       reason = kFirstSyncChoiceNotMade;
+    else if (!Async.isAppReady())
+      reason = kFirefoxShuttingDown;
 
     if (ignore && ignore.indexOf(reason) != -1)
       return "";

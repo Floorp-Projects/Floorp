@@ -10,7 +10,7 @@
 //! [renderer]: struct.Renderer.html
 
 use api::{channel, BlobImageRenderer, FontRenderMode};
-use api::{ColorF, Epoch, PipelineId, RenderApiSender, RenderNotifier};
+use api::{ColorF, ColorU, Epoch, PipelineId, RenderApiSender, RenderNotifier};
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect, DeviceUintSize};
 use api::{ExternalImageId, ExternalImageType, ImageFormat};
 use api::{YUV_COLOR_SPACES, YUV_FORMATS};
@@ -62,7 +62,7 @@ use std::thread;
 use texture_cache::TextureCache;
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use tiling::{AlphaRenderTarget, ColorRenderTarget, RenderTargetKind};
-use tiling::{BatchKey, BatchKind, BrushBatchKind, Frame, RenderTarget, TransformBatchKind};
+use tiling::{BatchKey, BatchKind, BrushBatchKind, Frame, RenderTarget, ScalingInfo, TransformBatchKind};
 use time::precise_time_ns;
 use util::TransformedRectKind;
 
@@ -221,12 +221,13 @@ type ShaderMode = i32;
 #[repr(C)]
 enum TextShaderMode {
     Alpha = 0,
-    SubpixelPass0 = 1,
-    SubpixelPass1 = 2,
-    SubpixelWithBgColorPass0 = 3,
-    SubpixelWithBgColorPass1 = 4,
-    SubpixelWithBgColorPass2 = 5,
-    ColorBitmap = 6,
+    SubpixelOpaque = 1,
+    SubpixelPass0 = 2,
+    SubpixelPass1 = 3,
+    SubpixelWithBgColorPass0 = 4,
+    SubpixelWithBgColorPass1 = 5,
+    SubpixelWithBgColorPass2 = 6,
+    ColorBitmap = 7,
 }
 
 impl Into<ShaderMode> for TextShaderMode {
@@ -255,7 +256,7 @@ enum TextureSampler {
     CacheA8,
     CacheRGBA8,
     ResourceCache,
-    Layers,
+    ClipScrollNodes,
     RenderTasks,
     Dither,
     // A special sampler that is bound to the A8 output of
@@ -286,7 +287,7 @@ impl Into<TextureSlot> for TextureSampler {
             TextureSampler::CacheA8 => TextureSlot(3),
             TextureSampler::CacheRGBA8 => TextureSlot(4),
             TextureSampler::ResourceCache => TextureSlot(5),
-            TextureSampler::Layers => TextureSlot(6),
+            TextureSampler::ClipScrollNodes => TextureSlot(6),
             TextureSampler::RenderTasks => TextureSlot(7),
             TextureSampler::Dither => TextureSlot(8),
             TextureSampler::SharedCacheA8 => TextureSlot(9),
@@ -640,7 +641,8 @@ pub enum BlendMode {
     Alpha,
     PremultipliedAlpha,
     PremultipliedDestOut,
-    Subpixel,
+    SubpixelOpaque(ColorU),
+    SubpixelWithAlpha,
     SubpixelWithBgColor,
 }
 
@@ -1013,7 +1015,8 @@ impl BrushShader {
             BlendMode::Alpha |
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
-            BlendMode::Subpixel |
+            BlendMode::SubpixelOpaque(..) |
+            BlendMode::SubpixelWithAlpha |
             BlendMode::SubpixelWithBgColor => {
                 self.alpha.bind(device, projection, mode, renderer_errors)
             }
@@ -1126,7 +1129,7 @@ fn create_prim_shader(
                 ("sDither", TextureSampler::Dither),
                 ("sCacheA8", TextureSampler::CacheA8),
                 ("sCacheRGBA8", TextureSampler::CacheRGBA8),
-                ("sLayers", TextureSampler::Layers),
+                ("sClipScrollNodes", TextureSampler::ClipScrollNodes),
                 ("sRenderTasks", TextureSampler::RenderTasks),
                 ("sResourceCache", TextureSampler::ResourceCache),
                 ("sSharedCacheA8", TextureSampler::SharedCacheA8),
@@ -1153,7 +1156,7 @@ fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program
             program,
             &[
                 ("sColor0", TextureSampler::Color0),
-                ("sLayers", TextureSampler::Layers),
+                ("sClipScrollNodes", TextureSampler::ClipScrollNodes),
                 ("sRenderTasks", TextureSampler::RenderTasks),
                 ("sResourceCache", TextureSampler::ResourceCache),
                 ("sSharedCacheA8", TextureSampler::SharedCacheA8),
@@ -1254,7 +1257,7 @@ pub struct Renderer {
     blur_vao: VAO,
     clip_vao: VAO,
 
-    layer_texture: VertexDataTexture,
+    node_data_texture: VertexDataTexture,
     render_task_texture: VertexDataTexture,
     gpu_cache_texture: CacheTexture,
 
@@ -1760,7 +1763,7 @@ impl Renderer {
 
         let texture_resolver = SourceTextureResolver::new(&mut device);
 
-        let layer_texture = VertexDataTexture::new(&mut device);
+        let node_data_texture = VertexDataTexture::new(&mut device);
         let render_task_texture = VertexDataTexture::new(&mut device);
 
         device.end_frame();
@@ -1868,7 +1871,7 @@ impl Renderer {
             prim_vao,
             blur_vao,
             clip_vao,
-            layer_texture,
+            node_data_texture,
             render_task_texture,
             pipeline_epoch_map: FastHashMap::default(),
             dither_matrix_texture,
@@ -2492,7 +2495,8 @@ impl Renderer {
                             BlendMode::Alpha |
                             BlendMode::PremultipliedAlpha |
                             BlendMode::PremultipliedDestOut |
-                            BlendMode::Subpixel |
+                            BlendMode::SubpixelOpaque(..) |
+                            BlendMode::SubpixelWithAlpha |
                             BlendMode::SubpixelWithBgColor => true,
                             BlendMode::None => false,
                         }
@@ -2689,6 +2693,30 @@ impl Renderer {
         self.draw_instanced_batch(instances, VertexArrayKind::Primitive, &key.textures);
     }
 
+    fn handle_scaling(
+        &mut self,
+        render_tasks: &RenderTaskTree,
+        scalings: &Vec<ScalingInfo>,
+        source: SourceTexture,
+    ) {
+        let cache_texture = self.texture_resolver
+            .resolve(&source)
+            .unwrap();
+        for scaling in scalings {
+            let source = render_tasks.get(scaling.src_task_id);
+            let dest = render_tasks.get(scaling.dest_task_id);
+
+            let (source_rect, source_layer) = source.get_target_rect();
+            let (dest_rect, _) = dest.get_target_rect();
+
+            let cache_draw_target = (cache_texture, source_layer.0 as i32);
+            self.device
+                .bind_read_target(Some(cache_draw_target));
+
+            self.device.blit_render_target(source_rect, dest_rect);
+        }
+    }
+
     fn draw_color_target(
         &mut self,
         render_target: Option<(&Texture, i32)>,
@@ -2754,6 +2782,8 @@ impl Renderer {
                 );
             }
         }
+
+        self.handle_scaling(render_tasks, &target.scalings, SourceTexture::CacheRGBA8);
 
         // Draw any textrun caches for this target. For now, this
         // is only used to cache text runs that are to be blurred
@@ -2832,12 +2862,13 @@ impl Renderer {
             for batch in &target.alpha_batcher.batch_list.alpha_batch_list.batches {
                 if self.debug_flags.contains(DebugFlags::ALPHA_PRIM_DBG) {
                     let color = match batch.key.blend_mode {
-                        BlendMode::None => ColorF::new(0.3, 0.3, 0.3, 1.0),
-                        BlendMode::Alpha => ColorF::new(0.0, 0.9, 0.1, 1.0),
-                        BlendMode::PremultipliedAlpha => ColorF::new(0.0, 0.3, 0.7, 1.0),
-                        BlendMode::PremultipliedDestOut => ColorF::new(0.6, 0.2, 0.0, 1.0),
-                        BlendMode::Subpixel => ColorF::new(0.5, 0.0, 0.4, 1.0),
-                        BlendMode::SubpixelWithBgColor => ColorF::new(0.6, 0.0, 0.5, 1.0),
+                        BlendMode::None => debug_colors::BLACK,
+                        BlendMode::Alpha => debug_colors::YELLOW,
+                        BlendMode::PremultipliedAlpha => debug_colors::GREY,
+                        BlendMode::PremultipliedDestOut => debug_colors::SALMON,
+                        BlendMode::SubpixelOpaque(..) => debug_colors::GREEN,
+                        BlendMode::SubpixelWithAlpha => debug_colors::RED,
+                        BlendMode::SubpixelWithBgColor => debug_colors::BLUE,
                     }.into();
                     for item_rect in &batch.item_rects {
                         self.debug.add_rect(item_rect, color);
@@ -2875,7 +2906,24 @@ impl Renderer {
                                     &batch.key.textures
                                 );
                             }
-                            BlendMode::Subpixel => {
+                            BlendMode::SubpixelOpaque(color) => {
+                                self.device.set_blend_mode_subpixel_opaque(color.into());
+
+                                self.ps_text_run.bind(
+                                    &mut self.device,
+                                    transform_kind,
+                                    projection,
+                                    TextShaderMode::SubpixelOpaque,
+                                    &mut self.renderer_errors,
+                                );
+
+                                self.draw_instanced_batch(
+                                    &batch.instances,
+                                    VertexArrayKind::Primitive,
+                                    &batch.key.textures
+                                );
+                            }
+                            BlendMode::SubpixelWithAlpha => {
                                 // Using the two pass component alpha rendering technique:
                                 //
                                 // http://anholt.livejournal.com/32058.html
@@ -2991,7 +3039,9 @@ impl Renderer {
                                     self.device.set_blend(true);
                                     self.device.set_blend_mode_premultiplied_dest_out();
                                 }
-                                BlendMode::Subpixel | BlendMode::SubpixelWithBgColor => {
+                                BlendMode::SubpixelOpaque(..) |
+                                BlendMode::SubpixelWithAlpha |
+                                BlendMode::SubpixelWithBgColor => {
                                     unreachable!("bug: subpx text handled earlier");
                                 }
                             }
@@ -3113,6 +3163,8 @@ impl Renderer {
                 );
             }
         }
+
+        self.handle_scaling(render_tasks, &target.scalings, SourceTexture::CacheA8);
 
         if !target.brush_mask_corners.is_empty() {
             self.device.set_blend(false);
@@ -3349,7 +3401,7 @@ impl Renderer {
                     pass.max_alpha_target_size.width,
                     pass.max_alpha_target_size.height,
                     ImageFormat::A8,
-                    TextureFilter::Nearest,
+                    TextureFilter::Linear,
                     RenderTargetMode::RenderTarget,
                     alpha_target_count as i32,
                     None,
@@ -3357,13 +3409,13 @@ impl Renderer {
             }
         }
 
-        self.layer_texture
-            .update(&mut self.device, &mut frame.layer_texture_data);
+        self.node_data_texture
+            .update(&mut self.device, &mut frame.node_data);
+        self.device
+            .bind_texture(TextureSampler::ClipScrollNodes, &self.node_data_texture.texture);
+
         self.render_task_texture
             .update(&mut self.device, &mut frame.render_tasks.task_data);
-
-        self.device
-            .bind_texture(TextureSampler::Layers, &self.layer_texture.texture);
         self.device.bind_texture(
             TextureSampler::RenderTasks,
             &self.render_task_texture.texture,
@@ -3669,7 +3721,7 @@ impl Renderer {
         if let Some(dither_matrix_texture) = self.dither_matrix_texture {
             self.device.delete_texture(dither_matrix_texture);
         }
-        self.layer_texture.deinit(&mut self.device);
+        self.node_data_texture.deinit(&mut self.device);
         self.render_task_texture.deinit(&mut self.device);
         for texture in self.alpha_render_targets {
             self.device.delete_texture(texture);

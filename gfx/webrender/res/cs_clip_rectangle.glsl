@@ -58,7 +58,7 @@ ClipData fetch_clip(ivec2 address) {
 void main(void) {
     ClipMaskInstance cmi = fetch_clip_item();
     ClipArea area = fetch_clip_area(cmi.render_task_address);
-    Layer layer = fetch_layer(cmi.layer_address);
+    Layer layer = fetch_layer(cmi.layer_address, cmi.layer_address);
     ClipData clip = fetch_clip(cmi.clip_data_address);
     RectWithSize local_rect = clip.rect.rect;
 

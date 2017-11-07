@@ -453,12 +453,11 @@ SurfaceTextureHost::~SurfaceTextureHost()
 void
 SurfaceTextureHost::PrepareTextureSource(CompositableTextureSourceRef& aTexture)
 {
-  GLContext* gl = this->gl();
-  if (!gl || !gl->MakeCurrent()) {
-    return;
-  }
-
   if (!mContinuousUpdate && mSurfTex) {
+    if (!EnsureAttached()) {
+      return;
+    }
+
     // UpdateTexImage() advances the internal buffer queue, so we only want to call this
     // once per transactionwhen we are not in continuous mode (as we are here). Otherwise,
     // the SurfaceTexture content will be de-synced from the rest of the page in subsequent
@@ -474,14 +473,32 @@ SurfaceTextureHost::gl() const
 }
 
 bool
-SurfaceTextureHost::Lock()
+SurfaceTextureHost::EnsureAttached()
 {
+  GLContext* gl = this->gl();
+  if (!gl || !gl->MakeCurrent()) {
+    return false;
+  }
+
   if (!mSurfTex) {
     return false;
   }
 
-  GLContext* gl = this->gl();
-  if (!gl || !gl->MakeCurrent()) {
+  if (!mSurfTex->IsAttachedToGLContext((int64_t)gl)) {
+    GLuint texName;
+    gl->fGenTextures(1, &texName);
+    if (NS_FAILED(mSurfTex->AttachToGLContext((int64_t)gl, texName))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool
+SurfaceTextureHost::Lock()
+{
+  if (!EnsureAttached()) {
     return false;
   }
 
@@ -499,14 +516,6 @@ SurfaceTextureHost::Lock()
                                               wrapMode,
                                               mSize,
                                               mIgnoreTransform);
-  }
-
-  if (!mSurfTex->IsAttachedToGLContext((int64_t)gl)) {
-    GLuint texName;
-    gl->fGenTextures(1, &texName);
-    if (NS_FAILED(mSurfTex->AttachToGLContext((int64_t)gl, texName))) {
-      return false;
-    }
   }
 
   return true;

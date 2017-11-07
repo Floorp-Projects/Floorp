@@ -9,7 +9,9 @@
 #include "nsISeekableStream.h"
 #include "nsStreamUtils.h"
 
-using namespace mozilla::ipc;
+namespace mozilla {
+
+using namespace ipc;
 
 NS_IMPL_ADDREF(SlicedInputStream);
 NS_IMPL_RELEASE(SlicedInputStream);
@@ -116,6 +118,11 @@ SlicedInputStream::Available(uint64_t* aLength)
   }
 
   nsresult rv = mInputStream->Available(aLength);
+  if (rv == NS_BASE_STREAM_CLOSED) {
+    mClosed = true;
+    return rv;
+  }
+
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -159,7 +166,12 @@ SlicedInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount)
         uint32_t bytesRead;
         uint64_t bufCount = XPCOM_MIN(mStart - mCurPos, (uint64_t)sizeof(buf));
         nsresult rv = mInputStream->Read(buf, bufCount, &bytesRead);
-        if (NS_WARN_IF(NS_FAILED(rv)) || bytesRead == 0) {
+        if (NS_SUCCEEDED(rv) && bytesRead == 0) {
+          mClosed = true;
+          return rv;
+        }
+
+        if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
 
@@ -179,7 +191,12 @@ SlicedInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount)
   }
 
   nsresult rv = mInputStream->Read(aBuffer, aCount, aReadCount);
-  if (NS_WARN_IF(NS_FAILED(rv)) || *aReadCount == 0) {
+  if (NS_SUCCEEDED(rv) && *aReadCount == 0) {
+    mClosed = true;
+    return rv;
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -309,12 +326,17 @@ SlicedInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
       uint32_t bytesRead;
       uint64_t bufCount = XPCOM_MIN(mStart - mCurPos, (uint64_t)sizeof(buf));
       nsresult rv = mInputStream->Read(buf, bufCount, &bytesRead);
+      if (NS_SUCCEEDED(rv) && bytesRead == 0) {
+        mClosed = true;
+        return RunAsyncWaitCallback();
+      }
+
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         return mWeakAsyncInputStream->AsyncWait(this, 0, mStart - mCurPos,
                                                 mAsyncWaitEventTarget);
       }
 
-      if (NS_WARN_IF(NS_FAILED(rv)) || bytesRead == 0) {
+      if (NS_WARN_IF(NS_FAILED(rv))) {
         return RunAsyncWaitCallback();
       }
 
@@ -427,6 +449,11 @@ SlicedInputStream::Seek(int32_t aWhence, int64_t aOffset)
     case NS_SEEK_END: {
       uint64_t available;
       rv = mInputStream->Available(&available);
+      if (rv == NS_BASE_STREAM_CLOSED) {
+        mClosed = true;
+        return rv;
+      }
+
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -486,3 +513,5 @@ SlicedInputStream::SetEOF()
   mClosed = true;
   return mWeakSeekableInputStream->SetEOF();
 }
+
+} // namespace mozilla

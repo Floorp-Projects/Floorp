@@ -26,7 +26,7 @@ add_task(function* () {
     document.querySelector(".requests-list-filter-ws-button"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-other-button"));
-  testFilterButtonsCustom(monitor, [0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1]);
+  testFilterButtonsCustom(monitor, [0, 1, 1, 1, 0, 0, 0, 0, 1, 1]);
   info("The correct filtering predicates are used before entering perf. analysis mode.");
 
   store.dispatch(Actions.openStatistics(connector, true));

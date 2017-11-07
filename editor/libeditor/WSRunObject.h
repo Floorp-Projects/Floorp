@@ -12,6 +12,7 @@
 #include "nscore.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/EditorDOMPoint.h" // for EditorDOMPoint
 
 class nsIDOMNode;
 
@@ -19,7 +20,6 @@ namespace mozilla {
 
 class HTMLEditor;
 class HTMLEditRules;
-struct EditorDOMPoint;
 
 // class WSRunObject represents the entire whitespace situation
 // around a given point.  It collects up a list of nodes that contain
@@ -322,9 +322,11 @@ protected:
   void MakeSingleWSRun(WSType aType);
   nsIContent* GetPreviousWSNodeInner(nsINode* aStartNode,
                                      nsINode* aBlockParent);
-  nsIContent* GetPreviousWSNode(EditorDOMPoint aPoint, nsINode* aBlockParent);
+  nsIContent* GetPreviousWSNode(const EditorDOMPoint& aPoint,
+                                nsINode* aBlockParent);
   nsIContent* GetNextWSNodeInner(nsINode* aStartNode, nsINode* aBlockParent);
-  nsIContent* GetNextWSNode(EditorDOMPoint aPoint, nsINode* aBlockParent);
+  nsIContent* GetNextWSNode(const EditorDOMPoint& aPoint,
+                            nsINode* aBlockParent);
   nsresult PrepareToDeleteRangePriv(WSRunObject* aEndObject);
   nsresult PrepareToSplitAcrossBlocksPriv();
   nsresult DeleteChars(nsINode* aStartNode, int32_t aStartOffset,

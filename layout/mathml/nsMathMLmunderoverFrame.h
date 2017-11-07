@@ -36,7 +36,7 @@ public:
   NS_IMETHOD UpdatePresentationData(uint32_t aFlagsValues,
                                     uint32_t aFlagsToUpdate) override;
 
-  void DestroyFrom(nsIFrame* aRoot) override;
+  void DestroyFrom(nsIFrame* aRoot, PostDestroyData& aPostDestroyData) override;
 
   nsresult AttributeChanged(int32_t aNameSpaceID,
                             nsAtom* aAttribute,

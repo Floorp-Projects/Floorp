@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const nsISupports              = Components.interfaces.nsISupports;
 
@@ -85,11 +86,8 @@ nsDefaultCLH.prototype = {
     try {
       var singletonWindowType =
                               prefs.getCharPref("toolkit.singletonWindowType");
-      var windowMediator =
-                Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                          .getService(Components.interfaces.nsIWindowMediator);
 
-      var win = windowMediator.getMostRecentWindow(singletonWindowType);
+      var win = Services.wm.getMostRecentWindow(singletonWindowType);
       if (win) {
         win.focus();
         cmdLine.preventDefault = true;

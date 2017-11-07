@@ -120,7 +120,8 @@ function NetworkEventMessage({
 
   // Only render the attachment if the network-event is
   // actually opened (performance optimization).
-  const attachment = open && dom.div({className: "network-info devtools-monospace"},
+  const attachment = open && dom.div({
+    className: "network-info network-monitor devtools-monospace"},
     TabboxPanel({
       connector,
       activeTabId: networkMessageActiveTabId,

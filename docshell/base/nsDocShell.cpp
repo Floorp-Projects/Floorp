@@ -15,6 +15,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/PendingGlobalHistoryEntry.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"

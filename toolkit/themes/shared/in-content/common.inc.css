@@ -77,14 +77,14 @@ xul|caption {
 }
 
 html|h2,
-xul|caption > xul|checkbox,
-xul|caption > xul|label {
+xul|caption xul|checkbox,
+xul|caption xul|label {
   font-weight: 600;
   line-height: 22px;
 }
 
-xul|caption > xul|checkbox,
-xul|caption > xul|label {
+xul|caption xul|checkbox,
+xul|caption xul|label {
   margin: 0 !important;
 }
 

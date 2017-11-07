@@ -459,24 +459,27 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
 
   bool snap;
   nsRect itemBounds = aItem->GetBounds(aDisplayListBuilder, &snap);
-  nsRect clippedBounds = itemBounds;
 
-  const DisplayItemClip& clip = aItem->GetClip();
   // Blob images will only draw the visible area of the blob so we don't need to clip
   // them here and can just rely on the webrender clipping.
-  if (clip.HasClip() && !gfxPrefs::WebRenderBlobImages()) {
-    clippedBounds = itemBounds.Intersect(clip.GetClipRect());
+  bool useClipBounds = true;
+  nsRect paintBounds = itemBounds;
+  if (gfxPrefs::WebRenderBlobImages()) {
+    paintBounds = itemBounds;
+    useClipBounds = false;
+  } else {
+    paintBounds = aItem->GetClippedBounds(aDisplayListBuilder);
   }
 
   // nsDisplayItem::Paint() may refer the variables that come from ComputeVisibility().
   // So we should call RecomputeVisibility() before painting. e.g.: nsDisplayBoxShadowInner
   // uses mVisibleRegion in Paint() and mVisibleRegion is computed in
   // nsDisplayBoxShadowInner::ComputeVisibility().
-  nsRegion visibleRegion(clippedBounds);
-  aItem->RecomputeVisibility(aDisplayListBuilder, &visibleRegion);
+  nsRegion visibleRegion(itemBounds);
+  aItem->RecomputeVisibility(aDisplayListBuilder, &visibleRegion, useClipBounds);
 
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(clippedBounds, appUnitsPerDevPixel);
+  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(paintBounds, appUnitsPerDevPixel);
 
   gfx::Size scale = aSc.GetInheritedScale();
   // XXX not sure if paintSize should be in layer or layoutdevice pixels, it
@@ -502,7 +505,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
     nsRegion invalidRegion;
 
     if (aItem->IsInvalid(invalid)) {
-      invalidRegion.OrWith(clippedBounds);
+      invalidRegion.OrWith(paintBounds);
     } else {
       nsPoint shift = itemBounds.TopLeft() - geometry->mBounds.TopLeft();
       geometry->MoveBy(shift);
@@ -511,9 +514,9 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       nsRect lastBounds = fallbackData->GetBounds();
       lastBounds.MoveBy(shift);
 
-      if (!lastBounds.IsEqualInterior(clippedBounds)) {
+      if (!lastBounds.IsEqualInterior(paintBounds)) {
         invalidRegion.OrWith(lastBounds);
-        invalidRegion.OrWith(clippedBounds);
+        invalidRegion.OrWith(paintBounds);
       }
     }
     needPaint = !invalidRegion.IsEmpty();
@@ -524,7 +527,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
                                                       gfx::SurfaceFormat::A8 : gfx::SurfaceFormat::B8G8R8A8;
     if (gfxPrefs::WebRenderBlobImages()) {
       bool snapped;
-      bool isOpaque = aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(clippedBounds);
+      bool isOpaque = aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);
 
       RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>([&] (MemStream &aStream, std::vector<RefPtr<UnscaledFont>> &aUnscaledFonts) {
           size_t count = aUnscaledFonts.size();
@@ -585,7 +588,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
 
   // Update current bounds to fallback data
   fallbackData->SetGeometry(Move(geometry));
-  fallbackData->SetBounds(clippedBounds);
+  fallbackData->SetBounds(paintBounds);
 
   MOZ_ASSERT(fallbackData->GetKey());
 

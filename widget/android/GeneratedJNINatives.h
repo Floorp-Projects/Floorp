@@ -219,6 +219,37 @@ const JNINativeMethod GeckoScreenOrientation::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class GeckoSession::Window::Natives : public mozilla::jni::NativeImpl<Window, Impl>
+{
+public:
+    static const JNINativeMethod methods[5];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoSession::Window::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoSession::Window::Attach_t>(
+            mozilla::jni::NativeStub<GeckoSession::Window::Attach_t, Impl>
+            ::template Wrap<&Impl::Attach>),
+
+    mozilla::jni::MakeNativeMethod<GeckoSession::Window::Close_t>(
+            mozilla::jni::NativeStub<GeckoSession::Window::Close_t, Impl>
+            ::template Wrap<&Impl::Close>),
+
+    mozilla::jni::MakeNativeMethod<GeckoSession::Window::DisposeNative_t>(
+            mozilla::jni::NativeStub<GeckoSession::Window::DisposeNative_t, Impl>
+            ::template Wrap<&Impl::DisposeNative>),
+
+    mozilla::jni::MakeNativeMethod<GeckoSession::Window::Open_t>(
+            mozilla::jni::NativeStub<GeckoSession::Window::Open_t, Impl>
+            ::template Wrap<&Impl::Open>),
+
+    mozilla::jni::MakeNativeMethod<GeckoSession::Window::Transfer_t>(
+            mozilla::jni::NativeStub<GeckoSession::Window::Transfer_t, Impl>
+            ::template Wrap<&Impl::Transfer>)
+};
+
+template<class Impl>
 class GeckoThread::Natives : public mozilla::jni::NativeImpl<GeckoThread, Impl>
 {
 public:
@@ -255,33 +286,6 @@ const JNINativeMethod GeckoThread::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoThread::WaitOnGecko_t>(
             mozilla::jni::NativeStub<GeckoThread::WaitOnGecko_t, Impl>
             ::template Wrap<&Impl::WaitOnGecko>)
-};
-
-template<class Impl>
-class GeckoView::Window::Natives : public mozilla::jni::NativeImpl<Window, Impl>
-{
-public:
-    static const JNINativeMethod methods[4];
-};
-
-template<class Impl>
-const JNINativeMethod GeckoView::Window::Natives<Impl>::methods[] = {
-
-    mozilla::jni::MakeNativeMethod<GeckoView::Window::Close_t>(
-            mozilla::jni::NativeStub<GeckoView::Window::Close_t, Impl>
-            ::template Wrap<&Impl::Close>),
-
-    mozilla::jni::MakeNativeMethod<GeckoView::Window::DisposeNative_t>(
-            mozilla::jni::NativeStub<GeckoView::Window::DisposeNative_t, Impl>
-            ::template Wrap<&Impl::DisposeNative>),
-
-    mozilla::jni::MakeNativeMethod<GeckoView::Window::Open_t>(
-            mozilla::jni::NativeStub<GeckoView::Window::Open_t, Impl>
-            ::template Wrap<&Impl::Open>),
-
-    mozilla::jni::MakeNativeMethod<GeckoView::Window::Reattach_t>(
-            mozilla::jni::NativeStub<GeckoView::Window::Reattach_t, Impl>
-            ::template Wrap<&Impl::Reattach>)
 };
 
 template<class Impl>

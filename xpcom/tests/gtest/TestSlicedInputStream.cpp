@@ -1,13 +1,15 @@
 #include "gtest/gtest.h"
 
+#include "mozilla/SlicedInputStream.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
 #include "nsIPipe.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsStringStream.h"
-#include "SlicedInputStream.h"
 #include "Helpers.h"
+
+using namespace mozilla;
 
 // This helper class is used to call OnInputStreamReady with the right stream
 // as argument.

@@ -38,10 +38,10 @@ nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
 }
 
 void
-nsHTMLButtonControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsHTMLButtonControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
-  nsContainerFrame::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 void

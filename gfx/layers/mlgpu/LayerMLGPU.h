@@ -75,9 +75,8 @@ public:
   // blend modes or opacity), false otherwise.
   virtual bool IsContentOpaque();
 
-  // This is used by RenderPasses for deciding which rects to draw. This
-  // region factors in occulsion culling and any layer-specific adjustments,
-  // whereas the local/shadow visible region does not.
+  // Returns the region that this layer will draw pixels to. If the layer and
+  // its content are opaque, this is the layer's opaque region.
   const LayerIntRegion& GetRenderRegion() const {
     return mRenderRegion;
   }
