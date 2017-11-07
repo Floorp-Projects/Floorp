@@ -168,6 +168,11 @@ enum class RecordEventResult {
   WrongProcess,
 };
 
+enum class RegisterEventResult {
+  Ok,
+  AlreadyRegistered,
+};
+
 typedef nsTArray<EventExtraEntry> ExtraArray;
 
 class EventRecord {
@@ -515,12 +520,19 @@ ShouldRecordChildEvent(const StaticMutexAutoLock& lock, const nsACString& catego
   return RecordEventResult::Ok;
 }
 
-void
+RegisterEventResult
 RegisterEvents(const StaticMutexAutoLock& lock, const nsACString& category,
                const nsTArray<DynamicEventInfo>& eventInfos,
                const nsTArray<bool>& eventExpired)
 {
   MOZ_ASSERT(eventInfos.Length() == eventExpired.Length(), "Event data array sizes should match.");
+
+  // Check that none of the events are already registered.
+  for (auto& info : eventInfos) {
+    if (gEventNameIDMap.Get(UniqueEventName(info))) {
+      return RegisterEventResult::AlreadyRegistered;
+    }
+  }
 
   // Register the new events.
   if (!gDynamicEventInfo) {
@@ -528,25 +540,15 @@ RegisterEvents(const StaticMutexAutoLock& lock, const nsACString& category,
   }
 
   for (uint32_t i = 0, len = eventInfos.Length(); i < len; ++i) {
-    const nsCString& eventName = UniqueEventName(eventInfos[i]);
-
-    // Re-registering events can happen when add-ons update, so we don't print warnings.
-    // We don't support changing their definition, but the expiry might have changed.
-    EventKey* existing = nullptr;
-    if (gEventNameIDMap.Get(eventName, &existing)) {
-      if (eventExpired[i]) {
-        existing->id = kExpiredEventId;
-      }
-      continue;
-    }
-
     gDynamicEventInfo->AppendElement(eventInfos[i]);
     uint32_t eventId = eventExpired[i] ? kExpiredEventId : gDynamicEventInfo->Length() - 1;
-    gEventNameIDMap.Put(eventName, new EventKey{eventId, true});
+    gEventNameIDMap.Put(UniqueEventName(eventInfos[i]), new EventKey{eventId, true});
   }
 
   // Now after successful registration enable recording for this category.
   gEnabledCategories.PutEntry(category);
+
+  return RegisterEventResult::Ok;
 }
 
 } // anonymous namespace
@@ -1078,9 +1080,18 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
     }
   }
 
+  RegisterEventResult res = RegisterEventResult::Ok;
   {
     StaticMutexAutoLock locker(gTelemetryEventsMutex);
-    RegisterEvents(locker, aCategory, newEventInfos, newEventExpired);
+    res = ::RegisterEvents(locker, aCategory, newEventInfos, newEventExpired);
+  }
+
+  switch (res) {
+    case RegisterEventResult::AlreadyRegistered:
+      JS_ReportErrorASCII(cx, "Attempt to register event that is already registered.");
+      return NS_ERROR_INVALID_ARG;
+    default:
+      break;
   }
 
   return NS_OK;
