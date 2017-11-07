@@ -11,6 +11,7 @@
 #include "FuzzerDefs.h"
 #if LIBFUZZER_POSIX
 
+#include "mozilla/Unused.h"
 #include "FuzzerExtFunctions.h"
 #include "FuzzerIO.h"
 #include <cstdarg>
@@ -115,7 +116,7 @@ bool IsInterestingCoverageFile(const std::string &FileName) {
 
 
 void RawPrint(const char *Str) {
-  write(2, Str, strlen(Str));
+  mozilla::Unused << write(2, Str, strlen(Str));
 }
 
 }  // namespace fuzzer

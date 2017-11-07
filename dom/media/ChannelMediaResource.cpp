@@ -438,7 +438,9 @@ ChannelMediaResource::CopySegmentToCache(nsIInputStream* aInStream,
 {
   Closure* closure = static_cast<Closure*>(aClosure);
   closure->mResource->mCacheStream.NotifyDataReceived(
-    closure->mLoadID, aCount, aFromSegment);
+    closure->mLoadID,
+    aCount,
+    reinterpret_cast<const uint8_t*>(aFromSegment));
   *aWriteCount = aCount;
   return NS_OK;
 }

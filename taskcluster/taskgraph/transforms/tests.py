@@ -872,12 +872,16 @@ def set_worker_type(config, tests):
         elif test_platform.startswith('macosx'):
             test['worker-type'] = MACOSX_WORKER_TYPES['macosx64']
         elif test_platform.startswith('win'):
-            if test.get('suite', '') == 'talos' and \
-                    not any('taskcluster' in cfg for cfg in test['mozharness']['config']):
-                test['worker-type'] = 'buildbot-bridge/buildbot-bridge'
+            win_worker_type_platform = WINDOWS_WORKER_TYPES[
+                test_platform.split('/')[0]
+            ]
+            if test.get('suite', '') == 'talos':
+                if try_options.get('taskcluster_worker'):
+                    test['worker-type'] = win_worker_type_platform['hardware']
+                else:
+                    test['worker-type'] = 'buildbot-bridge/buildbot-bridge'
             else:
-                test['worker-type'] = \
-                    WINDOWS_WORKER_TYPES[test_platform.split('/')[0]][test['virtualization']]
+                test['worker-type'] = win_worker_type_platform[test['virtualization']]
         elif test_platform.startswith('linux') or test_platform.startswith('android'):
             if test.get('suite', '') == 'talos' and test['build-platform'] != 'linux64-ccov/opt':
                 if try_options.get('taskcluster_worker'):

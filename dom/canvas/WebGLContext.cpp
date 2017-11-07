@@ -2007,7 +2007,6 @@ WebGLContext::GetSurfaceSnapshot(gfxAlphaType* const out_alphaType)
         // Expects Opaque or Premult
         if (alphaType == gfxAlphaType::NonPremult) {
             gfxUtils::PremultiplyDataSurface(surf, surf);
-            alphaType = gfxAlphaType::Premult;
         }
     }
 
