@@ -628,7 +628,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // send the child the PID so that it can open a ProcessHandle back to us.
   // probably don't want to do this in the long run
   char pidstring[32];
-  SprintfLiteral(pidstring,"%d", base::Process::Current().pid());
+  SprintfLiteral(pidstring, "%d", base::GetCurrentProcId());
 
   const char* const childProcessType =
       XRE_ChildProcessTypeToString(mProcessType);
