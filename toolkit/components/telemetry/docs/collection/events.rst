@@ -197,8 +197,6 @@ After registration, the events can be recorded through the ``recordEvent()`` fun
 
 New events registered here are subject to the same limitations as the ones registered through ``Events.yaml``, although the naming was in parts updated to recent policy changes.
 
-When add-ons are updated, they may re-register all of their events. In that case, any changes to events that are already registered are ignored. The only exception is expiry; an event that is re-registered with ``expired: true`` will not be recorded anymore.
-
 Example:
 
 .. code-block:: js
@@ -229,4 +227,3 @@ Version History
 - Firefox 53: Event recording disabled by default (`bug 1329139 <https://bugzilla.mozilla.org/show_bug.cgi?id=1329139>`_).
 - Firefox 54: Added child process events (`bug 1313326 <https://bugzilla.mozilla.org/show_bug.cgi?id=1313326>`_).
 - Firefox 56: Added support for recording new probes from add-ons (`bug 1302681 <bug https://bugzilla.mozilla.org/show_bug.cgi?id=1302681>`_).
-- Firefox 58: Ignore re-registering existing events for a category instead of failing (`bug 1408975 <https://bugzilla.mozilla.org/show_bug.cgi?id=1408975>`_).
