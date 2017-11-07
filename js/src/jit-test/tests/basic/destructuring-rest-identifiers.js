@@ -42,10 +42,8 @@ reserved.forEach(ident => {
 });
 
 var strictIdentifiers = [
-  // XXX: see bug 1032150. Once fixed, please uncomment these values and
-  // remove the assertions below
-  //'yield',
-  //'let',
+  'yield',
+  'let',
   'eval',
   'arguments',
   'implements',
@@ -56,8 +54,6 @@ var strictIdentifiers = [
   'public',
   'static'
 ];
-assertThrowsInstanceOf(() => new Function('[...yield] = []'), SyntaxError);
-assertThrowsInstanceOf(() => new Function('"use strict"; [...let] = []'), SyntaxError);
 
 strictIdentifiers.forEach(ident =>
   assertThrowsInstanceOf(() =>
