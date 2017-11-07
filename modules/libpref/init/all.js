@@ -3213,9 +3213,6 @@ pref("dom.global_stop_script", true);
 // Time (milliseconds) between throttled idle callbacks.
 pref("dom.idle_period.throttled_length", 10000);
 
-// The amount of idle time (milliseconds) reserved for a long idle period
-pref("idle_queue.long_period", 50);
-
 // Support the input event queue on the main thread of content process
 pref("input_event_queue.supported", true);
 
@@ -3231,14 +3228,6 @@ pref("input_event_queue.default_duration_per_event", 1);
 // The number of processed input events we use to predict the amount of time
 // required to process the following input events.
 pref("input_event_queue.count_for_prediction", 9);
-
-// The minimum amount of time (milliseconds) required for an idle
-// period to be scheduled on the main thread. N.B. that
-// layout.idle_period.time_limit adds padding at the end of the idle
-// period, which makes the point in time that we expect to become busy
-// again be:
-// now + idle_queue.min_period + layout.idle_period.time_limit
-pref("idle_queue.min_period", 3);
 
 // Hang monitor timeout after which we kill the browser, in seconds
 // (0 is disabled)
