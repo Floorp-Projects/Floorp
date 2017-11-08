@@ -87,10 +87,11 @@ protected:
     MOZ_RELEASE_ASSERT(aContainer,
       "This constructor shouldn't be used when pointing nowhere");
     if (!mRef) {
-      MOZ_ASSERT(mOffset.value() == 0);
+      MOZ_ASSERT(!mParent->IsContainerNode() || mOffset.value() == 0);
       return;
     }
     MOZ_ASSERT(mOffset.value() > 0);
+    MOZ_ASSERT(mParent == mRef->GetParentNode());
     MOZ_ASSERT(mParent->GetChildAt(mOffset.value() - 1) == mRef);
   }
 
