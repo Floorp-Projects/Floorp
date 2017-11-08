@@ -8,6 +8,14 @@
 // locally) with OCSP stapling enabled to determine that good things happen
 // and bad things don't, specifically with respect to various expired OCSP
 // responses (stapled and otherwise).
+// According to RFC 6066, if a stapled OCSP response can't be satisfactorilly
+// verified, the client should terminate the connection. Unfortunately, due to
+// some bugs where servers will staple any old garbage without verifying it, we
+// can't be this strict in practice. Originally this caveat only applied to
+// expired responses, but recent high-profile failures have caused us to expand
+// this to "try later" responses and responses where the signing certificate
+// doesn't verify successfully.
+
 
 var gCurrentOCSPResponse = null;
 var gOCSPRequestCount = 0;
@@ -41,6 +49,7 @@ var args = [["good", "default-ee", "unused", 0],
              ["oldvalidperiod", "default-ee", "unused", 0],
              ["revoked", "default-ee", "unused", 0],
              ["unknown", "default-ee", "unused", 0],
+             ["good", "must-staple-ee", "unused", 0],
             ];
 var ocspResponses = generateOCSPResponses(args, "ocsp_certs");
 // Fresh response, certificate is good.
@@ -53,6 +62,7 @@ var oldValidityPeriodOCSPResponseGood = ocspResponses[2];
 var ocspResponseRevoked = ocspResponses[3];
 // Fresh signature, certificate is unknown.
 var ocspResponseUnknown = ocspResponses[4];
+var ocspResponseGoodMustStaple = ocspResponses[5];
 
 // sometimes we expect a result without re-fetch
 var willNotRetry = 1;
@@ -164,6 +174,19 @@ function run_test() {
                 SEC_ERROR_OCSP_UNKNOWN_CERT,
                 ocspResponseUnknown, willRetry);
 
+  // Test how OCSP-must-staple (i.e. TLS feature) interacts with stapled OCSP
+  // responses that don't successfully verify.
+  // A strict reading of the relevant RFCs might say that these connections
+  // should all fail because a satisfactory stapled OCSP response is not
+  // present, but for compatibility reasons we fall back to active OCSP fetching
+  // in these situations. If the fetch succeeds, then connection succeeds.
+  add_ocsp_test("ocsp-stapling-must-staple-expired.example.com",
+                PRErrorCodeSuccess, ocspResponseGoodMustStaple, willNotRetry);
+  add_ocsp_test("ocsp-stapling-must-staple-try-later.example.com",
+                PRErrorCodeSuccess, ocspResponseGoodMustStaple, willNotRetry);
+  add_ocsp_test("ocsp-stapling-must-staple-invalid-signer.example.com",
+                PRErrorCodeSuccess, ocspResponseGoodMustStaple, willNotRetry);
+
   add_test(function () { ocspResponder.stop(run_next_test); });
   add_test(check_ocsp_stapling_telemetry);
   run_next_test();
@@ -180,9 +203,9 @@ function check_ocsp_stapling_telemetry() {
         "Actual and expected connections with a good response should match");
   equal(histogram.counts[2], 0,
         "Actual and expected connections with no stapled response should match");
-  equal(histogram.counts[3], 21,
+  equal(histogram.counts[3], 22,
         "Actual and expected connections with an expired response should match");
-  equal(histogram.counts[4], 0,
+  equal(histogram.counts[4], 2,
         "Actual and expected connections with bad responses should match");
   run_next_test();
 }
