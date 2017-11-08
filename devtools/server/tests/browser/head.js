@@ -108,6 +108,41 @@ function initDebuggerServer() {
   DebuggerServer.registerAllActors();
 }
 
+async function initPerfFront() {
+  const {PerfFront} = require("devtools/shared/fronts/perf");
+
+  initDebuggerServer();
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  await waitUntilClientConnected(client);
+  const rootForm = await getRootForm(client);
+  const front = PerfFront(client, rootForm);
+  return {front, client};
+}
+
+/**
+ * Gets the RootActor form from a DebuggerClient.
+ * @param {DebuggerClient} client
+ * @return {RootActor} Resolves when connected.
+ */
+function getRootForm(client) {
+  return new Promise(resolve => {
+    client.listTabs(rootForm => {
+      resolve(rootForm);
+    });
+  });
+}
+
+/**
+ * Wait until a DebuggerClient is connected.
+ * @param {DebuggerClient} client
+ * @return {Promise} Resolves when connected.
+ */
+function waitUntilClientConnected(client) {
+  return new Promise(resolve => {
+    client.addOneTimeListener("connected", resolve);
+  });
+}
+
 /**
  * Connect a debugger client.
  * @param {DebuggerClient}
