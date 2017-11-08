@@ -62,7 +62,7 @@ StubbedMemoryFront.prototype.detach = Task.async(function* () {
 
 StubbedMemoryFront.prototype.saveHeapSnapshot = expectState("attached",
   Task.async(function* () {
-    return ThreadSafeChromeUtils.saveHeapSnapshot({ runtime: true });
+    return ChromeUtils.saveHeapSnapshot({ runtime: true });
   }), "saveHeapSnapshot");
 
 StubbedMemoryFront.prototype.startRecordingAllocations = expectState("attached",

@@ -34,7 +34,7 @@ function getIntPref(prefName, def) {
 
 function handleWindowEvent(e) {
   if (this._browserElementParents) {
-    let beps = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(this._browserElementParents);
+    let beps = ChromeUtils.nondeterministicGetWeakMapKeys(this._browserElementParents);
     beps.forEach(bep => bep._handleOwnerEvent(e));
   }
 }

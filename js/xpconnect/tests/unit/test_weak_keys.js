@@ -14,18 +14,18 @@ function run_test()
   weakmap.set(bunnies, 23);
   weakmap.set(lizards, "oh no");
 
-  var keys = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(bunnies);
+  var keys = ChromeUtils.nondeterministicGetWeakMapKeys(bunnies);
   equal(keys, undefined, "test nondeterministicGetWeakMapKeys on non-WeakMap");
 
-  keys = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(weakmap);
+  keys = ChromeUtils.nondeterministicGetWeakMapKeys(weakmap);
   equal(keys.length, 2, "length of nondeterministicGetWeakMapKeys");
   equal(weakmap.get(bunnies), 23, "check bunnies in weakmap");
   equal(weakmap.get(lizards), "oh no", "check lizards in weakmap");
 
-  keys = ThreadSafeChromeUtils.nondeterministicGetWeakSetKeys(bunnies);
+  keys = ChromeUtils.nondeterministicGetWeakSetKeys(bunnies);
   equal(keys, undefined, "test nondeterministicGetWeakSetKeys on non-WeakMap");
 
-  keys = ThreadSafeChromeUtils.nondeterministicGetWeakSetKeys(weakset);
+  keys = ChromeUtils.nondeterministicGetWeakSetKeys(weakset);
   equal(keys.length, 2, "length of nondeterministicGetWeakSetKeys");
   ok(weakset.has(bunnies), "check bunnies in weakset");
   ok(weakset.has(lizards), "check lizards in weakset");
@@ -35,11 +35,11 @@ function run_test()
 
   Components.utils.forceGC();
 
-  keys = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(weakmap);
+  keys = ChromeUtils.nondeterministicGetWeakMapKeys(weakmap);
   equal(keys.length, 1, "length of nondeterministicGetWeakMapKeys after GC");
   equal(weakmap.get(lizards), "oh no", "check lizards still in weakmap");
 
-  keys = ThreadSafeChromeUtils.nondeterministicGetWeakSetKeys(weakset);
+  keys = ChromeUtils.nondeterministicGetWeakSetKeys(weakset);
   equal(keys.length, 1, "length of nondeterministicGetWeakSetKeys after GC");
   ok(weakset.has(lizards), "check lizards still in weakset");
 }
