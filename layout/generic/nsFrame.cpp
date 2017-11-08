@@ -990,22 +990,43 @@ nsIFrame::MarkNeedsDisplayItemRebuild()
     return;
   }
 
-  nsIFrame* viewport = nsLayoutUtils::GetViewportFrame(this);
-  MOZ_ASSERT(viewport);
+  nsIFrame* rootFrame = PresContext()->PresShell()->GetRootFrame();
+  MOZ_ASSERT(rootFrame);
+
+  if (rootFrame->IsFrameModified()) {
+    return;
+  }
 
   std::vector<WeakFrame>* modifiedFrames =
-    viewport->GetProperty(nsIFrame::ModifiedFrameList());
+    rootFrame->GetProperty(nsIFrame::ModifiedFrameList());
 
   if (!modifiedFrames) {
     modifiedFrames = new std::vector<WeakFrame>();
-    viewport->SetProperty(nsIFrame::ModifiedFrameList(), modifiedFrames);
+    rootFrame->SetProperty(nsIFrame::ModifiedFrameList(), modifiedFrames);
+  }
+
+  if (this == rootFrame) {
+    // If this is the root frame, then marking us as needing a display
+    // item rebuild implies the same for all our descendents. Clear them
+    // all out to reduce the number of WeakFrames we keep around.
+    for (nsIFrame* f : *modifiedFrames) {
+      if (f) {
+        f->SetFrameIsModified(false);
+      }
+    }
+    modifiedFrames->clear();
+  } else if (modifiedFrames->size() > gfxPrefs::LayoutRebuildFrameLimit()) {
+    // If the list starts getting too big, then just mark the root frame
+    // as needing a rebuild.
+    rootFrame->MarkNeedsDisplayItemRebuild();
+    return;
   }
 
   modifiedFrames->emplace_back(this);
 
   // TODO: this is a bit of a hack. We are using ModifiedFrameList property to
   // decide whether we are trying to reuse the display list.
-  if (displayRoot != viewport &&
+  if (displayRoot != rootFrame &&
       !displayRoot->HasProperty(nsIFrame::ModifiedFrameList())) {
     displayRoot->SetProperty(nsIFrame::ModifiedFrameList(),
                              new std::vector<WeakFrame>());
