@@ -209,7 +209,7 @@ function hideContextMenu(hud) {
 function loadDocument(url, browser = gBrowser.selectedBrowser) {
   return new Promise(resolve => {
     browser.addEventListener("load", resolve, {capture: true, once: true});
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+    BrowserTestUtils.loadURI(browser, url);
   });
 }
 
