@@ -23,8 +23,7 @@ public:
   }
 
   static float GetLongIdlePeriod();
-  static float GetMinIdlePeriod();
-  static uint32_t GetMaxTimerThreadBound();
+
 private:
   virtual ~MainThreadIdlePeriod() {}
 

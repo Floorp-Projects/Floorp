@@ -720,11 +720,14 @@ public:
   /**
    * Display the caret if needed.
    */
-  void DisplayCaret(nsIFrame* aFrame, nsDisplayList* aList) {
+  bool DisplayCaret(nsIFrame* aFrame, nsDisplayList* aList)
+  {
     nsIFrame* frame = GetCaretFrame();
     if (aFrame == frame) {
       frame->DisplayCaret(this, aList);
+      return true;
     }
+    return false;
   }
   /**
    * Get the frame that the caret is supposed to draw in.
@@ -1604,6 +1607,16 @@ public:
     if (!aFrame->IsFrameModified()) {
       mModifiedFramesDuringBuilding.AppendElement(aFrame);
       aFrame->SetFrameIsModified(true);
+      mInInvalidSubtree = true;
+      return true;
+    }
+    return false;
+  }
+
+  bool MarkCurrentFrameModifiedDuringBuilding()
+  {
+    if (MarkFrameModifiedDuringBuilding(const_cast<nsIFrame*>(mCurrentFrame))) {
+      mInInvalidSubtree = true;
       return true;
     }
     return false;

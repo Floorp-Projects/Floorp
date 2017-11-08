@@ -8,8 +8,8 @@ console.log("Initializing worker.");
 self.onmessage = e => {
   console.log("Starting test.");
   try {
-    const path = ThreadSafeChromeUtils.saveHeapSnapshot({ runtime: true });
-    const snapshot = ThreadSafeChromeUtils.readHeapSnapshot(path);
+    const path = ChromeUtils.saveHeapSnapshot({ runtime: true });
+    const snapshot = ChromeUtils.readHeapSnapshot(path);
 
     const dominatorTree = snapshot.computeDominatorTree();
     ok(dominatorTree);

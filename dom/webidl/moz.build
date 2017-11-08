@@ -313,9 +313,6 @@ with Files("TCP*"):
 with Files("TextTrack*"):
     BUG_COMPONENT = ("Core", "Audio/Video")
 
-with Files("ThreadSafeChromeUtils.webidl"):
-    BUG_COMPONENT = ("Firefox", "Developer Tools: Memory")
-
 with Files("TrackEvent.webidl"):
     BUG_COMPONENT = ("Core", "Audio/Video")
 
@@ -928,7 +925,6 @@ WEBIDL_FILES = [
     'TextTrackCue.webidl',
     'TextTrackCueList.webidl',
     'TextTrackList.webidl',
-    'ThreadSafeChromeUtils.webidl',
     'TimeEvent.webidl',
     'TimeRanges.webidl',
     'Touch.webidl',
