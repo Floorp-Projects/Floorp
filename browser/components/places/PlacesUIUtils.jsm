@@ -519,8 +519,6 @@ this.PlacesUIUtils = {
    *
    * @param   aData
    *          The unwrapped data blob of dropped or pasted data.
-   * @param   aType
-   *          The content type of the data.
    * @param   aNewParentGuid
    *          GUID of the container the data was dropped or pasted into.
    * @param   aIndex
@@ -531,7 +529,7 @@ this.PlacesUIUtils = {
    * @return  a Places Transaction that can be transacted for performing the
    *          move/insert command.
    */
-  getTransactionForData(aData, aType, aNewParentGuid, aIndex, aCopy) {
+  getTransactionForData(aData, aNewParentGuid, aIndex, aCopy) {
     if (!this.SUPPORTED_FLAVORS.includes(aData.type))
       throw new Error(`Unsupported '${aData.type}' data type`);
 
