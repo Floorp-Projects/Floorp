@@ -1868,11 +1868,11 @@ nsGlobalWindow::ShutDown()
 
 // static
 void
-nsGlobalWindow::CleanupCachedXBLHandlers(nsGlobalWindow* aWindow)
+nsGlobalWindow::CleanupCachedXBLHandlers()
 {
-  if (aWindow->mCachedXBLPrototypeHandlers &&
-      aWindow->mCachedXBLPrototypeHandlers->Count() > 0) {
-    aWindow->mCachedXBLPrototypeHandlers->Clear();
+  if (mCachedXBLPrototypeHandlers &&
+      mCachedXBLPrototypeHandlers->Count() > 0) {
+    mCachedXBLPrototypeHandlers->Clear();
   }
 }
 
@@ -2021,7 +2021,7 @@ nsGlobalWindow::CleanUp()
 
   mArguments = nullptr;
 
-  CleanupCachedXBLHandlers(this);
+  CleanupCachedXBLHandlers();
 
   for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
     mAudioContexts[i]->Shutdown();
@@ -2138,7 +2138,7 @@ nsGlobalWindow::FreeInnerObjects()
 
   NotifyWindowIDDestroyed("inner-window-destroyed");
 
-  CleanupCachedXBLHandlers(this);
+  CleanupCachedXBLHandlers();
 
   for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
     mAudioContexts[i]->Shutdown();
@@ -2340,7 +2340,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
-  nsGlobalWindow::CleanupCachedXBLHandlers(tmp);
+  tmp->CleanupCachedXBLHandlers();
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
 
