@@ -4372,9 +4372,16 @@ EditorBase::CreateTxnForCreateElement(nsAtom& aTag,
                                       int32_t aPosition,
                                       nsIContent* aChildAtPosition)
 {
+  EditorRawDOMPoint pointToInsert;
+  if (aPosition == -1) {
+    pointToInsert.Set(&aParent, aParent.Length());
+  } else if (aChildAtPosition) {
+    pointToInsert.Set(aChildAtPosition);
+  } else {
+    pointToInsert.Set(&aParent, aPosition);
+  }
   RefPtr<CreateElementTransaction> transaction =
-    new CreateElementTransaction(*this, aTag, aParent, aPosition,
-                                 aChildAtPosition);
+    new CreateElementTransaction(*this, aTag, pointToInsert);
 
   return transaction.forget();
 }
