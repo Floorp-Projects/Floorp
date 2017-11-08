@@ -19,8 +19,7 @@
 #include "mozilla/gfx/UnscaledFontMac.h"
 #elif defined(XP_WIN)
 #include "mozilla/gfx/UnscaledFontDWrite.h"
-#elif defined(MOZ_ENABLE_FREETYPE)
-#include "mozilla/ThreadLocal.h"
+#else
 #include "mozilla/gfx/UnscaledFontFreeType.h"
 #endif
 
@@ -43,10 +42,6 @@ using namespace gfx;
 
 namespace wr {
 
-#ifdef MOZ_ENABLE_FREETYPE
-static MOZ_THREAD_LOCAL(FT_Library) sFTLibrary;
-#endif
-
 struct FontTemplate {
   const uint8_t *mData;
   size_t mSize;
@@ -55,7 +50,6 @@ struct FontTemplate {
   RefPtr<UnscaledFont> mUnscaledFont;
 };
 
-// we need to do special things for linux so that we have fonts per backend
 std::unordered_map<FontKey, FontTemplate> sFontDataTable;
 
 extern "C" {
@@ -157,21 +151,6 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     return false;
   }
 
-  void* fontContext = nullptr;
-#ifdef MOZ_ENABLE_FREETYPE
-  if (!sFTLibrary.init()) {
-    return false;
-  }
-  if (!sFTLibrary.get()) {
-    FT_Library library = gfx::Factory::NewFTLibrary();
-    if (!library) {
-      return false;
-    }
-    sFTLibrary.set(library);
-  }
-  fontContext = sFTLibrary.get();
-#endif
-
   // In bindings.rs we allocate a buffer filled with opaque white.
   bool uninitialized = false;
 
@@ -225,7 +204,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     size_t end = reader.ReadSize();
     size_t extra_end = reader.ReadSize();
 
-    gfx::InlineTranslator translator(dt, fontContext);
+    gfx::InlineTranslator translator(dt);
 
     size_t count = *(size_t*)(aBlob.begin().get() + end);
     for (size_t i = 0; i < count; i++) {
