@@ -902,6 +902,21 @@ struct arena_bin_t
   // Amount of overhead runs are allowed to have.
   static constexpr long double kRunOverhead = 1.6_percent;
   static constexpr long double kRunRelaxedOverhead = 2.4_percent;
+
+  // Initialize a bin for the given size class.
+  // The generated run sizes, for a page size of 4 KiB, are:
+  //   size|run       size|run       size|run       size|run
+  //  class|size     class|size     class|size     class|size
+  //     4   4 KiB      8   4 KiB     16   4 KiB     32   4 KiB
+  //    48   4 KiB     64   4 KiB     80   4 KiB     96   4 KiB
+  //   112   4 KiB    128   8 KiB    144   4 KiB    160   8 KiB
+  //   176   4 KiB    192   4 KiB    208   8 KiB    224   4 KiB
+  //   240   4 KiB    256  16 KiB    272   4 KiB    288   4 KiB
+  //   304  12 KiB    320  12 KiB    336   4 KiB    352   8 KiB
+  //   368   4 KiB    384   8 KiB    400  20 KiB    416  16 KiB
+  //   432  12 KiB    448   4 KiB    464  16 KiB    480   8 KiB
+  //   496  20 KiB    512  32 KiB   1024  64 KiB   2048 128 KiB
+  inline void Init(SizeClass aSizeClass);
 };
 
 struct arena_t
@@ -2951,34 +2966,26 @@ arena_t::MallocBinHard(arena_bin_t* aBin)
   return MallocBinEasy(aBin, aBin->mCurrentRun);
 }
 
-// Calculate bin->mRunSize such that it meets a set of constraints.
-// bin->mRunNumRegions, bin->mRunNumRegionsMask, and bin->mRunFirstRegionOffset are
-// also calculated here, since these settings are all interdependent.
-// The generated run sizes, for a page size of 4 KiB, are:
-//   size|run       size|run       size|run       size|run
-//  class|size     class|size     class|size     class|size
-//     4   4 KiB      8   4 KiB     16   4 KiB     32   4 KiB
-//    48   4 KiB     64   4 KiB     80   4 KiB     96   4 KiB
-//   112   4 KiB    128   8 KiB    144   4 KiB    160   8 KiB
-//   176   4 KiB    192   4 KiB    208   8 KiB    224   4 KiB
-//   240   4 KiB    256  16 KiB    272   4 KiB    288   4 KiB
-//   304  12 KiB    320  12 KiB    336   4 KiB    352   8 KiB
-//   368   4 KiB    384   8 KiB    400  20 KiB    416  16 KiB
-//   432  12 KiB    448   4 KiB    464  16 KiB    480   8 KiB
-//   496  20 KiB    512  32 KiB   1024  64 KiB   2048 128 KiB
-static void
-arena_bin_run_size_calc(arena_bin_t* bin)
+void
+arena_bin_t::Init(SizeClass aSizeClass)
 {
   size_t try_run_size;
   unsigned try_nregs, try_mask_nelms, try_reg0_offset;
   // Size of the run header, excluding regs_mask.
   static const size_t kFixedHeaderSize = offsetof(arena_run_t, regs_mask);
 
+  MOZ_ASSERT(aSizeClass.Size() <= gMaxBinClass);
+
   try_run_size = gPageSize;
+
+  mCurrentRun = nullptr;
+  mNonFullRuns.Init();
+  mSizeClass = aSizeClass.Size();
+  mNumRuns = 0;
 
   // mRunSize expansion loop.
   while (true) {
-    try_nregs = ((try_run_size - kFixedHeaderSize) / bin->mSizeClass) +
+    try_nregs = ((try_run_size - kFixedHeaderSize) / mSizeClass) +
                 1; // Counter-act try_nregs-- in loop.
 
     // The do..while loop iteratively reduces the number of regions until
@@ -2990,7 +2997,7 @@ arena_bin_run_size_calc(arena_bin_t* bin)
       try_mask_nelms =
         (try_nregs >> (LOG2(sizeof(int)) + 3)) +
         ((try_nregs & ((1U << (LOG2(sizeof(int)) + 3)) - 1)) ? 1 : 0);
-      try_reg0_offset = try_run_size - (try_nregs * bin->mSizeClass);
+      try_reg0_offset = try_run_size - (try_nregs * mSizeClass);
     } while (kFixedHeaderSize + (sizeof(unsigned) * try_mask_nelms) >
              try_reg0_offset);
 
@@ -3000,15 +3007,15 @@ arena_bin_run_size_calc(arena_bin_t* bin)
     }
 
     // Try to keep the run overhead below kRunOverhead.
-    if (Fraction(try_reg0_offset, try_run_size) <= arena_bin_t::kRunOverhead) {
+    if (Fraction(try_reg0_offset, try_run_size) <= kRunOverhead) {
       break;
     }
 
     // If the overhead is larger than the size class, it means the size class
     // is small and doesn't align very well with the header. It's desirable to
     // have smaller run sizes for them, so relax the overhead requirement.
-    if (try_reg0_offset > bin->mSizeClass) {
-      if (Fraction(try_reg0_offset, try_run_size) <= arena_bin_t::kRunRelaxedOverhead) {
+    if (try_reg0_offset > mSizeClass) {
+      if (Fraction(try_reg0_offset, try_run_size) <= kRunRelaxedOverhead) {
         break;
       }
     }
@@ -3034,10 +3041,10 @@ arena_bin_run_size_calc(arena_bin_t* bin)
   MOZ_ASSERT((try_mask_nelms << (LOG2(sizeof(int)) + 3)) >= try_nregs);
 
   // Copy final settings.
-  bin->mRunSize = try_run_size;
-  bin->mRunNumRegions = try_nregs;
-  bin->mRunNumRegionsMask = try_mask_nelms;
-  bin->mRunFirstRegionOffset = try_reg0_offset;
+  mRunSize = try_run_size;
+  mRunNumRegions = try_nregs;
+  mRunNumRegionsMask = try_mask_nelms;
+  mRunFirstRegionOffset = try_reg0_offset;
 }
 
 void*
@@ -3804,7 +3811,6 @@ iralloc(void* aPtr, size_t aSize, arena_t* aArena)
 arena_t::arena_t()
 {
   unsigned i;
-  arena_bin_t* bin;
 
   MOZ_RELEASE_ASSERT(mLock.Init());
 
@@ -3829,15 +3835,8 @@ arena_t::arena_t()
   SizeClass sizeClass(1);
 
   for (i = 0;; i++) {
-    bin = &mBins[i];
-    bin->mCurrentRun = nullptr;
-    bin->mNonFullRuns.Init();
-
-    bin->mSizeClass = sizeClass.Size();
-
-    arena_bin_run_size_calc(bin);
-
-    bin->mNumRuns = 0;
+    arena_bin_t& bin = mBins[i];
+    bin.Init(sizeClass);
 
     // SizeClass doesn't want sizes larger than gMaxSubPageClass for now.
     if (sizeClass.Size() == gMaxSubPageClass) {
