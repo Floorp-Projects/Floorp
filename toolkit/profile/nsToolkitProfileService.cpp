@@ -121,7 +121,6 @@ private:
     friend nsresult NS_NewToolkitProfileService(nsIToolkitProfileService**);
 
     nsToolkitProfileService() :
-        mDirty(false),
         mStartWithLast(true),
         mStartOffline(false)
     {
@@ -150,7 +149,6 @@ private:
     nsCOMPtr<nsIFile>           mAppData;
     nsCOMPtr<nsIFile>           mTempData;
     nsCOMPtr<nsIFile>           mListFile;
-    bool mDirty;
     bool mStartWithLast;
     bool mStartOffline;
 
@@ -224,7 +222,6 @@ nsToolkitProfile::SetName(const nsACString& aName)
     NS_ENSURE_TRUE(!mForExternalApp, NS_ERROR_NOT_IMPLEMENTED);
 
     mName = aName;
-    nsToolkitProfileService::gService->mDirty = true;
 
     return NS_OK;
 }
@@ -284,8 +281,6 @@ nsToolkitProfile::RemoveInternal(bool aRemoveFiles, bool aInBackground)
 
     if (nsToolkitProfileService::gService->mChosen == this)
         nsToolkitProfileService::gService->mChosen = nullptr;
-
-    nsToolkitProfileService::gService->mDirty = true;
 
     return NS_OK;
 }
@@ -572,7 +567,6 @@ nsToolkitProfileService::SetStartWithLastProfile(bool aValue)
 {
     if (mStartWithLast != aValue) {
         mStartWithLast = aValue;
-        mDirty = true;
     }
     return NS_OK;
 }
@@ -647,7 +641,6 @@ nsToolkitProfileService::SetSelectedProfile(nsIToolkitProfile* aProfile)
 {
     if (mChosen != aProfile) {
         mChosen = aProfile;
-        mDirty = true;
     }
     return NS_OK;
 }
@@ -666,7 +659,6 @@ nsToolkitProfileService::SetDefaultProfile(nsIToolkitProfile* aProfile)
 {
     if (mDefault != aProfile) {
         mDefault = aProfile;
-        mDirty = true;
     }
     return NS_OK;
 }
