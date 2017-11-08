@@ -198,7 +198,7 @@ function computeMaxTabCount() {
     document.getAnonymousElementByAttribute(gBrowser.tabContainer,
                                             "anonid", "tabs-newtab-button");
   let newTabRect = newTabButton.getBoundingClientRect();
-  let tabStripRect = gBrowser.tabContainer.mTabstrip.getBoundingClientRect();
+  let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let availableTabStripWidth = tabStripRect.width - newTabRect.width;
 
   let tabMinWidth =
