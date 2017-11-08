@@ -46,53 +46,34 @@ import org.mozilla.focus.web.IWebView;
      */
     private static final String CLEAR_VISITED_CSS =
             "var nSheets = document.styleSheets.length;" +
-                    "var foundLink = false;" +
-                    "var foundA = false;" +
-                    "for (s = 0; s < nSheets; s++) {" +
-                    "  var stylesheet = document.styleSheets[s];" +
-                    "  var nRules = stylesheet.cssRules ? stylesheet.cssRules.length : 0;" +
-                    // rules need to be removed by index. That modifies the whole list - it's easiest
-                    // to therefore process the list from the back, so that we don't need to care about
-                    // indexes changing after deletion (all indexes before the removed item are unchanged,
-                    // so by moving towards the start we'll always process all previously unprocessed items -
-                    // moving in the other direction we'd need to remember to process a given index
-                    // again which is more complicated).
-                    "  for (i = nRules - 1; i >= 0; i--) {" +
-                    "    var cssRule = stylesheet.cssRules[i];" +
-                    "    if (cssRule.selectorText && cssRule.selectorText.trim() == \"a\") {" +
-                    "      foundA = true;" +
-                    "    }" +
-                    // Depending on style type, there might be no selector
-                    "    if (cssRule.selectorText && (cssRule.selectorText.includes(':link') || cssRule.selectorText.includes(':visited'))) {" +
-                    "      var tokens = cssRule.selectorText.split(',');" +
-                    "      var j = tokens.length;" +
-                    "      while (j--) {" +
-                    "        if (tokens[j].includes(':visited')) {" +
-                    "          tokens.splice(j, 1);" +
-                    "        }" +
-                    "      }" +
-                    "      if (tokens.length == 0) {" +
-                    "        stylesheet.deleteRule(i);" +
-                    "      } else {" +
-                    "        cssRule.selectorText = tokens.join(',');" +
-                    "      }" +
-                    "      var newTokens = cssRule.selectorText.split(',');" +
-                    "      var k = newTokens.length;" +
-                    "      while (k--) {" +
-                    "        if (newTokens[k].includes(':link')) {" +
-                    "          foundLink = true;" +
-                    "          var newVisitedRule = newTokens[k].split(':')[0].concat(':visited {').concat(cssRule.cssText.split(\"{\")[1]);" +
-                    "          stylesheet.insertRule(newVisitedRule, stylesheet.cssRules.length);" +
-                    "          newTokens.splice(k + 1, 0, newTokens[k].split(':')[0].concat(':visited'));" +
-                    "        }" +
-                    "      }" +
-                    "      cssRule.selectorText = newTokens.join(',');" +
-                    "    }" +
-                    "    if (i == 0 && !foundLink && !foundA) {" +
-                    "      stylesheet.insertRule(\"a:link, a:visited { color: #0000EE; }\", stylesheet.cssRules.length);" +
-                    "    }" +
-                    "  }" +
-                    "}";
+            "for (s=0; s < nSheets; s++) {" +
+            "  var stylesheet = document.styleSheets[s];" +
+            "  var nRules = stylesheet.cssRules ? stylesheet.cssRules.length : 0;" +
+            // rules need to be removed by index. That modifies the whole list - it's easiest
+            // to therefore process the list from the back, so that we don't need to care about
+            // indexes changing after deletion (all indexes before the removed item are unchanged,
+            // so by moving towards the start we'll always process all previously unprocessed items -
+            // moving in the other direction we'd need to remember to process a given index
+            // again which is more complicated).
+            "  for (i = nRules - 1; i >= 0; i--) {" +
+            "    var cssRule = stylesheet.cssRules[i];" +
+            // Depending on style type, there might be no selector
+            "    if (cssRule.selectorText && cssRule.selectorText.includes(':visited')) {" +
+            "      var tokens = cssRule.selectorText.split(',');" +
+            "      var j = tokens.length;" +
+            "      while (j--) {" +
+            "        if (tokens[j].includes(':visited')) {" +
+            "          tokens.splice(j, 1);" +
+            "        }" +
+            "      }" +
+            "      if (tokens.length == 0) {" +
+            "        stylesheet.deleteRule(i);" +
+            "      } else {" +
+            "        cssRule.selectorText = tokens.join(',');" +
+            "      }" +
+            "    }" +
+            "  }" +
+            "}";
 
     @Override
     public void onLoadResource(WebView view, String url) {
