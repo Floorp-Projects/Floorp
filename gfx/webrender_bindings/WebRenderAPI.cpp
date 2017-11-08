@@ -811,11 +811,13 @@ DisplayListBuilder::DefineStickyFrame(const wr::LayoutRect& aContentRect,
                                       const float* aBottomMargin,
                                       const float* aLeftMargin,
                                       const StickyOffsetBounds& aVerticalBounds,
-                                      const StickyOffsetBounds& aHorizontalBounds)
+                                      const StickyOffsetBounds& aHorizontalBounds,
+                                      const wr::LayoutVector2D& aAppliedOffset)
 {
   uint64_t id = wr_dp_define_sticky_frame(mWrState, aContentRect, aTopMargin,
-      aRightMargin, aBottomMargin, aLeftMargin, aVerticalBounds, aHorizontalBounds);
-  WRDL_LOG("DefineSticky id=%" PRIu64 " c=%s t=%s r=%s b=%s l=%s v=%s h=%s\n",
+      aRightMargin, aBottomMargin, aLeftMargin, aVerticalBounds, aHorizontalBounds,
+      aAppliedOffset);
+  WRDL_LOG("DefineSticky id=%" PRIu64 " c=%s t=%s r=%s b=%s l=%s v=%s h=%s a=%s\n",
       mWrState, id,
       Stringify(aContentRect).c_str(),
       aTopMargin ? Stringify(*aTopMargin).c_str() : "none",
@@ -823,7 +825,8 @@ DisplayListBuilder::DefineStickyFrame(const wr::LayoutRect& aContentRect,
       aBottomMargin ? Stringify(*aBottomMargin).c_str() : "none",
       aLeftMargin ? Stringify(*aLeftMargin).c_str() : "none",
       Stringify(aVerticalBounds).c_str(),
-      Stringify(aHorizontalBounds).c_str());
+      Stringify(aHorizontalBounds).c_str(),
+      Stringify(aAppliedOffset).c_str());
   return wr::WrStickyId { id };
 }
 

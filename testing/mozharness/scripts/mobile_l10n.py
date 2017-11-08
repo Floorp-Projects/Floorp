@@ -120,6 +120,15 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
          "type": "string",
          "help": "Override the gecko revision to use (otherwise use buildbot supplied"
                  " value, or en-US revision) "}
+    ], [
+        ['--scm-level'],
+        {"action": "store",
+         "type": "int",
+         "dest": "scm_level",
+         "default": 1,
+         "help": "This sets the SCM level for the branch being built."
+                 " See https://www.mozilla.org/en-US/about/"
+                 "governance/policies/commit/access-policy/"}
     ]]
 
     def __init__(self, require_config_file=True):

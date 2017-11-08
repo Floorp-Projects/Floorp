@@ -17,8 +17,16 @@ elif CONFIG['TARGET_CPU'].startswith('arm'):
 else:
     cpu = CONFIG['TARGET_CPU']
 
+gen_src = '%s.c' % cpu
+GENERATED_FILES += [
+    gen_src,
+]
+
+GENERATED_FILES[gen_src].script = 'copy_source.py:copy'
+GENERATED_FILES[gen_src].inputs = ['../inject.c']
+
 SOURCES += [
-    "!%s.c" % cpu,
+    '!%s' % gen_src,
 ]
 
 NO_PGO = True

@@ -10,7 +10,7 @@
 const ADDON_PATH = "addon-webext-contentscript.xpi";
 const TAB_URL = EXAMPLE_URL + "doc_script_webext_contentscript.html";
 
-let {getExtensionUUID} = Cu.import("resource://gre/modules/Extension.jsm", {});
+const {WebExtensionPolicy} = Cu.getGlobalForObject(Cu.import("resource://gre/modules/Extension.jsm", {}));
 
 function test() {
   let gPanel, gDebugger;
@@ -32,10 +32,10 @@ function test() {
 
   return Task.spawn(function* () {
     gAddon = yield addTemporaryAddon(ADDON_PATH);
-    let uuid = getExtensionUUID(gAddon.id);
+    let {mozExtensionHostname} = WebExtensionPolicy.getByID(gAddon.id);
 
     let options = {
-      source: `moz-extension://${uuid}/webext-content-script.js`,
+      source: `moz-extension://${mozExtensionHostname}/webext-content-script.js`,
       line: 1
     };
     [,, gPanel] = yield initDebugger(TAB_URL, options);

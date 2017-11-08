@@ -153,6 +153,9 @@ public:
   // once it is matched to a pull stream.
   virtual bool HasSink() { return true; }
 
+  // This is a no-op on pull streams. Pushed streams override this.
+  virtual void SetPushComplete() { };
+
   virtual ~Http2Stream();
 
   Http2Session *Session() { return mSession; }

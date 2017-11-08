@@ -2,6 +2,7 @@
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="parser_rtp.js"></script>
   <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
 </head>
 <body>
@@ -77,6 +78,9 @@
         }
       ]);
 
+      // For storing the rid extension so it can be checked in the RTP
+      let ridExtensionId = 0;
+
       // do this after set local description so the MediaPipeline
       // has been created.
       test.chain.insertAfter('PC_REMOTE_SET_LOCAL_DESCRIPTION',[
@@ -84,11 +88,36 @@
           const extmap_id = test.originalOffer.sdp.match(
               "a=extmap:([0-9+])/sendonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
           ok(extmap_id, "Original offer has extmap id for simulcast: " + extmap_id[1]);
+          ridExtensionId = extmap_id[1];
           // Cause pcRemote to filter out everything but RID "foo", only
           // allowing one of the simulcast streams through.
           addRIDExtension(test.pcRemote, extmap_id[1]);
           selectRecvRID(test.pcRemote, "foo");
         }
+      ]);
+
+      let getRtpPacket = (pc) => {
+        pc.mozEnablePacketDump(0, "rtp", false);
+        return new Promise((res, rej) =>
+          pc.mozSetPacketCallback((...args) => {
+            res([...args]);
+            pc.mozSetPacketCallback(() => {});
+            pc.mozDisablePacketDump(0, "rtp", false);
+          })
+        );
+      }
+
+      test.chain.insertBefore('PC_REMOTE_WAIT_FOR_MEDIA_FLOW', [
+          async function PC_REMOTE_CHECK_RID_IN_RTP() {
+            let pc = SpecialPowers.wrap(test.pcRemote._pc);
+            let [level, type, sending, data] =  await getRtpPacket(pc);
+            let extensions = ParseRtpPacket(data).header.extensions;
+            ok(ridExtensionId, "RID extension ID has been extracted from SDP");
+            let ridExt = extensions.find(e => e.id == ridExtensionId);
+            ok(ridExt, "RID is present in RTP.");
+            is(new TextDecoder('utf-8').decode(ridExt.data), "foo",
+               "RID is 'foo'.");
+          }
       ]);
 
       test.chain.append([

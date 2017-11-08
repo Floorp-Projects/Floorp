@@ -2,6 +2,7 @@
 // Test timeout (seconds)
 var gTimeoutSeconds = 45;
 var gConfig;
+var gSaveInstrumentationData = null;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -117,6 +118,255 @@ function testInit() {
 
   let gmm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
   gmm.loadFrameScript("chrome://mochikit/content/tests/SimpleTest/AsyncUtilsContent.js", true);
+
+  var testSuite = Cc["@mozilla.org/process/environment;1"].
+                    getService(Ci.nsIEnvironment).
+                    get("TEST_SUITE");
+  if (testSuite == "browser-chrome-instrumentation") {
+    takeInstrumentation();
+  }
+}
+
+function takeInstrumentation() {
+
+  let instrumentData = {
+    elements: {}
+  };
+
+  function pad(str, length) {
+    if (str.length >= length)
+      return str;
+
+    return str + " ".repeat(length - str.length);
+  }
+
+  function byCount(a, b) {
+    return b[1] - a[1];
+  }
+
+  function getSummaryText() {
+    let summary = [];
+    let allData = {};
+    for (let selector of Object.keys(instrumentData.elements)) {
+      allData[selector] = instrumentData.elements[selector];
+    }
+
+    let selectors = Object.keys(allData);
+    let elements = selectors.map(s => allData[s]);
+
+    let namespaceMap = new Map();
+    let bindingMap = new Map();
+
+    for (let element of elements) {
+      if (!bindingMap.has(element.binding)) {
+        bindingMap.set(element.binding, 1);
+      } else {
+        bindingMap.set(element.binding, bindingMap.get(element.binding) + 1);
+      }
+
+      if (!namespaceMap.has(element.namespaceURI)) {
+        namespaceMap.set(element.namespaceURI, new Map());
+      }
+
+      let localNameMap = namespaceMap.get(element.namespaceURI);
+      if (!localNameMap.has(element.localName)) {
+        localNameMap.set(element.localName, 1);
+      } else {
+        localNameMap.set(element.localName, localNameMap.get(element.localName) + 1);
+      }
+    }
+
+    for (let [namespace, localNameMap] of namespaceMap) {
+      summary.push(`Elements in namespace ${namespace}`);
+
+      let entries = Array.from(localNameMap);
+      entries.sort(byCount);
+      for (let entry of entries) {
+        summary.push(`  ${pad(entry[1] + "", 5)} ${entry[0]}`);
+      }
+    }
+
+    summary.push("XBL bindings");
+    let bindings = Array.from(bindingMap);
+    bindings.sort(byCount);
+    let bindingsJSON = {};
+    for (let binding of bindings) {
+      summary.push(`  ${pad(binding[1] + "", 5)} ${binding[0]}`);
+      if (binding[0]) {
+        bindingsJSON[binding[0].split("#")[1].split('"')[0]] = binding[1];
+      }
+    }
+
+    summary.push("XBL bindings as JSON");
+    summary.push(JSON.stringify(bindingsJSON, null, 2));
+
+    return summary.join("\n");
+  }
+
+  // Saves instrumantation data
+  function saveData() {
+    let path = Cc["@mozilla.org/process/environment;1"].
+               getService(Ci.nsIEnvironment).
+               get("MOZ_UPLOAD_DIR");
+    let encoder = new TextEncoder();
+
+    let instrumentPath = OS.Path.join(path, "xulinstrument.txt");
+    OS.File.writeAtomic(instrumentPath, encoder.encode(JSON.stringify(instrumentData, null, 2)));
+
+    let summaryPath = OS.Path.join(path, "xulsummary.txt");
+    OS.File.writeAtomic(summaryPath, encoder.encode(getSummaryText()));
+  }
+
+  // An iterator over an element and its ancestors
+  function* elementPath(element) {
+    yield element;
+    while ((element = element.parentNode) && (element instanceof Element)) {
+      yield element;
+    }
+  }
+
+  // Returns the information we care about for an element
+  function getElementInfo(element) {
+    let style = element.ownerGlobal.getComputedStyle(element);
+    let binding = style && style.getPropertyValue("-moz-binding");
+
+    return {
+      namespaceURI: element.namespaceURI,
+      localName: element.localName,
+      binding: (binding && binding != "none") ? binding : null,
+    }
+  }
+
+  // The selector for just this element
+  function immediateSelector(element) {
+    if (element.localName == "notificationbox" && element.parentNode &&
+        element.parentNode.classList.contains("tabbrowser-tabpanels")) {
+      // Don't do a full selector for a tabpanel's notificationbox
+      return element.localName;
+    }
+
+    if (element.localName == "tab" && element.classList.contains("tabbrowser-tab")) {
+      // Don't do a full selector for a tab
+      return element.localName;
+    }
+
+    if (element.id) {
+      return `#${element.id}`;
+    }
+
+    let selector = element.localName;
+
+    if (element.classList.length) {
+      selector += `.${Array.from(element.classList).join(".")}`;
+    }
+
+    for (let attr of ["src", "label"]) {
+      if (element.hasAttribute(attr)) {
+        selector += `[${attr}=${JSON.stringify(element.getAttribute(attr))}]`;
+      }
+    }
+
+    return selector;
+  }
+
+  // The selector chain for the element
+  function elementSelector(element) {
+    return Array.from(elementPath(element)).reverse().map(immediateSelector).join(" > ");
+  }
+
+  // An iterator over all elements in the window
+  function* windowElements(win) {
+    yield* elementDescendants(win.document.documentElement);
+  }
+
+  // An iterator over an element and all of its descendants
+  function* elementDescendants(element) {
+    let walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].
+                 createInstance(Ci.inIDeepTreeWalker);
+    walker.showAnonymousContent = true;
+    walker.showSubDocuments = false;
+    walker.showDocumentsAsNodes = false;
+    walker.init(element, Ci.nsIDOMNodeFilter.SHOW_ELEMENT);
+
+    yield element;
+    while (walker.nextNode()) {
+      if (walker.currentNode instanceof Element) {
+        yield walker.currentNode;
+      }
+    }
+  }
+
+  // Checks if we've seen an element and if not adds it to the instrumentation data
+  function instrumentElement(element) {
+    if (element.__instrumentSeen) {
+      return;
+    }
+
+    let selector = elementSelector(element);
+    element.__instrumentSeen = true;
+
+    if (selector in instrumentData.elements) {
+      return;
+    }
+
+    instrumentData.elements[selector] = getElementInfo(element);
+  }
+
+  // Instruments every element in a window
+  function scanWindow(win) {
+    Array.from(windowElements(win)).forEach(instrumentElement);
+  }
+
+  // Instruments every element in an element's descendants
+  function scanElement(element) {
+    Array.from(elementDescendants(element)).forEach(instrumentElement);
+  }
+
+  function handleMutation(mutation) {
+    if (mutation.type != "childList") {
+      return;
+    }
+
+    for (let node of mutation.addedNodes) {
+      if (node instanceof Element) {
+        scanElement(node);
+      }
+    }
+  }
+  // Watches a window for new elements to instrument
+  function observeWindow(win) {
+    let observer = new MutationObserver((mutations) => {
+      mutations.forEach(handleMutation);
+    });
+
+    observer.observe(win.document, {
+      childList: true,
+      subtree: true,
+    });
+
+    win.addEventListener("unload", () => {
+      observer.takeRecords().forEach(handleMutation);
+    }, { once: true });
+  }
+
+  scanWindow(window);
+  observeWindow(window);
+  gSaveInstrumentationData = saveData;
+
+  Services.ww.registerNotification((win, topic, data) => {
+    if (topic != "domwindowopened") {
+      return;
+    }
+
+    win.addEventListener("load", () => {
+      if (win.location.href != "chrome://browser/content/browser.xul") {
+        return;
+      }
+
+      scanWindow(win);
+      observeWindow(win);
+    }, { once: true });
+  });
 }
 
 function Tester(aTests, structuredLogger, aCallback) {
@@ -364,6 +614,10 @@ Tester.prototype = {
     this.callback(this.tests);
     this.callback = null;
     this.tests = null;
+
+    if (gSaveInstrumentationData) {
+      gSaveInstrumentationData();
+    }
   },
 
   haltTests: function Tester_haltTests() {

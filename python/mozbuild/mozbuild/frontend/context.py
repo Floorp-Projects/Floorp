@@ -1544,12 +1544,6 @@ VARIABLES = {
         This variable can only be used on Windows.
         """),
 
-    'LD_VERSION_SCRIPT': (unicode, unicode,
-        """The linker version script for shared libraries.
-
-        This variable can only be used on Linux.
-        """),
-
     'SYMBOLS_FILE': (Path, unicode,
         """A file containing a list of symbols to export from a shared library.
 

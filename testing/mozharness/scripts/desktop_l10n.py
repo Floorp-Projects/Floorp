@@ -160,6 +160,15 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
          "dest": "disable_mock",
          "action": "store_true",
          "help": "do not run under mock despite what gecko-config says"}
+    ], [
+        ['--scm-level'], {  # Ignored on desktop for now: see Bug 1414678.
+         "action": "store",
+         "type": "int",
+         "dest": "scm_level",
+         "default": 1,
+         "help": "This sets the SCM level for the branch being built."
+                 " See https://www.mozilla.org/en-US/about/"
+                 "governance/policies/commit/access-policy/"}
     ]]
 
     def __init__(self, require_config_file=True):

@@ -31,7 +31,7 @@ const ICON_STATE_DEFAULT = "default";
  * "tourId": { // The short tour id which could be saved in pref
  *   // The unique tour id
  *   id: "onboarding-tour-addons",
- *   // (optional) mark tour as complete instantly when user enters the tour
+ *   // (optional) mark tour as complete instantly when the user enters the tour
  *   instantComplete: false,
  *   // The string id of tour name which would be displayed on the navigation bar
  *   tourNameId: "onboarding.tour-addon",
@@ -372,7 +372,7 @@ class Onboarding {
   async init(contentWindow) {
     this._window = contentWindow;
     // session_key is used for telemetry to track the current tab.
-    // The number will renew after reload the page.
+    // The number will renew after reloading the page.
     this._session_key = Date.now();
     this._tours = [];
     this._tourType = Services.prefs.getStringPref("browser.onboarding.tour-type", "update");
@@ -397,7 +397,7 @@ class Onboarding {
 
     this._window.addEventListener("resize", this);
 
-    // Destroy on unload. This is to ensure we remove all the stuff we left.
+    // Destroy on unloading. This is to ensure we remove all the stuff we left.
     // No any leak out there.
     this._window.addEventListener("unload", () => this.destroy());
 
@@ -468,7 +468,7 @@ class Onboarding {
     let doc = this._window.document;
     if (doc.hidden) {
       // When the preloaded-browser feature is on,
-      // it would preload an hidden about:newtab in the background.
+      // it would preload a hidden about:newtab in the background.
       // We don't want to show notification in that hidden state.
       let onVisible = () => {
         if (!doc.hidden) {
@@ -595,9 +595,12 @@ class Onboarding {
   }
 
   /**
-   * Wrap keyboard focus within the dialog and focus on first element after last
-   * when moving forward or last element after first when moving backwards. Do
-   * nothing if focus is moving in the middle of the list of dialog's focusable
+   * Wrap keyboard focus within the dialog.
+   * When moving forward, focus on the first element when the current focused
+   * element is the last one.
+   * When moving backward, focus on the last element when the current focused
+   * element is the first one.
+   * Do nothing if focus is moving in the middle of the list of dialog's focusable
    * elements.
    *
    * @param  {DOMNode} current  currently focused element
@@ -633,7 +636,7 @@ class Onboarding {
       return;
     }
 
-    // Current focused item can be tab container if previous navigation was done
+    // Currently focused item could be tab container if previous navigation was done
     // via mouse.
     if (target.classList.contains("onboarding-tour-item-container")) {
       target = target.firstChild;
@@ -770,20 +773,20 @@ class Onboarding {
       [...doc.body.children].forEach(
         child => child.id !== "onboarding-overlay" &&
                  child.setAttribute("aria-hidden", true));
-      // When dialog is opened with the keyboard, focus on the 1st uncomplete tour
-      // because it will be the selected tour
+      // When dialog is opened with the keyboard, focus on the first
+      // uncomplete tour because it will be the selected tour.
       if (this._overlayIcon.dataset.keyboardFocus) {
         doc.getElementById(this._firstUncompleteTour.id).focus();
       } else {
-        // When dialog is opened with mouse, focus on the dialog itself to avoid
-        // visible keyboard focus styling.
+        // When the dialog is opened with the mouse, focus on the dialog
+        // itself to avoid visible keyboard focus styling.
         this._dialog.focus();
       }
     } else {
       // Remove all set aria-hidden attributes.
       [...doc.body.children].forEach(
         child => child.removeAttribute("aria-hidden"));
-      // If dialog was opened with a keyboard, set the focus back on the overlay
+      // If dialog was opened with a keyboard, set the focus back to the overlay
       // button.
       if (this._overlayIcon.dataset.keyboardFocus) {
         delete this._overlayIcon.dataset.keyboardFocus;
@@ -814,10 +817,10 @@ class Onboarding {
           session_key: this._session_key,
         });
 
-        // some tours should completed instantly upon showing.
+        // Some tours should complete instantly upon showing.
         if (tab.getAttribute("data-instant-complete")) {
           this.setToursCompleted([tourId]);
-          // also track auto completed tour so we can filter data with the same event
+          // Also track auto-completed tour so we can filter data with the same event.
           telemetry({
             event: "overlay-cta-click",
             tour_id: tourId,
@@ -1006,7 +1009,7 @@ class Onboarding {
     if (queue.length > 0 && this._isTimeForNextTourNotification(lastTime)) {
       queue.shift();
     }
-    // We don't want to prompt completed tour.
+    // We don't want to prompt the completed tour.
     while (queue.length > 0 && this.isTourCompleted(queue[0])) {
       queue.shift();
     }
@@ -1242,7 +1245,7 @@ class Onboarding {
         let element = l10nElements[i];
         // We always put brand short name as the first argument for it's the
         // only and frequently used arguments in our l10n case. Rewrite it if
-        // other arguments appears.
+        // other arguments appear.
         element.textContent = this._bundle.formatStringFromName(
                                 element.dataset.l10nId, [BRAND_SHORT_NAME], 1);
       }
@@ -1299,7 +1302,7 @@ if (Services.prefs.getBoolPref("browser.onboarding.enabled", false)) {
     let window = evt.target.defaultView;
     let location = window.location.href;
     if (location == ABOUT_NEWTAB_URL || location == ABOUT_HOME_URL) {
-      // We just want to run tests as quick as possible
+      // We just want to run tests as quickly as possible
       // so in the automation test, we don't do `requestIdleCallback`.
       if (Cu.isInAutomation) {
         new Onboarding(window);

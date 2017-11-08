@@ -1,0 +1,100 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * This file contains the styles for the newsletter subscription form on about:devtools.
+ * It is largely inspired from https://mozilla.github.io/basket-example/
+ */
+
+#newsletter-errors {
+  /* Hidden by default */
+  display: none;
+
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 2px;
+
+  background-color: var(--red-50);
+  color: var(--white);
+}
+
+#newsletter-errors.show {
+  display: block;
+}
+
+#newsletter-errors .error {
+  margin: 0;
+  margin-bottom: 10px;
+}
+
+#newsletter-errors .error:last-child {
+  margin-bottom: 0;
+}
+
+#newsletter-thanks {
+  /* Hidden by default */
+  display: none;
+}
+
+#newsletter-thanks.show {
+  display: block;
+}
+
+.newsletter-form-section {
+  display: block;
+  margin-bottom: 20px;
+  width: 320px;
+}
+
+#newsletter-privacy {
+  display: flex;
+
+  /* The privacy section is hidden by default and only displayed on focus */
+  height: 0;
+  margin-bottom: -20px;
+  overflow: hidden;
+}
+
+#newsletter-privacy.animate {
+  transition: all 0.25s cubic-bezier(.15,.75,.35,.9);
+}
+
+#newsletter-privacy label {
+  line-height: var(--line-height);
+}
+
+#privacy {
+  width: 20px;
+  height: 20px;
+  margin: 2px;
+  margin-inline-end: 10px;
+  flex-shrink: 0;
+}
+
+#email {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 15px;
+}
+
+#newsletter-form input {
+  border-color: var(--grey-90-alpha-30);
+}
+
+#newsletter-form input:hover {
+  border-color: var(--grey-90-alpha-50);
+}
+
+#newsletter-form input:focus {
+  border-color: var(--teal-60);
+  box-shadow: 0 0 2px 0 var(--teal-60);
+}
+
+#newsletter-form::placeholder {
+  color: var(--grey-90-alpha-40);
+}
+
+#newsletter-submit {
+  display: block;
+}
