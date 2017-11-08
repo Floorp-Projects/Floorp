@@ -216,6 +216,12 @@ PointerEvent::GetCoalescedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents)
       RefPtr<PointerEvent> domEvent =
         NS_NewDOMPointerEvent(nullptr, nullptr, &event);
 
+      // The dom event is derived from an OS generated widget event. Setup
+      // mWidget and mPresContext since they are necessary to calculate
+      // offsetX / offsetY.
+      domEvent->mEvent->AsGUIEvent()->mWidget = widgetEvent->mWidget;
+      domEvent->mPresContext = mPresContext;
+
       // The coalesced widget mouse events shouldn't have been dispatched.
       MOZ_ASSERT(!domEvent->mEvent->mTarget);
       // The event target should be the same as the dispatched event's target.
@@ -224,6 +230,10 @@ PointerEvent::GetCoalescedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents)
       // JS could hold reference to dom events. We have to ask dom event to
       // duplicate its private data to avoid the widget event is destroyed.
       domEvent->DuplicatePrivateData();
+
+      // Setup mPresContext again after DuplicatePrivateData since it clears
+      // mPresContext.
+      domEvent->mPresContext = mPresContext;
       mCoalescedEvents.AppendElement(domEvent);
     }
   }
