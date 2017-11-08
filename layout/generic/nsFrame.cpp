@@ -3644,7 +3644,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
     child->BuildDisplayListForStackingContext(aBuilder, &list, &canSkipWrapList);
     wrapListASR = contASRTracker.GetContainerASR();
-    aBuilder->DisplayCaret(child, &list);
+    if (aBuilder->DisplayCaret(child, &list)) {
+      canSkipWrapList = false;
+    }
   } else {
     Maybe<nsRect> clipPropClip =
       child->GetClipPropClipRect(disp, effects, child->GetSize());
@@ -3710,7 +3712,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     aBuilder->AdjustWindowDraggingRegion(child);
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
     child->BuildDisplayList(aBuilder, pseudoStack);
-    aBuilder->DisplayCaret(child, pseudoStack.Content());
+    if (aBuilder->DisplayCaret(child, pseudoStack.Content())) {
+      canSkipWrapList = false;
+    }
     wrapListASR = contASRTracker.GetContainerASR();
 
     list.AppendToTop(pseudoStack.BorderBackground());

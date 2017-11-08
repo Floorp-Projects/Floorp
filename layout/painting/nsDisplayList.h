@@ -720,11 +720,14 @@ public:
   /**
    * Display the caret if needed.
    */
-  void DisplayCaret(nsIFrame* aFrame, nsDisplayList* aList) {
+  bool DisplayCaret(nsIFrame* aFrame, nsDisplayList* aList)
+  {
     nsIFrame* frame = GetCaretFrame();
     if (aFrame == frame) {
       frame->DisplayCaret(this, aList);
+      return true;
     }
+    return false;
   }
   /**
    * Get the frame that the caret is supposed to draw in.
