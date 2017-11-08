@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+    function f() {
+        document.removeEventListener("DOMSubtreeModified", f, true);
+        document.documentElement.setAttributeNS(null, "contenteditable", "false");
+    }
+
+    document.addEventListener("DOMSubtreeModified", f, true);
+
+    document.documentElement.contentEditable = "true";
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

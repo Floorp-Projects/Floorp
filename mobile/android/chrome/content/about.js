@@ -30,7 +30,7 @@ function init() {
       distroIdField.textContent = distroId + " - " + distroVersion;
       distroIdField.hidden = false;
 
-      let distroAbout = Services.prefs.getStringPref("distribution.about");
+      let distroAbout = Services.prefs.getComplexValue("distribution.about", Ci.nsISupportsString);
       let distroField = document.getElementById("distributionAbout");
       distroField.textContent = distroAbout;
       distroField.hidden = false;

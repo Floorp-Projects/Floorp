@@ -57,6 +57,7 @@ class ElementCreationOptionsOrString;
 class gfxUserFontSet;
 class imgIRequest;
 class nsBindingManager;
+class nsCachableElementsByNameNodeList;
 class nsIDocShell;
 class nsDocShell;
 class nsDOMNavigationTiming;
@@ -2941,6 +2942,14 @@ public:
   virtual void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv) = 0;
   void GetDir(nsAString& aDirection) const;
   void SetDir(const nsAString& aDirection);
+  already_AddRefed<nsContentList> GetElementsByName(const nsAString& aName)
+  {
+    return GetFuncStringContentList<nsCachableElementsByNameNodeList>(this,
+                                                                      MatchNameAttribute,
+                                                                      nullptr,
+                                                                      UseExistingNameString,
+                                                                      aName);
+  }
   nsPIDOMWindowOuter* GetDefaultView() const
   {
     return GetWindow();
@@ -3320,6 +3329,12 @@ protected:
 
   // Helper for GetScrollingElement/IsScrollingElement.
   bool IsPotentiallyScrollable(mozilla::dom::HTMLBodyElement* aBody);
+
+  // Helpers for GetElementsByName.
+  static bool MatchNameAttribute(mozilla::dom::Element* aElement,
+                                 int32_t aNamespaceID,
+                                 nsAtom* aAtom, void* aData);
+  static void* UseExistingNameString(nsINode* aRootNode, const nsString* aName);
 
   nsCString mReferrer;
   nsString mLastModified;

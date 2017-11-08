@@ -48,9 +48,9 @@ function run_test() {
   do_check_throws(function() {
     pb.setCharPref(null, null); },  Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
-    pb.getStringPref(null); },  Cr.NS_ERROR_INVALID_ARG);
+    pb.getComplexValue(null, Components.interfaces.nsISupportsString); },  Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
-    pb.setStringPref(null, null); },  Cr.NS_ERROR_INVALID_ARG);
+    pb.setComplexValue(null, Components.interfaces.nsISupportsString, pb); },  Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     pb.clearUserPref(null); },  Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {

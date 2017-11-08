@@ -29,7 +29,6 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
   readonly attribute nsIDOMHTMLCollection links;
   readonly attribute nsIDOMHTMLCollection forms;
   readonly attribute nsIDOMHTMLCollection scripts;
-  nsIDOMNodeList            getElementsByName(in DOMString elementName);
 
   // If aContentType is not something supported by nsHTMLDocument and
   // the HTML content sink, trying to write to the document will

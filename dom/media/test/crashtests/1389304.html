@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: Negative duration.</title>
+</head>
+<body>
+
+<video id="v" controls src="1389304.mp4">
+</video>
+<p id="msg"></p>
+
+<script type="text/javascript">
+
+function log(x) {
+  msg.innerHTML = x + "<br>";
+}
+
+v.play();
+v.onended = function() {
+	log("endded!");
+	let seekable = v.seekable;
+	for (let i = 0; i < seekable.length; ++i) {
+		let start = seekable.start(i);
+		let end = seekable.end(i);
+		log(`[${i}]: start=${start} end=${end}`);
+	}
+}
+
+</script>
+
+</body>
+</html>
