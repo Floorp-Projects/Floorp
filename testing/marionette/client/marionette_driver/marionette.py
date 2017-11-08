@@ -687,34 +687,21 @@ class Marionette(object):
         starttime = datetime.datetime.now()
         timeout_time = starttime + datetime.timedelta(seconds=timeout)
 
+        client = transport.TcpTransport(self.host, self.port, 0.5)
+
         connected = False
         while datetime.datetime.now() < timeout_time:
             # If the instance we want to connect to is not running return immediately
             if runner is not None and not runner.is_running():
                 break
 
-            sock = None
             try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(0.5)
-                sock.connect((self.host, self.port))
-                data = sock.recv(16)
-
-                # If the application starts up very slowly (eg. Fennec on Android
-                # emulator) a response package has to be received first. Otherwise
-                # start_session will fail (see bug 1410366 comment 32 ff.)
-                if ":" in data:
-                    connected = True
-                    break
+                client.connect()
+                return True
             except socket.error:
                 pass
             finally:
-                if sock is not None:
-                    try:
-                        sock.shutdown(socket.SHUT_RDWR)
-                    except:
-                        pass
-                    sock.close()
+                client.close()
 
             time.sleep(poll_interval)
 
