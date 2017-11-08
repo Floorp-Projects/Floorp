@@ -781,7 +781,7 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
   margin-inline-end: 0.25em !important;
 }
 
-#main-window[customizing] :-moz-any(#urlbar, .searchbar-textbox) > .autocomplete-textbox-container > .textbox-input-box {
+#main-window[customizing] :-moz-any(#urlbar, .searchbar-textbox) > .urlbar-textbox-container > .textbox-input-box {
   visibility: hidden;
 }
 
