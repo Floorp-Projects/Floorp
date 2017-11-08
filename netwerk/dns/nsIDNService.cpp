@@ -102,14 +102,14 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
   mLock.AssertCurrentThreadOwns();
 
   if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNBLACKLIST).Equals(pref)) {
-    nsAutoCString blacklist;
-    nsresult rv =
-      prefBranch->GetStringPref(NS_NET_PREF_IDNBLACKLIST, EmptyCString(), 0, blacklist);
-    if (NS_SUCCEEDED(rv)) {
-      CopyUTF8toUTF16(blacklist, mIDNBlacklist);
-    } else {
+    nsCOMPtr<nsISupportsString> blacklist;
+    nsresult rv = prefBranch->GetComplexValue(NS_NET_PREF_IDNBLACKLIST,
+                                              NS_GET_IID(nsISupportsString),
+                                              getter_AddRefs(blacklist));
+    if (NS_SUCCEEDED(rv))
+      blacklist->ToString(getter_Copies(mIDNBlacklist));
+    else
       mIDNBlacklist.Truncate();
-    }
   }
   if (!pref || NS_LITERAL_STRING(NS_NET_PREF_SHOWPUNYCODE).Equals(pref)) {
     bool val;

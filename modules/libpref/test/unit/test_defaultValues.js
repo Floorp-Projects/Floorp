@@ -36,6 +36,13 @@ function run_test() {
   ps.setStringPref(prefName, "éèçàê€");
   strictEqual(ps.getStringPref(prefName), "éèçàê€");
   strictEqual(ps.getStringPref(prefName, "string"), "éèçàê€");
+  strictEqual(ps.getStringPref(prefName),
+              ps.getComplexValue(prefName, Ci.nsISupportsString).data);
+  let str = Cc["@mozilla.org/supports-string;1"].
+              createInstance(Ci.nsISupportsString);
+  str.data = "ù€ÚîœïŒëøÇ“";
+  ps.setComplexValue(prefName, Ci.nsISupportsString, str);
+  strictEqual(ps.getStringPref(prefName), "ù€ÚîœïŒëøÇ“");
 
   prefName = "test.default.values.float";
   do_check_throws(function() { ps.getFloatPref(prefName); },
