@@ -24,9 +24,8 @@ namespace mozilla {
 class ChannelSuspendAgent
 {
 public:
-  ChannelSuspendAgent(nsIChannel* aChannel, MediaCacheStream& aCacheStream)
-    : mChannel(aChannel)
-    , mCacheStream(aCacheStream)
+  explicit ChannelSuspendAgent(MediaCacheStream& aCacheStream)
+    : mCacheStream(aCacheStream)
   {
   }
 
@@ -40,21 +39,16 @@ public:
   // Return true only when the suspend count is equal to zero.
   bool Resume();
 
-  // Call after opening channel, set channel and check whether the channel
-  // needs to be suspended.
-  void NotifyChannelOpened(nsIChannel* aChannel);
-
-  // Call before closing channel, reset the channel internal status if needed.
-  void NotifyChannelClosing();
-
-  // Check whether we need to suspend the channel.
-  void UpdateSuspendedStatusIfNeeded();
+  // Tell the agent to manage the suspend status of the channel.
+  void Delegate(nsIChannel* aChannel);
+  // Stop the management of the suspend status of the channel.
+  void Revoke();
 
 private:
   // Only suspends channel but not changes the suspend count.
   void SuspendInternal();
 
-  nsIChannel* mChannel;
+  nsIChannel* mChannel = nullptr;
   MediaCacheStream& mCacheStream;
   uint32_t mSuspendCount = 0;
   bool mIsChannelSuspended = false;
