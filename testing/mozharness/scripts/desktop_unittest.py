@@ -674,7 +674,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
            Create the system-info.log artifact file, containing a variety of
            system information that might be useful in diagnosing test failures.
         """
-        import psutil
+        try:
+            import psutil
+        except:
+            return
         dir = self.query_abs_dirs()['abs_blob_upload_dir']
         self.mkdir_p(dir)
         path = os.path.join(dir, "system-info.log")
