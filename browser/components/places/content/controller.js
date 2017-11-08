@@ -1314,31 +1314,11 @@ PlacesController.prototype = {
 
     let itemsToSelect = [];
     if (PlacesUIUtils.useAsyncTransactions) {
-      let transactions = [];
-      if (ip.isTag) {
-        let urls = items.filter(item => "uri" in item).map(item => Services.io.newURI(item.uri));
-        transactions.push(PlacesTransactions.Tag({ urls, tag: ip.tagName }));
-      } else {
-        let insertionIndex = await ip.getIndex();
-        let doCopy = action == "copy";
-        let newTransactions = await getTransactionsForTransferItems(
-          items, insertionIndex, ip.guid, doCopy);
-        if (newTransactions.length) {
-          transactions = [...transactions, ...newTransactions];
-        }
-      }
-      // Note: this._view may be a view or the tree element.
-      let resultForBatching = getResultForBatching(this._view);
+      let doCopy = action == "copy";
+      let guidsToSelect = await handleTransferItems(items, ip, doCopy, this._view);
 
-      await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
-        transactions.length, async () => {
-          await PlacesTransactions.batch(async () => {
-            for (let transaction of transactions) {
-              let guid = await transaction.transact();
-              itemsToSelect.push(await PlacesUtils.promiseItemId(guid));
-            }
-          });
-        });
+      let guidsToIdMap = await PlacesUtils.promiseManyItemIds(guidsToSelect);
+      itemsToSelect = Array.from(guidsToIdMap.values());
     } else {
       let transactions = [];
       let insertionIndex = await ip.getIndex();
@@ -1620,7 +1600,6 @@ var PlacesControllerDragHelper = {
     let transactions = [];
     let dropCount = dt.mozItemCount;
     let parentGuid = insertionPoint.guid;
-    let tagName = insertionPoint.tagName;
 
     // Following flavors may contain duplicated data.
     let duplicable = new Map();
@@ -1667,29 +1646,7 @@ var PlacesControllerDragHelper = {
         }
       }
 
-      // If dragging over a tag container we should tag the item.
-      if (insertionPoint.isTag) {
-        let urls = nodes.filter(item => "uri" in item).map(item => item.uri);
-        transactions.push(PlacesTransactions.Tag({ urls, tag: tagName }));
-      } else {
-        let insertionIndex = await insertionPoint.getIndex();
-        let newTransactions = await getTransactionsForTransferItems(
-          nodes, insertionIndex, parentGuid, doCopy);
-        if (newTransactions.length) {
-          transactions = [...transactions, ...newTransactions];
-        }
-      }
-
-      // Check if we actually have something to add, if we don't it probably wasn't
-      // valid, or it was moving to the same location, so just ignore it.
-      if (!transactions.length) {
-        return;
-      }
-      let resultForBatching = getResultForBatching(view);
-      await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
-        transactions.length, async () => {
-          await PlacesTransactions.batch(transactions);
-        });
+      await handleTransferItems(nodes, insertionPoint, doCopy, view);
     } else {
       for (let {flavor, data} of dtItems) {
         let nodes;
@@ -1861,6 +1818,60 @@ function getResultForBatching(viewOrElement) {
   }
 
   return null;
+}
+
+/**
+ * Processes a set of transfer items that have been dropped or pasted.
+ * Batching will be applied where necessary.
+ *
+ * @param {Array} items A list of unwrapped nodes to process.
+ * @param {Object} insertionPoint The requested point for insertion.
+ * @param {Boolean} doCopy Set to true to copy the items, false will move them
+ *                         if possible.
+ * @return {Array} Returns an empty array when the insertion point is a tag, else
+ *                 returns an array of copied or moved guids.
+ */
+async function handleTransferItems(items, insertionPoint, doCopy, view) {
+  let transactions;
+  if (insertionPoint.isTag) {
+    let urls = items.filter(item => "uri" in item).map(item => item.uri);
+    transactions = [PlacesTransactions.Tag({ urls, tag: insertionPoint.tagName })];
+  } else {
+    let insertionIndex = await insertionPoint.getIndex();
+    transactions = await getTransactionsForTransferItems(
+      items, insertionIndex, insertionPoint.guid, doCopy);
+  }
+
+  // Check if we actually have something to add, if we don't it probably wasn't
+  // valid, or it was moving to the same location, so just ignore it.
+  if (!transactions.length) {
+    return [];
+  }
+
+  let guidsToSelect = [];
+  let resultForBatching = getResultForBatching(view);
+
+  // If we're inserting into a tag, we don't get the guid, so we'll just
+  // pass the transactions direct to the batch function.
+  let batchingItem = transactions;
+  if (!insertionPoint.isTag) {
+    // If we're not a tag, then we need to get the ids of the items to select.
+    batchingItem = async () => {
+      for (let transaction of transactions) {
+        let guid = await transaction.transact();
+        if (guid) {
+          guidsToSelect.push(guid);
+        }
+      }
+    };
+  }
+
+  await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
+    transactions.length, async () => {
+      await PlacesTransactions.batch(batchingItem);
+    });
+
+  return guidsToSelect;
 }
 
 /**
