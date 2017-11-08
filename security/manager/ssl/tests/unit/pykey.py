@@ -538,7 +538,9 @@ class RSAKey(object):
         privateKeyInfo.setComponentByName('version', 0)
         algorithmIdentifier = rfc2459.AlgorithmIdentifier()
         algorithmIdentifier.setComponentByName('algorithm', rfc2459.rsaEncryption)
-        algorithmIdentifier.setComponentByName('parameters', univ.Null())
+        # Directly setting parameters to univ.Null doesn't currently work.
+        nullEncapsulated = encoder.encode(univ.Null())
+        algorithmIdentifier['parameters'] = univ.Any(nullEncapsulated)
         privateKeyInfo.setComponentByName('privateKeyAlgorithm', algorithmIdentifier)
         rsaPrivateKey = RSAPrivateKey()
         rsaPrivateKey.setComponentByName('version', 0)
@@ -569,7 +571,9 @@ class RSAKey(object):
         this key for use by pyasn1."""
         algorithmIdentifier = rfc2459.AlgorithmIdentifier()
         algorithmIdentifier.setComponentByName('algorithm', rfc2459.rsaEncryption)
-        algorithmIdentifier.setComponentByName('parameters', univ.Null())
+        # Directly setting parameters to univ.Null doesn't currently work.
+        nullEncapsulated = encoder.encode(univ.Null())
+        algorithmIdentifier['parameters'] = univ.Any(nullEncapsulated)
         spki = rfc2459.SubjectPublicKeyInfo()
         spki.setComponentByName('algorithm', algorithmIdentifier)
         rsaKey = RSAPublicKey()

@@ -85,7 +85,7 @@ generated based on the contents of the certificate.
 
 from pyasn1.codec.der import decoder
 from pyasn1.codec.der import encoder
-from pyasn1.type import constraint, namedtype, tag, univ, useful
+from pyasn1.type import constraint, tag, univ, useful
 from pyasn1_modules import rfc2459
 from struct import pack
 import base64
@@ -96,30 +96,6 @@ import sys
 
 import pyct
 import pykey
-
-# The GeneralSubtree definition in pyasn1_modules.rfc2459 is incorrect.
-# Where this definition uses a DefaultedNamedType, pyasn1_modules uses
-# a NamedType, which results in the default value being explicitly
-# encoded, which is incorrect for DER.
-class GeneralSubtree(univ.Sequence):
-    componentType = namedtype.NamedTypes(
-        namedtype.NamedType('base', rfc2459.GeneralName()),
-        namedtype.DefaultedNamedType('minimum', rfc2459.BaseDistance(0).subtype(
-            implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))),
-        namedtype.OptionalNamedType('maximum', rfc2459.BaseDistance().subtype(
-            implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 1)))
-    )
-
-
-# The NameConstraints definition in pyasn1_modules.rfc2459 is incorrect.
-# excludedSubtrees has a tag value of 1, not 0.
-class NameConstraints(univ.Sequence):
-    componentType = namedtype.NamedTypes(
-        namedtype.OptionalNamedType('permittedSubtrees', rfc2459.GeneralSubtrees().subtype(
-            implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))),
-        namedtype.OptionalNamedType('excludedSubtrees', rfc2459.GeneralSubtrees().subtype(
-            implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 1)))
-    )
 
 
 class Error(Exception):
@@ -244,7 +220,7 @@ class InvalidSerialNumber(Error):
 def getASN1Tag(asn1Type):
     """Helper function for returning the base tag value of a given
     type from the pyasn1 package"""
-    return asn1Type.baseTagSet.getBaseTag().asTuple()[2]
+    return asn1Type.tagSet.baseTag.tagId
 
 def stringToAccessDescription(string):
     """Helper function that takes a string representing a URI
@@ -322,15 +298,20 @@ def stringToAlgorithmIdentifiers(string):
     algorithmIdentifier = rfc2459.AlgorithmIdentifier()
     algorithmType = None
     algorithm = None
+    # We add Null parameters for RSA only
+    addParameters = False
     if string == 'sha1WithRSAEncryption':
         algorithmType = pykey.HASH_SHA1
         algorithm = rfc2459.sha1WithRSAEncryption
+        addParameters = True
     elif string == 'sha256WithRSAEncryption':
         algorithmType = pykey.HASH_SHA256
         algorithm = univ.ObjectIdentifier('1.2.840.113549.1.1.11')
+        addParameters = True
     elif string == 'md5WithRSAEncryption':
         algorithmType = pykey.HASH_MD5
         algorithm = rfc2459.md5WithRSAEncryption
+        addParameters = True
     elif string == 'ecdsaWithSHA256':
         algorithmType = pykey.HASH_SHA256
         algorithm = univ.ObjectIdentifier('1.2.840.10045.4.3.2')
@@ -342,7 +323,11 @@ def stringToAlgorithmIdentifiers(string):
         algorithm = univ.ObjectIdentifier('1.2.840.10045.4.3.4')
     else:
         raise UnknownAlgorithmTypeError(string)
-    algorithmIdentifier.setComponentByName('algorithm', algorithm)
+    algorithmIdentifier['algorithm'] = algorithm
+    if addParameters:
+        # Directly setting parameters to univ.Null doesn't currently work.
+        nullEncapsulated = encoder.encode(univ.Null())
+        algorithmIdentifier['parameters'] = univ.Any(nullEncapsulated)
     return (algorithmIdentifier, algorithmType)
 
 def datetimeToTime(dt):
@@ -533,7 +518,7 @@ class Certificate(object):
         if pathLenConstraint:
             pathLenConstraintValue = \
                 univ.Integer(int(pathLenConstraint)).subtype(
-                    subtypeSpec=constraint.ValueRangeConstraint(0, 64))
+                    subtypeSpec=constraint.ValueRangeConstraint(0, float('inf')))
             basicConstraintsExtension.setComponentByName('pathLenConstraint',
                                                          pathLenConstraintValue)
         self.addExtension(rfc2459.id_ce_basicConstraints, basicConstraintsExtension, critical)
@@ -544,9 +529,7 @@ class Certificate(object):
 
     def keyPurposeToOID(self, keyPurpose):
         if keyPurpose == 'serverAuth':
-            # the OID for id_kp_serverAuth is incorrect in the
-            # pyasn1-modules implementation
-            return univ.ObjectIdentifier('1.3.6.1.5.5.7.3.1')
+            return rfc2459.id_kp_serverAuth
         if keyPurpose == 'clientAuth':
             return rfc2459.id_kp_clientAuth
         if keyPurpose == 'codeSigning':
@@ -601,7 +584,7 @@ class Certificate(object):
         self.addExtension(rfc2459.id_ce_certificatePolicies, policies, critical)
 
     def addNameConstraints(self, constraints, critical):
-        nameConstraints = NameConstraints()
+        nameConstraints = rfc2459.NameConstraints()
         if constraints.startswith('permitted:'):
             (subtreesType, subtreesTag) = ('permittedSubtrees', 0)
         elif constraints.startswith('excluded:'):
@@ -619,7 +602,7 @@ class Certificate(object):
                 generalName.setComponentByName('directoryName', directoryName)
             else:
                 generalName.setComponentByName('dNSName', name)
-            generalSubtree = GeneralSubtree()
+            generalSubtree = rfc2459.GeneralSubtree()
             generalSubtree.setComponentByName('base', generalName)
             generalSubtrees.setComponentByPosition(pos, generalSubtree)
         nameConstraints.setComponentByName(subtreesType, generalSubtrees)
