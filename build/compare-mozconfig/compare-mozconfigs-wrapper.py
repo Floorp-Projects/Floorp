@@ -8,7 +8,6 @@ from __future__ import unicode_literals
 import logging
 import mozunit
 import subprocess
-import sys
 import unittest
 
 from os import path
