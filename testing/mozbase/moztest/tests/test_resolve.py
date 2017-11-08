@@ -13,7 +13,6 @@ import unittest
 
 import mozpack.path as mozpath
 import mozunit
-import pytest
 from mozbuild.base import MozbuildObject
 from mozfile import NamedTemporaryFile
 
@@ -323,6 +322,22 @@ class TestTestResolver(Base):
         for t in tests:
             path = t['file_relpath']
             self.assertTrue(path.startswith('accessible') or path.endswith('.js'))
+
+    def test_resolve_metadata(self):
+        """Test finding metadata from outgoing files."""
+        r = self._get_resolver()
+
+        suites, tests = r.resolve_metadata(['bc'])
+        assert suites == {'mochitest-browser'}
+        assert tests == []
+
+        suites, tests = r.resolve_metadata(['mochitest-a11y', 'browser', 'xpcshell'])
+        assert suites == {'mochitest-a11y', 'xpcshell'}
+        assert sorted(t['file_relpath'] for t in tests) == [
+            'devtools/client/markupview/test/browser_markupview_copy_image_data.js',
+            'image/test/browser/browser_bug666317.js',
+            'mobile/android/tests/browser/junit3/src/TestDistribution.java',
+        ]
 
 
 if __name__ == '__main__':
