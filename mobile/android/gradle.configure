@@ -36,6 +36,75 @@ def gradle(value, build_env):
 set_config('GRADLE', gradle)
 
 
+@dependable
+@imports(_from='itertools', _import='chain')
+def gradle_android_build_config():
+    def capitalize(s):
+        # str.capitalize lower cases trailing letters.
+        if s:
+            return s[0].upper() + s[1:]
+        else:
+            return s
+
+    # It's not really possible to abstract the GeckoView details just yet; post
+    # Android-Gradle plugin 3.0+, the configurations can be more sensible and
+    # we'll do this work.
+    def variant(productFlavors, buildType):
+        return namespace(
+            productFlavors=productFlavors,
+            buildType=buildType,
+            # Like 'OfficialWithoutGeckoBinariesPhotonDebug'
+            name = ''.join(capitalize(t) for t in chain(productFlavors, (buildType, )))
+        )
+
+    return namespace(
+        app=namespace(
+            variant=variant(('official', 'photon'), 'debug'),
+        ),
+    )
+
+
+@depends(gradle_android_build_config)
+def gradle_android_app_variant_name(build_config):
+    '''Like "officialPhotonDebug".'''
+    def uncapitalize(s):
+        if s:
+            return s[0].lower() + s[1:]
+        else:
+            return s
+
+    return uncapitalize(build_config.app.variant.name)
+
+set_config('GRADLE_ANDROID_APP_VARIANT_NAME', gradle_android_app_variant_name)
+
+
+@depends(gradle_android_build_config)
+def gradle_android_app_tasks(build_config):
+    '''Gradle tasks run by |mach android assemble-app|.'''
+    return [
+        'geckoview:generateJNIWrappersForGeneratedRelease',
+        'app:generateJNIWrappersForFennec{app.variant.name}'.format(app=build_config.app),
+        'app:assemble{app.variant.name}'.format(app=build_config.app),
+        'app:assemble{app.variant.name}AndroidTest'.format(app=build_config.app),
+    ]
+
+set_config('GRADLE_ANDROID_APP_TASKS', gradle_android_app_tasks)
+
+
+@depends(gradle_android_build_config, check_build_environment)
+def gradle_android_app_apks(build_config, build_env):
+    '''Paths to APK files produced by |mach android assemble-app|.'''
+    flavor = '-'.join(build_config.app.variant.productFlavors)
+    buildType = build_config.app.variant.buildType
+    f = '{}/gradle/build/mobile/android/app/outputs/apk/app-{}-{}.apk'
+    g = '{}/gradle/build/mobile/android/app/outputs/apk/app-{}-{}-androidTest.apk'
+    return namespace(app_apk=f.format(build_env.topobjdir, flavor, buildType),
+                     app_androidTest_apk=g.format(build_env.topobjdir, flavor, buildType))
+
+set_config('GRADLE_ANDROID_APP_APK', gradle_android_app_apks.app_apk)
+set_config('GRADLE_ANDROID_APP_ANDROIDTEST_APK', gradle_android_app_apks.app_androidTest_apk)
+
+
 # Automation uses this to change log levels, not use the daemon, and use
 # offline mode.
 option(env='GRADLE_FLAGS', default='', help='Flags to pass to Gradle.')
