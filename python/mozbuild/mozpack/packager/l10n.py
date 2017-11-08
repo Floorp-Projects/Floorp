@@ -220,7 +220,8 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
     # if localized versions are present in the l10n dir, we package them as well
     # keeping the source dir resources as a runtime fallback.
     for p, f in l10n_finder.find('**/localization'):
-        formatter.add(p, f)
+        if not formatter.contains(p):
+            formatter.add(p, f)
 
     # Transplant jar preloading information.
     for path, log in app_finder.jarlogs.iteritems():

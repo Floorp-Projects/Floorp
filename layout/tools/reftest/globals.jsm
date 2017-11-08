@@ -25,6 +25,10 @@ for (let [key, val] of Object.entries({
   TYPE_PRINT: 'print',   // test and reference will be printed to PDF's and
                          // compared structurally
 
+  // keep this in sync with reftest-content.js
+  URL_TARGET_TYPE_TEST: 0,      // first url
+  URL_TARGET_TYPE_REFERENCE: 1, // second url, if any
+
   // The order of these constants matters, since when we have a status
   // listed for a *manifest*, we combine the status with the status for
   // the test by using the *larger*.
@@ -102,8 +106,8 @@ for (let [key, val] of Object.entries({
       Slow: 0,
     },
     totalTests: 0,
-    state: undefined,
     currentURL: undefined,
+    currentURLTargetType: undefined,
     testLog: [],
     logLevel: undefined,
     logFile: null,
