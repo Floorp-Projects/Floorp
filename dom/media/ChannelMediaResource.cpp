@@ -29,7 +29,6 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
                                            nsIURI* aURI,
                                            bool aIsPrivateBrowsing)
   : BaseMediaResource(aCallback, aChannel, aURI)
-  , mReopenOnError(false)
   , mCacheStream(this, aIsPrivateBrowsing)
   , mSuspendAgent(mChannel, mCacheStream)
 {
@@ -41,7 +40,6 @@ ChannelMediaResource::ChannelMediaResource(
   nsIURI* aURI,
   const MediaChannelStatistics& aStatistics)
   : BaseMediaResource(aCallback, aChannel, aURI)
-  , mReopenOnError(false)
   , mCacheStream(this, /* aIsPrivateBrowsing = */ false)
   , mChannelStatistics(aStatistics)
   , mSuspendAgent(mChannel, mCacheStream)
@@ -86,7 +84,7 @@ ChannelMediaResource::Listener::OnStopRequest(nsIRequest* aRequest,
   MOZ_ASSERT(NS_IsMainThread());
   if (!mResource)
     return NS_OK;
-  return mResource->OnStopRequest(aRequest, aStatus);
+  return mResource->OnStopRequest(aRequest, aStatus, mReopenOnError);
 }
 
 nsresult
@@ -296,7 +294,6 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
   mCacheStream.NotifyDataStarted(mLoadID, startOffset, seekable);
   mIsTransportSeekable = seekable;
   mChannelStatistics.Start();
-  mReopenOnError = false;
 
   mSuspendAgent.UpdateSuspendedStatusIfNeeded();
 
@@ -371,7 +368,9 @@ ChannelMediaResource::ParseContentRangeHeader(nsIHttpChannel * aHttpChan,
 }
 
 nsresult
-ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
+ChannelMediaResource::OnStopRequest(nsIRequest* aRequest,
+                                    nsresult aStatus,
+                                    bool aReopenOnError)
 {
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
   NS_ASSERTION(!mSuspendAgent.IsSuspended(),
@@ -386,7 +385,7 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
   // cases where we don't need to reopen are when *we* closed the stream.
   // But don't reopen if we need to seek and we don't think we can... that would
   // cause us to just re-read the stream, which would be really bad.
-  if (mReopenOnError && aStatus != NS_ERROR_PARSED_DATA_CACHED &&
+  if (aReopenOnError && aStatus != NS_ERROR_PARSED_DATA_CACHED &&
       aStatus != NS_BINDING_ABORTED &&
       (GetOffset() == 0 || (GetLength() > 0 && GetOffset() != GetLength() &&
                             mIsTransportSeekable))) {
@@ -730,7 +729,7 @@ ChannelMediaResource::Resume()
       mChannelStatistics.Start();
       // if an error occurs after Resume, assume it's because the server
       // timed out the connection and we should reopen it.
-      mReopenOnError = true;
+      mListener->SetReopenOnError();
       element->DownloadResumed();
     } else {
       int64_t totalLength = GetLength();
