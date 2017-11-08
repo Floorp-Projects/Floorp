@@ -34,5 +34,5 @@ config = {
         'LD_LIBRARY_PATH': '/tools/gcc-4.3.3/installed/lib64:%(abs_obj_dir)s/dist/bin',
         'TINDERBOX_OUTPUT': '1',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/linux64/noopt-debug',
+    'mozconfig_variant': 'noopt-debug',
 }

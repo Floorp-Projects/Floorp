@@ -81,7 +81,7 @@ config = {
         'gstreamer-plugins-base-devel', 'freetype-2.3.11-6.el6_1.8.x86_64',
         'freetype-devel-2.3.11-6.el6_1.8.x86_64'
     ],
-    'src_mozconfig': 'browser/config/mozconfigs/linux64/debug-artifact',
+    'mozconfig_variant': 'debug-artifact',
     'tooltool_manifest_src': "browser/config/tooltool-manifests/linux64/\
 releng.manifest",
     #######################

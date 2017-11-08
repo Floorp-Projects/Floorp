@@ -36,6 +36,6 @@ config = {
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
         ##
     },
-    'src_mozconfig': 'browser/config/mozconfigs/macosx64/add-on-devel',
+    'mozconfig_variant': 'add-on-devel',
     #######################
 }

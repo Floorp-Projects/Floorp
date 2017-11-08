@@ -60,7 +60,8 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s\\breakpad\\win64\\minidump_stackwalk.exe',
         'MINIDUMP_SAVE_PATH': os.path.join(os.getcwd(), 'public', 'build'),
     },
-    'src_mozconfig': 'browser\\config\\mozconfigs\\win64\\rusttests',
+    'mozconfig_platform': 'win64',
+    'mozconfig_variant': 'rusttests',
     'artifact_flag_build_variant_in_try': None,
     #########################################################################
 }

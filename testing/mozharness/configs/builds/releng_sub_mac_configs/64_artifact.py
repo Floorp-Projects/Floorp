@@ -54,7 +54,7 @@ config = {
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
         ##
     },
-    'src_mozconfig': 'browser/config/mozconfigs/macosx64/artifact',
+    'mozconfig_variant': 'artifact',
     'tooltool_manifest_src': 'browser/config/tooltool-manifests/macosx64/releng.manifest',
     #########################################################################
 }
