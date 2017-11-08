@@ -1314,12 +1314,11 @@ PlacesController.prototype = {
 
     let itemsToSelect = [];
     if (PlacesUIUtils.useAsyncTransactions) {
+      let transactions = [];
       if (ip.isTag) {
         let urls = items.filter(item => "uri" in item).map(item => Services.io.newURI(item.uri));
-        await PlacesTransactions.Tag({ urls, tag: ip.tagName }).transact();
+        transactions.push(PlacesTransactions.Tag({ urls, tag: ip.tagName }));
       } else {
-        let transactions = [];
-
         let insertionIndex = await ip.getIndex();
         let doCopy = action == "copy";
         let newTransactions = await getTransactionsForTransferItems(
@@ -1327,20 +1326,19 @@ PlacesController.prototype = {
         if (newTransactions.length) {
           transactions = [...transactions, ...newTransactions];
         }
-
-        // Note: this._view may be a view or the tree element.
-        let resultForBatching = getResultForBatching(this._view);
-
-        await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
-          transactions.length, async () => {
-            await PlacesTransactions.batch(async () => {
-              for (let transaction of transactions) {
-                let guid = await transaction.transact();
-                itemsToSelect.push(await PlacesUtils.promiseItemId(guid));
-              }
-            });
-          });
       }
+      // Note: this._view may be a view or the tree element.
+      let resultForBatching = getResultForBatching(this._view);
+
+      await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
+        transactions.length, async () => {
+          await PlacesTransactions.batch(async () => {
+            for (let transaction of transactions) {
+              let guid = await transaction.transact();
+              itemsToSelect.push(await PlacesUtils.promiseItemId(guid));
+            }
+          });
+        });
     } else {
       let transactions = [];
       let insertionIndex = await ip.getIndex();
@@ -1648,34 +1646,66 @@ var PlacesControllerDragHelper = {
       dtItems.push({flavor, data});
     }
 
-    for (let {flavor, data} of dtItems) {
-      let nodes;
-      if (flavor != TAB_DROP_TYPE) {
-        nodes = PlacesUtils.unwrapNodes(data, flavor);
-      } else if (data instanceof XULElement && data.localName == "tab" &&
-               data.ownerGlobal.isChromeWindow) {
-        let uri = data.linkedBrowser.currentURI;
-        let spec = uri ? uri.spec : "about:blank";
-        nodes = [{ uri: spec,
-                   title: data.label,
-                   type: PlacesUtils.TYPE_X_MOZ_URL}];
-      } else
-        throw new Error("bogus data was passed as a tab");
-
-      if (PlacesUIUtils.useAsyncTransactions) {
-        // If dragging over a tag container we should tag the item.
-        if (insertionPoint.isTag) {
-          let urls = nodes.filter(item => "uri" in item).map(item => item.uri);
-          transactions.push(PlacesTransactions.Tag({ urls, tag: tagName }));
+    if (PlacesUIUtils.useAsyncTransactions) {
+      let nodes = [];
+      // TODO: When sync transactions are removed, merge the for loop here into the
+      // one above.
+      for (let {flavor, data} of dtItems) {
+        if (flavor != TAB_DROP_TYPE) {
+          nodes = [...nodes, ...PlacesUtils.unwrapNodes(data, flavor)];
+        } else if (data instanceof XULElement && data.localName == "tab" &&
+                 data.ownerGlobal.isChromeWindow) {
+          let uri = data.linkedBrowser.currentURI;
+          let spec = uri ? uri.spec : "about:blank";
+          nodes.push({
+            uri: spec,
+            title: data.label,
+            type: PlacesUtils.TYPE_X_MOZ_URL
+          });
         } else {
-          let insertionIndex = await insertionPoint.getIndex();
-          let newTransactions = await getTransactionsForTransferItems(
-            nodes, insertionIndex, parentGuid, doCopy);
-          if (newTransactions.length) {
-            transactions = [...transactions, ...newTransactions];
-          }
+          throw new Error("bogus data was passed as a tab");
         }
+      }
+
+      // If dragging over a tag container we should tag the item.
+      if (insertionPoint.isTag) {
+        let urls = nodes.filter(item => "uri" in item).map(item => item.uri);
+        transactions.push(PlacesTransactions.Tag({ urls, tag: tagName }));
       } else {
+        let insertionIndex = await insertionPoint.getIndex();
+        let newTransactions = await getTransactionsForTransferItems(
+          nodes, insertionIndex, parentGuid, doCopy);
+        if (newTransactions.length) {
+          transactions = [...transactions, ...newTransactions];
+        }
+      }
+
+      // Check if we actually have something to add, if we don't it probably wasn't
+      // valid, or it was moving to the same location, so just ignore it.
+      if (!transactions.length) {
+        return;
+      }
+      let resultForBatching = getResultForBatching(view);
+      await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
+        transactions.length, async () => {
+          await PlacesTransactions.batch(transactions);
+        });
+    } else {
+      for (let {flavor, data} of dtItems) {
+        let nodes;
+        if (flavor != TAB_DROP_TYPE) {
+          nodes = PlacesUtils.unwrapNodes(data, flavor);
+        } else if (data instanceof XULElement && data.localName == "tab" &&
+                 data.ownerGlobal.isChromeWindow) {
+          let uri = data.linkedBrowser.currentURI;
+          let spec = uri ? uri.spec : "about:blank";
+          nodes = [{ uri: spec,
+                     title: data.label,
+                     type: PlacesUtils.TYPE_X_MOZ_URL}];
+        } else {
+          throw new Error("bogus data was passed as a tab");
+        }
+
         let movedCount = 0;
         for (let unwrapped of nodes) {
           let index = await insertionPoint.getIndex();
@@ -1718,22 +1748,16 @@ var PlacesControllerDragHelper = {
                                 index, doCopy));
           }
         }
+
+        // Check if we actually have something to add, if we don't it probably wasn't
+        // valid, or it was moving to the same location, so just ignore it.
+        if (!transactions.length) {
+          return;
+        }
+
+        let txn = new PlacesAggregatedTransaction("DropItems", transactions);
+        PlacesUtils.transactionManager.doTransaction(txn);
       }
-    }
-    // Check if we actually have something to add, if we don't it probably wasn't
-    // valid, or it was moving to the same location, so just ignore it.
-    if (!transactions.length) {
-      return;
-    }
-    if (PlacesUIUtils.useAsyncTransactions) {
-      let resultForBatching = getResultForBatching(view);
-      await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
-        transactions.length, async () => {
-          await PlacesTransactions.batch(transactions);
-        });
-    } else {
-      let txn = new PlacesAggregatedTransaction("DropItems", transactions);
-      PlacesUtils.transactionManager.doTransaction(txn);
     }
   },
 
