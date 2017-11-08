@@ -1534,6 +1534,13 @@ nsHTMLDocument::Open(JSContext* cx,
     return ret.forget();
   }
 
+  // Implement Step 6 of:
+  // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#document-open-steps
+  if (ShouldIgnoreOpens()) {
+    nsCOMPtr<nsIDocument> ret = this;
+    return ret.forget();
+  }
+
   // No calling document.open() without a script global object
   if (!mScriptGlobalObject) {
     nsCOMPtr<nsIDocument> ret = this;
@@ -1944,6 +1951,12 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
     // Hixie says aborting the parser doesn't undefine the insertion point.
     // However, since we null out mParser in that case, we track the
     // theoretically defined insertion point using mParserAborted.
+    return NS_OK;
+  }
+
+  // Implement Step 4.1 of:
+  // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#document-write-steps
+  if (ShouldIgnoreOpens()) {
     return NS_OK;
   }
 

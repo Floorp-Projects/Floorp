@@ -28,10 +28,6 @@ if test "$OS_ARCH" = "WINNT"; then
   fi
 fi
 
-if test "$NIGHTLY_BUILD"; then
-  MOZ_RUST_URLPARSE=1
-fi
-
 # Enable building ./signmar and running libmar signature tests
 MOZ_ENABLE_SIGNMAR=1
 

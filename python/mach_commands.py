@@ -112,7 +112,7 @@ class MachCommands(MachCommandBase):
         # which produces output in the format Mozilla infrastructure expects.
         # Some tests are run via pytest.
         if test_objects is None:
-            from mozbuild.testing import TestResolver
+            from moztest.resolve import TestResolver
             resolver = self._spawn(TestResolver)
             if tests:
                 # If we were given test paths, try to find tests matching them.

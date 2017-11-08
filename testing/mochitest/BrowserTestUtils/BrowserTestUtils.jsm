@@ -370,7 +370,7 @@ this.BrowserTestUtils = {
   },
 
   /**
-   * Waits for the next tab to open and load a given URL.
+   * Waits for a tab to open and load a given URL.
    *
    * The method doesn't wait for the tab contents to load.
    *
@@ -380,6 +380,9 @@ this.BrowserTestUtils = {
    *        A string URL to look for in the new tab. If null, allows any non-blank URL.
    * @param {boolean} waitForLoad
    *        True to wait for the page in the new tab to load. Defaults to false.
+   * @param {boolean} waitForAnyTab
+   *        True to wait for the url to be loaded in any new tab, not just the next
+   *        one opened.
    *
    * @return {Promise}
    * @resolves With the {xul:tab} when a tab is opened and its location changes
@@ -388,11 +391,14 @@ this.BrowserTestUtils = {
    * NB: this method will not work if you open a new tab with e.g. BrowserOpenTab
    * and the tab does not load a URL, because no onLocationChange will fire.
    */
-  waitForNewTab(tabbrowser, url, waitForLoad = false) {
+  waitForNewTab(tabbrowser, url, waitForLoad = false, waitForAnyTab = false) {
     let urlMatches = url ? (urlToMatch) => urlToMatch == url
                          : (urlToMatch) => urlToMatch != "about:blank";
     return new Promise((resolve, reject) => {
-      tabbrowser.tabContainer.addEventListener("TabOpen", function(openEvent) {
+      tabbrowser.tabContainer.addEventListener("TabOpen", function tabOpenListener(openEvent) {
+        if (!waitForAnyTab) {
+          tabbrowser.tabContainer.removeEventListener("TabOpen", tabOpenListener);
+        }
         let newTab = openEvent.target;
         let newBrowser = newTab.linkedBrowser;
         let result;
@@ -417,14 +423,15 @@ this.BrowserTestUtils = {
             if (!urlMatches(aBrowser.currentURI.spec)) {
               return;
             }
-
+            if (waitForAnyTab) {
+              tabbrowser.tabContainer.removeEventListener("TabOpen", tabOpenListener);
+            }
             tabbrowser.removeTabsProgressListener(progressListener);
             resolve(result);
           },
         };
         tabbrowser.addTabsProgressListener(progressListener);
-
-      }, {once: true});
+      });
     });
   },
 
