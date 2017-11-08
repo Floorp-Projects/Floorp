@@ -4,13 +4,11 @@
 
 "use strict";
 
-const {
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { div } = DOM;
+const { div } = dom;
 
 // Components
 const StackTrace = createFactory(require("devtools/client/shared/components/StackTrace"));

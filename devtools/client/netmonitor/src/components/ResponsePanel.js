@@ -4,12 +4,9 @@
 
 "use strict";
 
-const {
-  Component,
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { L10N } = require("../utils/l10n");
 const {
   decodeUnicodeBase64,
@@ -21,7 +18,7 @@ const { Filters } = require("../utils/filter-predicates");
 // Components
 const PropertiesView = createFactory(require("./PropertiesView"));
 
-const { div, img } = DOM;
+const { div, img } = dom;
 const JSON_SCOPE_NAME = L10N.getStr("jsonScopeName");
 const JSON_FILTER_TEXT = L10N.getStr("jsonFilterText");
 const RESPONSE_IMG_NAME = L10N.getStr("netmonitor.response.name");
