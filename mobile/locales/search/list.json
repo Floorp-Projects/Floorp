@@ -544,6 +544,13 @@
         ]
       }
     },
+    "oc": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo-france", "bing", "wikipedia-oc", "wiktionary-oc"
+        ]
+      }
+    },
     "or": {
       "default": {
         "visibleDefaultEngines": [
