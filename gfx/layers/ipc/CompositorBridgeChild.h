@@ -215,10 +215,6 @@ public:
                                                     wr::IdNamespace*) override;
   bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor) override;
 
-  uint64_t DeviceResetSequenceNumber() const {
-    return mDeviceResetSequenceNumber;
-  }
-
   wr::MaybeExternalImageId GetNextExternalImageId() override;
 
   wr::PipelineId GetNextPipelineId();
@@ -357,11 +353,6 @@ private:
    * It is incrementaed by UpdateFwdTransactionId() in each BeginTransaction() call.
    */
   uint64_t mFwdTransactionId;
-
-  /**
-   * Last sequence number recognized for a device reset.
-   */
-  uint64_t mDeviceResetSequenceNumber;
 
   /**
    * Hold TextureClients refs until end of their usages on host side.
