@@ -24,6 +24,7 @@ import java.util.List;
 
 public class SearchEngineChooserPreference extends Preference implements RadioGroup.OnCheckedChangeListener {
     private List<SearchEngine> searchEngines;
+    private RadioGroup searchEngineGroup;
 
     public SearchEngineChooserPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -38,9 +39,9 @@ public class SearchEngineChooserPreference extends Preference implements RadioGr
     @Override
     protected View onCreateView(ViewGroup parent) {
         final View layoutView = super.onCreateView(parent);
-        final RadioGroup searchEngineGroup = layoutView.findViewById(R.id.search_engine_group);
+        searchEngineGroup = layoutView.findViewById(R.id.search_engine_group);
         searchEngineGroup.setOnCheckedChangeListener(this);
-        refreshSearchEngines(searchEngineGroup);
+        refreshSearchEngines();
         return layoutView;
     }
 
@@ -49,15 +50,19 @@ public class SearchEngineChooserPreference extends Preference implements RadioGr
         Settings.getInstance(group.getContext()).setDefaultSearchEngine(searchEngines.get(checkedId));
     }
 
-    private void refreshSearchEngines(final RadioGroup engineRadioGroup) {
+    public void refreshSearchEngines() {
+        if (searchEngineGroup == null) {
+            // There is no search engine group yet.
+            return;
+        }
         final SearchEngineManager sem = SearchEngineManager.getInstance();
-        final Context context = engineRadioGroup.getContext();
+        final Context context = searchEngineGroup.getContext();
         final Resources resources = context.getResources();
 
         searchEngines = sem.getSearchEngines();
         final String defaultSearchEngine = sem.getDefaultSearchEngine(context).getIdentifier();
 
-        engineRadioGroup.removeAllViews();
+        searchEngineGroup.removeAllViews();
 
         final LayoutInflater layoutInflater = LayoutInflater.from(context);
         final RecyclerView.LayoutParams layoutParams = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -69,7 +74,7 @@ public class SearchEngineChooserPreference extends Preference implements RadioGr
             if (engine.getIdentifier().equals(defaultSearchEngine)) {
                 engineItem.setChecked(true);
             }
-            engineRadioGroup.addView(engineItem, layoutParams);
+            searchEngineGroup.addView(engineItem, layoutParams);
         }
     }
 

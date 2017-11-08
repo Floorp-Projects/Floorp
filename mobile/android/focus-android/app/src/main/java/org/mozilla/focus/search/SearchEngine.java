@@ -146,6 +146,9 @@ public class SearchEngine {
                 .putStringSet(PREF_KEY_CUSTOM_SEARCH_ENGINES, newEngines)
                 .putString(engineName, searchEngineXml)
                 .apply();
+
+        // Force SearchEngineManager to refetch, to get the newest search engine.
+        SearchEngineManager.getInstance().init(context);
         return true;
     }
 

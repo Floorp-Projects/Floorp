@@ -21,6 +21,7 @@ import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.locale.Locales;
+import org.mozilla.focus.search.SearchEngineChooserPreference;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
@@ -144,6 +145,18 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                 R.string.menu_settings;
         updater.updateTitle(titleResId);
         updater.updateIcon(R.drawable.ic_back);
+
+        // TODO: #1671 would add Enum types so figuring out the current Settings screen is cleaner
+        if (args != null && args.getInt(PREFERENCES_RESID_INTENT_EXTRA, 0) == R.xml.search_engine_settings_featureflag_manual) {
+            final PreferenceScreen prefScreen = getPreferenceScreen();
+            final int prefCount = prefScreen.getPreferenceCount();
+            for (int i = 0; i < prefCount; i++) {
+                final Preference pref = prefScreen.getPreference(i);
+                if (pref instanceof SearchEngineChooserPreference) {
+                    ((SearchEngineChooserPreference) pref).refreshSearchEngines();
+                }
+            }
+        }
     }
 
     @Override
