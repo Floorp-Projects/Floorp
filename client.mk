@@ -56,14 +56,6 @@ CONFIG_GUESS := $(shell $(TOPSRCDIR)/build/autoconf/config.guess)
 # Windows checks.
 ifneq (,$(findstring mingw,$(CONFIG_GUESS)))
 
-# check for CRLF line endings
-ifneq (0,$(shell $(PERL) -e 'binmode(STDIN); while (<STDIN>) { if (/\r/) { print "1"; exit } } print "0"' < $(TOPSRCDIR)/client.mk))
-$(error This source tree appears to have Windows-style line endings. To \
-convert it to Unix-style line endings, check \
-"https://developer.mozilla.org/en-US/docs/Developer_Guide/Mozilla_build_FAQ\#Win32-specific_questions" \
-for a workaround of this issue.)
-endif
-
 # Set this for baseconfig.mk
 HOST_OS_ARCH=WINNT
 endif
