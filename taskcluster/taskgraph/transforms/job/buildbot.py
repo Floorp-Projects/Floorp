@@ -30,7 +30,6 @@ buildbot_run_schema = Schema({
     Required('product'): Any('firefox', 'mobile', 'fennec', 'devedition', 'thunderbird'),
 
     Optional('release-promotion'): bool,
-    Optional('routes'): [basestring],
     Optional('properties'): {basestring: optionally_keyed_by('project', basestring)},
 })
 
@@ -40,9 +39,6 @@ def bb_release_worker(config, worker, run):
     release_props = get_release_config(config, force=True)
     repo_path = urlparse(config.params['head_repository']).path.lstrip('/')
     revision = config.params['head_rev']
-    branch = config.params['project']
-    buildername = worker['buildername']
-    underscore_version = release_props['version'].replace('.', '_')
     release_props.update({
         'release_promotion': True,
         'repo_path': repo_path,
@@ -50,22 +46,6 @@ def bb_release_worker(config, worker, run):
         'script_repo_revision': revision,
     })
     worker['properties'].update(release_props)
-    # scopes
-    worker['scopes'] = [
-        "project:releng:buildbot-bridge:builder-name:{}".format(buildername)
-    ]
-    # routes
-    if run.get('routes'):
-        worker['routes'] = []
-        repl_dict = {
-            'branch': branch,
-            'build_number': str(release_props['build_number']),
-            'revision': revision,
-            'underscore_version': underscore_version,
-        }
-        for route in run['routes']:
-            route = route.format(**repl_dict)
-            worker['routes'].append(route)
 
 
 def bb_ci_worker(config, worker):
