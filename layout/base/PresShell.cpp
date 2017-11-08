@@ -3075,10 +3075,9 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
 
   // Search for an anchor element with a matching "name" attribute
   if (!content && htmlDoc) {
-    nsCOMPtr<nsIDOMNodeList> list;
     // Find a matching list of named nodes
-    rv = htmlDoc->GetElementsByName(aAnchorName, getter_AddRefs(list));
-    if (NS_SUCCEEDED(rv) && list) {
+    nsCOMPtr<nsIDOMNodeList> list = mDocument->GetElementsByName(aAnchorName);
+    if (list) {
       uint32_t i;
       // Loop through the named nodes looking for the first anchor
       for (i = 0; true; i++) {

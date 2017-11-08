@@ -193,14 +193,6 @@ public:
     return nsHTMLDocument::GetForms();
   }
   nsIHTMLCollection* Scripts();
-  already_AddRefed<nsContentList> GetElementsByName(const nsAString & aName)
-  {
-    return GetFuncStringContentList<nsCachableElementsByNameNodeList>(this,
-                                                                      MatchNameAttribute,
-                                                                      nullptr,
-                                                                      UseExistingNameString,
-                                                                      aName);
-  }
   already_AddRefed<nsIDocument> Open(JSContext* cx,
                                      const nsAString& aType,
                                      const nsAString& aReplace,
@@ -280,10 +272,6 @@ protected:
                          nsAtom* aAtom, void* aData);
   static bool MatchAnchors(mozilla::dom::Element* aElement, int32_t aNamespaceID,
                            nsAtom* aAtom, void* aData);
-  static bool MatchNameAttribute(mozilla::dom::Element* aElement,
-                                 int32_t aNamespaceID,
-                                 nsAtom* aAtom, void* aData);
-  static void* UseExistingNameString(nsINode* aRootNode, const nsString* aName);
 
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 
