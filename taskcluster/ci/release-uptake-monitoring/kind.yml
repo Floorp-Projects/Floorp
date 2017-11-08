@@ -23,9 +23,6 @@ jobs:
          product: fennec
          buildername: release-{branch}-fennec_uptake_monitoring
          release-promotion: true
-         routes:
-            - index.releases.v1.{branch}.latest.fennec.latest.uptake_monitoring
-            - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.uptake_monitoring
          properties:
              # TODO: Calculate "platforms" dynamically
              platforms: "android-api-16, android-x86"
@@ -35,6 +32,13 @@ jobs:
                     mozilla-release: https://bounceradmin.mozilla.com/api
                     maple: https://admin-bouncer.stage.mozaws.net/api/
                     default: http://localhost/api
+      routes:
+         - index.releases.v1.{branch}.latest.fennec.latest.uptake_monitoring
+         - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.uptake_monitoring
+      index:
+         type: release
+         product: fennec
+         job-name: android-api-16-opt
       notifications:
          completed:
             by-project:

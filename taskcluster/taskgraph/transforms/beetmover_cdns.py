@@ -40,6 +40,8 @@ beetmover_cdns_description_schema = Schema({
         {'by-project': {basestring: job_description_schema['worker-type']}},
     ),
     Optional('dependencies'): {basestring: taskref_or_string},
+    Optional('index'): {basestring: basestring},
+    Optional('routes'): [basestring],
 })
 
 
