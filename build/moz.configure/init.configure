@@ -14,6 +14,7 @@ option(env='DIST', nargs=1, help='DIST directory')
 
 
 @depends('--help', 'DIST')
+@imports(_from='__builtin__', _import='open')
 @imports(_from='os.path', _import='exists')
 def check_build_environment(help, dist):
     topobjdir = os.path.realpath(os.path.abspath('.'))
@@ -60,6 +61,29 @@ def check_build_environment(help, dist):
             '  * mozconfig to point to a different object directory.\n'
             '  ***'
             )
+
+    # Check for CRLF line endings.
+    with open(os.path.join(topsrcdir, 'configure.py'), 'rb') as fh:
+        data = fh.read()
+        if '\r' in data:
+            die('\n ***\n'
+                ' * The source tree appears to have Windows-style line endings.\n'
+                ' *\n'
+                ' * If using Git, Git is likely configured to use Windows-style\n'
+                ' * line endings.\n'
+                ' *\n'
+                ' * To convert the working copy to UNIX-style line endings, run\n'
+                ' * the following:\n'
+                ' *\n'
+                ' * $ git config core.autocrlf false\n'
+                ' * $ git config core.eof lf\n'
+                ' * $ git rm --cached -r .\n'
+                ' * $ git reset --hard\n'
+                ' *\n'
+                ' * If not using Git, the tool you used to obtain the source\n'
+                ' * code likely converted files to Windows line endings. See\n'
+                ' * usage information for that tool for more.\n'
+                ' ***')
 
     # Check for a couple representative files in the source tree
     conflict_files = [
