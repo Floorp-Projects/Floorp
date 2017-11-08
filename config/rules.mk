@@ -52,7 +52,7 @@ else
   ELOG :=
 endif # -s
 
-_VPATH_SRCS = $<
+_VPATH_SRCS = $(abspath $<)
 
 ################################################################################
 # Testing frameworks support
