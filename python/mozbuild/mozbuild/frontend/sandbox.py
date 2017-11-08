@@ -111,6 +111,7 @@ class Sandbox(dict):
         'sorted': alphabetical_sorted,
         'int': int,
         'set': set,
+        'tuple': tuple,
     })
 
     def __init__(self, context, finder=default_finder):
