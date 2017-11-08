@@ -2,12 +2,12 @@ JS Trace Test Suite
 
 * PURPOSE
 
-This is a test suite for testing TraceMonkey. All tests are run in the JS shell
+This is a test suite for testing the SpiderMonkey JIT. All tests are run in the JS shell
 with tracing enabled (-j).
 
 * REQUIREMENTS
 
-Python 2.5. This is already a standard requirement for building our tree.
+Python 2.7. This is already a standard requirement for building our tree.
 
 * RUNNING THE TESTS
 
