@@ -543,7 +543,7 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
         if (!nbase)
             return nullptr;
 
-        Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs, 0));
+        Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs));
         child.updateGetterSetter(getter, setter);
         shape = getChildAccessorProperty(cx, obj, last, &child);
         if (!shape)
@@ -611,7 +611,7 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
         if (!nbase)
             return nullptr;
 
-        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs, 0));
+        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs));
         shape = getChildDataProperty(cx, obj, last, &child);
         if (!shape)
             return nullptr;
@@ -677,7 +677,7 @@ NativeObject::addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj, H
         if (!allocDictionarySlot(cx, obj, &slot))
             return nullptr;
 
-        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, JSPROP_ENUMERATE, 0));
+        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, JSPROP_ENUMERATE));
 
         MOZ_ASSERT(last == obj->lastProperty());
         shape = Allocate<Shape>(cx);
@@ -698,7 +698,7 @@ NativeObject::addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj, H
         MOZ_ASSERT(slot < JSSLOT_FREE(obj->getClass()) + PropertyTree::MAX_HEIGHT);
         MOZ_ASSERT(slot < SHAPE_MAXIMUM_SLOT);
 
-        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, JSPROP_ENUMERATE, 0));
+        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, JSPROP_ENUMERATE));
         shape = cx->zone()->propertyTree().inlinedGetChild(cx, last, child);
         if (!shape)
             return nullptr;
@@ -756,7 +756,7 @@ js::ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
         if (!nbase)
             return nullptr;
 
-        Rooted<StackShape> child(cx, StackShape(nbase, id, i, JSPROP_ENUMERATE, 0));
+        Rooted<StackShape> child(cx, StackShape(nbase, id, i, JSPROP_ENUMERATE));
         newShape = cx->zone()->propertyTree().getChild(cx, newShape, child);
         if (!newShape)
             return nullptr;
@@ -927,7 +927,7 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
         MOZ_ASSERT(shape == obj->lastProperty());
 
         /* Find or create a property tree node labeled by our arguments. */
-        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs, 0));
+        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs));
         RootedShape parent(cx, shape->parent);
         shape = getChildDataProperty(cx, obj, parent, &child);
         if (!shape)
@@ -1057,7 +1057,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
         MOZ_ASSERT(shape == obj->lastProperty());
 
         /* Find or create a property tree node labeled by our arguments. */
-        Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs, 0));
+        Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs));
         child.updateGetterSetter(getter, setter);
         RootedShape parent(cx, shape->parent);
         shape = getChildAccessorProperty(cx, obj, parent, &child);
@@ -1882,8 +1882,7 @@ Shape::fixupShapeTreeAfterMovingGC()
         StackShape lookup(unowned,
                           const_cast<Shape*>(key)->propidRef(),
                           key->slotInfo & Shape::SLOT_MASK,
-                          key->attrs,
-                          key->flags);
+                          key->attrs);
         lookup.updateGetterSetter(getter, setter);
         e.rekeyFront(lookup, key);
     }
