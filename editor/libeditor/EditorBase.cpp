@@ -1430,12 +1430,13 @@ EditorBase::CreateNode(nsAtom* aTag,
     pointToInsert.Set(aParent, aParent->Length());
   } else if (aChildAtPosition) {
     pointToInsert.Set(aChildAtPosition);
-    // Ensure pointToInsert has offset for sending same offset for both
-    // WillCreateNode() and DidCreateNode().
-    Unused << pointToInsert.Offset();
   } else {
     pointToInsert.Set(aParent, aPosition);
   }
+  // XXX We need to offset at new node to mRangeUpdater.  Therefore, we need
+  //     to compute the offset now but this is expensive.  So, if it's possible,
+  //     we need to redesign mRangeUpdater as avoiding using indices.
+  int32_t offset = static_cast<int32_t>(pointToInsert.Offset());
 
   AutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
 
@@ -1443,8 +1444,7 @@ EditorBase::CreateNode(nsAtom* aTag,
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillCreateNode(nsDependentAtomString(aTag),
-                               GetAsDOMNode(pointToInsert.Container()),
-                               pointToInsert.Offset());
+                               GetAsDOMNode(pointToInsert.GetChildAtOffset()));
     }
   }
 
@@ -1458,15 +1458,13 @@ EditorBase::CreateNode(nsAtom* aTag,
     MOZ_ASSERT(ret);
   }
 
-  mRangeUpdater.SelAdjCreateNode(pointToInsert.Container(),
-                                 pointToInsert.Offset());
+  mRangeUpdater.SelAdjCreateNode(pointToInsert.Container(), offset);
 
   {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidCreateNode(nsDependentAtomString(aTag), GetAsDOMNode(ret),
-                              GetAsDOMNode(pointToInsert.Container()),
-                              pointToInsert.Offset(), rv);
+      listener->DidCreateNode(nsDependentAtomString(aTag),
+                              GetAsDOMNode(ret), rv);
     }
   }
 
