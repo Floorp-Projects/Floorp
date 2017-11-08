@@ -38,6 +38,20 @@ Services.scriptloader.loadSubScript(
   this);
 
 /**
+ * Returns a promise that resolves when 'a11y-consumers-changed' event is fired.
+ * @return {Promise} event promise evaluating to event's data
+ */
+function a11yConsumersChangedPromise() {
+  return new Promise(resolve => {
+    let observe = (subject, topic, data) => {
+      Services.obs.removeObserver(observe, "a11y-consumers-changed");
+      resolve(JSON.parse(data));
+    };
+    Services.obs.addObserver(observe, "a11y-consumers-changed");
+  });
+}
+
+/**
  * Returns a promise that resolves when 'a11y-init-or-shutdown' event is fired.
  * @return {Promise} event promise evaluating to event's data
  */
