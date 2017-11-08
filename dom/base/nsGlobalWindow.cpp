@@ -9751,11 +9751,21 @@ struct BrowserCompartmentMatcher : public js::CompartmentFilter {
 class WindowDestroyedEvent final : public Runnable
 {
 public:
-  WindowDestroyedEvent(nsIDOMWindow* aWindow, uint64_t aID, const char* aTopic)
+  WindowDestroyedEvent(nsGlobalWindowInner* aWindow, uint64_t aID, const char* aTopic)
     : mozilla::Runnable("WindowDestroyedEvent")
     , mID(aID)
     , mPhase(Phase::Destroying)
     , mTopic(aTopic)
+    , mIsInnerWindow(true)
+  {
+    mWindow = do_GetWeakReference(aWindow);
+  }
+  WindowDestroyedEvent(nsGlobalWindowOuter* aWindow, uint64_t aID, const char* aTopic)
+    : mozilla::Runnable("WindowDestroyedEvent")
+    , mID(aID)
+    , mPhase(Phase::Destroying)
+    , mTopic(aTopic)
+    , mIsInnerWindow(false)
   {
     mWindow = do_GetWeakReference(aWindow);
   }
@@ -9820,10 +9830,13 @@ public:
       {
         nsCOMPtr<nsISupports> window = do_QueryReferent(mWindow);
         if (window) {
-          nsGlobalWindow* win = nsGlobalWindow::FromSupports(window);
-          nsGlobalWindowInner* currentInner = win->IsInnerWindow()
-            ? win->AssertInner()
-            : win->GetCurrentInnerWindowInternal();
+          nsGlobalWindowInner* currentInner;
+          if (mIsInnerWindow) {
+            currentInner = nsGlobalWindowInner::FromSupports(window);
+          } else {
+            nsGlobalWindowOuter* outer = nsGlobalWindowOuter::FromSupports(window);
+            currentInner = outer->GetCurrentInnerWindowInternal();
+          }
           NS_ENSURE_TRUE(currentInner, NS_OK);
 
           AutoSafeJSContext cx;
@@ -9835,13 +9848,13 @@ public:
             if (BasePrincipal::Cast(pc)->AddonPolicy()) {
               // We want to nuke all references to the add-on compartment.
               xpc::NukeAllWrappersForCompartment(cx, cpt,
-                                                 win->IsInnerWindow() ? js::DontNukeWindowReferences
-                                                                      : js::NukeWindowReferences);
+                                                 mIsInnerWindow ? js::DontNukeWindowReferences
+                                                                : js::NukeWindowReferences);
             } else {
               // We only want to nuke wrappers for the chrome->content case
               js::NukeCrossCompartmentWrappers(cx, BrowserCompartmentMatcher(), cpt,
-                                               win->IsInnerWindow() ? js::DontNukeWindowReferences
-                                                                    : js::NukeWindowReferences,
+                                               mIsInnerWindow ? js::DontNukeWindowReferences
+                                                              : js::NukeWindowReferences,
                                                js::NukeIncomingReferences);
             }
           }
@@ -9858,12 +9871,18 @@ private:
   Phase mPhase;
   nsCString mTopic;
   nsWeakPtr mWindow;
+  bool mIsInnerWindow;
 };
 
 void
 nsGlobalWindow::NotifyWindowIDDestroyed(const char* aTopic)
 {
-  nsCOMPtr<nsIRunnable> runnable = new WindowDestroyedEvent(this, mWindowID, aTopic);
+  nsCOMPtr<nsIRunnable> runnable;
+  if (IsInnerWindow()) {
+    runnable = new WindowDestroyedEvent(AssertInner(), mWindowID, aTopic);
+  } else {
+    runnable = new WindowDestroyedEvent(AssertOuter(), mWindowID, aTopic);
+  }
   nsresult rv = Dispatch(TaskCategory::Other, runnable.forget());
   if (NS_SUCCEEDED(rv)) {
     mNotifiedIDDestroyed = true;
@@ -10121,11 +10140,11 @@ nsGlobalWindow::ConvertDialogOptions(const nsAString& aOptions,
 class ChildCommandDispatcher : public Runnable
 {
 public:
-  ChildCommandDispatcher(nsGlobalWindow* aWindow,
+  ChildCommandDispatcher(nsPIWindowRoot* aRoot,
                          nsITabChild* aTabChild,
                          const nsAString& aAction)
     : mozilla::Runnable("ChildCommandDispatcher")
-    , mWindow(aWindow)
+    , mRoot(aRoot)
     , mTabChild(aTabChild)
     , mAction(aAction)
   {
@@ -10133,13 +10152,8 @@ public:
 
   NS_IMETHOD Run() override
   {
-    nsCOMPtr<nsPIWindowRoot> root = mWindow->GetTopWindowRoot();
-    if (!root) {
-      return NS_OK;
-    }
-
     nsTArray<nsCString> enabledCommands, disabledCommands;
-    root->GetEnabledDisabledCommands(enabledCommands, disabledCommands);
+    mRoot->GetEnabledDisabledCommands(enabledCommands, disabledCommands);
     if (enabledCommands.Length() || disabledCommands.Length()) {
       mTabChild->EnableDisableCommands(mAction, enabledCommands, disabledCommands);
     }
@@ -10148,7 +10162,7 @@ public:
   }
 
 private:
-  RefPtr<nsGlobalWindow>             mWindow;
+  nsCOMPtr<nsPIWindowRoot>             mRoot;
   nsCOMPtr<nsITabChild>                mTabChild;
   nsString                             mAction;
 };
@@ -10179,8 +10193,11 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, in
   // If this is a child process, redirect to the parent process.
   if (nsIDocShell* docShell = GetDocShell()) {
     if (nsCOMPtr<nsITabChild> child = docShell->GetTabChild()) {
-      nsContentUtils::AddScriptRunner(new ChildCommandDispatcher(this, child,
-                                                                 anAction));
+      nsCOMPtr<nsPIWindowRoot> root = GetTopWindowRoot();
+      if (root) {
+        nsContentUtils::AddScriptRunner(
+          new ChildCommandDispatcher(root, child, anAction));
+      }
       return NS_OK;
     }
   }
