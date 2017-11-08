@@ -1,4 +1,4 @@
-/* global ThreadSafeChromeUtils */
+/* global ChromeUtils */
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -26,7 +26,7 @@ ResourceCleaner.prototype = {
     return v;
   },
   cleanup: function ResourceCleaner_cleanup() {
-    let keys = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(this._map);
+    let keys = ChromeUtils.nondeterministicGetWeakMapKeys(this._map);
     keys.forEach(k => {
       try {
         k.dispose();
