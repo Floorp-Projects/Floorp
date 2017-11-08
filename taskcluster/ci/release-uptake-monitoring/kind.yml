@@ -23,15 +23,16 @@ jobs:
          product: fennec
          buildername: release-{branch}-fennec_uptake_monitoring
          release-promotion: true
+      worker:
          properties:
-             # TODO: Calculate "platforms" dynamically
-             platforms: "android-api-16, android-x86"
-             tuxedo_server_url:
-                by-project:
-                    mozilla-beta: https://bounceradmin.mozilla.com/api
-                    mozilla-release: https://bounceradmin.mozilla.com/api
-                    maple: https://admin-bouncer.stage.mozaws.net/api/
-                    default: http://localhost/api
+            # TODO: Calculate "platforms" dynamically
+            platforms: "android-api-16, android-x86"
+            tuxedo_server_url:
+               by-project:
+                  mozilla-beta: https://bounceradmin.mozilla.com/api
+                  mozilla-release: https://bounceradmin.mozilla.com/api
+                  maple: https://admin-bouncer.stage.mozaws.net/api/
+                  default: http://localhost/api
       routes:
          - index.releases.v1.{branch}.latest.fennec.latest.uptake_monitoring
          - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.uptake_monitoring
