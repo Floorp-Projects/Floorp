@@ -300,6 +300,14 @@ LazyLogModule gMediaTimerLog("MediaTimer");
 
 constexpr TimeUnit MediaDecoder::DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED;
 
+void
+MediaDecoder::InitStatics()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // Eagerly init gMediaDecoderLog to work around bug 1415441.
+  MOZ_LOG(gMediaDecoderLog, LogLevel::Info, ("MediaDecoder::InitStatics"));
+}
+
 NS_IMPL_ISUPPORTS(MediaMemoryTracker, nsIMemoryReporter)
 
 void
