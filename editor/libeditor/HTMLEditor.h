@@ -321,11 +321,12 @@ public:
   NS_IMETHOD DeleteNode(nsIDOMNode* aNode) override;
   nsresult DeleteText(nsGenericDOMDataNode& aTextNode, uint32_t aOffset,
                       uint32_t aLength);
-  virtual nsresult InsertTextImpl(const nsAString& aStringToInsert,
-                                  nsCOMPtr<nsINode>* aInOutNode,
-                                  nsCOMPtr<nsIContent>* aInOutChildAtOffset,
-                                  int32_t* aInOutOffset,
-                                  nsIDocument* aDoc) override;
+  virtual nsresult
+  InsertTextImpl(nsIDocument& aDocument,
+                 const nsAString& aStringToInsert,
+                 const EditorRawDOMPoint& aPointToInsert,
+                 EditorRawDOMPoint* aPointAfterInsertedString =
+                   nullptr) override;
   NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode* aNode) override;
   virtual bool IsModifiableNode(nsINode* aNode) override;
 

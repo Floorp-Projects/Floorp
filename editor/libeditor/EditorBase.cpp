@@ -2472,110 +2472,109 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
 }
 
 nsresult
-EditorBase::InsertTextImpl(const nsAString& aStringToInsert,
-                           nsCOMPtr<nsINode>* aInOutNode,
-                           nsCOMPtr<nsIContent>* aInOutChildAtOffset,
-                           int32_t* aInOutOffset,
-                           nsIDocument* aDoc)
+EditorBase::InsertTextImpl(nsIDocument& aDocument,
+                           const nsAString& aStringToInsert,
+                           const EditorRawDOMPoint& aPointToInsert,
+                           EditorRawDOMPoint* aPointAfterInsertedString)
 {
   // NOTE: caller *must* have already used AutoTransactionsConserveSelection
   // stack-based class to turn off txn selection updating.  Caller also turned
   // on rules sniffing if desired.
 
-  NS_ENSURE_TRUE(aInOutNode && *aInOutNode && aInOutOffset && aDoc,
-                 NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   if (!ShouldHandleIMEComposition() && aStringToInsert.IsEmpty()) {
+    if (aPointAfterInsertedString) {
+      *aPointAfterInsertedString = aPointToInsert;
+    }
     return NS_OK;
   }
 
   // This method doesn't support over INT32_MAX length text since aInOutOffset
   // is int32_t*.
   CheckedInt<int32_t> lengthToInsert(aStringToInsert.Length());
-  NS_ENSURE_TRUE(lengthToInsert.isValid(), NS_ERROR_INVALID_ARG);
-
-  nsCOMPtr<nsINode> node = *aInOutNode;
-  int32_t offset = *aInOutOffset;
-  nsCOMPtr<nsIContent> child = *aInOutChildAtOffset;
-
-  MOZ_ASSERT(!node->IsContainerNode() ||
-             node->Length() == static_cast<uint32_t>(offset) ||
-             node->GetChildAt(offset) == *aInOutChildAtOffset,
-    "|child| must be a child node at |offset| in |node| unless it's a text "
-    "or some other data node, or after the last child");
+  if (NS_WARN_IF(!lengthToInsert.isValid())) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   // In some cases, the node may be the anonymous div elemnt or a mozBR
   // element.  Let's try to look for better insertion point in the nearest
   // text node if there is.
-  EditorRawDOMPoint insertionPoint;
-  if (child) {
-    insertionPoint.Set(child);
-  } else {
-    insertionPoint.Set(node, offset);
-  }
-  EditorRawDOMPoint betterPoint = FindBetterInsertionPoint(insertionPoint);
-  node = betterPoint.Container();
-  offset = betterPoint.Offset();
-  child = betterPoint.GetChildAtOffset();
+  EditorRawDOMPoint pointToInsert = FindBetterInsertionPoint(aPointToInsert);
 
   // If a neighboring text node already exists, use that
-  if (!node->IsNodeOfType(nsINode::eTEXT)) {
-    if (offset && child && child->GetPreviousSibling() &&
-        child->GetPreviousSibling()->IsNodeOfType(nsINode::eTEXT)) {
-      node = child->GetPreviousSibling();
-      offset = node->Length();
-    } else if (offset < static_cast<int32_t>(node->Length()) &&
-               child && child->IsNodeOfType(nsINode::eTEXT)) {
-      node = child;
-      offset = 0;
+  if (!pointToInsert.Container()->IsNodeOfType(nsINode::eTEXT)) {
+    nsIContent* child = nullptr;
+    if (!pointToInsert.IsStartOfContainer() &&
+        (child = pointToInsert.GetPreviousSiblingOfChildAtOffset()) &&
+        child->IsNodeOfType(nsINode::eTEXT)) {
+      pointToInsert.Set(child, child->Length());
+    } else if (!pointToInsert.IsEndOfContainer() &&
+               (child = pointToInsert.GetChildAtOffset()) &&
+               child->IsNodeOfType(nsINode::eTEXT)) {
+      pointToInsert.Set(child, 0);
     }
   }
 
   if (ShouldHandleIMEComposition()) {
     CheckedInt<int32_t> newOffset;
-    if (!node->IsNodeOfType(nsINode::eTEXT)) {
+    if (!pointToInsert.Container()->IsNodeOfType(nsINode::eTEXT)) {
       // create a text node
       RefPtr<nsTextNode> newNode =
-        EditorBase::CreateTextNode(*aDoc, EmptyString());
+        EditorBase::CreateTextNode(aDocument, EmptyString());
       // then we insert it into the dom tree
-      nsresult rv = InsertNode(*newNode, *node, offset);
+      nsresult rv = InsertNode(*newNode, *pointToInsert.Container(),
+                               pointToInsert.Offset());
       NS_ENSURE_SUCCESS(rv, rv);
-      node = newNode;
-      offset = 0;
+      pointToInsert.Set(newNode, 0);
       newOffset = lengthToInsert;
     } else {
-      newOffset = lengthToInsert + offset;
+      newOffset = lengthToInsert + pointToInsert.Offset();
       NS_ENSURE_TRUE(newOffset.isValid(), NS_ERROR_FAILURE);
     }
     nsresult rv =
-      InsertTextIntoTextNodeImpl(aStringToInsert, *node->GetAsText(), offset);
+      InsertTextIntoTextNodeImpl(aStringToInsert,
+                                 *pointToInsert.Container()->GetAsText(),
+                                 pointToInsert.Offset());
     NS_ENSURE_SUCCESS(rv, rv);
-    offset = newOffset.value();
-  } else {
-    if (node->IsNodeOfType(nsINode::eTEXT)) {
-      CheckedInt<int32_t> newOffset = lengthToInsert + offset;
-      NS_ENSURE_TRUE(newOffset.isValid(), NS_ERROR_FAILURE);
-      // we are inserting text into an existing text node.
-      nsresult rv =
-        InsertTextIntoTextNodeImpl(aStringToInsert, *node->GetAsText(), offset);
-      NS_ENSURE_SUCCESS(rv, rv);
-      offset = newOffset.value();
-    } else {
-      // we are inserting text into a non-text node.  first we have to create a
-      // textnode (this also populates it with the text)
-      RefPtr<nsTextNode> newNode =
-        EditorBase::CreateTextNode(*aDoc, aStringToInsert);
-      // then we insert it into the dom tree
-      nsresult rv = InsertNode(*newNode, *node, offset);
-      NS_ENSURE_SUCCESS(rv, rv);
-      node = newNode;
-      offset = lengthToInsert.value();
+    if (aPointAfterInsertedString) {
+      aPointAfterInsertedString->Set(pointToInsert.Container(),
+                                     newOffset.value());
     }
+    return NS_OK;
   }
 
-  *aInOutNode = node;
-  *aInOutOffset = offset;
-  *aInOutChildAtOffset = nullptr;
+  if (pointToInsert.Container()->IsNodeOfType(nsINode::eTEXT)) {
+    CheckedInt<int32_t> newOffset = lengthToInsert + pointToInsert.Offset();
+    NS_ENSURE_TRUE(newOffset.isValid(), NS_ERROR_FAILURE);
+    // we are inserting text into an existing text node.
+    nsresult rv =
+      InsertTextIntoTextNodeImpl(aStringToInsert,
+                                 *pointToInsert.Container()->GetAsText(),
+                                 pointToInsert.Offset());
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (aPointAfterInsertedString) {
+      aPointAfterInsertedString->Set(pointToInsert.Container(),
+                                     newOffset.value());
+    }
+    return NS_OK;
+  }
+
+  // we are inserting text into a non-text node.  first we have to create a
+  // textnode (this also populates it with the text)
+  RefPtr<nsTextNode> newNode =
+    EditorBase::CreateTextNode(aDocument, aStringToInsert);
+  // then we insert it into the dom tree
+  nsresult rv = InsertNode(*newNode, *pointToInsert.Container(),
+                           pointToInsert.Offset());
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aPointAfterInsertedString) {
+    aPointAfterInsertedString->Set(newNode, lengthToInsert.value());
+  }
   return NS_OK;
 }
 
@@ -3877,16 +3876,33 @@ EditorBase::GetEndNodeAndOffset(Selection* aSelection,
   *aEndContainer = nullptr;
   *aEndOffset = 0;
 
-  NS_ENSURE_TRUE(aSelection->RangeCount(), NS_ERROR_FAILURE);
+  EditorRawDOMPoint point = EditorBase::GetEndPoint(aSelection);
+  if (!point.IsSet()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(*aEndContainer = point.Container());
+  *aEndOffset = point.Offset();
+  return NS_OK;
+}
+
+// static
+EditorRawDOMPoint
+EditorBase::GetEndPoint(Selection* aSelection)
+{
+  MOZ_ASSERT(aSelection);
+
+  if (NS_WARN_IF(!aSelection->RangeCount())) {
+    return EditorRawDOMPoint();
+  }
 
   const nsRange* range = aSelection->GetRangeAt(0);
-  NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!range) ||
+      NS_WARN_IF(!range->IsPositioned())) {
+    return EditorRawDOMPoint();
+  }
 
-  NS_ENSURE_TRUE(range->IsPositioned(), NS_ERROR_FAILURE);
-
-  NS_IF_ADDREF(*aEndContainer = range->GetEndContainer());
-  *aEndOffset = range->EndOffset();
-  return NS_OK;
+  return EditorRawDOMPoint(range->EndRef());
 }
 
 nsresult

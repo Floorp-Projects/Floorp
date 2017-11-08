@@ -734,19 +734,28 @@ TextEditor::InsertLineBreak()
   TextRulesInfo ruleInfo(EditAction::insertBreak);
   ruleInfo.maxLength = mMaxTextLength;
   bool cancel, handled;
+  // XXX DidDoAction() won't be called when this returns error.  Perhaps,
+  //     we should move the code between WillDoAction() and DidDoAction()
+  //     to a new method and guarantee that DidDoAction() is always called
+  //     after WillDoAction().
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!cancel && !handled) {
     // get the (collapsed) selection location
-    NS_ENSURE_STATE(selection->GetRangeAt(0));
-    nsCOMPtr<nsINode> selNode = selection->GetRangeAt(0)->GetStartContainer();
-    nsCOMPtr<nsIContent> selChild = selection->GetRangeAt(0)->GetChildAtStartOffset();
-    int32_t selOffset = selection->GetRangeAt(0)->StartOffset();
-    NS_ENSURE_STATE(selNode);
+    nsRange* firstRange = selection->GetRangeAt(0);
+    if (NS_WARN_IF(!firstRange)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    EditorRawDOMPoint pointToInsert(firstRange->StartRef());
+    if (NS_WARN_IF(!pointToInsert.IsSet())) {
+      return NS_ERROR_FAILURE;
+    }
+    MOZ_ASSERT(pointToInsert.IsSetAndValid());
 
     // don't put text in places that can't have it
-    if (!IsTextNode(selNode) && !CanContainTag(*selNode,
-                                               *nsGkAtoms::textTagName)) {
+    if (!IsTextNode(pointToInsert.Container()) &&
+        !CanContainTag(*pointToInsert.Container(), *nsGkAtoms::textTagName)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -758,29 +767,26 @@ TextEditor::InsertLineBreak()
     AutoTransactionsConserveSelection dontChangeMySelection(this);
 
     // insert a linefeed character
-    rv = InsertTextImpl(NS_LITERAL_STRING("\n"), address_of(selNode),
-                        address_of(selChild), &selOffset, doc);
-    if (!selNode) {
+    EditorRawDOMPoint pointAfterInsertedLineBreak;
+    rv = InsertTextImpl(*doc, NS_LITERAL_STRING("\n"), pointToInsert,
+                        &pointAfterInsertedLineBreak);
+    if (NS_WARN_IF(!pointAfterInsertedLineBreak.IsSet())) {
       rv = NS_ERROR_NULL_POINTER; // don't return here, so DidDoAction is called
     }
     if (NS_SUCCEEDED(rv)) {
       // set the selection to the correct location
-      MOZ_ASSERT(!selChild,
-        "After inserting text into a text node, selChild should be nullptr");
-      rv = selection->Collapse(EditorRawDOMPoint(selNode, selOffset));
+      MOZ_ASSERT(!pointAfterInsertedLineBreak.GetChildAtOffset(),
+        "After inserting text into a text node, pointAfterInsertedLineBreak."
+        "GetChildAtOffset() should be nullptr");
+      rv = selection->Collapse(pointAfterInsertedLineBreak);
       if (NS_SUCCEEDED(rv)) {
         // see if we're at the end of the editor range
-        nsCOMPtr<nsIDOMNode> endNode;
-        int32_t endOffset;
-        rv = GetEndNodeAndOffset(selection,
-                                 getter_AddRefs(endNode), &endOffset);
-
-        if (NS_SUCCEEDED(rv) &&
-            endNode == GetAsDOMNode(selNode) && endOffset == selOffset) {
-          // SetInterlinePosition(true) means we want the caret to stick to the content on the "right".
-          // We want the caret to stick to whatever is past the break.  This is
-          // because the break is on the same line we were on, but the next content
-          // will be on the following line.
+        EditorRawDOMPoint endPoint = GetEndPoint(selection);
+        if (endPoint == pointAfterInsertedLineBreak) {
+          // SetInterlinePosition(true) means we want the caret to stick to the
+          // content on the "right".  We want the caret to stick to whatever is
+          // past the break.  This is because the break is on the same line we
+          // were on, but the next content will be on the following line.
           selection->SetInterlinePosition(true);
         }
       }

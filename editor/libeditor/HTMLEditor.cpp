@@ -3186,20 +3186,22 @@ HTMLEditor::DeleteText(nsGenericDOMDataNode& aCharData,
 }
 
 nsresult
-HTMLEditor::InsertTextImpl(const nsAString& aStringToInsert,
-                           nsCOMPtr<nsINode>* aInOutNode,
-                           nsCOMPtr<nsIContent>* aInOutChildAtOffset,
-                           int32_t* aInOutOffset,
-                           nsIDocument* aDoc)
+HTMLEditor::InsertTextImpl(nsIDocument& aDocument,
+                           const nsAString& aStringToInsert,
+                           const EditorRawDOMPoint& aPointToInsert,
+                           EditorRawDOMPoint* aPointAfterInsertedString)
 {
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   // Do nothing if the node is read-only
-  if (!IsModifiableNode(*aInOutNode)) {
+  if (!IsModifiableNode(aPointToInsert.Container())) {
     return NS_ERROR_FAILURE;
   }
 
-  return EditorBase::InsertTextImpl(aStringToInsert, aInOutNode,
-                                    aInOutChildAtOffset,
-                                    aInOutOffset, aDoc);
+  return EditorBase::InsertTextImpl(aDocument, aStringToInsert, aPointToInsert,
+                                    aPointAfterInsertedString);
 }
 
 void
