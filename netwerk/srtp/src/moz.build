@@ -52,7 +52,7 @@ for var in ('HAVE_STDLIB_H', 'HAVE_UINT8_T', 'HAVE_UINT16_T',
 # falling back to the (presumably) slower-on-this-architecture but working
 # code path.  https://bugzilla.mozilla.org/show_bug.cgi?id=822380 has been filed
 # to make the right and more performant fix and push it back upstream.
-if CONFIG['CPU_ARCH'] in ('arm', 'x86', 'x86_64'):
+if CONFIG['CPU_ARCH'] in ('arm', 'x86', 'x86_64', 'mips', 'mips64'):
     DEFINES['CPU_CISC'] = 1
 else:
     # best guess
