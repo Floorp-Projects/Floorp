@@ -1008,6 +1008,13 @@ def build_buildbot_bridge_payload(config, task, task_def):
     task['extra'].pop('treeherder', None)
     task['extra'].pop('treeherderEnv', None)
     worker = task['worker']
+
+    if worker['properties'].get('tuxedo_server_url'):
+        resolve_keyed_by(
+            worker, 'properties.tuxedo_server_url', worker['buildername'],
+            **config.params
+        )
+
     task_def['payload'] = {
         'buildername': worker['buildername'],
         'sourcestamp': worker['sourcestamp'],

@@ -23,6 +23,7 @@ jobs:
          product: fennec
          buildername: release-{branch}-fennec_bouncer_aliases
          release-promotion: true
+      worker:
          properties:
              tuxedo_server_url:
                 by-project:
