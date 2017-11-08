@@ -255,13 +255,13 @@ LCovSource::writeScript(JSScript* script)
 
             uint64_t taken = hits - fallthroughHits;
             outBRDA_.printf("BRDA:%zu,%zu,0,", lineno, branchId);
-            if (taken)
+            if (hits)
                 outBRDA_.printf("%" PRIu64 "\n", taken);
             else
                 outBRDA_.put("-\n", 2);
 
             outBRDA_.printf("BRDA:%zu,%zu,1,", lineno, branchId);
-            if (fallthroughHits)
+            if (hits)
                 outBRDA_.printf("%" PRIu64 "\n", fallthroughHits);
             else
                 outBRDA_.put("-\n", 2);
@@ -359,7 +359,7 @@ LCovSource::writeScript(JSScript* script)
 
                     outBRDA_.printf("BRDA:%zu,%zu,%zu,",
                                     lineno, branchId, caseId);
-                    if (caseHits)
+                    if (hits)
                         outBRDA_.printf("%" PRIu64 "\n", caseHits);
                     else
                         outBRDA_.put("-\n", 2);
@@ -424,7 +424,7 @@ LCovSource::writeScript(JSScript* script)
             if (defaultHasOwnClause) {
                 outBRDA_.printf("BRDA:%zu,%zu,%zu,",
                                 lineno, branchId, caseId);
-                if (defaultHits)
+                if (hits)
                     outBRDA_.printf("%" PRIu64 "\n", defaultHits);
                 else
                     outBRDA_.put("-\n", 2);
