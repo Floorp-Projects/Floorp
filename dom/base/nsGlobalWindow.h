@@ -469,9 +469,6 @@ public:
                            bool aEnumerableOnly, mozilla::ErrorResult& aRv);
 
   // Object Management
-  static already_AddRefed<nsGlobalWindow> Create(nsGlobalWindow *aOuterWindow);
-  static already_AddRefed<nsGlobalWindow> CreateChrome(nsGlobalWindow *aOuterWindow);
-
   static nsGlobalWindow *FromSupports(nsISupports *supports)
   {
     // Make sure this matches the casts we do in QueryInterface().
@@ -515,8 +512,7 @@ public:
   class MOZ_RAII TemporarilyDisableDialogs
   {
   public:
-    // Takes an inner _or_ outer window.
-    explicit TemporarilyDisableDialogs(nsGlobalWindow* aWindow
+    explicit TemporarilyDisableDialogs(nsGlobalWindowOuter* aWindow
                                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~TemporarilyDisableDialogs();
 
@@ -526,7 +522,7 @@ public:
     // Always an inner window; this is the window whose dialog state we messed
     // with.  We just want to keep it alive, because we plan to poke at its
     // members in our destructor.
-    RefPtr<nsGlobalWindow> mTopWindow;
+    RefPtr<nsGlobalWindowInner> mTopWindow;
     // This is not a AutoRestore<bool> because that would require careful
     // member destructor ordering, which is a bit fragile.  This way we can
     // explicitly restore things before we drop our ref to mTopWindow.
@@ -814,7 +810,7 @@ public:
 
   nsresult GetPrompter(nsIPrompt** aPrompt) override;
 protected:
-  explicit nsGlobalWindow(nsGlobalWindow *aOuterWindow);
+  explicit nsGlobalWindow(nsGlobalWindowOuter *aOuterWindow);
   nsPIDOMWindowOuter* GetOpenerWindowOuter();
   // Initializes the mWasOffline member variable
   void InitWasOffline();
@@ -1366,8 +1362,6 @@ protected:
 
   RefPtr<mozilla::dom::WakeLock> mWakeLock;
 
-  static bool sIdleObserversAPIFuzzTimeDisabled;
-
   friend class HashchangeCallback;
   friend class mozilla::dom::BarProp;
 
@@ -1379,12 +1373,7 @@ protected:
   // Outer windows only.
   void FinalClose();
 
-  inline void MaybeClearInnerWindow(nsGlobalWindow* aExpectedInner)
-  {
-    if(mInnerWindow == aExpectedInner->AsInner()) {
-      mInnerWindow = nullptr;
-    }
-  }
+  inline void MaybeClearInnerWindow(nsGlobalWindowInner* aExpectedInner);
 
   void FreeInnerObjects();
   nsGlobalWindowInner *CallerInnerWindow();
@@ -1616,11 +1605,11 @@ public:
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() override;
 
 protected:
-  static void NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow);
+  static void NotifyDOMWindowDestroyed(nsGlobalWindowInner* aWindow);
   void NotifyWindowIDDestroyed(const char* aTopic);
 
-  static void NotifyDOMWindowFrozen(nsGlobalWindow* aWindow);
-  static void NotifyDOMWindowThawed(nsGlobalWindow* aWindow);
+  static void NotifyDOMWindowFrozen(nsGlobalWindowInner* aWindow);
+  static void NotifyDOMWindowThawed(nsGlobalWindowInner* aWindow);
 
   void ClearStatus();
 
@@ -2012,6 +2001,7 @@ public:
   typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindowOuter*> OuterWindowByIdTable;
 
   friend class nsGlobalWindow;
+  friend class nsGlobalWindowInner;
 
   static nsGlobalWindowOuter* Cast(nsPIDOMWindowOuter* aPIWin) {
     return static_cast<nsGlobalWindowOuter*>(
@@ -2046,6 +2036,14 @@ public:
     return sOuterWindowsById;
   }
 
+  static nsGlobalWindowOuter *FromSupports(nsISupports *supports)
+  {
+    // Make sure this matches the casts we do in QueryInterface().
+    return (nsGlobalWindowOuter *)(mozilla::dom::EventTarget *)supports;
+  }
+
+  static already_AddRefed<nsGlobalWindowOuter> Create(bool aIsChrome);
+
 private:
   nsGlobalWindowOuter();
   ~nsGlobalWindowOuter();
@@ -2059,6 +2057,7 @@ public:
   typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindowInner*> InnerWindowByIdTable;
 
   friend class nsGlobalWindow;
+  friend class nsGlobalWindowOuter;
 
   static nsGlobalWindowInner* Cast(nsPIDOMWindowInner* aPIWin) {
     return static_cast<nsGlobalWindowInner*>(
@@ -2094,7 +2093,16 @@ public:
     return sInnerWindowsById;
   }
 
+  static nsGlobalWindowInner *FromSupports(nsISupports *supports)
+  {
+    // Make sure this matches the casts we do in QueryInterface().
+    return (nsGlobalWindowInner *)(mozilla::dom::EventTarget *)supports;
+  }
+
 private:
+  static already_AddRefed<nsGlobalWindowInner>
+  Create(nsGlobalWindowOuter* aOuter, bool aIsChrome);
+
   explicit nsGlobalWindowInner(nsGlobalWindowOuter* aOuter);
   ~nsGlobalWindowInner();
 
@@ -2114,7 +2122,7 @@ nsGlobalWindow::GetOwnerGlobal() const
 inline nsGlobalWindowOuter*
 nsGlobalWindow::GetTopInternal()
 {
-  nsGlobalWindow* outer = IsOuterWindow() ? this : GetOuterWindowInternal();
+  nsGlobalWindowOuter* outer = IsOuterWindow() ? AssertOuter() : GetOuterWindowInternal();
   nsCOMPtr<nsPIDOMWindowOuter> top = outer ? outer->GetTop() : nullptr;
   if (top) {
     return nsGlobalWindowOuter::Cast(top);
@@ -2196,19 +2204,19 @@ nsGlobalWindow::AssertOuter()
   return static_cast<nsGlobalWindowOuter*>(this);
 }
 
+inline void
+nsGlobalWindow::MaybeClearInnerWindow(nsGlobalWindowInner* aExpectedInner)
+{
+  if(mInnerWindow == aExpectedInner->AsInner()) {
+    mInnerWindow = nullptr;
+  }
+}
+
 /* factory function */
 inline already_AddRefed<nsGlobalWindowOuter>
 NS_NewScriptGlobalObject(bool aIsChrome)
 {
-  RefPtr<nsGlobalWindow> global;
-
-  if (aIsChrome) {
-    global = nsGlobalWindow::CreateChrome(nullptr);
-  } else {
-    global = nsGlobalWindow::Create(nullptr);
-  }
-
-  return global.forget().downcast<nsGlobalWindowOuter>();
+  return nsGlobalWindowOuter::Create(aIsChrome);
 }
 
 #endif /* nsGlobalWindow_h___ */
