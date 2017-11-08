@@ -2,16 +2,163 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import cPickle as pickle
 import os
+import sys
 from collections import defaultdict
 
 import manifestparser
 import mozpack.path as mozpath
 from mozbuild.base import MozbuildObject
 from mozbuild.util import OrderedDefaultDict
+from mozbuild.frontend.reader import BuildReader, EmptyConfig
+from mozversioncontrol import get_repository_object
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+
+MOCHITEST_CHUNK_BY_DIR = 4
+MOCHITEST_TOTAL_CHUNKS = 5
+
+TEST_SUITES = {
+    'cppunittest': {
+        'aliases': ('Cpp', 'cpp'),
+        'mach_command': 'cppunittest',
+        'kwargs': {'test_file': None},
+    },
+    'crashtest': {
+        'aliases': ('C', 'Rc', 'RC', 'rc'),
+        'mach_command': 'crashtest',
+        'kwargs': {'test_file': None},
+    },
+    'firefox-ui-functional': {
+        'aliases': ('Fxfn',),
+        'mach_command': 'firefox-ui-functional',
+        'kwargs': {},
+    },
+    'firefox-ui-update': {
+        'aliases': ('Fxup',),
+        'mach_command': 'firefox-ui-update',
+        'kwargs': {},
+    },
+    'check-spidermonkey': {
+        'aliases': ('Sm', 'sm'),
+        'mach_command': 'check-spidermonkey',
+        'kwargs': {'valgrind': False},
+    },
+    'mochitest-a11y': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'a11y', 'test_paths': None},
+    },
+    'mochitest-browser': {
+        'aliases': ('bc', 'BC', 'Bc'),
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'browser-chrome', 'test_paths': None},
+    },
+    'mochitest-chrome': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'chrome', 'test_paths': None},
+    },
+    'mochitest-devtools': {
+        'aliases': ('dt', 'DT', 'Dt'),
+        'mach_command': 'mochitest',
+        'kwargs': {'subsuite': 'devtools', 'test_paths': None},
+    },
+    'mochitest-plain': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'plain', 'test_paths': None},
+    },
+    'python': {
+        'mach_command': 'python-test',
+        'kwargs': {'tests': None},
+    },
+    'reftest': {
+        'aliases': ('RR', 'rr', 'Rr'),
+        'mach_command': 'reftest',
+        'kwargs': {'tests': None},
+    },
+    'web-platform-tests': {
+        'aliases': ('wpt',),
+        'mach_command': 'web-platform-tests',
+        'kwargs': {}
+    },
+    'valgrind': {
+        'aliases': ('V', 'v'),
+        'mach_command': 'valgrind-test',
+        'kwargs': {},
+    },
+    'xpcshell': {
+        'aliases': ('X', 'x'),
+        'mach_command': 'xpcshell-test',
+        'kwargs': {'test_file': 'all'},
+    },
+}
+
+# Maps test flavors to metadata on how to run that test.
+TEST_FLAVORS = {
+    'a11y': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'a11y', 'test_paths': []},
+    },
+    'browser-chrome': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'browser-chrome', 'test_paths': []},
+    },
+    'crashtest': {},
+    'chrome': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'chrome', 'test_paths': []},
+    },
+    'firefox-ui-functional': {
+        'mach_command': 'firefox-ui-functional',
+        'kwargs': {'tests': []},
+    },
+    'firefox-ui-update': {
+        'mach_command': 'firefox-ui-update',
+        'kwargs': {'tests': []},
+    },
+    'marionette': {
+        'mach_command': 'marionette-test',
+        'kwargs': {'tests': []},
+    },
+    'mochitest': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'mochitest', 'test_paths': []},
+    },
+    'python': {
+        'mach_command': 'python-test',
+        'kwargs': {},
+    },
+    'reftest': {
+        'mach_command': 'reftest',
+        'kwargs': {'tests': []}
+    },
+    'steeplechase': {},
+    'web-platform-tests': {
+        'mach_command': 'web-platform-tests',
+        'kwargs': {'include': []}
+    },
+    'xpcshell': {
+        'mach_command': 'xpcshell-test',
+        'kwargs': {'test_paths': []},
+    },
+}
+
+for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
+    TEST_SUITES['mochitest-%d' % i] = {
+        'aliases': ('M%d' % i, 'm%d' % i),
+        'mach_command': 'mochitest',
+        'kwargs': {
+            'flavor': 'mochitest',
+            'subsuite': 'default',
+            'chunk_by_dir': MOCHITEST_CHUNK_BY_DIR,
+            'total_chunks': MOCHITEST_TOTAL_CHUNKS,
+            'this_chunk': i,
+            'test_paths': None,
+        },
+    }
 
 
 def rewrite_test_base(test, new_base, honor_install_to_subdir=False):
@@ -81,7 +228,6 @@ class TestMetadata(object):
 
         This is a generator of dicts describing each test.
         """
-
         for path in sorted(self._tests_by_flavor.get(flavor, [])):
             yield self._tests_by_path[path]
 
@@ -209,6 +355,14 @@ class TestResolver(MozbuildObject):
                                                'web-platform'),
             'xpcshell': os.path.join(self.topobjdir, '_tests', 'xpcshell'),
         }
+        self._vcs = None
+        self.verbose = False
+
+    @property
+    def vcs(self):
+        if not self._vcs:
+            self._vcs = get_repository_object(self.topsrcdir)
+        return self._vcs
 
     def resolve_tests(self, cwd=None, **kwargs):
         """Resolve tests in the context of the current environment.
@@ -252,3 +406,73 @@ class TestResolver(MozbuildObject):
                                         honor_install_to_subdir=True)
             else:
                 yield test
+
+    def get_outgoing_metadata(self):
+        paths, tags, flavors = set(), set(), set()
+        changed_files = self.vcs.get_outgoing_files('AM')
+        if changed_files:
+            config = EmptyConfig(self.topsrcdir)
+            reader = BuildReader(config)
+            files_info = reader.files_info(changed_files)
+
+            for path, info in files_info.items():
+                paths |= info.test_files
+                tags |= info.test_tags
+                flavors |= info.test_flavors
+
+        return {
+            'paths': paths,
+            'tags': tags,
+            'flavors': flavors,
+        }
+
+    def resolve_metadata(self, what):
+        """Resolve tests based on the given metadata. If not specified, metadata
+        from outgoing files will be used instead.
+        """
+        # Parse arguments and assemble a test "plan."
+        run_suites = set()
+        run_tests = []
+
+        for entry in what:
+            # If the path matches the name or alias of an entire suite, run
+            # the entire suite.
+            if entry in TEST_SUITES:
+                run_suites.add(entry)
+                continue
+            suitefound = False
+            for suite, v in TEST_SUITES.items():
+                if entry in v.get('aliases', []):
+                    run_suites.add(suite)
+                    suitefound = True
+            if suitefound:
+                continue
+
+            # Now look for file/directory matches in the TestResolver.
+            relpath = self._wrap_path_argument(entry).relpath()
+            tests = list(self.resolve_tests(paths=[relpath]))
+            run_tests.extend(tests)
+
+            if not tests:
+                print('UNKNOWN TEST: %s' % entry, file=sys.stderr)
+
+        if not what:
+            res = self.get_outgoing_metadata()
+            paths, tags, flavors = (res[key] for key in ('paths', 'tags', 'flavors'))
+
+            # This requires multiple calls to resolve_tests, because the test
+            # resolver returns tests that match every condition, while we want
+            # tests that match any condition. Bug 1210213 tracks implementing
+            # more flexible querying.
+            if tags:
+                run_tests = list(self.resolve_tests(tags=tags))
+            if paths:
+                run_tests += [t for t in self.resolve_tests(paths=paths)
+                              if not (tags & set(t.get('tags', '').split()))]
+            if flavors:
+                run_tests = [
+                    t for t in run_tests if t['flavor'] not in flavors]
+                for flavor in flavors:
+                    run_tests += list(self.resolve_tests(flavor=flavor))
+
+        return run_suites, run_tests
