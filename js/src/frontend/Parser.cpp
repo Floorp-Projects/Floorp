@@ -7934,7 +7934,7 @@ Parser<ParseHandler, CharT>::condExpr(InHandling inHandling, YieldHandling yield
     if (!thenExpr)
         return null();
 
-    MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
+    MUST_MATCH_TOKEN_MOD(TOK_COLON, TokenStream::Operand, JSMSG_COLON_IN_COND);
 
     Node elseExpr = assignExpr(inHandling, yieldHandling, TripledotProhibited);
     if (!elseExpr)
