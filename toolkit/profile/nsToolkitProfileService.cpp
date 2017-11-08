@@ -948,12 +948,12 @@ nsToolkitProfileService::CreateTimesInternal(nsIFile* aProfileDir)
 NS_IMETHODIMP
 nsToolkitProfileService::GetProfileCount(uint32_t *aResult)
 {
-    if (!mFirst)
-        *aResult = 0;
-    else if (! mFirst->mNext)
-        *aResult = 1;
-    else
-        *aResult = 2;
+    *aResult = 0;
+    nsToolkitProfile* profile = mFirst;
+    while (profile) {
+        (*aResult)++;
+        profile = profile->mNext;
+    }
 
     return NS_OK;
 }

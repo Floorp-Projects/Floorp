@@ -1051,16 +1051,10 @@ nsXREDirProvider::DoStartup()
     nsCOMPtr<nsIToolkitProfileService> profileService =
       do_GetService("@mozilla.org/toolkit/profile-service;1");
     if (profileService) {
-      nsCOMPtr<nsISimpleEnumerator> profiles;
-      rv = profileService->GetProfiles(getter_AddRefs(profiles));
+      uint32_t count = 0;
+      rv = profileService->GetProfileCount(&count);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
-      }
-
-      uint32_t count = 0;
-      nsCOMPtr<nsISupports> profile;
-      while (NS_SUCCEEDED(profiles->GetNext(getter_AddRefs(profile)))) {
-        ++count;
       }
 
       mozilla::Telemetry::Accumulate(mozilla::Telemetry::NUMBER_OF_PROFILES,
