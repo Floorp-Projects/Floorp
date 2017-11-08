@@ -69,29 +69,6 @@ interface nsIToolkitProfileService : nsISupports
                                     in AUTF8String aName);
 
     /**
-     * Create the default profile for an application.
-     *
-     * The profile will be typically in
-     * {Application Data}/.profilename/{salt}.default or
-     * {Application Data}/.appname/{salt}.default
-     * or if aVendorName is provided
-     * {Application Data}/.vendor/appname/{salt}.default
-     *
-     * @note Either aProfileName or aAppName must be non-empty
-     *
-     * @param  aProfileName
-     *         The name of the profile
-     * @param  aAppName
-     *         The name of the application
-     * @param  aVendorName
-     *         The name of the vendor
-     * @return The created profile.
-     */                                    
-    nsIToolkitProfile createDefaultProfileForApp(in AUTF8String aProfileName,
-                                                 in AUTF8String aAppName,
-                                                 in AUTF8String aVendorName);
-
-    /**
      * Returns the number of profiles.
      * @return the number of profiles.
      */
