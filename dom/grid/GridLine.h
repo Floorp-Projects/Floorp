@@ -48,6 +48,7 @@ public:
                      double aStart,
                      double aBreadth,
                      uint32_t aNumber,
+                     int32_t aNegativeNumber,
                      GridDeclaration aType);
 
 protected:
@@ -57,6 +58,7 @@ protected:
   double mBreadth;
   GridDeclaration mType;
   uint32_t mNumber;
+  int32_t mNegativeNumber;
 };
 
 } // namespace dom
