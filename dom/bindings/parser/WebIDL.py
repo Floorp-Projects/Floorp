@@ -1782,7 +1782,8 @@ class IDLNamespace(IDLInterfaceOrNamespace):
                 if not attr.hasValue():
                     raise WebIDLError("[%s] must have a value" % identifier,
                                       [attr.location])
-            elif identifier == "ProtoObjectHack":
+            elif (identifier == "ProtoObjectHack" or
+                  identifier == "ChromeOnly"):
                 if not attr.noArguments():
                     raise WebIDLError("[%s] must not have arguments" % identifier,
                                       [attr.location])

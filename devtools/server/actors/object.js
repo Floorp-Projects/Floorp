@@ -12,7 +12,7 @@ const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, dumpn } = DevToolsUtils;
 
-loader.lazyRequireGetter(this, "ThreadSafeChromeUtils");
+loader.lazyRequireGetter(this, "ChromeUtils");
 
 // Number of items to preview in objects, arrays, maps, sets, lists,
 // collections, etc.
@@ -1055,7 +1055,7 @@ function enumWeakMapEntries(objectActor) {
   // make sure we handle the resulting objects carefully.
   let raw = objectActor.obj.unsafeDereference();
   let keys = Cu.waiveXrays(
-    ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(raw));
+    ChromeUtils.nondeterministicGetWeakMapKeys(raw));
 
   return {
     [Symbol.iterator]: function* () {
@@ -1132,7 +1132,7 @@ function enumWeakSetEntries(objectActor) {
   // make sure we handle the resulting objects carefully.
   let raw = objectActor.obj.unsafeDereference();
   let keys = Cu.waiveXrays(
-    ThreadSafeChromeUtils.nondeterministicGetWeakSetKeys(raw));
+    ChromeUtils.nondeterministicGetWeakSetKeys(raw));
 
   return {
     [Symbol.iterator]: function* () {
