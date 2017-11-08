@@ -37,7 +37,7 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
    *
    * @params {Object|undefined} options.boundaries
    *         The boundaries for the heap snapshot. See
-   *         ThreadSafeChromeUtils.webidl for more details.
+   *         ChromeUtils.webidl for more details.
    *
    * @returns Promise<String>
    */

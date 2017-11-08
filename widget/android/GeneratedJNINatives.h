@@ -289,6 +289,29 @@ const JNINativeMethod GeckoThread::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class GeckoVRManager::Natives : public mozilla::jni::NativeImpl<GeckoVRManager, Impl>
+{
+public:
+    static const JNINativeMethod methods[3];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoVRManager::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoVRManager::CleanupGVRNonPresentingContext_t>(
+            mozilla::jni::NativeStub<GeckoVRManager::CleanupGVRNonPresentingContext_t, Impl>
+            ::template Wrap<&Impl::CleanupGVRNonPresentingContext>),
+
+    mozilla::jni::MakeNativeMethod<GeckoVRManager::SetGVRPaused_t>(
+            mozilla::jni::NativeStub<GeckoVRManager::SetGVRPaused_t, Impl>
+            ::template Wrap<&Impl::SetGVRPaused>),
+
+    mozilla::jni::MakeNativeMethod<GeckoVRManager::SetGVRPresentingContext_t>(
+            mozilla::jni::NativeStub<GeckoVRManager::SetGVRPresentingContext_t, Impl>
+            ::template Wrap<&Impl::SetGVRPresentingContext>)
+};
+
+template<class Impl>
 class PrefsHelper::Natives : public mozilla::jni::NativeImpl<PrefsHelper, Impl>
 {
 public:

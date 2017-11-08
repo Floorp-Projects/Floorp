@@ -10,7 +10,6 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
-#include "mozilla/dom/ThreadSafeChromeUtilsBinding.h"
 #include "mozilla/ErrorResult.h"
 
 namespace mozilla {
@@ -27,7 +26,7 @@ struct IdleRequestOptions;
 class PrecompiledScript;
 class Promise;
 
-class ThreadSafeChromeUtils
+class ChromeUtils
 {
 private:
   // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
@@ -76,11 +75,7 @@ public:
                               const Base64URLDecodeOptions& aOptions,
                               JS::MutableHandle<JSObject*> aRetval,
                               ErrorResult& aRv);
-};
 
-class ChromeUtils : public ThreadSafeChromeUtils
-{
-public:
   static void
   OriginAttributesToSuffix(GlobalObject& aGlobal,
                            const dom::OriginAttributesDictionary& aAttrs,

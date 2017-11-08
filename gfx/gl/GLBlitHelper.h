@@ -36,6 +36,7 @@ namespace gl {
 
 class BindAnglePlanes;
 class GLContext;
+class GLBlitHelper;
 
 bool
 GuessDivisors(const gfx::IntSize& ySize, const gfx::IntSize& uvSize,

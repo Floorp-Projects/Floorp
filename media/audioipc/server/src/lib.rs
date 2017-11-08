@@ -616,7 +616,7 @@ impl Server {
 
         let client_socket = match self.socket.accept() {
             Err(e) => {
-                error!("server accept error: {}", e);
+                warn!("server accept error: {}", e);
                 return Err(e.into());
             },
             Ok(None) => panic!("accept returned EAGAIN unexpectedly"),
@@ -673,14 +673,14 @@ impl Server {
 
         match poll.poll(&mut events, None) {
             Ok(_) => {},
-            Err(e) => error!("server poll error: {}", e),
+            Err(e) => warn!("server poll error: {}", e),
         }
 
         for event in events.iter() {
             match event.token() {
                 SERVER => {
                     if let Err(e) = self.accept(poll) {
-                        error!("server accept error: {}", e);
+                        warn!("server accept error: {}", e);
                     };
                 },
                 QUIT => {
