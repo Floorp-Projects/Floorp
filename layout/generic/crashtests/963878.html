@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function repeatManyTimes(s)
+{
+    while (s.length < 0x8000)
+        s = s + s;
+    return s;
+}
+
+function boom()
+{
+    var initialText =
+        "\u062A" + // ARABIC LETTER TEH
+        repeatManyTimes(
+            "\u2029" + // PARAGRAPH SEPARATOR
+            "\u202D" + // LEFT-TO-RIGHT OVERRIDE
+            " "
+        ) +
+        "1"; // THE LONELIEST ASCII CHARACTER
+
+    var textNode = document.createTextNode(initialText);
+    document.getElementById("v").appendChild(textNode);
+    document.documentElement.offsetHeight;
+    textNode.data = "*" + textNode.data;
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<div id="v" style="display: table-row; font-size: 500%;"></div>
+</body>
+</html>

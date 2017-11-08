@@ -9,9 +9,6 @@
 #define _SOFTOKNT_H_
 
 #define NSS_SOFTOKEN_DEFAULT_CHUNKSIZE 2048
-#define DES_BLOCK_SIZE 8     /* bytes */
-#define MAX_DES3_KEY_SIZE 24 /* DES_BLOCK_SIZE * 3 */
-#define SFTK_MAX_DERIVE_KEY_SIZE 64
 
 /*
  * FIPS 140-2 auditing

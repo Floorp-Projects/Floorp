@@ -6,6 +6,7 @@
 #include "InputData.h"
 
 #include "mozilla/dom/Touch.h"
+#include "mozilla/TextEvents.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsThreadUtils.h"

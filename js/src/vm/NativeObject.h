@@ -847,9 +847,12 @@ class NativeObject : public ShapedObject
     void freeSlot(JSContext* cx, uint32_t slot);
 
   private:
-    static MOZ_ALWAYS_INLINE Shape* getChildProperty(JSContext* cx, HandleNativeObject obj,
-                                                     HandleShape parent,
-                                                     MutableHandle<StackShape> child);
+    static MOZ_ALWAYS_INLINE Shape* getChildDataProperty(JSContext* cx, HandleNativeObject obj,
+                                                         HandleShape parent,
+                                                         MutableHandle<StackShape> child);
+    static MOZ_ALWAYS_INLINE Shape* getChildAccessorProperty(JSContext* cx, HandleNativeObject obj,
+                                                             HandleShape parent,
+                                                             MutableHandle<StackShape> child);
 
   public:
     /* Add a property whose id is not yet in this scope. */

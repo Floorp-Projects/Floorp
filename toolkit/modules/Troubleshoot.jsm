@@ -104,6 +104,7 @@ const PREFS_BLACKLIST = [
 ];
 
 // Table of getters for various preference types.
+// It's important to use getComplexValue for strings: it returns Unicode (wchars), getCharPref returns UTF-8 encoded chars.
 const PREFS_GETTERS = {};
 
 PREFS_GETTERS[Ci.nsIPrefBranch.PREF_STRING] = (prefs, name) => prefs.getStringPref(name);
