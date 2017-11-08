@@ -150,6 +150,14 @@
         ]]></getter>
       </property>
 
+      <property name="scrollPosition" readonly="true">
+        <getter><![CDATA[
+          return this.orient == "vertical" ?
+                 this._scrollbox.scrollTop :
+                 this._scrollbox.scrollLeft;
+        ]]></getter>
+      </property>
+
       <field name="_startEndProps"><![CDATA[
         this.orient == "vertical" ? ["top", "bottom"] : ["left", "right"];
       ]]></field>
@@ -404,6 +412,10 @@
           });
         ]]></body>
       </method>
+
+      <field name="_isScrolling">false</field>
+      <field name="_destination">0</field>
+      <field name="_direction">0</field>
     </implementation>
 
     <handlers>
@@ -450,6 +462,17 @@
         }
 
         if (doScroll) {
+          let direction = scrollAmount < 0 ? -1 : 1;
+          let startPos = this.scrollPosition;
+
+          if (!this._isScrolling || this._direction != direction) {
+            this._destination = startPos + scrollAmount;
+            this._direction = direction;
+          } else {
+            // We were already in the process of scrolling in this direction
+            this._destination = this._destination + scrollAmount;
+            scrollAmount = this._destination - startPos;
+          }
           this.scrollByPixels(scrollAmount, instant);
         }
 
@@ -536,7 +559,14 @@
       ]]></handler>
 
       <handler event="scroll"><![CDATA[
+        this._isScrolling = true;
         this._updateScrollButtonsDisabledState();
+      ]]></handler>
+
+      <handler event="scrollend"><![CDATA[
+        this._isScrolling = false;
+        this._destination = 0;
+        this._direction = 0;
       ]]></handler>
     </handlers>
   </binding>
