@@ -7,8 +7,9 @@
 from os import path, listdir, stat
 from sys import exit
 
-SIZE_LIMIT = 5242880
+SIZE_LIMIT = 5
 PATH = path.join(path.dirname(path.abspath(__file__)), '../../app/build/outputs/apk/')
+BYTE_LIMIT = SIZE_LIMIT * 1024 * 1024;
 
 files = []
 try:
@@ -22,11 +23,11 @@ except OSError as e:
 
 for apk_file in files:
     file_size = stat(path.join(PATH, apk_file)).st_size
-    if file_size > SIZE_LIMIT:
+    if file_size > BYTE_LIMIT:
         print(" * [TOOBIG] {filename} ({filesize} > {sizelimit})".format(
-            filename=apk_file, filesize=file_size, sizelimit=SIZE_LIMIT
+            filename=apk_file, filesize=file_size, sizelimit=BYTE_LIMIT
         ))
         exit(27)
     print(" * [OKAY] {filename} ({filesize} <= {sizelimit})".format(
-            filename=apk_file, filesize=file_size, sizelimit=SIZE_LIMIT
+            filename=apk_file, filesize=file_size, sizelimit=BYTE_LIMIT
         ))
