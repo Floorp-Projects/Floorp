@@ -141,16 +141,6 @@ this.sidebarAction = class extends ExtensionAPI {
         SidebarUI.show(this.id);
       }
     }
-
-    if (install && !Services.prefs.prefHasUserValue("extensions.sidebar-button.shown")) {
-      Services.prefs.setBoolPref("extensions.sidebar-button.shown", true);
-      // If the sidebar button has never been moved to the toolbar, move it now
-      // so the user can see/access the sidebars.
-      let widget = CustomizableUI.getWidget("sidebar-button");
-      if (!widget.areaType) {
-        CustomizableUI.addWidgetToArea("sidebar-button", CustomizableUI.AREA_NAVBAR, 0);
-      }
-    }
   }
 
   sidebarUrl(panel) {
