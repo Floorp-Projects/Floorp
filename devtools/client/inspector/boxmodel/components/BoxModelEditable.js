@@ -4,11 +4,9 @@
 
 "use strict";
 
-const {
-  DOM: dom,
-  PropTypes,
-  PureComponent,
-} = require("devtools/client/shared/vendor/react");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { editableItem } = require("devtools/client/shared/inplace-editor");
 
 const LONG_TEXT_ROTATE_LIMIT = 3;
