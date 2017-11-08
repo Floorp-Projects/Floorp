@@ -191,6 +191,8 @@ interface nsIPrefBranch : nsISupports
    * @param aType     The XPCOM interface that this complex preference
    *                  represents. Interfaces currently supported are:
    *                    - nsIFile
+   *                    - nsISupportsString (UniChar)
+   *                      (deprecated; see getStringPref)
    *                    - nsIPrefLocalizedString (Localized UniChar)
    * @param aValue    The XPCOM object into which to the complex preference 
    *                  value should be retrieved.
