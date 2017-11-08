@@ -37,14 +37,8 @@ public:
 
   static nsXREDirProvider* GetSingleton();
 
-  nsresult GetUserProfilesRootDir(nsIFile** aResult,
-                                  const nsACString* aProfileName,
-                                  const nsACString* aAppName,
-                                  const nsACString* aVendorName);
-  nsresult GetUserProfilesLocalDir(nsIFile** aResult,
-                                   const nsACString* aProfileName,
-                                   const nsACString* aAppName,
-                                   const nsACString* aVendorName);
+  nsresult GetUserProfilesRootDir(nsIFile** aResult);
+  nsresult GetUserProfilesLocalDir(nsIFile** aResult);
 
   // We only set the profile dir, we don't ensure that it exists;
   // that is the responsibility of the toolkit profile service.
@@ -57,18 +51,14 @@ public:
   void DoShutdown();
 
   static nsresult GetUserAppDataDirectory(nsIFile* *aFile) {
-    return GetUserDataDirectory(aFile, false, nullptr, nullptr, nullptr);
+    return GetUserDataDirectory(aFile, false);
   }
   static nsresult GetUserLocalDataDirectory(nsIFile* *aFile) {
-    return GetUserDataDirectory(aFile, true, nullptr, nullptr, nullptr);
+    return GetUserDataDirectory(aFile, true);
   }
 
-  // By default GetUserDataDirectory gets profile path from gAppData,
-  // but that can be overridden by using aProfileName/aAppName/aVendorName.
-  static nsresult GetUserDataDirectory(nsIFile** aFile, bool aLocal,
-                                       const nsACString* aProfileName,
-                                       const nsACString* aAppName,
-                                       const nsACString* aVendorName);
+  // GetUserDataDirectory gets the profile path from gAppData.
+  static nsresult GetUserDataDirectory(nsIFile** aFile, bool aLocal);
 
   /* make sure you clone it, if you need to do stuff to it */
   nsIFile* GetGREDir() { return mGREDir; }
@@ -112,11 +102,7 @@ protected:
 
   // Determine the profile path within the UAppData directory. This is different
   // on every major platform.
-  static nsresult AppendProfilePath(nsIFile* aFile,
-                                    const nsACString* aProfileName,
-                                    const nsACString* aAppName,
-                                    const nsACString* aVendorName,
-                                    bool aLocal);
+  static nsresult AppendProfilePath(nsIFile* aFile, bool aLocal);
 
   static nsresult AppendSysUserExtensionPath(nsIFile* aFile);
   static nsresult AppendSysUserExtensionsDevPath(nsIFile* aFile);

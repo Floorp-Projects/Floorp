@@ -223,15 +223,10 @@ nsXREDirProvider::Release()
 }
 
 nsresult
-nsXREDirProvider::GetUserProfilesRootDir(nsIFile** aResult,
-                                         const nsACString* aProfileName,
-                                         const nsACString* aAppName,
-                                         const nsACString* aVendorName)
+nsXREDirProvider::GetUserProfilesRootDir(nsIFile** aResult)
 {
   nsCOMPtr<nsIFile> file;
-  nsresult rv = GetUserDataDirectory(getter_AddRefs(file),
-                                     false,
-                                     aProfileName, aAppName, aVendorName);
+  nsresult rv = GetUserDataDirectory(getter_AddRefs(file), false);
 
   if (NS_SUCCEEDED(rv)) {
 #if !defined(XP_UNIX) || defined(XP_MACOSX)
@@ -248,15 +243,10 @@ nsXREDirProvider::GetUserProfilesRootDir(nsIFile** aResult,
 }
 
 nsresult
-nsXREDirProvider::GetUserProfilesLocalDir(nsIFile** aResult,
-                                          const nsACString* aProfileName,
-                                          const nsACString* aAppName,
-                                          const nsACString* aVendorName)
+nsXREDirProvider::GetUserProfilesLocalDir(nsIFile** aResult)
 {
   nsCOMPtr<nsIFile> file;
-  nsresult rv = GetUserDataDirectory(getter_AddRefs(file),
-                                     true,
-                                     aProfileName, aAppName, aVendorName);
+  nsresult rv = GetUserDataDirectory(getter_AddRefs(file), true);
 
   if (NS_SUCCEEDED(rv)) {
 #if !defined(XP_UNIX) || defined(XP_MACOSX)
@@ -419,10 +409,10 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
       rv = file->AppendNative(NS_LITERAL_CSTRING(APP_REGISTRY_NAME));
   }
   else if (!strcmp(aProperty, NS_APP_USER_PROFILES_ROOT_DIR)) {
-    rv = GetUserProfilesRootDir(getter_AddRefs(file), nullptr, nullptr, nullptr);
+    rv = GetUserProfilesRootDir(getter_AddRefs(file));
   }
   else if (!strcmp(aProperty, NS_APP_USER_PROFILES_LOCAL_ROOT_DIR)) {
-    rv = GetUserProfilesLocalDir(getter_AddRefs(file), nullptr, nullptr, nullptr);
+    rv = GetUserProfilesLocalDir(getter_AddRefs(file));
   }
   else if (!strcmp(aProperty, XRE_EXECUTABLE_FILE)) {
     nsCOMPtr<nsIFile> lf;
@@ -1552,16 +1542,13 @@ nsXREDirProvider::GetSystemExtensionsDirectory(nsIFile** aFile)
 #endif
 
 nsresult
-nsXREDirProvider::GetUserDataDirectory(nsIFile** aFile, bool aLocal,
-                                       const nsACString* aProfileName,
-                                       const nsACString* aAppName,
-                                       const nsACString* aVendorName)
+nsXREDirProvider::GetUserDataDirectory(nsIFile** aFile, bool aLocal)
 {
   nsCOMPtr<nsIFile> localDir;
   nsresult rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), aLocal);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AppendProfilePath(localDir, aProfileName, aAppName, aVendorName, aLocal);
+  rv = AppendProfilePath(localDir, aLocal);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG_jungshik
@@ -1667,11 +1654,7 @@ nsXREDirProvider::AppendSysUserExtensionsDevPath(nsIFile* aFile)
 
 
 nsresult
-nsXREDirProvider::AppendProfilePath(nsIFile* aFile,
-                                    const nsACString* aProfileName,
-                                    const nsACString* aAppName,
-                                    const nsACString* aVendorName,
-                                    bool aLocal)
+nsXREDirProvider::AppendProfilePath(nsIFile* aFile, bool aLocal)
 {
   NS_ASSERTION(aFile, "Null pointer!");
 
@@ -1682,14 +1665,7 @@ nsXREDirProvider::AppendProfilePath(nsIFile* aFile,
   nsAutoCString profile;
   nsAutoCString appName;
   nsAutoCString vendor;
-  if (aProfileName && !aProfileName->IsEmpty()) {
-    profile = *aProfileName;
-  } else if (aAppName) {
-    appName = *aAppName;
-    if (aVendorName) {
-      vendor = *aVendorName;
-    }
-  } else if (gAppData->profile) {
+  if (gAppData->profile) {
     profile = gAppData->profile;
   } else {
     appName = gAppData->name;
@@ -1728,8 +1704,6 @@ nsXREDirProvider::AppendProfilePath(nsIFile* aFile,
   // The parent of this directory is set in GetUserDataDirectoryHome
   // XXX: handle gAppData->profile properly
   // XXXsmaug ...and the rest of the profile creation!
-  MOZ_ASSERT(!aAppName,
-             "Profile creation for external applications is not implemented!");
   rv = aFile->AppendNative(nsDependentCString("mozilla"));
   NS_ENSURE_SUCCESS(rv, rv);
 #elif defined(XP_UNIX)
