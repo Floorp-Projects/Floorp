@@ -969,6 +969,22 @@ nsIFrame::RemoveDisplayItemDataForDeletion()
     }
     delete items;
   }
+
+  if (IsFrameModified()) {
+    nsIFrame* rootFrame = PresContext()->PresShell()->GetRootFrame();
+    MOZ_ASSERT(rootFrame);
+
+    nsTArray<nsIFrame*>* modifiedFrames =
+      rootFrame->GetProperty(nsIFrame::ModifiedFrameList());
+    MOZ_ASSERT(modifiedFrames);
+
+    for (auto& frame : *modifiedFrames) {
+      if (frame == this) {
+        frame = nullptr;
+        break;
+      }
+    }
+  }
 }
 
 void
@@ -997,39 +1013,39 @@ nsIFrame::MarkNeedsDisplayItemRebuild()
     return;
   }
 
-  std::vector<WeakFrame>* modifiedFrames =
+  nsTArray<nsIFrame*>* modifiedFrames =
     rootFrame->GetProperty(nsIFrame::ModifiedFrameList());
 
   if (!modifiedFrames) {
-    modifiedFrames = new std::vector<WeakFrame>();
+    modifiedFrames = new nsTArray<nsIFrame*>();
     rootFrame->SetProperty(nsIFrame::ModifiedFrameList(), modifiedFrames);
   }
 
   if (this == rootFrame) {
     // If this is the root frame, then marking us as needing a display
     // item rebuild implies the same for all our descendents. Clear them
-    // all out to reduce the number of WeakFrames we keep around.
+    // all out to reduce the number of modified frames we keep around.
     for (nsIFrame* f : *modifiedFrames) {
       if (f) {
         f->SetFrameIsModified(false);
       }
     }
-    modifiedFrames->clear();
-  } else if (modifiedFrames->size() > gfxPrefs::LayoutRebuildFrameLimit()) {
+    modifiedFrames->Clear();
+  } else if (modifiedFrames->Length() > gfxPrefs::LayoutRebuildFrameLimit()) {
     // If the list starts getting too big, then just mark the root frame
     // as needing a rebuild.
     rootFrame->MarkNeedsDisplayItemRebuild();
     return;
   }
 
-  modifiedFrames->emplace_back(this);
+  modifiedFrames->AppendElement(this);
 
   // TODO: this is a bit of a hack. We are using ModifiedFrameList property to
   // decide whether we are trying to reuse the display list.
   if (displayRoot != rootFrame &&
       !displayRoot->HasProperty(nsIFrame::ModifiedFrameList())) {
     displayRoot->SetProperty(nsIFrame::ModifiedFrameList(),
-                             new std::vector<WeakFrame>());
+                             new nsTArray<nsIFrame*>());
   }
 
   MOZ_ASSERT(PresContext()->LayoutPhaseCount(eLayoutPhase_DisplayListBuilding) == 0);
