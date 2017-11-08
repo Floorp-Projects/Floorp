@@ -37,15 +37,15 @@ TransitionEventHandler.prototype.clear = () => {
 };
 
 function setupTransition(t, transitionStyle) {
-  var div = addDiv(t, { style: 'transition: ' + transitionStyle });
-  var watcher = new EventWatcher(t, div, [ 'transitionrun',
+  const div = addDiv(t, { style: 'transition: ' + transitionStyle });
+  const watcher = new EventWatcher(t, div, [ 'transitionrun',
                                            'transitionstart',
                                            'transitionend',
                                            'transitioncancel' ]);
   flushComputedStyle(div);
 
   div.style.marginLeft = '100px';
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
 
   return [transition, watcher, div];
 }
@@ -53,7 +53,7 @@ function setupTransition(t, transitionStyle) {
 // On the next frame (i.e. when events are queued), whether or not the
 // transition is still pending depends on the implementation.
 promise_test(t => {
-  var [transition, watcher] =
+  const [transition, watcher] =
     setupTransition(t, 'margin-left 100s 100s');
   return watcher.wait_for('transitionrun').then(evt => {
     assert_equals(evt.elapsedTime, 0.0);
@@ -61,7 +61,7 @@ promise_test(t => {
 }, 'Idle -> Pending or Before');
 
 promise_test(t => {
-  var [transition, watcher] =
+  const [transition, watcher] =
     setupTransition(t, 'margin-left 100s 100s');
   // Force the transition to leave the idle phase
   transition.startTime = document.timeline.currentTime;
@@ -71,9 +71,9 @@ promise_test(t => {
 }, 'Idle -> Before');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s 100s');
-  var handler = new TransitionEventHandler(div);
+  const handler = new TransitionEventHandler(div);
 
   // Seek to Active phase.
   transition.currentTime = 100 * MS_PER_SEC;
@@ -86,9 +86,9 @@ promise_test(t => {
 }, 'Idle or Pending -> Active');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s 100s');
-  var handler = new TransitionEventHandler(div);
+  const handler = new TransitionEventHandler(div);
 
   // Seek to After phase.
   transition.finish();
@@ -102,7 +102,7 @@ promise_test(t => {
 }, 'Idle or Pending -> After');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s 100s');
 
   return Promise.all([ watcher.wait_for('transitionrun'),
@@ -117,7 +117,7 @@ promise_test(t => {
 }, 'Before -> Idle (display: none)');
 
 promise_test(t => {
-  var [transition, watcher] =
+  const [transition, watcher] =
     setupTransition(t, 'margin-left 100s 100s');
 
   return Promise.all([ watcher.wait_for('transitionrun'),
@@ -131,7 +131,7 @@ promise_test(t => {
 }, 'Before -> Idle (Animation.timeline = null)');
 
 promise_test(t => {
-  var [transition, watcher] =
+  const [transition, watcher] =
     setupTransition(t, 'margin-left 100s 100s');
 
   return Promise.all([ watcher.wait_for('transitionrun'),
@@ -144,9 +144,9 @@ promise_test(t => {
 }, 'Before -> Active');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s 100s');
-  var handler = new TransitionEventHandler(div);
+  const handler = new TransitionEventHandler(div);
 
   return Promise.all([ watcher.wait_for('transitionrun'),
                        transition.ready ]).then(() => {
@@ -160,7 +160,7 @@ promise_test(t => {
 }, 'Before -> After');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s');
 
   // Seek to Active start position.
@@ -177,7 +177,7 @@ promise_test(t => {
 }, 'Active -> Idle, no delay (display: none)');
 
 promise_test(t => {
-  var [transition, watcher] =
+  const [transition, watcher] =
     setupTransition(t, 'margin-left 100s');
 
   return watcher.wait_for([ 'transitionrun',
@@ -192,7 +192,7 @@ promise_test(t => {
 }, 'Active -> Idle, no delay (Animation.timeline = null)');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s 100s');
   // Pause so the currentTime is fixed and we can accurately compare the event
   // time in transition cancel events.
@@ -212,7 +212,7 @@ promise_test(t => {
 }, 'Active -> Idle, with positive delay (display: none)');
 
 promise_test(t => {
-  var [transition, watcher] =
+  const [transition, watcher] =
     setupTransition(t, 'margin-left 100s 100s');
 
   // Seek to Active phase.
@@ -229,7 +229,7 @@ promise_test(t => {
 }, 'Active -> Idle, with positive delay (Animation.timeline = null)');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s -50s');
 
   // Pause so the currentTime is fixed and we can accurately compare the event
@@ -248,7 +248,7 @@ promise_test(t => {
 }, 'Active -> Idle, with negative delay (display: none)');
 
 promise_test(t => {
-  var [transition, watcher] =
+  const [transition, watcher] =
     setupTransition(t, 'margin-left 100s -50s');
 
   return watcher.wait_for([ 'transitionrun',
@@ -263,7 +263,7 @@ promise_test(t => {
 }, 'Active -> Idle, with negative delay (Animation.timeline = null)');
 
 promise_test(t => {
-  var [transition, watcher] =
+  const [transition, watcher] =
     setupTransition(t, 'margin-left 100s 100s');
   // Seek to Active phase.
   transition.currentTime = 100 * MS_PER_SEC;
@@ -278,7 +278,7 @@ promise_test(t => {
 }, 'Active -> Before');
 
 promise_test(t => {
-  var [transition, watcher] =
+  const [transition, watcher] =
     setupTransition(t, 'margin-left 100s 100s');
   // Seek to Active phase.
   transition.currentTime = 100 * MS_PER_SEC;
@@ -293,9 +293,9 @@ promise_test(t => {
 }, 'Active -> After');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s 100s');
-  var handler = new TransitionEventHandler(div);
+  const handler = new TransitionEventHandler(div);
 
   // Seek to After phase.
   transition.finish();
@@ -312,7 +312,7 @@ promise_test(t => {
 }, 'After -> Before');
 
 promise_test(t => {
-  var [transition, watcher] =
+  const [transition, watcher] =
     setupTransition(t, 'margin-left 100s 100s');
   // Seek to After phase.
   transition.finish();
@@ -328,9 +328,9 @@ promise_test(t => {
 }, 'After -> Active');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s -50s');
-  var handler = new TransitionEventHandler(div);
+  const handler = new TransitionEventHandler(div);
 
   return watcher.wait_for([ 'transitionrun',
                             'transitionstart' ]).then(() => {
@@ -344,9 +344,9 @@ promise_test(t => {
 }, 'Calculating the interval start and end time with negative start delay.');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s 100s');
-  var handler = new TransitionEventHandler(div);
+  const handler = new TransitionEventHandler(div);
 
   return watcher.wait_for('transitionrun').then(evt => {
     // We can't set the end delay via generated effect timing.
@@ -373,7 +373,7 @@ promise_test(t => {
 }, 'Calculating the interval start and end time with negative end delay.');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s 100s');
 
   return watcher.wait_for('transitionrun').then(() => {
@@ -389,7 +389,7 @@ promise_test(t => {
 }, 'Call Animation.cancel after cancelling transition.');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s 100s');
 
   return watcher.wait_for('transitionrun').then(evt => {
@@ -404,7 +404,7 @@ promise_test(t => {
 }, 'Restart transition after cancelling transition immediately');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s 100s');
 
   return watcher.wait_for('transitionrun').then(evt => {
@@ -421,7 +421,7 @@ promise_test(t => {
 }, 'Call Animation.cancel after restarting transition immediately');
 
 promise_test(t => {
-  var [transition, watcher] =
+  const [transition, watcher] =
     setupTransition(t, 'margin-left 100s');
 
   return watcher.wait_for([ 'transitionrun',
@@ -438,7 +438,7 @@ promise_test(t => {
 }, 'Set timeline and play transition after clear the timeline');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s');
 
   return watcher.wait_for([ 'transitionrun',
@@ -455,7 +455,7 @@ promise_test(t => {
 }, 'Set null target effect after cancel the transition');
 
 promise_test(t => {
-  var [transition, watcher, div] =
+  const [transition, watcher, div] =
     setupTransition(t, 'margin-left 100s');
 
   return watcher.wait_for([ 'transitionrun',
