@@ -87,6 +87,21 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
     uint32_t numRepeatTracks = aTrackInfo->mRemovedRepeatTracks.Length();
     uint32_t numAddedLines = 0;
 
+    // For the calculation of negative line numbers, we need to know
+    // the total number of leading implicit and explicit tracks.
+    // This might be different from the number of tracks sizes in
+    // aTrackInfo, because some of those tracks may be auto-fits that
+    // have been removed. So the total number of tracks is:
+    // trackCount + (count of mRemovedRepeatTracks elements == true).
+    uint32_t leadingTrackCount = trackCount;
+    if (numRepeatTracks > 0) {
+      for (auto& removedTrack : aTrackInfo->mRemovedRepeatTracks) {
+        if (removedTrack) {
+          ++leadingTrackCount;
+        }
+      }
+    }
+
     for (uint32_t i = aTrackInfo->mStartFragmentTrack;
          i < aTrackInfo->mEndFragmentTrack + 1;
          i++) {
@@ -137,6 +152,7 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
                                                lastTrackEdge,
                                                repeatIndex,
                                                numRepeatTracks,
+                                               leadingTrackCount,
                                                lineNames);
       }
 
@@ -145,6 +161,7 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
       MOZ_ASSERT(line1Index > 0, "line1Index must be positive.");
       bool isBeforeFirstExplicit =
         (line1Index <= aTrackInfo->mNumLeadingImplicitTracks);
+      bool isAfterLastExplicit = line1Index > (leadingTrackCount + 1);
       // Calculate an actionable line number for this line, that could be used
       // in a css grid property to align a grid item or area at that line.
       // For implicit lines that appear before line 1, report a number of 0.
@@ -152,11 +169,13 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
       // meaning in the css grid spec (negative indexes are negative-1-based
       // from the end of the grid decreasing towards the front).
       uint32_t lineNumber = isBeforeFirstExplicit ? 0 :
-        (line1Index - aTrackInfo->mNumLeadingImplicitTracks + numAddedLines);
+        (line1Index + numAddedLines - aTrackInfo->mNumLeadingImplicitTracks);
+
+      // The negativeNumber is counted back from the leadingTrackCount.
+      int32_t lineNegativeNumber = isAfterLastExplicit ? 0 :
+        (line1Index + numAddedLines - (leadingTrackCount + 1));
       GridDeclaration lineType =
-        (isBeforeFirstExplicit ||
-         line1Index > (aTrackInfo->mNumLeadingImplicitTracks +
-                       aTrackInfo->mNumExplicitTracks + 1))
+        (isBeforeFirstExplicit || isAfterLastExplicit)
          ? GridDeclaration::Implicit
          : GridDeclaration::Explicit;
       line->SetLineValues(
@@ -165,6 +184,7 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
         nsPresContext::AppUnitsToDoubleCSSPixels(startOfNextTrack -
                                                  lastTrackEdge),
         lineNumber,
+        lineNegativeNumber,
         lineType
       );
 
@@ -181,6 +201,7 @@ GridLines::AppendRemovedAutoFits(const ComputedGridTrackInfo* aTrackInfo,
                                  nscoord aLastTrackEdge,
                                  uint32_t& aRepeatIndex,
                                  uint32_t aNumRepeatTracks,
+                                 uint32_t aNumLeadingTracks,
                                  nsTArray<nsString>& aLineNames)
 {
   // Check to see if lineNames contains ALL of the before line names.
@@ -225,13 +246,29 @@ GridLines::AppendRemovedAutoFits(const ComputedGridTrackInfo* aTrackInfo,
 
     RefPtr<GridLine> line = new GridLine(this);
     mLines.AppendElement(line);
+
+    // Time to calculate the line numbers. For the positive numbers
+    // we count with a 1-based index from mRepeatFirstTrack. Although
+    // this number is the index of the first repeat track AFTER all
+    // the leading implicit tracks, that's still what we want since
+    // all those leading implicit tracks have line number 0.
     uint32_t lineNumber = aTrackInfo->mRepeatFirstTrack +
                           aRepeatIndex + 1;
+
+    // The negative number does have to account for the leading
+    // implicit tracks. We've been passed aNumLeadingTracks which is
+    // the total of the leading implicit tracks plus the explicit
+    // tracks. So all we have to do is subtract that number from the
+    // 0-based index of this track.
+    int32_t lineNegativeNumber = (aTrackInfo->mNumLeadingImplicitTracks +
+                                  aTrackInfo->mRepeatFirstTrack +
+                                  aRepeatIndex) - aNumLeadingTracks;
     line->SetLineValues(
       aLineNames,
       nsPresContext::AppUnitsToDoubleCSSPixels(aLastTrackEdge),
       nsPresContext::AppUnitsToDoubleCSSPixels(0),
       lineNumber,
+      lineNegativeNumber,
       GridDeclaration::Explicit
     );
 
