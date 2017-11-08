@@ -549,17 +549,17 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
 {
     AutoCheckShapeConsistency check(obj);
 
+    /* The slot, if any, must be a reserved slot. */
+    MOZ_ASSERT(slot == SHAPE_INVALID_SLOT ||
+               slot < JSCLASS_RESERVED_SLOTS(obj->getClass()));
+
     /*
      * The code below deals with either converting obj to dictionary mode or
      * growing an object that's already in dictionary mode.
      */
     ShapeTable* table = nullptr;
     if (!obj->inDictionaryMode()) {
-        bool stableSlot =
-            (slot == SHAPE_INVALID_SLOT) ||
-            obj->lastProperty()->hasMissingSlot() ||
-            (slot == obj->lastProperty()->maybeSlot() + 1);
-        if (!stableSlot || ShouldConvertToDictionary(obj)) {
+        if (ShouldConvertToDictionary(obj)) {
             if (!toDictionaryMode(cx, obj))
                 return nullptr;
             table = obj->lastProperty()->maybeTable(keep);
