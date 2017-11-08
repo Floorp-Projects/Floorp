@@ -30,16 +30,14 @@ function run_test() {
 
   // serialNumber
   deepEqual(certificate.tbsCertificate.serialNumber,
-            [ 0x35, 0x1b, 0xe9, 0x3a, 0x1b, 0x03, 0x1c, 0x46, 0x1b, 0x45,
-              0xfe, 0x9b, 0xb2, 0x20, 0x0f, 0x6e, 0xf2, 0x9e, 0xd9, 0x50 ],
+            [ 0x2d, 0xb0, 0x79, 0x13, 0x99, 0xaa, 0xf8, 0x1f, 0x3e, 0xce, 0xac,
+              0xb7, 0x53, 0xc9, 0xc1, 0x09, 0x12, 0x9e, 0x95, 0x18 ],
             "default-ee.pem should have expected serialNumber");
 
   deepEqual(certificate.tbsCertificate.signature.algorithm._values,
             [ 1, 2, 840, 113549, 1, 1, 11 ], // sha256WithRSAEncryption
             "default-ee.pem should have sha256WithRSAEncryption signature");
-  // TODO: there should actually be an explicit encoded NULL here, but it looks
-  // like pycert doesn't include it.
-  deepEqual(certificate.tbsCertificate.signature.parameters, null,
+  deepEqual(certificate.tbsCertificate.signature.parameters._contents, [],
             "default-ee.pem should have NULL parameters for signature");
 
   equal(certificate.tbsCertificate.issuer.rdns.length, 1,
@@ -75,9 +73,7 @@ function run_test() {
   deepEqual(certificate.signatureAlgorithm.algorithm._values,
             [ 1, 2, 840, 113549, 1, 1, 11 ], // sha256WithRSAEncryption
             "default-ee.pem should have sha256WithRSAEncryption signatureAlgorithm");
-  // TODO: there should actually be an explicit encoded NULL here, but it looks
-  // like pycert doesn't include it.
-  deepEqual(certificate.signatureAlgorithm.parameters, null,
+  deepEqual(certificate.signatureAlgorithm.parameters._contents, [],
             "default-ee.pem should have NULL parameters for signatureAlgorithm");
 
   equal(certificate.signatureValue.length, 2048 / 8,
