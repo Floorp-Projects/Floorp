@@ -377,8 +377,17 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
   }
 
   // Ready, aim, fire!
-  mHTMLEditor->InsertTextImpl(theString, aInOutParent, aInOutChildAtOffset,
-                              aInOutOffset, aDoc);
+  EditorRawDOMPoint pointToInsert(*aInOutParent, *aInOutChildAtOffset,
+                                  *aInOutOffset);
+  EditorRawDOMPoint pointAfterInsertedString;
+  nsresult rv = mHTMLEditor->InsertTextImpl(*aDoc, theString, pointToInsert,
+                                            &pointAfterInsertedString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
+  *aInOutParent = pointAfterInsertedString.Container();
+  *aInOutChildAtOffset = pointAfterInsertedString.GetChildAtOffset();
+  *aInOutOffset = pointAfterInsertedString.Offset();
   return NS_OK;
 }
 
