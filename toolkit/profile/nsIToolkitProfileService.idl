@@ -93,7 +93,7 @@ interface nsIToolkitProfileService : nsISupports
 
     /**
      * Returns the number of profiles.
-     * @return 0, 1, or 2. More than 2 profiles will always return 2.
+     * @return the number of profiles.
      */
     readonly attribute unsigned long profileCount;
 
