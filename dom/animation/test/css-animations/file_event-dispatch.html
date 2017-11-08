@@ -189,7 +189,6 @@ promise_test(t => {
 promise_test(t => {
   const [animation, watcher, div] =
     setupAnimation(t, 'anim 100s 100s paused');
-  const handler = new AnimationEventHandler(div);
 
   // Seek to After phase.
   animation.finish();
@@ -197,7 +196,6 @@ promise_test(t => {
                             'animationend' ]).then(() => {
     // Seek to Active phase.
     animation.currentTime = 100 * MS_PER_SEC;
-    handler.clear();
     return watcher.wait_for('animationstart');
   }).then(evt => {
     assert_equals(evt.elapsedTime, 100.0);
@@ -207,7 +205,6 @@ promise_test(t => {
 promise_test(t => {
   const [animation, watcher, div]
     = setupAnimation(t, 'anim 100s 100s 3 paused');
-  const handler = new AnimationEventHandler(div);
 
   return animation.ready.then(() => {
     // Seek to iteration 0 (no animationiteration event should be dispatched)
@@ -216,7 +213,6 @@ promise_test(t => {
   }).then(evt => {
     // Seek to iteration 2
     animation.currentTime = 300 * MS_PER_SEC;
-    handler.clear();
     return watcher.wait_for('animationiteration');
   }).then(evt => {
     assert_equals(evt.elapsedTime, 200);
