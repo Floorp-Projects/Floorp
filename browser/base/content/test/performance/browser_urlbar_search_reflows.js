@@ -114,10 +114,10 @@ const EXPECTED_REFLOWS_SECOND_OPEN = [
   },
 ];
 
-const SEARCH_TERM = "urlbar-reflows";
+const SEARCH_TERM = "urlbar-reflows-" + Date.now();
 
 add_task(async function setup() {
-  await addDummyHistoryEntries();
+  await addDummyHistoryEntries(SEARCH_TERM);
 });
 
 /**

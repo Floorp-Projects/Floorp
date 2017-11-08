@@ -5,6 +5,7 @@
 basepath = "../../.."
 
 locales = [
+    "ach",
     "an",
     "ar",
     "as",
@@ -15,6 +16,7 @@ locales = [
     "bn-BD",
     "bn-IN",
     "br",
+    "bs",
     "ca",
     "cak",
     "cs",
@@ -48,6 +50,7 @@ locales = [
     "hsb",
     "hu",
     "hy-AM",
+    "ia",
     "id",
     "is",
     "it",
@@ -59,6 +62,7 @@ locales = [
     "ko",
     "lo",
     "lt",
+    "ltg",
     "lv",
     "mai",
     "ml",
@@ -69,6 +73,7 @@ locales = [
     "ne-NP",
     "nl",
     "nn-NO",
+    "oc",
     "or",
     "pa-IN",
     "pl",

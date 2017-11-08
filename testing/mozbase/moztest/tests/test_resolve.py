@@ -1,8 +1,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# flake8: noqa: E501
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import cPickle as pickle
 import os
@@ -11,12 +12,11 @@ import tempfile
 import unittest
 
 import mozpack.path as mozpath
-
-from mozfile import NamedTemporaryFile
-from mozunit import main
-
+import mozunit
 from mozbuild.base import MozbuildObject
-from mozbuild.testing import (
+from mozfile import NamedTemporaryFile
+
+from moztest.resolve import (
     TestMetadata,
     TestResolver,
 )
@@ -29,10 +29,10 @@ ALL_TESTS = {
             "expected": "pass",
             "file_relpath": "accessible/tests/mochitest/actions/test_anchors.html",
             "flavor": "a11y",
-            "here": "/Users/gps/src/firefox/accessible/tests/mochitest/actions",
-            "manifest": "/Users/gps/src/firefox/accessible/tests/mochitest/actions/a11y.ini",
+            "here": "/firefox/accessible/tests/mochitest/actions",
+            "manifest": "/firefox/accessible/tests/mochitest/actions/a11y.ini",
             "name": "test_anchors.html",
-            "path": "/Users/gps/src/firefox/accessible/tests/mochitest/actions/test_anchors.html",
+            "path": "/firefox/accessible/tests/mochitest/actions/test_anchors.html",
             "relpath": "test_anchors.html"
         }
     ],
@@ -43,10 +43,10 @@ ALL_TESTS = {
             "firefox-appdir": "browser",
             "flavor": "xpcshell",
             "head": "head_global.js head_helpers.js head_http.js",
-            "here": "/Users/gps/src/firefox/services/common/tests/unit",
-            "manifest": "/Users/gps/src/firefox/services/common/tests/unit/xpcshell.ini",
+            "here": "/firefox/services/common/tests/unit",
+            "manifest": "/firefox/services/common/tests/unit/xpcshell.ini",
             "name": "test_async_chain.js",
-            "path": "/Users/gps/src/firefox/services/common/tests/unit/test_async_chain.js",
+            "path": "/firefox/services/common/tests/unit/test_async_chain.js",
             "relpath": "test_async_chain.js",
         }
     ],
@@ -57,24 +57,24 @@ ALL_TESTS = {
             "firefox-appdir": "browser",
             "flavor": "xpcshell",
             "head": "head_global.js head_helpers.js head_http.js",
-            "here": "/Users/gps/src/firefox/services/common/tests/unit",
-            "manifest": "/Users/gps/src/firefox/services/common/tests/unit/xpcshell.ini",
+            "here": "/firefox/services/common/tests/unit",
+            "manifest": "/firefox/services/common/tests/unit/xpcshell.ini",
             "name": "test_async_querySpinningly.js",
-            "path": "/Users/gps/src/firefox/services/common/tests/unit/test_async_querySpinningly.js",
+            "path": "/firefox/services/common/tests/unit/test_async_querySpinningly.js",
             "relpath": "test_async_querySpinningly.js",
         }
     ],
-   "toolkit/mozapps/update/test/unit/test_0201_app_launch_apply_update.js": [
+    "toolkit/mozapps/update/test/unit/test_0201_app_launch_apply_update.js": [
         {
             "dir_relpath": "toolkit/mozapps/update/test/unit",
             "file_relpath": "toolkit/mozapps/update/test/unit/test_0201_app_launch_apply_update.js",
             "flavor": "xpcshell",
             "generated-files": "head_update.js",
             "head": "head_update.js",
-            "here": "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit",
-            "manifest": "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini",
+            "here": "/firefox/toolkit/mozapps/update/test/unit",
+            "manifest": "/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini",
             "name": "test_0201_app_launch_apply_update.js",
-            "path": "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit/test_0201_app_launch_apply_update.js",
+            "path": "/firefox/toolkit/mozapps/update/test/unit/test_0201_app_launch_apply_update.js",
             "reason": "bug 820380",
             "relpath": "test_0201_app_launch_apply_update.js",
             "run-sequentially": "Launches application.",
@@ -86,10 +86,10 @@ ALL_TESTS = {
             "flavor": "xpcshell",
             "generated-files": "head_update.js",
             "head": "head_update.js head2.js",
-            "here": "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit",
-            "manifest": "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini",
+            "here": "/firefox/toolkit/mozapps/update/test/unit",
+            "manifest": "/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini",
             "name": "test_0201_app_launch_apply_update.js",
-            "path": "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit/test_0201_app_launch_apply_update.js",
+            "path": "/firefox/toolkit/mozapps/update/test/unit/test_0201_app_launch_apply_update.js",
             "reason": "bug 820380",
             "relpath": "test_0201_app_launch_apply_update.js",
             "run-sequentially": "Launches application.",
@@ -101,10 +101,10 @@ ALL_TESTS = {
             "dir_relpath": "mobile/android/tests/background/junit3/src/common",
             "file_relpath": "mobile/android/tests/background/junit3/src/common/TestAndroidLogWriters.java",
             "flavor": "instrumentation",
-            "here": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/background/junit3",
-            "manifest": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/background/junit3/instrumentation.ini",
+            "here": "/firefox/mobile/android/tests/background/junit3",
+            "manifest": "/firefox/mobile/android/tests/background/junit3/instrumentation.ini",
             "name": "src/common/TestAndroidLogWriters.java",
-            "path": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/background/junit3/src/common/TestAndroidLogWriters.java",
+            "path": "/firefox/mobile/android/tests/background/junit3/src/common/TestAndroidLogWriters.java",
             "relpath": "src/common/TestAndroidLogWriters.java",
             "subsuite": "background"
         }
@@ -114,10 +114,10 @@ ALL_TESTS = {
             "dir_relpath": "mobile/android/tests/browser/junit3/src",
             "file_relpath": "mobile/android/tests/browser/junit3/src/TestDistribution.java",
             "flavor": "instrumentation",
-            "here": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/browser/junit3",
-            "manifest": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/browser/junit3/instrumentation.ini",
+            "here": "/firefox/mobile/android/tests/browser/junit3",
+            "manifest": "/firefox/mobile/android/tests/browser/junit3/instrumentation.ini",
             "name": "src/TestDistribution.java",
-            "path": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/browser/junit3/src/TestDistribution.java",
+            "path": "/firefox/mobile/android/tests/browser/junit3/src/TestDistribution.java",
             "relpath": "src/TestDistribution.java",
             "subsuite": "browser"
         }
@@ -127,10 +127,10 @@ ALL_TESTS = {
             "dir_relpath": "image/test/browser",
             "file_relpath": "image/test/browser/browser_bug666317.js",
             "flavor": "browser-chrome",
-            "here": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/image/test/browser",
-            "manifest": "/home/chris/m-c/image/test/browser/browser.ini",
+            "here": "/firefox/testing/mochitest/browser/image/test/browser",
+            "manifest": "/firefox/image/test/browser/browser.ini",
             "name": "browser_bug666317.js",
-            "path": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/image/test/browser/browser_bug666317.js",
+            "path": "/firefox/testing/mochitest/browser/image/test/browser/browser_bug666317.js",
             "relpath": "image/test/browser/browser_bug666317.js",
             "skip-if": "e10s # Bug 948194 - Decoded Images seem to not be discarded on memory-pressure notification with e10s enabled",
             "subsuite": ""
@@ -141,10 +141,10 @@ ALL_TESTS = {
             "dir_relpath": "devtools/client/markupview/test",
             "file_relpath": "devtools/client/markupview/test/browser_markupview_copy_image_data.js",
             "flavor": "browser-chrome",
-            "here": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/devtools/client/markupview/test",
-            "manifest": "/home/chris/m-c/devtools/client/markupview/test/browser.ini",
+            "here": "/firefox/testing/mochitest/browser/devtools/client/markupview/test",
+            "manifest": "/firefox/devtools/client/markupview/test/browser.ini",
             "name": "browser_markupview_copy_image_data.js",
-            "path": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/devtools/client/markupview/test/browser_markupview_copy_image_data.js",
+            "path": "/firefox/testing/mochitest/browser/devtools/client/markupview/test/browser_markupview_copy_image_data.js",
             "relpath": "devtools/client/markupview/test/browser_markupview_copy_image_data.js",
             "subsuite": "devtools",
             "tags": "devtools"
@@ -153,7 +153,7 @@ ALL_TESTS = {
 }
 
 TEST_DEFAULTS = {
-    "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini": {"support-files": "\ndata/**\nxpcshell_updater.ini"}
+    "/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini": {"support-files": "\ndata/**\nxpcshell_updater.ini"}
 }
 
 
@@ -230,7 +230,7 @@ class TestTestMetadata(Base):
 
 
 class TestTestResolver(Base):
-    FAKE_TOPSRCDIR = '/Users/gps/src/firefox'
+    FAKE_TOPSRCDIR = '/firefox'
 
     def setUp(self):
         Base.setUp(self)
@@ -323,6 +323,22 @@ class TestTestResolver(Base):
             path = t['file_relpath']
             self.assertTrue(path.startswith('accessible') or path.endswith('.js'))
 
+    def test_resolve_metadata(self):
+        """Test finding metadata from outgoing files."""
+        r = self._get_resolver()
+
+        suites, tests = r.resolve_metadata(['bc'])
+        assert suites == {'mochitest-browser'}
+        assert tests == []
+
+        suites, tests = r.resolve_metadata(['mochitest-a11y', 'browser', 'xpcshell'])
+        assert suites == {'mochitest-a11y', 'xpcshell'}
+        assert sorted(t['file_relpath'] for t in tests) == [
+            'devtools/client/markupview/test/browser_markupview_copy_image_data.js',
+            'image/test/browser/browser_bug666317.js',
+            'mobile/android/tests/browser/junit3/src/TestDistribution.java',
+        ]
+
 
 if __name__ == '__main__':
-    main()
+    mozunit.main()

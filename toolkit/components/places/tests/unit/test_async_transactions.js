@@ -1276,6 +1276,8 @@ add_task(async function test_tag_uri() {
   await doTest({ urls: [bm_info_a.url], tag: "MyTag" });
   await doTest({ urls: [bm_info_a.url, bm_info_b.url], tags: ["A, B"] });
   await doTest({ urls: [bm_info_a.url, unbookmarked_uri], tag: "C" });
+  // Duplicate URLs listed.
+  await doTest({ urls: [bm_info_a.url, bm_info_b.url, bm_info_a.url], tag: "D" });
 
   // Cleanup
   observer.reset();
