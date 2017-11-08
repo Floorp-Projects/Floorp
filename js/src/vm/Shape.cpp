@@ -292,61 +292,85 @@ Shape::replaceLastProperty(JSContext* cx, StackBaseShape& base,
  * one of lastProperty() or lastProperty()->parent.
  */
 /* static */ MOZ_ALWAYS_INLINE Shape*
-NativeObject::getChildProperty(JSContext* cx,
-                               HandleNativeObject obj, HandleShape parent,
-                               MutableHandle<StackShape> child)
+NativeObject::getChildDataProperty(JSContext* cx,
+                                   HandleNativeObject obj, HandleShape parent,
+                                   MutableHandle<StackShape> child)
 {
-    /*
-     * Shared properties have no slot, but slot_ will reflect that of parent.
-     * Unshared properties allocate a slot here but may lose it due to a
-     * JS_ClearScope call.
-     */
-    if (!child.isDataProperty()) {
-        child.setSlot(parent->maybeSlot());
-    } else {
-        if (child.hasMissingSlot()) {
-            uint32_t slot;
-            if (obj->inDictionaryMode()) {
-                if (!allocDictionarySlot(cx, obj, &slot))
-                    return nullptr;
-            } else {
-                slot = obj->slotSpan();
-                MOZ_ASSERT(slot >= JSSLOT_FREE(obj->getClass()));
-                // Objects with many properties are converted to dictionary
-                // mode, so we can't overflow SHAPE_MAXIMUM_SLOT here.
-                MOZ_ASSERT(slot < JSSLOT_FREE(obj->getClass()) + PropertyTree::MAX_HEIGHT);
-                MOZ_ASSERT(slot < SHAPE_MAXIMUM_SLOT);
-            }
-            child.setSlot(slot);
+    MOZ_ASSERT(child.isDataProperty());
+
+    if (child.hasMissingSlot()) {
+        uint32_t slot;
+        if (obj->inDictionaryMode()) {
+            if (!allocDictionarySlot(cx, obj, &slot))
+                return nullptr;
         } else {
-            /*
-             * Slots can only be allocated out of order on objects in
-             * dictionary mode.  Otherwise the child's slot must be after the
-             * parent's slot (if it has one), because slot number determines
-             * slot span for objects with that shape.  Usually child slot
-             * *immediately* follows parent slot, but there may be a slot gap
-             * when the object uses some -- but not all -- of its reserved
-             * slots to store properties.
-             */
-            MOZ_ASSERT(obj->inDictionaryMode() ||
-                       parent->hasMissingSlot() ||
-                       child.slot() == parent->maybeSlot() + 1 ||
-                       (parent->maybeSlot() + 1 < JSSLOT_FREE(obj->getClass()) &&
-                        child.slot() == JSSLOT_FREE(obj->getClass())));
+            slot = obj->slotSpan();
+            MOZ_ASSERT(slot >= JSSLOT_FREE(obj->getClass()));
+            // Objects with many properties are converted to dictionary
+            // mode, so we can't overflow SHAPE_MAXIMUM_SLOT here.
+            MOZ_ASSERT(slot < JSSLOT_FREE(obj->getClass()) + PropertyTree::MAX_HEIGHT);
+            MOZ_ASSERT(slot < SHAPE_MAXIMUM_SLOT);
         }
+        child.setSlot(slot);
+    } else {
+        /*
+         * Slots can only be allocated out of order on objects in
+         * dictionary mode.  Otherwise the child's slot must be after the
+         * parent's slot (if it has one), because slot number determines
+         * slot span for objects with that shape.  Usually child slot
+         * *immediately* follows parent slot, but there may be a slot gap
+         * when the object uses some -- but not all -- of its reserved
+         * slots to store properties.
+         */
+        MOZ_ASSERT(obj->inDictionaryMode() ||
+                   parent->hasMissingSlot() ||
+                   child.slot() == parent->maybeSlot() + 1 ||
+                   (parent->maybeSlot() + 1 < JSSLOT_FREE(obj->getClass()) &&
+                    child.slot() == JSSLOT_FREE(obj->getClass())));
     }
 
     if (obj->inDictionaryMode()) {
         MOZ_ASSERT(parent == obj->lastProperty());
-        Shape* shape = child.isAccessorShape() ? Allocate<AccessorShape>(cx) : Allocate<Shape>(cx);
+        Shape* shape = Allocate<Shape>(cx);
         if (!shape)
             return nullptr;
-        if (child.isDataProperty() && child.slot() >= obj->lastProperty()->base()->slotSpan()) {
+        if (child.slot() >= obj->lastProperty()->base()->slotSpan()) {
             if (!obj->setSlotSpan(cx, child.slot() + 1)) {
                 new (shape) Shape(obj->lastProperty()->base()->unowned(), 0);
                 return nullptr;
             }
         }
+        shape->initDictionaryShape(child, obj->numFixedSlots(), &obj->shape_);
+        return shape;
+    }
+
+    Shape* shape = cx->zone()->propertyTree().inlinedGetChild(cx, parent, child);
+    if (!shape)
+        return nullptr;
+
+    MOZ_ASSERT(shape->parent == parent);
+    MOZ_ASSERT_IF(parent != obj->lastProperty(), parent == obj->lastProperty()->parent);
+
+    if (!obj->setLastProperty(cx, shape))
+        return nullptr;
+    return shape;
+}
+
+/* static */ MOZ_ALWAYS_INLINE Shape*
+NativeObject::getChildAccessorProperty(JSContext* cx,
+                                       HandleNativeObject obj, HandleShape parent,
+                                       MutableHandle<StackShape> child)
+{
+    MOZ_ASSERT(!child.isDataProperty());
+
+    // Accessor properties have no slot, but slot_ will reflect that of parent.
+    child.setSlot(parent->maybeSlot());
+
+    if (obj->inDictionaryMode()) {
+        MOZ_ASSERT(parent == obj->lastProperty());
+        Shape* shape = Allocate<AccessorShape>(cx);
+        if (!shape)
+            return nullptr;
         shape->initDictionaryShape(child, obj->numFixedSlots(), &obj->shape_);
         return shape;
     }
@@ -521,7 +545,7 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
 
         Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs, 0));
         child.updateGetterSetter(getter, setter);
-        shape = getChildProperty(cx, obj, last, &child);
+        shape = getChildAccessorProperty(cx, obj, last, &child);
         if (!shape)
             return nullptr;
     }
@@ -588,7 +612,7 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
             return nullptr;
 
         Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs, 0));
-        shape = getChildProperty(cx, obj, last, &child);
+        shape = getChildDataProperty(cx, obj, last, &child);
         if (!shape)
             return nullptr;
     }
@@ -905,7 +929,7 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
         /* Find or create a property tree node labeled by our arguments. */
         Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs, 0));
         RootedShape parent(cx, shape->parent);
-        shape = getChildProperty(cx, obj, parent, &child);
+        shape = getChildDataProperty(cx, obj, parent, &child);
         if (!shape)
             return nullptr;
     }
@@ -1036,7 +1060,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
         Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs, 0));
         child.updateGetterSetter(getter, setter);
         RootedShape parent(cx, shape->parent);
-        shape = getChildProperty(cx, obj, parent, &child);
+        shape = getChildAccessorProperty(cx, obj, parent, &child);
         if (!shape)
             return nullptr;
     }
