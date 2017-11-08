@@ -2810,7 +2810,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // need the container even though the merged result will.
   if (aBuilder->IsRetainingDisplayList() && BuiltBlendContainer()) {
     dirtyRect = visibleRect;
-    aBuilder->MarkFrameModifiedDuringBuilding(this);
+    aBuilder->MarkCurrentFrameModifiedDuringBuilding();
   }
 
   bool usingFilter = StyleEffects()->HasFilters();
@@ -2973,7 +2973,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     if (aBuilder->ContainsBlendMode() != BuiltBlendContainer() &&
         aBuilder->IsRetainingDisplayList()) {
       SetBuiltBlendContainer(aBuilder->ContainsBlendMode());
-      aBuilder->MarkFrameModifiedDuringBuilding(this);
+      aBuilder->MarkCurrentFrameModifiedDuringBuilding();
 
       // If we did a partial build then delete all the items we just built
       // and repeat building with the full area.
