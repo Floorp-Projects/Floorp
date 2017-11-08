@@ -13,6 +13,11 @@
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
-      "loosen-msvc-detection.patch"
+      "loosen-msvc-detection.patch",
+      "r314201.patch",
+      "r315677.patch",
+      "r316048.patch",
+      "r317705.patch",
+      "r317709.patch"
     ]
 }
