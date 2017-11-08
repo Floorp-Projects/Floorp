@@ -26,9 +26,13 @@ jobs:
          product: fennec
          buildername: release-{branch}-fennec_mark_as_shipped
          release-promotion: true
-         routes:
-            - index.releases.v1.{branch}.latest.fennec.latest.mark_as_shipped
-            - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.mark_as_shipped
+      routes:
+         - index.releases.v1.{branch}.latest.fennec.latest.mark_as_shipped
+         - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.mark_as_shipped
+      index:
+         type: release
+         product: fennec
+         job-name: android-api-16-opt
       notifications:
          completed:
             by-project:
