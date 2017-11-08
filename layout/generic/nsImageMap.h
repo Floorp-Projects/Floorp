@@ -93,7 +93,11 @@ protected:
   nsImageFrame* mImageFrame;  // the frame that owns us
   nsCOMPtr<nsIContent> mMap;
   AutoTArray<Area*, 8> mAreas; // almost always has some entries
-  bool mContainsBlockContents;
+
+  // This is set when we search for all area children and tells us whether we
+  // should consider the whole subtree or just direct children when we get
+  // content notifications about changes inside the map subtree.
+  bool mConsiderWholeSubtree;
 };
 
 #endif /* nsImageMap_h */
