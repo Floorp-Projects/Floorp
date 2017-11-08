@@ -1772,9 +1772,13 @@ nsGlobalWindow::~nsGlobalWindow()
     // alive, iterate through the inner windows and null out their
     // back pointer to this outer, and pull them out of the list of
     // inner windows.
-
-    nsGlobalWindow *w;
-    while ((w = (nsGlobalWindow *)PR_LIST_HEAD(this)) != this) {
+    //
+    // Our linked list of inner windows both contains (an nsGlobalWindowOuter),
+    // and our inner windows (nsGlobalWindowInners). This means that we need to
+    // use PRCList*. We can then compare that PRCList* to `this` to see if its an
+    // inner or outer window.
+    PRCList* w;
+    while ((w = PR_LIST_HEAD(this)) != this) {
       PR_REMOVE_AND_INIT_LINK(w);
     }
 
@@ -3542,9 +3546,13 @@ nsGlobalWindow::DetachFromDocShell()
   // Call FreeInnerObjects on all inner windows, not just the current
   // one, since some could be held by WindowStateHolder objects that
   // are GC-owned.
-  for (RefPtr<nsGlobalWindow> inner = (nsGlobalWindow *)PR_LIST_HEAD(this);
-       inner != this;
-       inner = (nsGlobalWindow*)PR_NEXT_LINK(inner)) {
+  RefPtr<nsGlobalWindowInner> inner;
+  for (PRCList* node = PR_LIST_HEAD(this);
+       node != this;
+       node = PR_NEXT_LINK(inner)) {
+    // This cast is safe because `node != this`. Non-this nodes are inner windows.
+    inner = static_cast<nsGlobalWindowInner*>(node);
+    MOZ_ASSERT(inner->IsInnerWindow());
     MOZ_ASSERT(!inner->mOuterWindow || inner->mOuterWindow == AsOuter());
     inner->FreeInnerObjects();
   }
@@ -10761,9 +10769,13 @@ nsGlobalWindow::SetChromeEventHandler(EventTarget* aChromeEventHandler)
 
   SetChromeEventHandlerInternal(aChromeEventHandler);
   // update the chrome event handler on all our inner windows
-  for (nsGlobalWindow *inner = (nsGlobalWindow *)PR_LIST_HEAD(this);
-       inner != this;
-       inner = (nsGlobalWindow*)PR_NEXT_LINK(inner)) {
+  RefPtr<nsGlobalWindowInner> inner;
+  for (PRCList* node = PR_LIST_HEAD(this);
+       node != this;
+       node = PR_NEXT_LINK(inner)) {
+    // This cast is only safe if `node != this`, as nsGlobalWindowOuter is also
+    // in the list.
+    inner = static_cast<nsGlobalWindowInner*>(node);
     NS_ASSERTION(!inner->mOuterWindow || inner->mOuterWindow == AsOuter(),
                  "bad outer window pointer");
     inner->SetChromeEventHandlerInternal(aChromeEventHandler);
