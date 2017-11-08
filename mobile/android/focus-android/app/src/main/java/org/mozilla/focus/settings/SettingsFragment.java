@@ -16,6 +16,8 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuInflater;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
@@ -84,6 +86,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
         settingsScreen = SettingsScreen.valueOf(getArguments().getString(SETTINGS_SCREEN_NAME, SettingsScreen.MAIN.name()));
         addPreferencesFromResource(settingsScreen.prefsResId);
+
+        setHasOptionsMenu(settingsScreen == SettingsScreen.SEARCH_ENGINES
+                && AppConstants.FLAG_MANUAL_SEARCH_ENGINE);
     }
 
     @Override
@@ -91,6 +96,13 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         super.onAttach(context);
         if (!(getActivity() instanceof ActionBarUpdater)) {
             throw new IllegalArgumentException("Parent activity must implement ActionBarUpdater");
+        }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        if (settingsScreen == SettingsScreen.SEARCH_ENGINES) {
+            inflater.inflate(R.menu.menu_search_engines, menu);
         }
     }
 
