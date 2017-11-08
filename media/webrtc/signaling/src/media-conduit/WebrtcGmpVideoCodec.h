@@ -449,7 +449,7 @@ private:
   class InitDoneCallback : public GetGMPVideoDecoderCallback
   {
   public:
-    explicit InitDoneCallback(WebrtcGmpVideoDecoder* aDecoder,
+    explicit InitDoneCallback(const RefPtr<WebrtcGmpVideoDecoder>& aDecoder,
                               const RefPtr<GmpInitDoneRunnable>& aInitDone)
       : mDecoder(aDecoder),
         mInitDone(aInitDone)
@@ -465,7 +465,7 @@ private:
     }
 
   private:
-    WebrtcGmpVideoDecoder* mDecoder;
+    RefPtr<WebrtcGmpVideoDecoder> mDecoder;
     RefPtr<GmpInitDoneRunnable> mInitDone;
   };
 
