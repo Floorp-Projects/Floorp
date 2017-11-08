@@ -3344,17 +3344,6 @@ TabChild::ReinitRenderingForDeviceReset()
   ReinitRendering();
 }
 
-void
-TabChild::CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier,
-                            uint64_t aDeviceResetSeqNo)
-{
-  RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
-
-  mTextureFactoryIdentifier = aNewIdentifier;
-  lm->UpdateTextureFactoryIdentifier(aNewIdentifier, aDeviceResetSeqNo);
-  FrameLayerBuilder::InvalidateAllLayers(lm);
-}
-
 NS_IMETHODIMP
 TabChild::OnShowTooltip(int32_t aXCoords, int32_t aYCoords, const char16_t *aTipText,
                         const char16_t *aTipDir)

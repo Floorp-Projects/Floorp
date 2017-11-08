@@ -1388,7 +1388,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     }
 
     lf->SetShadowManager(shadowManager);
-    lm->UpdateTextureFactoryIdentifier(textureFactoryIdentifier, 0);
+    lm->UpdateTextureFactoryIdentifier(textureFactoryIdentifier);
     // Some popup or transparent widgets may use a different backend than the
     // compositors used with ImageBridge and VR (and more generally web content).
     if (WidgetTypeSupportsAcceleration()) {
