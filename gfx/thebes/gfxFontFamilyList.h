@@ -446,6 +446,11 @@ operator==(const FontFamilyList& a, const FontFamilyList& b) {
     return a.Equals(b);
 }
 
+inline bool
+operator!=(const FontFamilyList& a, const FontFamilyList& b) {
+    return !a.Equals(b);
+}
+
 } // namespace mozilla
 
 #endif /* GFX_FONT_FAMILY_LIST_H */

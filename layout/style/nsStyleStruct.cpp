@@ -199,16 +199,23 @@ nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const
   MOZ_ASSERT(mAllowZoom == aNewData.mAllowZoom,
              "expected mAllowZoom to be the same on both nsStyleFonts");
   if (mSize != aNewData.mSize ||
-      mFont != aNewData.mFont ||
       mLanguage != aNewData.mLanguage ||
       mExplicitLanguage != aNewData.mExplicitLanguage ||
       mMathVariant != aNewData.mMathVariant ||
       mMathDisplay != aNewData.mMathDisplay ||
       mMinFontSizeRatio != aNewData.mMinFontSizeRatio) {
-    // If only mFont.fontSmoothingBackgroundColor changes, we really only need
-    // a repaint hint rather than a reflow+repaint hint, but it's not worth
-    // worth optimizing.
     return NS_STYLE_HINT_REFLOW;
+  }
+
+  switch (mFont.CalcDifference(aNewData.mFont)) {
+    case nsFont::MaxDifference::eLayoutAffecting:
+      return NS_STYLE_HINT_REFLOW;
+
+    case nsFont::MaxDifference::eVisual:
+      return NS_STYLE_HINT_VISUAL;
+
+    case nsFont::MaxDifference::eNone:
+      break;
   }
 
   // XXX Should any of these cause a non-nsChangeHint_NeutralChange change?
