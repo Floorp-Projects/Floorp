@@ -258,8 +258,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gConstructorProperties['ArrayBuffer'] =
     constructorProps(["isView", Symbol.species]);
 
-  gPrototypeProperties['SharedArrayBuffer'] = ["constructor", "slice", "byteLength", Symbol.toStringTag];
-  gConstructorProperties['SharedArrayBuffer'] = constructorProps([Symbol.species]);
+  is(typeof SharedArrayBuffer, "undefined", "Enable tests!");
 
   gPrototypeProperties['Map'] =
     ["constructor", "size", Symbol.toStringTag, "get", "has", "set", "delete",
@@ -918,7 +917,7 @@ for (var prop of props) {
   }
 
   function testArrayBuffer() {
-    let constructors = ['ArrayBuffer', 'SharedArrayBuffer'];
+    let constructors = ['ArrayBuffer'];
 
     for (const c of constructors) {
       testXray(c, new iwin[c](0), new iwin[c](12));
