@@ -1,3 +1,9 @@
+Version 1.3.3 (2017 November 7)
+
+ * Fix and issue with corrupt continued packet handling.
+ * Update Windows projects and build settings.
+ * Remove Mac OS 9 build support.
+
 Version 1.3.2 (2014 May 27)
 
  * Fix an bug in oggpack_writecopy().
