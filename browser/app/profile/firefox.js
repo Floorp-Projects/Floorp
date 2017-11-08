@@ -470,10 +470,10 @@ pref("browser.tabs.loadBookmarksInBackground", false);
 pref("browser.tabs.loadBookmarksInTabs", false);
 pref("browser.tabs.tabClipWidth", 140);
 pref("browser.tabs.tabMinWidth", 76);
-#ifdef UNIX_BUT_NOT_MAC
-pref("browser.tabs.drawInTitlebar", false);
-#else
+#ifdef CAN_DRAW_IN_TITLEBAR
 pref("browser.tabs.drawInTitlebar", true);
+#else
+pref("browser.tabs.drawInTitlebar", false);
 #endif
 
 // Offer additional drag space to the user. The drag space
