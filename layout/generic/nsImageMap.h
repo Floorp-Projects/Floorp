@@ -22,6 +22,12 @@ class nsIFrame;
 class nsIContent;
 struct nsRect;
 
+namespace mozilla {
+namespace dom {
+class HTMLAreaElement;
+}
+}
+
 class nsImageMap final : public nsStubMutationObserver,
                          public nsIDOMEventListener
 {
@@ -82,11 +88,10 @@ protected:
   void FreeAreas();
 
   void UpdateAreas();
-  void SearchForAreas(nsIContent* aParent,
-                      bool& aFoundArea,
-                      bool& aFoundAnchor);
 
-  void AddArea(nsIContent* aArea);
+  void SearchForAreas(nsIContent* aParent);
+
+  void AddArea(mozilla::dom::HTMLAreaElement* aArea);
 
   void MaybeUpdateAreas(nsIContent *aContent);
 
