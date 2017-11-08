@@ -21,6 +21,10 @@ void
 AppendToString(std::stringstream& aStream, wr::ImageRendering aTextureFilter,
                const char* pfx="", const char* sfx="");
 
+void
+AppendToString(std::stringstream& aStream, wr::LayoutVector2D aVector,
+               const char* pfx="", const char* sfx="");
+
 } // namespace layers
 } // namespace mozilla
 

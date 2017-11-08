@@ -1081,7 +1081,7 @@ case "$target" in
     if $CC -E - -dM </dev/null | grep __ELF__ >/dev/null; then
         DSO_PIC_CFLAGS='-fPIC -DPIC'
         DSO_LDOPTS='-shared'
-        BIN_FLAGS='-Wl,--export-dynamic'
+        MOZ_PROGRAM_LDFLAGS="$MOZ_PROGRAM_LDFLAGS -Wl,--export-dynamic"
     else
         DSO_PIC_CFLAGS='-fPIC -DPIC'
         DSO_LDOPTS='-shared'
@@ -3219,7 +3219,14 @@ case "$CPU_ARCH" in
   x86|x86_64)
       MOZ_FFVPX=1
       dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.
-      FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
+      if test -n "$LIBAV_FFT_ASFLAGS"; then
+          FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
+      else
+          dnl On x86 system with assembly optimizations disabled, the ffvp9 and
+          dnl ffvp8 decoders give worse performance than libvpx ones. So we only
+          dnl enable the FFmpeg FLAC decoder on those machines.
+          MOZ_FFVPX_FLACONLY=1
+      fi
   ;;
   arm*|aarch64)
       MOZ_FFVPX=1
@@ -4481,7 +4488,6 @@ AC_SUBST(RCFLAGS)
 AC_SUBST(WINDRES)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
-AC_SUBST(BIN_FLAGS)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST_LIST(MOZ_DEBUG_LDFLAGS)
@@ -4838,7 +4844,6 @@ AC_SUBST(HAVE_X86_AVX2)
 AC_SUBST(HAVE_ALTIVEC)
 AC_SUBST(GCC_USE_GNU_LD)
 
-AC_SUBST(WRAP_LDFLAGS)
 AC_SUBST(MKSHLIB)
 AC_SUBST(MKCSHLIB)
 AC_SUBST_LIST(DSO_CFLAGS)
@@ -5032,7 +5037,6 @@ fi
 
 if test "$COMPILE_ENVIRONMENT" -a "$MOZ_WIDGET_TOOLKIT"; then
 
-export WRAP_LDFLAGS
 
 dnl ========================================================
 dnl = Setup a nice relatively clean build environment for

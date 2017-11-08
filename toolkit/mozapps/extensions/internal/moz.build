@@ -6,7 +6,6 @@
 
 EXTRA_JS_MODULES.addons += [
     'AddonRepository.jsm',
-    'AddonRepository_SQLiteMigrator.jsm',
     'AddonSettings.jsm',
     'AddonUpdateChecker.jsm',
     'APIExtensionBootstrap.js',

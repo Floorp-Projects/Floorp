@@ -8,6 +8,7 @@
 #define MediaCache_h_
 
 #include "Intervals.h"
+#include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
@@ -314,9 +315,7 @@ public:
   // in the cache. Will not mark blocks as read. Can be called from the main
   // thread. It's the caller's responsibility to wrap the call in a pin/unpin,
   // and also to check that the range they want is cached before calling this.
-  nsresult ReadFromCache(char* aBuffer,
-                         int64_t aOffset,
-                         int64_t aCount);
+  nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount);
 
   // IsDataCachedToEndOfStream returns true if all the data from
   // aOffset to the end of the stream (the server-reported end, if the
@@ -425,6 +424,16 @@ private:
     // The number of blocks in the list.
     int32_t mCount;
   };
+
+  // Read data from the partial block and return the number of bytes read
+  // successfully. 0 if aOffset is not an offset in the partial block or there
+  // is nothing to read.
+  uint32_t ReadPartialBlock(int64_t aOffset, Span<char> aBuffer);
+
+  // Read data from the cache block specified by aOffset. Return the number of
+  // bytes read successfully or an error code if any failure.
+  Result<uint32_t, nsresult> ReadBlockFromCache(int64_t aOffset,
+                                                Span<char> aBuffer);
 
   // Returns the end of the bytes starting at the given offset
   // which are in cache.

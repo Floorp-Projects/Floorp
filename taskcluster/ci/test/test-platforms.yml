@@ -221,6 +221,7 @@ windows10-64/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
+        - desktop-instrumentation
         - windows-talos
         - windows-talos-stylo-disabled
         - windows-tests

@@ -7072,8 +7072,7 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
       iter.Seek(aEndSkipChild);
       iter.GetPreviousChild();
     }
-    nsIFrame* nextSibling = FindNextSibling(iter, childDisplay);
-    if (nextSibling) {
+    if (nsIFrame* nextSibling = FindNextSibling(iter, childDisplay)) {
       aInsertion->mParentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
     } else {
       // No previous or next sibling, so treat this like an appended frame.
@@ -7085,19 +7084,13 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
         aInsertion->mParentFrame =
           GetLastIBSplitSibling(aInsertion->mParentFrame, false);
       }
-      // Get continuation that parents the last child.  This MUST be done
-      // before the AdjustAppendParentForAfterContent call.
+      // Get continuation that parents the last child.
       aInsertion->mParentFrame =
         nsLayoutUtils::LastContinuationWithChild(aInsertion->mParentFrame);
       // Deal with fieldsets
       aInsertion->mParentFrame =
         ::GetAdjustedParentFrame(aInsertion->mParentFrame, aChild);
-      nsIFrame* appendAfterFrame;
-      aInsertion->mParentFrame =
-        ::AdjustAppendParentForAfterContent(this, aInsertion->mContainer,
-                                            aInsertion->mParentFrame,
-                                            aChild, &appendAfterFrame);
-      prevSibling = ::FindAppendPrevSibling(aInsertion->mParentFrame, appendAfterFrame);
+      prevSibling = ::FindAppendPrevSibling(aInsertion->mParentFrame, nullptr);
     }
   }
 
