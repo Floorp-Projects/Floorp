@@ -740,6 +740,8 @@ org.eclipse.cdt.core.formatter.use_tabs_only_for_leading_indentations=false
 """
 
 STATIC_CDT_UI_PREFS="""eclipse.preferences.version=1
+buildConsoleLines=10000
+Console.limitConsoleOutput=false
 ensureNewlineAtEOF=false
 formatter_profile=_Mozilla
 formatter_settings_version=1

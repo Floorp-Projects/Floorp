@@ -538,6 +538,7 @@ load 847208.html
 asserts-if(Android,2) asserts-if(Android&&asyncPan,4) asserts-if(!Android,4) asserts-if(stylo,4) load 847209.html # bug 847368
 load 847211-1.html
 load 849603.html
+load 849987.html
 asserts(0-12) load 850931.html # bug 569193
 load 851396-1.html
 load 854263-1.html
@@ -563,6 +564,7 @@ load 944909-1.html
 load 946167-1.html
 load 947158.html
 load 949932.html
+load 963878.html
 load 964078.html
 load 970710.html
 load 973701-1.xhtml

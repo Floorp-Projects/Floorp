@@ -663,10 +663,48 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                                                     'resources',
                                                     module))
 
+    def _report_line(self, f, tag, info):
+        try:
+            f.write("%s %s\n" % (tag, str(info)))
+        except:
+            f.write("Exception getting system info: %s" % sys.exc_info()[0])
+
+    def _report_system_info(self):
+        """
+           Create the system-info.log artifact file, containing a variety of
+           system information that might be useful in diagnosing test failures.
+        """
+        import psutil
+        dir = self.query_abs_dirs()['abs_blob_upload_dir']
+        self.mkdir_p(dir)
+        path = os.path.join(dir, "system-info.log")
+        with open(path, "w") as f:
+            self._report_line(f, "System info collected at ", datetime.now())
+            self._report_line(f, "\nBoot time ", datetime.fromtimestamp(psutil.boot_time()))
+            self._report_line(f, "\nVirtual memory: ", psutil.virtual_memory())
+            self._report_line(f, "\nDisk partitions: ", psutil.disk_partitions())
+            self._report_line(f, "\nDisk usage (/): ", psutil.disk_usage(os.path.sep))
+            self._report_line(f, "\nUsers: ", psutil.users())
+            self._report_line(f, "\nNetwork connections:", "")
+            try:
+                for nc in psutil.net_connections():
+                    self._report_line(f, "  ", nc)
+            except:
+                f.write("Exception getting network info: %s" % sys.exc_info()[0])
+            self._report_line(f, "\nProcesses:", "")
+            try:
+                for p in psutil.process_iter():
+                    ctime = str(datetime.fromtimestamp(p.create_time()))
+                    self._report_line(f, "  PID", "%d %s %s created at %s" %
+                                      (p.pid, p.name(), str(p.cmdline()), ctime))
+            except:
+                f.write("Exception getting process info: %s" % sys.exc_info()[0])
+
     # pull defined in VCSScript.
     # preflight_run_tests defined in TestingMixin.
 
     def run_tests(self):
+        self._report_system_info()
         self.start_time = datetime.now()
         for category in SUITE_CATEGORIES:
             if not self._run_category_suites(category):

@@ -1,0 +1,15 @@
+Functions changes summary: 0 Removed, 1 Changed, 0 Added function
+Variables changes summary: 0 Removed, 0 Changed, 0 Added variable
+
+1 function with some indirect sub-type change:
+
+  [C]'function SECStatus SSL_GetChannelInfo(SSLChannelInfo*, PRUintn)' at sslinfo.c:26:1 has some indirect sub-type changes:
+    parameter 1 of type 'SSLChannelInfo*' has sub-type changes:
+      in pointed to type 'typedef SSLChannelInfo' at sslt.h:288:1:
+        underlying type 'struct SSLChannelInfoStr' at sslt.h:229:1 changed:
+          type size changed from 896 to 960 bits
+          2 data member insertions:
+            'SSLNamedGroup SSLChannelInfoStr::originalKeaGroup', at offset 864 (in bits) at sslt.h:281:1
+            'PRBool SSLChannelInfoStr::resumed', at offset 896 (in bits) at sslt.h:284:1
+
+

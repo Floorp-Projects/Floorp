@@ -24,7 +24,6 @@ const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2
 CU.import("resource://gre/modules/Timer.jsm");
 CU.import("chrome://reftest/content/AsyncSpellCheckTestHelper.jsm");
 CU.import("resource://gre/modules/Services.jsm");
-CU.import('resource://gre/modules/XPCOMUtils.jsm');
 
 var gBrowserIsRemote;
 var gIsWebRenderEnabled;
@@ -39,6 +38,7 @@ var gHaveCanvasSnapshot = false;
 var gExplicitPendingPaintCount = 0;
 var gExplicitPendingPaintsCompleteHook;
 var gCurrentURL;
+var gCurrentURLTargetType;
 var gCurrentTestType;
 var gTimeoutHook = null;
 var gFailureTimeout = null;
@@ -56,6 +56,10 @@ const TYPE_LOAD = 'load';  // test without a reference (just test that it does
 const TYPE_SCRIPT = 'script'; // test contains individual test results
 const TYPE_PRINT = 'print'; // test and reference will be printed to PDF's and
                             // compared structurally
+
+// keep this in sync with globals.jsm
+const URL_TARGET_TYPE_TEST = 0;      // first url
+const URL_TARGET_TYPE_REFERENCE = 1; // second url, if any
 
 function markupDocumentViewer() {
     return docShell.contentViewer;
@@ -124,7 +128,7 @@ function OnInitialLoad()
     LogInfo("Using browser remote="+ gBrowserIsRemote +"\n");
 }
 
-function SetFailureTimeout(cb, timeout)
+function SetFailureTimeout(cb, timeout, uri)
 {
   var targetTime = Date.now() + timeout;
 
@@ -139,10 +143,15 @@ function SetFailureTimeout(cb, timeout)
     }
   }
 
+  // Once OnDocumentLoad is called to handle the 'load' event it will update
+  // this error message to reflect what stage of the processing it has reached
+  // as it advances to each stage in turn.
+  gFailureReason = "timed out after " + timeout +
+                   " ms waiting for 'load' event for " + uri;
   gFailureTimeout = setTimeout(wrapper, timeout);
 }
 
-function StartTestURI(type, uri, timeout)
+function StartTestURI(type, uri, uriTargetType, timeout)
 {
     // The GC is only able to clean up compartments after the CC runs. Since
     // the JS ref tests disable the normal browser chrome and do not otherwise
@@ -159,12 +168,13 @@ function StartTestURI(type, uri, timeout)
 
     gCurrentTestType = type;
     gCurrentURL = uri;
+    gCurrentURLTargetType = uriTargetType;
 
     gCurrentTestStartTime = Date.now();
     if (gFailureTimeout != null) {
         SendException("program error managing timeouts\n");
     }
-    SetFailureTimeout(LoadFailed, timeout);
+    SetFailureTimeout(LoadFailed, timeout, uri);
 
     LoadURI(gCurrentURL);
 }
@@ -951,6 +961,7 @@ function RecordResult()
     gFailureReason = null;
     gFailureTimeout = null;
     gCurrentURL = null;
+    gCurrentURLTargetType = undefined;
 
     if (gCurrentTestType == TYPE_PRINT) {
         printToPdf(function (status, fileName) {
@@ -1111,7 +1122,9 @@ function RegisterMessageListeners()
     );
     addMessageListener(
         "reftest:LoadTest",
-        function (m) { RecvLoadTest(m.json.type, m.json.uri, m.json.timeout); }
+        function (m) { RecvLoadTest(m.json.type, m.json.uri,
+                                    m.json.uriTargetType,
+                                    m.json.timeout); }
     );
     addMessageListener(
         "reftest:ResetRenderingState",
@@ -1125,19 +1138,19 @@ function RecvClear()
     LoadURI(BLANK_URL_FOR_CLEARING);
 }
 
-function RecvLoadTest(type, uri, timeout)
+function RecvLoadTest(type, uri, uriTargetType, timeout)
 {
-    StartTestURI(type, uri, timeout);
+    StartTestURI(type, uri, uriTargetType, timeout);
 }
 
 function RecvLoadScriptTest(uri, timeout)
 {
-    StartTestURI(TYPE_SCRIPT, uri, timeout);
+    StartTestURI(TYPE_SCRIPT, uri, URL_TARGET_TYPE_TEST, timeout);
 }
 
 function RecvLoadPrintTest(uri, timeout)
 {
-    StartTestURI(TYPE_PRINT, uri, timeout);
+    StartTestURI(TYPE_PRINT, uri, URL_TARGET_TYPE_TEST, timeout);
 }
 
 function RecvResetRenderingState()

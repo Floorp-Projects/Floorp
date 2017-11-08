@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/AnimationEffectReadOnly.h"
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h"
+
+#include "mozilla/dom/Animation.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/FloatingPoint.h"
 

@@ -7736,6 +7736,31 @@ nsIDocument::SetDir(const nsAString& aDirection)
   }
 }
 
+/* static */
+bool
+nsIDocument::MatchNameAttribute(Element* aElement, int32_t aNamespaceID,
+                                nsAtom* aAtom, void* aData)
+{
+  NS_PRECONDITION(aElement, "Must have element to work with!");
+
+  if (!aElement->HasName()) {
+    return false;
+  }
+
+  nsString* elementName = static_cast<nsString*>(aData);
+  return
+    aElement->GetNameSpaceID() == kNameSpaceID_XHTML &&
+    aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                          *elementName, eCaseMatters);
+}
+
+/* static */
+void*
+nsIDocument::UseExistingNameString(nsINode* aRootNode, const nsString* aName)
+{
+  return const_cast<nsString*>(aName);
+}
+
 NS_IMETHODIMP
 nsDocument::GetInputEncoding(nsAString& aInputEncoding)
 {
