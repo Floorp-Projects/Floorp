@@ -161,12 +161,12 @@ class LoggingManager(object):
         # complaining about "no handlers could be found for logger XXX."
         self.root_logger.addHandler(logging.NullHandler())
 
-        self.mach_logger = logging.getLogger('mach')
-        self.mach_logger.setLevel(logging.DEBUG)
+        mach_logger = logging.getLogger('mach')
+        mach_logger.setLevel(logging.DEBUG)
 
         self.structured_filter = ConvertToStructuredFilter()
 
-        self.structured_loggers = [self.mach_logger]
+        self.structured_loggers = [mach_logger]
 
         self._terminal = None
 
