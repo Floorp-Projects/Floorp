@@ -51,16 +51,10 @@ add_task(async function sidebar_initial_install() {
   // Test sidebar is opened on install
   await extension.awaitMessage("sidebar");
   ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible");
-  // Test toolbar button is available
-  ok(document.getElementById("sidebar-button"), "sidebar button is in UI");
 
   await extension.unload();
   // Test that the sidebar was closed on unload.
   ok(document.getElementById("sidebar-box").hidden, "sidebar box is not visible");
-
-  // Move toolbar button back to customization.
-  CustomizableUI.removeWidgetFromArea("sidebar-button", CustomizableUI.AREA_NAVBAR);
-  ok(!document.getElementById("sidebar-button"), "sidebar button is not in UI");
 });
 
 
@@ -70,8 +64,6 @@ add_task(async function sidebar_two_sidebar_addons() {
   // Test sidebar is opened on install
   await extension2.awaitMessage("sidebar");
   ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible");
-  // Test toolbar button is NOT available after first install
-  ok(!document.getElementById("sidebar-button"), "sidebar button is not in UI");
 
   // Test second sidebar install opens new sidebar
   let extension3 = ExtensionTestUtils.loadExtension(extData);
@@ -96,9 +88,4 @@ add_task(async function sidebar_empty_panel() {
   extension.sendMessage("set-panel");
   await extension.awaitFinish();
   await extension.unload();
-});
-
-add_task(async function cleanup() {
-  // This is set on initial sidebar install.
-  Services.prefs.clearUserPref("extensions.sidebar-button.shown");
 });
