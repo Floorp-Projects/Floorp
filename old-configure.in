@@ -192,6 +192,16 @@ case "$target" in
             AC_DEFINE(MSVC_HAS_DIA_SDK)
         fi
 
+        if test "$_MSC_VER" -ge "1910"; then # VS2017+
+            # C5038: Enable initializer list order warnings
+            # The -w1#### flag treats warning C#### as if it was a warning level
+            # 1 warning, and thus enables it because we enable /W3 warnings. We
+            # don't use -we#### because it would enable warning C#### but treat
+            # it as an error, even in third-party code.
+            # https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level
+            CXXFLAGS="$CXXFLAGS -w15038"
+        fi
+
         # C5026: move constructor was implicitly defined as deleted
         CXXFLAGS="$CXXFLAGS -wd5026"
 
