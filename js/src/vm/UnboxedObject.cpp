@@ -398,8 +398,10 @@ MakeReplacementTemplateObject(JSContext* cx, HandleObjectGroup group, const Unbo
     for (size_t i = 0; i < layout.properties().length(); i++) {
         const UnboxedLayout::Property& property = layout.properties()[i];
         id = NameToId(property.name);
-        if (!NativeObject::addDataProperty(cx, obj, id, i, JSPROP_ENUMERATE))
+        Shape* shape = NativeObject::addDataProperty(cx, obj, id, SHAPE_INVALID_SLOT, JSPROP_ENUMERATE);
+        if (!shape)
             return nullptr;
+        MOZ_ASSERT(shape->slot() == i);
         MOZ_ASSERT(obj->slotSpan() == i + 1);
         MOZ_ASSERT(!obj->inDictionaryMode());
     }
