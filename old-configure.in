@@ -3893,7 +3893,9 @@ dnl ========================================================
 dnl = --disable-elf-hack
 dnl ========================================================
 
-USE_ELF_HACK=1
+if test -n "$MOZ_WIDGET_TOOLKIT"; then
+    USE_ELF_HACK=1
+fi
 MOZ_ARG_DISABLE_BOOL(elf-hack,
 [  --disable-elf-hack      Disable elf hacks],
     [USE_ELF_HACK=],
