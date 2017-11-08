@@ -532,63 +532,89 @@ TextEditor::ExtendSelectionForDelete(Selection* aSelection,
     GetSelectionController(getter_AddRefs(selCont));
     NS_ENSURE_TRUE(selCont, NS_ERROR_NO_INTERFACE);
 
-    nsresult rv;
     switch (*aAction) {
-      case eNextWord:
-        rv = selCont->WordExtendForDelete(true);
+      case eNextWord: {
+        nsresult rv = selCont->WordExtendForDelete(true);
         // DeleteSelectionImpl doesn't handle these actions
         // because it's inside batching, so don't confuse it:
         *aAction = eNone;
-        break;
-      case ePreviousWord:
-        rv = selCont->WordExtendForDelete(false);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        return NS_OK;
+      }
+      case ePreviousWord: {
+        nsresult rv = selCont->WordExtendForDelete(false);
         *aAction = eNone;
-        break;
-      case eNext:
-        rv = selCont->CharacterExtendForDelete();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        return NS_OK;
+      }
+      case eNext: {
+        nsresult rv = selCont->CharacterExtendForDelete();
         // Don't set aAction to eNone (see Bug 502259)
-        break;
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        return NS_OK;
+      }
       case ePrevious: {
         // Only extend the selection where the selection is after a UTF-16
         // surrogate pair or a variation selector.
         // For other cases we don't want to do that, in order
         // to make sure that pressing backspace will only delete the last
         // typed character.
-        nsCOMPtr<nsINode> node;
-        int32_t offset;
-        rv = GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+        EditorRawDOMPoint atStartOfSelection =
+          EditorBase::GetStartPoint(aSelection);
+        if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+          return NS_ERROR_FAILURE;
+        }
 
         // node might be anonymous DIV, so we find better text node
-        FindBetterInsertionPoint(node, offset, nullptr);
+        EditorRawDOMPoint insertionPoint =
+          FindBetterInsertionPoint(atStartOfSelection);
 
-        if (IsTextNode(node)) {
-          const nsTextFragment* data = node->GetAsText()->GetText();
+        if (IsTextNode(insertionPoint.Container())) {
+          const nsTextFragment* data =
+            insertionPoint.Container()->GetAsText()->GetText();
+          uint32_t offset = insertionPoint.Offset();
           if ((offset > 1 &&
                NS_IS_LOW_SURROGATE(data->CharAt(offset - 1)) &&
                NS_IS_HIGH_SURROGATE(data->CharAt(offset - 2))) ||
               (offset > 0 &&
                gfxFontUtils::IsVarSelector(data->CharAt(offset - 1)))) {
-            rv = selCont->CharacterExtendForBackspace();
+            nsresult rv = selCont->CharacterExtendForBackspace();
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
           }
         }
-        break;
+        return NS_OK;
       }
-      case eToBeginningOfLine:
-        selCont->IntraLineMove(true, false);          // try to move to end
-        rv = selCont->IntraLineMove(false, true); // select to beginning
+      case eToBeginningOfLine: {
+        // Try to move to end
+        selCont->IntraLineMove(true, false);
+        // Select to beginning
+        nsresult rv = selCont->IntraLineMove(false, true);
         *aAction = eNone;
-        break;
-      case eToEndOfLine:
-        rv = selCont->IntraLineMove(true, true);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        return NS_OK;
+      }
+      case eToEndOfLine: {
+        nsresult rv = selCont->IntraLineMove(true, true);
         *aAction = eNext;
-        break;
-      default:       // avoid several compiler warnings
-        rv = NS_OK;
-        break;
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        return NS_OK;
+      }
+      // For avoiding several compiler warnings
+      default:
+        return NS_OK;
     }
-    return rv;
   }
   return NS_OK;
 }

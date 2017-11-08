@@ -927,6 +927,7 @@ public:
   static nsresult GetStartNodeAndOffset(Selection* aSelection,
                                         nsINode** aStartContainer,
                                         int32_t* aStartOffset);
+  static EditorRawDOMPoint GetStartPoint(Selection* aSelection);
   static nsresult GetEndNodeAndOffset(Selection* aSelection,
                                       nsIDOMNode** outEndNode,
                                       int32_t* outEndOffset);
@@ -1258,22 +1259,11 @@ public:
    * FindBetterInsertionPoint() tries to look for better insertion point which
    * is typically the nearest text node and offset in it.
    *
-   * @param aNode in/out param, on input set to the node to use to start the search,
-   *              on output set to the node found as the better insertion point.
-   * @param aOffset in/out param, on input set to the offset to use to start the
-   *                search, on putput set to the offset found as the better insertion
-   *                point.
-   * @param aSelChild in/out param, on input, can be set to nullptr if the caller
-   *                  doesn't want to pass this in, or set to a pointer to an nsCOMPtr
-   *                  pointing to the child at the input node and offset, and on output
-   *                  the method will make it point to the child at the output node and
-   *                  offset returned in aNode and aOffset.
+   * @param aPoint      Insertion point which the callers found.
+   * @return            Better insertion point if there is.  If not returns
+   *                    same point as aPoint.
    */
-  void FindBetterInsertionPoint(nsCOMPtr<nsIDOMNode>& aNode,
-                                int32_t& aOffset);
-  void FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
-                                int32_t& aOffset,
-                                nsCOMPtr<nsIContent>* aSelChild);
+  EditorRawDOMPoint FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint);
 
   /**
    * HideCaret() hides caret with nsCaret::AddForceHide() or may show carent
