@@ -1322,7 +1322,7 @@ PlacesController.prototype = {
 
         let insertionIndex = await ip.getIndex();
         let doCopy = action == "copy";
-        let newTransactions = await getTransactionsForTransferItems(type,
+        let newTransactions = await getTransactionsForTransferItems(
           items, insertionIndex, ip.guid, doCopy);
         if (newTransactions.length) {
           transactions = [...transactions, ...newTransactions];
@@ -1669,7 +1669,7 @@ var PlacesControllerDragHelper = {
           transactions.push(PlacesTransactions.Tag({ urls, tag: tagName }));
         } else {
           let insertionIndex = await insertionPoint.getIndex();
-          let newTransactions = await getTransactionsForTransferItems(flavor,
+          let newTransactions = await getTransactionsForTransferItems(
             nodes, insertionIndex, parentGuid, doCopy);
           if (newTransactions.length) {
             transactions = [...transactions, ...newTransactions];
@@ -1843,7 +1843,6 @@ function getResultForBatching(viewOrElement) {
  * Processes a set of transfer items and returns transactions to insert or
  * move them.
  *
- * @param {String} dataFlavor The transfer flavor for the items.
  * @param {Array} items A list of unwrapped nodes to get transactions for.
  * @param {Integer} insertionIndex The requested index for insertion.
  * @param {String} insertionParentGuid The guid of the parent folder to insert
@@ -1852,7 +1851,7 @@ function getResultForBatching(viewOrElement) {
  *                         if possible.
  * @return {Array} Returns an array of created PlacesTransactions.
  */
-async function getTransactionsForTransferItems(dataFlavor, items, insertionIndex,
+async function getTransactionsForTransferItems(items, insertionIndex,
                                                insertionParentGuid, doCopy) {
   let transactions = [];
   let index = insertionIndex;
@@ -1888,7 +1887,6 @@ async function getTransactionsForTransferItems(dataFlavor, items, insertionIndex
     }
     transactions.push(
       PlacesUIUtils.getTransactionForData(item,
-                                          dataFlavor,
                                           insertionParentGuid,
                                           index,
                                           doCopy));
