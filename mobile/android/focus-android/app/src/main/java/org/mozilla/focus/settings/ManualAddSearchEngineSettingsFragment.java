@@ -24,14 +24,6 @@ import org.mozilla.focus.utils.UrlUtils;
 import java.util.Collections;
 
 public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
-    public static final int FRAGMENT_CLASS_TYPE = 1; // Unique SettingsFragment identifier
-
-    public static SettingsFragment newInstance(Bundle intentArgs, int prefsResId, int titleResId) {
-        SettingsFragment f = new ManualAddSearchEngineSettingsFragment();
-        f.setArguments(makeArgumentBundle(intentArgs, prefsResId, titleResId));
-        return f;
-    }
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

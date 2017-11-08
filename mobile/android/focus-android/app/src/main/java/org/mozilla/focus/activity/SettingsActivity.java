@@ -32,7 +32,7 @@ public class SettingsActivity extends LocaleAwareAppCompatActivity implements Se
 
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        final PreferenceFragment fragment = SettingsFragment.newInstance(getIntent().getExtras(), R.xml.settings, R.string.menu_settings);
+        final PreferenceFragment fragment = SettingsFragment.newInstance(getIntent().getExtras(), SettingsFragment.SettingsScreen.MAIN);
 
         getFragmentManager().beginTransaction()
                 .replace(R.id.container, fragment)

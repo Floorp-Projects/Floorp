@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.settings;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -29,41 +30,60 @@ import org.mozilla.focus.widget.DefaultBrowserPreference;
 import java.util.Locale;
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
-    public static final String PREFERENCES_RESID_INTENT_EXTRA = "extra_preferences_resid";
-    public static final String TITLE_RESID_INTENT_EXTRA = "extra_title_resid";
-
-    public static final int EXTRA_VALUE_NONE = -1;
+    public static final String SETTINGS_SCREEN_NAME = "settingsScreenName";
 
     private boolean localeUpdated;
+    private SettingsScreen settingsScreen;
 
     public interface ActionBarUpdater {
         void updateTitle(int titleResId);
         void updateIcon(int iconResId);
     }
 
-    public static SettingsFragment newInstance(Bundle intentArgs, int prefsResId, int titleResId) {
-        SettingsFragment f = new SettingsFragment();
-        f.setArguments(makeArgumentBundle(intentArgs, prefsResId, titleResId));
-        return f;
+    public enum SettingsScreen {
+        MAIN(R.xml.settings, R.string.menu_settings),
+        SEARCH_ENGINES(AppConstants.FLAG_MANUAL_SEARCH_ENGINE ?
+                R.xml.search_engine_settings_featureflag_manual :
+                R.xml.search_engine_settings,
+                R.string.preference_search_installed_search_engines),
+        ADD_SEARCH(R.xml.manual_add_search_engine, R.string.tutorial_search_title);
+
+        public final int prefsResId;
+        public final int titleResId;
+
+        SettingsScreen(int prefsResId, int titleResId) {
+            this.prefsResId = prefsResId;
+            this.titleResId =  titleResId;
+        }
     }
 
-    protected static Bundle makeArgumentBundle(Bundle intentArgs, int prefsResId, int titleResId) {
-        final Bundle args = intentArgs != null ? intentArgs : new Bundle();
-        args.putInt(PREFERENCES_RESID_INTENT_EXTRA, prefsResId);
-        args.putInt(TITLE_RESID_INTENT_EXTRA, titleResId);
-        return args;
+    public static SettingsFragment newInstance(Bundle intentArgs, SettingsScreen settingsType) {
+        final SettingsFragment f;
+        switch (settingsType) {
+            case MAIN:
+            case SEARCH_ENGINES:
+                f = new SettingsFragment();
+                break;
+            case ADD_SEARCH:
+                f = new ManualAddSearchEngineSettingsFragment();
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown SettingsScreen type " + settingsType.name());
+        }
+        if (intentArgs == null) {
+            intentArgs = new Bundle();
+        }
+        intentArgs.putString(SETTINGS_SCREEN_NAME, settingsType.name());
+        f.setArguments(intentArgs);
+        return f;
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final Bundle args = getArguments();
-        final int prefResId = args != null ?
-                args.getInt(PREFERENCES_RESID_INTENT_EXTRA, R.xml.settings) :
-                R.xml.settings;
-
-        addPreferencesFromResource(prefResId);
+        settingsScreen = SettingsScreen.valueOf(getArguments().getString(SETTINGS_SCREEN_NAME, SettingsScreen.MAIN.name()));
+        addPreferencesFromResource(settingsScreen.prefsResId);
     }
 
     @Override
@@ -94,32 +114,16 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             final Intent intent = InfoActivity.getPrivacyNoticeIntent(getActivity());
             startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_search_engine))) {
-            showSettingsFragment( AppConstants.FLAG_MANUAL_SEARCH_ENGINE ? R.xml.search_engine_settings_featureflag_manual : R.xml.search_engine_settings,
-                    R.string.preference_search_installed_search_engines);
+            showSettingsFragment(SettingsScreen.SEARCH_ENGINES);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_manual_add_search_engine))) {
-            showSettingsFragment(ManualAddSearchEngineSettingsFragment.FRAGMENT_CLASS_TYPE,
-                    R.xml.manual_add_search_engine,
-                    R.string.tutorial_search_title);
+            showSettingsFragment(SettingsScreen.ADD_SEARCH);
         }
 
         return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
 
-    private void showSettingsFragment(int prefsResId, int titleResId) {
-        showSettingsFragment(EXTRA_VALUE_NONE, prefsResId, titleResId);
-    }
-
-    private void showSettingsFragment(int fragmentClassType, int prefsResId, int titleResId) {
-        final SettingsFragment fragment;
-        switch (fragmentClassType) {
-            case ManualAddSearchEngineSettingsFragment.FRAGMENT_CLASS_TYPE:
-                fragment = ManualAddSearchEngineSettingsFragment.newInstance(null, prefsResId, titleResId);
-                break;
-
-            default:
-                fragment = SettingsFragment.newInstance(null, prefsResId, titleResId);
-        }
-
+    private void showSettingsFragment(SettingsScreen screenType) {
+        final Fragment fragment = SettingsFragment.newInstance(null, screenType);
         getFragmentManager().beginTransaction()
                 .replace(R.id.container, fragment)
                 .addToBackStack(null)
@@ -139,15 +143,10 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
         // Update title and icons when returning to fragments.
         final ActionBarUpdater updater = (ActionBarUpdater) getActivity();
-        final Bundle args = getArguments();
-        final int titleResId = args != null ?
-                args.getInt(TITLE_RESID_INTENT_EXTRA, R.string.menu_settings) :
-                R.string.menu_settings;
-        updater.updateTitle(titleResId);
+        updater.updateTitle(settingsScreen.titleResId);
         updater.updateIcon(R.drawable.ic_back);
 
-        // TODO: #1671 would add Enum types so figuring out the current Settings screen is cleaner
-        if (args != null && args.getInt(PREFERENCES_RESID_INTENT_EXTRA, 0) == R.xml.search_engine_settings_featureflag_manual) {
+        if (settingsScreen == SettingsScreen.SEARCH_ENGINES && AppConstants.FLAG_MANUAL_SEARCH_ENGINE) {
             final PreferenceScreen prefScreen = getPreferenceScreen();
             final int prefCount = prefScreen.getPreferenceCount();
             for (int i = 0; i < prefCount; i++) {
@@ -200,7 +199,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
             // The easiest way to ensure we update the language is by replacing the entire fragment:
             getFragmentManager().beginTransaction()
-                    .replace(R.id.container, SettingsFragment.newInstance(null, R.xml.settings, R.string.menu_settings))
+                    .replace(R.id.container, SettingsFragment.newInstance(null, SettingsScreen.MAIN))
                     .commit();
         }
     }
