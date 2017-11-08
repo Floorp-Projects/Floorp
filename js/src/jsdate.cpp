@@ -2688,12 +2688,16 @@ static size_t
 FormatTime(char* buf, int buflen, const char* fmt, double utcTime, double localTime)
 {
     PRMJTime prtm = ToPRMJTime(localTime, utcTime);
-    int eqivalentYear = IsRepresentableAsTime32(utcTime)
-                        ? prtm.tm_year
-                        : EquivalentYearForDST(prtm.tm_year);
+
+    // If an equivalent year was used to compute the date/time components, use
+    // the same equivalent year to determine the time zone name and offset in
+    // PRMJ_FormatTime(...).
+    int timeZoneYear = IsRepresentableAsTime32(utcTime)
+                       ? prtm.tm_year
+                       : EquivalentYearForDST(prtm.tm_year);
     int offsetInSeconds = (int) floor((localTime - utcTime) / msPerSecond);
 
-    return PRMJ_FormatTime(buf, buflen, fmt, &prtm, eqivalentYear, offsetInSeconds);
+    return PRMJ_FormatTime(buf, buflen, fmt, &prtm, timeZoneYear, offsetInSeconds);
 }
 
 enum class FormatSpec {
