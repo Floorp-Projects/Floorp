@@ -127,6 +127,9 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   const long INTERNAL_LOAD_FLAGS_NO_OPENER               = 0x100;
 
+  // Whether a top-level data URI navigation is allowed for that load
+  const long INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI    = 0x200;
+
   // NB: 0x80 is available.
 
   /**

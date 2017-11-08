@@ -58,6 +58,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mUpgradeInsecureRequests(false)
   , mVerifySignedContent(false)
   , mEnforceSRI(false)
+  , mForceAllowDataURI(false)
   , mForceInheritPrincipalDropped(false)
   , mInnerWindowID(0)
   , mOuterWindowID(0)
@@ -241,6 +242,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mUpgradeInsecureRequests(false)
   , mVerifySignedContent(false)
   , mEnforceSRI(false)
+  , mForceAllowDataURI(false)
   , mForceInheritPrincipalDropped(false)
   , mInnerWindowID(0)
   , mOuterWindowID(0)
@@ -309,6 +311,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mUpgradeInsecureRequests(rhs.mUpgradeInsecureRequests)
   , mVerifySignedContent(rhs.mVerifySignedContent)
   , mEnforceSRI(rhs.mEnforceSRI)
+  , mForceAllowDataURI(rhs.mForceAllowDataURI)
   , mForceInheritPrincipalDropped(rhs.mForceInheritPrincipalDropped)
   , mInnerWindowID(rhs.mInnerWindowID)
   , mOuterWindowID(rhs.mOuterWindowID)
@@ -346,6 +349,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aUpgradeInsecureRequests,
                    bool aVerifySignedContent,
                    bool aEnforceSRI,
+                   bool aForceAllowDataURI,
                    bool aForceInheritPrincipalDropped,
                    uint64_t aInnerWindowID,
                    uint64_t aOuterWindowID,
@@ -378,6 +382,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mUpgradeInsecureRequests(aUpgradeInsecureRequests)
   , mVerifySignedContent(aVerifySignedContent)
   , mEnforceSRI(aEnforceSRI)
+  , mForceAllowDataURI(aForceAllowDataURI)
   , mForceInheritPrincipalDropped(aForceInheritPrincipalDropped)
   , mInnerWindowID(aInnerWindowID)
   , mOuterWindowID(aOuterWindowID)
@@ -748,6 +753,23 @@ NS_IMETHODIMP
 LoadInfo::GetEnforceSRI(bool* aResult)
 {
   *aResult = mEnforceSRI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetForceAllowDataURI(bool aForceAllowDataURI)
+{
+  MOZ_ASSERT(!mForceAllowDataURI ||
+             mInternalContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT,
+             "can only allow data URI navigation for TYPE_DOCUMENT");
+  mForceAllowDataURI = aForceAllowDataURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetForceAllowDataURI(bool* aForceAllowDataURI)
+{
+  *aForceAllowDataURI = mForceAllowDataURI;
   return NS_OK;
 }
 
