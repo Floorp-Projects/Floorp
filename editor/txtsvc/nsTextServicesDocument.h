@@ -118,8 +118,11 @@ public:
                           nsIDOMNode  *aParent,
                           nsresult     aResult) override;
   // these listen methods are unused:
-  NS_IMETHOD WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, int32_t aPosition) override;
-  NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition, nsresult aResult) override;
+  NS_IMETHOD WillCreateNode(const nsAString& aTag,
+                            nsIDOMNode* aNextSiblingOfNewNode) override;
+  NS_IMETHOD DidCreateNode(const nsAString& aTag,
+                           nsIDOMNode* aNewNode,
+                           nsresult aResult) override;
   NS_IMETHOD WillInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString) override;
   NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString, nsresult aResult) override;
   NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength) override;
