@@ -22,7 +22,6 @@ struct CommonFactoryRequestParams
 {
   DatabaseMetadata metadata;
   PrincipalInfo principalInfo;
-  bool privateBrowsingMode;
 };
 
 struct OpenDatabaseRequestParams
