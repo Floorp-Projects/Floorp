@@ -443,6 +443,15 @@ var DebuggerServer = {
       constructor: "HeapSnapshotFileActor",
       type: { global: true }
     });
+    // Always register this as a global module, even while there is a pref turning
+    // on and off the other performance actor. This actor shouldn't conflict with
+    // the other one. These are also lazily loaded so there shouldn't be a performance
+    // impact.
+    this.registerModule("devtools/server/actors/perf", {
+      prefix: "perf",
+      constructor: "PerfActor",
+      type: { global: true }
+    });
   },
 
   /**
@@ -534,7 +543,8 @@ var DebuggerServer = {
       constructor: "TimelineActor",
       type: { tab: true }
     });
-    if ("nsIProfiler" in Ci) {
+    if ("nsIProfiler" in Ci &&
+        !Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false)) {
       this.registerModule("devtools/server/actors/performance", {
         prefix: "performance",
         constructor: "PerformanceActor",
