@@ -122,13 +122,11 @@ async function run_drag_test(startBookmarkIndex, insertionIndex, newParentGuid,
 
     Assert.deepEqual(args[0], JSON.parse(bookmarkWithId),
       "Should have called getTransactionForData with the correct unwrapped bookmark");
-    Assert.equal(args[1], PlacesUtils.TYPE_X_MOZ_PLACE,
-      "Should have called getTransactionForData with the correct flavor");
-    Assert.equal(args[2], newParentGuid,
+    Assert.equal(args[1], newParentGuid,
       "Should have called getTransactionForData with the correct parent guid");
-    Assert.equal(args[3], expectedInsertionIndex,
+    Assert.equal(args[2], expectedInsertionIndex,
       "Should have called getTransactionForData with the correct index");
-    Assert.equal(args[4], false,
+    Assert.equal(args[3], false,
       "Should have called getTransactionForData with a move");
   });
 }
