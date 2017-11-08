@@ -10,6 +10,7 @@
 #include "mtransport/runnable_utils.h"
 #include "nsAutoPtr.h"
 #include "AudioConverter.h"
+#include "MediaStreamGraphImpl.h"
 
 // scoped_ptr.h uses FF
 #ifdef FF
@@ -522,8 +523,7 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
 #undef HANDLE_APM_ERROR
 
 void
-MediaEngineWebRTCMicrophoneSource::SetLastPrefs(
-    const MediaEnginePrefs& aPrefs)
+MediaEngineWebRTCMicrophoneSource::SetLastPrefs(const MediaEnginePrefs& aPrefs)
 {
   mLastPrefs = aPrefs;
 
@@ -534,10 +534,34 @@ MediaEngineWebRTCMicrophoneSource::SetLastPrefs(
     that->mSettings->mAutoGainControl.Value() = aPrefs.mAgcOn;
     that->mSettings->mNoiseSuppression.Value() = aPrefs.mNoiseOn;
     that->mSettings->mChannelCount.Value() = aPrefs.mChannels;
+
+    class Message : public ControlMessage {
+    public:
+      Message(MediaEngineWebRTCMicrophoneSource* aSource,
+              bool aPassThrough)
+        : ControlMessage(nullptr)
+        , mMicrophoneSource(aSource)
+        , mPassThrough(aPassThrough)
+        {}
+
+      void Run() override
+      {
+        mMicrophoneSource->SetPassThrough(mPassThrough);
+      }
+
+    protected:
+      RefPtr<MediaEngineWebRTCMicrophoneSource> mMicrophoneSource;
+      bool mPassThrough;
+    };
+
+    bool passThrough = !(aPrefs.mAecOn || aPrefs.mAgcOn || aPrefs.mNoiseOn);
+    if (!that->mSources.IsEmpty()) {
+      that->mSources[0]->GraphImpl()->AppendMessage(MakeUnique<Message>(that, passThrough));
+    }
+
     return NS_OK;
   }));
 }
-
 
 nsresult
 MediaEngineWebRTCMicrophoneSource::Deallocate(AllocationHandle* aHandle)
@@ -675,7 +699,7 @@ MediaEngineWebRTCMicrophoneSource::NotifyOutputData(MediaStreamGraph* aGraph,
 {
   if (!PassThrough()) {
     mAudioOutputObserver->InsertFarEnd(aBuffer, aFrames, false,
-                                  aRate, aChannels);
+                                       aRate, aChannels);
   }
 }
 
