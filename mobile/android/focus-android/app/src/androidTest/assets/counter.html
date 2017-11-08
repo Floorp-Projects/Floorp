@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!-- random words that should not end up on disk -->
+    <title>Counter</title>
+</head>
+<body>
+<h2 id="header">Counter should increase when reloading</h2>
+<div id="counter"></div>
+
+
+<script>
+var n = localStorage.getItem('on_load_counter');
+
+if (n === null) {
+    n = 0;
+}
+
+n++;
+
+localStorage.setItem("on_load_counter", n);
+
+document.getElementById('counter').innerHTML = n;
+</script>
+</body>
+</html>
