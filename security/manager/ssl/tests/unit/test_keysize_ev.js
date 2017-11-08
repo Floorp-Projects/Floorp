@@ -134,8 +134,8 @@ function run_test() {
   let smallKeyEVRoot =
     constructCertFromFile("test_keysize_ev/ev_root_rsa_2040.pem");
   equal(smallKeyEVRoot.sha256Fingerprint,
-        "49:46:10:F4:F5:B1:96:E7:FB:FA:4D:A6:34:03:D0:99:" +
-        "22:D4:77:20:3F:84:E0:DF:1C:AD:B4:C2:76:BB:63:24",
+        "40:AB:5D:A5:89:15:A9:4B:82:87:B8:A6:9A:84:B1:DB:" +
+        "7A:9D:DB:B8:4E:E1:23:E3:C6:64:E7:50:DC:35:8C:68",
         "test sanity check: the small-key EV root must have the same " +
         "fingerprint as the corresponding entry in ExtendedValidation.cpp");
 
