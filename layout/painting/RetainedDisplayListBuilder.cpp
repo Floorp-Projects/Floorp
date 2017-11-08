@@ -472,22 +472,20 @@ TakeAndAddModifiedFramesFromRootFrame(nsTArray<nsIFrame*>& aFrames,
 {
   MOZ_ASSERT(aRootFrame);
 
-  std::vector<WeakFrame>* frames =
+  nsTArray<nsIFrame*>* frames =
     aRootFrame->GetProperty(nsIFrame::ModifiedFrameList());
 
   if (!frames) {
     return;
   }
 
-  for (WeakFrame& frame : *frames) {
-    nsIFrame* f = frame.GetFrame();
-
+  for (nsIFrame* f : *frames) {
     if (f) {
       aFrames.AppendElement(f);
     }
   }
 
-  frames->clear();
+  frames->Clear();
 }
 
 static bool
