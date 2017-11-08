@@ -81,7 +81,6 @@
            oncommand="showTab('perm');"/>
       <radio id="securityTab" label="&securityTab;" accesskey="&securityTab.accesskey;"
            oncommand="showTab('security');"/>
-      <!-- Others added by overlay -->
     </radiogroup>
   </windowdragbox>
 

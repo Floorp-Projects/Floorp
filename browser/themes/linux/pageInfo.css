@@ -9,8 +9,6 @@
 /* View buttons */
 #viewGroup > radio {
   list-style-image: url("chrome://browser/skin/pageInfo.png");
-  -moz-box-orient: vertical;
-  -moz-box-align: center;
   -moz-appearance: none;
   min-width: 4.5em;
   margin: 0;
