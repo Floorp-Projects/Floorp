@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Green square</title>
+<style>
+.filter {
+  filter: brightness(0.75);
+}
+
+.container {
+  width: 200px;
+  height: 200px;
+
+  transform-style: preserve-3d;
+  background-color: red;
+}
+
+.square {
+  position: absolute;
+
+  width: 200px;
+  height: 200px;
+
+  transform-style: preserve-3d;
+  background-color: green;
+}
+</style>
+</head>
+<body>
+
+<div class="filter">
+  <div class="container">
+    <div class="square"></div>
+  </div>
+</div>
+
+</body>
+</html>
