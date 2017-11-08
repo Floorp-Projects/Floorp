@@ -1,32 +1,34 @@
 /*
- * prng.h
+ * rtp_decoder.h
  *
- * pseudorandom source
+ * decoder structures and functions for SRTP pcap decoder
  *
- * David A. McGrew
- * Cisco Systems, Inc.
+ * Bernardo Torres <bernardo@torresautomacao.com.br>
+ *
+ * Some structure and code from https://github.com/gteissier/srtp-decrypt
+ *
  */
 /*
- *	
- * Copyright (c) 2001-2006, Cisco Systems, Inc.
+ *
+ * Copyright (c) 2001-2017 Cisco Systems, Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  *   Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * 
+ *
  *   Redistributions in binary form must reproduce the above
  *   copyright notice, this list of conditions and the following
  *   disclaimer in the documentation and/or other materials provided
  *   with the distribution.
- * 
+ *
  *   Neither the name of the Cisco Systems, Inc. nor the names of its
  *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -42,48 +44,62 @@
  *
  */
 
-#ifndef PRNG_H
-#define PRNG_H
+#ifndef RTP_DECODER_H
+#define RTP_DECODER_H
 
-#include "rand_source.h"  /* for rand_source_func_t definition       */
-#include "aes.h"          /* for aes                                 */
-#include "aes_icm.h"      /* for aes ctr                             */
+#include "srtp_priv.h"
+#include "rtp.h"
 
-#define MAX_PRNG_OUT_LEN 0xffffffffU
+#define DEFAULT_RTP_OFFSET 42
 
-/*
- * x917_prng is an ANSI X9.17-like AES-based PRNG
- */
+typedef struct rtp_decoder_ctx_t {
+    srtp_policy_t policy;
+    srtp_ctx_t *srtp_ctx;
+    int rtp_offset;
+    struct timeval start_tv;
+    int frame_nr;
+    rtp_msg_t message;
+} rtp_decoder_ctx_t;
 
-typedef struct {
-  v128_t   state;          /* state data                              */
-  aes_expanded_key_t key;  /* secret key                              */
-  uint32_t octet_count;    /* number of octets output since last init */
-  rand_source_func_t rand; /* random source for re-initialization     */
-} x917_prng_t;
-
-err_status_t
-x917_prng_init(rand_source_func_t random_source);
-
-err_status_t
-x917_prng_get_octet_string(uint8_t *dest, uint32_t len);
-
+typedef struct rtp_decoder_ctx_t *rtp_decoder_t;
 
 /*
- * ctr_prng is an AES-CTR based PRNG
+ * error to string
  */
+void rtp_print_error(srtp_err_status_t status, char *message);
 
-typedef struct {
-  uint32_t octet_count;    /* number of octets output since last init */
-  aes_icm_ctx_t   state;   /* state data                              */
-  rand_source_func_t rand; /* random source for re-initialization     */
-} ctr_prng_t;
+/*
+ * prints the output of a random buffer in hexadecimal
+ */
+void hexdump(const void *ptr, size_t size);
 
-err_status_t
-ctr_prng_init(rand_source_func_t random_source);
+/*
+ * the function usage() prints an error message describing how this
+ * program should be called, then calls exit()
+ */
+void usage(char *prog_name);
 
-err_status_t
-ctr_prng_get_octet_string(void *dest, uint32_t len);
+/*
+ * transforms base64 key into octet
+ */
+char *decode_sdes(char *in, char *out);
 
+/*
+ * pcap handling
+ */
+void rtp_decoder_handle_pkt(u_char *arg,
+                            const struct pcap_pkthdr *hdr,
+                            const u_char *bytes);
 
-#endif
+rtp_decoder_t rtp_decoder_alloc(void);
+
+void rtp_decoder_dealloc(rtp_decoder_t rtp_ctx);
+
+int rtp_decoder_init(rtp_decoder_t dcdr, srtp_policy_t policy);
+
+srtp_err_status_t rtp_decoder_init_srtp(rtp_decoder_t decoder,
+                                        unsigned int ssrc);
+
+int rtp_decoder_deinit_srtp(rtp_decoder_t decoder);
+
+#endif /* RTP_DECODER_H */

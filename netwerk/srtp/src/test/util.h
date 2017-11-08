@@ -1,32 +1,32 @@
 /*
- * crypto.h
+ * util.h
  *
- * API for libcrypto
- * 
- * David A. McGrew
+ * Utilities used by the test apps
+ *
+ * John A. Foley
  * Cisco Systems, Inc.
  */
 /*
- *	
- * Copyright (c) 2001-2006, Cisco Systems, Inc.
+ *
+ * Copyright (c) 2014-2017, Cisco Systems, Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  *   Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * 
+ *
  *   Redistributions in binary form must reproduce the above
  *   copyright notice, this list of conditions and the following
  *   disclaimer in the documentation and/or other materials provided
  *   with the distribution.
- * 
+ *
  *   Neither the name of the Cisco Systems, Inc. nor the names of its
  *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -41,38 +41,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#ifndef SRTP_TEST_UTIL_H
+#define SRTP_TEST_UTIL_H
 
-#ifndef CRYPTO_H
-#define CRYPTO_H
+#define MAX_PRINT_STRING_LEN 1024
 
-/** 
- *  @brief A cipher_type_id_t is an identifier for a particular cipher
- *  type.
- *
- *  A cipher_type_id_t is an integer that represents a particular
- *  cipher type, e.g. the Advanced Encryption Standard (AES).  A
- *  NULL_CIPHER is avaliable; this cipher leaves the data unchanged,
- *  and can be selected to indicate that no encryption is to take
- *  place.
- * 
- *  @ingroup Ciphers
- */
-typedef uint32_t cipher_type_id_t; 
+int hex_string_to_octet_string(char *raw, char *hex, int len);
+char *octet_string_hex_string(const void *s, int length);
+int base64_string_to_octet_string(char *raw, int *pad, char *base64, int len);
 
-/**
- *  @brief An auth_type_id_t is an identifier for a particular authentication
- *   function.
- *
- *  An auth_type_id_t is an integer that represents a particular
- *  authentication function type, e.g. HMAC-SHA1.  A NULL_AUTH is
- *  avaliable; this authentication function performs no computation,
- *  and can be selected to indicate that no authentication is to take
- *  place.
- *  
- *  @ingroup Authentication
- */
-typedef uint32_t auth_type_id_t;
-
-#endif /* CRYPTO_H */
-
-
+#endif
