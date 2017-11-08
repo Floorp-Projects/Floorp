@@ -151,12 +151,7 @@ public:
   static nsresult GetInt(const char* aPref, int32_t* aResult);
   static nsresult GetUint(const char* aPref, uint32_t* aResult)
   {
-    int32_t result;
-    nsresult rv = GetInt(aPref, &result);
-    if (NS_SUCCEEDED(rv)) {
-      *aResult = static_cast<uint32_t>(result);
-    }
-    return rv;
+    return GetInt(aPref, reinterpret_cast<int32_t*>(aResult));
   }
   static nsresult GetFloat(const char* aPref, float* aResult);
   static nsresult GetCString(const char* aPref, nsACString& aResult);
