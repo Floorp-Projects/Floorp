@@ -19,6 +19,7 @@ loader.lazyGetter(this, "CanvasDebuggerPanel", () => require("devtools/client/ca
 loader.lazyGetter(this, "WebAudioEditorPanel", () => require("devtools/client/webaudioeditor/panel").WebAudioEditorPanel);
 loader.lazyGetter(this, "MemoryPanel", () => require("devtools/client/memory/panel").MemoryPanel);
 loader.lazyGetter(this, "PerformancePanel", () => require("devtools/client/performance/panel").PerformancePanel);
+loader.lazyGetter(this, "NewPerformancePanel", () => require("devtools/client/performance-new/panel").PerformancePanel);
 loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/client/netmonitor/panel").NetMonitorPanel);
 loader.lazyGetter(this, "StoragePanel", () => require("devtools/client/storage/panel").StoragePanel);
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/client/scratchpad/scratchpad-panel").ScratchpadPanel);
@@ -252,29 +253,58 @@ Tools.canvasDebugger = {
   }
 };
 
-Tools.performance = {
-  id: "performance",
-  ordinal: 7,
-  icon: "chrome://devtools/skin/images/tool-profiler.svg",
-  url: "chrome://devtools/content/performance/performance.xul",
-  visibilityswitch: "devtools.performance.enabled",
-  label: l10n("performance.label"),
-  panelLabel: l10n("performance.panelLabel"),
-  get tooltip() {
-    return l10n("performance.tooltip", "Shift+" +
-    functionkey(l10n("performance.commandkey")));
-  },
-  accesskey: l10n("performance.accesskey"),
-  inMenu: true,
+if (Services.prefs.getBoolPref("devtools.performance.new-panel-enabled")) {
+  Tools.performance = {
+    id: "performance",
+    ordinal: 7,
+    icon: "chrome://devtools/skin/images/tool-profiler.svg",
+    url: "chrome://devtools/content/performance-new/perf.xhtml",
+    visibilityswitch: "devtools.performance.enabled",
+    label: l10n("performance.label"),
+    panelLabel: l10n("performance.panelLabel"),
+    get tooltip() {
+      return l10n("performance.tooltip", "Shift+" +
+      functionkey(l10n("performance.commandkey")));
+    },
+    accesskey: l10n("performance.accesskey"),
+    inMenu: true,
 
-  isTargetSupported: function (target) {
-    return target.hasActor("performance");
-  },
+    build: function (frame, target) {
+      return new NewPerformancePanel(frame, target);
+    },
 
-  build: function (frame, target) {
-    return new PerformancePanel(frame, target);
-  }
-};
+    isTargetSupported: function (target) {
+      // Root actors are lazily initialized, so we can't check if the target has
+      // the perf actor yet. Also this function is not async, so we can't initialize
+      // the actor yet.
+      return true;
+    }
+  };
+} else {
+  Tools.performance = {
+    id: "performance",
+    ordinal: 7,
+    icon: "chrome://devtools/skin/images/tool-profiler.svg",
+    url: "chrome://devtools/content/performance/performance.xul",
+    visibilityswitch: "devtools.performance.enabled",
+    label: l10n("performance.label"),
+    panelLabel: l10n("performance.panelLabel"),
+    get tooltip() {
+      return l10n("performance.tooltip", "Shift+" +
+      functionkey(l10n("performance.commandkey")));
+    },
+    accesskey: l10n("performance.accesskey"),
+    inMenu: true,
+
+    isTargetSupported: function (target) {
+      return target.hasActor("performance");
+    },
+
+    build: function (frame, target) {
+      return new PerformancePanel(frame, target);
+    },
+  };
+}
 
 Tools.memory = {
   id: "memory",
