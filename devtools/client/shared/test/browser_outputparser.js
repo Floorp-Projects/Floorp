@@ -420,18 +420,19 @@ function testParseVariable(doc, parser) {
     {
       text: "var(--seen)",
       variables: {"--seen": "chartreuse" },
-      expected: "<span>var(<span title=\"--seen = chartreuse\">--seen</span>)</span>"
+      expected: "<span>var(<span data-variable=\"--seen = chartreuse\">--seen</span>)" +
+        "</span>"
     },
     {
       text: "var(--not-seen)",
       variables: {},
       expected: "<span>var(<span class=\"unmatched-class\" " +
-        "title=\"--not-seen is not set\">--not-seen</span>)</span>"
+        "data-variable=\"--not-seen is not set\">--not-seen</span>)</span>"
     },
     {
       text: "var(--seen, seagreen)",
       variables: {"--seen": "chartreuse" },
-      expected: "<span>var(<span title=\"--seen = chartreuse\">--seen</span>," +
+      expected: "<span>var(<span data-variable=\"--seen = chartreuse\">--seen</span>," +
         "<span class=\"unmatched-class\"> <span data-color=\"seagreen\"><span>seagreen" +
         "</span></span></span>)</span>"
     },
@@ -439,8 +440,9 @@ function testParseVariable(doc, parser) {
       text: "var(--not-seen, var(--seen))",
       variables: {"--seen": "chartreuse" },
       expected: "<span>var(<span class=\"unmatched-class\" " +
-        "title=\"--not-seen is not set\">--not-seen</span>,<span> <span>var(<span " +
-        "title=\"--seen = chartreuse\">--seen</span>)</span></span>)</span>"
+        "data-variable=\"--not-seen is not set\">--not-seen</span>,<span> <span>var" +
+        "(<span data-variable=\"--seen = chartreuse\">--seen</span>)</span></span>)" + 
+        "</span>"
     },
   ];
 
