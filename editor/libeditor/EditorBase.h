@@ -394,13 +394,21 @@ protected:
     CreateTxnForRemoveAttribute(Element& aElement, nsAtom& aAttribute);
 
   /**
-   * Create a transaction for creating a new child node of aParent of type aTag.
+   * Create a transaction for creating a new child node of the container of
+   * aPointToInsert of type aTag.
+   *
+   * @param aTag            The element name to create.
+   * @param aPointToInsert  The insertion point of new element.  If this refers
+   *                        end of the container or after, the transaction
+   *                        will append the element to the container.
+   *                        Otherwise, will insert the element before the
+   *                        child node referred by this.
+   * @return                A CreateElementTransaction which are initialized
+   *                        with the arguments.
    */
   already_AddRefed<CreateElementTransaction>
     CreateTxnForCreateElement(nsAtom& aTag,
-                              nsINode& aParent,
-                              int32_t aPosition,
-                              nsIContent* aChildAtPosition);
+                              const EditorRawDOMPoint& aPointToInsert);
 
   already_AddRefed<Element> CreateNode(nsAtom* aTag, nsINode* aParent,
                                        int32_t aPosition,
