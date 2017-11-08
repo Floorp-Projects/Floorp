@@ -1820,11 +1820,14 @@ function getResultForBatching(viewOrElement) {
  */
 async function handleTransferItems(items, insertionPoint, doCopy, view) {
   let transactions;
+  let itemsCount;
   if (insertionPoint.isTag) {
     let urls = items.filter(item => "uri" in item).map(item => item.uri);
+    itemsCount = urls.length;
     transactions = [PlacesTransactions.Tag({ urls, tag: insertionPoint.tagName })];
   } else {
     let insertionIndex = await insertionPoint.getIndex();
+    itemsCount = items.length;
     transactions = await getTransactionsForTransferItems(
       items, insertionIndex, insertionPoint.guid, doCopy);
   }
@@ -1853,10 +1856,9 @@ async function handleTransferItems(items, insertionPoint, doCopy, view) {
     };
   }
 
-  await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
-    transactions.length, async () => {
-      await PlacesTransactions.batch(batchingItem);
-    });
+  await PlacesUIUtils.batchUpdatesForNode(resultForBatching, itemsCount, async () => {
+    await PlacesTransactions.batch(batchingItem);
+  });
 
   return guidsToSelect;
 }
