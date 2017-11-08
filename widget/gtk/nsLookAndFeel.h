@@ -32,7 +32,7 @@ public:
     virtual char16_t GetPasswordCharacterImpl();
     virtual bool GetEchoPasswordImpl();
 
-    bool IsCSDAvailable() const { return sCSDAvailable; }
+    bool IsCSDAvailable() const { return mCSDAvailable; }
 
 protected:
 
@@ -51,43 +51,43 @@ protected:
     gfxFontStyle mMenuFontStyle;
 
     // Cached colors
-    nscolor sInfoBackground;
-    nscolor sInfoText;
-    nscolor sMenuBackground;
-    nscolor sMenuBarText;
-    nscolor sMenuBarHoverText;
-    nscolor sMenuText;
-    nscolor sMenuTextInactive;
-    nscolor sMenuHover;
-    nscolor sMenuHoverText;
-    nscolor sButtonDefault;
-    nscolor sButtonText;
-    nscolor sButtonHoverText;
-    nscolor sButtonHoverFace;
-    nscolor sFrameOuterLightBorder;
-    nscolor sFrameInnerDarkBorder;
-    nscolor sOddCellBackground;
-    nscolor sNativeHyperLinkText;
-    nscolor sComboBoxText;
-    nscolor sComboBoxBackground;
-    nscolor sMozFieldText;
-    nscolor sMozFieldBackground;
-    nscolor sMozWindowText;
-    nscolor sMozWindowBackground;
-    nscolor sMozWindowActiveBorder;
-    nscolor sMozWindowInactiveBorder;
-    nscolor sMozWindowInactiveCaption;
-    nscolor sTextSelectedText;
-    nscolor sTextSelectedBackground;
-    nscolor sMozScrollbar;
-    nscolor sInfoBarText;
-    char16_t sInvisibleCharacter;
-    float   sCaretRatio;
-    bool    sMenuSupportsDrag;
-    bool    sCSDAvailable;
-    bool    sCSDMaximizeButton;
-    bool    sCSDMinimizeButton;
-    bool    sCSDCloseButton;
+    nscolor mInfoBackground;
+    nscolor mInfoText;
+    nscolor mMenuBackground;
+    nscolor mMenuBarText;
+    nscolor mMenuBarHoverText;
+    nscolor mMenuText;
+    nscolor mMenuTextInactive;
+    nscolor mMenuHover;
+    nscolor mMenuHoverText;
+    nscolor mButtonDefault;
+    nscolor mButtonText;
+    nscolor mButtonHoverText;
+    nscolor mButtonHoverFace;
+    nscolor mFrameOuterLightBorder;
+    nscolor mFrameInnerDarkBorder;
+    nscolor mOddCellBackground;
+    nscolor mNativeHyperLinkText;
+    nscolor mComboBoxText;
+    nscolor mComboBoxBackground;
+    nscolor mMozFieldText;
+    nscolor mMozFieldBackground;
+    nscolor mMozWindowText;
+    nscolor mMozWindowBackground;
+    nscolor mMozWindowActiveBorder;
+    nscolor mMozWindowInactiveBorder;
+    nscolor mMozWindowInactiveCaption;
+    nscolor mTextSelectedText;
+    nscolor mTextSelectedBackground;
+    nscolor mMozScrollbar;
+    nscolor mInfoBarText;
+    char16_t mInvisibleCharacter;
+    float   mCaretRatio;
+    bool    mMenuSupportsDrag;
+    bool    mCSDAvailable;
+    bool    mCSDMaximizeButton;
+    bool    mCSDMinimizeButton;
+    bool    mCSDCloseButton;
     bool    mInitialized;
 
     void EnsureInit();

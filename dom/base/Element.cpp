@@ -1214,7 +1214,7 @@ Element::AttachShadowInternal(bool aClosed, ErrorResult& aError)
    * 3. If context object is a shadow host, then throw
    *    an "InvalidStateError" DOMException.
    */
-  if (GetShadowRoot()) {
+  if (GetShadowRoot() || GetXBLBinding()) {
     aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }

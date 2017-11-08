@@ -80,4 +80,4 @@ cpuid: util/cpuid.c libyuv.a
 	$(CC) $(CFLAGS) -o $@ util/cpuid.c libyuv.a
 
 clean:
-	/bin/rm -f source/*.o *.ii *.s libyuv.a convert cpuid psnr
+	/bin/rm -f source/*.o *.ii *.s libyuv.a yuvconvert cpuid psnr

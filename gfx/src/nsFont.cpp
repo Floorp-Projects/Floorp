@@ -42,32 +42,42 @@ nsFont::~nsFont()
 
 bool nsFont::Equals(const nsFont& aOther) const
 {
-  if ((style == aOther.style) &&
-      (systemFont == aOther.systemFont) &&
-      (weight == aOther.weight) &&
-      (stretch == aOther.stretch) &&
-      (size == aOther.size) &&
-      (sizeAdjust == aOther.sizeAdjust) &&
-      (fontlist == aOther.fontlist) &&
-      (kerning == aOther.kerning) &&
-      (synthesis == aOther.synthesis) &&
-      (fontFeatureSettings == aOther.fontFeatureSettings) &&
-      (fontVariationSettings == aOther.fontVariationSettings) &&
-      (languageOverride == aOther.languageOverride) &&
-      (variantAlternates == aOther.variantAlternates) &&
-      (variantCaps == aOther.variantCaps) &&
-      (variantEastAsian == aOther.variantEastAsian) &&
-      (variantLigatures == aOther.variantLigatures) &&
-      (variantNumeric == aOther.variantNumeric) &&
-      (variantPosition == aOther.variantPosition) &&
-      (variantWidth == aOther.variantWidth) &&
-      (alternateValues == aOther.alternateValues) &&
-      (featureValueLookup == aOther.featureValueLookup) &&
-      (smoothing == aOther.smoothing) &&
-      (fontSmoothingBackgroundColor == aOther.fontSmoothingBackgroundColor)) {
-    return true;
+  return CalcDifference(aOther) == MaxDifference::eNone;
+}
+
+nsFont::MaxDifference
+nsFont::CalcDifference(const nsFont& aOther) const
+{
+  if ((style != aOther.style) ||
+      (systemFont != aOther.systemFont) ||
+      (weight != aOther.weight) ||
+      (stretch != aOther.stretch) ||
+      (size != aOther.size) ||
+      (sizeAdjust != aOther.sizeAdjust) ||
+      (fontlist != aOther.fontlist) ||
+      (kerning != aOther.kerning) ||
+      (synthesis != aOther.synthesis) ||
+      (fontFeatureSettings != aOther.fontFeatureSettings) ||
+      (fontVariationSettings != aOther.fontVariationSettings) ||
+      (languageOverride != aOther.languageOverride) ||
+      (variantAlternates != aOther.variantAlternates) ||
+      (variantCaps != aOther.variantCaps) ||
+      (variantEastAsian != aOther.variantEastAsian) ||
+      (variantLigatures != aOther.variantLigatures) ||
+      (variantNumeric != aOther.variantNumeric) ||
+      (variantPosition != aOther.variantPosition) ||
+      (variantWidth != aOther.variantWidth) ||
+      (alternateValues != aOther.alternateValues) ||
+      (featureValueLookup != aOther.featureValueLookup)) {
+    return MaxDifference::eLayoutAffecting;
   }
-  return false;
+
+  if ((smoothing != aOther.smoothing) ||
+      (fontSmoothingBackgroundColor != aOther.fontSmoothingBackgroundColor)) {
+    return MaxDifference::eVisual;
+  }
+
+  return MaxDifference::eNone;
 }
 
 nsFont& nsFont::operator=(const nsFont& aOther) = default;
