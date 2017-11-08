@@ -350,7 +350,7 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level
 
 checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1 //BRDA:$,0,2,- //BRDA:$,0,3,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,1 //BRDA:$,0,2,0 //BRDA:$,0,3,0
     case 0:
     case 1:
       l.push('0');        //DA:$,0
@@ -371,7 +371,7 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
 
 checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1 //BRDA:$,0,3,0
     case 0:
       l.push('0');        //DA:$,0
     case 1:
@@ -392,7 +392,7 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
 
 checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1 //BRDA:$,0,3,0
     case 0:
       l.push('0');        //DA:$,0
     case 1:
@@ -414,7 +414,7 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
 
 checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1 //BRDA:$,0,3,0
     case 0:
       l.push('0');        //DA:$,0
     case 1:
@@ -436,7 +436,7 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
 
 checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,- //BRDA:$,0,4,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1 //BRDA:$,0,3,0 //BRDA:$,0,4,0
     case 0:
       l.push('0');        //DA:$,0
     case 1:
@@ -459,7 +459,7 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
 
 checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,- //BRDA:$,0,3,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,0 //BRDA:$,0,3,1
     case 0:
       l.push('0');        //DA:$,0
     case 1:
@@ -474,6 +474,25 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   //FNH:1
   //LF:7
   //LH:5
+  //BRF:4
+  //BRH:1
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
+  var l = ','.split(','); //DA:$,1
+  if (l.length === 45) {  //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,0
+    switch (l[0]) {       //DA:$,0 //BRDA:$,1,0,- //BRDA:$,1,1,-
+      case ',':
+        l.push('0');      //DA:$,0
+      default:
+        l.push('1');      //DA:$,0
+    }
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:6
+  //LH:3
   //BRF:4
   //BRH:1
 });
