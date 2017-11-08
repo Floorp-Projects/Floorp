@@ -1003,9 +1003,7 @@ class AndroidArguments(ArgumentContainer):
 
             if not options.robocopApk and build_obj:
                 if build_obj.substs.get('MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE'):
-                    options.robocopApk = os.path.join(build_obj.topobjdir, 'gradle', 'build',
-                                                      'mobile', 'android', 'app', 'outputs', 'apk',
-                                                      'app-official-photon-debug-androidTest.apk')
+                    options.robocopApk = build_obj.substs.get('GRADLE_ANDROID_APP_ANDROIDTEST_APK')
                 else:
                     options.robocopApk = os.path.join(build_obj.topobjdir, 'mobile', 'android',
                                                       'tests', 'browser',

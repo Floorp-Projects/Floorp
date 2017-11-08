@@ -54,6 +54,16 @@ class MachCommands(MachCommandBase):
         pass
 
 
+    @SubCommand('android', 'assemble-app',
+        """Assemble Firefox for Android.
+        See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_assemble_app(self, args):
+        ret = self.gradle(self.substs['GRADLE_ANDROID_APP_TASKS'] + ['-x', 'lint', '--continue'] + args, verbose=True)
+
+        return ret
+
+
     @SubCommand('android', 'test',
         """Run Android local unit tests.
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-test""")
