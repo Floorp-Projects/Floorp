@@ -73,6 +73,7 @@ case $cmd in
        ${TOPSRCDIR}/test.mozbuild \
        ${tgtpath}
 
+    cp -pPR ${TOPSRCDIR}/js/app.mozbuild ${tgtpath}/js
     cp -pPR ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js
     cp -pPR ${TOPSRCDIR}/js/ffi.configure ${tgtpath}/js
 
