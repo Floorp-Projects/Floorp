@@ -721,7 +721,10 @@ class TestInfoCommand(MachCommandBase):
     def get_platform(self, record):
         platform = record['build']['platform']
         type = record['build']['type']
-        e10s = "-%s" % record['run']['type'] if 'run' in record else ""
+        if 'run' in record and 'e10s' in record['run']['type']:
+            e10s = "-e10s"
+        else:
+            e10s = ""
         return "%s/%s%s:" % (platform, type, e10s)
 
     def submit(self, query):
@@ -786,7 +789,7 @@ class TestInfoCommand(MachCommandBase):
                     worst_platform = platform
                     worst_failures = failures
                     worst_runs = runs
-                print("%-30s %6d failures in %6d runs" % (
+                print("%-40s %6d failures in %6d runs" % (
                     platform, failures, runs))
             print("\nTotal: %d failures in %d runs or %.3f failures/run" %
                   (total_failures, total_runs, (float)(total_failures) / total_runs))
@@ -825,7 +828,7 @@ class TestInfoCommand(MachCommandBase):
             data.sort(key=self.get_platform)
             for record in data:
                 platform = self.get_platform(record)
-                print("%-30s %6.2f s (%.2f s - %.2f s over %d runs)" % (
+                print("%-40s %6.2f s (%.2f s - %.2f s over %d runs)" % (
                     platform, record['average'], record['min'],
                     record['max'], record['count']))
         else:

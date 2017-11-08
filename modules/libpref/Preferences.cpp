@@ -164,6 +164,25 @@ enum class PrefType
   Bool = 3,
 };
 
+#ifdef DEBUG
+const char*
+PrefTypeToString(PrefType aType)
+{
+  switch (aType) {
+    case PrefType::Invalid:
+      return "INVALID";
+    case PrefType::String:
+      return "string";
+    case PrefType::Int:
+      return "int";
+    case PrefType::Bool:
+      return "bool";
+    default:
+      MOZ_CRASH("Unhandled enum value");
+  }
+}
+#endif
+
 // Keep the type of the preference, as well as the flags guiding its behaviour.
 class PrefTypeFlags
 {
@@ -979,8 +998,11 @@ pref_HashPref(const char* aKey,
              !pref->mPrefFlags.IsPrefType(aType)) {
     NS_WARNING(
       nsPrintfCString(
-        "Trying to overwrite value of default pref %s with the wrong type!",
-        aKey)
+        "Ignoring attempt to overwrite value of default pref %s (type %s) with "
+        "the wrong type (%s)!",
+        aKey,
+        PrefTypeToString(pref->mPrefFlags.GetPrefType()),
+        PrefTypeToString(aType))
         .get());
 
     return NS_ERROR_UNEXPECTED;
@@ -2541,6 +2563,20 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
     return NS_OK;
   }
 
+  if (aType.Equals(NS_GET_IID(nsISupportsString))) {
+    nsCOMPtr<nsISupportsString> theString(
+      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
+
+    if (NS_SUCCEEDED(rv)) {
+      // Debugging to see why we end up with very long strings here with
+      // some addons, see bug 836263.
+      NS_ConvertUTF8toUTF16 wdata(utf8String);
+      theString->SetData(wdata);
+      theString.forget(reinterpret_cast<nsISupportsString**>(aRetVal));
+    }
+    return rv;
+  }
+
   NS_WARNING("nsPrefBranch::GetComplexValue - Unsupported interface type");
   return NS_NOINTERFACE;
 }
@@ -2672,7 +2708,8 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
     return SetCharPrefInternal(aPrefName, descriptorString);
   }
 
-  if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
+  if (aType.Equals(NS_GET_IID(nsISupportsString)) ||
+      aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
     nsCOMPtr<nsISupportsString> theString = do_QueryInterface(aValue);
 
     if (theString) {
