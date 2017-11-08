@@ -10,6 +10,9 @@ with Files("**"):
 with Files("update-libjpeg.sh"):
     BUG_COMPONENT = ("Core", "ImageLib")
 
+with Files("openmax_dl/**"):
+    BUG_COMPONENT = ("Core", "Web Audio")
+
 with Files("openmax_il/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
