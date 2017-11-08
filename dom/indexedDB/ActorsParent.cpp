@@ -21083,19 +21083,32 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
   MOZ_ASSERT(mState == State::Initial || mState == State::PermissionRetry);
 
   const PrincipalInfo& principalInfo = mCommonParams.principalInfo();
-  if (principalInfo.type() != PrincipalInfo::TSystemPrincipalInfo &&
-      NS_WARN_IF(!Preferences::GetBool(kPrefIndexedDBEnabled, false))) {
-    if (aContentParent) {
-      // The DOM in the other process should have kept us from receiving any
-      // indexedDB messages so assume that the child is misbehaving.
-      aContentParent->KillHard("IndexedDB CheckPermission 1");
-    }
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
-  }
+  if (principalInfo.type() != PrincipalInfo::TSystemPrincipalInfo) {
+    if (principalInfo.type() != PrincipalInfo::TContentPrincipalInfo) {
+      if (aContentParent) {
+        // We just want ContentPrincipalInfo or SystemPrincipalInfo.
+        aContentParent->KillHard("IndexedDB CheckPermission 0");
+      }
 
-  if (NS_WARN_IF(mCommonParams.privateBrowsingMode())) {
-    // XXX This is only temporary.
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+      return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    }
+
+    if (NS_WARN_IF(!Preferences::GetBool(kPrefIndexedDBEnabled, false))) {
+      if (aContentParent) {
+        // The DOM in the other process should have kept us from receiving any
+        // indexedDB messages so assume that the child is misbehaving.
+        aContentParent->KillHard("IndexedDB CheckPermission 1");
+      }
+
+      return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    }
+
+    const ContentPrincipalInfo& contentPrincipalInfo =
+      principalInfo.get_ContentPrincipalInfo();
+    if (contentPrincipalInfo.attrs().mPrivateBrowsingId != 0) {
+      // IndexedDB is currently disabled in privateBrowsing.
+      return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    }
   }
 
   mFileHandleDisabled = !Preferences::GetBool(kPrefFileHandleEnabled);
