@@ -8,11 +8,63 @@
 
 assertEq(`x ${a => {}} z`, "x a => {} z");
 
+for (a => {}; ; )
+  break;
+
 for (; a => {}; )
   break;
 
 for (; ; a => {})
   break;
+
+Function.prototype[Symbol.iterator] = function() { return { next() { return { done: true }; } }; };
+for (let m of 0 ? 1 : a => {})
+  assertEq(true, false);
+for (let [m] of 0 ? 1 : a => {})
+  assertEq(true, false);
+delete Function.prototype[Symbol.iterator];
+
+for (let w in 0 ? 1 : a => {})
+  break;
+for (let [w] in 0 ? 1 : a => {})
+  break;
+
+function* stargen()
+{
+  yield a => {}
+  /Q/g;
+
+  var first = true;
+  Function.prototype[Symbol.iterator] = function() {
+    return {
+      next() {
+        var res = { done: true, value: 8675309 };
+        if (first)
+        {
+          res = { value: "fnord", done: false };
+          first = false;
+        }
+
+        return res;
+      }
+    };
+  };
+
+
+  yield* a => {}
+  /Q/g;
+
+  delete Function.prototype[Symbol.iterator];
+
+  yield 99;
+}
+var gen = stargen();
+assertEq(typeof gen.next().value, "function");
+var result = gen.next();
+assertEq(result.value, "fnord");
+assertEq(result.done, false);
+assertEq(gen.next().value, 99);
+assertEq(gen.next().done, true);
 
 switch (1)
 {
@@ -53,6 +105,7 @@ switch (a => {})
 with (a => {});
 
 assertEq(typeof (a => {}), "function");
+assertEq(typeof (a => b => {}), "function");
 
 for (var x in y => {})
   continue;
@@ -101,8 +154,24 @@ assertEq(typeof k, "function");
 
 assertEq(typeof [0 ? 1 : a => {}][0], "function");
 
+Function.prototype[Symbol.iterator] = function() { return { next() { return { done: true }; } }; };
+assertEq([...0 ? 1 : a => {}].length, 0);
+delete Function.prototype[Symbol.iterator];
+
+var props = Object.getOwnPropertyNames({ ...0 ? 1 : a => {} }).sort();
+assertEq(props.length, 0);
+
+var asyncf = async () => {};
+assertEq(typeof asyncf, "function");
+
 var { [0 ? 1 : a => {}]: h } = { "a => {}": "boo-urns!" };
 assertEq(h, "boo-urns!");
+
+var gencomp = (for (prop of [0]) 0 ? 1 : a => {});
+assertEq(typeof gencomp.next().value, "function");
+
+var arrcomp = [for (prop of [0]) 0 ? 1 : a => {}];
+assertEq(typeof arrcomp[0], "function");
 
 if (typeof reportCompare === "function")
   reportCompare(true, true);
