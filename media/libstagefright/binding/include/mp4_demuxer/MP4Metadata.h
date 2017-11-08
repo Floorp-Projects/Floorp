@@ -81,9 +81,7 @@ public:
   ResultAndIndice GetTrackIndice(mozilla::TrackID aTrackID);
 
 private:
-  UniquePtr<MP4MetadataStagefright> mStagefright;
   UniquePtr<MP4MetadataRust> mRust;
-  mutable bool mDisableRust;
   mutable bool mReportedAudioTrackTelemetry;
   mutable bool mReportedVideoTrackTelemetry;
   bool ShouldPreferRust() const;
