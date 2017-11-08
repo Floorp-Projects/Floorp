@@ -53,9 +53,4 @@ public class MockPrefsGlobalSession extends GlobalSession {
     config.syncKeyBundle = syncKeyBundle;
     return new MockPrefsGlobalSession(config, callback, context, clientsDelegate);
   }
-
-  @Override
-  public Context getContext() {
-    return null;
-  }
 }
