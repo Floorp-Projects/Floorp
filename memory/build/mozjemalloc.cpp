@@ -2359,33 +2359,8 @@ arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin, void* ptr, size_t size)
   // actual division here can reduce allocator throughput by over 20%!
   diff =
     (unsigned)((uintptr_t)ptr - (uintptr_t)run - bin->mRunFirstRegionOffset);
-  if ((size & (size - 1)) == 0) {
-    // log2_table allows fast division of a power of two in the
-    // [1..128] range.
-    //
-    // (x / divisor) becomes (x >> log2_table[divisor - 1]).
-    // clang-format off
-    static const unsigned char log2_table[] = {
-      0, 1, 0, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 4,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7
-    };
-    // clang-format on
-
-    if (size <= 128) {
-      regind = (diff >> log2_table[size - 1]);
-    } else if (size <= 32768) {
-      regind = diff >> (8 + log2_table[(size >> 8) - 1]);
-    } else {
-      // The run size is too large for us to use the lookup
-      // table.  Use real division.
-      regind = diff / size;
-    }
+  if (mozilla::IsPowerOfTwo(size)) {
+    regind = diff >> FloorLog2(size);
   } else if (size <= ((sizeof(size_invs) / sizeof(unsigned)) * kQuantum) + 2) {
     regind = size_invs[(size / kQuantum) - 3] * diff;
     regind >>= SIZE_INV_SHIFT;
