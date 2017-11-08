@@ -1257,7 +1257,7 @@ huge_palloc(size_t aSize, size_t aAlignment, bool aZero, arena_t* aArena);
 static void*
 huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena);
 static void
-huge_dalloc(void* aPtr);
+huge_dalloc(void* aPtr, arena_t* aArena);
 #ifdef XP_WIN
 extern "C"
 #else
@@ -3584,7 +3584,7 @@ arena_t::DallocLarge(arena_chunk_t* aChunk, void* aPtr)
 }
 
 static inline void
-arena_dalloc(void* aPtr, size_t aOffset)
+arena_dalloc(void* aPtr, size_t aOffset, arena_t* aArena)
 {
   MOZ_ASSERT(aPtr);
   MOZ_ASSERT(aOffset != 0);
@@ -3594,6 +3594,7 @@ arena_dalloc(void* aPtr, size_t aOffset)
   auto arena = chunk->arena;
   MOZ_ASSERT(arena);
   MOZ_DIAGNOSTIC_ASSERT(arena->mMagic == ARENA_MAGIC);
+  MOZ_RELEASE_ASSERT(!aArena || arena == aArena);
 
   MutexAutoLock lock(arena->mLock);
   size_t pageind = aOffset >> gPageSize2Pow;
@@ -3609,7 +3610,7 @@ arena_dalloc(void* aPtr, size_t aOffset)
 }
 
 static inline void
-idalloc(void* ptr)
+idalloc(void* ptr, arena_t* aArena)
 {
   size_t offset;
 
@@ -3617,9 +3618,9 @@ idalloc(void* ptr)
 
   offset = GetChunkOffsetForPtr(ptr);
   if (offset != 0) {
-    arena_dalloc(ptr, offset);
+    arena_dalloc(ptr, offset, aArena);
   } else {
-    huge_dalloc(ptr);
+    huge_dalloc(ptr, aArena);
   }
 }
 
@@ -3754,7 +3755,7 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   {
     memcpy(ret, aPtr, copysize);
   }
-  idalloc(aPtr);
+  idalloc(aPtr, aArena);
   return ret;
 }
 
@@ -3765,9 +3766,10 @@ iralloc(void* aPtr, size_t aSize, arena_t* aArena)
   MOZ_ASSERT(aSize != 0);
 
   auto info = AllocInfo::Get(aPtr);
-  aArena = aArena ? aArena : info.Arena();
+  auto arena = info.Arena();
+  MOZ_RELEASE_ASSERT(!aArena || arena == aArena);
+  aArena = aArena ? aArena : arena;
   size_t oldsize = info.Size();
-  MOZ_RELEASE_ASSERT(aArena);
   MOZ_DIAGNOSTIC_ASSERT(aArena->mMagic == ARENA_MAGIC);
 
   return (aSize <= gMaxLargeClass) ? arena_ralloc(aPtr, aSize, oldsize, aArena)
@@ -3966,6 +3968,7 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
       extent_node_t* node = huge.Search(&key);
       MOZ_ASSERT(node);
       MOZ_ASSERT(node->mSize == aOldSize);
+      MOZ_RELEASE_ASSERT(!aArena || node->mArena == aArena);
       huge_allocated -= aOldSize - psize;
       // No need to change huge_mapped, because we didn't (un)map anything.
       node->mSize = psize;
@@ -3990,6 +3993,7 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
       extent_node_t* node = huge.Search(&key);
       MOZ_ASSERT(node);
       MOZ_ASSERT(node->mSize == aOldSize);
+      MOZ_RELEASE_ASSERT(!aArena || node->mArena == aArena);
       huge_allocated += psize - aOldSize;
       // No need to change huge_mapped, because we didn't
       // (un)map anything.
@@ -4019,12 +4023,12 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   {
     memcpy(ret, aPtr, copysize);
   }
-  idalloc(aPtr);
+  idalloc(aPtr, aArena);
   return ret;
 }
 
 static void
-huge_dalloc(void* aPtr)
+huge_dalloc(void* aPtr, arena_t* aArena)
 {
   extent_node_t* node;
   {
@@ -4036,6 +4040,7 @@ huge_dalloc(void* aPtr)
     node = huge.Search(&key);
     MOZ_ASSERT(node);
     MOZ_ASSERT(node->mAddr == aPtr);
+    MOZ_RELEASE_ASSERT(!aArena || node->mArena == aArena);
     huge.Remove(node);
 
     huge_allocated -= node->mSize;
@@ -4373,10 +4378,10 @@ BaseAllocator::free(void* aPtr)
   offset = GetChunkOffsetForPtr(aPtr);
   if (offset != 0) {
     MOZ_RELEASE_ASSERT(malloc_initialized);
-    arena_dalloc(aPtr, offset);
+    arena_dalloc(aPtr, offset, mArena);
   } else if (aPtr) {
     MOZ_RELEASE_ASSERT(malloc_initialized);
-    huge_dalloc(aPtr);
+    huge_dalloc(aPtr, mArena);
   }
 }
 
@@ -4707,9 +4712,8 @@ inline void
 MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
 {
   arena_t* arena = gArenas.GetById(aArenaId, /* IsPrivate = */ true);
-  if (arena) {
-    gArenas.DisposeArena(arena);
-  }
+  MOZ_RELEASE_ASSERT(arena);
+  gArenas.DisposeArena(arena);
 }
 
 #define MALLOC_DECL(name, return_type, ...)                                    \
