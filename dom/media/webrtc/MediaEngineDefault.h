@@ -188,7 +188,6 @@ protected:
   TrackID mTrackID;
 
   TrackTicks mLastNotify; // Accessed in ::Start(), then on NotifyPull (from MSG thread)
-  TrackRate mRate; // ditto
   uint32_t mFreq; // ditto
 
   // Created on Start, then accessed from NotifyPull (MSG thread)
