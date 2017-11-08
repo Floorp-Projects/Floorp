@@ -8,10 +8,6 @@
 # MinGW does not have (or need) makecab
 unset MAKECAB
 
-# These aren't supported on mingw at this time
-# Bug 1393817
-MOZ_AUTOMATION_L10N_CHECK=0
-
 # Sets:
 #  build/mozconfig.common
 #    AUTOCLOBBER=1

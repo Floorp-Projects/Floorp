@@ -369,6 +369,13 @@
         ]
       }
     },
+    "ia": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "amazondotcom", "duckduckgo", "twitter", "wikipedia-ia"
+        ]
+      }
+    },
     "id": {
       "default": {
         "visibleDefaultEngines": [
@@ -534,6 +541,13 @@
       "default": {
         "visibleDefaultEngines": [
           "google", "duckduckgo", "gulesider-mobile-NO", "twitter", "wikipedia-NN"
+        ]
+      }
+    },
+    "oc": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo-france", "bing", "wikipedia-oc", "wiktionary-oc"
         ]
       }
     },

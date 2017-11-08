@@ -1552,13 +1552,15 @@ PT.Tag.prototype = {
         let uri = Services.io.newURI(url.href);
         let currentTags = PlacesUtils.tagging.getTagsForURI(uri);
         let newTags = tags.filter(t => !currentTags.includes(t));
-        PlacesUtils.tagging.tagURI(uri, newTags);
-        onUndo.unshift(() => {
-          PlacesUtils.tagging.untagURI(uri, newTags);
-        });
-        onRedo.push(() => {
+        if (newTags.length) {
           PlacesUtils.tagging.tagURI(uri, newTags);
-        });
+          onUndo.unshift(() => {
+            PlacesUtils.tagging.untagURI(uri, newTags);
+          });
+          onRedo.push(() => {
+            PlacesUtils.tagging.tagURI(uri, newTags);
+          });
+        }
       }
     }
     this.undo = async function() {
