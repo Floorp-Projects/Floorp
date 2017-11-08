@@ -4,12 +4,10 @@
 
 "use strict";
 
-const {
-  DOM: dom,
-  PropTypes,
-  PureComponent,
-} = require("devtools/client/shared/vendor/react");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Reps
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
