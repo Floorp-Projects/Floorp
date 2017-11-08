@@ -2964,6 +2964,8 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
   size_t try_run_size, good_run_size;
   unsigned good_nregs, good_mask_nelms, good_reg0_offset;
   unsigned try_nregs, try_mask_nelms, try_reg0_offset;
+  // Size of the run header, excluding regs_mask.
+  static const size_t kFixedHeaderSize = offsetof(arena_run_t, regs_mask);
 
   MOZ_ASSERT(min_run_size >= gPageSize);
   MOZ_ASSERT(min_run_size <= gMaxLargeClass);
@@ -2977,7 +2979,7 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
   // would be quite messy, since there is an interdependency between the
   // header's mask length and the number of regions.
   try_run_size = min_run_size;
-  try_nregs = ((try_run_size - sizeof(arena_run_t)) / bin->mSizeClass) +
+  try_nregs = ((try_run_size - kFixedHeaderSize) / bin->mSizeClass) +
               1; // Counter-act try_nregs-- in loop.
   do {
     try_nregs--;
@@ -2985,7 +2987,7 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
       (try_nregs >> (LOG2(sizeof(int)) + 3)) +
       ((try_nregs & ((1U << (LOG2(sizeof(int)) + 3)) - 1)) ? 1 : 0);
     try_reg0_offset = try_run_size - (try_nregs * bin->mSizeClass);
-  } while (sizeof(arena_run_t) + (sizeof(unsigned) * (try_mask_nelms - 1)) >
+  } while (kFixedHeaderSize + (sizeof(unsigned) * try_mask_nelms) >
            try_reg0_offset);
 
   // mRunSize expansion loop.
@@ -2998,7 +3000,7 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
 
     // Try more aggressive settings.
     try_run_size += gPageSize;
-    try_nregs = ((try_run_size - sizeof(arena_run_t)) / bin->mSizeClass) +
+    try_nregs = ((try_run_size - kFixedHeaderSize) / bin->mSizeClass) +
                 1; // Counter-act try_nregs-- in loop.
     do {
       try_nregs--;
@@ -3006,7 +3008,7 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
         (try_nregs >> (LOG2(sizeof(int)) + 3)) +
         ((try_nregs & ((1U << (LOG2(sizeof(int)) + 3)) - 1)) ? 1 : 0);
       try_reg0_offset = try_run_size - (try_nregs * bin->mSizeClass);
-    } while (sizeof(arena_run_t) + (sizeof(unsigned) * (try_mask_nelms - 1)) >
+    } while (kFixedHeaderSize + (sizeof(unsigned) * try_mask_nelms) >
              try_reg0_offset);
 
     // Don't allow runs larger than the largest possible large size class.
@@ -3027,13 +3029,13 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
     // With such overhead, there is no way to get to the wanted overhead above,
     // so we give up if the required size for regs_mask more than doubles the
     // size of the run header.
-    if (try_mask_nelms * sizeof(unsigned) >= sizeof(arena_run_t)) {
+    if (try_mask_nelms * sizeof(unsigned) >= kFixedHeaderSize) {
       break;
     }
 
   }
 
-  MOZ_ASSERT(sizeof(arena_run_t) + (sizeof(unsigned) * (good_mask_nelms - 1)) <=
+  MOZ_ASSERT(kFixedHeaderSize + (sizeof(unsigned) * good_mask_nelms) <=
              good_reg0_offset);
   MOZ_ASSERT((good_mask_nelms << (LOG2(sizeof(int)) + 3)) >= good_nregs);
 
