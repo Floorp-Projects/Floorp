@@ -951,12 +951,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             this.value = droppedItem instanceof URL ? droppedItem.href : droppedItem;
             SetPageProxyState("invalid");
             this.focus();
-            if (droppedItem instanceof URL) {
-              this.handleCommand();
-              // Force not showing the dropped URI immediately.
-              gBrowser.userTypedValue = null;
-              URLBarSetURI();
-            }
+            this.handleCommand();
+            // Force not showing the dropped URI immediately.
+            gBrowser.userTypedValue = null;
+            URLBarSetURI();
           }
         ]]></body>
       </method>

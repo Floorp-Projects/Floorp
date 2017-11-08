@@ -4324,7 +4324,7 @@ ssl3_ConsumeHandshakeNumber(sslSocket *ss, PRUint32 *num, PRUint32 bytes,
                             PRUint8 **b, PRUint32 *length)
 {
     PRUint8 *buf = *b;
-    PRUint32 i;
+    int i;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
@@ -4946,7 +4946,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
     sslSessionID *sid;
     ssl3CipherSpec *cwSpec;
     SECStatus rv;
-    unsigned int i;
+    int i;
     int length;
     int num_suites;
     int actual_count = 0;
@@ -7141,11 +7141,11 @@ ssl_HandleDHServerKeyExchange(sslSocket *ss, PRUint8 *b, PRUint32 length)
     }
 
     rv = NSS_OptionGet(NSS_DH_MIN_KEY_SIZE, &minDH);
-    if (rv != SECSuccess || minDH <= 0) {
+    if (rv != SECSuccess) {
         minDH = SSL_DH_MIN_P_BITS;
     }
     dh_p_bits = SECKEY_BigIntegerBitLength(&dh_p);
-    if (dh_p_bits < (unsigned)minDH) {
+    if (dh_p_bits < minDH) {
         errCode = SSL_ERROR_WEAK_SERVER_EPHEMERAL_DH_KEY;
         goto alert_loser;
     }
@@ -8082,8 +8082,8 @@ SECStatus
 ssl3_NegotiateCipherSuite(sslSocket *ss, const SECItem *suites,
                           PRBool initHashes)
 {
-    unsigned int j;
-    unsigned int i;
+    int j;
+    int i;
 
     for (j = 0; j < ssl_V3_SUITES_IMPLEMENTED; j++) {
         ssl3CipherSuiteCfg *suite = &ss->cipherSuites[j];
@@ -8683,6 +8683,15 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
         ssl3_DisableNonDTLSSuites(ss);
     }
 
+#ifdef PARANOID
+    /* Look for a matching cipher suite. */
+    j = ssl3_config_match_init(ss);
+    if (j <= 0) {                  /* no ciphers are working/supported by PK11 */
+        errCode = PORT_GetError(); /* error code is already set. */
+        goto alert_loser;
+    }
+#endif
+
     if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
         rv = tls13_HandleClientHelloPart2(ss, &suites, sid);
     } else {
@@ -8714,7 +8723,7 @@ ssl3_HandleClientHelloPart2(sslSocket *ss,
     SSL3AlertDescription desc = illegal_parameter;
     SECStatus rv;
     unsigned int i;
-    unsigned int j;
+    int j;
 
     /* If we already have a session for this client, be sure to pick the
     ** same cipher suite and compression method we picked before.
@@ -8746,7 +8755,7 @@ ssl3_HandleClientHelloPart2(sslSocket *ss,
                     break;
             }
             PORT_Assert(j > 0);
-            if (j == 0)
+            if (j <= 0)
                 break;
 #ifdef PARANOID
             /* Double check that the cached cipher suite is still enabled,
@@ -8783,7 +8792,8 @@ ssl3_HandleClientHelloPart2(sslSocket *ss,
 
 #ifndef PARANOID
     /* Look for a matching cipher suite. */
-    if (ssl3_config_match_init(ss) <= 0) {
+    j = ssl3_config_match_init(ss);
+    if (j <= 0) { /* no ciphers are working/supported by PK11 */
         desc = internal_error;
         errCode = PORT_GetError(); /* error code is already set. */
         goto alert_loser;
@@ -9685,12 +9695,12 @@ ssl3_SendCertificateRequest(sslSocket *ss)
     PRBool isTLS12;
     const PRUint8 *certTypes;
     SECStatus rv;
-    PRUint32 length;
+    int length;
     SECItem *names;
     unsigned int calen;
     unsigned int nnames;
     SECItem *name;
-    unsigned int i;
+    int i;
     int certTypesLength;
     PRUint8 sigAlgs[MAX_SIGNATURE_SCHEMES * 2];
     unsigned int sigAlgsLength = 0;
@@ -10908,8 +10918,7 @@ ssl3_AuthCertificate(sslSocket *ss)
         }
         if (pubKey) {
             KeyType pubKeyType;
-            PRUint32 minKey;
-            PRInt32 optval;
+            PRInt32 minKey;
             /* This partly fixes Bug 124230 and may cause problems for
              * callers which depend on the old (wrong) behavior. */
             ss->sec.authKeyBits = SECKEY_PublicKeyStrengthInBits(pubKey);
@@ -10920,29 +10929,29 @@ ssl3_AuthCertificate(sslSocket *ss)
                 case rsaPssKey:
                 case rsaOaepKey:
                     rv =
-                        NSS_OptionGet(NSS_RSA_MIN_KEY_SIZE, &optval);
-                    if (rv == SECSuccess && optval > 0) {
-                        minKey = (PRUint32)optval;
-                    } else {
-                        minKey = SSL_RSA_MIN_MODULUS_BITS;
+                        NSS_OptionGet(NSS_RSA_MIN_KEY_SIZE, &minKey);
+                    if (rv !=
+                        SECSuccess) {
+                        minKey =
+                            SSL_RSA_MIN_MODULUS_BITS;
                     }
                     break;
                 case dsaKey:
                     rv =
-                        NSS_OptionGet(NSS_DSA_MIN_KEY_SIZE, &optval);
-                    if (rv == SECSuccess && optval > 0) {
-                        minKey = (PRUint32)optval;
-                    } else {
-                        minKey = SSL_DSA_MIN_P_BITS;
+                        NSS_OptionGet(NSS_DSA_MIN_KEY_SIZE, &minKey);
+                    if (rv !=
+                        SECSuccess) {
+                        minKey =
+                            SSL_DSA_MIN_P_BITS;
                     }
                     break;
                 case dhKey:
                     rv =
-                        NSS_OptionGet(NSS_DH_MIN_KEY_SIZE, &optval);
-                    if (rv == SECSuccess && optval > 0) {
-                        minKey = (PRUint32)optval;
-                    } else {
-                        minKey = SSL_DH_MIN_P_BITS;
+                        NSS_OptionGet(NSS_DH_MIN_KEY_SIZE, &minKey);
+                    if (rv !=
+                        SECSuccess) {
+                        minKey =
+                            SSL_DH_MIN_P_BITS;
                     }
                     break;
                 default:

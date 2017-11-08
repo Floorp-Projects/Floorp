@@ -170,6 +170,20 @@ ResetSimulatedInterrupt()
 } // namespace js
 #endif // defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 
+JS_PUBLIC_DATA(arena_id_t) js::MallocArena;
+
+void
+js::InitMallocAllocator()
+{
+    MallocArena = moz_create_arena();
+}
+
+void
+js::ShutDownMallocAllocator()
+{
+    moz_dispose_arena(MallocArena);
+}
+
 JS_PUBLIC_API(void)
 JS_Assert(const char* s, const char* file, int ln)
 {

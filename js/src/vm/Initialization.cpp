@@ -100,6 +100,8 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
     RETURN_IF_FAIL(js::oom::InitThreadType());
 #endif
 
+    js::InitMallocAllocator();
+
     RETURN_IF_FAIL(js::Mutex::Init());
 
     RETURN_IF_FAIL(js::wasm::InitInstanceStaticData());
@@ -170,6 +172,7 @@ JS_ShutDown(void)
     js::MemoryProtectionExceptionHandler::uninstall();
 
     js::wasm::ShutDownInstanceStaticData();
+    js::wasm::ShutDownProcessStaticData();
 
     js::Mutex::ShutDown();
 
@@ -198,6 +201,8 @@ JS_ShutDown(void)
         js::wasm::ReleaseBuiltinThunks();
         js::jit::ReleaseProcessExecutableMemory();
     }
+
+    js::ShutDownMallocAllocator();
 
     libraryInitState = InitState::ShutDown;
 }

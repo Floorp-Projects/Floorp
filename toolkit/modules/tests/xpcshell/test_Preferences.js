@@ -112,7 +112,9 @@ add_test(function test_set_unsupported_pref() {
   run_next_test();
 });
 
-// Make sure that we can get a string pref that we didn't set ourselves.
+// Make sure that we can get a string pref that we didn't set ourselves
+// (i.e. that the way we get a string pref using getComplexValue doesn't
+// hork us getting a string pref that wasn't set using setComplexValue).
 add_test(function test_get_string_pref() {
   let svc = Cc["@mozilla.org/preferences-service;1"].
             getService(Ci.nsIPrefService).

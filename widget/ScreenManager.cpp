@@ -8,15 +8,16 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/DOMTypes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPtr.h"
 
-static LazyLogModule sScreenLog("WidgetScreen");
-
-NS_IMPL_ISUPPORTS(ScreenManager, nsIScreenManager)
+static mozilla::LazyLogModule sScreenLog("WidgetScreen");
 
 namespace mozilla {
 namespace widget {
+
+NS_IMPL_ISUPPORTS(ScreenManager, nsIScreenManager)
 
 ScreenManager::ScreenManager()
 {
@@ -78,7 +79,7 @@ template<class Range>
 void
 ScreenManager::CopyScreensToRemoteRange(Range aRemoteRange)
 {
-  AutoTArray<ScreenDetails, 4> screens;
+  AutoTArray<dom::ScreenDetails, 4> screens;
   for (auto& screen : mScreenList) {
     screens.AppendElement(screen->ToScreenDetails());
   }
@@ -92,7 +93,7 @@ ScreenManager::CopyScreensToRemoteRange(Range aRemoteRange)
 }
 
 void
-ScreenManager::CopyScreensToRemote(ContentParent* aContentParent)
+ScreenManager::CopyScreensToRemote(dom::ContentParent* aContentParent)
 {
   MOZ_ASSERT(aContentParent);
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -110,7 +111,7 @@ ScreenManager::CopyScreensToAllRemotesIfIsParent()
 
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refreshing all ContentParents"));
 
-  CopyScreensToRemoteRange(ContentParent::AllProcesses(ContentParent::eLive));
+  CopyScreensToRemoteRange(dom::ContentParent::AllProcesses(dom::ContentParent::eLive));
 }
 
 // Returns the screen that contains the rectangle. If the rect overlaps

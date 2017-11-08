@@ -235,7 +235,6 @@
 @BINPATH@/components/txtsvc.xpt
 @BINPATH@/components/txmgr.xpt
 @BINPATH@/components/uconv.xpt
-@BINPATH@/components/unicharutil.xpt
 @BINPATH@/components/update.xpt
 @BINPATH@/components/uriloader.xpt
 @BINPATH@/components/urlformatter.xpt

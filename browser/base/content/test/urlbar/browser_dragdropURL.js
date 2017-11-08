@@ -4,7 +4,28 @@ const TEST_URL = "data:text/html,a test page";
 const DRAG_URL = "http://www.example.com/";
 const DRAG_FORBIDDEN_URL = "chrome://browser/content/aboutDialog.xul";
 const DRAG_TEXT = "Firefox is awesome";
+const DRAG_TEXT_URL = "http://example.com/?q=Firefox+is+awesome";
 const DRAG_WORD = "Firefox";
+const DRAG_WORD_URL = "http://example.com/?q=Firefox";
+
+registerCleanupFunction(async function cleanup() {
+  while (gBrowser.tabs.length > 1) {
+    await BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+  }
+  Services.search.currentEngine = originalEngine;
+  let engine = Services.search.getEngineByName("MozSearch");
+  Services.search.removeEngine(engine);
+});
+
+let originalEngine;
+add_task(async function test_setup() {
+  // Stop search-engine loads from hitting the network
+  Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
+                                       "http://example.com/?q={searchTerms}");
+  let engine = Services.search.getEngineByName("MozSearch");
+  originalEngine = Services.search.currentEngine;
+  Services.search.currentEngine = engine;
+});
 
 add_task(async function checkDragURL() {
   await BrowserTestUtils.withNewTab(TEST_URL, function(browser) {
@@ -26,13 +47,15 @@ add_task(async function checkDragForbiddenURL() {
 });
 
 add_task(async function checkDragText() {
-  await BrowserTestUtils.withNewTab(TEST_URL, function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+    let promiseLoad = BrowserTestUtils.browserLoaded(browser, false, DRAG_TEXT_URL);
     EventUtils.synthesizeDrop(document.getElementById("home-button"), gURLBar,
                               [[{type: "text/plain", data: DRAG_TEXT}]], "copy", window);
-    is(gURLBar.value, DRAG_TEXT, "Dragging normal text should replace the URL bar value");
+    await promiseLoad;
 
+    promiseLoad = BrowserTestUtils.browserLoaded(browser, false, DRAG_WORD_URL);
     EventUtils.synthesizeDrop(document.getElementById("home-button"), gURLBar,
                               [[{type: "text/plain", data: DRAG_WORD}]], "copy", window);
-    is(gURLBar.value, DRAG_WORD, "Dragging a single word should replace the URL bar value");
+    await promiseLoad;
   });
 });

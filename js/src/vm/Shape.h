@@ -994,13 +994,13 @@ class Shape : public gc::TenuredCell
 
     bool matches(const Shape* other) const {
         return propid_.get() == other->propid_.get() &&
-               matchesParamsAfterId(other->base(), other->maybeSlot(), other->attrs, other->flags,
+               matchesParamsAfterId(other->base(), other->maybeSlot(), other->attrs,
                                     other->getter(), other->setter());
     }
 
     inline bool matches(const StackShape& other) const;
 
-    bool matchesParamsAfterId(BaseShape* base, uint32_t aslot, unsigned aattrs, unsigned aflags,
+    bool matchesParamsAfterId(BaseShape* base, uint32_t aslot, unsigned aattrs,
                               GetterOp rawGetter, SetterOp rawSetter) const
     {
         return base->unowned() == this->base()->unowned() &&
@@ -1443,14 +1443,14 @@ struct StackShape
     uint8_t flags;
 
     explicit StackShape(UnownedBaseShape* base, jsid propid, uint32_t slot,
-                        unsigned attrs, unsigned flags)
+                        unsigned attrs)
       : base(base),
         propid(propid),
         rawGetter(nullptr),
         rawSetter(nullptr),
         slot_(slot),
         attrs(uint8_t(attrs)),
-        flags(uint8_t(flags))
+        flags(0)
     {
         MOZ_ASSERT(base);
         MOZ_ASSERT(!JSID_IS_VOID(propid));
@@ -1623,7 +1623,7 @@ inline bool
 Shape::matches(const StackShape& other) const
 {
     return propid_.get() == other.propid &&
-           matchesParamsAfterId(other.base, other.slot_, other.attrs, other.flags,
+           matchesParamsAfterId(other.base, other.slot_, other.attrs,
                                 other.rawGetter, other.rawSetter);
 }
 

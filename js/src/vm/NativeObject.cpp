@@ -481,8 +481,6 @@ NativeObject::sparsifyDenseElement(JSContext* cx, HandleNativeObject obj, uint32
 
     removeDenseElementForSparseIndex(cx, obj, index);
 
-    uint32_t slot = obj->slotSpan();
-
     RootedId id(cx, INT_TO_JSID(index));
 
     AutoKeepShapeTables keep(cx);
@@ -496,15 +494,15 @@ NativeObject::sparsifyDenseElement(JSContext* cx, HandleNativeObject obj, uint32
 
     // NOTE: We don't use addDataProperty because we don't want the
     // extensibility check if we're, for example, sparsifying frozen objects..
-    if (!addDataPropertyInternal(cx, obj, id, slot,
-                                 obj->getElementsHeader()->elementAttributes(),
-                                 entry, keep)) {
+    Shape* shape = addDataPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT,
+                                           obj->getElementsHeader()->elementAttributes(),
+                                           entry, keep);
+    if (!shape) {
         obj->setDenseElementUnchecked(index, value);
         return false;
     }
 
-    MOZ_ASSERT(slot == obj->slotSpan() - 1);
-    obj->initSlot(slot, value);
+    obj->initSlot(shape->slot(), value);
 
     return true;
 }
