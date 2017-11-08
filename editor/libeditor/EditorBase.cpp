@@ -1425,34 +1425,48 @@ EditorBase::CreateNode(nsAtom* aTag,
 {
   MOZ_ASSERT(aTag && aParent);
 
+  EditorRawDOMPoint pointToInsert;
+  if (aPosition == -1) {
+    pointToInsert.Set(aParent, aParent->Length());
+  } else if (aChildAtPosition) {
+    pointToInsert.Set(aChildAtPosition);
+    // Ensure pointToInsert has offset for sending same offset for both
+    // WillCreateNode() and DidCreateNode().
+    Unused << pointToInsert.Offset();
+  } else {
+    pointToInsert.Set(aParent, aPosition);
+  }
+
   AutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
 
   {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillCreateNode(nsDependentAtomString(aTag),
-                               GetAsDOMNode(aParent), aPosition);
+                               GetAsDOMNode(pointToInsert.Container()),
+                               pointToInsert.Offset());
     }
   }
 
   nsCOMPtr<Element> ret;
 
   RefPtr<CreateElementTransaction> transaction =
-    CreateTxnForCreateElement(*aTag, *aParent, aPosition,
-                              aChildAtPosition);
+    CreateTxnForCreateElement(*aTag, pointToInsert);
   nsresult rv = DoTransaction(transaction);
   if (NS_SUCCEEDED(rv)) {
     ret = transaction->GetNewNode();
     MOZ_ASSERT(ret);
   }
 
-  mRangeUpdater.SelAdjCreateNode(aParent, aPosition);
+  mRangeUpdater.SelAdjCreateNode(pointToInsert.Container(),
+                                 pointToInsert.Offset());
 
   {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->DidCreateNode(nsDependentAtomString(aTag), GetAsDOMNode(ret),
-                              GetAsDOMNode(aParent), aPosition, rv);
+                              GetAsDOMNode(pointToInsert.Container()),
+                              pointToInsert.Offset(), rv);
     }
   }
 
@@ -4368,20 +4382,10 @@ EditorBase::CreateTxnForRemoveAttribute(Element& aElement,
 
 already_AddRefed<CreateElementTransaction>
 EditorBase::CreateTxnForCreateElement(nsAtom& aTag,
-                                      nsINode& aParent,
-                                      int32_t aPosition,
-                                      nsIContent* aChildAtPosition)
+                                      const EditorRawDOMPoint& aPointToInsert)
 {
-  EditorRawDOMPoint pointToInsert;
-  if (aPosition == -1) {
-    pointToInsert.Set(&aParent, aParent.Length());
-  } else if (aChildAtPosition) {
-    pointToInsert.Set(aChildAtPosition);
-  } else {
-    pointToInsert.Set(&aParent, aPosition);
-  }
   RefPtr<CreateElementTransaction> transaction =
-    new CreateElementTransaction(*this, aTag, pointToInsert);
+    new CreateElementTransaction(*this, aTag, aPointToInsert);
 
   return transaction.forget();
 }
