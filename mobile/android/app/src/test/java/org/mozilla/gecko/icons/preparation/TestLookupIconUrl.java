@@ -28,6 +28,7 @@ public class TestLookupIconUrl {
     @Before
     public void setUp() {
         MemoryStorage.get().evictAll();
+        DiskStorage.get(RuntimeEnvironment.application).evictAll();
     }
 
     @Test
