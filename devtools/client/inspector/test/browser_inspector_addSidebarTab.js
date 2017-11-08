@@ -16,7 +16,8 @@ add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URI);
 
   const React = inspector.React;
-  const { div } = React.DOM;
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
+  const { div } = dom;
 
   info("Adding custom panel.");
 
