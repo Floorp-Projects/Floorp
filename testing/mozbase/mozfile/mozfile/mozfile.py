@@ -61,17 +61,8 @@ def extract_zip(src, dest):
     namelist = bundle.namelist()
 
     for name in namelist:
+        bundle.extract(name, dest)
         filename = os.path.realpath(os.path.join(dest, name))
-        if name.endswith('/'):
-            if not os.path.isdir(filename):
-                os.makedirs(filename)
-        else:
-            path = os.path.dirname(filename)
-            if not os.path.isdir(path):
-                os.makedirs(path)
-            _dest = open(filename, 'wb')
-            _dest.write(bundle.read(name))
-            _dest.close()
         mode = bundle.getinfo(name).external_attr >> 16 & 0x1FF
         # Only update permissions if attributes are set. Otherwise fallback to the defaults.
         if mode:
