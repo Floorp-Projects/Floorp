@@ -35,6 +35,6 @@ config = {
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         'TINDERBOX_OUTPUT': '1',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/linux32/debug',
+    'mozconfig_variant': 'debug',
     #######################
 }

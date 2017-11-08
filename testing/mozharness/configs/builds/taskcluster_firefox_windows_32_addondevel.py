@@ -63,6 +63,7 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s\\breakpad\\win32\\minidump_stackwalk.exe',
         'MINIDUMP_SAVE_PATH': os.path.join(os.getcwd(), 'public', 'build'),
     },
-    'src_mozconfig': 'browser/config/mozconfigs/win32/add-on-devel',
+    'mozconfig_platform': '32',
+    'mozconfig_variant': 'add-on-devel',
     #########################################################################
 }

@@ -1,3 +1,3 @@
 config = {
-    'src_mozconfig': 'browser/config/mozconfigs/win32/opt-dmd',
+    'mozconfig_variant': 'opt-dmd',
 }

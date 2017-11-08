@@ -75,7 +75,8 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/win64/minidump_stackwalk.exe',
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/win64/nightly',
+    'mozconfig_platform': 'win64',
+    'mozconfig_variant': 'nightly',
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win64/releng.manifest",
     #########################################################################
 }
