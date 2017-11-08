@@ -43,18 +43,22 @@ AnimationEventHandler.prototype.clear = () => {
 
 function setupAnimation(t, animationStyle) {
   const div = addDiv(t, { style: 'animation: ' + animationStyle });
+  // Note that this AnimationEventHandler should be created before EventWatcher
+  // to capture all events in the handler prior to the EventWatcher since
+  // testharness.js proceeds when the EventWatcher received watching events.
+  const handler = new AnimationEventHandler(div);
   const watcher = new EventWatcher(t, div, [ 'animationstart',
                                            'animationiteration',
                                            'animationend',
                                            'animationcancel' ]);
   const animation = div.getAnimations()[0];
 
-  return [animation, watcher, div];
+  return { animation, watcher, div, handler };
 }
 
 promise_test(t => {
   // Add 1ms delay to ensure that the delay is not included in the elapsedTime.
-  const [animation, watcher] = setupAnimation(t, 'anim 100s 1ms');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s 1ms');
 
   return watcher.wait_for('animationstart').then(evt => {
     assert_equals(evt.elapsedTime, 0.0);
@@ -62,8 +66,7 @@ promise_test(t => {
 }, 'Idle -> Active');
 
 promise_test(t => {
-  const [animation, watcher, div] = setupAnimation(t, 'anim 100s');
-  const handler = new AnimationEventHandler(div);
+  const { animation, watcher, div, handler } = setupAnimation(t, 'anim 100s');
 
   // Seek to After phase.
   animation.finish();
@@ -75,7 +78,7 @@ promise_test(t => {
 }, 'Idle -> After');
 
 promise_test(t => {
-  const [animation, watcher] =
+  const { animation, watcher } =
     setupAnimation(t, 'anim 100s 100s paused');
 
   return animation.ready.then(() => {
@@ -88,9 +91,8 @@ promise_test(t => {
 }, 'Before -> Active');
 
 promise_test(t => {
-  const [animation, watcher, div] =
+  const { animation, watcher, div, handler } =
     setupAnimation(t, 'anim 100s 100s paused');
-  const handler = new AnimationEventHandler(div);
 
   return animation.ready.then(() => {
     // Seek to After phase.
@@ -103,7 +105,7 @@ promise_test(t => {
 }, 'Before -> After');
 
 promise_test(t => {
-  const [animation, watcher, div] = setupAnimation(t, 'anim 100s paused');
+  const { animation, watcher, div } = setupAnimation(t, 'anim 100s paused');
 
   return watcher.wait_for('animationstart').then(evt => {
     // Make idle
@@ -115,7 +117,7 @@ promise_test(t => {
 }, 'Active -> Idle, display: none');
 
 promise_test(t => {
-  const [animation, watcher, div] = setupAnimation(t, 'anim 100s');
+  const { animation, watcher, div } = setupAnimation(t, 'anim 100s');
 
   return watcher.wait_for('animationstart').then(evt => {
     animation.currentTime = 100.0;
@@ -129,7 +131,7 @@ promise_test(t => {
 
 promise_test(t => {
   // we should NOT pause animation since calling cancel synchronously.
-  const [animation, watcher, div] = setupAnimation(t, 'anim 100s');
+  const { animation, watcher, div } = setupAnimation(t, 'anim 100s');
 
   return watcher.wait_for('animationstart').then(evt => {
     animation.currentTime = 50.0;
@@ -141,7 +143,7 @@ promise_test(t => {
 }, 'Active -> Idle, calling Animation.cancel()');
 
 promise_test(t => {
-  const [animation, watcher] =
+  const { animation, watcher } =
     setupAnimation(t, 'anim 100s 100s paused');
 
   // Seek to Active phase.
@@ -156,7 +158,7 @@ promise_test(t => {
 }, 'Active -> Before');
 
 promise_test(t => {
-  const [animation, watcher] = setupAnimation(t, 'anim 100s paused');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s paused');
 
   return watcher.wait_for('animationstart').then(evt => {
     // Seek to After phase.
@@ -168,9 +170,8 @@ promise_test(t => {
 }, 'Active -> After');
 
 promise_test(t => {
-  const [animation, watcher, div] =
+  const { animation, watcher, div, handler } =
     setupAnimation(t, 'anim 100s 100s paused');
-  const handler = new AnimationEventHandler(div);
 
   // Seek to After phase.
   animation.finish();
@@ -187,7 +188,7 @@ promise_test(t => {
 }, 'After -> Before');
 
 promise_test(t => {
-  const [animation, watcher, div] =
+  const { animation, watcher, div } =
     setupAnimation(t, 'anim 100s 100s paused');
 
   // Seek to After phase.
@@ -203,7 +204,7 @@ promise_test(t => {
 }, 'After -> Active');
 
 promise_test(t => {
-  const [animation, watcher, div]
+  const { animation, watcher, div }
     = setupAnimation(t, 'anim 100s 100s 3 paused');
 
   return animation.ready.then(() => {
@@ -225,7 +226,7 @@ promise_test(t => {
 }, 'Active -> Active (forwards)');
 
 promise_test(t => {
-  const [animation, watcher] = setupAnimation(t, 'anim 100s 100s 3');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s 100s 3');
 
   // Seek to After phase.
   animation.finish();
@@ -248,7 +249,7 @@ promise_test(t => {
 }, 'Active -> Active (backwards)');
 
 promise_test(t => {
-  const [animation, watcher, div] =
+  const { animation, watcher, div } =
     setupAnimation(t, 'anim 100s paused');
   return watcher.wait_for('animationstart').then(evt => {
     // Seek to Idle phase.
@@ -264,7 +265,7 @@ promise_test(t => {
 }, 'Active -> Idle -> Active: animationstart is fired by restarting animation');
 
 promise_test(t => {
-  const [animation, watcher] =
+  const { animation, watcher } =
     setupAnimation(t, 'anim 100s 100s 2 paused');
 
   // Make After.
@@ -290,7 +291,7 @@ promise_test(t => {
 }, 'Negative playbackRate sanity test(Before -> Active -> Before)');
 
 promise_test(t => {
-  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s');
 
   return watcher.wait_for('animationstart').then(evt => {
     // Make idle
@@ -304,7 +305,7 @@ promise_test(t => {
 }, 'Call Animation.cancel after cancelling animation.');
 
 promise_test(t => {
-  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s');
 
   return watcher.wait_for('animationstart').then(evt => {
     // Make idle
@@ -316,7 +317,7 @@ promise_test(t => {
 }, 'Restart animation after cancelling animation immediately.');
 
 promise_test(t => {
-  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s');
 
   return watcher.wait_for('animationstart').then(evt => {
     // Make idle
@@ -331,7 +332,7 @@ promise_test(t => {
 }, 'Call Animation.cancel after restarting animation immediately.');
 
 promise_test(t => {
-  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s');
 
   return watcher.wait_for('animationstart').then(evt => {
     // Make idle
@@ -345,7 +346,7 @@ promise_test(t => {
 }, 'Set timeline and play transition after clearing the timeline.');
 
 promise_test(t => {
-  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s');
 
   return watcher.wait_for('animationstart').then(evt => {
     // Make idle
@@ -359,7 +360,7 @@ promise_test(t => {
 }, 'Set null target effect after cancelling the animation.');
 
 promise_test(t => {
-  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s');
 
   return watcher.wait_for('animationstart').then(evt => {
     animation.effect = null;
