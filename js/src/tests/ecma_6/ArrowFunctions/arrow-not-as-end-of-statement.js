@@ -161,6 +161,39 @@ delete Function.prototype[Symbol.iterator];
 var props = Object.getOwnPropertyNames({ ...0 ? 1 : a => {} }).sort();
 assertEq(props.length, 0);
 
+function f1(x = 0 ? 1 : a => {}) { return x; }
+assertEq(typeof f1(), "function");
+assertEq(f1(5), 5);
+
+var g1 = (x = 0 ? 1 : a => {}) => { return x; };
+assertEq(typeof g1(), "function");
+assertEq(g1(5), 5);
+
+var h1 = async (x = 0 ? 1 : a => {}) => { return x; };
+assertEq(typeof h1, "function");
+
+function f2(m, x = 0 ? 1 : a => {}) { return x; }
+assertEq(typeof f2(1), "function");
+assertEq(f2(1, 5), 5);
+
+var g2 = (m, x = 0 ? 1 : a => {}) => { return x; };
+assertEq(typeof g2(1), "function");
+assertEq(g2(1, 5), 5);
+
+var h2 = async (m, x = 0 ? 1 : a => {}) => { return x; };
+assertEq(typeof h2, "function");
+
+function f3(x = 0 ? 1 : a => {}, q) { return x; }
+assertEq(typeof f3(), "function");
+assertEq(f3(5), 5);
+
+var g3 = (x = 0 ? 1 : a => {}, q) => { return x; };
+assertEq(typeof g3(), "function");
+assertEq(g3(5), 5);
+
+var h3 = async (x = 0 ? 1 : a => {}, q) => { return x; };
+assertEq(typeof h3, "function");
+
 var asyncf = async () => {};
 assertEq(typeof asyncf, "function");
 
