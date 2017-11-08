@@ -454,7 +454,10 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
     RootedId maximumId(cx, AtomToId(maximumAtom));
 
     bool found;
-    if (HasProperty(cx, obj, maximumId, &found) && found) {
+    if (!HasProperty(cx, obj, maximumId, &found))
+        return false;
+
+    if (found) {
         RootedValue maxVal(cx);
         if (!GetProperty(cx, obj, obj, maximumId, &maxVal))
             return false;
