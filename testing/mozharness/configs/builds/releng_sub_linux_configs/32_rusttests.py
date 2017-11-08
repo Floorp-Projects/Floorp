@@ -33,7 +33,7 @@ config = {
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         'TINDERBOX_OUTPUT': '1',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/linux32/rusttests',
+    'mozconfig_variant': 'rusttests',
     'artifact_flag_build_variant_in_try': None,
     #######################
 }

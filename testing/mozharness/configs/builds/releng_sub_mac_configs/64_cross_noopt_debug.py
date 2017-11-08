@@ -33,7 +33,7 @@ config = {
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
         ##
     },
-    'src_mozconfig': 'browser/config/mozconfigs/macosx64/cross-noopt-debug',
+    'mozconfig_variant': 'cross-noopt-debug',
     'artifact_flag_build_variant_in_try': 'cross-debug-artifact',
     #######################
 }

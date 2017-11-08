@@ -146,6 +146,7 @@ config = {
         'freetype-2.3.11-6.el6_1.8.x86_64',
         ######## 32 bit specific ###########
     ],
-    'src_mozconfig': 'browser/config/mozconfigs/linux32/nightly',
+    'mozconfig_platform': 'linux32',
+    'mozconfig_variant': 'nightly',
     #########################################################################
 }

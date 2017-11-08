@@ -75,6 +75,7 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux/minidump_stackwalk',
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/win32/mingw32',
+    'mozconfig_platform': 'win32',
+    'mozconfig_variant': 'mingw32',
     #########################################################################
 }

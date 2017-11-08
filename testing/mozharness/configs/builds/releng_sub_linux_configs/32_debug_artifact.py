@@ -108,7 +108,7 @@ config = {
         'freetype-2.3.11-6.el6_1.8.x86_64',
         ######## 32 bit specific ###########
     ],
-    'src_mozconfig': 'browser/config/mozconfigs/linux32/debug-artifact',
+    'mozconfig_variant': 'debug-artifact',
     'tooltool_manifest_src': "browser/config/tooltool-manifests/linux32/\
 releng.manifest",
     #########################################################################

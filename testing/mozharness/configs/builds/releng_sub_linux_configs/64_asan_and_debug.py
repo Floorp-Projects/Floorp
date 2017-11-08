@@ -40,6 +40,6 @@ releng.manifest",
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:/tools/python27/bin:\
 /tools/python27-mercurial/bin:/home/cltbld/bin',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/linux64/debug-asan',
+    'mozconfig_variant': 'debug-asan',
     #######################
 }

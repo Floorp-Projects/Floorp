@@ -39,6 +39,6 @@ clang.manifest",
         'PATH': '/tools/python/bin:/opt/local/bin:/usr/bin:'
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/macosx64/debug-static-analysis',
+    'mozconfig_variant': 'debug-static-analysis',
     #######################
 }

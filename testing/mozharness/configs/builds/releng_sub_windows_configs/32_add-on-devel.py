@@ -31,6 +31,6 @@ config = {
         'TOOLTOOL_CACHE': 'c:/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/c/builds',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/win32/add-on-devel',
+    'mozconfig_variant': 'add-on-devel',
     #######################
 }
