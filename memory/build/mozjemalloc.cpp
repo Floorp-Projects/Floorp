@@ -839,6 +839,18 @@ struct arena_run_t
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   uint32_t magic;
 #define ARENA_RUN_MAGIC 0x384adf93
+
+  // On 64-bit platforms, having the arena_bin_t pointer following
+  // the magic field means there's padding between both fields, making
+  // the run header larger than necessary.
+  // But when MOZ_DIAGNOSTIC_ASSERT_ENABLED is not set, starting the
+  // header with this field followed by the arena_bin_t pointer yields
+  // the same padding. We do want the magic field to appear first, so
+  // depending whether MOZ_DIAGNOSTIC_ASSERT_ENABLED is set or not, we
+  // move some field to avoid padding.
+
+  // Number of free regions in run.
+  unsigned nfree;
 #endif
 
   // Bin this run is associated with.
@@ -847,8 +859,10 @@ struct arena_run_t
   // Index of first element that might have a free region.
   unsigned regs_minelm;
 
+#if !defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   // Number of free regions in run.
   unsigned nfree;
+#endif
 
   // Bitmask of in-use regions (0: in use, 1: free).
   unsigned regs_mask[1]; // Dynamically sized.
