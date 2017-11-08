@@ -324,11 +324,8 @@ private:
   DECL_GFX_PREF(Live, "apz.one_touch_pinch.enabled",           APZOneTouchPinchEnabled, bool, true);
   DECL_GFX_PREF(Live, "apz.overscroll.enabled",                APZOverscrollEnabled, bool, false);
   DECL_GFX_PREF(Live, "apz.overscroll.min_pan_distance_ratio", APZMinPanDistanceRatio, float, 1.0f);
-  DECL_GFX_PREF(Live, "apz.overscroll.spring_friction",        APZOverscrollSpringFriction, float, 0.015f);
   DECL_GFX_PREF(Live, "apz.overscroll.spring_stiffness",       APZOverscrollSpringStiffness, float, 0.001f);
   DECL_GFX_PREF(Live, "apz.overscroll.stop_distance_threshold", APZOverscrollStopDistanceThreshold, float, 5.0f);
-  DECL_GFX_PREF(Live, "apz.overscroll.stop_velocity_threshold", APZOverscrollStopVelocityThreshold, float, 0.01f);
-  DECL_GFX_PREF(Live, "apz.overscroll.stretch_factor",         APZOverscrollStretchFactor, float, 0.5f);
   DECL_GFX_PREF(Live, "apz.paint_skipping.enabled",            APZPaintSkipping, bool, true);
   DECL_GFX_PREF(Live, "apz.peek_messages.enabled",             APZPeekMessages, bool, true);
   DECL_GFX_PREF(Live, "apz.popups.enabled",                    APZPopupsEnabled, bool, false);
@@ -371,14 +368,12 @@ private:
   DECL_GFX_PREF(Live, "dom.vr.puppet.submitframe",             VRPuppetSubmitFrame, uint32_t, 0);
   DECL_GFX_PREF(Live, "dom.vr.display.rafMaxDuration",         VRDisplayRafMaxDuration, uint32_t, 50);
   DECL_GFX_PREF(Live, "dom.w3c_pointer_events.enabled",        PointerEventsEnabled, bool, false);
-  DECL_GFX_PREF(Live, "dom.w3c_touch_events.enabled",          TouchEventsEnabled, int32_t, 0);
 
   DECL_GFX_PREF(Live, "general.smoothScroll",                  SmoothScrollEnabled, bool, true);
   DECL_GFX_PREF(Live, "general.smoothScroll.currentVelocityWeighting",
                 SmoothScrollCurrentVelocityWeighting, float, 0.25);
   DECL_GFX_PREF(Live, "general.smoothScroll.durationToIntervalRatio",
                 SmoothScrollDurationToIntervalRatio, int32_t, 200);
-  DECL_GFX_PREF(Live, "general.smoothScroll.lines",            LineSmoothScrollEnabled, bool, true);
   DECL_GFX_PREF(Live, "general.smoothScroll.lines.durationMaxMS",
                 LineSmoothScrollMaxDurationMs, int32_t, 150);
   DECL_GFX_PREF(Live, "general.smoothScroll.lines.durationMinMS",
@@ -397,7 +392,6 @@ private:
                 PageSmoothScrollMaxDurationMs, int32_t, 150);
   DECL_GFX_PREF(Live, "general.smoothScroll.pages.durationMinMS",
                 PageSmoothScrollMinDurationMs, int32_t, 150);
-  DECL_GFX_PREF(Live, "general.smoothScroll.pixels",           PixelSmoothScrollEnabled, bool, true);
   DECL_GFX_PREF(Live, "general.smoothScroll.pixels.durationMaxMS",
                 PixelSmoothScrollMaxDurationMs, int32_t, 150);
   DECL_GFX_PREF(Live, "general.smoothScroll.pixels.durationMinMS",
@@ -563,7 +557,6 @@ private:
   // preference value, defaulting to true.
   DECL_GFX_PREF(Once, "layers.componentalpha.enabled",         ComponentAlphaEnabled, bool, true);
 #endif
-  DECL_GFX_PREF(Live, "layers.composer2d.enabled",             Composer2DCompositionEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.d3d11.force-warp",               LayersD3D11ForceWARP, bool, false);
   DECL_GFX_PREF(Live, "layers.deaa.enabled",                   LayersDEAAEnabled, bool, false);
   DECL_GFX_PREF(Live, "layers.draw-bigimage-borders",          DrawBigImageBorders, bool, false);
@@ -616,7 +609,6 @@ private:
   DECL_GFX_PREF(Live, "layers.progressive-paint",              ProgressivePaint, bool, false);
   DECL_GFX_PREF(Live, "layers.shared-buffer-provider.enabled", PersistentBufferProviderSharedEnabled, bool, false);
   DECL_GFX_PREF(Live, "layers.single-tile.enabled",            LayersSingleTileEnabled, bool, true);
-  DECL_GFX_PREF(Once, "layers.stereo-video.enabled",           StereoVideoEnabled, bool, false);
   DECL_GFX_PREF(Live, "layers.force-synchronous-resize",       LayersForceSynchronousResize, bool, true);
 
   // We allow for configurable and rectangular tile size to avoid wasting memory on devices whose
