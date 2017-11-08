@@ -494,12 +494,6 @@ private:
   // These allocate/configure and release the channel
   bool AllocChannel();
   void FreeChannel();
-
-  // This is true when all processing is disabled, we can skip
-  // packetization, resampling and other processing passes.
-  bool PassThrough() {
-    return mSkipProcessing;
-  }
   template<typename T>
   void InsertInGraph(const T* aBuffer,
                      size_t aFrames,
@@ -510,6 +504,16 @@ private:
                            size_t aFrames,
                            TrackRate aRate,
                            uint32_t aChannels);
+
+
+  // This is true when all processing is disabled, we can skip
+  // packetization, resampling and other processing passes.
+  bool PassThrough() {
+    return mSkipProcessing;
+  }
+  void SetPassThrough(bool aPassThrough) {
+    mSkipProcessing = aPassThrough;
+  }
 
   RefPtr<mozilla::AudioInput> mAudioInput;
   RefPtr<WebRTCAudioDataListener> mListener;
@@ -548,7 +552,8 @@ private:
   // mSkipProcessing is true if none of the processing passes are enabled,
   // because of prefs or constraints. This allows simply copying the audio into
   // the MSG, skipping resampling and the whole webrtc.org code.
-  std::atomic_bool mSkipProcessing;
+  // This is read and written to only on the MSG thread.
+  bool mSkipProcessing;
 
   // To only update microphone when needed, we keep track of previous settings.
   MediaEnginePrefs mLastPrefs;
