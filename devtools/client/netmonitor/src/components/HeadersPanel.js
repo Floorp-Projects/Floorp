@@ -4,12 +4,9 @@
 
 "use strict";
 
-const {
-  Component,
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   getFormattedIPAndPort,
   getFormattedSize,
@@ -28,7 +25,7 @@ const MDNLink = createFactory(require("./MdnLink"));
 const PropertiesView = createFactory(require("./PropertiesView"));
 
 const { Rep } = REPS;
-const { button, div, input, textarea, span } = DOM;
+const { button, div, input, textarea, span } = dom;
 
 const EDIT_AND_RESEND = L10N.getStr("netmonitor.summary.editAndResend");
 const RAW_HEADERS = L10N.getStr("netmonitor.summary.rawHeaders");

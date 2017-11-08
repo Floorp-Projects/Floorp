@@ -4,12 +4,9 @@
 
 "use strict";
 
-const {
-  Component,
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const Actions = require("../actions/index");
@@ -24,7 +21,7 @@ const RequestListHeader = createFactory(require("./RequestListHeader"));
 const RequestListItem = createFactory(require("./RequestListItem"));
 const RequestListContextMenu = require("../request-list-context-menu");
 
-const { div } = DOM;
+const { div } = dom;
 
 // Tooltip show / hide delay in ms
 const REQUESTS_TOOLTIP_TOGGLE_DELAY = 500;

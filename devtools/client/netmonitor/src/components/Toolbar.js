@@ -5,12 +5,9 @@
 "use strict";
 
 const Services = require("Services");
-const {
-  Component,
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const I = require("devtools/client/shared/vendor/immutable");
 
@@ -28,7 +25,7 @@ const { L10N } = require("../utils/l10n");
 // Components
 const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
 
-const { button, div, input, label, span } = DOM;
+const { button, div, input, label, span } = dom;
 
 // Localization
 const COLLAPSE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");

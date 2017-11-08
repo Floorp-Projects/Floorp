@@ -4,12 +4,9 @@
 
 "use strict";
 
-const {
-  Component,
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const I = require("devtools/client/shared/vendor/immutable");
 const { propertiesEqual } = require("../utils/request-utils");
 const { RESPONSE_HEADERS } = require("../constants");
@@ -36,7 +33,7 @@ const RequestListColumnTransferredSize = createFactory(require("./RequestListCol
 const RequestListColumnType = createFactory(require("./RequestListColumnType"));
 const RequestListColumnWaterfall = createFactory(require("./RequestListColumnWaterfall"));
 
-const { div } = DOM;
+const { div } = dom;
 
 /**
  * Used by shouldComponentUpdate: compare two items, and compare only properties
