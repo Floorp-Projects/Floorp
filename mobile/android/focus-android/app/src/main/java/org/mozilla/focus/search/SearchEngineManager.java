@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
@@ -19,12 +20,19 @@ import org.json.JSONObject;
 import org.mozilla.focus.ext.AssetManagerKt;
 import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.utils.Settings;
+import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -109,10 +117,28 @@ public class SearchEngineManager extends BroadcastReceiver {
         } catch (JSONException e) {
             throw new AssertionError("Reading search engine failed: ", e);
         } finally {
+            searchEngines.addAll(loadCustomSearchEngines(context));
             this.searchEngines = searchEngines;
 
             notifyAll();
         }
+    }
+
+    private List<SearchEngine> loadCustomSearchEngines(Context context) {
+        final List<SearchEngine> searchEngines = new LinkedList<>();
+        final SharedPreferences prefs = context.getSharedPreferences(SearchEngine.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE);
+        final Set<String> engines = prefs.getStringSet(SearchEngine.PREF_KEY_CUSTOM_SEARCH_ENGINES, Collections.<String>emptySet());
+        try {
+            for (String engine : engines) {
+                final InputStream engineInputStream = new ByteArrayInputStream(prefs.getString(engine, "").getBytes(StandardCharsets.UTF_8));
+                searchEngines.add(SearchEngineParser.load(engine, engineInputStream));
+            }
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "IOException whil loading custom search engines", e);
+        } catch (XmlPullParserException e) {
+            Log.e(LOG_TAG, "Couldn't load custom search engines", e);
+        }
+        return searchEngines;
     }
 
     private JSONArray loadSearchEngineListForLocale(Context context) throws IOException {

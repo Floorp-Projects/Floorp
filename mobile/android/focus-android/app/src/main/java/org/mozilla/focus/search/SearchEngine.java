@@ -5,18 +5,25 @@
 
 package org.mozilla.focus.search;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.util.Log;
 
+import org.mozilla.focus.shortcut.IconGenerator;
+import org.mozilla.focus.utils.BitmapUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -32,6 +39,10 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class SearchEngine {
     private static final String LOGTAG = "SearchEngine";
+    public static final String PREF_FILE_SEARCH_ENGINES = "custom-search-engines";
+    public static final String PREF_KEY_CUSTOM_SEARCH_ENGINES = "pref_custom_search_engines";
+    private static final String PREF_KEY_CUSTOM_SEARCH_VERSION = "pref_custom_search_version";
+    private static final int CUSTOM_SEARCH_VERSION = 1;
 
     // Parameters copied from nsSearchService.js
     private static final String MOZ_PARAM_LOCALE = "\\{moz:locale\\}";
@@ -120,7 +131,25 @@ public class SearchEngine {
         return template;
     }
 
-    public static String buildSearchEngineXML(String engineName, String searchString) {
+    public static boolean addSearchEngine(SharedPreferences sharedPreferences, Context context, String engineName, String searchQuery) {
+        final Bitmap iconBitmap = IconGenerator.generateLauncherIcon(context, searchQuery);
+        final String searchEngineXml = buildSearchEngineXML(engineName, searchQuery, iconBitmap);
+        if (searchEngineXml == null) {
+            return false;
+        }
+        final Set<String> existingEngines = sharedPreferences.getStringSet(PREF_KEY_CUSTOM_SEARCH_ENGINES, Collections.<String>emptySet());
+        final Set<String> newEngines = new LinkedHashSet<>();
+        newEngines.addAll(existingEngines);
+        newEngines.add(engineName);
+
+        sharedPreferences.edit().putInt(PREF_KEY_CUSTOM_SEARCH_VERSION, CUSTOM_SEARCH_VERSION)
+                .putStringSet(PREF_KEY_CUSTOM_SEARCH_ENGINES, newEngines)
+                .putString(engineName, searchEngineXml)
+                .apply();
+        return true;
+    }
+
+    public static String buildSearchEngineXML(String engineName, String searchQuery, Bitmap iconBitmap) {
         Document document = null;
         try {
             document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -132,13 +161,20 @@ public class SearchEngine {
             shortNameElement.setTextContent(engineName);
             rootElement.appendChild(shortNameElement);
 
+            final Element imageElement = document.createElement("Image");
+            imageElement.setAttribute("width", "16");
+            imageElement.setAttribute("height", "16");
+            imageElement.setTextContent(BitmapUtils.getBase64EncodedDataUriFromBitmap(iconBitmap));
+            rootElement.appendChild(imageElement);
+
             final Element descriptionElement = document.createElement("Description");
             descriptionElement.setTextContent(engineName);
             rootElement.appendChild(descriptionElement);
 
             final Element urlElement = document.createElement("Url");
             urlElement.setAttribute("type", "text/html");
-            final String templateSearchString = searchString.substring(0, searchString.length() - 2) + "{searchTerms}";
+            // Simple implementation that assumes "%s" terminator from UrlUtils.isValidSearchEngineQueryUrl
+            final String templateSearchString = searchQuery.substring(0, searchQuery.length() - 2) + "{searchTerms}";
             urlElement.setAttribute("template", templateSearchString);
             rootElement.appendChild(urlElement);
 
@@ -158,7 +194,6 @@ public class SearchEngine {
         try {
             final Transformer tf = TransformerFactory.newInstance().newTransformer();
             tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            tf.setOutputProperty(OutputKeys.INDENT, "yes");
             tf.transform(new DOMSource(doc), new StreamResult(writer));
         } catch (TransformerConfigurationException e) {
             return null;
