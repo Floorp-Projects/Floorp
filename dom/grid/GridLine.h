@@ -42,6 +42,7 @@ public:
   double Breadth() const;
   GridDeclaration Type() const;
   uint32_t Number() const;
+  int32_t NegativeNumber() const;
 
   void SetLineValues(const nsTArray<nsString>& aNames,
                      double aStart,
