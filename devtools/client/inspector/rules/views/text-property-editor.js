@@ -366,7 +366,8 @@ TextPropertyEditor.prototype = {
       defaultColorType: !propDirty,
       urlClass: "theme-link",
       baseURI: this.sheetHref,
-      unmatchedVariableClass: "ruleview-variable-unmatched",
+      unmatchedVariableClass: "ruleview-unmatched-variable",
+      matchedVariableClass: "ruleview-variable",
       isVariableInUse: varName => this.rule.elementStyle.getVariable(varName),
     };
     let frag = outputParser.parseCssProperty(name, val, parserOptions);
