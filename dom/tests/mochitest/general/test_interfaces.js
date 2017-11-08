@@ -27,7 +27,7 @@ var ecmaGlobals =
   [
     "Array",
     "ArrayBuffer",
-    "Atomics",
+    {name: "Atomics", disabled: true},
     "Boolean",
     {name: "ByteLengthQueuingStrategy", disabled: !SpecialPowers.Cu.getJSTestingFunctions().streamsAreEnabled()},
     {name: "CountQueuingStrategy", disabled: !SpecialPowers.Cu.getJSTestingFunctions().streamsAreEnabled()},
@@ -61,7 +61,7 @@ var ecmaGlobals =
     "Reflect",
     "RegExp",
     "Set",
-    "SharedArrayBuffer",
+    {name: "SharedArrayBuffer", disabled: true},
     {name: "SIMD", nightly: true},
     "String",
     "Symbol",
