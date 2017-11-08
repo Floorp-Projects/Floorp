@@ -7,7 +7,6 @@ fi
 
 ac_add_options --enable-official-branding
 ac_add_options --enable-verify-mar
-
-mk_add_options MOZ_PGO=1
+ac_add_options MOZ_PGO=1
 
 . "$topsrcdir/build/mozconfig.common.override"

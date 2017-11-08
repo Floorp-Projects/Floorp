@@ -4080,18 +4080,6 @@ Tab.prototype = {
         if (target != this.browser.contentDocument)
           return;
 
-        // Sample the background color of the page and pass it along. (This is used to draw the
-        // checkerboard.) Right now we don't detect changes in the background color after this
-        // event fires; it's not clear that doing so is worth the effort.
-        var backgroundColor = null;
-        try {
-          let { contentDocument, contentWindow } = this.browser;
-          let computedStyle = contentWindow.getComputedStyle(contentDocument.body);
-          backgroundColor = computedStyle.backgroundColor;
-        } catch (e) {
-          // Ignore. Catching and ignoring exceptions here ensures that Talos succeeds.
-        }
-
         let docURI = target.documentURI;
         let errorType = "";
         if (docURI.startsWith("about:certerror")) {
@@ -4135,7 +4123,6 @@ Tab.prototype = {
         GlobalEventDispatcher.sendRequest({
           type: "Content:DOMContentLoaded",
           tabID: this.id,
-          bgColor: backgroundColor,
           errorType: errorType,
           metadata: this.metatags,
         });

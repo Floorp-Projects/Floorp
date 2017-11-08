@@ -5,9 +5,6 @@
 
 include('/toolkit/toolkit.mozbuild')
 
-if CONFIG['ENABLE_TESTS']:
-    DIRS += ['/testing/instrumentation']
-
 if CONFIG['MOZ_EXTENSIONS']:
     DIRS += ['/extensions']
 

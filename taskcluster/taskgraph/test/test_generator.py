@@ -12,6 +12,7 @@ from taskgraph.generator import TaskGraphGenerator, Kind
 from taskgraph.optimize import OptimizationStrategy
 from taskgraph.util.templates import merge
 from taskgraph import (
+    generator,
     graph,
     optimize as optimize_mod,
     target_tasks as target_tasks_mod,
@@ -57,8 +58,9 @@ class WithFakeKind(TaskGraphGenerator):
                 config.update(cfg)
             yield FakeKind(kind_name, '/fake', config, graph_config)
 
-    def _load_graph_config(self):
-        return {}
+
+def fake_load_graph_config(root_dir):
+    return {}
 
 
 class FakeParameters(dict):
@@ -107,6 +109,8 @@ class TestGenerator(unittest.TestCase):
             'try_mode': None,
         })
         parameters.update(params)
+
+        self.patch.setattr(generator, 'load_graph_config', fake_load_graph_config)
 
         return WithFakeKind('/root', parameters)
 

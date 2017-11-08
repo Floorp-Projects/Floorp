@@ -17,7 +17,7 @@ STRIP_FLAGS="--strip-debug"
 
 ac_add_options --with-branding=browser/branding/aurora
 
-mk_add_options MOZ_PGO=1
+ac_add_options MOZ_PGO=1
 # Enable MOZ_ALLOW_LEGACY_EXTENSIONS
 ac_add_options "MOZ_ALLOW_LEGACY_EXTENSIONS=1"
 

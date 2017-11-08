@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll>
+<body>
+  <div style="width:400px; height:300px; overflow:hidden; border:2px solid black"
+       reftest-displayport-x="0" reftest-displayport-y="0"
+       reftest-displayport-w="800" reftest-displayport-h="2000"
+       reftest-async-scroll-x="0" reftest-async-scroll-y="100">
+    <!-- In this test the position:sticky element has already been adjusted by
+         the main thread paint, and the async scroll causes a reduction in that
+         adjustment. -->
+    <div style="height: 1000px"></div>
+    <div style="position:sticky; width: 100px; height: 100px; bottom: 50px; background-color: green"></div>
+    <div style="height: 1000px"></div>
+  </div>
