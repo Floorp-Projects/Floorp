@@ -42,7 +42,7 @@ AnimationEventHandler.prototype.clear = () => {
 }
 
 function setupAnimation(t, animationStyle) {
-  var div = addDiv(t, { style: "animation: " + animationStyle });
+  var div = addDiv(t, { style: 'animation: ' + animationStyle });
   var watcher = new EventWatcher(t, div, [ 'animationstart',
                                            'animationiteration',
                                            'animationend',
