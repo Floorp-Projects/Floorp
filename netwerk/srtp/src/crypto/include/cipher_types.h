@@ -1,32 +1,24 @@
 /*
- * rtp_priv.h
  *
- * private, internal header file for RTP
- *
- * David A. McGrew
- * Cisco Systems, Inc.
- */
-/*
- *	
- * Copyright (c) 2001-2006 Cisco Systems, Inc.
+ * Copyright(c) 2001-2017 Cisco Systems, Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  *   Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * 
+ *
  *   Redistributions in binary form must reproduce the above
  *   copyright notice, this list of conditions and the following
  *   disclaimer in the documentation and/or other materials provided
  *   with the distribution.
- * 
+ *
  *   Neither the name of the Cisco Systems, Inc. nor the names of its
  *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -42,33 +34,48 @@
  *
  */
 
+#ifndef CIHPER_TYPES_H
+#define CIHPER_TYPES_H
 
-#ifndef RTP_PRIV_H
-#define RTP_PRIV_H
+#include "cipher.h"
+#include "auth.h"
 
-#include "srtp_priv.h"
-#include "rtp.h"
+/*
+ * cipher types that can be included in the kernel
+ */
 
-typedef srtp_hdr_t rtp_hdr_t;
+const srtp_cipher_type_t srtp_null_cipher;
+const srtp_cipher_type_t srtp_aes_icm_128;
+const srtp_cipher_type_t srtp_aes_icm_256;
+#ifdef OPENSSL
+const srtp_cipher_type_t srtp_aes_icm_192;
+const srtp_cipher_type_t srtp_aes_gcm_128_openssl;
+const srtp_cipher_type_t srtp_aes_gcm_256_openssl;
+#endif
 
-typedef struct {
-  srtp_hdr_t header;        
-  char body[RTP_MAX_BUF_LEN];  
-} rtp_msg_t;
+/*
+ * auth func types that can be included in the kernel
+ */
 
-typedef struct rtp_sender_ctx_t {
-  rtp_msg_t message;         
-  int socket;
-  srtp_ctx_t *srtp_ctx;
-  struct sockaddr_in addr;   /* reciever's address */
-} rtp_sender_ctx_t;
+const srtp_auth_type_t srtp_null_auth;
+const srtp_auth_type_t srtp_hmac;
 
-typedef struct rtp_receiver_ctx_t {
-  rtp_msg_t message;
-  int socket;
-  srtp_ctx_t *srtp_ctx;
-  struct sockaddr_in addr;   /* receiver's address */
-} rtp_receiver_ctx_t;
+/*
+ * other generic debug modules that can be included in the kernel
+ */
 
+srtp_debug_module_t srtp_mod_auth;
+srtp_debug_module_t srtp_mod_cipher;
+srtp_debug_module_t mod_stat;
+srtp_debug_module_t mod_alloc;
 
-#endif /* RTP_PRIV_H */
+/* debug modules for cipher types */
+srtp_debug_module_t srtp_mod_aes_icm;
+#ifdef OPENSSL
+srtp_debug_module_t srtp_mod_aes_gcm;
+#endif
+
+/* debug modules for auth types */
+srtp_debug_module_t srtp_mod_hmac;
+
+#endif
