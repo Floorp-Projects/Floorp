@@ -1607,6 +1607,16 @@ public:
     if (!aFrame->IsFrameModified()) {
       mModifiedFramesDuringBuilding.AppendElement(aFrame);
       aFrame->SetFrameIsModified(true);
+      mInInvalidSubtree = true;
+      return true;
+    }
+    return false;
+  }
+
+  bool MarkCurrentFrameModifiedDuringBuilding()
+  {
+    if (MarkFrameModifiedDuringBuilding(const_cast<nsIFrame*>(mCurrentFrame))) {
+      mInInvalidSubtree = true;
       return true;
     }
     return false;
