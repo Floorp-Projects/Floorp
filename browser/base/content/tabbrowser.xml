@@ -260,7 +260,7 @@
           aTab.setAttribute("pinned", "true");
           this.tabContainer._unlockTabSizing();
           this.tabContainer._positionPinnedTabs();
-          this.tabContainer.adjustTabstrip();
+          this.tabContainer._updateCloseButtons();
 
           this.getBrowserForTab(aTab).messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: true })
 
@@ -284,7 +284,7 @@
           aTab.style.marginInlineStart = "";
           this.tabContainer._unlockTabSizing();
           this.tabContainer._positionPinnedTabs();
-          this.tabContainer.adjustTabstrip();
+          this.tabContainer._updateCloseButtons();
 
           this.getBrowserForTab(aTab).messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: false })
 
@@ -3356,7 +3356,7 @@
                 focusAndSelectUrlBar();
 
               // workaround for bug 345399
-              this.tabContainer.mTabstrip._updateScrollButtonsDisabledState();
+              this.tabContainer.arrowScrollbox._updateScrollButtonsDisabledState();
             }
 
             // We're going to remove the tab and the browser now.
@@ -3393,7 +3393,7 @@
                 this.tabContainer._positionPinnedTabs();
 
               // update tab close buttons state
-              this.tabContainer.adjustTabstrip();
+              this.tabContainer._updateCloseButtons();
 
               setTimeout(function(tabs) {
                 tabs._lastTabClosedByMouse = false;
@@ -3867,7 +3867,7 @@
             aTab.removeAttribute("hidden");
             this._visibleTabs = null; // invalidate cache
 
-            this.tabContainer.adjustTabstrip();
+            this.tabContainer._updateCloseButtons();
 
             this.tabContainer._setPositionalAttributes();
 
@@ -3888,7 +3888,7 @@
             aTab.setAttribute("hidden", "true");
             this._visibleTabs = null; // invalidate cache
 
-            this.tabContainer.adjustTabstrip();
+            this.tabContainer._updateCloseButtons();
 
             this.tabContainer._setPositionalAttributes();
 
@@ -6403,7 +6403,7 @@
     <implementation implements="nsIDOMEventListener, nsIObserver">
       <constructor>
         <![CDATA[
-          this.mTabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
+          this._tabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
 
           let { restoreTabsButton } = this;
           restoreTabsButton.setAttribute("label", gTabBrowserBundle.GetStringFromName("tabs.restoreLastTabs"));
@@ -6440,7 +6440,7 @@
         document.getElementById("tabContextMenu");
       </field>
 
-      <field name="mTabstrip">
+      <field name="arrowScrollbox">
         document.getAnonymousElementByAttribute(this, "anonid", "arrowscrollbox");
       </field>
 
@@ -6479,7 +6479,7 @@
             return;
           }
 
-          let tabstripWidth = this.mTabstrip.clientWidth;
+          let arrowScrollboxWidth = this.arrowScrollbox.clientWidth;
 
           let newTabButton = document.getAnonymousElementByAttribute(
             this, "anonid", "tabs-newtab-button");
@@ -6495,7 +6495,7 @@
 
           // Subtract the elements' widths from the available space to ensure
           // that showing the restoreTabsButton won't cause any overflow.
-          if (tabstripWidth - tabbarUsedSpace > restoreTabsButtonWrapperWidth) {
+          if (arrowScrollboxWidth - tabbarUsedSpace > restoreTabsButtonWrapperWidth) {
             restoreTabsButtonWrapper.setAttribute("shown", "true");
           } else {
             restoreTabsButtonWrapper.removeAttribute("shown");
@@ -6671,7 +6671,7 @@
       </method>
 
       <field name="_closeButtonsUpdatePending">false</field>
-      <method name="adjustTabstrip">
+      <method name="_updateCloseButtons">
         <body><![CDATA[
           // If we're overflowing, tabs are at their minimum widths.
           if (this.getAttribute("overflow") == "true") {
@@ -6706,7 +6706,7 @@
                              .getBoundsWithoutFlushing(ele);
               };
               let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
-              if (tab && rect(tab).width <= this.mTabClipWidth) {
+              if (tab && rect(tab).width <= this._tabClipWidth) {
                 this.setAttribute("closebuttons", "activetab");
               } else {
                 this.removeAttribute("closebuttons");
@@ -6720,7 +6720,7 @@
         <parameter name="aInstant"/>
         <body><![CDATA[
           if (this.getAttribute("overflow") == "true")
-            this.mTabstrip.ensureElementIsVisible(this.selectedItem, aInstant);
+            this.arrowScrollbox.ensureElementIsVisible(this.selectedItem, aInstant);
 
           this.selectedItem._notselectedsinceload = false;
         ]]></body>
@@ -6753,7 +6753,7 @@
           if (this.getAttribute("overflow") == "true") {
             // Don't need to do anything if we're in overflow mode and aren't scrolled
             // all the way to the right, or if we're closing the last tab.
-            if (isEndTab || !this.mTabstrip._scrollButtonDown.disabled)
+            if (isEndTab || !this.arrowScrollbox._scrollButtonDown.disabled)
               return;
 
             // If the tab has an owner that will become the active tab, the owner will
@@ -6838,10 +6838,10 @@
 
             let layoutData = this._pinnedTabsLayoutCache;
             if (!layoutData) {
-              let tabstrip = this.mTabstrip;
+              let arrowScrollbox = this.arrowScrollbox;
               layoutData = this._pinnedTabsLayoutCache = {
                 pinnedTabWidth: this.childNodes[0].getBoundingClientRect().width,
-                scrollButtonWidth: tabstrip._scrollButtonDown.getBoundingClientRect().width
+                scrollButtonWidth: arrowScrollbox._scrollButtonDown.getBoundingClientRect().width
               };
             }
 
@@ -6908,7 +6908,7 @@
           let tabScreenX = draggedTab.boxObject.screenX;
           let translateX = screenX - draggedTab._dragData.screenX;
           if (!pinned)
-            translateX += this.mTabstrip._scrollbox.scrollLeft - draggedTab._dragData.scrollX;
+            translateX += this.arrowScrollbox._scrollbox.scrollLeft - draggedTab._dragData.scrollX;
           let leftBound = leftTab.boxObject.screenX - tabScreenX;
           let rightBound = (rightTab.boxObject.screenX + rightTab.boxObject.width) -
                            (tabScreenX + tabWidth);
@@ -7000,7 +7000,7 @@
                 break;
 
               TabsInTitlebar.updateAppearance();
-              this.adjustTabstrip();
+              this._updateCloseButtons();
               this._handleTabSelect(true);
               this.updateSessionRestoreVisibility();
               break;
@@ -7019,7 +7019,7 @@
       </method>
 
       <field name="_animateElement">
-        this.mTabstrip._scrollButtonDown;
+        this.arrowScrollbox._scrollButtonDown;
       </field>
 
       <method name="_notifyBackgroundTab">
@@ -7028,7 +7028,7 @@
           if (aTab.pinned || aTab.hidden)
             return;
 
-          var scrollRect = this.mTabstrip.scrollClientRect;
+          var scrollRect = this.arrowScrollbox.scrollClientRect;
           var tab = aTab.getBoundingClientRect();
 
           // DOMRect left/right properties are immutable.
@@ -7038,7 +7038,7 @@
           if (scrollRect.left <= tab.left && tab.right <= scrollRect.right)
             return;
 
-          if (this.mTabstrip.smoothScroll) {
+          if (this.arrowScrollbox.smoothScroll) {
             let selected = !this.selectedItem.pinned &&
                            this.selectedItem.getBoundingClientRect();
 
@@ -7046,13 +7046,13 @@
             if (!selected ||
                 Math.max(tab.right - selected.left, selected.right - tab.left) <=
                   scrollRect.width) {
-              this.mTabstrip.ensureElementIsVisible(aTab);
+              this.arrowScrollbox.ensureElementIsVisible(aTab);
               return;
             }
 
-            this.mTabstrip.scrollByPixels(this.mTabstrip._isRTLScrollbox ?
-                                          selected.right - scrollRect.right :
-                                          selected.left - scrollRect.left);
+            this.arrowScrollbox.scrollByPixels(this.arrowScrollbox._isRTLScrollbox ?
+                                                 selected.right - scrollRect.right :
+                                                 selected.left - scrollRect.left);
           }
 
           if (!this._animateElement.hasAttribute("highlight")) {
@@ -7142,7 +7142,7 @@
           tab._fullyOpen = true;
           this.tabbrowser.tabAnimationsInProgress--;
 
-          this.adjustTabstrip();
+          this._updateCloseButtons();
 
           if (tab.getAttribute("selected") == "true") {
             this._handleTabSelect();
@@ -7155,7 +7155,7 @@
           // if a tab was inserted to the overflow area or removed from it
           // without any scrolling and when the tabbar has already
           // overflowed.
-          this.mTabstrip._updateScrollButtonsDisabledState();
+          this.arrowScrollbox._updateScrollButtonsDisabledState();
 
           // Preload the next about:newtab if there isn't one already.
           this.tabbrowser._createPreloadBrowser();
@@ -7198,7 +7198,7 @@
 
         if (tab.getAttribute("fadein") == "true") {
           if (tab._fullyOpen)
-            this.adjustTabstrip();
+            this._updateCloseButtons();
           else
             this._handleNewTab(tab);
         } else if (tab.closing) {
@@ -7448,7 +7448,7 @@
         tab._dragData = {
           offsetX: event.screenX - window.screenX - tabOffsetX,
           offsetY: event.screenY - window.screenY,
-          scrollX: this.mTabstrip._scrollbox.scrollLeft,
+          scrollX: this.arrowScrollbox._scrollbox.scrollLeft,
           screenX: event.screenX
         };
 
@@ -7466,7 +7466,7 @@
         event.preventDefault();
         event.stopPropagation();
 
-        var tabStrip = this.mTabstrip;
+        var arrowScrollbox = this.arrowScrollbox;
         var ltr = (window.getComputedStyle(this).direction == "ltr");
 
         // autoscroll the tab strip if we drag over the scroll
@@ -7477,14 +7477,14 @@
           var targetAnonid = event.originalTarget.getAttribute("anonid");
           switch (targetAnonid) {
             case "scrollbutton-up":
-              pixelsToScroll = tabStrip.scrollIncrement * -1;
+              pixelsToScroll = arrowScrollbox.scrollIncrement * -1;
               break;
             case "scrollbutton-down":
-              pixelsToScroll = tabStrip.scrollIncrement;
+              pixelsToScroll = arrowScrollbox.scrollIncrement;
               break;
           }
           if (pixelsToScroll)
-            tabStrip.scrollByPixels((ltr ? 1 : -1) * pixelsToScroll, true);
+            arrowScrollbox.scrollByPixels((ltr ? 1 : -1) * pixelsToScroll, true);
         }
 
         if (effects == "move" &&
@@ -7508,12 +7508,12 @@
           }
         }
 
-        var rect = tabStrip.getBoundingClientRect();
+        var rect = arrowScrollbox.getBoundingClientRect();
         var newMargin;
         if (pixelsToScroll) {
           // if we are scrolling, put the drop indicator at the edge
           // so that it doesn't jump while scrolling
-          let scrollRect = tabStrip.scrollClientRect;
+          let scrollRect = arrowScrollbox.scrollClientRect;
           let minMargin = scrollRect.left - rect.left;
           let maxMargin = Math.min(minMargin + scrollRect.width,
                                    scrollRect.right);
@@ -7671,7 +7671,7 @@
         var wX = window.screenX;
         // check if the drop point is horizontally within the window
         if (eX > wX && eX < (wX + window.outerWidth)) {
-          let bo = this.mTabstrip.boxObject;
+          let bo = this.arrowScrollbox.boxObject;
           // also avoid detaching if the the tab was dropped too close to
           // the tabbar (half a tab)
           let endScreenY = bo.screenY + 1.5 * bo.height;
@@ -8250,7 +8250,7 @@
 
           let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIDOMWindowUtils);
-          let tabstripRect = windowUtils.getBoundsWithoutFlushing(tabContainer.mTabstrip);
+          let arrowScrollboxRect = windowUtils.getBoundsWithoutFlushing(tabContainer.arrowScrollbox);
           for (let menuitem of this.childNodes) {
             let curTab = menuitem.tab;
             if (!curTab) {
@@ -8258,8 +8258,8 @@
               continue;
             }
             let curTabRect = windowUtils.getBoundsWithoutFlushing(curTab);
-            if (curTabRect.left >= tabstripRect.left &&
-                curTabRect.right <= tabstripRect.right) {
+            if (curTabRect.left >= arrowScrollboxRect.left &&
+                curTabRect.right <= arrowScrollboxRect.right) {
               menuitem.setAttribute("tabIsVisible", "true");
             } else {
               menuitem.removeAttribute("tabIsVisible");
