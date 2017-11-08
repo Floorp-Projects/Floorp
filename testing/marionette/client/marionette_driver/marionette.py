@@ -670,8 +670,8 @@ class Marionette(object):
         finally:
             s.close()
 
-    def wait_for_port(self, timeout=None):
-        """Wait until Marionette server has been created the communication socket.
+    def raise_for_port(self, timeout=None):
+        """Raise socket.timeout if no connection can be established.
 
         :param timeout: Timeout in seconds for the server to be ready.
 
@@ -685,12 +685,13 @@ class Marionette(object):
 
         poll_interval = 0.1
         starttime = datetime.datetime.now()
-
         timeout_time = starttime + datetime.timedelta(seconds=timeout)
+
+        connected = False
         while datetime.datetime.now() < timeout_time:
             # If the instance we want to connect to is not running return immediately
             if runner is not None and not runner.is_running():
-                return False
+                break
 
             sock = None
             try:
@@ -703,7 +704,8 @@ class Marionette(object):
                 # emulator) a response package has to be received first. Otherwise
                 # start_session will fail (see bug 1410366 comment 32 ff.)
                 if ":" in data:
-                    return True
+                    connected = True
+                    break
             except socket.error:
                 pass
             finally:
@@ -716,15 +718,7 @@ class Marionette(object):
 
             time.sleep(poll_interval)
 
-        return False
-
-    def raise_for_port(self, timeout=None):
-        """Raise socket.timeout if no connection can be established.
-
-        :param timeout: Timeout in seconds for the server to be ready.
-
-        """
-        if not self.wait_for_port(timeout):
+        if not connected:
             raise socket.timeout("Timed out waiting for connection on {0}:{1}!".format(
                 self.host, self.port))
 
