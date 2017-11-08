@@ -8,6 +8,7 @@ package org.mozilla.focus.search;
 import android.content.res.AssetManager;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.support.annotation.VisibleForTesting;
 import android.util.Base64;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -38,7 +39,7 @@ import java.nio.charset.StandardCharsets;
         }
     }
 
-    public static SearchEngine load(String identifier, InputStream stream) throws IOException, XmlPullParserException {
+    /* package */ @VisibleForTesting static SearchEngine load(String identifier, InputStream stream) throws IOException, XmlPullParserException {
         final SearchEngine searchEngine = new SearchEngine(identifier);
 
         XmlPullParser parser = XmlPullParserFactory.newInstance().newPullParser();

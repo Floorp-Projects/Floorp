@@ -18,6 +18,7 @@ import android.widget.EditText;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.search.SearchEngine;
+import org.mozilla.focus.search.SearchEngineManager;
 import org.mozilla.focus.utils.UrlUtils;
 
 import java.util.Collections;
@@ -63,9 +64,9 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                 if (!validateSearchFields(engineName, searchQuery, sharedPreferences)) {
                     Snackbar.make(rootView, R.string.search_add_error, Snackbar.LENGTH_SHORT).show();
                 } else {
-                    SearchEngine.addSearchEngine(sharedPreferences, getActivity(), engineName, searchQuery);
+                    SearchEngineManager.addSearchEngine(sharedPreferences, getActivity(), engineName, searchQuery);
                     Snackbar.make(rootView, R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show();
-                    getActivity().onBackPressed();
+                    getFragmentManager().popBackStack();
                 }
                 return true;
             default:
@@ -78,7 +79,7 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
             return false;
         }
 
-        if (sharedPreferences.getStringSet(SearchEngine.PREF_KEY_CUSTOM_SEARCH_ENGINES,
+        if (sharedPreferences.getStringSet(SearchEngineManager.PREF_KEY_CUSTOM_SEARCH_ENGINES,
                 Collections.<String>emptySet()).contains(engineName)) {
             return false;
         }
