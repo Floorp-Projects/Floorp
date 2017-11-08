@@ -13,6 +13,6 @@
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
-      "build/src/build/build-clang/loosen-msvc-detection.patch"
+      "loosen-msvc-detection.patch"
     ]
 }
