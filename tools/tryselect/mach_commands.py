@@ -205,7 +205,6 @@ class TrySelect(MachCommandBase):
         (available at https://github.com/glandium/git-cinnabar).
 
         """
-        from mozbuild.testing import TestResolver
         from tryselect.selectors.syntax import AutoTry
 
         try:
@@ -222,8 +221,5 @@ class TrySelect(MachCommandBase):
             print(CONFIG_ENVIRONMENT_NOT_FOUND)
             sys.exit(1)
 
-        def resolver_func():
-            return self._spawn(TestResolver)
-
-        at = AutoTry(self.topsrcdir, resolver_func, self._mach_context)
+        at = AutoTry(self.topsrcdir, self._mach_context)
         return at.run(**kwargs)

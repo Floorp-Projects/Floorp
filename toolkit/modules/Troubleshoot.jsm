@@ -651,7 +651,25 @@ var dataProviders = {
     done({
       exists: userJSFile.exists() && userJSFile.fileSize > 0,
     });
-  }
+  },
+
+  intl: function intl(done) {
+    const osPrefs =
+      Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
+    done({
+      localeService: {
+        requested: Services.locale.getRequestedLocales(),
+        available: Services.locale.getAvailableLocales(),
+        supported: Services.locale.getAppLocalesAsBCP47(),
+        regionalPrefs: Services.locale.getRegionalPrefsLocales(),
+        defaultLocale: Services.locale.defaultLocale,
+      },
+      osPrefs: {
+        systemLocales: osPrefs.getSystemLocales(),
+        regionalPrefsLocales: osPrefs.getRegionalPrefsLocales()
+      },
+    });
+  },
 };
 
 if (AppConstants.MOZ_CRASHREPORTER) {
