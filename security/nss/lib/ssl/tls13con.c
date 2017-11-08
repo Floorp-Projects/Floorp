@@ -2744,9 +2744,6 @@ tls13_SetupPendingCipherSpec(sslSocket *ss, ssl3CipherSpec *spec)
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
-    ssl_GetSpecWriteLock(ss); /*******************************/
-
-    spec = ss->ssl3.pwSpec;
     /* Version isn't set when we send 0-RTT data. */
     spec->version = PR_MAX(SSL_LIBRARY_VERSION_TLS_1_3, ss->version);
 

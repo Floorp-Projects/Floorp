@@ -6840,8 +6840,9 @@ ssl3_HandleServerHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
     rv = ssl_ClientSetCipherSuite(ss, ss->version, cipher,
                                   PR_TRUE /* init hashes */);
     if (rv != SECSuccess) {
+        desc = handshake_failure;
         errCode = PORT_GetError();
-        goto loser;
+        goto alert_loser;
     }
 
     rv = ssl3_HandleParsedExtensions(ss, server_hello);
