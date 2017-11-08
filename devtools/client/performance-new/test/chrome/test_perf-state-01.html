@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<head>
+  <meta charset="utf-8">
+  <title>Perf component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+  <div id="container"></div>
+
+  <pre id="test">
+    <script src="head.js" type="application/javascript"></script>
+    <script type="application/javascript">
+      "use strict";
+
+      /**
+       * Test the normal workflow of starting and stopping the profiler through the
+       * Perf component.
+       */
+      addPerfTest(async () => {
+        const Perf = require("devtools/client/performance-new/components/Perf");
+        const React = require("devtools/client/shared/vendor/react");
+        const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+        const perfFront = new MockPerfFront();
+        const container = document.querySelector("#container");
+
+        // Inject a function which will allow us to receive the profile.
+        let profile;
+        function receiveProfile(profileIn) {
+          profile = profileIn;
+        }
+
+        const element = React.createElement(Perf, { perfFront, receiveProfile });
+        const perfComponent = ReactDOM.render(element, container);
+        is(perfComponent.state.recordingState, "not-yet-known",
+          "The component at first is in an unknown state.");
+
+        await perfFront.flushAsyncQueue();
+        is(perfComponent.state.recordingState, "available-to-record",
+          "After talking to the actor, we're ready to record.");
+
+        const button = container.querySelector("button");
+        ok(button, "Selected the button to click.");
+        button.click();
+        is(perfComponent.state.recordingState, "request-to-start-recording",
+          "Sent in a request to start recording.");
+
+        await perfFront.flushAsyncQueue();
+        is(perfComponent.state.recordingState, "recording",
+          "The actor has started its recording");
+
+        button.click();
+        is(perfComponent.state.recordingState,
+          "request-to-get-profile-and-stop-profiler",
+          "We have requested to stop the profiler.");
+
+        await perfFront.flushAsyncQueue();
+        is(perfComponent.state.recordingState, "available-to-record",
+          "The profiler is available to record again.");
+        await perfFront.flushAsyncQueue();
+        is(typeof profile, "object", "Got a profile");
+      });
+    </script>
+  </pre>
+</body>
+</html>

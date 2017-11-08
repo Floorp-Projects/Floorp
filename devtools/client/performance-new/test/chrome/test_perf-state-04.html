@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<head>
+  <meta charset="utf-8">
+  <title>Perf component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+  <div id="container"></div>
+
+  <pre id="test">
+    <script src="head.js" type="application/javascript"></script>
+    <script type="application/javascript">
+      "use strict";
+
+      /**
+       * Test that the profiler gets disabled during private browsing.
+       */
+      addPerfTest(async () => {
+        const Perf = require("devtools/client/performance-new/components/Perf");
+        const React = require("devtools/client/shared/vendor/react");
+        const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+        const perfFront = new MockPerfFront();
+        const container = document.querySelector("#container");
+
+        perfFront.mockIsLocked = true;
+
+        const receiveProfile = () => {};
+        const element = React.createElement(Perf, { perfFront, receiveProfile });
+        const perfComponent = ReactDOM.render(element, container);
+
+        is(perfComponent.state.recordingState, "not-yet-known",
+          "The component at first is in an unknown state.");
+
+        await perfFront.flushAsyncQueue();
+        is(perfComponent.state.recordingState, "locked-by-private-browsing",
+          "After talking to the actor, it's locked for private browsing.");
+
+        perfFront.mockIsLocked = false;
+        perfFront.emit("profile-unlocked-from-private-browsing");
+
+        await perfFront.flushAsyncQueue();
+        is(perfComponent.state.recordingState, "available-to-record",
+          "After the profiler is unlocked, it's available to record.");
+
+        document.querySelector("button").click();
+        await perfFront.flushAsyncQueue();
+        is(perfComponent.state.recordingState, "recording",
+          "The actor has started its recording");
+
+        perfFront.mockIsLocked = true;
+        perfFront.emit("profile-locked-by-private-browsing");
+        await perfFront.flushAsyncQueue();
+        is(perfComponent.state.recordingState, "locked-by-private-browsing",
+          "The recording stops when going into private browsing mode.");
+      });
+    </script>
+  </pre>
+</body>
+</html>
