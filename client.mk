@@ -86,8 +86,7 @@ endef
 # before evaluation. $(shell) replacing newlines with spaces, || is always
 # followed by a space (since sed doesn't remove newlines), except on the
 # last line, so replace both '|| ' and '||'.
-# Also, make MOZ_PGO available to mozconfig when passed on make command line.
-MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell MOZ_PGO=$(MOZ_PGO) $(TOPSRCDIR)/mach environment --format=client.mk | sed 's/$$/||/')))
+MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell $(TOPSRCDIR)/mach environment --format=client.mk | sed 's/$$/||/')))
 $(eval $(MOZCONFIG_CONTENT))
 
 export FOUND_MOZCONFIG
@@ -103,9 +102,6 @@ MOZCONFIG_OUT_FILTERED := $(filter-out $(START_COMMENT)%,$(MOZCONFIG_OUT_LINES))
 
 ifdef AUTOCLOBBER
 export AUTOCLOBBER=1
-endif
-ifdef MOZ_PGO
-export MOZ_PGO
 endif
 
 ifdef MOZ_PARALLEL_BUILD
@@ -290,7 +286,7 @@ endif
 # Build it
 
 build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	+$(MOZ_MAKE) $(if $(MOZ_PGO),profiledbuild)
+	+$(MOZ_MAKE)
 
 ####################################
 # Other targets
