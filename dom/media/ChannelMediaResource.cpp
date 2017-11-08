@@ -30,7 +30,7 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
                                            bool aIsPrivateBrowsing)
   : BaseMediaResource(aCallback, aChannel, aURI)
   , mCacheStream(this, aIsPrivateBrowsing)
-  , mSuspendAgent(mChannel, mCacheStream)
+  , mSuspendAgent(mCacheStream)
 {
 }
 
@@ -42,7 +42,7 @@ ChannelMediaResource::ChannelMediaResource(
   : BaseMediaResource(aCallback, aChannel, aURI)
   , mCacheStream(this, /* aIsPrivateBrowsing = */ false)
   , mChannelStatistics(aStatistics)
-  , mSuspendAgent(mChannel, mCacheStream)
+  , mSuspendAgent(mCacheStream)
 {
 }
 
@@ -295,7 +295,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
   mIsTransportSeekable = seekable;
   mChannelStatistics.Start();
 
-  mSuspendAgent.UpdateSuspendedStatusIfNeeded();
+  mSuspendAgent.Delegate(mChannel);
 
   // Fires an initial progress event.
   owner->DownloadProgressed();
@@ -424,8 +424,9 @@ ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld,
                                         uint32_t aFlags,
                                         int64_t aOffset)
 {
+  // OnChannelRedirect() is followed by OnStartRequest() where we will
+  // call mSuspendAgent.Delegate().
   mChannel = aNew;
-  mSuspendAgent.NotifyChannelOpened(mChannel);
   return SetupChannelHeaders(aOffset);
 }
 
@@ -625,7 +626,7 @@ void ChannelMediaResource::CloseChannel()
   mChannelStatistics.Stop();
 
   if (mChannel) {
-    mSuspendAgent.NotifyChannelClosing();
+    mSuspendAgent.Revoke();
     // The status we use here won't be passed to the decoder, since
     // we've already revoked the listener. It can however be passed
     // to nsDocumentViewer::LoadComplete if our channel is the one
@@ -816,8 +817,6 @@ ChannelMediaResource::RecreateChannel()
     // play even when we switch the tab to background.
     cos->AddClassFlags(nsIClassOfService::DontThrottle);
   }
-
-  mSuspendAgent.NotifyChannelOpened(mChannel);
 
   // Tell the cache to reset the download status when the channel is reopened.
   mCacheStream.NotifyChannelRecreated();
@@ -1066,28 +1065,31 @@ ChannelSuspendAgent::Resume()
 }
 
 void
-ChannelSuspendAgent::UpdateSuspendedStatusIfNeeded()
+ChannelSuspendAgent::Delegate(nsIChannel* aChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mIsChannelSuspended && IsSuspended()) {
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(!mChannel, "The previous channel not closed.");
+  MOZ_ASSERT(!mIsChannelSuspended);
+
+  mChannel = aChannel;
+  // Ensure the suspend status of the channel matches our suspend count.
+  if (IsSuspended()) {
     SuspendInternal();
   }
 }
 
 void
-ChannelSuspendAgent::NotifyChannelOpened(nsIChannel* aChannel)
+ChannelSuspendAgent::Revoke()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aChannel);
-  mChannel = aChannel;
-}
 
-void
-ChannelSuspendAgent::NotifyChannelClosing()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mChannel);
-  // Before close the channel, it need to be resumed to make sure its internal
+  if (!mChannel) {
+    // Channel already revoked. Nothing to do.
+    return;
+  }
+
+  // Before closing the channel, it needs to be resumed to make sure its internal
   // state is correct. Besides, We need to suspend the channel after recreating.
   if (mIsChannelSuspended) {
     mChannel->Resume();
@@ -1102,6 +1104,5 @@ ChannelSuspendAgent::IsSuspended()
   MOZ_ASSERT(NS_IsMainThread());
   return (mSuspendCount > 0);
 }
-
 
 } // mozilla namespace
