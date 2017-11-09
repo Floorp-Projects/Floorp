@@ -374,8 +374,8 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
                             const ContainerLayerParameters& aContainerParameters)
 {
   RefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, this, aContainerParameters);
-  if (layer && layer->AsContainerLayer()) {
-    layer->AsContainerLayer()->SetEventRegionsOverride(mEventRegionsOverride);
+  if (layer && layer->AsRefLayer()) {
+    layer->AsRefLayer()->SetEventRegionsOverride(mEventRegionsOverride);
   }
   return layer.forget();
 }
