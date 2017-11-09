@@ -12,10 +12,12 @@ namespace mozilla {
 namespace dom {
 
 class ClientManagerService;
+class ClientSourceParent;
 
 class ClientHandleParent final : public PClientHandleParent
 {
   RefPtr<ClientManagerService> mService;
+  ClientSourceParent* mSource;
 
   // PClientHandleParent interface
   mozilla::ipc::IPCResult
@@ -40,6 +42,9 @@ public:
 
   void
   Init(const IPCClientInfo& aClientInfo);
+
+  ClientSourceParent*
+  GetSource() const;
 };
 
 } // namespace dom

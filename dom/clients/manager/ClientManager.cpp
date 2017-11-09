@@ -6,6 +6,7 @@
 
 #include "ClientManager.h"
 
+#include "ClientHandle.h"
 #include "ClientManagerChild.h"
 #include "ClientManagerOpChild.h"
 #include "ClientSource.h"
@@ -114,6 +115,24 @@ ClientManager::CreateSourceInternal(ClientType aType,
   return Move(source);
 }
 
+already_AddRefed<ClientHandle>
+ClientManager::CreateHandleInternal(const ClientInfo& aClientInfo,
+                                    nsISerialEventTarget* aSerialEventTarget)
+{
+  NS_ASSERT_OWNINGTHREAD(ClientManager);
+  MOZ_DIAGNOSTIC_ASSERT(aSerialEventTarget);
+
+  if (IsShutdown()) {
+    return nullptr;
+  }
+
+  RefPtr<ClientHandle> handle = new ClientHandle(this, aSerialEventTarget,
+                                                 aClientInfo);
+  handle->Activate(GetActor());
+
+  return handle.forget();
+}
+
 already_AddRefed<ClientOpPromise>
 ClientManager::StartOp(const ClientOpConstructorArgs& aArgs,
                        nsISerialEventTarget* aSerialEventTarget)
@@ -202,6 +221,15 @@ ClientManager::CreateSource(ClientType aType, const PrincipalInfo& aPrincipal)
 {
   RefPtr<ClientManager> mgr = GetOrCreateForCurrentThread();
   return mgr->CreateSourceInternal(aType, aPrincipal);
+}
+
+// static
+already_AddRefed<ClientHandle>
+ClientManager::CreateHandle(const ClientInfo& aClientInfo,
+                            nsISerialEventTarget* aSerialEventTarget)
+{
+  RefPtr<ClientManager> mgr = GetOrCreateForCurrentThread();
+  return mgr->CreateHandleInternal(aClientInfo, aSerialEventTarget);
 }
 
 } // namespace dom
