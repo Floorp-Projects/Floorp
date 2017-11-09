@@ -40,6 +40,11 @@
 #include "mozilla/X11Util.h"
 #endif
 
+#ifdef MOZ_CONTENT_SANDBOX
+#include "mozilla/SandboxBrokerPolicyFactory.h"
+#include "mozilla/SandboxSettings.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
@@ -1301,7 +1306,9 @@ gfxFcPlatformFontList::~gfxFcPlatformFontList()
 }
 
 void
-gfxFcPlatformFontList::AddFontSetFamilies(FcFontSet* aFontSet, bool aAppFonts)
+gfxFcPlatformFontList::AddFontSetFamilies(FcFontSet* aFontSet,
+                                          const SandboxPolicy* aPolicy,
+                                          bool aAppFonts)
 {
     // This iterates over the fonts in a font set and adds in gfxFontFamily
     // objects for each family. Individual gfxFontEntry objects for each face
@@ -1330,9 +1337,14 @@ gfxFcPlatformFontList::AddFontSetFamilies(FcFontSet* aFontSet, bool aAppFonts)
             continue;
         }
 
-        // TODO:
-        // Verify that /path/ will be readable with the content-process sandbox
-        // rules; any blocked fonts must not be included in the font list.
+#ifdef MOZ_CONTENT_SANDBOX
+        // Skip any fonts that will be blocked by the content-process sandbox
+        // policy.
+        if (aPolicy && !(aPolicy->Lookup(reinterpret_cast<const char*>(path)) &
+                         SandboxBroker::Perms::MAY_READ)) {
+            continue;
+        }
+#endif
 
         AddPatternToFontList(pattern, lastFamilyName,
                              familyName, fontFamily, aAppFonts);
@@ -1485,13 +1497,25 @@ gfxFcPlatformFontList::InitFontListForPlatform()
 
     mLastConfig = FcConfigGetCurrent();
 
+    UniquePtr<SandboxPolicy> policy;
+
+#ifdef MOZ_CONTENT_SANDBOX
+    // Create a temporary SandboxPolicy to check font paths; use a fake PID
+    // to avoid picking up any PID-specific rules by accident.
+    SandboxBrokerPolicyFactory policyFactory;
+    if (GetEffectiveContentSandboxLevel() > 0 &&
+        !PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX")) {
+        policy = policyFactory.GetContentPolicy(-1, false);
+    }
+#endif
+
     // iterate over available fonts
     FcFontSet* systemFonts = FcConfigGetFonts(nullptr, FcSetSystem);
-    AddFontSetFamilies(systemFonts, /* aAppFonts = */ false);
+    AddFontSetFamilies(systemFonts, policy.get(), /* aAppFonts = */ false);
 
 #ifdef MOZ_BUNDLED_FONTS
     FcFontSet* appFonts = FcConfigGetFonts(nullptr, FcSetApplication);
-    AddFontSetFamilies(appFonts, /* aAppFonts = */ true);
+    AddFontSetFamilies(appFonts, policy.get(), /* aAppFonts = */ true);
 #endif
 
     return NS_OK;
