@@ -1449,7 +1449,7 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
       }
     } else {
       context->UpdateSubresource(mTexture, 0, nullptr, map.mData,
-                                 aSurface->Stride(), aSurface->Stride() * mSize.height);
+                                 map.mStride, map.mStride * mSize.height);
     }
 
     aSurface->Unmap();
@@ -1478,9 +1478,9 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
 
       D3D11_SUBRESOURCE_DATA initData;
       initData.pSysMem = map.GetData() +
-                         tileRect.y * aSurface->Stride() +
+                         tileRect.y * map.GetStride() +
                          tileRect.x * bpp;
-      initData.SysMemPitch = aSurface->Stride();
+      initData.SysMemPitch = map.GetStride();
 
       hr = mDevice->CreateTexture2D(&desc, &initData, getter_AddRefs(mTileTextures[i]));
       if (FAILED(hr) || !mTileTextures[i]) {

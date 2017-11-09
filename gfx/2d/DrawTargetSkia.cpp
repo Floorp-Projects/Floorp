@@ -1580,7 +1580,7 @@ DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4x4& a
                         SkImageInfo::Make(xformBounds.Width(), xformBounds.Height(),
                         GfxFormatToSkiaColorType(dstSurf->GetFormat()),
                         kPremul_SkAlphaType),
-      map.GetData(), dstSurf->Stride()));
+      map.GetData(), map.GetStride()));
   if (!dstCanvas) {
     return false;
   }
@@ -1755,7 +1755,7 @@ DrawTargetSkia::OptimizeSourceSurfaceForUnknownAlpha(SourceSurface *aSurface) co
   // the alpha channel to make Skia happy with RGBX and in case GDI
   // writes some bad data. Luckily, this only happens on plugins.
   WriteRGBXFormat(map.GetData(), dataSurface->GetSize(),
-                  dataSurface->Stride(), dataSurface->GetFormat());
+                  map.GetStride(), dataSurface->GetFormat());
   return dataSurface.forget();
 }
 
@@ -1781,7 +1781,7 @@ DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
 #ifdef DEBUG
   DataSourceSurface::ScopedMap map(dataSurface, DataSourceSurface::READ);
   MOZ_ASSERT(VerifyRGBXFormat(map.GetData(), dataSurface->GetSize(),
-                              dataSurface->Stride(), dataSurface->GetFormat()));
+                              map.GetStride(), dataSurface->GetFormat()));
 #endif
   return dataSurface.forget();
 }

@@ -167,7 +167,7 @@ void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) 
     RefPtr<gfxImageSurface> hostSurface =
       new gfxImageSurface(map.GetData(),
                           hostDataSurface->GetSize(),
-                          hostDataSurface->Stride(),
+                          map.GetStride(),
                           SurfaceFormatToImageFormat(hostDataSurface->GetFormat()));
     AssertSurfacesEqual(surface, hostSurface.get());
     host->Unlock();

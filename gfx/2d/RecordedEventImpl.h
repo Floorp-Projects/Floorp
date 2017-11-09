@@ -1536,7 +1536,7 @@ RecordedDrawTargetCreation::Record(S &aStream) const
 
     DataSourceSurface::ScopedMap map(dataSurf, DataSourceSurface::READ);
     for (int y = 0; y < mSize.height; y++) {
-      aStream.write((const char*)map.GetData() + y * dataSurf->Stride(),
+      aStream.write((const char*)map.GetData() + y * map.GetStride(),
                     BytesPerPixel(mFormat) * mSize.width);
     }
   }
@@ -1563,7 +1563,7 @@ RecordedDrawTargetCreation::RecordedDrawTargetCreation(S &aStream)
 
     DataSourceSurface::ScopedMap map(dataSurf, DataSourceSurface::READ);
     for (int y = 0; y < mSize.height; y++) {
-      aStream.read((char*)map.GetData() + y * dataSurf->Stride(),
+      aStream.read((char*)map.GetData() + y * map.GetStride(),
                     BytesPerPixel(mFormat) * mSize.width);
     }
     mExistingData = dataSurf;

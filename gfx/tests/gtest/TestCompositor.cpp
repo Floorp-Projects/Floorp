@@ -141,8 +141,8 @@ static bool CompositeAndCompare(RefPtr<LayerManagerComposite> layerManager, Draw
   for (int y = 0; y < gCompHeight; y++) {
     for (int x = 0; x < gCompWidth; x++) {
       for (size_t channel = 0; channel < 4; channel++) {
-        uint8_t bit = bitmap[y * dss->Stride() + x * 4 + channel];
-        uint8_t bitRef = bitmapRef[y * dss->Stride() + x * 4 + channel];
+        uint8_t bit = bitmap[y * dssMap.GetStride() + x * 4 + channel];
+        uint8_t bitRef = bitmapRef[y * dssRefMap.GetStride() + x * 4 + channel];
         if (bit != bitRef) {
           printf("Layer Tree:\n");
           layerManager->Dump();
