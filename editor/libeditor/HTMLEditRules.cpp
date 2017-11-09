@@ -5273,11 +5273,9 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
                  aAction == nsIEditor::ePreviousWord ||
                  aAction == nsIEditor::eToBeginningOfLine) {
         // Move to the end of the previous node
-        int32_t offset = blockParent->IndexOf(emptyBlock);
-        nsCOMPtr<nsIContent> priorNode = htmlEditor->GetPriorNode(blockParent,
-                                                                  offset,
-                                                                  emptyBlock,
-                                                                  true);
+        EditorRawDOMPoint atEmptyBlock(emptyBlock);
+        nsCOMPtr<nsIContent> priorNode =
+          htmlEditor->GetPreviousEditableNode(atEmptyBlock);
         if (priorNode) {
           EditorDOMPoint pt = GetGoodSelPointForNode(*priorNode, aAction);
           nsresult rv = aSelection->Collapse(pt.AsRaw());
@@ -7940,6 +7938,8 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
           NS_ENSURE_SUCCESS(rv, rv);
           nsCOMPtr<nsIDOMNode> brParent =
             EditorBase::GetNodeLocation(brNode, &selOffset);
+          nsCOMPtr<nsIContent> br = do_QueryInterface(brNode);
+          child = br;
           // selection stays *before* moz-br, sticking to it
           aSelection->SetInterlinePosition(true);
           rv = aSelection->Collapse(brParent, selOffset);

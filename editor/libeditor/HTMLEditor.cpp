@@ -3881,7 +3881,8 @@ HTMLEditor::GetPriorHTMLNode(nsINode* aNode,
     return nullptr;
   }
 
-  return GetPriorNode(aNode, true, aNoBlockCrossing);
+  return aNoBlockCrossing ? GetPreviousEditableNodeInBlock(*aNode) :
+                            GetPreviousEditableNode(*aNode);
 }
 
 /**
@@ -3900,7 +3901,12 @@ HTMLEditor::GetPriorHTMLNode(nsINode* aParent,
     return nullptr;
   }
 
-  return GetPriorNode(aParent, aOffset, aChildAtOffset, true, aNoBlockCrossing);
+  EditorRawDOMPoint point(aParent,
+                          aChildAtOffset && aChildAtOffset->IsContent() ?
+                            aChildAtOffset->AsContent() : nullptr,
+                          aOffset);
+  return aNoBlockCrossing ? GetPreviousEditableNodeInBlock(point) :
+                            GetPreviousEditableNode(point);
 }
 
 /**

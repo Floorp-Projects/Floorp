@@ -607,11 +607,33 @@ protected:
   virtual bool IsBlockNode(nsINode* aNode);
 
   /**
-   * Helper for GetPriorNode() and GetNextNode().
+   * Helper for GetPreviousNodeInternal() and GetNextNode().
    */
   nsIContent* FindNextLeafNode(nsINode* aCurrentNode,
                                bool aGoForward,
                                bool bNoBlockCrossing);
+
+  /**
+   * Get the node immediately previous node of aNode.
+   * @param atNode               The node from which we start the search.
+   * @param aFindEditableNode    If true, only return an editable node.
+   * @param aNoBlockCrossing     If true, don't move across "block" nodes,
+   *                             whatever that means.
+   * @return                     The node that occurs before aNode in
+   *                             the tree, skipping non-editable nodes if
+   *                             aFindEditableNode is true.  If there is no
+   *                             previous node, returns nullptr.
+   */
+  nsIContent* GetPreviousNodeInternal(nsINode& aNode,
+                                      bool aFindEditableNode,
+                                      bool aNoBlockCrossing);
+
+  /**
+   * And another version that takes a point in DOM tree rather than a node.
+   */
+  nsIContent* GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
+                                      bool aFindEditableNode,
+                                      bool aNoBlockCrossing);
 
   virtual nsresult InstallEventListeners();
   virtual void CreateEventListeners();
@@ -737,28 +759,41 @@ public:
   static nsresult GetLengthOfDOMNode(nsIDOMNode *aNode, uint32_t &aCount);
 
   /**
-   * Get the node immediately prior to aCurrentNode.
-   * @param aCurrentNode   the node from which we start the search
-   * @param aEditableNode  if true, only return an editable node
-   * @param aResultNode    [OUT] the node that occurs before aCurrentNode in
-   *                             the tree, skipping non-editable nodes if
-   *                             aEditableNode is true.  If there is no prior
-   *                             node, aResultNode will be nullptr.
-   * @param bNoBlockCrossing If true, don't move across "block" nodes,
-   *                         whatever that means.
+   * Get the previous node.
    */
-  nsIContent* GetPriorNode(nsINode* aCurrentNode, bool aEditableNode,
-                           bool aNoBlockCrossing = false);
-
-  /**
-   * And another version that takes a {parent,offset} pair rather than a node.
-   */
-  nsIContent* GetPriorNode(nsINode* aParentNode,
-                           int32_t aOffset,
-                           nsINode* aChildAtOffset,
-                           bool aEditableNode,
-                           bool aNoBlockCrossing = false);
-
+  nsIContent* GetPreviousNode(const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousNodeInternal(aPoint, false, false);
+  }
+  nsIContent* GetPreviousEditableNode(const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousNodeInternal(aPoint, true, false);
+  }
+  nsIContent* GetPreviousNodeInBlock(const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousNodeInternal(aPoint, false, true);
+  }
+  nsIContent* GetPreviousEditableNodeInBlock(
+                const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousNodeInternal(aPoint, true, true);
+  }
+  nsIContent* GetPreviousNode(nsINode& aNode)
+  {
+    return GetPreviousNodeInternal(aNode, false, false);
+  }
+  nsIContent* GetPreviousEditableNode(nsINode& aNode)
+  {
+    return GetPreviousNodeInternal(aNode, true, false);
+  }
+  nsIContent* GetPreviousNodeInBlock(nsINode& aNode)
+  {
+    return GetPreviousNodeInternal(aNode, false, true);
+  }
+  nsIContent* GetPreviousEditableNodeInBlock(nsINode& aNode)
+  {
+    return GetPreviousNodeInternal(aNode, true, true);
+  }
 
   /**
    * Get the node immediately after to aCurrentNode.
@@ -783,7 +818,7 @@ public:
                           bool aNoBlockCrossing = false);
 
   /**
-   * Helper for GetNextNode() and GetPriorNode().
+   * Helper for GetNextNode() and GetPreviousNodeInternal().
    */
   nsIContent* FindNode(nsINode* aCurrentNode,
                        bool aGoForward,
