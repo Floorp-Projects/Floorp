@@ -932,8 +932,7 @@ element.isInView = function(el) {
 element.isVisible = function(el, x = undefined, y = undefined) {
   let win = el.ownerGlobal;
 
-  // Bug 1094246: webdriver's isShown doesn't work with content xul
-  if (!element.isXULElement(el) && !atom.isElementDisplayed(el, win)) {
+  if (!atom.isElementDisplayed(el, win)) {
     return false;
   }
 
