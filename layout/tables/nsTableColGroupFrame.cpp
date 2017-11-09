@@ -270,9 +270,8 @@ nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
     }
   }
 
-  PresShell()->FrameNeedsReflow(this,
-                                               nsIPresShell::eTreeChange,
-                                               NS_FRAME_HAS_DIRTY_CHILDREN);
+  PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 void

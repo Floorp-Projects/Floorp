@@ -95,8 +95,7 @@ nsContainerFrame::SetInitialChildList(ChildListID  aListID,
                 "The placeholder should points to a backdrop frame");
     }
 #endif
-    nsFrameList* list =
-      new (PresShell()) nsFrameList(aChildList);
+    nsFrameList* list = new (PresShell()) nsFrameList(aChildList);
     SetProperty(BackdropProperty(), list);
   } else {
     MOZ_ASSERT_UNREACHABLE("Unexpected child list");
@@ -118,9 +117,8 @@ nsContainerFrame::AppendFrames(ChildListID  aListID,
   mFrames.AppendFrames(this, aFrameList);
 
   if (aListID != kNoReflowPrincipalList) {
-    PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                       NS_FRAME_HAS_DIRTY_CHILDREN);
+    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                  NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 }
 
@@ -142,9 +140,8 @@ nsContainerFrame::InsertFrames(ChildListID aListID,
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
 
   if (aListID != kNoReflowPrincipalList) {
-    PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                       NS_FRAME_HAS_DIRTY_CHILDREN);
+    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                  NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 }
 
@@ -1987,9 +1984,8 @@ nsContainerFrame::AttributeChanged(int32_t         aNameSpaceID,
 
     // XXX Not sure if this is necessary anymore
     if (RenumberList()) {
-      PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eStyleChange,
-                         NS_FRAME_HAS_DIRTY_CHILDREN);
+      PresShell()->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                                    NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
   return rv;

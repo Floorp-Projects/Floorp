@@ -7266,8 +7266,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       return NS_OK;
     }
 
-    PresShell* shell =
-        static_cast<PresShell*>(frame->PresShell());
+    PresShell* shell = static_cast<PresShell*>(frame->PresShell());
     switch (aEvent->mMessage) {
       case eTouchMove:
       case eTouchCancel:
@@ -7296,8 +7295,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
             break;
           }
 
-          shell = static_cast<PresShell*>(
-                      contentFrame->PresShell());
+          shell = static_cast<PresShell*>(contentFrame->PresShell());
           if (shell) {
             break;
           }

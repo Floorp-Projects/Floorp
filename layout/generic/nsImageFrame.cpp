@@ -2150,9 +2150,8 @@ nsImageFrame::AttributeChanged(int32_t aNameSpaceID,
   }
   if (nsGkAtoms::alt == aAttribute)
   {
-    PresShell()->FrameNeedsReflow(this,
-                                                 nsIPresShell::eStyleChange,
-                                                 NS_FRAME_IS_DIRTY);
+    PresShell()->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                                  NS_FRAME_IS_DIRTY);
   }
 
   return NS_OK;

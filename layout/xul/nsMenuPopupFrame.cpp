@@ -945,7 +945,7 @@ nsMenuPopupFrame::ShowPopup(bool aIsContextMenu)
     // do we need an actual reflow here?
     // is SetPopupPosition all that is needed?
     PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                                                 NS_FRAME_HAS_DIRTY_CHILDREN);
+                                  NS_FRAME_HAS_DIRTY_CHILDREN);
 
     if (mPopupType == ePopupTypeMenu) {
       nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));

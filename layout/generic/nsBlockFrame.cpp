@@ -3044,9 +3044,8 @@ nsBlockFrame::AttributeChanged(int32_t         aNameSpaceID,
       if (ancestor) {
         // XXX Not sure if this is necessary anymore
         if (ancestor->RenumberList()) {
-          PresShell()->
-            FrameNeedsReflow(ancestor, nsIPresShell::eStyleChange,
-                             NS_FRAME_HAS_DIRTY_CHILDREN);
+          PresShell()->FrameNeedsReflow(ancestor, nsIPresShell::eStyleChange,
+                                        NS_FRAME_HAS_DIRTY_CHILDREN);
         }
       }
     }
