@@ -2680,7 +2680,7 @@ EditorBase::GetFirstEditableNode(nsINode* aRoot)
 
   nsIContent* node = GetLeftmostChild(aRoot);
   if (node && !IsEditable(node)) {
-    node = GetNextNode(node, /* aEditableNode = */ true);
+    node = GetNextEditableNode(*node);
   }
 
   return (node != aRoot) ? node : nullptr;
@@ -3342,55 +3342,72 @@ EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
 }
 
 nsIContent*
-EditorBase::GetNextNode(nsINode* aParentNode,
-                        int32_t aOffset,
-                        nsINode* aChildAtOffset,
-                        bool aEditableNode,
-                        bool aNoBlockCrossing)
+EditorBase::GetNextNodeInternal(nsINode& aNode,
+                                bool aFindEditableNode,
+                                bool aNoBlockCrossing)
 {
-  MOZ_ASSERT(aParentNode);
+  if (!IsDescendantOfEditorRoot(&aNode)) {
+    return nullptr;
+  }
+  return FindNode(&aNode, true, aFindEditableNode, aNoBlockCrossing);
+}
 
-  // if aParentNode is a text node, use its location instead
-  if (aParentNode->NodeType() == nsIDOMNode::TEXT_NODE) {
-    nsINode* parent = aParentNode->GetParentNode();
-    NS_ENSURE_TRUE(parent, nullptr);
-    aOffset = parent->IndexOf(aParentNode) + 1; // _after_ the text node
-    aParentNode = parent;
+nsIContent*
+EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
+                                bool aFindEditableNode,
+                                bool aNoBlockCrossing)
+{
+  MOZ_ASSERT(aPoint.IsSetAndValid());
+  NS_WARNING_ASSERTION(!aPoint.Container()->IsNodeOfType(nsINode::eDATA_NODE) ||
+                       aPoint.Container()->IsNodeOfType(nsINode::eTEXT),
+    "GetNextNodeInternal() doesn't assume that the start point is a "
+    "data node except text node");
+
+  EditorRawDOMPoint point(aPoint);
+
+  // if the container is a text node, use its location instead
+  if (point.Container()->IsNodeOfType(nsINode::eTEXT)) {
+    point.Set(point.Container());
+    bool advanced = point.AdvanceOffset();
+    if (NS_WARN_IF(!advanced)) {
+      return nullptr;
+    }
   }
 
   // look at the child at 'aOffset'
-  if (aChildAtOffset) {
-    if (aNoBlockCrossing && IsBlockNode(aChildAtOffset)) {
-      MOZ_ASSERT(aChildAtOffset->IsContent());
-      return aChildAtOffset->AsContent();
+  if (point.GetChildAtOffset()) {
+    if (aNoBlockCrossing && IsBlockNode(point.GetChildAtOffset())) {
+      return point.GetChildAtOffset();
     }
 
-    nsIContent* resultNode = GetLeftmostChild(aChildAtOffset, aNoBlockCrossing);
-    if (!resultNode) {
-      MOZ_ASSERT(aChildAtOffset->IsContent());
-      return aChildAtOffset->AsContent();
+    nsIContent* leftMostNode =
+      GetLeftmostChild(point.GetChildAtOffset(), aNoBlockCrossing);
+    if (!leftMostNode) {
+      return point.GetChildAtOffset();
     }
 
-    if (!IsDescendantOfEditorRoot(resultNode)) {
+    if (!IsDescendantOfEditorRoot(leftMostNode)) {
       return nullptr;
     }
 
-    if (!aEditableNode || IsEditable(resultNode)) {
-      return resultNode;
+    if (!aFindEditableNode || IsEditable(leftMostNode)) {
+      return leftMostNode;
     }
 
     // restart the search from the non-editable node we just found
-    return GetNextNode(resultNode, aEditableNode, aNoBlockCrossing);
+    return GetNextNodeInternal(*leftMostNode,
+                               aFindEditableNode, aNoBlockCrossing);
   }
 
   // unless there isn't one, in which case we are at the end of the node
   // and want the next one.
-  if (aNoBlockCrossing && IsBlockNode(aParentNode)) {
+  if (aNoBlockCrossing && IsBlockNode(point.Container())) {
     // don't cross out of parent block
     return nullptr;
   }
 
-  return GetNextNode(aParentNode, aEditableNode, aNoBlockCrossing);
+  return GetNextNodeInternal(*point.Container(),
+                             aFindEditableNode, aNoBlockCrossing);
 }
 
 nsIContent*
@@ -3443,20 +3460,6 @@ EditorBase::FindNextLeafNode(nsINode* aCurrentNode,
 
   NS_NOTREACHED("What part of for(;;) do you not understand?");
   return nullptr;
-}
-
-nsIContent*
-EditorBase::GetNextNode(nsINode* aCurrentNode,
-                        bool aEditableNode,
-                        bool bNoBlockCrossing)
-{
-  MOZ_ASSERT(aCurrentNode);
-
-  if (!IsDescendantOfEditorRoot(aCurrentNode)) {
-    return nullptr;
-  }
-
-  return FindNode(aCurrentNode, true, aEditableNode, bNoBlockCrossing);
 }
 
 nsIContent*
@@ -4646,7 +4649,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   if (aAction == eNext && isLast) {
     // we're deleting from the end of the node.  Delete the first thing to our
     // right
-    nsCOMPtr<nsIContent> nextNode = GetNextNode(node, true);
+    nsCOMPtr<nsIContent> nextNode = GetNextEditableNode(*node);
     if (NS_WARN_IF(!nextNode)) {
       return nullptr;
     }
@@ -4704,7 +4707,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     selectedNode =
       GetPreviousEditableNode(EditorRawDOMPoint(node, child, offset));
   } else if (aAction == eNext) {
-    selectedNode = GetNextNode(node, offset, child, true);
+    selectedNode = GetNextEditableNode(EditorRawDOMPoint(node, child, offset));
   }
 
   while (selectedNode &&
@@ -4714,7 +4717,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     if (aAction == ePrevious) {
       selectedNode = GetPreviousEditableNode(*selectedNode);
     } else if (aAction == eNext) {
-      selectedNode = GetNextNode(selectedNode, true);
+      selectedNode = GetNextEditableNode(*selectedNode);
     }
   }
 
