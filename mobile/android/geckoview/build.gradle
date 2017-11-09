@@ -144,9 +144,6 @@ android {
                     srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src"
                     srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/modules/video_capture/android/java/src"
                 }
-
-                // TODO: don't use AppConstants.
-                srcDir "${project.buildDir}/generated/source/preprocessed_code" // See syncPreprocessedCode.
             }
 
             assets {
@@ -160,20 +157,9 @@ dependencies {
     compile "com.android.support:palette-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
 }
 
-task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
-    into("${project.buildDir}/generated/source/preprocessed_code")
-    from("${topobjdir}/mobile/android/base/generated/preprocessed") {
-        // These constants files are included in the main app project.
-        exclude '**/AdjustConstants.java'
-        exclude '**/MmaConstants.java'
-    }
-}
-
 apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
 
 android.libraryVariants.all { variant ->
-    variant.preBuild.dependsOn syncPreprocessedCode
-
     // Like 'debug', 'release', or 'withGeckoBinaries'.
     def buildType = variant.buildType.name
 
