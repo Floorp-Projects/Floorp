@@ -1019,15 +1019,8 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
         return true;
       }
       case ValType::I64: {
-        if (!JitOptions.wasmTestMode) {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
-            return false;
-        }
-        RootedObject obj(cx, CreateI64Object(cx, val.i64()));
-        if (!obj)
-            return false;
-        jsval.set(ObjectValue(*obj));
-        return true;
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
+        return false;
       }
       case ValType::F32: {
         float f = val.f32();
