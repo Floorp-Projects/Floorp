@@ -1141,11 +1141,6 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
     return MakeAndAddRef<TextureClient>(data, aTextureFlags, aAllocator);
   }
 
-  if (moz2DBackend == BackendType::SKIA && aFormat == SurfaceFormat::B8G8R8X8) {
-    // Skia doesn't support RGBX, so ensure we clear the buffer for the proper alpha values.
-    aAllocFlags = TextureAllocationFlags(aAllocFlags | ALLOC_CLEAR_BUFFER);
-  }
-
   // Can't do any better than a buffer texture client.
   return TextureClient::CreateForRawBufferAccess(aAllocator, aFormat, aSize,
                                                  moz2DBackend, aLayersBackend,
@@ -1250,13 +1245,20 @@ TextureClient::CreateForRawBufferAccess(LayersIPCChannel* aAllocator,
     return nullptr;
   }
 
-  // D2D backend does not support CreateDrawTargetForData(). Use CAIRO instead.
-  if (aMoz2DBackend == gfx::BackendType::DIRECT2D ||
-      aMoz2DBackend == gfx::BackendType::DIRECT2D1_1) {
-    aMoz2DBackend = gfx::BackendType::CAIRO;
+  if (aFormat == SurfaceFormat::B8G8R8X8) {
+    // Skia doesn't support RGBX, so ensure we clear the buffer for the proper alpha values.
+    aAllocFlags = TextureAllocationFlags(aAllocFlags | ALLOC_CLEAR_BUFFER);
   }
 
-  TextureData* texData = BufferTextureData::Create(aSize, aFormat, aMoz2DBackend,
+  // Note that we ignore the backend type if we get here. It should only be D2D
+  // or Skia, and D2D does not support data surfaces. Therefore it is safe to
+  // force the buffer to be Skia.
+  NS_WARNING_ASSERTION(aMoz2DBackend != gfx::BackendType::SKIA &&
+                       aMoz2DBackend != gfx::BackendType::DIRECT2D &&
+                       aMoz2DBackend != gfx::BackendType::DIRECT2D1_1,
+                       "Unsupported TextureClient backend type");
+
+  TextureData* texData = BufferTextureData::Create(aSize, aFormat, gfx::BackendType::SKIA,
                                                    aLayersBackend, aTextureFlags,
                                                    aAllocFlags, aAllocator);
   if (!texData) {

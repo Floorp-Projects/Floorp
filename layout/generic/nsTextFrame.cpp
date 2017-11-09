@@ -681,7 +681,7 @@ InvalidateFrameDueToGlyphsChanged(nsIFrame* aFrame)
 {
   MOZ_ASSERT(aFrame);
 
-  nsIPresShell* shell = aFrame->PresContext()->PresShell();
+  nsIPresShell* shell = aFrame->PresShell();
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
     f->InvalidateFrame();
@@ -2036,7 +2036,7 @@ static already_AddRefed<DrawTarget>
 CreateReferenceDrawTarget(const nsTextFrame* aTextFrame)
 {
   RefPtr<gfxContext> ctx =
-    aTextFrame->PresContext()->PresShell()->CreateReferenceRenderingContext();
+    aTextFrame->PresShell()->CreateReferenceRenderingContext();
   RefPtr<DrawTarget> dt = ctx->GetDrawTarget();
   return dt.forget();
 }

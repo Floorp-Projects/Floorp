@@ -47,11 +47,13 @@ EOF
 set +x
 
 BUILD_CLANG_DIR=build/src/build/build-clang
-MOZCONFIG=${MOZCONFIG} build/src/mach python ${BUILD_CLANG_DIR}/build-clang.py -c ${BUILD_CLANG_DIR}/${1}
+cd ${BUILD_CLANG_DIR}
+MOZCONFIG=${MOZCONFIG} ../../mach python ./build-clang.py -c ./${1}
+cd -
 
 set -x
 
 # Put a tarball in the artifacts dir
 UPLOAD_PATH=public/build
 mkdir -p ${UPLOAD_PATH}
-cp clang*.tar.* ${UPLOAD_PATH}
+cp ${BUILD_CLANG_DIR}/clang*.tar.* ${UPLOAD_PATH}
