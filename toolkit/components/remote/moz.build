@@ -20,7 +20,13 @@ SOURCES += [
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     SOURCES += [
         'nsGTKRemoteService.cpp',
+        'nsRemoteService.cpp',
     ]
+    if CONFIG['MOZ_ENABLE_DBUS']:
+        SOURCES += [
+            'nsDBusRemoteService.cpp',
+        ]
+        CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
 FINAL_LIBRARY = 'xul'
 

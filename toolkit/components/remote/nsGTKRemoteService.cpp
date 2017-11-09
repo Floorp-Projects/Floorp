@@ -26,14 +26,12 @@
 #include "nsGTKToolkit.h"
 
 NS_IMPL_ISUPPORTS(nsGTKRemoteService,
-                  nsIRemoteService,
-                  nsIObserver)
+                  nsIRemoteService)
 
 NS_IMETHODIMP
 nsGTKRemoteService::Startup(const char* aAppName, const char* aProfileName)
 {
   NS_ASSERTION(aAppName, "Don't pass a null appname!");
-  sRemoteImplementation = this;
 
   if (mServerWindow) return NS_ERROR_ALREADY_INITIALIZED;
 
@@ -93,28 +91,9 @@ nsGTKRemoteService::Shutdown()
 
   gtk_widget_destroy(mServerWindow);
   mServerWindow = nullptr;
+
   return NS_OK;
 }
-
-// Set desktop startup ID to the passed ID, if there is one, so that any created
-// windows get created with the right window manager metadata, and any windows
-// that get new tabs and are activated also get the right WM metadata.
-// The timestamp will be used if there is no desktop startup ID, or if we're
-// raising an existing window rather than showing a new window for the first time.
-void
-nsGTKRemoteService::SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
-                                                   uint32_t aTimestamp) {
-  nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
-  if (!toolkit)
-    return;
-
-  if (!aDesktopStartupID.IsEmpty()) {
-    toolkit->SetDesktopStartupID(aDesktopStartupID);
-  }
-
-  toolkit->SetFocusTimestamp(aTimestamp);
-}
-
 
 void
 nsGTKRemoteService::HandleCommandsFor(GtkWidget* widget,
@@ -131,7 +110,6 @@ nsGTKRemoteService::HandleCommandsFor(GtkWidget* widget,
   Window window = gdk_x11_window_get_xid(gtk_widget_get_window(widget));
 #endif
   nsXRemoteService::HandleCommandsFor(window);
-
 }
 
 gboolean
@@ -154,28 +132,3 @@ nsGTKRemoteService::HandlePropertyChange(GtkWidget *aWidget,
   return FALSE;
 }
 
-
-// {C0773E90-5799-4eff-AD03-3EBCD85624AC}
-#define NS_REMOTESERVICE_CID \
-  { 0xc0773e90, 0x5799, 0x4eff, { 0xad, 0x3, 0x3e, 0xbc, 0xd8, 0x56, 0x24, 0xac } }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsGTKRemoteService)
-NS_DEFINE_NAMED_CID(NS_REMOTESERVICE_CID);
-
-static const mozilla::Module::CIDEntry kRemoteCIDs[] = {
-  { &kNS_REMOTESERVICE_CID, false, nullptr, nsGTKRemoteServiceConstructor },
-  { nullptr }
-};
-
-static const mozilla::Module::ContractIDEntry kRemoteContracts[] = {
-  { "@mozilla.org/toolkit/remote-service;1", &kNS_REMOTESERVICE_CID },
-  { nullptr }
-};
-
-static const mozilla::Module kRemoteModule = {
-  mozilla::Module::kVersion,
-  kRemoteCIDs,
-  kRemoteContracts
-};
-
-NSMODULE_DEFN(RemoteServiceModule) = &kRemoteModule;
