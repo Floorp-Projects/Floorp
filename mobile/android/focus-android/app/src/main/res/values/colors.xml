@@ -60,6 +60,7 @@
     <color name="firefoxInstallHint">@color/photonMagenta70</color>
 
     <color name="preference_row_selected">#414146</color>
+    <color name="preference_row_disabled">#B3313131</color>
 
     <color name="scrollbarThumb">#b2b2b2b2</color>
 </resources>

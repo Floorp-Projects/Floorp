@@ -6,7 +6,6 @@ package org.mozilla.focus.search;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.CompoundButton;
 
 import org.mozilla.focus.R;
@@ -31,8 +30,11 @@ public class MultiselectSearchEngineListPreference extends SearchEngineListPrefe
 
     @Override
     protected void updateDefaultItem(CompoundButton defaultButton) {
-        // Hide default engine so it can't be removed
-        defaultButton.setVisibility(View.GONE);
+        defaultButton.setClickable(false);
+        // Showing the default engine as disabled requires a StateListDrawable, but since there
+        // is no state_clickable and state_enabled seems to require a default drawable state,
+        // use state_activated instead to designate the default search engine.
+        defaultButton.setActivated(true);
     }
 
     public Set<String> getCheckedEngineIds() {
