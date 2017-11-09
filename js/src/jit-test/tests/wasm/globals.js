@@ -228,8 +228,13 @@ testInitExpr('f64', 13.37, 0.1989, x => +x);
 
 // Int64.
 {
-    wasmFailValidateText(`(module (import "globals" "x" (global i64)))`, /can't import.* an Int64 global/);
-    wasmFailValidateText(`(module (global i64 (i64.const 42)) (export "" global 0))`, /can't .*export an Int64 global/);
+    let module = new WebAssembly.Module(wasmTextToBinary(`(module (import "globals" "x" (global i64)))`));
+    assertErrorMessage(() => new WebAssembly.Instance(module, {globals: {x:42}}),
+                       WebAssembly.LinkError,
+                       /cannot pass i64 to or from JS/);
+
+    module = new WebAssembly.Module(wasmTextToBinary(`(module (global i64 (i64.const 42)) (export "" global 0))`));
+    assertErrorMessage(() => new WebAssembly.Instance(module), WebAssembly.LinkError, /cannot pass i64 to or from JS/);
 
     setJitCompilerOption('wasm.test-mode', 1);
     testInner('i64', '0x531642753864975F', '0x123456789abcdef0', createI64, assertEqI64);
