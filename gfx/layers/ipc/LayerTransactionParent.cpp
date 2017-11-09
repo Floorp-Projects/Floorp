@@ -609,6 +609,10 @@ LayerTransactionParent::SetLayerAttributes(const OpSetLayerAttributes& aOp)
     containerLayer->SetInheritedScale(attrs.inheritedXScale(), attrs.inheritedYScale());
     containerLayer->SetScaleToResolution(attrs.scaleToResolution(),
                                          attrs.presShellResolution());
+    if (attrs.eventRegionsOverride() != containerLayer->GetEventRegionsOverride()) {
+      UpdateHitTestingTree(layer, "event regions override changed");
+      containerLayer->SetEventRegionsOverride(attrs.eventRegionsOverride());
+    }
     break;
   }
   case Specific::TColorLayerAttributes: {
