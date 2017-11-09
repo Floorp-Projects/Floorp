@@ -272,8 +272,10 @@ AsyncCanvasRenderer::GetInputStream(const char *aMimeType,
     return NS_ERROR_FAILURE;
   }
 
+  gfx::DataSourceSurface::ScopedMap map(surface, gfx::DataSourceSurface::READ);
+
   // Handle y flip.
-  RefPtr<gfx::DataSourceSurface> dataSurf = gl::YInvertImageSurface(surface);
+  RefPtr<gfx::DataSourceSurface> dataSurf = gl::YInvertImageSurface(surface, map.GetStride());
 
   return gfxUtils::GetInputStream(dataSurf, false, aMimeType, aEncoderOptions, aStream);
 }

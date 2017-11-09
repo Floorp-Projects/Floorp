@@ -506,9 +506,9 @@ private:
             DataSourceSurface::ScopedMap map(aImage, DataSourceSurface::READ);
             tp->set_width(aImage->GetSize().width);
             tp->set_height(aImage->GetSize().height);
-            tp->set_stride(aImage->Stride());
+            tp->set_stride(map.GetStride());
 
-            mDatasize = aImage->GetSize().height * aImage->Stride();
+            mDatasize = aImage->GetSize().height * map.GetStride();
 
             auto compresseddata = MakeUnique<char[]>(LZ4::maxCompressedSize(mDatasize));
             if (compresseddata) {
