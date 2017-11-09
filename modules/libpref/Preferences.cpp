@@ -367,28 +367,6 @@ pref_HashPref(const char* aKey,
 
 #define PREF_HASHTABLE_INITIAL_LENGTH 1024
 
-// The Init function initializes the preference context and creates the
-// preference hashtable.
-static void
-PREF_Init()
-{
-  if (!gHashTable) {
-    gHashTable = new PLDHashTable(
-      &pref_HashTableOps, sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
-  }
-}
-
-// Frees up all the objects except the callback list.
-static void
-PREF_CleanupPrefs()
-{
-  if (gHashTable) {
-    delete gHashTable;
-    gHashTable = nullptr;
-    gPrefNameArena.Clear();
-  }
-}
-
 // Assign to aResult a quoted, escaped copy of aOriginal.
 static void
 StrEscape(const char* aOriginal, nsCString& aResult)
@@ -3659,7 +3637,9 @@ Preferences::~Preferences()
   }
   gLastPriorityNode = gFirstCallback = nullptr;
 
-  PREF_CleanupPrefs();
+  delete gHashTable;
+  gHashTable = nullptr;
+  gPrefNameArena.Clear();
 }
 
 //
@@ -3692,7 +3672,9 @@ Preferences::SetInitPreferences(nsTArray<PrefSetting>* aPrefs)
 Result<Ok, const char*>
 Preferences::Init()
 {
-  PREF_Init();
+  MOZ_ASSERT(!gHashTable);
+  gHashTable = new PLDHashTable(
+    &pref_HashTableOps, sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
 
   MOZ_TRY(pref_InitInitialObjects());
 
@@ -3834,9 +3816,9 @@ Preferences::ResetPrefs()
   }
 
   NotifyServiceObservers(NS_PREFSERVICE_RESET_TOPIC_ID);
-  PREF_CleanupPrefs();
 
-  PREF_Init();
+  gHashTable->ClearAndPrepareForLength(PREF_HASHTABLE_INITIAL_LENGTH);
+  gPrefNameArena.Clear();
 
   return pref_InitInitialObjects().isOk() ? NS_OK : NS_ERROR_FAILURE;
 }
