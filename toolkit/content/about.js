@@ -2,26 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var Cu = Components.utils;
+Cu.import("resource://gre/modules/Services.jsm");
+
 // get release notes and vendor URL from prefs
-var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                          .getService(Components.interfaces.nsIURLFormatter);
-var releaseNotesURL = formatter.formatURLPref("app.releaseNotesURL");
+var releaseNotesURL = Services.urlFormatter.formatURLPref("app.releaseNotesURL");
 if (releaseNotesURL != "about:blank") {
   var relnotes = document.getElementById("releaseNotesURL");
   relnotes.setAttribute("href", releaseNotesURL);
   relnotes.parentNode.removeAttribute("hidden");
 }
 
-var vendorURL = formatter.formatURLPref("app.vendorURL");
+var vendorURL = Services.urlFormatter.formatURLPref("app.vendorURL");
 if (vendorURL != "about:blank") {
   var vendor = document.getElementById("vendorURL");
   vendor.setAttribute("href", vendorURL);
 }
 
 // insert the version of the XUL application (!= XULRunner platform version)
-var versionNum = Components.classes["@mozilla.org/xre/app-info;1"]
-                           .getService(Components.interfaces.nsIXULAppInfo)
-                           .version;
+var versionNum = Services.appinfo.version;
 var version = document.getElementById("version");
 version.textContent += " " + versionNum;
 
