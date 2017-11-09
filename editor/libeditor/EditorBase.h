@@ -607,11 +607,15 @@ protected:
   virtual bool IsBlockNode(nsINode* aNode);
 
   /**
-   * Helper for GetPreviousNodeInternal() and GetNextNode().
+   * Helper for GetPreviousNodeInternal() and GetNextNodeInternal().
    */
   nsIContent* FindNextLeafNode(nsINode* aCurrentNode,
                                bool aGoForward,
                                bool bNoBlockCrossing);
+  nsIContent* FindNode(nsINode* aCurrentNode,
+                       bool aGoForward,
+                       bool aEditableNode,
+                       bool bNoBlockCrossing);
 
   /**
    * Get the node immediately previous node of aNode.
@@ -634,6 +638,29 @@ protected:
   nsIContent* GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
                                       bool aFindEditableNode,
                                       bool aNoBlockCrossing);
+
+  /**
+   * Get the node immediately next node of aNode.
+   * @param aNode                The node from which we start the search.
+   * @param aFindEditableNode    If true, only return an editable node.
+   * @param aNoBlockCrossing     If true, don't move across "block" nodes,
+   *                             whatever that means.
+   * @return                     The node that occurs after aNode in the
+   *                             tree, skipping non-editable nodes if
+   *                             aFindEditableNode is true.  If there is no
+   *                             next node, returns nullptr.
+   */
+  nsIContent* GetNextNodeInternal(nsINode& aNode,
+                                  bool aFindEditableNode,
+                                  bool bNoBlockCrossing);
+
+  /**
+   * And another version that takes a point in DOM tree rather than a node.
+   */
+  nsIContent* GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
+                                  bool aFindEditableNode,
+                                  bool aNoBlockCrossing);
+
 
   virtual nsresult InstallEventListeners();
   virtual void CreateEventListeners();
@@ -796,34 +823,65 @@ public:
   }
 
   /**
-   * Get the node immediately after to aCurrentNode.
-   * @param aCurrentNode   the node from which we start the search
-   * @param aEditableNode  if true, only return an editable node
-   * @param aResultNode    [OUT] the node that occurs after aCurrentNode in the
-   *                             tree, skipping non-editable nodes if
-   *                             aEditableNode is true.  If there is no prior
-   *                             node, aResultNode will be nullptr.
+   * Get the next node.
+   *
+   * Note that methods taking EditorRawDOMPoint behavior includes the
+   * child at offset as search target.  E.g., following code causes infinite
+   * loop.
+   *
+   * EditorRawDOMPoint point(aEditableNode);
+   * while (nsIContent* content = GetNextEditableNode(point)) {
+   *   // Do something...
+   *   point.Set(content);
+   * }
+   *
+   * Following code must be you expected:
+   *
+   * while (nsIContent* content = GetNextEditableNode(point)) {
+   *   // Do something...
+   *   DebugOnly<bool> advanced = point.Advanced();
+   *   MOZ_ASSERT(advanced);
+   *   point.Set(point.GetChildAtOffset());
+   * }
+   *
+   * On the other hand, the methods taking nsINode behavior must be what
+   * you want.  They start to search the result from next node of the given
+   * node.
    */
-  nsIContent* GetNextNode(nsINode* aCurrentNode,
-                          bool aEditableNode,
-                          bool bNoBlockCrossing = false);
+  nsIContent* GetNextNode(const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextNodeInternal(aPoint, false, false);
+  }
+  nsIContent* GetNextEditableNode(const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextNodeInternal(aPoint, true, false);
+  }
+  nsIContent* GetNextNodeInBlock(const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextNodeInternal(aPoint, false, true);
+  }
+  nsIContent* GetNextEditableNodeInBlock(
+                const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextNodeInternal(aPoint, true, true);
+  }
+  nsIContent* GetNextNode(nsINode& aNode)
+  {
+    return GetNextNodeInternal(aNode, false, false);
+  }
+  nsIContent* GetNextEditableNode(nsINode& aNode)
+  {
+    return GetNextNodeInternal(aNode, true, false);
+  }
+  nsIContent* GetNextNodeInBlock(nsINode& aNode)
+  {
+    return GetNextNodeInternal(aNode, false, true);
+  }
+  nsIContent* GetNextEditableNodeInBlock(nsINode& aNode)
+  {
+    return GetNextNodeInternal(aNode, true, true);
+  }
 
-  /**
-   * And another version that takes a {parent,offset} pair rather than a node.
-   */
-  nsIContent* GetNextNode(nsINode* aParentNode,
-                          int32_t aOffset,
-                          nsINode* aChildAtOffset,
-                          bool aEditableNode,
-                          bool aNoBlockCrossing = false);
-
-  /**
-   * Helper for GetNextNode() and GetPreviousNodeInternal().
-   */
-  nsIContent* FindNode(nsINode* aCurrentNode,
-                       bool aGoForward,
-                       bool aEditableNode,
-                       bool bNoBlockCrossing);
   /**
    * Get the rightmost child of aCurrentNode;
    * return nullptr if aCurrentNode has no children.
