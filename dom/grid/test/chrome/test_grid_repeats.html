@@ -12,6 +12,7 @@ body {
   display: grid;
   width: 600px;
   grid-gap: 0px;
+  grid-auto-column: 50px;
   background-color: #f00;
 }
 .grid1 {
@@ -44,6 +45,10 @@ body {
 .grid10 {
   grid-template-columns: [real-before] repeat(auto-fit, [before] 100px) [real-after];
 }
+.grid11 {
+  grid-template-columns: repeat(auto-fit, 100px);
+}
+
 .box {
   background-color: #444;
   color: #fff;
@@ -63,6 +68,9 @@ body {
 .e {
   grid-column: 5;
 }
+.f {
+  grid-column: -9;
+}
 
 </style>
 
@@ -73,16 +81,44 @@ SimpleTest.waitForExplicitFinish();
 
 function testLines(elementName, grid, expectedValues) {
   for (let i = 0; i < grid.cols.lines.length; i++) {
-    is(grid.cols.lines[i].number, (i + 1), elementName + " line " + (i + 1) + " has expected number.");
-    is(grid.cols.lines[i].start, expectedValues[i].start, elementName + " line " + (i + 1) + " has expected start.");
-    is(grid.cols.lines[i].breadth, 0, elementName + " line " + (i + 1) + " has zero breadth.");
-    is(grid.cols.lines[i].names + "", expectedValues[i].names, elementName + " line " + (i + 1) + " has expected names.");
+    // 'number' is optional.
+    if (typeof(expectedValues[i].number) != "undefined") {
+      is(grid.cols.lines[i].number, expectedValues[i].number, elementName + " line " + (i + 1) + " has expected number.");
+    } else {
+      // If 'number' is omitted, assume that first line is line 1 and increase from there.
+      is(grid.cols.lines[i].number, (i + 1), elementName + " line " + (i + 1) + " has expected number.");
+    }
+
+    // 'negativeNumber' is optional.
+    if (typeof(expectedValues[i].negativeNumber) != "undefined") {
+      // Check for the supplied number.
+      is(grid.cols.lines[i].negativeNumber, expectedValues[i].negativeNumber, elementName + " line " + (i + 1) + " has expected negativeNumber.");
+    }
+
+    // 'start' is optional.
+    if (typeof(expectedValues[i].start) != "undefined") {
+      is(grid.cols.lines[i].start, expectedValues[i].start, elementName + " line " + (i + 1) + " has expected start.");
+    }
+
+    // 'breadth' is optional.
+    if (typeof(expectedValues[i].breadth) != "undefined") {
+      is(grid.cols.lines[i].breadth, 0, elementName + " line " + (i + 1) + " has zero breadth.");
+    }
+
+    // 'names' is optional.
+    if (typeof(expectedValues[i].names) != "undefined") {
+      is(grid.cols.lines[i].names + "", expectedValues[i].names, elementName + " line " + (i + 1) + " has expected names.");
+    }
   }
 }
 
 function runTests() {
-  let wrapper = document.getElementById("wrapper1");
-  let grid = wrapper.getGridFragments()[0];
+  let wrapper;
+  let grid;
+  let expectedValues;
+
+  wrapper = document.getElementById("wrapper1");
+  grid = wrapper.getGridFragments()[0];
 
   // test auto-fit count
   is(grid.cols.tracks.length, 7, "Grid column track array reports removed auto-fit columns.");
@@ -93,7 +129,7 @@ function runTests() {
     "Resolved value of grid-template-columns reports removed auto-fits as '0px'.");
 
   // test starts, breadths, and states
-  let expectedValues = [
+  expectedValues = [
     { "start": 0,
       "breadth": 50,
       "state": "static" },
@@ -296,6 +332,35 @@ function runTests() {
   ];
   testLines("wrapper10", grid, expectedValues);
 
+
+  wrapper = document.getElementById("wrapper11");
+  grid = wrapper.getGridFragments()[0];
+
+  // test line numbers and negativeNumbers
+  expectedValues = [
+    { "number": 0,
+      "negativeNumber": -9 },
+    { "number": 0,
+      "negativeNumber": -8 },
+    { "number": 1,
+      "negativeNumber": -7 },
+    { "number": 2,
+      "negativeNumber": -6 },
+    { "number": 3,
+      "negativeNumber": -5 },
+    { "number": 4,
+      "negativeNumber": -4 },
+    { "number": 5,
+      "negativeNumber": -3 },
+    { "number": 6,
+      "negativeNumber": -2 },
+    { "number": 7,
+      "negativeNumber": -1 },
+    { "number": 8,
+      "negativeNumber": 0 },
+  ];
+  testLines("wrapper11", grid, expectedValues);
+
   SimpleTest.finish();
 }
 </script>
@@ -352,6 +417,13 @@ function runTests() {
   <div id="wrapper10" class="wrapper grid10">
     <div id="boxB" class="box b">B</div>
     <div id="boxE" class="box e">E</div>
+  </div>
+
+  <br/>
+  <div id="wrapper11" class="wrapper grid11">
+    <div id="boxF" class="box f">F</div>
+    <div id="boxB" class="box b">B</div>
+    <div id="boxD" class="box d">D</div>
   </div>
 
 </body>
