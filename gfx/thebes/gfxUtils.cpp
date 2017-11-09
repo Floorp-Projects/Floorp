@@ -1301,7 +1301,8 @@ gfxUtils::GetAsLZ4Base64Str(DataSourceSurface* aSourceSurface)
   int32_t dataSize = aSourceSurface->GetSize().height * aSourceSurface->Stride();
   auto compressedData = MakeUnique<char[]>(LZ4::maxCompressedSize(dataSize));
   if (compressedData) {
-    int nDataSize = LZ4::compress((char*)aSourceSurface->GetData(),
+    DataSourceSurface::ScopedMap map(aSourceSurface, DataSourceSurface::READ);
+    int nDataSize = LZ4::compress((char*)map.GetData(),
                                   dataSize,
                                   compressedData.get());
     if (nDataSize > 0) {
