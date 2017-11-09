@@ -510,8 +510,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
                       ps.BUTTON_POS_1_DEFAULT;
 
     // If running in context of the browser chrome, window does not exist.
-    var targetWindow = typeof window === "undefined" ? null : window;
-    let pressed = Services.prompt.confirmEx(targetWindow, title, body, buttonFlags,
+    let pressed = Services.prompt.confirmEx(null, title, body, buttonFlags,
                                        continueLabel, null, null, null,
                                        {});
     return pressed === 0; // 0 is the "continue" button
