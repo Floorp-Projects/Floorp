@@ -37,7 +37,6 @@ LOCAL_INCLUDES += [
     '/dom/filesystem',
     '/dom/geolocation',
     '/dom/html',
-    '/dom/json',
     '/dom/jsurl',
     '/dom/media',
     '/dom/offline',
