@@ -34,6 +34,8 @@ struct GradientCacheKey : public PLDHashEntryHdr {
     : mStops(aOther->mStops), mExtend(aOther->mExtend), mBackendType(aOther->mBackendType)
   { }
 
+  GradientCacheKey(GradientCacheKey&& aOther) = default;
+
   union FloatUint32
   {
     float    f;
@@ -86,9 +88,9 @@ struct GradientCacheKey : public PLDHashEntryHdr {
  * to the cache entry to be able to be tracked by the nsExpirationTracker.
  * */
 struct GradientCacheData {
-  GradientCacheData(GradientStops* aStops, const GradientCacheKey& aKey)
+  GradientCacheData(GradientStops* aStops, GradientCacheKey&& aKey)
     : mStops(aStops),
-      mKey(aKey)
+      mKey(Move(aKey))
   {}
 
   GradientCacheData(const GradientCacheData& aOther)
