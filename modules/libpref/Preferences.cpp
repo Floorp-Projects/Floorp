@@ -1065,17 +1065,6 @@ pref_HashPref(const char* aKey,
   return NS_OK;
 }
 
-static size_t
-pref_SizeOfPrivateData(MallocSizeOf aMallocSizeOf)
-{
-  size_t n = gPrefNameArena.SizeOfExcludingThis(aMallocSizeOf);
-  for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
-    n += aMallocSizeOf(node);
-    n += aMallocSizeOf(node->mDomain);
-  }
-  return n;
-}
-
 // Bool function that returns whether or not the preference is locked and
 // therefore cannot be changed.
 static bool
@@ -3452,7 +3441,11 @@ Preferences::SizeOfIncludingThisAndOtherStuff(
            ->SizeOfIncludingThis(aMallocSizeOf);
   }
 
-  n += pref_SizeOfPrivateData(aMallocSizeOf);
+  n += gPrefNameArena.SizeOfExcludingThis(aMallocSizeOf);
+  for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
+    n += aMallocSizeOf(node);
+    n += aMallocSizeOf(node->mDomain);
+  }
 
   return n;
 }
