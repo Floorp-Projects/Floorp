@@ -27,6 +27,10 @@ ClientHandleParent::RecvTeardown()
 void
 ClientHandleParent::ActorDestroy(ActorDestroyReason aReason)
 {
+  if (mSource) {
+    mSource->DetachHandle(this);
+    mSource = nullptr;
+  }
 }
 
 PClientHandleOpParent*
@@ -53,16 +57,31 @@ ClientHandleParent::RecvPClientHandleOpConstructor(PClientHandleOpParent* aActor
 
 ClientHandleParent::ClientHandleParent()
   : mService(ClientManagerService::GetOrCreateInstance())
+  , mSource(nullptr)
 {
 }
 
 ClientHandleParent::~ClientHandleParent()
 {
+  MOZ_DIAGNOSTIC_ASSERT(!mSource);
 }
 
 void
 ClientHandleParent::Init(const IPCClientInfo& aClientInfo)
 {
+  mSource = mService->FindSource(aClientInfo.id(), aClientInfo.principalInfo());
+  if (!mSource) {
+    Unused << Send__delete__(this);
+    return;
+  }
+
+  mSource->AttachHandle(this);
+}
+
+ClientSourceParent*
+ClientHandleParent::GetSource() const
+{
+  return mSource;
 }
 
 } // namespace dom

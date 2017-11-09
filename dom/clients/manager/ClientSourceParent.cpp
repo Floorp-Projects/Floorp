@@ -29,6 +29,14 @@ void
 ClientSourceParent::ActorDestroy(ActorDestroyReason aReason)
 {
   mService->RemoveSource(this);
+
+  nsTArray<ClientHandleParent*> handleList(mHandleList);
+  for (ClientHandleParent* handle : handleList) {
+    // This should trigger DetachHandle() to be called removing
+    // the entry from the mHandleList.
+    Unused << ClientHandleParent::Send__delete__(handle);
+  }
+  MOZ_DIAGNOSTIC_ASSERT(mHandleList.IsEmpty());
 }
 
 PClientSourceOpParent*
@@ -54,12 +62,29 @@ ClientSourceParent::ClientSourceParent(const ClientSourceConstructorArgs& aArgs)
 
 ClientSourceParent::~ClientSourceParent()
 {
+  MOZ_DIAGNOSTIC_ASSERT(mHandleList.IsEmpty());
 }
 
 const ClientInfo&
 ClientSourceParent::Info() const
 {
   return mClientInfo;
+}
+
+void
+ClientSourceParent::AttachHandle(ClientHandleParent* aClientHandle)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aClientHandle);
+  MOZ_ASSERT(!mHandleList.Contains(aClientHandle));
+  mHandleList.AppendElement(aClientHandle);
+}
+
+void
+ClientSourceParent::DetachHandle(ClientHandleParent* aClientHandle)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aClientHandle);
+  MOZ_ASSERT(mHandleList.Contains(aClientHandle));
+  mHandleList.RemoveElement(aClientHandle);
 }
 
 } // namespace dom

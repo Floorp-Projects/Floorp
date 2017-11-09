@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+  'ClientHandle.h',
   'ClientInfo.h',
   'ClientIPCUtils.h',
   'ClientManager.h',
@@ -17,6 +18,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+  'ClientHandle.cpp',
   'ClientHandleChild.cpp',
   'ClientHandleOpChild.cpp',
   'ClientHandleOpParent.cpp',
