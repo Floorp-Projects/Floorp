@@ -80,12 +80,6 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
     // Make a "root" layer data that has everything else as descendants
     mLayerScrollData.emplace_back();
     mLayerScrollData.back().InitializeRoot(mLayerScrollData.size() - 1);
-    if (aDisplayListBuilder->IsBuildingLayerEventRegions()) {
-      nsIPresShell* shell = aDisplayListBuilder->RootReferenceFrame()->PresShell();
-      if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(shell)) {
-        mLayerScrollData.back().SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
-      }
-    }
     auto callback = [&aScrollData](FrameMetrics::ViewID aScrollId) -> bool {
       return aScrollData.HasMetadataFor(aScrollId);
     };
