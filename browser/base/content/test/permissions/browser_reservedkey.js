@@ -42,3 +42,51 @@ add_task(async function test_reserved_shortcuts() {
 
   await BrowserTestUtils.removeTab(tab);
 });
+
+// This test checks that Alt+<key> and F10 cannot be blocked when the preference is set.
+if (navigator.platform.indexOf("Mac") == -1) {
+  add_task(async function test_accesskeys_menus() {
+    await new Promise(resolve => {
+      SpecialPowers.pushPrefEnv({"set": [["permissions.default.shortcuts", 2]]}, resolve);
+    });
+
+    const uri = "data:text/html,<body onkeydown='if (event.key == \"H\" || event.key == \"F10\") event.preventDefault();'>";
+    let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
+
+    // Pressing Alt+H should open the Help menu.
+    let helpPopup = document.getElementById("menu_HelpPopup");
+    let popupShown = BrowserTestUtils.waitForEvent(helpPopup, "popupshown");
+    EventUtils.synthesizeKey("VK_ALT", { type: "keydown" });
+    EventUtils.synthesizeKey("H", { altKey: true });
+    EventUtils.synthesizeKey("VK_ALT", { type: "keyup" });
+    await popupShown;
+
+    ok(true, "Help menu opened");
+
+    let popupHidden = BrowserTestUtils.waitForEvent(helpPopup, "popuphidden");
+    helpPopup.hidePopup();
+    await popupHidden;
+
+    // Pressing F10 should focus the menubar. On Linux, the file menu should open, but on Windows,
+    // pressing Down will open the file menu.
+    let menubar = document.getElementById("main-menubar");
+    let menubarActive = BrowserTestUtils.waitForEvent(menubar, "DOMMenuBarActive");
+    EventUtils.sendKey("F10");
+    await menubarActive;
+
+    let filePopup = document.getElementById("menu_FilePopup");
+    popupShown = BrowserTestUtils.waitForEvent(filePopup, "popupshown");
+    if (navigator.platform.indexOf("Win") >= 0) {
+      EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+    }
+    await popupShown;
+
+    ok(true, "File menu opened");
+
+    popupHidden = BrowserTestUtils.waitForEvent(filePopup, "popuphidden");
+    filePopup.hidePopup();
+    await popupHidden;
+
+    await BrowserTestUtils.removeTab(tab1);
+  });
+}
