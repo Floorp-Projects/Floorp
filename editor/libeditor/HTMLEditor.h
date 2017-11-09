@@ -777,10 +777,38 @@ protected:
 
   nsIContent* GetNextHTMLSibling(nsINode* aNode);
 
-  nsIContent* GetPriorHTMLNode(nsINode* aNode, bool aNoBlockCrossing = false);
-  nsIContent* GetPriorHTMLNode(nsINode* aParent, int32_t aOffset,
-                               nsINode* aChildAtOffset,
-                               bool aNoBlockCrossing = false);
+  /**
+   * GetPreviousEditableHTMLNode*() methods are similar to
+   * EditorBase::GetPreviousEditableNode() but this won't return nodes outside
+   * active editing host.
+   */
+  nsIContent* GetPreviousEditableHTMLNode(nsINode& aNode)
+  {
+    return GetPreviousEditableHTMLNodeInternal(aNode, false);
+  }
+  nsIContent* GetPreviousEditableHTMLNodeInBlock(nsINode& aNode)
+  {
+    return GetPreviousEditableHTMLNodeInternal(aNode, true);
+  }
+  nsIContent* GetPreviousEditableHTMLNode(const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousEditableHTMLNodeInternal(aPoint, false);
+  }
+  nsIContent* GetPreviousEditableHTMLNodeInBlock(
+                const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousEditableHTMLNodeInternal(aPoint, true);
+  }
+
+  /**
+   * GetPreviousEditableHTMLNodeInternal() methods are common implementation
+   * of above methods.  Please don't use this method directly.
+   */
+  nsIContent* GetPreviousEditableHTMLNodeInternal(nsINode& aNode,
+                                                  bool aNoBlockCrossing);
+  nsIContent* GetPreviousEditableHTMLNodeInternal(
+                const EditorRawDOMPoint& aPoint,
+                bool aNoBlockCrossing);
 
   nsIContent* GetNextHTMLNode(nsINode* aNode, bool aNoBlockCrossing = false);
   nsIContent* GetNextHTMLNode(nsINode* aParent, int32_t aOffset,
