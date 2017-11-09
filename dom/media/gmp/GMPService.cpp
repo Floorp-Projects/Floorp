@@ -268,10 +268,10 @@ GeckoMediaPluginService::GetCDM(const NodeId& aNodeId,
              }
              holder->Resolve(cdm, __func__);
            },
-           [rawHolder] {
+           [rawHolder](MediaResult result) {
              nsPrintfCString reason(
-               "%s::%s failed since GetContentParent rejects the promise.",
-               __CLASS__, __FUNCTION__);
+               "%s::%s failed since GetContentParent rejects the promise with reason %s.",
+               __CLASS__, __FUNCTION__, result.Description().get());
              UniquePtr<PromiseHolder> holder(rawHolder);
              holder->Reject(MediaResult(NS_ERROR_FAILURE, reason.get()), __func__);
            });
