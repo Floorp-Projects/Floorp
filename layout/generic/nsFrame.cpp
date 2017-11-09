@@ -2528,10 +2528,6 @@ public:
 static void
 CheckForApzAwareEventHandlers(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 {
-  if (aBuilder->GetAncestorHasApzAwareEventHandler()) {
-    return;
-  }
-
   nsIContent* content = aFrame->GetContent();
   if (!content) {
     return;
