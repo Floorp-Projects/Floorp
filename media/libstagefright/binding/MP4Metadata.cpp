@@ -66,7 +66,7 @@ public:
 
   MediaResult ReadTrackIndice(mp4parse_byte_data* aIndices, mozilla::TrackID aTrackID);
 
-  bool Init();
+  nsresult Init();
 
 private:
   void UpdateCrypto();
@@ -164,11 +164,16 @@ MP4Metadata::MP4Metadata(Stream* aSource)
  , mReportedAudioTrackTelemetry(false)
  , mReportedVideoTrackTelemetry(false)
 {
-  mRust->Init();
 }
 
 MP4Metadata::~MP4Metadata()
 {
+}
+
+nsresult
+MP4Metadata::Parse() const
+{
+  return mRust->Init();
 }
 
 /*static*/ MP4Metadata::ResultAndByteBuffer
@@ -284,15 +289,6 @@ MP4MetadataRust::MP4MetadataRust(Stream* aSource)
   : mSource(aSource)
   , mRustSource(aSource)
 {
-}
-
-MP4MetadataRust::~MP4MetadataRust()
-{
-}
-
-bool
-MP4MetadataRust::Init()
-{
   mp4parse_io io = { read_source, &mRustSource };
   mRustParser.reset(mp4parse_new(&io));
   MOZ_ASSERT(mRustParser);
@@ -300,21 +296,25 @@ MP4MetadataRust::Init()
   if (MOZ_LOG_TEST(gMP4MetadataLog, LogLevel::Debug)) {
     mp4parse_log(true);
   }
+}
 
-  mp4parse_status rv = mp4parse_read(mRustParser.get());
-  MOZ_LOG(gMP4MetadataLog, LogLevel::Debug, ("rust parser returned %d\n", rv));
-  Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_SUCCESS,
-                        rv == mp4parse_status_OK);
-  if (rv != mp4parse_status_OK && rv != mp4parse_status_OOM) {
-    MOZ_LOG(gMP4MetadataLog, LogLevel::Info, ("Rust mp4 parser fails to parse this stream."));
-    MOZ_ASSERT(rv > 0);
-    Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_ERROR_CODE, rv);
-    return false;
+MP4MetadataRust::~MP4MetadataRust()
+{
+}
+
+nsresult
+MP4MetadataRust::Init()
+{
+  mp4parse_status rv = mp4parse_read(mParser.get());
+  if (rv != mp4parse_status_OK) {
+    MOZ_LOG(gMP4MetadataLog, LogLevel::Debug, ("Parse failed, return code %d\n", rv));
+    return rv == mp4parse_status_OOM ? NS_ERROR_OUT_OF_MEMORY
+                                     : NS_ERROR_DOM_MEDIA_METADATA_ERR;
   }
 
   UpdateCrypto();
 
-  return true;
+  return NS_OK;
 }
 
 void
