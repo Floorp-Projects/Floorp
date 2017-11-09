@@ -44,13 +44,7 @@ nsJSON::~nsJSON()
 {
 }
 
-NS_IMETHODIMP
-nsJSON::DecodeFromStream(nsIInputStream *aStream, int32_t aContentLength,
-                         JSContext* cx, JS::MutableHandle<JS::Value> aRetval)
-{
-  return DecodeInternal(cx, aStream, aContentLength, true, aRetval);
-}
-
+// TODO This is going to be removed in the next patches!
 nsresult
 nsJSON::DecodeInternal(JSContext* cx,
                        nsIInputStream *aStream,
