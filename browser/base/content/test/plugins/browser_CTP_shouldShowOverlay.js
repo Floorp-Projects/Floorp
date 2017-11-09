@@ -7,12 +7,6 @@
 /* This test ensures that the click-to-play "Activate Plugin" overlay
  * is shown when expected.
  * All testcases are in the plugin_shouldShowOverlay.html file.
- *
- * Note: Technically, the overlay is *always* shown. When this test was
- * originally written, the meaning of "shown" was "shown with the contents",
- * as opposed to "shown as blank". The behavior hasn't changed, but the naming
- * has: now, a "shown as blank" overlay no longer receives a ".hidden" class.
- * It receives a sizing="blank" attribute.
  */
 
 var rootDir = getRootDirectory(gTestPath);
@@ -55,7 +49,7 @@ add_task(async function() {
       Assert.ok(overlay, `overlay exists in ${testcase.id}`);
 
       let expectedVisibility = (testcase.getAttribute("shouldshow") == "true");
-      Assert.ok((overlay.getAttribute("sizing") != "blank") == expectedVisibility,
+      Assert.ok(overlay.classList.contains("visible") == expectedVisibility,
                 `The expected visibility is correct in ${testcase.id}`);
     }
   })
