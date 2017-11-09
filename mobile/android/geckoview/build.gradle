@@ -81,6 +81,26 @@ android {
         buildConfigField 'String', "USER_AGENT_GECKOVIEW_TABLET", "\"Mozilla/5.0 (Android \" + android.os.Build.VERSION.RELEASE + \"; Tablet; rv: ${mozconfig.substs.MOZ_APP_VERSION}) Gecko/${mozconfig.substs.MOZ_APP_VERSION} GeckoView/${mozconfig.substs.MOZ_APP_VERSION}\"";
 
         buildConfigField 'String', "ANDROID_CPU_ARCH", "\"${mozconfig.substs.ANDROID_CPU_ARCH}\"";
+
+        buildConfigField 'int', 'MIN_SDK_VERSION', mozconfig.substs.MOZ_ANDROID_MIN_SDK_VERSION;
+
+        // Is the underlying compiled C/C++ code compiled with --enable-debug?
+        buildConfigField 'boolean', 'DEBUG_BUILD', mozconfig.substs.DEBUG_BUILD ? 'true' : 'false';
+
+        // See this wiki page for more details about channel specific build defines:
+        // https://wiki.mozilla.org/Platform/Channel-specific_build_defines
+        // This makes no sense for GeckoView and should be removed as soon as possible.
+        buildConfigField 'boolean', 'RELEASE_OR_BETA', mozconfig.substs.RELEASE_OR_BETA ? 'true' : 'false';
+        // This makes no sense for GeckoView and should be removed as soon as possible.
+        buildConfigField 'boolean', 'NIGHTLY_BUILD', mozconfig.substs.NIGHTLY_BUILD ? 'true' : 'false';
+        // This makes no sense for GeckoView and should be removed as soon as possible.
+        buildConfigField 'boolean', 'MOZ_CRASHREPORTER', mozconfig.substs.MOZ_CRASH_REPORTER ? 'true' : 'false';
+
+        // Official corresponds, roughly, to whether this build is performed on
+        // Mozilla's continuous integration infrastructure. You should disable
+        // developer-only functionality when this flag is set.
+        // This makes no sense for GeckoView and should be removed as soon as possible.
+        buildConfigField 'boolean', 'MOZILLA_OFFICIAL', mozconfig.substs.MOZILLA_OFFICIAL ? 'true' : 'false';
     }
 
     buildTypes {

@@ -36,9 +36,9 @@ import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.ReflectionTarget;
+import org.mozilla.geckoview.BuildConfig;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,7 +48,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     private static final String LOGTAG = "GeckoHlsPlayer";
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
     private static final int MAX_TIMELINE_ITEM_LINES = 3;
-    private static final boolean DEBUG = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD;
+    private static final boolean DEBUG = BuildConfig.NIGHTLY_BUILD || BuildConfig.DEBUG_BUILD;
 
     private static AtomicInteger sPlayerId = new AtomicInteger(0);
     /*
@@ -267,7 +267,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     private HttpDataSource.Factory buildHttpDataSourceFactory(DefaultBandwidthMeter bandwidthMeter) {
         return new DefaultHttpDataSourceFactory(
-            AppConstants.USER_AGENT_FENNEC_MOBILE,
+            BuildConfig.USER_AGENT_GECKOVIEW_MOBILE,
             bandwidthMeter /* listener */,
             DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
             DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,

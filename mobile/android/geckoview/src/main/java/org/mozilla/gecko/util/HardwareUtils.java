@@ -5,9 +5,6 @@
 
 package org.mozilla.gecko.util;
 
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.SysInfo;
-
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -129,7 +126,7 @@ public final class HardwareUtils {
     public static boolean isSupportedSystem() {
         // We've had crash reports from users on API 10 (with minSDK==15). That shouldn't even install,
         // but since it does we need to protect against it:
-        if (Build.VERSION.SDK_INT < AppConstants.Versions.MIN_SDK_VERSION) {
+        if (Build.VERSION.SDK_INT < BuildConfig.MIN_SDK_VERSION) {
             return false;
         }
 
