@@ -290,7 +290,7 @@ SendAccumulatedData(TActor* ipcActor)
   }
 
   // Send the accumulated data to the parent process.
-  mozilla::Unused << NS_WARN_IF(!ipcActor);
+  MOZ_ASSERT(ipcActor);
   if (histogramsToSend.Length()) {
     mozilla::Unused <<
       NS_WARN_IF(!ipcActor->SendAccumulateChildHistograms(histogramsToSend));
