@@ -584,7 +584,7 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
   // never be targeted --- something nsSubDocumentFrame in an ancestor document
   // would be targeted instead.
   nsIFrame* restrictToDescendants = target ?
-    target->PresContext()->PresShell()->GetRootFrame() : aRootFrame;
+    target->PresShell()->GetRootFrame() : aRootFrame;
 
   nsRect targetRect = GetTargetRect(aRootFrame, aPointRelativeToRootFrame,
                                     restrictToDescendants, prefs, aFlags);
