@@ -113,7 +113,11 @@ public class GeckoAppShell
     private static final CrashHandler CRASH_HANDLER = new CrashHandler() {
         @Override
         protected String getAppPackageName() {
-            return AppConstants.ANDROID_PACKAGE_NAME;
+            final Context appContext = getAppContext();
+            if (appContext == null) {
+                return "<unknown>";
+            }
+            return appContext.getPackageName();
         }
 
         @Override
