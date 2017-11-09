@@ -46,20 +46,20 @@ public:
     MOZ_ASSERT_IF(aRequireTailDispatch, NS_IsMainThread() && aTarget->IsOnCurrentThread());
   }
 
-  virtual void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                        DispatchFailureHandling aFailureHandling = AssertDispatchSuccess,
-                        DispatchReason aReason = NormalDispatch) override
+  virtual nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+                            DispatchFailureHandling aFailureHandling = AssertDispatchSuccess,
+                            DispatchReason aReason = NormalDispatch) override
   {
     AbstractThread* currentThread;
     if (aReason != TailDispatch && (currentThread = GetCurrent()) && RequiresTailDispatch(currentThread)) {
       currentThread->TailDispatcher().AddTask(this, Move(aRunnable), aFailureHandling);
-      return;
+      return NS_OK;
     }
 
     RefPtr<nsIRunnable> runner(new Runner(this, Move(aRunnable), false /* already drained by TaskGroupRunnable  */));
     nsresult rv = mTarget->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
     MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
-    Unused << rv;
+    return rv;
   }
 
   // Prevent a GCC warning about the other overload of Dispatch being hidden.
