@@ -895,7 +895,7 @@ HTMLEditor::IsVisibleBRElement(nsINode* aNode)
 
   // If there's an inline node after this one that's not a break, and also a
   // prior break, this break must be visible.
-  nsCOMPtr<nsINode> priorNode = GetPriorHTMLNode(aNode, true);
+  nsCOMPtr<nsINode> priorNode = GetPreviousEditableHTMLNodeInBlock(*aNode);
   if (priorNode && TextEditUtils::IsBreak(priorNode)) {
     return true;
   }
@@ -3867,46 +3867,26 @@ HTMLEditor::GetNextHTMLSibling(nsINode* aNode)
   return node;
 }
 
-/**
- * GetPriorHTMLNode() returns the previous editable leaf node, if there is
- * one within the <body>.
- */
 nsIContent*
-HTMLEditor::GetPriorHTMLNode(nsINode* aNode,
-                             bool aNoBlockCrossing)
+HTMLEditor::GetPreviousEditableHTMLNodeInternal(nsINode& aNode,
+                                                bool aNoBlockCrossing)
 {
-  MOZ_ASSERT(aNode);
-
   if (!GetActiveEditingHost()) {
     return nullptr;
   }
-
-  return aNoBlockCrossing ? GetPreviousEditableNodeInBlock(*aNode) :
-                            GetPreviousEditableNode(*aNode);
+  return aNoBlockCrossing ? GetPreviousEditableNodeInBlock(aNode) :
+                            GetPreviousEditableNode(aNode);
 }
 
-/**
- * GetPriorHTMLNode() is same as above but takes {parent,offset} instead of
- * node.
- */
 nsIContent*
-HTMLEditor::GetPriorHTMLNode(nsINode* aParent,
-                             int32_t aOffset,
-                             nsINode* aChildAtOffset,
-                             bool aNoBlockCrossing)
+HTMLEditor::GetPreviousEditableHTMLNodeInternal(const EditorRawDOMPoint& aPoint,
+                                                bool aNoBlockCrossing)
 {
-  MOZ_ASSERT(aParent);
-
   if (!GetActiveEditingHost()) {
     return nullptr;
   }
-
-  EditorRawDOMPoint point(aParent,
-                          aChildAtOffset && aChildAtOffset->IsContent() ?
-                            aChildAtOffset->AsContent() : nullptr,
-                          aOffset);
-  return aNoBlockCrossing ? GetPreviousEditableNodeInBlock(point) :
-                            GetPreviousEditableNode(point);
+  return aNoBlockCrossing ? GetPreviousEditableNodeInBlock(aPoint) :
+                            GetPreviousEditableNode(aPoint);
 }
 
 /**
@@ -4019,7 +3999,7 @@ HTMLEditor::GetLastEditableLeaf(nsINode& aNode)
 {
   nsCOMPtr<nsIContent> child = GetRightmostChild(&aNode, false);
   while (child && (!IsEditable(child) || child->HasChildren())) {
-    child = GetPriorHTMLNode(child);
+    child = GetPreviousEditableHTMLNode(*child);
 
     // Only accept nodes that are descendants of aNode
     if (!aNode.Contains(child)) {
@@ -4534,7 +4514,7 @@ HTMLEditor::CopyLastEditableChildStyles(nsINode* aPreviousBlock,
     tmp = GetLastEditableChild(*child);
   }
   while (child && TextEditUtils::IsBreak(child)) {
-    child = GetPriorHTMLNode(child);
+    child = GetPreviousEditableHTMLNode(*child);
   }
   nsCOMPtr<Element> newStyles, deepestStyle;
   nsCOMPtr<nsINode> childNode = child;
