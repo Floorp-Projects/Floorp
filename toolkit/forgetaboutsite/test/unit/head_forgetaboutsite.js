@@ -8,7 +8,8 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+Cu.import("resource://gre/modules/Services.jsm");
+
 var profileDir = do_get_profile();
 
 /**
@@ -23,7 +24,7 @@ function cleanUp() {
   ];
 
   for (let i = 0; i < files.length; i++) {
-    let file = dirSvc.get("ProfD", Ci.nsIFile);
+    let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
     file.append(files[i]);
     if (file.exists())
       file.remove(false);

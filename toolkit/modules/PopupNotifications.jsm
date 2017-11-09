@@ -481,8 +481,7 @@ PopupNotifications.prototype = {
     notifications.push(notification);
 
     let isActiveBrowser = this._isActiveBrowser(browser);
-    let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-    let isActiveWindow = fm.activeWindow == this.window;
+    let isActiveWindow = Services.focus.activeWindow == this.window;
 
     if (isActiveBrowser) {
       if (isActiveWindow) {
