@@ -164,6 +164,18 @@ build preflight_all::
 	done
 endif
 
+# In automation, manage an sccache daemon. The starting of the server
+# needs to be in a make file so sccache inherits the jobserver.
+ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
+build::
+	# Terminate any sccache server that might still be around.
+	-$(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server > /dev/null 2>&1
+	# Start a new server, ensuring it gets the jobserver file descriptors
+	# from make (but don't use the + prefix when make -n is used, so that
+	# the command doesn't run in that case)
+	$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env RUST_LOG=sccache::compiler=debug SCCACHE_ERROR_LOG=$(OBJDIR)/dist/sccache.log $(MOZBUILD_MANAGE_SCCACHE_DAEMON) --start-server
+endif
+
 ####################################
 # Configure
 
@@ -286,6 +298,12 @@ $(OBJDIR_TARGETS):: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 ifdef MOZ_AUTOMATION
 build::
 	$(MAKE) -f $(TOPSRCDIR)/client.mk automation/build
+endif
+
+ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
+build::
+	# Terminate sccache server. This prints sccache stats.
+	-$(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server
 endif
 
 ifdef MOZ_POSTFLIGHT_ALL
