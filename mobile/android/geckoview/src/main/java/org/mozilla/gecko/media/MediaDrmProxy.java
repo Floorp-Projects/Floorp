@@ -10,7 +10,6 @@ import java.util.UUID;
 
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.AppConstants;
 
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;

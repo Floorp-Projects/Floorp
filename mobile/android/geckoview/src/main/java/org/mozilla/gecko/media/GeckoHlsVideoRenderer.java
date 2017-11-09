@@ -10,7 +10,7 @@ import android.media.MediaCodec.CryptoInfo;
 import android.os.Build;
 import android.util.Log;
 
-import org.mozilla.gecko.AppConstants;
+import org.mozilla.geckoview.BuildConfig;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
@@ -56,7 +56,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
         super(C.TRACK_TYPE_VIDEO, eventDispatcher);
         assertTrue(Build.VERSION.SDK_INT >= 16);
         LOGTAG = getClass().getSimpleName();
-        DEBUG = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD;;
+        DEBUG = BuildConfig.NIGHTLY_BUILD || BuildConfig.DEBUG_BUILD;;
     }
 
     @Override
@@ -351,7 +351,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
 
             GeckoHLSSample toQueue = mDemuxedNoDurationSamples.poll();
             mDemuxedInputSamples.offer(toQueue);
-            if (AppConstants.DEBUG_BUILD) {
+            if (BuildConfig.DEBUG_BUILD) {
                 Log.d(LOGTAG, "Demuxed sample PTS : " +
                               toQueue.info.presentationTimeUs + ", duration :" +
                               toQueue.duration + ", isKeyFrame(" +
