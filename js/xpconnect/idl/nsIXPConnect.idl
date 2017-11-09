@@ -375,9 +375,6 @@ interface nsIXPConnect : nsISupports
     getWrappedNativeOfJSObject(in JSContextPtr aJSContext,
                                in JSObjectPtr  aJSObj);
 
-    // Will return null if there is no JS stack right now.
-    readonly attribute nsIStackFrame                CurrentJSStack;
-
     void debugDump(in short depth);
     void debugDumpObject(in nsISupports aCOMObj, in short depth);
     void debugDumpJSStack(in boolean showArgs,

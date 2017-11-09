@@ -566,10 +566,7 @@
         <hbox id="PanelUI-panic-timeframe">
           <image id="PanelUI-panic-timeframe-icon" alt=""/>
           <vbox flex="1">
-            <hbox id="PanelUI-panic-header">
-              <image id="PanelUI-panic-timeframe-icon-small" alt=""/>
-              <description id="PanelUI-panic-mainDesc" flex="1">&panicButton.view.mainTimeframeDesc;</description>
-            </hbox>
+            <description id="PanelUI-panic-mainDesc">&panicButton.view.mainTimeframeDesc;</description>
             <radiogroup id="PanelUI-panic-timeSpan" aria-labelledby="PanelUI-panic-mainDesc" closemenu="none">
               <radio id="PanelUI-panic-5min" label="&panicButton.view.5min;" selected="true"
                      value="5" class="subviewradio"/>

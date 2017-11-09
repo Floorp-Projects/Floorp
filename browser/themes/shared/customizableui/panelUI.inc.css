@@ -1378,8 +1378,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 }
 
 #panic-button-success-icon,
-#PanelUI-panic-timeframe-icon,
-#PanelUI-panic-timeframe-icon-small {
+#PanelUI-panic-timeframe-icon {
   background-color: transparent;
   margin-inline-end: 10px;
 }
@@ -1391,32 +1390,11 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   width: 48px;
 }
 
-#PanelUI-panic-timeframe-icon-small {
-  list-style-image: url(chrome://browser/skin/panic-panel/header-small.png);
-  max-height: 32px;
-  width: 32px;
-}
-
-/* current attribute is only set when in use as a subview instead of a main view */
-#PanelUI-panicView[current] #PanelUI-panic-timeframe-icon {
-  display: none;
-}
-
-#PanelUI-panicView.cui-widget-panelview #PanelUI-panic-timeframe-icon-small {
-  display: none;
-}
-
-#panic-button-success-header,
-#PanelUI-panic-header {
+#panic-button-success-header {
   -moz-box-align: center;
   margin-bottom: 5px;
 }
 
-#PanelUI-panicView.cui-widget-panelview #PanelUI-panic-header {
-  margin-bottom: 0;
-}
-
-#PanelUI-panic-timeframe-icon-small:-moz-locale-dir(rtl),
 #PanelUI-panic-timeframe-icon:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
@@ -1558,10 +1536,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   #panic-button-success-icon,
   #PanelUI-panic-timeframe-icon {
     list-style-image: url(chrome://browser/skin/panic-panel/header@2x.png);
-  }
-
-  #PanelUI-panic-timeframe-icon-small {
-    list-style-image: url(chrome://browser/skin/panic-panel/header-small@2x.png);
   }
 
   #PanelUI-panic-actionlist-cookies {

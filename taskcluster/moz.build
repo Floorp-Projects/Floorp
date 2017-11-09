@@ -27,3 +27,4 @@ PYTHON_UNITTEST_MANIFESTS += [
     'taskgraph/test/python.ini',
 ]
 SPHINX_TREES['taskcluster'] = 'docs'
+SPHINX_PYTHON_PACKAGE_DIRS += ['taskgraph']

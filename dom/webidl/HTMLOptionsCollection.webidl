@@ -11,8 +11,8 @@
  */
 
 interface HTMLOptionsCollection : HTMLCollection {
-  [CEReactions]
-           attribute unsigned long length;
+  [CEReactions, SetterThrows]
+  attribute unsigned long length;
   [CEReactions, Throws]
   setter void (unsigned long index, HTMLOptionElement? option);
   [CEReactions, Throws]
@@ -20,5 +20,5 @@ interface HTMLOptionsCollection : HTMLCollection {
   [CEReactions, Throws]
   void remove(long index);
   [Throws]
-           attribute long selectedIndex;
+  attribute long selectedIndex;
 };

@@ -8495,6 +8495,14 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
 bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,
                                              nsRegion *aVisibleRegion)
 {
+  // nsDisplayTransform::GetBounds() returns an empty rect in nested 3d context.
+  // Calling mStoredList.RecomputeVisibility below for such transform causes the
+  // child display items to end up with empty visible rect.
+  // We avoid this by bailing out always if we are dealing with a 3d context.
+  if (mFrame->Extend3DContext() || mFrame->Combines3DTransformWithAncestors()) {
+    return true;
+  }
+
   /* As we do this, we need to be sure to
    * untransform the visible rect, since we want everything that's painting to
    * think that it's painting in its original rectangular coordinate space.
