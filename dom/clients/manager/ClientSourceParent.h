@@ -6,13 +6,21 @@
 #ifndef _mozilla_dom_ClientSourceParent_h
 #define _mozilla_dom_ClientSourceParent_h
 
+#include "ClientInfo.h"
 #include "mozilla/dom/PClientSourceParent.h"
 
 namespace mozilla {
 namespace dom {
 
+class ClientHandleParent;
+class ClientManagerService;
+
 class ClientSourceParent final : public PClientSourceParent
 {
+  ClientInfo mClientInfo;
+  RefPtr<ClientManagerService> mService;
+  nsTArray<ClientHandleParent*> mHandleList;
+
   // PClientSourceParent
   IPCResult
   RecvTeardown() override;
@@ -29,6 +37,15 @@ class ClientSourceParent final : public PClientSourceParent
 public:
   explicit ClientSourceParent(const ClientSourceConstructorArgs& aArgs);
   ~ClientSourceParent();
+
+  const ClientInfo&
+  Info() const;
+
+  void
+  AttachHandle(ClientHandleParent* aClientSource);
+
+  void
+  DetachHandle(ClientHandleParent* aClientSource);
 };
 
 } // namespace dom
