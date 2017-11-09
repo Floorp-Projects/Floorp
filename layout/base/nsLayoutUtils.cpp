@@ -3278,8 +3278,7 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
   }
 
   if (aFlags & IGNORE_ROOT_SCROLL_FRAME) {
-    nsIFrame* rootScrollFrame =
-      aFrame->PresShell()->GetRootScrollFrame();
+    nsIFrame* rootScrollFrame = aFrame->PresShell()->GetRootScrollFrame();
     if (rootScrollFrame) {
       builder.SetIgnoreScrollFrame(rootScrollFrame);
     }
@@ -4763,8 +4762,7 @@ nsLayoutUtils::IsViewportScrollbarFrame(nsIFrame* aFrame)
   if (!aFrame)
     return false;
 
-  nsIFrame* rootScrollFrame =
-    aFrame->PresShell()->GetRootScrollFrame();
+  nsIFrame* rootScrollFrame = aFrame->PresShell()->GetRootScrollFrame();
   if (!rootScrollFrame)
     return false;
 
