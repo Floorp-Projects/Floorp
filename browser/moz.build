@@ -40,6 +40,24 @@ if CONFIG['MOZ_ARTIFACT_BUILDS']:
         '../build/prebuilt-interfaces.manifest',
     ]
 
+
+# These defines are read in firefox.js
+DEFINES['APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
+
+for cdm in CONFIG['MOZ_EME_MODULES']:
+    DEFINES['MOZ_%s_EME' % cdm.upper()] = True
+
+if CONFIG['MOZ_GPSD']:
+    DEFINES['MOZ_GPSD'] = True
+
+# These files are specified in this moz.build to pick up DIST_SUBDIR as set in
+# this directory, which is un-set in browser/app.
+JS_PREFERENCE_PP_FILES += [
+    'app/profile/firefox.js',
+]
+FINAL_TARGET_FILES += ['app/blocklist.xml']
+FINAL_TARGET_FILES.defaults += ['app/permissions']
+
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
 
