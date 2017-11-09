@@ -651,6 +651,10 @@ GetEventRegionsOverride(HitTestingTreeNode* aParent,
   // layer in the hit-test tree. This saves having to walk up the tree every
   // we want to see if a hit-test node is affected by this flag.
   EventRegionsOverride result = aLayer.GetEventRegionsOverride();
+  if (result != EventRegionsOverride::NoOverride) {
+    // Overrides should only ever get set for ref layers.
+    MOZ_ASSERT(aLayer.GetReferentId());
+  }
   if (aParent) {
     result |= aParent->GetEventRegionsOverride();
   }

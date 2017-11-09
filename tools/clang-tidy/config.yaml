@@ -10,11 +10,15 @@ clang_checkers:
    publish: !!bool yes
  - name: clang-analyzer-security.*
    publish: !!bool no
+ - name: misc-argument-comment
+   publish: !!bool yes
  - name: misc-assert-side-effect
    publish: !!bool yes
  - name: misc-suspicious-missing-comma
    publish: !!bool yes
  - name: misc-suspicious-semicolon
+   publish: !!bool yes
+ - name: misc-unused-using-decls
    publish: !!bool yes
  - name: modernize-avoid-bind
    publish: !!bool yes

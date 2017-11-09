@@ -30,20 +30,21 @@ add_task(async function compress_bookmark_backups_test() {
   do_check_eq((await PlacesBackups.getBackupFiles()).length, 1);
 
   // Check if import works from lz4 compressed json
-  let uri = NetUtil.newURI("http://www.mozilla.org/en-US/");
-  let bm  = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                                 uri,
-                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                                 "bookmark");
+  let url = "http://www.mozilla.org/en-US/"
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "bookmark",
+    url,
+  });
 
   // Force create a compressed backup, Remove the bookmark, the restore the backup
   await PlacesBackups.create(undefined, true);
   let recentBackup = await PlacesBackups.getMostRecentBackup();
-  PlacesUtils.bookmarks.removeItem(bm);
+  await PlacesUtils.bookmarks.remove(bm);
   await BookmarkJSONUtils.importFromFile(recentBackup, true);
   let root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
   let node = root.getChild(0);
-  do_check_eq(node.uri, uri.spec);
+  do_check_eq(node.uri, url);
 
   root.containerOpen = false;
   PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
