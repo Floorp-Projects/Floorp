@@ -8,6 +8,7 @@
 
 #include "ClientHandleParent.h"
 #include "ClientManagerOpParent.h"
+#include "ClientManagerService.h"
 #include "ClientSourceParent.h"
 #include "mozilla/dom/PClientNavigateOpParent.h"
 #include "mozilla/Unused.h"
@@ -54,7 +55,7 @@ ClientManagerParent::RecvPClientHandleConstructor(PClientHandleParent* aActor,
 PClientManagerOpParent*
 ClientManagerParent::AllocPClientManagerOpParent(const ClientOpConstructorArgs& aArgs)
 {
-  return new ClientManagerOpParent();
+  return new ClientManagerOpParent(mService);
 }
 
 bool
@@ -101,6 +102,7 @@ ClientManagerParent::DeallocPClientSourceParent(PClientSourceParent* aActor)
 }
 
 ClientManagerParent::ClientManagerParent()
+  : mService(ClientManagerService::GetOrCreateInstance())
 {
 }
 

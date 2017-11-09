@@ -39,6 +39,7 @@ protected:
   bool mLoadReplace;
   bool mInheritPrincipal;
   bool mPrincipalIsExplicit;
+  bool mForceAllowDataURI;
   bool mSendReferrer;
   nsDocShellInfoReferrerPolicy mReferrerPolicy;
   nsDocShellInfoLoadType mLoadType;

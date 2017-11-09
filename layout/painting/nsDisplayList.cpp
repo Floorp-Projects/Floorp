@@ -1125,7 +1125,7 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
     // position: fixed items are reflowed into and only drawn inside the
     // viewport, or the scroll position clamping scrollport size, if one is
     // set.
-    nsIPresShell* ps = aFrame->PresContext()->PresShell();
+    nsIPresShell* ps = aFrame->PresShell();
     if (ps->IsScrollPositionClampingScrollPortSizeSet()) {
       dirtyRectRelativeToDirtyFrame =
         nsRect(nsPoint(0, 0), ps->GetScrollPositionClampingScrollPortSize());
@@ -1266,7 +1266,7 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
                                      bool aPointerEventsNoneDoc)
 {
   PresShellState* state = mPresShellStates.AppendElement();
-  state->mPresShell = aReferenceFrame->PresContext()->PresShell();
+  state->mPresShell = aReferenceFrame->PresShell();
   state->mCaretFrame = nullptr;
   state->mFirstFrameMarkedForDisplay = mFramesMarkedForDisplay.Length();
 
@@ -1349,7 +1349,7 @@ void
 nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame, nsDisplayList* aPaintedContents)
 {
   NS_ASSERTION(CurrentPresShellState()->mPresShell ==
-      aReferenceFrame->PresContext()->PresShell(),
+      aReferenceFrame->PresShell(),
       "Presshell mismatch");
 
   if (mIsPaintingToWindow) {
@@ -1444,7 +1444,7 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
     // Store the current display data so that it can be used for fixed
     // background images.
     NS_ASSERTION(CurrentPresShellState()->mPresShell ==
-        aDirtyFrame->PresContext()->PresShell(),
+        aDirtyFrame->PresShell(),
         "Presshell mismatch");
     MOZ_ASSERT(!CurrentPresShellState()->mFixedBackgroundDisplayData,
                "already traversed this presshell's root frame?");
@@ -2481,12 +2481,6 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
                        1.0f/containerParameters.mYScale);
     root->SetScaleToResolution(presShell->ScaleToResolution(),
         containerParameters.mXScale);
-    if (aBuilder->IsBuildingLayerEventRegions() &&
-        nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell)) {
-      root->SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
-    } else {
-      root->SetEventRegionsOverride(EventRegionsOverride::NoOverride);
-    }
 
     auto callback = [root](FrameMetrics::ViewID aScrollId) -> bool {
       return nsLayoutUtils::ContainsMetricsWithId(root, aScrollId);
@@ -3274,7 +3268,7 @@ static Maybe<nsRect>
 GetViewportRectRelativeToReferenceFrame(nsDisplayListBuilder* aBuilder,
                                         nsIFrame* aFrame)
 {
-  nsIFrame* rootFrame = aFrame->PresContext()->PresShell()->GetRootFrame();
+  nsIFrame* rootFrame = aFrame->PresShell()->GetRootFrame();
   nsRect rootRect = rootFrame->GetRectRelativeToSelf();
   if (nsLayoutUtils::TransformRect(rootFrame, aFrame, rootRect) == nsLayoutUtils::TRANSFORM_SUCCEEDED) {
     return Some(rootRect + aBuilder->ToReferenceFrame(aFrame));
@@ -6861,9 +6855,6 @@ nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,
     , mSubDocFrame(aSubDocFrame)
 {
   MOZ_COUNT_CTOR(nsDisplaySubDocument);
-  mForceDispatchToContentRegion =
-    aBuilder->IsBuildingLayerEventRegions() &&
-    nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresContext()->PresShell());
 
   // The SubDocument display item is conceptually outside the viewport frame,
   // so in cases where the viewport frame is an AGR, the SubDocument's AGR
@@ -6878,17 +6869,6 @@ nsDisplaySubDocument::~nsDisplaySubDocument() {
   MOZ_COUNT_DTOR(nsDisplaySubDocument);
 }
 #endif
-
-already_AddRefed<Layer>
-nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
-                                 LayerManager* aManager,
-                                 const ContainerLayerParameters& aContainerParameters) {
-  RefPtr<Layer> layer = nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
-  layer->AsContainerLayer()->SetEventRegionsOverride(mForceDispatchToContentRegion
-    ? EventRegionsOverride::ForceDispatchToContent
-    : EventRegionsOverride::NoOverride);
-  return layer.forget();
-}
 
 UniquePtr<ScrollMetadata>
 nsDisplaySubDocument::ComputeScrollMetadata(LayerManager* aLayerManager,
@@ -6950,7 +6930,7 @@ nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   }
 
   nsRect displayport;
-  nsIFrame* rootScrollFrame = mFrame->PresContext()->PresShell()->GetRootScrollFrame();
+  nsIFrame* rootScrollFrame = mFrame->PresShell()->GetRootScrollFrame();
   MOZ_ASSERT(rootScrollFrame);
   Unused << nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), &displayport,
     RelativeTo::ScrollFrame);
@@ -7027,7 +7007,7 @@ nsDisplayResolution::HitTest(nsDisplayListBuilder* aBuilder,
                              HitTestState* aState,
                              nsTArray<nsIFrame*> *aOutFrames)
 {
-  nsIPresShell* presShell = mFrame->PresContext()->PresShell();
+  nsIPresShell* presShell = mFrame->PresShell();
   nsRect rect = aRect.RemoveResolution(presShell->ScaleToResolution() ? presShell->GetResolution () : 1.0f);
   mList.HitTest(aBuilder, rect, aState, aOutFrames);
 }
@@ -7036,7 +7016,7 @@ already_AddRefed<Layer>
 nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
                                 const ContainerLayerParameters& aContainerParameters) {
-  nsIPresShell* presShell = mFrame->PresContext()->PresShell();
+  nsIPresShell* presShell = mFrame->PresShell();
   ContainerLayerParameters containerParameters(
     presShell->GetResolution(), presShell->GetResolution(), nsIntPoint(),
     aContainerParameters);
@@ -8495,6 +8475,14 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
 bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,
                                              nsRegion *aVisibleRegion)
 {
+  // nsDisplayTransform::GetBounds() returns an empty rect in nested 3d context.
+  // Calling mStoredList.RecomputeVisibility below for such transform causes the
+  // child display items to end up with empty visible rect.
+  // We avoid this by bailing out always if we are dealing with a 3d context.
+  if (mFrame->Extend3DContext() || mFrame->Combines3DTransformWithAncestors()) {
+    return true;
+  }
+
   /* As we do this, we need to be sure to
    * untransform the visible rect, since we want everything that's painting to
    * think that it's painting in its original rectangular coordinate space.

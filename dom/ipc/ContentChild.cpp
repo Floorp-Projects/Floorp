@@ -22,6 +22,7 @@
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
+#include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/ContentBridgeChild.h"
 #include "mozilla/dom/ContentBridgeParent.h"
@@ -1153,6 +1154,8 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
     MOZ_ASSERT_UNREACHABLE("PBackground init can't fail at this point");
     return;
   }
+
+  ClientManager::Startup();
 
   nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (!svc) {

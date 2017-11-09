@@ -1310,6 +1310,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
   nsCOMPtr<nsISHEntry> shEntry;
   nsString target;
   nsAutoString srcdoc;
+  bool forceAllowDataURI = false;
   nsCOMPtr<nsIDocShell> sourceDocShell;
   nsCOMPtr<nsIURI> baseURI;
 
@@ -1346,6 +1347,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
     aLoadInfo->GetSrcdocData(srcdoc);
     aLoadInfo->GetSourceDocShell(getter_AddRefs(sourceDocShell));
     aLoadInfo->GetBaseURI(getter_AddRefs(baseURI));
+    aLoadInfo->GetForceAllowDataURI(&forceAllowDataURI);
   }
 
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
@@ -1607,6 +1609,10 @@ nsDocShell::LoadURI(nsIURI* aURI,
 
   if (isSrcdoc) {
     flags |= INTERNAL_LOAD_FLAGS_IS_SRCDOC;
+  }
+
+  if (forceAllowDataURI) {
+    flags |= INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
   }
 
   return InternalLoad(aURI,
@@ -4917,6 +4923,9 @@ nsDocShell::LoadURIWithOptions(const char16_t* aURI,
   }
   nsAutoPopupStatePusher statePusher(popupState);
 
+  bool forceAllowDataURI =
+    aLoadFlags & LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
+
   // Don't pass certain flags that aren't needed and end up confusing
   // ConvertLoadTypeToDocShellLoadInfo.  We do need to ensure that they are
   // passed to LoadURI though, since it uses them.
@@ -4947,6 +4956,7 @@ nsDocShell::LoadURIWithOptions(const char16_t* aURI,
   loadInfo->SetHeadersStream(aHeaderStream);
   loadInfo->SetBaseURI(aBaseURI);
   loadInfo->SetTriggeringPrincipal(aTriggeringPrincipal);
+  loadInfo->SetForceAllowDataURI(forceAllowDataURI);
 
   if (fixupInfo) {
     nsAutoString searchProvider, keyword;
@@ -8850,7 +8860,7 @@ nsDocShell::RestoreFromHistory()
   if (rootViewSibling) {
     nsIFrame* frame = rootViewSibling->GetFrame();
     sibling =
-      frame ? frame->PresContext()->PresShell()->GetDocument() : nullptr;
+      frame ? frame->PresShell()->GetDocument() : nullptr;
   }
 
   // Transfer ownership to mContentViewer.  By ensuring that either the
@@ -10189,6 +10199,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         // principal to inherit is: it should be aTriggeringPrincipal.
         loadInfo->SetPrincipalIsExplicit(true);
         loadInfo->SetLoadType(ConvertLoadTypeToDocShellLoadInfo(LOAD_LINK));
+        loadInfo->SetForceAllowDataURI(aFlags & INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI);
 
         rv = win->Open(NS_ConvertUTF8toUTF16(spec),
                        aWindowTarget, // window name
@@ -10866,7 +10877,9 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 
   nsCOMPtr<nsIRequest> req;
   rv = DoURILoad(aURI, aOriginalURI, aResultPrincipalURI, aLoadReplace,
-                 loadFromExternal, aReferrer,
+                 loadFromExternal,
+                 (aFlags & INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI),
+                 aReferrer,
                  !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
                  aReferrerPolicy,
                  aTriggeringPrincipal, principalToInherit, aTypeHint,
@@ -11004,6 +11017,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                       Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
                       bool aLoadReplace,
                       bool aLoadFromExternal,
+                      bool aForceAllowDataURI,
                       nsIURI* aReferrerURI,
                       bool aSendReferrer,
                       uint32_t aReferrerPolicy,
@@ -11184,6 +11198,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     loadInfo->SetPrincipalToInherit(aPrincipalToInherit);
   }
   loadInfo->SetLoadTriggeredFromExternal(aLoadFromExternal);
+  loadInfo->SetForceAllowDataURI(aForceAllowDataURI);
 
   // We have to do this in case our OriginAttributes are different from the
   // OriginAttributes of the parent document. Or in case there isn't a
@@ -13542,6 +13557,12 @@ nsDocShell::ConfirmRepost(bool* aRepost)
   rv = appBundle->GetStringFromName("resendButton.label", button0Title);
   if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  // Make the repost prompt tab modal to prevent malicious pages from locking
+  // up the browser, see bug 1412559 for an example.
+  if (nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompter)) {
+    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), true);
   }
 
   int32_t buttonPressed;

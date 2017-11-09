@@ -108,7 +108,10 @@ def moz_debug(debug):
 
 set_config('MOZ_DEBUG', moz_debug)
 set_define('MOZ_DEBUG', moz_debug)
-add_old_configure_assignment('MOZ_DEBUG', moz_debug)
+# Override any value MOZ_DEBUG may have from the environment when passing it
+# down to old-configure.
+add_old_configure_assignment('MOZ_DEBUG',
+                             depends('--enable-debug')(lambda x: bool(x)))
 
 js_option('--enable-rust-debug',
           help='Build Rust code with debug assertions turned on.')

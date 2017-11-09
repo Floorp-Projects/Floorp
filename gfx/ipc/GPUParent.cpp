@@ -213,6 +213,15 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
   } else {
     gtk_init(nullptr, nullptr);
   }
+
+  // Ensure we have an FT library for font instantiation.
+  // This would normally be set by gfxPlatform::Init().
+  // Since we bypass that, we must do it here instead.
+  if (gfxVars::UseWebRender()) {
+    FT_Library library = Factory::NewFTLibrary();
+    MOZ_ASSERT(library);
+    Factory::SetFTLibrary(library);
+  }
 #endif
 
   // Make sure to do this *after* we update gfxVars above.

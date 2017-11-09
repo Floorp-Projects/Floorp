@@ -5,31 +5,38 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+  'ClientHandle.h',
   'ClientInfo.h',
   'ClientIPCUtils.h',
+  'ClientManager.h',
   'ClientManagerActors.h',
   'ClientOpenWindowOpActors.h',
   'ClientOpPromise.h',
+  'ClientSource.h',
   'ClientState.h',
   'ClientThing.h',
 ]
 
 UNIFIED_SOURCES += [
+  'ClientHandle.cpp',
   'ClientHandleChild.cpp',
   'ClientHandleOpChild.cpp',
   'ClientHandleOpParent.cpp',
   'ClientHandleParent.cpp',
   'ClientInfo.cpp',
+  'ClientManager.cpp',
   'ClientManagerActors.cpp',
   'ClientManagerChild.cpp',
   'ClientManagerOpChild.cpp',
   'ClientManagerOpParent.cpp',
   'ClientManagerParent.cpp',
+  'ClientManagerService.cpp',
   'ClientNavigateOpChild.cpp',
   'ClientNavigateOpParent.cpp',
   'ClientOpenWindowOpActors.cpp',
   'ClientOpenWindowOpChild.cpp',
   'ClientOpenWindowOpParent.cpp',
+  'ClientSource.cpp',
   'ClientSourceChild.cpp',
   'ClientSourceOpChild.cpp',
   'ClientSourceOpParent.cpp',
@@ -52,6 +59,7 @@ IPDL_SOURCES += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
+  '/dom/workers',
 ]
 
 FINAL_LIBRARY = 'xul'

@@ -140,10 +140,7 @@ html|span.ac-tag {
 
 /* ::::: textboxes inside toolbarpaletteitems ::::: */
 
-toolbarpaletteitem > toolbaritem > textbox > hbox > hbox > html|*.textbox-input {
-  visibility: hidden;
-}
-
-toolbarpaletteitem > toolbaritem > * > textbox > hbox > hbox > html|*.textbox-input {
+toolbarpaletteitem > toolbaritem > textbox > .textbox-input-box > html|*.textbox-input,
+toolbarpaletteitem > toolbaritem > * > textbox > .textbox-input-box > html|*.textbox-input {
   visibility: hidden;
 }

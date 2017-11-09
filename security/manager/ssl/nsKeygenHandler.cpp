@@ -13,7 +13,7 @@
 #include "mozilla/Casting.h"
 #include "nsDependentString.h"
 #include "nsIContent.h"
-#include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIGenKeypairInfoDlg.h"
 #include "nsIServiceManager.h"
 #include "nsITokenDialogs.h"

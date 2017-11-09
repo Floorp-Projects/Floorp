@@ -5277,7 +5277,7 @@ PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
   bool addedScrollingBackgroundColor = (aFlags & APPEND_UNSCROLLED_ONLY);
   if (!aFrame->GetParent() && !addedScrollingBackgroundColor) {
     nsIScrollableFrame* sf =
-      aFrame->PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
+      aFrame->PresShell()->GetRootScrollFrameAsScrollable();
     if (sf) {
       nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
       if (canvasFrame && canvasFrame->IsVisibleForPainting(&aBuilder)) {
@@ -5566,7 +5566,7 @@ static nsView* FindFloatingViewContaining(nsView* aView, nsPoint aPt)
   nsIFrame* frame = aView->GetFrame();
   if (frame) {
     if (!frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) ||
-        !frame->PresContext()->PresShell()->IsActive()) {
+        !frame->PresShell()->IsActive()) {
       return nullptr;
     }
   }
@@ -5603,7 +5603,7 @@ static nsView* FindViewContaining(nsView* aView, nsPoint aPt)
   nsIFrame* frame = aView->GetFrame();
   if (frame) {
     if (!frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) ||
-        !frame->PresContext()->PresShell()->IsActive()) {
+        !frame->PresShell()->IsActive()) {
       return nullptr;
     }
   }
@@ -5785,7 +5785,7 @@ PresShell::MarkFramesInListApproximatelyVisible(const nsDisplayList& aList,
     }
 
     // Use the presshell containing the frame.
-    auto* presShell = static_cast<PresShell*>(frame->PresContext()->PresShell());
+    auto* presShell = static_cast<PresShell*>(frame->PresShell());
     MOZ_ASSERT(!presShell->AssumeAllFramesVisible());
     if (presShell->mApproximatelyVisibleFrames.EnsureInserted(frame)) {
       // The frame was added to mApproximatelyVisibleFrames, so increment its visible count.
@@ -5919,7 +5919,7 @@ PresShell::MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
                                                    Maybe<VisibleRegions>& aVisibleRegions,
                                                    bool aRemoveOnly /* = false */)
 {
-  MOZ_ASSERT(aFrame->PresContext()->PresShell() == this, "wrong presshell");
+  MOZ_ASSERT(aFrame->PresShell() == this, "wrong presshell");
 
   if (aFrame->TrackingVisibility() &&
       aFrame->StyleVisibility()->IsVisible() &&
@@ -7266,8 +7266,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       return NS_OK;
     }
 
-    PresShell* shell =
-        static_cast<PresShell*>(frame->PresContext()->PresShell());
+    PresShell* shell = static_cast<PresShell*>(frame->PresShell());
     switch (aEvent->mMessage) {
       case eTouchMove:
       case eTouchCancel:
@@ -7296,8 +7295,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
             break;
           }
 
-          shell = static_cast<PresShell*>(
-                      contentFrame->PresContext()->PresShell());
+          shell = static_cast<PresShell*>(contentFrame->PresShell());
           if (shell) {
             break;
           }

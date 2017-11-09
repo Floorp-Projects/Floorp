@@ -48,6 +48,10 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(nsIChannel* aChannel)
   if (loadInfo->GetExternalContentPolicyType() != nsIContentPolicy::TYPE_DOCUMENT) {
     return true;
   }
+  if (loadInfo->GetForceAllowDataURI()) {
+    // if the loadinfo explicitly allows the data URI navigation, let's allow it now
+    return true;
+  }
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, true);

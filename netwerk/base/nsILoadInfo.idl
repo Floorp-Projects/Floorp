@@ -507,6 +507,11 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean enforceSRI;
 
   /**
+   * If true, toplevel data: URI navigation is allowed
+   */
+  [infallible] attribute boolean forceAllowDataURI;
+
+  /**
    * The SEC_FORCE_INHERIT_PRINCIPAL flag may be dropped when a load info
    * object is created.  Specifically, it will be dropped if the SEC_SANDBOXED
    * flag is also present.  This flag is set if SEC_FORCE_INHERIT_PRINCIPAL was
