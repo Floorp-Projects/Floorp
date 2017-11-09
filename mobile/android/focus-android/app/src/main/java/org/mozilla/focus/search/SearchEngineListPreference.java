@@ -51,9 +51,12 @@ public abstract class SearchEngineListPreference extends Preference {
             // There is no search engine group yet.
             return;
         }
-        final SearchEngineManager sem = SearchEngineManager.getInstance();
         final Context context = searchEngineGroup.getContext();
         final Resources resources = context.getResources();
+        final SearchEngineManager sem = SearchEngineManager.getInstance();
+
+        // Force SearchEngineManager to refetch, to get the newest search engine.
+        sem.init(context);
 
         searchEngines = sem.getSearchEngines();
         final String defaultSearchEngine = sem.getDefaultSearchEngine(context).getIdentifier();
@@ -65,9 +68,11 @@ public abstract class SearchEngineListPreference extends Preference {
 
         for (int i = 0; i < searchEngines.size(); i++) {
             final SearchEngine engine = searchEngines.get(i);
+            final String engineId = engine.getIdentifier();
             final CompoundButton engineItem = makeButtonFromSearchEngine(engine, layoutInflater, resources);
             engineItem.setId(i);
-            if (engine.getIdentifier().equals(defaultSearchEngine)) {
+            engineItem.setTag(engineId);
+            if (engineId.equals(defaultSearchEngine)) {
                 updateDefaultItem(engineItem);
             }
             searchEngineGroup.addView(engineItem, layoutParams);

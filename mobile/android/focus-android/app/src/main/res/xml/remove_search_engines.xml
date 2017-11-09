@@ -4,5 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <org.mozilla.focus.search.MultiselectSearchEngineListPreference/>
+    <org.mozilla.focus.search.MultiselectSearchEngineListPreference
+        android:key="@string/pref_key_multiselect_search_engine_list"/>
 </PreferenceScreen>

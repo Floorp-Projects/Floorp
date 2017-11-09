@@ -11,6 +11,9 @@ import android.widget.CompoundButton;
 
 import org.mozilla.focus.R;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class MultiselectSearchEngineListPreference extends SearchEngineListPreference {
 
     public MultiselectSearchEngineListPreference(Context context, AttributeSet attrs) {
@@ -30,5 +33,17 @@ public class MultiselectSearchEngineListPreference extends SearchEngineListPrefe
     protected void updateDefaultItem(CompoundButton defaultButton) {
         // Hide default engine so it can't be removed
         defaultButton.setVisibility(View.GONE);
+    }
+
+    public Set<String> getCheckedEngineIds() {
+        final Set<String> engineIdSet = new HashSet<>();
+
+        for (int i = 0; i < searchEngineGroup.getChildCount(); i++) {
+            final CompoundButton engineButton = (CompoundButton) searchEngineGroup.getChildAt(i);
+            if (engineButton.isChecked()) {
+                engineIdSet.add((String) engineButton.getTag());
+            }
+        }
+        return engineIdSet;
     }
 }

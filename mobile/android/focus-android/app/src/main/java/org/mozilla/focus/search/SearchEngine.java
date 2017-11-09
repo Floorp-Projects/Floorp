@@ -15,7 +15,6 @@ import java.util.Locale;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class SearchEngine {
-    public static final String PREF_FILE_SEARCH_ENGINES = "custom-search-engines";
 
     // Parameters copied from nsSearchService.js
     private static final String MOZ_PARAM_LOCALE = "\\{moz:locale\\}";

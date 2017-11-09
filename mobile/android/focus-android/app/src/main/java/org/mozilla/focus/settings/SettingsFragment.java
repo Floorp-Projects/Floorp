@@ -25,12 +25,15 @@ import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.locale.Locales;
+import org.mozilla.focus.search.MultiselectSearchEngineListPreference;
 import org.mozilla.focus.search.RadioSearchEngineListPreference;
+import org.mozilla.focus.search.SearchEngineManager;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
 
 import java.util.Locale;
+import java.util.Set;
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     public static final String SETTINGS_SCREEN_NAME = "settingsScreenName";
@@ -122,7 +125,14 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                 showSettingsFragment(SettingsScreen.REMOVE_ENGINES);
                 return true;
             case R.id.menu_delete_items:
-                // TODO: Save removed engines
+                final Preference pref = getPreferenceScreen()
+                        .findPreference(getResources().getString(
+                                R.string.pref_key_multiselect_search_engine_list));
+                final Set<String> enginesToRemove = ((MultiselectSearchEngineListPreference) pref).getCheckedEngineIds();
+
+                final SharedPreferences sharedPreferences = getActivity()
+                        .getSharedPreferences(SearchEngineManager.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE);
+                SearchEngineManager.removeSearchEngines(enginesToRemove, sharedPreferences);
                 getFragmentManager().popBackStack();
                 return true;
         }
@@ -182,16 +192,13 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         updater.updateIcon(R.drawable.ic_back);
 
         if (settingsScreen == SettingsScreen.SEARCH_ENGINES && AppConstants.FLAG_MANUAL_SEARCH_ENGINE) {
-            final PreferenceScreen prefScreen = getPreferenceScreen();
-            final int prefCount = prefScreen.getPreferenceCount();
-            for (int i = 0; i < prefCount; i++) {
-                final Preference pref = prefScreen.getPreference(i);
-                if (pref instanceof RadioSearchEngineListPreference) {
-                    ((RadioSearchEngineListPreference) pref).refreshSearchEngines();
-                }
-            }
+            final Preference pref = getPreferenceScreen()
+                    .findPreference(getResources().getString(
+                            R.string.pref_key_radio_search_engine_list));
+            ((RadioSearchEngineListPreference) pref).refreshSearchEngines();
         }
     }
+
 
     @Override
     public void onPause() {

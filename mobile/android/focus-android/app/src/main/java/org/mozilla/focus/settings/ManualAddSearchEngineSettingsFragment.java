@@ -17,7 +17,6 @@ import android.view.View;
 import android.widget.EditText;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.search.SearchEngine;
 import org.mozilla.focus.search.SearchEngineManager;
 import org.mozilla.focus.utils.UrlUtils;
 
@@ -52,7 +51,7 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                 final String searchQuery = ((EditText) rootView.findViewById(R.id.edit_search_string)).getText().toString();
 
                 final SharedPreferences sharedPreferences = getActivity()
-                        .getSharedPreferences(SearchEngine.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE);
+                        .getSharedPreferences(SearchEngineManager.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE);
                 if (!validateSearchFields(engineName, searchQuery, sharedPreferences)) {
                     Snackbar.make(rootView, R.string.search_add_error, Snackbar.LENGTH_SHORT).show();
                 } else {

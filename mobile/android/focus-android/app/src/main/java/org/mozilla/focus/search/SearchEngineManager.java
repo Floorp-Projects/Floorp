@@ -55,8 +55,11 @@ import javax.xml.transform.stream.StreamResult;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class SearchEngineManager extends BroadcastReceiver {
-    public static final String PREF_KEY_CUSTOM_SEARCH_ENGINES = "pref_custom_search_engines";
     private static final String LOG_TAG = SearchEngineManager.class.getSimpleName();
+
+    public static final String PREF_FILE_SEARCH_ENGINES = "custom-search-engines";
+    public static final String PREF_KEY_CUSTOM_SEARCH_ENGINES = "pref_custom_search_engines";
+    public static final String PREF_KEY_HIDDEN_DEFAULT_ENGINES = "hidden_default_engines";
     private static final String PREF_KEY_CUSTOM_SEARCH_VERSION = "pref_custom_search_version";
     private static final int CUSTOM_SEARCH_VERSION = 1;
 
@@ -92,8 +95,6 @@ public class SearchEngineManager extends BroadcastReceiver {
                 .putString(engineName, searchEngineXml)
                 .apply();
 
-        // Force SearchEngineManager to refetch, to get the newest search engine.
-        getInstance().init(context);
         return true;
     }
 
@@ -194,8 +195,16 @@ public class SearchEngineManager extends BroadcastReceiver {
             final List<String> languageEngines = Arrays.asList(assetManager.list(languagePath));
             final List<String> defaultEngines = Arrays.asList(assetManager.list(defaultPath));
 
+           final SharedPreferences sharedPreferences = context.getSharedPreferences(
+                   SearchEngineManager.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE);
+            final Set<String> hiddenEngines = sharedPreferences.getStringSet(PREF_KEY_HIDDEN_DEFAULT_ENGINES, Collections.<String>emptySet());
+
             for (int i = 0; i < engineNames.length(); i++) {
                 final String engineName = engineNames.getString(i);
+                // Engine names are reused as engine ids, so they are the same.
+                if (hiddenEngines.contains(engineName)) {
+                    continue;
+                }
                 final String fileName = engineName + ".xml";
 
                 if (localeEngines.contains(fileName)) {
@@ -222,7 +231,7 @@ public class SearchEngineManager extends BroadcastReceiver {
 
     private List<SearchEngine> loadCustomSearchEngines(Context context) {
         final List<SearchEngine> searchEngines = new LinkedList<>();
-        final SharedPreferences prefs = context.getSharedPreferences(SearchEngine.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE);
+        final SharedPreferences prefs = context.getSharedPreferences(PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE);
         final Set<String> engines = prefs.getStringSet(PREF_KEY_CUSTOM_SEARCH_ENGINES, Collections.<String>emptySet());
         try {
             for (String engine : engines) {
@@ -300,5 +309,30 @@ public class SearchEngineManager extends BroadcastReceiver {
                 // Ignore
             }
         }
+    }
+
+    public static void removeSearchEngines(Set<String> engineIdsToRemove, SharedPreferences sharedPreferences) {
+        // Check custom engines first.
+        final Set<String> customEngines = sharedPreferences.getStringSet(PREF_KEY_CUSTOM_SEARCH_ENGINES, Collections.<String>emptySet());
+        final Set<String> remainingCustomEngines = new LinkedHashSet<>();
+        final SharedPreferences.Editor enginesEditor = sharedPreferences.edit();
+
+        for (String engineId : customEngines) {
+            if (engineIdsToRemove.contains(engineId)) {
+                enginesEditor.remove(engineId);
+                // Handled engine removal.
+                engineIdsToRemove.remove(engineId);
+            } else {
+                remainingCustomEngines.add(engineId);
+            }
+        }
+        enginesEditor.putStringSet(PREF_KEY_CUSTOM_SEARCH_ENGINES, remainingCustomEngines);
+
+        // Everything else must be a default engine.
+        final Set<String> hiddenDefaultEngines = sharedPreferences.getStringSet(PREF_KEY_HIDDEN_DEFAULT_ENGINES, Collections.<String>emptySet());
+        engineIdsToRemove.addAll(hiddenDefaultEngines);
+        enginesEditor.putStringSet(PREF_KEY_HIDDEN_DEFAULT_ENGINES, engineIdsToRemove);
+
+        enginesEditor.apply();
     }
 }
