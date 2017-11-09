@@ -33,6 +33,8 @@ from mozbuild.frontend.data import (
     JARManifest,
     LinkageMultipleRustLibrariesError,
     LocalInclude,
+    LocalizedFiles,
+    LocalizedPreprocessedFiles,
     Program,
     RustLibrary,
     RustProgram,
@@ -1234,6 +1236,46 @@ class TestEmitterBasic(unittest.TestCase):
         with self.assertRaisesRegexp(SandboxValidationError,
              'Only source directory paths allowed in FINAL_TARGET_PP_FILES:'):
             self.read_topsrcdir(reader)
+
+    def test_localized_files(self):
+        """Test that LOCALIZED_FILES works properly."""
+        reader = self.reader('localized-files')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 1)
+        self.assertIsInstance(objs[0], LocalizedFiles)
+
+        for path, files in objs[0].files.walk():
+            self.assertEqual(path, 'foo')
+            self.assertEqual(len(files), 3)
+
+            expected = {'en-US/bar.ini', 'en-US/code/*.js', 'en-US/foo.js'}
+            for f in files:
+                self.assertTrue(unicode(f) in expected)
+
+    def test_localized_files_no_en_us(self):
+        """Test that LOCALIZED_FILES errors if a path does not start with
+        `en-US/`."""
+        reader = self.reader('localized-files-no-en-us')
+        with self.assertRaisesRegexp(SandboxValidationError,
+             'LOCALIZED_FILES paths must start with `en-US/`:'):
+            objs = self.read_topsrcdir(reader)
+
+    def test_localized_pp_files(self):
+        """Test that LOCALIZED_PP_FILES works properly."""
+        reader = self.reader('localized-pp-files')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 1)
+        self.assertIsInstance(objs[0], LocalizedPreprocessedFiles)
+
+        for path, files in objs[0].files.walk():
+            self.assertEqual(path, 'foo')
+            self.assertEqual(len(files), 2)
+
+            expected = {'en-US/bar.ini', 'en-US/foo.js'}
+            for f in files:
+                self.assertTrue(unicode(f) in expected)
 
     def test_rust_library_no_cargo_toml(self):
         '''Test that defining a RustLibrary without a Cargo.toml fails.'''
