@@ -200,6 +200,7 @@
 #onboarding-tour-list .onboarding-tour-item-container {
   list-style: none;
   outline: none;
+  position: relative;
 }
 
 #onboarding-tour-list .onboarding-tour-item {
@@ -209,12 +210,10 @@
   padding-top: 14px;
   padding-bottom: 14px;
   margin-bottom: 9px;
-  background-repeat: no-repeat;
-  background-position: left 17px top 14px;
-  background-size: 20px;
   font-size: 16px;
   cursor: pointer;
   max-height: 54px;
+  --onboarding-tour-item-active-color: #0A84FF;
 }
 
 #onboarding-tour-list .onboarding-tour-item:dir(rtl) {
@@ -233,9 +232,32 @@
   padding-inline-start: 29px;
 }
 
+#onboarding-tour-list .onboarding-tour-item::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 48px;
+  position: absolute;
+  offset-inline-start: 0px;
+  top: 0px;
+  background-color: #3E3D40;
+  mask-repeat: no-repeat;
+  mask-position: left 17px top 14px;
+  mask-size: 20px;
+}
+
+#onboarding-tour-list .onboarding-tour-item:dir(rtl)::after {
+  mask-position: right 17px top 14px;
+}
+
+#onboarding-tour-list .onboarding-tour-item.onboarding-active::after,
+#onboarding-tour-list .onboarding-tour-item-container:hover .onboarding-tour-item::after {
+  background-color: var(--onboarding-tour-item-active-color);
+}
+
 #onboarding-tour-list .onboarding-tour-item.onboarding-active,
 #onboarding-tour-list .onboarding-tour-item-container:hover .onboarding-tour-item {
-  color: #0A84FF;
+  color: var(--onboarding-tour-item-active-color);
   /* With 1px transparent outline, could see a border in the high-constrast mode */
   outline: 1px solid transparent;
 }
@@ -396,94 +418,49 @@
 }
 
 /* Tour Icons */
-#onboarding-tour-singlesearch,
+#onboarding-tour-singlesearch.onboarding-tour-item::after,
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-singlesearch] #onboarding-notification-tour-title::before {
-  background-image: url("img/icons_singlesearch.svg");
+  mask-image: url("img/icons_singlesearch.svg");
 }
 
-#onboarding-tour-singlesearch.onboarding-active,
-.onboarding-tour-item-container:hover #onboarding-tour-singlesearch {
-  background-image: url("img/icons_singlesearch-colored.svg");
-}
-
-#onboarding-tour-private-browsing,
+#onboarding-tour-private-browsing.onboarding-tour-item::after,
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-private-browsing] #onboarding-notification-tour-title::before {
-  background-image: url("img/icons_private.svg");
+  mask-image: url("img/icons_private.svg");
 }
 
-#onboarding-tour-private-browsing.onboarding-active,
-.onboarding-tour-item-container:hover #onboarding-tour-private-browsing {
-  background-image: url("img/icons_private-colored.svg");
-}
-
-#onboarding-tour-addons,
+#onboarding-tour-addons.onboarding-tour-item::after,
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-addons] #onboarding-notification-tour-title::before {
-  background-image: url("img/icons_addons.svg");
+  mask-image: url("img/icons_addons.svg");
 }
 
-#onboarding-tour-addons.onboarding-active,
-.onboarding-tour-item-container:hover #onboarding-tour-addons {
-  background-image: url("img/icons_addons-colored.svg");
-}
-
-#onboarding-tour-customize,
+#onboarding-tour-customize.onboarding-tour-item::after,
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-customize] #onboarding-notification-tour-title::before {
-  background-image: url("img/icons_customize.svg");
+  mask-image: url("img/icons_customize.svg");
 }
 
-#onboarding-tour-customize.onboarding-active,
-.onboarding-tour-item-container:hover #onboarding-tour-customize {
-  background-image: url("img/icons_customize-colored.svg");
-}
-
-#onboarding-tour-default-browser ,
+#onboarding-tour-default-browser.onboarding-tour-item::after,
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-default-browser] #onboarding-notification-tour-title::before {
-  background-image: url("img/icons_default.svg");
+  mask-image: url("img/icons_default.svg");
 }
 
-#onboarding-tour-default-browser.onboarding-active,
-.onboarding-tour-item-container:hover #onboarding-tour-default-browser {
-  background-image: url("img/icons_default-colored.svg");
-}
-
-#onboarding-tour-sync,
+#onboarding-tour-sync.onboarding-tour-item::after,
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-sync] #onboarding-notification-tour-title::before {
-  background-image: url("img/icons_sync.svg");
+  mask-image: url("img/icons_sync.svg");
 }
 
-#onboarding-tour-sync.onboarding-active,
-.onboarding-tour-item-container:hover #onboarding-tour-sync {
-  background-image: url("img/icons_sync-colored.svg");
-}
-
-#onboarding-tour-library,
+#onboarding-tour-library.onboarding-tour-item::after,
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-library] #onboarding-notification-tour-title::before {
-  background-image: url("img/icons_library.svg");
+  mask-image: url("img/icons_library.svg");
 }
 
-#onboarding-tour-library.onboarding-active,
-.onboarding-tour-item-container:hover #onboarding-tour-library {
-  background-image: url("img/icons_library-colored.svg");
-}
-
-#onboarding-tour-performance,
+#onboarding-tour-performance.onboarding-tour-item::after,
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-performance] #onboarding-notification-tour-title::before {
-  background-image: url("img/icons_performance.svg");
+  mask-image: url("img/icons_performance.svg");
 }
 
-#onboarding-tour-performance.onboarding-active,
-.onboarding-tour-item-container:hover #onboarding-tour-performance {
-  background-image: url("img/icons_performance-colored.svg");
-}
-
-#onboarding-tour-screenshots,
+#onboarding-tour-screenshots.onboarding-tour-item::after,
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-screenshots] #onboarding-notification-tour-title::before {
-  background-image: url("img/icons_screenshots.svg");
-}
-
-#onboarding-tour-screenshots.onboarding-active,
-.onboarding-tour-item-container:hover #onboarding-tour-screenshots {
-  background-image: url("img/icons_screenshots-colored.svg");
+  mask-image: url("img/icons_screenshots.svg");
 }
 
 a#onboarding-tour-screenshots-button,
@@ -551,14 +528,16 @@ a#onboarding-tour-screenshots-button:visited {
 #onboarding-notification-tour-title {
   margin: 0;
   font-weight: bold;
-  color: #0f1126;
+  color: var(--onboarding-notification-tour-title-color);
   font-size: 14px;
+  --onboarding-notification-tour-title-color: #0f1126;
 }
 
 #onboarding-notification-tour-title::before {
   content: "";
-  background-repeat: no-repeat;
-  background-size: 14px;
+  background-color: var(--onboarding-notification-tour-title-color);
+  mask-repeat: no-repeat;
+  mask-size: 14px;
   height: 16px;
   width: 16px;
   float: inline-start;
