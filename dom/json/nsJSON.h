@@ -18,30 +18,6 @@
 
 class nsIURI;
 
-class MOZ_STACK_CLASS nsJSONWriter
-{
-public:
-  nsJSONWriter();
-  explicit nsJSONWriter(nsIOutputStream* aStream);
-  virtual ~nsJSONWriter();
-  nsCOMPtr<nsIOutputStream> mStream;
-  nsresult Write(const char16_t *aBuffer, uint32_t aLength);
-  nsString mOutputString;
-  bool DidWrite();
-  void FlushBuffer();
-
-protected:
-  char16_t *mBuffer;
-  uint32_t mBufferCount;
-  bool mDidWrite;
-  nsresult WriteToStream(nsIOutputStream* aStream,
-                         mozilla::Encoder* encoder,
-                         const char16_t* aBuffer,
-                         uint32_t aLength);
-
-  mozilla::UniquePtr<mozilla::Encoder> mEncoder;
-};
-
 class nsJSON final : public nsIJSON
 {
 public:
