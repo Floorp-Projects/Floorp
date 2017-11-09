@@ -7,6 +7,7 @@
 EXPORTS.mozilla.dom += [
   'ClientInfo.h',
   'ClientIPCUtils.h',
+  'ClientManager.h',
   'ClientManagerActors.h',
   'ClientOpenWindowOpActors.h',
   'ClientOpPromise.h',
@@ -20,6 +21,7 @@ UNIFIED_SOURCES += [
   'ClientHandleOpParent.cpp',
   'ClientHandleParent.cpp',
   'ClientInfo.cpp',
+  'ClientManager.cpp',
   'ClientManagerActors.cpp',
   'ClientManagerChild.cpp',
   'ClientManagerOpChild.cpp',
@@ -52,6 +54,7 @@ IPDL_SOURCES += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
+  '/dom/workers',
 ]
 
 FINAL_LIBRARY = 'xul'
