@@ -7990,108 +7990,74 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
 
   // look for a nearby text node.
   // prefer the correct direction.
-  nsresult rv = FindNearSelectableNode(point.Container(), point.Offset(),
-                                       point.GetChildAtOffset(), aAction,
-                                       address_of(nearNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nearNode = FindNearEditableNode(point.AsRaw(), aAction);
   if (!nearNode) {
     return NS_OK;
   }
+
   EditorDOMPoint pt = GetGoodSelPointForNode(*nearNode, aAction);
-  rv = aSelection->Collapse(pt.AsRaw());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  ErrorResult error;
+  aSelection->Collapse(pt.AsRaw(), error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
   return NS_OK;
 }
 
-
-nsresult
-HTMLEditRules::FindNearSelectableNode(nsINode* aSelNode,
-                                      int32_t aSelOffset,
-                                      nsINode* aChildAtOffset,
-                                      nsIEditor::EDirection& aDirection,
-                                      nsCOMPtr<nsIContent>* outSelectableNode)
+nsIContent*
+HTMLEditRules::FindNearEditableNode(const EditorRawDOMPoint& aPoint,
+                                    nsIEditor::EDirection aDirection)
 {
-  NS_ENSURE_TRUE(aSelNode && outSelectableNode, NS_ERROR_NULL_POINTER);
-  *outSelectableNode = nullptr;
+  if (NS_WARN_IF(!aPoint.IsSet()) ||
+      NS_WARN_IF(!mHTMLEditor)) {
+    return nullptr;
+  }
+  MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  EditorRawDOMPoint point(aSelNode,
-                          aChildAtOffset && aChildAtOffset->IsContent() ?
-                            aChildAtOffset->AsContent() : nullptr,
-                          aSelOffset);
+  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
-  nsCOMPtr<nsIContent> nearNode, curNode;
+  nsIContent* nearNode = nullptr;
   if (aDirection == nsIEditor::ePrevious) {
-    NS_ENSURE_STATE(mHTMLEditor);
-    nearNode = mHTMLEditor->GetPreviousEditableHTMLNode(point);
-    if (NS_WARN_IF(!nearNode)) {
-      return NS_ERROR_FAILURE;
+    nearNode = htmlEditor->GetPreviousEditableHTMLNode(aPoint);
+    if (!nearNode) {
+      return nullptr; // Not illegal.
     }
   } else {
-    NS_ENSURE_STATE(mHTMLEditor);
-    nearNode = mHTMLEditor->GetNextEditableHTMLNode(point);
+    nearNode = htmlEditor->GetNextEditableHTMLNode(aPoint);
     if (NS_WARN_IF(!nearNode)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  // Try the other direction then.
-  if (!nearNode) {
-    if (aDirection == nsIEditor::ePrevious) {
-      aDirection = nsIEditor::eNext;
-    } else {
-      aDirection = nsIEditor::ePrevious;
-    }
-
-    if (aDirection == nsIEditor::ePrevious) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      nearNode = mHTMLEditor->GetPreviousEditableHTMLNode(point);
-      if (NS_WARN_IF(!nearNode)) {
-        return NS_ERROR_FAILURE;
-      }
-    } else {
-      NS_ENSURE_STATE(mHTMLEditor);
-      nearNode = mHTMLEditor->GetPreviousEditableHTMLNode(point);
-      if (NS_WARN_IF(!nearNode)) {
-        return NS_ERROR_FAILURE;
-      }
+      // Perhaps, illegal because the node pointed by aPoint isn't editable
+      // and nobody of previous nodes is editable.
+      return nullptr;
     }
   }
 
   // scan in the right direction until we find an eligible text node,
   // but don't cross any breaks, images, or table elements.
+  // XXX This comment sounds odd.  |nearNode| may have already crossed breaks
+  //     and/or images.
   while (nearNode && !(EditorBase::IsTextNode(nearNode) ||
                        TextEditUtils::IsBreak(nearNode) ||
                        HTMLEditUtils::IsImage(nearNode))) {
-    curNode = nearNode;
     if (aDirection == nsIEditor::ePrevious) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      nearNode = mHTMLEditor->GetPreviousEditableHTMLNode(*curNode);
+      nearNode = htmlEditor->GetPreviousEditableHTMLNode(*nearNode);
       if (NS_WARN_IF(!nearNode)) {
-        return NS_ERROR_FAILURE;
+        return nullptr;
       }
     } else {
-      NS_ENSURE_STATE(mHTMLEditor);
-      nearNode = mHTMLEditor->GetNextEditableHTMLNode(*curNode);
+      nearNode = htmlEditor->GetNextEditableHTMLNode(*nearNode);
       if (NS_WARN_IF(!nearNode)) {
-        return NS_ERROR_FAILURE;
+        return nullptr;
       }
     }
-    NS_ENSURE_STATE(mHTMLEditor);
   }
 
-  if (nearNode) {
-    // don't cross any table elements
-    if (InDifferentTableElements(nearNode, aSelNode)) {
-      return NS_OK;
-    }
-
-    // otherwise, ok, we have found a good spot to put the selection
-    *outSelectableNode = nearNode;
+  // don't cross any table elements
+  if (InDifferentTableElements(nearNode, aPoint.Container())) {
+    return nullptr;
   }
-  return NS_OK;
+
+  // otherwise, ok, we have found a good spot to put the selection
+  return nearNode;
 }
 
 bool
