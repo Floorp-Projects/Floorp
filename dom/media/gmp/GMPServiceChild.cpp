@@ -103,10 +103,12 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       }
 
       if (!ok || NS_FAILED(rv)) {
-        LOGD(("GeckoMediaPluginServiceChild::GetContentParent SendLaunchGMP "
-              "failed rv=0x%x",
-              static_cast<uint32_t>(rv)));
-        holder->Reject(rv, __func__);
+        MediaResult error(rv,
+                          "GeckoMediaPluginServiceChild::GetContentParent "
+                          "SendLaunchGMPForNodeId failed");
+
+        LOGD(("%s", error.Description().get()));
+        holder->Reject(error, __func__);
         return;
       }
 
@@ -120,9 +122,9 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
         new GMPContentParent::CloseBlocker(parent));
       holder->Resolve(blocker, __func__);
     },
-    [rawHolder](nsresult rv) {
+    [rawHolder](MediaResult result) {
       UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(rawHolder);
-      holder->Reject(rv, __func__);
+      holder->Reject(result, __func__);
     });
 
   return promise;
@@ -146,7 +148,9 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
   nsTArray<nsCString> tags(aTags);
   RefPtr<GMPCrashHelper> helper(aHelper);
   RefPtr<GeckoMediaPluginServiceChild> self(this);
-  GetServiceChild()->Then(thread, __func__,
+  GetServiceChild()->Then(
+    thread,
+    __func__,
     [self, nodeId, api, tags, helper, rawHolder](GMPServiceChild* child) {
       UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(rawHolder);
       nsresult rv;
@@ -179,9 +183,12 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       }
 
       if (!ok || NS_FAILED(rv)) {
-        LOGD(("GeckoMediaPluginServiceChild::GetContentParent SendLaunchGMP failed rv=%" PRIu32,
-              static_cast<uint32_t>(rv)));
-        holder->Reject(rv, __func__);
+        MediaResult error(rv,
+                          "GeckoMediaPluginServiceChild::GetContentParent "
+                          "SendLaunchGMPForNodeId failed");
+
+        LOGD(("%s", error.Description().get()));
+        holder->Reject(error, __func__);
         return;
       }
 
@@ -195,9 +202,9 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       RefPtr<GMPContentParent::CloseBlocker> blocker(new GMPContentParent::CloseBlocker(parent));
       holder->Resolve(blocker, __func__);
     },
-    [rawHolder](nsresult rv) {
+    [rawHolder](MediaResult result) {
       UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(rawHolder);
-      holder->Reject(rv, __func__);
+      holder->Reject(result, __func__);
     });
 
   return promise;
