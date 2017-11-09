@@ -851,10 +851,6 @@ PP_Resources.h
 PP_Types.h
 Printing.h
 Print/PMPrintingDialogExtensions.h
-#ifdef ANDROID
-private/android_filesystem_config.h
-private/qucomextra_p.h
-#endif
 Processes.h
 process.h
 Process.h
