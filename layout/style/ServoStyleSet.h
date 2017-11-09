@@ -14,6 +14,7 @@
 #include "mozilla/PostTraversalTask.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoElementSnapshot.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/SheetType.h"
@@ -149,6 +150,15 @@ public:
   }
 
   nsRestyleHint MediumFeaturesChanged(bool aViewportChanged);
+
+  // Evaluates a given SourceSizeList, returning the optimal viewport width in
+  // app units.
+  //
+  // The SourceSizeList parameter can be null, in which case it will return
+  // 100vw.
+  nscoord EvaluateSourceSizeList(const RawServoSourceSizeList* aSourceSizeList) const {
+    return Servo_SourceSizeList_Evaluate(mRawSet.get(), aSourceSizeList);
+  }
 
   // aViewportChanged outputs whether any viewport units is used.
   bool MediumFeaturesChangedRules(bool* aViewportUnitsUsed);
