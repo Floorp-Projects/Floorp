@@ -700,7 +700,7 @@ HTMLImageElement::NodeInfoChanged(nsIDocument* aOldDoc)
   // Force reload image if adoption steps are run.
   // If loading is temporarily disabled, don't even launch script runner.
   // Otherwise script runner may run later when someone has reenabled loading.
-  if (LoadingEnabled()) {
+  if (LoadingEnabled() && OwnerDoc()->ShouldLoadImages()) {
     // Use script runner for the case the adopt is from appendChild.
     // Bug 1076583 - We still behave synchronously in the non-responsive case
     nsContentUtils::AddScriptRunner(

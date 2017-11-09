@@ -993,7 +993,7 @@ class CodeRange
   public:
     enum Kind {
         Function,          // function definition
-        Entry,             // calls into wasm from C++
+        InterpEntry,       // calls into wasm from C++
         ImportJitExit,     // fast-path calling from wasm into JIT code
         ImportInterpExit,  // slow-path calling from wasm into C++ interp
         BuiltinThunk,      // fast-path calling from wasm into a C++ native
@@ -1097,7 +1097,7 @@ class CodeRange
     // index.
 
     bool hasFuncIndex() const {
-        return isFunction() || isImportExit() || kind() == Entry;
+        return isFunction() || isImportExit() || kind() == InterpEntry;
     }
     uint32_t funcIndex() const {
         MOZ_ASSERT(hasFuncIndex());
