@@ -777,6 +777,15 @@ ClearFrameProps(nsTArray<nsIFrame*>& aFrames)
   }
 }
 
+void
+RetainedDisplayListBuilder::ClearModifiedFrameProps()
+{
+  nsTArray<nsIFrame*> modifiedFrames =
+    GetModifiedFrames(mBuilder.RootReferenceFrame());
+
+  ClearFrameProps(modifiedFrames);
+}
+
 bool
 RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 {
