@@ -27,6 +27,7 @@ UNIFIED_SOURCES += [
   'ClientManagerOpChild.cpp',
   'ClientManagerOpParent.cpp',
   'ClientManagerParent.cpp',
+  'ClientManagerService.cpp',
   'ClientNavigateOpChild.cpp',
   'ClientNavigateOpParent.cpp',
   'ClientOpenWindowOpActors.cpp',

@@ -11,8 +11,12 @@
 namespace mozilla {
 namespace dom {
 
+class ClientManagerService;
+
 class ClientSourceParent final : public PClientSourceParent
 {
+  RefPtr<ClientManagerService> mService;
+
   // PClientSourceParent
   IPCResult
   RecvTeardown() override;
