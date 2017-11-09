@@ -42,12 +42,6 @@ public:
   WebRenderLayerScrollData(); // needed for IPC purposes
   ~WebRenderLayerScrollData();
 
-  // Actually initialize the object. This is not done during the constructor
-  // for optimization purposes (the call site is hard to write efficiently
-  // if we do this in the constructor).
-  void Initialize(WebRenderScrollData& aOwner,
-                  Layer* aLayer,
-                  int32_t aDescendantCount);
   void InitializeRoot(int32_t aDescendantCount);
   void Initialize(WebRenderScrollData& aOwner,
                   nsDisplayItem* aItem,
