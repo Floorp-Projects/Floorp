@@ -810,10 +810,43 @@ protected:
                 const EditorRawDOMPoint& aPoint,
                 bool aNoBlockCrossing);
 
-  nsIContent* GetNextHTMLNode(nsINode* aNode, bool aNoBlockCrossing = false);
-  nsIContent* GetNextHTMLNode(nsINode* aParent, int32_t aOffset,
-                              nsINode* aChildAtOffset,
-                              bool aNoBlockCrossing = false);
+  /**
+   * GetNextEditableHTMLNode*() methods are similar to
+   * EditorBase::GetNextEditableNode() but this won't return nodes outside
+   * active editing host.
+   *
+   * Note that same as EditorBaseGetTextEditableNode(), methods which take
+   * |const EditorRawDOMPoint&| start to search from the node pointed by it.
+   * On the other hand, methods which take |nsINode&| start to search from
+   * next node of aNode.
+   */
+  nsIContent* GetNextEditableHTMLNode(nsINode& aNode)
+  {
+    return GetNextEditableHTMLNodeInternal(aNode, false);
+  }
+  nsIContent* GetNextEditableHTMLNodeInBlock(nsINode& aNode)
+  {
+    return GetNextEditableHTMLNodeInternal(aNode, true);
+  }
+  nsIContent* GetNextEditableHTMLNode(const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextEditableHTMLNodeInternal(aPoint, false);
+  }
+  nsIContent* GetNextEditableHTMLNodeInBlock(
+                const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextEditableHTMLNodeInternal(aPoint, true);
+  }
+
+  /**
+   * GetNextEditableHTMLNodeInternal() methods are common implementation
+   * of above methods.  Please don't use this method directly.
+   */
+  nsIContent* GetNextEditableHTMLNodeInternal(nsINode& aNode,
+                                                  bool aNoBlockCrossing);
+  nsIContent* GetNextEditableHTMLNodeInternal(
+                const EditorRawDOMPoint& aPoint,
+                bool aNoBlockCrossing);
 
   bool IsFirstEditableChild(nsINode* aNode);
   bool IsLastEditableChild(nsINode* aNode);
