@@ -20,8 +20,7 @@ function debug(msg) {
 }
 
 /**
- * Properties swapped between browsers by browser.xml's `swapDocShells`.  See also the
- * list at /devtools/client/responsive.html/docs/browser-swap.md.
+ * Properties swapped between browsers by browser.xml's `swapDocShells`.
  */
 const SWAPPED_BROWSER_STATE = [
   "_remoteFinder",

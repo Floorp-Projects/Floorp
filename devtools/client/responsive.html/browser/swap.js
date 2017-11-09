@@ -22,9 +22,6 @@ function debug(msg) {
  * this is used in RDM.  The steps described there are copied into the code
  * below.
  *
- * For additional low level details about swapping browser content,
- * see /devtools/client/responsive.html/docs/browser-swap.md.
- *
  * @param tab
  *        A browser tab with content to be swapped.
  * @param containerURL
