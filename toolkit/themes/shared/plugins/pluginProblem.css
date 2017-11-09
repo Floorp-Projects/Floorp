@@ -215,6 +215,38 @@ a .msgTapToPlay  {
   font-size: 13px;
 }
 
+:-moz-handler-clicktoplay .mainBox[sizing=blank] .hoverBox {
+  visibility: hidden;
+}
+
+:-moz-handler-clicktoplay .mainBox[sizing=tiny] .icon {
+  width: 16px;
+  height: 16px;
+}
+
+:-moz-handler-clicktoplay .mainBox[sizing=reduced] .icon {
+  width: 32px;
+  height: 32px;
+}
+
+:-moz-handler-clicktoplay .mainBox[sizing=blank] .closeIcon,
+:-moz-handler-clicktoplay .mainBox[sizing=tiny] .closeIcon,
+:-moz-handler-clicktoplay .mainBox[sizing=reduced] .closeIcon {
+  display: none;
+}
+
+:-moz-handler-clicktoplay .mainBox[notext] .msgClickToPlay {
+  display: none;
+}
+
+:-moz-handler-clicktoplay .mainBox[notext] .icon {
+  /* Override a `margin-bottom: 6px` now that .msgClickToPlay
+   * below the icon is no longer shown, in order to achieve
+   * a perfect vertical centering of the icon.
+   */
+  margin-bottom: 0;
+}
+
 :-moz-handler-clicktoplay .hoverBox:active {
   background-color: var(--grey-60);
 }
