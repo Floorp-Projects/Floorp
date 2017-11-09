@@ -274,21 +274,21 @@ WasmReportTrap(int32_t trapIndex)
         MOZ_CRASH("unexpected trap");
     }
 
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber);
 }
 
 static void
 WasmReportOutOfBounds()
 {
     JSContext* cx = TlsContext.get();
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
 }
 
 static void
 WasmReportUnalignedAccess()
 {
     JSContext* cx = TlsContext.get();
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNALIGNED_ACCESS);
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNALIGNED_ACCESS);
 }
 
 static int32_t
