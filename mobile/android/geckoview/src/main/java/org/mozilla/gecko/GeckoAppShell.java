@@ -37,6 +37,7 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.geckoview.BuildConfig;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -129,12 +130,12 @@ public class GeckoAppShell
         protected Bundle getCrashExtras(final Thread thread, final Throwable exc) {
             final Bundle extras = super.getCrashExtras(thread, exc);
 
-            extras.putString("ProductName", AppConstants.MOZ_APP_BASENAME);
-            extras.putString("ProductID", AppConstants.MOZ_APP_ID);
-            extras.putString("Version", AppConstants.MOZ_APP_VERSION);
-            extras.putString("BuildID", AppConstants.MOZ_APP_BUILDID);
-            extras.putString("Vendor", AppConstants.MOZ_APP_VENDOR);
-            extras.putString("ReleaseChannel", AppConstants.MOZ_UPDATE_CHANNEL);
+            extras.putString("ProductName", BuildConfig.MOZ_APP_BASENAME);
+            extras.putString("ProductID", BuildConfig.MOZ_APP_ID);
+            extras.putString("Version", BuildConfig.MOZ_APP_VERSION);
+            extras.putString("BuildID", BuildConfig.MOZ_APP_BUILDID);
+            extras.putString("Vendor", BuildConfig.MOZ_APP_VENDOR);
+            extras.putString("ReleaseChannel", BuildConfig.MOZ_UPDATE_CHANNEL);
 
             final String appNotes = getAppNotes();
             if (appNotes != null) {
@@ -164,7 +165,7 @@ public class GeckoAppShell
 
             // reportJavaCrash should have caused us to hard crash. If we're still here,
             // it probably means Gecko is not loaded, and we should do something else.
-            if (AppConstants.MOZ_CRASHREPORTER && AppConstants.MOZILLA_OFFICIAL) {
+            if (BuildConfig.MOZ_CRASHREPORTER && BuildConfig.MOZILLA_OFFICIAL) {
                 // Only use Java crash reporter if enabled on official build.
                 return super.reportException(thread, exc);
             }

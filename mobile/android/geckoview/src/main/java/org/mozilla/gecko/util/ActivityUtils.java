@@ -14,8 +14,6 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
-import org.mozilla.gecko.AppConstants;
-
 public class ActivityUtils {
     private ActivityUtils() {
     }

@@ -7,7 +7,6 @@ package org.mozilla.gecko.util;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.AppConstants;
 
 import org.json.JSONArray;
 import org.json.JSONException;
