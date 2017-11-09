@@ -475,7 +475,7 @@ enum UnpremultiplyInputs
   IN_UNPREMULTIPLY_IN = 0
 };
 
-class FilterNode : public RefCounted<FilterNode>
+class FilterNode : public external::AtomicRefCounted<FilterNode>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNode)

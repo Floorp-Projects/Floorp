@@ -14,6 +14,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/RangeBoundary.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -2544,13 +2545,13 @@ NS_IMETHODIMP
 Selection::Collapse(nsIDOMNode* aContainer, int32_t aOffset)
 {
   nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
-  return Collapse(container, aOffset);
+  return Collapse(RawRangeBoundary(container, aOffset));
 }
 
 NS_IMETHODIMP
 Selection::CollapseNative(nsINode* aContainer, int32_t aOffset)
 {
-  return Collapse(aContainer, aOffset);
+  return Collapse(RawRangeBoundary(aContainer, aOffset));
 }
 
 void
@@ -2562,56 +2563,52 @@ Selection::CollapseJS(nsINode* aContainer, uint32_t aOffset, ErrorResult& aRv)
     RemoveAllRanges(aRv);
     return;
   }
-  Collapse(*aContainer, aOffset, aRv);
-}
-
-nsresult
-Selection::Collapse(nsINode* aContainer, int32_t aOffset)
-{
-  if (!aContainer) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  ErrorResult result;
-  Collapse(*aContainer, static_cast<uint32_t>(aOffset), result);
-  return result.StealNSResult();
+  Collapse(RawRangeBoundary(aContainer, aOffset), aRv);
 }
 
 void
-Selection::Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
+Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv)
 {
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED); // Can't do selection
     return;
   }
 
-  if (aContainer.NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+  if (!aPoint.IsSet()) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+
+  if (aPoint.Container()->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
     aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
     return;
   }
 
-  if (aOffset > aContainer.Length()) {
+  // RawRangeBoundary::IsSetAndValid() checks if the point actually refers
+  // a child of the container when IsSet() is true.  If its offset hasn't been
+  // computed yet, this just checks it with its mRef.  So, we can avoid
+  // computing offset here.
+  if (!aPoint.IsSetAndValid()) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
 
-  if (!HasSameRoot(aContainer)) {
+  if (!HasSameRoot(*aPoint.Container())) {
     // Return with no error
     return;
   }
 
-  nsCOMPtr<nsINode> container = &aContainer;
-
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
   frameSelection->InvalidateDesiredPos();
-  if (!IsValidSelectionPoint(frameSelection, container)) {
+  if (!IsValidSelectionPoint(frameSelection, aPoint.Container())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
   nsresult result;
 
   RefPtr<nsPresContext> presContext = GetPresContext();
-  if (!presContext || presContext->Document() != container->OwnerDoc()) {
+  if (!presContext ||
+      presContext->Document() != aPoint.Container()->OwnerDoc()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2627,16 +2624,21 @@ Selection::Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
 
   // Hack to display the caret on the right line (bug 1237236).
   if (frameSelection->GetHint() != CARET_ASSOCIATE_AFTER &&
-      container->IsContent()) {
+      aPoint.Container()->IsContent()) {
     int32_t frameOffset;
     nsTextFrame* f =
-      do_QueryFrame(nsCaret::GetFrameAndOffset(this, container,
-                                               aOffset, &frameOffset));
+      do_QueryFrame(nsCaret::GetFrameAndOffset(this, aPoint.Container(),
+                                               aPoint.Offset(), &frameOffset));
     if (f && f->IsAtEndOfLine() && f->HasSignificantTerminalNewline()) {
-      if ((container->AsContent() == f->GetContent() &&
-           f->GetContentEnd() == int32_t(aOffset)) ||
-          (container == f->GetContent()->GetParentNode() &&
-           container->IndexOf(f->GetContent()) + 1 == int32_t(aOffset))) {
+      // RawRangeBounary::Offset() causes computing offset if it's not been
+      // done yet.  However, it's called only when the container is a text
+      // node.  In such case, offset has always been set since it cannot have
+      // any children.  So, this doesn't cause computing offset with expensive
+      // method, nsINode::IndexOf().
+      if ((aPoint.Container()->AsContent() == f->GetContent() &&
+           f->GetContentEnd() == static_cast<int32_t>(aPoint.Offset())) ||
+          (aPoint.Container() == f->GetContent()->GetParentNode() &&
+           f->GetContent() == aPoint.GetPreviousSiblingOfChildAtOffset())) {
         frameSelection->SetHint(CARET_ASSOCIATE_AFTER);
       }
     }
@@ -2650,21 +2652,21 @@ Selection::Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
   } else if (mCachedRange) {
     range = Move(mCachedRange);
   } else {
-    range = new nsRange(container);
+    range = new nsRange(aPoint.Container());
   }
-  result = range->CollapseTo(container, aOffset);
+  result = range->CollapseTo(aPoint);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
   }
 
 #ifdef DEBUG_SELECTION
-  nsCOMPtr<nsIContent> content = do_QueryInterface(container);
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(container);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aPoint.Container());
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aPoint.Container());
   printf ("Sel. Collapse to %p %s %d\n", container.get(),
           content ? nsAtomCString(content->NodeInfo()->NameAtom()).get()
                   : (doc ? "DOCUMENT" : "???"),
-          aOffset);
+          aPoint.Offset());
 #endif
 
   int32_t rangeIndex = -1;

@@ -988,9 +988,29 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
     // Imports are located upfront in the globals array.
     Val val;
     switch (global.kind()) {
-      case GlobalKind::Import:   val = globalImports[globalIndex]; break;
-      case GlobalKind::Variable: MOZ_CRASH("mutable variables can't be exported");
-      case GlobalKind::Constant: val = global.constantValue(); break;
+      case GlobalKind::Import: {
+        val = globalImports[globalIndex];
+        break;
+      }
+      case GlobalKind::Variable: {
+        MOZ_ASSERT(!global.isMutable(), "mutable variables can't be exported");
+        const InitExpr& init = global.initExpr();
+        switch (init.kind()) {
+          case InitExpr::Kind::Constant: {
+            val = init.val();
+            break;
+          }
+          case InitExpr::Kind::GetGlobal: {
+            val = globalImports[init.globalIndex()];
+            break;
+          }
+        }
+        break;
+      }
+      case GlobalKind::Constant: {
+        val = global.constantValue();
+        break;
+      }
     }
 
     switch (global.type()) {

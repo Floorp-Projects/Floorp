@@ -560,6 +560,7 @@ ChromiumCDMChild::RecvLoadSession(const uint32_t& aPromiseId,
                                   const uint32_t& aSessionType,
                                   const nsCString& aSessionId)
 {
+  MOZ_ASSERT(IsOnMessageLoopThread());
   GMP_LOG("ChromiumCDMChild::RecvLoadSession(pid=%u, type=%u, sessionId=%s)",
           aPromiseId,
           aSessionType,
@@ -737,6 +738,11 @@ ChromiumCDMChild::RecvInitializeVideoDecoder(
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
   MOZ_ASSERT(!mDecoderInitialized);
+  if (!mCDM) {
+    GMP_LOG("ChromiumCDMChild::RecvInitializeVideoDecoder() no CDM");
+    Unused << SendOnDecoderInitDone(cdm::kInitializationError);
+    return IPC_OK();
+  }
   cdm::VideoDecoderConfig config;
   config.codec =
     static_cast<cdm::VideoDecoderConfig::VideoCodec>(aConfig.mCodec());
@@ -761,10 +767,10 @@ ChromiumCDMChild::RecvDeinitializeVideoDecoder()
   MOZ_ASSERT(IsOnMessageLoopThread());
   GMP_LOG("ChromiumCDMChild::RecvDeinitializeVideoDecoder()");
   MOZ_ASSERT(mDecoderInitialized);
-  if (mDecoderInitialized) {
-    mDecoderInitialized = false;
+  if (mDecoderInitialized && mCDM) {
     mCDM->DeinitializeDecoder(cdm::kStreamTypeVideo);
   }
+  mDecoderInitialized = false;
   PurgeShmems();
   return IPC_OK();
 }
@@ -774,7 +780,7 @@ ChromiumCDMChild::RecvResetVideoDecoder()
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
   GMP_LOG("ChromiumCDMChild::RecvResetVideoDecoder()");
-  if (mDecoderInitialized) {
+  if (mDecoderInitialized && mCDM) {
     mCDM->ResetDecoder(cdm::kStreamTypeVideo);
   }
   Unused << SendResetVideoDecoderComplete();
@@ -788,6 +794,12 @@ ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
   GMP_LOG("ChromiumCDMChild::RecvDecryptAndDecodeFrame() t=%" PRId64 ")",
           aBuffer.mTimestamp());
   MOZ_ASSERT(mDecoderInitialized);
+
+  if (!mCDM) {
+    GMP_LOG("ChromiumCDMChild::RecvDecryptAndDecodeFrame() no CDM");
+    Unused << SendDecodeFailed(cdm::kDecodeError);
+    return IPC_OK();
+  }
 
   RefPtr<ChromiumCDMChild> self = this;
   auto autoDeallocateShmem = MakeScopeExit([&, self] {
@@ -882,6 +894,11 @@ mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvDrain()
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
+  if (!mCDM) {
+    GMP_LOG("ChromiumCDMChild::RecvDrain() no CDM");
+    Unused << SendDrainComplete();
+    return IPC_OK();
+  }
   WidevineVideoFrame frame;
   cdm::InputBuffer sample;
   cdm::Status rv = mCDM->DecryptAndDecodeFrame(sample, &frame);

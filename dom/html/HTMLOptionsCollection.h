@@ -8,7 +8,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsIHTMLCollection.h"
-#include "nsIDOMHTMLOptionsCollection.h"
 #include "nsWrapperCache.h"
 
 #include "mozilla/dom/HTMLOptionElement.h"
@@ -32,7 +31,6 @@ class HTMLSelectElement;
  * select.options in DOM)
  */
 class HTMLOptionsCollection final : public nsIHTMLCollection
-                                  , public nsIDOMHTMLOptionsCollection
                                   , public nsWrapperCache
 {
   typedef HTMLOptionElementOrHTMLOptGroupElement HTMLOptionOrOptGroupElement;
@@ -40,6 +38,7 @@ public:
   explicit HTMLOptionsCollection(HTMLSelectElement* aSelect);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_NSIDOMHTMLCOLLECTION
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
@@ -58,12 +57,6 @@ protected:
     nsWrapperCache::PreserveWrapper(aScriptObjectHolder);
   }
 public:
-
-  // nsIDOMHTMLOptionsCollection interface
-  NS_DECL_NSIDOMHTMLOPTIONSCOLLECTION
-
-  // nsIDOMHTMLCollection interface, all its methods are defined in
-  // nsIDOMHTMLOptionsCollection
 
   virtual Element* GetElementAt(uint32_t aIndex) override;
   virtual nsINode* GetParentObject() override;
@@ -147,7 +140,6 @@ public:
   {
     return NamedGetter(aName, aFound);
   }
-
   void Add(const HTMLOptionOrOptGroupElement& aElement,
            const Nullable<HTMLElementOrLong>& aBefore,
            ErrorResult& aError);
@@ -157,6 +149,7 @@ public:
   void IndexedSetter(uint32_t aIndex, HTMLOptionElement* aOption,
                      ErrorResult& aError);
   virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
+  void SetLength(uint32_t aLength, ErrorResult& aError);
 
 private:
   /** The list of options (holds strong references).  This is infallible, so

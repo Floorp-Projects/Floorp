@@ -1,0 +1,8 @@
+---
+$if: label in target_tasks
+then:
+    attributes:
+        $merge:
+            - $eval: attributes
+            - task_duplicates:
+                $eval: input

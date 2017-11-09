@@ -35,7 +35,8 @@ const getSender = (extension, target, sender) => {
     // page-open listener below).
     tabId = sender.tabId;
     delete sender.tabId;
-  } else if (target instanceof Ci.nsIDOMXULElement) {
+  } else if (target instanceof Ci.nsIDOMXULElement ||
+             ExtensionUtils.instanceOf(target, "HTMLIFrameElement")) {
     tabId = tabTracker.getBrowserData(target).tabId;
   }
 

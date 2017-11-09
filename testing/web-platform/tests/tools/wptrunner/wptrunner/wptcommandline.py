@@ -89,6 +89,8 @@ scheme host and port.""")
                                       help="URL prefix to exclude")
     test_selection_group.add_argument("--include-manifest", type=abs_path,
                                       help="Path to manifest listing tests to include")
+    test_selection_group.add_argument("--skip-timeout", action="store_true",
+                                      help="Skip tests that are expected to time out")
     test_selection_group.add_argument("--tag", action="append", dest="tags",
                                       help="Labels applied to tests to include in the run. Labels starting dir: are equivalent to top-level directories.")
 

@@ -71,9 +71,8 @@ class IDBFactory final
 
   indexedDB::BackgroundFactoryChild* mBackgroundActor;
 
-  // A DocGroup-specific EventTarget if created by CreateForWindow().
-  // Otherwise, it must either be set to SystemGroup on main thread or
-  // NS_GetCurrentThread() off main thread.
+  // It is either set to a DocGroup-specific EventTarget if created by
+  // CreateForWindow() or set to GetCurrentThreadEventTarget() otherwise.
   nsCOMPtr<nsIEventTarget> mEventTarget;
 
   uint64_t mInnerWindowID;

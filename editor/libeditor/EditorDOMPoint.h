@@ -49,15 +49,17 @@ public:
   }
 
   /**
-   * Different from RangeBoundary, aReferenceChild should be a child node
+   * Different from RangeBoundary, aPointedNode should be a child node
    * which you want to refer.  So, set non-nullptr if offset is
    * 0 - Length() - 1.  Otherwise, set nullptr, i.e., if offset is same as
    * Length().
    */
-  EditorDOMPointBase(nsINode* aContainer,
-                     nsIContent* aPointedNode)
-    : RangeBoundaryBase<ParentType, RefType>(aContainer,
-                                             GetRef(aPointedNode))
+  explicit EditorDOMPointBase(nsINode* aPointedNode)
+    : RangeBoundaryBase<ParentType, RefType>(
+        aPointedNode && aPointedNode->IsContent() ?
+          aPointedNode->GetParentNode() : nullptr,
+        aPointedNode && aPointedNode->IsContent() ?
+          GetRef(aPointedNode->AsContent()) : nullptr)
   {
   }
 

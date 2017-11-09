@@ -83,7 +83,7 @@ nsTextBoxFrame::AttributeChanged(int32_t         aNameSpaceID,
     UpdateAttributes(aAttribute, aResize, aRedraw);
 
     if (aResize) {
-        PresContext()->PresShell()->
+        PresShell()->
             FrameNeedsReflow(this, nsIPresShell::eStyleChange,
                              NS_FRAME_IS_DIRTY);
     } else if (aRedraw) {
@@ -215,7 +215,7 @@ nsTextBoxFrame::UpdateAccesskey(WeakFrame& aWeakThis)
         RecomputeTitle();
         mAccessKey = accesskey;
         UpdateAccessTitle();
-        PresContext()->PresShell()->
+        PresShell()->
             FrameNeedsReflow(this, nsIPresShell::eStyleChange,
                              NS_FRAME_IS_DIRTY);
         return true;
@@ -518,7 +518,7 @@ nsTextBoxFrame::DrawText(gfxContext&         aRenderingContext,
     }
 
     RefPtr<gfxContext> refContext =
-        PresContext()->PresShell()->CreateReferenceRenderingContext();
+        PresShell()->CreateReferenceRenderingContext();
     DrawTarget* refDrawTarget = refContext->GetDrawTarget();
 
     CalculateUnderline(refDrawTarget, *fontMet);
@@ -978,7 +978,7 @@ nsTextBoxFrame::DoXULLayout(nsBoxLayoutState& aBoxLayoutState)
     if (mNeedsReflowCallback) {
         nsIReflowCallback* cb = new nsAsyncAccesskeyUpdate(this);
         if (cb) {
-            PresContext()->PresShell()->PostReflowCallback(cb);
+            PresShell()->PostReflowCallback(cb);
         }
         mNeedsReflowCallback = false;
     }
@@ -1101,7 +1101,7 @@ nsTextBoxFrame::CalcDrawRect(gfxContext &aRenderingContext)
     // changed.
     nsAccessibilityService* accService = GetAccService();
     if (accService) {
-        accService->UpdateLabelValue(PresContext()->PresShell(), mContent,
+        accService->UpdateLabelValue(PresShell(), mContent,
                                      mCroppedTitle);
     }
 #endif

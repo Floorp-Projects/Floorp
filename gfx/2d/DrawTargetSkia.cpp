@@ -50,6 +50,8 @@
 #include "ScaledFontDWrite.h"
 #endif
 
+using namespace std;
+
 namespace mozilla {
 namespace gfx {
 
@@ -276,6 +278,7 @@ GetSkImageForSurface(SourceSurface* aSurface, const Rect* aBounds = nullptr, con
 
 DrawTargetSkia::DrawTargetSkia()
   : mSnapshot(nullptr)
+  , mSnapshotLock{make_shared<Mutex>("DrawTargetSkia::mSnapshotLock")}
 #ifdef MOZ_WIDGET_COCOA
   , mCG(nullptr)
   , mColorSpace(nullptr)
@@ -316,7 +319,7 @@ DrawTargetSkia::Snapshot()
     } else {
       image = mSurface->makeImageSnapshot();
     }
-    if (!snapshot->InitFromImage(image, mFormat, this)) {
+    if (!snapshot->InitFromImage(image, mFormat, this, mSnapshotLock)) {
       return nullptr;
     }
     mSnapshot = snapshot;
@@ -2214,6 +2217,7 @@ DrawTargetSkia::CreateFilter(FilterType aType)
 void
 DrawTargetSkia::MarkChanged()
 {
+  MutexAutoLock lock(*mSnapshotLock);
   if (mSnapshot) {
     mSnapshot->DrawTargetWillChange();
     mSnapshot = nullptr;

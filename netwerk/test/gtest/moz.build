@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     'TestMozURL.cpp',
     'TestPartiallySeekableInputStream.cpp',
     'TestProtocolProxyService.cpp',
+    'TestReadStreamToString.cpp',
     'TestStandardURL.cpp',
 ]
 

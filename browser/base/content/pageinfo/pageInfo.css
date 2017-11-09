@@ -2,10 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-#viewGroup > radio {
-  -moz-binding: url("chrome://browser/content/pageinfo/pageInfo.xml#viewbutton");
+#viewGroup > radio > .radio-label-box {
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
 }
+
+/* Hide the radio button for the section headers */
+#viewGroup > radio > .radio-check {
+  display: none;
+}
+
 
 richlistitem[feed] {
   -moz-binding: url("chrome://browser/content/pageinfo/feeds.xml#feed");

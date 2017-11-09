@@ -207,6 +207,12 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_FIXUP_SCHEME_TYPOS = 0x200000;
 
   /**
+   * Allows a top-level data: navigation to occur. E.g. view-image
+   * is an explicit user action which should be allowed.
+   */
+  const unsigned long LOAD_FLAGS_FORCE_ALLOW_DATA_URI = 0x400000;
+
+  /**
    * Loads a given URI.  This will give priority to loading the requested URI
    * in the object implementing	this interface.  If it can't be loaded here
    * however, the URI dispatcher will go through its normal process of content

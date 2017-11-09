@@ -19,6 +19,8 @@ fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-
 # background size in test vs. ref
 fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) skip-if(Android) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate the random-if. The skip-if(Android) is because checkbox/radio appearance:none doesn't work as expected.
 == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
+== flexbox-item-align-self-dynamic-pos-001.html flexbox-item-align-self-dynamic-pos-001-ref.html
+== flexbox-item-align-self-dynamic-pos-002.html flexbox-item-align-self-dynamic-pos-002-ref.html
 
 # Tests for box-sizing on flex containers and flex items.
 == flexbox-box-sizing-on-container-horiz-1.html flexbox-box-sizing-on-container-horiz-1-ref.html

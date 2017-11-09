@@ -61,9 +61,9 @@ public:
 
   TaskQueue* AsTaskQueue() override { return this; }
 
-  void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                DispatchFailureHandling aFailureHandling = AssertDispatchSuccess,
-                DispatchReason aReason = NormalDispatch) override
+  nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+                    DispatchFailureHandling aFailureHandling = AssertDispatchSuccess,
+                    DispatchReason aReason = NormalDispatch) override
   {
     nsCOMPtr<nsIRunnable> r = aRunnable;
     {
@@ -74,7 +74,7 @@ public:
         MOZ_CRASH_UNSAFE_PRINTF("%s: Dispatch failed. rv=%x", mName, uint32_t(rv));
       }
 #endif
-      Unused << rv;
+      return rv;
     }
     // If the ownership of |r| is not transferred in DispatchLocked() due to
     // dispatch failure, it will be deleted here outside the lock. We do so

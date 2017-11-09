@@ -402,7 +402,8 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
         transferred, size, time, displayedStatus } = data;
 
   let target = document.querySelectorAll(".request-list-item")[visibleIndex];
-  let unicodeUrl = decodeUnicodeUrl(url);
+  // Bug 1414981 - Request URL should not show #hash
+  let unicodeUrl = decodeUnicodeUrl(url).split("#")[0];
   let name = getUrlBaseName(url);
   let query = getUrlQuery(url);
   let host = getUrlHost(url);
@@ -424,7 +425,7 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
     ok(requestItem.url.startsWith(url), "The attached url is correct.");
   } else {
     is(requestItem.method, method, "The attached method is correct.");
-    is(requestItem.url, url, "The attached url is correct.");
+    is(requestItem.url, url.split("#")[0], "The attached url is correct.");
   }
 
   is(target.querySelector(".requests-list-method").textContent,

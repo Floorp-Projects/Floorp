@@ -225,24 +225,6 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   return true;
 }
 
-/*static*/ int32_t
-PopulateScrollData(WebRenderScrollData& aTarget, Layer* aLayer)
-{
-  MOZ_ASSERT(aLayer);
-
-  // We want to allocate a WebRenderLayerScrollData object for this layer,
-  // but don't keep a pointer to it since it might get memmove'd during the
-  // recursion below. Instead keep the index and get the pointer later.
-  size_t index = aTarget.AddNewLayerData();
-
-  int32_t descendants = 0;
-  for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
-    descendants += PopulateScrollData(aTarget, child);
-  }
-  aTarget.GetLayerDataMutable(index)->Initialize(aTarget, aLayer, descendants);
-  return descendants + 1;
-}
-
 void
 WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                       void* aCallbackData,

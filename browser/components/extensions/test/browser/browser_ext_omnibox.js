@@ -84,21 +84,35 @@ add_task(async function() {
     }
   }
 
-  async function startInputSession() {
+  async function waitForAutocompleteResultAt(index) {
+    let searchString = gURLBar.controller.searchString;
+    await BrowserTestUtils.waitForCondition(
+      () => gURLBar.popup.richlistbox.children.length > index &&
+            gURLBar.popup.richlistbox.children[index].getAttribute("ac-text") == searchString,
+      `Waiting for the autocomplete result for "${searchString}" at [${index}] to appear`);
+    // Ensure the addition is complete, for proper mouse events on the entries.
+    await new Promise(resolve => window.requestIdleCallback(resolve, {timeout: 1000}));
+    return gURLBar.popup.richlistbox.children[index];
+  }
+
+  let inputSessionSerial = 0;
+  async function startInputSession(indexToWaitFor) {
     gURLBar.focus();
     gURLBar.value = keyword;
     EventUtils.synthesizeKey(" ", {});
     await expectEvent("on-input-started-fired");
-    EventUtils.synthesizeKey("t", {});
-    await expectEvent("on-input-changed-fired", {text: "t"});
+    // Always use a different input at every invokation, so that
+    // waitForAutocompleteResultAt can distinguish different cases.
+    let char = ((inputSessionSerial++) % 10).toString();
+    EventUtils.synthesizeKey(char, {});
+
+    await expectEvent("on-input-changed-fired", {text: char});
     // Wait for the autocomplete search. Note that we cannot wait for the search
     // to be complete, since the add-on doesn't communicate when it's done, so
     // just check matches count.
-    await BrowserTestUtils.waitForCondition(
-      () => gURLBar.controller.matchCount >= 2 &&
-            gURLBar.popup.richlistbox.children[1].getAttribute("ac-text") == gURLBar.controller.searchString,
-      "waiting urlbar search to complete");
-    return "t";
+    await waitForAutocompleteResultAt(indexToWaitFor);
+
+    return char;
   }
 
   async function testInputEvents() {
@@ -174,7 +188,7 @@ add_task(async function() {
       await extension.awaitMessage("default-suggestion-set");
     }
 
-    let text = await startInputSession();
+    let text = await startInputSession(0);
 
     let item = gURLBar.popup.richlistbox.children[0];
 
@@ -193,7 +207,7 @@ add_task(async function() {
   }
 
   async function testDisposition(suggestionIndex, expectedDisposition, expectedText) {
-    await startInputSession();
+    await startInputSession(suggestionIndex);
 
     // Select the suggestion.
     for (let i = 0; i < suggestionIndex; i++) {
@@ -229,7 +243,7 @@ add_task(async function() {
         `Expected suggestion to have displayurl: "${keyword} ${content}".`);
     }
 
-    let text = await startInputSession();
+    let text = await startInputSession(info.suggestions.length - 1);
 
     extension.sendMessage(info.test);
     await extension.awaitMessage("test-ready");
@@ -274,12 +288,10 @@ add_task(async function() {
   // Test adding suggestions asynchronously.
   await testSuggestions({
     test: "test-multiple-suggest-calls",
-    skipHeuristic: true,
     suggestions,
   });
   await testSuggestions({
     test: "test-suggestions-after-delay",
-    skipHeuristic: true,
     suggestions,
   });
 

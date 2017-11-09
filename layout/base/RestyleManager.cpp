@@ -728,6 +728,16 @@ RecomputePosition(nsIFrame* aFrame)
     return false;
   }
 
+  // Flexbox and Grid layout supports CSS Align and the optimizations below
+  // don't support that yet.
+  if (aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+    nsIFrame* ph = aFrame->GetPlaceholderFrame();
+    if (ph && ph->HasAnyStateBits(PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN)) {
+      StyleChangeReflow(aFrame, nsChangeHint_NeedReflow);
+      return false;
+    }
+  }
+
   aFrame->SchedulePaint();
 
   // For relative positioning, we can simply update the frame rect
@@ -797,7 +807,7 @@ RecomputePosition(nsIFrame* aFrame)
   // doesn't need to change, we can simply update the frame position. Otherwise
   // we fall back to a reflow.
   RefPtr<gfxContext> rc =
-    aFrame->PresContext()->PresShell()->CreateReferenceRenderingContext();
+    aFrame->PresShell()->CreateReferenceRenderingContext();
 
   // Construct a bogus parent reflow state so that there's a usable
   // containing block reflow state.
@@ -1235,7 +1245,7 @@ StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint)
   }
 
   do {
-    aFrame->PresContext()->PresShell()->FrameNeedsReflow(
+    aFrame->PresShell()->FrameNeedsReflow(
       aFrame, dirtyType, dirtyBits, rootHandling);
     aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame);
   } while (aFrame);

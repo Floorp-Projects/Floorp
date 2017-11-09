@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <title>Reference: dynamic change .left on abs.pos. item w. align-self:center</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1405319">
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font:16px/1 monospace; padding:0; margin:0;
+}
+
+.grid {
+  display: inline-grid;
+  position: relative;
+  background: lightgrey;
+  grid: 50px 50px / 50px 50px;
+}
+
+#item {
+  background: grey;
+  position: absolute;
+  align-self: center;
+  left: 20px;
+}
+
+  </style>
+</head>
+<body>
+
+<div class="grid">
+  <div id="item">X</div>
+</div>
+
+</body>
+</html>

@@ -206,6 +206,7 @@ private:
   sk_sp<SkSurface> mSurface;
   SkCanvas* mCanvas;
   SourceSurfaceSkia* mSnapshot;
+  std::shared_ptr<Mutex> mSnapshotLock;
 
 #ifdef MOZ_WIDGET_COCOA
   friend class BorrowedCGContext;

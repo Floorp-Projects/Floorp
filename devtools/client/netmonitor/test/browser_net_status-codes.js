@@ -30,6 +30,7 @@ add_task(function* () {
       // request #0
       method: "GET",
       uri: STATUS_CODES_SJS + "?sts=100",
+      correctUri: STATUS_CODES_SJS + "?sts=100",
       details: {
         status: 101,
         statusText: "Switching Protocols",
@@ -42,7 +43,8 @@ add_task(function* () {
     {
       // request #1
       method: "GET",
-      uri: STATUS_CODES_SJS + "?sts=200",
+      uri: STATUS_CODES_SJS + "?sts=200#doh",
+      correctUri: STATUS_CODES_SJS + "?sts=200",
       details: {
         status: 202,
         statusText: "Created",
@@ -56,6 +58,7 @@ add_task(function* () {
       // request #2
       method: "GET",
       uri: STATUS_CODES_SJS + "?sts=300",
+      correctUri: STATUS_CODES_SJS + "?sts=300",
       details: {
         status: 303,
         statusText: "See Other",
@@ -69,6 +72,7 @@ add_task(function* () {
       // request #3
       method: "GET",
       uri: STATUS_CODES_SJS + "?sts=400",
+      correctUri: STATUS_CODES_SJS + "?sts=400",
       details: {
         status: 404,
         statusText: "Not Found",
@@ -82,6 +86,7 @@ add_task(function* () {
       // request #4
       method: "GET",
       uri: STATUS_CODES_SJS + "?sts=500",
+      correctUri: STATUS_CODES_SJS + "?sts=500",
       details: {
         status: 501,
         statusText: "Not Implemented",
@@ -169,9 +174,9 @@ add_task(function* () {
 
     let panel = document.querySelector("#headers-panel");
     let summaryValues = panel.querySelectorAll(".tabpanel-summary-value.textbox-input");
-    let { method, uri, details: { status, statusText } } = data;
+    let { method, correctUri, details: { status, statusText } } = data;
 
-    is(summaryValues[0].value, new URL(uri).origin,
+    is(summaryValues[0].value, correctUri,
       "The url summary value is incorrect.");
     is(summaryValues[1].value, method, "The method summary value is incorrect.");
     is(panel.querySelector(".requests-list-status-icon").dataset.code, status,
@@ -190,7 +195,8 @@ add_task(function* () {
       document.querySelector("#params-tab"));
 
     let panel = document.querySelector("#params-panel");
-    let statusParamValue = data.uri.split("=").pop();
+    // Bug 1414981 - Request URL should not show #hash
+    let statusParamValue = data.uri.split("=").pop().split("#")[0];
     let treeSections = panel.querySelectorAll(".tree-section");
 
     is(treeSections.length, 1,

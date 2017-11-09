@@ -231,26 +231,6 @@ Service::getSingleton()
   return service.forget();
 }
 
-nsIXPConnect *Service::sXPConnect = nullptr;
-
-// static
-already_AddRefed<nsIXPConnect>
-Service::getXPConnect()
-{
-  NS_PRECONDITION(NS_IsMainThread(),
-                  "Must only get XPConnect on the main thread!");
-  NS_PRECONDITION(gService,
-                  "Can not get XPConnect without an instance of our service!");
-
-  // If we've been shutdown, sXPConnect will be null.  To prevent leaks, we do
-  // not cache the service after this point.
-  nsCOMPtr<nsIXPConnect> xpc(sXPConnect);
-  if (!xpc)
-    xpc = do_GetService(nsIXPConnect::GetCID());
-  NS_ASSERTION(xpc, "Could not get XPConnect!");
-  return xpc.forget();
-}
-
 int32_t Service::sSynchronousPref;
 
 // static
@@ -278,8 +258,6 @@ Service::~Service()
   int rc = sqlite3_vfs_unregister(mSqliteVFS);
   if (rc != SQLITE_OK)
     NS_WARNING("Failed to unregister sqlite vfs wrapper.");
-
-  shutdown(); // To release sXPConnect.
 
   gService = nullptr;
   delete mSqliteVFS;
@@ -395,18 +373,11 @@ Service::minimizeMemory()
   }
 }
 
-void
-Service::shutdown()
-{
-  NS_IF_RELEASE(sXPConnect);
-}
-
 sqlite3_vfs *ConstructTelemetryVFS();
 const char *GetVFSName();
 
 static const char* sObserverTopics[] = {
   "memory-pressure",
-  "xpcom-shutdown",
   "xpcom-shutdown-threads"
 };
 
@@ -428,8 +399,6 @@ Service::initialize()
     NS_WARNING("Failed to register telemetry VFS");
   }
 
-  // Register for xpcom-shutdown so we can cleanup after ourselves.  The
-  // observer service can only be used on the main thread.
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
 
@@ -439,10 +408,6 @@ Service::initialize()
       return rv;
     }
   }
-
-  // We cache XPConnect for our language helpers.  XPConnect can only be
-  // used on the main thread.
-  (void)CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
 
   // We need to obtain the toolkit.storage.synchronous preferences on the main
   // thread because the preference service can only be accessed there.  This
@@ -804,8 +769,6 @@ Service::Observe(nsISupports *, const char *aTopic, const char16_t *)
 {
   if (strcmp(aTopic, "memory-pressure") == 0) {
     minimizeMemory();
-  } else if (strcmp(aTopic, "xpcom-shutdown") == 0) {
-    shutdown();
   } else if (strcmp(aTopic, "xpcom-shutdown-threads") == 0) {
     // The Service is kept alive by our strong observer references and
     // references held by Connection instances.  Since we're about to remove the

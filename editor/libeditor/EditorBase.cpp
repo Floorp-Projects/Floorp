@@ -4278,22 +4278,30 @@ EditorBase::DeleteSelectionAndPrepareToCreateNode()
     uint32_t offset = selection->AnchorOffset();
 
     if (!offset) {
-      nsresult rv = selection->Collapse(node->GetParentNode(),
-                                        node->GetParentNode()->IndexOf(node));
+      EditorRawDOMPoint atNode(node);
+      if (NS_WARN_IF(!atNode.IsSetAndValid())) {
+        return NS_ERROR_FAILURE;
+      }
+      nsresult rv = selection->Collapse(atNode);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (offset == node->Length()) {
-      nsresult rv =
-        selection->Collapse(node->GetParentNode(),
-                            node->GetParentNode()->IndexOf(node) + 1);
+      EditorRawDOMPoint afterNode(node);
+      if (NS_WARN_IF(!afterNode.AdvanceOffset())) {
+        return NS_ERROR_FAILURE;
+      }
+      nsresult rv = selection->Collapse(afterNode);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       nsCOMPtr<nsIDOMNode> tmp;
       nsresult rv = SplitNode(node->AsDOMNode(), offset, getter_AddRefs(tmp));
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = selection->Collapse(node->GetParentNode(),
-                               node->GetParentNode()->IndexOf(node));
+      EditorRawDOMPoint atNode(node);
+      if (NS_WARN_IF(!atNode.IsSetAndValid())) {
+        return NS_ERROR_FAILURE;
+      }
+      rv = selection->Collapse(atNode);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       NS_ENSURE_SUCCESS(rv, rv);
     }

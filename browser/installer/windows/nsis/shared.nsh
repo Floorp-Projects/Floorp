@@ -72,13 +72,13 @@
   ; Do this for both shell contexts in case the user has shortcuts in multiple
   ; locations, then restore the previous context at the end.
   SetShellVarContext all
-  ${UpdateShortcutBranding}
+  ${UpdateShortcutsBranding}
   ${If} ${AtLeastWin8}
     ${TouchStartMenuShortcut}
   ${EndIf}
   Call FixShortcutAppModelIDs
   SetShellVarContext current
-  ${UpdateShortcutBranding}
+  ${UpdateShortcutsBranding}
   ${If} ${AtLeastWin8}
     ${TouchStartMenuShortcut}
   ${EndIf}
@@ -339,130 +339,51 @@
 !macroend
 !define ShowShortcuts "!insertmacro ShowShortcuts"
 
-; Update the branding information on all shortcuts our installer created,
+; Update the branding name on all shortcuts our installer created
 ; to convert from BrandFullName (which is what we used to name shortcuts)
-; to BrandShortName (which is what we now name shortcuts). Also update the
-; icon if it's been changed.
-; This should only be called sometime after both MigrateStartMenuShortcut
-; and MigrateTaskBarShurtcut, and it assumes SHCTX is set correctly.
-!macro UpdateShortcutBranding
+; to BrandShortName (which is what we now name shortcuts). We only rename
+; desktop and start menu shortcuts, because touching taskbar pins often
+; (but inconsistently) triggers various broken behaviors in the shell.
+; This should only be called sometime after MigrateStartMenuShortcut,
+; and it assumes SHCTX is set correctly.
+!macro UpdateShortcutsBranding
+  ${UpdateOneShortcutBranding} "STARTMENU" "$SMPROGRAMS"
+  ${UpdateOneShortcutBranding} "DESKTOP" "$DESKTOP"
+!macroend
+!define UpdateShortcutsBranding "!insertmacro UpdateShortcutsBranding"
+
+!macro UpdateOneShortcutBranding LOG_SECTION SHORTCUT_DIR
+  ; Only try to rename the shortcuts found in the shortcuts log, to avoid
+  ; blowing away a name that the user created.
   ${GetLongPath} "$INSTDIR\uninstall\${SHORTCUTS_LOG}" $R9
   ${If} ${FileExists} "$R9"
     ClearErrors
-    ; The entries in the shortcut log are numbered, but we never actually
-    ; create more than one shortcut (or log entry) in each location.
-    ReadINIStr $R8 "$R9" "STARTMENU" "Shortcut0"
+    ; The shortcuts log contains a numbered list of entries for each section,
+    ; but we never actually create more than one.
+    ReadINIStr $R8 "$R9" "${LOG_SECTION}" "Shortcut0"
     ${IfNot} ${Errors}
-      ${If} ${FileExists} "$SMPROGRAMS\$R8"
-        ShellLink::GetShortCutTarget "$SMPROGRAMS\$R8"
+      ${If} ${FileExists} "${SHORTCUT_DIR}\$R8"
+        ShellLink::GetShortCutTarget "${SHORTCUT_DIR}\$R8"
         Pop $R7
         ${GetLongPath} "$R7" $R7
         ${If} $R7 == "$INSTDIR\${FileMainEXE}"
-          ShellLink::GetShortCutIconLocation "$SMPROGRAMS\$R8"
-          Pop $R6
-          ${GetLongPath} "$R6" $R6
-          ${If} $R6 != "$INSTDIR\firefox.ico"
-          ${AndIf} ${FileExists} "$INSTDIR\firefox.ico"
-            StrCpy $R5 "1"
-          ${ElseIf} $R6 == "$INSTDIR\firefox.ico"
-          ${AndIfNot} ${FileExists} "$INSTDIR\firefox.ico"
-            StrCpy $R5 "1"
-          ${Else}
-            StrCpy $R5 "0"
-          ${EndIf}
-
-          ${If} $R5 == "1"
-          ${OrIf} $R8 != "${BrandShortName}.lnk"
-            Delete "$SMPROGRAMS\$R8"
-            ${If} ${FileExists} "$INSTDIR\firefox.ico"
-              CreateShortcut "$SMPROGRAMS\${BrandShortName}.lnk" \
-                             "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\firefox.ico"
-            ${Else}
-              CreateShortcut "$SMPROGRAMS\${BrandShortName}.lnk" \
-                             "$INSTDIR\${FileMainEXE}"
-            ${EndIf}
-            WriteINIStr "$R9" "STARTMENU" "Shortcut0" "${BrandShortName}.lnk"
-          ${EndIf}
-        ${EndIf}
-      ${EndIf}
-    ${EndIf}
-
-    ClearErrors
-    ReadINIStr $R8 "$R9" "DESKTOP" "Shortcut0"
-    ${IfNot} ${Errors}
-      ${If} ${FileExists} "$DESKTOP\$R8"
-        ShellLink::GetShortCutTarget "$DESKTOP\$R8"
-        Pop $R7
-        ${GetLongPath} "$R7" $R7
-        ${If} $R7 == "$INSTDIR\${FileMainEXE}"
-          ShellLink::GetShortCutIconLocation "$DESKTOP\$R8"
-          Pop $R6
-          ${GetLongPath} "$R6" $R6
-          ${If} $R6 != "$INSTDIR\firefox.ico"
-          ${AndIf} ${FileExists} "$INSTDIR\firefox.ico"
-            StrCpy $R5 "1"
-          ${ElseIf} $R6 == "$INSTDIR\firefox.ico"
-          ${AndIfNot} ${FileExists} "$INSTDIR\firefox.ico"
-            StrCpy $R5 "1"
-          ${Else}
-            StrCpy $R5 "0"
-          ${EndIf}
-
-          ${If} $R5 == "1"
-          ${OrIf} $R8 != "${BrandShortName}.lnk"
-            Delete "$DESKTOP\$R8"
-            ${If} ${FileExists} "$INSTDIR\firefox.ico"
-              CreateShortcut "$DESKTOP\${BrandShortName}.lnk" \
-                             "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\firefox.ico"
-            ${Else}
-              CreateShortcut "$DESKTOP\${BrandShortName}.lnk" \
-                             "$INSTDIR\${FileMainEXE}"
-            ${EndIf}
-            WriteINIStr "$R9" "DESKTOP" "Shortcut0" "${BrandShortName}.lnk"
-          ${EndIf}
-        ${EndIf}
-      ${EndIf}
-    ${EndIf}
-
-    ClearErrors
-    ReadINIStr $R8 "$R9" "QUICKLAUNCH" "Shortcut0"
-    ${IfNot} ${Errors}
-      ; "QUICKLAUNCH" actually means a taskbar pin.
-      ; We can't simultaneously rename and change the icon for a taskbar pin
-      ; without the icon breaking, and the icon is more important than the name,
-      ; so we'll forget about changing the name and just overwrite the icon.
-      ${If} ${FileExists} "$QUICKLAUNCH\User Pinned\TaskBar\$R8"
-        ShellLink::GetShortCutTarget "$QUICKLAUNCH\User Pinned\TaskBar\$R8"
-        Pop $R7
-        ${GetLongPath} "$R7" $R7
-        ${If} "$INSTDIR\${FileMainEXE}" == "$R7"
-          ShellLink::GetShortCutIconLocation "$QUICKLAUNCH\User Pinned\TaskBar\$R8"
-          Pop $R6
-          ${GetLongPath} "$R6" $R6
-          ${If} $R6 != "$INSTDIR\firefox.ico"
-          ${AndIf} ${FileExists} "$INSTDIR\firefox.ico"
-            StrCpy $R5 "1"
-          ${ElseIf} $R6 == "$INSTDIR\firefox.ico"
-          ${AndIfNot} ${FileExists} "$INSTDIR\firefox.ico"
-            StrCpy $R5 "1"
-          ${Else}
-            StrCpy $R5 "0"
-          ${EndIf}
-
-          ${If} $R5 == "1"
-            ${If} ${FileExists} "$INSTDIR\firefox.ico"
-              CreateShortcut "$QUICKLAUNCH\User Pinned\TaskBar\$R8" "$R7" "" \
-                             "$INSTDIR\firefox.ico"
-            ${Else}
-              CreateShortcut "$QUICKLAUNCH\User Pinned\TaskBar\$R8" "$R7"
-            ${EndIf}
+        ${AndIf} $R8 != "${BrandShortName}.lnk"
+        ${AndIfNot} ${FileExists} "${SHORTCUT_DIR}\${BrandShortName}.lnk"
+          ClearErrors
+          Rename "${SHORTCUT_DIR}\$R8" "${SHORTCUT_DIR}\${BrandShortName}.lnk"
+          ${IfNot} ${Errors}
+            ; Update the shortcut log manually instead of calling LogShortcut
+            ; because it would add a Shortcut1 entry, and we really do want to
+            ; overwrite the existing entry 0, since we just renamed the file.
+            WriteINIStr "$R9" "${LOG_SECTION}" "Shortcut0" \
+                        "${BrandShortName}.lnk"
           ${EndIf}
         ${EndIf}
       ${EndIf}
     ${EndIf}
   ${EndIf}
 !macroend
-!define UpdateShortcutBranding "!insertmacro UpdateShortcutBranding"
+!define UpdateOneShortcutBranding "!insertmacro UpdateOneShortcutBranding"
 
 !macro AddAssociationIfNoneExist FILE_TYPE KEY
   ClearErrors

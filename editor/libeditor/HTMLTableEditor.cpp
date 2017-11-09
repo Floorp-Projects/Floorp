@@ -9,6 +9,7 @@
 
 #include "HTMLEditUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/dom/Selection.h"
@@ -3157,8 +3158,15 @@ HTMLEditor::SetSelectionAfterTableEdit(nsIDOMElement* aTable,
   nsCOMPtr<nsIDOMNode> tableParent;
   nsresult rv = aTable->GetParentNode(getter_AddRefs(tableParent));
   if (NS_SUCCEEDED(rv) && tableParent) {
-    int32_t tableOffset = GetChildOffset(aTable, tableParent);
-    selection->Collapse(tableParent, tableOffset);
+    nsCOMPtr<nsIContent> table = do_QueryInterface(aTable);
+    if (NS_WARN_IF(!table)) {
+      return;
+    }
+    EditorRawDOMPoint atTable(table);
+    if (NS_WARN_IF(!atTable.IsSetAndValid())) {
+      return;
+    }
+    selection->Collapse(atTable);
     return;
   }
   // Last resort: Set selection to start of doc
