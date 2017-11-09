@@ -6861,9 +6861,6 @@ nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,
     , mSubDocFrame(aSubDocFrame)
 {
   MOZ_COUNT_CTOR(nsDisplaySubDocument);
-  mForceDispatchToContentRegion =
-    aBuilder->IsBuildingLayerEventRegions() &&
-    nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresShell());
 
   // The SubDocument display item is conceptually outside the viewport frame,
   // so in cases where the viewport frame is an AGR, the SubDocument's AGR
@@ -6878,17 +6875,6 @@ nsDisplaySubDocument::~nsDisplaySubDocument() {
   MOZ_COUNT_DTOR(nsDisplaySubDocument);
 }
 #endif
-
-already_AddRefed<Layer>
-nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
-                                 LayerManager* aManager,
-                                 const ContainerLayerParameters& aContainerParameters) {
-  RefPtr<Layer> layer = nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
-  layer->AsContainerLayer()->SetEventRegionsOverride(mForceDispatchToContentRegion
-    ? EventRegionsOverride::ForceDispatchToContent
-    : EventRegionsOverride::NoOverride);
-  return layer.forget();
-}
 
 UniquePtr<ScrollMetadata>
 nsDisplaySubDocument::ComputeScrollMetadata(LayerManager* aLayerManager,
