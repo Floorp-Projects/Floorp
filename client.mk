@@ -12,8 +12,6 @@
 # Options:
 #   MOZ_OBJDIR           - Destination object directory
 #   MOZ_MAKE_FLAGS       - Flags to pass to $(MAKE)
-#   MOZ_PREFLIGHT_ALL    - Makefiles to run before building.
-#   MOZ_POSTFLIGHT_ALL   - Makefiles to run after building.
 #
 #######################################################################
 # Defines
@@ -153,17 +151,6 @@ endif
 # helper target for mobile
 build_and_deploy: build package install
 
-#####################################################
-# Preflight, before building any project
-
-ifdef MOZ_PREFLIGHT_ALL
-build preflight_all::
-	set -e; \
-	for mkfile in $(MOZ_PREFLIGHT_ALL); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile preflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
-	done
-endif
-
 # In automation, manage an sccache daemon. The starting of the server
 # needs to be in a make file so sccache inherits the jobserver.
 ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
@@ -292,9 +279,6 @@ build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 $(OBJDIR_TARGETS):: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	+$(MOZ_MAKE) $@
 
-####################################
-# Postflight, after building all projects
-
 ifdef MOZ_AUTOMATION
 build::
 	$(MAKE) -f $(TOPSRCDIR)/client.mk automation/build
@@ -304,14 +288,6 @@ ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
 build::
 	# Terminate sccache server. This prints sccache stats.
 	-$(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server
-endif
-
-ifdef MOZ_POSTFLIGHT_ALL
-build postflight_all::
-	set -e; \
-	for mkfile in $(MOZ_POSTFLIGHT_ALL); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile postflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
-	done
 endif
 
 echo-variable-%:
@@ -325,6 +301,4 @@ echo-variable-%:
 .PHONY: \
     build \
     configure \
-    preflight_all \
-    postflight_all \
     $(OBJDIR_TARGETS)
