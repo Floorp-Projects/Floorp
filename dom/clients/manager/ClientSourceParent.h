@@ -12,12 +12,14 @@
 namespace mozilla {
 namespace dom {
 
+class ClientHandleParent;
 class ClientManagerService;
 
 class ClientSourceParent final : public PClientSourceParent
 {
   ClientInfo mClientInfo;
   RefPtr<ClientManagerService> mService;
+  nsTArray<ClientHandleParent*> mHandleList;
 
   // PClientSourceParent
   IPCResult
@@ -38,6 +40,12 @@ public:
 
   const ClientInfo&
   Info() const;
+
+  void
+  AttachHandle(ClientHandleParent* aClientSource);
+
+  void
+  DetachHandle(ClientHandleParent* aClientSource);
 };
 
 } // namespace dom

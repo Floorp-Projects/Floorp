@@ -15,6 +15,8 @@ class PBackgroundChild;
 } // namespace ipc
 namespace dom {
 
+class ClientHandle;
+class ClientInfo;
 class ClientManagerChild;
 class ClientOpConstructorArgs;
 class ClientSource;
@@ -46,6 +48,10 @@ class ClientManager final : public ClientThing<ClientManagerChild>
   CreateSourceInternal(ClientType aType,
                        const mozilla::ipc::PrincipalInfo& aPrincipal);
 
+  already_AddRefed<ClientHandle>
+  CreateHandleInternal(const ClientInfo& aClientInfo,
+                       nsISerialEventTarget* aSerialEventTarget);
+
   // Utility method to perform an IPC operation.  This will create a
   // PClientManagerOp actor tied to a MozPromise.  The promise will
   // resolve or reject with the result of the remote operation.
@@ -75,6 +81,10 @@ public:
 
   static UniquePtr<ClientSource>
   CreateSource(ClientType aType, const mozilla::ipc::PrincipalInfo& aPrincipal);
+
+  static already_AddRefed<ClientHandle>
+  CreateHandle(const ClientInfo& aClientInfo,
+               nsISerialEventTarget* aSerialEventTarget);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManager)
 };
