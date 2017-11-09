@@ -1,0 +1,104 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+   - toolchain
+
+transforms:
+   - taskgraph.transforms.build_attrs:transforms
+   - taskgraph.transforms.use_toolchains:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+    index:
+        product: firefox
+    treeherder:
+        symbol: Searchfox(idx)
+        kind: build
+        tier: 2
+
+jobs:
+    linux64-searchfox/debug:
+        description: "Linux64 Debug Searchfox"
+        index:
+            job-name: linux64-searchfox-debug
+        treeherder:
+            platform: linux64/debug
+        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker:
+            docker-image: {in-tree: desktop-build}
+            max-run-time: 36000
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+        run:
+            using: mozharness
+            actions: [clobber build]
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_sub_linux_configs/64_searchfox_and_debug.py
+                - balrog/production.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            tooltool-downloads: public
+            keep-artifacts: false
+        toolchains:
+            - linux64-clang
+            - linux64-rust
+
+    macosx64-searchfox/debug:
+        description: "MacOS X x64 Debug Cross-compile Searchfox"
+        index:
+            job-name: macosx64-searchfox-debug
+        treeherder:
+            platform: osx-cross/debug
+        worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
+        worker:
+            docker-image: {in-tree: desktop-build}
+            max-run-time: 36000
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
+        run:
+            using: mozharness
+            actions: [clobber get-secrets build update]
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_mac_64_cross_builds.py
+                - balrog/production.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            custom-build-variant-cfg: cross-debug-searchfox
+            secrets: true
+            tooltool-downloads: internal
+            keep-artifacts: false
+        toolchains:
+            - linux64-cctools-port
+            - linux64-clang
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-rust-macos
+
+    # NOTE: Windows Searchfox jobs aren't working quite yet (bug 1418415).
+
+    win32-searchfox/debug:
+        description: "Win32 Searchfox Debug (clang-cl)"
+        index:
+            product: firefox
+            job-name: win32-searchfox-debug
+        treeherder:
+            platform: windows2012-32/debug
+        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker:
+            max-run-time: 7200
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+        run:
+            using: mozharness
+            script: mozharness/scripts/fx_desktop_build.py
+            config:
+                - builds/releng_base_firefox.py
+                - builds/taskcluster_firefox_win32_clang_searchfox_debug.py
+        toolchains:
+            - win32-clang-cl
+            - win32-rust
