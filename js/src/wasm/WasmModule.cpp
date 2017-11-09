@@ -1019,7 +1019,10 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
         return true;
       }
       case ValType::I64: {
-        MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in asm.js/wasm");
+        if (!JitOptions.wasmTestMode) {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
+            return false;
+        }
         RootedObject obj(cx, CreateI64Object(cx, val.i64()));
         if (!obj)
             return false;
