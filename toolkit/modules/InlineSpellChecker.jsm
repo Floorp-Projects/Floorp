@@ -12,6 +12,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 this.InlineSpellChecker = function InlineSpellChecker(aEditor) {
   this.init(aEditor);
   this.mAddedWordStack = []; // We init this here to preserve it between init/uninit calls
@@ -258,11 +260,9 @@ InlineSpellChecker.prototype = {
 
     if (!gLanguageBundle) {
       // Create the bundles for language and region names.
-      var bundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                    .getService(Components.interfaces.nsIStringBundleService);
-      gLanguageBundle = bundleService.createBundle(
+      gLanguageBundle = Services.strings.createBundle(
           "chrome://global/locale/languageNames.properties");
-      gRegionBundle = bundleService.createBundle(
+      gRegionBundle = Services.strings.createBundle(
           "chrome://global/locale/regionNames.properties");
     }
 

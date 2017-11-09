@@ -10,6 +10,12 @@
 
 this.EXPORTED_SYMBOLS = ["NS_ASSERT"];
 
+var Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
+
 var gTraceOnAssert = false;
 
 /**
@@ -34,9 +40,7 @@ this.NS_ASSERT = function NS_ASSERT(condition, message) {
     return;
 
   var releaseBuild = true;
-  var defB = Components.classes["@mozilla.org/preferences-service;1"]
-                       .getService(Components.interfaces.nsIPrefService)
-                       .getDefaultBranch(null);
+  var defB = Services.prefs.getDefaultBranch(null);
   try {
     switch (defB.getCharPref("app.update.channel")) {
       case "nightly":

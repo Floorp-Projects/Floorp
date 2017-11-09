@@ -59,7 +59,6 @@ this.ResetProfile = {
                 .getService(Ci.nsIEnvironment);
     env.set("MOZ_RESET_PROFILE_RESTART", "1");
 
-    let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
-    appStartup.quit(Ci.nsIAppStartup.eForceQuit | Ci.nsIAppStartup.eRestart);
+    Services.startup.quit(Ci.nsIAppStartup.eForceQuit | Ci.nsIAppStartup.eRestart);
   },
 };

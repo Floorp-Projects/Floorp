@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 const INTERNAL_FIELDS = new Set(["_level", "_message", "_time", "_namespace"]);
 
 
@@ -757,8 +759,7 @@ ConsoleAppender.prototype = {
   },
 
   doAppend: function CApp_doAppend(formatted) {
-    Cc["@mozilla.org/consoleservice;1"].
-      getService(Ci.nsIConsoleService).logStringMessage(formatted);
+    Services.console.logStringMessage(formatted);
   }
 };
 
