@@ -19,26 +19,34 @@ function caughtException() {
 add_task(async function() {
   const dbg = await initDebugger("doc-exceptions.html");
 
-  // test skipping an uncaught exception
+  log("1. test skipping an uncaught exception");
   await uncaughtException();
   ok(!isPaused(dbg));
 
-  // Test pausing on an uncaught exception
+  log("2. Test pausing on an uncaught exception");
   await togglePauseOnExceptions(dbg, true, false);
   uncaughtException();
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
   await resume(dbg);
+  await waitForActive(dbg);
 
-  // Test pausing on a caught Error
+  log("3. Test pausing on a caught Error");
   caughtException();
+  await waitForPaused(dbg);
+  assertPausedLocation(dbg);
+
+  log("3.b Test pausing in the catch statement");
+  await resume(dbg);
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
   await resume(dbg);
 
-  // Test skipping a caught error
+  log("4. Test skipping a caught error");
   await togglePauseOnExceptions(dbg, true, true);
   caughtException();
+
+  log("4.b Test pausing in the catch statement");
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
   await resume(dbg);
