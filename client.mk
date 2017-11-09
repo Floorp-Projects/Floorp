@@ -32,14 +32,6 @@ ifeq "$(CWD)" "/"
 CWD   := /.
 endif
 
-ifndef TOPSRCDIR
-ifeq (,$(wildcard client.mk))
-TOPSRCDIR := $(patsubst %/,%,$(dir $(MAKEFILE_LIST)))
-else
-TOPSRCDIR := $(CWD)
-endif
-endif
-
 PYTHON ?= $(shell which python2.7 > /dev/null 2>&1 && echo python2.7 || echo python)
 
 CONFIG_GUESS := $(shell $(TOPSRCDIR)/build/autoconf/config.guess)
