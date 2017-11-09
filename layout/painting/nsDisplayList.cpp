@@ -2481,12 +2481,6 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
                        1.0f/containerParameters.mYScale);
     root->SetScaleToResolution(presShell->ScaleToResolution(),
         containerParameters.mXScale);
-    if (aBuilder->IsBuildingLayerEventRegions() &&
-        nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell)) {
-      root->SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
-    } else {
-      root->SetEventRegionsOverride(EventRegionsOverride::NoOverride);
-    }
 
     auto callback = [root](FrameMetrics::ViewID aScrollId) -> bool {
       return nsLayoutUtils::ContainsMetricsWithId(root, aScrollId);
