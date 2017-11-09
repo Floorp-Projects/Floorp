@@ -58,10 +58,12 @@ html|a {
   height: 48px;
   background-position: center;
   background-repeat: no-repeat;
+  background-size: contain;
   border: none;
   background-color: transparent;
   -moz-user-focus: ignore;
   margin-bottom: 6px;
+  -moz-context-properties: fill;
 }
 
 :-moz-handler-vulnerable-updatable .icon,
@@ -74,7 +76,8 @@ html|a {
 }
 a .icon,
 :-moz-handler-clicktoplay .icon {
-  background-image: url(chrome://mozapps/skin/plugins/contentPluginActivate.png);
+  background-image: url(chrome://mozapps/skin/plugins/plugin.svg);
+  fill: var(--grey-10);
   -moz-user-focus: normal;
 }
 :-moz-handler-crashed .icon {
