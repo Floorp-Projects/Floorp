@@ -21,7 +21,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsIIPCSerializableURI.h"
 #include "nsISensitiveInfoHiddenURI.h"
-#include "RustURL.h"
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 #define DEBUG_DUMP_URLS_AT_SHUTDOWN
@@ -310,11 +309,6 @@ private:
 public:
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
     void PrintSpec() const { printf("  %s\n", mSpec.get()); }
-#endif
-
-#ifdef MOZ_RUST_URLPARSE
-    static Atomic<bool>                gRustEnabled;
-    RefPtr<RustURL>                    mRustURL;
 #endif
 };
 

@@ -18,7 +18,7 @@ const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const jsmScope = Cu.import("resource://gre/modules/Services.jsm", {});
 const { Services } = jsmScope;
 // Steal various globals only available in JSM scope (and not Sandbox one)
-const { PromiseDebugging, ChromeUtils, ThreadSafeChromeUtils, HeapSnapshot,
+const { PromiseDebugging, ChromeUtils, HeapSnapshot,
         atob, btoa, TextEncoder, TextDecoder } = Cu.getGlobalForObject(jsmScope);
 
 // Create a single Sandbox to access global properties needed in this module.
@@ -178,7 +178,6 @@ exports.modules = {
   Promise,
   PromiseDebugging,
   ChromeUtils,
-  ThreadSafeChromeUtils,
   HeapSnapshot,
   FileReader,
 };

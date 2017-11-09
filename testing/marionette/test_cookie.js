@@ -10,6 +10,9 @@ cookie.manager = {
   cookies: [],
 
   add: function (domain, path, name, value, secure, httpOnly, session, expiry, originAttributes) {
+    if (name === "fail") {
+      throw new Error("An error occurred while adding cookie");
+    }
     let newCookie = {
       host: domain,
       path: path,
@@ -116,18 +119,8 @@ add_test(function test_fromJSON() {
     Assert.throws(() => cookie.fromJSON(test), /Cookie httpOnly flag must be boolean/);
   }
 
-  // session
-  for (let invalidType of ["foo", 42, [], {}, null]) {
-    let test = {
-      name: "foo",
-      value: "bar",
-      session: invalidType,
-    };
-    Assert.throws(() => cookie.fromJSON(test), /Cookie session flag must be boolean/);
-  }
-
   // expiry
-  for (let invalidType of ["foo", true, [], {}, null]) {
+  for (let invalidType of [-1, Number.MAX_SAFE_INTEGER + 1, "foo", true, [], {}, null]) {
     let test = {
       name: "foo",
       value: "bar",
@@ -152,7 +145,6 @@ add_test(function test_fromJSON() {
     path: "path",
     secure: true,
     httpOnly: true,
-    session: true,
     expiry: 42,
   });
   equal("name", full.name);
@@ -161,7 +153,6 @@ add_test(function test_fromJSON() {
   equal("path", full.path);
   equal(true, full.secure);
   equal(true, full.httpOnly);
-  equal(true, full.session);
   equal(42, full.expiry);
 
   run_next_test();
@@ -221,6 +212,10 @@ add_test(function test_add() {
   });
   equal("/foo/bar", cookie.manager.cookies[3].path);
 
+  Assert.throws(() => {
+    cookie.add({name: "fail", value: "value6", domain: "domain6"})
+  }, /UnableToSetCookieError/);
+
   run_next_test();
 });
 
@@ -247,15 +242,17 @@ add_test(function test_remove() {
 
 add_test(function test_iter() {
   cookie.manager.cookies = [];
+  let tomorrow = new Date();
+  tomorrow.setHours(tomorrow.getHours() + 24);
 
   cookie.add({
-    session: false,
+    expiry: tomorrow,
     name: "0",
     value: "",
     domain: "foo.example.com",
   });
   cookie.add({
-    session: false,
+    expiry: tomorrow,
     name: "1",
     value: "",
     domain: "bar.example.com",
@@ -266,12 +263,7 @@ add_test(function test_iter() {
   equal(".foo.example.com", fooCookies[0].domain);
   equal(true, fooCookies[0].hasOwnProperty("expiry"));
 
-  // here we're explicitly setting session to true as a workaround until
-  // bug 1408962 has been fixed. when that bug has been fixed the cookie
-  // will be created as session cookie simply by leaving out the 'expiry'
-  // property.
   cookie.add({
-    session: true,
     name: "aSessionCookie",
     value: "",
     domain: "session.com",

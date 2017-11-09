@@ -143,18 +143,6 @@ static const struct EVInfo kEVInfos[] = {
   },
 #endif
   {
-    // OU=Security Communication EV RootCA1,O="SECOM Trust Systems CO.,LTD.",C=JP
-    "1.2.392.200091.100.721.1",
-    "SECOM EV OID",
-    { 0xA2, 0x2D, 0xBA, 0x68, 0x1E, 0x97, 0x37, 0x6E, 0x2D, 0x39, 0x7D,
-      0x72, 0x8A, 0xAE, 0x3A, 0x9B, 0x62, 0x96, 0xB9, 0xFD, 0xBA, 0x60,
-      0xBC, 0x2E, 0x11, 0xF6, 0x47, 0xF2, 0xC6, 0x75, 0xFB, 0x37 },
-    "MGAxCzAJBgNVBAYTAkpQMSUwIwYDVQQKExxTRUNPTSBUcnVzdCBTeXN0ZW1zIENP"
-    "LixMVEQuMSowKAYDVQQLEyFTZWN1cml0eSBDb21tdW5pY2F0aW9uIEVWIFJvb3RD"
-    "QTE=",
-    "AA==",
-  },
-  {
     // CN=Cybertrust Global Root,O=Cybertrust, Inc
     "1.3.6.1.4.1.6334.1.100.1",
     "Cybertrust EV OID",

@@ -1,10 +1,7 @@
 av_add_q
 av_add_stable
-av_adler32_update
 av_append_path_component
 av_asprintf
-av_base64_decode
-av_base64_encode
 av_basename
 av_bprint_append_data
 av_bprint_channel_layout
@@ -177,8 +174,10 @@ av_image_get_buffer_size
 av_image_get_linesize
 av_int_list_length_for_size
 av_log
+#ifndef MOZ_FFVPX_FLACONLY
 av_log2
 av_log2_16bit
+#endif
 av_log_default_callback
 av_log_format_line
 av_log_get_flags
@@ -257,7 +256,6 @@ av_pix_fmt_desc_get_id
 av_pix_fmt_desc_next
 av_pix_fmt_get_chroma_sub_sample
 av_pix_fmt_swap_endianness
-av_pixelutils_get_sad_fn
 av_q2intfloat
 av_read_image_line
 av_realloc
@@ -296,20 +294,6 @@ av_strstart
 av_strtod
 av_strtok
 av_sub_q
-av_thread_message_queue_alloc
-av_thread_message_queue_free
-av_thread_message_queue_recv
-av_thread_message_queue_send
-av_thread_message_queue_set_err_recv
-av_thread_message_queue_set_err_send
-av_timecode_adjust_ntsc_framenum2
-av_timecode_check_frame_rate
-av_timecode_get_smpte_from_framenum
-av_timecode_init
-av_timecode_init_from_string
-av_timecode_make_mpeg_tc_string
-av_timecode_make_smpte_tc_string
-av_timecode_make_string
 av_timegm
 av_usleep
 av_utf8_decode
@@ -321,13 +305,10 @@ av_write_image_line
 avpriv_alloc_fixed_dsp
 avpriv_float_dsp_alloc
 avpriv_frame_get_metadatap
-avpriv_get_gamma_from_trc
-avpriv_init_lls
 avpriv_report_missing_feature
 avpriv_request_sample
 avpriv_scalarproduct_float_c
 avpriv_set_systematic_pal2
-avpriv_solve_lls
 avutil_configuration
 avutil_license
 avutil_version

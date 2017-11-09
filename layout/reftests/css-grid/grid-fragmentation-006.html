@@ -67,12 +67,14 @@ i { display:block; height:10px; margin-top:7px; background:blue; }
 </div>
 </div></div>
 
+<!-- bug 1415301
 <div class="columns" style="height: 140px/*trigger IsInlineBreakBefore() for the item*/">
 <div style="padding-top:30px; background:grey">
 <div class="grid">
 <span style="grid-row:span 3"><x></x></span>
 <span class="avoid-break" style="grid-row:span 2"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><x></x></span></div>
 </div></div>
+-->
 
 <div class="columns" style="height: 100px/*trigger IsInlineBreakBefore() for the item*/">
 <div style="padding-top:1px; background:grey">

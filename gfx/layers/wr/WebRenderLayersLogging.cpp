@@ -75,5 +75,14 @@ AppendToString(std::stringstream& aStream, wr::ImageRendering aTextureFilter,
   aStream << sfx;
 }
 
+void
+AppendToString(std::stringstream& aStream, wr::LayoutVector2D aVector,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx;
+  aStream << nsPrintfCString("(x=%f, y=%f)", aVector.x, aVector.y).get();
+  aStream << sfx;
+}
+
 } // namespace layers
 } // namespace mozilla

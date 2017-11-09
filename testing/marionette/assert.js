@@ -233,7 +233,7 @@ assert.callable = function(obj, msg = "") {
  */
 assert.integer = function(obj, msg = "") {
   msg = msg || pprint`Expected ${obj} to be an integer`;
-  return assert.that(Number.isInteger, msg)(obj);
+  return assert.that(Number.isSafeInteger, msg)(obj);
 };
 
 /**

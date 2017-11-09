@@ -2101,13 +2101,6 @@ private:
                              nsContainerFrame*        aBlockFrame,
                              nsFrameItems&            aFrameItems);
 
-  void InsertFirstLineFrames(nsFrameConstructorState& aState,
-                             nsIContent*              aContent,
-                             nsIFrame*                aBlockFrame,
-                             nsContainerFrame**       aParentFrame,
-                             nsIFrame*                aPrevSibling,
-                             nsFrameItems&            aFrameItems);
-
   /**
    * When aFrameItems is being inserted into aParentFrame, and aParentFrame has
    * pseudo-element-affected styles, it's possible that we're inserting under a

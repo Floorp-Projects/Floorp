@@ -3319,8 +3319,9 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
     char trash[4096];
     uint32_t discardCount = std::min(mInputFrameDataSize - mInputFrameDataRead,
                                      4096U);
-    LOG3(("Http2Session::WriteSegments %p trying to discard %d bytes of data",
-          this, discardCount));
+    LOG3(("Http2Session::WriteSegments %p trying to discard %d bytes of %s",
+          this, discardCount,
+          mDownstreamState == DISCARDING_DATA_FRAME ? "data" : "padding"));
 
     if (!discardCount && mDownstreamState == DISCARDING_DATA_FRAME) {
       // Only do this short-cirtuit if we're not discarding a pure padding
@@ -3352,9 +3353,15 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
         streamToCleanup = mInputFrameDataStream;
       }
 
+      bool discardedPadding = (mDownstreamState == DISCARDING_DATA_FRAME_PADDING);
       ResetDownstreamState();
 
       if (streamToCleanup) {
+        if (discardedPadding && !(streamToCleanup->StreamID() & 1)) {
+          // Pushed streams are special on padding-only final data frames.
+          // See bug 1409570 comments 6-8 for details.
+          streamToCleanup->SetPushComplete();
+        }
         CleanupStream(streamToCleanup, NS_OK, CANCEL_ERROR);
       }
     }

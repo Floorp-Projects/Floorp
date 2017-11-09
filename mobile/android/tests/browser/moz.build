@@ -10,19 +10,11 @@ with Files('**'):
 with Files('chrome/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Testing')
 
-with Files('junit3/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Testing')
-
 # Ideally split this up, but testing catches many files
 with Files('robocop/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Testing')
 
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
-
-if not CONFIG['MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE']:
-    TEST_DIRS += [
-        'junit3',
-    ]
 
 TEST_DIRS += [
     'robocop/roboextender',

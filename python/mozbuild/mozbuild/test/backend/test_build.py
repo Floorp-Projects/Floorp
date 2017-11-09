@@ -34,6 +34,7 @@ class TestBuild(unittest.TestCase):
         self._old_env = dict(os.environ)
         os.environ.pop('MOZCONFIG', None)
         os.environ.pop('MOZ_OBJDIR', None)
+        os.environ.pop('MOZ_PGO', None)
 
     def tearDown(self):
         os.environ.clear()

@@ -7,122 +7,90 @@
  * Tests middle-clicking items in the Library.
  */
 
-const ENABLE_HISTORY_PREF = "places.history.enabled";
+const URIs = ["about:license", "about:"];
 
 var gLibrary = null;
 var gTests = [];
-var gCurrentTest = null;
 
-// Listener for TabOpen and tabs progress.
-var gTabsListener = {
-  _loadedURIs: [],
-  _openTabsCount: 0,
+add_task(async function test_setup() {
+  // Increase timeout, this test can be quite slow due to waitForFocus calls.
+  requestLongerTimeout(2);
 
-  handleEvent(aEvent) {
-    if (aEvent.type != "TabOpen")
-      return;
+  // Temporary disable history, so we won't record pages navigation.
+  await SpecialPowers.pushPrefEnv({set: [
+    ["places.history.enabled", false]
+  ]});
 
-    if (++this._openTabsCount == gCurrentTest.URIs.length) {
-      is(gBrowser.tabs.length, gCurrentTest.URIs.length + 1,
-         "We have opened " + gCurrentTest.URIs.length + " new tab(s)");
-    }
+  // Ensure the database is empty.
+  await PlacesUtils.bookmarks.eraseEverything();
 
-    var tab = aEvent.target;
-    is(tab.ownerGlobal, window,
-       "Tab has been opened in current browser window");
-  },
+  // Open Library window.
+  gLibrary = await promiseLibrary();
 
-  onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI,
-                             aFlags) {
-    var spec = aLocationURI.spec;
-    ok(true, spec);
-    // When a new tab is opened, location is first set to "about:blank", so
-    // we can ignore those calls.
-    // Ignore multiple notifications for the same URI too.
-    if (spec == "about:blank" || this._loadedURIs.includes(spec))
-      return;
+  registerCleanupFunction(async () => {
+    // We must close "Other Bookmarks" ready for other tests.
+    gLibrary.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+    gLibrary.PlacesOrganizer._places.selectedNode.containerOpen = false;
 
-    ok(gCurrentTest.URIs.includes(spec),
-       "Opened URI found in list: " + spec);
+    await PlacesUtils.bookmarks.eraseEverything();
 
-    if (gCurrentTest.URIs.includes(spec))
-      this._loadedURIs.push(spec);
-
-    if (this._loadedURIs.length == gCurrentTest.URIs.length) {
-      // We have correctly opened all URIs.
-
-      // Reset arrays.
-      this._loadedURIs.length = 0;
-
-      this._openTabsCount = 0;
-
-      executeSoon(function() {
-        // Close all tabs.
-        while (gBrowser.tabs.length > 1)
-          gBrowser.removeCurrentTab();
-
-        // Test finished.  This will move to the next one.
-        waitForFocus(gCurrentTest.finish, gBrowser.ownerGlobal);
-      });
-    }
-  }
-};
-
-// ------------------------------------------------------------------------------
-// Open bookmark in a new tab.
+    // Close Library window.
+    await promiseLibraryClosed(gLibrary);
+  });
+});
 
 gTests.push({
   desc: "Open bookmark in a new tab.",
   URIs: ["about:buildconfig"],
-  _itemId: -1,
+  _bookmark: null,
 
-  setup() {
-    var bs = PlacesUtils.bookmarks;
+  async setup() {
     // Add a new unsorted bookmark.
-    this._itemId = bs.insertBookmark(bs.unfiledBookmarksFolder,
-                                     PlacesUtils._uri(this.URIs[0]),
-                                     bs.DEFAULT_INDEX,
-                                     "Title");
+    this._bookmark = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      title: "Title",
+      url: this.URIs[0],
+    });
+
     // Select unsorted bookmarks root in the left pane.
     gLibrary.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
-    isnot(gLibrary.PlacesOrganizer._places.selectedNode, null,
-          "We correctly have selection in the Library left pane");
+    Assert.notEqual(gLibrary.PlacesOrganizer._places.selectedNode, null,
+      "We correctly have selection in the Library left pane");
+
     // Get our bookmark in the right pane.
     var bookmarkNode = gLibrary.ContentTree.view.view.nodeForTreeIndex(0);
-    is(bookmarkNode.uri, this.URIs[0], "Found bookmark in the right pane");
+    Assert.equal(bookmarkNode.uri, this.URIs[0], "Found bookmark in the right pane");
   },
 
-  finish() {
-    setTimeout(runNextTest, 0);
-  },
-
-  cleanup() {
-    PlacesUtils.bookmarks.removeItem(this._itemId);
+  async cleanup() {
+    await PlacesUtils.bookmarks.remove(this._bookmark);
   }
 });
 
 // ------------------------------------------------------------------------------
 // Open a folder in tabs.
-
+//
 gTests.push({
   desc: "Open a folder in tabs.",
   URIs: ["about:buildconfig", "about:"],
-  _folderId: -1,
+  _bookmarks: null,
 
-  setup() {
-    var bs = PlacesUtils.bookmarks;
+  async setup() {
     // Create a new folder.
-    var folderId = bs.createFolder(bs.unfiledBookmarksFolder,
-                                   "Folder",
-                                   bs.DEFAULT_INDEX);
-    this._folderId = folderId;
+    let children = this.URIs.map(url => {
+      return {
+        title: "Title",
+        url,
+      }
+    });
 
-    // Add bookmarks in folder.
-    this.URIs.forEach(function(aURI) {
-      bs.insertBookmark(folderId,
-                        PlacesUtils._uri(aURI),
-                        bs.DEFAULT_INDEX,
-                        "Title");
+    this._bookmarks = await PlacesUtils.bookmarks.insertTree({
+      guid: PlacesUtils.bookmarks.unfiledGuid,
+      children: [{
+        title: "Folder",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        children,
+      }],
     });
 
     // Select unsorted bookmarks root in the left pane.
@@ -134,12 +102,8 @@ gTests.push({
     is(folderNode.title, "Folder", "Found folder in the right pane");
   },
 
-  finish() {
-    setTimeout(runNextTest, 0);
-  },
-
-  cleanup() {
-    PlacesUtils.bookmarks.removeItem(this._folderId);
+  async cleanup() {
+    await PlacesUtils.bookmarks.remove(this._bookmarks[0]);
   }
 });
 
@@ -149,23 +113,24 @@ gTests.push({
 gTests.push({
   desc: "Open a query in tabs.",
   URIs: ["about:buildconfig", "about:"],
-  _folderId: -1,
-  _queryId: -1,
+  _bookmarks: null,
+  _query: null,
 
-  setup() {
-    var bs = PlacesUtils.bookmarks;
-    // Create a new folder.
-    var folderId = bs.createFolder(bs.unfiledBookmarksFolder,
-                                   "Folder",
-                                   bs.DEFAULT_INDEX);
-    this._folderId = folderId;
+  async setup() {
+    let children = this.URIs.map(url => {
+      return {
+        title: "Title",
+        url,
+      }
+    });
 
-    // Add bookmarks in folder.
-    this.URIs.forEach(function(aURI) {
-      bs.insertBookmark(folderId,
-                        PlacesUtils._uri(aURI),
-                        bs.DEFAULT_INDEX,
-                        "Title");
+    this._bookmarks = await PlacesUtils.bookmarks.insertTree({
+      guid: PlacesUtils.bookmarks.unfiledGuid,
+      children: [{
+        title: "Folder",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        children,
+      }],
     });
 
     // Create a bookmarks query containing our bookmarks.
@@ -177,10 +142,14 @@ gTests.push({
     // we also may get pages like about.html included in the query result.
     query.searchTerms = "about:";
     var queryString = hs.queriesToQueryString([query], 1, options);
-    this._queryId = bs.insertBookmark(bs.unfiledBookmarksFolder,
-                                     PlacesUtils._uri(queryString),
-                                     0, // It must be the first.
-                                     "Query");
+    this._query = await PlacesUtils.bookmarks.insert({
+      index: 0, // it must be the first
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      title: "Query",
+      url: queryString,
+    });
+
+    gLibrary.PlacesOrganizer.selectLeftPaneQuery("Query");
 
     // Select unsorted bookmarks root in the left pane.
     gLibrary.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
@@ -191,78 +160,42 @@ gTests.push({
     is(folderNode.title, "Query", "Found query in the right pane");
   },
 
-  finish() {
-    setTimeout(runNextTest, 0);
-  },
-
-  cleanup() {
-    PlacesUtils.bookmarks.removeItem(this._folderId);
-    PlacesUtils.bookmarks.removeItem(this._queryId);
+  async cleanup() {
+    await PlacesUtils.bookmarks.remove(this._bookmarks[0]);
+    await PlacesUtils.bookmarks.remove(this._query);
   }
 });
 
-// ------------------------------------------------------------------------------
+async function runTest(test) {
+  info("Start of test: " + test.desc);
+  // Test setup will set Library so that the bookmark to be opened is the
+  // first node in the content (right pane) tree.
+  await test.setup();
 
-function test() {
-  waitForExplicitFinish();
-  // Increase timeout, this test can be quite slow due to waitForFocus calls.
-  requestLongerTimeout(2);
+  // Middle click on first node in the content tree of the Library.
+  gLibrary.focus();
+  await SimpleTest.promiseFocus(gLibrary);
 
-  // Sanity checks.
-  ok(PlacesUtils, "PlacesUtils in context");
-  ok(PlacesUIUtils, "PlacesUIUtils in context");
+  // Now middle-click on the bookmark contained with it.
+  let promiseLoaded = Promise.all(test.URIs.map(uri =>
+    BrowserTestUtils.waitForNewTab(gBrowser, uri, false, true)));
 
-  // Add tabs listeners.
-  gBrowser.tabContainer.addEventListener("TabOpen", gTabsListener);
-  gBrowser.addTabsProgressListener(gTabsListener);
+  mouseEventOnCell(gLibrary.ContentTree.view, 0, 0, { button: 1 });
 
-  // Temporary disable history, so we won't record pages navigation.
-  gPrefService.setBoolPref(ENABLE_HISTORY_PREF, false);
+  let tabs = await promiseLoaded;
 
-  // Open Library window.
-  openLibrary(function(library) {
-    gLibrary = library;
-    // Kick off tests.
-    runNextTest();
-  });
+  Assert.ok(true, "Expected tabs were loaded");
+
+  await Promise.all(tabs.map(tab => BrowserTestUtils.removeTab(tab)));
+
+  await test.cleanup();
 }
 
-function runNextTest() {
-  // Cleanup from previous test.
-  if (gCurrentTest)
-    gCurrentTest.cleanup();
-
-  if (gTests.length > 0) {
-    // Goto next test.
-    gCurrentTest = gTests.shift();
-    info("Start of test: " + gCurrentTest.desc);
-    // Test setup will set Library so that the bookmark to be opened is the
-    // first node in the content (right pane) tree.
-    gCurrentTest.setup();
-
-    // Middle click on first node in the content tree of the Library.
-    gLibrary.focus();
-    waitForFocus(function() {
-      mouseEventOnCell(gLibrary.ContentTree.view, 0, 0, { button: 1 });
-    }, gLibrary);
-  } else {
-    // No more tests.
-
-    // Close Library window.
-    gLibrary.close();
-
-    // Remove tabs listeners.
-    gBrowser.tabContainer.removeEventListener("TabOpen", gTabsListener);
-    gBrowser.removeTabsProgressListener(gTabsListener);
-
-    // Restore history.
-    try {
-      gPrefService.clearUserPref(ENABLE_HISTORY_PREF);
-    } catch (ex) {}
-
-    finish();
+add_task(async function test_all() {
+  for (let test of gTests) {
+    await runTest(test);
   }
-}
+});
 
 function mouseEventOnCell(aTree, aRowIndex, aColumnIndex, aEventDetails) {
   var selection = aTree.view.selection;

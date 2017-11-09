@@ -88,8 +88,8 @@ edges, and write these messages to disk before continuing the traversal to the
 next node.
 
 This functionality is exposed to chrome JavaScript as the
-`[ThreadSafe]ChromeUtils.saveHeapSnapshot` function. See
-`dom/webidl/ThreadSafeChromeUtils.webidl` for API documentation.
+`ChromeUtils.saveHeapSnapshot` function. See `dom/webidl/ChromeUtils.webidl` for
+API documentation.
 
 ### Reading Heap Snapshots
 

@@ -7,6 +7,9 @@
 #ifndef _mozilla_dom_ClientState_h
 #define _mozilla_dom_ClientState_h
 
+#include "mozilla/dom/DocumentBinding.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {

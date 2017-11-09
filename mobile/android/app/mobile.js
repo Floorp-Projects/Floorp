@@ -330,9 +330,6 @@ pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inch
 // Allow 24-bit colour when the hardware supports it
 pref("gfx.android.rgb16.force", false);
 
-// Allow GLContexts to be attached/detached from SurfaceTextures
-pref("gfx.SurfaceTexture.detach.enabled", true);
-
 // Use SurfaceTextures as preferred backend for TextureClient/Host
 pref("gfx.use-surfacetexture-textures", false);
 

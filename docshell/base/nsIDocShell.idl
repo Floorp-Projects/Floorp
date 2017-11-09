@@ -13,6 +13,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/NotNull.h"
 #include "nsCOMPtr.h"
+#include "nsIURI.h"
 class nsPresContext;
 class nsIPresShell;
 namespace mozilla {

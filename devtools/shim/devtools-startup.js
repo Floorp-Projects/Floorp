@@ -465,14 +465,15 @@ DevToolsStartup.prototype = {
   },
 
   onKey(window, key) {
-    // Record the timing at which this event started in order to compute later in
-    // gDevTools.showToolbox, the complete time it takes to open the toolbox.
-    // i.e. especially take `initDevTools` into account.
-
-    let startTime = window.performance.now();
-    let require = this.initDevTools("KeyShortcut");
-    if (require) {
-      // require might be null if initDevTools was called while DevTools are disabled.
+    if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
+      let id = key.toolId || key.id;
+      this.openInstallPage("KeyShortcut", id);
+    } else {
+      // Record the timing at which this event started in order to compute later in
+      // gDevTools.showToolbox, the complete time it takes to open the toolbox.
+      // i.e. especially take `initDevTools` into account.
+      let startTime = window.performance.now();
+      let require = this.initDevTools("KeyShortcut");
       let { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
       gDevToolsBrowser.onKeyShortcut(window, key, startTime);
     }
@@ -528,7 +529,17 @@ DevToolsStartup.prototype = {
     return require;
   },
 
-  openInstallPage: function (reason) {
+  /**
+   * Open about:devtools to start the onboarding flow.
+   *
+   * @param {String} reason
+   *        One of "KeyShortcut", "SystemMenu", "HamburgerMenu", "ContextMenu",
+   *        "CommandLine".
+   * @param {String} keyId
+   *        Optional. If the onboarding flow was triggered by a keyboard shortcut, pass
+   *        the shortcut key id (or toolId) to about:devtools.
+   */
+  openInstallPage: function (reason, keyId) {
     let { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
 
     // Focus about:devtools tab if there is already one opened in the current window.
@@ -554,6 +565,10 @@ DevToolsStartup.prototype = {
     let selectedBrowser = gBrowser.selectedBrowser;
     if (selectedBrowser) {
       params.push("tabid=" + selectedBrowser.outerWindowID);
+    }
+
+    if (keyId) {
+      params.push("keyid=" + keyId);
     }
 
     if (params.length > 0) {

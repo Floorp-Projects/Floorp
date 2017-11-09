@@ -6,14 +6,18 @@
 
 #include "WebIDLGlobalNameHash.h"
 #include "js/GCAPI.h"
+#include "jswrapper.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/PrototypeList.h"
 #include "mozilla/dom/RegisterBindings.h"
+#include "nsGlobalWindow.h"
 #include "nsIMemoryReporter.h"
 #include "nsTHashtable.h"
+#include "WrapperFactory.h"
 
 namespace mozilla {
 namespace dom {

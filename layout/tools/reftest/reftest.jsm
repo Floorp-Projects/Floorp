@@ -604,21 +604,25 @@ function StartCurrentTest()
         var currentTest = g.totalTests - g.urls.length;
         g.containingWindow.document.title = "reftest: " + currentTest + " / " + g.totalTests +
             " (" + Math.floor(100 * (currentTest / g.totalTests)) + "%)";
-        StartCurrentURI(1);
+        StartCurrentURI(URL_TARGET_TYPE_TEST);
     }
 }
 
-function StartCurrentURI(aState)
+function StartCurrentURI(aURLTargetType)
 {
-    g.state = aState;
-    g.currentURL = g.urls[0]["url" + aState].spec;
+    const isStartingRef = (aURLTargetType == URL_TARGET_TYPE_REFERENCE);
+
+    g.currentURL = g.urls[0][isStartingRef ? "url2" : "url1"].spec;
+    g.currentURLTargetType = aURLTargetType;
 
     RestoreChangedPreferences();
 
     var prefs = Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefBranch);
 
-    var prefSettings = g.urls[0]["prefSettings" + aState];
+    const prefSettings =
+      g.urls[0][isStartingRef ? "prefSettings2" : "prefSettings1"];
+
     if (prefSettings.length > 0) {
         var badPref = undefined;
         try {
@@ -708,7 +712,7 @@ function StartCurrentURI(aState)
         } else if (TYPE_PRINT == type) {
             SendLoadPrintTest(g.currentURL, g.loadTimeout);
         } else {
-            SendLoadTest(type, g.currentURL, g.loadTimeout);
+            SendLoadTest(type, g.currentURL, g.currentURLTargetType, g.loadTimeout);
         }
     }
 }
@@ -894,15 +898,15 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults)
         return;
     }
     if (g.urls[0].type == TYPE_PRINT) {
-        switch (g.state) {
-        case 1:
+        switch (g.currentURLTargetType) {
+        case URL_TARGET_TYPE_TEST:
             // First document has been loaded.
             g.testPrintOutput = typeSpecificResults;
             // Proceed to load the second document.
             CleanUpCrashDumpFiles();
-            StartCurrentURI(2);
+            StartCurrentURI(URL_TARGET_TYPE_REFERENCE);
             break;
-        case 2:
+        case URL_TARGET_TYPE_REFERENCE:
             let pathToTestPdf = g.testPrintOutput;
             let pathToRefPdf = typeSpecificResults;
             comparePdfs(pathToTestPdf, pathToRefPdf, function(error, results) {
@@ -1000,32 +1004,32 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults)
         return;
     }
 
-    if (g.urls[0]["prefSettings" + g.state].length == 0 &&
-        g.uriCanvases[g.currentURL]) {
+    const isRecordingRef =
+      (g.currentURLTargetType == URL_TARGET_TYPE_REFERENCE);
+    const prefSettings =
+      g.urls[0][isRecordingRef ? "prefSettings2" : "prefSettings1"];
+
+    if (prefSettings.length == 0 && g.uriCanvases[g.currentURL]) {
         g.currentCanvas = g.uriCanvases[g.currentURL];
     }
     if (g.currentCanvas == null) {
         logger.error(g.currentURL, "program error managing snapshots");
         ++g.testResults.Exception;
     }
-    if (g.state == 1) {
-        g.canvas1 = g.currentCanvas;
-    } else {
-        g.canvas2 = g.currentCanvas;
-    }
+    g[isRecordingRef ? "canvas2" : "canvas1"] = g.currentCanvas;
     g.currentCanvas = null;
 
     ResetRenderingState();
 
-    switch (g.state) {
-        case 1:
+    switch (g.currentURLTargetType) {
+        case URL_TARGET_TYPE_TEST:
             // First document has been loaded.
             // Proceed to load the second document.
 
             CleanUpCrashDumpFiles();
-            StartCurrentURI(2);
+            StartCurrentURI(URL_TARGET_TYPE_REFERENCE);
             break;
-        case 2:
+        case URL_TARGET_TYPE_REFERENCE:
             // Both documents have been loaded. Compare the renderings and see
             // if the comparison result matches the expected result specified
             // in the manifest.
@@ -1172,10 +1176,14 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults)
 function LoadFailed(why)
 {
     ++g.testResults.FailedLoad;
-    // Once bug 896840 is fixed, this can go away, but for now it will give log
-    // output that is TBPL starable for bug 789751 and bug 720452.
     if (!why) {
-        logger.error("load failed with unknown reason");
+        // reftest-content.js sets an initial reason before it sets the
+        // timeout that will call us with the currently set reason, so we
+        // should never get here.  If we do then there's a logic error
+        // somewhere.  Perhaps tests are somehow running overlapped and the
+        // timeout for one test is not being cleared before the timeout for
+        // another is set?  Maybe there's some sort of race?
+        logger.error("load failed with unknown reason (we should always have a reason!)");
     }
     logger.testStatus(g.urls[0].identifier, "load failed: " + why, "FAIL", "PASS");
     FlushTestBuffer();
@@ -1543,10 +1551,12 @@ function SendLoadPrintTest(uri, timeout)
                                             { uri: uri, timeout: timeout });
 }
 
-function SendLoadTest(type, uri, timeout)
+function SendLoadTest(type, uri, uriTargetType, timeout)
 {
     g.browserMessageManager.sendAsyncMessage("reftest:LoadTest",
-                                            { type: type, uri: uri, timeout: timeout }
+                                            { type: type, uri: uri,
+                                              uriTargetType: uriTargetType,
+                                              timeout: timeout }
     );
 }
 

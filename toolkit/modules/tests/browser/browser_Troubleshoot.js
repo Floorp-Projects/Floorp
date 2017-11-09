@@ -744,6 +744,52 @@ const SNAPSHOT_SCHEMA = {
         },
       },
     },
+    intl: {
+      required: true,
+      type: "object",
+      properties: {
+        localeService: {
+          required: true,
+          type: "object",
+          properties: {
+            requested: {
+              required: true,
+              type: "array"
+            },
+            available: {
+              required: true,
+              type: "array"
+            },
+            supported: {
+              required: true,
+              type: "array"
+            },
+            regionalPrefs: {
+              required: true,
+              type: "array"
+            },
+            defaultLocale: {
+              required: true,
+              type: "string"
+            },
+          },
+        },
+        osPrefs: {
+          required: true,
+          type: "object",
+          properties: {
+            systemLocales: {
+              required: true,
+              type: "array"
+            },
+            regionalPrefsLocales: {
+              required: true,
+              type: "array"
+            },
+          },
+        },
+      },
+    },
   },
 };
 

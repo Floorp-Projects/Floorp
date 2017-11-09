@@ -26,7 +26,7 @@ telemetry.test:
     notification_emails: ["telemetry-client-dev@mozilla.com"]
     record_in_processes: ["main"]
     description: This is a test entry for Telemetry.
-    expiry_date: never
+    expiry_version: never
     extra_keys:
       key1: This is just a test description.
       key2: This is another test description.
@@ -37,7 +37,7 @@ telemetry.test:
     release_channel_collection: opt-out
     record_in_processes: ["main"]
     description: This is an opt-out test entry.
-    expiry_date: never
+    expiry_version: never
     extra_keys:
       key1: This is just a test description.
   expired_version:
@@ -47,13 +47,6 @@ telemetry.test:
     record_in_processes: ["main"]
     description: This is a test entry with an expired version.
     expiry_version: "3.6"
-  expired_date:
-    objects: ["object1", "object2"]
-    bug_numbers: [1286606]
-    notification_emails: ["telemetry-client-dev@mozilla.com"]
-    record_in_processes: ["main"]
-    description: This is a test entry with an expired date.
-    expiry_date: 2014-01-28
   not_expired_optout:
     objects: ["object1"]
     bug_numbers: [1286606]
@@ -61,7 +54,6 @@ telemetry.test:
     description: This is an opt-out test entry with unexpired date and version.
     release_channel_collection: opt-out
     record_in_processes: ["main"]
-    expiry_date: 2099-01-01
     expiry_version: "999.0"
   main_only:
     objects: ["object1"]
@@ -97,6 +89,6 @@ telemetry.test.second:
     notification_emails: ["telemetry-client-dev@mozilla.com"]
     record_in_processes: ["main"]
     description: This is a test entry for Telemetry.
-    expiry_date: never
+    expiry_version: never
     extra_keys:
       key1: This is just a test description.

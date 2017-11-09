@@ -55,3 +55,8 @@ JS_PREFERENCE_PP_FILES += [
 FINAL_TARGET_PP_FILES += [
   'ua-update.json.in',
 ]
+
+if CONFIG['MOZ_ANDROID_GOOGLE_VR']:
+    FINAL_TARGET_FILES += [
+        '/' + CONFIG['MOZ_ANDROID_GOOGLE_VR_LIBS'] + 'libgvr.so',
+    ]

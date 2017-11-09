@@ -22,16 +22,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=688277
   let Cu = Components.utils;
 
   /* Fail gracefully if junk is passed in. */
-  is(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(11), undefined,
+  is(ChromeUtils.nondeterministicGetWeakMapKeys(11), undefined,
     "nondeterministicGetWeakMapKeys should return undefined for non-objects");
-  is(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys({}), undefined,
+  is(ChromeUtils.nondeterministicGetWeakMapKeys({}), undefined,
     "nondeterministicGetWeakMapKeys should return undefined for non-weakmap objects");
-  is(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(null), undefined,
+  is(ChromeUtils.nondeterministicGetWeakMapKeys(null), undefined,
     "nondeterministicGetWeakMapKeys should return undefined for null");
 
   /* return an empty array for an empty WeakMap */
   let mempty = new WeakMap();
-  is(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(mempty).length, 0,
+  is(ChromeUtils.nondeterministicGetWeakMapKeys(mempty).length, 0,
     "nondeterministicGetWeakMapKeys should return empty array for empty weakmap");
 
   /* Test freeing/nonfreeing. */
@@ -53,7 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=688277
   add_elements();
 
   Cu.schedulePreciseGC(function () {
-    let keys = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(m);
+    let keys = ChromeUtils.nondeterministicGetWeakMapKeys(m);
     is(liveKeys.length, 1, "Wrong number of live keys.");
     is(keys.length, 1, "Should have one weak map key.");
     is(m.get(keys[0]), "live1", "live1 should be live");

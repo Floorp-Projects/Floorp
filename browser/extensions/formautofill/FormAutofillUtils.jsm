@@ -239,6 +239,54 @@ this.FormAutofillUtils = {
   },
 
   /**
+   * Parse a country address format string and outputs an array of fields.
+   * Spaces, commas, and other literals are ignored in this implementation.
+   * For example, format string "%A%n%C, %S" should return:
+   * [
+   *   {fieldId: "street-address", newLine: true},
+   *   {fieldId: "address-level2"},
+   *   {fieldId: "address-level1"},
+   * ]
+   *
+   * @param   {string} fmt Country address format string
+   * @returns {array<object>} List of fields
+   */
+  parseAddressFormat(fmt) {
+    if (!fmt) {
+      throw new Error("fmt string is missing.");
+    }
+    // Based on the list of fields abbreviations in
+    // https://github.com/googlei18n/libaddressinput/wiki/AddressValidationMetadata
+    const fieldsLookup = {
+      N: "name",
+      O: "organization",
+      A: "street-address",
+      S: "address-level1",
+      C: "address-level2",
+      Z: "postal-code",
+      n: "newLine",
+    };
+
+    return fmt.match(/%[^%]/g).reduce((parsed, part) => {
+      // Take the first letter of each segment and try to identify it
+      let fieldId = fieldsLookup[part[1]];
+      // Early return if cannot identify part.
+      if (!fieldId) {
+        return parsed;
+      }
+      // If a new line is detected, add an attribute to the previous field.
+      if (fieldId == "newLine") {
+        let size = parsed.length;
+        if (size) {
+          parsed[size - 1].newLine = true;
+        }
+        return parsed;
+      }
+      return parsed.concat({fieldId});
+    }, []);
+  },
+
+  /**
    * Use alternative country name list to identify a country code from a
    * specified country name.
    * @param   {string} countryName A country name to be identified

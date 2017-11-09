@@ -10,9 +10,13 @@ import sys
 from collections import defaultdict
 
 import mozpack.path as mozpath
+from moztest.resolve import TestResolver
+
 from .. import preset
 from ..cli import BaseTryParser
 from ..vcs import VCSHelper
+
+here = os.path.abspath(os.path.dirname(__file__))
 
 
 class SyntaxParser(BaseTryParser):
@@ -302,9 +306,8 @@ class AutoTry(object):
         "xpcshell",
     ]
 
-    def __init__(self, topsrcdir, resolver_func, mach_context):
+    def __init__(self, topsrcdir, mach_context):
         self.topsrcdir = topsrcdir
-        self._resolver_func = resolver_func
         self._resolver = None
         self.mach_context = mach_context
         self.vcs = VCSHelper.create()
@@ -312,7 +315,7 @@ class AutoTry(object):
     @property
     def resolver(self):
         if self._resolver is None:
-            self._resolver = self._resolver_func()
+            self._resolver = TestResolver.from_environment(cwd=here)
         return self._resolver
 
     def split_try_string(self, data):
@@ -459,42 +462,6 @@ class AutoTry(object):
 
         return " ".join(parts)
 
-    def find_paths_and_metadata(self, verbose, detect_paths):
-        paths, tags, flavors = set(), set(), set()
-        changed_files = self.vcs.files_changed
-        if changed_files and detect_paths:
-            if verbose:
-                print("Pushing tests based on modifications to the "
-                      "following files:\n\t%s" % "\n\t".join(changed_files))
-
-            from mozbuild.frontend.reader import (
-                BuildReader,
-                EmptyConfig,
-            )
-
-            config = EmptyConfig(self.topsrcdir)
-            reader = BuildReader(config)
-            files_info = reader.files_info(changed_files)
-
-            for path, info in files_info.items():
-                paths |= info.test_files
-                tags |= info.test_tags
-                flavors |= info.test_flavors
-
-            if verbose:
-                if paths:
-                    print("Pushing tests based on the following patterns:\n\t%s" %
-                          "\n\t".join(paths))
-                if tags:
-                    print("Pushing tests based on the following tags:\n\t%s" %
-                          "\n\t".join(tags))
-
-        return {
-            'paths': paths,
-            'tags': tags,
-            'flavors': flavors,
-        }
-
     def normalise_list(self, items, allow_subitems=False):
         rv = defaultdict(list)
         for item in items:
@@ -591,10 +558,13 @@ class AutoTry(object):
                     kwargs[key] = defaults[key]
 
         if not any(kwargs[item] for item in ("paths", "tests", "tags")):
-            res = self.find_paths_and_metadata(kwargs['verbose'],
-                                               kwargs['detect_paths'])
-            kwargs['paths'] = res['paths']
-            kwargs['tags'] = res['tags']
+            if kwargs['detect_paths']:
+                res = self.resolver.get_outgoing_metadata()
+                kwargs['paths'] = res['paths']
+                kwargs['tags'] = res['tags']
+            else:
+                kwargs['paths'] = set()
+                kwargs['tags'] = set()
 
         builds, platforms, tests, talos, jobs, paths, tags, extra = self.validate_args(**kwargs)
 

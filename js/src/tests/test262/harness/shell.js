@@ -1,34 +1,3 @@
-// file: timer.js
-// Copyright (C) 2017 Ecma International.  All rights reserved.
-// This code is governed by the BSD license found in the LICENSE file.
-/*---
-description: |
-    Used in website/scripts/sth.js
----*/
-//setTimeout is not available, hence this script was loaded
-if (Promise === undefined && this.setTimeout === undefined) {
-  if(/\$DONE()/.test(code))
-    $ERROR("Async test capability is not supported in your test environment");
-}
-
-if (Promise !== undefined && this.setTimeout === undefined) {
-  (function(that) {
-     that.setTimeout = function(callback, delay) {
-      var p = Promise.resolve();
-      var start = Date.now();
-      var end = start + delay;
-      function check(){
-        var timeLeft = end - Date.now();
-        if(timeLeft > 0)
-          p.then(check);
-        else
-          callback();
-      }
-      p.then(check);
-    }
-  })(this);
-}
-
 // file: fnGlobalObject.js
 // Copyright (C) 2017 Ecma International.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
@@ -570,6 +539,20 @@ var byteConversionValues = {
   }
 };
 
+// file: nans.js
+// Copyright (C) 2017 Ecma International.  All rights reserved.
+// This code is governed by the BSD license found in the LICENSE file.
+/*---
+description: |
+    A collection of NaN values produced from expressions that have been observed
+    to create distinct bit representations on various platforms. These provide a
+    weak basis for assertions regarding the consistent canonicalization of NaN
+    values in Array buffers.
+---*/
+var distinctNaNs = [
+  0/0, Infinity/Infinity, -(0/0), Math.pow(-1, 0.5), -Math.pow(-1, 0.5)
+];
+
 // file: testBuiltInObject.js
 // Copyright 2012 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
@@ -699,26 +682,35 @@ function testBuiltInObject(obj, isFunction, isConstructor, properties, length) {
   return true;
 }
 
-// file: promiseHelper.js
+// file: timer.js
 // Copyright (C) 2017 Ecma International.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: |
-    Check that an array contains a numeric sequence starting at 1
-    and incrementing by 1 for each entry in the array. Used by
-    Promise tests to assert the order of execution in deep Promise
-    resolution pipelines.
+    Used in website/scripts/sth.js
 ---*/
+//setTimeout is not available, hence this script was loaded
+if (Promise === undefined && this.setTimeout === undefined) {
+  if(/\$DONE()/.test(code))
+    $ERROR("Async test capability is not supported in your test environment");
+}
 
-function checkSequence(arr, message) {
-  arr.forEach(function(e, i) {
-    if (e !== (i+1)) {
-      $ERROR((message ? message : "Steps in unexpected sequence:") +
-             " '" + arr.join(',') + "'");
+if (Promise !== undefined && this.setTimeout === undefined) {
+  (function(that) {
+     that.setTimeout = function(callback, delay) {
+      var p = Promise.resolve();
+      var start = Date.now();
+      var end = start + delay;
+      function check(){
+        var timeLeft = end - Date.now();
+        if(timeLeft > 0)
+          p.then(check);
+        else
+          callback();
+      }
+      p.then(check);
     }
-  });
-
-  return true;
+  })(this);
 }
 
 // file: proxyTrapsHelper.js
@@ -851,19 +843,27 @@ description: |
 
 var $MAX_ITERATIONS = 100000;
 
-// file: nans.js
+// file: promiseHelper.js
 // Copyright (C) 2017 Ecma International.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: |
-    A collection of NaN values produced from expressions that have been observed
-    to create distinct bit representations on various platforms. These provide a
-    weak basis for assertions regarding the consistent canonicalization of NaN
-    values in Array buffers.
+    Check that an array contains a numeric sequence starting at 1
+    and incrementing by 1 for each entry in the array. Used by
+    Promise tests to assert the order of execution in deep Promise
+    resolution pipelines.
 ---*/
-var distinctNaNs = [
-  0/0, Infinity/Infinity, -(0/0), Math.pow(-1, 0.5), -Math.pow(-1, 0.5)
-];
+
+function checkSequence(arr, message) {
+  arr.forEach(function(e, i) {
+    if (e !== (i+1)) {
+      $ERROR((message ? message : "Steps in unexpected sequence:") +
+             " '" + arr.join(',') + "'");
+    }
+  });
+
+  return true;
+}
 
 // file: detachArrayBuffer.js
 // Copyright (C) 2017 Ecma International.  All rights reserved.

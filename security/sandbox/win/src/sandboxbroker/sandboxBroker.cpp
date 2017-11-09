@@ -35,6 +35,7 @@ const std::vector<std::wstring> kDllsToUnload = {
   // Symantec Corporation (bug 1400637)
   L"ffm64.dll",
   L"ffm.dll",
+  L"prntm64.dll",
 
   // HitmanPro - SurfRight now part of Sophos (bug 1400637)
   L"hmpalert.dll",
@@ -45,6 +46,9 @@ const std::vector<std::wstring> kDllsToUnload = {
 
   // Webroot SecureAnywhere (bug 1400637)
   L"wrusr.dll",
+
+  // Comodo Internet Security (bug 1400637)
+  L"guard32.dll",
 };
 
 namespace mozilla

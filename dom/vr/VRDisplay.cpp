@@ -658,6 +658,11 @@ VRDisplay::SubmitFrame()
 {
   AUTO_PROFILER_TRACING("VR", "SubmitFrameAtVRDisplay");
 
+  if (mClient && !mClient->IsPresentationGenerationCurrent()) {
+    mPresentation = nullptr;
+    mClient->MakePresentationGenerationCurrent();
+  }
+
   if (mPresentation) {
     mPresentation->SubmitFrame();
   }

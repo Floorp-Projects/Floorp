@@ -117,9 +117,14 @@ add_task(async function test_get_current() {
       testEmptyTheme(await browser.theme.getCurrent());
       testEmptyTheme(await browser.theme.getCurrent(firstWin.id));
 
-      browser.test.log("Testing getCurrent() with invalid window ID");
+      browser.test.log("Testing update calls with invalid window ID");
       await browser.test.assertRejects(
-        browser.theme.getCurrent(secondWin.id),
+        browser.theme.reset(secondWin.id),
+        /Invalid window/,
+        "Invalid window should throw",
+      );
+      await browser.test.assertRejects(
+        browser.theme.update(secondWin.id, theme2),
         /Invalid window/,
         "Invalid window should throw",
       );

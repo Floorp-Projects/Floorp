@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[JSImplementation="@mozilla.org/sidebar;1"]
+[NoInterfaceObject, JSImplementation="@mozilla.org/sidebar;1"]
 interface External
 {
   [UnsafeInPrerendering] void AddSearchProvider(DOMString aDescriptionURL);

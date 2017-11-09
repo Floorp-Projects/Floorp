@@ -8,6 +8,7 @@
 
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
+#include "nsCOMPtr.h"
 
 class nsITransferable;
 class nsIClipboardOwner;

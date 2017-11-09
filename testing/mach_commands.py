@@ -20,6 +20,7 @@ from mach.decorators import (
 )
 
 from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
+from moztest.resolve import TEST_SUITES
 from argparse import ArgumentParser
 
 UNKNOWN_TEST = '''
@@ -40,147 +41,6 @@ UNKNOWN_FLAVOR = '''
 I know you are trying to run a %s test. Unfortunately, I can't run those
 tests yet. Sorry!
 '''.strip()
-
-MOCHITEST_CHUNK_BY_DIR = 4
-MOCHITEST_TOTAL_CHUNKS = 5
-
-TEST_SUITES = {
-    'cppunittest': {
-        'aliases': ('Cpp', 'cpp'),
-        'mach_command': 'cppunittest',
-        'kwargs': {'test_file': None},
-    },
-    'crashtest': {
-        'aliases': ('C', 'Rc', 'RC', 'rc'),
-        'mach_command': 'crashtest',
-        'kwargs': {'test_file': None},
-    },
-    'firefox-ui-functional': {
-        'aliases': ('Fxfn',),
-        'mach_command': 'firefox-ui-functional',
-        'kwargs': {},
-    },
-    'firefox-ui-update': {
-        'aliases': ('Fxup',),
-        'mach_command': 'firefox-ui-update',
-        'kwargs': {},
-    },
-    'check-spidermonkey': {
-        'aliases': ('Sm', 'sm'),
-        'mach_command': 'check-spidermonkey',
-        'kwargs': {'valgrind': False},
-    },
-    'mochitest-a11y': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'a11y', 'test_paths': None},
-    },
-    'mochitest-browser': {
-        'aliases': ('bc', 'BC', 'Bc'),
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'browser-chrome', 'test_paths': None},
-    },
-    'mochitest-chrome': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'chrome', 'test_paths': None},
-    },
-    'mochitest-devtools': {
-        'aliases': ('dt', 'DT', 'Dt'),
-        'mach_command': 'mochitest',
-        'kwargs': {'subsuite': 'devtools', 'test_paths': None},
-    },
-    'mochitest-plain': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'plain', 'test_paths': None},
-    },
-    'python': {
-        'mach_command': 'python-test',
-        'kwargs': {'tests': None},
-    },
-    'reftest': {
-        'aliases': ('RR', 'rr', 'Rr'),
-        'mach_command': 'reftest',
-        'kwargs': {'tests': None},
-    },
-    'web-platform-tests': {
-        'aliases': ('wpt',),
-        'mach_command': 'web-platform-tests',
-        'kwargs': {}
-    },
-    'valgrind': {
-        'aliases': ('V', 'v'),
-        'mach_command': 'valgrind-test',
-        'kwargs': {},
-    },
-    'xpcshell': {
-        'aliases': ('X', 'x'),
-        'mach_command': 'xpcshell-test',
-        'kwargs': {'test_file': 'all'},
-    },
-}
-
-# Maps test flavors to metadata on how to run that test.
-TEST_FLAVORS = {
-    'a11y': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'a11y', 'test_paths': []},
-    },
-    'browser-chrome': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'browser-chrome', 'test_paths': []},
-    },
-    'crashtest': {},
-    'chrome': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'chrome', 'test_paths': []},
-    },
-    'firefox-ui-functional': {
-        'mach_command': 'firefox-ui-functional',
-        'kwargs': {'tests': []},
-    },
-    'firefox-ui-update': {
-        'mach_command': 'firefox-ui-update',
-        'kwargs': {'tests': []},
-    },
-    'marionette': {
-        'mach_command': 'marionette-test',
-        'kwargs': {'tests': []},
-    },
-    'mochitest': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'mochitest', 'test_paths': []},
-    },
-    'python': {
-        'mach_command': 'python-test',
-        'kwargs': {},
-    },
-    'reftest': {
-        'mach_command': 'reftest',
-        'kwargs': {'tests': []}
-    },
-    'steeplechase': {},
-    'web-platform-tests': {
-        'mach_command': 'web-platform-tests',
-        'kwargs': {'include': []}
-    },
-    'xpcshell': {
-        'mach_command': 'xpcshell-test',
-        'kwargs': {'test_paths': []},
-    },
-}
-
-for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
-    TEST_SUITES['mochitest-%d' % i] = {
-        'aliases': ('M%d' % i, 'm%d' % i),
-        'mach_command': 'mochitest',
-        'kwargs': {
-            'flavor': 'mochitest',
-            'subsuite': 'default',
-            'chunk_by_dir': MOCHITEST_CHUNK_BY_DIR,
-            'total_chunks': MOCHITEST_TOTAL_CHUNKS,
-            'this_chunk': i,
-            'test_paths': None,
-        },
-    }
 
 TEST_HELP = '''
 Test or tests to run. Tests can be specified by filename, directory, suite
@@ -224,61 +84,9 @@ class Test(MachCommandBase):
         you specify a directory with xpcshell and browser chrome mochitests,
         both harnesses will be invoked.
         """
-        from mozbuild.testing import TestResolver
-
-        # Parse arguments and assemble a test "plan."
-        run_suites = set()
-        run_tests = []
+        from moztest.resolve import TestResolver, TEST_FLAVORS, TEST_SUITES
         resolver = self._spawn(TestResolver)
-
-        for entry in what:
-            # If the path matches the name or alias of an entire suite, run
-            # the entire suite.
-            if entry in TEST_SUITES:
-                run_suites.add(entry)
-                continue
-            suitefound = False
-            for suite, v in TEST_SUITES.items():
-                if entry in v.get('aliases', []):
-                    run_suites.add(suite)
-                    suitefound = True
-            if suitefound:
-                continue
-
-            # Now look for file/directory matches in the TestResolver.
-            relpath = self._wrap_path_argument(entry).relpath()
-            tests = list(resolver.resolve_tests(paths=[relpath]))
-            run_tests.extend(tests)
-
-            if not tests:
-                print('UNKNOWN TEST: %s' % entry, file=sys.stderr)
-
-        if not what:
-            from tryselect.selectors.syntax import AutoTry
-            at = AutoTry(self.topsrcdir, resolver, self._mach_context)
-            res = at.find_paths_and_metadata(False, detect_paths=True)
-            paths = res['paths']
-            tags = res['tags']
-            flavors = res['flavors']
-
-            if paths:
-                print("Tests will be run based on modifications to the "
-                      "following files:\n\t%s" % "\n\t".join(paths))
-
-            # This requires multiple calls to resolve_tests, because the test
-            # resolver returns tests that match every condition, while we want
-            # tests that match any condition. Bug 1210213 tracks implementing
-            # more flexible querying.
-            if tags:
-                run_tests = list(resolver.resolve_tests(tags=tags))
-            if paths:
-                run_tests += [t for t in resolver.resolve_tests(paths=paths)
-                              if not (tags & set(t.get('tags', '').split()))]
-            if flavors:
-                run_tests = [
-                    t for t in run_tests if t['flavor'] not in flavors]
-                for flavor in flavors:
-                    run_tests += list(resolver.resolve_tests(flavor=flavor))
+        run_suites, run_tests = resolver.resolve_metadata(what)
 
         if not run_suites and not run_tests:
             print(UNKNOWN_TEST)
@@ -517,7 +325,7 @@ class CramTest(MachCommandBase):
         from manifestparser import TestManifest
 
         if test_objects is None:
-            from mozbuild.testing import TestResolver
+            from moztest.resolve import TestResolver
             resolver = self._spawn(TestResolver)
             if test_paths:
                 # If we were given test paths, try to find tests matching them.
@@ -627,7 +435,7 @@ class ChunkFinder(MachCommandBase):
         suite_name = kwargs['suite_name'][0]
         _, dump_tests = tempfile.mkstemp()
 
-        from mozbuild.testing import TestResolver
+        from moztest.resolve import TestResolver
         resolver = self._spawn(TestResolver)
         relpath = self._wrap_path_argument(test_path).relpath()
         tests = list(resolver.resolve_tests(paths=[relpath]))
@@ -829,7 +637,7 @@ class TestInfoCommand(MachCommandBase):
             self.full_test_name = self.test_name
 
         # search for full_test_name in test manifests
-        from mozbuild.testing import TestResolver
+        from moztest.resolve import TestResolver
         resolver = self._spawn(TestResolver)
         relpath = self._wrap_path_argument(self.full_test_name).relpath()
         tests = list(resolver.resolve_tests(paths=[relpath]))
@@ -913,7 +721,10 @@ class TestInfoCommand(MachCommandBase):
     def get_platform(self, record):
         platform = record['build']['platform']
         type = record['build']['type']
-        e10s = "-%s" % record['run']['type'] if 'run' in record else ""
+        if 'run' in record and 'e10s' in record['run']['type']:
+            e10s = "-e10s"
+        else:
+            e10s = ""
         return "%s/%s%s:" % (platform, type, e10s)
 
     def submit(self, query):
@@ -978,7 +789,7 @@ class TestInfoCommand(MachCommandBase):
                     worst_platform = platform
                     worst_failures = failures
                     worst_runs = runs
-                print("%-30s %6d failures in %6d runs" % (
+                print("%-40s %6d failures in %6d runs" % (
                     platform, failures, runs))
             print("\nTotal: %d failures in %d runs or %.3f failures/run" %
                   (total_failures, total_runs, (float)(total_failures) / total_runs))
@@ -1017,7 +828,7 @@ class TestInfoCommand(MachCommandBase):
             data.sort(key=self.get_platform)
             for record in data:
                 platform = self.get_platform(record)
-                print("%-30s %6.2f s (%.2f s - %.2f s over %d runs)" % (
+                print("%-40s %6.2f s (%.2f s - %.2f s over %d runs)" % (
                     platform, record['average'], record['min'],
                     record['max'], record['count']))
         else:
