@@ -58,8 +58,8 @@ window.dialog {
 .alert-icon,
 .error-icon,
 .question-icon {
-  width: 32px;
-  height: 32px;
+  width: 64px;
+  height: 64px;
   margin: 6px;
   margin-inline-end: 20px;
 }
@@ -68,7 +68,7 @@ window.dialog {
   list-style-image: url("chrome://global/skin/icons/info.svg");
 }
 
-.alert-dialog #infoIcon,
+.alert-dialog #info\.icon,
 .alert-icon {
   list-style-image: url("chrome://global/skin/icons/warning-64.png");
 }

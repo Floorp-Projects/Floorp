@@ -18,18 +18,18 @@
   padding-top: 10px;
 }
 
-#infoIcon {
+#info\.icon {
   margin-inline-end: 14px;
 }
 
-#infoTitle,
-#infoHeader,
-#infoBody {
+#info\.title,
+#info\.header,
+#info\.body {
   font: menu;
   line-height: 16px;
   margin-bottom: 6px;
 }
 
-#infoTitle {
+#info\.title {
   font-weight: bold;
 }
