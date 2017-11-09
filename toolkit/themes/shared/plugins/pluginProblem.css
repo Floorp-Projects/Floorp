@@ -8,6 +8,8 @@
 /* Keep any changes to these styles in sync with plugin-doorhanger.inc.css */
 .mainBox {
  --grey-10: #f9f9fa;
+ --grey-60: #4a4a4f;
+ --grey-70: #38383d;
 }
 
 .mainBox {
@@ -31,12 +33,10 @@
   height: 100%;
 }
 :-moz-handler-vulnerable-updatable .hoverBox:active,
-:-moz-handler-vulnerable-no-update .hoverBox:active,
-:-moz-handler-clicktoplay .hoverBox:active {
+:-moz-handler-vulnerable-no-update .hoverBox:active {
   background-color: rgb(65, 65, 65);
 }
 
-:-moz-handler-clicktoplay .hoverBox:active .msgClickToPlay,
 :-moz-handler-vulnerable-updatable .hoverBox:active .msgClickToPlay,
 :-moz-handler-vulnerable-no-update .hoverBox:active .msgClickToPlay {
   color: red;
@@ -95,10 +95,6 @@ a .icon,
     background-image: url(chrome://global/skin/icons/loading@2x.png);
     background-size: 16px;
   }
-}
-
-.msgClickToPlay {
-  text-decoration: underline;
 }
 
 /* on desktop, don't ever show the tap-to-play UI: that is for mobile only */
@@ -202,4 +198,23 @@ a .msgTapToPlay  {
 }
 :-moz-handler-vulnerable-updatable .action-link:active {
   background-color: #801409;
+}
+
+/* New Photon styling
+ *
+ * At the moment, these rules are written to only override
+ * :-moz-handler-clicktoplay styling. Once we finish the
+ * redesign for all cases, we can change the CSS directly
+ * above instead of writing these super-specific rules.
+ */
+:-moz-handler-clicktoplay .mainBox {
+  background-color: var(--grey-70);
+}
+
+:-moz-handler-clicktoplay .msgClickToPlay {
+  font-size: 13px;
+}
+
+:-moz-handler-clicktoplay .hoverBox:active {
+  background-color: var(--grey-60);
 }
