@@ -315,7 +315,11 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
         MOZ_CRASH("GFX: Bad format, read pixels.");
     }
     destPixelSize = BytesPerPixel(dest->GetFormat());
-    MOZ_ASSERT(dest->GetSize().width * destPixelSize <= dest->Stride());
+
+    Maybe<DataSourceSurface::ScopedMap> map;
+    map.emplace(dest, DataSourceSurface::READ_WRITE);
+
+    MOZ_ASSERT(dest->GetSize().width * destPixelSize <= map->GetStride());
 
     GLenum readFormat = destFormat;
     GLenum readType = destType;
@@ -327,7 +331,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
     DataSourceSurface* readSurf = dest;
     int readAlignment = GuessAlignment(dest->GetSize().width,
                                        destPixelSize,
-                                       dest->Stride());
+                                       map->GetStride());
     if (!readAlignment) {
         needsTempSurf = true;
     }
@@ -389,11 +393,12 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
         }
 
         readSurf = tempSurf;
+        map = Nothing();
+        map.emplace(readSurf, DataSourceSurface::READ_WRITE);
     }
 
-    DataSourceSurface::ScopedMap map(readSurf, DataSourceSurface::READ_WRITE);
     MOZ_ASSERT(readAlignment);
-    MOZ_ASSERT(reinterpret_cast<uintptr_t>(map.GetData()) % readAlignment == 0);
+    MOZ_ASSERT(reinterpret_cast<uintptr_t>(map->GetData()) % readAlignment == 0);
 
     GLsizei width = dest->GetSize().width;
     GLsizei height = dest->GetSize().height;
@@ -405,8 +410,10 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
         gl->fReadPixels(0, 0,
                         width, height,
                         readFormat, readType,
-                        map.GetData());
+                        map->GetData());
     }
+
+    map = Nothing();
 
     if (readSurf != dest) {
         MOZ_ASSERT(readFormat == LOCAL_GL_RGBA);
