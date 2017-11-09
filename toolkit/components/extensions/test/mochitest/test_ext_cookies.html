@@ -27,7 +27,7 @@ add_task(async function test_cookies() {
       let results = await browser.tabs.executeScript(tabId, {
         code: "document.cookie",
       });
-      browser.test.assertEq(results.length, 1, "executeScript returns one result");
+      browser.test.assertEq(1, results.length, "executeScript returns one result");
       return results[0];
     }
 
@@ -84,6 +84,7 @@ add_task(async function test_cookies() {
       session: false,
       expirationDate: THE_FUTURE,
       storeId: STORE_ID,
+      firstPartyDomain: "",
     };
 
     // Remove all cookies before starting the test.
@@ -96,32 +97,32 @@ add_task(async function test_cookies() {
     assertExpected(expected, cookie);
 
     let cookies = await browser.cookies.getAll({name: "name1"});
-    browser.test.assertEq(cookies.length, 1, "one cookie found for matching name");
+    browser.test.assertEq(1, cookies.length, "one cookie found for matching name");
     assertExpected(expected, cookies[0]);
 
     cookies = await browser.cookies.getAll({domain: "example.org"});
-    browser.test.assertEq(cookies.length, 1, "one cookie found for matching domain");
+    browser.test.assertEq(1, cookies.length, "one cookie found for matching domain");
     assertExpected(expected, cookies[0]);
 
     cookies = await browser.cookies.getAll({domain: "example.net"});
-    browser.test.assertEq(cookies.length, 0, "no cookies found for non-matching domain");
+    browser.test.assertEq(0, cookies.length, "no cookies found for non-matching domain");
 
     cookies = await browser.cookies.getAll({secure: false});
-    browser.test.assertEq(cookies.length, 1, "one non-secure cookie found");
+    browser.test.assertEq(1, cookies.length, "one non-secure cookie found");
     assertExpected(expected, cookies[0]);
 
     cookies = await browser.cookies.getAll({secure: true});
-    browser.test.assertEq(cookies.length, 0, "no secure cookies found");
+    browser.test.assertEq(0, cookies.length, "no secure cookies found");
 
     cookies = await browser.cookies.getAll({storeId: STORE_ID});
-    browser.test.assertEq(cookies.length, 1, "one cookie found for valid storeId");
+    browser.test.assertEq(1, cookies.length, "one cookie found for valid storeId");
     assertExpected(expected, cookies[0]);
 
     cookies = await browser.cookies.getAll({storeId: "invalid_id"});
-    browser.test.assertEq(cookies.length, 0, "no cookies found for invalid storeId");
+    browser.test.assertEq(0, cookies.length, "no cookies found for invalid storeId");
 
     let details = await browser.cookies.remove({url: TEST_URL, name: "name1"});
-    assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID}, details);
+    assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID, firstPartyDomain: ""}, details);
 
     cookie = await browser.cookies.get({url: TEST_URL, name: "name1"});
     browser.test.assertEq(null, cookie, "removed cookie not found");
@@ -144,7 +145,7 @@ add_task(async function test_cookies() {
     // .remove should return the URL of the API call, so the port is included in the return value.
     const TEST_URL_TO_REMOVE = changePort(TEST_URL, 1023);
     details = await browser.cookies.remove({url: TEST_URL_TO_REMOVE, name: "name1"});
-    assertExpected({url: TEST_URL_TO_REMOVE, name: "name1", storeId: STORE_ID}, details);
+    assertExpected({url: TEST_URL_TO_REMOVE, name: "name1", storeId: STORE_ID, firstPartyDomain: ""}, details);
 
     cookie = await browser.cookies.get({url: TEST_URL, name: "name1"});
     browser.test.assertEq(null, cookie, "removed cookie not found");
@@ -173,7 +174,7 @@ add_task(async function test_cookies() {
     browser.test.assertEq(false, cookie.hostOnly, "cookie is not a hostOnly cookie");
 
     details = await browser.cookies.remove({url: TEST_URL, name: "name2"});
-    assertExpected({url: TEST_URL, name: "name2", storeId: STORE_ID}, details);
+    assertExpected({url: TEST_URL, name: "name2", storeId: STORE_ID, firstPartyDomain: ""}, details);
 
     // Create a session cookie.
     cookie = await browser.cookies.set({url: TEST_URL, name: "name1", value: "value1"});
@@ -183,14 +184,14 @@ add_task(async function test_cookies() {
     browser.test.assertEq(true, cookie.session, "got session cookie");
 
     cookies = await browser.cookies.getAll({session: true});
-    browser.test.assertEq(cookies.length, 1, "one session cookie found");
+    browser.test.assertEq(1, cookies.length, "one session cookie found");
     browser.test.assertEq(true, cookies[0].session, "found session cookie");
 
     cookies = await browser.cookies.getAll({session: false});
-    browser.test.assertEq(cookies.length, 0, "no non-session cookies found");
+    browser.test.assertEq(0, cookies.length, "no non-session cookies found");
 
     details = await browser.cookies.remove({url: TEST_URL, name: "name1"});
-    assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID}, details);
+    assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID, firstPartyDomain: ""}, details);
 
     cookie = await browser.cookies.get({url: TEST_URL, name: "name1"});
     browser.test.assertEq(null, cookie, "removed cookie not found");
@@ -202,14 +203,14 @@ add_task(async function test_cookies() {
     browser.test.assertEq(true, cookie.session, "got secure cookie");
 
     cookies = await browser.cookies.getAll({secure: true});
-    browser.test.assertEq(cookies.length, 1, "one secure cookie found");
+    browser.test.assertEq(1, cookies.length, "one secure cookie found");
     browser.test.assertEq(true, cookies[0].secure, "found secure cookie");
 
     cookies = await browser.cookies.getAll({secure: false});
-    browser.test.assertEq(cookies.length, 0, "no non-secure cookies found");
+    browser.test.assertEq(0, cookies.length, "no non-secure cookies found");
 
     details = await browser.cookies.remove({url: TEST_SECURE_URL, name: "name1"});
-    assertExpected({url: TEST_SECURE_URL, name: "name1", storeId: STORE_ID}, details);
+    assertExpected({url: TEST_SECURE_URL, name: "name1", storeId: STORE_ID, firstPartyDomain: ""}, details);
 
     cookie = await browser.cookies.get({url: TEST_SECURE_URL, name: "name1"});
     browser.test.assertEq(null, cookie, "removed cookie not found");
@@ -221,17 +222,17 @@ add_task(async function test_cookies() {
     browser.test.assertEq(TEST_COOKIE_PATH, cookie.path, "got cookie with path");
 
     cookies = await browser.cookies.getAll({path: TEST_COOKIE_PATH});
-    browser.test.assertEq(cookies.length, 1, "one cookie with path found");
+    browser.test.assertEq(1, cookies.length, "one cookie with path found");
     browser.test.assertEq(TEST_COOKIE_PATH, cookies[0].path, "found cookie with path");
 
     cookie = await browser.cookies.get({url: TEST_URL + "invalid_path", name: "name1"});
     browser.test.assertEq(null, cookie, "get with invalid path returns null");
 
     cookies = await browser.cookies.getAll({path: "/invalid_path"});
-    browser.test.assertEq(cookies.length, 0, "getAll with invalid path returns 0 cookies");
+    browser.test.assertEq(0, cookies.length, "getAll with invalid path returns 0 cookies");
 
     details = await browser.cookies.remove({url: TEST_URL_WITH_PATH, name: "name1"});
-    assertExpected({url: TEST_URL_WITH_PATH, name: "name1", storeId: STORE_ID}, details);
+    assertExpected({url: TEST_URL_WITH_PATH, name: "name1", storeId: STORE_ID, firstPartyDomain: ""}, details);
 
     cookie = await browser.cookies.set({url: TEST_URL, name: "name1", value: "value1", httpOnly: true});
     browser.test.assertEq(true, cookie.httpOnly, "httpOnly cookie set");
@@ -240,7 +241,7 @@ add_task(async function test_cookies() {
     browser.test.assertEq(false, cookie.httpOnly, "non-httpOnly cookie set");
 
     details = await browser.cookies.remove({url: TEST_URL, name: "name1"});
-    assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID}, details);
+    assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID, firstPartyDomain: ""}, details);
 
     cookie = await browser.cookies.set({url: TEST_URL});
     browser.test.assertEq("", cookie.name, "default name set");
@@ -270,13 +271,13 @@ add_task(async function test_cookies() {
       browser.test.assertEq("store=private", await getDocumentCookie(tabId), "private document.cookie should be set");
 
       let details = await browser.cookies.remove({url: TEST_URL, name: "store", storeId: STORE_ID});
-      assertExpected({url: TEST_URL, name: "store", storeId: STORE_ID}, details);
+      assertExpected({url: TEST_URL, name: "store", storeId: STORE_ID, firstPartyDomain: ""}, details);
 
       cookie = await browser.cookies.get({url: TEST_URL, name: "store", storeId: STORE_ID});
       browser.test.assertEq(null, cookie, "deleted the default cookie");
 
       details = await browser.cookies.remove({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
-      assertExpected({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID}, details);
+      assertExpected({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID, firstPartyDomain: ""}, details);
 
       cookie = await browser.cookies.get({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
       browser.test.assertEq(null, cookie, "deleted the private cookie");
