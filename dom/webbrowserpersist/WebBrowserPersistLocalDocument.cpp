@@ -11,6 +11,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/HTMLObjectElement.h"
+#include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/TabParent.h"
@@ -29,7 +30,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLMediaElement.h"
-#include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMNode.h"
@@ -1166,14 +1166,15 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLOptionElement> nodeAsOption = do_QueryInterface(aNodeIn);
+    dom::HTMLOptionElement* nodeAsOption = dom::HTMLOptionElement::FromContent(content);
     if (nodeAsOption) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
-            nsCOMPtr<nsIDOMHTMLOptionElement> outElt = do_QueryInterface(*aNodeOut);
-            bool selected;
-            nodeAsOption->GetSelected(&selected);
-            outElt->SetDefaultSelected(selected);
+            nsCOMPtr<nsIContent> outContent = do_QueryInterface(*aNodeOut);
+            dom::HTMLOptionElement* outElt = dom::HTMLOptionElement::FromContent(outContent);
+            bool selected = nodeAsOption->Selected();
+            IgnoredErrorResult ignored;
+            outElt->SetDefaultSelected(selected, ignored);
         }
         return rv;
     }
