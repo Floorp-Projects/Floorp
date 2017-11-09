@@ -247,7 +247,8 @@ public:
                                    const float* aBottomMargin,
                                    const float* aLeftMargin,
                                    const StickyOffsetBounds& aVerticalBounds,
-                                   const StickyOffsetBounds& aHorizontalBounds);
+                                   const StickyOffsetBounds& aHorizontalBounds,
+                                   const wr::LayoutVector2D& aAppliedOffset);
   void PushStickyFrame(const wr::WrStickyId& aStickyId,
                        const DisplayItemClipChain* aParent);
   void PopStickyFrame(const DisplayItemClipChain* aParent);

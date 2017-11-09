@@ -51,6 +51,9 @@ RegisterCodeSegment(const CodeSegment* cs);
 void
 UnregisterCodeSegment(const CodeSegment* cs);
 
+void
+ShutDownProcessStaticData();
+
 } // namespace wasm
 } // namespace js
 

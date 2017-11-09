@@ -217,7 +217,7 @@ add_task(async function checkWrongSystemTimeWarning() {
   is(message.divDisplay, "none", "Wrong time message information is not visible");
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
+}).skip(); // Skipping because of bug 1414804.
 
 add_task(async function checkAdvancedDetails() {
   info("Loading a bad cert page and verifying the main error and advanced details section");

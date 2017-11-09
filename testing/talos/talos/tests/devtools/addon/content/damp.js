@@ -19,8 +19,8 @@ XPCOMUtils.defineLazyGetter(this, "TargetFactory", function() {
   let { TargetFactory } = require("devtools/client/framework/target");
   return TargetFactory;
 });
-XPCOMUtils.defineLazyGetter(this, "ThreadSafeChromeUtils", function() {
-  return require("ThreadSafeChromeUtils");
+XPCOMUtils.defineLazyGetter(this, "ChromeUtils", function() {
+  return require("ChromeUtils");
 });
 
 const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
@@ -142,7 +142,7 @@ Damp.prototype = {
 
   readHeapSnapshot(label) {
     let start = performance.now();
-    this._snapshot = ThreadSafeChromeUtils.readHeapSnapshot(this._heapSnapshotFilePath);
+    this._snapshot = ChromeUtils.readHeapSnapshot(this._heapSnapshotFilePath);
     let end = performance.now();
     this._results.push({
       name: label + ".readHeapSnapshot",

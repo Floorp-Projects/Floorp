@@ -114,6 +114,8 @@ load 746849.html
 load 746866.html
 load 747132.html
 load 747302.html
+load 766422-1.html
+load 766422-2.html
 load 766452-1.html
 load 766452-2.html
 load 768079-1.html
@@ -136,6 +138,7 @@ pref(layers.force-active,true) load 914457-1.html
 load 944579.svg
 load 944579.html
 pref(security.fileuri.strict_origin_policy,false) load 950000.html
+load 951893.xhtml
 load 1011218.html
 load 1034403-1.html
 load 1056516.html

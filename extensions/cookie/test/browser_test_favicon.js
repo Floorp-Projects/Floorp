@@ -2,27 +2,22 @@
 // in this case, the docshell of the channel is chrome, not content; thus
 // the cookie should be considered third party.
 
-function test() {
-  waitForExplicitFinish();
+add_task(async function() {
+  const iconUrl = "http://example.org/browser/extensions/cookie/test/damonbowling.jpg";
+	await SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]]});
 
-  Services.prefs.setIntPref("network.cookie.cookieBehavior", 1);
+  let promise = TestUtils.topicObserved("cookie-rejected", subject => {
+    let uri = subject.QueryInterface(Components.interfaces.nsIURI);
+    return uri.spec == iconUrl;
+  });
 
-  Services.obs.addObserver(function (theSubject, theTopic, theData) {
-    var uri = theSubject.QueryInterface(Components.interfaces.nsIURI);
-    var domain = uri.host;
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  registerCleanupFunction(async function() {
+    await BrowserTestUtils.removeTab(tab);
+  });
 
-    if (domain == "example.org") {
-      ok(true, "foreign favicon cookie was blocked");
-
-      Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
-
-      Services.obs.removeObserver(arguments.callee, "cookie-rejected");
-
-      finish();
-    }
-  }, "cookie-rejected");
-
-  // kick off a favicon load
-  gBrowser.setIcon(gBrowser.selectedTab, "http://example.org/tests/extensions/cookie/test/damonbowling.jpg",
-                   Services.scriptSecurityManager.getSystemPrincipal());
-}
+  // Kick off a favicon load.
+  gBrowser.setIcon(tab, iconUrl);
+  await promise;
+  ok(true, "foreign favicon cookie was blocked");
+});

@@ -148,6 +148,10 @@ let gWhitelist = [{
     file: "preferences.properties",
     key: "searchResults.needHelp2",
     type: "double-quote"
+  }, {
+    file: "aboutdevtools.dtd",
+    key: "aboutDevtools.newsletter.privacy.label",
+    type: "single-quote"
   }
 ];
 

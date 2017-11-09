@@ -858,8 +858,13 @@ IonBuilder::inlineArrayPush(CallInfo& callInfo)
             value = valueDouble;
         }
 
-        if (needsPostBarrier(value))
-            current->add(MPostWriteBarrier::New(alloc(), obj, value));
+        if (needsPostBarrier(value)) {
+            MInstruction* elements = MElements::New(alloc(), obj);
+            current->add(elements);
+            MInstruction* initLength = MInitializedLength::New(alloc(), elements);
+            current->add(initLength);
+            current->add(MPostWriteElementBarrier::New(alloc(), obj, value, initLength));
+        }
 
         ins = MArrayPush::New(alloc(), obj, value);
         current->add(ins);

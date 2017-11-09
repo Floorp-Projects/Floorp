@@ -7,29 +7,29 @@ requestLongerTimeout(2);
  * amount in non-smoothscroll mode.
  */
 add_task(async function() {
-  let tabstrip = gBrowser.tabContainer.mTabstrip;
-  let scrollbox = tabstrip._scrollbox;
-  let originalSmoothScroll = tabstrip.smoothScroll;
+  let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
+  let scrollbox = arrowScrollbox._scrollbox;
+  let originalSmoothScroll = arrowScrollbox.smoothScroll;
   let tabs = gBrowser.tabs;
   let tabMinWidth = parseInt(getComputedStyle(gBrowser.selectedTab, null).minWidth);
 
   let rect = ele => ele.getBoundingClientRect();
   let width = ele => rect(ele).width;
 
-  let tabCountForOverflow = Math.ceil(width(tabstrip) / tabMinWidth * 3);
+  let tabCountForOverflow = Math.ceil(width(arrowScrollbox) / tabMinWidth * 3);
 
   let left = ele => rect(ele).left;
   let right = ele => rect(ele).right;
   let isLeft = (ele, msg) => is(left(ele), left(scrollbox), msg);
   let isRight = (ele, msg) => is(right(ele), right(scrollbox), msg);
-  let elementFromPoint = x => tabstrip._elementFromPoint(x);
+  let elementFromPoint = x => arrowScrollbox._elementFromPoint(x);
   let nextLeftElement = () => elementFromPoint(left(scrollbox) - 1);
   let nextRightElement = () => elementFromPoint(right(scrollbox) + 1);
   let firstScrollable = () => tabs[gBrowser._numPinnedTabs];
 
-  tabstrip.smoothScroll = false;
+  arrowScrollbox.smoothScroll = false;
   registerCleanupFunction(() => {
-    tabstrip.smoothScroll = originalSmoothScroll;
+    arrowScrollbox.smoothScroll = originalSmoothScroll;
   });
 
   while (tabs.length < tabCountForOverflow) {
@@ -45,8 +45,8 @@ add_task(async function() {
   ok(!scrollbox.hasAttribute("notoverflowing"),
      "Tab strip should be overflowing");
 
-  let upButton = tabstrip._scrollButtonUp;
-  let downButton = tabstrip._scrollButtonDown;
+  let upButton = arrowScrollbox._scrollButtonUp;
+  let downButton = arrowScrollbox._scrollButtonDown;
   let element;
 
   gBrowser.selectedTab = firstScrollable();

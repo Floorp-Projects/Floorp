@@ -1331,7 +1331,8 @@ pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
                                             bottom_margin: *const f32,
                                             left_margin: *const f32,
                                             vertical_bounds: StickyOffsetBounds,
-                                            horizontal_bounds: StickyOffsetBounds)
+                                            horizontal_bounds: StickyOffsetBounds,
+                                            applied_offset: LayoutVector2D)
                                             -> u64 {
     assert!(unsafe { is_in_main_thread() });
     let clip_id = state.frame_builder.dl_builder.define_sticky_frame(
@@ -1341,8 +1342,7 @@ pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
             unsafe { bottom_margin.as_ref() }.cloned(),
             unsafe { left_margin.as_ref() }.cloned()
         ),
-        vertical_bounds, horizontal_bounds,
-        LayoutVector2D::new(0.0, 0.0));
+        vertical_bounds, horizontal_bounds, applied_offset);
     match clip_id {
         ClipId::Clip(id, pipeline_id) => {
             assert!(pipeline_id == state.pipeline_id);

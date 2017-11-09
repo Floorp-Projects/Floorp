@@ -124,6 +124,14 @@ class TestDeflater(unittest.TestCase):
         deflater.write(self.wrap('aaaaaaaaaaaaanopqrstuvwxyz'))
         self.assertEqual(deflater.crc32, 0xd46b97ed)
 
+    def test_deflater_empty(self):
+        deflater = Deflater(False)
+        self.assertFalse(deflater.compressed)
+        self.assertEqual(deflater.uncompressed_size, 0)
+        self.assertEqual(deflater.compressed_size, deflater.uncompressed_size)
+        self.assertEqual(deflater.compressed_data, '')
+        self.assertEqual(deflater.crc32, 0)
+
 
 class TestDeflaterMemoryView(TestDeflater):
     def wrap(self, data):

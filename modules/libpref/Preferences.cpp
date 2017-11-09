@@ -164,6 +164,25 @@ enum class PrefType
   Bool = 3,
 };
 
+#ifdef DEBUG
+const char*
+PrefTypeToString(PrefType aType)
+{
+  switch (aType) {
+    case PrefType::Invalid:
+      return "INVALID";
+    case PrefType::String:
+      return "string";
+    case PrefType::Int:
+      return "int";
+    case PrefType::Bool:
+      return "bool";
+    default:
+      MOZ_CRASH("Unhandled enum value");
+  }
+}
+#endif
+
 // Keep the type of the preference, as well as the flags guiding its behaviour.
 class PrefTypeFlags
 {
@@ -298,6 +317,7 @@ struct CallbackNode
   // be removed at the end of pref_DoCallback.
   PrefChangedFunc mFunc;
   void* mData;
+  Preferences::MatchKind mMatchKind;
   CallbackNode* mNext;
 };
 
@@ -978,8 +998,11 @@ pref_HashPref(const char* aKey,
              !pref->mPrefFlags.IsPrefType(aType)) {
     NS_WARNING(
       nsPrintfCString(
-        "Trying to overwrite value of default pref %s with the wrong type!",
-        aKey)
+        "Ignoring attempt to overwrite value of default pref %s (type %s) with "
+        "the wrong type (%s)!",
+        aKey,
+        PrefTypeToString(pref->mPrefFlags.GetPrefType()),
+        PrefTypeToString(aType))
         .get());
 
     return NS_ERROR_UNEXPECTED;
@@ -1075,6 +1098,7 @@ static void
 PREF_RegisterCallback(const char* aPrefNode,
                       PrefChangedFunc aCallback,
                       void* aData,
+                      Preferences::MatchKind aMatchKind,
                       bool aIsPriority)
 {
   NS_PRECONDITION(aPrefNode, "aPrefNode must not be nullptr");
@@ -1084,6 +1108,7 @@ PREF_RegisterCallback(const char* aPrefNode,
   node->mDomain = moz_xstrdup(aPrefNode);
   node->mFunc = aCallback;
   node->mData = aData;
+  node->mMatchKind = aMatchKind;
 
   if (aIsPriority) {
     // Add to the start of the list.
@@ -1134,7 +1159,8 @@ pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
 static nsresult
 PREF_UnregisterCallback(const char* aPrefNode,
                         PrefChangedFunc aCallback,
-                        void* aData)
+                        void* aData,
+                        Preferences::MatchKind aMatchKind)
 {
   nsresult rv = NS_ERROR_FAILURE;
   CallbackNode* node = gFirstCallback;
@@ -1142,6 +1168,7 @@ PREF_UnregisterCallback(const char* aPrefNode,
 
   while (node != nullptr) {
     if (node->mFunc == aCallback && node->mData == aData &&
+        node->mMatchKind == aMatchKind &&
         strcmp(node->mDomain, aPrefNode) == 0) {
       if (gCallbacksInProgress) {
         // postpone the node removal until after
@@ -1176,10 +1203,15 @@ pref_DoCallback(const char* aChangedPref)
   // if we haven't reentered.
   gCallbacksInProgress = true;
 
-  for (node = gFirstCallback; node != nullptr; node = node->mNext) {
-    if (node->mFunc &&
-        PL_strncmp(aChangedPref, node->mDomain, strlen(node->mDomain)) == 0) {
-      (*node->mFunc)(aChangedPref, node->mData);
+  for (node = gFirstCallback; node; node = node->mNext) {
+    if (node->mFunc) {
+      bool matches =
+        node->mMatchKind == Preferences::ExactMatch
+          ? strcmp(node->mDomain, aChangedPref) == 0
+          : strncmp(node->mDomain, aChangedPref, strlen(node->mDomain)) == 0;
+      if (matches) {
+        (node->mFunc)(aChangedPref, node->mData);
+      }
     }
   }
 
@@ -2898,8 +2930,12 @@ nsPrefBranch::AddObserver(const char* aDomain,
   // aDomain == nullptr is the only possible failure, and we trapped it with
   // NS_ENSURE_ARG above.
   const PrefName& pref = GetPrefName(aDomain);
-  PREF_RegisterCallback(
-    pref.get(), NotifyObserver, pCallback, /* isPriority */ false);
+  PREF_RegisterCallback(pref.get(),
+                        NotifyObserver,
+                        pCallback,
+                        Preferences::PrefixMatch,
+                        /* isPriority */ false);
+
   return NS_OK;
 }
 
@@ -2931,7 +2967,8 @@ nsPrefBranch::RemoveObserver(const char* aDomain, nsIObserver* aObserver)
   if (pCallback) {
     // aDomain == nullptr is the only possible failure, trapped above.
     const PrefName& pref = GetPrefName(aDomain);
-    rv = PREF_UnregisterCallback(pref.get(), NotifyObserver, pCallback);
+    rv = PREF_UnregisterCallback(
+      pref.get(), NotifyObserver, pCallback, Preferences::PrefixMatch);
   }
 
   return rv;
@@ -2993,7 +3030,10 @@ nsPrefBranch::FreeObserverList()
     nsAutoPtr<PrefCallback>& callback = iter.Data();
     nsPrefBranch* prefBranch = callback->GetPrefBranch();
     const PrefName& pref = prefBranch->GetPrefName(callback->GetDomain().get());
-    PREF_UnregisterCallback(pref.get(), nsPrefBranch::NotifyObserver, callback);
+    PREF_UnregisterCallback(pref.get(),
+                            nsPrefBranch::NotifyObserver,
+                            callback,
+                            Preferences::PrefixMatch);
     iter.Remove();
   }
   mFreeingObserverList = false;
@@ -3204,110 +3244,6 @@ bool Preferences::sShutdown = false;
 // This globally enables or disables OMT pref writing, both sync and async.
 static int32_t sAllowOMTPrefWrite = -1;
 
-class ValueObserverHashKey : public PLDHashEntryHdr
-{
-public:
-  typedef ValueObserverHashKey* KeyType;
-  typedef const ValueObserverHashKey* KeyTypePointer;
-
-  static const ValueObserverHashKey* KeyToPointer(ValueObserverHashKey* aKey)
-  {
-    return aKey;
-  }
-
-  static PLDHashNumber HashKey(const ValueObserverHashKey* aKey)
-  {
-    PLDHashNumber hash = HashString(aKey->mPrefName);
-    hash = AddToHash(hash, aKey->mMatchKind);
-    return AddToHash(hash, aKey->mCallback);
-  }
-
-  ValueObserverHashKey(const char* aPref,
-                       PrefChangedFunc aCallback,
-                       Preferences::MatchKind aMatchKind)
-    : mPrefName(aPref)
-    , mCallback(aCallback)
-    , mMatchKind(aMatchKind)
-  {
-  }
-
-  explicit ValueObserverHashKey(const ValueObserverHashKey* aOther)
-    : mPrefName(aOther->mPrefName)
-    , mCallback(aOther->mCallback)
-    , mMatchKind(aOther->mMatchKind)
-  {
-  }
-
-  bool KeyEquals(const ValueObserverHashKey* aOther) const
-  {
-    return mCallback == aOther->mCallback && mPrefName == aOther->mPrefName &&
-           mMatchKind == aOther->mMatchKind;
-  }
-
-  ValueObserverHashKey* GetKey() const
-  {
-    return const_cast<ValueObserverHashKey*>(this);
-  }
-
-  enum
-  {
-    ALLOW_MEMMOVE = true
-  };
-
-  nsCString mPrefName;
-  PrefChangedFunc mCallback;
-  Preferences::MatchKind mMatchKind;
-};
-
-class ValueObserver final
-  : public nsIObserver
-  , public ValueObserverHashKey
-{
-  ~ValueObserver() = default;
-
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  ValueObserver(const char* aPref,
-                PrefChangedFunc aCallback,
-                Preferences::MatchKind aMatchKind)
-    : ValueObserverHashKey(aPref, aCallback, aMatchKind)
-  {
-  }
-
-  void AppendClosure(void* aClosure) { mClosures.AppendElement(aClosure); }
-
-  void RemoveClosure(void* aClosure) { mClosures.RemoveElement(aClosure); }
-
-  bool HasNoClosures() { return mClosures.Length() == 0; }
-
-  nsTArray<void*> mClosures;
-};
-
-NS_IMPL_ISUPPORTS(ValueObserver, nsIObserver)
-
-NS_IMETHODIMP
-ValueObserver::Observe(nsISupports* aSubject,
-                       const char* aTopic,
-                       const char16_t* aData)
-{
-  NS_ASSERTION(!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
-               "invalid topic");
-
-  NS_ConvertUTF16toUTF8 data(aData);
-  if (mMatchKind == Preferences::ExactMatch &&
-      !mPrefName.EqualsASCII(data.get())) {
-    return NS_OK;
-  }
-
-  for (uint32_t i = 0; i < mClosures.Length(); i++) {
-    mCallback(data.get(), mClosures.ElementAt(i));
-  }
-
-  return NS_OK;
-}
-
 // Write the preference data to a file.
 class PreferencesWriter final
 {
@@ -3456,8 +3392,6 @@ struct CacheData
 // diagnosing prefs startup problems in bug 1276488.
 static const char* gCacheDataDesc = "untouched";
 static nsTArray<nsAutoPtr<CacheData>>* gCacheData = nullptr;
-static nsRefPtrHashtable<ValueObserverHashKey, ValueObserver>* gObserverTable =
-  nullptr;
 
 #ifdef DEBUG
 static bool
@@ -3520,14 +3454,6 @@ Preferences::SizeOfIncludingThisAndOtherStuff(
     n += gCacheData->ShallowSizeOfIncludingThis(aMallocSizeOf);
     for (uint32_t i = 0, count = gCacheData->Length(); i < count; ++i) {
       n += aMallocSizeOf((*gCacheData)[i]);
-    }
-  }
-
-  if (gObserverTable) {
-    n += gObserverTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
-    for (auto iter = gObserverTable->Iter(); !iter.Done(); iter.Next()) {
-      n += iter.Key()->mPrefName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-      n += iter.Data()->mClosures.ShallowSizeOfExcludingThis(aMallocSizeOf);
     }
   }
 
@@ -3705,8 +3631,6 @@ Preferences::GetInstanceForService()
   gCacheData = new nsTArray<nsAutoPtr<CacheData>>();
   gCacheDataDesc = "set by GetInstanceForService()";
 
-  gObserverTable = new nsRefPtrHashtable<ValueObserverHashKey, ValueObserver>();
-
   // Preferences::GetInstanceForService() can be called from GetService(), and
   // RegisterStrongMemoryReporter calls GetService(nsIMemoryReporter).  To
   // avoid a potential recursive GetService() call, we can't register the
@@ -3762,9 +3686,6 @@ Preferences::Preferences()
 Preferences::~Preferences()
 {
   MOZ_ASSERT(!sPreferences);
-
-  delete gObserverTable;
-  gObserverTable = nullptr;
 
   delete gCacheData;
   gCacheData = nullptr;
@@ -4940,37 +4861,6 @@ Preferences::RemoveObservers(nsIObserver* aObserver, const char** aPrefs)
   return NS_OK;
 }
 
-static void
-NotifyObserver(const char* aPref, void* aClosure)
-{
-  nsCOMPtr<nsIObserver> observer = static_cast<nsIObserver*>(aClosure);
-  observer->Observe(nullptr,
-                    NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
-                    NS_ConvertASCIItoUTF16(aPref).get());
-}
-
-static void
-RegisterCallbackHelper(PrefChangedFunc aCallback,
-                       const char* aPref,
-                       void* aClosure,
-                       Preferences::MatchKind aMatchKind,
-                       bool aIsPriority)
-{
-  ValueObserverHashKey hashKey(aPref, aCallback, aMatchKind);
-  RefPtr<ValueObserver> observer;
-  gObserverTable->Get(&hashKey, getter_AddRefs(observer));
-  if (observer) {
-    observer->AppendClosure(aClosure);
-    return;
-  }
-
-  observer = new ValueObserver(aPref, aCallback, aMatchKind);
-  observer->AppendClosure(aClosure);
-  PREF_RegisterCallback(
-    aPref, NotifyObserver, static_cast<nsIObserver*>(observer), aIsPriority);
-  gObserverTable->Put(observer, observer);
-}
-
 // RegisterVarCacheCallback uses high priority callbacks to ensure that cache
 // observers are called prior to ordinary pref observers. Doing this ensures
 // that ordinary observers will never get stale values from cache variables.
@@ -4981,8 +4871,8 @@ RegisterVarCacheCallback(PrefChangedFunc aCallback,
 {
   MOZ_ASSERT(Preferences::IsServiceAvailable());
 
-  RegisterCallbackHelper(
-    aCallback, aPref, aClosure, Preferences::ExactMatch, /* isPriority */ true);
+  PREF_RegisterCallback(
+    aPref, aCallback, aClosure, Preferences::ExactMatch, /* isPriority */ true);
 }
 
 /* static */ nsresult
@@ -4994,8 +4884,9 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
   MOZ_ASSERT(aCallback);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  RegisterCallbackHelper(
-    aCallback, aPref, aClosure, aMatchKind, /* isPriority */ false);
+  PREF_RegisterCallback(
+    aPref, aCallback, aClosure, aMatchKind, /* isPriority */ false);
+
   return NS_OK;
 }
 
@@ -5026,22 +4917,7 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
   }
   NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
 
-  ValueObserverHashKey hashKey(aPref, aCallback, aMatchKind);
-  RefPtr<ValueObserver> observer;
-  gObserverTable->Get(&hashKey, getter_AddRefs(observer));
-  if (!observer) {
-    return NS_OK;
-  }
-
-  observer->RemoveClosure(aClosure);
-  if (observer->HasNoClosures()) {
-    // Delete the callback since its list of closures is empty.
-    MOZ_ALWAYS_SUCCEEDS(
-      PREF_UnregisterCallback(aPref, NotifyObserver, observer));
-
-    gObserverTable->Remove(observer);
-  }
-  return NS_OK;
+  return PREF_UnregisterCallback(aPref, aCallback, aClosure, aMatchKind);
 }
 
 static void

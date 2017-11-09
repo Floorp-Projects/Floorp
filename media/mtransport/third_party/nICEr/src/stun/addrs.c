@@ -372,8 +372,6 @@ nr_stun_remove_duplicate_addrs(nr_local_addr addrs[], int remove_loopback, int r
     nr_local_addr *tmp = 0;
     int i;
     int n;
-    int contains_mac_based_ipv6 = 0;
-    int contains_teredo_ipv6 = 0;
     int contains_regular_ipv6 = 0;
 
     tmp = RMALLOC(*count * sizeof(*tmp));
@@ -381,14 +379,11 @@ nr_stun_remove_duplicate_addrs(nr_local_addr addrs[], int remove_loopback, int r
         ABORT(R_NO_MEMORY);
 
     for (i = 0; i < *count; ++i) {
-        if (nr_transport_addr_is_mac_based(&addrs[i].addr)) {
-            contains_mac_based_ipv6 = 1;
-        }
-        else if (nr_transport_addr_is_teredo(&addrs[i].addr)) {
+        if (nr_transport_addr_is_teredo(&addrs[i].addr)) {
             addrs[i].interface.type |= NR_INTERFACE_TYPE_TEREDO;
-            contains_teredo_ipv6 = 1;
         }
-        else if (addrs[i].addr.ip_version == NR_IPV6) {
+        else if (addrs[i].addr.ip_version == NR_IPV6 &&
+                 !nr_transport_addr_is_mac_based(&addrs[i].addr)) {
             contains_regular_ipv6 = 1;
         }
     }

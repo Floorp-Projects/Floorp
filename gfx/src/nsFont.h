@@ -143,6 +143,14 @@ struct nsFont {
 
   nsFont& operator=(const nsFont& aOther);
 
+  enum class MaxDifference : uint8_t {
+    eNone,
+    eVisual,
+    eLayoutAffecting
+  };
+
+  MaxDifference CalcDifference(const nsFont& aOther) const;
+
   void CopyAlternates(const nsFont& aOther);
 
   // Add featureSettings into style

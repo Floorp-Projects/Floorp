@@ -21,17 +21,16 @@
 
 # Generate input to certutil
 certscript() {
-  ca=n
   while [ $# -gt 0 ]; do
     case $1 in
       sign) echo 0 ;;
       kex) echo 2 ;;
-      ca) echo 5;echo 6;ca=y ;;
+      ca) echo 5;echo 6 ;;
     esac; shift
   done;
   echo 9
   echo n
-  echo $ca
+  echo ${ca:-n}
   echo
   echo n
 }
@@ -51,9 +50,9 @@ make_cert() {
     p256) type_args='-q nistp256';type=ec ;;
     p384) type_args='-q secp384r1';type=ec ;;
     p521) type_args='-q secp521r1';type=ec ;;
-    rsa_ca) type_args='-g 1024';trust='CT,CT,CT';type=rsa ;;
+    rsa_ca) type_args='-g 1024';trust='CT,CT,CT';ca=y;type=rsa ;;
     rsa_chain) type_args='-g 1024';sign='-c rsa_ca';type=rsa;;
-    rsapss_ca) type_args='-g 1024 --pss';trust='CT,CT,CT';type=rsa ;;
+    rsapss_ca) type_args='-g 1024 --pss';trust='CT,CT,CT';ca=y;type=rsa ;;
     rsapss_chain) type_args='-g 1024';sign='-c rsa_pss_ca';type=rsa;;
     rsa_ca_rsapss_chain) type_args='-g 1024 --pss-sign';sign='-c rsa_ca';type=rsa;;
     ecdh_rsa) type_args='-q nistp256';sign='-c rsa_ca';type=ec ;;

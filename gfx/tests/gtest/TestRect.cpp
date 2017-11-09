@@ -9,6 +9,7 @@
 
 #include "nsRect.h"
 #include "gfxRect.h"
+#include "mozilla/WritingModes.h"
 #ifdef XP_WIN
 #include <windows.h>
 #endif
@@ -445,7 +446,55 @@ TestSwap()
   return true;
 }
 
+static void
+TestIntersectionLogicalHelper(nscoord x1, nscoord y1, nscoord w1, nscoord h1,
+                              nscoord x2, nscoord y2, nscoord w2, nscoord h2,
+                              nscoord xR, nscoord yR, nscoord wR, nscoord hR,
+                              bool isNonEmpty)
+{
+  nsRect rect1(x1, y1, w1, h1);
+  nsRect rect2(x2, y2, w2, h2);
+  nsRect rectDebug;
+  EXPECT_TRUE(isNonEmpty == rectDebug.IntersectRect(rect1, rect2));
+  EXPECT_TRUE(rectDebug.IsEqualEdges(nsRect(xR, yR, wR, hR)));
 
+  mozilla::LogicalRect r1(mozilla::WritingMode(), rect1.X(), rect1.Y(), rect1.Width(), rect1.Height());
+  mozilla::LogicalRect r2(mozilla::WritingMode(), rect2.X(), rect2.Y(), rect2.Width(), rect2.Height());
+  EXPECT_TRUE(isNonEmpty == r1.IntersectRect(r1, r2));
+  EXPECT_TRUE(rectDebug.IsEqualEdges(nsRect(r1.IStart(WritingMode()), r1.BStart(WritingMode()),
+                                            r1.ISize(WritingMode()), r1.BSize(WritingMode()))));
+
+  mozilla::LogicalRect r3(mozilla::WritingMode(), rect1.X(), rect1.Y(), rect1.Width(), rect1.Height());
+  mozilla::LogicalRect r4(mozilla::WritingMode(), rect2.X(), rect2.Y(), rect2.Width(), rect2.Height());
+  EXPECT_TRUE(isNonEmpty == r4.IntersectRect(r3, r4));
+  EXPECT_TRUE(rectDebug.IsEqualEdges(nsRect(r4.IStart(WritingMode()), r4.BStart(WritingMode()),
+                                            r4.ISize(WritingMode()), r4.BSize(WritingMode()))));
+
+  mozilla::LogicalRect r5(mozilla::WritingMode(), rect1.X(), rect1.Y(), rect1.Width(), rect1.Height());
+  mozilla::LogicalRect r6(mozilla::WritingMode(), rect2.X(), rect2.Y(), rect2.Width(), rect2.Height());
+  mozilla::LogicalRect r7(mozilla::WritingMode(), 0, 0, 1, 1);
+  EXPECT_TRUE(isNonEmpty == r7.IntersectRect(r5, r6));
+  EXPECT_TRUE(rectDebug.IsEqualEdges(nsRect(r7.IStart(WritingMode()), r7.BStart(WritingMode()),
+                                            r7.ISize(WritingMode()), r7.BSize(WritingMode()))));
+}
+
+static void
+TestIntersectionLogical(nscoord x1, nscoord y1, nscoord w1, nscoord h1,
+                        nscoord x2, nscoord y2, nscoord w2, nscoord h2,
+                        nscoord xR, nscoord yR, nscoord wR, nscoord hR,
+                        bool isNonEmpty)
+{
+  TestIntersectionLogicalHelper(x1, y1, w1, h1, x2, y2, w2, h2, xR, yR, wR, hR, isNonEmpty);
+  TestIntersectionLogicalHelper(x2, y2, w2, h2, x1, y1, w1, h1, xR, yR, wR, hR, isNonEmpty);
+}
+
+TEST(Gfx, Logical)
+{
+  TestIntersectionLogical(578, 0, 2650, 1152, 1036, 0, 2312, 1, 1036, 0, 2192, 1, true);
+  TestIntersectionLogical(0, 0, 1000, 1000, 500, 500, 1000, 1000, 500, 500, 500, 500, true);
+  TestIntersectionLogical(100, 200, 300, 400, 50, 250, 100, 100, 100, 250, 50, 100, true);
+  TestIntersectionLogical(0, 100, 200, 300, 300, 100, 100, 300, 300, 100, 0, 0, false);
+}
 
 TEST(Gfx, nsRect) {
   TestConstructors<nsRect>();
@@ -483,3 +532,4 @@ TEST(Gfx, gfxRect) {
   TestSetWH<gfxRect>();
   TestSwap<gfxRect>();
 }
+

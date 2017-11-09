@@ -1189,6 +1189,13 @@ nsDocumentViewer::PermitUnloadInternal(bool *aShouldPrompt,
 
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(), "This is unsafe");
 
+  // https://html.spec.whatwg.org/multipage/browsing-the-web.html#prompt-to-unload-a-document
+  // Create an RAII object on mDocument that will increment the
+  // should-ignore-opens-during-unload counter on initialization
+  // and decrement it again when it goes out of score (regardless
+  // of how we exit this function).
+  IgnoreOpensDuringUnload ignoreOpens(mDocument);
+
   // Now, fire an BeforeUnload event to the document and see if it's ok
   // to unload...
   nsIPresShell* shell = mDocument->GetShell();
@@ -1396,6 +1403,12 @@ nsDocumentViewer::PageHide(bool aIsUnload)
       NS_WARNING("window not set for document!");
       return NS_ERROR_NULL_POINTER;
     }
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#unload-a-document
+    // Create an RAII object on mDocument that will increment the
+    // should-ignore-opens-during-unload counter on initialization
+    // and decrement it again when it goes out of scope.
+    IgnoreOpensDuringUnload ignoreOpens(mDocument);
 
     // Now, fire an Unload event to the document...
     nsEventStatus status = nsEventStatus_eIgnore;

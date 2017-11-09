@@ -13,7 +13,7 @@ loader.lazyRequireGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm", true);
 loader.lazyRequireGetter(this, "StackFrameCache",
   "devtools/server/actors/utils/stack", true);
-loader.lazyRequireGetter(this, "ThreadSafeChromeUtils");
+loader.lazyRequireGetter(this, "ChromeUtils");
 loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
   "devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
 loader.lazyRequireGetter(this, "ChromeActor", "devtools/server/actors/chrome",
@@ -151,7 +151,7 @@ Memory.prototype = {
         boundaries = { debugger: this.dbg };
       }
     }
-    return ThreadSafeChromeUtils.saveHeapSnapshotGetId(boundaries);
+    return ChromeUtils.saveHeapSnapshotGetId(boundaries);
   }, "saveHeapSnapshot"),
 
   /**

@@ -7325,26 +7325,6 @@ nsLayoutUtils::GetDisplayRootFrame(nsIFrame* aFrame)
 }
 
 /* static */ nsIFrame*
-nsLayoutUtils::GetViewportFrame(nsIFrame* aFrame)
-{
-  nsIFrame* f = aFrame;
-
-  for (;;) {
-    MOZ_ASSERT(f);
-    if (f->Type() == LayoutFrameType::Viewport) {
-      return f;
-    }
-
-    nsIFrame* parent = GetCrossDocParentFrame(f);
-    if (!parent) {
-      return f;
-    }
-
-    f = parent;
-  }
-}
-
-/* static */ nsIFrame*
 nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame)
 {
   nsIFrame *f = aFrame;

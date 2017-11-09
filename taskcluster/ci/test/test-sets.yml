@@ -309,6 +309,9 @@ linux32-opt-tests:
 desktop-screenshot-capture:
     - browser-screenshots
 
+desktop-instrumentation:
+    - browser-instrumentation
+
 android-common-tests:
     - cppunit
     - crashtest

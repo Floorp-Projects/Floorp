@@ -228,7 +228,8 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
 
         spki->algorithm.parameters.data = NULL;
         rv = SECOID_SetAlgorithmID(arena, &spki->algorithm,
-                                   SEC_OID_PKCS1_RSA_PSS_SIGNATURE, params);
+                                   SEC_OID_PKCS1_RSA_PSS_SIGNATURE,
+                                   hashAlgTag == SEC_OID_UNKNOWN ? NULL : params);
         if (rv != SECSuccess) {
             PORT_FreeArena(arena, PR_FALSE);
             SECKEY_DestroySubjectPublicKeyInfo(spki);

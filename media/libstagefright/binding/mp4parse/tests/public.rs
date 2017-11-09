@@ -99,9 +99,12 @@ fn public_api() {
                     mp4::AudioCodecSpecific::MP3 => {
                         "MP3"
                     }
+                    mp4::AudioCodecSpecific::LPCM => {
+                        "LPCM"
+                    }
                 }, "ES");
                 assert!(a.samplesize > 0);
-                assert!(a.samplerate > 0);
+                assert!(a.samplerate > 0.0);
             }
             Some(mp4::SampleEntry::Unknown) | None => {}
         }

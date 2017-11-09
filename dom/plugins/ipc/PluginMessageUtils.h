@@ -872,31 +872,11 @@ struct ParamTraits<mozilla::plugins::_OpenFileNameRetIPC>
 };
 
 template <>
-struct ParamTraits<mozilla::plugins::GetFileNameFunc>
-{
-  typedef mozilla::plugins::GetFileNameFunc paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, static_cast<uint32_t>(aParam));
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    uint32_t result;
-    if (ReadParam(aMsg, aIter, &result)) {
-      *aResult = static_cast<paramType>(result);
-      return true;
-    }
-    return false;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"[%S]",
-                 aParam == mozilla::plugins::OPEN_FUNC ? "GetOpenFileName" : "GetSaveFileName"));
-  }
-};
+struct ParamTraits<mozilla::plugins::GetFileNameFunc> :
+  public ContiguousEnumSerializerInclusive<mozilla::plugins::GetFileNameFunc,
+                                           mozilla::plugins::OPEN_FUNC,
+                                           mozilla::plugins::SAVE_FUNC>
+{};
 #endif  // XP_WIN
 
 } /* namespace IPC */

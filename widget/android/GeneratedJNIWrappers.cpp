@@ -987,6 +987,58 @@ auto GeckoThread::State::RUNNING() -> State::LocalRef
     return mozilla::jni::Field<RUNNING_t>::Get(State::Context(), nullptr);
 }
 
+const char GeckoVRManager::name[] =
+        "org/mozilla/gecko/GeckoVRManager";
+
+constexpr char GeckoVRManager::CleanupGVRNonPresentingContext_t::name[];
+constexpr char GeckoVRManager::CleanupGVRNonPresentingContext_t::signature[];
+
+constexpr char GeckoVRManager::CreateGVRNonPresentingContext_t::name[];
+constexpr char GeckoVRManager::CreateGVRNonPresentingContext_t::signature[];
+
+auto GeckoVRManager::CreateGVRNonPresentingContext() -> int64_t
+{
+    return mozilla::jni::Method<CreateGVRNonPresentingContext_t>::Call(GeckoVRManager::Context(), nullptr);
+}
+
+constexpr char GeckoVRManager::DestroyGVRNonPresentingContext_t::name[];
+constexpr char GeckoVRManager::DestroyGVRNonPresentingContext_t::signature[];
+
+auto GeckoVRManager::DestroyGVRNonPresentingContext() -> void
+{
+    return mozilla::jni::Method<DestroyGVRNonPresentingContext_t>::Call(GeckoVRManager::Context(), nullptr);
+}
+
+constexpr char GeckoVRManager::DisableVRMode_t::name[];
+constexpr char GeckoVRManager::DisableVRMode_t::signature[];
+
+auto GeckoVRManager::DisableVRMode() -> void
+{
+    return mozilla::jni::Method<DisableVRMode_t>::Call(GeckoVRManager::Context(), nullptr);
+}
+
+constexpr char GeckoVRManager::EnableVRMode_t::name[];
+constexpr char GeckoVRManager::EnableVRMode_t::signature[];
+
+auto GeckoVRManager::EnableVRMode() -> void
+{
+    return mozilla::jni::Method<EnableVRMode_t>::Call(GeckoVRManager::Context(), nullptr);
+}
+
+constexpr char GeckoVRManager::IsGVRPresent_t::name[];
+constexpr char GeckoVRManager::IsGVRPresent_t::signature[];
+
+auto GeckoVRManager::IsGVRPresent() -> bool
+{
+    return mozilla::jni::Method<IsGVRPresent_t>::Call(GeckoVRManager::Context(), nullptr);
+}
+
+constexpr char GeckoVRManager::SetGVRPaused_t::name[];
+constexpr char GeckoVRManager::SetGVRPaused_t::signature[];
+
+constexpr char GeckoVRManager::SetGVRPresentingContext_t::name[];
+constexpr char GeckoVRManager::SetGVRPresentingContext_t::signature[];
+
 const char PrefsHelper::name[] =
         "org/mozilla/gecko/PrefsHelper";
 

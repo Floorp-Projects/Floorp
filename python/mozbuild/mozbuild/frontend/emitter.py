@@ -719,10 +719,10 @@ class TreeMetadataEmitter(LoggingMixin):
                     raise SandboxValidationError(
                         'SYMBOLS_FILE can only be used with a SHARED_LIBRARY.',
                         context)
-                if context.get('DEFFILE') or context.get('LD_VERSION_SCRIPT'):
+                if context.get('DEFFILE'):
                     raise SandboxValidationError(
-                        'SYMBOLS_FILE cannot be used along DEFFILE or '
-                        'LD_VERSION_SCRIPT.', context)
+                        'SYMBOLS_FILE cannot be used along DEFFILE.',
+                        context)
                 if isinstance(symbols_file, SourcePath):
                     if not os.path.exists(symbols_file.full_path):
                         raise SandboxValidationError(
@@ -948,7 +948,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'RCINCLUDE',
             'DEFFILE',
             'WIN32_EXE_LDFLAGS',
-            'LD_VERSION_SCRIPT',
             'USE_EXTENSION_MANIFEST',
             'NO_JS_MANIFEST',
             'HAS_MISC_RULE',

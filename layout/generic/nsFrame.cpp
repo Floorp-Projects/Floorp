@@ -969,6 +969,22 @@ nsIFrame::RemoveDisplayItemDataForDeletion()
     }
     delete items;
   }
+
+  if (IsFrameModified()) {
+    nsIFrame* rootFrame = PresContext()->PresShell()->GetRootFrame();
+    MOZ_ASSERT(rootFrame);
+
+    nsTArray<nsIFrame*>* modifiedFrames =
+      rootFrame->GetProperty(nsIFrame::ModifiedFrameList());
+    MOZ_ASSERT(modifiedFrames);
+
+    for (auto& frame : *modifiedFrames) {
+      if (frame == this) {
+        frame = nullptr;
+        break;
+      }
+    }
+  }
 }
 
 void
@@ -990,25 +1006,46 @@ nsIFrame::MarkNeedsDisplayItemRebuild()
     return;
   }
 
-  nsIFrame* viewport = nsLayoutUtils::GetViewportFrame(this);
-  MOZ_ASSERT(viewport);
+  nsIFrame* rootFrame = PresContext()->PresShell()->GetRootFrame();
+  MOZ_ASSERT(rootFrame);
 
-  std::vector<WeakFrame>* modifiedFrames =
-    viewport->GetProperty(nsIFrame::ModifiedFrameList());
-
-  if (!modifiedFrames) {
-    modifiedFrames = new std::vector<WeakFrame>();
-    viewport->SetProperty(nsIFrame::ModifiedFrameList(), modifiedFrames);
+  if (rootFrame->IsFrameModified()) {
+    return;
   }
 
-  modifiedFrames->emplace_back(this);
+  nsTArray<nsIFrame*>* modifiedFrames =
+    rootFrame->GetProperty(nsIFrame::ModifiedFrameList());
+
+  if (!modifiedFrames) {
+    modifiedFrames = new nsTArray<nsIFrame*>();
+    rootFrame->SetProperty(nsIFrame::ModifiedFrameList(), modifiedFrames);
+  }
+
+  if (this == rootFrame) {
+    // If this is the root frame, then marking us as needing a display
+    // item rebuild implies the same for all our descendents. Clear them
+    // all out to reduce the number of modified frames we keep around.
+    for (nsIFrame* f : *modifiedFrames) {
+      if (f) {
+        f->SetFrameIsModified(false);
+      }
+    }
+    modifiedFrames->Clear();
+  } else if (modifiedFrames->Length() > gfxPrefs::LayoutRebuildFrameLimit()) {
+    // If the list starts getting too big, then just mark the root frame
+    // as needing a rebuild.
+    rootFrame->MarkNeedsDisplayItemRebuild();
+    return;
+  }
+
+  modifiedFrames->AppendElement(this);
 
   // TODO: this is a bit of a hack. We are using ModifiedFrameList property to
   // decide whether we are trying to reuse the display list.
-  if (displayRoot != viewport &&
+  if (displayRoot != rootFrame &&
       !displayRoot->HasProperty(nsIFrame::ModifiedFrameList())) {
     displayRoot->SetProperty(nsIFrame::ModifiedFrameList(),
-                             new std::vector<WeakFrame>());
+                             new nsTArray<nsIFrame*>());
   }
 
   MOZ_ASSERT(PresContext()->LayoutPhaseCount(eLayoutPhase_DisplayListBuilding) == 0);
@@ -2773,7 +2810,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // need the container even though the merged result will.
   if (aBuilder->IsRetainingDisplayList() && BuiltBlendContainer()) {
     dirtyRect = visibleRect;
-    aBuilder->MarkFrameModifiedDuringBuilding(this);
+    aBuilder->MarkCurrentFrameModifiedDuringBuilding();
   }
 
   bool usingFilter = StyleEffects()->HasFilters();
@@ -2936,7 +2973,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     if (aBuilder->ContainsBlendMode() != BuiltBlendContainer() &&
         aBuilder->IsRetainingDisplayList()) {
       SetBuiltBlendContainer(aBuilder->ContainsBlendMode());
-      aBuilder->MarkFrameModifiedDuringBuilding(this);
+      aBuilder->MarkCurrentFrameModifiedDuringBuilding();
 
       // If we did a partial build then delete all the items we just built
       // and repeat building with the full area.
@@ -3607,7 +3644,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
     child->BuildDisplayListForStackingContext(aBuilder, &list, &canSkipWrapList);
     wrapListASR = contASRTracker.GetContainerASR();
-    aBuilder->DisplayCaret(child, &list);
+    if (aBuilder->DisplayCaret(child, &list)) {
+      canSkipWrapList = false;
+    }
   } else {
     Maybe<nsRect> clipPropClip =
       child->GetClipPropClipRect(disp, effects, child->GetSize());
@@ -3673,7 +3712,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     aBuilder->AdjustWindowDraggingRegion(child);
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
     child->BuildDisplayList(aBuilder, pseudoStack);
-    aBuilder->DisplayCaret(child, pseudoStack.Content());
+    if (aBuilder->DisplayCaret(child, pseudoStack.Content())) {
+      canSkipWrapList = false;
+    }
     wrapListASR = contASRTracker.GetContainerASR();
 
     list.AppendToTop(pseudoStack.BorderBackground());

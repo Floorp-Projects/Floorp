@@ -16,6 +16,8 @@
 using mozilla::ipc::Shmem;
 using mozilla::dom::TabChild;
 using mozilla::dom::OptionalShmem;
+using mozilla::LayoutDeviceIntRect;
+using mozilla::Maybe;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsDragServiceProxy, nsBaseDragService)
 

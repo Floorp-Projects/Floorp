@@ -12,10 +12,14 @@ faster.
 How PGO Builds Work
 ===================
 
-The supported interface for invoking a PGO build is to invoke the build system
-with ``MOZ_PGO`` defined. e.g.::
+The supported interface for invoking a PGO build is to add ``MOZ_PGO=1`` to
+configure flags and then build. e.g. in your mozconfig::
 
-    $ MOZ_PGO=1 ./mach build
+    ac_add_options MOZ_PGO=1
+
+Then::
+
+    $ ./mach build
 
 This is roughly equivalent to::
 

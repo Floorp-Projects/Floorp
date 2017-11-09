@@ -52,10 +52,10 @@ NS_IMPL_CLASSINFO(nsConsoleService, nullptr,
 NS_IMPL_QUERY_INTERFACE_CI(nsConsoleService, nsIConsoleService, nsIObserver)
 NS_IMPL_CI_INTERFACE_GETTER(nsConsoleService, nsIConsoleService, nsIObserver)
 
-static bool sLoggingEnabled = true;
-static bool sLoggingBuffered = true;
+static const bool gLoggingEnabled = true;
+static const bool gLoggingBuffered = true;
 #if defined(ANDROID)
-static bool sLoggingLogcat = true;
+static bool gLoggingLogcat = false;
 #endif // defined(ANDROID)
 
 nsConsoleService::MessageElement::~MessageElement()
@@ -135,10 +135,14 @@ public:
 
   NS_IMETHOD Run() override
   {
-    Preferences::AddBoolVarCache(&sLoggingEnabled, "consoleservice.enabled", true);
-    Preferences::AddBoolVarCache(&sLoggingBuffered, "consoleservice.buffered", true);
 #if defined(ANDROID)
-    Preferences::AddBoolVarCache(&sLoggingLogcat, "consoleservice.logcat", true);
+    Preferences::AddBoolVarCache(&gLoggingLogcat, "consoleservice.logcat",
+    #ifdef RELEASE_OR_BETA
+      false
+    #else
+      true
+    #endif
+    );
 #endif // defined(ANDROID)
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -146,7 +150,7 @@ public:
     obs->AddObserver(mConsole, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
     obs->AddObserver(mConsole, "inner-window-destroyed", false);
 
-    if (!sLoggingBuffered) {
+    if (!gLoggingBuffered) {
       mConsole->Reset();
     }
     return NS_OK;
@@ -221,7 +225,7 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (!sLoggingEnabled) {
+  if (!gLoggingEnabled) {
     return NS_OK;
   }
 
@@ -245,7 +249,7 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
     MutexAutoLock lock(mLock);
 
 #if defined(ANDROID)
-    if (sLoggingLogcat && aOutputMode == OutputToLog) {
+    if (gLoggingLogcat && aOutputMode == OutputToLog) {
       nsCString msg;
       aMessage->ToString(msg);
 
@@ -301,7 +305,7 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
     }
 #endif
 
-    if (sLoggingBuffered) {
+    if (gLoggingBuffered) {
       MessageElement* e = new MessageElement(aMessage);
       mMessages.insertBack(e);
       if (mCurrentSize != mMaximumSize) {
@@ -352,7 +356,7 @@ nsConsoleService::CollectCurrentListeners(
 NS_IMETHODIMP
 nsConsoleService::LogStringMessage(const char16_t* aMessage)
 {
-  if (!sLoggingEnabled) {
+  if (!gLoggingEnabled) {
     return NS_OK;
   }
 

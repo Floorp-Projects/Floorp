@@ -87,7 +87,6 @@ showbuild:
 		DSO_LDOPTS \
 		OS_INCLUDES \
 		OS_LIBS \
-		EXTRA_LIBS \
 		BIN_FLAGS \
 		INCLUDES \
 		DEFINES \

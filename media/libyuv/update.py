@@ -52,6 +52,8 @@ def apply_patches():
     os.system("patch -p3 < cpu_id.patch")
     # Patch for bug 1342732
     os.system("patch -p3 < row_any.patch")
+    # Patch for bug 1414440
+    os.system("patch -p1 -d libyuv < clang_x86_asm.patch")
 
 def update_readme(commit, commitdate):
     with open('README_MOZILLA') as f:

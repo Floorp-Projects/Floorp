@@ -249,7 +249,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                       "$`", "$'", Symbol.species])
 
   gPrototypeProperties['Promise'] =
-    ["constructor", "catch", "then", Symbol.toStringTag];
+    ["constructor", "catch", "then", "finally", Symbol.toStringTag];
   gConstructorProperties['Promise'] =
     constructorProps(["resolve", "reject", "all", "race", Symbol.species]);
 

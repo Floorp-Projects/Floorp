@@ -5,7 +5,7 @@
 <!DOCTYPE html [
 <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
-<!ENTITY % aboutdevtoolsDTD SYSTEM "chrome://devtools-shim/content/aboutdevtools/tmp-locale/aboutdevtools.dtd"> %aboutdevtoolsDTD;
+<!ENTITY % aboutdevtoolsDTD SYSTEM "chrome://devtools-shim/locale/aboutdevtools.dtd"> %aboutdevtoolsDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml" dir="&locale.dir;">
@@ -14,7 +14,9 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>a
   <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css"/>
   <link rel="stylesheet" href="chrome://devtools-shim/content/aboutdevtools/aboutdevtools.css"  type="text/css"/>
+  <link rel="stylesheet" href="chrome://devtools-shim/content/aboutdevtools/subscribe.css"  type="text/css"/>
   <script type="application/javascript" src="chrome://devtools-shim/content/aboutdevtools/aboutdevtools.js"></script>
+  <script type="application/javascript" src="chrome://devtools-shim/content/aboutdevtools/subscribe.js"></script>
 </head>
 <body>
   <div id="install-page" class="wrapper" hidden="true">
@@ -34,7 +36,7 @@
         <p>&aboutDevtools.enable.commonMessage;</p>
         <a class="external installpage-link" href="https://developer.mozilla.org/docs/Tools" target="_blank">&aboutDevtools.enable.learnMoreLink;</a>
         <div class="buttons-container">
-          <button class="primary-button" id="install">&aboutDevtools.enable.installButton;</button>
+          <button class="primary-button" id="install">&aboutDevtools.enable.enableButton;</button>
           <button class="default-button" id="close">&aboutDevtools.enable.closeButton;</button>
         </div>
       </div>
@@ -47,7 +49,36 @@
       <div class="left-pane" />
       <div class="right-pane">
         <h1 class="title" >&aboutDevtools.welcome.title;</h1>
-        <p id="welcome-message">&aboutDevtools.welcome.message;</p>
+        <!-- The welcome message is dynamically updated with a keyboard shortcut at
+             runtime and added in aboutdevtools.js -->
+        <p id="welcome-message"></p>
+
+        <!-- Form dedicated to the newsletter subscription -->
+        <div class="newsletter">
+          <h2 class="newsletter-title">&aboutDevtools.newsletter.title;</h2>
+          <p>&aboutDevtools.newsletter.message;</p>
+
+          <form id="newsletter-form" name="newsletter-form" action="https://www.mozilla.org/en-US/newsletter/" method="post">
+            <!-- "H" stands for the HTML format (->fmt). Alternative is T for text. -->
+            <input type="hidden" id="fmt" name="fmt" value="H" />
+            <!-- "app-dev" is the id of the Mozilla Developper newsletter -->
+            <input type="hidden" id="newsletters" name="newsletters" value="app-dev" />
+            <div id="newsletter-errors"></div>
+            <section id="newsletter-email" class="newsletter-form-section">
+              <input type="email" id="email" name="email" required="true" placeholder="&aboutDevtools.newsletter.email.placeholder;" />
+            </section>
+
+            <section id="newsletter-privacy" class="newsletter-form-section">
+              <input type="checkbox" id="privacy" name="privacy" required="true" />
+              <label for="privacy">&aboutDevtools.newsletter.privacy.label;</label>
+            </section>
+            <button type="submit" id="newsletter-submit" class="primary-button">&aboutDevtools.newsletter.subscribeButton;</button>
+          </form>
+          <div id="newsletter-thanks">
+            <h2>&aboutDevtools.newsletter.thanks.title;</h2>
+            <p>&aboutDevtools.newsletter.thanks.message;</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -61,12 +92,11 @@
            src="chrome://devtools-shim/content/aboutdevtools/images/dev-edition-logo.svg"
            alt="Firefox Developer Edition logo"/>
       <div class="footer-message">
-        <h1 class="footer-message-title">Firefox Developer Edition</h1>
-        <p>
-          Looking for more than just Developer Tools?
-          Check out the Firefox browser that is built specifically for developers and modern workflows.
-        </p>
-        <a class="external footer-link" href="https://www.mozilla.org/en-US/firefox/developer/" target="_blank">Learn more</a>
+        <h1 class="footer-message-title">&aboutDevtools.footer.title;</h1>
+        <p>&aboutDevtools.footer.message;</p>
+        <a class="external footer-link"
+           href="https://www.mozilla.org/firefox/developer/"
+           target="_blank">&aboutDevtools.footer.learnMoreLink;</a>
       </div>
     </footer>
   </div>

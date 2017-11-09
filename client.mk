@@ -31,9 +31,6 @@ endif
 
 
 CWD := $(CURDIR)
-ifneq (1,$(words $(CWD)))
-$(error The mozilla directory cannot be located in a path with spaces.)
-endif
 
 ifeq "$(CWD)" "/"
 CWD   := /.
@@ -59,14 +56,6 @@ CONFIG_GUESS := $(shell $(TOPSRCDIR)/build/autoconf/config.guess)
 # Windows checks.
 ifneq (,$(findstring mingw,$(CONFIG_GUESS)))
 
-# check for CRLF line endings
-ifneq (0,$(shell $(PERL) -e 'binmode(STDIN); while (<STDIN>) { if (/\r/) { print "1"; exit } } print "0"' < $(TOPSRCDIR)/client.mk))
-$(error This source tree appears to have Windows-style line endings. To \
-convert it to Unix-style line endings, check \
-"https://developer.mozilla.org/en-US/docs/Developer_Guide/Mozilla_build_FAQ\#Win32-specific_questions" \
-for a workaround of this issue.)
-endif
-
 # Set this for baseconfig.mk
 HOST_OS_ARCH=WINNT
 endif
@@ -86,8 +75,7 @@ endef
 # before evaluation. $(shell) replacing newlines with spaces, || is always
 # followed by a space (since sed doesn't remove newlines), except on the
 # last line, so replace both '|| ' and '||'.
-# Also, make MOZ_PGO available to mozconfig when passed on make command line.
-MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell MOZ_PGO=$(MOZ_PGO) $(TOPSRCDIR)/mach environment --format=client.mk | sed 's/$$/||/')))
+MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell $(TOPSRCDIR)/mach environment --format=client.mk | sed 's/$$/||/')))
 $(eval $(MOZCONFIG_CONTENT))
 
 export FOUND_MOZCONFIG
@@ -103,9 +91,6 @@ MOZCONFIG_OUT_FILTERED := $(filter-out $(START_COMMENT)%,$(MOZCONFIG_OUT_LINES))
 
 ifdef AUTOCLOBBER
 export AUTOCLOBBER=1
-endif
-ifdef MOZ_PGO
-export MOZ_PGO
 endif
 
 ifdef MOZ_PARALLEL_BUILD
@@ -132,14 +117,13 @@ CONFIGURES := $(TOPSRCDIR)/configure
 CONFIGURES += $(TOPSRCDIR)/js/src/configure
 
 # Make targets that are going to be passed to the real build system
-OBJDIR_TARGETS = install export libs clean realclean distclean maybe_clobber_profiledbuild upload sdk installer package package-compare stage-package source-package l10n-check automation/build
+OBJDIR_TARGETS = install export libs clean realclean distclean upload sdk installer package package-compare stage-package source-package l10n-check automation/build
 
 #######################################################################
 # Rules
 
 # The default rule is build
 build::
-	$(MAKE) -f $(TOPSRCDIR)/client.mk $(if $(MOZ_PGO),profiledbuild,realbuild) CREATE_MOZCONFIG_JSON=
 
 # Include baseconfig.mk for its $(MAKE) validation.
 include $(TOPSRCDIR)/config/baseconfig.mk
@@ -160,47 +144,20 @@ $(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG) $(call mkdir_
 include $(OBJDIR)/.mozconfig.mk
 
 # Print out any options loaded from mozconfig.
-all realbuild clean distclean export libs install realclean::
+all build clean distclean export libs install realclean::
 ifneq (,$(strip $(MOZCONFIG_OUT_FILTERED)))
 	$(info Adding client.mk options from $(FOUND_MOZCONFIG):)
 	$(foreach line,$(MOZCONFIG_OUT_FILTERED),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
 endif
 
-# Windows equivalents
-build_all: build
-clobber clobber_all: clean
-
 # helper target for mobile
 build_and_deploy: build package install
-
-####################################
-# Profile-Guided Optimization
-#  This is up here so that this is usable in multi-pass builds, where you
-# might not have a runnable application until all the build passes have run.
-profiledbuild::
-	$(call BUILDSTATUS,TIERS pgo_profile_generate pgo_package pgo_profile pgo_clobber pgo_profile_use)
-	$(call BUILDSTATUS,TIER_START pgo_profile_generate)
-	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_GENERATE=1 MOZ_PGO_INSTRUMENTED=1 CREATE_MOZCONFIG_JSON=
-	$(call BUILDSTATUS,TIER_FINISH pgo_profile_generate)
-	$(call BUILDSTATUS,TIER_START pgo_package)
-	$(MAKE) -C $(OBJDIR) package MOZ_PGO_INSTRUMENTED=1 MOZ_INTERNAL_SIGNING_FORMAT= MOZ_EXTERNAL_SIGNING_FORMAT=
-	rm -f $(OBJDIR)/jarlog/en-US.log
-	$(call BUILDSTATUS,TIER_FINISH pgo_package)
-	$(call BUILDSTATUS,TIER_START pgo_profile)
-	MOZ_PGO_INSTRUMENTED=1 JARLOG_FILE=jarlog/en-US.log EXTRA_TEST_ARGS=10 $(MAKE) -C $(OBJDIR) pgo-profile-run
-	$(call BUILDSTATUS,TIER_FINISH pgo_profile)
-	$(call BUILDSTATUS,TIER_START pgo_clobber)
-	$(MAKE) -f $(TOPSRCDIR)/client.mk maybe_clobber_profiledbuild CREATE_MOZCONFIG_JSON=
-	$(call BUILDSTATUS,TIER_FINISH pgo_clobber)
-	$(call BUILDSTATUS,TIER_START pgo_profile_use)
-	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_USE=1 CREATE_MOZCONFIG_JSON=
-	$(call BUILDSTATUS,TIER_FINISH pgo_profile_use)
 
 #####################################################
 # Preflight, before building any project
 
 ifdef MOZ_PREFLIGHT_ALL
-realbuild preflight_all::
+build preflight_all::
 	set -e; \
 	for mkfile in $(MOZ_PREFLIGHT_ALL); do \
 	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile preflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
@@ -313,7 +270,7 @@ endif
 ####################################
 # Build it
 
-realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
+build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	+$(MOZ_MAKE)
 
 ####################################
@@ -327,12 +284,12 @@ $(OBJDIR_TARGETS):: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Postflight, after building all projects
 
 ifdef MOZ_AUTOMATION
-$(if $(MOZ_PGO),profiledbuild,realbuild)::
+build::
 	$(MAKE) -f $(TOPSRCDIR)/client.mk automation/build
 endif
 
 ifdef MOZ_POSTFLIGHT_ALL
-realbuild postflight_all::
+build postflight_all::
 	set -e; \
 	for mkfile in $(MOZ_POSTFLIGHT_ALL); do \
 	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile postflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
@@ -348,12 +305,7 @@ echo-variable-%:
 .NOTPARALLEL:
 
 .PHONY: \
-    realbuild \
     build \
-    profiledbuild \
-    build_all \
-    clobber \
-    clobber_all \
     configure \
     preflight_all \
     postflight_all \

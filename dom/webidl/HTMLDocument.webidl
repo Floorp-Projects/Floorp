@@ -29,7 +29,6 @@ interface HTMLDocument : Document {
   readonly attribute HTMLCollection forms;
   [Pure]
   readonly attribute HTMLCollection scripts;
-  NodeList getElementsByName(DOMString elementName);
 
   // dynamic markup insertion
   [CEReactions, Throws]

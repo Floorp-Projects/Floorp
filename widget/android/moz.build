@@ -66,6 +66,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/system/android',
     '/gfx/2d',
+    '/gfx/vr',
     '/layout/painting',
     '/netwerk/base',
     '/netwerk/cache',

@@ -5,17 +5,107 @@
  */
 
 /**
- * A collection of static utility methods that are only exposed to Chrome. This
- * interface is not exposed in workers, while ThreadSafeChromeUtils is.
+ * A collection of static utility methods that are only exposed to system code.
+ * This is exposed in all the system globals where we can expose stuff by
+ * default, so should only include methods that are **thread-safe**.
  */
-[ChromeOnly, Exposed=(Window,System)]
-interface ChromeUtils : ThreadSafeChromeUtils {
+[ChromeOnly, Exposed=(Window,System,Worker)]
+namespace ChromeUtils {
+  /**
+   * Serialize a snapshot of the heap graph, as seen by |JS::ubi::Node| and
+   * restricted by |boundaries|, and write it to the provided file path.
+   *
+   * @param boundaries        The portion of the heap graph to write.
+   *
+   * @returns                 The path to the file the heap snapshot was written
+   *                          to. This is guaranteed to be within the temp
+   *                          directory and its file name will match the regexp
+   *                          `\d+(\-\d+)?\.fxsnapshot`.
+   */
+  [Throws]
+  DOMString saveHeapSnapshot(optional HeapSnapshotBoundaries boundaries);
+
+  /**
+   * This is the same as saveHeapSnapshot, but with a different return value.
+   *
+   * @returns                 The snapshot ID of the file. This is the file name
+   *                          without the temp directory or the trailing
+   *                          `.fxsnapshot`.
+   */
+  [Throws]
+  DOMString saveHeapSnapshotGetId(optional HeapSnapshotBoundaries boundaries);
+
+  /**
+   * Deserialize a core dump into a HeapSnapshot.
+   *
+   * @param filePath          The file path to read the heap snapshot from.
+   */
+  [Throws, NewObject]
+  HeapSnapshot readHeapSnapshot(DOMString filePath);
+
+  /**
+   * Return the keys in a weak map.  This operation is
+   * non-deterministic because it is affected by the scheduling of the
+   * garbage collector and the cycle collector.
+   *
+   * @param aMap weak map or other JavaScript value
+   * @returns If aMap is a weak map object, return the keys of the weak
+   *          map as an array.  Otherwise, return undefined.
+   */
+  [Throws, NewObject]
+  any nondeterministicGetWeakMapKeys(any map);
+
+  /**
+   * Return the keys in a weak set.  This operation is
+   * non-deterministic because it is affected by the scheduling of the
+   * garbage collector and the cycle collector.
+   *
+   * @param aSet weak set or other JavaScript value
+   * @returns If aSet is a weak set object, return the keys of the weak
+   *          set as an array.  Otherwise, return undefined.
+   */
+  [Throws, NewObject]
+  any nondeterministicGetWeakSetKeys(any aSet);
+
+  /**
+   * Converts a buffer to a Base64 URL-encoded string per RFC 4648.
+   *
+   * @param source The buffer to encode.
+   * @param options Additional encoding options.
+   * @returns The encoded string.
+   */
+  [Throws]
+  ByteString base64URLEncode(BufferSource source,
+                             Base64URLEncodeOptions options);
+
+  /**
+   * Decodes a Base64 URL-encoded string per RFC 4648.
+   *
+   * @param string The string to decode.
+   * @param options Additional decoding options.
+   * @returns The decoded buffer.
+   */
+  [Throws, NewObject]
+  ArrayBuffer base64URLDecode(ByteString string,
+                              Base64URLDecodeOptions options);
+
+  /**
+   * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
+   */
+};
+
+/**
+ * Additional ChromeUtils methods that are _not_ thread-safe, and hence not
+ * exposed in workers.
+ */
+[Exposed=(Window,System)]
+partial namespace ChromeUtils {
   /**
    * A helper that converts OriginAttributesDictionary to a opaque suffix string.
    *
    * @param originAttrs       The originAttributes from the caller.
    */
-  static ByteString
+  ByteString
   originAttributesToSuffix(optional OriginAttributesDictionary originAttrs);
 
   /**
@@ -25,7 +115,7 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    * @param originAttrs       The originAttributes under consideration.
    * @param pattern           The pattern to use for matching.
    */
-  static boolean
+  boolean
   originAttributesMatchPattern(optional OriginAttributesDictionary originAttrs,
                                optional OriginAttributesPatternDictionary pattern);
 
@@ -39,7 +129,7 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    *                          added and assigned default values.
    */
   [Throws]
-  static OriginAttributesDictionary
+  OriginAttributesDictionary
   createOriginAttributesFromOrigin(DOMString origin);
 
   /**
@@ -51,13 +141,13 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    *                          with unspecified attributes added and assigned
    *                          default values.
    */
-  static OriginAttributesDictionary
+  OriginAttributesDictionary
   fillNonDefaultOriginAttributes(optional OriginAttributesDictionary originAttrs);
 
   /**
    * Returns true if the 2 OriginAttributes are equal.
    */
-  static boolean
+  boolean
   isOriginAttributesEqual(optional OriginAttributesDictionary aA,
                           optional OriginAttributesDictionary aB);
 
@@ -66,21 +156,21 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    * which may be used to execute it repeatedly, in different globals, without
    * re-parsing.
    */
-  [NewObject, Throws]
-  static Promise<PrecompiledScript>
+  [NewObject]
+  Promise<PrecompiledScript>
   compileScript(DOMString url, optional CompileScriptOptionsDictionary options);
 
   /**
    * Waive Xray on a given value. Identity op for primitives.
    */
   [Throws]
-  static any waiveXrays(any val);
+  any waiveXrays(any val);
 
   /**
    * Strip off Xray waivers on a given value. Identity op for primitives.
    */
   [Throws]
-  static any unwaiveXrays(any val);
+  any unwaiveXrays(any val);
 
   /**
    * Gets the name of the JSClass of the object.
@@ -89,7 +179,7 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    * specifically trying to detect whether the object is a proxy, this is
    * probably what you want.
    */
-  static DOMString getClassName(object obj, optional boolean unwrap = true);
+  DOMString getClassName(object obj, optional boolean unwrap = true);
 
   /**
    * Clones the properties of the given object into a new object in the given
@@ -100,7 +190,7 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    * with getters or setters.
    */
   [Throws]
-  static object shallowClone(object obj, optional object? target = null);
+  object shallowClone(object obj, optional object? target = null);
 
   /**
    * Dispatches the given callback to the main thread when it would be
@@ -108,8 +198,8 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    * particular DOM windw.
    */
   [Throws]
-  static void idleDispatch(IdleRequestCallback callback,
-                           optional IdleRequestOptions options);
+  void idleDispatch(IdleRequestCallback callback,
+                    optional IdleRequestOptions options);
 };
 
 /**
@@ -158,4 +248,64 @@ dictionary CompileScriptOptionsDictionary {
    * should not be used when not absolutely necessary.
    */
   boolean hasReturnValue = false;
+};
+
+/**
+ * A JS object whose properties specify what portion of the heap graph to
+ * write. The recognized properties are:
+ *
+ * * globals: [ global, ... ]
+ *   Dump only nodes that either:
+ *   - belong in the compartment of one of the given globals;
+ *   - belong to no compartment, but do belong to a Zone that contains one of
+ *     the given globals;
+ *   - are referred to directly by one of the last two kinds of nodes; or
+ *   - is the fictional root node, described below.
+ *
+ * * debugger: Debugger object
+ *   Like "globals", but use the Debugger's debuggees as the globals.
+ *
+ * * runtime: true
+ *   Dump the entire heap graph, starting with the JSRuntime's roots.
+ *
+ * One, and only one, of these properties must exist on the boundaries object.
+ *
+ * The root of the dumped graph is a fictional node whose ubi::Node type name is
+ * "CoreDumpRoot". If we are dumping the entire ubi::Node graph, this root node
+ * has an edge for each of the JSRuntime's roots. If we are dumping a selected
+ * set of globals, the root has an edge to each global, and an edge for each
+ * incoming JS reference to the selected Zones.
+ */
+dictionary HeapSnapshotBoundaries {
+  sequence<object> globals;
+  object           debugger;
+  boolean          runtime;
+};
+
+dictionary Base64URLEncodeOptions {
+  /** Specifies whether the output should be padded with "=" characters. */
+  required boolean pad;
+};
+
+enum Base64URLDecodePadding {
+  /**
+   * Fails decoding if the input is unpadded. RFC 4648, section 3.2 requires
+   * padding, unless the referring specification prohibits it.
+   */
+  "require",
+
+  /** Tolerates padded and unpadded input. */
+  "ignore",
+
+  /**
+   * Fails decoding if the input is padded. This follows the strict base64url
+   * variant used in JWS (RFC 7515, Appendix C) and HTTP Encrypted
+   * Content-Encoding (draft-ietf-httpbis-encryption-encoding-01).
+   */
+  "reject"
+};
+
+dictionary Base64URLDecodeOptions {
+  /** Specifies the padding mode for decoding the input. */
+  required Base64URLDecodePadding padding;
 };

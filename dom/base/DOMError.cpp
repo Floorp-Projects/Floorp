@@ -8,6 +8,7 @@
 #include "mozilla/dom/DOMErrorBinding.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/UseCounter.h"
+#include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 
 namespace mozilla {
