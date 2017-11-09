@@ -1,0 +1,37 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1180145
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [["dom.enable_resource_timing", true]]}, start);
+var subwindow = null;
+
+function start() {
+  subwindow = window.open("file_resource_timing_nocors.html");
+}
+
+function finishTests() {
+  subwindow.close();
+  SimpleTest.finish();
+}
+</script>
+</pre>
+
+</body>
+</html>
