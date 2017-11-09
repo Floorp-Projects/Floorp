@@ -1,7 +1,7 @@
 This is the debugger.html project output.
 See https://github.com/devtools-html/debugger.html
 
-Taken from upstream commit: b902ed728543b8ed39b8d145da37a25418aea48e
+Taken from upstream commit: d9f18b2cd0792de70289d4dcde5ed3e38be87cf1
 
 Packages:
 - babel-plugin-transform-es2015-modules-commonjs @6.26.0
