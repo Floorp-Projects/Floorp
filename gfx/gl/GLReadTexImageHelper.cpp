@@ -416,12 +416,12 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
 }
 
 already_AddRefed<gfx::DataSourceSurface>
-YInvertImageSurface(gfx::DataSourceSurface* aSurf)
+YInvertImageSurface(gfx::DataSourceSurface* aSurf, uint32_t aStride)
 {
     RefPtr<DataSourceSurface> temp =
       Factory::CreateDataSourceSurfaceWithStride(aSurf->GetSize(),
                                                  aSurf->GetFormat(),
-                                                 aSurf->Stride());
+                                                 aStride);
     if (NS_WARN_IF(!temp)) {
         return nullptr;
     }
@@ -489,7 +489,7 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
     }
 
     if (aYInvert) {
-        surf = YInvertImageSurface(surf);
+        surf = YInvertImageSurface(surf, map.GetStride());
     }
 
     return surf.forget();
