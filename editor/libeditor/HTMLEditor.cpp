@@ -3919,12 +3919,12 @@ HTMLEditor::GetNextHTMLNode(nsINode* aNode,
 {
   MOZ_ASSERT(aNode);
 
-  nsIContent* result = GetNextNode(aNode, true, aNoBlockCrossing);
-
+  nsIContent* result =
+    aNoBlockCrossing ? GetNextEditableNodeInBlock(*aNode) :
+                       GetNextEditableNode(*aNode);
   if (result && !IsDescendantOfEditorRoot(result)) {
     return nullptr;
   }
-
   return result;
 }
 
@@ -3937,8 +3937,13 @@ HTMLEditor::GetNextHTMLNode(nsINode* aParent,
                             nsINode* aChildAtOffset,
                             bool aNoBlockCrossing)
 {
-  nsIContent* content = GetNextNode(aParent, aOffset, aChildAtOffset,
-                                    true, aNoBlockCrossing);
+  EditorRawDOMPoint point(aParent,
+                          aChildAtOffset && aChildAtOffset->IsContent() ?
+                            aChildAtOffset->AsContent() : nullptr,
+                          aOffset);
+  nsIContent* content =
+    aNoBlockCrossing ? GetNextEditableNodeInBlock(point) :
+                       GetNextEditableNode(point);
   if (content && !IsDescendantOfEditorRoot(content)) {
     return nullptr;
   }
