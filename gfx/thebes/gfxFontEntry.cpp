@@ -59,7 +59,6 @@ gfxCharacterMap::NotifyReleased()
 
 gfxFontEntry::gfxFontEntry() :
     mStyle(NS_FONT_STYLE_NORMAL), mFixedPitch(false),
-    mIsValid(true),
     mIsBadUnderlineFont(false),
     mIsUserFontContainer(false),
     mIsDataUserFont(false),
@@ -98,7 +97,6 @@ gfxFontEntry::gfxFontEntry() :
 
 gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     mName(aName), mStyle(NS_FONT_STYLE_NORMAL), mFixedPitch(false),
-    mIsValid(true),
     mIsBadUnderlineFont(false),
     mIsUserFontContainer(false),
     mIsDataUserFont(false),
