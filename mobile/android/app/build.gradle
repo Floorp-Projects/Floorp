@@ -161,13 +161,10 @@ android {
                     exclude 'org/mozilla/gecko/gcm/**/*.java'
                     exclude 'org/mozilla/gecko/push/**/*.java'
                 }
-
-                srcDir "${project.buildDir}/generated/source/preprocessed_code" // See syncPreprocessedCode.
             }
 
             res {
                 srcDir "${topsrcdir}/${mozconfig.substs.MOZ_BRANDING_DIRECTORY}/res"
-                srcDir "${project.buildDir}/generated/source/preprocessed_resources" // See syncPreprocessedResources.
                 srcDir "${topsrcdir}/mobile/android/services/src/main/res"
                 if (mozconfig.substs.MOZ_CRASHREPORTER) {
                     srcDir "${topsrcdir}/mobile/android/base/crashreporter/res"
@@ -179,18 +176,6 @@ android {
                     srcDir "${mozconfig.substs.MOZ_ANDROID_DISTRIBUTION_DIRECTORY}/assets"
                 }
             }
-        }
-
-        // Every configuration needs the stub manifest at
-        // src/main/AndroidManifest.xml and the generated manifest.  We can't
-        // use the main sourceSet without losing the stub, so we cover all the
-        // configurations by enumerating the buildTypes here.
-        debug {
-            manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
-        }
-
-        release {
-            manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
         }
 
         test {
@@ -302,11 +287,6 @@ task checkstyle(type: Checkstyle) {
     classpath = files()
 }
 
-task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
-    into("${project.buildDir}/generated/source/preprocessed_code")
-    from("${topobjdir}/mobile/android/base/generated/preprocessed")
-}
-
 // The localization system uses the moz.build preprocessor to interpolate a .dtd
 // file of XML entity definitions into an XML file of elements referencing those
 // entities.  (Each locale produces its own .dtd file, backstopped by the en-US
@@ -322,30 +302,64 @@ class ExpandXMLEntitiesFilter extends FilterReader {
     }
 }
 
-task syncPreprocessedResources(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
-    into("${project.buildDir}/generated/source/preprocessed_resources")
-    from("${topobjdir}/mobile/android/base/res")
-    filesMatching('**/strings.xml') {
-        filter(ExpandXMLEntitiesFilter)
-    }
-}
-
-// It's not easy -- see the backout in Bug 1242213 -- to change the <manifest>
-// package for Fennec.  Gradle has grown a mechanism to achieve what we want for
-// Fennec, however, with applicationId.  To use the same manifest as moz.build,
-// we replace the package with org.mozilla.gecko (the eventual package) here.
-task rewriteManifestPackage(type: Copy, dependsOn: rootProject.generateCodeAndResources) {
-    into("${project.buildDir}/generated/source/preprocessed_manifest")
-    from("${topobjdir}/mobile/android/base/AndroidManifest.xml")
-    filter { it.replaceFirst(/package=".*?"/, 'package="org.mozilla.gecko"') }
-}
-
 apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
 
 android.applicationVariants.all { variant ->
+    def syncPreprocessedJava = task("syncPreprocessedJavaFor${variant.name.capitalize()}", type: Sync) {
+        into("${project.buildDir}/moz.build/src/${variant.name}/java")
+        from("${topobjdir}/mobile/android/base/generated/preprocessed")
+        exclude('**/*.mkdir.done')
+    }
+    // This is an Android-Gradle plugin 3+-ism.  Culted from reading the source,
+    // searching for "registerJavaGeneratingTask", and finding
+    // https://github.com/GoogleCloudPlatform/endpoints-framework-gradle-plugin/commit/2f2b91476fb1c6647791e2c6fe531a47615a1e85.
+    // The added directory doesn't appear in the paths listed by the
+    // `sourceSets` task, for reasons unknown.
+    variant.registerJavaGeneratingTask(syncPreprocessedJava, syncPreprocessedJava.destinationDir)
+
+    def syncPreprocessedRes = task("syncPreprocessedResFor${variant.name.capitalize()}", type: Sync) {
+        into("${project.buildDir}/moz.build/src/${variant.name}/res")
+        from("${topobjdir}/mobile/android/base/res")
+        filesMatching('**/strings.xml') {
+            filter(ExpandXMLEntitiesFilter)
+        }
+        exclude('**/*.mkdir.done')
+    }
+    // This is an Android-Gradle plugin 3+-ism.  Determined by reading the
+    // source.  The added directory doesn't appear in the paths listed by the
+    // `sourceSets` task, for reasons unknown.
+    variant.registerGeneratedResFolders(project.files(syncPreprocessedRes.destinationDir).builtBy(syncPreprocessedRes))
+
+    // It's not easy -- see the backout in Bug 1242213 -- to change the
+    // <manifest> package for Fennec.  Gradle has grown a mechanism to achieve
+    // what we want for Fennec, however, with applicationId.  To use the same
+    // manifest as moz.build, we replace the package with org.mozilla.gecko (the
+    // eventual package) here.
+    def rewriteManifestPackage = task("rewriteManifestPackageFor${variant.name.capitalize()}", type: Copy, dependsOn: rootProject.generateCodeAndResources) {
+        into("${project.buildDir}/moz.build/src/${variant.name}")
+        from("${topobjdir}/mobile/android/base/AndroidManifest.xml")
+        filter { it.replaceFirst(/package=".*?"/, 'package="org.mozilla.gecko"') }
+        exclude('**/*.mkdir.done')
+    }
+
+    // Every configuration needs the stub manifest at
+    // src/main/AndroidManifest.xml and the generated manifest.  We can't use
+    // the main sourceSet without losing the stub, so we cover all the
+    // configurations here.
+    android.sourceSets."${variant.name}".manifest.srcFile "${rewriteManifestPackage.destinationDir}/AndroidManifest.xml"
     variant.preBuild.dependsOn rewriteManifestPackage
-    variant.preBuild.dependsOn syncPreprocessedCode
-    variant.preBuild.dependsOn syncPreprocessedResources
+
+
+    // Local (read, not 'official') builds want to reflect developer changes to
+    // AndroidManifest.xml.in, strings.xml, and preprocessed Java code.  To do
+    // this, the Gradle build calls out to the moz.build system, which can be
+    // re-entrant.  Official builds are driven by the moz.build system and
+    // should never be re-entrant in this way.
+    if (!((variant.productFlavors*.name).contains('official'))) {
+        syncPreprocessedJava.dependsOn rootProject.generateCodeAndResources
+        syncPreprocessedRes.dependsOn rootProject.generateCodeAndResources
+        rewriteManifestPackage.dependsOn rootProject.generateCodeAndResources
+    }
 
     // Official automation builds don't include Gecko binaries, since those binaries are not
     // produced until after build time (at package time).  official Therefore, automation builds
