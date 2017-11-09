@@ -63,3 +63,14 @@ if CONFIG['WRAP_STL_INCLUDES']:
         stl.script = 'make-stl-wrappers.py:gen_wrappers'
         stl.flags = [output_dir, stl_compiler, template_file]
         stl.flags.extend(stl_headers)
+
+if CONFIG['WRAP_SYSTEM_INCLUDES']:
+    include('system-headers.mozbuild')
+    output_dir = '../dist/system_wrappers'
+    outputs = tuple(['system-header.sentinel'] + ['%s/%s' % (output_dir, h) for h in stl_headers + system_headers])
+    GENERATED_FILES += [outputs]
+    system = GENERATED_FILES[outputs]
+    system.script = 'make-system-wrappers.py:gen_wrappers'
+    system.flags = [output_dir]
+    system.flags.extend(stl_headers)
+    system.flags.extend(system_headers)
