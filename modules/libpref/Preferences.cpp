@@ -3540,6 +3540,8 @@ public:
 
 } // namespace
 
+static InfallibleTArray<Preferences::PrefSetting>* gInitPrefs;
+
 /* static */ already_AddRefed<Preferences>
 Preferences::GetInstanceForService()
 {
@@ -3553,11 +3555,60 @@ Preferences::GetInstanceForService()
   }
 
   sPreferences = new Preferences();
-  Result<Ok, const char*> res = sPreferences->Init();
+
+  MOZ_ASSERT(!gHashTable);
+  gHashTable = new PLDHashTable(
+    &pref_HashTableOps, sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
+
+  Result<Ok, const char*> res = pref_InitInitialObjects();
   if (res.isErr()) {
     sPreferences = nullptr;
     gCacheDataDesc = res.unwrapErr();
     return nullptr;
+  }
+
+  if (XRE_IsContentProcess()) {
+    MOZ_ASSERT(gInitPrefs);
+    for (unsigned int i = 0; i < gInitPrefs->Length(); i++) {
+      Preferences::SetPreference(gInitPrefs->ElementAt(i));
+    }
+    delete gInitPrefs;
+    gInitPrefs = nullptr;
+
+  } else {
+    // Check if there is a deployment configuration file. If so, set up the
+    // pref config machinery, which will actually read the file.
+    nsAutoCString lockFileName;
+    nsresult rv =
+      PREF_GetCStringPref("general.config.filename", lockFileName, false);
+    if (NS_SUCCEEDED(rv)) {
+      NS_CreateServicesFromCategory(
+        "pref-config-startup",
+        static_cast<nsISupports*>(static_cast<void*>(sPreferences)),
+        "pref-config-startup");
+    }
+
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (!observerService) {
+      sPreferences = nullptr;
+      gCacheDataDesc = "GetObserverService() failed (1)";
+      return nullptr;
+    }
+
+    observerService->AddObserver(
+      sPreferences, "profile-before-change-telemetry", true);
+    rv =
+      observerService->AddObserver(sPreferences, "profile-before-change", true);
+
+    observerService->AddObserver(
+      sPreferences, "suspend_process_notification", true);
+
+    if (NS_FAILED(rv)) {
+      sPreferences = nullptr;
+      gCacheDataDesc = "AddObserver(\"profile-before-change\") failed";
+      return nullptr;
+    }
   }
 
   gCacheData = new nsTArray<nsAutoPtr<CacheData>>();
@@ -3658,66 +3709,10 @@ NS_INTERFACE_MAP_END
 // nsIPrefService Implementation
 //
 
-static InfallibleTArray<Preferences::PrefSetting>* gInitPrefs;
-
 /* static */ void
 Preferences::SetInitPreferences(nsTArray<PrefSetting>* aPrefs)
 {
   gInitPrefs = new InfallibleTArray<PrefSetting>(mozilla::Move(*aPrefs));
-}
-
-Result<Ok, const char*>
-Preferences::Init()
-{
-  MOZ_ASSERT(!gHashTable);
-  gHashTable = new PLDHashTable(
-    &pref_HashTableOps, sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
-
-  MOZ_TRY(pref_InitInitialObjects());
-
-  if (XRE_IsContentProcess()) {
-    MOZ_ASSERT(gInitPrefs);
-    for (unsigned int i = 0; i < gInitPrefs->Length(); i++) {
-      Preferences::SetPreference(gInitPrefs->ElementAt(i));
-    }
-    delete gInitPrefs;
-    gInitPrefs = nullptr;
-    return Ok();
-  }
-
-  nsAutoCString lockFileName;
-
-  // The following is a small hack which will allow us to only load the library
-  // which supports the netscape.cfg file if the preference is defined. We
-  // test for the existence of the pref, set in the all.js (mozilla) or
-  // all-ns.js (netscape 6), and if it exists we startup the pref config
-  // category which will do the rest.
-
-  nsresult rv =
-    PREF_GetCStringPref("general.config.filename", lockFileName, false);
-  if (NS_SUCCEEDED(rv)) {
-    NS_CreateServicesFromCategory(
-      "pref-config-startup",
-      static_cast<nsISupports*>(static_cast<void*>(this)),
-      "pref-config-startup");
-  }
-
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-  if (!observerService) {
-    return Err("GetObserverService() failed (1)");
-  }
-
-  observerService->AddObserver(this, "profile-before-change-telemetry", true);
-  rv = observerService->AddObserver(this, "profile-before-change", true);
-
-  observerService->AddObserver(this, "suspend_process_notification", true);
-
-  if (NS_FAILED(rv)) {
-    return Err("AddObserver(\"profile-before-change\") failed");
-  }
-
-  return Ok();
 }
 
 /* static */ void
