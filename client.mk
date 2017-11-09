@@ -286,9 +286,6 @@ build::
 	-$(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server
 endif
 
-echo-variable-%:
-	@echo $($*)
-
 # This makefile doesn't support parallel execution. It does pass
 # MOZ_MAKE_FLAGS to sub-make processes, so they will correctly execute
 # in parallel.
