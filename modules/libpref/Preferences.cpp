@@ -273,9 +273,6 @@ struct PrefHashEntry : PLDHashEntryHdr
   PrefValue mUserPref;
 };
 
-static nsresult
-PREF_ClearUserPref(const char* aPrefName);
-
 static void
 ClearPrefEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
