@@ -20,8 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredSave",
                                   "resource://gre/modules/DeferredSave.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository_SQLiteMigrator",
-                                  "resource://gre/modules/addons/AddonRepository_SQLiteMigrator.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ServiceRequest",
@@ -1580,19 +1578,6 @@ var AddonDatabase = {
          // Create a blank addons.json file
          this._saveDBToDisk();
 
-         let dbSchema = Services.prefs.getIntPref(PREF_GETADDONS_DB_SCHEMA, 0);
-
-         if (dbSchema < DB_MIN_JSON_SCHEMA) {
-           let results = await new Promise((resolve, reject) => {
-             AddonRepository_SQLiteMigrator.migrate(resolve);
-           });
-
-           if (results.length) {
-             await this._insertAddons(results);
-           }
-
-         }
-
          Services.prefs.setIntPref(PREF_GETADDONS_DB_SCHEMA, DB_SCHEMA);
          return this.DB;
        }
@@ -1611,13 +1596,6 @@ var AddonDatabase = {
     }
 
     return this.connectionPromise;
-  },
-
-  /**
-   * A lazy getter for the database connection.
-   */
-  get connection() {
-    return this.openConnection();
   },
 
   /**

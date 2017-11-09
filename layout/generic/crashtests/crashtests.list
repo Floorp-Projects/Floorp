@@ -179,7 +179,7 @@ load 398332-1.html
 load 398332-2.html
 asserts(0-2) load 398332-3.html # bug 436123 and bug 457397
 load 399407-1.xhtml
-load 399412-1.html
+asserts(1) load 399412-1.html # bug 574889
 load 399843-1.html
 load 400078-1.html
 load 400190.html
@@ -538,6 +538,7 @@ load 847208.html
 asserts-if(Android,2) asserts-if(Android&&asyncPan,4) asserts-if(!Android,4) asserts-if(stylo,4) load 847209.html # bug 847368
 load 847211-1.html
 load 849603.html
+load 849987.html
 asserts(0-12) load 850931.html # bug 569193
 load 851396-1.html
 load 854263-1.html
@@ -563,6 +564,7 @@ load 944909-1.html
 load 946167-1.html
 load 947158.html
 load 949932.html
+load 963878.html
 load 964078.html
 load 970710.html
 load 973701-1.xhtml
@@ -575,7 +577,7 @@ load 1003441.xul
 pref(layout.css.grid.enabled,true) load 1015562.html
 asserts(1-2) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
-asserts(543) asserts-if(stylo&&Android,274) load 1015844.html # bug 574889, bug 1374479
+asserts(11) asserts-if(stylo&&Android,274) load 1015844.html # bug 574889, bug 1374479
 pref(font.size.inflation.minTwips,200) load 1032450.html
 load 1032613-1.svg
 load 1032613-2.html

@@ -13,6 +13,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/IdleDeadline.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowBinding.h" // For IdleRequestCallback/Options
 #include "nsThreadUtils.h"
 
@@ -20,10 +21,10 @@ namespace mozilla {
 namespace dom {
 
 /* static */ void
-ThreadSafeChromeUtils::NondeterministicGetWeakMapKeys(GlobalObject& aGlobal,
-                                                      JS::Handle<JS::Value> aMap,
-                                                      JS::MutableHandle<JS::Value> aRetval,
-                                                      ErrorResult& aRv)
+ChromeUtils::NondeterministicGetWeakMapKeys(GlobalObject& aGlobal,
+                                            JS::Handle<JS::Value> aMap,
+                                            JS::MutableHandle<JS::Value> aRetval,
+                                            ErrorResult& aRv)
 {
   if (!aMap.isObject()) {
     aRetval.setUndefined();
@@ -40,10 +41,10 @@ ThreadSafeChromeUtils::NondeterministicGetWeakMapKeys(GlobalObject& aGlobal,
 }
 
 /* static */ void
-ThreadSafeChromeUtils::NondeterministicGetWeakSetKeys(GlobalObject& aGlobal,
-                                                      JS::Handle<JS::Value> aSet,
-                                                      JS::MutableHandle<JS::Value> aRetval,
-                                                      ErrorResult& aRv)
+ChromeUtils::NondeterministicGetWeakSetKeys(GlobalObject& aGlobal,
+                                            JS::Handle<JS::Value> aSet,
+                                            JS::MutableHandle<JS::Value> aRetval,
+                                            ErrorResult& aRv)
 {
   if (!aSet.isObject()) {
     aRetval.setUndefined();
@@ -60,11 +61,11 @@ ThreadSafeChromeUtils::NondeterministicGetWeakSetKeys(GlobalObject& aGlobal,
 }
 
 /* static */ void
-ThreadSafeChromeUtils::Base64URLEncode(GlobalObject& aGlobal,
-                                       const ArrayBufferViewOrArrayBuffer& aSource,
-                                       const Base64URLEncodeOptions& aOptions,
-                                       nsACString& aResult,
-                                       ErrorResult& aRv)
+ChromeUtils::Base64URLEncode(GlobalObject& aGlobal,
+                             const ArrayBufferViewOrArrayBuffer& aSource,
+                             const Base64URLEncodeOptions& aOptions,
+                             nsACString& aResult,
+                             ErrorResult& aRv)
 {
   size_t length = 0;
   uint8_t* data = nullptr;
@@ -92,11 +93,11 @@ ThreadSafeChromeUtils::Base64URLEncode(GlobalObject& aGlobal,
 }
 
 /* static */ void
-ThreadSafeChromeUtils::Base64URLDecode(GlobalObject& aGlobal,
-                                       const nsACString& aString,
-                                       const Base64URLDecodeOptions& aOptions,
-                                       JS::MutableHandle<JSObject*> aRetval,
-                                       ErrorResult& aRv)
+ChromeUtils::Base64URLDecode(GlobalObject& aGlobal,
+                             const nsACString& aString,
+                             const Base64URLDecodeOptions& aOptions,
+                             JS::MutableHandle<JSObject*> aRetval,
+                             ErrorResult& aRv)
 {
   Base64URLDecodePaddingPolicy paddingPolicy;
   switch (aOptions.mPadding) {

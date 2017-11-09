@@ -150,7 +150,7 @@ static const size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
  * Limit the timeout to 30 minutes to prevent an overflow on platfoms
  * that represent the time internally in microseconds using 32-bit int.
  */
-static const TimeDuration MAX_TIMEOUT_INTERVAL = TimeDuration::FromSeconds(1800.0);
+static const double MAX_TIMEOUT_SECONDS = 1800.0;
 
 // SharedArrayBuffer and Atomics are enabled by default (tracking Firefox).
 #define SHARED_MEMORY_DEFAULT 1
@@ -3852,6 +3852,7 @@ Sleep_fn(JSContext* cx, unsigned argc, Value* vp)
         }
 
         duration = TimeDuration::FromSeconds(Max(0.0, t_secs));
+        const TimeDuration MAX_TIMEOUT_INTERVAL = TimeDuration::FromSeconds(MAX_TIMEOUT_SECONDS);
         if (duration > MAX_TIMEOUT_INTERVAL) {
             JS_ReportErrorASCII(cx, "Excessive sleep interval");
             return false;
@@ -3992,6 +3993,8 @@ KillWorkerThreads(JSContext* cx)
         thread->join();
     }
 
+    workerThreads.clearAndFree();
+
     js_delete(workerThreadsLock);
     workerThreadsLock = nullptr;
 
@@ -4019,6 +4022,7 @@ SetTimeoutValue(JSContext* cx, double t)
         JS_ReportErrorASCII(cx, "timeout is not a number");
         return false;
     }
+    const TimeDuration MAX_TIMEOUT_INTERVAL = TimeDuration::FromSeconds(MAX_TIMEOUT_SECONDS);
     if (TimeDuration::FromSeconds(t) > MAX_TIMEOUT_INTERVAL) {
         JS_ReportErrorASCII(cx, "Excessive timeout value");
         return false;
@@ -4927,12 +4931,12 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
         return false;
     }
-    if (!argv.append(strdup(sArgv[0])))
+    if (!argv.append(js_strdup(sArgv[0])))
         return false;
 
     // Propagate selected flags from the current shell
     for (unsigned i = 0; i < sPropagatedFlags.length(); i++) {
-        char* cstr = strdup(sPropagatedFlags[i]);
+        char* cstr = js_strdup(sPropagatedFlags[i]);
         if (!cstr || !argv.append(cstr))
             return false;
     }
@@ -8629,6 +8633,7 @@ main(int argc, char** argv, char** envp)
         state->shutdown = true;
         while (!state->jobs.empty())
             state.wait(/* jobs empty */);
+        state->jobs.clearAndFree();
     });
 
     sArgc = argc;
@@ -8649,6 +8654,12 @@ main(int argc, char** argv, char** envp)
 
     SetOutputFile("JS_STDOUT", &rcStdout, &gOutFile);
     SetOutputFile("JS_STDERR", &rcStderr, &gErrFile);
+
+    // Start the engine.
+    if (!JS_Init())
+        return 1;
+
+    auto shutdownEngine = MakeScopeExit([]() { JS_ShutDown(); });
 
     OptionParser op("Usage: {progname} [options] [[script] scriptArgs*]");
 
@@ -8873,10 +8884,6 @@ main(int argc, char** argv, char** envp)
     if (op.getBoolOption("no-threads"))
         js::DisableExtraThreads();
 
-    // Start the engine.
-    if (!JS_Init())
-        return 1;
-
     if (!InitSharedArrayBufferMailbox())
         return 1;
 
@@ -8976,6 +8983,5 @@ main(int argc, char** argv, char** envp)
     DestructSharedArrayBufferMailbox();
 
     JS_DestroyContext(cx);
-    JS_ShutDown();
     return result;
 }

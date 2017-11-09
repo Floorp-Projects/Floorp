@@ -2099,10 +2099,6 @@ pref("network.dns.offline-localhost", true);
 // The maximum allowed length for a URL - 1MB default
 pref("network.standard-url.max-length", 1048576);
 
-// The preference controls if the rust URL parser is run in parallel with the
-// C++ implementation. Requires restart for changes to take effect.
-pref("network.standard-url.enable-rust", false);
-
 // Whether nsIURI.host/.hostname/.spec should return a punycode string
 // If set to false we will revert to previous behaviour and return a unicode string.
 pref("network.standard-url.punycode-host", true);
@@ -3213,9 +3209,6 @@ pref("dom.global_stop_script", true);
 // Time (milliseconds) between throttled idle callbacks.
 pref("dom.idle_period.throttled_length", 10000);
 
-// The amount of idle time (milliseconds) reserved for a long idle period
-pref("idle_queue.long_period", 50);
-
 // Support the input event queue on the main thread of content process
 pref("input_event_queue.supported", true);
 
@@ -3231,14 +3224,6 @@ pref("input_event_queue.default_duration_per_event", 1);
 // The number of processed input events we use to predict the amount of time
 // required to process the following input events.
 pref("input_event_queue.count_for_prediction", 9);
-
-// The minimum amount of time (milliseconds) required for an idle
-// period to be scheduled on the main thread. N.B. that
-// layout.idle_period.time_limit adds padding at the end of the idle
-// period, which makes the point in time that we expect to become busy
-// again be:
-// now + idle_queue.min_period + layout.idle_period.time_limit
-pref("idle_queue.min_period", 3);
 
 // Hang monitor timeout after which we kill the browser, in seconds
 // (0 is disabled)
@@ -5210,33 +5195,10 @@ pref("dom.netinfo.enabled", true);
 pref("dom.netinfo.enabled", false);
 #endif
 
-#ifdef XP_WIN
-// On 32-bit Windows, fire a low-memory notification if we have less than this
-// many mb of virtual address space available.
-pref("memory.low_virtual_memory_threshold_mb", 128);
-
-// On Windows 32-bit, fire a low-memory notification if we have less
-// than this many mb of commit space (physical memory plus page file) left.
-pref("memory.low_commit_space_threshold_mb", 128);
-
-// On Windows 32-bit, fire a low-memory notification if we have less
-// than this many mb of physical memory available on the whole machine.
-pref("memory.low_physical_memory_threshold_mb", 0);
-
-// On Windows 32-bit, don't fire a low-memory notification because of
-// low available physical memory or low commit space more than once every
-// low_memory_notification_interval_ms.
-pref("memory.low_memory_notification_interval_ms", 10000);
-#endif
-
 // How long must we wait before declaring that a window is a "ghost" (i.e., a
 // likely leak)?  This should be longer than it usually takes for an eligible
 // window to be collected via the GC/CC.
 pref("memory.ghost_window_timeout_seconds", 60);
-
-// On memory pressure, release dirty but unused pages held by jemalloc
-// back to the system.
-pref("memory.free_dirty_pages", true);
 
 // Don't dump memory reports on OOM, by default.
 pref("memory.dump_reports_on_oom", false);

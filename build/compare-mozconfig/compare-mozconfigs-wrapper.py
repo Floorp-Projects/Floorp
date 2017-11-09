@@ -8,7 +8,6 @@ from __future__ import unicode_literals
 import logging
 import mozunit
 import subprocess
-import sys
 import unittest
 
 from os import path
@@ -16,25 +15,21 @@ from buildconfig import substs
 
 log = logging.getLogger(__name__)
 
-def determine_platform():
-    platform_mapping = {'WINNT': {'x86_64': 'win64',
-                                  'i686': 'win32'},
-                        'Darwin': {'x86_64': 'macosx64'},
-                        'Linux': {'x86_64': 'linux64',
-                                  'i686': 'linux32'}}
-
-    os_type = substs['OS_TARGET']
-    cpu_type = substs['TARGET_CPU']
-    return platform_mapping.get(os_type, {}).get(cpu_type, None)
+PLATFORMS = (
+    'linux32',
+    'linux64',
+    'macosx64',
+    'win32',
+    'win64',
+)
 
 
 class TestCompareMozconfigs(unittest.TestCase):
     def test_compare_mozconfigs(self):
         """ A wrapper script that calls compare-mozconfig.py
         based on the platform that the machine is building for"""
-        platform = determine_platform()
-
-        if platform is not None:
+        for platform in PLATFORMS:
+            log.info('Comparing platform %s' % platform)
             python_exe = substs['PYTHON']
             topsrcdir = substs['top_srcdir']
 
@@ -52,7 +47,6 @@ class TestCompareMozconfigs(unittest.TestCase):
                                         platform + ',' + beta_mozconfig_path +
                                         ',' + nightly_mozconfig_path])
             self.assertEqual(0, ret_code)
-
 
             log.info("Comparing release against nightly mozconfigs")
             ret_code = subprocess.call([python_exe, script_path, '--whitelist',

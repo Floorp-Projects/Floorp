@@ -14,6 +14,7 @@ option(env='DIST', nargs=1, help='DIST directory')
 
 
 @depends('--help', 'DIST')
+@imports(_from='__builtin__', _import='open')
 @imports(_from='os.path', _import='exists')
 def check_build_environment(help, dist):
     topobjdir = os.path.realpath(os.path.abspath('.'))
@@ -34,6 +35,21 @@ def check_build_environment(help, dist):
     if help:
         return result
 
+    # This limitation has mostly to do with GNU make. Since make can't represent
+    # variables with spaces without correct quoting and many paths are used
+    # without proper quoting, using paths with spaces commonly results in
+    # targets or dependencies being treated as multiple paths. This, of course,
+    # undermines the ability for make to perform up-to-date checks and makes
+    # the build system not work very efficiently. In theory, a non-make build
+    # backend will make this limitation go away. But there is likely a long tail
+    # of things that will need fixing due to e.g. lack of proper path quoting.
+    if len(topsrcdir.split()) > 1:
+        die('Source directory cannot be located in a path with spaces: %s' %
+            topsrcdir)
+    if len(topobjdir.split()) > 1:
+        die('Object directory cannot be located in a path with spaces: %s' %
+            topobjdir)
+
     if topsrcdir == topobjdir:
         die('  ***\n'
             '  * Building directly in the main source directory is not allowed.\n'
@@ -45,6 +61,29 @@ def check_build_environment(help, dist):
             '  * mozconfig to point to a different object directory.\n'
             '  ***'
             )
+
+    # Check for CRLF line endings.
+    with open(os.path.join(topsrcdir, 'configure.py'), 'rb') as fh:
+        data = fh.read()
+        if '\r' in data:
+            die('\n ***\n'
+                ' * The source tree appears to have Windows-style line endings.\n'
+                ' *\n'
+                ' * If using Git, Git is likely configured to use Windows-style\n'
+                ' * line endings.\n'
+                ' *\n'
+                ' * To convert the working copy to UNIX-style line endings, run\n'
+                ' * the following:\n'
+                ' *\n'
+                ' * $ git config core.autocrlf false\n'
+                ' * $ git config core.eof lf\n'
+                ' * $ git rm --cached -r .\n'
+                ' * $ git reset --hard\n'
+                ' *\n'
+                ' * If not using Git, the tool you used to obtain the source\n'
+                ' * code likely converted files to Windows line endings. See\n'
+                ' * usage information for that tool for more.\n'
+                ' ***')
 
     # Check for a couple representative files in the source tree
     conflict_files = [

@@ -25,6 +25,12 @@ from .config import validate_graph_config
 logger = logging.getLogger(__name__)
 
 
+class KindNotFound(Exception):
+    """
+    Raised when trying to load kind from a directory without a kind.yml.
+    """
+
+
 class Kind(object):
 
     def __init__(self, name, path, config, graph_config):
@@ -66,6 +72,31 @@ class Kind(object):
                       dependencies=task_dict.get('dependencies'))
                  for task_dict in transforms(trans_config, inputs)]
         return tasks
+
+    @classmethod
+    def load(cls, root_dir, graph_config, kind_name):
+        path = os.path.join(root_dir, kind_name)
+        kind_yml = os.path.join(path, 'kind.yml')
+        if not os.path.exists(kind_yml):
+            raise KindNotFound(kind_yml)
+
+        logger.debug("loading kind `{}` from `{}`".format(kind_name, path))
+        with open(kind_yml) as f:
+            config = yaml.load(f)
+
+        return cls(kind_name, path, config, graph_config)
+
+
+def load_graph_config(root_dir):
+    config_yml = os.path.join(root_dir, "config.yml")
+    if not os.path.exists(config_yml):
+        raise Exception("Couldn't find taskgraph configuration: {}".format(config_yml))
+
+    logger.debug("loading config from `{}`".format(config_yml))
+    with open(config_yml) as f:
+        config = yaml.load(f)
+
+    return validate_graph_config(config)
 
 
 class TaskGraphGenerator(object):
@@ -182,36 +213,15 @@ class TaskGraphGenerator(object):
         return self._run_until('morphed_task_graph')
 
     def _load_kinds(self, graph_config):
-        for path in os.listdir(self.root_dir):
-            path = os.path.join(self.root_dir, path)
-            if not os.path.isdir(path):
+        for kind_name in os.listdir(self.root_dir):
+            try:
+                yield Kind.load(self.root_dir, graph_config, kind_name)
+            except KindNotFound:
                 continue
-            kind_name = os.path.basename(path)
-
-            kind_yml = os.path.join(path, 'kind.yml')
-            if not os.path.exists(kind_yml):
-                continue
-
-            logger.debug("loading kind `{}` from `{}`".format(kind_name, path))
-            with open(kind_yml) as f:
-                config = yaml.load(f)
-
-            yield Kind(kind_name, path, config, graph_config)
-
-    def _load_graph_config(self):
-        config_yml = os.path.join(self.root_dir, "config.yml")
-        if not os.path.exists(config_yml):
-            raise Exception("Couldn't find taskgraph configuration: {}".format(config_yml))
-
-        logger.debug("loading config from `{}`".format(config_yml))
-        with open(config_yml) as f:
-            config = yaml.load(f)
-
-        return validate_graph_config(config)
 
     def _run(self):
         logger.info("Loading graph configuration.")
-        graph_config = self._load_graph_config()
+        graph_config = load_graph_config(self.root_dir)
 
         logger.info("Loading kinds")
         # put the kinds into a graph and sort topologically so that kinds are loaded

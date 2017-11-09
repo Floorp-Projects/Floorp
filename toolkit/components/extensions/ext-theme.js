@@ -17,38 +17,40 @@ var {
 
 const ICONS = Services.prefs.getStringPref("extensions.webextensions.themes.icons.buttons", "").split(",");
 
-/** Class representing a theme. */
+const onUpdatedEmitter = new EventEmitter();
+
+// Represents an empty theme for convenience of use
+const emptyTheme = {
+  details: {},
+};
+
+
+let defaultTheme = emptyTheme;
+// Map[windowId -> Theme instance]
+let windowOverrides = new Map();
+
+/**
+ * Class representing either a global theme affecting all windows or an override on a specific window.
+ * Any extension updating the theme with a new global theme will replace the singleton defaultTheme.
+ */
 class Theme {
   /**
    * Creates a theme instance.
    *
-   * @param {string} baseURI The base URI of the extension, used to
-   *   resolve relative filepaths.
-   * @param {Object} logger  Reference to the (console) logger that will be used
-   *   to show manifest warnings to the theme author.
+   * @param {string} extension Extension that created the theme.
+   * @param {Integer} windowId The windowId where the theme is applied.
    */
-  constructor(baseURI, logger) {
-    // The base theme applied to all windows.
-    this.baseProperties = {};
+  constructor(extension, windowId) {
+    // The base URI of the extension, used to resolve relative filepaths.
+    this.baseURI = extension.baseURI;
+    // Logger that will be used to show manifest warnings to the theme author.
+    this.logger = extension.logger;
 
-    // Window-specific theme overrides.
-    this.windowOverrides = new WeakMap();
-
-    this.baseURI = baseURI;
-    this.logger = logger;
-  }
-
-  /**
-   * Gets the current theme for a specified window
-   *
-   * @param {Object} window
-   * @returns {Object} The theme of the specified window
-   */
-  getWindowTheme(window) {
-    if (this.windowOverrides.has(window)) {
-      return this.windowOverrides.get(window);
-    }
-    return this.baseProperties;
+    this.extension = extension;
+    this.windowId = windowId;
+    this.lwtStyles = {
+      icons: {},
+    };
   }
 
   /**
@@ -57,16 +59,13 @@ class Theme {
    *
    * @param {Object} details Theme part of the manifest. Supported
    *   properties can be found in the schema under ThemeType.
-   * @param {Object} targetWindow The window to apply the theme to. Omitting
-   *   this parameter will apply the theme globally.
    */
-  load(details, targetWindow) {
-    this.lwtStyles = {
-      icons: {},
-    };
+  load(details) {
+    this.details = details;
 
-    if (targetWindow) {
-      this.lwtStyles.window = getWinUtils(targetWindow).outerWindowID;
+    if (this.windowId) {
+      this.lwtStyles.window = getWinUtils(
+        windowTracker.getWindow(this.windowId)).outerWindowID;
     }
 
     if (details.colors) {
@@ -89,11 +88,14 @@ class Theme {
     if (this.lwtStyles.headerURL &&
         this.lwtStyles.accentcolor &&
         this.lwtStyles.textcolor) {
-      if (!targetWindow) {
-        this.baseProperties = details;
+      if (this.windowId) {
+        windowOverrides.set(this.windowId, this);
       } else {
-        this.windowOverrides.set(targetWindow, details);
+        windowOverrides.clear();
+        defaultTheme = this;
       }
+      onUpdatedEmitter.emit("theme-updated", this.details, this.windowId);
+
       LightweightThemeManager.fallbackThemeData = this.lwtStyles;
       Services.obs.notifyObservers(null,
         "lightweight-theme-styling-update",
@@ -266,12 +268,8 @@ class Theme {
     }
   }
 
-  /**
-   * Unloads the currently applied theme.
-   * @param {Object} targetWindow The window the theme should be unloaded from
-   */
-  unload(targetWindow) {
-    this.lwtStyles = {
+  static unload(windowId) {
+    let lwtStyles = {
       headerURL: "",
       accentcolor: "",
       additionalBackgrounds: "",
@@ -281,25 +279,24 @@ class Theme {
       icons: {},
     };
 
-    if (targetWindow) {
-      this.lwtStyles.window = getWinUtils(targetWindow).outerWindowID;
-      this.windowOverrides.set(targetWindow, {});
+    if (windowId) {
+      lwtStyles.window = getWinUtils(windowTracker.getWindow(windowId)).outerWindowID;
+      windowOverrides.set(windowId, emptyTheme);
     } else {
-      this.windowOverrides = new WeakMap();
-      this.baseProperties = {};
+      windowOverrides.clear();
+      defaultTheme = emptyTheme;
     }
+    onUpdatedEmitter.emit("theme-updated", {}, windowId);
 
     for (let icon of ICONS) {
-      this.lwtStyles.icons[`--${icon}--icon`] = "";
+      lwtStyles.icons[`--${icon}--icon`] = "";
     }
     LightweightThemeManager.fallbackThemeData = null;
     Services.obs.notifyObservers(null,
       "lightweight-theme-styling-update",
-      JSON.stringify(this.lwtStyles));
+      JSON.stringify(lwtStyles));
   }
 }
-
-const onUpdatedEmitter = new EventEmitter();
 
 this.theme = class extends ExtensionAPI {
   onManifestEntry(entryName) {
@@ -316,16 +313,25 @@ this.theme = class extends ExtensionAPI {
       return;
     }
 
-    this.theme = new Theme(extension.baseURI, extension.logger);
-    this.theme.load(manifest.theme);
-    onUpdatedEmitter.emit("theme-updated", manifest.theme);
+    defaultTheme = new Theme(extension);
+    defaultTheme.load(manifest.theme);
   }
 
-  onShutdown() {
-    if (this.theme) {
-      this.theme.unload();
+  onShutdown(reason) {
+    if (reason === "APP_SHUTDOWN") {
+      return;
     }
-    onUpdatedEmitter.emit("theme-updated", {});
+
+    let {extension} = this;
+    for (let [windowId, theme] of windowOverrides) {
+      if (theme.extension === extension) {
+        Theme.unload(windowId);
+      }
+    }
+
+    if (defaultTheme.extension === extension) {
+      Theme.unload();
+    }
   }
 
   getAPI(context) {
@@ -334,21 +340,15 @@ this.theme = class extends ExtensionAPI {
     return {
       theme: {
         getCurrent: (windowId) => {
-          // Return empty theme if none is applied.
-          if (!this.theme) {
-            return Promise.resolve({});
-          }
-
-          // Return theme applied on last focused window when no ID is supplied.
+          // Take last focused window when no ID is supplied.
           if (!windowId) {
-            return Promise.resolve(this.theme.getWindowTheme(windowTracker.topWindow));
+            windowId = windowTracker.getId(windowTracker.topWindow);
           }
 
-          const browserWindow = windowTracker.getWindow(windowId, context);
-          if (!browserWindow) {
-            return Promise.reject(`Invalid window ID: ${windowId}`);
+          if (windowOverrides.has(windowId)) {
+            return Promise.resolve(windowOverrides.get(windowId).details);
           }
-          return Promise.resolve(this.theme.getWindowTheme(browserWindow));
+          return Promise.resolve(defaultTheme.details);
         },
         update: (windowId, details) => {
           if (!gThemesEnabled) {
@@ -356,19 +356,15 @@ this.theme = class extends ExtensionAPI {
             return;
           }
 
-          if (!this.theme) {
-            // WebExtensions using the Theme API will not have a theme defined
-            // in the manifest. Therefore, we need to initialize the theme the
-            // first time browser.theme.update is called.
-            this.theme = new Theme(extension.baseURI, extension.logger);
+          if (windowId) {
+            const browserWindow = windowTracker.getWindow(windowId, context);
+            if (!browserWindow) {
+              return Promise.reject(`Invalid window ID: ${windowId}`);
+            }
           }
 
-          let browserWindow;
-          if (windowId !== null) {
-            browserWindow = windowTracker.getWindow(windowId, context);
-          }
-          this.theme.load(details, browserWindow);
-          onUpdatedEmitter.emit("theme-updated", details, windowId);
+          let theme = new Theme(extension, windowId);
+          theme.load(details);
         },
         reset: (windowId) => {
           if (!gThemesEnabled) {
@@ -376,18 +372,19 @@ this.theme = class extends ExtensionAPI {
             return;
           }
 
-          if (!this.theme) {
+          if (windowId) {
+            const browserWindow = windowTracker.getWindow(windowId, context);
+            if (!browserWindow) {
+              return Promise.reject(`Invalid window ID: ${windowId}`);
+            }
+          }
+
+          if (!defaultTheme && !windowOverrides.has(windowId)) {
             // If no theme has been initialized, nothing to do.
             return;
           }
 
-          let browserWindow;
-          if (windowId !== null) {
-            browserWindow = windowTracker.getWindow(windowId, context);
-          }
-
-          this.theme.unload(browserWindow);
-          onUpdatedEmitter.emit("theme-updated", {}, windowId);
+          Theme.unload(windowId);
         },
         onUpdated: new EventManager(context, "theme.onUpdated", fire => {
           let callback = (event, theme, windowId) => {

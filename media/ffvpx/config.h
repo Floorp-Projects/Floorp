@@ -7,7 +7,7 @@
 #ifndef MOZ_FFVPX_CONFIG_H
 #define MOZ_FFVPX_CONFIG_H
 #if defined(MOZ_FFVPX_FLACONLY)
-#if defined(MOZ_WIDGET_ANDROID) && !defined(HAVE_64BIT_BUILD)
+#if defined(MOZ_WIDGET_ANDROID) && defined(__arm__)
 #include "config_android32.h"
 #else
 #include "config_flac.h"

@@ -57,6 +57,7 @@ class ElementCreationOptionsOrString;
 class gfxUserFontSet;
 class imgIRequest;
 class nsBindingManager;
+class nsCachableElementsByNameNodeList;
 class nsIDocShell;
 class nsDocShell;
 class nsDOMNavigationTiming;
@@ -2941,6 +2942,14 @@ public:
   virtual void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv) = 0;
   void GetDir(nsAString& aDirection) const;
   void SetDir(const nsAString& aDirection);
+  already_AddRefed<nsContentList> GetElementsByName(const nsAString& aName)
+  {
+    return GetFuncStringContentList<nsCachableElementsByNameNodeList>(this,
+                                                                      MatchNameAttribute,
+                                                                      nullptr,
+                                                                      UseExistingNameString,
+                                                                      aName);
+  }
   nsPIDOMWindowOuter* GetDefaultView() const
   {
     return GetWindow();
@@ -3217,6 +3226,22 @@ public:
     --mThrowOnDynamicMarkupInsertionCounter;
   }
 
+  bool ShouldIgnoreOpens() const
+  {
+    return mIgnoreOpensDuringUnloadCounter;
+  }
+
+  void IncrementIgnoreOpensDuringUnloadCounter()
+  {
+    ++mIgnoreOpensDuringUnloadCounter;
+  }
+
+  void DecrementIgnoreOpensDuringUnloadCounter()
+  {
+    MOZ_ASSERT(mIgnoreOpensDuringUnloadCounter);
+    --mIgnoreOpensDuringUnloadCounter;
+  }
+
   virtual bool AllowPaymentRequest() const = 0;
   virtual void SetAllowPaymentRequest(bool aAllowPaymentRequest) = 0;
 
@@ -3304,6 +3329,12 @@ protected:
 
   // Helper for GetScrollingElement/IsScrollingElement.
   bool IsPotentiallyScrollable(mozilla::dom::HTMLBodyElement* aBody);
+
+  // Helpers for GetElementsByName.
+  static bool MatchNameAttribute(mozilla::dom::Element* aElement,
+                                 int32_t aNamespaceID,
+                                 nsAtom* aAtom, void* aData);
+  static void* UseExistingNameString(nsINode* aRootNode, const nsString* aName);
 
   nsCString mReferrer;
   nsString mLastModified;
@@ -3768,6 +3799,9 @@ protected:
   // prevent custom element constructors from being able to use document.open(),
   // document.close(), and document.write() when they are invoked by the parser.
   uint32_t mThrowOnDynamicMarkupInsertionCounter;
+
+  // Count of unload/beforeunload/pagehide operations in progress.
+  uint32_t mIgnoreOpensDuringUnloadCounter;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
@@ -3839,6 +3873,23 @@ class MOZ_RAII AutoSetThrowOnDynamicMarkupInsertionCounter final {
 
   private:
     nsIDocument* mDocument;
+};
+
+class MOZ_RAII IgnoreOpensDuringUnload final
+{
+public:
+  explicit IgnoreOpensDuringUnload(nsIDocument* aDoc)
+    : mDoc(aDoc)
+  {
+    mDoc->IncrementIgnoreOpensDuringUnloadCounter();
+  }
+
+  ~IgnoreOpensDuringUnload()
+  {
+    mDoc->DecrementIgnoreOpensDuringUnloadCounter();
+  }
+private:
+  nsIDocument* mDoc;
 };
 
 // XXX These belong somewhere else

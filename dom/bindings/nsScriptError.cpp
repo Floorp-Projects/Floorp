@@ -12,6 +12,7 @@
 #include "jsprf.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
+#include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"

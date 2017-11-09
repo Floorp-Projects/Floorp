@@ -76,6 +76,10 @@
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME_PIE@
 
+#ifdef MOZ_ANDROID_GOOGLE_VR
+@BINPATH@/@DLL_PREFIX@gvr@DLL_SUFFIX@
+#endif
+
 [xpcom]
 @BINPATH@/package-name.txt
 @BINPATH@/classes.dex
@@ -231,7 +235,6 @@
 @BINPATH@/components/txtsvc.xpt
 @BINPATH@/components/txmgr.xpt
 @BINPATH@/components/uconv.xpt
-@BINPATH@/components/unicharutil.xpt
 @BINPATH@/components/update.xpt
 @BINPATH@/components/uriloader.xpt
 @BINPATH@/components/urlformatter.xpt

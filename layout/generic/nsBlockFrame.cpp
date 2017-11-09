@@ -7492,10 +7492,9 @@ nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
                          aBorderPadding.BEnd(wm));
 
   if (aStatus->IsIncomplete() &&
-      aFinalSize.BSize(wm) < aReflowInput.AvailableBSize()) {
-    // We fit in the available space - change status to OVERFLOW_INCOMPLETE.
-    // XXXmats why didn't Reflow report OVERFLOW_INCOMPLETE in the first place?
-    // XXXmats and why exclude the case when our size == AvailableBSize?
+      aFinalSize.BSize(wm) <= aReflowInput.AvailableBSize()) {
+    // We ran out of height on this page but we're incomplete.
+    // Set status to complete except for overflow.
     aStatus->SetOverflowIncomplete();
   }
 
