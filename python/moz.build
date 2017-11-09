@@ -26,6 +26,9 @@ with Files('mozlint/**'):
 with Files('mozversioncontrol/**'):
     BUG_COMPONENT = ('Core', 'Build Config')
 
+with Files('l10n/**'):
+    BUG_COMPONENT = ('Core', 'Localization')
+
 SPHINX_PYTHON_PACKAGE_DIRS += [
     'mach',
     'mozbuild/mozbuild',
