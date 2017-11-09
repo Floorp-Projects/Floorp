@@ -1982,7 +1982,7 @@ nsListControlFrame::ScrollToFrame(dom::HTMLOptionElement& aOptElement)
   // otherwise we find the content's frame and scroll to it
   nsIFrame* childFrame = aOptElement.GetPrimaryFrame();
   if (childFrame) {
-    PresContext()->PresShell()->
+    PresShell()->
       ScrollFrameRectIntoView(childFrame,
                               nsRect(nsPoint(0, 0), childFrame->GetSize()),
                               nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(),

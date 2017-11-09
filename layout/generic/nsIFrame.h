@@ -641,6 +641,10 @@ public:
     return StyleContext()->PresContext();
   }
 
+  nsIPresShell* PresShell() const {
+    return PresContext()->PresShell();
+  }
+
   /**
    * Called to initialize the frame. This is called immediately after creating
    * the frame.

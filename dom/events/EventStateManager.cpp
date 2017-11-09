@@ -3310,7 +3310,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           ScrollbarsForWheel::SetActiveScrollTarget(scrollTarget);
 
           nsIFrame* rootScrollFrame = !mCurrentTarget ? nullptr :
-            mCurrentTarget->PresContext()->PresShell()->GetRootScrollFrame();
+            mCurrentTarget->PresShell()->GetRootScrollFrame();
           nsIScrollableFrame* rootScrollableFrame = nullptr;
           if (rootScrollFrame) {
             rootScrollableFrame = do_QueryFrame(rootScrollFrame);
