@@ -21,6 +21,10 @@
 #include <cairo.h>
 #include <cairo-ft.h>
 
+#ifdef MOZ_CONTENT_SANDBOX
+#include "mozilla/SandboxBroker.h"
+#endif
+
 namespace mozilla {
     namespace dom {
         class SystemFontListEntry;
@@ -305,9 +309,17 @@ public:
 protected:
     virtual ~gfxFcPlatformFontList();
 
+#ifdef MOZ_CONTENT_SANDBOX
+    typedef mozilla::SandboxBroker::Policy SandboxPolicy;
+#else
+    // Dummy type just so we can still have a SandboxPolicy* parameter.
+    struct SandboxPolicy {};
+#endif
+
     // Add all the font families found in a font set.
     // aAppFonts indicates whether this is the system or application fontset.
-    void AddFontSetFamilies(FcFontSet* aFontSet, bool aAppFonts);
+    void AddFontSetFamilies(FcFontSet* aFontSet, const SandboxPolicy* aPolicy,
+                            bool aAppFonts);
 
     // Helper for above, to add a single font pattern.
     void AddPatternToFontList(FcPattern* aFont, FcChar8*& aLastFamilyName,
