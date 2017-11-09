@@ -16,8 +16,6 @@
 #######################################################################
 # Defines
 
-comma := ,
-
 ifdef MACH
 ifndef NO_BUILDSTATUS_MESSAGES
 define BUILDSTATUS
@@ -42,8 +40,6 @@ TOPSRCDIR := $(CWD)
 endif
 endif
 
-SH := /bin/sh
-PERL ?= perl
 PYTHON ?= $(shell which python2.7 > /dev/null 2>&1 && echo python2.7 || echo python)
 
 CONFIG_GUESS := $(shell $(TOPSRCDIR)/build/autoconf/config.guess)
