@@ -502,13 +502,31 @@ this.FormAutofillHeuristics = {
     if (this._isExpirationMonthLikely(element)) {
       fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-month");
       fieldScanner.parsingIndex++;
-      const nextDetail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
-      const nextElement = nextDetail.elementWeakRef.get();
-      if (this._isExpirationYearLikely(nextElement) && !fieldScanner.parsingFinished) {
-        fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-year");
-        fieldScanner.parsingIndex++;
+      if (!fieldScanner.parsingFinished) {
+        const nextDetail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
+        const nextElement = nextDetail.elementWeakRef.get();
+        if (this._isExpirationYearLikely(nextElement)) {
+          fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-year");
+          fieldScanner.parsingIndex++;
+          return true;
+        }
+      }
+    }
+    fieldScanner.parsingIndex = savedIndex;
 
-        return true;
+    // Verify that the following consecutive two fields can match cc-exp-month and cc-exp-year
+    // respectively.
+    if (this._findMatchedFieldName(element, ["cc-exp-month"])) {
+      fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-month");
+      fieldScanner.parsingIndex++;
+      if (!fieldScanner.parsingFinished) {
+        const nextDetail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
+        const nextElement = nextDetail.elementWeakRef.get();
+        if (this._findMatchedFieldName(nextElement, ["cc-exp-year"])) {
+          fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-year");
+          fieldScanner.parsingIndex++;
+          return true;
+        }
       }
     }
     fieldScanner.parsingIndex = savedIndex;
@@ -516,6 +534,9 @@ this.FormAutofillHeuristics = {
     // If no possible regular expiration fields are detected in current parsing window
     // fallback to "cc-exp" as there's no such case that cc-exp-month or cc-exp-year
     // presents alone.
+    // TODO: bug 1392947 - We should eventually remove this fallback, since we don't
+    // want to mess up deduplication if meanwhile a birthday was fallback to cc-exp
+    // that preceding the actual expiration fields.
     fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp");
     fieldScanner.parsingIndex++;
 
@@ -665,21 +686,58 @@ this.FormAutofillHeuristics = {
       return null;
     }
 
-    let labelStrings;
-    let getElementStrings = {};
-    getElementStrings[Symbol.iterator] = function* () {
-      yield element.id;
-      yield element.name;
-      if (!labelStrings) {
-        labelStrings = [];
-        let labels = LabelUtils.findLabelElements(element);
-        for (let label of labels) {
-          labelStrings.push(...LabelUtils.extractLabelStrings(label));
-        }
-      }
-      yield *labelStrings;
-    };
+    let matchedFieldName =  this._findMatchedFieldName(element, regexps);
+    if (matchedFieldName) {
+      return {
+        fieldName: matchedFieldName,
+        section: "",
+        addressType: "",
+        contactType: "",
+      };
+    }
 
+    return null;
+  },
+
+
+  /**
+   * @typedef ElementStrings
+   * @type {object}
+   * @yield {string} id - element id.
+   * @yield {string} name - element name.
+   * @yield {Array<string>} labels - extracted labels.
+   */
+
+  /**
+   * Extract all the signature strings of an element.
+   *
+   * @param {HTMLElement} element
+   * @returns {ElementStrings}
+   */
+  _getElementStrings(element) {
+    return {
+      * [Symbol.iterator]() {
+        yield element.id;
+        yield element.name;
+
+        const labels = LabelUtils.findLabelElements(element);
+        for (let label of labels) {
+          yield *LabelUtils.extractLabelStrings(label);
+        }
+      },
+    };
+  },
+
+  /**
+   * Find the first matched field name of the element wih given regex list.
+   *
+   * @param {HTMLElement} element
+   * @param {Array<string>} regexps
+   *        The regex key names that correspond to pattern in the rule list.
+   * @returns {?string} The first matched field name
+   */
+  _findMatchedFieldName(element, regexps) {
+    const getElementStrings = this._getElementStrings(element);
     for (let regexp of regexps) {
       for (let string of getElementStrings) {
         // The original regexp "(?<!united )state|county|region|province" for
@@ -693,12 +751,7 @@ this.FormAutofillHeuristics = {
           string = string.toLowerCase().split("united state").join("");
         }
         if (this.RULES[regexp].test(string)) {
-          return {
-            fieldName: regexp,
-            section: "",
-            addressType: "",
-            contactType: "",
-          };
+          return regexp;
         }
       }
     }
