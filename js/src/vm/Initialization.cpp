@@ -112,7 +112,7 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
 
     RETURN_IF_FAIL(js::jit::InitProcessExecutableMemory());
 
-    MOZ_ALWAYS_TRUE(js::MemoryProtectionExceptionHandler::install());
+    RETURN_IF_FAIL(js::MemoryProtectionExceptionHandler::install());
 
     RETURN_IF_FAIL(js::jit::InitializeIon());
 
