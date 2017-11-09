@@ -21,7 +21,4 @@ interface nsIScriptGlobalObject;
 [scriptable, uuid(083aebb0-7790-43b2-ae81-9e404e626236)]
 interface nsIJSON : nsISupports
 {
-  [implicit_jscontext]
-  jsval decodeFromStream(in nsIInputStream stream,
-                         in long contentLength);
 };

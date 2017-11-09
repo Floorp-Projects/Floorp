@@ -20,6 +20,3 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'xul'
-
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']
