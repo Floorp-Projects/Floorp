@@ -5,11 +5,16 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
+import time
 
 
 TARGET_CACHE_INDEX = (
-    'gecko.cache.level-{level}.{type}.{name}.{digest}'
+    'gecko.cache.level-{level}.{type}.{name}.hash.{digest}'
 )
+EXTRA_CACHE_INDEXES = [
+    'gecko.cache.level-{level}.{type}.{name}.latest',
+    'gecko.cache.level-{level}.{type}.{name}.pushdate.{build_date_long}',
+]
 
 
 def add_optimization(config, taskdesc, cache_type, cache_name, digest=None, digest_data=None):
@@ -53,3 +58,11 @@ def add_optimization(config, taskdesc, cache_type, cache_name, digest=None, dige
     # ... and cache at the lowest level.
     taskdesc.setdefault('routes', []).append(
         'index.{}'.format(TARGET_CACHE_INDEX.format(**subs)))
+
+    # ... and add some extra routes for humans
+    subs['build_date_long'] = time.strftime("%Y.%m.%d.%Y%m%d%H%M%S",
+                                            time.gmtime(config.params['build_date']))
+    taskdesc['routes'].extend([
+        'index.{}'.format(route.format(**subs))
+        for route in EXTRA_CACHE_INDEXES
+    ])

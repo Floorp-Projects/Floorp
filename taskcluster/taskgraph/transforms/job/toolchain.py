@@ -24,7 +24,7 @@ from taskgraph import GECKO
 from taskgraph.util.cached_tasks import add_optimization
 
 
-CACHE_TYPE = 'toolchains.v1'
+CACHE_TYPE = 'toolchains.v2'
 
 toolchain_run_schema = Schema({
     Required('using'): 'toolchain-script',
