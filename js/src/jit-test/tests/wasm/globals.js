@@ -188,8 +188,8 @@ function testInitExpr(type, initialValue, nextValue, coercion, assertFunc = asse
     var module = wasmEvalText(`(module
         (import "globals" "a" (global ${type}))
 
-        (global (mut ${type}) (get_global 0))
-        (global ${type} (get_global 0))
+        (global $glob_mut (mut ${type}) (get_global 0))
+        (global $glob_imm ${type} (get_global 0))
 
         (func $get0 (result ${type}) (get_global 0))
 
@@ -203,6 +203,7 @@ function testInitExpr(type, initialValue, nextValue, coercion, assertFunc = asse
         (export "get_cst" $get_cst)
 
         (export "set1" $set1)
+        (export "global_imm" (global $glob_imm))
     )`, {
         globals: {
             a: coercion(initialValue)
@@ -211,10 +212,12 @@ function testInitExpr(type, initialValue, nextValue, coercion, assertFunc = asse
 
     assertFunc(module.get0(), coercion(initialValue));
     assertFunc(module.get1(), coercion(initialValue));
+    assertFunc(module.global_imm, coercion(initialValue));
 
     assertEq(module.set1(coercion(nextValue)), undefined);
     assertFunc(module.get1(), coercion(nextValue));
     assertFunc(module.get0(), coercion(initialValue));
+    assertFunc(module.global_imm, coercion(initialValue));
 
     assertFunc(module.get_cst(), coercion(initialValue));
 }

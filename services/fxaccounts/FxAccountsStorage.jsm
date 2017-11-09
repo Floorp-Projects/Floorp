@@ -193,7 +193,7 @@ this.FxAccountsStorageManager.prototype = {
           result[fieldName] = this.cachedSecure[fieldName];
         }
       } else {
-        throw new Error("unexpected field '" + name + "'");
+        throw new Error("unexpected field '" + fieldName + "'");
       }
     }
     return result;
