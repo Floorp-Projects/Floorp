@@ -827,9 +827,9 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .webconsole-filterbar-primary {
   display: flex;
-  /* We want the toolbar (which contain the text search input) to be at least 200px
-  so we don't allow to shrink it */
-  flex: 100 0 200px;
+  /* We want the toolbar (which contain the text search input) to fit
+  the content, we don't allow to shrink/overlap it */
+  flex: 100 0 -moz-fit-content;
   align-items: center;
   min-height: var(--primary-toolbar-height);
 }
@@ -865,6 +865,7 @@ a.learn-more-link.webconsole-learn-more-link {
   text-align: end;
   align-items: center;
   min-height: var(--primary-toolbar-height);
+  line-height: var(--primary-toolbar-height);
 }
 
 .webconsole-filterbar-filtered-messages .filter-message-text {
