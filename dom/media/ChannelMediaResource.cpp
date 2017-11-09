@@ -294,6 +294,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
   UpdatePrincipal();
 
   mCacheStream.NotifyDataStarted(mLoadID, startOffset, seekable);
+  mIsTransportSeekable = seekable;
   mChannelStatistics.Start();
   mReopenOnError = false;
 
@@ -318,7 +319,8 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
 bool
 ChannelMediaResource::IsTransportSeekable()
 {
-  return mCacheStream.IsTransportSeekable();
+  MOZ_ASSERT(NS_IsMainThread());
+  return mIsTransportSeekable;
 }
 
 nsresult
@@ -387,7 +389,7 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
   if (mReopenOnError && aStatus != NS_ERROR_PARSED_DATA_CACHED &&
       aStatus != NS_BINDING_ABORTED &&
       (GetOffset() == 0 || (GetLength() > 0 && GetOffset() != GetLength() &&
-                            mCacheStream.IsTransportSeekable()))) {
+                            mIsTransportSeekable))) {
     // If the stream did close normally, restart the channel if we're either
     // at the start of the resource, or if the server is seekable and we're
     // not at the end of stream. We don't restart the stream if we're at the
@@ -600,6 +602,8 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
   RefPtr<ChannelMediaResource> resource =
     new ChannelMediaResource(aCallback, nullptr, mURI, mChannelStatistics);
 
+  resource->mIsTransportSeekable = mIsTransportSeekable;
+
   // Initially the clone is treated as suspended by the cache, because
   // we don't have a channel. If the cache needs to read data from the clone
   // it will call CacheClientResume (or CacheClientSeek with aResume true)
@@ -692,7 +696,7 @@ ChannelMediaResource::Suspend(bool aCloseImmediately)
   dom::HTMLMediaElement* element = owner->GetMediaElement();
   MOZ_DIAGNOSTIC_ASSERT(element);
 
-  if (mChannel && aCloseImmediately && mCacheStream.IsTransportSeekable()) {
+  if (mChannel && aCloseImmediately && mIsTransportSeekable) {
     CloseChannel();
     element->DownloadSuspended();
   }

@@ -7,6 +7,7 @@
 #ifndef Utils_h
 #define Utils_h
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/TemplateLib.h"
 
 // Helper for log2 of powers of 2 at compile time.
@@ -40,5 +41,87 @@ constexpr unsigned long long int operator"" _MiB(unsigned long long int aNum)
 {
   return aNum * 1024_KiB;
 }
+
+constexpr long double operator""_percent(long double aPercent)
+{
+  return aPercent / 100;
+}
+
+// Helper for (fast) comparison of fractions without involving divisions or
+// floats.
+class Fraction
+{
+public:
+  explicit constexpr Fraction(size_t aNumerator, size_t aDenominator)
+    : mNumerator(aNumerator)
+    , mDenominator(aDenominator)
+  {
+  }
+
+  MOZ_IMPLICIT constexpr Fraction(long double aValue)
+    // We use an arbitrary power of two as denominator that provides enough
+    // precision for our use case.
+    : mNumerator(aValue * 4096)
+    , mDenominator(4096)
+  {
+  }
+
+  inline bool operator<(const Fraction& aOther) const
+  {
+#ifndef MOZ_DEBUG
+    // We are comparing A / B < C / D, with all A, B, C and D being positive
+    // numbers. Multiplying both sides with B * D, we have:
+    // (A * B * D) / B < (C * B * D) / D, which can then be simplified as
+    // A * D < C * B. When can thus compare our fractions without actually
+    // doing any division.
+    // This however assumes the multiplied quantities are small enough not
+    // to overflow the multiplication. We use CheckedInt on debug builds
+    // to enforce the assumption.
+    return mNumerator * aOther.mDenominator < aOther.mNumerator * mDenominator;
+#else
+    mozilla::CheckedInt<size_t> numerator(mNumerator);
+    mozilla::CheckedInt<size_t> denominator(mDenominator);
+    // value() asserts when the multiplication overflowed.
+    size_t lhs = (numerator * aOther.mDenominator).value();
+    size_t rhs = (aOther.mNumerator * denominator).value();
+    return lhs < rhs;
+#endif
+  }
+
+  inline bool operator>(const Fraction& aOther) const { return aOther < *this; }
+
+  inline bool operator>=(const Fraction& aOther) const
+  {
+    return !(*this < aOther);
+  }
+
+  inline bool operator<=(const Fraction& aOther) const
+  {
+    return !(*this > aOther);
+  }
+
+  inline bool operator==(const Fraction& aOther) const
+  {
+#ifndef MOZ_DEBUG
+    // Same logic as operator<
+    return mNumerator * aOther.mDenominator == aOther.mNumerator * mDenominator;
+#else
+    mozilla::CheckedInt<size_t> numerator(mNumerator);
+    mozilla::CheckedInt<size_t> denominator(mDenominator);
+    size_t lhs = (numerator * aOther.mDenominator).value();
+    size_t rhs = (aOther.mNumerator * denominator).value();
+    return lhs == rhs;
+#endif
+  }
+
+  inline bool operator!=(const Fraction& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+private:
+  size_t mNumerator;
+  size_t mDenominator;
+};
 
 #endif
