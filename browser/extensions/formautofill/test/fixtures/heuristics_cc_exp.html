@@ -6,22 +6,26 @@
 </head>
 <body>
   <h1>Heuristics cc-exp field test page</h1>
-  <form id="form">
+
+  <form id="form1">
     <p><label>Name: <input id="cc-name" autocomplete="cc-name"></label></p>
     <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
     <p><label>Expiration month: <input id="cc-exp-month" autocomplete="cc-exp-month"></label></p>
     <p><label>Expiration year: <input id="cc-exp-year" autocomplete="cc-exp-year"></label></p>
     <p><label>CSC: <input id="cc-csc" autocomplete="cc-csc"></label></p>
   </form>
-  <form id="formB">
+
+  <form id="form2">
     <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
     <p><label>Expiration Date: <input autocomplete="cc-exp"></label></p>
   </form>
-  <form id="formC">
+
+  <form id="form3">
     <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
     <p><label>Expiration Date: <input type="text"></label></p>
   </form>
-  <form id="formD">
+
+  <form id="form4">
     <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
     <p>
       <label>Exp:
@@ -58,6 +62,12 @@
         </select>
       </label>
     </p>
+  </form>
+
+  <form id="form5">
+    <input class="expire-date" maxlength="2" id="expiry-month" placeholder="MM" name="expireMonth" type="text">
+    <input id="expiry-year" class="expire-date" placeholder="YY" maxlength="2" name="expireYear" type="text">
+    <input maxlength="3" name="cvc" type="text">
   </form>
 </body>
 </html>
