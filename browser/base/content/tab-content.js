@@ -995,7 +995,7 @@ var RefreshBlocker = {
 
       let URI = Services.io.newURI(data.URI);
 
-      refreshURI.forceRefreshURI(URI, data.delay, true);
+      refreshURI.forceRefreshURI(URI, null, data.delay, true);
     }
   },
 
