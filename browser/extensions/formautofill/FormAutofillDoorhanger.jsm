@@ -71,7 +71,7 @@ const CONTENT = {
       hideClose: true,
     },
   },
-  update: {
+  updateAddress: {
     notificationId: "autofill-address",
     message: GetStringFromName("updateAddressMessage"),
     linkMessage: GetStringFromName(autofillOptsKey),
@@ -96,7 +96,7 @@ const CONTENT = {
       hideClose: true,
     },
   },
-  creditCard: {
+  addCreditCard: {
     notificationId: "autofill-credit-card",
     message: formatStringFromName("saveCreditCardMessage", [brandShortName], 1),
     linkMessage: GetStringFromName(autofillSecurityOptionsKey),
@@ -147,6 +147,31 @@ const CONTENT = {
           log.debug("Set creditCard sync to", checked);
         },
       },
+    },
+  },
+  updateCreditCard: {
+    notificationId: "autofill-credit-card",
+    message: GetStringFromName("updateCreditCardMessage"),
+    linkMessage: GetStringFromName(autofillOptsKey),
+    anchor: {
+      id: "autofill-credit-card-notification-icon",
+      URL: "chrome://formautofill/content/formfill-anchor.svg",
+      tooltiptext: GetStringFromName("openAutofillMessagePanel"),
+    },
+    mainAction: {
+      label: GetStringFromName("updateCreditCardLabel"),
+      accessKey: "U",
+      callbackState: "update",
+    },
+    secondaryActions: [{
+      label: GetStringFromName("createCreditCardLabel"),
+      accessKey: "C",
+      callbackState: "create",
+    }],
+    options: {
+      persistWhileVisible: true,
+      popupIconURL: "chrome://formautofill/content/icon-credit-card.svg",
+      hideClose: true,
     },
   },
 };

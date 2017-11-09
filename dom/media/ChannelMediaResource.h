@@ -247,6 +247,8 @@ protected:
   // Main thread access only
   // True if Close() has been called.
   bool mClosed = false;
+  // The last reported seekability state for the underlying channel
+  bool mIsTransportSeekable = false;
   RefPtr<Listener> mListener;
   // A mono-increasing integer to uniquely identify the channel we are loading.
   uint32_t mLoadID = 0;
