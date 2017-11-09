@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <!--
-Test @autocomplete on <input>
+Test @autocomplete on <input>/<select>/<textarea>
 -->
 <head>
-  <title>Test for &lt;input autocomplete='…'&gt;</title>
+  <title>Test for @autocomplete</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 <script>
@@ -108,6 +108,10 @@ function start() {
 
   var selectField = document.getElementById("select-field");
   checkAutocompleteValues(selectField, "select");
+
+  var textarea = document.getElementById("textarea");
+  checkAutocompleteValues(textarea, "textarea");
+
   SimpleTest.finish();
 }
 
@@ -122,6 +126,7 @@ SpecialPowers.pushPrefEnv({"set": [["dom.forms.autocomplete.formautofill", true]
   <form>
     <input id="input-field" />
     <select id="select-field" />
+    <textarea id="textarea"></textarea>
   </form>
 </div>
 <pre id="test">

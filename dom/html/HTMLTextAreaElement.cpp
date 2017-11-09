@@ -63,6 +63,7 @@ HTMLTextAreaElement::HTMLTextAreaElement(already_AddRefed<mozilla::dom::NodeInfo
     mCanShowInvalidUI(true),
     mCanShowValidUI(true),
     mIsPreviewEnabled(false),
+    mAutocompleteAttrState(nsContentUtils::eAutocompleteAttrState_Unknown),
     mState(this)
 {
   AddMutationObserver(this);
@@ -435,6 +436,9 @@ HTMLTextAreaElement::ParseAttribute(int32_t aNamespaceID,
       return true;
     } else if (aAttribute == nsGkAtoms::rows) {
       aResult.ParseIntWithFallback(aValue, DEFAULT_ROWS_TEXTAREA);
+      return true;
+    } else if (aAttribute == nsGkAtoms::autocomplete) {
+      aResult.ParseAtomArray(aValue);
       return true;
     }
   }
@@ -1060,6 +1064,9 @@ HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (aName == nsGkAtoms::readonly || aName == nsGkAtoms::disabled) {
         UpdateBarredFromConstraintValidation();
       }
+    } else if (aName == nsGkAtoms::autocomplete) {
+      // Clear the cached @autocomplete attribute state.
+      mAutocompleteAttrState = nsContentUtils::eAutocompleteAttrState_Unknown;
     } else if (aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
     } else if (aName == nsGkAtoms::minlength) {
@@ -1367,6 +1374,16 @@ JSObject*
 HTMLTextAreaElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return HTMLTextAreaElementBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+HTMLTextAreaElement::GetAutocomplete(DOMString& aValue)
+{
+  const nsAttrValue* attributeVal = GetParsedAttr(nsGkAtoms::autocomplete);
+
+  mAutocompleteAttrState =
+    nsContentUtils::SerializeAutocompleteAttribute(attributeVal, aValue,
+                                                   mAutocompleteAttrState);
 }
 
 } // namespace dom
