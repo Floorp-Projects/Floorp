@@ -728,6 +728,16 @@ RecomputePosition(nsIFrame* aFrame)
     return false;
   }
 
+  // Flexbox and Grid layout supports CSS Align and the optimizations below
+  // don't support that yet.
+  if (aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+    nsIFrame* ph = aFrame->GetPlaceholderFrame();
+    if (ph && ph->HasAnyStateBits(PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN)) {
+      StyleChangeReflow(aFrame, nsChangeHint_NeedReflow);
+      return false;
+    }
+  }
+
   aFrame->SchedulePaint();
 
   // For relative positioning, we can simply update the frame rect
