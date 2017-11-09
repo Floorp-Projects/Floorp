@@ -377,19 +377,19 @@ partial interface Window {
 // Mozilla extensions for Chrome windows.
 partial interface Window {
   // The STATE_* constants need to match the corresponding enum in nsGlobalWindow.cpp.
-  [Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   const unsigned short STATE_MAXIMIZED = 1;
-  [Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   const unsigned short STATE_MINIMIZED = 2;
-  [Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   const unsigned short STATE_NORMAL = 3;
-  [Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   const unsigned short STATE_FULLSCREEN = 4;
 
-  [Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   readonly attribute unsigned short windowState;
 
-  [Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   readonly attribute boolean isFullyOccluded;
 
   /**
@@ -397,40 +397,40 @@ partial interface Window {
    * utility functions implemented by chrome script. It will be null
    * for DOMWindows not corresponding to browsers.
    */
-  [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
            attribute nsIBrowserDOMWindow? browserDOMWindow;
 
-  [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void                      getAttention();
 
-  [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void                      getAttentionWithCycleCount(long aCycleCount);
 
-  [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void                      setCursor(DOMString cursor);
 
-  [Func="nsGlobalWindow::IsPrivilegedChromeWindow", UnsafeInPrerendering]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow", UnsafeInPrerendering]
   void                      maximize();
-  [Func="nsGlobalWindow::IsPrivilegedChromeWindow", UnsafeInPrerendering]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow", UnsafeInPrerendering]
   void                      minimize();
-  [Func="nsGlobalWindow::IsPrivilegedChromeWindow", UnsafeInPrerendering]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow", UnsafeInPrerendering]
   void                      restore();
 
   /**
    * Notify a default button is loaded on a dialog or a wizard.
    * defaultButton is the default button.
    */
-  [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void notifyDefaultButtonLoaded(Element defaultButton);
 
-  [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   readonly attribute nsIMessageBroadcaster messageManager;
 
   /**
    * Returns the message manager identified by the given group name that
    * manages all frame loaders belonging to that group.
    */
-  [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   nsIMessageBroadcaster getGroupMessageManager(DOMString aGroup);
 
   /**
@@ -443,7 +443,7 @@ partial interface Window {
    *
    * Throws NS_ERROR_NOT_IMPLEMENTED if the OS doesn't support this.
    */
-  [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void beginWindowMove(Event mouseDownEvent, optional Element? panel = null);
 
   [Func="IsChromeOrXBL"]
@@ -478,10 +478,10 @@ partial interface Window {
 Window implements WindowOrWorkerGlobalScope;
 
 partial interface Window {
-  [Throws, Func="nsGlobalWindow::IsRequestIdleCallbackEnabled"]
+  [Throws, Func="nsGlobalWindowInner::IsRequestIdleCallbackEnabled"]
   unsigned long requestIdleCallback(IdleRequestCallback callback,
                                     optional IdleRequestOptions options);
-  [Func="nsGlobalWindow::IsRequestIdleCallbackEnabled"]
+  [Func="nsGlobalWindowInner::IsRequestIdleCallbackEnabled"]
   void          cancelIdleCallback(unsigned long handle);
 };
 
