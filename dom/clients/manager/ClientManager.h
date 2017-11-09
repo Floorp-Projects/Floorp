@@ -17,6 +17,8 @@ namespace dom {
 
 class ClientManagerChild;
 class ClientOpConstructorArgs;
+class ClientSource;
+enum class ClientType : uint8_t;
 
 namespace workers {
 class WorkerPrivate;
@@ -39,6 +41,10 @@ class ClientManager final : public ClientThing<ClientManagerChild>
   // is dropped.
   void
   Shutdown();
+
+  UniquePtr<ClientSource>
+  CreateSourceInternal(ClientType aType,
+                       const mozilla::ipc::PrincipalInfo& aPrincipal);
 
   // Utility method to perform an IPC operation.  This will create a
   // PClientManagerOp actor tied to a MozPromise.  The promise will
@@ -63,6 +69,12 @@ public:
   // This should only be called by process startup code.
   static void
   Startup();
+
+  static UniquePtr<ClientSource>
+  CreateSource(ClientType aType, nsIPrincipal* aPrincipal);
+
+  static UniquePtr<ClientSource>
+  CreateSource(ClientType aType, const mozilla::ipc::PrincipalInfo& aPrincipal);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManager)
 };

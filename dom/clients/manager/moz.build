@@ -11,6 +11,7 @@ EXPORTS.mozilla.dom += [
   'ClientManagerActors.h',
   'ClientOpenWindowOpActors.h',
   'ClientOpPromise.h',
+  'ClientSource.h',
   'ClientState.h',
   'ClientThing.h',
 ]
@@ -33,6 +34,7 @@ UNIFIED_SOURCES += [
   'ClientOpenWindowOpActors.cpp',
   'ClientOpenWindowOpChild.cpp',
   'ClientOpenWindowOpParent.cpp',
+  'ClientSource.cpp',
   'ClientSourceChild.cpp',
   'ClientSourceOpChild.cpp',
   'ClientSourceOpParent.cpp',

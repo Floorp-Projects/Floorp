@@ -6,6 +6,7 @@
 #ifndef _mozilla_dom_ClientSourceParent_h
 #define _mozilla_dom_ClientSourceParent_h
 
+#include "ClientInfo.h"
 #include "mozilla/dom/PClientSourceParent.h"
 
 namespace mozilla {
@@ -15,6 +16,7 @@ class ClientManagerService;
 
 class ClientSourceParent final : public PClientSourceParent
 {
+  ClientInfo mClientInfo;
   RefPtr<ClientManagerService> mService;
 
   // PClientSourceParent
@@ -33,6 +35,9 @@ class ClientSourceParent final : public PClientSourceParent
 public:
   explicit ClientSourceParent(const ClientSourceConstructorArgs& aArgs);
   ~ClientSourceParent();
+
+  const ClientInfo&
+  Info() const;
 };
 
 } // namespace dom
