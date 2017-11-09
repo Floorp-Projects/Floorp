@@ -1779,6 +1779,9 @@ private:
   // Data members
   EventStates mState;
   // Per-node data managed by Servo.
+  //
+  // There should not be data on nodes that are in the flattened tree, or
+  // descendants of display: none elements.
   mozilla::ServoCell<ServoNodeData*> mServoData;
 };
 
