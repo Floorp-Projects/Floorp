@@ -168,10 +168,11 @@ public class SearchEngineManager extends BroadcastReceiver {
         loadSearchEngines(context.getApplicationContext());
     }
 
-    private void loadSearchEngines(final Context context) {
+    public void loadSearchEngines(final Context context) {
         new Thread("SearchEngines-Load") {
             @Override
             public void run() {
+                invalidateSearchEngines();
                 loadFromDisk(context);
             }
         }.start();
@@ -336,7 +337,11 @@ public class SearchEngineManager extends BroadcastReceiver {
         enginesEditor.apply();
     }
 
-    public static void restoreDefaultSearchEngines(SharedPreferences sharedPreferences) {
-        sharedPreferences.edit().remove(PREF_KEY_HIDDEN_DEFAULT_ENGINES).apply();
+    public static synchronized void restoreDefaultSearchEngines(SharedPreferences sharedPreferences) {
+        sharedPreferences.edit().remove(PREF_KEY_HIDDEN_DEFAULT_ENGINES).commit();
+    }
+
+    private void invalidateSearchEngines() {
+        searchEngines = null;
     }
 }

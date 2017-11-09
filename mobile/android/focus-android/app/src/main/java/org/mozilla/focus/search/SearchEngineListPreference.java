@@ -39,26 +39,32 @@ public abstract class SearchEngineListPreference extends Preference {
     protected View onCreateView(ViewGroup parent) {
         final View layoutView = super.onCreateView(parent);
         searchEngineGroup = layoutView.findViewById(R.id.search_engine_group);
-        refreshSearchEngines();
+        final Context context = searchEngineGroup.getContext();
+        final SearchEngineManager sem = SearchEngineManager.getInstance();
+        searchEngines = sem.getSearchEngines();
+        refreshSearchEngineViews(context, sem);
+
         return layoutView;
     }
 
     protected abstract int getItemResId();
     protected abstract void updateDefaultItem(CompoundButton defaultButton);
 
-    public void refreshSearchEngines() {
+    public void refetchSearchEngines() {
+        final SearchEngineManager sem = SearchEngineManager.getInstance();
+        sem.loadSearchEngines(getContext());
+        searchEngines = sem.getSearchEngines();
+        refreshSearchEngineViews(getContext(), sem);
+    }
+
+    private void refreshSearchEngineViews(Context context, SearchEngineManager sem) {
         if (searchEngineGroup == null) {
-            // There is no search engine group yet.
+            // We want to refresh the search engine list of this preference in onResume,
+            // but the first time this preference is created onResume is called before onCreateView
+            // so searchEngineGroup is not set yet.
             return;
         }
-        final Context context = searchEngineGroup.getContext();
-        final Resources resources = context.getResources();
-        final SearchEngineManager sem = SearchEngineManager.getInstance();
 
-        // Force SearchEngineManager to refetch, to get the newest search engine.
-        sem.init(context);
-
-        searchEngines = sem.getSearchEngines();
         final String defaultSearchEngine = sem.getDefaultSearchEngine(context).getIdentifier();
 
         searchEngineGroup.removeAllViews();
@@ -69,7 +75,7 @@ public abstract class SearchEngineListPreference extends Preference {
         for (int i = 0; i < searchEngines.size(); i++) {
             final SearchEngine engine = searchEngines.get(i);
             final String engineId = engine.getIdentifier();
-            final CompoundButton engineItem = makeButtonFromSearchEngine(engine, layoutInflater, resources);
+            final CompoundButton engineItem = makeButtonFromSearchEngine(engine, layoutInflater, context.getResources());
             engineItem.setId(i);
             engineItem.setTag(engineId);
             if (engineId.equals(defaultSearchEngine)) {

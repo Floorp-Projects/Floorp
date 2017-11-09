@@ -108,19 +108,21 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        switch(settingsScreen) {
+        switch (settingsScreen) {
             case SEARCH_ENGINES:
                 inflater.inflate(R.menu.menu_search_engines, menu);
                 break;
             case REMOVE_ENGINES:
                 inflater.inflate(R.menu.menu_remove_search_engines, menu);
                 break;
+            default:
+                return;
         }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
+        switch (item.getItemId()) {
             case R.id.menu_remove_search_engines:
                 showSettingsFragment(SettingsScreen.REMOVE_ENGINES);
                 return true;
@@ -134,10 +136,11 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                 return true;
             case R.id.menu_restore_default_engines:
                 SearchEngineManager.restoreDefaultSearchEngines(getSearchEngineSharedPreferences());
-                refreshSearchEngines();
+                refetchSearchEngines();
                 return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -191,18 +194,22 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         final ActionBarUpdater updater = (ActionBarUpdater) getActivity();
         updater.updateTitle(settingsScreen.titleResId);
         updater.updateIcon(R.drawable.ic_back);
-        refreshSearchEngines();
+        if (settingsScreen == SettingsScreen.SEARCH_ENGINES || settingsScreen == SettingsScreen.REMOVE_ENGINES) {
+            refetchSearchEngines();
+        }
     }
 
     /**
      * Refresh search engines list. Only runs if showing the "Installed search engines" screen.
      */
-    private void refreshSearchEngines() {
+    private void refetchSearchEngines() {
         if (settingsScreen == SettingsScreen.SEARCH_ENGINES && AppConstants.FLAG_MANUAL_SEARCH_ENGINE) {
             final Preference pref = getPreferenceScreen()
                     .findPreference(getResources().getString(
                             R.string.pref_key_radio_search_engine_list));
-            ((RadioSearchEngineListPreference) pref).refreshSearchEngines();
+            ((RadioSearchEngineListPreference) pref).refetchSearchEngines();
+
+            // Refresh this preference screen to display changes.
             getPreferenceScreen().removeAll();
             addPreferencesFromResource(settingsScreen.prefsResId);
         }
