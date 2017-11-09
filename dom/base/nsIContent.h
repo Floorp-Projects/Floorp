@@ -758,6 +758,15 @@ public:
    */
   virtual void SetAssignedSlot(mozilla::dom::HTMLSlotElement* aSlot) = 0;
 
+  /**
+   * Gets the assigned slot associated with this content based on parent's
+   * shadow root mode. Returns null if parent's shadow root is "closed".
+   * https://dom.spec.whatwg.org/#dom-slotable-assignedslot
+   *
+   * @return The assigned slot element or null.
+   */
+  mozilla::dom::HTMLSlotElement* GetAssignedSlotByMode() const;
+
   nsIContent* GetXBLInsertionParent() const
   {
     nsIContent* ip = GetXBLInsertionPoint();

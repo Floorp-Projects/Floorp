@@ -11,8 +11,6 @@
 
 #viewGroup > radio {
   list-style-image: url("chrome://browser/skin/pageInfo.png");
-  -moz-box-orient: vertical;
-  -moz-box-align: center;
   -moz-appearance: none;
   padding: 5px 3px 1px 3px;
   margin: 0 1px;

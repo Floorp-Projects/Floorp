@@ -11,6 +11,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 from abc import ABCMeta, abstractmethod
+from argparse import Action
 
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
 
@@ -67,7 +68,37 @@ class Environment(Template):
         return dict(e.split('=', 1) for e in env)
 
 
+class RangeAction(Action):
+    def __init__(self, min, max, *args, **kwargs):
+        self.min = min
+        self.max = max
+        kwargs['metavar'] = '[{}-{}]'.format(self.min, self.max)
+        super(RangeAction, self).__init__(*args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        name = option_string or self.dest
+        if values < self.min:
+            parser.error('{} can not be less than {}'.format(name, self.min))
+        if values > self.max:
+            parser.error('{} can not be more than {}'.format(name, self.max))
+        setattr(namespace, self.dest, values)
+
+
+class Rebuild(Template):
+
+    def add_arguments(self, parser):
+        parser.add_argument('--rebuild', action=RangeAction, min=2, max=20, default=None, type=int,
+                            help='Rebuild all selected tasks the specified number of times.')
+
+    def context(self, rebuild, **kwargs):
+        if not rebuild:
+            return
+
+        return rebuild
+
+
 all_templates = {
     'artifact': Artifact,
     'env': Environment,
+    'rebuild': Rebuild,
 }

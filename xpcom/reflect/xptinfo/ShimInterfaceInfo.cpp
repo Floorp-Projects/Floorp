@@ -54,9 +54,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsIDOMHTMLOptionElement.h"
-#include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLScriptElement.h"
-#include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMMouseEvent.h"
@@ -157,9 +155,7 @@
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/HTMLOptionElementBinding.h"
-#include "mozilla/dom/HTMLOptionsCollectionBinding.h"
 #include "mozilla/dom/HTMLScriptElementBinding.h"
-#include "mozilla/dom/HTMLSelectElementBinding.h"
 #include "mozilla/dom/KeyEventBinding.h"
 #include "mozilla/dom/ListBoxObjectBinding.h"
 #include "mozilla/dom/MediaListBinding.h"
@@ -311,9 +307,7 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLInputElement),
   DEFINE_SHIM(HTMLMediaElement),
   DEFINE_SHIM(HTMLOptionElement),
-  DEFINE_SHIM(HTMLOptionsCollection),
   DEFINE_SHIM(HTMLScriptElement),
-  DEFINE_SHIM(HTMLSelectElement),
   DEFINE_SHIM(KeyEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIListBoxObject, ListBoxObject),
   DEFINE_SHIM(MediaList),

@@ -18,6 +18,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Base64.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
@@ -657,8 +658,10 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
         SplitNodeDeep(*linkContent, *selContent, selOffset,
                       EmptyContainers::no, getter_AddRefs(leftLink));
         if (leftLink) {
-          selNode = GetNodeLocation(GetAsDOMNode(leftLink), &selOffset);
-          selection->Collapse(selNode, selOffset+1);
+          EditorRawDOMPoint afterLeftLink(leftLink);
+          if (afterLeftLink.AdvanceOffset()) {
+            selection->Collapse(afterLeftLink);
+          }
         }
       }
     }
@@ -1898,10 +1901,9 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
 
   // Set the selection to just after the inserted node:
   if (NS_SUCCEEDED(rv) && newNode) {
-    nsCOMPtr<nsINode> parent = newNode->GetParentNode();
-    int32_t offset = parent ? parent->IndexOf(newNode) : -1;
-    if (parent) {
-      selection->Collapse(parent, offset + 1);
+    EditorRawDOMPoint afterNewNode(newNode);
+    if (afterNewNode.AdvanceOffset()) {
+      selection->Collapse(afterNewNode);
     }
   }
   return rv;
@@ -1978,10 +1980,9 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
 
   // Set the selection to just after the inserted node:
   if (NS_SUCCEEDED(rv) && newNode) {
-    nsCOMPtr<nsINode> parent = newNode->GetParentNode();
-    int32_t offset = parent ? parent->IndexOf(newNode) : -1;
-    if (parent) {
-      selection->Collapse(parent, offset + 1);
+    EditorRawDOMPoint afterNewNode(newNode);
+    if (afterNewNode.AdvanceOffset()) {
+      selection->Collapse(afterNewNode);
     }
   }
   return rv;

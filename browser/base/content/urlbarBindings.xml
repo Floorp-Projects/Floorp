@@ -26,9 +26,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   <binding id="urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
 
     <content sizetopopup="pref">
-      <xul:hbox anonid="textbox-container"
-                class="autocomplete-textbox-container urlbar-textbox-container"
-                flex="1" xbl:inherits="focused">
+      <xul:hbox flex="1" class="urlbar-textbox-container">
         <children includes="image|deck|stack|box"/>
         <xul:hbox anonid="textbox-input-box"
                   class="textbox-input-box urlbar-input-box"
