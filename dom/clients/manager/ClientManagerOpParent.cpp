@@ -14,6 +14,12 @@ ClientManagerOpParent::ActorDestroy(ActorDestroyReason aReason)
 {
 }
 
+ClientManagerOpParent::ClientManagerOpParent(ClientManagerService* aService)
+  : mService(aService)
+{
+  MOZ_DIAGNOSTIC_ASSERT(mService);
+}
+
 void
 ClientManagerOpParent::Init(const ClientOpConstructorArgs& aArgs)
 {

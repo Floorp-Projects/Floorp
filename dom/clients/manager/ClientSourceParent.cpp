@@ -7,6 +7,7 @@
 #include "ClientSourceParent.h"
 
 #include "ClientHandleParent.h"
+#include "ClientManagerService.h"
 #include "ClientSourceOpParent.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/Unused.h"
@@ -44,6 +45,7 @@ ClientSourceParent::DeallocPClientSourceOpParent(PClientSourceOpParent* aActor)
 }
 
 ClientSourceParent::ClientSourceParent(const ClientSourceConstructorArgs& aArgs)
+  : mService(ClientManagerService::GetOrCreateInstance())
 {
 }
 

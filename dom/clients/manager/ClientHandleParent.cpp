@@ -7,6 +7,7 @@
 #include "ClientHandleParent.h"
 
 #include "ClientHandleOpParent.h"
+#include "ClientManagerService.h"
 #include "ClientSourceParent.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/Unused.h"
@@ -51,6 +52,7 @@ ClientHandleParent::RecvPClientHandleOpConstructor(PClientHandleOpParent* aActor
 }
 
 ClientHandleParent::ClientHandleParent()
+  : mService(ClientManagerService::GetOrCreateInstance())
 {
 }
 
