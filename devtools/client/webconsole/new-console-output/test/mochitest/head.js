@@ -3,10 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from ../../../../framework/test/shared-head.js */
-/* exported WCUL10n, openNewTabAndConsole, waitForMessages, waitForMessage, waitFor,
-   findMessage, openContextMenu, hideContextMenu, loadDocument, hasFocus,
-   waitForNodeMutation, testOpenInDebugger, checkClickOnNode, jstermSetValueAndComplete,
-   openDebugger, openConsole */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
 
 "use strict";
 
@@ -18,6 +15,9 @@ Services.scriptloader.loadSubScript(
 
 var {HUDService} = require("devtools/client/webconsole/hudservice");
 var WCUL10n = require("devtools/client/webconsole/webconsole-l10n");
+const DOCS_GA_PARAMS = "?utm_source=mozilla" +
+                       "&utm_medium=firefox-console-errors" +
+                       "&utm_campaign=default";
 
 Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", true);
 registerCleanupFunction(function* () {
@@ -363,4 +363,28 @@ async function openConsole(tab) {
   let target = TargetFactory.forTab(tab || gBrowser.selectedTab);
   const toolbox = await gDevTools.showToolbox(target, "webconsole");
   return toolbox.getCurrentPanel().hud;
-};
+}
+
+/**
+ * Fake clicking a link and return the URL we would have navigated to.
+ * This function should be used to check external links since we can't access
+ * network in tests.
+ *
+ * @param ElementNode element
+ *        The <a> element we want to simulate click on.
+ * @returns Promise
+ *          A Promise that resolved when the link clik simulation occured.
+ */
+function simulateLinkClick(element) {
+  return new Promise((resolve) => {
+    // Override openUILinkIn to prevent navigating.
+    let oldOpenUILinkIn = window.openUILinkIn;
+    window.openUILinkIn = function (link) {
+      window.openUILinkIn = oldOpenUILinkIn;
+      resolve(link);
+    };
+
+    // Click on the link.
+    element.click();
+  });
+}
