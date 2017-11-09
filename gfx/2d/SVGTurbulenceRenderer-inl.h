@@ -329,7 +329,8 @@ SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::Render(const IntSize
     return nullptr;
   }
 
-  uint8_t* targetData = target->GetData();
+  DataSourceSurface::ScopedMap map(target, DataSourceSurface::READ_WRITE);
+  uint8_t* targetData = map.GetData();
   uint32_t stride = target->Stride();
 
   Point startOffset = EquivalentNonNegativeOffset(aOffset);

@@ -193,7 +193,7 @@ RectIsSolidColor(SourceSurface* aSurface,
                                        DataSourceSurface::MapType::READ);
   ASSERT_TRUE_OR_RETURN(mapping.IsMapped(), false);
 
-  uint8_t* data = dataSurface->GetData();
+  uint8_t* data = mapping.GetData();
   ASSERT_TRUE_OR_RETURN(data != nullptr, false);
 
   int32_t rowLength = dataSurface->Stride();
@@ -274,7 +274,7 @@ RowHasPixels(SourceSurface* aSurface,
                                        DataSourceSurface::MapType::READ);
   ASSERT_TRUE_OR_RETURN(mapping.IsMapped(), false);
 
-  uint8_t* data = dataSurface->GetData();
+  uint8_t* data = mapping.GetData();
   ASSERT_TRUE_OR_RETURN(data != nullptr, false);
 
   int32_t rowLength = dataSurface->Stride();
