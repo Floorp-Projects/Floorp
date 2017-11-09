@@ -3250,7 +3250,7 @@ ContentEventHandler::FrameRelativeRect::RectRelativeTo(
     return mRect;
   }
 
-  nsIFrame* rootFrame = mBaseFrame->PresContext()->PresShell()->GetRootFrame();
+  nsIFrame* rootFrame = mBaseFrame->PresShell()->GetRootFrame();
   nsRect baseFrameRectInRootFrame =
     nsLayoutUtils::TransformFrameRectToAncestor(mBaseFrame, nsRect(),
                                                 rootFrame);

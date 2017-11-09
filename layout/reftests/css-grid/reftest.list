@@ -278,5 +278,9 @@ asserts(0-10) == grid-fragmentation-015.html grid-fragmentation-015-ref.html # b
 == grid-fragmentation-dyn2-029.html grid-fragmentation-029-ref.html
 == grid-fragmentation-dyn2-030.html grid-fragmentation-030-ref.html
 == grid-fragmentation-dyn2-031.html grid-fragmentation-031-ref.html
+
 == bug1306106.html bug1306106-ref.html
 == grid-percent-intrinsic-sizing-001.html grid-percent-intrinsic-sizing-001-ref.html
+== grid-item-align-dynamic-pos-001.html grid-item-align-dynamic-pos-001-ref.html
+== grid-item-align-dynamic-pos-002.html grid-item-align-dynamic-pos-002-ref.html
+== grid-item-align-dynamic-pos-003.html grid-item-align-dynamic-pos-003-ref.html

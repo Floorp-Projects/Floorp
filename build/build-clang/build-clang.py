@@ -456,15 +456,15 @@ if __name__ == "__main__":
     for p in config.get("patches", []):
         patch(p, source_dir)
 
-    symlinks = [(source_dir + "/clang",
+    symlinks = [(clang_source_dir,
                  llvm_source_dir + "/tools/clang"),
-                (source_dir + "/extra",
+                (extra_source_dir,
                  llvm_source_dir + "/tools/clang/tools/extra"),
-                (source_dir + "/compiler-rt",
+                (compiler_rt_source_dir,
                  llvm_source_dir + "/projects/compiler-rt"),
-                (source_dir + "/libcxx",
+                (libcxx_source_dir,
                  llvm_source_dir + "/projects/libcxx"),
-                (source_dir + "/libcxxabi",
+                (libcxxabi_source_dir,
                  llvm_source_dir + "/projects/libcxxabi")]
     for l in symlinks:
         # On Windows, we have to re-copy the whole directory every time.

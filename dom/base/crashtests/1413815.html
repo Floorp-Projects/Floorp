@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script type="text/javascript">
+class XFoo extends HTMLElement {
+  constructor() {
+    super();
+  }
+
+  static get observedAttributes() {
+    return [3.76277868767527e-310, Symbol("Ashitaka"), {}];
+  }
+
+  attributeChangedCallback(aName, aOldValue, aNewValue) {
+  }
+}
+
+customElements.define('x-foo', XFoo);
+</script>
+</html>

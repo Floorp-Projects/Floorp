@@ -783,7 +783,6 @@ CustomElementRegistry::Define(const nsAString& aName,
        *          observedAttributesIterable to a sequence<DOMString>. Rethrow
        *          any exceptions from the conversion.
        */
-      // TODO: Bug 1293921 - Implement connected/disconnected/adopted/attributeChanged lifecycle callbacks for custom elements
       if (callbacksHolder->mAttributeChangedCallback.WasPassed()) {
         // Enter constructor's compartment.
         JSAutoCompartment ac(cx, constructor);
@@ -796,9 +795,19 @@ CustomElementRegistry::Define(const nsAString& aName,
         }
 
         if (!observedAttributesIterable.isUndefined()) {
+          if (!observedAttributesIterable.isObject()) {
+            aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(NS_LITERAL_STRING("observedAttributes"));
+            return;
+          }
+
           JS::ForOfIterator iter(cx);
-          if (!iter.init(observedAttributesIterable)) {
+          if (!iter.init(observedAttributesIterable, JS::ForOfIterator::AllowNonIterable)) {
             aRv.StealExceptionFromJSContext(cx);
+            return;
+          }
+
+          if (!iter.valueIsIterable()) {
+            aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(NS_LITERAL_STRING("observedAttributes"));
             return;
           }
 
@@ -813,13 +822,16 @@ CustomElementRegistry::Define(const nsAString& aName,
               break;
             }
 
-            JSString *attrJSStr = attribute.toString();
-            nsAutoJSString attrStr;
-            if (!attrStr.init(cx, attrJSStr)) {
+            nsAutoString attrStr;
+            if (!ConvertJSValueToString(cx, attribute, eStringify, eStringify, attrStr)) {
               aRv.StealExceptionFromJSContext(cx);
               return;
             }
-            observedAttributes.AppendElement(NS_Atomize(attrStr));
+
+            if (!observedAttributes.AppendElement(NS_Atomize(attrStr))) {
+              aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+              return;
+            }
           }
         }
       } // Leave constructor's compartment.
