@@ -30,9 +30,14 @@ this.PluginContent = function(global) {
 const FLASH_MIME_TYPE = "application/x-shockwave-flash";
 const REPLACEMENT_STYLE_SHEET = Services.io.newURI("chrome://pluginproblem/content/pluginReplaceBinding.css");
 
-const OVERLAY_DISPLAY_HIDDEN = 0;
-const OVERLAY_DISPLAY_VISIBLE = 1;
-const OVERLAY_DISPLAY_MINIMAL = 2;
+const OVERLAY_DISPLAY = {
+  HIDDEN: 0, // The overlay will be transparent
+  BLANK: 1, // The overlay will be just a grey box
+  TINY: 2, // The overlay with a 16x16 plugin icon
+  REDUCED: 3, // The overlay with a 32x32 plugin icon
+  NOTEXT: 4, // The overlay with a 48x48 plugin icon and the close button
+  FULL: 5, // The full overlay: 48x48 plugin icon, close button and label
+};
 
 PluginContent.prototype = {
   init(global) {
@@ -289,44 +294,80 @@ PluginContent.prototype = {
    * Update the visibility of the plugin overlay.
    */
   setVisibility(plugin, overlay, overlayDisplayState) {
-    overlay.classList.toggle("visible", overlayDisplayState != OVERLAY_DISPLAY_HIDDEN);
-    overlay.classList.toggle("minimal", overlayDisplayState == OVERLAY_DISPLAY_MINIMAL)
-    if (overlayDisplayState == OVERLAY_DISPLAY_VISIBLE) {
+    overlay.classList.toggle("visible", overlayDisplayState != OVERLAY_DISPLAY.HIDDEN);
+    if (overlayDisplayState != OVERLAY_DISPLAY.HIDDEN) {
       overlay.removeAttribute("dismissed");
     }
   },
 
   /**
-   * Check whether the plugin should be visible on the page. A plugin should
-   * not be visible if the overlay is too big, or if any other page content
-   * overlays it.
+   * Adjust the style in which the overlay will be displayed. It might be adjusted
+   * based on its size, or if there's some other element covering all corners of
+   * the overlay.
    *
-   * This function will handle showing or hiding the overlay.
-   * @returns true if the plugin is invisible.
+   * This function will handle adjusting the style of the overlay, but will
+   * not handle hiding it. That is done by setVisibility with the return value
+   * from this function.
+   *
+   * @returns A value from OVERLAY_DISPLAY.
    */
-  computeOverlayDisplayState(plugin, overlay) {
+  computeAndAdjustOverlayDisplay(plugin, overlay) {
     let fallbackType = plugin.pluginFallbackType;
     if (plugin.pluginFallbackTypeOverride !== undefined) {
       fallbackType = plugin.pluginFallbackTypeOverride;
     }
     if (fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY_QUIET) {
-      return OVERLAY_DISPLAY_HIDDEN;
+      return OVERLAY_DISPLAY.HIDDEN;
     }
 
     // If the overlay size is 0, we haven't done layout yet. Presume that
     // plugins are visible until we know otherwise.
     if (overlay.scrollWidth == 0) {
-      return OVERLAY_DISPLAY_VISIBLE;
+      return OVERLAY_DISPLAY.FULL;
     }
+
+    let overlayDisplay = OVERLAY_DISPLAY.FULL;
 
     // Is the <object>'s size too small to hold what we want to show?
     let pluginRect = plugin.getBoundingClientRect();
+    let pluginWidth = Math.ceil(pluginRect.width);
+    let pluginHeight = Math.ceil(pluginRect.height);
+
+    // We must set the attributes while here inside this function in order
+    // for a possible re-style to occur, which will make the scrollWidth/Height
+    // checks below correct. Otherwise, we would be requesting e.g. a TINY
+    // overlay here, but the default styling would be used, and that would make
+    // it overflow, causing it to change to BLANK instead of remaining as TINY.
+
+    if (pluginWidth <= 32 || pluginHeight <= 32) {
+      overlay.setAttribute("sizing", "blank");
+      overlayDisplay = OVERLAY_DISPLAY.BLANK;
+    } else if (pluginWidth <= 80 || pluginHeight <= 60) {
+      overlayDisplay = OVERLAY_DISPLAY.TINY;
+      overlay.setAttribute("sizing", "tiny");
+      overlay.setAttribute("notext", "notext");
+    } else if (pluginWidth <= 120 || pluginHeight <= 80) {
+      overlayDisplay = OVERLAY_DISPLAY.REDUCED;
+      overlay.setAttribute("sizing", "reduced");
+      overlay.setAttribute("notext", "notext");
+    } else if (pluginWidth <= 240 || pluginHeight <= 160) {
+      overlayDisplay = OVERLAY_DISPLAY.NOTEXT;
+      overlay.removeAttribute("sizing");
+      overlay.setAttribute("notext", "notext");
+    } else {
+      overlayDisplay = OVERLAY_DISPLAY.FULL;
+      overlay.removeAttribute("sizing");
+      overlay.removeAttribute("notext");
+    }
+
+
     // XXX bug 446693. The text-shadow on the submitted-report text at
     //     the bottom causes scrollHeight to be larger than it should be.
-    let overflows = (overlay.scrollWidth > Math.ceil(pluginRect.width)) ||
-                    (overlay.scrollHeight - 5 > Math.ceil(pluginRect.height));
+    let overflows = (overlay.scrollWidth > pluginWidth) ||
+                    (overlay.scrollHeight - 5 > pluginHeight);
     if (overflows) {
-      return OVERLAY_DISPLAY_MINIMAL;
+      overlay.setAttribute("sizing", "blank");
+      return OVERLAY_DISPLAY.BLANK;
     }
 
     // Is the plugin covered up by other content so that it is not clickable?
@@ -353,11 +394,12 @@ PluginContent.prototype = {
       }
       let el = cwu.elementFromPoint(x, y, true, true);
       if (el === plugin) {
-        return OVERLAY_DISPLAY_VISIBLE;
+        return overlayDisplay;
       }
     }
 
-    return OVERLAY_DISPLAY_HIDDEN;
+    overlay.setAttribute("sizing", "blank");
+    return OVERLAY_DISPLAY.BLANK;
   },
 
   addLinkClickCallback(linkNode, callbackName /* callbackArgs...*/) {
@@ -476,7 +518,7 @@ PluginContent.prototype = {
     if (eventType == "PluginPlaceholderReplaced") {
       plugin.removeAttribute("href");
       let overlay = this.getPluginUI(plugin, "main");
-      this.setVisibility(plugin, overlay, OVERLAY_DISPLAY_VISIBLE);
+      this.setVisibility(plugin, overlay, OVERLAY_DISPLAY.FULL);
       let inIDOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
                           .getService(Ci.inIDOMUtils);
       // Add psuedo class so our styling will take effect
@@ -561,10 +603,10 @@ PluginContent.prototype = {
     if (eventType != "PluginCrashed") {
       if (overlay != null) {
         this.setVisibility(plugin, overlay,
-                           this.computeOverlayDisplayState(plugin, overlay));
+                           this.computeAndAdjustOverlayDisplay(plugin, overlay));
         let resizeListener = () => {
           this.setVisibility(plugin, overlay,
-            this.computeOverlayDisplayState(plugin, overlay));
+            this.computeAndAdjustOverlayDisplay(plugin, overlay));
           this.updateNotificationUI();
         };
         plugin.addEventListener("overflow", resizeListener);
@@ -903,9 +945,9 @@ PluginContent.prototype = {
       if (!overlay) {
         continue;
       }
-      let overlayDisplayState = this.computeOverlayDisplayState(plugin, overlay);
+      let overlayDisplayState = this.computeAndAdjustOverlayDisplay(plugin, overlay);
       this.setVisibility(plugin, overlay, overlayDisplayState);
-      if (overlayDisplayState == OVERLAY_DISPLAY_VISIBLE) {
+      if (overlayDisplayState > OVERLAY_DISPLAY.BLANK) {
         actions.delete(info.permissionString);
         if (actions.size == 0) {
           break;
@@ -1089,21 +1131,21 @@ PluginContent.prototype = {
     let link = this.getPluginUI(plugin, "reloadLink");
     this.addLinkClickCallback(link, "reloadPage");
 
-    let overlayDisplayState = this.computeOverlayDisplayState(plugin, overlay);
+    let overlayDisplayState = this.computeAndAdjustOverlayDisplay(plugin, overlay);
 
     // Is the <object>'s size too small to hold what we want to show?
-    if (overlayDisplayState != OVERLAY_DISPLAY_VISIBLE) {
+    if (overlayDisplayState != OVERLAY_DISPLAY.FULL) {
       // First try hiding the crash report submission UI.
       statusDiv.removeAttribute("status");
 
-      overlayDisplayState = this.computeOverlayDisplayState(plugin, overlay);
+      overlayDisplayState = this.computeAndAdjustOverlayDisplay(plugin, overlay);
     }
     this.setVisibility(plugin, overlay, overlayDisplayState);
 
     let doc = plugin.ownerDocument;
     let runID = plugin.runID;
 
-    if (overlayDisplayState == OVERLAY_DISPLAY_VISIBLE) {
+    if (overlayDisplayState == OVERLAY_DISPLAY.FULL) {
       // If a previous plugin on the page was too small and resulted in adding a
       // notification bar, then remove it because this plugin instance it big
       // enough to serve as in-content notification.

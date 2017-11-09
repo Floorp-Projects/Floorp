@@ -68,11 +68,6 @@ a .mainBox:focus,
   visibility: visible;
 }
 
-.minimal > .hoverBox,
-.minimal > .closeIcon {
-  visibility: hidden;
-}
-
 .mainBox[chromedir="rtl"] {
   direction: rtl;
 }
