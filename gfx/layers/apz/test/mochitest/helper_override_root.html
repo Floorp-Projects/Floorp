@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Simple wheel scroll cancellation</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+// Add a non-passive listener on the document, so that we have a document-level
+// APZ-aware listener, and the entire document is put in the dispatch-to-content
+// region
+document.addEventListener('wheel', function(e) {
+    dump("Wheel listener running...\n");
+
+    // spin for 2 seconds to give APZ time to scroll, if the event region override
+    // is broken and it decides not to wait for the main thread. Note that it's
+    // possible the APZ controller thread is busy for whatever reason so APZ
+    // may not scroll. That might cause this test to only fail intermittently
+    // instead of consistently if the behaviour being tested regresses.
+    var now = Date.now();
+    while (Date.now() - now < 2000);
+
+    // Cancel the scroll. If this works then we know APZ waited for this listener
+    // to run.
+    e.preventDefault();
+
+    setTimeout(function() {
+        flushApzRepaints(checkScroll);
+    }, 0);
+}, false);
+
+function scrollPage() {
+  synthesizeNativeWheel(document.body, 100, 100, 0, -50);
+  dump("Finished native wheel, waiting for listener to run...\n");
+}
+
+function checkScroll() {
+  is(window.scrollY, 0, "check that the window didn't scroll");
+  subtestDone();
+}
+
+if (window.top != window) {
+    dump("Running inside an iframe! stealing functions from window.top...\n");
+    window.subtestDone = window.top.subtestDone;
+    window.SimpleTest = window.top.SimpleTest;
+    window.is = window.top.is;
+    window.ok = window.top.ok;
+}
+
+waitUntilApzStable().then(scrollPage);
+
+  </script>
+</head>
+<body style="height: 5000px; background-image: linear-gradient(green,red);">
+  This page should not be wheel-scrollable.
+</body>
+</html>
