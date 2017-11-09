@@ -287,7 +287,6 @@ struct ContainerLayerAttributes {
   float inheritedYScale;
   float presShellResolution;
   bool scaleToResolution;
-  EventRegionsOverride eventRegionsOverride;
 };
 
 struct GlyphArray
@@ -303,8 +302,6 @@ struct ColorLayerAttributes     { LayerColor color; IntRect bounds; };
 struct CanvasLayerAttributes    { SamplingFilter samplingFilter; IntRect bounds; };
 struct RefLayerAttributes {
   uint64_t id;
-  // TODO: Once bug 1132895 is fixed we shouldn't need to propagate the override
-  // explicitly here.
   EventRegionsOverride eventRegionsOverride;
 };
 struct ImageLayerAttributes     { SamplingFilter samplingFilter; IntSize scaleToSize; ScaleMode scaleMode; };
