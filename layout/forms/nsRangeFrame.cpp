@@ -761,7 +761,7 @@ nsRangeFrame::AttributeChanged(int32_t  aNameSpaceID,
       }
     } else if (aAttribute == nsGkAtoms::orient) {
       PresShell()->FrameNeedsReflow(this, nsIPresShell::eResize,
-                                                   NS_FRAME_IS_DIRTY);
+                                    NS_FRAME_IS_DIRTY);
     }
   }
 
