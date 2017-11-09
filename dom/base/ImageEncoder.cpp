@@ -202,11 +202,7 @@ public:
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stream->Available(aImgSize);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(*aImgSize <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
-
-    rv = NS_ReadInputStreamToBuffer(stream, aImgData, *aImgSize);
+    rv = NS_ReadInputStreamToBuffer(stream, aImgData, -1, aImgSize);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;
