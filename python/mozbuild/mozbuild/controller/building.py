@@ -1128,62 +1128,62 @@ class BuildDriver(MozbuildObject):
 
             monitor.finish(record_usage=status == 0)
 
-            # Print the collected compiler warnings. This is redundant with
-            # inline output from the compiler itself. However, unlike inline
-            # output, this list is sorted and grouped by file, making it
-            # easier to triage output.
-            #
-            # Only do this if we had a successful build. If the build failed,
-            # there are more important things in the log to look for than
-            # whatever code we warned about.
-            if not status:
-                # Suppress warnings for 3rd party projects in local builds
-                # until we suppress them for real.
-                # TODO remove entries/feature once we stop generating warnings
-                # in these directories.
-                pathToThirdparty = os.path.join(self.topsrcdir,
-                                                "tools",
-                                               "rewriting",
-                                               "ThirdPartyPaths.txt")
+        # Print the collected compiler warnings. This is redundant with
+        # inline output from the compiler itself. However, unlike inline
+        # output, this list is sorted and grouped by file, making it
+        # easier to triage output.
+        #
+        # Only do this if we had a successful build. If the build failed,
+        # there are more important things in the log to look for than
+        # whatever code we warned about.
+        if not status:
+            # Suppress warnings for 3rd party projects in local builds
+            # until we suppress them for real.
+            # TODO remove entries/feature once we stop generating warnings
+            # in these directories.
+            pathToThirdparty = os.path.join(self.topsrcdir,
+                                            "tools",
+                                           "rewriting",
+                                           "ThirdPartyPaths.txt")
 
-                if os.path.exists(pathToThirdparty):
-                    with open(pathToThirdparty) as f:
-                        # Normalize the path (no trailing /)
-                        LOCAL_SUPPRESS_DIRS = tuple(d.rstrip('/') for d in f.read().splitlines())
+            if os.path.exists(pathToThirdparty):
+                with open(pathToThirdparty) as f:
+                    # Normalize the path (no trailing /)
+                    LOCAL_SUPPRESS_DIRS = tuple(d.rstrip('/') for d in f.read().splitlines())
+            else:
+                # For application based on gecko like thunderbird
+                LOCAL_SUPPRESS_DIRS = ()
+
+            suppressed_by_dir = Counter()
+
+            for warning in sorted(monitor.instance_warnings):
+                path = mozpath.normsep(warning['filename'])
+                if path.startswith(self.topsrcdir):
+                    path = path[len(self.topsrcdir) + 1:]
+
+                warning['normpath'] = path
+
+                if (path.startswith(LOCAL_SUPPRESS_DIRS) and
+                        'MOZ_AUTOMATION' not in os.environ):
+                    for d in LOCAL_SUPPRESS_DIRS:
+                        if path.startswith(d):
+                            suppressed_by_dir[d] += 1
+                            break
+
+                    continue
+
+                if warning['column'] is not None:
+                    self.log(logging.WARNING, 'compiler_warning', warning,
+                             'warning: {normpath}:{line}:{column} [{flag}] '
+                             '{message}')
                 else:
-                    # For application based on gecko like thunderbird
-                    LOCAL_SUPPRESS_DIRS = ()
+                    self.log(logging.WARNING, 'compiler_warning', warning,
+                             'warning: {normpath}:{line} [{flag}] {message}')
 
-                suppressed_by_dir = Counter()
-
-                for warning in sorted(monitor.instance_warnings):
-                    path = mozpath.normsep(warning['filename'])
-                    if path.startswith(self.topsrcdir):
-                        path = path[len(self.topsrcdir) + 1:]
-
-                    warning['normpath'] = path
-
-                    if (path.startswith(LOCAL_SUPPRESS_DIRS) and
-                            'MOZ_AUTOMATION' not in os.environ):
-                        for d in LOCAL_SUPPRESS_DIRS:
-                            if path.startswith(d):
-                                suppressed_by_dir[d] += 1
-                                break
-
-                        continue
-
-                    if warning['column'] is not None:
-                        self.log(logging.WARNING, 'compiler_warning', warning,
-                                 'warning: {normpath}:{line}:{column} [{flag}] '
-                                 '{message}')
-                    else:
-                        self.log(logging.WARNING, 'compiler_warning', warning,
-                                 'warning: {normpath}:{line} [{flag}] {message}')
-
-                for d, count in sorted(suppressed_by_dir.items()):
-                    self.log(logging.WARNING, 'suppressed_warning',
-                             {'dir': d, 'count': count},
-                             '(suppressed {count} warnings in {dir})')
+            for d, count in sorted(suppressed_by_dir.items()):
+                self.log(logging.WARNING, 'suppressed_warning',
+                         {'dir': d, 'count': count},
+                         '(suppressed {count} warnings in {dir})')
 
         high_finder, finder_percent = monitor.have_high_finder_usage()
         if high_finder:
