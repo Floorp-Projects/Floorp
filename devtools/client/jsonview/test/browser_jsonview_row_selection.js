@@ -62,6 +62,55 @@ add_task(async function () {
   await assertRowSelected(numRows - 1);
 });
 
+add_task(async function () {
+  info("Test 3 JSON row selection started");
+
+  // Create a JSON with a row taller than the panel.
+  let json = JSON.stringify([0, "a ".repeat(1e4), 1]);
+  await addJsonViewTab("data:application/json," + encodeURI(json));
+
+  is(await getElementCount(".treeRow"), 3, "Got the expected number of rows.");
+  await assertRowSelected(null);
+  await evalInContent("var scroller = $('.jsonPanelBox .panelContent')");
+  await evalInContent("var row = $('.treeRow:nth-child(2)')");
+  ok(await evalInContent("scroller.clientHeight < row.clientHeight"),
+     "The row is taller than the scroller.");
+  is(await evalInContent("scroller.scrollTop"), 0, "Initially scrolled to the top.");
+
+  // Select the tall row.
+  await evalInContent("row.click()");
+  await assertRowSelected(2);
+  is(await evalInContent("scroller.scrollTop"), await evalInContent("row.offsetTop"),
+     "Scrolled to the top of the row.");
+
+  // Select the last row.
+  await evalInContent("$('.treeRow:last-child').click()");
+  await assertRowSelected(3);
+  is(await evalInContent("scroller.scrollTop + scroller.offsetHeight"),
+     await evalInContent("scroller.scrollHeight"), "Scrolled to the bottom.");
+
+  // Select the tall row.
+  await evalInContent("row.click()");
+  await assertRowSelected(2);
+  is(await evalInContent("scroller.scrollTop + scroller.offsetHeight"),
+     await evalInContent("row.offsetTop + row.offsetHeight"),
+     "Scrolled to the bottom of the row.");
+
+  // Scroll up a bit, so that both the top and bottom of the row are not visible.
+  let scroll = await evalInContent(
+    "scroller.scrollTop = Math.ceil((scroller.scrollTop + row.offsetTop) / 2)");
+  ok(await evalInContent("scroller.scrollTop > row.offsetTop"),
+     "The top of the row is not visible.");
+  ok(await evalInContent("scroller.scrollTop + scroller.offsetHeight")
+     < await evalInContent("row.offsetTop + row.offsetHeight"),
+     "The bottom of the row is not visible.");
+
+  // Select the tall row.
+  await evalInContent("row.click()");
+  await assertRowSelected(2);
+  is(await evalInContent("scroller.scrollTop"), scroll, "Scroll did not change");
+});
+
 async function assertRowSelected(rowNum) {
   let idx = evalInContent("[].indexOf.call($$('.treeRow'), $('.treeRow.selected'))");
   is(await idx + 1, +rowNum, `${rowNum ? "The row #" + rowNum : "No row"} is selected.`);
