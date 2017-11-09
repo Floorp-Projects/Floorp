@@ -48,7 +48,6 @@ HTMLScriptElement::~HTMLScriptElement()
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(HTMLScriptElement, nsGenericHTMLElement,
-                            nsIDOMHTMLScriptElement,
                             nsIScriptLoaderObserver,
                             nsIScriptElement,
                             nsIMutationObserver)
@@ -115,123 +114,6 @@ HTMLScriptElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLScriptElement::GetText(nsAString& aValue)
-{
-  if (!nsContentUtils::GetNodeTextContent(this, false, aValue, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLScriptElement::SetText(const nsAString& aValue)
-{
-  ErrorResult rv;
-  SetText(aValue, rv);
-  return rv.StealNSResult();
-}
-
-void
-HTMLScriptElement::SetText(const nsAString& aValue, ErrorResult& rv)
-{
-  rv = nsContentUtils::SetNodeTextContent(this, aValue, true);
-}
-
-
-NS_IMPL_STRING_ATTR(HTMLScriptElement, Charset, charset)
-NS_IMPL_BOOL_ATTR(HTMLScriptElement, Defer, defer)
-// If this ever gets changed to return "" if the attr value is "" (see
-// https://github.com/whatwg/html/issues/1739 for why it might not get changed),
-// it may be worth it to use GetSrc instead of GetAttr and manual
-// NewURIWithDocumentCharset in FreezeUriAsyncDefer.
-NS_IMPL_URI_ATTR(HTMLScriptElement, Src, src)
-NS_IMPL_STRING_ATTR(HTMLScriptElement, Type, type)
-NS_IMPL_STRING_ATTR(HTMLScriptElement, HtmlFor, _for)
-NS_IMPL_STRING_ATTR(HTMLScriptElement, Event, event)
-
-void
-HTMLScriptElement::SetCharset(const nsAString& aCharset, ErrorResult& rv)
-{
-  SetHTMLAttr(nsGkAtoms::charset, aCharset, rv);
-}
-
-void
-HTMLScriptElement::SetDefer(bool aDefer, ErrorResult& rv)
-{
-  SetHTMLBoolAttr(nsGkAtoms::defer, aDefer, rv);
-}
-
-bool
-HTMLScriptElement::Defer()
-{
-  return GetBoolAttr(nsGkAtoms::defer);
-}
-
-void
-HTMLScriptElement::SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& rv)
-{
-  SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, rv);
-}
-
-void
-HTMLScriptElement::SetType(const nsAString& aType, ErrorResult& rv)
-{
-  SetHTMLAttr(nsGkAtoms::type, aType, rv);
-}
-
-void
-HTMLScriptElement::SetHtmlFor(const nsAString& aHtmlFor, ErrorResult& rv)
-{
-  SetHTMLAttr(nsGkAtoms::_for, aHtmlFor, rv);
-}
-
-void
-HTMLScriptElement::SetEvent(const nsAString& aEvent, ErrorResult& rv)
-{
-  SetHTMLAttr(nsGkAtoms::event, aEvent, rv);
-}
-
-nsresult
-HTMLScriptElement::GetAsync(bool* aValue)
-{
-  *aValue = Async();
-  return NS_OK;
-}
-
-bool
-HTMLScriptElement::Async()
-{
-  return mForceAsync || GetBoolAttr(nsGkAtoms::async);
-}
-
-nsresult
-HTMLScriptElement::SetAsync(bool aValue)
-{
-  ErrorResult rv;
-  SetAsync(aValue, rv);
-  return rv.StealNSResult();
-}
-
-void
-HTMLScriptElement::SetAsync(bool aValue, ErrorResult& rv)
-{
-  mForceAsync = false;
-  SetHTMLBoolAttr(nsGkAtoms::async, aValue, rv);
-}
-
-bool
-HTMLScriptElement::NoModule()
-{
-  return GetBoolAttr(nsGkAtoms::nomodule);
-}
-
-void
-HTMLScriptElement::SetNoModule(bool aValue, ErrorResult& aRv)
-{
-  SetHTMLBoolAttr(nsGkAtoms::nomodule, aValue, aRv);
-}
-
 nsresult
 HTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
@@ -269,6 +151,20 @@ HTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML,
   aError = nsContentUtils::SetNodeTextContent(this, aInnerHTML, true);
 }
 
+void
+HTMLScriptElement::GetText(nsAString& aValue, ErrorResult& aRv)
+{
+  if (!nsContentUtils::GetNodeTextContent(this, false, aValue, fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+  }
+}
+
+void
+HTMLScriptElement::SetText(const nsAString& aValue, ErrorResult& aRv)
+{
+  aRv = nsContentUtils::SetNodeTextContent(this, aValue, true);
+}
+
 // variation of this code in nsSVGScriptElement - check if changes
 // need to be transfered when modifying
 
@@ -281,7 +177,8 @@ HTMLScriptElement::GetScriptType(nsAString& type)
 void
 HTMLScriptElement::GetScriptText(nsAString& text)
 {
-  GetText(text);
+  IgnoredErrorResult rv;
+  GetText(text, rv);
 }
 
 void
@@ -330,9 +227,8 @@ HTMLScriptElement::FreezeUriAsyncDefer()
     // At this point mUri will be null for invalid URLs.
     mExternal = true;
 
-    bool defer, async;
-    GetAsync(&async);
-    GetDefer(&defer);
+    bool async = Async();
+    bool defer = Defer();
 
     mDefer = !async && defer;
     mAsync = async;
