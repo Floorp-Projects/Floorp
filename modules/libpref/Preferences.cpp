@@ -357,10 +357,10 @@ enum
 };
 
 static nsresult
-pref_HashPref(const char* aKey,
-              PrefValue aValue,
-              PrefType aType,
-              uint32_t aFlags);
+pref_SetPref(const char* aKey,
+             PrefValue aValue,
+             PrefType aType,
+             uint32_t aFlags);
 
 #define PREF_HASHTABLE_INITIAL_LENGTH 1024
 
@@ -441,12 +441,12 @@ PREF_SetCStringPref(const char* aPrefName,
   }
 
   // It's ok to stash a pointer to the temporary PromiseFlatCString's chars in
-  // pref because pref_HashPref() duplicates those chars.
+  // pref because pref_SetPref() duplicates those chars.
   PrefValue pref;
   const nsCString& flat = PromiseFlatCString(aValue);
   pref.mStringVal = flat.get();
 
-  return pref_HashPref(
+  return pref_SetPref(
     aPrefName, pref, PrefType::String, aSetDefault ? kPrefSetDefault : 0);
 }
 
@@ -457,7 +457,7 @@ PREF_SetIntPref(const char* aPrefName, int32_t aValue, bool aSetDefault)
   PrefValue pref;
   pref.mIntVal = aValue;
 
-  return pref_HashPref(
+  return pref_SetPref(
     aPrefName, pref, PrefType::Int, aSetDefault ? kPrefSetDefault : 0);
 }
 
@@ -468,7 +468,7 @@ PREF_SetBoolPref(const char* aPrefName, bool aValue, bool aSetDefault)
   PrefValue pref;
   pref.mBoolVal = aValue;
 
-  return pref_HashPref(
+  return pref_SetPref(
     aPrefName, pref, PrefType::Bool, aSetDefault ? kPrefSetDefault : 0);
 }
 
@@ -924,10 +924,10 @@ pref_HashTableLookup(const char* aKey)
 }
 
 static nsresult
-pref_HashPref(const char* aKey,
-              PrefValue aValue,
-              PrefType aType,
-              uint32_t aFlags)
+pref_SetPref(const char* aKey,
+             PrefValue aValue,
+             PrefType aType,
+             uint32_t aFlags)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1196,7 +1196,7 @@ PREF_ReaderCallback(void* aClosure,
   } else {
     flags |= kPrefForceSet;
   }
-  pref_HashPref(aPref, aValue, aType, flags);
+  pref_SetPref(aPref, aValue, aType, flags);
 }
 
 //===========================================================================
