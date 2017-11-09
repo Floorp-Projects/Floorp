@@ -82,6 +82,8 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
     MOZ_ASSERT(!JSRuntime::hasLiveRuntimes(),
                "how do we have live runtimes before JS_Init?");
 
+    libraryInitState = InitState::Initializing;
+
     PRMJ_NowInit();
 
     // The first invocation of `ProcessCreation` creates a temporary thread
