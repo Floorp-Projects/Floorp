@@ -65,6 +65,12 @@ interface nsIDocShellLoadInfo : nsISupports
      */
     attribute boolean principalIsExplicit;
 
+    /**
+     * If this attribute is true, then a top-level navigation
+     * to a data URI will be allowed.
+     */
+    attribute boolean forceAllowDataURI;
+
     /* these are load type enums... */
     const long loadNormal = 0;                     // Normal Load
     const long loadNormalReplace = 1;              // Normal Load but replaces current history slot

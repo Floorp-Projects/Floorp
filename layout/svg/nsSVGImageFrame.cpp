@@ -101,7 +101,7 @@ nsSVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDest
   }
 
   if (mReflowCallbackPosted) {
-    PresContext()->PresShell()->CancelReflowCallback(this);
+    PresShell()->CancelReflowCallback(this);
     mReflowCallbackPosted = false;
   }
 
@@ -451,7 +451,7 @@ nsSVGImageFrame::ReflowSVG()
     SVGObserverUtils::UpdateEffects(this);
 
     if (!mReflowCallbackPosted) {
-      nsIPresShell* shell = PresContext()->PresShell();
+      nsIPresShell* shell = PresShell();
       mReflowCallbackPosted = true;
       shell->PostReflowCallback(this);
     }

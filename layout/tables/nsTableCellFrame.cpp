@@ -66,7 +66,7 @@ public:
                                mozilla::layers::WebRenderLayerManager* aManager,
                                nsDisplayListBuilder* aDisplayListBuilder) override
   {
-    RefPtr<nsFrameSelection> frameSelection = mFrame->PresContext()->PresShell()->FrameSelection();
+    RefPtr<nsFrameSelection> frameSelection = mFrame->PresShell()->FrameSelection();
     if (frameSelection->GetTableCellSelection()) {
       return false;
     }
@@ -218,7 +218,7 @@ nsTableCellFrame::AttributeChanged(int32_t         aNameSpaceID,
   // BasicTableLayoutStrategy
   if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::nowrap &&
       PresContext()->CompatibilityMode() == eCompatibility_NavQuirks) {
-    PresContext()->PresShell()->
+    PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
   }
 

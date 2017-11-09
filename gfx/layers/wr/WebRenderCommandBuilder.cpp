@@ -81,7 +81,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
     mLayerScrollData.emplace_back();
     mLayerScrollData.back().InitializeRoot(mLayerScrollData.size() - 1);
     if (aDisplayListBuilder->IsBuildingLayerEventRegions()) {
-      nsIPresShell* shell = aDisplayListBuilder->RootReferenceFrame()->PresContext()->PresShell();
+      nsIPresShell* shell = aDisplayListBuilder->RootReferenceFrame()->PresShell();
       if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(shell)) {
         mLayerScrollData.back().SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
       }
