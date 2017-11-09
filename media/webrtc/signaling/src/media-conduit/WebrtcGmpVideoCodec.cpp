@@ -319,13 +319,12 @@ WebrtcGmpVideoEncoder::Encode(const webrtc::VideoFrame& aInputImage,
   // Would be really nice to avoid this sync dispatch, but it would require a
   // copy of the frame, since it doesn't appear to actually have a refcount.
   // Passing 'this' is safe since this is synchronous.
-  mGMPThread->Dispatch(
+  mozilla::SyncRunnable::DispatchToThread(mGMPThread,
       WrapRunnable(this,
                    &WebrtcGmpVideoEncoder::Encode_g,
                    &aInputImage,
                    aCodecSpecificInfo,
-                   aFrameTypes),
-      NS_DISPATCH_SYNC);
+                   aFrameTypes));
 
   return WEBRTC_VIDEO_CODEC_OK;
 }

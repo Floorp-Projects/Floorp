@@ -105,29 +105,83 @@ public:
     return sPreferences->mDefaultRootBranch;
   }
 
-  // Gets int or bool type pref value with default value if failed to get the
-  // pref.
+  // Gets the type of the pref.
+  static int32_t GetDefaultType(const char* aPref);
+
+  // Fallible getters of default values.
+  static nsresult GetDefaultBool(const char* aPref, bool* aResult);
+  static nsresult GetDefaultInt(const char* aPref, int32_t* aResult);
+  static nsresult GetDefaultUint(const char* aPref, uint32_t* aResult)
+  {
+    return GetDefaultInt(aPref, reinterpret_cast<int32_t*>(aResult));
+  }
+  static nsresult GetDefaultCString(const char* aPref, nsACString& aResult);
+  static nsresult GetDefaultString(const char* aPref, nsAString& aResult);
+  static nsresult GetDefaultLocalizedCString(const char* aPref,
+                                             nsACString& aResult);
+  static nsresult GetDefaultLocalizedString(const char* aPref,
+                                            nsAString& aResult);
+  static nsresult GetDefaultComplex(const char* aPref,
+                                    const nsIID& aType,
+                                    void** aResult);
+
+  // Infallible getters of default values, with fallback results on failure.
+  static bool GetDefaultBool(const char* aPref, bool aFailedResult)
+  {
+    bool result;
+    return NS_SUCCEEDED(GetDefaultBool(aPref, &result)) ? result
+                                                        : aFailedResult;
+  }
+  static int32_t GetDefaultInt(const char* aPref, int32_t aFailedResult)
+  {
+    int32_t result;
+    return NS_SUCCEEDED(GetDefaultInt(aPref, &result)) ? result : aFailedResult;
+  }
+  static uint32_t GetDefaultUint(const char* aPref, uint32_t aFailedResult)
+  {
+    return static_cast<uint32_t>(
+      GetDefaultInt(aPref, static_cast<int32_t>(aFailedResult)));
+  }
+
+  // Gets the type of the pref.
+  static int32_t GetType(const char* aPref);
+
+  // Fallible getters of user or default values.
+  static nsresult GetBool(const char* aPref, bool* aResult);
+  static nsresult GetInt(const char* aPref, int32_t* aResult);
+  static nsresult GetUint(const char* aPref, uint32_t* aResult)
+  {
+    return GetInt(aPref, reinterpret_cast<int32_t*>(aResult));
+  }
+  static nsresult GetFloat(const char* aPref, float* aResult);
+  static nsresult GetCString(const char* aPref, nsACString& aResult);
+  static nsresult GetString(const char* aPref, nsAString& aResult);
+  static nsresult GetLocalizedCString(const char* aPref, nsACString& aResult);
+  static nsresult GetLocalizedString(const char* aPref, nsAString& aResult);
+  static nsresult GetComplex(const char* aPref,
+                             const nsIID& aType,
+                             void** aResult);
+
+  // Infallible getters of user or default values, with fallback results on
+  // failure.
   static bool GetBool(const char* aPref, bool aDefault = false)
   {
     bool result = aDefault;
     GetBool(aPref, &result);
     return result;
   }
-
   static int32_t GetInt(const char* aPref, int32_t aDefault = 0)
   {
     int32_t result = aDefault;
     GetInt(aPref, &result);
     return result;
   }
-
   static uint32_t GetUint(const char* aPref, uint32_t aDefault = 0)
   {
     uint32_t result = aDefault;
     GetUint(aPref, &result);
     return result;
   }
-
   static float GetFloat(const char* aPref, float aDefault = 0)
   {
     float result = aDefault;
@@ -135,36 +189,7 @@ public:
     return result;
   }
 
-  // Gets int, float, or bool type pref value with raw return value of
-  // nsIPrefBranch.
-  //
-  // |aResult| must not be nullptr; its contents are never modified when these
-  // methods fail.
-  static nsresult GetBool(const char* aPref, bool* aResult);
-  static nsresult GetInt(const char* aPref, int32_t* aResult);
-  static nsresult GetFloat(const char* aPref, float* aResult);
-  static nsresult GetUint(const char* aPref, uint32_t* aResult)
-  {
-    int32_t result;
-    nsresult rv = GetInt(aPref, &result);
-    if (NS_SUCCEEDED(rv)) {
-      *aResult = static_cast<uint32_t>(result);
-    }
-    return rv;
-  }
-
-  // Gets string type pref value with raw return value of nsIPrefBranch.
-  // |aResult| is never modified when these methods fail.
-  static nsresult GetCString(const char* aPref, nsACString& aResult);
-  static nsresult GetString(const char* aPref, nsAString& aResult);
-  static nsresult GetLocalizedCString(const char* aPref, nsACString& aResult);
-  static nsresult GetLocalizedString(const char* aPref, nsAString& aResult);
-
-  static nsresult GetComplex(const char* aPref,
-                             const nsIID& aType,
-                             void** aResult);
-
-  // Sets various type pref values.
+  // Setters of user values.
   static nsresult SetBool(const char* aPref, bool aValue);
   static nsresult SetInt(const char* aPref, int32_t aValue);
   static nsresult SetUint(const char* aPref, uint32_t aValue)
@@ -176,7 +201,6 @@ public:
   static nsresult SetCString(const char* aPref, const nsACString& aValue);
   static nsresult SetString(const char* aPref, const char16ptr_t aValue);
   static nsresult SetString(const char* aPref, const nsAString& aValue);
-
   static nsresult SetComplex(const char* aPref,
                              const nsIID& aType,
                              nsISupports* aValue);
@@ -186,9 +210,6 @@ public:
 
   // Whether the pref has a user value or not.
   static bool HasUserValue(const char* aPref);
-
-  // Gets the type of the pref.
-  static int32_t GetType(const char* aPref);
 
   // Adds/Removes the observer for the root pref branch. See nsIPrefBranch.idl
   // for details.
@@ -274,51 +295,6 @@ public:
   static nsresult AddFloatVarCache(float* aVariable,
                                    const char* aPref,
                                    float aDefault = 0.0f);
-
-  // Gets the default bool, int or uint value of the pref. The result is raw
-  // result of nsIPrefBranch::Get*Pref(). If the pref could have any value, you
-  // need to use these methods. If not so, you could use the methods below.
-  static nsresult GetDefaultBool(const char* aPref, bool* aResult);
-  static nsresult GetDefaultInt(const char* aPref, int32_t* aResult);
-  static nsresult GetDefaultUint(const char* aPref, uint32_t* aResult)
-  {
-    return GetDefaultInt(aPref, reinterpret_cast<int32_t*>(aResult));
-  }
-
-  // Gets the default bool, int or uint value of the pref directly. You can set
-  // an invalid value of the pref to |aFailedResult|. If these methods fail to
-  // get the default value, they return |aFailedResult|.
-  static bool GetDefaultBool(const char* aPref, bool aFailedResult)
-  {
-    bool result;
-    return NS_SUCCEEDED(GetDefaultBool(aPref, &result)) ? result
-                                                        : aFailedResult;
-  }
-  static int32_t GetDefaultInt(const char* aPref, int32_t aFailedResult)
-  {
-    int32_t result;
-    return NS_SUCCEEDED(GetDefaultInt(aPref, &result)) ? result : aFailedResult;
-  }
-  static uint32_t GetDefaultUint(const char* aPref, uint32_t aFailedResult)
-  {
-    return static_cast<uint32_t>(
-      GetDefaultInt(aPref, static_cast<int32_t>(aFailedResult)));
-  }
-
-  // Gets the default value of the char type pref.
-  static nsresult GetDefaultCString(const char* aPref, nsACString& aResult);
-  static nsresult GetDefaultString(const char* aPref, nsAString& aResult);
-  static nsresult GetDefaultLocalizedCString(const char* aPref,
-                                             nsACString& aResult);
-  static nsresult GetDefaultLocalizedString(const char* aPref,
-                                            nsAString& aResult);
-
-  static nsresult GetDefaultComplex(const char* aPref,
-                                    const nsIID& aType,
-                                    void** aResult);
-
-  // Gets the type of the pref.
-  static int32_t GetDefaultType(const char* aPref);
 
   // Used to synchronise preferences between chrome and content processes.
   static void GetPreferences(InfallibleTArray<PrefSetting>* aPrefs);

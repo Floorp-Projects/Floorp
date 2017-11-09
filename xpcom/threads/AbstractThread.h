@@ -69,9 +69,9 @@ public:
 
   enum DispatchFailureHandling { AssertDispatchSuccess, DontAssertDispatchSuccess };
   enum DispatchReason { NormalDispatch, TailDispatch };
-  virtual void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                        DispatchFailureHandling aHandling = AssertDispatchSuccess,
-                        DispatchReason aReason = NormalDispatch) = 0;
+  virtual nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+                            DispatchFailureHandling aHandling = AssertDispatchSuccess,
+                            DispatchReason aReason = NormalDispatch) = 0;
 
   virtual bool IsCurrentThreadIn() = 0;
 

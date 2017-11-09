@@ -440,16 +440,16 @@ protected:
   }
 
   nsLineBox* NewLineBox(nsIFrame* aFrame, bool aIsBlock) {
-    return NS_NewLineBox(PresContext()->PresShell(), aFrame, aIsBlock);
+    return NS_NewLineBox(PresShell(), aFrame, aIsBlock);
   }
   nsLineBox* NewLineBox(nsLineBox* aFromLine, nsIFrame* aFrame, int32_t aCount) {
-    return NS_NewLineBox(PresContext()->PresShell(), aFromLine, aFrame, aCount);
+    return NS_NewLineBox(PresShell(), aFromLine, aFrame, aCount);
   }
   void FreeLineBox(nsLineBox* aLine) {
     if (aLine == GetLineCursor()) {
       ClearLineCursor();
     }
-    aLine->Destroy(PresContext()->PresShell());
+    aLine->Destroy(PresShell());
   }
   /**
    * Helper method for StealFrame.
