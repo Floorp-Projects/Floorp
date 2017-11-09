@@ -19,18 +19,15 @@ whitelist['nightly']['linux32'] += [
     'CXX=$REAL_CXX',
     'CXX="ccache $REAL_CXX"',
     'CC="ccache $REAL_CC"',
-    'mk_add_options PROFILE_GEN_SCRIPT=@TOPSRCDIR@/build/profile_pageloader.pl',
     'ac_add_options --with-ccache=/usr/bin/ccache',
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
-    "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
     'STRIP_FLAGS="--strip-debug"',
 ]
 
 whitelist['nightly']['linux64'] += [
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
-    "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
     'STRIP_FLAGS="--strip-debug"',
     'ac_add_options --with-ccache=/usr/bin/ccache',
 ]
@@ -74,13 +71,11 @@ whitelist['release']['linux32'] += [
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
     'ac_add_options MOZ_PGO=1',
-    "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
 ]
 whitelist['release']['linux64'] += [
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
     'ac_add_options MOZ_PGO=1',
-    "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
 ]
 
 if __name__ == '__main__':
