@@ -190,8 +190,8 @@ Optional. This field inserts an #ifdef directive around the histogram's C++ decl
 ----------------------------
 Optional. This is one of:
 
-* ``"opt-in"``: (default value) This histogram is submitted by default on pre-release channels; on the release channel only if the user opted into additional data collection
-* ``"opt-out"``: this histogram is submitted by default on release and pre-release channels, unless the user opted out.
+* ``"opt-in"``: (default value) This histogram is submitted by default on pre-release channels, unless the user opts out.
+* ``"opt-out"``: This histogram is submitted by default on release and pre-release channels, unless the user opts out.
 
 .. warning::
 
