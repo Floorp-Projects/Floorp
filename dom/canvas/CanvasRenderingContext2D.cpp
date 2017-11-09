@@ -6015,6 +6015,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
     return NS_ERROR_FAILURE;
   }
 
+  DataSourceSurface::MappedSurface map;
   RefPtr<DataSourceSurface> sourceSurface;
   uint8_t* lockedBits = nullptr;
   uint8_t* dstData;
@@ -6036,11 +6037,15 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
     if (!sourceSurface) {
       return NS_ERROR_FAILURE;
     }
-    dstData = sourceSurface->GetData();
+    if (!sourceSurface->Map(DataSourceSurface::READ_WRITE, &map)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    dstData = map.mData;
     if (!dstData) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    dstStride = sourceSurface->Stride();
+    dstStride = map.mStride;
     dstFormat = sourceSurface->GetFormat();
   }
 
@@ -6055,6 +6060,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
   if (lockedBits) {
     mTarget->ReleaseBits(lockedBits);
   } else if (sourceSurface) {
+    sourceSurface->Unmap();
     mTarget->CopySurface(sourceSurface, dirtyRect - dirtyRect.TopLeft(), dirtyRect.TopLeft());
   }
 

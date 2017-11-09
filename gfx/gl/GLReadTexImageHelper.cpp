@@ -390,8 +390,10 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
 
         readSurf = tempSurf;
     }
+
+    DataSourceSurface::ScopedMap map(readSurf, DataSourceSurface::READ_WRITE);
     MOZ_ASSERT(readAlignment);
-    MOZ_ASSERT(reinterpret_cast<uintptr_t>(readSurf->GetData()) % readAlignment == 0);
+    MOZ_ASSERT(reinterpret_cast<uintptr_t>(map.GetData()) % readAlignment == 0);
 
     GLsizei width = dest->GetSize().width;
     GLsizei height = dest->GetSize().height;
@@ -403,7 +405,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
         gl->fReadPixels(0, 0,
                         width, height,
                         readFormat, readType,
-                        readSurf->GetData());
+                        map.GetData());
     }
 
     if (readSurf != dest) {
@@ -475,7 +477,8 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
         gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
     }
 
-    gl->fGetTexImage(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, surf->GetData());
+    DataSourceSurface::ScopedMap map(surf, DataSourceSurface::READ);
+    gl->fGetTexImage(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, map.GetData());
 
     if (currentPackAlignment != 4) {
         gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
