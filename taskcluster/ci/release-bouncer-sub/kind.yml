@@ -8,6 +8,8 @@ transforms:
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
+job-defaults:
+   shipping-phase: promote
 
 jobs:
    fennec:
@@ -15,6 +17,7 @@ jobs:
       description: release bouncer submission job
       worker-type: buildbot-bridge/buildbot-bridge
       run-on-projects: []
+      shipping-product: fennec
       run:
          using: buildbot
          product: fennec

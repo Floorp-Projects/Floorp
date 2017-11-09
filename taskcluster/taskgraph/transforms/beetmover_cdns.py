@@ -41,6 +41,8 @@ beetmover_cdns_description_schema = Schema({
     Optional('dependencies'): {basestring: taskref_or_string},
     Optional('index'): {basestring: basestring},
     Optional('routes'): [basestring],
+    Required('shipping-phase'): task_description_schema['shipping-phase'],
+    Required('shipping-product'): task_description_schema['shipping-product'],
 })
 
 
