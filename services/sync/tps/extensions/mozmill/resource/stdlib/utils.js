@@ -158,6 +158,7 @@ function getPreference(aPrefName, aDefaultValue) {
       case ('number'):
         return branch.getIntPref(aPrefName);
       default:
+        // XXX: how does this work? It's missing the nsIIDRef argument...
         return branch.getComplexValue(aPrefName);
     }
   } catch (e) {
@@ -191,6 +192,7 @@ function setPreference(aName, aValue) {
         branch.setIntPref(aName, aValue);
         break;
       default:
+        // XXX: how does this work? It's missing the nsIIDRef argument...
         branch.setComplexValue(aName, aValue);
     }
   } catch (e) {
