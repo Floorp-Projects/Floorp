@@ -7,6 +7,7 @@
 #include "ClientSourceParent.h"
 
 #include "ClientHandleParent.h"
+#include "ClientManagerService.h"
 #include "ClientSourceOpParent.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/Unused.h"
@@ -27,6 +28,15 @@ ClientSourceParent::RecvTeardown()
 void
 ClientSourceParent::ActorDestroy(ActorDestroyReason aReason)
 {
+  mService->RemoveSource(this);
+
+  nsTArray<ClientHandleParent*> handleList(mHandleList);
+  for (ClientHandleParent* handle : handleList) {
+    // This should trigger DetachHandle() to be called removing
+    // the entry from the mHandleList.
+    Unused << ClientHandleParent::Send__delete__(handle);
+  }
+  MOZ_DIAGNOSTIC_ASSERT(mHandleList.IsEmpty());
 }
 
 PClientSourceOpParent*
@@ -44,11 +54,37 @@ ClientSourceParent::DeallocPClientSourceOpParent(PClientSourceOpParent* aActor)
 }
 
 ClientSourceParent::ClientSourceParent(const ClientSourceConstructorArgs& aArgs)
+  : mClientInfo(aArgs.id(), aArgs.type(), aArgs.principalInfo(), aArgs.creationTime())
+  , mService(ClientManagerService::GetOrCreateInstance())
 {
+  mService->AddSource(this);
 }
 
 ClientSourceParent::~ClientSourceParent()
 {
+  MOZ_DIAGNOSTIC_ASSERT(mHandleList.IsEmpty());
+}
+
+const ClientInfo&
+ClientSourceParent::Info() const
+{
+  return mClientInfo;
+}
+
+void
+ClientSourceParent::AttachHandle(ClientHandleParent* aClientHandle)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aClientHandle);
+  MOZ_ASSERT(!mHandleList.Contains(aClientHandle));
+  mHandleList.AppendElement(aClientHandle);
+}
+
+void
+ClientSourceParent::DetachHandle(ClientHandleParent* aClientHandle)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aClientHandle);
+  MOZ_ASSERT(mHandleList.Contains(aClientHandle));
+  mHandleList.RemoveElement(aClientHandle);
 }
 
 } // namespace dom
