@@ -24,7 +24,4 @@ interface nsIJSON : nsISupports
   [implicit_jscontext]
   jsval decodeFromStream(in nsIInputStream stream,
                          in long contentLength);
-
-  // Make sure you GCroot the result of this function before using it.
-  [noscript] jsval    decodeToJSVal(in AString str, in JSContext cx);
 };

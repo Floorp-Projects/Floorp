@@ -51,17 +51,6 @@ nsJSON::DecodeFromStream(nsIInputStream *aStream, int32_t aContentLength,
   return DecodeInternal(cx, aStream, aContentLength, true, aRetval);
 }
 
-NS_IMETHODIMP
-nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx,
-                      JS::MutableHandle<JS::Value> result)
-{
-  if (!JS_ParseJSON(cx, static_cast<const char16_t*>(PromiseFlatString(str).get()),
-                    str.Length(), result)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  return NS_OK;
-}
-
 nsresult
 nsJSON::DecodeInternal(JSContext* cx,
                        nsIInputStream *aStream,
