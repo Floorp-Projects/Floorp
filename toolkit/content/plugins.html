@@ -12,6 +12,9 @@
   Components.utils.import("resource://gre/modules/Services.jsm");
 
   var Ci = Components.interfaces;
+  // XXX Bug 1418959 - For some reason, using Services.strings here causes
+  // about:plugins to leak when running browser_aboutURLs.js.
+  // eslint-disable-next-line mozilla/use-services
   var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
   var pluginsbundle = strBundleService.createBundle("chrome://global/locale/plugins.properties");
 
