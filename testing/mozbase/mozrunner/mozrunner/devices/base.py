@@ -10,11 +10,9 @@ import os
 import posixpath
 import re
 import shutil
-import socket
 import subprocess
 import tempfile
 import time
-import traceback
 
 from mozdevice import DMError
 from mozprocess import ProcessHandler
@@ -205,21 +203,6 @@ class Device(object):
             time_out += 1
             time.sleep(1)
         return active
-
-    def wait_for_port(self, port, timeout=300):
-        starttime = datetime.datetime.now()
-        while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.connect(('localhost', port))
-                data = sock.recv(16)
-                sock.close()
-                if ':' in data:
-                    return True
-            except:
-                traceback.print_exc()
-            time.sleep(1)
-        return False
 
     def backup_file(self, remote_path):
         if not self.restore:
