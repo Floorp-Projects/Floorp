@@ -3,8 +3,10 @@
 add_task(async function testLastAccessed() {
   let past = Date.now();
 
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/?1");
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/?2");
+  for (let url of ["https://example.com/?1", "https://example.com/?2"]) {
+    let tab = BrowserTestUtils.addTab(gBrowser, url, {skipAnimation: true});
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, url);
+  }
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -12,10 +14,6 @@ add_task(async function testLastAccessed() {
     },
     async background() {
       browser.test.onMessage.addListener(async function(msg, past) {
-        if (msg !== "past") {
-          return;
-        }
-
         let [tab1] = await browser.tabs.query({url: "https://example.com/?1"});
         let [tab2] = await browser.tabs.query({url: "https://example.com/?2"});
 
@@ -23,10 +21,12 @@ add_task(async function testLastAccessed() {
 
         let now = Date.now();
 
-        browser.test.assertTrue(past < tab1.lastAccessed &&
-                                tab1.lastAccessed < tab2.lastAccessed &&
-                                tab2.lastAccessed <= now,
-                                "lastAccessed timestamps are recent and in the right order");
+        browser.test.assertTrue(past < tab1.lastAccessed,
+                                "lastAccessed of tab 1 is later than the test start time.");
+        browser.test.assertTrue(tab1.lastAccessed < tab2.lastAccessed,
+                                "lastAccessed of tab 2 is later than lastAccessed of tab 1.");
+        browser.test.assertTrue(tab2.lastAccessed <= now,
+                                "lastAccessed of tab 2 is earlier than now.");
 
         await browser.tabs.remove([tab1.id, tab2.id]);
 

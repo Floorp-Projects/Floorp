@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
+const { Ci, Cu } = require("chrome");
 const Services = require("Services");
 const { Task } = require("devtools/shared/task");
 const { BrowserElementWebNavigation } = require("./web-navigation");
@@ -20,8 +20,7 @@ function debug(msg) {
 }
 
 /**
- * Properties swapped between browsers by browser.xml's `swapDocShells`.  See also the
- * list at /devtools/client/responsive.html/docs/browser-swap.md.
+ * Properties swapped between browsers by browser.xml's `swapDocShells`.
  */
 const SWAPPED_BROWSER_STATE = [
   "_remoteFinder",
@@ -328,8 +327,8 @@ function MessageManagerTunnel(outer, inner) {
   if (outer.isRemoteBrowser) {
     throw new Error("The outer browser must be non-remote.");
   }
-  this.outer = outer;
-  this.inner = inner;
+  this.outerRef = Cu.getWeakReference(outer);
+  this.innerRef = Cu.getWeakReference(inner);
   this.tunneledMessageNames = new Set();
   this.init();
 }
@@ -415,6 +414,8 @@ MessageManagerTunnel.prototype = {
     "Finder:",
     // Messages sent from InlineSpellChecker.jsm
     "InlineSpellChecker:",
+    // Messages sent from MessageChannel.jsm
+    "MessageChannel:",
     // Messages sent from pageinfo.js
     "PageInfo:",
     // Messages sent from printUtils.js
@@ -433,6 +434,8 @@ MessageManagerTunnel.prototype = {
     "Findbar:",
     // Messages sent to RemoteFinder.jsm
     "Finder:",
+    // Messages sent to MessageChannel.jsm
+    "MessageChannel:",
     // Messages sent to pageinfo.js
     "PageInfo:",
     // Messages sent to printUtils.js
@@ -446,6 +449,10 @@ MessageManagerTunnel.prototype = {
     // DevTools server for OOP frames
     "resource://devtools/server/child.js"
   ],
+
+  get outer() {
+    return this.outerRef.get();
+  },
 
   get outerParentMM() {
     if (!this.outer[FRAME_LOADER]) {
@@ -461,6 +468,10 @@ MessageManagerTunnel.prototype = {
     let docShell = this.outer[FRAME_LOADER].docShell;
     return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIContentFrameMessageManager);
+  },
+
+  get inner() {
+    return this.innerRef.get();
   },
 
   get innerParentMM() {
@@ -618,6 +629,10 @@ MessageManagerTunnel.prototype = {
   _shouldTunnelInnerToOuter(name) {
     return this.INNER_TO_OUTER_MESSAGES.includes(name) ||
            this.INNER_TO_OUTER_MESSAGE_PREFIXES.some(prefix => name.startsWith(prefix));
+  },
+
+  toString() {
+    return "[object MessageManagerTunnel]";
   },
 
 };

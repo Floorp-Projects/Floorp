@@ -8,22 +8,34 @@
  * ancestor in the bookmarks table.
  */
 add_task(async function() {
-  let bm = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                                NetUtil.newURI("http://mozilla.org/"),
-                                                PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                                "bookmark");
-  let f2 = PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId, "f2",
-                                              PlacesUtils.bookmarks.DEFAULT_INDEX);
-  PlacesUtils.bookmarks.moveItem(bm, f2, PlacesUtils.bookmarks.DEFAULT_INDEX);
-  let f1 = PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId, "f1",
-                                              PlacesUtils.bookmarks.DEFAULT_INDEX);
-  PlacesUtils.bookmarks.moveItem(f2, f1, PlacesUtils.bookmarks.DEFAULT_INDEX);
+  let bms = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: [{
+      title: "bookmark",
+      url: "http://mozilla.org",
+    }, {
+      title: "f2",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    }, {
+      title: "f1",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    }]
+  });
+
+  let bookmark = bms[0];
+  let folder2 = bms[1];
+  let folder1 = bms[2];
+  bookmark.parentGuid = folder2.guid;
+  await PlacesUtils.bookmarks.update(bookmark);
+
+  folder2.parentGuid = folder1.guid;
+  await PlacesUtils.bookmarks.update(folder2);
 
   // Create a backup.
   await PlacesBackups.create();
 
   // Remove the bookmarks, then restore the backup.
-  PlacesUtils.bookmarks.removeItem(f1);
+  await PlacesUtils.bookmarks.remove(folder1);
   await BookmarkJSONUtils.importFromFile((await PlacesBackups.getMostRecentBackup()), true);
 
   do_print("Checking first level");
@@ -36,7 +48,7 @@ add_task(async function() {
   do_check_eq(level2.title, "f2");
   do_print("Checking bookmark");
   PlacesUtils.asContainer(level2).containerOpen = true;
-  let bookmark = level2.getChild(0);
+  bookmark = level2.getChild(0);
   do_check_eq(bookmark.title, "bookmark");
   level2.containerOpen = false;
   level1.containerOpen = false;
