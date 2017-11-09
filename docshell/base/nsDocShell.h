@@ -114,8 +114,12 @@ class nsRefreshTimer : public nsITimerCallback
                      , public nsINamed
 {
 public:
-  nsRefreshTimer(nsDocShell* aDocShell, nsIURI* aURI, int32_t aDelay,
-                 bool aRepeat, bool aMetaRefresh);
+  nsRefreshTimer(nsDocShell* aDocShell,
+                 nsIURI* aURI,
+                 nsIPrincipal* aPrincipal,
+                 int32_t aDelay,
+                 bool aRepeat,
+                 bool aMetaRefresh);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
@@ -125,6 +129,7 @@ public:
 
   RefPtr<nsDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
   int32_t mDelay;
   bool mRepeat;
   bool mMetaRefresh;
@@ -259,7 +264,8 @@ public:
   // ForceRefreshURI method on nsIRefreshURI, but makes sure to take
   // the timer involved out of mRefreshURIList if it's there.
   // aTimer must not be null.
-  nsresult ForceRefreshURIFromTimer(nsIURI* aURI, int32_t aDelay,
+  nsresult ForceRefreshURIFromTimer(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                                    int32_t aDelay,
                                     bool aMetaRefresh, nsITimer* aTimer);
 
   friend class OnLinkClickEvent;
