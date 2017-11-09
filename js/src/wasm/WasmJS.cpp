@@ -288,7 +288,10 @@ GetImports(JSContext* cx,
                 break;
               }
               case ValType::I64: {
-                MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in JS");
+                if (!JitOptions.wasmTestMode) {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
+                    return false;
+                }
                 int64_t i64;
                 if (!ReadI64Object(cx, v, &i64))
                     return false;
