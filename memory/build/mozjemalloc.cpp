@@ -3718,7 +3718,11 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   // If we get here, then aSize and aOldSize are different enough that we
   // need to move the object.  In that case, fall back to allocating new
   // space and copying.
-  aArena = aArena ? aArena : choose_arena(aSize);
+  if (!aArena) {
+    arena_chunk_t* chunk = GetChunkForPtr(aPtr);
+    aArena = chunk->arena;
+    MOZ_DIAGNOSTIC_ASSERT(aArena->mMagic == ARENA_MAGIC);
+  }
   ret = aArena->Malloc(aSize, false);
   if (!ret) {
     return nullptr;
