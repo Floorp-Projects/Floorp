@@ -8,6 +8,7 @@
 
 #include "ClientManagerChild.h"
 #include "ClientManagerOpChild.h"
+#include "ClientSource.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/workers/bindings/WorkerHolderToken.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -19,6 +20,7 @@ namespace dom {
 
 using mozilla::ipc::BackgroundChild;
 using mozilla::ipc::PBackgroundChild;
+using mozilla::ipc::PrincipalInfo;
 using mozilla::dom::workers::Closing;
 using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
 using mozilla::dom::workers::WorkerHolderToken;
@@ -89,6 +91,29 @@ ClientManager::Shutdown()
   ShutdownThing();
 }
 
+UniquePtr<ClientSource>
+ClientManager::CreateSourceInternal(ClientType aType,
+                                    const PrincipalInfo& aPrincipal)
+{
+  NS_ASSERT_OWNINGTHREAD(ClientManager);
+
+  if (IsShutdown()) {
+    return nullptr;
+  }
+
+  nsID id;
+  nsresult rv = nsContentUtils::GenerateUUIDInPlace(id);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  ClientSourceConstructorArgs args(id, aType, aPrincipal, TimeStamp::Now());
+  UniquePtr<ClientSource> source(new ClientSource(this, args));
+  source->Activate(GetActor());
+
+  return Move(source);
+}
+
 already_AddRefed<ClientOpPromise>
 ClientManager::StartOp(const ClientOpConstructorArgs& aArgs,
                        nsISerialEventTarget* aSerialEventTarget)
@@ -152,6 +177,31 @@ ClientManager::Startup()
   PRStatus status =
     PR_NewThreadPrivateIndex(&sClientManagerThreadLocalIndex, nullptr);
   MOZ_DIAGNOSTIC_ASSERT(status == PR_SUCCESS);
+}
+
+// static
+UniquePtr<ClientSource>
+ClientManager::CreateSource(ClientType aType, nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+
+  PrincipalInfo principalInfo;
+  nsresult rv = PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  RefPtr<ClientManager> mgr = GetOrCreateForCurrentThread();
+  return mgr->CreateSourceInternal(aType, principalInfo);
+}
+
+// static
+UniquePtr<ClientSource>
+ClientManager::CreateSource(ClientType aType, const PrincipalInfo& aPrincipal)
+{
+  RefPtr<ClientManager> mgr = GetOrCreateForCurrentThread();
+  return mgr->CreateSourceInternal(aType, aPrincipal);
 }
 
 } // namespace dom

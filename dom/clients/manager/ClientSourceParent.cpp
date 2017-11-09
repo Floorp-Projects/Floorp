@@ -28,6 +28,7 @@ ClientSourceParent::RecvTeardown()
 void
 ClientSourceParent::ActorDestroy(ActorDestroyReason aReason)
 {
+  mService->RemoveSource(this);
 }
 
 PClientSourceOpParent*
@@ -45,12 +46,20 @@ ClientSourceParent::DeallocPClientSourceOpParent(PClientSourceOpParent* aActor)
 }
 
 ClientSourceParent::ClientSourceParent(const ClientSourceConstructorArgs& aArgs)
-  : mService(ClientManagerService::GetOrCreateInstance())
+  : mClientInfo(aArgs.id(), aArgs.type(), aArgs.principalInfo(), aArgs.creationTime())
+  , mService(ClientManagerService::GetOrCreateInstance())
 {
+  mService->AddSource(this);
 }
 
 ClientSourceParent::~ClientSourceParent()
 {
+}
+
+const ClientInfo&
+ClientSourceParent::Info() const
+{
+  return mClientInfo;
 }
 
 } // namespace dom
