@@ -18,13 +18,14 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.locale.Locales;
-import org.mozilla.focus.search.SearchEngineChooserPreference;
+import org.mozilla.focus.search.RadioSearchEngineListPreference;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
@@ -48,7 +49,8 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                 R.xml.search_engine_settings_featureflag_manual :
                 R.xml.search_engine_settings,
                 R.string.preference_search_installed_search_engines),
-        ADD_SEARCH(R.xml.manual_add_search_engine, R.string.tutorial_search_title);
+        ADD_SEARCH(R.xml.manual_add_search_engine, R.string.tutorial_search_title),
+        REMOVE_ENGINES(R.xml.remove_search_engines, R.string.preference_search_remove_title);
 
         public final int prefsResId;
         public final int titleResId;
@@ -64,6 +66,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         switch (settingsType) {
             case MAIN:
             case SEARCH_ENGINES:
+            case REMOVE_ENGINES:
                 f = new SettingsFragment();
                 break;
             case ADD_SEARCH:
@@ -87,8 +90,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         settingsScreen = SettingsScreen.valueOf(getArguments().getString(SETTINGS_SCREEN_NAME, SettingsScreen.MAIN.name()));
         addPreferencesFromResource(settingsScreen.prefsResId);
 
-        setHasOptionsMenu(settingsScreen == SettingsScreen.SEARCH_ENGINES
-                && AppConstants.FLAG_MANUAL_SEARCH_ENGINE);
+        setHasOptionsMenu((settingsScreen == SettingsScreen.SEARCH_ENGINES
+                && AppConstants.FLAG_MANUAL_SEARCH_ENGINE)
+                || settingsScreen == SettingsScreen.REMOVE_ENGINES);
     }
 
     @Override
@@ -101,9 +105,28 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        if (settingsScreen == SettingsScreen.SEARCH_ENGINES) {
-            inflater.inflate(R.menu.menu_search_engines, menu);
+        switch(settingsScreen) {
+            case SEARCH_ENGINES:
+                inflater.inflate(R.menu.menu_search_engines, menu);
+                break;
+            case REMOVE_ENGINES:
+                inflater.inflate(R.menu.menu_remove_search_engines, menu);
+                break;
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.menu_remove_search_engines:
+                showSettingsFragment(SettingsScreen.REMOVE_ENGINES);
+                return true;
+            case R.id.menu_delete_items:
+                // TODO: Save removed engines
+                getFragmentManager().popBackStack();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -163,8 +186,8 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             final int prefCount = prefScreen.getPreferenceCount();
             for (int i = 0; i < prefCount; i++) {
                 final Preference pref = prefScreen.getPreference(i);
-                if (pref instanceof SearchEngineChooserPreference) {
-                    ((SearchEngineChooserPreference) pref).refreshSearchEngines();
+                if (pref instanceof RadioSearchEngineListPreference) {
+                    ((RadioSearchEngineListPreference) pref).refreshSearchEngines();
                 }
             }
         }

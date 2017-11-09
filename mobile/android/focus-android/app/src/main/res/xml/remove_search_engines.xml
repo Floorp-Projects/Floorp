@@ -3,11 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- This preffed off by feature flag FLAG_MANUAL_SEARCH_ENGINE and corresponds to
-search_engine_settings.xml -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <org.mozilla.focus.search.RadioSearchEngineListPreference />
-    <Preference
-        android:title="@string/preference_search_add2"
-        android:key="@string/pref_key_manual_add_search_engine"/>
+    <org.mozilla.focus.search.MultiselectSearchEngineListPreference/>
 </PreferenceScreen>
