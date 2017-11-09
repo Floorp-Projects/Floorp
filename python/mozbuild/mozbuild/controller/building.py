@@ -1117,10 +1117,10 @@ class BuildDriver(MozbuildObject):
                 # If the backend doesn't specify a build() method, then just
                 # call client.mk directly.
                 if status is None:
-                    status = self._run_make(srcdir=True, filename='client.mk',
-                        line_handler=output.on_line, log=False, print_directory=False,
-                        allow_parallel=False, ensure_exit_code=False, num_jobs=jobs,
-                        silent=not verbose, keep_going=keep_going)
+                    status = self._run_client_mk(line_handler=output.on_line,
+                                                 jobs=jobs,
+                                                 verbose=verbose,
+                                                 keep_going=keep_going)
 
                 self.log(logging.WARNING, 'warning_summary',
                     {'count': len(monitor.warnings_database)},
@@ -1289,10 +1289,9 @@ class BuildDriver(MozbuildObject):
         # monitor.
         if not buildstatus_messages:
             append_env[b'NO_BUILDSTATUS_MESSAGES'] =  b'1'
-        status = self._run_make(srcdir=True, filename='client.mk',
-            target='configure', line_handler=line_handler, log=False,
-            print_directory=False, allow_parallel=False, ensure_exit_code=False,
-            append_env=append_env)
+        status = self._run_client_mk(target='configure',
+                                     line_handler=line_handler,
+                                     append_env=append_env)
 
         if not status:
             print('Configure complete!')
@@ -1316,3 +1315,18 @@ class BuildDriver(MozbuildObject):
         else:
             install_test_files(mozpath.normpath(self.topsrcdir), self.topobjdir,
                                '_tests', test_objs)
+
+    def _run_client_mk(self, target=None, line_handler=None, jobs=0,
+                       verbose=None, keep_going=False, append_env=None):
+        return self._run_make(srcdir=True,
+                              filename='client.mk',
+                              allow_parallel=False,
+                              ensure_exit_code=False,
+                              print_directory=False,
+                              target=target,
+                              line_handler=line_handler,
+                              log=False,
+                              num_jobs=jobs,
+                              silent=not verbose,
+                              keep_going=keep_going,
+                              append_env=append_env)
