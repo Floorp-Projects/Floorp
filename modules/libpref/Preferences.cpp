@@ -389,27 +389,6 @@ PREF_CleanupPrefs()
   }
 }
 
-// Frees the callback list. Should be called at program exit.
-static void
-PREF_Cleanup()
-{
-  NS_ASSERTION(!gCallbacksInProgress,
-               "PREF_Cleanup was called while gCallbacksInProgress is true!");
-
-  CallbackNode* node = gFirstCallback;
-  CallbackNode* next_node;
-
-  while (node) {
-    next_node = node->mNext;
-    free(const_cast<char*>(node->mDomain));
-    free(node);
-    node = next_node;
-  }
-  gLastPriorityNode = gFirstCallback = nullptr;
-
-  PREF_CleanupPrefs();
-}
-
 // Assign to aResult a quoted, escaped copy of aOriginal.
 static void
 StrEscape(const char* aOriginal, nsCString& aResult)
@@ -3668,7 +3647,19 @@ Preferences::~Preferences()
   delete gCacheData;
   gCacheData = nullptr;
 
-  PREF_Cleanup();
+  NS_ASSERTION(!gCallbacksInProgress,
+               "~Preferences was called while gCallbacksInProgress is true!");
+
+  CallbackNode* node = gFirstCallback;
+  while (node) {
+    CallbackNode* next_node = node->mNext;
+    free(const_cast<char*>(node->mDomain));
+    free(node);
+    node = next_node;
+  }
+  gLastPriorityNode = gFirstCallback = nullptr;
+
+  PREF_CleanupPrefs();
 }
 
 //
