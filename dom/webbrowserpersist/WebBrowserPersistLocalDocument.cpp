@@ -30,7 +30,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLMediaElement.h"
-#include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
@@ -514,8 +513,7 @@ ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
         return OnWalkAttribute(aNode, "background");
     }
 
-    nsCOMPtr<nsIDOMHTMLScriptElement> nodeAsScript = do_QueryInterface(aNode);
-    if (nodeAsScript) {
+    if (content->IsHTMLElement(nsGkAtoms::script)) {
         return OnWalkAttribute(aNode, "src");
     }
 
@@ -1031,8 +1029,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLScriptElement> nodeAsScript = do_QueryInterface(aNodeIn);
-    if (nodeAsScript) {
+    if (content->IsHTMLElement(nsGkAtoms::script)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "src");
