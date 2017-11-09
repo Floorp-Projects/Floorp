@@ -166,7 +166,8 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-  nsGlobalWindow::Init();
+  // XXX: Arbitrarially choose inner window?
+  nsGlobalWindowInner::Init();
   Navigator::Init();
   nsXBLService::Init();
 
@@ -380,7 +381,8 @@ nsLayoutStatics::Shutdown()
   RuleProcessorCache::Shutdown();
 
   ShutdownJSEnvironment();
-  nsGlobalWindow::ShutDown();
+  // XXX: Arbitrarially choose inner window?
+  nsGlobalWindowInner::ShutDown();
   nsDOMClassInfo::ShutDown();
   WebIDLGlobalNameHash::Shutdown();
   nsListControlFrame::Shutdown();
