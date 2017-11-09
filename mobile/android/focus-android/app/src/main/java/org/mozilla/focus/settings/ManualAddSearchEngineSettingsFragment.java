@@ -4,7 +4,6 @@
 
 package org.mozilla.focus.settings;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -50,8 +49,7 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                 final String engineName = ((EditText) rootView.findViewById(R.id.edit_engine_name)).getText().toString();
                 final String searchQuery = ((EditText) rootView.findViewById(R.id.edit_search_string)).getText().toString();
 
-                final SharedPreferences sharedPreferences = getActivity()
-                        .getSharedPreferences(SearchEngineManager.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE);
+                final SharedPreferences sharedPreferences = getSearchEngineSharedPreferences();
                 if (!validateSearchFields(engineName, searchQuery, sharedPreferences)) {
                     Snackbar.make(rootView, R.string.search_add_error, Snackbar.LENGTH_SHORT).show();
                 } else {

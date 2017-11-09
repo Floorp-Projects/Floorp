@@ -129,11 +129,12 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                         .findPreference(getResources().getString(
                                 R.string.pref_key_multiselect_search_engine_list));
                 final Set<String> enginesToRemove = ((MultiselectSearchEngineListPreference) pref).getCheckedEngineIds();
-
-                final SharedPreferences sharedPreferences = getActivity()
-                        .getSharedPreferences(SearchEngineManager.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE);
-                SearchEngineManager.removeSearchEngines(enginesToRemove, sharedPreferences);
+                SearchEngineManager.removeSearchEngines(enginesToRemove, getSearchEngineSharedPreferences());
                 getFragmentManager().popBackStack();
+                return true;
+            case R.id.menu_restore_default_engines:
+                SearchEngineManager.restoreDefaultSearchEngines(getSearchEngineSharedPreferences());
+                refreshSearchEngines();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -190,15 +191,22 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         final ActionBarUpdater updater = (ActionBarUpdater) getActivity();
         updater.updateTitle(settingsScreen.titleResId);
         updater.updateIcon(R.drawable.ic_back);
+        refreshSearchEngines();
+    }
 
+    /**
+     * Refresh search engines list. Only runs if showing the "Installed search engines" screen.
+     */
+    private void refreshSearchEngines() {
         if (settingsScreen == SettingsScreen.SEARCH_ENGINES && AppConstants.FLAG_MANUAL_SEARCH_ENGINE) {
             final Preference pref = getPreferenceScreen()
                     .findPreference(getResources().getString(
                             R.string.pref_key_radio_search_engine_list));
             ((RadioSearchEngineListPreference) pref).refreshSearchEngines();
+            getPreferenceScreen().removeAll();
+            addPreferencesFromResource(settingsScreen.prefsResId);
         }
     }
-
 
     @Override
     public void onPause() {
@@ -244,5 +252,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                     .replace(R.id.container, SettingsFragment.newInstance(null, SettingsScreen.MAIN))
                     .commit();
         }
+    }
+
+    protected SharedPreferences getSearchEngineSharedPreferences() {
+        return getActivity().getSharedPreferences(SearchEngineManager.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE);
     }
 }
