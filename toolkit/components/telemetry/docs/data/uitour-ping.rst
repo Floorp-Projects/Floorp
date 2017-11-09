@@ -2,7 +2,7 @@
 "uitour-tag" ping
 =================
 
-This ping is submitted via the UITour setTreatmentTag API. It may be used by
+This ping is submitted via the UITour ``setTreatmentTag`` API. It may be used by
 the tour to record what settings were made by a user or to track the result of
 A/B experiments.
 
