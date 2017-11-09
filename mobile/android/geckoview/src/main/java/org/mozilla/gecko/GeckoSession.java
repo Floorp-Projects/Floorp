@@ -6,7 +6,6 @@
 
 package org.mozilla.gecko;
 
-import java.io.File;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -475,16 +474,6 @@ public class GeckoSession implements Parcelable {
             final boolean multiprocess =
                     mSettings.getBoolean(GeckoSessionSettings.USE_MULTIPROCESS);
             preload(appContext, /* geckoArgs */ null, multiprocess);
-        }
-
-        if (mSettings.getString(GeckoSessionSettings.DATA_DIR) == null) {
-            final File dataDir = new File(appContext.getApplicationInfo().dataDir);
-            try {
-                mSettings.setString(GeckoSessionSettings.DATA_DIR,
-                                    dataDir.getCanonicalPath());
-            } catch (final java.io.IOException e) {
-                Log.e(LOGTAG, "Failed to resolve app data directory");
-            }
         }
 
         final String chromeUri = mSettings.getString(GeckoSessionSettings.CHROME_URI);
