@@ -10,6 +10,7 @@
 #include "nsIWeakReference.h"
 
 #include "mozilla/AutoRestore.h"
+#include "mozilla/RangeBoundary.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/UniquePtr.h"
 #include "nsISelection.h"
@@ -132,7 +133,19 @@ public:
   nsresult      RemoveItem(nsRange* aRange);
   nsresult      RemoveCollapsedRanges();
   nsresult      Clear(nsPresContext* aPresContext);
-  nsresult      Collapse(nsINode* aContainer, int32_t aOffset);
+  nsresult      Collapse(nsINode* aContainer, int32_t aOffset)
+  {
+    if (!aContainer) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    return Collapse(RawRangeBoundary(aContainer, aOffset));
+  }
+  nsresult      Collapse(const RawRangeBoundary& aPoint)
+  {
+    ErrorResult result;
+    Collapse(aPoint, result);
+    return result.StealNSResult();
+  }
   nsresult      Extend(nsINode* aContainer, int32_t aOffset);
   nsRange*      GetRangeAt(int32_t aIndex) const;
 
@@ -291,7 +304,11 @@ public:
   void ResetColors(mozilla::ErrorResult& aRv);
 
   // Non-JS callers should use the following methods.
-  void Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv);
+  void Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
+  {
+    Collapse(RawRangeBoundary(&aContainer, aOffset), aRv);
+  }
+  void Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv);
   void CollapseToStart(mozilla::ErrorResult& aRv);
   void CollapseToEnd(mozilla::ErrorResult& aRv);
   void Extend(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv);

@@ -10,21 +10,21 @@
 [HTMLConstructor]
 interface HTMLSelectElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
-           attribute boolean autofocus;
+  attribute boolean autofocus;
   [CEReactions, Pref="dom.forms.autocomplete.formautofill", SetterThrows, Pure]
-           attribute DOMString autocomplete;
+  attribute DOMString autocomplete;
   [CEReactions, SetterThrows, Pure]
-           attribute boolean disabled;
+  attribute boolean disabled;
   [Pure]
   readonly attribute HTMLFormElement? form;
   [CEReactions, SetterThrows, Pure]
-           attribute boolean multiple;
+  attribute boolean multiple;
   [CEReactions, SetterThrows, Pure]
-           attribute DOMString name;
+  attribute DOMString name;
   [CEReactions, SetterThrows, Pure]
-           attribute boolean required;
+  attribute boolean required;
   [CEReactions, SetterThrows, Pure]
-           attribute unsigned long size;
+  attribute unsigned long size;
 
   [Pure]
   readonly attribute DOMString type;
@@ -32,7 +32,7 @@ interface HTMLSelectElement : HTMLElement {
   [Constant]
   readonly attribute HTMLOptionsCollection options;
   [CEReactions, SetterThrows, Pure]
-           attribute unsigned long length;
+  attribute unsigned long length;
   getter Element? item(unsigned long index);
   HTMLOptionElement? namedItem(DOMString name);
   [CEReactions, Throws]
@@ -44,9 +44,9 @@ interface HTMLSelectElement : HTMLElement {
 
   readonly attribute HTMLCollection selectedOptions;
   [SetterThrows, Pure]
-           attribute long selectedIndex;
+  attribute long selectedIndex;
   [Pure]
-           attribute DOMString value;
+  attribute DOMString value;
 
   readonly attribute boolean willValidate;
   readonly attribute ValidityState validity;

@@ -245,9 +245,9 @@ partial interface Element {
   // Shadow DOM v1
   [Throws, Pref="dom.webcomponents.enabled"]
   ShadowRoot attachShadow(ShadowRootInit shadowRootInitDict);
-  [Pref="dom.webcomponents.enabled"]
+  [BinaryName="shadowRootByMode", Pref="dom.webcomponents.enabled"]
   readonly attribute ShadowRoot? shadowRoot;
-  [Pref="dom.webcomponents.enabled"]
+  [BinaryName="assignedSlotByMode", Pref="dom.webcomponents.enabled"]
   readonly attribute HTMLSlotElement? assignedSlot;
   [CEReactions, Unscopable, SetterThrows, Pref="dom.webcomponents.enabled"]
            attribute DOMString slot;

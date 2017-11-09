@@ -1408,7 +1408,7 @@ ANDROID_GENERATED_RESFILES += [
 ]
 
 ANDROID_ASSETS_DIRS += [
-    '/mobile/android/app/assets',
+    '/mobile/android/app/src/main/assets',
 ]
 
 if CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY']:

@@ -9,6 +9,7 @@
 #include "TextEditUtils.h"
 #include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h" // AutoPlaceholderBatch, AutoRules
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/mozalloc.h"
@@ -476,19 +477,24 @@ TextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
 
   *outBRNode = GetAsDOMNode(brNode);
   if (*outBRNode && (aSelect != eNone)) {
-    int32_t offset;
-    nsCOMPtr<nsINode> parent = GetNodeLocation(brNode, &offset);
-
     RefPtr<Selection> selection = GetSelection();
     NS_ENSURE_STATE(selection);
     if (aSelect == eNext) {
+      selection->SetInterlinePosition(true);
       // position selection after br
-      selection->SetInterlinePosition(true);
-      selection->Collapse(parent, offset + 1);
+      EditorRawDOMPoint afterBrNode(brNode);
+      if (NS_WARN_IF(!afterBrNode.AdvanceOffset())) {
+        return NS_OK;
+      }
+      selection->Collapse(afterBrNode);
     } else if (aSelect == ePrevious) {
-      // position selection before br
       selection->SetInterlinePosition(true);
-      selection->Collapse(parent, offset);
+      // position selection before br
+      EditorRawDOMPoint atBrNode(brNode);
+      if (NS_WARN_IF(!atBrNode.IsSetAndValid())) {
+        return NS_OK;
+      }
+      selection->Collapse(atBrNode);
     }
   }
   return NS_OK;
@@ -729,7 +735,9 @@ TextEditor::InsertLineBreak()
     }
     if (NS_SUCCEEDED(rv)) {
       // set the selection to the correct location
-      rv = selection->Collapse(selNode, selOffset);
+      MOZ_ASSERT(!selChild,
+        "After inserting text into a text node, selChild should be nullptr");
+      rv = selection->Collapse(EditorRawDOMPoint(selNode, selOffset));
       if (NS_SUCCEEDED(rv)) {
         // see if we're at the end of the editor range
         nsCOMPtr<nsIDOMNode> endNode;

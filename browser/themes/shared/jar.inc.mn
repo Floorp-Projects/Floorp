@@ -217,8 +217,6 @@
   skin/classic/browser/readerMode.svg                          (../shared/reader/readerMode.svg)
   skin/classic/browser/panic-panel/header.png                  (../shared/panic-panel/header.png)
   skin/classic/browser/panic-panel/header@2x.png               (../shared/panic-panel/header@2x.png)
-  skin/classic/browser/panic-panel/header-small.png            (../shared/panic-panel/header-small.png)
-  skin/classic/browser/panic-panel/header-small@2x.png         (../shared/panic-panel/header-small@2x.png)
   skin/classic/browser/panic-panel/icons.png                   (../shared/panic-panel/icons.png)
   skin/classic/browser/panic-panel/icons@2x.png                (../shared/panic-panel/icons@2x.png)
   skin/classic/browser/places/bookmarks-notification-finish.png (../shared/places/bookmarks-notification-finish.png)

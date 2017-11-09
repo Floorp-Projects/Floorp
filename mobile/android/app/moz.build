@@ -19,11 +19,11 @@ with Files('mobile*'):
 with Files('ua-update.json.in'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
-with Files('assets/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
 with Files('omnijar/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+
+with Files('src/main/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
 
 with Files('src/androidTest/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Testing')

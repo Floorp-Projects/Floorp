@@ -216,9 +216,13 @@ public:
     mOffset = mozilla::Some(aOffset);
   }
   void
-  Set(const nsIContent* aChild)
+  Set(const nsINode* aChild)
   {
     MOZ_ASSERT(aChild);
+    if (!aChild->IsContent()) {
+      Clear();
+      return;
+    }
     mParent = aChild->GetParentNode();
     mRef = aChild->GetPreviousSibling();
     if (!mRef) {
@@ -246,12 +250,14 @@ public:
    * If the container can have children and there is no next sibling, this
    * outputs warning and does nothing.  So, callers need to check if there is
    * next sibling which you need to refer.
+   *
+   * @return            true if there is a next sibling to refer.
    */
-  void
+  bool
   AdvanceOffset()
   {
     if (NS_WARN_IF(!mParent)) {
-      return;
+      return false;
     }
     EnsureRef();
     if (!mRef) {
@@ -260,30 +266,31 @@ public:
         MOZ_ASSERT(mOffset.isSome());
         if (NS_WARN_IF(mOffset.value() == mParent->Length())) {
           // Already referring the end of the node.
-          return;
+          return false;
         }
         mOffset = mozilla::Some(mOffset.value() + 1);
-        return;
+        return true;
       }
       mRef = mParent->GetFirstChild();
       if (NS_WARN_IF(!mRef)) {
         // No children in the container.
         mOffset = mozilla::Some(0);
-      } else {
-        mOffset = mozilla::Some(1);
+        return false;
       }
-      return;
+      mOffset = mozilla::Some(1);
+      return true;
     }
 
     nsIContent* nextSibling = mRef->GetNextSibling();
     if (NS_WARN_IF(!nextSibling)) {
       // Already referring the end of the container.
-      return;
+      return false;
     }
     mRef = nextSibling;
     if (mOffset.isSome()) {
       mOffset = mozilla::Some(mOffset.value() + 1);
     }
+    return true;
   }
 
   /**
@@ -293,34 +300,37 @@ public:
    * If the container can have children and there is no next previous, this
    * outputs warning and does nothing.  So, callers need to check if there is
    * previous sibling which you need to refer.
+   *
+   * @return            true if there is a previous sibling to refer.
    */
-  void
+  bool
   RewindOffset()
   {
     if (NS_WARN_IF(!mParent)) {
-      return;
+      return false;
     }
     EnsureRef();
     if (!mRef) {
       if (NS_WARN_IF(mParent->IsContainerNode())) {
         // Already referring the start of the container
         mOffset = mozilla::Some(0);
-        return;
+        return false;
       }
       // In text node or something, just decrement the offset.
       MOZ_ASSERT(mOffset.isSome());
       if (NS_WARN_IF(mOffset.value() == 0)) {
         // Already referring the start of the node.
-        return;
+        return false;
       }
       mOffset = mozilla::Some(mOffset.value() - 1);
-      return;
+      return true;
     }
 
     mRef = mRef->GetPreviousSibling();
     if (mOffset.isSome()) {
       mOffset = mozilla::Some(mOffset.value() - 1);
     }
+    return true;
   }
 
   void

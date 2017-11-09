@@ -253,8 +253,9 @@ class apply_jsone_templates(object):
     """
     template_dir = os.path.join(here, 'templates')
 
-    def __init__(self, templates):
-        self.templates = templates
+    def __init__(self, try_task_config):
+        self.templates = try_task_config.get('templates')
+        self.target_tasks = try_task_config.get('tasks')
 
     def __call__(self, taskgraph, label_to_taskid):
         if not self.templates:
@@ -268,12 +269,19 @@ class apply_jsone_templates(object):
                     'taskId': task.task_id,
                     'kind': task.kind,
                     'input': self.templates[template],
+                    # The following context differs from action tasks
+                    'attributes': task.attributes,
+                    'label': task.label,
+                    'target_tasks': self.target_tasks,
                 }
 
                 template_path = os.path.join(self.template_dir, template + '.yml')
                 with open(template_path) as f:
                     template = yaml.load(f)
-                task.task = jsone.render(template, context)
+                result = jsone.render(template, context) or {}
+                for attr in ('task', 'attributes'):
+                    if attr in result:
+                        setattr(task, attr, result[attr])
 
         return taskgraph, label_to_taskid
 
@@ -285,7 +293,7 @@ def morph(taskgraph, label_to_taskid, parameters):
         add_s3_uploader_task,
     ]
     if parameters['try_mode'] == 'try_task_config':
-        morphs.append(apply_jsone_templates(parameters['try_task_config'].get('templates')))
+        morphs.append(apply_jsone_templates(parameters['try_task_config']))
 
     for m in morphs:
         taskgraph, label_to_taskid = m(taskgraph, label_to_taskid)
