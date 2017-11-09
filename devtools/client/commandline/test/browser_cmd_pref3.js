@@ -7,9 +7,6 @@ var prefBranch = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Ci.nsIPrefService).getBranch(null)
                     .QueryInterface(Ci.nsIPrefBranch);
 
-var supportsString = Cc["@mozilla.org/supports-string;1"]
-                      .createInstance(Ci.nsISupportsString);
-
 const TEST_URI = "data:text/html;charset=utf-8,gcli-pref3";
 
 function test() {
@@ -101,9 +98,7 @@ function* spawnTest() {
     },
   ]);
 
-  supportsString.data = remoteHostOrig;
-  prefBranch.setComplexValue("devtools.debugger.remote-host",
-                             Ci.nsISupportsString, supportsString);
+  prefBranch.setStringPref("devtools.debugger.remote-host", remoteHostOrig);
 
   yield helpers.closeToolbar(options);
   yield helpers.closeTab(options);
