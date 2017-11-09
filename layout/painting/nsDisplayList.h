@@ -701,7 +701,7 @@ public:
     return CurrentPresShellState()->mInsidePointerEventsNoneDoc;
   }
 
-  bool GetAncestorHasApzAwareEventHandler() const { return mAncestorHasApzAwareEventHandler; }
+  bool GetAncestorHasApzAwareEventHandler() { return mAncestorHasApzAwareEventHandler; }
   void SetAncestorHasApzAwareEventHandler(bool aValue)
   {
     mAncestorHasApzAwareEventHandler = aValue;
@@ -5110,6 +5110,10 @@ public:
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplaySubDocument();
 #endif
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;

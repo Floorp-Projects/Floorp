@@ -404,8 +404,8 @@ public:
   {
     MOZ_ASSERT(IsValid());
 
-    if (mLayer->AsRefLayer()) {
-      return mLayer->AsRefLayer()->GetEventRegionsOverride();
+    if (mLayer->AsContainerLayer()) {
+      return mLayer->AsContainerLayer()->GetEventRegionsOverride();
     }
     return EventRegionsOverride::NoOverride;
   }

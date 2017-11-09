@@ -2315,6 +2315,20 @@ public:
     mChildrenChanged = aVal;
   }
 
+  void SetEventRegionsOverride(EventRegionsOverride aVal) {
+    if (mEventRegionsOverride == aVal) {
+      return;
+    }
+
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) EventRegionsOverride", this));
+    mEventRegionsOverride = aVal;
+    Mutated();
+  }
+
+  EventRegionsOverride GetEventRegionsOverride() const {
+    return mEventRegionsOverride;
+  }
+
   // If |aRect| is null, the entire layer should be considered invalid for
   // compositing.
   virtual void SetInvalidCompositeRect(const gfx::IntRect* aRect) {}
@@ -2404,6 +2418,7 @@ protected:
   // This is updated by ComputeDifferences. This will be true if we need to invalidate
   // the intermediate surface.
   bool mChildrenChanged;
+  EventRegionsOverride mEventRegionsOverride;
 };
 
 /**
@@ -2823,25 +2838,6 @@ public:
   }
 
   /**
-   * CONSTRUCTION PHASE ONLY
-   * Set flags that indicate how event regions in the child layer tree need
-   * to be overridden because of properties of the parent layer tree.
-   */
-  void SetEventRegionsOverride(EventRegionsOverride aVal) {
-    if (mEventRegionsOverride == aVal) {
-      return;
-    }
-
-    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) EventRegionsOverride", this));
-    mEventRegionsOverride = aVal;
-    Mutated();
-  }
-
-  EventRegionsOverride GetEventRegionsOverride() const {
-    return mEventRegionsOverride;
-  }
-
-  /**
    * DRAWING PHASE ONLY
    * |aLayer| is the same as the argument to ConnectReferentLayer().
    */
@@ -2865,9 +2861,7 @@ public:
 
 protected:
   RefLayer(LayerManager* aManager, void* aImplData)
-    : ContainerLayer(aManager, aImplData)
-    , mId(0)
-    , mEventRegionsOverride(EventRegionsOverride::NoOverride)
+    : ContainerLayer(aManager, aImplData) , mId(0)
   {}
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
@@ -2876,7 +2870,6 @@ protected:
 
   // 0 is a special value that means "no ID".
   uint64_t mId;
-  EventRegionsOverride mEventRegionsOverride;
 };
 
 void SetAntialiasingFlags(Layer* aLayer, gfx::DrawTarget* aTarget);
