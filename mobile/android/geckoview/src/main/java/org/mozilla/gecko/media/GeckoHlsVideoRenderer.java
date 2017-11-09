@@ -7,6 +7,7 @@ package org.mozilla.gecko.media;
 import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
 import android.media.MediaCodec.CryptoInfo;
+import android.os.Build;
 import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
@@ -22,8 +23,6 @@ import com.google.android.exoplayer2.util.MimeTypes;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import org.mozilla.gecko.AppConstants.Versions;
 
 public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
     /*
@@ -55,7 +54,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
 
     public GeckoHlsVideoRenderer(GeckoHlsPlayer.ComponentEventDispatcher eventDispatcher) {
         super(C.TRACK_TYPE_VIDEO, eventDispatcher);
-        assertTrue(Versions.feature16Plus);
+        assertTrue(Build.VERSION.SDK_INT >= 16);
         LOGTAG = getClass().getSimpleName();
         DEBUG = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD;;
     }
@@ -105,7 +104,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
 
         boolean decoderCapable = decoderInfo.isCodecSupported(format.codecs);
         if (decoderCapable && format.width > 0 && format.height > 0) {
-            if (Versions.preLollipop) {
+            if (Build.VERSION.SDK_INT < 21) {
                 try {
                     decoderCapable = format.width * format.height <= MediaCodecUtil.maxH264DecodableFrameSize();
                 } catch (MediaCodecUtil.DecoderQueryException e) {

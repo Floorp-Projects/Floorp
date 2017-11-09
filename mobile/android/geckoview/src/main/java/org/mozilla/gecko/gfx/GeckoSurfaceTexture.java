@@ -6,13 +6,13 @@
 package org.mozilla.gecko.gfx;
 
 import android.graphics.SurfaceTexture;
+import android.os.Build;
 import android.util.Log;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.HashMap;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.AppConstants.Versions;
 
 public final class GeckoSurfaceTexture extends SurfaceTexture {
     private static final String LOGTAG = "GeckoSurfaceTexture";
@@ -123,7 +123,7 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
 
     @WrapForJNI
     public static boolean isSingleBufferSupported() {
-        return Versions.feature19Plus;
+        return Build.VERSION.SDK_INT >= 19;
     }
 
     @WrapForJNI
@@ -142,7 +142,7 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
 
             setListener(null);
 
-            if (Versions.feature16Plus) {
+            if (Build.VERSION.SDK_INT >= 16) {
                 try {
                     detachFromGLContext();
                 } catch (Exception e) {
