@@ -42,7 +42,7 @@ public class ActivityUtils {
             newVis = View.SYSTEM_UI_FLAG_VISIBLE;
         }
 
-        if (AppConstants.Versions.feature23Plus) {
+        if (Build.VERSION.SDK_INT >= 23) {
             // We also have to set SYSTEM_UI_FLAG_LIGHT_STATUS_BAR with to current system ui status
             // to support both light and dark status bar.
             final int oldVis = window.getDecorView().getSystemUiVisibility();
