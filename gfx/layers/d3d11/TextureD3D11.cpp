@@ -1448,7 +1448,7 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
         context->UpdateSubresource(mTexture, 0, &box, data, map.mStride, map.mStride * rect.Height());
       }
     } else {
-      context->UpdateSubresource(mTexture, 0, nullptr, aSurface->GetData(),
+      context->UpdateSubresource(mTexture, 0, nullptr, map.mData,
                                  aSurface->Stride(), aSurface->Stride() * mSize.height);
     }
 
@@ -1462,6 +1462,13 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
     mTileSRVs.resize(tileCount);
     mTexture = nullptr;
 
+    DataSourceSurface::ScopedMap map(aSurface, DataSourceSurface::READ);
+    if (!map.IsMapped()) {
+      gfxCriticalError() << "Failed to map surface.";
+      Reset();
+      return false;
+    }
+
     for (uint32_t i = 0; i < tileCount; i++) {
       IntRect tileRect = GetTileRect(i);
 
@@ -1470,7 +1477,7 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
       desc.Usage = D3D11_USAGE_IMMUTABLE;
 
       D3D11_SUBRESOURCE_DATA initData;
-      initData.pSysMem = aSurface->GetData() +
+      initData.pSysMem = map.GetData() +
                          tileRect.y * aSurface->Stride() +
                          tileRect.x * bpp;
       initData.SysMemPitch = aSurface->Stride();

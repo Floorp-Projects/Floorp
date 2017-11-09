@@ -238,12 +238,13 @@ AsyncCanvasRenderer::GetSurface()
   MutexAutoLock lock(mMutex);
   if (mSurfaceForBasic) {
     // Since SourceSurface isn't thread-safe, we need copy to a new SourceSurface.
+    gfx::DataSourceSurface::ScopedMap srcMap(mSurfaceForBasic, gfx::DataSourceSurface::READ);
+
     RefPtr<gfx::DataSourceSurface> result =
       gfx::Factory::CreateDataSourceSurfaceWithStride(mSurfaceForBasic->GetSize(),
                                                       mSurfaceForBasic->GetFormat(),
-                                                      mSurfaceForBasic->Stride());
+                                                      srcMap.GetStride());
 
-    gfx::DataSourceSurface::ScopedMap srcMap(mSurfaceForBasic, gfx::DataSourceSurface::READ);
     gfx::DataSourceSurface::ScopedMap dstMap(result, gfx::DataSourceSurface::WRITE);
 
     if (NS_WARN_IF(!srcMap.IsMapped()) ||
