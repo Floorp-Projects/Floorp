@@ -8860,7 +8860,7 @@ nsDocShell::RestoreFromHistory()
   if (rootViewSibling) {
     nsIFrame* frame = rootViewSibling->GetFrame();
     sibling =
-      frame ? frame->PresContext()->PresShell()->GetDocument() : nullptr;
+      frame ? frame->PresShell()->GetDocument() : nullptr;
   }
 
   // Transfer ownership to mContentViewer.  By ensuring that either the

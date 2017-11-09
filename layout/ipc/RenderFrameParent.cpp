@@ -362,7 +362,7 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
     if (aBuilder->IsInsidePointerEventsNoneDoc() || frameIsPointerEventsNone) {
       mEventRegionsOverride |= EventRegionsOverride::ForceEmptyHitRegion;
     }
-    if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresContext()->PresShell())) {
+    if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresShell())) {
       mEventRegionsOverride |= EventRegionsOverride::ForceDispatchToContent;
     }
   }
