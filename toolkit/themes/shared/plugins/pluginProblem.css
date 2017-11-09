@@ -7,6 +7,10 @@
 /* These styles affect only the bound element, not other page content. */
 /* Keep any changes to these styles in sync with plugin-doorhanger.inc.css */
 .mainBox {
+ --grey-10: #f9f9fa;
+}
+
+.mainBox {
   font: message-box;
   font-size: 12px;
   text-align: center;
@@ -155,23 +159,27 @@ a .msgTapToPlay  {
 
 .closeIcon {
   display: block;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   margin-top: 4px;
-  margin-inline-start: -20px;
+  margin-inline-start: -24px;
   margin-inline-end: 4px;
   border: none;
+  border-radius: 2px;
   background-color: transparent;
-  background-image: url("chrome://mozapps/skin/plugins/contentPluginClose.png");
+  background-image: url(chrome://global/skin/icons/close.svg);
   background-repeat: no-repeat;
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0;
+  fill: var(--grey-10);
 }
 
 .closeIcon:hover {
-  background-position: -16px 0;
+  fill-opacity: .1;
 }
 
 .closeIcon:hover:active {
-  background-position: -32px 0;
+  fill-opacity: .2;
 }
 
 .action-link {
