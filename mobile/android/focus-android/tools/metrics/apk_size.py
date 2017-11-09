@@ -9,7 +9,7 @@ from sys import exit
 
 SIZE_LIMIT_MB = 5
 PATH = path.join(path.dirname(path.abspath(__file__)), '../../app/build/outputs/apk/')
-SIZE_LIMIT_BYTES = SIZE_LIMIT * 1024 * 1024;
+SIZE_LIMIT_BYTES = SIZE_LIMIT_MB * 1024 * 1024;
 
 files = []
 try:
