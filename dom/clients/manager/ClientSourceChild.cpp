@@ -7,6 +7,7 @@
 #include "ClientSourceChild.h"
 
 #include "ClientSourceOpChild.h"
+#include "ClientThing.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/Unused.h"
 
