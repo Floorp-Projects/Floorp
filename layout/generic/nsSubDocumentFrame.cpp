@@ -447,12 +447,6 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     needsOwnLayer = true;
   }
 
-  if (!needsOwnLayer && aBuilder->IsBuildingLayerEventRegions() &&
-      nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell))
-  {
-    needsOwnLayer = true;
-  }
-
   if (aBuilder->IsRetainingDisplayList()) {
     // The value of needsOwnLayer can change between builds without
     // an invalidation recorded for this frame (like if the root
@@ -505,7 +499,11 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
               ? nsLayoutUtils::FindOrCreateIDFor(rootScrollFrame->GetContent())
               : aBuilder->GetCurrentScrollParentId());
 
-      aBuilder->SetAncestorHasApzAwareEventHandler(false);
+      bool hasDocumentLevelListenersForApzAwareEvents =
+          aBuilder->IsBuildingLayerEventRegions() &&
+          nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell);
+
+      aBuilder->SetAncestorHasApzAwareEventHandler(hasDocumentLevelListenersForApzAwareEvents);
       subdocRootFrame->
         BuildDisplayListForStackingContext(aBuilder, &childItems);
     }
