@@ -3263,71 +3263,62 @@ arena_salloc(const void* ptr)
   return ret;
 }
 
-// Validate ptr before assuming that it points to an allocation.  Currently,
-// the following validation is performed:
-//
-// + Check that ptr is not nullptr.
-//
-// + Check that ptr lies within a mapped chunk.
-static inline size_t
-isalloc_validate(const void* aPtr)
+class AllocInfo
 {
-  // If the allocator is not initialized, the pointer can't belong to it.
-  if (malloc_initialized == false) {
-    return 0;
+public:
+  template<bool Validate = false>
+  static inline AllocInfo Get(const void* aPtr)
+  {
+    // If the allocator is not initialized, the pointer can't belong to it.
+    if (Validate && malloc_initialized == false) {
+      return AllocInfo(0);
+    }
+
+    auto chunk = GetChunkForPtr(aPtr);
+    if (Validate) {
+      if (!chunk || !gChunkRTree.Get(chunk)) {
+        return AllocInfo(0);
+      }
+    }
+
+    if (chunk != aPtr) {
+      MOZ_DIAGNOSTIC_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
+      return AllocInfo(arena_salloc(aPtr));
+    }
+
+    extent_node_t key;
+
+    // Huge allocation
+    key.mAddr = chunk;
+    MutexAutoLock lock(huge_mtx);
+    extent_node_t* node = huge.Search(&key);
+    if (Validate && !node) {
+      return AllocInfo(0);
+    }
+    return AllocInfo(node->mSize);
   }
 
-  auto chunk = GetChunkForPtr(aPtr);
-  if (!chunk) {
-    return 0;
+  // Validate ptr before assuming that it points to an allocation.  Currently,
+  // the following validation is performed:
+  //
+  // + Check that ptr is not nullptr.
+  //
+  // + Check that ptr lies within a mapped chunk.
+  static inline AllocInfo GetValidated(const void* aPtr)
+  {
+    return Get<true>(aPtr);
   }
 
-  if (!gChunkRTree.Get(chunk)) {
-    return 0;
+  explicit AllocInfo(size_t aSize)
+    : mSize(aSize)
+  {
   }
 
-  if (chunk != aPtr) {
-    MOZ_DIAGNOSTIC_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
-    return arena_salloc(aPtr);
-  }
+  size_t Size() { return mSize; }
 
-  extent_node_t key;
-
-  // Chunk.
-  key.mAddr = (void*)chunk;
-  MutexAutoLock lock(huge_mtx);
-  extent_node_t* node = huge.Search(&key);
-  if (node) {
-    return node->mSize;
-  }
-  return 0;
-}
-
-static inline size_t
-isalloc(const void* aPtr)
-{
-  MOZ_ASSERT(aPtr);
-
-  auto chunk = GetChunkForPtr(aPtr);
-  if (chunk != aPtr) {
-    // Region.
-    MOZ_DIAGNOSTIC_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
-
-    return arena_salloc(aPtr);
-  }
-
-  extent_node_t key;
-
-  // Chunk (huge allocation).
-  MutexAutoLock lock(huge_mtx);
-
-  // Extract from tree of huge allocations.
-  key.mAddr = const_cast<void*>(aPtr);
-  extent_node_t* node = huge.Search(&key);
-  MOZ_DIAGNOSTIC_ASSERT(node);
-
-  return node->mSize;
-}
+private:
+  size_t mSize;
+};
 
 template<>
 inline void
@@ -3750,7 +3741,7 @@ iralloc(void* aPtr, size_t aSize, arena_t* aArena)
   MOZ_ASSERT(aPtr);
   MOZ_ASSERT(aSize != 0);
 
-  oldsize = isalloc(aPtr);
+  oldsize = AllocInfo::Get(aPtr).Size();
 
   return (aSize <= gMaxLargeClass) ? arena_ralloc(aPtr, aSize, oldsize, aArena)
                                    : huge_ralloc(aPtr, aSize, oldsize);
@@ -4450,7 +4441,7 @@ template<>
 inline size_t
 MozJemalloc::malloc_usable_size(usable_ptr_t aPtr)
 {
-  return isalloc_validate(aPtr);
+  return AllocInfo::GetValidated(aPtr).Size();
 }
 
 template<>
@@ -5016,7 +5007,7 @@ MOZ_EXPORT void* (*__memalign_hook)(size_t, size_t) = memalign_impl;
 void*
 _recalloc(void* aPtr, size_t aCount, size_t aSize)
 {
-  size_t oldsize = aPtr ? isalloc(aPtr) : 0;
+  size_t oldsize = aPtr ? AllocInfo::Get(aPtr).Size() : 0;
   CheckedInt<size_t> checkedSize = CheckedInt<size_t>(aCount) * aSize;
 
   if (!checkedSize.isValid()) {
@@ -5043,7 +5034,7 @@ _recalloc(void* aPtr, size_t aCount, size_t aSize)
 void*
 _expand(void* aPtr, size_t newsize)
 {
-  if (isalloc(aPtr) >= newsize) {
+  if (AllocInfo::Get(aPtr).Size() >= newsize) {
     return aPtr;
   }
 
