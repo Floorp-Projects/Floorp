@@ -12,12 +12,16 @@ transforms:
 kind-dependencies:
    - beetmover-cdns
 
+job-defaults:
+   shipping-phase: ship
+
 jobs:
    fennec:
       name: fennec-version-bump
       description: Release Promotion version bump
       worker-type: buildbot-bridge/buildbot-bridge
       run-on-projects: []
+      shipping-product: fennec
       run:
          using: buildbot
          product: fennec

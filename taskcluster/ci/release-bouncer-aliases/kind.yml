@@ -12,12 +12,16 @@ transforms:
 kind-dependencies:
    - release-uptake-monitoring
 
+job-defaults:
+   shipping-phase: ship
+
 jobs:
    fennec:
       name: fennec_release_bouncer_aliases
       description: Update bouncer aliases job
       worker-type: buildbot-bridge/buildbot-bridge
       run-on-projects: []
+      shipping-product: fennec
       run:
          using: buildbot
          product: fennec

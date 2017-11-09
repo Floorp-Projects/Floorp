@@ -171,6 +171,24 @@ task_description_schema = Schema({
     # See the attributes documentation for details.
     Optional('run-on-projects'): [basestring],
 
+    # The `shipping_phase` attribute, defaulting to None. This specifies the
+    # release promotion phase that this task belongs to.
+    Required('shipping-phase', default=None): Any(
+        None,
+        'promote',
+        'publish',
+        'ship',
+    ),
+
+    # The `shipping_product` attribute, defaulting to None. This specifies the
+    # release promotion product that this task belongs to.
+    Required('shipping-product', default=None): Any(
+        None,
+        'devedition',
+        'fennec',
+        'firefox',
+    ),
+
     # Coalescing provides the facility for tasks to be superseded by the same
     # task in a subsequent commit, if the current task backlog reaches an
     # explicit threshold. Both age and size thresholds need to be met in order
@@ -1309,6 +1327,8 @@ def build_task(config, tasks):
         attributes = task.get('attributes', {})
         attributes['run_on_projects'] = task.get('run-on-projects', ['all'])
         attributes['always_target'] = task['always-target']
+        attributes['shipping_phase'] = task['shipping-phase']
+        attributes['shipping_product'] = task['shipping-product']
 
         # Set MOZ_AUTOMATION on all jobs.
         if task['worker']['implementation'] in (
