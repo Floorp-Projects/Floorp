@@ -69,7 +69,7 @@
          Components.classes["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
                    .getService(Components.interfaces.mozIPlacesAutoComplete);
       </field>
-      <field name="mTabBox" readonly="true">
+      <field name="tabbox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "tabbox");
       </field>
       <field name="mPanelContainer" readonly="true">
@@ -3935,10 +3935,10 @@
         <setter>
           <![CDATA[
           if (gNavToolbox.collapsed && !this._allowTabChange) {
-            return this.mTabBox.selectedTab;
+            return this.tabbox.selectedTab;
           }
           // Update the tab
-          this.mTabBox.selectedTab = val;
+          this.tabbox.selectedTab = val;
           return val;
           ]]>
         </setter>
@@ -4625,7 +4625,7 @@
 
                 this.maybeVisibleTabs.add(showTab);
 
-                let tabs = this.tabbrowser.mTabBox.tabs;
+                let tabs = this.tabbrowser.tabbox.tabs;
                 let tabPanel = this.tabbrowser.mPanelContainer;
                 let showPanel = tabs.getRelatedElement(showTab);
                 let index = Array.indexOf(tabPanel.childNodes, showPanel);
@@ -6429,7 +6429,7 @@
       </field>
 
       <field name="tabbox" readonly="true">
-        this.tabbrowser.mTabBox;
+        this.tabbrowser.tabbox;
       </field>
 
       <field name="contextMenu" readonly="true">

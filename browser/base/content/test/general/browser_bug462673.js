@@ -29,7 +29,7 @@ add_task(async function() {
     is(win.gBrowser.browsers.length, 1, "Window has one browser");
     is(win.gBrowser.selectedTab, newTab, "Remaining tab is selected");
     is(win.gBrowser.selectedBrowser, newBrowser, "Browser for remaining tab is selected");
-    is(win.gBrowser.mTabBox.selectedPanel, newBrowser.parentNode.parentNode.parentNode.parentNode, "Panel for remaining tab is selected");
+    is(win.gBrowser.tabbox.selectedPanel, newBrowser.parentNode.parentNode.parentNode.parentNode, "Panel for remaining tab is selected");
   }
 
   await promiseWindowClosed(win);
