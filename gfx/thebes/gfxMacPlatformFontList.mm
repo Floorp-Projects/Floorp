@@ -64,6 +64,7 @@
 #include "gfxFontConstants.h"
 
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
@@ -988,12 +989,17 @@ gfxMacPlatformFontList::gfxMacPlatformFontList() :
         }
     }
 
-    ::CFNotificationCenterAddObserver(::CFNotificationCenterGetLocalCenter(),
-                                      this,
-                                      RegisteredFontsChangedNotificationCallback,
-                                      kCTFontManagerRegisteredFontsChangedNotification,
-                                      0,
-                                      CFNotificationSuspensionBehaviorDeliverImmediately);
+    // Only the parent process listens for OS font-changed notifications;
+    // after rebuilding its list, it will update the content processes.
+    if (XRE_IsParentProcess()) {
+        ::CFNotificationCenterAddObserver(
+            ::CFNotificationCenterGetLocalCenter(),
+            this,
+            RegisteredFontsChangedNotificationCallback,
+            kCTFontManagerRegisteredFontsChangedNotification,
+            0,
+            CFNotificationSuspensionBehaviorDeliverImmediately);
+    }
 
     // cache this in a static variable so that MacOSFontFamily objects
     // don't have to repeatedly look it up
@@ -1002,10 +1008,13 @@ gfxMacPlatformFontList::gfxMacPlatformFontList() :
 
 gfxMacPlatformFontList::~gfxMacPlatformFontList()
 {
-    ::CFNotificationCenterRemoveObserver(::CFNotificationCenterGetLocalCenter(),
-                                         this,
-                                         kCTFontManagerRegisteredFontsChangedNotification,
-                                         0);
+    if (XRE_IsParentProcess()) {
+        ::CFNotificationCenterRemoveObserver(
+            ::CFNotificationCenterGetLocalCenter(),
+            this,
+            kCTFontManagerRegisteredFontsChangedNotification,
+            0);
+    }
 
     if (mDefaultFont) {
         ::CFRelease(mDefaultFont);
@@ -1100,9 +1109,8 @@ gfxMacPlatformFontList::InitFontListForPlatform()
         // Content process: use font list passed from the chrome process via
         // the GetXPCOMProcessAttributes message, because it's much faster than
         // querying Core Text again in the child.
-        mozilla::dom::ContentChild* cc =
-            mozilla::dom::ContentChild::GetSingleton();
-        for (SystemFontListEntry& fle : cc->SystemFontList()) {
+        auto& fontList = dom::ContentChild::GetSingleton()->SystemFontList();
+        for (SystemFontListEntry& fle : fontList) {
             MOZ_ASSERT(fle.type() ==
                        SystemFontListEntry::Type::TFontFamilyListEntry);
             FontFamilyListEntry& ffe(fle);
@@ -1122,13 +1130,10 @@ gfxMacPlatformFontList::InitFontListForPlatform()
                 break;
             }
         }
-        // The ContentChild doesn't need the font list any longer.
-        cc->SystemFontList().Clear();
-    }
-
-    // If this is the chrome process, or if for some reason we failed to get
-    // a usable list above, get the available fonts from Core Text.
-    if (!mFontFamilies.Count()) {
+        fontList.Clear();
+    } else {
+        // We're not a content process, so get the available fonts directly
+        // from Core Text.
         InitSystemFontNames();
         CFArrayRef familyNames = CTFontManagerCopyAvailableFontFamilyNames();
         for (NSString* familyName in (NSArray*)familyNames) {
@@ -1347,6 +1352,8 @@ gfxMacPlatformFontList::RegisteredFontsChangedNotificationCallback(CFNotificatio
 
     // modify a preference that will trigger reflow everywhere
     fl->ForceGlobalReflow();
+
+    mozilla::dom::ContentParent::NotifyUpdatedFonts();
 }
 
 gfxFontEntry*
