@@ -15,12 +15,14 @@ class ClientManagerService;
 
 class ClientManagerOpParent final : public PClientManagerOpParent
 {
+  RefPtr<ClientManagerService> mService;
+
   // PClientManagerOpParent interface
   void
   ActorDestroy(ActorDestroyReason aReason) override;
 
 public:
-  ClientManagerOpParent() = default;
+  explicit ClientManagerOpParent(ClientManagerService* aService);
   ~ClientManagerOpParent() = default;
 
   void
