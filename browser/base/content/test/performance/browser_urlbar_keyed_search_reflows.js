@@ -45,6 +45,7 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "adjustHeight@chrome://global/content/bindings/autocomplete.xml",
       "_invalidate/this._adjustHeightTimeout<@chrome://global/content/bindings/autocomplete.xml",
     ],
+    minTimes: 39, // This number should only ever go down - never up.
     times: 51, // This number should only ever go down - never up.
   },
 

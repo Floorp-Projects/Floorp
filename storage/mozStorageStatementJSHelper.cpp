@@ -21,6 +21,8 @@
 
 #include "xpc_make_class.h"
 
+#include "mozilla/Services.h"
+
 namespace mozilla {
 namespace storage {
 
@@ -33,7 +35,7 @@ stepFunc(JSContext *aCtx,
          uint32_t,
          JS::Value *_vp)
 {
-  nsCOMPtr<nsIXPConnect> xpc(Service::getXPConnect());
+  nsCOMPtr<nsIXPConnect> xpc(mozilla::services::GetXPConnect());
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   JSObject *obj = JS_THIS_OBJECT(aCtx, _vp);
   if (!obj) {
