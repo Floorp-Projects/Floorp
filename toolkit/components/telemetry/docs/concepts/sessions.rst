@@ -3,7 +3,7 @@ Sessions
 ========
 
 A *session* is the time from when Firefox starts until it shuts down.
-A session can be very long-running. E.g. for Mac users that are used to always put their laptops into sleep-mode, Firefox may run for weeks.
+A session can be very long-running. E.g. for users that always put their computers into sleep-mode, Firefox may run for weeks.
 We slice the sessions into smaller logical units called *subsessions*.
 
 Subsessions

@@ -2,9 +2,9 @@
 "sync" ping
 ===========
 
-This is an aggregated format that contains information about each sync that occurred during a timeframe. It is submitted every 12 hours, and on browser shutdown, but only if the syncs property would not be empty. The ping does not contain the enviroment block, nor the clientId.
+This is an aggregated format that contains information about each sync that occurred during a timeframe. It is submitted every 12 hours, and on browser shutdown, but only if the ``syncs`` property would not be empty. The ping does not contain the enviroment block, nor the clientId.
 
-Each item in the syncs property is generated after a sync is completed, for both successful and failed syncs, and contains measurements pertaining to sync performance and error information.
+Each item in the ``syncs`` property is generated after a sync is completed, for both successful and failed syncs, and contains measurements pertaining to sync performance and error information.
 
 A JSON-schema document describing the exact format of the ping's payload property can be found at `services/sync/tests/unit/sync\_ping\_schema.json <https://dxr.mozilla.org/mozilla-central/source/services/sync/tests/unit/sync_ping_schema.json>`_.
 
