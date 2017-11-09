@@ -1126,6 +1126,8 @@ class BuildDriver(MozbuildObject):
                     {'count': len(monitor.warnings_database)},
                     '{count} compiler warnings present.')
 
+            monitor.finish(record_usage=status == 0)
+
             # Print the collected compiler warnings. This is redundant with
             # inline output from the compiler itself. However, unlike inline
             # output, this list is sorted and grouped by file, making it
@@ -1182,8 +1184,6 @@ class BuildDriver(MozbuildObject):
                     self.log(logging.WARNING, 'suppressed_warning',
                              {'dir': d, 'count': count},
                              '(suppressed {count} warnings in {dir})')
-
-            monitor.finish(record_usage=status==0)
 
         high_finder, finder_percent = monitor.have_high_finder_usage()
         if high_finder:
