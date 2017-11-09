@@ -95,6 +95,10 @@
       title="&prefWindow.title;">
 #endif
 
+  <link rel="localization" href="browser/preferences/main.ftl"/>
+  <link rel="localization" href="browser/preferences/preferences.ftl"/>
+  <script type="text/javascript" src="chrome://global/content/l10n.js"></script>
+
   <html:link rel="shortcut icon"
               href="chrome://browser/skin/settings.svg"/>
 
