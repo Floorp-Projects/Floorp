@@ -1318,6 +1318,9 @@ class BuildDriver(MozbuildObject):
 
     def _run_client_mk(self, target=None, line_handler=None, jobs=0,
                        verbose=None, keep_going=False, append_env=None):
+        append_env = dict(append_env or {})
+        append_env['TOPSRCDIR'] = self.topsrcdir
+
         return self._run_make(srcdir=True,
                               filename='client.mk',
                               allow_parallel=False,
