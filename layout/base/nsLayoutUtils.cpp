@@ -3781,6 +3781,9 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
       builder.SetVisibleRect(visibleRect);
       builder.SetIsBuilding(true);
+      builder.SetAncestorHasApzAwareEventHandler(
+          builder.IsBuildingLayerEventRegions() &&
+          nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell));
 
       const bool paintedPreviously =
         aFrame->HasProperty(nsIFrame::ModifiedFrameList());
