@@ -505,6 +505,15 @@ def target_tasks_dmd(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
+# Run Searchfox analysis once daily.
+@_target_task('searchfox_index')
+def target_tasks_searchfox(full_task_graph, parameters, graph_config):
+    """Select tasks required for indexing Firefox for Searchfox web site each day"""
+    # For now we only do Linux debug builds. Windows and Mac builds
+    # are currently broken (bug 1418415).
+    return ['searchfox-linux64-searchfox/debug']
+
+
 @_target_task('file_update')
 def target_tasks_file_update(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to perform nightly in-tree file updates
