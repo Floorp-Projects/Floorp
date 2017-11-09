@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">Na\'nïn ngà %1$s</string>
   <string name="menu_open_with_a_browser">Na\'nïn ngà...</string>
   <string name="menu_add_to_home_screen">Na\'nïn riña pantayâ nìko</string>
+  <string name="menu_whats_new">Nuin si hua nanj</string>
   <string name="menu_settings">Nagi\'iaj</string>
   <string name="menu_about">Doj rayi\'î</string>
   <string name="menu_help">Sa ruguñu\'unj un</string>
@@ -31,6 +32,7 @@
   <string name="preference_category_privacy">Nitaj à\'go ni\'iaj sò\'</string>
   <string name="preference_privacy_block_ads">Si gâ\'nïnjt nej anûnsio</string>
   <string name="preference_privacy_block_analytics">Si gâ\'nïnjt nej blokeador analítiko</string>
+  <string name="preference_privacy_block_analytics_summary">Si sunj huin nagi\'iaj chrej, nadigi\'ñunj daj unanj ma</string>
   <string name="preference_privacy_block_social">Si gâ\'nïnjt nej blokeador sosial</string>
   <string name="preference_privacy_block_content">Si gâ\'nïnt a\'ngô nej sa ni\'iaj sa \'iát</string>
   <string name="preference_privacy_secure_mode">Dugumî sa achrûnt</string>
@@ -42,6 +44,10 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Gini\'in doj rayi\'î na</string>
   <string name="preference_about">Rayi\'î %1$s</string>
+  <string name="preference_search_remove_title">Nadure\'\' sa nana\'ui\'</string>
+  <string name="preference_search_remove">Nadure\'</string>
+  <string name="tutorial_search_manually_add">Nuta\' mu\'un\'</string>
+  <string name="tutorial_search_title">Nutò\' a\'ngô sa ruguñu\'unj ñù\' nana\'uì\'</string>
   <string name="content_description_clear_input">Nadure\' sa duguatujt</string>
   <string name="content_description_dismiss_input">Dunaj man</string>
   <string name="content_description_erase">Narè\' nej nuguan\' garajsunt nga ganana\'uî\'t</string>

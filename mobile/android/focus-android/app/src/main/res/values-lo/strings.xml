@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">ການຊອກຫາພື້ນຖານ</string>
   <string name="preference_category_privacy">ຄວາມເປັນສ່ວນຕົວ</string>
   <string name="preference_privacy_block_ads">ບັອກຕົວຕິດຕາມຂອງການໂຄສະນາ</string>
+  <string name="preference_privacy_block_ads_summary">ມີໂຄສະນາບາງໂຕສາມາດຕິດຕາມການເຂົ້າໄປເວັບຕ່າງໆ ເຖິງແມ່ນວ່າທ່ານຈະບໍ່ໄດ້ຄິກໃສ່ໂຄສະນານັ້ນເລີຍ</string>
   <string name="preference_privacy_block_analytics">ບັອກຕົວຕິດຕາມຂອງການວິເຄາະ</string>
+  <string name="preference_privacy_block_analytics_summary">ໃຊ້ເພື່ອເກັບກຳຮວບຮ່ວມ, ວິເຄາະ ແລະ ວັດແທກກິດຈະກຳເຊັນວ່າການແຕະ ແລະ ການເລື່ອນ</string>
   <string name="preference_privacy_block_social">ບັອກຕົວຕິດຕາມຂອງສືສັງຄົມອອນໄລນ໌</string>
+  <string name="preference_privacy_block_social_summary">ຝັງໄວ້ຢູ່ໃນເວັບໄຊທ໌ເພື່ອຕິດຕາມເບິງການເຂົ້າມາເບິງຂອງທ່ານ ແລະ ເພື່ອສະແດງຟັງຊັນເຊັ່ນວ່າປຸ່ມແບ່ງປັນ</string>
   <string name="preference_privacy_block_content">ບັອກຕົວຕິດຕາມຂອງເນື້ອຫາຕ່າງໆ</string>
+  <string name="preference_privacy_block_content_summary2">ການເປີດໃຊ້ງານອາດຈະເຮັດໃຫ້ບາງຫນ້າເຮັດວຽກຜຶດປົກກະຕິ</string>
   <string name="preference_privacy_secure_mode">ອຳພາງຕົວຕົນ</string>
   <string name="preference_privacy_stealth_summary">ເຊື່ອງຫນ້າເວັບເມື່ອສະລັບແອັບ</string>
   <string name="preference_category_performance">ປະສິດທິພາບ</string>
@@ -44,9 +48,20 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">ສົ່ງຂໍ້ມູນການນຳໃຊ້</string>
   <string name="preference_mozilla_telemetry_summary">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla ພະຍາຍາມທີ່ຈະເກັບຮວບຮ່ວມສະເພາະສິ່ງທີ່ຈຳເປັນຕໍ່ການປັບປູງ %1$s ສຳລັບທຸກໆຄົນ.</string>
+  <string name="preference_privacy_notice">ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ</string>
   <string name="preference_about">ກ່ຽວກັບ %1$s</string>
+  <string name="preference_search_installed_search_engines">ໄດ້ທຳການຕິດຕັ້ງເຄື່ອງມືການຄົ້ນຫາແລ້ວ</string>
+  <string name="preference_search_restore">ກູ້ຄືນເຄື່ອງມືພື້ນຖານຂອງການຄົ້ນຫາ</string>
+  <string name="preference_search_add2">+ ເພີ່ມລະບົບການຊອກຫາຕົວອື່ນ</string>
+  <string name="preference_search_remove_title">ລຶບເຄື່ອງມືການຄົ້ນຫາ</string>
   <string name="preference_search_remove">ລຶບ</string>
+  <string name="tutorial_search_manually_add">ເພີ່ມເອງ</string>
+  <string name="tutorial_search_title">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
+  <string name="action_option_add_search_engine">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
+  <string name="search_add_manually_name_hint">ຊື່ເຄື່ອງມືການຄົ້ນຫາ</string>
   <string name="search_add_manually_save">ບັນທຶກ</string>
+  <string name="accessibility_announcement_search">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
   <string name="content_description_clear_input">ລົບລ້າງຂໍ້ມູນທີ່ປ້ອນເຂົ້າ</string>
   <string name="content_description_dismiss_input">ຍົກເລີກ</string>
   <string name="content_description_erase">ລຶບປະຫວັດການທ່ອງເວັບ</string>
@@ -103,6 +118,7 @@
   <string name="contextmenu_image_warning"><![CDATA["ບັນທຶກໄວ້ ແລະ ໄດ້ແບ່ງປັນຮູບພາບ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3720;&#3760;&#3738;&#3789;&#3784;&#3734;&#3767;&#3713;&#3749;&#3771;&#3738;</b>" ເມື່ອທ່ານລຶບປະຫວັດການນຳໃຊ້ຂອງ %1$s"]]></string>
   <string name="firstrun_defaultbrowser_title">ເພີ່ມຄວາມເປັນສ່ວນໂຕຂອງທ່ານ</string>
   <string name="firstrun_search_title">ການຄົ້ນຫາໃນແບບຂອງທ່ານເອງ</string>
+  <string name="firstrun_search_text">ກຳລັງຊອກຫາບາງສິ່ງບາງຢ່າງທີ່ແຕກຕ່າງບໍ່? ເລືອກເອົາຕົວຄົ້ນຫາພື້ນຖານອື່ນໆໃນການຕັ້ງຄ່າ.</string>
   <string name="firstrun_close_button">ຕົກລົງ, ເຂົ້າໃຈແລ້ວ!</string>
   <string name="firstrun_skip_button">ຂ້າມໄປ</string>
   <string name="firstrun_next_button">ຕໍ່ໄປ</string>

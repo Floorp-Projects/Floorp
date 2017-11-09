@@ -9,7 +9,7 @@
   <string name="menu_share">Споделяне…</string>
   <string name="menu_open_with_default_browser">Отваряне с %1$s</string>
   <string name="menu_open_with_a_browser">Отваряне с…</string>
-  <string name="menu_add_to_home_screen">Добавяне към началния екран</string>
+  <string name="menu_add_to_home_screen">Добавяне към екрана</string>
   <string name="menu_whats_new">Какво е новото</string>
   <string name="menu_settings">Настройки</string>
   <string name="menu_about">Относно</string>
@@ -31,7 +31,7 @@
   <string name="preference_dialog_title_search_engine">Избиране на търсеща машина</string>
   <string name="preference_category_privacy">Поверителност</string>
   <string name="preference_privacy_block_ads">Спиране на следене от реклами</string>
-  <string name="preference_privacy_block_ads_summary">Някои реклами проследяват посещенията, даже и да не натискате върху рекламите</string>
+  <string name="preference_privacy_block_ads_summary">Някои реклами проследяват посещенията, даже и да не натискате върху тях</string>
   <string name="preference_privacy_block_analytics">Спиране на следене с цел анализ</string>
   <string name="preference_privacy_block_analytics_summary">Използват го, за да събират, анализират и измерват дейности като докосване и плъзгане</string>
   <string name="preference_privacy_block_social">Спиране на следене от социални мрежи</string>
@@ -108,7 +108,7 @@
   <string name="download_dialog_action_cancel">Отказ</string>
   <string name="download_dialog_action_download">Изтегляне</string>
   <string name="errorpage_title">Проблем при зареждане на страница</string>
-  <string name="errorpage_refresh">Нов опит</string>
+  <string name="errorpage_refresh">Повторен опит</string>
   <string name="error_connectionfailure_title">Не може да бъде установена връзка</string>
   <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1057;&#1072;&#1081;&#1090;&#1098;&#1090; &#1084;&#1086;&#1078;&#1077; &#1076;&#1072; &#1077; &#1074;&#1088;&#1077;&#1084;&#1077;&#1085;&#1085;&#1086; &#1085;&#1077;&#1076;&#1086;&#1089;&#1090;&#1098;&#1087;&#1077;&#1085; &#1080;&#1083;&#1080; &#1085;&#1072;&#1090;&#1086;&#1074;&#1072;&#1088;&#1077;&#1085;. &#1054;&#1087;&#1080;&#1090;&#1072;&#1081;&#1090;&#1077; &#1086;&#1090;&#1085;&#1086;&#1074;&#1086; &#1089;&#1083;&#1077;&#1076; &#1084;&#1072;&#1083;&#1082;&#1086;.</li>"\n  "<li>&#1040;&#1082;&#1086; &#1085;&#1077; &#1084;&#1086;&#1078;&#1077; &#1076;&#1072; &#1086;&#1090;&#1074;&#1086;&#1088;&#1080;&#1090;&#1077; &#1076;&#1088;&#1091;&#1075;&#1072; &#1089;&#1090;&#1088;&#1072;&#1085;&#1080;&#1094;&#1072;, &#1087;&#1088;&#1086;&#1074;&#1077;&#1088;&#1077;&#1090;&#1077; &#1074;&#1088;&#1098;&#1079;&#1082;&#1072;&#1090;&#1072; &#1079;&#1072; &#1084;&#1086;&#1073;&#1080;&#1083;&#1085;&#1080; &#1076;&#1072;&#1085;&#1085;&#1080; &#1080;&#1083;&#1080; Wi-Fi.</li>\n</ul>]]></string>
   <string name="error_timeout_title">Времето за изчакване при свързване изтече</string>
@@ -124,26 +124,26 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1058;&#1086;&#1074;&#1072; &#1080;&#1083;&#1080; &#1077; &#1087;&#1088;&#1086;&#1073;&#1083;&#1077;&#1084; &#1089; &#1085;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1080;&#1090;&#1077; &#1085;&#1072; &#1089;&#1098;&#1088;&#1074;&#1098;&#1088;&#1072;, &#1080;&#1083;&#1080; &#1085;&#1103;&#1082;&#1086;&#1081; &#1089;&#1077; &#1086;&#1087;&#1080;&#1090;&#1074;&#1072; &#1089;&#1077; &#1087;&#1088;&#1077;&#1076;&#1089;&#1090;&#1072;&#1074;&#1080; &#1079;&#1072; &#1085;&#1077;&#1075;&#1086;.</li>"\n  "<li>&#1040;&#1082;&#1086; &#1087;&#1088;&#1077;&#1076;&#1080; &#1090;&#1086;&#1074;&#1072; &#1091;&#1089;&#1087;&#1077;&#1096;&#1085;&#1086; &#1089;&#1090;&#1077; &#1089;&#1077; &#1089;&#1074;&#1098;&#1088;&#1079;&#1074;&#1072;&#1083;&#1080; &#1089; &#1085;&#1077;&#1075;&#1086;, &#1080;&#1084;&#1072; &#1074;&#1077;&#1088;&#1086;&#1103;&#1090;&#1085;&#1086;&#1089;&#1090; &#1075;&#1088;&#1077;&#1096;&#1082;&#1072;&#1090;&#1072; &#1076;&#1072; &#1077; &#1074;&#1088;&#1077;&#1084;&#1077;&#1085;&#1085;&#1072; &#1080; &#1084;&#1086;&#1078;&#1077; &#1076;&#1072; &#1086;&#1087;&#1080;&#1090;&#1072;&#1090;&#1077; &#1087;&#1086;-&#1082;&#1098;&#1089;&#1085;&#1086;.</li>\n</ul>]]></string>
   <string name="error_generic_title">Олеле</string>
   <string name="error_generic_message">По някаква причина страницата не може да бъде заредена.</string>
-  <string name="contextmenu_link_share">Споделяне на връзката</string>
-  <string name="contextmenu_link_copy">Копиране адреса на връзката</string>
+  <string name="contextmenu_link_share">Споделяне на препратката</string>
+  <string name="contextmenu_link_copy">Копиране на адреса</string>
   <string name="contextmenu_image_share">Споделяне на изображението</string>
-  <string name="contextmenu_image_copy">Копиране адреса на изображението</string>
+  <string name="contextmenu_image_copy">Копиране на изображението</string>
   <string name="contextmenu_image_save">Запазване на изображението</string>
   <string name="contextmenu_open_in_new_tab">Отваряне в раздел</string>
-  <string name="contextmenu_image_warning"><![CDATA["Запазените и споделените изображения "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1103;&#1084;&#1072; &#1076;&#1072; &#1073;&#1098;&#1076;&#1072;&#1090; &#1080;&#1079;&#1090;&#1088;&#1080;&#1090;&#1080;</b>при изтриване на историята на %1$s.]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Запазените и споделените изображения "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1103;&#1084;&#1072; &#1076;&#1072; &#1073;&#1098;&#1076;&#1072;&#1090; &#1080;&#1079;&#1090;&#1088;&#1080;&#1090;&#1080;</b>" при изтриване на историята на %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Усилете вашата поверителност</string>
-  <string name="firstrun_defaultbrowser_text2">Преминете към следващото ниво на поверителността. Спирайте рекламите и друго съдържание, което следи движенията ви през много сайтове и забавя зареждането на страници.</string>
+  <string name="firstrun_defaultbrowser_text2">Преминете към следващото ниво на поверителност. Спирайте рекламите и друго съдържание, което следи движението ви през интернет и забавя зареждането на страниците.</string>
   <string name="firstrun_search_title">Вашето търсене, по вашия начин</string>
   <string name="firstrun_search_text">Търсите нещо различно? Изберете друга търсеща машина в Настройки.</string>
   <string name="firstrun_shortcut_title">Добавяне на преки пътища към началния екран</string>
-  <string name="firstrun_shortcut_text">С %1$s можете бързо да се връщате към най-използваните от вас сайтове. Просто изберете „Добавяне към началния екран“ от менюто на %1$s.</string>
+  <string name="firstrun_shortcut_text">С %1$s можете бързо да се връщате към най-използваните от вас сайтове. Просто изберете „Добавяне към екрана“ от менюто на %1$s.</string>
   <string name="firstrun_privacy_title">Изградете навик за поверителност</string>
-  <string name="firstrun_privacy_text">Задайте %1$s като ваш браузър по подразбиране и използвайте предимствата от поверителното четене, когато други приложения ви препращат към Мрежата.</string>
+  <string name="firstrun_privacy_text">Задайте %1$s като стандартен четец и се възползвайте предимствата на поверителното разглеждане, когато други приложения ви препращат към Мрежата.</string>
   <string name="firstrun_close_button">Разбрано!</string>
   <string name="firstrun_skip_button">Пропускане</string>
   <string name="firstrun_next_button">Напред</string>
   <string name="content_blocking_disabled">–</string>
-  <string name="dialog_addtohomescreen_title">Добавяне към началния екран</string>
+  <string name="dialog_addtohomescreen_title">Добавяне към екрана</string>
   <string name="dialog_addtohomescreen_action_add">Добавяне</string>
   <string name="dialog_addtohomescreen_action_cancel">Отказ</string>
   <string name="dialog_addtohomescreen_tracking_protection">Преките пътища ще се отварят с изключена защита от проследяване</string>

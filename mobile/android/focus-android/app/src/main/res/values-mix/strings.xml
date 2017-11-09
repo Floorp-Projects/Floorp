@@ -31,7 +31,9 @@
   <string name="preference_dialog_title_search_engine">Ntuku ta xi’na</string>
   <string name="preference_category_privacy">Sèè</string>
   <string name="preference_privacy_block_ads">Kasi ña ndukuyo</string>
+  <string name="preference_privacy_block_ads_summary">Yee tu\'un nduku ña tsinu, vasu ma katavu ña</string>
   <string name="preference_privacy_block_analytics">Kasi ña ndukuyo</string>
+  <string name="preference_privacy_block_analytics_summary">Kuachu\'un ña tava satutuku tsi chikuau ña sau tana katavu tsi samu</string>
   <string name="preference_privacy_block_social">Kasi ña ndukuyo</string>
   <string name="preference_privacy_block_content">Kasi ña ndukuyo inka tsio</string>
   <string name="preference_privacy_secure_mode">Sèè kivu</string>
@@ -49,7 +51,8 @@
   <string name="preference_about">Tsaa ña\'a%1$s</string>
   <string name="preference_search_installed_search_engines">Ndu tsaa ña nda nduku</string>
   <string name="preference_search_restore">Ndu tsaa ña nda ntuku</string>
-  <string name="preference_search_remove_title">Xita ntuku</string>
+  <string name="preference_search_add2">+ Chika´a inka motor nduku</string>
+  <string name="preference_search_remove_title">Sto\'o ña ntuku</string>
   <string name="preference_search_remove">Xitaá</string>
   <string name="tutorial_search_manually_add">Chikai meu\'ña</string>
   <string name="tutorial_search_title">Chika´a ñaa nda nduku</string>
