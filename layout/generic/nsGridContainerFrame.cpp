@@ -6687,7 +6687,7 @@ nsGridContainerFrame::NoteNewChildren(ChildListID aListID,
   MOZ_ASSERT(supportedLists.Contains(aListID), "unexpected child list");
 #endif
 
-  nsIPresShell* shell = PresContext()->PresShell();
+  nsIPresShell* shell = PresShell();
   for (auto pif = GetPrevInFlow(); pif; pif = pif->GetPrevInFlow()) {
     if (aListID == kPrincipalList) {
       pif->AddStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
@@ -6726,7 +6726,7 @@ nsGridContainerFrame::MergeSortedExcessOverflowContainers(nsFrameList& aList)
   if (eoc) {
     ::MergeSortedFrameLists(*eoc, aList, GetContent());
   } else {
-    SetPropTableFrames(new (PresContext()->PresShell()) nsFrameList(aList),
+    SetPropTableFrames(new (PresShell()) nsFrameList(aList),
                        ExcessOverflowContainersProperty());
   }
 }
@@ -6915,7 +6915,7 @@ nsGridContainerFrame::GetGridFrameWithComputedInfo(nsIFrame* aFrame)
 
     if (reflowNeeded) {
       // Trigger a reflow that generates additional grid property data.
-      nsIPresShell* shell = gridFrame->PresContext()->PresShell();
+      nsIPresShell* shell = gridFrame->PresShell();
       gridFrame->AddStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
       shell->FrameNeedsReflow(gridFrame,
                               nsIPresShell::eResize,

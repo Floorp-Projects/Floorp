@@ -52,7 +52,7 @@ NS_IMETHODIMP
 nsReflowFrameRunnable::Run()
 {
   if (mWeakFrame.IsAlive()) {
-    mWeakFrame->PresContext()->PresShell()->
+    mWeakFrame->PresShell()->
       FrameNeedsReflow(mWeakFrame, mIntrinsicDirty, mBitToAdd);
   }
   return NS_OK;
@@ -112,7 +112,7 @@ nsProgressMeterFrame::DoXULLayout(nsBoxLayoutState& aState)
   if (mNeedsReflowCallback) {
     nsIReflowCallback* cb = new nsAsyncProgressMeterInit(this);
     if (cb) {
-      PresContext()->PresShell()->PostReflowCallback(cb);
+      PresShell()->PostReflowCallback(cb);
     }
     mNeedsReflowCallback = false;
   }

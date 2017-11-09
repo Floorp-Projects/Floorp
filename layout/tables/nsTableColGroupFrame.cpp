@@ -242,7 +242,7 @@ nsTableColGroupFrame::InsertColsReflow(int32_t                   aColIndex,
 {
   AddColsToTable(aColIndex, true, aCols);
 
-  PresContext()->PresShell()->FrameNeedsReflow(this,
+  PresShell()->FrameNeedsReflow(this,
                                                nsIPresShell::eTreeChange,
                                                NS_FRAME_HAS_DIRTY_CHILDREN);
 }
@@ -270,7 +270,7 @@ nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
     }
   }
 
-  PresContext()->PresShell()->FrameNeedsReflow(this,
+  PresShell()->FrameNeedsReflow(this,
                                                nsIPresShell::eTreeChange,
                                                NS_FRAME_HAS_DIRTY_CHILDREN);
 }

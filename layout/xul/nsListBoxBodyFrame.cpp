@@ -216,7 +216,7 @@ nsListBoxBodyFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostD
 {
   // make sure we cancel any posted callbacks.
   if (mReflowCallbackPosted)
-     PresContext()->PresShell()->CancelReflowCallback(this);
+     PresShell()->CancelReflowCallback(this);
 
   // Revoke any pending position changed events
   for (uint32_t i = 0; i < mPendingPositionChangeEvents.Length(); ++i) {
@@ -239,7 +239,7 @@ nsListBoxBodyFrame::AttributeChanged(int32_t aNameSpaceID,
   nsresult rv = NS_OK;
 
   if (aAttribute == nsGkAtoms::rows) {
-    PresContext()->PresShell()->
+    PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
   }
   else
@@ -492,7 +492,7 @@ nsListBoxBodyFrame::ReflowFinished()
   // if the row height changed then mark everything as a style change.
   // That will dirty the entire listbox
   if (mRowHeightWasSet) {
-    PresContext()->PresShell()->
+    PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
      int32_t pos = mCurrentIndex * mRowHeight;
      if (mYPosition != pos)
@@ -780,7 +780,7 @@ nsListBoxBodyFrame::PostReflowCallback()
 {
   if (!mReflowCallbackPosted) {
     mReflowCallbackPosted = true;
-    PresContext()->PresShell()->PostReflowCallback(this);
+    PresShell()->PostReflowCallback(this);
   }
 }
 
@@ -1074,7 +1074,7 @@ nsListBoxBodyFrame::DestroyRows(int32_t& aRowsToLose)
   nsIFrame* childFrame = GetFirstFrame();
   nsBoxLayoutState state(PresContext());
 
-  nsCSSFrameConstructor* fc = PresContext()->PresShell()->FrameConstructor();
+  nsCSSFrameConstructor* fc = PresShell()->FrameConstructor();
   fc->BeginUpdate();
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
@@ -1086,7 +1086,7 @@ nsListBoxBodyFrame::DestroyRows(int32_t& aRowsToLose)
   }
   fc->EndUpdate();
 
-  PresContext()->PresShell()->
+  PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                      NS_FRAME_HAS_DIRTY_CHILDREN);
 }
@@ -1099,7 +1099,7 @@ nsListBoxBodyFrame::ReverseDestroyRows(int32_t& aRowsToLose)
   nsIFrame* childFrame = GetLastFrame();
   nsBoxLayoutState state(PresContext());
 
-  nsCSSFrameConstructor* fc = PresContext()->PresShell()->FrameConstructor();
+  nsCSSFrameConstructor* fc = PresShell()->FrameConstructor();
   fc->BeginUpdate();
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
@@ -1112,7 +1112,7 @@ nsListBoxBodyFrame::ReverseDestroyRows(int32_t& aRowsToLose)
   }
   fc->EndUpdate();
 
-  PresContext()->PresShell()->
+  PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                      NS_FRAME_HAS_DIRTY_CHILDREN);
 }
@@ -1301,7 +1301,7 @@ nsListBoxBodyFrame::ContinueReflow(nscoord height)
       nsBoxLayoutState state(PresContext());
 
       nsCSSFrameConstructor* fc =
-        PresContext()->PresShell()->FrameConstructor();
+        PresShell()->FrameConstructor();
       fc->BeginUpdate();
       while (currFrame) {
         nsIFrame* nextFrame = currFrame->GetNextSibling();
@@ -1310,7 +1310,7 @@ nsListBoxBodyFrame::ContinueReflow(nscoord height)
       }
       fc->EndUpdate();
 
-      PresContext()->PresShell()->
+      PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
     }
@@ -1328,7 +1328,7 @@ nsListBoxBodyFrame::ListBoxAppendFrames(nsFrameList& aFrameList)
   const nsFrameList::Slice& newFrames = mFrames.AppendFrames(nullptr, aFrameList);
   if (mLayoutManager)
     mLayoutManager->ChildrenAppended(this, state, newFrames);
-  PresContext()->PresShell()->
+  PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                      NS_FRAME_HAS_DIRTY_CHILDREN);
 
@@ -1345,7 +1345,7 @@ nsListBoxBodyFrame::ListBoxInsertFrames(nsIFrame* aPrevFrame,
     mFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
   if (mLayoutManager)
     mLayoutManager->ChildrenInserted(this, state, aPrevFrame, newFrames);
-  PresContext()->PresShell()->
+  PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                      NS_FRAME_HAS_DIRTY_CHILDREN);
 
@@ -1386,7 +1386,7 @@ nsListBoxBodyFrame::OnContentInserted(nsIContent* aChildContent)
   }
 
   CreateRows();
-  PresContext()->PresShell()->
+  PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                      NS_FRAME_HAS_DIRTY_CHILDREN);
 }
@@ -1472,7 +1472,7 @@ nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext,
     RemoveChildFrame(state, aChildFrame);
   }
 
-  PresContext()->PresShell()->
+  PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                      NS_FRAME_HAS_DIRTY_CHILDREN);
 }
@@ -1529,7 +1529,7 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
   nsAccessibilityService* accService = nsIPresShell::AccService();
   if (accService) {
     nsIContent* content = aFrame->GetContent();
-    accService->ContentRemoved(PresContext()->PresShell(), content);
+    accService->ContentRemoved(PresShell(), content);
   }
 #endif
 
