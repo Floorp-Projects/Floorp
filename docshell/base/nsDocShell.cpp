@@ -6831,7 +6831,8 @@ nsDocShell::ScrollByPages(int32_t aNumPages)
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsDocShell::RefreshURI(nsIURI* aURI, int32_t aDelay, bool aRepeat,
+nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                       int32_t aDelay, bool aRepeat,
                        bool aMetaRefresh)
 {
   NS_ENSURE_ARG(aURI);
@@ -6860,7 +6861,7 @@ nsDocShell::RefreshURI(nsIURI* aURI, int32_t aDelay, bool aRepeat,
   }
 
   nsCOMPtr<nsITimerCallback> refreshTimer =
-    new nsRefreshTimer(this, aURI, aDelay, aRepeat, aMetaRefresh);
+    new nsRefreshTimer(this, aURI, aPrincipal, aDelay, aRepeat, aMetaRefresh);
 
   uint32_t busyFlags = 0;
   GetBusyFlags(&busyFlags);
@@ -6891,6 +6892,7 @@ nsDocShell::RefreshURI(nsIURI* aURI, int32_t aDelay, bool aRepeat,
 
 nsresult
 nsDocShell::ForceRefreshURIFromTimer(nsIURI* aURI,
+                                     nsIPrincipal* aPrincipal,
                                      int32_t aDelay,
                                      bool aMetaRefresh,
                                      nsITimer* aTimer)
@@ -6911,11 +6913,11 @@ nsDocShell::ForceRefreshURIFromTimer(nsIURI* aURI,
     }
   }
 
-  return ForceRefreshURI(aURI, aDelay, aMetaRefresh);
+  return ForceRefreshURI(aURI, aPrincipal, aDelay, aMetaRefresh);
 }
 
 NS_IMETHODIMP
-nsDocShell::ForceRefreshURI(nsIURI* aURI, int32_t aDelay, bool aMetaRefresh)
+nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDelay, bool aMetaRefresh)
 {
   NS_ENSURE_ARG(aURI);
 
@@ -6961,6 +6963,13 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, int32_t aDelay, bool aMetaRefresh)
     }
   } else {
     loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
+  }
+
+  // If the principal is null, the refresh will have a triggeringPrincipal
+  // derived from the referrer URI, or will be set to the system principal
+  // if there is no refererrer. See LoadURI()
+  if (aPrincipal) {
+    loadInfo->SetTriggeringPrincipal(aPrincipal);
   }
 
   /*
@@ -7203,7 +7212,7 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI* aBaseURI,
           return NS_ERROR_FAILURE;
         }
 
-        rv = RefreshURI(uri, seconds * 1000, false, true);
+        rv = RefreshURI(uri, aPrincipal, seconds * 1000, false, true);
       }
     }
   }
@@ -13793,9 +13802,12 @@ nsDocShell::SetLayoutHistoryState(nsILayoutHistoryState* aLayoutHistoryState)
   return NS_OK;
 }
 
-nsRefreshTimer::nsRefreshTimer(nsDocShell* aDocShell, nsIURI* aURI,
+nsRefreshTimer::nsRefreshTimer(nsDocShell* aDocShell,
+                               nsIURI* aURI,
+                               nsIPrincipal* aPrincipal,
                                int32_t aDelay, bool aRepeat, bool aMetaRefresh)
-  : mDocShell(aDocShell), mURI(aURI), mDelay(aDelay), mRepeat(aRepeat),
+  : mDocShell(aDocShell), mURI(aURI), mPrincipal(aPrincipal),
+    mDelay(aDelay), mRepeat(aRepeat),
     mMetaRefresh(aMetaRefresh)
 {
 }
@@ -13822,7 +13834,7 @@ nsRefreshTimer::Notify(nsITimer* aTimer)
     // Get the delay count to determine load type
     uint32_t delay = 0;
     aTimer->GetDelay(&delay);
-    mDocShell->ForceRefreshURIFromTimer(mURI, delay, mMetaRefresh, aTimer);
+    mDocShell->ForceRefreshURIFromTimer(mURI, mPrincipal, delay, mMetaRefresh, aTimer);
   }
   return NS_OK;
 }
