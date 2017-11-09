@@ -416,7 +416,7 @@ load 571618-1.svg
 asserts(1) asserts-if(stylo,0-1) load 571975-1.html # bug 574889
 load 571995.xhtml
 load 574958.xhtml
-asserts(0-4) load 578977.html # bug 757305
+asserts(0-6) load 578977.html # bug 757305
 load 580504-1.xhtml
 load 585598-1.xhtml
 load 586806-1.html
