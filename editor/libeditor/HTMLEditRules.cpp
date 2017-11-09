@@ -2489,7 +2489,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         rightNode = startNode;
       } else {
         NS_ENSURE_STATE(mHTMLEditor);
-        rightNode = mHTMLEditor->GetNextHTMLNode(visNode);
+        rightNode = mHTMLEditor->GetNextEditableHTMLNode(*visNode);
         leftNode = startNode;
       }
 
@@ -3802,7 +3802,8 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsAtom& blockType)
         // Otherwise it gets pushed into a following block after the split,
         // which is visually bad.
         nsCOMPtr<nsIContent> brNode =
-          htmlEditor->GetNextHTMLNode(container, offset, child);
+          htmlEditor->GetNextEditableHTMLNode(
+                        EditorRawDOMPoint(container, child, offset));
         if (brNode && brNode->IsHTMLElement(nsGkAtoms::br)) {
           rv = htmlEditor->DeleteNode(brNode);
           NS_ENSURE_SUCCESS(rv, rv);
@@ -3825,7 +3826,8 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsAtom& blockType)
     } else {
       // We are making a block.  Consume a br, if needed.
       nsCOMPtr<nsIContent> brNode =
-        htmlEditor->GetNextHTMLNode(container, offset, child, true);
+        htmlEditor->GetNextEditableHTMLNodeInBlock(
+                      EditorRawDOMPoint(container, child, offset));
       if (brNode && brNode->IsHTMLElement(nsGkAtoms::br)) {
         rv = htmlEditor->DeleteNode(brNode);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -4966,8 +4968,9 @@ HTMLEditRules::WillAlign(Selection& aSelection,
     NS_ENSURE_SUCCESS(rv, rv);
     // Consume a trailing br, if any.  This is to keep an alignment from
     // creating extra lines, if possible.
+    EditorRawDOMPoint atChild(parent, child, offset);
     nsCOMPtr<nsIContent> brContent =
-      htmlEditor->GetNextHTMLNode(parent, offset, child);
+      htmlEditor->GetNextEditableHTMLNodeInBlock(atChild);
     if (brContent && TextEditUtils::IsBreak(brContent)) {
       // Making use of html structure... if next node after where we are
       // putting our div is not a block, then the br we found is in same block
@@ -4981,7 +4984,6 @@ HTMLEditRules::WillAlign(Selection& aSelection,
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
-    EditorRawDOMPoint atChild(parent, child, offset);
     RefPtr<Element> div = htmlEditor->CreateNode(nsGkAtoms::div, atChild);
     NS_ENSURE_STATE(div);
     // Remember our new block for postprocessing
@@ -5633,9 +5635,8 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
     } else if (wsStartObj.mEndReason == WSType::thisBlock) {
       // startpoint is just before end of this block
       nsINode* child =
-        htmlEditor->GetNextHTMLNode(startNode,
-                                    static_cast<int32_t>(startOffset),
-                                    startChild);
+        htmlEditor->GetNextEditableHTMLNode(
+                      EditorRawDOMPoint(startNode, startChild, startOffset));
       if (child) {
         int32_t offset = -1;
         newStartNode = EditorBase::GetNodeLocation(child, &offset);
@@ -5811,8 +5812,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
   // look ahead through any further inline nodes that aren't across a <br> from
   // us, and that are enclosed in the same block.
   nsCOMPtr<nsIContent> nextNode =
-    htmlEditor->GetNextHTMLNode(point.Container(), point.Offset(),
-                                point.GetChildAtOffset(), true);
+    htmlEditor->GetNextEditableHTMLNodeInBlock(point.AsRaw());
 
   while (nextNode && !IsBlockNode(*nextNode) && nextNode->GetParentNode()) {
     point.Set(nextNode);
@@ -5840,16 +5840,14 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
         }
       }
     }
-    nextNode = htmlEditor->GetNextHTMLNode(point.Container(), point.Offset(),
-                                           point.GetChildAtOffset(), true);
+    nextNode = htmlEditor->GetNextEditableHTMLNodeInBlock(point.AsRaw());
   }
 
   // finding the real end for this point.  look up the tree for as long as we
   // are the last node in the container, and as long as we haven't hit the body
   // node.
   nsCOMPtr<nsIContent> nearNode =
-    htmlEditor->GetNextHTMLNode(point.Container(), point.Offset(),
-                                point.GetChildAtOffset(), true);
+    htmlEditor->GetNextEditableHTMLNodeInBlock(point.AsRaw());
   while (!nearNode &&
          !point.Container()->IsHTMLElement(nsGkAtoms::body) &&
          point.Container()->GetParentNode()) {
@@ -5866,8 +5864,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
     if (NS_WARN_IF(!point.AdvanceOffset())) {
       break;
     }
-    nearNode = htmlEditor->GetNextHTMLNode(point.Container(), point.Offset(),
-                                           point.GetChildAtOffset(), true);
+    nearNode = htmlEditor->GetNextEditableHTMLNodeInBlock(point.AsRaw());
   }
   return point;
 }
@@ -6804,7 +6801,9 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
         TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
       // is there a BR after it?
       NS_ENSURE_STATE(mHTMLEditor);
-      nearNode = mHTMLEditor->GetNextHTMLNode(node, aOffset, aChildAtOffset);
+      nearNode =
+        mHTMLEditor->GetNextEditableHTMLNode(
+                       EditorRawDOMPoint(node, aChildAtOffset, aOffset));
       NS_ENSURE_STATE(mHTMLEditor);
       if (!nearNode || !mHTMLEditor->IsVisibleBRElement(nearNode) ||
           TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
@@ -7959,7 +7958,7 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
         } else {
           NS_ENSURE_STATE(mHTMLEditor);
           nsCOMPtr<nsIContent> nextNode =
-            mHTMLEditor->GetNextHTMLNode(nearNode, true);
+            mHTMLEditor->GetNextEditableHTMLNodeInBlock(*nearNode);
           if (nextNode && TextEditUtils::IsMozBR(nextNode)) {
             // selection between br and mozbr.  make it stick to mozbr
             // so that it will be on blank line.
@@ -7981,8 +7980,7 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
     return NS_OK;
   }
   NS_ENSURE_STATE(mHTMLEditor);
-  nearNode = mHTMLEditor->GetNextHTMLNode(point.Container(), point.Offset(),
-                                          point.GetChildAtOffset(), true);
+  nearNode = mHTMLEditor->GetNextEditableHTMLNodeInBlock(point.AsRaw());
   if (nearNode && (TextEditUtils::IsBreak(nearNode) ||
                    EditorBase::IsTextNode(nearNode) ||
                    nearNode->IsAnyOfHTMLElements(nsGkAtoms::img,
@@ -8033,8 +8031,7 @@ HTMLEditRules::FindNearSelectableNode(nsINode* aSelNode,
     }
   } else {
     NS_ENSURE_STATE(mHTMLEditor);
-    nearNode = mHTMLEditor->GetNextHTMLNode(point.Container(), point.Offset(),
-                                            point.GetChildAtOffset());
+    nearNode = mHTMLEditor->GetNextEditableHTMLNode(point);
     if (NS_WARN_IF(!nearNode)) {
       return NS_ERROR_FAILURE;
     }
@@ -8077,7 +8074,7 @@ HTMLEditRules::FindNearSelectableNode(nsINode* aSelNode,
       }
     } else {
       NS_ENSURE_STATE(mHTMLEditor);
-      nearNode = mHTMLEditor->GetNextHTMLNode(curNode);
+      nearNode = mHTMLEditor->GetNextEditableHTMLNode(*curNode);
       if (NS_WARN_IF(!nearNode)) {
         return NS_ERROR_FAILURE;
       }

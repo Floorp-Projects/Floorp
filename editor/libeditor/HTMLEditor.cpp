@@ -876,7 +876,7 @@ HTMLEditor::IsVisibleBRElement(nsINode* aNode)
     return false;
   }
   // Check if there is a later node in block after br
-  nsCOMPtr<nsINode> nextNode = GetNextHTMLNode(aNode, true);
+  nsCOMPtr<nsINode> nextNode = GetNextEditableHTMLNodeInBlock(*aNode);
   if (nextNode && TextEditUtils::IsBreak(nextNode)) {
     return true;
   }
@@ -3889,45 +3889,26 @@ HTMLEditor::GetPreviousEditableHTMLNodeInternal(const EditorRawDOMPoint& aPoint,
                             GetPreviousEditableNode(aPoint);
 }
 
-/**
- * GetNextHTMLNode() returns the next editable leaf node, if there is
- * one within the <body>.
- */
 nsIContent*
-HTMLEditor::GetNextHTMLNode(nsINode* aNode,
-                            bool aNoBlockCrossing)
+HTMLEditor::GetNextEditableHTMLNodeInternal(nsINode& aNode,
+                                            bool aNoBlockCrossing)
 {
-  MOZ_ASSERT(aNode);
-
-  nsIContent* result =
-    aNoBlockCrossing ? GetNextEditableNodeInBlock(*aNode) :
-                       GetNextEditableNode(*aNode);
-  if (result && !IsDescendantOfEditorRoot(result)) {
+  if (!GetActiveEditingHost()) {
     return nullptr;
   }
-  return result;
+  return aNoBlockCrossing ? GetNextEditableNodeInBlock(aNode) :
+                            GetNextEditableNode(aNode);
 }
 
-/**
- * GetNextHTMLNode() is same as above but takes {parent,offset} instead of node.
- */
 nsIContent*
-HTMLEditor::GetNextHTMLNode(nsINode* aParent,
-                            int32_t aOffset,
-                            nsINode* aChildAtOffset,
-                            bool aNoBlockCrossing)
+HTMLEditor::GetNextEditableHTMLNodeInternal(const EditorRawDOMPoint& aPoint,
+                                            bool aNoBlockCrossing)
 {
-  EditorRawDOMPoint point(aParent,
-                          aChildAtOffset && aChildAtOffset->IsContent() ?
-                            aChildAtOffset->AsContent() : nullptr,
-                          aOffset);
-  nsIContent* content =
-    aNoBlockCrossing ? GetNextEditableNodeInBlock(point) :
-                       GetNextEditableNode(point);
-  if (content && !IsDescendantOfEditorRoot(content)) {
+  if (!GetActiveEditingHost()) {
     return nullptr;
   }
-  return content;
+  return aNoBlockCrossing ? GetNextEditableNodeInBlock(aPoint) :
+                            GetNextEditableNode(aPoint);
 }
 
 bool
@@ -3983,7 +3964,7 @@ HTMLEditor::GetFirstEditableLeaf(nsINode& aNode)
 {
   nsCOMPtr<nsIContent> child = GetLeftmostChild(&aNode);
   while (child && (!IsEditable(child) || child->HasChildren())) {
-    child = GetNextHTMLNode(child);
+    child = GetNextEditableHTMLNode(*child);
 
     // Only accept nodes that are descendants of aNode
     if (!aNode.Contains(child)) {
