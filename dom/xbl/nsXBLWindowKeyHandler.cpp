@@ -211,8 +211,16 @@ BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
           valKey.IsEmpty() && valCharCode.IsEmpty() && valKeyCode.IsEmpty())
         continue;
 
-      bool reserved = key->AttrValueIs(kNameSpaceID_None, nsGkAtoms::reserved,
-                                       nsGkAtoms::_true, eCaseMatters);
+      // reserved="pref" is the default for <key> elements.
+      XBLReservedKey reserved = XBLReservedKey_Unset;
+      if (key->AttrValueIs(kNameSpaceID_None, nsGkAtoms::reserved,
+                           nsGkAtoms::_true, eCaseMatters)) {
+        reserved = XBLReservedKey_True;
+      } else if (key->AttrValueIs(kNameSpaceID_None, nsGkAtoms::reserved,
+                                   nsGkAtoms::_false, eCaseMatters)) {
+        reserved = XBLReservedKey_False;
+      }
+
       nsXBLPrototypeHandler* handler = new nsXBLPrototypeHandler(key, reserved);
 
       handler->SetNextHandler(*aResult);
@@ -725,7 +733,12 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
       continue;
     }
 
-    bool isReserved = handler->GetIsReserved();
+    bool isReserved = handler->GetIsReserved() == XBLReservedKey_True;
+    if (handler->GetIsReserved() == XBLReservedKey_Unset &&
+        Preferences::GetInt("permissions.default.shortcuts") == 2) {
+      isReserved = true;
+    }
+
     if (aOutReservedForChrome) {
       *aOutReservedForChrome = isReserved;
     }

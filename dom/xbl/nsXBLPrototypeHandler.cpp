@@ -93,7 +93,7 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const char16_t* aEvent,
                                              uint32_t aLineNumber)
   : mHandlerText(nullptr),
     mLineNumber(aLineNumber),
-    mReserved(false),
+    mReserved(XBLReservedKey_False),
     mNextHandler(nullptr),
     mPrototypeBinding(aBinding)
 {
@@ -104,7 +104,7 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const char16_t* aEvent,
                      aGroup, aPreventDefault, aAllowUntrusted);
 }
 
-nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement, bool aReserved)
+nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement, XBLReservedKey aReserved)
   : mHandlerElement(nullptr),
     mLineNumber(0),
     mReserved(aReserved),
@@ -120,7 +120,7 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement, bool a
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsXBLPrototypeBinding* aBinding)
   : mHandlerText(nullptr),
     mLineNumber(0),
-    mReserved(false),
+    mReserved(XBLReservedKey_False),
     mNextHandler(nullptr),
     mPrototypeBinding(aBinding)
 {
