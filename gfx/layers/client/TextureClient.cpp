@@ -692,6 +692,10 @@ TextureClient::BorrowDrawTarget()
     return nullptr;
   }
 
+  if (!NS_IsMainThread()) {
+    return nullptr;
+  }
+
   if (!mBorrowedDrawTarget) {
     mBorrowedDrawTarget = mData->BorrowDrawTarget();
 #ifdef DEBUG
