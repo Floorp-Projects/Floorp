@@ -446,7 +446,6 @@ class TPSTestRunner(object):
         # build our tps.xpi extension
         self.extensions = []
         self.extensions.append(os.path.join(self.extensionDir, 'tps'))
-        self.extensions.append(os.path.join(self.extensionDir, "mozmill"))
 
         # build the test list
         try:
