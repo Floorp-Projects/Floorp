@@ -429,6 +429,10 @@ ifdef MOZ_STYLO
   UPLOAD_FILES += $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(STYLO_BINDINGS_PACKAGE))
 endif
 
+ifdef ENABLE_MOZSEARCH_PLUGIN
+  UPLOAD_FILES += $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(MOZSEARCH_ARCHIVE_BASENAME).zip)
+endif
+
 SIGN_CHECKSUM_CMD=
 ifdef MOZ_SIGN_CMD
   # If we're signing with gpg, we'll have a bunch of extra detached signatures to

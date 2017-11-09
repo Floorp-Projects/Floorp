@@ -1514,6 +1514,12 @@ js_option('--enable-clang-plugin', env='ENABLE_CLANG_PLUGIN',
 add_old_configure_assignment('ENABLE_CLANG_PLUGIN',
                              depends_if('--enable-clang-plugin')(lambda _: True))
 
+js_option('--enable-mozsearch-plugin', env='ENABLE_MOZSEARCH_PLUGIN',
+          help="Enable building with the mozsearch indexer plugin")
+
+add_old_configure_assignment('ENABLE_MOZSEARCH_PLUGIN',
+                             depends_if('--enable-mozsearch-plugin')(lambda _: True))
+
 # Code Coverage
 # ==============================================================
 
