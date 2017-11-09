@@ -150,7 +150,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
             break;
           case ValType::I64: {
             if (!JitOptions.wasmTestMode) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
                 return false;
             }
             RootedObject obj(cx, CreateI64Object(cx, *(int64_t*)&argv[i]));
@@ -180,7 +180,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
 
     // Throw an error if returning i64 and not in test mode.
     if (!JitOptions.wasmTestMode && fi.sig().ret() == ExprType::I64) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
         return false;
     }
 
@@ -611,7 +611,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
             break;
           case ValType::I64:
             if (!JitOptions.wasmTestMode) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
                 return false;
             }
             if (!ReadI64Object(cx, v, (int64_t*)&exportArgs[i]))
@@ -722,7 +722,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
         break;
       case ExprType::I64:
         if (!JitOptions.wasmTestMode) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
             return false;
         }
         retObj = CreateI64Object(cx, *(int64_t*)retAddr);
