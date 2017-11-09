@@ -40,7 +40,7 @@ function assertStackContainsSeq(got, expect)
             frame = frame.replace(/fast FFI trampoline to native/g, "N");
             frame = frame.replace(/^call to( asm.js)? native .*\(in wasm\)$/g, "N");
             frame = frame.replace(/(fast|slow) FFI trampoline/g, "<");
-            frame = frame.replace(/entry trampoline/g, ">");
+            frame = frame.replace(/slow entry trampoline/g, ">");
             frame = frame.replace(/(\/[^\/,<]+)*\/testProfiling.js/g, "");
             frame = frame.replace(/testBuiltinD2D/g, "");
             frame = frame.replace(/testBuiltinF2F/g, "");

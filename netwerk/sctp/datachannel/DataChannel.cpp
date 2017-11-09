@@ -2904,19 +2904,14 @@ DataChannelConnection::ReadBlob(already_AddRefed<DataChannelConnection> aThis,
   // background thread, we may not want to block on one stream's data.
   // I.e. run non-blocking and service multiple channels.
 
-  // For now as a hack, send as a single blast of queued packets which may
-  // be deferred until buffer space is available.
-  uint64_t len;
-
   // Must not let Dispatching it cause the DataChannelConnection to get
   // released on the wrong thread.  Using WrapRunnable(RefPtr<DataChannelConnection>(aThis),...
   // will occasionally cause aThis to get released on this thread.  Also, an explicit Runnable
   // lets us avoid copying the blob data an extra time.
   RefPtr<DataChannelBlobSendRunnable> runnable = new DataChannelBlobSendRunnable(aThis,
-                                                                                   aStream);
+                                                                                 aStream);
   // avoid copying the blob data by passing the mData from the runnable
-  if (NS_FAILED(aBlob->Available(&len)) ||
-      NS_FAILED(NS_ReadInputStreamToString(aBlob, runnable->mData, len))) {
+  if (NS_FAILED(NS_ReadInputStreamToString(aBlob, runnable->mData, -1))) {
     // Bug 966602:  Doesn't return an error to the caller via onerror.
     // We must release DataChannelConnection on MainThread to avoid issues (bug 876167)
     // aThis is now owned by the runnable; release it there
