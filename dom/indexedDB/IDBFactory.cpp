@@ -275,8 +275,7 @@ IDBFactory::CreateForJSInternal(JSContext* aCx,
   factory->mPrincipalInfo = aPrincipalInfo.forget();
   factory->mOwningObject = aOwningObject;
   mozilla::HoldJSObjects(factory.get());
-  factory->mEventTarget = NS_IsMainThread() ?
-    SystemGroup::EventTargetFor(TaskCategory::Other) : GetCurrentThreadEventTarget();
+  factory->mEventTarget = GetCurrentThreadEventTarget();
   factory->mInnerWindowID = aInnerWindowID;
 
   factory.forget(aFactory);

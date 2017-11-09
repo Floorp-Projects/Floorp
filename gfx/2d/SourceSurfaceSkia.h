@@ -18,6 +18,7 @@ namespace mozilla {
 namespace gfx {
 
 class DrawTargetSkia;
+class SnapshotLock;
 
 class SourceSurfaceSkia : public DataSourceSurface
 {
@@ -39,7 +40,8 @@ public:
 
   bool InitFromImage(const sk_sp<SkImage>& aImage,
                      SurfaceFormat aFormat = SurfaceFormat::UNKNOWN,
-                     DrawTargetSkia* aOwner = nullptr);
+                     DrawTargetSkia* aOwner = nullptr,
+                     std::shared_ptr<Mutex> aSnapshotLock = std::shared_ptr<Mutex>{});
 
   virtual uint8_t* GetData();
 
@@ -62,6 +64,7 @@ private:
   IntSize mSize;
   int32_t mStride;
   RefPtr<DrawTargetSkia> mDrawTarget;
+  std::shared_ptr<Mutex> mSnapshotLock;
   Mutex mChangeMutex;
 };
 

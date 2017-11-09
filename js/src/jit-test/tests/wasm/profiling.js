@@ -13,7 +13,7 @@ const Table = WebAssembly.Table;
 function normalize(stack)
 {
     var wasmFrameTypes = [
-        {re:/^entry trampoline \(in wasm\)$/,                        sub:">"},
+        {re:/^slow entry trampoline \(in wasm\)$/,                   sub:">"},
         {re:/^wasm-function\[(\d+)\] \(.*\)$/,                       sub:"$1"},
         {re:/^(fast|slow) FFI trampoline (to native )?\(in wasm\)$/, sub:"<"},
         {re:/^call to[ asm.js]? native (.*) \(in wasm\)$/,           sub:"$1"},

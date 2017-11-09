@@ -1047,13 +1047,6 @@ public:
   {
     MOZ_ASSERT(mMsgType == kMsgTypeStream, "Not a stream!");
 
-#ifdef DEBUG
-    // Make sure we got correct length from Blob
-    uint64_t bytes;
-    mMsg.pStream->Available(&bytes);
-    NS_ASSERTION(bytes == mLength, "Stream length != blob length!");
-#endif
-
     nsAutoPtr<nsCString> temp(new nsCString());
     nsresult rv = NS_ReadInputStreamToString(mMsg.pStream, *temp, mLength);
 

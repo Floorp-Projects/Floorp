@@ -397,13 +397,8 @@ DataTransferItem::CreateFileFromInputStream(nsIInputStream* aStream)
   }
 
   uint64_t available;
-  rv = aStream->Available(&available);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
   void* data = nullptr;
-  rv = NS_ReadInputStreamToBuffer(aStream, &data, available);
+  rv = NS_ReadInputStreamToBuffer(aStream, &data, -1, &available);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }

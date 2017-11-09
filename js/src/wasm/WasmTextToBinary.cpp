@@ -2660,7 +2660,7 @@ ParseFunc(WasmParseContext& c, AstModule* module)
 
         if (c.ts.getIf(WasmToken::Export)) {
             AstRef ref = funcName.empty()
-                         ? AstRef(module->funcImportNames().length() + module->funcs().length())
+                         ? AstRef(module->numFuncImports() + module->funcs().length())
                          : AstRef(funcName);
             if (!ParseInlineExport(c, DefinitionKind::Function, module, ref))
                 return false;
@@ -3227,7 +3227,8 @@ ParseGlobal(WasmParseContext& c, AstModule* module)
         }
 
         if (c.ts.getIf(WasmToken::Export)) {
-            AstRef ref = name.empty() ? AstRef(module->globals().length()) : AstRef(name);
+            size_t refIndex = module->numGlobalImports() + module->globals().length();
+            AstRef ref = name.empty() ? AstRef(refIndex) : AstRef(name);
             if (!ParseInlineExport(c, DefinitionKind::Global, module, ref))
                 return false;
             if (!c.ts.match(WasmToken::CloseParen, c.error))

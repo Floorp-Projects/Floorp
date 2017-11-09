@@ -944,8 +944,8 @@ nsMenuPopupFrame::ShowPopup(bool aIsContextMenu)
 
     // do we need an actual reflow here?
     // is SetPopupPosition all that is needed?
-    PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                                                 NS_FRAME_HAS_DIRTY_CHILDREN);
+    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                  NS_FRAME_HAS_DIRTY_CHILDREN);
 
     if (mPopupType == ePopupTypeMenu) {
       nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
@@ -1878,7 +1878,7 @@ nsIScrollableFrame* nsMenuPopupFrame::GetScrollFrame(nsIFrame* aStart)
 void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem)
 {
   if (aMenuItem) {
-    aMenuItem->PresContext()->PresShell()->ScrollFrameRectIntoView(
+    aMenuItem->PresShell()->ScrollFrameRectIntoView(
       aMenuItem,
       nsRect(nsPoint(0,0), aMenuItem->GetRect().Size()),
       nsIPresShell::ScrollAxis(),
@@ -2029,7 +2029,7 @@ nsMenuPopupFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
       // the menu, blink it, or update any other state of the menuitem. The
       // command event will cause the item to be selected.
       nsContentUtils::DispatchXULCommand(aMenuItem->GetContent(), /* aTrusted = */ true,
-                                         nullptr, PresContext()->PresShell(),
+                                         nullptr, PresShell(),
                                          false, false, false, false);
     }
 #endif
@@ -2062,7 +2062,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
   doAction = false;
 
   // Enumerate over our list of frames.
-  auto insertion = PresContext()->PresShell()->
+  auto insertion = PresShell()->
     FrameConstructor()->GetInsertionPoint(GetContent(), nullptr);
   nsContainerFrame* immediateParent = insertion.mParentFrame;
   if (!immediateParent)
@@ -2339,7 +2339,7 @@ void
 nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   if (mReflowCallbackData.mPosted) {
-    PresContext()->PresShell()->CancelReflowCallback(this);
+    PresShell()->CancelReflowCallback(this);
     mReflowCallbackData.Clear();
   }
 

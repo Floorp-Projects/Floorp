@@ -13,6 +13,7 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/EditorDOMPoint.h"
 
 #include "nsAlgorithm.h"
 #include "nsAString.h"
@@ -103,7 +104,14 @@ CreateElementTransaction::DoTransaction()
   RefPtr<Selection> selection = mEditorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  rv = selection->Collapse(mParent, mParent->IndexOf(mNewNode) + 1);
+  EditorRawDOMPoint afterNewNode(mNewNode);
+  if (NS_WARN_IF(!afterNewNode.AdvanceOffset())) {
+    // If mutation observer or mutation event listener moved or removed the
+    // new node, we hit this case.  Should we use script blocker while we're
+    // in this method?
+    return NS_ERROR_FAILURE;
+  }
+  rv = selection->Collapse(afterNewNode);
   NS_ASSERTION(!rv.Failed(),
                "selection could not be collapsed after insert");
   return NS_OK;

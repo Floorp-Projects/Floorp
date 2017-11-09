@@ -1,0 +1,129 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/* eslint-env webextensions */
+
+"use strict";
+
+const TEST_URL = "http://example.com/";
+
+// These allowed rejections are copied from
+// browser/components/extensions/test/browser/head.js.
+PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
+PromiseTestUtils.whitelistRejectionsGlobally(/Receiving end does not exist/);
+
+add_task(async function () {
+  let tab = await addTab(TEST_URL);
+  await openRDM(tab);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+
+      "content_scripts": [{
+        "matches": [TEST_URL],
+        "js": ["content-script.js"],
+        "run_at": "document_start",
+      }],
+    },
+
+    async background() {
+      const TEST_URL = "http://example.com/"; // eslint-disable-line no-shadow
+
+      browser.test.log("Background script init");
+
+      let extTab;
+      let contentMessage = new Promise(resolve => {
+        browser.test.log("Listen to content");
+        let listener = async (msg, sender, respond) => {
+          browser.test.assertEq(msg, "hello-from-content",
+            "Background script got hello-from-content message");
+
+          let tabs = await browser.tabs.query({
+            currentWindow: true,
+            active: true,
+          });
+          browser.test.assertEq(tabs.length, 1,
+            "One tab is active in the current window");
+          extTab = tabs[0];
+          browser.test.log(`Tab: id ${extTab.id}, url ${extTab.url}`);
+          browser.test.assertEq(extTab.url, TEST_URL, "Tab has the test URL");
+
+          browser.test.assertTrue(!!sender, "Message has a sender");
+          browser.test.assertTrue(!!sender.tab, "Message has a sender.tab");
+          browser.test.assertEq(sender.tab.id, extTab.id,
+            "Sender's tab ID matches the RDM tab ID");
+          browser.test.assertEq(sender.tab.url, extTab.url,
+            "Sender's tab URL matches the RDM tab URL");
+
+          browser.runtime.onMessage.removeListener(listener);
+          resolve();
+        };
+        browser.runtime.onMessage.addListener(listener);
+      });
+
+      // Wait for "resume" message so we know the content script is also ready.
+      await new Promise(resolve => {
+        browser.test.onMessage.addListener(resolve);
+        browser.test.sendMessage("background-script-ready");
+      });
+
+      await contentMessage;
+
+      browser.test.log("Send message from background to content");
+      let contentSender = await browser.tabs.sendMessage(
+        extTab.id,
+        "hello-from-background"
+      );
+      browser.test.assertEq(contentSender.id, browser.runtime.id,
+        "The sender ID in content matches this extension");
+
+      browser.test.notifyPass("rdm-messaging");
+    },
+
+    files: {
+      "content-script.js": async function () {
+        browser.test.log("Content script init");
+
+        browser.test.log("Listen to background");
+        browser.runtime.onMessage.addListener((msg, sender, respond) => {
+          browser.test.assertEq(msg, "hello-from-background",
+            "Content script got hello-from-background message");
+
+          browser.test.assertTrue(!!sender, "Message has a sender");
+          browser.test.assertTrue(!!sender.id, "Message has a sender.id");
+
+          let { id } = sender;
+          respond({ id });
+        });
+
+        // Wait for "resume" message so we know the background script is also ready.
+        await new Promise(resolve => {
+          browser.test.onMessage.addListener(resolve);
+          browser.test.sendMessage("content-script-ready");
+        });
+
+        browser.test.log("Send message from content to background");
+        browser.runtime.sendMessage("hello-from-content");
+      },
+    },
+  });
+
+  let contentScriptReady = extension.awaitMessage("content-script-ready");
+  let backgroundScriptReady = extension.awaitMessage("background-script-ready");
+  let finish = extension.awaitFinish("rdm-messaging");
+
+  await extension.startup();
+
+  // It appears the background script and content script can loaded in either order, so
+  // we'll wait for the both to listen before proceeding.
+  await backgroundScriptReady;
+  await contentScriptReady;
+  extension.sendMessage("resume");
+
+  await finish;
+  await extension.unload();
+
+  await closeRDM(tab);
+  await removeTab(tab);
+});

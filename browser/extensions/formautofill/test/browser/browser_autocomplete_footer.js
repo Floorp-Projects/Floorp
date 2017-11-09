@@ -20,27 +20,6 @@ add_task(async function setup_storage() {
   await saveAddress(TEST_ADDRESS_5);
 });
 
-add_task(async function test_click_on_footer() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async function(browser) {
-    const {autoCompletePopup: {richlistbox: itemsBox}} = browser;
-
-    await openPopupOn(browser, "#organization");
-    // Click on the footer
-    const optionButton = itemsBox.querySelector(".autocomplete-richlistitem:last-child")._optionButton;
-    const prefTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, PRIVACY_PREF_URL);
-    // Wait for dropdown animation finished to continue mouse synthesizing.
-    await sleep(1000);
-    await EventUtils.synthesizeMouseAtCenter(optionButton, {});
-    info(`expecting tab: about:preferences#privacy opened`);
-    const prefTab = await prefTabPromise;
-    info(`expecting tab: about:preferences#privacy removed`);
-    await BrowserTestUtils.removeTab(prefTab);
-    ok(true, "Tab: preferences#privacy was successfully opened by clicking on the footer");
-
-    await closePopup(browser);
-  });
-});
-
 add_task(async function test_press_enter_on_footer() {
   await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async function(browser) {
     const {autoCompletePopup: {richlistbox: itemsBox}} = browser;
@@ -58,6 +37,27 @@ add_task(async function test_press_enter_on_footer() {
     info(`expecting tab: about:preferences#privacy removed`);
     await BrowserTestUtils.removeTab(prefTab);
     ok(true, "Tab: preferences#privacy was successfully opened by pressing enter on the footer");
+
+    await closePopup(browser);
+  });
+});
+
+add_task(async function test_click_on_footer() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async function(browser) {
+    const {autoCompletePopup: {richlistbox: itemsBox}} = browser;
+
+    await openPopupOn(browser, "#organization");
+    // Click on the footer
+    const optionButton = itemsBox.querySelector(".autocomplete-richlistitem:last-child")._optionButton;
+    const prefTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, PRIVACY_PREF_URL);
+    // Wait for dropdown animation finished to continue mouse synthesizing.
+    await sleep(3000);
+    await EventUtils.synthesizeMouseAtCenter(optionButton, {});
+    info(`expecting tab: about:preferences#privacy opened`);
+    const prefTab = await prefTabPromise;
+    info(`expecting tab: about:preferences#privacy removed`);
+    await BrowserTestUtils.removeTab(prefTab);
+    ok(true, "Tab: preferences#privacy was successfully opened by clicking on the footer");
 
     await closePopup(browser);
   });

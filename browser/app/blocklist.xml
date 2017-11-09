@@ -961,10 +961,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="i446" id="{E90FA778-C2B7-41D0-9FA9-3FEC1CA54D66}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
     <emItem blockID="i13" id="{E8E88AB0-7182-11DF-904E-6045E0D72085}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -1527,6 +1523,10 @@
     <emItem blockID="i520" id="/^({7316e43a-3ebd-4bb4-95c1-9caf6756c97f}|{0cc09160-108c-4759-bab1-5c12c216e005}|{ef03e721-f564-4333-a331-d4062cee6f2b}|{465fcfbb-47a4-4866-a5d5-d12f9a77da00}|{7557724b-30a9-42a4-98eb-77fcb0fd1be3}|{b7c7d4b0-7a84-4b73-a7ef-48ef59a52c3b})$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="f7569261-f575-4719-8202-552b20d013b0" id="{7e907a15-0a4c-4ff4-b64f-5eeb8f841349}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i8" id="{B13721C7-F507-4982-B2E5-502A71474FED}">
       <prefs/>
@@ -2138,6 +2138,10 @@
           <versionRange maxVersion="*" minVersion="43.0a1"/>
         </targetApplication>
       </versionRange>
+    </emItem>
+    <emItem blockID="i446" id="{E90FA778-C2B7-41D0-9FA9-3FEC1CA54D66}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
   </emItems>
   <pluginItems>

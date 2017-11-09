@@ -212,7 +212,7 @@ nsProgressFrame::AttributeChanged(int32_t  aNameSpaceID,
 
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::value || aAttribute == nsGkAtoms::max)) {
-    auto shell = PresContext()->PresShell();
+    auto shell = PresShell();
     for (auto childFrame : PrincipalChildList()) {
       shell->FrameNeedsReflow(childFrame, nsIPresShell::eResize,
                               NS_FRAME_IS_DIRTY);

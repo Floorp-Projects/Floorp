@@ -167,7 +167,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLSelectElement,
                                              nsGenericHTMLFormElementWithState,
-                                             nsIDOMHTMLSelectElement,
                                              nsIConstraintValidation)
 
 
@@ -202,12 +201,6 @@ HTMLSelectElement::GetAutocompleteInfo(AutocompleteInfo& aInfo)
     nsContentUtils::SerializeAutocompleteAttribute(attributeVal, aInfo,
                                                    mAutocompleteInfoState,
                                                    true);
-}
-
-NS_IMETHODIMP
-HTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
-{
-  return nsGenericHTMLFormElementWithState::GetForm(aForm);
 }
 
 nsresult
@@ -605,74 +598,18 @@ HTMLSelectElement::Add(nsGenericHTMLElement& aElement,
   parent->InsertBefore(aElement, refNode, aError);
 }
 
-NS_IMETHODIMP
-HTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
-                       nsIVariant* aBefore)
-{
-  uint16_t dataType;
-  nsresult rv = aBefore->GetDataType(&dataType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIContent> element = do_QueryInterface(aElement);
-  nsGenericHTMLElement* htmlElement =
-    nsGenericHTMLElement::FromContentOrNull(element);
-  if (!htmlElement) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // aBefore is omitted, undefined or null
-  if (dataType == nsIDataType::VTYPE_EMPTY ||
-      dataType == nsIDataType::VTYPE_VOID) {
-    ErrorResult error;
-    Add(*htmlElement, (nsGenericHTMLElement*)nullptr, error);
-    return error.StealNSResult();
-  }
-
-  nsCOMPtr<nsISupports> supports;
-
-  // whether aBefore is nsIDOMHTMLElement...
-  if (NS_SUCCEEDED(aBefore->GetAsISupports(getter_AddRefs(supports)))) {
-    nsCOMPtr<nsIContent> beforeElement = do_QueryInterface(supports);
-    nsGenericHTMLElement* beforeHTMLElement =
-      nsGenericHTMLElement::FromContentOrNull(beforeElement);
-
-    NS_ENSURE_TRUE(beforeHTMLElement, NS_ERROR_DOM_SYNTAX_ERR);
-
-    ErrorResult error;
-    Add(*htmlElement, beforeHTMLElement, error);
-    return error.StealNSResult();
-  }
-
-  // otherwise, whether aBefore is long
-  int32_t index;
-  NS_ENSURE_SUCCESS(aBefore->GetAsInt32(&index), NS_ERROR_DOM_SYNTAX_ERR);
-
-  ErrorResult error;
-  Add(*htmlElement, index, error);
-  return error.StealNSResult();
-}
-
-NS_IMETHODIMP
+void
 HTMLSelectElement::Remove(int32_t aIndex)
 {
   nsCOMPtr<nsINode> option = Item(static_cast<uint32_t>(aIndex));
   if (!option) {
-    return NS_OK;
+    return;
   }
 
   option->Remove();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLSelectElement::GetOptions(nsIDOMHTMLOptionsCollection** aValue)
-{
-  NS_IF_ADDREF(*aValue = GetOptions());
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 HTMLSelectElement::GetType(nsAString& aType)
 {
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
@@ -681,25 +618,9 @@ HTMLSelectElement::GetType(nsAString& aType)
   else {
     aType.AssignLiteral("select-one");
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLSelectElement::GetLength(uint32_t* aLength)
-{
-  return mOptions->GetLength(aLength);
 }
 
 #define MAX_DYNAMIC_SELECT_LENGTH 10000
-
-NS_IMETHODIMP
-HTMLSelectElement::SetLength(uint32_t aLength)
-{
-  ErrorResult rv;
-  SetLength(aLength, rv);
-  return rv.StealNSResult();
-}
 
 void
 HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv)
@@ -708,7 +629,7 @@ HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv)
 
   if (curlen > aLength) { // Remove extra options
     for (uint32_t i = curlen; i > aLength; --i) {
-      MOZ_ALWAYS_SUCCEEDS(Remove(i - 1));
+      Remove(i - 1);
     }
   } else if (aLength > curlen) {
     if (aLength > MAX_DYNAMIC_SELECT_LENGTH) {
@@ -768,23 +689,6 @@ HTMLSelectElement::SelectedOptions()
   return mSelectedOptions;
 }
 
-NS_IMETHODIMP
-HTMLSelectElement::GetSelectedOptions(nsIDOMHTMLCollection** aSelectedOptions)
-{
-  NS_ADDREF(*aSelectedOptions = SelectedOptions());
-  return NS_OK;
-}
-
-//NS_IMPL_INT_ATTR(HTMLSelectElement, SelectedIndex, selectedindex)
-
-NS_IMETHODIMP
-HTMLSelectElement::GetSelectedIndex(int32_t* aValue)
-{
-  *aValue = SelectedIndex();
-
-  return NS_OK;
-}
-
 nsresult
 HTMLSelectElement::SetSelectedIndexInternal(int32_t aIndex, bool aNotify)
 {
@@ -805,12 +709,6 @@ HTMLSelectElement::SetSelectedIndexInternal(int32_t aIndex, bool aNotify)
   SetSelectionChanged(true, aNotify);
 
   return rv;
-}
-
-NS_IMETHODIMP
-HTMLSelectElement::SetSelectedIndex(int32_t aIndex)
-{
-  return SetSelectedIndexInternal(aIndex, true);
 }
 
 NS_IMETHODIMP
@@ -1119,15 +1017,6 @@ HTMLSelectElement::IsOptionDisabled(HTMLOptionElement* aOption) const
   return false;
 }
 
-NS_IMETHODIMP
-HTMLSelectElement::GetValue(nsAString& aValue)
-{
-  DOMString value;
-  GetValue(value);
-  value.ToString(aValue);
-  return NS_OK;
-}
-
 void
 HTMLSelectElement::GetValue(DOMString& aValue)
 {
@@ -1147,7 +1036,7 @@ HTMLSelectElement::GetValue(DOMString& aValue)
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-NS_IMETHODIMP
+void
 HTMLSelectElement::SetValue(const nsAString& aValue)
 {
   uint32_t length = Length();
@@ -1162,21 +1051,12 @@ HTMLSelectElement::SetValue(const nsAString& aValue)
     option->GetValue(optionVal);
     if (optionVal.Equals(aValue)) {
       SetSelectedIndexInternal(int32_t(i), true);
-      return NS_OK;
+      return;
     }
   }
   // No matching option was found.
   SetSelectedIndexInternal(-1, true);
-  return NS_OK;
 }
-
-
-NS_IMPL_BOOL_ATTR(HTMLSelectElement, Autofocus, autofocus)
-NS_IMPL_BOOL_ATTR(HTMLSelectElement, Disabled, disabled)
-NS_IMPL_BOOL_ATTR(HTMLSelectElement, Multiple, multiple)
-NS_IMPL_STRING_ATTR(HTMLSelectElement, Name, name)
-NS_IMPL_BOOL_ATTR(HTMLSelectElement, Required, required)
-NS_IMPL_UINT_ATTR(HTMLSelectElement, Size, size)
 
 int32_t
 HTMLSelectElement::TabIndexDefault()
@@ -1199,18 +1079,6 @@ HTMLSelectElement::IsHTMLFocusable(bool aWithMouse,
   return false;
 }
 
-NS_IMETHODIMP
-HTMLSelectElement::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  return mOptions->Item(aIndex, aReturn);
-}
-
-NS_IMETHODIMP
-HTMLSelectElement::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
-{
-  return mOptions->NamedItem(aName, aReturn);
-}
-
 bool
 HTMLSelectElement::CheckSelectSomething(bool aNotify)
 {
@@ -1230,8 +1098,7 @@ HTMLSelectElement::SelectSomething(bool aNotify)
     return false;
   }
 
-  uint32_t count;
-  GetLength(&count);
+  uint32_t count = Length();
   for (uint32_t i = 0; i < count; i++) {
     bool disabled;
     nsresult rv = IsOptionDisabled(i, &disabled);
@@ -1586,7 +1453,8 @@ HTMLSelectElement::RestoreState(nsPresState* aState)
   }
 
   if (aState->IsDisabledSet() && !aState->GetDisabled()) {
-    SetDisabled(false);
+    IgnoredErrorResult rv;
+    SetDisabled(false, rv);
   }
 
   return false;

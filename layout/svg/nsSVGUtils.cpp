@@ -248,7 +248,7 @@ nsSVGUtils::ScheduleReflowSVG(nsIFrame *aFrame)
   nsFrameState dirtyBit =
     (outerSVGFrame == aFrame ? NS_FRAME_IS_DIRTY : NS_FRAME_HAS_DIRTY_CHILDREN);
 
-  aFrame->PresContext()->PresShell()->FrameNeedsReflow(
+  aFrame->PresShell()->FrameNeedsReflow(
     outerSVGFrame, nsIPresShell::eResize, dirtyBit);
 }
 

@@ -1265,9 +1265,8 @@ HTMLEditRules::WillInsert(Selection& aSelection,
       // If we are here then the selection is right after a mozBR that is in
       // the same block as the selection.  We need to move the selection start
       // to be before the mozBR.
-      selNode = priorNode->GetParentNode();
-      selOffset = selNode->IndexOf(priorNode);
-      nsresult rv = aSelection.Collapse(selNode, selOffset);
+      EditorRawDOMPoint point(priorNode);
+      nsresult rv = aSelection.Collapse(point.AsRaw());
       NS_ENSURE_SUCCESS_VOID(rv);
     }
   }
@@ -1493,7 +1492,9 @@ HTMLEditRules::WillInsertText(EditAction aAction,
       }
     }
     aSelection->SetInterlinePosition(false);
-    if (curNode) aSelection->Collapse(curNode, curOffset);
+    if (curNode) {
+      aSelection->Collapse(curNode, curOffset);
+    }
     // manually update the doc changed range so that AfterEdit will clean up
     // the correct portion of the document.
     if (!mDocChangeRange) {
@@ -1802,15 +1803,16 @@ HTMLEditRules::StandardBreakImpl(nsINode& aNode,
   }
   node = brNode->GetParentNode();
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-  int32_t offset = node->IndexOf(brNode);
   if (bAfterBlock && bBeforeBlock) {
     // We just placed a br between block boundaries.  This is the one case
     // where we want the selection to be before the br we just placed, as the
     // br will be on a new line, rather than at end of prior line.
     aSelection.SetInterlinePosition(true);
-    nsresult rv = aSelection.Collapse(node, offset);
+    EditorRawDOMPoint point(brNode);
+    nsresult rv = aSelection.Collapse(point.AsRaw());
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
+    int32_t offset = node->IndexOf(brNode);
     WSRunObject wsObj(htmlEditor, node, offset + 1);
     nsCOMPtr<nsINode> secondBR;
     int32_t visOffset = 0;
@@ -2309,7 +2311,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
           return NS_ERROR_FAILURE;
         }
         // Fix up selection
-        rv = aSelection->Collapse(pt.Container(), pt.Offset());
+        rv = aSelection->Collapse(pt.AsRaw());
         NS_ENSURE_SUCCESS(rv, rv);
       }
       rv = InsertBRIfNeeded(aSelection);
@@ -2380,7 +2382,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         if (NS_WARN_IF(!newSel.IsSet())) {
           return NS_ERROR_FAILURE;
         }
-        aSelection->Collapse(newSel.Container(), newSel.Offset());
+        aSelection->Collapse(newSel.AsRaw());
         return NS_OK;
       }
 
@@ -2572,7 +2574,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
             return NS_ERROR_FAILURE;
           }
           // Fix up selection
-          rv = aSelection->Collapse(pt.Container(), pt.Offset());
+          rv = aSelection->Collapse(pt.AsRaw());
           NS_ENSURE_SUCCESS(rv, rv);
           return NS_OK;
         }
@@ -2792,7 +2794,7 @@ HTMLEditRules::GetGoodSelPointForNode(nsINode& aNode,
     return EditorDOMPoint();
   }
 
-  EditorDOMPoint ret(aNode.GetParentNode(), aNode.AsContent());
+  EditorDOMPoint ret(&aNode);
   if ((!aNode.IsHTMLElement(nsGkAtoms::br) ||
        mHTMLEditor->IsVisibleBRElement(&aNode)) && isPreviousAction) {
     ret.AdvanceOffset();
@@ -4552,25 +4554,22 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
       NS_ENSURE_TRUE(aSelection.GetRangeAt(0), NS_OK);
       nsCOMPtr<nsINode> startNode =
         aSelection.GetRangeAt(0)->GetStartContainer();
-      int32_t startOffset = aSelection.GetRangeAt(0)->StartOffset();
       if (rememberedLeftBQ &&
           (startNode == rememberedLeftBQ ||
            EditorUtils::IsDescendantOf(*startNode, *rememberedLeftBQ))) {
         // Selection is inside rememberedLeftBQ - push it past it.
-        startNode = rememberedLeftBQ->GetParentNode();
-        startOffset = startNode ? 1 + startNode->IndexOf(rememberedLeftBQ) : 0;
-        aSelection.Collapse(startNode, startOffset);
+        EditorRawDOMPoint afterRememberedLeftBQ(rememberedLeftBQ);
+        afterRememberedLeftBQ.AdvanceOffset();
+        aSelection.Collapse(afterRememberedLeftBQ);
       }
       // And pull selection before beginning of rememberedRightBQ
       startNode = aSelection.GetRangeAt(0)->GetStartContainer();
-      startOffset = aSelection.GetRangeAt(0)->StartOffset();
       if (rememberedRightBQ &&
           (startNode == rememberedRightBQ ||
            EditorUtils::IsDescendantOf(*startNode, *rememberedRightBQ))) {
         // Selection is inside rememberedRightBQ - push it before it.
-        startNode = rememberedRightBQ->GetParentNode();
-        startOffset = startNode ? startNode->IndexOf(rememberedRightBQ) : -1;
-        aSelection.Collapse(startNode, startOffset);
+        EditorRawDOMPoint atRememberedRightBQ(rememberedRightBQ);
+        aSelection.Collapse(atRememberedRightBQ);
       }
     }
     return NS_OK;
@@ -5188,37 +5187,45 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
         // AfterEdit()
       }
     } else {
-      int32_t offset = blockParent->IndexOf(emptyBlock);
-
       if (aAction == nsIEditor::eNext || aAction == nsIEditor::eNextWord ||
           aAction == nsIEditor::eToEndOfLine) {
         // Move to the start of the next node, if any
         nsINode* child = emptyBlock->GetNextSibling();
+        int32_t offset = blockParent->IndexOf(emptyBlock);
         nsCOMPtr<nsIContent> nextNode =
           htmlEditor->GetNextNode(blockParent, offset + 1, child, true);
         if (nextNode) {
           EditorDOMPoint pt = GetGoodSelPointForNode(*nextNode, aAction);
-          nsresult rv = aSelection->Collapse(pt.Container(), pt.Offset());
+          nsresult rv = aSelection->Collapse(pt.AsRaw());
           NS_ENSURE_SUCCESS(rv, rv);
         } else {
           // Adjust selection to be right after it.
-          nsresult rv = aSelection->Collapse(blockParent, offset + 1);
+          EditorRawDOMPoint afterEmptyBlock(emptyBlock);
+          if (NS_WARN_IF(!afterEmptyBlock.AdvanceOffset())) {
+            return NS_ERROR_FAILURE;
+          }
+          nsresult rv = aSelection->Collapse(afterEmptyBlock);
           NS_ENSURE_SUCCESS(rv, rv);
         }
       } else if (aAction == nsIEditor::ePrevious ||
                  aAction == nsIEditor::ePreviousWord ||
                  aAction == nsIEditor::eToBeginningOfLine) {
         // Move to the end of the previous node
+        int32_t offset = blockParent->IndexOf(emptyBlock);
         nsCOMPtr<nsIContent> priorNode = htmlEditor->GetPriorNode(blockParent,
                                                                   offset,
                                                                   emptyBlock,
                                                                   true);
         if (priorNode) {
           EditorDOMPoint pt = GetGoodSelPointForNode(*priorNode, aAction);
-          nsresult rv = aSelection->Collapse(pt.Container(), pt.Offset());
+          nsresult rv = aSelection->Collapse(pt.AsRaw());
           NS_ENSURE_SUCCESS(rv, rv);
         } else {
-          nsresult rv = aSelection->Collapse(blockParent, offset + 1);
+          EditorRawDOMPoint afterEmptyBlock(emptyBlock);
+          if (NS_WARN_IF(!afterEmptyBlock.AdvanceOffset())) {
+            return NS_ERROR_FAILURE;
+          }
+          nsresult rv = aSelection->Collapse(afterEmptyBlock);
           NS_ENSURE_SUCCESS(rv, rv);
         }
       } else if (aAction != nsIEditor::eNone) {
@@ -6625,10 +6632,12 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
       rv = aSelection.Collapse(pNode, 0);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
-      headerParent = sibling->GetParentNode();
-      offset = headerParent ? headerParent->IndexOf(sibling) : -1;
+      EditorRawDOMPoint afterSibling(sibling);
+      if (NS_WARN_IF(!afterSibling.AdvanceOffset())) {
+        return NS_ERROR_FAILURE;
+      }
       // Put selection after break
-      rv = aSelection.Collapse(headerParent, offset + 1);
+      rv = aSelection.Collapse(afterSibling);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   } else {
@@ -6825,15 +6834,13 @@ HTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
   // look inside any containers that are up front.
   nsCOMPtr<nsINode> rightParaNode = do_QueryInterface(rightPara);
   NS_ENSURE_STATE(mHTMLEditor && rightParaNode);
-  nsCOMPtr<nsIDOMNode> child =
-    GetAsDOMNode(mHTMLEditor->GetLeftmostChild(rightParaNode, true));
+  nsIContent* child = mHTMLEditor->GetLeftmostChild(rightParaNode, true);
   if (EditorBase::IsTextNode(child) ||
       mHTMLEditor->IsContainer(child)) {
     aSelection->Collapse(child,0);
   } else {
-    int32_t offset;
-    nsCOMPtr<nsIDOMNode> parent = EditorBase::GetNodeLocation(child, &offset);
-    aSelection->Collapse(parent,offset);
+    EditorRawDOMPoint atChild(child);
+    aSelection->Collapse(atChild);
   }
   return NS_OK;
 }
@@ -6959,9 +6966,11 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
                                                      getter_AddRefs(brNode));
         NS_ENSURE_SUCCESS(rv, rv);
         if (brNode) {
-          nsCOMPtr<nsINode> brParent = brNode->GetParentNode();
-          int32_t offset = brParent ? brParent->IndexOf(brNode) : -1;
-          rv = aSelection.Collapse(brParent, offset);
+          EditorRawDOMPoint atBrNode(brNode);
+          if (NS_WARN_IF(!atBrNode.IsSetAndValid())) {
+            return NS_ERROR_FAILURE;
+          }
+          rv = aSelection.Collapse(atBrNode);
           NS_ENSURE_SUCCESS(rv, rv);
           return NS_OK;
         }
@@ -6974,9 +6983,11 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
                               &visOffset, &wsType);
         if (wsType == WSType::special || wsType == WSType::br ||
             visNode->IsHTMLElement(nsGkAtoms::hr)) {
-          nsCOMPtr<nsINode> parent = visNode->GetParentNode();
-          int32_t offset = parent ? parent->IndexOf(visNode) : -1;
-          rv = aSelection.Collapse(parent, offset);
+          EditorRawDOMPoint atVisNode(visNode);
+          if (NS_WARN_IF(!atVisNode.IsSetAndValid())) {
+            return NS_ERROR_FAILURE;
+          }
+          rv = aSelection.Collapse(atVisNode);
           NS_ENSURE_SUCCESS(rv, rv);
           return NS_OK;
         } else {
@@ -7681,36 +7692,42 @@ HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
 
   if (nodeBefore && nodeAfter) {
     return NS_OK;  // selection is inside block
-  } else if (nodeBefore) {
+  }
+
+  if (nodeBefore) {
     // selection is after block.  put at end of block.
     NS_ENSURE_STATE(mHTMLEditor);
     nsCOMPtr<nsINode> tmp = mHTMLEditor->GetLastEditableChild(*mNewBlock);
     if (!tmp) {
       tmp = mNewBlock;
     }
-    uint32_t endPoint;
+    EditorRawDOMPoint endPoint;
     if (EditorBase::IsTextNode(tmp) ||
         mHTMLEditor->IsContainer(tmp)) {
-      endPoint = tmp->Length();
+      endPoint.Set(tmp, tmp->Length());
     } else {
-      tmp = EditorBase::GetNodeLocation(tmp, (int32_t*)&endPoint);
-      endPoint++;  // want to be after this node
+      endPoint.Set(tmp);
+      if (NS_WARN_IF(!endPoint.AdvanceOffset())) {
+        return NS_ERROR_FAILURE;
+      }
     }
-    return aSelection->Collapse(tmp, (int32_t)endPoint);
-  } else {
-    // selection is before block.  put at start of block.
-    NS_ENSURE_STATE(mHTMLEditor);
-    nsCOMPtr<nsINode> tmp = mHTMLEditor->GetFirstEditableChild(*mNewBlock);
-    if (!tmp) {
-      tmp = mNewBlock;
-    }
-    int32_t offset;
-    if (EditorBase::IsTextNode(tmp) ||
-        mHTMLEditor->IsContainer(tmp)) {
-      tmp = EditorBase::GetNodeLocation(tmp, &offset);
-    }
-    return aSelection->Collapse(tmp, 0);
+    return aSelection->Collapse(endPoint);
   }
+
+  // selection is before block.  put at start of block.
+  NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsINode> tmp = mHTMLEditor->GetFirstEditableChild(*mNewBlock);
+  if (!tmp) {
+    tmp = mNewBlock;
+  }
+  EditorRawDOMPoint atStartOfBlock;
+  if (EditorBase::IsTextNode(tmp) ||
+      mHTMLEditor->IsContainer(tmp)) {
+    atStartOfBlock.Set(tmp);
+  } else {
+    atStartOfBlock.Set(tmp, 0);
+  }
+  return aSelection->Collapse(atStartOfBlock);
 }
 
 void
@@ -7904,7 +7921,7 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
     return NS_OK;
   }
   EditorDOMPoint pt = GetGoodSelPointForNode(*nearNode, aAction);
-  rv = aSelection->Collapse(pt.Container(), pt.Offset());
+  rv = aSelection->Collapse(pt.AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

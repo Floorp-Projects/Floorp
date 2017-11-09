@@ -937,7 +937,7 @@ nsContainerFrame::DestroyOverflowList()
 {
   nsFrameList* list = RemovePropTableFrames(OverflowProperty());
   MOZ_ASSERT(list && list->IsEmpty());
-  list->Delete(PresContext()->PresShell());
+  list->Delete(PresShell());
 }
 
 #endif /* nsContainerFrame_h___ */

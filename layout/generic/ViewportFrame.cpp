@@ -178,7 +178,7 @@ ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  nsIPresShell* shell = PresContext()->PresShell();
+  nsIPresShell* shell = PresShell();
   if (nsCanvasFrame* canvasFrame = shell->GetCanvasFrame()) {
     if (Element* container = canvasFrame->GetCustomContentContainer()) {
       if (nsIFrame* frame = container->GetPrimaryFrame()) {
@@ -279,7 +279,7 @@ ViewportFrame::AdjustReflowInputAsContainingBlock(ReflowInput* aReflowInput) con
   // If a scroll position clamping scroll-port size has been set, layout
   // fixed position elements to this size instead of the computed size.
   nsRect rect(0, 0, aReflowInput->ComputedWidth(), aReflowInput->ComputedHeight());
-  nsIPresShell* ps = PresContext()->PresShell();
+  nsIPresShell* ps = PresShell();
   if (ps->IsScrollPositionClampingScrollPortSizeSet()) {
     rect.SizeTo(ps->GetScrollPositionClampingScrollPortSize());
   }
@@ -399,7 +399,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
     nsSubDocumentFrame* container = static_cast<nsSubDocumentFrame*>
       (nsLayoutUtils::GetCrossDocParentFrame(this));
     if (container && !container->ShouldClipSubdocument()) {
-      container->PresContext()->PresShell()->
+      container->PresShell()->
         FrameNeedsReflow(container, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
     }
   }
@@ -412,7 +412,7 @@ bool
 ViewportFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 {
   nsIScrollableFrame* rootScrollFrame =
-    PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
+    PresShell()->GetRootScrollFrameAsScrollable();
   if (rootScrollFrame && !rootScrollFrame->IsIgnoringViewportClipping()) {
     return false;
   }

@@ -177,7 +177,7 @@ struct nsSVGFrameReferenceFromProperty
 {
   explicit nsSVGFrameReferenceFromProperty(nsIFrame* aFrame)
     : mFrame(aFrame)
-    , mFramePresShell(aFrame->PresContext()->PresShell())
+    , mFramePresShell(aFrame->PresShell())
   {}
 
   // Clear our reference to the frame.

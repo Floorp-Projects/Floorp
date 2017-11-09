@@ -8,11 +8,11 @@
  */
 add_task(async function test_saveBookmarksToJSONFile_and_create() {
   // Add a bookmark
-  let uri = NetUtil.newURI("http://getfirefox.com/");
-  let bookmarkId =
-    PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.unfiledBookmarksFolderId, uri,
-      PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
+  let bookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "Get Firefox!",
+    url: "http://getfirefox.com/"
+  });
 
   // Test saveBookmarksToJSONFile()
   let backupFile = FileUtils.getFile("TmpD", ["bookmarks.json"]);
@@ -47,5 +47,5 @@ add_task(async function test_saveBookmarksToJSONFile_and_create() {
   // Cleanup
   backupFile.remove(false);
   await PlacesBackups.create(0);
-  PlacesUtils.bookmarks.removeItem(bookmarkId);
+  await PlacesUtils.bookmarks.remove(bookmark);
 });

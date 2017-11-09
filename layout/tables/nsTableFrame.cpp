@@ -373,7 +373,7 @@ nsTableFrame::RowOrColSpanChanged(nsTableCellFrame* aCellFrame)
 
       // XXX Should this use eStyleChange?  It currently doesn't need
       // to, but it might given more optimization.
-      PresContext()->PresShell()->
+      PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
     }
   }
@@ -726,7 +726,7 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
   NS_PRECONDITION(aColType != eColAnonymousCol, "Shouldn't happen");
   MOZ_ASSERT(aNumColsToAdd > 0, "We should be adding _something_.");
 
-  nsIPresShell *shell = PresContext()->PresShell();
+  nsIPresShell *shell = PresShell();
 
   // Get the last col frame
   nsFrameList newColFrames;
@@ -1219,7 +1219,7 @@ nsDisplayItemGeometry*
 nsDisplayTableItem::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 {
   return new nsDisplayTableItemGeometry(this, aBuilder,
-      mFrame->GetOffsetTo(mFrame->PresContext()->PresShell()->GetRootFrame()));
+      mFrame->GetOffsetTo(mFrame->PresShell()->GetRootFrame()));
 }
 
 void
@@ -1233,7 +1233,7 @@ nsDisplayTableItem::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   bool invalidateForAttachmentFixed = false;
   if (mDrawsBackground && mPartHasFixedBackground) {
     nsPoint frameOffsetToViewport = mFrame->GetOffsetTo(
-        mFrame->PresContext()->PresShell()->GetRootFrame());
+        mFrame->PresShell()->GetRootFrame());
     invalidateForAttachmentFixed =
         frameOffsetToViewport != geometry->mFrameOffsetToViewport;
   }
@@ -2577,8 +2577,8 @@ nsTableFrame::AppendFrames(ChildListID     aListID,
   printf("=== TableFrame::AppendFrames\n");
   Dump(true, true, true);
 #endif
-  PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                                               NS_FRAME_HAS_DIRTY_CHILDREN);
+  PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                NS_FRAME_HAS_DIRTY_CHILDREN);
   SetGeometryDirty();
 }
 
@@ -2749,8 +2749,8 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
     return;
   }
 
-  PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                                               NS_FRAME_HAS_DIRTY_CHILDREN);
+  PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                NS_FRAME_HAS_DIRTY_CHILDREN);
   SetGeometryDirty();
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== TableFrame::InsertFrames\n");
@@ -2838,7 +2838,7 @@ nsTableFrame::RemoveFrame(ChildListID     aListID,
                mozilla::StyleDisplay::TableColumnGroup !=
                  aOldFrame->StyleDisplay()->mDisplay,
                "Wrong list name; use kColGroupList iff colgroup");
-  nsIPresShell* shell = PresContext()->PresShell();
+  nsIPresShell* shell = PresShell();
   nsTableFrame* lastParent = nullptr;
   while (aOldFrame) {
     nsIFrame* oldFrameNextContinuation = aOldFrame->GetNextContinuation();

@@ -248,7 +248,7 @@ nsTreeBodyFrame::CalcMaxRowWidth()
   nsTreeColumn* col;
 
   RefPtr<gfxContext> rc =
-    PresContext()->PresShell()->CreateReferenceRenderingContext();
+    PresShell()->CreateReferenceRenderingContext();
 
   for (int32_t row = 0; row < mRowCount; ++row) {
     rowWidth = 0;
@@ -282,7 +282,7 @@ nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDest
   mScrollEvent.Revoke();
   // Make sure we cancel any posted callbacks.
   if (mReflowCallbackPosted) {
-    PresContext()->PresShell()->CancelReflowCallback(this);
+    PresShell()->CancelReflowCallback(this);
     mReflowCallbackPosted = false;
   }
 
@@ -349,10 +349,10 @@ void
 nsTreeBodyFrame::EnsureView()
 {
   if (!mView) {
-    if (PresContext()->PresShell()->IsReflowLocked()) {
+    if (PresShell()->IsReflowLocked()) {
       if (!mReflowCallbackPosted) {
         mReflowCallbackPosted = true;
-        PresContext()->PresShell()->PostReflowCallback(this);
+        PresShell()->PostReflowCallback(this);
       }
       return;
     }
@@ -389,13 +389,13 @@ nsTreeBodyFrame::ManageReflowCallback(const nsRect& aRect, nscoord aHorzWidth)
 {
   if (!mReflowCallbackPosted &&
       (!aRect.IsEqualEdges(mRect) || mHorzWidth != aHorzWidth)) {
-    PresContext()->PresShell()->PostReflowCallback(this);
+    PresShell()->PostReflowCallback(this);
     mReflowCallbackPosted = true;
     mOriginalHorzWidth = mHorzWidth;
   }
   else if (mReflowCallbackPosted &&
            mHorzWidth != aHorzWidth && mOriginalHorzWidth == aHorzWidth) {
-    PresContext()->PresShell()->CancelReflowCallback(this);
+    PresShell()->CancelReflowCallback(this);
     mReflowCallbackPosted = false;
     mOriginalHorzWidth = -1;
   }
@@ -527,12 +527,12 @@ nsTreeBodyFrame::SetView(nsITreeView * aView)
     NS_ENSURE_STATE(weakFrame.IsAlive());
     mView->GetRowCount(&mRowCount);
 
-    if (!PresContext()->PresShell()->IsReflowLocked()) {
+    if (!PresShell()->IsReflowLocked()) {
       // The scrollbar will need to be updated.
       FullScrollbarsUpdate(false);
     } else if (!mReflowCallbackPosted) {
       mReflowCallbackPosted = true;
-      PresContext()->PresShell()->PostReflowCallback(this);
+      PresShell()->PostReflowCallback(this);
     }
   }
 
@@ -1771,7 +1771,7 @@ nsTreeBodyFrame::IsCellCropped(int32_t aRow, nsITreeColumn* aCol, bool *_retval)
     return NS_ERROR_INVALID_ARG;
 
   RefPtr<gfxContext> rc =
-    PresContext()->PresShell()->CreateReferenceRenderingContext();
+    PresShell()->CreateReferenceRenderingContext();
 
   rv = GetCellWidth(aRow, col, rc, desiredSize, currentSize);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1792,9 +1792,8 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
     // XXX optimize this more
 
     mStringWidth = -1;
-    PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                 nsIPresShell::eTreeChange,
-                                                 NS_FRAME_IS_DIRTY);
+    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                  NS_FRAME_IS_DIRTY);
   }
 }
 
@@ -2920,8 +2919,8 @@ nsTreeBodyFrame::PaintTreeBody(gfxContext& aRenderingContext,
 
   if (oldPageCount != mPageLength || mHorzWidth != CalcHorzWidth(GetScrollParts())) {
     // Schedule a ResizeReflow that will update our info properly.
-    PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+    PresShell()->FrameNeedsReflow(this, nsIPresShell::eResize,
+                                  NS_FRAME_IS_DIRTY);
   }
 #ifdef DEBUG
   int32_t rowCount = mRowCount;

@@ -170,8 +170,9 @@ class HeadersPanel extends Component {
       this.getProperties(uploadHeaders, REQUEST_HEADERS_FROM_UPLOAD),
     );
 
+    // not showing #hash in url
     let summaryUrl = urlDetails.unicodeUrl ?
-      this.renderSummary(SUMMARY_URL, new URL(urlDetails.unicodeUrl).origin) : null;
+      this.renderSummary(SUMMARY_URL, urlDetails.unicodeUrl.split("#")[0]) : null;
 
     let summaryMethod = method ?
       this.renderSummary(SUMMARY_METHOD, method) : null;

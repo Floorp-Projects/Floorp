@@ -552,7 +552,7 @@ public:
         static_cast<nsComboboxControlFrame*>(mFrame.GetFrame());
       static_cast<nsListControlFrame*>(combo->mDropdownFrame)->
         SetSuppressScrollbarUpdate(true);
-      nsCOMPtr<nsIPresShell> shell = mFrame->PresContext()->PresShell();
+      nsCOMPtr<nsIPresShell> shell = mFrame->PresShell();
       shell->FrameNeedsReflow(combo->mDropdownFrame, nsIPresShell::eResize,
                               NS_FRAME_IS_DIRTY);
       shell->FlushPendingNotifications(FlushType::Layout);
@@ -1046,7 +1046,7 @@ nsComboboxControlFrame::HandleRedisplayTextEvent()
 
   ActuallyDisplayText(true);
   // XXXbz This should perhaps be eResize.  Check.
-  PresContext()->PresShell()->FrameNeedsReflow(mDisplayFrame,
+  PresShell()->FrameNeedsReflow(mDisplayFrame,
                                                nsIPresShell::eStyleChange,
                                                NS_FRAME_IS_DIRTY);
 
@@ -1364,7 +1364,7 @@ nsComboboxControlFrame::CreateFrameForDisplayNode()
   MOZ_ASSERT(mDisplayContent);
 
   // Get PresShell
-  nsIPresShell *shell = PresContext()->PresShell();
+  nsIPresShell *shell = PresShell();
   StyleSetHandle styleSet = shell->StyleSet();
 
   // create the style contexts for the anonymous block frame and text frame

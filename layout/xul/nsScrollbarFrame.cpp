@@ -155,7 +155,7 @@ nsScrollbarFrame::GetScrollbarMediator()
   }
   sbm = do_QueryFrame(f);
   if (f && !sbm) {
-    f = f->PresContext()->PresShell()->GetRootScrollFrame();
+    f = f->PresShell()->GetRootScrollFrame();
     if (f && f->GetContent() == mScrollbarMediator) {
       return do_QueryFrame(f);
     }

@@ -17,6 +17,10 @@ namespace dom {
 
 struct ClientSourceConstructorArgs
 {
+  nsID id;
+  ClientType type;
+  PrincipalInfo principalInfo;
+  TimeStamp creationTime;
 };
 
 struct IPCClientInfo

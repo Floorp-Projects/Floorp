@@ -1460,7 +1460,7 @@ nsCSSRendering::FindBackgroundFrame(nsIFrame* aForFrame,
                                     nsIFrame** aBackgroundFrame)
 {
   nsIFrame* rootElementFrame =
-    aForFrame->PresContext()->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
+    aForFrame->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
   if (IsCanvasFrame(aForFrame)) {
     *aBackgroundFrame = FindCanvasBackgroundFrame(aForFrame, rootElementFrame);
     return true;

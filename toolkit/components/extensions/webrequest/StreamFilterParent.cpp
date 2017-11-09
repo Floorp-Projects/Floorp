@@ -418,8 +418,11 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   // Important: Do this only *after* running the next listener in the chain, so
   // that we get the final delivery target after any retargeting that it may do.
   if (nsCOMPtr<nsIThreadRetargetableRequest> req = do_QueryInterface(aRequest)) {
-    Unused << req->GetDeliveryTarget(getter_AddRefs(mIOThread));
-    MOZ_ASSERT(mIOThread);
+    nsCOMPtr<nsIEventTarget> thread;
+    Unused << req->GetDeliveryTarget(getter_AddRefs(thread));
+    if (thread) {
+      mIOThread = Move(thread);
+    }
   }
 
   return rv;

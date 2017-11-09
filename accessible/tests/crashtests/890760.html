@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+    window.getSelection().collapse(document.createTextNode("."), 0);
+}
+
+</script>
+</head>
+<body onload="setTimeout(boom, 0);"></body>
+</html>

@@ -268,7 +268,7 @@ static already_AddRefed<TextureClient>
 TexClientFromReadback(SharedSurface* src, CompositableForwarder* allocator,
                       TextureFlags baseFlags, LayersBackend layersBackend)
 {
-  auto backendType = gfx::BackendType::CAIRO;
+  auto backendType = gfx::BackendType::SKIA;
   TexClientFactory factory(allocator, src->mHasAlpha, src->mSize, backendType,
                            baseFlags, layersBackend);
 

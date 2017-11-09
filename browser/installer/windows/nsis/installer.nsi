@@ -495,17 +495,35 @@ Section "-Application" APP_IDX
   ; since this will either add it for the user if unelevated or All Users if
   ; elevated.
   ${If} $AddStartMenuSC == 1
-    CreateShortCut "$SMPROGRAMS\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
-    ${If} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
-      ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandShortName}.lnk" \
-                                           "$INSTDIR"
-      ${If} ${AtLeastWin7}
-      ${AndIf} "$AppUserModelID" != ""
-        ApplicationID::Set "$SMPROGRAMS\${BrandShortName}.lnk" "$AppUserModelID" "true"
+    ; See if there's an existing shortcut for this installation using the old
+    ; name that we should just rename, instead of creating a new shortcut.
+    ; We could do this renaming even when $AddStartMenuSC is false; the idea
+    ; behind not doing that is to interpret "false" as "don't do anything
+    ; involving start menu shortcuts at all." We could also try to do this for
+    ; both shell contexts, but that won't typically accomplish anything.
+    ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+      ShellLink::GetShortCutTarget "$SMPROGRAMS\${BrandFullName}.lnk"
+      Pop $0
+      ${GetLongPath} "$0" $0
+      ${If} $0 == "$INSTDIR\${FileMainEXE}"
+      ${AndIfNot} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
+        Rename "$SMPROGRAMS\${BrandFullName}.lnk" \
+               "$SMPROGRAMS\${BrandShortName}.lnk"
+        ${LogMsg} "Renamed existing shortcut to $SMPROGRAMS\${BrandShortName}.lnk"
       ${EndIf}
-      ${LogMsg} "Added Shortcut: $SMPROGRAMS\${BrandShortName}.lnk"
     ${Else}
-      ${LogMsg} "** ERROR Adding Shortcut: $SMPROGRAMS\${BrandShortName}.lnk"
+      CreateShortCut "$SMPROGRAMS\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
+      ${If} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
+        ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandShortName}.lnk" \
+                                               "$INSTDIR"
+        ${If} "$AppUserModelID" != ""
+          ApplicationID::Set "$SMPROGRAMS\${BrandShortName}.lnk" \
+                             "$AppUserModelID" "true"
+        ${EndIf}
+        ${LogMsg} "Added Shortcut: $SMPROGRAMS\${BrandShortName}.lnk"
+      ${Else}
+        ${LogMsg} "** ERROR Adding Shortcut: $SMPROGRAMS\${BrandShortName}.lnk"
+      ${EndIf}
     ${EndIf}
   ${EndIf}
 
@@ -525,17 +543,28 @@ Section "-Application" APP_IDX
   ${EndIf}
 
   ${If} $AddDesktopSC == 1
-    CreateShortCut "$DESKTOP\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
-    ${If} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
-      ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandShortName}.lnk" \
-                                             "$INSTDIR"
-      ${If} ${AtLeastWin7}
-      ${AndIf} "$AppUserModelID" != ""
-        ApplicationID::Set "$DESKTOP\${BrandShortName}.lnk" "$AppUserModelID"  "true"
+    ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
+      ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
+      Pop $0
+      ${GetLongPath} "$0" $0
+      ${If} $0 == "$INSTDIR\${FileMainEXE}"
+      ${AndIfNot} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
+        Rename "$DESKTOP\${BrandFullName}.lnk" "$DESKTOP\${BrandShortName}.lnk"
+        ${LogMsg} "Renamed existing shortcut to $DESKTOP\${BrandShortName}.lnk"
       ${EndIf}
-      ${LogMsg} "Added Shortcut: $DESKTOP\${BrandShortName}.lnk"
     ${Else}
-      ${LogMsg} "** ERROR Adding Shortcut: $DESKTOP\${BrandShortName}.lnk"
+      CreateShortCut "$DESKTOP\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
+      ${If} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
+        ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandShortName}.lnk" \
+                                               "$INSTDIR"
+        ${If} "$AppUserModelID" != ""
+          ApplicationID::Set "$DESKTOP\${BrandShortName}.lnk" \
+                             "$AppUserModelID" "true"
+        ${EndIf}
+        ${LogMsg} "Added Shortcut: $DESKTOP\${BrandShortName}.lnk"
+      ${Else}
+        ${LogMsg} "** ERROR Adding Shortcut: $DESKTOP\${BrandShortName}.lnk"
+      ${EndIf}
     ${EndIf}
   ${EndIf}
 

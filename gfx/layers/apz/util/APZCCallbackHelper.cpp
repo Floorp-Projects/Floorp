@@ -613,7 +613,7 @@ UpdateRootFrameForTouchTargetDocument(nsIFrame* aRootFrame)
   // Re-target so that the hit test is performed relative to the frame for the
   // Root Content Document instead of the Root Document which are different in
   // Android. See bug 1229752 comment 16 for an explanation of why this is necessary.
-  if (nsIDocument* doc = aRootFrame->PresContext()->PresShell()->GetPrimaryContentDocument()) {
+  if (nsIDocument* doc = aRootFrame->PresShell()->GetPrimaryContentDocument()) {
     if (nsIPresShell* shell = doc->GetShell()) {
       if (nsIFrame* frame = shell->GetRootFrame()) {
         return frame;
@@ -648,7 +648,7 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
     nsLayoutUtils::GetFrameForPoint(aRootFrame, point, flags);
   nsIScrollableFrame* scrollAncestor = target
     ? nsLayoutUtils::GetAsyncScrollableAncestorFrame(target)
-    : aRootFrame->PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
+    : aRootFrame->PresShell()->GetRootScrollFrameAsScrollable();
 
   // Assuming that if there's no scrollAncestor, there's already a displayPort.
   nsCOMPtr<dom::Element> dpElement = scrollAncestor
@@ -685,7 +685,7 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
     // element again and bail out on this operation.
     APZCCH_LOG("Widget %p's document element %p didn't have a displayport\n",
         aWidget, dpElement.get());
-    APZCCallbackHelper::InitializeRootDisplayport(aRootFrame->PresContext()->PresShell());
+    APZCCallbackHelper::InitializeRootDisplayport(aRootFrame->PresShell());
     return false;
   }
 

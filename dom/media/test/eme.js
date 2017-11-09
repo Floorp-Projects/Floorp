@@ -149,7 +149,7 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
 function MaybeCrossOriginURI(test, uri)
 {
   if (test.crossOrigin) {
-    return "http://test2.mochi.test:8888/tests/dom/media/test/allowed.sjs?" + uri;
+    return "https://example.com:443/tests/dom/media/test/allowed.sjs?" + uri;
   } else {
     return uri;
   }

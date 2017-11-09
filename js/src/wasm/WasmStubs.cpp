@@ -256,7 +256,7 @@ static const unsigned FramePushedBeforeAlign = NonVolatileRegsPushSize + sizeof(
 // function has an ABI derived from its specific signature, so this function
 // must map from the ABI of ExportFuncPtr to the export's signature's ABI.
 static bool
-GenerateEntry(MacroAssembler& masm, const FuncExport& fe, Offsets* offsets)
+GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe, Offsets* offsets)
 {
     masm.haltingAlign(CodeAlignment);
 
@@ -1370,9 +1370,9 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
 
     for (const FuncExport& fe : exports) {
         Offsets offsets;
-        if (!GenerateEntry(masm, fe, &offsets))
+        if (!GenerateInterpEntry(masm, fe, &offsets))
             return false;
-        if (!code->codeRanges.emplaceBack(CodeRange::Entry, fe.funcIndex(), offsets))
+        if (!code->codeRanges.emplaceBack(CodeRange::InterpEntry, fe.funcIndex(), offsets))
             return false;
     }
 

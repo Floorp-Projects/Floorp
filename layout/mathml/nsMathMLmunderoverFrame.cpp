@@ -77,7 +77,7 @@ void
 nsMathMLmunderoverFrame::DestroyFrom(nsIFrame* aDestroyRoot, PostDestroyData& aPostDestroyData)
 {
   if (!mPostReflowIncrementScriptLevelCommands.IsEmpty()) {
-    PresContext()->PresShell()->CancelReflowCallback(this);
+    PresShell()->CancelReflowCallback(this);
   }
   nsMathMLContainerFrame::DestroyFrom(aDestroyRoot, aPostDestroyData);
 }
@@ -119,7 +119,7 @@ nsMathMLmunderoverFrame::SetIncrementScriptLevel(uint32_t aChildIndex,
   }
 
   if (mPostReflowIncrementScriptLevelCommands.IsEmpty()) {
-    PresContext()->PresShell()->PostReflowCallback(this);
+    PresShell()->PostReflowCallback(this);
   }
 
   mPostReflowIncrementScriptLevelCommands.AppendElement(

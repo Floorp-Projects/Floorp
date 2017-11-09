@@ -269,7 +269,7 @@ AccessibleCaret::RemoveCaretElement(nsIDocument* aDocument)
       frame = frame->GetPlaceholderFrame();
     }
     nsAutoScriptBlocker scriptBlocker;
-    nsCSSFrameConstructor* fc = frame->PresContext()->PresShell()->FrameConstructor();
+    nsCSSFrameConstructor* fc = frame->PresShell()->FrameConstructor();
     fc->BeginUpdate();
     frame->GetParent()->RemoveFrame(nsIFrame::kPrincipalList, frame);
     fc->EndUpdate();

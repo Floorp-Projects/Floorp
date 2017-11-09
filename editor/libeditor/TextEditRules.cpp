@@ -7,6 +7,7 @@
 
 #include "TextEditUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
@@ -494,8 +495,11 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
 
   nsINode* nextNode = selNode->GetNextSibling();
   if (nextNode && TextEditUtils::IsMozBR(nextNode)) {
-    int32_t offsetInParent = EditorBase::GetChildOffset(selNode, parentNode);
-    rv = aSelection->Collapse(parentNode, offsetInParent + 1);
+    EditorRawDOMPoint afterSelNode(selNode);
+    if (NS_WARN_IF(!afterSelNode.AdvanceOffset())) {
+      return NS_ERROR_FAILURE;
+    }
+    rv = aSelection->Collapse(afterSelNode);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -778,6 +782,8 @@ TextEditRules::WillInsertText(EditAction aAction,
         !outString->IsEmpty() && outString->Last() == nsCRT::LF;
       aSelection->SetInterlinePosition(endsWithLF);
 
+      MOZ_ASSERT(!selChild,
+        "After inserting text into a text node, selChild should be nullptr");
       aSelection->Collapse(curNode, curOffset);
     }
   }

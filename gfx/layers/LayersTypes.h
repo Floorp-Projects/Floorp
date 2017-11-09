@@ -203,7 +203,7 @@ struct EventRegions {
   }
 };
 
-// Bit flags that go on a ContainerLayer (or RefLayer) and override the
+// Bit flags that go on a RefLayer and override the
 // event regions in the entire subtree below. This is needed for propagating
 // various flags across processes since the child-process layout code doesn't
 // know about parent-process listeners or CSS rules.

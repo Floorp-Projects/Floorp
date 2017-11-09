@@ -33,27 +33,22 @@
 .scrollbutton-up > .toolbarbutton-icon,
 .scrollbutton-down > .toolbarbutton-icon {
   -moz-appearance: none;
-  width: 7px;
+  width: 20px;
   height: 16px;
-  background-size: 14px 16px;
-  background-position: 0 center;
+  background-size: 16px;
+  background-position: center;
   background-repeat: no-repeat;
-  background-image: url("images/breadcrumbs-scrollbutton.png");
+  background-image: url("images/breadcrumbs-scrollbutton.svg");
   list-style-image: none;
-  margin: 0 8px;
   padding: 0;
+
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-color);
 }
 
-@media (min-resolution: 1.1dppx) {
-  .scrollbutton-up > .toolbarbutton-icon,
-  .scrollbutton-down > .toolbarbutton-icon {
-    background-image: url("images/breadcrumbs-scrollbutton@2x.png");
-  }
-}
-
-.scrollbutton-up:not([disabled]):active:hover > .toolbarbutton-icon,
-.scrollbutton-down:not([disabled]):active:hover > .toolbarbutton-icon {
-  background-position: -7px center;
+.scrollbutton-up:not([disabled]):active:hover,
+.scrollbutton-down:not([disabled]):active:hover {
+  background-color: var(--theme-toolbar-hover);
 }
 
 .scrollbutton-up[disabled] > .toolbarbutton-icon,
@@ -241,9 +236,4 @@ widgets.css is overwritten. */
 .theme-firebug .breadcrumbs-widget-container .scrollbutton-up:active,
 .theme-firebug .breadcrumbs-widget-container .scrollbutton-down:active {
   background: none !important;
-}
-
-.theme-firebug .breadcrumbs-widget-container .scrollbutton-up:not([disabled]):active:hover > .toolbarbutton-icon,
-.theme-firebug .breadcrumbs-widget-container .scrollbutton-down:not([disabled]):active:hover > .toolbarbutton-icon {
-  background-position: 0 center;
 }

@@ -7451,7 +7451,7 @@ nsWindow::GetAccessible()
       nsAccessibilityService* accService = GetOrCreateAccService();
       if (accService) {
         a11y::DocAccessible* docAcc =
-          GetAccService()->GetDocAccessible(frame->PresContext()->PresShell());
+          GetAccService()->GetDocAccessible(frame->PresShell());
         if (docAcc) {
           NS_LOG_WMGETOBJECT(this, mWnd,
                              docAcc->GetAccessibleOrDescendant(frame->GetContent()));
