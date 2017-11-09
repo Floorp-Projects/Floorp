@@ -8,6 +8,7 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsXRemoteService.h"
+#include "nsRemoteService.h"
 #include "nsIObserverService.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
@@ -47,14 +48,6 @@ using namespace mozilla;
 
 const unsigned char kRemoteVersion[] = "5.1";
 
-#ifdef IS_BIG_ENDIAN
-#define TO_LITTLE_ENDIAN32(x) \
-    ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >> 8) | \
-    (((x) & 0x0000ff00) << 8) | (((x) & 0x000000ff) << 24))
-#else
-#define TO_LITTLE_ENDIAN32(x) (x)
-#endif
-
 // Minimize the roundtrips to the X server by getting all the atoms at once
 static const char *XAtomNames[] = {
   MOZILLA_VERSION_PROP,
@@ -75,40 +68,6 @@ Atom nsXRemoteService::sMozProfileAtom;
 Atom nsXRemoteService::sMozProgramAtom;
 Atom nsXRemoteService::sMozCommandLineAtom;
 
-nsXRemoteService * nsXRemoteService::sRemoteImplementation = 0;
-
-
-static bool
-FindExtensionParameterInCommand(const char* aParameterName,
-                                const nsACString& aCommand,
-                                char aSeparator,
-                                nsACString* aValue)
-{
-  nsAutoCString searchFor;
-  searchFor.Append(aSeparator);
-  searchFor.Append(aParameterName);
-  searchFor.Append('=');
-
-  nsACString::const_iterator start, end;
-  aCommand.BeginReading(start);
-  aCommand.EndReading(end);
-  if (!FindInReadable(searchFor, start, end))
-    return false;
-
-  nsACString::const_iterator charStart, charEnd;
-  charStart = end;
-  aCommand.EndReading(charEnd);
-  nsACString::const_iterator idStart = charStart, idEnd;
-  if (FindCharInReadable(aSeparator, charStart, charEnd)) {
-    idEnd = charStart;
-  } else {
-    idEnd = charEnd;
-  }
-  *aValue = nsDependentCSubstring(idStart, idEnd);
-  return true;
-}
-
-
 nsXRemoteService::nsXRemoteService() = default;
 
 void
@@ -120,12 +79,6 @@ nsXRemoteService::XRemoteBaseStartup(const char *aAppName, const char *aProfileN
     ToLowerCase(mAppName);
 
     mProfileName = aProfileName;
-
-    nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
-    if (obs) {
-      obs->AddObserver(this, "xpcom-shutdown", false);
-      obs->AddObserver(this, "quit-application", false);
-    }
 }
 
 void
@@ -154,17 +107,6 @@ nsXRemoteService::HandleCommandsFor(Window aWindowId)
                     (unsigned char*) mProfileName.get(), mProfileName.Length());
   }
 
-}
-
-NS_IMETHODIMP
-nsXRemoteService::Observe(nsISupports* aSubject,
-                          const char *aTopic,
-                          const char16_t *aData)
-{
-  // This can be xpcom-shutdown or quit-application, but it's the same either
-  // way.
-  Shutdown();
-  return NS_OK;
 }
 
 bool
@@ -208,7 +150,8 @@ nsXRemoteService::HandleNewProperty(XID aWindowId, Display* aDisplay,
       return false;
 
     // cool, we got the property data.
-    const char *response = HandleCommandLine(data, window, aEventTime);
+    const char *response =
+      nsRemoteService::HandleCommandLine(data, window, aEventTime);
 
     // put the property onto the window as the response
     XChangeProperty (aDisplay, aWindowId,
@@ -231,74 +174,6 @@ nsXRemoteService::HandleNewProperty(XID aWindowId, Display* aDisplay,
   }
 
   return false;
-}
-
-const char*
-nsXRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
-                                    uint32_t aTimestamp)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsICommandLineRunner> cmdline
-    (do_CreateInstance("@mozilla.org/toolkit/command-line;1", &rv));
-  if (NS_FAILED(rv))
-    return "509 internal error";
-
-  // the commandline property is constructed as an array of int32_t
-  // followed by a series of null-terminated strings:
-  //
-  // [argc][offsetargv0][offsetargv1...]<workingdir>\0<argv[0]>\0argv[1]...\0
-  // (offset is from the beginning of the buffer)
-
-  int32_t argc = TO_LITTLE_ENDIAN32(*reinterpret_cast<int32_t*>(aBuffer));
-  char *wd   = aBuffer + ((argc + 1) * sizeof(int32_t));
-
-  nsCOMPtr<nsIFile> lf;
-  rv = NS_NewNativeLocalFile(nsDependentCString(wd), true,
-                             getter_AddRefs(lf));
-  if (NS_FAILED(rv))
-    return "509 internal error";
-
-  nsAutoCString desktopStartupID;
-
-  char **argv = (char**) malloc(sizeof(char*) * argc);
-  if (!argv) return "509 internal error";
-
-  int32_t  *offset = reinterpret_cast<int32_t*>(aBuffer) + 1;
-
-  for (int i = 0; i < argc; ++i) {
-    argv[i] = aBuffer + TO_LITTLE_ENDIAN32(offset[i]);
-
-    if (i == 0) {
-      nsDependentCString cmd(argv[0]);
-      FindExtensionParameterInCommand("DESKTOP_STARTUP_ID",
-                                      cmd, ' ',
-                                      &desktopStartupID);
-    }
-  }
-
-  rv = cmdline->Init(argc, argv, lf, nsICommandLine::STATE_REMOTE_AUTO);
-
-  free (argv);
-  if (NS_FAILED(rv)) {
-    return "509 internal error";
-  }
-
-  if (aWindow)
-    cmdline->SetWindowContext(aWindow);
-
-  if (sRemoteImplementation)
-    sRemoteImplementation->SetDesktopStartupIDOrTimestamp(desktopStartupID, aTimestamp);
-
-  rv = cmdline->Run();
-
-  if (NS_ERROR_ABORT == rv)
-    return "500 command not parseable";
-
-  if (NS_FAILED(rv))
-    return "509 internal error";
-
-  return "200 executed command";
 }
 
 void
