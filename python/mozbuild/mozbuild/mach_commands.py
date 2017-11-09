@@ -394,7 +394,7 @@ class Build(MachCommandBase):
             resolve_target_to_make,
         )
 
-        self.log_manager.register_structured_logger(logging.getLogger('mozbuild'))
+        self.log_manager.enable_all_structured_loggers()
 
         warnings_path = self._get_state_filename('warnings.json')
         monitor = self._spawn(BuildMonitor)
@@ -690,6 +690,8 @@ class Build(MachCommandBase):
     @CommandArgument('options', default=None, nargs=argparse.REMAINDER,
                      help='Configure options')
     def configure(self, options=None, buildstatus_messages=False, line_handler=None):
+        self.log_manager.enable_all_structured_loggers()
+
         def on_line(line):
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
 
@@ -2214,6 +2216,8 @@ class StaticAnalysis(MachCommandBase):
     def check(self, source=None, jobs=2, strip=1, verbose=False,
               checks='-*', fix=False, header_filter=''):
         self._set_log_level(verbose)
+        self.log_manager.enable_all_structured_loggers()
+
         rc = self._build_compile_db(verbose=verbose)
         if rc != 0:
             return rc
@@ -2245,8 +2249,6 @@ class StaticAnalysis(MachCommandBase):
 
         if fix:
             common_args.append('-fix')
-
-        self.log_manager.register_structured_logger(logging.getLogger('mozbuild'))
 
         compile_db = json.loads(open(self._compile_db, 'r').read())
         total = 0
