@@ -16,7 +16,8 @@ interface XULControllers;
 
 [HTMLConstructor]
 interface HTMLTextAreaElement : HTMLElement {
-           // attribute DOMString autocomplete;
+  [CEReactions, SetterThrows, Pure]
+           attribute DOMString autocomplete;
   [CEReactions, SetterThrows, Pure]
            attribute boolean autofocus;
   [CEReactions, SetterThrows, Pure]

@@ -181,6 +181,11 @@ public:
                                 ValidityStateType aType) override;
 
   // Web IDL binding methods
+  void GetAutocomplete(DOMString& aValue);
+  void SetAutocomplete(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);
+  }
   bool Autofocus()
   {
     return GetBoolAttr(nsGkAtoms::autofocus);
@@ -346,6 +351,8 @@ protected:
   /** Whether we should make :-moz-ui-valid apply on the element. **/
   bool                     mCanShowValidUI;
   bool                     mIsPreviewEnabled;
+
+  nsContentUtils::AutocompleteAttrState mAutocompleteAttrState;
 
   void FireChangeEventIfNeeded();
 
