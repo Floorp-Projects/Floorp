@@ -313,11 +313,7 @@ task checkstyle(type: Checkstyle) {
 
 task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
     into("${project.buildDir}/generated/source/preprocessed_code")
-    from("${topobjdir}/mobile/android/base/generated/preprocessed") {
-        // All other preprocessed code is included in the geckoview project.
-        include '**/AdjustConstants.java'
-        include '**/MmaConstants.java'
-    }
+    from("${topobjdir}/mobile/android/base/generated/preprocessed")
 }
 
 // The localization system uses the moz.build preprocessor to interpolate a .dtd
