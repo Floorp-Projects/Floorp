@@ -35,12 +35,12 @@ promise_test(t => {
 }, 'Ensure document has been loaded');
 
 promise_test(t => {
-  useTestRefreshMode(t);
-
-  var div = addDiv(t, { style: 'opacity: 0.1' });
-  div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'opacity: 0.1' });
+    div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
+    return waitForPaintsFlushed();
+  }).then(() => {
     var opacity =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
     assert_equals(opacity, '0.1',
@@ -49,13 +49,14 @@ promise_test(t => {
 }, 'Initial opacity value for animation with no no keyframe at offset 0');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'opacity: 0.1' });
+    div.animate({ opacity: [ 0.5, 1 ] }, 100 * MS_PER_SEC);
+    div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
 
-  var div = addDiv(t, { style: 'opacity: 0.1' });
-  div.animate({ opacity: [ 0.5, 1 ] }, 100 * MS_PER_SEC);
-  div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     var opacity =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
     assert_equals(opacity, '0.5',
@@ -66,16 +67,16 @@ promise_test(t => {
    'there is a lower-priority animation');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'opacity: 0.1; transition: opacity 100s linear' });
+    getComputedStyle(div).opacity;
 
-  var div =
-    addDiv(t, { style: 'opacity: 0.1; transition: opacity 100s linear' });
-  getComputedStyle(div).opacity;
+    div.style.opacity = '0.5';
+    div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
 
-  div.style.opacity = '0.5';
-  div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     var opacity =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
     assert_equals(opacity, '0.1',
@@ -86,12 +87,13 @@ promise_test(t => {
    'there is a transition on the same property');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'opacity: 0' });
+    div.animate([{ offset: 0, opacity: 1 }], 100 * MS_PER_SEC);
 
-  var div = addDiv(t, { style: 'opacity: 0' });
-  div.animate([{ offset: 0, opacity: 1 }], 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
 
     var opacity =
@@ -103,13 +105,14 @@ promise_test(t => {
 }, 'Opacity value for animation with no keyframe at offset 1 at 50% ');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'opacity: 0' });
+    div.animate({ opacity: [ 0.5, 0.5 ] }, 100 * MS_PER_SEC);
+    div.animate([{ offset: 0, opacity: 1 }], 100 * MS_PER_SEC);
 
-  var div = addDiv(t, { style: 'opacity: 0' });
-  div.animate({ opacity: [ 0.5, 0.5 ] }, 100 * MS_PER_SEC);
-  div.animate([{ offset: 0, opacity: 1 }], 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
 
     var opacity =
@@ -122,16 +125,16 @@ promise_test(t => {
    'there is a lower-priority animation');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'opacity: 0; transition: opacity 100s linear' });
+    getComputedStyle(div).opacity;
 
-  var div =
-    addDiv(t, { style: 'opacity: 0; transition: opacity 100s linear' });
-  getComputedStyle(div).opacity;
+    div.style.opacity = '0.5';
+    div.animate([{ offset: 0, opacity: 1 }], 100 * MS_PER_SEC);
 
-  div.style.opacity = '0.5';
-  div.animate([{ offset: 0, opacity: 1 }], 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
 
     var opacity =
@@ -144,13 +147,15 @@ promise_test(t => {
    'there is a transition on the same property');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  var lowerAnimation;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    lowerAnimation = div.animate({ opacity: [ 0.5, 1 ] }, 100 * MS_PER_SEC);
+    var higherAnimation = div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
 
-  var div = addDiv(t);
-  var lowerAnimation = div.animate({ opacity: [ 0.5, 1 ] }, 100 * MS_PER_SEC);
-  var higherAnimation = div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     lowerAnimation.pause();
     return waitForPaintsFlushed();
   }).then(() => {
@@ -169,13 +174,15 @@ promise_test(t => {
    'composed onto a paused underlying animation');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  var lowerAnimation;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    lowerAnimation = div.animate({ opacity: [ 0.5, 1 ] }, 100 * MS_PER_SEC);
+    var higherAnimation = div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
 
-  var div = addDiv(t);
-  var lowerAnimation = div.animate({ opacity: [ 0.5, 1 ] }, 100 * MS_PER_SEC);
-  var higherAnimation = div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     lowerAnimation.playbackRate = 0;
     return waitForPaintsFlushed();
   }).then(() => {
@@ -194,13 +201,15 @@ promise_test(t => {
    'composed onto a zero playback rate underlying animation');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  var lowerAnimation;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    lowerAnimation = div.animate({ opacity: [ 1, 0.5 ] }, 100 * MS_PER_SEC);
+    var higherAnimation = div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
 
-  var div = addDiv(t);
-  var lowerAnimation = div.animate({ opacity: [ 1, 0.5 ] }, 100 * MS_PER_SEC);
-  var higherAnimation = div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     lowerAnimation.effect.timing.duration = 0;
     lowerAnimation.effect.timing.fill = 'forwards';
     return waitForPaintsFlushed();
@@ -220,12 +229,13 @@ promise_test(t => {
    'composed onto a zero active duration underlying animation');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate({ transform: 'translateX(200px)' }, 100 * MS_PER_SEC);
 
-  var div = addDiv(t, { style: 'transform: translateX(100px)' });
-  div.animate({ transform: 'translateX(200px)' }, 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     var transform =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
     assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 100, 0)',
@@ -234,14 +244,15 @@ promise_test(t => {
 }, 'Initial transform value for animation with no keyframe at offset 0');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate({ transform: [ 'translateX(200px)', 'translateX(300px)' ] },
+                100 * MS_PER_SEC);
+    div.animate({ transform: 'translateX(400px)' }, 100 * MS_PER_SEC);
 
-  var div = addDiv(t, { style: 'transform: translateX(100px)' });
-  div.animate({ transform: [ 'translateX(200px)', 'translateX(300px)' ] },
-              100 * MS_PER_SEC);
-  div.animate({ transform: 'translateX(400px)' }, 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     var transform =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
     assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 200, 0)',
@@ -251,17 +262,17 @@ promise_test(t => {
    'there is a lower-priority animation');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px);' +
+                             'transition: transform 100s linear' });
+    getComputedStyle(div).transform;
 
-  var div =
-    addDiv(t, { style: 'transform: translateX(100px);' +
-                       'transition: transform 100s linear' });
-  getComputedStyle(div).transform;
+    div.style.transform = 'translateX(200px)';
+    div.animate({ transform: 'translateX(400px)' }, 100 * MS_PER_SEC);
 
-  div.style.transform = 'translateX(200px)';
-  div.animate({ transform: 'translateX(400px)' }, 100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     var transform =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
     assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 100, 0)',
@@ -272,13 +283,14 @@ promise_test(t => {
    'there is a transition');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate([{ offset: 0, transform: 'translateX(200pX)' }],
+                100 * MS_PER_SEC);
 
-  var div = addDiv(t, { style: 'transform: translateX(100px)' });
-  div.animate([{ offset: 0, transform: 'translateX(200pX)' }],
-              100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
 
     var transform =
@@ -289,15 +301,16 @@ promise_test(t => {
 }, 'Transform value for animation with no keyframe at offset 1 at 50%');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate({ transform: [ 'translateX(200px)', 'translateX(200px)' ] },
+                100 * MS_PER_SEC);
+    div.animate([{ offset: 0, transform: 'translateX(300px)' }],
+                100 * MS_PER_SEC);
 
-  var div = addDiv(t, { style: 'transform: translateX(100px)' });
-  div.animate({ transform: [ 'translateX(200px)', 'translateX(200px)' ] },
-              100 * MS_PER_SEC);
-  div.animate([{ offset: 0, transform: 'translateX(300px)' }],
-              100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
 
     var transform =
@@ -309,18 +322,18 @@ promise_test(t => {
    'there is a lower-priority animation');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px);' +
+                             'transition: transform 100s linear' });
+    getComputedStyle(div).transform;
 
-  var div =
-    addDiv(t, { style: 'transform: translateX(100px);' +
-                       'transition: transform 100s linear' });
-  getComputedStyle(div).transform;
+    div.style.transform = 'translateX(200px)';
+    div.animate([{ offset: 0, transform: 'translateX(300px)' }],
+                100 * MS_PER_SEC);
 
-  div.style.transform = 'translateX(200px)';
-  div.animate([{ offset: 0, transform: 'translateX(300px)' }],
-              100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
 
     var transform =
@@ -333,16 +346,18 @@ promise_test(t => {
    'there is a transition');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  var lowerAnimation;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    lowerAnimation =
+      div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                  100 * MS_PER_SEC);
+    var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                      100 * MS_PER_SEC);
 
-  var div = addDiv(t);
-  var lowerAnimation =
-    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
-                100 * MS_PER_SEC);
-  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
-                                    100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     lowerAnimation.pause();
     return waitForPaintsFlushed();
   }).then(() => {
@@ -361,16 +376,18 @@ promise_test(t => {
    'composed onto a paused underlying animation');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  var lowerAnimation;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    lowerAnimation =
+      div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                  100 * MS_PER_SEC);
+    var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                      100 * MS_PER_SEC);
 
-  var div = addDiv(t);
-  var lowerAnimation =
-    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
-                100 * MS_PER_SEC);
-  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
-                                    100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     lowerAnimation.playbackRate = 0;
     return waitForPaintsFlushed();
   }).then(() => {
@@ -389,17 +406,18 @@ promise_test(t => {
    'composed onto a zero playback rate underlying animation');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    var lowerAnimation =
+      div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                  { duration: 10 * MS_PER_SEC,
+                    fill: 'forwards' });
+    var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                      100 * MS_PER_SEC);
 
-  var div = addDiv(t);
-  var lowerAnimation =
-    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
-                { duration: 10 * MS_PER_SEC,
-                  fill: 'forwards' });
-  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
-                                    100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
 
     // We need to wait for a paint so that we can send the state of the lower
@@ -417,18 +435,19 @@ promise_test(t => {
    'composed onto a underlying animation with fill:forwards');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    var lowerAnimation =
+      div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                  { duration: 10 * MS_PER_SEC,
+                    endDelay: -5 * MS_PER_SEC,
+                    fill: 'forwards' });
+    var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                      100 * MS_PER_SEC);
 
-  var div = addDiv(t);
-  var lowerAnimation =
-    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
-                { duration: 10 * MS_PER_SEC,
-                  endDelay: -5 * MS_PER_SEC,
-                  fill: 'forwards' });
-  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
-                                    100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
 
     // We need to wait for a paint just like the above test.
@@ -446,18 +465,19 @@ promise_test(t => {
    'endDelay');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    var lowerAnimation =
+      div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                  { duration: 10 * MS_PER_SEC,
+                    endDelay: 100 * MS_PER_SEC,
+                    fill: 'forwards' });
+    var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                      100 * MS_PER_SEC);
 
-  var div = addDiv(t);
-  var lowerAnimation =
-    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
-                { duration: 10 * MS_PER_SEC,
-                  endDelay: 100 * MS_PER_SEC,
-                  fill: 'forwards' });
-  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
-                                    100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
 
     var transform =
@@ -472,13 +492,14 @@ promise_test(t => {
    'endDelay');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate({ transform: 'translateX(200px)' },
+                { duration: 100 * MS_PER_SEC, delay: 50 * MS_PER_SEC });
 
-  var div = addDiv(t, { style: 'transform: translateX(100px)' });
-  div.animate({ transform: 'translateX(200px)' },
-              { duration: 100 * MS_PER_SEC, delay: 50 * MS_PER_SEC });
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(100 * MS_PER_SEC);
 
     var transform =
@@ -491,16 +512,17 @@ promise_test(t => {
    'positive delay');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
 
-  var div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate([{ offset: 0, transform: 'translateX(200px)'}],
+                { duration: 100 * MS_PER_SEC,
+                  iterationStart: 1,
+                  iterationComposite: 'accumulate' });
 
-  div.animate([{ offset: 0, transform: 'translateX(200px)'}],
-              { duration: 100 * MS_PER_SEC,
-                iterationStart: 1,
-                iterationComposite: 'accumulate' });
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     var transform =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
     assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 300, 0)',
@@ -511,20 +533,21 @@ promise_test(t => {
    'iterationComposite is accumulate');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    var lowerAnimation =
+      div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                  100 * MS_PER_SEC);
+    var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                      100 * MS_PER_SEC);
 
-  var div = addDiv(t);
-  var lowerAnimation =
-    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
-                100 * MS_PER_SEC);
-  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
-                                    100 * MS_PER_SEC);
+    lowerAnimation.timeline = null;
+    // Set current time at 50% duration.
+    lowerAnimation.currentTime = 50 * MS_PER_SEC;
 
-  lowerAnimation.timeline = null;
-  // Set current time at 50% duration.
-  lowerAnimation.currentTime = 50 * MS_PER_SEC;
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
 
     var transform =
