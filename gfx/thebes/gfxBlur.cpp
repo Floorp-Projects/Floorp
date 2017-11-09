@@ -285,6 +285,8 @@ struct BlurCacheKey : public PLDHashEntryHdr {
     , mInnerMinSize(aInnerMinSize)
   { }
 
+  BlurCacheKey(BlurCacheKey&&) = default;
+
   static PLDHashNumber
   HashKey(const KeyTypePointer aKey)
   {
@@ -344,10 +346,10 @@ struct BlurCacheKey : public PLDHashEntryHdr {
  * to the cache entry to be able to be tracked by the nsExpirationTracker.
  * */
 struct BlurCacheData {
-  BlurCacheData(SourceSurface* aBlur, const IntMargin& aBlurMargin, const BlurCacheKey& aKey)
+  BlurCacheData(SourceSurface* aBlur, const IntMargin& aBlurMargin, BlurCacheKey&& aKey)
     : mBlur(aBlur)
     , mBlurMargin(aBlurMargin)
-    , mKey(aKey)
+    , mKey(Move(aKey))
   {}
 
   BlurCacheData(const BlurCacheData& aOther)
@@ -506,7 +508,7 @@ CacheBlur(DrawTarget* aDT,
           SourceSurface* aBoxShadow)
 {
   BlurCacheKey key(aMinSize, aBlurRadius, aCornerRadii, aShadowColor, aDT->GetBackendType());
-  BlurCacheData* data = new BlurCacheData(aBoxShadow, aBlurMargin, key);
+  BlurCacheData* data = new BlurCacheData(aBoxShadow, aBlurMargin, Move(key));
   if (!gBlurCache->RegisterEntry(data)) {
     delete data;
   }
@@ -1088,7 +1090,7 @@ CacheInsetBlur(const IntSize& aMinOuterSize,
                    aShadowColor, isInsetBlur,
                    aBackendType);
   IntMargin blurMargin(0, 0, 0, 0);
-  BlurCacheData* data = new BlurCacheData(aBoxShadow, blurMargin, key);
+  BlurCacheData* data = new BlurCacheData(aBoxShadow, blurMargin, Move(key));
   if (!gBlurCache->RegisterEntry(data)) {
     delete data;
   }
