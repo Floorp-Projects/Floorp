@@ -1366,11 +1366,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
 
     WSRunObject wsObj(mHTMLEditor,
                       pointToInsert.Container(), pointToInsert.Offset());
-    nsCOMPtr<nsINode> selNode = pointToInsert.Container();
-    nsCOMPtr<nsIContent> selChild = pointToInsert.GetChildAtOffset();
-    int32_t selOffset = pointToInsert.Offset();
-    rv = wsObj.InsertText(*inString, address_of(selNode),
-                          address_of(selChild), &selOffset, doc);
+    rv = wsObj.InsertText(*doc, *inString, pointToInsert.AsRaw());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1486,16 +1482,15 @@ HTMLEditRules::WillInsertText(EditAction aAction,
 
         // is it a tab?
         if (subStr.Equals(tabStr)) {
-          nsCOMPtr<nsINode> curNode = currentPoint.Container();
-          nsCOMPtr<nsIContent> selChild = currentPoint.GetChildAtOffset();
-          int32_t curOffset = currentPoint.Offset();
-          rv =
-            wsObj.InsertText(spacesStr, address_of(curNode),
-                             address_of(selChild), &curOffset, doc);
-          NS_ENSURE_SUCCESS(rv, rv);
+          EditorRawDOMPoint pointAfterInsertedSpaces;
+          rv = wsObj.InsertText(*doc, spacesStr, currentPoint.AsRaw(),
+                                &pointAfterInsertedSpaces);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
           pos++;
-          currentPoint.Set(curNode, curOffset);
-          pointToInsert = currentPoint;
+          currentPoint = pointAfterInsertedSpaces;
+          pointToInsert = pointAfterInsertedSpaces;
         }
         // is it a return?
         else if (subStr.Equals(newlineStr)) {
@@ -1514,14 +1509,14 @@ HTMLEditRules::WillInsertText(EditAction aAction,
           currentPoint.Set(curNode, curOffset);
           MOZ_ASSERT(currentPoint == pointToInsert);
         } else {
-          nsCOMPtr<nsINode> curNode = currentPoint.Container();
-          nsCOMPtr<nsIContent> selChild = currentPoint.GetChildAtOffset();
-          int32_t curOffset = currentPoint.Offset();
-          rv = wsObj.InsertText(subStr, address_of(curNode),
-                                address_of(selChild), &curOffset, doc);
-          NS_ENSURE_SUCCESS(rv, rv);
-          currentPoint.Set(curNode, curOffset);
-          pointToInsert = currentPoint;
+          EditorRawDOMPoint pointAfterInsertedString;
+          rv = wsObj.InsertText(*doc, subStr, currentPoint.AsRaw(),
+                                &pointAfterInsertedString);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+          currentPoint = pointAfterInsertedString;
+          pointToInsert = pointAfterInsertedString;
         }
       }
     }
