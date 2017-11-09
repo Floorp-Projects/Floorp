@@ -17,8 +17,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsTArray.h"
 
-class nsIDOMHTMLOptionElement;
-
 namespace mozilla {
 namespace dom {
 
