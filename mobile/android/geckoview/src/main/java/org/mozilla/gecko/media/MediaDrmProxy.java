@@ -16,8 +16,8 @@ import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaCrypto;
 import android.media.MediaDrm;
-import android.util.Log;
 import android.os.Build;
+import android.util.Log;
 
 public final class MediaDrmProxy {
     private static final String LOGTAG = "GeckoMediaDrmProxy";
@@ -48,7 +48,7 @@ public final class MediaDrmProxy {
 
     private static boolean isSystemSupported() {
         // Support versions >= Marshmallow
-        if (AppConstants.Versions.preMarshmallow) {
+        if (Build.VERSION.SDK_INT < 23) {
             if (DEBUG) Log.d(LOGTAG, "System Not supported !!, current SDK version is " + Build.VERSION.SDK_INT);
             return false;
         }
