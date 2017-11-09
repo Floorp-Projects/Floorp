@@ -26,8 +26,8 @@ add_task(async function test_reserved_shortcuts() {
   is(document.getElementById("kt_reserveddefault").getAttribute("count"), "0", "default reserved with preference off");
 
   // Now try with reserved shortcut key handling enabled.
-  await new Promise(r => {
-    SpecialPowers.pushPrefEnv({"set": [["permissions.default.shortcuts", 2]]}, r);
+  await new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [["permissions.default.shortcuts", 2]]}, resolve);
   });
 
   EventUtils.synthesizeKey("O", { shiftKey: true });

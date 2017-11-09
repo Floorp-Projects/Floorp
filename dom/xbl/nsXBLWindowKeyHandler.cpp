@@ -23,6 +23,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
+#include "nsIRemoteBrowser.h"
 #include "nsISelectionController.h"
 #include "nsIPresShell.h"
 #include "mozilla/EventListenerManager.h"
@@ -733,16 +734,6 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
       continue;
     }
 
-    bool isReserved = handler->GetIsReserved() == XBLReservedKey_True;
-    if (handler->GetIsReserved() == XBLReservedKey_Unset &&
-        Preferences::GetInt("permissions.default.shortcuts") == 2) {
-      isReserved = true;
-    }
-
-    if (aOutReservedForChrome) {
-      *aOutReservedForChrome = isReserved;
-    }
-
     if (commandElement) {
       if (aExecute && !IsExecutableElement(commandElement)) {
         continue;
@@ -751,23 +742,37 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
 
     if (!aExecute) {
       if (handler->EventTypeEquals(aEventType)) {
+        if (aOutReservedForChrome) {
+          *aOutReservedForChrome = IsReservedKey(widgetKeyboardEvent, handler);
+        }
+
         return true;
       }
+
       // If the command is reserved and the event is keydown, check also if
       // the handler is for keypress because if following keypress event is
       // reserved, we shouldn't dispatch the event into web contents.
-      if (isReserved &&
-          aEventType == nsGkAtoms::keydown &&
+      if (aEventType == nsGkAtoms::keydown &&
           handler->EventTypeEquals(nsGkAtoms::keypress)) {
-        return true;
+        if (IsReservedKey(widgetKeyboardEvent, handler)) {
+          if (aOutReservedForChrome) {
+            *aOutReservedForChrome = true;
+          }
+
+          return true;
+        }
       }
       // Otherwise, we've not found a handler for the event yet.
       continue;
     }
 
+    // This should only be assigned when aExecute is false.
+    MOZ_ASSERT(!aOutReservedForChrome);
+
     // If it's not reserved and the event is a key event on a plugin,
     // the handler shouldn't be executed.
-    if (!isReserved && widgetKeyboardEvent->IsKeyEventOnPlugin()) {
+    if (widgetKeyboardEvent->IsKeyEventOnPlugin() &&
+        !IsReservedKey(widgetKeyboardEvent, handler)) {
       return false;
     }
 
@@ -800,6 +805,50 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
                                   aCharCode, ignoreModifierState, aExecute);
   }
 #endif
+
+  return false;
+}
+
+bool
+nsXBLWindowKeyHandler::IsReservedKey(WidgetKeyboardEvent* aKeyEvent,
+                                     nsXBLPrototypeHandler* aHandler)
+{
+  XBLReservedKey reserved = aHandler->GetIsReserved();
+  // reserved="true" means that the key is always reserved. reserved="false"
+  // means that the key is never reserved. Otherwise, we check site-specific
+  // permissions.
+  if (reserved == XBLReservedKey_True) {
+    return true;
+  }
+
+  if (reserved == XBLReservedKey_Unset) {
+    nsCOMPtr<nsIPrincipal> principal;
+    nsCOMPtr<nsIRemoteBrowser> targetBrowser = do_QueryInterface(aKeyEvent->mOriginalTarget);
+    if (targetBrowser) {
+      targetBrowser->GetContentPrincipal(getter_AddRefs(principal));
+    }
+    else {
+      // Get the top-level document.
+      nsCOMPtr<nsIContent> content = do_QueryInterface(aKeyEvent->mOriginalTarget);
+      if (content) {
+        nsIDocument* doc = content->GetUncomposedDoc();
+        if (doc) {
+          nsCOMPtr<nsIDocShellTreeItem> docShell = doc->GetDocShell();
+          if (docShell && docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
+            nsCOMPtr<nsIDocShellTreeItem> rootItem;
+            docShell->GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
+            if (rootItem && rootItem->GetDocument()) {
+              principal = rootItem->GetDocument()->NodePrincipal();
+            }
+          }
+        }
+      }
+    }
+
+    if (principal) {
+      return nsContentUtils::IsSitePermDeny(principal, "shortcuts");
+    }
+  }
 
   return false;
 }
