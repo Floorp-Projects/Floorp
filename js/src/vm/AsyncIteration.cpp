@@ -80,8 +80,7 @@ js::WrapAsyncGeneratorWithProto(JSContext* cx, HandleFunction unwrapped, HandleO
     RootedFunction wrapped(cx, NewFunctionWithProto(cx, WrappedAsyncGenerator, length,
                                                     JSFunction::NATIVE_FUN, nullptr,
                                                     funName, proto,
-                                                    AllocKind::FUNCTION_EXTENDED,
-                                                    TenuredObject));
+                                                    AllocKind::FUNCTION_EXTENDED));
     if (!wrapped)
         return nullptr;
 
