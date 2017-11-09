@@ -31,18 +31,6 @@ class WasmInstanceScope;
 
 namespace wasm {
 
-// Creates a JS object containing two fields (low: low 32 bits; high: high 32
-// bits) of a given Int64 value. For testing purposes only.
-
-JSObject*
-CreateI64Object(JSContext* cx, int64_t i64);
-
-// Reads an int64 from a JS object with the same shape as described in the
-// comment above. For testing purposes only.
-
-bool
-ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64);
-
 // Return whether WebAssembly can be compiled on this platform.
 // This must be checked and must be true to call any of the top-level wasm
 // eval/compile methods.

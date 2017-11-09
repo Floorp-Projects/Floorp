@@ -197,13 +197,11 @@ StoreABIReturn(MacroAssembler& masm, const FuncExport& fe, Register argv)
         masm.store64(ReturnReg64, Address(argv, 0));
         break;
       case ExprType::F32:
-        if (!JitOptions.wasmTestMode)
-            masm.canonicalizeFloat(ReturnFloat32Reg);
+        masm.canonicalizeFloat(ReturnFloat32Reg);
         masm.storeFloat32(ReturnFloat32Reg, Address(argv, 0));
         break;
       case ExprType::F64:
-        if (!JitOptions.wasmTestMode)
-            masm.canonicalizeDouble(ReturnDoubleReg);
+        masm.canonicalizeDouble(ReturnDoubleReg);
         masm.storeDouble(ReturnDoubleReg, Address(argv, 0));
         break;
       case ExprType::I8x16:
@@ -654,8 +652,7 @@ GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
         break;
       case ExprType::I64:
         masm.call(SymbolicAddress::CallImport_I64);
-        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
-        masm.load64(argv, ReturnReg64);
+        masm.jump(throwLabel);
         break;
       case ExprType::F32:
         masm.call(SymbolicAddress::CallImport_F64);
@@ -817,8 +814,6 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
                                  /* -0 check */ false);
         break;
       case ExprType::I64:
-        // We don't expect int64 to be returned from Ion yet, because of a
-        // guard in callImport.
         masm.breakpoint();
         break;
       case ExprType::F32:
