@@ -34,6 +34,7 @@
 #include "mozilla/DataStorage.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
+#include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Element.h"
@@ -628,6 +629,7 @@ ContentParent::StartUp()
   mozilla::dom::time::InitializeDateCacheCleaner();
 
   BackgroundChild::Startup();
+  ClientManager::Startup();
 
   sDisableUnsafeCPOWWarnings = PR_GetEnv("DISABLE_UNSAFE_CPOW_WARNINGS");
 

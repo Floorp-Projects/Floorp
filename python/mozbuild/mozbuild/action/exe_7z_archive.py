@@ -9,7 +9,6 @@ import shutil
 import sys
 import subprocess
 import tempfile
-import buildconfig
 import mozpack.path as mozpath
 
 def archive_exe(pkg_dir, tagfile, sfx_package, package):
@@ -19,7 +18,7 @@ def archive_exe(pkg_dir, tagfile, sfx_package, package):
             shutil.move(pkg_dir, 'core')
         subprocess.check_call(['upx', '--best', '-o', mozpath.join(tmpdir, '7zSD.sfx'), sfx_package])
 
-        subprocess.check_call([buildconfig.substs['7Z'], 'a', '-r', '-t7z', mozpath.join(tmpdir, 'app.7z'), '-mx', '-m0=BCJ2', '-m1=LZMA:d25', '-m2=LZMA:d19', '-m3=LZMA:d19', '-mb0:1', '-mb0s1:2', '-mb0s2:3'])
+        subprocess.check_call(['7z', 'a', '-r', '-t7z', mozpath.join(tmpdir, 'app.7z'), '-mx', '-m0=BCJ2', '-m1=LZMA:d25', '-m2=LZMA:d19', '-m3=LZMA:d19', '-mb0:1', '-mb0s1:2', '-mb0s2:3'])
 
         with open(package, 'wb') as o:
             for i in [mozpath.join(tmpdir, '7zSD.sfx'), tagfile, mozpath.join(tmpdir, 'app.7z')]:

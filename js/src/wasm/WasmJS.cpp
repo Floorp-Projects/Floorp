@@ -1852,16 +1852,24 @@ WebAssembly_toSource(JSContext* cx, unsigned argc, Value* vp)
 #endif
 
 static bool
+RejectWithPendingException(JSContext* cx, Handle<PromiseObject*> promise)
+{
+    if (!cx->isExceptionPending())
+        return false;
+
+    RootedValue rejectionValue(cx);
+    if (!GetAndClearException(cx, &rejectionValue))
+        return false;
+
+    return PromiseObject::reject(cx, promise, rejectionValue);
+}
+
+static bool
 Reject(JSContext* cx, const CompileArgs& args, UniqueChars error, Handle<PromiseObject*> promise)
 {
     if (!error) {
         ReportOutOfMemory(cx);
-
-        RootedValue rejectionValue(cx);
-        if (!cx->getPendingException(&rejectionValue))
-            return false;
-
-        return PromiseObject::reject(cx, promise, rejectionValue);
+        return RejectWithPendingException(cx, promise);
     }
 
     RootedObject stack(cx, promise->allocationSite());
@@ -1889,19 +1897,6 @@ Reject(JSContext* cx, const CompileArgs& args, UniqueChars error, Handle<Promise
         return false;
 
     RootedValue rejectionValue(cx, ObjectValue(*errorObj));
-    return PromiseObject::reject(cx, promise, rejectionValue);
-}
-
-static bool
-RejectWithPendingException(JSContext* cx, Handle<PromiseObject*> promise)
-{
-    if (!cx->isExceptionPending())
-        return false;
-
-    RootedValue rejectionValue(cx);
-    if (!GetAndClearException(cx, &rejectionValue))
-        return false;
-
     return PromiseObject::reject(cx, promise, rejectionValue);
 }
 
@@ -2522,7 +2517,7 @@ ResolveResponse(JSContext* cx, CallArgs callArgs, Handle<PromiseObject*> promise
 
     RootedFunction onRejected(cx, NewNativeFunction(cx, ResolveResponse_OnRejected, 1, nullptr,
                                                     gc::AllocKind::FUNCTION_EXTENDED));
-    if (!onResolved)
+    if (!onRejected)
         return false;
 
     onResolved->setExtendedSlot(0, ObjectValue(*closure));

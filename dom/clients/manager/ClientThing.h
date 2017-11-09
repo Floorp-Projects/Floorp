@@ -99,6 +99,11 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(mActor == aActor);
     mActor->RevokeOwner(this);
     mActor = nullptr;
+
+    // Also consider the ClientThing shutdown.  We simply set the flag
+    // instead of calling ShutdownThing() to avoid calling MaybeStartTeardown()
+    // on the destroyed actor.
+    mShutdown = true;
   }
 };
 
