@@ -23,7 +23,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
-#include "nsIRemoteBrowser.h"
 #include "nsISelectionController.h"
 #include "nsIPresShell.h"
 #include "mozilla/EventListenerManager.h"
@@ -817,40 +816,15 @@ nsXBLWindowKeyHandler::IsReservedKey(WidgetKeyboardEvent* aKeyEvent,
   // reserved="true" means that the key is always reserved. reserved="false"
   // means that the key is never reserved. Otherwise, we check site-specific
   // permissions.
+  if (reserved == XBLReservedKey_False) {
+    return false;
+  }
+
   if (reserved == XBLReservedKey_True) {
     return true;
   }
 
-  if (reserved == XBLReservedKey_Unset) {
-    nsCOMPtr<nsIPrincipal> principal;
-    nsCOMPtr<nsIRemoteBrowser> targetBrowser = do_QueryInterface(aKeyEvent->mOriginalTarget);
-    if (targetBrowser) {
-      targetBrowser->GetContentPrincipal(getter_AddRefs(principal));
-    }
-    else {
-      // Get the top-level document.
-      nsCOMPtr<nsIContent> content = do_QueryInterface(aKeyEvent->mOriginalTarget);
-      if (content) {
-        nsIDocument* doc = content->GetUncomposedDoc();
-        if (doc) {
-          nsCOMPtr<nsIDocShellTreeItem> docShell = doc->GetDocShell();
-          if (docShell && docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
-            nsCOMPtr<nsIDocShellTreeItem> rootItem;
-            docShell->GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
-            if (rootItem && rootItem->GetDocument()) {
-              principal = rootItem->GetDocument()->NodePrincipal();
-            }
-          }
-        }
-      }
-    }
-
-    if (principal) {
-      return nsContentUtils::IsSitePermDeny(principal, "shortcuts");
-    }
-  }
-
-  return false;
+  return nsContentUtils::ShouldBlockReservedKeys(aKeyEvent);
 }
 
 bool
