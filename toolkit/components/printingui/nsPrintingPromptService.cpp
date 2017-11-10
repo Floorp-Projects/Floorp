@@ -10,8 +10,10 @@
 #include "nsISupportsUtils.h"
 #include "nsString.h"
 #include "nsIPrintDialogService.h"
+#include "nsPIDOMWindow.h"
 
 // Printing Progress Includes
+#if !defined(XP_MACOSX)
 #include "nsPrintProgress.h"
 #include "nsPrintProgressParams.h"
 
@@ -19,6 +21,7 @@ static const char* kPrintProgressDialogURL =
   "chrome://global/content/printProgress.xul";
 static const char* kPrtPrvProgressDialogURL =
   "chrome://global/content/printPreviewProgress.xul";
+#endif
 
 NS_IMPL_ISUPPORTS(nsPrintingPromptService,
                   nsIPrintingPromptService,
@@ -31,9 +34,13 @@ nsPrintingPromptService::~nsPrintingPromptService() = default;
 nsresult
 nsPrintingPromptService::Init()
 {
+#if !defined(XP_MACOSX)
   nsresult rv;
   mWatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   return rv;
+#else
+  return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
@@ -64,6 +71,7 @@ nsPrintingPromptService::ShowProgress(
   nsIPrintProgressParams** printProgressParams,
   bool* notifyOnOpen)
 {
+#if !defined(XP_MACOSX)
   NS_ENSURE_ARG(webProgressListener);
   NS_ENSURE_ARG(printProgressParams);
   NS_ENSURE_ARG(notifyOnOpen);
@@ -101,6 +109,9 @@ nsPrintingPromptService::ShowProgress(
   NS_ADDREF(*webProgressListener = this);
 
   return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP
@@ -125,6 +136,7 @@ nsPrintingPromptService::OnStateChange(nsIWebProgress* aWebProgress,
                                        uint32_t aStateFlags,
                                        nsresult aStatus)
 {
+#if !defined(XP_MACOSX)
   if ((aStateFlags & STATE_STOP) && mWebProgressListener) {
     mWebProgressListener->OnStateChange(
       aWebProgress, aRequest, aStateFlags, aStatus);
@@ -134,6 +146,7 @@ nsPrintingPromptService::OnStateChange(nsIWebProgress* aWebProgress,
     mPrintProgress = nullptr;
     mWebProgressListener = nullptr;
   }
+#endif
   return NS_OK;
 }
 
@@ -145,6 +158,7 @@ nsPrintingPromptService::OnProgressChange(nsIWebProgress* aWebProgress,
                                           int32_t aCurTotalProgress,
                                           int32_t aMaxTotalProgress)
 {
+#if !defined(XP_MACOSX)
   if (mWebProgressListener) {
     return mWebProgressListener->OnProgressChange(aWebProgress,
                                                   aRequest,
@@ -153,6 +167,7 @@ nsPrintingPromptService::OnProgressChange(nsIWebProgress* aWebProgress,
                                                   aCurTotalProgress,
                                                   aMaxTotalProgress);
   }
+#endif
   return NS_OK;
 }
 
@@ -162,10 +177,12 @@ nsPrintingPromptService::OnLocationChange(nsIWebProgress* aWebProgress,
                                           nsIURI* location,
                                           uint32_t aFlags)
 {
+#if !defined(XP_MACOSX)
   if (mWebProgressListener) {
     return mWebProgressListener->OnLocationChange(
       aWebProgress, aRequest, location, aFlags);
   }
+#endif
   return NS_OK;
 }
 
@@ -175,10 +192,12 @@ nsPrintingPromptService::OnStatusChange(nsIWebProgress* aWebProgress,
                                         nsresult aStatus,
                                         const char16_t* aMessage)
 {
+#if !defined(XP_MACOSX)
   if (mWebProgressListener) {
     return mWebProgressListener->OnStatusChange(
       aWebProgress, aRequest, aStatus, aMessage);
   }
+#endif
   return NS_OK;
 }
 
@@ -187,9 +206,11 @@ nsPrintingPromptService::OnSecurityChange(nsIWebProgress* aWebProgress,
                                           nsIRequest* aRequest,
                                           uint32_t state)
 {
+#if !defined(XP_MACOSX)
   if (mWebProgressListener) {
     return mWebProgressListener->OnSecurityChange(
       aWebProgress, aRequest, state);
   }
+#endif
   return NS_OK;
 }

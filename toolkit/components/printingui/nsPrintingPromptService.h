@@ -23,11 +23,13 @@
 #include "nsIWindowWatcher.h"
 
 // Printing Progress Includes
-#include "nsPrintProgress.h"
 #include "nsIWebProgressListener.h"
+#if !defined(XP_MACOSX)
+#include "nsPrintProgress.h"
 
 class nsIDOMWindow;
 class nsIDialogParamBlock;
+#endif
 
 class nsPrintingPromptService
   : public nsIPrintingPromptService
@@ -47,9 +49,11 @@ protected:
   virtual ~nsPrintingPromptService();
 
 private:
+#if !defined(XP_MACOSX)
   nsCOMPtr<nsIWindowWatcher> mWatcher;
   nsCOMPtr<nsIPrintProgress> mPrintProgress;
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
+#endif
 };
 
 #endif
