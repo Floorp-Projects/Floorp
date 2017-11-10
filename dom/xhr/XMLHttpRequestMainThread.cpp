@@ -173,6 +173,18 @@ static void AddLoadFlags(nsIRequest *request, nsLoadFlags newFlags)
   request->SetLoadFlags(flags);
 }
 
+// We are in a sync event loop.
+#define NOT_CALLABLE_IN_SYNC_SEND                              \
+  if (mFlagSyncLooping) {                                      \
+    return NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT; \
+  }
+
+#define NOT_CALLABLE_IN_SYNC_SEND_RV                               \
+  if (mFlagSyncLooping) {                                          \
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT); \
+    return;                                                        \
+  }
+
 /////////////////////////////////////////////
 //
 //
@@ -699,6 +711,8 @@ void
 XMLHttpRequestMainThread::SetResponseType(XMLHttpRequestResponseType aResponseType,
                                           ErrorResult& aRv)
 {
+  NOT_CALLABLE_IN_SYNC_SEND_RV
+
   if (mState == State::loading || mState == State::done) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE);
     return;
@@ -1093,6 +1107,13 @@ XMLHttpRequestMainThread::RequestErrorSteps(const ProgressEventType aEventType,
 void
 XMLHttpRequestMainThread::Abort(ErrorResult& aRv)
 {
+  NOT_CALLABLE_IN_SYNC_SEND_RV
+  AbortInternal(aRv);
+}
+
+void
+XMLHttpRequestMainThread::AbortInternal(ErrorResult& aRv)
+{
   mFlagAborted = true;
 
   // Step 1
@@ -1189,6 +1210,8 @@ void
 XMLHttpRequestMainThread::GetAllResponseHeaders(nsACString& aResponseHeaders,
                                                 ErrorResult& aRv)
 {
+  NOT_CALLABLE_IN_SYNC_SEND_RV
+
   aResponseHeaders.Truncate();
 
   // If the state is UNSENT or OPENED,
@@ -1254,6 +1277,8 @@ void
 XMLHttpRequestMainThread::GetResponseHeader(const nsACString& header,
                                             nsACString& _retval, ErrorResult& aRv)
 {
+  NOT_CALLABLE_IN_SYNC_SEND_RV
+
   _retval.SetIsVoid(true);
 
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
@@ -1515,7 +1540,10 @@ XMLHttpRequestMainThread::Open(const nsACString& aMethod,
                                const nsACString& aUrl,
                                bool aAsync,
                                const nsAString& aUsername,
-                               const nsAString& aPassword) {
+                               const nsAString& aPassword)
+{
+  NOT_CALLABLE_IN_SYNC_SEND
+
   // Gecko-specific
   if (!aAsync && !DontWarnAboutSyncXHR() && GetOwner() &&
       GetOwner()->GetExtantDoc()) {
@@ -2861,6 +2889,8 @@ XMLHttpRequestMainThread::Send(JSContext* aCx,
                                const Nullable<DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>& aData,
                                ErrorResult& aRv)
 {
+  NOT_CALLABLE_IN_SYNC_SEND_RV
+
   if (aData.IsNull()) {
     aRv = SendInternal(nullptr);
     return;
@@ -3156,6 +3186,8 @@ NS_IMETHODIMP
 XMLHttpRequestMainThread::SetRequestHeader(const nsACString& aName,
                                            const nsACString& aValue)
 {
+  NOT_CALLABLE_IN_SYNC_SEND
+
   // Step 1
   if (mState != State::opened) {
     return NS_ERROR_DOM_INVALID_STATE_XHR_MUST_BE_OPENED;
@@ -3219,6 +3251,8 @@ XMLHttpRequestMainThread::SetTimeout(uint32_t aTimeout)
 void
 XMLHttpRequestMainThread::SetTimeout(uint32_t aTimeout, ErrorResult& aRv)
 {
+  NOT_CALLABLE_IN_SYNC_SEND_RV
+
   if (mFlagSynchronous && mState != State::unsent && HasOrHasHadOwner()) {
     /* Timeout is not supported for synchronous requests with an owning window,
        per XHR2 spec. */
@@ -3314,8 +3348,12 @@ XMLHttpRequestMainThread::ReadyState() const
   return 0;
 }
 
-void XMLHttpRequestMainThread::OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv)
+void
+XMLHttpRequestMainThread::OverrideMimeType(const nsAString& aMimeType,
+                                           ErrorResult& aRv)
 {
+  NOT_CALLABLE_IN_SYNC_SEND_RV
+
   if (mState == State::loading || mState == State::done) {
     ResetResponse();
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE);
@@ -3395,6 +3433,8 @@ XMLHttpRequestMainThread::SetWithCredentials(bool aWithCredentials)
 void
 XMLHttpRequestMainThread::SetWithCredentials(bool aWithCredentials, ErrorResult& aRv)
 {
+  NOT_CALLABLE_IN_SYNC_SEND_RV
+
   // Return error if we're already processing a request.  Note that we can't use
   // ReadyState() here, because it can't differentiate between "opened" and
   // "sent", so we use mState directly.
