@@ -209,7 +209,8 @@ pub enum ServerMessage {
     StreamSetPanning(usize, f32),
     StreamGetCurrentDevice(usize),
 
-    StreamDataCallback(isize)
+    StreamDataCallback(isize),
+    StreamStateCallback
 }
 
 // Server -> Client messages.

@@ -110,7 +110,7 @@ impl cubeb::StreamCallback for Callback {
                 }
             },
             _ => {
-                debug!("Unexpected message {:?} during callback", r);
+                debug!("Unexpected message {:?} during data_callback", r);
                 -1
             },
         }
@@ -130,6 +130,18 @@ impl cubeb::StreamCallback for Callback {
         );
         if r.is_err() {
             debug!("state_callback: Failed to send to client - got={:?}", r);
+        }
+
+        // Bug 1414623 - We need to block on an ACK from the client
+        // side to make state_callback synchronous. If not, then there
+        // exists a race on cubeb_stream_stop()/cubeb_stream_destroy()
+        // in Gecko that results in a UAF.
+        let r = self.connection.receive();
+        match r {
+            Ok(ServerMessage::StreamStateCallback) => {},
+            _ => {
+                debug!("Unexpected message {:?} during state_callback", r);
+            },
         }
     }
 }
