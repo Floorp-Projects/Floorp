@@ -2143,6 +2143,11 @@ nsNSSComponent::ShutdownNSS()
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::ShutdownNSS\n"));
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
+  // If we don't do this we might try to unload the loadable roots while the
+  // loadable roots loading thread is setting up EV information, which can cause
+  // it to fail to find the roots it is expecting.
+  Unused << BlockUntilLoadableRootsLoaded();
+
   // This is idempotent and can happen as a result of observing
   // profile-before-change and being called from nsNSSComponent's destructor.
   // We need to do this before other cleanup because we must avoid acquiring
@@ -2187,12 +2192,7 @@ nsNSSComponent::ShutdownNSS()
   // to be released (it's not an nsNSSShutDownObject, so we have to do this
   // manually).
   mDefaultCertVerifier = nullptr;
-
-  if (NSS_Shutdown() != SECSuccess) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("NSS SHUTDOWN FAILURE"));
-  } else {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("NSS shutdown =====>> OK <<====="));
-  }
+  // We don't actually shut down NSS.
 }
 
 nsresult
