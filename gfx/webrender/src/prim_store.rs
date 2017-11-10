@@ -6,7 +6,7 @@ use api::{BorderRadius, BuiltDisplayList, ColorF, ComplexClipRegion, DeviceIntRe
 use api::{DevicePoint, ExtendMode, FontInstance, GlyphInstance, GlyphKey};
 use api::{GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag, LayerPoint, LayerRect};
 use api::{ClipMode, LayerSize, LayerVector2D, LineOrientation, LineStyle};
-use api::{TileOffset, YuvColorSpace, YuvFormat};
+use api::{ClipAndScrollInfo, EdgeAaSegmentMask, TileOffset, YuvColorSpace, YuvFormat};
 use border::BorderCornerInstance;
 use clip::{ClipSourcesHandle, ClipStore, Geometry};
 use frame_builder::PrimitiveContext;
@@ -19,6 +19,20 @@ use resource_cache::{ImageProperties, ResourceCache};
 use std::{mem, usize};
 use std::rc::Rc;
 use util::{pack_as_float, recycle_vec, MatrixHelpers, TransformedRect, TransformedRectKind};
+
+#[derive(Clone, Debug)]
+pub struct PrimitiveRun {
+    pub base_prim_index: PrimitiveIndex,
+    pub count: usize,
+    pub clip_and_scroll: ClipAndScrollInfo,
+}
+
+#[derive(Debug)]
+pub struct PrimitiveRunResult {
+    pub local_rect: LayerRect,
+    pub device_rect: DeviceIntRect,
+    pub visible_primitives: usize,
+}
 
 #[derive(Debug, Copy, Clone)]
 pub struct PrimitiveOpacity {
@@ -161,6 +175,7 @@ pub enum RectangleContent {
 #[derive(Debug)]
 pub struct RectanglePrimitive {
     pub content: RectangleContent,
+    pub edge_aa_segment_mask: EdgeAaSegmentMask,
 }
 
 impl ToGpuBlocks for RectanglePrimitive {
@@ -174,6 +189,9 @@ impl ToGpuBlocks for RectanglePrimitive {
                 request.push(ColorF::new(0.0, 0.0, 0.0, 1.0));
             }
         }
+        request.extend_from_slice(&[GpuBlockData {
+            data: [self.edge_aa_segment_mask.bits() as f32, 0.0, 0.0, 0.0],
+        }]);
     }
 }
 
@@ -890,7 +908,6 @@ impl PrimitiveStore {
             is_backface_visible: is_backface_visible,
             screen_rect: None,
             tag,
-
             opacity: PrimitiveOpacity::translucent(),
             prim_kind: PrimitiveKind::Rectangle,
             cpu_prim_index: SpecificPrimitiveIndex(0),
@@ -1333,7 +1350,7 @@ impl PrimitiveStore {
         //           avoid borrow checker issues.
         for run in dependent_primitives {
             for i in 0 .. run.count {
-                let sub_prim_index = PrimitiveIndex(run.prim_index.0 + i);
+                let sub_prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
 
                 self.prepare_prim_for_render_inner(
                     sub_prim_index,
@@ -1367,8 +1384,42 @@ impl PrimitiveStore {
 
         Some(geometry)
     }
-}
 
+    pub fn prepare_prim_run(
+        &mut self,
+        run: &PrimitiveRun,
+        prim_context: &PrimitiveContext,
+        gpu_cache: &mut GpuCache,
+        resource_cache: &mut ResourceCache,
+        render_tasks: &mut RenderTaskTree,
+        clip_store: &mut ClipStore,
+    ) -> PrimitiveRunResult {
+        let mut result = PrimitiveRunResult {
+            local_rect: LayerRect::zero(),
+            device_rect: DeviceIntRect::zero(),
+            visible_primitives: 0,
+        };
+
+        for i in 0 .. run.count {
+            let prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
+
+            if let Some(prim_geom) = self.prepare_prim_for_render(
+                prim_index,
+                prim_context,
+                resource_cache,
+                gpu_cache,
+                render_tasks,
+                clip_store,
+            ) {
+                result.local_rect = result.local_rect.union(&prim_geom.local_rect);
+                result.device_rect = result.device_rect.union(&prim_geom.device_rect);
+                result.visible_primitives += 1;
+            }
+        }
+
+        result
+    }
+}
 
 //Test for one clip region contains another
 trait InsideTest<T> {

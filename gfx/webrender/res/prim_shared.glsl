@@ -634,17 +634,20 @@ vec2 intersect_lines(vec2 p0, vec2 p1, vec2 p2, vec2 p3) {
 
 TransformVertexInfo write_transform_vertex(RectWithSize instance_rect,
                                            RectWithSize local_clip_rect,
+                                           vec4 clip_edge_mask,
                                            float z,
                                            Layer layer,
-                                           AlphaBatchTask task,
-                                           RectWithSize snap_rect) {
+                                           AlphaBatchTask task) {
     RectWithEndpoint local_rect = to_rect_with_endpoint(instance_rect);
+    RectWithSize clip_rect;
+    clip_rect.p0 = clamp_rect(local_clip_rect.p0, layer.local_clip_rect);
+    clip_rect.size = clamp_rect(local_clip_rect.p0 + local_clip_rect.size, layer.local_clip_rect) - clip_rect.p0;
 
     vec2 current_local_pos, prev_local_pos, next_local_pos;
 
     // Clamp to the two local clip rects.
-    local_rect.p0 = clamp_rect(clamp_rect(local_rect.p0, local_clip_rect), layer.local_clip_rect);
-    local_rect.p1 = clamp_rect(clamp_rect(local_rect.p1, local_clip_rect), layer.local_clip_rect);
+    local_rect.p0 = clamp_rect(local_rect.p0, clip_rect);
+    local_rect.p1 = clamp_rect(local_rect.p1, clip_rect);
 
     // Select the current vertex and the previous/next vertices,
     // based on the vertex ID that is known based on the instance rect.
@@ -707,11 +710,27 @@ TransformVertexInfo write_transform_vertex(RectWithSize instance_rect,
                      task.screen_space_origin +
                      task.render_target_origin;
 
+
     gl_Position = uTransform * vec4(final_pos, z, 1.0);
 
-    vLocalBounds = vec4(local_rect.p0, local_rect.p1);
+    vLocalBounds = mix(
+        vec4(clip_rect.p0, clip_rect.p0 + clip_rect.size),
+        vec4(local_rect.p0, local_rect.p1),
+        clip_edge_mask
+    );
 
     return TransformVertexInfo(layer_pos.xyw, device_pos);
+}
+
+TransformVertexInfo write_transform_vertex_primitive(Primitive prim) {
+    return write_transform_vertex(
+        prim.local_rect,
+        prim.local_clip_rect,
+        vec4(0.0),
+        prim.z,
+        prim.layer,
+        prim.task
+    );
 }
 
 #endif //WR_FEATURE_TRANSFORM
@@ -745,11 +764,13 @@ ImageResource fetch_image_resource_direct(ivec2 address) {
 
 struct Rectangle {
     vec4 color;
+    vec4 edge_aa_segment_mask;
 };
 
 Rectangle fetch_rectangle(int address) {
-    vec4 data = fetch_from_resource_cache_1(address);
-    return Rectangle(data);
+    vec4 data[2] = fetch_from_resource_cache_2(address);
+    vec4 mask = vec4((int(data[1].x) & ivec4(1,2,4,8)) != ivec4(0));
+    return Rectangle(data[0], mask);
 }
 
 struct TextRun {

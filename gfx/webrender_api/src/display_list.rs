@@ -315,6 +315,7 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
         LayerPrimitiveInfo {
             rect: info.rect.translate(&offset),
             local_clip: info.local_clip.create_with_offset(offset),
+            edge_aa_segment_mask: info.edge_aa_segment_mask,
             is_backface_visible: info.is_backface_visible,
             tag: info.tag,
         }
@@ -669,7 +670,7 @@ impl DisplayListBuilder {
     /// Saves the current display list state, so it may be `restore()`'d.
     ///
     /// # Conditions:
-    /// 
+    ///
     /// * Doesn't support popping clips that were pushed before the save.
     /// * Doesn't support nested saves.
     /// * Must call `clear_save()` if the restore becomes unnecessary.
@@ -1197,13 +1198,7 @@ impl DisplayListBuilder {
             image_mask: image_mask,
             scroll_sensitivity,
         });
-
-        let info = LayoutPrimitiveInfo {
-            rect: content_rect,
-            local_clip: LocalClip::from(clip_rect),
-            is_backface_visible: true,
-            tag: None,
-        };
+        let info = LayoutPrimitiveInfo::with_clip_rect(content_rect, clip_rect);
 
         let scrollinfo = ClipAndScrollInfo::simple(parent);
         self.push_item_with_clip_scroll_info(item, &info, scrollinfo);
