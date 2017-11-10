@@ -212,8 +212,10 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
       // "Requested Range Not Satisfiable".
       if (responseStatus == HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE) {
         // OnStopRequest will not be fired, so we need to do some of its
-        // work here.
-        mCacheStream.NotifyDataEnded(status);
+        // work here. Note we need to pass the load ID first so the following
+        // NotifyDataEnded() can pass the ID check.
+        mCacheStream.NotifyLoadID(mLoadID);
+        mCacheStream.NotifyDataEnded(mLoadID, status);
       } else {
         mCallback->NotifyNetworkError(
           MediaResult(NS_ERROR_FAILURE, "HTTP error"));
@@ -391,7 +393,7 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest,
     ModifyLoadFlags(loadFlags & ~nsIRequest::LOAD_BACKGROUND);
   }
 
-  mCacheStream.NotifyDataEnded(aStatus, aReopenOnError);
+  mCacheStream.NotifyDataEnded(mLoadID, aStatus, aReopenOnError);
   return NS_OK;
 }
 
