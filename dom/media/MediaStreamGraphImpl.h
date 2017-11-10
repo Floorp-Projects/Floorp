@@ -396,6 +396,9 @@ public:
    */
   bool IsEmpty() const
   {
+    MOZ_ASSERT(OnGraphThreadOrNotRunning() ||
+               (NS_IsMainThread() &&
+                LifecycleStateRef() >= LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP));
     return mStreams.IsEmpty() && mSuspendedStreams.IsEmpty() && mPortCount == 0;
   }
 
