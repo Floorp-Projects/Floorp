@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// React & Redux
-const React = require("devtools/client/shared/vendor/react");
+const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
@@ -13,8 +13,8 @@ const { createContextMenu } = require("devtools/client/webconsole/new-console-ou
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 
 const EventEmitter = require("devtools/shared/old-event-emitter");
-const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/new-console-output/components/ConsoleOutput"));
-const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/FilterBar"));
+const ConsoleOutput = createFactory(require("devtools/client/webconsole/new-console-output/components/ConsoleOutput"));
+const FilterBar = createFactory(require("devtools/client/webconsole/new-console-output/components/FilterBar"));
 
 let store = null;
 
@@ -189,10 +189,10 @@ NewConsoleOutputWrapper.prototype = {
         }
       });
 
-      let provider = React.createElement(
+      let provider = createElement(
         Provider,
         { store },
-        React.DOM.div(
+        dom.div(
           {className: "webconsole-output-wrapper"},
           filterBar,
           childComponent
