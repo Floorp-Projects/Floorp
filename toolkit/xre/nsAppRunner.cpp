@@ -177,6 +177,9 @@
 #include "nsProfileLock.h"
 #include "SpecialSystemDirectory.h"
 #include <sched.h>
+#ifdef MOZ_ENABLE_DBUS
+#include "DBusRemoteClient.h"
+#endif
 // Time to wait for the remoting service to start
 #define MOZ_XREMOTE_START_TIMEOUT_SEC 5
 #endif
@@ -1818,18 +1821,31 @@ static RemoteResult
 StartRemoteClient(const char* aDesktopStartupID,
                   nsCString& program,
                   const char* profile,
-                  const char* username)
+                  const char* username,
+                  bool aIsX11Display)
 {
-  XRemoteClient client;
-  nsresult rv = client.Init();
+  nsAutoPtr<nsRemoteClient> client;
+
+  if (aIsX11Display) {
+    client = new XRemoteClient();
+  } else {
+#if defined(MOZ_ENABLE_DBUS) && defined(MOZ_WAYLAND)
+    client = new DBusRemoteClient();
+#else
+    MOZ_ASSERT(false, "Missing remote implementation!");
+    return REMOTE_NOT_FOUND;
+#endif
+  }
+
+  nsresult rv = client->Init();
   if (NS_FAILED(rv))
     return REMOTE_NOT_FOUND;
 
   nsCString response;
   bool success = false;
-  rv = client.SendCommandLine(program.get(), username, profile,
-                              gArgc, gArgv, aDesktopStartupID,
-                              getter_Copies(response), &success);
+  rv = client->SendCommandLine(program.get(), username, profile,
+                               gArgc, gArgv, aDesktopStartupID,
+                               getter_Copies(response), &success);
   // did the command fail?
   if (!success)
     return REMOTE_NOT_FOUND;
@@ -4015,7 +4031,8 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     const char* desktopStartupIDPtr =
       mDesktopStartupID.IsEmpty() ? nullptr : mDesktopStartupID.get();
 
-    rr = StartRemoteClient(desktopStartupIDPtr, program, profile, username);
+    rr = StartRemoteClient(desktopStartupIDPtr, program, profile, username,
+                           GDK_IS_X11_DISPLAY(mGdkDisplay));
     if (rr == REMOTE_FOUND) {
       *aExitFlag = true;
       return 0;

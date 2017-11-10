@@ -119,6 +119,11 @@ OBJDIR_TARGETS = install export libs clean realclean distclean upload sdk instal
 # The default rule is build
 build::
 
+ifndef MACH
+$(error client.mk must be used via `mach`. Try running \
+`./mach $(firstword $(MAKECMDGOALS) $(.DEFAULT_GOAL))`)
+endif
+
 # Include baseconfig.mk for its $(MAKE) validation.
 include $(TOPSRCDIR)/config/baseconfig.mk
 

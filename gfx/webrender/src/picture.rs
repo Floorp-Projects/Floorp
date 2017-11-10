@@ -7,7 +7,7 @@ use api::{BoxShadowClipMode, LayerPoint, LayerRect, LayerSize, Shadow};
 use box_shadow::BLUR_SAMPLE_SCALE;
 use frame_builder::PrimitiveContext;
 use gpu_cache::GpuDataRequest;
-use prim_store::PrimitiveIndex;
+use prim_store::{PrimitiveIndex, PrimitiveRun};
 use render_task::{ClearMode, RenderTask, RenderTaskId, RenderTaskTree};
 use tiling::RenderTargetKind;
 
@@ -20,13 +20,6 @@ use tiling::RenderTargetKind;
  * A configuration describing how to draw the primitives on
    this picture (e.g. in screen space or local space).
  */
-
-#[derive(Clone, Debug)]
-pub struct PrimitiveRun {
-    pub prim_index: PrimitiveIndex,
-    pub count: usize,
-    pub clip_and_scroll: ClipAndScrollInfo,
-}
 
 #[derive(Debug)]
 pub enum PictureKind {
@@ -112,14 +105,14 @@ impl PicturePrimitive {
 
         if let Some(ref mut run) = self.prim_runs.last_mut() {
             if run.clip_and_scroll == clip_and_scroll &&
-               run.prim_index.0 + run.count == prim_index.0 {
+               run.base_prim_index.0 + run.count == prim_index.0 {
                 run.count += 1;
                 return;
             }
         }
 
         self.prim_runs.push(PrimitiveRun {
-            prim_index,
+            base_prim_index: prim_index,
             count: 1,
             clip_and_scroll,
         });

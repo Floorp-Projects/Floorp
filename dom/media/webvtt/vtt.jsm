@@ -305,8 +305,14 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
     rt: "ruby"
   };
 
+  const PARSE_CONTENT_MODE = {
+    NORMAL_CUE: "normal_cue",
+    PSUEDO_CUE: "pseudo_cue",
+    DOCUMENT_FRAGMENT: "document_fragment",
+    REGION_CUE: "region_cue",
+  }
   // Parse content into a document fragment.
-  function parseContent(window, input, bReturnFrag) {
+  function parseContent(window, input, mode) {
     function nextToken() {
       // Check for end-of-string.
       if (!input) {
@@ -384,16 +390,20 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       return hours + ':' + minutes + ':' + seconds + '.' + f;
     }
 
-    var isFirefoxSupportPseudo = (/firefox/i.test(window.navigator.userAgent))
-          && Services.prefs.getBoolPref("media.webvtt.pseudo.enabled");
     var root;
-    if (bReturnFrag) {
-      root = window.document.createDocumentFragment();
-    } else if (isFirefoxSupportPseudo) {
-      root = window.document.createElement("div", {pseudo: "::cue"});
-    } else {
-      root = window.document.createElement("div");
+    switch (mode) {
+      case PARSE_CONTENT_MODE.PSUEDO_CUE:
+        root = window.document.createElement("div", {pseudo: "::cue"});
+        break;
+      case PARSE_CONTENT_MODE.NORMAL_CUE:
+      case PARSE_CONTENT_MODE.REGION_CUE:
+        root = window.document.createElement("div");
+        break;
+      case PARSE_CONTENT_MODE.DOCUMENT_FRAGMENT:
+        root = window.document.createDocumentFragment();
+        break;
     }
+
     var current = root,
         t,
         tagStack = [];
@@ -494,7 +504,11 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
     // Parse our cue's text into a DOM tree rooted at 'cueDiv'. This div will
     // have inline positioning and will function as the cue background box.
-    this.cueDiv = parseContent(window, cue.text, false);
+    if (isFirefoxSupportPseudo) {
+      this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.PSUEDO_CUE);
+    } else {
+      this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.NORMAL_CUE);
+    }
     var styles = {
       color: color,
       backgroundColor: backgroundColor,
@@ -585,6 +599,79 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
   }
   CueStyleBox.prototype = _objCreate(StyleBox.prototype);
   CueStyleBox.prototype.constructor = CueStyleBox;
+
+  function RegionNodeBox(window, region, container) {
+    StyleBox.call(this);
+
+    var boxLineHeight = container.height * 0.0533 // 0.0533vh ? 5.33vh
+    var boxHeight = boxLineHeight * region.lines;
+    var boxWidth = container.width * region.width / 100; // convert percentage to px
+
+    var regionNodeStyles = {
+      position: "absolute",
+      height: boxHeight + "px",
+      width: boxWidth + "px",
+      top: (region.viewportAnchorY * container.height / 100) - (region.regionAnchorY * boxHeight / 100) + "px",
+      left: (region.viewportAnchorX * container.width / 100) - (region.regionAnchorX * boxWidth / 100) + "px",
+      lineHeight: boxLineHeight + "px",
+      writingMode: "horizontal-tb",
+      backgroundColor: "rgba(0, 0, 0, 0.8)",
+      wordWrap: "break-word",
+      overflowWrap: "break-word",
+      font: (boxLineHeight/1.3) + "px sans-serif",
+      color: "rgba(255, 255, 255, 1)",
+      overflow: "hidden",
+      minHeight: "0px",
+      maxHeight: boxHeight + "px",
+      display: "inline-flex",
+      flexFlow: "column",
+      justifyContent: "flex-end",
+    };
+
+    this.div = window.document.createElement("div");
+    this.div.id = region.id; // useless?
+    this.applyStyles(regionNodeStyles);
+  }
+  RegionNodeBox.prototype = _objCreate(StyleBox.prototype);
+  RegionNodeBox.prototype.constructor = RegionNodeBox;
+
+  function RegionCueStyleBox(window, cue) {
+    StyleBox.call(this);
+    this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.REGION_CUE);
+
+    var regionCueStyles = {
+      position: "relative",
+      writingMode: "horizontal-tb",
+      unicodeBidi: "plaintext",
+      width: "auto",
+      height: "auto",
+      textAlign: cue.align,
+    };
+    // TODO: fix me, LTR and RTL ? using margin replace the "left/right"
+    // 6.1.14.3.3
+    var offset = cue.computedPosition * cue.region.width / 100;
+    // 6.1.14.3.4
+    switch (cue.align) {
+      case "start":
+      case "left":
+        regionCueStyles.left = offset + "%";
+        regionCueStyles.right = "auto";
+        break;
+      case "end":
+      case "right":
+        regionCueStyles.left = "auto";
+        regionCueStyles.right = offset + "%";
+        break;
+      case "middle":
+        break;
+    }
+
+    this.div = window.document.createElement("div");
+    this.applyStyles(regionCueStyles);
+    this.div.appendChild(this.cueDiv);
+  }
+  RegionCueStyleBox.prototype = _objCreate(StyleBox.prototype);
+  RegionCueStyleBox.prototype.constructor = RegionCueStyleBox;
 
   // Represents the co-ordinates of an Element in a way that we can easily
   // compute things with such as if it overlaps or intersects with another Element.
@@ -896,7 +983,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
     if (!window) {
       return null;
     }
-    return parseContent(window, cuetext, true);
+    return parseContent(window, cuetext, PARSE_CONTENT_MODE.DOCUMENT_FRAGMENT);
   };
 
   var FONT_SIZE_PERCENT = 0.05;
@@ -962,29 +1049,66 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
     };
 
     (function() {
-      var styleBox, cue;
+      var styleBox, cue, controlBarBox;
 
       if (controlBarShown) {
+        controlBarBox = BoxPosition.getSimpleBoxPosition(controlBar);
         // Add an empty output box that cover the same region as video control bar.
-        boxPositions.push(BoxPosition.getSimpleBoxPosition(controlBar));
+        boxPositions.push(controlBarBox);
       }
+
+      // https://w3c.github.io/webvtt/#processing-model 6.1.12.1
+      // Create regionNode
+      var regionNodeBoxes = {};
+      var regionNodeBox;
 
       for (var i = 0; i < cues.length; i++) {
         cue = cues[i];
+        if (cue.region != null) {
+         // 6.1.14.1
+          styleBox = new RegionCueStyleBox(window, cue);
 
-        // Compute the intial position and styles of the cue div.
-        styleBox = new CueStyleBox(window, cue, styleOptions);
-        styleBox.cueDiv.style.setProperty("--cue-font-size", fontSize + "px");
-        rootOfCues.appendChild(styleBox.div);
+          if (!regionNodeBoxes[cue.region.id]) {
+            // create regionNode
+            // Adjust the container hieght to exclude the controlBar
+            var adjustContainerBox = BoxPosition.getSimpleBoxPosition(rootOfCues);
+            if (controlBarShown) {
+              adjustContainerBox.height -= controlBarBox.height;
+              adjustContainerBox.bottom += controlBarBox.height;
+            }
+            regionNodeBox = new RegionNodeBox(window, cue.region, adjustContainerBox);
+            regionNodeBoxes[cue.region.id] = regionNodeBox;
+          }
+          // 6.1.14.3
+          var currentRegionBox = regionNodeBoxes[cue.region.id];
+          var currentRegionNodeDiv = currentRegionBox.div;
+          // 6.1.14.3.2
+          // TODO: fix me, it looks like the we need to set/change "top" attribute at the styleBox.div
+          // to do the "scroll up", however, we do not implement it yet?
+          if (cue.region.scroll == "up" && currentRegionNodeDiv.childElementCount > 0) {
+            styleBox.div.style.transitionProperty = "top";
+            styleBox.div.style.transitionDuration = "0.433s";
+          }
 
-        // Move the cue div to it's correct line position.
-        moveBoxToLinePosition(window, styleBox, containerBox, boxPositions);
+          currentRegionNodeDiv.appendChild(styleBox.div);
+          rootOfCues.appendChild(currentRegionNodeDiv);
+          cue.displayState = styleBox.div;
+          boxPositions.push(BoxPosition.getSimpleBoxPosition(currentRegionBox));
+        } else {
+          // Compute the intial position and styles of the cue div.
+          styleBox = new CueStyleBox(window, cue, styleOptions);
+          styleBox.cueDiv.style.setProperty("--cue-font-size", fontSize + "px");
+          rootOfCues.appendChild(styleBox.div);
 
-        // Remember the computed div so that we don't have to recompute it later
-        // if we don't have too.
-        cue.displayState = styleBox.div;
+          // Move the cue div to it's correct line position.
+          moveBoxToLinePosition(window, styleBox, containerBox, boxPositions);
 
-        boxPositions.push(BoxPosition.getSimpleBoxPosition(styleBox));
+          // Remember the computed div so that we don't have to recompute it later
+          // if we don't have too.
+          cue.displayState = styleBox.div;
+
+          boxPositions.push(BoxPosition.getSimpleBoxPosition(styleBox));
+        }
       }
     })();
   };

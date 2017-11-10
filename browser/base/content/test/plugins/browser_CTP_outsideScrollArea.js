@@ -58,7 +58,7 @@ add_task(async function() {
     let doc = content.document;
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
     Assert.ok(overlay && overlay.classList.contains("visible") &&
-              !overlay.classList.contains("minimal"),
+              overlay.getAttribute("sizing") != "blank",
               "Test 2, overlay should be visible.");
   });
 });
@@ -88,7 +88,7 @@ add_task(async function() {
     let doc = content.document;
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
     Assert.ok(overlay && overlay.classList.contains("visible") &&
-              !overlay.classList.contains("minimal"),
+              overlay.getAttribute("sizing") != "blank",
               "Test 3, overlay should be visible.");
   });
 });
@@ -116,7 +116,7 @@ add_task(async function() {
     let plugin = content.document.getElementById("test");
     let doc = content.document;
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    Assert.ok(!overlay || !overlay.classList.contains("visible"),
-      "Test 4, overlay should be hidden.");
+    Assert.ok(!overlay || overlay.getAttribute("sizing") == "blank",
+      "Test 4, overlay should be blank.");
   });
 });
