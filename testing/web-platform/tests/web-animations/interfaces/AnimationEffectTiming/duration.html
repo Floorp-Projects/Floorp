@@ -169,5 +169,22 @@ promise_test(function(t) {
   });
 }, 'Extending an effect\'s duration does not change the start or current time');
 
+test(function(t) {
+  var div = createDiv(t);
+  var anim = div.animate(null, { duration: 100000, fill: 'both' });
+  anim.finish();
+  assert_equals(anim.effect.getComputedTiming().progress, 1,
+                'progress when animation is finished');
+  anim.effect.timing.duration *= 2;
+  assert_times_equal(anim.effect.getComputedTiming().progress, 0.5,
+                     'progress after doubling the duration');
+  anim.effect.timing.duration = 0;
+  assert_equals(anim.effect.getComputedTiming().progress, 1,
+                'progress after setting duration to zero');
+  anim.effect.timing.duration = 'auto';
+  assert_equals(anim.effect.getComputedTiming().progress, 1,
+                'progress after setting duration to \'auto\'');
+}, 'Can be updated while the animation is in progress');
+
 </script>
 </body>
