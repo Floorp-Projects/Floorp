@@ -619,7 +619,7 @@ function dbClose(aShutdown) {
  * @param {Array.<Object>} aChanges changes to form history
  * @param {Object} aCallbacks
  */
-async function updateFormHistoryWrite(aChanges, aCallbacks) {
+function updateFormHistoryWrite(aChanges, aCallbacks) {
   log("updateFormHistoryWrite  " + aChanges.length);
 
   // pass 'now' down so that every entry in the batch has the same timestamp
@@ -648,30 +648,7 @@ async function updateFormHistoryWrite(aChanges, aCallbacks) {
           delete change.timeDeleted;
         }
         stmt = makeRemoveStatement(change, bindingArrays);
-
-        // Fetch the GUIDs we are going to delete.
-        try {
-          await new Promise((res, rej) => {
-            let selectStmt = makeSearchStatement(change, ["guid"]);
-            let selectHandlers = {
-              handleCompletion() {
-                res();
-              },
-              handleError() {
-                log("remove select guids failure");
-              },
-              handleResult(aResultSet) {
-                for (let row = aResultSet.getNextRow(); row; row = aResultSet.getNextRow()) {
-                  notifications.push(["formhistory-remove", row.getResultByName("guid")]);
-                }
-              },
-            };
-            dbConnection.executeAsync([selectStmt], 1, selectHandlers);
-          });
-        } catch (e) {
-          log("Error in select statement: " + e);
-        }
-
+        notifications.push(["formhistory-remove", change.guid]);
         break;
       case "update":
         log("Update form history " + change);
