@@ -42,7 +42,6 @@ class TestMozbuildObject(unittest.TestCase):
         self._old_env = dict(os.environ)
         os.environ.pop('MOZCONFIG', None)
         os.environ.pop('MOZ_OBJDIR', None)
-        os.environ.pop('MOZ_CURRENT_PROJECT', None)
 
     def tearDown(self):
         os.chdir(self._old_cwd)

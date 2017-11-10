@@ -1097,8 +1097,6 @@ class MachDebug(MachCommandBase):
             print('MOZ_MAKE_FLAGS=%s' % ' '.join(self.mozconfig['make_flags']))
         objdir = mozpath.normsep(self.topobjdir)
         print('MOZ_OBJDIR=%s' % objdir, file=out)
-        if 'MOZ_CURRENT_PROJECT' in os.environ:
-            objdir = mozpath.join(objdir, os.environ['MOZ_CURRENT_PROJECT'])
         print('OBJDIR=%s' % objdir, file=out)
         if self.mozconfig['path']:
             print('FOUND_MOZCONFIG=%s' % mozpath.normsep(self.mozconfig['path']),
