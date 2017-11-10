@@ -105,7 +105,7 @@
   <binding id="statusbarpanel" display="xul:button">
     <content>
       <children>
-        <xul:label class="statusbarpanel-text" xbl:inherits="value=label,crop" crop="right" flex="1"/>
+        <xul:label xbl:inherits="value=label,crop" crop="right" flex="1"/>
       </children>
     </content>
 
