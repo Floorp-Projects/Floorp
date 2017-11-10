@@ -1321,6 +1321,8 @@ class BuildDriver(MozbuildObject):
         append_env = dict(append_env or {})
         append_env['TOPSRCDIR'] = self.topsrcdir
 
+        append_env['CONFIG_GUESS'] = self.resolve_config_guess()
+
         return self._run_make(srcdir=True,
                               filename='client.mk',
                               allow_parallel=False,
