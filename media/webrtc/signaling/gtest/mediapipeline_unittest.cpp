@@ -72,6 +72,15 @@ public:
     return mozilla::dom::MediaSourceEnum::Microphone;
   }
 
+
+  virtual void Disable() override
+  {
+  }
+
+  virtual void Enable() override
+  {
+  }
+
   virtual void Stop() override
   {
   }
