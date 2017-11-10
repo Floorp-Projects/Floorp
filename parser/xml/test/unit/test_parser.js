@@ -51,22 +51,11 @@ function updateDocumentSourceMaps(source) {
       do_parse_check(aNodeName, "Missing element node name (endElement)");
     },
 
-    inCDataSection: false,
-
     characters: function characters(aData) {
     },
 
     processingInstruction: function processingInstruction(aTarget, aData) {
       do_parse_check(aTarget, "Missing processing instruction target");
-    },
-
-    ignorableWhitespace: function ignorableWhitespace(aWhitespace) {
-    },
-
-    startPrefixMapping: function startPrefixMapping(aPrefix, aURI) {
-    },
-
-    endPrefixMapping: function endPrefixMapping(aPrefix) {
     }
   };
 
