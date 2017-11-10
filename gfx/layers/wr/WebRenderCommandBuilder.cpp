@@ -476,6 +476,14 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(paintBounds, appUnitsPerDevPixel);
 
   gfx::Size scale = aSc.GetInheritedScale();
+  gfx::Size oldScale = fallbackData->GetScale();
+  // This scale determination should probably be done using
+  // ChooseScaleAndSetTransform but for now we just fake it.
+  // We tolerate slight changes in scale so that we don't, for example,
+  // rerasterize on MotionMark
+  bool differentScale = gfx::FuzzyEqual(scale.width, oldScale.width, 1e-6f) &&
+                        gfx::FuzzyEqual(scale.height, oldScale.height, 1e-6f);
+
   // XXX not sure if paintSize should be in layer or layoutdevice pixels, it
   // has some sort of scaling applied.
   LayerIntSize paintSize = RoundedToInt(LayerSize(bounds.width * scale.width, bounds.height * scale.height));
@@ -494,7 +502,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
   if (geometry && !fallbackData->IsInvalid() &&
       aItem->GetType() != DisplayItemType::TYPE_FILTER &&
       aItem->GetType() != DisplayItemType::TYPE_SVG_WRAPPER &&
-      scale == fallbackData->GetScale()) {
+      differentScale) {
     nsRect invalid;
     nsRegion invalidRegion;
 
