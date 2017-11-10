@@ -18,6 +18,7 @@
 #include "nsServiceManagerUtils.h"
 #endif
 
+#ifdef NIGHTLY_BUILD
 #if defined(DEBUG) && !defined(XP_WIN) && !defined(ANDROID)
 #define HAS_GDB_SLEEP_DURATION 1
 extern unsigned int _gdb_sleep_duration;
@@ -44,7 +45,8 @@ static void DisableCrashReporter()
 #else
 #define ASSERT_DEATH_WRAP(a, b)
 #endif
-
+#endif
+q
 using namespace mozilla;
 
 static inline void
