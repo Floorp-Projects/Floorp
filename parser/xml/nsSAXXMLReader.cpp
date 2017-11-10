@@ -16,7 +16,6 @@
 #include "nsStringStream.h"
 #include "nsIScriptError.h"
 #include "nsSAXAttributes.h"
-#include "nsSAXLocator.h"
 #include "nsCharsetSource.h"
 
 using mozilla::Encoding;
@@ -139,17 +138,6 @@ nsSAXXMLReader::HandleStartDTD(const char16_t *aName,
                                const char16_t *aSystemId,
                                const char16_t *aPublicId)
 {
-  char16_t nullChar = char16_t(0);
-  if (!aName)
-    aName = &nullChar;
-  if (!aSystemId)
-    aSystemId = &nullChar;
-  if (!aPublicId)
-    aPublicId = &nullChar;
-
-  mSystemId = aSystemId;
-  mPublicId = aPublicId;
-
   return NS_OK;
 }
 
@@ -238,22 +226,7 @@ nsSAXXMLReader::ReportError(const char16_t* aErrorText,
   *_retval = true;
 
   if (mErrorHandler) {
-    uint32_t lineNumber;
-    nsresult rv = aError->GetLineNumber(&lineNumber);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint32_t columnNumber;
-    rv = aError->GetColumnNumber(&columnNumber);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsISAXLocator> locator = new nsSAXLocator(mPublicId,
-                                                       mSystemId,
-                                                       lineNumber,
-                                                       columnNumber);
-    if (!locator)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = mErrorHandler->FatalError(locator, nsDependentString(aErrorText));
+    nsresult rv = mErrorHandler->FatalError(nsDependentString(aErrorText));
     if (NS_SUCCEEDED(rv)) {
       // The error handler has handled the script error.  Don't log to console.
       *_retval = false;
@@ -375,17 +348,9 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStreamPtr,
   if (NS_FAILED(rv))
     parserChannel->Cancel(rv);
 
-  /* When parsing a new document, we need to clear the XML identifiers.
-     HandleStartDTD will set these values from the DTD declaration tag.
-     We won't have them, of course, if there's a well-formedness error
-     before the DTD tag (such as a space before an XML declaration).
-   */
-  mSystemId.Truncate();
-  mPublicId.Truncate();
-
   nsresult status;
   parserChannel->GetStatus(&status);
-  
+
   uint64_t offset = 0;
   while (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
     uint64_t available;
