@@ -667,7 +667,8 @@ def enable_code_coverage(config, tests):
             test['when'] = {}
             test['instance-size'] = 'xlarge'
             # Ensure we don't run on inbound/autoland/beta, but if the test is try only, ignore it
-            if 'mozilla-central' in test['run-on-projects'] or test['run-on-projects'] == 'built-projects':
+            if 'mozilla-central' in test['run-on-projects'] or \
+                    test['run-on-projects'] == 'built-projects':
                 test['run-on-projects'] = ['mozilla-central', 'try']
 
             if test['test-name'].startswith('talos'):
@@ -684,7 +685,8 @@ def enable_code_coverage(config, tests):
                 test['mozharness']['extra-options'].append('--tptimeout,15000')
         elif test['build-platform'] == 'linux64-jsdcov/opt':
             # Ensure we don't run on inbound/autoland/beta, but if the test is try only, ignore it
-            if 'mozilla-central' in test['run-on-projects'] or test['run-on-projects'] == 'built-projects':
+            if 'mozilla-central' in test['run-on-projects'] or \
+                    test['run-on-projects'] == 'built-projects':
                 test['run-on-projects'] = ['mozilla-central', 'try']
             test['mozharness'].setdefault('extra-options', []).append('--jsd-code-coverage')
         yield test
