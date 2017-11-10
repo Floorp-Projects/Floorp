@@ -297,22 +297,19 @@ protected:
 
   /**
    * ReturnInParagraph() does the right thing for Enter key press or
-   * 'insertParagraph' command in aParentDivOrP.
+   * 'insertParagraph' command in aParentDivOrP.  aParentDivOrP will be
+   * split at start of first selection range.
    *
-   * @param aSelection      The selection
+   * @param aSelection      The selection.  aParentDivOrP will be split at
+   *                        start of the first selection range.
    * @param aParentDivOrP   The parent block.  This must be <p> or <div>
    *                        element.
-   * @param aTextNode
-   * @param aOffset
-   * @param aChildAtOffset
    * @return                Returns with NS_OK if this doesn't meat any
    *                        unexpected situation.  If this method tries to
    *                        split the paragraph, marked as handled.
    */
   EditActionResult ReturnInParagraph(Selection& aSelection,
-                                     nsINode& aParentDivOrP,
-                                     nsINode* aTextNode, int32_t aOffset,
-                                     nsIContent* aChildAtOffset);
+                                     nsINode& aParentDivOrP);
 
   /**
    * SplitParagraph() splits the parent block, aPara, at aSelNode - aOffset.
