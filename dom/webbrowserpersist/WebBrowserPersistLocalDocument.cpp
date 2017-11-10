@@ -25,7 +25,6 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMHTMLBaseElement.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -899,35 +898,36 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
         return NS_OK;
     }
 
-    // BASE elements are replaced by a comment so relative links are not hosed.
-    if (!IsFlagSet(IWBP::PERSIST_FLAGS_NO_BASE_TAG_MODIFICATIONS)) {
-        nsCOMPtr<nsIDOMHTMLBaseElement> nodeAsBase = do_QueryInterface(aNodeIn);
-        if (nodeAsBase) {
-            nsCOMPtr<nsIDOMDocument> ownerDocument;
-            auto* base = static_cast<dom::HTMLSharedElement*>(nodeAsBase.get());
-            base->GetOwnerDocument(getter_AddRefs(ownerDocument));
-            if (ownerDocument) {
-                nsAutoString href;
-                base->GetHref(href); // Doesn't matter if this fails
-                nsCOMPtr<nsIDOMComment> comment;
-                nsAutoString commentText;
-                commentText.AssignLiteral(" base ");
-                if (!href.IsEmpty()) {
-                    commentText += NS_LITERAL_STRING("href=\"") + href
-                                   + NS_LITERAL_STRING("\" ");
-                }
-                rv = ownerDocument->CreateComment(commentText,
-                                                  getter_AddRefs(comment));
-                if (comment) {
-                    return CallQueryInterface(comment, aNodeOut);
-                }
-            }
-            return NS_OK;
-        }
-    }
-
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNodeIn);
     if (!content) {
+        return NS_OK;
+    }
+
+    // BASE elements are replaced by a comment so relative links are not hosed.
+    if (!IsFlagSet(IWBP::PERSIST_FLAGS_NO_BASE_TAG_MODIFICATIONS) &&
+        content->IsHTMLElement(nsGkAtoms::base)) {
+        nsCOMPtr<nsIDOMDocument> ownerDocument;
+        // Base uses HTMLSharedElement, which would be awkward to implement
+        // FromContent on, since it represents multiple elements. Since we've
+        // already checked IsHTMLElement here, just cast as we were doing.
+        auto* base = static_cast<dom::HTMLSharedElement*>(content.get());
+        base->GetOwnerDocument(getter_AddRefs(ownerDocument));
+        if (ownerDocument) {
+            nsAutoString href;
+            base->GetHref(href); // Doesn't matter if this fails
+            nsCOMPtr<nsIDOMComment> comment;
+            nsAutoString commentText;
+            commentText.AssignLiteral(" base ");
+            if (!href.IsEmpty()) {
+                commentText += NS_LITERAL_STRING("href=\"") + href
+                    + NS_LITERAL_STRING("\" ");
+            }
+            rv = ownerDocument->CreateComment(commentText,
+                                              getter_AddRefs(comment));
+            if (comment) {
+                return CallQueryInterface(comment, aNodeOut);
+            }
+        }
         return NS_OK;
     }
 
