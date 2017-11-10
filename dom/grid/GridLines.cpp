@@ -129,7 +129,8 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
         }
       }
 
-      if (i >= aTrackInfo->mRepeatFirstTrack &&
+      if (i >= (aTrackInfo->mRepeatFirstTrack +
+                aTrackInfo->mNumLeadingImplicitTracks) &&
           repeatIndex < numRepeatTracks) {
         numAddedLines += AppendRemovedAutoFits(aTrackInfo,
                                                aLineInfo,
@@ -224,11 +225,8 @@ GridLines::AppendRemovedAutoFits(const ComputedGridTrackInfo* aTrackInfo,
 
     RefPtr<GridLine> line = new GridLine(this);
     mLines.AppendElement(line);
-    MOZ_ASSERT(aTrackInfo->mRepeatFirstTrack >=
-               aTrackInfo->mNumLeadingImplicitTracks,
-      "We shouldn't have a repeat track within the implicit tracks.");
-    uint32_t lineNumber = aTrackInfo->mRepeatFirstTrack -
-      aTrackInfo->mNumLeadingImplicitTracks + aRepeatIndex + 1;
+    uint32_t lineNumber = aTrackInfo->mRepeatFirstTrack +
+                          aRepeatIndex + 1;
     line->SetLineValues(
       aLineNames,
       nsPresContext::AppUnitsToDoubleCSSPixels(aLastTrackEdge),
