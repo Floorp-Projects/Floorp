@@ -81,7 +81,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
     mLayerScrollData.emplace_back();
     mLayerScrollData.back().InitializeRoot(mLayerScrollData.size() - 1);
     auto callback = [&aScrollData](FrameMetrics::ViewID aScrollId) -> bool {
-      return aScrollData.HasMetadataFor(aScrollId);
+      return aScrollData.HasMetadataFor(aScrollId).isSome();
     };
     if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
           aDisplayListBuilder, mManager, ContainerLayerParameters(), callback)) {
