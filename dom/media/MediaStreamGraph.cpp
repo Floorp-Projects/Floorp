@@ -323,8 +323,8 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
 }
 
 StreamTime
-MediaStreamGraphImpl::GraphTimeToStreamTimeWithBlocking(MediaStream* aStream,
-                                                        GraphTime aTime)
+MediaStreamGraphImpl::GraphTimeToStreamTimeWithBlocking(const MediaStream* aStream,
+                                                        GraphTime aTime) const
 {
   MOZ_ASSERT(aTime <= mStateComputedTime,
              "Don't ask about times where we haven't made blocking decisions yet");
@@ -2036,6 +2036,12 @@ MediaStream::GraphImpl()
   return mGraph;
 }
 
+const MediaStreamGraphImpl*
+MediaStream::GraphImpl() const
+{
+  return mGraph;
+}
+
 MediaStreamGraph*
 MediaStream::Graph()
 {
@@ -2058,7 +2064,7 @@ MediaStream::SetGraphImpl(MediaStreamGraph* aGraph)
 }
 
 StreamTime
-MediaStream::GraphTimeToStreamTime(GraphTime aTime)
+MediaStream::GraphTimeToStreamTime(GraphTime aTime) const
 {
   NS_ASSERTION(mStartBlocking == GraphImpl()->mStateComputedTime ||
                aTime <= mStartBlocking,
@@ -2067,7 +2073,7 @@ MediaStream::GraphTimeToStreamTime(GraphTime aTime)
 }
 
 GraphTime
-MediaStream::StreamTimeToGraphTime(StreamTime aTime)
+MediaStream::StreamTimeToGraphTime(StreamTime aTime) const
 {
   NS_ASSERTION(mStartBlocking == GraphImpl()->mStateComputedTime ||
                aTime + mTracksStartTime <= mStartBlocking,
@@ -2076,7 +2082,7 @@ MediaStream::StreamTimeToGraphTime(StreamTime aTime)
 }
 
 StreamTime
-MediaStream::GraphTimeToStreamTimeWithBlocking(GraphTime aTime)
+MediaStream::GraphTimeToStreamTimeWithBlocking(GraphTime aTime) const
 {
   return GraphImpl()->GraphTimeToStreamTimeWithBlocking(this, aTime);
 }
@@ -2088,7 +2094,7 @@ MediaStream::FinishOnGraphThread()
 }
 
 StreamTracks::Track*
-MediaStream::FindTrack(TrackID aID)
+MediaStream::FindTrack(TrackID aID) const
 {
   return mTracks.FindTrack(aID);
 }
@@ -3267,7 +3273,7 @@ MediaInputPort::Disconnect()
 }
 
 MediaInputPort::InputInterval
-MediaInputPort::GetNextInputInterval(GraphTime aTime)
+MediaInputPort::GetNextInputInterval(GraphTime aTime) const
 {
   InputInterval result = { GRAPH_TIME_MAX, GRAPH_TIME_MAX, false };
   if (aTime >= mDest->mStartBlocking) {
