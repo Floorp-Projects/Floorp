@@ -10,17 +10,17 @@ from marionette_harness import MarionetteTestCase
 class TestVisibility(MarionetteTestCase):
 
     def testShouldAllowTheUserToTellIfAnElementIsDisplayedOrNot(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+        test_html = self.marionette.absolute_url("visibility.html")
         self.marionette.navigate(test_html)
 
         self.assertTrue(self.marionette.find_element(By.ID, "displayed").is_displayed())
         self.assertFalse(self.marionette.find_element(By.ID, "none").is_displayed())
         self.assertFalse(self.marionette.find_element(By.ID,
-            "suppressedParagraph").is_displayed())
+                                                      "suppressedParagraph").is_displayed())
         self.assertFalse(self.marionette.find_element(By.ID, "hidden").is_displayed())
 
     def testVisibilityShouldTakeIntoAccountParentVisibility(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+        test_html = self.marionette.absolute_url("visibility.html")
         self.marionette.navigate(test_html)
 
         childDiv = self.marionette.find_element(By.ID, "hiddenchild")
@@ -30,13 +30,13 @@ class TestVisibility(MarionetteTestCase):
         self.assertFalse(hiddenLink.is_displayed())
 
     def testShouldCountElementsAsVisibleIfStylePropertyHasBeenSet(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+        test_html = self.marionette.absolute_url("visibility.html")
         self.marionette.navigate(test_html)
         shown = self.marionette.find_element(By.ID, "visibleSubElement")
         self.assertTrue(shown.is_displayed())
 
     def testShouldModifyTheVisibilityOfAnElementDynamically(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+        test_html = self.marionette.absolute_url("visibility.html")
         self.marionette.navigate(test_html)
         element = self.marionette.find_element(By.ID, "hideMe")
         self.assertTrue(element.is_displayed())
@@ -44,7 +44,7 @@ class TestVisibility(MarionetteTestCase):
         self.assertFalse(element.is_displayed())
 
     def testHiddenInputElementsAreNeverVisible(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+        test_html = self.marionette.absolute_url("visibility.html")
         self.marionette.navigate(test_html)
 
         shown = self.marionette.find_element(By.NAME, "hidden")

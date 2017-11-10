@@ -76,7 +76,6 @@ class BaseCrashTestCase(MarionetteTestCase):
 
         self.crash_count = self.marionette.crashed
         self.pid = self.marionette.process_id
-        self.remote_uri = self.marionette.absolute_url("javascriptPage.html")
 
     def tearDown(self):
         # Replace mockup with original mozcrash instance
