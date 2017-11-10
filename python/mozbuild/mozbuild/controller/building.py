@@ -1278,6 +1278,10 @@ class BuildDriver(MozbuildObject):
 
     def configure(self, options=None, buildstatus_messages=False,
                   line_handler=None):
+        # Disable indexing in objdir because it is not necessary and can slow
+        # down builds.
+        mkdir(self.topobjdir, not_indexed=True)
+
         def on_line(line):
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
 

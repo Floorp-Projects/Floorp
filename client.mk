@@ -99,13 +99,9 @@ $(error client.mk must be used via `mach`. Try running \
 `./mach $(firstword $(MAKECMDGOALS) $(.DEFAULT_GOAL))`)
 endif
 
-# Define mkdir
-include $(TOPSRCDIR)/config/makefiles/makeutils.mk
-include $(TOPSRCDIR)/config/makefiles/autotargets.mk
-
 # For now, only output "export" lines and lines containing UPLOAD_EXTRA_FILES.
 MOZCONFIG_MK_LINES := $(filter export||% UPLOAD_EXTRA_FILES% %UPLOAD_EXTRA_FILES%,$(MOZCONFIG_OUT_LINES))
-$(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG) $(call mkdir_deps,$(OBJDIR)) $(OBJDIR)/CLOBBER
+$(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG) $(OBJDIR)/CLOBBER
 	$(if $(MOZCONFIG_MK_LINES),( $(foreach line,$(MOZCONFIG_MK_LINES), echo '$(subst ||, ,$(line))';) )) > $@
 
 # Include that makefile so that it is created. This should not actually change
@@ -194,7 +190,6 @@ configure-files: $(CONFIGURES)
 configure-preqs = \
   $(OBJDIR)/CLOBBER \
   configure-files \
-  $(call mkdir_deps,$(OBJDIR)) \
   save-mozconfig \
   $(OBJDIR)/.mozconfig.json \
   $(NULL)
@@ -206,7 +201,7 @@ CREATE_MOZCONFIG_JSON = $(shell $(TOPSRCDIR)/mach environment --format=json -o $
 ifneq (,$(CREATE_MOZCONFIG_JSON))
 endif
 
-$(OBJDIR)/.mozconfig.json: $(call mkdir_deps,$(OBJDIR)) ;
+$(OBJDIR)/.mozconfig.json: ;
 
 save-mozconfig: $(FOUND_MOZCONFIG)
 ifdef FOUND_MOZCONFIG
