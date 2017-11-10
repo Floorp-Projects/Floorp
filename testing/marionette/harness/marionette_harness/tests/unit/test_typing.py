@@ -35,18 +35,18 @@ class TestTypingChrome(TypingTestCase):
     @skip_if_mobile("Interacting with chrome elements not available for Fennec")
     def test_cut_and_paste_shortcuts(self):
         with self.marionette.using_context("content"):
-            test_html = self.marionette.absolute_url("javascriptPage.html")
+            test_html = self.marionette.absolute_url("keyboard.html")
             self.marionette.navigate(test_html)
 
-            keyReporter = self.marionette.find_element(By.ID, "keyReporter")
-            self.assertEqual("", keyReporter.get_property("value"))
-            keyReporter.send_keys("zyxwvutsr")
-            self.assertEqual("zyxwvutsr", keyReporter.get_property("value"))
+            key_reporter = self.marionette.find_element(By.ID, "keyReporter")
+            self.assertEqual("", key_reporter.get_property("value"))
+            key_reporter.send_keys("zyxwvutsr")
+            self.assertEqual("zyxwvutsr", key_reporter.get_property("value"))
 
             # select all and cut
-            keyReporter.send_keys(self.mod_key, "a")
-            keyReporter.send_keys(self.mod_key, "x")
-            self.assertEqual("", keyReporter.get_property("value"))
+            key_reporter.send_keys(self.mod_key, "a")
+            key_reporter.send_keys(self.mod_key, "x")
+            self.assertEqual("", key_reporter.get_property("value"))
 
         url_bar = self.marionette.find_element(By.ID, "urlbar")
 
@@ -61,98 +61,98 @@ class TestTypingChrome(TypingTestCase):
 
 class TestTypingContent(TypingTestCase):
 
-    def testShouldFireKeyPressEvents(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_should_fire_key_press_events(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
-        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
-        keyReporter.send_keys("a")
+        key_reporter = self.marionette.find_element(By.ID, "keyReporter")
+        key_reporter.send_keys("a")
         result = self.marionette.find_element(By.ID, "result")
         self.assertTrue("press:" in result.text)
 
-    def testShouldFireKeyDownEvents(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_should_fire_key_down_events(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
-        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
-        keyReporter.send_keys("I")
+        key_reporter = self.marionette.find_element(By.ID, "keyReporter")
+        key_reporter.send_keys("I")
         result = self.marionette.find_element(By.ID, "result")
         self.assertTrue("down" in result.text)
 
-    def testShouldFireKeyUpEvents(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_should_fire_key_up_events(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
-        keyReporter.send_keys("a")
+        key_reporter = self.marionette.find_element(By.ID, "keyReporter")
+        key_reporter.send_keys("a")
         result = self.marionette.find_element(By.ID, "result")
         self.assertTrue("up:" in result.text)
 
-    def testShouldTypeLowerCaseLetters(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_should_type_lowercase_characters(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
-        keyReporter.send_keys("abc def")
-        self.assertEqual("abc def", keyReporter.get_property("value"))
+        key_reporter = self.marionette.find_element(By.ID, "keyReporter")
+        key_reporter.send_keys("abc def")
+        self.assertEqual("abc def", key_reporter.get_property("value"))
 
-    def testShouldBeAbleToTypeCapitalLetters(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_should_type_uppercase_characters(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
-        keyReporter.send_keys("ABC DEF")
-        self.assertEqual("ABC DEF", keyReporter.get_property("value"))
+        key_reporter = self.marionette.find_element(By.ID, "keyReporter")
+        key_reporter.send_keys("ABC DEF")
+        self.assertEqual("ABC DEF", key_reporter.get_property("value"))
 
-    def testCutAndPasteShortcuts(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_cut_and_paste_shortcuts(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
-        self.assertEqual("", keyReporter.get_property("value"))
-        keyReporter.send_keys("zyxwvutsr")
-        self.assertEqual("zyxwvutsr", keyReporter.get_property("value"))
+        key_reporter = self.marionette.find_element(By.ID, "keyReporter")
+        self.assertEqual("", key_reporter.get_property("value"))
+        key_reporter.send_keys("zyxwvutsr")
+        self.assertEqual("zyxwvutsr", key_reporter.get_property("value"))
 
         # select all and cut
-        keyReporter.send_keys(self.mod_key, "a")
-        keyReporter.send_keys(self.mod_key, "x")
-        self.assertEqual("", keyReporter.get_property("value"))
+        key_reporter.send_keys(self.mod_key, "a")
+        key_reporter.send_keys(self.mod_key, "x")
+        self.assertEqual("", key_reporter.get_property("value"))
 
-        keyReporter.send_keys(self.mod_key, "v")
-        self.assertEqual("zyxwvutsr", keyReporter.get_property("value"))
+        key_reporter.send_keys(self.mod_key, "v")
+        self.assertEqual("zyxwvutsr", key_reporter.get_property("value"))
 
-    def testShouldBeAbleToTypeQuoteMarks(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_should_type_a_quote_characters(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
-        keyReporter.send_keys("\"")
-        self.assertEqual("\"", keyReporter.get_property("value"))
+        key_reporter = self.marionette.find_element(By.ID, "keyReporter")
+        key_reporter.send_keys("\"")
+        self.assertEqual("\"", key_reporter.get_property("value"))
 
-    def testShouldBeAbleToTypeTheAtCharacter(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_should_type_an_at_character(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
-        keyReporter.send_keys("@")
-        self.assertEqual("@", keyReporter.get_property("value"))
+        key_reporter = self.marionette.find_element(By.ID, "keyReporter")
+        key_reporter.send_keys("@")
+        self.assertEqual("@", key_reporter.get_property("value"))
 
-    def testShouldBeAbleToMixUpperAndLowerCaseLetters(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_should_type_a_mix_of_upper_and_lower_case_character(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
-        keyReporter.send_keys("me@eXample.com")
-        self.assertEqual("me@eXample.com", keyReporter.get_property("value"))
+        key_reporter = self.marionette.find_element(By.ID, "keyReporter")
+        key_reporter.send_keys("me@eXample.com")
+        self.assertEqual("me@eXample.com", key_reporter.get_property("value"))
 
-    def testArrowKeysShouldNotBePrintable(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_arrow_keys_are_not_printable(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
-        keyReporter.send_keys(Keys.ARROW_LEFT)
-        self.assertEqual("", keyReporter.get_property("value"))
+        key_reporter = self.marionette.find_element(By.ID, "keyReporter")
+        key_reporter.send_keys(Keys.ARROW_LEFT)
+        self.assertEqual("", key_reporter.get_property("value"))
 
-    def testWillSimulateAKeyUpWhenEnteringTextIntoInputElements(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_will_simulate_a_key_up_when_entering_text_into_input_elements(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         element = self.marionette.find_element(By.ID, "keyUp")
@@ -160,8 +160,8 @@ class TestTypingContent(TypingTestCase):
         result = self.marionette.find_element(By.ID, "result")
         self.assertEqual(result.text, "I like cheese")
 
-    def testWillSimulateAKeyDownWhenEnteringTextIntoInputElements(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_will_simulate_a_key_down_when_entering_text_into_input_elements(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         element = self.marionette.find_element(By.ID, "keyDown")
@@ -171,8 +171,8 @@ class TestTypingContent(TypingTestCase):
         #  filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
 
-    def testWillSimulateAKeyPressWhenEnteringTextIntoInputElements(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_will_simulate_a_key_press_when_entering_text_into_input_elements(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         element = self.marionette.find_element(By.ID, "keyPress")
@@ -182,8 +182,8 @@ class TestTypingContent(TypingTestCase):
         #  filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
 
-    def testWillSimulateAKeyUpWhenEnteringTextIntoTextAreas(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_will_simulate_a_keyup_when_entering_text_into_textareas(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         element = self.marionette.find_element(By.ID, "keyUpArea")
@@ -191,8 +191,8 @@ class TestTypingContent(TypingTestCase):
         result = self.marionette.find_element(By.ID, "result")
         self.assertEqual("I like cheese", result.text)
 
-    def testWillSimulateAKeyDownWhenEnteringTextIntoTextAreas(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_will_simulate_a_keydown_when_entering_text_into_textareas(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         element = self.marionette.find_element(By.ID, "keyDownArea")
@@ -202,8 +202,8 @@ class TestTypingContent(TypingTestCase):
         #  filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
 
-    def testWillSimulateAKeyPressWhenEnteringTextIntoTextAreas(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_will_simulate_a_keypress_when_entering_text_into_textareas(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         element = self.marionette.find_element(By.ID, "keyPressArea")
@@ -213,9 +213,9 @@ class TestTypingContent(TypingTestCase):
         #  filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
 
-    @skip_if_mobile("Bug 1324752 - Arrow keys cannot be sent in Fennec")
-    def testShouldReportKeyCodeOfArrowKeysUpDownEvents(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    @skip_if_mobile("Bug 1333069 - Assertion: 'down: 40' not found in u''")
+    def test_should_report_key_code_of_arrow_keys_up_down_events(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         result = self.marionette.find_element(By.ID, "result")
@@ -242,78 +242,89 @@ class TestTypingContent(TypingTestCase):
         self.assertEqual("", element.get_property("value"))
 
     @skip("Reenable in Bug 1068728")
-    def testNumericShiftKeys(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_numeric_shift_keys(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         result = self.marionette.find_element(By.ID, "result")
         element = self.marionette.find_element(By.ID, "keyReporter")
-        numericShiftsEtc = "~!@#$%^&*()_+{}:i\"<>?|END~"
-        element.send_keys(numericShiftsEtc)
-        self.assertEqual(numericShiftsEtc, element.get_property("value"))
+        numeric_shifts_etc = "~!@#$%^&*()_+{}:i\"<>?|END~"
+        element.send_keys(numeric_shifts_etc)
+        self.assertEqual(numeric_shifts_etc, element.get_property("value"))
         self.assertIn(" up: 16", result.text.strip())
 
-    def testLowerCaseAlphaKeys(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_numeric_non_shift_keys(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
+        self.marionette.navigate(test_html)
+        element = self.marionette.find_element(By.ID, "keyReporter")
+        numeric_line_chars_non_shifted = "`1234567890-=[]\\,.'/42"
+        element.send_keys(numeric_line_chars_non_shifted)
+        self.assertEqual(numeric_line_chars_non_shifted, element.get_property("value"))
+
+    def test_lowercase_alpha_keys(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         element = self.marionette.find_element(By.ID, "keyReporter")
-        lowerAlphas = "abcdefghijklmnopqrstuvwxyz"
-        element.send_keys(lowerAlphas)
-        self.assertEqual(lowerAlphas, element.get_property("value"))
+        lower_alphas = "abcdefghijklmnopqrstuvwxyz"
+        element.send_keys(lower_alphas)
+        self.assertEqual(lower_alphas, element.get_property("value"))
 
     @skip("Reenable in Bug 1068735")
-    def testUppercaseAlphaKeys(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_uppercase_alpha_keys(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         result = self.marionette.find_element(By.ID, "result")
         element = self.marionette.find_element(By.ID, "keyReporter")
-        upperAlphas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        element.send_keys(upperAlphas)
-        self.assertEqual(upperAlphas, element.get_property("value"))
+        upper_alphas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        element.send_keys(upper_alphas)
+        self.assertEqual(upper_alphas, element.get_property("value"))
         self.assertIn(" up: 16", result.text.strip())
 
     @skip("Reenable in Bug 1068726")
-    def testAllPrintableKeys(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_all_printable_keys(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         result = self.marionette.find_element(By.ID, "result")
         element = self.marionette.find_element(By.ID, "keyReporter")
-        allPrintable = "!\"#$%&'()*+,-./0123456789:<=>?@ ABCDEFGHIJKLMNOPQRSTUVWXYZ [\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-        element.send_keys(allPrintable)
+        all_printable = ("!\"#$%&'()*+,-./0123456789:<=>?@ "
+                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ [\\]^_`"
+                         "abcdefghijklmnopqrstuvwxyz{|}~")
+        element.send_keys(all_printable)
 
-        self.assertTrue(allPrintable, element.get_property("value"))
+        self.assertTrue(all_printable, element.get_property("value"))
         self.assertIn(" up: 16", result.text.strip())
 
     @skip("Reenable in Bug 1068733")
-    def testSpecialSpaceKeys(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_special_space_keys(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         element = self.marionette.find_element(By.ID, "keyReporter")
         element.send_keys("abcd" + Keys.SPACE + "fgh" + Keys.SPACE + "ij")
         self.assertEqual("abcd fgh ij", element.get_property("value"))
 
-    def testShouldTypeAnInteger(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_should_type_an_integer(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         element = self.marionette.find_element(By.ID, "keyReporter")
         element.send_keys(1234)
         self.assertEqual("1234", element.get_property("value"))
 
-    def testShouldSendKeysToElementsWithoutTheValueAttribute(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+    def test_should_send_keys_to_elements_without_the_value_attribute(self):
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
 
         # If we don't get an error below we are good
         self.marionette.find_element(By.TAG_NAME, "body").send_keys("foo")
 
     def test_not_interactable_if_hidden(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
+
         not_displayed = self.marionette.find_element(By.ID, "notDisplayed")
         self.assertRaises(ElementNotInteractableException, not_displayed.send_keys, "foo")
 
@@ -330,3 +341,29 @@ class TestTypingContent(TypingTestCase):
         textarea.send_keys("foo")
         textarea.send_keys("bar")
         self.assertEqual("foobar", textarea.get_property("value"))
+
+    def test_send_keys_to_type_input(self):
+        test_html = self.marionette.absolute_url("html5/test_html_inputs.html")
+        self.marionette.navigate(test_html)
+
+        num_input = self.marionette.find_element(By.ID, 'number')
+        self.assertEqual("",
+                         self.marionette.execute_script("return arguments[0].value", [num_input]))
+        num_input.send_keys("1234")
+        self.assertEqual('1234',
+                         self.marionette.execute_script("return arguments[0].value", [num_input]))
+
+    def test_insert_keys(self):
+        l = self.marionette.find_element(By.ID, "change")
+        l.send_keys("abde")
+        self.assertEqual("abde", self.marionette.execute_script("return arguments[0].value;", [l]))
+
+        # Set caret position to the middle of the input text.
+        self.marionette.execute_script(
+            """var el = arguments[0];
+            el.selectionStart = el.selectionEnd = el.value.length / 2;""",
+            script_args=[l])
+
+        l.send_keys("c")
+        self.assertEqual("abcde",
+                         self.marionette.execute_script("return arguments[0].value;", [l]))
