@@ -1021,7 +1021,7 @@ class MachDebug(MachCommandBase):
     @Command('environment', category='build-dev',
         description='Show info about the mach and build environment.')
     @CommandArgument('--format', default='pretty',
-        choices=['pretty', 'client.mk', 'configure', 'json'],
+        choices=['pretty', 'configure', 'json'],
         help='Print data in the given format.')
     @CommandArgument('--output', '-o', type=str,
         help='Output to the given file.')
@@ -1088,19 +1088,6 @@ class MachDebug(MachCommandBase):
                 print('config defines:', file=out)
                 for k in sorted(config.defines):
                     print('\t%s' % k, file=out)
-
-    def _environment_client_mk(self, out, verbose):
-        if self.mozconfig['make_extra']:
-            for arg in self.mozconfig['make_extra']:
-                print(arg, file=out)
-        if self.mozconfig['make_flags']:
-            print('MOZ_MAKE_FLAGS=%s' % ' '.join(self.mozconfig['make_flags']))
-        objdir = mozpath.normsep(self.topobjdir)
-        print('MOZ_OBJDIR=%s' % objdir, file=out)
-        print('OBJDIR=%s' % objdir, file=out)
-        if self.mozconfig['path']:
-            print('FOUND_MOZCONFIG=%s' % mozpath.normsep(self.mozconfig['path']),
-                file=out)
 
     def _environment_json(self, out, verbose):
         import json
