@@ -600,6 +600,41 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
   CueStyleBox.prototype = _objCreate(StyleBox.prototype);
   CueStyleBox.prototype.constructor = CueStyleBox;
 
+  function RegionNodeBox(window, region, container) {
+    StyleBox.call(this);
+
+    var boxLineHeight = container.height * 0.0533 // 0.0533vh ? 5.33vh
+    var boxHeight = boxLineHeight * region.lines;
+    var boxWidth = container.width * region.width / 100; // convert percentage to px
+
+    var regionNodeStyles = {
+      position: "absolute",
+      height: boxHeight + "px",
+      width: boxWidth + "px",
+      top: (region.viewportAnchorY * container.height / 100) - (region.regionAnchorY * boxHeight / 100) + "px",
+      left: (region.viewportAnchorX * container.width / 100) - (region.regionAnchorX * boxWidth / 100) + "px",
+      lineHeight: boxLineHeight + "px",
+      writingMode: "horizontal-tb",
+      backgroundColor: "rgba(0, 0, 0, 0.8)",
+      wordWrap: "break-word",
+      overflowWrap: "break-word",
+      font: (boxLineHeight/1.3) + "px sans-serif",
+      color: "rgba(255, 255, 255, 1)",
+      overflow: "hidden",
+      minHeight: "0px",
+      maxHeight: boxHeight + "px",
+      display: "inline-flex",
+      flexFlow: "column",
+      justifyContent: "flex-end",
+    };
+
+    this.div = window.document.createElement("div");
+    this.div.id = region.id; // useless?
+    this.applyStyles(regionNodeStyles);
+  }
+  RegionNodeBox.prototype = _objCreate(StyleBox.prototype);
+  RegionNodeBox.prototype.constructor = RegionNodeBox;
+
   // Represents the co-ordinates of an Element in a way that we can easily
   // compute things with such as if it overlaps or intersects with another Element.
   // Can initialize it with either a StyleBox or another BoxPosition.
