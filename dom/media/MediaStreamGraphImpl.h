@@ -11,6 +11,7 @@
 #include "AudioMixer.h"
 #include "GraphDriver.h"
 #include "Latency.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Services.h"
 #include "mozilla/TimeStamp.h"
@@ -733,7 +734,7 @@ public:
    * The graph should stop processing at or after this time.
    * Only set on main thread. Read on both main and MSG thread.
    */
-  GraphTime mEndTime;
+  Atomic<GraphTime> mEndTime;
 
   /**
    * True when we need to do a forced shutdown during application shutdown.
@@ -770,7 +771,7 @@ public:
    * LIFECYCLE_RUNNING. Since only the main thread can reset mLifecycleState to
    * LIFECYCLE_RUNNING, this can be relied on to not change unexpectedly.
    */
-  bool mDetectedNotRunning;
+  Atomic<bool> mDetectedNotRunning;
   /**
    * True when a stable state runner has been posted to the appshell to run
    * RunInStableState at the next stable state.
