@@ -69,6 +69,10 @@
   margin-inline-end: 0;
 }
 
+:root[customizing] .urlbar-input-box {
+  visibility: hidden;
+}
+
 #urlbar-container {
   -moz-box-align: center;
 }
