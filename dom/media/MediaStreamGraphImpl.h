@@ -780,7 +780,7 @@ public:
    * True when processing real-time audio/video.  False when processing non-realtime
    * audio.
    */
-  bool mRealtime;
+  const bool mRealtime;
   /**
    * True when a non-realtime MediaStreamGraph has started to process input.  This
    * value is only accessed on the main thread.
