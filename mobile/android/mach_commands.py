@@ -289,6 +289,21 @@ class MachCommands(MachCommandBase):
         return 0
 
 
+    @SubCommand('android', 'archive-geckoview',
+        """Create GeckoView archives.
+        See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_archive_geckoview(self, args):
+        gradle_targets = [
+            'geckoview:assembleWithGeckoBinaries',
+            'geckoview_example:assembleWithGeckoBinaries',
+            'geckoview:uploadArchives',
+        ]
+        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
+
+        return ret
+
+
     @Command('gradle', category='devenv',
         description='Run gradle.',
         conditions=[conditions.is_android])
