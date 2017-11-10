@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadiusKind, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint, ImageKey};
+use api::{BorderRadiusKind, ClipId, ColorF, DeviceIntPoint, ImageKey};
 use api::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize};
 use api::{ExternalImageType, FilterOp, FontRenderMode, ImageRendering, LayerRect};
 use api::{MixBlendMode, PipelineId, PropertyBinding, TransformStyle};
@@ -20,7 +20,7 @@ use internal_types::{FastHashMap, SourceTexture};
 use internal_types::BatchTextures;
 use picture::PictureKind;
 use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore};
-use prim_store::{BrushMaskKind, BrushKind, DeferredResolve, RectangleContent};
+use prim_store::{BrushMaskKind, BrushKind, DeferredResolve, PrimitiveRun, RectangleContent};
 use profiler::FrameProfileCounters;
 use render_task::{AlphaRenderItem, ClipWorkItem, MaskGeometryKind, MaskSegment};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskKey, RenderTaskKind};
@@ -61,10 +61,8 @@ impl AlphaBatchHelpers for PrimitiveStore {
                     FontRenderMode::Subpixel => {
                         if font.bg_color.a != 0 {
                             BlendMode::SubpixelWithBgColor
-                        } else if font.color.a != 255 || metadata.clip_task_id.is_some() {
-                            BlendMode::SubpixelWithAlpha
                         } else {
-                            BlendMode::SubpixelOpaque(font.color)
+                            BlendMode::SubpixelConstantTextColor(font.color)
                         }
                     }
                     FontRenderMode::Alpha |
@@ -121,7 +119,7 @@ pub struct ScrollbarPrimitive {
 pub enum PrimitiveRunCmd {
     PushStackingContext(StackingContextIndex),
     PopStackingContext,
-    PrimitiveRun(PrimitiveIndex, usize, ClipAndScrollInfo),
+    PrimitiveRun(PrimitiveRun),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -168,7 +166,7 @@ impl AlphaBatchList {
                 // optimize this in the future.
             }
             (BatchKind::Transformable(_, TransformBatchKind::TextRun(_)), BlendMode::SubpixelWithBgColor) |
-            (BatchKind::Transformable(_, TransformBatchKind::TextRun(_)), BlendMode::SubpixelWithAlpha) => {
+            (BatchKind::Transformable(_, TransformBatchKind::TextRun(_)), BlendMode::SubpixelVariableTextColor) => {
                 'outer_text: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10) {
                     // Subpixel text is drawn in two passes. Because of this, we need
                     // to check for overlaps with every batch (which is a bit different
@@ -286,8 +284,8 @@ impl BatchList {
             BlendMode::None => self.opaque_batch_list.get_suitable_batch(key),
             BlendMode::Alpha | BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
-            BlendMode::SubpixelOpaque(..) |
-            BlendMode::SubpixelWithAlpha |
+            BlendMode::SubpixelConstantTextColor(..) |
+            BlendMode::SubpixelVariableTextColor |
             BlendMode::SubpixelWithBgColor => {
                 self.alpha_batch_list
                     .get_suitable_batch(key, item_bounding_rect)
@@ -1245,7 +1243,7 @@ impl RenderTarget for ColorRenderTarget {
 
                         for run in &prim.prim_runs {
                             for i in 0 .. run.count {
-                                let sub_prim_index = PrimitiveIndex(run.prim_index.0 + i);
+                                let sub_prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
 
                                 let sub_metadata = ctx.prim_store.get_metadata(sub_prim_index);
                                 let sub_prim_address =
@@ -1414,7 +1412,7 @@ impl RenderTarget for AlphaRenderTarget {
 
                         for run in &prim.prim_runs {
                             for i in 0 .. run.count {
-                                let sub_prim_index = PrimitiveIndex(run.prim_index.0 + i);
+                                let sub_prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
 
                                 let sub_metadata = ctx.prim_store.get_metadata(sub_prim_index);
                                 let sub_prim_address =

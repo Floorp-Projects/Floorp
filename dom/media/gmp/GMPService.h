@@ -53,7 +53,7 @@ struct NodeId
 };
 
 typedef MozPromise<RefPtr<GMPContentParent::CloseBlocker>,
-                   nsresult,
+                   MediaResult,
                    /* IsExclusive = */ true>
   GetGMPContentParentPromise;
 typedef MozPromise<RefPtr<ChromiumCDMParent>,

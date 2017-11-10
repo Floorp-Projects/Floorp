@@ -17,6 +17,8 @@ use tiling::{RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind, StackingContextIndex};
 
 const FLOATS_PER_RENDER_TASK_INFO: usize = 12;
+pub const MAX_BLUR_STD_DEVIATION: f32 = 4.0;
+pub const MIN_DOWNSCALING_RT_SIZE: i32 = 128;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub struct RenderTaskId(pub u32); // TODO(gw): Make private when using GPU cache!
@@ -479,8 +481,6 @@ impl RenderTask {
         color: ColorF,
     ) -> RenderTask {
         // Adjust large std deviation value.
-        const MAX_BLUR_STD_DEVIATION: f32 = 4.0;
-        const MIN_DOWNSCALING_RT_SIZE: i32 = 128;
         let mut adjusted_blur_std_deviation = blur_std_deviation;
         let blur_target_size = render_tasks.get(src_task_id).get_dynamic_size();
         let mut adjusted_blur_target_size = blur_target_size;

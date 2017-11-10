@@ -1241,8 +1241,6 @@ protected:
    */
   void HiddenVideoStop();
 
-  void ReportEMETelemetry();
-
   void ReportTelemetry();
 
   // Seeks to aTime seconds. aSeekType can be Exact to seek to exactly the
