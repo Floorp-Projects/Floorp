@@ -44,9 +44,9 @@ class TestMouseAction(MarionetteTestCase):
         self.assertEqual("zyxw", rel.get_property("value"))
 
     def test_context_click_action(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+        test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
-        click_el = self.marionette.find_element(By.ID, "resultContainer")
+        click_el = self.marionette.find_element(By.ID, "normal")
 
         def context_menu_state():
             with self.marionette.using_context("chrome"):
