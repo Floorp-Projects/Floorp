@@ -1486,7 +1486,7 @@ MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
   // Process graph message from the main thread for this iteration.
   RunMessagesInQueue();
 
-  GraphTime stateEnd = std::min(aStateEnd, mEndTime);
+  GraphTime stateEnd = std::min(aStateEnd, GraphTime(mEndTime));
   UpdateGraph(stateEnd);
 
   mStateComputedTime = stateEnd;
