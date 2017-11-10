@@ -11,6 +11,7 @@ const TAB_ENTRIES_LIMIT = 5; // How many URLs to include in tab history.
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
@@ -205,13 +206,6 @@ TabStore.prototype = {
     return allTabs;
   },
 
-  getMaxRecordPayloadSize() {
-    // Tabs have a different max size due to being stored using memcached on the
-    // server (See bug 1403052), but we still check the server config to make
-    // sure we respect the global limits it sets.
-    return Math.min(512 * 1024, this.engine.service.getMaxRecordPayloadSize());
-  },
-
   async createRecord(id, collection) {
     let record = new TabSetRecord(collection, id);
     record.clientName = this.engine.service.clientsEngine.localName;
@@ -220,30 +214,21 @@ TabStore.prototype = {
     let tabs = this.getAllTabs(true).sort(function(a, b) {
       return b.lastUsed - a.lastUsed;
     });
-    let encoder = new TextEncoder("utf-8");
-    // Figure out how many tabs we can pack into a payload.
-    // We use byteLength here because the data is not encrypted in ascii yet.
-    let size = encoder.encode(JSON.stringify(tabs)).byteLength;
-    let origLength = tabs.length;
-    const maxPayloadSize = this.getMaxRecordPayloadSize();
-    // See bug 535326 comment 8 for an explanation of the estimation
-    const MAX_TAB_SIZE = maxPayloadSize / 4 * 3 - 1500;
-    if (size > MAX_TAB_SIZE) {
-      // Estimate a little more than the direct fraction to maximize packing
-      let cutoff = Math.ceil(tabs.length * MAX_TAB_SIZE / size);
-      tabs = tabs.slice(0, cutoff + 1);
+    const maxPayloadSize = this.engine.service.getMemcacheMaxRecordPayloadSize();
+    let records = Utils.tryFitItems(tabs, maxPayloadSize);
 
-      // Keep dropping off the last entry until the data fits
-      while (encoder.encode(JSON.stringify(tabs)).byteLength > MAX_TAB_SIZE)
-        tabs.pop();
+    if (records.length != tabs.length) {
+      this._log.warn(`Can't fit all tabs in sync payload: have ${
+                     tabs.length}, but can only fit ${records.length}.`);
     }
 
-    this._log.trace("Created tabs " + tabs.length + " of " + origLength);
-    tabs.forEach(function(tab) {
-      this._log.trace("Wrapping tab: " + JSON.stringify(tab));
-    }, this);
+    if (this._log.level <= Log.Level.Trace) {
+      records.forEach(tab => {
+        this._log.trace("Wrapping tab: ", tab);
+      });
+    }
 
-    record.tabs = tabs;
+    record.tabs = records;
     return record;
   },
 

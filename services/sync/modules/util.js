@@ -368,6 +368,42 @@ this.Utils = {
   },
 
   /**
+   * Helper utility function to fit an array of records so that when serialized,
+   * they will be within payloadSizeMaxBytes. Returns a new array without the
+   * items.
+   */
+  tryFitItems(records, payloadSizeMaxBytes) {
+    // Copy this so that callers don't have to do it in advance.
+    records = records.slice();
+    let encoder = Utils.utf8Encoder;
+    const computeSerializedSize = () =>
+      encoder.encode(JSON.stringify(records)).byteLength;
+    // Figure out how many records we can pack into a payload.
+    // We use byteLength here because the data is not encrypted in ascii yet.
+    let size = computeSerializedSize();
+    // See bug 535326 comment 8 for an explanation of the estimation
+    const maxSerializedSize = payloadSizeMaxBytes / 4 * 3 - 1500;
+    if (maxSerializedSize < 0) {
+      // This is probably due to a test, but it causes very bad behavior if a
+      // test causes this accidentally. We could throw, but there's an obvious/
+      // natural way to handle it, so we do that instead (otherwise we'd have a
+      // weird lower bound of ~1125b on the max record payload size).
+      return [];
+    }
+    if (size > maxSerializedSize) {
+      // Estimate a little more than the direct fraction to maximize packing
+      let cutoff = Math.ceil(records.length * maxSerializedSize / size);
+      records = records.slice(0, cutoff + 1);
+
+      // Keep dropping off the last entry until the data fits.
+      while (computeSerializedSize() > maxSerializedSize) {
+        records.pop();
+      }
+    }
+    return records;
+  },
+
+  /**
    * Move a json file in the profile directory. Will fail if a file exists at the
    * destination.
    *
@@ -622,6 +658,9 @@ XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function() {
   converter.charset = "UTF-8";
   return converter;
 });
+
+XPCOMUtils.defineLazyGetter(Utils, "utf8Encoder", () =>
+  new TextEncoder("utf-8"));
 
 /*
  * Commonly-used services

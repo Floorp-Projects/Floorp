@@ -616,6 +616,17 @@ Sync11Service.prototype = {
     return payloadMax;
   },
 
+  getMemcacheMaxRecordPayloadSize() {
+    // Collections stored in memcached ("tabs", "clients" or "meta") have a
+    // different max size than ones stored in the normal storage server db.
+    // In practice, the real limit here is 1M (bug 1300451 comment 40), but
+    // there's overhead involved that is hard to calculate on the client, so we
+    // use 512k to be safe (at the recommendation of the server team). Note
+    // that if the server reports a lower limit (via info/configuration), we
+    // respect that limit instead. See also bug 1403052.
+    return Math.min(512 * 1024, this.getMaxRecordPayloadSize());
+  },
+
   async verifyLogin(allow40XRecovery = true) {
     if (!this.identity.username) {
       this._log.warn("No username in verifyLogin.");
