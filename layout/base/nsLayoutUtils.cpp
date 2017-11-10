@@ -1400,28 +1400,36 @@ nsLayoutUtils::InvalidateForDisplayPortChange(nsIContent* aContent,
     // rect properties on so we can find the frame later to remove the properties.
     frame->SchedulePaint();
 
+    if (!gfxPrefs::LayoutRetainDisplayList()) {
+      return;
+    }
+
     nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(frame);
     RetainedDisplayListBuilder* retainedBuilder =
       displayRoot->GetProperty(RetainedDisplayListBuilder::Cached());
-    if (retainedBuilder) {
-      nsRect* rect =
-        frame->GetProperty(nsDisplayListBuilder::DisplayListBuildingDisplayPortRect());
-      if (!rect) {
-        rect = new nsRect();
-        frame->SetProperty(nsDisplayListBuilder::DisplayListBuildingDisplayPortRect(), rect);
-        frame->SetHasOverrideDirtyRegion(true);
-      }
-      if (aHadDisplayPort) {
-        // We only need to build a display list for any new areas added
-        nsRegion newRegion(aNewDisplayPort);
-        newRegion.SubOut(aOldDisplayPort);
-        rect->UnionRect(*rect, newRegion.GetBounds());
-      } else {
-        rect->UnionRect(*rect, aNewDisplayPort);
-      }
+
+    if (!retainedBuilder) {
+      return;
+    }
+
+    nsRect* rect =
+      frame->GetProperty(nsDisplayListBuilder::DisplayListBuildingDisplayPortRect());
+
+    if (!rect) {
+      rect = new nsRect();
+      frame->SetProperty(nsDisplayListBuilder::DisplayListBuildingDisplayPortRect(), rect);
+      frame->SetHasOverrideDirtyRegion(true);
+    }
+
+    if (aHadDisplayPort) {
+      // We only need to build a display list for any new areas added
+      nsRegion newRegion(aNewDisplayPort);
+      newRegion.SubOut(aOldDisplayPort);
+      rect->UnionRect(*rect, newRegion.GetBounds());
+    } else {
+      rect->UnionRect(*rect, aNewDisplayPort);
     }
   }
-
 }
 
 bool

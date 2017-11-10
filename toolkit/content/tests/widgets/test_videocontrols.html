@@ -92,14 +92,14 @@ function verifyExpectedEvent(event) {
   }
 
   if (expectingEvents.length == 0) {
-    expectingEventPromise.resolve();
+    SimpleTest.executeSoon(expectingEventPromise.resolve);
   }
 }
 
 async function waitForEvent(...eventTypes) {
   expectingEvents = eventTypes;
 
-  return new Promise((resolve, reject) => expectingEventPromise = {resolve, reject}).catch(e => {
+  await new Promise((resolve, reject) => expectingEventPromise = {resolve, reject}).catch(e => {
     // Throw error here to get the caller in error stack.
     ok(false, e);
   });

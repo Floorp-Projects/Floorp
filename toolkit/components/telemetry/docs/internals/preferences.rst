@@ -1,13 +1,81 @@
 Preferences
 ===========
 
-Telemetry behaviour is controlled through the preferences listed here.
+Telemetry behaviour is controlled through the mozconfig defines and preferences listed here.
 
-Default behaviors
+mozconfig Defines
 -----------------
 
-Sending only happens on official builds (i.e. with ``MOZILLA_OFFICIAL`` set) with ``MOZ_TELEMETRY_REPORTING`` defined.
-All other builds drop all outgoing pings, so they will also not retry sending them later.
+``MOZ_TELEMETRY_REPORTING``
+
+  When Defined (which it is for official builds):
+
+  * If ``RELEASE_OR_BETA`` is not defined, defines ``MOZ_TELEMETRY_ON_BY_DEFAULT``
+
+  When Not Defined:
+
+  * If ``datareporting.healthreport.uploadEnabled`` is locked, we print a message in the Privacy settings that you cannot turn on data submission and disabled the checkbox so you don't try.
+  * Android: hides the data submission UI to prevent users from thinking they can turn it on
+  * Disables Telemetry from being sent (due to ``Telemetry::IsOfficialTelemetry``)
+
+``MOZ_TELEMETRY_ON_BY_DEFAULT``
+
+  When Defined:
+
+  * Android: enables ``toolkit.telemetry.enabled``
+
+``MOZ_SERVICES_HEALTHREPORT``
+
+  When Defined (which it is on most platforms):
+
+  * Builds ``about:healthreport`` and associated underpinnings (see `healthreport <../fhr/index>`)
+  * Desktop: includes ``toolkit/components/telemetry/healthreport-prefs.js`` (which sets ``datareporting.healthreport.{infoURL|uploadEnabled|about.reportUrl}``)
+  * Android: enables ``datareporting.healthreport.uploadEnabled`` (which is unused on Android)
+  * Android: includes ``mobile/android/chrome/content/healthreport-prefs.js`` (which sets ``datareporting.healthreport.about.reportUrl``)
+
+``MOZ_DATA_REPORTING``
+
+  When Defined (which it is when ``MOZ_TELEMETRY_REPORTING``, ``MOZ_SERVICES_HEALTHREPORT``, or ``MOZ_CRASHREPORTER`` is defined (so, on most platforms, but not typically on developer builds)):
+
+  * Enables ``app.shield.optoutstudies.enabled``
+
+  When Not Defined:
+
+  * Disables ``app.shield.optoutstudies.enabled``
+  * Removes the Data Collection Preferences UI in ``privacy.xul``
+
+``MOZILLA_OFFICIAL``
+
+  When Not Defined (defined on our own external builds and builds from several Linux distros, but not typically on defeloper builds):
+
+  * Disables Telemetry from being sent (due to ``Telemetry::IsOfficialTelemetry``)
+
+``MOZ_UPDATE_CHANNEL``
+
+  When not ``release`` or ``beta``:
+
+  * If ``MOZ_TELEMETRY_REPORTING`` is also defined, defines ``MOZ_TELEMETRY_ON_BY_DEFAULT``
+
+  When ``beta``:
+
+  * If ``toolkit.telemetry.enabled`` is otherwise unset at startup, ``toolkit.telemetry.enabled`` is defaulted to ``true`` (this is irrespective of ``MOZ_TELEMETRY_REPORTING``)
+
+  When ``nightly`` or ``aurora`` or ``beta`` or ``default``:
+
+  * Desktop: Locks ``toolkit.telemetry.enabled`` to ``true``. All other values for ``MOZ_UPDATE_CHANNEL`` on Desktop locks ``toolkit.telemetry.enabled`` to ``false``.
+  * Desktop: Defaults ``Telemetry::CanRecordExtended`` (and, thus ``Telemetry::CanRecordReleaseData``) to ``true``. All other values of ``MOZ_UPDATE_CHANNEL`` on Desktop defaults these to ``false``.
+
+``DEBUG``
+
+  When Defined:
+
+  * Disables Telemetry from being sent (due to ``Telemetry::IsOfficialTelemetry``)
+
+**In Short:**
+
+  For builds downloaded from mozilla.com ``MOZ_TELEMETRY_REPORTING`` is defined, ``MOZ_TELEMETRY_ON_BY_DEFAULT`` is on if you downloaded Nightly or Developer Edition, ``MOZ_SERVICES_HEALTHREPORT`` is defined, ``MOZ_DATA_REPORTING`` is defined, ``MOZILLA_OFFICIAL`` is defined, ``MOZ_UPDATE_CHANNEL`` is set to the channel you downloaded, and ``DEBUG`` is false. This means Telemetry is, by default, collecting some amount of information and is sending it to Mozilla.
+
+  For builds you make yourself with a blank mozconfig, ``MOZ_UPDATE_CHANNEL`` is set to ``default`` and everything else is undefined. This means Telemetry is, by default, collecting an extended amount of information but isn't sending it anywhere.
 
 Preferences
 -----------

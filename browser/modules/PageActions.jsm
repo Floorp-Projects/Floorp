@@ -119,15 +119,20 @@ this.PageActions = {
   },
 
   /**
-   * The list of actions in the urlbar, sorted in the order in which they should
-   * appear there.  Not live.  (array of Action objects)
+   * The list of actions currently in the urlbar, sorted in the order in which
+   * they appear.  Not live.
+   *
+   * @param  browserWindow (DOM window, required)
+   *         This window's actions will be returned.
+   * @return (array of PageAction.Action objects) The actions currently in the
+   *         given window's urlbar.
    */
-  get actionsInUrlbar() {
+  actionsInUrlbar(browserWindow) {
     // Remember that IDs in idsInUrlbar may belong to actions that aren't
     // currently registered.
     return this._persistedActions.idsInUrlbar.reduce((actions, id) => {
       let action = this.actionForID(id);
-      if (action) {
+      if (action && action.shouldShowInUrlbar(browserWindow)) {
         actions.push(action);
       }
       return actions;
@@ -228,30 +233,29 @@ this.PageActions = {
     }
 
     if (this._persistedActions.ids.includes(action.id)) {
-      // The action has been seen before.  Override its shownInUrlbar value
+      // The action has been seen before.  Override its pinnedToUrlbar value
       // with the persisted value.  Set the private version of that property
-      // so that onActionToggledShownInUrlbar isn't called, which happens when
+      // so that onActionToggledPinnedToUrlbar isn't called, which happens when
       // the public version is set.
-      action._shownInUrlbar =
+      action._pinnedToUrlbar =
         this._persistedActions.idsInUrlbar.includes(action.id);
     } else {
       // The action is new.  Store it in the persisted actions.
       this._persistedActions.ids.push(action.id);
-      this._updateIDsInUrlbarForAction(action);
+      this._updateIDsPinnedToUrlbarForAction(action);
     }
   },
 
-  _updateIDsInUrlbarForAction(action) {
+  _updateIDsPinnedToUrlbarForAction(action) {
     let index = this._persistedActions.idsInUrlbar.indexOf(action.id);
-    if (action.shownInUrlbar) {
+    if (action.pinnedToUrlbar) {
       if (index < 0) {
-        let nextID = this.nextActionIDInUrlbar(action.id);
-        let nextIndex =
-          nextID ? this._persistedActions.idsInUrlbar.indexOf(nextID) : -1;
-        if (nextIndex < 0) {
-          nextIndex = this._persistedActions.idsInUrlbar.length;
+        index = action.id == ACTION_ID_BOOKMARK ? -1 :
+                this._persistedActions.idsInUrlbar.indexOf(ACTION_ID_BOOKMARK);
+        if (index < 0) {
+          index = this._persistedActions.idsInUrlbar.length;
         }
-        this._persistedActions.idsInUrlbar.splice(nextIndex, 0, action.id);
+        this._persistedActions.idsInUrlbar.splice(index, 0, action.id);
       }
     } else if (index >= 0) {
       this._persistedActions.idsInUrlbar.splice(index, 1);
@@ -273,13 +277,13 @@ this.PageActions = {
    * @return The ID of the reference action, or null if your action should be
    *         appended.
    */
-  nextActionIDInUrlbar(action) {
+  nextActionIDInUrlbar(browserWindow, action) {
     // Actions in the urlbar are always inserted before the bookmark action,
     // which always comes last if it's present.
     if (action.id == ACTION_ID_BOOKMARK) {
       return null;
     }
-    let id = this._nextActionID(action, this.actionsInUrlbar);
+    let id = this._nextActionID(action, this.actionsInUrlbar(browserWindow));
     return id || ACTION_ID_BOOKMARK;
   },
 
@@ -354,34 +358,32 @@ this.PageActions = {
   },
 
   /**
-   * Call this when an action's shownInUrlbar property changes.
+   * Call this when an action's pinnedToUrlbar property changes.
    *
    * @param  action (Action object, required)
-   *         The action whose shownInUrlbar property changed.
+   *         The action whose pinnedToUrlbar property changed.
    */
-  onActionToggledShownInUrlbar(action) {
+  onActionToggledPinnedToUrlbar(action) {
     if (!this.actionForID(action.id)) {
       // This may be called before the action has been added.
       return;
     }
-    this._updateIDsInUrlbarForAction(action);
+    this._updateIDsPinnedToUrlbarForAction(action);
     for (let bpa of allBrowserPageActions()) {
       bpa.placeActionInUrlbar(action);
     }
   },
 
   logTelemetry(type, action, node = null) {
-    const kAllowedLabels = ["pocket", "screenshots", "webcompat"].concat(
-      gBuiltInActions.filter(a => !a.__isSeparator).map(a => a.id)
-    );
-
     if (type == "used") {
-      type = (node && node.closest("#urlbar-container")) ? "urlbar_used" : "panel_used";
+      type =
+        node && node.closest("#urlbar-container") ? "urlbar_used" :
+        "panel_used";
     }
     let histogramID = "FX_PAGE_ACTION_" + type.toUpperCase();
     try {
       let histogram = Services.telemetry.getHistogramById(histogramID);
-      if (kAllowedLabels.includes(action.labelForHistogram)) {
+      if (action._isBuiltIn) {
         histogram.add(action.labelForHistogram);
       } else {
         histogram.add("other");
@@ -492,6 +494,8 @@ this.PageActions = {
  * @param disabled (bool, optional)
  *        Pass true to cause the action to be disabled initially in all browser
  *        windows.  False by default.
+ * @param extensionID (string, optional)
+ *        If the action lives in an extension, pass its ID.
  * @param iconURL (string or object, optional)
  *        The URL string of the action's icon.  Usually you want to specify an
  *        icon in CSS, but this option is useful if that would be a pain for
@@ -549,9 +553,9 @@ this.PageActions = {
  *        Called when a browser window's page action panel is showing:
  *        onShowingInPanel(buttonNode)
  *        * buttonNode: The action's node in the page action panel.
- * @param shownInUrlbar (bool, optional)
- *        Pass true to show the action in the urlbar, false otherwise.  False by
- *        default.
+ * @param pinnedToUrlbar (bool, optional)
+ *        Pass true to pin the action to the urlbar.  An action is shown in the
+ *        urlbar if it's pinned and not disabled.  False by default.
  * @param subview (object, optional)
  *        An options object suitable for passing to the Subview constructor, if
  *        you'd like the action to have a subview.  See the subview constructor
@@ -572,6 +576,7 @@ function Action(options) {
     title: !options._isSeparator,
     anchorIDOverride: false,
     disabled: false,
+    extensionID: false,
     iconURL: false,
     labelForHistogram: false,
     nodeAttributes: false,
@@ -585,7 +590,7 @@ function Action(options) {
     onPlacedInUrlbar: false,
     onRemovedFromWindow: false,
     onShowingInPanel: false,
-    shownInUrlbar: false,
+    pinnedToUrlbar: false,
     subview: false,
     tooltip: false,
     urlbarIDOverride: false,
@@ -618,6 +623,13 @@ function Action(options) {
 
 Action.prototype = {
   /**
+   * The ID of the action's parent extension (string, nullable)
+   */
+  get extensionID() {
+    return this._extensionID;
+  },
+
+  /**
    * The action's ID (string, nonnull)
    */
   get id() {
@@ -633,17 +645,18 @@ Action.prototype = {
   },
 
   /**
-   * True if the action is shown in the urlbar (bool, nonnull)
+   * True if the action is pinned to the urlbar.  The action is shown in the
+   * urlbar if it's pinned and not disabled.  (bool, nonnull)
    */
-  get shownInUrlbar() {
-    return this._shownInUrlbar || false;
+  get pinnedToUrlbar() {
+    return this._pinnedToUrlbar || false;
   },
-  set shownInUrlbar(shown) {
-    if (this.shownInUrlbar != shown) {
-      this._shownInUrlbar = shown;
-      PageActions.onActionToggledShownInUrlbar(this);
+  set pinnedToUrlbar(shown) {
+    if (this.pinnedToUrlbar != shown) {
+      this._pinnedToUrlbar = shown;
+      PageActions.onActionToggledPinnedToUrlbar(this);
     }
-    return this.shownInUrlbar;
+    return this.pinnedToUrlbar;
   },
 
   /**
@@ -972,7 +985,28 @@ Action.prototype = {
    */
   remove() {
     PageActions.onActionRemoved(this);
-  }
+  },
+
+  /**
+   * Returns whether the action should be shown in a given window's urlbar.
+   *
+   * @param  browserWindow (DOM window, required)
+   *         The window.
+   * @return True if the action should be shown and false otherwise.  The action
+   *         should be shown if it's both pinned and not disabled.
+   */
+  shouldShowInUrlbar(browserWindow) {
+    return this.pinnedToUrlbar && !this.getDisabled(browserWindow);
+  },
+
+  get _isBuiltIn() {
+    let builtInIDs = [
+      "pocket",
+      "screenshots",
+      "webcompat-reporter-button",
+    ].concat(gBuiltInActions.filter(a => !a.__isSeparator).map(a => a.id));
+    return builtInIDs.includes(this.id);
+  },
 };
 
 this.PageActions.Action = Action;
@@ -1146,7 +1180,7 @@ var gBuiltInActions = [
     // The title is set in browser-pageActions.js by calling
     // BookmarkingUI.updateBookmarkPageMenuItem().
     title: "",
-    shownInUrlbar: true,
+    pinnedToUrlbar: true,
     nodeAttributes: {
       observes: "bookmarkThisPageBroadcaster",
     },

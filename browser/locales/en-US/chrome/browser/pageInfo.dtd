@@ -55,6 +55,7 @@
 <!ENTITY  permAskAlways         "Always ask">
 <!ENTITY  permAllow             "Allow">
 <!ENTITY  permAllowSession      "Allow for Session">
+<!ENTITY  permHide              "Hide">
 <!ENTITY  permBlock             "Block">
 <!ENTITY  permissionsFor        "Permissions for:">
 <!ENTITY  permPlugins           "Activate Plugins">

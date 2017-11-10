@@ -414,34 +414,14 @@ MediaResourceIndex::UncachedReadAt(int64_t aOffset,
                                    uint32_t aCount,
                                    uint32_t* aBytes) const
 {
-  *aBytes = 0;
   if (aOffset < 0) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  if (aCount != 0) {
-    for (;;) {
-      uint32_t bytesRead = 0;
-      nsresult rv = mResource->ReadAt(aOffset, aBuffer, aCount, &bytesRead);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      if (bytesRead == 0) {
-        break;
-      }
-      *aBytes += bytesRead;
-      aCount -= bytesRead;
-      if (aCount == 0) {
-        break;
-      }
-      aOffset += bytesRead;
-      if (aOffset < 0) {
-        // Very unlikely overflow.
-        return NS_ERROR_FAILURE;
-      }
-      aBuffer += bytesRead;
-    }
+  if (aCount == 0) {
+    *aBytes = 0;
+    return NS_OK;
   }
-  return NS_OK;
+  return mResource->ReadAt(aOffset, aBuffer, aCount, aBytes);
 }
 
 nsresult
@@ -451,36 +431,15 @@ MediaResourceIndex::UncachedRangedReadAt(int64_t aOffset,
                                          uint32_t aExtraCount,
                                          uint32_t* aBytes) const
 {
-  *aBytes = 0;
   uint32_t count = aRequestedCount + aExtraCount;
   if (aOffset < 0 || count < aRequestedCount) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  if (count != 0) {
-    for (;;) {
-      uint32_t bytesRead = 0;
-      nsresult rv = mResource->ReadAt(aOffset, aBuffer, count, &bytesRead);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      if (bytesRead == 0) {
-        break;
-      }
-      *aBytes += bytesRead;
-      count -= bytesRead;
-      if (count <= aExtraCount) {
-        // We have read at least aRequestedCount, don't loop anymore.
-        break;
-      }
-      aOffset += bytesRead;
-      if (aOffset < 0) {
-        // Very unlikely overflow.
-        return NS_ERROR_FAILURE;
-      }
-      aBuffer += bytesRead;
-    }
+  if (count == 0) {
+    *aBytes = 0;
+    return NS_OK;
   }
-  return NS_OK;
+  return mResource->ReadAt(aOffset, aBuffer, count, aBytes);
 }
 
 nsresult
@@ -516,30 +475,17 @@ MediaResourceIndex::Seek(int32_t aWhence, int64_t aOffset)
 already_AddRefed<MediaByteBuffer>
 MediaResourceIndex::MediaReadAt(int64_t aOffset, uint32_t aCount) const
 {
+  NS_ENSURE_TRUE(aOffset >= 0, nullptr);
   RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
-  if (aOffset < 0) {
-    return bytes.forget();
-  }
   bool ok = bytes->SetLength(aCount, fallible);
   NS_ENSURE_TRUE(ok, nullptr);
-  char* curr = reinterpret_cast<char*>(bytes->Elements());
-  const char* start = curr;
-  while (aCount > 0) {
-    uint32_t bytesRead;
-    nsresult rv = mResource->ReadAt(aOffset, curr, aCount, &bytesRead);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-    if (!bytesRead) {
-      break;
-    }
-    aOffset += bytesRead;
-    if (aOffset < 0) {
-      // Very unlikely overflow.
-      break;
-    }
-    aCount -= bytesRead;
-    curr += bytesRead;
-  }
-  bytes->SetLength(curr - start);
+
+  uint32_t bytesRead = 0;
+  nsresult rv = mResource->ReadAt(
+    aOffset, reinterpret_cast<char*>(bytes->Elements()), aCount, &bytesRead);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  bytes->SetLength(bytesRead);
   return bytes.forget();
 }
 

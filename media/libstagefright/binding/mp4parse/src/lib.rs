@@ -1863,12 +1863,11 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
         _ => return Err(Error::Unsupported("unsupported non-isom audio sample entry")),
     }
 
-    let mut codec_type = CodecType::Unknown;
-    let mut codec_specific = None;
-    if name == BoxType::MP3AudioSampleEntry {
-        codec_type = CodecType::MP3;
-        codec_specific = Some(AudioCodecSpecific::MP3);
-    }
+    let (mut codec_type, mut codec_specific) = match name {
+        BoxType::MP3AudioSampleEntry => (CodecType::MP3, Some(AudioCodecSpecific::MP3)),
+        BoxType::LPCMAudioSampleEntry => (CodecType::LPCM, Some(AudioCodecSpecific::LPCM)),
+        _ => (CodecType::Unknown, None),
+    };
     let mut protection_info = Vec::new();
     let mut iter = src.box_iter();
     while let Some(mut b) = iter.next_box()? {
@@ -1915,15 +1914,6 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                 log!("{:?} (sinf)", sinf);
                 codec_type = CodecType::EncryptedAudio;
                 vec_push(&mut protection_info, sinf)?;
-            }
-            BoxType::AudioChannelLayoutAtom => {
-                if name != BoxType::LPCMAudioSampleEntry {
-                    return Err(Error::InvalidData("malformed audio sample entry"));
-                }
-                // skip 'chan' for now.
-                skip_box_content(&mut b)?;
-                codec_type = CodecType::LPCM;
-                codec_specific = Some(AudioCodecSpecific::LPCM);
             }
             _ => {
                 log!("Unsupported audio codec, box {:?} found", b.head.name);

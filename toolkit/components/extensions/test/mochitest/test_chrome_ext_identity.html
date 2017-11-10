@@ -144,6 +144,13 @@ function background_launchWebAuthFlow(interactive, path, redirect = true) {
     url = `${url}&no_redirect=1`;
   }
 
+  // Ensure we do not start the actual request for the redirect url.
+  browser.webRequest.onBeforeRequest.addListener(details => {
+    if (details.url.startsWith(expected_redirect)) {
+      browser.test.fail("onBeforeRequest called for redirect url");
+    }
+  }, {urls: ["https://35b64b676900f491c00e7f618d43f7040e88422e.example.com/*"]});
+
   browser.identity.launchWebAuthFlow({interactive, url}).then((redirectURL) => {
     browser.test.assertTrue(redirectURL.startsWith(redirect_uri), `correct redirect url ${redirectURL}`);
     if (redirect) {
@@ -172,8 +179,9 @@ add_task(async function test_autoRedirect() {
         },
       },
       "permissions": [
+        "webRequest",
         "identity",
-        "https://example.com/",
+        "https://*.example.com/*",
       ],
     },
     background: `(${background_launchWebAuthFlow})(false, "redirect_auto.sjs")`,
@@ -194,8 +202,9 @@ add_task(async function test_noRedirect() {
         },
       },
       "permissions": [
+        "webRequest",
         "identity",
-        "https://example.com/",
+        "https://*.example.com/*",
       ],
     },
     background: `(${background_launchWebAuthFlow})(false, "redirect_auto.sjs", false)`,
@@ -219,8 +228,9 @@ add_task(async function test_interaction() {
         },
       },
       "permissions": [
+        "webRequest",
         "identity",
-        "https://example.com/",
+        "https://*.example.com/*",
       ],
     },
     background: `(${background_launchWebAuthFlow})(true, "oauth.html")`,

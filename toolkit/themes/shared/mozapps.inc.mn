@@ -25,6 +25,8 @@
   skin/classic/mozapps/extensions/alerticon-info-positive.svg (../../shared/extensions/alerticon-info-positive.svg)
   skin/classic/mozapps/extensions/alerticon-info-negative.svg (../../shared/extensions/alerticon-info-negative.svg)
   skin/classic/mozapps/extensions/category-legacy.svg        (../../shared/extensions/category-legacy.svg)
+  skin/classic/mozapps/plugins/plugin.svg                    (../../shared/plugins/plugin.svg)
+  skin/classic/mozapps/plugins/plugin-blocked.svg            (../../shared/plugins/plugin-blocked.svg)
   skin/classic/mozapps/plugins/pluginGeneric.svg             (../../shared/extensions/category-plugins.svg)
   skin/classic/mozapps/plugins/pluginProblem.css             (../../shared/plugins/pluginProblem.css)
   skin/classic/mozapps/aboutNetworking.css                   (../../shared/aboutNetworking.css)
@@ -32,9 +34,7 @@
   skin/classic/mozapps/aboutProfiles.css                     (../../shared/aboutProfiles.css)
 #endif
   skin/classic/mozapps/aboutServiceWorkers.css               (../../shared/aboutServiceWorkers.css)
-  skin/classic/mozapps/plugins/contentPluginActivate.png     (../../shared/plugins/contentPluginActivate.png)
   skin/classic/mozapps/plugins/contentPluginBlocked.png      (../../shared/plugins/contentPluginBlocked.png)
-  skin/classic/mozapps/plugins/contentPluginClose.png        (../../shared/plugins/contentPluginClose.png)
   skin/classic/mozapps/plugins/contentPluginCrashed.png      (../../shared/plugins/contentPluginCrashed.png)
   skin/classic/mozapps/plugins/contentPluginStripe.png       (../../shared/plugins/contentPluginStripe.png)
 

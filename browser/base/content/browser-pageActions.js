@@ -48,24 +48,6 @@ var BrowserPageActions = {
    */
   init() {
     this.placeAllActions();
-
-    // Add a click listener to #page-action-buttons for blocking clicks on
-    // disabled actions in the urlbar.  Normally we'd do this by setting
-    // `pointer-events: none` in the CSS, but that also blocks context menu
-    // events, and we want the context menu even on disabled actions so that
-    // they can be removed from the urlbar.
-    this.mainButtonNode.parentNode.addEventListener("click", event => {
-      if (event.button == 2) {
-        // Let context-clicks be handled normally.
-        return;
-      }
-      let node = event.originalTarget;
-      let action = this.actionForNode(node);
-      if (action && action.getDisabled(window)) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    }, true);
   },
 
   /**
@@ -86,7 +68,7 @@ var BrowserPageActions = {
     // node.insertBefore() is always passed null, and nodes are always appended.
     // That will break the position of nodes that should be inserted before
     // nodes that are in markup, which in turn can break other nodes.
-    let actionsInUrlbar = PageActions.actionsInUrlbar;
+    let actionsInUrlbar = PageActions.actionsInUrlbar(window);
     for (let i = actionsInUrlbar.length - 1; i >= 0; i--) {
       let action = actionsInUrlbar[i];
       this.placeActionInUrlbar(action);
@@ -112,21 +94,19 @@ var BrowserPageActions = {
    *         The action to place.
    */
   placeActionInPanel(action) {
-    let insertBeforeID = PageActions.nextActionIDInPanel(action);
     let id = this.panelButtonNodeIDForActionID(action.id);
     let node = document.getElementById(id);
     if (!node) {
       let panelViewNode;
       [node, panelViewNode] = this._makePanelButtonNodeForAction(action);
       node.id = id;
-      let insertBeforeNode = null;
-      if (insertBeforeID) {
-        let insertBeforeNodeID =
-          this.panelButtonNodeIDForActionID(insertBeforeID);
-        insertBeforeNode = document.getElementById(insertBeforeNodeID);
-      }
+      let insertBeforeID = PageActions.nextActionIDInPanel(action);
+      let insertBeforeNode =
+        insertBeforeID ? this.panelButtonNodeForActionID(insertBeforeID) :
+        null;
       this.mainViewBodyNode.insertBefore(node, insertBeforeNode);
       this.updateAction(action);
+      this._updateActionDisabledInPanel(action);
       action.onPlacedInPanel(node);
       if (panelViewNode) {
         action.subview.onPlaced(panelViewNode);
@@ -356,11 +336,10 @@ var BrowserPageActions = {
    *         The action to place.
    */
   placeActionInUrlbar(action) {
-    let insertBeforeID = PageActions.nextActionIDInUrlbar(action);
     let id = this.urlbarButtonNodeIDForActionID(action.id);
     let node = document.getElementById(id);
 
-    if (!action.shownInUrlbar) {
+    if (!action.shouldShowInUrlbar(window)) {
       if (node) {
         if (action.__urlbarNodeInMarkup) {
           node.hidden = true;
@@ -382,14 +361,11 @@ var BrowserPageActions = {
     }
 
     if (newlyPlaced) {
-      let parentNode = this.mainButtonNode.parentNode;
-      let insertBeforeNode = null;
-      if (insertBeforeID) {
-        let insertBeforeNodeID =
-          this.urlbarButtonNodeIDForActionID(insertBeforeID);
-        insertBeforeNode = document.getElementById(insertBeforeNodeID);
-      }
-      parentNode.insertBefore(node, insertBeforeNode);
+      let insertBeforeID = PageActions.nextActionIDInUrlbar(window, action);
+      let insertBeforeNode =
+        insertBeforeID ? this.urlbarButtonNodeForActionID(insertBeforeID) :
+        null;
+      this.mainButtonNode.parentNode.insertBefore(node, insertBeforeNode);
       this.updateAction(action);
       action.onPlacedInUrlbar(node);
 
@@ -398,8 +374,7 @@ var BrowserPageActions = {
       // button.  Why not set tooltiptext to action.title when the node is
       // created?  Because the consumer may set a title dynamically.
       if (!node.hasAttribute("tooltiptext")) {
-        let panelNodeID = this.panelButtonNodeIDForActionID(action.id);
-        let panelNode = document.getElementById(panelNodeID);
+        let panelNode = this.panelButtonNodeForActionID(action.id);
         if (panelNode) {
           node.setAttribute("tooltiptext", panelNode.getAttribute("label"));
         }
@@ -412,9 +387,6 @@ var BrowserPageActions = {
     buttonNode.classList.add("urlbar-icon", "urlbar-page-action");
     buttonNode.setAttribute("actionid", action.id);
     buttonNode.setAttribute("role", "button");
-    buttonNode.addEventListener("contextmenu", event => {
-      BrowserPageActions.onContextMenu(event);
-    });
     if (action.nodeAttributes) {
       for (let name in action.nodeAttributes) {
         buttonNode.setAttribute(name, action.nodeAttributes[name]);
@@ -439,8 +411,7 @@ var BrowserPageActions = {
   },
 
   _removeActionFromPanel(action) {
-    let id = this.panelButtonNodeIDForActionID(action.id);
-    let node = document.getElementById(id);
+    let node = this.panelButtonNodeForActionID(action.id);
     if (node) {
       node.remove();
     }
@@ -466,8 +437,7 @@ var BrowserPageActions = {
   },
 
   _removeActionFromUrlbar(action) {
-    let id = this.urlbarButtonNodeIDForActionID(action.id);
-    let node = document.getElementById(id);
+    let node = this.urlbarButtonNodeForActionID(action.id);
     if (node) {
       node.remove();
     }
@@ -479,56 +449,51 @@ var BrowserPageActions = {
    *
    * @param  action (PageActions.Action, required)
    *         The action to update.
-   * @param  nameToUpdate (string, optional)
-   *         The property's name.  If not given, then DOM nodes will be updated
-   *         to reflect the current values of all properties.
+   * @param  propertyName (string, optional)
+   *         The name of the property to update.  If not given, then DOM nodes
+   *         will be updated to reflect the current values of all properties.
    */
-  updateAction(action, nameToUpdate = null) {
-    let names = nameToUpdate ? [nameToUpdate] : [
-      "disabled",
+  updateAction(action, propertyName = null) {
+    let propertyNames = propertyName ? [propertyName] : [
       "iconURL",
       "title",
       "tooltip",
     ];
-    for (let name of names) {
+    for (let name of propertyNames) {
       let upper = name[0].toUpperCase() + name.substr(1);
       this[`_updateAction${upper}`](action);
     }
   },
 
   _updateActionDisabled(action) {
-    let nodeIDs = [
-      this.panelButtonNodeIDForActionID(action.id),
-      this.urlbarButtonNodeIDForActionID(action.id),
-    ];
-    for (let nodeID of nodeIDs) {
-      let node = document.getElementById(nodeID);
-      if (node) {
-        if (action.getDisabled(window)) {
-          node.setAttribute("disabled", "true");
-        } else {
-          node.removeAttribute("disabled");
-        }
+    this._updateActionDisabledInPanel(action);
+    this.placeActionInUrlbar(action);
+  },
+
+  _updateActionDisabledInPanel(action) {
+    let panelButton = this.panelButtonNodeForActionID(action.id);
+    if (panelButton) {
+      if (action.getDisabled(window)) {
+        panelButton.setAttribute("disabled", "true");
+      } else {
+        panelButton.removeAttribute("disabled");
       }
     }
   },
 
   _updateActionIconURL(action) {
-    let nodeIDs = [
-      this.panelButtonNodeIDForActionID(action.id),
-      this.urlbarButtonNodeIDForActionID(action.id),
-    ];
-    for (let nodeID of nodeIDs) {
-      let node = document.getElementById(nodeID);
-      if (node) {
-        for (let size of [16, 32]) {
-          let url = action.iconURLForSize(size, window);
-          let prop = `--pageAction-image-${size}px`;
-          if (url) {
-            node.style.setProperty(prop, `url("${url}")`);
-          } else {
-            node.style.removeProperty(prop);
-          }
+    let nodes = [
+      this.panelButtonNodeForActionID(action.id),
+      this.urlbarButtonNodeForActionID(action.id),
+    ].filter(n => !!n);
+    for (let node of nodes) {
+      for (let size of [16, 32]) {
+        let url = action.iconURLForSize(size, window);
+        let prop = `--pageAction-image-${size}px`;
+        if (url) {
+          node.style.setProperty(prop, `url("${url}")`);
+        } else {
+          node.style.removeProperty(prop);
         }
       }
     }
@@ -543,13 +508,12 @@ var BrowserPageActions = {
       // return is to ignore that empty title.
       return;
     }
-    let attrNamesByNodeIDFnName = {
-      panelButtonNodeIDForActionID: "label",
-      urlbarButtonNodeIDForActionID: "aria-label",
+    let attrNamesByNodeFnName = {
+      panelButtonNodeForActionID: "label",
+      urlbarButtonNodeForActionID: "aria-label",
     };
-    for (let [fnName, attrName] of Object.entries(attrNamesByNodeIDFnName)) {
-      let nodeID = this[fnName](action.id);
-      let node = document.getElementById(nodeID);
+    for (let [fnName, attrName] of Object.entries(attrNamesByNodeFnName)) {
+      let node = this[fnName](action.id);
       if (node) {
         node.setAttribute(attrName, title);
       }
@@ -559,9 +523,7 @@ var BrowserPageActions = {
   },
 
   _updateActionTooltip(action) {
-    let node = document.getElementById(
-      this.urlbarButtonNodeIDForActionID(action.id)
-    );
+    let node = this.urlbarButtonNodeForActionID(action.id);
     if (node) {
       let tooltip = action.getTooltip(window) || action.getTitle(window);
       node.setAttribute("tooltiptext", tooltip);
@@ -575,8 +537,10 @@ var BrowserPageActions = {
     PageActions.logTelemetry("used", action, buttonNode);
     // If we're in the panel, open a subview inside the panel:
     // Note that we can't use this.panelNode.contains(buttonNode) here
-    // because of XBL boundaries breaking ELement.contains.
-    if (action.subview && buttonNode && buttonNode.closest("panel") == this.panelNode) {
+    // because of XBL boundaries breaking Element.contains.
+    if (action.subview &&
+        buttonNode &&
+        buttonNode.closest("panel") == this.panelNode) {
       let panelViewNodeID = this._panelViewNodeIDForActionID(action.id, false);
       let panelViewNode = document.getElementById(panelViewNodeID);
       action.subview.onShowing(panelViewNode);
@@ -628,6 +592,17 @@ var BrowserPageActions = {
   },
 
   /**
+   * The given action's top-level button in the main panel.
+   *
+   * @param  actionID (string, required)
+   *         The action ID.
+   * @return (DOM node) The action's button in the main panel.
+   */
+  panelButtonNodeForActionID(actionID) {
+    return document.getElementById(this.panelButtonNodeIDForActionID(actionID));
+  },
+
+  /**
    * The ID of the given action's top-level button in the main panel.
    *
    * @param  actionID (string, required)
@@ -636,6 +611,17 @@ var BrowserPageActions = {
    */
   panelButtonNodeIDForActionID(actionID) {
     return `pageAction-panel-${actionID}`;
+  },
+
+  /**
+   * The given action's button in the urlbar.
+   *
+   * @param  actionID (string, required)
+   *         The action ID.
+   * @return (DOM node) The action's urlbar button node.
+   */
+  urlbarButtonNodeForActionID(actionID) {
+    return document.getElementById(this.urlbarButtonNodeIDForActionID(actionID));
   },
 
   /**
@@ -722,8 +708,7 @@ var BrowserPageActions = {
    */
   showPanel(event = null) {
     for (let action of PageActions.actions) {
-      let buttonNodeID = this.panelButtonNodeIDForActionID(action.id);
-      let buttonNode = document.getElementById(buttonNodeID);
+      let buttonNode = this.panelButtonNodeForActionID(action.id);
       action.onShowingInPanel(buttonNode);
     }
 
@@ -739,22 +724,6 @@ var BrowserPageActions = {
   },
 
   /**
-   * Call this on the contextmenu event.  Note that this is called before
-   * onContextMenuShowing.
-   *
-   * @param  event (DOM event, required)
-   *         The contextmenu event.
-   */
-  onContextMenu(event) {
-    let node = event.originalTarget;
-    this._contextAction = this.actionForNode(node);
-    // Don't show the menu if there's no action where the user clicked!
-    if (!this._contextAction) {
-      event.preventDefault();
-    }
-  },
-
-  /**
    * Call this on the context menu's popupshowing event.
    *
    * @param  event (DOM event, required)
@@ -766,32 +735,58 @@ var BrowserPageActions = {
     if (event.target != popup) {
       return;
     }
-    // Right now there's only one item in the context menu, to toggle the
-    // context action's shown-in-urlbar state.  Update it now.
-    let toggleItem = popup.firstChild;
-    let toggleItemLabel = null;
-    if (this._contextAction) {
-      toggleItem.disabled = false;
-      if (this._contextAction.shownInUrlbar) {
-        toggleItemLabel = toggleItem.getAttribute("remove-label");
-      }
+
+    this._contextAction = this.actionForNode(popup.triggerNode);
+    if (!this._contextAction) {
+      event.preventDefault();
+      return;
     }
-    if (!toggleItemLabel) {
-      toggleItemLabel = toggleItem.getAttribute("add-label");
+
+    let state;
+    if (this._contextAction._isBuiltIn) {
+      state =
+        this._contextAction.pinnedToUrlbar ?
+        "builtInPinned" :
+        "builtInUnpinned";
+    } else {
+      state =
+        this._contextAction.pinnedToUrlbar ?
+        "extensionPinned" :
+        "extensionUnpinned";
     }
-    toggleItem.label = toggleItemLabel;
+    popup.setAttribute("state", state);
   },
 
   /**
-   * Call this from the context menu's toggle menu item.
+   * Call this from the menu item in the context menu that toggles pinning.
    */
-  toggleShownInUrlbarForContextAction() {
+  togglePinningForContextAction() {
     if (!this._contextAction) {
       return;
     }
-    let telemetryType = this._contextAction.shownInUrlbar ? "removed" : "added";
-    PageActions.logTelemetry(telemetryType, this._contextAction);
-    this._contextAction.shownInUrlbar = !this._contextAction.shownInUrlbar;
+    let action = this._contextAction;
+    this._contextAction = null;
+
+    let telemetryType = action.pinnedToUrlbar ? "removed" : "added";
+    PageActions.logTelemetry(telemetryType, action);
+
+    action.pinnedToUrlbar = !action.pinnedToUrlbar;
+  },
+
+  /**
+   * Call this from the menu item in the context menu that opens about:addons.
+   */
+  openAboutAddonsForContextAction() {
+    if (!this._contextAction) {
+      return;
+    }
+    let action = this._contextAction;
+    this._contextAction = null;
+
+    PageActions.logTelemetry("managed", action);
+
+    let viewID = "addons://detail/" + encodeURIComponent(action.extensionID);
+    window.BrowserOpenAddonsMgr(viewID);
   },
 
   _contextAction: null,
