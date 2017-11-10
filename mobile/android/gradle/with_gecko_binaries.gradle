@@ -3,44 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// We run fairly hard into a fundamental limitation of the Android Gradle
-// plugin.  There are many bugs filed about this, but
-// https://code.google.com/p/android/issues/detail?id=216978#c6 is a reason one.
-// The issue is that we need fine-grained control over when to include Gecko's
-// binary libraries into the GeckoView AAR and the Fennec APK, and that's hard
-// to achieve.  In particular:
-//
-// * :app:official* wants :geckoview to not include Gecko binaries (official
-// *  automation build, before package)
-//
-// * :geckoview:withLibraries wants :geckoview to include Gecko binaries
-// * (automation build, after package)
-//
-// * non-:app:official* wants :geckoview to include Gecko binaries (local
-// * build, always after package)
-//
-// publishNonDefault (see
-// http://tools.android.com/tech-docs/new-build-system/user-guide#TOC-Library-Publication)
-// is intended to address this, but doesn't handle our case.  That option always
-// builds *all* configurations, which fails when the required Gecko binaries
-// don't exist (automation build, before package).  So instead, we make both
-// :app and :geckoview both know how to include the Gecko binaries, and use a
-// non-default, non-published :geckoview:withGeckoBinaries configuration to
-// handle automation's needs.  Simple, right?
-
 // The omnijar inputs are listed as resource directory inputs to a dummy JAR.
 // That arrangement labels them nicely in IntelliJ.  See the comment in the
 // :omnijar project for more context.
 evaluationDependsOn(':omnijar')
 
-task buildOmnijar(type:Exec) {
+task buildOmnijars(type:Exec) {
     dependsOn rootProject.generateCodeAndResources
 
     // See comment in :omnijar project regarding interface mismatches here.
     inputs.file(project(':omnijar').sourceSets.main.resources.srcDirs).skipWhenEmpty() 
 
-    // Produce a single output file.
+    // Produce both the Fennec and the GeckoView omnijars.
     outputs.file "${topobjdir}/dist/fennec/assets/omni.ja"
+    outputs.file "${topobjdir}/dist/geckoview/assets/omni.ja"
 
     workingDir "${topobjdir}"
 
@@ -60,70 +36,69 @@ task buildOmnijar(type:Exec) {
     }
 }
 
-task syncOmnijarFromDistDir(type: Sync) {
-    // :app needs the full Fennec omni.ja, whereas other projects need the GeckoView-specific omni.ja.
-    def omnijar_dir = "app".equals(project.name) ? "fennec" : "geckoview"
-    into("${project.buildDir}/generated/omnijar")
-    from("${topobjdir}/dist/${omnijar_dir}/omni.ja",
-         "${topobjdir}/dist/${omnijar_dir}/assets/omni.ja") {
-        // Throw an exception if we find multiple, potentially conflicting omni.ja files.
-        duplicatesStrategy 'fail'
-    }
-}
-
-task checkLibsExistInDistDir {
-    doLast {
-        if (syncLibsFromDistDir.source.empty) {
-            throw new GradleException("Required JNI libraries not found in ${topobjdir}/dist/fennec/lib.  Have you built and packaged?")
-        }
-    }
-}
-
-task syncLibsFromDistDir(type: Sync, dependsOn: checkLibsExistInDistDir) {
-    into("${project.buildDir}/generated/jniLibs")
-    from("${topobjdir}/dist/fennec/lib")
-}
-
-task checkAssetsExistInDistDir {
-    doLast {
-        if (syncAssetsFromDistDir.source.empty) {
-            throw new GradleException("Required assets not found in ${topobjdir}/dist/fennec/assets.  Have you built and packaged?")
-        }
-    }
-}
-
-task syncAssetsFromDistDir(type: Sync, dependsOn: checkAssetsExistInDistDir) {
-    into("${project.buildDir}/generated/assets")
-    from("${topobjdir}/dist/fennec/assets") {
-        exclude 'omni.ja'
-    }
-}
-
 ext.configureVariantWithGeckoBinaries = { variant ->
-    // Like 'localPhoton' or 'localOldPhoton'; may be null.
-    def productFlavor = ""
-    def productFlavorNames = variant.productFlavors.collect { it.name.capitalize() }
-    if (!productFlavorNames.isEmpty()) {
-        productFlavor = productFlavorNames.join()
-        // Groovy's `uncapitilize` is not yet available.
-        def c = productFlavor.toCharArray()
-        c[0] = Character.toLowerCase(c[0])
-        productFlavor = new String(c)
+    // :app needs the full Fennec omni.ja, whereas other projects need the
+    // GeckoView-specific omni.ja.
+    def omnijar_dir = "app".equals(project.name) ? "fennec" : "geckoview"
+    def distDir = "${topobjdir}/dist/${omnijar_dir}"
+
+    def syncOmnijarFromDistDir = task("syncOmnijarFromDistDirFor${variant.name.capitalize()}", type: Sync) {
+        doFirst {
+            if (source.empty) {
+                throw new GradleException("Required omnijar not found in ${source.asPath}.  Have you built and packaged?")
+            }
+        }
+
+        into("${project.buildDir}/moz.build/src/${variant.name}/omnijar")
+        from("${distDir}/omni.ja",
+             "${distDir}/assets/omni.ja") {
+            // Throw an exception if we find multiple, potentially conflicting omni.ja files.
+            duplicatesStrategy 'fail'
+        }
     }
 
-    // Like 'debug' or 'release'.
-    def buildType = variant.buildType.name
+    def syncLibsFromDistDir = task("syncLibsFromDistDirFor${variant.name.capitalize()}", type: Sync) {
+        doFirst {
+            if (source.empty) {
+                throw new GradleException("Required JNI libraries not found in ${source.asPath}.  Have you built and packaged?")
+            }
+        }
 
-    syncOmnijarFromDistDir.dependsOn buildOmnijar
-    def generateAssetsTask = tasks.findByName("generate${productFlavor.capitalize()}${buildType.capitalize()}Assets")
-    generateAssetsTask.dependsOn syncOmnijarFromDistDir
-    generateAssetsTask.dependsOn syncLibsFromDistDir
-    generateAssetsTask.dependsOn syncAssetsFromDistDir
+        into("${project.buildDir}/moz.build/src/${variant.name}/jniLibs")
+        from("${distDir}/lib")
+    }
 
-    def sourceSet = productFlavor ? "${productFlavor}${buildType.capitalize()}" : buildType
-    android.sourceSets."${sourceSet}".assets.srcDir syncOmnijarFromDistDir.destinationDir
-    android.sourceSets."${sourceSet}".assets.srcDir syncAssetsFromDistDir.destinationDir
-    android.sourceSets."${sourceSet}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
+    def syncAssetsFromDistDir = task("syncAssetsFromDistDirFor${variant.name.capitalize()}", type: Sync) {
+        doFirst {
+            if (source.empty) {
+                throw new GradleException("Required assets not found in ${source.asPath}.  Have you built and packaged?")
+            }
+        }
+
+        into("${project.buildDir}/moz.build/src/${variant.name}/assets")
+        from("${distDir}/assets") {
+            exclude 'omni.ja'
+        }
+    }
+
+    // Local (read, not 'official') builds want to reflect developer changes to
+    // the Omnijar sources.  To do this, the Gradle build calls out to the
+    // moz.build system, which can be re-entrant.  Official builds are driven by
+    // the moz.build system and should never be re-entrant in this way.
+    if (!((variant.productFlavors*.name).contains('official'))) {
+        syncOmnijarFromDistDir.dependsOn buildOmnijars
+    }
+
+    def assetGenTask = tasks.findByName("generate${variant.name.capitalize()}Assets")
+    if ((variant.productFlavors*.name).contains('withGeckoBinaries')) {
+        assetGenTask.dependsOn syncOmnijarFromDistDir
+        assetGenTask.dependsOn syncLibsFromDistDir
+        assetGenTask.dependsOn syncAssetsFromDistDir
+
+        android.sourceSets."${variant.name}".assets.srcDir syncOmnijarFromDistDir.destinationDir
+        android.sourceSets."${variant.name}".assets.srcDir syncAssetsFromDistDir.destinationDir
+        android.sourceSets."${variant.name}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
+    }
 }
 
 ext.configureLibraryVariantWithJNIWrappers = { variant, module ->

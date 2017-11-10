@@ -1,0 +1,48 @@
+/* -*- Mode: Groovy; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ext.configureProductFlavors = {
+    flavorDimensions "audience", "geckoBinaries", "minApi"
+    productFlavors {
+        local {
+            dimension "audience"
+        }
+
+        // Automation builds.  We use "official" rather than "automation" to drive these builds down
+        // the list of configurations that Android Studio offers, thereby making it _not_ the
+        // default.  This avoids a common issue with "omni.ja" not being packed into the default APK
+        // built and deployed by Android Studio.
+        official {
+             dimension "audience"
+        }
+
+        withGeckoBinaries {
+            dimension "geckoBinaries"
+        }
+
+        withoutGeckoBinaries {
+            dimension "geckoBinaries"
+        }
+
+        // For API 21+ - with pre-dexing, this will be faster for local development.
+        minApi21 {
+            dimension "minApi"
+
+            // For pre-dexing, setting `minSdkVersion 21` allows the Android gradle plugin to
+            // pre-DEX each module and produce an APK that can be tested on
+            // Android Lollipop without time consuming DEX merging processes.
+            minSdkVersion 21
+            dexOptions {
+                preDexLibraries true
+            }
+        }
+
+        // For API < 21 - does not support pre-dexing because local development
+        // is slow in that case.
+        noMinApi {
+            dimension "minApi"
+        }
+    }
+}

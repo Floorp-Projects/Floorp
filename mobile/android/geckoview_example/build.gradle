@@ -2,6 +2,8 @@ buildDir "${topobjdir}/gradle/build/mobile/android/geckoview_example"
 
 apply plugin: 'com.android.application'
 
+apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
+
 android {
     compileSdkVersion project.ext.compileSdkVersion
 
@@ -16,22 +18,15 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
-    // This is extremely frustrating, but the only way to do it automation for
-    // now.  Without this, we only get a "debugAndroidTest" configuration; we
-    // have no "withoutGeckoBinariesAndroidTest" configuration.
-    testBuildType "withoutGeckoBinaries"
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        withGeckoBinaries { // For consistency with :geckoview project in Task Cluster invocations.
-            initWith debug
-        }
-        withoutGeckoBinaries { // Logical negation of withGeckoBinaries.
-            initWith debug
-        }
     }
+
+    project.configureProductFlavors.delegate = it
+    project.configureProductFlavors()
 }
 
 dependencies {
@@ -46,19 +41,4 @@ dependencies {
     androidTestImplementation 'com.android.support:support-annotations:23.4.0'
 
     implementation project(path: ':geckoview')
-}
-
-apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
-
-android.applicationVariants.all { variant ->
-    // Like 'debug', 'release', or 'withoutGeckoBinaries'.
-    def buildType = variant.buildType.name
-
-    // It would be most natural for :geckoview to always include the Gecko
-    // binaries, but that's difficult; see the notes in
-    // mobile/android/gradle/with_gecko_binaries.gradle.  Instead we handle our
-    // own Gecko binary inclusion.
-    if (!buildType.equals('withoutGeckoBinaries')) {
-        configureVariantWithGeckoBinaries(variant)
-    }
 }
