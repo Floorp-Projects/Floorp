@@ -27,7 +27,11 @@ FileMediaResource::EnsureSizeInitialized()
   nsresult res = mInput->Available(&size);
   if (NS_SUCCEEDED(res) && size <= INT64_MAX) {
     mSize = (int64_t)size;
-    mCallback->NotifyDataEnded(NS_OK);
+    mCallback->AbstractMainThread()->Dispatch(
+      NewRunnableMethod<nsresult>("MediaResourceCallback::NotifyDataEnded",
+                                  mCallback.get(),
+                                  &MediaResourceCallback::NotifyDataEnded,
+                                  NS_OK));
   }
 }
 
