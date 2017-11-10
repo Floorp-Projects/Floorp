@@ -1021,6 +1021,7 @@ BaselineCompiler::emitBody()
           case JSOP_SETINTRINSIC:
             // Run-once opcode during self-hosting initialization.
           case JSOP_UNUSED126:
+          case JSOP_UNUSED206:
           case JSOP_UNUSED223:
           case JSOP_LIMIT:
             // === !! WARNING WARNING WARNING !! ===
@@ -2265,25 +2266,6 @@ bool
 BaselineCompiler::emit_JSOP_INITHIDDENPROP()
 {
     return emit_JSOP_INITPROP();
-}
-
-typedef bool (*NewbornArrayPushFn)(JSContext*, HandleObject, const Value&);
-static const VMFunction NewbornArrayPushInfo =
-    FunctionInfo<NewbornArrayPushFn>(NewbornArrayPush, "NewbornArrayPush");
-
-bool
-BaselineCompiler::emit_JSOP_ARRAYPUSH()
-{
-    // Keep value in R0, object in R1.
-    frame.popRegsAndSync(2);
-    masm.unboxObject(R1, R1.scratchReg());
-
-    prepareVMCall();
-
-    pushArg(R0);
-    pushArg(R1.scratchReg());
-
-    return callVM(NewbornArrayPushInfo);
 }
 
 bool

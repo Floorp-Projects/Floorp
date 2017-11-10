@@ -19,9 +19,9 @@ assertEq(s.size, 0);
 // Symbols returned by Symbol.for() can be in Sets.
 var str = "how much wood would a woodchuck chuck if a woodchuck could chuck wood";
 var s2  = "how much wood would a woodchuck chuck if could";
-var arr = [for (word of str.split(" ")) Symbol.for(word)];
+var arr = str.split(" ").map(Symbol.for);
 s = new Set(arr);
-assertDeepEq([...s], [for (word of s2.split(" ")) Symbol.for(word)]);
+assertDeepEq([...s], s2.split(" ").map(Symbol.for));
 
 if (typeof reportCompare === "function")
   reportCompare(0, 0);
