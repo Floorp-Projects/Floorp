@@ -720,6 +720,14 @@ public:
     mCaptureStream->StopCapture();
   }
 
+  void Disable() override
+  {
+  }
+
+  void Enable() override
+  {
+  }
+
 private:
   virtual ~CanvasCaptureTrackSource() {}
 

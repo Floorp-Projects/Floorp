@@ -74,6 +74,21 @@ public:
      */
     virtual bool KeepsSourceAlive() const = 0;
 
+    /**
+     * Return true to ensure that the MediaStreamTrackSource where this Sink is
+     * registered is kept turned on and active.
+     * Return false to allow the source to pause, and any underlying devices to
+     * temporarily stop.
+     *
+     * When the underlying enabled state of the sink changes,
+     * call MediaStreamTrackSource::SinkEnabledStateChanged().
+     *
+     * Typically MediaStreamTrack returns the track's enabled state and other
+     * Sinks (like HTMLMediaElement::StreamCaptureTrackSource) return false so
+     * control over device state remains with tracks and their enabled state.
+     */
+    virtual bool Enabled() const = 0;
+
     virtual void PrincipalChanged() = 0;
     virtual void MutedChanged(bool aNewState) = 0;
   };
@@ -157,6 +172,33 @@ public:
   virtual void Stop() = 0;
 
   /**
+   * Called by the source interface when all registered sinks with
+   * KeepsSourceAlive() == true become disabled.
+   */
+  virtual void Disable() = 0;
+
+  /**
+   * Called by the source interface when at least one registered sink with
+   * KeepsSourceAlive() == true become enabled.
+   */
+  virtual void Enable() = 0;
+
+  /**
+   * Called when a Sink's Enabled() state changed. Will iterate through all
+   * sinks and notify the source of the aggregated enabled state.
+   *
+   * Note that a Sink with KeepsSourceAlive() == false counts as disabled.
+   */
+  void SinkEnabledStateChanged()
+  {
+    if (IsEnabled()) {
+      Enable();
+    } else {
+      Disable();
+    }
+  }
+
+  /**
    * Called by each MediaStreamTrack clone on initialization.
    */
   void RegisterSink(Sink* aSink)
@@ -199,6 +241,16 @@ protected:
   {
     for (const WeakPtr<Sink>& sink : mSinks) {
       if (sink && sink->KeepsSourceAlive()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool IsEnabled()
+  {
+    for (const WeakPtr<Sink>& sink : mSinks) {
+      if (sink && sink->KeepsSourceAlive() && sink->Enabled()) {
         return true;
       }
     }
@@ -272,6 +324,8 @@ public:
   MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
 
   void Stop() override {}
+  void Disable() override {}
+  void Enable() override {}
 
 protected:
   ~BasicTrackSource() {}
@@ -342,7 +396,7 @@ public:
   virtual void GetKind(nsAString& aKind) = 0;
   void GetId(nsAString& aID) const;
   virtual void GetLabel(nsAString& aLabel, CallerType /* aCallerType */) { GetSource().GetLabel(aLabel); }
-  bool Enabled() { return mEnabled; }
+  bool Enabled() const override { return mEnabled; }
   void SetEnabled(bool aEnabled);
   bool Muted() { return mMuted; }
   void Stop();

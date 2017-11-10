@@ -3248,6 +3248,22 @@ public:
     return false;
   }
 
+  /**
+   * Do not keep the track source on. It is controlled by its associated tracks.
+   */
+  bool Enabled() const override
+  {
+    return false;
+  }
+
+  void Disable() override
+  {
+  }
+
+  void Enable() override
+  {
+  }
+
   void PrincipalChanged() override
   {
     if (!mCapturedTrackSource) {
@@ -3339,6 +3355,14 @@ public:
     // producing tracks until the element ends. The decoder also needs the
     // tracks it created to be live at the source since the decoder's clock is
     // based on MediaStreams during capture.
+  }
+
+  void Disable() override
+  {
+  }
+
+  void Enable() override
+  {
   }
 
   void NotifyDecoderPrincipalChanged() override

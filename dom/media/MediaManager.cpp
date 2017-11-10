@@ -188,6 +188,19 @@ public:
   void StopTrack(TrackID aTrackID);
 
   /**
+   * Posts a task to disable the device associated with aTrackID and notifies
+   * the associated window listener that a track has been disabled.
+   */
+  void DisableTrack(TrackID aTrackID);
+
+
+  /**
+   * Posts a task to enable the device associated with aTrackID and notifies
+   * the associated window listener that a track has been enabled.
+   */
+  void EnableTrack(TrackID aTrackID);
+
+  /**
    * Stops all screen/app/window/audioCapture sharing, but not camera or
    * microphone.
    */
@@ -1116,6 +1129,20 @@ public:
           if (mListener) {
             mListener->StopTrack(mTrackID);
             mListener = nullptr;
+          }
+        }
+
+        void Disable() override
+        {
+          if (mListener) {
+            mListener->DisableTrack(mTrackID);
+          }
+        }
+
+        void Enable() override
+        {
+          if (mListener) {
+            mListener->EnableTrack(mTrackID);
           }
         }
 
@@ -3808,6 +3835,102 @@ SourceListener::StopTrack(TrackID aTrackID)
     return;
   }
   mWindowListener->NotifySourceTrackStopped();
+}
+
+void
+SourceListener::DisableTrack(TrackID aTrackID)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
+
+  if (!Activated()) {
+    MOZ_ASSERT(false, "No device to disable");
+    return;
+  }
+
+  RefPtr<MediaDevice> device;
+
+  switch (aTrackID) {
+    case kAudioTrack: {
+      LOG(("SourceListener %p disabling audio track %d", this, aTrackID));
+      if (!mAudioDevice) {
+        NS_ASSERTION(false, "Can't disable audio. No device.");
+        return;
+      }
+      if (mAudioStopped) {
+        // Audio stopped. Disabling is pointless.
+        return;
+      }
+      device = mAudioDevice;
+      break;
+    }
+    case kVideoTrack: {
+      LOG(("SourceListener %p disabling video track %d", this, aTrackID));
+      if (!mVideoDevice) {
+        NS_ASSERTION(false, "Can't disable video. No device.");
+        return;
+      }
+      if (mVideoStopped) {
+        // Video stopped. Disabling is pointless.
+        return;
+      }
+      device = mVideoDevice;
+      break;
+    }
+    default: {
+      MOZ_ASSERT(false, "Unknown track id");
+      return;
+    }
+  }
+
+  // XXX Later patch
+}
+
+void
+SourceListener::EnableTrack(TrackID aTrackID)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
+
+  if (!Activated()) {
+    MOZ_ASSERT(false, "No device to enable");
+    return;
+  }
+
+  RefPtr<MediaDevice> device;
+
+  switch (aTrackID) {
+    case kAudioTrack: {
+      LOG(("SourceListener %p enabling audio track %d", this, aTrackID));
+      if (!mAudioDevice) {
+        NS_ASSERTION(false, "Can't enable audio. No device.");
+        return;
+      }
+      if (mAudioStopped) {
+        // Audio stopped. Enabling is pointless.
+        return;
+      }
+      device = mAudioDevice;
+      break;
+    }
+    case kVideoTrack: {
+      LOG(("SourceListener %p enabling video track %d", this, aTrackID));
+      if (!mVideoDevice) {
+        NS_ASSERTION(false, "Can't enable video. No device.");
+        return;
+      }
+      if (mVideoStopped) {
+        // Video stopped. Enabling is pointless.
+        return;
+      }
+      device = mVideoDevice;
+      break;
+    }
+    default: {
+      MOZ_ASSERT(false, "Unknown track id");
+      return;
+    }
+  }
+
+  // XXX Later patch
 }
 
 void
