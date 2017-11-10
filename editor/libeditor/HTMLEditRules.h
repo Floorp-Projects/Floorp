@@ -106,10 +106,9 @@ public:
 
   // nsIEditActionListener methods
 
-  NS_IMETHOD WillCreateNode(const nsAString& aTag, nsIDOMNode* aParent,
-                            int32_t aPosition) override;
-  NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode* aNode,
-                           nsIDOMNode* aParent, int32_t aPosition,
+  NS_IMETHOD WillCreateNode(const nsAString& aTag,
+                            nsIDOMNode* aNextSiblingOfNewNode) override;
+  NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode* aNewNode,
                            nsresult aResult) override;
   NS_IMETHOD WillInsertNode(nsIDOMNode* aNode, nsIDOMNode* aParent,
                             int32_t aPosition) override;

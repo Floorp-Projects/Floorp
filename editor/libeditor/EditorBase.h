@@ -394,17 +394,39 @@ protected:
     CreateTxnForRemoveAttribute(Element& aElement, nsAtom& aAttribute);
 
   /**
-   * Create a transaction for creating a new child node of aParent of type aTag.
+   * Create a transaction for creating a new child node of the container of
+   * aPointToInsert of type aTag.
+   *
+   * @param aTag            The element name to create.
+   * @param aPointToInsert  The insertion point of new element.  If this refers
+   *                        end of the container or after, the transaction
+   *                        will append the element to the container.
+   *                        Otherwise, will insert the element before the
+   *                        child node referred by this.
+   * @return                A CreateElementTransaction which are initialized
+   *                        with the arguments.
    */
   already_AddRefed<CreateElementTransaction>
     CreateTxnForCreateElement(nsAtom& aTag,
-                              nsINode& aParent,
-                              int32_t aPosition,
-                              nsIContent* aChildAtPosition);
+                              const EditorRawDOMPoint& aPointToInsert);
 
-  already_AddRefed<Element> CreateNode(nsAtom* aTag, nsINode* aParent,
-                                       int32_t aPosition,
-                                       nsIContent* aChildAtPosition = nullptr);
+  /**
+   * Create an element node whose name is aTag at before aPointToInsert.  When
+   * this succeed to create an element node, this sets aPointToInsert to the
+   * new element because the relation of child and offset may be broken.
+   * If the caller needs to collapse the selection to next to the new element
+   * node, it should call |aPointToInsert.AdvanceOffset()| after calling this.
+   *
+   * @param aTag            The element name to create.
+   * @param aPointToInsert  The insertion point of new element.  If this refers
+   *                        end of the container or after, the transaction
+   *                        will append the element to the container.
+   *                        Otherwise, will insert the element before the
+   *                        child node referred by this.
+   * @return                The created new element node.
+   */
+  already_AddRefed<Element> CreateNode(nsAtom* aTag,
+                                       EditorRawDOMPoint& aPointToInsert);
 
   /**
    * Create a transaction for inserting aNode as a child of aParent.
