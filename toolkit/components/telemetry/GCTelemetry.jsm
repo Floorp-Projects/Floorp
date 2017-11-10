@@ -110,7 +110,7 @@ class GCData {
 // make sure to update the JSON schema at:
 // https://github.com/mozilla-services/mozilla-pipeline-schemas/blob/master/telemetry/main.schema.json
 // You should also adjust browser_TelemetryGC.js.
-const MAX_GC_KEYS = 30;
+const MAX_GC_KEYS = 24;
 const MAX_SLICES = 4;
 const MAX_SLICE_KEYS = 12;
 const MAX_PHASES = 65;

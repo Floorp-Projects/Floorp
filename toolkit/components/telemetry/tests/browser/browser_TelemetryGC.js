@@ -41,7 +41,7 @@ function check(entries) {
 
       foundGCs++;
 
-      ok(Object.keys(gc).length <= 30, "number of keys in GC is not too large");
+      ok(Object.keys(gc).length <= 24, "number of keys in GC is not too large");
 
       // Sanity check the GC data.
       ok("status" in gc, "status field present");
