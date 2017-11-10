@@ -710,7 +710,7 @@ nsXREDirProvider::LoadContentProcessTempDir()
 static bool
 IsContentSandboxDisabled()
 {
-  return !BrowserTabsRemoteAutostart() || (!IsContentSandboxEnabled());
+  return !BrowserTabsRemoteAutostart() || (GetEffectiveContentSandboxLevel() < 1);
 }
 
 //

@@ -2386,7 +2386,8 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   // purpose. If the decision is made to permanently rely on the pref, this
   // should be changed so that it is required to restart firefox for the change
   // of value to take effect.
-  shouldSandbox = IsContentSandboxEnabled();
+  shouldSandbox = (GetEffectiveContentSandboxLevel() > 0) &&
+    !PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX");
 
 #ifdef XP_LINUX
   if (shouldSandbox) {
