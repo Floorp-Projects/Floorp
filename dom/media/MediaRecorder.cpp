@@ -104,6 +104,12 @@ public:
     MediaRecorder::SizeOfPromise::All(GetCurrentThreadSerialEventTarget(), promises)
       ->Then(GetCurrentThreadSerialEventTarget(), __func__,
           [handleReport, data](const nsTArray<size_t>& sizes) {
+            nsCOMPtr<nsIMemoryReporterManager> manager =
+              do_GetService("@mozilla.org/memory-reporter-manager;1");
+            if (!manager) {
+              return;
+            }
+
             size_t sum = 0;
             for (const size_t& size : sizes) {
               sum += size;
@@ -114,6 +120,8 @@ public:
               KIND_HEAP, UNITS_BYTES, sum,
               NS_LITERAL_CSTRING("Memory used by media recorder."),
               data);
+
+            manager->EndReport();
           },
           [](size_t) { MOZ_CRASH("Unexpected reject"); });
 
