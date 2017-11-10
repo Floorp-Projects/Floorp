@@ -294,7 +294,23 @@ protected:
   nsAtom& DefaultParagraphSeparator();
   nsresult ReturnInHeader(Selection& aSelection, Element& aHeader,
                           nsINode& aNode, int32_t aOffset);
-  EditActionResult ReturnInParagraph(Selection* aSelection, nsINode* aHeader,
+
+  /**
+   * ReturnInParagraph() does the right thing for Enter key press or
+   * 'insertParagraph' command in aParentDivOrP.
+   *
+   * @param aSelection      The selection
+   * @param aParentDivOrP   The parent block.  This must be <p> or <div>
+   *                        element.
+   * @param aTextNode
+   * @param aOffset
+   * @param aChildAtOffset
+   * @return                Returns with NS_OK if this doesn't meat any
+   *                        unexpected situation.  If this method tries to
+   *                        split the paragraph, marked as handled.
+   */
+  EditActionResult ReturnInParagraph(Selection& aSelection,
+                                     nsINode& aParentDivOrP,
                                      nsINode* aTextNode, int32_t aOffset,
                                      nsIContent* aChildAtOffset);
 
