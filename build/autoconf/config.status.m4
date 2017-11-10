@@ -24,7 +24,7 @@ dnl with values got from the value of the environment variable, split on
 dnl whitespaces.
 define([AC_SUBST_SET],
 [ifdef([AC_SUBST_$1], [m4_fatal([Cannot use AC_SUBST and AC_SUBST_SET on the same variable ($1)])],
-[ifdef([AC_SUBST_LIST$1], [m4_fatal([Cannot use AC_SUBST_LIST and AC_SUBST_SET on the same variable ($1)])],
+[ifdef([AC_SUBST_LIST_$1], [m4_fatal([Cannot use AC_SUBST_LIST and AC_SUBST_SET on the same variable ($1)])],
 [ifdef([AC_SUBST_SET_$1], ,
 [define([AC_SUBST_SET_$1], )dnl
 AC_DIVERT_PUSH(MOZ_DIVERSION_SUBST)dnl
