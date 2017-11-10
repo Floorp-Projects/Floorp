@@ -1450,6 +1450,8 @@ ${helpers.single_keyword_system("font-kerning",
     ///    annotation(<feature-value-name>) ]
     pub fn parse<'i, 't>(_context: &ParserContext, input: &mut Parser<'i, 't>)
                          -> Result<SpecifiedValue, ParseError<'i>> {
+        #[allow(unused_imports)] use std::ascii::AsciiExt;
+
         let mut alternates = Vec::new();
         if input.try(|input| input.expect_ident_matching("normal")).is_ok() {
             return Ok(SpecifiedValue::Value(VariantAlternatesList(alternates.into_boxed_slice())));
@@ -1468,7 +1470,7 @@ ${helpers.single_keyword_system("font-kerning",
             // FIXME: remove clone() when lifetimes are non-lexical
             match input.next()?.clone() {
                 Token::Ident(ref ident) => {
-                    if *ident == "historical-forms" {
+                    if ident.eq_ignore_ascii_case("historical-forms") {
                         check_if_parsed!(HISTORICAL_FORMS);
                         alternates.push(VariantAlternates::HistoricalForms);
                         Ok(())
