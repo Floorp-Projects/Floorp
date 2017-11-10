@@ -132,12 +132,6 @@ statusbarpanel:not(.statusbar-resizerpanel):-moz-lwtheme {
   border: none;
 }
 
-.statusbarpanel-iconic,
-.statusbarpanel-iconic-text,
-.statusbarpanel-menu-iconic {
-  padding: 0 1px;
-}
-
 /* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
 
 sidebarheader {
