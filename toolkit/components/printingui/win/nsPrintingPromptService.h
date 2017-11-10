@@ -9,10 +9,15 @@
 #include <windows.h>
 
 // {E042570C-62DE-4bb6-A6E0-798E3C07B4DF}
-#define NS_PRINTINGPROMPTSERVICE_CID \
- {0xe042570c, 0x62de, 0x4bb6, { 0xa6, 0xe0, 0x79, 0x8e, 0x3c, 0x7, 0xb4, 0xdf}}
-#define NS_PRINTINGPROMPTSERVICE_CONTRACTID \
- "@mozilla.org/embedcomp/printingprompt-service;1"
+#define NS_PRINTINGPROMPTSERVICE_CID                                           \
+  {                                                                            \
+    0xe042570c, 0x62de, 0x4bb6,                                                \
+    {                                                                          \
+      0xa6, 0xe0, 0x79, 0x8e, 0x3c, 0x7, 0xb4, 0xdf                            \
+    }                                                                          \
+  }
+#define NS_PRINTINGPROMPTSERVICE_CONTRACTID                                    \
+  "@mozilla.org/embedcomp/printingprompt-service;1"
 
 #include "nsCOMPtr.h"
 #include "nsIPrintingPromptService.h"
@@ -27,26 +32,25 @@
 class nsIDOMWindow;
 class nsIDialogParamBlock;
 
-class nsPrintingPromptService: public nsIPrintingPromptService,
-                               public nsIWebProgressListener
+class nsPrintingPromptService
+  : public nsIPrintingPromptService
+  , public nsIWebProgressListener
 {
-    virtual ~nsPrintingPromptService();
+  virtual ~nsPrintingPromptService();
 
 public:
-    nsPrintingPromptService();
+  nsPrintingPromptService();
 
-    nsresult Init();
+  nsresult Init();
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIPRINTINGPROMPTSERVICE
-    NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRINTINGPROMPTSERVICE
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
 private:
-    nsCOMPtr<nsIWindowWatcher> mWatcher;
-    nsCOMPtr<nsIPrintProgress> mPrintProgress;
-    nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
-
+  nsCOMPtr<nsIWindowWatcher> mWatcher;
+  nsCOMPtr<nsIPrintProgress> mPrintProgress;
+  nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
 };
 
 #endif
-
