@@ -4,8 +4,7 @@ configure --help works
 
   $ touch $TMP/mozconfig
   $ export MOZCONFIG=$TMP/mozconfig
-  $ ./configure --help > out
-  $ head -n 7 out
+  $ ./configure --help 2>& 1 | head -n 7
   Adding configure options from */tmp/mozconfig (glob)
   checking for vcs source checkout... hg
   checking for vcs source checkout... hg
