@@ -1427,6 +1427,7 @@ async function sendKeysToElement(el, val) {
   await interaction.sendKeysToElement(
       el, val,
       capabilities.get("moz:accessibilityChecks"),
+      capabilities.get("moz:webdriverClick"),
   );
 }
 
