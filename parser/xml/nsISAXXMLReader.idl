@@ -57,49 +57,6 @@ interface nsISAXXMLReader : nsIStreamListener {
   attribute nsISAXErrorHandler errorHandler;
 
   /**
-   * Set the value of a feature flag.
-   *
-   * The feature name is any fully-qualified URI.  It is possible
-   * for an XMLReader to expose a feature value but to be unable to
-   * change the current value.  Some feature values may be immutable
-   * or mutable only in specific contexts, such as before, during, or
-   * after a parse.
-   *
-   * All XMLReaders are required to support setting
-   * http://xml.org/sax/features/namespaces to true and
-   * http://xml.org/sax/features/namespace-prefixes to false.
-   *
-   * @param name String flag for a parser feature.
-   * @param value Turn the feature on/off.
-   *
-   * @note This is currently supported only for
-   * http://xml.org/sax/features/namespace-prefixes .  All other
-   * features will result in a NOT_IMPLEMENTED exception.
-   */
-  void setFeature(in AString name, in boolean value);
-
-  /**
-   * Look up the value of a feature flag.
-   *
-   * The feature name is any fully-qualified URI.  It is
-   * possible for an XMLReader to recognize a feature name but
-   * temporarily be unable to return its value.
-   * Some feature values may be available only in specific
-   * contexts, such as before, during, or after a parse.
-   *
-   * All XMLReaders are required to recognize the
-   * http://xml.org/sax/features/namespaces and the
-   * http://xml.org/sax/features/namespace-prefixes feature names.
-   *
-   * @param name String flag for a parser feature.
-   *
-   * @note This is currently supported only for
-   * http://xml.org/sax/features/namespace-prefixes .  All other
-   * features will result in a NOT_IMPLEMENTED exception.
-   */
-  boolean getFeature(in AString name);
-
-  /**
    * @param str The UTF16 string to be parsed
    * @param contentType The content type of the string (see parseFromStream)
    */
