@@ -214,23 +214,13 @@ nsresult GetPathToSpecialDir(const char *aKey, nsString& aOutPath)
  * to ensure that this does not break existing code, so that future
  * workers spawned after the profile is setup have these constants.
  *
- * For this purpose, we register an observer to set |gPaths->profileDir|
- * and |gPaths->localProfileDir| once the profile is setup.
+ * For this purpose, we register an observer to set |mPaths->profileDir|
+ * and |mPaths->localProfileDir| once the profile is setup.
  */
-class DelayedPathSetter final: public nsIObserver
-{
-  ~DelayedPathSetter() {}
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  DelayedPathSetter() {}
-};
-
-NS_IMPL_ISUPPORTS(DelayedPathSetter, nsIObserver)
-
 NS_IMETHODIMP
-DelayedPathSetter::Observe(nsISupports*, const char * aTopic, const char16_t*)
+OSFileConstantsService::Observe(nsISupports*,
+                                const char* aTopic,
+                                const char16_t*)
 {
   if (gPaths == nullptr) {
     // Initialization of gPaths has not taken place, something is wrong,
@@ -296,8 +286,7 @@ OSFileConstantsService::InitOSFileConstants()
     if (NS_FAILED(rv)) {
       return rv;
     }
-    RefPtr<DelayedPathSetter> pathSetter = new DelayedPathSetter();
-    rv = obsService->AddObserver(pathSetter, "profile-do-change", false);
+    rv = obsService->AddObserver(this, "profile-do-change", false);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1059,7 +1048,8 @@ OSFileConstantsService::DefineOSFileConstants(JSContext* aCx,
   return true;
 }
 
-NS_IMPL_ISUPPORTS(OSFileConstantsService, nsIOSFileConstantsService)
+NS_IMPL_ISUPPORTS(OSFileConstantsService, nsIOSFileConstantsService,
+                  nsIObserver)
 
 /* static */ already_AddRefed<OSFileConstantsService>
 OSFileConstantsService::GetOrCreate()
