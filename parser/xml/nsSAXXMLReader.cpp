@@ -345,18 +345,6 @@ nsSAXXMLReader::GetFeature(const nsAString &aName, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::SetProperty(const nsAString &aName, nsISupports* aValue)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::GetProperty(const nsAString &aName, bool *aResult)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsSAXXMLReader::ParseFromString(const nsAString &aStr,
                                 const char *aContentType)
 {
