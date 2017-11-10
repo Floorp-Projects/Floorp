@@ -481,6 +481,7 @@ Structure:
           "total_zones": 9,
           "total_compartments": 309,
           "minor_gcs": 44,
+          // Present if non-zero.
           "store_buffer_overflows": 19,
           "mmu_20ms": 0,
           "mmu_50ms": 0,
@@ -488,11 +489,14 @@ Structure:
           // "AbortRequested", "KeepAtomsSet", "IncrementalDisabled",
           // "ModeChange", "MallocBytesTrigger", "GCBytesTrigger",
           // "ZoneChange", "CompartmentRevived".
-          "nonincremental_reason": "None",
-          "allocated": 37, // In megabytes.
+          // Present for non-incremental GCs only.
+          "nonincremental_reason": "GCBytesTrigger",
           "allocated_bytes": 38853696 // in bytes
+
+          // Present if non-zero.
           "added_chunks": 54,
           "removed_chunks": 12,
+
           // Total number of slices (some of which may not appear
           // in the "slices" array).
           "slices": 15,
