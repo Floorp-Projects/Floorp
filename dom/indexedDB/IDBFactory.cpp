@@ -143,7 +143,7 @@ IDBFactory::CreateForWindow(nsPIDOMWindowInner* aWindow,
   factory->mWindow = aWindow;
   factory->mTabChild = TabChild::GetFrom(aWindow);
   factory->mEventTarget =
-    nsGlobalWindow::Cast(aWindow)->EventTargetFor(TaskCategory::Other);
+    nsGlobalWindowInner::Cast(aWindow)->EventTargetFor(TaskCategory::Other);
   factory->mInnerWindowID = aWindow->WindowID();
   factory->mPrivateBrowsingMode =
     loadContext && loadContext->UsePrivateBrowsing();
@@ -741,7 +741,7 @@ IDBFactory::OpenInternal(JSContext* aCx,
 
   if (mWindow) {
     JS::Rooted<JSObject*> scriptOwner(aCx,
-                                      nsGlobalWindow::Cast(mWindow.get())->FastGetGlobalJSObject());
+                                      nsGlobalWindowInner::Cast(mWindow.get())->FastGetGlobalJSObject());
     MOZ_ASSERT(scriptOwner);
 
     request = IDBOpenDBRequest::CreateForWindow(aCx, this, mWindow, scriptOwner);

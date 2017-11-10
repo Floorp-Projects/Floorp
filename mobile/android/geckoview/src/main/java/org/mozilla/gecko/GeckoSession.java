@@ -476,11 +476,6 @@ public class GeckoSession implements Parcelable {
             preload(appContext, /* geckoArgs */ null, multiprocess);
         }
 
-        if (mSettings.getString(GeckoSessionSettings.DATA_DIR) == null) {
-            mSettings.setString(GeckoSessionSettings.DATA_DIR,
-                                appContext.getApplicationInfo().dataDir);
-        }
-
         final String chromeUri = mSettings.getString(GeckoSessionSettings.CHROME_URI);
         final int screenId = mSettings.getInt(GeckoSessionSettings.SCREEN_ID);
         final boolean isPrivate = mSettings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE);

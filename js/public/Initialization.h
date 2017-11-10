@@ -13,7 +13,12 @@
 namespace JS {
 namespace detail {
 
-enum class InitState { Uninitialized = 0, Running, ShutDown };
+enum class InitState {
+    Uninitialized = 0,
+    Initializing,
+    Running,
+    ShutDown
+};
 
 /**
  * SpiderMonkey's initialization status is tracked here, and it controls things
@@ -99,7 +104,7 @@ JS_InitWithFailureDiagnostic(void)
 inline bool
 JS_IsInitialized(void)
 {
-  return JS::detail::libraryInitState != JS::detail::InitState::Uninitialized;
+  return JS::detail::libraryInitState >= JS::detail::InitState::Running;
 }
 
 /**

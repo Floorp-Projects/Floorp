@@ -1573,12 +1573,14 @@ DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4x4& a
   if (!dstSurf) {
     return false;
   }
+
+  DataSourceSurface::ScopedMap map(dstSurf, DataSourceSurface::READ_WRITE);
   std::unique_ptr<SkCanvas> dstCanvas(
     SkCanvas::MakeRasterDirect(
                         SkImageInfo::Make(xformBounds.Width(), xformBounds.Height(),
                         GfxFormatToSkiaColorType(dstSurf->GetFormat()),
                         kPremul_SkAlphaType),
-      dstSurf->GetData(), dstSurf->Stride()));
+      map.GetData(), map.GetStride()));
   if (!dstCanvas) {
     return false;
   }
@@ -1746,13 +1748,14 @@ DrawTargetSkia::OptimizeSourceSurfaceForUnknownAlpha(SourceSurface *aSurface) co
   }
 
   RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
+  DataSourceSurface::ScopedMap map(dataSurface, DataSourceSurface::READ_WRITE);
 
   // For plugins, GDI can sometimes just write 0 to the alpha channel
   // even for RGBX formats. In this case, we have to manually write
   // the alpha channel to make Skia happy with RGBX and in case GDI
   // writes some bad data. Luckily, this only happens on plugins.
-  WriteRGBXFormat(dataSurface->GetData(), dataSurface->GetSize(),
-                  dataSurface->Stride(), dataSurface->GetFormat());
+  WriteRGBXFormat(map.GetData(), dataSurface->GetSize(),
+                  map.GetStride(), dataSurface->GetFormat());
   return dataSurface.forget();
 }
 
@@ -1775,8 +1778,11 @@ DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
   // to trigger any required readback so that it only happens
   // once.
   RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
-  MOZ_ASSERT(VerifyRGBXFormat(dataSurface->GetData(), dataSurface->GetSize(),
-                              dataSurface->Stride(), dataSurface->GetFormat()));
+#ifdef DEBUG
+  DataSourceSurface::ScopedMap map(dataSurface, DataSourceSurface::READ);
+  MOZ_ASSERT(VerifyRGBXFormat(map.GetData(), dataSurface->GetSize(),
+                              map.GetStride(), dataSurface->GetFormat()));
+#endif
   return dataSurface.forget();
 }
 

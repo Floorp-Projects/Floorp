@@ -42,7 +42,7 @@ public:
   void InitCompositionEvent(const nsAString& aType,
                             bool aCanBubble,
                             bool aCancelable,
-                            nsGlobalWindow* aView,
+                            nsGlobalWindowInner* aView,
                             const nsAString& aData,
                             const nsAString& aLocale);
   void GetData(nsAString&) const;

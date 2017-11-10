@@ -226,7 +226,7 @@ FindObjectClass(JSContext* cx, JSObject* aGlobalObject)
 
 // Helper to handle torn-down inner windows.
 static inline nsresult
-SetParentToWindow(nsGlobalWindow *win, JSObject **parent)
+SetParentToWindow(nsGlobalWindowInner *win, JSObject **parent)
 {
   MOZ_ASSERT(win);
   MOZ_ASSERT(win->IsInnerWindow());
@@ -724,7 +724,7 @@ nsDOMClassInfo::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 static nsresult
-ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
+ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindowInner *aWin, JSContext *cx,
                  JS::Handle<JSObject*> obj, const char16_t *name,
                  const nsDOMClassInfoData *ci_data,
                  const nsGlobalNameStruct *name_struct,
@@ -781,7 +781,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
   JS::Rooted<JSObject*> global(cx, ::JS_GetGlobalForObject(cx, proto));
 
   // Only do this if the global object is a window.
-  nsGlobalWindow* win;
+  nsGlobalWindowInner* win;
   if (NS_FAILED(UNWRAP_OBJECT(Window, &global, win))) {
     // Not a window.
     return NS_OK;
@@ -803,9 +803,9 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
   NS_ENSURE_TRUE(nameSpaceManager, NS_OK);
 
   JS::Rooted<JS::PropertyDescriptor> desc(cx);
-  nsresult rv = ResolvePrototype(sXPConnect, win, cx, global, mData->mNameUTF16,
-                                 mData, nullptr, nameSpaceManager, proto,
-                                 &desc);
+  nsresult rv = ResolvePrototype(sXPConnect, win->AssertInner(), cx, global,
+                                 mData->mNameUTF16, mData, nullptr,
+                                 nameSpaceManager, proto, &desc);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!contentDefinedProperty && desc.object() && !desc.value().isUndefined()) {
     desc.attributesRef() |= JSPROP_RESOLVING;
@@ -1077,7 +1077,7 @@ nsDOMConstructor::PreCreate(JSContext *cx, JSObject *globalObj, JSObject **paren
     return NS_OK;
   }
 
-  nsGlobalWindow *win = nsGlobalWindow::Cast(owner);
+  nsGlobalWindowInner *win = nsGlobalWindowInner::Cast(owner);
   return SetParentToWindow(win, parentObj);
 }
 
@@ -1273,7 +1273,7 @@ nsDOMConstructor::ToString(nsAString &aResult)
 
 
 static nsresult
-GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindow *aWin,
+GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindowInner *aWin,
             const nsGlobalNameStruct *aNameStruct,
             JS::MutableHandle<JSObject*> aProto)
 {
@@ -1298,7 +1298,7 @@ GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindow *aWin,
 // Either ci_data must be non-null or name_struct must be non-null and of type
 // eTypeClassProto.
 static nsresult
-ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
+ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindowInner *aWin, JSContext *cx,
                  JS::Handle<JSObject*> obj, const char16_t *name,
                  const nsDOMClassInfoData *ci_data,
                  const nsGlobalNameStruct *name_struct,
@@ -1462,7 +1462,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
 static bool
 OldBindingConstructorEnabled(const nsGlobalNameStruct *aStruct,
-                             nsGlobalWindow *aWin, JSContext *cx)
+                             nsGlobalWindowInner *aWin, JSContext *cx)
 {
   MOZ_ASSERT(aStruct->mType == nsGlobalNameStruct::eTypeProperty ||
              aStruct->mType == nsGlobalNameStruct::eTypeClassConstructor);
@@ -1491,7 +1491,7 @@ LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
 
 // static
 bool
-nsWindowSH::NameStructEnabled(JSContext* aCx, nsGlobalWindow *aWin,
+nsWindowSH::NameStructEnabled(JSContext* aCx, nsGlobalWindowInner *aWin,
                               const nsAString& aName,
                               const nsGlobalNameStruct& aNameStruct)
 {
@@ -1521,7 +1521,7 @@ static const JSClass XULControllersShimClass = {
 
 // static
 nsresult
-nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
+nsWindowSH::GlobalResolve(nsGlobalWindowInner *aWin, JSContext *cx,
                           JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                           JS::MutableHandle<JS::PropertyDescriptor> desc)
 {

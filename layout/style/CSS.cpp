@@ -32,7 +32,7 @@ static nsresult
 GetParsingInfo(const GlobalObject& aGlobal,
                SupportsParsingInfo& aInfo)
 {
-  nsGlobalWindow* win = xpc::WindowOrNull(aGlobal.Get());
+  nsGlobalWindowInner* win = xpc::WindowOrNull(aGlobal.Get());
   if (!win) {
     return NS_ERROR_FAILURE;
   }

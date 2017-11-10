@@ -18,7 +18,7 @@ namespace dom {
 //
 //  Basic (virtual) BarProp class implementation
 //
-BarProp::BarProp(nsGlobalWindow* aWindow)
+BarProp::BarProp(nsGlobalWindowInner* aWindow)
   : mDOMWindow(aWindow)
 {
   MOZ_ASSERT(aWindow->IsInnerWindow());
@@ -106,7 +106,7 @@ BarProp::GetBrowserChrome()
 // MenubarProp class implementation
 //
 
-MenubarProp::MenubarProp(nsGlobalWindow *aWindow)
+MenubarProp::MenubarProp(nsGlobalWindowInner *aWindow)
   : BarProp(aWindow)
 {
 }
@@ -132,7 +132,7 @@ MenubarProp::SetVisible(bool aVisible, CallerType aCallerType, ErrorResult& aRv)
 // ToolbarProp class implementation
 //
 
-ToolbarProp::ToolbarProp(nsGlobalWindow *aWindow)
+ToolbarProp::ToolbarProp(nsGlobalWindowInner *aWindow)
   : BarProp(aWindow)
 {
 }
@@ -158,7 +158,7 @@ ToolbarProp::SetVisible(bool aVisible, CallerType aCallerType, ErrorResult& aRv)
 // LocationbarProp class implementation
 //
 
-LocationbarProp::LocationbarProp(nsGlobalWindow *aWindow)
+LocationbarProp::LocationbarProp(nsGlobalWindowInner *aWindow)
   : BarProp(aWindow)
 {
 }
@@ -186,7 +186,7 @@ LocationbarProp::SetVisible(bool aVisible, CallerType aCallerType,
 // PersonalbarProp class implementation
 //
 
-PersonalbarProp::PersonalbarProp(nsGlobalWindow *aWindow)
+PersonalbarProp::PersonalbarProp(nsGlobalWindowInner *aWindow)
   : BarProp(aWindow)
 {
 }
@@ -215,7 +215,7 @@ PersonalbarProp::SetVisible(bool aVisible, CallerType aCallerType,
 // StatusbarProp class implementation
 //
 
-StatusbarProp::StatusbarProp(nsGlobalWindow *aWindow)
+StatusbarProp::StatusbarProp(nsGlobalWindowInner *aWindow)
   : BarProp(aWindow)
 {
 }
@@ -243,7 +243,7 @@ StatusbarProp::SetVisible(bool aVisible, CallerType aCallerType,
 // ScrollbarsProp class implementation
 //
 
-ScrollbarsProp::ScrollbarsProp(nsGlobalWindow *aWindow)
+ScrollbarsProp::ScrollbarsProp(nsGlobalWindowInner *aWindow)
 : BarProp(aWindow)
 {
 }

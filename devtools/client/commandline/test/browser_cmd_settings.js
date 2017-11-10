@@ -7,9 +7,6 @@ var prefBranch = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Ci.nsIPrefService).getBranch(null)
                     .QueryInterface(Ci.nsIPrefBranch);
 
-var supportsString = Cc["@mozilla.org/supports-string;1"]
-                      .createInstance(Ci.nsISupportsString);
-
 const TEST_URI = "data:text/html;charset=utf-8,gcli-settings";
 
 function test() {
@@ -114,10 +111,7 @@ function* spawnTest() {
   // Cleanup
   prefBranch.setBoolPref("devtools.gcli.hideIntro", hideIntroOrig);
   prefBranch.setIntPref("devtools.editor.tabsize", tabSizeOrig);
-  supportsString.data = remoteHostOrig;
-  prefBranch.setComplexValue("devtools.debugger.remote-host",
-          Components.interfaces.nsISupportsString,
-          supportsString);
+  prefBranch.setStringPref("devtools.debugger.remote-host", remoteHostOrig);
 
   yield helpers.closeTab(options);
 }

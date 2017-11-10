@@ -1697,7 +1697,7 @@ WebSocketImpl::Init(JSContext* aCx,
         if (innerWindow == currentInnerWindow) {
           ErrorResult error;
           parentWindow =
-            nsGlobalWindow::Cast(innerWindow)->GetOpenerWindow(error);
+            nsGlobalWindowInner::Cast(innerWindow)->GetOpenerWindow(error);
           if (NS_WARN_IF(error.Failed())) {
             error.SuppressException();
             return NS_ERROR_DOM_SECURITY_ERR;

@@ -26,8 +26,8 @@ SEC_BEGIN_PROTOS
  * This will either become part of the standard or be disabled
  * after we have tested it.
  */
-#define SSL_UseAltHandshakeType(fd, enable)                  \
-    SSL_EXPERIMENTAL_API("SSL_UseAltHandshakeType",          \
+#define SSL_UseAltServerHelloType(fd, enable)                \
+    SSL_EXPERIMENTAL_API("SSL_UseAltServerHelloType",        \
                          (PRFileDesc * _fd, PRBool _enable), \
                          (fd, enable))
 

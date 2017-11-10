@@ -163,10 +163,11 @@ void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) 
   if (host->Lock()) {
     RefPtr<mozilla::gfx::DataSourceSurface> hostDataSurface = host->GetAsSurface();
 
+    DataSourceSurface::ScopedMap map(hostDataSurface, DataSourceSurface::READ);
     RefPtr<gfxImageSurface> hostSurface =
-      new gfxImageSurface(hostDataSurface->GetData(),
+      new gfxImageSurface(map.GetData(),
                           hostDataSurface->GetSize(),
-                          hostDataSurface->Stride(),
+                          map.GetStride(),
                           SurfaceFormatToImageFormat(hostDataSurface->GetFormat()));
     AssertSurfacesEqual(surface, hostSurface.get());
     host->Unlock();

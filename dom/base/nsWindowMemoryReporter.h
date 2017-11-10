@@ -101,7 +101,7 @@ public:
 #endif
 
   static nsWindowMemoryReporter* Get();
-  void ObserveDOMWindowDetached(nsGlobalWindow* aWindow);
+  void ObserveDOMWindowDetached(nsGlobalWindowInner* aWindow);
 
   static int64_t GhostWindowsDistinguishedAmount();
 

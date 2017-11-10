@@ -10,20 +10,6 @@
 
 namespace mozilla {
 
-void
-DisplayListClipState::ClearUpToASR(const ActiveScrolledRoot* aASR)
-{
-  while (mClipChainContentDescendants &&
-         ActiveScrolledRoot::IsAncestor(aASR, mClipChainContentDescendants->mASR)) {
-    mClipChainContentDescendants = mClipChainContentDescendants->mParent;
-  }
-  while (mClipChainContainingBlockDescendants &&
-         ActiveScrolledRoot::IsAncestor(aASR, mClipChainContainingBlockDescendants->mASR)) {
-    mClipChainContainingBlockDescendants = mClipChainContainingBlockDescendants->mParent;
-  }
-  InvalidateCurrentCombinedClipChain(aASR);
-}
-
 const DisplayItemClipChain*
 DisplayListClipState::GetCurrentCombinedClipChain(nsDisplayListBuilder* aBuilder)
 {

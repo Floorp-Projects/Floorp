@@ -63,7 +63,7 @@ public:
   void GetInitDict(KeyboardEventInit& aParam);
 
   void InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
-                    nsGlobalWindow* aView, bool aCtrlKey, bool aAltKey,
+                    nsGlobalWindowInner* aView, bool aCtrlKey, bool aAltKey,
                     bool aShiftKey, bool aMetaKey,
                     uint32_t aKeyCode, uint32_t aCharCode)
   {
@@ -74,7 +74,7 @@ public:
 
   void InitKeyboardEvent(const nsAString& aType,
                          bool aCanBubble, bool aCancelable,
-                         nsGlobalWindow* aView, const nsAString& aKey,
+                         nsGlobalWindowInner* aView, const nsAString& aKey,
                          uint32_t aLocation, bool aCtrlKey, bool aAltKey,
                          bool aShiftKey, bool aMetaKey, ErrorResult& aRv);
 
