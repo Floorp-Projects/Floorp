@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "unstable", feature(asm, repr_simd, test))]
+#![cfg_attr(feature = "unstable", feature(asm, repr_simd, test, fn_must_use))]
 
 //! A collection of strongly typed math tools for computer graphics with an inclination
 //! towards 2d graphics and layout.
@@ -81,6 +81,7 @@ pub use vector::{
 };
 
 pub use rect::{Rect, TypedRect, rect};
+pub use rotation::{TypedRotation2D, Rotation2D, TypedRotation3D, Rotation3D};
 pub use side_offsets::{SideOffsets2D, TypedSideOffsets2D};
 #[cfg(feature = "unstable")] pub use side_offsets::SideOffsets2DSimdI32;
 pub use size::{Size2D, TypedSize2D, size2};
@@ -95,6 +96,7 @@ mod transform2d;
 mod transform3d;
 mod point;
 mod rect;
+mod rotation;
 mod scale_factor;
 mod side_offsets;
 mod size;
@@ -132,4 +134,3 @@ pub type Matrix4D<T> = Transform3D<T>;
 /// Temporary alias to facilitate the transition to the new naming scheme
 #[deprecated]
 pub type TypedMatrix4D<T, Src, Dst> = TypedTransform3D<T, Src, Dst>;
-
