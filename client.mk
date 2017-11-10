@@ -81,9 +81,6 @@ MOZ_MAKE = $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
 CONFIGURES := $(TOPSRCDIR)/configure
 CONFIGURES += $(TOPSRCDIR)/js/src/configure
 
-# Make targets that are going to be passed to the real build system
-OBJDIR_TARGETS = install export libs clean realclean distclean upload sdk installer package package-compare stage-package source-package l10n-check automation/build
-
 #######################################################################
 # Rules
 
@@ -226,16 +223,9 @@ endif
 build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	+$(MOZ_MAKE)
 
-####################################
-# Other targets
-
-# Pass these target onto the real build system
-$(OBJDIR_TARGETS):: $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	+$(MOZ_MAKE) $@
-
 ifdef MOZ_AUTOMATION
 build::
-	$(MAKE) -f $(TOPSRCDIR)/client.mk automation/build
+	+$(MOZ_MAKE) automation/build
 endif
 
 ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
@@ -251,5 +241,4 @@ endif
 
 .PHONY: \
     build \
-    configure \
-    $(OBJDIR_TARGETS)
+    configure
