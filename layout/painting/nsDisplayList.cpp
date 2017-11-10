@@ -1002,9 +1002,11 @@ nsDisplayListBuilder::EndFrame()
 }
 
 void
-nsDisplayListBuilder::MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
+nsDisplayListBuilder::MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame, bool aAlreadyAddedFrame)
 {
-  mFramesMarkedForDisplay.AppendElement(aFrame);
+  if (!aAlreadyAddedFrame) {
+    mFramesMarkedForDisplay.AppendElement(aFrame);
+  }
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
     if (f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)
@@ -1162,6 +1164,10 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
     return;
   }
 
+  // Always store OutOfFlowDisplayData for visible frames (even when they aren't dirty)
+  // since a nested out-of-flow frame might force building and we'll need to have this
+  // data available.
+
   // mClipState.GetClipChainForContainingBlockDescendants can return pointers
   // to objects on the stack, so we need to clone the chain.
   const DisplayItemClipChain* clipChain =
@@ -1170,8 +1176,14 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
   const ActiveScrolledRoot* asr = mCurrentActiveScrolledRoot;
   OutOfFlowDisplayData* data = new OutOfFlowDisplayData(clipChain, combinedClipChain, asr, visible, dirty);
   aFrame->SetProperty(nsDisplayListBuilder::OutOfFlowDisplayDataProperty(), data);
+  mFramesMarkedForDisplay.AppendElement(aFrame);
 
-  MarkFrameForDisplay(aFrame, aDirtyFrame);
+  // Only MarkFrameForDisplay if we're dirty. If this is a nested out-of-flow frame, then it will
+  // also mark any outer frames to ensure that building reaches the dirty feame.
+  if (!dirty.IsEmpty() ||
+      aFrame->ForceDescendIntoIfVisible()) {
+    MarkFrameForDisplay(aFrame, aDirtyFrame, true);
+  }
 }
 
 static void UnmarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
