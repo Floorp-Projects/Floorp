@@ -958,10 +958,40 @@ RHypot::recover(JSContext* cx, SnapshotIterator& iter) const
 }
 
 bool
+MNearbyInt::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    switch (roundingMode_) {
+      case RoundingMode::Up:
+        writer.writeUnsigned(uint32_t(RInstruction::Recover_Ceil));
+        return true;
+      case RoundingMode::Down:
+        writer.writeUnsigned(uint32_t(RInstruction::Recover_Floor));
+        return true;
+      default:
+        MOZ_CRASH("Unsupported rounding mode.");
+    }
+}
+
+RNearbyInt::RNearbyInt(CompactBufferReader& reader)
+{
+    roundingMode_ = reader.readByte();
+}
+
+bool
+RNearbyInt::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    MOZ_CRASH("Unsupported rounding mode.");
+}
+
+bool
 MMathFunction::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     switch (function_) {
+      case Ceil:
+        writer.writeUnsigned(uint32_t(RInstruction::Recover_Ceil));
+        return true;
       case Floor:
         writer.writeUnsigned(uint32_t(RInstruction::Recover_Floor));
         return true;
