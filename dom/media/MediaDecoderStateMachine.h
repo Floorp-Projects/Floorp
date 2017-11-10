@@ -359,6 +359,7 @@ protected:
   void VolumeChanged();
   void SetPlaybackRate(double aPlaybackRate);
   void PreservesPitchChanged();
+  void LoopingChanged();
 
   MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
   MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
@@ -665,6 +666,8 @@ private:
   MediaEventProducer<NextFrameStatus> mOnNextFrameStatus;
 
   const bool mIsMSE;
+
+  bool mSeamlessLoopingAllowed;
 
 private:
   // The buffered range. Mirrored from the decoder thread.
