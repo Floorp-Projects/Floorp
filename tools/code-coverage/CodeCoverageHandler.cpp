@@ -3,9 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <signal.h>
 #include <stdio.h>
+#ifndef XP_WIN
+#include <signal.h>
 #include <unistd.h>
+#endif
 #include "mozilla/CodeCoverageHandler.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
@@ -62,6 +64,7 @@ void CodeCoverageHandler::ResetCounters(int)
 
 void CodeCoverageHandler::SetSignalHandlers()
 {
+#ifndef XP_WIN
   printf_stderr("[CodeCoverage] Setting handlers for process %d.\n", getpid());
 
   struct sigaction dump_sa;
@@ -77,6 +80,7 @@ void CodeCoverageHandler::SetSignalHandlers()
   sigemptyset(&reset_sa.sa_mask);
   DebugOnly<int> r2 = sigaction(SIGUSR2, &reset_sa, nullptr);
   MOZ_ASSERT(r2 == 0, "Failed to install GCOV SIGUSR2 handler");
+#endif
 }
 
 CodeCoverageHandler::CodeCoverageHandler()
