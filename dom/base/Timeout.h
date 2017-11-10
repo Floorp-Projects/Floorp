@@ -69,7 +69,7 @@ public:
   // keep decent binary packing.
 
   // Window for which this timeout fires
-  RefPtr<nsGlobalWindow> mWindow;
+  RefPtr<nsGlobalWindowInner> mWindow;
 
   // The language-specific information about the callback.
   nsCOMPtr<nsITimeoutHandler> mScriptHandler;

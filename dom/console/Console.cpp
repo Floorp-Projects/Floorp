@@ -375,7 +375,7 @@ protected:
     AutoJSAPI jsapi;
     MOZ_ASSERT(aWindow);
 
-    RefPtr<nsGlobalWindow> win = nsGlobalWindow::Cast(aWindow);
+    RefPtr<nsGlobalWindowInner> win = nsGlobalWindowInner::Cast(aWindow);
     if (NS_WARN_IF(!jsapi.Init(win))) {
       return;
     }
@@ -1296,7 +1296,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
       aMethodName == MethodTimeEnd ||
       aMethodName == MethodTimeStamp) {
     if (mWindow) {
-      nsGlobalWindow *win = nsGlobalWindow::Cast(mWindow);
+      nsGlobalWindowInner *win = nsGlobalWindowInner::Cast(mWindow);
       MOZ_ASSERT(win);
 
       RefPtr<Performance> performance = win->GetPerformance();
@@ -2458,7 +2458,7 @@ Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
       return nullptr;
     }
 
-    nsGlobalWindow* window = nsGlobalWindow::Cast(innerWindow);
+    nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(innerWindow);
     return window->GetConsole(aRv);
   }
 

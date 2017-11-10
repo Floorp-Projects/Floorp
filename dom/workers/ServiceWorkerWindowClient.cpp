@@ -122,7 +122,8 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);
+    nsGlobalWindowInner* window =
+      nsGlobalWindowInner::GetInnerWindowWithId(mWindowId);
     UniquePtr<ServiceWorkerClientInfo> clientInfo;
 
     if (window) {
@@ -383,7 +384,7 @@ public:
       return RejectPromise(NS_ERROR_TYPE_ERR);
     }
 
-    nsGlobalWindow* window;
+    nsGlobalWindowInner* window;
     rv = Navigate(url, principal, &window);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return RejectPromise(rv);
@@ -471,11 +472,12 @@ private:
   }
 
   nsresult
-  Navigate(nsIURI* aUrl, nsIPrincipal* aPrincipal, nsGlobalWindow** aWindow)
+  Navigate(nsIURI* aUrl, nsIPrincipal* aPrincipal, nsGlobalWindowInner** aWindow)
   {
     MOZ_ASSERT(aWindow);
 
-    nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);
+    nsGlobalWindowInner* window =
+      nsGlobalWindowInner::GetInnerWindowWithId(mWindowId);
     if (NS_WARN_IF(!window)) {
       return NS_ERROR_TYPE_ERR;
     }

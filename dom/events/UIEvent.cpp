@@ -155,7 +155,7 @@ void
 UIEvent::InitUIEvent(const nsAString& typeArg,
                      bool canBubbleArg,
                      bool cancelableArg,
-                     nsGlobalWindow* viewArg,
+                     nsGlobalWindowInner* viewArg,
                      int32_t detailArg)
 {
   auto* view = viewArg ? viewArg->AsInner() : nullptr;

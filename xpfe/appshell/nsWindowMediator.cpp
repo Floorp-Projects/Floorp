@@ -352,7 +352,7 @@ NS_IMETHODIMP
 nsWindowMediator::GetOuterWindowWithId(uint64_t aWindowID,
                                        mozIDOMWindowProxy** aWindow)
 {
-  RefPtr<nsGlobalWindow> window = nsGlobalWindow::GetOuterWindowWithId(aWindowID);
+  RefPtr<nsGlobalWindowOuter> window = nsGlobalWindowOuter::GetOuterWindowWithId(aWindowID);
   nsCOMPtr<nsPIDOMWindowOuter> outer = window ? window->AsOuter() : nullptr;
   outer.forget(aWindow);
   return NS_OK;
@@ -362,7 +362,7 @@ NS_IMETHODIMP
 nsWindowMediator::GetCurrentInnerWindowWithId(uint64_t aWindowID,
                                               mozIDOMWindow** aWindow)
 {
-  RefPtr<nsGlobalWindow> window = nsGlobalWindow::GetInnerWindowWithId(aWindowID);
+  RefPtr<nsGlobalWindowInner> window = nsGlobalWindowInner::GetInnerWindowWithId(aWindowID);
 
   // not found
   if (!window)

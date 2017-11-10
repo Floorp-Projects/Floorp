@@ -2118,7 +2118,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
     if (!console)
         return NS_OK;
 
-    nsGlobalWindow* globalWin = CurrentWindowOrNull(cx);
+    nsGlobalWindowInner* globalWin = CurrentWindowOrNull(cx);
     nsPIDOMWindowInner* win = globalWin ? globalWin->AsInner() : nullptr;
     const uint64_t innerWindowID = win ? win->WindowID() : 0;
 
@@ -2338,7 +2338,7 @@ nsXPCComponents_Utils::ImportGlobalProperties(HandleValue aPropertyList,
     MOZ_ASSERT(global);
 
     // Don't allow doing this if the global is a Window
-    nsGlobalWindow* win;
+    nsGlobalWindowInner* win;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, &global, win))) {
         return NS_ERROR_NOT_AVAILABLE;
     }

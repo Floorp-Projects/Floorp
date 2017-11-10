@@ -130,17 +130,19 @@ static bool CompositeAndCompare(RefPtr<LayerManagerComposite> layerManager, Draw
 
   RefPtr<SourceSurface> ss = drawTarget->Snapshot();
   RefPtr<DataSourceSurface> dss = ss->GetDataSurface();
-  uint8_t* bitmap = dss->GetData();
+  DataSourceSurface::ScopedMap dssMap(dss, DataSourceSurface::READ);
+  uint8_t* bitmap = dssMap.GetData();
 
   RefPtr<SourceSurface> ssRef = refDT->Snapshot();
   RefPtr<DataSourceSurface> dssRef = ssRef->GetDataSurface();
-  uint8_t* bitmapRef = dssRef->GetData();
+  DataSourceSurface::ScopedMap dssRefMap(dssRef, DataSourceSurface::READ);
+  uint8_t* bitmapRef = dssRefMap.GetData();
 
   for (int y = 0; y < gCompHeight; y++) {
     for (int x = 0; x < gCompWidth; x++) {
       for (size_t channel = 0; channel < 4; channel++) {
-        uint8_t bit = bitmap[y * dss->Stride() + x * 4 + channel];
-        uint8_t bitRef = bitmapRef[y * dss->Stride() + x * 4 + channel];
+        uint8_t bit = bitmap[y * dssMap.GetStride() + x * 4 + channel];
+        uint8_t bitRef = bitmapRef[y * dssRefMap.GetStride() + x * 4 + channel];
         if (bit != bitRef) {
           printf("Layer Tree:\n");
           layerManager->Dump();

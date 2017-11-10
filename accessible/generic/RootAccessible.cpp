@@ -485,7 +485,8 @@ RootAccessible::RelationByType(RelationType aType)
     return DocAccessibleWrap::RelationByType(aType);
 
   if (nsPIDOMWindowOuter* rootWindow = mDocumentNode->GetWindow()) {
-    nsCOMPtr<nsPIDOMWindowOuter> contentWindow = nsGlobalWindow::Cast(rootWindow)->GetContent();
+    nsCOMPtr<nsPIDOMWindowOuter> contentWindow =
+      nsGlobalWindowOuter::Cast(rootWindow)->GetContent();
     if (contentWindow) {
       nsCOMPtr<nsIDocument> contentDocumentNode = contentWindow->GetDoc();
       if (contentDocumentNode) {

@@ -17,6 +17,7 @@
 #include "nsUnicharUtils.h"
 #include "nsUnicodeRange.h"
 #include "nsUnicodeProperties.h"
+#include "nsXULAppAPI.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
@@ -25,6 +26,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/2D.h"
 
 #include <locale.h>
@@ -200,8 +202,12 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
     NS_ADDREF(gFontListPrefObserver);
     Preferences::AddStrongObservers(gFontListPrefObserver, kObservedPrefs);
 
-    Preferences::RegisterCallback(FontWhitelistPrefChanged,
-                                  kFontSystemWhitelistPref);
+    // Only the parent process listens for whitelist changes; it will then
+    // notify its children to rebuild their font lists.
+    if (XRE_IsParentProcess()) {
+        Preferences::RegisterCallback(FontWhitelistPrefChanged,
+                                      kFontSystemWhitelistPref);
+    }
 
     RegisterStrongMemoryReporter(new MemoryReporter());
 }
@@ -212,9 +218,21 @@ gfxPlatformFontList::~gfxPlatformFontList()
     ClearLangGroupPrefFonts();
     NS_ASSERTION(gFontListPrefObserver, "There is no font list pref observer");
     Preferences::RemoveObservers(gFontListPrefObserver, kObservedPrefs);
-    Preferences::UnregisterCallback(FontWhitelistPrefChanged,
-                                    kFontSystemWhitelistPref);
+    if (XRE_IsParentProcess()) {
+        Preferences::UnregisterCallback(FontWhitelistPrefChanged,
+                                        kFontSystemWhitelistPref);
+    }
     NS_RELEASE(gFontListPrefObserver);
+}
+
+/* static */
+void
+gfxPlatformFontList::FontWhitelistPrefChanged(const char *aPref,
+                                              void *aClosure)
+{
+    MOZ_ASSERT(XRE_IsParentProcess());
+    gfxPlatformFontList::PlatformFontList()->UpdateFontList();
+    mozilla::dom::ContentParent::NotifyUpdatedFonts();
 }
 
 // number of CSS generic font families
@@ -730,7 +748,8 @@ gfxPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
     if (!familyEntry && !mOtherFamilyNamesInitialized && !IsASCII(aFamily)) {
         InitOtherFamilyNames(!(aFlags & FindFamiliesFlags::eForceOtherFamilyNamesLoading));
         familyEntry = mOtherFamilyNames.GetWeak(key);
-        if (!familyEntry && !mOtherFamilyNamesInitialized) {
+        if (!familyEntry && !mOtherFamilyNamesInitialized &&
+            !(aFlags & FindFamiliesFlags::eNoAddToNamesMissedWhenSearching)) {
             // localized family names load timed out, add name to list of
             // names to check after localized names are loaded
             if (!mOtherNamesMissed) {
@@ -1559,7 +1578,8 @@ gfxPlatformFontList::CleanupLoader()
     if (mOtherNamesMissed) {
         for (auto it = mOtherNamesMissed->Iter(); !it.Done(); it.Next()) {
             if (FindFamily(it.Get()->GetKey(),
-                           FindFamiliesFlags::eForceOtherFamilyNamesLoading)) {
+                           (FindFamiliesFlags::eForceOtherFamilyNamesLoading |
+                            FindFamiliesFlags::eNoAddToNamesMissedWhenSearching))) {
                 forceReflow = true;
                 ForceGlobalReflow();
                 break;

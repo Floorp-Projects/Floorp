@@ -613,7 +613,7 @@ ScreenOrientation::VisibleEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  auto* win = nsGlobalWindow::Cast(doc->GetInnerWindow());
+  auto* win = nsGlobalWindowInner::Cast(doc->GetInnerWindow());
   if (!win) {
     return NS_OK;
   }

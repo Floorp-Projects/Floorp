@@ -62,6 +62,7 @@ class nsIDocShell;
 class nsDocShell;
 class nsDOMNavigationTiming;
 class nsFrameLoader;
+class nsGlobalWindowInner;
 class nsHTMLCSSStyleSheet;
 class nsHTMLDocument;
 class nsHTMLStyleSheet;
@@ -3045,7 +3046,7 @@ public:
              JS::Handle<JSObject*> aResult, mozilla::ErrorResult& rv);
   // Touch event handlers already on nsINode
   already_AddRefed<mozilla::dom::Touch>
-    CreateTouch(nsGlobalWindow* aView, mozilla::dom::EventTarget* aTarget,
+    CreateTouch(nsGlobalWindowInner* aView, mozilla::dom::EventTarget* aTarget,
                 int32_t aIdentifier, int32_t aPageX, int32_t aPageY,
                 int32_t aScreenX, int32_t aScreenY, int32_t aClientX,
                 int32_t aClientY, int32_t aRadiusX, int32_t aRadiusY,

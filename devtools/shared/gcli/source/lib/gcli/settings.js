@@ -31,11 +31,6 @@ XPCOMUtils.defineLazyGetter(imports, 'prefBranch', function() {
   return prefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch);
 });
 
-XPCOMUtils.defineLazyGetter(imports, 'supportsString', function() {
-  return Cc['@mozilla.org/supports-string;1']
-          .createInstance(Ci.nsISupportsString);
-});
-
 var util = require('./util/util');
 
 /**
@@ -266,10 +261,7 @@ Object.defineProperty(Setting.prototype, 'value', {
         break;
 
       case imports.prefBranch.PREF_STRING:
-        imports.supportsString.data = value;
-        imports.prefBranch.setComplexValue(this.name,
-                Ci.nsISupportsString,
-                imports.supportsString);
+        imports.prefBranch.setStringPref(this.name, value);
         break;
 
       default:

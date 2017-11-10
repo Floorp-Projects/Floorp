@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom() {
+    document.evaluate("a", document.documentElement, null, 4096, null);
+}
+
+</script>
+</head>
+
+<body onload="boom()"></body>
+</html>

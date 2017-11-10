@@ -531,18 +531,18 @@ CompilationScope()
     return XPCJSRuntime::Get()->CompilationScope();
 }
 
-nsGlobalWindow*
+nsGlobalWindowInner*
 WindowOrNull(JSObject* aObj)
 {
     MOZ_ASSERT(aObj);
     MOZ_ASSERT(!js::IsWrapper(aObj));
 
-    nsGlobalWindow* win = nullptr;
+    nsGlobalWindowInner* win = nullptr;
     UNWRAP_NON_WRAPPER_OBJECT(Window, aObj, win);
     return win;
 }
 
-nsGlobalWindow*
+nsGlobalWindowInner*
 WindowGlobalOrNull(JSObject* aObj)
 {
     MOZ_ASSERT(aObj);
@@ -551,7 +551,7 @@ WindowGlobalOrNull(JSObject* aObj)
     return WindowOrNull(glob);
 }
 
-nsGlobalWindow*
+nsGlobalWindowInner*
 AddonWindowOrNull(JSObject* aObj)
 {
     if (!IsInAddonScope(aObj))
@@ -571,7 +571,7 @@ AddonWindowOrNull(JSObject* aObj)
     return WindowOrNull(mainGlobal);
 }
 
-nsGlobalWindow*
+nsGlobalWindowInner*
 CurrentWindowOrNull(JSContext* cx)
 {
     JSObject* glob = JS::CurrentGlobalOrNull(cx);
@@ -2238,7 +2238,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         extras->pathPrefix.AssignLiteral("explicit/js-non-window/zones/");
         RootedObject global(cx, JS::GetRealmGlobalOrNull(realm));
         if (global) {
-            RefPtr<nsGlobalWindow> window;
+            RefPtr<nsGlobalWindowInner> window;
             if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, global, window))) {
                 // The global is a |window| object.  Use the path prefix that
                 // we should have already created for it.
@@ -2278,7 +2278,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         Rooted<Realm*> realm(cx, JS::GetRealmForCompartment(c));
         RootedObject global(cx, JS::GetRealmGlobalOrNull(realm));
         if (global) {
-            RefPtr<nsGlobalWindow> window;
+            RefPtr<nsGlobalWindowInner> window;
             if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, global, window))) {
                 // The global is a |window| object.  Use the path prefix that
                 // we should have already created for it.

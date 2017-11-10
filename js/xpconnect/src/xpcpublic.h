@@ -27,7 +27,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/Preferences.h"
 
-class nsGlobalWindow;
+class nsGlobalWindowInner;
 class nsIPrincipal;
 class nsScriptNameSpaceManager;
 class nsIHandleReportCallback;
@@ -483,14 +483,14 @@ NativeGlobal(JSObject* aObj);
  * If |aObj| is a window, returns the associated nsGlobalWindow.
  * Otherwise, returns null.
  */
-nsGlobalWindow*
+nsGlobalWindowInner*
 WindowOrNull(JSObject* aObj);
 
 /**
  * If |aObj| has a window for a global, returns the associated nsGlobalWindow.
  * Otherwise, returns null.
  */
-nsGlobalWindow*
+nsGlobalWindowInner*
 WindowGlobalOrNull(JSObject* aObj);
 
 /**
@@ -498,14 +498,14 @@ WindowGlobalOrNull(JSObject* aObj);
  * live DOM Window, returns the associated nsGlobalWindow. Otherwise, returns
  * null.
  */
-nsGlobalWindow*
+nsGlobalWindowInner*
 AddonWindowOrNull(JSObject* aObj);
 
 /**
  * If |cx| is in a compartment whose global is a window, returns the associated
  * nsGlobalWindow. Otherwise, returns null.
  */
-nsGlobalWindow*
+nsGlobalWindowInner*
 CurrentWindowOrNull(JSContext* cx);
 
 void

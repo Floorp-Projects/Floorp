@@ -16,7 +16,8 @@
 
 #include <stdint.h>
 
-#include "js/Utility.h"
+#include "jsutil.h"
+
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
 #include "vm/MutexIDs.h"
@@ -101,7 +102,9 @@ public:
     : idMutex_(mutexid::ThreadId)
     , id_(Id())
     , options_(mozilla::Forward<O>(options))
-  { }
+  {
+    MOZ_ASSERT(js::IsInitialized());
+  }
 
   // Start a thread of execution at functor |f| with parameters |args|. This
   // method will return false if thread creation fails. This Thread must not

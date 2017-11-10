@@ -429,6 +429,7 @@ pref("permissions.default.camera", 0);
 pref("permissions.default.microphone", 0);
 pref("permissions.default.geo", 0);
 pref("permissions.default.desktop-notification", 0);
+pref("permissions.default.shortcuts", 0);
 
 // handle links targeting new windows
 // 1=current window/tab, 2=new window, 3=new tab in most recent window

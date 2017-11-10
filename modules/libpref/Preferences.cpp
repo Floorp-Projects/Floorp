@@ -2563,20 +2563,6 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
     return NS_OK;
   }
 
-  if (aType.Equals(NS_GET_IID(nsISupportsString))) {
-    nsCOMPtr<nsISupportsString> theString(
-      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
-
-    if (NS_SUCCEEDED(rv)) {
-      // Debugging to see why we end up with very long strings here with
-      // some addons, see bug 836263.
-      NS_ConvertUTF8toUTF16 wdata(utf8String);
-      theString->SetData(wdata);
-      theString.forget(reinterpret_cast<nsISupportsString**>(aRetVal));
-    }
-    return rv;
-  }
-
   NS_WARNING("nsPrefBranch::GetComplexValue - Unsupported interface type");
   return NS_NOINTERFACE;
 }
@@ -2708,8 +2694,7 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
     return SetCharPrefInternal(aPrefName, descriptorString);
   }
 
-  if (aType.Equals(NS_GET_IID(nsISupportsString)) ||
-      aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
+  if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
     nsCOMPtr<nsISupportsString> theString = do_QueryInterface(aValue);
 
     if (theString) {

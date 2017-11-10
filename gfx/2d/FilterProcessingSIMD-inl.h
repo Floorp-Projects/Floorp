@@ -20,10 +20,12 @@ ConvertToB8G8R8A8_SIMD(SourceSurface* aSurface)
   RefPtr<DataSourceSurface> input = aSurface->GetDataSurface();
   RefPtr<DataSourceSurface> output =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
-  uint8_t *inputData = input->GetData();
-  uint8_t *outputData = output->GetData();
-  int32_t inputStride = input->Stride();
-  int32_t outputStride = output->Stride();
+  DataSourceSurface::ScopedMap inputMap(input, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap outputMap(output, DataSourceSurface::READ_WRITE);
+  uint8_t *inputData = inputMap.GetData();
+  uint8_t *outputData = outputMap.GetData();
+  int32_t inputStride = inputMap.GetStride();
+  int32_t outputStride = outputMap.GetStride();
   switch (input->GetFormat()) {
     case SurfaceFormat::B8G8R8A8:
       output = input;
@@ -295,12 +297,16 @@ ApplyBlending_SIMD(DataSourceSurface* aInput1, DataSourceSurface* aInput2)
     return nullptr;
   }
 
-  uint8_t* source1Data = aInput1->GetData();
-  uint8_t* source2Data = aInput2->GetData();
-  uint8_t* targetData = target->GetData();
-  int32_t targetStride = target->Stride();
-  int32_t source1Stride = aInput1->Stride();
-  int32_t source2Stride = aInput2->Stride();
+  DataSourceSurface::ScopedMap inputMap1(aInput1, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap inputMap2(aInput2, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap outputMap(target, DataSourceSurface::READ_WRITE);
+
+  uint8_t* source1Data = inputMap1.GetData();
+  uint8_t* source2Data = inputMap2.GetData();
+  uint8_t* targetData = outputMap.GetData();
+  int32_t targetStride = outputMap.GetStride();
+  int32_t source1Stride = inputMap1.GetStride();
+  int32_t source2Stride = inputMap2.GetStride();
 
   for (int32_t y = 0; y < size.height; y++) {
     for (int32_t x = 0; x < size.width; x += 4) {
@@ -520,10 +526,13 @@ ApplyColorMatrix_SIMD(DataSourceSurface* aInput, const Matrix5x4 &aMatrix)
     return nullptr;
   }
 
-  uint8_t* sourceData = aInput->GetData();
-  uint8_t* targetData = target->GetData();
-  int32_t sourceStride = aInput->Stride();
-  int32_t targetStride = target->Stride();
+  DataSourceSurface::ScopedMap inputMap(aInput, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap outputMap(target, DataSourceSurface::READ_WRITE);
+
+  uint8_t* sourceData = inputMap.GetData();
+  uint8_t* targetData = outputMap.GetData();
+  int32_t sourceStride = inputMap.GetStride();
+  int32_t targetStride = outputMap.GetStride();
 
   const int16_t factor = 128;
   const Float floatElementMax = INT16_MAX / factor; // 255
@@ -702,10 +711,13 @@ ApplyComposition(DataSourceSurface* aSource, DataSourceSurface* aDest)
 {
   IntSize size = aDest->GetSize();
 
-  uint8_t* sourceData = aSource->GetData();
-  uint8_t* destData = aDest->GetData();
-  uint32_t sourceStride = aSource->Stride();
-  uint32_t destStride = aDest->Stride();
+  DataSourceSurface::ScopedMap input(aSource, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap output(aDest, DataSourceSurface::READ_WRITE);
+
+  uint8_t* sourceData = input.GetData();
+  uint8_t* destData = output.GetData();
+  uint32_t sourceStride = input.GetStride();
+  uint32_t destStride = output.GetStride();
 
   for (int32_t y = 0; y < size.height; y++) {
     for (int32_t x = 0; x < size.width; x += 4) {
@@ -1025,12 +1037,16 @@ ApplyArithmeticCombine_SIMD(DataSourceSurface* aInput1, DataSourceSurface* aInpu
     return nullptr;
   }
 
-  uint8_t* source1Data = aInput1->GetData();
-  uint8_t* source2Data = aInput2->GetData();
-  uint8_t* targetData = target->GetData();
-  uint32_t source1Stride = aInput1->Stride();
-  uint32_t source2Stride = aInput2->Stride();
-  uint32_t targetStride = target->Stride();
+  DataSourceSurface::ScopedMap inputMap1(aInput1, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap inputMap2(aInput2, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap outputMap(target, DataSourceSurface::READ_WRITE);
+
+  uint8_t* source1Data = inputMap1.GetData();
+  uint8_t* source2Data = inputMap2.GetData();
+  uint8_t* targetData = outputMap.GetData();
+  uint32_t source1Stride = inputMap1.GetStride();
+  uint32_t source2Stride = inputMap2.GetStride();
+  uint32_t targetStride = outputMap.GetStride();
 
   // The arithmetic combine filter does the following calculation:
   // result = k1 * in1 * in2 + k2 * in1 + k3 * in2 + k4
