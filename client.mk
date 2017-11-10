@@ -57,9 +57,6 @@ include $(OBJDIR)/.mozconfig-client-mk
 # to then replace newlines with normal spaces. This allows to get a list
 # of mozconfig output lines.
 MOZCONFIG_OUT_LINES := $(subst $(CR), ,$(subst $(NULL) $(NULL),||,$(MOZCONFIG_CONTENT)))
-# Filter-out comments from those lines.
-START_COMMENT = \#
-MOZCONFIG_OUT_FILTERED := $(filter-out $(START_COMMENT)%,$(MOZCONFIG_OUT_LINES))
 
 ifdef AUTOCLOBBER
 export AUTOCLOBBER=1
@@ -118,9 +115,9 @@ include $(OBJDIR)/.mozconfig.mk
 
 # Print out any options loaded from mozconfig.
 all build clean distclean export libs install realclean::
-ifneq (,$(strip $(MOZCONFIG_OUT_FILTERED)))
+ifneq (,$(strip $(MOZCONFIG_OUT_LINES)))
 	$(info Adding client.mk options from $(FOUND_MOZCONFIG):)
-	$(foreach line,$(MOZCONFIG_OUT_FILTERED),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
+	$(foreach line,$(MOZCONFIG_OUT_LINES),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
 endif
 
 # helper target for mobile
