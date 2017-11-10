@@ -184,6 +184,52 @@ interface nsIIOService : nsISupports
      * @return true if the URI hostname is a local IP address
      */
     boolean hostnameIsLocalIPAddress(in nsIURI aURI);
+
+    /**
+     * While this is set, IOService will monitor an nsINetworkLinkService
+     * (if available) and set its offline status to "true" whenever
+     * isLinkUp is false.
+     *
+     * Applications that want to control changes to the IOService's offline
+     * status should set this to false, watch for network:link-status-changed
+     * broadcasts, and change nsIIOService::offline as they see fit. Note
+     * that this means during application startup, IOService may be offline
+     * if there is no link, until application code runs and can turn off
+     * this management.
+     */
+    attribute boolean manageOfflineStatus;
+
+    /**
+     * Creates a channel for a given URI.
+     *
+     * @param aURI
+     *        nsIURI from which to make a channel
+     * @param aProxyURI
+     *        nsIURI to use for proxy resolution. Can be null in which
+     *        case aURI is used
+     * @param aProxyFlags flags from nsIProtocolProxyService to use
+     *        when resolving proxies for this new channel
+     * @param aLoadingNode
+     * @param aLoadingPrincipal
+     * @param aTriggeringPrincipal
+     * @param aSecurityFlags
+     * @param aContentPolicyType
+     *        These will be used as values for the nsILoadInfo object on the
+     *        created channel. For details, see nsILoadInfo in nsILoadInfo.idl
+     * @return reference to the new nsIChannel object
+     *
+     * Please note, if you provide both a loadingNode and a loadingPrincipal,
+     * then loadingPrincipal must be equal to loadingNode->NodePrincipal().
+     * But less error prone is to just supply a loadingNode.
+     */
+    nsIChannel newChannelFromURIWithProxyFlags2(in nsIURI aURI,
+                                                in nsIURI aProxyURI,
+                                                in unsigned long aProxyFlags,
+                                                in nsIDOMNode aLoadingNode,
+                                                in nsIPrincipal aLoadingPrincipal,
+                                                in nsIPrincipal aTriggeringPrincipal,
+                                                in unsigned long aSecurityFlags,
+                                                in unsigned long aContentPolicyType);
 };
 
 %{C++

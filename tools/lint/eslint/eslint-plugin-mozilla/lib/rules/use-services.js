@@ -31,7 +31,6 @@ var servicesASTParser = {
     "nsIFrameScriptLoader": "mm",
     "nsIProcessScriptLoader": "ppmm",
     "nsIIOService": "io",
-    "nsIIOService2": "io",
     "nsISpeculativeConnect": "io",
     "nsICookieManager": "cookies"
   },
