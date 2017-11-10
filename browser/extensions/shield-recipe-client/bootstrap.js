@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {utils: Cu} = Components;
+const {results: Cr, utils: Cu} = Components;
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -82,26 +82,36 @@ this.Bootstrap = {
       }
 
       // record the value of the default branch before setting it
-      switch (realPrefType) {
-        case Services.prefs.PREF_STRING:
-          studyPrefsChanged[prefName] = defaultBranch.getCharPref(prefName);
-          break;
+      try {
+        switch (realPrefType) {
+          case Services.prefs.PREF_STRING:
+            studyPrefsChanged[prefName] = defaultBranch.getCharPref(prefName);
+            break;
 
-        case Services.prefs.PREF_INT:
-          studyPrefsChanged[prefName] = defaultBranch.getIntPref(prefName);
-          break;
+          case Services.prefs.PREF_INT:
+            studyPrefsChanged[prefName] = defaultBranch.getIntPref(prefName);
+            break;
 
-        case Services.prefs.PREF_BOOL:
-          studyPrefsChanged[prefName] = defaultBranch.getBoolPref(prefName);
-          break;
+          case Services.prefs.PREF_BOOL:
+            studyPrefsChanged[prefName] = defaultBranch.getBoolPref(prefName);
+            break;
 
-        case Services.prefs.PREF_INVALID:
+          case Services.prefs.PREF_INVALID:
+            studyPrefsChanged[prefName] = null;
+            break;
+
+          default:
+            // This should never happen
+            log.error(`Error getting startup pref ${prefName}; unknown value type ${experimentPrefType}.`);
+        }
+      } catch (e) {
+        if (e.result == Cr.NS_ERROR_UNEXPECTED) {
+          // There is a value for the pref on the user branch but not on the default branch. This is ok.
           studyPrefsChanged[prefName] = null;
-          break;
-
-        default:
-          // This should never happen
-          log.error(`Error getting startup pref ${prefName}; unknown value type ${experimentPrefType}.`);
+        } else {
+          // rethrow
+          throw e;
+        }
       }
 
       // now set the new default value
