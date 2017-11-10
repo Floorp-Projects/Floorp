@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <!-- This Source Code Form is subject to the terms of the Mozilla Public
+     - License, v. 2.0. If a copy of the MPL was not distributed with this
+        - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<head>
+  <title>Testing Javascript</title>
+  <script type="text/javascript">
+    var seen = {};
+
+    function updateResult(event) {
+      document.getElementById('result').innerText = event.target.value;
+    }
+
+    function displayMessage(message) {
+      document.getElementById('result').innerText = message;
+    }
+
+    function appendMessage(message) {
+      document.getElementById('result').innerText += " " + message + " ";
+    }
+  </script>
+</head>
+
+<body>
+<h1>Type Stuff</h1>
+
+<div id="resultContainer">
+  Result: <p id="result"></p>
+</div>
+
+<div>
+  <form action="#">
+    <p>
+      <label>keyDown: <input type="text" id="keyDown" onkeydown="updateResult(event)"/></label>
+      <label>keyPress: <input type="text" id="keyPress" onkeypress="updateResult(event)"/></label>
+      <label>keyUp: <input type="text" id="keyUp" onkeyup="updateResult(event)"/></label>
+      <label>change: <input type="text" id="change" onchange="updateResult(event)"/></label>
+    </p>
+    <p>
+      <label>change:
+        <input type="checkbox" id="checkbox" value="checkbox thing" onchange="updateResult(event)"/>
+      </label>
+    </p>
+    <p>
+      <label>keyDown:
+        <textarea id="keyDownArea" onkeydown="updateResult(event)" rows="2" cols="15"></textarea>
+      </label>
+      <label>keyPress:
+        <textarea id="keyPressArea" onkeypress="updateResult(event)" rows="2" cols="15"></textarea>
+      </label>
+      <label>keyUp:
+        <textarea id="keyUpArea" onkeyup="updateResult(event)" rows="2" cols="15"></textarea>
+      </label>
+    </p>
+    <p>
+      <select id="selector" onchange="updateResult(event)">
+        <option value="foo">Foo</option>
+        <option value="bar">Bar</option>
+      </select>
+    </p>
+    <p>
+      <label>hidden: <input type="text" id="notDisplayed" style="display: none"></label>
+    </p>
+  </form>
+</div>
+
+<div id="formageddon">
+    <form action="#">
+        Key Up: <input type="text" id="keyUp" onkeyup="javascript:updateContent(this)"/><br/>
+        Key Down: <input type="text" id="keyDown" onkeydown="javascript:updateContent(this)"/><br/>
+        Key Press: <input type="text" id="keyPress" onkeypress="javascript:updateContent(this)"/><br/>
+        Change: <input type="text" id="change" onkeypress="javascript:displayMessage('change')"/><br/>
+        <textarea id="keyDownArea" onkeydown="javascript:updateContent(this)" rows="2" cols="15"></textarea>
+        <textarea id="keyPressArea" onkeypress="javascript:updateContent(this)" rows="2" cols="15"></textarea>
+        <textarea id="keyUpArea" onkeyup="javascript:updateContent(this)" rows="2" cols="15"></textarea>
+        <select id="selector" onchange="javascript:updateContent(this)">
+            <option value="foo">Foo</option>
+            <option value="bar">Bar</option>
+        </select>
+        <input type="checkbox" id="checkbox" value="checkbox thing" onchange="javascript:updateContent(this)"/>
+        <input id="clickField" type="text" onclick="document.getElementById('clickField').value='Clicked';" value="Hello"/>
+        <input id="doubleClickField" type="text" onclick="document.getElementById('doubleClickField').value='Clicked';" ondblclick="document.getElementById('doubleClickField').value='DoubleClicked';" oncontextmenu="document.getElementById('doubleClickField').value='ContextClicked'; return false;" value="DoubleHello"/>
+        <input id="clearMe" value="Something" onchange="displayMessage('Cleared')"/>
+        <input type="text" id="notDisplayed" style="display: none">
+    </form>
+</div>
+
+<div>
+    <form>
+        <input type="text" id="keyReporter" size="80"
+               onkeyup="appendMessage('up: ' + event.keyCode)"
+               onkeypress="appendMessage('press: ' + event.keyCode)"
+               onkeydown="displayMessage(''); appendMessage('down: ' + event.keyCode)" />
+        <input name="suppress" onkeydown="if (event.preventDefault) event.preventDefault(); event.returnValue = false; return false;" onkeypress="appendMessage('press');"/>
+    </form>
+</div>
+
+</body>
+</html>
