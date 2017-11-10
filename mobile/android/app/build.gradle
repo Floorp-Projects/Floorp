@@ -5,6 +5,8 @@ apply plugin: 'checkstyle'
 apply plugin: 'com.getkeepsafe.dexcount'
 apply plugin: 'findbugs'
 
+apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
+
 dexcount {
     format = "tree"
 }
@@ -83,35 +85,13 @@ android {
     // want to develop significant new user interface pieces in-tree that don't ship (even in the
     // Nightly channel) while under development.  A new "skin" flavour allows us to develop such
     // pieces in Gradle without changing the mainline configuration.
-    flavorDimensions "audience", "skin"
+
+    project.configureProductFlavors.delegate = it
+    project.configureProductFlavors()
+
+    flavorDimensions "audience", "geckoBinaries", "minApi", "skin"
 
     productFlavors {
-        // For API 21+ - with pre-dexing, this will be faster for local development.
-        local {
-            dimension "audience"
-
-            // For pre-dexing, setting `minSdkVersion 21` allows the Android gradle plugin to
-            // pre-DEX each module and produce an APK that can be tested on
-            // Android Lollipop without time consuming DEX merging processes.
-            minSdkVersion 21
-            dexOptions {
-                preDexLibraries true
-            }
-        }
-        // For API < 21 - does not support pre-dexing because local development
-        // is slow in that case.
-        localOld {
-            dimension "audience"
-        }
-
-        // Automation builds.  We use "official" rather than "automation" to drive these builds down
-        // the list of configurations that Android Studio offers, thereby making it _not_ the
-        // default.  This avoids a common issue with "omni.ja" not being packed into the default APK
-        // built and deployed by Android Studio.
-        official {
-             dimension "audience"
-        }
-
         // Since Firefox 57, the mobile user interface has followed the Photon design.
         // Before Firefox 57, the user interface followed the Australis design.
         photon {
@@ -251,16 +231,11 @@ dependencies {
         implementation "com.google.android.gms:play-services-measurement:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
     }
 
-    // Include LeakCanary in most gradle based builds. LeakCanary adds about 5k methods, so we disable
-    // it for the (non-proguarded, non-predex) localOld builds to allow space for other libraries.
-    // Gradle based tests include the no-op version.  Mach based builds only include the no-op version
-    // of this library.
-    // It doesn't seem like there is a non-trivial way to be conditional on 'localOld', so instead we explicitly
-    // define a version of leakcanary for every flavor:
-    localImplementation 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
-    localOldImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
-    officialImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
-    officialImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
+    // Include LeakCanary in most gradle based builds.  Gradle based tests
+    // include the no-op version.  Mach based builds only include the no-op
+    // version of this library.
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
+    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
     testImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
 
     implementation project(path: ':geckoview')
@@ -361,18 +336,15 @@ android.applicationVariants.all { variant ->
         rewriteManifestPackage.dependsOn rootProject.generateCodeAndResources
     }
 
-    // Official automation builds don't include Gecko binaries, since those binaries are not
-    // produced until after build time (at package time).  official Therefore, automation builds
-    // include the Gecko binaries into the APK at package time.  The "withGeckoBinaries" variant of
-    // the :geckoview project also does this.  (It does what it says on the tin!)  For notes on this
-    // approach, see mobile/android/gradle/with_gecko_binaries.gradle.
-
-    // Like 'local' or 'localOld'.
-    def audienceDimension = variant.productFlavors[0].name
-
-    // :app uses :geckoview:release and handles it's own Gecko binary inclusion,
-    // even though this would be most naturally done in the :geckoview project.
-    if (!audienceDimension.equals('official')) {
+    // When driven from moz.build via |mach build|, Gradle does not require or
+    // use Gecko binaries.  It's only |mach package| that packs the Gecko
+    // binaries into the resulting APK.  The "withoutGeckoBinaries" variants
+    // handle this.  When driven from Android Studio or Gradle, the
+    // "withGeckoBinaries" variants handle packing the Gecko binaries into the
+    // resulting APK (for on-device deployment).  They also update the Omnijars
+    // as necessary, smoothing out the edit-compile-test development cycle.
+    // They do what they say on the tin!
+    if ((variant.productFlavors*.name).contains('withGeckoBinaries')) {
         configureVariantWithGeckoBinaries(variant)
     }
 }
