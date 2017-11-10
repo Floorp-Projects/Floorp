@@ -58,10 +58,6 @@ include $(OBJDIR)/.mozconfig-client-mk
 # of mozconfig output lines.
 MOZCONFIG_OUT_LINES := $(subst $(CR), ,$(subst $(NULL) $(NULL),||,$(MOZCONFIG_CONTENT)))
 
-ifdef AUTOCLOBBER
-export AUTOCLOBBER=1
-endif
-
 ifdef MOZ_PARALLEL_BUILD
   MOZ_MAKE_FLAGS := $(filter-out -j%,$(MOZ_MAKE_FLAGS))
   MOZ_MAKE_FLAGS += -j$(MOZ_PARALLEL_BUILD)
@@ -101,7 +97,7 @@ endif
 
 # For now, only output "export" lines and lines containing UPLOAD_EXTRA_FILES.
 MOZCONFIG_MK_LINES := $(filter export||% UPLOAD_EXTRA_FILES% %UPLOAD_EXTRA_FILES%,$(MOZCONFIG_OUT_LINES))
-$(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG) $(OBJDIR)/CLOBBER
+$(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG)
 	$(if $(MOZCONFIG_MK_LINES),( $(foreach line,$(MOZCONFIG_MK_LINES), echo '$(subst ||, ,$(line))';) )) > $@
 
 # Include that makefile so that it is created. This should not actually change
@@ -153,7 +149,6 @@ $(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
 CONFIG_STATUS_DEPS := \
   $(wildcard $(TOPSRCDIR)/*/confvars.sh) \
   $(CONFIGURES) \
-  $(TOPSRCDIR)/CLOBBER \
   $(TOPSRCDIR)/nsprpub/configure \
   $(TOPSRCDIR)/config/milestone.txt \
   $(TOPSRCDIR)/browser/config/version.txt \
@@ -181,14 +176,9 @@ else
   CONFIGURE = $(TOPSRCDIR)/configure
 endif
 
-$(OBJDIR)/CLOBBER: $(TOPSRCDIR)/CLOBBER
-	$(PYTHON) $(TOPSRCDIR)/config/pythonpath.py -I $(TOPSRCDIR)/testing/mozbase/mozfile \
-	    $(TOPSRCDIR)/python/mozbuild/mozbuild/controller/clobber.py $(TOPSRCDIR) $(OBJDIR)
-
 configure-files: $(CONFIGURES)
 
 configure-preqs = \
-  $(OBJDIR)/CLOBBER \
   configure-files \
   save-mozconfig \
   $(OBJDIR)/.mozconfig.json \
