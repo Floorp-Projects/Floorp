@@ -3127,8 +3127,8 @@ pref("layout.display-list.dump-content", false);
 pref("layout.display-list.dump-parent", false);
 
 // Toggle retaining display lists between paints
-#ifdef ANDROID
-pref("layout.display-list.retain", false);
+#if !defined(ANDROID) && defined(NIGHTLY_BUILD)
+pref("layout.display-list.retain", true);
 #else
 pref("layout.display-list.retain", false);
 #endif
