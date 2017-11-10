@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
   <string name="action_cancel">Duyichin\'</string>
-  <string name="action_ok">ga\'ue</string>
+  <string name="action_ok">Ga\'ue</string>
   <string name="urlbar_hint">Gachrun nuguan\' ruhuât nanà\'uìt</string>
   <string name="teaser">Gache nu huì\' nanûn man\'an. Ni\'iaj. Nadure\'. yakaj da\'nga\' ñû.</string>
   <string name="feedback_erase">Gisij ganare\' nej nuguan\' garajsunt nga gaché nunt.</string>
@@ -35,16 +35,24 @@
   <string name="preference_privacy_block_analytics_summary">Si sunj huin nagi\'iaj chrej, nadigi\'ñunj daj unanj ma</string>
   <string name="preference_privacy_block_social">Si gâ\'nïnjt nej blokeador sosial</string>
   <string name="preference_privacy_block_content">Si gâ\'nïnt a\'ngô nej sa ni\'iaj sa \'iát</string>
+  <string name="preference_privacy_block_content_summary2">Si ganachunt man, ni gahuin ni si gi\'iaj sun hue\'e da\'aj pagina</string>
   <string name="preference_privacy_secure_mode">Dugumî sa achrûnt</string>
   <string name="preference_privacy_stealth_summary">Nagi\'iaj huì nej pâjina si ruhuât garasunt a\'ngô app</string>
   <string name="preference_category_performance">suun</string>
   <string name="preference_performance_block_webfonts">Nará riña nej yi\'nïn\' web</string>
   <string name="preference_performance_block_webfonts_summary">Ga\'ue narugui\'ìj riña a\'ngô ikono</string>
   <string name="preference_performance_block_images">Si ga\'nïnjt gahui imâjen</string>
+  <string name="preference_default_browser2">Nagi\'iaj %1$s da\' garasun yitïnjt</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Ga\'nïnj nej datô arâj sunt</string>
   <string name="preference_mozilla_telemetry_summary">Gini\'in doj rayi\'î na</string>
+  <string name="preference_mozilla_telemetry_summary2">Ûta ‘iaj nukuaj Mozilla man’an da’ gā hue’ê nej sa narikïj %1$s da’ garasun daran’ nê’.</string>
+  <string name="preference_privacy_notice">Noticia huìi</string>
   <string name="preference_about">Rayi\'î %1$s</string>
-  <string name="preference_search_remove_title">Nadure\'\' sa nana\'ui\'</string>
+  <string name="preference_search_installed_search_engines">Nej sa nana\'ui\'t gà\' nikajt</string>
+  <string name="preference_search_restore">Nagi\'iaj nakà nû nej sa nana\'uî\'t gà\' nikajt</string>
+  <string name="preference_search_add2">Nachrun\' \'ngo sa huin ruhuô\' nanà\'uì\'</string>
+  <string name="preference_search_remove_title">Nadure\' sa nana\'ui\'</string>
   <string name="preference_search_remove">Nadure\'</string>
   <string name="tutorial_search_manually_add">Nuta\' mu\'un\'</string>
   <string name="tutorial_search_title">Nutò\' a\'ngô sa ruguñu\'unj ñù\' nana\'uì\'</string>
