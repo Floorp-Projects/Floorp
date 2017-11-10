@@ -78,7 +78,7 @@ function TabboxPanel({
         id: PANELS.RESPONSE,
         title: RESPONSE_TITLE,
       },
-        ResponsePanel({ request, openLink, connector }),
+        ResponsePanel({ request, openLink }),
       ),
       TabPanel({
         id: PANELS.TIMINGS,

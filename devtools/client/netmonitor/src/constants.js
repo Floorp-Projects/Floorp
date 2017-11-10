@@ -124,7 +124,6 @@ const UPDATE_PROPS = [
   "responseHeaders",
   "responseCookies",
   "responseContent",
-  "responseContentAvailable",
   "responseContentDataUri",
   "formDataSections",
 ];

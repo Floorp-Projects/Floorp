@@ -31,16 +31,10 @@
 
       // Use a count parameter to defeat caching.
       let count = 0;
-      let doRequests = true;
-      function stopRequests() { // eslint-disable-line no-unused-vars
-        doRequests = false;
-      }
 
       (function performRequests() {
         get("request_" + (count++), function () {
-          if (doRequests) {
-            setTimeout(performRequests, 50);
-          }
+          setTimeout(performRequests, 50);
         });
       })();
     </script>
