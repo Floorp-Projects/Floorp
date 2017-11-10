@@ -1651,15 +1651,19 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   }
 
   // Smart splitting rules
-  NS_ENSURE_TRUE(aSelection.GetRangeAt(0) &&
-                 aSelection.GetRangeAt(0)->GetStartContainer(),
-                 NS_ERROR_FAILURE);
-  OwningNonNull<nsINode> node = *aSelection.GetRangeAt(0)->GetStartContainer();
-  nsIContent* child = aSelection.GetRangeAt(0)->GetChildAtStartOffset();
-  int32_t offset = aSelection.GetRangeAt(0)->StartOffset();
+  nsRange* firstRange = aSelection.GetRangeAt(0);
+  if (NS_WARN_IF(!firstRange)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  EditorDOMPoint atStartOfSelection(firstRange->StartRef());
+  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
   // Do nothing if the node is read-only
-  if (!htmlEditor->IsModifiableNode(node)) {
+  if (!htmlEditor->IsModifiableNode(atStartOfSelection.Container())) {
     *aCancel = true;
     return NS_OK;
   }
@@ -1675,7 +1679,8 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   // Look for the nearest parent block.  However, don't return error even if
   // there is no block parent here because in such case, i.e., editing host
   // is an inline element, we should insert <br> simply.
-  RefPtr<Element> blockParent = HTMLEditor::GetBlock(node, host);
+  RefPtr<Element> blockParent =
+    HTMLEditor::GetBlock(*atStartOfSelection.Container(), host);
 
   ParagraphSeparator separator = htmlEditor->GetDefaultParagraphSeparator();
   bool insertBRElement;
@@ -1712,7 +1717,8 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   // If we cannot insert a <p>/<div> element at the selection, we should insert
   // a <br> element instead.
   if (insertBRElement) {
-    nsresult rv = StandardBreakImpl(node, offset, aSelection);
+    nsresult rv = StandardBreakImpl(*atStartOfSelection.Container(),
+                                    atStartOfSelection.Offset(), aSelection);
     NS_ENSURE_SUCCESS(rv, rv);
     *aHandled = true;
     return NS_OK;
@@ -1729,22 +1735,25 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditRules::MakeBasicBlock() failed");
 
-    // Reinitialize node/offset in case they're not inside the new block
-    if (NS_WARN_IF(!aSelection.GetRangeAt(0) ||
-                   !aSelection.GetRangeAt(0)->GetStartContainer())) {
+    firstRange = aSelection.GetRangeAt(0);
+    if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }
-    node = *aSelection.GetRangeAt(0)->GetStartContainer();
-    child = aSelection.GetRangeAt(0)->GetChildAtStartOffset();
-    offset = aSelection.GetRangeAt(0)->StartOffset();
 
-    blockParent = mHTMLEditor->GetBlock(node, host);
+    atStartOfSelection = firstRange->StartRef();
+    if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+      return NS_ERROR_FAILURE;
+    }
+    MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
+
+    blockParent = mHTMLEditor->GetBlock(*atStartOfSelection.Container(), host);
     if (NS_WARN_IF(!blockParent)) {
       return NS_ERROR_UNEXPECTED;
     }
     if (NS_WARN_IF(blockParent == host)) {
       // Didn't create a new block for some reason, fall back to <br>
-      rv = StandardBreakImpl(node, offset, aSelection);
+      rv = StandardBreakImpl(*atStartOfSelection.Container(),
+                             atStartOfSelection.Offset(), aSelection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1767,15 +1776,20 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
 
   nsCOMPtr<Element> listItem = IsInListItem(blockParent);
   if (listItem && listItem != host) {
-    ReturnInListItem(aSelection, *listItem, node, offset);
-    *aHandled = true;
-    return NS_OK;
-  } else if (HTMLEditUtils::IsHeader(*blockParent)) {
-    // Headers: close (or split) header
-    ReturnInHeader(aSelection, *blockParent, node, offset);
+    ReturnInListItem(aSelection, *listItem, *atStartOfSelection.Container(),
+                     atStartOfSelection.Offset());
     *aHandled = true;
     return NS_OK;
   }
+
+  if (HTMLEditUtils::IsHeader(*blockParent)) {
+    // Headers: close (or split) header
+    ReturnInHeader(aSelection, *blockParent, *atStartOfSelection.Container(),
+                   atStartOfSelection.Offset());
+    *aHandled = true;
+    return NS_OK;
+  }
+
   // XXX Ideally, we should take same behavior with both <p> container and
   //     <div> container.  However, we are still using <br> as default
   //     paragraph separator (non-standard) and we've split only <p> container
@@ -1783,13 +1797,16 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   //     Gmail.  So, let's use traditional odd behavior only when the default
   //     paragraph separator is <br>.  Otherwise, take consistent behavior
   //     between <p> container and <div> container.
-  else if ((separator == ParagraphSeparator::br &&
-            blockParent->IsHTMLElement(nsGkAtoms::p)) ||
-           (separator != ParagraphSeparator::br &&
-            blockParent->IsAnyOfHTMLElements(nsGkAtoms::p, nsGkAtoms::div))) {
+  if ((separator == ParagraphSeparator::br &&
+       blockParent->IsHTMLElement(nsGkAtoms::p)) ||
+      (separator != ParagraphSeparator::br &&
+       blockParent->IsAnyOfHTMLElements(nsGkAtoms::p, nsGkAtoms::div))) {
     // Paragraphs: special rules to look for <br>s
     EditActionResult result =
-      ReturnInParagraph(aSelection, *blockParent, node, offset, child);
+      ReturnInParagraph(aSelection, *blockParent,
+                        atStartOfSelection.Container(),
+                        atStartOfSelection.Offset(),
+                        atStartOfSelection.GetChildAtOffset());
     if (NS_WARN_IF(result.Failed())) {
       return result.Rv();
     }
@@ -1801,7 +1818,8 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   // If not already handled then do the standard thing
   if (!(*aHandled)) {
     *aHandled = true;
-    return StandardBreakImpl(node, offset, aSelection);
+    return StandardBreakImpl(*atStartOfSelection.Container(),
+                             atStartOfSelection.Offset(), aSelection);
   }
   return NS_OK;
 }
