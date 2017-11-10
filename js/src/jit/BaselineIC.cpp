@@ -1270,7 +1270,7 @@ DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
     FallbackICSpew(cx, stub, "In");
 
     if (!objValue.isObject()) {
-        ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, objValue, nullptr);
+        ReportInNotObjectError(cx, key, -2, objValue, -1);
         return false;
     }
 

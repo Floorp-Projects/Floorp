@@ -1154,7 +1154,7 @@ def webrtc_default(target):
             os_match = True
 
     cpu_match = False
-    if (target.cpu in ('x86_64', 'arm', 'aarch64', 'x86', 'ia64') or
+    if (target.cpu in ('x86_64', 'arm', 'aarch64', 'x86', 'ia64', 'mips32', 'mips64') or
         target.cpu.startswith('ppc')):
         cpu_match = True
 

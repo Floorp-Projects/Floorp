@@ -552,6 +552,9 @@ ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandlePropertyNam
 void
 ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandleScript script, jsbytecode* pc);
 
+void
+ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex, HandleValue rref, int rindex);
+
 // The parser only reports redeclarations that occurs within a single
 // script. Due to the extensibility of the global lexical scope, we also check
 // for redeclarations during runtime in JSOP_DEF{VAR,LET,CONST}.
