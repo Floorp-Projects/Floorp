@@ -14,7 +14,7 @@
 <script class="testbody" type="text/javascript">
 
 function debug(msg) { 
-   ok(1, msg);
+   ok(true, msg);
 }
 
 function createArrayBufferContainingHelloWorld()
@@ -39,9 +39,8 @@ function createArrayBufferContainingAllDistinctBytes()
     return array.buffer;
 }
 
-var ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/websocket_hybi/file_binary-frames");
-ws.binaryType = "arraybuffer";
-is(ws.binaryType, "arraybuffer", "should be equal to 'arraybuffer'");
+var ws = new WebSocket("ws://mochi.test:8888/tests/dom/websocket/tests/websocket_hybi/file_binary-frames");
+is(ws.binaryType, "blob", "should be 'blob'");
 
 var closeEvent;
 var receivedMessages = [];
@@ -56,20 +55,34 @@ ws.onclose = function(event)
 {
     closeEvent = event;
 
-    is(receivedMessages.length, expectedValues.length, "lengths not equal");
-    for (var i = 0; i < expectedValues.length; ++i)
-        check(i);
-    SimpleTest.finish();
+    is(receivedMessages.length, expectedValues.length, "lengths not same");
+    check(0);
 };
 
 var responseType;
 
 function check(index)
 {
+    if (index == expectedValues.length) {
+        SimpleTest.finish();
+        return;
+    }
+
     debug("Checking message #" + index + ".");
-    ok(receivedMessages[index] instanceof ArrayBuffer, 
-       "Should receive an arraybuffer!");
-    checkArrayBuffer(index, receivedMessages[index], expectedValues[index]);
+    ok(receivedMessages[index] instanceof Blob, 
+       "We should be receiving a Blob");
+    var reader = new FileReader();
+    reader.readAsArrayBuffer(receivedMessages[index]);
+    reader.onload = function(event)
+    {
+        checkArrayBuffer(index, reader.result, expectedValues[index]);
+        check(index + 1);
+    };
+    reader.onerror = function(event)
+    {
+        ok(false, "Failed to read blob: error code = " + reader.error.code);
+        check(index + 1);
+    };
 }
 
 var actualArray;
@@ -79,7 +92,7 @@ function checkArrayBuffer(testIndex, actual, expected)
 {
     actualArray = new Uint8Array(actual);
     expectedArray = new Uint8Array(expected);
-    is(actualArray.length, expectedArray.length, "lengths not equal");
+    is(actualArray.length, expectedArray.length, "lengths not same");
     // Print only the first mismatched byte in order not to flood console.
     for (var i = 0; i < expectedArray.length; ++i) {
         if (actualArray[i] != expectedArray[i]) {

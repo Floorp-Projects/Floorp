@@ -23,7 +23,7 @@ function test_frameset() {
 }
 
 function test_window() {
-  var win = window.open("http://example.com/tests/dom/base/test/window_bug1384658.html",
+  var win = window.open("http://example.com/tests/dom/websocket/tests/window_bug1384658.html",
                         "_blank", "width=100,height=100");
   var bc = new BroadcastChannel("test_channel");
   bc.onmessage = ev => {
