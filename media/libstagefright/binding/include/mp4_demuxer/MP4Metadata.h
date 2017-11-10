@@ -17,9 +17,6 @@
 
 namespace mp4_demuxer {
 
-class MP4MetadataStagefright;
-class MP4MetadataRust;
-
 class IndiceWrapper {
 public:
   virtual size_t Length() const = 0;
@@ -29,6 +26,26 @@ public:
   virtual bool GetIndice(size_t aIndex, Index::Indice& aIndice) const = 0;
 
   virtual ~IndiceWrapper() {}
+};
+
+struct FreeMP4Parser { void operator()(mp4parse_parser* aPtr) { mp4parse_free(aPtr); } };
+
+// Wrap an mp4_demuxer::Stream to remember the read offset.
+class StreamAdaptor {
+public:
+  explicit StreamAdaptor(Stream* aSource)
+    : mSource(aSource)
+    , mOffset(0)
+  {
+  }
+
+  ~StreamAdaptor() {}
+
+  bool Read(uint8_t* buffer, uintptr_t size, size_t* bytes_read);
+
+private:
+  Stream* mSource;
+  CheckedInt<size_t> mOffset;
 };
 
 class MP4Metadata
@@ -74,19 +91,22 @@ public:
 
   bool CanSeek() const;
 
-  nsresult Parse() const;
-
   using ResultAndCryptoFile = ResultAndType<const CryptoFile*>;
   ResultAndCryptoFile Crypto() const;
 
   using ResultAndIndice = ResultAndType<mozilla::UniquePtr<IndiceWrapper>>;
   ResultAndIndice GetTrackIndice(mozilla::TrackID aTrackID);
 
+  nsresult Parse();
+
 private:
-  UniquePtr<MP4MetadataRust> mRust;
-  mutable bool mReportedAudioTrackTelemetry;
-  mutable bool mReportedVideoTrackTelemetry;
-  bool ShouldPreferRust() const;
+  void UpdateCrypto();
+  Maybe<uint32_t> TrackTypeToGlobalTrackIndex(mozilla::TrackInfo::TrackType aType, size_t aTrackNumber) const;
+
+  CryptoFile mCrypto;
+  RefPtr<Stream> mSource;
+  StreamAdaptor mSourceAdaptor;
+  mozilla::UniquePtr<mp4parse_parser, FreeMP4Parser> mParser;
 };
 
 } // namespace mp4_demuxer
