@@ -3097,7 +3097,7 @@ struct CreateGlobalOptions
 };
 
 template <>
-struct CreateGlobalOptions<nsGlobalWindow>
+struct CreateGlobalOptions<nsGlobalWindowInner>
 {
   static constexpr ProtoAndIfaceCache::Kind ProtoAndIfaceCacheKind =
     ProtoAndIfaceCache::WindowLike;

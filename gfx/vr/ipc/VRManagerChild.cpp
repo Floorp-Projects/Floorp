@@ -244,7 +244,8 @@ VRManagerChild::RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates)
      * can resolve.  This must happen even if no changes
      * to VRDisplays have been detected here.
      */
-    nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(windowId);
+    nsGlobalWindowInner* window =
+      nsGlobalWindowInner::GetInnerWindowWithId(windowId);
     if (!window) {
       continue;
     }

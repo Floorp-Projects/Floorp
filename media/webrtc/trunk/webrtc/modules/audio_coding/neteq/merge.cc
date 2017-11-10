@@ -211,6 +211,12 @@ int16_t Merge::SignalScaling(const int16_t* input, size_t input_length,
   // Adjust muting factor if new vector is more or less of the BGN energy.
   const size_t mod_input_length =
       std::min(static_cast<size_t>(64 * fs_mult_), input_length);
+
+  // Missing input, do no muting
+  if (mod_input_length == 0) {
+    return 16384;
+  }
+
   const int16_t expanded_max =
       WebRtcSpl_MaxAbsValueW16(expanded_signal, mod_input_length);
   int32_t factor = (expanded_max * expanded_max) /

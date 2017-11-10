@@ -690,7 +690,7 @@ class PCDispatchWrapper : public nsSupportsWeakReference
   }
 
   NS_IMETHODIMP Initialize(TestObserver* aObserver,
-                           nsGlobalWindow* aWindow,
+                           nsGlobalWindowInner* aWindow,
                            const PeerConnectionConfiguration& aConfiguration,
                            nsIThread* aThread) {
     nsresult rv;

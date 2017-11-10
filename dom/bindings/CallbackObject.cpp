@@ -182,7 +182,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
     // Now get the global for this callback. Note that for the case of
     // JS-implemented WebIDL we never have a window here.
-    nsGlobalWindow* win = mIsMainThread && !aIsJSImplementedWebIDL
+    nsGlobalWindowInner* win = mIsMainThread && !aIsJSImplementedWebIDL
                             ? xpc::WindowGlobalOrNull(realCallback)
                             : nullptr;
     if (win) {

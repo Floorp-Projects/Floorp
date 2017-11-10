@@ -12,7 +12,7 @@
 
 class nsIEventTarget;
 class nsITimeoutHandler;
-class nsGlobalWindow;
+class nsGlobalWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -24,7 +24,7 @@ class TimeoutExecutor;
 class TimeoutManager final
 {
 public:
-  explicit TimeoutManager(nsGlobalWindow& aWindow);
+  explicit TimeoutManager(nsGlobalWindowInner& aWindow);
   ~TimeoutManager();
   TimeoutManager(const TimeoutManager& rhs) = delete;
   void operator=(const TimeoutManager& rhs) = delete;
@@ -215,9 +215,9 @@ private:
 
   friend class OrderedTimeoutIterator;
 
-  // Each nsGlobalWindow object has a TimeoutManager member.  This reference
+  // Each nsGlobalWindowInner object has a TimeoutManager member.  This reference
   // points to that holder object.
-  nsGlobalWindow&             mWindow;
+  nsGlobalWindowInner&             mWindow;
   // The executor is specific to the nsGlobalWindow/TimeoutManager, but it
   // can live past the destruction of the window if its scheduled.  Therefore
   // it must be a separate ref-counted object.

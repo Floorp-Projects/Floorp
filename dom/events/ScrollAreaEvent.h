@@ -63,7 +63,7 @@ public:
   void InitScrollAreaEvent(const nsAString& aType,
                            bool aCanBubble,
                            bool aCancelable,
-                           nsGlobalWindow* aView,
+                           nsGlobalWindowInner* aView,
                            int32_t aDetail,
                            float aX, float aY,
                            float aWidth, float aHeight);

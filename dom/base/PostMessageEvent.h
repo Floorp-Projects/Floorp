@@ -13,7 +13,8 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
-class nsGlobalWindow;
+class nsGlobalWindowOuter;
+class nsGlobalWindowInner;
 class nsIDocument;
 class nsIPrincipal;
 
@@ -30,9 +31,9 @@ class PostMessageEvent final : public Runnable
 public:
   NS_DECL_NSIRUNNABLE
 
-  PostMessageEvent(nsGlobalWindow* aSource,
+  PostMessageEvent(nsGlobalWindowOuter* aSource,
                    const nsAString& aCallerOrigin,
-                   nsGlobalWindow* aTargetWindow,
+                   nsGlobalWindowOuter* aTargetWindow,
                    nsIPrincipal* aProvidedPrincipal,
                    nsIDocument* aSourceDocument,
                    bool aTrustedCaller);
@@ -41,15 +42,15 @@ private:
   ~PostMessageEvent();
 
   void
-  Dispatch(nsGlobalWindow* aTargetWindow, Event* aEvent);
+  Dispatch(nsGlobalWindowInner* aTargetWindow, Event* aEvent);
 
   void
-  DispatchError(JSContext* aCx, nsGlobalWindow* aTargetWindow,
+  DispatchError(JSContext* aCx, nsGlobalWindowInner* aTargetWindow,
                 mozilla::dom::EventTarget* aEventTarget);
 
-  RefPtr<nsGlobalWindow> mSource;
+  RefPtr<nsGlobalWindowOuter> mSource;
   nsString mCallerOrigin;
-  RefPtr<nsGlobalWindow> mTargetWindow;
+  RefPtr<nsGlobalWindowOuter> mTargetWindow;
   nsCOMPtr<nsIPrincipal> mProvidedPrincipal;
   nsCOMPtr<nsIDocument> mSourceDocument;
   bool mTrustedCaller;

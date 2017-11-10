@@ -345,7 +345,7 @@ void
 KeyboardEvent::InitKeyboardEvent(const nsAString& aType,
                                  bool aCanBubble,
                                  bool aCancelable,
-                                 nsGlobalWindow* aView,
+                                 nsGlobalWindowInner* aView,
                                  const nsAString& aKey,
                                  uint32_t aLocation,
                                  bool aCtrlKey,

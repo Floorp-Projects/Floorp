@@ -74,8 +74,6 @@ private:
     mCurrentCombinedClipChainIsValid = false;
   }
 
-  void ClearUpToASR(const ActiveScrolledRoot* aASR);
-
   void SetClipChainForContainingBlockDescendants(const DisplayItemClipChain* aClipChain)
   {
     mClipChainContainingBlockDescendants = aClipChain;
@@ -167,15 +165,6 @@ public:
   {
     NS_ASSERTION(!mRestored, "Already restored!");
     mState.Clear();
-#ifdef DEBUG
-    mClipUsed = false;
-#endif
-  }
-
-  void ClearUpToASR(const ActiveScrolledRoot* aASR)
-  {
-    NS_ASSERTION(!mRestored, "Already restored!");
-    mState.ClearUpToASR(aASR);
 #ifdef DEBUG
     mClipUsed = false;
 #endif

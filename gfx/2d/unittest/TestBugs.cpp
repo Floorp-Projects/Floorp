@@ -61,9 +61,11 @@ TestBugs::CairoClip918671()
   RefPtr<DataSourceSurface> dataSurf1 = surf1->GetDataSurface();
   RefPtr<DataSourceSurface> dataSurf2 = surf2->GetDataSurface();
 
+  DataSourceSurface::ScopedMap map1(dataSurf1, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap map2(dataSurf2, DataSourceSurface::READ);
   for (int y = 0; y < dt->GetSize().height; y++) {
-    VERIFY(memcmp(dataSurf1->GetData() + y * dataSurf1->Stride(),
-                  dataSurf2->GetData() + y * dataSurf2->Stride(),
+    VERIFY(memcmp(map1.GetData() + y * map1.GetStride(),
+                  map2.GetData() + y * map2.GetStride(),
                   dataSurf1->GetSize().width * 4) == 0);
   }
 

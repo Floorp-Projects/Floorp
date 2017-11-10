@@ -188,7 +188,7 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
     return promise.forget();
   }
 
-  RefPtr<Navigator> navigator = nsGlobalWindow::Cast(GetOwner())->Navigator();
+  RefPtr<Navigator> navigator = nsGlobalWindowInner::Cast(GetOwner())->Navigator();
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -488,7 +488,7 @@ PresentationRequest::NotifyPromiseSettled()
     return;
   }
 
-  RefPtr<Navigator> navigator = nsGlobalWindow::Cast(GetOwner())->Navigator();
+  RefPtr<Navigator> navigator = nsGlobalWindowInner::Cast(GetOwner())->Navigator();
   if (!navigator) {
     return;
   }

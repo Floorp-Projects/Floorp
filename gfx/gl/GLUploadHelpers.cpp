@@ -539,10 +539,10 @@ UploadSurfaceToTexture(GLContext* gl,
                        GLenum aTextureUnit,
                        GLenum aTextureTarget)
 {
-
-    int32_t stride = aSurface->Stride();
+    DataSourceSurface::ScopedMap map(aSurface, DataSourceSurface::READ);
+    int32_t stride = map.GetStride();
     SurfaceFormat format = aSurface->GetFormat();
-    unsigned char* data = aSurface->GetData() +
+    unsigned char* data = map.GetData() +
         DataOffset(aSrcPoint, stride, format);
 
     return UploadImageDataToTexture(gl, data, stride, format,

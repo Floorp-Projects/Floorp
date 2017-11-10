@@ -46,8 +46,8 @@ const char* kGamepadEnabledPref = "dom.gamepad.enabled";
 const char* kGamepadEventsEnabledPref =
   "dom.gamepad.non_standard_events.enabled";
 
-const nsTArray<RefPtr<nsGlobalWindow>>::index_type NoIndex =
-  nsTArray<RefPtr<nsGlobalWindow>>::NoIndex;
+const nsTArray<RefPtr<nsGlobalWindowInner>>::index_type NoIndex =
+  nsTArray<RefPtr<nsGlobalWindowInner>>::NoIndex;
 
 bool sShutdown = false;
 
@@ -132,7 +132,7 @@ GamepadManager::BeginShutdown()
 }
 
 void
-GamepadManager::AddListener(nsGlobalWindow* aWindow)
+GamepadManager::AddListener(nsGlobalWindowInner* aWindow)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsInnerWindow());
@@ -178,7 +178,7 @@ GamepadManager::AddListener(nsGlobalWindow* aWindow)
 }
 
 void
-GamepadManager::RemoveListener(nsGlobalWindow* aWindow)
+GamepadManager::RemoveListener(nsGlobalWindowInner* aWindow)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsInnerWindow());
@@ -349,7 +349,7 @@ GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected)
 
   // Hold on to listeners in a separate array because firing events
   // can mutate the mListeners array.
-  nsTArray<RefPtr<nsGlobalWindow>> listeners(mListeners);
+  nsTArray<RefPtr<nsGlobalWindowInner>> listeners(mListeners);
 
   if (aConnected) {
     for (uint32_t i = 0; i < listeners.Length(); i++) {
@@ -468,7 +468,7 @@ GamepadManager::IsAPIEnabled() {
 }
 
 bool
-GamepadManager::MaybeWindowHasSeenGamepad(nsGlobalWindow* aWindow, uint32_t aIndex)
+GamepadManager::MaybeWindowHasSeenGamepad(nsGlobalWindowInner* aWindow, uint32_t aIndex)
 {
   if (!WindowHasSeenGamepad(aWindow, aIndex)) {
     // This window hasn't seen this gamepad before, so
@@ -480,14 +480,14 @@ GamepadManager::MaybeWindowHasSeenGamepad(nsGlobalWindow* aWindow, uint32_t aInd
 }
 
 bool
-GamepadManager::WindowHasSeenGamepad(nsGlobalWindow* aWindow, uint32_t aIndex) const
+GamepadManager::WindowHasSeenGamepad(nsGlobalWindowInner* aWindow, uint32_t aIndex) const
 {
   RefPtr<Gamepad> gamepad = aWindow->GetGamepad(aIndex);
   return gamepad != nullptr;
 }
 
 void
-GamepadManager::SetWindowHasSeenGamepad(nsGlobalWindow* aWindow,
+GamepadManager::SetWindowHasSeenGamepad(nsGlobalWindowInner* aWindow,
                                         uint32_t aIndex,
                                         bool aHasSeen)
 {
@@ -546,7 +546,7 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
 
   // Hold on to listeners in a separate array because firing events
   // can mutate the mListeners array.
-  nsTArray<RefPtr<nsGlobalWindow>> listeners(mListeners);
+  nsTArray<RefPtr<nsGlobalWindowInner>> listeners(mListeners);
 
   for (uint32_t i = 0; i < listeners.Length(); i++) {
     MOZ_ASSERT(listeners[i]->IsInnerWindow());
@@ -564,7 +564,7 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
 
 void
 GamepadManager::MaybeConvertToNonstandardGamepadEvent(const GamepadChangeEvent& aEvent,
-                                                      nsGlobalWindow* aWindow)
+                                                      nsGlobalWindowInner* aWindow)
 {
   MOZ_ASSERT(aWindow);
 
@@ -598,7 +598,7 @@ GamepadManager::MaybeConvertToNonstandardGamepadEvent(const GamepadChangeEvent& 
 }
 
 bool
-GamepadManager::SetGamepadByEvent(const GamepadChangeEvent& aEvent, nsGlobalWindow *aWindow)
+GamepadManager::SetGamepadByEvent(const GamepadChangeEvent& aEvent, nsGlobalWindowInner *aWindow)
 {
   bool ret = false;
   bool firstTime = false;

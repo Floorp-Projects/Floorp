@@ -10,7 +10,7 @@
 #include "mozilla/dom/VRDisplayEventBinding.h"
 #include "nsISupportsImpl.h" // for NS_INLINE_DECL_REFCOUNTING
 
-class nsGlobalWindow;
+class nsGlobalWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -19,7 +19,7 @@ class VREventObserver final
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(VREventObserver)
-  explicit VREventObserver(nsGlobalWindow* aGlobalWindow);
+  explicit VREventObserver(nsGlobalWindowInner* aGlobalWindow);
 
   void NotifyVRDisplayMounted(uint32_t aDisplayID);
   void NotifyVRDisplayUnmounted(uint32_t aDisplayID);
@@ -35,7 +35,7 @@ public:
 private:
   ~VREventObserver();
 
-  RefPtr<nsGlobalWindow> mWindow;
+  RefPtr<nsGlobalWindowInner> mWindow;
   // For WebVR telemetry for tracking users who view content
   // in the 2D view.
   TimeStamp mSpendTimeIn2DView;

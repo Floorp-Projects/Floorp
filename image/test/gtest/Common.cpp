@@ -187,16 +187,15 @@ RectIsSolidColor(SourceSurface* aSurface,
   RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
   ASSERT_TRUE_OR_RETURN(dataSurface != nullptr, false);
 
-  ASSERT_EQ_OR_RETURN(dataSurface->Stride(), surfaceSize.width * 4, false);
-
   DataSourceSurface::ScopedMap mapping(dataSurface,
                                        DataSourceSurface::MapType::READ);
   ASSERT_TRUE_OR_RETURN(mapping.IsMapped(), false);
+  ASSERT_EQ_OR_RETURN(mapping.GetStride(), surfaceSize.width * 4, false);
 
-  uint8_t* data = dataSurface->GetData();
+  uint8_t* data = mapping.GetData();
   ASSERT_TRUE_OR_RETURN(data != nullptr, false);
 
-  int32_t rowLength = dataSurface->Stride();
+  int32_t rowLength = mapping.GetStride();
   for (int32_t row = rect.y; row < rect.YMost(); ++row) {
     for (int32_t col = rect.x; col < rect.XMost(); ++col) {
       int32_t i = row * rowLength + col * 4;
@@ -268,16 +267,15 @@ RowHasPixels(SourceSurface* aSurface,
   RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
   ASSERT_TRUE_OR_RETURN(dataSurface, false);
 
-  ASSERT_EQ_OR_RETURN(dataSurface->Stride(), surfaceSize.width * 4, false);
-
   DataSourceSurface::ScopedMap mapping(dataSurface,
                                        DataSourceSurface::MapType::READ);
   ASSERT_TRUE_OR_RETURN(mapping.IsMapped(), false);
+  ASSERT_EQ_OR_RETURN(mapping.GetStride(), surfaceSize.width * 4, false);
 
-  uint8_t* data = dataSurface->GetData();
+  uint8_t* data = mapping.GetData();
   ASSERT_TRUE_OR_RETURN(data != nullptr, false);
 
-  int32_t rowLength = dataSurface->Stride();
+  int32_t rowLength = mapping.GetStride();
   for (int32_t col = 0; col < surfaceSize.width; ++col) {
     int32_t i = aRow * rowLength + col * 4;
     ASSERT_EQ_OR_RETURN(aPixels[col].mBlue,  data[i + 0], false);
