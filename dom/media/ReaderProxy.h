@@ -91,6 +91,7 @@ private:
   RefPtr<MetadataPromise> OnMetadataRead(MetadataHolder&& aMetadata);
   RefPtr<MetadataPromise> OnMetadataNotRead(const MediaResult& aError);
   void UpdateDuration();
+  RefPtr<SeekPromise> SeekInternal(const SeekTarget& aTarget);
 
   RefPtr<ReaderProxy::AudioDataPromise> OnAudioDataRequestCompleted(
     RefPtr<AudioData> aAudio);
@@ -108,6 +109,11 @@ private:
 
   // Duration, mirrored from the state machine task queue.
   Mirror<media::NullableTimeUnit> mDuration;
+
+  // The total duration of audio looping in previous rounds.
+  media::TimeUnit mLoopingOffset = media::TimeUnit::Zero();
+  // To keep tracking the latest time of decoded audio data.
+  media::TimeUnit mLastAudioEndTime = media::TimeUnit::Zero();
 
   // To prevent seamless looping while seeking.
   bool mSeamlessLoopingBlocked;
