@@ -46,7 +46,7 @@ static void DisableCrashReporter()
 #define ASSERT_DEATH_WRAP(a, b)
 #endif
 #endif
-q
+
 using namespace mozilla;
 
 static inline void
