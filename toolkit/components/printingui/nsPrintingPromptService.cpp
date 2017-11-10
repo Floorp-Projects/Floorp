@@ -69,6 +69,11 @@ nsPrintingPromptService::ShowProgress(
   NS_ENSURE_ARG(notifyOnOpen);
 
   *notifyOnOpen = false;
+  if (mPrintProgress) {
+    *webProgressListener = nullptr;
+    *printProgressParams = nullptr;
+    return NS_ERROR_FAILURE;
+  }
 
   nsPrintProgress* prtProgress = new nsPrintProgress(printSettings);
   mPrintProgress = prtProgress;
