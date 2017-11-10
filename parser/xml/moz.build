@@ -10,12 +10,9 @@ with Files('**'):
 TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
-    'nsIMozSAXXMLDeclarationHandler.idl',
     'nsISAXAttributes.idl',
     'nsISAXContentHandler.idl',
-    'nsISAXDTDHandler.idl',
     'nsISAXErrorHandler.idl',
-    'nsISAXLexicalHandler.idl',
     'nsISAXLocator.idl',
     'nsISAXMutableAttributes.idl',
     'nsISAXXMLReader.idl',
