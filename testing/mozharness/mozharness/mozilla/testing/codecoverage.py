@@ -5,8 +5,11 @@
 
 import os
 import shutil
+import sys
+import tarfile
 import tempfile
 
+import mozinfo
 from mozharness.base.script import (
     PreScriptAction,
     PostScriptAction,
@@ -94,15 +97,24 @@ class CodeCoverageMixin(object):
         # Create the grcov directory, get the tooltool manifest, and finally
         # download and unpack the grcov binary.
         self.grcov_dir = tempfile.mkdtemp()
+
+        if mozinfo.os == 'linux':
+            platform = 'linux64'
+            tar_file = 'grcov-linux-standalone-x86_64.tar.bz2'
+        elif mozinfo.os == 'win':
+            platform = 'win32'
+            tar_file = 'grcov-win-i686.tar.bz2'
+
         manifest = os.path.join(dirs.get('abs_test_install_dir', os.path.join(dirs['abs_work_dir'], 'tests')), \
-            'config/tooltool-manifests/linux64/ccov.manifest')
+            'config/tooltool-manifests/%s/ccov.manifest' % platform)
 
         tooltool_path = self._fetch_tooltool_py()
-        cmd = [tooltool_path, '--url', 'https://tooltool.mozilla-releng.net/', 'fetch', \
+        cmd = [sys.executable, tooltool_path, '--url', 'https://tooltool.mozilla-releng.net/', 'fetch', \
             '-m', manifest, '-o', '-c', '/builds/worker/tooltool-cache']
         self.run_command(cmd, cwd=self.grcov_dir)
-        self.run_command(['tar', '-jxvf', os.path.join(self.grcov_dir, 'grcov-linux-standalone-x86_64.tar.bz2'), \
-            '-C', self.grcov_dir], cwd=self.grcov_dir)
+
+        with tarfile.open(os.path.join(self.grcov_dir, tar_file)) as tar:
+            tar.extractall(self.grcov_dir)
 
     @PostScriptAction('run-tests')
     def _package_coverage_data(self, action, success=None):
