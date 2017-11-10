@@ -929,13 +929,13 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .webconsole-output-wrapper .message-flex-body > .message-body {
-  display: flex;
-  flex-wrap: wrap;
+  display: inline-block;
   max-width: 100%;
 }
 
 .webconsole-output-wrapper .message-body > * {
   flex-shrink: 0;
+  vertical-align: top;
 }
 
 .message.startGroup .message-body > .objectBox-string,
@@ -1030,6 +1030,7 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .network .message-flex-body > .message-body {
   display: flex;
+  flex-wrap: wrap;
 }
 
 /* Output Wrapper */
@@ -1178,6 +1179,7 @@ body #output-container {
   --tree-indent-width: var(--console-output-indent-width);
   --tree-indent-border-color: var(--console-output-indent-border-color);
   --tree-node-hover-background-color : var(--object-inspector-hover-background);
+  display: inline-block;
 }
 
 .theme-dark .webconsole-output-wrapper .object-inspector.tree {
