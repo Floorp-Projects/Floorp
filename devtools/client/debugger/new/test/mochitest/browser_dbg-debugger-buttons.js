@@ -1,29 +1,19 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function clickButton(dbg, button) {
-  const resumeFired = waitForDispatch(dbg, "COMMAND");
-  clickElement(dbg, button);
-  return resumeFired;
-}
-
-async function clickStepOver(dbg) {
-  await clickButton(dbg, "stepOver");
+function clickStepOver(dbg) {
+  clickElement(dbg, "stepOver");
   return waitForPaused(dbg);
 }
 
-async function clickStepIn(dbg) {
-  await clickButton(dbg, "stepIn");
+function clickStepIn(dbg) {
+  clickElement(dbg, "stepIn");
   return waitForPaused(dbg);
 }
 
-async function clickStepOut(dbg) {
-  await clickButton(dbg, "stepOut");
+function clickStepOut(dbg) {
+  clickElement(dbg, "stepOut");
   return waitForPaused(dbg);
-}
-
-async function clickResume(dbg) {
-  return clickButton(dbg, "resume");
 }
 
 /**
@@ -43,7 +33,7 @@ add_task(async function() {
   assertPausedLocation(dbg);
 
   // resume
-  await clickResume(dbg)
+  clickElement(dbg, "resume");
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
 
