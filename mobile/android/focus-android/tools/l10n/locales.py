@@ -27,7 +27,7 @@ RELEASE_LOCALES = [
 	"bn-BD",
 	"bn-IN",
 	"ca",
-        "cak",
+    "cak",
 	"cs",
 	"cy",
 	"da",
@@ -41,7 +41,7 @@ RELEASE_LOCALES = [
 	"es-MX",
 	"eu",
 	"fa",
-        "fi",
+    "fi",
 	"fr",
 	"fy-NL",
 	"ga-IE",
@@ -49,6 +49,7 @@ RELEASE_LOCALES = [
 	"hsb",
 	"hu",
 	"hy-AM",
+	"ia",
 	"in",
 	"it",
 	"iw",
@@ -58,11 +59,11 @@ RELEASE_LOCALES = [
 	"kk",
 	"ko",
 	"lo",
-        "mix",
+    "mix",
 	"ms",
 	"my",
 	"nb-NO",
-        "ne-NP",
+    "ne-NP",
 	"nl",
 	"nn-NO",
 	"pl",
@@ -78,12 +79,13 @@ RELEASE_LOCALES = [
 	"te",
 	"th",
 	"tr",
-        "trs",
+    "trs",
 	"uk",
 	"ur",
 	"vi",
 	"zh-CN",
-	"zh-TW"
+	"zh-TW",
+	"zam"
 ]
 
 # This is the list of locales that we want to take automated screenshots of
@@ -93,7 +95,6 @@ RELEASE_LOCALES = [
 ADDITIONAL_SCREENSHOT_LOCALES = [
 	"lt",
 	"meh",	
-	"zam",
 ]
 
 # Those are locales that we take automated screenshots of.
