@@ -1057,6 +1057,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
   // Offset from the start of the implicit grid to the first explicit track.
   uint32_t mExplicitGridOffset;
   // The index of the repeat(auto-fill/fit) track, or zero if there is none.
+  // Relative to mExplicitGridOffset (repeat tracks are explicit by definition).
   const uint32_t mRepeatAutoStart;
   // The (hypothetical) index of the last such repeat() track.
   uint32_t mRepeatAutoEnd;
@@ -1065,6 +1066,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
   // True if there is a specified repeat(auto-fill/fit) track.
   const bool mHasRepeatAuto;
   // True if this track (relative to mRepeatAutoStart) is a removed auto-fit.
+  // Indexed relative to mExplicitGridOffset + mRepeatAutoStart.
   nsTArray<bool> mRemovedRepeatTracks;
 };
 
@@ -3295,19 +3297,27 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
   // Count empty 'auto-fit' tracks in the repeat() range.
   // |colAdjust| will have a count for each line in the grid of how many
   // tracks were empty between the start of the grid and that line.
+
+  // Since this loop is concerned with just the repeat tracks, we
+  // iterate from 0..NumRepeatTracks() which is the natural range of
+  // mRemoveRepeatTracks. This means we have to add
+  // (mExplicitGridOffset + mRepeatAutoStart) to get a zero-based
+  // index for arrays like mCellMap and colAdjust. We'll then fill out
+  // the colAdjust array for all the remaining lines.
   Maybe<nsTArray<uint32_t>> colAdjust;
   uint32_t numEmptyCols = 0;
   if (aState.mColFunctions.mHasRepeatAuto &&
       !gridStyle->GridTemplateColumns().mIsAutoFill &&
       aState.mColFunctions.NumRepeatTracks() > 0) {
-    for (uint32_t col = aState.mColFunctions.mRepeatAutoStart,
-           endRepeat = aState.mColFunctions.mRepeatAutoEnd,
-           numColLines = mGridColEnd + 1;
-         col < numColLines; ++col) {
+    const uint32_t repeatStart = (aState.mColFunctions.mExplicitGridOffset +
+                                  aState.mColFunctions.mRepeatAutoStart);
+    const uint32_t numRepeats = aState.mColFunctions.NumRepeatTracks();
+    const uint32_t numColLines = mGridColEnd + 1;
+    for (uint32_t i = 0; i < numRepeats; ++i) {
       if (numEmptyCols) {
-        (*colAdjust)[col] = numEmptyCols;
+        (*colAdjust)[repeatStart + i] = numEmptyCols;
       }
-      if (col < endRepeat && mCellMap.IsEmptyCol(col)) {
+      if (mCellMap.IsEmptyCol(repeatStart + i)) {
         ++numEmptyCols;
         if (colAdjust.isNothing()) {
           colAdjust.emplace(numColLines);
@@ -3315,26 +3325,34 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
           PodZero(colAdjust->Elements(), colAdjust->Length());
         }
 
-        uint32_t repeatIndex = col - aState.mColFunctions.mRepeatAutoStart;
-        MOZ_ASSERT(aState.mColFunctions.mRemovedRepeatTracks.Length() >
-                   repeatIndex);
-        aState.mColFunctions.mRemovedRepeatTracks[repeatIndex] = true;
+        aState.mColFunctions.mRemovedRepeatTracks[i] = true;
+      }
+    }
+    // Fill out the colAdjust array for all the columns after the
+    // repeats.
+    if (numEmptyCols) {
+      for (uint32_t col = repeatStart + numRepeats;
+          col < numColLines; ++col) {
+        (*colAdjust)[col] = numEmptyCols;
       }
     }
   }
+
+  // Do similar work for the row tracks, with the same logic.
   Maybe<nsTArray<uint32_t>> rowAdjust;
   uint32_t numEmptyRows = 0;
   if (aState.mRowFunctions.mHasRepeatAuto &&
       !gridStyle->GridTemplateRows().mIsAutoFill &&
       aState.mRowFunctions.NumRepeatTracks() > 0) {
-    for (uint32_t row = aState.mRowFunctions.mRepeatAutoStart,
-           endRepeat = aState.mRowFunctions.mRepeatAutoEnd,
-           numRowLines = mGridRowEnd + 1;
-         row < numRowLines; ++row) {
+    const uint32_t repeatStart = (aState.mRowFunctions.mExplicitGridOffset +
+                                  aState.mRowFunctions.mRepeatAutoStart);
+    const uint32_t numRepeats = aState.mRowFunctions.NumRepeatTracks();
+    const uint32_t numRowLines = mGridRowEnd + 1;
+    for (uint32_t i = 0; i < numRepeats; ++i) {
       if (numEmptyRows) {
-        (*rowAdjust)[row] = numEmptyRows;
+        (*rowAdjust)[repeatStart + i] = numEmptyRows;
       }
-      if (row < endRepeat && mCellMap.IsEmptyRow(row)) {
+      if (mCellMap.IsEmptyRow(repeatStart + i)) {
         ++numEmptyRows;
         if (rowAdjust.isNothing()) {
           rowAdjust.emplace(numRowLines);
@@ -3342,10 +3360,13 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
           PodZero(rowAdjust->Elements(), rowAdjust->Length());
         }
 
-        uint32_t repeatIndex = row - aState.mRowFunctions.mRepeatAutoStart;
-        MOZ_ASSERT(aState.mRowFunctions.mRemovedRepeatTracks.Length() >
-                   repeatIndex);
-        aState.mRowFunctions.mRemovedRepeatTracks[repeatIndex] = true;
+        aState.mRowFunctions.mRemovedRepeatTracks[i] = true;
+      }
+    }
+    if (numEmptyRows) {
+      for (uint32_t row = repeatStart + numRepeats;
+          row < numRowLines; ++row) {
+        (*rowAdjust)[row] = numEmptyRows;
       }
     }
   }
