@@ -12,7 +12,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.net.Uri
 import android.os.Build
-import android.support.annotation.VisibleForTesting
 import android.support.v4.content.ContextCompat
 import android.util.TypedValue
 
@@ -23,18 +22,26 @@ class IconGenerator {
 
     companion object {
         private val TEXT_SIZE_DP = 36f
-        private val DEFAULT_ICON_CHAR = "?"
+        private val DEFAULT_ICON_CHAR = '?'
 
         /**
-         * Use the given raw website icon and generate a launcher icon from it. If the given icon is null
-         * or too small then an icon will be generated based on the website's URL. The icon will be drawn
+         * See [generateAdaptiveLauncherIcon] for more details.
+         */
+        @JvmStatic
+        fun generateLauncherIcon(context: Context, url: String?): Bitmap {
+            val startingChar = getRepresentativeCharacter(url)
+            return generateCharacterIcon(context, startingChar)
+        }
+
+        /**
+         * Generate an icon with the given character. The icon will be drawn
          * on top of a generic launcher icon shape that we provide.
          */
         @JvmStatic
-        fun generateLauncherIcon(context: Context, url: String?) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            generateAdaptiveLauncherIcon(context, url)
+        fun generateCharacterIcon(context: Context, character: Char) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            generateAdaptiveLauncherIcon(context, character)
         } else {
-            generateLauncherIconPreOreo(context, url)
+            generateLauncherIconPreOreo(context, character)
         }
 
         /*
@@ -42,18 +49,18 @@ class IconGenerator {
          * the pre-Oreo icon to display in the Add To Home screen Dialog
          */
         @JvmStatic
-        fun generateLauncherIconPreOreo(context: Context, url: String?): Bitmap {
+        fun generateLauncherIconPreOreo(context: Context, character: Char): Bitmap {
             val options = BitmapFactory.Options()
             options.inMutable = true
             val shape = BitmapFactory.decodeResource(context.resources, R.drawable.ic_homescreen_shape, options)
-            return drawCharacterOnBitmap(context, url, shape)
+            return drawCharacterOnBitmap(context, character, shape)
         }
 
         /**
          * Generates a launcher icon for versions of Android that support Adaptive Icons (Oreo+):
          * https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive.html
          */
-        private fun generateAdaptiveLauncherIcon(context: Context, url: String?): Bitmap {
+        private fun generateAdaptiveLauncherIcon(context: Context, character: Char): Bitmap {
             val res = context.resources
             val adaptiveIconDimen = res.getDimensionPixelSize(R.dimen.adaptive_icon_drawable_dimen)
 
@@ -65,15 +72,13 @@ class IconGenerator {
             canvas.drawColor(ContextCompat.getColor(context, R.color.add_to_homescreen_icon_background))
 
             // Then draw the foreground
-            return drawCharacterOnBitmap(context, url, bitmap)
+            return drawCharacterOnBitmap(context, character, bitmap)
         }
 
-        private fun drawCharacterOnBitmap(context: Context, url: String?, bitmap: Bitmap): Bitmap {
+        private fun drawCharacterOnBitmap(context: Context, character: Char, bitmap: Bitmap): Bitmap {
             val canvas = Canvas(bitmap)
 
             val paint = Paint()
-
-            val character = getRepresentativeCharacter(url)
 
             val textSize = TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DP, context.resources.displayMetrics)
@@ -83,7 +88,7 @@ class IconGenerator {
             paint.textSize = textSize
             paint.isAntiAlias = true
 
-            canvas.drawText(character,
+            canvas.drawText(character.toString(),
                     canvas.width / 2.0f,
                     canvas.height / 2.0f - (paint.descent() + paint.ascent()) / 2.0f,
                     paint)
@@ -96,9 +101,10 @@ class IconGenerator {
          *
          * For example this method will return "f" for "http://m.facebook.com/foobar".
          */
-        @VisibleForTesting internal fun getRepresentativeCharacter(url: String?): String {
+        @JvmStatic
+        fun getRepresentativeCharacter(url: String?): Char {
             val firstChar = getRepresentativeSnippet(url)?.find { it.isLetterOrDigit() }?.toUpperCase()
-            return (firstChar ?: DEFAULT_ICON_CHAR).toString()
+            return (firstChar ?: DEFAULT_ICON_CHAR)
         }
 
         /**

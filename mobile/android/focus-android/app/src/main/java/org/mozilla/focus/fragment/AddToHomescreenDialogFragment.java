@@ -61,7 +61,7 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
 
         // For the dialog we display the Pre Oreo version of the icon because the Oreo+
         // adaptive launcher icon does not have a mask applied until we create the shortcut
-        final Bitmap iconBitmap = IconGenerator.generateLauncherIconPreOreo(getContext(), url);
+        final Bitmap iconBitmap = IconGenerator.generateLauncherIconPreOreo(getContext(), IconGenerator.getRepresentativeCharacter(url));
         final ImageView iconView = (ImageView) dialogView.findViewById(R.id.homescreen_icon);
         iconView.setImageBitmap(iconBitmap);
 
