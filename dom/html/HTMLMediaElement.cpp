@@ -3198,6 +3198,15 @@ public:
     Destroy();
   }
 
+  /**
+   * Do not keep the track source alive. The source lifetime is controlled by
+   * its associated tracks.
+   */
+  bool KeepsSourceAlive() const override
+  {
+    return false;
+  }
+
   void PrincipalChanged() override
   {
     if (!mCapturedTrackSource) {
