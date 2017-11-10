@@ -4,8 +4,11 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  createFactory,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;

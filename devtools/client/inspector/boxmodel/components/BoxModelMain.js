@@ -4,10 +4,13 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
