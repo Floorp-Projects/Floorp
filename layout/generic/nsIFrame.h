@@ -663,6 +663,22 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) = 0;
 
+  using PostDestroyData = mozilla::layout::PostFrameDestroyData;
+  struct MOZ_RAII AutoPostDestroyData
+  {
+    explicit AutoPostDestroyData(nsPresContext* aPresContext)
+      : mPresContext(aPresContext) {}
+    ~AutoPostDestroyData() {
+      for (auto& content : mozilla::Reversed(mData.mAnonymousContent)) {
+        nsIFrame::DestroyAnonymousContent(mPresContext, content.forget());
+      }
+      for (auto& content : mozilla::Reversed(mData.mGeneratedContent)) {
+        content->UnbindFromTree();
+      }
+    }
+    nsPresContext* mPresContext;
+    PostDestroyData mData;
+  };
   /**
    * Destroys this frame and each of its child frames (recursively calls
    * Destroy() for each child). If this frame is a first-continuation, this
@@ -671,18 +687,10 @@ public:
    * If the frame is a placeholder, it also ensures the out-of-flow frame's
    * removal and destruction.
    */
-  using PostDestroyData = mozilla::layout::PostFrameDestroyData;
   void Destroy() {
-    nsPresContext* presContext = PresContext();
-    PostDestroyData data;
-    DestroyFrom(this, data);
+    AutoPostDestroyData data(PresContext());
+    DestroyFrom(this, data.mData);
     // Note that |this| is deleted at this point.
-    for (auto& content : mozilla::Reversed(data.mAnonymousContent)) {
-      DestroyAnonymousContent(presContext, content.forget());
-    }
-    for (auto& content : mozilla::Reversed(data.mGeneratedContent)) {
-      content->UnbindFromTree();
-    }
   }
 
   /** Flags for PeekOffsetCharacter, PeekOffsetNoAmount, PeekOffsetWord return values.
@@ -719,6 +727,8 @@ public:
   };
 
 protected:
+  friend class nsBlockFrame; // for access to DestroyFrom
+
   /**
    * Return true if the frame is part of a Selection.
    * Helper method to implement the public IsSelected() API.
