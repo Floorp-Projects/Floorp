@@ -21,8 +21,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
