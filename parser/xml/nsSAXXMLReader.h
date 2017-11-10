@@ -13,10 +13,7 @@
 #include "nsIURI.h"
 #include "nsISAXXMLReader.h"
 #include "nsISAXContentHandler.h"
-#include "nsISAXDTDHandler.h"
 #include "nsISAXErrorHandler.h"
-#include "nsISAXLexicalHandler.h"
-#include "nsIMozSAXXMLDeclarationHandler.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/NotNull.h"
@@ -78,10 +75,7 @@ private:
   ~nsSAXXMLReader() {}
 
   nsCOMPtr<nsISAXContentHandler> mContentHandler;
-  nsCOMPtr<nsISAXDTDHandler> mDTDHandler;
   nsCOMPtr<nsISAXErrorHandler> mErrorHandler;
-  nsCOMPtr<nsISAXLexicalHandler> mLexicalHandler;
-  nsCOMPtr<nsIMozSAXXMLDeclarationHandler> mDeclarationHandler;
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIRequestObserver> mParserObserver;
