@@ -13,7 +13,6 @@ XPIDL_SOURCES += [
     'nsISAXAttributes.idl',
     'nsISAXContentHandler.idl',
     'nsISAXErrorHandler.idl',
-    'nsISAXLocator.idl',
     'nsISAXXMLReader.idl',
 ]
 
@@ -21,13 +20,11 @@ XPIDL_MODULE = 'saxparser'
 
 EXPORTS += [
     'nsSAXAttributes.h',
-    'nsSAXLocator.h',
     'nsSAXXMLReader.h',
 ]
 
 UNIFIED_SOURCES += [
     'nsSAXAttributes.cpp',
-    'nsSAXLocator.cpp',
     'nsSAXXMLReader.cpp',
 ]
 

@@ -60,15 +60,15 @@ function updateDocumentSourceMaps(source) {
   };
 
   var errorHandler = {
-    error: function error(aLocator, aError) {
+    error: function error(aError) {
       do_parse_check(!aError, "XML error");
     },
 
-    fatalError: function fatalError(aLocator, aError) {
+    fatalError: function fatalError(aError) {
       do_parse_check(!aError, "XML fatal error");
     },
 
-    ignorableWarning: function ignorableWarning(aLocator, aError) {
+    ignorableWarning: function ignorableWarning(aError) {
       do_parse_check(!aError, "XML ignorable warning");
     }
   };
