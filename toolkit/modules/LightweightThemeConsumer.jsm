@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeImageOptimizer",
 const kCSSVarsMap = new Map([
   ["--lwt-background-alignment", "backgroundsAlignment"],
   ["--lwt-background-tiling", "backgroundsTiling"],
+  ["--theme-tab-text", "tab_text"],
   ["--toolbar-bgcolor", "toolbarColor"],
   ["--toolbar-color", "toolbar_text"],
   ["--url-and-searchbar-background-color", "toolbar_field"],
