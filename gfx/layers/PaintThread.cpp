@@ -21,6 +21,58 @@ namespace layers {
 
 using namespace gfx;
 
+bool
+CapturedBufferState::Copy::CopyBuffer()
+{
+  if (mSource->Lock(OpenMode::OPEN_READ_ONLY)) {
+    mDestination->UpdateDestinationFrom(*mSource, mBounds);
+    mSource->Unlock();
+    return true;
+  }
+  return false;
+}
+
+bool
+CapturedBufferState::Unrotate::UnrotateBuffer()
+{
+  return mBuffer->UnrotateBufferTo(mParameters);
+}
+
+bool
+CapturedBufferState::PrepareBuffer()
+{
+  return (!mBufferCopy || mBufferCopy->CopyBuffer()) &&
+         (!mBufferUnrotate || mBufferUnrotate->UnrotateBuffer());
+}
+
+void
+CapturedBufferState::GetTextureClients(nsTArray<RefPtr<TextureClient>>& aTextureClients)
+{
+  if (mBufferCopy) {
+    if (TextureClient* source = mBufferCopy->mSource->GetClient()) {
+      aTextureClients.AppendElement(source);
+    }
+    if (TextureClient* sourceOnWhite = mBufferCopy->mSource->GetClientOnWhite()) {
+      aTextureClients.AppendElement(sourceOnWhite);
+    }
+    if (TextureClient* destination = mBufferCopy->mDestination->GetClient()) {
+      aTextureClients.AppendElement(destination);
+    }
+    if (TextureClient* destinationOnWhite = mBufferCopy->mDestination->GetClientOnWhite()) {
+      aTextureClients.AppendElement(destinationOnWhite);
+    }
+  }
+
+  if (mBufferUnrotate) {
+    if (TextureClient* client = mBufferUnrotate->mBuffer->GetClient()) {
+      aTextureClients.AppendElement(client);
+    }
+    if (TextureClient* clientOnWhite = mBufferUnrotate->mBuffer->GetClientOnWhite()) {
+      aTextureClients.AppendElement(clientOnWhite);
+    }
+  }
+}
+
 StaticAutoPtr<PaintThread> PaintThread::sSingleton;
 StaticRefPtr<nsIThread> PaintThread::sThread;
 PlatformThreadId PaintThread::sThreadId;
@@ -159,6 +211,56 @@ PaintThread::BeginLayerTransaction()
 }
 
 void
+PaintThread::PrepareBuffer(CapturedBufferState* aState)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aState);
+
+  // If painting asynchronously, we need to acquire the compositor bridge which
+  // owns the underlying MessageChannel. Otherwise we leave it null and use
+  // synchronous dispatch.
+  RefPtr<CompositorBridgeChild> cbc;
+  if (!gfxPrefs::LayersOMTPForceSync()) {
+    cbc = CompositorBridgeChild::Get();
+    cbc->NotifyBeginAsyncPrepareBuffer(aState);
+  }
+  RefPtr<CapturedBufferState> state(aState);
+
+  RefPtr<PaintThread> self = this;
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PrepareBuffer",
+    [self, cbc, state]() -> void
+  {
+    self->AsyncPrepareBuffer(cbc,
+                             state);
+  });
+
+  if (cbc) {
+    sThread->Dispatch(task.forget());
+  } else {
+    SyncRunnable::DispatchToThread(sThread, task);
+  }
+}
+
+void
+PaintThread::AsyncPrepareBuffer(CompositorBridgeChild* aBridge,
+                                CapturedBufferState* aState)
+{
+  MOZ_ASSERT(IsOnPaintThread());
+  MOZ_ASSERT(aState);
+
+  if (!mInAsyncPaintGroup) {
+    mInAsyncPaintGroup = true;
+    PROFILER_TRACING("Paint", "Rasterize", TRACING_INTERVAL_START);
+  }
+
+  if (!aState->PrepareBuffer()) {
+    gfxCriticalNote << "Failed to prepare buffers on the paint thread.";
+  }
+
+  aBridge->NotifyFinishedAsyncPrepareBuffer(aState);
+}
+
+void
 PaintThread::PaintContents(CapturedPaintState* aState,
                            PrepDrawTargetForPaintingCallback aCallback)
 {
@@ -174,11 +276,10 @@ PaintThread::PaintContents(CapturedPaintState* aState,
     cbc->NotifyBeginAsyncPaint(aState);
   }
   RefPtr<CapturedPaintState> state(aState);
-  RefPtr<DrawTargetCapture> capture(aState->mCapture);
 
   RefPtr<PaintThread> self = this;
   RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintContents",
-    [self, cbc, capture, state, aCallback]() -> void
+    [self, cbc, state, aCallback]() -> void
   {
     self->AsyncPaintContents(cbc,
                              state,

@@ -212,11 +212,6 @@ class FullParseHandler
         return new_<UnaryNode>(PNK_SPREAD, pos, kid);
     }
 
-    ParseNode* newArrayPush(uint32_t begin, ParseNode* kid) {
-        TokenPos pos(begin, kid->pn_pos.end);
-        return new_<UnaryNode>(PNK_ARRAYPUSH, pos, kid);
-    }
-
   private:
     ParseNode* newBinary(ParseNodeKind kind, ParseNode* left, ParseNode* right,
                          JSOp op = JSOP_NOP)
@@ -233,26 +228,6 @@ class FullParseHandler
     }
 
     // Expressions
-
-    ParseNode* newGeneratorComprehension(ParseNode* genfn, const TokenPos& pos) {
-        MOZ_ASSERT(pos.begin <= genfn->pn_pos.begin);
-        MOZ_ASSERT(genfn->pn_pos.end <= pos.end);
-        ParseNode* result = new_<ListNode>(PNK_GENEXP, JSOP_CALL, pos);
-        if (!result)
-            return null();
-        result->append(genfn);
-        return result;
-    }
-
-    ParseNode* newArrayComprehension(ParseNode* body, const TokenPos& pos) {
-        MOZ_ASSERT(pos.begin <= body->pn_pos.begin);
-        MOZ_ASSERT(body->pn_pos.end <= pos.end);
-        ParseNode* pn = new_<ListNode>(PNK_ARRAYCOMP, pos);
-        if (!pn)
-            return nullptr;
-        pn->append(body);
-        return pn;
-    }
 
     ParseNode* newArrayLiteral(uint32_t begin) {
         return new_<ListNode>(PNK_ARRAY, TokenPos(begin, begin + 1));
@@ -577,24 +552,6 @@ class FullParseHandler
         return pn;
     }
 
-    ParseNode* newComprehensionFor(uint32_t begin, ParseNode* forHead, ParseNode* body) {
-        // A PNK_COMPREHENSIONFOR node is binary: left is loop control, right
-        // is the body.
-        MOZ_ASSERT(forHead->isKind(PNK_FORIN) || forHead->isKind(PNK_FOROF));
-        JSOp op = forHead->isKind(PNK_FORIN) ? JSOP_ITER : JSOP_NOP;
-        BinaryNode* pn = new_<BinaryNode>(PNK_COMPREHENSIONFOR, op,
-                                          TokenPos(begin, body->pn_pos.end), forHead, body);
-        if (!pn)
-            return null();
-        pn->pn_iflags = JSOP_ITER;
-        return pn;
-    }
-
-    ParseNode* newComprehensionBinding(ParseNode* kid) {
-        MOZ_ASSERT(kid->isKind(PNK_NAME));
-        return new_<ListNode>(PNK_LET, JSOP_NOP, kid);
-    }
-
     ParseNode* newForHead(ParseNode* init, ParseNode* test, ParseNode* update,
                           const TokenPos& pos)
     {
@@ -691,14 +648,6 @@ class FullParseHandler
         return new_<CodeNode>(PNK_FUNCTION, JSOP_LAMBDA_ARROW, pos);
     }
 
-    bool setComprehensionLambdaBody(ParseNode* pn, ParseNode* body) {
-        MOZ_ASSERT(body->isKind(PNK_STATEMENTLIST));
-        ParseNode* paramsBody = newList(PNK_PARAMSBODY, body);
-        if (!paramsBody)
-            return false;
-        setFunctionFormalParametersAndBody(pn, paramsBody);
-        return true;
-    }
     void setFunctionFormalParametersAndBody(ParseNode* pn, ParseNode* kid) {
         MOZ_ASSERT_IF(kid, kid->isKind(PNK_PARAMSBODY));
         pn->pn_body = kid;

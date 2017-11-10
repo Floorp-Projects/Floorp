@@ -12,7 +12,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/fallible.h"
-#include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/OperatorNewExtensions.h"
@@ -380,9 +379,6 @@ template<class EntryType>
 nsTHashtable<EntryType>::nsTHashtable(nsTHashtable<EntryType>&& aOther)
   : mTable(mozilla::Move(aOther.mTable))
 {
-  // aOther shouldn't touch mTable after this, because we've stolen the table's
-  // pointers but not overwitten them.
-  MOZ_MAKE_MEM_UNDEFINED(&aOther.mTable, sizeof(aOther.mTable));
 }
 
 template<class EntryType>

@@ -2439,7 +2439,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_GENERATOR:
 
       // Misc
-      case JSOP_ARRAYPUSH:
       case JSOP_DELNAME:
       case JSOP_FINALLY:
       case JSOP_GETRVAL:
@@ -2458,6 +2457,7 @@ IonBuilder::inspectOpcode(JSOp op)
         break;
 
       case JSOP_UNUSED126:
+      case JSOP_UNUSED206:
       case JSOP_UNUSED223:
       case JSOP_LIMIT:
         break;
