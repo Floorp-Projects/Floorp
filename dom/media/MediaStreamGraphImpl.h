@@ -469,8 +469,7 @@ public:
    * It is only safe to call this at the very end of an iteration, when there
    * has been a SwitchAtNextIteration call during the iteration. The driver
    * should return and pass the control to the new driver shortly after.
-   * We can also switch from Revive() (on MainThread), in which case the
-   * monitor is held
+   * We can also switch from Revive() (on MainThread). Monitor must be held.
    */
   void SetCurrentDriver(GraphDriver* aDriver)
   {
@@ -568,6 +567,8 @@ public:
    * switch occur, previous driver is either deleted, or it's ownership is
    * passed to a event that will take care of the asynchronous cleanup, as
    * audio stream can take some time to shut down.
+   * Accessed on both the main thread and the graph thread; both read and write.
+   * Must hold monitor to access it.
    */
   RefPtr<GraphDriver> mDriver;
 
@@ -579,6 +580,7 @@ public:
    * The graph keeps a reference to each stream.
    * References are maintained manually to simplify reordering without
    * unnecessary thread-safe refcount changes.
+   * Must satisfy OnGraphThreadOrNotRunning().
    */
   nsTArray<MediaStream*> mStreams;
   /**
@@ -586,6 +588,7 @@ public:
    * mStreams and mSuspendStream are disjoint sets: a stream is either suspended
    * or not suspended. Suspended streams are not ordered in UpdateStreamOrder,
    * and are therefore not doing any processing.
+   * Must satisfy OnGraphThreadOrNotRunning().
    */
   nsTArray<MediaStream*> mSuspendedStreams;
   /**
@@ -719,28 +722,36 @@ public:
     // realtime graph when it has no streams.
     LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION
   };
+
   /**
-   * Modified only on the main thread in mMonitor.
+   * Modified on the main and graph thread (in UpdateMainThreadState() when
+   * we're about to shutdown) in mMonitor. mMonitor must be held when accessed.
    */
   LifecycleState mLifecycleState;
   /**
    * The graph should stop processing at or after this time.
+   * Only set on main thread. Read on both main and MSG thread.
    */
   GraphTime mEndTime;
 
   /**
    * True when we need to do a forced shutdown during application shutdown.
+   * Only set on main thread.
+   * Can be read safely on the main thread, on all other threads mMonitor must
+   * be held.
    */
   bool mForceShutDown;
 
   /**
    * Drop this reference during shutdown to unblock shutdown.
+   * Only accessed on the main thread.
    **/
   RefPtr<media::ShutdownTicket> mForceShutdownTicket;
 
   /**
    * True when we have posted an event to the main thread to run
    * RunInStableState() and the event hasn't run yet.
+   * Accessed on both main and MSG thread, mMonitor must be held.
    */
   bool mPostedRunInStableStateEvent;
 
@@ -762,6 +773,7 @@ public:
   /**
    * True when a stable state runner has been posted to the appshell to run
    * RunInStableState at the next stable state.
+   * Only accessed on the main thread.
    */
   bool mPostedRunInStableState;
   /**
@@ -790,6 +802,7 @@ public:
 #endif
 
   // used to limit graph shutdown time
+  // Only accessed on the main thread.
   nsCOMPtr<nsITimer> mShutdownTimer;
 
 private:

@@ -1390,8 +1390,8 @@ protected:
     MOZ_COUNT_DTOR(MediaStreamGraph);
   }
 
-  // Intended only for assertions, either on graph thread, not running, or
-  // with monitor held.
+  // Intended only for assertions, either on graph thread or not running (in
+  // which case we must be on the main thread).
   bool OnGraphThreadOrNotRunning() const;
 
   // Media graph thread only
