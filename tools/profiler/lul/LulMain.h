@@ -152,6 +152,10 @@ struct UnwindRegs {
   TaggedUWord xbp;
   TaggedUWord xsp;
   TaggedUWord xip;
+#elif defined(GP_ARCH_mips64)
+  TaggedUWord sp;
+  TaggedUWord fp;
+  TaggedUWord pc;
 #else
 # error "Unknown plat"
 #endif

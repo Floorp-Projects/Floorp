@@ -2106,17 +2106,8 @@
      *   Stack: gen, val => rval
      */ \
     macro(JSOP_RESUME,        205,"resume",      NULL,    3,  2,  1,  JOF_UINT8|JOF_INVOKE) \
-    /*
-     * Pops the top two values on the stack as 'obj' and 'v', pushes 'v' to
-     * 'obj'.
-     *
-     * This opcode is used for Array Comprehension.
-     *   Category: Literals
-     *   Type: Array
-     *   Operands:
-     *   Stack: v, obj =>
-     */ \
-    macro(JSOP_ARRAYPUSH,     206,"arraypush",   NULL,    1,  2,  0,  JOF_BYTE) \
+    \
+    macro(JSOP_UNUSED206,     206,"unused206",   NULL,    1,  0,  0,  JOF_BYTE) \
     \
     /*
      * No-op bytecode only emitted in some self-hosted functions. Not handled by

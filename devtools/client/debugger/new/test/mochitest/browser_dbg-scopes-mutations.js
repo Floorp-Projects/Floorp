@@ -78,10 +78,8 @@ add_task(async function() {
     'The "lastName" element has the expected "Doe" value'
   );
 
-  info("Resuming");
-  onPaused = waitForPaused(dbg);
   await resume(dbg);
-  await onPaused;
+  await waitForPaused(dbg);
 
   is(
     getScopeNodeLabel(dbg, 2),

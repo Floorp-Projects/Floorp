@@ -53,6 +53,10 @@ enum DW_REG_NUMBER {
   DW_REG_INTEL_XBP = 5,
   DW_REG_INTEL_XSP = 4,
   DW_REG_INTEL_XIP = 8,
+#elif defined(GP_ARCH_mips64)
+  DW_REG_MIPS_SP = 29,
+  DW_REG_MIPS_FP = 30,
+  DW_REG_MIPS_PC = 34,
 #else
 # error "Unknown arch"
 #endif
@@ -275,6 +279,10 @@ public:
   LExpr  mR12expr;
   LExpr  mR11expr;
   LExpr  mR7expr;
+#elif defined(GP_ARCH_mips64)
+  LExpr  mPCexpr;
+  LExpr  mFPexpr;
+  LExpr  mSPexpr;
 #else
 #   error "Unknown arch"
 #endif
@@ -290,6 +298,9 @@ static inline bool registerIsTracked(DW_REG_NUMBER reg) {
 #   elif defined(GP_ARCH_arm)
     case DW_REG_ARM_R7:  case DW_REG_ARM_R11: case DW_REG_ARM_R12:
     case DW_REG_ARM_R13: case DW_REG_ARM_R14: case DW_REG_ARM_R15:
+      return true;
+#elif defined(GP_ARCH_mips64)
+    case DW_REG_MIPS_FP:  case DW_REG_MIPS_SP: case DW_REG_MIPS_PC:
       return true;
 #   else
 #     error "Unknown arch"

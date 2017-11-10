@@ -603,17 +603,6 @@ class NodeBuilder
     MOZ_MUST_USE bool yieldExpression(HandleValue arg, YieldKind kind, TokenPos* pos,
                                       MutableHandleValue dst);
 
-    MOZ_MUST_USE bool comprehensionBlock(HandleValue patt, HandleValue src, bool isForEach,
-                                         bool isForOf, TokenPos* pos, MutableHandleValue dst);
-    MOZ_MUST_USE bool comprehensionIf(HandleValue test, TokenPos* pos, MutableHandleValue dst);
-
-    MOZ_MUST_USE bool comprehensionExpression(HandleValue body, NodeVector& blocks,
-                                              HandleValue filter, bool isLegacy, TokenPos* pos,
-                                              MutableHandleValue dst);
-
-    MOZ_MUST_USE bool generatorExpression(HandleValue body, NodeVector& blocks, HandleValue filter,
-                                          bool isLegacy, TokenPos* pos, MutableHandleValue dst);
-
     MOZ_MUST_USE bool metaProperty(HandleValue meta, HandleValue property, TokenPos* pos,
                                    MutableHandleValue dst);
 
@@ -1332,85 +1321,6 @@ NodeBuilder::yieldExpression(HandleValue arg, YieldKind kind, TokenPos* pos, Mut
 }
 
 bool
-NodeBuilder::comprehensionBlock(HandleValue patt, HandleValue src, bool isForEach, bool isForOf, TokenPos* pos,
-                                MutableHandleValue dst)
-{
-    RootedValue isForEachVal(cx, BooleanValue(isForEach));
-    RootedValue isForOfVal(cx, BooleanValue(isForOf));
-
-    RootedValue cb(cx, callbacks[AST_COMP_BLOCK]);
-    if (!cb.isNull())
-        return callback(cb, patt, src, isForEachVal, isForOfVal, pos, dst);
-
-    return newNode(AST_COMP_BLOCK, pos,
-                   "left", patt,
-                   "right", src,
-                   "each", isForEachVal,
-                   "of", isForOfVal,
-                   dst);
-}
-
-bool
-NodeBuilder::comprehensionIf(HandleValue test, TokenPos* pos, MutableHandleValue dst)
-{
-    RootedValue cb(cx, callbacks[AST_COMP_IF]);
-    if (!cb.isNull())
-        return callback(cb, test, pos, dst);
-
-    return newNode(AST_COMP_IF, pos,
-                   "test", test,
-                   dst);
-}
-
-bool
-NodeBuilder::comprehensionExpression(HandleValue body, NodeVector& blocks, HandleValue filter,
-                                     bool isLegacy, TokenPos* pos, MutableHandleValue dst)
-{
-    RootedValue array(cx);
-    if (!newArray(blocks, &array))
-        return false;
-
-    RootedValue style(cx);
-    if (!atomValue(isLegacy ? "legacy" : "modern", &style))
-        return false;
-
-    RootedValue cb(cx, callbacks[AST_COMP_EXPR]);
-    if (!cb.isNull())
-        return callback(cb, body, array, opt(filter), style, pos, dst);
-
-    return newNode(AST_COMP_EXPR, pos,
-                   "body", body,
-                   "blocks", array,
-                   "filter", filter,
-                   "style", style,
-                   dst);
-}
-
-bool
-NodeBuilder::generatorExpression(HandleValue body, NodeVector& blocks, HandleValue filter,
-                                 bool isLegacy, TokenPos* pos, MutableHandleValue dst)
-{
-    RootedValue array(cx);
-    if (!newArray(blocks, &array))
-        return false;
-
-    RootedValue style(cx);
-    if (!atomValue(isLegacy ? "legacy" : "modern", &style))
-        return false;
-
-    RootedValue cb(cx, callbacks[AST_GENERATOR_EXPR]);
-    if (!cb.isNull())
-        return callback(cb, body, array, opt(filter), style, pos, dst);
-
-    return newNode(AST_GENERATOR_EXPR, pos,
-                   "body", body,
-                   "blocks", array,
-                   "filter", filter,
-                   "style", style,
-                   dst);
-}
-
-bool
 NodeBuilder::importDeclaration(NodeVector& elts, HandleValue moduleSpec, TokenPos* pos,
                                MutableHandleValue dst)
 {
@@ -1547,7 +1457,7 @@ NodeBuilder::catchClause(HandleValue var, HandleValue guard, HandleValue body, T
 {
     RootedValue cb(cx, callbacks[AST_CATCH]);
     if (!cb.isNull())
-        return callback(cb, var, opt(guard), body, pos, dst);
+        return callback(cb, opt(var), opt(guard), body, pos, dst);
 
     return newNode(AST_CATCH, pos,
                    "param", var,
@@ -1800,6 +1710,14 @@ class ASTSerializer
     bool identifier(ParseNode* pn, MutableHandleValue dst);
     bool literal(ParseNode* pn, MutableHandleValue dst);
 
+    bool optPattern(ParseNode* pn, MutableHandleValue dst) {
+        if (!pn) {
+            dst.setMagic(JS_SERIALIZE_NO_NODE);
+            return true;
+        }
+        return pattern(pn, dst);
+    }
+
     bool pattern(ParseNode* pn, MutableHandleValue dst);
     bool arrayPattern(ParseNode* pn, MutableHandleValue dst);
     bool objectPattern(ParseNode* pn, MutableHandleValue dst);
@@ -1809,11 +1727,6 @@ class ASTSerializer
                              bool isAsync, bool isExpression,
                              MutableHandleValue body, MutableHandleValue rest);
     bool functionBody(ParseNode* pn, TokenPos* pos, MutableHandleValue dst);
-
-    bool comprehensionBlock(ParseNode* pn, MutableHandleValue dst);
-    bool comprehensionIf(ParseNode* pn, MutableHandleValue dst);
-    bool comprehension(ParseNode* pn, MutableHandleValue dst);
-    bool generatorExpression(ParseNode* pn, MutableHandleValue dst);
 
   public:
     ASTSerializer(JSContext* c, bool l, char const* src, uint32_t ln)
@@ -2263,13 +2176,13 @@ ASTSerializer::switchStatement(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::catchClause(ParseNode* pn, bool* isGuarded, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
+    MOZ_ASSERT_IF(pn->pn_kid1, pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
     MOZ_ASSERT_IF(pn->pn_kid2, pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
     MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid3->pn_pos));
 
     RootedValue var(cx), guard(cx), body(cx);
 
-    if (!pattern(pn->pn_kid1, &var) ||
+    if (!optPattern(pn->pn_kid1, &var) ||
         !optExpression(pn->pn_kid2, &guard)) {
         return false;
     }
@@ -2455,7 +2368,6 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
       }
 
       case PNK_FOR:
-      case PNK_COMPREHENSIONFOR:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
@@ -2686,129 +2598,6 @@ ASTSerializer::rightAssociate(ParseNode* pn, MutableHandleValue dst)
 }
 
 bool
-ASTSerializer::comprehensionBlock(ParseNode* pn, MutableHandleValue dst)
-{
-    LOCAL_ASSERT(pn->isArity(PN_BINARY));
-
-    ParseNode* in = pn->pn_left;
-
-    LOCAL_ASSERT(in && (in->isKind(PNK_FORIN) || in->isKind(PNK_FOROF)));
-
-    bool isForEach = in->isKind(PNK_FORIN) && (pn->pn_iflags & JSITER_FOREACH);
-    bool isForOf = in->isKind(PNK_FOROF);
-
-    ParseNode* decl = in->pn_kid1;
-    if (decl->isKind(PNK_LEXICALSCOPE))
-        decl = decl->pn_expr;
-    MOZ_ASSERT(decl->pn_count == 1);
-
-    RootedValue patt(cx), src(cx);
-    return pattern(decl->pn_head, &patt) &&
-           expression(in->pn_kid3, &src) &&
-           builder.comprehensionBlock(patt, src, isForEach, isForOf, &in->pn_pos, dst);
-}
-
-bool
-ASTSerializer::comprehensionIf(ParseNode* pn, MutableHandleValue dst)
-{
-    LOCAL_ASSERT(pn->isKind(PNK_IF));
-    LOCAL_ASSERT(!pn->pn_kid3);
-
-    RootedValue patt(cx);
-    return pattern(pn->pn_kid1, &patt) &&
-           builder.comprehensionIf(patt, &pn->pn_pos, dst);
-}
-
-bool
-ASTSerializer::comprehension(ParseNode* pn, MutableHandleValue dst)
-{
-    // There are two array comprehension flavors.
-    // 1. The kind that was in ES4 for a while: [z for (x in y)]
-    // 2. The kind that was in ES6 for a while: [for (x of y) z]
-    // They have slightly different parse trees and scoping.
-    bool isLegacy = pn->isKind(PNK_LEXICALSCOPE);
-    ParseNode* next = isLegacy ? pn->pn_expr : pn;
-    LOCAL_ASSERT(next->isKind(PNK_COMPREHENSIONFOR));
-
-    NodeVector blocks(cx);
-    RootedValue filter(cx, MagicValue(JS_SERIALIZE_NO_NODE));
-    while (true) {
-        if (next->isKind(PNK_COMPREHENSIONFOR)) {
-            RootedValue block(cx);
-            if (!comprehensionBlock(next, &block) || !blocks.append(block))
-                return false;
-            next = next->pn_right;
-        } else if (next->isKind(PNK_IF)) {
-            if (isLegacy) {
-                MOZ_ASSERT(filter.isMagic(JS_SERIALIZE_NO_NODE));
-                if (!optExpression(next->pn_kid1, &filter))
-                    return false;
-            } else {
-                // ES7 comprehension can contain multiple ComprehensionIfs.
-                RootedValue compif(cx);
-                if (!comprehensionIf(next, &compif) || !blocks.append(compif))
-                    return false;
-            }
-            next = next->pn_kid2;
-        } else {
-            break;
-        }
-    }
-
-    LOCAL_ASSERT(next->isKind(PNK_ARRAYPUSH));
-
-    RootedValue body(cx);
-
-    return expression(next->pn_kid, &body) &&
-           builder.comprehensionExpression(body, blocks, filter, isLegacy, &pn->pn_pos, dst);
-}
-
-bool
-ASTSerializer::generatorExpression(ParseNode* pn, MutableHandleValue dst)
-{
-    // Just as there are two kinds of array comprehension (see
-    // ASTSerializer::comprehension), there are legacy and modern generator
-    // expression.
-    bool isLegacy = pn->isKind(PNK_LEXICALSCOPE);
-    ParseNode* next = isLegacy ? pn->pn_expr : pn;
-    LOCAL_ASSERT(next->isKind(PNK_COMPREHENSIONFOR));
-
-    NodeVector blocks(cx);
-    RootedValue filter(cx, MagicValue(JS_SERIALIZE_NO_NODE));
-    while (true) {
-        if (next->isKind(PNK_COMPREHENSIONFOR)) {
-            RootedValue block(cx);
-            if (!comprehensionBlock(next, &block) || !blocks.append(block))
-                return false;
-            next = next->pn_right;
-        } else if (next->isKind(PNK_IF)) {
-            if (isLegacy) {
-                MOZ_ASSERT(filter.isMagic(JS_SERIALIZE_NO_NODE));
-                if (!optExpression(next->pn_kid1, &filter))
-                    return false;
-            } else {
-                // ES7 comprehension can contain multiple ComprehensionIfs.
-                RootedValue compif(cx);
-                if (!comprehensionIf(next, &compif) || !blocks.append(compif))
-                    return false;
-            }
-            next = next->pn_kid2;
-        } else {
-            break;
-        }
-    }
-
-    LOCAL_ASSERT(next->isKind(PNK_SEMI) &&
-                 next->pn_kid->isKind(PNK_YIELD) &&
-                 next->pn_kid->pn_kid);
-
-    RootedValue body(cx);
-
-    return expression(next->pn_kid->pn_kid, &body) &&
-           builder.generatorExpression(body, blocks, filter, isLegacy, &pn->pn_pos, dst);
-}
-
-bool
 ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
 {
     if (!CheckRecursionLimit(cx))
@@ -2942,9 +2731,6 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         return expression(pn->pn_kid, &expr) &&
                builder.unaryExpression(op, expr, &pn->pn_pos, dst);
       }
-
-      case PNK_GENEXP:
-        return generatorExpression(pn->generatorExpr(), dst);
 
       case PNK_NEW:
       case PNK_TAGGED_TEMPLATE:
@@ -3164,13 +2950,6 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         return optExpression(pn->pn_kid, &arg) &&
                builder.yieldExpression(arg, NotDelegating, &pn->pn_pos, dst);
       }
-
-      case PNK_ARRAYCOMP:
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_head->pn_pos));
-
-        /* NB: it's no longer the case that pn_count could be 2. */
-        LOCAL_ASSERT(pn->pn_count == 1);
-        return comprehension(pn->pn_head, dst);
 
       case PNK_CLASS:
         return classDefinition(pn, true, dst);

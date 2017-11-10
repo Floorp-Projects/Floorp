@@ -23,9 +23,6 @@ var fourAC = nested.body[0].expression.left.right.arguments[0].right;
 
 Pattern({ source: "quad.js", start: { line: 1, column: 20 }, end: { line: 1, column: 29 } }).match(fourAC.loc);
 
-var generator = Reflect.parse("[ for \n(x of a) x+1 ]");
-Pattern({ start: { line: 2, column: 1 }, end: { line: 2, column: 2 } }).match(generator.body[0].expression.blocks[0].left.loc);
-
 // No source location
 
 assertEq(Reflect.parse("42", {loc:false}).loc, null);

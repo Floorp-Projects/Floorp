@@ -52,6 +52,7 @@ struct SurfaceDescriptorDXGIYCbCr {
   IntSize size;
   IntSize sizeY;
   IntSize sizeCbCr;
+  YUVColorSpace yUVColorSpace;
 };
 
 struct SurfaceDescriptorMacIOSurface {

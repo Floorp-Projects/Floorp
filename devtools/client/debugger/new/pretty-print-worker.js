@@ -275,6 +275,10 @@ var _devtoolsUtils = __webpack_require__(1363);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 const { workerHandler } = _devtoolsUtils.workerUtils;
 
 function prettyPrint({ url, indent, source }) {
@@ -7588,3 +7592,4 @@ exports.SourceNode = SourceNode;
 
 /******/ });
 });
+//# sourceMappingURL=pretty-print-worker.js.map

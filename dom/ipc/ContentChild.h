@@ -399,8 +399,6 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvUpdateDictionaryList(InfallibleTArray<nsString>&& aDictionaries) override;
 
-  virtual mozilla::ipc::IPCResult RecvUpdateFontList(InfallibleTArray<SystemFontListEntry>&& aFontList) override;
-
   virtual mozilla::ipc::IPCResult RecvUpdateAppLocales(nsTArray<nsCString>&& aAppLocales) override;
   virtual mozilla::ipc::IPCResult RecvUpdateRequestedLocales(nsTArray<nsCString>&& aRequestedLocales) override;
 
@@ -605,7 +603,7 @@ public:
   RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
                                 const StructuredCloneData& aInitialData,
                                 nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache,
-                                nsTArray<SystemFontListEntry>&& aFontList) override;
+                                nsTArray<FontFamilyListEntry>&& aFontFamilyList) override;
 
   virtual mozilla::ipc::IPCResult
   RecvProvideAnonymousTemporaryFile(const uint64_t& aID, const FileDescOrError& aFD) override;
@@ -643,11 +641,11 @@ public:
   SendGetA11yContentId();
 #endif // defined(XP_WIN) && defined(ACCESSIBILITY)
 
-  // Get a reference to the font list passed from the chrome process,
+  // Get a reference to the font family list passed from the chrome process,
   // for use during gfx initialization.
-  InfallibleTArray<mozilla::dom::SystemFontListEntry>&
-  SystemFontList() {
-    return mFontList;
+  InfallibleTArray<mozilla::dom::FontFamilyListEntry>&
+  SystemFontFamilyList() {
+    return mFontFamilies;
   }
 
   // PURLClassifierChild
@@ -751,10 +749,10 @@ private:
 
   InfallibleTArray<nsString> mAvailableDictionaries;
 
-  // Temporary storage for a list of available fonts, passed from the
+  // Temporary storage for a list of available font families, passed from the
   // parent process and used to initialize gfx in the child. Currently used
-  // only on MacOSX and Linux.
-  InfallibleTArray<mozilla::dom::SystemFontListEntry> mFontList;
+  // only on MacOSX.
+  InfallibleTArray<mozilla::dom::FontFamilyListEntry> mFontFamilies;
   // Temporary storage for nsXPLookAndFeel flags.
   nsTArray<LookAndFeelInt> mLookAndFeelCache;
 

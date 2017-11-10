@@ -200,11 +200,5 @@ assertEq(typeof asyncf, "function");
 var { [0 ? 1 : a => {}]: h } = { "a => {}": "boo-urns!" };
 assertEq(h, "boo-urns!");
 
-var gencomp = (for (prop of [0]) 0 ? 1 : a => {});
-assertEq(typeof gencomp.next().value, "function");
-
-var arrcomp = [for (prop of [0]) 0 ? 1 : a => {}];
-assertEq(typeof arrcomp[0], "function");
-
 if (typeof reportCompare === "function")
   reportCompare(true, true);
