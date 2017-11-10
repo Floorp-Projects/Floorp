@@ -24,7 +24,7 @@ add_task(async function() {
   await waitForLoadedSource(dbg, "simple1");
 
   assertPausedLocation(dbg);
-  is(countSources(dbg), 4, "4 sources are loaded.");
+  is(countSources(dbg), 5, "5 sources are loaded.");
 
   await navigate(dbg, "about:blank");
   await waitForDispatch(dbg, "NAVIGATE");
@@ -36,11 +36,12 @@ add_task(async function() {
     "doc-scripts.html",
     "simple1.js",
     "simple2.js",
+    "simple3.js",
     "long.js",
     "scripts.html"
   );
 
-  is(countSources(dbg), 4, "4 sources are loaded.");
+  is(countSources(dbg), 5, "5 sources are loaded.");
 
   // Test that the current select source persists across reloads
   await selectSource(dbg, "long.js");
