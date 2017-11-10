@@ -112,9 +112,6 @@ ifneq (,$(strip $(MOZCONFIG_OUT_LINES)))
 	$(foreach line,$(MOZCONFIG_OUT_LINES),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
 endif
 
-# helper target for mobile
-build_and_deploy: build package install
-
 # In automation, manage an sccache daemon. The starting of the server
 # needs to be in a make file so sccache inherits the jobserver.
 ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
