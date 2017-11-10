@@ -2,7 +2,7 @@
 function test1() {
   return new Promise(function(resolve, reject) {
     try {
-      var ws = CreateTestWS("http://mochi.test:8888/tests/dom/base/test/file_websocket");
+      var ws = CreateTestWS("http://mochi.test:8888/tests/dom/websocket/tests/file_websocket");
       ok(false, "test1 failed");
     } catch (e) {
       ok(true, "test1 failed");
@@ -20,8 +20,8 @@ function test2() {
     var waitTest2Part1 = true;
     var waitTest2Part2 = true;
 
-    var ws1 = CreateTestWS("ws://sub2.test2.example.com/tests/dom/base/test/file_websocket", "test-2.1");
-    var ws2 = CreateTestWS("ws://sub2.test2.example.com/tests/dom/base/test/file_websocket", "test-2.2");
+    var ws1 = CreateTestWS("ws://sub2.test2.example.com/tests/dom/websocket/tests/file_websocket", "test-2.1");
+    var ws2 = CreateTestWS("ws://sub2.test2.example.com/tests/dom/websocket/tests/file_websocket", "test-2.2");
 
     var ws2CanConnect = false;
 
@@ -93,21 +93,21 @@ function test4() {
 function test5() {
   return new Promise(function(resolve, reject) {
     try {
-      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "");
+      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "");
       ok(false, "couldn't accept an empty string in the protocol parameter");
     } catch (e) {
       ok(true, "couldn't accept an empty string in the protocol parameter");
     }
 
     try {
-      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "\n");
+      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "\n");
       ok(false, "couldn't accept any not printable ASCII character in the protocol parameter");
     } catch (e) {
       ok(true, "couldn't accept any not printable ASCII character in the protocol parameter");
     }
 
     try {
-      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test 5");
+      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test 5");
       ok(false, "U+0020 not acceptable in protocol parameter");
     } catch (e) {
       ok(true, "U+0020 not acceptable in protocol parameter");
@@ -120,7 +120,7 @@ function test5() {
 // test6: counter and encoding check;
 function test6() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-6");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-6");
     var counter = 1;
 
     ws.onopen = function() {
@@ -148,7 +148,7 @@ function test6() {
 // test7: onmessage event origin property check
 function test7() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://sub2.test2.example.org/tests/dom/base/test/file_websocket", "test-7");
+    var ws = CreateTestWS("ws://sub2.test2.example.org/tests/dom/websocket/tests/file_websocket", "test-7");
     var gotmsg = false;
 
     ws.onopen = function() {
@@ -174,7 +174,7 @@ function test7() {
 //        code or reason) in acknowledgement;
 function test8() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-8");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-8");
 
     ws.onopen = function() {
       is(ws.protocol, "test-8", "test-8 subprotocol selection");
@@ -195,7 +195,7 @@ function test8() {
 // test9: client closes the connection before the ws connection is established;
 function test9() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://test2.example.org/tests/dom/base/test/file_websocket", "test-9");
+    var ws = CreateTestWS("ws://test2.example.org/tests/dom/websocket/tests/file_websocket", "test-9");
 
     ws._receivedErrorEvent = false;
 
@@ -218,7 +218,7 @@ function test9() {
 // test10: client sends a message before the ws connection is established;
 function test10() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://sub1.test1.example.com/tests/dom/base/test/file_websocket", "test-10");
+    var ws = CreateTestWS("ws://sub1.test1.example.com/tests/dom/websocket/tests/file_websocket", "test-10");
 
     ws.onclose = function(e) {
       shouldCloseCleanly(e);
@@ -243,7 +243,7 @@ function test10() {
 // test11: a simple hello echo;
 function test11() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-11");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-11");
     is(ws.readyState, 0, "create bad readyState in test-11!");
 
     ws.onopen = function() {
@@ -273,7 +273,7 @@ function test11() {
 // test12: client sends a message containing unpaired surrogates
 function test12() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-12");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-12");
 
     ws.onopen = function() {
       try {
@@ -311,7 +311,7 @@ function test13() {
     // returned, but the protocol stack typically closes down after reporting a
     // protocol level error - trying to resync is too dangerous
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-13");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-13");
     ws._timesCalledOnError = 0;
 
     ws.onerror = function() {
@@ -329,7 +329,7 @@ function test13() {
 //         and it keeps sending normal ws messages;
 function test14() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-14");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-14");
 
     ws.onmessage = function() {
       ok(false, "shouldn't received message after the server sent the close frame");
@@ -351,7 +351,7 @@ function test15() {
      */
    resolve();
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-15");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-15");
     ws.onclose = function(e) {
       shouldCloseNotCleanly(e);
       resolve();
@@ -366,7 +366,7 @@ function test15() {
 // test16: client calls close() and tries to send a message;
 function test16() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-16");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-16");
 
     ws.onopen = function() {
       ws.close();
@@ -392,7 +392,7 @@ function test17() {
     var status_test17 = "not started";
 
     var test17func = function() {
-      var local_ws = new WebSocket("ws://sub1.test2.example.org/tests/dom/base/test/file_websocket", "test-17");
+      var local_ws = new WebSocket("ws://sub1.test2.example.org/tests/dom/websocket/tests/file_websocket", "test-17");
       status_test17 = "started";
 
       local_ws.onopen = function(e) {
@@ -435,7 +435,7 @@ function test17() {
 // test18: client tries to connect to an http resource;
 function test18() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket_http_resource.txt");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_http_resource.txt");
     ws.onopen = shouldNotOpen;
     ws.onerror = ignoreError;
     ws.onclose = function(e)
@@ -450,7 +450,7 @@ function test18() {
 //         connection;
 function test19() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-19");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-19");
     ws.onopen = shouldNotOpen;
     ws.onerror = ignoreError;
     ws.onclose = function(e)
@@ -465,7 +465,7 @@ function test19() {
 function test20() {
   return new Promise(function(resolve, reject) {
     var test20func = function() {
-      var local_ws = new WebSocket("ws://sub1.test1.example.org/tests/dom/base/test/file_websocket", "test-20");
+      var local_ws = new WebSocket("ws://sub1.test1.example.org/tests/dom/websocket/tests/file_websocket", "test-20");
 
       local_ws.onerror = function() {
         ok(false, "onerror called on test " + current_test + "!");
@@ -491,7 +491,7 @@ function test20() {
 function test21() {
   return new Promise(function(resolve, reject) {
     var test21func = function() {
-      var local_ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-21");
+      var local_ws = new WebSocket("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-21");
       var received_message = false;
 
       local_ws.onopen = function(e) {
@@ -535,7 +535,7 @@ function test22() {
     const pref_open = "network.websocket.timeout.open";
     SpecialPowers.setIntPref(pref_open, 5);
 
-    var ws = CreateTestWS("ws://sub2.test2.example.org/tests/dom/base/test/file_websocket", "test-22");
+    var ws = CreateTestWS("ws://sub2.test2.example.org/tests/dom/websocket/tests/file_websocket", "test-22");
 
     ws.onopen = shouldNotOpen;
     ws.onerror = ignoreError;
@@ -560,7 +560,7 @@ function test23() {
 // test24: server rejects sub-protocol string
 function test24() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-does-not-exist");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-does-not-exist");
 
     ws.onopen = shouldNotOpen;
     ws.onclose = function(e) {
@@ -578,7 +578,7 @@ function test25() {
   return new Promise(function(resolve, reject) {
     var prots=[];
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
 
     // This test errors because the server requires a sub-protocol, but
     // the test just wants to ensure that the ctor doesn't generate an
@@ -600,7 +600,7 @@ function test26() {
     var prots=[""];
 
     try {
-      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
       ok(false, "testing empty element sub protocol array");
     } catch (e) {
       ok(true, "testing empty sub element protocol array");
@@ -617,7 +617,7 @@ function test27() {
     var prots=["test27", ""];
 
     try {
-      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
       ok(false, "testing empty element mixed sub protocol array");
     } catch (e) {
       ok(true, "testing empty element mixed sub protocol array");
@@ -632,7 +632,7 @@ function test28() {
   return new Promise(function(resolve, reject) {
     var prots=["test28"];
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
 
     ws.onopen = function(e) {
       ok(true, "test 28 protocol array open");
@@ -652,7 +652,7 @@ function test29() {
   return new Promise(function(resolve, reject) {
     var prots=["test29a", "test29b"];
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
 
     ws.onopen = function(e) {
       ok(true, "test 29 protocol array open");
@@ -671,7 +671,7 @@ function test29() {
 function test30() {
   return new Promise(function(resolve, reject) {
     var prots=["test-does-not-exist"];
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
 
     ws.onopen = shouldNotOpen;
 
@@ -690,7 +690,7 @@ function test30() {
 function test31() {
   return new Promise(function(resolve, reject) {
     var prots=["test-does-not-exist", "test31"];
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
 
     ws.onopen = function(e) {
       ok(true, "test 31 protocol array open");
@@ -711,7 +711,7 @@ function test32() {
     var prots=["test32","test32"];
 
     try {
-      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
       ok(false, "testing duplicated element sub protocol array");
     } catch (e) {
       ok(true, "testing duplicated sub element protocol array");
@@ -726,7 +726,7 @@ function test33() {
   return new Promise(function(resolve, reject) {
     var prots=["test33"];
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
 
     ws.onopen = function(e) {
       ok(true, "test 33 open");
@@ -748,7 +748,7 @@ function test34() {
   return new Promise(function(resolve, reject) {
     var prots=["test-34"];
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
 
     ws.onopen = function(e) {
       ok(true, "test 34 open");
@@ -769,7 +769,7 @@ function test34() {
 // test35: test for sending custom close code and reason
 function test35() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-35a");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-35a");
 
     ws.onopen = function(e) {
       ok(true, "test 35a open");
@@ -779,7 +779,7 @@ function test35() {
     ws.onclose = function(e) {
       ok(true, "test 35a close");
       ok(e.wasClean, "test 35a closed cleanly");
-      var wsb = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-35b");
+      var wsb = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-35b");
 
       wsb.onopen = function(e) {
         ok(true, "test 35b open");
@@ -802,7 +802,7 @@ function test36() {
   return new Promise(function(resolve, reject) {
     var prots=["test-36"];
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
 
     ws.onopen = function(e) {
       ok(true, "test 36 open");
@@ -829,7 +829,7 @@ function test37() {
   return new Promise(function(resolve, reject) {
     var prots=["test-37"];
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
 
     ws.onopen = function(e) {
       ok(true, "test 37 open");
@@ -847,7 +847,7 @@ function test37() {
       ok(true, "test 37 close");
       ok(e.wasClean, "test 37 closed cleanly");
 
-      var wsb = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-37b");
+      var wsb = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-37b");
 
       wsb.onopen = function(e) {
         // now test that a rejected close code and reason dont persist
@@ -865,7 +865,7 @@ function test37() {
         ok(true, "test 37b close");
         ok(e.wasClean, "test 37b closed cleanly");
 
-        var wsc = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-37c");
+        var wsc = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-37c");
 
         wsc.onopen = function(e) {
           ok(true, "test 37c open");
@@ -887,7 +887,7 @@ function test38() {
   return new Promise(function(resolve, reject) {
     var prots=["test-38"];
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
 
     ws.onopen = function(e) {
       ok(true, "test 38 open");
@@ -908,7 +908,7 @@ function test39() {
   return new Promise(function(resolve, reject) {
     var prots=["test-39"];
 
-    var ws = CreateTestWS("wss://example.com/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("wss://example.com/tests/dom/websocket/tests/file_websocket", prots);
     status_test39 = "started";
 
     ws.onopen = function(e) {
@@ -930,7 +930,7 @@ function test40() {
   return new Promise(function(resolve, reject) {
     var prots=["test-40"];
 
-    var ws = CreateTestWS("wss://nocert.example.com/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("wss://nocert.example.com/tests/dom/websocket/tests/file_websocket", prots);
 
     status_test40 = "started";
     ws.onerror = ignoreError;
@@ -952,11 +952,11 @@ function test40() {
 // test41: HSTS
 function test41() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://example.com/tests/dom/base/test/file_websocket", "test-41a", 1);
+    var ws = CreateTestWS("ws://example.com/tests/dom/websocket/tests/file_websocket", "test-41a", 1);
 
     ws.onopen = function(e) {
       ok(true, "test 41a open");
-      is(ws.url, "ws://example.com/tests/dom/base/test/file_websocket",
+      is(ws.url, "ws://example.com/tests/dom/websocket/tests/file_websocket",
          "test 41a initial ws should not be redirected");
       ws.close();
     }
@@ -965,7 +965,7 @@ function test41() {
       ok(true, "test 41a close");
 
       // establish a hsts policy for example.com
-      var wsb = CreateTestWS("wss://example.com/tests/dom/base/test/file_websocket", "test-41b", 1);
+      var wsb = CreateTestWS("wss://example.com/tests/dom/websocket/tests/file_websocket", "test-41b", 1);
 
       wsb.onopen = function(e) {
         ok(true, "test 41b open");
@@ -976,11 +976,11 @@ function test41() {
         ok(true, "test 41b close");
 
         // try ws:// again, it should be done over wss:// now due to hsts
-        var wsc = CreateTestWS("ws://example.com/tests/dom/base/test/file_websocket", "test-41c");
+        var wsc = CreateTestWS("ws://example.com/tests/dom/websocket/tests/file_websocket", "test-41c");
 
         wsc.onopen = function(e) {
           ok(true, "test 41c open");
-          is(wsc.url, "wss://example.com/tests/dom/base/test/file_websocket",
+          is(wsc.url, "wss://example.com/tests/dom/websocket/tests/file_websocket",
              "test 41c ws should be redirected by hsts to wss");
           wsc.close();
         }
@@ -1010,7 +1010,7 @@ function test42() {
   return new Promise(function(resolve, reject) {
     // test some utf-8 non-characters. They should be allowed in the
     // websockets context. Test via round trip echo.
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-42");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-42");
     var data = ["U+FFFE \ufffe",
 		"U+FFFF \uffff",
 		"U+10FFFF \udbff\udfff"];
@@ -1041,7 +1041,7 @@ function test43() {
   return new Promise(function(resolve, reject) {
     var prots=["test-43"];
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", prots);
 
     ws.onopen = function(e) {
       ok(true, "test 43 open");
@@ -1069,7 +1069,7 @@ function test43() {
 // test44: Test sending/receving binary ArrayBuffer
 function test44() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-44");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-44");
     is(ws.readyState, 0, "bad readyState in test-44!");
     ws.binaryType = "arraybuffer";
 
@@ -1103,7 +1103,7 @@ function test44() {
 function test45() {
   return new Promise(function(resolve, reject) {
     function test45Real(blobFile) {
-      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-45");
+      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-45");
       is(ws.readyState, 0, "bad readyState in test-45!");
       // ws.binaryType = "blob";  // Don't need to specify: blob is the default
 
@@ -1158,7 +1158,7 @@ function test45() {
 // test46: Test that we don't dispatch incoming msgs once in CLOSING state
 function test46() {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-46");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-46");
     is(ws.readyState, 0, "create bad readyState in test-46!");
 
     ws.onopen = function() {
@@ -1221,7 +1221,7 @@ function test48() {
     const pref_close = "network.websocket.timeout.close";
     SpecialPowers.setIntPref(pref_close, 1);
 
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-48");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-48");
 
     ws.onopen = function() {
       ws.close();
@@ -1246,7 +1246,7 @@ function test48() {
 function test49()
 {
   return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-49");
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-49");
     var gotError = 0;
     ok(ws.readyState == 0, "create bad readyState in test-49!");
 

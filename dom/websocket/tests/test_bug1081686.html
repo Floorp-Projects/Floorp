@@ -27,7 +27,7 @@ function forcegc()
 }
 
 function testWebSocket () {
-  ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/file_websocket_hello");
+  ws = new WebSocket("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_hello");
   ws.onopen = function(e) {
     ws.send("data");
   }
@@ -39,7 +39,7 @@ function testWebSocket () {
       is(ws.binaryType, 'blob', 'WebSocket.binaryType is blob');
       ws.binaryType = 'arraybuffer';
       is(ws.binaryType, 'arraybuffer', 'WebSocket.binaryType is arraybuffer');
-      is(ws.url, 'ws://mochi.test:8888/tests/dom/base/test/file_websocket_hello', 'WebSocket.url is correct');
+      is(ws.url, 'ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_hello', 'WebSocket.url is correct');
       ws.close();
       ws.send('foobar');
       SimpleTest.finish();

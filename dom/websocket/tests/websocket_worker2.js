@@ -1,6 +1,6 @@
-importScripts('../../../dom/base/test/websocket_helpers.js');
-importScripts('../../../dom/base/test/websocket_tests.js');
 importScripts('websocket_helpers.js');
+importScripts('websocket_tests.js');
+importScripts('websocket_worker_helpers.js');
 
 var tests = [
   test11, // a simple hello echo;

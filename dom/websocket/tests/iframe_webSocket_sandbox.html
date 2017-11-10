@@ -23,7 +23,7 @@ if (location.search == '?nested') {
   "</scr" + "ipt></html>";
 } else if (location.search == '?opener') {
   try{
-    var socket = new WebSocket('ws://mochi.test:8888/tests/dom/base/test/file_websocket_basic');
+    var socket = new WebSocket('ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_basic');
     socket.onerror = function(e) {
       opener.postMessage('WS onerror', '*');
       close();
@@ -44,7 +44,7 @@ if (location.search == '?nested') {
   ifr.srcdoc = `
   <html><script>
   try{
-    var socket = new WebSocket('ws://mochi.test:8888/tests/dom/base/test/file_websocket_basic');
+    var socket = new WebSocket('ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_basic');
     socket.onerror = function(e) {
       parent.postMessage('WS onerror', '*');
     };

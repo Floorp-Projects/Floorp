@@ -21,13 +21,13 @@ var sendText = true;
 
 tests = [
   // enable PMCE
-  [ true, true, "ws://mochi.test:8888/tests/dom/base/test/file_websocket_permessage_deflate" ],
+  [ true, true, "ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_permessage_deflate" ],
   // disable PMCE
-  [ false, false, "ws://mochi.test:8888/tests/dom/base/test/file_websocket_permessage_deflate_disabled" ],
+  [ false, false, "ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_permessage_deflate_disabled" ],
   // server rejects offered PMCE
-  [ true, false, "ws://mochi.test:8888/tests/dom/base/test/file_websocket_permessage_deflate_rejected" ],
+  [ true, false, "ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_permessage_deflate_rejected" ],
   // server returns parameters in the handshake
-  [ true, true, "ws://mochi.test:8888/tests/dom/base/test/file_websocket_permessage_deflate_params" ]
+  [ true, true, "ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_permessage_deflate_params" ]
 ]
 
 function ab2str(buf) {
