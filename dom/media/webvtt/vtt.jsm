@@ -305,8 +305,14 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
     rt: "ruby"
   };
 
+  const PARSE_CONTENT_MODE = {
+    NORMAL_CUE: "normal_cue",
+    PSUEDO_CUE: "pseudo_cue",
+    DOCUMENT_FRAGMENT: "document_fragment",
+    REGION_CUE: "region_cue",
+  }
   // Parse content into a document fragment.
-  function parseContent(window, input, bReturnFrag) {
+  function parseContent(window, input, mode) {
     function nextToken() {
       // Check for end-of-string.
       if (!input) {
@@ -384,16 +390,20 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       return hours + ':' + minutes + ':' + seconds + '.' + f;
     }
 
-    var isFirefoxSupportPseudo = (/firefox/i.test(window.navigator.userAgent))
-          && Services.prefs.getBoolPref("media.webvtt.pseudo.enabled");
     var root;
-    if (bReturnFrag) {
-      root = window.document.createDocumentFragment();
-    } else if (isFirefoxSupportPseudo) {
-      root = window.document.createElement("div", {pseudo: "::cue"});
-    } else {
-      root = window.document.createElement("div");
+    switch (mode) {
+      case PARSE_CONTENT_MODE.PSUEDO_CUE:
+        root = window.document.createElement("div", {pseudo: "::cue"});
+        break;
+      case PARSE_CONTENT_MODE.NORMAL_CUE:
+      case PARSE_CONTENT_MODE.REGION_CUE:
+        root = window.document.createElement("div");
+        break;
+      case PARSE_CONTENT_MODE.DOCUMENT_FRAGMENT:
+        root = window.document.createDocumentFragment();
+        break;
     }
+
     var current = root,
         t,
         tagStack = [];
@@ -494,7 +504,11 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
     // Parse our cue's text into a DOM tree rooted at 'cueDiv'. This div will
     // have inline positioning and will function as the cue background box.
-    this.cueDiv = parseContent(window, cue.text, false);
+    if (isFirefoxSupportPseudo) {
+      this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.PSUEDO_CUE);
+    } else {
+      this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.NORMAL_CUE);
+    }
     var styles = {
       color: color,
       backgroundColor: backgroundColor,
@@ -896,7 +910,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
     if (!window) {
       return null;
     }
-    return parseContent(window, cuetext, true);
+    return parseContent(window, cuetext, PARSE_CONTENT_MODE.DOCUMENT_FRAGMENT);
   };
 
   var FONT_SIZE_PERCENT = 0.05;
