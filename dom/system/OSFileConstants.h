@@ -42,6 +42,16 @@ private:
   ~OSFileConstantsService();
 
   bool mInitialized;
+
+  struct Paths;
+  nsAutoPtr<Paths> mPaths;
+
+  /**
+   * (Unix) the umask, which goes in OS.Constants.Sys but
+   * can only be looked up (via the system-info service)
+   * on the main thread.
+   */
+  uint32_t mUserUmask;
 };
 
 } // namespace mozilla
