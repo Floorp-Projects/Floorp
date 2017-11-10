@@ -547,6 +547,19 @@ add_task(async function test_bookmark_guidMap_fail() {
   }
   do_check_eq(err, "Nooo");
 
+  _("Sync the engine and validate that we didn't put the error code in the wrong place");
+  let ping;
+  try {
+    // Clear processIncoming so that we initialize the guid map inside uploadOutgoing
+    engine._processIncoming = async function() {};
+    await sync_engine_and_validate_telem(engine, true, p => { ping = p; });
+  } catch (e) {}
+
+  deepEqual(ping.engines.find(e => e.name == "bookmarks").failureReason, {
+    name: "unexpectederror",
+    error: "Nooo"
+  });
+
   PlacesUtils.promiseBookmarksTree = pbt;
   await PlacesSyncUtils.bookmarks.reset();
   await promiseStopServer(server);
