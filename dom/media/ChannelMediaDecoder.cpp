@@ -103,26 +103,21 @@ ChannelMediaDecoder::ResourceCallback::NotifyDataArrived()
 void
 ChannelMediaDecoder::ResourceCallback::NotifyDataEnded(nsresult aStatus)
 {
-  RefPtr<ResourceCallback> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "ChannelMediaDecoder::ResourceCallback::NotifyDataEnded",
-    [=]() {
-    if (!self->mDecoder) {
-      return;
-    }
-    self->mDecoder->NotifyDownloadEnded(aStatus);
-    if (NS_SUCCEEDED(aStatus)) {
-      MediaDecoderOwner* owner = self->GetMediaOwner();
-      MOZ_ASSERT(owner);
-      owner->DownloadSuspended();
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mDecoder) {
+    return;
+  }
+  mDecoder->NotifyDownloadEnded(aStatus);
+  if (NS_SUCCEEDED(aStatus)) {
+    MediaDecoderOwner* owner = GetMediaOwner();
+    MOZ_ASSERT(owner);
+    owner->DownloadSuspended();
 
-      // NotifySuspendedStatusChanged will tell the element that download
-      // has been suspended "by the cache", which is true since we never
-      // download anything. The element can then transition to HAVE_ENOUGH_DATA.
-      owner->NotifySuspendedByCache(true);
-    }
-  });
-  mAbstractMainThread->Dispatch(r.forget());
+    // NotifySuspendedStatusChanged will tell the element that download
+    // has been suspended "by the cache", which is true since we never
+    // download anything. The element can then transition to HAVE_ENOUGH_DATA.
+    owner->NotifySuspendedByCache(true);
+  }
 }
 
 void
