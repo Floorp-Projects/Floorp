@@ -200,8 +200,7 @@ public:
 
   bool Running() const
   {
-    mMonitor.AssertCurrentThreadOwns();
-    return mLifecycleState == LIFECYCLE_RUNNING;
+    return LifecycleStateRef() == LIFECYCLE_RUNNING;
   }
 
   /* This is the end of the current iteration, that is, the current time of the
@@ -730,6 +729,24 @@ public:
    * we're about to shutdown) in mMonitor. mMonitor must be held when accessed.
    */
   LifecycleState mLifecycleState;
+  LifecycleState& LifecycleStateRef()
+  {
+#if DEBUG
+    if (!mDetectedNotRunning) {
+      mMonitor.AssertCurrentThreadOwns();
+    }
+#endif
+    return mLifecycleState;
+  }
+  const LifecycleState& LifecycleStateRef() const
+  {
+#if DEBUG
+    if (!mDetectedNotRunning) {
+      mMonitor.AssertCurrentThreadOwns();
+    }
+#endif
+    return mLifecycleState;
+  }
   /**
    * The graph should stop processing at or after this time.
    * Only set on main thread. Read on both main and MSG thread.
