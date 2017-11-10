@@ -14,11 +14,9 @@ this.EXPORTED_SYMBOLS = ["ExtensionChildDevToolsUtils"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/EventEmitter.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource://gre/modules/EventEmitter.jsm");
 
 // Create a variable to hold the cached ThemeChangeObserver which does not
 // get created until a devtools context has been created.
