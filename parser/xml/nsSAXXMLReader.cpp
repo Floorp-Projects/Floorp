@@ -44,9 +44,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSAXXMLReader)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISAXXMLReader)
 NS_INTERFACE_MAP_END
 
-nsSAXXMLReader::nsSAXXMLReader() :
-    mIsAsyncParse(false),
-    mEnableNamespacePrefixes(false)
+nsSAXXMLReader::nsSAXXMLReader()
+  : mIsAsyncParse(false)
 {
 }
 
@@ -94,7 +93,7 @@ nsSAXXMLReader::HandleStartElement(const char16_t *aName,
     // XXX don't have attr type information
     NS_NAMED_LITERAL_STRING(cdataType, "CDATA");
     // could support xmlns reporting, it's a standard SAX feature
-    if (mEnableNamespacePrefixes || !uri.EqualsLiteral(XMLNS_URI)) {
+    if (!uri.EqualsLiteral(XMLNS_URI)) {
       NS_ASSERTION(aAtts[1], "null passed to handler");
       atts->AddAttribute(uri, localName, qName, cdataType,
                          nsDependentString(aAtts[1]));
@@ -322,26 +321,6 @@ nsSAXXMLReader::SetErrorHandler(nsISAXErrorHandler *aErrorHandler)
 {
   mErrorHandler = aErrorHandler;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::SetFeature(const nsAString &aName, bool aValue)
-{
-  if (aName.EqualsLiteral("http://xml.org/sax/features/namespace-prefixes")) {
-    mEnableNamespacePrefixes = aValue;
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::GetFeature(const nsAString &aName, bool *aResult)
-{
-  if (aName.EqualsLiteral("http://xml.org/sax/features/namespace-prefixes")) {
-    *aResult = mEnableNamespacePrefixes;
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
