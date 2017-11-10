@@ -140,7 +140,7 @@ FlyWebPublishedServer::OnWebSocketAccept(InternalRequest* aConnectRequest,
 
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetOwner());
   AutoJSContext cx;
-  GlobalObject global(cx, nsGlobalWindow::Cast(window)->FastGetGlobalJSObject());
+  GlobalObject global(cx, nsGlobalWindowInner::Cast(window)->FastGetGlobalJSObject());
 
   nsAutoCString extensions, negotiatedExtensions;
   aConnectRequest->Headers()->

@@ -212,7 +212,7 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
         if (elm) {
           elm->MarkForCC();
         }
-        static_cast<nsGlobalWindow*>(win.get())->AsInner()->
+        static_cast<nsGlobalWindowInner*>(win.get())->AsInner()->
           TimeoutManager().UnmarkGrayTimers();
       }
     } else if (aPrepareForCC) {
@@ -503,12 +503,12 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, uint32_t aGCNumber, bool aIsShutdownG
   }
 
   // Mark globals of active windows black.
-  nsGlobalWindow::WindowByIdTable* windowsById =
-    nsGlobalWindow::GetWindowsTable();
+  nsGlobalWindowOuter::OuterWindowByIdTable* windowsById =
+    nsGlobalWindowOuter::GetWindowsTable();
   if (windowsById) {
     for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
-      nsGlobalWindow* window = iter.Data();
-      if (!window->IsCleanedUp() && window->IsOuterWindow()) {
+      nsGlobalWindowOuter* window = iter.Data();
+      if (!window->IsCleanedUp()) {
         window->TraceGlobalJSObject(aTrc);
         EventListenerManager* elm = window->GetExistingListenerManager();
         if (elm) {

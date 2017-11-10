@@ -12,13 +12,9 @@
 # Options:
 #   MOZ_OBJDIR           - Destination object directory
 #   MOZ_MAKE_FLAGS       - Flags to pass to $(MAKE)
-#   MOZ_PREFLIGHT_ALL    - Makefiles to run before building.
-#   MOZ_POSTFLIGHT_ALL   - Makefiles to run after building.
 #
 #######################################################################
 # Defines
-
-comma := ,
 
 ifdef MACH
 ifndef NO_BUILDSTATUS_MESSAGES
@@ -44,8 +40,6 @@ TOPSRCDIR := $(CWD)
 endif
 endif
 
-SH := /bin/sh
-PERL ?= perl
 PYTHON ?= $(shell which python2.7 > /dev/null 2>&1 && echo python2.7 || echo python)
 
 CONFIG_GUESS := $(shell $(TOPSRCDIR)/build/autoconf/config.guess)
@@ -125,6 +119,11 @@ OBJDIR_TARGETS = install export libs clean realclean distclean upload sdk instal
 # The default rule is build
 build::
 
+ifndef MACH
+$(error client.mk must be used via `mach`. Try running \
+`./mach $(firstword $(MAKECMDGOALS) $(.DEFAULT_GOAL))`)
+endif
+
 # Include baseconfig.mk for its $(MAKE) validation.
 include $(TOPSRCDIR)/config/baseconfig.mk
 
@@ -153,15 +152,16 @@ endif
 # helper target for mobile
 build_and_deploy: build package install
 
-#####################################################
-# Preflight, before building any project
-
-ifdef MOZ_PREFLIGHT_ALL
-build preflight_all::
-	set -e; \
-	for mkfile in $(MOZ_PREFLIGHT_ALL); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile preflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
-	done
+# In automation, manage an sccache daemon. The starting of the server
+# needs to be in a make file so sccache inherits the jobserver.
+ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
+build::
+	# Terminate any sccache server that might still be around.
+	-$(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server > /dev/null 2>&1
+	# Start a new server, ensuring it gets the jobserver file descriptors
+	# from make (but don't use the + prefix when make -n is used, so that
+	# the command doesn't run in that case)
+	$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env RUST_LOG=sccache::compiler=debug SCCACHE_ERROR_LOG=$(OBJDIR)/dist/sccache.log $(MOZBUILD_MANAGE_SCCACHE_DAEMON) --start-server
 endif
 
 ####################################
@@ -280,24 +280,16 @@ build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 $(OBJDIR_TARGETS):: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	+$(MOZ_MAKE) $@
 
-####################################
-# Postflight, after building all projects
-
 ifdef MOZ_AUTOMATION
 build::
 	$(MAKE) -f $(TOPSRCDIR)/client.mk automation/build
 endif
 
-ifdef MOZ_POSTFLIGHT_ALL
-build postflight_all::
-	set -e; \
-	for mkfile in $(MOZ_POSTFLIGHT_ALL); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile postflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
-	done
+ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
+build::
+	# Terminate sccache server. This prints sccache stats.
+	-$(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server
 endif
-
-echo-variable-%:
-	@echo $($*)
 
 # This makefile doesn't support parallel execution. It does pass
 # MOZ_MAKE_FLAGS to sub-make processes, so they will correctly execute
@@ -307,6 +299,4 @@ echo-variable-%:
 .PHONY: \
     build \
     configure \
-    preflight_all \
-    postflight_all \
     $(OBJDIR_TARGETS)

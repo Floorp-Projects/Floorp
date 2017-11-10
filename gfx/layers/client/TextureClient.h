@@ -225,6 +225,7 @@ public:
 
 #ifdef XP_WIN
 class D3D11TextureData;
+class DXGIYCbCrTextureData;
 #endif
 
 class TextureData {
@@ -290,6 +291,9 @@ public:
 
 #ifdef XP_WIN
   virtual D3D11TextureData* AsD3D11TextureData() {
+    return nullptr;
+  }
+  virtual DXGIYCbCrTextureData* AsDXGIYCbCrTextureData() {
     return nullptr;
   }
 #endif

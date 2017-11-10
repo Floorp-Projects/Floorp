@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
-<title>delay tests</title>
+<title>AnimationEffectTiming.delay</title>
 <link rel="help" href="https://w3c.github.io/web-animations/#dom-animationeffecttiming-delay">
-<link rel="author" title="Daisuke Akatsuka" href="mailto:daisuke@mozilla-japan.org">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="../../testcommon.js"></script>
@@ -14,7 +13,7 @@
 test(function(t) {
   var anim = createDiv(t).animate(null);
   assert_equals(anim.effect.timing.delay, 0);
-}, 'Test default value');
+}, 'Has the default value 0');
 
 test(function(t) {
   var div = createDiv(t);
@@ -23,7 +22,7 @@ test(function(t) {
   assert_equals(anim.effect.timing.delay, 100, 'set delay 100');
   assert_equals(anim.effect.getComputedTiming().delay, 100,
                   'getComputedTiming() after set delay 100');
-}, 'set delay 100');
+}, 'Can be set to a positive number');
 
 test(function(t) {
   var div = createDiv(t);
@@ -32,7 +31,7 @@ test(function(t) {
   assert_equals(anim.effect.timing.delay, -100, 'set delay -100');
   assert_equals(anim.effect.getComputedTiming().delay, -100,
                 'getComputedTiming() after set delay -100');
-}, 'set delay -100');
+}, 'Can be set to a negative number');
 
 test(function(t) {
   var div = createDiv(t);
@@ -40,8 +39,8 @@ test(function(t) {
   anim.effect.timing.delay = 100;
   assert_equals(anim.effect.getComputedTiming().progress, null);
   assert_equals(anim.effect.getComputedTiming().currentIteration, null);
-}, 'Test adding a positive delay to an animation without a backwards fill ' +
-   'makes it no longer active');
+}, 'Can set a positive delay on an animation without a backwards fill to'
+   + ' make it no longer active');
 
 test(function(t) {
   var div = createDiv(t);
@@ -50,7 +49,7 @@ test(function(t) {
                            duration: 100 });
   anim.effect.timing.delay = -50;
   assert_equals(anim.effect.getComputedTiming().progress, 0.5);
-}, 'Test seeking an animation by setting a negative delay');
+}, 'Can set a negative delay to seek into the active interval');
 
 test(function(t) {
   var div = createDiv(t);
@@ -60,7 +59,7 @@ test(function(t) {
   anim.effect.timing.delay = -100;
   assert_equals(anim.effect.getComputedTiming().progress, 1);
   assert_equals(anim.effect.getComputedTiming().currentIteration, 0);
-}, 'Test finishing an animation using a large negative delay');
+}, 'Can set a large negative delay to finishing an animation');
 
 test(function(t) {
   var div = createDiv(t);
@@ -73,7 +72,7 @@ test(function(t) {
       div.animate({}, { delay: invalid });
     }, 'animate() with ' + invalid);
   }
-}, 'Setting invalid values should throw TypeError');
+}, 'Throws when setting invalid values');
 
 </script>
 </body>

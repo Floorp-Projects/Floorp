@@ -30,7 +30,7 @@
   add_task(async function check_normal_status() {
     await new Promise(resolve => {
       video.src = "seek_with_sound.ogg";
-      video.addEventListener("loadedmetadata", resolve);
+      video.addEventListener("loadedmetadata", () => SimpleTest.executeSoon(resolve));
     });
 
     ok(statusOverlay.hidden, "statusOverlay shoud not present without error");
@@ -43,7 +43,7 @@
 
     await new Promise(resolve => {
       video.src = "invalid_source.ogg";
-      video.addEventListener("error", resolve)
+      video.addEventListener("error", () => SimpleTest.executeSoon(resolve));
     });
 
     ok(clickToPlay.hasAttribute("hidden"), `click to play button should hide`);

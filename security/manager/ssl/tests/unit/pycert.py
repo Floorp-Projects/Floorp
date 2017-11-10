@@ -17,7 +17,8 @@ subject:<subject distinguished name specification>
 [issuerKey:<key specification>]
 [subjectKey:<key specification>]
 [signature:{sha256WithRSAEncryption,sha1WithRSAEncryption,
-            md5WithRSAEncryption,ecdsaWithSHA256}]
+            md5WithRSAEncryption,ecdsaWithSHA256,ecdsaWithSHA384,
+            ecdsaWithSHA512}]
 [serialNumber:<integer in the interval [1, 127]>]
 [extension:<extension name:<extension-specific data>>]
 [...]
@@ -333,6 +334,12 @@ def stringToAlgorithmIdentifiers(string):
     elif string == 'ecdsaWithSHA256':
         algorithmType = pykey.HASH_SHA256
         algorithm = univ.ObjectIdentifier('1.2.840.10045.4.3.2')
+    elif string == 'ecdsaWithSHA384':
+        algorithmType = pykey.HASH_SHA384
+        algorithm = univ.ObjectIdentifier('1.2.840.10045.4.3.3')
+    elif string == 'ecdsaWithSHA512':
+        algorithmType = pykey.HASH_SHA512
+        algorithm = univ.ObjectIdentifier('1.2.840.10045.4.3.4')
     else:
         raise UnknownAlgorithmTypeError(string)
     algorithmIdentifier.setComponentByName('algorithm', algorithm)

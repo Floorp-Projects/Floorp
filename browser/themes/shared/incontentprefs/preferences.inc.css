@@ -664,6 +664,7 @@ button > hbox > label {
 
 .help-label {
   margin: 0 4px;
+  line-height: 22px;
   -moz-user-select: none;
 }
 

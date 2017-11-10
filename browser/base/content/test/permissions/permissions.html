@@ -6,7 +6,10 @@
   <head>
     <meta charset="utf8">
   </head>
-  <body>
+<script>
+var gKeyPresses = 0;
+</script>
+  <body onkeypress="gKeyPresses++;">
 	<!-- This page could eventually request permissions from content
 	     and make sure that chrome responds appropriately -->
   <button id="geo" onclick="navigator.geolocation.getCurrentPosition(() => {})">Geolocation</button>

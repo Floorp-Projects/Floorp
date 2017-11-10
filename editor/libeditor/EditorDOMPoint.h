@@ -59,15 +59,16 @@ public:
         aPointedNode && aPointedNode->IsContent() ?
           aPointedNode->GetParentNode() : nullptr,
         aPointedNode && aPointedNode->IsContent() ?
-          GetRef(aPointedNode->AsContent()) : nullptr)
+          GetRef(aPointedNode->GetParentNode(),
+                 aPointedNode->AsContent()) : nullptr)
   {
   }
 
-  EditorDOMPointBase(nsINode* aConatiner,
+  EditorDOMPointBase(nsINode* aContainer,
                      nsIContent* aPointedNode,
                      int32_t aOffset)
-    : RangeBoundaryBase<ParentType, RefType>(aConatiner,
-                                             GetRef(aPointedNode),
+    : RangeBoundaryBase<ParentType, RefType>(aContainer,
+                                             GetRef(aContainer, aPointedNode),
                                              aOffset)
   {
   }
@@ -83,11 +84,32 @@ public:
   {
   }
 
-private:
-  static nsIContent* GetRef(nsIContent* aPointedNode)
+  EditorDOMPointBase<nsINode*, nsIContent*>
+  AsRaw() const
   {
-    MOZ_ASSERT(aPointedNode);
-    return aPointedNode ? aPointedNode->GetPreviousSibling() : nullptr;
+    return EditorDOMPointBase<nsINode*, nsIContent*>(*this);
+  }
+
+  template<typename A, typename B>
+  EditorDOMPointBase& operator=(const EditorDOMPointBase<A, B>& aOther)
+  {
+    RangeBoundaryBase<ParentType, RefType>::operator=(aOther);
+    return *this;
+  }
+
+private:
+  static nsIContent* GetRef(nsINode* aContainerNode, nsIContent* aPointedNode)
+  {
+    // If referring one of a child of the container, the 'ref' should be the
+    // previous sibling of the referring child.
+    if (aPointedNode) {
+      return aPointedNode->GetPreviousSibling();
+    }
+    // If referring after the last child, the 'ref' should be the last child.
+    if (aContainerNode && aContainerNode->IsContainerNode()) {
+      return aContainerNode->GetLastChild();
+    }
+    return nullptr;
   }
 };
 

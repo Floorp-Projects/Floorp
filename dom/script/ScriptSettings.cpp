@@ -505,23 +505,23 @@ AutoJSAPI::Init(JSObject* aObject)
 bool
 AutoJSAPI::Init(nsPIDOMWindowInner* aWindow, JSContext* aCx)
 {
-  return Init(nsGlobalWindow::Cast(aWindow), aCx);
+  return Init(nsGlobalWindowInner::Cast(aWindow), aCx);
 }
 
 bool
 AutoJSAPI::Init(nsPIDOMWindowInner* aWindow)
 {
-  return Init(nsGlobalWindow::Cast(aWindow));
+  return Init(nsGlobalWindowInner::Cast(aWindow));
 }
 
 bool
-AutoJSAPI::Init(nsGlobalWindow* aWindow, JSContext* aCx)
+AutoJSAPI::Init(nsGlobalWindowInner* aWindow, JSContext* aCx)
 {
   return Init(static_cast<nsIGlobalObject*>(aWindow), aCx);
 }
 
 bool
-AutoJSAPI::Init(nsGlobalWindow* aWindow)
+AutoJSAPI::Init(nsGlobalWindowInner* aWindow)
 {
   return Init(static_cast<nsIGlobalObject*>(aWindow));
 }
@@ -552,7 +552,7 @@ WarningOnlyErrorReporter(JSContext* aCx, JSErrorReport* aRep)
   }
 
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-  nsGlobalWindow* win = xpc::CurrentWindowOrNull(aCx);
+  nsGlobalWindowInner* win = xpc::CurrentWindowOrNull(aCx);
   if (!win) {
     // We run addons in a separate privileged compartment, but if we're in an
     // addon compartment we should log warnings to the console of the associated
@@ -592,7 +592,7 @@ AutoJSAPI::ReportException()
     if (mIsMainThread) {
       RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
 
-      RefPtr<nsGlobalWindow> win = xpc::WindowGlobalOrNull(errorGlobal);
+      RefPtr<nsGlobalWindowInner> win = xpc::WindowGlobalOrNull(errorGlobal);
       if (!win) {
         // We run addons in a separate privileged compartment, but they still
         // expect to trigger the onerror handler of their associated DOM Window.

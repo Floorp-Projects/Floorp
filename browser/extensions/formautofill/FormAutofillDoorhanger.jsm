@@ -46,7 +46,7 @@ const CONTENT = {
     },
     mainAction: {
       label: GetStringFromName(changeAutofillOptsKey),
-      accessKey: "C",
+      accessKey: GetStringFromName("changeAutofillOptionsAccessKey"),
       callbackState: "open-pref",
       disableHighlight: true,
     },
@@ -82,12 +82,12 @@ const CONTENT = {
     },
     mainAction: {
       label: GetStringFromName("updateAddressLabel"),
-      accessKey: "U",
+      accessKey: GetStringFromName("updateAddressAccessKey"),
       callbackState: "update",
     },
     secondaryActions: [{
       label: GetStringFromName("createAddressLabel"),
-      accessKey: "C",
+      accessKey: GetStringFromName("createAddressAccessKey"),
       callbackState: "create",
     }],
     options: {
@@ -107,16 +107,16 @@ const CONTENT = {
     },
     mainAction: {
       label: GetStringFromName("saveCreditCardLabel"),
-      accessKey: "S",
+      accessKey: GetStringFromName("saveCreditCardAccessKey"),
       callbackState: "save",
     },
     secondaryActions: [{
       label: GetStringFromName("cancelCreditCardLabel"),
-      accessKey: "D",
+      accessKey: GetStringFromName("cancelCreditCardAccessKey"),
       callbackState: "cancel",
     }, {
       label: GetStringFromName("neverSaveCreditCardLabel"),
-      accessKey: "N",
+      accessKey: GetStringFromName("neverSaveCreditCardAccessKey"),
       callbackState: "disable",
     }],
     options: {
@@ -160,12 +160,12 @@ const CONTENT = {
     },
     mainAction: {
       label: GetStringFromName("updateCreditCardLabel"),
-      accessKey: "U",
+      accessKey: GetStringFromName("updateCreditCardAccessKey"),
       callbackState: "update",
     },
     secondaryActions: [{
       label: GetStringFromName("createCreditCardLabel"),
-      accessKey: "C",
+      accessKey: GetStringFromName("createCreditCardAccessKey"),
       callbackState: "create",
     }],
     options: {

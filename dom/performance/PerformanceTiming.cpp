@@ -144,8 +144,8 @@ PerformanceTiming::FetchStartHighRes()
     MOZ_ASSERT(!mAsyncOpen.IsNull(), "The fetch start time stamp should always be "
         "valid if the performance timing is enabled");
     if (!mAsyncOpen.IsNull()) {
-      if (!mWorkerStart.IsNull() && mWorkerStart > mAsyncOpen) {
-        mFetchStart = TimeStampToDOMHighRes(mWorkerStart);
+      if (!mWorkerRequestStart.IsNull() && mWorkerRequestStart > mAsyncOpen) {
+        mFetchStart = TimeStampToDOMHighRes(mWorkerRequestStart);
       } else {
         mFetchStart = TimeStampToDOMHighRes(mAsyncOpen);
       }

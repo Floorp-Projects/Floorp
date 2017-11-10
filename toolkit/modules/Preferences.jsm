@@ -47,7 +47,7 @@ this.Preferences =
  *
  * @returns the value of the pref, if any; otherwise the default value
  */
-Preferences.get = function(prefName, defaultValue, valueType = Ci.nsISupportsString) {
+Preferences.get = function(prefName, defaultValue, valueType = null) {
   if (Array.isArray(prefName))
     return prefName.map(v => this.get(v, defaultValue));
 
@@ -57,7 +57,13 @@ Preferences.get = function(prefName, defaultValue, valueType = Ci.nsISupportsStr
 Preferences._get = function(prefName, defaultValue, valueType) {
   switch (this._prefBranch.getPrefType(prefName)) {
     case Ci.nsIPrefBranch.PREF_STRING:
-      return this._prefBranch.getComplexValue(prefName, valueType).data;
+      if (valueType) {
+        let ifaces = ["nsIFile", "nsIPrefLocalizedString"];
+        if (ifaces.includes(valueType.name)) {
+          return this._prefBranch.getComplexValue(prefName, valueType).data;
+        }
+      }
+      return this._prefBranch.getStringPref(prefName);
 
     case Ci.nsIPrefBranch.PREF_INT:
       return this._prefBranch.getIntPref(prefName);

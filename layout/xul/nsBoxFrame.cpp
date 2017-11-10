@@ -1367,11 +1367,12 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     const ActiveScrolledRoot* ownLayerASR = contASRTracker->GetContainerASR();
 
     DisplayListClipState::AutoSaveRestore ownLayerClipState(aBuilder);
-    ownLayerClipState.ClearUpToASR(ownLayerASR);
 
     // Wrap the list to make it its own layer
     aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayOwnLayer(aBuilder, this, &masterList, ownLayerASR));
+      nsDisplayOwnLayer(aBuilder, this, &masterList, ownLayerASR, 0,
+                        mozilla::layers::FrameMetrics::NULL_SCROLL_ID,
+                        mozilla::layers::ScrollThumbData{}, true, true));
   }
 }
 

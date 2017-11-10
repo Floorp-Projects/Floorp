@@ -24,7 +24,7 @@ function makeWidgetId(id) {
   return id.replace(/[^a-z0-9_-]/g, "_");
 }
 
-// Tests that the shownInUrlbar property of the PageActions.Action object
+// Tests that the pinnedToUrlbar property of the PageActions.Action object
 // backing the extension's page action persists across app restarts.
 add_task(async function testAppShutdown() {
   let extensionData = {
@@ -44,11 +44,11 @@ add_task(async function testAppShutdown() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
-  // Get the PageAction.Action object.  Its shownInUrlbar should have been
+  // Get the PageAction.Action object.  Its pinnedToUrlbar should have been
   // initialized to true in ext-pageAction.js, when it's created.
   let actionID = makeWidgetId(extension.id);
   let action = PageActions.actionForID(actionID);
-  Assert.equal(action.shownInUrlbar, true);
+  Assert.equal(action.pinnedToUrlbar, true);
 
   // Simulate restarting the app without first unloading the extension.
   await promiseShutdownManager();
@@ -56,12 +56,12 @@ add_task(async function testAppShutdown() {
   await promiseStartupManager();
   await extension.awaitStartup();
 
-  // Get the action.  Its shownInUrlbar should remain true.
+  // Get the action.  Its pinnedToUrlbar should remain true.
   action = PageActions.actionForID(actionID);
-  Assert.equal(action.shownInUrlbar, true);
+  Assert.equal(action.pinnedToUrlbar, true);
 
-  // Now set its shownInUrlbar to false.
-  action.shownInUrlbar = false;
+  // Now set its pinnedToUrlbar to false.
+  action.pinnedToUrlbar = false;
 
   // Simulate restarting the app again without first unloading the extension.
   await promiseShutdownManager();
@@ -69,9 +69,9 @@ add_task(async function testAppShutdown() {
   await promiseStartupManager();
   await extension.awaitStartup();
 
-  // Get the action.  Its shownInUrlbar should remain false.
+  // Get the action.  Its pinnedToUrlbar should remain false.
   action = PageActions.actionForID(actionID);
-  Assert.equal(action.shownInUrlbar, false);
+  Assert.equal(action.pinnedToUrlbar, false);
 
   // Now unload the extension and quit the app.
   await extension.unload();

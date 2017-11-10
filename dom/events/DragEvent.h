@@ -40,7 +40,7 @@ public:
 
   void InitDragEvent(const nsAString& aType,
                      bool aCanBubble, bool aCancelable,
-                     nsGlobalWindow* aView, int32_t aDetail,
+                     nsGlobalWindowInner* aView, int32_t aDetail,
                      int32_t aScreenX, int32_t aScreenY,
                      int32_t aClientX, int32_t aClientY,
                      bool aCtrlKey, bool aAltKey, bool aShiftKey,

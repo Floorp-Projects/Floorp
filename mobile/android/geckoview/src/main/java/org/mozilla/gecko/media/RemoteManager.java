@@ -27,7 +27,6 @@ public final class RemoteManager implements IBinder.DeathRecipient {
     private static final String LOGTAG = "GeckoRemoteManager";
     private static final boolean DEBUG = false;
     private static RemoteManager sRemoteManager = null;
-    private static ICrashReporter setCrashReporter = null;
 
     public synchronized static RemoteManager getInstance() {
         if (sRemoteManager == null) {
@@ -145,20 +144,6 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         }
     }
 
-    private void reportDecodingProcessCrash() {
-        if (setCrashReporter != null) {
-            setCrashReporter.reportDecodingProcessCrash();
-        }
-    }
-
-    public static void setCrashReporter(ICrashReporter reporter) {
-        setCrashReporter = reporter;
-    }
-
-    public interface ICrashReporter {
-        void reportDecodingProcessCrash();
-    }
-
     public synchronized IMediaDrmBridge createRemoteMediaDrmBridge(String keySystem,
                                                                    String stubId) {
         if (mRemote == null) {
@@ -178,7 +163,6 @@ public final class RemoteManager implements IBinder.DeathRecipient {
     @Override
     public void binderDied() {
         Log.e(LOGTAG, "remote codec is dead");
-        reportDecodingProcessCrash();
         handleRemoteDeath();
     }
 

@@ -245,7 +245,7 @@ class JSFunction : public js::NativeObject
     }
 
     bool hasLexicalThis() const {
-        return isArrow() || nonLazyScript()->isGeneratorExp();
+        return isArrow();
     }
 
     bool isBuiltinFunctionConstructor();

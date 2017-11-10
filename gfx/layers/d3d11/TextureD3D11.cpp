@@ -603,7 +603,8 @@ DXGIYCbCrTextureData::Create(IDirect3DTexture9* aTextureY,
                              HANDLE aHandleCr,
                              const gfx::IntSize& aSize,
                              const gfx::IntSize& aSizeY,
-                             const gfx::IntSize& aSizeCbCr)
+                             const gfx::IntSize& aSizeCbCr,
+                             YUVColorSpace aYUVColorSpace)
 {
   if (!aHandleY || !aHandleCb || !aHandleCr ||
       !aTextureY || !aTextureCb || !aTextureCr) {
@@ -620,6 +621,7 @@ DXGIYCbCrTextureData::Create(IDirect3DTexture9* aTextureY,
   texture->mSize = aSize;
   texture->mSizeY = aSizeY;
   texture->mSizeCbCr = aSizeCbCr;
+  texture->mYUVColorSpace = aYUVColorSpace;
 
   return texture;
 }
@@ -630,7 +632,8 @@ DXGIYCbCrTextureData::Create(ID3D11Texture2D* aTextureY,
                              ID3D11Texture2D* aTextureCr,
                              const gfx::IntSize& aSize,
                              const gfx::IntSize& aSizeY,
-                             const gfx::IntSize& aSizeCbCr)
+                             const gfx::IntSize& aSizeCbCr,
+                             YUVColorSpace aYUVColorSpace)
 {
   if (!aTextureY || !aTextureCb || !aTextureCr) {
     return nullptr;
@@ -678,6 +681,7 @@ DXGIYCbCrTextureData::Create(ID3D11Texture2D* aTextureY,
   texture->mSize = aSize;
   texture->mSizeY = aSizeY;
   texture->mSizeCbCr = aSizeCbCr;
+  texture->mYUVColorSpace = aYUVColorSpace;
 
   return texture;
 }
@@ -697,7 +701,7 @@ DXGIYCbCrTextureData::SerializeSpecific(SurfaceDescriptorDXGIYCbCr* const aOutDe
 {
   *aOutDesc = SurfaceDescriptorDXGIYCbCr(
     (WindowsHandle)mHandles[0], (WindowsHandle)mHandles[1], (WindowsHandle)mHandles[2],
-    mSize, mSizeY, mSizeCbCr
+    mSize, mSizeY, mSizeCbCr, mYUVColorSpace
   );
 }
 
@@ -764,7 +768,7 @@ CreateTextureHostD3D11(const SurfaceDescriptor& aDesc,
 already_AddRefed<DrawTarget>
 D3D11TextureData::BorrowDrawTarget()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread() || PaintThread::IsOnPaintThread());
 
   if (!mDrawTarget && mTexture) {
     // This may return a null DrawTarget
@@ -1142,6 +1146,7 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(TextureFlags aFlags,
   : TextureHost(aFlags)
   , mSize(aDescriptor.size())
   , mIsLocked(false)
+  , mYUVColorSpace(aDescriptor.yUVColorSpace())
 {
   mHandles[0] = aDescriptor.handleY();
   mHandles[1] = aDescriptor.handleCb();
@@ -1448,8 +1453,8 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
         context->UpdateSubresource(mTexture, 0, &box, data, map.mStride, map.mStride * rect.Height());
       }
     } else {
-      context->UpdateSubresource(mTexture, 0, nullptr, aSurface->GetData(),
-                                 aSurface->Stride(), aSurface->Stride() * mSize.height);
+      context->UpdateSubresource(mTexture, 0, nullptr, map.mData,
+                                 map.mStride, map.mStride * mSize.height);
     }
 
     aSurface->Unmap();
@@ -1462,6 +1467,13 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
     mTileSRVs.resize(tileCount);
     mTexture = nullptr;
 
+    DataSourceSurface::ScopedMap map(aSurface, DataSourceSurface::READ);
+    if (!map.IsMapped()) {
+      gfxCriticalError() << "Failed to map surface.";
+      Reset();
+      return false;
+    }
+
     for (uint32_t i = 0; i < tileCount; i++) {
       IntRect tileRect = GetTileRect(i);
 
@@ -1470,10 +1482,10 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
       desc.Usage = D3D11_USAGE_IMMUTABLE;
 
       D3D11_SUBRESOURCE_DATA initData;
-      initData.pSysMem = aSurface->GetData() +
-                         tileRect.y * aSurface->Stride() +
+      initData.pSysMem = map.GetData() +
+                         tileRect.y * map.GetStride() +
                          tileRect.x * bpp;
-      initData.SysMemPitch = aSurface->Stride();
+      initData.SysMemPitch = map.GetStride();
 
       hr = mDevice->CreateTexture2D(&desc, &initData, getter_AddRefs(mTileTextures[i]));
       if (FAILED(hr) || !mTileTextures[i]) {

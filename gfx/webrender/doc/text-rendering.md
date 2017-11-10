@@ -293,12 +293,44 @@ and output `text_color.a * mask` from our fragment shader.
 But then there's still the problem that the first summand of the computation for `result.r` uses
 `text_color.r * mask.r` and the second summand uses `text_color.a * mask.r`.
 
-There's no way around it, we have to use two passes.
-(Actually, there is a way around it, but it requires the use of `glBlendColor`, which we want to avoid because
-we'd have to use different draw calls for different text colors, or it requires "dual source blending" which is
-not supported everywhere.)
+There are multiple ways to deal with this. They are:
 
-Here's how we can express the subpixel text blend function with two passes:
+ 1. Making use of `glBlendColor` and the `GL_CONSTANT_COLOR` blend func.
+ 2. Using a two-pass method.
+ 3. Using "dual source blending".
+
+Let's look at them in order.
+
+#### 1. Subpixel text blending in OpenGL using `glBlendColor`
+
+In this approach we return `text_color.a * mask` from the shader.
+Then we set the blend color to `text_color / text_color.a` and use `GL_CONSTANT_COLOR` as the source blendfunc.
+This results in the following blend equation:
+
+```
+result.r = (text_color.r / text_color.a) * oFragColor.r + (1 - oFragColor.r) * dest.r;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^  ^^^^^^^^^^^^^^^^^
+                         |                              |      |
+                         +--gl::CONSTANT_COLOR          |      +-- gl::ONE_MINUS_SRC_COLOR
+                                                        |
+                                                        +-- gl::FUNC_ADD
+
+         = (text_color.r / text_color.a) * (text_color.a * mask.r) + (1 - (text_color.a * mask.r)) * dest.r
+         = text_color.r * mask.r + (1 - text_color.a * mask.r) * dest.r
+```
+
+At the very beginning of this document, we defined `text_color` as the *premultiplied* text color.
+So instead of actually doing the calculation `text_color.r / text_color.a` when specifying the blend color,
+we really just want to use the *unpremultiplied* text color in that place.
+That's usually the representation we start with anyway.
+
+#### 2. Two-pass subpixel blending in OpenGL
+
+The `glBlendColor` method has the disadvantage that the text color is part of the OpenGL state.
+So if we want to draw text with different colors, we have two use separate batches / draw calls
+to draw the differently-colored parts of text.
+
+Alternatively, we can use a two-pass method which avoids the need to use the `GL_CONSTANT_COLOR` blend func:
 
  - The first pass outputs `text_color.a * mask` from the fragment shader and
    uses `gl::ZERO, gl::ONE_MINUS_SRC_COLOR` as the glBlendFuncs. This achieves:
@@ -316,7 +348,7 @@ result_after_pass0.g = 0 * oFragColor.g + (1 - oFragColor.g) * dest.r
 ```
 
  - The second pass outputs `text_color * mask` from the fragment shader and uses
-   `gl::ONE, gl::ONE` as the glBlendFuncs. This gets us:
+   `gl::ONE, gl::ONE` as the glBlendFuncs. This results in the correct overall blend equation.
 
 ```
 oFragColor = text_color * mask;
@@ -327,9 +359,15 @@ result_after_pass1.r
  = text_color.r * mask.r + (1 - text_color.a * mask.r) * dest.r
 ```
 
-And analogous results for the other channels.
+#### 3. Dual source subpixel blending in OpenGL
 
-This achieves what we set out to do, so we're done here.
+The third approach is similar to the second approach, but makes use of the [`ARB_blend_func_extended`](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_blend_func_extended.txt) extension
+in order to fold the two passes into one:
+Instead of outputting the two different colors in two separate passes, we output them from the same pass,
+as two separate fragment shader outputs.
+Those outputs can then be treated as two different sources in the blend equation.
+
+This method of text blending has not been implemented in WebRender yet.
 
 ## Subpixel Text Rendering to Transparent Destinations with a Background Color Hint
 

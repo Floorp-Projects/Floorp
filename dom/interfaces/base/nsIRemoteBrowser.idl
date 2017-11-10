@@ -4,6 +4,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIPrincipal;
+
 [scriptable, uuid(C8379366-F79F-4D25-89A6-22BEC0A93D16)]
 interface nsIRemoteBrowser : nsISupports
 {
@@ -22,4 +24,6 @@ interface nsIRemoteBrowser : nsISupports
                              [array, size_is(enabledLength)] in string enabledCommands,
                              in unsigned long disabledLength,
                              [array, size_is(disabledLength)] in string disabledCommands);
+
+  readonly attribute nsIPrincipal contentPrincipal;
 };

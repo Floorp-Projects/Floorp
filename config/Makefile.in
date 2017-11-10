@@ -32,53 +32,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef WRAP_SYSTEM_INCLUDES
-export-preqs = \
-  $(call mkdir_deps,system_wrappers) \
-  $(NULL)
-
-export:: $(export-preqs)
-	$(PYTHON) -m mozbuild.action.preprocessor $(DEFINES) $(ACDEFINES) \
-		-DMOZ_TREE_CAIRO=$(MOZ_TREE_CAIRO) \
-		-DMOZ_TREE_PIXMAN=$(MOZ_TREE_PIXMAN) \
-		-DMOZ_SYSTEM_HUNSPELL=$(MOZ_SYSTEM_HUNSPELL) \
-		-DMOZ_SYSTEM_BZ2=$(MOZ_SYSTEM_BZ2) \
-		-DMOZ_SYSTEM_ZLIB=$(MOZ_SYSTEM_ZLIB) \
-		-DMOZ_SYSTEM_PNG=$(MOZ_SYSTEM_PNG) \
-		-DMOZ_SYSTEM_JPEG=$(MOZ_SYSTEM_JPEG) \
-		-DMOZ_SYSTEM_LIBEVENT=$(MOZ_SYSTEM_LIBEVENT) \
-		-DMOZ_SYSTEM_LIBVPX=$(MOZ_SYSTEM_LIBVPX) \
-		-DMOZ_SYSTEM_ICU=$(MOZ_SYSTEM_ICU) \
-		$(srcdir)/system-headers $(srcdir)/stl-headers | $(PERL) $(topsrcdir)/nsprpub/config/make-system-wrappers.pl system_wrappers
-	$(INSTALL) system_wrappers $(DIST)
-
-GARBAGE_DIRS += system_wrappers
-endif
-
-ifdef WRAP_STL_INCLUDES
-ifdef GNU_CXX
-stl_compiler = gcc
-else
-ifdef _MSC_VER
-stl_compiler = msvc
-endif
-endif
-endif
-
-ifdef stl_compiler
-STL_WRAPPERS_SENTINEL = $(DIST)/stl_wrappers/sentinel
-
-$(STL_WRAPPERS_SENTINEL): $(srcdir)/make-stl-wrappers.py $(srcdir)/$(stl_compiler)-stl-wrapper.template.h $(srcdir)/stl-headers $(GLOBAL_DEPS)
-	$(PYTHON) $(srcdir)/make-stl-wrappers.py stl_wrappers $(stl_compiler) $(srcdir)/$(stl_compiler)-stl-wrapper.template.h $(srcdir)/stl-headers
-	$(PYTHON) $(srcdir)/nsinstall.py -t stl_wrappers $(DIST)
-	touch $(STL_WRAPPERS_SENTINEL)
-
-export:: $(STL_WRAPPERS_SENTINEL)
-
-GARBAGE += $(STL_WRAPPERS_SENTINEL)
-GARBAGE_DIRS += stl_wrappers
-endif
-
 GARBAGE += \
   $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES) $(srcdir)/*.pyc *.pyc
 

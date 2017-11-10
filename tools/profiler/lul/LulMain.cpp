@@ -73,6 +73,10 @@ NameOf_DW_REG(int16_t aReg)
     case DW_REG_ARM_R13:   return "r13";
     case DW_REG_ARM_R14:   return "r14";
     case DW_REG_ARM_R15:   return "r15";
+#elif defined(GP_ARCH_mips64)
+    case DW_REG_MIPS_SP:   return "sp";
+    case DW_REG_MIPS_FP:   return "fp";
+    case DW_REG_MIPS_PC:   return "pc";
 #else
 # error "Unsupported arch"
 #endif
@@ -132,6 +136,10 @@ RuleSet::Print(void(*aLog)(const char*)) const
   res += mR12expr.ShowRule(" R12");
   res += mR13expr.ShowRule(" R13");
   res += mR14expr.ShowRule(" R14");
+#elif defined(GP_ARCH_mips64)
+  res += mPCexpr.ShowRule(" PC");
+  res += mSPexpr.ShowRule(" SP");
+  res += mFPexpr.ShowRule(" FP");
 #else
 # error "Unsupported arch"
 #endif
@@ -153,6 +161,10 @@ RuleSet::ExprForRegno(DW_REG_NUMBER aRegno) {
     case DW_REG_ARM_R12:   return &mR12expr;
     case DW_REG_ARM_R11:   return &mR11expr;
     case DW_REG_ARM_R7:    return &mR7expr;
+#elif defined(GP_ARCH_mips64)
+    case DW_REG_MIPS_SP:    return &mSPexpr;
+    case DW_REG_MIPS_FP:    return &mFPexpr;
+    case DW_REG_MIPS_PC:    return &mPCexpr;
 #   else
 #     error "Unknown arch"
 #   endif
@@ -902,6 +914,10 @@ TaggedUWord EvaluateReg(int16_t aReg, const UnwindRegs* aOldRegs,
     case DW_REG_ARM_R13:   return aOldRegs->r13;
     case DW_REG_ARM_R14:   return aOldRegs->r14;
     case DW_REG_ARM_R15:   return aOldRegs->r15;
+#elif defined(GP_ARCH_mips64)
+    case DW_REG_MIPS_SP:   return aOldRegs->sp;
+    case DW_REG_MIPS_FP:   return aOldRegs->fp;
+    case DW_REG_MIPS_PC:   return aOldRegs->pc;
 #else
 # error "Unsupported arch"
 #endif
@@ -1094,6 +1110,10 @@ void UseRuleSet(/*MOD*/UnwindRegs* aRegs,
   aRegs->r13 = TaggedUWord();
   aRegs->r14 = TaggedUWord();
   aRegs->r15 = TaggedUWord();
+#elif defined(GP_ARCH_mips64)
+  aRegs->sp  = TaggedUWord();
+  aRegs->fp  = TaggedUWord();
+  aRegs->pc  = TaggedUWord();
 #else
 #  error "Unsupported arch"
 #endif
@@ -1131,6 +1151,13 @@ void UseRuleSet(/*MOD*/UnwindRegs* aRegs,
     = aRS->mR14expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->r15
     = aRS->mR15expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+#elif defined(GP_ARCH_mips64)
+  aRegs->sp
+    = aRS->mSPexpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+  aRegs->fp
+    = aRS->mFPexpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+  aRegs->pc
+    = aRS->mPCexpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
 #else
 # error "Unsupported arch"
 #endif
@@ -1183,6 +1210,14 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
                      (int)regs.r14.Valid(), (unsigned long long int)regs.r14.Value());
       buf[sizeof(buf)-1] = 0;
       mLog(buf);
+#elif defined(GP_ARCH_mips64)
+      SprintfLiteral(buf,
+                     "LoopTop: pc %d/%llx  sp %d/%llx  fp %d/%llx\n",
+                     (int)regs.pc.Valid(), (unsigned long long int)regs.pc.Value(),
+                     (int)regs.sp.Valid(), (unsigned long long int)regs.sp.Value(),
+                     (int)regs.fp.Valid(), (unsigned long long int)regs.fp.Value());
+      buf[sizeof(buf)-1] = 0;
+      mLog(buf);
 #else
 # error "Unsupported arch"
 #endif
@@ -1194,6 +1229,9 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
 #elif defined(GP_ARCH_arm)
     TaggedUWord ia = (*aFramesUsed == 0 ? regs.r15 : regs.r14);
     TaggedUWord sp = regs.r13;
+#elif defined(GP_ARCH_mips64)
+    TaggedUWord ia = regs.pc;
+    TaggedUWord sp = regs.sp;
 #else
 # error "Unsupported arch"
 #endif
@@ -1410,6 +1448,15 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
 
 static const int LUL_UNIT_TEST_STACK_SIZE = 16384;
 
+#if defined(GP_ARCH_mips64)
+static __attribute__((noinline))
+unsigned long __getpc(void) {
+    unsigned long rtaddr;
+    __asm__ volatile ("move %0, $31" : "=r"(rtaddr));
+    return rtaddr;
+}
+#endif
+
 // This function is innermost in the test call sequence.  It uses LUL
 // to unwind, and compares the result with the sequence specified in
 // the director string.  These need to agree in order for the test to
@@ -1478,6 +1525,22 @@ bool GetAndCheckStackTrace(LUL* aLUL, const char* dstring)
   startRegs.r12 = TaggedUWord(block[3]);
   startRegs.r11 = TaggedUWord(block[4]);
   startRegs.r7  = TaggedUWord(block[5]);
+  const uintptr_t REDZONE_SIZE = 0;
+  uintptr_t start = block[1] - REDZONE_SIZE;
+#elif defined(GP_ARCH_mips64)
+  volatile uintptr_t block[3];
+  MOZ_ASSERT(sizeof(block) == 24);
+  __asm__ __volatile__(
+    "sd $29, 8(%0)     \n"
+    "sd $30, 16(%0)    \n"
+    :
+    :"r"(block)
+    :"memory"
+  );
+  block[0] = __getpc();
+  startRegs.pc = TaggedUWord(block[0]);
+  startRegs.sp = TaggedUWord(block[1]);
+  startRegs.fp = TaggedUWord(block[2]);
   const uintptr_t REDZONE_SIZE = 0;
   uintptr_t start = block[1] - REDZONE_SIZE;
 #else

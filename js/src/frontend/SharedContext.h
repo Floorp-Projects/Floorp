@@ -407,7 +407,6 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint8_t         generatorKind_;         /* The GeneratorKind of this function. */
     uint8_t         asyncKindBits_;         /* The FunctionAsyncKind of this function. */
 
-    bool            isGenexpLambda:1;       /* lambda from generator expression */
     bool            hasDestructuringArgs:1; /* parameter list contains destructuring expression */
     bool            hasParameterExprs:1;    /* parameter list contains expressions */
     bool            hasDirectEvalInParameterExpr:1; /* parameter list contains direct eval */

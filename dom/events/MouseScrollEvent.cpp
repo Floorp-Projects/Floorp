@@ -42,7 +42,7 @@ void
 MouseScrollEvent::InitMouseScrollEvent(const nsAString& aType,
                                        bool aCanBubble,
                                        bool aCancelable,
-                                       nsGlobalWindow* aView,
+                                       nsGlobalWindowInner* aView,
                                        int32_t aDetail,
                                        int32_t aScreenX,
                                        int32_t aScreenY,

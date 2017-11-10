@@ -63,26 +63,25 @@ const openOAuthWindow = (details, redirectURI) => {
     // If the user just closes the window we need to reject
     function unloadlistener() {
       window.removeEventListener("unload", unloadlistener);
-      window.gBrowser.removeTabsProgressListener(wpl);
+      window.gBrowser.removeProgressListener(wpl);
       reject({message: "User cancelled or denied access."});
     }
 
     wpl = {
-      onLocationChange(browser, webProgress, request, locationURI) {
-        if (locationURI.spec.startsWith(redirectURI)) {
-          resolve(locationURI.spec);
+      onStateChange(progress, request, flags, status) {
+        if (request instanceof Ci.nsIHttpChannel &&
+          request.URI.spec.startsWith(redirectURI)) {
+          request.cancel(Components.results.NS_BINDING_ABORTED);
           window.removeEventListener("unload", unloadlistener);
-          window.gBrowser.removeTabsProgressListener(wpl);
+          window.gBrowser.removeProgressListener(wpl);
           window.close();
+          resolve(request.URI.spec);
         }
       },
-      onProgressChange() {},
-      onStatusChange() {},
-      onSecurityChange() {},
     };
 
     promiseDocumentLoaded(window.document).then(() => {
-      window.gBrowser.addTabsProgressListener(wpl);
+      window.gBrowser.addProgressListener(wpl);
       window.addEventListener("unload", unloadlistener);
     });
   });

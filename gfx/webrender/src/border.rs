@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ColorF, LayerPoint, LayerRect};
+use api::{BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ColorF};
+use api::{EdgeAaSegmentMask, LayerPoint, LayerRect};
 use api::{LayerPrimitiveInfo, LayerSize, NormalBorder, RepeatMode};
 use clip::ClipSource;
 use ellipse::Ellipse;
@@ -377,54 +378,55 @@ impl FrameBuilder {
             let p1 = info.rect.bottom_right();
             let rect_width = info.rect.size.width;
             let rect_height = info.rect.size.height;
+            let mut info = info.clone();
 
             // Add a solid rectangle for each visible edge/corner combination.
             if top_edge == BorderEdgeKind::Solid {
-                let mut info = info.clone();
                 info.rect = LayerRect::new(p0, LayerSize::new(rect_width, top_len));
+                info.edge_aa_segment_mask = EdgeAaSegmentMask::BOTTOM;
                 self.add_solid_rectangle(
                     clip_and_scroll,
                     &info,
-                    &RectangleContent::Fill(border.top.color),
+                    RectangleContent::Fill(border.top.color),
                     PrimitiveFlags::None,
                 );
             }
             if left_edge == BorderEdgeKind::Solid {
-                let mut info = info.clone();
                 info.rect = LayerRect::new(
                     LayerPoint::new(p0.x, p0.y + top_len),
                     LayerSize::new(left_len, rect_height - top_len - bottom_len),
                 );
+                info.edge_aa_segment_mask = EdgeAaSegmentMask::RIGHT;
                 self.add_solid_rectangle(
                     clip_and_scroll,
                     &info,
-                    &RectangleContent::Fill(border.left.color),
+                    RectangleContent::Fill(border.left.color),
                     PrimitiveFlags::None,
                 );
             }
             if right_edge == BorderEdgeKind::Solid {
-                let mut info = info.clone();
                 info.rect = LayerRect::new(
                     LayerPoint::new(p1.x - right_len, p0.y + top_len),
                     LayerSize::new(right_len, rect_height - top_len - bottom_len),
                 );
+                info.edge_aa_segment_mask = EdgeAaSegmentMask::LEFT;
                 self.add_solid_rectangle(
                     clip_and_scroll,
                     &info,
-                    &RectangleContent::Fill(border.right.color),
+                    RectangleContent::Fill(border.right.color),
                     PrimitiveFlags::None,
                 );
             }
             if bottom_edge == BorderEdgeKind::Solid {
-                let mut info = info.clone();
                 info.rect = LayerRect::new(
                     LayerPoint::new(p0.x, p1.y - bottom_len),
                     LayerSize::new(rect_width, bottom_len),
                 );
+                info.edge_aa_segment_mask = EdgeAaSegmentMask::TOP;
                 self.add_solid_rectangle(
                     clip_and_scroll,
                     &info,
-                    &RectangleContent::Fill(border.bottom.color),
+                    RectangleContent::Fill(border.bottom.color),
                     PrimitiveFlags::None,
                 );
             }
@@ -555,7 +557,7 @@ impl BorderCornerClipSource {
             BorderCornerClipKind::Dot => {
                 // The centers of dots follow an ellipse along the middle of the
                 // border radius.
-                let inner_radius = corner_radius - widths * 0.5;
+                let inner_radius = (corner_radius - widths * 0.5).abs();
                 let ellipse = Ellipse::new(inner_radius);
 
                 // Allocate a "worst case" number of dot clips. This can be

@@ -831,10 +831,14 @@ class MochitestArguments(ArgumentContainer):
 
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,
-            "tab": 3000,  # See dependencies of bug 1401764.
+            "tab": options.defaultLeakThreshold,
             # GMP rarely gets a log, but when it does, it leaks a little.
             "geckomediaplugin": 20000,
         }
+
+        # See the dependencies of bug 1401764.
+        if mozinfo.isWin:
+            options.leakThresholds["tab"] = 1000
 
         # XXX We can't normalize test_paths in the non build_obj case here,
         # because testRoot depends on the flavor, which is determined by the

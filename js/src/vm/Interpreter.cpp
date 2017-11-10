@@ -46,6 +46,7 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/Stopwatch.h"
+#include "vm/StringBuffer.h"
 #include "vm/TraceLogging.h"
 
 #include "jsatominlines.h"
@@ -1683,6 +1684,40 @@ class ReservedRooted : public RootedBase<T, ReservedRooted<T>>
     DECLARE_POINTER_ASSIGN_OPS(ReservedRooted, T)
 };
 
+void
+js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
+                           HandleValue rref, int rindex)
+{
+    auto uniqueCharsFromString = [](JSContext* cx, HandleValue ref) -> UniqueChars {
+        static const size_t MAX_STRING_LENGTH = 16;
+        RootedString str(cx, ref.toString());
+        if (str->length() > MAX_STRING_LENGTH) {
+            StringBuffer buf(cx);
+            if (!buf.appendSubstring(str, 0, MAX_STRING_LENGTH))
+                return nullptr;
+            if (!buf.append("..."))
+                return nullptr;
+            str = buf.finishString();
+            if (!str)
+                return nullptr;
+        }
+        return UniqueChars(JS_EncodeString(cx, str));
+    };
+
+    UniqueChars lbytes = lref.isString()
+                       ? uniqueCharsFromString(cx, lref)
+                       : DecompileValueGenerator(cx, lindex, lref, nullptr);
+    if (!lbytes)
+        return;
+    UniqueChars rbytes = rref.isString()
+                       ? uniqueCharsFromString(cx, rref)
+                       : DecompileValueGenerator(cx, rindex, rref, nullptr);
+    if (!rbytes)
+        return;
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_IN_NOT_OBJECT,
+                               lbytes.get(), rbytes.get());
+}
+
 static MOZ_NEVER_INLINE bool
 Interpret(JSContext* cx, RunState& state)
 {
@@ -1978,6 +2013,7 @@ CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
 CASE(JSOP_TRY_DESTRUCTURING_ITERCLOSE)
 CASE(JSOP_UNUSED126)
+CASE(JSOP_UNUSED206)
 CASE(JSOP_UNUSED223)
 CASE(JSOP_CONDSWITCH)
 {
@@ -2205,7 +2241,8 @@ CASE(JSOP_IN)
 {
     HandleValue rref = REGS.stackHandleAt(-1);
     if (!rref.isObject()) {
-        ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, nullptr);
+        HandleValue lref = REGS.stackHandleAt(-2);
+        ReportInNotObjectError(cx, lref, -2, rref, -1);
         goto error;
     }
     bool found;
@@ -4099,15 +4136,6 @@ CASE(JSOP_FINALYIELDRVAL)
     GeneratorObject::finalSuspend(cx, gen);
     goto successful_return_continuation;
 }
-
-CASE(JSOP_ARRAYPUSH)
-{
-    ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
-    if (!NewbornArrayPush(cx, obj, REGS.sp[-2]))
-        goto error;
-    REGS.sp -= 2;
-}
-END_CASE(JSOP_ARRAYPUSH)
 
 CASE(JSOP_CHECKCLASSHERITAGE)
 {

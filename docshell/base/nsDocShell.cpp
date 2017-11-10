@@ -3274,7 +3274,7 @@ NS_IMETHODIMP
 nsDocShell::SetCustomUserAgent(const nsAString& aCustomUserAgent)
 {
   mCustomUserAgent = aCustomUserAgent;
-  RefPtr<nsGlobalWindow> win = mScriptGlobal ?
+  RefPtr<nsGlobalWindowInner> win = mScriptGlobal ?
     mScriptGlobal->GetCurrentInnerWindowInternal() : nullptr;
   if (win) {
     Navigator* navigator = win->Navigator();
@@ -3779,7 +3779,7 @@ static bool
 ItemIsActive(nsIDocShellTreeItem* aItem)
 {
   if (nsCOMPtr<nsPIDOMWindowOuter> window = aItem->GetWindow()) {
-    auto* win = nsGlobalWindow::Cast(window);
+    auto* win = nsGlobalWindowOuter::Cast(window);
     MOZ_ASSERT(win->IsOuterWindow());
     if (!win->GetClosedOuter()) {
       return true;
@@ -10619,8 +10619,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       // applies to aURI.
       CopyFavicon(currentURI, aURI, doc->NodePrincipal(), UsePrivateBrowsing());
 
-      RefPtr<nsGlobalWindow> scriptGlobal = mScriptGlobal;
-      RefPtr<nsGlobalWindow> win = scriptGlobal ?
+      RefPtr<nsGlobalWindowOuter> scriptGlobal = mScriptGlobal;
+      RefPtr<nsGlobalWindowInner> win = scriptGlobal ?
         scriptGlobal->GetCurrentInnerWindowInternal() : nullptr;
 
       // ScrollToAnchor doesn't necessarily cause us to scroll the window;

@@ -49,18 +49,9 @@ HTMLOptionElement::~HTMLOptionElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLOptionElement, nsGenericHTMLElement,
-                            nsIDOMHTMLOptionElement)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLOptionElement, nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLOptionElement)
-
-
-NS_IMETHODIMP
-HTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
-{
-  NS_IF_ADDREF(*aForm = GetForm());
-  return NS_OK;
-}
 
 mozilla::dom::HTMLFormElement*
 HTMLOptionElement::GetForm()
@@ -115,15 +106,7 @@ HTMLOptionElement::UpdateDisabledState(bool aNotify)
   }
 }
 
-NS_IMETHODIMP
-HTMLOptionElement::GetSelected(bool* aValue)
-{
-  NS_ENSURE_ARG_POINTER(aValue);
-  *aValue = Selected();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 HTMLOptionElement::SetSelected(bool aValue)
 {
   // Note: The select content obj maintains all the PresState
@@ -141,21 +124,6 @@ HTMLOptionElement::SetSelected(bool aValue)
   } else {
     SetSelectedInternal(aValue, true);
   }
-
-  return NS_OK;
-}
-
-NS_IMPL_BOOL_ATTR(HTMLOptionElement, DefaultSelected, selected)
-// GetText returns a whitespace compressed .textContent value.
-NS_IMPL_STRING_ATTR_WITH_FALLBACK(HTMLOptionElement, Label, label, GetText)
-NS_IMPL_STRING_ATTR_WITH_FALLBACK(HTMLOptionElement, Value, value, GetText)
-NS_IMPL_BOOL_ATTR(HTMLOptionElement, Disabled, disabled)
-
-NS_IMETHODIMP
-HTMLOptionElement::GetIndex(int32_t* aIndex)
-{
-  *aIndex = Index();
-  return NS_OK;
 }
 
 int32_t
@@ -177,18 +145,6 @@ HTMLOptionElement::Index()
   int32_t index = defaultIndex;
   MOZ_ALWAYS_SUCCEEDS(options->GetOptionIndex(this, 0, true, &index));
   return index;
-}
-
-bool
-HTMLOptionElement::Selected() const
-{
-  return mIsSelected;
-}
-
-bool
-HTMLOptionElement::DefaultSelected() const
-{
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::selected);
 }
 
 nsChangeHint
@@ -288,7 +244,7 @@ HTMLOptionElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                             aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-NS_IMETHODIMP
+void
 HTMLOptionElement::GetText(nsAString& aText)
 {
   nsAutoString text;
@@ -310,14 +266,12 @@ HTMLOptionElement::GetText(nsAString& aText)
   // XXX No CompressWhitespace for nsAString.  Sad.
   text.CompressWhitespace(true, true);
   aText = text;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLOptionElement::SetText(const nsAString& aText)
+void
+HTMLOptionElement::SetText(const nsAString& aText, ErrorResult& aRv)
 {
-  return nsContentUtils::SetNodeTextContent(this, aText, true);
+  aRv = nsContentUtils::SetNodeTextContent(this, aText, true);
 }
 
 nsresult
@@ -435,11 +389,7 @@ HTMLOptionElement::Option(const GlobalObject& aGlobal,
     }
   }
 
-  option->SetSelected(aSelected, aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
+  option->SetSelected(aSelected);
   option->SetSelectedChanged(false);
 
   return option.forget();

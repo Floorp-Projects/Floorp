@@ -87,10 +87,11 @@ protected:
     MOZ_RELEASE_ASSERT(aContainer,
       "This constructor shouldn't be used when pointing nowhere");
     if (!mRef) {
-      MOZ_ASSERT(mOffset.value() == 0);
+      MOZ_ASSERT(!mParent->IsContainerNode() || mOffset.value() == 0);
       return;
     }
     MOZ_ASSERT(mOffset.value() > 0);
+    MOZ_ASSERT(mParent == mRef->GetParentNode());
     MOZ_ASSERT(mParent->GetChildAt(mOffset.value() - 1) == mRef);
   }
 
@@ -408,8 +409,54 @@ public:
   template<typename A, typename B>
   bool operator==(const RangeBoundaryBase<A, B>& aOther) const
   {
-    return mParent == aOther.mParent &&
-      (mRef ? mRef == aOther.mRef : mOffset == aOther.mOffset);
+    if (mParent != aOther.mParent) {
+      return false;
+    }
+
+    if (mOffset.isSome() && aOther.mOffset.isSome()) {
+      // If both mOffset are set, we need to compare both mRef too because
+      // the relation of mRef and mOffset have already broken by DOM tree
+      // changes.
+      if (mOffset != aOther.mOffset) {
+        return false;
+      }
+      if (mRef == aOther.mRef) {
+        return true;
+      }
+      if (NS_WARN_IF(mRef && aOther.mRef)) {
+        // In this case, relation between mRef and mOffset of one of or both of
+        // them doesn't match with current DOM tree since the DOM tree might
+        // have been changed after computing mRef or mOffset.
+        return false;
+      }
+      // If one of mRef hasn't been computed yet, we should compare them only
+      // with mOffset.  Perhaps, we shouldn't copy mRef from non-nullptr one to
+      // nullptr one since if we copy it here, it may be unexpected behavior for
+      // some callers.
+      return true;
+    }
+
+    if (mOffset.isSome() && !mRef &&
+        !aOther.mOffset.isSome() && aOther.mRef) {
+      // If this has only mOffset and the other has only mRef, this needs to
+      // compute mRef now.
+      EnsureRef();
+      return mRef == aOther.mRef;
+    }
+
+    if (!mOffset.isSome() && mRef &&
+        aOther.mOffset.isSome() && !aOther.mRef) {
+      // If this has only mRef and the other has only mOffset, the other needs
+      // to compute mRef now.
+      aOther.EnsureRef();
+      return mRef == aOther.mRef;
+    }
+
+    // If mOffset of one of them hasn't been computed from mRef yet, we should
+    // compare only with mRef.  Perhaps, we shouldn't copy mOffset from being
+    // some one to not being some one since if we copy it here, it may be
+    // unexpected behavior for some callers.
+    return mRef == aOther.mRef;
   }
 
   template<typename A, typename B>

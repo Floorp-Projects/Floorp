@@ -607,7 +607,7 @@ int VP8EncoderImpl::InitAndSetControlSettings() {
   // when encoding lower resolution streams. Would it work with the
   // multi-res encoding feature?
   denoiserState denoiser_state = kDenoiserOnYOnly;
-#if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || defined(ANDROID)
+#if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || defined(ANDROID) || defined(WEBRTC_ARCH_MIPS)
   denoiser_state = kDenoiserOnYOnly;
 #else
   denoiser_state = kDenoiserOnAdaptive;
@@ -1033,7 +1033,7 @@ int VP8DecoderImpl::InitDecode(const VideoCodec* inst, int number_of_cores) {
 
   vpx_codec_flags_t flags = 0;
 #if !defined(WEBRTC_ARCH_ARM) && !defined(WEBRTC_ARCH_ARM64) && \
-  !defined(ANDROID)
+  !defined(ANDROID) && !defined(WEBRTC_ARCH_MIPS)
   flags = VPX_CODEC_USE_POSTPROC;
 #endif
 
@@ -1074,7 +1074,7 @@ int VP8DecoderImpl::Decode(const EncodedImage& input_image,
   }
 
 #if !defined(WEBRTC_ARCH_ARM) && !defined(WEBRTC_ARCH_ARM64) && \
-  !defined(ANDROID)
+  !defined(ANDROID) && !defined(WEBRTC_ARCH_MIPS)
   vp8_postproc_cfg_t ppcfg;
   // MFQE enabled to reduce key frame popping.
   ppcfg.post_proc_flag = VP8_MFQE | VP8_DEBLOCK;

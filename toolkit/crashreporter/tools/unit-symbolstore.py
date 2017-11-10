@@ -48,6 +48,9 @@ extension = {'WINNT': ".dll",
              'Linux': ".so",
              'Sunos5': ".so",
              'Darwin': ".dylib"}[target_platform()]
+file_output = [{'WINNT': "bogus data",
+                'Linux': "ELF executable",
+                'Darwin': "Mach-O executable"}[target_platform()]]
 
 def add_extension(files):
     return [f + extension for f in files]
@@ -109,8 +112,15 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
         stdout_iter = self.next_mock_stdout()
         def next_popen(*args, **kwargs):
             m = mock.MagicMock()
-            m.stdout = stdout_iter.next()
+            # Get the iterators over whatever output was provided.
+            stdout_ = stdout_iter.next()
+            # Eager evaluation for communicate(), below.
+            stdout_ = list(stdout_)
+            # stdout is really an iterator, so back to iterators we go.
+            m.stdout = iter(stdout_)
             m.wait.return_value = 0
+            # communicate returns the full text of stdout and stderr.
+            m.communicate.return_value = ('\n'.join(stdout_), '')
             return m
         self.mock_popen.side_effect = next_popen
         shutil.rmtree = patch("shutil.rmtree").start()
@@ -135,6 +145,9 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
         def mock_copy_debug(filename, debug_file, guid, code_file, code_id):
             copied.append(filename[len(self.symbol_dir):] if filename.startswith(self.symbol_dir) else filename)
         self.add_test_files(add_extension(["foo"]))
+        # Windows doesn't call file(1) to figure out if the file should be processed.
+        if target_platform() != 'WINNT':
+            self.stdouts.append(file_output)
         self.stdouts.append(mock_dump_syms("X" * 33, add_extension(["foo"])[0]))
         self.stdouts.append(mock_dump_syms("Y" * 33, add_extension(["foo"])[0]))
         def mock_dsymutil(args, **kwargs):

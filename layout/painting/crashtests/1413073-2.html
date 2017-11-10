@@ -1,0 +1,18 @@
+<html class="reftest-wait">
+<body>
+<div style="position:absolute; width:200px; height:200px; opacity:0.5">
+    <div style="opacity:0.9">
+      <div style="position:fixed; width:200px; height:200px; left:400px; background-color:blue" id="fixed"></div>
+    </div>
+    <div style="width:200px; height:200px; background-color:red" id="inner"></div>
+</div>
+</body>
+<script>
+  function doTest() {
+    var d = document.getElementById("inner");
+    d.style.backgroundColor = "green";
+    document.documentElement.className = "";
+  }
+  window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>

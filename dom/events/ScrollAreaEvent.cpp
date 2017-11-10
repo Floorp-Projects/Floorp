@@ -35,7 +35,7 @@ void
 ScrollAreaEvent::InitScrollAreaEvent(const nsAString& aEventType,
                                      bool aCanBubble,
                                      bool aCancelable,
-                                     nsGlobalWindow* aView,
+                                     nsGlobalWindowInner* aView,
                                      int32_t aDetail,
                                      float aX,
                                      float aY,

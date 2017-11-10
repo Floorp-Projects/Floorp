@@ -34,7 +34,7 @@ var test = function (isContent) {
   };
 
   // Returns generator object that iterates through pref values.
-  let prefVals = (for (prefVal of [false, true]) prefVal);
+  let prefVals = (function*() { yield false; yield true; })();
 
   // The main test function, runs until all pref values are exhausted.
   let nextTest = function () {

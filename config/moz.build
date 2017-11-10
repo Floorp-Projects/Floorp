@@ -42,3 +42,35 @@ HOST_DEFINES = {
     'UNICODE': True,
     '_UNICODE': True,
 }
+
+include('stl-headers.mozbuild')
+if CONFIG['WRAP_STL_INCLUDES']:
+    stl_compiler = None
+    if CONFIG['GNU_CXX']:
+        stl_compiler = 'gcc'
+    elif CONFIG['_MSC_VER']:
+        stl_compiler = 'msvc'
+
+    if stl_compiler:
+        template_file = SRCDIR + '/%s-stl-wrapper.template.h' % stl_compiler
+        output_dir = '../dist/stl_wrappers'
+        # We have to use a sentinel file as the first file because the
+        # file_generate action will create it for us, but we want to create all
+        # the files in gen_wrappers()
+        outputs = tuple(['stl.sentinel'] + ['%s/%s' % (output_dir, h) for h in stl_headers])
+        GENERATED_FILES += [outputs]
+        stl = GENERATED_FILES[outputs]
+        stl.script = 'make-stl-wrappers.py:gen_wrappers'
+        stl.flags = [output_dir, stl_compiler, template_file]
+        stl.flags.extend(stl_headers)
+
+if CONFIG['WRAP_SYSTEM_INCLUDES']:
+    include('system-headers.mozbuild')
+    output_dir = '../dist/system_wrappers'
+    outputs = tuple(['system-header.sentinel'] + ['%s/%s' % (output_dir, h) for h in stl_headers + system_headers])
+    GENERATED_FILES += [outputs]
+    system = GENERATED_FILES[outputs]
+    system.script = 'make-system-wrappers.py:gen_wrappers'
+    system.flags = [output_dir]
+    system.flags.extend(stl_headers)
+    system.flags.extend(system_headers)

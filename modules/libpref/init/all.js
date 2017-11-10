@@ -550,7 +550,7 @@ pref("media.navigator.audio.full_duplex", true);
 pref("media.navigator.hardware.vp8_encode.acceleration_enabled", true);
 pref("media.navigator.hardware.vp8_encode.acceleration_remote_enabled", true);
 pref("media.navigator.hardware.vp8_decode.acceleration_enabled", false);
-#elif defined(XP_LINUX)
+#elif defined(XP_LINUX) || defined(MOZ_SNDIO)
 pref("media.peerconnection.capture_delay", 70);
 pref("media.getusermedia.playout_delay", 50);
 pref("media.navigator.audio.full_duplex", true);
@@ -1032,7 +1032,13 @@ pref("toolkit.telemetry.debugSlowSql", false);
 // Whether to use the unified telemetry behavior, requires a restart.
 pref("toolkit.telemetry.unified", true);
 // AsyncShutdown delay before crashing in case of shutdown freeze
-pref("toolkit.asyncshutdown.crash_timeout", 60000);
+#ifndef MOZ_ASAN
+pref("toolkit.asyncshutdown.crash_timeout", 60000); // 1 minute
+#else
+// MOZ_ASAN builds can be considerably slower. Extending the grace period
+// of both asyncshutdown and the terminator.
+pref("toolkit.asyncshutdown.crash_timeout", 180000); // 3 minutes
+#endif // MOZ_ASAN
 // Extra logging for AsyncShutdown barriers and phases
 pref("toolkit.asyncshutdown.log", false);
 
@@ -5147,7 +5153,7 @@ pref("dom.w3c_touch_events.enabled", 2);
 #endif
 
 // W3C draft pointer events
-#if !defined(ANDROID) && defined(NIGHTLY_BUILD)
+#if !defined(ANDROID) && defined(EARLY_BETA_OR_EARLIER)
 pref("dom.w3c_pointer_events.enabled", true);
 #else
 pref("dom.w3c_pointer_events.enabled", false);

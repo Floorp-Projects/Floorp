@@ -196,7 +196,7 @@ _GetMinTTLForRequestType_Windows(DnsapiInfo * dnsapi, const char* aHost,
 }
 
 static MOZ_ALWAYS_INLINE nsresult
-_GetTTLData_Windows(const char* aHost, uint16_t* aResult, uint16_t aAddressFamily)
+_GetTTLData_Windows(const char* aHost, uint32_t* aResult, uint16_t aAddressFamily)
 {
   MOZ_ASSERT(aHost);
   MOZ_ASSERT(aResult);
@@ -351,7 +351,7 @@ GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
     }
 
     LOG("Getting TTL for %s (cname = %s).", aHost, name);
-    uint16_t ttl = 0;
+    uint32_t ttl = 0;
     nsresult ttlRv = _GetTTLData_Windows(name, &ttl, aAddressFamily);
     if (NS_SUCCEEDED(ttlRv)) {
       (*aAddrInfo)->ttl = ttl;

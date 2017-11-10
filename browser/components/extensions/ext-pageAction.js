@@ -66,9 +66,10 @@ this.pageAction = class extends ExtensionAPI {
     if (!this.browserPageAction) {
       this.browserPageAction = PageActions.addAction(new PageActions.Action({
         id: widgetId,
+        extensionID: extension.id,
         title: this.defaults.title,
         iconURL: this.getIconData(this.defaults.icon),
-        shownInUrlbar: true,
+        pinnedToUrlbar: true,
         disabled: true,
         onCommand: (event, buttonNode) => {
           this.handleClick(event.target.ownerGlobal);

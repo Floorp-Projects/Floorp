@@ -39,7 +39,7 @@ function startup(data, reason) {
   let orig = Services.wm.getMostRecentWindow("navigator:browser");
 
   let ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService2);
+              .getService(Ci.nsIIOService);
   ios.manageOfflineStatus = false;
   ios.offline = false;
 

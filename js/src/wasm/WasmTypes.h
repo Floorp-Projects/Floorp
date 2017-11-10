@@ -1021,8 +1021,8 @@ class CodeRange
                     uint8_t beginToTierEntry_;
                 } func;
                 struct {
-                    uint8_t beginToUntrustedFPStart_;
-                    uint8_t beginToUntrustedFPEnd_;
+                    uint16_t beginToUntrustedFPStart_;
+                    uint16_t beginToUntrustedFPEnd_;
                 } jitExit;
             };
         };

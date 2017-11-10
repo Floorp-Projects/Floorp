@@ -25,7 +25,7 @@ use picture::{PicturePrimitive};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{TexelRect, YuvImagePrimitiveCpu};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, LinePrimitive, PrimitiveKind};
-use prim_store::{PrimitiveContainer, PrimitiveIndex};
+use prim_store::{PrimitiveContainer, PrimitiveIndex, PrimitiveRun};
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu};
 use prim_store::{RectangleContent, RectanglePrimitive, TextRunPrimitiveCpu};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
@@ -263,24 +263,24 @@ impl FrameBuilder {
     ) {
         match self.cmds.last_mut().unwrap() {
             &mut PrimitiveRunCmd::PrimitiveRun(
-                run_prim_index,
-                ref mut count,
-                run_clip_and_scroll,
-            ) => if run_clip_and_scroll == clip_and_scroll &&
-                run_prim_index.0 + *count == prim_index.0
+                ref mut run,
+            ) => if run.clip_and_scroll == clip_and_scroll &&
+                run.base_prim_index.0 + run.count == prim_index.0
             {
-                *count += 1;
+                run.count += 1;
                 return;
             },
             &mut PrimitiveRunCmd::PushStackingContext(..) |
             &mut PrimitiveRunCmd::PopStackingContext => {}
         }
 
-        self.cmds.push(PrimitiveRunCmd::PrimitiveRun(
-            prim_index,
-            1,
+        let run = PrimitiveRun {
+            base_prim_index: prim_index,
+            count: 1,
             clip_and_scroll,
-        ));
+        };
+
+        self.cmds.push(PrimitiveRunCmd::PrimitiveRun(run));
     }
 
     /// Convenience interface that creates a primitive entry and adds it
@@ -564,10 +564,10 @@ impl FrameBuilder {
         &mut self,
         clip_and_scroll: ClipAndScrollInfo,
         info: &LayerPrimitiveInfo,
-        content: &RectangleContent,
+        content: RectangleContent,
         flags: PrimitiveFlags,
     ) {
-        if let &RectangleContent::Fill(ColorF{a, ..}) = content {
+        if let RectangleContent::Fill(ColorF{a, ..}) = content {
             if a == 0.0 {
                 // Don't add transparent rectangles to the draw list, but do consider them for hit
                 // testing. This allows specifying invisible hit testing areas.
@@ -575,7 +575,10 @@ impl FrameBuilder {
                 return;
             }
         }
-        let prim = RectanglePrimitive { content: *content };
+        let prim = RectanglePrimitive {
+            content,
+            edge_aa_segment_mask: info.edge_aa_segment_mask,
+        };
 
         let prim_index = self.add_primitive(
             clip_and_scroll,
@@ -1337,9 +1340,7 @@ impl FrameBuilder {
 
     fn handle_primitive_run(
         &mut self,
-        base_prim_index: PrimitiveIndex,
-        prim_count: usize,
-        clip_and_scroll: ClipAndScrollInfo,
+        run: &PrimitiveRun,
         render_tasks: &mut RenderTaskTree,
         gpu_cache: &mut GpuCache,
         resource_cache: &mut ResourceCache,
@@ -1347,20 +1348,20 @@ impl FrameBuilder {
         clip_scroll_tree: &ClipScrollTree,
         device_pixel_ratio: f32,
         profile_counters: &mut FrameProfileCounters,
-    ) -> bool {
+    ) {
         let stacking_context_index = *self.stacking_context_stack.last().unwrap();
-        let scroll_node = &clip_scroll_tree.nodes[&clip_and_scroll.scroll_node_id];
-        let clip_node = &clip_scroll_tree.nodes[&clip_and_scroll.clip_node_id()];
+        let scroll_node = &clip_scroll_tree.nodes[&run.clip_and_scroll.scroll_node_id];
+        let clip_node = &clip_scroll_tree.nodes[&run.clip_and_scroll.clip_node_id()];
 
-        if clip_node.combined_clip_outer_bounds == DeviceIntRect::zero() {
-            debug!("{:?} of clipped out {:?}", base_prim_index, stacking_context_index);
-            return false;
+        if !clip_node.is_visible() {
+            debug!("{:?} of clipped out {:?}", run.base_prim_index, stacking_context_index);
+            return;
         }
 
         let stacking_context = &mut self.stacking_context_store[stacking_context_index.0];
         let pipeline_id = {
             if !stacking_context.can_contribute_to_scene() {
-                return false;
+                return;
             }
 
             // At least one primitive in this stacking context is visible, so the stacking
@@ -1371,7 +1372,7 @@ impl FrameBuilder {
 
         debug!(
             "\t{:?} of {:?}",
-            base_prim_index,
+            run.base_prim_index,
             stacking_context_index,
         );
 
@@ -1381,7 +1382,7 @@ impl FrameBuilder {
             .display_list;
 
         if !stacking_context.is_backface_visible && scroll_node.world_content_transform.is_backface_visible() {
-            return false;
+            return;
         }
 
         let prim_context = PrimitiveContext::new(
@@ -1391,30 +1392,26 @@ impl FrameBuilder {
             scroll_node,
         );
 
-        for i in 0 .. prim_count {
-            let prim_index = PrimitiveIndex(base_prim_index.0 + i);
+        let result = self.prim_store.prepare_prim_run(
+            run,
+            &prim_context,
+            gpu_cache,
+            resource_cache,
+            render_tasks,
+            &mut self.clip_store,
+        );
 
-            if let Some(prim_geom) = self.prim_store.prepare_prim_for_render(
-                prim_index,
-                &prim_context,
-                resource_cache,
-                gpu_cache,
-                render_tasks,
-                &mut self.clip_store,
-            ) {
-                stacking_context.screen_bounds = stacking_context
-                    .screen_bounds
-                    .union(&prim_geom.device_rect);
-                stacking_context.isolated_items_bounds = stacking_context
-                    .isolated_items_bounds
-                    .union(&prim_geom.local_rect);
-                stacking_context.has_any_primitive = true;
+        if result.visible_primitives > 0 {
+            stacking_context.screen_bounds = stacking_context
+                .screen_bounds
+                .union(&result.device_rect);
+            stacking_context.isolated_items_bounds = stacking_context
+                .isolated_items_bounds
+                .union(&result.local_rect);
+            stacking_context.has_any_primitive = true;
 
-                profile_counters.visible_primitives.inc();
-            }
+            profile_counters.visible_primitives.add(result.visible_primitives);
         }
-
-        true //visible
     }
 
     fn handle_pop_stacking_context(
@@ -1496,11 +1493,9 @@ impl FrameBuilder {
                 PrimitiveRunCmd::PushStackingContext(stacking_context_index) => {
                     self.handle_push_stacking_context(stacking_context_index)
                 }
-                PrimitiveRunCmd::PrimitiveRun(prim_index, prim_count, clip_and_scroll) => {
+                PrimitiveRunCmd::PrimitiveRun(ref run) => {
                     self.handle_primitive_run(
-                        prim_index,
-                        prim_count,
-                        clip_and_scroll,
+                        run,
                         render_tasks,
                         gpu_cache,
                         resource_cache,
@@ -1840,19 +1835,22 @@ impl FrameBuilder {
                         current_task = prev_task;
                     }
                 }
-                PrimitiveRunCmd::PrimitiveRun(first_prim_index, prim_count, clip_and_scroll) => {
+                PrimitiveRunCmd::PrimitiveRun(ref run) => {
                     let stacking_context_index = *sc_stack.last().unwrap();
                     if !self.stacking_context_store[stacking_context_index.0].is_visible {
                         continue;
                     }
 
-                    debug!("\trun of {} items", prim_count);
+                    debug!("\trun of {} items", run.count);
 
-                    let scroll_node = &clip_scroll_tree.nodes[&clip_and_scroll.scroll_node_id];
-                    let clip_node = &clip_scroll_tree.nodes[&clip_and_scroll.clip_node_id()];
+                    let clip_node = &clip_scroll_tree.nodes[&run.clip_and_scroll.clip_node_id()];
+                    if !clip_node.is_visible() {
+                        continue;
+                    }
+                    let scroll_node = &clip_scroll_tree.nodes[&run.clip_and_scroll.scroll_node_id];
 
-                    for i in 0 .. prim_count {
-                        let prim_index = PrimitiveIndex(first_prim_index.0 + i);
+                    for i in 0 .. run.count {
+                        let prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
 
                         if self.prim_store.cpu_metadata[prim_index.0].screen_rect.is_some() {
                             self.prim_store

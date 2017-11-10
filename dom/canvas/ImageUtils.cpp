@@ -117,7 +117,8 @@ public:
   virtual uint32_t
   GetBufferLength() const
   {
-    const uint32_t stride = Surface()->Stride();
+    DataSourceSurface::ScopedMap map(Surface(), DataSourceSurface::READ);
+    const uint32_t stride = map.GetStride();
     const IntSize size = Surface()->GetSize();
     return (uint32_t)(size.height * stride);
   }

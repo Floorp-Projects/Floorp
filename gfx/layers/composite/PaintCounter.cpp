@@ -28,11 +28,12 @@ PaintCounter::PaintCounter()
 {
   mFormat = SurfaceFormat::B8G8R8A8;
   mSurface = Factory::CreateDataSourceSurface(mRect.Size(), mFormat);
-  mStride = mSurface->Stride();
+  mMap.emplace(mSurface, DataSourceSurface::READ_WRITE);
+  mStride = mMap->GetStride();
 
   mCanvas =
     SkCanvas::MakeRasterDirect(MakeSkiaImageInfo(mRect.Size(), mFormat),
-                              mSurface->GetData(), mStride);
+                              mMap->GetData(), mStride);
   mCanvas->clear(SK_ColorWHITE);
 }
 

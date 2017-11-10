@@ -513,7 +513,7 @@ HTMLSelectElement::GetFirstOptionIndex(nsIContent* aOptions)
   int32_t listIndex = -1;
   HTMLOptionElement* optElement = HTMLOptionElement::FromContent(aOptions);
   if (optElement) {
-    GetOptionIndex(optElement, 0, true, &listIndex);
+    mOptions->GetOptionIndex(optElement->AsElement(), 0, true, &listIndex);
     return listIndex;
   }
 
@@ -709,15 +709,6 @@ HTMLSelectElement::SetSelectedIndexInternal(int32_t aIndex, bool aNotify)
   SetSelectionChanged(true, aNotify);
 
   return rv;
-}
-
-NS_IMETHODIMP
-HTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
-                                  int32_t aStartIndex, bool aForward,
-                                  int32_t* aIndex)
-{
-  nsCOMPtr<nsINode> option = do_QueryInterface(aOption);
-  return mOptions->GetOptionIndex(option->AsElement(), aStartIndex, aForward, aIndex);
 }
 
 bool
@@ -1032,8 +1023,7 @@ HTMLSelectElement::GetValue(DOMString& aValue)
     return;
   }
 
-  DebugOnly<nsresult> rv = option->GetValue(aValue);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  option->GetValue(aValue);
 }
 
 void
@@ -1479,8 +1469,8 @@ HTMLSelectElement::RestoreStateTo(SelectState* aNewSelected)
     HTMLOptionElement* option = Item(i);
     if (option) {
       nsAutoString value;
-      nsresult rv = option->GetValue(value);
-      if (NS_SUCCEEDED(rv) && aNewSelected->ContainsOption(i, value)) {
+      option->GetValue(value);
+      if (aNewSelected->ContainsOption(i, value)) {
         SetOptionsSelectedByIndex(i, i, IS_SELECTED | SET_DISABLED | NOTIFY);
       }
     }
@@ -1579,7 +1569,7 @@ HTMLSelectElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
     }
 
     nsString value;
-    MOZ_ALWAYS_SUCCEEDS(option->GetValue(value));
+    option->GetValue(value);
 
     if (keyGenProcessor) {
       nsString tmp(value);
@@ -1659,7 +1649,7 @@ HTMLSelectElement::IsValueMissing() const
     // Check for a placeholder label option, don't count it as a valid value.
     if (i == 0 && !Multiple() && Size() <= 1 && option->GetParent() == this) {
       nsAutoString value;
-      MOZ_ALWAYS_SUCCEEDS(option->GetValue(value));
+      option->GetValue(value);
       if (value.IsEmpty()) {
         continue;
       }

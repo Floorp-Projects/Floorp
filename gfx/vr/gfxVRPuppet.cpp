@@ -370,21 +370,24 @@ VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
       // access the image library. So, we have to convert the RAW image data
       // to a base64 string and forward it to let the content process to
       // do the image conversion.
-      char* srcData = static_cast<char*>(mapInfo.pData);
+      const char* srcData = static_cast<const char*>(mapInfo.pData);
       VRSubmitFrameResultInfo result;
       result.mFormat = SurfaceFormat::B8G8R8A8;
-      // If the original texture size is not pow of 2, CopyResource() will add padding,
-      // so the size is adjusted. We have to get the correct size by (mapInfo.RowPitch /
-      // the format size).
-      result.mWidth = mapInfo.RowPitch / 4;
+      result.mWidth = desc.Width;
       result.mHeight = desc.Height;
       result.mFrameNum = mDisplayInfo.mFrameId;
-      nsCString rawString(Substring(srcData, mapInfo.RowPitch * desc.Height));
+      // If the original texture size is not pow of 2, the data will not be tightly strided.
+      // We have to copy the pixels by rows.
+      nsCString rawString;
+      for (uint32_t i = 0; i < desc.Height; i++) {
+        rawString += Substring(srcData + i * mapInfo.RowPitch,
+                               desc.Width * 4);
+      }
+      mContext->Unmap(mappedTexture, 0);
 
       if (Base64Encode(rawString, result.mBase64Image) != NS_OK) {
         MOZ_ASSERT(false, "Failed to encode base64 images.");
       }
-      mContext->Unmap(mappedTexture, 0);
       // Dispatch the base64 encoded string to the DOM side. Then, it will be decoded
       // and convert to a PNG image there.
       MessageLoop* loop = VRListenerThreadHolder::Loop();

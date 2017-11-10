@@ -176,3 +176,43 @@ add_task(async function testPermissionIcons() {
     SitePermissions.remove(gBrowser.currentURI, "camera");
   });
 });
+
+add_task(async function testPermissionShortcuts() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
+    browser.focus();
+
+    await new Promise(r => {
+      SpecialPowers.pushPrefEnv({"set": [["permissions.default.shortcuts", 0]]}, r);
+    });
+
+    async function tryKey(desc, expectedValue) {
+      await EventUtils.synthesizeAndWaitKey("c", { accelKey: true });
+      let result = await ContentTask.spawn(browser, null, function() {
+        return content.wrappedJSObject.gKeyPresses;
+      });
+      is(result, expectedValue, desc);
+    }
+
+    await tryKey("pressed with default permissions", 1);
+
+    SitePermissions.set(gBrowser.currentURI, "shortcuts", SitePermissions.BLOCK);
+    await tryKey("pressed when site blocked", 1);
+
+    SitePermissions.set(gBrowser.currentURI, "shortcuts", SitePermissions.ALLOW);
+    await tryKey("pressed when site allowed", 2);
+
+    SitePermissions.remove(gBrowser.currentURI, "shortcuts");
+    await new Promise(r => {
+      SpecialPowers.pushPrefEnv({"set": [["permissions.default.shortcuts", 2]]}, r);
+    });
+
+    await tryKey("pressed when globally blocked", 2);
+    SitePermissions.set(gBrowser.currentURI, "shortcuts", SitePermissions.ALLOW);
+    await tryKey("pressed when globally blocked but site allowed", 3);
+
+    SitePermissions.set(gBrowser.currentURI, "shortcuts", SitePermissions.BLOCK);
+    await tryKey("pressed when globally blocked and site blocked", 3);
+
+    SitePermissions.remove(gBrowser.currentURI, "shortcuts");
+  });
+});

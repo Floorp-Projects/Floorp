@@ -144,7 +144,8 @@ public:
          HANDLE aHandleCr,
          const gfx::IntSize& aSize,
          const gfx::IntSize& aSizeY,
-         const gfx::IntSize& aSizeCbCr);
+         const gfx::IntSize& aSizeCbCr,
+         YUVColorSpace aYUVColorSpace);
 
   static DXGIYCbCrTextureData*
   Create(ID3D11Texture2D* aTextureCb,
@@ -152,7 +153,8 @@ public:
          ID3D11Texture2D* aTextureCr,
          const gfx::IntSize& aSize,
          const gfx::IntSize& aSizeY,
-         const gfx::IntSize& aSizeCbCr);
+         const gfx::IntSize& aSizeCbCr,
+         YUVColorSpace aYUVColorSpace);
 
   virtual bool Lock(OpenMode) override { return true; }
 
@@ -175,6 +177,25 @@ public:
     return TextureFlags::DEALLOCATE_MAIN_THREAD;
   }
 
+  DXGIYCbCrTextureData* AsDXGIYCbCrTextureData() override {
+    return this;
+  }
+
+  gfx::IntSize GetYSize() const
+  {
+    return mSizeY;
+  }
+
+  gfx::IntSize GetCbCrSize() const
+  {
+    return mSizeCbCr;
+  }
+
+  YUVColorSpace GetYUVColorSpace() const
+  {
+    return mYUVColorSpace;
+  }
+
   ID3D11Texture2D* GetD3D11Texture(size_t index) { return mD3D11Textures[index]; }
 
 protected:
@@ -184,6 +205,7 @@ protected:
    gfx::IntSize mSize;
    gfx::IntSize mSizeY;
    gfx::IntSize mSizeCbCr;
+   YUVColorSpace mYUVColorSpace;
 };
 
 /**
@@ -383,8 +405,7 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const override{ return gfx::SurfaceFormat::YUV; }
 
-  // Bug 1305906 fixes YUVColorSpace handling
-  virtual YUVColorSpace GetYUVColorSpace() const override { return YUVColorSpace::BT601; }
+  virtual YUVColorSpace GetYUVColorSpace() const override { return mYUVColorSpace; }
 
   virtual bool Lock() override;
 
@@ -426,6 +447,7 @@ protected:
   gfx::IntSize mSize;
   WindowsHandle mHandles[3];
   bool mIsLocked;
+  YUVColorSpace mYUVColorSpace;
 };
 
 class CompositingRenderTargetD3D11 : public CompositingRenderTarget,

@@ -117,12 +117,7 @@ void main(void) {
     vColor = line.color;
 
     #ifdef WR_FEATURE_TRANSFORM
-        TransformVertexInfo vi = write_transform_vertex(prim.local_rect,
-                                                        prim.local_clip_rect,
-                                                        prim.z,
-                                                        prim.layer,
-                                                        prim.task,
-                                                        prim.local_rect);
+        TransformVertexInfo vi = write_transform_vertex_primitive(prim);
     #else
         VertexInfo vi = write_vertex(prim.local_rect,
                                      prim.local_clip_rect,

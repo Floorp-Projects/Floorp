@@ -125,6 +125,13 @@ public final class GeckoLoader {
             }
         }
 
+        try {
+            final File dataDir = new File(context.getApplicationInfo().dataDir);
+            putenv("MOZ_ANDROID_DATA_DIR=" + dataDir.getCanonicalPath());
+        } catch (final java.io.IOException e) {
+            Log.e(LOGTAG, "Failed to resolve app data directory");
+        }
+
         putenv("MOZ_ANDROID_PACKAGE_NAME=" + context.getPackageName());
 
         setupDownloadEnvironment(context);

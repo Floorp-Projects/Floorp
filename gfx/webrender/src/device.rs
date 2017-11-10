@@ -1925,8 +1925,9 @@ impl Device {
         self.gl.blend_func_separate(gl::ONE, gl::ONE, gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
         self.gl.blend_equation(gl::FUNC_ADD);
     }
-    pub fn set_blend_mode_subpixel_opaque(&self, color: ColorF) {
-        self.gl.blend_color(color.r, color.g, color.b, color.a);
+    pub fn set_blend_mode_subpixel_constant_text_color(&self, color: ColorF) {
+        // color is an unpremultiplied color.
+        self.gl.blend_color(color.r, color.g, color.b, 1.0);
         self.gl
             .blend_func(gl::CONSTANT_COLOR, gl::ONE_MINUS_SRC_COLOR);
         self.gl.blend_equation(gl::FUNC_ADD);
