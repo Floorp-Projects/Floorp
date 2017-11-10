@@ -77,7 +77,8 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(mozIDOMWindowProxy *parent,
     // We will set the opener of the dialog to be the nsIDOMWindow for the
     // browser XUL window itself, as opposed to the content. That way, the
     // progress window has access to the opener.
-    auto* pParentWindow = nsPIDOMWindowOuter::From(parent);
+    nsCOMPtr<nsPIDOMWindowOuter> pParentWindow = nsPIDOMWindowOuter::From(parent);
+    NS_ENSURE_STATE(pParentWindow);
     nsCOMPtr<nsIDocShell> docShell = pParentWindow->GetDocShell();
     NS_ENSURE_STATE(docShell);
 
