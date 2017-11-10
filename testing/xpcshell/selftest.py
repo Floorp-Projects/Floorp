@@ -463,7 +463,7 @@ class XPCShellTestsTests(unittest.TestCase):
                                                       {},
                                                       {"tbpl": self.log})
         self.x = XPCShellTests(logger)
-        self.x.harness_timeout = 15
+        self.x.harness_timeout = 15 if not mozinfo.info["ccov"] else 60
         self.symbols_path = None
         candidate_path = os.path.join(build_obj.distdir, 'crashreporter-symbols')
         if (os.path.isdir(candidate_path)):

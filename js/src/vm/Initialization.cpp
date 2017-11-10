@@ -82,6 +82,8 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
     MOZ_ASSERT(!JSRuntime::hasLiveRuntimes(),
                "how do we have live runtimes before JS_Init?");
 
+    libraryInitState = InitState::Initializing;
+
     PRMJ_NowInit();
 
     // The first invocation of `ProcessCreation` creates a temporary thread
@@ -110,7 +112,7 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
 
     RETURN_IF_FAIL(js::jit::InitProcessExecutableMemory());
 
-    MOZ_ALWAYS_TRUE(js::MemoryProtectionExceptionHandler::install());
+    RETURN_IF_FAIL(js::MemoryProtectionExceptionHandler::install());
 
     RETURN_IF_FAIL(js::jit::InitializeIon());
 

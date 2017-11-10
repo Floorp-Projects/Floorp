@@ -19,7 +19,7 @@
 #include "js/Debug.h"
 
 class nsPIDOMWindowInner;
-class nsGlobalWindow;
+class nsGlobalWindowInner;
 class nsIScriptContext;
 class nsIDocument;
 class nsIDocShell;
@@ -246,8 +246,8 @@ public:
   MOZ_MUST_USE bool Init(nsPIDOMWindowInner* aWindow);
   MOZ_MUST_USE bool Init(nsPIDOMWindowInner* aWindow, JSContext* aCx);
 
-  MOZ_MUST_USE bool Init(nsGlobalWindow* aWindow);
-  MOZ_MUST_USE bool Init(nsGlobalWindow* aWindow, JSContext* aCx);
+  MOZ_MUST_USE bool Init(nsGlobalWindowInner* aWindow);
+  MOZ_MUST_USE bool Init(nsGlobalWindowInner* aWindow, JSContext* aCx);
 
   JSContext* cx() const {
     MOZ_ASSERT(mCx, "Must call Init before using an AutoJSAPI");

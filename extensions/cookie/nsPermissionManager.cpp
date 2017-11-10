@@ -135,7 +135,8 @@ static const char* kPermissionsWithDefaults[] = {
   "camera",
   "microphone",
   "geo",
-  "desktop-notification"
+  "desktop-notification",
+  "shortcuts"
 };
 
 // NOTE: nullptr can be passed as aType - if it is this function will return

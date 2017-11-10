@@ -834,7 +834,7 @@ public:
    */
   void MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
                                 const nsFrameList& aFrames);
-  void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame);
+  void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame, bool aAlreadyAddedFrame = false);
   void MarkFrameForDisplayIfVisible(nsIFrame* aFrame, nsIFrame* aStopAtFrame);
 
   void ClearFixedBackgroundDisplayData();
@@ -1607,7 +1607,6 @@ public:
     if (!aFrame->IsFrameModified()) {
       mModifiedFramesDuringBuilding.AppendElement(aFrame);
       aFrame->SetFrameIsModified(true);
-      mInInvalidSubtree = true;
       return true;
     }
     return false;
@@ -1942,6 +1941,7 @@ public:
    * Downcasts this item to nsDisplayWrapList, if possible.
    */
   virtual const nsDisplayWrapList* AsDisplayWrapList() const { return nullptr; }
+  virtual nsDisplayWrapList* AsDisplayWrapList() { return nullptr; }
 
   /**
    * Create a clone of this item.
@@ -2584,7 +2584,7 @@ public:
   }
   void IntersectClip(nsDisplayListBuilder* aBuilder, const DisplayItemClipChain* aOther, bool aStore);
 
-  void SetActiveScrolledRoot(const ActiveScrolledRoot* aActiveScrolledRoot) { mActiveScrolledRoot = aActiveScrolledRoot; }
+  virtual void SetActiveScrolledRoot(const ActiveScrolledRoot* aActiveScrolledRoot) { mActiveScrolledRoot = aActiveScrolledRoot; }
   const ActiveScrolledRoot* GetActiveScrolledRoot() const { return mActiveScrolledRoot; }
 
   virtual void SetClipChain(const DisplayItemClipChain* aClipChain,
@@ -4572,12 +4572,14 @@ public:
                     nsDisplayList* aList);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayList* aList,
-                    const ActiveScrolledRoot* aActiveScrolledRoot);
+                    const ActiveScrolledRoot* aActiveScrolledRoot,
+                    bool aClearClipChain = false);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayItem* aItem);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame)
     , mList(aBuilder)
+    , mFrameActiveScrolledRoot(aBuilder->CurrentActiveScrolledRoot())
     , mOverrideZIndex(0)
     , mHasZIndexOverride(false)
   {
@@ -4595,11 +4597,13 @@ public:
     : nsDisplayItem(aBuilder, aOther)
     , mList(aOther.mList.mBuilder)
     , mListPtr(&mList)
+    , mFrameActiveScrolledRoot(aOther.mFrameActiveScrolledRoot)
     , mMergedFrames(aOther.mMergedFrames)
     , mBounds(aOther.mBounds)
     , mBaseVisibleRect(aOther.mBaseVisibleRect)
     , mOverrideZIndex(aOther.mOverrideZIndex)
     , mHasZIndexOverride(aOther.mHasZIndexOverride)
+    , mClearingClipChain(aOther.mClearingClipChain)
   {
     MOZ_COUNT_CTOR(nsDisplayWrapList);
   }
@@ -4607,6 +4611,10 @@ public:
   virtual ~nsDisplayWrapList();
 
   virtual const nsDisplayWrapList* AsDisplayWrapList() const override
+  {
+    return this;
+  }
+  virtual nsDisplayWrapList* AsDisplayWrapList() override
   {
     return this;
   }
@@ -4629,6 +4637,16 @@ public:
    */
   virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override
   {
+    // Clear the clip chain up to the asr, but don't store it, so that we'll recover
+    // it when we reuse the item.
+    if (mClearingClipChain) {
+      const DisplayItemClipChain* clip = mState.mClipChain;
+      while (clip && ActiveScrolledRoot::IsAncestor(GetActiveScrolledRoot(), clip->mASR)) {
+        clip = clip->mParent;
+      }
+      SetClipChain(clip, false);
+    }
+
     nsRect visibleRect;
     mBounds =
       mListPtr->GetClippedBoundsWithRespectToASR(aBuilder, mActiveScrolledRoot, &visibleRect);
@@ -4736,6 +4754,8 @@ public:
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 
+  const ActiveScrolledRoot* GetFrameActiveScrolledRoot() { return mFrameActiveScrolledRoot; }
+
 protected:
   nsDisplayWrapList() = delete;
 
@@ -4749,6 +4769,9 @@ protected:
 
   nsDisplayList mList;
   nsDisplayList* mListPtr;
+  // The active scrolled root for the frame that created this
+  // wrap list.
+  RefPtr<const ActiveScrolledRoot> mFrameActiveScrolledRoot;
   // The frames from items that have been merged into this item, excluding
   // this item's own frame.
   nsTArray<nsIFrame*> mMergedFrames;
@@ -4758,6 +4781,7 @@ protected:
   nsRect mBaseVisibleRect;
   int32_t mOverrideZIndex;
   bool mHasZIndexOverride;
+  bool mClearingClipChain = false;
 };
 
 /**
@@ -5041,7 +5065,8 @@ public:
                     uint32_t aFlags = 0,
                     ViewID aScrollTarget = mozilla::layers::FrameMetrics::NULL_SCROLL_ID,
                     const ScrollThumbData& aThumbData = ScrollThumbData{},
-                    bool aForceActive = true);
+                    bool aForceActive = true,
+                    bool aClearClipChain = false);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
 #endif
@@ -5434,7 +5459,8 @@ class nsDisplaySVGEffects: public nsDisplayWrapList {
 public:
   nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       nsDisplayList* aList, bool aHandleOpacity,
-                      const ActiveScrolledRoot* aActiveScrolledRoot);
+                      const ActiveScrolledRoot* aActiveScrolledRoot,
+                      bool aClearClipChain = false);
   nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       nsDisplayList* aList, bool aHandleOpacity);
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -5759,6 +5785,12 @@ public:
   virtual nsDisplayList* GetChildren() const override
   {
     return mStoredList.GetChildren();
+  }
+
+  virtual void SetActiveScrolledRoot(const ActiveScrolledRoot* aActiveScrolledRoot) override
+  {
+    nsDisplayItem::SetActiveScrolledRoot(aActiveScrolledRoot);
+    mStoredList.SetActiveScrolledRoot(aActiveScrolledRoot);
   }
 
   virtual void HitTest(nsDisplayListBuilder *aBuilder, const nsRect& aRect,
@@ -6147,6 +6179,12 @@ public:
   virtual nsDisplayList* GetChildren() const override
   {
     return mList.GetChildren();
+  }
+
+  virtual void SetActiveScrolledRoot(const ActiveScrolledRoot* aActiveScrolledRoot) override
+  {
+    nsDisplayItem::SetActiveScrolledRoot(aActiveScrolledRoot);
+    mList.SetActiveScrolledRoot(aActiveScrolledRoot);
   }
 
   virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const override

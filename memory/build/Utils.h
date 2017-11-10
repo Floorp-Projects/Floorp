@@ -32,14 +32,24 @@ CompareAddr(T* aAddr1, T* aAddr2)
 }
 
 // User-defined literals to make constants more legible
-constexpr unsigned long long int operator"" _KiB(unsigned long long int aNum)
+constexpr size_t operator"" _KiB(unsigned long long int aNum)
 {
-  return aNum * 1024;
+  return size_t(aNum) * 1024;
 }
 
-constexpr unsigned long long int operator"" _MiB(unsigned long long int aNum)
+constexpr size_t operator"" _KiB(long double aNum)
 {
-  return aNum * 1024_KiB;
+  return size_t(aNum * 1024);
+}
+
+constexpr size_t operator"" _MiB(unsigned long long int aNum)
+{
+  return size_t(aNum) * 1024_KiB;
+}
+
+constexpr size_t operator"" _MiB(long double aNum)
+{
+  return size_t(aNum * 1024_KiB);
 }
 
 constexpr long double operator""_percent(long double aPercent)

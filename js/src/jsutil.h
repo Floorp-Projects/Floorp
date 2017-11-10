@@ -20,6 +20,7 @@
 
 #include <limits.h>
 
+#include "js/Initialization.h"
 #include "js/Utility.h"
 #include "js/Value.h"
 
@@ -46,6 +47,16 @@ js_memcpy(void* dst_, const void* src_, size_t len)
 }
 
 namespace js {
+
+// An internal version of JS_IsInitialized() that returns whether SpiderMonkey
+// is currently initialized or is in the process of being initialized.
+inline bool
+IsInitialized()
+{
+    using namespace JS::detail;
+    return libraryInitState == InitState::Initializing ||
+           libraryInitState == InitState::Running;
+}
 
 template <class T>
 static inline void

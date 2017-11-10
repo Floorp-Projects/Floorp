@@ -206,7 +206,7 @@ PWebSocketEventListenerChild*
 NeckoChild::AllocPWebSocketEventListenerChild(const uint64_t& aInnerWindowID)
 {
   nsCOMPtr<nsIEventTarget> target;
-  if (nsGlobalWindow* win = nsGlobalWindow::GetInnerWindowWithId(aInnerWindowID)) {
+  if (nsGlobalWindowInner* win = nsGlobalWindowInner::GetInnerWindowWithId(aInnerWindowID)) {
     target = win->EventTargetFor(TaskCategory::Other);
   }
 

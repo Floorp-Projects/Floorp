@@ -2605,7 +2605,7 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   if (getTLSProviderFlagAltHandshake(infoObject->GetProviderTlsFlags())) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("[%p] nsSSLIOLayerSetOptions: Use AltHandshake\n", fd));
-    if (SECSuccess != SSL_UseAltHandshakeType(fd, PR_TRUE)) {
+    if (SECSuccess != SSL_UseAltServerHelloType(fd, PR_TRUE)) {
           MOZ_LOG(gPIPNSSLog, LogLevel::Error,
                   ("[%p] nsSSLIOLayerSetOptions: Use AltHandshake failed\n", fd));
           // continue on default path
