@@ -549,14 +549,14 @@ mozilla::ipc::IPCResult
 ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
                                             const StructuredCloneData& aInitialData,
                                             nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache,
-                                            nsTArray<SystemFontListEntry>&& aFontList)
+                                            nsTArray<FontFamilyListEntry>&& aFontFamilyList)
 {
   if (!sShutdownCanary) {
     return IPC_OK();
   }
 
   mLookAndFeelCache = Move(aLookAndFeelIntCache);
-  mFontList = Move(aFontList);
+  mFontFamilies = Move(aFontFamilyList);
   gfx::gfxVars::SetValuesForInitialize(aXPCOMInit.gfxNonDefaultVarUpdates());
   InitXPCOM(aXPCOMInit, aInitialData);
   InitGraphicsDeviceData(aXPCOMInit.contentDeviceData());
@@ -2538,14 +2538,6 @@ ContentChild::RecvUpdateDictionaryList(InfallibleTArray<nsString>&& aDictionarie
 {
   mAvailableDictionaries = aDictionaries;
   mozInlineSpellChecker::UpdateCanEnableInlineSpellChecking();
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvUpdateFontList(InfallibleTArray<SystemFontListEntry>&& aFontList)
-{
-  mFontList = Move(aFontList);
-  gfxPlatform::GetPlatform()->UpdateFontList();
   return IPC_OK();
 }
 
