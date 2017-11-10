@@ -16,53 +16,26 @@
 class nsNSSShutDownObject;
 class nsOnPK11LogoutCancelObject;
 
-// Singleton, owned by nsNSSShutDownList
-class nsNSSActivityState
-{
-public:
-  nsNSSActivityState();
-  ~nsNSSActivityState();
+// Yes, this races. We don't care because we're only temporarily using this to
+// silence compiler warnings. Without it every instance of a
+// nsNSSShutDownPreventionLock would be unused, causing the compiler to
+// complain. This will be removed when we've demonstrated that not shutting down
+// NSS is feasible (and beneficial) and we can remove the machinery entirely in
+// bug 1421084.
+static int sSilenceCompilerWarnings;
 
-  // Call enter/leave when PSM enters a scope during which
-  // shutting down NSS is prohibited.
-  void enter();
-  void leave();
-  // Wait for all activity to stop, and block any other thread on entering
-  // relevant PSM code.
-  PRStatus restrictActivityToCurrentThread();
-
-  // Go back to normal state.
-  void releaseCurrentThreadActivityRestriction();
-
-private:
-  // The lock protecting all our member variables.
-  mozilla::Mutex mNSSActivityStateLock;
-
-  // The activity variable, bound to our lock,
-  // used either to signal the activity counter reaches zero,
-  // or a thread restriction has been released.
-  mozilla::CondVar mNSSActivityChanged;
-
-  // The number of active scopes holding resources.
-  int mNSSActivityCounter;
-
-  // nullptr means "no restriction"
-  // if not null, activity is only allowed on that thread
-  PRThread* mNSSRestrictedThread;
-};
-
-// Helper class that automatically enters/leaves the global activity state
 class nsNSSShutDownPreventionLock
 {
 public:
-  nsNSSShutDownPreventionLock();
-  ~nsNSSShutDownPreventionLock();
-private:
-  // Keeps track of whether or not we actually managed to enter the NSS activity
-  // state. This is important because if we're attempting to shut down and we
-  // can't enter the NSS activity state, we need to not attempt to leave it when
-  // our destructor runs.
-  bool mEnteredActivityState;
+  nsNSSShutDownPreventionLock()
+  {
+    sSilenceCompilerWarnings++;
+  }
+
+  ~nsNSSShutDownPreventionLock()
+  {
+    sSilenceCompilerWarnings--;
+  }
 };
 
 // Singleton, used by nsNSSComponent to track the list of PSM objects,
@@ -70,10 +43,6 @@ private:
 class nsNSSShutDownList
 {
 public:
-  // track instances that support early cleanup
-  static void remember(nsNSSShutDownObject *o);
-  static void forget(nsNSSShutDownObject *o);
-
   // track instances that would like notification when
   // a PK11 logout operation is performed.
   static void remember(nsOnPK11LogoutCancelObject *o);
@@ -87,12 +56,6 @@ public:
   // Notify all registered instances that want to react to that event.
   static nsresult doPK11Logout();
 
-  // Signal entering/leaving a scope where shutting down NSS is prohibited.
-  // enteredActivityState will be set to true if we actually managed to enter
-  // the NSS activity state.
-  static void enterActivityState(/*out*/ bool& enteredActivityState);
-  static void leaveActivityState();
-
 private:
   static bool construct(const mozilla::StaticMutexAutoLock& /*proofOfLock*/);
 
@@ -100,9 +63,7 @@ private:
   ~nsNSSShutDownList();
 
 protected:
-  PLDHashTable mObjects;
   PLDHashTable mPK11LogoutCancelObjects;
-  nsNSSActivityState mActivityState;
 };
 
 /*
@@ -207,8 +168,6 @@ public:
 
   nsNSSShutDownObject()
   {
-    mAlreadyShutDown = false;
-    nsNSSShutDownList::remember(this);
   }
 
   virtual ~nsNSSShutDownObject()
@@ -218,29 +177,14 @@ public:
     // in its destructor
   }
 
-  void shutdown(ShutdownCalledFrom calledFrom)
+  void shutdown(ShutdownCalledFrom)
   {
-    if (!mAlreadyShutDown) {
-      switch (calledFrom) {
-        case ShutdownCalledFrom::Object:
-          nsNSSShutDownList::forget(this);
-          break;
-        case ShutdownCalledFrom::List:
-          virtualDestroyNSSReference();
-          break;
-        default:
-          MOZ_CRASH("shutdown() called from an unknown source");
-      }
-      mAlreadyShutDown = true;
-    }
   }
 
   bool isAlreadyShutDown() const;
 
 protected:
   virtual void virtualDestroyNSSReference() = 0;
-private:
-  volatile bool mAlreadyShutDown;
 };
 
 class nsOnPK11LogoutCancelObject
