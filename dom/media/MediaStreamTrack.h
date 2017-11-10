@@ -61,6 +61,19 @@ public:
   {
   public:
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MediaStreamTrackSource::Sink)
+
+    /**
+     * Must be constant throughout the Sink's lifetime.
+     *
+     * Return true to keep the MediaStreamTrackSource where this sink is
+     * registered alive.
+     * Return false to allow the source to stop.
+     *
+     * Typically MediaStreamTrack::Sink returns true and other Sinks
+     * (like HTMLMediaElement::StreamCaptureTrackSource) return false.
+     */
+    virtual bool KeepsSourceAlive() const = 0;
+
     virtual void PrincipalChanged() = 0;
     virtual void MutedChanged(bool aNewState) = 0;
   };
@@ -138,7 +151,8 @@ public:
   GetSettings(dom::MediaTrackSettings& aResult) {};
 
   /**
-   * Called by the source interface when all registered sinks have unregistered.
+   * Called by the source interface when all registered sinks with
+   * KeepsSourceAlive() == true have unregistered.
    */
   virtual void Stop() = 0;
 
@@ -167,8 +181,10 @@ public:
     while(mSinks.RemoveElement(nullptr)) {
       MOZ_ASSERT_UNREACHABLE("Sink was not explicitly removed");
     }
-    if (mSinks.RemoveElement(aSink) && mSinks.IsEmpty()) {
-      MOZ_ASSERT(!mStopped);
+    if (mSinks.RemoveElement(aSink) && !IsActive()) {
+      MOZ_ASSERT(!aSink->KeepsSourceAlive() || !mStopped,
+                 "When the last sink keeping the source alive is removed, "
+                 "we should still be live");
       Stop();
       mStopped = true;
     }
@@ -177,6 +193,16 @@ public:
 protected:
   virtual ~MediaStreamTrackSource()
   {
+  }
+
+  bool IsActive()
+  {
+    for (const WeakPtr<Sink>& sink : mSinks) {
+      if (sink && sink->KeepsSourceAlive()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -395,7 +421,18 @@ public:
   void AssignId(const nsAString& aID) { mID = aID; }
 
   // Implementation of MediaStreamTrackSource::Sink
+
+  /**
+   * Keep the track source alive. This track and any clones are controlling the
+   * lifetime of the source by being registered as its sinks.
+   */
+  bool KeepsSourceAlive() const override
+  {
+    return true;
+  }
+
   void PrincipalChanged() override;
+
   /**
    * 4.3.1 Life-cycle and Media flow - Media flow
    * To set a track's muted state to newState, the User Agent MUST run the
