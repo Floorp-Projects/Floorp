@@ -24,6 +24,20 @@ constexpr char ANRReporter::ReleaseNativeStack_t::signature[];
 constexpr char ANRReporter::RequestNativeStack_t::name[];
 constexpr char ANRReporter::RequestNativeStack_t::signature[];
 
+const char BrowserLocaleManager::name[] =
+        "org/mozilla/gecko/BrowserLocaleManager";
+
+constexpr char BrowserLocaleManager::GetLocale_t::name[];
+constexpr char BrowserLocaleManager::GetLocale_t::signature[];
+
+auto BrowserLocaleManager::GetLocale() -> mozilla::jni::String::LocalRef
+{
+    return mozilla::jni::Method<GetLocale_t>::Call(BrowserLocaleManager::Context(), nullptr);
+}
+
+constexpr char BrowserLocaleManager::RefreshLocales_t::name[];
+constexpr char BrowserLocaleManager::RefreshLocales_t::signature[];
+
 const char DownloadsIntegration::name[] =
         "org/mozilla/gecko/DownloadsIntegration";
 
