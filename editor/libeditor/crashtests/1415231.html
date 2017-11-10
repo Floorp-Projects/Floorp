@@ -1,0 +1,17 @@
+<script>
+function jsfuzzer() {
+  var var00043 = window.getSelection();
+  htmlvar00018.addEventListener("DOMNodeRemoved", eh1);
+  var00043.setPosition(htmlvar00016);
+  document.execCommand("insertText", false, "1");
+}
+function eh1() {
+  document.execCommand("insertHorizontalRule", false);
+  document.execCommand("justifyCenter", false);
+}
+</script>
+<body onload=jsfuzzer()>
+<li contenteditable="true">
+<shadow id="htmlvar00016">
+<ins id="htmlvar00018">
+<option>
