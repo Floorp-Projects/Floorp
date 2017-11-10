@@ -924,6 +924,16 @@
         ], 
         "revision": "275f181f8ee2"
     }, 
+    "wo": {
+        "platforms": [
+            "linux", 
+            "linux64", 
+            "macosx64", 
+            "win32", 
+            "win64"
+        ], 
+        "revision": "default"
+    }, 
     "xh": {
         "platforms": [
             "linux", 
