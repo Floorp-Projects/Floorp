@@ -6,11 +6,6 @@ module.exports = {
   ],
 
   globals: {
-    // Globals specific to mozmill
-    "assert": false,
-    "controller": false,
-    "findElement": false,
-    "mozmill": false,
     // Injected into tests via tps.jsm
     "Addons": false,
     "Bookmarks": false,
@@ -22,7 +17,6 @@ module.exports = {
     "Passwords": false,
     "Phase": false,
     "Prefs": false,
-    "RunMozmillTest": false,
     "STATE_DISABLED": false,
     "STATE_ENABLED": false,
     "Sync": false,

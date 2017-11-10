@@ -1419,11 +1419,15 @@ EditorBase::SetSpellcheckUserOverride(bool enable)
 
 already_AddRefed<Element>
 EditorBase::CreateNode(nsAtom* aTag,
-                       nsINode* aParent,
-                       int32_t aPosition,
-                       nsIContent* aChildAtPosition)
+                       EditorRawDOMPoint& aPointToInsert)
 {
-  MOZ_ASSERT(aTag && aParent);
+  MOZ_ASSERT(aTag);
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
+
+  // XXX We need to offset at new node to mRangeUpdater.  Therefore, we need
+  //     to compute the offset now but this is expensive.  So, if it's possible,
+  //     we need to redesign mRangeUpdater as avoiding using indices.
+  int32_t offset = static_cast<int32_t>(aPointToInsert.Offset());
 
   AutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
 
@@ -1431,28 +1435,31 @@ EditorBase::CreateNode(nsAtom* aTag,
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillCreateNode(nsDependentAtomString(aTag),
-                               GetAsDOMNode(aParent), aPosition);
+                               GetAsDOMNode(aPointToInsert.GetChildAtOffset()));
     }
   }
 
   nsCOMPtr<Element> ret;
 
   RefPtr<CreateElementTransaction> transaction =
-    CreateTxnForCreateElement(*aTag, *aParent, aPosition,
-                              aChildAtPosition);
+    CreateTxnForCreateElement(*aTag, aPointToInsert);
   nsresult rv = DoTransaction(transaction);
   if (NS_SUCCEEDED(rv)) {
     ret = transaction->GetNewNode();
     MOZ_ASSERT(ret);
+    // Now, aPointToInsert may be invalid.  I.e., ChildAtOffset() keeps
+    // referring the next sibling of new node but Offset() refers the
+    // new node.  Let's make refer the new node.
+    aPointToInsert.Set(ret);
   }
 
-  mRangeUpdater.SelAdjCreateNode(aParent, aPosition);
+  mRangeUpdater.SelAdjCreateNode(aPointToInsert.Container(), offset);
 
   {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidCreateNode(nsDependentAtomString(aTag), GetAsDOMNode(ret),
-                              GetAsDOMNode(aParent), aPosition, rv);
+      listener->DidCreateNode(nsDependentAtomString(aTag),
+                              GetAsDOMNode(ret), rv);
     }
   }
 
@@ -4214,16 +4221,29 @@ EditorBase::DeleteSelectionAndCreateElement(nsAtom& aTag)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, nullptr);
 
-  nsCOMPtr<nsINode> node = selection->GetAnchorNode();
-  uint32_t offset = selection->AnchorOffset();
-  nsIContent* child = selection->GetChildAtAnchorOffset();
-
-  nsCOMPtr<Element> newElement = CreateNode(&aTag, node, offset, child);
+  EditorRawDOMPoint pointToInsert(selection->GetChildAtAnchorOffset());
+  if (!pointToInsert.IsSet()) {
+    // Perhaps, the anchor point is in a text node.
+    pointToInsert.Set(selection->GetAnchorNode(), selection->AnchorOffset());
+    if (NS_WARN_IF(!pointToInsert.IsSet())) {
+      return nullptr;
+    }
+  }
+  RefPtr<Element> newElement = CreateNode(&aTag, pointToInsert);
 
   // We want the selection to be just after the new node
-  rv = selection->Collapse(node, offset + 1);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
+  DebugOnly<bool> advanced = pointToInsert.AdvanceOffset();
+  NS_WARNING_ASSERTION(advanced,
+                       "Failed to move offset next to the new element");
+  ErrorResult error;
+  selection->Collapse(pointToInsert, error);
+  if (NS_WARN_IF(error.Failed())) {
+    // XXX Even if it succeeded to create new element, this returns error
+    //     when Selection.Collapse() fails something.  This could occur with
+    //     mutation observer or mutation event listener.
+    error.SuppressException();
+    return nullptr;
+  }
   return newElement.forget();
 }
 
@@ -4368,13 +4388,10 @@ EditorBase::CreateTxnForRemoveAttribute(Element& aElement,
 
 already_AddRefed<CreateElementTransaction>
 EditorBase::CreateTxnForCreateElement(nsAtom& aTag,
-                                      nsINode& aParent,
-                                      int32_t aPosition,
-                                      nsIContent* aChildAtPosition)
+                                      const EditorRawDOMPoint& aPointToInsert)
 {
   RefPtr<CreateElementTransaction> transaction =
-    new CreateElementTransaction(*this, aTag, aParent, aPosition,
-                                 aChildAtPosition);
+    new CreateElementTransaction(*this, aTag, aPointToInsert);
 
   return transaction.forget();
 }
