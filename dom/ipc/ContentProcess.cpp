@@ -28,6 +28,14 @@ namespace mozilla {
 namespace dom {
 
 #if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+static bool
+IsSandboxTempDirRequired()
+{
+  // On Windows, a sandbox-writable temp directory is only used
+  // when sandbox pref level >= 1.
+  return GetEffectiveContentSandboxLevel() >= 1;
+}
+
 static void
 SetTmpEnvironmentVariable(nsIFile* aValue)
 {
@@ -47,6 +55,13 @@ SetTmpEnvironmentVariable(nsIFile* aValue)
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+static bool
+IsSandboxTempDirRequired()
+{
+  // On OSX, use the sandbox-writable temp when the pref level >= 1.
+  return (GetEffectiveContentSandboxLevel() >= 1);
+}
+
 static void
 SetTmpEnvironmentVariable(nsIFile* aValue)
 {
@@ -66,9 +81,7 @@ SetUpSandboxEnvironment()
   MOZ_ASSERT(nsDirectoryService::gService,
     "SetUpSandboxEnvironment relies on nsDirectoryService being initialized");
 
-  // On macOS and Windows, a sandbox-writable temp directory is used whenever
-  // the sandbox is enabled.
-  if (!IsContentSandboxEnabled()) {
+  if (!IsSandboxTempDirRequired()) {
     return;
   }
 

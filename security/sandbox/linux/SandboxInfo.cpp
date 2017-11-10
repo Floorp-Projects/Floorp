@@ -19,7 +19,6 @@
 #include "base/posix/eintr_wrapper.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/SandboxSettings.h"
 #include "sandbox/linux/system_headers/linux_seccomp.h"
 #include "sandbox/linux/system_headers/linux_syscalls.h"
 
@@ -227,9 +226,6 @@ SandboxInfo::SandboxInfo() {
   }
 
 #ifdef MOZ_CONTENT_SANDBOX
-  // We can't use mozilla::IsContentSandboxEnabled() here because a)
-  // libmozsandbox can't depend on libxul, and b) this is called in a static
-  // initializer before the prefences service is ready.
   if (!getenv("MOZ_DISABLE_CONTENT_SANDBOX")) {
     flags |= kEnabledForContent;
   }
