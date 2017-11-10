@@ -1802,11 +1802,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
       (separator != ParagraphSeparator::br &&
        blockParent->IsAnyOfHTMLElements(nsGkAtoms::p, nsGkAtoms::div))) {
     // Paragraphs: special rules to look for <br>s
-    EditActionResult result =
-      ReturnInParagraph(aSelection, *blockParent,
-                        atStartOfSelection.Container(),
-                        atStartOfSelection.Offset(),
-                        atStartOfSelection.GetChildAtOffset());
+    EditActionResult result = ReturnInParagraph(aSelection, *blockParent);
     if (NS_WARN_IF(result.Failed())) {
       return result.Rv();
     }
@@ -6734,21 +6730,24 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
 
 EditActionResult
 HTMLEditRules::ReturnInParagraph(Selection& aSelection,
-                                 nsINode& aParentDivOrP,
-                                 nsINode* aNode,
-                                 int32_t aOffset,
-                                 nsIContent* aChildAtOffset)
+                                 nsINode& aParentDivOrP)
 {
   if (NS_WARN_IF(!mHTMLEditor)) {
     return EditActionResult(NS_ERROR_NOT_AVAILABLE);
   }
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!node) {
-    return EditActionResult(NS_ERROR_NULL_POINTER);
+  RefPtr<HTMLEditor> htmlEditor = mHTMLEditor;
+
+  nsRange* firstRange = aSelection.GetRangeAt(0);
+  if (NS_WARN_IF(!firstRange)) {
+    return EditActionResult(NS_ERROR_FAILURE);
   }
 
-  RefPtr<HTMLEditor> htmlEditor = mHTMLEditor;
+  EditorDOMPoint atStartOfSelection(firstRange->StartRef());
+  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
+  MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
   bool doesCRCreateNewP = htmlEditor->GetReturnInParagraphCreatesNewParagraph();
 
@@ -6757,39 +6756,41 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
 
   // Point to split aParentDivOrP.
   // XXX If we don't need to use nsIDOMNode here, we should use EditorDOMPoint.
-  nsCOMPtr<nsIDOMNode> containerAtSplitPoint = GetAsDOMNode(aNode);
-  int32_t offsetAtSplitPoint = aOffset;
+  nsCOMPtr<nsIDOMNode> containerAtSplitPoint =
+    GetAsDOMNode(atStartOfSelection.Container());
+  int32_t offsetAtSplitPoint = atStartOfSelection.Offset();
 
   EditorRawDOMPoint pointToInsertBR;
-  if (aNode == &aParentDivOrP && doesCRCreateNewP) {
-    // We are at the edges of the block, we don't need to create new <br>.
+  if (doesCRCreateNewP &&
+      atStartOfSelection.Container() == &aParentDivOrP) {
+    // We are at the edges of the block, so, we don't need to create new <br>.
     brNode = nullptr;
-  } else if (EditorBase::IsTextNode(aNode)) {
+  } else if (EditorBase::IsTextNode(atStartOfSelection.Container())) {
     // at beginning of text node?
-    if (!aOffset) {
+    if (atStartOfSelection.IsStartOfContainer()) {
       // is there a BR prior to it?
-      brNode = htmlEditor->GetPriorHTMLSibling(node);
+      brNode = htmlEditor->GetPriorHTMLSibling(atStartOfSelection.Container());
       if (!brNode ||
           !htmlEditor->IsVisibleBRElement(brNode) ||
           TextEditUtils::HasMozAttr(GetAsDOMNode(brNode))) {
-        pointToInsertBR.Set(node);
+        pointToInsertBR.Set(atStartOfSelection.Container());
         brNode = nullptr;
       }
-    } else if (aOffset == static_cast<int32_t>(node->Length())) {
+    } else if (atStartOfSelection.IsEndOfContainer()) {
       // we're at the end of text node...
       // is there a BR after to it?
-      brNode = htmlEditor->GetNextHTMLSibling(node);
+      brNode = htmlEditor->GetNextHTMLSibling(atStartOfSelection.Container());
       if (!brNode ||
           !htmlEditor->IsVisibleBRElement(brNode) ||
           TextEditUtils::HasMozAttr(GetAsDOMNode(brNode))) {
-        pointToInsertBR.Set(node);
+        pointToInsertBR.Set(atStartOfSelection.Container());
         DebugOnly<bool> advanced = pointToInsertBR.AdvanceOffset();
         NS_WARNING_ASSERTION(advanced,
-          "Failed to advance offset to after the container");
+          "Failed to advance offset to after the container of selection start");
         brNode = nullptr;
       }
     } else {
-      nsCOMPtr<nsINode> leftNode = node;
+      nsCOMPtr<nsINode> leftNode = atStartOfSelection.Container();
 
       if (doesCRCreateNewP) {
         nsCOMPtr<nsIDOMNode> leftDOMNode;
@@ -6808,25 +6809,22 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
       pointToInsertBR.Set(leftNode);
       DebugOnly<bool> advanced = pointToInsertBR.AdvanceOffset();
       NS_WARNING_ASSERTION(advanced,
-        "Failed to advance offset to after the container");
+        "Failed to advance offset to after the container of selection start");
     }
   } else {
     // not in a text node.
     // is there a BR prior to it?
     nsCOMPtr<nsIContent> nearNode;
-    nearNode = htmlEditor->GetPreviousEditableHTMLNode(
-                             EditorRawDOMPoint(node, aChildAtOffset, aOffset));
+    nearNode =
+      htmlEditor->GetPreviousEditableHTMLNode(atStartOfSelection.AsRaw());
     if (!nearNode || !htmlEditor->IsVisibleBRElement(nearNode) ||
         TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
       // is there a BR after it?
       nearNode =
-        htmlEditor->GetNextEditableHTMLNode(
-                      EditorRawDOMPoint(node, aChildAtOffset, aOffset));
+        htmlEditor->GetNextEditableHTMLNode(atStartOfSelection.AsRaw());
       if (!nearNode || !htmlEditor->IsVisibleBRElement(nearNode) ||
           TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
-        pointToInsertBR.Set(node, aOffset);
-        NS_WARNING_ASSERTION(pointToInsertBR.IsSetAndValid(),
-          "Failed to set point to insert <br> to given node");
+        pointToInsertBR = atStartOfSelection;
         splitAfterNewBR = true;
       }
     }
