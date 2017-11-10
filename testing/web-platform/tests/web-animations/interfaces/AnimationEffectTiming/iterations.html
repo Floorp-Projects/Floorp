@@ -13,7 +13,7 @@
 test(function(t) {
   var anim = createDiv(t).animate(null);
   assert_equals(anim.effect.timing.iterations, 1);
-}, 'Test default value');
+}, 'Has the default value 1');
 
 test(function(t) {
   var div = createDiv(t);
@@ -22,7 +22,7 @@ test(function(t) {
   assert_equals(anim.effect.timing.iterations, 2, 'set duration 2');
   assert_equals(anim.effect.getComputedTiming().iterations, 2,
                        'getComputedTiming() after set iterations 2');
-}, 'set iterations 2');
+}, 'Can be set to a double value');
 
 test(function(t) {
   var div = createDiv(t);
@@ -31,7 +31,7 @@ test(function(t) {
   assert_equals(anim.effect.timing.iterations, Infinity, 'set duration Infinity');
   assert_equals(anim.effect.getComputedTiming().iterations, Infinity,
                        'getComputedTiming() after set iterations Infinity');
-}, 'set iterations Infinity');
+}, 'Can be set to infinity');
 
 test(function(t) {
   var div = createDiv(t);
@@ -39,7 +39,7 @@ test(function(t) {
   assert_throws({ name: 'TypeError' }, function() {
     anim.effect.timing.iterations = -1;
   });
-}, 'set negative iterations');
+}, 'Throws when setting a negative number');
 
 test(function(t) {
   var div = createDiv(t);
@@ -47,7 +47,7 @@ test(function(t) {
   assert_throws({ name: 'TypeError' }, function() {
     anim.effect.timing.iterations = -Infinity;
   });
-}, 'set negative infinity iterations ');
+}, 'Throws when setting negative infinity');
 
 test(function(t) {
   var div = createDiv(t);
@@ -55,7 +55,7 @@ test(function(t) {
   assert_throws({ name: 'TypeError' }, function() {
     anim.effect.timing.iterations = NaN;
   });
-}, 'set NaN iterations');
+}, 'Throws when setting a NaN value');
 
 </script>
 </body>
