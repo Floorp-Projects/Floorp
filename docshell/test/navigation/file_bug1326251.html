@@ -154,7 +154,7 @@
         frame.addEventListener('load', function listener(e) {
           if (++count == occurances) {
             frame.removeEventListener('load', listener);
-            resolve();
+            setTimeout(resolve, 0);
           }
         });
       });
