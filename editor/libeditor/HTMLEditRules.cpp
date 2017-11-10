@@ -3396,23 +3396,29 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
                        address_of(child));
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_STATE(mHTMLEditor);
-    nsCOMPtr<Element> theList =
-      mHTMLEditor->CreateNode(listType, container, offset, child);
+    EditorRawDOMPoint atListItemToInsertBefore(container, child, offset);
+    RefPtr<Element> theList =
+      mHTMLEditor->CreateNode(listType, atListItemToInsertBefore);
     NS_ENSURE_STATE(theList);
 
     NS_ENSURE_STATE(mHTMLEditor);
-    nsCOMPtr<Element> theListItem =
-      mHTMLEditor->CreateNode(itemType, theList, 0, theList->GetFirstChild());
+    EditorRawDOMPoint atFirstListItemToInsertBefore(theList, 0);
+    RefPtr<Element> theListItem =
+      mHTMLEditor->CreateNode(itemType, atFirstListItemToInsertBefore);
     NS_ENSURE_STATE(theListItem);
 
     // remember our new block for postprocessing
     mNewBlock = theListItem;
     // put selection in new list item
     *aHandled = true;
-    rv = aSelection->Collapse(theListItem, 0);
+    ErrorResult error;
+    aSelection->Collapse(EditorRawDOMPoint(theListItem, 0), error);
     // Don't restore the selection
     selectionRestorer.Abort();
-    return rv;
+    if (NS_WARN_IF(!error.Failed())) {
+      return error.StealNSResult();
+    }
+    return NS_OK;
   }
 
   // if there is only one node in the array, and it is a list, div, or
@@ -3498,13 +3504,9 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
             mHTMLEditor->SplitNode(*curParent->AsContent(), offset, rv);
           NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
           newBlock = splitNode ? splitNode->AsElement() : nullptr;
-          int32_t offset;
-          nsCOMPtr<nsINode> parent = EditorBase::GetNodeLocation(curParent,
-                                                                 &offset);
           NS_ENSURE_STATE(mHTMLEditor);
-          curList = mHTMLEditor->CreateNode(listType, parent, offset,
-                                            curParent ? curParent->AsContent()
-                                                      : nullptr);
+          EditorRawDOMPoint atCurParent(curParent);
+          curList = mHTMLEditor->CreateNode(listType, atCurParent);
           NS_ENSURE_STATE(curList);
         }
         // move list item to new list
@@ -3575,8 +3577,8 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
                          address_of(curChild));
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_STATE(mHTMLEditor);
-      curList = mHTMLEditor->CreateNode(listType, curParent, offset,
-                                        curChild);
+      EditorRawDOMPoint atCurChild(curParent, curChild, offset);
+      curList = mHTMLEditor->CreateNode(listType, atCurChild);
       // remember our new block for postprocessing
       mNewBlock = curList;
       // curList is now the correct thing to put curNode in
@@ -3781,13 +3783,15 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsAtom& blockType)
         NS_ENSURE_SUCCESS(rv, rv);
         // We don't need to act on this node any more
         arrayOfNodes.RemoveElement(brNode);
-        child = nullptr;
+        // XXX We need to recompute child here because SplitAsNeeded() and
+        //     EditorBase::SplitNodeDeep() don't compute child in some cases.
+        child = container->GetChildAt(offset);
       }
       // Make sure we can put a block here
       rv = SplitAsNeeded(blockType, container, offset, address_of(child));
       NS_ENSURE_SUCCESS(rv, rv);
-      nsCOMPtr<Element> block =
-        htmlEditor->CreateNode(&blockType, container, offset, child);
+      EditorRawDOMPoint atChild(container, child, offset);
+      RefPtr<Element> block = htmlEditor->CreateNode(&blockType, atChild);
       NS_ENSURE_STATE(block);
       // Remember our new block for postprocessing
       mNewBlock = block;
@@ -3928,9 +3932,9 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
     rv = SplitAsNeeded(*nsGkAtoms::div, container, offset, address_of(child));
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_STATE(mHTMLEditor);
-    nsCOMPtr<Element> theBlock = mHTMLEditor->CreateNode(nsGkAtoms::div,
-                                                         container, offset,
-                                                         child);
+    EditorRawDOMPoint atChild(container, child, offset);
+    RefPtr<Element> theBlock =
+      mHTMLEditor->CreateNode(nsGkAtoms::div, atChild);
     NS_ENSURE_STATE(theBlock);
     // remember our new block for postprocessing
     mNewBlock = theBlock;
@@ -3945,10 +3949,15 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
     }
     // put selection in new block
     *aHandled = true;
-    rv = aSelection->Collapse(theBlock, 0);
+    EditorRawDOMPoint atStartOfTheBlock(theBlock, 0);
+    ErrorResult error;
+    aSelection->Collapse(atStartOfTheBlock, error);
     // Don't restore the selection
     selectionRestorer.Abort();
-    return rv;
+    if (NS_WARN_IF(!error.Failed())) {
+      return error.StealNSResult();
+    }
+    return NS_OK;
   }
 
   // Ok, now go through all the nodes and put them in a blockquote,
@@ -4025,8 +4034,9 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
                         address_of(curChild));
         NS_ENSURE_SUCCESS(rv, rv);
         NS_ENSURE_STATE(mHTMLEditor);
+        EditorRawDOMPoint atCurChild(curParent, curChild, offset);
         curList = mHTMLEditor->CreateNode(curParent->NodeInfo()->NameAtom(),
-                                          curParent, offset, curChild);
+                                          atCurChild);
         NS_ENSURE_STATE(curList);
         // curList is now the correct thing to put curNode in
         // remember our new block for postprocessing
@@ -4058,8 +4068,8 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
                              address_of(curChild));
           NS_ENSURE_SUCCESS(rv, rv);
           NS_ENSURE_STATE(mHTMLEditor);
-          curQuote = mHTMLEditor->CreateNode(nsGkAtoms::div, curParent,
-                                             offset, curChild);
+          EditorRawDOMPoint atCurChild(curParent, curChild, offset);
+          curQuote = mHTMLEditor->CreateNode(nsGkAtoms::div, atCurChild);
           NS_ENSURE_STATE(curQuote);
           ChangeIndentation(*curQuote, Change::plus);
           // remember our new block for postprocessing
@@ -4127,9 +4137,9 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
                        address_of(child));
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_STATE(mHTMLEditor);
-    nsCOMPtr<Element> theBlock = mHTMLEditor->CreateNode(nsGkAtoms::blockquote,
-                                                         container, offset,
-                                                         child);
+    EditorRawDOMPoint atChild(container, child, offset);
+    RefPtr<Element> theBlock =
+      mHTMLEditor->CreateNode(nsGkAtoms::blockquote, atChild);
     NS_ENSURE_STATE(theBlock);
     // remember our new block for postprocessing
     mNewBlock = theBlock;
@@ -4143,10 +4153,15 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
     }
     // put selection in new block
     *aHandled = true;
-    rv = aSelection->Collapse(theBlock, 0);
+    EditorRawDOMPoint atStartOfTheBlock(theBlock, 0);
+    ErrorResult error;
+    aSelection->Collapse(atStartOfTheBlock, error);
     // Don't restore the selection
     selectionRestorer.Abort();
-    return rv;
+    if (NS_WARN_IF(!error.Failed())) {
+      return error.StealNSResult();
+    }
+    return NS_OK;
   }
 
   // Ok, now go through all the nodes and put them in a blockquote,
@@ -4224,8 +4239,9 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
                         address_of(curChild));
         NS_ENSURE_SUCCESS(rv, rv);
         NS_ENSURE_STATE(mHTMLEditor);
+        EditorRawDOMPoint atCurChild(curParent, curChild, offset);
         curList = mHTMLEditor->CreateNode(curParent->NodeInfo()->NameAtom(),
-                                          curParent, offset, curChild);
+                                          atCurChild);
         NS_ENSURE_STATE(curList);
         // curList is now the correct thing to put curNode in
         // remember our new block for postprocessing
@@ -4269,8 +4285,9 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
                              offset, address_of(curChild));
           NS_ENSURE_SUCCESS(rv, rv);
           NS_ENSURE_STATE(mHTMLEditor);
+          EditorRawDOMPoint atCurChild(curParent, curChild, offset);
           curList = mHTMLEditor->CreateNode(curParent->NodeInfo()->NameAtom(),
-                                            curParent, offset, curChild);
+                                            atCurChild);
           NS_ENSURE_STATE(curList);
         }
         NS_ENSURE_STATE(mHTMLEditor);
@@ -4301,8 +4318,8 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
                              address_of(curChild));
           NS_ENSURE_SUCCESS(rv, rv);
           NS_ENSURE_STATE(mHTMLEditor);
-          curQuote = mHTMLEditor->CreateNode(nsGkAtoms::blockquote, curParent,
-                                             offset, curChild);
+          EditorRawDOMPoint atCurChild(curParent, curChild, offset);
+          curQuote = mHTMLEditor->CreateNode(nsGkAtoms::blockquote, atCurChild);
           NS_ENSURE_STATE(curQuote);
           // remember our new block for postprocessing
           mNewBlock = curQuote;
@@ -4916,8 +4933,8 @@ HTMLEditRules::WillAlign(Selection& aSelection,
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
-    nsCOMPtr<Element> div = htmlEditor->CreateNode(nsGkAtoms::div, parent,
-                                                   offset, child);
+    EditorRawDOMPoint atChild(parent, child, offset);
+    RefPtr<Element> div = htmlEditor->CreateNode(nsGkAtoms::div, atChild);
     NS_ENSURE_STATE(div);
     // Remember our new block for postprocessing
     mNewBlock = div;
@@ -4928,10 +4945,14 @@ HTMLEditRules::WillAlign(Selection& aSelection,
     // Put in a moz-br so that it won't get deleted
     rv = CreateMozBR(div->AsDOMNode(), 0);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = aSelection.Collapse(div, 0);
+    EditorRawDOMPoint atStartOfDiv(div, 0);
+    ErrorResult error;
+    aSelection.Collapse(atStartOfDiv, error);
     // Don't restore the selection
     selectionRestorer.Abort();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
     return NS_OK;
   }
 
@@ -5022,8 +5043,8 @@ HTMLEditRules::WillAlign(Selection& aSelection,
       rv = SplitAsNeeded(*nsGkAtoms::div, curParent, offset,
                          address_of(curChild));
       NS_ENSURE_SUCCESS(rv, rv);
-      curDiv = htmlEditor->CreateNode(nsGkAtoms::div, curParent, offset,
-                                      curChild);
+      EditorRawDOMPoint atCurChild(curParent, curChild, offset);
+      curDiv = htmlEditor->CreateNode(nsGkAtoms::div, atCurChild);
       NS_ENSURE_STATE(curDiv);
       // Remember our new block for postprocessing
       mNewBlock = curDiv;
@@ -5099,8 +5120,9 @@ HTMLEditRules::AlignBlockContents(nsIDOMNode* aNode,
   } else {
     // else we need to put in a div, set the alignment, and toss in all the children
     NS_ENSURE_STATE(mHTMLEditor);
-    RefPtr<Element> divElem = mHTMLEditor->CreateNode(nsGkAtoms::div, node, 0,
-                                                      node->GetFirstChild());
+    EditorRawDOMPoint atStartOfNode(node, 0);
+    RefPtr<Element> divElem =
+      mHTMLEditor->CreateNode(nsGkAtoms::div, atStartOfNode);
     NS_ENSURE_STATE(divElem);
     // set up the alignment on the div
     NS_ENSURE_STATE(mHTMLEditor);
@@ -6618,10 +6640,11 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
       // Create a paragraph
       nsAtom& paraAtom = DefaultParagraphSeparator();
       // We want a wrapper element even if we separate with <br>
-      nsCOMPtr<Element> pNode =
-        htmlEditor->CreateNode(&paraAtom == nsGkAtoms::br ? nsGkAtoms::p
-                                                           : &paraAtom,
-                                headerParent, offset + 1);
+      EditorRawDOMPoint nextToHeader(headerParent, offset + 1);
+      RefPtr<Element> pNode =
+        htmlEditor->CreateNode(&paraAtom == nsGkAtoms::br ?
+                                 nsGkAtoms::p : &paraAtom,
+                               nextToHeader);
       NS_ENSURE_STATE(pNode);
 
       // Append a <br> to it
@@ -6899,10 +6922,11 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
       // Time to insert a paragraph
       nsAtom& paraAtom = DefaultParagraphSeparator();
       // We want a wrapper even if we separate with <br>
-      nsCOMPtr<Element> pNode =
-        htmlEditor->CreateNode(&paraAtom == nsGkAtoms::br ? nsGkAtoms::p
-                                                           : &paraAtom,
-                                listParent, offset + 1);
+      EditorRawDOMPoint atNextListItem(listParent, offset + 1);
+      RefPtr<Element> pNode =
+        htmlEditor->CreateNode(&paraAtom == nsGkAtoms::br ?
+                                 nsGkAtoms::p : &paraAtom,
+                               atNextListItem);
       NS_ENSURE_STATE(pNode);
 
       // Append a <br> to it
@@ -6948,9 +6972,11 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
 
           nsAtom* listAtom = nodeAtom == nsGkAtoms::dt ? nsGkAtoms::dd
                                                         : nsGkAtoms::dt;
-          nsCOMPtr<Element> newListItem =
-            htmlEditor->CreateNode(listAtom, list, itemOffset + 1,
-                                   aListItem.GetNextSibling());
+          MOZ_DIAGNOSTIC_ASSERT(itemOffset != -1);
+          EditorRawDOMPoint atNextListItem(list, aListItem.GetNextSibling(),
+                                           itemOffset + 1);
+          RefPtr<Element> newListItem =
+            htmlEditor->CreateNode(listAtom, atNextListItem);
           NS_ENSURE_STATE(newListItem);
           rv = htmlEditor->DeleteNode(&aListItem);
           NS_ENSURE_SUCCESS(rv, rv);
@@ -7053,8 +7079,8 @@ HTMLEditRules::MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
                                   address_of(curChild));
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_STATE(mHTMLEditor);
-      curBlock = mHTMLEditor->CreateNode(nsGkAtoms::blockquote, curParent,
-                                         offset, curChild);
+      EditorRawDOMPoint atCurChild(curParent, curChild, offset);
+      curBlock = mHTMLEditor->CreateNode(nsGkAtoms::blockquote, atCurChild);
       NS_ENSURE_STATE(curBlock);
       // remember our new block for postprocessing
       mNewBlock = curBlock;
@@ -7223,9 +7249,9 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
         nsresult rv = SplitAsNeeded(aBlockTag, curParent, offset,
                                     address_of(curChild));
         NS_ENSURE_SUCCESS(rv, rv);
-        nsCOMPtr<Element> theBlock =
-          htmlEditor->CreateNode(&aBlockTag, curParent, offset,
-                                 curChild);
+        EditorRawDOMPoint atCurChild(curParent, curChild, offset);
+        RefPtr<Element> theBlock =
+          htmlEditor->CreateNode(&aBlockTag, atCurChild);
         NS_ENSURE_STATE(theBlock);
         // Remember our new block for postprocessing
         mNewBlock = theBlock;
@@ -7245,8 +7271,8 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
         nsresult rv = SplitAsNeeded(aBlockTag, curParent, offset,
                                     address_of(curChild));
         NS_ENSURE_SUCCESS(rv, rv);
-        curBlock = htmlEditor->CreateNode(&aBlockTag, curParent, offset,
-                                          curChild);
+        EditorRawDOMPoint atCurChild(curParent, curChild, offset);
+        curBlock = htmlEditor->CreateNode(&aBlockTag, atCurChild);
         NS_ENSURE_STATE(curBlock);
         // Remember our new block for postprocessing
         mNewBlock = curBlock;
@@ -7273,8 +7299,8 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
         nsresult rv = SplitAsNeeded(aBlockTag, curParent, offset,
                                     address_of(curChild));
         NS_ENSURE_SUCCESS(rv, rv);
-        curBlock = htmlEditor->CreateNode(&aBlockTag, curParent, offset,
-                                          curChild);
+        EditorRawDOMPoint atCurChild(curParent, curChild, offset);
+        curBlock = htmlEditor->CreateNode(&aBlockTag, atCurChild);
         NS_ENSURE_STATE(curBlock);
         // Remember our new block for postprocessing
         mNewBlock = curBlock;
@@ -8518,24 +8544,21 @@ HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
 
 NS_IMETHODIMP
 HTMLEditRules::WillCreateNode(const nsAString& aTag,
-                              nsIDOMNode* aParent,
-                              int32_t aPosition)
+                              nsIDOMNode* aNextSiblingOfNewNode)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLEditRules::DidCreateNode(const nsAString& aTag,
-                             nsIDOMNode* aNode,
-                             nsIDOMNode* aParent,
-                             int32_t aPosition,
+                             nsIDOMNode* aNewNode,
                              nsresult aResult)
 {
   if (!mListenerEnabled) {
     return NS_OK;
   }
   // assumption that Join keeps the righthand node
-  nsresult rv = mUtilRange->SelectNode(aNode);
+  nsresult rv = mUtilRange->SelectNode(aNewNode);
   NS_ENSURE_SUCCESS(rv, rv);
   return UpdateDocChangeRange(mUtilRange);
 }
@@ -9028,8 +9051,9 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
     rv = SplitAsNeeded(*nsGkAtoms::div, parent, offset,
                        address_of(child));
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<Element> positionedDiv =
-      htmlEditor->CreateNode(nsGkAtoms::div, parent, offset, child);
+    EditorRawDOMPoint atChild(parent, child, offset);
+    RefPtr<Element> positionedDiv =
+      htmlEditor->CreateNode(nsGkAtoms::div, atChild);
     NS_ENSURE_STATE(positionedDiv);
     // Remember our new block for postprocessing
     mNewBlock = positionedDiv;
@@ -9084,16 +9108,15 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
           SplitAsNeeded(*curParent->NodeInfo()->NameAtom(), curParent, offset);
         NS_ENSURE_SUCCESS(rv, rv);
         if (!curPositionedDiv) {
-          nsCOMPtr<nsINode> curParentParent = curParent->GetParentNode();
-          int32_t parentOffset = curParentParent
-            ? curParentParent->IndexOf(curParent) : -1;
-          curPositionedDiv = htmlEditor->CreateNode(nsGkAtoms::div, curParentParent,
-                                                    parentOffset);
+          EditorRawDOMPoint atCurParent(curParent);
+          curPositionedDiv =
+            htmlEditor->CreateNode(nsGkAtoms::div, atCurParent);
           mNewBlock = curPositionedDiv;
         }
+        EditorRawDOMPoint atEndOfCurPositionedDiv(curPositionedDiv,
+                                                  curPositionedDiv->Length());
         curList = htmlEditor->CreateNode(curParent->NodeInfo()->NameAtom(),
-                                         curPositionedDiv, -1,
-                                         curPositionedDiv->GetLastChild());
+                                         atEndOfCurPositionedDiv);
         NS_ENSURE_STATE(curList);
         // curList is now the correct thing to put curNode in.  Remember our
         // new block for postprocessing.
@@ -9128,18 +9151,15 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
                              offset);
           NS_ENSURE_SUCCESS(rv, rv);
           if (!curPositionedDiv) {
-            nsCOMPtr<nsINode> curParentParent = curParent->GetParentNode();
-            int32_t parentOffset = curParentParent ?
-              curParentParent->IndexOf(curParent) : -1;
-            curPositionedDiv = htmlEditor->CreateNode(nsGkAtoms::div,
-                                                      curParentParent,
-                                                      parentOffset,
-                                                      curParent->AsContent());
+            EditorRawDOMPoint atCurParent(curParent);
+            curPositionedDiv =
+              htmlEditor->CreateNode(nsGkAtoms::div, atCurParent);
             mNewBlock = curPositionedDiv;
           }
+          EditorRawDOMPoint atEndOfCurPositionedDiv(curPositionedDiv,
+                                                    curPositionedDiv->Length());
           curList = htmlEditor->CreateNode(curParent->NodeInfo()->NameAtom(),
-                                           curPositionedDiv, -1,
-                                           curPositionedDiv->GetLastChild());
+                                           atEndOfCurPositionedDiv);
           NS_ENSURE_STATE(curList);
         }
         rv = htmlEditor->MoveNode(listItem, curList, -1);
@@ -9160,8 +9180,8 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
           rv = SplitAsNeeded(*nsGkAtoms::div, curParent, offset,
                              address_of(curChild));
           NS_ENSURE_SUCCESS(rv, rv);
-          curPositionedDiv = htmlEditor->CreateNode(nsGkAtoms::div, curParent,
-                                                    offset, curChild);
+          EditorRawDOMPoint atCurChild(curParent, curChild, offset);
+          curPositionedDiv = htmlEditor->CreateNode(nsGkAtoms::div, atCurChild);
           NS_ENSURE_STATE(curPositionedDiv);
           // Remember our new block for postprocessing
           mNewBlock = curPositionedDiv;

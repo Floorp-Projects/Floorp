@@ -14,7 +14,7 @@ add_task(async function() {
     let dialogPromise = promiseLoadSubDialog(CONTAINERS_URL);
 
     let addButton = doc.getElementById("containersAdd");
-    addButton.click();
+    addButton.doCommand();
 
     let dialog = await dialogPromise;
 

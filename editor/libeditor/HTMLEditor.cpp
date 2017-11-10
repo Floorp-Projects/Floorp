@@ -6,6 +6,7 @@
 #include "mozilla/HTMLEditor.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/TextEvents.h"
 
@@ -2021,11 +2022,13 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
       }
 
       // make a list
-      nsCOMPtr<Element> newList = CreateNode(listAtom, parent, offset, child);
+      MOZ_DIAGNOSTIC_ASSERT(child);
+      EditorRawDOMPoint atChild(parent, child, offset);
+      RefPtr<Element> newList = CreateNode(listAtom, atChild);
       NS_ENSURE_STATE(newList);
       // make a list item
-      nsCOMPtr<Element> newItem = CreateNode(nsGkAtoms::li, newList, 0,
-                                             newList->GetFirstChild());
+      EditorRawDOMPoint atStartOfNewList(newList, 0);
+      RefPtr<Element> newItem = CreateNode(nsGkAtoms::li, atStartOfNewList);
       NS_ENSURE_STATE(newItem);
       rv = selection->Collapse(newItem, 0);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -2164,7 +2167,9 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
       }
 
       // make a block
-      nsCOMPtr<Element> newBlock = CreateNode(blockAtom, parent, offset, child);
+      MOZ_DIAGNOSTIC_ASSERT(child);
+      EditorRawDOMPoint atChild(parent, child, offset);
+      RefPtr<Element> newBlock = CreateNode(blockAtom, atChild);
       NS_ENSURE_STATE(newBlock);
 
       // reposition selection to inside the block
@@ -2238,8 +2243,9 @@ HTMLEditor::Indent(const nsAString& aIndent)
         }
 
         // make a blockquote
-        nsCOMPtr<Element> newBQ =
-          CreateNode(nsGkAtoms::blockquote, parent, offset, child);
+        MOZ_DIAGNOSTIC_ASSERT(child);
+        EditorRawDOMPoint atChild(parent, child, offset);
+        RefPtr<Element> newBQ = CreateNode(nsGkAtoms::blockquote, atChild);
         NS_ENSURE_STATE(newBQ);
         // put a space in it so layout will draw the list item
         rv = selection->Collapse(newBQ, 0);
@@ -4532,9 +4538,9 @@ HTMLEditor::CopyLastEditableChildStyles(nsINode* aPreviousBlock,
                                          childElement->NodeInfo()->NameAtom());
         NS_ENSURE_STATE(newStyles);
       } else {
+        EditorRawDOMPoint atStartOfNewBlock(newBlock, 0);
         deepestStyle = newStyles =
-          CreateNode(childElement->NodeInfo()->NameAtom(), newBlock, 0,
-                     newBlock->GetFirstChild());
+          CreateNode(childElement->NodeInfo()->NameAtom(), atStartOfNewBlock);
         NS_ENSURE_STATE(newStyles);
       }
       CloneAttributes(newStyles, childElement);

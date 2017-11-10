@@ -40,7 +40,7 @@ let gContainersPane = {
     }
   },
 
-  async onRemoveClick(button) {
+  async onRemoveCommand(button) {
     let userContextId = parseInt(button.getAttribute("value"), 10);
 
     let count = ContextualIdentityService.countContainerTabs(userContextId);
@@ -69,11 +69,11 @@ let gContainersPane = {
     this._rebuildView();
   },
 
-  onPreferenceClick(button) {
+  onPreferenceCommand(button) {
     this.openPreferenceDialog(button.getAttribute("value"));
   },
 
-  onAddButtonClick(button) {
+  onAddButtonCommand(button) {
     this.openPreferenceDialog(null);
   },
 

@@ -119,8 +119,7 @@ else
     esac
     export CCACHE="$topsrcdir/sccache2/sccache${suffix}"
     export SCCACHE_VERBOSE_STATS=1
-    mk_add_options MOZ_PREFLIGHT_ALL+=build/sccache.mk
-    mk_add_options MOZ_POSTFLIGHT_ALL+=build/sccache.mk
+    mk_add_options MOZBUILD_MANAGE_SCCACHE_DAEMON=${topsrcdir}/sccache2/sccache
     mk_add_options "UPLOAD_EXTRA_FILES+=sccache.log.gz"
     case "$platform" in
     win*)
