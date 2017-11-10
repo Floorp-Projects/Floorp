@@ -11503,12 +11503,6 @@
     "n_buckets": 16,
     "description": "The number of entries in persistent DataStorage (HSTS and HPKP data, basically)"
   },
-  "VIDEO_EME_PLAY_SUCCESS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "45",
-    "kind": "boolean",
-    "description": "EME video playback success or failure"
-  },
   "VIDEO_PLAY_TIME_MS" : {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["ajones@mozilla.com"],
