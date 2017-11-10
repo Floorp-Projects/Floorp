@@ -84,6 +84,8 @@ public:
   void SetCanonicalDuration(
     AbstractCanonical<media::NullableTimeUnit>* aCanonical);
 
+  void SetSeamlessLoopingEnabled(bool aEnabled);
+
 private:
   ~ReaderProxy();
   RefPtr<MetadataPromise> OnMetadataRead(MetadataHolder&& aMetadata);
@@ -101,6 +103,9 @@ private:
 
   // Duration, mirrored from the state machine task queue.
   Mirror<media::NullableTimeUnit> mDuration;
+
+  // Indicates whether we should loop the media.
+  bool mSeamlessLoopingEnabled;
 };
 
 } // namespace mozilla

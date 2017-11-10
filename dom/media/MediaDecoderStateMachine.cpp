@@ -2198,6 +2198,13 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder&& aMetadata)
     Move(aMetadata.mTags),
     MediaDecoderEventVisibility::Observable);
 
+  // Check whether the media satisfies the requirement of seamless looing.
+  // (Before checking the media is audio only, we need to get metadata first.)
+  mMaster->mSeamlessLoopingAllowed = MediaPrefs::SeamlessLooping() &&
+                                     mMaster->HasAudio() &&
+                                     !mMaster->HasVideo();
+  mMaster->LoopingChanged();
+
   SetState<DecodingFirstFrameState>();
 }
 
@@ -2621,6 +2628,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mOutputStreamManager(new OutputStreamManager()),
   mVideoDecodeMode(VideoDecodeMode::Normal),
   mIsMSE(aDecoder->IsMSE()),
+  mSeamlessLoopingAllowed(false),
   INIT_MIRROR(mBuffered, TimeIntervals()),
   INIT_MIRROR(mPlayState, MediaDecoder::PLAY_STATE_LOADING),
   INIT_MIRROR(mVolume, 1.0),
@@ -2677,6 +2685,7 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mWatchManager.Watch(mPreservesPitch,
                       &MediaDecoderStateMachine::PreservesPitchChanged);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
+  mWatchManager.Watch(mLooping, &MediaDecoderStateMachine::LoopingChanged);
 
   MOZ_ASSERT(!mStateObj);
   auto* s = new DecodeMetadataState(this);
@@ -3558,6 +3567,15 @@ void MediaDecoderStateMachine::PreservesPitchChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
   mMediaSink->SetPreservesPitch(mPreservesPitch);
+}
+
+void
+MediaDecoderStateMachine::LoopingChanged()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  if (mSeamlessLoopingAllowed) {
+    mReader->SetSeamlessLoopingEnabled(mLooping);
+  }
 }
 
 TimeUnit

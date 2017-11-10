@@ -19,6 +19,7 @@ ReaderProxy::ReaderProxy(AbstractThread* aOwnerThread,
   , mDuration(aReader->OwnerThread(),
               media::NullableTimeUnit(),
               "ReaderProxy::mDuration (Mirror)")
+  , mSeamlessLoopingEnabled(false)
 {
   // Must support either heuristic buffering or WaitForData().
   MOZ_ASSERT(mReader->UseBufferingHeuristics() ||
@@ -220,6 +221,13 @@ ReaderProxy::SetCanonicalDuration(
     });
   nsresult rv = mReader->OwnerThread()->Dispatch(r.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+}
+
+void
+ReaderProxy::SetSeamlessLoopingEnabled(bool aEnabled)
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  mSeamlessLoopingEnabled = aEnabled;
 }
 
 } // namespace mozilla
