@@ -209,8 +209,18 @@ class TcpTransport(object):
             raise exc, msg.format(val), tb
 
         hello = json.loads(raw)
-        self.protocol = hello.get("marionetteProtocol", self.min_protocol_level)
-        self.application_type = hello.get("applicationType")
+        application_type = hello.get("applicationType")
+        protocol = hello.get("marionetteProtocol")
+
+        if application_type != "gecko":
+            raise ValueError("Application type '{}' is not supported".format(application_type))
+
+        if not isinstance(protocol, int) or protocol < self.min_protocol_level:
+            msg = "Earliest supported protocol level is '{}' but got '{}'"
+            raise ValueError(msg.format(self.min_protocol_level, protocol))
+
+        self.application_type = application_type
+        self.protocol = protocol
 
         return (self.protocol, self.application_type)
 

@@ -23,6 +23,12 @@ const MESSAGES = {
   SystemMenu: "menu-message",
 };
 
+// Google analytics parameters that should be added to all outgoing links.
+const GA_PARAMETERS = [
+  ["utm_source", "devtools"],
+  ["utm_medium", "onboarding"],
+];
+
 const ABOUTDEVTOOLS_STRINGS = "chrome://devtools-shim/locale/aboutdevtools.properties";
 const aboutDevtoolsBundle = Services.strings.createBundle(ABOUTDEVTOOLS_STRINGS);
 
@@ -184,6 +190,14 @@ window.addEventListener("load", function () {
   let featuresContainer = document.querySelector(".features-list");
   for (let feature of features) {
     featuresContainer.appendChild(createFeatureEl(feature));
+  }
+
+  // Add Google Analytics parameters to all the external links.
+  let externalLinks = [...document.querySelectorAll("a.external")];
+  for (let link of externalLinks) {
+    let linkUrl = new URL(link.getAttribute("href"));
+    GA_PARAMETERS.forEach(([key, value]) => linkUrl.searchParams.set(key, value));
+    link.setAttribute("href", linkUrl.href);
   }
 
   // Update the current page based on the current value of DEVTOOLS_ENABLED_PREF.

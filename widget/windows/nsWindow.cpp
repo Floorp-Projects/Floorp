@@ -4065,18 +4065,46 @@ nsWindow::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
     clearRegion.Or(clearRegion, gfx::IntRect::Truncate(0, 0, rect.right - rect.left, borderSize));
   }
 
+  mWindowButtonsRect = Nothing();
+
   if (!IsWin10OrLater()) {
     for (size_t i = 0; i < aThemeGeometries.Length(); i++) {
       if (aThemeGeometries[i].mType == nsNativeThemeWin::eThemeGeometryTypeWindowButtons) {
         LayoutDeviceIntRect bounds = aThemeGeometries[i].mRect;
+        // Extend the bounds by one pixel to the right, because that's how much
+        // the actual window button shape extends past the client area of the
+        // window (and overlaps the right window frame).
+        bounds.width += 1;
+        if (!mWindowButtonsRect) {
+          mWindowButtonsRect = Some(bounds);
+        }
         clearRegion.Or(clearRegion, gfx::IntRect::Truncate(bounds.X(), bounds.Y(), bounds.Width(), bounds.Height() - 2.0));
-        clearRegion.Or(clearRegion, gfx::IntRect::Truncate(bounds.X() + 1.0, bounds.YMost() - 2.0, bounds.Width() - 1.0, 1.0));
-        clearRegion.Or(clearRegion, gfx::IntRect::Truncate(bounds.X() + 2.0, bounds.YMost() - 1.0, bounds.Width() - 3.0, 1.0));
+        clearRegion.Or(clearRegion, gfx::IntRect::Truncate(bounds.X() + 1.0, bounds.YMost() - 2.0, bounds.Width() - 2.0, 1.0));
+        clearRegion.Or(clearRegion, gfx::IntRect::Truncate(bounds.X() + 2.0, bounds.YMost() - 1.0, bounds.Width() - 4.0, 1.0));
       }
     }
   }
 
   layerManager->SetRegionToClear(clearRegion);
+}
+
+void
+nsWindow::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWrBridge,
+                                            wr::DisplayListBuilder& aBuilder,
+                                            wr::IpcResourceUpdateQueue& aResources)
+{
+  if (mWindowButtonsRect) {
+    wr::LayoutRect rect = wr::ToLayoutRect(*mWindowButtonsRect);
+    nsTArray<wr::ComplexClipRegion> roundedClip;
+    roundedClip.AppendElement(wr::ToComplexClipRegion(
+      RoundedRect(ThebesRect(mWindowButtonsRect->ToUnknownRect()),
+                  RectCornerRadii(0, 0, 3, 3))));
+    wr::WrClipId clipId =
+      aBuilder.DefineClip(Nothing(), Nothing(), rect, &roundedClip);
+    aBuilder.PushClip(clipId);
+    aBuilder.PushClearRect(rect);
+    aBuilder.PopClip();
+  }
 }
 
 uint32_t

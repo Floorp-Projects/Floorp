@@ -113,7 +113,6 @@ WeaveService.prototype = {
         let getHistogramById = Services.telemetry.getHistogramById;
         getHistogramById("WEAVE_CONFIGURED").add(isConfigured);
         if (isConfigured) {
-          getHistogramById("WEAVE_CONFIGURED_MASTER_PASSWORD").add(Utils.mpEnabled());
           this.ensureLoaded();
         }
       }

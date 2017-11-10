@@ -219,14 +219,31 @@ public:
                                              int32_t* aInOutOffset,
                                              nsIEditor::EDirection aSelect);
 
-  // InsertText inserts a string at {aInOutParent,aInOutOffset} and makes any
-  // needed adjustments to ws around that point.  Example of fixup:
-  // trailingws before {aInOutParent,aInOutOffset} needs to be removed.
-  nsresult InsertText(const nsAString& aStringToInsert,
-                      nsCOMPtr<nsINode>* aInOutNode,
-                      nsCOMPtr<nsIContent>* aInOutChildAtOffset,
-                      int32_t* aInOutOffset,
-                      nsIDocument* aDoc);
+  /**
+   * InsertTextImpl() inserts aStringToInsert to aPointToInsert and makes any
+   * needed adjustments to white spaces around that point. E.g., trailing white
+   * spaces before aPointToInsert needs to be removed.
+   * This calls EditorBase::InsertTextImpl() after adjusting white spaces.
+   * So, please refer the method's explanation to know what this method exactly
+   * does.
+   *
+   * @param aDocument       The document of this editor.
+   * @param aStringToInsert The string to insert.
+   * @param aPointToInser   The point to insert aStringToInsert.
+   *                        Must be valid DOM point.
+   * @param aPointAfterInsertedString
+   *                        The point after inserted aStringToInsert.
+   *                        So, when this method actually inserts string,
+   *                        this is set to a point in the text node.
+   *                        Otherwise, this may be set to aPointToInsert.
+   * @return                When this succeeds to insert the string or
+   *                        does nothing during composition, returns NS_OK.
+   *                        Otherwise, an error code.
+   */
+  nsresult InsertText(nsIDocument& aDocument,
+                      const nsAString& aStringToInsert,
+                      const EditorRawDOMPoint& aPointToInsert,
+                      EditorRawDOMPoint* aPointAfterInsertedString = nullptr);
 
   // DeleteWSBackward deletes a single visible piece of ws before the ws
   // point (the point to create the wsRunObject, passed to its constructor).

@@ -46,6 +46,7 @@
 
 [@AB_CD@]
 @RESPATH@/dictionaries/*
+@RESPATH@/browser/localization/*
 #if defined(XP_WIN) || defined(XP_LINUX)
 @RESPATH@/fonts/*
 #endif

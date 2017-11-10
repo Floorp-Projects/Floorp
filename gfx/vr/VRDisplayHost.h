@@ -93,7 +93,7 @@ protected:
 
   VRDisplayInfo mDisplayInfo;
 
-  nsTArray<RefPtr<VRLayerParent>> mLayers;
+  nsTArray<VRLayerParent *> mLayers;
   // Weak reference to mLayers entries are cleared in
   // VRLayerParent destructor
 

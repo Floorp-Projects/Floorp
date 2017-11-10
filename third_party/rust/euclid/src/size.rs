@@ -13,7 +13,7 @@ use scale_factor::ScaleFactor;
 use vector::{TypedVector2D, vec2};
 use num::*;
 
-use num_traits::NumCast;
+use num_traits::{NumCast, Signed};
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 use std::marker::PhantomData;
@@ -242,6 +242,17 @@ impl<T: NumCast + Copy, Unit> TypedSize2D<T, Unit> {
     /// the desired conversion behavior.
     pub fn to_i64(&self) -> TypedSize2D<i64, Unit> {
         self.cast().unwrap()
+    }
+}
+
+impl<T, U> TypedSize2D<T, U>
+where T: Signed {
+    pub fn abs(&self) -> Self {
+        size2(self.width.abs(), self.height.abs())
+    }
+
+    pub fn is_positive(&self) -> bool {
+        self.width.is_positive() && self.height.is_positive()
     }
 }
 
