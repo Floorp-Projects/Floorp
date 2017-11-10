@@ -46,8 +46,8 @@ add_task(async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    Assert.ok(!overlay || overlay.getAttribute("sizing") == "blank",
-      "Test 2, overlay should be blank.");
+    Assert.ok(!overlay || overlay.classList.contains("minimal"),
+      "Test 2, overlay should be hidden.");
   });
 });
 
@@ -64,8 +64,8 @@ add_task(async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    Assert.ok(!overlay || overlay.getAttribute("sizing") == "blank",
-      "Test 3, overlay should be blank.");
+    Assert.ok(!overlay || overlay.classList.contains("minimal"),
+      "Test 3, overlay should be hidden.");
   });
 });
 
@@ -84,7 +84,7 @@ add_task(async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    Assert.ok(overlay && overlay.getAttribute("sizing") != "blank",
+    Assert.ok(overlay && overlay.classList.contains("visible"),
       "Test 4, overlay should be visible.");
   });
 });
@@ -104,8 +104,8 @@ add_task(async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    Assert.ok(!overlay || overlay.getAttribute("sizing") == "blank",
-      "Test 5, overlay should be blank.");
+    Assert.ok(!overlay || overlay.classList.contains("minimal"),
+      "Test 5, overlay should be hidden.");
   });
 });
 
@@ -124,7 +124,7 @@ add_task(async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    Assert.ok(overlay && overlay.getAttribute("sizing") != "blank",
+    Assert.ok(overlay && overlay.classList.contains("visible"),
       "Test 6, overlay should be visible.");
   });
 });
