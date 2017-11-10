@@ -6734,10 +6734,13 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
 
   bool doesCRCreateNewP = htmlEditor->GetReturnInParagraphCreatesNewParagraph();
 
-  bool newSelNode = false;
+  bool splitAfterNewBR = false;
   nsCOMPtr<nsIContent> brNode;
-  nsCOMPtr<nsIDOMNode> selNode = GetAsDOMNode(aNode);
-  int32_t selOffset = aOffset;
+
+  // Point to split aParentDivOrP.
+  // XXX If we don't need to use nsIDOMNode here, we should use EditorDOMPoint.
+  nsCOMPtr<nsIDOMNode> containerAtSplitPoint = GetAsDOMNode(aNode);
+  int32_t offsetAtSplitPoint = aOffset;
 
   EditorRawDOMPoint pointToInsertBR;
   if (aNode == &aParentDivOrP && doesCRCreateNewP) {
@@ -6773,11 +6776,12 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
       if (doesCRCreateNewP) {
         nsCOMPtr<nsIDOMNode> leftDOMNode;
         nsresult rv =
-          htmlEditor->SplitNode(selNode, aOffset, getter_AddRefs(leftDOMNode));
+          htmlEditor->SplitNode(containerAtSplitPoint, offsetAtSplitPoint,
+                                getter_AddRefs(leftDOMNode));
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return EditActionResult(rv);
         }
-        selNode = leftDOMNode;
+        containerAtSplitPoint = leftDOMNode;
         leftNode = do_QueryInterface(leftDOMNode);
       }
 
@@ -6805,7 +6809,7 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
         pointToInsertBR.Set(node, aOffset);
         NS_WARNING_ASSERTION(pointToInsertBR.IsSetAndValid(),
           "Failed to set point to insert <br> to given node");
-        newSelNode = true;
+        splitAfterNewBR = true;
       }
     }
     if (!pointToInsertBR.IsSet() && TextEditUtils::IsBreak(nearNode)) {
@@ -6825,15 +6829,15 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
 
     brNode = htmlEditor->CreateBR(pointToInsertBR.Container(),
                                   pointToInsertBR.Offset());
-    if (newSelNode) {
+    if (splitAfterNewBR) {
       // We split the parent after the br we've just inserted.
-      selNode = GetAsDOMNode(pointToInsertBR.Container());
-      selOffset = pointToInsertBR.Offset() + 1;
+      containerAtSplitPoint = GetAsDOMNode(pointToInsertBR.Container());
+      offsetAtSplitPoint = pointToInsertBR.Offset() + 1;
     }
   }
   EditActionResult result(
     SplitParagraph(GetAsDOMNode(&aParentDivOrP), brNode, &aSelection,
-                   address_of(selNode), &selOffset));
+                   address_of(containerAtSplitPoint), &offsetAtSplitPoint));
   result.MarkAsHandled();
   if (NS_WARN_IF(result.Failed())) {
     return result;
