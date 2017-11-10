@@ -1530,7 +1530,6 @@ MediaStreamGraphImpl::ForceShutDown(media::ShutdownTicket* aShutdownTicket)
   MOZ_ASSERT(NS_IsMainThread(), "Must be called on main thread");
   LOG(LogLevel::Debug, ("MediaStreamGraph %p ForceShutdown", this));
 
-  MonitorAutoLock lock(mMonitor);
   if (aShutdownTicket) {
     MOZ_ASSERT(!mForceShutdownTicket);
     // Avoid waiting forever for a graph to shut down
@@ -1541,8 +1540,9 @@ MediaStreamGraphImpl::ForceShutDown(media::ShutdownTicket* aShutdownTicket)
                             MediaStreamGraph::AUDIO_CALLBACK_DRIVER_SHUTDOWN_TIMEOUT,
                             nsITimer::TYPE_ONE_SHOT);
   }
-  mForceShutDown = true;
   mForceShutdownTicket = aShutdownTicket;
+  MonitorAutoLock lock(mMonitor);
+  mForceShutDown = true;
   if (LifecycleStateRef() == LIFECYCLE_THREAD_NOT_STARTED) {
     // We *could* have just sent this a message to start up, so don't
     // yank the rug out from under it.  Tell it to startup and let it
@@ -1558,7 +1558,6 @@ NS_IMETHODIMP
 MediaStreamGraphImpl::Notify(nsITimer* aTimer)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MonitorAutoLock lock(mMonitor);
   NS_ASSERTION(!mForceShutdownTicket, "MediaStreamGraph took too long to shut down!");
   // Sigh, graph took too long to shut down.  Stop blocking system
   // shutdown and hope all is well.
