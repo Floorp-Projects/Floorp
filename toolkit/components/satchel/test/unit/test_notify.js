@@ -5,176 +5,196 @@
  *
  */
 
-XPCOMUtils.defineLazyModuleGetter(this, "setTimeout", "resource://gre/modules/Timer.jsm");
+let expectedNotification;
+let expectedData;
+let subjectIsGuid = false;
+let lastGUID;
 
-const TestObserver = {
-  observed: [],
+let TestObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+
   observe(subject, topic, data) {
-    if (subject instanceof Ci.nsISupportsString) {
-      subject = subject.toString();
+    do_check_eq(topic, "satchel-storage-changed");
+    do_check_eq(data, expectedNotification);
+
+    let verifySubjectIsGuid = () => {
+      do_check_true(subject instanceof Ci.nsISupportsString);
+      do_check_true(isGUID.test(subject.toString()));
+      lastGUID = subject.toString();
+    };
+
+    switch (data) {
+      case "formhistory-add":
+      case "formhistory-update":
+        verifySubjectIsGuid();
+        break;
+      case "formhistory-remove":
+        if (subjectIsGuid) {
+          verifySubjectIsGuid();
+        } else {
+          do_check_eq(null, subject);
+        }
+        break;
+      default:
+        do_throw("Unhandled notification: " + data + " / " + topic);
     }
-    this.observed.push({subject, topic, data});
-  },
-  reset() {
-    this.observed = [];
+
+    expectedNotification = null;
+    expectedData = null;
   },
 };
 
-const entry1 = ["entry1", "value1"];
-const entry2 = ["entry2", "value2"];
-const entry3 = ["entry3", "value3"];
+let testIterator = null;
 
-add_task(async function setup() {
-  await promiseUpdateEntry("remove", null, null);
-  const count = await promiseCountEntries(null, null);
-  do_check_false(count, "Checking initial DB is empty");
+function run_test() {
+  do_test_pending();
+  testIterator = run_test_steps();
+  testIterator.next();
+}
 
-  // Add the observer
-  Services.obs.addObserver(TestObserver, "satchel-storage-changed");
-});
+function next_test() {
+  testIterator.next();
+}
 
-add_task(async function addAndUpdateEntry() {
-  // Add
-  await promiseUpdateEntry("add", entry1[0], entry1[1]);
-  do_check_eq(TestObserver.observed.length, 1);
-  let {subject, data} = TestObserver.observed[0];
-  do_check_eq(data, "formhistory-add");
-  do_check_true(isGUID.test(subject));
+function* run_test_steps() {
+  let testnum = 0;
+  let testdesc = "Setup of test form history entries";
 
-  let count = await promiseCountEntries(entry1[0], entry1[1]);
-  do_check_eq(count, 1);
+  try {
+    let entry1 = ["entry1", "value1"];
 
-  // Update
-  TestObserver.reset();
+    /* ========== 1 ========== */
+    testnum = 1;
+    testdesc = "Initial connection to storage module";
 
-  await promiseUpdateEntry("update", entry1[0], entry1[1]);
-  do_check_eq(TestObserver.observed.length, 1);
-  ({subject, data} = TestObserver.observed[0]);
-  do_check_eq(data, "formhistory-update");
-  do_check_true(isGUID.test(subject));
+    yield updateEntry("remove", null, null, next_test);
+    yield countEntries(null, null, function(num) {
+      do_check_false(num, "Checking initial DB is empty");
+      next_test();
+    });
 
-  count = await promiseCountEntries(entry1[0], entry1[1]);
-  do_check_eq(count, 1);
+    // Add the observer
+    Services.obs.addObserver(TestObserver, "satchel-storage-changed");
 
-  // Clean-up
-  await promiseUpdateEntry("remove", null, null);
-});
+    /* ========== 2 ========== */
+    testnum++;
+    testdesc = "addEntry";
 
-add_task(async function removeEntry() {
-  TestObserver.reset();
-  await promiseUpdateEntry("add", entry1[0], entry1[1]);
-  const guid = TestObserver.observed[0].subject;
-  TestObserver.reset();
+    expectedNotification = "formhistory-add";
+    expectedData = entry1;
 
-  await new Promise(res => {
-    FormHistory.update({
+    yield updateEntry("add", entry1[0], entry1[1], next_test);
+    do_check_eq(expectedNotification, null); // check that observer got a notification
+
+    yield countEntries(entry1[0], entry1[1], function(num) {
+      do_check_true(num > 0);
+      next_test();
+    });
+
+    /* ========== 3 ========== */
+    testnum++;
+    testdesc = "modifyEntry";
+
+    expectedNotification = "formhistory-update";
+    expectedData = entry1;
+    // will update previous entry
+    yield updateEntry("update", entry1[0], entry1[1], next_test);
+    yield countEntries(entry1[0], entry1[1], function(num) {
+      do_check_true(num > 0);
+      next_test();
+    });
+
+    do_check_eq(expectedNotification, null);
+
+    /* ========== 4 ========== */
+    testnum++;
+    testdesc = "removeEntry";
+
+    expectedNotification = "formhistory-remove";
+    expectedData = entry1;
+
+    subjectIsGuid = true;
+    yield FormHistory.update({
       op: "remove",
       fieldname: entry1[0],
       value: entry1[1],
-      guid,
+      guid: lastGUID,
     }, {
       handleError(error) {
         do_throw("Error occurred updating form history: " + error);
       },
       handleCompletion(reason) {
         if (!reason) {
-          res();
+          next_test();
         }
       },
     });
-  });
-  do_check_eq(TestObserver.observed.length, 1);
-  const {subject, data} = TestObserver.observed[0];
-  do_check_eq(data, "formhistory-remove");
-  do_check_true(isGUID.test(subject));
+    subjectIsGuid = false;
 
-  const count = await promiseCountEntries(entry1[0], entry1[1]);
-  do_check_eq(count, 0, "doesn't exist after remove");
-});
+    do_check_eq(expectedNotification, null);
+    yield countEntries(entry1[0], entry1[1], function(num) {
+      do_check_false(num, "doesn't exist after remove");
+      next_test();
+    });
 
-add_task(async function removeAllEntries() {
-  await promiseAddEntry(entry1[0], entry1[1]);
-  await promiseAddEntry(entry2[0], entry2[1]);
-  await promiseAddEntry(entry3[0], entry3[1]);
-  TestObserver.reset();
+    /* ========== 5 ========== */
+    testnum++;
+    testdesc = "removeAllEntries";
 
-  await promiseUpdateEntry("remove", null, null);
-  do_check_eq(TestObserver.observed.length, 3);
-  for (const notification of TestObserver.observed) {
-    const {subject, data} = notification;
-    do_check_eq(data, "formhistory-remove");
-    do_check_true(isGUID.test(subject));
-  }
+    expectedNotification = "formhistory-remove";
+    expectedData = null; // no data expected
+    yield updateEntry("remove", null, null, next_test);
 
-  const count = await promiseCountEntries(null, null);
-  do_check_eq(count, 0);
-});
+    do_check_eq(expectedNotification, null);
 
-add_task(async function removeEntriesForName() {
-  await promiseAddEntry(entry1[0], entry1[1]);
-  await promiseAddEntry(entry2[0], entry2[1]);
-  await promiseAddEntry(entry3[0], entry3[1]);
-  TestObserver.reset();
+    /* ========== 6 ========== */
+    testnum++;
+    testdesc = "removeAllEntries (again)";
 
-  await promiseUpdateEntry("remove", entry2[0], null);
-  do_check_eq(TestObserver.observed.length, 1);
-  const {subject, data} = TestObserver.observed[0];
-  do_check_eq(data, "formhistory-remove");
-  do_check_true(isGUID.test(subject));
+    expectedNotification = "formhistory-remove";
+    expectedData = null;
+    yield updateEntry("remove", null, null, next_test);
 
-  let count = await promiseCountEntries(entry2[0], entry2[1]);
-  do_check_eq(count, 0);
+    do_check_eq(expectedNotification, null);
 
-  count = await promiseCountEntries(null, null);
-  do_check_eq(count, 2, "the other entries are still there");
+    /* ========== 7 ========== */
+    testnum++;
+    testdesc = "removeEntriesForName";
 
-  // Clean-up
-  await promiseUpdateEntry("remove", null, null);
-});
+    expectedNotification = "formhistory-remove";
+    expectedData = "field2";
+    yield updateEntry("remove", null, "field2", next_test);
 
-add_task(async function removeEntriesByTimeframe() {
-  await promiseAddEntry(entry1[0], entry1[1]);
-  await promiseAddEntry(entry2[0], entry2[1]);
+    do_check_eq(expectedNotification, null);
 
-  const cutoffDate = Date.now();
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(res => setTimeout(res, 10));
+    /* ========== 8 ========== */
+    testnum++;
+    testdesc = "removeEntriesByTimeframe";
 
-  await promiseAddEntry(entry3[0], entry3[1]);
-  TestObserver.reset();
+    expectedNotification = "formhistory-remove";
+    expectedData = [10, 99999999999];
 
-  await new Promise(res => {
-    FormHistory.update({
+    yield FormHistory.update({
       op: "remove",
-      firstUsedStart: 10,
-      firstUsedEnd: cutoffDate * 1000,
+      firstUsedStart: expectedData[0],
+      firstUsedEnd: expectedData[1],
     }, {
       handleCompletion(reason) {
         if (!reason) {
-          res();
+          next_test();
         }
       },
       handleErrors(error) {
         do_throw("Error occurred updating form history: " + error);
       },
     });
-  });
-  do_check_eq(TestObserver.observed.length, 2);
-  for (const notification of TestObserver.observed) {
-    const {subject, data} = notification;
-    do_check_eq(data, "formhistory-remove");
-    do_check_true(isGUID.test(subject));
+
+    do_check_eq(expectedNotification, null);
+
+    Services.obs.removeObserver(TestObserver, "satchel-storage-changed");
+
+    do_test_finished();
+  } catch (e) {
+    throw new Error(`FAILED in test #${testnum} -- ${testdesc}: ${e}`);
   }
-
-  const count = await promiseCountEntries(null, null);
-  do_check_eq(count, 1, "entry2 should still be there");
-
-  // Clean-up
-  await promiseUpdateEntry("remove", null, null);
-});
-
-add_task(async function teardown() {
-  await promiseUpdateEntry("remove", null, null);
-  Services.obs.removeObserver(TestObserver, "satchel-storage-changed");
-});
+}
