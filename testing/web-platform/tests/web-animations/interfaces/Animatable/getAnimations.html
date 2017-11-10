@@ -67,5 +67,90 @@ test(function(t) {
   assert_array_equals(div.getAnimations(), [animation]);
 }, 'Returns animations in their delay phase');
 
+test(function(t) {
+  var div = createDiv(t);
+  var animation = div.animate(null, 100 * MS_PER_SEC);
+
+  animation.finish();
+  assert_array_equals(div.getAnimations(), [],
+                      'Animation should not be returned when it is finished');
+
+  animation.effect.timing.duration += 100 * MS_PER_SEC;
+  assert_array_equals(div.getAnimations(), [animation],
+                      'Animation should be returned after extending the'
+                      + ' duration');
+
+  animation.effect.timing.duration = 0;
+  assert_array_equals(div.getAnimations(), [],
+                      'Animation should not be returned after setting the'
+                      + ' duration to zero');
+}, 'Returns animations based on dynamic changes to individual'
+   + ' animations\' duration');
+
+test(function(t) {
+  var div = createDiv(t);
+  var animation = div.animate(null, 100 * MS_PER_SEC);
+
+  animation.effect.timing.endDelay = -200 * MS_PER_SEC;
+  assert_array_equals(div.getAnimations(), [],
+                      'Animation should not be returned after setting a'
+                      + ' negative end delay such that the end time is less'
+                      + ' than the current time');
+
+  animation.effect.timing.endDelay = 100 * MS_PER_SEC;
+  assert_array_equals(div.getAnimations(), [animation],
+                      'Animation should be returned after setting a positive'
+                      + ' end delay such that the end time is more than the'
+                      + ' current time');
+}, 'Returns animations based on dynamic changes to individual'
+   + ' animations\' end delay');
+
+test(function(t) {
+  var div = createDiv(t);
+  var animation = div.animate(null, 100 * MS_PER_SEC);
+
+  animation.finish();
+  assert_array_equals(div.getAnimations(), [],
+                      'Animation should not be returned when it is finished');
+
+  animation.effect.timing.iterations = 10;
+  assert_array_equals(div.getAnimations(), [animation],
+                      'Animation should be returned after inreasing the'
+                      + ' number of iterations');
+
+  animation.effect.timing.iterations = 0;
+  assert_array_equals(div.getAnimations(), [],
+                      'Animations should not be returned after setting the'
+                      + ' iteration count to zero');
+
+  animation.effect.timing.iterations = Infinity;
+  assert_array_equals(div.getAnimations(), [animation],
+                      'Animation should be returned after inreasing the'
+                      + ' number of iterations to infinity');
+}, 'Returns animations based on dynamic changes to individual'
+   + ' animations\' iteration count');
+
+test(function(t) {
+  var div = createDiv(t);
+  var animation = div.animate(null,
+                              { duration: 100 * MS_PER_SEC,
+                                delay: 50 * MS_PER_SEC,
+                                endDelay: -50 * MS_PER_SEC });
+
+  assert_array_equals(div.getAnimations(), [animation],
+                      'Animation should be returned at during delay phase');
+
+  animation.currentTime = 50 * MS_PER_SEC;
+  assert_array_equals(div.getAnimations(), [animation],
+                      'Animation should be returned after seeking to the start'
+                      + ' of the active interval');
+
+  animation.currentTime = 100 * MS_PER_SEC;
+  assert_array_equals(div.getAnimations(), [],
+                      'Animation should not be returned after seeking to the'
+                      + ' clipped end of the active interval');
+}, 'Returns animations based on dynamic changes to individual'
+   + ' animations\' current time');
+
 </script>
 </body>
