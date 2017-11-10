@@ -44,7 +44,7 @@ private:
   bool mInitialized;
 
   struct Paths;
-  nsAutoPtr<Paths> mPaths;
+  UniquePtr<Paths> mPaths;
 
   /**
    * (Unix) the umask, which goes in OS.Constants.Sys but
