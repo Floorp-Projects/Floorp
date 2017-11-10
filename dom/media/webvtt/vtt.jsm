@@ -635,6 +635,44 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
   RegionNodeBox.prototype = _objCreate(StyleBox.prototype);
   RegionNodeBox.prototype.constructor = RegionNodeBox;
 
+  function RegionCueStyleBox(window, cue) {
+    StyleBox.call(this);
+    this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.REGION_CUE);
+
+    var regionCueStyles = {
+      position: "relative",
+      writingMode: "horizontal-tb",
+      unicodeBidi: "plaintext",
+      width: "auto",
+      height: "auto",
+      textAlign: cue.align,
+    };
+    // TODO: fix me, LTR and RTL ? using margin replace the "left/right"
+    // 6.1.14.3.3
+    var offset = cue.computedPosition * cue.region.width / 100;
+    // 6.1.14.3.4
+    switch (cue.align) {
+      case "start":
+      case "left":
+        regionCueStyles.left = offset + "%";
+        regionCueStyles.right = "auto";
+        break;
+      case "end":
+      case "right":
+        regionCueStyles.left = "auto";
+        regionCueStyles.right = offset + "%";
+        break;
+      case "middle":
+        break;
+    }
+
+    this.div = window.document.createElement("div");
+    this.applyStyles(regionCueStyles);
+    this.div.appendChild(this.cueDiv);
+  }
+  RegionCueStyleBox.prototype = _objCreate(StyleBox.prototype);
+  RegionCueStyleBox.prototype.constructor = RegionCueStyleBox;
+
   // Represents the co-ordinates of an Element in a way that we can easily
   // compute things with such as if it overlaps or intersects with another Element.
   // Can initialize it with either a StyleBox or another BoxPosition.
