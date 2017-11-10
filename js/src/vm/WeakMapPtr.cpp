@@ -15,7 +15,7 @@
 
 using namespace js;
 
-namespace details {
+namespace WeakMapDetails {
 
 template<typename T>
 struct DataType
@@ -48,14 +48,14 @@ struct Utils
     static PtrType cast(void* ptr) { return static_cast<PtrType>(ptr); }
 };
 
-} /* namespace */
+} /* WeakMapDetails */
 
 template <typename K, typename V>
 void
 JS::WeakMapPtr<K, V>::destroy()
 {
     MOZ_ASSERT(initialized());
-    js_delete(details::Utils<K, V>::cast(ptr));
+    js_delete(WeakMapDetails::Utils<K, V>::cast(ptr));
     ptr = nullptr;
 }
 
@@ -64,8 +64,8 @@ bool
 JS::WeakMapPtr<K, V>::init(JSContext* cx)
 {
     MOZ_ASSERT(!initialized());
-    typename details::Utils<K, V>::PtrType map =
-        cx->zone()->new_<typename details::Utils<K,V>::Type>(cx);
+    typename WeakMapDetails::Utils<K, V>::PtrType map =
+        cx->zone()->new_<typename WeakMapDetails::Utils<K,V>::Type>(cx);
     if (!map || !map->init())
         return false;
     ptr = map;
@@ -77,7 +77,7 @@ void
 JS::WeakMapPtr<K, V>::trace(JSTracer* trc)
 {
     MOZ_ASSERT(initialized());
-    return details::Utils<K, V>::cast(ptr)->trace(trc);
+    return WeakMapDetails::Utils<K, V>::cast(ptr)->trace(trc);
 }
 
 template <typename K, typename V>
@@ -85,9 +85,10 @@ V
 JS::WeakMapPtr<K, V>::lookup(const K& key)
 {
     MOZ_ASSERT(initialized());
-    typename details::Utils<K, V>::Type::Ptr result = details::Utils<K, V>::cast(ptr)->lookup(key);
+    typename WeakMapDetails::Utils<K, V>::Type::Ptr result =
+        WeakMapDetails::Utils<K, V>::cast(ptr)->lookup(key);
     if (!result)
-        return details::DataType<V>::NullValue();
+        return WeakMapDetails::DataType<V>::NullValue();
     return result->value();
 }
 
@@ -96,25 +97,25 @@ bool
 JS::WeakMapPtr<K, V>::put(JSContext* cx, const K& key, const V& value)
 {
     MOZ_ASSERT(initialized());
-    return details::Utils<K, V>::cast(ptr)->put(key, value);
+    return WeakMapDetails::Utils<K, V>::cast(ptr)->put(key, value);
 }
 
 template <typename K, typename V>
 V
 JS::WeakMapPtr<K, V>::removeValue(const K& key)
 {
-    typedef typename details::Utils<K, V>::Type Map;
+    typedef typename WeakMapDetails::Utils<K, V>::Type Map;
     typedef typename Map::Ptr Ptr;
 
     MOZ_ASSERT(initialized());
 
-    Map* map = details::Utils<K, V>::cast(ptr);
+    Map* map = WeakMapDetails::Utils<K, V>::cast(ptr);
     if (Ptr result = map->lookup(key)) {
         V value = result->value();
         map->remove(result);
         return value;
     }
-    return details::DataType<V>::NullValue();
+    return WeakMapDetails::DataType<V>::NullValue();
 }
 
 //
