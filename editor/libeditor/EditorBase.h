@@ -286,11 +286,32 @@ public:
 public:
   virtual bool IsModifiableNode(nsINode* aNode);
 
-  virtual nsresult InsertTextImpl(const nsAString& aStringToInsert,
-                                  nsCOMPtr<nsINode>* aInOutNode,
-                                  nsCOMPtr<nsIContent>* aInOutChildAtOffset,
-                                  int32_t* aInOutOffset,
-                                  nsIDocument* aDoc);
+  /**
+   * InsertTextImpl() inserts aStringToInsert to aPointToInsert or better
+   * insertion point around it.  If aPointToInsert isn't in a text node,
+   * this method looks for the nearest point in a text node with
+   * FindBetterInsertionPoint().  If there is no text node, this creates
+   * new text node and put aStringToInsert to it.
+   *
+   * @param aDocument       The document of this editor.
+   * @param aStringToInsert The string to insert.
+   * @param aPointToInser   The point to insert aStringToInsert.
+   *                        Must be valid DOM point.
+   * @param aPointAfterInsertedString
+   *                        The point after inserted aStringToInsert.
+   *                        So, when this method actually inserts string,
+   *                        this is set to a point in the text node.
+   *                        Otherwise, this may be set to aPointToInsert.
+   * @return                When this succeeds to insert the string or
+   *                        does nothing during composition, returns NS_OK.
+   *                        Otherwise, an error code.
+   */
+  virtual nsresult
+  InsertTextImpl(nsIDocument& aDocument,
+                 const nsAString& aStringToInsert,
+                 const EditorRawDOMPoint& aPointToInsert,
+                 EditorRawDOMPoint* aPointAfterInsertedString = nullptr);
+
   nsresult InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
                                       Text& aTextNode, int32_t aOffset,
                                       bool aSuppressIME = false);
@@ -586,11 +607,60 @@ protected:
   virtual bool IsBlockNode(nsINode* aNode);
 
   /**
-   * Helper for GetPriorNode() and GetNextNode().
+   * Helper for GetPreviousNodeInternal() and GetNextNodeInternal().
    */
   nsIContent* FindNextLeafNode(nsINode* aCurrentNode,
                                bool aGoForward,
                                bool bNoBlockCrossing);
+  nsIContent* FindNode(nsINode* aCurrentNode,
+                       bool aGoForward,
+                       bool aEditableNode,
+                       bool bNoBlockCrossing);
+
+  /**
+   * Get the node immediately previous node of aNode.
+   * @param atNode               The node from which we start the search.
+   * @param aFindEditableNode    If true, only return an editable node.
+   * @param aNoBlockCrossing     If true, don't move across "block" nodes,
+   *                             whatever that means.
+   * @return                     The node that occurs before aNode in
+   *                             the tree, skipping non-editable nodes if
+   *                             aFindEditableNode is true.  If there is no
+   *                             previous node, returns nullptr.
+   */
+  nsIContent* GetPreviousNodeInternal(nsINode& aNode,
+                                      bool aFindEditableNode,
+                                      bool aNoBlockCrossing);
+
+  /**
+   * And another version that takes a point in DOM tree rather than a node.
+   */
+  nsIContent* GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
+                                      bool aFindEditableNode,
+                                      bool aNoBlockCrossing);
+
+  /**
+   * Get the node immediately next node of aNode.
+   * @param aNode                The node from which we start the search.
+   * @param aFindEditableNode    If true, only return an editable node.
+   * @param aNoBlockCrossing     If true, don't move across "block" nodes,
+   *                             whatever that means.
+   * @return                     The node that occurs after aNode in the
+   *                             tree, skipping non-editable nodes if
+   *                             aFindEditableNode is true.  If there is no
+   *                             next node, returns nullptr.
+   */
+  nsIContent* GetNextNodeInternal(nsINode& aNode,
+                                  bool aFindEditableNode,
+                                  bool bNoBlockCrossing);
+
+  /**
+   * And another version that takes a point in DOM tree rather than a node.
+   */
+  nsIContent* GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
+                                  bool aFindEditableNode,
+                                  bool aNoBlockCrossing);
+
 
   virtual nsresult InstallEventListeners();
   virtual void CreateEventListeners();
@@ -716,58 +786,102 @@ public:
   static nsresult GetLengthOfDOMNode(nsIDOMNode *aNode, uint32_t &aCount);
 
   /**
-   * Get the node immediately prior to aCurrentNode.
-   * @param aCurrentNode   the node from which we start the search
-   * @param aEditableNode  if true, only return an editable node
-   * @param aResultNode    [OUT] the node that occurs before aCurrentNode in
-   *                             the tree, skipping non-editable nodes if
-   *                             aEditableNode is true.  If there is no prior
-   *                             node, aResultNode will be nullptr.
-   * @param bNoBlockCrossing If true, don't move across "block" nodes,
-   *                         whatever that means.
+   * Get the previous node.
    */
-  nsIContent* GetPriorNode(nsINode* aCurrentNode, bool aEditableNode,
-                           bool aNoBlockCrossing = false);
+  nsIContent* GetPreviousNode(const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousNodeInternal(aPoint, false, false);
+  }
+  nsIContent* GetPreviousEditableNode(const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousNodeInternal(aPoint, true, false);
+  }
+  nsIContent* GetPreviousNodeInBlock(const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousNodeInternal(aPoint, false, true);
+  }
+  nsIContent* GetPreviousEditableNodeInBlock(
+                const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousNodeInternal(aPoint, true, true);
+  }
+  nsIContent* GetPreviousNode(nsINode& aNode)
+  {
+    return GetPreviousNodeInternal(aNode, false, false);
+  }
+  nsIContent* GetPreviousEditableNode(nsINode& aNode)
+  {
+    return GetPreviousNodeInternal(aNode, true, false);
+  }
+  nsIContent* GetPreviousNodeInBlock(nsINode& aNode)
+  {
+    return GetPreviousNodeInternal(aNode, false, true);
+  }
+  nsIContent* GetPreviousEditableNodeInBlock(nsINode& aNode)
+  {
+    return GetPreviousNodeInternal(aNode, true, true);
+  }
 
   /**
-   * And another version that takes a {parent,offset} pair rather than a node.
+   * Get the next node.
+   *
+   * Note that methods taking EditorRawDOMPoint behavior includes the
+   * child at offset as search target.  E.g., following code causes infinite
+   * loop.
+   *
+   * EditorRawDOMPoint point(aEditableNode);
+   * while (nsIContent* content = GetNextEditableNode(point)) {
+   *   // Do something...
+   *   point.Set(content);
+   * }
+   *
+   * Following code must be you expected:
+   *
+   * while (nsIContent* content = GetNextEditableNode(point)) {
+   *   // Do something...
+   *   DebugOnly<bool> advanced = point.Advanced();
+   *   MOZ_ASSERT(advanced);
+   *   point.Set(point.GetChildAtOffset());
+   * }
+   *
+   * On the other hand, the methods taking nsINode behavior must be what
+   * you want.  They start to search the result from next node of the given
+   * node.
    */
-  nsIContent* GetPriorNode(nsINode* aParentNode,
-                           int32_t aOffset,
-                           nsINode* aChildAtOffset,
-                           bool aEditableNode,
-                           bool aNoBlockCrossing = false);
+  nsIContent* GetNextNode(const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextNodeInternal(aPoint, false, false);
+  }
+  nsIContent* GetNextEditableNode(const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextNodeInternal(aPoint, true, false);
+  }
+  nsIContent* GetNextNodeInBlock(const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextNodeInternal(aPoint, false, true);
+  }
+  nsIContent* GetNextEditableNodeInBlock(
+                const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextNodeInternal(aPoint, true, true);
+  }
+  nsIContent* GetNextNode(nsINode& aNode)
+  {
+    return GetNextNodeInternal(aNode, false, false);
+  }
+  nsIContent* GetNextEditableNode(nsINode& aNode)
+  {
+    return GetNextNodeInternal(aNode, true, false);
+  }
+  nsIContent* GetNextNodeInBlock(nsINode& aNode)
+  {
+    return GetNextNodeInternal(aNode, false, true);
+  }
+  nsIContent* GetNextEditableNodeInBlock(nsINode& aNode)
+  {
+    return GetNextNodeInternal(aNode, true, true);
+  }
 
-
-  /**
-   * Get the node immediately after to aCurrentNode.
-   * @param aCurrentNode   the node from which we start the search
-   * @param aEditableNode  if true, only return an editable node
-   * @param aResultNode    [OUT] the node that occurs after aCurrentNode in the
-   *                             tree, skipping non-editable nodes if
-   *                             aEditableNode is true.  If there is no prior
-   *                             node, aResultNode will be nullptr.
-   */
-  nsIContent* GetNextNode(nsINode* aCurrentNode,
-                          bool aEditableNode,
-                          bool bNoBlockCrossing = false);
-
-  /**
-   * And another version that takes a {parent,offset} pair rather than a node.
-   */
-  nsIContent* GetNextNode(nsINode* aParentNode,
-                          int32_t aOffset,
-                          nsINode* aChildAtOffset,
-                          bool aEditableNode,
-                          bool aNoBlockCrossing = false);
-
-  /**
-   * Helper for GetNextNode() and GetPriorNode().
-   */
-  nsIContent* FindNode(nsINode* aCurrentNode,
-                       bool aGoForward,
-                       bool aEditableNode,
-                       bool bNoBlockCrossing);
   /**
    * Get the rightmost child of aCurrentNode;
    * return nullptr if aCurrentNode has no children.
@@ -927,12 +1041,14 @@ public:
   static nsresult GetStartNodeAndOffset(Selection* aSelection,
                                         nsINode** aStartContainer,
                                         int32_t* aStartOffset);
+  static EditorRawDOMPoint GetStartPoint(Selection* aSelection);
   static nsresult GetEndNodeAndOffset(Selection* aSelection,
                                       nsIDOMNode** outEndNode,
                                       int32_t* outEndOffset);
   static nsresult GetEndNodeAndOffset(Selection* aSelection,
                                       nsINode** aEndContainer,
                                       int32_t* aEndOffset);
+  static EditorRawDOMPoint GetEndPoint(Selection* aSelection);
 
   static nsresult GetEndChildNode(Selection* aSelection,
                                   nsIContent** aEndNode);
@@ -1258,22 +1374,11 @@ public:
    * FindBetterInsertionPoint() tries to look for better insertion point which
    * is typically the nearest text node and offset in it.
    *
-   * @param aNode in/out param, on input set to the node to use to start the search,
-   *              on output set to the node found as the better insertion point.
-   * @param aOffset in/out param, on input set to the offset to use to start the
-   *                search, on putput set to the offset found as the better insertion
-   *                point.
-   * @param aSelChild in/out param, on input, can be set to nullptr if the caller
-   *                  doesn't want to pass this in, or set to a pointer to an nsCOMPtr
-   *                  pointing to the child at the input node and offset, and on output
-   *                  the method will make it point to the child at the output node and
-   *                  offset returned in aNode and aOffset.
+   * @param aPoint      Insertion point which the callers found.
+   * @return            Better insertion point if there is.  If not returns
+   *                    same point as aPoint.
    */
-  void FindBetterInsertionPoint(nsCOMPtr<nsIDOMNode>& aNode,
-                                int32_t& aOffset);
-  void FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
-                                int32_t& aOffset,
-                                nsCOMPtr<nsIContent>* aSelChild);
+  EditorRawDOMPoint FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint);
 
   /**
    * HideCaret() hides caret with nsCaret::AddForceHide() or may show carent

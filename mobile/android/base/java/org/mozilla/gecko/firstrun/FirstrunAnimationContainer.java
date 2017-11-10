@@ -66,10 +66,6 @@ public class FirstrunAnimationContainer extends LinearLayout {
             onFinishListener.onFinish();
         }
         animateHide();
-
-        // Stop all versions of firstrun A/B sessions.
-        Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_B);
-        Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_C);
     }
 
     private void animateHide() {

@@ -28,6 +28,9 @@ NUMBYTES_COL = "NumBytes"
 
 CEVT_WINDOWS_RESTORED = "{917b96b1-ecad-4dab-a760-8d49027748ae}"
 CEVT_XPCOM_SHUTDOWN = "{26d1e091-0ae7-4f49-a554-4214445c505c}"
+NAME_SUBSTITUTIONS = [
+    (re.compile(r'{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}}'), '{uuid}')
+]
 stages = ["startup", "normal", "shutdown"]
 net_events = {
     "TcpDataTransferReceive": "recv",
@@ -275,6 +278,7 @@ def etlparser(xperf_path, etl_filename, processID, approot=None,
               configFile=None, outputFile=None, whitelist_file=None,
               error_filename=None, all_stages=False, all_threads=False,
               debug=False):
+    global NAME_SUBSTITUTIONS
 
     # setup output file
     if outputFile:
@@ -419,6 +423,9 @@ def etlparser(xperf_path, etl_filename, processID, approot=None,
         parts = filename.split('refetch')
         if len(parts) >= 2:
             filename = "%srefetch\\{prefetch}.pf" % parts[0]
+
+        for pattern, substitution in NAME_SUBSTITUTIONS:
+            filename = re.sub(pattern, substitution, filename)
 
         if filename in wl:
             if 'ignore' in wl[filename] and wl[filename]['ignore']:

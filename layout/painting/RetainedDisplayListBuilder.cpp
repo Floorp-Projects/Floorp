@@ -760,6 +760,20 @@ ShouldBuildPartial(nsTArray<nsIFrame*>& aModifiedFrames)
   return true;
 }
 
+static void
+ClearFrameProps(nsTArray<nsIFrame*>& aFrames)
+{
+  for (nsIFrame* f : aFrames) {
+    if (f->HasOverrideDirtyRegion()) {
+      f->SetHasOverrideDirtyRegion(false);
+      f->DeleteProperty(nsDisplayListBuilder::DisplayListBuildingRect());
+      f->DeleteProperty(nsDisplayListBuilder::DisplayListBuildingDisplayPortRect());
+    }
+
+    f->SetFrameIsModified(false);
+  }
+}
+
 bool
 RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 {
@@ -773,7 +787,10 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
   nsTArray<nsIFrame*> modifiedFrames =
     GetModifiedFrames(mBuilder.RootReferenceFrame());
 
-  const bool shouldBuildPartial = ShouldBuildPartial(modifiedFrames);
+  // Do not allow partial builds if the retained display list is empty, or if
+  // ShouldBuildPartial heuristic fails.
+  const bool shouldBuildPartial =
+    !mList.IsEmpty() && ShouldBuildPartial(modifiedFrames);
 
   if (mPreviousCaret != mBuilder.GetCaretFrame()) {
     if (mPreviousCaret) {
@@ -795,8 +812,9 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
   AnimatedGeometryRoot* modifiedAGR = nullptr;
   nsTArray<nsIFrame*> framesWithProps;
   bool merged = false;
-  if (shouldBuildPartial && !mList.IsEmpty() &&
-      ComputeRebuildRegion(modifiedFrames, &modifiedDirty, &modifiedAGR, &framesWithProps)) {
+  if (shouldBuildPartial &&
+      ComputeRebuildRegion(modifiedFrames, &modifiedDirty,
+                           &modifiedAGR, &framesWithProps)) {
     modifiedDirty.IntersectRect(modifiedDirty, mBuilder.RootReferenceFrame()->GetVisualOverflowRectRelativeToSelf());
 
     PreProcessDisplayList(&mList, modifiedAGR);
@@ -838,21 +856,11 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 
   mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), &mList);
 
-  // TODO: Do we mark frames as modified during displaylist building? If
-  // we do this isn't gonna work.
-  for (nsIFrame* f : modifiedFrames) {
-    if (f) {
-      f->SetFrameIsModified(false);
-    }
-  }
-
-  // Override dirty regions should only exist during this function. We set them up during
-  // ComputeRebuildRegion, and clear them here.
-  for (nsIFrame* f: framesWithProps) {
-    f->SetHasOverrideDirtyRegion(false);
-    f->DeleteProperty(nsDisplayListBuilder::DisplayListBuildingRect());
-    f->DeleteProperty(nsDisplayListBuilder::DisplayListBuildingDisplayPortRect());
-  }
+  // We set the override dirty regions during ComputeRebuildRegion or in
+  // nsLayoutUtils::InvalidateForDisplayPortChange. The display port change also
+  // marks the frame modified, so those regions are cleared here as well.
+  ClearFrameProps(modifiedFrames);
+  ClearFrameProps(framesWithProps);
 
   return merged;
 }

@@ -133,6 +133,7 @@ CompositorVsyncScheduler::PostCompositeTask(TimeStamp aCompositeTimestamp)
     mCurrentCompositeTask = task;
     ScheduleTask(task.forget(), 0);
   }
+  MonitorAutoLock lockVR(mCurrentVRListenerTaskMonitor);
   if (mCurrentVRListenerTask == nullptr && VRListenerThreadHolder::Loop()) {
     RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod<TimeStamp>(
       "layers::CompositorVsyncScheduler::DispatchVREvents",
@@ -239,6 +240,11 @@ CompositorVsyncScheduler::CancelCurrentCompositeTask()
   if (mCurrentCompositeTask) {
     mCurrentCompositeTask->Cancel();
     mCurrentCompositeTask = nullptr;
+  }
+  MonitorAutoLock lockVR(mCurrentVRListenerTaskMonitor);
+  if (mCurrentVRListenerTask) {
+    mCurrentVRListenerTask->Cancel();
+    mCurrentVRListenerTask = nullptr;
   }
 }
 

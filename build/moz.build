@@ -15,6 +15,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 else:
     DIRS += ['unix']
 
+CRAMTEST_MANIFESTS += [
+    'tests/cram/cram.ini',
+]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['annotationProcessors']
 
