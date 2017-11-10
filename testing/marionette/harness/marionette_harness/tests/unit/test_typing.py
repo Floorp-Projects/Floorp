@@ -321,13 +321,6 @@ class TestTypingContent(TypingTestCase):
         # If we don't get an error below we are good
         self.marionette.find_element(By.TAG_NAME, "body").send_keys("foo")
 
-    def test_not_interactable_if_hidden(self):
-        test_html = self.marionette.absolute_url("keyboard.html")
-        self.marionette.navigate(test_html)
-
-        not_displayed = self.marionette.find_element(By.ID, "notDisplayed")
-        self.assertRaises(ElementNotInteractableException, not_displayed.send_keys, "foo")
-
     def test_appends_to_input_text(self):
         self.marionette.navigate(inline("<input>"))
         el = self.marionette.find_element(By.TAG_NAME, "input")
@@ -367,3 +360,12 @@ class TestTypingContent(TypingTestCase):
         l.send_keys("c")
         self.assertEqual("abcde",
                          self.marionette.execute_script("return arguments[0].value;", [l]))
+
+
+class TestTypingContentLegacy(TestTypingContent):
+
+    def setUp(self):
+        super(TestTypingContent, self).setUp()
+
+        self.marionette.delete_session()
+        self.marionette.start_session({"moz:webdriverClick": False})
