@@ -93,7 +93,11 @@ namespace {
 
 StaticRefPtr<OSFileConstantsService> gInstance;
 
-struct Paths {
+} // anonymous namespace
+
+struct
+OSFileConstantsService::Paths
+{
   /**
    * The name of the directory holding all the libraries (libxpcom, libnss, etc.)
    */
@@ -177,19 +181,6 @@ struct Paths {
 };
 
 /**
- * System directories.
- */
-Paths* gPaths = nullptr;
-
-/**
- * (Unix) the umask, which goes in OS.Constants.Sys but
- * can only be looked up (via the system-info service)
- * on the main thread.
- */
-uint32_t gUserUmask = 0;
-} // namespace
-
-/**
  * Return the path to one of the special directories.
  *
  * @param aKey The key to the special directory (e.g. "TmpD", "ProfD", ...)
@@ -222,16 +213,17 @@ OSFileConstantsService::Observe(nsISupports*,
                                 const char* aTopic,
                                 const char16_t*)
 {
-  if (gPaths == nullptr) {
-    // Initialization of gPaths has not taken place, something is wrong,
+  if (!mInitialized) {
+    // Initialization has not taken place, something is wrong,
     // don't make things worse.
     return NS_OK;
   }
-  nsresult rv = GetPathToSpecialDir(NS_APP_USER_PROFILE_50_DIR, gPaths->profileDir);
+
+  nsresult rv = GetPathToSpecialDir(NS_APP_USER_PROFILE_50_DIR, mPaths->profileDir);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = GetPathToSpecialDir(NS_APP_USER_PROFILE_LOCAL_50_DIR, gPaths->localProfileDir);
+  rv = GetPathToSpecialDir(NS_APP_USER_PROFILE_LOCAL_50_DIR, mPaths->localProfileDir);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -311,14 +303,14 @@ OSFileConstantsService::InitOSFileConstants()
   GetPathToSpecialDir(NS_MAC_TRASH_DIR, paths->macTrashDir);
 #endif // defined(XP_MACOSX)
 
-  gPaths = paths.forget();
+  mPaths = Move(paths);
 
   // Get the umask from the system-info service.
   // The property will always be present, but it will be zero on
   // non-Unix systems.
   // nsSystemInfo::gUserUmask is initialized by NS_InitXPCOM2 so we don't need
   // to initialize the service.
-  gUserUmask = nsSystemInfo::gUserUmask;
+  mUserUmask = nsSystemInfo::gUserUmask;
 
   mInitialized = true;
   return NS_OK;
@@ -851,11 +843,7 @@ bool
 OSFileConstantsService::DefineOSFileConstants(JSContext* aCx,
                                               JS::Handle<JSObject*> aGlobal)
 {
-  if (!mInitialized || gPaths == nullptr) {
-    // If an initialization error was ignored, we may end up with
-    // |gInitialized == true| but |gPaths == nullptr|. We cannot
-    // |MOZ_ASSERT| this, as this would kill precompile_cache.js,
-    // so we simply return an error.
+  if (!mInitialized) {
     JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                               JSMSG_CANT_OPEN,
                               "OSFileConstants", "initialization has failed");
@@ -933,7 +921,7 @@ OSFileConstantsService::DefineOSFileConstants(JSContext* aCx,
     return false;
   }
 
-  if (!JS_DefineProperty(aCx, objSys, "umask", gUserUmask,
+  if (!JS_DefineProperty(aCx, objSys, "umask", mUserUmask,
                          JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
       return false;
   }
@@ -953,7 +941,7 @@ OSFileConstantsService::DefineOSFileConstants(JSContext* aCx,
   // Under MacOS X, for some reason, libxul is called simply "XUL",
   // and we need to provide the full path.
   nsAutoString libxul;
-  libxul.Append(gPaths->libDir);
+  libxul.Append(mPaths->libDir);
   libxul.AppendLiteral("/XUL");
 #else
   // On other platforms, libxul is a library "xul" with regular
@@ -968,58 +956,58 @@ OSFileConstantsService::DefineOSFileConstants(JSContext* aCx,
     return false;
   }
 
-  if (!SetStringProperty(aCx, objPath, "libDir", gPaths->libDir)) {
+  if (!SetStringProperty(aCx, objPath, "libDir", mPaths->libDir)) {
     return false;
   }
 
-  if (!SetStringProperty(aCx, objPath, "tmpDir", gPaths->tmpDir)) {
+  if (!SetStringProperty(aCx, objPath, "tmpDir", mPaths->tmpDir)) {
     return false;
   }
 
   // Configure profileDir only if it is available at this stage
-  if (!gPaths->profileDir.IsVoid()
-    && !SetStringProperty(aCx, objPath, "profileDir", gPaths->profileDir)) {
+  if (!mPaths->profileDir.IsVoid()
+    && !SetStringProperty(aCx, objPath, "profileDir", mPaths->profileDir)) {
     return false;
   }
 
   // Configure localProfileDir only if it is available at this stage
-  if (!gPaths->localProfileDir.IsVoid()
-    && !SetStringProperty(aCx, objPath, "localProfileDir", gPaths->localProfileDir)) {
+  if (!mPaths->localProfileDir.IsVoid()
+    && !SetStringProperty(aCx, objPath, "localProfileDir", mPaths->localProfileDir)) {
     return false;
   }
 
-  if (!SetStringProperty(aCx, objPath, "homeDir", gPaths->homeDir)) {
+  if (!SetStringProperty(aCx, objPath, "homeDir", mPaths->homeDir)) {
     return false;
   }
 
-  if (!SetStringProperty(aCx, objPath, "desktopDir", gPaths->desktopDir)) {
+  if (!SetStringProperty(aCx, objPath, "desktopDir", mPaths->desktopDir)) {
     return false;
   }
 
-  if (!SetStringProperty(aCx, objPath, "userApplicationDataDir", gPaths->userApplicationDataDir)) {
+  if (!SetStringProperty(aCx, objPath, "userApplicationDataDir", mPaths->userApplicationDataDir)) {
     return false;
   }
 
 #if defined(XP_WIN)
-  if (!SetStringProperty(aCx, objPath, "winAppDataDir", gPaths->winAppDataDir)) {
+  if (!SetStringProperty(aCx, objPath, "winAppDataDir", mPaths->winAppDataDir)) {
     return false;
   }
 
-  if (!SetStringProperty(aCx, objPath, "winStartMenuProgsDir", gPaths->winStartMenuProgsDir)) {
+  if (!SetStringProperty(aCx, objPath, "winStartMenuProgsDir", mPaths->winStartMenuProgsDir)) {
     return false;
   }
 #endif // defined(XP_WIN)
 
 #if defined(XP_MACOSX)
-  if (!SetStringProperty(aCx, objPath, "macUserLibDir", gPaths->macUserLibDir)) {
+  if (!SetStringProperty(aCx, objPath, "macUserLibDir", mPaths->macUserLibDir)) {
     return false;
   }
 
-  if (!SetStringProperty(aCx, objPath, "macLocalApplicationsDir", gPaths->macLocalApplicationsDir)) {
+  if (!SetStringProperty(aCx, objPath, "macLocalApplicationsDir", mPaths->macLocalApplicationsDir)) {
     return false;
   }
 
-  if (!SetStringProperty(aCx, objPath, "macTrashDir", gPaths->macTrashDir)) {
+  if (!SetStringProperty(aCx, objPath, "macTrashDir", mPaths->macTrashDir)) {
     return false;
   }
 #endif // defined(XP_MACOSX)
@@ -1073,6 +1061,7 @@ OSFileConstantsService::GetOrCreate()
 
 OSFileConstantsService::OSFileConstantsService()
   : mInitialized(false)
+  , mUserUmask(0)
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
@@ -1080,11 +1069,6 @@ OSFileConstantsService::OSFileConstantsService()
 OSFileConstantsService::~OSFileConstantsService()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (mInitialized) {
-    delete gPaths;
-    gPaths = nullptr;
-  }
 }
 
 NS_IMETHODIMP
