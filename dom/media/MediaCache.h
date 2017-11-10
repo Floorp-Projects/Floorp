@@ -268,7 +268,7 @@ public:
   // Called on the main thread.
   void FlushPartialBlock();
   // Notifies the cache that the channel has closed with the given status.
-  void NotifyDataEnded(nsresult aStatus);
+  void NotifyDataEnded(nsresult aStatus, bool aReopenOnError = false);
 
   // Notifies the stream that the channel is reopened. The stream should
   // reset variables such as |mDidNotifyDataEnded|.
