@@ -13,46 +13,32 @@
 namespace mozilla {
 
 /**
- * Perform initialization of this module.
- *
- * This function _must_ be called:
- * - from the main thread;
- * - before any Chrome Worker is created.
- *
- * The function is idempotent.
- */
-nsresult InitOSFileConstants();
-
-/**
- * Perform cleanup of this module.
- *
- * This function _must_ be called:
- * - from the main thread;
- * - after all Chrome Workers are dead.
- *
- * The function is idempotent.
- */
-void CleanupOSFileConstants();
-
-/**
- * Define OS-specific constants.
- *
- * This function creates or uses JS object |OS.Constants| to store
- * all its constants.
- */
-bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global);
-
-/**
  * XPConnect initializer, for use in the main thread.
+ * This class is thread-safe but it must be first be initialized on the
+ * main-thread.
  */
 class OSFileConstantsService final : public nsIOSFileConstantsService
 {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOSFILECONSTANTSSERVICE
-  OSFileConstantsService();
+
+  static already_AddRefed<OSFileConstantsService>
+  GetOrCreate();
+
+  bool
+  DefineOSFileConstants(JSContext* aCx,
+                        JS::Handle<JSObject*> aGlobal);
+
 private:
+
+  nsresult
+  InitOSFileConstants();
+
+  OSFileConstantsService();
   ~OSFileConstantsService();
+
+  bool mInitialized;
 };
 
 } // namespace mozilla

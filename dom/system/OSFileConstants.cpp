@@ -69,6 +69,9 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozJSComponentLoader.h"
 
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPtr.h"
+
 #include "OSFileConstants.h"
 #include "nsIOSFileConstantsService.h"
 #include "nsZipArchive.h"
@@ -86,13 +89,9 @@
 
 namespace mozilla {
 
-// Use an anonymous namespace to hide the symbols and avoid any collision
-// with, for instance, |extern bool gInitialized;|
 namespace {
-/**
- * |true| if this module has been initialized, |false| otherwise
- */
-bool gInitialized = false;
+
+StaticRefPtr<OSFileConstantsService> gInstance;
 
 struct Paths {
   /**
@@ -254,14 +253,13 @@ DelayedPathSetter::Observe(nsISupports*, const char * aTopic, const char16_t*)
  * Perform the part of initialization that can only be
  * executed on the main thread.
  */
-nsresult InitOSFileConstants()
+nsresult
+OSFileConstantsService::InitOSFileConstants()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (gInitialized) {
+  if (mInitialized) {
     return NS_OK;
   }
-
-  gInitialized = true;
 
   nsAutoPtr<Paths> paths(new Paths);
 
@@ -333,24 +331,9 @@ nsresult InitOSFileConstants()
   // to initialize the service.
   gUserUmask = nsSystemInfo::gUserUmask;
 
+  mInitialized = true;
   return NS_OK;
 }
-
-/**
- * Perform the cleaning up that can only be executed on the main thread.
- */
-void CleanupOSFileConstants()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!gInitialized) {
-    return;
-  }
-
-  gInitialized = false;
-  delete gPaths;
-  gPaths = nullptr;
-}
-
 
 /**
  * Define a simple read-only property holding an integer.
@@ -875,54 +858,56 @@ bool SetStringProperty(JSContext *cx, JS::Handle<JSObject*> aObject, const char 
  * This function creates or uses JS object |OS.Constants| to store
  * all its constants.
  */
-bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
+bool
+OSFileConstantsService::DefineOSFileConstants(JSContext* aCx,
+                                              JS::Handle<JSObject*> aGlobal)
 {
-  if (!gInitialized || gPaths == nullptr) {
+  if (!mInitialized || gPaths == nullptr) {
     // If an initialization error was ignored, we may end up with
     // |gInitialized == true| but |gPaths == nullptr|. We cannot
     // |MOZ_ASSERT| this, as this would kill precompile_cache.js,
     // so we simply return an error.
-    JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+    JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                               JSMSG_CANT_OPEN,
                               "OSFileConstants", "initialization has failed");
     return false;
   }
 
-  JS::Rooted<JSObject*> objOS(cx);
-  if (!(objOS = GetOrCreateObjectProperty(cx, global, "OS"))) {
+  JS::Rooted<JSObject*> objOS(aCx);
+  if (!(objOS = GetOrCreateObjectProperty(aCx, aGlobal, "OS"))) {
     return false;
   }
-  JS::Rooted<JSObject*> objConstants(cx);
-  if (!(objConstants = GetOrCreateObjectProperty(cx, objOS, "Constants"))) {
+  JS::Rooted<JSObject*> objConstants(aCx);
+  if (!(objConstants = GetOrCreateObjectProperty(aCx, objOS, "Constants"))) {
     return false;
   }
 
   // Build OS.Constants.libc
 
-  JS::Rooted<JSObject*> objLibc(cx);
-  if (!(objLibc = GetOrCreateObjectProperty(cx, objConstants, "libc"))) {
+  JS::Rooted<JSObject*> objLibc(aCx);
+  if (!(objLibc = GetOrCreateObjectProperty(aCx, objConstants, "libc"))) {
     return false;
   }
-  if (!dom::DefineConstants(cx, objLibc, gLibcProperties)) {
+  if (!dom::DefineConstants(aCx, objLibc, gLibcProperties)) {
     return false;
   }
 
 #if defined(XP_WIN)
   // Build OS.Constants.Win
 
-  JS::Rooted<JSObject*> objWin(cx);
-  if (!(objWin = GetOrCreateObjectProperty(cx, objConstants, "Win"))) {
+  JS::Rooted<JSObject*> objWin(aCx);
+  if (!(objWin = GetOrCreateObjectProperty(aCx, objConstants, "Win"))) {
     return false;
   }
-  if (!dom::DefineConstants(cx, objWin, gWinProperties)) {
+  if (!dom::DefineConstants(aCx, objWin, gWinProperties)) {
     return false;
   }
 #endif // defined(XP_WIN)
 
   // Build OS.Constants.Sys
 
-  JS::Rooted<JSObject*> objSys(cx);
-  if (!(objSys = GetOrCreateObjectProperty(cx, objConstants, "Sys"))) {
+  JS::Rooted<JSObject*> objSys(aCx);
+  if (!(objSys = GetOrCreateObjectProperty(aCx, objConstants, "Sys"))) {
     return false;
   }
 
@@ -932,42 +917,42 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
     DebugOnly<nsresult> rv = runtime->GetOS(os);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-    JSString* strVersion = JS_NewStringCopyZ(cx, os.get());
+    JSString* strVersion = JS_NewStringCopyZ(aCx, os.get());
     if (!strVersion) {
       return false;
     }
 
-    JS::Rooted<JS::Value> valVersion(cx, JS::StringValue(strVersion));
-    if (!JS_SetProperty(cx, objSys, "Name", valVersion)) {
+    JS::Rooted<JS::Value> valVersion(aCx, JS::StringValue(strVersion));
+    if (!JS_SetProperty(aCx, objSys, "Name", valVersion)) {
       return false;
     }
   }
 
 #if defined(DEBUG)
-  JS::Rooted<JS::Value> valDebug(cx, JS::TrueValue());
-  if (!JS_SetProperty(cx, objSys, "DEBUG", valDebug)) {
+  JS::Rooted<JS::Value> valDebug(aCx, JS::TrueValue());
+  if (!JS_SetProperty(aCx, objSys, "DEBUG", valDebug)) {
     return false;
   }
 #endif
 
 #if defined(HAVE_64BIT_BUILD)
-  JS::Rooted<JS::Value> valBits(cx, JS::Int32Value(64));
+  JS::Rooted<JS::Value> valBits(aCx, JS::Int32Value(64));
 #else
-  JS::Rooted<JS::Value> valBits(cx, JS::Int32Value(32));
+  JS::Rooted<JS::Value> valBits(aCx, JS::Int32Value(32));
 #endif //defined (HAVE_64BIT_BUILD)
-  if (!JS_SetProperty(cx, objSys, "bits", valBits)) {
+  if (!JS_SetProperty(aCx, objSys, "bits", valBits)) {
     return false;
   }
 
-  if (!JS_DefineProperty(cx, objSys, "umask", gUserUmask,
+  if (!JS_DefineProperty(aCx, objSys, "umask", gUserUmask,
                          JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
       return false;
   }
 
   // Build OS.Constants.Path
 
-  JS::Rooted<JSObject*> objPath(cx);
-  if (!(objPath = GetOrCreateObjectProperty(cx, objConstants, "Path"))) {
+  JS::Rooted<JSObject*> objPath(aCx);
+  if (!(objPath = GetOrCreateObjectProperty(aCx, objConstants, "Path"))) {
     return false;
   }
 
@@ -990,62 +975,62 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
   libxul.AppendLiteral(DLL_SUFFIX);
 #endif // defined(XP_MACOSX)
 
-  if (!SetStringProperty(cx, objPath, "libxul", libxul)) {
+  if (!SetStringProperty(aCx, objPath, "libxul", libxul)) {
     return false;
   }
 
-  if (!SetStringProperty(cx, objPath, "libDir", gPaths->libDir)) {
+  if (!SetStringProperty(aCx, objPath, "libDir", gPaths->libDir)) {
     return false;
   }
 
-  if (!SetStringProperty(cx, objPath, "tmpDir", gPaths->tmpDir)) {
+  if (!SetStringProperty(aCx, objPath, "tmpDir", gPaths->tmpDir)) {
     return false;
   }
 
   // Configure profileDir only if it is available at this stage
   if (!gPaths->profileDir.IsVoid()
-    && !SetStringProperty(cx, objPath, "profileDir", gPaths->profileDir)) {
+    && !SetStringProperty(aCx, objPath, "profileDir", gPaths->profileDir)) {
     return false;
   }
 
   // Configure localProfileDir only if it is available at this stage
   if (!gPaths->localProfileDir.IsVoid()
-    && !SetStringProperty(cx, objPath, "localProfileDir", gPaths->localProfileDir)) {
+    && !SetStringProperty(aCx, objPath, "localProfileDir", gPaths->localProfileDir)) {
     return false;
   }
 
-  if (!SetStringProperty(cx, objPath, "homeDir", gPaths->homeDir)) {
+  if (!SetStringProperty(aCx, objPath, "homeDir", gPaths->homeDir)) {
     return false;
   }
 
-  if (!SetStringProperty(cx, objPath, "desktopDir", gPaths->desktopDir)) {
+  if (!SetStringProperty(aCx, objPath, "desktopDir", gPaths->desktopDir)) {
     return false;
   }
 
-  if (!SetStringProperty(cx, objPath, "userApplicationDataDir", gPaths->userApplicationDataDir)) {
+  if (!SetStringProperty(aCx, objPath, "userApplicationDataDir", gPaths->userApplicationDataDir)) {
     return false;
   }
 
 #if defined(XP_WIN)
-  if (!SetStringProperty(cx, objPath, "winAppDataDir", gPaths->winAppDataDir)) {
+  if (!SetStringProperty(aCx, objPath, "winAppDataDir", gPaths->winAppDataDir)) {
     return false;
   }
 
-  if (!SetStringProperty(cx, objPath, "winStartMenuProgsDir", gPaths->winStartMenuProgsDir)) {
+  if (!SetStringProperty(aCx, objPath, "winStartMenuProgsDir", gPaths->winStartMenuProgsDir)) {
     return false;
   }
 #endif // defined(XP_WIN)
 
 #if defined(XP_MACOSX)
-  if (!SetStringProperty(cx, objPath, "macUserLibDir", gPaths->macUserLibDir)) {
+  if (!SetStringProperty(aCx, objPath, "macUserLibDir", gPaths->macUserLibDir)) {
     return false;
   }
 
-  if (!SetStringProperty(cx, objPath, "macLocalApplicationsDir", gPaths->macLocalApplicationsDir)) {
+  if (!SetStringProperty(aCx, objPath, "macLocalApplicationsDir", gPaths->macLocalApplicationsDir)) {
     return false;
   }
 
-  if (!SetStringProperty(cx, objPath, "macTrashDir", gPaths->macTrashDir)) {
+  if (!SetStringProperty(aCx, objPath, "macTrashDir", gPaths->macTrashDir)) {
     return false;
   }
 #endif // defined(XP_MACOSX)
@@ -1067,7 +1052,7 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
   libsqlite3 = libxul;
 #endif // defined(ANDROID) || defined(XP_WIN)
 
-  if (!SetStringProperty(cx, objPath, "libsqlite3", libsqlite3)) {
+  if (!SetStringProperty(aCx, objPath, "libsqlite3", libsqlite3)) {
     return false;
   }
 
@@ -1076,21 +1061,48 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
 
 NS_IMPL_ISUPPORTS(OSFileConstantsService, nsIOSFileConstantsService)
 
+/* static */ already_AddRefed<OSFileConstantsService>
+OSFileConstantsService::GetOrCreate()
+{
+  if (!gInstance) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    RefPtr<OSFileConstantsService> service = new OSFileConstantsService();
+    nsresult rv = service->InitOSFileConstants();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+
+    gInstance = service.forget();
+    ClearOnShutdown(&gInstance);
+  }
+
+  RefPtr<OSFileConstantsService> copy = gInstance;
+  return copy.forget();
+}
+
 OSFileConstantsService::OSFileConstantsService()
+  : mInitialized(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 OSFileConstantsService::~OSFileConstantsService()
 {
-  mozilla::CleanupOSFileConstants();
-}
+  MOZ_ASSERT(NS_IsMainThread());
 
+  if (mInitialized) {
+    delete gPaths;
+    gPaths = nullptr;
+  }
+}
 
 NS_IMETHODIMP
 OSFileConstantsService::Init(JSContext *aCx)
 {
-  nsresult rv = mozilla::InitOSFileConstants();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv = InitOSFileConstants();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1099,7 +1111,7 @@ OSFileConstantsService::Init(JSContext *aCx)
   JS::Rooted<JSObject*> targetObj(aCx);
   loader->FindTargetObject(aCx, &targetObj);
 
-  if (!mozilla::DefineOSFileConstants(aCx, targetObj)) {
+  if (!DefineOSFileConstants(aCx, targetObj)) {
     return NS_ERROR_FAILURE;
   }
 
