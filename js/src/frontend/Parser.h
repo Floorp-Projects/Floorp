@@ -780,15 +780,6 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     Node condition(InHandling inHandling, YieldHandling yieldHandling);
 
-    /* comprehensions */
-    Node generatorComprehensionLambda(unsigned begin);
-    Node comprehensionFor(GeneratorKind comprehensionKind);
-    Node comprehensionIf(GeneratorKind comprehensionKind);
-    Node comprehensionTail(GeneratorKind comprehensionKind);
-    Node comprehension(GeneratorKind comprehensionKind);
-    Node arrayComprehension(uint32_t begin);
-    Node generatorComprehension(uint32_t begin);
-
     bool argumentList(YieldHandling yieldHandling, Node listNode, bool* isSpread,
                       PossibleError* possibleError = nullptr);
     Node destructuringDeclaration(DeclarationKind kind, YieldHandling yieldHandling,
