@@ -558,7 +558,7 @@ pref("media.navigator.audio.full_duplex", true);
 // *BSD, others - merely a guess for now
 pref("media.peerconnection.capture_delay", 50);
 pref("media.getusermedia.playout_delay", 50);
-pref("media.navigator.audio.full_duplex", true);
+pref("media.navigator.audio.full_duplex", false);
 #endif
 // Use MediaDataDecoder API for WebRTC, this includes hardware acceleration for
 // decoding.
