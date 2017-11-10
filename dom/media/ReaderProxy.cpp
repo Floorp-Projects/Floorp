@@ -33,7 +33,6 @@ media::TimeUnit
 ReaderProxy::StartTime() const
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(!mShutdown);
   return mStartTime.ref();
 }
 
@@ -54,25 +53,38 @@ ReaderProxy::ReadMetadata()
 }
 
 RefPtr<ReaderProxy::AudioDataPromise>
+ReaderProxy::OnAudioDataRequestCompleted(RefPtr<AudioData> aAudio)
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+
+  int64_t startTime = StartTime().ToMicroseconds();
+  aAudio->AdjustForStartTime(startTime);
+  return AudioDataPromise::CreateAndResolve(aAudio.forget(), __func__);
+}
+
+RefPtr<ReaderProxy::AudioDataPromise>
+ReaderProxy::OnAudioDataRequestFailed(const MediaResult& aError)
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+
+  return AudioDataPromise::CreateAndReject(aError, __func__);
+}
+
+RefPtr<ReaderProxy::AudioDataPromise>
 ReaderProxy::RequestAudioData()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
 
-  int64_t startTime = StartTime().ToMicroseconds();
   return InvokeAsync(mReader->OwnerThread(),
                      mReader.get(),
                      __func__,
                      &MediaFormatReader::RequestAudioData)
     ->Then(mOwnerThread,
            __func__,
-           [startTime](RefPtr<AudioData> aAudio) {
-             aAudio->AdjustForStartTime(startTime);
-             return AudioDataPromise::CreateAndResolve(aAudio.forget(), __func__);
-           },
-           [](const MediaResult& aError) {
-             return AudioDataPromise::CreateAndReject(aError, __func__);
-           });
+           this,
+           &ReaderProxy::OnAudioDataRequestCompleted,
+           &ReaderProxy::OnAudioDataRequestFailed);
 }
 
 RefPtr<ReaderProxy::VideoDataPromise>
