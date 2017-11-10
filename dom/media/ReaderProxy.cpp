@@ -58,8 +58,11 @@ ReaderProxy::OnAudioDataRequestCompleted(RefPtr<AudioData> aAudio)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
-  int64_t startTime = StartTime().ToMicroseconds();
-  aAudio->AdjustForStartTime(startTime);
+  // Subtract the start time and add the looping-offset time.
+  int64_t offset =
+    StartTime().ToMicroseconds() - mLoopingOffset.ToMicroseconds();
+  aAudio->AdjustForStartTime(offset);
+  mLastAudioEndTime = aAudio->mTime;
   return AudioDataPromise::CreateAndResolve(aAudio.forget(), __func__);
 }
 
@@ -73,6 +76,11 @@ ReaderProxy::OnAudioDataRequestFailed(const MediaResult& aError)
     return AudioDataPromise::CreateAndReject(aError, __func__);
   }
 
+  // The data time in the audio queue is assumed to be increased linearly,
+  // so we need to add the last ending time as the offset to correct the
+  // audio data time in the next round when seamless looping is enabled.
+  mLoopingOffset = mLastAudioEndTime;
+
   // For seamless looping, the demuxer is sought to the beginning and then
   // keep requesting decoded data in advance, upon receiving EOS.
   // The MDSM will not be aware of the EOS and keep receiving decoded data
@@ -80,7 +88,7 @@ ReaderProxy::OnAudioDataRequestFailed(const MediaResult& aError)
   RefPtr<ReaderProxy> self = this;
   RefPtr<MediaFormatReader> reader = mReader;
   ResetDecode(TrackInfo::kAudioTrack);
-  return Seek(SeekTarget(media::TimeUnit::Zero(), SeekTarget::Accurate))
+  return SeekInternal(SeekTarget(media::TimeUnit::Zero(), SeekTarget::Accurate))
     ->Then(mReader->OwnerThread(),
            __func__,
            [reader]() { return reader->RequestAudioData(); },
@@ -149,6 +157,16 @@ ReaderProxy::Seek(const SeekTarget& aTarget)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   mSeamlessLoopingBlocked = true;
+  // Reset the members for seamless looping if the seek is triggered outside.
+  mLoopingOffset = media::TimeUnit::Zero();
+  mLastAudioEndTime = media::TimeUnit::Zero();
+  return SeekInternal(aTarget);
+}
+
+RefPtr<ReaderProxy::SeekPromise>
+ReaderProxy::SeekInternal(const SeekTarget& aTarget)
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   SeekTarget adjustedTarget = aTarget;
   adjustedTarget.SetTime(adjustedTarget.GetTime() + StartTime());
   return InvokeAsync(mReader->OwnerThread(),
