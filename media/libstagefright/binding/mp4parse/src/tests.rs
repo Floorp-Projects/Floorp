@@ -848,6 +848,9 @@ fn read_qt_wave_atom() {
          .B8(0x6b)  // mp3
          .append_repeated(0, 12)
     }).into_inner();
+    let chan = make_box(BoxSize::Auto, b"chan", |s| {
+        s.append_repeated(0, 10)    // we don't care its data.
+    }).into_inner();
     let wave = make_box(BoxSize::Auto, b"wave", |s| {
         s.append_bytes(esds.as_slice())
     }).into_inner();
@@ -862,6 +865,7 @@ fn read_qt_wave_atom() {
          .B32(48000 << 16)
          .append_repeated(0, 16)
          .append_bytes(wave.as_slice())
+         .append_bytes(chan.as_slice())
     });
 
     let mut iter = super::BoxIter::new(&mut stream);
@@ -1172,4 +1176,3 @@ fn read_stsd_lpcm() {
     }
 
 }
-
