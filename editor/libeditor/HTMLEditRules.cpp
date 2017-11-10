@@ -1789,7 +1789,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
             blockParent->IsAnyOfHTMLElements(nsGkAtoms::p, nsGkAtoms::div))) {
     // Paragraphs: special rules to look for <br>s
     EditActionResult result =
-      ReturnInParagraph(&aSelection, blockParent, node, offset, child);
+      ReturnInParagraph(aSelection, *blockParent, node, offset, child);
     if (NS_WARN_IF(result.Failed())) {
       return result.Rv();
     }
@@ -6714,15 +6714,9 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
   return NS_OK;
 }
 
-/**
- * ReturnInParagraph() does the right thing for returns pressed in paragraphs.
- * For our purposes, this means either <p> or <div>, which is not in keeping
- * with the semantics of <div>, but is necessary for compatibility with other
- * browsers.
- */
 EditActionResult
-HTMLEditRules::ReturnInParagraph(Selection* aSelection,
-                                 nsINode* aPara,
+HTMLEditRules::ReturnInParagraph(Selection& aSelection,
+                                 nsINode& aParentDivOrP,
                                  nsINode* aNode,
                                  int32_t aOffset,
                                  nsIContent* aChildAtOffset)
@@ -6732,7 +6726,7 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
   }
 
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!aSelection || !aPara || !node) {
+  if (!node) {
     return EditActionResult(NS_ERROR_NULL_POINTER);
   }
 
@@ -6749,7 +6743,7 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
   nsCOMPtr<nsIDOMNode> selNode = GetAsDOMNode(aNode);
   int32_t selOffset = aOffset;
 
-  if (aNode == aPara && doesCRCreateNewP) {
+  if (aNode == &aParentDivOrP && doesCRCreateNewP) {
     // we are at the edges of the block, newBRneeded not needed!
     brNode = nullptr;
   } else if (EditorBase::IsTextNode(aNode)) {
@@ -6831,7 +6825,7 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
     }
   }
   EditActionResult result(
-    SplitParagraph(GetAsDOMNode(aPara), brNode, aSelection,
+    SplitParagraph(GetAsDOMNode(&aParentDivOrP), brNode, &aSelection,
                    address_of(selNode), &selOffset));
   result.MarkAsHandled();
   if (NS_WARN_IF(result.Failed())) {
