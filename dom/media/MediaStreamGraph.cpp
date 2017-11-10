@@ -1612,7 +1612,10 @@ public:
     // objects owning streams, or for expiration of mGraph->mShutdownTimer,
     // which won't otherwise release its reference on the graph until
     // nsTimerImpl::Shutdown(), which runs after xpcom-shutdown-threads.
-    mGraph->mDriver = nullptr;
+    {
+      MonitorAutoLock mon(mGraph->mMonitor);
+      mGraph->SetCurrentDriver(nullptr);
+    }
 
     // Safe to access these without the monitor since the graph isn't running.
     // We may be one of several graphs. Drop ticket to eventually unblock shutdown.
