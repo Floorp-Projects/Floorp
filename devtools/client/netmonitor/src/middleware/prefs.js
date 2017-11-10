@@ -13,7 +13,6 @@ const {
   ENABLE_PERSISTENT_LOGS,
   DISABLE_BROWSER_CACHE,
 } = require("../constants");
-const { getRequestFilterTypes } = require("../selectors/index");
 
 /**
   * Update the relevant prefs when:
@@ -26,7 +25,8 @@ function prefsMiddleware(store) {
     switch (action.type) {
       case ENABLE_REQUEST_FILTER_TYPE_ONLY:
       case TOGGLE_REQUEST_FILTER_TYPE:
-        let filters = getRequestFilterTypes(store.getState())
+        let filters = store.getState().filters.requestFilterTypes
+          .entrySeq().toArray()
           .filter(([type, check]) => check)
           .map(([type, check]) => type);
         Services.prefs.setCharPref(
