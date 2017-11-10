@@ -92,6 +92,11 @@ private:
   RefPtr<MetadataPromise> OnMetadataNotRead(const MediaResult& aError);
   void UpdateDuration();
 
+  RefPtr<ReaderProxy::AudioDataPromise> OnAudioDataRequestCompleted(
+    RefPtr<AudioData> aAudio);
+  RefPtr<ReaderProxy::AudioDataPromise> OnAudioDataRequestFailed(
+    const MediaResult& aError);
+
   const RefPtr<AbstractThread> mOwnerThread;
   const RefPtr<MediaFormatReader> mReader;
 
