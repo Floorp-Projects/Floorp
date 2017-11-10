@@ -177,29 +177,13 @@ NS_IMETHODIMP
 nsSAXXMLReader::HandleStartNamespaceDecl(const char16_t *aPrefix,
                                          const char16_t *aUri)
 {
-  if (!mContentHandler)
-    return NS_OK;
-  
-  char16_t nullChar = char16_t(0);
-  if (!aPrefix)
-    aPrefix = &nullChar;
-  if (!aUri)
-    aUri = &nullChar;
-
-  return mContentHandler->StartPrefixMapping(nsDependentString(aPrefix),
-                                             nsDependentString(aUri));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSAXXMLReader::HandleEndNamespaceDecl(const char16_t *aPrefix)
 {
-  if (!mContentHandler)
-    return NS_OK;
-  
-  if (aPrefix)
-    return mContentHandler->EndPrefixMapping(nsDependentString(aPrefix));
-
-  return mContentHandler->EndPrefixMapping(EmptyString());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
