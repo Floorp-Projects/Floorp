@@ -64,32 +64,38 @@ static nsTHashtable<nsRefPtrHashKey<MediaRecorder::Session>> gSessions;
 class MediaRecorderReporter final : public nsIMemoryReporter
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  MediaRecorderReporter() {};
-  static MediaRecorderReporter* UniqueInstance();
-  void InitMemoryReporter();
-
   static void AddMediaRecorder(MediaRecorder *aRecorder)
   {
-    GetRecorders().AppendElement(aRecorder);
+    if (!sUniqueInstance) {
+      sUniqueInstance = MakeAndAddRef<MediaRecorderReporter>();
+      RegisterWeakAsyncMemoryReporter(sUniqueInstance);
+    }
+    sUniqueInstance->mRecorders.AppendElement(aRecorder);
   }
 
   static void RemoveMediaRecorder(MediaRecorder *aRecorder)
   {
-    RecordersArray& recorders = GetRecorders();
-    recorders.RemoveElement(aRecorder);
-    if (recorders.IsEmpty()) {
+    if (!sUniqueInstance) {
+      return;
+    }
+
+    sUniqueInstance->mRecorders.RemoveElement(aRecorder);
+    if (sUniqueInstance->mRecorders.IsEmpty()) {
+      UnregisterWeakMemoryReporter(sUniqueInstance);
       sUniqueInstance = nullptr;
     }
   }
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  MediaRecorderReporter() = default;
 
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport,
                  nsISupports* aData, bool aAnonymize) override
   {
-    RecordersArray& recorders = GetRecorders();
     nsTArray<RefPtr<MediaRecorder::SizeOfPromise>> promises;
-    for (const RefPtr<MediaRecorder>& recorder: recorders) {
+    for (const RefPtr<MediaRecorder>& recorder: mRecorders) {
       promises.AppendElement(recorder->SizeOfExcludingThis(MallocSizeOf));
     }
 
@@ -116,14 +122,15 @@ public:
 
 private:
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
-  virtual ~MediaRecorderReporter();
-  static StaticRefPtr<MediaRecorderReporter> sUniqueInstance;
-  typedef nsTArray<MediaRecorder*> RecordersArray;
-  static RecordersArray& GetRecorders()
+
+  virtual ~MediaRecorderReporter()
   {
-    return UniqueInstance()->mRecorders;
+    MOZ_ASSERT(mRecorders.IsEmpty(), "All recorders must have been removed");
   }
-  RecordersArray mRecorders;
+
+  static StaticRefPtr<MediaRecorderReporter> sUniqueInstance;
+
+  nsTArray<RefPtr<MediaRecorder>> mRecorders;
 };
 NS_IMPL_ISUPPORTS(MediaRecorderReporter, nsIMemoryReporter);
 
@@ -1749,25 +1756,6 @@ MediaRecorder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 }
 
 StaticRefPtr<MediaRecorderReporter> MediaRecorderReporter::sUniqueInstance;
-
-MediaRecorderReporter* MediaRecorderReporter::UniqueInstance()
-{
-  if (!sUniqueInstance) {
-    sUniqueInstance = new MediaRecorderReporter();
-    sUniqueInstance->InitMemoryReporter();
-  }
-  return sUniqueInstance;
- }
-
-void MediaRecorderReporter::InitMemoryReporter()
-{
-  RegisterWeakAsyncMemoryReporter(this);
-}
-
-MediaRecorderReporter::~MediaRecorderReporter()
-{
-  UnregisterWeakMemoryReporter(this);
-}
 
 } // namespace dom
 } // namespace mozilla
