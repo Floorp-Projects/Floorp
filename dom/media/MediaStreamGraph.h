@@ -1393,6 +1393,7 @@ protected:
   // Intended only for assertions, either on graph thread or not running (in
   // which case we must be on the main thread).
   bool OnGraphThreadOrNotRunning() const;
+  bool OnGraphThread() const;
 
   // Media graph thread only
   nsTArray<nsCOMPtr<nsIRunnable> > mPendingUpdateRunnables;
