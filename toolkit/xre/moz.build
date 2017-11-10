@@ -45,7 +45,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DEFINES['PROXY_PRINTING'] = 1
     LOCAL_INCLUDES += [
         '../../other-licenses/nsis/Contrib/CityHash/cityhash',
-        '../components/printingui/win',
+        '../components/printingui',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
@@ -58,7 +58,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
     DEFINES['PROXY_PRINTING'] = 1
     LOCAL_INCLUDES += [
-        '../components/printingui/mac',
+        '../components/printingui',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
     UNIFIED_SOURCES += [
@@ -130,7 +130,7 @@ if CONFIG['MOZ_UPDATER']:
 if CONFIG['MOZ_PDF_PRINTING']:
     DEFINES['PROXY_PRINTING'] = 1
     LOCAL_INCLUDES += [
-        '../components/printingui/unixshared',
+        '../components/printingui',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
