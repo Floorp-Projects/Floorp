@@ -69,10 +69,7 @@ class MachCommands(MachCommandBase):
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-test""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_test(self, args):
-        gradle_targets = [
-            'app:testOfficialPhotonDebugUnitTest',
-        ]
-        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
+        ret = self.gradle(self.substs['GRADLE_ANDROID_TEST_TASKS'] + ["--continue"] + args, verbose=True)
 
         # Findbug produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
@@ -88,7 +85,7 @@ class MachCommands(MachCommandBase):
             artifactdir='public/android/unittest',
             objdir='gradle/build/mobile/android/app/reports/tests')
 
-        reports = ('officialPhotonDebug',)
+        reports = (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],)
         for report in reports:
             finder = FileFinder(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/test-results/', report))
             for p, _ in finder.find('TEST-*.xml'):
@@ -143,10 +140,7 @@ class MachCommands(MachCommandBase):
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-lint""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_lint(self, args):
-        gradle_targets = [
-            'app:lintOfficialPhotonDebug',
-        ]
-        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
+        ret = self.gradle(self.substs['GRADLE_ANDROID_LINT_TASKS'] + ["--continue"] + args, verbose=True)
 
         # Android Lint produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
@@ -157,7 +151,7 @@ class MachCommands(MachCommandBase):
             artifactdir='public/android/lint',
             objdir='gradle/build/mobile/android/app/reports')
 
-        reports = ('officialPhotonDebug',)
+        reports = (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],)
         for report in reports:
             f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/lint-results-{}.xml'.format(report)), 'rt')
             tree = ET.parse(f)
@@ -191,10 +185,7 @@ class MachCommands(MachCommandBase):
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-checkstyle""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_checkstyle(self, args):
-        gradle_targets = [
-            'app:checkstyle',
-        ]
-        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
+        ret = self.gradle(self.substs['GRADLE_ANDROID_CHECKSTYLE_TASKS'] + ["--continue"] + args, verbose=True)
 
         # Checkstyle produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
@@ -248,11 +239,7 @@ class MachCommands(MachCommandBase):
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-findbugs""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_findbugs(self, dryrun=False, args=[]):
-        gradle_targets = [
-            'app:findbugsXmlOfficialPhotonDebug',
-            'app:findbugsHtmlOfficialPhotonDebug',
-        ]
-        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
+        ret = self.gradle(self.substs['GRADLE_ANDROID_FINDBUGS_TASKS'] + ["--continue"] + args, verbose=True)
 
         # Findbug produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
@@ -263,10 +250,10 @@ class MachCommands(MachCommandBase):
             artifactdir='public/android/findbugs',
             objdir='gradle/build/mobile/android/app/reports/findbugs')
 
-        reports = ('findbugs-officialPhotonDebug-output.xml',)
+        reports = (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],)
         for report in reports:
             try:
-                f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs', report), 'rt')
+                f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs', 'findbugs-{}-output.xml'.format(report)), 'rt')
             except IOError:
                 continue
 
@@ -274,9 +261,8 @@ class MachCommands(MachCommandBase):
             root = tree.getroot()
 
             # Log reports for Tree Herder "Job Details".
-            title = report.replace('findbugs-', '').replace('-output.xml', '')
-            html_report_url = '{}/{}'.format(root_url, report.replace('.xml', '.html'))
-            xml_report_url = '{}/{}'.format(root_url, report)
+            html_report_url = '{}/findbugs-{}-output.html'.format(root_url, report)
+            xml_report_url = '{}/findbugs-{}-output.xml'.format(root_url, report)
             print('TinderboxPrint: report<br/><a href="{}">HTML {} report</a>, visit "Inspect Task" link for details'.format(html_report_url, report))
             print('TinderboxPrint: report<br/><a href="{}">XML {} report</a>, visit "Inspect Task" link for details'.format(xml_report_url, report))
 
@@ -303,26 +289,10 @@ class MachCommands(MachCommandBase):
         See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_gradle_dependencies(self, args):
-        # The union, plus a bit more, of all of the Gradle tasks
-        # invoked by the android-* automation jobs.
-        gradle_targets = [
-            'app:checkstyle',
-            'app:assembleOfficialPhotonRelease',
-            'app:assembleOfficialPhotonDebug',
-            'app:assembleOfficialPhotonDebugAndroidTest',
-            'app:findbugsXmlOfficialPhotonDebug',
-            'app:findbugsHtmlOfficialPhotonDebug',
-            'app:lintOfficialPhotonDebug',
-            # Does not include Gecko binaries -- see mobile/android/gradle/with_gecko_binaries.gradle.
-            'geckoview:assembleWithoutGeckoBinaries',
-            # So that we pick up the test dependencies for the builders.
-            'geckoview_example:assembleWithoutGeckoBinaries',
-            'geckoview_example:assembleWithoutGeckoBinariesAndroidTest',
-        ]
         # We don't want to gate producing dependency archives on clean
         # lint or checkstyle, particularly because toolchain versions
         # can change the outputs for those processes.
-        self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
+        self.gradle(self.substs['GRADLE_ANDROID_DEPENDENCIES_TASKS'] + ["--continue"] + args, verbose=True)
 
         return 0
 
@@ -332,12 +302,7 @@ class MachCommands(MachCommandBase):
         See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_archive_geckoview(self, args):
-        gradle_targets = [
-            'geckoview:assembleWithGeckoBinaries',
-            'geckoview_example:assembleWithGeckoBinaries',
-            'geckoview:uploadArchives',
-        ]
-        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
+        ret = self.gradle(self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS'] + ["--continue"] + args, verbose=True)
 
         return ret
 
