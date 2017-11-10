@@ -52,8 +52,6 @@ endef
 MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell cat $(OBJDIR)/.mozconfig-client-mk | sed 's/$$/||/')))
 include $(OBJDIR)/.mozconfig-client-mk
 
-export FOUND_MOZCONFIG
-
 # As '||' was used as a newline separator, it means it's not occurring in
 # lines themselves. It can thus safely be used to replaces normal spaces,
 # to then replace newlines with normal spaces. This allows to get a list
