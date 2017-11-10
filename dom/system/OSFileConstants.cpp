@@ -63,7 +63,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsSystemInfo.h"
-#include "nsAutoPtr.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsXULAppAPI.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -71,6 +70,7 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/UniquePtr.h"
 
 #include "OSFileConstants.h"
 #include "nsIOSFileConstantsService.h"
@@ -243,7 +243,7 @@ OSFileConstantsService::InitOSFileConstants()
     return NS_OK;
   }
 
-  nsAutoPtr<Paths> paths(new Paths);
+  UniquePtr<Paths> paths(new Paths);
 
   // Initialize paths->libDir
   nsCOMPtr<nsIFile> file;
