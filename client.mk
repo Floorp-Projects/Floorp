@@ -49,8 +49,8 @@ endef
 # before evaluation. $(shell) replacing newlines with spaces, || is always
 # followed by a space (since sed doesn't remove newlines), except on the
 # last line, so replace both '|| ' and '||'.
-MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell $(TOPSRCDIR)/mach environment --format=client.mk | sed 's/$$/||/')))
-$(eval $(MOZCONFIG_CONTENT))
+MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell cat $(OBJDIR)/.mozconfig-client-mk | sed 's/$$/||/')))
+include $(OBJDIR)/.mozconfig-client-mk
 
 export FOUND_MOZCONFIG
 
@@ -108,8 +108,7 @@ endif
 include $(TOPSRCDIR)/config/makefiles/makeutils.mk
 include $(TOPSRCDIR)/config/makefiles/autotargets.mk
 
-# For now, only output "export" lines and lines containing UPLOAD_EXTRA_FILES
-# from mach environment --format=client.mk output.
+# For now, only output "export" lines and lines containing UPLOAD_EXTRA_FILES.
 MOZCONFIG_MK_LINES := $(filter export||% UPLOAD_EXTRA_FILES% %UPLOAD_EXTRA_FILES%,$(MOZCONFIG_OUT_LINES))
 $(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG) $(call mkdir_deps,$(OBJDIR)) $(OBJDIR)/CLOBBER
 	$(if $(MOZCONFIG_MK_LINES),( $(foreach line,$(MOZCONFIG_MK_LINES), echo '$(subst ||, ,$(line))';) )) > $@

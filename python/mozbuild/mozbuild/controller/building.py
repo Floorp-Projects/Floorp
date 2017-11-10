@@ -50,6 +50,7 @@ from ..shellutil import (
     quote as shell_quote,
 )
 from ..util import (
+    FileAvoidWrite,
     mkdir,
     resolve_target_to_make,
 )
@@ -1322,6 +1323,24 @@ class BuildDriver(MozbuildObject):
         append_env['TOPSRCDIR'] = self.topsrcdir
 
         append_env['CONFIG_GUESS'] = self.resolve_config_guess()
+
+        mozconfig = self.mozconfig
+        mozconfig_client_mk = os.path.join(self.topobjdir,
+                                           '.mozconfig-client-mk')
+        with FileAvoidWrite(mozconfig_client_mk) as fh:
+            for arg in mozconfig['make_extra'] or []:
+                fh.write(arg)
+                fh.write(b'\n')
+            if mozconfig['make_flags']:
+                fh.write(b'MOZ_MAKE_FLAGS=%s\n' % b' '.join(mozconfig['make_flags']))
+            objdir = mozpath.normsep(self.topobjdir)
+            fh.write(b'MOZ_OBJDIR=%s\n' % objdir)
+            fh.write(b'OBJDIR=%s\n' % objdir)
+            if mozconfig['path']:
+                fh.write(b'FOUND_MOZCONFIG=%s\n' %
+                         mozpath.normsep(mozconfig['path']))
+
+        append_env['OBJDIR'] = mozpath.normsep(self.topobjdir)
 
         return self._run_make(srcdir=True,
                               filename='client.mk',
