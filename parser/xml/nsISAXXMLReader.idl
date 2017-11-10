@@ -18,6 +18,12 @@ interface nsIMozSAXXMLDeclarationHandler;
 /**
  * Interface for reading an XML document using callbacks.
  *
+ * NOTE: This file (and related ones) used to implement a full-featured SAX XML
+ * parser. But we have few uses of this interface and the ones we have only use
+ * a fraction of the full SAX functionality. So in bug 1416038 we removed a lot
+ * of it. See the changes associated with that bug if you need to reintroduce
+ * any of that functionality.
+ *
  * nsISAXXMLReader is the interface that an XML parser's SAX2
  * driver must implement.  This interface allows an application to set
  * and query features and properties in the parser, to register event
