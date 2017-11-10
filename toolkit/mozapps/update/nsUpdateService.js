@@ -3598,7 +3598,15 @@ class ChannelDownloader extends CommonDownloader {
     this._bkgFileSaver.onStartRequest(request, context);
 
     if (request instanceof Ci.nsIResumableChannel) {
-      this._patch.setProperty("entityID", request.entityID);
+      // Reading the entityID can throw if the server doesn't allow resuming.
+      try {
+        this._patch.setProperty("entityID", request.entityID);
+      } catch (ex) {
+        if (!(ex instanceof Components.Exception) ||
+            ex.result != Cr.NS_ERROR_NOT_RESUMABLE) {
+          throw ex;
+        }
+      }
     }
 
     var um = Cc["@mozilla.org/updates/update-manager;1"].
