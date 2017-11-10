@@ -75,7 +75,10 @@ ClientManager::~ClientManager()
   Shutdown();
 
   MOZ_DIAGNOSTIC_ASSERT(this == PR_GetThreadPrivate(sClientManagerThreadLocalIndex));
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   PRStatus status =
+#endif
     PR_SetThreadPrivate(sClientManagerThreadLocalIndex, nullptr);
   MOZ_DIAGNOSTIC_ASSERT(status == PR_SUCCESS);
 }
@@ -171,7 +174,9 @@ ClientManager::GetOrCreateForCurrentThread()
   if (!cm) {
     cm = new ClientManager();
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     PRStatus status =
+#endif
       PR_SetThreadPrivate(sClientManagerThreadLocalIndex, cm.get());
     MOZ_DIAGNOSTIC_ASSERT(status == PR_SUCCESS);
   }
@@ -193,7 +198,9 @@ void
 ClientManager::Startup()
 {
   MOZ_ASSERT(NS_IsMainThread());
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   PRStatus status =
+#endif
     PR_NewThreadPrivateIndex(&sClientManagerThreadLocalIndex, nullptr);
   MOZ_DIAGNOSTIC_ASSERT(status == PR_SUCCESS);
 }
