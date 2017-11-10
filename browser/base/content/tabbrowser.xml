@@ -1426,6 +1426,12 @@
 
             this.tabContainer._setPositionalAttributes();
 
+            // Enable touch events to start a native dragging
+            // session to allow the user to easily drag the selected tab.
+            // This is currently only supported on Windows.
+            oldTab.removeAttribute("touchdownstartsdrag");
+            this.mCurrentTab.setAttribute("touchdownstartsdrag", "true");
+
             if (!gMultiProcessBrowser) {
               document.commandDispatcher.unlock();
 
