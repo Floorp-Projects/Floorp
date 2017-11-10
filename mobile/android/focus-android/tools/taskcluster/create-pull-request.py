@@ -33,8 +33,11 @@ BASE = 'master'
 HEAD = "MickeyMoz:%s" % BRANCH
 URL = "https://%s:%s@github.com/%s/%s/" % (USER, token, USER, REPO)
 
+github = Github(login_or_token=token)
+repo = github.get_user(OWNER).get_repo(REPO)
+
 # Check if there's already a pull request. If one is found then only update the existing one.
-for request in pull_requests:
+for request in repo.get_pulls(state='open'):
 	if request.user.login == USER:
 		print "There's already an unmerged pull request. Updating existing one."
 		BRANCH=request.head.ref
@@ -62,8 +65,6 @@ Log:
 """ % (BRANCH, log)
 
 # Create pull request
-github = Github(login_or_token=token)
-repo = github.get_user(OWNER).get_repo(REPO)
 pull_request = repo.create_pull(title='String import ' + BRANCH, body=body, base=BASE, head=HEAD)
 print pull_request
 
