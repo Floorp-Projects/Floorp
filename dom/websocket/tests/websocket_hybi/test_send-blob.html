@@ -35,7 +35,7 @@ var filesToCreate = [
 ];
 
 SpecialPowers.createFiles(filesToCreate, function (files) {
-  var ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/websocket_hybi/file_check-binary-messages");
+  var ws = new WebSocket("ws://mochi.test:8888/tests/dom/websocket/tests/websocket_hybi/file_check-binary-messages");
   var closeEvent;
 
   ws.onopen = function()

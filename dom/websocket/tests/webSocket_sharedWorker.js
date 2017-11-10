@@ -1,5 +1,5 @@
 onconnect = function(evt) {
-  var ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/file_websocket_hello");
+  var ws = new WebSocket("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_hello");
 
   ws.onopen = function(e) {
     evt.ports[0].postMessage({type: 'status', status: true, msg: 'OnOpen called' });
