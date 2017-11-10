@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>The ASR for the opacity item is the root scroll frame instead of the subframe.</title>
+
+<style>
+
+.outer {
+  /* avoid event regions messing with our demonstration */
+  pointer-events: none;
+  /* make sure the .outer opacity item has the root scroll frame as its ASR */
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.opacity {
+  opacity: 0.8;
+}
+
+.scrollFrameWrapper {
+  /* clips off .scrollFrame's scrollbar */
+  margin: 100px;
+  overflow: hidden;
+}
+
+.scrollFrame {
+  height: 300px;
+  margin-right: -20px;
+  padding-right: 20px;
+  overflow: auto;
+}
+
+.scrolledContents {
+  height: 1000px;
+  width: 200px;
+  border: 5px solid black;
+  pointer-events: auto;
+}
+
+</style>
+
+</head><body>
+
+<div class="opacity outer">
+  <div class="opacity inner">
+    <div class="scrollFrameWrapper">
+      <div class="scrollFrame">
+        <div class="scrolledContents"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+function doTest()
+{
+  var scrollFrame = document.querySelector('.scrollFrame');
+  scrollFrame.scrollTop = 10;
+  scrollFrame.scrollTop = 20;
+  scrollFrame.scrollTop = 0;
+
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body></html>
