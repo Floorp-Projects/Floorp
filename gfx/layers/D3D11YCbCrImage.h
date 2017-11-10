@@ -34,7 +34,6 @@ public:
 
   ID3D11Device* GetDevice() { return mDevice; }
   KnowsCompositor* GetAllocator() { return mSurfaceAllocator; }
-  void SetSizes(const gfx::IntSize& aYSize, const gfx::IntSize& aCbCrSize);
 
 protected:
   already_AddRefed<TextureClient>
@@ -45,8 +44,6 @@ protected:
            TextureAllocationFlags aAllocFlags) override;
 
   RefPtr<ID3D11Device> mDevice;
-  Maybe<gfx::IntSize> mYSize;
-  Maybe<gfx::IntSize> mCbCrSize;
 };
 
 class D3D11YCbCrImage : public Image
