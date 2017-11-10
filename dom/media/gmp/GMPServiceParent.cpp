@@ -1735,7 +1735,8 @@ GMPServiceParent::RecvLaunchGMP(const nsCString& aNodeId,
                                 ProcessId* aOutProcessId,
                                 nsCString* aOutDisplayName,
                                 Endpoint<PGMPContentParent>* aOutEndpoint,
-                                nsresult* aOutRv)
+                                nsresult* aOutRv,
+                                nsCString* aOutErrorDescription)
 {
   if (mService->IsShuttingDown()) {
     *aOutRv = NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
@@ -1794,7 +1795,8 @@ GMPServiceParent::RecvLaunchGMPForNodeId(
   ProcessId* aOutId,
   nsCString* aOutDisplayName,
   Endpoint<PGMPContentParent>* aOutEndpoint,
-  nsresult* aOutRv)
+  nsresult* aOutRv,
+  nsCString* aOutErrorDescription)
 {
   nsCString nodeId;
   nsresult rv = mService->GetNodeId(
@@ -1811,7 +1813,8 @@ GMPServiceParent::RecvLaunchGMPForNodeId(
                        aOutId,
                        aOutDisplayName,
                        aOutEndpoint,
-                       aOutRv);
+                       aOutRv,
+                       aOutErrorDescription);
 }
 
 mozilla::ipc::IPCResult

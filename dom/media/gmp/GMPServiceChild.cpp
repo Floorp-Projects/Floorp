@@ -84,6 +84,8 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       nsCString displayName;
       uint32_t pluginId = 0;
       ipc::Endpoint<PGMPContentParent> endpoint;
+      nsCString errorDescription = NS_LITERAL_CSTRING("");
+
       bool ok = child->SendLaunchGMP(nodeIdString,
                                      api,
                                      tags,
@@ -92,7 +94,8 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
                                      &otherProcess,
                                      &displayName,
                                      &endpoint,
-                                     &rv);
+                                     &rv,
+                                     &errorDescription);
       if (helper && pluginId) {
         // Note: Even if the launch failed, we need to connect the crash
         // helper so that if the launch failed due to the plugin crashing,
@@ -103,9 +106,11 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       }
 
       if (!ok || NS_FAILED(rv)) {
-        MediaResult error(rv,
-                          "GeckoMediaPluginServiceChild::GetContentParent "
-                          "SendLaunchGMPForNodeId failed");
+        MediaResult error(
+          rv,
+          nsPrintfCString("GeckoMediaPluginServiceChild::GetContentParent "
+                          "SendLaunchGMPForNodeId failed with description (%s)",
+                          errorDescription.get()));
 
         LOGD(("%s", error.Description().get()));
         holder->Reject(error, __func__);
@@ -162,6 +167,7 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       nsCString displayName;
       uint32_t pluginId = 0;
       ipc::Endpoint<PGMPContentParent> endpoint;
+      nsCString errorDescription = NS_LITERAL_CSTRING("");
 
       bool ok = child->SendLaunchGMPForNodeId(nodeId,
                                               api,
@@ -171,7 +177,8 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
                                               &otherProcess,
                                               &displayName,
                                               &endpoint,
-                                              &rv);
+                                              &rv,
+                                              &errorDescription);
 
       if (helper && pluginId) {
         // Note: Even if the launch failed, we need to connect the crash
@@ -183,9 +190,11 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       }
 
       if (!ok || NS_FAILED(rv)) {
-        MediaResult error(rv,
-                          "GeckoMediaPluginServiceChild::GetContentParent "
-                          "SendLaunchGMPForNodeId failed");
+        MediaResult error(
+          rv,
+          nsPrintfCString("GeckoMediaPluginServiceChild::GetContentParent "
+                          "SendLaunchGMPForNodeId failed with description (%s)",
+                          errorDescription.get()));
 
         LOGD(("%s", error.Description().get()));
         holder->Reject(error, __func__);
