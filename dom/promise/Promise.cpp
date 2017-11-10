@@ -497,7 +497,9 @@ Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise)
   bool isMainThread = MOZ_LIKELY(NS_IsMainThread());
   bool isChrome = isMainThread ? nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(aPromise))
                                : GetCurrentThreadWorkerPrivate()->IsChromeWorker();
-  nsGlobalWindow* win = isMainThread ? xpc::WindowGlobalOrNull(aPromise) : nullptr;
+  nsGlobalWindowInner* win = isMainThread
+    ? xpc::WindowGlobalOrNull(aPromise)
+    : nullptr;
   xpcReport->Init(report.report(), report.toStringResult().c_str(), isChrome,
                   win ? win->AsInner()->WindowID() : 0);
 

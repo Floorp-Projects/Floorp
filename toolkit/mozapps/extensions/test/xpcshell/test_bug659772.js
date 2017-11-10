@@ -4,6 +4,8 @@
 
 // Tests that a pending upgrade during a schema update doesn't break things
 
+Components.utils.importGlobalProperties(["File"]);
+
 var addon1 = {
   id: "addon1@tests.mozilla.org",
   version: "2.0",
@@ -118,13 +120,16 @@ async function run_test_1() {
       do_check_true(jsonfile.exists());
 
       // Remove an unnecessary property from the cached manifest
-      let fis = AM_Cc["@mozilla.org/network/file-input-stream;1"].
-                   createInstance(AM_Ci.nsIFileInputStream);
-      let json = AM_Cc["@mozilla.org/dom/json;1"].
-                 createInstance(AM_Ci.nsIJSON);
-      fis.init(jsonfile, -1, 0, 0);
-      let addonObj = json.decodeFromStream(fis, jsonfile.fileSize);
-      fis.close();
+      let file = await File.createFromNsIFile(jsonfile);
+
+      let addonObj = await new Promise(resolve => {
+        let fr = new FileReader();
+        fr.readAsText(file);
+        fr.onloadend = () => {
+          resolve(JSON.parse(fr.result));
+        }
+      });
+
       delete addonObj.optionsType;
 
       let stream = AM_Cc["@mozilla.org/network/file-output-stream;1"].
@@ -259,13 +264,16 @@ async function run_test_2() {
       do_check_true(jsonfile.exists());
 
       // Remove an unnecessary property from the cached manifest
-      let fis = AM_Cc["@mozilla.org/network/file-input-stream;1"].
-                   createInstance(AM_Ci.nsIFileInputStream);
-      let json = AM_Cc["@mozilla.org/dom/json;1"].
-                 createInstance(AM_Ci.nsIJSON);
-      fis.init(jsonfile, -1, 0, 0);
-      let addonObj = json.decodeFromStream(fis, jsonfile.fileSize);
-      fis.close();
+      let file = await File.createFromNsIFile(jsonfile);
+
+      let addonObj = await new Promise(resolve => {
+        let fr = new FileReader();
+        fr.readAsText(file);
+        fr.onloadend = () => {
+          resolve(JSON.parse(fr.result));
+        }
+      });
+
       delete addonObj.optionsType;
 
       let stream = AM_Cc["@mozilla.org/network/file-output-stream;1"].

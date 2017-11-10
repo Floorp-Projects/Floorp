@@ -10,7 +10,7 @@ const STORAGE_MANAGER_ENABLED = Services.prefs.getBoolPref("browser.storageManag
 
 add_task(async function testPermissionsListing() {
   let expectedPermissions = ["camera", "cookie", "desktop-notification", "focus-tab-by-prompt",
-     "geo", "image", "install", "microphone", "popup", "screen"];
+     "geo", "image", "install", "microphone", "popup", "screen", "shortcuts"];
   if (STORAGE_MANAGER_ENABLED) {
     // The persistent-storage permission is still only pref-on on Nightly
     // so we add it only when it's pref-on.
@@ -58,6 +58,18 @@ add_task(async function testGetAllByURI() {
   SitePermissions.set(uri, "addon", SitePermissions.BLOCK);
   Assert.deepEqual(SitePermissions.getAllByURI(uri), []);
   SitePermissions.remove(uri, "addon");
+
+  Assert.equal(Services.prefs.getIntPref("permissions.default.shortcuts"), 0);
+  SitePermissions.set(uri, "shortcuts", SitePermissions.BLOCK);
+
+  // Customized preference should have been enabled, but the default should not.
+  Assert.equal(Services.prefs.getIntPref("permissions.default.shortcuts"), 0);
+  Assert.deepEqual(SitePermissions.getAllByURI(uri), [
+      { id: "shortcuts", state: SitePermissions.BLOCK, scope: SitePermissions.SCOPE_PERSISTENT },
+  ]);
+
+  SitePermissions.remove(uri, "shortcuts");
+  Services.prefs.clearUserPref("permissions.default.shortcuts");
 });
 
 add_task(async function testGetAvailableStates() {
@@ -96,7 +108,7 @@ add_task(async function testExactHostMatch() {
     // Should remove this checking and add it as default after it is fully pref-on.
     exactHostMatched.push("persistent-storage");
   }
-  let nonExactHostMatched = ["image", "cookie", "popup", "install"];
+  let nonExactHostMatched = ["image", "cookie", "popup", "install", "shortcuts"];
 
   let permissions = SitePermissions.listPermissions();
   for (let permission of permissions) {

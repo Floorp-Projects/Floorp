@@ -84,7 +84,7 @@ void
 TouchEvent::InitTouchEvent(const nsAString& aType,
                            bool aCanBubble,
                            bool aCancelable,
-                           nsGlobalWindow* aView,
+                           nsGlobalWindowInner* aView,
                            int32_t aDetail,
                            bool aCtrlKey,
                            bool aAltKey,
@@ -171,7 +171,7 @@ TouchEvent::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
 {
   nsIDocShell* docShell = nullptr;
   if (aGlobal) {
-    nsGlobalWindow* win = xpc::WindowOrNull(aGlobal);
+    nsGlobalWindowInner* win = xpc::WindowOrNull(aGlobal);
     if (win) {
       docShell = win->GetDocShell();
     }

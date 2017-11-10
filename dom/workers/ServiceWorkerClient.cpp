@@ -43,7 +43,8 @@ ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc, uint32_t aOr
     NS_WARNING("Failed to get the UUID of the document.");
   }
 
-  RefPtr<nsGlobalWindow> innerWindow = nsGlobalWindow::Cast(aDoc->GetInnerWindow());
+  RefPtr<nsGlobalWindowInner> innerWindow =
+    nsGlobalWindowInner::Cast(aDoc->GetInnerWindow());
   if (innerWindow) {
     // XXXcatalinb: The inner window can be null if the document is navigating
     // and was detached.
@@ -69,7 +70,8 @@ ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc, uint32_t aOr
   MOZ_ASSERT_IF(mLastFocusTime.IsNull(), !mFocused);
   MOZ_ASSERT_IF(mFocused, !mLastFocusTime.IsNull());
 
-  RefPtr<nsGlobalWindow> outerWindow = nsGlobalWindow::Cast(aDoc->GetWindow());
+  RefPtr<nsGlobalWindowOuter> outerWindow =
+    nsGlobalWindowOuter::Cast(aDoc->GetWindow());
   if (!outerWindow) {
     MOZ_ASSERT(mFrameType == FrameType::None);
   } else if (!outerWindow->IsTopLevelWindow()) {
@@ -150,7 +152,7 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);
+    nsGlobalWindowInner* window = nsGlobalWindowInner::GetInnerWindowWithId(mWindowId);
     if (!window) {
       return NS_ERROR_FAILURE;
     }

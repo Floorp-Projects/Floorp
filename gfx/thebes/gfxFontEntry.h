@@ -349,7 +349,6 @@ public:
 
     uint8_t          mStyle       : 2; // italic/oblique
     bool             mFixedPitch  : 1;
-    bool             mIsValid     : 1;
     bool             mIsBadUnderlineFont : 1;
     bool             mIsUserFontContainer : 1; // userfont entry
     bool             mIsDataUserFont : 1;      // platform font entry (data)

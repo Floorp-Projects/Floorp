@@ -71,6 +71,7 @@
 #include "mozilla/ManualNAC.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/TextEvents.h"
 #include "nsArrayUtils.h"
@@ -164,6 +165,7 @@
 #include "nsIParser.h"
 #include "nsIPermissionManager.h"
 #include "nsIPluginHost.h"
+#include "nsIRemoteBrowser.h"
 #include "nsIRequest.h"
 #include "nsIRunnable.h"
 #include "nsIScriptContext.h"
@@ -4739,7 +4741,8 @@ nsContentUtils::GetSubdocumentWithOuterWindowId(nsIDocument *aDocument,
     return nullptr;
   }
 
-  RefPtr<nsGlobalWindow> window = nsGlobalWindow::GetOuterWindowWithId(aOuterWindowId);
+  RefPtr<nsGlobalWindowOuter> window =
+    nsGlobalWindowOuter::GetOuterWindowWithId(aOuterWindowId);
   if (!window) {
     return nullptr;
   }
@@ -9891,7 +9894,7 @@ nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri)
   MOZ_ASSERT(strncmp(aUri, "about:", 6) == 0);
 
   // Make sure the global is a window
-  nsGlobalWindow* win = xpc::WindowGlobalOrNull(aGlobal);
+  nsGlobalWindowInner* win = xpc::WindowGlobalOrNull(aGlobal);
   if (!win) {
     return false;
   }
@@ -10588,6 +10591,40 @@ nsContentUtils::CreateJSValueFromSequenceOfObject(JSContext* aCx,
   return NS_OK;
 }
 
+/* static */
+bool
+nsContentUtils::ShouldBlockReservedKeys(WidgetKeyboardEvent* aKeyEvent)
+{
+  nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsIRemoteBrowser> targetBrowser = do_QueryInterface(aKeyEvent->mOriginalTarget);
+  if (targetBrowser) {
+    targetBrowser->GetContentPrincipal(getter_AddRefs(principal));
+  }
+  else {
+    // Get the top-level document.
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aKeyEvent->mOriginalTarget);
+    if (content) {
+      nsIDocument* doc = content->GetUncomposedDoc();
+      if (doc) {
+        nsCOMPtr<nsIDocShellTreeItem> docShell = doc->GetDocShell();
+        if (docShell && docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
+          nsCOMPtr<nsIDocShellTreeItem> rootItem;
+          docShell->GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
+          if (rootItem && rootItem->GetDocument()) {
+            principal = rootItem->GetDocument()->NodePrincipal();
+          }
+        }
+      }
+    }
+  }
+
+  if (principal) {
+    return nsContentUtils::IsSitePermDeny(principal, "shortcuts");
+  }
+
+  return false;
+}
+
 /* static */ Element*
 nsContentUtils::GetClosestNonNativeAnonymousAncestor(Element* aElement)
 {
@@ -10733,7 +10770,8 @@ nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, TaskCategory aC
       // something else.
       return nullptr;
     }
-    RefPtr<nsGlobalWindow> window = nsGlobalWindow::GetOuterWindowWithId(outerWindowId);
+    RefPtr<nsGlobalWindowOuter> window =
+      nsGlobalWindowOuter::GetOuterWindowWithId(outerWindowId);
     if (!window) {
       return nullptr;
     }
@@ -10910,6 +10948,42 @@ nsContentUtils::IsOverridingWindowName(const nsAString& aName)
     !aName.LowerCaseEqualsLiteral("_self");
 }
 
+// Unfortunately, we can't unwrap an IDL object using only a concrete type.
+// We need to calculate type data based on the IDL typename. Which means
+// wrapping our templated function in a macro.
+#define EXTRACT_EXN_VALUES(T, ...)                                \
+  ExtractExceptionValues<mozilla::dom::prototypes::id::T,         \
+                         T##Binding::NativeType, T>(__VA_ARGS__).isOk()
+
+template <prototypes::ID PrototypeID, class NativeType, typename T>
+static Result<Ok, nsresult>
+ExtractExceptionValues(JSContext* aCx,
+                       JS::HandleObject aObj,
+                       nsACString& aSourceSpecOut,
+                       uint32_t* aLineOut,
+                       uint32_t* aColumnOut,
+                       nsString& aMessageOut)
+{
+  RefPtr<T> exn;
+  MOZ_TRY((UnwrapObject<PrototypeID, NativeType>(aObj, exn)));
+
+  nsAutoString filename;
+  exn->GetFilename(aCx, filename);
+  if (!filename.IsEmpty()) {
+    CopyUTF16toUTF8(filename, aSourceSpecOut);
+    *aLineOut = exn->LineNumber(aCx);
+    *aColumnOut = exn->ColumnNumber();
+  }
+
+  exn->GetName(aMessageOut);
+  aMessageOut.AppendLiteral(": ");
+
+  nsAutoString message;
+  exn->GetMessageMoz(message);
+  aMessageOut.Append(message);
+  return Ok();
+}
+
 /* static */ void
 nsContentUtils::ExtractErrorValues(JSContext* aCx,
                                    JS::Handle<JS::Value> aValue,
@@ -10923,7 +10997,6 @@ nsContentUtils::ExtractErrorValues(JSContext* aCx,
 
   if (aValue.isObject()) {
     JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
-    RefPtr<dom::DOMException> domException;
 
     // Try to process as an Error object.  Use the file/line/column values
     // from the Error as they will be more specific to the root cause of
@@ -10947,22 +11020,15 @@ nsContentUtils::ExtractErrorValues(JSContext* aCx,
     }
 
     // Next, try to unwrap the rejection value as a DOMException.
-    else if(NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, obj, domException))) {
+    else if (EXTRACT_EXN_VALUES(DOMException, aCx, obj, aSourceSpecOut,
+                                aLineOut, aColumnOut, aMessageOut)) {
+      return;
+    }
 
-      nsAutoString filename;
-      domException->GetFilename(aCx, filename);
-      if (!filename.IsEmpty()) {
-        CopyUTF16toUTF8(filename, aSourceSpecOut);
-        *aLineOut = domException->LineNumber(aCx);
-        *aColumnOut = domException->ColumnNumber();
-      }
-
-      domException->GetName(aMessageOut);
-      aMessageOut.AppendLiteral(": ");
-
-      nsAutoString message;
-      domException->GetMessageMoz(message);
-      aMessageOut.Append(message);
+    // Next, try to unwrap the rejection value as an XPC Exception.
+    else if (EXTRACT_EXN_VALUES(Exception, aCx, obj, aSourceSpecOut,
+                                aLineOut, aColumnOut, aMessageOut)) {
+      return;
     }
   }
 
@@ -10978,6 +11044,8 @@ nsContentUtils::ExtractErrorValues(JSContext* aCx,
     }
   }
 }
+
+#undef EXTRACT_EXN_VALUES
 
 /* static */ bool
 nsContentUtils::DevToolsEnabled(JSContext* aCx)

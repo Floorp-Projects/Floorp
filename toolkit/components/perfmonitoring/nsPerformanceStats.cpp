@@ -65,7 +65,7 @@ namespace {
  */
 already_AddRefed<nsPIDOMWindowOuter>
 GetPrivateWindow(JSContext* cx) {
-  nsGlobalWindow* win = xpc::CurrentWindowOrNull(cx);
+  nsGlobalWindowInner* win = xpc::CurrentWindowOrNull(cx);
   if (!win) {
     return nullptr;
   }

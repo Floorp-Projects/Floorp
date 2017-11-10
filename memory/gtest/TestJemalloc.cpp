@@ -12,6 +12,39 @@
 
 #include "gtest/gtest.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsCOMPtr.h"
+#include "nsICrashReporter.h"
+#include "nsServiceManagerUtils.h"
+#endif
+
+#if defined(DEBUG) && !defined(XP_WIN) && !defined(ANDROID)
+#define HAS_GDB_SLEEP_DURATION 1
+extern unsigned int _gdb_sleep_duration;
+#endif
+
+// Death tests are too slow on OSX because of the system crash reporter.
+#ifndef XP_DARWIN
+static void DisableCrashReporter()
+{
+#ifdef MOZ_CRASHREPORTER
+  nsCOMPtr<nsICrashReporter> crashreporter =
+    do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+  if (crashreporter) {
+    crashreporter->SetEnabled(false);
+  }
+#endif
+}
+
+// Wrap ASSERT_DEATH_IF_SUPPORTED to disable the crash reporter
+// when entering the subprocess, so that the expected crashes don't
+// create a minidump that the gtest harness will interpret as an error.
+#define ASSERT_DEATH_WRAP(a, b) \
+  ASSERT_DEATH_IF_SUPPORTED({ DisableCrashReporter(); a; }, b)
+#else
+#define ASSERT_DEATH_WRAP(a, b)
+#endif
+
 using namespace mozilla;
 
 static inline void
@@ -223,3 +256,58 @@ TEST(Jemalloc, PtrInfo)
 
   jemalloc_thread_local_arena(false);
 }
+
+#ifdef NIGHTLY_BUILD
+TEST(Jemalloc, Arenas)
+{
+  arena_id_t arena = moz_create_arena();
+  ASSERT_TRUE(arena != 0);
+  void* ptr = moz_arena_malloc(arena, 42);
+  ASSERT_TRUE(ptr != nullptr);
+  ptr = moz_arena_realloc(arena, ptr, 64);
+  ASSERT_TRUE(ptr != nullptr);
+  moz_arena_free(arena, ptr);
+  ptr = moz_arena_calloc(arena, 24, 2);
+  // For convenience, free can be used to free arena pointers.
+  free(ptr);
+  moz_dispose_arena(arena);
+
+#ifdef HAS_GDB_SLEEP_DURATION
+  // Avoid death tests adding some unnecessary (long) delays.
+  unsigned int old_gdb_sleep_duration = _gdb_sleep_duration;
+  _gdb_sleep_duration = 0;
+#endif
+
+  // Can't use an arena after it's disposed.
+  ASSERT_DEATH_WRAP(moz_arena_malloc(arena, 80), "");
+
+  // Arena id 0 can't be used to somehow get to the main arena.
+  ASSERT_DEATH_WRAP(moz_arena_malloc(0, 80), "");
+
+  arena = moz_create_arena();
+  arena_id_t arena2 = moz_create_arena();
+
+  // For convenience, realloc can also be used to reallocate arena pointers.
+  // The result should be in the same arena. Test various size class transitions.
+  size_t sizes[] = { 1, 42, 80, 1_KiB, 1.5_KiB, 72_KiB, 129_KiB, 2.5_MiB, 5.1_MiB };
+  for (size_t from_size : sizes) {
+    for (size_t to_size : sizes) {
+      ptr = moz_arena_malloc(arena, from_size);
+      ptr = realloc(ptr, to_size);
+      // Freeing with the wrong arena should crash.
+      ASSERT_DEATH_WRAP(moz_arena_free(arena2, ptr), "");
+      // Likewise for moz_arena_realloc.
+      ASSERT_DEATH_WRAP(moz_arena_realloc(arena2, ptr, from_size), "");
+      // The following will crash if it's not in the right arena.
+      moz_arena_free(arena, ptr);
+    }
+  }
+
+  moz_dispose_arena(arena2);
+  moz_dispose_arena(arena);
+
+#ifdef HAS_GDB_SLEEP_DURATION
+  _gdb_sleep_duration = old_gdb_sleep_duration;
+#endif
+}
+#endif
