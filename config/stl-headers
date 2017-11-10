@@ -1,0 +1,52 @@
+#
+# This file contains a list the of STL headers that have been reviewed
+# for exception safety and approved. See
+#
+#   https://bugzilla.mozilla.org/show_bug.cgi?id=551254
+#
+# At build time, each header listed here is converted into a "wrapper
+# header" that is installed into dist/stl_includes.
+#
+# If you would like to request a new STL header <foo> be added, please
+# file a Core:XPCOM bug with a title like "STL: Review exception
+# safety of <foo> for gcc and MSVC".
+#
+
+new
+
+# FIXME: these headers haven't been reviewed yet, but we use them
+# unsafely in Gecko, so we might as well prevent them from
+# throwing exceptions
+algorithm
+atomic
+deque
+functional
+ios
+iosfwd
+iostream
+istream
+iterator
+limits
+list
+map
+memory
+ostream
+set
+stack
+string
+thread
+type_traits
+unordered_map
+unordered_set
+utility
+vector
+cassert
+climits
+cmath
+cstdarg
+cstdio
+cstdlib
+cstring
+cwchar
+tuple
+xutility
