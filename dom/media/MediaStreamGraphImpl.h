@@ -358,7 +358,7 @@ public:
    * Given a graph time aTime, convert it to a stream time taking into
    * account the time during which aStream is scheduled to be blocked.
    */
-  StreamTime GraphTimeToStreamTimeWithBlocking(MediaStream* aStream, GraphTime aTime);
+  StreamTime GraphTimeToStreamTimeWithBlocking(const MediaStream* aStream, GraphTime aTime) const;
 
   /**
    * Call NotifyHaveCurrentData on aStream's listeners.
