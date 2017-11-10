@@ -114,7 +114,6 @@ UNIFIED_SOURCES += [
     'nsNSSErrors.cpp',
     'nsNSSIOLayer.cpp',
     'nsNSSModule.cpp',
-    'nsNSSShutDown.cpp',
     'nsNSSVersion.cpp',
     'nsNTLMAuthModule.cpp',
     'nsPK11TokenDB.cpp',
