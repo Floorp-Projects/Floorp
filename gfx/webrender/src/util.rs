@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ComplexClipRegion, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use api::{DevicePoint, DeviceRect, DeviceSize, LayerRect, LayerToWorldTransform, LayoutRect};
+use api::{DevicePoint, DeviceRect, DeviceSize, LayerRect, LayerToWorldTransform};
+use api::{LayoutPoint, LayoutRect, LayoutSize};
 use api::WorldPoint3D;
 use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, TypedTransform2D};
 use euclid::TypedTransform3D;
@@ -142,6 +143,7 @@ pub fn rect_is_empty<N: PartialEq + Zero, U>(rect: &TypedRect<N, U>) -> bool {
     rect.size.width == Zero::zero() || rect.size.height == Zero::zero()
 }
 
+#[allow(dead_code)]
 #[inline]
 pub fn rect_from_points_f(x0: f32, y0: f32, x1: f32, y1: f32) -> Rect<f32> {
     Rect::new(Point2D::new(x0, y0), Size2D::new(x1 - x0, y1 - y0))
@@ -151,7 +153,7 @@ pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
     (b - a) * t + a
 }
 
-pub fn subtract_rect<U>(
+pub fn _subtract_rect<U>(
     rect: &TypedRect<f32, U>,
     other: &TypedRect<f32, U>,
     results: &mut Vec<TypedRect<f32, U>>,
@@ -283,13 +285,78 @@ pub trait ComplexClipRegionHelpers {
     /// Return the approximately largest aligned rectangle that is fully inside
     /// the provided clip region.
     fn get_inner_rect_full(&self) -> Option<LayoutRect>;
+    /// Split the clip region into 2 sets of rectangles: opaque and transparent.
+    /// Guarantees no T-junctions in the produced split.
+    /// Attempts to cover more space in opaque, where it reasonably makes sense.
+    fn split_rectangles(
+        &self,
+        opaque: &mut Vec<LayoutRect>,
+        transparent: &mut Vec<LayoutRect>,
+    );
 }
 
 impl ComplexClipRegionHelpers for ComplexClipRegion {
     fn get_inner_rect_full(&self) -> Option<LayoutRect> {
-        // this `k` optimal for a simple case of all border radii being equal
+        // this `k` is optimal for a simple case of all border radii being equal
         let k = 1.0 - 0.5 * FRAC_1_SQRT_2; // could be nicely approximated to `0.3`
         extract_inner_rect_impl(&self.rect, &self.radii, k)
+    }
+
+    fn split_rectangles(
+        &self,
+        opaque: &mut Vec<LayoutRect>,
+        transparent: &mut Vec<LayoutRect>,
+    ) {
+        fn rect(p0: LayoutPoint, p1: LayoutPoint) -> Option<LayoutRect> {
+            if p0.x != p1.x && p0.y != p1.y {
+                Some(LayerRect::new(p0.min(p1), (p1 - p0).abs().to_size()))
+            } else {
+                None
+            }
+        }
+
+        let inner = match extract_inner_rect_impl(&self.rect, &self.radii, 1.0) {
+            Some(rect) => rect,
+            None => {
+                transparent.push(self.rect);
+                return
+            },
+        };
+        let left_top = inner.origin - self.rect.origin;
+        let right_bot = self.rect.bottom_right() - inner.bottom_right();
+
+        // fill in the opaque parts
+        opaque.push(inner);
+        if left_top.x > 0.0 {
+            opaque.push(LayerRect::new(
+                LayoutPoint::new(self.rect.origin.x, inner.origin.y),
+                LayoutSize::new(left_top.x, inner.size.height),
+            ));
+        }
+        if right_bot.y > 0.0 {
+            opaque.push(LayerRect::new(
+                LayoutPoint::new(inner.origin.x, inner.origin.y + inner.size.height),
+                LayoutSize::new(inner.size.width, right_bot.y),
+            ));
+        }
+        if right_bot.x > 0.0 {
+            opaque.push(LayerRect::new(
+                LayoutPoint::new(inner.origin.x + inner.size.width, inner.origin.y),
+                LayoutSize::new(right_bot.x, inner.size.height),
+            ));
+        }
+        if left_top.y > 0.0 {
+            opaque.push(LayerRect::new(
+                LayoutPoint::new(inner.origin.x, self.rect.origin.y),
+                LayoutSize::new(inner.size.width, left_top.y),
+            ));
+        }
+
+        // fill in the transparent parts
+        transparent.extend(rect(self.rect.origin, inner.origin));
+        transparent.extend(rect(self.rect.bottom_left(), inner.bottom_left()));
+        transparent.extend(rect(self.rect.bottom_right(), inner.bottom_right()));
+        transparent.extend(rect(self.rect.top_right(), inner.top_right()));
     }
 }
 

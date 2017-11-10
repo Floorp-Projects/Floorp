@@ -20,7 +20,12 @@ namespace mozilla {
 struct RoundedRect {
     typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
 
-    RoundedRect(gfxRect &aRect, RectCornerRadii &aCorners) : rect(aRect), corners(aCorners) { }
+    RoundedRect(const gfxRect& aRect, const RectCornerRadii& aCorners)
+      : rect(aRect)
+      , corners(aCorners)
+    {
+    }
+
     void Deflate(gfxFloat aTopWidth, gfxFloat aBottomWidth, gfxFloat aLeftWidth, gfxFloat aRightWidth) {
         // deflate the internal rect
         rect.x += aLeftWidth;

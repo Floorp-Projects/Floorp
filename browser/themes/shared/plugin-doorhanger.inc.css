@@ -1,5 +1,5 @@
 .messageImage[value="plugin-hidden"] {
-  list-style-image: url(chrome://browser/skin/notification-icons/plugin.svg);
+  list-style-image: url(chrome://mozapps/skin/plugins/plugin.svg);
 }
 
 /* Keep any changes to this style in sync with pluginProblem.css */
@@ -10,5 +10,5 @@ notification.pluginVulnerable {
 }
 
 notification.pluginVulnerable .messageImage {
-  list-style-image: url(chrome://browser/skin/notification-icons/plugin-blocked.svg);
+  list-style-image: url(chrome://mozapps/skin/plugins/plugin-blocked.svg);
 }
