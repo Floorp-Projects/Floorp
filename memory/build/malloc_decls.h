@@ -105,7 +105,9 @@ MALLOC_DECL(jemalloc_ptr_info, void, const void*, jemalloc_ptr_info_t*)
 // functions.
 MALLOC_DECL(moz_create_arena, arena_id_t)
 
-// Dispose of the given arena. Subsequent uses of the arena will fail.
+// Dispose of the given arena. Subsequent uses of the arena will crash.
+// Passing an invalid id (inexistent or already disposed) to this function
+// will crash.
 MALLOC_DECL(moz_dispose_arena, void, arena_id_t)
 #endif
 
@@ -113,8 +115,9 @@ MALLOC_DECL(moz_dispose_arena, void, arena_id_t)
 // Same as the functions without the moz_arena_ prefix, but using arenas
 // created with moz_create_arena.
 // The contract, even if not enforced at runtime in some configurations,
-// is that moz_arena_realloc and moz_arena_free will crash if the wrong
-// arena id is given. All functions will crash if the arena id is invalid.
+// is that moz_arena_realloc and moz_arena_free will crash if the given
+// arena doesn't own the given pointer. All functions will crash if the
+// arena id is invalid.
 // Although discouraged, plain realloc and free can still be used on
 // pointers allocated with these functions. Realloc will properly keep
 // new pointers in the same arena as the original.

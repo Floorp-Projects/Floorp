@@ -2,7 +2,7 @@ const Cu = Components.utils;
 
 function run_test() {
   // Existing module.
-  do_check_true(!Cu.isModuleLoaded("resource://gre/modules/NetUtil.jsm"),
+  do_check_true(Cu.isModuleLoaded("resource://gre/modules/NetUtil.jsm"),
                 "isModuleLoaded returned correct value for non-loaded module");
   Cu.import("resource://gre/modules/NetUtil.jsm");
   do_check_true(Cu.isModuleLoaded("resource://gre/modules/NetUtil.jsm"),

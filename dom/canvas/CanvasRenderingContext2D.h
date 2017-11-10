@@ -31,7 +31,7 @@
 #include "Layers.h"
 #include "nsBidi.h"
 
-class nsGlobalWindow;
+class nsGlobalWindowInner;
 class nsXULElement;
 
 namespace mozilla {
@@ -408,7 +408,7 @@ public:
     }
   }
 
-  void DrawWindow(nsGlobalWindow& aWindow, double aX, double aY,
+  void DrawWindow(nsGlobalWindowInner& aWindow, double aX, double aY,
                   double aW, double aH,
                   const nsAString& aBgColor, uint32_t aFlags,
                   mozilla::ErrorResult& aError);

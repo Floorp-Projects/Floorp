@@ -868,7 +868,7 @@ class Marionette(object):
                Preferences.reset(arguments[0]);
                """, script_args=(pref,))
 
-    def get_pref(self, pref, default_branch=False, value_type="nsISupportsString"):
+    def get_pref(self, pref, default_branch=False, value_type="unspecified"):
         """Get the value of the specified preference.
 
         :param pref: Name of the preference.
@@ -876,8 +876,8 @@ class Marionette(object):
                                from the default branch. Otherwise the user-defined
                                value if set is returned. Defaults to `False`.
         :param value_type: Optional, XPCOM interface of the pref's complex value.
-                           Defaults to `nsISupportsString`. Other possible values are:
-                           `nsIFile`, and `nsIPrefLocalizedString`.
+                           Possible values are: `nsIFile` and
+                           `nsIPrefLocalizedString`.
 
         Usage example::
 

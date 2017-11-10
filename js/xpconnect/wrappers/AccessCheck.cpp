@@ -129,7 +129,7 @@ IsFrameId(JSContext* cx, JSObject* obj, jsid idArg)
     MOZ_ASSERT(!js::IsWrapper(obj));
     RootedId id(cx, idArg);
 
-    nsGlobalWindow* win = WindowOrNull(obj);
+    nsGlobalWindowInner* win = WindowOrNull(obj);
     if (!win) {
         return false;
     }

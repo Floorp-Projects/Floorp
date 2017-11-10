@@ -1116,7 +1116,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     if (newWindow) {
       newWindow->SetInitialPrincipalToSubject();
       if (aIsPopupSpam) {
-        nsGlobalWindow* globalWin = nsGlobalWindow::Cast(newWindow);
+        nsGlobalWindowOuter* globalWin = nsGlobalWindowOuter::Cast(newWindow);
         MOZ_ASSERT(!globalWin->IsPopupSpamWindow(),
                    "Who marked it as popup spam already???");
         if (!globalWin->IsPopupSpamWindow()) { // Make sure we don't mess up our

@@ -223,17 +223,19 @@ CreateImageFromRawData(const gfx::IntSize& aSize,
   }
 
   // Convert RGBA to BGRA
+  DataSourceSurface::MappedSurface rgbaMap;
   RefPtr<DataSourceSurface> rgbaDataSurface = rgbaSurface->GetDataSurface();
+  if (NS_WARN_IF(!rgbaDataSurface->Map(DataSourceSurface::MapType::READ, &rgbaMap))) {
+    return nullptr;
+  }
+
   RefPtr<DataSourceSurface> bgraDataSurface =
     Factory::CreateDataSourceSurfaceWithStride(rgbaDataSurface->GetSize(),
                                                SurfaceFormat::B8G8R8A8,
-                                               rgbaDataSurface->Stride());
+                                               rgbaMap.mStride);
 
-  DataSourceSurface::MappedSurface rgbaMap;
   DataSourceSurface::MappedSurface bgraMap;
-
-  if (NS_WARN_IF(!rgbaDataSurface->Map(DataSourceSurface::MapType::READ, &rgbaMap)) ||
-      NS_WARN_IF(!bgraDataSurface->Map(DataSourceSurface::MapType::WRITE, &bgraMap))) {
+  if (NS_WARN_IF(!bgraDataSurface->Map(DataSourceSurface::MapType::WRITE, &bgraMap))) {
     return nullptr;
   }
 

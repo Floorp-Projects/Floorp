@@ -2860,7 +2860,7 @@ EnforceNotInPrerendering(JSContext* aCx, JSObject* aObj)
     // Without a this object, we cannot check the safety.
     return true;
   }
-  nsGlobalWindow* window = xpc::WindowGlobalOrNull(thisObj);
+  nsGlobalWindowInner* window = xpc::WindowGlobalOrNull(thisObj);
   if (!window) {
     // Without a window, we cannot check the safety.
     return true;
@@ -3151,7 +3151,7 @@ ConvertExceptionToPromise(JSContext* cx,
 
 /* static */
 void
-CreateGlobalOptions<nsGlobalWindow>::TraceGlobal(JSTracer* aTrc, JSObject* aObj)
+CreateGlobalOptions<nsGlobalWindowInner>::TraceGlobal(JSTracer* aTrc, JSObject* aObj)
 {
   xpc::TraceXPCGlobal(aTrc, aObj);
 }
@@ -3181,8 +3181,8 @@ RegisterDOMNames()
 
 /* static */
 bool
-CreateGlobalOptions<nsGlobalWindow>::PostCreateGlobal(JSContext* aCx,
-                                                      JS::Handle<JSObject*> aGlobal)
+CreateGlobalOptions<nsGlobalWindowInner>::PostCreateGlobal(JSContext* aCx,
+                                                           JS::Handle<JSObject*> aGlobal)
 {
   nsresult rv = RegisterDOMNames();
   if (NS_FAILED(rv)) {
@@ -3534,7 +3534,7 @@ GetCustomElementReactionsStack(JS::Handle<JSObject*> aObj)
     return nullptr;
   }
 
-  nsGlobalWindow* window = xpc::WindowGlobalOrNull(obj);
+  nsGlobalWindowInner* window = xpc::WindowGlobalOrNull(obj);
   if (!window) {
     return nullptr;
   }
@@ -3732,7 +3732,7 @@ AssertReflectorHasGivenProto(JSContext* aCx, JSObject* aReflector,
 void
 SetDocumentAndPageUseCounter(JSObject* aObject, UseCounter aUseCounter)
 {
-  nsGlobalWindow* win = xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject));
+  nsGlobalWindowInner* win = xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject));
   if (win && win->GetDocument()) {
     win->GetDocument()->SetDocumentAndPageUseCounter(aUseCounter);
   }
