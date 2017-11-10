@@ -138,9 +138,21 @@ private:
   layers::SynchronousTask* mTask;
 };
 
+/*static*/ void
+WebRenderAPI::InitExternalLogHandler()
+{
+  // Redirect the webrender's log to gecko's log system.
+  // The current log level is "error".
+  mozilla::wr::wr_init_external_log_handler(wr::LogLevelFilter::Error);
+}
 
-//static
-already_AddRefed<WebRenderAPI>
+/*static*/ void
+WebRenderAPI::ShutdownExternalLogHandler()
+{
+  mozilla::wr::wr_shutdown_external_log_handler();
+}
+
+/*static*/ already_AddRefed<WebRenderAPI>
 WebRenderAPI::Create(layers::CompositorBridgeParentBase* aBridge,
                      RefPtr<widget::CompositorWidget>&& aWidget,
                      LayoutDeviceIntSize aSize)
