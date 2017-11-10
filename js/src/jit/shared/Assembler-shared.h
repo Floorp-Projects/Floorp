@@ -32,10 +32,10 @@
 # define JS_SMALL_BRANCH
 #endif
 
+using mozilla::CheckedInt;
+
 namespace js {
 namespace jit {
-
-using mozilla::CheckedInt;
 
 namespace Disassembler {
 class HeapAccess;
