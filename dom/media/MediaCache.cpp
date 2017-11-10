@@ -1944,6 +1944,14 @@ MediaCacheStream::NotifyDataLength(int64_t aLength)
 }
 
 void
+MediaCacheStream::NotifyLoadID(uint32_t aLoadID)
+{
+  MOZ_ASSERT(aLoadID > 0);
+  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+  mLoadID = aLoadID;
+}
+
+void
 MediaCacheStream::NotifyDataStarted(uint32_t aLoadID,
                                     int64_t aOffset,
                                     bool aSeekable)
@@ -2072,8 +2080,6 @@ void
 MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
                                             ReentrantMonitorAutoEnter& aReentrantMonitor)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
   int32_t blockIndex = OffsetToBlockIndexUnchecked(mChannelOffset);
   int32_t blockOffset = OffsetInBlock(mChannelOffset);
   if (blockOffset > 0) {
@@ -2119,11 +2125,16 @@ MediaCacheStream::FlushPartialBlock()
 }
 
 void
-MediaCacheStream::NotifyDataEnded(nsresult aStatus, bool aReopenOnError)
+MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
+                                          nsresult aStatus,
+                                          bool aReopenOnError)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+
+  if (mClosed || aLoadID != mLoadID) {
+    // Nothing to do if the stream is closed or a new load has begun.
+    return;
+  }
 
   // Note that aStatus might have succeeded --- this might be a normal close
   // --- even in situations where the server cut us off because we were
@@ -2183,6 +2194,23 @@ MediaCacheStream::NotifyChannelRecreated()
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   mChannelEnded = false;
   mDidNotifyDataEnded = false;
+}
+
+void
+MediaCacheStream::NotifyDataEnded(uint32_t aLoadID,
+                                  nsresult aStatus,
+                                  bool aReopenOnError)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aLoadID > 0);
+
+  RefPtr<ChannelMediaResource> client = mClient;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaCacheStream::NotifyDataEnded",
+    [client, this, aLoadID, aStatus, aReopenOnError]() {
+      NotifyDataEndedInternal(aLoadID, aStatus, aReopenOnError);
+    });
+  OwnerThread()->Dispatch(r.forget());
 }
 
 void
