@@ -105,6 +105,85 @@ set_config('GRADLE_ANDROID_APP_APK', gradle_android_app_apks.app_apk)
 set_config('GRADLE_ANDROID_APP_ANDROIDTEST_APK', gradle_android_app_apks.app_androidTest_apk)
 
 
+@depends(gradle_android_build_config)
+def gradle_android_test_tasks(build_config):
+    '''Gradle tasks run by |mach android test|.'''
+    return [
+        'app:test{app.variant.name}UnitTest'.format(app=build_config.app),
+    ]
+
+set_config('GRADLE_ANDROID_TEST_TASKS', gradle_android_test_tasks)
+
+
+@depends(gradle_android_build_config)
+def gradle_android_lint_tasks(build_config):
+    '''Gradle tasks run by |mach android lint|.'''
+    return [
+        'app:lint{app.variant.name}'.format(app=build_config.app),
+    ]
+
+set_config('GRADLE_ANDROID_LINT_TASKS', gradle_android_lint_tasks)
+
+
+@dependable
+def gradle_android_checkstyle_tasks():
+    '''Gradle tasks run by |mach android checkstyle|.'''
+    return [
+        'app:checkstyle',
+    ]
+
+set_config('GRADLE_ANDROID_CHECKSTYLE_TASKS', gradle_android_checkstyle_tasks)
+
+
+@depends(gradle_android_build_config)
+def gradle_android_findbugs_tasks(build_config):
+    '''Gradle tasks run by |mach android findbugs|.'''
+    return [
+        'app:findbugsXml{app.variant.name}'.format(app=build_config.app),
+        'app:findbugsHtml{app.variant.name}'.format(app=build_config.app),
+    ]
+
+set_config('GRADLE_ANDROID_FINDBUGS_TASKS', gradle_android_findbugs_tasks)
+
+
+@dependable
+def gradle_android_archive_geckoview_tasks():
+    '''Gradle tasks run by |mach android archive-geckoview|.'''
+    return [
+        'geckoview:assembleWithGeckoBinaries',
+        'geckoview_example:assembleWithGeckoBinaries',
+        'geckoview:uploadArchives',
+    ]
+
+set_config('GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS', gradle_android_archive_geckoview_tasks)
+
+
+@depends(
+    gradle_android_app_tasks,
+    gradle_android_test_tasks,
+    gradle_android_lint_tasks,
+    gradle_android_checkstyle_tasks,
+    gradle_android_findbugs_tasks,
+    gradle_android_archive_geckoview_tasks,
+)
+@imports(_from='itertools', _import='imap')
+@imports(_from='itertools', _import='chain')
+@imports(_from='itertools', _import='ifilterfalse')
+def gradle_android_dependencies_tasks(*tasks):
+    '''Gradle tasks run by |mach android dependencies|.'''
+    # The union, plus a bit more, of all of the Gradle tasks
+    # invoked by the android-* automation jobs.
+    def withoutGeckoBinaries(task):
+        return task.replace('withGeckoBinaries', 'withoutGeckoBinaries')
+
+    def isUploadArchives(task):
+        return 'uploadArchives' in task
+
+    return list(ifilterfalse(isUploadArchives, imap(withoutGeckoBinaries, chain(*tasks))))
+
+set_config('GRADLE_ANDROID_DEPENDENCIES_TASKS', gradle_android_dependencies_tasks)
+
+
 # Automation uses this to change log levels, not use the daemon, and use
 # offline mode.
 option(env='GRADLE_FLAGS', default='', help='Flags to pass to Gradle.')
