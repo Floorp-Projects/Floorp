@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.activity.screenshots;
 
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.web.webdriver.Locator;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -26,6 +27,7 @@ import tools.fastlane.screengrab.locale.LocaleTestRule;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.PreferenceMatchers.withTitleText;
@@ -40,6 +42,7 @@ import static android.support.test.espresso.web.webdriver.DriverAtoms.webClick;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.endsWith;
+import static org.mozilla.focus.activity.helpers.EspressoHelper.assertToolbarMatchesText;
 import static org.mozilla.focus.activity.helpers.EspressoHelper.openSettings;
 
 @RunWith(AndroidJUnit4.class)
@@ -79,8 +82,19 @@ public class SettingsScreenshots extends ScreenshotTest {
         TestHelper.settingsHeading.waitUntilGone(waitingTime);
         Screengrab.screenshot("SearchEngine_Selection");
 
-        /* Manual Search Engine Page */
         if (AppConstants.FLAG_MANUAL_SEARCH_ENGINE) {
+            /* Remove Search Engine page */
+            openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getContext());
+            Screengrab.screenshot("SearchEngine_Search_Engine_Menu");
+            // Menu items don't have ids, so we have to match by text
+            onView(withText(R.string.preference_search_remove))
+                    .perform(click());
+
+            assertToolbarMatchesText(R.string.preference_search_remove_title);
+            Screengrab.screenshot("SearchEngine_Remove_Search_Engines");
+            TestHelper.pressBackKey();
+
+            /* Manual Search Engine page */
             final String addEngineLabel = getString(R.string.preference_search_add2);
             onData(withTitleText(addEngineLabel))
                     .perform(click());
