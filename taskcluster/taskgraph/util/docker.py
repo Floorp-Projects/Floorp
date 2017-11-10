@@ -19,7 +19,6 @@ from .. import GECKO
 
 
 IMAGE_DIR = os.path.join(GECKO, 'taskcluster', 'docker')
-INDEX_PREFIX = 'docker.images.v2'
 
 
 def docker_image(name, by_tag=False):
