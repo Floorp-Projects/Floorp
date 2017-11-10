@@ -1024,12 +1024,8 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource)
     }
 
     RootedScript script(cx);
-
-    if (fun->hasScript()) {
+    if (fun->hasScript())
         script = fun->nonLazyScript();
-        if (MOZ_UNLIKELY(script->isGeneratorExp()))
-            return NewStringCopyZ<CanGC>(cx, "function genexp() {\n    [generator expression]\n}");
-    }
 
     // Default class constructors are self-hosted, but have their source
     // objects overridden to refer to the span of the class statement or
@@ -1592,34 +1588,6 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
             return true;
         }
 
-        // Lazy script caching is only supported for leaf functions. If a
-        // script with inner functions was returned by the cache, those inner
-        // functions would be delazified when deep cloning the script, even if
-        // they have never executed.
-        //
-        // Additionally, the lazy script cache is not used during incremental
-        // GCs, to avoid resurrecting dead scripts after incremental sweeping
-        // has started.
-        if (canRelazify && !JS::IsIncrementalGCInProgress(cx)) {
-            LazyScriptCache::Lookup lookup(cx, lazy);
-            cx->caches().lazyScriptCache.lookup(lookup, script.address());
-        }
-
-        if (script) {
-            RootedScope enclosingScope(cx, lazy->enclosingScope());
-            RootedScript clonedScript(cx, CloneScriptIntoFunction(cx, enclosingScope, fun, script));
-            if (!clonedScript)
-                return false;
-
-            clonedScript->setSourceObject(lazy->sourceObject());
-
-            fun->initAtom(script->functionNonDelazifying()->displayAtom());
-
-            if (!lazy->maybeScript())
-                lazy->initScript(clonedScript);
-            return true;
-        }
-
         MOZ_ASSERT(lazy->scriptSource()->hasSourceData());
 
         // Parse and compile the script from source.
@@ -1653,9 +1621,6 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
             // specify this from the lazy script so that if an identical lazy
             // script is encountered later a match can be determined.
             script->setColumn(lazy->column());
-
-            LazyScriptCache::Lookup lookup(cx, lazy);
-            cx->caches().lazyScriptCache.insert(lookup, script);
 
             // Remember the lazy script on the compiled script, so it can be
             // stored on the function again in case of re-lazification.

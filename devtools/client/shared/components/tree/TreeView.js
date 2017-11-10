@@ -130,7 +130,6 @@ define(function (require, exports, module) {
       this.toggle = this.toggle.bind(this);
       this.isExpanded = this.isExpanded.bind(this);
       this.onKeyDown = this.onKeyDown.bind(this);
-      this.onKeyUp = this.onKeyUp.bind(this);
       this.onClickRow = this.onClickRow.bind(this);
       this.getSelectedRow = this.getSelectedRow.bind(this);
       this.selectRow = this.selectRow.bind(this);
@@ -228,13 +227,10 @@ define(function (require, exports, module) {
     // Event Handlers
 
     onKeyDown(event) {
-      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(
-        event.key)) {
-        event.preventDefault();
+      if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+        return;
       }
-    }
 
-    onKeyUp(event) {
       let row = this.getSelectedRow(this.rows);
       if (!row) {
         return;
@@ -265,8 +261,6 @@ define(function (require, exports, module) {
             this.selectRow(previousRow);
           }
           break;
-        default:
-          return;
       }
 
       event.preventDefault();
@@ -293,7 +287,19 @@ define(function (require, exports, module) {
       this.setState(Object.assign({}, this.state, {
         selected: row.id
       }));
-      row.scrollIntoView({block: "nearest"});
+
+      // If the top or bottom side of the row is not visible and there is available space
+      // beyond the opposite one, then attempt to scroll the hidden side into view, but
+      // without hiding the visible side.
+      let scroller = scrollContainer(row);
+      if (!scroller) {
+        return;
+      }
+      let scrollToTop = row.offsetTop;
+      let scrollToBottom = scrollToTop + row.offsetHeight - scroller.offsetHeight;
+      let max = Math.max(scrollToTop, scrollToBottom);
+      let min = Math.min(scrollToTop, scrollToBottom);
+      scroller.scrollTop = Math.max(min, Math.min(max, scroller.scrollTop));
     }
 
     isSelected(nodePath) {
@@ -471,7 +477,6 @@ define(function (require, exports, module) {
           role: "tree",
           tabIndex: 0,
           onKeyDown: this.onKeyDown,
-          onKeyUp: this.onKeyUp,
           "aria-label": this.props.label || "",
           "aria-activedescendant": this.state.selected,
           cellPadding: 0,
@@ -507,6 +512,18 @@ define(function (require, exports, module) {
 
   function isLongString(value) {
     return typeof value == "string" && value.length > 50;
+  }
+
+  function scrollContainer(element) {
+    let parent = element.parentElement;
+    let window = element.ownerDocument.defaultView;
+    if (!parent || !window) {
+      return null;
+    }
+    if (window.getComputedStyle(parent).overflowY != "visible") {
+      return parent;
+    }
+    return scrollContainer(parent);
   }
 
   // Exports from this module

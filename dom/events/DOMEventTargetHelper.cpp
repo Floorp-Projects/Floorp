@@ -90,7 +90,7 @@ NS_IMPL_DOMTARGET_DEFAULTS(DOMEventTargetHelper)
 DOMEventTargetHelper::~DOMEventTargetHelper()
 {
   if (nsPIDOMWindowInner* owner = GetOwner()) {
-    nsGlobalWindow::Cast(owner)->RemoveEventTargetObject(this);
+    nsGlobalWindowInner::Cast(owner)->RemoveEventTargetObject(this);
   }
   if (mListenerManager) {
     mListenerManager->Disconnect();
@@ -111,7 +111,7 @@ DOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner)
   nsCOMPtr<nsIGlobalObject> parentObject = do_QueryReferent(mParentObject);
   if (parentObject) {
     if (mOwnerWindow) {
-      nsGlobalWindow::Cast(mOwnerWindow)->RemoveEventTargetObject(this);
+      nsGlobalWindowInner::Cast(mOwnerWindow)->RemoveEventTargetObject(this);
       mOwnerWindow = nullptr;
     }
     mParentObject = nullptr;
@@ -124,7 +124,7 @@ DOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner)
     mOwnerWindow = nsCOMPtr<nsPIDOMWindowInner>(do_QueryInterface(aOwner)).get();
     if (mOwnerWindow) {
       mHasOrHasHadOwnerWindow = true;
-      nsGlobalWindow::Cast(mOwnerWindow)->AddEventTargetObject(this);
+      nsGlobalWindowInner::Cast(mOwnerWindow)->AddEventTargetObject(this);
     }
   }
 }
@@ -133,7 +133,7 @@ void
 DOMEventTargetHelper::BindToOwner(DOMEventTargetHelper* aOther)
 {
   if (mOwnerWindow) {
-    nsGlobalWindow::Cast(mOwnerWindow)->RemoveEventTargetObject(this);
+    nsGlobalWindowInner::Cast(mOwnerWindow)->RemoveEventTargetObject(this);
     mOwnerWindow = nullptr;
     mParentObject = nullptr;
     mHasOrHasHadOwnerWindow = false;
@@ -147,7 +147,7 @@ DOMEventTargetHelper::BindToOwner(DOMEventTargetHelper* aOther)
       mOwnerWindow = nsCOMPtr<nsPIDOMWindowInner>(do_QueryInterface(aOther->GetParentObject())).get();
       if (mOwnerWindow) {
         mHasOrHasHadOwnerWindow = true;
-        nsGlobalWindow::Cast(mOwnerWindow)->AddEventTargetObject(this);
+        nsGlobalWindowInner::Cast(mOwnerWindow)->AddEventTargetObject(this);
       }
     }
   }
@@ -341,7 +341,7 @@ DOMEventTargetHelper::GetContextForEventHandlers(nsresult* aRv)
     return nullptr;
   }
   nsPIDOMWindowInner* owner = GetOwner();
-  return owner ? nsGlobalWindow::Cast(owner)->GetContextInternal()
+  return owner ? nsGlobalWindowInner::Cast(owner)->GetContextInternal()
                : nullptr;
 }
 

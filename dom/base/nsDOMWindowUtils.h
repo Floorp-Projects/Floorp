@@ -13,7 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
 
-class nsGlobalWindow;
+class nsGlobalWindowOuter;
 class nsIPresShell;
 class nsIWidget;
 class nsPresContext;
@@ -62,7 +62,7 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
   typedef mozilla::widget::TextEventDispatcher
     TextEventDispatcher;
 public:
-  explicit nsDOMWindowUtils(nsGlobalWindow *aWindow);
+  explicit nsDOMWindowUtils(nsGlobalWindowOuter *aWindow);
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMWINDOWUTILS
 

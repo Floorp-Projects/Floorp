@@ -618,32 +618,37 @@ enum ChunkType
 struct extent_node_t
 {
   // Linkage for the size/address-ordered tree.
-  RedBlackTreeNode<extent_node_t> link_szad;
+  RedBlackTreeNode<extent_node_t> mLinkBySize;
 
   // Linkage for the address-ordered tree.
-  RedBlackTreeNode<extent_node_t> link_ad;
+  RedBlackTreeNode<extent_node_t> mLinkByAddr;
 
   // Pointer to the extent that this tree node is responsible for.
-  void* addr;
+  void* mAddr;
 
   // Total region size.
-  size_t size;
+  size_t mSize;
 
-  // What type of chunk is there; used by chunk recycling code.
-  ChunkType chunk_type;
+  union {
+    // What type of chunk is there; used for chunk recycling.
+    ChunkType mChunkType;
+
+    // A pointer to the associated arena, for huge allocations.
+    arena_t* mArena;
+  };
 };
 
 struct ExtentTreeSzTrait
 {
   static RedBlackTreeNode<extent_node_t>& GetTreeNode(extent_node_t* aThis)
   {
-    return aThis->link_szad;
+    return aThis->mLinkBySize;
   }
 
   static inline int Compare(extent_node_t* aNode, extent_node_t* aOther)
   {
-    int ret = (aNode->size > aOther->size) - (aNode->size < aOther->size);
-    return ret ? ret : CompareAddr(aNode->addr, aOther->addr);
+    int ret = (aNode->mSize > aOther->mSize) - (aNode->mSize < aOther->mSize);
+    return ret ? ret : CompareAddr(aNode->mAddr, aOther->mAddr);
   }
 };
 
@@ -651,12 +656,12 @@ struct ExtentTreeTrait
 {
   static RedBlackTreeNode<extent_node_t>& GetTreeNode(extent_node_t* aThis)
   {
-    return aThis->link_ad;
+    return aThis->mLinkByAddr;
   }
 
   static inline int Compare(extent_node_t* aNode, extent_node_t* aOther)
   {
-    return CompareAddr(aNode->addr, aOther->addr);
+    return CompareAddr(aNode->mAddr, aOther->mAddr);
   }
 };
 
@@ -664,9 +669,9 @@ struct ExtentTreeBoundsTrait : public ExtentTreeTrait
 {
   static inline int Compare(extent_node_t* aKey, extent_node_t* aNode)
   {
-    uintptr_t key_addr = reinterpret_cast<uintptr_t>(aKey->addr);
-    uintptr_t node_addr = reinterpret_cast<uintptr_t>(aNode->addr);
-    size_t node_size = aNode->size;
+    uintptr_t key_addr = reinterpret_cast<uintptr_t>(aKey->mAddr);
+    uintptr_t node_addr = reinterpret_cast<uintptr_t>(aNode->mAddr);
+    size_t node_size = aNode->mSize;
 
     // Is aKey within aNode?
     if (node_addr <= key_addr && key_addr < node_addr + node_size) {
@@ -1246,13 +1251,13 @@ chunk_dealloc(void* aChunk, size_t aSize, ChunkType aType);
 static void
 chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed);
 static void*
-huge_malloc(size_t size, bool zero);
+huge_malloc(size_t size, bool zero, arena_t* aArena);
 static void*
-huge_palloc(size_t aSize, size_t aAlignment, bool aZero);
+huge_palloc(size_t aSize, size_t aAlignment, bool aZero, arena_t* aArena);
 static void*
-huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize);
+huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena);
 static void
-huge_dalloc(void* aPtr);
+huge_dalloc(void* aPtr, arena_t* aArena);
 #ifdef XP_WIN
 extern "C"
 #else
@@ -1967,20 +1972,20 @@ chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed)
   if (alloc_size < aSize) {
     return nullptr;
   }
-  key.addr = nullptr;
-  key.size = alloc_size;
+  key.mAddr = nullptr;
+  key.mSize = alloc_size;
   chunks_mtx.Lock();
   extent_node_t* node = gChunksBySize.SearchOrNext(&key);
   if (!node) {
     chunks_mtx.Unlock();
     return nullptr;
   }
-  size_t leadsize = ALIGNMENT_CEILING((uintptr_t)node->addr, aAlignment) -
-                    (uintptr_t)node->addr;
-  MOZ_ASSERT(node->size >= leadsize + aSize);
-  size_t trailsize = node->size - leadsize - aSize;
-  void* ret = (void*)((uintptr_t)node->addr + leadsize);
-  ChunkType chunk_type = node->chunk_type;
+  size_t leadsize = ALIGNMENT_CEILING((uintptr_t)node->mAddr, aAlignment) -
+                    (uintptr_t)node->mAddr;
+  MOZ_ASSERT(node->mSize >= leadsize + aSize);
+  size_t trailsize = node->mSize - leadsize - aSize;
+  void* ret = (void*)((uintptr_t)node->mAddr + leadsize);
+  ChunkType chunk_type = node->mChunkType;
   if (aZeroed) {
     *aZeroed = (chunk_type == ZEROED_CHUNK);
   }
@@ -1989,7 +1994,7 @@ chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed)
   gChunksByAddress.Remove(node);
   if (leadsize != 0) {
     // Insert the leading space as a smaller chunk.
-    node->size = leadsize;
+    node->mSize = leadsize;
     gChunksBySize.Insert(node);
     gChunksByAddress.Insert(node);
     node = nullptr;
@@ -2010,9 +2015,9 @@ chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed)
       }
       chunks_mtx.Lock();
     }
-    node->addr = (void*)((uintptr_t)(ret) + aSize);
-    node->size = trailsize;
-    node->chunk_type = chunk_type;
+    node->mAddr = (void*)((uintptr_t)(ret) + aSize);
+    node->mSize = trailsize;
+    node->mChunkType = chunk_type;
     gChunksBySize.Insert(node);
     gChunksByAddress.Insert(node);
     node = nullptr;
@@ -2125,18 +2130,18 @@ chunk_record(void* aChunk, size_t aSize, ChunkType aType)
   // RAII deallocates xnode and xprev defined above after unlocking
   // in order to avoid potential dead-locks
   MutexAutoLock lock(chunks_mtx);
-  key.addr = (void*)((uintptr_t)aChunk + aSize);
+  key.mAddr = (void*)((uintptr_t)aChunk + aSize);
   extent_node_t* node = gChunksByAddress.SearchOrNext(&key);
   // Try to coalesce forward.
-  if (node && node->addr == key.addr) {
+  if (node && node->mAddr == key.mAddr) {
     // Coalesce chunk with the following address range.  This does
     // not change the position within gChunksByAddress, so only
     // remove/insert from/into gChunksBySize.
     gChunksBySize.Remove(node);
-    node->addr = aChunk;
-    node->size += aSize;
-    if (node->chunk_type != aType) {
-      node->chunk_type = RECYCLED_CHUNK;
+    node->mAddr = aChunk;
+    node->mSize += aSize;
+    if (node->mChunkType != aType) {
+      node->mChunkType = RECYCLED_CHUNK;
     }
     gChunksBySize.Insert(node);
   } else {
@@ -2149,16 +2154,16 @@ chunk_record(void* aChunk, size_t aSize, ChunkType aType)
       return;
     }
     node = xnode.release();
-    node->addr = aChunk;
-    node->size = aSize;
-    node->chunk_type = aType;
+    node->mAddr = aChunk;
+    node->mSize = aSize;
+    node->mChunkType = aType;
     gChunksByAddress.Insert(node);
     gChunksBySize.Insert(node);
   }
 
   // Try to coalesce backward.
   extent_node_t* prev = gChunksByAddress.Prev(node);
-  if (prev && (void*)((uintptr_t)prev->addr + prev->size) == aChunk) {
+  if (prev && (void*)((uintptr_t)prev->mAddr + prev->mSize) == aChunk) {
     // Coalesce chunk with the previous address range.  This does
     // not change the position within gChunksByAddress, so only
     // remove/insert node from/into gChunksBySize.
@@ -2166,10 +2171,10 @@ chunk_record(void* aChunk, size_t aSize, ChunkType aType)
     gChunksByAddress.Remove(prev);
 
     gChunksBySize.Remove(node);
-    node->addr = prev->addr;
-    node->size += prev->size;
-    if (node->chunk_type != prev->chunk_type) {
-      node->chunk_type = RECYCLED_CHUNK;
+    node->mAddr = prev->mAddr;
+    node->mSize += prev->mSize;
+    if (node->mChunkType != prev->mChunkType) {
+      node->mChunkType = RECYCLED_CHUNK;
     }
     gChunksBySize.Insert(node);
 
@@ -3088,11 +3093,11 @@ imalloc(size_t aSize, bool aZero, arena_t* aArena)
 {
   MOZ_ASSERT(aSize != 0);
 
+  aArena = aArena ? aArena : choose_arena(aSize);
   if (aSize <= gMaxLargeClass) {
-    aArena = aArena ? aArena : choose_arena(aSize);
     return aArena->Malloc(aSize, aZero);
   }
-  return huge_malloc(aSize, aZero);
+  return huge_malloc(aSize, aZero, aArena);
 }
 
 // Only handles large allocations that require more than page alignment.
@@ -3180,9 +3185,9 @@ ipalloc(size_t aAlignment, size_t aSize, arena_t* aArena)
     return nullptr;
   }
 
+  aArena = aArena ? aArena : choose_arena(aSize);
   if (ceil_size <= gPageSize ||
       (aAlignment <= gPageSize && ceil_size <= gMaxLargeClass)) {
-    aArena = aArena ? aArena : choose_arena(aSize);
     ret = aArena->Malloc(ceil_size, false);
   } else {
     size_t run_size;
@@ -3223,12 +3228,11 @@ ipalloc(size_t aAlignment, size_t aSize, arena_t* aArena)
     }
 
     if (run_size <= gMaxLargeClass) {
-      aArena = aArena ? aArena : choose_arena(aSize);
       ret = aArena->Palloc(aAlignment, ceil_size, run_size);
     } else if (aAlignment <= kChunkSize) {
-      ret = huge_malloc(ceil_size, false);
+      ret = huge_malloc(ceil_size, false, aArena);
     } else {
-      ret = huge_palloc(ceil_size, aAlignment, false);
+      ret = huge_palloc(ceil_size, aAlignment, false, aArena);
     }
   }
 
@@ -3263,71 +3267,90 @@ arena_salloc(const void* ptr)
   return ret;
 }
 
-// Validate ptr before assuming that it points to an allocation.  Currently,
-// the following validation is performed:
-//
-// + Check that ptr is not nullptr.
-//
-// + Check that ptr lies within a mapped chunk.
-static inline size_t
-isalloc_validate(const void* aPtr)
+class AllocInfo
 {
-  // If the allocator is not initialized, the pointer can't belong to it.
-  if (malloc_initialized == false) {
-    return 0;
+public:
+  template<bool Validate = false>
+  static inline AllocInfo Get(const void* aPtr)
+  {
+    // If the allocator is not initialized, the pointer can't belong to it.
+    if (Validate && malloc_initialized == false) {
+      return AllocInfo();
+    }
+
+    auto chunk = GetChunkForPtr(aPtr);
+    if (Validate) {
+      if (!chunk || !gChunkRTree.Get(chunk)) {
+        return AllocInfo();
+      }
+    }
+
+    if (chunk != aPtr) {
+      MOZ_DIAGNOSTIC_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
+      return AllocInfo(arena_salloc(aPtr), chunk);
+    }
+
+    extent_node_t key;
+
+    // Huge allocation
+    key.mAddr = chunk;
+    MutexAutoLock lock(huge_mtx);
+    extent_node_t* node = huge.Search(&key);
+    if (Validate && !node) {
+      return AllocInfo();
+    }
+    return AllocInfo(node->mSize, node);
   }
 
-  auto chunk = GetChunkForPtr(aPtr);
-  if (!chunk) {
-    return 0;
+  // Validate ptr before assuming that it points to an allocation.  Currently,
+  // the following validation is performed:
+  //
+  // + Check that ptr is not nullptr.
+  //
+  // + Check that ptr lies within a mapped chunk.
+  static inline AllocInfo GetValidated(const void* aPtr)
+  {
+    return Get<true>(aPtr);
   }
 
-  if (!gChunkRTree.Get(chunk)) {
-    return 0;
+  AllocInfo()
+    : mSize(0)
+    , mChunk(nullptr)
+  {
   }
 
-  if (chunk != aPtr) {
-    MOZ_DIAGNOSTIC_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
-    return arena_salloc(aPtr);
+  explicit AllocInfo(size_t aSize, arena_chunk_t* aChunk)
+    : mSize(aSize)
+    , mChunk(aChunk)
+  {
+    MOZ_ASSERT(mSize <= gMaxLargeClass);
   }
 
-  extent_node_t key;
-
-  // Chunk.
-  key.addr = (void*)chunk;
-  MutexAutoLock lock(huge_mtx);
-  extent_node_t* node = huge.Search(&key);
-  if (node) {
-    return node->size;
-  }
-  return 0;
-}
-
-static inline size_t
-isalloc(const void* aPtr)
-{
-  MOZ_ASSERT(aPtr);
-
-  auto chunk = GetChunkForPtr(aPtr);
-  if (chunk != aPtr) {
-    // Region.
-    MOZ_DIAGNOSTIC_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
-
-    return arena_salloc(aPtr);
+  explicit AllocInfo(size_t aSize, extent_node_t* aNode)
+    : mSize(aSize)
+    , mNode(aNode)
+  {
+    MOZ_ASSERT(mSize > gMaxLargeClass);
   }
 
-  extent_node_t key;
+  size_t Size() { return mSize; }
 
-  // Chunk (huge allocation).
-  MutexAutoLock lock(huge_mtx);
+  arena_t* Arena()
+  {
+    return (mSize <= gMaxLargeClass) ? mChunk->arena : mNode->mArena;
+  }
 
-  // Extract from tree of huge allocations.
-  key.addr = const_cast<void*>(aPtr);
-  extent_node_t* node = huge.Search(&key);
-  MOZ_DIAGNOSTIC_ASSERT(node);
+private:
+  size_t mSize;
+  union {
+    // Pointer to the chunk associated with the allocation for small
+    // and large allocations.
+    arena_chunk_t* mChunk;
 
-  return node->size;
-}
+    // Pointer to the extent node for huge allocations.
+    extent_node_t* mNode;
+  };
+};
 
 template<>
 inline void
@@ -3350,13 +3373,13 @@ MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
   extent_node_t key;
   {
     MutexAutoLock lock(huge_mtx);
-    key.addr = const_cast<void*>(aPtr);
+    key.mAddr = const_cast<void*>(aPtr);
     node =
       reinterpret_cast<RedBlackTree<extent_node_t, ExtentTreeBoundsTrait>*>(
         &huge)
         ->Search(&key);
     if (node) {
-      *aInfo = { TagLiveHuge, node->addr, node->size };
+      *aInfo = { TagLiveHuge, node->mAddr, node->mSize };
       return;
     }
   }
@@ -3561,7 +3584,7 @@ arena_t::DallocLarge(arena_chunk_t* aChunk, void* aPtr)
 }
 
 static inline void
-arena_dalloc(void* aPtr, size_t aOffset)
+arena_dalloc(void* aPtr, size_t aOffset, arena_t* aArena)
 {
   MOZ_ASSERT(aPtr);
   MOZ_ASSERT(aOffset != 0);
@@ -3571,6 +3594,7 @@ arena_dalloc(void* aPtr, size_t aOffset)
   auto arena = chunk->arena;
   MOZ_ASSERT(arena);
   MOZ_DIAGNOSTIC_ASSERT(arena->mMagic == ARENA_MAGIC);
+  MOZ_RELEASE_ASSERT(!aArena || arena == aArena);
 
   MutexAutoLock lock(arena->mLock);
   size_t pageind = aOffset >> gPageSize2Pow;
@@ -3586,7 +3610,7 @@ arena_dalloc(void* aPtr, size_t aOffset)
 }
 
 static inline void
-idalloc(void* ptr)
+idalloc(void* ptr, arena_t* aArena)
 {
   size_t offset;
 
@@ -3594,9 +3618,9 @@ idalloc(void* ptr)
 
   offset = GetChunkOffsetForPtr(ptr);
   if (offset != 0) {
-    arena_dalloc(ptr, offset);
+    arena_dalloc(ptr, offset, aArena);
   } else {
-    huge_dalloc(ptr);
+    huge_dalloc(ptr, aArena);
   }
 }
 
@@ -3660,7 +3684,7 @@ arena_t::RallocGrowLarge(arena_chunk_t* aChunk,
 // always fail if growing an object, and the following run is already in use.
 // Returns whether reallocation was successful.
 static bool
-arena_ralloc_large(void* aPtr, size_t aSize, size_t aOldSize)
+arena_ralloc_large(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
 {
   size_t psize;
 
@@ -3674,17 +3698,15 @@ arena_ralloc_large(void* aPtr, size_t aSize, size_t aOldSize)
   }
 
   arena_chunk_t* chunk = GetChunkForPtr(aPtr);
-  arena_t* arena = chunk->arena;
-  MOZ_DIAGNOSTIC_ASSERT(arena->mMagic == ARENA_MAGIC);
 
   if (psize < aOldSize) {
     // Fill before shrinking in order avoid a race.
     memset((void*)((uintptr_t)aPtr + aSize), kAllocPoison, aOldSize - aSize);
-    arena->RallocShrinkLarge(chunk, aPtr, psize, aOldSize);
+    aArena->RallocShrinkLarge(chunk, aPtr, psize, aOldSize);
     return true;
   }
 
-  bool ret = arena->RallocGrowLarge(chunk, aPtr, psize, aOldSize);
+  bool ret = aArena->RallocGrowLarge(chunk, aPtr, psize, aOldSize);
   if (ret && opt_zero) {
     memset((void*)((uintptr_t)aPtr + aOldSize), 0, aSize - aOldSize);
   }
@@ -3710,7 +3732,7 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
     }
   } else if (aOldSize > gMaxBinClass && aOldSize <= gMaxLargeClass) {
     MOZ_ASSERT(aSize > gMaxBinClass);
-    if (arena_ralloc_large(aPtr, aSize, aOldSize)) {
+    if (arena_ralloc_large(aPtr, aSize, aOldSize, aArena)) {
       return aPtr;
     }
   }
@@ -3718,7 +3740,6 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   // If we get here, then aSize and aOldSize are different enough that we
   // need to move the object.  In that case, fall back to allocating new
   // space and copying.
-  aArena = aArena ? aArena : choose_arena(aSize);
   ret = aArena->Malloc(aSize, false);
   if (!ret) {
     return nullptr;
@@ -3734,22 +3755,25 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   {
     memcpy(ret, aPtr, copysize);
   }
-  idalloc(aPtr);
+  idalloc(aPtr, aArena);
   return ret;
 }
 
 static inline void*
 iralloc(void* aPtr, size_t aSize, arena_t* aArena)
 {
-  size_t oldsize;
-
   MOZ_ASSERT(aPtr);
   MOZ_ASSERT(aSize != 0);
 
-  oldsize = isalloc(aPtr);
+  auto info = AllocInfo::Get(aPtr);
+  auto arena = info.Arena();
+  MOZ_RELEASE_ASSERT(!aArena || arena == aArena);
+  aArena = aArena ? aArena : arena;
+  size_t oldsize = info.Size();
+  MOZ_DIAGNOSTIC_ASSERT(aArena->mMagic == ARENA_MAGIC);
 
   return (aSize <= gMaxLargeClass) ? arena_ralloc(aPtr, aSize, oldsize, aArena)
-                                   : huge_ralloc(aPtr, aSize, oldsize);
+                                   : huge_ralloc(aPtr, aSize, oldsize, aArena);
 }
 
 arena_t::arena_t()
@@ -3826,13 +3850,13 @@ ArenaCollection::CreateArena(bool aIsPrivate)
 // Begin general internal functions.
 
 static void*
-huge_malloc(size_t size, bool zero)
+huge_malloc(size_t size, bool zero, arena_t* aArena)
 {
-  return huge_palloc(size, kChunkSize, zero);
+  return huge_palloc(size, kChunkSize, zero, aArena);
 }
 
 static void*
-huge_palloc(size_t aSize, size_t aAlignment, bool aZero)
+huge_palloc(size_t aSize, size_t aAlignment, bool aZero, arena_t* aArena)
 {
   void* ret;
   size_t csize;
@@ -3863,9 +3887,10 @@ huge_palloc(size_t aSize, size_t aAlignment, bool aZero)
   }
 
   // Insert node into huge.
-  node->addr = ret;
+  node->mAddr = ret;
   psize = PAGE_CEILING(aSize);
-  node->size = psize;
+  node->mSize = psize;
+  node->mArena = aArena ? aArena : choose_arena(aSize);
 
   {
     MutexAutoLock lock(huge_mtx);
@@ -3884,7 +3909,7 @@ huge_palloc(size_t aSize, size_t aAlignment, bool aZero)
     //
     // A correct program will only touch memory in excess of how much it
     // requested if it first calls malloc_usable_size and finds out how
-    // much space it has to play with.  But because we set node->size =
+    // much space it has to play with.  But because we set node->mSize =
     // psize above, malloc_usable_size will return psize, not csize, and
     // the program will (hopefully) never touch bytes in excess of psize.
     // Thus those bytes won't take up space in physical memory, and we can
@@ -3919,7 +3944,7 @@ huge_palloc(size_t aSize, size_t aAlignment, bool aZero)
 }
 
 static void*
-huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize)
+huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
 {
   void* ret;
   size_t copysize;
@@ -3939,13 +3964,14 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize)
 
       // Update recorded size.
       MutexAutoLock lock(huge_mtx);
-      key.addr = const_cast<void*>(aPtr);
+      key.mAddr = const_cast<void*>(aPtr);
       extent_node_t* node = huge.Search(&key);
       MOZ_ASSERT(node);
-      MOZ_ASSERT(node->size == aOldSize);
+      MOZ_ASSERT(node->mSize == aOldSize);
+      MOZ_RELEASE_ASSERT(!aArena || node->mArena == aArena);
       huge_allocated -= aOldSize - psize;
       // No need to change huge_mapped, because we didn't (un)map anything.
-      node->size = psize;
+      node->mSize = psize;
     } else if (psize > aOldSize) {
       if (!pages_commit((void*)((uintptr_t)aPtr + aOldSize),
                         psize - aOldSize)) {
@@ -3963,14 +3989,15 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize)
       // Update recorded size.
       extent_node_t key;
       MutexAutoLock lock(huge_mtx);
-      key.addr = const_cast<void*>(aPtr);
+      key.mAddr = const_cast<void*>(aPtr);
       extent_node_t* node = huge.Search(&key);
       MOZ_ASSERT(node);
-      MOZ_ASSERT(node->size == aOldSize);
+      MOZ_ASSERT(node->mSize == aOldSize);
+      MOZ_RELEASE_ASSERT(!aArena || node->mArena == aArena);
       huge_allocated += psize - aOldSize;
       // No need to change huge_mapped, because we didn't
       // (un)map anything.
-      node->size = psize;
+      node->mSize = psize;
     }
 
     if (opt_zero && aSize > aOldSize) {
@@ -3982,7 +4009,7 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize)
   // If we get here, then aSize and aOldSize are different enough that we
   // need to use a different size class.  In that case, fall back to
   // allocating new space and copying.
-  ret = huge_malloc(aSize, false);
+  ret = huge_malloc(aSize, false, aArena);
   if (!ret) {
     return nullptr;
   }
@@ -3996,12 +4023,12 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize)
   {
     memcpy(ret, aPtr, copysize);
   }
-  idalloc(aPtr);
+  idalloc(aPtr, aArena);
   return ret;
 }
 
 static void
-huge_dalloc(void* aPtr)
+huge_dalloc(void* aPtr, arena_t* aArena)
 {
   extent_node_t* node;
   {
@@ -4009,18 +4036,19 @@ huge_dalloc(void* aPtr)
     MutexAutoLock lock(huge_mtx);
 
     // Extract from tree of huge allocations.
-    key.addr = aPtr;
+    key.mAddr = aPtr;
     node = huge.Search(&key);
     MOZ_ASSERT(node);
-    MOZ_ASSERT(node->addr == aPtr);
+    MOZ_ASSERT(node->mAddr == aPtr);
+    MOZ_RELEASE_ASSERT(!aArena || node->mArena == aArena);
     huge.Remove(node);
 
-    huge_allocated -= node->size;
-    huge_mapped -= CHUNK_CEILING(node->size);
+    huge_allocated -= node->mSize;
+    huge_mapped -= CHUNK_CEILING(node->mSize);
   }
 
   // Unmap chunk.
-  chunk_dealloc(node->addr, CHUNK_CEILING(node->size), HUGE_CHUNK);
+  chunk_dealloc(node->mAddr, CHUNK_CEILING(node->mSize), HUGE_CHUNK);
 
   base_node_dealloc(node);
 }
@@ -4350,10 +4378,10 @@ BaseAllocator::free(void* aPtr)
   offset = GetChunkOffsetForPtr(aPtr);
   if (offset != 0) {
     MOZ_RELEASE_ASSERT(malloc_initialized);
-    arena_dalloc(aPtr, offset);
+    arena_dalloc(aPtr, offset, mArena);
   } else if (aPtr) {
     MOZ_RELEASE_ASSERT(malloc_initialized);
-    huge_dalloc(aPtr);
+    huge_dalloc(aPtr, mArena);
   }
 }
 
@@ -4446,7 +4474,7 @@ template<>
 inline size_t
 MozJemalloc::malloc_usable_size(usable_ptr_t aPtr)
 {
-  return isalloc_validate(aPtr);
+  return AllocInfo::GetValidated(aPtr).Size();
 }
 
 template<>
@@ -4684,9 +4712,8 @@ inline void
 MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
 {
   arena_t* arena = gArenas.GetById(aArenaId, /* IsPrivate = */ true);
-  if (arena) {
-    gArenas.DisposeArena(arena);
-  }
+  MOZ_RELEASE_ASSERT(arena);
+  gArenas.DisposeArena(arena);
 }
 
 #define MALLOC_DECL(name, return_type, ...)                                    \
@@ -5012,7 +5039,7 @@ MOZ_EXPORT void* (*__memalign_hook)(size_t, size_t) = memalign_impl;
 void*
 _recalloc(void* aPtr, size_t aCount, size_t aSize)
 {
-  size_t oldsize = aPtr ? isalloc(aPtr) : 0;
+  size_t oldsize = aPtr ? AllocInfo::Get(aPtr).Size() : 0;
   CheckedInt<size_t> checkedSize = CheckedInt<size_t>(aCount) * aSize;
 
   if (!checkedSize.isValid()) {
@@ -5039,7 +5066,7 @@ _recalloc(void* aPtr, size_t aCount, size_t aSize)
 void*
 _expand(void* aPtr, size_t newsize)
 {
-  if (isalloc(aPtr) >= newsize) {
+  if (AllocInfo::Get(aPtr).Size() >= newsize) {
     return aPtr;
   }
 

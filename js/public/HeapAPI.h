@@ -342,7 +342,6 @@ GetGCThingZone(const uintptr_t addr)
     MOZ_ASSERT(addr);
     const uintptr_t zone_addr = (addr & ~ArenaMask) | ArenaZoneOffset;
     return *reinterpret_cast<JS::Zone**>(zone_addr);
-
 }
 
 static MOZ_ALWAYS_INLINE bool

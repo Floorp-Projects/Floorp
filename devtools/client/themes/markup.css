@@ -387,6 +387,7 @@ ul.children + .tag-line::before {
    theme-selected doesn't work in this case since the text is a
    sibling of the class, not a child. */
 .theme-selected ~ .editor,
+.theme-selected ~ .editor.comment,
 .theme-selected ~ .editor .theme-fg-color1,
 .theme-selected ~ .editor .theme-fg-color2,
 .theme-selected ~ .editor .theme-fg-color3,

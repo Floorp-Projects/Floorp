@@ -29,7 +29,6 @@ interfaces = [
     'xul',
     'security',
     'storage',
-    'json',
     'offline',
     'geolocation',
     'notification',
@@ -65,7 +64,6 @@ DIRS += [
     'geolocation',
     'grid',
     'html',
-    'json',
     'jsurl',
     'asmjscache',
     'mathml',
@@ -110,6 +108,7 @@ DIRS += [
     'worklet',
     'script',
     'payments',
+    'websocket',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

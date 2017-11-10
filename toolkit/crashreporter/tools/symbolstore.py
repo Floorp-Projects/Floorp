@@ -480,12 +480,9 @@ class Dumper:
 
     def RunFileCommand(self, file):
         """Utility function, returns the output of file(1)"""
-        try:
-            # we use -L to read the targets of symlinks,
-            # and -b to print just the content, not the filename
-            return os.popen("file -Lb " + file).read()
-        except:
-            return ""
+        # we use -L to read the targets of symlinks,
+        # and -b to print just the content, not the filename
+        return read_output('file', '-Lb', file)
 
     # This is a no-op except on Win32
     def SourceServerIndexing(self, debug_file, guid, sourceFileStream, vcs_root):

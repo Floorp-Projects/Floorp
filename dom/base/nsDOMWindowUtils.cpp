@@ -208,7 +208,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDOMWindowUtils)
 NS_IMPL_RELEASE(nsDOMWindowUtils)
 
-nsDOMWindowUtils::nsDOMWindowUtils(nsGlobalWindow *aWindow)
+nsDOMWindowUtils::nsDOMWindowUtils(nsGlobalWindowOuter *aWindow)
 {
   nsCOMPtr<nsISupports> supports = do_QueryObject(aWindow);
   mWindow = do_GetWeakReference(supports);
@@ -2357,7 +2357,7 @@ nsDOMWindowUtils::IsInModalState(bool *retval)
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  *retval = nsGlobalWindow::Cast(window)->IsInModalState();
+  *retval = nsGlobalWindowOuter::Cast(window)->IsInModalState();
   return NS_OK;
 }
 
@@ -2389,8 +2389,8 @@ nsDOMWindowUtils::GetCurrentInnerWindowID(uint64_t *aWindowID)
   NS_ENSURE_TRUE(window, NS_ERROR_NOT_AVAILABLE);
 
   NS_ASSERTION(window->IsOuterWindow(), "How did that happen?");
-  nsGlobalWindow* inner =
-    nsGlobalWindow::Cast(window)->GetCurrentInnerWindowInternal();
+  nsGlobalWindowInner* inner =
+    nsGlobalWindowOuter::Cast(window)->GetCurrentInnerWindowInternal();
   if (!inner) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -3268,7 +3268,7 @@ nsDOMWindowUtils::EnableDialogs()
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsGlobalWindow::Cast(window)->EnableDialogs();
+  nsGlobalWindowOuter::Cast(window)->EnableDialogs();
   return NS_OK;
 }
 
@@ -3278,7 +3278,7 @@ nsDOMWindowUtils::DisableDialogs()
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsGlobalWindow::Cast(window)->DisableDialogs();
+  nsGlobalWindowOuter::Cast(window)->DisableDialogs();
   return NS_OK;
 }
 
@@ -3288,7 +3288,7 @@ nsDOMWindowUtils::AreDialogsEnabled(bool* aResult)
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  *aResult = nsGlobalWindow::Cast(window)->AreDialogsEnabled();
+  *aResult = nsGlobalWindowOuter::Cast(window)->AreDialogsEnabled();
   return NS_OK;
 }
 
@@ -3796,7 +3796,7 @@ nsDOMWindowUtils::AllowScriptsToClose()
 {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
-  nsGlobalWindow::Cast(window)->AllowScriptsToClose();
+  nsGlobalWindowOuter::Cast(window)->AllowScriptsToClose();
   return NS_OK;
 }
 

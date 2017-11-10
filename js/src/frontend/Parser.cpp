@@ -302,9 +302,8 @@ SharedContext::computeThisBinding(Scope* scope)
         if (si.kind() == ScopeKind::Function) {
             JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
 
-            // Arrow functions and generator expression lambdas don't have
-            // their own `this` binding.
-            if (fun->isArrow() || fun->nonLazyScript()->isGeneratorExp())
+            // Arrow functions don't have their own `this` binding.
+            if (fun->isArrow())
                 continue;
 
             // Derived class constructors (including nested arrow functions and
@@ -468,7 +467,6 @@ FunctionBox::FunctionBox(JSContext* cx, LifoAlloc& alloc, ObjectBox* traceListHe
     length(0),
     generatorKind_(GeneratorKindAsBit(generatorKind)),
     asyncKindBits_(AsyncKindAsBits(asyncKind)),
-    isGenexpLambda(false),
     hasDestructuringArgs(false),
     hasParameterExprs(false),
     hasDirectEvalInParameterExpr(false),
@@ -547,10 +545,7 @@ FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing, FunctionSynt
             }
         }
 
-        if (isGenexpLambda)
-            thisBinding_ = sc->thisBinding();
-        else
-            thisBinding_ = ThisBinding::Function;
+        thisBinding_ = ThisBinding::Function;
     }
 
     if (sc->inWith()) {
@@ -6852,58 +6847,68 @@ Parser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
 
             /*
              * Legal catch forms are:
-             *   catch (lhs)
-             *   catch (lhs if <boolean_expression>)
+             *   catch (lhs) {
+             *   catch (lhs if <boolean_expression>) {
+             *   catch {
              * where lhs is a name or a destructuring left-hand side.
-             * (the latter is legal only #ifdef JS_HAS_CATCH_GUARD)
+             * The second is legal only #ifdef JS_HAS_CATCH_GUARD.
              */
-            MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
-
-            if (!tokenStream.getToken(&tt))
+            bool omittedBinding;
+            if (!tokenStream.matchToken(&omittedBinding, TOK_LC))
                 return null();
-            Node catchName;
-            switch (tt) {
-              case TOK_LB:
-              case TOK_LC:
-                catchName = destructuringDeclaration(DeclarationKind::CatchParameter,
-                                                     yieldHandling, tt);
-                if (!catchName)
-                    return null();
-                break;
 
-              default: {
-                if (!TokenKindIsPossibleIdentifierName(tt)) {
-                    error(JSMSG_CATCH_IDENTIFIER);
+            Node catchName;
+            Node catchGuard = null();
+
+            if (omittedBinding) {
+                catchName = null();
+            } else {
+                MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
+
+                if (!tokenStream.getToken(&tt))
                     return null();
+                switch (tt) {
+                  case TOK_LB:
+                  case TOK_LC:
+                    catchName = destructuringDeclaration(DeclarationKind::CatchParameter,
+                                                         yieldHandling, tt);
+                    if (!catchName)
+                        return null();
+                    break;
+
+                  default: {
+                    if (!TokenKindIsPossibleIdentifierName(tt)) {
+                        error(JSMSG_CATCH_IDENTIFIER);
+                        return null();
+                    }
+
+                    catchName = bindingIdentifier(DeclarationKind::SimpleCatchParameter,
+                                                  yieldHandling);
+                    if (!catchName)
+                        return null();
+                    break;
+                  }
                 }
 
-                catchName = bindingIdentifier(DeclarationKind::SimpleCatchParameter,
-                                              yieldHandling);
-                if (!catchName)
-                    return null();
-                break;
-              }
-            }
-
-            Node catchGuard = null();
 #if JS_HAS_CATCH_GUARD
-            /*
-             * We use 'catch (x if x === 5)' (not 'catch (x : x === 5)')
-             * to avoid conflicting with the JS2/ECMAv4 type annotation
-             * catchguard syntax.
-             */
-            bool matched;
-            if (!tokenStream.matchToken(&matched, TOK_IF, TokenStream::Operand))
-                return null();
-            if (matched) {
-                catchGuard = expr(InAllowed, yieldHandling, TripledotProhibited);
-                if (!catchGuard)
+                /*
+                 * We use 'catch (x if x === 5)' (not 'catch (x : x === 5)')
+                 * to avoid conflicting with the JS2/ECMAv4 type annotation
+                 * catchguard syntax.
+                 */
+                bool matched;
+                if (!tokenStream.matchToken(&matched, TOK_IF, TokenStream::Operand))
                     return null();
-            }
+                if (matched) {
+                    catchGuard = expr(InAllowed, yieldHandling, TripledotProhibited);
+                    if (!catchGuard)
+                        return null();
+                }
 #endif
-            MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_CATCH);
+                MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_CATCH);
 
-            MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
+                MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
+            }
 
             Node catchBody = catchBlockStatement(yieldHandling, scope);
             if (!catchBody)
@@ -8361,307 +8366,6 @@ Parser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
 }
 
 
-/*** Comprehensions *******************************************************************************
- *
- * We currently support two flavors of comprehensions, all deprecated:
- *
- *     [for (V of OBJ) if (COND) EXPR]  // ES6-era array comprehension
- *     (for (V of OBJ) if (COND) EXPR)  // ES6-era generator expression
- *
- * (These flavors are called "ES6-era" because they were in ES6 draft
- * specifications for a while. Shortly after this syntax was implemented in SM,
- * TC39 decided to drop it.)
- */
-
-template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
-Parser<ParseHandler, CharT>::generatorComprehensionLambda(unsigned begin)
-{
-    Node genfn = handler.newFunctionExpression(pos());
-    if (!genfn)
-        return null();
-
-    ParseContext* outerpc = pc;
-
-    // If we are off thread, the generator meta-objects have
-    // already been created by js::StartOffThreadParseScript, so cx will not
-    // be necessary.
-    RootedObject proto(context);
-    JSContext* cx = context->helperThread() ? nullptr : context;
-    proto = GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, context->global());
-    if (!proto)
-        return null();
-
-    RootedFunction fun(context, newFunction(/* atom = */ nullptr, Expression,
-                                            GeneratorKind::Generator, SyncFunction, proto));
-    if (!fun)
-        return null();
-
-    // Create box for fun->object early to root it.
-    Directives directives(/* strict = */ outerpc->sc()->strict());
-    FunctionBox* genFunbox = newFunctionBox(genfn, fun, /* toStringStart = */ begin, directives,
-                                            GeneratorKind::Generator, SyncFunction);
-    if (!genFunbox)
-        return null();
-    genFunbox->isGenexpLambda = true;
-    genFunbox->initWithEnclosingParseContext(outerpc, Expression);
-    genFunbox->setStart(tokenStream, begin);
-
-    SourceParseContext genpc(this, genFunbox, /* newDirectives = */ nullptr);
-    if (!genpc.init())
-        return null();
-    genpc.functionScope().useAsVarScope(&genpc);
-
-    /*
-     * We assume conservatively that any deoptimization flags in pc->sc()
-     * come from the kid. So we propagate these flags into genfn. For code
-     * simplicity we also do not detect if the flags were only set in the
-     * kid and could be removed from pc->sc().
-     */
-    genFunbox->anyCxFlags = outerpc->sc()->anyCxFlags;
-
-    if (!declareDotGeneratorName())
-        return null();
-
-    Node body = handler.newStatementList(TokenPos(begin, pos().end));
-    if (!body)
-        return null();
-
-    Node comp = comprehension(GeneratorKind::Generator);
-    if (!comp)
-        return null();
-
-    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_IN_PAREN);
-
-    uint32_t end = pos().end;
-    handler.setBeginPosition(comp, begin);
-    handler.setEndPosition(comp, end);
-    genFunbox->setEnd(tokenStream);
-    handler.addStatementToList(body, comp);
-    handler.setEndPosition(body, end);
-    handler.setBeginPosition(genfn, begin);
-    handler.setEndPosition(genfn, end);
-
-    Node generator = newDotGeneratorName();
-    if (!generator)
-        return null();
-    if (!handler.prependInitialYield(body, generator))
-        return null();
-
-    if (!propagateFreeNamesAndMarkClosedOverBindings(pc->varScope()))
-        return null();
-    if (!finishFunction())
-        return null();
-    if (!leaveInnerFunction(outerpc))
-        return null();
-
-    // Note that if we ever start syntax-parsing generators, we will also
-    // need to propagate the closed-over variable set to the inner
-    // lazyscript.
-    if (!handler.setComprehensionLambdaBody(genfn, body))
-        return null();
-
-    return genfn;
-}
-
-template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
-Parser<ParseHandler, CharT>::comprehensionFor(GeneratorKind comprehensionKind)
-{
-    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
-
-    uint32_t begin = pos().begin;
-
-    MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
-
-    // FIXME: Destructuring binding (bug 980828).
-
-    MUST_MATCH_TOKEN_FUNC(TokenKindIsPossibleIdentifier, JSMSG_NO_VARIABLE_NAME);
-    RootedPropertyName name(context, bindingIdentifier(YieldIsKeyword));
-    if (!name)
-        return null();
-    if (name == context->names().let) {
-        error(JSMSG_LET_COMP_BINDING);
-        return null();
-    }
-    TokenPos namePos = pos();
-    Node lhs = newName(name);
-    if (!lhs)
-        return null();
-    bool matched;
-    if (!tokenStream.matchToken(&matched, TOK_OF))
-        return null();
-    if (!matched) {
-        error(JSMSG_OF_AFTER_FOR_NAME);
-        return null();
-    }
-
-    Node rhs = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
-    if (!rhs)
-        return null();
-
-    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_FOR_OF_ITERABLE);
-
-    TokenPos headPos(begin, pos().end);
-
-    ParseContext::Scope scope(this);
-    if (!scope.init(pc))
-        return null();
-
-    {
-        // Push a temporary ForLoopLexicalHead Statement that allows for
-        // lexical declarations, as they are usually allowed only in braced
-        // statements.
-        ParseContext::Statement forHeadStmt(pc, StatementKind::ForLoopLexicalHead);
-        if (!noteDeclaredName(name, DeclarationKind::Let, namePos))
-            return null();
-    }
-
-    Node decls = handler.newComprehensionBinding(lhs);
-    if (!decls)
-        return null();
-
-    Node tail = comprehensionTail(comprehensionKind);
-    if (!tail)
-        return null();
-
-    // Finish the lexical scope after parsing the tail.
-    Node lexicalScope = finishLexicalScope(scope, decls);
-    if (!lexicalScope)
-        return null();
-
-    Node head = handler.newForInOrOfHead(PNK_FOROF, lexicalScope, rhs, headPos);
-    if (!head)
-        return null();
-
-    return handler.newComprehensionFor(begin, head, tail);
-}
-
-template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
-Parser<ParseHandler, CharT>::comprehensionIf(GeneratorKind comprehensionKind)
-{
-    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_IF));
-
-    uint32_t begin = pos().begin;
-
-    MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_COND);
-    Node cond = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
-    if (!cond)
-        return null();
-    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_COND);
-
-    /* Check for (a = b) and warn about possible (a == b) mistype. */
-    if (handler.isUnparenthesizedAssignment(cond)) {
-        if (!extraWarning(JSMSG_EQUAL_AS_ASSIGN))
-            return null();
-    }
-
-    Node then = comprehensionTail(comprehensionKind);
-    if (!then)
-        return null();
-
-    return handler.newIfStatement(begin, cond, then, null());
-}
-
-template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
-Parser<ParseHandler, CharT>::comprehensionTail(GeneratorKind comprehensionKind)
-{
-    if (!CheckRecursionLimit(context))
-        return null();
-
-    bool matched;
-    if (!tokenStream.matchToken(&matched, TOK_FOR, TokenStream::Operand))
-        return null();
-    if (matched)
-        return comprehensionFor(comprehensionKind);
-
-    if (!tokenStream.matchToken(&matched, TOK_IF, TokenStream::Operand))
-        return null();
-    if (matched)
-        return comprehensionIf(comprehensionKind);
-
-    uint32_t begin = pos().begin;
-
-    Node bodyExpr = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
-    if (!bodyExpr)
-        return null();
-
-    if (comprehensionKind == GeneratorKind::NotGenerator)
-        return handler.newArrayPush(begin, bodyExpr);
-
-    MOZ_ASSERT(comprehensionKind == GeneratorKind::Generator);
-    Node yieldExpr = handler.newYieldExpression(begin, bodyExpr);
-    if (!yieldExpr)
-        return null();
-    yieldExpr = handler.parenthesize(yieldExpr);
-
-    return handler.newExprStatement(yieldExpr, pos().end);
-}
-
-// Parse an ES6-era generator or array comprehension, starting at the first
-// `for`. The caller is responsible for matching the ending TOK_RP or TOK_RB.
-template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
-Parser<ParseHandler, CharT>::comprehension(GeneratorKind comprehensionKind)
-{
-    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
-
-    uint32_t startYieldOffset = pc->lastYieldOffset;
-
-    Node body = comprehensionFor(comprehensionKind);
-    if (!body)
-        return null();
-
-    if (comprehensionKind == GeneratorKind::Generator && pc->lastYieldOffset != startYieldOffset) {
-        errorAt(pc->lastYieldOffset, JSMSG_BAD_GENEXP_BODY, js_yield_str);
-        return null();
-    }
-
-    return body;
-}
-
-template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
-Parser<ParseHandler, CharT>::arrayComprehension(uint32_t begin)
-{
-    Node inner = comprehension(GeneratorKind::NotGenerator);
-    if (!inner)
-        return null();
-
-    MUST_MATCH_TOKEN_MOD(TOK_RB, TokenStream::Operand, JSMSG_BRACKET_AFTER_ARRAY_COMPREHENSION);
-
-    Node comp = handler.newList(PNK_ARRAYCOMP, inner);
-    if (!comp)
-        return null();
-
-    handler.setBeginPosition(comp, begin);
-    handler.setEndPosition(comp, pos().end);
-
-    return comp;
-}
-
-template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
-Parser<ParseHandler, CharT>::generatorComprehension(uint32_t begin)
-{
-    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
-
-    // We have no problem parsing generator comprehensions inside lazy
-    // functions, but the bytecode emitter currently can't handle them that way,
-    // because when it goes to emit the code for the inner generator function,
-    // it expects outer functions to have non-lazy scripts.
-    if (!abortIfSyntaxParser())
-        return null();
-
-    Node genfn = generatorComprehensionLambda(begin);
-    if (!genfn)
-        return null();
-
-    return handler.newGeneratorComprehension(genfn, TokenPos(begin, pos().end));
-}
-
 template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 Parser<ParseHandler, CharT>::assignExprWithoutYieldOrAwait(YieldHandling yieldHandling)
@@ -9330,10 +9034,6 @@ Parser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling,
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
-
-    // Handle an ES6-era array comprehension first.
-    if (tt == TOK_FOR)
-        return arrayComprehension(begin);
 
     if (tt == TOK_RB) {
         /*
@@ -10028,12 +9728,6 @@ Parser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
             // It doesn't matter what; when we reach the =>, we will rewind and
             // reparse the whole arrow function. See Parser::assignExpr.
             return handler.newNullLiteral(pos());
-        }
-
-        if (next == TOK_FOR) {
-            uint32_t begin = pos().begin;
-            tokenStream.consumeKnownToken(next, TokenStream::Operand);
-            return generatorComprehension(begin);
         }
 
         // Pass |possibleError| to support destructuring in arrow parameters.

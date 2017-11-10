@@ -150,7 +150,10 @@ public:
         // family" names to add to the font list. This is used to avoid
         // a recursive search when using FindFamily to find a potential base
         // family name for a styled variant.
-        eNoSearchForLegacyFamilyNames = 1 << 1
+        eNoSearchForLegacyFamilyNames = 1 << 1,
+
+        // If set, FindAndAddFamilies will not add a missing entry to mOtherNamesMissed
+        eNoAddToNamesMissedWhenSearching = 1 << 2
     };
 
     // Find family(ies) matching aFamily and append to the aOutput array

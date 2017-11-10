@@ -304,10 +304,10 @@ void main(void) {
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(segment_rect,
                                                     prim.local_clip_rect,
+                                                    vec4(1.0),
                                                     prim.z,
                                                     prim.layer,
-                                                    prim.task,
-                                                    prim.local_rect);
+                                                    prim.task);
 #else
     VertexInfo vi = write_vertex(segment_rect,
                                  prim.local_clip_rect,

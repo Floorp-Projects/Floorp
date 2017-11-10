@@ -3093,7 +3093,7 @@ FireControllerChangeOnDocument(nsIDocument* aDocument)
     return;
   }
 
-  auto* window = nsGlobalWindow::Cast(w.get());
+  auto* window = nsGlobalWindowInner::Cast(w.get());
   dom::Navigator* navigator = window->Navigator();
   if (!navigator) {
     return;
@@ -3784,7 +3784,8 @@ ServiceWorkerManager::ShouldReportToWindow(mozIDOMWindowProxy* aWindow,
         continue;
       }
 
-      nsCOMPtr<nsPIDOMWindowInner> win = nsGlobalWindow::GetInnerWindowWithId(id)->AsInner();
+      nsCOMPtr<nsPIDOMWindowInner> win =
+        nsGlobalWindowInner::GetInnerWindowWithId(id)->AsInner();
       if (!win) {
         continue;
       }

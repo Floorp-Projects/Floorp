@@ -3129,6 +3129,12 @@ public:
   IsWebComponentsEnabled() { return sIsWebComponentsEnabled; }
 
   /**
+   * Returns true if reserved key events should be prevented from being sent
+   * to their target. Instead, the key event should be handled by chrome only.
+   */
+  static bool ShouldBlockReservedKeys(mozilla::WidgetKeyboardEvent* aKeyEvent);
+
+  /**
    * Walks up the tree from aElement until it finds an element that is
    * not native anonymous content.  aElement must be NAC itself.
    */
@@ -3411,6 +3417,7 @@ private:
   static int32_t sBytecodeCacheStrategy;
   static uint32_t sCookiesLifetimePolicy;
   static uint32_t sCookiesBehavior;
+  static bool sShortcutsCustomized;
 
   static int32_t sPrivacyMaxInnerWidth;
   static int32_t sPrivacyMaxInnerHeight;

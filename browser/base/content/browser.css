@@ -781,10 +781,6 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
   margin-inline-end: 0.25em !important;
 }
 
-#main-window[customizing] :-moz-any(#urlbar, .searchbar-textbox) > .urlbar-textbox-container > .textbox-input-box {
-  visibility: hidden;
-}
-
 /* Flexible spacer sizing (matching url bar) */
 toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
 toolbarspring {
@@ -1418,6 +1414,17 @@ toolbarpaletteitem[place="palette"][hidden] {
   .urlbar-page-action {
     list-style-image: var(--pageAction-image-32px, inherit);
   }
+}
+
+/* Page action context menu */
+#pageActionContextMenu > .pageActionContextMenuItem {
+  visibility: collapse;
+}
+#pageActionContextMenu[state=builtInPinned] > .pageActionContextMenuItem.builtInPinned,
+#pageActionContextMenu[state=builtInUnpinned] > .pageActionContextMenuItem.builtInUnpinned,
+#pageActionContextMenu[state=extensionPinned] > .pageActionContextMenuItem.extensionPinned,
+#pageActionContextMenu[state=extensionUnpinned] > .pageActionContextMenuItem.extensionUnpinned {
+  visibility: visible;
 }
 
 /* WebExtension Sidebars */

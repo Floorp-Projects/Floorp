@@ -27,7 +27,7 @@ def gecko_profiler(target):
     if target.os == 'Android':
         return target.cpu in ('aarch64', 'arm', 'x86')
     elif target.kernel == 'Linux':
-        return target.cpu in ('x86', 'x86_64')
+        return target.cpu in ('x86', 'x86_64', 'mips64')
     return target.os in ('OSX', 'WINNT')
 
 @depends(gecko_profiler)
@@ -1156,7 +1156,7 @@ def webrtc_default(target):
             os_match = True
 
     cpu_match = False
-    if (target.cpu in ('x86_64', 'arm', 'aarch64', 'x86', 'ia64') or
+    if (target.cpu in ('x86_64', 'arm', 'aarch64', 'x86', 'ia64', 'mips32', 'mips64') or
         target.cpu.startswith('ppc')):
         cpu_match = True
 

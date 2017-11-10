@@ -49,7 +49,6 @@ class Version(LooseVersion):
             itertools.takewhile(lambda x:isinstance(x, int), self.version),
             (0, 0, 0)))[:3]
 
-
     def __cmp__(self, other):
         # LooseVersion checks isinstance(StringType), so work around it.
         if isinstance(other, unicode):
@@ -150,7 +149,7 @@ class ConfigureOutputHandler(logging.Handler):
                 msg = '%s\n' % self.format(record)
             stream.write(msg)
             stream.flush()
-        except (KeyboardInterrupt, SystemExit):
+        except (KeyboardInterrupt, SystemExit, IOError):
             raise
         except:
             self.handleError(record)

@@ -68,11 +68,6 @@ a .mainBox:focus,
   visibility: visible;
 }
 
-.minimal > .hoverBox,
-.minimal > .closeIcon {
-  visibility: hidden;
-}
-
 .mainBox[chromedir="rtl"] {
   direction: rtl;
 }
@@ -97,7 +92,6 @@ a .hoverBox,
 
 a .msgClickToPlay,
 :-moz-handler-clicktoplay .msgClickToPlay,
-:-moz-handler-clicktoplay .msgActivationWarning,
 :-moz-handler-vulnerable-updatable .msgVulnerabilityStatus,
 :-moz-handler-vulnerable-updatable .msgCheckForUpdates,
 :-moz-handler-vulnerable-updatable .msgClickToPlay,

@@ -75,7 +75,6 @@
 #include "nsJSProtocolHandler.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIControllerContext.h"
-#include "nsJSON.h"
 #include "nsZipArchive.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/DOMException.h"
@@ -627,7 +626,6 @@ NS_DEFINE_NAMED_CID(NS_XMLHTTPREQUEST_CID);
 NS_DEFINE_NAMED_CID(NS_DOMPARSER_CID);
 NS_DEFINE_NAMED_CID(NS_DOMSESSIONSTORAGEMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DOMLOCALSTORAGEMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_DOMJSON_CID);
 NS_DEFINE_NAMED_CID(NS_TEXTEDITOR_CID);
 NS_DEFINE_NAMED_CID(DOMREQUEST_SERVICE_CID);
 NS_DEFINE_NAMED_CID(QUOTAMANAGER_SERVICE_CID);
@@ -886,7 +884,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_XPCEXCEPTION_CID, false, nullptr, ExceptionConstructor },
   { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, SessionStorageManagerConstructor },
   { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, nullptr, LocalStorageManagerConstructor },
-  { &kNS_DOMJSON_CID, false, nullptr, NS_NewJSON },
   { &kNS_TEXTEDITOR_CID, false, nullptr, TextEditorConstructor },
   { &kDOMREQUEST_SERVICE_CID, false, nullptr, DOMRequestServiceConstructor },
   { &kQUOTAMANAGER_SERVICE_CID, false, nullptr, QuotaManagerServiceConstructor },
@@ -1013,7 +1010,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   // Keeping the old ContractID for backward compatibility
   { "@mozilla.org/dom/storagemanager;1", &kNS_DOMLOCALSTORAGEMANAGER_CID },
   { "@mozilla.org/dom/sessionStorage-manager;1", &kNS_DOMSESSIONSTORAGEMANAGER_CID },
-  { "@mozilla.org/dom/json;1", &kNS_DOMJSON_CID },
   { "@mozilla.org/editor/texteditor;1", &kNS_TEXTEDITOR_CID },
   { DOMREQUEST_SERVICE_CONTRACTID, &kDOMREQUEST_SERVICE_CID },
   { QUOTAMANAGER_SERVICE_CONTRACTID, &kQUOTAMANAGER_SERVICE_CID },

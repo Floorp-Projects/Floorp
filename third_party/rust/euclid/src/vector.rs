@@ -14,7 +14,7 @@ use point::{TypedPoint2D, TypedPoint3D, point2, point3};
 use size::{TypedSize2D, size2};
 use scale_factor::ScaleFactor;
 use num::*;
-use num_traits::{Float, NumCast};
+use num_traits::{Float, NumCast, Signed};
 use std::fmt;
 use std::ops::{Add, Neg, Mul, Sub, Div, AddAssign, SubAssign, MulAssign, DivAssign};
 use std::marker::PhantomData;
@@ -58,13 +58,15 @@ impl<T: fmt::Display, U> fmt::Display for TypedVector2D<T, U> {
     }
 }
 
-impl<T: Copy, U> TypedVector2D<T, U> {
+impl<T, U> TypedVector2D<T, U> {
     /// Constructor taking scalar values directly.
     #[inline]
     pub fn new(x: T, y: T) -> Self {
         TypedVector2D { x: x, y: y, _unit: PhantomData }
     }
+}
 
+impl<T: Copy, U> TypedVector2D<T, U> {
     /// Constructor taking properly typed Lengths instead of scalar values.
     #[inline]
     pub fn from_lengths(x: Length<T, U>, y: Length<T, U>) -> Self {
@@ -272,7 +274,7 @@ impl<T: Round, U> TypedVector2D<T, U> {
     /// This behavior is preserved for negative values (unlike the basic cast).
     /// For example `{ -0.1, -0.8 }.round() == { 0.0, -1.0 }`.
     #[inline]
-    #[must_use]
+    #[cfg_attr(feature = "unstable", must_use)]
     pub fn round(&self) -> Self {
         vec2(self.x.round(), self.y.round())
     }
@@ -284,7 +286,7 @@ impl<T: Ceil, U> TypedVector2D<T, U> {
     /// This behavior is preserved for negative values (unlike the basic cast).
     /// For example `{ -0.1, -0.8 }.ceil() == { 0.0, 0.0 }`.
     #[inline]
-    #[must_use]
+    #[cfg_attr(feature = "unstable", must_use)]
     pub fn ceil(&self) -> Self {
         vec2(self.x.ceil(), self.y.ceil())
     }
@@ -296,7 +298,7 @@ impl<T: Floor, U> TypedVector2D<T, U> {
     /// This behavior is preserved for negative values (unlike the basic cast).
     /// For example `{ -0.1, -0.8 }.floor() == { -1.0, -1.0 }`.
     #[inline]
-    #[must_use]
+    #[cfg_attr(feature = "unstable", must_use)]
     pub fn floor(&self) -> Self {
         vec2(self.x.floor(), self.y.floor())
     }
@@ -384,6 +386,13 @@ impl<T: Copy, U> From<[T; 2]> for TypedVector2D<T, U> {
     }
 }
 
+impl<T, U> TypedVector2D<T, U>
+where T: Signed {
+    pub fn abs(&self) -> Self {
+        vec2(self.x.abs(), self.y.abs())
+    }
+}
+
 define_matrix! {
     /// A 3d Vector tagged with a unit.
     pub struct TypedVector3D<T, U> {
@@ -423,13 +432,15 @@ impl<T: fmt::Display, U> fmt::Display for TypedVector3D<T, U> {
     }
 }
 
-impl<T: Copy, U> TypedVector3D<T, U> {
+impl<T, U> TypedVector3D<T, U> {
     /// Constructor taking scalar values directly.
     #[inline]
     pub fn new(x: T, y: T, z: T) -> Self {
         TypedVector3D { x: x, y: y, z: z, _unit: PhantomData }
     }
+}
 
+impl<T: Copy, U> TypedVector3D<T, U> {
     /// Constructor taking properly typed Lengths instead of scalar values.
     #[inline]
     pub fn from_lengths(x: Length<T, U>, y: Length<T, U>, z: Length<T, U>) -> TypedVector3D<T, U> {
@@ -637,7 +648,7 @@ impl<T: Round, U> TypedVector3D<T, U> {
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
     #[inline]
-    #[must_use]
+    #[cfg_attr(feature = "unstable", must_use)]
     pub fn round(&self) -> Self {
         vec3(self.x.round(), self.y.round(), self.z.round())
     }
@@ -648,7 +659,7 @@ impl<T: Ceil, U> TypedVector3D<T, U> {
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
     #[inline]
-    #[must_use]
+    #[cfg_attr(feature = "unstable", must_use)]
     pub fn ceil(&self) -> Self {
         vec3(self.x.ceil(), self.y.ceil(), self.z.ceil())
     }
@@ -659,7 +670,7 @@ impl<T: Floor, U> TypedVector3D<T, U> {
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
     #[inline]
-    #[must_use]
+    #[cfg_attr(feature = "unstable", must_use)]
     pub fn floor(&self) -> Self {
         vec3(self.x.floor(), self.y.floor(), self.z.floor())
     }
@@ -753,16 +764,22 @@ impl<T: Copy, U> From<[T; 3]> for TypedVector3D<T, U> {
     }
 }
 
+impl<T, U> TypedVector3D<T, U>
+where T: Signed {
+    pub fn abs(&self) -> Self {
+        vec3(self.x.abs(), self.y.abs(), self.z.abs())
+    }
+}
 
 /// Convenience constructor.
 #[inline]
-pub fn vec2<T: Copy, U>(x: T, y: T) -> TypedVector2D<T, U> {
+pub fn vec2<T, U>(x: T, y: T) -> TypedVector2D<T, U> {
     TypedVector2D::new(x, y)
 }
 
 /// Convenience constructor.
 #[inline]
-pub fn vec3<T: Copy, U>(x: T, y: T, z: T) -> TypedVector3D<T, U> {
+pub fn vec3<T, U>(x: T, y: T, z: T) -> TypedVector3D<T, U> {
     TypedVector3D::new(x, y, z)
 }
 

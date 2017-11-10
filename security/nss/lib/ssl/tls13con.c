@@ -4612,13 +4612,13 @@ tls13_NegotiateVersion(sslSocket *ss, const TLSExtension *supported_versions)
 }
 
 SECStatus
-SSLExp_UseAltHandshakeType(PRFileDesc *fd, PRBool enable)
+SSLExp_UseAltServerHelloType(PRFileDesc *fd, PRBool enable)
 {
     sslSocket *ss;
 
     ss = ssl_FindSocket(fd);
     if (!ss || IS_DTLS(ss)) {
-        SSL_DBG(("%d: SSL[%d]: bad socket in SSLExp_UseAltHandshakeType",
+        SSL_DBG(("%d: SSL[%d]: bad socket in SSLExp_UseAltServerHelloType",
                  SSL_GETPID(), fd));
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;

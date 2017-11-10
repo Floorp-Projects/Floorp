@@ -16,7 +16,6 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLHtmlElement.idl',
     'nsIDOMHTMLInputElement.idl',
     'nsIDOMHTMLMediaElement.idl',
-    'nsIDOMHTMLOptionElement.idl',
     'nsIDOMHTMLScriptElement.idl',
     'nsIDOMMozBrowserFrame.idl',
     'nsIDOMTimeRanges.idl',

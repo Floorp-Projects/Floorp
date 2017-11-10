@@ -515,7 +515,7 @@ Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
     nsIScriptContext* scriptContext = nullptr;
     nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetEntryGlobal());
     if (win) {
-      scriptContext = nsGlobalWindow::Cast(win)->GetContextInternal();
+      scriptContext = nsGlobalWindowInner::Cast(win)->GetContextInternal();
     }
 
     if (scriptContext) {
@@ -530,8 +530,7 @@ Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
     }
 
     return SetURI(newUri, aReplace || inScriptTag);
-  }
-
+  } 
   return result;
 }
 

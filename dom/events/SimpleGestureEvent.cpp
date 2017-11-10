@@ -107,7 +107,7 @@ void
 SimpleGestureEvent::InitSimpleGestureEvent(const nsAString& aTypeArg,
                                            bool aCanBubbleArg,
                                            bool aCancelableArg,
-                                           nsGlobalWindow* aViewArg,
+                                           nsGlobalWindowInner* aViewArg,
                                            int32_t aDetailArg,
                                            int32_t aScreenX,
                                            int32_t aScreenY,

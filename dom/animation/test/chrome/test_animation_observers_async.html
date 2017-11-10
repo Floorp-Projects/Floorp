@@ -1140,14 +1140,15 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   var divAnimations = div.getAnimations();
   var childAAnimations = childA.getAnimations();
   var childBAnimations = childB.getAnimations();
+
   var divBeforeAnimations =
-    [ for (x of docAnims) if (x.effect.target.parentElement == div &&
-                              x.effect.target.type == "::before") x ];
+    docAnims.filter(x => (x.effect.target.parentElement == div &&
+                          x.effect.target.type == "::before"));
   var divAfterAnimations =
-    [ for (x of docAnims) if (x.effect.target.parentElement == div &&
-                              x.effect.target.type == "::after") x ];
+    docAnims.filter(x => (x.effect.target.parentElement == div &&
+                          x.effect.target.type == "::after"));
   var childBPseudoAnimations =
-    [ for (x of docAnims) if (x.effect.target.parentElement == childB) x ];
+    docAnims.filter(x => x.effect.target.parentElement == childB);
 
   // The order in which we get the corresponding records is currently
   // based on the order we visit these nodes when updating styles.
