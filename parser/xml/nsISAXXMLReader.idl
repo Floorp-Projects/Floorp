@@ -44,17 +44,6 @@ interface nsISAXXMLReader : nsIStreamListener {
   attribute nsISAXContentHandler contentHandler;
 
   /**
-   * If the application does not register a DTD handler, all DTD
-   * events reported by the SAX parser will be silently ignored.
-   *
-   * Applications may register a new or different handler in the
-   * middle of a parse, and the SAX parser must begin using the new
-   * handler immediately.
-   */
-  attribute nsISAXDTDHandler dtdHandler;
-
-
-  /**
    * If the application does not register an error handler, all
    * error events reported by the SAX parser will be silently ignored;
    * however, normal processing may not continue.  It is highly
@@ -66,25 +55,6 @@ interface nsISAXXMLReader : nsIStreamListener {
    * handler immediately.
    */
   attribute nsISAXErrorHandler errorHandler;
-
-  /**
-   * A handler for the (optional) XML declaration of a document.
-   * <?xml version='1.0'?>
-   *
-   * @note This is not part of the SAX standard.
-   */
-  attribute nsIMozSAXXMLDeclarationHandler declarationHandler;
-
-  /**
-   * If the application does not register a lexical handler, all
-   * lexical events (e.g. startDTD) reported by the SAX parser will be
-   * silently ignored.
-   *
-   * Applications may register a new or different handler in the
-   * middle of a parse, and the SAX parser must begin using the new
-   * handler immediately.
-   */
-  attribute nsISAXLexicalHandler lexicalHandler;
 
   /**
    * Set the value of a feature flag.

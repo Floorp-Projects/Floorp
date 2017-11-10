@@ -28,10 +28,7 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
 NS_IMPL_CYCLE_COLLECTION(nsSAXXMLReader,
                          mContentHandler,
-                         mDTDHandler,
                          mErrorHandler,
-                         mLexicalHandler,
-                         mDeclarationHandler,
                          mBaseURI,
                          mListener,
                          mParserObserver)
@@ -124,9 +121,6 @@ NS_IMETHODIMP
 nsSAXXMLReader::HandleComment(const char16_t *aName)
 {
   NS_ASSERTION(aName, "null passed to handler");
-  if (mLexicalHandler)
-    return mLexicalHandler->Comment(nsDependentString(aName));
- 
   return NS_OK;
 }
 
@@ -134,22 +128,10 @@ NS_IMETHODIMP
 nsSAXXMLReader::HandleCDataSection(const char16_t *aData,
                                    uint32_t aLength)
 {
-  nsresult rv;
-  if (mLexicalHandler) {
-    rv = mLexicalHandler->StartCDATA();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   if (mContentHandler) {
-    rv = mContentHandler->Characters(Substring(aData, aData+aLength));
+    nsresult rv = mContentHandler->Characters(Substring(aData, aData+aLength));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  if (mLexicalHandler) {
-    rv = mLexicalHandler->EndCDATA();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   return NS_OK;
 }
 
@@ -168,11 +150,6 @@ nsSAXXMLReader::HandleStartDTD(const char16_t *aName,
 
   mSystemId = aSystemId;
   mPublicId = aPublicId;
-  if (mLexicalHandler) {
-    return mLexicalHandler->StartDTD(nsDependentString(aName),
-                                     nsDependentString(aPublicId),
-                                     nsDependentString(aSystemId));
-  }
 
   return NS_OK;
 }
@@ -184,9 +161,6 @@ nsSAXXMLReader::HandleDoctypeDecl(const nsAString & aSubset,
                                   const nsAString & aPublicId,
                                   nsISupports* aCatalogData)
 {
-  if (mLexicalHandler)
-    return mLexicalHandler->EndDTD();
-
   return NS_OK;
 }
 
@@ -248,18 +222,6 @@ nsSAXXMLReader::HandleNotationDecl(const char16_t *aNotationName,
                                    const char16_t *aPublicId)
 {
   NS_ASSERTION(aNotationName, "null passed to handler");
-  if (mDTDHandler) {
-    char16_t nullChar = char16_t(0);
-    if (!aSystemId)
-      aSystemId = &nullChar;
-    if (!aPublicId)
-      aPublicId = &nullChar;
-
-    return mDTDHandler->NotationDecl(nsDependentString(aNotationName),
-                                     nsDependentString(aSystemId),
-                                     nsDependentString(aPublicId));
-  }
-
   return NS_OK;
 }
 
@@ -270,19 +232,6 @@ nsSAXXMLReader::HandleUnparsedEntityDecl(const char16_t *aEntityName,
                                          const char16_t *aNotationName)
 {
   NS_ASSERTION(aEntityName && aNotationName, "null passed to handler");
-  if (mDTDHandler) {
-    char16_t nullChar = char16_t(0);
-    if (!aSystemId)
-      aSystemId = &nullChar;
-    if (!aPublicId)
-      aPublicId = &nullChar;
-
-    return mDTDHandler->UnparsedEntityDecl(nsDependentString(aEntityName),
-                                           nsDependentString(aSystemId),
-                                           nsDependentString(aPublicId),
-                                           nsDependentString(aNotationName));
-  }
-
   return NS_OK;
 }
 
@@ -292,14 +241,6 @@ nsSAXXMLReader::HandleXMLDeclaration(const char16_t *aVersion,
                                      int32_t aStandalone)
 {
   NS_ASSERTION(aVersion, "null passed to handler");
-  if (mDeclarationHandler) {
-    char16_t nullChar = char16_t(0);
-    if (!aEncoding)
-      aEncoding = &nullChar;
-    mDeclarationHandler->HandleXMLDeclaration(nsDependentString(aVersion),
-                                              nsDependentString(aEncoding),
-                                              aStandalone > 0);
-  }
   return NS_OK;
 }
 
@@ -370,20 +311,6 @@ nsSAXXMLReader::SetContentHandler(nsISAXContentHandler *aContentHandler)
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::GetDtdHandler(nsISAXDTDHandler **aDtdHandler)
-{
-  NS_IF_ADDREF(*aDtdHandler = mDTDHandler);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::SetDtdHandler(nsISAXDTDHandler *aDtdHandler)
-{
-  mDTDHandler = aDtdHandler;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSAXXMLReader::GetErrorHandler(nsISAXErrorHandler **aErrorHandler)
 {
   NS_IF_ADDREF(*aErrorHandler = mErrorHandler);
@@ -415,32 +342,6 @@ nsSAXXMLReader::GetFeature(const nsAString &aName, bool *aResult)
     return NS_OK;
   }
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::GetDeclarationHandler(nsIMozSAXXMLDeclarationHandler **aDeclarationHandler) {
-  NS_IF_ADDREF(*aDeclarationHandler = mDeclarationHandler);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::SetDeclarationHandler(nsIMozSAXXMLDeclarationHandler *aDeclarationHandler) {
-  mDeclarationHandler = aDeclarationHandler;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::GetLexicalHandler(nsISAXLexicalHandler **aLexicalHandler)
-{
-  NS_IF_ADDREF(*aLexicalHandler = mLexicalHandler);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::SetLexicalHandler(nsISAXLexicalHandler *aLexicalHandler)
-{
-  mLexicalHandler = aLexicalHandler;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
