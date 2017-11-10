@@ -781,10 +781,6 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
   margin-inline-end: 0.25em !important;
 }
 
-#main-window[customizing] :-moz-any(#urlbar, .searchbar-textbox) > .urlbar-textbox-container > .textbox-input-box {
-  visibility: hidden;
-}
-
 /* Flexible spacer sizing (matching url bar) */
 toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
 toolbarspring {

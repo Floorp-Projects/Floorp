@@ -161,12 +161,12 @@ class LoggingManager(object):
         # complaining about "no handlers could be found for logger XXX."
         self.root_logger.addHandler(logging.NullHandler())
 
-        self.mach_logger = logging.getLogger('mach')
-        self.mach_logger.setLevel(logging.DEBUG)
+        mach_logger = logging.getLogger('mach')
+        mach_logger.setLevel(logging.DEBUG)
 
         self.structured_filter = ConvertToStructuredFilter()
 
-        self.structured_loggers = [self.mach_logger]
+        self.structured_loggers = [mach_logger]
 
         self._terminal = None
 
@@ -256,10 +256,43 @@ class LoggingManager(object):
             self.terminal_handler.removeFilter(self.structured_filter)
             self.root_logger.removeHandler(self.terminal_handler)
 
-    def register_structured_logger(self, logger):
+    def register_structured_logger(self, logger, terminal=True, json=True):
         """Register a structured logger.
 
         This needs to be called for all structured loggers that don't chain up
         to the mach logger in order for their output to be captured.
         """
         self.structured_loggers.append(logger)
+
+        if terminal and self.terminal_handler:
+            logger.addHandler(self.terminal_handler)
+
+        if json:
+            for handler in self.json_handlers:
+                logger.addHandler(handler)
+
+    def enable_all_structured_loggers(self, terminal=True, json=True):
+        """Enable logging of all structured messages from all loggers.
+
+        ``terminal`` and ``json`` determine which log handlers to operate
+        on. By default, all known handlers are operated on.
+        """
+        # Remove current handlers from all loggers so we don't double
+        # register handlers.
+        for logger in self.root_logger.manager.loggerDict.values():
+            # Some entries might be logging.PlaceHolder.
+            if not isinstance(logger, logging.Logger):
+                continue
+
+            if terminal:
+                logger.removeHandler(self.terminal_handler)
+
+            if json:
+                for handler in self.json_handlers:
+                    logger.removeHandler(handler)
+
+        # Wipe out existing registered structured loggers since they
+        # all propagate to root logger.
+        self.structured_loggers = []
+        self.register_structured_logger(self.root_logger, terminal=terminal,
+                                        json=json)

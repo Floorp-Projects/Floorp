@@ -361,19 +361,6 @@ public:
                                  uint32_t aOptionsMask);
 
   /**
-   * Finds the index of a given option element
-   *
-   * @param aOption the option to get the index of
-   * @param aStartIndex the index to start looking at
-   * @param aForward TRUE to look forward, FALSE to look backward
-   * @return the option index
-   */
-  NS_IMETHOD GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
-                            int32_t aStartIndex,
-                            bool aForward,
-                            int32_t* aIndex);
-
-  /**
    * Called when an attribute is about to be changed
    */
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
