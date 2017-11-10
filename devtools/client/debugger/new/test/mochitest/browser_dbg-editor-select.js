@@ -4,13 +4,6 @@
 // Tests that the editor highlights the correct location when the
 // debugger pauses
 
-// checks to see if the first breakpoint is visible
-function isElementVisible(dbg, elementName) {
-  const bpLine = findElement(dbg, elementName);
-  const cm = findElement(dbg, "codeMirror");
-  return bpLine && isVisibleWithin(cm, bpLine);
-}
-
 add_task(async function() {
   // This test runs too slowly on linux debug. I'd like to figure out
   // which is the slowest part of this and make it run faster, but to
@@ -54,5 +47,5 @@ add_task(async function() {
   await waitForLoadedSource(dbg, "long.js");
 
   assertPausedLocation(dbg);
-  ok(isElementVisible(dbg, "breakpoint"), "Breakpoint is visible");
+  ok(isVisibleInEditor(dbg, findElement(dbg, "breakpoint")), "Breakpoint is visible");
 });
