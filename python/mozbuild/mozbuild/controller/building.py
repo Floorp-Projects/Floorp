@@ -1339,6 +1339,7 @@ class BuildDriver(MozbuildObject):
             if mozconfig['path']:
                 fh.write(b'FOUND_MOZCONFIG=%s\n' %
                          mozpath.normsep(mozconfig['path']))
+                fh.write(b'export FOUND_MOZCONFIG\n')
 
         append_env['OBJDIR'] = mozpath.normsep(self.topobjdir)
 
