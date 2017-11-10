@@ -18,7 +18,6 @@ XPIDL_SOURCES += [
     'nsISAXLexicalHandler.idl',
     'nsISAXLocator.idl',
     'nsISAXMutableAttributes.idl',
-    'nsISAXXMLFilter.idl',
     'nsISAXXMLReader.idl',
 ]
 
