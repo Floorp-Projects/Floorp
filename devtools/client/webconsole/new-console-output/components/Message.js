@@ -7,19 +7,23 @@
 "use strict";
 
 // React & Redux
-const {
-  Component,
-  createFactory,
-  DOM: dom,
-  PropTypes
-} = require("devtools/client/shared/vendor/react");
-const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
-const actions = require("devtools/client/webconsole/new-console-output/actions/index");
-const {MESSAGE_SOURCE} = require("devtools/client/webconsole/new-console-output/constants");
-const CollapseButton = require("devtools/client/webconsole/new-console-output/components/CollapseButton");
-const MessageIndent = require("devtools/client/webconsole/new-console-output/components/MessageIndent").MessageIndent;
-const MessageIcon = require("devtools/client/webconsole/new-console-output/components/MessageIcon");
-const MessageRepeat = require("devtools/client/webconsole/new-console-output/components/MessageRepeat");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { l10n } =
+  require("devtools/client/webconsole/new-console-output/utils/messages");
+const actions =
+  require("devtools/client/webconsole/new-console-output/actions/index");
+const { MESSAGE_SOURCE } =
+  require("devtools/client/webconsole/new-console-output/constants");
+const CollapseButton =
+  require("devtools/client/webconsole/new-console-output/components/CollapseButton");
+const { MessageIndent } =
+  require("devtools/client/webconsole/new-console-output/components/MessageIndent");
+const MessageIcon =
+  require("devtools/client/webconsole/new-console-output/components/MessageIcon");
+const MessageRepeat =
+  require("devtools/client/webconsole/new-console-output/components/MessageRepeat");
 const FrameView = createFactory(require("devtools/client/shared/components/Frame"));
 const StackTrace = createFactory(require("devtools/client/shared/components/StackTrace"));
 

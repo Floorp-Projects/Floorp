@@ -6,10 +6,7 @@
 
 "use strict";
 
-// React & Redux
-const {
-  DOM: dom,
-} = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const messageToggleDetails = l10n.getStr("messageToggleDetails");

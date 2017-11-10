@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory, DOM, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const NetInfoParams = createFactory(require("./net-info-params"));
 
 /**
@@ -25,8 +26,8 @@ class ParamsTab extends Component {
     let data = this.props.data;
 
     return (
-      DOM.div({className: "paramsTabBox"},
-        DOM.div({className: "panelContent"},
+      dom.div({className: "paramsTabBox"},
+        dom.div({className: "panelContent"},
           NetInfoParams({params: data.request.queryString})
         )
       )

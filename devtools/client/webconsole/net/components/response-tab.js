@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory, DOM, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Reps
 const TreeView = createFactory(require("devtools/client/shared/components/tree/TreeView"));
@@ -50,6 +51,16 @@ class ResponseTab extends Component {
     this.renderXml = this.renderXml.bind(this);
     this.renderFormattedResponse = this.renderFormattedResponse.bind(this);
     this.renderRawResponse = this.renderRawResponse.bind(this);
+  }
+
+  componentDidMount() {
+    let { actions, data: file } = this.props;
+    let content = file.response.content;
+
+    if (!content || typeof (content.text) == "undefined") {
+      // TODO: use async action objects as soon as Redux is in place
+      actions.requestData("responseContent");
+    }
   }
 
   // Response Types
@@ -133,7 +144,7 @@ class ResponseTab extends Component {
     let dataUri = "data:" + content.mimeType + ";base64," + content.text;
     return {
       key: "image",
-      content: DOM.img({src: dataUri}),
+      content: dom.img({src: dataUri}),
       name: Locale.$STR("netRequest.image")
     };
   }
@@ -177,6 +188,8 @@ class ResponseTab extends Component {
     if (group) {
       return group;
     }
+
+    return null;
   }
 
   renderRawResponse(file) {
@@ -189,7 +202,7 @@ class ResponseTab extends Component {
       group = {
         key: "raw-longstring",
         name: Locale.$STR("netRequest.rawData"),
-        content: DOM.div({className: "netInfoResponseContent"},
+        content: dom.div({className: "netInfoResponseContent"},
           content.text.initial,
           SizeLimit({
             actions: this.props.actions,
@@ -203,23 +216,13 @@ class ResponseTab extends Component {
       group = {
         key: "raw",
         name: Locale.$STR("netRequest.rawData"),
-        content: DOM.div({className: "netInfoResponseContent"},
+        content: dom.div({className: "netInfoResponseContent"},
           content.text
         )
       };
     }
 
     return group;
-  }
-
-  componentDidMount() {
-    let { actions, data: file } = this.props;
-    let content = file.response.content;
-
-    if (!content || typeof (content.text) == "undefined") {
-      // TODO: use async action objects as soon as Redux is in place
-      actions.requestData("responseContent");
-    }
   }
 
   /**
@@ -229,13 +232,13 @@ class ResponseTab extends Component {
    * 2) Raw response data (always displayed if not discarded)
    */
   render() {
-    let { actions, data: file } = this.props;
+    let { data: file } = this.props;
 
     // If response bodies are discarded (not collected) let's just
     // display a info message indicating what to do to collect even
     // response bodies.
     if (file.discardResponseBody) {
-      return DOM.span({className: "netInfoBodiesDiscarded"},
+      return dom.span({className: "netInfoBodiesDiscarded"},
         Locale.$STR("netRequest.responseBodyDiscarded")
       );
     }
@@ -267,8 +270,8 @@ class ResponseTab extends Component {
     }
 
     return (
-      DOM.div({className: "responseTabBox"},
-        DOM.div({className: "panelContent"},
+      dom.div({className: "responseTabBox"},
+        dom.div({className: "panelContent"},
           NetInfoGroupList({
             groups: groups
           })
