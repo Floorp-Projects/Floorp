@@ -9,9 +9,8 @@
 
 "use strict";
 
-const { createElement, PureComponent } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const React = require("devtools/client/shared/vendor/react");
+const { PureComponent, DOM: dom, PropTypes } = React;
 
 const { div, span } = dom;
 
@@ -77,7 +76,7 @@ class Accordion extends PureComponent {
           { className: "_content",
             style: { display: opened[i] ? "block" : "none" }
           },
-          createElement(item.component, item.componentProps || {})
+          React.createElement(item.component, item.componentProps || {})
         ) :
         null
     );

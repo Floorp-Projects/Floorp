@@ -5,9 +5,11 @@
 "use strict";
 
 const Services = require("Services");
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 
 const Types = require("../types");
 const { getStr } = require("../utils/l10n");
