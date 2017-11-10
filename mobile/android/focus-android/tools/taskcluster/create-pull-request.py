@@ -42,7 +42,7 @@ for request in repo.get_pulls(state='open'):
 		print "There's already an unmerged pull request. Updating existing one."
 		BRANCH=request.head.ref
 		print subprocess.check_output(['git', 'checkout', '-b', BRANCH])
-		print subprocess.check_output(['git', 'push', URL, BRANCH], '-f')
+		print subprocess.check_output(['git', 'push', URL, BRANCH, '-f'])
 		exit(0)
 
 # Push local state to branch
