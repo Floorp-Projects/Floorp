@@ -27,7 +27,7 @@ public:
   static VRListenerThreadHolder* GetSingleton();
 
   static bool IsActive() {
-    return GetSingleton() && Loop();
+    return !!GetSingleton();
   }
 
   static void Start();
