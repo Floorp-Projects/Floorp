@@ -50,6 +50,7 @@ fn main() {
 
     println!("cargo:rustc-link-search=native={}/dist/bin", out_dir);
     println!("cargo:rustc-link-lib=nspr4");
+    println!("cargo:rustc-link-lib=mozglue");
 
     if target.contains("windows") {
         println!("cargo:rustc-link-lib=winmm");
