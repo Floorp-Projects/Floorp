@@ -105,8 +105,8 @@ Example:
 Each image has a repo digest, an image hash, and a version. The repo digest is
 stored in the ``HASH`` file in the image directory  and used to refer to the
 image as above.  The version is in ``VERSION``.  The image hash is used in
-chain-of-trust verification in `scriptworker
-<https://github.com/mozilla-releng/scriptworker>`_.
+`chain-of-trust verification <http://scriptworker.readthedocs.io/en/latest/chain_of_trust.html>`
+in `scriptworker <https://github.com/mozilla-releng/scriptworker>`_.
 
 The version file only serves to provide convenient names, such that old
 versions are easy to discover in the registry (and ensuring old versions aren't

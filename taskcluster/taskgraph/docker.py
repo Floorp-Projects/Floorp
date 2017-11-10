@@ -30,7 +30,12 @@ def load_image_by_name(image_name, tag=None):
     context_hash = docker.generate_context_hash(GECKO, context_path, image_name)
 
     index_path = cached_index_path(
-        level=3, cache_type='docker-images.v1', cache_name=image_name, digest=context_hash)
+        trust_domain='gecko',
+        level=3,
+        cache_type='docker-images.v1',
+        cache_name=image_name,
+        digest=context_hash,
+    )
     task_id = find_task_id(index_path)
 
     return load_image_by_task_id(task_id, tag)

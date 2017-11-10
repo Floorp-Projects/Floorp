@@ -9,11 +9,11 @@ import time
 
 
 TARGET_CACHE_INDEX = (
-    'gecko.cache.level-{level}.{type}.{name}.hash.{digest}'
+    '{trust_domain}.cache.level-{level}.{type}.{name}.hash.{digest}'
 )
 EXTRA_CACHE_INDEXES = [
-    'gecko.cache.level-{level}.{type}.{name}.latest',
-    'gecko.cache.level-{level}.{type}.{name}.pushdate.{build_date_long}',
+    '{trust_domain}.cache.level-{level}.{type}.{name}.latest',
+    '{trust_domain}.cache.level-{level}.{type}.{name}.pushdate.{build_date_long}',
 ]
 
 
@@ -42,6 +42,7 @@ def add_optimization(config, taskdesc, cache_type, cache_name, digest=None, dige
         digest = hashlib.sha256('\n'.join(digest_data)).hexdigest()
 
     subs = {
+        'trust_domain': config.graph_config['trust-domain'],
         'type': cache_type,
         'name': cache_name,
         'digest': digest,
@@ -68,12 +69,13 @@ def add_optimization(config, taskdesc, cache_type, cache_name, digest=None, dige
     ])
 
 
-def cached_index_path(level, cache_type, cache_name, digest=None, digest_data=None):
+def cached_index_path(level, trust_domain, cache_type, cache_name, digest=None, digest_data=None):
     """
     Get the index path needed to locate the task that would be created by
     :func:`add_optimization`.
 
     :param int level: The SCM level of the task to look for.
+    :param str trust_domain: The trust domain to look for the task in.
     :param str cache_type: The type of task result being cached.
     :param str cache_name: The name of the object being cached.
     :param digest: A unique string indentifying this version of the artifacts
@@ -92,4 +94,4 @@ def cached_index_path(level, cache_type, cache_name, digest=None, digest_data=No
         digest = hashlib.sha256('\n'.join(digest_data)).hexdigest()
 
     return TARGET_CACHE_INDEX.format(
-        level=level, type=cache_type, name=cache_name, digest=digest)
+        trust_domain=trust_domain, level=level, type=cache_type, name=cache_name, digest=digest)
