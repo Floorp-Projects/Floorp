@@ -166,7 +166,7 @@ add_task(async function test_repairs_skip_if_cant_vaidate() {
   };
   let requestor = {
     async startRepairs(validationInfo, flowID) {
-      assert.ok(false, "Never should start repairs");
+      ok(false, "Never should start repairs");
     },
     tryServerOnlyRepairs() {
       return false;

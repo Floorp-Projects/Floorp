@@ -3373,13 +3373,16 @@ nsTextServicesDocument::WillJoinNodes(nsIDOMNode  *aLeftNode,
 // -------------------------------
 
 NS_IMETHODIMP
-nsTextServicesDocument::WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, int32_t aPosition)
+nsTextServicesDocument::WillCreateNode(const nsAString& aTag,
+                                       nsIDOMNode* aNextSiblingOfNewNode)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition, nsresult aResult)
+nsTextServicesDocument::DidCreateNode(const nsAString& aTag,
+                                      nsIDOMNode* aNewNode,
+                                      nsresult aResult)
 {
   return NS_OK;
 }

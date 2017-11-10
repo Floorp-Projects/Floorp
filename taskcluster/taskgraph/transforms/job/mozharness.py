@@ -248,14 +248,34 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         mh_command.append('--custom-build-variant')
         mh_command.append(run['custom-build-variant-cfg'])
 
-    hg_command = ['"c:\\Program Files\\Mercurial\\hg.exe"']
-    hg_command.append('robustcheckout')
-    hg_command.extend(['--sharebase', 'y:\\hg-shared'])
-    hg_command.append('--purge')
-    hg_command.extend(['--upstream', 'https://hg.mozilla.org/mozilla-unified'])
-    hg_command.extend(['--revision', env['GECKO_HEAD_REV']])
-    hg_command.append(env['GECKO_HEAD_REPOSITORY'])
-    hg_command.append('.\\build\\src')
+    def checkout_repo(base_repo, head_repo, head_rev, path):
+        hg_command = ['"c:\\Program Files\\Mercurial\\hg.exe"']
+        hg_command.append('robustcheckout')
+        hg_command.extend(['--sharebase', 'y:\\hg-shared'])
+        hg_command.append('--purge')
+        hg_command.extend(['--upstream', base_repo])
+        hg_command.extend(['--revision', head_rev])
+        hg_command.append(head_repo)
+        hg_command.append(path)
+
+        return [
+            ' '.join(hg_command),
+        ]
+
+    hg_commands = checkout_repo(
+        base_repo=env['GECKO_BASE_REPOSITORY'],
+        head_repo=env['GECKO_HEAD_REPOSITORY'],
+        head_rev=env['GECKO_HEAD_REV'],
+        path='.\\build\\src')
+
+    if run['comm-checkout']:
+        hg_commands.extend(
+            checkout_repo(
+                base_repo=env['COMM_BASE_REPOSITORY'],
+                head_repo=env['COMM_HEAD_REPOSITORY'],
+                head_rev=env['COMM_HEAD_REV'],
+                path='.\\build\\src\\comm')
+        )
 
     worker['command'] = []
     if taskdesc.get('needs-sccache'):
@@ -273,8 +293,8 @@ def mozharness_on_generic_worker(config, job, taskdesc):
             r'cd /d z:\build',
         ])
 
+    worker['command'].extend(hg_commands)
     worker['command'].extend([
-        ' '.join(hg_command),
         ' '.join(mh_command)
     ])
 

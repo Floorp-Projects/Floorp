@@ -759,6 +759,8 @@ CodeRange::CodeRange(uint32_t funcIndex, JitExitOffsets offsets)
     u.funcIndex_ = funcIndex;
     u.jitExit.beginToUntrustedFPStart_ = offsets.untrustedFPStart - begin_;
     u.jitExit.beginToUntrustedFPEnd_ = offsets.untrustedFPEnd - begin_;
+    MOZ_ASSERT(jitExitUntrustedFPStart() == offsets.untrustedFPStart);
+    MOZ_ASSERT(jitExitUntrustedFPEnd() == offsets.untrustedFPEnd);
 }
 
 CodeRange::CodeRange(Trap trap, CallableOffsets offsets)

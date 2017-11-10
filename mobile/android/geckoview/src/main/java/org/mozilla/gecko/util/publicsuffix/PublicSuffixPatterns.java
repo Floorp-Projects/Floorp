@@ -39,7 +39,7 @@ class PublicSuffixPatterns {
             }
 
         } catch (IOException e) {
-            Log.e("Patterns", "IOException during loading public suffix list");
+            throw new IllegalStateException("resource publicsuffixlist could not be opened but is bundled with app", e);
         } finally {
             IOUtils.safeStreamClose(reader);
         }
