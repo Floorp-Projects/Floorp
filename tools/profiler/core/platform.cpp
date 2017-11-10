@@ -107,7 +107,7 @@
 #endif
 
 // Linux builds use LUL, which uses DWARF info to unwind stacks.
-#if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux)
+#if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) || defined(GP_PLAT_mips64_linux)
 # define HAVE_NATIVE_UNWIND
 # define USE_LUL_STACKWALK
 # include "lul/LulMain.h"

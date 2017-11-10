@@ -164,6 +164,9 @@ bool DwarfCFIRegisterNames(const typename ElfClass::Ehdr* elf_header,
     case EM_X86_64:
       *num_dw_regnames = DwarfCFIToModule::RegisterNames::X86_64();
       return true;
+    case EM_MIPS:
+      *num_dw_regnames = DwarfCFIToModule::RegisterNames::MIPS();
+      return true;
     default:
       MOZ_ASSERT(0);
       return false;

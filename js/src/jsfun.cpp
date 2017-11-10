@@ -1024,12 +1024,8 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource)
     }
 
     RootedScript script(cx);
-
-    if (fun->hasScript()) {
+    if (fun->hasScript())
         script = fun->nonLazyScript();
-        if (MOZ_UNLIKELY(script->isGeneratorExp()))
-            return NewStringCopyZ<CanGC>(cx, "function genexp() {\n    [generator expression]\n}");
-    }
 
     // Default class constructors are self-hosted, but have their source
     // objects overridden to refer to the span of the class statement or

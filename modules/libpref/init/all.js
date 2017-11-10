@@ -550,7 +550,7 @@ pref("media.navigator.audio.full_duplex", true);
 pref("media.navigator.hardware.vp8_encode.acceleration_enabled", true);
 pref("media.navigator.hardware.vp8_encode.acceleration_remote_enabled", true);
 pref("media.navigator.hardware.vp8_decode.acceleration_enabled", false);
-#elif defined(XP_LINUX)
+#elif defined(XP_LINUX) || defined(MOZ_SNDIO)
 pref("media.peerconnection.capture_delay", 70);
 pref("media.getusermedia.playout_delay", 50);
 pref("media.navigator.audio.full_duplex", true);

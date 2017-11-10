@@ -190,12 +190,10 @@ mochitest-clipboard:
     suite: mochitest/clipboard
     treeherder-symbol: tc-M(cl)
     loopback-video: true
-    virtualization: hardware
     instance-size: xlarge
     worker-type:
         by-test-platform:
             windows7-32.*: buildbot-bridge/buildbot-bridge
-            windows10-64.*: buildbot-bridge/buildbot-bridge
             default: null
     e10s:
         by-test-platform:
@@ -214,6 +212,10 @@ mochitest-clipboard:
                     - --test-suite=mochitest-plain-clipboard
                 default:
                     - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"

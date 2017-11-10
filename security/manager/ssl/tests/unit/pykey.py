@@ -45,6 +45,8 @@ import sys
 HASH_MD5 = 'hash:md5'
 HASH_SHA1 = 'hash:sha1'
 HASH_SHA256 = 'hash:sha256'
+HASH_SHA384 = 'hash:sha384'
+HASH_SHA512 = 'hash:sha512'
 
 def byteStringToHexifiedBitString(string):
     """Takes a string of bytes and returns a hex string representing
@@ -588,6 +590,10 @@ class RSAKey(object):
             hashAlgorithmName = "SHA-1"
         elif hashAlgorithm == HASH_SHA256:
             hashAlgorithmName = "SHA-256"
+        elif hashAlgorithm == HASH_SHA384:
+            hashAlgorithmName = "SHA-384"
+        elif hashAlgorithm == HASH_SHA512:
+            hashAlgorithmName = "SHA-512"
         else:
             raise UnknownHashAlgorithmError(hashAlgorithm)
         rsaPrivateKey = rsa.PrivateKey(self.RSA_N, self.RSA_E, self.RSA_D, self.RSA_P, self.RSA_Q)
@@ -701,8 +707,6 @@ class ECCKey(object):
         """Returns a hexified bit string representing a
         signature by this key over the specified data.
         Intended for use with pyasn1.type.univ.BitString"""
-        if hashAlgorithm != HASH_SHA256:
-            raise UnsupportedHashAlgorithmError(hashAlgorithm)
         # There is some non-determinism in ECDSA signatures. Work around
         # this by patching ecc.ecdsa.urandom to not be random.
         with mock.patch('ecc.ecdsa.urandom', side_effect=notRandom):
@@ -712,9 +716,9 @@ class ECCKey(object):
             # Also patch in secp256k1 if applicable.
             if self.keyOID == secp256k1:
                 with mock.patch('ecc.curves.DOMAINS', {256: secp256k1Params}):
-                    x, y = encoding.dec_point(self.key.sign(data, 'sha256'))
+                    x, y = encoding.dec_point(self.key.sign(data, hashAlgorithm.split(':')[-1]))
             else:
-                x, y = encoding.dec_point(self.key.sign(data, 'sha256'))
+                x, y = encoding.dec_point(self.key.sign(data, hashAlgorithm.split(':')[-1]))
             point = ECPoint()
             point.setComponentByName('x', x)
             point.setComponentByName('y', y)

@@ -14,10 +14,6 @@
         var c;
 
         stmts.push(`var ${pattern} = ${val};`);
-        if (!opt.no_comp) {
-            stmts.push(`[for (x of [1]) ${pattern} = ${val}];`);
-            stmts.push(`[...(for (x of [1]) ${pattern} = ${val})];`);
-        }
 
         for (var stmt of stmts) {
             if (!opt.no_plain) {
