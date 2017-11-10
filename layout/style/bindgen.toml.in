@@ -1,4 +1,4 @@
 [build]
 args = [
-    @BINDGEN_CFLAGS@
+    @BINDGEN_SYSTEM_FLAGS@
 ]

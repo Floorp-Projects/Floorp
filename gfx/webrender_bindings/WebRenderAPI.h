@@ -132,6 +132,10 @@ public:
                                                RefPtr<widget::CompositorWidget>&& aWidget,
                                                LayoutDeviceIntSize aSize);
 
+  // Redirect the WR's log to gfxCriticalError/Note.
+  static void InitExternalLogHandler();
+  static void ShutdownExternalLogHandler();
+
   already_AddRefed<WebRenderAPI> Clone();
 
   wr::WindowId GetId() const { return mId; }

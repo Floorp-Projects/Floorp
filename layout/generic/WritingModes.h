@@ -1696,7 +1696,7 @@ public:
 
   bool IsEmpty() const
   {
-    return mISize <= 0 || mBSize << 0;
+    return mISize <= 0 || mBSize <= 0;
   }
 
   bool IsAllZero() const

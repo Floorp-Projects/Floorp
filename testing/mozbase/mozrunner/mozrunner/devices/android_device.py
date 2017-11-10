@@ -9,6 +9,7 @@ import glob
 import os
 import platform
 import psutil
+import re
 import shutil
 import signal
 import sys
@@ -93,6 +94,77 @@ AVD_DICT = {
 }
 
 
+def _install_host_utils(build_obj):
+    _log_info("Installing host utilities. This may take a while...")
+    installed = False
+    host_platform = _get_host_platform()
+    if host_platform:
+        path = os.path.join(MANIFEST_PATH, host_platform, 'hostutils.manifest')
+        _get_tooltool_manifest(build_obj.substs, path, EMULATOR_HOME_DIR,
+                               'releng.manifest')
+        _tooltool_fetch()
+        xre_path = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
+        for path in xre_path:
+            if os.path.isdir(path) and os.path.isfile(os.path.join(path, 'xpcshell')):
+                os.environ['MOZ_HOST_BIN'] = path
+                installed = True
+                break
+        if not installed:
+            _log_warning("Unable to install host utilities.")
+    else:
+        _log_warning(
+            "Unable to install host utilities -- your platform is not supported!")
+
+
+def _maybe_update_host_utils(build_obj):
+    """
+       Compare the installed host-utils to the version name in the manifest;
+       if the installed version is older, offer to update.
+    """
+
+    # Determine existing/installed version
+    existing_path = None
+    xre_paths = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
+    for path in xre_paths:
+        if os.path.isdir(path) and os.path.isfile(os.path.join(path, 'xpcshell')):
+            existing_path = path
+            break
+    if existing_path is None:
+        # if not installed, no need to upgrade (new version will be installed)
+        return
+    existing_version = os.path.basename(existing_path)
+
+    # Determine manifest version
+    manifest_version = None
+    host_platform = _get_host_platform()
+    if host_platform:
+        # Extract tooltool file name from manifest, something like:
+        #     "filename": "host-utils-58.0a1.en-US-linux-x86_64.tar.gz",
+        manifest_path = os.path.join(MANIFEST_PATH, host_platform, 'hostutils.manifest')
+        with open(manifest_path, 'r') as f:
+            for line in f.readlines():
+                m = re.search('.*\"(host-utils-.*)\"', line)
+                if m:
+                    manifest_version = m.group(1)
+                    break
+
+    # Compare, prompt, update
+    if existing_version and manifest_version:
+        manifest_version = manifest_version[:len(existing_version)]
+        if existing_version < manifest_version:
+            _log_info("Your host utilities are out of date!")
+            _log_info("You have %s installed, but %s is available" %
+                      (existing_version, manifest_version))
+            response = raw_input(
+                "Update host utilities? (Y/n) ").strip()
+            if response.lower().startswith('y') or response == '':
+                parts = os.path.split(existing_path)
+                backup_dir = '_backup-' + parts[1]
+                backup_path = os.path.join(parts[0], backup_dir)
+                shutil.move(existing_path, backup_path)
+                _install_host_utils(build_obj)
+
+
 def verify_android_device(build_obj, install=False, xre=False, debugger=False, verbose=False):
     """
        Determine if any Android device is connected via adb.
@@ -156,13 +228,14 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False, v
         xre_path = os.environ.get('MOZ_HOST_BIN')
         err = None
         if not xre_path:
-            err = "environment variable MOZ_HOST_BIN is not set to a directory" \
+            err = "environment variable MOZ_HOST_BIN is not set to a directory " \
                   "containing host xpcshell"
         elif not os.path.isdir(xre_path):
             err = '$MOZ_HOST_BIN does not specify a directory'
         elif not os.path.isfile(os.path.join(xre_path, 'xpcshell')):
             err = '$MOZ_HOST_BIN/xpcshell does not exist'
         if err:
+            _maybe_update_host_utils(build_obj)
             xre_path = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
             for path in xre_path:
                 if os.path.isdir(path) and os.path.isfile(os.path.join(path, 'xpcshell')):
@@ -174,24 +247,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False, v
             response = raw_input(
                 "Download and setup your host utilities? (Y/n) ").strip()
             if response.lower().startswith('y') or response == '':
-                _log_info("Installing host utilities. This may take a while...")
-                host_platform = _get_host_platform()
-                if host_platform:
-                    path = os.path.join(MANIFEST_PATH, host_platform, 'hostutils.manifest')
-                    _get_tooltool_manifest(build_obj.substs, path, EMULATOR_HOME_DIR,
-                                           'releng.manifest')
-                    _tooltool_fetch()
-                    xre_path = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
-                    for path in xre_path:
-                        if os.path.isdir(path) and os.path.isfile(os.path.join(path, 'xpcshell')):
-                            os.environ['MOZ_HOST_BIN'] = path
-                            err = None
-                            break
-                    if err:
-                        _log_warning("Unable to install host utilities.")
-                else:
-                    _log_warning(
-                        "Unable to install host utilities -- your platform is not supported!")
+                _install_host_utils(build_obj)
 
     if debugger:
         # Optionally set up JimDB. See https://wiki.mozilla.org/Mobile/Fennec/Android/GDB.

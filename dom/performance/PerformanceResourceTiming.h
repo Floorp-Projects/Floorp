@@ -64,7 +64,7 @@ public:
   }
 
   DOMHighResTimeStamp WorkerStart() const {
-    return mTiming && mTiming->TimingAllowed()
+    return mTiming
         ? mTiming->WorkerStartHighRes()
         : 0;
   }

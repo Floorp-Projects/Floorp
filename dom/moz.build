@@ -108,6 +108,7 @@ DIRS += [
     'worklet',
     'script',
     'payments',
+    'websocket',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
