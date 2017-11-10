@@ -152,6 +152,7 @@ def gradle_android_archive_geckoview_tasks():
     return [
         'geckoview:assembleWithGeckoBinaries',
         'geckoview_example:assembleWithGeckoBinaries',
+        'geckoview_example:assembleWithGeckoBinariesAndroidTest',
         'geckoview:uploadArchives',
     ]
 
