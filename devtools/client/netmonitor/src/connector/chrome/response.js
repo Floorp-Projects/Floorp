@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { formDataURI } = require("../../utils/request-utils");
+
 function ResponseInfo(id, response, content) {
   let {
     mimeType
@@ -21,7 +23,7 @@ function ResponseInfo(id, response, content) {
 }
 
 function ResponseContent(id, response, content) {
-  const {body} = content;
+  const {body, base64Encoded} = content;
   let {mimeType, encodedDataLength} = response;
   let responseContent = ResponseInfo(id, response, content);
   let payload = Object.assign(
@@ -31,6 +33,9 @@ function ResponseContent(id, response, content) {
       transferredSize: encodedDataLength, // TODO: verify
       mimeType: mimeType
     }, body);
+  if (mimeType.includes("image/")) {
+    payload.responseContentDataUri = formDataURI(mimeType, base64Encoded, response);
+  }
   return payload;
 }
 

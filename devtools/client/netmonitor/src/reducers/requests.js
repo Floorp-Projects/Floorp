@@ -58,7 +58,7 @@ const Request = I.Record({
   responseHeaders: undefined,
   responseCookies: undefined,
   responseContent: undefined,
-  responseContentAvailable: false,
+  responseContentDataUri: undefined,
   formDataSections: undefined,
 });
 

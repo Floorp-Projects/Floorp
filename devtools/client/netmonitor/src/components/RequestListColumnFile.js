@@ -11,9 +11,10 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { propertiesEqual } = require("../utils/request-utils");
 
-const { div } = DOM;
+const { div, img } = DOM;
 
 const UPDATED_FILE_PROPS = [
+  "responseContentDataUri",
   "urlDetails",
 ];
 
@@ -21,6 +22,7 @@ class RequestListColumnFile extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
+      onThumbnailMouseDown: PropTypes.func.isRequired,
     };
   }
 
@@ -30,7 +32,8 @@ class RequestListColumnFile extends Component {
 
   render() {
     let {
-      item: { urlDetails },
+      item: { responseContentDataUri, urlDetails },
+      onThumbnailMouseDown
     } = this.props;
 
     return (
@@ -38,6 +41,11 @@ class RequestListColumnFile extends Component {
         className: "requests-list-column requests-list-file",
         title: urlDetails.unicodeUrl,
       },
+        img({
+          className: "requests-list-icon",
+          src: responseContentDataUri,
+          onMouseDown: onThumbnailMouseDown,
+        }),
         urlDetails.baseNameWithQuery
       )
     );
