@@ -6,7 +6,7 @@
 
 # PGO
 # ==============================================================
-option(env='MOZ_PGO', help='Build with profile guided optimizations')
+js_option(env='MOZ_PGO', help='Build with profile guided optimizations')
 
 set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
 add_old_configure_assignment('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
