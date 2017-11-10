@@ -408,7 +408,8 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
                       nsDisplayListBuilder* aDisplayListBuilder,
                       RefPtr<BasicLayerManager>& aManager,
                       WebRenderLayerManager* aWrManager,
-                      const gfx::Size& aScale)
+                      const gfx::Size& aScale,
+                      Maybe<gfx::Color>& aHighlight)
 {
   MOZ_ASSERT(aDT);
 
@@ -447,9 +448,9 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
     break;
   }
 
-  if (gfxPrefs::WebRenderHighlightPaintedLayers()) {
+  if (aHighlight) {
     aDT->SetTransform(gfx::Matrix());
-    aDT->FillRect(gfx::Rect(0, 0, aImageRect.Width(), aImageRect.Height()), gfx::ColorPattern(gfx::Color(1.0, 0.0, 0.0, 0.5)));
+    aDT->FillRect(gfx::Rect(0, 0, aImageRect.Width(), aImageRect.Height()), gfx::ColorPattern(aHighlight.value()));
   }
   if (aItem->Frame()->PresContext()->GetPaintFlashing() && isInvalidated) {
     aDT->SetTransform(gfx::Matrix());
@@ -470,6 +471,13 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
                                               nsDisplayListBuilder* aDisplayListBuilder,
                                               LayoutDeviceRect& aImageRect)
 {
+  bool useBlobImage = gfxPrefs::WebRenderBlobImages() && !aItem->MustPaintOnContentSide();
+  Maybe<gfx::Color> highlight = Nothing();
+  if (gfxPrefs::WebRenderHighlightPaintedLayers()) {
+    highlight = Some(useBlobImage ? gfx::Color(1.0, 0.0, 0.0, 0.5)
+                                  : gfx::Color(1.0, 1.0, 0.0, 0.5));
+  }
+
   RefPtr<WebRenderFallbackData> fallbackData = CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(aItem);
 
   bool snap;
@@ -479,7 +487,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
   // them here and can just rely on the webrender clipping.
   bool useClipBounds = true;
   nsRect paintBounds = itemBounds;
-  if (gfxPrefs::WebRenderBlobImages()) {
+  if (useBlobImage) {
     paintBounds = itemBounds;
     useClipBounds = false;
   } else {
@@ -548,7 +556,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
   if (needPaint || !fallbackData->GetKey()) {
     gfx::SurfaceFormat format = aItem->GetType() == DisplayItemType::TYPE_MASK ?
                                                       gfx::SurfaceFormat::A8 : gfx::SurfaceFormat::B8G8R8A8;
-    if (gfxPrefs::WebRenderBlobImages()) {
+    if (useBlobImage) {
       bool snapped;
       bool isOpaque = aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);
 
@@ -564,7 +572,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
         gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, paintSize.ToUnknownSize());
       bool isInvalidated = PaintItemByDrawTarget(aItem, dt, paintRect, offset, aDisplayListBuilder,
-                                                 fallbackData->mBasicLayerManager, mManager, scale);
+                                                 fallbackData->mBasicLayerManager, mManager, scale, highlight);
       recorder->FlushItem(IntRect());
       recorder->Finish();
 
@@ -600,7 +608,8 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
           }
           isInvalidated = PaintItemByDrawTarget(aItem, dt, paintRect, offset,
                                                aDisplayListBuilder,
-                                               fallbackData->mBasicLayerManager, mManager, scale);
+                                               fallbackData->mBasicLayerManager, mManager, scale,
+                                               highlight);
         }
 
         if (isInvalidated) {
