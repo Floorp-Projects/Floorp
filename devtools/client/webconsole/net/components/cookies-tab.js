@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory, DOM, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const NetInfoGroupList = createFactory(require("./net-info-group-list"));
-const Spinner = createFactory(require("./spinner"));
 
 /**
  * This template represents 'Cookies' tab displayed when the user
@@ -39,7 +39,7 @@ class CookiesTab extends Component {
   }
 
   render() {
-    let { actions, data: file } = this.props;
+    let { data: file } = this.props;
     let requestCookies = file.request.cookies;
     let responseCookies = file.response.cookies;
 
@@ -57,8 +57,8 @@ class CookiesTab extends Component {
     }];
 
     return (
-      DOM.div({className: "cookiesTabBox"},
-        DOM.div({className: "panelContent"},
+      dom.div({className: "cookiesTabBox"},
+        dom.div({className: "panelContent"},
           NetInfoGroupList({
             groups: groups
           })

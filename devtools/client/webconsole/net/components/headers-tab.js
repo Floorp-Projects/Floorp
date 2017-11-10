@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory, DOM, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const NetInfoGroupList = createFactory(require("./net-info-group-list"));
 const Spinner = createFactory(require("./spinner"));
 
@@ -63,8 +64,8 @@ class HeadersTab extends Component {
     }
 
     return (
-      DOM.div({className: "headersTabBox"},
-        DOM.div({className: "panelContent"},
+      dom.div({className: "headersTabBox"},
+        dom.div({className: "panelContent"},
           NetInfoGroupList({groups: groups})
         )
       )
