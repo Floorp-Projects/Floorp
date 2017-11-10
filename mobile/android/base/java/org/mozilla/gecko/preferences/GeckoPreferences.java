@@ -644,8 +644,8 @@ public class GeckoPreferences
                     preferences.removePreference(pref);
                     i--;
                     continue;
-                } else if (PREFS_CATEGORY_EXPERIMENTAL_FEATURES.equals(key)
-                        && !AppConstants.MOZ_ANDROID_PWA) {
+
+                } else if (PREFS_CATEGORY_EXPERIMENTAL_FEATURES.equals(key) && ((PreferenceGroup) pref).getPreferenceCount() == 0) {
                     preferences.removePreference(pref);
                     i--;
                     continue;
