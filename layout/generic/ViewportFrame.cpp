@@ -169,6 +169,9 @@ ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
       if (nsIFrame* backdropPh =
           frame->GetChildList(kBackdropList).FirstChild()) {
         MOZ_ASSERT(backdropPh->IsPlaceholderFrame());
+        MOZ_ASSERT(!backdropPh->GetNextSibling(), "more than one ::backdrop?");
+        MOZ_ASSERT(backdropPh->HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
+                   "did you intend to reflow ::backdrop placeholders?");
         nsIFrame* backdropFrame =
           static_cast<nsPlaceholderFrame*>(backdropPh)->GetOutOfFlowFrame();
         MOZ_ASSERT(backdropFrame);
