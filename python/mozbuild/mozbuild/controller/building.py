@@ -5,6 +5,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import getpass
+import io
 import json
 import logging
 import os
@@ -32,6 +33,9 @@ from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 
 import mozpack.path as mozpath
 
+from .clobber import (
+    Clobberer,
+)
 from ..base import (
     BuildEnvironmentNotFoundException,
     MozbuildObject,
@@ -1329,6 +1333,10 @@ class BuildDriver(MozbuildObject):
         append_env['CONFIG_GUESS'] = self.resolve_config_guess()
 
         mozconfig = self.mozconfig
+
+        if self._check_clobber(mozconfig, os.environ):
+            return 1
+
         mozconfig_client_mk = os.path.join(self.topobjdir,
                                            '.mozconfig-client-mk')
         with FileAvoidWrite(mozconfig_client_mk) as fh:
@@ -1359,3 +1367,32 @@ class BuildDriver(MozbuildObject):
                               silent=not verbose,
                               keep_going=keep_going,
                               append_env=append_env)
+
+    def _check_clobber(self, mozconfig, env):
+        auto_clobber = any([
+            env.get('AUTOCLOBBER', False),
+            (mozconfig['env'] or {}).get('added', {}).get('AUTOCLOBBER', False),
+            'AUTOCLOBBER=1' in (mozconfig['make_extra'] or []),
+        ])
+
+        clobberer = Clobberer(self.topsrcdir, self.topobjdir)
+        clobber_output = io.BytesIO()
+        res = clobberer.maybe_do_clobber(os.getcwd(), auto_clobber,
+                                         clobber_output)
+        clobber_output.seek(0)
+        for line in clobber_output.readlines():
+            self.log(logging.WARNING, 'clobber',
+                     {'msg': line.rstrip()}, '{msg}')
+
+        clobber_required, clobber_performed, clobber_message = res
+        if not clobber_required or clobber_performed:
+            if clobber_performed and env.get('TINDERBOX_OUTPUT'):
+                self.log(logging.WARNING, 'clobber',
+                         {'msg': 'TinderboxPrint: auto clobber'}, '{msg}')
+        else:
+            for line in clobber_message.splitlines():
+                self.log(logging.WARNING, 'clobber',
+                         {'msg': line.rstrip()}, '{msg}')
+            return True
+
+        return False
