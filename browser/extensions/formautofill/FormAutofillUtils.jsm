@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = ["FormAutofillUtils"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-const ADDRESS_REFERENCES = "chrome://formautofill/content/addressReferences.js";
+const ADDRESS_REFERENCES = "resource://formautofill/addressmetadata/addressReferences.js";
 
 // TODO: We only support US in MVP. We are going to support more countries in
 //       bug 1370193.
