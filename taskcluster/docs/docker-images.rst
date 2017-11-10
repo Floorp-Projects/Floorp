@@ -78,9 +78,9 @@ Task Image Index Namespace
 Images that are built on push and uploaded as an artifact of a task will be indexed under the
 following namespaces.
 
-* docker.images.v2.level-{level}.{image_name}.latest
-* docker.images.v2.level-{level}.{image_name}.pushdate.{year}.{month}-{day}-{pushtime}
-* docker.images.v2.level-{level}.{image_name}.hash.{context_hash}
+* gecko.cache.level-{level}.docker.v2.{name}.hash.{digest}
+* gecko.cache.level-{level}.docker.v2.{name}.latest
+* gecko.cache.level-{level}.docker.v2.{name}.pushdate.{year}.{month}-{day}-{pushtime}
 
 Not only can images be browsed by the pushdate and context hash, but the 'latest' namespace
 is meant to view the latest built image.  This functions similarly to the 'latest' tag

@@ -21,16 +21,16 @@ from taskgraph.util.taskcluster import (
     find_task_id,
     get_artifact_url,
 )
+from taskgraph.util.cached_tasks import cached_index_path
 from . import GECKO
-
-DOCKER_INDEX = docker.INDEX_PREFIX + '.{}.{}.hash.{}'
 
 
 def load_image_by_name(image_name, tag=None):
     context_path = os.path.join(GECKO, 'taskcluster', 'docker', image_name)
     context_hash = docker.generate_context_hash(GECKO, context_path, image_name)
 
-    index_path = DOCKER_INDEX.format('level-3', image_name, context_hash)
+    index_path = cached_index_path(
+        level=3, cache_type='docker-images.v1', cache_name=image_name, digest=context_hash)
     task_id = find_task_id(index_path)
 
     return load_image_by_task_id(task_id, tag)
