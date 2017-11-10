@@ -66,3 +66,30 @@ def add_optimization(config, taskdesc, cache_type, cache_name, digest=None, dige
         'index.{}'.format(route.format(**subs))
         for route in EXTRA_CACHE_INDEXES
     ])
+
+
+def cached_index_path(level, cache_type, cache_name, digest=None, digest_data=None):
+    """
+    Get the index path needed to locate the task that would be created by
+    :func:`add_optimization`.
+
+    :param int level: The SCM level of the task to look for.
+    :param str cache_type: The type of task result being cached.
+    :param str cache_name: The name of the object being cached.
+    :param digest: A unique string indentifying this version of the artifacts
+        being generated. Typically this will be the hash of inputs to the task.
+    :type digest: bytes or None
+    :param digest_data: A list of bytes representing the inputs of this task.
+        They will be concatenated and hashed to create the digest for this
+        task.
+    :type digest_data: list of bytes or None
+
+    :return str: The index path.
+    """
+    if (digest is None) == (digest_data is None):
+        raise Exception("Must pass exactly one of `digest` and `digest_data`.")
+    if digest is None:
+        digest = hashlib.sha256('\n'.join(digest_data)).hexdigest()
+
+    return TARGET_CACHE_INDEX.format(
+        level=level, type=cache_type, name=cache_name, digest=digest)
