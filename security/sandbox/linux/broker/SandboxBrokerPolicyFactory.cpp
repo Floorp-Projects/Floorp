@@ -403,7 +403,7 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
 
   MOZ_ASSERT(NS_IsMainThread());
   // File broker usage is controlled through a pref.
-  if (!IsContentSandboxEnabled()) {
+  if (GetEffectiveContentSandboxLevel() <= 1) {
     return nullptr;
   }
 
