@@ -13,7 +13,7 @@
 test(function(t) {
   var anim = createDiv(t).animate(null);
   assert_equals(anim.effect.timing.direction, 'normal');
-}, 'Test default value');
+}, 'Has the default value \'normal\'');
 
 test(function(t) {
   var div = createDiv(t);
@@ -25,7 +25,7 @@ test(function(t) {
     assert_equals(anim.effect.timing.direction, direction,
                   'set direction to ' + direction);
   });
-}, 'set direction to a valid keyword');
+}, 'Can be set to each of the possible keywords');
 
 </script>
 </body>
