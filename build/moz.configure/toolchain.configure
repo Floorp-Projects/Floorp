@@ -6,7 +6,7 @@
 
 # PGO
 # ==============================================================
-option(env='MOZ_PGO', help='Build with profile guided optimizations')
+js_option(env='MOZ_PGO', help='Build with profile guided optimizations')
 
 set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
 add_old_configure_assignment('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
@@ -1072,16 +1072,13 @@ option(env='BINDGEN_CFLAGS',
 
 
 @depends('BINDGEN_CFLAGS')
-@checking('bindgen cflags', lambda s: s if s and s.strip() else 'no')
+@checking('bindgen cflags', lambda s: s if s else 'no')
 def bindgen_cflags(value):
     if value and len(value):
-        # Reformat the env value for substitution into a toml list.
-        flags = value[0].split()
-        return ', '.join('"' + flag + '"' for flag in flags)
-    return ''
+        return value[0].split()
 
 
-set_config('BINDGEN_CFLAGS', bindgen_cflags)
+add_old_configure_assignment('_BINDGEN_CFLAGS', bindgen_cflags)
 
 
 @depends(c_compiler)

@@ -249,18 +249,12 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
-    Node newArrayPush(uint32_t begin, Node kid) {
-        return NodeGeneric;
-    }
-
     Node appendOrCreateList(ParseNodeKind kind, Node left, Node right, ParseContext* pc) {
         return NodeGeneric;
     }
 
     // Expressions
 
-    Node newGeneratorComprehension(Node genfn, const TokenPos& pos) { return NodeGeneric; }
-    Node newArrayComprehension(Node body, const TokenPos& pos) { return NodeGeneric; }
     Node newArrayLiteral(uint32_t begin) { return NodeUnparenthesizedArray; }
     MOZ_MUST_USE bool addElision(Node literal, const TokenPos& pos) { return true; }
     MOZ_MUST_USE bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }
@@ -359,25 +353,12 @@ class SyntaxParseHandler
     Node newFunctionExpression(const TokenPos& pos) { return NodeFunctionDefinition; }
     Node newArrowFunction(const TokenPos& pos) { return NodeFunctionDefinition; }
 
-    bool setComprehensionLambdaBody(Node pn, Node body) { return true; }
     void setFunctionFormalParametersAndBody(Node pn, Node kid) {}
     void setFunctionBody(Node pn, Node kid) {}
     void setFunctionBox(Node pn, FunctionBox* funbox) {}
     void addFunctionFormalParameter(Node pn, Node argpn) {}
 
     Node newForStatement(uint32_t begin, Node forHead, Node body, unsigned iflags) {
-        return NodeGeneric;
-    }
-
-    Node newComprehensionFor(uint32_t begin, Node forHead, Node body) {
-        return NodeGeneric;
-    }
-
-    Node newComprehensionBinding(Node kid) {
-        // Careful: we're asking this well after the name was parsed, so the
-        // value returned may not correspond to |kid|'s actual name.  But it
-        // *will* be truthy iff |kid| was a name, so we're safe.
-        MOZ_ASSERT(isUnparenthesizedName(kid));
         return NodeGeneric;
     }
 

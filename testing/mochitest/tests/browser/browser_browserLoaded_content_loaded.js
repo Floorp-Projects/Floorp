@@ -28,13 +28,14 @@ add_task(async function() {
     `http://test:80`,
   ];
   //Add tabs, get the respective browsers
-  let browsers = [
-    for (u of tabURLs) BrowserTestUtils.addTab(gBrowser, u).linkedBrowser
-  ];
+  let browsers = tabURLs.map(u => BrowserTestUtils.addTab(gBrowser, u).linkedBrowser);
+
   //wait for promises to settle
-  await Promise.all((
-    for (b of browsers) BrowserTestUtils.browserLoaded(b)
-  ));
+  await Promise.all((function*() {
+    for (let b of browsers) {
+      yield BrowserTestUtils.browserLoaded(b);
+    }
+  })());
   let expected = 'Expected all promised browsers to have loaded.';
   for (const browser of browsers) {
     await isDOMLoaded(browser);

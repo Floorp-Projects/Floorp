@@ -57,6 +57,10 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
 });
 
+XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
+  return new TextDecoder();
+});
+
 Cu.importGlobalProperties(["URL"]);
 
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
@@ -2920,12 +2924,11 @@ this.XPIProvider = {
           logger.debug("Found updated metadata for " + id + " in " + location.name);
           let fis = Cc["@mozilla.org/network/file-input-stream;1"].
                        createInstance(Ci.nsIFileInputStream);
-          let json = Cc["@mozilla.org/dom/json;1"].
-                     createInstance(Ci.nsIJSON);
-
           try {
             fis.init(jsonfile, -1, 0, 0);
-            let metadata = json.decodeFromStream(fis, jsonfile.fileSize);
+
+            let bytes = NetUtil.readInputStream(fis, jsonfile.fileSize);
+            let metadata = JSON.parse(gTextDecoder.decode(bytes));
             addon.importMetadata(metadata);
 
             // Pass this through to addMetadata so it knows this add-on was

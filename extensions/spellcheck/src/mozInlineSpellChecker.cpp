@@ -1054,13 +1054,17 @@ mozInlineSpellChecker::IgnoreWords(const char16_t **aWordsToIgnore,
   return ScheduleSpellCheck(Move(status));
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::WillCreateNode(const nsAString & aTag, nsIDOMNode *aParent, int32_t aPosition)
+NS_IMETHODIMP
+mozInlineSpellChecker::WillCreateNode(const nsAString& aTag,
+                                      nsIDOMNode* aNextSiblingOfNewNode)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::DidCreateNode(const nsAString & aTag, nsIDOMNode *aNode, nsIDOMNode *aParent,
-                                                   int32_t aPosition, nsresult aResult)
+NS_IMETHODIMP
+mozInlineSpellChecker::DidCreateNode(const nsAString& aTag,
+                                     nsIDOMNode* aNewNode,
+                                     nsresult aResult)
 {
   return NS_OK;
 }

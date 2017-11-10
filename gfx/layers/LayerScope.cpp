@@ -503,15 +503,16 @@ private:
         tp->set_ismask(mIsMask);
 
         if (aImage) {
+            DataSourceSurface::ScopedMap map(aImage, DataSourceSurface::READ);
             tp->set_width(aImage->GetSize().width);
             tp->set_height(aImage->GetSize().height);
-            tp->set_stride(aImage->Stride());
+            tp->set_stride(map.GetStride());
 
-            mDatasize = aImage->GetSize().height * aImage->Stride();
+            mDatasize = aImage->GetSize().height * map.GetStride();
 
             auto compresseddata = MakeUnique<char[]>(LZ4::maxCompressedSize(mDatasize));
             if (compresseddata) {
-                int ndatasize = LZ4::compress((char*)aImage->GetData(),
+                int ndatasize = LZ4::compress((char*)map.GetData(),
                                               mDatasize,
                                               compresseddata.get());
                 if (ndatasize > 0) {
@@ -520,11 +521,11 @@ private:
                     tp->set_data(compresseddata.get(), mDatasize);
                 } else {
                     NS_WARNING("Compress data failed");
-                    tp->set_data(aImage->GetData(), mDatasize);
+                    tp->set_data(map.GetData(), mDatasize);
                 }
             } else {
                 NS_WARNING("Couldn't new compressed data.");
-                tp->set_data(aImage->GetData(), mDatasize);
+                tp->set_data(map.GetData(), mDatasize);
             }
         } else {
             tp->set_width(0);

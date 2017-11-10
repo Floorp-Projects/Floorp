@@ -670,8 +670,8 @@ class Marionette(object):
         finally:
             s.close()
 
-    def wait_for_port(self, timeout=None):
-        """Wait until Marionette server has been created the communication socket.
+    def raise_for_port(self, timeout=None):
+        """Raise socket.timeout if no connection can be established.
 
         :param timeout: Timeout in seconds for the server to be ready.
 
@@ -685,46 +685,27 @@ class Marionette(object):
 
         poll_interval = 0.1
         starttime = datetime.datetime.now()
-
         timeout_time = starttime + datetime.timedelta(seconds=timeout)
+
+        client = transport.TcpTransport(self.host, self.port, 0.5)
+
+        connected = False
         while datetime.datetime.now() < timeout_time:
             # If the instance we want to connect to is not running return immediately
             if runner is not None and not runner.is_running():
-                return False
+                break
 
-            sock = None
             try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(0.5)
-                sock.connect((self.host, self.port))
-                data = sock.recv(16)
-
-                # If the application starts up very slowly (eg. Fennec on Android
-                # emulator) a response package has to be received first. Otherwise
-                # start_session will fail (see bug 1410366 comment 32 ff.)
-                if ":" in data:
-                    return True
+                client.connect()
+                return True
             except socket.error:
                 pass
             finally:
-                if sock is not None:
-                    try:
-                        sock.shutdown(socket.SHUT_RDWR)
-                    except:
-                        pass
-                    sock.close()
+                client.close()
 
             time.sleep(poll_interval)
 
-        return False
-
-    def raise_for_port(self, timeout=None):
-        """Raise socket.timeout if no connection can be established.
-
-        :param timeout: Timeout in seconds for the server to be ready.
-
-        """
-        if not self.wait_for_port(timeout):
+        if not connected:
             raise socket.timeout("Timed out waiting for connection on {0}:{1}!".format(
                 self.host, self.port))
 
@@ -868,7 +849,7 @@ class Marionette(object):
                Preferences.reset(arguments[0]);
                """, script_args=(pref,))
 
-    def get_pref(self, pref, default_branch=False, value_type="nsISupportsString"):
+    def get_pref(self, pref, default_branch=False, value_type="unspecified"):
         """Get the value of the specified preference.
 
         :param pref: Name of the preference.
@@ -876,8 +857,8 @@ class Marionette(object):
                                from the default branch. Otherwise the user-defined
                                value if set is returned. Defaults to `False`.
         :param value_type: Optional, XPCOM interface of the pref's complex value.
-                           Defaults to `nsISupportsString`. Other possible values are:
-                           `nsIFile`, and `nsIPrefLocalizedString`.
+                           Possible values are: `nsIFile` and
+                           `nsIPrefLocalizedString`.
 
         Usage example::
 

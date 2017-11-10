@@ -160,7 +160,7 @@ impl ClipScrollNode {
         parent_id: Option<ClipId>,
         rect: &LayerRect,
         node_type: NodeType
-    ) -> ClipScrollNode {
+    ) -> Self {
         ClipScrollNode {
             local_viewport_rect: *rect,
             local_clip_rect: *rect,
@@ -185,7 +185,7 @@ impl ClipScrollNode {
         frame_rect: &LayerRect,
         content_size: &LayerSize,
         scroll_sensitivity: ScrollSensitivity,
-    ) -> ClipScrollNode {
+    ) -> Self {
         let node_type = NodeType::ScrollFrame(ScrollingState::new(
             scroll_sensitivity,
             LayerSize::new(
@@ -202,7 +202,7 @@ impl ClipScrollNode {
         parent_id: ClipId,
         clip_info: ClipInfo,
         clip_rect: LayerRect,
-    ) -> ClipScrollNode {
+    ) -> Self {
         Self::new(pipeline_id, Some(parent_id), &clip_rect, NodeType::Clip(clip_info))
     }
 
@@ -212,7 +212,7 @@ impl ClipScrollNode {
         transform: &LayerToScrollTransform,
         origin_in_parent_reference_frame: LayerVector2D,
         pipeline_id: PipelineId,
-    ) -> ClipScrollNode {
+    ) -> Self {
         let info = ReferenceFrameInfo {
             transform: *transform,
             origin_in_parent_reference_frame,
@@ -225,7 +225,7 @@ impl ClipScrollNode {
         frame_rect: LayerRect,
         sticky_frame_info: StickyFrameInfo,
         pipeline_id: PipelineId,
-    ) -> ClipScrollNode {
+    ) -> Self {
         let node_type = NodeType::StickyFrame(sticky_frame_info);
         Self::new(pipeline_id, Some(parent_id), &frame_rect, node_type)
     }
@@ -709,6 +709,10 @@ impl ClipScrollNode {
             NodeType::ScrollFrame(ref state) => state.overscroll_amount() != LayerVector2D::zero(),
             _ => false,
         }
+    }
+
+    pub fn is_visible(&self) -> bool {
+        self.combined_clip_outer_bounds != DeviceIntRect::zero()
     }
 }
 

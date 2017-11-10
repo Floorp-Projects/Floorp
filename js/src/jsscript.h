@@ -1102,10 +1102,6 @@ class JSScript : public js::gc::TenuredCell
     // Lexical check did fail and bail out.
     bool failedLexicalCheck_:1;
 
-    // If the generator was created implicitly via a generator expression,
-    // isGeneratorExp will be true.
-    bool isGeneratorExp_:1;
-
     // Script has an entry in JSCompartment::scriptCountsMap.
     bool hasScriptCounts_:1;
 
@@ -1389,8 +1385,6 @@ class JSScript : public js::gc::TenuredCell
         return isLikelyConstructorWrapper_;
     }
     void setLikelyConstructorWrapper() { isLikelyConstructorWrapper_ = true; }
-
-    bool isGeneratorExp() const { return isGeneratorExp_; }
 
     bool failedBoundsCheck() const {
         return failedBoundsCheck_;

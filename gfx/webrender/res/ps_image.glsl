@@ -28,12 +28,7 @@ void main(void) {
     ImageResource res = fetch_image_resource(prim.user_data0);
 
 #ifdef WR_FEATURE_TRANSFORM
-    TransformVertexInfo vi = write_transform_vertex(prim.local_rect,
-                                                    prim.local_clip_rect,
-                                                    prim.z,
-                                                    prim.layer,
-                                                    prim.task,
-                                                    prim.local_rect);
+    TransformVertexInfo vi = write_transform_vertex_primitive(prim);
     vLocalPos = vi.local_pos;
     vLocalRect = vec4(prim.local_rect.p0, prim.local_rect.p0 + prim.local_rect.size);
 #else

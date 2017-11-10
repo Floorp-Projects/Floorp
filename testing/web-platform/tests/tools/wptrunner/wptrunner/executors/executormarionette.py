@@ -62,30 +62,27 @@ class MarionetteProtocol(Protocol):
         self.marionette = marionette.Marionette(host='localhost',
                                                 port=self.marionette_port,
                                                 socket_timeout=None,
-                                                startup_timeout=None)
+                                                startup_timeout=startup_timeout)
 
-        # XXX Move this timeout somewhere
-        self.logger.debug("Waiting for Marionette connection")
-        while True:
-            success = self.marionette.wait_for_port(startup_timeout)
-            #When running in a debugger wait indefinitely for firefox to start
-            if success or self.executor.debug_info is None:
-                break
+        try:
+            self.logger.debug("Waiting for Marionette connection")
+            while True:
+                try:
+                    self.marionette.raise_for_port()
+                    break
+                except IOError:
+                    # When running in a debugger wait indefinitely for Firefox to start
+                    if self.executor.debug_info is None:
+                        raise
 
-        session_started = False
-        if success:
-            try:
-                self.logger.debug("Starting Marionette session")
-                self.marionette.start_session()
-            except Exception as e:
-                self.logger.warning("Starting marionette session failed: %s" % e)
-            else:
-                self.logger.debug("Marionette session started")
-                session_started = True
+            self.logger.debug("Starting Marionette session")
+            self.marionette.start_session()
+            self.logger.debug("Marionette session started")
 
-        if not success or not session_started:
-            self.logger.warning("Failed to connect to Marionette")
+        except Exception as e:
+            self.logger.warning("Failed to start a Marionette session: %s" % e)
             self.executor.runner.send_message("init_failed")
+
         else:
             try:
                 self.after_connect()

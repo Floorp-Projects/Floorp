@@ -30,31 +30,23 @@ interface nsIEditActionListener : nsISupports{
 
   /**
    * Called before the editor creates a node.
-   * @param aTag      The tag name of the DOM Node to create.
-   * @param aParent   The node to insert the new object into
-   * @param aPosition The place in aParent to insert the new node
-   *                  0=first child, 1=second child, etc.
-   *                  any number > number of current children = last child
+   * @param aTag                    The tag name of the DOM Node to create.
+   * @param aNextSiblingOfNewNode   The node which will be next sibling of
+   *                                new node.  If the new node will be appended,
+   *                                this is null.
    */
   void WillCreateNode(in DOMString aTag,
-                            in nsIDOMNode   aParent,
-                            in long aPosition);
+                      in nsIDOMNode aNextSiblingOfNewNode);
 
   /**
    * Called after the editor creates a node.
    * @param aTag      The tag name of the DOM Node to create.
-   * @param aNode     The DOM Node that was created.
-   * @param aParent   The node to insert the new object into
-   * @param aPosition The place in aParent to insert the new node
-   *                  0=first child, 1=second child, etc.
-   *                  any number > number of current children = last child
+   * @param aNewNode  The DOM Node that was created.
    * @param aResult   The result of the create node operation.
    */
   void DidCreateNode(in DOMString aTag,
-                           in nsIDOMNode aNode,
-                           in nsIDOMNode aParent,
-                           in long          aPosition,
-                           in nsresult      aResult);
+                     in nsIDOMNode aNewNode,
+                     in nsresult aResult);
 
   /**
    * Called before the editor inserts a node.

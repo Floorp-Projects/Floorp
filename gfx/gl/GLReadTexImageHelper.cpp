@@ -315,7 +315,11 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
         MOZ_CRASH("GFX: Bad format, read pixels.");
     }
     destPixelSize = BytesPerPixel(dest->GetFormat());
-    MOZ_ASSERT(dest->GetSize().width * destPixelSize <= dest->Stride());
+
+    Maybe<DataSourceSurface::ScopedMap> map;
+    map.emplace(dest, DataSourceSurface::READ_WRITE);
+
+    MOZ_ASSERT(dest->GetSize().width * destPixelSize <= map->GetStride());
 
     GLenum readFormat = destFormat;
     GLenum readType = destType;
@@ -327,7 +331,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
     DataSourceSurface* readSurf = dest;
     int readAlignment = GuessAlignment(dest->GetSize().width,
                                        destPixelSize,
-                                       dest->Stride());
+                                       map->GetStride());
     if (!readAlignment) {
         needsTempSurf = true;
     }
@@ -389,9 +393,12 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
         }
 
         readSurf = tempSurf;
+        map = Nothing();
+        map.emplace(readSurf, DataSourceSurface::READ_WRITE);
     }
+
     MOZ_ASSERT(readAlignment);
-    MOZ_ASSERT(reinterpret_cast<uintptr_t>(readSurf->GetData()) % readAlignment == 0);
+    MOZ_ASSERT(reinterpret_cast<uintptr_t>(map->GetData()) % readAlignment == 0);
 
     GLsizei width = dest->GetSize().width;
     GLsizei height = dest->GetSize().height;
@@ -403,8 +410,10 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
         gl->fReadPixels(0, 0,
                         width, height,
                         readFormat, readType,
-                        readSurf->GetData());
+                        map->GetData());
     }
+
+    map = Nothing();
 
     if (readSurf != dest) {
         MOZ_ASSERT(readFormat == LOCAL_GL_RGBA);
@@ -414,12 +423,12 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
 }
 
 already_AddRefed<gfx::DataSourceSurface>
-YInvertImageSurface(gfx::DataSourceSurface* aSurf)
+YInvertImageSurface(gfx::DataSourceSurface* aSurf, uint32_t aStride)
 {
     RefPtr<DataSourceSurface> temp =
       Factory::CreateDataSourceSurfaceWithStride(aSurf->GetSize(),
                                                  aSurf->GetFormat(),
-                                                 aSurf->Stride());
+                                                 aStride);
     if (NS_WARN_IF(!temp)) {
         return nullptr;
     }
@@ -475,7 +484,8 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
         gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
     }
 
-    gl->fGetTexImage(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, surf->GetData());
+    DataSourceSurface::ScopedMap map(surf, DataSourceSurface::READ);
+    gl->fGetTexImage(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, map.GetData());
 
     if (currentPackAlignment != 4) {
         gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
@@ -486,7 +496,7 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
     }
 
     if (aYInvert) {
-        surf = YInvertImageSurface(surf);
+        surf = YInvertImageSurface(surf, map.GetStride());
     }
 
     return surf.forget();

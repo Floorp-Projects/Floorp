@@ -422,7 +422,6 @@
                             viewCacheId="appMenu-viewCache">
         <panelview id="pageActionPanelMainView"
                    context="pageActionContextMenu"
-                   oncontextmenu="BrowserPageActions.onContextMenu(event);"
                    class="PanelUI-subView">
           <vbox class="panel-subview-body"/>
         </panelview>
@@ -446,11 +445,22 @@
 
     <menupopup id="pageActionContextMenu"
                onpopupshowing="BrowserPageActions.onContextMenuShowing(event, this);">
-      <menuitem id="pageActionContextMenu-toggleUrlbar"
-                add-label="&pageAction.addToUrlbar.label;"
-                remove-label="&pageAction.removeFromUrlbar.label;"
+      <menuitem class="pageActionContextMenuItem builtInUnpinned"
                 label="&pageAction.addToUrlbar.label;"
-                oncommand="BrowserPageActions.toggleShownInUrlbarForContextAction();"/>
+                oncommand="BrowserPageActions.togglePinningForContextAction();"/>
+      <menuitem class="pageActionContextMenuItem builtInPinned"
+                label="&pageAction.removeFromUrlbar.label;"
+                oncommand="BrowserPageActions.togglePinningForContextAction();"/>
+      <menuitem class="pageActionContextMenuItem extensionUnpinned"
+                label="&pageAction.allowInUrlbar.label;"
+                oncommand="BrowserPageActions.togglePinningForContextAction();"/>
+      <menuitem class="pageActionContextMenuItem extensionPinned"
+                label="&pageAction.disallowInUrlbar.label;"
+                oncommand="BrowserPageActions.togglePinningForContextAction();"/>
+      <menuseparator class="pageActionContextMenuItem extensionPinned extensionUnpinned"/>
+      <menuitem class="pageActionContextMenuItem extensionPinned extensionUnpinned"
+                label="&pageAction.manageExtension.label;"
+                oncommand="BrowserPageActions.openAboutAddonsForContextAction();"/>
     </menupopup>
 
     <!-- Bookmarks and history tooltip -->
@@ -859,9 +869,7 @@
                 <label id="switchtab" class="urlbar-display urlbar-display-switchtab" value="&urlbar.switchToTab.label;"/>
                 <label id="extension" class="urlbar-display urlbar-display-extension" value="&urlbar.extension.label;"/>
               </box>
-              <hbox id="page-action-buttons"
-                    context="pageActionContextMenu"
-                    oncontextmenu="BrowserPageActions.onContextMenu(event);">
+              <hbox id="page-action-buttons" context="pageActionContextMenu">
                 <hbox id="userContext-icons" hidden="true">
                   <label id="userContext-label"/>
                   <image id="userContext-indicator"/>

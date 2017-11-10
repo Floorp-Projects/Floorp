@@ -47,7 +47,7 @@ nsresult PresentationBuilderChild::Init()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsPIDOMWindowInner* window = nsGlobalWindow::GetInnerWindowWithId(windowId)->AsInner();
+  nsPIDOMWindowInner* window = nsGlobalWindowInner::GetInnerWindowWithId(windowId)->AsInner();
   if (NS_WARN_IF(!window)) {
     return NS_ERROR_NOT_AVAILABLE;
   }

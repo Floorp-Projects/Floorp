@@ -221,7 +221,7 @@ type ShaderMode = i32;
 #[repr(C)]
 enum TextShaderMode {
     Alpha = 0,
-    SubpixelOpaque = 1,
+    SubpixelConstantTextColor = 1,
     SubpixelPass0 = 2,
     SubpixelPass1 = 3,
     SubpixelWithBgColorPass0 = 4,
@@ -636,14 +636,15 @@ impl SourceTextureResolver {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[allow(dead_code)] // SubpixelVariableTextColor is not used at the moment.
 pub enum BlendMode {
     None,
     Alpha,
     PremultipliedAlpha,
     PremultipliedDestOut,
-    SubpixelOpaque(ColorU),
-    SubpixelWithAlpha,
+    SubpixelConstantTextColor(ColorU),
     SubpixelWithBgColor,
+    SubpixelVariableTextColor,
 }
 
 // Tracks the state of each row in the GPU cache texture.
@@ -1015,8 +1016,8 @@ impl BrushShader {
             BlendMode::Alpha |
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
-            BlendMode::SubpixelOpaque(..) |
-            BlendMode::SubpixelWithAlpha |
+            BlendMode::SubpixelConstantTextColor(..) |
+            BlendMode::SubpixelVariableTextColor |
             BlendMode::SubpixelWithBgColor => {
                 self.alpha.bind(device, projection, mode, renderer_errors)
             }
@@ -1786,33 +1787,57 @@ impl Renderer {
         let debug_flags = options.debug_flags;
         let payload_tx_for_backend = payload_tx.clone();
         let recorder = options.recorder;
-        let worker_config = ThreadPoolConfig::new()
-            .thread_name(|idx| format!("WebRender:Worker#{}", idx))
-            .start_handler(|idx| {
-                register_thread_with_profiler(format!("WebRender:Worker#{}", idx));
-            });
+        let thread_listener = Arc::new(options.thread_listener);
+        let thread_listener_for_rayon_start = thread_listener.clone();
+        let thread_listener_for_rayon_end = thread_listener.clone();
         let workers = options
             .workers
             .take()
-            .unwrap_or_else(|| Arc::new(ThreadPool::new(worker_config).unwrap()));
+            .unwrap_or_else(|| {
+                let worker_config = ThreadPoolConfig::new()
+                    .thread_name(|idx|{ format!("WRWorker#{}", idx) })
+                    .start_handler(move |idx| {
+                        register_thread_with_profiler(format!("WRWorker#{}", idx));
+                        if let Some(ref thread_listener) = *thread_listener_for_rayon_start {
+                            thread_listener.thread_started(&format!("WRWorker#{}", idx));
+                        }
+                    })
+                    .exit_handler(move |idx| {
+                        if let Some(ref thread_listener) = *thread_listener_for_rayon_end {
+                            thread_listener.thread_stopped(&format!("WRWorker#{}", idx));
+                        }
+                    });
+                Arc::new(ThreadPool::new(worker_config).unwrap())
+            });
         let enable_render_on_scroll = options.enable_render_on_scroll;
 
         let blob_image_renderer = options.blob_image_renderer.take();
-        try!{ thread::Builder::new().name("RenderBackend".to_string()).spawn(move || {
-            let mut backend = RenderBackend::new(api_rx,
-                                                 payload_rx,
-                                                 payload_tx_for_backend,
-                                                 result_tx,
-                                                 device_pixel_ratio,
-                                                 texture_cache,
-                                                 workers,
-                                                 backend_notifier,
-                                                 config,
-                                                 recorder,
-                                                 blob_image_renderer,
-                                                 enable_render_on_scroll);
-            backend.run(backend_profile_counters);
-        })};
+        let thread_listener_for_render_backend = thread_listener.clone();
+        let thread_name = format!("WRRenderBackend#{}", options.renderer_id.unwrap_or(0));
+        try!{
+            thread::Builder::new().name(thread_name.clone()).spawn(move || {
+                register_thread_with_profiler(thread_name.clone());
+                if let Some(ref thread_listener) = *thread_listener_for_render_backend {
+                    thread_listener.thread_started(&thread_name);
+                }
+                let mut backend = RenderBackend::new(api_rx,
+                                                     payload_rx,
+                                                     payload_tx_for_backend,
+                                                     result_tx,
+                                                     device_pixel_ratio,
+                                                     texture_cache,
+                                                     workers,
+                                                     backend_notifier,
+                                                     config,
+                                                     recorder,
+                                                     blob_image_renderer,
+                                                     enable_render_on_scroll);
+                backend.run(backend_profile_counters);
+                if let Some(ref thread_listener) = *thread_listener_for_render_backend {
+                    thread_listener.thread_stopped(&thread_name);
+                }
+            })
+        };
 
         let gpu_cache_texture = CacheTexture::new(&mut device);
 
@@ -2495,8 +2520,8 @@ impl Renderer {
                             BlendMode::Alpha |
                             BlendMode::PremultipliedAlpha |
                             BlendMode::PremultipliedDestOut |
-                            BlendMode::SubpixelOpaque(..) |
-                            BlendMode::SubpixelWithAlpha |
+                            BlendMode::SubpixelConstantTextColor(..) |
+                            BlendMode::SubpixelVariableTextColor |
                             BlendMode::SubpixelWithBgColor => true,
                             BlendMode::None => false,
                         }
@@ -2866,8 +2891,8 @@ impl Renderer {
                         BlendMode::Alpha => debug_colors::YELLOW,
                         BlendMode::PremultipliedAlpha => debug_colors::GREY,
                         BlendMode::PremultipliedDestOut => debug_colors::SALMON,
-                        BlendMode::SubpixelOpaque(..) => debug_colors::GREEN,
-                        BlendMode::SubpixelWithAlpha => debug_colors::RED,
+                        BlendMode::SubpixelConstantTextColor(..) => debug_colors::GREEN,
+                        BlendMode::SubpixelVariableTextColor => debug_colors::RED,
                         BlendMode::SubpixelWithBgColor => debug_colors::BLUE,
                     }.into();
                     for item_rect in &batch.item_rects {
@@ -2906,14 +2931,14 @@ impl Renderer {
                                     &batch.key.textures
                                 );
                             }
-                            BlendMode::SubpixelOpaque(color) => {
-                                self.device.set_blend_mode_subpixel_opaque(color.into());
+                            BlendMode::SubpixelConstantTextColor(color) => {
+                                self.device.set_blend_mode_subpixel_constant_text_color(color.into());
 
                                 self.ps_text_run.bind(
                                     &mut self.device,
                                     transform_kind,
                                     projection,
-                                    TextShaderMode::SubpixelOpaque,
+                                    TextShaderMode::SubpixelConstantTextColor,
                                     &mut self.renderer_errors,
                                 );
 
@@ -2923,7 +2948,7 @@ impl Renderer {
                                     &batch.key.textures
                                 );
                             }
-                            BlendMode::SubpixelWithAlpha => {
+                            BlendMode::SubpixelVariableTextColor => {
                                 // Using the two pass component alpha rendering technique:
                                 //
                                 // http://anholt.livejournal.com/32058.html
@@ -3039,8 +3064,8 @@ impl Renderer {
                                     self.device.set_blend(true);
                                     self.device.set_blend_mode_premultiplied_dest_out();
                                 }
-                                BlendMode::SubpixelOpaque(..) |
-                                BlendMode::SubpixelWithAlpha |
+                                BlendMode::SubpixelConstantTextColor(..) |
+                                BlendMode::SubpixelVariableTextColor |
                                 BlendMode::SubpixelWithBgColor => {
                                     unreachable!("bug: subpx text handled earlier");
                                 }
@@ -3749,6 +3774,7 @@ impl Renderer {
         self.ps_rectangle.deinit(&mut self.device);
         self.ps_rectangle_clip.deinit(&mut self.device);
         self.ps_text_run.deinit(&mut self.device);
+        self.ps_text_run_subpx_bg_pass1.deinit(&mut self.device);
         for shader in self.ps_image {
             if let Some(shader) = shader {
                 shader.deinit(&mut self.device);
@@ -3825,6 +3851,11 @@ pub trait OutputImageHandler {
     fn unlock(&mut self, pipeline_id: PipelineId);
 }
 
+pub trait ThreadListener {
+    fn thread_started(&self, thread_name: &str);
+    fn thread_stopped(&self, thread_name: &str);
+}
+
 pub struct RendererOptions {
     pub device_pixel_ratio: f32,
     pub resource_override_path: Option<PathBuf>,
@@ -3844,8 +3875,10 @@ pub struct RendererOptions {
     pub workers: Option<Arc<ThreadPool>>,
     pub blob_image_renderer: Option<Box<BlobImageRenderer>>,
     pub recorder: Option<Box<ApiRecordingReceiver>>,
+    pub thread_listener: Option<Box<ThreadListener + Send + Sync>>,
     pub enable_render_on_scroll: bool,
     pub debug_flags: DebugFlags,
+    pub renderer_id: Option<u64>,
 }
 
 impl Default for RendererOptions {
@@ -3870,7 +3903,9 @@ impl Default for RendererOptions {
             workers: None,
             blob_image_renderer: None,
             recorder: None,
+            thread_listener: None,
             enable_render_on_scroll: true,
+            renderer_id: None,
         }
     }
 }

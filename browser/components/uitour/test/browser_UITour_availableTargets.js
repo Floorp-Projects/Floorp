@@ -136,8 +136,8 @@ var pageActionsHelper = {
   setActionsUrlbarState(inUrlbar) {
     this._originalStates = [];
     PageActions._actionsByID.forEach(action => {
-      this._originalStates.push([ action, action.shownInUrlbar ]);
-      action.shownInUrlbar = inUrlbar;
+      this._originalStates.push([ action, action.pinnedToUrlbar ]);
+      action.pinnedToUrlbar = inUrlbar;
     });
   },
 
@@ -146,7 +146,7 @@ var pageActionsHelper = {
       return;
     }
     for (let [ action, originalState] of this._originalStates) {
-      action.shownInUrlbar = originalState;
+      action.pinnedToUrlbar = originalState;
     }
     this._originalStates = null;
   }

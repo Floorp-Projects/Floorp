@@ -365,12 +365,6 @@ public class GeckoApplication extends Application
         GeckoAccessibility.setAccessibilityManagerListeners(this);
 
         AudioFocusAgent.getInstance().attachToContext(this);
-
-        RemoteManager.setCrashReporter(new RemoteManager.ICrashReporter() {
-            public void reportDecodingProcessCrash() {
-                Telemetry.addToHistogram(MEDIA_DECODING_PROCESS_CRASH, 1);
-            }
-        });
     }
 
     private class EventListener implements BundleEventListener

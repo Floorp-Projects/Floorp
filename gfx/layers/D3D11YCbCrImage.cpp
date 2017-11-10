@@ -16,6 +16,22 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
+class DXGIYCbCrTextureAllocationHelper : public ITextureClientAllocationHelper
+{
+public:
+  DXGIYCbCrTextureAllocationHelper(const PlanarYCbCrData& aData,
+                                   TextureFlags aTextureFlags,
+                                   ID3D11Device* aDevice);
+
+  bool IsCompatible(TextureClient* aTextureClient) override;
+
+  already_AddRefed<TextureClient> Allocate(KnowsCompositor* aAllocator) override;
+
+protected:
+  const PlanarYCbCrData& mData;
+  RefPtr<ID3D11Device> mDevice;
+};
+
 D3D11YCbCrImage::D3D11YCbCrImage()
  : Image(NULL, ImageFormat::D3D11_YCBCR_IMAGE)
 {
@@ -39,18 +55,18 @@ D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
   if (!allocator) {
     return false;
   }
-  allocator->SetSizes(aData.mYSize, aData.mCbCrSize);
 
-  mTextureClient = allocator->CreateOrRecycle(SurfaceFormat::A8,
-                                              mYSize,
-                                              BackendSelector::Content,
-                                              TextureFlags::DEFAULT);
+  {
+    DXGIYCbCrTextureAllocationHelper helper(aData, TextureFlags::DEFAULT, allocator->GetDevice());
+    mTextureClient = allocator->CreateOrRecycle(helper);
+  }
+
   if (!mTextureClient) {
     return false;
   }
 
-  DXGIYCbCrTextureData *data =
-    static_cast<DXGIYCbCrTextureData*>(mTextureClient->GetInternalData());
+  DXGIYCbCrTextureData* data =
+    mTextureClient->GetInternalData()->AsDXGIYCbCrTextureData();
 
   ID3D11Texture2D* textureY = data->GetD3D11Texture(0);
   ID3D11Texture2D* textureCb = data->GetD3D11Texture(1);
@@ -124,7 +140,7 @@ D3D11YCbCrImage::GetData() const
   if (!mTextureClient)
     return nullptr;
 
-  return static_cast<DXGIYCbCrTextureData*>(mTextureClient->GetInternalData());
+  return mTextureClient->GetInternalData()->AsDXGIYCbCrTextureData();
 }
 
 already_AddRefed<SourceSurface>
@@ -143,8 +159,8 @@ D3D11YCbCrImage::GetAsSourceSurface()
 
   PlanarYCbCrData data;
 
-  DXGIYCbCrTextureData *dxgiData =
-    static_cast<DXGIYCbCrTextureData*>(mTextureClient->GetInternalData());
+  DXGIYCbCrTextureData* dxgiData =
+    mTextureClient->GetInternalData()->AsDXGIYCbCrTextureData();
 
   if (!dxgiData) {
     gfxCriticalError() << "Failed to get texture client internal data.";
@@ -274,27 +290,39 @@ D3D11YCbCrImage::GetAsSourceSurface()
   return surface.forget();
 }
 
-void
-D3D11YCbCrRecycleAllocator::SetSizes(const gfx::IntSize& aYSize,
-                                     const gfx::IntSize& aCbCrSize)
+DXGIYCbCrTextureAllocationHelper::DXGIYCbCrTextureAllocationHelper(const PlanarYCbCrData& aData,
+                                                                   TextureFlags aTextureFlags,
+                                                                   ID3D11Device* aDevice)
+  : ITextureClientAllocationHelper(gfx::SurfaceFormat::YUV,
+                                   aData.mYSize,
+                                   BackendSelector::Content,
+                                   aTextureFlags,
+                                   ALLOC_DEFAULT)
+  , mData(aData)
+  , mDevice(aDevice)
 {
-  mYSize = Some(aYSize);
-  mCbCrSize = Some(aCbCrSize);
+}
+
+bool
+DXGIYCbCrTextureAllocationHelper::IsCompatible(TextureClient* aTextureClient)
+{
+  MOZ_ASSERT(aTextureClient->GetFormat() == gfx::SurfaceFormat::YUV);
+
+  DXGIYCbCrTextureData* dxgiData = aTextureClient->GetInternalData()->AsDXGIYCbCrTextureData();
+  if (!dxgiData ||
+      aTextureClient->GetSize() != mData.mYSize ||
+      dxgiData->GetYSize() != mData.mYSize ||
+      dxgiData->GetCbCrSize() != mData.mCbCrSize ||
+      dxgiData->GetYUVColorSpace() != mData.mYUVColorSpace) {
+    return false;
+  }
+  return true;
 }
 
 already_AddRefed<TextureClient>
-D3D11YCbCrRecycleAllocator::Allocate(SurfaceFormat aFormat,
-                                     IntSize aSize,
-                                     BackendSelector aSelector,
-                                     TextureFlags aTextureFlags,
-                                     TextureAllocationFlags aAllocFlags)
+DXGIYCbCrTextureAllocationHelper::Allocate(KnowsCompositor* aAllocator)
 {
-  MOZ_ASSERT(aFormat == SurfaceFormat::A8);
-
-  gfx::IntSize YSize = mYSize.refOr(aSize);
-  gfx::IntSize CbCrSize =
-    mCbCrSize.refOr(gfx::IntSize(YSize.width, YSize.height));
-  CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_R8_UNORM, YSize.width, YSize.height,
+  CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_R8_UNORM, mData.mYSize.width, mData.mYSize.height,
                                 1, 1);
   newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
@@ -318,8 +346,8 @@ D3D11YCbCrRecycleAllocator::Allocate(SurfaceFormat aFormat,
   hr = mDevice->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureY));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  newDesc.Width = CbCrSize.width;
-  newDesc.Height = CbCrSize.height;
+  newDesc.Width = mData.mCbCrSize.width;
+  newDesc.Height = mData.mCbCrSize.height;
 
   RefPtr<ID3D11Texture2D> textureCb;
   hr = mDevice->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureCb));
@@ -334,11 +362,23 @@ D3D11YCbCrRecycleAllocator::Allocate(SurfaceFormat aFormat,
       textureY,
       textureCb,
       textureCr,
-      aSize,
-      YSize,
-      CbCrSize),
-    TextureFlags::DEFAULT,
-    mSurfaceAllocator->GetTextureForwarder());
+      mData.mYSize,
+      mData.mYSize,
+      mData.mCbCrSize,
+      mData.mYUVColorSpace),
+    mTextureFlags,
+    aAllocator->GetTextureForwarder());
+}
+
+already_AddRefed<TextureClient>
+D3D11YCbCrRecycleAllocator::Allocate(SurfaceFormat aFormat,
+                                     IntSize aSize,
+                                     BackendSelector aSelector,
+                                     TextureFlags aTextureFlags,
+                                     TextureAllocationFlags aAllocFlags)
+{
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+  return nullptr;
 }
 
 } // namespace layers

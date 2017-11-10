@@ -39,6 +39,22 @@ impl ClipAndScrollInfo {
     }
 }
 
+bitflags! {
+    /// Each bit of the edge AA mask is:
+    /// 0, when the edge of the primitive needs to be considered for AA
+    /// 1, when the edge of the segment needs to be considered for AA
+    ///
+    /// *Note*: the bit values have to match the shader logic in
+    /// `write_transform_vertex()` function.
+    #[derive(Deserialize, Serialize)]
+    pub struct EdgeAaSegmentMask: u8 {
+        const LEFT = 0x1;
+        const TOP = 0x2;
+        const RIGHT = 0x4;
+        const BOTTOM = 0x8;
+    }
+}
+
 /// A tag that can be used to identify items during hit testing. If the tag
 /// is missing then the item doesn't take part in hit testing at all. This
 /// is composed of two numbers. In Servo, the first is an identifier while the
@@ -57,6 +73,7 @@ pub struct DisplayItem {
 pub struct PrimitiveInfo<T> {
     pub rect: TypedRect<f32, T>,
     pub local_clip: LocalClip,
+    pub edge_aa_segment_mask: EdgeAaSegmentMask,
     pub is_backface_visible: bool,
     pub tag: Option<ItemTag>,
 }
@@ -66,9 +83,10 @@ impl LayerPrimitiveInfo {
         Self::with_clip_rect(rect, rect)
     }
 
-    pub fn with_clip_rect(rect: TypedRect<f32, LayerPixel>,
-                          clip_rect: TypedRect<f32, LayerPixel>)
-                          -> Self {
+    pub fn with_clip_rect(
+        rect: TypedRect<f32, LayerPixel>,
+        clip_rect: TypedRect<f32, LayerPixel>,
+    ) -> Self {
         Self::with_clip(rect, LocalClip::from(clip_rect))
     }
 
@@ -76,6 +94,7 @@ impl LayerPrimitiveInfo {
         PrimitiveInfo {
             rect: rect,
             local_clip: clip,
+            edge_aa_segment_mask: EdgeAaSegmentMask::empty(),
             is_backface_visible: true,
             tag: None,
         }
@@ -683,7 +702,7 @@ impl ComplexClipRegion {
         rect: LayoutRect,
         radii: BorderRadius,
         mode: ClipMode,
-    ) -> ComplexClipRegion {
+    ) -> Self {
         ComplexClipRegion { rect, radii, mode }
     }
 }

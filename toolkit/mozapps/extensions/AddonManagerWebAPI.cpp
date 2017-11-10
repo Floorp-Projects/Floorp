@@ -91,7 +91,7 @@ AddonManagerWebAPI::IsValidSite(nsIURI* uri)
 bool
 AddonManagerWebAPI::IsAPIEnabled(JSContext* cx, JSObject* obj)
 {
-  nsGlobalWindow* global = xpc::WindowGlobalOrNull(obj);
+  nsGlobalWindowInner* global = xpc::WindowGlobalOrNull(obj);
   if (!global) {
     return false;
   }

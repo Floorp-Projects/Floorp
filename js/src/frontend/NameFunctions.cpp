@@ -427,7 +427,6 @@ class NameResolver
           case PNK_PREDECREMENT:
           case PNK_POSTDECREMENT:
           case PNK_COMPUTED_NAME:
-          case PNK_ARRAYPUSH:
           case PNK_SPREAD:
           case PNK_MUTATEPROTO:
           case PNK_EXPORT:
@@ -466,7 +465,6 @@ class NameResolver
           case PNK_WHILE:
           case PNK_SWITCH:
           case PNK_FOR:
-          case PNK_COMPREHENSIONFOR:
           case PNK_CLASSMETHOD:
           case PNK_SETTHIS:
             MOZ_ASSERT(cur->isArity(PN_BINARY));
@@ -652,8 +650,10 @@ class NameResolver
           // contain arbitrary expressions.
           case PNK_CATCH:
             MOZ_ASSERT(cur->isArity(PN_TERNARY));
-            if (!resolve(cur->pn_kid1, prefix))
-                return false;
+            if (cur->pn_kid1) {
+              if (!resolve(cur->pn_kid1, prefix))
+                  return false;
+            }
             if (cur->pn_kid2) {
                 if (!resolve(cur->pn_kid2, prefix))
                     return false;
@@ -692,7 +692,6 @@ class NameResolver
           case PNK_NEW:
           case PNK_CALL:
           case PNK_SUPERCALL:
-          case PNK_GENEXP:
           case PNK_ARRAY:
           case PNK_STATEMENTLIST:
           case PNK_PARAMSBODY:
@@ -706,19 +705,6 @@ class NameResolver
                 if (!resolve(element, prefix))
                     return false;
             }
-            break;
-
-          // Array comprehension nodes are lists with a single child:
-          // PNK_COMPREHENSIONFOR for comprehensions, PNK_LEXICALSCOPE for
-          // legacy comprehensions.  Probably this should be a non-list
-          // eventually.
-          case PNK_ARRAYCOMP:
-            MOZ_ASSERT(cur->isArity(PN_LIST));
-            MOZ_ASSERT(cur->pn_count == 1);
-            MOZ_ASSERT(cur->pn_head->isKind(PNK_LEXICALSCOPE) ||
-                       cur->pn_head->isKind(PNK_COMPREHENSIONFOR));
-            if (!resolve(cur->pn_head, prefix))
-                return false;
             break;
 
           case PNK_OBJECT:

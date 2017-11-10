@@ -73,7 +73,7 @@ PresentationIPCService::StartSession(
   }
 
   nsPIDOMWindowInner* window =
-    nsGlobalWindow::GetInnerWindowWithId(aWindowId)->AsInner();
+    nsGlobalWindowInner::GetInnerWindowWithId(aWindowId)->AsInner();
   TabId tabId = TabParent::GetTabIdFrom(window->GetDocShell());
 
   return SendRequest(aCallback, StartSessionRequest(aUrls,
@@ -490,7 +490,7 @@ PresentationIPCService::UntrackSessionInfo(const nsAString& aSessionId,
         [windowId]() -> void {
           PRES_DEBUG("Attempt to close window[%" PRIu64 "]\n", windowId);
 
-          if (auto* window = nsGlobalWindow::GetInnerWindowWithId(windowId)) {
+          if (auto* window = nsGlobalWindowInner::GetInnerWindowWithId(windowId)) {
             window->Close();
           }
         }));

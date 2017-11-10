@@ -22,6 +22,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/LayersTypes.h"  // for TextureDumpMode
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
+#include "mozilla/layers/PaintThread.h"  // for CapturedBufferState
 #include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "ReadbackProcessor.h"          // For ReadbackProcessor::Update
@@ -40,6 +41,9 @@ namespace layers {
 
 class PaintedLayer;
 class CapturedPaintState;
+class CapturedBufferState;
+
+typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState*);
 
 /**
  * A compositable client for PaintedLayers. These are different to Image/Canvas
@@ -114,6 +118,7 @@ public:
     SurfaceMode mMode;
     DrawRegionClip mClip;
     gfxContentType mContentType;
+    RefPtr<CapturedBufferState> mBufferState;
   };
 
   enum {
@@ -193,6 +198,7 @@ protected:
     gfxContentType mBufferContentType;
     bool mCanReuseBuffer;
     bool mCanKeepBufferContents;
+    bool mMustRemoveFrontBuffer;
   };
 
   /**
@@ -203,15 +209,11 @@ protected:
   BufferDecision CalculateBufferForPaint(PaintedLayer* aLayer,
                                          uint32_t aFlags);
 
-  /**
-   * Return the buffer's content type.  Requires a valid buffer.
-   */
-  gfxContentType BufferContentType();
-  /**
-   * Returns whether the specified size is adequate for the current
-   * buffer and buffer size policy.
-   */
-  bool BufferSizeOkFor(const gfx::IntSize& aSize);
+  static bool ValidBufferSize(BufferSizePolicy aPolicy,
+                              const gfx::IntSize& aBufferSize,
+                              const gfx::IntSize& aVisibleBoundsSize);
+
+  virtual RefPtr<RotatedBuffer> GetFrontBuffer() const;
 
   /**
    * Any actions that should be performed at the last moment before we begin
@@ -220,7 +222,8 @@ protected:
    * aRegionToDraw is the region which is guaranteed to be overwritten when
    * drawing the next frame.
    */
-  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) {}
+  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw,
+                             CapturedBufferState* aState) {}
 
   /**
    * Create a new rotated buffer for the specified content type, buffer rect,
@@ -363,7 +366,10 @@ public:
 
   virtual PaintState BeginPaint(PaintedLayer* aLayer, uint32_t aFlags) override;
 
-  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) override;
+  virtual RefPtr<RotatedBuffer> GetFrontBuffer() const override;
+
+  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw,
+                             CapturedBufferState* aState) override;
 
   virtual TextureInfo GetTextureInfo() const override
   {
@@ -371,8 +377,6 @@ public:
   }
 
 private:
-  void EnsureBackBufferIfFrontBuffer();
-
   RefPtr<RemoteRotatedBuffer> mFrontBuffer;
   nsIntRegion mFrontUpdatedRegion;
   bool mFrontAndBackBufferDiffer;

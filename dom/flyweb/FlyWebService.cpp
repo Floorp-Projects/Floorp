@@ -68,7 +68,8 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsGlobalWindow* globalWindow = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
+    nsGlobalWindowInner* globalWindow =
+      nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
     if (!globalWindow) {
       return Cancel();
     }

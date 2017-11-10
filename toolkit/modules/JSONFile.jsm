@@ -46,6 +46,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+
 
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", function() {
   return new TextDecoder();
@@ -241,8 +244,8 @@ JSONFile.prototype = {
                                             FileUtils.MODE_RDONLY,
                                             FileUtils.PERMS_FILE, 0);
       try {
-        let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-        data = json.decodeFromStream(inputStream, inputStream.available());
+        let bytes = NetUtil.readInputStream(inputStream, inputStream.available());
+        data = JSON.parse(gTextDecoder.decode(bytes));
       } finally {
         inputStream.close();
       }

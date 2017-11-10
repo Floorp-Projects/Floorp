@@ -53,7 +53,7 @@ class InvalidElementCoordinatesException(WebDriverException):
 
 class InvalidElementStateException(WebDriverException):
     http_status = 400
-    status_code = "invalid cookie domain"
+    status_code = "invalid element state"
 
 
 class InvalidSelectorException(WebDriverException):

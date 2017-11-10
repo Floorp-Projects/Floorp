@@ -279,7 +279,8 @@ gfxImageSurface::CopyFrom (SourceSurface *aSurface)
         return false;
     }
 
-    CopyForStride(mData, data->GetData(), size, mStride, data->Stride());
+    DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
+    CopyForStride(mData, map.GetData(), size, mStride, map.GetStride());
 
     return true;
 }
@@ -319,7 +320,8 @@ gfxImageSurface::CopyTo(SourceSurface *aSurface) {
         return false;
     }
 
-    CopyForStride(data->GetData(), mData, size, data->Stride(), mStride);
+    DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ_WRITE);
+    CopyForStride(map.GetData(), mData, size, map.GetStride(), mStride);
 
     return true;
 }

@@ -21,6 +21,7 @@
 
 struct nsGlobalNameStruct;
 class nsGlobalWindow;
+class nsGlobalWindowInner;
 
 struct nsDOMClassInfoData;
 
@@ -140,13 +141,13 @@ public:
 class nsWindowSH
 {
 protected:
-  static nsresult GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
+  static nsresult GlobalResolve(nsGlobalWindowInner *aWin, JSContext *cx,
                                 JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                                 JS::MutableHandle<JS::PropertyDescriptor> desc);
 
   friend class nsGlobalWindow;
 public:
-  static bool NameStructEnabled(JSContext* aCx, nsGlobalWindow *aWin,
+  static bool NameStructEnabled(JSContext* aCx, nsGlobalWindowInner *aWin,
                                 const nsAString& aName,
                                 const nsGlobalNameStruct& aNameStruct);
 };

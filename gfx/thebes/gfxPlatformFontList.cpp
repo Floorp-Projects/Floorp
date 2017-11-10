@@ -730,7 +730,8 @@ gfxPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
     if (!familyEntry && !mOtherFamilyNamesInitialized && !IsASCII(aFamily)) {
         InitOtherFamilyNames(!(aFlags & FindFamiliesFlags::eForceOtherFamilyNamesLoading));
         familyEntry = mOtherFamilyNames.GetWeak(key);
-        if (!familyEntry && !mOtherFamilyNamesInitialized) {
+        if (!familyEntry && !mOtherFamilyNamesInitialized &&
+            !(aFlags & FindFamiliesFlags::eNoAddToNamesMissedWhenSearching)) {
             // localized family names load timed out, add name to list of
             // names to check after localized names are loaded
             if (!mOtherNamesMissed) {
@@ -1559,7 +1560,8 @@ gfxPlatformFontList::CleanupLoader()
     if (mOtherNamesMissed) {
         for (auto it = mOtherNamesMissed->Iter(); !it.Done(); it.Next()) {
             if (FindFamily(it.Get()->GetKey(),
-                           FindFamiliesFlags::eForceOtherFamilyNamesLoading)) {
+                           (FindFamiliesFlags::eForceOtherFamilyNamesLoading |
+                            FindFamiliesFlags::eNoAddToNamesMissedWhenSearching))) {
                 forceReflow = true;
                 ForceGlobalReflow();
                 break;

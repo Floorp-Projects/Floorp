@@ -4,6 +4,8 @@
   <title>Video controls test</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -15,51 +17,27 @@
 
 <pre id="test">
 <script clas="testbody" type="application/javascript">
-  SimpleTest.waitForExplicitFinish();
-
-  const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
-    getService(SpecialPowers.Ci.inIDOMUtils);
   const video = document.getElementById("video");
-  const muteButton = getElementByAttribute("class", "muteButton");
-  const volumeStack = getElementByAttribute("class", "volumeStack");
-  const testCases = [];
+  const muteButton = getAnonElementWithinVideoByAttribute(video, "anonid", "muteButton");
+  const volumeStack = getAnonElementWithinVideoByAttribute(video, "anonid", "volumeStack");
 
-  testCases.push(() => new Promise(resolve => {
+  add_task(async function setup() {
+    await new Promise(resolve => window.addEventListener("load", resolve));
+    await SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]});
+    await new Promise(resolve => {
+      video.src = "video.ogg";
+      video.addEventListener("loadedmetadata", () => SimpleTest.executeSoon(resolve));
+    })
+  });
+
+  add_task(async function mute_button_icon() {
     is(muteButton.getAttribute("noAudio"), "true");
     is(muteButton.getAttribute("disabled"), "true");
 
     if (volumeStack) {
       ok(volumeStack.hidden);
     }
-
-    resolve();
-  }));
-
-  function executeTestCases(tasks) {
-    return tasks.reduce((promise, task) => promise.then(task), Promise.resolve());
-  }
-
-  function getElementByAttribute(aName, aValue) {
-    const videoControl = domUtils.getChildrenForNode(video, true)[1];
-
-    return SpecialPowers.wrap(document)
-      .getAnonymousElementByAttribute(videoControl, aName, aValue);
-  }
-
-  function loadedmetadata() {
-    executeTestCases(testCases).then(SimpleTest.finish);
-  }
-
-  function startMediaLoad() {
-    video.src = "video.ogg";
-    video.addEventListener("loadedmetadata", loadedmetadata);
-  }
-
-  function loadevent() {
-    SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startMediaLoad);
-  }
-
-  window.addEventListener("load", loadevent);
+  });
 </script>
 </pre>
 </body>

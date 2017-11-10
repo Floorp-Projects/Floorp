@@ -626,7 +626,7 @@ protected:
 
   bool Suppressed()
   {
-    return mOwner && nsGlobalWindow::Cast(mOwner)->IsInSyncOperation();
+    return mOwner && nsGlobalWindowInner::Cast(mOwner)->IsInSyncOperation();
   }
 
   static void HandleMutationsInternal(mozilla::AutoSlowOperation& aAso);

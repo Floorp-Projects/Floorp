@@ -6601,6 +6601,16 @@
                "sendToDevice", "other"],
     "description": "Count how many times people remove items from the url bar"
   },
+  "FX_PAGE_ACTION_MANAGED": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["gijs@mozilla.com"],
+    "bug_numbers": [1393843],
+    "expires_in_version": "60",
+    "kind": "categorical",
+    "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
+               "sendToDevice", "other"],
+    "description": "Count how many times people manage extensions via their actions in the url bar"
+  },
   "FX_PAGE_ACTION_URLBAR_USED": {
     "record_in_processes": ["main"],
     "alert_emails": ["gijs@mozilla.com"],
@@ -8585,15 +8595,6 @@
     "kind": "boolean",
     "description": "Reports whether a decoder for an HTTP Live Streaming media type was created when requested.",
     "bug_numbers": [1262659]
-  },
-  "MEDIA_DECODING_PROCESS_CRASH": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["bwu@mozilla.com", "jolin@mozilla.com", "jacheng@mozilla.com"],
-    "expires_in_version": "57",
-    "kind": "count",
-    "bug_numbers": [1297556, 1257777],
-    "description": "Records a value each time Fennec remote decoding process crashes unexpected while decoding media content.",
-    "releaseChannelCollection": "opt-out"
   },
   "MEDIA_ANDROID_VIDEO_TUNNELING_SUPPORT": {
     "record_in_processes": ["main", "content"],
@@ -11511,12 +11512,6 @@
     "high": 1024,
     "n_buckets": 16,
     "description": "The number of entries in persistent DataStorage (HSTS and HPKP data, basically)"
-  },
-  "VIDEO_EME_PLAY_SUCCESS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "45",
-    "kind": "boolean",
-    "description": "EME video playback success or failure"
   },
   "VIDEO_PLAY_TIME_MS" : {
     "record_in_processes": ["main", "content"],

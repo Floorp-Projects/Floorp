@@ -45,7 +45,7 @@ protected:
   void InitFocusEvent(const nsAString& aType,
                       bool aCanBubble,
                       bool aCancelable,
-                      nsGlobalWindow* aView,
+                      nsGlobalWindowInner* aView,
                       int32_t aDetail,
                       EventTarget* aRelatedTarget);
 };

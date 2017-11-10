@@ -6,6 +6,7 @@
 #include "mozilla/HTMLEditor.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/TextEvents.h"
 
@@ -875,7 +876,7 @@ HTMLEditor::IsVisibleBRElement(nsINode* aNode)
     return false;
   }
   // Check if there is a later node in block after br
-  nsCOMPtr<nsINode> nextNode = GetNextHTMLNode(aNode, true);
+  nsCOMPtr<nsINode> nextNode = GetNextEditableHTMLNodeInBlock(*aNode);
   if (nextNode && TextEditUtils::IsBreak(nextNode)) {
     return true;
   }
@@ -894,7 +895,7 @@ HTMLEditor::IsVisibleBRElement(nsINode* aNode)
 
   // If there's an inline node after this one that's not a break, and also a
   // prior break, this break must be visible.
-  nsCOMPtr<nsINode> priorNode = GetPriorHTMLNode(aNode, true);
+  nsCOMPtr<nsINode> priorNode = GetPreviousEditableHTMLNodeInBlock(*aNode);
   if (priorNode && TextEditUtils::IsBreak(priorNode)) {
     return true;
   }
@@ -2021,11 +2022,13 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
       }
 
       // make a list
-      nsCOMPtr<Element> newList = CreateNode(listAtom, parent, offset, child);
+      MOZ_DIAGNOSTIC_ASSERT(child);
+      EditorRawDOMPoint atChild(parent, child, offset);
+      RefPtr<Element> newList = CreateNode(listAtom, atChild);
       NS_ENSURE_STATE(newList);
       // make a list item
-      nsCOMPtr<Element> newItem = CreateNode(nsGkAtoms::li, newList, 0,
-                                             newList->GetFirstChild());
+      EditorRawDOMPoint atStartOfNewList(newList, 0);
+      RefPtr<Element> newItem = CreateNode(nsGkAtoms::li, atStartOfNewList);
       NS_ENSURE_STATE(newItem);
       rv = selection->Collapse(newItem, 0);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -2164,7 +2167,9 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
       }
 
       // make a block
-      nsCOMPtr<Element> newBlock = CreateNode(blockAtom, parent, offset, child);
+      MOZ_DIAGNOSTIC_ASSERT(child);
+      EditorRawDOMPoint atChild(parent, child, offset);
+      RefPtr<Element> newBlock = CreateNode(blockAtom, atChild);
       NS_ENSURE_STATE(newBlock);
 
       // reposition selection to inside the block
@@ -2238,8 +2243,9 @@ HTMLEditor::Indent(const nsAString& aIndent)
         }
 
         // make a blockquote
-        nsCOMPtr<Element> newBQ =
-          CreateNode(nsGkAtoms::blockquote, parent, offset, child);
+        MOZ_DIAGNOSTIC_ASSERT(child);
+        EditorRawDOMPoint atChild(parent, child, offset);
+        RefPtr<Element> newBQ = CreateNode(nsGkAtoms::blockquote, atChild);
         NS_ENSURE_STATE(newBQ);
         // put a space in it so layout will draw the list item
         rv = selection->Collapse(newBQ, 0);
@@ -3180,20 +3186,22 @@ HTMLEditor::DeleteText(nsGenericDOMDataNode& aCharData,
 }
 
 nsresult
-HTMLEditor::InsertTextImpl(const nsAString& aStringToInsert,
-                           nsCOMPtr<nsINode>* aInOutNode,
-                           nsCOMPtr<nsIContent>* aInOutChildAtOffset,
-                           int32_t* aInOutOffset,
-                           nsIDocument* aDoc)
+HTMLEditor::InsertTextImpl(nsIDocument& aDocument,
+                           const nsAString& aStringToInsert,
+                           const EditorRawDOMPoint& aPointToInsert,
+                           EditorRawDOMPoint* aPointAfterInsertedString)
 {
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   // Do nothing if the node is read-only
-  if (!IsModifiableNode(*aInOutNode)) {
+  if (!IsModifiableNode(aPointToInsert.Container())) {
     return NS_ERROR_FAILURE;
   }
 
-  return EditorBase::InsertTextImpl(aStringToInsert, aInOutNode,
-                                    aInOutChildAtOffset,
-                                    aInOutOffset, aDoc);
+  return EditorBase::InsertTextImpl(aDocument, aStringToInsert, aPointToInsert,
+                                    aPointAfterInsertedString);
 }
 
 void
@@ -3859,76 +3867,48 @@ HTMLEditor::GetNextHTMLSibling(nsINode* aNode)
   return node;
 }
 
-/**
- * GetPriorHTMLNode() returns the previous editable leaf node, if there is
- * one within the <body>.
- */
 nsIContent*
-HTMLEditor::GetPriorHTMLNode(nsINode* aNode,
-                             bool aNoBlockCrossing)
+HTMLEditor::GetPreviousEditableHTMLNodeInternal(nsINode& aNode,
+                                                bool aNoBlockCrossing)
 {
-  MOZ_ASSERT(aNode);
-
   if (!GetActiveEditingHost()) {
     return nullptr;
   }
-
-  return GetPriorNode(aNode, true, aNoBlockCrossing);
+  return aNoBlockCrossing ? GetPreviousEditableNodeInBlock(aNode) :
+                            GetPreviousEditableNode(aNode);
 }
 
-/**
- * GetPriorHTMLNode() is same as above but takes {parent,offset} instead of
- * node.
- */
 nsIContent*
-HTMLEditor::GetPriorHTMLNode(nsINode* aParent,
-                             int32_t aOffset,
-                             nsINode* aChildAtOffset,
-                             bool aNoBlockCrossing)
+HTMLEditor::GetPreviousEditableHTMLNodeInternal(const EditorRawDOMPoint& aPoint,
+                                                bool aNoBlockCrossing)
 {
-  MOZ_ASSERT(aParent);
-
   if (!GetActiveEditingHost()) {
     return nullptr;
   }
-
-  return GetPriorNode(aParent, aOffset, aChildAtOffset, true, aNoBlockCrossing);
+  return aNoBlockCrossing ? GetPreviousEditableNodeInBlock(aPoint) :
+                            GetPreviousEditableNode(aPoint);
 }
 
-/**
- * GetNextHTMLNode() returns the next editable leaf node, if there is
- * one within the <body>.
- */
 nsIContent*
-HTMLEditor::GetNextHTMLNode(nsINode* aNode,
-                            bool aNoBlockCrossing)
+HTMLEditor::GetNextEditableHTMLNodeInternal(nsINode& aNode,
+                                            bool aNoBlockCrossing)
 {
-  MOZ_ASSERT(aNode);
-
-  nsIContent* result = GetNextNode(aNode, true, aNoBlockCrossing);
-
-  if (result && !IsDescendantOfEditorRoot(result)) {
+  if (!GetActiveEditingHost()) {
     return nullptr;
   }
-
-  return result;
+  return aNoBlockCrossing ? GetNextEditableNodeInBlock(aNode) :
+                            GetNextEditableNode(aNode);
 }
 
-/**
- * GetNextHTMLNode() is same as above but takes {parent,offset} instead of node.
- */
 nsIContent*
-HTMLEditor::GetNextHTMLNode(nsINode* aParent,
-                            int32_t aOffset,
-                            nsINode* aChildAtOffset,
-                            bool aNoBlockCrossing)
+HTMLEditor::GetNextEditableHTMLNodeInternal(const EditorRawDOMPoint& aPoint,
+                                            bool aNoBlockCrossing)
 {
-  nsIContent* content = GetNextNode(aParent, aOffset, aChildAtOffset,
-                                    true, aNoBlockCrossing);
-  if (content && !IsDescendantOfEditorRoot(content)) {
+  if (!GetActiveEditingHost()) {
     return nullptr;
   }
-  return content;
+  return aNoBlockCrossing ? GetNextEditableNodeInBlock(aPoint) :
+                            GetNextEditableNode(aPoint);
 }
 
 bool
@@ -3984,7 +3964,7 @@ HTMLEditor::GetFirstEditableLeaf(nsINode& aNode)
 {
   nsCOMPtr<nsIContent> child = GetLeftmostChild(&aNode);
   while (child && (!IsEditable(child) || child->HasChildren())) {
-    child = GetNextHTMLNode(child);
+    child = GetNextEditableHTMLNode(*child);
 
     // Only accept nodes that are descendants of aNode
     if (!aNode.Contains(child)) {
@@ -4000,7 +3980,7 @@ HTMLEditor::GetLastEditableLeaf(nsINode& aNode)
 {
   nsCOMPtr<nsIContent> child = GetRightmostChild(&aNode, false);
   while (child && (!IsEditable(child) || child->HasChildren())) {
-    child = GetPriorHTMLNode(child);
+    child = GetPreviousEditableHTMLNode(*child);
 
     // Only accept nodes that are descendants of aNode
     if (!aNode.Contains(child)) {
@@ -4515,7 +4495,7 @@ HTMLEditor::CopyLastEditableChildStyles(nsINode* aPreviousBlock,
     tmp = GetLastEditableChild(*child);
   }
   while (child && TextEditUtils::IsBreak(child)) {
-    child = GetPriorHTMLNode(child);
+    child = GetPreviousEditableHTMLNode(*child);
   }
   nsCOMPtr<Element> newStyles, deepestStyle;
   nsCOMPtr<nsINode> childNode = child;
@@ -4532,9 +4512,9 @@ HTMLEditor::CopyLastEditableChildStyles(nsINode* aPreviousBlock,
                                          childElement->NodeInfo()->NameAtom());
         NS_ENSURE_STATE(newStyles);
       } else {
+        EditorRawDOMPoint atStartOfNewBlock(newBlock, 0);
         deepestStyle = newStyles =
-          CreateNode(childElement->NodeInfo()->NameAtom(), newBlock, 0,
-                     newBlock->GetFirstChild());
+          CreateNode(childElement->NodeInfo()->NameAtom(), atStartOfNewBlock);
         NS_ENSURE_STATE(newStyles);
       }
       CloneAttributes(newStyles, childElement);

@@ -204,17 +204,26 @@ ClientPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUp
  *     but block the main thread while the paint thread paints. Async OMTP doesn't block
  *     the main thread. Sync OMTP is only meant to be used as a debugging tool.
  */
-bool
+void
 ClientPaintedLayer::PaintOffMainThread()
 {
   uint32_t flags = GetPaintFlags();
 
   PaintState state = mContentClient->BeginPaint(this, flags | ContentClient::PAINT_ASYNC);
-  if (!UpdatePaintRegion(state)) {
-    return false;
+  bool didUpdate = false;
+
+  if (state.mBufferState) {
+    PaintThread::Get()->PrepareBuffer(state.mBufferState);
+    didUpdate = true;
   }
 
-  bool didUpdate = false;
+  if (!UpdatePaintRegion(state)) {
+    if (didUpdate) {
+      ClientManager()->SetQueuedAsyncPaints();
+    }
+    return;
+  }
+
   RotatedBuffer::DrawIterator iter;
 
   // Debug Protip: Change to BorrowDrawTargetForPainting if using sync OMTP.
@@ -266,7 +275,7 @@ ClientPaintedLayer::PaintOffMainThread()
     UpdateContentClient(state);
     ClientManager()->SetQueuedAsyncPaints();
   }
-  return true;
+  return;
 }
 
 void
@@ -279,9 +288,8 @@ ClientPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
   }
 
   if (CanRecordLayer(aReadback)) {
-    if (PaintOffMainThread()) {
-      return;
-    }
+    PaintOffMainThread();
+    return;
   }
 
   nsTArray<ReadbackProcessor::Update> readbackUpdates;

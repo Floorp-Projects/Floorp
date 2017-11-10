@@ -395,7 +395,7 @@ PresentationSessionInfo::GetWindow()
     return nullptr;
   }
 
-  auto window = nsGlobalWindow::GetInnerWindowWithId(windowId);
+  auto window = nsGlobalWindowInner::GetInnerWindowWithId(windowId);
   if (!window) {
     return nullptr;
   }

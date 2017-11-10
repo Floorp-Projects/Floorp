@@ -121,7 +121,7 @@ protected:
   uint32_t GetPaintFlags();
   void UpdateContentClient(PaintState& aState);
   bool UpdatePaintRegion(PaintState& aState);
-  bool PaintOffMainThread();
+  void PaintOffMainThread();
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 

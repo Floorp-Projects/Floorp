@@ -94,7 +94,7 @@ class Whitelist:
             elif filename in self.dependent_libs:
                 continue
             elif event_source_index is not None and \
-                    test[event_source_index] in self.expected_event_sources:
+                    row_key[event_source_index] in self.expected_event_sources:
                 continue
             else:
                 if filename not in errors:

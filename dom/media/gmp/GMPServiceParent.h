@@ -246,7 +246,8 @@ public:
                                ProcessId* aOutID,
                                nsCString* aOutDisplayName,
                                Endpoint<PGMPContentParent>* aOutEndpoint,
-                               nsresult* aOutRv) override;
+                               nsresult* aOutRv,
+                               nsCString* aOutErrorDescription) override;
 
   ipc::IPCResult RecvLaunchGMPForNodeId(
     const NodeIdData& nodeId,
@@ -257,7 +258,8 @@ public:
     ProcessId* aOutID,
     nsCString* aOutDisplayName,
     Endpoint<PGMPContentParent>* aOutEndpoint,
-    nsresult* aOutRv) override;
+    nsresult* aOutRv,
+    nsCString* aOutErrorDescription) override;
 
 private:
   void CloseTransport(Monitor* aSyncMonitor, bool* aCompleted);

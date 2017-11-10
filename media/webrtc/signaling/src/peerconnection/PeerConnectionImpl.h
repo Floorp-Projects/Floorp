@@ -55,7 +55,6 @@ class AFakePCObserver;
 #endif
 }
 
-class nsGlobalWindow;
 class nsDOMDataChannel;
 
 namespace mozilla {
@@ -325,13 +324,13 @@ public:
   // (used directly by unit-tests, and indirectly by the JS entry point)
   // This is necessary because RTCConfiguration can't be used by unit-tests
   nsresult Initialize(PeerConnectionObserver& aObserver,
-                      nsGlobalWindow* aWindow,
+                      nsGlobalWindowInner* aWindow,
                       const PeerConnectionConfiguration& aConfiguration,
                       nsISupports* aThread);
 
   // Initialize PeerConnection from an RTCConfiguration object (JS entrypoint)
   void Initialize(PeerConnectionObserver& aObserver,
-                  nsGlobalWindow& aWindow,
+                  nsGlobalWindowInner& aWindow,
                   const RTCConfiguration& aConfiguration,
                   nsISupports* aThread,
                   ErrorResult &rv);

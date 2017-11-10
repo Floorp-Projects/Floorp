@@ -132,7 +132,6 @@ class StatisticsPanel extends Component {
         size: L10N.getStr("charts.size"),
         transferredSize: L10N.getStr("charts.transferred"),
         time: L10N.getStr("charts.time"),
-        nonBlockingTime: L10N.getStr("charts.nonBlockingTime"),
       },
       data,
       strings: {
@@ -142,8 +141,6 @@ class StatisticsPanel extends Component {
           L10N.getFormatStr("charts.transferredSizeKB",
             getSizeWithDecimals(value / 1024)),
         time: (value) =>
-          L10N.getFormatStr("charts.totalS", getTimeWithDecimals(value / 1000)),
-        nonBlockingTime: (value) =>
           L10N.getFormatStr("charts.totalS", getTimeWithDecimals(value / 1000)),
       },
       totals: {
@@ -158,13 +155,7 @@ class StatisticsPanel extends Component {
           let seconds = total / 1000;
           let string = getTimeWithDecimals(seconds);
           return PluralForm.get(seconds,
-            L10N.getFormatStr("charts.totalSeconds", string));
-        },
-        nonBlockingTime: (total) => {
-          let seconds = total / 1000;
-          let string = getTimeWithDecimals(seconds);
-          return PluralForm.get(seconds,
-            L10N.getFormatStr("charts.totalSecondsNonBlocking", string));
+            L10N.getStr("charts.totalSeconds")).replace("#1", string);
         },
       },
       sorted: true,
@@ -194,7 +185,6 @@ class StatisticsPanel extends Component {
       size: 0,
       transferredSize: 0,
       time: 0,
-      nonBlockingTime: 0,
     }));
 
     for (let request of requests) {
@@ -234,9 +224,6 @@ class StatisticsPanel extends Component {
         data[type].time += request.totalTime || 0;
         data[type].size += request.contentSize || 0;
         data[type].transferredSize += request.transferredSize || 0;
-        let nonBlockingTime =
-           request.eventTimings.totalTime - request.eventTimings.timings.blocked;
-        data[type].nonBlockingTime += nonBlockingTime || 0;
       } else {
         data[type].cached++;
       }

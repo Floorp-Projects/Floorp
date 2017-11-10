@@ -18,10 +18,10 @@ void main(void) {
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(prim.local_rect,
                                                     prim.local_clip_rect,
+                                                    rect.edge_aa_segment_mask,
                                                     prim.z,
                                                     prim.layer,
-                                                    prim.task,
-                                                    prim.local_rect);
+                                                    prim.task);
     vLocalPos = vi.local_pos;
 #else
     VertexInfo vi = write_vertex(prim.local_rect,

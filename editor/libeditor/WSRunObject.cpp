@@ -233,11 +233,10 @@ WSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
 }
 
 nsresult
-WSRunObject::InsertText(const nsAString& aStringToInsert,
-                        nsCOMPtr<nsINode>* aInOutParent,
-                        nsCOMPtr<nsIContent>* aInOutChildAtOffset,
-                        int32_t* aInOutOffset,
-                        nsIDocument* aDoc)
+WSRunObject::InsertText(nsIDocument& aDocument,
+                        const nsAString& aStringToInsert,
+                        const EditorRawDOMPoint& aPointToInsert,
+                        EditorRawDOMPoint* aPointAfterInsertedString)
 {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
   // meanwhile, the pre case is handled in WillInsertText in
@@ -247,25 +246,33 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
   // is very slow.  Will need to replace edit rules impl with a more efficient
   // text sink here that does the minimal amount of searching/replacing/copying
 
-  NS_ENSURE_TRUE(aInOutParent && aInOutOffset && aDoc, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  MOZ_ASSERT(aPointToInsert.IsSet());
+
 
   if (aStringToInsert.IsEmpty()) {
+    if (aPointAfterInsertedString) {
+      *aPointAfterInsertedString = aPointToInsert;
+    }
     return NS_OK;
   }
 
+  EditorDOMPoint pointToInsert(aPointToInsert);
   nsAutoString theString(aStringToInsert);
 
   WSFragment *beforeRun, *afterRun;
-  FindRun(*aInOutParent, *aInOutOffset, &beforeRun, false);
-  FindRun(*aInOutParent, *aInOutOffset, &afterRun, true);
+  FindRun(pointToInsert.Container(), pointToInsert.Offset(),
+          &beforeRun, false);
+  FindRun(pointToInsert.Container(), pointToInsert.Offset(),
+          &afterRun, true);
 
   {
     // Some scoping for AutoTrackDOMPoint.  This will track our insertion
     // point while we tweak any surrounding whitespace
-    AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent,
-                              aInOutOffset);
+    AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, &pointToInsert);
 
-    bool maybeModified = false;
     // Handle any changes needed to ws run after inserted text
     if (!afterRun || afterRun->mType & WSType::trailingWS) {
       // Don't need to do anything.  Just insert text.  ws won't change.
@@ -273,16 +280,15 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
       // Delete the leading ws that is after insertion point, because it
       // would become significant after text inserted.
       nsresult rv =
-        DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode,
-                    afterRun->mEndOffset);
+        DeleteChars(pointToInsert.Container(), pointToInsert.Offset(),
+                    afterRun->mEndNode, afterRun->mEndOffset);
       NS_ENSURE_SUCCESS(rv, rv);
-      maybeModified = true;
     } else if (afterRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, if possible, just to prevent nbsp
       // proliferation
-      nsresult rv = CheckLeadingNBSP(afterRun, *aInOutParent, *aInOutOffset);
+      nsresult rv = CheckLeadingNBSP(afterRun, pointToInsert.Container(),
+                                     pointToInsert.Offset());
       NS_ENSURE_SUCCESS(rv, rv);
-      maybeModified = true;
     }
 
     // Handle any changes needed to ws run before inserted text
@@ -293,30 +299,17 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
       // it would become significant after text inserted.
       nsresult rv =
         DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset,
-                    *aInOutParent, *aInOutOffset);
+                    pointToInsert.Container(), pointToInsert.Offset());
       NS_ENSURE_SUCCESS(rv, rv);
-      maybeModified = true;
     } else if (beforeRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, if possible, just to prevent nbsp
       // proliferation
-      nsresult rv = CheckTrailingNBSP(beforeRun, *aInOutParent, *aInOutOffset);
+      nsresult rv = CheckTrailingNBSP(beforeRun, pointToInsert.Container(),
+                                      pointToInsert.Offset());
       NS_ENSURE_SUCCESS(rv, rv);
-      maybeModified = true;
     }
 
-    // The child node may be changed.  So, even though getting child at offset
-    // is expensive, we need to do it here.
-    if (maybeModified) {
-      if ((*aInOutParent)->HasChildren()) {
-        if (*aInOutOffset == 0) {
-          *aInOutChildAtOffset = (*aInOutParent)->GetFirstChild();
-        } else {
-          *aInOutChildAtOffset = (*aInOutParent)->GetChildAt(*aInOutOffset);
-        }
-      } else {
-        *aInOutChildAtOffset = nullptr;
-      }
-    }
+    // After this block, pointToInsert is modified by AutoTrackDOMPoint.
   }
 
   // Next up, tweak head and tail of string as needed.  First the head: there
@@ -329,7 +322,8 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
       if (beforeRun->mType & WSType::leadingWS) {
         theString.SetCharAt(nbsp, 0);
       } else if (beforeRun->mType & WSType::normalWS) {
-        WSPoint wspoint = GetCharBefore(*aInOutParent, *aInOutOffset);
+        WSPoint wspoint =
+          GetCharBefore(pointToInsert.Container(), pointToInsert.Offset());
         if (wspoint.mTextNode && nsCRT::IsAsciiSpace(wspoint.mChar)) {
           theString.SetCharAt(nbsp, 0);
         }
@@ -348,7 +342,8 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
       if (afterRun->mType & WSType::trailingWS) {
         theString.SetCharAt(nbsp, lastCharIndex);
       } else if (afterRun->mType & WSType::normalWS) {
-        WSPoint wspoint = GetCharAfter(*aInOutParent, *aInOutOffset);
+        WSPoint wspoint =
+          GetCharAfter(pointToInsert.Container(), pointToInsert.Offset());
         if (wspoint.mTextNode && nsCRT::IsAsciiSpace(wspoint.mChar)) {
           theString.SetCharAt(nbsp, lastCharIndex);
         }
@@ -377,8 +372,12 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
   }
 
   // Ready, aim, fire!
-  mHTMLEditor->InsertTextImpl(theString, aInOutParent, aInOutChildAtOffset,
-                              aInOutOffset, aDoc);
+  nsresult rv =
+    mHTMLEditor->InsertTextImpl(aDocument, theString, pointToInsert.AsRaw(),
+                                aPointAfterInsertedString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
   return NS_OK;
 }
 

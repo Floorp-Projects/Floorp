@@ -8,15 +8,18 @@ import getpass
 import json
 import logging
 import os
-import platform
 import subprocess
 import sys
 import time
 import which
 
 from collections import (
+    Counter,
     namedtuple,
     OrderedDict,
+)
+from textwrap import (
+    TextWrapper,
 )
 
 try:
@@ -24,20 +27,48 @@ try:
 except Exception:
     psutil = None
 
+from mach.mixin.logging import LoggingMixin
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 
 import mozpack.path as mozpath
 
-from ..base import MozbuildObject
-
-from ..testing import install_test_files
-
+from ..base import (
+    BuildEnvironmentNotFoundException,
+    MozbuildObject,
+)
+from ..backend import (
+    get_backend_class,
+)
+from ..testing import (
+    install_test_files,
+)
 from ..compilation.warnings import (
     WarningsCollector,
     WarningsDatabase,
 )
+from ..shellutil import (
+    quote as shell_quote,
+)
+from ..util import (
+    mkdir,
+    resolve_target_to_make,
+)
 
-from textwrap import TextWrapper
+
+FINDER_SLOW_MESSAGE = '''
+===================
+PERFORMANCE WARNING
+
+The OS X Finder application (file indexing used by Spotlight) used a lot of CPU
+during the build - an average of %f%% (100%% is 1 core). This made your build
+slower.
+
+Consider adding ".noindex" to the end of your object directory name to have
+Finder ignore it. Or, add an indexing exclusion through the Spotlight System
+Preferences.
+===================
+'''.strip()
+
 
 INSTALL_TESTS_CLOBBER = ''.join([TextWrapper().fill(line) + '\n' for line in
 '''
@@ -485,6 +516,275 @@ class BuildMonitor(MozbuildObject):
         return ccache_stats
 
 
+class TerminalLoggingHandler(logging.Handler):
+    """Custom logging handler that works with terminal window dressing.
+
+    This class should probably live elsewhere, like the mach core. Consider
+    this a proving ground for its usefulness.
+    """
+    def __init__(self):
+        logging.Handler.__init__(self)
+
+        self.fh = sys.stdout
+        self.footer = None
+
+    def flush(self):
+        self.acquire()
+
+        try:
+            self.fh.flush()
+        finally:
+            self.release()
+
+    def emit(self, record):
+        msg = self.format(record)
+
+        self.acquire()
+
+        try:
+            if self.footer:
+                self.footer.clear()
+
+            self.fh.write(msg)
+            self.fh.write('\n')
+
+            if self.footer:
+                self.footer.draw()
+
+            # If we don't flush, the footer may not get drawn.
+            self.fh.flush()
+        finally:
+            self.release()
+
+
+class Footer(object):
+    """Handles display of a footer in a terminal.
+
+    This class implements the functionality common to all mach commands
+    that render a footer.
+    """
+
+    def __init__(self, terminal):
+        # terminal is a blessings.Terminal.
+        self._t = terminal
+        self._fh = sys.stdout
+
+    def clear(self):
+        """Removes the footer from the current terminal."""
+        self._fh.write(self._t.move_x(0))
+        self._fh.write(self._t.clear_eol())
+
+    def write(self, parts):
+        """Write some output in the footer, accounting for terminal width.
+
+        parts is a list of 2-tuples of (encoding_function, input).
+        None means no encoding."""
+
+        # We don't want to write more characters than the current width of the
+        # terminal otherwise wrapping may result in weird behavior. We can't
+        # simply truncate the line at terminal width characters because a)
+        # non-viewable escape characters count towards the limit and b) we
+        # don't want to truncate in the middle of an escape sequence because
+        # subsequent output would inherit the escape sequence.
+        max_width = self._t.width
+        written = 0
+        write_pieces = []
+        for part in parts:
+            try:
+                func, part = part
+                encoded = getattr(self._t, func)(part)
+            except ValueError:
+                encoded = part
+
+            len_part = len(part)
+            len_spaces = len(write_pieces)
+            if written + len_part + len_spaces > max_width:
+                write_pieces.append(part[0:max_width - written - len_spaces])
+                written += len_part
+                break
+
+            write_pieces.append(encoded)
+            written += len_part
+
+        with self._t.location():
+            self._t.move(self._t.height-1,0)
+            self._fh.write(' '.join(write_pieces))
+
+
+class BuildProgressFooter(Footer):
+    """Handles display of a build progress indicator in a terminal.
+
+    When mach builds inside a blessings-supported terminal, it will render
+    progress information collected from a BuildMonitor. This class converts the
+    state of BuildMonitor into terminal output.
+    """
+
+    def __init__(self, terminal, monitor):
+        Footer.__init__(self, terminal)
+        self.tiers = monitor.tiers.tier_status.viewitems()
+
+    def draw(self):
+        """Draws this footer in the terminal."""
+
+        if not self.tiers:
+            return
+
+        # The drawn terminal looks something like:
+        # TIER: static export libs tools
+
+        parts = [('bold', 'TIER:')]
+        append = parts.append
+        for tier, status in self.tiers:
+            if status is None:
+                append(tier)
+            elif status == 'finished':
+                append(('green', tier))
+            else:
+                append(('underline_yellow', tier))
+
+        self.write(parts)
+
+
+
+class OutputManager(LoggingMixin):
+    """Handles writing job output to a terminal or log."""
+
+    def __init__(self, log_manager, footer):
+        self.populate_logger()
+
+        self.footer = None
+        terminal = log_manager.terminal
+
+        # TODO convert terminal footer to config file setting.
+        if not terminal or os.environ.get('MACH_NO_TERMINAL_FOOTER', None):
+            return
+        if os.environ.get('INSIDE_EMACS', None):
+            return
+
+        self.t = terminal
+        self.footer = footer
+
+        self._handler = TerminalLoggingHandler()
+        self._handler.setFormatter(log_manager.terminal_formatter)
+        self._handler.footer = self.footer
+
+        old = log_manager.replace_terminal_handler(self._handler)
+        self._handler.level = old.level
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.footer:
+            self.footer.clear()
+            # Prevents the footer from being redrawn if logging occurs.
+            self._handler.footer = None
+
+    def write_line(self, line):
+        if self.footer:
+            self.footer.clear()
+
+        print(line)
+
+        if self.footer:
+            self.footer.draw()
+
+    def refresh(self):
+        if not self.footer:
+            return
+
+        self.footer.clear()
+        self.footer.draw()
+
+
+class BuildOutputManager(OutputManager):
+    """Handles writing build output to a terminal, to logs, etc."""
+
+    def __init__(self, log_manager, monitor, footer):
+        self.monitor = monitor
+        OutputManager.__init__(self, log_manager, footer)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        OutputManager.__exit__(self, exc_type, exc_value, traceback)
+
+        # Ensure the resource monitor is stopped because leaving it running
+        # could result in the process hanging on exit because the resource
+        # collection child process hasn't been told to stop.
+        self.monitor.stop_resource_recording()
+
+
+    def on_line(self, line):
+        warning, state_changed, relevant = self.monitor.on_line(line)
+
+        if relevant:
+            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
+        elif state_changed:
+            have_handler = hasattr(self, 'handler')
+            if have_handler:
+                self.handler.acquire()
+            try:
+                self.refresh()
+            finally:
+                if have_handler:
+                    self.handler.release()
+
+
+class StaticAnalysisFooter(Footer):
+    """Handles display of a static analysis progress indicator in a terminal.
+    """
+
+    def __init__(self, terminal, monitor):
+        Footer.__init__(self, terminal)
+        self.monitor = monitor
+
+    def draw(self):
+        """Draws this footer in the terminal."""
+
+        monitor = self.monitor
+        total = monitor.num_files
+        processed = monitor.num_files_processed
+        percent = '(%.2f%%)' % (processed * 100.0 / total)
+        parts = [
+            ('dim', 'Processing'),
+            ('yellow', str(processed)),
+            ('dim', 'of'),
+            ('yellow', str(total)),
+            ('dim', 'files'),
+            ('green', percent)
+        ]
+        if monitor.current_file:
+            parts.append(('bold', monitor.current_file))
+
+        self.write(parts)
+
+
+class StaticAnalysisOutputManager(OutputManager):
+    """Handles writing static analysis output to a terminal."""
+
+    def __init__(self, log_manager, monitor, footer):
+        self.monitor = monitor
+        OutputManager.__init__(self, log_manager, footer)
+
+    def on_line(self, line):
+        warning, relevant = self.monitor.on_line(line)
+
+        if warning:
+            self.log(logging.INFO, 'compiler_warning', warning,
+                'Warning: {flag} in {filename}: {message}')
+
+        if relevant:
+            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
+        else:
+            have_handler = hasattr(self, 'handler')
+            if have_handler:
+                self.handler.acquire()
+            try:
+                self.refresh()
+            finally:
+                if have_handler:
+                    self.handler.release()
+
+
 class CCacheStats(object):
     """Holds statistics from ccache.
 
@@ -677,6 +977,328 @@ class CCacheStats(object):
 
 class BuildDriver(MozbuildObject):
     """Provides a high-level API for build actions."""
+
+    def build(self, what=None, disable_extra_make_dependencies=None, jobs=0,
+              directory=None, verbose=False, keep_going=False, mach_context=None):
+        """Invoke the build backend.
+
+        ``what`` defines the thing to build. If not defined, the default
+        target is used.
+        """
+        warnings_path = self._get_state_filename('warnings.json')
+        monitor = self._spawn(BuildMonitor)
+        monitor.init(warnings_path)
+        ccache_start = monitor.ccache_stats()
+        footer = BuildProgressFooter(self.log_manager.terminal, monitor)
+
+        # Disable indexing in objdir because it is not necessary and can slow
+        # down builds.
+        mkdir(self.topobjdir, not_indexed=True)
+
+        with BuildOutputManager(self.log_manager, monitor, footer) as output:
+            monitor.start()
+
+            if directory is not None and not what:
+                print('Can only use -C/--directory with an explicit target '
+                    'name.')
+                return 1
+
+            if directory is not None:
+                disable_extra_make_dependencies=True
+                directory = mozpath.normsep(directory)
+                if directory.startswith('/'):
+                    directory = directory[1:]
+
+            status = None
+            monitor.start_resource_recording()
+            if what:
+                top_make = os.path.join(self.topobjdir, 'Makefile')
+                if not os.path.exists(top_make):
+                    print('Your tree has not been configured yet. Please run '
+                        '|mach build| with no arguments.')
+                    return 1
+
+                # Collect target pairs.
+                target_pairs = []
+                for target in what:
+                    path_arg = self._wrap_path_argument(target)
+
+                    if directory is not None:
+                        make_dir = os.path.join(self.topobjdir, directory)
+                        make_target = target
+                    else:
+                        make_dir, make_target = \
+                            resolve_target_to_make(self.topobjdir,
+                                path_arg.relpath())
+
+                    if make_dir is None and make_target is None:
+                        return 1
+
+                    # See bug 886162 - we don't want to "accidentally" build
+                    # the entire tree (if that's really the intent, it's
+                    # unlikely they would have specified a directory.)
+                    if not make_dir and not make_target:
+                        print("The specified directory doesn't contain a "
+                              "Makefile and the first parent with one is the "
+                              "root of the tree. Please specify a directory "
+                              "with a Makefile or run |mach build| if you "
+                              "want to build the entire tree.")
+                        return 1
+
+                    target_pairs.append((make_dir, make_target))
+
+                # Possibly add extra make depencies using dumbmake.
+                if not disable_extra_make_dependencies:
+                    from dumbmake.dumbmake import (dependency_map,
+                                                   add_extra_dependencies)
+                    depfile = os.path.join(self.topsrcdir, 'build',
+                                           'dumbmake-dependencies')
+                    with open(depfile) as f:
+                        dm = dependency_map(f.readlines())
+                    new_pairs = list(add_extra_dependencies(target_pairs, dm))
+                    self.log(logging.DEBUG, 'dumbmake',
+                             {'target_pairs': target_pairs,
+                              'new_pairs': new_pairs},
+                             'Added extra dependencies: will build {new_pairs} ' +
+                             'instead of {target_pairs}.')
+                    target_pairs = new_pairs
+
+                # Ensure build backend is up to date. The alternative is to
+                # have rules in the invoked Makefile to rebuild the build
+                # backend. But that involves make reinvoking itself and there
+                # are undesired side-effects of this. See bug 877308 for a
+                # comprehensive history lesson.
+                self._run_make(directory=self.topobjdir, target='backend',
+                    line_handler=output.on_line, log=False,
+                    print_directory=False, keep_going=keep_going)
+
+                # Build target pairs.
+                for make_dir, make_target in target_pairs:
+                    # We don't display build status messages during partial
+                    # tree builds because they aren't reliable there. This
+                    # could potentially be fixed if the build monitor were more
+                    # intelligent about encountering undefined state.
+                    status = self._run_make(directory=make_dir, target=make_target,
+                        line_handler=output.on_line, log=False, print_directory=False,
+                        ensure_exit_code=False, num_jobs=jobs, silent=not verbose,
+                        append_env={b'NO_BUILDSTATUS_MESSAGES': b'1'},
+                        keep_going=keep_going)
+
+                    if status != 0:
+                        break
+            else:
+                # Try to call the default backend's build() method. This will
+                # run configure to determine BUILD_BACKENDS if it hasn't run
+                # yet.
+                config = None
+                try:
+                    config = self.config_environment
+                except Exception:
+                    config_rc = self.configure(buildstatus_messages=True,
+                                               line_handler=output.on_line)
+                    if config_rc != 0:
+                        return config_rc
+
+                    # Even if configure runs successfully, we may have trouble
+                    # getting the config_environment for some builds, such as
+                    # OSX Universal builds. These have to go through client.mk
+                    # regardless.
+                    try:
+                        config = self.config_environment
+                    except Exception:
+                        pass
+
+                if config:
+                    active_backend = config.substs.get('BUILD_BACKENDS', [None])[0]
+                    if active_backend:
+                        backend_cls = get_backend_class(active_backend)(config)
+                        status = backend_cls.build(self, output, jobs, verbose)
+
+                # If the backend doesn't specify a build() method, then just
+                # call client.mk directly.
+                if status is None:
+                    status = self._run_make(srcdir=True, filename='client.mk',
+                        line_handler=output.on_line, log=False, print_directory=False,
+                        allow_parallel=False, ensure_exit_code=False, num_jobs=jobs,
+                        silent=not verbose, keep_going=keep_going)
+
+                self.log(logging.WARNING, 'warning_summary',
+                    {'count': len(monitor.warnings_database)},
+                    '{count} compiler warnings present.')
+
+            monitor.finish(record_usage=status == 0)
+
+        # Print the collected compiler warnings. This is redundant with
+        # inline output from the compiler itself. However, unlike inline
+        # output, this list is sorted and grouped by file, making it
+        # easier to triage output.
+        #
+        # Only do this if we had a successful build. If the build failed,
+        # there are more important things in the log to look for than
+        # whatever code we warned about.
+        if not status:
+            # Suppress warnings for 3rd party projects in local builds
+            # until we suppress them for real.
+            # TODO remove entries/feature once we stop generating warnings
+            # in these directories.
+            pathToThirdparty = os.path.join(self.topsrcdir,
+                                            "tools",
+                                           "rewriting",
+                                           "ThirdPartyPaths.txt")
+
+            if os.path.exists(pathToThirdparty):
+                with open(pathToThirdparty) as f:
+                    # Normalize the path (no trailing /)
+                    LOCAL_SUPPRESS_DIRS = tuple(d.rstrip('/') for d in f.read().splitlines())
+            else:
+                # For application based on gecko like thunderbird
+                LOCAL_SUPPRESS_DIRS = ()
+
+            suppressed_by_dir = Counter()
+
+            for warning in sorted(monitor.instance_warnings):
+                path = mozpath.normsep(warning['filename'])
+                if path.startswith(self.topsrcdir):
+                    path = path[len(self.topsrcdir) + 1:]
+
+                warning['normpath'] = path
+
+                if (path.startswith(LOCAL_SUPPRESS_DIRS) and
+                        'MOZ_AUTOMATION' not in os.environ):
+                    for d in LOCAL_SUPPRESS_DIRS:
+                        if path.startswith(d):
+                            suppressed_by_dir[d] += 1
+                            break
+
+                    continue
+
+                if warning['column'] is not None:
+                    self.log(logging.WARNING, 'compiler_warning', warning,
+                             'warning: {normpath}:{line}:{column} [{flag}] '
+                             '{message}')
+                else:
+                    self.log(logging.WARNING, 'compiler_warning', warning,
+                             'warning: {normpath}:{line} [{flag}] {message}')
+
+            for d, count in sorted(suppressed_by_dir.items()):
+                self.log(logging.WARNING, 'suppressed_warning',
+                         {'dir': d, 'count': count},
+                         '(suppressed {count} warnings in {dir})')
+
+        high_finder, finder_percent = monitor.have_high_finder_usage()
+        if high_finder:
+            print(FINDER_SLOW_MESSAGE % finder_percent)
+
+        ccache_end = monitor.ccache_stats()
+
+        ccache_diff = None
+        if ccache_start and ccache_end:
+            ccache_diff = ccache_end - ccache_start
+            if ccache_diff:
+                self.log(logging.INFO, 'ccache',
+                         {'msg': ccache_diff.hit_rate_message()}, "{msg}")
+
+        notify_minimum_time = 300
+        try:
+            notify_minimum_time = int(os.environ.get('MACH_NOTIFY_MINTIME', '300'))
+        except ValueError:
+            # Just stick with the default
+            pass
+
+        if monitor.elapsed > notify_minimum_time:
+            # Display a notification when the build completes.
+            self.notify('Build complete' if not status else 'Build failed')
+
+        if status:
+            return status
+
+        long_build = monitor.elapsed > 600
+
+        if long_build:
+            output.on_line('We know it took a while, but your build finally finished successfully!')
+        else:
+            output.on_line('Your build was successful!')
+
+        if monitor.have_resource_usage:
+            excessive, swap_in, swap_out = monitor.have_excessive_swapping()
+            # if excessive:
+            #    print(EXCESSIVE_SWAP_MESSAGE)
+
+            print('To view resource usage of the build, run |mach '
+                'resource-usage|.')
+
+            telemetry_handler = getattr(mach_context,
+                                        'telemetry_handler', None)
+            telemetry_data = monitor.get_resource_usage()
+
+            # Record build configuration data. For now, we cherry pick
+            # items we need rather than grabbing everything, in order
+            # to avoid accidentally disclosing PII.
+            telemetry_data['substs'] = {}
+            try:
+                for key in ['MOZ_ARTIFACT_BUILDS', 'MOZ_USING_CCACHE', 'MOZ_USING_SCCACHE']:
+                    value = self.substs.get(key, False)
+                    telemetry_data['substs'][key] = value
+            except BuildEnvironmentNotFoundException:
+                pass
+
+            # Grab ccache stats if available. We need to be careful not
+            # to capture information that can potentially identify the
+            # user (such as the cache location)
+            if ccache_diff:
+                telemetry_data['ccache'] = {}
+                for key in [key[0] for key in ccache_diff.STATS_KEYS]:
+                    try:
+                        telemetry_data['ccache'][key] = ccache_diff._values[key]
+                    except KeyError:
+                        pass
+
+            if telemetry_handler:
+                telemetry_handler(mach_context, telemetry_data)
+
+        # Only for full builds because incremental builders likely don't
+        # need to be burdened with this.
+        if not what:
+            try:
+                # Fennec doesn't have useful output from just building. We should
+                # arguably make the build action useful for Fennec. Another day...
+                if self.substs['MOZ_BUILD_APP'] != 'mobile/android':
+                    print('To take your build for a test drive, run: |mach run|')
+                app = self.substs['MOZ_BUILD_APP']
+                if app in ('browser', 'mobile/android'):
+                    print('For more information on what to do now, see '
+                        'https://developer.mozilla.org/docs/Developer_Guide/So_You_Just_Built_Firefox')
+            except Exception:
+                # Ignore Exceptions in case we can't find config.status (such
+                # as when doing OSX Universal builds)
+                pass
+
+        return status
+
+    def configure(self, options=None, buildstatus_messages=False,
+                  line_handler=None):
+        def on_line(line):
+            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
+
+        line_handler = line_handler or on_line
+
+        options = ' '.join(shell_quote(o) for o in options or ())
+        append_env = {b'CONFIGURE_ARGS': options.encode('utf-8')}
+
+        # Only print build status messages when we have an active
+        # monitor.
+        if not buildstatus_messages:
+            append_env[b'NO_BUILDSTATUS_MESSAGES'] =  b'1'
+        status = self._run_make(srcdir=True, filename='client.mk',
+            target='configure', line_handler=line_handler, log=False,
+            print_directory=False, allow_parallel=False, ensure_exit_code=False,
+            append_env=append_env)
+
+        if not status:
+            print('Configure complete!')
+            print('Be sure to run |mach build| to pick up any changes');
+
+        return status
 
     def install_tests(self, test_objs):
         """Install test files."""

@@ -19,7 +19,7 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
-class nsGlobalWindow;
+class nsGlobalWindowInner;
 class nsIWebBrowserChrome;
 
 namespace mozilla {
@@ -33,7 +33,7 @@ class BarProp : public nsISupports,
                 public nsWrapperCache
 {
 public:
-  explicit BarProp(nsGlobalWindow *aWindow);
+  explicit BarProp(nsGlobalWindowInner *aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BarProp)
@@ -56,14 +56,14 @@ protected:
 
   already_AddRefed<nsIWebBrowserChrome> GetBrowserChrome();
 
-  RefPtr<nsGlobalWindow> mDOMWindow;
+  RefPtr<nsGlobalWindowInner> mDOMWindow;
 };
 
 // Script "menubar" object
 class MenubarProp final : public BarProp
 {
 public:
-  explicit MenubarProp(nsGlobalWindow *aWindow);
+  explicit MenubarProp(nsGlobalWindowInner *aWindow);
   virtual ~MenubarProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;
@@ -75,7 +75,7 @@ public:
 class ToolbarProp final : public BarProp
 {
 public:
-  explicit ToolbarProp(nsGlobalWindow *aWindow);
+  explicit ToolbarProp(nsGlobalWindowInner *aWindow);
   virtual ~ToolbarProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;
@@ -87,7 +87,7 @@ public:
 class LocationbarProp final : public BarProp
 {
 public:
-  explicit LocationbarProp(nsGlobalWindow *aWindow);
+  explicit LocationbarProp(nsGlobalWindowInner *aWindow);
   virtual ~LocationbarProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;
@@ -99,7 +99,7 @@ public:
 class PersonalbarProp final : public BarProp
 {
 public:
-  explicit PersonalbarProp(nsGlobalWindow *aWindow);
+  explicit PersonalbarProp(nsGlobalWindowInner *aWindow);
   virtual ~PersonalbarProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;
@@ -111,7 +111,7 @@ public:
 class StatusbarProp final : public BarProp
 {
 public:
-  explicit StatusbarProp(nsGlobalWindow *aWindow);
+  explicit StatusbarProp(nsGlobalWindowInner *aWindow);
   virtual ~StatusbarProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;
@@ -123,7 +123,7 @@ public:
 class ScrollbarsProp final : public BarProp
 {
 public:
-  explicit ScrollbarsProp(nsGlobalWindow *aWindow);
+  explicit ScrollbarsProp(nsGlobalWindowInner *aWindow);
   virtual ~ScrollbarsProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;

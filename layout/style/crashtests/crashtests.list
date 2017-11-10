@@ -262,3 +262,4 @@ load 1413288.html
 load 1413361.html
 load 1415663.html
 pref(dom.webcomponents.enabled,true) load 1415353.html
+load 1415021.html # This should have dom.webcomponents.enabled=true, but it leaks the world, see bug 1416296.

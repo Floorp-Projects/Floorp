@@ -15,6 +15,7 @@
 #undef KeyPress
 #endif
 
+class nsMenuFrame;
 class nsMenuBarFrame;
 class nsIDOMKeyEvent;
 
@@ -73,6 +74,18 @@ protected:
   static void InitAccessKey();
 
   static mozilla::Modifiers GetModifiersForAccessKey(nsIDOMKeyEvent* event);
+
+  /**
+   * Given a key event for an Alt+shortcut combination,
+   * return the menu, if any, that would be opened.
+   */
+  nsMenuFrame* GetMenuForKeyEvent(nsIDOMKeyEvent* aKeyEvent);
+
+  /**
+   * Call MarkAsReservedByChrome if the user's preferences indicate that
+   * the key should be chrome-only.
+   */
+  void ReserveKeyIfNeeded(nsIDOMEvent* aKeyEvent);
 
   // This should only be called by the nsMenuBarListener during event dispatch,
   // thus ensuring that this doesn't get destroyed during the process.

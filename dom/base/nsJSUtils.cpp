@@ -83,7 +83,7 @@ nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext)
   if (!aContext)
     return 0;
 
-  nsGlobalWindow* win = xpc::CurrentWindowOrNull(aContext);
+  nsGlobalWindowInner* win = xpc::CurrentWindowOrNull(aContext);
   return win ? win->WindowID() : 0;
 }
 

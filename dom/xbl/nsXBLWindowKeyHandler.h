@@ -19,6 +19,7 @@ class nsXBLPrototypeHandler;
 
 namespace mozilla {
 class EventListenerManager;
+class WidgetKeyboardEvent;
 struct IgnoreModifierState;
 namespace dom {
 class Element;
@@ -76,6 +77,11 @@ protected:
   // attribute.
   bool HasHandlerForEvent(nsIDOMKeyEvent* aEvent,
                           bool* aOutReservedForChrome = nullptr);
+
+  // Returns true if the key would be reserved for the given handler. A reserved
+  // key is not sent to a content process or single-process equivalent.
+  bool IsReservedKey(mozilla::WidgetKeyboardEvent* aKeyEvent,
+                     nsXBLPrototypeHandler* aHandler);
 
   // Returns event type for matching between aWidgetKeyboardEvent and
   // shortcut key handlers.  This is used for calling WalkHandlers(),

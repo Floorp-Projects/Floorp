@@ -31,6 +31,7 @@
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/layers/MemoryReportingMLGPU.h"
 #include "mozilla/webrender/RenderThread.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "nsDebugImpl.h"
 #include "nsThreadManager.h"
 #include "prenv.h"
@@ -226,6 +227,8 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
 
   // Make sure to do this *after* we update gfxVars above.
   if (gfxVars::UseWebRender()) {
+    wr::WebRenderAPI::InitExternalLogHandler();
+
     wr::RenderThread::Start();
   }
 
@@ -457,6 +460,8 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   VRListenerThreadHolder::Shutdown();
   if (gfxVars::UseWebRender()) {
     wr::RenderThread::ShutDown();
+
+    wr::WebRenderAPI::ShutdownExternalLogHandler();
   }
   Factory::ShutDown();
 #if defined(XP_WIN)

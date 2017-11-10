@@ -280,7 +280,7 @@ ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type, const ch
 
     // Compute the current window id if any.
     uint64_t windowId = 0;
-    nsGlobalWindow* win = WindowGlobalOrNull(CurrentGlobalOrNull(cx));
+    nsGlobalWindowInner* win = WindowGlobalOrNull(CurrentGlobalOrNull(cx));
     if (win)
       windowId = win->WindowID();
 
@@ -1434,7 +1434,7 @@ IsXPCWNHolderClass(const JSClass* clasp)
 
 } // namespace XrayUtils
 
-static nsGlobalWindow*
+static nsGlobalWindowInner*
 AsWindow(JSContext* cx, JSObject* wrapper)
 {
   // We want to use our target object here, since we don't want to be
@@ -1763,13 +1763,13 @@ DOMXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper, HandleObj
     // Check for indexed access on a window.
     uint32_t index = GetArrayIndexFromId(cx, id);
     if (IsArrayIndex(index)) {
-        nsGlobalWindow* win = AsWindow(cx, wrapper);
+        nsGlobalWindowInner* win = AsWindow(cx, wrapper);
         // Note: As() unwraps outer windows to get to the inner window.
         if (win) {
             nsCOMPtr<nsPIDOMWindowOuter> subframe = win->IndexedGetter(index);
             if (subframe) {
                 subframe->EnsureInnerWindow();
-                nsGlobalWindow* global = nsGlobalWindow::Cast(subframe);
+                nsGlobalWindowOuter* global = nsGlobalWindowOuter::Cast(subframe);
                 JSObject* obj = global->FastGetGlobalJSObject();
                 if (MOZ_UNLIKELY(!obj)) {
                     // It's gone?
@@ -1835,7 +1835,7 @@ DOMXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flag
                               AutoIdVector& props)
 {
     // Put the indexed properties for a window first.
-    nsGlobalWindow* win = AsWindow(cx, wrapper);
+    nsGlobalWindowInner* win = AsWindow(cx, wrapper);
     if (win) {
         uint32_t length = win->Length();
         if (!props.reserve(props.length() + length)) {
@@ -2131,7 +2131,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
     // named access. So we just handle it separately here.  Note that this is
     // only relevant for CrossOriginXrayWrapper, which calls
     // getPropertyDescriptor from getOwnPropertyDescriptor.
-    nsGlobalWindow* win = nullptr;
+    nsGlobalWindowInner* win = nullptr;
     if (!desc.object() &&
         JSID_IS_STRING(id) &&
         (win = AsWindow(cx, wrapper)))
@@ -2140,7 +2140,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
         if (!name.init(cx, JSID_TO_STRING(id)))
             return false;
         if (nsCOMPtr<nsPIDOMWindowOuter> childDOMWin = win->GetChildWindow(name)) {
-            auto* cwin = nsGlobalWindow::Cast(childDOMWin);
+            auto* cwin = nsGlobalWindowOuter::Cast(childDOMWin);
             JSObject* childObj = cwin->FastGetGlobalJSObject();
             if (MOZ_UNLIKELY(!childObj))
                 return xpc::Throw(cx, NS_ERROR_FAILURE);

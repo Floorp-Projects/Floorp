@@ -34,7 +34,8 @@ private:
 
   void MergeDisplayLists(nsDisplayList* aNewList,
                          nsDisplayList* aOldList,
-                         nsDisplayList* aOutList);
+                         nsDisplayList* aOutList,
+                         const mozilla::ActiveScrolledRoot** aOutContainerASR = nullptr);
 
   bool ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedFrames,
                             nsRect* aOutDirty,
