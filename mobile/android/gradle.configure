@@ -46,9 +46,6 @@ def gradle_android_build_config():
         else:
             return s
 
-    # It's not really possible to abstract the GeckoView details just yet; post
-    # Android-Gradle plugin 3.0+, the configurations can be more sensible and
-    # we'll do this work.
     def variant(productFlavors, buildType):
         return namespace(
             productFlavors=productFlavors,
@@ -59,7 +56,13 @@ def gradle_android_build_config():
 
     return namespace(
         app=namespace(
-            variant=variant(('official', 'photon'), 'debug'),
+            variant=variant(('official', 'withoutGeckoBinaries', 'noMinApi', 'photon'), 'debug'),
+        ),
+        geckoview=namespace(
+            variant=variant(('official', 'withGeckoBinaries', 'noMinApi'), 'release'),
+        ),
+        geckoview_example=namespace(
+            variant=variant(('official', 'withGeckoBinaries', 'noMinApi'), 'debug'),
         ),
     )
 
@@ -82,7 +85,7 @@ set_config('GRADLE_ANDROID_APP_VARIANT_NAME', gradle_android_app_variant_name)
 def gradle_android_app_tasks(build_config):
     '''Gradle tasks run by |mach android assemble-app|.'''
     return [
-        'geckoview:generateJNIWrappersForGeneratedRelease',
+        'geckoview:generateJNIWrappersForGenerated{geckoview.variant.name}'.format(geckoview=build_config.geckoview),
         'app:generateJNIWrappersForFennec{app.variant.name}'.format(app=build_config.app),
         'app:assemble{app.variant.name}'.format(app=build_config.app),
         'app:assemble{app.variant.name}AndroidTest'.format(app=build_config.app),
@@ -175,9 +178,9 @@ set_config('GRADLE_ANDROID_FINDBUGS_TASKS', gradle_android_findbugs_tasks)
 def gradle_android_archive_geckoview_tasks(build_config):
     '''Gradle tasks run by |mach android archive-geckoview|.'''
     return [
-        'geckoview:assembleWithGeckoBinaries',
-        'geckoview_example:assembleWithGeckoBinaries',
-        'geckoview_example:assembleWithGeckoBinariesAndroidTest',
+        'geckoview:assemble{geckoview.variant.name}'.format(geckoview=build_config.geckoview),
+        'geckoview_example:assemble{geckoview_example.variant.name}'.format(geckoview_example=build_config.geckoview_example),
+        'geckoview_example:assemble{geckoview_example.variant.name}AndroidTest'.format(geckoview_example=build_config.geckoview_example),
         'geckoview:uploadArchives',
     ]
 
