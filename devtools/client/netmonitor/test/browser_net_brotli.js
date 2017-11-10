@@ -51,13 +51,11 @@ add_task(function* () {
     });
 
   wait = waitForDOM(document, ".CodeMirror-code");
-  let onResponseContent = monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
   yield wait;
-  yield onResponseContent;
   yield testResponse("br");
   yield teardown(monitor);
 

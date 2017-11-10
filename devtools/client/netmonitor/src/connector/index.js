@@ -25,7 +25,6 @@ class Connector {
     this.setPreferences = this.setPreferences.bind(this);
     this.triggerActivity = this.triggerActivity.bind(this);
     this.viewSourceInDebugger = this.viewSourceInDebugger.bind(this);
-    this.requestData = this.requestData.bind(this);
   }
 
   // Connect/Disconnect API
@@ -98,10 +97,6 @@ class Connector {
 
   viewSourceInDebugger() {
     return this.connector.viewSourceInDebugger(...arguments);
-  }
-
-  requestData() {
-    return this.connector.requestData(...arguments);
   }
 }
 
