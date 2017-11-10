@@ -596,10 +596,6 @@ public:
    */
   nsTArray<MediaStream*> mSuspendedStreams;
   /**
-   * Suspended AudioContext IDs
-   */
-  nsTHashtable<nsUint64HashKey> mSuspendedContexts;
-  /**
    * Streams from mFirstCycleBreaker to the end of mStreams produce output
    * before they receive input.  They correspond to DelayNodes that are in
    * cycles.
