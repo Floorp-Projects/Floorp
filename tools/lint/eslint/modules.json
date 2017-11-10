@@ -72,6 +72,7 @@
   "forms.jsm": ["FormData"],
   "FormAutofillHeuristics.jsm": ["FormAutofillHeuristics", "LabelUtils"],
   "FormAutofillSync.jsm": ["AddressesEngine", "CreditCardsEngine"],
+  "FormAutofillUtils.jsm": ["FormAutofillUtils", "AddressDataLoader"],
   "FrameScriptManager.jsm": ["getNewLoaderID"],
   "fxa_utils.js": ["initializeIdentityWithTokenServerResponse"],
   "fxaccounts.jsm": ["Authentication"],
