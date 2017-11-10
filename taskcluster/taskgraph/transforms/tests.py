@@ -366,11 +366,10 @@ test_description_schema = Schema({
     # the product name, defaults to firefox
     Optional('product'): basestring,
 
-    Optional('when'): {
-        # Run this test when the given SCHEDULES components have changed; the
-        # test suite and platform family are added to this list automatically.
-        Optional('schedules'): [basestring],
-    },
+    # conditional files to determine when these tests should be run
+    Optional('when'): Any({
+        Optional('files-changed'): [basestring],
+    }),
 
     Optional('worker-type'): optionally_keyed_by(
         'test-platform',
@@ -641,7 +640,7 @@ def handle_suite_category(config, tests):
 
         script = test['mozharness']['script']
         category_arg = None
-        if suite == 'test-verify':
+        if suite == 'test-verification':
             pass
         elif script == 'android_emulator_unittest.py':
             category_arg = '--test-suite'
@@ -976,16 +975,16 @@ def make_job_description(config, tests):
             'platform': test.get('treeherder-machine-platform', test['build-platform']),
         }
 
-        schedules = [attributes['unittest_suite'], platform_family(test['build-platform'])]
-        when = test.get('when')
-        if when and 'schedules' in when:
-            schedules.extend(when['schedules'])
-        if config.params['project'] != 'try':
-            # for non-try branches, include SETA
-            jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
+        if test.get('when'):
+            jobdesc['when'] = test['when']
         else:
-            # otherwise just use skip-unless-schedules
-            jobdesc['optimization'] = {'skip-unless-schedules': schedules}
+            schedules = [attributes['unittest_suite'], platform_family(test['build-platform'])]
+            if config.params['project'] != 'try':
+                # for non-try branches, include SETA
+                jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
+            else:
+                # otherwise just use skip-unless-schedules
+                jobdesc['optimization'] = {'skip-unless-schedules': schedules}
 
         run = jobdesc['run'] = {}
         run['using'] = 'mozharness-test'
