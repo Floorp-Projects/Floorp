@@ -24,14 +24,9 @@
 #define MATCH_OS_LOCALE_PREF "intl.locale.matchOS"
 #define SELECTED_LOCALE_PREF "general.useragent.locale"
 
-//XXX: This pref is used only by Android and we use it to emulate
-//     retrieving OS locale until we get proper hook into JNI in bug 1337078.
-#define ANDROID_OS_LOCALE_PREF "intl.locale.os"
-
 static const char* kObservedPrefs[] = {
   MATCH_OS_LOCALE_PREF,
   SELECTED_LOCALE_PREF,
-  ANDROID_OS_LOCALE_PREF,
   nullptr
 };
 
@@ -575,16 +570,10 @@ LocaleService::Observe(nsISupports *aSubject, const char *aTopic,
     RequestedLocalesChanged();
   } else {
     NS_ConvertUTF16toUTF8 pref(aData);
-
-    // This is a temporary solution until we get bug 1337078 landed.
-    if (pref.EqualsLiteral(ANDROID_OS_LOCALE_PREF)) {
-      OSPreferences::GetInstance()->Refresh();
-    }
     // At the moment the only thing we're observing are settings indicating
     // user requested locales.
     if (pref.EqualsLiteral(MATCH_OS_LOCALE_PREF) ||
-        pref.EqualsLiteral(SELECTED_LOCALE_PREF) ||
-        pref.EqualsLiteral(ANDROID_OS_LOCALE_PREF)) {
+        pref.EqualsLiteral(SELECTED_LOCALE_PREF)) {
       RequestedLocalesChanged();
     }
   }

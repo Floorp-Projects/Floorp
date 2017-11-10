@@ -79,6 +79,55 @@ public:
     template<class Impl> class Natives;
 };
 
+class BrowserLocaleManager : public mozilla::jni::ObjectBase<BrowserLocaleManager>
+{
+public:
+    static const char name[];
+
+    explicit BrowserLocaleManager(const Context& ctx) : ObjectBase<BrowserLocaleManager>(ctx) {}
+
+    struct GetLocale_t {
+        typedef BrowserLocaleManager Owner;
+        typedef mozilla::jni::String::LocalRef ReturnType;
+        typedef mozilla::jni::String::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getLocale";
+        static constexpr char signature[] =
+                "()Ljava/lang/String;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto GetLocale() -> mozilla::jni::String::LocalRef;
+
+    struct RefreshLocales_t {
+        typedef BrowserLocaleManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "refreshLocales";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::ANY;
+
+    template<class Impl> class Natives;
+};
+
 class DownloadsIntegration : public mozilla::jni::ObjectBase<DownloadsIntegration>
 {
 public:
