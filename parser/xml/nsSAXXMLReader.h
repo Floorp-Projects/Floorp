@@ -89,8 +89,6 @@ private:
                           nsString &aURI,
                           nsString &aLocalName,
                           nsString &aQName);
-  nsString mPublicId;
-  nsString mSystemId;
 };
 
 #endif // nsSAXXMLReader_h__
