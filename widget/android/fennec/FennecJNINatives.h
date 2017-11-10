@@ -39,6 +39,21 @@ const JNINativeMethod ANRReporter::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class BrowserLocaleManager::Natives : public mozilla::jni::NativeImpl<BrowserLocaleManager, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod BrowserLocaleManager::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<BrowserLocaleManager::RefreshLocales_t>(
+            mozilla::jni::NativeStub<BrowserLocaleManager::RefreshLocales_t, Impl>
+            ::template Wrap<&Impl::RefreshLocales>)
+};
+
+template<class Impl>
 class GeckoJavaSampler::Natives : public mozilla::jni::NativeImpl<GeckoJavaSampler, Impl>
 {
 public:

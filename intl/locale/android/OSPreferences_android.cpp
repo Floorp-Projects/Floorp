@@ -7,22 +7,25 @@
 #include "OSPreferences.h"
 #include "mozilla/Preferences.h"
 
+#include "FennecJNIWrappers.h"
+#include "GeneratedJNIWrappers.h"
+
 using namespace mozilla::intl;
 
 bool
 OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
 {
-  //XXX: This is a quite sizable hack to work around the fact that we cannot
-  //     retrieve OS locale in C++ without reaching out to JNI.
-  //     Once we fix this (bug 1337078), this hack should not be necessary.
-  //
+  if (!mozilla::jni::IsAvailable()) {
+    return false;
+  }
+
   //XXX: Notice, this value may be empty on an early read. In that case
   //     we won't add anything to the return list so that it doesn't get
   //     cached in mSystemLocales.
-  nsAutoCString locale;
-  Preferences::GetCString("intl.locale.os", locale);
-  if (!locale.IsEmpty()) {
-    aLocaleList.AppendElement(locale);
+  auto locale = mozilla::jni::IsFennec() ? java::BrowserLocaleManager::GetLocale() :
+                java::GeckoAppShell::GetDefaultLocale();
+  if (locale) {
+    aLocaleList.AppendElement(locale->ToCString());
     return true;
   }
   return false;
