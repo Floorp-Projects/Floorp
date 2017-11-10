@@ -380,6 +380,17 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest,
 
   mChannelStatistics.Stop();
 
+  // Move this request back into the foreground.  This is necessary for
+  // requests owned by video documents to ensure the load group fires
+  // OnStopRequest when restoring from session history.
+  nsLoadFlags loadFlags;
+  DebugOnly<nsresult> rv = mChannel->GetLoadFlags(&loadFlags);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GetLoadFlags() failed!");
+
+  if (loadFlags & nsIRequest::LOAD_BACKGROUND) {
+    ModifyLoadFlags(loadFlags & ~nsIRequest::LOAD_BACKGROUND);
+  }
+
   // Note that aStatus might have succeeded --- this might be a normal close
   // --- even in situations where the server cut us off because we were
   // suspended. So we need to "reopen on error" in that case too. The only
@@ -404,17 +415,6 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest,
   }
 
   mCacheStream.NotifyDataEnded(aStatus);
-
-  // Move this request back into the foreground.  This is necessary for
-  // requests owned by video documents to ensure the load group fires
-  // OnStopRequest when restoring from session history.
-  nsLoadFlags loadFlags;
-  DebugOnly<nsresult> rv = mChannel->GetLoadFlags(&loadFlags);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetLoadFlags() failed!");
-
-  if (loadFlags & nsIRequest::LOAD_BACKGROUND) {
-    ModifyLoadFlags(loadFlags & ~nsIRequest::LOAD_BACKGROUND);
-  }
 
   return NS_OK;
 }
