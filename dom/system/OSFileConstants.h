@@ -7,6 +7,7 @@
 #ifndef mozilla_osfileconstants_h__
 #define mozilla_osfileconstants_h__
 
+#include "nsIObserver.h"
 #include "nsIOSFileConstantsService.h"
 #include "mozilla/Attributes.h"
 
@@ -18,10 +19,12 @@ namespace mozilla {
  * main-thread.
  */
 class OSFileConstantsService final : public nsIOSFileConstantsService
+                                   , public nsIObserver
 {
- public:
+public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOSFILECONSTANTSSERVICE
+  NS_DECL_NSIOBSERVER
 
   static already_AddRefed<OSFileConstantsService>
   GetOrCreate();
