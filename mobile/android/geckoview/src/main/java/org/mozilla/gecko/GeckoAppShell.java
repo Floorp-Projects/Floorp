@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -1863,5 +1864,10 @@ public class GeckoAppShell
             return 0;
         }
         return Integer.parseInt(prop);
+    }
+
+    @WrapForJNI
+    public static String getDefaultLocale() {
+        return Locale.getDefault().toString();
     }
 }

@@ -15,9 +15,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/NotificationDB.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "extensionNameFromURI", () => {
-  return Cu.import("resource://gre/modules/ExtensionParent.jsm", {}).extensionNameFromURI;
-});
+const {WebExtensionPolicy} = Cu.getGlobalForObject(Services);
 
 // lazy module getters
 
@@ -7128,9 +7126,9 @@ var gIdentityHandler = {
   _uriHasHost: false,
 
   /**
-   * Whether this is a "moz-extension:" page, loaded from a WebExtension.
+   * If this tab belongs to a WebExtension, contains its WebExtensionPolicy.
    */
-  _isExtensionPage: false,
+  _pageExtensionPolicy: null,
 
   /**
    * Whether this._uri refers to an internally implemented browser page.
@@ -7571,9 +7569,9 @@ var gIdentityHandler = {
         icon_labels_dir = /^[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufefc]/.test(icon_label) ?
                           "rtl" : "ltr";
       }
-    } else if (this._isExtensionPage) {
+    } else if (this._pageExtensionPolicy) {
       this._identityBox.className = "extensionPage";
-      let extensionName = extensionNameFromURI(this._uri);
+      let extensionName = this._pageExtensionPolicy.name;
       icon_label = gNavigatorBundle.getFormattedString(
         "identity.extension.label", [extensionName]);
     } else if (this._uriHasHost && this._isSecure) {
@@ -7652,8 +7650,8 @@ var gIdentityHandler = {
     // Push the appropriate strings out to the UI
     this._connectionIcon.setAttribute("tooltiptext", tooltip);
 
-    if (this._isExtensionPage) {
-      let extensionName = extensionNameFromURI(this._uri);
+    if (this._pageExtensionPolicy) {
+      let extensionName = this._pageExtensionPolicy.name;
       this._extensionIcon.setAttribute("tooltiptext",
         gNavigatorBundle.getFormattedString("identity.extension.tooltip", [extensionName]));
     }
@@ -7689,7 +7687,7 @@ var gIdentityHandler = {
     let connection = "not-secure";
     if (this._isSecureInternalUI) {
       connection = "chrome";
-    } else if (this._isExtensionPage) {
+    } else if (this._pageExtensionPolicy) {
       connection = "extension";
     } else if (this._isURILoadedFromFile) {
       connection = "file";
@@ -7771,8 +7769,8 @@ var gIdentityHandler = {
       hostless = true;
     }
 
-    if (this._isExtensionPage) {
-      host = extensionNameFromURI(this._uri);
+    if (this._pageExtensionPolicy) {
+      host = this._pageExtensionPolicy.name;
     }
 
     // Fill in the CA name if we have a valid TLS certificate.
@@ -7828,7 +7826,7 @@ var gIdentityHandler = {
     this._isSecureInternalUI = uri.schemeIs("about") &&
       this._secureInternalUIWhitelist.test(uri.pathQueryRef);
 
-    this._isExtensionPage = uri.schemeIs("moz-extension");
+    this._pageExtensionPolicy = WebExtensionPolicy.getByURI(uri);
 
     // Create a channel for the sole purpose of getting the resolved URI
     // of the request to determine if it's loaded from the file system.

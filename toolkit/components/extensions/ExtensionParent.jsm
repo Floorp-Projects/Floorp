@@ -1212,24 +1212,6 @@ function watchExtensionProxyContextLoad({extension, viewType, browser}, onExtens
 // Used to cache the list of WebExtensionManifest properties defined in the BASE_SCHEMA.
 let gBaseManifestProperties = null;
 
-/**
- * Function to obtain the extension name from a moz-extension URI without exposing GlobalManager.
- *
- * @param {Object} uri The URI for the extension to look up.
- * @returns {string} the name of the extension.
- */
-function extensionNameFromURI(uri) {
-  let id = null;
-  try {
-    id = gAddonPolicyService.extensionURIToAddonId(uri);
-  } catch (ex) {
-    if (ex.name != "NS_ERROR_XPC_BAD_CONVERT_JS") {
-      Cu.reportError("Extension cannot be found in AddonPolicyService.");
-    }
-  }
-  return GlobalManager.getExtension(id).name;
-}
-
 // Manages icon details for toolbar buttons in the |pageAction| and
 // |browserAction| APIs.
 let IconDetails = {
@@ -1570,7 +1552,6 @@ for (let name of StartupCache.STORE_NAMES) {
 }
 
 var ExtensionParent = {
-  extensionNameFromURI,
   GlobalManager,
   HiddenExtensionPage,
   IconDetails,
