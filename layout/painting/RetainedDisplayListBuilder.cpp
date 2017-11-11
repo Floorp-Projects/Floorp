@@ -354,7 +354,7 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
                                               Maybe<const ActiveScrolledRoot*>& aOutContainerASR)
 {
   nsDisplayList merged(&mBuilder);
-  const auto ReuseItem = [&](nsDisplayItem* aItem) {
+  const auto UseItem = [&](nsDisplayItem* aItem) {
     const ActiveScrolledRoot* itemClipASR =
       aItem->GetClipChain() ? aItem->GetClipChain()->mASR : nullptr;
 
@@ -368,6 +368,10 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
     }
 
     merged.AppendToTop(aItem);
+  };
+
+  const auto ReuseItem = [&](nsDisplayItem* aItem) {
+    UseItem(aItem);
     aItem->SetReused(true);
 
     if (aItem->GetType() == DisplayItemType::TYPE_SUBDOCUMENT) {
@@ -468,13 +472,13 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
           }
 
           old->Destroy(&mBuilder);
-          merged.AppendToTop(newItem);
+          UseItem(newItem);
         }
       }
     } else {
       // If there was no matching item in the old list, then we only need to
       // add the new item to the merged list.
-      merged.AppendToTop(newItem);
+      UseItem(newItem);
     }
   }
 
