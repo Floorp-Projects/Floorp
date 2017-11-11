@@ -306,8 +306,6 @@ this.PanelMultiView = class {
     } else {
       this._clickCapturer.addEventListener("click", this);
 
-      this._mainViewContainer.setAttribute("panelid", this._panel.id);
-
       if (this._mainView) {
         this.setMainView(this._mainView);
       }
