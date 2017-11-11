@@ -145,3 +145,29 @@ add_task(async function test_deleted() {
   let expected = validator.emptyProblemData();
   deepEqual(problemData, expected);
 });
+
+add_task(async function test_duplicates() {
+  let validator = new PasswordValidator();
+  {
+    let { server, client } = getDummyServerAndClient();
+    client.push(Cu.cloneInto(client[0], {}));
+
+    let { problemData } = await validator.compareClientWithServer(
+      client, server);
+
+    let expected = validator.emptyProblemData();
+    expected.clientDuplicates.push("11111");
+    deepEqual(problemData, expected);
+  }
+  {
+    let { server, client } = getDummyServerAndClient();
+    server.push(Cu.cloneInto(server[server.length - 1], {}));
+
+    let { problemData } = await validator.compareClientWithServer(
+      client, server);
+
+    let expected = validator.emptyProblemData();
+    expected.duplicates.push("33333");
+    deepEqual(problemData, expected);
+  }
+});
