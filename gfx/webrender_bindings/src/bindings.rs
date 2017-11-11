@@ -697,6 +697,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                 }
             }
         },
+        renderer_id: Some(window_id.0),
         ..Default::default()
     };
 
