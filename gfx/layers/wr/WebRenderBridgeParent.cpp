@@ -101,6 +101,19 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
   return reinterpret_cast<void*>(p);
 }
 
+void
+gecko_profiler_register_thread(const char* name)
+{
+  char stackTop;
+  profiler_register_thread(name, &stackTop);
+}
+
+void
+gecko_profiler_unregister_thread()
+{
+  profiler_unregister_thread();
+}
+
 namespace mozilla {
 namespace layers {
 
