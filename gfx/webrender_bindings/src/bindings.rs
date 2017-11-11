@@ -7,7 +7,7 @@ use std::os::raw::{c_void, c_char, c_float};
 use gleam::gl;
 
 use webrender_api::*;
-use webrender::{ReadPixelsFormat, Renderer, RendererOptions};
+use webrender::{ReadPixelsFormat, Renderer, RendererOptions, ThreadListener};
 use webrender::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::DebugFlags;
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
@@ -592,6 +592,30 @@ extern "C" {
     fn gecko_profiler_unregister_thread();
 }
 
+struct GeckoProfilerThreadListener {}
+
+impl GeckoProfilerThreadListener {
+    pub fn new() -> GeckoProfilerThreadListener {
+        GeckoProfilerThreadListener{}
+    }
+}
+
+impl ThreadListener for GeckoProfilerThreadListener {
+    fn thread_started(&self, thread_name: &str) {
+        let name = CString::new(thread_name).unwrap();
+        unsafe {
+            // gecko_profiler_register_thread copies the passed name here.
+            gecko_profiler_register_thread(name.as_ptr());
+        }
+    }
+
+    fn thread_stopped(&self, _: &str) {
+        unsafe {
+            gecko_profiler_unregister_thread();
+        }
+    }
+}
+
 pub struct WrThreadPool(Arc<rayon::ThreadPool>);
 
 #[no_mangle]
@@ -660,6 +684,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         recorder: recorder,
         blob_image_renderer: Some(Box::new(Moz2dImageRenderer::new(workers.clone()))),
         workers: Some(workers.clone()),
+        thread_listener: Some(Box::new(GeckoProfilerThreadListener::new())),
         enable_render_on_scroll: false,
         resource_override_path: unsafe {
             let override_charptr = gfx_wr_resource_path_override();
