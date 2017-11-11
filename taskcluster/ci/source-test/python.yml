@@ -41,10 +41,10 @@ marionette-harness:
         mach: python-test --subsuite marionette-harness
     when:
         files-changed:
-          - 'testing/marionette/harness/**'
-          - 'testing/mozbase/mozlog/mozlog/**'
-          - 'testing/mozbase/mozlog/setup.py'
-          - 'testing/mozbase/packages.txt'
+            - 'testing/marionette/harness/**'
+            - 'testing/mozbase/mozlog/mozlog/**'
+            - 'testing/mozbase/mozlog/setup.py'
+            - 'testing/mozbase/packages.txt'
 
 mochitest-harness:
     description: testing/mochitest unittests
