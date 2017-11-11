@@ -1658,8 +1658,8 @@ gfxTextRun::SetSpaceGlyphIfSimple(gfxFont* aFont, uint32_t aCharIndex,
 
     AddGlyphRun(aFont, gfxTextRange::kFontGroup, aCharIndex, false,
                 aOrientation);
-    CompressedGlyph g;
-    g.SetSimpleGlyph(spaceWidthAppUnits, spaceGlyph);
+    CompressedGlyph g =
+        CompressedGlyph::MakeSimpleGlyph(spaceWidthAppUnits, spaceGlyph);
     if (aSpaceChar == ' ') {
         g.SetIsSpace();
     }
@@ -2756,8 +2756,8 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
                             gfxTextRun::DetailedGlyph detailedGlyph;
                             detailedGlyph.mGlyphID = mainFont->GetSpaceGlyph();
                             detailedGlyph.mAdvance = advance;
-                            gfxShapedText::CompressedGlyph g;
-                            g.SetComplex(true, true, 1);
+                            CompressedGlyph g =
+                                CompressedGlyph::MakeComplex(true, true, 1);
                             aTextRun->SetGlyphs(aOffset + index,
                                                 g, &detailedGlyph);
                         }
