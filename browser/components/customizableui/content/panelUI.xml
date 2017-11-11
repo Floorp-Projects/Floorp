@@ -20,7 +20,6 @@
     <content>
       <xul:vbox anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,transitioning">
         <xul:stack anonid="viewStack" xbl:inherits="transitioning" class="panel-viewstack">
-          <xul:vbox anonid="mainViewContainer" class="panel-mainview"/>
           <children includes="panelview"/>
         </xul:stack>
       </xul:vbox>

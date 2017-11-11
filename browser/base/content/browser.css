@@ -86,10 +86,6 @@ panel[hidden] panelview {
   -moz-binding: none;
 }
 
-.panel-mainview {
-  transition: transform var(--panelui-subview-transition-duration);
-}
-
 panelview:not([mainview]):not([current]):not([in-transition]) {
   transition: visibility 0s linear var(--panelui-subview-transition-duration);
   visibility: collapse;
