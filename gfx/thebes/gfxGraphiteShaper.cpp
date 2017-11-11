@@ -216,6 +216,8 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedText   *aShapedText,
                                         gr_segment      *aSegment,
                                         RoundingFlags    aRounding)
 {
+    typedef gfxShapedText::CompressedGlyph CompressedGlyph;
+
     int32_t dev2appUnits = aShapedText->GetAppUnitsPerDevUnit();
     bool rtl = aShapedText->IsRightToLeft();
 
@@ -289,8 +291,7 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedText   *aShapedText,
         }
     }
 
-    gfxShapedText::CompressedGlyph *charGlyphs =
-        aShapedText->GetCharacterGlyphs() + aOffset;
+    CompressedGlyph* charGlyphs = aShapedText->GetCharacterGlyphs() + aOffset;
 
     bool roundX = bool(aRounding & RoundingFlags::kRoundX);
     bool roundY = bool(aRounding & RoundingFlags::kRoundY);
@@ -326,8 +327,8 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedText   *aShapedText,
         uint32_t appAdvance = roundX ? NSToIntRound(adv) * dev2appUnits
                                      : NSToIntRound(adv * dev2appUnits);
         if (c.nGlyphs == 1 &&
-            gfxShapedText::CompressedGlyph::IsSimpleGlyphID(gids[c.baseGlyph]) &&
-            gfxShapedText::CompressedGlyph::IsSimpleAdvance(appAdvance) &&
+            CompressedGlyph::IsSimpleGlyphID(gids[c.baseGlyph]) &&
+            CompressedGlyph::IsSimpleAdvance(appAdvance) &&
             charGlyphs[offs].IsClusterStart() &&
             yLocs[c.baseGlyph] == 0)
         {
@@ -352,15 +353,17 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedText   *aShapedText,
                     d->mAdvance = 0;
                 }
             }
-            gfxShapedText::CompressedGlyph g;
-            g.SetComplex(charGlyphs[offs].IsClusterStart(),
-                         true, details.Length());
-            aShapedText->SetGlyphs(aOffset + offs, g, details.Elements());
+            bool isClusterStart = charGlyphs[offs].IsClusterStart();
+            aShapedText->SetGlyphs(aOffset + offs,
+                                   CompressedGlyph::MakeComplex(isClusterStart,
+                                                                true,
+                                                                details.Length()),
+                                   details.Elements());
         }
 
         for (uint32_t j = c.baseChar + 1; j < c.baseChar + c.nChars; ++j) {
             NS_ASSERTION(j < aLength, "unexpected offset");
-            gfxShapedText::CompressedGlyph &g = charGlyphs[j];
+            CompressedGlyph &g = charGlyphs[j];
             NS_ASSERTION(!g.IsSimpleGlyph(), "overwriting a simple glyph");
             g.SetComplex(g.IsClusterStart(), false, 0);
         }

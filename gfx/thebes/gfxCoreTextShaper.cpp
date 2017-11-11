@@ -244,6 +244,8 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
                                     uint32_t       aLength,
                                     CTRunRef       aCTRun)
 {
+    typedef gfxShapedText::CompressedGlyph CompressedGlyph;
+
     int32_t direction = aShapedText->IsRightToLeft() ? -1 : 1;
 
     int32_t numGlyphs = ::CTRunGetGlyphCount(aCTRun);
@@ -319,8 +321,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
                                                   nullptr, nullptr, nullptr);
 
     AutoTArray<gfxShapedText::DetailedGlyph,1> detailedGlyphs;
-    gfxShapedText::CompressedGlyph *charGlyphs =
-        aShapedText->GetCharacterGlyphs() + aOffset;
+    CompressedGlyph* charGlyphs = aShapedText->GetCharacterGlyphs() + aOffset;
 
     // CoreText gives us the glyphindex-to-charindex mapping, which relates each glyph
     // to a source text character; we also need the charindex-to-glyphindex mapping to
@@ -540,10 +541,10 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
                 advance = int32_t(toNextGlyph * appUnitsPerDevUnit);
             }
 
-            gfxTextRun::CompressedGlyph textRunGlyph;
-            textRunGlyph.SetComplex(charGlyphs[baseCharIndex].IsClusterStart(),
-                                    true, detailedGlyphs.Length());
-            aShapedText->SetGlyphs(aOffset + baseCharIndex, textRunGlyph,
+            bool isClusterStart = charGlyphs[baseCharIndex].IsClusterStart();
+            aShapedText->SetGlyphs(aOffset + baseCharIndex,
+                                   CompressedGlyph::MakeComplex(isClusterStart, true,
+                                                                detailedGlyphs.Length()),
                                    detailedGlyphs.Elements());
 
             detailedGlyphs.Clear();
@@ -551,7 +552,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
 
         // the rest of the chars in the group are ligature continuations, no associated glyphs
         while (++baseCharIndex != endCharIndex && baseCharIndex < wordLength) {
-            gfxShapedText::CompressedGlyph &shapedTextGlyph = charGlyphs[baseCharIndex];
+            CompressedGlyph &shapedTextGlyph = charGlyphs[baseCharIndex];
             NS_ASSERTION(!shapedTextGlyph.IsSimpleGlyph(), "overwriting a simple glyph");
             shapedTextGlyph.SetComplex(inOrder && shapedTextGlyph.IsClusterStart(), false, 0);
         }
