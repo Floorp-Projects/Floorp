@@ -484,10 +484,6 @@
                 onget="return this.docShell.contentViewer;"
                 readonly="true"/>
 
-      <property name="contentViewerEdit"
-                onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIContentViewerEdit);"
-                readonly="true"/>
-
       <property name="contentDocument"
                 onget="return this.webNavigation.document;"
                 readonly="true"/>
