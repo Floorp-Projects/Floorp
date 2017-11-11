@@ -532,7 +532,9 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SystemPrincipal,
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NullPrincipal, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStructuredCloneContainer)
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(OSFileConstantsService)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(OSFileConstantsService,
+                                         OSFileConstantsService::GetOrCreate);
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(UDPSocketChild)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(GeckoMediaPluginService, GeckoMediaPluginService::GetGeckoMediaPluginService)
