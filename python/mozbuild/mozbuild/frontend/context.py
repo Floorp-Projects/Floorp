@@ -344,6 +344,31 @@ class HostCompileFlags(BaseCompileFlags):
         return optimize_flags
 
 
+class AsmFlags(BaseCompileFlags):
+    def __init__(self, context):
+        self._context = context
+        self.flag_variables = (
+            ('OS', context.config.substs.get('ASFLAGS'), ('ASFLAGS',)),
+            ('DEBUG', self._debug_flags(), ('ASFLAGS',)),
+            ('MOZBUILD', None, ('ASFLAGS',)),
+        )
+        BaseCompileFlags.__init__(self, context)
+
+    def _debug_flags(self):
+        debug_flags = []
+        if (self._context.config.substs.get('MOZ_DEBUG') or
+            self._context.config.substs.get('MOZ_DEBUG_SYMBOLS')):
+            if self._context.get('USE_YASM'):
+                if (self._context.config.substs.get('OS_ARCH') == 'WINNT' and
+                    not self._context.config.substs.get('GNU_CC')):
+                    debug_flags += ['-g', 'cv8']
+                elif self._context.config.substs.get('OS_ARCH') != 'Darwin':
+                    debug_flags += ['-g', 'dwarf2']
+            else:
+                debug_flags += self._context.config.substs.get('MOZ_DEBUG_FLAGS', '').split()
+        return debug_flags
+
+
 class LinkFlags(BaseCompileFlags):
     def __init__(self, context):
         self._context = context
@@ -1955,6 +1980,11 @@ VARIABLES = {
         directly.
         """),
 
+    'ASM_FLAGS': (AsmFlags, dict,
+        """Recipe for linker flags for this context. Not to be manipulated
+        directly.
+        """),
+
     'CFLAGS': (List, list,
         """Flags passed to the C compiler for all of the C source files
            declared in this directory.
@@ -2410,6 +2440,15 @@ SPECIAL_VARIABLES = {
 
 # Deprecation hints.
 DEPRECATION_HINTS = {
+
+    'ASM_FLAGS': '''
+        Please use
+
+            ASFLAGS
+
+        instead of manipulating ASM_FLAGS directly.
+        ''',
+
     'CPP_UNIT_TESTS': '''
         Please use'
 
