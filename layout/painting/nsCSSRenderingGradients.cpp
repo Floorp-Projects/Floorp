@@ -932,7 +932,7 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
   gfxRect dirtyAreaToFill = nsLayoutUtils::RectToGfxRect(dirty, appUnitsPerDevPixel);
   dirtyAreaToFill.RoundOut();
 
-  gfxMatrix ctm = aContext.CurrentMatrix();
+  Matrix ctm = aContext.CurrentMatrix();
   bool isCTMPreservingAxisAlignedRectangles = ctm.PreservesAxisAlignedRectangles();
 
   // xStart/yStart are the top-left corner of the top-left tile.
@@ -975,7 +975,7 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
         gfxMatrix transform = gfxUtils::TransformRectToRect(fillRect,
             snappedFillRectTopLeft, snappedFillRectTopRight,
             snappedFillRectBottomRight);
-        aContext.SetMatrix(transform);
+        aContext.SetMatrixDouble(transform);
       }
       aContext.NewPath();
       aContext.Rectangle(fillRect);
@@ -989,8 +989,8 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
         edgeColor.a *= aOpacity;
         aContext.SetColor(edgeColor);
       } else {
-        aContext.SetMatrix(
-          aContext.CurrentMatrix().Copy().PreTranslate(tileRect.TopLeft()));
+        aContext.SetMatrixDouble(
+          aContext.CurrentMatrixDouble().Copy().PreTranslate(tileRect.TopLeft()));
         aContext.SetPattern(gradientPattern);
       }
       aContext.Fill();

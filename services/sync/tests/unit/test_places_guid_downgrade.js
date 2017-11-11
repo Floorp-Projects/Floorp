@@ -12,9 +12,6 @@ const kDBName = "places.sqlite";
 const storageSvc = Cc["@mozilla.org/storage/service;1"]
                      .getService(Ci.mozIStorageService);
 
-const fxuri = CommonUtils.makeURI("http://getfirefox.com/");
-const tburi = CommonUtils.makeURI("http://getthunderbird.com/");
-
 function setPlacesDatabase(aFileName) {
   removePlacesDatabase();
   _("Copying over places.sqlite.");
@@ -93,26 +90,26 @@ add_task(async function test_history_guids() {
 
   let places = [
     {
-      uri: fxuri,
+      url: "http://getfirefox.com/",
       title: "Get Firefox!",
       visits: [{
-        visitDate: Date.now() * 1000,
-        transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+        date: new Date(),
+        transition: Ci.nsINavHistoryService.TRANSITION_LINK
       }]
     },
     {
-      uri: tburi,
+      url: "http://getthunderbird.com/",
       title: "Get Thunderbird!",
       visits: [{
-        visitDate: Date.now() * 1000,
-        transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+        date: new Date(),
+        transition: Ci.nsINavHistoryService.TRANSITION_LINK
       }]
     }
   ];
 
   async function onVisitAdded() {
-    let fxguid = await store.GUIDForUri(fxuri, true);
-    let tbguid = await store.GUIDForUri(tburi, true);
+    let fxguid = await store.GUIDForUri("http://getfirefox.com/", true);
+    let tbguid = await store.GUIDForUri("http://getthunderbird.com/", true);
     dump("fxguid: " + fxguid + "\n");
     dump("tbguid: " + tbguid + "\n");
 
@@ -144,47 +141,36 @@ add_task(async function test_history_guids() {
     do_check_eq(result.length, 0);
   }
 
-  await new Promise((resolve, reject) => {
-    PlacesUtils.asyncHistory.updatePlaces(places, {
-      handleError: function handleError() {
-        do_throw("Unexpected error in adding visit.");
-      },
-      handleResult: function handleResult() {},
-      handleCompletion: () => { onVisitAdded().then(resolve, reject); },
-    });
-  });
+  await PlacesUtils.history.insertMany(places);
+  await onVisitAdded();
 });
 
 add_task(async function test_bookmark_guids() {
-  let engine = new BookmarksEngine(Service);
-  let store = engine._store;
-
-  let fxid = PlacesUtils.bookmarks.insertBookmark(
-    PlacesUtils.bookmarks.toolbarFolder,
-    fxuri,
-    PlacesUtils.bookmarks.DEFAULT_INDEX,
-    "Get Firefox!");
-  let tbid = PlacesUtils.bookmarks.insertBookmark(
-    PlacesUtils.bookmarks.toolbarFolder,
-    tburi,
-    PlacesUtils.bookmarks.DEFAULT_INDEX,
-    "Get Thunderbird!");
-
-  let fxguid = await store.GUIDForId(fxid);
-  let tbguid = await store.GUIDForId(tbid);
+  let fx = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    url: "http://getfirefox.com/",
+    title: "Get Firefox!",
+  });
+  let fxid = await PlacesUtils.promiseItemId(fx.guid);
+  let tb = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    url: "http://getthunderbird.com/",
+    title: "Get Thunderbird!",
+  });
+  let tbid = await PlacesUtils.promiseItemId(tb.guid);
 
   _("Bookmarks: Verify GUIDs are added to the guid column.");
   let db = await PlacesUtils.promiseDBConnection();
   let result = await db.execute(
     "SELECT id FROM moz_bookmarks WHERE guid = :guid",
-    {guid: fxguid}
+    {guid: fx.guid}
   );
   do_check_eq(result.length, 1);
   do_check_eq(result[0].getResultByName("id"), fxid);
 
   result = await db.execute(
     "SELECT id FROM moz_bookmarks WHERE guid = :guid",
-    {guid: tbguid}
+    {guid: tb.guid}
   );
   do_check_eq(result.length, 1);
   do_check_eq(result[0].getResultByName("id"), tbid);
@@ -192,13 +178,13 @@ add_task(async function test_bookmark_guids() {
   _("Bookmarks: Verify GUIDs weren't added to annotations.");
   result = await db.execute(
     "SELECT a.content AS guid FROM moz_items_annos a WHERE guid = :guid",
-    {guid: fxguid}
+    {guid: fx.guid}
   );
   do_check_eq(result.length, 0);
 
   result = await db.execute(
     "SELECT a.content AS guid FROM moz_items_annos a WHERE guid = :guid",
-    {guid: tbguid}
+    {guid: tb.guid}
   );
   do_check_eq(result.length, 0);
 });

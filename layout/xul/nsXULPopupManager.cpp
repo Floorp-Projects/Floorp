@@ -2612,8 +2612,7 @@ nsXULPopupManager::HandleEvent(nsIDOMEvent* aEvent)
     return KeyPress(keyEvent);
   }
 
-  NS_ABORT();
-
+  MOZ_ASSERT_UNREACHABLE("Unexpected eventType");
   return NS_OK;
 }
 

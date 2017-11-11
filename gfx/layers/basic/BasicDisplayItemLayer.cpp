@@ -60,7 +60,7 @@ public:
     AutoRestoreTransform autoRestoreTransform(aDT);
     Matrix transform = aDT->GetTransform();
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT, aDeviceOffset);
-    context->SetMatrix(ThebesMatrix(transform));
+    context->SetMatrix(transform);
 
     mItem->Paint(mBuilder, context);
   }

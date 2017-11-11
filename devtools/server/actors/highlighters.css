@@ -598,6 +598,10 @@
 
 /* Shapes highlighter */
 
+:-moz-native-anonymous .shapes-root {
+  pointer-events: auto;
+}
+
 :-moz-native-anonymous .shapes-shape-container {
   position: absolute;
   overflow: visible;

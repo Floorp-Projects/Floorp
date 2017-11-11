@@ -63,9 +63,9 @@ nsSVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
         PrependLocalTransformsTo(GetClipPathTransform(aClippedFrame) * aMatrix,
                                  eUserSpaceToParent);
       gfxMatrix newMatrix =
-        aContext.CurrentMatrix().PreMultiply(toChildsUserSpace).NudgeToIntegers();
+        aContext.CurrentMatrixDouble().PreMultiply(toChildsUserSpace).NudgeToIntegers();
       if (!newMatrix.IsSingular()) {
-        aContext.SetMatrix(newMatrix);
+        aContext.SetMatrixDouble(newMatrix);
         FillRule clipRule =
           nsSVGUtils::ToFillRule(pathFrame->StyleSVG()->mClipRule);
         clipPath = pathElement->GetOrBuildPath(aDrawTarget, clipRule);
@@ -103,7 +103,7 @@ nsSVGClipPathFrame::CreateClipMask(gfxContext& aReferenceContext,
 }
 
 static void
-ComposeExtraMask(DrawTarget* aTarget, const gfxMatrix& aMaskTransfrom,
+ComposeExtraMask(DrawTarget* aTarget,
                  SourceSurface* aExtraMask, const Matrix& aExtraMasksTransform)
 {
   MOZ_ASSERT(aExtraMask);
@@ -178,14 +178,14 @@ nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
   }
 
   // Moz2D transforms in the opposite direction to Thebes
-  gfxMatrix maskTransfrom = aMaskContext.CurrentMatrix();
+  Matrix maskTransfrom = aMaskContext.CurrentMatrix();
   maskTransfrom.Invert();
 
   if (aExtraMask) {
-    ComposeExtraMask(maskDT, maskTransfrom, aExtraMask, aExtraMasksTransform);
+    ComposeExtraMask(maskDT, aExtraMask, aExtraMasksTransform);
   }
 
-  *aMaskTransform = ToMatrix(maskTransfrom);
+  *aMaskTransform = maskTransfrom;
 }
 
 void
@@ -271,7 +271,7 @@ nsSVGClipPathFrame::GetClipMask(gfxContext& aReferenceContext,
     return nullptr;
   }
   maskContext->SetMatrix(aReferenceContext.CurrentMatrix() *
-                         gfxMatrix::Translation(-offset));
+                         Matrix::Translation(-offset));
 
   PaintClipMask(*maskContext, aClippedFrame, aMatrix, aMaskTransform,
                 aExtraMask, aExtraMasksTransform);
