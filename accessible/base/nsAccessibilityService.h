@@ -8,7 +8,6 @@
 
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/a11y/FocusManager.h"
-#include "mozilla/a11y/Platform.h"
 #include "mozilla/a11y/Role.h"
 #include "mozilla/a11y/SelectionManager.h"
 #include "mozilla/Preferences.h"
@@ -74,16 +73,6 @@ struct XULMarkupMapInfo {
   New_Accessible* new_func;
 };
 #endif
-
-/**
- * PREF_ACCESSIBILITY_FORCE_DISABLED preference change callback.
- */
-void PrefChanged(const char* aPref, void* aClosure);
-
-/**
- * Read and normalize PREF_ACCESSIBILITY_FORCE_DISABLED preference.
- */
-EPlatformDisabledState ReadPlatformDisabledState();
 
 } // namespace a11y
 } // namespace mozilla
@@ -351,7 +340,6 @@ private:
   friend nsAccessibilityService* GetAccService();
   friend nsAccessibilityService* GetOrCreateAccService(uint32_t);
   friend void MaybeShutdownAccService(uint32_t);
-  friend void mozilla::a11y::PrefChanged(const char*, void*);
   friend mozilla::a11y::FocusManager* mozilla::a11y::FocusMgr();
   friend mozilla::a11y::SelectionManager* mozilla::a11y::SelectionMgr();
   friend mozilla::a11y::ApplicationAccessible* mozilla::a11y::ApplicationAcc();

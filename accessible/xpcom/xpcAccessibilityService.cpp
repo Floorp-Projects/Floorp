@@ -6,7 +6,6 @@
 
 #include "nsAccessiblePivot.h"
 #include "nsAccessibilityService.h"
-#include "Platform.h"
 
 #ifdef A11Y_LOG
 #include "Logging.h"
@@ -44,9 +43,7 @@ xpcAccessibilityService::AddRef(void)
   nsrefcnt count = ++mRefCnt;
   NS_LOG_ADDREF(this, count, "xpcAccessibilityService", sizeof(*this));
 
-  // We want refcount to be > 1 because one reference is added in the XPCOM
-  // accessibility service getter.
-  if (mRefCnt > 1 && PlatformDisabledState() != ePlatformIsDisabled) {
+  if (mRefCnt > 1) {
     GetOrCreateAccService(nsAccessibilityService::eXPCOM);
   }
 
@@ -117,12 +114,7 @@ xpcAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsAccessibilityService* accService = GetAccService();
-  if (!accService) {
-    return NS_ERROR_SERVICE_NOT_AVAILABLE;
-  }
-
-  DocAccessible* document = accService->GetDocAccessible(node->OwnerDoc());
+  DocAccessible* document = GetAccService()->GetDocAccessible(node->OwnerDoc());
   if (document) {
     NS_IF_ADDREF(*aAccessible = ToXPC(document->GetAccessible(node)));
   }
@@ -133,12 +125,7 @@ xpcAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
 NS_IMETHODIMP
 xpcAccessibilityService::GetStringRole(uint32_t aRole, nsAString& aString)
 {
-  nsAccessibilityService* accService = GetAccService();
-  if (!accService) {
-    return NS_ERROR_SERVICE_NOT_AVAILABLE;
-  }
-
-  accService->GetStringRole(aRole, aString);
+  GetAccService()->GetStringRole(aRole, aString);
   return NS_OK;
 }
 
@@ -146,12 +133,7 @@ NS_IMETHODIMP
 xpcAccessibilityService::GetStringStates(uint32_t aState, uint32_t aExtraState,
                                          nsISupports **aStringStates)
 {
-  nsAccessibilityService* accService = GetAccService();
-  if (!accService) {
-    return NS_ERROR_SERVICE_NOT_AVAILABLE;
-  }
-
-  accService->GetStringStates(aState, aExtraState, aStringStates);
+  GetAccService()->GetStringStates(aState, aExtraState, aStringStates);
   return NS_OK;
 }
 
@@ -159,12 +141,7 @@ NS_IMETHODIMP
 xpcAccessibilityService::GetStringEventType(uint32_t aEventType,
                                             nsAString& aString)
 {
-  nsAccessibilityService* accService = GetAccService();
-  if (!accService) {
-    return NS_ERROR_SERVICE_NOT_AVAILABLE;
-  }
-
-  accService->GetStringEventType(aEventType, aString);
+  GetAccService()->GetStringEventType(aEventType, aString);
   return NS_OK;
 }
 
@@ -172,12 +149,7 @@ NS_IMETHODIMP
 xpcAccessibilityService::GetStringRelationType(uint32_t aRelationType,
                                                nsAString& aString)
 {
-  nsAccessibilityService* accService = GetAccService();
-  if (!accService) {
-    return NS_ERROR_SERVICE_NOT_AVAILABLE;
-  }
-
-  accService->GetStringRelationType(aRelationType, aString);
+  GetAccService()->GetStringRelationType(aRelationType, aString);
   return NS_OK;
 }
 
@@ -196,18 +168,13 @@ xpcAccessibilityService::GetAccessibleFromCache(nsIDOMNode* aNode,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsAccessibilityService* accService = GetAccService();
-  if (!accService) {
-    return NS_ERROR_SERVICE_NOT_AVAILABLE;
-  }
-
   // Search for an accessible in each of our per document accessible object
   // caches. If we don't find it, and the given node is itself a document, check
   // our cache of document accessibles (document cache). Note usually shutdown
   // document accessibles are not stored in the document cache, however an
   // "unofficially" shutdown document (i.e. not from DocManager) can still
   // exist in the document cache.
-  Accessible* accessible = accService->FindAccessibleInCache(node);
+  Accessible* accessible = GetAccService()->FindAccessibleInCache(node);
   if (!accessible) {
     nsCOMPtr<nsIDocument> document(do_QueryInterface(node));
     if (document) {
@@ -267,11 +234,6 @@ NS_GetAccessibilityService(nsIAccessibilityService** aResult)
 {
   NS_ENSURE_TRUE(aResult, NS_ERROR_NULL_POINTER);
   *aResult = nullptr;
-
-  // Do not initialize accessibility if it is force disabled.
-  if (PlatformDisabledState() == ePlatformIsDisabled) {
-    return NS_ERROR_SERVICE_NOT_AVAILABLE;
-  }
 
   GetOrCreateAccService(nsAccessibilityService::eXPCOM);
 
