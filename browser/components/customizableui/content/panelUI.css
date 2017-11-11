@@ -10,15 +10,6 @@
   transition: height var(--panelui-subview-transition-duration);
 }
 
-.panel-subviews {
-  -moz-stack-sizing: ignore-horizontal;
-  transform: translateX(0);
-}
-
-.panel-subviews[panelopen] {
-  transition: transform var(--panelui-subview-transition-duration);
-}
-
 .panel-viewcontainer[panelopen] {
   transition-property: height;
   transition-timing-function: var(--animation-easing-function);

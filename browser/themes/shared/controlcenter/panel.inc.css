@@ -68,11 +68,6 @@
   max-width: 30em;
 }
 
-#identity-popup-multiView > .panel-viewcontainer > .panel-viewstack > .panel-subviews {
-  background: var(--arrowpanel-background);
-  padding: 0;
-}
-
 .identity-popup-section:not(:first-child) {
   border-top: 1px solid var(--panel-separator-color);
 }

@@ -4,10 +4,6 @@
 
 %include ../../shared/customizableui/panelUI.inc.css
 
-.panel-subviews {
-  background-color: var(--arrowpanel-background);
-}
-
 /* bookmark panel submenus */
 
 #BMB_bookmarksPopup menupopup[placespopup=true] {
