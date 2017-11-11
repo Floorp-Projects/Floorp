@@ -426,7 +426,7 @@ nsDeviceContext::CreateRenderingContextCommon(bool aWantReferenceContext)
     }
     transform.PreScale(mPrintingScale, mPrintingScale);
 
-    pContext->SetMatrix(transform);
+    pContext->SetMatrixDouble(transform);
     return pContext.forget();
 }
 

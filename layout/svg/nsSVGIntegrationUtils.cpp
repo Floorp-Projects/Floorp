@@ -419,7 +419,7 @@ public:
     basic->SetTarget(&aContext);
 
     gfxContextMatrixAutoSaveRestore autoSR(&aContext);
-    aContext.SetMatrix(aContext.CurrentMatrix().PreTranslate(-mUserSpaceToFrameSpaceOffset));
+    aContext.SetMatrixDouble(aContext.CurrentMatrixDouble().PreTranslate(-mUserSpaceToFrameSpaceOffset));
 
     mLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, mBuilder);
     basic->SetTarget(oldCtx);
@@ -440,7 +440,7 @@ static void
 PaintMaskSurface(const PaintFramesParams& aParams,
                  DrawTarget* aMaskDT, float aOpacity, nsStyleContext* aSC,
                  const nsTArray<nsSVGMaskFrame*>& aMaskFrames,
-                 const gfxMatrix& aMaskSurfaceMatrix,
+                 const Matrix& aMaskSurfaceMatrix,
                  const nsPoint& aOffsetToUserSpace)
 {
   MOZ_ASSERT(aMaskFrames.Length() > 0);
@@ -573,8 +573,8 @@ CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
 
   // Set context's matrix on maskContext, offset by the maskSurfaceRect's
   // position. This makes sure that we combine the masks in device space.
-  gfxMatrix maskSurfaceMatrix =
-    ctx.CurrentMatrix() * gfxMatrix::Translation(-aParams.maskRect.TopLeft());
+  Matrix maskSurfaceMatrix =
+    ctx.CurrentMatrix() * Matrix::Translation(-aParams.maskRect.TopLeft());
 
   PaintMaskSurface(aParams, maskDT,
                    paintResult.opacityApplied ? aOpacity : 1.0,
@@ -604,7 +604,7 @@ CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
     return paintResult;
   }
 
-  paintResult.maskTransform = ToMatrix(maskSurfaceMatrix);
+  paintResult.maskTransform = maskSurfaceMatrix;
   if (!paintResult.maskTransform.Invert()) {
     return paintResult;
   }
@@ -711,8 +711,8 @@ MoveContextOriginToUserSpace(nsIFrame* aFrame, const PaintFramesParams& aParams)
 {
   EffectOffsets offset = ComputeEffectOffset(aFrame, aParams);
 
-  aParams.ctx.SetMatrix(
-    aParams.ctx.CurrentMatrix().PreTranslate(offset.offsetToUserSpaceInDevPx));
+  aParams.ctx.SetMatrixDouble(
+    aParams.ctx.CurrentMatrixDouble().PreTranslate(offset.offsetToUserSpaceInDevPx));
 
   return offset;
 }
@@ -852,7 +852,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
       maskUsage.shouldGenerateMaskLayer ? maskTarget->Snapshot() : nullptr;
     clipPathFrame->PaintClipMask(ctx, frame, cssPxToDevPxMatrix,
                                    &clipMaskTransform, maskSurface,
-                                   ToMatrix(ctx.CurrentMatrix()));
+                                   ctx.CurrentMatrix());
   }
 }
 

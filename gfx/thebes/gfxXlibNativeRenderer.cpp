@@ -467,7 +467,7 @@ void
 gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
                             uint32_t flags, Screen *screen, Visual *visual)
 {
-    gfxMatrix matrix = ctx->CurrentMatrix();
+    Matrix matrix = ctx->CurrentMatrix();
 
     // We can only draw direct or onto a copied background if pixels align and
     // native drawing is compatible with the current operator.  (The matrix is
