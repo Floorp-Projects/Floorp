@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1411322: Shutdown after getting memory reports from MediaRecorder</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<audio id="audio"></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+let recorder = new MediaRecorder(audio.mozCaptureStream());
+recorder.start();
+SpecialPowers.getMemoryReports();
+</script>
+</pre>
+</body>
+</html>

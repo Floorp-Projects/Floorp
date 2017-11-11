@@ -186,3 +186,11 @@ optimization even if the ``optimize_target_tasks`` parameter is False.
 This is meant to be used for tasks which a developer would almost always want to
 run. Typically these tasks will be short running and have a high risk of causing
 a backout. For example ``lint`` or ``python-unittest`` tasks.
+
+shipping_product
+================
+For release promotion jobs, this is the product we are shipping.
+
+shipping_phase
+==============
+For release promotion jobs, this is the shipping phase (promote, publish, ship).

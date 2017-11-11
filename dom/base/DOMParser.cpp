@@ -357,8 +357,8 @@ DOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
 
   mBaseURI = baseURI;
 
-  NS_POSTCONDITION(mPrincipal, "Must have principal");
-  NS_POSTCONDITION(mDocumentURI, "Must have document URI");
+  MOZ_ASSERT(mPrincipal, "Must have principal");
+  MOZ_ASSERT(mDocumentURI, "Must have document URI");
   return NS_OK;
 }
 

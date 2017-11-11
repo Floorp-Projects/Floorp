@@ -5101,6 +5101,7 @@ export HOST_CFLAGS
 export HOST_CPPFLAGS
 export HOST_CXXFLAGS
 export HOST_LDFLAGS
+export MOZ_PGO
 
 if ! test -e js; then
     mkdir js

@@ -33,14 +33,15 @@ promise_test(t => {
 }, 'Ensure document has been loaded');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate({ transform: ['translateX(0px)', 'translateX(200px)'],
+                  composite: 'accumulate' },
+                100 * MS_PER_SEC);
 
-  var div = addDiv(t, { style: 'transform: translateX(100px)' });
-  div.animate({ transform: ['translateX(0px)', 'translateX(200px)'],
-                composite: 'accumulate' },
-              100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
     var transform =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
@@ -50,17 +51,18 @@ promise_test(t => {
 }, 'Accumulate onto the base value');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    div.animate({ transform: ['translateX(100px)', 'translateX(200px)'],
+                  composite: 'replace' },
+                100 * MS_PER_SEC);
+    div.animate({ transform: ['translateX(0px)', 'translateX(100px)'],
+                  composite: 'accumulate' },
+                100 * MS_PER_SEC);
 
-  var div = addDiv(t);
-  div.animate({ transform: ['translateX(100px)', 'translateX(200px)'],
-                composite: 'replace' },
-              100 * MS_PER_SEC);
-  div.animate({ transform: ['translateX(0px)', 'translateX(100px)'],
-                composite: 'accumulate' },
-              100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
     var transform =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
@@ -70,14 +72,15 @@ promise_test(t => {
 }, 'Accumulate onto an underlying animation value');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate([{ transform: 'translateX(100px)', composite: 'accumulate' },
+                 { transform: 'translateX(300px)', composite: 'replace' }],
+                100 * MS_PER_SEC);
 
-  var div = addDiv(t, { style: 'transform: translateX(100px)' });
-  div.animate([{ transform: 'translateX(100px)', composite: 'accumulate' },
-               { transform: 'translateX(300px)', composite: 'replace' }],
-              100 * MS_PER_SEC);
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
     var transform =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
@@ -87,14 +90,14 @@ promise_test(t => {
 }, 'Composite when mixing accumulate and replace');
 
 promise_test(t => {
-  useTestRefreshMode(t);
-
-  var div = addDiv(t, { style: 'transform: translateX(100px)' });
-  div.animate([{ transform: 'translateX(100px)', composite: 'replace' },
-               { transform: 'translateX(300px)' }],
-              { duration: 100 * MS_PER_SEC, composite: 'accumulate' });
-
-  return waitForPaintsFlushed().then(() => {
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate([{ transform: 'translateX(100px)', composite: 'replace' },
+                 { transform: 'translateX(300px)' }],
+                { duration: 100 * MS_PER_SEC, composite: 'accumulate' });
+    return waitForPaintsFlushed();
+  }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
     var transform =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
@@ -105,14 +108,16 @@ promise_test(t => {
    'effect');
 
 promise_test(t => {
-  useTestRefreshMode(t);
+  var div;
+  var anim;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    div.animate({ transform: [ 'scale(2)', 'scale(2)' ] }, 100 * MS_PER_SEC);
+    anim = div.animate({ transform: [ 'scale(4)', 'scale(4)' ] },
+                       { duration: 100 * MS_PER_SEC, composite: 'add' });
 
-  var div = addDiv(t);
-  div.animate({ transform: [ 'scale(2)', 'scale(2)' ] }, 100 * MS_PER_SEC);
-  var anim = div.animate({ transform: [ 'scale(4)', 'scale(4)' ] },
-                         { duration: 100 * MS_PER_SEC, composite: 'add' });
-
-  return waitForPaintsFlushed().then(() => {
+    return waitForPaintsFlushed();
+  }).then(() => {
     var transform =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
     assert_matrix_equals(transform, 'matrix(8, 0, 0, 8, 0, 0)',

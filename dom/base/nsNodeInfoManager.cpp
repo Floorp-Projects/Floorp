@@ -459,7 +459,7 @@ nsNodeInfoManager::RemoveNodeInfo(NodeInfo *aNodeInfo)
 #endif
   PL_HashTableRemove(mNodeInfoHash, &aNodeInfo->mInner);
 
-  NS_POSTCONDITION(ret, "Can't find mozilla::dom::NodeInfo to remove!!!");
+  MOZ_ASSERT(ret, "Can't find mozilla::dom::NodeInfo to remove!!!");
 }
 
 bool
