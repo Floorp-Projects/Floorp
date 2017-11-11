@@ -7326,28 +7326,13 @@ var gIdentityHandler = {
     this._identityPopup.hidePopup();
   },
 
-  toggleSubView(name, anchor) {
-    let view = this._identityPopupMultiView;
-    let id = `identity-popup-${name}View`;
-    let subView = document.getElementById(id);
+  showSecuritySubView() {
+    this._identityPopupMultiView.showSubView("identity-popup-securityView",
+                                             this._popupExpander);
 
-    // Listen for the subview showing or hiding to change
-    // the tooltip on the expander button.
-    subView.addEventListener("ViewShowing", this);
-    subView.addEventListener("ViewHiding", this);
-
-    if (view.showingSubView) {
-      view.showMainView();
-    } else {
-      view.showSubView(id, anchor);
-    }
-
-    // If an element is focused that's not the anchor, clear the focus.
     // Elements of hidden views have -moz-user-focus:ignore but setting that
     // per CSS selector doesn't blur a focused element in those hidden views.
-    if (Services.focus.focusedElement != anchor) {
-      Services.focus.clearFocus(window);
-    }
+    Services.focus.clearFocus(window);
   },
 
   disableMixedContentProtection() {
@@ -7680,7 +7665,7 @@ var gIdentityHandler = {
     this._identityPopupInsecureLoginFormsLearnMore
         .setAttribute("href", baseURL + "insecure-password");
 
-    // The expander switches its tooltip when toggled, change it to the default.
+    // This is in the properties file because the expander used to switch its tooltip.
     this._popupExpander.tooltipText = gNavigatorBundle.getString("identity.showDetails.tooltip");
 
     // Determine connection security information.
@@ -7910,16 +7895,6 @@ var gIdentityHandler = {
   },
 
   handleEvent(event) {
-    // If the subview is shown or hidden, change the tooltip on the expander button.
-    if (event.type == "ViewShowing") {
-      this._popupExpander.tooltipText = gNavigatorBundle.getString("identity.hideDetails.tooltip");
-      return;
-    }
-    if (event.type == "ViewHiding") {
-      this._popupExpander.tooltipText = gNavigatorBundle.getString("identity.showDetails.tooltip");
-      return;
-    }
-
     let elem = document.activeElement;
     let position = elem.compareDocumentPosition(this._identityPopup);
 

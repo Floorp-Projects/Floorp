@@ -218,11 +218,14 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
 
   // Make sure the correct icon is visible in the Control Center.
   // This logic is controlled with CSS, so this helps prevent regressions there.
-  let securityView = doc.getElementById("identity-popup-securityView");
-  let securityViewBG = tabbrowser.ownerGlobal.getComputedStyle(securityView).
-                       getPropertyValue("background-image");
-  let securityContentBG = tabbrowser.ownerGlobal.getComputedStyle(securityView).
-                          getPropertyValue("background-image");
+  let securityViewBG = tabbrowser.ownerGlobal
+    .getComputedStyle(document.getElementById("identity-popup-securityView")
+                              .getElementsByClassName("identity-popup-security-content")[0])
+    .getPropertyValue("background-image");
+  let securityContentBG = tabbrowser.ownerGlobal
+    .getComputedStyle(document.getElementById("identity-popup-mainView")
+                              .getElementsByClassName("identity-popup-security-content")[0])
+    .getPropertyValue("background-image");
 
   if (stateInsecure) {
     is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/conn-not-secure.svg\")",
@@ -262,7 +265,8 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     let promiseViewShown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "ViewShown");
     doc.getElementById("identity-popup-security-expander").click();
     await promiseViewShown;
-    is(Array.filter(doc.querySelectorAll("[observes=identity-popup-mcb-learn-more]"),
+    is(Array.filter(doc.getElementById("identity-popup-securityView")
+                       .querySelectorAll("[observes=identity-popup-mcb-learn-more]"),
                     element => !is_hidden(element)).length, 1,
        "The 'Learn more' link should be visible once.");
   }
