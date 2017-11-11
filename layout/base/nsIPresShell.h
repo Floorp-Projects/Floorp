@@ -685,9 +685,9 @@ public:
   /**
    * @param aWhere: Either a percentage or a special value.
    *                nsIPresShell defines:
-   *                * (Default) SCROLL_MINIMUM = -1: The visible area is
-   *                scrolled to show the entire frame. If the frame is too
-   *                large, the top and left edges are given precedence.
+   *                * (Default) SCROLL_MINIMUM = -1: The visible area is scrolled
+   *                the minimum amount to show as much as possible of the frame.
+   *                This won't hide any initially visible part of the frame.
    *                * SCROLL_TOP = 0: The frame's upper edge is aligned with the
    *                top edge of the visible area.
    *                * SCROLL_BOTTOM = 100: The frame's bottom edge is aligned
