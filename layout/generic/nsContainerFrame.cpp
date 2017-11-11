@@ -1315,7 +1315,7 @@ nsContainerFrame::StealFrame(nsIFrame* aChild)
     }
   }
 
-  NS_POSTCONDITION(removed, "StealFrame: can't find aChild");
+  MOZ_ASSERT(removed, "StealFrame: can't find aChild");
   return removed ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
@@ -1430,7 +1430,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
   // remove it from its next-in-flow/prev-in-flow chain.
   aNextInFlow->Destroy();
 
-  NS_POSTCONDITION(!prevInFlow->GetNextInFlow(), "non null next-in-flow");
+  MOZ_ASSERT(!prevInFlow->GetNextInFlow(), "non null next-in-flow");
 }
 
 /**

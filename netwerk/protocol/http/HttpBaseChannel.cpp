@@ -772,7 +772,7 @@ HttpBaseChannel::GetContentLength(int64_t *aContentLength)
 NS_IMETHODIMP
 HttpBaseChannel::SetContentLength(int64_t value)
 {
-  NS_NOTYETIMPLEMENTED("HttpBaseChannel::SetContentLength");
+  MOZ_ASSERT_UNREACHABLE("HttpBaseChannel::SetContentLength");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

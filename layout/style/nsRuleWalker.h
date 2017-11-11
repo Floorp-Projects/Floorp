@@ -30,7 +30,7 @@ public:
 protected:
   void DoForward(nsIStyleRule* aRule) {
     mCurrent = mCurrent->Transition(aRule, mLevel, mImportance);
-    NS_POSTCONDITION(mCurrent, "Transition messed up");
+    MOZ_ASSERT(mCurrent, "Transition messed up");
   }
 
 public:

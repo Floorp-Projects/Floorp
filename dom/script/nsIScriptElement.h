@@ -13,8 +13,8 @@
 #include "nsIScriptLoaderObserver.h"
 #include "nsWeakPtr.h"
 #include "nsIParser.h"
+#include "nsIContent.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsIDOMHTMLScriptElement.h"
 #include "mozilla/CORSMode.h"
 
 #define NS_ISCRIPTELEMENT_IID \
@@ -152,12 +152,7 @@ public:
     mUri = nullptr;
     mCreatorParser = nullptr;
     mParserCreated = mozilla::dom::NOT_FROM_PARSER;
-    bool async = false;
-    nsCOMPtr<nsIDOMHTMLScriptElement> htmlScript = do_QueryInterface(this);
-    if (htmlScript) {
-      htmlScript->GetAsync(&async);
-    }
-    mForceAsync = !async;
+    mForceAsync = !GetAsyncState();
   }
 
   void SetCreatorParser(nsIParser* aParser)
@@ -269,6 +264,12 @@ protected:
    *         loaded
    */
   virtual bool MaybeProcessScript() = 0;
+
+  /**
+   * Since we've removed the XPCOM interface to HTML elements, we need a way to
+   * retreive async state from script elements without bringing the type in.
+   */
+  virtual bool GetAsyncState() = 0;
 
   /**
    * The start line number of the script.

@@ -25,7 +25,8 @@ public:
   enum Flags {
     // System call filtering; kernel config option CONFIG_SECCOMP_FILTER.
     kHasSeccompBPF     = 1 << 0,
-    // Config flag MOZ_CONTENT_SANDBOX; env var MOZ_DISABLE_CONTENT_SANDBOX.
+    // Config flag MOZ_CONTENT_SANDBOX; runtime
+    // mozilla::IsContentSandboxEnabled().
     kEnabledForContent = 1 << 1,
     // Config flag MOZ_GMP_SANDBOX; env var MOZ_DISABLE_GMP_SANDBOX.
     kEnabledForMedia   = 1 << 2,

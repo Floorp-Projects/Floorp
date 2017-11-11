@@ -47,7 +47,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   BulkKeyBundle: "resource://services-sync/keys.js",
   CollectionKeyManager: "resource://services-sync/record.js",
   CommonUtils: "resource://services-common/utils.js",

@@ -41,7 +41,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIEditRules.h"

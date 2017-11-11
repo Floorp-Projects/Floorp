@@ -17,6 +17,8 @@ jobs:
         attributes:
             build_platform: android-nightly
             nightly: true
+        shipping-phase: ship
+        shipping-product: fennec
         worker-type: # see transforms
         worker:
             implementation: push-apk-breakpoint

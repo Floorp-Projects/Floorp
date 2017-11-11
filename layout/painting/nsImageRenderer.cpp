@@ -698,7 +698,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
       nsSVGIntegrationUtils::DrawableFromPaintServer(
         mPaintServerFrame, mForFrame, mSize, imageSize,
         aContext.GetDrawTarget(),
-        aContext.CurrentMatrix(),
+        aContext.CurrentMatrixDouble(),
         nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES);
 
     return drawable.forget();

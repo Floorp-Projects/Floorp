@@ -16,6 +16,7 @@ Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/ObjectUtils.jsm");
 
 add_task(async function head_setup() {

@@ -602,7 +602,6 @@ nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
     return Fullscreen(aEvent);
   }
 
-  NS_ABORT();
-
+  MOZ_ASSERT_UNREACHABLE("Unexpected eventType");
   return NS_OK;
 }

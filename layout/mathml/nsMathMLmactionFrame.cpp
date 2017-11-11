@@ -274,7 +274,7 @@ nsMathMLmactionFrame::MouseListener::HandleEvent(nsIDOMEvent* aEvent)
     mOwner->MouseOut();
   }
   else {
-    NS_ABORT();
+    MOZ_ASSERT_UNREACHABLE("Unexpected eventType");
   }
 
   return NS_OK;

@@ -306,9 +306,24 @@ function waitForDocumentLoad() {
  * Enters test refresh mode, and restores the mode when |t| finishes.
  */
 function useTestRefreshMode(t) {
-  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
-  t.add_cleanup(() => {
-    SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+  function ensureNoSuppressedPaints() {
+    return new Promise(resolve => {
+      function checkSuppressedPaints() {
+        if (!SpecialPowers.DOMWindowUtils.paintingSuppressed) {
+          resolve();
+        } else {
+          window.requestAnimationFrame(checkSuppressedPaints);
+        }
+      }
+      checkSuppressedPaints();
+    });
+  }
+
+  return ensureNoSuppressedPaints().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+    t.add_cleanup(() => {
+      SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+    });
   });
 }
 

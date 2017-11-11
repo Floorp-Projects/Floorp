@@ -3054,7 +3054,7 @@ nsStandardURL::SetRef(const nsACString &input)
 NS_IMETHODIMP
 nsStandardURL::SetDirectory(const nsACString &input)
 {
-    NS_NOTYETIMPLEMENTED("");
+    MOZ_ASSERT_UNREACHABLE("SetDirectory");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

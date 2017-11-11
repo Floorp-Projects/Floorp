@@ -305,7 +305,7 @@ static inline wr::LayoutRect ToLayoutRect(const mozilla::LayoutDeviceRect& rect)
   return r;
 }
 
-static inline wr::LayoutRect ToLayoutRect(const gfxRect rect)
+static inline wr::LayoutRect ToLayoutRect(const gfxRect& rect)
 {
   wr::LayoutRect r;
   r.origin.x = rect.x;

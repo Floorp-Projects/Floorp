@@ -898,6 +898,25 @@ public:
 
     static auto GetCurrentNetworkInformation() -> mozilla::jni::DoubleArray::LocalRef;
 
+    struct GetDefaultLocale_t {
+        typedef GeckoAppShell Owner;
+        typedef mozilla::jni::String::LocalRef ReturnType;
+        typedef mozilla::jni::String::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getDefaultLocale";
+        static constexpr char signature[] =
+                "()Ljava/lang/String;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto GetDefaultLocale() -> mozilla::jni::String::LocalRef;
+
     struct GetDensity_t {
         typedef GeckoAppShell Owner;
         typedef float ReturnType;

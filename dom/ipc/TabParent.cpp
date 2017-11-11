@@ -3139,7 +3139,7 @@ TabParent::AllocPPluginWidgetParent()
 #ifdef XP_WIN
   return new mozilla::plugins::PluginWidgetParent();
 #else
-  MOZ_ASSERT_UNREACHABLE();
+  MOZ_ASSERT_UNREACHABLE("AllocPPluginWidgetParent only supports Windows");
   return nullptr;
 #endif
 }

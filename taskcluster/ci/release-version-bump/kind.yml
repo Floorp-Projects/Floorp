@@ -12,20 +12,28 @@ transforms:
 kind-dependencies:
    - beetmover-cdns
 
+job-defaults:
+   shipping-phase: ship
+
 jobs:
    fennec:
       name: fennec-version-bump
       description: Release Promotion version bump
       worker-type: buildbot-bridge/buildbot-bridge
       run-on-projects: []
+      shipping-product: fennec
       run:
          using: buildbot
          product: fennec
          buildername: release-{branch}-fennec_version_bump
          release-promotion: true
-         routes:
-            - index.releases.v1.{branch}.latest.fennec.latest.version_bump
-            - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.version_bump
+      routes:
+         - index.releases.v1.{branch}.latest.fennec.latest.version_bump
+         - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.version_bump
+      index:
+         type: release
+         product: fennec
+         job-name: android-api-16-opt
       notifications:
          completed:
             by-project:

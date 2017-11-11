@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_HTMLSharedElement_h
 #define mozilla_dom_HTMLSharedElement_h
 
-#include "nsIDOMHTMLBaseElement.h"
-#include "nsIDOMHTMLHtmlElement.h"
 #include "nsGenericHTMLElement.h"
 
 #include "nsGkAtoms.h"
@@ -19,9 +17,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLSharedElement final : public nsGenericHTMLElement,
-                                public nsIDOMHTMLBaseElement,
-                                public nsIDOMHTMLHtmlElement
+class HTMLSharedElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLSharedElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
@@ -32,15 +28,6 @@ public:
       SetHasWeirdParserInsertionMode();
     }
   }
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMHTMLBaseElement
-  NS_DECL_NSIDOMHTMLBASEELEMENT
-
-  // nsIDOMHTMLHtmlElement
-  NS_DECL_NSIDOMHTMLHTMLELEMENT
 
   // nsIContent
   virtual bool ParseAttribute(int32_t aNamespaceID,
@@ -115,7 +102,8 @@ public:
     MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::base));
     SetHTMLAttr(nsGkAtoms::target, aValue, aResult);
   }
-  // The XPCOM GetHref is fine for us
+
+  void GetHref(nsAString& aValue);
   void SetHref(const nsAString& aValue, ErrorResult& aResult)
   {
     MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::base));

@@ -318,6 +318,14 @@ auto GeckoAppShell::GetCurrentNetworkInformation() -> mozilla::jni::DoubleArray:
     return mozilla::jni::Method<GetCurrentNetworkInformation_t>::Call(GeckoAppShell::Context(), nullptr);
 }
 
+constexpr char GeckoAppShell::GetDefaultLocale_t::name[];
+constexpr char GeckoAppShell::GetDefaultLocale_t::signature[];
+
+auto GeckoAppShell::GetDefaultLocale() -> mozilla::jni::String::LocalRef
+{
+    return mozilla::jni::Method<GetDefaultLocale_t>::Call(GeckoAppShell::Context(), nullptr);
+}
+
 constexpr char GeckoAppShell::GetDensity_t::name[];
 constexpr char GeckoAppShell::GetDensity_t::signature[];
 

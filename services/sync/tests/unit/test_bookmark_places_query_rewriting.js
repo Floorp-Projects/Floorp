@@ -32,18 +32,16 @@ add_task(async function run_test() {
   _("Folder name: " + tagRecord.folderName);
   await store.applyIncoming(tagRecord);
 
-  let tags = PlacesUtils.getFolderContents(PlacesUtils.tagsFolderId).root;
-  let tagID;
-  try {
-    for (let i = 0; i < tags.childCount; ++i) {
-      let child = tags.getChild(i);
-      if (child.title == "bar") {
-        tagID = child.itemId;
-      }
-    }
-  } finally {
-    tags.containerOpen = false;
-  }
+  let tagID = -1;
+  let db = await PlacesUtils.promiseDBConnection();
+  let rows = await db.execute(`
+    SELECT id FROM moz_bookmarks
+    WHERE parent = :tagsFolderId AND
+          title = :title`,
+    { tagsFolderId: PlacesUtils.tagsFolderId,
+      title: "bar" });
+  equal(rows.length, 1);
+  tagID = rows[0].getResultByName("id");
 
   _("Tag ID: " + tagID);
   let insertedRecord = await store.createRecord("abcdefabcdef", "bookmarks");

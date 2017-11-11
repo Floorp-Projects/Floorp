@@ -771,7 +771,7 @@ GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
   {
     // Paint text selection background into sourceCtx.
     gfxContextMatrixAutoSaveRestore save(sourceCtx);
-    sourceCtx->SetMatrix(sourceCtx->CurrentMatrix().PreTranslate(bounds.TopLeft()));
+    sourceCtx->SetMatrixDouble(sourceCtx->CurrentMatrixDouble().PreTranslate(bounds.TopLeft()));
 
     nsLayoutUtils::PaintFrame(aContext, aFrame,
                               nsRect(nsPoint(0, 0), aFrame->GetSize()),
@@ -793,10 +793,10 @@ GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
   }
   RefPtr<gfxContext> maskCtx = gfxContext::CreatePreservingTransformOrNull(maskDT);
   MOZ_ASSERT(maskCtx);
-  gfxMatrix currentMatrix = sourceCtx->CurrentMatrix();
-  maskCtx->SetMatrix(gfxMatrix::Translation(bounds.TopLeft()) *
-                     currentMatrix *
-                     gfxMatrix::Translation(-drawRect.TopLeft()));
+  gfxMatrix currentMatrix = sourceCtx->CurrentMatrixDouble();
+  maskCtx->SetMatrixDouble(gfxMatrix::Translation(bounds.TopLeft()) *
+                           currentMatrix *
+                           gfxMatrix::Translation(-drawRect.TopLeft()));
 
   // Shade text shape into mask A8 surface.
   nsLayoutUtils::PaintFrame(maskCtx, aFrame,
@@ -9171,7 +9171,7 @@ ComputeMaskGeometry(PaintFramesParams& aParams)
                                    frame->PresContext()->AppUnitsPerDevPixel());
 
   gfxContextMatrixAutoSaveRestore matSR(&ctx);
-  ctx.SetMatrix(ctx.CurrentMatrix().PreTranslate(devPixelOffsetToUserSpace));
+  ctx.SetMatrixDouble(ctx.CurrentMatrixDouble().PreTranslate(devPixelOffsetToUserSpace));
 
   // Convert boaderArea and dirtyRect to user space.
   int32_t appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();

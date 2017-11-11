@@ -68,7 +68,7 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
         if (surf && surf->CairoStatus() != 0)
             return nullptr;
 
-        gfxMatrix m = mContext->CurrentMatrix();
+        gfxMatrix m = mContext->CurrentMatrixDouble();
         if (!m.HasNonTranslation())
             mTransformType = TRANSLATION_ONLY;
         else if (m.HasNonAxisAlignedTransform())

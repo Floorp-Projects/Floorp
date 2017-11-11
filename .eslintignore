@@ -181,6 +181,7 @@ devtools/server/tests/unit/setBreakpoint*
 devtools/server/tests/unit/sourcemapped.js
 
 # dom/ exclusions
+dom/abort/**
 dom/animation/**
 dom/archivereader/**
 dom/asmjscache/**

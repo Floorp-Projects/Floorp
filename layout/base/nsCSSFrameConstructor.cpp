@@ -1518,7 +1518,7 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
     }
   }
 
-  NS_POSTCONDITION(aFrameItems.IsEmpty(), "How did that happen?");
+  MOZ_ASSERT(aFrameItems.IsEmpty(), "How did that happen?");
 }
 
 
@@ -9374,7 +9374,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     newFrame->SetNextContinuation(nextContinuation);
   }
 
-  NS_POSTCONDITION(!newFrame->GetNextSibling(), "unexpected sibling");
+  MOZ_ASSERT(!newFrame->GetNextSibling(), "unexpected sibling");
   return newFrame;
 }
 
@@ -13207,7 +13207,7 @@ Iterator::AppendItemsToList(nsCSSFrameConstructor* aFCtor, const Iterator& aEnd,
 
   // Point ourselves to aEnd, as advertised
   SetToEnd();
-  NS_POSTCONDITION(*this == aEnd, "How did that happen?");
+  MOZ_ASSERT(*this == aEnd, "How did that happen?");
 }
 
 void
@@ -13222,7 +13222,7 @@ Iterator::InsertItem(FrameConstructionItem* aItem)
   }
   mList.AdjustCountsForItem(aItem, 1);
 
-  NS_POSTCONDITION(aItem->getNext() == mCurrent, "How did that happen?");
+  MOZ_ASSERT(aItem->getNext() == mCurrent, "How did that happen?");
 }
 
 void

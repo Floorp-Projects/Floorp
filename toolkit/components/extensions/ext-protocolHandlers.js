@@ -8,7 +8,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "handlerService",
 XPCOMUtils.defineLazyServiceGetter(this, "protocolService",
                                    "@mozilla.org/uriloader/external-protocol-service;1",
                                    "nsIExternalProtocolService");
-Cu.importGlobalProperties(["URL"]);
 
 const hasHandlerApp = handlerConfig => {
   let protoInfo = protocolService.getProtocolHandlerInfo(handlerConfig.protocol);

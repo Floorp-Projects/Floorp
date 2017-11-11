@@ -250,7 +250,7 @@ FileSystemDataSource::GetSources(nsIRDFResource *property,
                                  bool tv,
                                  nsISimpleEnumerator **sources /* out */)
 {
-//  NS_NOTYETIMPLEMENTED("write me");
+//  MOZ_ASSERT_UNREACHABLE("write me");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -705,7 +705,7 @@ NS_IMETHODIMP
 FileSystemDataSource::ArcLabelsIn(nsIRDFNode *node,
                             nsISimpleEnumerator ** labels /* out */)
 {
-//  NS_NOTYETIMPLEMENTED("write me");
+//  MOZ_ASSERT_UNREACHABLE("write me");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -762,7 +762,7 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 NS_IMETHODIMP
 FileSystemDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
-    NS_NOTYETIMPLEMENTED("sorry!");
+    MOZ_ASSERT_UNREACHABLE("sorry!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
