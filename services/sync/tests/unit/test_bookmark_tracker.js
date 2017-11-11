@@ -2,14 +2,12 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 Cu.import("resource:///modules/PlacesUIUtils.jsm");
 
 let engine;

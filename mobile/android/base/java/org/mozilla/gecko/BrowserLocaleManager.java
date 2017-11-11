@@ -17,6 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.ReflectionTarget;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.GeckoJarReader;
 
@@ -225,6 +226,12 @@ public class BrowserLocaleManager implements LocaleManager {
         data.putString("languageTag", Locales.getLanguageTag(osLocale));
 
         EventDispatcher.getInstance().dispatch("Locale:OS", data);
+
+        if (GeckoThread.isRunning()) {
+            refreshLocales();
+        } else {
+            GeckoThread.queueNativeCall(BrowserLocaleManager.class, "refreshLocales");
+        }
     }
 
     @Override
@@ -450,5 +457,19 @@ public class BrowserLocaleManager implements LocaleManager {
     @SuppressWarnings("static-method")
     public String getFallbackLocaleTag() {
         return FALLBACK_LOCALE_TAG;
+    }
+
+    @WrapForJNI
+    public static native void refreshLocales();
+
+
+    @WrapForJNI
+    private static String getLocale() {
+        try {
+            return Locales.getLocaleManager().getCurrentLocale(GeckoAppShell.getApplicationContext()).toString();
+        } catch (NullPointerException e) {
+            Log.i(LOG_TAG, "Couldn't get current locale.");
+            return null;
+        }
     }
 }

@@ -138,6 +138,15 @@ Optimization
    Any tasks in the graph matching one of the labels will use the previously-run
    taskId rather than submitting a new task.
 
+Release Promotion
+-----------------
+
+``build_number``
+   Specify the release promotion build number.
+
+``next_version``
+   Specify the next version for version bump tasks.
+
 Comm Push Information
 ---------------------
 

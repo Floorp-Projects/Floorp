@@ -164,11 +164,11 @@ add_task(async function test_uploading() {
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
-  let parent = PlacesUtils.toolbarFolderId;
-  let uri = CommonUtils.makeURI("http://getfirefox.com/");
-
-  let bmk_id = PlacesUtils.bookmarks.insertBookmark(parent, uri,
-    PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
+  let bmk = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    url: "http://getfirefox.com/",
+    title: "Get Firefox!",
+  });
 
   try {
     let ping = await sync_engine_and_validate_telem(engine, false);
@@ -179,7 +179,10 @@ add_task(async function test_uploading() {
     greater(ping.engines[0].outgoing[0].sent, 0);
     ok(!ping.engines[0].incoming);
 
-    PlacesUtils.bookmarks.setItemTitle(bmk_id, "New Title");
+    await PlacesUtils.bookmarks.update({
+      guid: bmk.guid,
+      title: "New Title",
+    });
 
     await engine.resetClient();
 

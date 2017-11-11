@@ -1284,8 +1284,8 @@ NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsINode)
 nsresult
 nsINode::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
-  // This is only here so that we can use the NS_DECL_NSIDOMTARGET macro
-  NS_ABORT();
+  MOZ_ASSERT_UNREACHABLE("GetEventTargetParent is only here so that we can "
+                         "use the NS_DECL_NSIDOMTARGET macro");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

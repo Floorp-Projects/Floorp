@@ -69,6 +69,7 @@ public:
     nsTArray<nsIAnonymousContentCreator::ContentInfo>& aElements);
   void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32_t aFilter);
   nsresult FireScrollPortEvent();
+  void FireScrollEndEvent();
   void PostOverflowEvent();
   using PostDestroyData = nsIFrame::PostDestroyData;
   void Destroy(PostDestroyData& aPostDestroyData);
@@ -400,6 +401,9 @@ public:
   nsExpirationState* GetExpirationState() { return &mActivityExpirationState; }
 
   void SetTransformingByAPZ(bool aTransforming) {
+    if (mTransformingByAPZ && !aTransforming) {
+      FireScrollEndEvent();
+    }
     mTransformingByAPZ = aTransforming;
     if (!mozilla::css::TextOverflow::HasClippedOverflow(mOuter)) {
       // If the block has some text-overflow stuff we should kick off a paint

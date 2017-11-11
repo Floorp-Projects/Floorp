@@ -1371,6 +1371,6 @@ nsDirectoryViewerFactory::CreateInstanceForDocument(nsISupports* aContainer,
                                                     const char *aCommand,
                                                     nsIContentViewer** aDocViewerResult)
 {
-  NS_NOTYETIMPLEMENTED("didn't expect to get here");
+  MOZ_ASSERT_UNREACHABLE("didn't expect to get here");
   return NS_ERROR_NOT_IMPLEMENTED;
 }

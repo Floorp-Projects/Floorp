@@ -616,7 +616,7 @@ var AddonTestUtils = {
         let XPIscope = Cu.import("resource://gre/modules/addons/XPIProvider.jsm", {});
         // This would be cleaner if I could get it as the rejection reason from
         // the AddonManagerInternal.shutdown() promise
-        let shutdownError = XPIscope.XPIProvider._shutdownError;
+        let shutdownError = XPIscope.XPIDatabase._saveError;
 
         AddonManagerPrivate.unregisterProvider(XPIscope.XPIProvider);
         Cu.unload("resource://gre/modules/addons/XPIProvider.jsm");

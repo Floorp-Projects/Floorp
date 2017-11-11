@@ -6937,7 +6937,7 @@ HTMLInputElement::GetValueMode() const
     case NS_FORM_INPUT_DATETIME_LOCAL:
       return VALUE_MODE_VALUE;
     default:
-      NS_NOTYETIMPLEMENTED("Unexpected input type in GetValueMode()");
+      MOZ_ASSERT_UNREACHABLE("Unexpected input type in GetValueMode()");
       return VALUE_MODE_VALUE;
 #else // DEBUG
     default:
@@ -6985,7 +6985,7 @@ HTMLInputElement::DoesReadOnlyApply() const
     case NS_FORM_INPUT_DATETIME_LOCAL:
       return true;
     default:
-      NS_NOTYETIMPLEMENTED("Unexpected input type in DoesReadOnlyApply()");
+      MOZ_ASSERT_UNREACHABLE("Unexpected input type in DoesReadOnlyApply()");
       return true;
 #else // DEBUG
     default:
@@ -7025,7 +7025,7 @@ HTMLInputElement::DoesRequiredApply() const
     case NS_FORM_INPUT_DATETIME_LOCAL:
       return true;
     default:
-      NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
+      MOZ_ASSERT_UNREACHABLE("Unexpected input type in DoesRequiredApply()");
       return true;
 #else // DEBUG
     default:
@@ -7075,7 +7075,7 @@ HTMLInputElement::DoesMinMaxApply() const
     case NS_FORM_INPUT_COLOR:
       return false;
     default:
-      NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
+      MOZ_ASSERT_UNREACHABLE("Unexpected input type in DoesRequiredApply()");
       return false;
 #else // DEBUG
     default:
@@ -7115,7 +7115,7 @@ HTMLInputElement::DoesAutocompleteApply() const
     case NS_FORM_INPUT_FILE:
       return false;
     default:
-      NS_NOTYETIMPLEMENTED("Unexpected input type in DoesAutocompleteApply()");
+      MOZ_ASSERT_UNREACHABLE("Unexpected input type in DoesAutocompleteApply()");
       return false;
 #else // DEBUG
     default:

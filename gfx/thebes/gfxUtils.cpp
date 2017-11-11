@@ -438,8 +438,8 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
                         gfxFloat aOpacity,
                         ExtendMode aExtendMode)
 {
-  gfxSize scaleFactor = aContext->CurrentMatrix().ScaleFactors(true);
-  gfxMatrix scaleMatrix = gfxMatrix::Scaling(scaleFactor.width, scaleFactor.height);
+  Size scaleFactor = aContext->CurrentMatrix().ScaleFactors(true);
+  Matrix scaleMatrix = Matrix::Scaling(scaleFactor.width, scaleFactor.height);
   const float fuzzFactor = 0.01;
 
   // If we aren't scaling or translating, don't go down this path
@@ -456,13 +456,13 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
   clipExtents.Inflate(1.0);
 
   gfxRect needed = aRegion.IntersectAndRestrict(clipExtents);
-  Rect scaledNeededRect = ToMatrix(scaleMatrix).TransformBounds(ToRect(needed));
+  Rect scaledNeededRect = scaleMatrix.TransformBounds(ToRect(needed));
   scaledNeededRect.RoundOut();
   if (scaledNeededRect.IsEmpty()) {
     return false;
   }
 
-  Rect scaledImageRect = ToMatrix(scaleMatrix).TransformBounds(aImageRect);
+  Rect scaledImageRect = scaleMatrix.TransformBounds(aImageRect);
   if (!ShouldUseTempSurface(scaledImageRect, scaledNeededRect)) {
     return false;
   }
@@ -485,7 +485,7 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
   RefPtr<gfxContext> tmpCtx = gfxContext::CreateOrNull(scaledDT);
   MOZ_ASSERT(tmpCtx); // already checked the target above
 
-  scaledDT->SetTransform(ToMatrix(scaleMatrix));
+  scaledDT->SetTransform(scaleMatrix);
   gfxRect gfxImageRect(aImageRect.x, aImageRect.y, aImageRect.width, aImageRect.height);
 
   // Since this is just the scaled image, we don't want to repeat anything yet.
@@ -495,12 +495,12 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
 
   {
     gfxContextMatrixAutoSaveRestore autoSR(aContext);
-    Matrix withoutScale = ToMatrix(aContext->CurrentMatrix());
+    Matrix withoutScale = aContext->CurrentMatrix();
     DrawTarget* destDrawTarget = aContext->GetDrawTarget();
 
     // The translation still is in scaled units
     withoutScale.PreScale(1.0 / scaleFactor.width, 1.0 / scaleFactor.height);
-    aContext->SetMatrix(ThebesMatrix(withoutScale));
+    aContext->SetMatrix(withoutScale);
 
     DrawOptions drawOptions(aOpacity, aContext->CurrentOp(),
                             aContext->CurrentAntialiasMode());

@@ -4685,10 +4685,10 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
   // slight rounding errors here.  We use NudgeToIntegers() here to adjust
   // matrix components that are integers up to the accuracy of floats to be
   // those integers.
-  gfxMatrix newTM = aThebesContext->CurrentMatrix().PreTranslate(offset).
-                                                    PreScale(scale, scale).
-                                                    NudgeToIntegers();
-  aThebesContext->SetMatrix(newTM);
+  gfxMatrix newTM = aThebesContext->CurrentMatrixDouble().PreTranslate(offset).
+                                                          PreScale(scale, scale).
+                                                          NudgeToIntegers();
+  aThebesContext->SetMatrixDouble(newTM);
 
   AutoSaveRestoreRenderingState _(this);
 
@@ -5088,7 +5088,7 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
     ctx->Clip(path);
   }
 
-  gfxMatrix initialTM = ctx->CurrentMatrix();
+  gfxMatrix initialTM = ctx->CurrentMatrixDouble();
 
   if (resize)
     initialTM.PreScale(scale, scale);
@@ -5118,7 +5118,7 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
     gfxPoint rootOffset =
       nsLayoutUtils::PointToGfxPoint(rangeInfo->mRootOffset,
                                      pc->AppUnitsPerDevPixel());
-    ctx->SetMatrix(gfxMatrix(initialTM).PreTranslate(rootOffset));
+    ctx->SetMatrixDouble(initialTM.PreTranslate(rootOffset));
     aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
     nsRegion visible(aArea);
     RefPtr<LayerManager> layerManager =
@@ -10144,8 +10144,8 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       aRenderingContext->Save();
       gfxPoint devPixelOffset =
         nsLayoutUtils::PointToGfxPoint(aOffset, appUnitsPerDevPixel);
-      aRenderingContext->SetMatrix(
-        aRenderingContext->CurrentMatrix().PreTranslate(devPixelOffset));
+      aRenderingContext->SetMatrixDouble(
+        aRenderingContext->CurrentMatrixDouble().PreTranslate(devPixelOffset));
 
       // We don't care about the document language or user fonts here;
       // just get a default Latin font.

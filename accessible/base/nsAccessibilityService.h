@@ -293,6 +293,21 @@ private:
     CreateAccessibleByFrameType(nsIFrame* aFrame, nsIContent* aContent,
                                 Accessible* aContext);
 
+  /**
+   * Notify observers about change of the accessibility service's consumers.
+   */
+  void NotifyOfConsumersChange();
+
+  /**
+   * Set accessibility service consumers.
+   */
+  void SetConsumers(uint32_t aConsumers);
+
+  /**
+   * Unset accessibility service consumers.
+   */
+  void UnsetConsumers(uint32_t aConsumers);
+
 #ifdef MOZ_XUL
   /**
    * Create accessible for XUL tree element.

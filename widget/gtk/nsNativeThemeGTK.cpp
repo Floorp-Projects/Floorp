@@ -1172,11 +1172,11 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
   gfxContextAutoSaveRestore autoSR(ctx);
   gfxMatrix matrix;
   if (!snapped) { // else rects are in device coords
-    matrix = ctx->CurrentMatrix();
+    matrix = ctx->CurrentMatrixDouble();
   }
   matrix.Translate(origin);
   matrix.Scale(scaleFactor, scaleFactor); // Draw in GDK coords
-  ctx->SetMatrix(matrix);
+  ctx->SetMatrixDouble(matrix);
 
   // The gdk_clip is just advisory here, meaning "you don't
   // need to draw outside this rect if you don't feel like it!"

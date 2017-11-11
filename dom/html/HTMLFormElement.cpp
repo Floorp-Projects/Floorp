@@ -1294,10 +1294,11 @@ HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
       }
       *firstSubmitSlot = aChild;
     }
-    NS_POSTCONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
-                     mDefaultSubmitElement == mFirstSubmitNotInElements ||
-                     !mDefaultSubmitElement,
-                     "What happened here?");
+
+    MOZ_ASSERT(mDefaultSubmitElement == mFirstSubmitInElements ||
+               mDefaultSubmitElement == mFirstSubmitNotInElements ||
+               !mDefaultSubmitElement,
+               "What happened here?");
 
     // Notify that the state of the previous default submit element has changed
     // if the element which is the default submit element has changed.  The new
@@ -1430,9 +1431,9 @@ HTMLFormElement::HandleDefaultSubmitRemoval()
       mFirstSubmitInElements : mFirstSubmitNotInElements;
   }
 
-  NS_POSTCONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
-                   mDefaultSubmitElement == mFirstSubmitNotInElements,
-                   "What happened here?");
+  MOZ_ASSERT(mDefaultSubmitElement == mFirstSubmitInElements ||
+             mDefaultSubmitElement == mFirstSubmitNotInElements,
+             "What happened here?");
 
   // Notify about change if needed.
   if (mDefaultSubmitElement) {

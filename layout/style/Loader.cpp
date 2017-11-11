@@ -213,8 +213,8 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     ++(mParentData->mPendingChildren);
   }
 
-  NS_POSTCONDITION(!mUseSystemPrincipal || mSyncLoad,
-                   "Shouldn't use system principal for async loads");
+  MOZ_ASSERT(!mUseSystemPrincipal || mSyncLoad,
+             "Shouldn't use system principal for async loads");
 }
 
 SheetLoadData::SheetLoadData(Loader* aLoader,
@@ -248,8 +248,8 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mPreloadEncoding(aPreloadEncoding)
 {
   NS_PRECONDITION(mLoader, "Must have a loader!");
-  NS_POSTCONDITION(!mUseSystemPrincipal || mSyncLoad,
-                   "Shouldn't use system principal for async loads");
+  MOZ_ASSERT(!mUseSystemPrincipal || mSyncLoad,
+             "Shouldn't use system principal for async loads");
 }
 
 SheetLoadData::~SheetLoadData()

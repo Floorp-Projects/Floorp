@@ -221,8 +221,12 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     if run['use-simple-package']:
         env.update({'MOZ_SIMPLE_PACKAGE_NAME': 'target'})
 
+    # The windows generic worker uses batch files to pass environment variables
+    # to commands.  Setting a variable to empty in a batch file unsets, so if
+    # there is no `TRY_COMMIT_MESSAGE`, pass a space instead, so that
+    # mozharness doesn't try to find the commit message on its own.
     if 'try' in config.params['project']:
-        env['TRY_COMMIT_MSG'] = config.params['message']
+        env['TRY_COMMIT_MSG'] = config.params['message'] or 'no commit message'
 
     if not job['attributes']['build_platform'].startswith('win'):
         raise Exception(
