@@ -16,6 +16,7 @@ this.EXPORTED_SYMBOLS = ["CollectionValidator", "CollectionProblemData"];
 class CollectionProblemData {
   constructor() {
     this.missingIDs = 0;
+    this.clientDuplicates = [];
     this.duplicates = [];
     this.clientMissing = [];
     this.serverMissing = [];
@@ -39,7 +40,8 @@ class CollectionProblemData {
       { name: "serverUnexpected", count: this.serverUnexpected.length },
       { name: "differences", count: this.differences.length },
       { name: "missingIDs", count: this.missingIDs },
-      { name: "duplicates", count: this.duplicates.length }
+      { name: "clientDuplicates", count: this.clientDuplicates.length },
+      { name: "duplicates", count: this.duplicates.length },
     ];
   }
 }
@@ -170,8 +172,8 @@ class CollectionValidator {
       if (record.deleted) {
         serverDeleted.add(record);
       } else {
-        let possibleDupe = seenServer.get(id);
-        if (possibleDupe) {
+        let serverHasPossibleDupe = seenServer.has(id);
+        if (serverHasPossibleDupe) {
           problems.duplicates.push(id);
         } else {
           seenServer.set(id, record);
@@ -185,6 +187,12 @@ class CollectionValidator {
     for (let record of clientRecords) {
       let id = record[this.idProp];
       record.shouldSync = this.syncedByClient(record);
+      let clientHasPossibleDupe = seenClient.has(id);
+      if (clientHasPossibleDupe && record.shouldSync) {
+        // Only report duplicate client IDs for syncable records.
+        problems.clientDuplicates.push(id);
+        continue;
+      }
       seenClient.set(id, record);
       let combined = allRecords.get(id);
       if (combined) {
