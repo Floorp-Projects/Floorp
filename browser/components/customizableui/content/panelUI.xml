@@ -21,13 +21,6 @@
       <xul:vbox anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,transitioning">
         <xul:stack anonid="viewStack" xbl:inherits="transitioning" class="panel-viewstack">
           <xul:vbox anonid="mainViewContainer" class="panel-mainview"/>
-
-          <!-- Used to capture click events over the PanelUI-mainView if we're in
-               subview mode. That way, any click on the PanelUI-mainView causes us
-               to revert to the mainView mode, whereupon PanelUI-click-capture then
-               allows click events to go through it. -->
-          <xul:vbox anonid="clickCapturer" class="panel-clickcapturer"/>
-
           <children includes="panelview"/>
         </xul:stack>
       </xul:vbox>

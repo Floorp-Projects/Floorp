@@ -269,8 +269,6 @@ this.PanelMultiView = class {
 
     const {document, window} = this;
 
-    this._clickCapturer =
-      document.getAnonymousElementByAttribute(this.node, "anonid", "clickCapturer");
     this._viewContainer =
       document.getAnonymousElementByAttribute(this.node, "anonid", "viewContainer");
     this._mainViewContainer =
@@ -296,12 +294,8 @@ this.PanelMultiView = class {
       this._dir = cs.direction;
       this.setMainView(this.panelViews.currentView);
       this.showMainView();
-    } else {
-      this._clickCapturer.addEventListener("click", this);
-
-      if (this._mainView) {
-        this.setMainView(this._mainView);
-      }
+    } else if (this._mainView) {
+      this.setMainView(this._mainView);
     }
 
     this._showingSubView = false;
@@ -349,8 +343,6 @@ this.PanelMultiView = class {
     if (this.panelViews) {
       this._moveOutKids(this._viewStack);
       this.panelViews.clear();
-    } else {
-      this._clickCapturer.removeEventListener("click", this);
     }
     this._panel.removeEventListener("mousemove", this);
     this._panel.removeEventListener("popupshowing", this);
@@ -358,7 +350,7 @@ this.PanelMultiView = class {
     this._panel.removeEventListener("popupshown", this);
     this._panel.removeEventListener("popuphidden", this);
     this.window.removeEventListener("keydown", this);
-    this.node = this._clickCapturer = this._viewContainer = this._mainViewContainer =
+    this.node = this._viewContainer = this._mainViewContainer =
       this._viewStack = this.__dwu = this._panelViewCache =
         this._transitionDetails = null;
   }
@@ -991,11 +983,6 @@ this.PanelMultiView = class {
       return;
     }
     switch (aEvent.type) {
-      case "click":
-        if (aEvent.originalTarget == this._clickCapturer) {
-          this.showMainView();
-        }
-        break;
       case "keydown":
         this._keyNavigation(aEvent);
         break;
