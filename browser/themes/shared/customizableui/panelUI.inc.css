@@ -22,7 +22,6 @@
 %define panelPaletteIconSize 16px
 
 :root {
-  --panel-ui-exit-subview-gutter-width: 38px;
   --appmenu-yellow-warning-border-color: hsl(45, 100%, 77%);
   --appmenu-yellow-warning-color: #FFEFBF;
   --appmenu-yellow-warning-hover-color: #FFE8A2;
@@ -112,15 +111,6 @@
 #PanelUI-menu-button[badge-status="addon-alert"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   height: 13px;
   background: #FFBF00 url(chrome://browser/skin/update-badge-failed.svg) no-repeat center;
-}
-
-.panel-subviews {
-  padding: 4px;
-  background-clip: padding-box;
-  border-left: 1px solid var(--arrowpanel-border-color);
-  box-shadow: 0 3px 5px hsla(210,4%,10%,.1),
-              0 0 7px hsla(210,4%,10%,.1);
-  margin-inline-start: var(--panel-ui-exit-subview-gutter-width);
 }
 
 panelview {
