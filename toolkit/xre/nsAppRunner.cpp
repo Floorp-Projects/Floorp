@@ -3762,7 +3762,11 @@ static void SetShutdownChecks() {
   // too.
 
 #ifdef DEBUG
+#if defined(MOZ_CODE_COVERAGE) && defined(XP_WIN)
+  gShutdownChecks = SCM_NOTHING;
+#else
   gShutdownChecks = SCM_CRASH;
+#endif // MOZ_CODE_COVERAGE && XP_WIN
 #else
   const char* releaseChannel = NS_STRINGIFY(MOZ_UPDATE_CHANNEL);
   if (strcmp(releaseChannel, "nightly") == 0 ||
@@ -3771,7 +3775,7 @@ static void SetShutdownChecks() {
   } else {
     gShutdownChecks = SCM_NOTHING;
   }
-#endif
+#endif // DEBUG
 
   // We let an environment variable override the default so that addons
   // authors can use it for debugging shutdown with released firefox versions.
