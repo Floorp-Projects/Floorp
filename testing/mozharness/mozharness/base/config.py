@@ -440,7 +440,7 @@ class BaseConfig(object):
                     file_path = os.path.join(os.getcwd(), file_name)
                     download_config_file(cf, file_path)
                     all_cfg_files_and_dicts.append(
-                        (file_path, parse_config_file(file_path))
+                        (file_path, parse_config_file(file_path, search_path=["."]))
                     )
                 else:
                     all_cfg_files_and_dicts.append((cf, parse_config_file(cf)))
