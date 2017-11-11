@@ -135,6 +135,8 @@ class ReadOnlyDict(dict):
             result[k] = deepcopy(v, memo)
         return result
 
+DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "configs")
+
 # parse_config_file {{{1
 def parse_config_file(file_name, quiet=False, search_path=None,
                       config_dict_name="config"):
@@ -145,8 +147,7 @@ def parse_config_file(file_name, quiet=False, search_path=None,
         file_path = file_name
     else:
         if not search_path:
-            search_path = ['.', os.path.join(sys.path[0], '..', 'configs'),
-                           os.path.join(sys.path[0], '..', '..', 'configs')]
+            search_path = ['.', DEFAULT_CONFIG_PATH]
         for path in search_path:
             if os.path.exists(os.path.join(path, file_name)):
                 file_path = os.path.join(path, file_name)
