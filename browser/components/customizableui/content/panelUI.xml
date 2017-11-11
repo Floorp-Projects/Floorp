@@ -28,14 +28,7 @@
                allows click events to go through it. -->
           <xul:vbox anonid="clickCapturer" class="panel-clickcapturer"/>
 
-          <!-- We manually set display: none (via a CSS attribute selector) on the
-               subviews that are not being displayed. We're using this over a deck
-               because a deck assumes the size of its largest child, regardless of
-               whether or not it is shown. That's not good for our case, since we
-               want to allow each subview to be uniquely sized. -->
-          <xul:vbox anonid="subViews" class="panel-subviews" xbl:inherits="panelopen">
-            <children includes="panelview"/>
-          </xul:vbox>
+          <children includes="panelview"/>
         </xul:stack>
       </xul:vbox>
     </content>

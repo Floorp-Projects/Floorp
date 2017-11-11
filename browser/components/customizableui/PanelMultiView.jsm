@@ -201,11 +201,6 @@ this.PanelMultiView = class {
   }
 
   get panelViews() {
-    // If there's a dedicated subViews container, we're not in the right binding
-    // to use SlidingPanelViews.
-    if (this._subViews)
-      return null;
-
     if (this._panelViews)
       return this._panelViews;
 
@@ -280,8 +275,6 @@ this.PanelMultiView = class {
       document.getAnonymousElementByAttribute(this.node, "anonid", "viewContainer");
     this._mainViewContainer =
       document.getAnonymousElementByAttribute(this.node, "anonid", "mainViewContainer");
-    this._subViews =
-      document.getAnonymousElementByAttribute(this.node, "anonid", "subViews");
     this._viewStack =
       document.getAnonymousElementByAttribute(this.node, "anonid", "viewStack");
     this._offscreenViewStack =
@@ -352,8 +345,6 @@ this.PanelMultiView = class {
         this._panelViewCache.appendChild(mainView);
       mainView.removeAttribute("mainview");
     }
-    if (this._subViews)
-      this._moveOutKids(this._subViews);
 
     if (this.panelViews) {
       this._moveOutKids(this._viewStack);
@@ -368,7 +359,7 @@ this.PanelMultiView = class {
     this._panel.removeEventListener("popuphidden", this);
     this.window.removeEventListener("keydown", this);
     this.node = this._clickCapturer = this._viewContainer = this._mainViewContainer =
-      this._subViews = this._viewStack = this.__dwu = this._panelViewCache =
+      this._viewStack = this.__dwu = this._panelViewCache =
         this._transitionDetails = null;
   }
 
@@ -397,8 +388,6 @@ this.PanelMultiView = class {
       this._viewStack.appendChild(viewNode);
       if (!this.panelViews.includes(viewNode))
         this.panelViews.push(viewNode);
-    } else {
-      this._subViews.appendChild(viewNode);
     }
   }
 
@@ -423,8 +412,6 @@ this.PanelMultiView = class {
       return;
 
     if (this._mainView) {
-      if (!this.panelViews)
-        this._subViews.appendChild(this._mainView);
       this._mainView.removeAttribute("mainview");
     }
     this._mainViewId = aNewMainView.id;
@@ -984,10 +971,7 @@ this.PanelMultiView = class {
       // If the anchor is an element on the far end of the mainView we
       // don't want to shift the mainView too far, we would reveal empty
       // space otherwise.
-      let cstyle = this.window.getComputedStyle(this.document.documentElement);
-      let exitSubViewGutterWidth =
-        cstyle.getPropertyValue("--panel-ui-exit-subview-gutter-width");
-      let maxShift = mainViewRect.width - parseInt(exitSubViewGutterWidth);
+      let maxShift = mainViewRect.width - 38;
       let target = Math.min(maxShift, edge + center);
 
       let neg = direction == "ltr" ? "-" : "";
