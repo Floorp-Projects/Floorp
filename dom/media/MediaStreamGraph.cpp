@@ -3993,8 +3993,6 @@ MediaStreamGraphImpl::AudioContextOperationCompleted(MediaStream* aStream,
   // This can be called from the thread created to do cubeb operation, or the
   // MSG thread. The pointers passed back here are refcounted, so are still
   // alive.
-  MonitorAutoLock lock(mMonitor);
-
   AudioContextState state;
   switch (aOperation) {
     case AudioContextOperation::Suspend:
