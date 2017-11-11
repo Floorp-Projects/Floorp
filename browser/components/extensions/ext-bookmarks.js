@@ -5,8 +5,7 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-browserAction.js */
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 const {
   TYPE_BOOKMARK,
