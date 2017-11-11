@@ -19,13 +19,18 @@ job-defaults:
          mozilla-beta: scriptworker-prov-v1/beetmoverworker-v1
          default: scriptworker-prov-v1/beetmoverworker-dev
    run-on-projects: []
+   shipping-phase: publish
 
 jobs:
    fennec-push-to-cdns:
       name: fennec_push_to_cdns
       product: fennec
-      run:
-         routes:
-            - index.releases.v1.{branch}.latest.fennec.latest.beetmover_cdns
-            - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.beetmover_cdns
+      shipping-product: fennec
+      routes:
+        - index.releases.v1.{branch}.latest.fennec.latest.beetmover_cdns
+        - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.beetmover_cdns
       treeherder-platform: Android/opt
+      index:
+         type: release
+         product: fennec
+         job-name: android-api-16-opt

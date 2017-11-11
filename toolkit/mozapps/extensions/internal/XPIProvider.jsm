@@ -2091,8 +2091,7 @@ this.XPIProvider = {
       this.installs = new Set();
       this.installLocations = [];
       this.installLocationsByName = {};
-      // Hook for tests to detect when saving database at shutdown time fails
-      this._shutdownError = null;
+
       // Clear this at startup for xpcshell test restarts
       this._telemetryDetails = {};
       // Register our details structure with AddonManager
@@ -2379,11 +2378,7 @@ this.XPIProvider = {
     this.extensionsActive = false;
     this._addonFileMap.clear();
 
-    try {
-      await XPIDatabase.shutdown();
-    } catch (err) {
-      this._shutdownError = err;
-    }
+    await XPIDatabase.shutdown();
   },
 
   cleanupTemporaryAddons() {

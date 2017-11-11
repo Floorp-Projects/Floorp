@@ -106,24 +106,9 @@ inline void MOZ_PretendNoReturn()
 #endif
 
 /**
- * NS_PRECONDITION/POSTCONDITION are synonyms for NS_ASSERTION.
+ * NS_PRECONDITION is a synonym for NS_ASSERTION.
  */
 #define NS_PRECONDITION(expr, str) NS_ASSERTION(expr, str)
-#define NS_POSTCONDITION(expr, str) NS_ASSERTION(expr, str)
-
-/**
- * This macros triggers a program failure if executed. It indicates that
- * an attempt was made to execute some unimplemented functionality.
- */
-#ifdef DEBUG
-#define NS_NOTYETIMPLEMENTED(str)                             \
-  do {                                                        \
-    NS_DebugBreak(NS_DEBUG_ASSERTION, str, "NotYetImplemented", __FILE__, __LINE__); \
-    MOZ_PretendNoReturn();                                    \
-  } while(0)
-#else
-#define NS_NOTYETIMPLEMENTED(str)      do { /* nothing */ } while(0)
-#endif
 
 /**
  * This macros triggers a program failure if executed. It indicates that
@@ -160,21 +145,6 @@ inline void MOZ_PretendNoReturn()
   NS_DebugBreak(NS_DEBUG_WARNING, str, nullptr, __FILE__, __LINE__)
 #else
 #define NS_WARNING(str)                do { /* nothing */ } while(0)
-#endif
-
-/**
- * Trigger an debug-only abort.
- *
- * @see MOZ_RELEASE_ASSERT or MOZ_CRASH for release-mode asserts.
- */
-#ifdef DEBUG
-#define NS_ABORT()                                            \
-  do {                                                        \
-    NS_DebugBreak(NS_DEBUG_ABORT, nullptr, nullptr, __FILE__, __LINE__); \
-    MOZ_PretendNoReturn();                                    \
-  } while(0)
-#else
-#define NS_ABORT()                     do { /* nothing */ } while(0)
 #endif
 
 /**
