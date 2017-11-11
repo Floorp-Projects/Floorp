@@ -2904,18 +2904,32 @@ struct SavedRange final
   int32_t mEndOffset;
 };
 
-nsresult
-EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
-                          int32_t aOffset,
-                          nsIContent& aNewLeftNode)
+void
+EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
+                          nsIContent& aNewLeftNode,
+                          ErrorResult& aError)
 {
+  if (NS_WARN_IF(aError.Failed())) {
+    return;
+  }
+
+  // XXX Perhaps, aStartOfRightNode may be invalid if this is a redo
+  //     operation after modifying DOM node with JS.
+  if (NS_WARN_IF(!aStartOfRightNode.IsSet())) {
+    aError.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+  MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
+
   // Remember all selection points.
   AutoTArray<SavedRange, 10> savedRanges;
   for (SelectionType selectionType : kPresentSelectionTypes) {
     SavedRange range;
     range.mSelection = GetSelection(selectionType);
-    if (selectionType == SelectionType::eNormal) {
-      NS_ENSURE_TRUE(range.mSelection, NS_ERROR_NULL_POINTER);
+    if (NS_WARN_IF(!range.mSelection &&
+                   selectionType == SelectionType::eNormal)) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return;
     } else if (!range.mSelection) {
       // For non-normal selections, skip over the non-existing ones.
       continue;
@@ -2924,6 +2938,8 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
     for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
       RefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
       MOZ_ASSERT(r->IsPositioned());
+      // XXX Looks like that SavedRange should have mStart and mEnd which
+      //     are RangeBoundary.  Then, we can avoid to compute offset here.
       range.mStartContainer = r->GetStartContainer();
       range.mStartOffset = r->StartOffset();
       range.mEndContainer = r->GetEndContainer();
@@ -2933,54 +2949,69 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
     }
   }
 
-  nsCOMPtr<nsINode> parent = aExistingRightNode.GetParentNode();
-  NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
-
-  ErrorResult rv;
-  nsCOMPtr<nsINode> refNode = &aExistingRightNode;
-  parent->InsertBefore(aNewLeftNode, refNode, rv);
-  NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
-
-  // Split the children between the two nodes.  At this point,
-  // aExistingRightNode has all the children.  Move all the children whose
-  // index is < aOffset to aNewLeftNode.
-  if (aOffset < 0) {
-    // This means move no children
-    return NS_OK;
+  nsCOMPtr<nsINode> parent = aStartOfRightNode.Container()->GetParentNode();
+  if (NS_WARN_IF(!parent)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
-  // If it's a text node, just shuffle around some text
-  if (aExistingRightNode.GetAsText() && aNewLeftNode.GetAsText()) {
-    // Fix right node
-    nsAutoString leftText;
-    aExistingRightNode.GetAsText()->SubstringData(0, aOffset, leftText);
-    aExistingRightNode.GetAsText()->DeleteData(0, aOffset);
-    // Fix left node
-    aNewLeftNode.GetAsText()->SetData(leftText);
-  } else {
-    // Otherwise it's an interior node, so shuffle around the children. Go
-    // through list backwards so deletes don't interfere with the iteration.
-    nsCOMPtr<nsINodeList> childNodes = aExistingRightNode.ChildNodes();
-    for (int32_t i = aOffset - 1; i >= 0; i--) {
-      nsCOMPtr<nsIContent> childNode = childNodes->Item(i);
-      if (childNode) {
-        aExistingRightNode.RemoveChild(*childNode, rv);
-        if (!rv.Failed()) {
-          nsCOMPtr<nsIContent> firstChild = aNewLeftNode.GetFirstChild();
-          aNewLeftNode.InsertBefore(*childNode, firstChild, rv);
+  parent->InsertBefore(aNewLeftNode, aStartOfRightNode.Container(),
+                       aError);
+  if (NS_WARN_IF(aError.Failed())) {
+    return;
+  }
+
+  // At this point, the existing right node has all the children.  Move all
+  // the children which are before aStartOfRightNode.
+  if (!aStartOfRightNode.IsStartOfContainer()) {
+    // If it's a text node, just shuffle around some text
+    Text* rightAsText = aStartOfRightNode.Container()->GetAsText();
+    Text* leftAsText = aNewLeftNode.GetAsText();
+    if (rightAsText && leftAsText) {
+      // Fix right node
+      nsAutoString leftText;
+      rightAsText->SubstringData(0, aStartOfRightNode.Offset(),
+                                 leftText);
+      rightAsText->DeleteData(0, aStartOfRightNode.Offset());
+      // Fix left node
+      leftAsText->GetAsText()->SetData(leftText);
+    } else {
+      MOZ_DIAGNOSTIC_ASSERT(!rightAsText && !leftAsText);
+      // Otherwise it's an interior node, so shuffle around the children. Go
+      // through list backwards so deletes don't interfere with the iteration.
+      // FYI: It's okay to use raw pointer for caching existing right node since
+      //      it's already grabbed by aStartOfRightNode.
+      nsINode* existingRightNode = aStartOfRightNode.Container();
+      nsCOMPtr<nsINodeList> childNodes = existingRightNode->ChildNodes();
+      // XXX This is wrong loop range if some children has already gone.
+      //     This will be fixed by a later patch.
+      for (int32_t i = aStartOfRightNode.Offset() - 1; i >= 0; i--) {
+        nsCOMPtr<nsIContent> childNode = childNodes->Item(i);
+        MOZ_RELEASE_ASSERT(childNode);
+        existingRightNode->RemoveChild(*childNode, aError);
+        if (NS_WARN_IF(aError.Failed())) {
+          break;
         }
-      }
-      if (rv.Failed()) {
-        break;
+        nsCOMPtr<nsIContent> firstChild = aNewLeftNode.GetFirstChild();
+        aNewLeftNode.InsertBefore(*childNode, firstChild, aError);
+        NS_WARNING_ASSERTION(!aError.Failed(),
+          "Failed to insert a child which is removed from the right node into "
+          "the left node");
       }
     }
   }
+
+  // XXX Why do we ignore an error while moving nodes from the right node to
+  //     the left node?
+  aError.SuppressException();
 
   // Handle selection
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   if (ps) {
     ps->FlushPendingNotifications(FlushType::Frames);
   }
+  NS_WARNING_ASSERTION(!Destroyed(),
+    "The editor is destroyed during splitting a node");
 
   bool shouldSetSelection = GetShouldTxnSetSelection();
 
@@ -2991,11 +3022,16 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
 
     // If we have not seen the selection yet, clear all of its ranges.
     if (range.mSelection != previousSelection) {
-      nsresult rv = range.mSelection->RemoveAllRanges();
-      NS_ENSURE_SUCCESS(rv, rv);
+      range.mSelection->RemoveAllRanges(aError);
+      if (NS_WARN_IF(aError.Failed())) {
+        return;
+      }
       previousSelection = range.mSelection;
     }
 
+    // XXX Looks like that we don't need to modify normal selection here
+    //     because selection will be modified by the caller if
+    //     GetShouldTxnSetSelection() will return true.
     if (shouldSetSelection &&
         range.mSelection->Type() == SelectionType::eNormal) {
       // If the editor should adjust the selection, don't bother restoring
@@ -3004,19 +3040,21 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
     }
 
     // Split the selection into existing node and new node.
-    if (range.mStartContainer == &aExistingRightNode) {
-      if (range.mStartOffset < aOffset) {
+    if (range.mStartContainer == aStartOfRightNode.Container()) {
+      if (static_cast<uint32_t>(range.mStartOffset) <
+            aStartOfRightNode.Offset()) {
         range.mStartContainer = &aNewLeftNode;
       } else {
-        range.mStartOffset -= aOffset;
+        range.mStartOffset -= aStartOfRightNode.Offset();
       }
     }
 
-    if (range.mEndContainer == &aExistingRightNode) {
-      if (range.mEndOffset < aOffset) {
+    if (range.mEndContainer == aStartOfRightNode.Container()) {
+      if (static_cast<uint32_t>(range.mEndOffset) <
+            aStartOfRightNode.Offset()) {
         range.mEndContainer = &aNewLeftNode;
       } else {
-        range.mEndOffset -= aOffset;
+        range.mEndOffset -= aStartOfRightNode.Offset();
       }
     }
 
@@ -3026,19 +3064,18 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
                                        range.mEndContainer,
                                        range.mEndOffset,
                                        getter_AddRefs(newRange));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = range.mSelection->AddRange(newRange);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aError.Throw(rv);
+      return;
+    }
+    range.mSelection->AddRange(*newRange, aError);
+    if (NS_WARN_IF(aError.Failed())) {
+      return;
+    }
   }
 
-  if (shouldSetSelection) {
-    // Editor wants us to set selection at split point.
-    RefPtr<Selection> selection = GetSelection();
-    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    selection->Collapse(&aNewLeftNode, aOffset);
-  }
-
-  return NS_OK;
+  // We don't need to set selection here because the caller should do that
+  // in any case.
 }
 
 nsresult
