@@ -224,8 +224,7 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   margin-inline-start: 0;
 }
 
-#BMB_bookmarksPopup,
-.panel-mainview {
+#BMB_bookmarksPopup {
   max-width: @standaloneSubviewWidth@;
 }
 
@@ -303,11 +302,6 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
 #pageActionFeedbackAnimatableBox[animate] + #pageActionFeedbackMessage {
   transform: scale(1);
   opacity: 1;
-}
-
-/* Give WebExtension stand-alone panels extra width for Chrome compatibility */
-.cui-widget-panel[viewId^=PanelUI-webext-] .panel-mainview {
-  max-width: 800px;
 }
 
 .cui-widget-panel[viewId^=PanelUI-webext-] > .panel-arrowcontainer > .panel-arrowcontent {
