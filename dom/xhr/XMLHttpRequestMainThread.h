@@ -352,8 +352,8 @@ public:
   void
   Abort()
   {
-    IgnoredErrorResult rv;
-    AbortInternal(rv);
+    ErrorResult rv;
+    Abort(rv);
     MOZ_ASSERT(!rv.Failed());
   }
 
@@ -562,9 +562,6 @@ protected:
 
   void SuspendEventDispatching();
   void ResumeEventDispatching();
-
-  void
-  AbortInternal(ErrorResult& aRv);
 
   struct PendingEvent
   {
