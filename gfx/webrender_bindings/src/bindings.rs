@@ -597,9 +597,14 @@ pub struct WrThreadPool(Arc<rayon::ThreadPool>);
 #[no_mangle]
 pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
     let worker_config = rayon::Configuration::new()
-        .thread_name(|idx|{ format!("WebRender:Worker#{}", idx) })
+        .thread_name(|idx|{ format!("WRWorker#{}", idx) })
         .start_handler(|idx| {
-            register_thread_with_profiler(format!("WebRender:Worker#{}", idx));
+            let name = format!("WRWorker#{}", idx);
+            register_thread_with_profiler(name.clone());
+            gecko_profiler_register_thread(CString::new(name).unwrap().as_ptr());
+        })
+        .exit_handler(|_idx| {
+            gecko_profiler_unregister_thread();
         });
 
     let workers = Arc::new(rayon::ThreadPool::new(worker_config).unwrap());
