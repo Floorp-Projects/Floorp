@@ -96,11 +96,6 @@ public:
     mozilla::layers::WebRenderLayerManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) override;
 
-  virtual LayerState GetLayerState(
-    nsDisplayListBuilder* aBuilder,
-    LayerManager* aManager,
-    const ContainerLayerParameters& aParameters) override;
-
   virtual already_AddRefed<Layer> BuildLayer(
     nsDisplayListBuilder* aBuilder,
     LayerManager* aManager,
@@ -153,19 +148,6 @@ nsDisplayButtonBoxShadowOuter::CanBuildWebRenderDisplayItems()
   return true;
 }
 
-LayerState
-nsDisplayButtonBoxShadowOuter::GetLayerState(
-  nsDisplayListBuilder* aBuilder,
-  LayerManager* aManager,
-  const ContainerLayerParameters& aParameters)
-{
-  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowOuterBoxShadow) &&
-      CanBuildWebRenderDisplayItems()) {
-    return LAYER_ACTIVE;
-  }
-  return LAYER_NONE;
-}
-
 already_AddRefed<Layer>
 nsDisplayButtonBoxShadowOuter::BuildLayer(
   nsDisplayListBuilder* aBuilder,
@@ -183,9 +165,7 @@ nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
   mozilla::layers::WebRenderLayerManager* aManager,
   nsDisplayListBuilder* aDisplayListBuilder)
 {
-  ContainerLayerParameters parameter;
-  if (GetLayerState(aDisplayListBuilder, aManager, parameter) !=
-      LAYER_ACTIVE) {
+  if (!CanBuildWebRenderDisplayItems()) {
     return false;
   }
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
@@ -256,7 +236,6 @@ public:
                                   nsButtonFrameRenderer* aRenderer)
     : nsDisplayItem(aBuilder, aRenderer->GetFrame())
     , mBFR(aRenderer)
-    , mBorderIsEmpty(false)
   {
     MOZ_COUNT_CTOR(nsDisplayButtonBorder);
   }
@@ -280,9 +259,6 @@ public:
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion *aInvalidRegion) const override;
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager,
-                                   const ContainerLayerParameters& aParameters) override;
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
@@ -294,60 +270,12 @@ public:
   NS_DISPLAY_DECL_NAME("ButtonBorderBackground", TYPE_BUTTON_BORDER_BACKGROUND)
 private:
   nsButtonFrameRenderer* mBFR;
-  Maybe<nsCSSBorderRenderer> mBorderRenderer;
-  bool mBorderIsEmpty;
 };
 
 nsDisplayItemGeometry*
 nsDisplayButtonBorder::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 {
   return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-}
-
-LayerState
-nsDisplayButtonBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
-                                     LayerManager* aManager,
-                                     const ContainerLayerParameters& aParameters)
-{
-  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowDisplayButtonBorder)) {
-    // TODO: Figure out what to do with sync decode images
-    if (aBuilder->ShouldSyncDecodeImages()) {
-      return LAYER_NONE;
-    }
-
-    nsPoint offset = ToReferenceFrame();
-    if (!nsDisplayBoxShadowInner::CanCreateWebRenderCommands(aBuilder,
-                                                             mFrame,
-                                                             offset)) {
-      return LAYER_NONE;
-    }
-
-    mBorderIsEmpty = false;
-    Maybe<nsCSSBorderRenderer> br =
-    nsCSSRendering::CreateBorderRenderer(mFrame->PresContext(),
-                                         nullptr,
-                                         mFrame,
-                                         nsRect(),
-                                         nsRect(offset, mFrame->GetSize()),
-                                         mFrame->StyleContext(),
-                                         &mBorderIsEmpty,
-                                         mFrame->GetSkipSides());
-    if (!br) {
-      if (mBorderIsEmpty) {
-        return LAYER_ACTIVE;
-      }
-      return LAYER_NONE;
-    }
-
-    if (!br->CanCreateWebRenderCommands()) {
-      return LAYER_NONE;
-    }
-
-    mBorderRenderer = br;
-    return LAYER_ACTIVE;
-  }
-
-  return LAYER_NONE;
 }
 
 already_AddRefed<Layer>
@@ -365,8 +293,23 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
                                                mozilla::layers::WebRenderLayerManager* aManager,
                                                nsDisplayListBuilder* aDisplayListBuilder)
 {
-  ContainerLayerParameters parameter;
-  if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
+  bool borderIsEmpty = false;
+  Maybe<nsCSSBorderRenderer> br =
+  nsCSSRendering::CreateBorderRenderer(mFrame->PresContext(),
+                                       nullptr,
+                                       mFrame,
+                                       nsRect(),
+                                       nsRect(ToReferenceFrame(), mFrame->GetSize()),
+                                       mFrame->StyleContext(),
+                                       &borderIsEmpty,
+                                       mFrame->GetSkipSides());
+  if (!br) {
+    if (borderIsEmpty) {
+      return true;
+    }
+    return false;
+  }
+  if (!br->CanCreateWebRenderCommands()) {
     return false;
   }
 
@@ -381,12 +324,7 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
                                                                  mFrame,
                                                                  buttonRect);
 
-  if (mBorderRenderer) {
-    mBorderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
-  } else {
-    // empty border, nothing to do
-    MOZ_ASSERT(mBorderIsEmpty);
-  }
+  br->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
 
   return true;
 }
@@ -451,9 +389,6 @@ public:
                                  nsRegion *aInvalidRegion) const override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override;
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager,
-                                   const ContainerLayerParameters& aParameters) override;
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
@@ -465,7 +400,6 @@ public:
   NS_DISPLAY_DECL_NAME("ButtonForeground", TYPE_BUTTON_FOREGROUND)
 private:
   nsButtonFrameRenderer* mBFR;
-  Maybe<nsCSSBorderRenderer> mBorderRenderer;
 };
 
 nsDisplayItemGeometry*
@@ -508,37 +442,6 @@ void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
   }
 }
 
-LayerState
-nsDisplayButtonForeground::GetLayerState(nsDisplayListBuilder* aBuilder,
-                                         LayerManager* aManager,
-                                         const ContainerLayerParameters& aParameters)
-{
-  Maybe<nsCSSBorderRenderer> br;
-
-  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowButtonForegroundLayers)) {
-    nsPresContext *presContext = mFrame->PresContext();
-    const nsStyleDisplay *disp = mFrame->StyleDisplay();
-    if (!mFrame->IsThemed(disp) ||
-        !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
-      bool borderIsEmpty = false;
-      nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
-      br = mBFR->CreateInnerFocusBorderRenderer(aBuilder, presContext, nullptr,
-                                                mVisibleRect, r, &borderIsEmpty);
-      if (borderIsEmpty) {
-        return LAYER_ACTIVE;
-      }
-    }
-  }
-
-  if (!br || !br->CanCreateWebRenderCommands()) {
-    return LAYER_NONE;
-  }
-
-  mBorderRenderer = br;
-
-  return LAYER_ACTIVE;
-}
-
 already_AddRefed<mozilla::layers::Layer>
 nsDisplayButtonForeground::BuildLayer(nsDisplayListBuilder* aBuilder,
                                       LayerManager* aManager,
@@ -554,17 +457,28 @@ nsDisplayButtonForeground::CreateWebRenderCommands(mozilla::wr::DisplayListBuild
                                                    mozilla::layers::WebRenderLayerManager* aManager,
                                                    nsDisplayListBuilder* aDisplayListBuilder)
 {
-  ContainerLayerParameters parameter;
-  if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
+  Maybe<nsCSSBorderRenderer> br;
+  bool borderIsEmpty = false;
+  nsPresContext *presContext = mFrame->PresContext();
+  const nsStyleDisplay *disp = mFrame->StyleDisplay();
+  if (!mFrame->IsThemed(disp) ||
+      !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
+    nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
+    br = mBFR->CreateInnerFocusBorderRenderer(aDisplayListBuilder, presContext, nullptr,
+                                              mVisibleRect, r, &borderIsEmpty);
+  }
+
+  if (!br) {
+    if (borderIsEmpty) {
+      return true;
+    }
+    return false;
+  }
+  if (!br->CanCreateWebRenderCommands()) {
     return false;
   }
 
-  // empty border, nothing to do
-  if (!mBorderRenderer) {
-    return true;
-  }
-
-  mBorderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
+  br->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
   return true;
 }
 
