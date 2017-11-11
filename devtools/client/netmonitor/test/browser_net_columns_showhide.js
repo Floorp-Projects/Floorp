@@ -22,7 +22,27 @@ add_task(function* () {
       yield testVisibleColumnContextMenuItem(column, document, parent);
     }
   }
+
+  for (let [column, shown] of store.getState().ui.columns) {
+    if (shown) {
+      yield testVisibleColumnContextMenuItem(column, document, parent);
+      // Right click on the white-space for the context menu to appear
+      // and toggle column visibility
+      yield testWhiteSpaceContextMenuItem(column, document, parent);
+    }
+  }
 });
+
+function* testWhiteSpaceContextMenuItem(column, document, parent) {
+  ok(!document.querySelector(`#requests-list-${column}-button`),
+     `Column ${column} should be hidden`);
+
+  info(`Right clicking on white-space in the header to get the context menu`);
+  EventUtils.sendMouseEvent({ type: "contextmenu" },
+    document.querySelector(".devtools-toolbar.requests-list-headers"));
+
+  yield toggleAndCheckColumnVisibility(column, document, parent);
+}
 
 function* testVisibleColumnContextMenuItem(column, document, parent) {
   ok(document.querySelector(`#requests-list-${column}-button`),
@@ -59,6 +79,10 @@ function* testHiddenColumnContextMenuItem(column, document, parent) {
     document.querySelector("#requests-list-status-button") ||
     document.querySelector("#requests-list-waterfall-button"));
 
+  yield toggleAndCheckColumnVisibility(column, document, parent);
+}
+
+function* toggleAndCheckColumnVisibility(column, document, parent) {
   let menuItem = parent.document.querySelector(`#request-list-header-${column}-toggle`);
 
   is(menuItem.getAttribute("type"), "checkbox",
