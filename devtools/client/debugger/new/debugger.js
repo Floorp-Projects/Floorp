@@ -17612,7 +17612,7 @@ const {
   isOriginalId
 } = __webpack_require__(1389);
 
-const { workerUtils: { WorkerDispatcher } } = __webpack_require__(1363);
+const { workerUtils: { WorkerDispatcher } } = __webpack_require__(1390);
 
 const dispatcher = new WorkerDispatcher();
 
@@ -18277,9 +18277,9 @@ WorkerDispatcher.prototype = {
           }
 
           if (!this.worker) {
-            reject("Oops, The worker has shutdown!");
             return;
           }
+
           this.worker.removeEventListener("message", listener);
           if (result.error) {
             reject(result.error);
@@ -20810,9 +20810,181 @@ module.exports = {
 };
 
 /***/ }),
-/* 1390 */,
-/* 1391 */,
-/* 1392 */,
+/* 1390 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const networkRequest = __webpack_require__(1391);
+const workerUtils = __webpack_require__(1392);
+
+module.exports = {
+  networkRequest,
+  workerUtils
+};
+
+/***/ }),
+/* 1391 */
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+function networkRequest(url, opts) {
+  return fetch(url, {
+    cache: opts.loadFromCache ? "default" : "no-cache"
+  }).then(res => {
+    if (res.status >= 200 && res.status < 300) {
+      return res.text().then(text => ({ content: text }));
+    }
+    return Promise.reject(`request failed with status ${res.status}`);
+  });
+}
+
+module.exports = networkRequest;
+
+/***/ }),
+/* 1392 */
+/***/ (function(module, exports) {
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function WorkerDispatcher() {
+  this.msgId = 1;
+  this.worker = null;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+WorkerDispatcher.prototype = {
+  start(url) {
+    this.worker = new Worker(url);
+    this.worker.onerror = () => {
+      console.error(`Error in worker ${url}`);
+    };
+  },
+
+  stop() {
+    if (!this.worker) {
+      return;
+    }
+
+    this.worker.terminate();
+    this.worker = null;
+  },
+
+  task(method) {
+    return (...args) => {
+      return new Promise((resolve, reject) => {
+        const id = this.msgId++;
+        this.worker.postMessage({ id, method, args });
+
+        const listener = ({ data: result }) => {
+          if (result.id !== id) {
+            return;
+          }
+
+          if (!this.worker) {
+            reject("Oops, The worker has shutdown!");
+            return;
+          }
+          this.worker.removeEventListener("message", listener);
+          if (result.error) {
+            reject(result.error);
+          } else {
+            resolve(result.response);
+          }
+        };
+
+        this.worker.addEventListener("message", listener);
+      });
+    };
+  }
+};
+
+function workerHandler(publicInterface) {
+  return function (msg) {
+    const { id, method, args } = msg.data;
+    try {
+      const response = publicInterface[method].apply(undefined, args);
+      if (response instanceof Promise) {
+        response.then(val => self.postMessage({ id, response: val }),
+        // Error can't be sent via postMessage, so be sure to
+        // convert to string.
+        err => self.postMessage({ id, error: err.toString() }));
+      } else {
+        self.postMessage({ id, response });
+      }
+    } catch (error) {
+      // Error can't be sent via postMessage, so be sure to convert to
+      // string.
+      self.postMessage({ id, error: error.toString() });
+    }
+  };
+}
+
+function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
+  let streamingWorker = (() => {
+    var _ref = _asyncToGenerator(function* (id, tasks) {
+      let isWorking = true;
+
+      const intervalId = setTimeout(function () {
+        isWorking = false;
+      }, timeout);
+
+      const results = [];
+      while (tasks.length !== 0 && isWorking) {
+        const { callback, context, args } = tasks.shift();
+        const result = yield callback.call(context, args);
+        results.push(result);
+      }
+      worker.postMessage({ id, status: "pending", data: results });
+      clearInterval(intervalId);
+
+      if (tasks.length !== 0) {
+        yield streamingWorker(id, tasks);
+      }
+    });
+
+    return function streamingWorker(_x, _x2) {
+      return _ref.apply(this, arguments);
+    };
+  })();
+
+  return (() => {
+    var _ref2 = _asyncToGenerator(function* (msg) {
+      const { id, method, args } = msg.data;
+      const workerMethod = publicInterface[method];
+      if (!workerMethod) {
+        console.error(`Could not find ${method} defined in worker.`);
+      }
+      worker.postMessage({ id, status: "start" });
+
+      try {
+        const tasks = workerMethod(args);
+        yield streamingWorker(id, tasks);
+        worker.postMessage({ id, status: "done" });
+      } catch (error) {
+        worker.postMessage({ id, status: "error", error });
+      }
+    });
+
+    return function (_x3) {
+      return _ref2.apply(this, arguments);
+    };
+  })();
+}
+
+module.exports = {
+  WorkerDispatcher,
+  workerHandler,
+  streamingWorkerHandler
+};
+
+/***/ }),
 /* 1393 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -21820,6 +21992,9 @@ function setSymbols(sourceId) {
       source,
       symbols
     });
+
+    dispatch(setEmptyLines(source.id));
+    dispatch(setSourceMetaData(source.id));
   };
 }
 
@@ -24782,9 +24957,7 @@ function loadSourceText(source) {
     }
 
     await (0, _parser.setSource)(newSource);
-    await dispatch((0, _ast.setSymbols)(source.id));
-    await dispatch((0, _ast.setEmptyLines)(source.id));
-    await dispatch((0, _ast.setSourceMetaData)(source.id));
+    dispatch((0, _ast.setSymbols)(source.id));
   };
 }
 
@@ -45768,4 +45941,3 @@ function timing(store) {
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=debugger.js.map
