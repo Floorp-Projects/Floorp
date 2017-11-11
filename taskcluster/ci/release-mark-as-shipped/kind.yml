@@ -14,6 +14,8 @@ kind-dependencies:
    - release-bouncer-aliases
    - release-version-bump
 
+job-defaults:
+   shipping-phase: ship
 
 jobs:
    fennec:
@@ -21,14 +23,19 @@ jobs:
       description: mark release as shipped in Ship-It
       worker-type: buildbot-bridge/buildbot-bridge
       run-on-projects: []
+      shipping-product: fennec
       run:
          using: buildbot
          product: fennec
          buildername: release-{branch}-fennec_mark_as_shipped
          release-promotion: true
-         routes:
-            - index.releases.v1.{branch}.latest.fennec.latest.mark_as_shipped
-            - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.mark_as_shipped
+      routes:
+         - index.releases.v1.{branch}.latest.fennec.latest.mark_as_shipped
+         - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.mark_as_shipped
+      index:
+         type: release
+         product: fennec
+         job-name: android-api-16-opt
       notifications:
          completed:
             by-project:

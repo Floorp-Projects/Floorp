@@ -1068,7 +1068,7 @@ CompositeDataSourceImpl::ArcLabelsOut(nsIRDFResource* aSource,
 NS_IMETHODIMP
 CompositeDataSourceImpl::GetAllResources(nsISimpleEnumerator** aResult)
 {
-    NS_NOTYETIMPLEMENTED("CompositeDataSourceImpl::GetAllResources");
+    MOZ_ASSERT_UNREACHABLE("CompositeDataSourceImpl::GetAllResources");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

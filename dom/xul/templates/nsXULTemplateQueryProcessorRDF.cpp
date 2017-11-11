@@ -793,7 +793,7 @@ nsXULTemplateQueryProcessorRDF::OnMove(nsIRDFDataSource* aDataSource,
     if (mUpdateBatchNest)
         return NS_OK;
 
-    NS_NOTYETIMPLEMENTED("write me");
+    MOZ_ASSERT_UNREACHABLE("write me");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

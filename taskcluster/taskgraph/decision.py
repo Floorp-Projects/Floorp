@@ -169,6 +169,8 @@ def get_decision_parameters(options):
     ]
     parameters['existing_tasks'] = {}
     parameters['do_not_optimize'] = []
+    parameters['build_number'] = 1
+    parameters['next_version'] = None
 
     # owner must be an email, but sometimes (e.g., for ffxbld) it is not, in which
     # case, fake it

@@ -39,6 +39,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include <stdint.h>
 #include "mozilla/MathAlgorithms.h"
@@ -2185,6 +2186,7 @@ ScrollFrameHelper::CompleteAsyncScroll(const nsRect &aRange, nsAtom* aOrigin)
   // We are done scrolling, set our destination to wherever we actually ended
   // up scrolling to.
   mDestination = GetScrollPosition();
+  FireScrollEndEvent();
 }
 
 bool
@@ -4406,6 +4408,17 @@ ScrollFrameHelper::FireScrollPortEvent()
   event.mOrient = orient;
   return EventDispatcher::Dispatch(mOuter->GetContent(),
                                    mOuter->PresContext(), &event);
+}
+
+void
+ScrollFrameHelper::FireScrollEndEvent()
+{
+  MOZ_ASSERT(mOuter->GetContent());
+  nsContentUtils::DispatchEventOnlyToChrome(mOuter->GetContent()->OwnerDoc(),
+                                            mOuter->GetContent(),
+                                            NS_LITERAL_STRING("scrollend"),
+                                            true /* aCanBubble */,
+                                            false /* aCancelable */);
 }
 
 void

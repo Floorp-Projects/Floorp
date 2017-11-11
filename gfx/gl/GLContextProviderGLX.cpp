@@ -474,7 +474,7 @@ GLXLibrary::AfterGLXCall() const
                           sErrorEvent.mError.request_code,
                           sErrorEvent.mError.minor_code,
                           sErrorEvent.mError.serial);
-            NS_ABORT();
+            MOZ_ASSERT_UNREACHABLE("AfterGLXCall sErrorEvent");
         }
         XSetErrorHandler(sOldErrorHandler);
     }
@@ -1087,4 +1087,3 @@ GLContextProviderGLX::Shutdown()
 
 } /* namespace gl */
 } /* namespace mozilla */
-

@@ -1627,7 +1627,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
   if (!found) {
     found = parent->GetChildList(nsIFrame::kOverflowList)
               .ContainsFrame(aChildFrame);
-    NS_POSTCONDITION(found, "not in child list");
+    MOZ_ASSERT(found, "not in child list");
   }
 #endif
 
@@ -3728,8 +3728,8 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         gfxPoint devPixelOffset =
           nsLayoutUtils::PointToGfxPoint(pos,
                                          presContext->AppUnitsPerDevPixel());
-        aRenderingContext->SetMatrix(
-          aRenderingContext->CurrentMatrix().PreTranslate(devPixelOffset));
+        aRenderingContext->SetMatrixDouble(
+          aRenderingContext->CurrentMatrixDouble().PreTranslate(devPixelOffset));
       }
     }
     builder.SetIgnoreScrollFrame(rootScrollFrame);
@@ -6674,7 +6674,7 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
   gfxRect devPixelDirty =
     nsLayoutUtils::RectToGfxRect(aDirty, aAppUnitsPerDevPixel);
 
-  gfxMatrix currentMatrix = aCtx->CurrentMatrix();
+  gfxMatrix currentMatrix = aCtx->CurrentMatrixDouble();
   gfxRect fill = devPixelFill;
   gfxRect dest = devPixelDest;
   bool didSnap;
@@ -6901,7 +6901,7 @@ DrawImageInternal(gfxContext&            aContext,
   {
     gfxContextMatrixAutoSaveRestore contextMatrixRestorer(&aContext);
 
-    aContext.SetMatrix(params.imageSpaceToDeviceSpace);
+    aContext.SetMatrixDouble(params.imageSpaceToDeviceSpace);
 
     Maybe<SVGImageContext> fallbackContext;
     if (!aSVGContext) {

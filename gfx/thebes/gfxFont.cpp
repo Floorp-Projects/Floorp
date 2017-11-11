@@ -1679,7 +1679,7 @@ private:
                   fillPattern =
                     mFontParams.contextPaint->GetFillPattern(
                                           mRunParams.context->GetDrawTarget(),
-                                          mRunParams.context->CurrentMatrix(),
+                                          mRunParams.context->CurrentMatrixDouble(),
                                           imgParams);
                 }
                 if (!fillPattern) {
@@ -2163,7 +2163,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                         gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT)
                        ? -M_PI / 2.0 : M_PI / 2.0;
         gfxMatrix mat =
-            aRunParams.context->CurrentMatrix().
+            aRunParams.context->CurrentMatrixDouble().
             PreTranslate(p).     // translate origin for rotation
             PreRotate(rotation). // turn 90deg CCW (sideways-left) or CW (*-right)
             PreTranslate(-p);    // undo the translation
@@ -2182,7 +2182,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
             mat.PreTranslate(baseAdj);
         }
 
-        aRunParams.context->SetMatrix(mat);
+        aRunParams.context->SetMatrixDouble(mat);
     }
 
     RefPtr<SVGContextPaint> contextPaint;
@@ -2193,7 +2193,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         RefPtr<gfxPattern> fillPattern = aRunParams.context->GetPattern();
         contextPaint =
             new SimpleTextContextPaint(fillPattern, nullptr,
-                                       aRunParams.context->CurrentMatrix());
+                                       aRunParams.context->CurrentMatrixDouble());
         fontParams.contextPaint = contextPaint.get();
     }
 
