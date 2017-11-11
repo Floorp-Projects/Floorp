@@ -842,6 +842,7 @@ private:
 class gfxFontGroup final : public gfxTextRunFactory {
 public:
     typedef mozilla::unicode::Script Script;
+    typedef gfxShapedText::CompressedGlyph CompressedGlyph;
 
     static void Shutdown(); // platform must call this to release the languageAtomService
 

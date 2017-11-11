@@ -7,7 +7,7 @@ use std::os::raw::{c_void, c_char, c_float};
 use gleam::gl;
 
 use webrender_api::*;
-use webrender::{ReadPixelsFormat, Renderer, RendererOptions};
+use webrender::{ReadPixelsFormat, Renderer, RendererOptions, ThreadListener};
 use webrender::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::DebugFlags;
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
@@ -587,14 +587,48 @@ pub unsafe extern "C" fn wr_rendered_epochs_delete(pipeline_epochs: *mut WrRende
     Box::from_raw(pipeline_epochs);
 }
 
+extern "C" {
+    fn gecko_profiler_register_thread(name: *const ::std::os::raw::c_char);
+    fn gecko_profiler_unregister_thread();
+}
+
+struct GeckoProfilerThreadListener {}
+
+impl GeckoProfilerThreadListener {
+    pub fn new() -> GeckoProfilerThreadListener {
+        GeckoProfilerThreadListener{}
+    }
+}
+
+impl ThreadListener for GeckoProfilerThreadListener {
+    fn thread_started(&self, thread_name: &str) {
+        let name = CString::new(thread_name).unwrap();
+        unsafe {
+            // gecko_profiler_register_thread copies the passed name here.
+            gecko_profiler_register_thread(name.as_ptr());
+        }
+    }
+
+    fn thread_stopped(&self, _: &str) {
+        unsafe {
+            gecko_profiler_unregister_thread();
+        }
+    }
+}
+
 pub struct WrThreadPool(Arc<rayon::ThreadPool>);
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
     let worker_config = rayon::Configuration::new()
-        .thread_name(|idx|{ format!("WebRender:Worker#{}", idx) })
+        .thread_name(|idx|{ format!("WRWorker#{}", idx) })
         .start_handler(|idx| {
-            register_thread_with_profiler(format!("WebRender:Worker#{}", idx));
+            let name = format!("WRWorker#{}", idx);
+            register_thread_with_profiler(name.clone());
+            gecko_profiler_register_thread(CString::new(name).unwrap().as_ptr());
+        })
+        .exit_handler(|_idx| {
+            gecko_profiler_unregister_thread();
         });
 
     let workers = Arc::new(rayon::ThreadPool::new(worker_config).unwrap());
@@ -650,6 +684,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         recorder: recorder,
         blob_image_renderer: Some(Box::new(Moz2dImageRenderer::new(workers.clone()))),
         workers: Some(workers.clone()),
+        thread_listener: Some(Box::new(GeckoProfilerThreadListener::new())),
         enable_render_on_scroll: false,
         resource_override_path: unsafe {
             let override_charptr = gfx_wr_resource_path_override();
@@ -662,6 +697,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                 }
             }
         },
+        renderer_id: Some(window_id.0),
         ..Default::default()
     };
 
