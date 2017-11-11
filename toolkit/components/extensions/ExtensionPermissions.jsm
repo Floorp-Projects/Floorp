@@ -6,7 +6,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
-  ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   JSONFile: "resource://gre/modules/JSONFile.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });
