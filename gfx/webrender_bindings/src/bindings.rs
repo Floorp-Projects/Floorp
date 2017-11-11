@@ -587,6 +587,11 @@ pub unsafe extern "C" fn wr_rendered_epochs_delete(pipeline_epochs: *mut WrRende
     Box::from_raw(pipeline_epochs);
 }
 
+extern "C" {
+    fn gecko_profiler_register_thread(name: *const ::std::os::raw::c_char);
+    fn gecko_profiler_unregister_thread();
+}
+
 pub struct WrThreadPool(Arc<rayon::ThreadPool>);
 
 #[no_mangle]
