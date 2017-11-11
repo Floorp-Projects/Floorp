@@ -180,22 +180,19 @@ case "$target" in
         AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         AC_DEFINE(_USE_MATH_DEFINES) # Otherwise MSVC's math.h doesn't #define M_PI.
 
-        case "$CC_VERSION" in
-        19*)
-            _CC_SUITE=14
-            MSVC_C_RUNTIME_DLL=vcruntime140.dll
-            MSVC_CXX_RUNTIME_DLL=msvcp140.dll
+        _CC_SUITE=14
+        MSVC_C_RUNTIME_DLL=vcruntime140.dll
+        MSVC_CXX_RUNTIME_DLL=msvcp140.dll
 
-            # C5026: move constructor was implicitly defined as deleted
-            CXXFLAGS="$CXXFLAGS -wd5026"
+        # C5026: move constructor was implicitly defined as deleted
+        CXXFLAGS="$CXXFLAGS -wd5026"
 
-            # C5027: move assignment operator was implicitly defined as deleted
-            CXXFLAGS="$CXXFLAGS -wd5027"
+        # C5027: move assignment operator was implicitly defined as deleted
+        CXXFLAGS="$CXXFLAGS -wd5027"
 
-            # -Zc:sizedDealloc- disables C++14 global sized deallocation (see bug 1160146)
-            CXXFLAGS="$CXXFLAGS -Zc:sizedDealloc-"
-            ;;
-        esac
+        # -Zc:sizedDealloc- disables C++14 global sized deallocation (see bug 1160146)
+        CXXFLAGS="$CXXFLAGS -Zc:sizedDealloc-"
+
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
 
