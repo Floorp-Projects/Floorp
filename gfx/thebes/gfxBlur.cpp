@@ -52,7 +52,7 @@ gfxAlphaBoxBlur::Init(gfxContext* aDestinationCtx,
 
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(context); // already checked for target above
-  context->SetMatrix(gfxMatrix::Translation(-mBlur.GetRect().TopLeft()));
+  context->SetMatrix(Matrix::Translation(-mBlur.GetRect().TopLeft()));
   return context.forget();
 }
 
@@ -285,6 +285,8 @@ struct BlurCacheKey : public PLDHashEntryHdr {
     , mInnerMinSize(aInnerMinSize)
   { }
 
+  BlurCacheKey(BlurCacheKey&&) = default;
+
   static PLDHashNumber
   HashKey(const KeyTypePointer aKey)
   {
@@ -344,17 +346,13 @@ struct BlurCacheKey : public PLDHashEntryHdr {
  * to the cache entry to be able to be tracked by the nsExpirationTracker.
  * */
 struct BlurCacheData {
-  BlurCacheData(SourceSurface* aBlur, const IntMargin& aBlurMargin, const BlurCacheKey& aKey)
+  BlurCacheData(SourceSurface* aBlur, const IntMargin& aBlurMargin, BlurCacheKey&& aKey)
     : mBlur(aBlur)
     , mBlurMargin(aBlurMargin)
-    , mKey(aKey)
+    , mKey(Move(aKey))
   {}
 
-  BlurCacheData(const BlurCacheData& aOther)
-    : mBlur(aOther.mBlur)
-    , mBlurMargin(aOther.mBlurMargin)
-    , mKey(aOther.mKey)
-  { }
+  BlurCacheData(BlurCacheData&& aOther) = default;
 
   nsExpirationState *GetExpirationState() {
     return &mExpirationState;
@@ -506,7 +504,7 @@ CacheBlur(DrawTarget* aDT,
           SourceSurface* aBoxShadow)
 {
   BlurCacheKey key(aMinSize, aBlurRadius, aCornerRadii, aShadowColor, aDT->GetBackendType());
-  BlurCacheData* data = new BlurCacheData(aBoxShadow, aBlurMargin, key);
+  BlurCacheData* data = new BlurCacheData(aBoxShadow, aBlurMargin, Move(key));
   if (!gBlurCache->RegisterEntry(data)) {
     delete data;
   }
@@ -588,7 +586,7 @@ GetBlur(gfxContext* aDestinationCtx,
   // since our source image is only 1px for some parts, we make thousands of calls.
   // Instead just render the blur ourself here as one image and send it over for printing.
   // TODO: May need to change this with the blob renderer in WR since it also records.
-  Matrix destMatrix = ToMatrix(aDestinationCtx->CurrentMatrix());
+  Matrix destMatrix = aDestinationCtx->CurrentMatrix();
   bool useDestRect = !destMatrix.IsRectilinear() || destMatrix.HasNonIntegerTranslation() ||
                      aDestinationCtx->GetDrawTarget()->IsRecording();
   if (useDestRect) {
@@ -1088,7 +1086,7 @@ CacheInsetBlur(const IntSize& aMinOuterSize,
                    aShadowColor, isInsetBlur,
                    aBackendType);
   IntMargin blurMargin(0, 0, 0, 0);
-  BlurCacheData* data = new BlurCacheData(aBoxShadow, blurMargin, key);
+  BlurCacheData* data = new BlurCacheData(aBoxShadow, blurMargin, Move(key));
   if (!gBlurCache->RegisterEntry(data)) {
     delete data;
   }

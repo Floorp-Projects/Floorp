@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://testing-common/PlacesTestUtils.jsm");
-Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/utils.js");
@@ -13,27 +11,6 @@ Cu.import("resource://services-sync/util.js");
 const TIMESTAMP1 = (Date.now() - 103406528) * 1000;
 const TIMESTAMP2 = (Date.now() - 6592903) * 1000;
 const TIMESTAMP3 = (Date.now() - 123894) * 1000;
-
-function queryPlaces(uri, options) {
-  let query = PlacesUtils.history.getNewQuery();
-  query.uri = uri;
-  let res = PlacesUtils.history.executeQuery(query, options);
-  res.root.containerOpen = true;
-
-  let results = [];
-  for (let i = 0; i < res.root.childCount; i++)
-    results.push(res.root.getChild(i));
-  res.root.containerOpen = false;
-  return results;
-}
-
-function queryHistoryVisits(uri) {
-  let options = PlacesUtils.history.getNewQueryOptions();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
-  options.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_VISIT;
-  options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING;
-  return queryPlaces(uri, options);
-}
 
 function promiseOnVisitObserved() {
   return new Promise(res => {
@@ -118,17 +95,18 @@ add_task(async function test_store() {
      visits: [record.visits[0], secondvisit]}
   ]);
   await onVisitObserved;
-  try {
-    let queryres = queryHistoryVisits(fxuri);
-    do_check_eq(queryres.length, 2);
-    do_check_eq(queryres[0].time, TIMESTAMP1);
-    do_check_eq(queryres[0].title, "Hol Dir Firefox!");
-    do_check_eq(queryres[1].time, TIMESTAMP2);
-    do_check_eq(queryres[1].title, "Hol Dir Firefox!");
-  } catch (ex) {
-    PlacesTestUtils.clearHistory();
-    do_throw(ex);
-  }
+  let queryres = await PlacesUtils.history.fetch(fxuri.spec, {
+    includeVisits: true,
+  });
+  do_check_eq(queryres.title, "Hol Dir Firefox!");
+  do_check_matches(queryres.visits, [{
+    date: new Date(TIMESTAMP2 / 1000),
+    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
+  }, {
+    date: new Date(TIMESTAMP1 / 1000),
+    transition: Ci.nsINavHistoryService.TRANSITION_LINK,
+  }]);
+  await PlacesTestUtils.clearHistory();
 });
 
 add_task(async function test_store_create() {
@@ -144,17 +122,17 @@ add_task(async function test_store_create() {
                type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
   ]);
   await onVisitObserved;
-  try {
-    do_check_true((await store.itemExists(tbguid)));
-    do_check_attribute_count(await store.getAllIDs(), 2);
-    let queryres = queryHistoryVisits(tburi);
-    do_check_eq(queryres.length, 1);
-    do_check_eq(queryres[0].time, TIMESTAMP3);
-    do_check_eq(queryres[0].title, "The bird is the word!");
-  } catch (ex) {
-    PlacesTestUtils.clearHistory();
-    do_throw(ex);
-  }
+  do_check_true((await store.itemExists(tbguid)));
+  do_check_attribute_count(await store.getAllIDs(), 1);
+  let queryres = await PlacesUtils.history.fetch(tburi.spec, {
+    includeVisits: true,
+  });
+  do_check_eq(queryres.title, "The bird is the word!");
+  do_check_matches(queryres.visits, [{
+    date: new Date(TIMESTAMP3 / 1000),
+    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
+  }]);
+  await PlacesTestUtils.clearHistory();
 });
 
 add_task(async function test_null_title() {
@@ -168,10 +146,17 @@ add_task(async function test_null_title() {
      visits: [{date: TIMESTAMP3,
                type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
   ]);
-  do_check_attribute_count((await store.getAllIDs()), 3);
-  let queryres = queryHistoryVisits(resuri);
-  do_check_eq(queryres.length, 1);
-  do_check_eq(queryres[0].time, TIMESTAMP3);
+  do_check_attribute_count((await store.getAllIDs()), 1);
+
+  let queryres = await PlacesUtils.history.fetch(resuri.spec, {
+    includeVisits: true,
+  });
+  do_check_eq(queryres.title, "");
+  do_check_matches(queryres.visits, [{
+    date: new Date(TIMESTAMP3 / 1000),
+    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
+  }]);
+  await PlacesTestUtils.clearHistory();
 });
 
 add_task(async function test_invalid_records() {
@@ -190,7 +175,7 @@ add_task(async function test_invalid_records() {
       + TIMESTAMP3 + ", " + Ci.nsINavHistoryService.TRANSITION_TYPED + ", 1)"
     );
   });
-  do_check_attribute_count((await store.getAllIDs()), 4);
+  do_check_attribute_count((await store.getAllIDs()), 1);
 
   _("Make sure we report records with invalid URIs.");
   let invalid_uri_guid = Utils.makeGUID();
@@ -337,19 +322,25 @@ add_task(async function test_remove() {
   await applyEnsureNoFailures([{id: fxguid, deleted: true},
                          {id: Utils.makeGUID(), deleted: true}]);
   do_check_false((await store.itemExists(fxguid)));
-  let queryres = queryHistoryVisits(fxuri);
-  do_check_eq(queryres.length, 0);
+  let queryres = await PlacesUtils.history.fetch(fxuri.spec, {
+    includeVisits: true,
+  });
+  do_check_null(queryres);
 
   _("Make sure wipe works.");
   await store.wipe();
   do_check_empty((await store.getAllIDs()));
-  queryres = queryHistoryVisits(fxuri);
-  do_check_eq(queryres.length, 0);
-  queryres = queryHistoryVisits(tburi);
-  do_check_eq(queryres.length, 0);
+  queryres = await PlacesUtils.history.fetch(fxuri.spec, {
+    includeVisits: true,
+  });
+  do_check_null(queryres);
+  queryres = await PlacesUtils.history.fetch(tburi.spec, {
+    includeVisits: true,
+  });
+  do_check_null(queryres);
 });
 
-add_test(function cleanup() {
+add_task(async function cleanup() {
   _("Clean up.");
-  PlacesTestUtils.clearHistory().then(run_next_test);
+  await PlacesTestUtils.clearHistory();
 });

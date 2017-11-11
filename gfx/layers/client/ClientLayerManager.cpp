@@ -436,6 +436,12 @@ ClientLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
     return;
   }
 
+  if (mTransactionIncomplete) {
+    // If the previous transaction was incomplete then we may have buffer operations
+    // running on the paint thread that haven't finished yet
+    GetCompositorBridgeChild()->FlushAsyncPaints();
+  }
+
   if (mWidget) {
     mWidget->PrepareWindowEffects();
   }

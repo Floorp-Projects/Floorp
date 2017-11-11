@@ -22,7 +22,7 @@ MOZ_EXPORT void SandboxEarlyInit(GeckoProcessType aType);
 
 #ifdef MOZ_CONTENT_SANDBOX
 // Call only if SandboxInfo::CanSandboxContent() returns true.
-// (No-op if MOZ_DISABLE_CONTENT_SANDBOX is set.)
+// (No-op if the sandbox is disabled.)
 // aBrokerFd is the filesystem broker client file descriptor,
 // or -1 to allow direct filesystem access.
 // isFileProcess determines whether we allow system wide file reads.
