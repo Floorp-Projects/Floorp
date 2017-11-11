@@ -16,9 +16,9 @@ add_task(async function testForceDisable() {
   try {
     accService = Cc["@mozilla.org/accessibilityService;1"].getService(
       Ci.nsIAccessibilityService);
-    ok(false, "Getting accessibility service should've triggered an exception")
+    ok(false, "Getting accessibility service should've triggered an exception");
   } catch (e) {
-    is(e.name, NS_ERROR_SERVICE_NOT_AVAILABLE, "Getting accessibility service triggered an exception as expected")
+    is(e.name, NS_ERROR_SERVICE_NOT_AVAILABLE, "Getting accessibility service triggered an exception as expected");
   }
   info("Reset force disabled preference");
   Services.prefs.clearUserPref(PREF_ACCESSIBILITY_FORCE_DISABLED);
@@ -41,9 +41,9 @@ add_task(async function testForceDisable() {
     Ci.nsIAccessibilityService);
   try {
     accService.getAccesssibleFor(document);
-    ok(false, "getAccesssibleFor should've triggered an exception.")
+    ok(false, "getAccesssibleFor should've triggered an exception.");
   } catch (e) {
-    ok(true, "getAccesssibleFor triggers an exception as a11y service is shutdown.")
+    ok(true, "getAccesssibleFor triggers an exception as a11y service is shutdown.");
   }
   ok(!Services.appinfo.accessibilityEnabled, "Accessibility is disabled");
 
