@@ -66,13 +66,14 @@ void
 gfxFT2Font::AddRange(const char16_t *aText, uint32_t aOffset,
                      uint32_t aLength, gfxShapedText *aShapedText)
 {
+    typedef gfxShapedText::CompressedGlyph CompressedGlyph;
+
     const uint32_t appUnitsPerDevUnit = aShapedText->GetAppUnitsPerDevUnit();
     // we'll pass this in/figure it out dynamically, but at this point there can be only one face.
     gfxFT2LockedFace faceLock(this);
     FT_Face face = faceLock.get();
 
-    gfxShapedText::CompressedGlyph *charGlyphs =
-        aShapedText->GetCharacterGlyphs();
+    CompressedGlyph* charGlyphs = aShapedText->GetCharacterGlyphs();
 
     const gfxFT2Font::CachedGlyphData *cgd = nullptr, *cgdNext = nullptr;
 
@@ -139,8 +140,8 @@ gfxFT2Font::AddRange(const char16_t *aText, uint32_t aOffset,
         }
 
         if (advance >= 0 &&
-            gfxShapedText::CompressedGlyph::IsSimpleAdvance(advance) &&
-            gfxShapedText::CompressedGlyph::IsSimpleGlyphID(gid)) {
+            CompressedGlyph::IsSimpleAdvance(advance) &&
+            CompressedGlyph::IsSimpleGlyphID(gid)) {
             charGlyphs[aOffset].SetSimpleGlyph(advance, gid);
         } else if (gid == 0) {
             // gid = 0 only happens when the glyph is missing from the font
@@ -151,9 +152,11 @@ gfxFT2Font::AddRange(const char16_t *aText, uint32_t aOffset,
             NS_ASSERTION(details.mGlyphID == gid,
                          "Seriously weird glyph ID detected!");
             details.mAdvance = advance;
-            gfxShapedText::CompressedGlyph g;
-            g.SetComplex(charGlyphs[aOffset].IsClusterStart(), true, 1);
-            aShapedText->SetGlyphs(aOffset, g, &details);
+            bool isClusterStart = charGlyphs[aOffset].IsClusterStart();
+            aShapedText->SetGlyphs(aOffset,
+                                   CompressedGlyph::MakeComplex(isClusterStart,
+                                                                true, 1),
+                                   &details);
         }
     }
 }
