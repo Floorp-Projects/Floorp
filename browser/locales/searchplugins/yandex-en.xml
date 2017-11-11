@@ -11,6 +11,11 @@
   <Param name="part" value="{searchTerms}"/>
 </Url>
 <Url type="text/html" method="GET" template="https://www.yandex.com/search">
+  <MozParam name="clid" condition="purpose" purpose="searchbar"   value="2186618"/>
+  <MozParam name="clid" condition="purpose" purpose="keyword"     value="2186621"/>
+  <MozParam name="clid" condition="purpose" purpose="contextmenu" value="2186623"/>
+  <MozParam name="clid" condition="purpose" purpose="homepage"    value="2186617"/>
+  <MozParam name="clid" condition="purpose" purpose="newtab"      value="2186620"/>
   <Param name="text" value="{searchTerms}"/>
 </Url>
 <SearchForm>https://www.yandex.com/</SearchForm>
