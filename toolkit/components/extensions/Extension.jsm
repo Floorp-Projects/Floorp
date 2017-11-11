@@ -36,11 +36,8 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-Cu.importGlobalProperties(["TextEncoder"]);
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.importGlobalProperties(["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
