@@ -943,6 +943,10 @@ extern void DeleteFontData(WrFontKey aKey);
 
 extern void gecko_printf_stderr_output(const char *aMsg);
 
+extern void gecko_profiler_register_thread(const char *aName);
+
+extern void gecko_profiler_unregister_thread();
+
 extern void gfx_critical_error(const char *aMsg);
 
 extern void gfx_critical_note(const char *aMsg);
