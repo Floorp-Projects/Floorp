@@ -47,26 +47,54 @@ SplitNodeTransaction::DoTransaction()
   }
 
   // Create a new node
-  ErrorResult rv;
+  ErrorResult error;
   // Don't use .downcast directly because AsContent has an assertion we want
-  nsCOMPtr<nsINode> clone = mExistingRightNode->CloneNode(false, rv);
-  NS_ASSERTION(!rv.Failed() && clone, "Could not create clone");
-  NS_ENSURE_TRUE(!rv.Failed() && clone, rv.StealNSResult());
+  nsCOMPtr<nsINode> clone = mExistingRightNode->CloneNode(false, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  if (NS_WARN_IF(!clone)) {
+    return NS_ERROR_UNEXPECTED;
+  }
   mNewLeftNode = dont_AddRef(clone.forget().take()->AsContent());
   mEditorBase->MarkNodeDirty(mExistingRightNode->AsDOMNode());
 
   // Get the parent node
   mParent = mExistingRightNode->GetParentNode();
-  NS_ENSURE_TRUE(mParent, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!mParent)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Insert the new node
-  rv = mEditorBase->SplitNodeImpl(*mExistingRightNode, mOffset, *mNewLeftNode);
+  int32_t offset =
+    std::min(std::max(mOffset, 0),
+             static_cast<int32_t>(mExistingRightNode->Length()));
+  mEditorBase->SplitNodeImpl(EditorDOMPoint(mExistingRightNode, offset),
+                             *mNewLeftNode, error);
+  // XXX Really odd.  The result of SplitNodeImpl() is respected only when
+  //     we shouldn't set selection.  Otherwise, it's overridden by the
+  //     result of Selection.Collapse().
   if (mEditorBase->GetShouldTxnSetSelection()) {
+    NS_WARNING_ASSERTION(!mEditorBase->Destroyed(),
+      "The editor has gone but SplitNodeTransaction keeps trying to modify "
+      "Selection");
     RefPtr<Selection> selection = mEditorBase->GetSelection();
-    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    rv = selection->Collapse(mNewLeftNode, mOffset);
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
+    if (NS_WARN_IF(error.Failed())) {
+      // XXX This must be a bug.
+      error.SuppressException();
+    }
+    MOZ_ASSERT(offset == mNewLeftNode->Length());
+    EditorRawDOMPoint atEndOfLeftNode(mNewLeftNode, mNewLeftNode->Length());
+    selection->Collapse(atEndOfLeftNode, error);
   }
-  return rv.StealNSResult();
+
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
