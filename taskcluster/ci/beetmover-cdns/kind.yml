@@ -27,8 +27,8 @@ jobs:
       product: fennec
       shipping-product: fennec
       routes:
-        - index.releases.v1.{branch}.latest.fennec.latest.beetmover_cdns
-        - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.beetmover_cdns
+         - index.releases.v1.{branch}.latest.fennec.latest.beetmover_cdns
+         - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.beetmover_cdns
       treeherder-platform: Android/opt
       index:
          type: release

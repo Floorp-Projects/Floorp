@@ -19,7 +19,7 @@ awsy:
     treeherder-symbol: tc-SY(sy)
     run-on-projects:
         by-test-platform:
-            .*-devedition/.*: [] # don't run on devedition
+            .*-devedition/.*: []  # don't run on devedition
             default: built-projects
 
 awsy-stylo-disabled:
@@ -27,7 +27,7 @@ awsy-stylo-disabled:
     treeherder-symbol: tc-SYsd(sy)
     run-on-projects:
         by-test-platform:
-            .*-devedition/.*: [] # don't run on devedition
+            .*-devedition/.*: []  # don't run on devedition
             default: built-projects
     mozharness:
         extra-options:
@@ -38,7 +38,7 @@ awsy-stylo-sequential:
     treeherder-symbol: tc-SYss(sy)
     run-on-projects:
         by-test-platform:
-            .*-devedition/.*: [] # don't run on devedition
+            .*-devedition/.*: []  # don't run on devedition
             default: built-projects
     mozharness:
         extra-options:
