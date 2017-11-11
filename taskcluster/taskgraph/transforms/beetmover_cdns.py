@@ -8,7 +8,9 @@ Transform the beetmover-cdns task into a task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import validate_schema, Schema
+from taskgraph.util.schema import (
+    optionally_keyed_by, resolve_keyed_by, validate_schema, Schema
+)
 from taskgraph.util.scriptworker import (
     get_beetmover_bucket_scope, get_beetmover_action_scope
 )
@@ -35,11 +37,12 @@ beetmover_cdns_description_schema = Schema({
     Optional('job-from'): task_description_schema['job-from'],
     Optional('run'): {basestring: object},
     Optional('run-on-projects'): task_description_schema['run-on-projects'],
-    Required('worker-type'): Any(
-        job_description_schema['worker-type'],
-        {'by-project': {basestring: job_description_schema['worker-type']}},
-    ),
+    Required('worker-type'): optionally_keyed_by('project', basestring),
     Optional('dependencies'): {basestring: taskref_or_string},
+    Optional('index'): {basestring: basestring},
+    Optional('routes'): [basestring],
+    Required('shipping-phase'): task_description_schema['shipping-phase'],
+    Required('shipping-product'): task_description_schema['shipping-product'],
 })
 
 
@@ -68,13 +71,18 @@ def make_beetmover_cdns_description(config, jobs):
             )
         )
 
+        resolve_keyed_by(
+            job, 'worker-type', item_name=job['name'],
+            project=config.params['project']
+        )
+
         bucket_scope = get_beetmover_bucket_scope(config)
         action_scope = get_beetmover_action_scope(config)
 
         task = {
             'label': label,
             'description': description,
-            'worker-type': 'scriptworker-prov-v1/beetmoverworker-dev',
+            'worker-type': job['worker-type'],
             'scopes': [bucket_scope, action_scope],
             'product': job['product'],
             'dependencies': job['dependencies'],

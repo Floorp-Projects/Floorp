@@ -575,7 +575,7 @@ PluginContent.prototype = {
       case "PluginClickToPlay":
         this._handleClickToPlayEvent(plugin);
         let pluginName = this._getPluginInfo(plugin).pluginName;
-        let messageString = gNavigatorBundle.formatStringFromName("PluginClickToActivate", [pluginName], 1);
+        let messageString = gNavigatorBundle.formatStringFromName("PluginClickToActivate2", [pluginName], 1);
         let overlayText = this.getPluginUI(plugin, "clickToPlay");
         overlayText.textContent = messageString;
         if (eventType == "PluginVulnerableUpdatable" ||

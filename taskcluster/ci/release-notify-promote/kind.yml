@@ -12,11 +12,15 @@ kind-dependencies:
   - beetmover-checksums
   - release-bouncer-sub
 
+job-defaults:
+    shipping-phase: promote
+
 jobs:
    fennec:
       name: notify-release-drivers-promote
       description: Sends email to release-drivers telling release was promoted.
       run-on-projects: []
+      shipping-product: fennec
       worker-type: aws-provisioner-v1/gecko-{level}-b-linux
       worker:
          implementation: docker-worker

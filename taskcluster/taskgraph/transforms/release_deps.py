@@ -14,8 +14,9 @@ transforms = TransformSequence()
 
 def _get_product(job_or_task):
     # Find the product.
-    # XXX officially support a product attribute that is consistently set.
-    product = job_or_task.get('product')
+    # XXX Once shipping-product is set for nightly builds as well, we can get
+    # rid of this function.
+    product = job_or_task.get('shipping-product', job_or_task.get('product'))
     if 'payload' in job_or_task:
         product = product or job_or_task['payload'].get(
             'product',

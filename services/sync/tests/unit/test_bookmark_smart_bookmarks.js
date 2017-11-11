@@ -9,10 +9,6 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
-const IOService = Cc["@mozilla.org/network/io-service;1"]
-                .getService(Ci.nsIIOService);
-
 async function newSmartBookmark(parentGuid, url, position, title, queryID) {
   let info = await PlacesUtils.bookmarks.insert({
     parentGuid,
@@ -21,9 +17,9 @@ async function newSmartBookmark(parentGuid, url, position, title, queryID) {
     title,
   });
   let id = await PlacesUtils.promiseItemId(info.guid);
-  PlacesUtils.annotations.setItemAnnotation(id, SMART_BOOKMARKS_ANNO,
-                                            queryID, 0,
-                                            PlacesUtils.annotations.EXPIRE_NEVER);
+  PlacesUtils.annotations.setItemAnnotation(id,
+    PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO, queryID, 0,
+    PlacesUtils.annotations.EXPIRE_NEVER);
   return info;
 }
 
@@ -31,16 +27,9 @@ function smartBookmarkCount() {
   // We do it this way because PlacesUtils.annotations.getItemsWithAnnotation
   // doesn't work the same (or at all?) between 3.6 and 4.0.
   let out = {};
-  PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO, out);
+  PlacesUtils.annotations.getItemsWithAnnotation(
+    PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO, out);
   return out.value;
-}
-
-function clearBookmarks() {
-  _("Cleaning up existing items.");
-  PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.bookmarksMenuFolder);
-  PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.tagsFolder);
-  PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.toolbarFolder);
-  PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.unfiledBookmarksFolder);
 }
 
 let engine;
@@ -65,15 +54,12 @@ add_task(async function test_annotation_uploaded() {
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
+  _("Cleaning up existing items.");
+  await PlacesUtils.bookmarks.eraseEverything();
+
   let startCount = smartBookmarkCount();
 
   _("Start count is " + startCount);
-
-  if (startCount > 0) {
-    // This can happen in XULRunner.
-    clearBookmarks();
-    _("Start count is now " + startCount);
-  }
 
   _("Create a smart bookmark in the toolbar.");
   let url = "place:sort=" +
@@ -89,11 +75,11 @@ add_task(async function test_annotation_uploaded() {
   do_check_true(!!mostVisitedID);
 
   let annoValue = PlacesUtils.annotations.getItemAnnotation(mostVisitedID,
-                                              SMART_BOOKMARKS_ANNO);
+    PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO);
   _("Anno: " + annoValue);
   do_check_eq("MostVisited", annoValue);
 
-  let guid = await store.GUIDForId(mostVisitedID);
+  let guid = await PlacesUtils.promiseItemGuid(mostVisitedID);
   _("GUID: " + guid);
   do_check_true(!!guid);
 
@@ -135,11 +121,13 @@ add_task(async function test_annotation_uploaded() {
 
     // "Clear" by changing attributes: if we delete it, apparently it sticks
     // around as a deleted record...
-    PlacesUtils.bookmarks.setItemTitle(mostVisitedID, "Not Most Visited");
-    PlacesUtils.bookmarks.changeBookmarkURI(
-      mostVisitedID, CommonUtils.makeURI("http://something/else"));
+    await PlacesUtils.bookmarks.update({
+      guid: mostVisitedInfo.guid,
+      title: "Not Most Visited",
+      url: "http://something/else",
+    });
     PlacesUtils.annotations.removeItemAnnotation(mostVisitedID,
-                                                 SMART_BOOKMARKS_ANNO);
+      PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO);
     await store.wipe();
     await engine.resetClient();
     do_check_eq(smartBookmarkCount(), startCount);
@@ -152,11 +140,12 @@ add_task(async function test_annotation_uploaded() {
     do_check_eq(smartBookmarkCount(), startCount + 1);
 
     _("Find by GUID and verify that it's annotated.");
-    let newID = await store.idForGUID(serverGUID);
+    let newID = await PlacesUtils.promiseItemId(serverGUID);
     let newAnnoValue = PlacesUtils.annotations.getItemAnnotation(
-      newID, SMART_BOOKMARKS_ANNO);
+      newID, PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO);
     do_check_eq(newAnnoValue, "MostVisited");
-    do_check_eq(PlacesUtils.bookmarks.getBookmarkURI(newID).spec, url);
+    let newInfo = await PlacesUtils.bookmarks.fetch(serverGUID);
+    do_check_eq(newInfo.url.href, url);
 
     _("Test updating.");
     let newRecord = await store.createRecord(serverGUID);
@@ -166,7 +155,7 @@ add_task(async function test_annotation_uploaded() {
     engine.lastModified = collection.timestamp + 1;
     await sync_engine_and_validate_telem(engine, false);
     do_check_eq("LeastVisited", PlacesUtils.annotations.getItemAnnotation(
-      newID, SMART_BOOKMARKS_ANNO));
+      newID, PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO));
 
   } finally {
     // Clean up.

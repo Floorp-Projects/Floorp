@@ -95,7 +95,7 @@ DocumentRendererChild::RenderDocument(nsPIDOMWindowOuter* window,
     }
     RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(ctx); // already checked the draw target above
-    ctx->SetMatrix(mozilla::gfx::ThebesMatrix(transform));
+    ctx->SetMatrix(transform);
 
     nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
     shell->RenderDocument(documentRect, renderFlags, bgColor, ctx);

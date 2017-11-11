@@ -106,7 +106,7 @@ nsDOMCSSValueList::SetCssText(const nsAString& aCssText)
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  NS_NOTYETIMPLEMENTED("Can't SetCssText yet: please write me!");
+  MOZ_ASSERT_UNREACHABLE("Can't SetCssText yet: please write me!");
   return NS_OK;
 }
 

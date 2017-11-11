@@ -67,8 +67,8 @@ ClipToContain(gfxContext* aContext, const IntRect& aRect)
   gfxRect deviceRect = aContext->UserToDevice(userRect);
   deviceRect.RoundOut();
 
-  gfxMatrix currentMatrix = aContext->CurrentMatrix();
-  aContext->SetMatrix(gfxMatrix());
+  Matrix currentMatrix = aContext->CurrentMatrix();
+  aContext->SetMatrix(Matrix());
   aContext->NewPath();
   aContext->Rectangle(deviceRect);
   aContext->Clip();
@@ -130,7 +130,7 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const 
     // destination. Since the User->Device space transform will be applied
     // to the mask by PopGroupAndBlend we need to adjust the transform to
     // transform the mask to user space.
-    Matrix currentTransform = ToMatrix(aGroupResult.mFinalTarget->CurrentMatrix());
+    Matrix currentTransform = aGroupResult.mFinalTarget->CurrentMatrix();
     currentTransform.Invert();
     maskTransform = maskTransform * currentTransform;
   }
@@ -249,7 +249,7 @@ public:
   // it applies an identity.
   void Apply2DTransform()
   {
-    mTarget->SetMatrix(ThebesMatrix(mTransform));
+    mTarget->SetMatrix(mTransform);
   }
 
   // Set the opaque rect to match the bounds of the visible region.
@@ -591,7 +591,7 @@ BasicLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
     } else {
       mSnapEffectiveTransforms = true;
     }
-    mRoot->ComputeEffectiveTransforms(mTarget ? Matrix4x4::From2D(ToMatrix(mTarget->CurrentMatrix())) : Matrix4x4());
+    mRoot->ComputeEffectiveTransforms(mTarget ? Matrix4x4::From2D(mTarget->CurrentMatrix()) : Matrix4x4());
 
     ToData(mRoot)->Validate(aCallback, aCallbackData, nullptr);
     if (mRoot->GetMaskLayer()) {
@@ -788,9 +788,9 @@ InstallLayerClipPreserves3D(gfxContext* aTarget, Layer* aLayer)
   if (!transform3d.CanDraw2D(&transform)) {
     gfxDevCrash(LogReason::CannotDraw3D) << "GFX: We should not have a 3D transform that CanDraw2D() is false!";
   }
-  gfxMatrix oldTransform = aTarget->CurrentMatrix();
-  transform *= ToMatrix(oldTransform);
-  aTarget->SetMatrix(ThebesMatrix(transform));
+  Matrix oldTransform = aTarget->CurrentMatrix();
+  transform *= oldTransform;
+  aTarget->SetMatrix(transform);
 
   aTarget->NewPath();
   aTarget->SnappedRectangle(gfxRect(clipRect->x, clipRect->y,
