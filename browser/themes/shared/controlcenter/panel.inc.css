@@ -150,7 +150,7 @@
 .identity-popup-host {
   word-wrap: break-word;
   /* 1em + 2em + 24px is .identity-popup-security-content padding
-   * 30em is .panel-mainview width */
+   * 30em is the panel width */
   max-width: calc(30rem - 3rem - 24px - @identityPopupExpanderWidth@);
 }
 
