@@ -5589,19 +5589,6 @@ nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   return true;
 }
 
-
-LayerState
-nsDisplayBoxShadowOuter::GetLayerState(nsDisplayListBuilder* aBuilder,
-                                       LayerManager* aManager,
-                                       const ContainerLayerParameters& aParameters)
-{
-  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowOuterBoxShadow)) {
-    return LAYER_ACTIVE;
-  }
-
-  return LAYER_NONE;
-}
-
 already_AddRefed<Layer>
 nsDisplayBoxShadowOuter::BuildLayer(nsDisplayListBuilder* aBuilder,
                                     LayerManager* aManager,
@@ -5801,18 +5788,6 @@ nsDisplayBoxShadowInner::CanCreateWebRenderCommands(nsDisplayListBuilder* aBuild
   }
 
   return true;
-}
-
-LayerState
-nsDisplayBoxShadowInner::GetLayerState(nsDisplayListBuilder* aBuilder,
-                                       LayerManager* aManager,
-                                       const ContainerLayerParameters& aParameters)
-{
-  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowInsetBoxShadow)) {
-    return LAYER_ACTIVE;
-  }
-
-  return LAYER_NONE;
 }
 
 already_AddRefed<Layer>
