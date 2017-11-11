@@ -53,6 +53,8 @@ enum nsMixedContentBlockerMessageType {
 // iframes, websockets, XHR) enabled?
 bool nsMixedContentBlocker::sBlockMixedScript = false;
 
+bool nsMixedContentBlocker::sBlockMixedObjectSubrequest = false;
+
 // Is mixed display content blocking (images, audio, video, <a ping>) enabled?
 bool nsMixedContentBlocker::sBlockMixedDisplay = false;
 
@@ -255,6 +257,9 @@ nsMixedContentBlocker::nsMixedContentBlocker()
   // Cache the pref for mixed script blocking
   Preferences::AddBoolVarCache(&sBlockMixedScript,
                                "security.mixed_content.block_active_content");
+
+  Preferences::AddBoolVarCache(&sBlockMixedObjectSubrequest,
+                               "security.mixed_content.block_object_subrequest");
 
   // Cache the pref for mixed display blocking
   Preferences::AddBoolVarCache(&sBlockMixedDisplay,
@@ -590,8 +595,14 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     // these will be blocked according to the mixed display preference
     case TYPE_IMAGE:
     case TYPE_MEDIA:
-    case TYPE_OBJECT_SUBREQUEST:
       classification = eMixedDisplay;
+      break;
+    case TYPE_OBJECT_SUBREQUEST:
+      if (sBlockMixedObjectSubrequest) {
+        classification = eMixedScript;
+      } else {
+        classification = eMixedDisplay;
+      }
       break;
 
     // Active content (or content with a low value/risk-of-blocking ratio)
