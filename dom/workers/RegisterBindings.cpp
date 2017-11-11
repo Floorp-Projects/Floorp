@@ -25,8 +25,13 @@ WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
   }
 
   if (IsChromeWorker()) {
-    if (!DefineChromeWorkerFunctions(aCx, aGlobal) ||
-        !DefineOSFileConstants(aCx, aGlobal)) {
+    if (!DefineChromeWorkerFunctions(aCx, aGlobal)) {
+      return false;
+    }
+
+    RefPtr<OSFileConstantsService> service =
+      OSFileConstantsService::GetOrCreate();
+    if (!service->DefineOSFileConstants(aCx, aGlobal)) {
       return false;
     }
   }

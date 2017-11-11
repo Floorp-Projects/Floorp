@@ -6,9 +6,6 @@
 /* import-globals-from ext-devtools.js */
 /* import-globals-from ext-browser.js */
 
-XPCOMUtils.defineLazyModuleGetter(this, "DevToolsShim",
-                                  "chrome://devtools-shim/content/DevToolsShim.jsm");
-
 var {
   SpreadArgs,
 } = ExtensionCommon;

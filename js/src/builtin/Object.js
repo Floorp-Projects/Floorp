@@ -205,7 +205,7 @@ function ObjectOrReflectDefineProperty(obj, propertyKey, attributes, strict) {
 
     // 6.2.4.5 ToPropertyDescriptor, step 1.
     if (!IsObject(attributes))
-        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, DecompileArg(2, obj));
+        ThrowArgTypeNotObject(NOT_OBJECT_KIND_DESCRIPTOR, attributes);
 
     // 6.2.4.5 ToPropertyDescriptor, step 2.
     var attrs = 0, hasValue = false;

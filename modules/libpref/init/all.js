@@ -5153,7 +5153,7 @@ pref("dom.w3c_touch_events.enabled", 2);
 #endif
 
 // W3C draft pointer events
-#if !defined(ANDROID) && defined(EARLY_BETA_OR_EARLIER)
+#if !defined(ANDROID) && defined(NIGHTLY_BUILD)
 pref("dom.w3c_pointer_events.enabled", true);
 #else
 pref("dom.w3c_pointer_events.enabled", false);

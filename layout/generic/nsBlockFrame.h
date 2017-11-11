@@ -534,7 +534,11 @@ public:
     REMOVE_FIXED_CONTINUATIONS = 0x02,
     FRAMES_ARE_EMPTY = 0x04
   };
-  void DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags);
+  void DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags)
+  {
+    AutoPostDestroyData data(PresContext());
+    DoRemoveFrameInternal(aDeletedFrame, aFlags, data.mData);
+  }
 
   void ReparentFloats(nsIFrame* aFirstFrame, nsBlockFrame* aOldParent,
                       bool aReparentSiblings);
@@ -585,6 +589,9 @@ public:
                                    int32_t aIncrement,
                                    bool aForCounting) override;
 protected:
+  /** @see DoRemoveFrame */
+  void DoRemoveFrameInternal(nsIFrame* aDeletedFrame, uint32_t aFlags,
+                             PostDestroyData& data);
 
   /** grab overflow lines from this block's prevInFlow, and make them
     * part of this block's mLines list.

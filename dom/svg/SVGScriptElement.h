@@ -79,6 +79,13 @@ protected:
 
   virtual StringAttributesInfo GetStringInfo() override;
 
+  // SVG Script elements don't have the ability to set async properties on
+  // themselves, so this will always return false.
+  virtual bool GetAsyncState() override
+  {
+    return false;
+  }
+
   enum { HREF, XLINK_HREF };
   nsSVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];

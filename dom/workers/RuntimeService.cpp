@@ -2032,9 +2032,10 @@ RuntimeService::Init()
                         MAX_HARDWARE_CONCURRENCY);
   gMaxHardwareConcurrency = std::max(0, maxHardwareConcurrency);
 
-  rv = InitOSFileConstants();
-  if (NS_FAILED(rv)) {
-    return rv;
+  RefPtr<OSFileConstantsService> osFileConstantsService =
+    OSFileConstantsService::GetOrCreate();
+  if (NS_WARN_IF(!osFileConstantsService)) {
+    return NS_ERROR_FAILURE;
   }
 
   if (NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate())) {
@@ -2205,7 +2206,6 @@ RuntimeService::Cleanup()
     }
   }
 
-  CleanupOSFileConstants();
   nsLayoutStatics::Release();
 }
 
