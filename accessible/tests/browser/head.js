@@ -5,7 +5,7 @@
 "use strict";
 
 /* exported initPromise, shutdownPromise, waitForEvent, setE10sPrefs,
-            unsetE10sPrefs */
+            unsetE10sPrefs, a11yConsumersChangedPromise */
 
 /**
  * Set e10s related preferences in the test environment.
