@@ -1603,8 +1603,9 @@ nsLocalFile::Normalize()
       path.Replace(0, 2, currentDir + NS_LITERAL_STRING("\\"));
     }
   }
-  NS_POSTCONDITION(0 < rootIdx && rootIdx < (int32_t)path.Length(), "rootIdx is invalid");
-  NS_POSTCONDITION(path.CharAt(rootIdx) == '\\', "rootIdx is invalid");
+
+  MOZ_ASSERT(0 < rootIdx && rootIdx < (int32_t)path.Length(), "rootIdx is invalid");
+  MOZ_ASSERT(path.CharAt(rootIdx) == '\\', "rootIdx is invalid");
 
   // if there is nothing following the root path then it is already normalized
   if (rootIdx + 1 == (int32_t)path.Length()) {

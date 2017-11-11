@@ -8,6 +8,8 @@ transforms:
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
+job-defaults:
+   shipping-phase: promote
 
 jobs:
    fennec:
@@ -15,14 +17,19 @@ jobs:
       description: release bouncer submission job
       worker-type: buildbot-bridge/buildbot-bridge
       run-on-projects: []
+      shipping-product: fennec
       run:
          using: buildbot
          product: fennec
          buildername: release-{branch}-fennec_bncr_sub
          release-promotion: true
-         routes:
-            - index.releases.v1.{branch}.latest.fennec.latest.bouncer_submitter
-            - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.bouncer_submitter
+      routes:
+         - index.releases.v1.{branch}.latest.fennec.latest.bouncer_submitter
+         - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.bouncer_submitter
+      index:
+         type: release
+         product: fennec
+         job-name: android-api-16-opt
       notifications:
          completed:
             by-project:

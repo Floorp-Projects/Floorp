@@ -13,11 +13,15 @@ kind-dependencies:
    - release-bouncer-aliases
    - release-version-bump
 
+job-defaults:
+   shipping-phase: ship
+
 jobs:
    fennec:
       name: notify-release-drivers-publish
       description: Sends email to release-drivers telling release was published.
       run-on-projects: []
+      shipping-product: fennec
       worker-type: aws-provisioner-v1/gecko-{level}-b-linux
       worker:
          implementation: docker-worker

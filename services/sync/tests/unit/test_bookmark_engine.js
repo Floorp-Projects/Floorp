@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
 Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
@@ -113,15 +112,12 @@ add_task(async function bad_record_allIDs() {
   await SyncTestingInfrastructure(server);
 
   _("Ensure that bad Places queries don't cause an error in getAllIDs.");
-  let badRecordID = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.toolbarFolder,
-      CommonUtils.makeURI("place:folder=1138"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      null);
+  let badRecord = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    url: "place:folder=1138",
+  });
 
-  do_check_true(badRecordID > 0);
-  _("Record is " + badRecordID);
-  _("Type: " + PlacesUtils.bookmarks.getItemType(badRecordID));
+  _("Type: " + badRecord.type);
 
   _("Fetching all IDs.");
   let all = await fetchAllRecordIds();
@@ -131,7 +127,7 @@ add_task(async function bad_record_allIDs() {
   do_check_true(all.has("toolbar"));
 
   _("Clean up.");
-  PlacesUtils.bookmarks.removeItem(badRecordID);
+  await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
   await promiseStopServer(server);
 });
@@ -149,24 +145,29 @@ add_task(async function test_processIncoming_error_orderChildren() {
 
   try {
 
-    let folder1_id = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.toolbarFolder, "Folder 1", 0);
-    let folder1_guid = await store.GUIDForId(folder1_id);
+    let folder1 = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      title: "Folder 1",
+    });
 
-    let fxuri = CommonUtils.makeURI("http://getfirefox.com/");
-    let tburi = CommonUtils.makeURI("http://getthunderbird.com/");
-
-    let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
-      folder1_id, fxuri, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
-    let bmk2_id = PlacesUtils.bookmarks.insertBookmark(
-      folder1_id, tburi, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Thunderbird!");
+    let bmk1 = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder1.guid,
+      url: "http://getfirefox.com/",
+      title: "Get Firefox!",
+    });
+    let bmk2 = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder1.guid,
+      url: "http://getthunderbird.com/",
+      title: "Get Thunderbird!",
+    });
 
     // Create a server record for folder1 where we flip the order of
     // the children.
-    let folder1_record = await store.createRecord(folder1_guid);
+    let folder1_record = await store.createRecord(folder1.guid);
     let folder1_payload = folder1_record.cleartext;
     folder1_payload.children.reverse();
-    collection.insert(folder1_guid, encryptPayload(folder1_payload));
+    collection.insert(folder1.guid, encryptPayload(folder1_payload));
 
     // Create a bogus record that when synced down will provoke a
     // network error which in turn provokes an exception in _processIncoming.
@@ -190,14 +191,14 @@ add_task(async function test_processIncoming_error_orderChildren() {
     ok(!!error);
 
     // Verify that the bookmark order has been applied.
-    folder1_record = await store.createRecord(folder1_guid);
+    folder1_record = await store.createRecord(folder1.guid);
     let new_children = folder1_record.children;
-    do_check_eq(new_children.length, 2);
-    do_check_eq(new_children[0], folder1_payload.children[0]);
-    do_check_eq(new_children[1], folder1_payload.children[1]);
+    do_check_matches(new_children,
+      [folder1_payload.children[0], folder1_payload.children[1]]);
 
-    do_check_eq(PlacesUtils.bookmarks.getItemIndex(bmk1_id), 1);
-    do_check_eq(PlacesUtils.bookmarks.getItemIndex(bmk2_id), 0);
+    let localChildIds = await PlacesSyncUtils.bookmarks.fetchChildRecordIds(
+      folder1.guid);
+    do_check_matches(localChildIds, [bmk2.guid, bmk1.guid]);
 
   } finally {
     await store.wipe();
@@ -238,19 +239,19 @@ async function test_restoreOrImport(aReplace) {
 
   try {
 
-    let folder1_id = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.toolbarFolder, "Folder 1", 0);
-    let folder1_guid = await store.GUIDForId(folder1_id);
-    _("Folder 1: " + folder1_id + ", " + folder1_guid);
-
-    let fxuri = CommonUtils.makeURI("http://getfirefox.com/");
-    let tburi = CommonUtils.makeURI("http://getthunderbird.com/");
+    let folder1 = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      title: "Folder 1",
+    });
 
     _("Create a single record.");
-    let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
-      folder1_id, fxuri, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
-    let bmk1_guid = await store.GUIDForId(bmk1_id);
-    _(`Get Firefox!: ${bmk1_id}, ${bmk1_guid}`);
+    let bmk1 = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder1.guid,
+      url: "http://getfirefox.com/",
+      title: "Get Firefox!",
+    });
+    _(`Get Firefox!: ${bmk1.guid}`);
 
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
       .getService(Ci.nsIProperties);
@@ -264,12 +265,14 @@ async function test_restoreOrImport(aReplace) {
     await bookmarkUtils.exportToFile(backupFile.path);
 
     _("Create a different record and sync.");
-    let bmk2_id = PlacesUtils.bookmarks.insertBookmark(
-      folder1_id, tburi, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Thunderbird!");
-    let bmk2_guid = await store.GUIDForId(bmk2_id);
-    _(`Get Thunderbird!: ${bmk2_id}, ${bmk2_guid}`);
+    let bmk2 = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder1.guid,
+      url: "http://getthunderbird.com/",
+      title: "Get Thunderbird!",
+    });
+    _(`Get Thunderbird!: ${bmk2.guid}`);
 
-    PlacesUtils.bookmarks.removeItem(bmk1_id);
+    await PlacesUtils.bookmarks.remove(bmk1.guid);
 
     let error;
     try {
@@ -283,10 +286,10 @@ async function test_restoreOrImport(aReplace) {
     _("Verify that there's only one bookmark on the server, and it's Thunderbird.");
     // Of course, there's also the Bookmarks Toolbar and Bookmarks Menu...
     let wbos = collection.keys(function(id) {
-      return ["menu", "toolbar", "mobile", "unfiled", folder1_guid].indexOf(id) == -1;
+      return ["menu", "toolbar", "mobile", "unfiled", folder1.guid].indexOf(id) == -1;
     });
     do_check_eq(wbos.length, 1);
-    do_check_eq(wbos[0], bmk2_guid);
+    do_check_eq(wbos[0], bmk2.guid);
 
     _(`Now ${verb} from a backup.`);
     await bookmarkUtils.importFromFile(backupFile, aReplace);
@@ -307,24 +310,24 @@ async function test_restoreOrImport(aReplace) {
     let count = 0;
     for (let guid of guids) {
       count++;
-      let id = await store.idForGUID(guid, true);
+      let info = await PlacesUtils.bookmarks.fetch(
+        PlacesSyncUtils.bookmarks.recordIdToGuid(guid));
       // Only one bookmark, so _all_ should be Firefox!
-      if (PlacesUtils.bookmarks.getItemType(id) == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
-        let uri = PlacesUtils.bookmarks.getBookmarkURI(id);
-        _(`Found URI ${uri.spec} for GUID ${guid}`);
-        bookmarkGuids.set(uri.spec, guid);
+      if (info.type == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
+        _(`Found URI ${info.url.href} for GUID ${guid}`);
+        bookmarkGuids.set(info.url.href, guid);
       }
     }
-    do_check_true(bookmarkGuids.has(fxuri.spec));
+    do_check_true(bookmarkGuids.has("http://getfirefox.com/"));
     if (!aReplace) {
-      do_check_true(bookmarkGuids.has(tburi.spec));
+      do_check_true(bookmarkGuids.has("http://getthunderbird.com/"));
     }
 
     _("Have the correct number of IDs locally, too.");
-    let expectedResults = ["menu", "toolbar", "mobile", "unfiled", folder1_id,
-                           bmk1_id];
+    let expectedResults = ["menu", "toolbar", "mobile", "unfiled", folder1.guid,
+                           bmk1.guid];
     if (!aReplace) {
-      expectedResults.push("toolbar", folder1_id, bmk2_id);
+      expectedResults.push("toolbar", folder1.guid, bmk2.guid);
     }
     do_check_eq(count, expectedResults.length);
 
@@ -354,13 +357,13 @@ async function test_restoreOrImport(aReplace) {
                        });
 
     let expectedFX = {
-      id: bookmarkGuids.get(fxuri.spec),
-      bmkUri: fxuri.spec,
+      id: bookmarkGuids.get("http://getfirefox.com/"),
+      bmkUri: "http://getfirefox.com/",
       title: "Get Firefox!"
     };
     let expectedTB = {
-      id: bookmarkGuids.get(tburi.spec),
-      bmkUri: tburi.spec,
+      id: bookmarkGuids.get("http://getthunderbird.com/"),
+      bmkUri: "http://getthunderbird.com/",
       title: "Get Thunderbird!"
     };
 
@@ -458,10 +461,7 @@ add_task(async function test_mismatched_types() {
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
-  _("GUID: " + (await store.GUIDForId(6, true)));
-
   try {
-    let bms = PlacesUtils.bookmarks;
     let oldR = new FakeRecord(BookmarkFolder, oldRecord);
     let newR = new FakeRecord(Livemark, newRecord);
     oldR.parentid = PlacesUtils.bookmarks.toolbarGuid;
@@ -469,18 +469,20 @@ add_task(async function test_mismatched_types() {
 
     await store.applyIncoming(oldR);
     _("Applied old. It's a folder.");
-    let oldID = await store.idForGUID(oldR.id);
+    let oldID = await PlacesUtils.promiseItemId(oldR.id);
     _("Old ID: " + oldID);
-    do_check_eq(bms.getItemType(oldID), bms.TYPE_FOLDER);
+    let oldInfo = await PlacesUtils.bookmarks.fetch(oldR.id);
+    do_check_eq(oldInfo.type, PlacesUtils.bookmarks.TYPE_FOLDER);
     do_check_false(PlacesUtils.annotations
                               .itemHasAnnotation(oldID, PlacesUtils.LMANNO_FEEDURI));
 
     await store.applyIncoming(newR);
-    let newID = await store.idForGUID(newR.id);
+    let newID = await PlacesUtils.promiseItemId(newR.id);
     _("New ID: " + newID);
 
     _("Applied new. It's a livemark.");
-    do_check_eq(bms.getItemType(newID), bms.TYPE_FOLDER);
+    let newInfo = await PlacesUtils.bookmarks.fetch(newR.id);
+    do_check_eq(newInfo.type, PlacesUtils.bookmarks.TYPE_FOLDER);
     do_check_true(PlacesUtils.annotations
                              .itemHasAnnotation(newID, PlacesUtils.LMANNO_FEEDURI));
 
@@ -506,12 +508,14 @@ add_task(async function test_bookmark_guidMap_fail() {
   await SyncTestingInfrastructure(server);
 
   // Add one item to the server.
-  let itemID = PlacesUtils.bookmarks.createFolder(
-    PlacesUtils.bookmarks.toolbarFolder, "Folder 1", 0);
-  let itemGUID = await store.GUIDForId(itemID);
-  let itemRecord = await store.createRecord(itemGUID);
+  let item = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "Folder 1",
+  });
+  let itemRecord = await store.createRecord(item.guid);
   let itemPayload = itemRecord.cleartext;
-  coll.insert(itemGUID, encryptPayload(itemPayload));
+  coll.insert(item.guid, encryptPayload(itemPayload));
 
   engine.lastSync = 1; // So we don't back up.
 
@@ -611,11 +615,13 @@ add_task(async function test_misreconciled_root() {
 
   // Let's find out where the toolbar is right now.
   let toolbarBefore = await store.createRecord("toolbar", "bookmarks");
-  let toolbarIDBefore = await store.idForGUID("toolbar");
+  let toolbarIDBefore = await PlacesUtils.promiseItemId(
+    PlacesUtils.bookmarks.toolbarGuid);
   do_check_neq(-1, toolbarIDBefore);
 
   let parentGUIDBefore = toolbarBefore.parentid;
-  let parentIDBefore = await store.idForGUID(parentGUIDBefore);
+  let parentIDBefore = await PlacesUtils.promiseItemId(
+    PlacesSyncUtils.bookmarks.recordIdToGuid(parentGUIDBefore));
   do_check_neq(-1, parentIDBefore);
   do_check_eq("string", typeof(parentGUIDBefore));
 
@@ -641,8 +647,10 @@ add_task(async function test_misreconciled_root() {
   // the real GUID, instead using a generated one. Sync does the translation.
   let toolbarAfter = await store.createRecord("toolbar", "bookmarks");
   let parentGUIDAfter = toolbarAfter.parentid;
-  let parentIDAfter = await store.idForGUID(parentGUIDAfter);
-  do_check_eq((await store.GUIDForId(toolbarIDBefore)), "toolbar");
+  let parentIDAfter = await PlacesUtils.promiseItemId(
+    PlacesSyncUtils.bookmarks.recordIdToGuid(parentGUIDAfter));
+  do_check_eq((await PlacesUtils.promiseItemGuid(toolbarIDBefore)),
+    PlacesUtils.bookmarks.toolbarGuid);
   do_check_eq(parentGUIDBefore, parentGUIDAfter);
   do_check_eq(parentIDBefore, parentIDAfter);
 
@@ -760,12 +768,12 @@ add_task(async function test_sync_dateAdded() {
     collection.insert(item2GUID, encryptPayload(item2.cleartext), now / 1000 - 50);
 
 
-    // Also, add a local bookmark and make sure it's date added makes it up to the server
-    let bzid = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarksMenuFolderId, CommonUtils.makeURI("https://bugzilla.mozilla.org/"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX, "Bugzilla");
-
-    let bzguid = await PlacesUtils.promiseItemGuid(bzid);
+    // Also, add a local bookmark and make sure its date added makes it up to the server
+    let bz = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url: "https://bugzilla.mozilla.org/",
+      title: "Bugzilla",
+    });
 
     // last sync did a POST, which doesn't advance its lastModified value.
     // Next sync of the engine doesn't hit info/collections, so lastModified
@@ -776,10 +784,10 @@ add_task(async function test_sync_dateAdded() {
     let newRecord2 = await store.createRecord(item2GUID);
     equal(newRecord2.dateAdded, item2.dateAdded, "dateAdded update should work for earlier date");
 
-    let bzWBO = JSON.parse(JSON.parse(collection._wbos[bzguid].payload).ciphertext);
+    let bzWBO = JSON.parse(JSON.parse(collection._wbos[bz.guid].payload).ciphertext);
     ok(bzWBO.dateAdded, "Locally added dateAdded lost");
 
-    let localRecord = await store.createRecord(bzguid);
+    let localRecord = await store.createRecord(bz.guid);
     equal(bzWBO.dateAdded, localRecord.dateAdded, "dateAdded should not change during upload");
 
     item2.dateAdded += 10000;

@@ -112,7 +112,7 @@ gfxContext::CreatePreservingTransformOrNull(DrawTarget* aTarget)
 
   Matrix transform = aTarget->GetTransform();
   RefPtr<gfxContext> result = new gfxContext(aTarget);
-  result->SetMatrix(ThebesMatrix(transform));
+  result->SetMatrix(transform);
   return result.forget();
 }
 
@@ -318,16 +318,28 @@ gfxContext::Multiply(const gfxMatrix& matrix)
 }
 
 void
-gfxContext::SetMatrix(const gfxMatrix& matrix)
+gfxContext::SetMatrix(const gfx::Matrix& matrix)
 {
   CURRENTSTATE_CHANGED()
-  ChangeTransform(ToMatrix(matrix));
+  ChangeTransform(matrix);
+}
+
+void
+gfxContext::SetMatrixDouble(const gfxMatrix& matrix)
+{
+  SetMatrix(ToMatrix(matrix));
+}
+
+gfx::Matrix
+gfxContext::CurrentMatrix() const
+{
+  return mTransform;
 }
 
 gfxMatrix
-gfxContext::CurrentMatrix() const
+gfxContext::CurrentMatrixDouble() const
 {
-  return ThebesMatrix(mTransform);
+  return ThebesMatrix(CurrentMatrix());
 }
 
 gfxPoint
