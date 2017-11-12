@@ -3,8 +3,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
-<ShortName>Amazon.com.nl</ShortName>
-<Description>Amazon.com.nl Search</Description>
+<ShortName>Amazon.nl</ShortName>
+<Description>Amazon.nl Search</Description>
 <InputEncoding>UTF-8</InputEncoding>
 <Image width="16" height="16">resource://search-plugins/images/amazon.ico</Image>
 <Url type="text/html" method="GET" template="https://www.amazon.nl/exec/obidos/external-search/" rel="searchform">
