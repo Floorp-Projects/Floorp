@@ -1401,7 +1401,7 @@ CSSValueArrayTo3DMatrix(nsCSSValue::Array* aArray)
   return m;
 }
 
-gfxSize
+Size
 GetScaleValue(const nsCSSValueSharedList* aList,
               const nsIFrame* aForFrame)
 {
@@ -1420,10 +1420,10 @@ GetScaleValue(const nsCSSValueSharedList* aList,
   Matrix transform2d;
   bool canDraw2D = transform.CanDraw2D(&transform2d);
   if (!canDraw2D) {
-    return gfxSize();
+    return Size();
   }
 
-  return ThebesMatrix(transform2d).ScaleFactors(true);
+  return transform2d.ScaleFactors(true);
 }
 
 } // namespace nsStyleTransformMatrix
