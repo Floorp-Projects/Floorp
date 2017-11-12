@@ -438,7 +438,8 @@ audio > xul|videocontrols {
   transition-duration: 300ms;
   transition-delay: 750ms;
 }
-.statusOverlay[fadeout] {
+.statusOverlay[fadeout],
+.statusOverlay[error] + .controlsOverlay > .controlsSpacerStack {
   opacity: 0;
 }
 

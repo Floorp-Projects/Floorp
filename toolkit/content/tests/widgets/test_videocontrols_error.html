@@ -20,7 +20,6 @@
   const video = document.getElementById("video");
   const statusOverlay = getAnonElementWithinVideoByAttribute(video, "anonid", "statusOverlay");
   const statusIcon = getAnonElementWithinVideoByAttribute(video, "anonid", "statusIcon");
-  const clickToPlay = getAnonElementWithinVideoByAttribute(video, "anonid", "clickToPlay");
 
   add_task(async function setup() {
     await new Promise(resolve => window.addEventListener("load", resolve, {once: true}));
@@ -46,7 +45,6 @@
       video.addEventListener("error", () => SimpleTest.executeSoon(resolve));
     });
 
-    ok(clickToPlay.hasAttribute("hidden"), `click to play button should hide`);
     ok(!statusOverlay.hidden, `statusOverlay should show when ${errorType}`);
     is(statusOverlay.getAttribute("error"), errorType, `statusOverlay should have correct error state: ${errorType}`);
     is(statusIcon.getAttribute("type"), "error", `should show error icon when ${errorType}`);
