@@ -1,3 +1,5 @@
+# META: timeout=long
+
 from tests.actions.support.keys import Keys, MODIFIER_KEY
 from tests.actions.support.refine import get_keys
 
@@ -45,5 +47,3 @@ def test_mod_a_mod_x_deletes_all_text(session, key_reporter, key_chain):
              .key_up("x") \
              .perform()
     assert get_keys(key_reporter) == ""
-
-
