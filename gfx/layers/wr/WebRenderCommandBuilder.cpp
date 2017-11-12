@@ -339,7 +339,7 @@ WebRenderCommandBuilder::PushImage(nsDisplayItem* aItem,
   return true;
 }
 
-static void
+static bool
 PaintByLayer(nsDisplayItem* aItem,
              nsDisplayListBuilder* aDisplayListBuilder,
              RefPtr<BasicLayerManager>& aManager,
@@ -350,22 +350,36 @@ PaintByLayer(nsDisplayItem* aItem,
     aManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
   }
 
+  UniquePtr<LayerProperties> props;
+  if (aManager->GetRoot()) {
+    props = Move(LayerProperties::CloneFrom(aManager->GetRoot()));
+  }
   FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
   layerBuilder->Init(aDisplayListBuilder, aManager, nullptr, true);
   layerBuilder->DidBeginRetainedLayerTransaction(aManager);
 
   aManager->BeginTransactionWithTarget(aContext);
+  bool isInvalidated = false;
 
   ContainerLayerParameters param;
-  RefPtr<Layer> layer = aItem->BuildLayer(aDisplayListBuilder, aManager, param);
-  if (layer) {
-    UniquePtr<LayerProperties> props;
-    props = Move(LayerProperties::CloneFrom(aManager->GetRoot()));
+  RefPtr<Layer> root = aItem->BuildLayer(aDisplayListBuilder, aManager, param);
 
-    aManager->SetRoot(layer);
+  if (root) {
+    aManager->SetRoot(root);
     layerBuilder->WillEndTransaction();
 
     aPaintFunc();
+
+    // Check if there is any invalidation region.
+    nsIntRegion invalid;
+    if (props) {
+      props->ComputeDifferences(root, invalid, nullptr);
+      if (!invalid.IsEmpty()) {
+        isInvalidated = true;
+      }
+    } else {
+      isInvalidated = true;
+    }
   }
 
 #ifdef MOZ_DUMP_PAINTING
@@ -382,9 +396,11 @@ PaintByLayer(nsDisplayItem* aItem,
   }
 
   aManager->SetTarget(nullptr);
+
+  return isInvalidated;
 }
 
-static void
+static bool
 PaintItemByDrawTarget(nsDisplayItem* aItem,
                       gfx::DrawTarget* aDT,
                       const LayerRect& aImageRect,
@@ -396,6 +412,7 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
 {
   MOZ_ASSERT(aDT);
 
+  bool isInvalidated = false;
   aDT->ClearRect(aImageRect.ToUnknownRect());
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT);
   MOZ_ASSERT(context);
@@ -405,10 +422,11 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   switch (aItem->GetType()) {
   case DisplayItemType::TYPE_MASK:
     static_cast<nsDisplayMask*>(aItem)->PaintMask(aDisplayListBuilder, context);
+    isInvalidated = true;
     break;
   case DisplayItemType::TYPE_SVG_WRAPPER:
     {
-      PaintByLayer(aItem, aDisplayListBuilder, aManager, context, [&]() {
+      isInvalidated = PaintByLayer(aItem, aDisplayListBuilder, aManager, context, [&]() {
         aManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aDisplayListBuilder);
       });
       break;
@@ -416,7 +434,7 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
 
   case DisplayItemType::TYPE_FILTER:
     {
-      PaintByLayer(aItem, aDisplayListBuilder, aManager, context, [&]() {
+      isInvalidated = PaintByLayer(aItem, aDisplayListBuilder, aManager, context, [&]() {
         static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aDisplayListBuilder,
                                                            context, aManager);
       });
@@ -425,6 +443,7 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
 
   default:
     aItem->Paint(aDisplayListBuilder, context);
+    isInvalidated = true;
     break;
   }
 
@@ -432,13 +451,15 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
     aDT->SetTransform(gfx::Matrix());
     aDT->FillRect(gfx::Rect(0, 0, aImageRect.Width(), aImageRect.Height()), gfx::ColorPattern(gfx::Color(1.0, 0.0, 0.0, 0.5)));
   }
-  if (aItem->Frame()->PresContext()->GetPaintFlashing()) {
+  if (aItem->Frame()->PresContext()->GetPaintFlashing() && isInvalidated) {
     aDT->SetTransform(gfx::Matrix());
     float r = float(rand()) / RAND_MAX;
     float g = float(rand()) / RAND_MAX;
     float b = float(rand()) / RAND_MAX;
     aDT->FillRect(gfx::Rect(0, 0, aImageRect.Width(), aImageRect.Height()), gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
   }
+
+  return isInvalidated;
 }
 
 already_AddRefed<WebRenderFallbackData>
@@ -542,22 +563,33 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       RefPtr<gfx::DrawTarget> dummyDt =
         gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, paintSize.ToUnknownSize());
-      PaintItemByDrawTarget(aItem, dt, paintRect, offset, aDisplayListBuilder,
-                            fallbackData->mBasicLayerManager, mManager, scale);
+      bool isInvalidated = PaintItemByDrawTarget(aItem, dt, paintRect, offset, aDisplayListBuilder,
+                                                 fallbackData->mBasicLayerManager, mManager, scale);
       recorder->FlushItem(IntRect());
       recorder->Finish();
 
-      Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
-      wr::ImageKey key = mManager->WrBridge()->GetNextImageKey();
-      wr::ImageDescriptor descriptor(paintSize.ToUnknownSize(), 0, dt->GetFormat(), isOpaque);
-      if (!aResources.AddBlobImage(key, descriptor, bytes)) {
-        return nullptr;
+      if (isInvalidated) {
+        Range<uint8_t> bytes((uint8_t *)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
+        wr::ImageKey key = mManager->WrBridge()->GetNextImageKey();
+        wr::ImageDescriptor descriptor(paintSize.ToUnknownSize(), 0, dt->GetFormat(), isOpaque);
+        if (!aResources.AddBlobImage(key, descriptor, bytes)) {
+          return nullptr;
+        }
+        fallbackData->SetKey(key);
+      } else {
+        // If there is no invalidation region and we don't have a image key,
+        // it means we don't need to push image for the item.
+        if (!fallbackData->GetKey().isSome()) {
+          return nullptr;
+        }
       }
-      fallbackData->SetKey(key);
+
+
     } else {
       fallbackData->CreateImageClientIfNeeded();
       RefPtr<ImageClient> imageClient = fallbackData->GetImageClient();
       RefPtr<ImageContainer> imageContainer = LayerManager::CreateImageContainer();
+      bool isInvalidated = false;
 
       {
         UpdateImageHelper helper(imageContainer, imageClient, paintSize.ToUnknownSize(), format);
@@ -566,19 +598,29 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
           if (!dt) {
             return nullptr;
           }
-          PaintItemByDrawTarget(aItem, dt, paintRect, offset,
-                                aDisplayListBuilder,
-                                fallbackData->mBasicLayerManager, mManager, scale);
+          isInvalidated = PaintItemByDrawTarget(aItem, dt, paintRect, offset,
+                                               aDisplayListBuilder,
+                                               fallbackData->mBasicLayerManager, mManager, scale);
         }
-        if (!helper.UpdateImage()) {
-          return nullptr;
+
+        if (isInvalidated) {
+          // Update image if there it's invalidated.
+          if (!helper.UpdateImage()) {
+            return nullptr;
+          }
+        } else {
+          // If there is no invalidation region and we don't have a image key,
+          // it means we don't need to push image for the item.
+          if (!fallbackData->GetKey().isSome()) {
+            return nullptr;
+          }
         }
       }
 
       // Force update the key in fallback data since we repaint the image in this path.
       // If not force update, fallbackData may reuse the original key because it
       // doesn't know UpdateImageHelper already updated the image container.
-      if (!fallbackData->UpdateImageKey(imageContainer, aResources, true)) {
+      if (isInvalidated && !fallbackData->UpdateImageKey(imageContainer, aResources, true)) {
         return nullptr;
       }
     }
