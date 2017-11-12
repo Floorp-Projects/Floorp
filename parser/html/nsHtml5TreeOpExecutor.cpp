@@ -509,10 +509,17 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
         }
       }
 
+      if (MOZ_UNLIKELY(!mParser)) {
+        // The parse ended during an update pause.
+        return;
+      }
+      if (streamEnded) {
+        GetParser()->PermanentlyUndefineInsertionPoint();
+      }
     } // end autoFlush
 
     if (MOZ_UNLIKELY(!mParser)) {
-      // The parse ended already.
+      // Ending the doc update caused a call to nsIParser::Terminate().
       return;
     }
 
@@ -586,12 +593,9 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
     // autoFlush clears mOpQueue in its destructor.
     nsHtml5AutoFlush autoFlush(this);
 
-
-  nsHtml5TreeOperation* start = mOpQueue.Elements();
-  nsHtml5TreeOperation* end = start + mOpQueue.Length();
-  for (nsHtml5TreeOperation* iter = start;
-       iter < end;
-       ++iter) {
+    nsHtml5TreeOperation* start = mOpQueue.Elements();
+    nsHtml5TreeOperation* end = start + mOpQueue.Length();
+    for (nsHtml5TreeOperation* iter = start; iter < end; ++iter) {
       if (MOZ_UNLIKELY(!mParser)) {
         // The previous tree op caused a call to nsIParser::Terminate().
         return rv;
@@ -605,6 +609,14 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
       }
     }
 
+    if (MOZ_UNLIKELY(!mParser)) {
+      // The parse ended during an update pause.
+      return rv;
+    }
+    if (streamEnded) {
+      // This should be redundant but let's do it just in case.
+      GetParser()->PermanentlyUndefineInsertionPoint();
+    }
   } // autoFlush
 
   if (MOZ_UNLIKELY(!mParser)) {
