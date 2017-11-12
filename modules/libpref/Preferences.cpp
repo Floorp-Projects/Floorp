@@ -3166,6 +3166,7 @@ static const char kPrefFileHeader[] =
   NS_LINEBREAK;
 // clang-format on
 
+// Note: if sShutdown is true, sPreferences will be nullptr.
 StaticRefPtr<Preferences> Preferences::sPreferences;
 bool Preferences::sShutdown = false;
 
@@ -3636,7 +3637,11 @@ Preferences::InitStaticMembers()
 {
   MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
 
-  if (!sShutdown && !sPreferences) {
+  if (MOZ_LIKELY(sPreferences)) {
+    return true;
+  }
+
+  if (!sShutdown) {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIPrefService> prefService =
       do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -4759,7 +4764,8 @@ Preferences::AddWeakObserver(nsIObserver* aObserver, const char* aPref)
 Preferences::RemoveObserver(nsIObserver* aObserver, const char* aPref)
 {
   MOZ_ASSERT(aObserver);
-  if (!sPreferences && sShutdown) {
+  if (sShutdown) {
+    MOZ_ASSERT(!sPreferences);
     return NS_OK; // Observers have been released automatically.
   }
   NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
@@ -4792,7 +4798,8 @@ Preferences::AddWeakObservers(nsIObserver* aObserver, const char** aPrefs)
 Preferences::RemoveObservers(nsIObserver* aObserver, const char** aPrefs)
 {
   MOZ_ASSERT(aObserver);
-  if (!sPreferences && sShutdown) {
+  if (sShutdown) {
+    MOZ_ASSERT(!sPreferences);
     return NS_OK; // Observers have been released automatically.
   }
   NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
@@ -4855,7 +4862,8 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
                                 MatchKind aMatchKind)
 {
   MOZ_ASSERT(aCallback);
-  if (!sPreferences && sShutdown) {
+  if (sShutdown) {
+    MOZ_ASSERT(!sPreferences);
     return NS_OK; // Observers have been released automatically.
   }
   NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
