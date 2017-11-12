@@ -1114,8 +1114,9 @@ option('--enable-geckodriver', help='Enable WebDriver implementation')
          'MOZ_AUTOMATION',
          compile_environment,
          cross_compiling,
-         hazard_analysis)
-def geckodriver(enable, automation, compile_env, cross_compile, hazard):
+         hazard_analysis,
+         target)
+def geckodriver(enable, automation, compile_env, cross_compile, hazard, target):
     """
     geckodriver is implied on supported platforms when MOZ_AUTOMATION
     is set, but we also provide the --enable-geckodriver option for
@@ -1133,7 +1134,8 @@ def geckodriver(enable, automation, compile_env, cross_compile, hazard):
         return True
 
     if enable.origin == 'default':
-        broken_platforms = cross_compile or hazard
+        linux32 = target.kernel == 'Linux' and target.cpu == 'x86'
+        broken_platforms = cross_compile or linux32 or hazard
 
         if automation and compile_env and not broken_platforms:
             return True
