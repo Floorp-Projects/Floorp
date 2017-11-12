@@ -104,26 +104,9 @@ using namespace mozilla;
     }                                                                          \
   } while (0)
 
-#define ENSURE_MAIN_PROCESS_WITH_WARNING(func, pref)                           \
-  do {                                                                         \
-    if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                \
-      nsPrintfCString msg(                                                     \
-        "ENSURE_MAIN_PROCESS: called %s on %s in a non-main process",          \
-        func,                                                                  \
-        pref);                                                                 \
-      NS_WARNING(msg.get());                                                   \
-      return NS_ERROR_NOT_AVAILABLE;                                           \
-    }                                                                          \
-  } while (0)
-
 #else // DEBUG
 
 #define ENSURE_MAIN_PROCESS(func, pref)                                        \
-  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                  \
-    return NS_ERROR_NOT_AVAILABLE;                                             \
-  }
-
-#define ENSURE_MAIN_PROCESS_WITH_WARNING(func, pref)                           \
   if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                  \
     return NS_ERROR_NOT_AVAILABLE;                                             \
   }
@@ -907,14 +890,14 @@ static PrefHashEntry*
 pref_HashTableLookup(const char* aKey)
 {
   MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
-  MOZ_ASSERT((!XRE_IsContentProcess() || gPhase != START),
+  MOZ_ASSERT((XRE_IsParentProcess() || gPhase != START),
              "pref access before commandline prefs set");
 
   // If you're hitting this assertion, you've added a pref access to start up.
   // Consider moving it later or add it to the whitelist in ContentPrefs.cpp
-  // and get review from a DOM peer
+  // and get review from a DOM peer.
 #ifdef DEBUG
-  if (XRE_IsContentProcess() && gPhase <= END_INIT_PREFS && !gWatchingPref &&
+  if (!XRE_IsParentProcess() && gPhase <= END_INIT_PREFS && !gWatchingPref &&
       !InInitArray(aKey)) {
     MOZ_CRASH_UNSAFE_PRINTF(
       "accessing non-init pref %s before the rest of the prefs are sent", aKey);
@@ -2385,7 +2368,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
   nsresult rv;
   nsAutoCString utf8String;
 
-  // we have to do this one first because it's different than all the rest
+  // We have to do this one first because it's different to all the rest.
   if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
     nsCOMPtr<nsIPrefLocalizedString> theString(
       do_CreateInstance(NS_PREFLOCALIZEDSTRING_CONTRACTID, &rv));
@@ -2434,10 +2417,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
   }
 
   if (aType.Equals(NS_GET_IID(nsIFile))) {
-    if (XRE_IsContentProcess()) {
-      NS_ERROR("cannot get nsIFile pref from content process");
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+    ENSURE_MAIN_PROCESS("GetComplexValue(nsIFile)", aPrefName);
 
     nsCOMPtr<nsIFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
 
@@ -2452,10 +2432,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
   }
 
   if (aType.Equals(NS_GET_IID(nsIRelativeFilePref))) {
-    if (XRE_IsContentProcess()) {
-      NS_ERROR("cannot get nsIRelativeFilePref from content process");
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+    ENSURE_MAIN_PROCESS("GetComplexValue(nsIRelativeFilePref)", aPrefName);
 
     nsACString::const_iterator keyBegin, strEnd;
     utf8String.BeginReading(keyBegin);
@@ -3100,9 +3077,9 @@ void
 Preferences::HandleDirty()
 {
   if (!XRE_IsParentProcess()) {
-    // TODO: this should really assert because you can't set prefs in a
-    // content process. But so much code currently does this that we just
-    // ignore it for now.
+    // This path is hit a lot when setting up prefs for content processes. Just
+    // ignore it in that case, because content processes aren't responsible for
+    // saving prefs.
     return;
   }
 
@@ -3569,7 +3546,7 @@ Preferences::GetInstanceForService()
     return nullptr;
   }
 
-  if (XRE_IsContentProcess()) {
+  if (!XRE_IsParentProcess()) {
     MOZ_ASSERT(gInitPrefs);
     for (unsigned int i = 0; i < gInitPrefs->Length(); i++) {
       Preferences::SetPreference(gInitPrefs->ElementAt(i));
@@ -3792,10 +3769,7 @@ Preferences::Observe(nsISupports* aSubject,
 NS_IMETHODIMP
 Preferences::ReadUserPrefsFromFile(nsIFile* aFile)
 {
-  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
-    NS_ERROR("must load prefs from parent process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  ENSURE_MAIN_PROCESS("Preferences::ReadUserPrefsFromFile", "all prefs");
 
   if (!aFile) {
     NS_ERROR("ReadUserPrefsFromFile requires a parameter");
@@ -3808,10 +3782,7 @@ Preferences::ReadUserPrefsFromFile(nsIFile* aFile)
 NS_IMETHODIMP
 Preferences::ResetPrefs()
 {
-  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
-    NS_ERROR("must reset prefs from parent process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  ENSURE_MAIN_PROCESS("Preferences::ResetPrefs", "all prefs");
 
   NotifyServiceObservers(NS_PREFSERVICE_RESET_TOPIC_ID);
 
@@ -3824,10 +3795,7 @@ Preferences::ResetPrefs()
 NS_IMETHODIMP
 Preferences::ResetUserPrefs()
 {
-  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
-    NS_ERROR("must reset user prefs from parent process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  ENSURE_MAIN_PROCESS("Preferences::ResetUserPrefs", "all prefs");
 
   PREF_ClearAllUserPrefs();
   return NS_OK;
@@ -4087,10 +4055,7 @@ Preferences::MakeBackupPrefFile(nsIFile* aFile)
 nsresult
 Preferences::SavePrefFileInternal(nsIFile* aFile, SaveMethod aSaveMethod)
 {
-  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
-    NS_ERROR("must save pref file from parent process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  ENSURE_MAIN_PROCESS("Preferences::SavePrefFileInternal", "all prefs");
 
   // We allow different behavior here when aFile argument is not null, but it
   // happens to be the same as the current file.  It is not clear that we
@@ -4660,7 +4625,7 @@ Preferences::GetComplex(const char* aPref, const nsIID& aType, void** aResult)
 /* static */ nsresult
 Preferences::SetCString(const char* aPref, const char* aValue)
 {
-  ENSURE_MAIN_PROCESS_WITH_WARNING("SetCString", aPref);
+  ENSURE_MAIN_PROCESS("SetCString", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetCStringPref(aPref, nsDependentCString(aValue), false);
 }
@@ -4668,7 +4633,7 @@ Preferences::SetCString(const char* aPref, const char* aValue)
 /* static */ nsresult
 Preferences::SetCString(const char* aPref, const nsACString& aValue)
 {
-  ENSURE_MAIN_PROCESS_WITH_WARNING("SetCString", aPref);
+  ENSURE_MAIN_PROCESS("SetCString", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetCStringPref(aPref, aValue, false);
 }
@@ -4676,7 +4641,7 @@ Preferences::SetCString(const char* aPref, const nsACString& aValue)
 /* static */ nsresult
 Preferences::SetString(const char* aPref, const char16ptr_t aValue)
 {
-  ENSURE_MAIN_PROCESS_WITH_WARNING("SetString", aPref);
+  ENSURE_MAIN_PROCESS("SetString", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetCStringPref(aPref, NS_ConvertUTF16toUTF8(aValue), false);
 }
@@ -4684,7 +4649,7 @@ Preferences::SetString(const char* aPref, const char16ptr_t aValue)
 /* static */ nsresult
 Preferences::SetString(const char* aPref, const nsAString& aValue)
 {
-  ENSURE_MAIN_PROCESS_WITH_WARNING("SetString", aPref);
+  ENSURE_MAIN_PROCESS("SetString", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetCStringPref(aPref, NS_ConvertUTF16toUTF8(aValue), false);
 }
@@ -4692,7 +4657,7 @@ Preferences::SetString(const char* aPref, const nsAString& aValue)
 /* static */ nsresult
 Preferences::SetBool(const char* aPref, bool aValue)
 {
-  ENSURE_MAIN_PROCESS_WITH_WARNING("SetBool", aPref);
+  ENSURE_MAIN_PROCESS("SetBool", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetBoolPref(aPref, aValue, false);
 }
@@ -4700,7 +4665,7 @@ Preferences::SetBool(const char* aPref, bool aValue)
 /* static */ nsresult
 Preferences::SetInt(const char* aPref, int32_t aValue)
 {
-  ENSURE_MAIN_PROCESS_WITH_WARNING("SetInt", aPref);
+  ENSURE_MAIN_PROCESS("SetInt", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetIntPref(aPref, aValue, false);
 }
@@ -4723,7 +4688,7 @@ Preferences::SetComplex(const char* aPref,
 /* static */ nsresult
 Preferences::ClearUser(const char* aPref)
 {
-  ENSURE_MAIN_PROCESS_WITH_WARNING("ClearUser", aPref);
+  ENSURE_MAIN_PROCESS("ClearUser", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_ClearUserPref(aPref);
 }
@@ -5106,7 +5071,6 @@ Preferences::GetDefaultType(const char* aPref)
 } // namespace mozilla
 
 #undef ENSURE_MAIN_PROCESS
-#undef ENSURE_MAIN_PROCESS_WITH_WARNING
 
 //===========================================================================
 // Module and factory stuff
