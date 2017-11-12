@@ -580,8 +580,8 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   margin: 0 -7px;
 }
 
-#lives,
-#ball {
+#wp-lives,
+#wp-ball {
   /* Don't need HiDPI versions since the size used will be scaled down to 20x20. */
   background-image: url("chrome://browser/skin/customizableui/whimsy.png");
   background-size: contain;
@@ -594,57 +594,73 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   border-left: 1px solid currentColor;
   border-right: 1px solid currentColor;
   margin: 16px auto 0;
+  box-sizing: content-box;
 }
 
-#ball {
-  margin-left: -10px;
+#customization-palette[whimsypong] > toolbarpaletteitem[kcode],
+#customization-pong-arena[kcode] {
+  animation-name: kcode;
+  animation-timing-function: steps(5);
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+}
+
+#wp-ball {
+  margin-inline-start: -10px;
   margin-top: -10px;
   height: 20px;
 }
 
-#player1,
-#player2 {
+#wp-player1,
+#wp-player2 {
   width: 84px;
   height: calc(39px + 3em);
-  background-color: rgba(255,255,0,.5);
 }
 
-#player1,
-#player2,
-#ball,
-#score {
+#wp-player1,
+#wp-player2,
+#wp-ball,
+#wp-score {
   position: fixed;
 }
 
-#score {
+#wp-score {
   transform: translateX(-4ch);
 }
 
-#lives {
+#wp-score:-moz-locale-dir(rtl) {
+  transform: translateX(4ch);
+}
+
+#wp-lives {
   transform: translate(-4ch, 1ch);
 }
 
-#lives[lives="5"] {
+#wp-lives:-moz-locale-dir(rtl) {
+  transform: translate(4ch, 1ch);
+}
+
+#wp-lives[lives="5"] {
   height: 100px;
 }
 
-#lives[lives="4"] {
+#wp-lives[lives="4"] {
   height: 80px;
 }
 
-#lives[lives="3"] {
+#wp-lives[lives="3"] {
   height: 60px;
 }
 
-#lives[lives="2"] {
+#wp-lives[lives="2"] {
   height: 40px;
 }
 
-#lives[lives="1"] {
+#wp-lives[lives="1"] {
   height: 20px;
 }
 
-#customization-pong-arena[lives="0"] > #ball {
+#customization-pong-arena[lives="0"] > #wp-ball {
   animation: game-over 4s forwards ease;
 }
 
@@ -662,4 +678,13 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
     transform: scale(2) translateY(300px) rotateZ(-2.5turn);
     opacity: 0;
   }
+}
+
+@keyframes kcode {
+  0% { border-color: rgb(195,17,206); color: rgb(195,17,206); }
+  20% { border-color: rgb(252,82,27); color: rgb(252,82,27); }
+  40% { border-color: rgb(251,179,0); color: rgb(251,179,0); }
+  60% { border-color: rgb(105,211,0); color: rgb(105,211,0); }
+  80% { border-color: rgb(20,155,249); color: rgb(20,155,249); }
+  100% { border-color: rgb(195,17,206); color: rgb(195,17,206); }
 }

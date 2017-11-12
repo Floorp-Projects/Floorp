@@ -21,6 +21,7 @@
 #include "nsThreadManager.h"
 #include "PrioritizedEventQueue.h"
 #include "xpcpublic.h"
+#include "xpccomponents.h"
 
 // Windows silliness. winbase.h defines an empty no-argument Yield macro.
 #undef Yield
@@ -93,6 +94,7 @@ public:
   explicit SchedulerImpl(SchedulerEventQueue* aQueue);
 
   void Start();
+  void Stop(already_AddRefed<nsIRunnable> aStoppedCallback);
   void Shutdown();
 
   void Dispatch(already_AddRefed<nsIRunnable> aEvent);
@@ -118,6 +120,9 @@ public:
   static bool UnlabeledEventRunning() { return sUnlabeledEventRunning; }
   static bool AnyEventRunning() { return sNumThreadsRunning > 0; }
 
+  void BlockThreadedExecution(nsIBlockThreadedExecutionCallback* aCallback);
+  void UnblockThreadedExecution();
+
   CooperativeThreadPool::Resource* GetQueueResource() { return &mQueueResource; }
   bool UseCooperativeScheduling() const { return mQueue->UseCooperativeScheduling(); }
 
@@ -142,6 +147,9 @@ private:
   CondVar mShutdownCondVar;
 
   bool mShuttingDown;
+
+  // Runnable to call when the scheduler has finished shutting down.
+  nsTArray<nsCOMPtr<nsIRunnable>> mShutdownCallbacks;
 
   UniquePtr<CooperativeThreadPool> mThreadPool;
 
@@ -201,6 +209,11 @@ private:
 
   static size_t sNumThreadsRunning;
   static bool sUnlabeledEventRunning;
+
+  // Number of times that BlockThreadedExecution has been called without
+  // corresponding calls to UnblockThreadedExecution. If this is non-zero,
+  // scheduling is disabled.
+  size_t mNumSchedulerBlocks = 0;
 
   JSContext* mContexts[CooperativeThreadPool::kMaxThreads];
 };
@@ -443,6 +456,8 @@ SchedulerImpl::SwitcherThread(void* aData)
 void
 SchedulerImpl::Start()
 {
+  MOZ_ASSERT(mNumSchedulerBlocks == 0);
+
   NS_DispatchToMainThread(NS_NewRunnableFunction("Scheduler::Start", [this]() -> void {
     // Let's pretend the runnable here isn't actually running.
     MOZ_ASSERT(sUnlabeledEventRunning);
@@ -492,16 +507,40 @@ SchedulerImpl::Start()
     MOZ_ASSERT(sNumThreadsRunning == 0);
     sNumThreadsRunning = 1;
 
-    // Delete the SchedulerImpl. Don't use it after this point.
-    Scheduler::sScheduler = nullptr;
+    mShuttingDown = false;
+    nsTArray<nsCOMPtr<nsIRunnable>> callbacks = Move(mShutdownCallbacks);
+    for (nsIRunnable* runnable : callbacks) {
+      runnable->Run();
+    }
   }));
+}
+
+void
+SchedulerImpl::Stop(already_AddRefed<nsIRunnable> aStoppedCallback)
+{
+  MOZ_ASSERT(mNumSchedulerBlocks > 0);
+
+  // Note that this may be called when mShuttingDown is already true. We still
+  // want to invoke the callback in that case.
+
+  MutexAutoLock lock(mLock);
+  mShuttingDown = true;
+  mShutdownCallbacks.AppendElement(aStoppedCallback);
+  mShutdownCondVar.Notify();
 }
 
 void
 SchedulerImpl::Shutdown()
 {
+  MOZ_ASSERT(mNumSchedulerBlocks == 0);
+
   MutexAutoLock lock(mLock);
   mShuttingDown = true;
+
+  // Delete the SchedulerImpl once shutdown is complete.
+  mShutdownCallbacks.AppendElement(NS_NewRunnableFunction("SchedulerImpl::Shutdown",
+                                                          [] { Scheduler::sScheduler = nullptr; }));
+
   mShutdownCondVar.Notify();
 }
 
@@ -519,7 +558,9 @@ SchedulerImpl::SystemZoneResource::IsAvailable(const MutexAutoLock& aProofOfLock
 {
   mScheduler->mLock.AssertCurrentThreadOwns();
 
-  JSContext* cx = dom::danger::GetJSContext();
+  // It doesn't matter which context we pick; we really just some main-thread
+  // JSContext.
+  JSContext* cx = mScheduler->mContexts[0];
   return js::SystemZoneAvailable(cx);
 }
 
@@ -681,6 +722,27 @@ SchedulerImpl::Yield()
   CooperativeThreadPool::Yield(nullptr, lock);
 }
 
+void
+SchedulerImpl::BlockThreadedExecution(nsIBlockThreadedExecutionCallback* aCallback)
+{
+  if (mNumSchedulerBlocks++ == 0 || mShuttingDown) {
+    Stop(NewRunnableMethod("BlockThreadedExecution", aCallback,
+                           &nsIBlockThreadedExecutionCallback::Callback));
+  } else {
+    // The scheduler is already blocked.
+    nsCOMPtr<nsIBlockThreadedExecutionCallback> kungFuDeathGrip(aCallback);
+    aCallback->Callback();
+  }
+}
+
+void
+SchedulerImpl::UnblockThreadedExecution()
+{
+  if (--mNumSchedulerBlocks == 0) {
+    Start();
+  }
+}
+
 /* static */ already_AddRefed<nsThread>
 Scheduler::Init(nsIIdlePeriod* aIdlePeriod)
 {
@@ -788,4 +850,26 @@ Scheduler::UnlabeledEventRunning()
 Scheduler::AnyEventRunning()
 {
   return SchedulerImpl::AnyEventRunning();
+}
+
+/* static */ void
+Scheduler::BlockThreadedExecution(nsIBlockThreadedExecutionCallback* aCallback)
+{
+  if (!sScheduler) {
+    nsCOMPtr<nsIBlockThreadedExecutionCallback> kungFuDeathGrip(aCallback);
+    aCallback->Callback();
+    return;
+  }
+
+  sScheduler->BlockThreadedExecution(aCallback);
+}
+
+/* static */ void
+Scheduler::UnblockThreadedExecution()
+{
+  if (!sScheduler) {
+    return;
+  }
+
+  sScheduler->UnblockThreadedExecution();
 }
