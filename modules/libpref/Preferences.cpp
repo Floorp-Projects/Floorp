@@ -454,18 +454,12 @@ PREF_SetBoolPref(const char* aPrefName, bool aValue, bool aSetDefault)
     aPrefName, pref, PrefType::Bool, aSetDefault ? kPrefSetDefault : 0);
 }
 
-enum WhichValue
-{
-  DEFAULT_VALUE,
-  USER_VALUE
-};
-
 static nsresult
 SetPrefValue(const char* aPrefName,
              const dom::PrefValue& aValue,
-             WhichValue aWhich)
+             PrefValueKind aKind)
 {
-  bool setDefault = (aWhich == DEFAULT_VALUE);
+  bool setDefault = (aKind == PrefValueKind::Default);
 
   switch (aValue.type()) {
     case dom::PrefValue::TnsCString:
@@ -554,11 +548,11 @@ pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry)
 static void
 GetPrefValueFromEntry(PrefHashEntry* aHashEntry,
                       dom::PrefSetting* aPref,
-                      WhichValue aWhich)
+                      PrefValueKind aKind)
 {
   PrefValue* value;
   dom::PrefValue* settingValue;
-  if (aWhich == USER_VALUE) {
+  if (aKind == PrefValueKind::User) {
     value = &aHashEntry->mUserPref;
     aPref->userValue() = dom::PrefValue();
     settingValue = &aPref->userValue().get_PrefValue();
@@ -589,13 +583,13 @@ pref_GetPrefFromEntry(PrefHashEntry* aHashEntry, dom::PrefSetting* aPref)
   aPref->name() = aHashEntry->mKey;
 
   if (aHashEntry->mPrefFlags.HasDefault()) {
-    GetPrefValueFromEntry(aHashEntry, aPref, DEFAULT_VALUE);
+    GetPrefValueFromEntry(aHashEntry, aPref, PrefValueKind::Default);
   } else {
     aPref->defaultValue() = null_t();
   }
 
   if (aHashEntry->mPrefFlags.HasUserValue()) {
-    GetPrefValueFromEntry(aHashEntry, aPref, USER_VALUE);
+    GetPrefValueFromEntry(aHashEntry, aPref, PrefValueKind::User);
   } else {
     aPref->userValue() = null_t();
   }
@@ -3856,15 +3850,15 @@ Preferences::SetPreference(const PrefSetting& aPref)
   const dom::MaybePrefValue& userValue = aPref.userValue();
 
   if (defaultValue.type() == dom::MaybePrefValue::TPrefValue) {
-    nsresult rv =
-      SetPrefValue(prefName, defaultValue.get_PrefValue(), DEFAULT_VALUE);
+    nsresult rv = SetPrefValue(
+      prefName, defaultValue.get_PrefValue(), PrefValueKind::Default);
     if (NS_FAILED(rv)) {
       return;
     }
   }
 
   if (userValue.type() == dom::MaybePrefValue::TPrefValue) {
-    SetPrefValue(prefName, userValue.get_PrefValue(), USER_VALUE);
+    SetPrefValue(prefName, userValue.get_PrefValue(), PrefValueKind::User);
   } else {
     PREF_ClearUserPref(prefName);
   }
