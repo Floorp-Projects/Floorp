@@ -661,11 +661,17 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
       // Also store it in as a preference, so we can use it as a fallback.
       // We don't want this for mail composer because it uses
       // "spellchecker.dictionary" as a preference.
-      Preferences::SetString("spellchecker.dictionary", aDictionary);
+      //
+      // XXX: Prefs can only be set in the parent process, so this condition is
+      // necessary to stop libpref from throwing errors. But this should
+      // probably be handled in a better way.
+      if (XRE_IsParentProcess()) {
+        Preferences::SetString("spellchecker.dictionary", aDictionary);
 #ifdef DEBUG_DICT
-      printf("***** Storing spellchecker.dictionary |%s|\n",
-             NS_ConvertUTF16toUTF8(aDictionary).get());
+        printf("***** Possibly storing spellchecker.dictionary |%s|\n",
+               NS_ConvertUTF16toUTF8(aDictionary).get());
 #endif
+      }
     }
   }
   return mSpellChecker->SetCurrentDictionary(aDictionary);
