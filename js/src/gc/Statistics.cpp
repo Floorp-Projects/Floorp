@@ -631,14 +631,17 @@ Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
 void
 Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice, JSONPrinter& json) const
 {
-    TimeDuration when = slice.start - slices_[0].start;
+    // If you change JSON properties here, please update:
+    // Telemetry ping code: toolkit/components/telemetry/GCTelemetry.jsm
+    // Telemetry documentation: toolkit/components/telemetry/docs/data/main-ping.rst
+    // Telemetry tests: toolkit/components/telemetry/tests/browser/browser_TelemetryGC.js
+    // Perf.html: https://github.com/devtools-html/perf.html
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
     TimeStamp originTime = TimeStamp::ProcessCreation();
 
     json.property("slice", i);
     json.property("pause", slice.duration(), JSONPrinter::MILLISECONDS);
-    json.property("when", when, JSONPrinter::MILLISECONDS);
     json.property("reason", ExplainReason(slice.reason));
     json.property("initial_state", gc::StateName(slice.initialState));
     json.property("final_state", gc::StateName(slice.finalState));
@@ -648,9 +651,10 @@ Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice, JSONP
         json.floatProperty("trigger_amount", triggerAmount, 0);
         json.floatProperty("trigger_threshold", triggerThreshold, 0);
     }
-    json.property("page_faults", int64_t(slice.endFaults - slice.startFaults));
+    int64_t numFaults = slice.endFaults - slice.startFaults;
+    if (numFaults != 0)
+        json.property("page_faults", numFaults);
     json.property("start_timestamp", slice.start - originTime, JSONPrinter::SECONDS);
-    json.property("end_timestamp", slice.end - originTime, JSONPrinter::SECONDS);
 }
 
 void
