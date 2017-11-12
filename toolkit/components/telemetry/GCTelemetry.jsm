@@ -112,7 +112,7 @@ class GCData {
 // You should also adjust browser_TelemetryGC.js.
 const MAX_GC_KEYS = 30;
 const MAX_SLICES = 4;
-const MAX_SLICE_KEYS = 15;
+const MAX_SLICE_KEYS = 12;
 const MAX_PHASES = 65;
 
 function limitProperties(obj, count) {

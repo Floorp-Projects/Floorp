@@ -501,8 +501,7 @@ Structure:
           "slices_list": [
             {
               "slice": 218,  // The global index of this slice.
-              "pause": 23.221,  // How long the slice took.
-              "when": 0,  // Milliseconds since the start of the GC.
+              "pause": 23.221,  // How long the slice took (milliseconds).
               "reason": "SET_NEW_DOCUMENT",
               // GC state when the slice started
               "initial_state": "NotActive",
@@ -512,9 +511,11 @@ Structure:
               // "unlimited".
               "budget": "10ms",
               // Number of page faults during the slice.
-              "page_faults": 0,
+              // optional field, missing means 0.
+              "page_faults": 1,
+              // The start time of this slice in seconds.  The end time is
+              // given by the start_timestamp + pause.
               "start_timestamp": 294875,
-              "end_timestamp": 294879,
               // Time taken by each phase. There are at most 65 possible
               // phases, but usually only a few phases run in a given slice.
               "times": {
