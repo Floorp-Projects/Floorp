@@ -12,28 +12,24 @@
 add_task(async function() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await loadBadCertPage("https://expired.example.com");
-  checkControlPanelIcons();
-  let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
-                              .getService(Ci.nsICertOverrideService);
-  certOverrideService.clearValidityOverride("expired.example.com", -1);
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
 
-// Check for the correct icons in the identity box and control center.
-function checkControlPanelIcons() {
   let { gIdentityHandler } = gBrowser.ownerGlobal;
   gIdentityHandler._identityBox.click();
+  let promiseViewShown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "ViewShown");
   document.getElementById("identity-popup-security-expander").click();
+  await promiseViewShown;
 
   is_element_visible(document.getElementById("connection-icon"), "Should see connection icon");
   let connectionIconImage = gBrowser.ownerGlobal
         .getComputedStyle(document.getElementById("connection-icon"))
         .getPropertyValue("list-style-image");
   let securityViewBG = gBrowser.ownerGlobal
-        .getComputedStyle(document.getElementById("identity-popup-securityView"))
+        .getComputedStyle(document.getElementById("identity-popup-securityView")
+                                  .getElementsByClassName("identity-popup-security-content")[0])
         .getPropertyValue("background-image");
   let securityContentBG = gBrowser.ownerGlobal
-        .getComputedStyle(document.getElementById("identity-popup-security-content"))
+        .getComputedStyle(document.getElementById("identity-popup-mainView")
+                                  .getElementsByClassName("identity-popup-security-content")[0])
         .getPropertyValue("background-image");
   is(connectionIconImage,
      "url(\"chrome://browser/skin/connection-mixed-passive-loaded.svg\")",
@@ -46,5 +42,9 @@ function checkControlPanelIcons() {
      "Using expected icon image in the Control Center subview");
 
   gIdentityHandler._identityPopup.hidden = true;
-}
 
+  let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
+                              .getService(Ci.nsICertOverrideService);
+  certOverrideService.clearValidityOverride("expired.example.com", -1);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
