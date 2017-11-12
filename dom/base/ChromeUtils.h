@@ -166,6 +166,10 @@ public:
                                  const nsAString& id,
                                  const nsAString& resourceURI,
                                  ErrorResult& aRv);
+
+  static void
+  GetCallerLocation(const GlobalObject& global, nsIPrincipal* principal,
+                    JS::MutableHandle<JSObject*> aRetval);
 };
 
 } // namespace dom

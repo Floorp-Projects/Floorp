@@ -653,5 +653,31 @@ ChromeUtils::ClearRecentJSDevError(GlobalObject&)
 }
 #endif // NIGHTLY_BUILD
 
+constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
+
+/* static */ void
+ChromeUtils::GetCallerLocation(const GlobalObject& aGlobal, nsIPrincipal* aPrincipal,
+                               JS::MutableHandle<JSObject*> aRetval)
+{
+  JSContext* cx = aGlobal.Context();
+
+  auto* principals = nsJSPrincipals::get(aPrincipal);
+
+  JS::StackCapture captureMode(JS::FirstSubsumedFrame(cx, principals));
+
+  JS::RootedObject frame(cx);
+  if (!JS::CaptureCurrentStack(cx, &frame, mozilla::Move(captureMode))) {
+    JS_ClearPendingException(cx);
+    aRetval.set(nullptr);
+    return;
+  }
+
+  // FirstSubsumedFrame gets us a stack which stops at the first principal which
+  // is subsumed by the given principal. That means that we may have a lot of
+  // privileged frames that we don't care about at the top of the stack, though.
+  // We need to filter those out to get the frame we actually want.
+  aRetval.set(js::GetFirstSubsumedSavedFrame(cx, principals, frame, kSkipSelfHosted));
+}
+
 } // namespace dom
 } // namespace mozilla
