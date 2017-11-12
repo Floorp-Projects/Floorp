@@ -35,25 +35,34 @@ try {
       let prefix = msg.data.prefix;
       let addonId = msg.data.addonId;
 
-      let conn = DebuggerServer.connectToParent(prefix, mm);
-      conn.parentMessageManager = mm;
-      connections.set(prefix, conn);
+      // Using the JS debugger causes problems when we're trying to
+      // schedule those zone groups across different threads. Calling
+      // blockThreadedExecution causes Gecko to switch to a simpler
+      // single-threaded model until unblockThreadedExecution is
+      // called later. We cannot start the debugger until the callback
+      // passed to blockThreadedExecution has run, signaling that
+      // we're running single-threaded.
+      Cu.blockThreadedExecution(() => {
+        let conn = DebuggerServer.connectToParent(prefix, mm);
+        conn.parentMessageManager = mm;
+        connections.set(prefix, conn);
 
-      let actor;
+        let actor;
 
-      if (addonId) {
-        const { WebExtensionChildActor } = require("devtools/server/actors/webextension");
-        actor = new WebExtensionChildActor(conn, chromeGlobal, prefix, addonId);
-      } else {
-        const { ContentActor } = require("devtools/server/actors/childtab");
-        actor = new ContentActor(conn, chromeGlobal, prefix);
-      }
+        if (addonId) {
+          const { WebExtensionChildActor } = require("devtools/server/actors/webextension");
+          actor = new WebExtensionChildActor(conn, chromeGlobal, prefix, addonId);
+        } else {
+          const { ContentActor } = require("devtools/server/actors/childtab");
+          actor = new ContentActor(conn, chromeGlobal, prefix);
+        }
 
-      let actorPool = new ActorPool(conn);
-      actorPool.addActor(actor);
-      conn.addActorPool(actorPool);
+        let actorPool = new ActorPool(conn);
+        actorPool.addActor(actor);
+        conn.addActorPool(actorPool);
 
-      sendAsyncMessage("debug:actor", {actor: actor.form(), prefix: prefix});
+        sendAsyncMessage("debug:actor", {actor: actor.form(), prefix: prefix});
+      });
     });
 
     addMessageListener("debug:connect", onConnect);
@@ -99,6 +108,8 @@ try {
         // request doesn't match a connection known here, ignore it.
         return;
       }
+
+      Cu.unblockThreadedExecution();
 
       removeMessageListener("debug:disconnect", onDisconnect);
       // Call DebuggerServerConnection.close to destroy all child actors. It should end up

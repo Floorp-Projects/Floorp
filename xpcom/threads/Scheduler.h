@@ -18,6 +18,7 @@
 // Windows silliness. winbase.h defines an empty no-argument Yield macro.
 #undef Yield
 
+class nsIBlockThreadedExecutionCallback;
 class nsIIdlePeriod;
 class nsThread;
 
@@ -73,6 +74,9 @@ public:
 
   static bool UnlabeledEventRunning();
   static bool AnyEventRunning();
+
+  static void BlockThreadedExecution(nsIBlockThreadedExecutionCallback* aCallback);
+  static void UnblockThreadedExecution();
 
   class MOZ_RAII EventLoopActivation
   {
