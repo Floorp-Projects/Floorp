@@ -546,7 +546,7 @@ UpdateMinMaxScale(const nsIFrame* aFrame,
                   Size& aMinScale,
                   Size& aMaxScale)
 {
-  gfxSize size = aValue.GetScaleValue(aFrame);
+  Size size = aValue.GetScaleValue(aFrame);
   aMaxScale.width = std::max<float>(aMaxScale.width, size.width);
   aMaxScale.height = std::max<float>(aMaxScale.height, size.height);
   aMinScale.width = std::min<float>(aMinScale.width, size.width);
