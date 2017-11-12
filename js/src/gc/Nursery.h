@@ -36,7 +36,6 @@
     _(FreeMallocedBuffers,      "frSlts")                                     \
     _(ClearStoreBuffer,         "clrSB")                                      \
     _(ClearNursery,             "clear")                                      \
-    _(Resize,                   "resize")                                     \
     _(Pretenure,                "pretnr")
 
 template<typename T> class SharedMem;
