@@ -545,9 +545,6 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
                "Must have style context or specify aUseProvidedRootEmSize");
   NS_ASSERTION(aPresContext, "Must have prescontext");
 
-  if (aValue.IsFixedLengthUnit()) {
-    return aValue.GetFixedLength(aPresContext);
-  }
   if (aValue.IsPixelLengthUnit()) {
     return aValue.GetPixelLength();
   }

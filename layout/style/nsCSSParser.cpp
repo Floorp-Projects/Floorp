@@ -7361,7 +7361,6 @@ const UnitInfo UnitData[] = {
   { STR_WITH_LEN("ch"), eCSSUnit_Char, VARIANT_LENGTH },
   { STR_WITH_LEN("rem"), eCSSUnit_RootEM, VARIANT_LENGTH },
   { STR_WITH_LEN("mm"), eCSSUnit_Millimeter, VARIANT_LENGTH },
-  { STR_WITH_LEN("mozmm"), eCSSUnit_PhysicalMillimeter, VARIANT_LENGTH },
   { STR_WITH_LEN("vw"), eCSSUnit_ViewportWidth, VARIANT_LENGTH },
   { STR_WITH_LEN("vh"), eCSSUnit_ViewportHeight, VARIANT_LENGTH },
   { STR_WITH_LEN("vmin"), eCSSUnit_ViewportMin, VARIANT_LENGTH },
