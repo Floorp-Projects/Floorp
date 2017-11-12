@@ -345,8 +345,23 @@ public:
                                                  nsAtom* aAttribute = nullptr,
                                                  const nsAString* aValue =
                                                  nullptr);
-  nsIContent* SplitNode(nsIContent& aNode, int32_t aOffset,
-                        ErrorResult& aResult);
+
+  /**
+   * SplitNode() creates a transaction to create a new node (left node)
+   * identical to an existing node (right node), and split the contents
+   * between the same point in both nodes, then, execute the transaction.
+   *
+   * @param aStartOfRightNode   The point to split.  Its container will be
+   *                            the right node, i.e., become the new node's
+   *                            next sibling.  And the point will be start
+   *                            of the right node.
+   * @param aError              If succeed, returns no error.  Otherwise, an
+   *                            error.
+   */
+  already_AddRefed<nsIContent>
+  SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
+            ErrorResult& aResult);
+
   nsresult JoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
   nsresult MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset);
 
@@ -538,8 +553,20 @@ protected:
     CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData, uint32_t aOffset,
                                 EDirection aDirection);
 
+  /**
+   * CreateTxnForSplitNode() creates a transaction to create a new node
+   * (left node) identical to an existing node (right node), and split the
+   * contents between the same point in both nodes.
+   *
+   * @param aStartOfRightNode   The point to split.  Its container will be
+   *                            the right node, i.e., become the new node's
+   *                            next sibling.  And the point will be start
+   *                            of the right node.
+   * @return                    The new transaction to split the container of
+   *                            aStartOfRightNode.
+   */
   already_AddRefed<SplitNodeTransaction>
-    CreateTxnForSplitNode(nsIContent& aNode, uint32_t aOffset);
+    CreateTxnForSplitNode(const EditorRawDOMPoint& aStartOfRightNode);
 
   already_AddRefed<JoinNodeTransaction>
     CreateTxnForJoinNode(nsINode& aLeftNode, nsINode& aRightNode);
