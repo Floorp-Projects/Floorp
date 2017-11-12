@@ -248,6 +248,11 @@ class nsHtml5Parser final : public nsIParser,
       return mStreamListener->GetDelegate();
     }
 
+    void PermanentlyUndefineInsertionPoint()
+    {
+      mInsertionPointPermanentlyUndefined = true;
+    }
+
     /**
      * Parse until pending data is exhausted or a script blocks the parser
      */
@@ -293,6 +298,20 @@ class nsHtml5Parser final : public nsIParser,
     bool                          mDocumentClosed;
 
     bool                          mInDocumentWrite;
+
+    /**
+     * This is set when the tokenizer has seen EOF. The purpose is to
+     * keep the insertion point undefined between the time the
+     * parser has reached the point where it can't accept more input
+     * and the time the document's mParser is set to nullptr.
+     * Scripts can run during this time period due to an update
+     * batch ending and due to various end-of-parse events firing.
+     * (Setting mParser on the document to nullptr at the point
+     * where this flag gets set to true would break things that for
+     * legacy reasons assume that mParser on the document stays
+     * non-null though the end-of-parse events.)
+     */
+    bool mInsertionPointPermanentlyUndefined;
 
     // Portable parser objects
     /**
