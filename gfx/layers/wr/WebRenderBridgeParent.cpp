@@ -104,14 +104,13 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 void
 gecko_profiler_register_thread(const char* name)
 {
-  char stackTop;
-  profiler_register_thread(name, &stackTop);
+  PROFILER_REGISTER_THREAD(name);
 }
 
 void
 gecko_profiler_unregister_thread()
 {
-  profiler_unregister_thread();
+  PROFILER_UNREGISTER_THREAD();
 }
 
 namespace mozilla {
