@@ -95,7 +95,7 @@ public:
   nsExpirationState mState;
 
   // Previous scale due to the CSS transform property.
-  Maybe<gfxSize> mPreviousTransformScale;
+  Maybe<Size> mPreviousTransformScale;
 
   // The scroll frame during for which we most recently received a call to
   // NotifyAnimatedFromScrollHandler.
@@ -275,7 +275,7 @@ IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame, LayerActivity* aActivity)
     return;
   }
 
-  gfxSize scale = ThebesMatrix(transform2D).ScaleFactors(true);
+  Size scale = transform2D.ScaleFactors(true);
   if (aActivity->mPreviousTransformScale == Some(scale)) {
     return;  // Nothing changed.
   }
