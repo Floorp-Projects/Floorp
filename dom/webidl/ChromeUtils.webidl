@@ -294,6 +294,13 @@ partial namespace ChromeUtils {
    */
   [Throws]
   void defineModuleGetter(object target, DOMString id, DOMString resourceURI);
+
+  /**
+   * Returns the scripted location of the first ancestor stack frame with a
+   * principal which is subsumed by the given principal. If no such frame
+   * exists on the call stack, returns null.
+   */
+  object? getCallerLocation(Principal principal);
 };
 
 /**
