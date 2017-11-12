@@ -3497,7 +3497,6 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
   // or whatever is approriate.  Wohoo!
 
   uint32_t listCount = arrayOfNodes.Length();
-  nsCOMPtr<nsINode> curParent;
   nsCOMPtr<Element> curList, prevListItem;
 
   for (uint32_t i = 0; i < listCount; i++) {
@@ -3506,8 +3505,6 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
     NS_ENSURE_STATE(arrayOfNodes[i]->IsContent());
     OwningNonNull<nsIContent> curNode = *arrayOfNodes[i]->AsContent();
     nsCOMPtr<nsIContent> curChild(curNode);
-    int32_t offset;
-    curParent = EditorBase::GetNodeLocation(curNode, &offset);
 
     // make sure we don't assemble content that is in different table cells
     // into the same list.  respect table cell boundaries when listifying.
@@ -3558,22 +3555,31 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
       continue;
     }
 
+    EditorRawDOMPoint atCurNode(curNode);
+    if (NS_WARN_IF(!atCurNode.IsSet())) {
+      return NS_ERROR_FAILURE;
+    }
+    MOZ_ASSERT(atCurNode.IsSetAndValid());
     if (HTMLEditUtils::IsListItem(curNode)) {
       NS_ENSURE_STATE(mHTMLEditor);
-      if (!curParent->IsHTMLElement(listType)) {
+      if (!atCurNode.Container()->IsHTMLElement(listType)) {
         // list item is in wrong type of list. if we don't have a curList,
         // split the old list and make a new list of correct type.
         if (!curList || EditorUtils::IsDescendantOf(*curNode, *curList)) {
           NS_ENSURE_STATE(mHTMLEditor);
-          NS_ENSURE_STATE(curParent->IsContent());
-          ErrorResult rv;
-          nsCOMPtr<nsIContent> splitNode =
-            mHTMLEditor->SplitNode(*curParent->AsContent(), offset, rv);
-          NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
-          newBlock = splitNode ? splitNode->AsElement() : nullptr;
+          if (NS_WARN_IF(!atCurNode.Container()->IsContent())) {
+            return NS_ERROR_FAILURE;
+          }
+          ErrorResult error;
+          nsCOMPtr<nsIContent> newLeftNode =
+            mHTMLEditor->SplitNode(atCurNode, error);
+          if (NS_WARN_IF(error.Failed())) {
+            return error.StealNSResult();
+          }
+          newBlock = newLeftNode ? newLeftNode->AsElement() : nullptr;
           NS_ENSURE_STATE(mHTMLEditor);
-          EditorRawDOMPoint atCurParent(curParent);
-          curList = mHTMLEditor->CreateNode(listType, atCurParent);
+          EditorRawDOMPoint atParentOfCurNode(atCurNode.Container());
+          curList = mHTMLEditor->CreateNode(listType, atParentOfCurNode);
           NS_ENSURE_STATE(curList);
         }
         // move list item to new list
@@ -3592,8 +3598,8 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
         // item is in right type of list.  But we might still have to move it.
         // and we might need to convert list item types.
         if (!curList) {
-          curList = curParent->AsElement();
-        } else if (curParent != curList) {
+          curList = atCurNode.Container()->AsElement();
+        } else if (atCurNode.Container() != curList) {
           // move list item to new list
           NS_ENSURE_STATE(mHTMLEditor);
           rv = mHTMLEditor->MoveNode(curNode, curList, -1);
@@ -3639,7 +3645,9 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
 
     // need to make a list to put things in if we haven't already,
     if (!curList) {
+      nsCOMPtr<nsINode> curParent(atCurNode.Container());
       nsCOMPtr<nsIContent> curChild(curNode);
+      int32_t offset = atCurNode.Offset();
       rv = SplitAsNeeded(listType, curParent, offset,
                          address_of(curChild));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -3650,6 +3658,10 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
       mNewBlock = curList;
       // curList is now the correct thing to put curNode in
       prevListItem = nullptr;
+
+      // atCurChild is now referring the right node with mOffset but
+      // referring the left node with mRef.  So, invalidate it now.
+      atCurNode.Clear();
     }
 
     // if curNode isn't a list item, we must wrap it in one
@@ -6031,31 +6043,32 @@ HTMLEditRules::GetNodesForOperation(
   NS_ENSURE_STATE(mHTMLEditor);
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
-  int32_t rangeCount = aArrayOfRanges.Length();
   if (aTouchContent == TouchContent::yes) {
     // Split text nodes. This is necessary, since GetPromotedPoint() may return a
     // range ending in a text node in case where part of a pre-formatted
     // elements needs to be moved.
-    for (int32_t i = 0; i < rangeCount; i++) {
-      RefPtr<nsRange> r = aArrayOfRanges[i];
-      nsCOMPtr<nsINode> endContainer = r->GetEndContainer();
-      if (!endContainer->IsNodeOfType(nsINode::eTEXT)) {
+    for (RefPtr<nsRange>& range : aArrayOfRanges) {
+      EditorDOMPoint atEnd(range->EndRef());
+      if (NS_WARN_IF(!atEnd.IsSet()) ||
+          !atEnd.Container()->IsNodeOfType(nsINode::eTEXT)) {
         continue;
       }
-      int32_t offset = r->EndOffset();
 
-      if (0 < offset &&
-          offset < static_cast<int32_t>(endContainer->Length())) {
+      if (!atEnd.IsStartOfContainer() && !atEnd.IsEndOfContainer()) {
         // Split the text node.
-        nsCOMPtr<nsIDOMNode> tempNode;
-        nsresult rv = htmlEditor->SplitNode(endContainer->AsDOMNode(), offset,
-                                            getter_AddRefs(tempNode));
-        NS_ENSURE_SUCCESS(rv, rv);
+        ErrorResult error;
+        nsCOMPtr<nsIContent> newLeftNode =
+          htmlEditor->SplitNode(atEnd.AsRaw(), error);
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
+        }
 
         // Correct the range.
         // The new end parent becomes the parent node of the text.
-        nsCOMPtr<nsIContent> newParent = endContainer->GetParent();
-        r->SetEnd(newParent, newParent->IndexOf(endContainer));
+        // XXX We want nsRange::SetEnd(const RawRangeBoundary&)
+        EditorRawDOMPoint atContainerOfSplitNode(atEnd.Container());
+        range->SetEnd(atContainerOfSplitNode.Container(),
+                      atContainerOfSplitNode.Offset());
       }
     }
   }
@@ -6065,13 +6078,13 @@ HTMLEditRules::GetNodesForOperation(
 
   if (aTouchContent == TouchContent::yes) {
     nsTArray<OwningNonNull<RangeItem>> rangeItemArray;
-    rangeItemArray.AppendElements(rangeCount);
+    rangeItemArray.AppendElements(aArrayOfRanges.Length());
 
     // First register ranges for special editor gravity
-    for (int32_t i = 0; i < rangeCount; i++) {
-      rangeItemArray[i] = new RangeItem();
-      rangeItemArray[i]->StoreRange(aArrayOfRanges[0]);
-      htmlEditor->mRangeUpdater.RegisterRangeItem(rangeItemArray[i]);
+    for (auto& rangeItem : rangeItemArray) {
+      rangeItem = new RangeItem();
+      rangeItem->StoreRange(aArrayOfRanges[0]);
+      htmlEditor->mRangeUpdater.RegisterRangeItem(rangeItem);
       aArrayOfRanges.RemoveElementAt(0);
     }
     // Now bust up inlines.
@@ -6756,10 +6769,7 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
   bool splitAfterNewBR = false;
   nsCOMPtr<nsIContent> brNode;
 
-  // Point to split aParentDivOrP.
-  // XXX We should use EditorDOMPoint.
-  nsCOMPtr<nsINode> containerAtSplitPoint = atStartOfSelection.Container();
-  int32_t offsetAtSplitPoint = atStartOfSelection.Offset();
+  EditorDOMPoint pointToSplitParentDivOrP(atStartOfSelection);
 
   EditorRawDOMPoint pointToInsertBR;
   if (doesCRCreateNewP &&
@@ -6792,18 +6802,18 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
       }
     } else {
       if (doesCRCreateNewP) {
-        ErrorResult errorResult;
-        containerAtSplitPoint =
-          htmlEditor->SplitNode(*containerAtSplitPoint->AsContent(),
-                                offsetAtSplitPoint, errorResult);
-        if (NS_WARN_IF(errorResult.Failed())) {
-          return EditActionResult(errorResult.StealNSResult());
+        ErrorResult error;
+        nsCOMPtr<nsIContent> newLeftDivOrP =
+          htmlEditor->SplitNode(pointToSplitParentDivOrP.AsRaw(), error);
+        if (NS_WARN_IF(error.Failed())) {
+          return EditActionResult(error.StealNSResult());
         }
+        pointToSplitParentDivOrP.Set(newLeftDivOrP, newLeftDivOrP->Length());
       }
 
       // We need to put new <br> after the left node if given node was split
       // above.
-      pointToInsertBR.Set(containerAtSplitPoint);
+      pointToInsertBR.Set(pointToSplitParentDivOrP.Container());
       DebugOnly<bool> advanced = pointToInsertBR.AdvanceOffset();
       NS_WARNING_ASSERTION(advanced,
         "Failed to advance offset to after the container of selection start");
@@ -6844,13 +6854,16 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
                                   pointToInsertBR.Offset());
     if (splitAfterNewBR) {
       // We split the parent after the br we've just inserted.
-      containerAtSplitPoint = pointToInsertBR.Container();
-      offsetAtSplitPoint = pointToInsertBR.Offset() + 1;
+      pointToSplitParentDivOrP.Set(brNode);
+      DebugOnly<bool> advanced = pointToSplitParentDivOrP.AdvanceOffset();
+      NS_WARNING_ASSERTION(advanced,
+        "Failed to advance offset after the new <br>");
     }
   }
   EditActionResult result(
     SplitParagraph(aSelection, aParentDivOrP, brNode,
-                   *containerAtSplitPoint, offsetAtSplitPoint));
+                   *pointToSplitParentDivOrP.Container(),
+                   pointToSplitParentDivOrP.Offset()));
   result.MarkAsHandled();
   if (NS_WARN_IF(result.Failed())) {
     return result;
@@ -6941,32 +6954,36 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
   // Get the item parent and the active editing host.
   nsCOMPtr<Element> root = htmlEditor->GetActiveEditingHost();
 
-  nsCOMPtr<Element> list = aListItem.GetParentElement();
-  int32_t itemOffset = list ? list->IndexOf(&aListItem) : -1;
-
   // If we are in an empty item, then we want to pop up out of the list, but
   // only if prefs say it's okay and if the parent isn't the active editing
   // host.
   bool isEmpty;
   nsresult rv = IsEmptyBlock(aListItem, &isEmpty, MozBRCounts::no);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (isEmpty && root != list && mReturnInEmptyLIKillsList) {
-    // Get the list offset now -- before we might eventually split the list
-    nsCOMPtr<nsINode> listParent = list->GetParentNode();
-    int32_t offset = listParent ? listParent->IndexOf(list) : -1;
-
+  if (isEmpty && root != aListItem.GetParentElement() &&
+      mReturnInEmptyLIKillsList) {
+    nsCOMPtr<nsIContent> leftListNode = aListItem.GetParent();
     // Are we the last list item in the list?
     if (!htmlEditor->IsLastEditableChild(&aListItem)) {
       // We need to split the list!
-      ErrorResult rv;
-      htmlEditor->SplitNode(*list, itemOffset, rv);
-      NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
+      EditorRawDOMPoint atListItem(&aListItem);
+      ErrorResult error;
+      leftListNode = htmlEditor->SplitNode(atListItem, error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
     }
 
     // Are we in a sublist?
-    if (HTMLEditUtils::IsList(listParent)) {
+    EditorRawDOMPoint atNextSiblingOfLeftList(leftListNode);
+    DebugOnly<bool> advanced = atNextSiblingOfLeftList.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced,
+      "Failed to advance offset after the right list node");
+    if (HTMLEditUtils::IsList(atNextSiblingOfLeftList.Container())) {
       // If so, move item out of this list and into the grandparent list
-      rv = htmlEditor->MoveNode(&aListItem, listParent, offset + 1);
+      rv = htmlEditor->MoveNode(&aListItem,
+                                atNextSiblingOfLeftList.Container(),
+                                atNextSiblingOfLeftList.Offset());
       NS_ENSURE_SUCCESS(rv, rv);
       rv = aSelection.Collapse(&aListItem, 0);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -6978,11 +6995,10 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
       // Time to insert a paragraph
       nsAtom& paraAtom = DefaultParagraphSeparator();
       // We want a wrapper even if we separate with <br>
-      EditorRawDOMPoint atNextListItem(listParent, offset + 1);
       RefPtr<Element> pNode =
         htmlEditor->CreateNode(&paraAtom == nsGkAtoms::br ?
                                  nsGkAtoms::p : &paraAtom,
-                               atNextListItem);
+                               atNextSiblingOfLeftList);
       NS_ENSURE_STATE(pNode);
 
       // Append a <br> to it
@@ -8343,47 +8359,67 @@ HTMLEditRules::PopListItem(nsIContent& aListItem,
   nsCOMPtr<nsIContent> kungFuDeathGrip(&aListItem);
   Unused << kungFuDeathGrip;
 
-  nsCOMPtr<nsINode> curParent = aListItem.GetParentNode();
-  if (NS_WARN_IF(!curParent)) {
-    return NS_ERROR_FAILURE;
-  }
-  int32_t offset = curParent->IndexOf(&aListItem);
 
-  if (!HTMLEditUtils::IsListItem(&aListItem)) {
+  if (NS_WARN_IF(!mHTMLEditor) ||
+      NS_WARN_IF(!aListItem.GetParent()) ||
+      NS_WARN_IF(!aListItem.GetParent()->GetParentNode()) ||
+      !HTMLEditUtils::IsListItem(&aListItem)) {
     return NS_ERROR_FAILURE;
   }
 
   // if it's first or last list item, don't need to split the list
   // otherwise we do.
-  nsCOMPtr<nsINode> curParPar = curParent->GetParentNode();
-  int32_t parOffset = curParPar ? curParPar->IndexOf(curParent) : -1;
-
-  NS_ENSURE_STATE(mHTMLEditor);
   bool bIsFirstListItem = mHTMLEditor->IsFirstEditableChild(&aListItem);
-
-  NS_ENSURE_STATE(mHTMLEditor);
+  MOZ_ASSERT(mHTMLEditor);
   bool bIsLastListItem = mHTMLEditor->IsLastEditableChild(&aListItem);
+  MOZ_ASSERT(mHTMLEditor);
 
+  nsCOMPtr<nsIContent> leftListNode = aListItem.GetParent();
   if (!bIsFirstListItem && !bIsLastListItem) {
+    if (NS_WARN_IF(!mHTMLEditor)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    EditorDOMPoint atListItem(&aListItem);
+    if (NS_WARN_IF(!atListItem.IsSet())) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    MOZ_ASSERT(atListItem.IsSetAndValid());
+
     // split the list
-    ErrorResult rv;
-    NS_ENSURE_STATE(mHTMLEditor);
-    mHTMLEditor->SplitNode(*curParent->AsContent(), offset, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
+    ErrorResult error;
+    leftListNode = mHTMLEditor->SplitNode(atListItem.AsRaw(), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    if (NS_WARN_IF(!mHTMLEditor)) {
+      return NS_ERROR_FAILURE;
     }
   }
 
+  // In most cases, insert the list item into the new left list node..
+  EditorDOMPoint pointToInsertListItem(leftListNode);
+  if (NS_WARN_IF(!pointToInsertListItem.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  MOZ_ASSERT(pointToInsertListItem.IsSetAndValid());
+
+  // But when the list item was the first child of the right list, it should
+  // be inserted into the next sibling of the list.  This allows user to hit
+  // Enter twice at a list item breaks the parent list node.
   if (!bIsFirstListItem) {
-    parOffset++;
+    DebugOnly<bool> advanced = pointToInsertListItem.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced,
+      "Failed to advance offset to right list node");
   }
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsresult rv = mHTMLEditor->MoveNode(&aListItem, curParPar, parOffset);
+  nsresult rv =
+    mHTMLEditor->MoveNode(&aListItem, pointToInsertListItem.Container(),
+                          pointToInsertListItem.Offset());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // unwrap list item contents if they are no longer in a list
-  if (!HTMLEditUtils::IsList(curParPar) &&
+  if (!HTMLEditUtils::IsList(pointToInsertListItem.Container()) &&
       HTMLEditUtils::IsListItem(&aListItem)) {
     NS_ENSURE_STATE(mHTMLEditor);
     rv = mHTMLEditor->RemoveBlockContainer(*aListItem.AsElement());

@@ -285,37 +285,49 @@ HTMLEditor::SetInlinePropertyOnTextNode(Text& aText,
     return NS_OK;
   }
 
-  // Do we need to split the text node?
-  ErrorResult rv;
-  nsCOMPtr<nsIContent> text = &aText;
-  if (uint32_t(aEndOffset) != aText.Length()) {
+  // Make the range an independent node.
+  nsCOMPtr<nsIContent> textNodeForTheRange = &aText;
+
+  // Split at the end of the range.
+  EditorRawDOMPoint atEnd(textNodeForTheRange, aEndOffset);
+  if (!atEnd.IsEndOfContainer()) {
     // We need to split off back of text node
-    text = SplitNode(*text, aEndOffset, rv);
-    NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
+    ErrorResult error;
+    textNodeForTheRange = SplitNode(atEnd, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
   }
 
-  if (aStartOffset) {
+  // Split at the start of the range.
+  EditorRawDOMPoint atStart(textNodeForTheRange, aStartOffset);
+  if (!atStart.IsStartOfContainer()) {
     // We need to split off front of text node
-    SplitNode(*text, aStartOffset, rv);
-    NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
+    ErrorResult error;
+    nsCOMPtr<nsIContent> newLeftNode = SplitNode(atStart, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    Unused << newLeftNode;
   }
 
   if (aAttribute) {
     // Look for siblings that are correct type of node
-    nsIContent* sibling = GetPriorHTMLSibling(text);
+    nsIContent* sibling = GetPriorHTMLSibling(textNodeForTheRange);
     if (IsSimpleModifiableNode(sibling, &aProperty, aAttribute, &aValue)) {
       // Previous sib is already right kind of inline node; slide this over
-      return MoveNode(text, sibling, -1);
+      return MoveNode(textNodeForTheRange, sibling, -1);
     }
-    sibling = GetNextHTMLSibling(text);
+    sibling = GetNextHTMLSibling(textNodeForTheRange);
     if (IsSimpleModifiableNode(sibling, &aProperty, aAttribute, &aValue)) {
       // Following sib is already right kind of inline node; slide this over
-      return MoveNode(text, sibling, 0);
+      return MoveNode(textNodeForTheRange, sibling, 0);
     }
   }
 
   // Reparent the node inside inline node with appropriate {attribute,value}
-  return SetInlinePropertyOnNode(*text, aProperty, aAttribute, aValue);
+  return SetInlinePropertyOnNode(*textNodeForTheRange,
+                                 aProperty, aAttribute, aValue);
 }
 
 nsresult
@@ -1436,47 +1448,58 @@ HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
     return NS_OK;
   }
 
-  OwningNonNull<nsIContent> node = aTextNode;
-
-  // Do we need to split the text node?
-
   // -1 is a magic value meaning to the end of node
   if (aEndOffset == -1) {
     aEndOffset = aTextNode.Length();
   }
 
-  ErrorResult rv;
-  if ((uint32_t)aEndOffset != aTextNode.Length()) {
+  // Make the range an independent node.
+  nsCOMPtr<nsIContent> textNodeForTheRange = &aTextNode;
+
+  // Split at the end of the range.
+  EditorRawDOMPoint atEnd(textNodeForTheRange, aEndOffset);
+  if (!atEnd.IsEndOfContainer()) {
     // We need to split off back of text node
-    node = SplitNode(node, aEndOffset, rv);
-    NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
+    ErrorResult error;
+    textNodeForTheRange = SplitNode(atEnd, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
   }
-  if (aStartOffset) {
+
+  // Split at the start of the range.
+  EditorRawDOMPoint atStart(textNodeForTheRange, aStartOffset);
+  if (!atStart.IsStartOfContainer()) {
     // We need to split off front of text node
-    SplitNode(node, aStartOffset, rv);
-    NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
+    ErrorResult error;
+    nsCOMPtr<nsIContent> newLeftNode = SplitNode(atStart, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    Unused << newLeftNode;
   }
 
   // Look for siblings that are correct type of node
   nsAtom* nodeType = aDir == FontSize::incr ? nsGkAtoms::big
                                              : nsGkAtoms::small;
-  nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(node);
+  nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(textNodeForTheRange);
   if (sibling && sibling->IsHTMLElement(nodeType)) {
     // Previous sib is already right kind of inline node; slide this over
-    nsresult rv = MoveNode(node, sibling, -1);
+    nsresult rv = MoveNode(textNodeForTheRange, sibling, -1);
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
-  sibling = GetNextHTMLSibling(node);
+  sibling = GetNextHTMLSibling(textNodeForTheRange);
   if (sibling && sibling->IsHTMLElement(nodeType)) {
     // Following sib is already right kind of inline node; slide this over
-    nsresult rv = MoveNode(node, sibling, 0);
+    nsresult rv = MoveNode(textNodeForTheRange, sibling, 0);
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
 
   // Else reparent the node inside font node with appropriate relative size
-  nsCOMPtr<Element> newElement = InsertContainerAbove(node, nodeType);
+  nsCOMPtr<Element> newElement =
+    InsertContainerAbove(textNodeForTheRange, nodeType);
   NS_ENSURE_STATE(newElement);
 
   return NS_OK;
