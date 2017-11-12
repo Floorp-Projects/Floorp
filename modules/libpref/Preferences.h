@@ -49,6 +49,12 @@ namespace dom {
 class PrefSetting;
 } // namespace dom
 
+enum class PrefValueKind
+{
+  Default,
+  User
+};
+
 class Preferences final
   : public nsIPrefService
   , public nsIObserver
