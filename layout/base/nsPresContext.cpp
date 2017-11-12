@@ -3095,6 +3095,14 @@ nsPresContext::AppUnitsToGfxUnits(nscoord aAppUnits) const
   return mDeviceContext->AppUnitsToGfxUnits(aAppUnits);
 }
 
+nscoord
+nsPresContext::PhysicalMillimetersToAppUnits(float aMM) const
+{
+  float inches = aMM / MM_PER_INCH_FLOAT;
+  return NSToCoordFloorClamped(
+      inches * float(DeviceContext()->AppUnitsPerPhysicalInch()));
+}
+
 bool
 nsPresContext::IsDeviceSizePageSize()
 {
