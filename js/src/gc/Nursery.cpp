@@ -673,9 +673,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     }
 
     // Resize the nursery.
-    startProfile(ProfileKey::Resize);
     maybeResizeNursery(reason);
-    endProfile(ProfileKey::Resize);
 
     // If we are promoting the nursery, or exhausted the store buffer with
     // pointers to nursery things, which will force a collection well before
