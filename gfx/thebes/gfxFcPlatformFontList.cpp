@@ -1435,12 +1435,40 @@ gfxFcPlatformFontList::InitFontListForPlatform()
         // or in an UpdateFontList message.
         auto& fontList = dom::ContentChild::GetSingleton()->SystemFontList();
 
+        // For fontconfig versions between 2.10.94 and 2.11.1 inclusive,
+        // we need to escape any leading space in the charset element,
+        // otherwise FcNameParse will fail. :(
+        //
+        // The bug was introduced on 2013-05-24 by
+        //   https://cgit.freedesktop.org/fontconfig/commit/?id=cd9b1033a68816a7acfbba1718ba0aa5888f6ec7
+        //   "Bug 64906 - FcNameParse() should ignore leading whitespace in parameters"
+        // because ignoring a leading space in the encoded value of charset
+        // causes erroneous decoding of the whole element.
+        // This first shipped in version 2.10.94, and was eventually fixed as
+        // a side-effect of switching to the "human-readable" representation of
+        // charsets on 2014-07-03 in
+        //   https://cgit.freedesktop.org/fontconfig/commit/?id=e708e97c351d3bc9f7030ef22ac2f007d5114730
+        //   "Change charset parse/unparse format to be human readable"
+        // (with a followup fix next day) which means a leading space is no
+        // longer significant. This fix landed after 2.11.1 had been shipped,
+        // so the first version tag without the bug is 2.11.91.
+        int fcVersion = FcGetVersion();
+        bool fcCharsetParseBug = fcVersion >= 21094 && fcVersion <= 21101;
+
         for (SystemFontListEntry& fle : fontList) {
             MOZ_ASSERT(fle.type() ==
                        SystemFontListEntry::Type::TFontPatternListEntry);
             FontPatternListEntry& fpe(fle);
+            nsCString& patternStr = fpe.pattern();
+            if (fcCharsetParseBug) {
+                int32_t index = patternStr.Find(":charset= ");
+                if (index != kNotFound) {
+                    // insert backslash after the =, before the space
+                    patternStr.Insert('\\', index + 9);
+                }
+            }
             FcPattern* pattern =
-                FcNameParse((const FcChar8*)fpe.pattern().get());
+                FcNameParse((const FcChar8*)patternStr.get());
             AddPatternToFontList(pattern, lastFamilyName, familyName,
                                  fontFamily, fpe.appFontFamily());
             FcPatternDestroy(pattern);
