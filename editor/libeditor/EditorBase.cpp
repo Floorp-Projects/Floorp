@@ -2876,8 +2876,11 @@ already_AddRefed<SplitNodeTransaction>
 EditorBase::CreateTxnForSplitNode(nsIContent& aNode,
                                   uint32_t aOffset)
 {
+  int32_t offset =
+    std::min(std::max(static_cast<int32_t>(aOffset), 0),
+             static_cast<int32_t>(aNode.Length()));
   RefPtr<SplitNodeTransaction> transaction =
-    new SplitNodeTransaction(*this, aNode, aOffset);
+    new SplitNodeTransaction(*this, EditorRawDOMPoint(&aNode, offset));
   return transaction.forget();
 }
 
