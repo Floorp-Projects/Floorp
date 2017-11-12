@@ -188,21 +188,38 @@ public:
     return result;
   }
 
-  // Setters of user values.
-  static nsresult SetBool(const char* aPref, bool aValue);
-  static nsresult SetInt(const char* aPref, int32_t aValue);
-  static nsresult SetUint(const char* aPref, uint32_t aValue)
+  // Value setters.
+  static nsresult SetBool(const char* aPrefName,
+                          bool aValue,
+                          PrefValueKind aKind = PrefValueKind::User);
+  static nsresult SetInt(const char* aPrefName,
+                         int32_t aValue,
+                         PrefValueKind aKind = PrefValueKind::User);
+  static nsresult SetUint(const char* aPrefName,
+                          uint32_t aValue,
+                          PrefValueKind aKind = PrefValueKind::User)
   {
-    return SetInt(aPref, static_cast<int32_t>(aValue));
+    return SetInt(aPrefName, static_cast<int32_t>(aValue), aKind);
   }
-  static nsresult SetFloat(const char* aPref, float aValue);
-  static nsresult SetCString(const char* aPref, const char* aValue);
-  static nsresult SetCString(const char* aPref, const nsACString& aValue);
-  static nsresult SetString(const char* aPref, const char16ptr_t aValue);
-  static nsresult SetString(const char* aPref, const nsAString& aValue);
-  static nsresult SetComplex(const char* aPref,
+  static nsresult SetFloat(const char* aPrefName,
+                           float aValue,
+                           PrefValueKind aKind = PrefValueKind::User);
+  static nsresult SetCString(const char* aPrefName,
+                             const char* aValue,
+                             PrefValueKind aKind = PrefValueKind::User);
+  static nsresult SetCString(const char* aPrefName,
+                             const nsACString& aValue,
+                             PrefValueKind aKind = PrefValueKind::User);
+  static nsresult SetString(const char* aPrefName,
+                            const char16ptr_t aValue,
+                            PrefValueKind aKind = PrefValueKind::User);
+  static nsresult SetString(const char* aPrefName,
+                            const nsAString& aValue,
+                            PrefValueKind aKind = PrefValueKind::User);
+  static nsresult SetComplex(const char* aPrefName,
                              const nsIID& aType,
-                             nsISupports* aValue);
+                             nsISupports* aValue,
+                             PrefValueKind aKind = PrefValueKind::User);
 
   // Clears user set pref.
   static nsresult ClearUser(const char* aPref);

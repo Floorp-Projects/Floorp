@@ -4617,66 +4617,82 @@ Preferences::GetComplex(const char* aPref, const nsIID& aType, void** aResult)
 }
 
 /* static */ nsresult
-Preferences::SetCString(const char* aPref, const char* aValue)
+Preferences::SetCString(const char* aPrefName,
+                        const char* aValue,
+                        PrefValueKind aKind)
 {
-  ENSURE_MAIN_PROCESS("SetCString", aPref);
+  ENSURE_MAIN_PROCESS("SetCString", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCStringPref(aPref, nsDependentCString(aValue), false);
+  return PREF_SetCStringPref(
+    aPrefName, nsDependentCString(aValue), aKind == PrefValueKind::Default);
 }
 
 /* static */ nsresult
-Preferences::SetCString(const char* aPref, const nsACString& aValue)
+Preferences::SetCString(const char* aPrefName,
+                        const nsACString& aValue,
+                        PrefValueKind aKind)
 {
-  ENSURE_MAIN_PROCESS("SetCString", aPref);
+  ENSURE_MAIN_PROCESS("SetCString", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCStringPref(aPref, aValue, false);
+  return PREF_SetCStringPref(
+    aPrefName, aValue, aKind == PrefValueKind::Default);
 }
 
 /* static */ nsresult
-Preferences::SetString(const char* aPref, const char16ptr_t aValue)
+Preferences::SetString(const char* aPrefName,
+                       const char16ptr_t aValue,
+                       PrefValueKind aKind)
 {
-  ENSURE_MAIN_PROCESS("SetString", aPref);
+  ENSURE_MAIN_PROCESS("SetString", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCStringPref(aPref, NS_ConvertUTF16toUTF8(aValue), false);
+  return PREF_SetCStringPref(
+    aPrefName, NS_ConvertUTF16toUTF8(aValue), aKind == PrefValueKind::Default);
 }
 
 /* static */ nsresult
-Preferences::SetString(const char* aPref, const nsAString& aValue)
+Preferences::SetString(const char* aPrefName,
+                       const nsAString& aValue,
+                       PrefValueKind aKind)
 {
-  ENSURE_MAIN_PROCESS("SetString", aPref);
+  ENSURE_MAIN_PROCESS("SetString", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCStringPref(aPref, NS_ConvertUTF16toUTF8(aValue), false);
+  return PREF_SetCStringPref(
+    aPrefName, NS_ConvertUTF16toUTF8(aValue), aKind == PrefValueKind::Default);
 }
 
 /* static */ nsresult
-Preferences::SetBool(const char* aPref, bool aValue)
+Preferences::SetBool(const char* aPrefName, bool aValue, PrefValueKind aKind)
 {
-  ENSURE_MAIN_PROCESS("SetBool", aPref);
+  ENSURE_MAIN_PROCESS("SetBool", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetBoolPref(aPref, aValue, false);
+  return PREF_SetBoolPref(aPrefName, aValue, aKind == PrefValueKind::Default);
 }
 
 /* static */ nsresult
-Preferences::SetInt(const char* aPref, int32_t aValue)
+Preferences::SetInt(const char* aPrefName, int32_t aValue, PrefValueKind aKind)
 {
-  ENSURE_MAIN_PROCESS("SetInt", aPref);
+  ENSURE_MAIN_PROCESS("SetInt", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetIntPref(aPref, aValue, false);
+  return PREF_SetIntPref(aPrefName, aValue, aKind == PrefValueKind::Default);
 }
 
 /* static */ nsresult
-Preferences::SetFloat(const char* aPref, float aValue)
+Preferences::SetFloat(const char* aPrefName, float aValue, PrefValueKind aKind)
 {
-  return SetCString(aPref, nsPrintfCString("%f", aValue).get());
+  return SetCString(aPrefName, nsPrintfCString("%f", aValue).get(), aKind);
 }
 
 /* static */ nsresult
-Preferences::SetComplex(const char* aPref,
+Preferences::SetComplex(const char* aPrefName,
                         const nsIID& aType,
-                        nsISupports* aValue)
+                        nsISupports* aValue,
+                        PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sPreferences->mRootBranch->SetComplexValue(aPref, aType, aValue);
+  nsIPrefBranch* branch = (aKind == PrefValueKind::Default)
+                            ? sPreferences->mDefaultRootBranch
+                            : sPreferences->mRootBranch;
+  return branch->SetComplexValue(aPrefName, aType, aValue);
 }
 
 /* static */ nsresult
