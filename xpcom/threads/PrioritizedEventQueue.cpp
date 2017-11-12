@@ -124,8 +124,10 @@ PrioritizedEventQueue<InnerQueueT>::SelectQueue(bool aUpdateState,
   bool normalPending = !mNormalQueue->IsEmpty(aProofOfLock);
   size_t inputCount = mInputQueue->Count(aProofOfLock);
 
-  if (mInputQueueState == STATE_ENABLED &&
-      mInputHandlingStartTime.IsNull() && inputCount > 0) {
+  if (aUpdateState &&
+      mInputQueueState == STATE_ENABLED &&
+      mInputHandlingStartTime.IsNull() &&
+      inputCount > 0) {
     mInputHandlingStartTime =
       InputEventStatistics::Get()
       .GetInputHandlingStartTime(inputCount);
@@ -156,6 +158,7 @@ PrioritizedEventQueue<InnerQueueT>::SelectQueue(bool aUpdateState,
     queue = EventPriority::High;
   } else if (inputCount > 0 && (mInputQueueState == STATE_FLUSHING ||
                                 (mInputQueueState == STATE_ENABLED &&
+                                 !mInputHandlingStartTime.IsNull() &&
                                  TimeStamp::Now() > mInputHandlingStartTime))) {
     queue = EventPriority::Input;
   } else if (normalPending) {
