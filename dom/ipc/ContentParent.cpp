@@ -1296,7 +1296,11 @@ ContentParent::Init()
       obs->AddObserver(this, sObserverTopics[i], false);
     }
   }
+
+  // Register ContentParent as an observer for changes to any pref whose prefix
+  // matches the empty string, i.e. all of them.
   Preferences::AddStrongObserver(this, "");
+
   if (obs) {
     nsAutoString cpId;
     cpId.AppendInt(static_cast<uint64_t>(this->ChildID()));
@@ -2773,14 +2777,14 @@ ContentParent::Observe(nsISupports* aSubject,
                       NS_LITERAL_STRING("-no-forward"))) {
       Unused << SendFlushMemory(nsDependentString(aData));
   }
-  // listening for remotePrefs...
   else if (!strcmp(aTopic, "nsPref:changed")) {
-    // Some prefs are not useful in the content process.
+    // A pref changed. If it's not on the blacklist, inform child processes.
 #define BLACKLIST_ENTRY(s) { s, (sizeof(s)/sizeof(char16_t)) - 1 }
     struct BlacklistEntry {
       const char16_t* mPrefBranch;
       size_t mLen;
     };
+    // These prefs are not useful in child processes.
     static const BlacklistEntry sContentPrefBranchBlacklist[] = {
       BLACKLIST_ENTRY(u"app.update.lastUpdateTime."),
       BLACKLIST_ENTRY(u"datareporting.policy."),

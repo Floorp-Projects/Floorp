@@ -289,12 +289,15 @@ public:
                                    const char* aPref,
                                    float aDefault = 0.0f);
 
-  // Used to synchronise preferences between chrome and content processes.
+  // When a content process is created these methods are used to pass prefs in
+  // bulk from the parent process.
   static void GetPreferences(InfallibleTArray<PrefSetting>* aPrefs);
+  static void SetInitPreferences(nsTArray<PrefSetting>* aPrefs);
+
+  // When a pref is changed in the parent process, these methods are used to
+  // pass the update to content processes.
   static void GetPreference(PrefSetting* aPref);
   static void SetPreference(const PrefSetting& aPref);
-
-  static void SetInitPreferences(nsTArray<PrefSetting>* aPrefs);
 
 #ifdef DEBUG
   static void SetInitPhase(pref_initPhase phase);
