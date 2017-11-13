@@ -616,6 +616,10 @@ ContentClientBasic::CreateBuffer(gfxContentType aType,
       gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aType));
   }
 
+  if (!drawTarget) {
+    return nullptr;
+  }
+
   return new DrawTargetRotatedBuffer(drawTarget, nullptr, aRect, IntPoint(0,0));
 }
 
