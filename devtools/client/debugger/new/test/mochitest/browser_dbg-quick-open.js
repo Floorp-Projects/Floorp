@@ -99,7 +99,7 @@ add_task(async function() {
   quickOpen(dbg, "#");
   is(resultCount(dbg), 1, "one variable result");
   const results = findAllElements(dbg, "resultItems");
-  results.forEach(result => is(result.textContent, "x13"));
+  results.forEach(result => is(result.textContent, "x:13"));
   await waitToClose(dbg);
 
   info("Testing goto line:column");
