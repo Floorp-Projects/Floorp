@@ -526,39 +526,31 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let { width, height } = this.zoomAdjustedDimensions;
 
       // How much points on each axis should be translated before scaling
-      let transX = (type === "scale-se" || type === "scale-ne" || type === "scale-e") ?
+      let transX = (type === "scale-se" || type === "scale-ne") ?
       minX / 100 * width : maxX / 100 * width;
-      let transY = (type === "scale-se" || type === "scale-sw" || type === "scale-s") ?
+      let transY = (type === "scale-se" || type === "scale-sw") ?
       minY / 100 * height : maxY / 100 * height;
 
       let { percentX, percentY } = this.convertPageCoordsToPercent(x, y);
       let { percentX: percentPageX,
           percentY: percentPageY } = this.convertPageCoordsToPercent(pageX, pageY);
       // distance from original click to current mouse position, in %
-      let distanceX = (type === "scale-se" || type === "scale-ne" || type === "scale-e") ?
+      let distanceX = (type === "scale-se" || type === "scale-ne") ?
       percentPageX - percentX : percentX - percentPageX;
-      let distanceY = (type === "scale-se" || type === "scale-sw" || type === "scale-s") ?
+      let distanceY = (type === "scale-se" || type === "scale-sw") ?
       percentPageY - percentY : percentY - percentPageY;
 
       // scale = 1 + proportion of distance to bounding box width/height of shape
       let scaleX = 1 + distanceX / (maxX - minX);
       let scaleY = 1 + distanceY / (maxY - minY);
       let scale = (scaleX + scaleY) / 2;
-      let axis = "xy";
-      if (type === "scale-e" || type === "scale-w") {
-        scale = scaleX;
-        axis = "x";
-      } else if (type === "scale-n" || type === "scale-s") {
-        scale = scaleY;
-        axis = "y";
-      }
 
       if (this.shapeType === "polygon") {
-        this._scalePolygon(pageX, pageY, transX, transY, scale, axis);
+        this._scalePolygon(pageX, pageY, transX, transY, scale);
       } else if (this.shapeType === "circle") {
         this._scaleCircle(pageX, pageY, transX, transY, scale);
       } else if (this.shapeType === "ellipse") {
-        this._scaleEllipse(pageX, pageY, transX, transY, scale, axis);
+        this._scaleEllipse(pageX, pageY, transX, transY, scale);
       } else if (this.shapeType === "inset") {
         this._scaleInset(pageX, pageY, transX, transY, scale);
       }
@@ -572,16 +564,15 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} transX the number of pixels to translate on the x axis before scaling
    * @param {Number} transY the number of pixels to translate on the y axis before scaling
    * @param {Number} scale the proportion to scale by
-   * @param {String} axis the axis to scale on. "x", "y", or "xy" for both.
    */
-  _scalePolygon(pageX, pageY, transX, transY, scale, axis) {
+  _scalePolygon(pageX, pageY, transX, transY, scale) {
     let { pointsInfo } = this[_dragging];
 
     let polygonDef = (this.fillRule) ? `${this.fillRule}, ` : "";
     polygonDef += pointsInfo.map(point => {
       let { unitX, unitY, valueX, valueY, ratioX, ratioY } = point;
       let [newX, newY] = scalePoint(valueX, valueY, transX * ratioX,
-                                    transY * ratioY, scale, axis);
+                                    transY * ratioY, scale);
       return `${newX}${unitX} ${newY}${unitY}`;
     }).join(", ");
     polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
@@ -622,14 +613,13 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} transX the number of pixels to translate on the x axis before scaling
    * @param {Number} transY the number of pixels to translate on the y axis before scaling
    * @param {Number} scale the proportion to scale by
-   * @param {String} axis the axis to scale on. "x", "y", or "xy" for both.
    */
-  _scaleEllipse(pageX, pageY, transX, transY, scale, axis) {
+  _scaleEllipse(pageX, pageY, transX, transY, scale) {
     let { unitX, unitY, unitRX, unitRY, valueX, valueY,
           ratioX, ratioY, ratioRX, ratioRY } = this[_dragging];
 
     let [newCx, newCy] = scalePoint(valueX, valueY, transX * ratioX,
-                                    transY * ratioY, scale, axis);
+                                    transY * ratioY, scale);
     // As part of scaling, the center is translated to be tangent to the lines y=0 & x=0.
     // To get the new radii, we scale the new center back to that point and get the
     // distances to the line x=0 and y=0.
@@ -1092,10 +1082,6 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         { pointName: "scale-ne", x: maxX, y: minY, cursor: "nesw-resize" },
         { pointName: "scale-sw", x: minX, y: maxY, cursor: "nesw-resize" },
         { pointName: "scale-nw", x: minX, y: minY, cursor: "nwse-resize" },
-        { pointName: "scale-n", x: centerX, y: minY, cursor: "ns-resize" },
-        { pointName: "scale-s", x: centerX, y: maxY, cursor: "ns-resize" },
-        { pointName: "scale-e", x: maxX, y: centerY, cursor: "ew-resize" },
-        { pointName: "scale-w", x: minX, y: centerY, cursor: "ew-resize" }
       ];
 
       for (let { pointName, x, y, cursor } of points) {
@@ -1240,20 +1226,13 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     let centerX = (minX + maxX) / 2;
     let centerY = (minY + maxY) / 2;
 
-    let points = [
+    const points = [
       { point: "translate", x: centerX, y: centerY },
       { point: "scale-se", x: maxX, y: maxY },
       { point: "scale-ne", x: maxX, y: minY },
       { point: "scale-sw", x: minX, y: maxY },
       { point: "scale-nw", x: minX, y: minY },
     ];
-
-    if (this.shapeType === "polygon" || this.shapeType === "ellipse") {
-      points.push({ point: "scale-n", x: centerX, y: minY },
-                  { point: "scale-s", x: centerX, y: maxY },
-                  { point: "scale-e", x: maxX, y: centerY },
-                  { point: "scale-w", x: minX, y: centerY });
-    }
 
     for (let { point, x, y } of points) {
       if (pageX >= x - clickRadiusX && pageX <= x + clickRadiusX &&
@@ -1900,9 +1879,6 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     let centerY = (minY + maxY) / 2;
     let markerPoints = [[centerX, centerY], [minX, minY],
                         [maxX, minY], [minX, maxY], [maxX, maxY]];
-    if (this.shapeType === "polygon" || this.shapeType === "ellipse") {
-      markerPoints.push([minX, centerY], [maxX, centerY], [centerX, minY], [centerX, maxY]);
-    }
     this._drawMarkers(markerPoints, width, height, zoom);
 
     if (this.shapeType === "polygon") {
