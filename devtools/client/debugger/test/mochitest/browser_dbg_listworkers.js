@@ -5,7 +5,7 @@ var WORKER2_URL = "code_listworkers-worker2.js";
 function test() {
   Task.spawn(function* () {
     DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+    DebuggerServer.registerAllActors();
 
     let client = new DebuggerClient(DebuggerServer.connectPipe());
     yield connect(client);

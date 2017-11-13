@@ -64,7 +64,7 @@ function getClient() {
   let deferred = defer();
 
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 
   let transport = DebuggerServer.connectPipe();
   let client = new DebuggerClient(transport);

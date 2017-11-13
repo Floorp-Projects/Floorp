@@ -249,7 +249,7 @@ var DebuggerServer = {
   },
 
   /**
-   * Register all type of actors. Only register the one that are not already
+   * Register different type of actors. Only register the one that are not already
    * registered.
    *
    * @param root boolean
@@ -267,13 +267,20 @@ var DebuggerServer = {
       this._addBrowserActors();
     }
 
-    if (browser || root) {
+    if (root) {
       this.registerModule("devtools/server/actors/webbrowser");
     }
 
-    if (browser || tab) {
+    if (tab) {
       this._addTabActors();
     }
+  },
+
+  /**
+   * Register all possible actors for this DebuggerServer.
+   */
+  registerAllActors() {
+    this.registerActors({ root: true, browser: true, tab: true });
   },
 
   /**

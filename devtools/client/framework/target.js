@@ -411,7 +411,8 @@ TabTarget.prototype = {
       // directly with actors living in the child process.
       // We also need browser actors for actor registry which enabled addons
       // to register custom actors.
-      DebuggerServer.registerActors({ root: true, browser: true, tab: false });
+      // TODO: the comment and implementation are out of sync here. See Bug 1420134.
+      DebuggerServer.registerAllActors();
 
       this._client = new DebuggerClient(DebuggerServer.connectPipe());
       // A local TabTarget will never perform chrome debugging.

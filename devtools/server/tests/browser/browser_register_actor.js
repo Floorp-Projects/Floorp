@@ -8,7 +8,7 @@ function test() {
   let actorURL = "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
 
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect()

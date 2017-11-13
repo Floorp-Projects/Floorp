@@ -11,7 +11,7 @@ function run_test() {
   let {EventLoopLagFront} = require("devtools/shared/fronts/eventlooplag");
 
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 
   // As seen in EventTracer.cpp
   let threshold = 20;
