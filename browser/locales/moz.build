@@ -6,6 +6,9 @@
 
 JAR_MANIFESTS += ['jar.mn']
 
+if CONFIG['MOZ_CRASHREPORTER']:
+    LOCALIZED_FILES += ['en-US/crashreporter/crashreporter-override.ini']
+
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Build Config")
 

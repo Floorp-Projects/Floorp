@@ -185,13 +185,6 @@ else
 endif
 endif
 
-ifndef IS_LANGPACK
-ifdef MOZ_CRASHREPORTER
-libs:: $(call MERGE_FILE,crashreporter/crashreporter-override.ini)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
-endif
-endif
-
 ident:
 	@printf 'fx_revision '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
