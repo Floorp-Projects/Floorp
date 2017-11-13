@@ -23,3 +23,14 @@ multilocale.script = 'gen_multilocale.py'
 FINAL_TARGET_FILES.res += [
     '!multilocale.json',
 ]
+
+if CONFIG['MOZ_CRASHREPORTER']:
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+        # TODO: fixing bug 1223748 should let us remove this special case
+        LOCALIZED_FILES['crashreporter.app'].Contents.Resources += [
+            'en-US/crashreporter/crashreporter.ini'
+        ]
+    else:
+        LOCALIZED_FILES += [
+            'en-US/crashreporter/crashreporter.ini'
+        ]
