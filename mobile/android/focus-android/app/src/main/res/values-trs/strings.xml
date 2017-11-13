@@ -31,9 +31,11 @@
   <string name="preference_dialog_title_search_engine">Riña nana\'uì\' yitïnjt</string>
   <string name="preference_category_privacy">Nitaj à\'go ni\'iaj sò\'</string>
   <string name="preference_privacy_block_ads">Si gâ\'nïnjt nej anûnsio</string>
+  <string name="preference_privacy_block_ads_summary">Hua dà\'aj nej sa dugune\' sitiô nan ni ga\'ue gini\'ìn nej si, si sô atuj</string>
   <string name="preference_privacy_block_analytics">Si gâ\'nïnjt nej blokeador analítiko</string>
   <string name="preference_privacy_block_analytics_summary">Si sunj huin nagi\'iaj chrej, nadigi\'ñunj daj unanj ma</string>
   <string name="preference_privacy_block_social">Si gâ\'nïnjt nej blokeador sosial</string>
+  <string name="preference_privacy_block_social_summary">Hua ni\'inj riña sitiô na da\' gini\'in si so\' àtuj ni digàn botûn da\' duyi\'ngo\'</string>
   <string name="preference_privacy_block_content">Si gâ\'nïnt a\'ngô nej sa ni\'iaj sa \'iát</string>
   <string name="preference_privacy_block_content_summary2">Si ganachunt man, ni gahuin ni si gi\'iaj sun hue\'e da\'aj pagina</string>
   <string name="preference_privacy_secure_mode">Dugumî sa achrûnt</string>
@@ -53,12 +55,35 @@
   <string name="preference_search_restore">Nagi\'iaj nakà nû nej sa nana\'uî\'t gà\' nikajt</string>
   <string name="preference_search_add2">Nachrun\' \'ngo sa huin ruhuô\' nanà\'uì\'</string>
   <string name="preference_search_remove_title">Nadure\' sa nana\'ui\'</string>
-  <string name="preference_search_remove">Nadure\'</string>
+  <string name="preference_search_remove">Guxūn</string>
   <string name="tutorial_search_manually_add">Nuta\' mu\'un\'</string>
   <string name="tutorial_search_title">Nutò\' a\'ngô sa ruguñu\'unj ñù\' nana\'uì\'</string>
+  <string name="tutorial_search_step1">1. Huij riña ayi\'ì sa nana\'uit.</string>
+  <string name="tutorial_search_step2">2. Ga\'ui\' ña nù sa nana\'uì\'.</string>
+  <string name="tutorial_search_step2_alternative">2. Guta\' ra\'at ña nūn sa nana\'ui\' si motor sa nana\'ui\'.</string>
+  <string name="tutorial_search_step3">3. Ga\'ui\' riña nūn da\'nga\' nagi\'iaj yachij, da\' nūtat sa nana\'uit.</string>
+  <string name="action_option_add_search_engine">Nutò\' sa nana\'uì\'</string>
+  <string name="tutorial_search_step3_alternative">3. Ga\'ui\' %1$s</string>
+  <string name="tutorial_search_step4">4. Si nitaj si ra\'nga\' nūn sā nagi\'iaj yàchij, ni ga\'uè nùta\' ma\'ant sa nana\'uit.</string>
+  <string name="tutorial_search_step4_alternative">4. Si nit si ra\'nga\' nū %1$s, ni ga\'uè nùta\' ma\'ant sa nana\'uit.</string>
+  <string name="tutorial_search_finish">GAYI\'I\'</string>
+  <string name="search_add_hint">3. Ga\'ui\' riña nūn da\'nga\' nagi\'iaj yachij, da\' nūtat sa nana\'uit.</string>
+  <string name="search_add_manually_name">Das dugu\'najt ma</string>
+  <string name="search_add_manually_name_hint">Si yugui sa nana\'ui\'</string>
+  <string name="search_add_manually_string">Ahuin si gahuin cadena gàrasunt</string>
+  <string name="search_add_manually_save">Na\'ninj sa\'</string>
+  <string name="search_add_manually_string_hint">Gachrun cadenâ garasunt da\' nana\'uit. Si nuhuij nī gachrû nuguan\'\' ruat nana\'uìt: %s.</string>
+  <string name="search_add_manually_example">Da\' gi\'ìat: example.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">Nutò\' sa nana\'uì\'</string>
+  <string name="search_add_confirmation">Ngà nata\' a\'ngo sa nakà da\' nana\'uì\'.</string>
+  <string name="search_add_error">Ni\'ìaj si hua hue\'è sa gachrut nī garahuè ñut</string>
   <string name="content_description_clear_input">Nadure\' sa duguatujt</string>
   <string name="content_description_dismiss_input">Dunaj man</string>
   <string name="content_description_erase">Narè\' nej nuguan\' garajsunt nga ganana\'uî\'t</string>
+  <string name="content_description_fab_expand">Nagi\'iaj gachrà\'</string>
+  <string name="content_description_tab_counter">Rakïj ñanj huā ni\'nïnj: %1$s</string>
+  <string name="content_description_open_tab">Na\'nïn rakïj ñanj</string>
+  <string name="content_description_close_tab">Narán rakïj ñanj</string>
   <string name="content_description_lock">Koneksiôn hua hue\'ê</string>
   <string name="accessibility_announcement_loading">Hìaj ayì\'ij</string>
   <string name="accessibility_announcement_loading_finished">Gayi\'ìj \'iaj sunj</string>
@@ -104,8 +129,16 @@
   <string name="contextmenu_image_share">duguachîn asi dusîjt ñadu\'ua</string>
   <string name="contextmenu_image_copy">Guxun\' dirección korreo da\' nachrun\' a\'ngô hiuj u</string>
   <string name="contextmenu_image_save">Dunaj ñadu\'ua</string>
+  <string name="contextmenu_open_in_new_tab">Na\'nïn\' riña a\'ngô rakïj ñanj nakàa</string>
   <string name="contextmenu_image_warning"><![CDATA["Nej ñadu\'ua nadunïnjt "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" Se si nare\'&#232;j"</b>" nga nadurê\'t %1$s nej sa gi\'iát nga gaché nunt."]]></string>
   <string name="firstrun_defaultbrowser_title">Nagi\'iaj nukuaj riña gache nun \'ngorïnt</string>
+  <string name="firstrun_defaultbrowser_text2">Ga’ue gan’ānj ñānt doj ngà riña aché nu huìt. Dure’ asi narán riña nej sa ga’ue gatū naga’nāj nej sa ahī màn ‘iát nī natsij nej diû huin ràn nej pâjina ngà nayi’nïn.</string>
+  <string name="firstrun_search_title">Sa nana’uî’t, si chrējt</string>
+  <string name="firstrun_search_text">Huā a’ngô sa nana’uî’ raj. Naguī a’ngô sa rugûñu’ūnj da’ nana’uì’t sa huin ruhuât riña configuración.</string>
+  <string name="firstrun_shortcut_title">Gachrūn nej acceso directo riña aga’ ayi’ì sinïnt</string>
+  <string name="firstrun_shortcut_text">Nanikàjt riña nej sitiô nihià’ ruhuât %1$s nanèt chre. Ma sa gi’iát huin sisī guru’man ra’ât riña tāj \"Nachrun riña aga’ gayi’ì\" riña menú %1$s.</string>
+  <string name="firstrun_privacy_title">Yitïnj gachē nun ‘ngōrïnt</string>
+  <string name="firstrun_privacy_text">Nachrūn %1$s da’ gahuin man nevegador garasūn yitïnjt nī ga’ue garasunt man da’ gachē nu ‘ngorïnt ngà na’nïnt a’ngô da’āj nej pâjina.</string>
   <string name="firstrun_close_button">Ngà nikà man an!</string>
   <string name="firstrun_skip_button">Si gi\'iaj guendât</string>
   <string name="firstrun_next_button">Ne\' ñaan</string>
@@ -113,4 +146,16 @@
   <string name="dialog_addtohomescreen_title">"Nachrun ma riña pantâya "</string>
   <string name="dialog_addtohomescreen_action_add">Nutà\'</string>
   <string name="dialog_addtohomescreen_action_cancel">Duyichin\'</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Nayi’nïnj riña gatū nikô’ nikāj ‘ngō sa dugumîn ñù’ nga aché nun’ sanī huā na’àj man</string>
+  <string name="dialog_opentab_title">Na\'nïn riña rakïj ñanj huin ruhuât</string>
+  <string name="dialog_opentab_action_open">Na\'nïn</string>
+  <string name="notification_browsing_session_channel_name">Sesión riña gachē nu huìt</string>
+  <string name="notification_browsing_session_channel_description">Nej notificación nī rugûñun’un da’ nadurê´t %1$s sesión ngà ‘ngō toke. Sê da guezâ na’nïnt riña app asi ni’iāj nùhuin si ‘iaj sun riña navegador hua ‘iát.</string>
+  <string name="tabs_tray_action_erase">Narè\' nej nuguan\' garajsunt nga ganana\'uî\'t</string>
+  <string name="download_firefox">Naduninj Firefox</string>
+  <string name="your_rights_content1">%1$s ‘ngō software chre nī sa huā nî’nïnj ï huin man giri Mozilla nī a’ngô nej duguî’ rugûñu’ūnj.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s huin guendâ gārasunt sanī da’uît gārayinat "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">si nugu&#224;n&#8217; Mozilla</a>" nī a’ngô nej nuguan’ nikāj nej sa huā nî’nïnj ïn."]]></string>
+  <string name="your_rights_content3"><![CDATA["Nitāj si â’nïnj fundación Mozilla ganè’ nej rasuun nīka nī ngà ‘ngō yiko’ li, dàj rû’ si yugui nej %1$s asi da’nga’ nīka, Firefox. Ga’ue narì’t doj nuguan’ a’min rayi’î "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">hi&#363;j nan</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["‘Ngō da’nga’ ga’ue natà’ guendâ %1$s nū man ngà a’ngô licencia huā chre "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">n&#299; codig&#244; hu&#257; n&#238;&#8217;n&#239;nj &#239;n</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s arâj sunj nej nuguan’ narikî Disconnect,Inc. dàj rû’ nej sun huā ninïïn "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" GNU &#8216;iaj Licencia Yum&#224;n&#8217; v3"</a>", nī nunj "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">hi&#363;j nan</a>.]]></string>
 </resources>

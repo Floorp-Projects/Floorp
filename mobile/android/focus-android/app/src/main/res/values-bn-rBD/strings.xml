@@ -43,6 +43,7 @@
   <string name="preference_mozilla_telemetry_summary">আরও জানুন</string>
   <string name="preference_privacy_notice">গোপনীয়তা নীতি</string>
   <string name="preference_about">%1$s সম্পর্কে</string>
+  <string name="preference_search_remove">অপসারণ</string>
   <string name="content_description_clear_input">ইনপুট পরিস্কার</string>
   <string name="content_description_dismiss_input">খারিজ</string>
   <string name="content_description_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
@@ -95,6 +96,7 @@
   <string name="contextmenu_image_save">ছবি সংরক্ষণ</string>
   <string name="contextmenu_open_in_new_tab">নতুন ট্যাবে লিঙ্ক খুলুন</string>
   <string name="firstrun_defaultbrowser_title">আপনার গোপনীয়তা কঠোর করুন</string>
+  <string name="firstrun_defaultbrowser_text2">ব্যাক্তিগত ব্রাউজিং কে আরেক উচ্চতায় নিয়ে যান। বিজ্ঞাপন আর অন্যান্য কনটেন্ট ব্লক করুন, যারা আপনাকে সকল ওয়েবসাইটে অনুসরণ করে বেড়ায় আর আপনার পেজ লোডিং টাইম অনেকগুন বাড়িয়ে দেয়।</string>
   <string name="firstrun_close_button">ঠিক আছে, বুঝতে পেরেছি!</string>
   <string name="firstrun_skip_button">উপেক্ষা</string>
   <string name="firstrun_next_button">পরবর্তী</string>
