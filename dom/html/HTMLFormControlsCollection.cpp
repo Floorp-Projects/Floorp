@@ -163,19 +163,6 @@ HTMLFormControlsCollection::GetLength(uint32_t* aLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLFormControlsCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  nsISupports* item = GetElementAt(aIndex);
-  if (!item) {
-    *aReturn = nullptr;
-
-    return NS_OK;
-  }
-
-  return CallQueryInterface(item, aReturn);
-}
-
 nsISupports*
 HTMLFormControlsCollection::NamedItemInternal(const nsAString& aName,
                                               bool aFlushContent)

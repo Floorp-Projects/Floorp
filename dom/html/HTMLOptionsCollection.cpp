@@ -201,19 +201,6 @@ HTMLOptionsCollection::SetSelectedIndex(int32_t aSelectedIndex,
   mSelect->SetSelectedIndex(aSelectedIndex, aError);
 }
 
-NS_IMETHODIMP
-HTMLOptionsCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  nsISupports* item = GetElementAt(aIndex);
-  if (!item) {
-    *aReturn = nullptr;
-
-    return NS_OK;
-  }
-
-  return CallQueryInterface(item, aReturn);
-}
-
 Element*
 HTMLOptionsCollection::GetElementAt(uint32_t aIndex)
 {

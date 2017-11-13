@@ -78,10 +78,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsBaseContentList)
   return nsCCUncollectableMarker::sGeneration && tmp->HasKnownLiveWrapper();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-#define NS_CONTENT_LIST_INTERFACES(_class)                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, nsINodeList)                             \
-    NS_INTERFACE_TABLE_ENTRY(_class, nsIDOMNodeList)
-
 // QueryInterface implementation for nsBaseContentList
 NS_INTERFACE_TABLE_HEAD(nsBaseContentList)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
