@@ -1,11 +1,9 @@
-setJitCompilerOption('wasm.test-mode', 1);
-
 wasmFullPassI64(`
     (module
         (global (mut i64) (i64.const 9970292656026947164))
         (func (export "get_global_0") (result i64) get_global 0)
 
-        (func (export "run") (result i64) (param i32)
+        (func $run (result i64) (param i32)
             i64.const 8692897571457488645
             i64.const 1028567229461950342
             i64.mul
@@ -19,4 +17,4 @@ wasmFullPassI64(`
             i64.div_u
         )
     )
-`, createI64(1));
+`, 1, {}, 'i32.const 0');

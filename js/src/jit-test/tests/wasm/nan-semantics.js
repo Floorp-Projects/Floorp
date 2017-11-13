@@ -121,9 +121,9 @@ function test(type, opcode, lhs_code, rhs_code) {
         (func $4 (param ${t}) (param ${t}) (result ${t}) (${t}.${op} (get_local 0) (get_local 1)))
     )`, [
         { type, func: '$1', expected: qnan_code },
-        { type, func: '$2', params: [lhs_code], expected: qnan_code },
-        { type, func: '$3', params: [rhs_code], expected: qnan_code },
-        { type, func: '$4', params: [lhs_code, rhs_code], expected: qnan_code },
+        { type, func: '$2', args: [lhs_code], expected: qnan_code },
+        { type, func: '$3', args: [rhs_code], expected: qnan_code },
+        { type, func: '$4', args: [lhs_code, rhs_code], expected: qnan_code },
     ]);
 }
 
@@ -171,5 +171,3 @@ test('f32', 'max', f32_zero, f32_snan_code);
 
 test('f64', 'max', f64_snan_code, f64_zero);
 test('f64', 'max', f64_zero, f64_snan_code);
-
-setJitCompilerOption('wasm.test-mode', 0);
