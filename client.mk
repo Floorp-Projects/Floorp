@@ -37,16 +37,6 @@ PYTHON ?= $(shell which python2.7 > /dev/null 2>&1 && echo python2.7 || echo pyt
 CONFIG_GUESS := $(shell $(TOPSRCDIR)/build/autoconf/config.guess)
 
 ####################################
-# Sanity checks
-
-# Windows checks.
-ifneq (,$(findstring mingw,$(CONFIG_GUESS)))
-
-# Set this for baseconfig.mk
-HOST_OS_ARCH=WINNT
-endif
-
-####################################
 # Load mozconfig Options
 
 # See build pages, http://www.mozilla.org/build/ for how to set up mozconfig.
@@ -115,9 +105,6 @@ ifndef MACH
 $(error client.mk must be used via `mach`. Try running \
 `./mach $(firstword $(MAKECMDGOALS) $(.DEFAULT_GOAL))`)
 endif
-
-# Include baseconfig.mk for its $(MAKE) validation.
-include $(TOPSRCDIR)/config/baseconfig.mk
 
 # Define mkdir
 include $(TOPSRCDIR)/config/makefiles/makeutils.mk
