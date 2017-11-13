@@ -261,15 +261,8 @@ var DebuggerServer = {
    * @param tab boolean
    *        Registers all the tab actors like console, script, ... all useful
    *        for debugging a target context.
-   * @param windowType string
-   *        "windowtype" attribute of the main chrome windows. Used by some
-   *        actors to retrieve them.
    */
-  registerActors({ root, browser, tab, windowType }) {
-    if (windowType) {
-      this.chromeWindowType = windowType;
-    }
-
+  registerActors({ root, browser, tab }) {
     if (browser) {
       this._addBrowserActors();
     }
