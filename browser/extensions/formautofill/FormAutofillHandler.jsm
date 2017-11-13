@@ -134,18 +134,28 @@ class FormAutofillSection {
     return this._validDetails.find(detail => detail.fieldName == fieldName);
   }
 
-  getFieldDetailsByElement(element) {
+  _getTargetSet(element) {
     let fieldDetail = this.getFieldDetailByElement(element);
     if (!fieldDetail) {
-      return [];
+      return null;
     }
     if (FormAutofillUtils.isAddressField(fieldDetail.fieldName)) {
-      return this.address.fieldDetails;
+      return this.address;
     }
     if (FormAutofillUtils.isCreditCardField(fieldDetail.fieldName)) {
-      return this.creditCard.fieldDetails;
+      return this.creditCard;
     }
-    return [];
+    return null;
+  }
+
+  getFieldDetailsByElement(element) {
+    let targetSet = this._getTargetSet(element);
+    return targetSet ? targetSet.fieldDetails : [];
+  }
+
+  getFilledRecordGUID(element) {
+    let targetSet = this._getTargetSet(element);
+    return targetSet ? targetSet.filledRecordGUID : null;
   }
 
   _getOneLineStreetAddress(address) {
@@ -335,7 +345,7 @@ class FormAutofillSection {
     if (!focusedDetail) {
       throw new Error("No fieldDetail for the focused input.");
     }
-    let targetSet;
+    let targetSet = this._getTargetSet(focusedInput);
     if (FormAutofillUtils.isCreditCardField(focusedDetail.fieldName)) {
       // When Master Password is enabled by users, the decryption process
       // should prompt Master Password dialog to get the decrypted credit
@@ -351,11 +361,6 @@ class FormAutofillSection {
 
         profile["cc-number"] = decrypted;
       }
-      targetSet = this.creditCard;
-    } else if (FormAutofillUtils.isAddressField(focusedDetail.fieldName)) {
-      targetSet = this.address;
-    } else {
-      throw new Error("Unknown form fields");
     }
 
     log.debug("profile in autofillFields:", profile);
@@ -524,12 +529,7 @@ class FormAutofillSection {
   clearFieldState(focusedInput) {
     let fieldDetail = this.getFieldDetailByElement(focusedInput);
     this.changeFieldState(fieldDetail, "NORMAL");
-    let targetSet;
-    if (FormAutofillUtils.isAddressField(focusedInput)) {
-      targetSet = this.address;
-    } else if (FormAutofillUtils.isCreditCardField(focusedInput)) {
-      targetSet = this.creditCard;
-    }
+    let targetSet = this._getTargetSet(focusedInput);
 
     if (!targetSet.fieldDetails.some(detail => detail.state == "AUTO_FILLED")) {
       targetSet.filledRecordGUID = null;
@@ -742,6 +742,8 @@ class FormAutofillHandler {
 
     this.sections = [];
 
+    this._sectionCache = new WeakMap();
+
     /**
      * Array of collected data about relevant form fields.  Each item is an object
      * storing the identifying details of the field and a reference to the
@@ -846,24 +848,15 @@ class FormAutofillHandler {
     return allValidDetails;
   }
 
-  getFieldDetailByElement(element) {
-    return this.fieldDetails.find(
-      detail => detail.elementWeakRef.get() == element
-    );
-  }
-
   getSectionByElement(element) {
-    return this.sections.find(
-      section => section.getFieldDetailByElement(element)
-    );
-  }
-
-  getFieldDetailsByElement(element) {
-    let fieldDetail = this.getFieldDetailByElement(element);
-    if (!fieldDetail) {
-      return [];
+    let section = this._sectionCache.get(element);
+    if (!section) {
+      section = this.sections.find(
+        s => s.getFieldDetailByElement(element)
+      );
+      this._sectionCache.set(element, section);
     }
-    return this.getSectionByElement(element).getFieldDetailsByElement(element);
+    return section;
   }
 
   getAllFieldNames(focusedInput) {
@@ -879,6 +872,11 @@ class FormAutofillHandler {
   clearPreviewedFormFields(focusedInput) {
     let section = this.getSectionByElement(focusedInput);
     section.clearPreviewedFormFields(focusedInput);
+  }
+
+  getFilledRecordGUID(focusedInput) {
+    let section = this.getSectionByElement(focusedInput);
+    return section.getFilledRecordGUID(focusedInput);
   }
 
   getAdaptedProfiles(originalProfiles, focusedInput) {

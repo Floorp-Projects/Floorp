@@ -102,9 +102,8 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let info = FormAutofillContent.getInputDetails(focusedInput);
     let isAddressField = FormAutofillUtils.isAddressField(info.fieldName);
     let handler = FormAutofillContent.getFormHandler(focusedInput);
-    let section = handler.getSectionByElement(focusedInput);
-    let allFieldNames = section.allFieldNames;
-    let filledRecordGUID = isAddressField ? section.address.filledRecordGUID : section.creditCard.filledRecordGUID;
+    let allFieldNames = handler.getAllFieldNames(focusedInput);
+    let filledRecordGUID = handler.getFilledRecordGUID(focusedInput);
     let searchPermitted = isAddressField ?
                           FormAutofillUtils.isAutofillAddressesEnabled :
                           FormAutofillUtils.isAutofillCreditCardsEnabled;
