@@ -602,6 +602,7 @@ var PrintUtils = {
       if (message.data.failed) {
         // Something went wrong while putting the document into print preview
         // mode. Bail out.
+        this._ppBrowsers.clear();
         this._listener.onEnter();
         this._listener.onExit();
         return;
