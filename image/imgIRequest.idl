@@ -88,7 +88,7 @@ interface imgIRequest : nsIRequest
   /**
    * The URI of the resource we ended up loading after all redirects, etc.
    */
-  readonly attribute nsIURI currentURI;
+  readonly attribute nsIURI finalURI;
 
   readonly attribute imgINotificationObserver notificationObserver;
 

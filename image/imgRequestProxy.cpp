@@ -745,13 +745,13 @@ imgRequestProxy::GetURI(nsIURI** aURI)
 }
 
 nsresult
-imgRequestProxy::GetCurrentURI(nsIURI** aURI)
+imgRequestProxy::GetFinalURI(nsIURI** aURI)
 {
   if (!GetOwner()) {
     return NS_ERROR_FAILURE;
   }
 
-  return GetOwner()->GetCurrentURI(aURI);
+  return GetOwner()->GetFinalURI(aURI);
 }
 
 nsresult
