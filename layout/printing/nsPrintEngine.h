@@ -279,6 +279,7 @@ protected:
   void FirePrintPreviewUpdateEvent();
 private:
   nsPrintEngine& operator=(const nsPrintEngine& aOther) = delete;
+  void PageDone(nsresult aResult);
 };
 
 #endif /* nsPrintEngine_h___ */
