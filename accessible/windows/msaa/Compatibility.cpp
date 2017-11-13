@@ -183,7 +183,7 @@ Compatibility::Init()
   if (::GetModuleHandleW(L"nvdaHelperRemote"))
     sConsumers |= NVDA;
 
-  if (::GetModuleHandleW(L"OsmHooks"))
+  if (::GetModuleHandleW(L"OsmHooks") || ::GetModuleHandleW(L"OsmHks64"))
     sConsumers |= COBRA;
 
   if (::GetModuleHandleW(L"WebFinderRemote"))
