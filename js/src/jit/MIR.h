@@ -7017,6 +7017,7 @@ class MMathFunction
         switch(function_) {
           case Sin:
           case Log:
+          case Ceil:
           case Floor:
           case Round:
             return true;
@@ -12622,6 +12623,18 @@ class MNearbyInt
     }
 
     void printOpcode(GenericPrinter& out) const override;
+
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
+
+    bool canRecoverOnBailout() const override {
+        switch (roundingMode_) {
+          case RoundingMode::Up:
+          case RoundingMode::Down:
+            return true;
+          default:
+            return false;
+        }
+    }
 
     ALLOW_CLONE(MNearbyInt)
 };

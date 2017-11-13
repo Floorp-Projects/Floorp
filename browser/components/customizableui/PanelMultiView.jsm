@@ -1032,35 +1032,6 @@ this.PanelMultiView = class {
         const EXTRA_MARGIN_PX = 20;
         maxHeight -= EXTRA_MARGIN_PX;
         this._viewStack.style.maxHeight = maxHeight + "px";
-
-        // When using block-in-box layout inside a scrollable frame, like in the
-        // main menu contents scroller, if we allow the contents to scroll then
-        // it will not cause its container to expand. Thus, we layout first
-        // without any scrolling (using "display: flex;"), and only if the view
-        // exceeds the available space we set the height explicitly and enable
-        // scrolling.
-        let mainView = this._mainView;
-        if (mainView && mainView.hasAttribute("blockinboxworkaround")) {
-          let blockInBoxWorkaround = () => {
-            let mainViewHeight =
-                this._dwu.getBoundsWithoutFlushing(mainView).height;
-            if (mainViewHeight > maxHeight) {
-              mainView.style.height = maxHeight + "px";
-              mainView.setAttribute("exceeding", "true");
-            }
-          };
-          // On Windows, we cannot measure the full height of the main view
-          // until it is visible. Unfortunately, this causes a visible jump when
-          // the view needs to scroll, but there is no easy way around this.
-          if (AppConstants.platform == "win") {
-            // We register a "once" listener so we don't need to store the value
-            // of maxHeight elsewhere on the object.
-            this._panel.addEventListener("popupshown", blockInBoxWorkaround,
-                                         { once: true });
-          } else {
-            blockInBoxWorkaround();
-          }
-        }
         break;
       }
       case "popupshown":
@@ -1097,13 +1068,6 @@ this.PanelMultiView = class {
           this._viewContainer.style.removeProperty("max-width");
         }
 
-        // Always try to layout the panel normally when reopening it. This is
-        // also the layout that will be used in customize mode.
-        let mainView = this._mainView;
-        if (mainView && mainView.hasAttribute("blockinboxworkaround")) {
-          mainView.style.removeProperty("height");
-          mainView.removeAttribute("exceeding");
-        }
         this._dispatchViewEvent(this.node, "PanelMultiViewHidden");
         break;
       }

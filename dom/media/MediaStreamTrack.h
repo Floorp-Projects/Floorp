@@ -15,6 +15,7 @@
 #include "mozilla/dom/MediaTrackSettingsBinding.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/WeakPtr.h"
+#include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsID.h"
 #include "nsIPrincipal.h"
@@ -280,12 +281,12 @@ public:
   // WebIDL
   virtual void GetKind(nsAString& aKind) = 0;
   void GetId(nsAString& aID) const;
-  void GetLabel(nsAString& aLabel) { GetSource().GetLabel(aLabel); }
+  virtual void GetLabel(nsAString& aLabel, CallerType /* aCallerType */) { GetSource().GetLabel(aLabel); }
   bool Enabled() { return mEnabled; }
   void SetEnabled(bool aEnabled);
   void Stop();
   void GetConstraints(dom::MediaTrackConstraints& aResult);
-  void GetSettings(dom::MediaTrackSettings& aResult);
+  void GetSettings(dom::MediaTrackSettings& aResult, CallerType aCallerType);
 
   already_AddRefed<Promise>
   ApplyConstraints(const dom::MediaTrackConstraints& aConstraints,

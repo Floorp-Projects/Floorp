@@ -7,6 +7,7 @@
 
 #include "MediaStreamVideoSink.h"
 #include "MediaStreamGraph.h"
+#include "nsContentUtils.h"
 
 #include "mozilla/dom/VideoStreamTrackBinding.h"
 
@@ -29,6 +30,16 @@ void
 VideoStreamTrack::RemoveVideoOutput(MediaStreamVideoSink* aSink)
 {
   GetOwnedStream()->RemoveVideoOutput(aSink, mTrackID);
+}
+
+void
+VideoStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType)
+{
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
+    aLabel.AssignLiteral("Internal Camera");
+    return;
+  }
+  MediaStreamTrack::GetLabel(aLabel, aCallerType);
 }
 
 } // namespace dom

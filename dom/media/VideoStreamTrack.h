@@ -35,6 +35,8 @@ public:
   // WebIDL
   void GetKind(nsAString& aKind) override { aKind.AssignLiteral("video"); }
 
+  void GetLabel(nsAString& aLabel, CallerType aCallerType) override;
+
 protected:
   already_AddRefed<MediaStreamTrack> CloneInternal(DOMMediaStream* aOwningStream,
                                                    TrackID aTrackID) override

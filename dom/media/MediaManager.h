@@ -257,7 +257,8 @@ public:
 
   nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow,
                             nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
-                            nsIDOMGetUserMediaErrorCallback* aOnFailure);
+                            nsIDOMGetUserMediaErrorCallback* aOnFailure,
+                            dom::CallerType aCallerType);
 
   nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow, dom::Promise& aPromise);
   void OnNavigation(uint64_t aWindowID);

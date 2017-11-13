@@ -8,7 +8,7 @@
   --drag-drop-transition-duration: .3s;
 }
 
-#main-window[customizing] .customization-target:not(#PanelUI-contents):not(#widget-overflow-fixed-list) {
+#main-window[customizing] .customization-target:not(#widget-overflow-fixed-list) {
   min-width: 100px;
 }
 
@@ -174,7 +174,6 @@ toolbarpaletteitem[mousedown] {
   cursor: -moz-grabbing;
 }
 
-.panel-customization-placeholder,
 toolbarpaletteitem[place="palette"],
 toolbarpaletteitem[place="panel"] {
   transition: transform var(--drag-drop-transition-duration) ease-in-out;
@@ -194,7 +193,6 @@ toolbarpaletteitem toolbarbutton[disabled] {
 }
 
 #widget-overflow-fixed-list > toolbarpaletteitem[notransition][place="panel"],
-toolbarpaletteitem[notransition].panel-customization-placeholder,
 toolbarpaletteitem[notransition][place="toolbar"],
 toolbarpaletteitem[notransition][place="palette"],
 toolbarpaletteitem[notransition][place="panel"] {
@@ -203,7 +201,8 @@ toolbarpaletteitem[notransition][place="panel"] {
 
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon,
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-toolbarpaletteitem > toolbaritem.panel-wide-item {
+toolbarpaletteitem > #search-container,
+toolbarpaletteitem > toolbaritem.toolbaritem-combined-buttons {
   transition: transform var(--drag-drop-transition-duration) cubic-bezier(.6, 2, .75, 1.5) !important;
 }
 
@@ -212,7 +211,8 @@ toolbarpaletteitem[mousedown] > toolbarbutton > .toolbarbutton-badge-stack > .to
   transform: scale(1.3);
 }
 
-toolbarpaletteitem[mousedown] > toolbaritem.panel-wide-item {
+toolbarpaletteitem[mousedown] > #search-container,
+toolbarpaletteitem[mousedown] > toolbaritem.toolbaritem-combined-buttons {
   transform: scale(1.1);
 }
 

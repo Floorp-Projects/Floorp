@@ -3,7 +3,7 @@ Measuring elapsed time
 ======================
 
 To make it easier to measure how long operations take, we have helpers for both JavaScript and C++.
-These helpers record the elapsed time into histograms, so you have to create suitable histograms for them first.
+These helpers record the elapsed time into histograms, so you have to create suitable :doc:`histograms` for them first.
 
 From JavaScript
 ===============

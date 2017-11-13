@@ -7,9 +7,10 @@
 
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
-  const React = require("devtools/client/shared/vendor/react");
-  const { Component, PropTypes } = React;
-  const { input, span, td } = React.DOM;
+  const { Component } = require("devtools/client/shared/vendor/react");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
+  const { input, span, td } = dom;
 
   /**
    * This template represents a cell in TreeView row. It's rendered

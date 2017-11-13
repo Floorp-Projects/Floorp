@@ -1651,15 +1651,19 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   }
 
   // Smart splitting rules
-  NS_ENSURE_TRUE(aSelection.GetRangeAt(0) &&
-                 aSelection.GetRangeAt(0)->GetStartContainer(),
-                 NS_ERROR_FAILURE);
-  OwningNonNull<nsINode> node = *aSelection.GetRangeAt(0)->GetStartContainer();
-  nsIContent* child = aSelection.GetRangeAt(0)->GetChildAtStartOffset();
-  int32_t offset = aSelection.GetRangeAt(0)->StartOffset();
+  nsRange* firstRange = aSelection.GetRangeAt(0);
+  if (NS_WARN_IF(!firstRange)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  EditorDOMPoint atStartOfSelection(firstRange->StartRef());
+  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
   // Do nothing if the node is read-only
-  if (!htmlEditor->IsModifiableNode(node)) {
+  if (!htmlEditor->IsModifiableNode(atStartOfSelection.Container())) {
     *aCancel = true;
     return NS_OK;
   }
@@ -1675,7 +1679,8 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   // Look for the nearest parent block.  However, don't return error even if
   // there is no block parent here because in such case, i.e., editing host
   // is an inline element, we should insert <br> simply.
-  RefPtr<Element> blockParent = HTMLEditor::GetBlock(node, host);
+  RefPtr<Element> blockParent =
+    HTMLEditor::GetBlock(*atStartOfSelection.Container(), host);
 
   ParagraphSeparator separator = htmlEditor->GetDefaultParagraphSeparator();
   bool insertBRElement;
@@ -1712,7 +1717,8 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   // If we cannot insert a <p>/<div> element at the selection, we should insert
   // a <br> element instead.
   if (insertBRElement) {
-    nsresult rv = StandardBreakImpl(node, offset, aSelection);
+    nsresult rv = StandardBreakImpl(*atStartOfSelection.Container(),
+                                    atStartOfSelection.Offset(), aSelection);
     NS_ENSURE_SUCCESS(rv, rv);
     *aHandled = true;
     return NS_OK;
@@ -1729,22 +1735,25 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditRules::MakeBasicBlock() failed");
 
-    // Reinitialize node/offset in case they're not inside the new block
-    if (NS_WARN_IF(!aSelection.GetRangeAt(0) ||
-                   !aSelection.GetRangeAt(0)->GetStartContainer())) {
+    firstRange = aSelection.GetRangeAt(0);
+    if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }
-    node = *aSelection.GetRangeAt(0)->GetStartContainer();
-    child = aSelection.GetRangeAt(0)->GetChildAtStartOffset();
-    offset = aSelection.GetRangeAt(0)->StartOffset();
 
-    blockParent = mHTMLEditor->GetBlock(node, host);
+    atStartOfSelection = firstRange->StartRef();
+    if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+      return NS_ERROR_FAILURE;
+    }
+    MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
+
+    blockParent = mHTMLEditor->GetBlock(*atStartOfSelection.Container(), host);
     if (NS_WARN_IF(!blockParent)) {
       return NS_ERROR_UNEXPECTED;
     }
     if (NS_WARN_IF(blockParent == host)) {
       // Didn't create a new block for some reason, fall back to <br>
-      rv = StandardBreakImpl(node, offset, aSelection);
+      rv = StandardBreakImpl(*atStartOfSelection.Container(),
+                             atStartOfSelection.Offset(), aSelection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1767,15 +1776,20 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
 
   nsCOMPtr<Element> listItem = IsInListItem(blockParent);
   if (listItem && listItem != host) {
-    ReturnInListItem(aSelection, *listItem, node, offset);
-    *aHandled = true;
-    return NS_OK;
-  } else if (HTMLEditUtils::IsHeader(*blockParent)) {
-    // Headers: close (or split) header
-    ReturnInHeader(aSelection, *blockParent, node, offset);
+    ReturnInListItem(aSelection, *listItem, *atStartOfSelection.Container(),
+                     atStartOfSelection.Offset());
     *aHandled = true;
     return NS_OK;
   }
+
+  if (HTMLEditUtils::IsHeader(*blockParent)) {
+    // Headers: close (or split) header
+    ReturnInHeader(aSelection, *blockParent, *atStartOfSelection.Container(),
+                   atStartOfSelection.Offset());
+    *aHandled = true;
+    return NS_OK;
+  }
+
   // XXX Ideally, we should take same behavior with both <p> container and
   //     <div> container.  However, we are still using <br> as default
   //     paragraph separator (non-standard) and we've split only <p> container
@@ -1783,22 +1797,25 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   //     Gmail.  So, let's use traditional odd behavior only when the default
   //     paragraph separator is <br>.  Otherwise, take consistent behavior
   //     between <p> container and <div> container.
-  else if ((separator == ParagraphSeparator::br &&
-            blockParent->IsHTMLElement(nsGkAtoms::p)) ||
-           (separator != ParagraphSeparator::br &&
-            blockParent->IsAnyOfHTMLElements(nsGkAtoms::p, nsGkAtoms::div))) {
+  if ((separator == ParagraphSeparator::br &&
+       blockParent->IsHTMLElement(nsGkAtoms::p)) ||
+      (separator != ParagraphSeparator::br &&
+       blockParent->IsAnyOfHTMLElements(nsGkAtoms::p, nsGkAtoms::div))) {
     // Paragraphs: special rules to look for <br>s
-    nsresult rv =
-      ReturnInParagraph(&aSelection, blockParent, node,
-                        offset, child, aCancel, aHandled);
-    NS_ENSURE_SUCCESS(rv, rv);
+    EditActionResult result = ReturnInParagraph(aSelection, *blockParent);
+    if (NS_WARN_IF(result.Failed())) {
+      return result.Rv();
+    }
+    *aHandled = result.Handled();
+    *aCancel = result.Canceled();
     // Fall through, we may not have handled it in ReturnInParagraph()
   }
 
   // If not already handled then do the standard thing
   if (!(*aHandled)) {
     *aHandled = true;
-    return StandardBreakImpl(node, offset, aSelection);
+    return StandardBreakImpl(*atStartOfSelection.Container(),
+                             atStartOfSelection.Offset(), aSelection);
   }
   return NS_OK;
 }
@@ -6711,133 +6728,139 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
   return NS_OK;
 }
 
-/**
- * ReturnInParagraph() does the right thing for returns pressed in paragraphs.
- * For our purposes, this means either <p> or <div>, which is not in keeping
- * with the semantics of <div>, but is necessary for compatibility with other
- * browsers.
- */
-nsresult
-HTMLEditRules::ReturnInParagraph(Selection* aSelection,
-                                 nsINode* aPara,
-                                 nsINode* aNode,
-                                 int32_t aOffset,
-                                 nsIContent* aChildAtOffset,
-                                 bool* aCancel,
-                                 bool* aHandled)
+EditActionResult
+HTMLEditRules::ReturnInParagraph(Selection& aSelection,
+                                 nsINode& aParentDivOrP)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!aSelection || !aPara || !node || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return EditActionResult(NS_ERROR_NOT_AVAILABLE);
   }
-  *aCancel = false;
-  *aHandled = false;
 
-  int32_t offset;
-  nsCOMPtr<nsINode> parent = EditorBase::GetNodeLocation(node, &offset);
+  RefPtr<HTMLEditor> htmlEditor = mHTMLEditor;
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  bool doesCRCreateNewP = mHTMLEditor->GetReturnInParagraphCreatesNewParagraph();
+  nsRange* firstRange = aSelection.GetRangeAt(0);
+  if (NS_WARN_IF(!firstRange)) {
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
 
-  bool newBRneeded = false;
-  bool newSelNode = false;
-  nsCOMPtr<nsIContent> sibling;
-  nsCOMPtr<nsIDOMNode> selNode = GetAsDOMNode(aNode);
-  int32_t selOffset = aOffset;
+  EditorDOMPoint atStartOfSelection(firstRange->StartRef());
+  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
+  MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  if (aNode == aPara && doesCRCreateNewP) {
-    // we are at the edges of the block, newBRneeded not needed!
-    sibling = node->AsContent();
-  } else if (EditorBase::IsTextNode(aNode)) {
+  bool doesCRCreateNewP = htmlEditor->GetReturnInParagraphCreatesNewParagraph();
+
+  bool splitAfterNewBR = false;
+  nsCOMPtr<nsIContent> brNode;
+
+  // Point to split aParentDivOrP.
+  // XXX If we don't need to use nsIDOMNode here, we should use EditorDOMPoint.
+  nsCOMPtr<nsIDOMNode> containerAtSplitPoint =
+    GetAsDOMNode(atStartOfSelection.Container());
+  int32_t offsetAtSplitPoint = atStartOfSelection.Offset();
+
+  EditorRawDOMPoint pointToInsertBR;
+  if (doesCRCreateNewP &&
+      atStartOfSelection.Container() == &aParentDivOrP) {
+    // We are at the edges of the block, so, we don't need to create new <br>.
+    brNode = nullptr;
+  } else if (EditorBase::IsTextNode(atStartOfSelection.Container())) {
     // at beginning of text node?
-    if (!aOffset) {
+    if (atStartOfSelection.IsStartOfContainer()) {
       // is there a BR prior to it?
-      NS_ENSURE_STATE(mHTMLEditor);
-      sibling = mHTMLEditor->GetPriorHTMLSibling(node);
-      if (!sibling || !mHTMLEditor ||
-          !mHTMLEditor->IsVisibleBRElement(sibling) ||
-          TextEditUtils::HasMozAttr(GetAsDOMNode(sibling))) {
-        NS_ENSURE_STATE(mHTMLEditor);
-        newBRneeded = true;
+      brNode = htmlEditor->GetPriorHTMLSibling(atStartOfSelection.Container());
+      if (!brNode ||
+          !htmlEditor->IsVisibleBRElement(brNode) ||
+          TextEditUtils::HasMozAttr(GetAsDOMNode(brNode))) {
+        pointToInsertBR.Set(atStartOfSelection.Container());
+        brNode = nullptr;
       }
-    } else if (aOffset == static_cast<int32_t>(node->Length())) {
+    } else if (atStartOfSelection.IsEndOfContainer()) {
       // we're at the end of text node...
       // is there a BR after to it?
-      NS_ENSURE_STATE(mHTMLEditor);
-      sibling = mHTMLEditor->GetNextHTMLSibling(node);
-      if (!sibling || !mHTMLEditor ||
-          !mHTMLEditor->IsVisibleBRElement(sibling) ||
-          TextEditUtils::HasMozAttr(GetAsDOMNode(sibling))) {
-        NS_ENSURE_STATE(mHTMLEditor);
-        newBRneeded = true;
-        offset++;
+      brNode = htmlEditor->GetNextHTMLSibling(atStartOfSelection.Container());
+      if (!brNode ||
+          !htmlEditor->IsVisibleBRElement(brNode) ||
+          TextEditUtils::HasMozAttr(GetAsDOMNode(brNode))) {
+        pointToInsertBR.Set(atStartOfSelection.Container());
+        DebugOnly<bool> advanced = pointToInsertBR.AdvanceOffset();
+        NS_WARNING_ASSERTION(advanced,
+          "Failed to advance offset to after the container of selection start");
+        brNode = nullptr;
       }
     } else {
+      nsCOMPtr<nsINode> leftNode = atStartOfSelection.Container();
+
       if (doesCRCreateNewP) {
-        nsCOMPtr<nsIDOMNode> tmp;
-        if (NS_WARN_IF(!mHTMLEditor)) {
-          return NS_ERROR_UNEXPECTED;
-        }
+        nsCOMPtr<nsIDOMNode> leftDOMNode;
         nsresult rv =
-          mHTMLEditor->SplitNode(selNode, aOffset, getter_AddRefs(tmp));
-        NS_ENSURE_SUCCESS(rv, rv);
-        selNode = tmp;
+          htmlEditor->SplitNode(containerAtSplitPoint, offsetAtSplitPoint,
+                                getter_AddRefs(leftDOMNode));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return EditActionResult(rv);
+        }
+        containerAtSplitPoint = leftDOMNode;
+        leftNode = do_QueryInterface(leftDOMNode);
       }
 
-      newBRneeded = true;
-      offset++;
+      // We need to put new <br> after the left node if given node was split
+      // above.
+      pointToInsertBR.Set(leftNode);
+      DebugOnly<bool> advanced = pointToInsertBR.AdvanceOffset();
+      NS_WARNING_ASSERTION(advanced,
+        "Failed to advance offset to after the container of selection start");
     }
   } else {
     // not in a text node.
     // is there a BR prior to it?
     nsCOMPtr<nsIContent> nearNode;
-    NS_ENSURE_STATE(mHTMLEditor);
     nearNode =
-      mHTMLEditor->GetPreviousEditableHTMLNode(
-                     EditorRawDOMPoint(node, aChildAtOffset, aOffset));
-    NS_ENSURE_STATE(mHTMLEditor);
-    if (!nearNode || !mHTMLEditor->IsVisibleBRElement(nearNode) ||
+      htmlEditor->GetPreviousEditableHTMLNode(atStartOfSelection.AsRaw());
+    if (!nearNode || !htmlEditor->IsVisibleBRElement(nearNode) ||
         TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
       // is there a BR after it?
-      NS_ENSURE_STATE(mHTMLEditor);
       nearNode =
-        mHTMLEditor->GetNextEditableHTMLNode(
-                       EditorRawDOMPoint(node, aChildAtOffset, aOffset));
-      NS_ENSURE_STATE(mHTMLEditor);
-      if (!nearNode || !mHTMLEditor->IsVisibleBRElement(nearNode) ||
+        htmlEditor->GetNextEditableHTMLNode(atStartOfSelection.AsRaw());
+      if (!nearNode || !htmlEditor->IsVisibleBRElement(nearNode) ||
           TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
-        newBRneeded = true;
-        parent = node;
-        offset = aOffset;
-        newSelNode = true;
+        pointToInsertBR = atStartOfSelection;
+        splitAfterNewBR = true;
       }
     }
-    if (!newBRneeded) {
-      sibling = nearNode;
+    if (!pointToInsertBR.IsSet() && TextEditUtils::IsBreak(nearNode)) {
+      brNode = nearNode;
     }
   }
-  if (newBRneeded) {
-    // if CR does not create a new P, default to BR creation
-    NS_ENSURE_TRUE(doesCRCreateNewP, NS_OK);
+  if (pointToInsertBR.IsSet()) {
+    // Don't modify the DOM tree if mHTMLEditor disappeared.
+    if (NS_WARN_IF(!mHTMLEditor)) {
+      return EditActionResult(NS_ERROR_NOT_AVAILABLE);
+    }
 
-    NS_ENSURE_STATE(mHTMLEditor);
-    sibling = mHTMLEditor->CreateBR(parent, offset);
-    if (newSelNode) {
+    // if CR does not create a new P, default to BR creation
+    if (NS_WARN_IF(!doesCRCreateNewP)) {
+      return EditActionResult(NS_OK);
+    }
+
+    brNode = htmlEditor->CreateBR(pointToInsertBR.Container(),
+                                  pointToInsertBR.Offset());
+    if (splitAfterNewBR) {
       // We split the parent after the br we've just inserted.
-      selNode = GetAsDOMNode(parent);
-      selOffset = offset + 1;
+      containerAtSplitPoint = GetAsDOMNode(pointToInsertBR.Container());
+      offsetAtSplitPoint = pointToInsertBR.Offset() + 1;
     }
   }
-  *aHandled = true;
-  return SplitParagraph(GetAsDOMNode(aPara), sibling, aSelection,
-                        address_of(selNode), &selOffset);
+  EditActionResult result(
+    SplitParagraph(GetAsDOMNode(&aParentDivOrP), brNode, &aSelection,
+                   address_of(containerAtSplitPoint), &offsetAtSplitPoint));
+  result.MarkAsHandled();
+  if (NS_WARN_IF(result.Failed())) {
+    return result;
+  }
+  return result;
 }
 
-/**
- * SplitParagraph() splits a paragraph at selection point, possibly deleting a
- * br.
- */
 nsresult
 HTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
                               nsIContent* aBRNode,
@@ -6846,7 +6869,7 @@ HTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
                               int32_t* aOffset)
 {
   nsCOMPtr<Element> para = do_QueryInterface(aPara);
-  NS_ENSURE_TRUE(para && aBRNode && aSelNode && *aSelNode && aOffset &&
+  NS_ENSURE_TRUE(para && aSelNode && *aSelNode && aOffset &&
                  aSelection, NS_ERROR_NULL_POINTER);
 
   // split para
@@ -6874,7 +6897,8 @@ HTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
   }
   // get rid of the break, if it is visible (otherwise it may be needed to prevent an empty p)
   NS_ENSURE_STATE(mHTMLEditor);
-  if (mHTMLEditor->IsVisibleBRElement(aBRNode)) {
+  if (aBRNode &&
+      mHTMLEditor->IsVisibleBRElement(aBRNode)) {
     NS_ENSURE_STATE(mHTMLEditor);
     rv = mHTMLEditor->DeleteNode(aBRNode);
     NS_ENSURE_SUCCESS(rv, rv);

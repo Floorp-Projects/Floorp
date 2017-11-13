@@ -137,6 +137,10 @@
   padding-inline-end: 5px;
 }
 
+.network-monitor .tree-container .treeTable .treeValueCell input{
+  color: var(--string-color);
+}
+
 /* Source editor in tab panels */
 
 /* If there is a source editor shows up in the last row of TreeView,

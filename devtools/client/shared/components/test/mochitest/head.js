@@ -28,8 +28,9 @@ var { require: browserRequire } = BrowserLoader({
   window
 });
 
-let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
 let React = browserRequire("devtools/client/shared/vendor/react");
+let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+let dom = browserRequire("devtools/client/shared/vendor/react-dom-factories");
 var TestUtils = React.addons.TestUtils;
 
 var EXAMPLE_URL = "http://example.com/browser/browser/devtools/shared/test/";
@@ -200,7 +201,7 @@ function renderComponent(component, props) {
   // By default, renderIntoDocument() won't work for stateless components, but
   // it will work if the stateless component is wrapped in a stateful one.
   // See https://github.com/facebook/react/issues/4839
-  const wrappedEl = React.DOM.span({}, [el]);
+  const wrappedEl = dom.span({}, [el]);
   const renderedComponent = TestUtils.renderIntoDocument(wrappedEl);
   return ReactDOM.findDOMNode(renderedComponent).children[0];
 }
