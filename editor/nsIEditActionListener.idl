@@ -98,14 +98,13 @@ interface nsIEditActionListener : nsISupports{
 
   /**
    * Called after the editor splits a node.
-   * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.
-   * @param aOffset              the offset of aExistingRightNode's content|children to do the split at
-   * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
+   * @param aExistingRightNode   The node which was split.  It will become the
+   *                             next sibling of the new left node.
+   * @param aNewLeftNode         The new node resulting from the split, becomes
+   *                             the previous sibling of aExistingRightNode.
    */
   void DidSplitNode(in nsIDOMNode aExistingRightNode,
-                          in long      aOffset,
-                          in nsIDOMNode aNewLeftNode,
-                          in nsresult    aResult);
+                    in nsIDOMNode aNewLeftNode);
 
   /**
    * Called before the editor joins 2 nodes.

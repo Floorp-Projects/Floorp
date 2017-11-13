@@ -8679,9 +8679,7 @@ HTMLEditRules::WillSplitNode(nsIDOMNode* aExistingRightNode,
 
 NS_IMETHODIMP
 HTMLEditRules::DidSplitNode(nsIDOMNode* aExistingRightNode,
-                            int32_t aOffset,
-                            nsIDOMNode* aNewLeftNode,
-                            nsresult aResult)
+                            nsIDOMNode* aNewLeftNode)
 {
   if (!mListenerEnabled) {
     return NS_OK;

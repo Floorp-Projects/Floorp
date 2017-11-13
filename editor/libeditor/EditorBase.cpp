@@ -1546,11 +1546,14 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
   AutoRules beginRulesSniffing(this, EditAction::splitNode, nsIEditor::eNext);
 
   // Different from CreateNode(), we need offset at start of right node only
-  // for WillSplitNode() and DidSplitNoe() since the offset is always same as
-  // the length of new left node.
+  // for WillSplitNode() since the offset is always same as the length of new
+  // left node.
   {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
+      // XXX Unfortunately, we need to compute offset here because the container
+      //     may be a data node like text node.  However, nobody implements this
+      //     method actually.  So, we should get rid of this in a follow up bug.
       listener->WillSplitNode(aStartOfRightNode.Container()->AsDOMNode(),
                               aStartOfRightNode.Offset());
     }
@@ -1566,18 +1569,14 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
   mRangeUpdater.SelAdjSplitNode(*aStartOfRightNode.Container()->AsContent(),
                                 newNode);
 
-  nsresult rv = aError.StealNSResult();
   {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->DidSplitNode(aStartOfRightNode.Container()->AsDOMNode(),
-                             aStartOfRightNode.Offset(),
-                             GetAsDOMNode(newNode), rv);
+                             GetAsDOMNode(newNode));
     }
   }
-  // Note: result might be a success code, so we can't use Throw() to
-  // set it on aResult.
-  aError = rv;
+
   if (NS_WARN_IF(aError.Failed())) {
     return nullptr;
   }
