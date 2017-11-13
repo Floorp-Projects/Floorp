@@ -20,7 +20,6 @@ const INSET_POINT_TYPES = ["top", "right", "bottom", "left"];
  * Highlighters overlay is a singleton managing all highlighters in the Inspector.
  */
 class HighlightersOverlay {
-
   /**
    * @param  {Inspector} inspector
    *         Inspector toolbox panel.
@@ -33,6 +32,8 @@ class HighlightersOverlay {
     // Only initialize the overlay if at least one of the highlighter types is supported.
     this.supportsHighlighters = this.highlighterUtils.supportsCustomHighlighters();
 
+    // NodeFront of the flexbox container that is highlighted.
+    this.flexboxHighlighterShown = null;
     // NodeFront of element that is highlighted by the geometry editor.
     this.geometryEditorHighlighterShown = null;
     // NodeFront of the grid container that is highlighted.
@@ -45,8 +46,9 @@ class HighlightersOverlay {
     this.shapesHighlighterShown = null;
     // Saved state to be restore on page navigation.
     this.state = {
+      flexbox: {},
       grid: {},
-      shapes: {}
+      shapes: {},
     };
 
     this.onClick = this.onClick.bind(this);
@@ -54,6 +56,10 @@ class HighlightersOverlay {
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseOut = this.onMouseOut.bind(this);
     this.onWillNavigate = this.onWillNavigate.bind(this);
+    this.hideFlexboxHighlighter = this.hideFlexboxHighlighter.bind(this);
+    this.hideGridHighlighter = this.hideGridHighlighter.bind(this);
+    this.hideShapesHighlighter = this.hideShapesHighlighter.bind(this);
+    this.showFlexboxHighlighter = this.showFlexboxHighlighter.bind(this);
     this.showGridHighlighter = this.showGridHighlighter.bind(this);
     this.showShapesHighlighter = this.showShapesHighlighter.bind(this);
     this._handleRejection = this._handleRejection.bind(this);
@@ -238,6 +244,83 @@ class HighlightersOverlay {
   }
 
   /**
+   * Toggle the flexbox highlighter for the given flexbox container element.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of the flexbox container element to highlight.
+   * @param  {Object} options
+   *         Object used for passing options to the flexbox highlighter.
+   */
+  async toggleFlexboxHighlighter(node, options = {}) {
+    if (node == this.flexboxHighlighterShown) {
+      await this.hideFlexboxHighlighter(node);
+      return;
+    }
+
+    await this.showFlexboxHighlighter(node, options);
+  }
+
+  /**
+   * Show the flexbox highlighter for the given flexbox container element.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of the flexbox container element to highlight.
+   * @param  {Object} options
+   *         Object used for passing options to the flexbox highlighter.
+   */
+  async showFlexboxHighlighter(node, options) {
+    let highlighter = await this._getHighlighter("FlexboxHighlighter");
+    if (!highlighter) {
+      return;
+    }
+
+    let isShown = await highlighter.show(node, options);
+    if (!isShown) {
+      return;
+    }
+
+    this._toggleRuleViewIcon(node, true, ".ruleview-flex");
+
+    try {
+      // Save flexbox highlighter state.
+      let { url } = this.inspector.target;
+      let selector = await node.getUniqueSelector();
+      this.state.flexbox = { selector, options, url };
+      this.flexboxHighlighterShown = node;
+
+      // Emit the NodeFront of the flexbox container element that the flexbox highlighter
+      // was shown for.
+      this.emit("flexbox-highlighter-shown", node, options);
+    } catch (e) {
+      this._handleRejection(e);
+    }
+  }
+
+  /**
+   * Hide the flexbox highlighter for the given flexbox container element.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of the flexbox container element to unhighlight.
+   */
+  async hideFlexboxHighlighter(node) {
+    if (!this.flexboxHighlighterShown || !this.highlighters.FlexboxHighlighter) {
+      return;
+    }
+
+    this._toggleRuleViewIcon(node, false, ".ruleview-flex");
+
+    await this.highlighters.FlexboxHighlighter.hide();
+
+    // Emit the NodeFront of the flexbox container element that the flexbox highlighter
+    // was hidden for.
+    this.emit("flexbox-highlighter-hidden", this.flexboxHighlighterShown);
+    this.flexboxHighlighterShown = null;
+
+    // Erase flexbox highlighter state.
+    this.state.flexbox = null;
+  }
+
+  /**
    * Toggle the grid highlighter for the given grid container element.
    *
    * @param  {NodeFront} node
@@ -394,6 +477,17 @@ class HighlightersOverlay {
   }
 
   /**
+   * Restores the saved flexbox highlighter state.
+   */
+  async restoreFlexboxState() {
+    try {
+      await this.restoreState("flexbox", this.state.flexbox, this.showFlexboxHighlighter);
+    } catch (e) {
+      this._handleRejection(e);
+    }
+  }
+
+  /**
    * Restores the saved grid highlighter state.
    */
   async restoreGridState() {
@@ -416,8 +510,9 @@ class HighlightersOverlay {
   }
 
   /**
-   * Helper function called by restoreGridState and restoreShapeState.
-   * Restores the saved highlighter state for the given highlighter and their state.
+   * Helper function called by restoreFlexboxState, restoreGridState and
+   * restoreShapeState. Restores the saved highlighter state for the given highlighter
+   * and their state.
    *
    * @param  {String} name
    *         The name of the highlighter to be restored
@@ -553,6 +648,31 @@ class HighlightersOverlay {
   }
 
   /**
+   * Given a node front and a function that hides the given node's highlighter, hides
+   * the highlighter if the node front is no longer in the DOM tree. This is called
+   * from the "markupmutation" event handler.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of a highlighted DOM node.
+   * @param  {Function} hideHighlighter
+   *         The function that will hide the highlighter of the highlighted node.
+   */
+  async _hideHighlighterIfDeadNode(node, hideHighlighter) {
+    if (!node) {
+      return;
+    }
+
+    try {
+      let isInTree = await this.inspector.walker.isInDOMTree(node);
+      if (!isInTree) {
+        hideHighlighter(node);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  /**
    * Is the current hovered node a css transform property value in the
    * computed-view.
    *
@@ -563,6 +683,17 @@ class HighlightersOverlay {
     let isTransform = nodeInfo.type === VIEW_NODE_VALUE_TYPE &&
                       nodeInfo.value.property === "transform";
     return !this.isRuleView && isTransform;
+  }
+
+  /**
+   * Is the current clicked node a flex display property value in the
+   * rule-view.
+   *
+   * @param  {DOMNode} node
+   * @return {Boolean}
+   */
+  _isRuleViewDisplayFlex(node) {
+    return this.isRuleView && node.classList.contains("ruleview-flex");
   }
 
   /**
@@ -631,6 +762,10 @@ class HighlightersOverlay {
 
       this.toggleGridHighlighter(this.inspector.selection.nodeFront, highlighterSettings,
         "rule");
+    } else if (this._isRuleViewDisplayFlex(event.target)) {
+      event.stopPropagation();
+
+      this.toggleFlexboxHighlighter(this.inspector.selection.nodeFront);
     } else if (this._isRuleViewShape(event.target)) {
       event.stopPropagation();
 
@@ -709,8 +844,8 @@ class HighlightersOverlay {
   }
 
   /**
-   * Handler function for "markupmutation" events. Hides the grid/shapes highlighter
-   * if the grid/shapes container is no longer in the DOM tree.
+   * Handler function for "markupmutation" events. Hides the flexbox/grid/shapes
+   * highlighter if the flexbox/grid/shapes container is no longer in the DOM tree.
    */
   async onMarkupMutation(evt, mutations) {
     let hasInterestingMutation = mutations.some(mut => mut.type === "childList");
@@ -720,37 +855,19 @@ class HighlightersOverlay {
       return;
     }
 
-    if (this.gridHighlighterShown) {
-      let nodeFront = this.gridHighlighterShown;
-
-      try {
-        let isInTree = await this.inspector.walker.isInDOMTree(nodeFront);
-        if (!isInTree) {
-          this.hideGridHighlighter(nodeFront);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    if (this.shapesHighlighterShown) {
-      let nodeFront = this.shapesHighlighterShown;
-
-      try {
-        let isInTree = await this.inspector.walker.isInDOMTree(nodeFront);
-        if (!isInTree) {
-          this.hideShapesHighlighter(nodeFront);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
+    this._hideHighlighterIfDeadNode(this.flexboxHighlighterShown,
+      this.hideFlexboxHighlighter);
+    this._hideHighlighterIfDeadNode(this.gridHighlighterShown,
+      this.hideGridHighlighter);
+    this._hideHighlighterIfDeadNode(this.shapesHighlighterShown,
+      this.hideShapesHighlighter);
   }
 
   /**
    * Clear saved highlighter shown properties on will-navigate.
    */
   onWillNavigate() {
+    this.flexboxHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
     this.gridHighlighterShown = null;
     this.hoveredHighlighterShown = null;
@@ -785,6 +902,7 @@ class HighlightersOverlay {
     this.supportsHighlighters = null;
     this.state = null;
 
+    this.flexboxHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
     this.gridHighlighterShown = null;
     this.hoveredHighlighterShown = null;
@@ -793,7 +911,6 @@ class HighlightersOverlay {
 
     this.destroyed = true;
   }
-
 }
 
 module.exports = HighlightersOverlay;
