@@ -5283,6 +5283,9 @@ AddonWrapper.prototype = {
       return addon.optionsURL;
     }
 
+    if (this.hasResource("options.xul"))
+      return this.getResourceURI("options.xul").spec;
+
     return null;
   },
 
@@ -5291,16 +5294,27 @@ AddonWrapper.prototype = {
       return null;
 
     let addon = addonFor(this);
+    let hasOptionsXUL = this.hasResource("options.xul");
     let hasOptionsURL = !!this.optionsURL;
 
     if (addon.optionsType) {
       switch (parseInt(addon.optionsType, 10)) {
+      case AddonManager.OPTIONS_TYPE_DIALOG:
       case AddonManager.OPTIONS_TYPE_TAB:
-      case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
         return hasOptionsURL ? addon.optionsType : null;
+      case AddonManager.OPTIONS_TYPE_INLINE:
+      case AddonManager.OPTIONS_TYPE_INLINE_INFO:
+      case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
+        return (hasOptionsXUL || hasOptionsURL) ? addon.optionsType : null;
       }
       return null;
     }
+
+    if (hasOptionsXUL)
+      return AddonManager.OPTIONS_TYPE_INLINE;
+
+    if (hasOptionsURL)
+      return AddonManager.OPTIONS_TYPE_DIALOG;
 
     return null;
   },

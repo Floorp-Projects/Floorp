@@ -818,12 +818,14 @@ button.warning {
 }
 
 .detail-row[first-row="true"],
-.detail-row-complex[first-row="true"] {
+.detail-row-complex[first-row="true"],
+setting[first-row="true"] {
   border-top: none;
 }
 
 .detail-row,
-.detail-row-complex {
+.detail-row-complex,
+setting {
   border-top: 1px solid var(--in-content-box-border-color);
   -moz-box-align: center;
   min-height: 35px;
@@ -835,8 +837,13 @@ button.warning {
   margin-bottom: 1em;
 }
 
-.inline-options-browser {
+.inline-options-browser,
+setting[first-row="true"] {
   margin-top: 2em;
+}
+
+setting {
+  -moz-box-align: start;
 }
 
 .preferences-alignment {
@@ -854,6 +861,10 @@ button.warning {
 
 .preferences-description:empty {
   display: none;
+}
+
+setting[type="radio"] > radiogroup {
+  -moz-box-orient: horizontal;
 }
 
 

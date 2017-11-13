@@ -46,6 +46,15 @@ MockGMPInstallManager.prototype = {
   },
 };
 
+var gOptionsObserver = {
+  lastDisplayed: null,
+  observe(aSubject, aTopic, aData) {
+    if (aTopic == AddonManager.OPTIONS_NOTIFICATION_DISPLAYED) {
+      this.lastDisplayed = aData;
+    }
+  }
+};
+
 function openDetailsView(aId) {
   let view = get_current_view(gManagerWindow);
   Assert.equal(view.id, "list-view", "Should be in the list view to use this function");
@@ -71,6 +80,8 @@ add_task(async function initializeState() {
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
   registerCleanupFunction(async function() {
+    Services.obs.removeObserver(gOptionsObserver, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
+
     for (let addon of gMockAddons) {
       gPrefs.clearUserPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id));
       gPrefs.clearUserPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, addon.id));
@@ -86,6 +97,8 @@ add_task(async function initializeState() {
     await GMPScope.GMPProvider.shutdown();
     GMPScope.GMPProvider.startup();
   });
+
+  Services.obs.addObserver(gOptionsObserver, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
 
   // Start out with plugins not being installed, disabled and automatic updates
   // disabled.
@@ -288,11 +301,12 @@ add_task(async function testPreferencesButton() {
       let item = get_addon_element(gManagerWindow, addon.id);
 
       let button = doc.getAnonymousElementByAttribute(item, "anonid", "preferences-btn");
-      is_element_visible(button);
       EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
       await new Promise(resolve => {
         wait_for_view_load(gManagerWindow, resolve);
       });
+
+      is(gOptionsObserver.lastDisplayed, addon.id);
     }
   }
 });

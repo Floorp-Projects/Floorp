@@ -3452,8 +3452,15 @@ this.AddonManager = {
   AUTOUPDATE_ENABLE: 2,
 
   // Constants for how Addon options should be shown.
+  // Options will be opened in a new window
+  OPTIONS_TYPE_DIALOG: 1,
+  // Options will be displayed within the AM detail view
+  OPTIONS_TYPE_INLINE: 2,
   // Options will be displayed in a new tab, if possible
   OPTIONS_TYPE_TAB: 3,
+  // Same as OPTIONS_TYPE_INLINE, but no Preferences button will be shown.
+  // Used to indicate that only non-interactive information will be shown.
+  OPTIONS_TYPE_INLINE_INFO: 4,
   // Similar to OPTIONS_TYPE_INLINE, but rather than generating inline
   // options from a specially-formatted XUL file, the contents of the
   // file are simply displayed in an inline <browser> element.
