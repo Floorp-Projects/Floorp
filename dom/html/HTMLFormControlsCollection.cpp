@@ -155,12 +155,11 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(HTMLFormControlsCollection)
 
 // nsIDOMHTMLCollection interface
 
-NS_IMETHODIMP
-HTMLFormControlsCollection::GetLength(uint32_t* aLength)
+uint32_t
+HTMLFormControlsCollection::Length()
 {
   FlushPendingNotifications();
-  *aLength = mElements.Length();
-  return NS_OK;
+  return mElements.Length();
 }
 
 nsISupports*

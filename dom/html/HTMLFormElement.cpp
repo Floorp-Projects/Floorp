@@ -1041,9 +1041,7 @@ HTMLFormElement::WalkFormElements(HTMLFormSubmission* aFormSubmission)
 NS_IMETHODIMP_(uint32_t)
 HTMLFormElement::GetElementCount() const
 {
-  uint32_t count = 0;
-  mControls->GetLength(&count);
-  return count;
+  return mControls->Length();
 }
 
 Element*

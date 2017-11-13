@@ -40,12 +40,7 @@ public:
    */
   virtual nsINode* GetParentObject() = 0;
 
-  uint32_t Length()
-  {
-    uint32_t length;
-    GetLength(&length);
-    return length;
-  }
+  virtual uint32_t Length() = 0;
   virtual mozilla::dom::Element* GetElementAt(uint32_t index) = 0;
   mozilla::dom::Element* Item(uint32_t index)
   {

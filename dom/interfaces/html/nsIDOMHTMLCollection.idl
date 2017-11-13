@@ -19,5 +19,4 @@
 [uuid(bb07f567-5b37-4172-92aa-7d00ceed4809)]
 interface nsIDOMHTMLCollection : nsISupports
 {
-  readonly attribute unsigned long    length;
 };
