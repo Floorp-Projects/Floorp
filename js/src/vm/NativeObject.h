@@ -898,13 +898,14 @@ class NativeObject : public ShapedObject
      */
     static Shape*
     addDataPropertyInternal(JSContext* cx, HandleNativeObject obj, HandleId id,
-                            uint32_t slot, unsigned attrs, ShapeTable::Entry* entry,
-                            const AutoKeepShapeTables& keep);
+                            uint32_t slot, unsigned attrs, ShapeTable* table,
+                            ShapeTable::Entry* entry, const AutoKeepShapeTables& keep);
 
     static Shape*
     addAccessorPropertyInternal(JSContext* cx, HandleNativeObject obj, HandleId id,
                                 JSGetterOp getter, JSSetterOp setter, unsigned attrs,
-                                ShapeTable::Entry* entry, const AutoKeepShapeTables& keep);
+                                ShapeTable* table, ShapeTable::Entry* entry,
+                                const AutoKeepShapeTables& keep);
 
     static MOZ_MUST_USE bool fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
                                              const Vector<Value>& values, void* priv);

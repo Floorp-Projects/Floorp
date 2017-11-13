@@ -502,8 +502,8 @@ class MOZ_RAII AutoCheckShapeConsistency
 /* static */ Shape*
 NativeObject::addAccessorPropertyInternal(JSContext* cx,
                                           HandleNativeObject obj, HandleId id,
-                                          GetterOp getter, SetterOp setter,
-                                          unsigned attrs, ShapeTable::Entry* entry,
+                                          GetterOp getter, SetterOp setter, unsigned attrs,
+                                          ShapeTable* table, ShapeTable::Entry* entry,
                                           const AutoKeepShapeTables& keep)
 {
     AutoCheckShapeConsistency check(obj);
@@ -511,7 +511,6 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
 
     // The code below deals with either converting obj to dictionary mode or
     // growing an object that's already in dictionary mode.
-    ShapeTable* table = nullptr;
     if (!obj->inDictionaryMode()) {
         if (ShouldConvertToDictionary(obj)) {
             if (!toDictionaryMode(cx, obj))
@@ -520,9 +519,6 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
             entry = &table->search<MaybeAdding::Adding>(id, keep);
         }
     } else {
-        table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
-        if (!table)
-            return nullptr;
         if (table->needsToGrow()) {
             if (!table->grow(cx))
                 return nullptr;
@@ -567,7 +563,9 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
 NativeObject::addDataPropertyInternal(JSContext* cx,
                                       HandleNativeObject obj, HandleId id,
                                       uint32_t slot, unsigned attrs,
-                                      ShapeTable::Entry* entry, const AutoKeepShapeTables& keep)
+                                      ShapeTable* table,
+                                      ShapeTable::Entry* entry,
+                                      const AutoKeepShapeTables& keep)
 {
     AutoCheckShapeConsistency check(obj);
 
@@ -577,7 +575,6 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
 
     // The code below deals with either converting obj to dictionary mode or
     // growing an object that's already in dictionary mode.
-    ShapeTable* table = nullptr;
     if (!obj->inDictionaryMode()) {
         if (ShouldConvertToDictionary(obj)) {
             if (!toDictionaryMode(cx, obj))
@@ -586,9 +583,6 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
             entry = &table->search<MaybeAdding::Adding>(id, keep);
         }
     } else {
-        table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
-        if (!table)
-            return nullptr;
         if (table->needsToGrow()) {
             if (!table->grow(cx))
                 return nullptr;
@@ -805,10 +799,11 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
 
     // Search for id in order to claim its entry if table has been allocated.
     AutoKeepShapeTables keep(cx);
+    ShapeTable* table;
     ShapeTable::Entry* entry;
     RootedShape shape(cx);
     if (!Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, keep,
-                                            shape.address(), &entry))
+                                            shape.address(), &table, &entry))
     {
         return nullptr;
     }
@@ -816,7 +811,7 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
     if (!shape) {
         MOZ_ASSERT(obj->nonProxyIsExtensible(),
                    "Can't add new property to non-extensible object");
-        return addDataPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT, attrs, entry, keep);
+        return addDataPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT, attrs, table, entry, keep);
     }
 
     // Property exists: search must have returned a valid entry.
@@ -920,10 +915,11 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
 
     // Search for id in order to claim its entry if table has been allocated.
     AutoKeepShapeTables keep(cx);
+    ShapeTable* table;
     ShapeTable::Entry* entry;
     RootedShape shape(cx);
     if (!Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, keep,
-                                            shape.address(), &entry))
+                                            shape.address(), &table, &entry))
     {
         return nullptr;
     }
@@ -931,7 +927,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
     if (!shape) {
         MOZ_ASSERT(obj->nonProxyIsExtensible(),
                    "Can't add new property to non-extensible object");
-        return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, entry, keep);
+        return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, table, entry, keep);
     }
 
     // Property exists: search must have returned a valid entry.
@@ -961,7 +957,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
     if (shape != obj->lastProperty() && !obj->inDictionaryMode()) {
         if (!toDictionaryMode(cx, obj))
             return nullptr;
-        ShapeTable* table = obj->lastProperty()->maybeTable(keep);
+        table = obj->lastProperty()->maybeTable(keep);
         MOZ_ASSERT(table);
         entry = &table->search<MaybeAdding::NotAdding>(shape->propid(), keep);
         shape = entry->shape();
@@ -1055,9 +1051,10 @@ NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj, jsid id_)
     RootedId id(cx, id_);
 
     AutoKeepShapeTables keep(cx);
+    ShapeTable* table;
     ShapeTable::Entry* entry;
     RootedShape shape(cx);
-    if (!Shape::search(cx, obj->lastProperty(), id, keep, shape.address(), &entry))
+    if (!Shape::search(cx, obj->lastProperty(), id, keep, shape.address(), &table, &entry))
         return false;
 
     if (!shape)
@@ -1070,7 +1067,7 @@ NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj, jsid id_)
     if (!obj->inDictionaryMode() && (shape != obj->lastProperty() || !obj->canRemoveLastProperty())) {
         if (!toDictionaryMode(cx, obj))
             return false;
-        ShapeTable* table = obj->lastProperty()->maybeTable(keep);
+        table = obj->lastProperty()->maybeTable(keep);
         MOZ_ASSERT(table);
         entry = &table->search<MaybeAdding::NotAdding>(shape->propid(), keep);
         shape = entry->shape();
@@ -1116,8 +1113,7 @@ NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj, jsid id_)
      * list and hash in place.
      */
     if (obj->inDictionaryMode()) {
-        ShapeTable* table = obj->lastProperty()->maybeTable(keep);
-        MOZ_ASSERT(table);
+        MOZ_ASSERT(obj->lastProperty()->maybeTable(keep) == table);
 
         if (entry->hadCollision()) {
             entry->setRemoved();
