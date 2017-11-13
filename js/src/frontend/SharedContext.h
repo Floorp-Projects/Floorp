@@ -62,51 +62,6 @@ StatementKindIsUnlabeledBreakTarget(StatementKind kind)
     return StatementKindIsLoop(kind) || kind == StatementKind::Switch;
 }
 
-// These flags apply to both global and function contexts.
-class AnyContextFlags
-{
-    // This class's data is all private and so only visible to these friends.
-    friend class SharedContext;
-
-    // True if "use strict"; appears in the body instead of being inherited.
-    bool hasExplicitUseStrict:1;
-
-    // The (static) bindings of this script need to support dynamic name
-    // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
-    // the scope chain for a dynamic set of keys. The primary examples are:
-    //  - direct eval
-    //  - function::
-    //  - with
-    // since both effectively allow any name to be accessed. Non-examples are:
-    //  - upvars of nested functions
-    //  - function statement
-    // since the set of assigned name is known dynamically.
-    //
-    // Note: access through the arguments object is not considered dynamic
-    // binding access since it does not go through the normal name lookup
-    // mechanism. This is debatable and could be changed (although care must be
-    // taken not to turn off the whole 'arguments' optimization). To answer the
-    // more general "is this argument aliased" question, script->needsArgsObj
-    // should be tested (see JSScript::argIsAliased).
-    bool bindingsAccessedDynamically:1;
-
-    // Whether this script, or any of its inner scripts contains a debugger
-    // statement which could potentially read or write anywhere along the
-    // scope chain.
-    bool hasDebuggerStatement:1;
-
-    // A direct eval occurs in the body of the script.
-    bool hasDirectEval:1;
-
-  public:
-    AnyContextFlags()
-     :  hasExplicitUseStrict(false),
-        bindingsAccessedDynamically(false),
-        hasDebuggerStatement(false),
-        hasDirectEval(false)
-    { }
-};
-
 class FunctionContextFlags
 {
     // This class's data is all private and so only visible to these friends.
@@ -224,7 +179,6 @@ class SharedContext
 {
   public:
     JSContext* const context;
-    AnyContextFlags anyCxFlags;
 
   protected:
     enum class Kind : uint8_t {
@@ -250,6 +204,36 @@ class SharedContext
     bool inWith_:1;
     bool needsThisTDZChecks_:1;
 
+    // True if "use strict"; appears in the body instead of being inherited.
+    bool hasExplicitUseStrict_:1;
+
+    // The (static) bindings of this script need to support dynamic name
+    // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
+    // the scope chain for a dynamic set of keys. The primary examples are:
+    //  - direct eval
+    //  - function::
+    //  - with
+    // since both effectively allow any name to be accessed. Non-examples are:
+    //  - upvars of nested functions
+    //  - function statement
+    // since the set of assigned name is known dynamically.
+    //
+    // Note: access through the arguments object is not considered dynamic
+    // binding access since it does not go through the normal name lookup
+    // mechanism. This is debatable and could be changed (although care must be
+    // taken not to turn off the whole 'arguments' optimization). To answer the
+    // more general "is this argument aliased" question, script->needsArgsObj
+    // should be tested (see JSScript::argIsAliased).
+    bool bindingsAccessedDynamically_:1;
+
+    // Whether this script, or any of its inner scripts contains a debugger
+    // statement which could potentially read or write anywhere along the
+    // scope chain.
+    bool hasDebuggerStatement_:1;
+
+    // A direct eval occurs in the body of the script.
+    bool hasDirectEval_:1;
+
     void computeAllowSyntax(Scope* scope);
     void computeInWith(Scope* scope);
     void computeThisBinding(Scope* scope);
@@ -257,7 +241,6 @@ class SharedContext
   public:
     SharedContext(JSContext* cx, Kind kind, Directives directives, bool extraWarnings)
       : context(cx),
-        anyCxFlags(),
         kind_(kind),
         thisBinding_(ThisBinding::Global),
         strictScript(directives.strict()),
@@ -267,7 +250,11 @@ class SharedContext
         allowSuperProperty_(false),
         allowSuperCall_(false),
         inWith_(false),
-        needsThisTDZChecks_(false)
+        needsThisTDZChecks_(false),
+        hasExplicitUseStrict_(false),
+        bindingsAccessedDynamically_(false),
+        hasDebuggerStatement_(false),
+        hasDirectEval_(false)
     { }
 
     // If this is the outermost SharedContext, the Scope that encloses
@@ -291,15 +278,15 @@ class SharedContext
     bool inWith()                      const { return inWith_; }
     bool needsThisTDZChecks()          const { return needsThisTDZChecks_; }
 
-    bool hasExplicitUseStrict()        const { return anyCxFlags.hasExplicitUseStrict; }
-    bool bindingsAccessedDynamically() const { return anyCxFlags.bindingsAccessedDynamically; }
-    bool hasDebuggerStatement()        const { return anyCxFlags.hasDebuggerStatement; }
-    bool hasDirectEval()               const { return anyCxFlags.hasDirectEval; }
+    bool hasExplicitUseStrict()        const { return hasExplicitUseStrict_; }
+    bool bindingsAccessedDynamically() const { return bindingsAccessedDynamically_; }
+    bool hasDebuggerStatement()        const { return hasDebuggerStatement_; }
+    bool hasDirectEval()               const { return hasDirectEval_; }
 
-    void setExplicitUseStrict()           { anyCxFlags.hasExplicitUseStrict        = true; }
-    void setBindingsAccessedDynamically() { anyCxFlags.bindingsAccessedDynamically = true; }
-    void setHasDebuggerStatement()        { anyCxFlags.hasDebuggerStatement        = true; }
-    void setHasDirectEval()               { anyCxFlags.hasDirectEval               = true; }
+    void setExplicitUseStrict()           { hasExplicitUseStrict_        = true; }
+    void setBindingsAccessedDynamically() { bindingsAccessedDynamically_ = true; }
+    void setHasDebuggerStatement()        { hasDebuggerStatement_        = true; }
+    void setHasDirectEval()               { hasDirectEval_               = true; }
 
     inline bool allBindingsClosedOver();
 
