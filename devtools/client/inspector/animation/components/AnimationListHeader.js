@@ -4,18 +4,30 @@
 
 "use strict";
 
-const { createFactory, DOM: dom, PureComponent } =
+const { createFactory, DOM: dom, PropTypes, PureComponent } =
   require("devtools/client/shared/vendor/react");
 
 const AnimationTimelineTickList = createFactory(require("./AnimationTimelineTickList"));
 
 class AnimationListHeader extends PureComponent {
+  static get propTypes() {
+    return {
+      animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+    };
+  }
+
   render() {
+    const { animations } = this.props;
+
     return dom.div(
       {
         className: "animation-list-header devtools-toolbar"
       },
-      AnimationTimelineTickList()
+      AnimationTimelineTickList(
+        {
+          animations
+        }
+      )
     );
   }
 }

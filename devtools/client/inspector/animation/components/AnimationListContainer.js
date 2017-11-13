@@ -24,7 +24,11 @@ class AnimationListContainer extends PureComponent {
       {
         className: "animation-list-container"
       },
-      AnimationListHeader(),
+      AnimationListHeader(
+        {
+          animations
+        }
+      ),
       AnimationList(
         {
           animations
