@@ -1358,6 +1358,12 @@ class BuildDriver(MozbuildObject):
         with FileAvoidWrite(mozconfig_client_mk) as fh:
             fh.write(b'\n'.join(mozconfig_make_lines))
 
+        if mozconfig_make_lines:
+            self.log(logging.WARNING, 'mozconfig_content', {
+                'path': mozconfig['path'],
+                'content': '\n    '.join(mozconfig_make_lines),
+            }, 'Adding make options from {path}\n    {content}')
+
         append_env['OBJDIR'] = mozpath.normsep(self.topobjdir)
 
         return self._run_make(srcdir=True,
