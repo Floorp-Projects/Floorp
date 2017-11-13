@@ -4084,12 +4084,11 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
     // just have some smarts about unneccessarily splitting text nodes, which
     // should be universal enough to put straight in this EditorBase routine.
 
-    bool didSplit = false;
-
+    // If the split point is middle of the node or the node is not a text node
+    // and we're allowed to create empty element node, split it.
     if ((aSplitAtEdges == SplitAtEdges::eAllowToCreateEmptyContainer &&
          !nodeToSplit->GetAsText()) ||
         (offset && offset != (int32_t)nodeToSplit->Length())) {
-      didSplit = true;
       ErrorResult error;
       int32_t offsetAtStartOfRightNode =
         std::min(std::max(offset, 0),
@@ -4102,15 +4101,20 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
         return -1;
       }
 
+      // Then, try to split its parent.
+      offset = parent->IndexOf(nodeToSplit);
       rightNode = nodeToSplit;
       leftNode = newLeftNode;
     }
-
-    if (!didSplit && offset) {
-      // Must be "end of text node" case, we didn't split it, just move past it
+    // If the split point is end of the node and it is a text node or we're not
+    // allowed to create empty container node, try to split its parent after it.
+    else if (offset) {
       offset = parent->IndexOf(nodeToSplit) + 1;
       leftNode = nodeToSplit;
-    } else {
+    }
+    // If the split point is start of the node and it is a text node or we're
+    // not allowed to create empty container node, try to split its parent.
+    else {
       offset = parent->IndexOf(nodeToSplit);
       rightNode = nodeToSplit;
     }
