@@ -150,11 +150,9 @@ public:
   {
   }
 
-  // nsIDOMHTMLCollection
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsEmptyContentList,
                                            nsBaseContentList)
-  NS_DECL_NSIDOMHTMLCOLLECTION
   // nsIDOMNodeList, which we also implement.
   NS_DECL_NSIDOMNODELIST
 
@@ -337,8 +335,6 @@ protected:
   }
 public:
 
-  // nsIDOMHTMLCollection
-  NS_DECL_NSIDOMHTMLCOLLECTION
   // nsIDOMNodeList, which we also implement.
   NS_DECL_NSIDOMNODELIST
 

@@ -7,7 +7,7 @@
 #ifndef nsIHTMLCollection_h___
 #define nsIHTMLCollection_h___
 
-#include "nsIDOMHTMLCollection.h"
+#include "nsISupports.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
@@ -30,7 +30,7 @@ class Element;
 /**
  * An internal interface
  */
-class nsIHTMLCollection : public nsIDOMHTMLCollection
+class nsIHTMLCollection : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTMLCOLLECTION_IID)
