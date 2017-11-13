@@ -175,14 +175,6 @@ HTMLFormElement::Elements()
   return mControls;
 }
 
-NS_IMETHODIMP
-HTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
-{
-  *aElements = Elements();
-  NS_ADDREF(*aElements);
-  return NS_OK;
-}
-
 nsresult
 HTMLFormElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                const nsAttrValueOrString* aValue, bool aNotify)
