@@ -1876,8 +1876,8 @@ wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length, LifoAllo
         !AstDecodeModuleTail(c))
     {
         if (error) {
-            JS_ReportErrorNumberASCII(c.cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
-                                      error.get());
+            JS_ReportErrorNumberUTF8(c.cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
+                                     error.get());
             return false;
         }
         ReportOutOfMemory(c.cx);

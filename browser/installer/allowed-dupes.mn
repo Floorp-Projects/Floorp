@@ -76,6 +76,8 @@ browser/modules/devtools/gDevTools.jsm
 browser/chrome/icons/default/default16.png
 browser/chrome/icons/default/default32.png
 browser/chrome/icons/default/default48.png
+browser/chrome/icons/default/default64.png
+browser/chrome/icons/default/default128.png
 browser/chrome/pdfjs/content/web/images/findbarButton-next-rtl.png
 browser/chrome/pdfjs/content/web/images/findbarButton-next-rtl@2x.png
 browser/chrome/pdfjs/content/web/images/findbarButton-next.png
@@ -105,7 +107,6 @@ browser/features/flyweb@mozilla.org/chrome/skin/windows/icon-32-anchored.png
 browser/features/flyweb@mozilla.org/chrome/skin/windows/icon-32.png
 browser/features/flyweb@mozilla.org/chrome/skin/windows/icon-64-anchored.png
 browser/features/flyweb@mozilla.org/chrome/skin/windows/icon-64.png
-browser/icons/mozicon128.png
 chrome.manifest
 chrome/toolkit/skin/classic/global/autocomplete.css
 chrome/toolkit/skin/classic/global/button.css

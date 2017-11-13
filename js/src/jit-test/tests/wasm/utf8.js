@@ -22,3 +22,15 @@ bin[25] = 0x85;			// bad UTF-8
 assertEq(WebAssembly.validate(bin), false);
 
 assertThrowsInstanceOf(() => new WebAssembly.Module(bin), WebAssembly.CompileError);
+
+assertThrowsInstanceOf(() => wasmEvalText(`(module (import "\u2603" "")) `, {}), TypeError);
+
+{
+    let i1 = wasmEvalText(` (module (func (export "\u2603")))`);
+    assertThrowsInstanceOf(() => wasmEvalText(`(module (import "" "\u2603" (result i32)))`,
+                                              { "": { "\u2603": i1.exports['\u2603'] } }),
+                           WebAssembly.LinkError);
+    assertThrowsInstanceOf(() => wasmEvalText(`(module (import "\u2603" "" (result i32)))`,
+                                              { "\u2603": { "": i1.exports['\u2603'] } }),
+                           WebAssembly.LinkError);
+}

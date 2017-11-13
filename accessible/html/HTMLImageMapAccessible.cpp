@@ -10,7 +10,6 @@
 #include "DocAccessible-inl.h"
 #include "Role.h"
 
-#include "nsIDOMHTMLCollection.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMElement.h"
 #include "nsIFrame.h"

@@ -35,9 +35,7 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  // nsIDOMHTMLCollection interface
-  NS_DECL_NSIDOMHTMLCOLLECTION
-
+  virtual uint32_t Length() override;
   virtual Element* GetElementAt(uint32_t index) override;
   virtual nsINode* GetParentObject() override;
 
