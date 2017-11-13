@@ -182,13 +182,6 @@ nsEmptyContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEmptyContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
-{
-  *aReturn = nullptr;
-  return NS_OK;
-}
-
 mozilla::dom::Element*
 nsEmptyContentList::GetElementAt(uint32_t index)
 {
@@ -676,20 +669,6 @@ nsContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
 
   if (node) {
     return CallQueryInterface(node, aReturn);
-  }
-
-  *aReturn = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
-{
-  nsIContent *content = NamedItem(aName, true);
-
-  if (content) {
-    return CallQueryInterface(content, aReturn);
   }
 
   *aReturn = nullptr;

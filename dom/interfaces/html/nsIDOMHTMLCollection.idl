@@ -22,5 +22,4 @@ interface nsIDOMHTMLCollection : nsISupports
   readonly attribute unsigned long    length;
 
   nsIDOMNode item(in unsigned long index);
-  nsIDOMNode namedItem(in DOMString name);
 };
