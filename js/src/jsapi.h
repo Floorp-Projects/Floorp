@@ -6768,6 +6768,13 @@ typedef bool
 extern JS_PUBLIC_API(bool)
 SetGetPerformanceGroupsCallback(JSContext*, GetGroupsCallback, void*);
 
+/**
+ * Hint that we expect a crash. Currently, the only thing that cares is the
+ * breakpad injector, which (if loaded) will suppress minidump generation.
+ */
+extern JS_PUBLIC_API(void)
+NoteIntentionalCrash();
+
 } /* namespace js */
 
 namespace js {
