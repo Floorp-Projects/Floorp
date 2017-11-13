@@ -151,6 +151,180 @@ button:not(#update-btn) {
   border-inline-start-color: transparent;
 }
 
+/* Settings */
+
+setting {
+  padding-bottom: 1em;
+  -moz-box-align: center;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+setting[type="integer"],
+setting[type="string"],
+setting[type="menulist"],
+setting[type="control"] {
+  -moz-box-orient: vertical;
+  -moz-box-align: start;
+}
+
+setting > vbox {
+  -moz-box-flex: 1;
+}
+
+.preferences-description {
+  margin-top: 4px;
+  color: #666;
+}
+
+.preferences-description:empty {
+  display: none;
+}
+
+/* Checkbox */
+
+checkbox {
+  -moz-binding: url("chrome://browser/content/bindings/checkbox.xml#checkbox-with-spacing") !important;
+  margin: 0;
+}
+
+checkbox[label=""] > .checkbox-label-box,
+checkbox:not([label]) > .checkbox-label-box {
+  display: none;
+}
+
+.checkbox-check {
+  background-color: transparent;
+  background-image: url("chrome://browser/skin/images/checkbox_unchecked.png");
+  border: none;
+  height: 48px;
+  width: 48px;
+}
+
+setting:active checkbox > .checkbox-spacer-box > .checkbox-check {
+  background-image: url("chrome://browser/skin/images/checkbox_unchecked_pressed.png");
+}
+
+checkbox[disabled="true"] > .checkbox-spacer-box > .checkbox-check {
+  background-image: url("chrome://browser/skin/images/checkbox_unchecked_disabled.png");
+}
+
+checkbox[checked="true"] > .checkbox-spacer-box > .checkbox-check {
+  background-image: url("chrome://browser/skin/images/checkbox_checked.png");
+}
+
+setting:active checkbox[checked="true"] > .checkbox-spacer-box > .checkbox-check {
+  background-image: url("chrome://browser/skin/images/checkbox_checked_pressed.png");
+}
+
+checkbox[checked="true"][disabled="true"] > .checkbox-spacer-box > .checkbox-check {
+  background-image: url("chrome://browser/skin/images/checkbox_checked_disabled.png");
+}
+
+/* Textbox */
+
+textbox[type="number"] > spinbuttons {
+  visibility: collapse;
+}
+
+textbox {
+  min-width: 200px;
+  margin: 2px 0;
+  padding: 0.5em !important;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #333;
+}
+
+/* Button */
+
+setting button {
+  margin: 2px 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 0.5em;
+}
+
+/* Menulist */
+
+menulist {
+  -moz-appearance: none !important;
+  -moz-user-focus: ignore;
+  min-width: 200px;
+  margin: 2px 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.5em;
+}
+
+menulist > dropmarker {
+  height: 1.8em;
+  width: 1.8em;
+  margin-left: var(--margin_snormal);
+  background-color: transparent;
+  border: none;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  list-style-image: url("chrome://geckoview/skin/images/dropmarker.svg") !important;
+  -moz-image-region: auto;
+  display: block;
+}
+
+/* Select */
+
+select {
+  min-width: 200px;
+  margin: 2px 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 1em;
+}
+
+/* XBL bindings */
+
+setting {
+  display: none;
+}
+
+setting[type="bool"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://browser/content/bindings/settings.xml#setting-fulltoggle-bool");
+}
+
+setting[type="bool"][localized="true"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://browser/content/bindings/settings.xml#setting-fulltoggle-localized-bool");
+}
+
+setting[type="boolint"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://browser/content/bindings/settings.xml#setting-fulltoggle-boolint");
+}
+
+setting[type="integer"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-integer");
+}
+
+setting[type="control"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-control");
+}
+
+setting[type="string"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-string");
+}
+
+setting[type="radio"],
+setting[type="menulist"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-multi");
+}
+
 .hide-on-enable,
 .show-on-error,
 .show-on-uninstall,

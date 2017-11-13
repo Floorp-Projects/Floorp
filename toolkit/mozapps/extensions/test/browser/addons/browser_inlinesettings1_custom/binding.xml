@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <binding id="custom"
+           extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
+    <content>
+      <xul:vbox>
+        <xul:hbox class="preferences-alignment">
+          <xul:label anonid="label" class="preferences-title" flex="1" xbl:inherits="xbl:text=title"/>
+        </xul:hbox>
+        <xul:description class="preferences-description" flex="1" xbl:inherits="xbl:text=desc"/>
+      </xul:vbox>
+      <xul:hbox class="preferences-alignment">
+        <xul:label anonid="input" value="Woah!"/>
+      </xul:hbox>
+    </content>
+  </binding>
+</bindings>

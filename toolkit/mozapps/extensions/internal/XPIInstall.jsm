@@ -590,9 +590,11 @@ async function loadManifestFromRDF(aUri, aStream) {
     addon.hasEmbeddedWebExtension = getRDFProperty(ds, root, "hasEmbeddedWebExtension") == "true";
 
     if (addon.optionsType &&
-        addon.optionsType != AddonManager.OPTIONS_INLINE_BROWSER &&
-        addon.optionsType != AddonManager.OPTIONS_TYPE_TAB) {
-      throw new Error("Install manifest specifies unknown optionsType: " + addon.optionsType);
+        addon.optionsType != AddonManager.OPTIONS_TYPE_DIALOG &&
+        addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE &&
+        addon.optionsType != AddonManager.OPTIONS_TYPE_TAB &&
+        addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE_INFO) {
+      throw new Error("Install manifest specifies unknown type: " + addon.optionsType);
     }
 
     if (addon.hasEmbeddedWebExtension) {
