@@ -410,10 +410,6 @@ body {
   padding-left: 3px;
   font-weight: normal;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .modal-wrapper {
   position: fixed;
   display: flex;
@@ -477,10 +473,6 @@ body {
     transform: translateY(30px);
   }
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .shortcuts-content {
   padding: 15px;
   -moz-column-width: 250px;
@@ -492,6 +484,20 @@ body {
   margin-top: 2px;
   margin-bottom: 2px;
   color: var(--theme-content-color1);
+}
+
+.mac .keystroke {
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 3px;
+  border-color: var(--theme-graphs-grey);
+  background-color: var(--theme-selection-color);
+  width: 21px;
+  height: 17px;
+  display: inline-block;
+  font-size: 10px;
+  text-align: center;
+  padding-top: 2px;
 }
 
 .shortcuts-section {
@@ -523,10 +529,6 @@ body {
     width: 100%;
   }
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 :root {
   --arrow-width: 10px;
 }
@@ -542,10 +544,6 @@ body {
   --search-overlays-semitransparent: rgba(42, 46, 56, 0.66);
   --popup-shadow-color: #5c667b;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 * {
   box-sizing: border-box;
 }
@@ -604,10 +602,6 @@ button:focus {
   left: 50%;
   transform: translate(-50%, -50%);
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 menupopup {
   position: fixed;
   z-index: 10000;
@@ -928,10 +922,6 @@ menuseparator {
 .split-box.dragging > .uncontrolled {
   pointer-events: none;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .arrow,
 .worker,
 .refresh,
@@ -1045,10 +1035,6 @@ html .arrow.expanded svg {
 .theme-dark .webpack {
   opacity: 0.5;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .managed-tree .tree {
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -1090,10 +1076,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 .managed-tree .tree-node button {
   position: fixed;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .close-btn path {
   fill: var(--theme-comment-alt);
 }
@@ -1141,10 +1123,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 .close-btn.big .close svg {
   width: 9px;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .search-field {
   width: calc(100% - 1px);
   height: 27px;
@@ -1251,10 +1229,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 .search-field .search-nav-buttons .nav-btn path {
   fill: var(--theme-comment);
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .project-text-search {
   flex-grow: 1;
   display: flex;
@@ -1343,10 +1317,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 .project-text-search .managed-tree .tree {
   height: 100%;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .search-container {
   position: absolute;
   top: 30px;
@@ -1359,10 +1329,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   background-color: var(--theme-body-background);
   overflow-y: hidden;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .sources-panel {
   background-color: var(--theme-sidebar-background);
   display: flex;
@@ -1454,7 +1420,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   -moz-user-select: none;
   user-select: none;
   box-sizing: border-box;
-  height: 29px;
 }
 
 .source-outline-tabs .tab {
@@ -1523,10 +1488,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 .theme-dark .sources-list .managed-tree .tree .node.focused img.blackBox {
   background-color: white;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .outline {
   overflow-y: auto;
 }
@@ -1572,10 +1533,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 .outline-list__element:hover {
   background: var(--theme-toolbar-background-hover);
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .function-signature {
   align-self: center;
 }
@@ -1595,10 +1552,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 .function-signature .comma {
   color: var(--object-color);
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .toggle-button-start,
 .toggle-button-end {
   transform: translate(0, 0px);
@@ -1644,10 +1597,6 @@ html .toggle-button-end.vertical svg {
 .toggle-button-end.collapsed {
   transform: rotate(180deg);
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .source-footer {
   background: var(--theme-body-background);
   border-top: 1px solid var(--theme-splitter-color);
@@ -1734,10 +1683,6 @@ html .toggle-button-end.vertical svg {
 .source-footer .blackbox-summary {
   color: var(--theme-body-color);
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .search-bar {
   display: flex;
   flex-direction: column;
@@ -2118,10 +2063,6 @@ html[dir="rtl"] .arrow svg,
   opacity: 0.6;
 }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .bracket-arrow {
   position: absolute;
 }
@@ -2164,10 +2105,6 @@ html[dir="rtl"] .arrow svg,
   border-top-color: var(--theme-body-background);
   top: -1px;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .popover {
   position: fixed;
   z-index: 100;
@@ -2177,10 +2114,6 @@ html[dir="rtl"] .arrow svg,
   height: 5px;
   padding-top: 5px;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .popover .preview-popup {
   background: var(--theme-body-background);
   width: 350px;
@@ -2305,10 +2238,6 @@ html[dir="rtl"] .arrow svg,
   font-size: 14px;
   color: var(--theme-content-color3);
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .call-site {
   background: #f0f9ff;
   position: relative;
@@ -2354,17 +2283,9 @@ html[dir="rtl"] .arrow svg,
 .theme-dark .call-site-bp::before {
   border-bottom-color: #dd4d4d;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .empty-line .CodeMirror-linenumber {
   opacity: 0.5;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .conditional-breakpoint-panel {
   cursor: initial;
   margin: 1em 0;
@@ -2399,10 +2320,6 @@ html[dir="rtl"] .arrow svg,
 .conditional-breakpoint-panel input:focus {
   outline-width: 0;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .editor-wrapper {
   --debug-line-border: rgb(145, 188, 219);
   --debug-expression-background: rgba(202, 227, 255, 0.5);
@@ -2410,7 +2327,6 @@ html[dir="rtl"] .arrow svg,
   --editor-second-searchbar-height: 27px;
   --debug-line-error-border: rgb(255, 0, 0);
   --debug-expression-error-background: rgba(231, 116, 113, 0.3);
-  --editor-header-height: 30px;
 }
 
 .theme-dark .editor-wrapper {
@@ -2436,9 +2352,9 @@ html[dir="rtl"] .arrow svg,
  */
 .editor-wrapper {
   position: absolute;
-  height: calc(100% - var(--editor-header-height));
+  height: calc(100% - 29px);
   width: calc(100% - 1px);
-  top: var(--editor-header-height);
+  top: 29px;
   left: 0px;
   --editor-footer-height: 24px;
 }
@@ -2618,10 +2534,6 @@ debug-expression-error {
 .visible {
   visibility: visible;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .cm-highlight {
   position: relative;
 }
@@ -2647,10 +2559,6 @@ debug-expression-error {
   border-radius: 2px;
   margin: 0 -1px -1px -1px;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .breakpoints-toggle {
   margin: 2px 3px;
 }
@@ -2763,10 +2671,6 @@ html .breakpoints-list .breakpoint.paused {
 .breakpoint:hover .close {
   visibility: visible;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .input-expression {
   width: 100%;
   margin: 0px;
@@ -2848,10 +2752,6 @@ html .breakpoints-list .breakpoint.paused {
 .expression-input {
   max-width: 50%;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .frames ul .frames-group .group,
 .frames ul .frames-group .group .location {
   font-weight: 500;
@@ -2875,10 +2775,6 @@ html .breakpoints-list .breakpoint.paused {
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .why-paused {
   background-color: var(--theme-body-background);
   color: var(--theme-body-color);
@@ -2907,10 +2803,6 @@ html .breakpoints-list .breakpoint.paused {
   font-weight: bold;
   font-style: normal;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .frames ul {
   list-style: none;
   margin: 0;
@@ -3003,10 +2895,6 @@ html .breakpoints-list .breakpoint.paused {
 :root.theme-dark .annotation-logo svg path {
   fill: var(--theme-highlight-blue);
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .event-listeners {
   list-style: none;
   margin: 0;
@@ -3052,10 +2940,6 @@ html .breakpoints-list .breakpoint.paused {
 .event-listeners .listener:hover .close {
   display: block;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .workers-list * {
   user-select: none;
 }
@@ -3068,10 +2952,6 @@ html .breakpoints-list .breakpoint.paused {
   position: relative;
   transition: all 0.25s ease;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 :root {
   --accordion-header-background: var(--theme-toolbar-background);
 }
@@ -3148,10 +3028,6 @@ html .breakpoints-list .breakpoint.paused {
 .accordion .header-buttons button::-moz-focus-inner {
   border: none;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .command-bar {
   flex: 0 0 29px;
   border-bottom: 1px solid var(--theme-splitter-color);
@@ -3280,10 +3156,6 @@ img.resume {
 .command-bar.bottom > button:hover {
   color: var(--theme-body-color);
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .object-node.default-property {
   opacity: 0.6;
 }
@@ -3314,10 +3186,6 @@ img.resume {
 .scopes-list .function-signature {
   display: inline-block;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .secondary-panes {
   overflow: auto;
   display: flex;
@@ -3362,10 +3230,6 @@ img.resume {
 .theme-dark .secondary-panes .accordion .arrow svg {
   fill: var(--theme-content-color3);
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .welcomebox {
   width: calc(100% - 1px);
 
@@ -3447,10 +3311,6 @@ html .welcomebox .toggle-button-end.collapsed {
     display: block;
   }
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .source-header {
   border-bottom: 1px solid var(--theme-splitter-color);
   width: 100%;
@@ -3579,10 +3439,6 @@ html .welcomebox .toggle-button-end.collapsed {
 .source-tab:hover .close-btn {
   visibility: visible;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .dropdown {
   --width: 150px;
   background: var(--theme-body-background);
@@ -3646,10 +3502,6 @@ html[dir="rtl"] .dropdown {
   left: 0;
   top: 0;
 }
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .result-list {
   list-style: none;
   margin: 0px;
@@ -3739,5 +3591,3 @@ html[dir="rtl"] .dropdown {
 .theme-dark .result-list {
   background-color: var(--theme-body-background);
 }
-
-/*# sourceMappingURL=debugger.css.map*/
