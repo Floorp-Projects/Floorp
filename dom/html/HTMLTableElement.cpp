@@ -240,19 +240,6 @@ TableRowsCollection::GetElementAt(uint32_t aIndex)
   return nullptr;
 }
 
-NS_IMETHODIMP
-TableRowsCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  nsISupports* node = GetElementAt(aIndex);
-  if (!node) {
-    *aReturn = nullptr;
-
-    return NS_OK;
-  }
-
-  return CallQueryInterface(node, aReturn);
-}
-
 Element*
 TableRowsCollection::GetFirstNamedElement(const nsAString& aName, bool& aFound)
 {

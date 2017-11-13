@@ -155,6 +155,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsEmptyContentList,
                                            nsBaseContentList)
   NS_DECL_NSIDOMHTMLCOLLECTION
+  // Need Item because we also implement nsIDOMNodeList.
+  NS_IMETHOD Item(uint32_t aIndex, nsIDOMNode** aReturn);
 
   virtual nsINode* GetParentObject() override
   {
@@ -333,6 +335,8 @@ public:
 
   // nsIDOMHTMLCollection
   NS_DECL_NSIDOMHTMLCOLLECTION
+  // Need Item because we also implement nsIDOMNodeList.
+  NS_IMETHOD Item(uint32_t aIndex, nsIDOMNode** aReturn);
 
   // nsBaseContentList overrides
   virtual int32_t IndexOf(nsIContent *aContent, bool aDoFlush) override;
