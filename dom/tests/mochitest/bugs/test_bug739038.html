@@ -28,8 +28,7 @@ SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_print", true]]}, functio
   } catch (e) {
     caughtException = true;
   }
-  ok(caughtException, "window.print() should throw an exception");
-  is(window.print, undefined, "window.print shouldn't even exist");
+  ok(caughtException, "window.print should throw an exception");
   SimpleTest.finish();
 });
 
