@@ -5,37 +5,46 @@
 /* Animation-inspector specific theme variables */
 
 :root {
-  --animation-even-background-color: rgba(0,0,0,0.05);
+  --animation-even-background-color: rgba(0, 0, 0, 0.05);
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
 }
 
 :root.theme-dark {
-  --animation-even-background-color: rgba(255,255,255,0.05);
+  --animation-even-background-color: rgba(255, 255, 255, 0.05);
 }
 
 :root.theme-firebug {
   --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
 }
 
-/* Settings for animation-list-header */
+/* Animation List Header */
 .animation-list-header {
   display: flex;
   justify-content: flex-end;
+  padding: 0;
 }
 
+/* Animation Timeline Tick List */
 .animation-timeline-tick-list {
   margin-right: 10px;
+  position: relative;
   width: calc(100% - 210px);
 }
 
-/* Settings for animations element */
+.animation-timeline-tick-item {
+  border-left: 0.5px solid rgba(128, 136, 144, .5);
+  height: 100vh;
+  position: absolute;
+}
+
+/* Animation List */
 .animation-list {
   list-style-type: none;
   margin-top: 0;
   padding: 0;
 }
 
-/* Settings for each animation element */
+/* Animation Item */
 .animation-item {
   height: 30px;
 }
@@ -44,7 +53,7 @@
   background-color: var(--animation-even-background-color);
 }
 
-/* Settings for no animation message */
+/* No Animation Panel */
 .animation-error-message {
   overflow: auto;
 }
