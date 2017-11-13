@@ -499,6 +499,33 @@ class MOZ_RAII AutoCheckShapeConsistency
 
 } // namespace js
 
+/* static */ MOZ_ALWAYS_INLINE bool
+NativeObject::maybeConvertToOrGrowDictionaryForAdd(JSContext* cx, HandleNativeObject obj, HandleId id,
+                                                   ShapeTable** table, ShapeTable::Entry** entry,
+                                                   const AutoKeepShapeTables& keep)
+{
+    MOZ_ASSERT(!!*table == !!*entry);
+
+    // The code below deals with either converting obj to dictionary mode or
+    // growing an object that's already in dictionary mode.
+    if (!obj->inDictionaryMode()) {
+        if (!ShouldConvertToDictionary(obj))
+            return true;
+        if (!toDictionaryMode(cx, obj))
+            return false;
+        *table = obj->lastProperty()->maybeTable(keep);
+    } else {
+        if (!(*table)->needsToGrow())
+            return true;
+        if (!(*table)->grow(cx))
+            return false;
+    }
+
+    *entry = &(*table)->search<MaybeAdding::Adding>(id, keep);
+    MOZ_ASSERT(!(*entry)->shape());
+    return true;
+}
+
 /* static */ Shape*
 NativeObject::addAccessorPropertyInternal(JSContext* cx,
                                           HandleNativeObject obj, HandleId id,
@@ -509,25 +536,8 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
     AutoCheckShapeConsistency check(obj);
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
-    // The code below deals with either converting obj to dictionary mode or
-    // growing an object that's already in dictionary mode.
-    if (!obj->inDictionaryMode()) {
-        if (ShouldConvertToDictionary(obj)) {
-            if (!toDictionaryMode(cx, obj))
-                return nullptr;
-            table = obj->lastProperty()->maybeTable(keep);
-            entry = &table->search<MaybeAdding::Adding>(id, keep);
-        }
-    } else {
-        if (table->needsToGrow()) {
-            if (!table->grow(cx))
-                return nullptr;
-            entry = &table->search<MaybeAdding::Adding>(id, keep);
-            MOZ_ASSERT(!entry->shape());
-        }
-    }
-
-    MOZ_ASSERT(!!table == !!entry);
+    if (!maybeConvertToOrGrowDictionaryForAdd(cx, obj, id, &table, &entry, keep))
+        return nullptr;
 
     // Find or create a property tree node labeled by our arguments.
     RootedShape shape(cx);
@@ -573,25 +583,8 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
     MOZ_ASSERT(slot == SHAPE_INVALID_SLOT ||
                slot < JSCLASS_RESERVED_SLOTS(obj->getClass()));
 
-    // The code below deals with either converting obj to dictionary mode or
-    // growing an object that's already in dictionary mode.
-    if (!obj->inDictionaryMode()) {
-        if (ShouldConvertToDictionary(obj)) {
-            if (!toDictionaryMode(cx, obj))
-                return nullptr;
-            table = obj->lastProperty()->maybeTable(keep);
-            entry = &table->search<MaybeAdding::Adding>(id, keep);
-        }
-    } else {
-        if (table->needsToGrow()) {
-            if (!table->grow(cx))
-                return nullptr;
-            entry = &table->search<MaybeAdding::Adding>(id, keep);
-            MOZ_ASSERT(!entry->shape());
-        }
-    }
-
-    MOZ_ASSERT(!!table == !!entry);
+    if (!maybeConvertToOrGrowDictionaryForAdd(cx, obj, id, &table, &entry, keep))
+        return nullptr;
 
     // Find or create a property tree node labeled by our arguments.
     RootedShape shape(cx);
