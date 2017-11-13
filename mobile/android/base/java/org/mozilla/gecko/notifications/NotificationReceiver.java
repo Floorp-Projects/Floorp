@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.notifications;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
@@ -63,17 +62,7 @@ public class NotificationReceiver extends BroadcastReceiver {
     }
 
     private void forwardMessageToActivity(final Intent intent, final Context context) {
-        final ComponentName name =
-                intent.getExtras().getParcelable(NotificationHelper.ORIGINAL_EXTRA_COMPONENT);
-
-        if (!AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS.equals(
-                name != null ? name.getClassName() : null)) {
-            // Don't try to start anything other than the browser Activity.
-            NotificationHelper.getInstance(context.getApplicationContext())
-                              .handleNotificationIntent(new SafeIntent(intent));
-            return;
-        }
-
+        final ComponentName name = intent.getExtras().getParcelable(NotificationHelper.ORIGINAL_EXTRA_COMPONENT);
         intent.setComponent(name);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
