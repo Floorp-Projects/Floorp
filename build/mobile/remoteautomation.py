@@ -165,9 +165,9 @@ class RemoteAutomation(Automation):
 
     def deleteTombstones(self):
         # delete any existing tombstone files from device
-        remoteDir = "/data/tombstones"
+        tombstones = "/data/tombstones/*"
         try:
-            self._devicemanager.shellCheckOutput(['rm', '-r', remoteDir], root=True,
+            self._devicemanager.shellCheckOutput(['rm', '-r', tombstones], root=True,
                                                  timeout=DeviceManager.short_timeout)
         except DMError:
             # This may just indicate that the tombstone directory is missing
