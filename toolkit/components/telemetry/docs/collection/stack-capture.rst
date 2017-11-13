@@ -9,8 +9,7 @@ demand and annotated with a unique key for further inspection.
 
 Capturing stacks is only supported on official builds with ``--enable-profiling``
 switch enabled, such as Nightly builds, for example. The feature is available on
-Windows, Linux and macOS. Capturing stacks is only available with extended Telemetry
-enabled.
+Windows, Linux and macOS builds of Firefox.
 
 Captured stacks are grouped by a user-defined key. Identical stacks captured under
 the same key are combined in order to reduce their memory footprint. A counter is

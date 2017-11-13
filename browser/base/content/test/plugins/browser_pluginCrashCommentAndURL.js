@@ -1,3 +1,4 @@
+/* global gBrowser */
 Cu.import("resource://gre/modules/CrashSubmit.jsm", this);
 
 const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
@@ -119,6 +120,41 @@ add_task(async function() {
     urlOptIn: true
   };
 
+  // Deferred promise object used by the test to wait for the crash handler
+  let crashDeferred = PromiseUtils.defer();
+
+  // Clear out any minidumps we create from plugin crashes, this is needed
+  // because we do not submit the crash otherwise the submission process would
+  // have deleted the crash dump files for us.
+  let crashObserver = (subject, topic, data) => {
+    if (topic != "plugin-crashed") {
+      return;
+    }
+
+    let propBag = subject.QueryInterface(Ci.nsIPropertyBag2);
+    let minidumpID = propBag.getPropertyAsAString("pluginDumpID");
+
+    Services.crashmanager.ensureCrashIsPresent(minidumpID).then(() => {
+      let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
+                     .getService(Ci.nsIProperties);
+      let minidumpDir = dirSvc.get("UAppData", Ci.nsIFile);
+      minidumpDir.append("Crash Reports");
+      minidumpDir.append("pending");
+
+      let pluginDumpFile = minidumpDir.clone();
+      pluginDumpFile.append(minidumpID + ".dmp");
+
+      let extraFile = minidumpDir.clone();
+      extraFile.append(minidumpID + ".extra");
+
+      pluginDumpFile.remove(false);
+      extraFile.remove(false);
+      crashDeferred.resolve();
+    });
+  };
+
+  Services.obs.addObserver(crashObserver, "plugin-crashed");
+
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
 
   let pluginCrashed = promisePluginCrashed();
@@ -141,6 +177,9 @@ add_task(async function() {
     Assert.equal(!!pleaseSubmit && content.getComputedStyle(pleaseSubmit).display == "block",
       aConfig.shouldSubmissionUIBeVisible, "Plugin crash UI should not be visible");
   });
+
+  await crashDeferred.promise;
+  Services.obs.removeObserver(crashObserver, "plugin-crashed");
 });
 
 function promisePluginCrashed() {
@@ -155,9 +194,11 @@ function promisePluginCrashed() {
 }
 
 function onSubmitStatus(aSubject, aData) {
-  // Wait for success or failed, doesn't matter which.
-  if (aData != "success" && aData != "failed")
+  if (aData === "submitting") {
     return false;
+  }
+
+  is(aData, "success", "The crash report should be submitted successfully");
 
   let propBag = aSubject.QueryInterface(Ci.nsIPropertyBag);
   if (aData == "success") {
@@ -176,20 +217,22 @@ function onSubmitStatus(aSubject, aData) {
   ok(extra instanceof Ci.nsIPropertyBag, "Extra data should be property bag");
 
   let val = getPropertyBagValue(extra, "PluginUserComment");
-  if (config.comment)
+  if (config.comment) {
     is(val, config.comment,
        "Comment in extra data should match comment in textbox");
-  else
+  } else {
     ok(val === undefined,
        "Comment should be absent from extra data when textbox is empty");
+  }
 
   val = getPropertyBagValue(extra, "PluginContentURL");
-  if (config.urlOptIn)
+  if (config.urlOptIn) {
     is(val, gBrowser.currentURI.spec,
        "URL in extra data should match browser URL when opt-in checked");
-  else
+  } else {
     ok(val === undefined,
        "URL should be absent from extra data when opt-in not checked");
+  }
 
   return true;
 }

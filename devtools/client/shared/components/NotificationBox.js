@@ -4,14 +4,14 @@
 
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Immutable = require("devtools/client/shared/vendor/immutable");
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
 
-// Shortcuts
-const { PropTypes, Component, DOM } = React;
-const { div, span, button } = DOM;
+const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
+const { div, span, button } = dom;
 
 // Priority Levels
 const PriorityLevels = {

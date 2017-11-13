@@ -63,7 +63,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIFile.h"
 #include "nsFrameSelection.h"
-#include "nsISelectionPrivate.h"//for toStringwithformat code
+#include "nsISelectionPrivate.h" //for toStringwithformat code
 
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"

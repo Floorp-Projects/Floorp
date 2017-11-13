@@ -3777,11 +3777,6 @@ const BrowserSearch = {
       searchBar.select();
       focusUrlBarIfSearchFieldIsNotActive(searchBar);
     };
-    if (placement && placement.area == CustomizableUI.AREA_PANEL) {
-      // The panel is not constructed until the first time it is shown.
-      PanelUI.show().then(focusSearchBar);
-      return;
-    }
     if (placement && searchBar &&
         ((searchBar.parentNode.getAttribute("overflowedItem") == "true" &&
           placement.area == CustomizableUI.AREA_NAVBAR) ||
