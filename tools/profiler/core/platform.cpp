@@ -107,7 +107,8 @@
 #endif
 
 // Linux builds use LUL, which uses DWARF info to unwind stacks.
-#if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) || defined(GP_PLAT_mips64_linux)
+#if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) || \
+    defined(GP_PLAT_mips64_linux)
 # define HAVE_NATIVE_UNWIND
 # define USE_LUL_STACKWALK
 # include "lul/LulMain.h"
@@ -1133,6 +1134,10 @@ DoLULBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
   startRegs.xip = lul::TaggedUWord(mc->gregs[REG_EIP]);
   startRegs.xsp = lul::TaggedUWord(mc->gregs[REG_ESP]);
   startRegs.xbp = lul::TaggedUWord(mc->gregs[REG_EBP]);
+#elif defined(GP_PLAT_mips64_linux)
+  startRegs.pc = lul::TaggedUWord(mc->pc);
+  startRegs.sp = lul::TaggedUWord(mc->gregs[29]);
+  startRegs.fp = lul::TaggedUWord(mc->gregs[30]);
 #else
 # error "Unknown plat"
 #endif
@@ -1180,6 +1185,9 @@ DoLULBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
 #elif defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
     uintptr_t rEDZONE_SIZE = 0;
     uintptr_t start = startRegs.xsp.Value() - rEDZONE_SIZE;
+#elif defined(GP_PLAT_mips64_linux)
+    uintptr_t rEDZONE_SIZE = 0;
+    uintptr_t start = startRegs.sp.Value() - rEDZONE_SIZE;
 #else
 #   error "Unknown plat"
 #endif
