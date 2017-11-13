@@ -4891,7 +4891,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
   return false;
 }
 
-gfxSize
+Size
 StyleAnimationValue::GetScaleValue(const nsIFrame* aForFrame) const
 {
   MOZ_ASSERT(GetUnit() == StyleAnimationValue::eUnit_Transform);
@@ -5361,7 +5361,7 @@ AnimationValue::GetTransformList() const
   return transform.forget();
 }
 
-gfxSize
+Size
 AnimationValue::GetScaleValue(const nsIFrame* aFrame) const
 {
   MOZ_ASSERT(!mServo != mGecko.IsNull());

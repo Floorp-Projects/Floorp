@@ -87,19 +87,17 @@ Preferences
   * Telemetry is always enabled and recording *base* data.
   * Telemetry will send additional ``main`` pings.
 
+  It defaults to ``true``, but is ``false`` on Android (Fennec) builds.
+
 ``toolkit.telemetry.enabled``
 
-  If ``unified`` is off, this controls whether the Telemetry module is enabled.
-  If ``unified`` is on, this controls whether to record *extended* data.
-  This preference is controlled through the `Preferences` dialog.
-
-  Note that the default value here of this pref depends on the define ``RELEASE_OR_BETA`` and the channel.
-  If ``RELEASE_OR_BETA`` is set, ``MOZ_TELEMETRY_ON_BY_DEFAULT`` gets set, which means this pref will default to ``true``.
-  This is overridden by the preferences code on the "beta" channel, the pref also defaults to ``true`` there.
+  If ``unified`` is off, this controls whether the Telemetry module is enabled. It can be set or unset via the `Preferences` dialog in Firefox for Android (Fennec).
+  If ``unified`` is on, this is locked to ``true`` if ``MOZ_UPDATE_CHANNEL`` is ``nightly`` or ``aurora`` or ``beta`` or ``default`` (which is the default value of ``MOZ_UPDATE_CHANNEL`` for developer builds). Otherwise it is locked to ``false``. This controls a diminishing number of things and is intended to be deprecated, and then removed.
 
 ``datareporting.healthreport.uploadEnabled``
 
-  Send the data we record if user has consented to FHR. This preference is controlled through the `Preferences` dialog.
+  If ``unified`` is true, this controls whether we send Telemetry data.
+  If ``unified`` is false, we don't use this value.
 
 ``toolkit.telemetry.archive.enabled``
 
@@ -128,7 +126,7 @@ Preferences
 
 ``toolkit.telemetry.firstShutdownPing.enabled``
 
-  Allow a duplicate of the shutdown ping from the first browsing session to be sent as a separate ``first-shutdown`` ping.
+  Allow a duplicate of the ``main`` shutdown ping from the first browsing session to be sent as a separate ``first-shutdown`` ping.
 
 ``toolkit.telemetry.newProfilePing.enabled``
 

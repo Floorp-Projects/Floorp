@@ -164,7 +164,7 @@ Optional Fields
 ---------------
 
 - ``cpp_guard``: A string that gets inserted as an ``#ifdef`` directive around the automatically generated C++ declaration. This is typically used for platform-specific scalars, e.g. ``ANDROID``.
-- ``release_channel_collection``: This can be either ``opt-in`` (default) or ``opt-out``. With the former the scalar is submitted by default on pre-release channels; on the release channel only if the user opted into additional data collection. With the latter the scalar is submitted by default on release and pre-release channels, unless the user opted out.
+- ``release_channel_collection``: This can be either ``opt-in`` (default) or ``opt-out``. With the former the scalar is submitted by default on pre-release channels, unless the user has opted out. With the latter the scalar is submitted by default on release and pre-release channels, unless the user has opted out.
 - ``keyed``: A boolean that determines whether this is a keyed scalar. It defaults to ``False``.
 
 String type restrictions
@@ -247,7 +247,7 @@ Let's start by registering two probes in the `Scalars.yaml <https://dxr.mozilla.
           - 'main'
 
 These two scalars have different collection policies and are both constrained to recording only in the main process.
-For example, the ``ui.download_button_activated`` can be recorded only by users who opted into the extended Telemetry collection.
+For example, the ``ui.download_button_activated`` can be recorded only by users on running pre-release builds of Firefox.
 
 Using the JS API
 ----------------

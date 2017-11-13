@@ -402,29 +402,25 @@ select > option.divider {
 .device-modal {
   border-radius: 2px;
   box-shadow: var(--rdm-box-shadow);
-  display: none;
   position: absolute;
   margin: auto;
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
-  width: 642px;
+  width: 800px;
+  max-width: 90%;
   height: 650px;
   z-index: 1;
 }
 
 /* Handles the opening/closing of the modal */
 #device-modal-wrapper.opened .device-modal {
-  animation: fade-in-and-up 0.3s ease;
-  animation-fill-mode: forwards;
-  display: block;
+  animation: fade-in-and-up 0.3s ease forwards;
 }
 
 #device-modal-wrapper.closed .device-modal {
-  animation: fade-down-and-out 0.3s ease;
-  animation-fill-mode: forwards;
-  display: block;
+  animation: fade-down-and-out 0.3s ease forwards;
 }
 
 #device-modal-wrapper.opened .modal-overlay {
@@ -444,7 +440,6 @@ select > option.divider {
   flex-wrap: wrap;
   overflow: auto;
   height: 515px;
-  width: 600px;
   margin: 20px 20px 0;
 }
 

@@ -1,10 +1,10 @@
 
 "modules" ping
-============
+==============
 
 This ping is sent once a week and includes the modules loaded in the Firefox process.
 
-The client ID and environment is submitted with this ping.
+The client ID and environment are submitted with this ping.
 
 Structure:
 

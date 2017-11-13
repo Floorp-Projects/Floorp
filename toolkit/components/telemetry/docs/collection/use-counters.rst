@@ -4,7 +4,7 @@ Use Counters
 
 Use counters are used to report Telemetry statistics on whether individual documents
 use a given WebIDL method or attribute (getters and setters are reported separately), CSS
-property and deprecated DOM operations.  Custom use counters can also be
+property, or deprecated DOM operation.  Custom use counters can also be
 defined to test frequency of things that don't fall into one of those
 categories.
 
@@ -78,4 +78,3 @@ This script is called by the build system to generate:
 
 - the ``PropertyUseCounterMap.inc`` C++ header for the CSS properties;
 - the ``UseCounterList.h`` header for the WebIDL, out of the definition files.
-

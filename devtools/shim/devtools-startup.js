@@ -314,9 +314,6 @@ DevToolsStartup.prototype = {
       viewId: "PanelUI-developer",
       shortcutId: "key_toggleToolbox",
       tooltiptext: "developer-button.tooltiptext2",
-      defaultArea: AppConstants.MOZ_DEV_EDITION ?
-                     CustomizableUI.AREA_NAVBAR :
-                     CustomizableUI.AREA_PANEL,
       onViewShowing: (event) => {
         if (Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
           // If DevTools are enabled, initialize DevTools to create all menuitems in the
@@ -361,6 +358,9 @@ DevToolsStartup.prototype = {
         doc.getElementById("PanelUI-multiView").appendChild(view);
       }
     };
+    if (AppConstants.MOZ_DEV_EDITION) {
+      item.defaultArea = CustomizableUI.AREA_NAVBAR;
+    }
     CustomizableUI.createWidget(item);
     CustomizableWidgets.push(item);
   },

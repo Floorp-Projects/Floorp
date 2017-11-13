@@ -764,14 +764,14 @@ GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
   // background, one for generating text mask.
 
   gfxContext* sourceCtx = aContext;
-  gfxRect bounds =
-    nsLayoutUtils::RectToGfxRect(aFillRect,
-                                 aFrame->PresContext()->AppUnitsPerDevPixel());
+  LayoutDeviceRect bounds =
+    LayoutDeviceRect::FromAppUnits(aFillRect,
+                                   aFrame->PresContext()->AppUnitsPerDevPixel());
 
   {
     // Paint text selection background into sourceCtx.
     gfxContextMatrixAutoSaveRestore save(sourceCtx);
-    sourceCtx->SetMatrixDouble(sourceCtx->CurrentMatrixDouble().PreTranslate(bounds.TopLeft()));
+    sourceCtx->SetMatrix(sourceCtx->CurrentMatrix().PreTranslate(bounds.TopLeft().ToUnknownPoint()));
 
     nsLayoutUtils::PaintFrame(aContext, aFrame,
                               nsRect(nsPoint(0, 0), aFrame->GetSize()),
@@ -793,10 +793,10 @@ GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
   }
   RefPtr<gfxContext> maskCtx = gfxContext::CreatePreservingTransformOrNull(maskDT);
   MOZ_ASSERT(maskCtx);
-  gfxMatrix currentMatrix = sourceCtx->CurrentMatrixDouble();
-  maskCtx->SetMatrixDouble(gfxMatrix::Translation(bounds.TopLeft()) *
-                           currentMatrix *
-                           gfxMatrix::Translation(-drawRect.TopLeft()));
+  Matrix currentMatrix = sourceCtx->CurrentMatrix();
+  maskCtx->SetMatrix(Matrix::Translation(bounds.TopLeft().ToUnknownPoint()) *
+                     currentMatrix *
+                     Matrix::Translation(-drawRect.TopLeft()));
 
   // Shade text shape into mask A8 surface.
   nsLayoutUtils::PaintFrame(maskCtx, aFrame,
@@ -806,7 +806,7 @@ GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
 
   // Push the generated mask into aContext, so that the caller can pop and
   // blend with it.
-  Matrix maskTransform = ToMatrix(currentMatrix) *
+  Matrix maskTransform = currentMatrix *
                          Matrix::Translation(-drawRect.x, -drawRect.y);
   maskTransform.Invert();
 

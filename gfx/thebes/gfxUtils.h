@@ -149,7 +149,7 @@ public:
      * aVal. If aRoundDown is specified, the power of 2 will rather be less than
      * or equal to aVal.
      */
-    static gfxFloat ClampToScaleFactor(gfxFloat aVal, bool aRoundDown = false);
+    static float ClampToScaleFactor(float aVal, bool aRoundDown = false);
 
     /**
      * Clears surface to aColor (which defaults to transparent black).

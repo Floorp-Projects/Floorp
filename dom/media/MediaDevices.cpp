@@ -9,6 +9,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/MediaManager.h"
 #include "MediaTrackConstraints.h"
+#include "nsContentUtils.h"
 #include "nsIEventTarget.h"
 #include "nsINamed.h"
 #include "nsIScriptGlobalObject.h"
@@ -197,7 +198,7 @@ MediaDevices::GetUserMedia(const MediaStreamConstraints& aConstraints,
 }
 
 already_AddRefed<Promise>
-MediaDevices::EnumerateDevices(ErrorResult &aRv)
+MediaDevices::EnumerateDevices(CallerType aCallerType, ErrorResult &aRv)
 {
   nsPIDOMWindowInner* window = GetOwner();
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
@@ -207,7 +208,7 @@ MediaDevices::EnumerateDevices(ErrorResult &aRv)
   RefPtr<EnumDevResolver> resolver = new EnumDevResolver(p, window->WindowID());
   RefPtr<GumRejecter> rejecter = new GumRejecter(p);
 
-  aRv = MediaManager::Get()->EnumerateDevices(window, resolver, rejecter);
+  aRv = MediaManager::Get()->EnumerateDevices(window, resolver, rejecter, aCallerType);
   return p.forget();
 }
 
@@ -229,6 +230,12 @@ MediaDevices::OnDeviceChange()
 
   if (!(MediaManager::Get()->IsActivelyCapturingOrHasAPermission(GetOwner()->WindowID()) ||
     Preferences::GetBool("media.navigator.permission.disabled", false))) {
+    return;
+  }
+
+  // Do not fire event to content script when
+  // privacy.resistFingerprinting is true.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 

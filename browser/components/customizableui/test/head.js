@@ -125,10 +125,6 @@ function removeNonOriginalButtons() {
   CustomizableUI.removeWidgetFromArea("sync-button");
 }
 
-function restoreNonOriginalButtons() {
-  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
-}
-
 function assertAreaPlacements(areaId, expectedPlacements) {
   let actualPlacements = getAreaWidgetIds(areaId);
   placementArraysEqual(areaId, actualPlacements, expectedPlacements);

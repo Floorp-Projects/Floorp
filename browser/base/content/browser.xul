@@ -928,7 +928,7 @@
 
         <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional subviewbutton-nav"
                        removable="true"
-                       onmousedown="PanelUI.showSubView('appMenu-libraryView', this, null, event);"
+                       onmousedown="PanelUI.showSubView('appMenu-libraryView', this, event);"
                        closemenu="none"
                        cui-areatype="toolbar"
                        tooltiptext="&libraryButton.tooltip;"
@@ -1152,7 +1152,7 @@
       </toolbarbutton>
 
       <toolbaritem id="search-container"
-                   class="chromeclass-toolbar-additional panel-wide-item"
+                   class="chromeclass-toolbar-additional"
                    title="&searchItem.title;"
                    align="center"
                    flex="100"

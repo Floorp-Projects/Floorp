@@ -5,13 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VideoFrameContainer.h"
-
-#include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/Telemetry.h"
-
-#include "nsIFrame.h"
-#include "nsDisplayList.h"
-#include "SVGObserverUtils.h"
+#include "MediaDecoderOwner.h"
 
 using namespace mozilla::layers;
 
@@ -43,18 +38,18 @@ private:
 }
 
 VideoFrameContainer::VideoFrameContainer(
-  dom::HTMLMediaElement* aElement,
+  MediaDecoderOwner* aOwner,
   already_AddRefed<ImageContainer> aContainer)
-  : mElement(aElement)
+  : mOwner(aOwner)
   , mImageContainer(aContainer)
   , mMutex("nsVideoFrameContainer")
   , mBlackImage(nullptr)
   , mFrameID(0)
   , mPendingPrincipalHandle(PRINCIPAL_HANDLE_NONE)
   , mFrameIDForPendingPrincipalHandle(0)
-  , mMainThread(aElement->AbstractMainThread())
+  , mMainThread(aOwner->AbstractMainThread())
 {
-  NS_ASSERTION(aElement, "aElement must not be null");
+  NS_ASSERTION(aOwner, "aOwner must not be null");
   NS_ASSERTION(mImageContainer, "aContainer must not be null");
 }
 
@@ -295,9 +290,9 @@ void VideoFrameContainer::SetCurrentFramesLocked(const gfx::IntSize& aIntrinsicS
       "PrincipalHandleOrImageSizeChanged",
       [this, self, principalHandle, imageSizeChanged]() {
         mMainThreadState.mImageSizeChanged = imageSizeChanged;
-        if (mElement && principalHandle != PRINCIPAL_HANDLE_NONE) {
-          mElement->PrincipalHandleChangedForVideoFrameContainer(
-            this, principalHandle);
+        if (mOwner && principalHandle != PRINCIPAL_HANDLE_NONE) {
+          mOwner->PrincipalHandleChangedForVideoFrameContainer(this,
+                                                               principalHandle);
         }
       }));
   }
@@ -346,7 +341,6 @@ ImageContainer* VideoFrameContainer::GetImageContainer() {
   return mImageContainer;
 }
 
-
 double VideoFrameContainer::GetFrameDelay()
 {
   return mImageContainer->GetPaintDelay().ToSeconds();
@@ -356,40 +350,22 @@ void VideoFrameContainer::InvalidateWithFlags(uint32_t aFlags)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must call on main thread");
 
-  if (!mElement) {
-    // Element has been destroyed
+  if (!mOwner) {
+    // Owner has been destroyed
     return;
   }
 
-  nsIFrame* frame = mElement->GetPrimaryFrame();
-  bool invalidateFrame = mMainThreadState.mImageSizeChanged;
+  bool imageSizeChanged = mMainThreadState.mImageSizeChanged;
   mMainThreadState.mImageSizeChanged = false;
 
+  Maybe<nsIntSize> intrinsicSize;
   if (mMainThreadState.mIntrinsicSizeChanged) {
-    mElement->UpdateMediaSize(mMainThreadState.mIntrinsicSize);
+    intrinsicSize = Some(mMainThreadState.mIntrinsicSize);
     mMainThreadState.mIntrinsicSizeChanged = false;
-    if (frame) {
-      nsPresContext* presContext = frame->PresContext();
-      nsIPresShell* presShell = presContext->PresShell();
-      presShell->FrameNeedsReflow(
-        frame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
-    }
   }
 
-  bool asyncInvalidate = mImageContainer &&
-                         mImageContainer->IsAsync() &&
-                         !(aFlags & INVALIDATE_FORCE);
-
-  if (frame) {
-    if (invalidateFrame) {
-      frame->InvalidateFrame();
-    } else {
-      frame->InvalidateLayer(DisplayItemType::TYPE_VIDEO, nullptr, nullptr,
-                             asyncInvalidate ? nsIFrame::UPDATE_IS_ASYNC : 0);
-    }
-  }
-
-  SVGObserverUtils::InvalidateDirectRenderingObservers(mElement);
+  bool forceInvalidate = aFlags & INVALIDATE_FORCE;
+  mOwner->Invalidate(imageSizeChanged, intrinsicSize, forceInvalidate);
 }
 
 } // namespace mozilla

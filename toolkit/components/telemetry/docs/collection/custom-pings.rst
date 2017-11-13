@@ -17,7 +17,7 @@ Custom pings can be submitted from JavaScript using:
 
 ``TelemetryController`` will assemble a ping with the passed payload and the specified options.
 That ping will be archived locally for use with Shield and inspection in ``about:telemetry``.
-If the preferences allow upload of Telemetry pings, the ping will be uploaded at the next opportunity (this is subject to throttling, retry-on-failure, etc.).
+If preferences allow the upload of Telemetry pings, the ping will be uploaded at the next opportunity (this is subject to throttling, retry-on-failure, etc.).
 
 .. important::
 
