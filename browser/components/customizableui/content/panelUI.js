@@ -367,11 +367,9 @@ const PanelUI = {
    *
    * @param aViewId the ID of the subview to show.
    * @param aAnchor the element that spawned the subview.
-   * @param aPlacementArea the CustomizableUI area that aAnchor is in.
    * @param aEvent the event triggering the view showing.
    */
-  async showSubView(aViewId, aAnchor, aPlacementArea, aEvent) {
-
+  async showSubView(aViewId, aAnchor, aEvent) {
     let domEvent = null;
     if (aEvent) {
       if (aEvent.type == "mousedown" && aEvent.button != 0) {

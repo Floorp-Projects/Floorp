@@ -8,14 +8,16 @@
 
 "use strict";
 
-const { DOM, Component, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Tabs = createFactory(require("devtools/client/shared/components/tabs/Tabs").Tabs);
 
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
 // Shortcuts
-const { div } = DOM;
+const { div } = dom;
 
 /**
  * Renders Tabbar component.

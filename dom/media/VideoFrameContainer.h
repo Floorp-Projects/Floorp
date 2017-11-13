@@ -18,9 +18,7 @@
 
 namespace mozilla {
 
-namespace dom {
-class HTMLMediaElement;
-} // namespace dom
+class MediaDecoderOwner;
 
 /**
  * This object is used in the decoder backend threads and the main thread
@@ -38,7 +36,7 @@ public:
   typedef layers::ImageContainer ImageContainer;
   typedef layers::Image Image;
 
-  VideoFrameContainer(dom::HTMLMediaElement* aElement,
+  VideoFrameContainer(MediaDecoderOwner* aOwner,
                       already_AddRefed<ImageContainer> aContainer);
 
   // Call on any thread
@@ -92,7 +90,7 @@ public:
   void Invalidate() override { InvalidateWithFlags(INVALIDATE_DEFAULT); }
   void InvalidateWithFlags(uint32_t aFlags);
   ImageContainer* GetImageContainer();
-  void ForgetElement() { mElement = nullptr; }
+  void ForgetElement() { mOwner = nullptr; }
 
   uint32_t GetDroppedImageCount() { return mImageContainer->GetDroppedImageCount(); }
 
@@ -100,9 +98,9 @@ protected:
   void SetCurrentFramesLocked(const gfx::IntSize& aIntrinsicSize,
                               const nsTArray<ImageContainer::NonOwningImage>& aImages);
 
-  // Non-addreffed pointer to the element. The element calls ForgetElement
-  // to clear this reference when the element is destroyed.
-  dom::HTMLMediaElement* mElement;
+  // Non-addreffed pointer to the owner. The ownenr calls ForgetElement
+  // to clear this reference when the owner is destroyed.
+  MediaDecoderOwner* mOwner;
   RefPtr<ImageContainer> mImageContainer;
 
   struct

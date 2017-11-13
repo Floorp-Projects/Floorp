@@ -13,7 +13,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  PanelWideWidgetTracker: "resource:///modules/PanelWideWidgetTracker.jsm",
   SearchWidgetTracker: "resource:///modules/SearchWidgetTracker.jsm",
   CustomizableWidgets: "resource:///modules/CustomizableWidgets.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
@@ -159,8 +158,6 @@ var gUIStateBeforeReset = {
   uiDensity: null,
   autoTouchMode: null,
 };
-
-var gDefaultPanelPlacements = null;
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let scope = {};
@@ -1630,7 +1627,7 @@ var CustomizableUIInternal = {
         }
       }
 
-      ownerWindow.PanelUI.showSubView(aWidget.viewId, anchor, area, aEvent);
+      ownerWindow.PanelUI.showSubView(aWidget.viewId, anchor, aEvent);
     }
   },
 
@@ -1649,10 +1646,7 @@ var CustomizableUIInternal = {
   },
 
   _getPanelForNode(aNode) {
-    let panel = aNode;
-    while (panel && panel.localName != "panel")
-      panel = panel.parentNode;
-    return panel;
+    return aNode.closest("panel");
   },
 
   /*
@@ -2962,11 +2956,6 @@ Object.freeze(CustomizableUIInternal);
 
 this.CustomizableUI = {
   /**
-   * Constant reference to the ID of the menu panel.
-   * DEPRECATED.
-   */
-  AREA_PANEL: "PanelUI-contents",
-  /**
    * Constant reference to the ID of the navigation toolbar.
    */
   AREA_NAVBAR: "nav-bar",
@@ -3018,15 +3007,6 @@ this.CustomizableUI = {
    * (e.g. by add-ons or other items not part of the builtin widget set).
    */
   SOURCE_EXTERNAL: "external",
-
-  /**
-   * The class used to distinguish items that span the entire menu panel.
-   */
-  WIDE_PANEL_CLASS: "panel-wide-item",
-  /**
-   * The (constant) number of columns in the menu panel.
-   */
-  PANEL_COLUMN_COUNT: 3,
 
   /**
    * Constant indicating the reason the event was fired was a window closing

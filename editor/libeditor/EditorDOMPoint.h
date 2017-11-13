@@ -97,6 +97,13 @@ public:
     return *this;
   }
 
+  template<typename A, typename B>
+  EditorDOMPointBase& operator=(const RangeBoundaryBase<A, B>& aOther)
+  {
+    RangeBoundaryBase<ParentType, RefType>::operator=(aOther);
+    return *this;
+  }
+
 private:
   static nsIContent* GetRef(nsINode* aContainerNode, nsIContent* aPointedNode)
   {

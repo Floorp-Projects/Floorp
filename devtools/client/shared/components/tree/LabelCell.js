@@ -7,9 +7,9 @@
 
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
-  // ReactJS
-  const { Component, DOM: dom, PropTypes } =
-    require("devtools/client/shared/vendor/react");
+  const { Component } = require("devtools/client/shared/vendor/react");
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
   /**
    * Render the default cell used for toggle buttons
