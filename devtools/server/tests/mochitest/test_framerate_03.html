@@ -35,10 +35,8 @@ window.onload = function () {
   const STOP_TICK = 3000;
   const TOTAL_TIME = 5000;
 
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {

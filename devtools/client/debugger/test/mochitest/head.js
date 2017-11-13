@@ -627,10 +627,8 @@ AddonDebugger.prototype = {
   init: Task.async(function* (aAddonId) {
     info("Initializing an addon debugger panel.");
 
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-    }
+    DebuggerServer.init();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
     DebuggerServer.allowChromeProcess = true;
 
     this.frame = document.createElement("iframe");
@@ -1324,10 +1322,8 @@ function waitForDispatch(panel, type, eventRepeat = 1) {
 }
 
 function* initWorkerDebugger(TAB_URL, WORKER_URL) {
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
   yield connect(client);

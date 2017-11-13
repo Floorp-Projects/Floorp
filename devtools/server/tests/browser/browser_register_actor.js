@@ -7,10 +7,8 @@ function test() {
   let {ActorRegistryFront} = require("devtools/shared/fronts/actor-registry");
   let actorURL = "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
 
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect()

@@ -404,9 +404,8 @@ TabTarget.prototype = {
     if (this.isLocalTab) {
       // Since a remote protocol connection will be made, let's start the
       // DebuggerServer here, once and for all tools.
-      if (!DebuggerServer.initialized) {
-        DebuggerServer.init();
-      }
+      DebuggerServer.init();
+
       // When connecting to a local tab, we only need the root actor.
       // Then we are going to call DebuggerServer.connectToChild and talk
       // directly with actors living in the child process.

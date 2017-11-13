@@ -13,10 +13,8 @@ const TAB_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 var gClient;
 
 function test() {
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
   DebuggerServer.addActors(ACTORS_URL);
 

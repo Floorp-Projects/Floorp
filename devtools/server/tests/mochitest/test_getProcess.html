@@ -38,9 +38,7 @@ window.onload = function () {
 
 function runTests() {
   // Instantiate a minimal server
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-  }
+  DebuggerServer.init();
   DebuggerServer.allowChromeProcess = true;
   if (!DebuggerServer.createRootActor) {
     DebuggerServer.registerActors({ browser: true, root: true, tab: true });

@@ -438,10 +438,8 @@ function finishClient(client) {
 // Create a server, connect to it and fetch tab actors for the parent process;
 // pass |callback| the debugger client and tab actor form with all actor IDs.
 function get_chrome_actors(callback) {
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   DebuggerServer.allowChromeProcess = true;
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
