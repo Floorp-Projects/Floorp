@@ -105,10 +105,8 @@ public:
 
   NS_IMETHOD WillSplitNode(nsIDOMNode * aExistingRightNode,
                            int32_t      aOffset) override;
-  NS_IMETHOD DidSplitNode(nsIDOMNode *aExistingRightNode,
-                          int32_t     aOffset,
-                          nsIDOMNode *aNewLeftNode,
-                          nsresult    aResult) override;
+  NS_IMETHOD DidSplitNode(nsIDOMNode* aExistingRightNode,
+                          nsIDOMNode* aNewLeftNode) override;
 
   NS_IMETHOD WillJoinNodes(nsIDOMNode  *aLeftNode,
                            nsIDOMNode  *aRightNode,
