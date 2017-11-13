@@ -12,10 +12,8 @@ const ACTORS_URL = CHROME_URL + "testactors.js";
 function test() {
   let gClient;
 
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
   DebuggerServer.addActors(ACTORS_URL);
 

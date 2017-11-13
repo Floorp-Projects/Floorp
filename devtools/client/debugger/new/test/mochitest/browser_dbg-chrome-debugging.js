@@ -18,10 +18,8 @@ var { DebuggerServer } = customLoader.require("devtools/server/main");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 function initDebuggerClient() {
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   DebuggerServer.allowChromeProcess = true;
 
   let transport = DebuggerServer.connectPipe();

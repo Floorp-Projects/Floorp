@@ -18,9 +18,7 @@ try {
     const { dumpn } = DevToolsUtils;
     const { DebuggerServer, ActorPool } = require("devtools/server/main");
 
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-    }
+    DebuggerServer.init();
     // We want a special server without any root actor and only tab actors.
     // We are going to spawn a ContentActor instance in the next few lines,
     // it is going to act like a root actor without being one.

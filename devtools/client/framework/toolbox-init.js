@@ -70,10 +70,8 @@ if (url.search.length > 1) {
       // linkedBrowser is the only one attribute being queried by client.getTab
       let tab = { linkedBrowser: iframe };
 
-      if (!DebuggerServer.initialized) {
-        DebuggerServer.init();
-        DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-      }
+      DebuggerServer.init();
+      DebuggerServer.registerActors({ browser: true, root: true, tab: true });
       let client = new DebuggerClient(DebuggerServer.connectPipe());
 
       yield client.connect();

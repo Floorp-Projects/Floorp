@@ -23,10 +23,8 @@ window.onload = function () {
   const {DebuggerServer} = require("devtools/server/main");
   const Services = require("Services");
 
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
   const {
     ConnectionManager,
