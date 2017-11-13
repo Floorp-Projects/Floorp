@@ -22,6 +22,12 @@ struct _XDisplay;
 typedef struct _XDisplay Display;
 #endif // MOZ_X11
 
+namespace mozilla {
+    namespace dom {
+        class SystemFontListEntry;
+    };
+};
+
 class gfxPlatformGtk : public gfxPlatform {
 public:
     gfxPlatformGtk();
@@ -30,6 +36,9 @@ public:
     static gfxPlatformGtk *GetPlatform() {
         return (gfxPlatformGtk*) gfxPlatform::GetPlatform();
     }
+
+    void ReadSystemFontList(
+        InfallibleTArray<mozilla::dom::SystemFontListEntry>* retValue) override;
 
     virtual already_AddRefed<gfxASurface>
       CreateOffscreenSurface(const IntSize& aSize,

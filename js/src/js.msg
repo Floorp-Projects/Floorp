@@ -56,7 +56,7 @@ MSG_DEF(JSMSG_TOPRIMITIVE_RETURNED_OBJECT, 2, JSEXN_TYPEERR, "can't convert {0} 
 MSG_DEF(JSMSG_NO_PROPERTIES,           1, JSEXN_TYPEERR, "{0} has no properties")
 MSG_DEF(JSMSG_BAD_REGEXP_FLAG,         1, JSEXN_SYNTAXERR, "invalid regular expression flag {0}")
 MSG_DEF(JSMSG_INVALID_DATA_VIEW_LENGTH, 0, JSEXN_RANGEERR, "invalid data view length")
-MSG_DEF(JSMSG_ARG_INDEX_OUT_OF_RANGE,  1, JSEXN_RANGEERR, "argument {0} accesses an index that is out of range")
+MSG_DEF(JSMSG_OFFSET_LARGER_THAN_FILESIZE, 0, JSEXN_RANGEERR, "offset is larger than filesize")
 MSG_DEF(JSMSG_OFFSET_OUT_OF_BUFFER,    0, JSEXN_RANGEERR, "start offset is outside the bounds of the buffer")
 MSG_DEF(JSMSG_OFFSET_OUT_OF_DATAVIEW,  0, JSEXN_RANGEERR, "offset is outside the bounds of the DataView")
 MSG_DEF(JSMSG_SPREAD_TOO_LARGE,        0, JSEXN_RANGEERR, "array too large due to spread operand(s)")
