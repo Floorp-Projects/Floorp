@@ -12,10 +12,6 @@ set -e
 cd "$(dirname "$0")"
 cd ../..
 
-# Update local checkout
-git fetch origin
-git reset --mixed origin/master
-
 # Import strings from L10N repository
 tools/l10n/import-strings.sh > import-log.txt
 cat import-log.txt
