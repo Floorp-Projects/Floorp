@@ -1925,12 +1925,11 @@ Toolbox.prototype = {
    * Loads the tool next to the currently selected tool.
    */
   selectNextTool: function () {
-    const index = this.panelDefinitions.findIndex(({id}) => id === this.currentToolId);
-    let definition = this.panelDefinitions[index + 1];
+    let definitions = this.component.panelDefinitions;
+    const index = definitions.findIndex(({id}) => id === this.currentToolId);
+    let definition = definitions[index + 1];
     if (!definition) {
-      definition = index === -1
-        ? this.panelDefinitions[0]
-        : this.optionsDefinition;
+      definition = index === -1 ? definitions[0] : this.optionsDefinition;
     }
     return this.selectTool(definition.id);
   },
@@ -1939,11 +1938,12 @@ Toolbox.prototype = {
    * Loads the tool just left to the currently selected tool.
    */
   selectPreviousTool: function () {
-    const index = this.panelDefinitions.findIndex(({id}) => id === this.currentToolId);
-    let definition = this.panelDefinitions[index - 1];
+    let definitions = this.component.panelDefinitions;
+    const index = definitions.findIndex(({id}) => id === this.currentToolId);
+    let definition = definitions[index - 1];
     if (!definition) {
       definition = index === -1
-        ? this.panelDefinitions[this.panelDefinitions.length - 1]
+        ? definitions[definitions.length - 1]
         : this.optionsDefinition;
     }
     return this.selectTool(definition.id);
