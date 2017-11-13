@@ -36,7 +36,7 @@ window.onload = function () {
   const TOTAL_TIME = 5000;
 
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {

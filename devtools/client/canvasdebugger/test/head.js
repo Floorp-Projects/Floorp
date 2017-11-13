@@ -192,7 +192,7 @@ function reload(aTarget, aWaitForTargetEvent = "navigate") {
 
 function initServer() {
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 }
 
 function initCallWatcherBackend(aUrl) {

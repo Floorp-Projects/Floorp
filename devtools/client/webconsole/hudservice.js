@@ -192,7 +192,7 @@ HUD_SERVICE.prototype =
       // so that the Browser Console can retrieve the console actors.
       // (See Bug 1416105 for rationale).
       DebuggerServer.init();
-      DebuggerServer.registerActors({ root: true, browser: false, tab: true });
+      DebuggerServer.registerActors({ root: true, tab: true });
 
       DebuggerServer.allowChromeProcess = true;
 

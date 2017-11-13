@@ -21,7 +21,7 @@ function test() {
   waitForExplicitFinish();
 
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 
   openTabs();
 }

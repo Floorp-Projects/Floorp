@@ -14,7 +14,7 @@ var gClient;
 
 function test() {
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 
   DebuggerServer.addActors(ACTORS_URL);
 

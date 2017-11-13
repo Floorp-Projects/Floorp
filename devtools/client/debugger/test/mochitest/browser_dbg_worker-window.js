@@ -15,7 +15,7 @@ add_task(function* () {
   yield pushPrefs(["devtools.scratchpad.enabled", true]);
 
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
   yield connect(client);

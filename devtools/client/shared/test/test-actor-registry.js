@@ -67,7 +67,7 @@
     // We need to spawn a client instance,
     // but for that we have to first ensure a server is running
     DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+    DebuggerServer.registerAllActors();
     let client = new DebuggerClient(DebuggerServer.connectPipe());
 
     yield client.connect();

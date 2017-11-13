@@ -22,7 +22,7 @@ try {
     // We want a special server without any root actor and only tab actors.
     // We are going to spawn a ContentActor instance in the next few lines,
     // it is going to act like a root actor without being one.
-    DebuggerServer.registerActors({ root: false, browser: false, tab: true });
+    DebuggerServer.registerActors({ tab: true });
 
     let connections = new Map();
 

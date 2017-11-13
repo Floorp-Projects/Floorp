@@ -227,7 +227,7 @@ function initBackend(aUrl) {
   info("Initializing a shader editor front.");
 
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 
   return Task.spawn(function* () {
     let tab = yield addTab(aUrl);

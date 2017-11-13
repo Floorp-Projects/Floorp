@@ -26,7 +26,7 @@ function onListChangedHandler() {
 
 function test() {
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 
   gTabList = new BrowserTabList("fake DebuggerServerConnection");
   gTabList._testing = true;

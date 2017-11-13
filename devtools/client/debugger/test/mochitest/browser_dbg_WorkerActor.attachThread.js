@@ -4,7 +4,7 @@ var WORKER_URL = "code_WorkerActor.attachThread-worker.js";
 function test() {
   Task.spawn(function* () {
     DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+    DebuggerServer.registerAllActors();
 
     let client1 = new DebuggerClient(DebuggerServer.connectPipe());
     yield connect(client1);
