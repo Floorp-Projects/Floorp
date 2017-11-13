@@ -1,5 +1,0 @@
-<?xml version="1.0" ?>
-<!DOCTYPE vbox SYSTEM "chrome://inlinesettings/locale/string.dtd">
-<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <setting type="custom" title="&custom.title;" style="background-color: blue; display: -moz-grid-line; -moz-binding: url('chrome://inlinesettings/content/binding.xml#custom');"/>
-</vbox>
