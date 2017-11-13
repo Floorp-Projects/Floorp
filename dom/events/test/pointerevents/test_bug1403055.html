@@ -20,11 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1403055
 /** Test for Bug 1403055 **/
 SimpleTest.waitForExplicitFinish();
 
-function runTests() {
-  let target0 = window.document.getElementById("target0");
-  let target1 = window.document.getElementById("target1");
-  let done = window.document.getElementById("done");
+var target0 = window.document.getElementById("target0");
+var target1 = window.document.getElementById("target1");
+var done = window.document.getElementById("done");
 
+function withoutImplicitlyPointerCaptureForTouch() {
   let target0_events = ["pointerover", "pointerenter", "pointerdown", "pointermove"];
   let target1_events = ["pointerover", "pointerenter", "pointermove", "pointercancel", "pointerout", "pointerleave"];
 
@@ -45,8 +45,33 @@ function runTests() {
   done.addEventListener("mouseup", () => {
     ok(target0_events.length == 0, " should receive " + target0_events + " on target0");
     ok(target1_events.length == 0, " should receive " + target1_events + " on target1");
-    SimpleTest.finish();
+    SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true],
+                                       ["dom.w3c_pointer_events.implicit_capture", true]]},
+                              withImplicitlyPointerCaptureForTouch);
+  }, {once : true});
+
+  synthesizeTouch(target0, 5, 5, { type: "touchstart" });
+  synthesizeTouch(target0, 5, 5, { type: "touchmove" });
+  synthesizeTouch(target1, 5, 5, { type: "touchmove" });
+  synthesizeTouch(target1, 5, 5, { type: "touchcancel" });
+  synthesizeMouseAtCenter(done, { type: "mousedown" });
+  synthesizeMouseAtCenter(done, { type: "mouseup" });
+}
+
+function withImplicitlyPointerCaptureForTouch() {
+  let target0_events = ["pointerover", "pointerenter", "pointerdown", "pointermove", "pointercancel", "pointerout", "pointerleave"];
+
+  target0_events.forEach((elem, index, arr) => {
+    target0.addEventListener(elem, (event) => {
+      is(event.type, target0_events[0], "receive " + event.type + " on target0");
+      target0_events = target0_events.filter(item => item !== event.type);
+    }, { once: true });
   });
+
+  done.addEventListener("mouseup", () => {
+    ok(target0_events.length == 0, " should receive " + target0_events + " on target0");
+    SimpleTest.finish();
+  }, {once : true});
 
   synthesizeTouch(target0, 5, 5, { type: "touchstart" });
   synthesizeTouch(target0, 5, 5, { type: "touchmove" });
@@ -57,7 +82,9 @@ function runTests() {
 }
 
 SimpleTest.waitForFocus(() => {
-  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, runTests);
+  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true],
+                                     ["dom.w3c_pointer_events.implicit_capture", false]]},
+                            withoutImplicitlyPointerCaptureForTouch);
 });
 
 </script>

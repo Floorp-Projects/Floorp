@@ -253,30 +253,30 @@ function runTests() {
 
   sendTouchEvent(cwu, "touchmove", getTouchEventForTarget(d1, cwu, 3), 0);
   synthesizeMouse(d3, 3, 3, { type: "mousemove"});
-  is(touchPointerEnterLeaveCount, 3, "Wrong touch enterLeave count for!");
+  is(touchPointerEnterLeaveCount, 1, "Wrong touch enterLeave count for!");
   is(mousePointerEnterLeaveCount, 4, "Wrong mouse enterLeave count for!");
 
-  is(d3leaveCount, 1, "Wrong leave count for! d3");
+  is(d3leaveCount, 0, "Wrong leave count for! d3");
   is(d1leaveCount, 1, "Wrong leave count for! d1");
-  is(d1enterCount, 2, "Wrong enter count for! d1");
+  is(d1enterCount, 1, "Wrong enter count for! d1");
   is(d3enterCount, 2, "Wrong enter count for! d3");
 
   sendTouchEvent(cwu, "touchmove", getTouchEventForTarget(d2, cwu, 3), 0);
   synthesizeMouse(d2, 3, 3, { type: "mousemove"});
-  is(touchPointerEnterLeaveCount, 5, "Wrong touch enterLeave count for!");
+  is(touchPointerEnterLeaveCount, 1, "Wrong touch enterLeave count for!");
   is(mousePointerEnterLeaveCount, 6, "Wrong mouse enterLeave count for!");
 
-  is(d1leaveCount, 2, "Wrong leave count for! d1");
-  is(d2enterCount, 2, "Wrong enter count for! d2");
-  is(d3leaveCount, 2, "Wrong leave count for! d3");
+  is(d1leaveCount, 1, "Wrong leave count for! d1");
+  is(d2enterCount, 1, "Wrong enter count for! d2");
+  is(d3leaveCount, 1, "Wrong leave count for! d3");
 
   sendTouchEvent(cwu, "touchmove", getTouchEventForTarget(d1, cwu, 3), 0);
   synthesizeMouse(d1, 3, 3, { type: "mousemove"});
-  is(touchPointerEnterLeaveCount, 7, "Wrong touch enterLeave count for!");
+  is(touchPointerEnterLeaveCount, 1, "Wrong touch enterLeave count for!");
   is(mousePointerEnterLeaveCount, 8, "Wrong mouse enterLeave count for!");
 
-  is(d2leaveCount, 3, "Wrong leave count for! d2");
-  is(d1enterCount, 4, "Wrong enter count for! d1");
+  is(d2leaveCount, 2, "Wrong leave count for! d2");
+  is(d1enterCount, 2, "Wrong enter count for! d1");
 
   // Test for pointer buttons when it generated from mousemove event
   d1.onpointermove = function(e) {
@@ -297,7 +297,7 @@ function runTests() {
   pointerCancelTriggered = 0;
   var pointerOutTriggeredForCancelEvent = 0;
   var pointerLeaveTriggeredForCancelEvent = 0;
-  d1.onpointerout = function(e) {
+  d3.onpointerout = function(e) {
     if (pointerOutTriggeredForCancelEvent == 0) {
       is(e.pointerId, 3, "Wrong Pointer type, should be id from Touch event");
       is(e.pointerType, "touch", "Wrong Pointer type, should be touch type");
@@ -307,7 +307,7 @@ function runTests() {
     }
     pointerOutTriggeredForCancelEvent = 1;
   };
-  d1.onpointerleave = function(e) {
+  d3.onpointerleave = function(e) {
     is(pointerOutTriggeredForCancelEvent, 1, "Pointer Out must be dispatched bedore Pointer leave");
     if (pointerLeaveTriggeredForCancelEvent == 0) {
       is(e.pointerId, 3, "Wrong Pointer type, should be id from Touch event");
@@ -318,7 +318,6 @@ function runTests() {
     }
     pointerLeaveTriggeredForCancelEvent = 1;
   }
-
   sendTouchEvent(cwu, "touchcancel", getTouchEventForTarget(d1, cwu, 3), 0);
   is(pointerOutTriggeredForCancelEvent, 1, "Pointer Out not dispatched on PointerCancel");
   is(pointerLeaveTriggeredForCancelEvent, 1, "Pointer Leave not dispatched on PointerCancel");
@@ -330,7 +329,7 @@ function finishTest() {
   // Let window.onerror have a chance to fire
   setTimeout(function() {
     setTimeout(function() {
-      window.parent.postMessage("run next", "*");
+      window.parent.postMessage("finishTest", "*");
     }, 0);
   }, 0);
 }
@@ -339,7 +338,7 @@ window.onload = function () {
   SpecialPowers.pushPrefEnv({
     "set": [
       ["dom.w3c_pointer_events.enabled", true],
-      ["dom.w3c_pointer_events.implicit_capture", false]
+      ["dom.w3c_pointer_events.implicit_capture", true]
     ]
   }, runTests);
 }
