@@ -81,20 +81,20 @@ add_old_configure_assignment('_YASM_MINOR_VERSION',
 def yasm_asflags(yasm, target):
     if yasm:
         asflags = {
-            ('OSX', 'x86'): '-f macho32',
-            ('OSX', 'x86_64'): '-f macho64',
-            ('WINNT', 'x86'): '-f win32',
-            ('WINNT', 'x86_64'): '-f x64',
+            ('OSX', 'x86'): ['-f', 'macho32'],
+            ('OSX', 'x86_64'): ['-f', 'macho64'],
+            ('WINNT', 'x86'): ['-f', 'win32'],
+            ('WINNT', 'x86_64'): ['-f', 'x64'],
         }.get((target.os, target.cpu), None)
         if asflags is None:
             # We're assuming every x86 platform we support that's
             # not Windows or Mac is ELF.
             if target.cpu == 'x86':
-                asflags = '-f elf32'
+                asflags = ['-f', 'elf32']
             elif target.cpu == 'x86_64':
-                asflags = '-f elf64'
+                asflags = ['-f', 'elf64']
         if asflags:
-            asflags += ' -rnasm -pnasm'
+            asflags += ['-rnasm', '-pnasm']
         return asflags
 
 
