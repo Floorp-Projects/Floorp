@@ -46,7 +46,10 @@ registerCleanupFunction(function* () {
   // somewhere over inspector the pointer is considered to be there when the
   // next test begins. This might cause unexpected events to be emitted when
   // another test moves the mouse.
-  EventUtils.synthesizeMouseAtPoint(1, 1, {type: "mousemove"}, window);
+  // Move the mouse at the top-right corner of the browser, to prevent
+  // the mouse from triggering the tab tooltip to be shown while the tab is
+  // being closed because the test is exiting (See Bug 1378524 for rationale).
+  EventUtils.synthesizeMouseAtPoint(window.innerWidth, 1, {type: "mousemove"}, window);
 });
 
 var navigateTo = Task.async(function* (inspector, url) {
