@@ -293,6 +293,17 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
                                                mozilla::layers::WebRenderLayerManager* aManager,
                                                nsDisplayListBuilder* aDisplayListBuilder)
 {
+  // This is really a combination of paint box shadow inner +
+  // paint border.
+  nsRect buttonRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  bool snap;
+  nsRegion visible = GetBounds(aDisplayListBuilder, &snap);
+  nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(aBuilder,
+                                                                 aSc,
+                                                                 visible,
+                                                                 mFrame,
+                                                                 buttonRect);
+
   bool borderIsEmpty = false;
   Maybe<nsCSSBorderRenderer> br =
   nsCSSRendering::CreateBorderRenderer(mFrame->PresContext(),
@@ -312,17 +323,6 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
   if (!br->CanCreateWebRenderCommands()) {
     return false;
   }
-
-  // This is really a combination of paint box shadow inner +
-  // paint border.
-  nsRect buttonRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  bool snap;
-  nsRegion visible = GetBounds(aDisplayListBuilder, &snap);
-  nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(aBuilder,
-                                                                 aSc,
-                                                                 visible,
-                                                                 mFrame,
-                                                                 buttonRect);
 
   br->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
 
