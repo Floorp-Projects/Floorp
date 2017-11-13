@@ -7,6 +7,7 @@
 #include "MediaQueue.h"
 #include "VideoSink.h"
 #include "MediaPrefs.h"
+#include "VideoUtils.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
 
