@@ -154,6 +154,13 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level
   f();              //DA:$,1
 });
 
+checkGetOffsetsCoverage(function () { ','.split(','); //FN:$,top-level //DA:$,1
+});
+
+checkGetOffsetsCoverage(function () { function f() { ','.split(','); } //FN:$,top-level //FN:$,f //DA:$,1
+  f(); //DA:$,1
+});
+
 checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
   if (l.length == 3)      //DA:$,1

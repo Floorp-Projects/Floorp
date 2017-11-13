@@ -101,6 +101,21 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //LH:2
 });
 
+checkLcov(function () { ','.split(','); //FN:$,top-level //FNDA:1,% //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:1
+  //LH:1
+});
+
+checkLcov(function () { function f() { ','.split(','); } //FN:$,top-level //FNDA:1,% //FN:$,f //FNDA:1,f //DA:$,1
+  f(); //DA:$,1
+  //FNF:2
+  //FNH:2
+  //LF:2
+  //LH:2
+});
+
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
   if (l.length == 3)      //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,-
