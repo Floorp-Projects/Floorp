@@ -176,10 +176,6 @@ var RemoteDebugger = {
   },
 
   initServer: function() {
-    if (DebuggerServer.initialized) {
-      return;
-    }
-
     DebuggerServer.init();
 
     // Add browser and Fennec specific actors

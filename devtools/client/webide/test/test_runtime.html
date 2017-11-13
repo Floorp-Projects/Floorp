@@ -39,10 +39,8 @@
             return !win.document.querySelector("#cmd_stop").hasAttribute("disabled");
           }
 
-          if (!DebuggerServer.initialized) {
-            DebuggerServer.init();
-            DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-          }
+          DebuggerServer.init();
+          DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
           win = yield openWebIDE();
           let docRuntime = getRuntimeDocument(win);

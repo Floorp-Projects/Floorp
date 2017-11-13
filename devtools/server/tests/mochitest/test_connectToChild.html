@@ -49,9 +49,7 @@ function runTests() {
     const { DebuggerServer } = require("devtools/server/main");
     /* eslint-enable no-shadow */
 
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-    }
+    DebuggerServer.init();
 
     function TestActor() {
       dump("instanciate test actor\n");
@@ -73,9 +71,7 @@ function runTests() {
   }, false);
 
   // Instantiate a minimal server
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-  }
+  DebuggerServer.init();
   if (!DebuggerServer.createRootActor) {
     DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   }

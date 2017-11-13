@@ -161,10 +161,8 @@ function loadFrameScripts() {
 function initBackend(aUrl) {
   info("Initializing a web audio editor front.");
 
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
   return Task.spawn(function* () {
     let tab = yield addTab(aUrl);

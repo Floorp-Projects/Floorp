@@ -42,9 +42,7 @@ function runTests() {
   document.body.appendChild(iframe);
 
   // Instantiate a minimal server
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-  }
+  DebuggerServer.init();
   if (!DebuggerServer.createRootActor) {
     DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   }

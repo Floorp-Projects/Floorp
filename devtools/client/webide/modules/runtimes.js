@@ -437,10 +437,8 @@ exports._WiFiRuntime = WiFiRuntime;
 var gLocalRuntime = {
   type: RuntimeTypes.LOCAL,
   connect: function (connection) {
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-    }
+    DebuggerServer.init();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
     DebuggerServer.allowChromeProcess = true;
     connection.host = null; // Force Pipe transport
     connection.port = null;

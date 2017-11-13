@@ -12,10 +12,8 @@ Components.utils.import("resource://gre/modules/devtools/dbg-client.jsm");
 
 function start() {
   // Start the server.
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
   // Listen to an nsIPipe
   let transport = DebuggerServer.connectPipe();
@@ -41,10 +39,8 @@ Components.utils.import("resource://gre/modules/devtools/dbg-client.jsm");
 
 function startServer() {
   // Start the server.
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
   // For an nsIServerSocket we do this:
   DebuggerServer.openListener(2929); // A connection on port 2929.
@@ -166,10 +162,8 @@ let threadClient;
 
 function startDebugger() {
   // Start the server.
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   // Listen to an nsIPipe
   let transport = DebuggerServer.connectPipe();
   // For an nsIServerSocket we do this:

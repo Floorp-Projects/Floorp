@@ -13,10 +13,8 @@ const TAB2_URL = EXAMPLE_URL + "doc_empty-tab-02.html";
 var gClient;
 
 function test() {
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
