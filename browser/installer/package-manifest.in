@@ -615,8 +615,6 @@
 @RESPATH@/browser/chrome/icons/default/default16.png
 @RESPATH@/browser/chrome/icons/default/default32.png
 @RESPATH@/browser/chrome/icons/default/default48.png
-@RESPATH@/browser/chrome/icons/default/default64.png
-@RESPATH@/browser/chrome/icons/default/default128.png
 #endif
 @RESPATH@/browser/features/*
 
@@ -639,6 +637,8 @@
 ; shell icons
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
+; shell icons
+@RESPATH@/browser/icons/*.png
 #ifdef MOZ_UPDATER
 ; updater icon
 @RESPATH@/icons/updater.png
