@@ -610,7 +610,7 @@ enum ChunkType
   UNKNOWN_CHUNK,
   ZEROED_CHUNK,   // chunk only contains zeroes.
   ARENA_CHUNK,    // used to back arena runs created by arena_t::AllocRun.
-  HUGE_CHUNK,     // used to back huge allocations (e.g. huge_malloc).
+  HUGE_CHUNK,     // used to back huge allocations (e.g. arena_t::MallocHuge).
   RECYCLED_CHUNK, // chunk has been stored for future use by chunk_recycle.
 };
 
@@ -1034,7 +1034,11 @@ private:
 
   void* PallocLarge(size_t aAlignment, size_t aSize, size_t aAllocSize);
 
+  void* PallocHuge(size_t aSize, size_t aAlignment, bool aZero);
+
 public:
+  void* MallocHuge(size_t aSize, bool aZero);
+
   inline void* Malloc(size_t aSize, bool aZero);
 
   void* Palloc(size_t aAlignment, size_t aSize);
@@ -1250,10 +1254,6 @@ static void
 chunk_dealloc(void* aChunk, size_t aSize, ChunkType aType);
 static void
 chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed);
-static void*
-huge_malloc(size_t size, bool zero, arena_t* aArena);
-static void*
-huge_palloc(size_t aSize, size_t aAlignment, bool aZero, arena_t* aArena);
 static void*
 huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena);
 static void
@@ -3087,7 +3087,7 @@ imalloc(size_t aSize, bool aZero, arena_t* aArena)
   if (aSize <= gMaxLargeClass) {
     return aArena->Malloc(aSize, aZero);
   }
-  return huge_malloc(aSize, aZero, aArena);
+  return aArena->MallocHuge(aSize, aZero);
 }
 
 // Only handles large allocations that require more than page alignment.
@@ -3219,9 +3219,9 @@ arena_t::Palloc(size_t aAlignment, size_t aSize)
     if (run_size <= gMaxLargeClass) {
       ret = PallocLarge(aAlignment, ceil_size, run_size);
     } else if (aAlignment <= kChunkSize) {
-      ret = huge_malloc(ceil_size, false, this);
+      ret = MallocHuge(ceil_size, false);
     } else {
-      ret = huge_palloc(ceil_size, aAlignment, false, this);
+      ret = PallocHuge(ceil_size, aAlignment, false);
     }
   }
 
@@ -3840,14 +3840,14 @@ ArenaCollection::CreateArena(bool aIsPrivate, arena_params_t* aParams)
 // ***************************************************************************
 // Begin general internal functions.
 
-static void*
-huge_malloc(size_t size, bool zero, arena_t* aArena)
+void*
+arena_t::MallocHuge(size_t aSize, bool aZero)
 {
-  return huge_palloc(size, kChunkSize, zero, aArena);
+  return PallocHuge(aSize, kChunkSize, aZero);
 }
 
-static void*
-huge_palloc(size_t aSize, size_t aAlignment, bool aZero, arena_t* aArena)
+void*
+arena_t::PallocHuge(size_t aSize, size_t aAlignment, bool aZero)
 {
   void* ret;
   size_t csize;
@@ -3881,8 +3881,7 @@ huge_palloc(size_t aSize, size_t aAlignment, bool aZero, arena_t* aArena)
   node->mAddr = ret;
   psize = PAGE_CEILING(aSize);
   node->mSize = psize;
-  MOZ_ASSERT(aArena);
-  node->mArena = aArena;
+  node->mArena = this;
 
   {
     MutexAutoLock lock(huge_mtx);
@@ -4001,7 +4000,7 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   // If we get here, then aSize and aOldSize are different enough that we
   // need to use a different size class.  In that case, fall back to
   // allocating new space and copying.
-  ret = huge_malloc(aSize, false, aArena);
+  ret = aArena->MallocHuge(aSize, false);
   if (!ret) {
     return nullptr;
   }
