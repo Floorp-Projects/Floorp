@@ -23,7 +23,7 @@ function test_requestTypes_request(client, anActor) {
 
 function run_test() {
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function () {

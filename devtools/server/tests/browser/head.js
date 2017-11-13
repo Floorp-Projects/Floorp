@@ -105,7 +105,7 @@ function initDebuggerServer() {
     info(`DebuggerServer destroy error: ${e}\n${e.stack}`);
   }
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 }
 
 /**

@@ -411,7 +411,7 @@ function _setupDebuggerServer(breakpointFiles, callback) {
   let { DebuggerServer } = require("devtools/server/main");
   let { OriginalLocation } = require("devtools/server/actors/common");
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
   DebuggerServer.addActors("resource://testing-common/dbg-actors.js");
   DebuggerServer.allowChromeProcess = true;
 

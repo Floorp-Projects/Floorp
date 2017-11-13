@@ -133,7 +133,7 @@ function* createClient(params) {
   } else {
     // Setup a server if we don't have one already running
     DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+    DebuggerServer.registerAllActors();
     transport = DebuggerServer.connectPipe();
   }
   return new DebuggerClient(transport);

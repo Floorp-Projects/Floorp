@@ -71,7 +71,7 @@ if (url.search.length > 1) {
       let tab = { linkedBrowser: iframe };
 
       DebuggerServer.init();
-      DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+      DebuggerServer.registerAllActors();
       let client = new DebuggerClient(DebuggerServer.connectPipe());
 
       yield client.connect();

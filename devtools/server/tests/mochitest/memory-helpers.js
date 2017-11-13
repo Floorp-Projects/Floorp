@@ -20,7 +20,7 @@ SimpleTest.registerCleanupFunction(function () {
 
 function startServerAndGetSelectedTabMemory() {
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
 
   return client.connect()

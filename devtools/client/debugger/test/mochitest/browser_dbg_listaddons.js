@@ -15,7 +15,7 @@ var gAddon1, gAddon1Actor, gAddon2, gAddon2Actor, gClient;
 
 function test() {
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);

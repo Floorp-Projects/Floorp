@@ -44,7 +44,7 @@ function runTests() {
   // Instantiate a minimal server
   DebuggerServer.init();
   if (!DebuggerServer.createRootActor) {
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+    DebuggerServer.registerAllActors();
   }
 
   // Fake a connection to an iframe

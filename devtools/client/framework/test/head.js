@@ -29,7 +29,7 @@ function getChromeActors(callback)
   let { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
   DebuggerServer.allowChromeProcess = true;
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());

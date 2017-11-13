@@ -81,7 +81,7 @@ function* setupDebuggerServer(websocket) {
   let { DebuggerServer } = loader.require("devtools/server/main");
 
   DebuggerServer.init();
-  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+  DebuggerServer.registerAllActors();
   DebuggerServer.allowChromeProcess = true;
 
   let listener = DebuggerServer.createListener();

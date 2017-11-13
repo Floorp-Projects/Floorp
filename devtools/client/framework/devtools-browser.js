@@ -329,7 +329,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   _getContentProcessTarget(processId) {
     // Create a DebuggerServer in order to connect locally to it
     DebuggerServer.init();
-    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
+    DebuggerServer.registerAllActors();
     DebuggerServer.allowChromeProcess = true;
 
     let transport = DebuggerServer.connectPipe();
