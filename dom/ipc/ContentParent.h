@@ -269,6 +269,8 @@ public:
 
   static void NotifyUpdatedDictionaries();
 
+  static void NotifyUpdatedFonts();
+
 #if defined(XP_WIN)
   /**
    * Windows helper for firing off an update window request to a plugin
