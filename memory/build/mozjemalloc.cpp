@@ -1032,10 +1032,12 @@ private:
 
   void* MallocLarge(size_t aSize, bool aZero);
 
+  void* PallocLarge(size_t aAlignment, size_t aSize, size_t aAllocSize);
+
 public:
   inline void* Malloc(size_t aSize, bool aZero);
 
-  void* PallocLarge(size_t aAlignment, size_t aSize, size_t aAllocSize);
+  void* Palloc(size_t aAlignment, size_t aSize);
 
   inline void DallocSmall(arena_chunk_t* aChunk,
                           void* aPtr,
@@ -3142,8 +3144,8 @@ arena_t::PallocLarge(size_t aAlignment, size_t aSize, size_t aAllocSize)
   return ret;
 }
 
-static inline void*
-ipalloc(size_t aAlignment, size_t aSize, arena_t* aArena)
+void*
+arena_t::Palloc(size_t aAlignment, size_t aSize)
 {
   void* ret;
   size_t ceil_size;
@@ -3173,10 +3175,9 @@ ipalloc(size_t aAlignment, size_t aSize, arena_t* aArena)
     return nullptr;
   }
 
-  MOZ_ASSERT(aArena);
   if (ceil_size <= gPageSize ||
       (aAlignment <= gPageSize && ceil_size <= gMaxLargeClass)) {
-    ret = aArena->Malloc(ceil_size, false);
+    ret = Malloc(ceil_size, false);
   } else {
     size_t run_size;
 
@@ -3216,11 +3217,11 @@ ipalloc(size_t aAlignment, size_t aSize, arena_t* aArena)
     }
 
     if (run_size <= gMaxLargeClass) {
-      ret = aArena->PallocLarge(aAlignment, ceil_size, run_size);
+      ret = PallocLarge(aAlignment, ceil_size, run_size);
     } else if (aAlignment <= kChunkSize) {
-      ret = huge_malloc(ceil_size, false, aArena);
+      ret = huge_malloc(ceil_size, false, this);
     } else {
-      ret = huge_palloc(ceil_size, aAlignment, false, aArena);
+      ret = huge_palloc(ceil_size, aAlignment, false, this);
     }
   }
 
@@ -4279,8 +4280,6 @@ RETURN:
 inline void*
 BaseAllocator::memalign(size_t aAlignment, size_t aSize)
 {
-  void* ret;
-
   MOZ_ASSERT(((aAlignment - 1) & aAlignment) == 0);
 
   if (!malloc_init()) {
@@ -4293,9 +4292,7 @@ BaseAllocator::memalign(size_t aAlignment, size_t aSize)
 
   aAlignment = aAlignment < sizeof(void*) ? sizeof(void*) : aAlignment;
   arena_t* arena = mArena ? mArena : choose_arena(aSize);
-  ret = ipalloc(aAlignment, aSize, arena);
-
-  return ret;
+  return arena->Palloc(aAlignment, aSize);
 }
 
 inline void*
