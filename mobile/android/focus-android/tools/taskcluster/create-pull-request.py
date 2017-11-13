@@ -36,13 +36,10 @@ URL = "https://%s:%s@github.com/%s/%s/" % (USER, token, USER, REPO)
 github = Github(login_or_token=token)
 repo = github.get_user(OWNER).get_repo(REPO)
 
-# Check if there's already a pull request. If one is found then only update the existing one.
+# Check if there's already an umerged pull request.
 for request in repo.get_pulls(state='open'):
 	if request.user.login == USER:
-		print "There's already an unmerged pull request. Updating existing one."
-		BRANCH=request.head.ref
-		print subprocess.check_output(['git', 'checkout', '-b', BRANCH])
-		print subprocess.check_output(['git', 'push', URL, BRANCH, '-f'])
+		print "There's already an unmerged pull request. Doing nothing."
 		exit(0)
 
 # Push local state to branch
