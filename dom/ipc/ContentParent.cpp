@@ -171,6 +171,7 @@
 #include "nsDocShell.h"
 #include "nsOpenURIInFrameParams.h"
 #include "mozilla/net/NeckoMessageUtils.h"
+#include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "prio.h"
 #include "private/pprio.h"
@@ -2224,9 +2225,10 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
       }
     }
   }
-  // This is only implemented (returns a non-empty list) by MacOSX at present.
-  nsTArray<FontFamilyListEntry> fontFamilies;
-  gfxPlatform::GetPlatform()->GetSystemFontFamilyList(&fontFamilies);
+  // This is only implemented (returns a non-empty list) by MacOSX and Linux
+  // at present.
+  nsTArray<SystemFontListEntry> fontList;
+  gfxPlatform::GetPlatform()->ReadSystemFontList(&fontList);
   nsTArray<LookAndFeelInt> lnfCache = LookAndFeel::GetIntCache();
 
   // Content processes have no permission to access profile directory, so we
@@ -2269,7 +2271,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   screenManager.CopyScreensToRemote(this);
 
   Unused << SendSetXPCOMProcessAttributes(xpcomInit, initialData, lnfCache,
-                                          fontFamilies);
+                                          fontList);
 
   if (aSendRegisteredChrome) {
     nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
@@ -4259,6 +4261,17 @@ ContentParent::NotifyUpdatedDictionaries()
 
   for (auto* cp : AllProcesses(eLive)) {
     Unused << cp->SendUpdateDictionaryList(dictionaries);
+  }
+}
+
+void
+ContentParent::NotifyUpdatedFonts()
+{
+  InfallibleTArray<SystemFontListEntry> fontList;
+  gfxPlatform::GetPlatform()->ReadSystemFontList(&fontList);
+
+  for (auto* cp : AllProcesses(eLive)) {
+    Unused << cp->SendUpdateFontList(fontList);
   }
 }
 

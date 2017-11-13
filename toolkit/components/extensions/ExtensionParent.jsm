@@ -31,7 +31,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
-  gAddonPolicyService: ["@mozilla.org/addons/policy-service;1", "nsIAddonPolicyService"],
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
 });
 
@@ -1477,8 +1476,6 @@ StartupCache = {
     return this.general.delete([extension.id, extension.version, ...path]);
   },
 };
-
-// void StartupCache.dataPromise;
 
 Services.obs.addObserver(StartupCache, "startupcache-invalidate");
 

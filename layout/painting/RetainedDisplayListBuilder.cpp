@@ -283,17 +283,21 @@ RetainedDisplayListBuilder::IncrementSubDocPresShellPaintCount(nsDisplayItem* aI
 }
 
 void UpdateASR(nsDisplayItem* aItem,
-               const ActiveScrolledRoot* aContainerASR)
+               Maybe<const ActiveScrolledRoot*>& aContainerASR)
 {
+  if (!aContainerASR) {
+    return;
+  }
+
   nsDisplayWrapList* wrapList = aItem->AsDisplayWrapList();
   if (!wrapList) {
-    aItem->SetActiveScrolledRoot(aContainerASR);
+    aItem->SetActiveScrolledRoot(aContainerASR.value());
     return;
   }
 
   wrapList->SetActiveScrolledRoot(
     ActiveScrolledRoot::PickAncestor(wrapList->GetFrameActiveScrolledRoot(),
-                                     aContainerASR));
+                                     aContainerASR.value()));
 }
 
 /**
@@ -347,25 +351,27 @@ void
 RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
                                               nsDisplayList* aOldList,
                                               nsDisplayList* aOutList,
-                                              const ActiveScrolledRoot** aOutContainerASR)
+                                              Maybe<const ActiveScrolledRoot*>& aOutContainerASR)
 {
   nsDisplayList merged(&mBuilder);
-  const ActiveScrolledRoot* containerASR = nullptr;
-
-  const auto ReuseItem = [&](nsDisplayItem* aItem) {
+  const auto UseItem = [&](nsDisplayItem* aItem) {
     const ActiveScrolledRoot* itemClipASR =
       aItem->GetClipChain() ? aItem->GetClipChain()->mASR : nullptr;
 
     const ActiveScrolledRoot* finiteBoundsASR = ActiveScrolledRoot::PickDescendant(
       itemClipASR, aItem->GetActiveScrolledRoot());
-    if (merged.IsEmpty()) {
-      containerASR = finiteBoundsASR;
+    if (!aOutContainerASR) {
+      aOutContainerASR = Some(finiteBoundsASR);
     } else {
-      containerASR =
-        ActiveScrolledRoot::PickAncestor(containerASR, finiteBoundsASR);
+      aOutContainerASR =
+        Some(ActiveScrolledRoot::PickAncestor(aOutContainerASR.value(), finiteBoundsASR));
     }
 
     merged.AppendToTop(aItem);
+  };
+
+  const auto ReuseItem = [&](nsDisplayItem* aItem) {
+    UseItem(aItem);
     aItem->SetReused(true);
 
     if (aItem->GetType() == DisplayItemType::TYPE_SUBDOCUMENT) {
@@ -408,9 +414,9 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
 
         if (oldItem->GetChildren()) {
           MOZ_ASSERT(newItem->GetChildren());
-          const ActiveScrolledRoot* containerASRForChildren;
+          Maybe<const ActiveScrolledRoot*> containerASRForChildren;
           MergeDisplayLists(newItem->GetChildren(), oldItem->GetChildren(),
-                            oldItem->GetChildren(), &containerASRForChildren);
+                            oldItem->GetChildren(), containerASRForChildren);
           UpdateASR(oldItem, containerASRForChildren);
           oldItem->UpdateBounds(&mBuilder);
         }
@@ -428,9 +434,9 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
             // ensure that we find and remove any invalidated items.
             if (old->GetChildren()) {
               nsDisplayList empty(&mBuilder);
-              const ActiveScrolledRoot* containerASRForChildren;
+              Maybe<const ActiveScrolledRoot*> containerASRForChildren;
               MergeDisplayLists(&empty, old->GetChildren(),
-                                old->GetChildren(), &containerASRForChildren);
+                                old->GetChildren(), containerASRForChildren);
               UpdateASR(old, containerASRForChildren);
               old->UpdateBounds(&mBuilder);
             }
@@ -458,21 +464,21 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
           if (!IsAnyAncestorModified(old->FrameForInvalidation()) &&
               old->GetChildren()) {
             MOZ_ASSERT(newItem->GetChildren());
-            const ActiveScrolledRoot* containerASRForChildren;
+            Maybe<const ActiveScrolledRoot*> containerASRForChildren;
             MergeDisplayLists(newItem->GetChildren(), old->GetChildren(),
-                              newItem->GetChildren(), &containerASRForChildren);
+                              newItem->GetChildren(), containerASRForChildren);
             UpdateASR(newItem, containerASRForChildren);
             newItem->UpdateBounds(&mBuilder);
           }
 
           old->Destroy(&mBuilder);
-          merged.AppendToTop(newItem);
+          UseItem(newItem);
         }
       }
     } else {
       // If there was no matching item in the old list, then we only need to
       // add the new item to the merged list.
-      merged.AppendToTop(newItem);
+      UseItem(newItem);
     }
   }
 
@@ -485,10 +491,10 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
         // Passing an empty new display list as an argument skips the merging
         // loop above and jumps back here.
         nsDisplayList empty(&mBuilder);
-        const ActiveScrolledRoot* containerASRForChildren;
+        Maybe<const ActiveScrolledRoot*> containerASRForChildren;
 
         MergeDisplayLists(&empty, old->GetChildren(),
-                          old->GetChildren(), &containerASRForChildren);
+                          old->GetChildren(), containerASRForChildren);
         UpdateASR(old, containerASRForChildren);
         old->UpdateBounds(&mBuilder);
       }
@@ -502,9 +508,6 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
   }
 
   aOutList->AppendToTop(&merged);
-  if (aOutContainerASR) {
-    *aOutContainerASR = containerASR;
-  }
 }
 
 static void
@@ -846,7 +849,8 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
     // are not visible anymore) from the old list.
     // TODO: Optimization opportunity. In this case, MergeDisplayLists()
     // unnecessarily creates a hashtable of the old items.
-    MergeDisplayLists(&modifiedDL, &mList, &mList, nullptr);
+    Maybe<const ActiveScrolledRoot*> dummy;
+    MergeDisplayLists(&modifiedDL, &mList, &mList, dummy);
 
     //printf_stderr("Painting --- Merged list:\n");
     //nsFrame::PrintDisplayList(&mBuilder, mList);

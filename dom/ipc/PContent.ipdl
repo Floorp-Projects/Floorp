@@ -132,6 +132,19 @@ struct FontFamilyListEntry {
     uint8_t  entryType;
 };
 
+// Used on Linux to pass list of font patterns from chrome to content.
+struct FontPatternListEntry {
+    nsCString pattern;
+    bool      appFontFamily;
+};
+
+// Wrap the Font*ListEntry records in a union so the SetXPCOMProcessAttributes
+// message can pass an array of either type.
+union SystemFontListEntry {
+    FontFamilyListEntry;
+    FontPatternListEntry;
+};
+
 union PrefValue {
   nsCString;
   int32_t;
@@ -429,6 +442,8 @@ child:
 
     async UpdateDictionaryList(nsString[] dictionaries);
 
+    async UpdateFontList(SystemFontListEntry[] fontList);
+
     async UpdateAppLocales(nsCString[] appLocales);
     async UpdateRequestedLocales(nsCString[] requestedLocales);
 
@@ -476,8 +491,8 @@ child:
     async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit,
                                     StructuredCloneData initialData,
                                     LookAndFeelInt[] lookAndFeelIntCache,
-                                    /* used on MacOSX only: */
-                                    FontFamilyListEntry[] fontFamilyList);
+                                    /* used on MacOSX and Linux only: */
+                                    SystemFontListEntry[] systemFontList);
 
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();
