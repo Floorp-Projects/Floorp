@@ -1549,8 +1549,12 @@ class CGAbstractMethod(CGThing):
     If templateArgs is not None it should be a list of strings containing
     template arguments, and the function will be templatized using those
     arguments.
+
+    canRunScript should be True to generate a MOZ_CAN_RUN_SCRIPT annotation.
     """
-    def __init__(self, descriptor, name, returnType, args, inline=False, alwaysInline=False, static=False, templateArgs=None):
+    def __init__(self, descriptor, name, returnType, args, inline=False,
+                 alwaysInline=False, static=False, templateArgs=None,
+                 canRunScript=False):
         CGThing.__init__(self)
         self.descriptor = descriptor
         self.name = name
@@ -1560,6 +1564,7 @@ class CGAbstractMethod(CGThing):
         self.alwaysInline = alwaysInline
         self.static = static
         self.templateArgs = templateArgs
+        self.canRunScript = canRunScript
 
     def _argstring(self, declare):
         return ', '.join([a.declare() if declare else a.define() for a in self.args])
@@ -1571,6 +1576,8 @@ class CGAbstractMethod(CGThing):
 
     def _decorators(self):
         decorators = []
+        if self.canRunScript:
+            decorators.append('MOZ_CAN_RUN_SCRIPT');
         if self.alwaysInline:
             decorators.append('MOZ_ALWAYS_INLINE')
         elif self.inline:
@@ -1618,9 +1625,10 @@ class CGAbstractStaticMethod(CGAbstractMethod):
     Abstract base class for codegen of implementation-only (no
     declaration) static methods.
     """
-    def __init__(self, descriptor, name, returnType, args):
+    def __init__(self, descriptor, name, returnType, args, canRunScript=False):
         CGAbstractMethod.__init__(self, descriptor, name, returnType, args,
-                                  inline=False, static=True)
+                                  inline=False, static=True,
+                                  canRunScript=canRunScript)
 
     def declare(self):
         # We only have implementation
@@ -2988,7 +2996,8 @@ class CGJsonifyAttributesMethod(CGAbstractMethod):
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
                 Argument('JS::Rooted<JSObject*>&', 'aResult')]
-        CGAbstractMethod.__init__(self, descriptor, 'JsonifyAttributes', 'bool', args)
+        CGAbstractMethod.__init__(self, descriptor, 'JsonifyAttributes',
+                                  'bool', args, canRunScript=True)
 
     def definition_body(self):
         ret = ''
@@ -8847,7 +8856,8 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
                 Argument('const JSJitMethodCallArgs&', 'args')]
-        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args,
+                                        canRunScript=True)
 
     def definition_body(self):
         nativeName = CGSpecializedMethod.makeNativeName(self.descriptor,
@@ -8870,7 +8880,8 @@ class CGMethodPromiseWrapper(CGAbstractStaticMethod):
         self.method = methodToWrap
         name = self.makeName(methodToWrap.name)
         args = list(methodToWrap.args)
-        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args,
+                                        canRunScript=True)
 
     def definition_body(self):
         return fill(
@@ -9217,7 +9228,13 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             Argument('%s*' % descriptor.nativeType, 'self'),
             Argument('JSJitGetterCallArgs', 'args')
         ]
-        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
+        # StoreInSlot attributes have their getters called from Wrap().  We
+        # really hope they can't run script, and don't want to annotate Wrap()
+        # methods as doing that anyway, so let's not annotate them as
+        # MOZ_CAN_RUN_SCRIPT.
+        CGAbstractStaticMethod.__init__(
+            self, descriptor, name, "bool", args,
+            canRunScript=not attr.getExtendedAttribute("StoreInSlot"))
 
     def definition_body(self):
         if self.attr.isMaplikeOrSetlikeAttr():
@@ -9327,7 +9344,8 @@ class CGGetterPromiseWrapper(CGAbstractStaticMethod):
         self.getter = getterToWrap
         name = self.makeName(getterToWrap.name)
         args = list(getterToWrap.args)
-        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args,
+                                        canRunScript=True)
 
     def definition_body(self):
         return fill(
