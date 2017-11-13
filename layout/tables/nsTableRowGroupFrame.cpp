@@ -18,7 +18,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
 
-#include "nsCellMap.h"//table cell navigation
+#include "nsCellMap.h" //table cell navigation
 #include <algorithm>
 
 using namespace mozilla;

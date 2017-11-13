@@ -11,7 +11,7 @@
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "Layers.h"                     // for CanvasLayer, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/layers/CanvasClient.h"// for CanvasClient, etc
+#include "mozilla/layers/CanvasClient.h" // for CanvasClient, etc
 #include "mozilla/layers/LayersMessages.h"  // for CanvasLayerAttributes, etc
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsDebug.h"                    // for NS_ASSERTION
