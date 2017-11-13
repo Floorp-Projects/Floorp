@@ -32,5 +32,5 @@ as Windows that would open a separate console window just to display the
 program output. If you need runtime information to be printed out compile the
 ping sender with debugging enabled.
 
-The pingsender is not supported on Firefox for Android at the moment
+The pingsender is not supported on Firefox for Android
 (see `bug 1335917 <https://bugzilla.mozilla.org/show_bug.cgi?id=1335917>`_)

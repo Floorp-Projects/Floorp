@@ -87,6 +87,7 @@ namespace jit {
     _(Sqrt)                                     \
     _(Atan2)                                    \
     _(Hypot)                                    \
+    _(NearbyInt)                                \
     _(MathFunction)                             \
     _(Random)                                   \
     _(StringSplit)                              \
@@ -464,6 +465,17 @@ class RHypot final : public RInstruction
      }
 
      MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
+};
+
+class RNearbyInt final : public RInstruction
+{
+  private:
+    uint8_t roundingMode_;
+
+  public:
+    RINSTRUCTION_HEADER_NUM_OP_(NearbyInt, 1)
+
+    MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
 };
 
 class RMathFunction final : public RInstruction

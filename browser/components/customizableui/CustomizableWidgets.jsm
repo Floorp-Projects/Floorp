@@ -34,7 +34,6 @@ XPCOMUtils.defineLazyGetter(this, "BrandBundle", function() {
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
-const kWidePanelItemClass = "panel-wide-item";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let scope = {};
@@ -153,7 +152,6 @@ const CustomizableWidgets = [
     viewId: "PanelUI-history",
     shortcutId: "key_gotoHistory",
     tooltiptext: "history-panelmenu.tooltiptext2",
-    defaultArea: CustomizableUI.AREA_PANEL,
     recentlyClosedTabsPanel: "appMenu-library-recentlyClosedTabs",
     recentlyClosedWindowsPanel: "appMenu-library-recentlyClosedWindows",
     handleEvent(event) {
@@ -245,7 +243,6 @@ const CustomizableWidgets = [
     tooltiptext: "remotetabs-panelmenu.tooltiptext2",
     type: "view",
     viewId: "PanelUI-remotetabs",
-    defaultArea: CustomizableUI.AREA_PANEL,
     deckIndices: {
       DECKINDEX_TABS: 0,
       DECKINDEX_TABSDISABLED: 1,
@@ -524,7 +521,6 @@ const CustomizableWidgets = [
   }, {
     id: "privatebrowsing-button",
     shortcutId: "key_privatebrowsing",
-    defaultArea: CustomizableUI.AREA_PANEL,
     onCommand(e) {
       let win = e.target.ownerGlobal;
       win.OpenBrowserWindow({private: true});
@@ -533,7 +529,6 @@ const CustomizableWidgets = [
     id: "save-page-button",
     shortcutId: "key_savePage",
     tooltiptext: "save-page-button.tooltiptext3",
-    defaultArea: CustomizableUI.AREA_PANEL,
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       win.saveBrowser(win.gBrowser.selectedBrowser);
@@ -542,7 +537,6 @@ const CustomizableWidgets = [
     id: "find-button",
     shortcutId: "key_find",
     tooltiptext: "find-button.tooltiptext3",
-    defaultArea: CustomizableUI.AREA_PANEL,
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       if (win.gFindBar) {
@@ -553,7 +547,6 @@ const CustomizableWidgets = [
     id: "open-file-button",
     shortcutId: "openFileKb",
     tooltiptext: "open-file-button.tooltiptext3",
-    defaultArea: CustomizableUI.AREA_PANEL,
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       win.BrowserOpenFileWindow();
@@ -582,7 +575,6 @@ const CustomizableWidgets = [
     id: "add-ons-button",
     shortcutId: "key_openAddons",
     tooltiptext: "add-ons-button.tooltiptext3",
-    defaultArea: CustomizableUI.AREA_PANEL,
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       win.BrowserOpenAddonsMgr();
@@ -591,7 +583,6 @@ const CustomizableWidgets = [
     id: "zoom-controls",
     type: "custom",
     tooltiptext: "zoom-controls.tooltiptext2",
-    defaultArea: CustomizableUI.AREA_PANEL,
     onBuild(aDocument) {
       let buttons = [{
         id: "zoom-out-button",
@@ -626,7 +617,6 @@ const CustomizableWidgets = [
       node.setAttribute("removable", "true");
       node.classList.add("chromeclass-toolbar-additional");
       node.classList.add("toolbaritem-combined-buttons");
-      node.classList.add(kWidePanelItemClass);
 
       buttons.forEach(function(aButton, aIndex) {
         if (aIndex != 0)
@@ -641,7 +631,6 @@ const CustomizableWidgets = [
     id: "edit-controls",
     type: "custom",
     tooltiptext: "edit-controls.tooltiptext2",
-    defaultArea: CustomizableUI.AREA_PANEL,
     onBuild(aDocument) {
       let buttons = [{
         id: "cut-button",
@@ -674,7 +663,6 @@ const CustomizableWidgets = [
       node.setAttribute("removable", "true");
       node.classList.add("chromeclass-toolbar-additional");
       node.classList.add("toolbaritem-combined-buttons");
-      node.classList.add(kWidePanelItemClass);
 
       buttons.forEach(function(aButton, aIndex) {
         if (aIndex != 0)
@@ -711,7 +699,6 @@ const CustomizableWidgets = [
     type: "view",
     viewId: "PanelUI-feeds",
     tooltiptext: "feed-button.tooltiptext2",
-    defaultArea: CustomizableUI.AREA_PANEL,
     onClick(aEvent) {
       let win = aEvent.target.ownerGlobal;
       let feeds = win.gBrowser.selectedBrowser.feeds;
@@ -751,7 +738,6 @@ const CustomizableWidgets = [
     type: "view",
     viewId: "PanelUI-characterEncodingView",
     tooltiptext: "characterencoding-button2.tooltiptext",
-    defaultArea: CustomizableUI.AREA_PANEL,
     maybeDisableMenu(aDocument) {
       let window = aDocument.defaultView;
       return !(window.gBrowser &&
@@ -924,7 +910,6 @@ const CustomizableWidgets = [
 
 let preferencesButton = {
   id: "preferences-button",
-  defaultArea: CustomizableUI.AREA_PANEL,
   onCommand(aEvent) {
     let win = aEvent.target.ownerGlobal;
     win.openPreferences(undefined, {origin: "preferencesButton"});

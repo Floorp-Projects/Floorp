@@ -678,6 +678,12 @@ class SyncTelemetryImpl {
   // happen (for example, when including an error in the |extra| field of
   // event telemetry)
   transformError(error) {
+    // Certain parts of sync will use this pattern as a way to communicate to
+    // processIncoming to abort the processing. However, there's no guarantee
+    // this can only happen then.
+    if (typeof error == "object" && error.code && error.cause) {
+      error = error.cause;
+    }
     if (Async.isShutdownException(error)) {
       return { name: "shutdownerror" };
     }

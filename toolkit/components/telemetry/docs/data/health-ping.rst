@@ -40,10 +40,10 @@ Send behavior
 
 ``TelemetryHealthPing.jsm`` tracks several problems:
 
-* The size of other assembled ping exceed the ping limit.
-* There was a failure while sending other ping.
+* The size of other assembled pings exceeds the ping limit.
+* Failures while sending other pings.
 
-After recording the data, ping will be sent:
+After recording the data, a health ping will be sent:
 
 * immediately, with the reason ``immediate`` , if it is first ping in the session or it passed at least one hour from the previous submission.
 * after 1 hour minus the time passed from previous submission, with the reason ``delayed`` , if less than an hour passed from the previous submission.
@@ -54,7 +54,7 @@ Field details
 
 reason
 ~~~~~~
-The ``reason`` field contains the information about when "health" ping was submitted. Now it supports three types:
+The ``reason`` field contains the information about why the "health" ping was submitted. It presently supports three reasons:
 
 * immediate: The health ping was submitted immediately after recording a failure.
 * delayed: The health ping was submitted after a delay.
@@ -62,8 +62,8 @@ The ``reason`` field contains the information about when "health" ping was submi
 
 pingDiscardedForSize
 ~~~~~~~~~~~~~~~~~~~~
-The ``pingDiscardedForSize`` field contains the information about top ten pings, whose size exceeded the
-ping size limit (1 mb). This field lists the number of discarded pings per ping type.
+The ``pingDiscardedForSize`` field contains the information about the top ten pings whose size exceeded the
+ping size limit (1 MB). This field lists the number of discarded pings per ping type.
 
 The ping type "<unknown>" is used to indicate that a pending pings size exceeded the limit. This is because we don't have the pending pings type available cheaply at the moment.
 

@@ -525,18 +525,19 @@ var gSync = {
 
   openSyncedTabsPanel() {
     let placement = CustomizableUI.getPlacementOfWidget("sync-button");
-    let area = placement ? placement.area : CustomizableUI.AREA_NAVBAR;
+    let area = placement && placement.area;
     let anchor = document.getElementById("sync-button") ||
                  document.getElementById("PanelUI-menu-button");
-    if (area == CustomizableUI.AREA_PANEL) {
-      // The button is in the panel, so we need to show the panel UI, then our
-      // subview.
-      PanelUI.show().then(() => {
-        PanelUI.showSubView("PanelUI-remotetabs", anchor, area);
-      }).catch(Cu.reportError);
+    if (area == CustomizableUI.AREA_FIXED_OVERFLOW_PANEL) {
+      // The button is in the overflow panel, so we need to show the panel,
+      // then show our subview.
+      let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
+      navbar.overflowable.show().then(() => {
+        PanelUI.showSubView("PanelUI-remotetabs", anchor);
+      }, Cu.reportError);
     } else {
       // It is placed somewhere else - just try and show it.
-      PanelUI.showSubView("PanelUI-remotetabs", anchor, area);
+      PanelUI.showSubView("PanelUI-remotetabs", anchor);
     }
   },
 
