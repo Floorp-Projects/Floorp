@@ -7,7 +7,6 @@ import junit.framework.AssertionFailedError;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionBeginDelegate;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionCreationDelegate;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionFetchRecordsDelegate;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionFinishDelegate;
@@ -19,6 +18,7 @@ import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.middleware.Crypto5MiddlewareRepository;
@@ -54,7 +54,7 @@ public class TestCrypto5MiddlewareRepositorySession {
     getTestWaiter().performNotify(failed);
   }
 
-  protected static void performNotify(InvalidSessionTransitionException e) {
+  protected static void performNotify(SyncException e) {
     final AssertionFailedError failed = new AssertionFailedError("Invalid session transition.");
     failed.initCause(e);
     getTestWaiter().performNotify(failed);
@@ -96,16 +96,11 @@ public class TestCrypto5MiddlewareRepositorySession {
             assertSame(RepositorySession.SessionStatus.UNSTARTED, cmwSession.getStatus());
 
             try {
-              session.begin(new ExpectSuccessRepositorySessionBeginDelegate(getTestWaiter()) {
-                @Override
-                public void onBeginSucceeded(RepositorySession _session) {
-                  assertSame(self.cmwSession, _session);
-                  runnable.run();
-                }
-              });
-            } catch (InvalidSessionTransitionException e) {
+              session.begin();
+            } catch (SyncException e) {
               TestCrypto5MiddlewareRepositorySession.performNotify(e);
             }
+            runnable.run();
           }
         }, null);
       }
@@ -125,9 +120,9 @@ public class TestCrypto5MiddlewareRepositorySession {
         } catch (InactiveSessionException e) {
           performNotify(e);
         }
+        assertSame(RepositorySession.SessionStatus.DONE, cmwSession.getStatus());
       }
     });
-    assertSame(RepositorySession.SessionStatus.DONE, cmwSession.getStatus());
   }
 
   @Test

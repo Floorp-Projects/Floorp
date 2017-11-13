@@ -14,16 +14,15 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
 import org.mozilla.gecko.background.sync.helpers.BookmarkHelpers;
-import org.mozilla.gecko.background.sync.helpers.SimpleSuccessBeginDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessCreationDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessFetchDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessFinishDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessStoreDelegate;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
-import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
@@ -31,8 +30,6 @@ import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 import org.mozilla.gecko.sync.repositories.android.BookmarksDataAccessor;
 import org.mozilla.gecko.sync.repositories.android.BookmarksRepository;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
@@ -569,22 +566,21 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * Create and begin a new session, handing control to the delegate when started.
    * Returns when the delegate has notified.
    */
-  public void inBegunSession(final BookmarksRepository repo,
-                             final RepositorySessionBeginDelegate beginDelegate) {
+  private void inBegunSession(final BookmarksRepository repo) {
     Runnable go = new Runnable() {
       @Override
       public void run() {
-        RepositorySessionCreationDelegate delegate = new SimpleSuccessCreationDelegate() {
+        repo.createSession(new SimpleSuccessCreationDelegate() {
           @Override
           public void onSessionCreated(final RepositorySession session) {
             try {
-              session.begin(beginDelegate);
-            } catch (InvalidSessionTransitionException e) {
-              performNotify(e);
+              session.begin();
+              performNotify();
+            } catch (SyncException e) {
+              performNotify("Begin failed", e);
             }
           }
-        };
-        repo.createSession(delegate, getApplicationContext());
+        }, getApplicationContext());
       }
     };
     performWait(go);
@@ -610,75 +606,6 @@ public class TestBookmarks extends AndroidSyncTestCase {
   }
 
   /**
-   * Simple helper class for fetching all records.
-   * The fetched records' GUIDs are stored in `fetchedGUIDs`.
-   */
-  public class SimpleFetchAllBeginDelegate extends SimpleSuccessBeginDelegate {
-    public final ArrayList<String> fetchedGUIDs = new ArrayList<String>();
-
-    @Override
-    public void onBeginSucceeded(final RepositorySession session) {
-      RepositorySessionFetchRecordsDelegate fetchDelegate = new SimpleSuccessFetchDelegate() {
-
-        @Override
-        public void onFetchedRecord(Record record) {
-          fetchedGUIDs.add(record.guid);
-        }
-
-        @Override
-        public void onFetchCompleted() {
-          finishAndNotify(session);
-        }
-
-        @Override
-        public void onBatchCompleted() {
-
-        }
-      };
-      session.fetchModified(fetchDelegate);
-    }
-  }
-
-  /**
-   * Simple helper class for fetching a single record by GUID.
-   * The fetched record is stored in `fetchedRecord`.
-   */
-  public class SimpleFetchOneBeginDelegate extends SimpleSuccessBeginDelegate {
-    public final String guid;
-    public Record fetchedRecord = null;
-
-    public SimpleFetchOneBeginDelegate(String guid) {
-      this.guid = guid;
-    }
-
-    @Override
-    public void onBeginSucceeded(final RepositorySession session) {
-      RepositorySessionFetchRecordsDelegate fetchDelegate = new SimpleSuccessFetchDelegate() {
-
-        @Override
-        public void onFetchedRecord(Record record) {
-          fetchedRecord = record;
-        }
-
-        @Override
-        public void onFetchCompleted() {
-          finishAndNotify(session);
-        }
-
-        @Override
-        public void onBatchCompleted() {
-
-        }
-      };
-      try {
-        session.fetch(new String[] { guid }, fetchDelegate);
-      } catch (InactiveSessionException e) {
-        performNotify("Session is inactive.", e);
-      }
-    }
-  }
-
-  /**
    * Create a new session for the given repository, storing each record
    * from the provided array. Notifies on failure or success.
    *
@@ -687,14 +614,19 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * @param records
    * @param tracked
    */
-  public void storeRecordsInSession(BookmarksRepository repo,
+  private void storeRecordsInSession(BookmarksRepository repo,
                                     final BookmarkRecord[] records,
                                     final Collection<String> tracked) {
-    SimpleSuccessBeginDelegate beginDelegate = new SimpleSuccessBeginDelegate() {
+    repo.createSession(new SimpleSuccessCreationDelegate() {
       @Override
-      public void onBeginSucceeded(final RepositorySession session) {
-        RepositorySessionStoreDelegate storeDelegate = new SimpleSuccessStoreDelegate() {
+      public void onSessionCreated(final RepositorySession session) {
+        try {
+          session.begin();
+        } catch (SyncException e) {
+          performNotify("Begin failed", e);
+        }
 
+        RepositorySessionStoreDelegate storeDelegate = new SimpleSuccessStoreDelegate() {
           @Override
           public void onStoreCompleted() {
             // Pass back whatever we tracked.
@@ -730,24 +662,87 @@ public class TestBookmarks extends AndroidSyncTestCase {
         }
         session.storeDone();
       }
-    };
-    inBegunSession(repo, beginDelegate);
+    }, getApplicationContext());
   }
 
   public ArrayList<String> fetchGUIDs(BookmarksRepository repo) {
-    SimpleFetchAllBeginDelegate beginDelegate = new SimpleFetchAllBeginDelegate();
-    inBegunSession(repo, beginDelegate);
-    return beginDelegate.fetchedGUIDs;
+    final ArrayList<String> fetchedGUIDs = new ArrayList<String>();
+
+    repo.createSession(new SimpleSuccessCreationDelegate() {
+      @Override
+      public void onSessionCreated(final RepositorySession session) {
+        try {
+          session.begin();
+        } catch (SyncException e) {
+          performNotify("Begin failed", e);
+        }
+
+        RepositorySessionFetchRecordsDelegate fetchDelegate = new SimpleSuccessFetchDelegate() {
+          @Override
+          public void onFetchedRecord(Record record) {
+            fetchedGUIDs.add(record.guid);
+          }
+
+          @Override
+          public void onFetchCompleted() {
+            finishAndNotify(session);
+          }
+
+          @Override
+          public void onBatchCompleted() {
+
+          }
+        };
+        session.fetchModified(fetchDelegate);
+      }
+    }, getApplicationContext());
+
+    return fetchedGUIDs;
   }
 
-  public BookmarkRecord fetchGUID(BookmarksRepository repo,
+  private BookmarkRecord fetchGUID(BookmarksRepository repo,
                                   final String guid) {
     Logger.info(LOG_TAG, "Fetching for " + guid);
-    SimpleFetchOneBeginDelegate beginDelegate = new SimpleFetchOneBeginDelegate(guid);
-    inBegunSession(repo, beginDelegate);
-    Logger.info(LOG_TAG, "Fetched " + beginDelegate.fetchedRecord);
-    assertTrue(beginDelegate.fetchedRecord != null);
-    return (BookmarkRecord) beginDelegate.fetchedRecord;
+    final ArrayList<Record> fetchedRecords = new ArrayList<>();
+
+    repo.createSession(new SimpleSuccessCreationDelegate() {
+      @Override
+      public void onSessionCreated(final RepositorySession session) {
+        try {
+          session.begin();
+        } catch (SyncException e) {
+          performNotify("Begin failed", e);
+        }
+
+        RepositorySessionFetchRecordsDelegate fetchDelegate = new SimpleSuccessFetchDelegate() {
+          @Override
+          public void onFetchedRecord(Record record) {
+            fetchedRecords.add(record);
+          }
+
+          @Override
+          public void onFetchCompleted() {
+            finishAndNotify(session);
+          }
+
+          @Override
+          public void onBatchCompleted() {
+
+          }
+        };
+        try {
+          session.fetch(new String[] { guid }, fetchDelegate);
+        } catch (InactiveSessionException e) {
+          performNotify("Session is inactive.", e);
+        }
+      }
+    }, getApplicationContext());
+
+    assertEquals(1, fetchedRecords.size());
+    Record fetchedRecord = fetchedRecords.get(0);
+
+    Logger.info(LOG_TAG, "Fetched " + fetchedRecord);
+    return (BookmarkRecord) fetchedRecord;
   }
 
   public JSONArray fetchChildrenForGUID(BookmarksRepository repo,

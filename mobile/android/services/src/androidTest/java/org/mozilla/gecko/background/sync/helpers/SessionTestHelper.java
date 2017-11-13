@@ -7,6 +7,7 @@ import static junit.framework.Assert.assertNotNull;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
@@ -41,10 +42,11 @@ public class SessionTestHelper {
           Logger.info(logTag, "Calling session.begin on new session.");
           // The begin callbacks will notify.
           try {
-            session.begin(new ExpectBeginDelegate());
-          } catch (InvalidSessionTransitionException e) {
+            session.begin();
+          } catch (SyncException e) {
             testWaiter.performNotify(e);
           }
+          testWaiter.performNotify();
         } else {
           Logger.info(logTag, "Notifying after setting new session.");
           testWaiter.performNotify();
