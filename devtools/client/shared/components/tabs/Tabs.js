@@ -7,9 +7,8 @@
 "use strict";
 
 define(function (require, exports, module) {
-  const { Component } = require("devtools/client/shared/vendor/react");
-  const dom = require("devtools/client/shared/vendor/react-dom-factories");
-  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const React = require("devtools/client/shared/vendor/react");
+  const { Component, DOM } = React;
   const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 
   /**
@@ -35,26 +34,26 @@ define(function (require, exports, module) {
   class Tabs extends Component {
     static get propTypes() {
       return {
-        className: PropTypes.oneOfType([
-          PropTypes.array,
-          PropTypes.string,
-          PropTypes.object
+        className: React.PropTypes.oneOfType([
+          React.PropTypes.array,
+          React.PropTypes.string,
+          React.PropTypes.object
         ]),
-        tabActive: PropTypes.number,
-        onMount: PropTypes.func,
-        onBeforeChange: PropTypes.func,
-        onAfterChange: PropTypes.func,
-        children: PropTypes.oneOfType([
-          PropTypes.array,
-          PropTypes.element
+        tabActive: React.PropTypes.number,
+        onMount: React.PropTypes.func,
+        onBeforeChange: React.PropTypes.func,
+        onAfterChange: React.PropTypes.func,
+        children: React.PropTypes.oneOfType([
+          React.PropTypes.array,
+          React.PropTypes.element
         ]).isRequired,
-        showAllTabsMenu: PropTypes.bool,
-        onAllTabsMenuClick: PropTypes.func,
+        showAllTabsMenu: React.PropTypes.bool,
+        onAllTabsMenuClick: React.PropTypes.func,
 
         // Set true will only render selected panel on DOM. It's complete
         // opposite of the created array, and it's useful if panels content
         // is unpredictable and update frequently.
-        renderOnlySelected: PropTypes.bool,
+        renderOnlySelected: React.PropTypes.bool,
       };
     }
 
@@ -268,14 +267,14 @@ define(function (require, exports, module) {
           // left and right arrow keys.
           // See also `onKeyDown()` event handler.
           return (
-            dom.li({
+            DOM.li({
               className,
               key: index,
               ref,
               role: "presentation",
             },
-              dom.span({className: "devtools-tab-line"}),
-              dom.a({
+              DOM.span({className: "devtools-tab-line"}),
+              DOM.a({
                 id: id ? id + "-tab" : "tab-" + index,
                 tabIndex: isTabSelected ? 0 : -1,
                 "aria-controls": id ? id + "-panel" : "panel-" + index,
@@ -285,7 +284,7 @@ define(function (require, exports, module) {
               },
                 title,
                 badge && !isTabSelected && showBadge() ?
-                  dom.span({ className: "tab-badge" }, badge)
+                  DOM.span({ className: "tab-badge" }, badge)
                   :
                   null
               )
@@ -296,15 +295,15 @@ define(function (require, exports, module) {
       // Display the menu only if there is not enough horizontal
       // space for all tabs (and overflow happened).
       let allTabsMenu = this.state.overflow ? (
-        dom.div({
+        DOM.div({
           className: "all-tabs-menu",
           onClick: this.props.onAllTabsMenuClick,
         })
       ) : null;
 
       return (
-        dom.nav({className: "tabs-navigation"},
-          dom.ul({className: "tabs-menu", role: "tablist"},
+        DOM.nav({className: "tabs-navigation"},
+          DOM.ul({className: "tabs-menu", role: "tablist"},
             tabs
           ),
           allTabsMenu
@@ -352,7 +351,7 @@ define(function (require, exports, module) {
           let panel = tab.panel || tab;
 
           return (
-            dom.div({
+            DOM.div({
               id: id ? id + "-panel" : "panel-" + index,
               key: index,
               style: style,
@@ -366,7 +365,7 @@ define(function (require, exports, module) {
         });
 
       return (
-        dom.div({className: "panels"},
+        DOM.div({className: "panels"},
           panels
         )
       );
@@ -374,7 +373,7 @@ define(function (require, exports, module) {
 
     render() {
       return (
-        dom.div({ className: ["tabs", this.props.className].join(" ") },
+        DOM.div({ className: ["tabs", this.props.className].join(" ") },
           this.renderMenuItems(),
           this.renderPanels()
         )
@@ -388,16 +387,16 @@ define(function (require, exports, module) {
   class Panel extends Component {
     static get propTypes() {
       return {
-        title: PropTypes.string.isRequired,
-        children: PropTypes.oneOfType([
-          PropTypes.array,
-          PropTypes.element
+        title: React.PropTypes.string.isRequired,
+        children: React.PropTypes.oneOfType([
+          React.PropTypes.array,
+          React.PropTypes.element
         ]).isRequired
       };
     }
 
     render() {
-      return dom.div({className: "tab-panel"},
+      return DOM.div({className: "tab-panel"},
         this.props.children
       );
     }

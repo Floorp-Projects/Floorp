@@ -33,10 +33,6 @@ require.config({
       JSONView.debug
       ? "resource://devtools-client-shared/vendor/react-dom-dev"
       : "resource://devtools-client-shared/vendor/react-dom",
-    "devtools/client/shared/vendor/react-prop-types":
-      JSONView.debug
-      ? "resource://devtools-client-shared/vendor/react-prop-types-dev"
-      : "resource://devtools-client-shared/vendor/react-prop-types",
   }
 });
 

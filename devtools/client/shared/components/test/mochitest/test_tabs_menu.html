@@ -26,8 +26,7 @@ Test all-tabs menu.
 window.onload = Task.async(function* () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-    const { Component, createFactory } = browserRequire("devtools/client/shared/vendor/react");
-    const dom = require("devtools/client/shared/vendor/react-dom-factories");
+    const { Component, createFactory, DOM } = browserRequire("devtools/client/shared/vendor/react");
     const Tabbar = createFactory(browserRequire("devtools/client/shared/components/tabs/TabBar"));
 
     // Create container for the TabBar. Set smaller width
@@ -48,7 +47,7 @@ window.onload = Task.async(function* () {
 
     class TabPanelClass extends Component {
       render() {
-        return dom.div({}, "content");
+        return DOM.div({}, "content");
       }
     }
 
