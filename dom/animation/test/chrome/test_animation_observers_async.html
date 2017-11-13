@@ -605,6 +605,12 @@ function assert_records_any_order(expected, desc) {
 
     // Cancel the animation by setting animation-fill-mode.
     e.style.animationFillMode = "none";
+    // Explicitly flush style to make sure the above style change happens.
+    // Normally we don't need explicit style flush if there is a waitForFrame()
+    // call but in this particular case we are in the middle of animation events'
+    // callback handling and requestAnimationFrame handling so that we have no
+    // chance to process styling even after the requestAnimationFrame handling.
+    flushComputedStyle(e);
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
@@ -976,6 +982,12 @@ function assert_records_any_order(expected, desc) {
 
     // Cancel the animation.
     e.style = "";
+    // Explicitly flush style to make sure the above style change happens.
+    // That's because after the above `animations[0].ready` we are the state
+    // just before the next tick happens.  So if we waited for a
+    // requestAnimationFrame as usual here, we have no chance to process the
+    // style change since requestAnimationFrame is processed prior to styling.
+    flushComputedStyle(e);
 
     // Wait for the single removal notification.
     yield waitForFrame();
@@ -1015,6 +1027,8 @@ function assert_records_any_order(expected, desc) {
 
     // Cancel the animation.
     e.style = "";
+    // Explicitly flush style as with the above test.
+    flushComputedStyle(e);
 
     // Wait for the single removal notification.
     yield waitForFrame();
@@ -1055,6 +1069,8 @@ function assert_records_any_order(expected, desc) {
 
     // Cancel the animation.
     e.style = "";
+    // Explicitly flush style as with the above test.
+    flushComputedStyle(e);
 
     // Wait for the single removal notification.
     yield waitForFrame();
