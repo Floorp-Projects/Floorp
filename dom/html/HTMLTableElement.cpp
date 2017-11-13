@@ -39,6 +39,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
+  virtual uint32_t Length() override;
   virtual Element* GetElementAt(uint32_t aIndex) override;
   virtual nsINode* GetParentObject() override
   {
@@ -222,12 +223,11 @@ NS_INTERFACE_TABLE_HEAD(TableRowsCollection)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(TableRowsCollection)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
-TableRowsCollection::GetLength(uint32_t* aLength)
+uint32_t
+TableRowsCollection::Length()
 {
   EnsureInitialized();
-  *aLength = mRows.Length();
-  return NS_OK;
+  return mRows.Length();
 }
 
 Element*

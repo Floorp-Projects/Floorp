@@ -592,6 +592,10 @@ public:
   {
     return nsSimpleContentList::GetParentObject();
   }
+  virtual uint32_t Length() override
+  {
+    return nsSimpleContentList::Length();
+  }
   virtual Element* GetElementAt(uint32_t aIndex) override
   {
     return mElements.SafeElementAt(aIndex)->AsElement();
@@ -657,7 +661,6 @@ public:
     return HTMLCollectionBinding::Wrap(aCx, this, aGivenProto);
   }
 
-  using nsBaseContentList::Length;
   using nsBaseContentList::Item;
 
 private:
@@ -666,13 +669,6 @@ private:
 
 NS_IMPL_ISUPPORTS_INHERITED(SimpleHTMLCollection, nsSimpleContentList,
                             nsIHTMLCollection, nsIDOMHTMLCollection)
-
-NS_IMETHODIMP
-SimpleHTMLCollection::GetLength(uint32_t* aLength)
-{
-  *aLength = Length();
-  return NS_OK;
-}
 
 } // namespace dom
 } // namespace mozilla
