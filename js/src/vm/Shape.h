@@ -235,6 +235,7 @@ class ShapeTable {
   public:
     friend class NativeObject;
     friend class BaseShape;
+    friend class Shape;
     static const uint32_t MIN_ENTRIES   = 11;
 
     class Entry {
@@ -801,6 +802,9 @@ class Shape : public gc::TenuredCell
     bool makeOwnBaseShape(JSContext* cx);
 
     MOZ_ALWAYS_INLINE MOZ_MUST_USE bool maybeCreateTableForLookup(JSContext* cx);
+
+    MOZ_ALWAYS_INLINE void updateDictionaryTable(ShapeTable* table, ShapeTable::Entry* entry,
+                                                 const AutoKeepShapeTables& keep);
 
   public:
     bool hasTable() const { return base()->hasTable(); }
