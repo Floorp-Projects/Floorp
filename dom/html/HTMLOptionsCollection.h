@@ -56,6 +56,7 @@ protected:
   }
 public:
 
+  virtual uint32_t Length() override;
   virtual Element* GetElementAt(uint32_t aIndex) override;
   virtual nsINode* GetParentObject() override;
 

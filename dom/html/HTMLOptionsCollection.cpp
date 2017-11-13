@@ -110,12 +110,10 @@ HTMLOptionsCollection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
   return HTMLOptionsCollectionBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMETHODIMP
-HTMLOptionsCollection::GetLength(uint32_t* aLength)
+uint32_t
+HTMLOptionsCollection::Length()
 {
-  *aLength = mElements.Length();
-
-  return NS_OK;
+  return mElements.Length();
 }
 
 void
