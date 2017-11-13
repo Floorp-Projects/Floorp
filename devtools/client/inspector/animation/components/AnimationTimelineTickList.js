@@ -6,6 +6,7 @@
 
 const { createFactory, DOM: dom, PropTypes, PureComponent } =
   require("devtools/client/shared/vendor/react");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
 const AnimationTimelineTickItem = createFactory(require("./AnimationTimelineTickItem"));
@@ -20,6 +21,7 @@ class AnimationTimelineTickList extends PureComponent {
   static get propTypes() {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      sidebarWidth: PropTypes.number.isRequired,
     };
   }
 
@@ -33,6 +35,27 @@ class AnimationTimelineTickList extends PureComponent {
 
   componentDidMount() {
     this.updateTickList();
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.updateTickList();
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    if (this.state.tickList.length !== nextState.tickList.length) {
+      return true;
+    }
+
+    for (let i = 0; i < this.state.tickList.length; i++) {
+      const currentTickItem = this.state.tickList[i];
+      const nextTickItem = nextState.tickList[i];
+
+      if (currentTickItem.text !== nextTickItem.text) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   updateTickList() {
@@ -70,4 +93,10 @@ class AnimationTimelineTickList extends PureComponent {
   }
 }
 
-module.exports = AnimationTimelineTickList;
+const mapStateToProps = state => {
+  return {
+    sidebarWidth: state.animationSidebar.width
+  };
+};
+
+module.exports = connect(mapStateToProps)(AnimationTimelineTickList);
