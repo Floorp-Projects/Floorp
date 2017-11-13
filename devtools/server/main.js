@@ -265,8 +265,7 @@ var DebuggerServer = {
    *        "windowtype" attribute of the main chrome windows. Used by some
    *        actors to retrieve them.
    */
-  registerActors({ root = true, browser = true, tab = true,
-                   windowType = null }) {
+  registerActors({ root, browser, tab, windowType }) {
     if (windowType) {
       this.chromeWindowType = windowType;
     }
