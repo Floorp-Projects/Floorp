@@ -135,7 +135,12 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     if (!args.init(cx, argc))
         return false;
 
-    bool hasI64Arg = false;
+    bool hasI64ArgOrRet = fi.sig().hasI64ArgOrRet();
+    if (!JitOptions.wasmTestMode && hasI64ArgOrRet) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_TYPE);
+        return false;
+    }
+
     MOZ_ASSERT(fi.sig().args().length() == argc);
     for (size_t i = 0; i < argc; i++) {
         switch (fi.sig().args()[i]) {
@@ -149,15 +154,11 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
             args[i].set(JS::CanonicalizedDoubleValue(*(double*)&argv[i]));
             break;
           case ValType::I64: {
-            if (!JitOptions.wasmTestMode) {
-                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_TYPE);
-                return false;
-            }
+            MOZ_ASSERT(JitOptions.wasmTestMode);
             RootedObject obj(cx, CreateI64Object(cx, *(int64_t*)&argv[i]));
             if (!obj)
                 return false;
             args[i].set(ObjectValue(*obj));
-            hasI64Arg = true;
             break;
           }
           case ValType::I8x16:
@@ -178,16 +179,10 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     if (!Call(cx, fval, thisv, args, rval))
         return false;
 
-    // Throw an error if returning i64 and not in test mode.
-    if (!JitOptions.wasmTestMode && fi.sig().ret() == ExprType::I64) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_TYPE);
-        return false;
-    }
-
     // Don't try to optimize if the function has at least one i64 arg or if
     // it returns an int64. GenerateJitExit relies on this, as does the
     // type inference code below in this function.
-    if (hasI64Arg || fi.sig().ret() == ExprType::I64)
+    if (hasI64ArgOrRet)
         return true;
 
     // The import may already have become optimized.
@@ -589,6 +584,11 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
 
     const FuncExport& func = metadata(tier).lookupFuncExport(funcIndex);
 
+    if (!JitOptions.wasmTestMode && func.sig().hasI64ArgOrRet()) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_TYPE);
+        return false;
+    }
+
     // The calling convention for an external call into wasm is to pass an
     // array of 16-byte values where each value contains either a coerced int32
     // (in the low word), a double value (in the low dword) or a SIMD vector
@@ -610,10 +610,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
                 return false;
             break;
           case ValType::I64:
-            if (!JitOptions.wasmTestMode) {
-                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_TYPE);
-                return false;
-            }
+            MOZ_ASSERT(JitOptions.wasmTestMode);
             if (!ReadI64Object(cx, v, (int64_t*)&exportArgs[i]))
                 return false;
             break;
@@ -721,10 +718,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
         args.rval().set(Int32Value(*(int32_t*)retAddr));
         break;
       case ExprType::I64:
-        if (!JitOptions.wasmTestMode) {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_TYPE);
-            return false;
-        }
+        MOZ_ASSERT(JitOptions.wasmTestMode);
         retObj = CreateI64Object(cx, *(int64_t*)retAddr);
         if (!retObj)
             return false;
