@@ -3081,7 +3081,7 @@ imalloc(size_t aSize, bool aZero, arena_t* aArena)
 {
   MOZ_ASSERT(aSize != 0);
 
-  aArena = aArena ? aArena : choose_arena(aSize);
+  MOZ_ASSERT(aArena);
   if (aSize <= gMaxLargeClass) {
     return aArena->Malloc(aSize, aZero);
   }
@@ -3173,7 +3173,7 @@ ipalloc(size_t aAlignment, size_t aSize, arena_t* aArena)
     return nullptr;
   }
 
-  aArena = aArena ? aArena : choose_arena(aSize);
+  MOZ_ASSERT(aArena);
   if (ceil_size <= gPageSize ||
       (aAlignment <= gPageSize && ceil_size <= gMaxLargeClass)) {
     ret = aArena->Malloc(ceil_size, false);
@@ -3880,7 +3880,8 @@ huge_palloc(size_t aSize, size_t aAlignment, bool aZero, arena_t* aArena)
   node->mAddr = ret;
   psize = PAGE_CEILING(aSize);
   node->mSize = psize;
-  node->mArena = aArena ? aArena : choose_arena(aSize);
+  MOZ_ASSERT(aArena);
+  node->mArena = aArena;
 
   {
     MutexAutoLock lock(huge_mtx);
@@ -3958,7 +3959,7 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
       extent_node_t* node = huge.Search(&key);
       MOZ_ASSERT(node);
       MOZ_ASSERT(node->mSize == aOldSize);
-      MOZ_RELEASE_ASSERT(!aArena || node->mArena == aArena);
+      MOZ_RELEASE_ASSERT(node->mArena == aArena);
       huge_allocated -= aOldSize - psize;
       // No need to change huge_mapped, because we didn't (un)map anything.
       node->mSize = psize;
@@ -3983,7 +3984,7 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
       extent_node_t* node = huge.Search(&key);
       MOZ_ASSERT(node);
       MOZ_ASSERT(node->mSize == aOldSize);
-      MOZ_RELEASE_ASSERT(!aArena || node->mArena == aArena);
+      MOZ_RELEASE_ASSERT(node->mArena == aArena);
       huge_allocated += psize - aOldSize;
       // No need to change huge_mapped, because we didn't
       // (un)map anything.
@@ -4254,6 +4255,7 @@ inline void*
 BaseAllocator::malloc(size_t aSize)
 {
   void* ret;
+  arena_t* arena;
 
   if (!malloc_init()) {
     ret = nullptr;
@@ -4263,8 +4265,8 @@ BaseAllocator::malloc(size_t aSize)
   if (aSize == 0) {
     aSize = 1;
   }
-
-  ret = imalloc(aSize, /* zero = */ false, mArena);
+  arena = mArena ? mArena : choose_arena(aSize);
+  ret = imalloc(aSize, /* zero = */ false, arena);
 
 RETURN:
   if (!ret) {
@@ -4290,7 +4292,8 @@ BaseAllocator::memalign(size_t aAlignment, size_t aSize)
   }
 
   aAlignment = aAlignment < sizeof(void*) ? sizeof(void*) : aAlignment;
-  ret = ipalloc(aAlignment, aSize, mArena);
+  arena_t* arena = mArena ? mArena : choose_arena(aSize);
+  ret = ipalloc(aAlignment, aSize, arena);
 
   return ret;
 }
@@ -4307,7 +4310,8 @@ BaseAllocator::calloc(size_t aNum, size_t aSize)
       if (allocSize == 0) {
         allocSize = 1;
       }
-      ret = imalloc(allocSize, /* zero = */ true, mArena);
+      arena_t* arena = mArena ? mArena : choose_arena(allocSize);
+      ret = imalloc(allocSize, /* zero = */ true, arena);
     } else {
       ret = nullptr;
     }
@@ -4343,7 +4347,8 @@ BaseAllocator::realloc(void* aPtr, size_t aSize)
     if (!malloc_init()) {
       ret = nullptr;
     } else {
-      ret = imalloc(aSize, /* zero = */ false, mArena);
+      arena_t* arena = mArena ? mArena : choose_arena(aSize);
+      ret = imalloc(aSize, /* zero = */ false, arena);
     }
 
     if (!ret) {
