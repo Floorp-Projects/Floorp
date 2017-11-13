@@ -1981,11 +1981,15 @@ toolbar#nav-bar {
         If parent_pid is provided, and psutil is available, returns children of
         parent_pid according to psutil.
         """
+        rv = []
         if parent_pid and HAVE_PSUTIL:
             self.log.info("Determining child pids from psutil")
-            return [p.pid for p in psutil.Process(parent_pid).children()]
+            try:
+                rv = [p.pid for p in psutil.Process(parent_pid).children()]
+            except psutil.NoSuchProcess:
+                self.log.warning("Failed to lookup children of pid %d" % parent_pid)
+            return rv
 
-        rv = []
         pid_re = re.compile(r'==> process \d+ launched child process (\d+)')
         with open(process_log) as fd:
             for line in fd:
@@ -2231,6 +2235,10 @@ toolbar#nav-bar {
             # until bug 913970 is fixed regarding mozrunner `wait` not returning status
             # see https://bugzilla.mozilla.org/show_bug.cgi?id=913970
             status = proc.wait()
+            if status is None:
+                self.log.warning("runtests.py | Failed to get app exit code - running/crashed?")
+                # must report an integer to process_exit()
+                status = 0
             self.log.process_exit("Main app process", status)
             runner.process_handler = None
 
@@ -2788,11 +2796,28 @@ toolbar#nav-bar {
         self.log.info('Found child pids: %s' % child_pids)
 
         if HAVE_PSUTIL:
-            child_procs = [psutil.Process(pid) for pid in child_pids]
+            try:
+                browser_proc = [psutil.Process(browser_pid)]
+            except:
+                self.log.info('Failed to get proc for pid %d' % browser_pid)
+                browser_proc = []
+            try:
+                child_procs = [psutil.Process(pid) for pid in child_pids]
+            except:
+                self.log.info('Failed to get child procs')
+                child_procs = []
             for pid in child_pids:
                 self.killAndGetStack(pid, utilityPath, debuggerInfo,
                                      dump_screen=not debuggerInfo)
             gone, alive = psutil.wait_procs(child_procs, timeout=30)
+            for p in gone:
+                self.log.info('psutil found pid %s dead' % p.pid)
+            for p in alive:
+                self.log.warning('failed to kill pid %d after 30s' %
+                                 p.pid)
+            self.killAndGetStack(browser_pid, utilityPath, debuggerInfo,
+                                 dump_screen=not debuggerInfo)
+            gone, alive = psutil.wait_procs(browser_proc, timeout=30)
             for p in gone:
                 self.log.info('psutil found pid %s dead' % p.pid)
             for p in alive:
@@ -2808,8 +2833,8 @@ toolbar#nav-bar {
             if child_pids:
                 time.sleep(30)
 
-        self.killAndGetStack(browser_pid, utilityPath, debuggerInfo,
-                             dump_screen=not debuggerInfo)
+            self.killAndGetStack(browser_pid, utilityPath, debuggerInfo,
+                                 dump_screen=not debuggerInfo)
 
     class OutputHandler(object):
 
