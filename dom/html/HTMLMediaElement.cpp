@@ -3985,7 +3985,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mCurrentPlayRangeStart(-1.0),
     mLoadedDataFired(false),
     mAutoplaying(true),
-    mAutoplayEnabled(true),
     mPaused(true, *this),
     mStatsShowing(false),
     mAllowCasting(false),
@@ -4532,9 +4531,6 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
   mUnboundFromTree = false;
 
   if (aDocument) {
-    mAutoplayEnabled =
-      IsAutoplayEnabled() && (!aDocument || !aDocument->IsStaticDocument()) &&
-      !IsEditable();
     // The preload action depends on the value of the autoplay attribute.
     // It's value may have changed, so update it.
     UpdatePreloadAction();
@@ -6107,7 +6103,11 @@ bool HTMLMediaElement::CanActivateAutoplay()
   // download is controlled by the script and there is no way to evaluate
   // MediaDecoder::CanPlayThrough().
 
-  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) || !mAutoplayEnabled) {
+  if (!IsAutoplayEnabled()) {
+    return false;
+  }
+
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) {
     return false;
   }
 
@@ -6124,6 +6124,11 @@ bool HTMLMediaElement::CanActivateAutoplay()
   }
 
   if (mPausedForInactiveDocumentOrChannel) {
+    return false;
+  }
+
+  // Static document is used for print preview and printing, should not be autoplay
+  if (OwnerDoc()->IsStaticDocument()) {
     return false;
   }
 
