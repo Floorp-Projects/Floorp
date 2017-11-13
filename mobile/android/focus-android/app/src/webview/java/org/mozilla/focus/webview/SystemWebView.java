@@ -37,6 +37,9 @@ import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class SystemWebView extends NestedWebView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "WebkitView";
 
@@ -160,7 +163,10 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
         // called by webview when clicking on a link, and not when opening a new page for the
         // first time using loadUrl().
         if (!client.shouldOverrideUrlLoading(this, url)) {
-            super.loadUrl(url);
+            final Map<String, String> additionalHeaders = new HashMap<>();
+            additionalHeaders.put("X-Requested-With", "");
+
+            super.loadUrl(url, additionalHeaders);
         }
 
         client.notifyCurrentURL(url);
