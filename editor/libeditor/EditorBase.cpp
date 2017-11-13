@@ -4060,7 +4060,7 @@ int32_t
 EditorBase::SplitNodeDeep(nsIContent& aNode,
                           nsIContent& aSplitPointParent,
                           int32_t aSplitPointOffset,
-                          EmptyContainers aEmptyContainers,
+                          SplitAtEdges aSplitAtEdges,
                           nsIContent** aOutLeftNode,
                           nsIContent** aOutRightNode,
                           nsCOMPtr<nsIContent>* ioChildAtSplitPointOffset)
@@ -4079,7 +4079,7 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
 
     bool didSplit = false;
 
-    if ((aEmptyContainers == EmptyContainers::yes &&
+    if ((aSplitAtEdges == SplitAtEdges::eAllowToCreateEmptyContainer &&
          !nodeToSplit->GetAsText()) ||
         (offset && offset != (int32_t)nodeToSplit->Length())) {
       didSplit = true;

@@ -358,8 +358,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     if (IsTextNode(parentNode)) {
       nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parentNode);
       NS_ENSURE_STATE(parentContent || !parentNode);
-      offsetOfNewNode = SplitNodeDeep(*parentContent, *parentContent,
-                                      offsetOfNewNode);
+      offsetOfNewNode =
+        SplitNodeDeep(*parentContent, *parentContent, offsetOfNewNode,
+                      SplitAtEdges::eAllowToCreateEmptyContainer);
       NS_ENSURE_STATE(offsetOfNewNode != -1);
       nsCOMPtr<nsIDOMNode> temp;
       rv = parentNode->GetParentNode(getter_AddRefs(temp));
@@ -446,7 +447,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
         nsCOMPtr<nsIDOMNode> child;
         curNode->GetFirstChild(getter_AddRefs(child));
         while (child) {
-          rv = InsertNodeAtPoint(child, address_of(parentNode), &offsetOfNewNode, true);
+          rv = InsertNodeAtPoint(child, address_of(parentNode),
+                                 &offsetOfNewNode,
+                                 SplitAtEdges::eDoNotCreateEmptyContainer);
           if (NS_FAILED(rv)) {
             break;
           }
@@ -485,7 +488,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                 }
               }
             }
-            rv = InsertNodeAtPoint(child, address_of(parentNode), &offsetOfNewNode, true);
+            rv = InsertNodeAtPoint(child, address_of(parentNode),
+                                   &offsetOfNewNode,
+                                   SplitAtEdges::eDoNotCreateEmptyContainer);
             if (NS_FAILED(rv)) {
               break;
             }
@@ -504,7 +509,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
         nsCOMPtr<nsIDOMNode> child;
         curNode->GetFirstChild(getter_AddRefs(child));
         while (child) {
-          rv = InsertNodeAtPoint(child, address_of(parentNode), &offsetOfNewNode, true);
+          rv = InsertNodeAtPoint(child, address_of(parentNode),
+                                 &offsetOfNewNode,
+                                 SplitAtEdges::eDoNotCreateEmptyContainer);
           if (NS_FAILED(rv)) {
             break;
           }
@@ -519,7 +526,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
 
       if (!bDidInsert || NS_FAILED(rv)) {
         // try to insert
-        rv = InsertNodeAtPoint(curNode, address_of(parentNode), &offsetOfNewNode, true);
+        rv = InsertNodeAtPoint(curNode, address_of(parentNode),
+                               &offsetOfNewNode,
+                               SplitAtEdges::eDoNotCreateEmptyContainer);
         if (NS_SUCCEEDED(rv)) {
           bDidInsert = true;
           lastInsertNode = curNode;
@@ -531,7 +540,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
         while (NS_FAILED(rv) && curNode) {
           curNode->GetParentNode(getter_AddRefs(parent));
           if (parent && !TextEditUtils::IsBody(parent)) {
-            rv = InsertNodeAtPoint(parent, address_of(parentNode), &offsetOfNewNode, true,
+            rv = InsertNodeAtPoint(parent, address_of(parentNode),
+                                   &offsetOfNewNode,
+                                   SplitAtEdges::eDoNotCreateEmptyContainer,
                                    address_of(lastInsertNode));
             if (NS_SUCCEEDED(rv)) {
               bDidInsert = true;
@@ -640,7 +651,8 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
         NS_ENSURE_STATE(selContent || !selNode);
         nsCOMPtr<nsIContent> leftLink;
         SplitNodeDeep(*linkContent, *selContent, selOffset,
-                      EmptyContainers::no, getter_AddRefs(leftLink));
+                      SplitAtEdges::eDoNotCreateEmptyContainer,
+                      getter_AddRefs(leftLink));
         if (leftLink) {
           EditorRawDOMPoint afterLeftLink(leftLink);
           if (afterLeftLink.AdvanceOffset()) {

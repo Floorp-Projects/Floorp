@@ -554,8 +554,8 @@ HTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
         isSet) {
       // Found a style node we need to split
       int32_t offset = SplitNodeDeep(*node, *(*aNode)->AsContent(), *aOffset,
-                                     EmptyContainers::yes, aOutLeftNode,
-                                     aOutRightNode);
+                                     SplitAtEdges::eAllowToCreateEmptyContainer,
+                                     aOutLeftNode, aOutRightNode);
       NS_ENSURE_TRUE(offset != -1, NS_ERROR_FAILURE);
       // reset startNode/startOffset
       *aNode = node->GetParent();

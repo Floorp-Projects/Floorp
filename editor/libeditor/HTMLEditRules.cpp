@@ -1857,9 +1857,9 @@ HTMLEditRules::StandardBreakImpl(nsINode& aNode,
       nsCOMPtr<Element> linkNode = do_QueryInterface(linkDOMNode);
       NS_ENSURE_STATE(linkNode || !linkDOMNode);
       nsCOMPtr<nsINode> linkParent = linkNode->GetParentNode();
-      aOffset = htmlEditor->SplitNodeDeep(*linkNode, *node->AsContent(),
-                                          aOffset,
-                                          HTMLEditor::EmptyContainers::no);
+      aOffset =
+        htmlEditor->SplitNodeDeep(*linkNode, *node->AsContent(), aOffset,
+                                  SplitAtEdges::eDoNotCreateEmptyContainer);
       NS_ENSURE_STATE(aOffset != -1);
       node = linkParent;
     }
@@ -1967,9 +1967,11 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
 
     NS_ENSURE_STATE(mHTMLEditor);
     NS_ENSURE_STATE(selNode->IsContent());
-    int32_t newOffset = mHTMLEditor->SplitNodeDeep(*citeNode,
-        *selNode->AsContent(), selOffset, HTMLEditor::EmptyContainers::no,
-        getter_AddRefs(leftCite), getter_AddRefs(rightCite));
+    int32_t newOffset =
+      mHTMLEditor->SplitNodeDeep(*citeNode, *selNode->AsContent(), selOffset,
+                                 SplitAtEdges::eDoNotCreateEmptyContainer,
+                                 getter_AddRefs(leftCite),
+                                 getter_AddRefs(rightCite));
     NS_ENSURE_STATE(newOffset != -1);
 
     // Add an invisible <br> to the end of the left part if it was a <span> of
@@ -3840,9 +3842,9 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsAtom& blockType)
           NS_ENSURE_SUCCESS(rv, rv);
         }
         // Do the splits!
-        offset = htmlEditor->SplitNodeDeep(curBlock, *container->AsContent(),
-                                            offset,
-                                            HTMLEditor::EmptyContainers::no);
+        offset =
+          htmlEditor->SplitNodeDeep(curBlock, *container->AsContent(), offset,
+                                    SplitAtEdges::eDoNotCreateEmptyContainer);
         NS_ENSURE_STATE(offset != -1);
         // Put a br at the split point
         brNode = htmlEditor->CreateBR(curBlock->GetParentNode(), offset);
@@ -4716,7 +4718,7 @@ HTMLEditRules::SplitBlock(Element& aBlock,
   // Do the splits!
   nsCOMPtr<nsIContent> newMiddleNode1;
   htmlEditor->SplitNodeDeep(aBlock, startParent, startOffset,
-                            HTMLEditor::EmptyContainers::no,
+                            SplitAtEdges::eDoNotCreateEmptyContainer,
                             aOutLeftNode, getter_AddRefs(newMiddleNode1));
 
   // Get split point location
@@ -4727,7 +4729,7 @@ HTMLEditRules::SplitBlock(Element& aBlock,
   // Do the splits!
   nsCOMPtr<nsIContent> newMiddleNode2;
   htmlEditor->SplitNodeDeep(aBlock, endParent, endOffset,
-                            HTMLEditor::EmptyContainers::no,
+                            SplitAtEdges::eDoNotCreateEmptyContainer,
                             getter_AddRefs(newMiddleNode2), aOutRightNode);
 
   if (aOutMiddleNode) {
@@ -4851,7 +4853,9 @@ HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
     if (RefPtr<Text> text = node->GetAsText()) {
       // if we are in a text node, split it
       NS_ENSURE_STATE(mHTMLEditor);
-      offset = mHTMLEditor->SplitNodeDeep(*text, *text, offset);
+      offset =
+        mHTMLEditor->SplitNodeDeep(*text, *text, offset,
+                                   SplitAtEdges::eAllowToCreateEmptyContainer);
       NS_ENSURE_STATE(offset != -1);
       node = node->GetParentNode();
     }
@@ -6406,7 +6410,7 @@ HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& item)
     int32_t resultEndOffset =
       mHTMLEditor->SplitNodeDeep(*endInline, *item.mEndContainer->AsContent(),
                                  item.mEndOffset,
-                                 EditorBase::EmptyContainers::no);
+                                 SplitAtEdges::eDoNotCreateEmptyContainer);
     NS_ENSURE_TRUE(resultEndOffset != -1, NS_ERROR_FAILURE);
     // reset range
     item.mEndContainer = resultEndNode;
@@ -6423,7 +6427,7 @@ HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& item)
       mHTMLEditor->SplitNodeDeep(*startInline,
                                  *item.mStartContainer->AsContent(),
                                  item.mStartOffset,
-                                 EditorBase::EmptyContainers::no);
+                                 SplitAtEdges::eDoNotCreateEmptyContainer);
     NS_ENSURE_TRUE(resultStartOffset != -1, NS_ERROR_FAILURE);
     // reset range
     item.mStartContainer = resultStartNode;
@@ -6467,7 +6471,7 @@ HTMLEditRules::BustUpInlinesAtBRs(
 
     int32_t resultOffset =
       htmlEditor->SplitNodeDeep(*splitDeepNode, splitParentNode, splitOffset,
-                                HTMLEditor::EmptyContainers::yes,
+                                SplitAtEdges::eAllowToCreateEmptyContainer,
                                 getter_AddRefs(leftNode),
                                 getter_AddRefs(rightNode));
     NS_ENSURE_STATE(resultOffset != -1);
@@ -6678,7 +6682,8 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
 
   // Split the header
   NS_ENSURE_STATE(node->IsContent());
-  htmlEditor->SplitNodeDeep(aHeader, *node->AsContent(), aOffset);
+  htmlEditor->SplitNodeDeep(aHeader, *node->AsContent(), aOffset,
+                            SplitAtEdges::eAllowToCreateEmptyContainer);
 
   // If the left-hand heading is empty, put a mozbr in it
   nsCOMPtr<nsIContent> prevItem = htmlEditor->GetPriorHTMLSibling(&aHeader);
@@ -6897,7 +6902,7 @@ HTMLEditRules::SplitParagraph(Selection& aSelection,
   NS_ENSURE_STATE(selNode->IsContent());
   int32_t offset =
     htmlEditor->SplitNodeDeep(aParentDivOrP, *selNode->AsContent(), selOffset,
-                              HTMLEditor::EmptyContainers::yes,
+                              SplitAtEdges::eAllowToCreateEmptyContainer,
                               getter_AddRefs(leftPara),
                               getter_AddRefs(rightPara));
   if (NS_WARN_IF(offset == -1)) {
@@ -7020,7 +7025,8 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
   NS_ENSURE_SUCCESS(rv, rv);
   // Now split list item
   NS_ENSURE_STATE(selNode->IsContent());
-  htmlEditor->SplitNodeDeep(aListItem, *selNode->AsContent(), aOffset);
+  htmlEditor->SplitNodeDeep(aListItem, *selNode->AsContent(), aOffset,
+                            SplitAtEdges::eAllowToCreateEmptyContainer);
 
   // Hack: until I can change the damaged doc range code back to being
   // extra-inclusive, I have to manually detect certain list items that may be
@@ -7452,12 +7458,11 @@ HTMLEditRules::SplitAsNeeded(nsAtom& aTag,
   if (splitNode && splitNode->IsContent() && inOutParent->IsContent()) {
     // We found a place for block, but above inOutParent. We need to split.
     NS_ENSURE_STATE(mHTMLEditor);
-    int32_t offset = mHTMLEditor->SplitNodeDeep(*splitNode->AsContent(),
-                                                *inOutParent->AsContent(),
-                                                inOutOffset,
-                                                EditorBase::EmptyContainers::yes,
-                                                nullptr, nullptr,
-                                                inOutChildAtOffset);
+    int32_t offset =
+      mHTMLEditor->SplitNodeDeep(*splitNode->AsContent(),
+                                 *inOutParent->AsContent(), inOutOffset,
+                                 SplitAtEdges::eAllowToCreateEmptyContainer,
+                                 nullptr, nullptr, inOutChildAtOffset);
     NS_ENSURE_STATE(offset != -1);
     inOutParent = tagParent;
     inOutOffset = offset;

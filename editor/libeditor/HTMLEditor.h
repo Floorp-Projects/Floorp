@@ -341,7 +341,7 @@ public:
   nsresult InsertNodeAtPoint(nsIDOMNode* aNode,
                              nsCOMPtr<nsIDOMNode>* ioParent,
                              int32_t* ioOffset,
-                             bool aNoEmptyNodes,
+                             SplitAtEdges aSplitAtEdges,
                              nsCOMPtr<nsIDOMNode>* ioChildAtOffset = nullptr);
 
   /**
