@@ -17,7 +17,6 @@
 
 struct RawServoStyleSet;
 struct RawServoSelectorList;
-struct RawServoSourceSizeList;
 struct RawServoAnimationValueMap;
 struct RustString;
 
@@ -183,9 +182,6 @@ DECL_BORROWED_REF_TYPE_FOR(nsXBLBinding)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoStyleChildrenIterator)
 DECL_OWNED_REF_TYPE_FOR(RawServoSelectorList)
 DECL_BORROWED_REF_TYPE_FOR(RawServoSelectorList)
-DECL_OWNED_REF_TYPE_FOR(RawServoSourceSizeList)
-DECL_BORROWED_REF_TYPE_FOR(RawServoSourceSizeList)
-DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoSourceSizeList)
 
 #undef DECL_ARC_REF_TYPE_FOR
 #undef DECL_OWNED_REF_TYPE_FOR
@@ -229,7 +225,6 @@ DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoSourceSizeList)
 
 DEFINE_BOXED_TYPE(StyleSet, RawServoStyleSet);
 DEFINE_BOXED_TYPE(SelectorList, RawServoSelectorList);
-DEFINE_BOXED_TYPE(SourceSizeList, RawServoSourceSizeList);
 
 #undef DEFINE_BOXED_TYPE
 

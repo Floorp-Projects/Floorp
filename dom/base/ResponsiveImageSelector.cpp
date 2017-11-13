@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ResponsiveImageSelector.h"
-#include "mozilla/ServoStyleSet.h"
 #include "nsIURI.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
@@ -242,17 +241,10 @@ bool
 ResponsiveImageSelector::SetSizesFromDescriptor(const nsAString & aSizes)
 {
   ClearSelectedCandidate();
-
-  if (Document()->IsStyledByServo()) {
-    NS_ConvertUTF16toUTF8 sizes(aSizes);
-    mServoSourceSizeList.reset(Servo_SourceSizeList_Parse(&sizes));
-    return !!mServoSourceSizeList;
-  }
-
-  nsCSSParser cssParser;
-
   mSizeQueries.Clear();
   mSizeValues.Clear();
+
+  nsCSSParser cssParser;
 
   return cssParser.ParseSourceSizeList(aSizes, nullptr, 0,
                                        mSizeQueries, mSizeValues);
@@ -372,11 +364,11 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
   }
 
   nsIDocument* doc = Document();
-  nsIPresShell* shell = doc->GetShell();
-  nsPresContext* pctx = shell ? shell->GetPresContext() : nullptr;
-  nsCOMPtr<nsIURI> baseURI = mOwnerNode->GetBaseURI();
+  nsIPresShell *shell = doc ? doc->GetShell() : nullptr;
+  nsPresContext *pctx = shell ? shell->GetPresContext() : nullptr;
+  nsCOMPtr<nsIURI> baseURI = mOwnerNode ? mOwnerNode->GetBaseURI() : nullptr;
 
-  if (!pctx || !baseURI) {
+  if (!pctx || !doc || !baseURI) {
     return oldBest != -1;
   }
 
@@ -396,7 +388,7 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
   double computedWidth = -1;
   for (int i = 0; i < numCandidates; i++) {
     if (mCandidates[i].IsComputedFromWidth()) {
-      DebugOnly<bool> computeResult =
+      DebugOnly<bool> computeResult = \
         ComputeFinalWidthForCurrentViewport(&computedWidth);
       MOZ_ASSERT(computeResult,
                  "Computed candidates not allowed without sizes data");
@@ -447,38 +439,34 @@ ResponsiveImageSelector::GetSelectedCandidateIndex()
 bool
 ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(double *aWidth)
 {
+  unsigned int numSizes = mSizeQueries.Length();
   nsIDocument* doc = Document();
-  nsIPresShell* presShell = doc->GetShell();
-  nsPresContext* pctx = presShell ? presShell->GetPresContext() : nullptr;
+  nsIPresShell *presShell = doc ? doc->GetShell() : nullptr;
+  nsPresContext *pctx = presShell ? presShell->GetPresContext() : nullptr;
 
   if (!pctx) {
     return false;
   }
+
+  MOZ_ASSERT(numSizes == mSizeValues.Length(),
+             "mSizeValues length differs from mSizeQueries");
+
+  unsigned int i;
+  for (i = 0; i < numSizes; i++) {
+    if (mSizeQueries[i]->Matches(pctx, nullptr)) {
+      break;
+    }
+  }
+
   nscoord effectiveWidth;
-  if (doc->IsStyledByServo()) {
-    effectiveWidth = presShell->StyleSet()->AsServo()->EvaluateSourceSizeList(
-      mServoSourceSizeList.get());
+  if (i == numSizes) {
+    // No match defaults to 100% viewport
+    nsCSSValue defaultWidth(100.0f, eCSSUnit_ViewportWidth);
+    effectiveWidth = nsRuleNode::CalcLengthWithInitialFont(pctx,
+                                                           defaultWidth);
   } else {
-    unsigned int numSizes = mSizeQueries.Length();
-    MOZ_ASSERT(numSizes == mSizeValues.Length(),
-               "mSizeValues length differs from mSizeQueries");
-
-    unsigned int i;
-    for (i = 0; i < numSizes; i++) {
-      if (mSizeQueries[i]->Matches(pctx, nullptr)) {
-        break;
-      }
-    }
-
-    if (i == numSizes) {
-      // No match defaults to 100% viewport
-      nsCSSValue defaultWidth(100.0f, eCSSUnit_ViewportWidth);
-      effectiveWidth = nsRuleNode::CalcLengthWithInitialFont(pctx,
-                                                             defaultWidth);
-    } else {
-      effectiveWidth = nsRuleNode::CalcLengthWithInitialFont(pctx,
-                                                             mSizeValues[i]);
-    }
+    effectiveWidth = nsRuleNode::CalcLengthWithInitialFont(pctx,
+                                                           mSizeValues[i]);
   }
 
   *aWidth = nsPresContext::AppUnitsToDoubleCSSPixels(std::max(effectiveWidth, 0));

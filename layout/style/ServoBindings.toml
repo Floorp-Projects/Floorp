@@ -495,7 +495,6 @@ structs-types = [
     "RawGeckoURLExtraData",
     "RawGeckoXBLBinding",
     "RawServoSelectorList",
-    "RawServoSourceSizeList",
     "RefPtr",
     "RustString",
     "CSSPseudoClassType",
@@ -609,7 +608,6 @@ array-types = [
 servo-owned-types = [
     { name = "RawServoStyleSet", opaque = true },
     { name = "RawServoSelectorList", opaque = false },
-    { name = "RawServoSourceSizeList", opaque = false },
     { name = "ServoElementSnapshot", opaque = false },
     { name = "RawServoAnimationValueMap", opaque = true },
 ]
