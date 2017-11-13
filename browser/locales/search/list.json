@@ -71,7 +71,7 @@
       },
       "experimental-hidden": {
         "visibleDefaultEngines": [
-          "yahoo-en-CA", "yandex-en"
+          "amazon-ca", "amazon-au", "google-2018", "yahoo-en-CA", "yandex-en"
         ]
       }
     },
@@ -274,6 +274,11 @@
         "visibleDefaultEngines": [
           "google", "yahoo-mx", "bing", "ddg", "mercadolibre-mx", "wikipedia-es"
         ]
+      },
+      "experimental-hidden": {
+        "visibleDefaultEngines": [
+          "amazon-mx"
+        ]
       }
     },
     "et": {
@@ -322,6 +327,11 @@
       "default": {
         "visibleDefaultEngines": [
           "google", "yahoo-fy-NL", "bing", "bolcom-fy-NL", "ddg", "ebay-nl", "marktplaats-fy-NL", "wikipedia-fy-NL"
+        ]
+      },
+      "experimental-hidden": {
+        "visibleDefaultEngines": [
+          "amazon-nl"
         ]
       }
     },
@@ -582,6 +592,11 @@
         "visibleDefaultEngines": [
           "google", "bing", "bolcom-nl", "ddg", "ebay-nl", "marktplaats-nl", "wikipedia-nl"
         ]
+      },
+      "experimental-hidden": {
+        "visibleDefaultEngines": [
+          "amazon-nl"
+        ]
       }
     },
     "nn-NO": {
@@ -623,6 +638,11 @@
       "default": {
         "visibleDefaultEngines": [
           "google", "yahoo-br", "bing", "buscape", "ddg", "mercadolivre", "twitter", "wikipedia-pt"
+        ]
+      },
+      "experimental-hidden": {
+        "visibleDefaultEngines": [
+          "amazon-br"
         ]
       }
     },
@@ -762,7 +782,7 @@
     "vi": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "coccoc", "ddg", "wikipedia-vi", "zing-mp3"
+          "google", "coccoc", "ddg", "wikipedia-vi"
         ]
       }
     },

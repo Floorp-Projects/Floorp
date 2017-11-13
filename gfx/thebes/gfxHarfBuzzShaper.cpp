@@ -1529,6 +1529,8 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxShapedText  *aShapedText,
                                     bool            aVertical,
                                     RoundingFlags   aRounding)
 {
+    typedef gfxShapedText::CompressedGlyph CompressedGlyph;
+
     uint32_t numGlyphs;
     const hb_glyph_info_t *ginfo = hb_buffer_get_glyph_infos(mBuffer, &numGlyphs);
     if (numGlyphs == 0) {
@@ -1569,8 +1571,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxShapedText  *aShapedText,
     }
 
     int32_t appUnitsPerDevUnit = aShapedText->GetAppUnitsPerDevUnit();
-    gfxShapedText::CompressedGlyph *charGlyphs =
-        aShapedText->GetCharacterGlyphs() + aOffset;
+    CompressedGlyph* charGlyphs = aShapedText->GetCharacterGlyphs() + aOffset;
 
     // factor to convert 16.16 fixed-point pixels to app units
     // (only used if not rounding)
@@ -1718,8 +1719,8 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxShapedText  *aShapedText,
         }
         // Check if it's a simple one-to-one mapping
         if (glyphsInClump == 1 &&
-            gfxTextRun::CompressedGlyph::IsSimpleGlyphID(ginfo[glyphStart].codepoint) &&
-            gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
+            CompressedGlyph::IsSimpleGlyphID(ginfo[glyphStart].codepoint) &&
+            CompressedGlyph::IsSimpleAdvance(advance) &&
             charGlyphs[baseCharIndex].IsClusterStart() &&
             iOffset == 0 && b_offset == 0 &&
             b_advance == 0 && bPos == 0)
@@ -1789,11 +1790,12 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxShapedText  *aShapedText,
                 }
             }
 
-            gfxShapedText::CompressedGlyph g;
-            g.SetComplex(charGlyphs[baseCharIndex].IsClusterStart(),
-                         true, detailedGlyphs.Length());
+            bool isClusterStart = charGlyphs[baseCharIndex].IsClusterStart();
             aShapedText->SetGlyphs(aOffset + baseCharIndex,
-                                   g, detailedGlyphs.Elements());
+                                   CompressedGlyph::MakeComplex(isClusterStart,
+                                                                true,
+                                                                detailedGlyphs.Length()),
+                                   detailedGlyphs.Elements());
 
             detailedGlyphs.Clear();
         }
@@ -1802,7 +1804,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxShapedText  *aShapedText,
         // no associated glyphs
         while (++baseCharIndex != endCharIndex &&
                baseCharIndex < int32_t(wordLength)) {
-            gfxShapedText::CompressedGlyph &g = charGlyphs[baseCharIndex];
+            CompressedGlyph &g = charGlyphs[baseCharIndex];
             NS_ASSERTION(!g.IsSimpleGlyph(), "overwriting a simple glyph");
             g.SetComplex(g.IsClusterStart(), false, 0);
         }

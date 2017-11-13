@@ -51,7 +51,8 @@ const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
    * correct. Unfortunately this requires 2 sync reflows.
    *
    * If we add more views where this is necessary, we may need to duplicate
-   * these expected reflows further.
+   * these expected reflows further. Bug 1392340 is on file to remove the
+   * reflows completely when opening subviews.
    */
   {
     stack: [
@@ -59,7 +60,16 @@ const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
       "hideAllViewsExcept@resource:///modules/PanelMultiView.jsm",
     ],
 
-    times: 2, // This number should only ever go down - never up.
+    times: 1, // This number should only ever go down - never up.
+  },
+
+  {
+    stack: [
+      "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
+      "_transitionViews@resource:///modules/PanelMultiView.jsm",
+    ],
+
+    times: 3, // This number should only ever go down - never up.
   },
 
   /**

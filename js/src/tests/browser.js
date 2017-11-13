@@ -516,7 +516,8 @@
       gczeal(Number(properties.gczeal));
     }
 
-    document.write(`<title>${ properties.test }<\/title>`);
+    // Display the test path in the title.
+    document.title = properties.test;
 
     // Output script tags for shell.js, then browser.js, at each level of the
     // test path hierarchy.
@@ -537,10 +538,6 @@
     scripts.push({src: "js-test-driver-end.js", module: false});
 
     if (!moduleTest) {
-      // XXX bc - the first document.written script is ignored if the protocol
-      // is file:. insert an empty script tag, to work around it.
-      document.write("<script></script>");
-
       var key, value;
       if (properties.language !== "type") {
         key = "language";

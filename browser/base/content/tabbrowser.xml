@@ -5431,10 +5431,6 @@
                 onget="return this.mCurrentBrowser.markupDocumentViewer;"
                 readonly="true"/>
 
-      <property name="contentViewerEdit"
-                onget="return this.mCurrentBrowser.contentViewerEdit;"
-                readonly="true"/>
-
       <property name="contentDocument"
                 onget="return this.mCurrentBrowser.contentDocument;"
                 readonly="true"/>

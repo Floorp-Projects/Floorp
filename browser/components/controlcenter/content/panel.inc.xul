@@ -5,6 +5,7 @@
 <panel id="identity-popup"
        type="arrow"
        hidden="true"
+       photon="true"
        role="alertdialog"
        onpopupshown="gIdentityHandler.onPopupShown(event);"
        onpopuphidden="gIdentityHandler.onPopupHidden(event);"
@@ -15,13 +16,13 @@
     <broadcaster id="identity-popup-insecure-login-forms-learn-more" class="text-link plain" value="&identity.learnMore;"/>
   </broadcasterset>
 
-  <panelmultiview id="identity-popup-multiView"
-                  mainViewId="identity-popup-mainView">
-    <panelview id="identity-popup-mainView" flex="1"
+  <photonpanelmultiview id="identity-popup-multiView"
+                        mainViewId="identity-popup-mainView">
+    <panelview id="identity-popup-mainView"
                descriptionheightworkaround="true">
       <!-- Security Section -->
       <hbox id="identity-popup-security" class="identity-popup-section">
-        <vbox id="identity-popup-security-content" flex="1">
+        <vbox class="identity-popup-security-content" flex="1">
           <label class="plain">
             <label class="identity-popup-headline identity-popup-host"></label>
             <label class="identity-popup-headline identity-popup-hostless" crop="end"/>
@@ -48,7 +49,7 @@
         <button id="identity-popup-security-expander"
                 class="identity-popup-expander"
                 when-connection="not-secure secure secure-ev secure-cert-user-overridden"
-                oncommand="gIdentityHandler.toggleSubView('security', this)"/>
+                oncommand="gIdentityHandler.showSecuritySubView();"/>
       </hbox>
 
       <!-- Tracking Protection Section -->
@@ -98,8 +99,9 @@
 
     <!-- Security SubView -->
     <panelview id="identity-popup-securityView"
+               title="&identity.securityView.label;"
                descriptionheightworkaround="true">
-      <vbox id="identity-popup-securityView-header">
+      <vbox class="identity-popup-security-content">
         <label class="plain">
           <label class="identity-popup-headline identity-popup-host"></label>
           <label class="identity-popup-headline identity-popup-hostless" crop="end"/>
@@ -182,5 +184,5 @@
       </vbox>
 
     </panelview>
-  </panelmultiview>
+  </photonpanelmultiview>
 </panel>
