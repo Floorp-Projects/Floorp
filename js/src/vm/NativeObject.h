@@ -854,6 +854,11 @@ class NativeObject : public ShapedObject
                                                              HandleShape parent,
                                                              MutableHandle<StackShape> child);
 
+    static MOZ_ALWAYS_INLINE bool
+    maybeConvertToOrGrowDictionaryForAdd(JSContext* cx, HandleNativeObject obj, HandleId id,
+                                         ShapeTable** table, ShapeTable::Entry** entry,
+                                         const AutoKeepShapeTables& keep);
+
   public:
     /* Add a property whose id is not yet in this scope. */
     static MOZ_ALWAYS_INLINE Shape* addDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
