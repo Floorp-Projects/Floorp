@@ -46,7 +46,6 @@ using mozilla::DefaultXDisplay;
 #include "nsIScrollableFrame.h"
 #include "nsIDocShell.h"
 #include "ImageContainer.h"
-#include "nsIDOMHTMLCollection.h"
 #include "GLContext.h"
 #include "EGLUtils.h"
 #include "nsIContentInlines.h"

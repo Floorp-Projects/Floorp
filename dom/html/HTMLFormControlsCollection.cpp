@@ -143,8 +143,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_INTERFACE_TABLE_HEAD(HTMLFormControlsCollection)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
   NS_INTERFACE_TABLE(HTMLFormControlsCollection,
-                     nsIHTMLCollection,
-                     nsIDOMHTMLCollection)
+                     nsIHTMLCollection)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(HTMLFormControlsCollection)
 NS_INTERFACE_MAP_END
 
@@ -153,64 +152,13 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(HTMLFormControlsCollection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(HTMLFormControlsCollection)
 
 
-// nsIDOMHTMLCollection interface
+// nsIHTMLCollection interface
 
-NS_IMETHODIMP
-HTMLFormControlsCollection::GetLength(uint32_t* aLength)
+uint32_t
+HTMLFormControlsCollection::Length()
 {
   FlushPendingNotifications();
-  *aLength = mElements.Length();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLFormControlsCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  nsISupports* item = GetElementAt(aIndex);
-  if (!item) {
-    *aReturn = nullptr;
-
-    return NS_OK;
-  }
-
-  return CallQueryInterface(item, aReturn);
-}
-
-NS_IMETHODIMP
-HTMLFormControlsCollection::NamedItem(const nsAString& aName,
-                                      nsIDOMNode** aReturn)
-{
-  FlushPendingNotifications();
-
-  *aReturn = nullptr;
-
-  nsCOMPtr<nsISupports> supports;
-
-  if (!mNameLookupTable.Get(aName, getter_AddRefs(supports))) {
-    // key not found
-    return NS_OK;
-  }
-
-  if (!supports) {
-    return NS_OK;
-  }
-
-  // We found something, check if it's a node
-  CallQueryInterface(supports, aReturn);
-  if (*aReturn) {
-    return NS_OK;
-  }
-
-  // If not, we check if it's a node list.
-  nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(supports);
-  NS_ASSERTION(nodeList, "Huh, what's going one here?");
-  if (!nodeList) {
-    return NS_OK;
-  }
-
-  // And since we're only asking for one node here, we return the first
-  // one from the list.
-  return nodeList->Item(0, aReturn);
+  return mElements.Length();
 }
 
 nsISupports*

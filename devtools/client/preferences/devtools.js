@@ -58,13 +58,15 @@ pref("devtools.inspector.showUserAgentStyles", false);
 pref("devtools.inspector.showAllAnonymousContent", false);
 // Enable the new color widget
 pref("devtools.inspector.colorWidget.enabled", false);
+// Enable the Flexbox highlighter
+pref("devtools.inspector.flexboxHighlighter.enabled", false);
 // Enable the CSS shapes highlighter
 pref("devtools.inspector.shapesHighlighter.enabled", true);
 // Enable the Changes View
 pref("devtools.changesview.enabled", false);
 // Enable the Events View
 pref("devtools.eventsview.enabled", false);
-// Enable the Flexbox Inspector
+// Enable the Flexbox Inspector panel
 pref("devtools.flexboxinspector.enabled", false);
 
 // Enable the new Animation Inspector

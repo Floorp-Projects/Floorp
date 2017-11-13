@@ -57,7 +57,6 @@
 #include "nsPresState.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMHTMLCollection.h"
 #include "nsLinebreakConverter.h" //to strip out carriage returns
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"

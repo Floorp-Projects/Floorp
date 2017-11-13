@@ -729,8 +729,8 @@ Module::initSegments(JSContext* cx,
         uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
 
         if (offset > tableLength || tableLength - offset < numElems) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
-                                      "elem", "table");
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
+                                     "elem", "table");
             return false;
         }
     }
@@ -741,8 +741,8 @@ Module::initSegments(JSContext* cx,
             uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
 
             if (offset > memoryLength || memoryLength - offset < seg.length) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
-                                          "data", "memory");
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
+                                         "data", "memory");
                 return false;
             }
         }
@@ -832,8 +832,8 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
 
         if (funcExport.sig() != metadata(tier).funcImports[i].sig()) {
             const Import& import = FindImportForFuncImport(imports_, i);
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG,
-                                      import.module.get(), import.field.get());
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG,
+                                     import.module.get(), import.field.get());
             return false;
         }
     }
@@ -853,12 +853,12 @@ CheckLimits(JSContext* cx, uint32_t declaredMin, const Maybe<uint32_t>& declared
     }
 
     if (actualLength < declaredMin || actualLength > declaredMax.valueOr(UINT32_MAX)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, kind);
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, kind);
         return false;
     }
 
     if ((actualMax && declaredMax && *actualMax > *declaredMax) || (!actualMax && declaredMax)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_MAX, kind);
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_MAX, kind);
         return false;
     }
 
