@@ -3072,22 +3072,14 @@ arena_t::Malloc(size_t aSize, bool aZero)
 {
   MOZ_DIAGNOSTIC_ASSERT(mMagic == ARENA_MAGIC);
   MOZ_ASSERT(aSize != 0);
-  MOZ_ASSERT(QUANTUM_CEILING(aSize) <= gMaxLargeClass);
 
-  return (aSize <= gMaxBinClass) ? MallocSmall(aSize, aZero)
-                                 : MallocLarge(aSize, aZero);
-}
-
-static inline void*
-imalloc(size_t aSize, bool aZero, arena_t* aArena)
-{
-  MOZ_ASSERT(aSize != 0);
-
-  MOZ_ASSERT(aArena);
-  if (aSize <= gMaxLargeClass) {
-    return aArena->Malloc(aSize, aZero);
+  if (aSize <= gMaxBinClass) {
+    return MallocSmall(aSize, aZero);
   }
-  return aArena->MallocHuge(aSize, aZero);
+  if (aSize <= gMaxLargeClass) {
+    return MallocLarge(aSize, aZero);
+  }
+  return MallocHuge(aSize, aZero);
 }
 
 // Only handles large allocations that require more than page alignment.
@@ -4266,7 +4258,7 @@ BaseAllocator::malloc(size_t aSize)
     aSize = 1;
   }
   arena = mArena ? mArena : choose_arena(aSize);
-  ret = imalloc(aSize, /* zero = */ false, arena);
+  ret = arena->Malloc(aSize, /* zero = */ false);
 
 RETURN:
   if (!ret) {
@@ -4307,7 +4299,7 @@ BaseAllocator::calloc(size_t aNum, size_t aSize)
         allocSize = 1;
       }
       arena_t* arena = mArena ? mArena : choose_arena(allocSize);
-      ret = imalloc(allocSize, /* zero = */ true, arena);
+      ret = arena->Malloc(allocSize, /* zero = */ true);
     } else {
       ret = nullptr;
     }
@@ -4344,7 +4336,7 @@ BaseAllocator::realloc(void* aPtr, size_t aSize)
       ret = nullptr;
     } else {
       arena_t* arena = mArena ? mArena : choose_arena(aSize);
-      ret = imalloc(aSize, /* zero = */ false, arena);
+      ret = arena->Malloc(aSize, /* zero = */ false);
     }
 
     if (!ret) {
