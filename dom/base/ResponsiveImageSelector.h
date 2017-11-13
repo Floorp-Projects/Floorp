@@ -120,10 +120,6 @@ private:
   // resolve the absolute URL at selection time
   nsCOMPtr<nsIURI> mSelectedCandidateURL;
 
-  // Servo bits.
-  UniquePtr<RawServoSourceSizeList> mServoSourceSizeList;
-
-  // Gecko bits.
   nsTArray< nsAutoPtr<nsMediaQuery> > mSizeQueries;
   nsTArray<nsCSSValue> mSizeValues;
 };
