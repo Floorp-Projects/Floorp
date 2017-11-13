@@ -859,6 +859,9 @@ class NativeObject : public ShapedObject
                                          ShapeTable** table, ShapeTable::Entry** entry,
                                          const AutoKeepShapeTables& keep);
 
+    static bool maybeToDictionaryModeForPut(JSContext* cx, HandleNativeObject obj,
+                                            MutableHandleShape shape);
+
   public:
     /* Add a property whose id is not yet in this scope. */
     static MOZ_ALWAYS_INLINE Shape* addDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id,

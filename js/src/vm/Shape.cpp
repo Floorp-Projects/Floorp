@@ -777,6 +777,27 @@ AssertValidArrayIndex(NativeObject* obj, jsid id)
 #endif
 }
 
+/* static */ bool
+NativeObject::maybeToDictionaryModeForPut(JSContext* cx, HandleNativeObject obj,
+                                          MutableHandleShape shape)
+{
+    // Overwriting a non-last property requires switching to dictionary mode.
+    // The shape tree is shared immutable, and we can't removeProperty and then
+    // addAccessorPropertyInternal because a failure under add would lose data.
+
+    if (shape == obj->lastProperty() || obj->inDictionaryMode())
+        return true;
+
+    if (!toDictionaryMode(cx, obj))
+        return false;
+
+    AutoCheckCannotGC nogc;
+    ShapeTable* table = obj->lastProperty()->maybeTable(nogc);
+    MOZ_ASSERT(table);
+    shape.set(table->search<MaybeAdding::NotAdding>(shape->propid(), nogc).shape());
+    return true;
+}
+
 /* static */ Shape*
 NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                               unsigned attrs)
@@ -831,16 +852,8 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
     if (shape->matchesParamsAfterId(nbase, slot, attrs, nullptr, nullptr))
         return shape;
 
-    // Overwriting a non-last property requires switching to dictionary mode.
-    // The shape tree is shared immutable, and we can't removeProperty and then
-    // addDataPropertyInternal because a failure under add would lose data.
-    if (shape != obj->lastProperty() && !obj->inDictionaryMode()) {
-        if (!toDictionaryMode(cx, obj))
-            return nullptr;
-        ShapeTable* table = obj->lastProperty()->maybeTable(keep);
-        MOZ_ASSERT(table);
-        shape = table->search<MaybeAdding::NotAdding>(shape->propid(), keep).shape();
-    }
+    if (!maybeToDictionaryModeForPut(cx, obj, &shape))
+        return nullptr;
 
     MOZ_ASSERT_IF(shape->isDataProperty(), shape->slot() == slot);
 
@@ -945,16 +958,8 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
     if (shape->matchesParamsAfterId(nbase, SHAPE_INVALID_SLOT, attrs, getter, setter))
         return shape;
 
-    // Overwriting a non-last property requires switching to dictionary mode.
-    // The shape tree is shared immutable, and we can't removeProperty and then
-    // addAccessorPropertyInternal because a failure under add would lose data.
-    if (shape != obj->lastProperty() && !obj->inDictionaryMode()) {
-        if (!toDictionaryMode(cx, obj))
-            return nullptr;
-        ShapeTable* table = obj->lastProperty()->maybeTable(keep);
-        MOZ_ASSERT(table);
-        shape = table->search<MaybeAdding::NotAdding>(shape->propid(), keep).shape();
-    }
+    if (!maybeToDictionaryModeForPut(cx, obj, &shape))
+        return nullptr;
 
     if (obj->inDictionaryMode()) {
         // Updating some property in a dictionary-mode object. Create a new
