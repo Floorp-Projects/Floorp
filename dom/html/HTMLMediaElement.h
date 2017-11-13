@@ -681,11 +681,6 @@ public:
 
   void NotifyWaitingForKey() override;
 
-  bool MozAutoplayEnabled() const
-  {
-    return mAutoplayEnabled;
-  }
-
   already_AddRefed<DOMMediaStream> CaptureAudio(ErrorResult& aRv,
                                                 MediaStreamGraph* aGraph);
 
