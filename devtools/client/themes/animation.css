@@ -17,6 +17,17 @@
   --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
 }
 
+/* Settings for animation-list-header */
+.animation-list-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.animation-timeline-tick-list {
+  margin-right: 10px;
+  width: calc(100% - 210px);
+}
+
 /* Settings for animations element */
 .animation-list {
   list-style-type: none;
