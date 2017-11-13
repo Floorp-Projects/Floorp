@@ -257,7 +257,9 @@ PaintThread::AsyncPrepareBuffer(CompositorBridgeChild* aBridge,
     gfxCriticalNote << "Failed to prepare buffers on the paint thread.";
   }
 
-  aBridge->NotifyFinishedAsyncPrepareBuffer(aState);
+  if (aBridge) {
+    aBridge->NotifyFinishedAsyncPrepareBuffer(aState);
+  }
 }
 
 void
