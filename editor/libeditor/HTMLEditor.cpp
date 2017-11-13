@@ -1522,7 +1522,8 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
                                  &offsetForInsert);
 
       rv = InsertNodeAtPoint(node, address_of(parentSelectedDOMNode),
-                             &offsetForInsert, false);
+                             &offsetForInsert,
+                             SplitAtEdges::eAllowToCreateEmptyContainer);
       NS_ENSURE_SUCCESS(rv, rv);
       // Set caret after element, but check for special case
       //  of inserting table-related elements: set in first cell instead
@@ -1564,14 +1565,14 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
  * @param aNode             Node to insert.
  * @param ioParent          Insertion parent.
  * @param ioOffset          Insertion offset.
- * @param aNoEmptyNodes     Splitting can result in empty nodes?
+ * @param aSplitAtEdges     Splitting can result in empty nodes?
  * @param ioChildAtOffset   Child node at insertion offset (optional).
  */
 nsresult
 HTMLEditor::InsertNodeAtPoint(nsIDOMNode* aNode,
                               nsCOMPtr<nsIDOMNode>* ioParent,
                               int32_t* ioOffset,
-                              bool aNoEmptyNodes,
+                              SplitAtEdges aSplitAtEdges,
                               nsCOMPtr<nsIDOMNode>* ioChildAtOffset)
 {
   nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
@@ -1624,8 +1625,7 @@ HTMLEditor::InsertNodeAtPoint(nsIDOMNode* aNode,
     }
     // we need to split some levels above the original selection parent
     int32_t offset = SplitNodeDeep(*topChild, *origParent, *ioOffset,
-                                   aNoEmptyNodes ? EmptyContainers::no
-                                                 : EmptyContainers::yes,
+                                   aSplitAtEdges,
                                    nullptr, nullptr, address_of(child));
     NS_ENSURE_STATE(offset != -1);
     *ioParent = GetAsDOMNode(parent);
@@ -2003,7 +2003,8 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
       if (parent != node) {
         // we need to split up to the child of parent
         offset = SplitNodeDeep(*topChild, *node, offset,
-                               EmptyContainers::yes, nullptr, nullptr,
+                               SplitAtEdges::eAllowToCreateEmptyContainer,
+                               nullptr, nullptr,
                                address_of(child));
         NS_ENSURE_STATE(offset != -1);
       }
@@ -2148,7 +2149,8 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
       if (parent != node) {
         // we need to split up to the child of parent
         offset = SplitNodeDeep(*topChild, *node, offset,
-                               EmptyContainers::yes, nullptr, nullptr,
+                               SplitAtEdges::eAllowToCreateEmptyContainer,
+                               nullptr, nullptr,
                                address_of(child));
         NS_ENSURE_STATE(offset != -1);
       }
@@ -2224,7 +2226,8 @@ HTMLEditor::Indent(const nsAString& aIndent)
         if (parent != node) {
           // we need to split up to the child of parent
           offset = SplitNodeDeep(*topChild, *node, offset,
-                                 EmptyContainers::yes, nullptr, nullptr,
+                                 SplitAtEdges::eAllowToCreateEmptyContainer,
+                                 nullptr, nullptr,
                                  address_of(child));
           NS_ENSURE_STATE(offset != -1);
         }

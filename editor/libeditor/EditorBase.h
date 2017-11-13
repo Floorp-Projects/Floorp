@@ -210,6 +210,23 @@ private:
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
 
 /**
+ * SplitAtEdges is for EditorBase::SplitNodeDeep(),
+ * HTMLEditor::InsertNodeAtPoint()
+ */
+enum class SplitAtEdges
+{
+  // EditorBase::SplitNodeDeep() won't split container element nodes at
+  // their edges.  I.e., when split point is start or end of container,
+  // it won't be split.
+  eDoNotCreateEmptyContainer,
+  // EditorBase::SplitNodeDeep() always splits containers even if the split
+  // point is at edge of a container.  E.g., if split point is start of an
+  // inline element, empty inline element is created as a new left node.
+  eAllowToCreateEmptyContainer
+};
+
+
+/**
  * Implementation of an editor object.  it will be the controller/focal point
  * for the main editor services. i.e. the GUIManager, publishing, transaction
  * manager, event interfaces. the idea for the event interfaces is to have them
@@ -1130,11 +1147,9 @@ public:
 
   nsresult IsPreformatted(nsIDOMNode* aNode, bool* aResult);
 
-  enum class EmptyContainers { no, yes };
   int32_t SplitNodeDeep(nsIContent& aNode, nsIContent& aSplitPointParent,
                         int32_t aSplitPointOffset,
-                        EmptyContainers aEmptyContainers =
-                          EmptyContainers::yes,
+                        SplitAtEdges aSplitAtEdges,
                         nsIContent** outLeftNode = nullptr,
                         nsIContent** outRightNode = nullptr,
                         nsCOMPtr<nsIContent>* ioChildAtSplitPointOffset =
