@@ -11,14 +11,13 @@ import android.os.SystemClock;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
-import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
@@ -98,43 +97,8 @@ public class BookmarksValidationRepository extends Repository {
 
 
         @Override
-        public void begin(final RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
-            wrappedSession.begin(new RepositorySessionBeginDelegate() {
-
-                @Override
-                public void onBeginFailed(Exception ex) {
-                    delegate.onBeginFailed(ex);
-                }
-
-                @Override
-                public void onBeginSucceeded(RepositorySession session) {
-                    delegate.onBeginSucceeded(BookmarksValidationRepositorySession.this);
-                }
-
-                @Override
-                public RepositorySessionBeginDelegate deferredBeginDelegate(ExecutorService executor) {
-                    final RepositorySessionBeginDelegate deferred = delegate.deferredBeginDelegate(executor);
-                    return new RepositorySessionBeginDelegate() {
-                        @Override
-                        public void onBeginSucceeded(RepositorySession session) {
-                            if (wrappedSession != session) {
-                                Logger.warn(LOG_TAG, "Got onBeginSucceeded for session " + session + ", not our inner session!");
-                            }
-                            deferred.onBeginSucceeded(BookmarksValidationRepositorySession.this);
-                        }
-
-                        @Override
-                        public void onBeginFailed(Exception ex) {
-                            deferred.onBeginFailed(ex);
-                        }
-
-                        @Override
-                        public RepositorySessionBeginDelegate deferredBeginDelegate(ExecutorService executor) {
-                            return this;
-                        }
-                    };
-                }
-            });
+        public void begin() throws SyncException {
+            wrappedSession.begin();
         }
 
         @Override

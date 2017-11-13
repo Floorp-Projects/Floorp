@@ -15,6 +15,7 @@ import org.mozilla.gecko.sync.MetaGlobalException;
 import org.mozilla.gecko.sync.NoCollectionKeysSetException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.ReflowIsNecessaryException;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
@@ -34,7 +35,6 @@ import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 import org.mozilla.gecko.sync.repositories.RepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.Server15Repository;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
@@ -314,84 +314,68 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
       @Override
       public void run() {
         r.createSession(new RepositorySessionCreationDelegate() {
-
           @Override
           public void onSessionCreated(final RepositorySession session) {
             try {
-              session.begin(new RepositorySessionBeginDelegate() {
+              session.begin();
+            } catch (SyncException e) {
+              Logger.error(LOG_TAG, "Couldn't begin session", e);
+              session.abort();
+              synchronized (monitor) {
+                monitor.notify(e, true);
+              }
+              return;
+            }
 
-                @Override
-                public void onBeginSucceeded(final RepositorySession session) {
-                  session.wipe(new RepositorySessionWipeDelegate() {
+            session.wipe(new RepositorySessionWipeDelegate() {
+              @Override
+              public void onWipeSucceeded() {
+                try {
+                  session.finish(new RepositorySessionFinishDelegate() {
+
                     @Override
-                    public void onWipeSucceeded() {
-                      try {
-                        session.finish(new RepositorySessionFinishDelegate() {
-
-                          @Override
-                          public void onFinishSucceeded(RepositorySession session,
-                                                        RepositorySessionBundle bundle) {
-                            // Hurrah.
-                            synchronized (monitor) {
-                              monitor.notify();
-                            }
-                          }
-
-                          @Override
-                          public void onFinishFailed(Exception ex) {
-                            // Assume that no finish => no wipe.
-                            synchronized (monitor) {
-                              monitor.notify(ex, true);
-                            }
-                          }
-
-                          @Override
-                          public RepositorySessionFinishDelegate deferredFinishDelegate(ExecutorService executor) {
-                            return this;
-                          }
-                        });
-                      } catch (InactiveSessionException e) {
-                        // Cannot happen. Call for safety.
-                        synchronized (monitor) {
-                          monitor.notify(e, true);
-                        }
+                    public void onFinishSucceeded(RepositorySession session,
+                                                  RepositorySessionBundle bundle) {
+                      // Hurrah.
+                      synchronized (monitor) {
+                        monitor.notify();
                       }
                     }
 
                     @Override
-                    public void onWipeFailed(Exception ex) {
-                      session.abort();
+                    public void onFinishFailed(Exception ex) {
+                      // Assume that no finish => no wipe.
                       synchronized (monitor) {
                         monitor.notify(ex, true);
                       }
                     }
 
                     @Override
-                    public RepositorySessionWipeDelegate deferredWipeDelegate(ExecutorService executor) {
+                    public RepositorySessionFinishDelegate deferredFinishDelegate(ExecutorService executor) {
                       return this;
                     }
                   });
-                }
-
-                @Override
-                public void onBeginFailed(Exception ex) {
-                  session.abort();
+                } catch (InactiveSessionException e) {
+                  // Cannot happen. Call for safety.
                   synchronized (monitor) {
-                    monitor.notify(ex, true);
+                    monitor.notify(e, true);
                   }
                 }
-
-                @Override
-                public RepositorySessionBeginDelegate deferredBeginDelegate(ExecutorService executor) {
-                  return this;
-                }
-              });
-            } catch (InvalidSessionTransitionException e) {
-              session.abort();
-              synchronized (monitor) {
-                monitor.notify(e, true);
               }
-            }
+
+              @Override
+              public void onWipeFailed(Exception ex) {
+                session.abort();
+                synchronized (monitor) {
+                  monitor.notify(ex, true);
+                }
+              }
+
+              @Override
+              public RepositorySessionWipeDelegate deferredWipeDelegate(ExecutorService executor) {
+                return this;
+              }
+            });
           }
 
           @Override
