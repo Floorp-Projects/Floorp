@@ -16,6 +16,7 @@ const {
   formDataURI,
   getUrlBaseName,
 } = require("../utils/request-utils");
+const { Filters } = require("../utils/filter-predicates");
 
 // Components
 const PropertiesView = createFactory(require("./PropertiesView"));
@@ -27,6 +28,7 @@ const RESPONSE_IMG_NAME = L10N.getStr("netmonitor.response.name");
 const RESPONSE_IMG_DIMENSIONS = L10N.getStr("netmonitor.response.dimensions");
 const RESPONSE_IMG_MIMETYPE = L10N.getStr("netmonitor.response.mime");
 const RESPONSE_PAYLOAD = L10N.getStr("responsePayload");
+const RESPONSE_PREVIEW = L10N.getStr("responsePreview");
 
 const JSON_VIEW_MIME_TYPE = "application/vnd.mozilla.json.view";
 
@@ -176,6 +178,13 @@ class ResponsePanel extends Component {
       object[sectionName] = json;
     }
 
+    // Display HTML under Properties View
+    if (Filters.html(this.props.request)) {
+      object[RESPONSE_PREVIEW] = {
+        HTML_PREVIEW: { responseContent }
+      };
+    }
+
     // Others like text/html, text/plain, application/javascript
     object[RESPONSE_PAYLOAD] = {
       EDITOR_CONFIG: {
@@ -184,8 +193,13 @@ class ResponsePanel extends Component {
       },
     };
 
+    let classList = ["panel-container"];
+    if (Filters.html(this.props.request)) {
+      classList.push("contains-html-preview");
+    }
+
     return (
-      div({ className: "panel-container" },
+      div({ className: classList.join(" ") },
         error && div({ className: "response-error-header", title: error },
           error
         ),

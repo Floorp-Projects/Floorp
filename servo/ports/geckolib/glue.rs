@@ -111,7 +111,7 @@ use style::gecko_bindings::structs::nsresult;
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasFFI, HasArcFFI};
 use style::gecko_bindings::sugar::ownership::{HasSimpleFFI, Strong};
 use style::gecko_bindings::sugar::refptr::RefPtr;
-use style::gecko_properties::style_structs;
+use style::gecko_properties;
 use style::invalidation::element::restyle_hints;
 use style::media_queries::{Device, MediaList, parse_media_query_list};
 use style::parser::{Parse, ParserContext, self};
@@ -721,7 +721,7 @@ pub extern "C" fn Servo_AnimationValue_GetTransform(
                 list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
             }
         } else {
-            style_structs::Box::convert_transform(&servo_list.0, list);
+            gecko_properties::convert_transform(&servo_list.0, list);
         }
     } else {
         panic!("The AnimationValue should be transform");
@@ -733,7 +733,7 @@ pub extern "C" fn Servo_AnimationValue_Transform(
     list: *const nsCSSValueSharedList
 ) -> RawServoAnimationValueStrong {
     let list = unsafe { (&*list).mHead.as_ref() };
-    let transform = style_structs::Box::clone_transform_from_list(list);
+    let transform = gecko_properties::clone_transform_from_list(list);
     Arc::new(AnimationValue::Transform(transform)).into_strong()
 }
 
@@ -3171,7 +3171,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
         structs::nsCSSUnit::eCSSUnit_Inch => NoCalcLength::Absolute(AbsoluteLength::In(value)),
         structs::nsCSSUnit::eCSSUnit_Centimeter => NoCalcLength::Absolute(AbsoluteLength::Cm(value)),
         structs::nsCSSUnit::eCSSUnit_Millimeter => NoCalcLength::Absolute(AbsoluteLength::Mm(value)),
-        structs::nsCSSUnit::eCSSUnit_PhysicalMillimeter => NoCalcLength::Physical(PhysicalLength(value)),
+        structs::nsCSSUnit::eCSSUnit_PhysicalMillimeter => NoCalcLength::Physical(PhysicalLength::Mozmm(value)),
         structs::nsCSSUnit::eCSSUnit_Point => NoCalcLength::Absolute(AbsoluteLength::Pt(value)),
         structs::nsCSSUnit::eCSSUnit_Pica => NoCalcLength::Absolute(AbsoluteLength::Pc(value)),
         structs::nsCSSUnit::eCSSUnit_Quarter => NoCalcLength::Absolute(AbsoluteLength::Q(value)),
@@ -3202,7 +3202,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetNumberValue(
     let prop = match_wrap_declared! { long,
         MozScriptSizeMultiplier => value,
         // Gecko uses Number values to signal that it is absolute
-        MozScriptLevel => MozScriptLevel::Absolute(value as i32),
+        MozScriptLevel => MozScriptLevel::MozAbsolute(value as i32),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal, DeclarationSource::CssOm);

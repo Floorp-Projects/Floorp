@@ -255,6 +255,36 @@
   max-height: 100px;
 }
 
+.network-monitor .tree-container .treeTable tr.response-preview-container {
+  flex: 1;
+  min-height: 0;
+}
+
+.network-monitor .tree-container .treeTable tr.response-preview-container td {
+  display: block;
+  height: 100%;
+}
+
+.network-monitor .html-preview {
+  height: 100%;
+}
+
+.network-monitor .html-preview iframe {
+  background-color: #fff;
+  border: none;
+  height: 100%;
+  width: 100%;
+}
+
+/* The editor container should only become a flex item when inside a container
+ * with other flex items. In this case, the HTML preview is a flex item and we
+ * can grow the editor. Otherwise, there may be overflow and
+ * .editor-row-container will become 0px tall. */
+.network-monitor .contains-html-preview .editor-row-container {
+  flex: 1;
+  min-height: 0;
+}
+
 /* Timings tabpanel */
 
 .network-monitor .timings-container {
