@@ -160,10 +160,6 @@ nsDisplayFieldSetBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
                                                  mozilla::layers::WebRenderLayerManager* aManager,
                                                  nsDisplayListBuilder* aDisplayListBuilder)
 {
-  if (!ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBorderLayers)) {
-    return false;
-  }
-
   auto frame = static_cast<nsFieldSetFrame*>(mFrame);
   auto offset = ToReferenceFrame();
   nsRect rect;

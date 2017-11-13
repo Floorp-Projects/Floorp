@@ -441,7 +441,7 @@ ProfileEntry::script() const
     // AutoSuppressProfilerSampling prohibits the runtime's active context from
     // being changed while it exists.
     JSContext* cx = script->runtimeFromAnyThread()->activeContext();
-    if (!cx->isProfilerSamplingEnabled())
+    if (!cx || !cx->isProfilerSamplingEnabled())
         return nullptr;
 
     MOZ_ASSERT(!IsForwarded(script));

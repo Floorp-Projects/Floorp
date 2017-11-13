@@ -38,6 +38,15 @@ add_task(async function test_simple() {
 
     let { gIdentityHandler } = gBrowser.ownerGlobal;
     gIdentityHandler._identityBox.click();
+
+    // Messages should be visible when the scheme is HTTP, and invisible when
+    // the scheme is HTTPS.
+    is(Array.every(document.getElementById("identity-popup-mainView")
+                           .querySelectorAll("[when-loginforms=insecure]"),
+                   element => !is_hidden(element)),
+       expectWarning,
+       "The relevant messages should be visible or hidden in the main view.");
+
     let promiseViewShown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "ViewShown");
     document.getElementById("identity-popup-security-expander").click();
     await promiseViewShown;
@@ -48,10 +57,12 @@ add_task(async function test_simple() {
             .getComputedStyle(document.getElementById("connection-icon"))
             .getPropertyValue("list-style-image");
       let securityViewBG = gBrowser.ownerGlobal
-            .getComputedStyle(document.getElementById("identity-popup-securityView"))
+            .getComputedStyle(document.getElementById("identity-popup-securityView")
+                                      .getElementsByClassName("identity-popup-security-content")[0])
             .getPropertyValue("background-image");
       let securityContentBG = gBrowser.ownerGlobal
-            .getComputedStyle(document.getElementById("identity-popup-security-content"))
+            .getComputedStyle(document.getElementById("identity-popup-mainView")
+                                      .getElementsByClassName("identity-popup-security-content")[0])
             .getPropertyValue("background-image");
       is(connectionIconImage,
          "url(\"chrome://browser/skin/connection-mixed-active-loaded.svg\")",
@@ -62,17 +73,19 @@ add_task(async function test_simple() {
       is(securityContentBG,
          "url(\"chrome://browser/skin/controlcenter/mcb-disabled.svg\")",
          "Using expected icon image in the Control Center subview");
-      is(Array.filter(document.querySelectorAll("[observes=identity-popup-insecure-login-forms-learn-more]"),
+      is(Array.filter(document.getElementById("identity-popup-securityView")
+                              .querySelectorAll("[observes=identity-popup-insecure-login-forms-learn-more]"),
                       element => !is_hidden(element)).length, 1,
          "The 'Learn more' link should be visible once.");
     }
 
     // Messages should be visible when the scheme is HTTP, and invisible when
     // the scheme is HTTPS.
-    is(Array.every(document.querySelectorAll("[when-loginforms=insecure]"),
+    is(Array.every(document.getElementById("identity-popup-securityView")
+                           .querySelectorAll("[when-loginforms=insecure]"),
                    element => !is_hidden(element)),
        expectWarning,
-       "The relevant messages should be visible or hidden.");
+       "The relevant messages should be visible or hidden in the security view.");
 
     if (gIdentityHandler._identityPopup.state != "closed") {
       let hideEvent = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popuphidden");
@@ -134,6 +147,12 @@ add_task(async function test_ignoring_window_opener() {
     // Open the identity popup.
     let { gIdentityHandler } = gBrowser.ownerGlobal;
     gIdentityHandler._identityBox.click();
+
+    ok(Array.every(document.getElementById("identity-popup-mainView")
+                           .querySelectorAll("[when-loginforms=insecure]"),
+                   element => is_hidden(element)),
+       "All messages should be hidden in the main view.");
+
     let promiseViewShown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "ViewShown");
     document.getElementById("identity-popup-security-expander").click();
     await promiseViewShown;
@@ -146,10 +165,12 @@ add_task(async function test_ignoring_window_opener() {
           .getComputedStyle(document.getElementById("connection-icon"))
           .getPropertyValue("list-style-image");
     let securityViewBG = gBrowser.ownerGlobal
-          .getComputedStyle(document.getElementById("identity-popup-securityView"))
+          .getComputedStyle(document.getElementById("identity-popup-securityView")
+                                    .getElementsByClassName("identity-popup-security-content")[0])
           .getPropertyValue("background-image");
     let securityContentBG = gBrowser.ownerGlobal
-          .getComputedStyle(document.getElementById("identity-popup-security-content"))
+          .getComputedStyle(document.getElementById("identity-popup-mainView")
+                                    .getElementsByClassName("identity-popup-security-content")[0])
           .getPropertyValue("background-image");
     is(connectionIconImage,
        "url(\"chrome://browser/skin/connection-secure.svg\")",
@@ -161,9 +182,10 @@ add_task(async function test_ignoring_window_opener() {
        "url(\"chrome://browser/skin/controlcenter/connection.svg\")",
        "Using expected icon image in the Control Center subview");
 
-    ok(Array.every(document.querySelectorAll("[when-loginforms=insecure]"),
+    ok(Array.every(document.getElementById("identity-popup-securityView")
+                           .querySelectorAll("[when-loginforms=insecure]"),
                    element => is_hidden(element)),
-       "All messages should be hidden.");
+       "All messages should be hidden in the security view.");
 
     if (gIdentityHandler._identityPopup.state != "closed") {
       info("hiding popup");
