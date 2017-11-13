@@ -674,14 +674,6 @@ SimpleHTMLCollection::GetLength(uint32_t* aLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-SimpleHTMLCollection::Item(uint32_t aIdx, nsIDOMNode** aRetVal)
-{
-  nsCOMPtr<nsIDOMNode> retVal = Item(aIdx)->AsDOMNode();
-  retVal.forget(aRetVal);
-  return NS_OK;
-}
-
 } // namespace dom
 } // namespace mozilla
 

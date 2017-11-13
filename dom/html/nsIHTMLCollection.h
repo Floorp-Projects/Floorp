@@ -40,8 +40,6 @@ public:
    */
   virtual nsINode* GetParentObject() = 0;
 
-  using nsIDOMHTMLCollection::Item;
-
   uint32_t Length()
   {
     uint32_t length;
