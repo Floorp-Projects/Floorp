@@ -57,7 +57,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "49e6d8c40b9b"
+        "revision": "cf4e2d222687"
     }, 
     "az": {
         "platforms": [
@@ -137,7 +137,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "2e62f8719d35"
+        "revision": "1c2e6fbc3b53"
     }, 
     "cak": {
         "platforms": [
@@ -247,7 +247,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "ab6d9487027a"
+        "revision": "a5fb9782c9b7"
     }, 
     "es-CL": {
         "platforms": [
@@ -277,7 +277,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "aed521ff002e"
+        "revision": "20dae34dd4b0"
     }, 
     "et": {
         "platforms": [
@@ -407,7 +407,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "e1f5e263992e"
+        "revision": "10a063e7ac8f"
     }, 
     "hi-IN": {
         "platforms": [
@@ -447,7 +447,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "1df35a51c523"
+        "revision": "0c0a76bf25e6"
     }, 
     "hy-AM": {
         "platforms": [
@@ -487,7 +487,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "d91a8c5f38db"
+        "revision": "7beed7983fd3"
     }, 
     "ja": {
         "platforms": [
@@ -512,7 +512,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f028f512ad4a"
+        "revision": "707732398dc8"
     }, 
     "kab": {
         "platforms": [
@@ -522,7 +522,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "e83c4123a6d4"
+        "revision": "e19799fa93b3"
     }, 
     "kk": {
         "platforms": [
@@ -642,7 +642,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "10e64263ca86"
+        "revision": "2be3c6f7fba3"
     }, 
     "my": {
         "platforms": [
@@ -712,7 +712,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "99afa23f80c7"
+        "revision": "f407d0f1c2be"
     }, 
     "pl": {
         "platforms": [
@@ -752,7 +752,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "31586be980a0"
+        "revision": "8015d9824d14"
     }, 
     "ro": {
         "platforms": [
@@ -822,7 +822,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "5a09ae01d326"
+        "revision": "9db8e71f92e8"
     }, 
     "sr": {
         "platforms": [
