@@ -3,8 +3,6 @@
 
 "use strict";
 
-requestLongerTimeout(2);
-
 // Test that whether animations ui could be displayed
 
 add_task(async function () {
@@ -36,7 +34,6 @@ add_task(async function () {
 
   // TODO: We need to add following tests after implement since this test has same role
   // of animationinspector/test/browser_animation_timeline_ui.js
-  // * header existance.
   // * name label in animation element existance.
   // * target node in animation element existance.
   // * summary graph in animation element existance.
