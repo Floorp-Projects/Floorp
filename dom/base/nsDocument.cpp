@@ -585,9 +585,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMHTMLCollection
-  NS_DECL_NSIDOMHTMLCOLLECTION
-
   virtual nsINode* GetParentObject() override
   {
     return nsSimpleContentList::GetParentObject();
@@ -668,7 +665,7 @@ private:
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(SimpleHTMLCollection, nsSimpleContentList,
-                            nsIHTMLCollection, nsIDOMHTMLCollection)
+                            nsIHTMLCollection)
 
 } // namespace dom
 } // namespace mozilla

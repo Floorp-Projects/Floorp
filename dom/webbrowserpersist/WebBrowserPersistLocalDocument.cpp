@@ -25,7 +25,6 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLMediaElement.h"

@@ -59,7 +59,6 @@ interface nsIDOMEventListener;
 // HTML
 interface nsIDOMHTMLElement;
 interface nsIDOMHTMLFormElement;
-interface nsIDOMHTMLCollection;
 interface nsIDOMHTMLHeadElement;
 
 // CSS

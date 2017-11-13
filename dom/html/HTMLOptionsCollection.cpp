@@ -96,8 +96,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HTMLOptionsCollection, mElements)
 NS_INTERFACE_TABLE_HEAD(HTMLOptionsCollection)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
   NS_INTERFACE_TABLE(HTMLOptionsCollection,
-                     nsIHTMLCollection,
-                     nsIDOMHTMLCollection)
+                     nsIHTMLCollection)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(HTMLOptionsCollection)
 NS_INTERFACE_MAP_END
 
