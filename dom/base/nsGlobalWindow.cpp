@@ -8115,17 +8115,25 @@ nsGlobalWindow::Stop(ErrorResult& aError)
   FORWARD_TO_OUTER_OR_THROW(StopOuter, (aError), aError, );
 }
 
+/* static */
+bool
+nsGlobalWindow::IsWindowPrintEnabled(JSContext*, JSObject*)
+{
+  static bool called = false;
+  static bool printDisabled = false;
+  if (!called) {
+    called = true;
+    Preferences::AddBoolVarCache(&printDisabled, "dom.disable_window_print");
+  }
+  return !printDisabled;
+}
+
 void
 nsGlobalWindow::PrintOuter(ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
 #ifdef NS_PRINTING
-  if (Preferences::GetBool("dom.disable_window_print", false)) {
-    aError.Throw(NS_ERROR_NOT_AVAILABLE);
-    return;
-  }
-
   if (!AreDialogsEnabled()) {
     // We probably want to keep throwing here; silently doing nothing is a bit
     // weird given the typical use cases of print().
