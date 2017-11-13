@@ -176,43 +176,6 @@ HTMLFormControlsCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(item, aReturn);
 }
 
-NS_IMETHODIMP
-HTMLFormControlsCollection::NamedItem(const nsAString& aName,
-                                      nsIDOMNode** aReturn)
-{
-  FlushPendingNotifications();
-
-  *aReturn = nullptr;
-
-  nsCOMPtr<nsISupports> supports;
-
-  if (!mNameLookupTable.Get(aName, getter_AddRefs(supports))) {
-    // key not found
-    return NS_OK;
-  }
-
-  if (!supports) {
-    return NS_OK;
-  }
-
-  // We found something, check if it's a node
-  CallQueryInterface(supports, aReturn);
-  if (*aReturn) {
-    return NS_OK;
-  }
-
-  // If not, we check if it's a node list.
-  nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(supports);
-  NS_ASSERTION(nodeList, "Huh, what's going one here?");
-  if (!nodeList) {
-    return NS_OK;
-  }
-
-  // And since we're only asking for one node here, we return the first
-  // one from the list.
-  return nodeList->Item(0, aReturn);
-}
-
 nsISupports*
 HTMLFormControlsCollection::NamedItemInternal(const nsAString& aName,
                                               bool aFlushContent)
