@@ -442,7 +442,7 @@
         // (Note: the |controls| attribute is already handled via layout/style/html.css)
         var shouldShow = !this.dynamicControls ||
                          (this.video.paused &&
-                         !(this.video.autoplay && this.video.mozAutoplayEnabled));
+                         !this.video.autoplay);
         // Hide the overlay if the video time is non-zero or if an error occurred to workaround bug 718107.
         let shouldClickToPlayShow = shouldShow && !this.isAudioOnly &&
                                     this.video.currentTime == 0 && !this.hasError();
@@ -1029,7 +1029,7 @@
         // its first frame. But since autoplay videos start off with no
         // controls, let them fade-out so the controls don't get stuck on.
         if (!this.firstFrameShown &&
-            !(this.video.autoplay && this.video.mozAutoplayEnabled)) {
+            !this.video.autoplay) {
           return;
         }
 
@@ -1077,7 +1077,7 @@
         // its first frame. But since autoplay videos start off with no
         // controls, let them fade-out so the controls don't get stuck on.
         if (!this.firstFrameShown && !isMouseOver &&
-            !(this.video.autoplay && this.video.mozAutoplayEnabled)) {
+            !this.video.autoplay) {
           return;
         }
 
@@ -2274,10 +2274,6 @@
 
         for (let event of this.videoEvents) {
           this.video.addEventListener(event, this, { mozSystemGroup: true });
-        }
-
-        if (this.video.autoplay && !this.video.mozAutoplayEnabled) {
-          this.blockedVideoHandler();
         }
       }
     };
