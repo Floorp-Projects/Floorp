@@ -22,7 +22,7 @@ loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 // Initialize a minimal DebuggerServer and connect to the webextension addon actor.
 if (!DebuggerServer.initialized) {
   DebuggerServer.init();
-  DebuggerServer.addBrowserActors();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   SimpleTest.registerCleanupFunction(function () {
     DebuggerServer.destroy();
   });

@@ -14,7 +14,7 @@ function start() {
   // Start the server.
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   }
 
   // Listen to an nsIPipe
@@ -43,7 +43,7 @@ function startServer() {
   // Start the server.
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   }
 
   // For an nsIServerSocket we do this:
@@ -168,7 +168,7 @@ function startDebugger() {
   // Start the server.
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   }
   // Listen to an nsIPipe
   let transport = DebuggerServer.connectPipe();

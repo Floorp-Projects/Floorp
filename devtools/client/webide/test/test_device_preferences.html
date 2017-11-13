@@ -21,7 +21,7 @@
         Task.spawn(function* () {
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
-            DebuggerServer.addBrowserActors();
+            DebuggerServer.registerActors({ browser: true, root: true, tab: true });
           }
 
           let win = yield openWebIDE();

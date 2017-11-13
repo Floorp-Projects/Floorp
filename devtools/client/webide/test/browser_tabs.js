@@ -13,7 +13,7 @@ function test() {
     // was left open.
     DebuggerServer.destroy();
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
     let tab = yield addTab(TEST_URI);
 

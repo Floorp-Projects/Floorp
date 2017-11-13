@@ -18,7 +18,7 @@ function run_test() {
   DebuggerServer.addActors("resource://test/pre_init_tab_actors.js");
 
   DebuggerServer.init();
-  DebuggerServer.addBrowserActors();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
   DebuggerServer.addActors("resource://test/post_init_global_actors.js");
   DebuggerServer.addActors("resource://test/post_init_tab_actors.js");

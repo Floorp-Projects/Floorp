@@ -16,7 +16,7 @@ var EventEmitter = require("devtools/shared/event-emitter");
 function test() {
   Task.spawn(function* () {
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
 
     let options = {
       source: TAB_URL,

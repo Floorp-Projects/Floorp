@@ -420,7 +420,7 @@ function initTestDebuggerServer(server = DebuggerServer) {
 function startTestDebuggerServer(title, server = DebuggerServer) {
   initTestDebuggerServer(server);
   addTestGlobal(title);
-  DebuggerServer.addTabActors();
+  DebuggerServer.registerActors({ browser: false, root: false, tab: true });
 
   let transport = DebuggerServer.connectPipe();
   let client = new DebuggerClient(transport);
@@ -440,7 +440,7 @@ function finishClient(client) {
 function get_chrome_actors(callback) {
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   }
   DebuggerServer.allowChromeProcess = true;
 

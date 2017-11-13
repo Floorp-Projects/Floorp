@@ -77,7 +77,7 @@ function runTests() {
     DebuggerServer.init();
   }
   if (!DebuggerServer.createRootActor) {
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   }
 
   function firstClient() {

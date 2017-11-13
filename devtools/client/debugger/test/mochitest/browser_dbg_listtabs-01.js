@@ -15,7 +15,7 @@ var gTab1, gTab1Actor, gTab2, gTab2Actor, gClient;
 function test() {
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   }
 
   let transport = DebuggerServer.connectPipe();

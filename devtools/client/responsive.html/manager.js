@@ -432,7 +432,7 @@ ResponsiveUI.prototype = {
   connectToServer: Task.async(function* () {
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
+      DebuggerServer.registerActors({ browser: true, root: true, tab: true });
     }
     this.client = new DebuggerClient(DebuggerServer.connectPipe());
     yield this.client.connect();
