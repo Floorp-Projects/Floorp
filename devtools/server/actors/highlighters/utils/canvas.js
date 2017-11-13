@@ -35,6 +35,9 @@ const { getViewportDimensions } = require("devtools/shared/layout/utils");
 // Using a fixed value should also solve bug 1348293.
 const CANVAS_SIZE = 4096;
 
+// The default color used for the canvas' font, fill and stroke colors.
+const DEFAULT_COLOR = "#9400FF";
+
 /**
  * Draws an arrow-bubble rectangle in the provided canvas context.
  *
@@ -426,6 +429,7 @@ function updateCanvasPosition(canvasPosition, scrollPosition, window, windowDime
 }
 
 exports.CANVAS_SIZE = CANVAS_SIZE;
+exports.DEFAULT_COLOR = DEFAULT_COLOR;
 exports.drawBubbleRect = drawBubbleRect;
 exports.drawLine = drawLine;
 exports.drawRect = drawRect;
