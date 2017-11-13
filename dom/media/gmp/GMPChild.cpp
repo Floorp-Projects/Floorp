@@ -623,21 +623,25 @@ GMPChild::ActorDestroy(ActorDestroyReason aWhy)
 void
 GMPChild::ProcessingError(Result aCode, const char* aReason)
 {
+  if (!aReason) {
+    aReason = "";
+  }
+
   switch (aCode) {
     case MsgDropped:
       _exit(0); // Don't trigger a crash report.
     case MsgNotKnown:
-      MOZ_CRASH("aborting because of MsgNotKnown");
+      MOZ_CRASH_UNSAFE_PRINTF("aborting because of MsgNotKnown, reason(%s)", aReason);
     case MsgNotAllowed:
-      MOZ_CRASH("aborting because of MsgNotAllowed");
+      MOZ_CRASH_UNSAFE_PRINTF("aborting because of MsgNotAllowed, reason(%s)", aReason);
     case MsgPayloadError:
-      MOZ_CRASH("aborting because of MsgPayloadError");
+      MOZ_CRASH_UNSAFE_PRINTF("aborting because of MsgPayloadError, reason(%s)", aReason);
     case MsgProcessingError:
-      MOZ_CRASH("aborting because of MsgProcessingError");
+      MOZ_CRASH_UNSAFE_PRINTF("aborting because of MsgProcessingError, reason(%s)", aReason);
     case MsgRouteError:
-      MOZ_CRASH("aborting because of MsgRouteError");
+      MOZ_CRASH_UNSAFE_PRINTF("aborting because of MsgRouteError, reason(%s)", aReason);
     case MsgValueError:
-      MOZ_CRASH("aborting because of MsgValueError");
+      MOZ_CRASH_UNSAFE_PRINTF("aborting because of MsgValueError, reason(%s)", aReason);
     default:
       MOZ_CRASH("not reached");
   }
