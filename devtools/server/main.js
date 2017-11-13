@@ -417,40 +417,40 @@ var DebuggerServer = {
    *
    * /!\ Be careful when adding a new actor, especially global actors.
    * Any new global actor will be exposed and returned by the root actor.
-   *
-   * That's the reason why tab actors aren't loaded on demand via
-   * restrictPrivileges=true, to prevent exposing them on b2g parent process's
-   * root actor.
    */
-  addBrowserActors(windowType = null, restrictPrivileges = false) {
+  addBrowserActors(windowType = null) {
     if (windowType) {
       this.chromeWindowType = windowType;
     }
+
     this.registerModule("devtools/server/actors/webbrowser");
 
-    if (!restrictPrivileges) {
-      this.addTabActors();
-      this.registerModule("devtools/server/actors/preference", {
-        prefix: "preference",
-        constructor: "PreferenceActor",
-        type: { global: true }
-      });
-      this.registerModule("devtools/server/actors/actor-registry", {
-        prefix: "actorRegistry",
-        constructor: "ActorRegistryActor",
-        type: { global: true }
-      });
-    }
+    this.addTabActors();
+
+    this.registerModule("devtools/server/actors/preference", {
+      prefix: "preference",
+      constructor: "PreferenceActor",
+      type: { global: true }
+    });
+
+    this.registerModule("devtools/server/actors/actor-registry", {
+      prefix: "actorRegistry",
+      constructor: "ActorRegistryActor",
+      type: { global: true }
+    });
+
     this.registerModule("devtools/server/actors/addons", {
       prefix: "addons",
       constructor: "AddonsActor",
       type: { global: true }
     });
+
     this.registerModule("devtools/server/actors/device", {
       prefix: "device",
       constructor: "DeviceActor",
       type: { global: true }
     });
+
     this.registerModule("devtools/server/actors/heap-snapshot-file", {
       prefix: "heapSnapshotFile",
       constructor: "HeapSnapshotFileActor",
