@@ -8,6 +8,7 @@ const Services = require("Services");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
   CANVAS_SIZE,
+  DEFAULT_COLOR,
   drawBubbleRect,
   drawLine,
   drawRect,
@@ -38,8 +39,6 @@ const LAYOUT_STRINGS_URI = "devtools/client/locales/layout.properties";
 const LAYOUT_L10N = new LocalizationHelper(LAYOUT_STRINGS_URI);
 
 const NEGATIVE_LINE_NUMBERS_PREF = "devtools.gridinspector.showNegativeLineNumbers";
-
-const DEFAULT_GRID_COLOR = "#4B0082";
 
 const COLUMNS = "cols";
 const ROWS = "rows";
@@ -426,7 +425,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
   }
 
   get color() {
-    return this.options.color || DEFAULT_GRID_COLOR;
+    return this.options.color || DEFAULT_COLOR;
   }
 
   /**
