@@ -526,6 +526,23 @@ NativeObject::maybeConvertToOrGrowDictionaryForAdd(JSContext* cx, HandleNativeOb
     return true;
 }
 
+MOZ_ALWAYS_INLINE void
+Shape::updateDictionaryTable(ShapeTable* table, ShapeTable::Entry* entry,
+                             const AutoKeepShapeTables& keep)
+{
+    MOZ_ASSERT(table);
+    MOZ_ASSERT(entry);
+    MOZ_ASSERT(inDictionary());
+
+    // Store this Shape in the table entry.
+    entry->setPreservingCollision(this);
+    table->incEntryCount();
+
+    // Pass the table along to the new last property, namely *this.
+    MOZ_ASSERT(parent->maybeTable(keep) == table);
+    parent->handoffTableTo(this);
+}
+
 /* static */ Shape*
 NativeObject::addAccessorPropertyInternal(JSContext* cx,
                                           HandleNativeObject obj, HandleId id,
@@ -556,15 +573,8 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
 
     MOZ_ASSERT(shape == obj->lastProperty());
 
-    if (table) {
-        // Store the tree node pointer in the table entry for id.
-        entry->setPreservingCollision(shape);
-        table->incEntryCount();
-
-        // Pass the table along to the new last property, namely shape.
-        MOZ_ASSERT(shape->parent->maybeTable(keep) == table);
-        shape->parent->handoffTableTo(shape);
-    }
+    if (table)
+        shape->updateDictionaryTable(table, entry, keep);
 
     return shape;
 }
@@ -602,15 +612,8 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
 
     MOZ_ASSERT(shape == obj->lastProperty());
 
-    if (table) {
-        // Store the tree node pointer in the table entry for id.
-        entry->setPreservingCollision(shape);
-        table->incEntryCount();
-
-        // Pass the table along to the new last property, namely shape.
-        MOZ_ASSERT(shape->parent->maybeTable(keep) == table);
-        shape->parent->handoffTableTo(shape);
-    }
+    if (table)
+        shape->updateDictionaryTable(table, entry, keep);
 
     return shape;
 }
@@ -691,15 +694,8 @@ NativeObject::addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj, H
 
     MOZ_ASSERT(shape == obj->lastProperty());
 
-    if (table) {
-        /* Store the tree node pointer in the table entry for id. */
-        entry->setPreservingCollision(shape);
-        table->incEntryCount();
-
-        /* Pass the table along to the new last property, namely shape. */
-        MOZ_ASSERT(shape->parent->maybeTable(keep) == table);
-        shape->parent->handoffTableTo(shape);
-    }
+    if (table)
+        shape->updateDictionaryTable(table, entry, keep);
 
     return shape;
 }
