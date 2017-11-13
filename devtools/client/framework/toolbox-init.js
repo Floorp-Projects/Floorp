@@ -72,7 +72,7 @@ if (url.search.length > 1) {
 
       if (!DebuggerServer.initialized) {
         DebuggerServer.init();
-        DebuggerServer.addBrowserActors();
+        DebuggerServer.registerActors({ browser: true, root: true, tab: true });
       }
       let client = new DebuggerClient(DebuggerServer.connectPipe());
 

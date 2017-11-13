@@ -28,7 +28,7 @@ window.onload = function () {
   add_task(function* () {
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
+      DebuggerServer.registerActors({ browser: true, root: true, tab: true });
     }
 
     is(DebuggerServer.listeningSockets, 0, "0 listening sockets");

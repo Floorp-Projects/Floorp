@@ -272,15 +272,15 @@ var DebuggerServer = {
     }
 
     if (browser) {
-      this.addBrowserActors(this.chromeWindowType);
+      this._addBrowserActors();
     }
 
-    if (root) {
+    if (browser || root) {
       this.registerModule("devtools/server/actors/webbrowser");
     }
 
-    if (tab) {
-      this.addTabActors();
+    if (browser || tab) {
+      this._addTabActors();
     }
   },
 
@@ -418,39 +418,27 @@ var DebuggerServer = {
    * /!\ Be careful when adding a new actor, especially global actors.
    * Any new global actor will be exposed and returned by the root actor.
    */
-  addBrowserActors(windowType = null) {
-    if (windowType) {
-      this.chromeWindowType = windowType;
-    }
-
-    this.registerModule("devtools/server/actors/webbrowser");
-
-    this.addTabActors();
-
+  _addBrowserActors() {
     this.registerModule("devtools/server/actors/preference", {
       prefix: "preference",
       constructor: "PreferenceActor",
       type: { global: true }
     });
-
     this.registerModule("devtools/server/actors/actor-registry", {
       prefix: "actorRegistry",
       constructor: "ActorRegistryActor",
       type: { global: true }
     });
-
     this.registerModule("devtools/server/actors/addons", {
       prefix: "addons",
       constructor: "AddonsActor",
       type: { global: true }
     });
-
     this.registerModule("devtools/server/actors/device", {
       prefix: "device",
       constructor: "DeviceActor",
       type: { global: true }
     });
-
     this.registerModule("devtools/server/actors/heap-snapshot-file", {
       prefix: "heapSnapshotFile",
       constructor: "HeapSnapshotFileActor",
@@ -461,7 +449,7 @@ var DebuggerServer = {
   /**
    * Install tab actors.
    */
-  addTabActors() {
+  _addTabActors() {
     this.registerModule("devtools/server/actors/webconsole", {
       prefix: "console",
       constructor: "WebConsoleActor",
