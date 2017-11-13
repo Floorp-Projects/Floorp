@@ -799,23 +799,26 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
 
     // Search for id in order to claim its entry if table has been allocated.
     AutoKeepShapeTables keep(cx);
-    ShapeTable* table;
-    ShapeTable::Entry* entry;
     RootedShape shape(cx);
-    if (!Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, keep,
-                                            shape.address(), &table, &entry))
     {
-        return nullptr;
-    }
+        ShapeTable* table;
+        ShapeTable::Entry* entry;
+        if (!Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, keep,
+                                                shape.address(), &table, &entry))
+        {
+            return nullptr;
+        }
 
-    if (!shape) {
-        MOZ_ASSERT(obj->nonProxyIsExtensible(),
-                   "Can't add new property to non-extensible object");
-        return addDataPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT, attrs, table, entry, keep);
-    }
+        if (!shape) {
+            MOZ_ASSERT(obj->nonProxyIsExtensible(),
+                       "Can't add new property to non-extensible object");
+            return addDataPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT, attrs, table, entry,
+                                           keep);
+        }
 
-    // Property exists: search must have returned a valid entry.
-    MOZ_ASSERT_IF(entry, !entry->isRemoved());
+        // Property exists: search must have returned a valid entry.
+        MOZ_ASSERT_IF(entry, !entry->isRemoved());
+    }
 
     AssertCanChangeAttrs(shape, attrs);
 
@@ -847,8 +850,7 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
             return nullptr;
         ShapeTable* table = obj->lastProperty()->maybeTable(keep);
         MOZ_ASSERT(table);
-        entry = &table->search<MaybeAdding::NotAdding>(shape->propid(), keep);
-        shape = entry->shape();
+        shape = table->search<MaybeAdding::NotAdding>(shape->propid(), keep).shape();
     }
 
     MOZ_ASSERT_IF(shape->isDataProperty(), shape->slot() == slot);
@@ -915,23 +917,26 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
 
     // Search for id in order to claim its entry if table has been allocated.
     AutoKeepShapeTables keep(cx);
-    ShapeTable* table;
-    ShapeTable::Entry* entry;
     RootedShape shape(cx);
-    if (!Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, keep,
-                                            shape.address(), &table, &entry))
     {
-        return nullptr;
-    }
+        ShapeTable* table;
+        ShapeTable::Entry* entry;
+        if (!Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, keep,
+                                                shape.address(), &table, &entry))
+        {
+            return nullptr;
+        }
 
-    if (!shape) {
-        MOZ_ASSERT(obj->nonProxyIsExtensible(),
-                   "Can't add new property to non-extensible object");
-        return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, table, entry, keep);
-    }
+        if (!shape) {
+            MOZ_ASSERT(obj->nonProxyIsExtensible(),
+                       "Can't add new property to non-extensible object");
+            return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, table, entry,
+                                               keep);
+        }
 
-    // Property exists: search must have returned a valid entry.
-    MOZ_ASSERT_IF(entry, !entry->isRemoved());
+        // Property exists: search must have returned a valid entry.
+        MOZ_ASSERT_IF(entry, !entry->isRemoved());
+    }
 
     AssertCanChangeAttrs(shape, attrs);
 
@@ -957,10 +962,9 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
     if (shape != obj->lastProperty() && !obj->inDictionaryMode()) {
         if (!toDictionaryMode(cx, obj))
             return nullptr;
-        table = obj->lastProperty()->maybeTable(keep);
+        ShapeTable* table = obj->lastProperty()->maybeTable(keep);
         MOZ_ASSERT(table);
-        entry = &table->search<MaybeAdding::NotAdding>(shape->propid(), keep);
-        shape = entry->shape();
+        shape = table->search<MaybeAdding::NotAdding>(shape->propid(), keep).shape();
     }
 
     if (obj->inDictionaryMode()) {
