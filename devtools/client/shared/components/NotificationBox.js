@@ -4,14 +4,14 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const React = require("devtools/client/shared/vendor/react");
 const Immutable = require("devtools/client/shared/vendor/immutable");
 const { LocalizationHelper } = require("devtools/shared/l10n");
-
 const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
-const { div, span, button } = dom;
+
+// Shortcuts
+const { PropTypes, Component, DOM } = React;
+const { div, span, button } = DOM;
 
 // Priority Levels
 const PriorityLevels = {
@@ -231,12 +231,12 @@ class NotificationBox extends Component {
       div({
         key: notification.value,
         className: "notification",
+        "data-key": notification.value,
         "data-type": notification.type},
         div({className: "notificationInner"},
           div({className: "details"},
             div({
               className: "messageImage",
-              "data-key": notification.value,
               "data-type": notification.type}),
             span({className: "messageText"},
               notification.label

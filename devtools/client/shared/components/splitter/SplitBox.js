@@ -4,11 +4,10 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const React = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const Draggable = createFactory(require("devtools/client/shared/components/splitter/Draggable"));
+const Draggable = React.createFactory(require("devtools/client/shared/components/splitter/Draggable"));
+const { Component, DOM: dom, PropTypes } = React;
 
 /**
  * This component represents a Splitter. The splitter supports vertical

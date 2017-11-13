@@ -21,13 +21,11 @@ window.onload = Task.async(function* () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const React = browserRequire("devtools/client/shared/vendor/react");
-    const dom = require("devtools/client/shared/vendor/react-dom-factories");
-    const Tree =
-      React.createFactory(browserRequire("devtools/client/shared/components/Tree"));
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/Tree"));
 
     const treeProps = Object.assign({}, TEST_TREE_INTERFACE, {
       renderItem: (item, depth, focused, arrow) => {
-        return dom.div(
+        return React.DOM.div(
           {
             id: item,
             style: { marginLeft: depth * 16 + "px" }

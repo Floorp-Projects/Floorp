@@ -6,12 +6,10 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { DOM, Component, PropTypes } = require("devtools/client/shared/vendor/react");
 
 // Shortcuts
-const { button } = dom;
+const { button } = DOM;
 
 /**
  * Sidebar toggle button. This button is used to exapand

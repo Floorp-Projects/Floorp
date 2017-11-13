@@ -4,11 +4,9 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getSourceNames, parseURL, isScratchpadScheme, getSourceMappedFile } =
-  require("devtools/client/shared/source-utils");
+const { DOM: dom, Component, PropTypes } = require("devtools/client/shared/vendor/react");
+const { getSourceNames, parseURL,
+        isScratchpadScheme, getSourceMappedFile } = require("devtools/client/shared/source-utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
