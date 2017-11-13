@@ -23,10 +23,12 @@ const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
 const STYLE_INSPECTOR_L10N
       = new LocalizationHelper("devtools/shared/locales/styleinspector.properties");
 
+Services.prefs.setBoolPref("devtools.inspector.flexboxHighlighter.enabled", true);
 Services.prefs.setBoolPref("devtools.inspector.shapesHighlighter.enabled", true);
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.defaultColorUnit");
+  Services.prefs.clearUserPref("devtools.inspector.flexboxHighlighter.enabled");
   Services.prefs.clearUserPref("devtools.inspector.shapesHighlighter.enabled");
 });
 
