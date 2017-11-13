@@ -6,6 +6,10 @@
 
 Cu.import("resource:///modules/SitePermissions.jsm", this);
 
+function uri(url) {
+  return Services.io.newURI(url);
+}
+
 // This tests the key used to store the URI -> permission map on a tab.
 add_task(async function testTemporaryPermissionTabURLs() {
 
@@ -18,8 +22,15 @@ add_task(async function testTemporaryPermissionTabURLs() {
   // due to the combinatory nature of the test that is hard to fix.
   requestLongerTimeout(2);
 
-  let same = [ "https://example.com", "https://example.com/sub/path", "https://example.com:443" ].map(Services.io.newURI);
-  let different = [ "https://example.com", "https://name:password@example.com", "https://test1.example.com", "http://example.com", "http://example.org" ].map(Services.io.newURI);
+
+  let same = [ uri("https://example.com"),
+               uri("https://example.com/sub/path"),
+               uri("https://example.com:443") ]
+  let different = [ uri("https://example.com"),
+                    uri("https://name:password@example.com"),
+                    uri("https://test1.example.com"),
+                    uri("http://example.com"),
+                    uri("http://example.org") ]
 
   let id = "microphone";
 
