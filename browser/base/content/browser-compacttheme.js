@@ -76,7 +76,6 @@ var CompactTheme = {
 // If the compact theme is going to be applied in gBrowserInit.onLoad,
 // then preload it now.  This prevents a flash of unstyled content where the
 // normal theme is applied while the compact theme stylesheet is loading.
-if (AppConstants.INSTALL_COMPACT_THEMES &&
-    this != Services.appShell.hiddenDOMWindow && CompactTheme.isThemeCurrentlyApplied) {
+if (this != Services.appShell.hiddenDOMWindow && CompactTheme.isThemeCurrentlyApplied) {
   CompactTheme.createStyleSheet();
 }
