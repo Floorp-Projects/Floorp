@@ -1970,11 +1970,18 @@ KeyframeEffectReadOnly::UpdateEffectSet(EffectSet* aEffectSet) const
     return;
   }
 
+  nsIFrame* frame = GetAnimationFrame();
   if (HasAnimationOfProperty(eCSSProperty_opacity)) {
     effectSet->SetMayHaveOpacityAnimation();
+    if (frame) {
+      frame->SetMayHaveOpacityAnimation();
+    }
   }
   if (HasAnimationOfProperty(eCSSProperty_transform)) {
     effectSet->SetMayHaveTransformAnimation();
+    if (frame) {
+      frame->SetMayHaveTransformAnimation();
+    }
   }
 }
 

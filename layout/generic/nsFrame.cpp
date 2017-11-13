@@ -669,6 +669,17 @@ nsFrame::Init(nsIContent*       aContent,
       IncApproximateVisibleCount();
     }
   }
+  if (aPrevInFlow) {
+    mMayHaveOpacityAnimation = aPrevInFlow->MayHaveOpacityAnimation();
+    mMayHaveTransformAnimation = aPrevInFlow->MayHaveTransformAnimation();
+  } else if (mContent) {
+    EffectSet* effectSet = EffectSet::GetEffectSet(this);
+    if (effectSet) {
+      mMayHaveOpacityAnimation = effectSet->MayHaveOpacityAnimation();
+      mMayHaveTransformAnimation = effectSet->MayHaveTransformAnimation();
+    }
+  }
+
   const nsStyleDisplay *disp = StyleDisplay();
   if (disp->HasTransform(this) ||
       (IsFrameOfType(eSupportsCSSTransforms) &&
