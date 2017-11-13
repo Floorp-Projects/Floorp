@@ -11984,7 +11984,7 @@ class CGDeleteNamedProperty(CGAbstractStaticMethod):
             MOZ_ASSERT(js::IsProxy(proxy));
             MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy));
             JSAutoCompartment ac(cx, proxy);
-            bool deleteSucceeded;
+            bool deleteSucceeded = false;
             bool found = false;
             $*{namedBody}
             if (!found || deleteSucceeded) {
