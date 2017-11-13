@@ -310,6 +310,11 @@ private:
   void NotifyOfConsumersChange();
 
   /**
+   * Get a JSON string representing the accessibility service consumers.
+   */
+  void GetConsumers(nsAString& aString);
+
+  /**
    * Set accessibility service consumers.
    */
   void SetConsumers(uint32_t aConsumers);

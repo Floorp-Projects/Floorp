@@ -47,6 +47,12 @@ add_task(async function() {
       XPCOM: true, MainProcess: true, PlatformAPI: false
     }, "Accessibility service consumers in content are correct."));
 
+    const contentConsumers = await ContentTask.spawn(browser, {}, () =>
+      accService.getConsumers());
+    Assert.deepEqual(JSON.parse(contentConsumers), {
+      XPCOM: true, MainProcess: true, PlatformAPI: false
+    }, "Accessibility service consumers in parent are correct.");
+
     info("Shutting down a service in parent and making sure the one in " +
       "content stays alive");
     let contentCanShutdown = false;
