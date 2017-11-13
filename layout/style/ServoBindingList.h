@@ -141,6 +141,8 @@ SERVO_BINDING_FUNC(Servo_SourceSizeList_Evaluate,
                    int32_t,
                    RawServoStyleSetBorrowed set,
                    RawServoSourceSizeListBorrowedOrNull)
+SERVO_BINDING_FUNC(Servo_SourceSizeList_Drop, void,
+                   RawServoSourceSizeListOwned)
 SERVO_BINDING_FUNC(Servo_SelectorList_Matches, bool,
                    RawGeckoElementBorrowed, RawServoSelectorListBorrowed)
 SERVO_BINDING_FUNC(Servo_SelectorList_Closest, const RawGeckoElement*,
