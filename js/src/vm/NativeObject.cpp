@@ -484,9 +484,10 @@ NativeObject::sparsifyDenseElement(JSContext* cx, HandleNativeObject obj, uint32
     RootedId id(cx, INT_TO_JSID(index));
 
     AutoKeepShapeTables keep(cx);
+    ShapeTable* table = nullptr;
     ShapeTable::Entry* entry = nullptr;
     if (obj->inDictionaryMode()) {
-        ShapeTable* table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
+        table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
         if (!table)
             return false;
         entry = &table->search<MaybeAdding::Adding>(id, keep);
@@ -496,7 +497,7 @@ NativeObject::sparsifyDenseElement(JSContext* cx, HandleNativeObject obj, uint32
     // extensibility check if we're, for example, sparsifying frozen objects..
     Shape* shape = addDataPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT,
                                            obj->getElementsHeader()->elementAttributes(),
-                                           entry, keep);
+                                           table, entry, keep);
     if (!shape) {
         obj->setDenseElementUnchecked(index, value);
         return false;
