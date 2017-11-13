@@ -255,8 +255,6 @@ RotatedBuffer::UpdateDestinationFrom(const RotatedBuffer& aSource,
     if (isClippingCheap) {
       destDT->PopClip();
     }
-    // Flush the destination before the sources become inaccessible (Unlock).
-    destDT->Flush();
     ReturnDrawTarget(destDT);
   }
 
@@ -273,8 +271,6 @@ RotatedBuffer::UpdateDestinationFrom(const RotatedBuffer& aSource,
       if (isClippingCheap) {
         destDT->PopClip();
       }
-      // Flush the destination before the sources become inaccessible (Unlock).
-      destDT->Flush();
       ReturnDrawTarget(destDT);
     }
   }
