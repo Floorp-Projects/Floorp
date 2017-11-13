@@ -102,13 +102,6 @@ $(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG)
 # from, has already been eval'ed.
 include $(OBJDIR)/.mozconfig.mk
 
-# Print out any options loaded from mozconfig.
-all build clean distclean export libs install realclean::
-ifneq (,$(strip $(MOZCONFIG_OUT_LINES)))
-	$(info Adding client.mk options from $(FOUND_MOZCONFIG):)
-	$(foreach line,$(MOZCONFIG_OUT_LINES),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
-endif
-
 # In automation, manage an sccache daemon. The starting of the server
 # needs to be in a make file so sccache inherits the jobserver.
 ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
