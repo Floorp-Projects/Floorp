@@ -32,13 +32,13 @@ public:
   explicit TableRowsCollection(HTMLTableElement* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMHTMLCOLLECTION
 
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
+  virtual uint32_t Length() override;
   virtual Element* GetElementAt(uint32_t aIndex) override;
   virtual nsINode* GetParentObject() override
   {
@@ -217,17 +217,15 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(TableRowsCollection,
 
 NS_INTERFACE_TABLE_HEAD(TableRowsCollection)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
-  NS_INTERFACE_TABLE(TableRowsCollection, nsIHTMLCollection,
-                     nsIDOMHTMLCollection, nsIMutationObserver)
+  NS_INTERFACE_TABLE(TableRowsCollection, nsIHTMLCollection, nsIMutationObserver)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(TableRowsCollection)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
-TableRowsCollection::GetLength(uint32_t* aLength)
+uint32_t
+TableRowsCollection::Length()
 {
   EnsureInitialized();
-  *aLength = mRows.Length();
-  return NS_OK;
+  return mRows.Length();
 }
 
 Element*
@@ -238,19 +236,6 @@ TableRowsCollection::GetElementAt(uint32_t aIndex)
     return mRows[aIndex]->AsElement();
   }
   return nullptr;
-}
-
-NS_IMETHODIMP
-TableRowsCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  nsISupports* node = GetElementAt(aIndex);
-  if (!node) {
-    *aReturn = nullptr;
-
-    return NS_OK;
-  }
-
-  return CallQueryInterface(node, aReturn);
 }
 
 Element*
@@ -305,21 +290,6 @@ TableRowsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
   }
 }
 
-
-NS_IMETHODIMP
-TableRowsCollection::NamedItem(const nsAString& aName,
-                               nsIDOMNode** aReturn)
-{
-  bool found;
-  nsISupports* node = GetFirstNamedElement(aName, found);
-  if (!node) {
-    *aReturn = nullptr;
-
-    return NS_OK;
-  }
-
-  return CallQueryInterface(node, aReturn);
-}
 
 NS_IMETHODIMP
 TableRowsCollection::ParentDestroyed()

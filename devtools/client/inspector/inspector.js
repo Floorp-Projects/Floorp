@@ -968,6 +968,7 @@ Inspector.prototype = {
 
     // Restore the highlighter states prior to emitting "new-root".
     yield Promise.all([
+      this.highlighters.restoreFlexboxState(),
       this.highlighters.restoreGridState(),
       this.highlighters.restoreShapeState()
     ]);
