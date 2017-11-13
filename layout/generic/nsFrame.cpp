@@ -7590,7 +7590,7 @@ nsIFrame::ListTag(nsACString& aTo, const nsIFrame* aFrame) {
 void
 nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) const
 {
-  aTo =+ aPrefix;
+  aTo += aPrefix;
   ListTag(aTo);
   if (HasView()) {
     aTo += nsPrintfCString(" [view=%p]", static_cast<void*>(GetView()));
