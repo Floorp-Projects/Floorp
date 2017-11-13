@@ -35,7 +35,7 @@ Test chrome-only MutationObserver animation notifications (async tests)
 <script>
 var div = document.getElementById("target");
 var gRecords = [];
-var gObserver = new MutationObserver(function(newRecords) {
+var gObserver = new MutationObserver(newRecords => {
   gRecords.push(...newRecords);
 });
 
@@ -51,7 +51,7 @@ function addAsyncAnimTest(aName, aOptions, aTestGenerator) {
 }
 
 function runAsyncTest(aTestGenerator) {
-  return waitForFrame().then(function() {
+  return waitForFrame().then(() => {
     var generator;
 
     function step(arg) {
@@ -86,7 +86,7 @@ function runAsyncTest(aTestGenerator) {
 };
 
 function runAllAsyncTests() {
-  return gTests.reduce(function(sequence, test) {
+  return gTests.reduce((sequence, test) => {
     return sequence.then(() => runAsyncTest(test));
   }, Promise.resolve());
 }
@@ -110,7 +110,7 @@ ok = function(a, message) {
 // Adds an event listener and returns a Promise that is resolved when the
 // event listener is called.
 function await_event(aElement, aEventName) {
-  return new Promise(function(aResolve) {
+  return new Promise(aResolve => {
     function listener(aEvent) {
       aElement.removeEventListener(aEventName, listener);
       aResolve();
@@ -193,7 +193,7 @@ function assert_records_any_order(expected, desc) {
 [
   { observe: div,            target: div, subtree: false },
   { observe: div.parentNode, target: div, subtree: true  },
-].forEach(function(aOptions) {
+].forEach(aOptions => {
 
   var e = aOptions.target;
 
@@ -663,7 +663,7 @@ function assert_records_any_order(expected, desc) {
     { name: "state",     prop: "animationPlayState",      val: "paused"  },
     { name: "delay",     prop: "animationDelay",          val: "-1s"     },
     { name: "fill",      prop: "animationFillMode",       val: "both"    },
-  ].forEach(function(aChangeTest) {
+  ].forEach(aChangeTest => {
     addAsyncAnimTest(`single_animation_change_${aChangeTest.name}`, aOptions, function*() {
       // Start a long animation.
       e.style = "animation: anim 100s;";
@@ -1221,9 +1221,9 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
 SimpleTest.requestLongerTimeout(2);
 SimpleTest.waitForExplicitFinish();
 
-runAllAsyncTests().then(function() {
+runAllAsyncTests().then(() => {
   SimpleTest.finish();
-}, function(aError) {
+}, aError => {
   ok(false, "Something failed: " + aError);
 });
 </script>
