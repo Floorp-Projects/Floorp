@@ -1035,7 +1035,7 @@ private:
 public:
   inline void* Malloc(size_t aSize, bool aZero);
 
-  void* Palloc(size_t aAlignment, size_t aSize, size_t aAllocSize);
+  void* PallocLarge(size_t aAlignment, size_t aSize, size_t aAllocSize);
 
   inline void DallocSmall(arena_chunk_t* aChunk,
                           void* aPtr,
@@ -3090,7 +3090,7 @@ imalloc(size_t aSize, bool aZero, arena_t* aArena)
 
 // Only handles large allocations that require more than page alignment.
 void*
-arena_t::Palloc(size_t aAlignment, size_t aSize, size_t aAllocSize)
+arena_t::PallocLarge(size_t aAlignment, size_t aSize, size_t aAllocSize)
 {
   void* ret;
   size_t offset;
@@ -3216,7 +3216,7 @@ ipalloc(size_t aAlignment, size_t aSize, arena_t* aArena)
     }
 
     if (run_size <= gMaxLargeClass) {
-      ret = aArena->Palloc(aAlignment, ceil_size, run_size);
+      ret = aArena->PallocLarge(aAlignment, ceil_size, run_size);
     } else if (aAlignment <= kChunkSize) {
       ret = huge_malloc(ceil_size, false, aArena);
     } else {
