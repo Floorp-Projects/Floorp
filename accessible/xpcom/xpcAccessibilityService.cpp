@@ -258,6 +258,18 @@ xpcAccessibilityService::IsLogged(const nsAString& aModule, bool* aIsLogged)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+xpcAccessibilityService::GetConsumers(nsAString& aString)
+{
+  nsAccessibilityService* accService = GetAccService();
+  if (!accService) {
+    return NS_ERROR_SERVICE_NOT_AVAILABLE;
+  }
+
+  accService->GetConsumers(aString);
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // NS_GetAccessibilityService
 ////////////////////////////////////////////////////////////////////////////////
