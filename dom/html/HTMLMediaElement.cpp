@@ -1683,13 +1683,6 @@ HTMLMediaElement::SetSrcObject(DOMMediaStream* aValue)
   DoLoad();
 }
 
-NS_IMETHODIMP HTMLMediaElement::GetMozAutoplayEnabled(bool *aAutoplayEnabled)
-{
-  *aAutoplayEnabled = mAutoplayEnabled;
-
-  return NS_OK;
-}
-
 bool
 HTMLMediaElement::Ended()
 {
