@@ -1092,15 +1092,16 @@ NS_IMETHODIMP mozInlineSpellChecker::DidDeleteNode(nsIDOMNode *aChild, nsresult 
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::WillSplitNode(nsIDOMNode *aExistingRightNode, int32_t aOffset)
+NS_IMETHODIMP
+mozInlineSpellChecker::WillSplitNode(nsIDOMNode* aExistingRightNode,
+                                     int32_t aOffset)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-mozInlineSpellChecker::DidSplitNode(nsIDOMNode *aExistingRightNode,
-                                    int32_t aOffset,
-                                    nsIDOMNode *aNewLeftNode, nsresult aResult)
+mozInlineSpellChecker::DidSplitNode(nsIDOMNode* aExistingRightNode,
+                                    nsIDOMNode* aNewLeftNode)
 {
   return SpellCheckBetweenNodes(aNewLeftNode, 0, aNewLeftNode, 0);
 }
