@@ -4,9 +4,8 @@
 /* eslint-env browser */
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const React = require("devtools/client/shared/vendor/react");
+const { DOM: dom, Component, createFactory, PropTypes } = React;
 
 const AUTO_EXPAND_DEPTH = 0;
 const NUMBER_OF_OFFSCREEN_ITEMS = 1;

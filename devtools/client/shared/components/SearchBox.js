@@ -6,9 +6,7 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const { DOM: dom, Component, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const AutocompletePopup = createFactory(require("devtools/client/shared/components/AutoCompletePopup"));
 
