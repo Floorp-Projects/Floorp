@@ -307,21 +307,6 @@ TableRowsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
 
 
 NS_IMETHODIMP
-TableRowsCollection::NamedItem(const nsAString& aName,
-                               nsIDOMNode** aReturn)
-{
-  bool found;
-  nsISupports* node = GetFirstNamedElement(aName, found);
-  if (!node) {
-    *aReturn = nullptr;
-
-    return NS_OK;
-  }
-
-  return CallQueryInterface(node, aReturn);
-}
-
-NS_IMETHODIMP
 TableRowsCollection::ParentDestroyed()
 {
   CleanUp();

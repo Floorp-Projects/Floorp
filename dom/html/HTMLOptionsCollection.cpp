@@ -246,15 +246,6 @@ HTMLOptionsCollection::GetParentObject()
   return mSelect;
 }
 
-NS_IMETHODIMP
-HTMLOptionsCollection::NamedItem(const nsAString& aName,
-                                 nsIDOMNode** aReturn)
-{
-  NS_IF_ADDREF(*aReturn = GetNamedItem(aName));
-
-  return NS_OK;
-}
-
 void
 HTMLOptionsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
 {

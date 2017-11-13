@@ -659,7 +659,6 @@ public:
 
   using nsBaseContentList::Length;
   using nsBaseContentList::Item;
-  using nsIHTMLCollection::NamedItem;
 
 private:
   virtual ~SimpleHTMLCollection() {}
@@ -679,14 +678,6 @@ NS_IMETHODIMP
 SimpleHTMLCollection::Item(uint32_t aIdx, nsIDOMNode** aRetVal)
 {
   nsCOMPtr<nsIDOMNode> retVal = Item(aIdx)->AsDOMNode();
-  retVal.forget(aRetVal);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SimpleHTMLCollection::NamedItem(const nsAString& aName, nsIDOMNode** aRetVal)
-{
-  nsCOMPtr<nsIDOMNode> retVal = NamedItem(aName)->AsDOMNode();
   retVal.forget(aRetVal);
   return NS_OK;
 }
