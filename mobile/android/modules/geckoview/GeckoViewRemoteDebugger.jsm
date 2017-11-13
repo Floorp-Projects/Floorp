@@ -45,7 +45,9 @@ class GeckoViewRemoteDebugger extends GeckoViewModule {
   register() {
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
-      DebuggerServer.addBrowserActors("navigator:geckoview");
+
+      let windowType = "navigator:geckoview";
+      DebuggerServer.registerActors({ browser: true, root: true, tab: true, windowType });
       DebuggerServer.registerModule(
         "resource://gre/modules/dbg-browser-actors.js");
       DebuggerServer.allowChromeProcess = true;

@@ -439,7 +439,7 @@ var gLocalRuntime = {
   connect: function (connection) {
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
+      DebuggerServer.registerActors({ browser: true, root: true, tab: true });
     }
     DebuggerServer.allowChromeProcess = true;
     connection.host = null; // Force Pipe transport

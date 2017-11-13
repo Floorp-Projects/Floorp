@@ -25,7 +25,7 @@ SimpleTest.registerCleanupFunction(function () {
 
 if (!DebuggerServer.initialized) {
   DebuggerServer.init();
-  DebuggerServer.addBrowserActors();
+  DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   SimpleTest.registerCleanupFunction(function () {
     DebuggerServer.destroy();
   });

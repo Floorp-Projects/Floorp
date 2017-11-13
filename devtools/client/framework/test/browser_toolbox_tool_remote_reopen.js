@@ -65,7 +65,7 @@ function getClient() {
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   }
 
   let transport = DebuggerServer.connectPipe();

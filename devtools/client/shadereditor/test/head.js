@@ -228,7 +228,7 @@ function initBackend(aUrl) {
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   }
 
   return Task.spawn(function* () {

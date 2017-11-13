@@ -22,7 +22,7 @@ function test() {
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerActors({ browser: true, root: true, tab: true });
   }
 
   openTabs();

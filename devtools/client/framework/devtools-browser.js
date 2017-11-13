@@ -330,7 +330,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     // Create a DebuggerServer in order to connect locally to it
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
+      DebuggerServer.registerActors({ browser: true, root: true, tab: true });
     }
     DebuggerServer.allowChromeProcess = true;
 
