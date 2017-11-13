@@ -181,6 +181,7 @@ void counters_reset(int) {
 static void
 InstallCoverageSignalHandlers()
 {
+#ifndef XP_WIN
     fprintf(stderr, "[CodeCoverage] Setting handlers for process %d.\n", getpid());
 
     struct sigaction dump_sa;
@@ -196,6 +197,7 @@ InstallCoverageSignalHandlers()
     sigemptyset(&reset_sa.sa_mask);
     mozilla::DebugOnly<int> r2 = sigaction(SIGUSR2, &reset_sa, nullptr);
     MOZ_ASSERT(r2 == 0, "Failed to install GCOV SIGUSR2 handler");
+#endif
 }
 #endif
 

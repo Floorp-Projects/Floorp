@@ -571,10 +571,10 @@ gfxShapedText::SetupClusterBoundaries(uint32_t        aOffset,
                                       const char16_t *aString,
                                       uint32_t        aLength)
 {
-    CompressedGlyph *glyphs = GetCharacterGlyphs() + aOffset;
+    CompressedGlyph* glyphs = GetCharacterGlyphs() + aOffset;
 
-    gfxTextRun::CompressedGlyph extendCluster;
-    extendCluster.SetComplex(false, true, 0);
+    CompressedGlyph extendCluster =
+        CompressedGlyph::MakeComplex(false, true, 0);
 
     ClusterIterator iter(aString, aLength);
 
