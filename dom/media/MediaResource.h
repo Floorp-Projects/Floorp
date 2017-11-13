@@ -265,9 +265,6 @@ private:
                          uint32_t aCount,
                          uint32_t* aBytes);
 
-  // Select the next power of 2 (in range 32B-128KB, or 0 -> no cache)
-  static uint32_t SelectCacheSize(uint32_t aHint);
-
   // Maps a file offset to a mCachedBlock index.
   uint32_t IndexInCache(int64_t aOffsetInFile) const;
 
