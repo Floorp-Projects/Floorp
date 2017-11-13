@@ -642,30 +642,28 @@ BrowserGlue.prototype = {
 
     SessionStore.init();
 
-    if (AppConstants.INSTALL_COMPACT_THEMES) {
-      let vendorShortName = gBrandBundle.GetStringFromName("vendorShortName");
+    let vendorShortName = gBrandBundle.GetStringFromName("vendorShortName");
 
-      LightweightThemeManager.addBuiltInTheme({
-        id: "firefox-compact-light@mozilla.org",
-        name: gBrowserBundle.GetStringFromName("lightTheme.name"),
-        description: gBrowserBundle.GetStringFromName("lightTheme.description"),
-        headerURL: "resource:///chrome/browser/content/browser/defaultthemes/compact.header.png",
-        iconURL: "resource:///chrome/browser/content/browser/defaultthemes/light.icon.svg",
-        textcolor: "black",
-        accentcolor: "white",
-        author: vendorShortName,
-      });
-      LightweightThemeManager.addBuiltInTheme({
-        id: "firefox-compact-dark@mozilla.org",
-        name: gBrowserBundle.GetStringFromName("darkTheme.name"),
-        description: gBrowserBundle.GetStringFromName("darkTheme.description"),
-        headerURL: "resource:///chrome/browser/content/browser/defaultthemes/compact.header.png",
-        iconURL: "resource:///chrome/browser/content/browser/defaultthemes/dark.icon.svg",
-        textcolor: "white",
-        accentcolor: "black",
-        author: vendorShortName,
-      });
-    }
+    LightweightThemeManager.addBuiltInTheme({
+      id: "firefox-compact-light@mozilla.org",
+      name: gBrowserBundle.GetStringFromName("lightTheme.name"),
+      description: gBrowserBundle.GetStringFromName("lightTheme.description"),
+      headerURL: "resource:///chrome/browser/content/browser/defaultthemes/compact.header.png",
+      iconURL: "resource:///chrome/browser/content/browser/defaultthemes/light.icon.svg",
+      textcolor: "black",
+      accentcolor: "white",
+      author: vendorShortName,
+    });
+    LightweightThemeManager.addBuiltInTheme({
+      id: "firefox-compact-dark@mozilla.org",
+      name: gBrowserBundle.GetStringFromName("darkTheme.name"),
+      description: gBrowserBundle.GetStringFromName("darkTheme.description"),
+      headerURL: "resource:///chrome/browser/content/browser/defaultthemes/compact.header.png",
+      iconURL: "resource:///chrome/browser/content/browser/defaultthemes/dark.icon.svg",
+      textcolor: "white",
+      accentcolor: "black",
+      author: vendorShortName,
+    });
 
 
     // Initialize the default l10n resource sources for L10nRegistry.
