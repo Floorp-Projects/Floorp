@@ -485,21 +485,20 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
 
   // Blob images will only draw the visible area of the blob so we don't need to clip
   // them here and can just rely on the webrender clipping.
-  bool useClipBounds = true;
   nsRect paintBounds = itemBounds;
   if (useBlobImage) {
     paintBounds = itemBounds;
-    useClipBounds = false;
   } else {
     paintBounds = aItem->GetClippedBounds(aDisplayListBuilder);
   }
 
   // nsDisplayItem::Paint() may refer the variables that come from ComputeVisibility().
-  // So we should call RecomputeVisibility() before painting. e.g.: nsDisplayBoxShadowInner
+  // So we should call ComputeVisibility() before painting. e.g.: nsDisplayBoxShadowInner
   // uses mVisibleRegion in Paint() and mVisibleRegion is computed in
   // nsDisplayBoxShadowInner::ComputeVisibility().
-  nsRegion visibleRegion(itemBounds);
-  aItem->RecomputeVisibility(aDisplayListBuilder, &visibleRegion, useClipBounds);
+  nsRegion visibleRegion(paintBounds);
+  aItem->SetVisibleRect(paintBounds, false);
+  aItem->ComputeVisibility(aDisplayListBuilder, &visibleRegion);
 
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(paintBounds, appUnitsPerDevPixel);
