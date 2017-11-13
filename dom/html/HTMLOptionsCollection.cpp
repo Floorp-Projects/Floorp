@@ -96,8 +96,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HTMLOptionsCollection, mElements)
 NS_INTERFACE_TABLE_HEAD(HTMLOptionsCollection)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
   NS_INTERFACE_TABLE(HTMLOptionsCollection,
-                     nsIHTMLCollection,
-                     nsIDOMHTMLCollection)
+                     nsIHTMLCollection)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(HTMLOptionsCollection)
 NS_INTERFACE_MAP_END
 
@@ -110,12 +109,10 @@ HTMLOptionsCollection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
   return HTMLOptionsCollectionBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMETHODIMP
-HTMLOptionsCollection::GetLength(uint32_t* aLength)
+uint32_t
+HTMLOptionsCollection::Length()
 {
-  *aLength = mElements.Length();
-
-  return NS_OK;
+  return mElements.Length();
 }
 
 void
@@ -201,19 +198,6 @@ HTMLOptionsCollection::SetSelectedIndex(int32_t aSelectedIndex,
   mSelect->SetSelectedIndex(aSelectedIndex, aError);
 }
 
-NS_IMETHODIMP
-HTMLOptionsCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  nsISupports* item = GetElementAt(aIndex);
-  if (!item) {
-    *aReturn = nullptr;
-
-    return NS_OK;
-  }
-
-  return CallQueryInterface(item, aReturn);
-}
-
 Element*
 HTMLOptionsCollection::GetElementAt(uint32_t aIndex)
 {
@@ -244,15 +228,6 @@ nsINode*
 HTMLOptionsCollection::GetParentObject()
 {
   return mSelect;
-}
-
-NS_IMETHODIMP
-HTMLOptionsCollection::NamedItem(const nsAString& aName,
-                                 nsIDOMNode** aReturn)
-{
-  NS_IF_ADDREF(*aReturn = GetNamedItem(aName));
-
-  return NS_OK;
 }
 
 void

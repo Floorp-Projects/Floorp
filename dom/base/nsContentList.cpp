@@ -78,10 +78,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsBaseContentList)
   return nsCCUncollectableMarker::sGeneration && tmp->HasKnownLiveWrapper();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-#define NS_CONTENT_LIST_INTERFACES(_class)                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, nsINodeList)                             \
-    NS_INTERFACE_TABLE_ENTRY(_class, nsIDOMNodeList)
-
 // QueryInterface implementation for nsBaseContentList
 NS_INTERFACE_TABLE_HEAD(nsBaseContentList)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
@@ -177,13 +173,6 @@ nsEmptyContentList::GetLength(uint32_t* aLength)
 
 NS_IMETHODIMP
 nsEmptyContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  *aReturn = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEmptyContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
 {
   *aReturn = nullptr;
   return NS_OK;
@@ -517,8 +506,7 @@ nsContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsContentList, nsBaseContentList,
-                            nsIHTMLCollection, nsIDOMHTMLCollection,
-                            nsIMutationObserver)
+                            nsIHTMLCollection, nsIMutationObserver)
 
 uint32_t
 nsContentList::Length(bool aDoFlush)
@@ -676,20 +664,6 @@ nsContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
 
   if (node) {
     return CallQueryInterface(node, aReturn);
-  }
-
-  *aReturn = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
-{
-  nsIContent *content = NamedItem(aName, true);
-
-  if (content) {
-    return CallQueryInterface(content, aReturn);
   }
 
   *aReturn = nullptr;

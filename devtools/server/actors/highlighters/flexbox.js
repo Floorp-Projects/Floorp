@@ -7,6 +7,8 @@
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
   CANVAS_SIZE,
+  DEFAULT_COLOR,
+  drawRect,
   getCurrentMatrix,
   updateCanvasElement,
   updateCanvasPosition,
@@ -16,8 +18,21 @@ const {
   createNode,
 } = require("./utils/markup");
 const {
+  getAdjustedQuads,
+  getDisplayPixelRatio,
   setIgnoreLayoutChanges,
 } = require("devtools/shared/layout/utils");
+
+const FLEXBOX_LINES_PROPERTIES = {
+  "edge": {
+    lineDash: [0, 0],
+    alpha: 1,
+  },
+  "item": {
+    lineDash: [2, 2],
+    alpha: 1,
+  },
+};
 
 class FlexboxHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {
@@ -109,6 +124,21 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     return this.markup.getElement(this.ID_CLASS_PREFIX + id);
   }
 
+  /**
+   * The AutoRefreshHighlighter's _hasMoved method returns true only if the
+   * element's quads have changed. Override it so it also returns true if the
+   * element and its flex items have changed.
+   */
+  _hasMoved() {
+    let hasMoved = AutoRefreshHighlighter.prototype._hasMoved.call(this);
+
+    // TODO: Implement a check of old and new flex container and flex items to react
+    // to any alignment and size changes. This is blocked on Bug 1414920 that implements
+    // a platform API to retrieve the flex container and flex item information.
+
+    return hasMoved;
+  }
+
   _hide() {
     setIgnoreLayoutChanges(true);
     this._hideFlexbox();
@@ -162,6 +192,77 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
   }
 
+  renderFlexContainer() {
+    if (!this.currentQuads.content || !this.currentQuads.content[0]) {
+      return;
+    }
+
+    let { devicePixelRatio } = this.win;
+    let lineWidth = getDisplayPixelRatio(this.win);
+    let offset = (lineWidth / 2) % 1;
+
+    let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
+    let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+
+    this.ctx.save();
+    this.ctx.translate(offset - canvasX, offset - canvasY);
+    this.ctx.setLineDash(FLEXBOX_LINES_PROPERTIES.edge.lineDash);
+    this.ctx.globalAlpha = FLEXBOX_LINES_PROPERTIES.edge.alpha;
+    this.ctx.lineWidth = lineWidth;
+    this.ctx.strokeStyle = DEFAULT_COLOR;
+
+    let { bounds } = this.currentQuads.content[0];
+
+    drawRect(this.ctx, 0, 0, bounds.width, bounds.height, this.currentMatrix);
+
+    this.ctx.stroke();
+    this.ctx.restore();
+  }
+
+  renderFlexItems() {
+    if (!this.currentQuads.content || !this.currentQuads.content[0]) {
+      return;
+    }
+
+    let { devicePixelRatio } = this.win;
+    let lineWidth = getDisplayPixelRatio(this.win);
+    let offset = (lineWidth / 2) % 1;
+
+    let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
+    let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+
+    this.ctx.save();
+    this.ctx.translate(offset - canvasX, offset - canvasY);
+    this.ctx.setLineDash(FLEXBOX_LINES_PROPERTIES.item.lineDash);
+    this.ctx.globalAlpha = FLEXBOX_LINES_PROPERTIES.item.alpha;
+    this.ctx.lineWidth = lineWidth;
+    this.ctx.strokeStyle = DEFAULT_COLOR;
+
+    let { bounds } = this.currentQuads.content[0];
+    let flexItems = this.currentNode.children;
+
+    // TODO: Utilize the platform API that will be implemented in Bug 1414290 to
+    // retrieve the flex item properties.
+    for (let flexItem of flexItems) {
+      let quads = getAdjustedQuads(this.win, flexItem, "content");
+      if (!quads.length) {
+        continue;
+      }
+
+      // Adjust the flex item bounds relative to the current quads.
+      let { bounds: flexItemBounds } = quads[0];
+      let left = flexItemBounds.left - bounds.left;
+      let top = flexItemBounds.top - bounds.top;
+      let right = flexItemBounds.right - bounds.left;
+      let bottom = flexItemBounds.bottom - bounds.top;
+
+      drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
+      this.ctx.stroke();
+    }
+
+    this.ctx.restore();
+  }
+
   _update() {
     setIgnoreLayoutChanges(true);
 
@@ -183,6 +284,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
       this.win);
     this.currentMatrix = currentMatrix;
     this.hasNodeTransformations = hasNodeTransformations;
+
+    this.renderFlexContainer();
+    this.renderFlexItems();
 
     this._showFlexbox();
 

@@ -585,12 +585,13 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMHTMLCollection
-  NS_DECL_NSIDOMHTMLCOLLECTION
-
   virtual nsINode* GetParentObject() override
   {
     return nsSimpleContentList::GetParentObject();
+  }
+  virtual uint32_t Length() override
+  {
+    return nsSimpleContentList::Length();
   }
   virtual Element* GetElementAt(uint32_t aIndex) override
   {
@@ -657,39 +658,14 @@ public:
     return HTMLCollectionBinding::Wrap(aCx, this, aGivenProto);
   }
 
-  using nsBaseContentList::Length;
   using nsBaseContentList::Item;
-  using nsIHTMLCollection::NamedItem;
 
 private:
   virtual ~SimpleHTMLCollection() {}
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(SimpleHTMLCollection, nsSimpleContentList,
-                            nsIHTMLCollection, nsIDOMHTMLCollection)
-
-NS_IMETHODIMP
-SimpleHTMLCollection::GetLength(uint32_t* aLength)
-{
-  *aLength = Length();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SimpleHTMLCollection::Item(uint32_t aIdx, nsIDOMNode** aRetVal)
-{
-  nsCOMPtr<nsIDOMNode> retVal = Item(aIdx)->AsDOMNode();
-  retVal.forget(aRetVal);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SimpleHTMLCollection::NamedItem(const nsAString& aName, nsIDOMNode** aRetVal)
-{
-  nsCOMPtr<nsIDOMNode> retVal = NamedItem(aName)->AsDOMNode();
-  retVal.forget(aRetVal);
-  return NS_OK;
-}
+                            nsIHTMLCollection)
 
 } // namespace dom
 } // namespace mozilla

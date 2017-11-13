@@ -141,8 +141,8 @@ private:
 
 // Used for returning lists that will always be empty, such as the applets list
 // in HTML Documents
-class nsEmptyContentList: public nsBaseContentList,
-                          public nsIHTMLCollection
+class nsEmptyContentList final : public nsBaseContentList,
+                                 public nsIHTMLCollection
 {
 public:
   explicit nsEmptyContentList(nsINode* aRoot) : nsBaseContentList(),
@@ -150,11 +150,11 @@ public:
   {
   }
 
-  // nsIDOMHTMLCollection
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsEmptyContentList,
                                            nsBaseContentList)
-  NS_DECL_NSIDOMHTMLCOLLECTION
+  // nsIDOMNodeList, which we also implement.
+  NS_DECL_NSIDOMNODELIST
 
   virtual nsINode* GetParentObject() override
   {
@@ -172,6 +172,10 @@ public:
     nsWrapperCache::PreserveWrapper(aScriptObjectHolder);
   }
 
+  virtual uint32_t Length() override final
+  {
+    return 0;
+  }
   virtual nsIContent* Item(uint32_t aIndex) override;
   virtual mozilla::dom::Element* GetElementAt(uint32_t index) override;
   virtual mozilla::dom::Element*
@@ -331,8 +335,8 @@ protected:
   }
 public:
 
-  // nsIDOMHTMLCollection
-  NS_DECL_NSIDOMHTMLCOLLECTION
+  // nsIDOMNodeList, which we also implement.
+  NS_DECL_NSIDOMNODELIST
 
   // nsBaseContentList overrides
   virtual int32_t IndexOf(nsIContent *aContent, bool aDoFlush) override;
@@ -342,6 +346,10 @@ public:
     return mRootNode;
   }
 
+  virtual uint32_t Length() override final
+  {
+    return Length(true);
+  }
   virtual nsIContent* Item(uint32_t aIndex) override;
   virtual mozilla::dom::Element* GetElementAt(uint32_t index) override;
   virtual mozilla::dom::Element*
