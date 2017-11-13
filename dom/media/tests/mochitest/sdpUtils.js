@@ -22,6 +22,23 @@ findCodecId: function(sdp, format, offset = 0) {
   return match[1];
 },
 
+// Finds all the extmap ids in the given sdp.  Note that this does NOT
+// consider m-sections, so a more generic version would need to
+// look at each m-section separately.
+findExtmapIds: function(sdp) {
+        var sdpExtmapIds = [];
+        extmapRegEx = /^a=extmap:([0-9+])/gm;
+        // must call exec on the regex to get each match in the string
+        while ((searchResults = extmapRegEx.exec(sdp))
+               !== null) {
+          // returned array has the matched text as the first item,
+          // and then one item for each capturing parenthesis that
+          // matched containing the text that was captured.
+          sdpExtmapIds.push(searchResults[1]);
+        }
+  return sdpExtmapIds;
+},
+
 checkSdpAfterEndOfTrickle: function(sdp, testOptions, label) {
   info("EOC-SDP: " + JSON.stringify(sdp));
 
