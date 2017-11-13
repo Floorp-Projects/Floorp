@@ -22,14 +22,6 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
   readonly attribute nsISupports          head;
            attribute nsIDOMHTMLElement    body;
 
-  readonly attribute nsIDOMHTMLCollection images;
-  readonly attribute nsIDOMHTMLCollection embeds;
-  // mapped to attribute embeds for NS4 compat
-  readonly attribute nsIDOMHTMLCollection plugins;
-  readonly attribute nsIDOMHTMLCollection links;
-  readonly attribute nsIDOMHTMLCollection forms;
-  readonly attribute nsIDOMHTMLCollection scripts;
-
   // If aContentType is not something supported by nsHTMLDocument and
   // the HTML content sink, trying to write to the document will
   // probably throw.
@@ -67,9 +59,6 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
            attribute DOMString            linkColor;
            attribute DOMString            vlinkColor;
            attribute DOMString            alinkColor;
-
-  readonly attribute nsIDOMHTMLCollection anchors;
-  readonly attribute nsIDOMHTMLCollection applets;
 
   void                      clear();
 
