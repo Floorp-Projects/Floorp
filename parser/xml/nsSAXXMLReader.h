@@ -8,7 +8,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContentSink.h"
-#include "nsIExtendedExpatSink.h"
+#include "nsIExpatSink.h"
 #include "nsIParser.h"
 #include "nsIURI.h"
 #include "nsISAXXMLReader.h"
@@ -24,14 +24,13 @@
 { 0x96, 0xd0, 0x47, 0xa8, 0x28, 0x2a, 0xe3, 0xdb} }
 
 class nsSAXXMLReader final : public nsISAXXMLReader,
-                             public nsIExtendedExpatSink,
+                             public nsIExpatSink,
                              public nsIContentSink
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsSAXXMLReader, nsISAXXMLReader)
   NS_DECL_NSIEXPATSINK
-  NS_DECL_NSIEXTENDEDEXPATSINK
   NS_DECL_NSISAXXMLREADER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
