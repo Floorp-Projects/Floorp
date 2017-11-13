@@ -12,7 +12,7 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/Sprintf.h"
+#include "mozilla/Printf.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtrExtensions.h"
