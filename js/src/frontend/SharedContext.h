@@ -410,7 +410,6 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool            hasDirectEvalInParameterExpr:1; /* parameter list contains direct eval */
     bool            hasDuplicateParameters:1; /* parameter list contains duplicate names */
     bool            useAsm:1;               /* see useAsmOrInsideUseAsm */
-    bool            insideUseAsm:1;         /* see useAsmOrInsideUseAsm */
     bool            isAnnexB:1;             /* need to emit a synthesized Annex B assignment */
     bool            wasEmitted:1;           /* Bytecode has been emitted for this function. */
 
@@ -549,7 +548,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     // certain parsing features that are necessary in general, but unnecessary
     // for validated asm.js.
     bool useAsmOrInsideUseAsm() const {
-        return useAsm || insideUseAsm;
+        return useAsm;
     }
 
     void setStart(const TokenStream& tokenStream) {
