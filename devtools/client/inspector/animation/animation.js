@@ -10,8 +10,10 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const App = createFactory(require("./components/App"));
 const { isAllTimingEffectEqual } = require("./utils/utils");
+
 const { updateAnimations } = require("./actions/animations");
 const { updateElementPickerEnabled } = require("./actions/element-picker");
+const { updateSidebarSize } = require("./actions/sidebar");
 
 class AnimationInspector {
   constructor(inspector) {
@@ -21,6 +23,8 @@ class AnimationInspector {
     this.update = this.update.bind(this);
     this.onElementPickerStarted = this.onElementPickerStarted.bind(this);
     this.onElementPickerStopped = this.onElementPickerStopped.bind(this);
+    this.onSidebarResized = this.onSidebarResized.bind(this);
+    this.onSidebarSelect = this.onSidebarSelect.bind(this);
 
     this.init();
   }
@@ -44,14 +48,16 @@ class AnimationInspector {
     this.provider = provider;
 
     this.inspector.selection.on("new-node-front", this.update);
-    this.inspector.sidebar.on("newanimationinspector-selected", this.update);
+    this.inspector.sidebar.on("newanimationinspector-selected", this.onSidebarSelect);
+    this.inspector.toolbox.on("inspector-sidebar-resized", this.onSidebarResized);
     this.inspector.toolbox.on("picker-started", this.onElementPickerStarted);
     this.inspector.toolbox.on("picker-stopped", this.onElementPickerStopped);
   }
 
   destroy() {
     this.inspector.selection.off("new-node-front", this.update);
-    this.inspector.sidebar.off("newanimationinspector-selected", this.update);
+    this.inspector.sidebar.off("newanimationinspector-selected", this.onSidebarSelect);
+    this.inspector.toolbox.off("inspector-sidebar-resized", this.onSidebarResized);
     this.inspector.toolbox.off("picker-started", this.onElementPickerStarted);
     this.inspector.toolbox.off("picker-stopped", this.onElementPickerStopped);
 
@@ -96,6 +102,19 @@ class AnimationInspector {
 
   onElementPickerStopped() {
     this.inspector.store.dispatch(updateElementPickerEnabled(false));
+  }
+
+  onSidebarSelect() {
+    this.update();
+    this.onSidebarResized(null, this.inspector.getSidebarSize());
+  }
+
+  onSidebarResized(type, size) {
+    if (!this.isPanelVisible()) {
+      return;
+    }
+
+    this.inspector.store.dispatch(updateSidebarSize(size));
   }
 }
 

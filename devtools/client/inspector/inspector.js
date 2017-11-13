@@ -126,6 +126,7 @@ function Inspector(toolbox) {
   this.onShowBoxModelHighlighterForNode =
     this.onShowBoxModelHighlighterForNode.bind(this);
   this.onSidebarHidden = this.onSidebarHidden.bind(this);
+  this.onSidebarResized = this.onSidebarResized.bind(this);
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onSidebarShown = this.onSidebarShown.bind(this);
 
@@ -503,6 +504,7 @@ Inspector.prototype = {
         id: "inspector-sidebar-container"
       }),
       vert: this.useLandscapeMode(),
+      onControlledPanelResized: this.onSidebarResized,
     });
 
     this._splitter = this.ReactDOM.render(splitter,
@@ -571,6 +573,10 @@ Inspector.prototype = {
     this.getPanel(toolId);
 
     this.toolbox.emit("inspector-sidebar-select", toolId);
+  },
+
+  onSidebarResized: function (width, height) {
+    this.toolbox.emit("inspector-sidebar-resized", { width, height });
   },
 
   /**
