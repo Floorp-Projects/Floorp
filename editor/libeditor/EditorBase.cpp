@@ -4067,15 +4067,22 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
 {
   MOZ_ASSERT(&aSplitPointParent == &aNode ||
              EditorUtils::IsDescendantOf(aSplitPointParent, aNode));
-  int32_t offset = aSplitPointOffset;
+
+  int32_t offset =
+    std::min(std::max(aSplitPointOffset, 0),
+             static_cast<int32_t>(aSplitPointParent.Length()));
+  EditorDOMPoint atStartOfRightNode(&aSplitPointParent, offset);
+  if (NS_WARN_IF(!atStartOfRightNode.IsSet())) {
+    return -1;
+  }
+  MOZ_ASSERT(atStartOfRightNode.IsSetAndValid());
 
   nsCOMPtr<nsIContent> leftNode, rightNode;
-  OwningNonNull<nsIContent> nodeToSplit = aSplitPointParent;
   while (true) {
     // If we meet an orphan node before meeting aNode, we need to stop
     // splitting.  This is a bug of the caller.
-    nsCOMPtr<nsIContent> parent = nodeToSplit->GetParent();
-    if (NS_WARN_IF(nodeToSplit != &aNode && !parent)) {
+    if (NS_WARN_IF(atStartOfRightNode.Container() != &aNode &&
+                   !atStartOfRightNode.Container()->GetParent())) {
       return -1;
     }
 
@@ -4084,47 +4091,62 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
     // just have some smarts about unneccessarily splitting text nodes, which
     // should be universal enough to put straight in this EditorBase routine.
 
+    if (NS_WARN_IF(!atStartOfRightNode.Container()->IsContent())) {
+      return -1;
+    }
+    nsIContent* currentRightNode = atStartOfRightNode.Container()->AsContent();
+
     // If the split point is middle of the node or the node is not a text node
     // and we're allowed to create empty element node, split it.
     if ((aSplitAtEdges == SplitAtEdges::eAllowToCreateEmptyContainer &&
-         !nodeToSplit->GetAsText()) ||
-        (offset && offset != (int32_t)nodeToSplit->Length())) {
+         !atStartOfRightNode.Container()->GetAsText()) ||
+        (!atStartOfRightNode.IsStartOfContainer() &&
+         !atStartOfRightNode.IsEndOfContainer())) {
       ErrorResult error;
-      int32_t offsetAtStartOfRightNode =
-        std::min(std::max(offset, 0),
-                 static_cast<int32_t>(nodeToSplit->Length()));
-      nsCOMPtr<nsIContent> newLeftNode =
-        SplitNode(EditorRawDOMPoint(nodeToSplit, offsetAtStartOfRightNode),
-                  error);
+      rightNode = currentRightNode;
+      leftNode = SplitNode(atStartOfRightNode.AsRaw(), error);
       if (NS_WARN_IF(error.Failed())) {
         error.SuppressException();
         return -1;
       }
 
-      // Then, try to split its parent.
-      offset = parent->IndexOf(nodeToSplit);
-      rightNode = nodeToSplit;
-      leftNode = newLeftNode;
+      // Then, try to split its parent before current node.
+      atStartOfRightNode.Set(currentRightNode);
     }
     // If the split point is end of the node and it is a text node or we're not
     // allowed to create empty container node, try to split its parent after it.
-    else if (offset) {
-      offset = parent->IndexOf(nodeToSplit) + 1;
-      leftNode = nodeToSplit;
+    else if (!atStartOfRightNode.IsStartOfContainer()) {
+      // XXX Making current node which wasn't split treated as new left node
+      //     here.  However, rightNode still may keep referring a descendant
+      //     of the leftNode, which was split.  This must be odd behavior for
+      //     the callers.
+      //     Perhaps, we should set rightNode to currentRightNode?
+      leftNode = currentRightNode;
+
+      // Try to split its parent after current node.
+      atStartOfRightNode.Set(currentRightNode);
+      DebugOnly<bool> advanced = atStartOfRightNode.AdvanceOffset();
+      NS_WARNING_ASSERTION(advanced,
+        "Failed to advance offset after current node");
     }
     // If the split point is start of the node and it is a text node or we're
     // not allowed to create empty container node, try to split its parent.
     else {
-      offset = parent->IndexOf(nodeToSplit);
-      rightNode = nodeToSplit;
+      // XXX Making current node which wasn't split treated as exiting right
+      //     node here.  However, leftNode still may keep referring a
+      //     descendant of rightNode, which was created at splitting.  This
+      //     must be odd behavior for the callers.
+      //     Perhaps, we should set leftNode to nullptr?
+      rightNode = currentRightNode;
+
+      // Try to split its parent before current node.
+      atStartOfRightNode.Set(currentRightNode);
     }
 
-    if (nodeToSplit == &aNode) {
+    if (currentRightNode == &aNode) {
       // we split all the way up to (and including) aNode; we're done
       break;
     }
-
-    nodeToSplit = *parent;
   }
 
   if (aOutLeftNode) {
@@ -4134,10 +4156,10 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
     rightNode.forget(aOutRightNode);
   }
   if (ioChildAtSplitPointOffset) {
-    *ioChildAtSplitPointOffset = nodeToSplit;
+    *ioChildAtSplitPointOffset = atStartOfRightNode.GetChildAtOffset();
   }
 
-  return offset;
+  return atStartOfRightNode.Offset();
 }
 
 /**
