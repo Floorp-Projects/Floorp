@@ -43,6 +43,7 @@ nsHtml5Parser::nsHtml5Parser()
   , mInsertionPointPushLevel(0)
   , mDocumentClosed(false)
   , mInDocumentWrite(false)
+  , mInsertionPointPermanentlyUndefined(false)
   , mFirstBuffer(new nsHtml5OwningUTF16Buffer((void*)nullptr))
   , mLastBuffer(mFirstBuffer)
   , mExecutor(new nsHtml5TreeOpExecutor())
@@ -277,11 +278,12 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   // If we got this far, we are dealing with a document.write or
   // document.writeln call--not document.close().
 
-  NS_ASSERTION(IsInsertionPointDefined(),
-               "Doc.write reached parser with undefined insertion point.");
+  MOZ_RELEASE_ASSERT(
+    IsInsertionPointDefined(),
+    "Doc.write reached parser with undefined insertion point.");
 
-  NS_ASSERTION(!(GetStreamParser() && !aKey),
-               "Got a null key in a non-script-created parser");
+  MOZ_RELEASE_ASSERT(!(GetStreamParser() && !aKey),
+                     "Got a null key in a non-script-created parser");
 
   // XXX is this optimization bogus?
   if (aSourceBuffer.IsEmpty()) {
@@ -564,8 +566,8 @@ nsHtml5Parser::Reset()
 bool
 nsHtml5Parser::IsInsertionPointDefined()
 {
-  return !mExecutor->IsFlushing() &&
-    (!GetStreamParser() || mInsertionPointPushLevel);
+  return !mExecutor->IsFlushing() && !mInsertionPointPermanentlyUndefined &&
+         (!GetStreamParser() || mInsertionPointPushLevel);
 }
 
 void
@@ -639,9 +641,11 @@ nsHtml5Parser::ParseUntilBlocked()
           return NS_OK;
         }
         if (mDocumentClosed) {
+          PermanentlyUndefineInsertionPoint();
           nsresult rv;
-          NS_ASSERTION(!GetStreamParser(),
-                       "This should only happen with script-created parser.");
+          MOZ_RELEASE_ASSERT(
+            !GetStreamParser(),
+            "This should only happen with script-created parser.");
           if (NS_SUCCEEDED((rv = mExecutor->IsBroken()))) {
             mTokenizer->eof();
             if (NS_FAILED((rv = mTreeBuilder->IsBroken()))) {

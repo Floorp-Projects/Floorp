@@ -756,7 +756,7 @@ public:
 
   void SetValueAsNumber(double aValue, ErrorResult& aRv);
 
-  uint32_t Width();
+  MOZ_CAN_RUN_SCRIPT uint32_t Width();
 
   void SetWidth(uint32_t aValue, ErrorResult& aRv)
   {

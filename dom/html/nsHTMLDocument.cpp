@@ -1147,13 +1147,6 @@ nsHTMLDocument::GetHead(nsISupports** aHead)
   return head ? CallQueryInterface(head, aHead) : NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetImages(nsIDOMHTMLCollection** aImages)
-{
-  NS_ADDREF(*aImages = Images());
-  return NS_OK;
-}
-
 nsIHTMLCollection*
 nsHTMLDocument::Images()
 {
@@ -1161,13 +1154,6 @@ nsHTMLDocument::Images()
     mImages = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::img, nsGkAtoms::img);
   }
   return mImages;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
-{
-  NS_ADDREF(*aApplets = Applets());
-  return NS_OK;
 }
 
 nsIHTMLCollection*
@@ -1211,13 +1197,6 @@ nsHTMLDocument::MatchLinks(Element* aElement, int32_t aNamespaceID,
   return false;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
-{
-  NS_ADDREF(*aLinks = Links());
-  return NS_OK;
-}
-
 nsIHTMLCollection*
 nsHTMLDocument::Links()
 {
@@ -1251,13 +1230,6 @@ nsHTMLDocument::MatchAnchors(Element* aElement, int32_t aNamespaceID,
   return false;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetAnchors(nsIDOMHTMLCollection** aAnchors)
-{
-  NS_ADDREF(*aAnchors = Anchors());
-  return NS_OK;
-}
-
 nsIHTMLCollection*
 nsHTMLDocument::Anchors()
 {
@@ -1265,13 +1237,6 @@ nsHTMLDocument::Anchors()
     mAnchors = new nsContentList(this, MatchAnchors, nullptr, nullptr);
   }
   return mAnchors;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetScripts(nsIDOMHTMLCollection** aScripts)
-{
-  NS_ADDREF(*aScripts = Scripts());
-  return NS_OK;
 }
 
 nsIHTMLCollection*
@@ -1974,8 +1939,11 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
                                       mDocumentURI);
       return NS_OK;
     }
+    // The spec doesn't tell us to ignore opens from here, but we need to
+    // ensure opens are ignored here.
+    IgnoreOpensDuringUnload ignoreOpenGuard(this);
     mParser->Terminate();
-    NS_ASSERTION(!mParser, "mParser should have been null'd out");
+    MOZ_RELEASE_ASSERT(!mParser, "mParser should have been null'd out");
   }
 
   if (!mParser) {
@@ -2202,13 +2170,6 @@ nsHTMLDocument::SetFgColor(const nsAString& aFgColor)
 }
 
 
-NS_IMETHODIMP
-nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)
-{
-  NS_ADDREF(*aEmbeds = Embeds());
-  return NS_OK;
-}
-
 nsIHTMLCollection*
 nsHTMLDocument::Embeds()
 {
@@ -2241,14 +2202,6 @@ nsHTMLDocument::ReleaseEvents()
 }
 
 // Mapped to document.embeds for NS4 compatibility
-NS_IMETHODIMP
-nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)
-{
-  *aPlugins = nullptr;
-
-  return GetEmbeds(aPlugins);
-}
-
 nsIHTMLCollection*
 nsHTMLDocument::Plugins()
 {
@@ -2330,13 +2283,6 @@ nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames)
 //----------------------------
 
 // forms related stuff
-
-NS_IMETHODIMP
-nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
-{
-  NS_ADDREF(*aForms = nsHTMLDocument::GetForms());
-  return NS_OK;
-}
 
 nsContentList*
 nsHTMLDocument::GetForms()

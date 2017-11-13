@@ -29,7 +29,6 @@ interface nsIDOMHTMLFormElement : nsISupports
            attribute boolean              noValidate;
            attribute DOMString            target;
 
-  readonly attribute nsIDOMHTMLCollection elements;
   readonly attribute long                 length;
 
   void                      submit();

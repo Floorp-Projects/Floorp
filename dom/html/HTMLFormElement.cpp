@@ -175,14 +175,6 @@ HTMLFormElement::Elements()
   return mControls;
 }
 
-NS_IMETHODIMP
-HTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
-{
-  *aElements = Elements();
-  NS_ADDREF(*aElements);
-  return NS_OK;
-}
-
 nsresult
 HTMLFormElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                const nsAttrValueOrString* aValue, bool aNotify)
@@ -1041,9 +1033,7 @@ HTMLFormElement::WalkFormElements(HTMLFormSubmission* aFormSubmission)
 NS_IMETHODIMP_(uint32_t)
 HTMLFormElement::GetElementCount() const
 {
-  uint32_t count = 0;
-  mControls->GetLength(&count);
-  return count;
+  return mControls->Length();
 }
 
 Element*
