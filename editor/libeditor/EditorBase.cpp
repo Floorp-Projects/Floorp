@@ -4072,6 +4072,13 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
   nsCOMPtr<nsIContent> leftNode, rightNode;
   OwningNonNull<nsIContent> nodeToSplit = aSplitPointParent;
   while (true) {
+    // If we meet an orphan node before meeting aNode, we need to stop
+    // splitting.  This is a bug of the caller.
+    nsCOMPtr<nsIContent> parent = nodeToSplit->GetParent();
+    if (NS_WARN_IF(nodeToSplit != &aNode && !parent)) {
+      return -1;
+    }
+
     // Need to insert rules code call here to do things like not split a list
     // if you are after the last <li> or before the first, etc.  For now we
     // just have some smarts about unneccessarily splitting text nodes, which
@@ -4099,15 +4106,12 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
       leftNode = newLeftNode;
     }
 
-    NS_ENSURE_TRUE(nodeToSplit->GetParent(), -1);
-    OwningNonNull<nsIContent> parentNode = *nodeToSplit->GetParent();
-
     if (!didSplit && offset) {
       // Must be "end of text node" case, we didn't split it, just move past it
-      offset = parentNode->IndexOf(nodeToSplit) + 1;
+      offset = parent->IndexOf(nodeToSplit) + 1;
       leftNode = nodeToSplit;
     } else {
-      offset = parentNode->IndexOf(nodeToSplit);
+      offset = parent->IndexOf(nodeToSplit);
       rightNode = nodeToSplit;
     }
 
@@ -4116,7 +4120,7 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
       break;
     }
 
-    nodeToSplit = parentNode;
+    nodeToSplit = *parent;
   }
 
   if (aOutLeftNode) {
