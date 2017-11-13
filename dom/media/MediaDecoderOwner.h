@@ -8,6 +8,10 @@
 
 #include "mozilla/UniquePtr.h"
 #include "MediaInfo.h"
+#include "MediaSegment.h"
+#include "nsSize.h"
+
+class nsIDocument;
 
 namespace mozilla {
 
@@ -173,6 +177,19 @@ public:
   {
     return nullptr;
   }
+
+  // Called by the frame container to notify the layout engine that the
+  // size of the image has changed, or the video needs to be be repainted
+  // for some other reason.
+  virtual void Invalidate(bool aImageSizeChanged,
+                          Maybe<nsIntSize>& aNewIntrinsicSize,
+                          bool aForceInvalidate) {}
+
+  // Called after the MediaStream we're playing rendered a frame to aContainer
+  // with a different principalHandle than the previous frame.
+  virtual void PrincipalHandleChangedForVideoFrameContainer(
+    VideoFrameContainer* aContainer,
+    const PrincipalHandle& aNewPrincipalHandle) {}
 
   /*
    * Servo only methods go here. Please provide default implementations so they
