@@ -4,9 +4,6 @@
 
 package org.mozilla.gecko.sync.repositories;
 
-import android.support.annotation.Nullable;
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -14,7 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
@@ -28,7 +25,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
  * <li>Construct, with a reference to its parent {@link Repository}, by calling
  *   {@link Repository#createSession(org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate, android.content.Context)}.</li>
  * <li>Populate with saved information by calling {@link #unbundle(RepositorySessionBundle)}.</li>
- * <li>Begin a sync by calling {@link #begin(RepositorySessionBeginDelegate)}. <code>begin()</code>
+ * <li>Begin a sync by calling {@link #begin()}. <code>begin()</code>
  *   is an appropriate place to initialize expensive resources.</li>
  * <li>Perform operations such as {@link #fetchModified(RepositorySessionFetchRecordsDelegate)} and
  *   {@link #store(Record)}.</li>
@@ -216,15 +213,13 @@ public abstract class RepositorySession {
   }
 
   /**
-   * Start the session. This is an appropriate place to initialize
-   * data access components such as database handles.
+   * Start the session. Override this in your subclasses to initialize data access components such
+   * as database handles, and otherwise specify what "begin" means for your session.
    *
-   * @param delegate
-   * @throws InvalidSessionTransitionException
+   * @throws InvalidSessionTransitionException if session wasn't {@link SessionStatus#UNSTARTED}.
    */
-  public void begin(RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
+  public void begin() throws SyncException {
     sharedBegin();
-    delegate.deferredBeginDelegate(delegateQueue).onBeginSucceeded(this);
   }
 
   public void unbundle(RepositorySessionBundle bundle) {

@@ -8,12 +8,11 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.SyncDeadlineReachedException;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
-import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
@@ -230,7 +229,7 @@ public class SynchronizerHelpers {
     }
   }
 
-  public static class BeginFailedException extends Exception {
+  public static class BeginFailedException extends SyncException {
     private static final long serialVersionUID = -2349459755976915096L;
   }
 
@@ -251,8 +250,8 @@ public class SynchronizerHelpers {
       }
 
       @Override
-      public void begin(RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
-        delegate.onBeginFailed(new BeginFailedException());
+      public void begin() throws SyncException {
+        throw new BeginFailedException();
       }
     }
   }

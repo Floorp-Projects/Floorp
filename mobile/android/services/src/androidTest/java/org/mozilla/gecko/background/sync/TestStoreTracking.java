@@ -10,7 +10,6 @@ import junit.framework.AssertionFailedError;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
-import org.mozilla.gecko.background.sync.helpers.SimpleSuccessBeginDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessCreationDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessFetchDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessFinishDelegate;
@@ -18,6 +17,7 @@ import org.mozilla.gecko.background.sync.helpers.SimpleSuccessStoreDelegate;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
@@ -151,43 +151,39 @@ public class TestStoreTracking extends AndroidSyncTestCase {
       public void onSessionCreated(final RepositorySession session) {
         Logger.debug(getName(), "Session created.");
         try {
-          session.begin(new SimpleSuccessBeginDelegate() {
-            @Override
-            public void onBeginSucceeded(final RepositorySession session) {
-              // Now we get a result.
-              session.fetchModified(new SimpleSuccessFetchDelegate() {
-
-                @Override
-                public void onFetchedRecord(Record record) {
-                  assertEq(expectedGUID, record.guid);
-                }
-
-                @Override
-                public void onFetchCompleted() {
-                  try {
-                    session.finish(new SimpleSuccessFinishDelegate() {
-                      @Override
-                      public void onFinishSucceeded(RepositorySession session,
-                                                    RepositorySessionBundle bundle) {
-                        // Hooray!
-                        performNotify();
-                      }
-                    });
-                  } catch (InactiveSessionException e) {
-                    performNotify(e);
-                  }
-                }
-
-                @Override
-                public void onBatchCompleted() {
-
-                }
-              });
-            }
-          });
-        } catch (InvalidSessionTransitionException e) {
+          session.begin();
+        } catch (SyncException e) {
+          e.printStackTrace();
           performNotify(e);
         }
+
+        // Now we get a result.
+        session.fetchModified(new SimpleSuccessFetchDelegate() {
+          @Override
+          public void onFetchedRecord(Record record) {
+            assertEq(expectedGUID, record.guid);
+          }
+
+          @Override
+          public void onFetchCompleted() {
+            try {
+              session.finish(new SimpleSuccessFinishDelegate() {
+                @Override
+                public void onFinishSucceeded(RepositorySession session,
+                                              RepositorySessionBundle bundle) {
+                  // Hooray!
+                  performNotify();
+                }
+              });
+            } catch (InactiveSessionException e) {
+              performNotify(e);
+            }
+          }
+
+          @Override
+          public void onBatchCompleted() {
+          }
+        });
       }
     };
     Runnable create = new Runnable() {
@@ -220,15 +216,13 @@ public class TestStoreTracking extends AndroidSyncTestCase {
       public void onSessionCreated(RepositorySession session) {
         Logger.debug(getName(), "Session created: " + session);
         try {
-          session.begin(new SimpleSuccessBeginDelegate() {
-            @Override
-            public void onBeginSucceeded(final RepositorySession session) {
-              doTestStoreRetrieveByGUID(r, session, expectedGUID, record);
-            }
-          });
-        } catch (InvalidSessionTransitionException e) {
+          session.begin();
+        } catch (SyncException e) {
+          e.printStackTrace();
           performNotify(e);
         }
+
+        doTestStoreRetrieveByGUID(r, session, expectedGUID, record);
       }
     };
 
