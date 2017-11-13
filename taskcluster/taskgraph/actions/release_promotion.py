@@ -141,9 +141,10 @@ def is_release_promotion_available(parameters):
 )
 def release_promotion_action(parameters, input, task_group_id, task_id, task):
     release_promotion_flavor = input['release_promotion_flavor']
+    next_version = str(input.get('next_version') or '')
     if release_promotion_flavor in VERSION_BUMP_FLAVORS:
-        next_version = str(input.get('next_version', ''))
-        if next_version == "":
+        # We force str() the input, hence the 'None'
+        if next_version in ['', 'None']:
             raise Exception(
                 "`next_version` property needs to be provided for %s "
                 "targets." % ', '.join(VERSION_BUMP_FLAVORS)
