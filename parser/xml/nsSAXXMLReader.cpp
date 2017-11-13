@@ -36,7 +36,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSAXXMLReader)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSAXXMLReader)
   NS_INTERFACE_MAP_ENTRY(nsISAXXMLReader)
   NS_INTERFACE_MAP_ENTRY(nsIExpatSink)
-  NS_INTERFACE_MAP_ENTRY(nsIExtendedExpatSink)
   NS_INTERFACE_MAP_ENTRY(nsIContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
@@ -49,6 +48,7 @@ nsSAXXMLReader::nsSAXXMLReader()
 }
 
 // nsIContentSink
+
 NS_IMETHODIMP
 nsSAXXMLReader::WillBuildModel(nsDTDMode)
 {
@@ -73,7 +73,8 @@ nsSAXXMLReader::SetParser(nsParserBase *aParser)
   return NS_OK;
 }
 
-// nsIExtendedExpatSink
+// nsIExpatSink
+
 NS_IMETHODIMP
 nsSAXXMLReader::HandleStartElement(const char16_t *aName,
                                    const char16_t **aAtts,
@@ -134,14 +135,6 @@ nsSAXXMLReader::HandleCDataSection(const char16_t *aData,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleStartDTD(const char16_t *aName,
-                               const char16_t *aSystemId,
-                               const char16_t *aPublicId)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSAXXMLReader::HandleDoctypeDecl(const nsAString & aSubset,
                                   const nsAString & aName,
                                   const nsAString & aSystemId,
@@ -162,19 +155,6 @@ nsSAXXMLReader::HandleCharacterData(const char16_t *aData,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleStartNamespaceDecl(const char16_t *aPrefix,
-                                         const char16_t *aUri)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::HandleEndNamespaceDecl(const char16_t *aPrefix)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSAXXMLReader::HandleProcessingInstruction(const char16_t *aTarget,
                                             const char16_t *aData)
 {
@@ -184,25 +164,6 @@ nsSAXXMLReader::HandleProcessingInstruction(const char16_t *aTarget,
                                                   nsDependentString(aData));
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::HandleNotationDecl(const char16_t *aNotationName,
-                                   const char16_t *aSystemId,
-                                   const char16_t *aPublicId)
-{
-  NS_ASSERTION(aNotationName, "null passed to handler");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::HandleUnparsedEntityDecl(const char16_t *aEntityName,
-                                         const char16_t *aSystemId,
-                                         const char16_t *aPublicId,
-                                         const char16_t *aNotationName)
-{
-  NS_ASSERTION(aEntityName && aNotationName, "null passed to handler");
   return NS_OK;
 }
 
