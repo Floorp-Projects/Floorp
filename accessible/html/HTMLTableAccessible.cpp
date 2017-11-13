@@ -22,7 +22,7 @@
 #include "nsIDOMRange.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMHTMLCollection.h"
+#include "nsIHTMLCollection.h"
 #include "nsIDocument.h"
 #include "nsIMutableArray.h"
 #include "nsIPersistentProperties2.h"

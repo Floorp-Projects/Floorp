@@ -506,8 +506,7 @@ nsContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsContentList, nsBaseContentList,
-                            nsIHTMLCollection, nsIDOMHTMLCollection,
-                            nsIMutationObserver)
+                            nsIHTMLCollection, nsIMutationObserver)
 
 uint32_t
 nsContentList::Length(bool aDoFlush)

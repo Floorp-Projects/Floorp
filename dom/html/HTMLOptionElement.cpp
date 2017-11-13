@@ -13,7 +13,6 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMHTMLCollection.h"
 #include "nsISelectControlFrame.h"
 
 // Notify/query select frame for selected state
