@@ -455,7 +455,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             scriptBits |= (1 << OwnSource);
         if (script->isGenerator())
             scriptBits |= (1 << IsGenerator);
-        if (script->asyncKind() == AsyncFunction)
+        if (script->isAsync())
             scriptBits |= (1 << IsAsync);
         if (script->hasRest())
             scriptBits |= (1 << HasRest);
@@ -627,7 +627,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         if (scriptBits & (1 << IsGenerator))
             script->setGeneratorKind(GeneratorKind::Generator);
         if (scriptBits & (1 << IsAsync))
-            script->setAsyncKind(AsyncFunction);
+            script->setAsyncKind(FunctionAsyncKind::AsyncFunction);
         if (scriptBits & (1 << HasRest))
             script->setHasRest();
         if (scriptBits & (1 << IsExprBody))
@@ -3621,7 +3621,7 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->isDerivedClassConstructor_ = src->isDerivedClassConstructor();
     dst->needsHomeObject_ = src->needsHomeObject();
     dst->isDefaultClassConstructor_ = src->isDefaultClassConstructor();
-    dst->isAsync_ = src->asyncKind() == AsyncFunction;
+    dst->isAsync_ = src->isAsync_;
     dst->hasRest_ = src->hasRest_;
     dst->isExprBody_ = src->isExprBody_;
 
@@ -4375,7 +4375,7 @@ LazyScript::Create(JSContext* cx, HandleFunction fun,
     p.isExprBody = false;
     p.numClosedOverBindings = closedOverBindings.length();
     p.numInnerFunctions = innerFunctions.length();
-    p.generatorKind = GeneratorKindAsBit(GeneratorKind::NotGenerator);
+    p.isGenerator = false;
     p.strict = false;
     p.bindingsAccessedDynamically = false;
     p.hasDebuggerStatement = false;

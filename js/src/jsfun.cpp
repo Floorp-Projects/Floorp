@@ -1732,7 +1732,7 @@ CreateDynamicFunction(JSContext* cx, const CallArgs& args, GeneratorKind generat
     }
 
     bool isGenerator = generatorKind == GeneratorKind::Generator;
-    bool isAsync = asyncKind == AsyncFunction;
+    bool isAsync = asyncKind == FunctionAsyncKind::AsyncFunction;
 
     RootedScript maybeScript(cx);
     const char* filename;
@@ -1931,28 +1931,32 @@ bool
 js::Function(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CreateDynamicFunction(cx, args, GeneratorKind::NotGenerator, SyncFunction);
+    return CreateDynamicFunction(cx, args, GeneratorKind::NotGenerator,
+                                 FunctionAsyncKind::SyncFunction);
 }
 
 bool
 js::Generator(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CreateDynamicFunction(cx, args, GeneratorKind::Generator, SyncFunction);
+    return CreateDynamicFunction(cx, args, GeneratorKind::Generator,
+                                 FunctionAsyncKind::SyncFunction);
 }
 
 bool
 js::AsyncFunctionConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CreateDynamicFunction(cx, args, GeneratorKind::NotGenerator, AsyncFunction);
+    return CreateDynamicFunction(cx, args, GeneratorKind::NotGenerator,
+                                 FunctionAsyncKind::AsyncFunction);
 }
 
 bool
 js::AsyncGeneratorConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CreateDynamicFunction(cx, args, GeneratorKind::Generator, AsyncFunction);
+    return CreateDynamicFunction(cx, args, GeneratorKind::Generator,
+                                 FunctionAsyncKind::AsyncFunction);
 }
 
 bool

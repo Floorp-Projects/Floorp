@@ -646,7 +646,7 @@ class ParseContext : public Nestable<ParseContext>
     }
 
     FunctionAsyncKind asyncKind() const {
-        return isAsync() ? AsyncFunction : SyncFunction;
+        return isAsync() ? FunctionAsyncKind::AsyncFunction : FunctionAsyncKind::SyncFunction;
     }
 
     bool isArrowFunction() const {
