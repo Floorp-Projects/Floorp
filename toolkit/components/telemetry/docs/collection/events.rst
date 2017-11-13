@@ -5,7 +5,7 @@ Events
 ======
 
 Across the different Firefox initiatives, there is a common need for a mechanism for recording, storing, sending & analysing application usage in an event-oriented format.
-*Event Telemetry* specifies a common events dataformat, which allows for broader, shared usage of data processing tools.
+*Event Telemetry* specifies a common events data format, which allows for broader, shared usage of data processing tools.
 
 For events recorded into Firefox Telemetry we also provide an API that opaquely handles storage and submission to our servers.
 

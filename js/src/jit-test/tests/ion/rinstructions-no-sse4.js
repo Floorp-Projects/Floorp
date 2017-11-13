@@ -18,6 +18,18 @@ let uceFault = function (i) {
     return false;
 };
 
+let uceFault_ceil_double = eval(
+    uneval(uceFault)
+        .replace('uceFault', 'uceFault_ceil_double')
+);
+function rceil_double(i) {
+    const x = Math.ceil(i + (-1 >>> 0));
+    if (uceFault_ceil_double(i) || uceFault_ceil_double(i))
+        assertEq(x, 99 + (-1 >>> 0)); /* = i + 2 ^ 32 - 1 */
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 let uceFault_floor_double = eval(
     uneval(uceFault)
         .replace('uceFault', 'uceFault_floor_double')
@@ -33,5 +45,6 @@ function rfloor_double(i) {
 for (let j = 100 - max; j < 100; j++) {
     with({}){} // Do not Ion-compile this loop.
     const i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
+    rceil_double(i);
     rfloor_double(i);
 }

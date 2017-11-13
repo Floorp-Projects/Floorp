@@ -495,11 +495,29 @@ function rfloor_object(i) {
     return i;
 }
 
+let uceFault_floor_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_double'));
+function rfloor_double(i) {
+    const x = Math.floor(i + (-1 >>> 0));
+    if (uceFault_floor_double(i) || uceFault_floor_double(i))
+        assertEq(x, 99 + (-1 >>> 0)); /* = i + 2 ^ 32 - 1 */
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 var uceFault_ceil_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_ceil_number'));
 function rceil_number(i) {
     var x = Math.ceil(-i - 0.12010799100);
     if (uceFault_ceil_number(i) || uceFault_ceil_number(i))
         assertEq(x, -i);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+let uceFault_ceil_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_ceil_double'));
+function rceil_double(i) {
+    const x = Math.floor(i + (-1 >>> 0));
+    if (uceFault_ceil_double(i) || uceFault_ceil_double(i))
+        assertEq(x, 99 + (-1 >>> 0)); /* = i + 2 ^ 32 - 1 */
     assertRecoveredOnBailout(x, true);
     return i;
 }
@@ -1391,8 +1409,10 @@ for (j = 100 - max; j < 100; j++) {
     rinline_arguments_length_1(i);
     rinline_arguments_length_3(i, 0, 1);
     rfloor_number(i);
+    rfloor_double(i);
     rfloor_object(i);
     rceil_number(i);
+    rceil_double(i);
     rround_number(i);
     rround_double(i);
     rcharCodeAt(i);

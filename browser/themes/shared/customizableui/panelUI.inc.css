@@ -237,35 +237,6 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
 }
 
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
-  line-height: 1.2;
-  max-height: 2.4em;
-}
-
-.panelUI-grid .toolbarbutton-1:not([auto-hyphens="off"]) > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
-.panelUI-grid .toolbarbutton-1:not([auto-hyphens="off"]) > .toolbarbutton-multiline-text {
-  -moz-hyphens: auto;
-}
-
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
-  position: absolute;
-  clip: rect(-0.1em, auto, 2.6em, auto);
-}
-
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-text,
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
-  text-align: center;
-  /* Need to override toolkit theming which sets margin: 0 !important; */
-  margin: 2px 0 0 !important;
-}
-
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text {
-  text-align: center;
-  margin: -1px 0 0;
-}
-
 #wrapper-edit-controls:-moz-any([place="palette"],[place="panel"]) > #edit-controls,
 #wrapper-zoom-controls:-moz-any([place="palette"],[place="panel"]) > #zoom-controls {
   margin-inline-start: 0;
@@ -416,42 +387,10 @@ photonpanelmultiview .panel-subview-body {
   padding-bottom: 0;
 }
 
-#PanelUI-contents {
-  display: block;
-  flex: 1 0 auto;
-  margin-left: auto;
-  margin-right: auto;
-  padding: .5em 0;
-  max-width: @menuPanelWidth@;
-}
-
-#PanelUI-contents-scroller {
-  -moz-box-flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  width: @menuPanelWidth@;
-  padding-left: 5px;
-  padding-right: 5px;
-  -moz-box-align: center;
-}
-
-/* Allow box layout to take over when the view exceeds the available space. */
-#PanelUI-mainView:not([exceeding]) > #PanelUI-contents-scroller {
-  display: flex;
-}
-
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon {
   min-width: 0;
   min-height: 0;
   margin: 0;
-}
-
-.panelUI-grid .toolbarbutton-1,
-.panel-customization-placeholder-child {
-  -moz-appearance: none;
-  -moz-box-orient: vertical;
-  width: calc(@menuPanelButtonWidth@);
-  height: calc(51px + 2.2em);
 }
 
 .animate-out {
@@ -495,8 +434,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 /* above we treat the container as the icon for the margins, that is so the
 /* badge itself is positioned correctly. Here we make sure that the icon itself
 /* has the minimum size we want, but no padding/margin. */
-.customization-palette .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+.customization-palette .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   width: @panelPaletteIconSize@;
   height: @panelPaletteIconSize@;
   min-width: @panelPaletteIconSize@;

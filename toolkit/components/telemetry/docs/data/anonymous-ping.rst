@@ -1,6 +1,10 @@
 
 "anonymous" ping
-============
+================
+
+.. note::
+
+    This ping is no longer sent by Firefox or Fennec.
 
 This ping is only for product survey purpose and will not track/associate client ID. It's used
 to evaluate custom tab usage and see which app is using our custom tab.

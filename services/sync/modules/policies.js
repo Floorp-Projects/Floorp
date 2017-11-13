@@ -134,6 +134,7 @@ SyncScheduler.prototype = {
 
     if (Status.checkSetup() == STATUS_OK) {
       Svc.Obs.add("wake_notification", this);
+      Svc.Obs.add("captive-portal-login-success", this);
       IdleService.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
     }
   },
@@ -275,6 +276,7 @@ SyncScheduler.prototype = {
          Services.prefs.savePrefFile(null);
          IdleService.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
          Svc.Obs.add("wake_notification", this);
+         Svc.Obs.add("captive-portal-login-success", this);
          break;
       case "weave:service:start-over":
          this.setDefaults();
@@ -322,6 +324,12 @@ SyncScheduler.prototype = {
             this._log.debug("More than 1 client. Will sync in 5s.");
             this.scheduleNextSync(5000);
           }
+        });
+        break;
+      case "captive-portal-login-success":
+        this._log.debug("Captive portal login success. Scheduling a sync.");
+        CommonUtils.nextTick(() => {
+          this.scheduleNextSync(3000);
         });
         break;
     }

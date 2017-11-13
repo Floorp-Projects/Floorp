@@ -652,13 +652,13 @@ gfxUtils::ClipToRegion(DrawTarget* aTarget, const nsIntRegion& aRegion)
   }
 }
 
-/*static*/ gfxFloat
-gfxUtils::ClampToScaleFactor(gfxFloat aVal, bool aRoundDown)
+/*static*/ float
+gfxUtils::ClampToScaleFactor(float aVal, bool aRoundDown)
 {
   // Arbitary scale factor limitation. We can increase this
   // for better scaling performance at the cost of worse
   // quality.
-  static const gfxFloat kScaleResolution = 2;
+  static const float kScaleResolution = 2;
 
   // Negative scaling is just a flip and irrelevant to
   // our resolution calculation.
@@ -672,7 +672,7 @@ gfxUtils::ClampToScaleFactor(gfxFloat aVal, bool aRoundDown)
     aVal = 1 / aVal;
   }
 
-  gfxFloat power = log(aVal)/log(kScaleResolution);
+  float power = logf(aVal)/logf(kScaleResolution);
 
   // If power is within 1e-5 of an integer, round to nearest to
   // prevent floating point errors, otherwise round up to the
@@ -689,7 +689,7 @@ gfxUtils::ClampToScaleFactor(gfxFloat aVal, bool aRoundDown)
     power = ceil(power);
   }
 
-  gfxFloat scale = pow(kScaleResolution, power);
+  float scale = powf(kScaleResolution, power);
 
   if (inverse) {
     scale = 1 / scale;
