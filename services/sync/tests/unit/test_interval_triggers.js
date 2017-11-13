@@ -41,7 +41,7 @@ async function setUp(server) {
   await generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
   await serverKeys.encrypt(Service.identity.syncKeyBundle);
-  serverKeys.upload(Service.resource(Service.cryptoKeysURL));
+  await serverKeys.upload(Service.resource(Service.cryptoKeysURL));
 }
 
 add_task(async function setup() {
