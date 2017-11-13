@@ -2027,6 +2027,24 @@ toolbar#nav-bar {
 
         return foundZombie
 
+    def checkForRunningBrowsers(self):
+        firefoxes = ""
+        if HAVE_PSUTIL:
+            attrs = ['pid', 'ppid', 'name', 'cmdline', 'username']
+            for proc in psutil.process_iter():
+                try:
+                    if 'firefox' in proc.name():
+                        firefoxes = "%s%s\n" % (firefoxes, proc.as_dict(attrs=attrs))
+                except:
+                    # may not be able to access process info for all processes
+                    continue
+        if len(firefoxes) > 0:
+            # In automation, this warning is unexpected and should be investigated.
+            # In local testing, this is probably okay, as long as the browser is not
+            # running a marionette server.
+            self.log.warning("Found 'firefox' running before starting test browser!")
+            self.log.warning(firefoxes)
+
     def runApp(self,
                testUrl,
                env,
@@ -2148,6 +2166,8 @@ toolbar#nav-bar {
                          'cwd': SCRIPT_DIR,
                          'onTimeout': [timeoutHandler]}
             kp_kwargs['processOutputLine'] = [outputHandler]
+
+            self.checkForRunningBrowsers()
 
             # create mozrunner instance and start the system under test process
             self.lastTestSeen = self.test_name
