@@ -46,8 +46,33 @@ function test() {
     prefsBtn = aManager.document.getAnonymousElementByAttribute(addonItem,
                                                                 "anonid",
                                                                 "preferences-btn");
-    is(prefsBtn.hidden, true, "Prefs button should not be shown for addon with just an optionsURL set");
+    is(prefsBtn.hidden, false, "Prefs button should be shown for addon with a optionsURL set");
 
-    close_manager(aManager, finish);
+    Services.ww.registerNotification(function TEST_ww_observer(aSubject, aTopic, aData) {
+      if (aTopic == "domwindowclosed") {
+        Services.ww.unregisterNotification(TEST_ww_observer);
+        // Give the preference window a chance to finish closing before closing
+        // the add-ons manager.
+        executeSoon(function() {
+          close_manager(aManager, finish);
+        });
+      } else if (aTopic == "domwindowopened") {
+        let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+        win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+        win.addEventListener("load", function TEST_ww_onLoad() {
+          if (win.location != addonPrefsURI)
+            return;
+
+          win.removeEventListener("load", TEST_ww_onLoad);
+          is(win.location, addonPrefsURI,
+             "The correct addon pref window should have opened");
+          win.close();
+        });
+      }
+    });
+
+    addonList.ensureElementIsVisible(addonItem);
+    EventUtils.synthesizeMouseAtCenter(prefsBtn, { }, aManager);
   });
+
 }

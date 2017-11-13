@@ -57,12 +57,10 @@ var PluginProvider = {
         if (!plugin)
           return;
 
-        let document = aSubject.getElementById("addon-options").contentDocument;
-
-        let libLabel = document.getElementById("pluginLibraries");
+        let libLabel = aSubject.getElementById("pluginLibraries");
         libLabel.textContent = plugin.pluginLibraries.join(", ");
 
-        let typeLabel = document.getElementById("pluginMimeTypes"), types = [];
+        let typeLabel = aSubject.getElementById("pluginMimeTypes"), types = [];
         for (let type of plugin.pluginMimeTypes) {
           let extras = [type.description.trim(), type.suffixes].
                        filter(x => x).join(": ");
@@ -70,7 +68,7 @@ var PluginProvider = {
         }
         typeLabel.textContent = types.join(",\n");
         let showProtectedModePref = canDisableFlashProtectedMode(plugin);
-        document.getElementById("pluginEnableProtectedMode")
+        aSubject.getElementById("pluginEnableProtectedMode")
           .setAttribute("collapsed", showProtectedModePref ? "" : "true");
       });
       break;
@@ -527,7 +525,7 @@ PluginWrapper.prototype = {
   },
 
   get optionsType() {
-    return AddonManager.OPTIONS_TYPE_INLINE_BROWSER;
+    return AddonManager.OPTIONS_TYPE_INLINE;
   },
 
   get optionsURL() {
