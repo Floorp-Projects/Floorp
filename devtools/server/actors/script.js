@@ -1949,7 +1949,15 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * @returns true, if the source was added; false otherwise.
    */
   _addSource: function (source) {
-    if (!this.sources.allowSource(source) || this._debuggerSourcesSeen.has(source)) {
+    if (!this.sources.allowSource(source)) {
+      return false;
+    }
+
+    // Preloaded WebExtension content scripts may be cached internally by
+    // ExtensionContent.jsm and ThreadActor would ignore them on a page reload
+    // because it finds them in the _debuggerSourcesSeen WeakSet,
+    // and so we also need to be sure that there is still a source actor for the source.
+    if (this._debuggerSourcesSeen.has(source) && this.sources.hasSourceActor(source)) {
       return false;
     }
 
