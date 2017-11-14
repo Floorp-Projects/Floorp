@@ -50,6 +50,12 @@ add_task(function* () {
     "UTF-16LE": "%FF%FE"
   };
 
+  // Test double BOM.
+  tests.push(Object.entries(bom).reduce((obj, [prop, value]) => {
+    obj[prop + " with BOM"] = value;
+    return obj;
+  }, {[text]: "\uFEFF"}));
+
   for (let test of tests) {
     let result = test[text];
     for (let [encoding, data] of Object.entries(test)) {
