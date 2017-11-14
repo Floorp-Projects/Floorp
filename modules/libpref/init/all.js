@@ -2779,22 +2779,6 @@ pref("general.smoothScroll.msdPhysics.slowdownMinDeltaRatio", "1.3");
 pref("general.smoothScroll.msdPhysics.slowdownSpringConstant", 2000);
 pref("general.smoothScroll.msdPhysics.regularSpringConstant", 1000);
 
-pref("profile.confirm_automigration",true);
-// profile.migration_behavior determines how the profiles root is set
-// 0 - use NS_APP_USER_PROFILES_ROOT_DIR
-// 1 - create one based on the NS4.x profile root
-// 2 - use, if not empty, profile.migration_directory otherwise same as 0
-pref("profile.migration_behavior",0);
-pref("profile.migration_directory", "");
-
-// the amount of time (in seconds) that must elapse
-// before we think your mozilla profile is defunct
-// and you'd benefit from re-migrating from 4.x
-// see bug #137886 for more details
-//
-// if -1, we never think your profile is defunct
-// and users will never see the remigrate UI.
-pref("profile.seconds_until_defunct", -1);
 // We can show it anytime from menus
 pref("profile.manage_only_at_launch", false);
 
