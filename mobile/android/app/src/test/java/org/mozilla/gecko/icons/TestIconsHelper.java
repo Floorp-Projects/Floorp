@@ -33,8 +33,8 @@ public class TestIconsHelper {
                 IconsHelper.guessDefaultFaviconURL("about:home"));
 
         Assert.assertEquals(
-                "about:",
-                IconsHelper.guessDefaultFaviconURL("about:"));
+                "about:firefox",
+                IconsHelper.guessDefaultFaviconURL("about:firefox"));
 
         Assert.assertEquals(
                 "about:addons",
