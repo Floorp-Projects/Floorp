@@ -1006,6 +1006,11 @@ WrIdNamespace wr_api_get_namespace(DocumentHandle *aDh)
 WR_FUNC;
 
 WR_INLINE
+void wr_api_remove_pipeline(DocumentHandle *aDh,
+                            WrPipelineId aPipelineId)
+WR_FUNC;
+
+WR_INLINE
 void wr_api_send_external_event(DocumentHandle *aDh,
                                 size_t aEvt)
 WR_DESTRUCTOR_SAFE_FUNC;

@@ -126,7 +126,7 @@ ca_context_get_default()
     }
 
     nsAutoString wbrand;
-    WidgetUtils::GetBrandShortName(wbrand);
+    mozilla::widget::WidgetUtils::GetBrandShortName(wbrand);
     ca_context_change_props(ctx, "application.name",
                             NS_ConvertUTF16toUTF8(wbrand).get(),
                             nullptr);
@@ -225,7 +225,7 @@ nsSound::GetInstance()
 
     if (!sInstance) {
         if (gfxPlatform::IsHeadless()) {
-            sInstance = new widget::HeadlessSound();
+            sInstance = new mozilla::widget::HeadlessSound();
         } else {
             sInstance = new nsSound();
         }

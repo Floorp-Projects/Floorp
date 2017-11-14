@@ -116,6 +116,9 @@ function NetworkEventMessage({
     sendHTTPRequest: () => {},
     setPreferences: () => {},
     triggerActivity: () => {},
+    requestData: (requestId, dataType) => {
+      return serviceContainer.requestData(requestId, dataType);
+    },
   };
 
   // Only render the attachment if the network-event is

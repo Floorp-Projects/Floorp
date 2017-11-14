@@ -301,15 +301,6 @@
   text-align: start;
 }
 
-.requests-list-icon {
-  background: transparent;
-  width: 15px;
-  height: 15px;
-  margin: 0 4px;
-  outline: 1px solid var(--table-splitter-color);
-  vertical-align: top;
-}
-
 /* Protocol column */
 
 .requests-list-protocol {
