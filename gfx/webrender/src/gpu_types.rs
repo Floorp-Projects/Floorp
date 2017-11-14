@@ -31,7 +31,7 @@ pub struct BlurInstance {
 #[repr(C)]
 pub struct ClipMaskInstance {
     pub render_task_address: RenderTaskAddress,
-    pub scroll_node_id: ClipScrollNodeIndex,
+    pub scroll_node_data_index: ClipScrollNodeIndex,
     pub segment: i32,
     pub clip_data_address: GpuCacheAddress,
     pub resource_address: GpuCacheAddress,
