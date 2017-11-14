@@ -197,9 +197,23 @@ private:
   GlobalAllocPolicy& mPolicy; // reference to a singleton object.
 };
 
+static int32_t
+MediaDecoderLimitDefault()
+{
+#ifdef MOZ_WIDGET_ANDROID
+  if (jni::GetAPIVersion() < 18) {
+    // Older Android versions have broken support for multiple simultaneous
+    // decoders, see bug 1278574.
+    return 1;
+  }
+#endif
+  // Otherwise, set no decoder limit.
+  return -1;
+}
+
 GlobalAllocPolicy::GlobalAllocPolicy()
   : mMonitor("DecoderAllocPolicy::mMonitor")
-  , mDecoderLimit(MediaPrefs::MediaDecoderLimit())
+  , mDecoderLimit(MediaDecoderLimitDefault())
 {
   SystemGroup::Dispatch(
     TaskCategory::Other,

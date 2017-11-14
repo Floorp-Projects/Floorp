@@ -149,10 +149,7 @@ BaselineCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun)
 {
     MOZ_ASSERT(inStubFrame_);
 
-    JitCode* code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
-    if (!code)
-        return false;
-
+    uint8_t* code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
     MOZ_ASSERT(fun.expectTailCall == NonTailCall);
     MOZ_ASSERT(engine_ == ICStubEngine::Baseline);
 

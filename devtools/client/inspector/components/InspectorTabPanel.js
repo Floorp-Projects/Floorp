@@ -6,10 +6,12 @@
 
 "use strict";
 
-const { DOM, Component, PropTypes } = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Shortcuts
-const { div } = DOM;
+const { div } = dom;
 
 /**
  * Helper panel component that is using an existing DOM node
