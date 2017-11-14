@@ -96,6 +96,9 @@ NewConsoleOutputWrapper.prototype = {
         getLongString: (grip) => {
           return hud.proxy.webConsoleClient.getString(grip);
         },
+        requestData(id, type) {
+          return hud.proxy.networkDataProvider.requestData(id, type);
+        },
       };
 
       // Set `openContextMenu` this way so, `serviceContainer` variable

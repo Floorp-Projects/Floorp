@@ -439,6 +439,12 @@ WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
 }
 
 void
+WebRenderAPI::RemovePipeline(PipelineId aPipeline)
+{
+  wr_api_remove_pipeline(mDocHandle, aPipeline);
+}
+
+void
 WebRenderAPI::UpdateResources(ResourceUpdateQueue& aUpdates)
 {
   wr_api_update_resources(mDocHandle, aUpdates.Raw());

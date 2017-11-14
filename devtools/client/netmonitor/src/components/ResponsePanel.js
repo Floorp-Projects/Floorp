@@ -41,6 +41,7 @@ class ResponsePanel extends Component {
     return {
       request: PropTypes.object.isRequired,
       openLink: PropTypes.func,
+      connector: PropTypes.object.isRequired,
     };
   }
 
@@ -56,6 +57,36 @@ class ResponsePanel extends Component {
 
     this.updateImageDimemsions = this.updateImageDimemsions.bind(this);
     this.isJSON = this.isJSON.bind(this);
+  }
+
+  /**
+   * `componentDidMount` is called when opening the ResponsePanel for the first time
+   */
+  componentDidMount() {
+    this.maybeFetchResponseContent(this.props);
+  }
+
+  /**
+   * `componentWillReceiveProps` is the only method called when switching between two
+   * requests while the response panel is displayed.
+   */
+  componentWillReceiveProps(nextProps) {
+    this.maybeFetchResponseContent(nextProps);
+  }
+
+  /**
+   * When switching to another request, lazily fetch response content
+   * from the backend. The Response Panel will first be empty and then
+   * display the content.
+   */
+  maybeFetchResponseContent(props) {
+    if (props.request.responseContentAvailable &&
+        (!props.request.responseContent ||
+         !props.request.responseContent.content)) {
+      // This method will set `props.request.responseContent.content`
+      // asynchronously and force another render.
+      props.connector.requestData(props.request.id, "responseContent");
+    }
   }
 
   updateImageDimemsions({ target }) {

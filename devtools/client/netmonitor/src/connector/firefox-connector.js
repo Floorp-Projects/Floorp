@@ -22,6 +22,7 @@ class FirefoxConnector {
     this.triggerActivity = this.triggerActivity.bind(this);
     this.getTabTarget = this.getTabTarget.bind(this);
     this.viewSourceInDebugger = this.viewSourceInDebugger.bind(this);
+    this.requestData = this.requestData.bind(this);
 
     // Internals
     this.getLongString = this.getLongString.bind(this);
@@ -284,6 +285,10 @@ class FirefoxConnector {
     if (this.toolbox) {
       this.toolbox.viewSourceInDebugger(sourceURL, sourceLine);
     }
+  }
+
+  requestData(request, type) {
+    return this.dataProvider.requestData(request, type);
   }
 }
 
