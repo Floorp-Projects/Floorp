@@ -703,6 +703,21 @@ TransceiverImpl::UpdateAudioConduit()
                           " ConfigureRecvMediaCodecs failed: " << error);
       return NS_ERROR_FAILURE;
     }
+
+    const SdpExtmapAttributeList::Extmap* audioLevelExt =
+        details.GetExt(webrtc::RtpExtension::kAudioLevelUri);
+    if (audioLevelExt) {
+      MOZ_MTLOG(ML_DEBUG, "Calling EnableAudioLevelExtension");
+      error = conduit->EnableAudioLevelExtension(true,
+                                                 audioLevelExt->entry,
+                                                 true);
+
+      if (error) {
+        MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
+                            " EnableAudioLevelExtension failed: " << error);
+        return NS_ERROR_FAILURE;
+      }
+    }
   }
 
   if (mJsepTransceiver->mSendTrack.GetNegotiatedDetails() &&
@@ -740,7 +755,9 @@ TransceiverImpl::UpdateAudioConduit()
 
     if (audioLevelExt) {
       MOZ_MTLOG(ML_DEBUG, "Calling EnableAudioLevelExtension");
-      error = conduit->EnableAudioLevelExtension(true, audioLevelExt->entry);
+      error = conduit->EnableAudioLevelExtension(true,
+                                                 audioLevelExt->entry,
+                                                 false);
 
       if (error) {
         MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
@@ -1070,6 +1087,34 @@ bool
 TransceiverImpl::IsVideo() const
 {
   return mJsepTransceiver->GetMediaType() == SdpMediaSection::MediaType::kVideo;
+}
+
+void TransceiverImpl::GetRtpSources(const int64_t aTimeNow,
+    nsTArray<dom::RTCRtpSourceEntry>& outSources) const
+{
+  if (IsVideo()) {
+    return;
+  }
+  WebrtcAudioConduit *audio_conduit =
+    static_cast<WebrtcAudioConduit*>(mConduit.get());
+  audio_conduit->GetRtpSources(aTimeNow, outSources);
+}
+
+
+void TransceiverImpl::InsertAudioLevelForContributingSource(uint32_t aSource,
+                                                            int64_t aTimestamp,
+                                                            bool aHasLevel,
+                                                            uint8_t aLevel)
+{
+  if (IsVideo()) {
+    return;
+  }
+  WebrtcAudioConduit *audio_conduit =
+    static_cast<WebrtcAudioConduit*>(mConduit.get());
+  audio_conduit->InsertAudioLevelForContributingSource(aSource,
+                                                       aTimestamp,
+                                                       aHasLevel,
+                                                       aLevel);
 }
 
 } // namespace mozilla

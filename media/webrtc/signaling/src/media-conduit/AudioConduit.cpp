@@ -285,6 +285,48 @@ bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
   return result != -1;
 }
 
+void
+WebrtcAudioConduit::OnRtpPacket(const webrtc::WebRtcRTPHeader* aHeader,
+                                const int64_t aTimestamp,
+                                const uint32_t aJitter) {
+  mRtpSourceObserver.OnRtpPacket(aHeader, aTimestamp, aJitter);
+}
+
+void
+WebrtcAudioConduit::GetRtpSources(const int64_t aTimeNow,
+                                  nsTArray<dom::RTCRtpSourceEntry>& outSources)
+{
+  return mRtpSourceObserver.GetRtpSources(aTimeNow, outSources);
+}
+
+// test-only: inserts a CSRC entry in a RtpSourceObserver's history for
+// getContributingSources mochitests
+void InsertAudioLevelForContributingSource(RtpSourceObserver& observer,
+                                           uint32_t aCsrcSource,
+                                           int64_t aTimestamp,
+                                           bool aHasAudioLevel,
+                                           uint8_t aAudioLevel)
+{
+  using EntryType = dom::RTCRtpSourceEntryType;
+  auto key = RtpSourceObserver::GetKey(aCsrcSource, EntryType::Contributing);
+  auto& hist = observer.mRtpSources[key];
+  hist.Insert(aTimestamp, aTimestamp, aHasAudioLevel, aAudioLevel);
+}
+
+
+void
+WebrtcAudioConduit::InsertAudioLevelForContributingSource(uint32_t aCsrcSource,
+                                                          int64_t aTimestamp,
+                                                          bool aHasAudioLevel,
+                                                          uint8_t aAudioLevel)
+{
+  mozilla::InsertAudioLevelForContributingSource(mRtpSourceObserver,
+                                                 aCsrcSource,
+                                                 aTimestamp,
+                                                 aHasAudioLevel,
+                                                 aAudioLevel);
+}
+
 /*
  * WebRTCAudioConduit Implementation
  */
@@ -371,6 +413,7 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
   webrtc::VoiceEngineImpl* s = static_cast<webrtc::VoiceEngineImpl*>(mVoiceEngine);
   mChannelProxy = s->GetChannelProxy(mChannel);
   MOZ_ASSERT(mChannelProxy);
+  mChannelProxy->SetRtpPacketObserver(this);
 
   CSFLogDebug(LOGTAG, "%s Channel Created %d ",__FUNCTION__, mChannel);
 
