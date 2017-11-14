@@ -7,8 +7,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <string>
-#include <vector>
 
 #include "base/basictypes.h"
 #include "GeckoProfiler.h"
@@ -34,6 +32,7 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/URLPreloader.h"
 #include "mozilla/Variant.h"
+#include "mozilla/Vector.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAutoPtr.h"
 #include "nsCategoryManagerUtils.h"
@@ -758,12 +757,14 @@ PREF_ClearAllUserPrefs()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  std::vector<std::string> prefStrings;
+  Vector<const char*> prefNames;
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
     if (pref->mPrefFlags.HasUserValue()) {
-      prefStrings.push_back(std::string(pref->mKey));
+      if (!prefNames.append(pref->mKey)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
 
       pref->mPrefFlags.SetHasUserValue(false);
       if (!pref->mPrefFlags.HasDefault()) {
@@ -772,8 +773,8 @@ PREF_ClearAllUserPrefs()
     }
   }
 
-  for (std::string& prefString : prefStrings) {
-    pref_DoCallback(prefString.c_str());
+  for (const char* prefName : prefNames) {
+    pref_DoCallback(prefName);
   }
 
   Preferences::HandleDirty();
