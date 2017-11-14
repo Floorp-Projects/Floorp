@@ -6,6 +6,7 @@
 
 #include "ClientValidation.h"
 
+#include "ClientPrefs.h"
 #include "mozilla/net/MozURL.h"
 
 namespace mozilla {
@@ -71,6 +72,111 @@ ClientIsValidPrincipalInfo(const PrincipalInfo& aPrincipalInfo)
   }
 
   // Windows and workers should not have expanded URLs, etc.
+  return false;
+}
+
+bool
+ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
+                         const nsACString& aURL)
+{
+  RefPtr<MozURL> url;
+  nsresult rv = MozURL::Init(getter_AddRefs(url), aURL);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  switch (aPrincipalInfo.type()) {
+    case PrincipalInfo::TContentPrincipalInfo:
+    {
+      // Any origin can create an about:blank or about:srcdoc Client.
+      if (aURL.LowerCaseEqualsLiteral("about:blank") ||
+          aURL.LowerCaseEqualsLiteral("about:srcdoc")) {
+        return true;
+      }
+
+      const ContentPrincipalInfo& content =
+        aPrincipalInfo.get_ContentPrincipalInfo();
+
+      // Parse the principal origin URL as well.  This ensures any MozURL
+      // parser issues effect both URLs equally.
+      RefPtr<MozURL> principalURL;
+      rv = MozURL::Init(getter_AddRefs(principalURL),
+                        content.originNoSuffix().get_nsCString());
+      NS_ENSURE_SUCCESS(rv, false);
+
+      nsAutoCString origin;
+      rv = url->GetOrigin(origin);
+      NS_ENSURE_SUCCESS(rv, false);
+
+      nsAutoCString principalOrigin;
+      rv = principalURL->GetOrigin(principalOrigin);
+      NS_ENSURE_SUCCESS(rv, false);
+
+      // The vast majority of sites should simply result in the same principal
+      // and URL origin.
+      if (principalOrigin == origin) {
+        return true;
+      }
+
+      nsAutoCString scheme;
+      rv = url->GetScheme(scheme);
+      NS_ENSURE_SUCCESS(rv, false);
+
+      // Generally any origin can also open javascript: windows and workers.
+      if (scheme.LowerCaseEqualsLiteral("javascript")) {
+        return true;
+      }
+
+      // We have some tests that use data: URL windows without an opaque
+      // origin.  This should only happen when a pref is set.
+      if (!ClientPrefsGetDataURLUniqueOpaqueOrigin() &&
+          scheme.LowerCaseEqualsLiteral("data")) {
+        return true;
+      }
+
+      nsAutoCString principalScheme;
+      rv = principalURL->GetScheme(principalScheme);
+      NS_ENSURE_SUCCESS(rv, false);
+
+      // Otherwise don't support this URL type in the clients sub-system for
+      // now.  This will exclude a variety of internal browser clients, but
+      // currently we don't need to support those.  This function can be
+      // expanded to handle more cases as necessary.
+      return false;
+    }
+    case PrincipalInfo::TSystemPrincipalInfo:
+    {
+      nsAutoCString scheme;
+      rv = url->GetScheme(scheme);
+      NS_ENSURE_SUCCESS(rv, false);
+
+      // While many types of documents can be created with a system principal,
+      // there are only a few that can reasonably become windows.  We attempt
+      // to validate the list of known cases here with a simple scheme check.
+      return scheme.LowerCaseEqualsLiteral("about") ||
+             scheme.LowerCaseEqualsLiteral("chrome") ||
+             scheme.LowerCaseEqualsLiteral("resource") ||
+             scheme.LowerCaseEqualsLiteral("blob") ||
+             scheme.LowerCaseEqualsLiteral("javascript") ||
+             scheme.LowerCaseEqualsLiteral("view-source") ||
+
+             (!ClientPrefsGetDataURLUniqueOpaqueOrigin() &&
+              scheme.LowerCaseEqualsLiteral("data"));
+    }
+    case PrincipalInfo::TNullPrincipalInfo:
+    {
+      // A wide variety of clients can have a null principal.  For example,
+      // sandboxed iframes can have a normal content URL.  For now allow
+      // any parsable URL for null principals.  This is relatively safe since
+      // null principals have unique origins and won't most ClientManagerService
+      // queries anyway.
+      return true;
+    }
+    default:
+    {
+      break;
+    }
+  }
+
+  // Clients (windows/workers) should never have an expanded principal type.
   return false;
 }
 

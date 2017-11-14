@@ -20,6 +20,7 @@ class ClientSourceParent final : public PClientSourceParent
   ClientInfo mClientInfo;
   RefPtr<ClientManagerService> mService;
   nsTArray<ClientHandleParent*> mHandleList;
+  bool mExecutionReady;
 
   void
   KillInvalidChild();
@@ -27,6 +28,9 @@ class ClientSourceParent final : public PClientSourceParent
   // PClientSourceParent
   IPCResult
   RecvTeardown() override;
+
+  IPCResult
+  RecvExecutionReady(const ClientSourceExecutionReadyArgs& aArgs) override;
 
   void
   ActorDestroy(ActorDestroyReason aReason) override;

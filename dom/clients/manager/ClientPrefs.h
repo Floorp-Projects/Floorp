@@ -3,25 +3,19 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef _mozilla_dom_ClientValidation_h
-#define _mozilla_dom_ClientValidation_h
+#ifndef _mozilla_dom_ClientPrefs_h
+#define _mozilla_dom_ClientPrefs_h
 
 namespace mozilla {
-
-namespace ipc {
-class PrincipalInfo;
-} // namespace ipc
-
 namespace dom {
 
-bool
-ClientIsValidPrincipalInfo(const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+void
+ClientPrefsInit();
 
 bool
-ClientIsValidCreationURL(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                         const nsACString& aURL);
+ClientPrefsGetAllowUniqueOpaqueOrigin();
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // _mozilla_dom_ClientValidation_h
+#endif // _mozilla_dom_ClientPrefs_h
