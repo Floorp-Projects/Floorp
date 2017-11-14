@@ -23,7 +23,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
  *
  *<ul>
  * <li>Construct, with a reference to its parent {@link Repository}, by calling
- *   {@link Repository#createSession(org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate, android.content.Context)}.</li>
+ *   {@link Repository#createSession(android.content.Context)}.</li>
  * <li>Populate with saved information by calling {@link #unbundle(RepositorySessionBundle)}.</li>
  * <li>Begin a sync by calling {@link #begin()}. <code>begin()</code>
  *   is an appropriate place to initialize expensive resources.</li>

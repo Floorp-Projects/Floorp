@@ -10,13 +10,13 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.db.Tab;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Clients;
+import org.mozilla.gecko.sync.SessionCreateException;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.NoContentProviderException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
@@ -309,13 +309,11 @@ public class FennecTabsRepository extends Repository {
   }
 
   @Override
-  public void createSession(RepositorySessionCreationDelegate delegate,
-                            Context context) {
+  public RepositorySession createSession(Context context) throws SessionCreateException {
     try {
-      final FennecTabsRepositorySession session = new FennecTabsRepositorySession(this, context);
-      delegate.onSessionCreated(session);
+      return new FennecTabsRepositorySession(this, context);
     } catch (Exception e) {
-      delegate.onSessionCreateFailed(e);
+      throw new SessionCreateException(e);
     }
   }
 

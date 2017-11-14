@@ -6,10 +6,10 @@ package org.mozilla.gecko.sync.middleware;
 
 import android.content.Context;
 
+import org.mozilla.gecko.sync.SessionCreateException;
 import org.mozilla.gecko.sync.middleware.storage.BufferStorage;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 
 /**
  * A buffering-enabled middleware which is intended to wrap local repositories. Configurable with
@@ -17,32 +17,10 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDe
  *
  * @author grisha
  */
-public class BufferingMiddlewareRepository extends MiddlewareRepository {
+public class BufferingMiddlewareRepository extends Repository {
     private final long syncDeadline;
     private final Repository inner;
     private final BufferStorage bufferStorage;
-
-    private class BufferingMiddlewareRepositorySessionCreationDelegate extends MiddlewareRepository.SessionCreationDelegate {
-        private final BufferingMiddlewareRepository repository;
-        private final RepositorySessionCreationDelegate outerDelegate;
-
-        private BufferingMiddlewareRepositorySessionCreationDelegate(BufferingMiddlewareRepository repository, RepositorySessionCreationDelegate outerDelegate) {
-            this.repository = repository;
-            this.outerDelegate = outerDelegate;
-        }
-
-        @Override
-        public void onSessionCreateFailed(Exception ex) {
-            this.outerDelegate.onSessionCreateFailed(ex);
-        }
-
-        @Override
-        public void onSessionCreated(RepositorySession session) {
-            outerDelegate.onSessionCreated(new BufferingMiddlewareRepositorySession(
-                    session, this.repository, syncDeadline, bufferStorage
-            ));
-        }
-    }
 
     public BufferingMiddlewareRepository(long syncDeadline, BufferStorage bufferStore, Repository wrappedRepository) {
         this.syncDeadline = syncDeadline;
@@ -51,10 +29,8 @@ public class BufferingMiddlewareRepository extends MiddlewareRepository {
     }
 
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate, Context context) {
-        this.inner.createSession(
-                new BufferingMiddlewareRepositorySessionCreationDelegate(this, delegate),
-                context
-        );
+    public RepositorySession createSession(Context context) throws SessionCreateException {
+        final RepositorySession innerSession = this.inner.createSession(context);
+        return new BufferingMiddlewareRepositorySession(innerSession, this, syncDeadline, bufferStorage);
     }
 }

@@ -10,20 +10,16 @@ import junit.framework.AssertionFailedError;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
-import org.mozilla.gecko.background.sync.helpers.SimpleSuccessCreationDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessFetchDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessFinishDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessStoreDelegate;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
-import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
@@ -134,30 +130,33 @@ public class TestStoreTracking extends AndroidSyncTestCase {
       }
     };
 
-    session.setStoreDelegate(storeDelegate);
-    try {
-      Logger.debug(getName(), "Storing...");
-      session.store(record);
-      session.storeDone();
-    } catch (NoStoreDelegateException e) {
-      // Should not happen.
-    }
+    final Runnable doStore = new Runnable() {
+      @Override
+      public void run() {
+        session.setStoreDelegate(storeDelegate);
+        try {
+          Logger.debug(getName(), "Storing...");
+          session.store(record);
+          session.storeDone();
+        } catch (NoStoreDelegateException e) {
+          throw new IllegalStateException(e);
+        }
+      }
+    };
+
+    performWait(doStore);
   }
 
   private void doTestNewSessionRetrieveByTime(final WBORepository repository,
-                                              final String expectedGUID) {
-    final SimpleSuccessCreationDelegate createDelegate = new SimpleSuccessCreationDelegate() {
-      @Override
-      public void onSessionCreated(final RepositorySession session) {
-        Logger.debug(getName(), "Session created.");
-        try {
-          session.begin();
-        } catch (SyncException e) {
-          e.printStackTrace();
-          performNotify(e);
-        }
+                                              final String expectedGUID) throws Exception {
+    final RepositorySession session = repository.createSession(getApplicationContext());
+    Logger.debug(getName(), "Session created.");
+    session.begin();
 
-        // Now we get a result.
+    // Now we get a result.
+    final Runnable doFetch = new Runnable() {
+      @Override
+      public void run() {
         session.fetchModified(new SimpleSuccessFetchDelegate() {
           @Override
           public void onFetchedRecord(Record record) {
@@ -171,8 +170,12 @@ public class TestStoreTracking extends AndroidSyncTestCase {
                 @Override
                 public void onFinishSucceeded(RepositorySession session,
                                               RepositorySessionBundle bundle) {
-                  // Hooray!
                   performNotify();
+                }
+
+                @Override
+                public void onFinishFailed(Exception ex) {
+                  performNotify(ex);
                 }
               });
             } catch (InactiveSessionException e) {
@@ -186,14 +189,8 @@ public class TestStoreTracking extends AndroidSyncTestCase {
         });
       }
     };
-    Runnable create = new Runnable() {
-      @Override
-      public void run() {
-        repository.createSession(createDelegate, getApplicationContext());
-      }
-    };
 
-    performWait(create);
+    performWait(doFetch);
   }
 
   /**
@@ -204,49 +201,20 @@ public class TestStoreTracking extends AndroidSyncTestCase {
    *
    * Invokes doTestStoreRetrieveByGUID, doTestNewSessionRetrieveByTime.
    */
-  public void testStoreRetrieveByGUID() {
+  public void testStoreRetrieveByGUID() throws Exception {
     Logger.debug(getName(), "Started.");
     final WBORepository r = new TrackingWBORepository();
     final long now = System.currentTimeMillis();
     final String expectedGUID = "abcdefghijkl";
     final Record record = new BookmarkRecord(expectedGUID, "bookmarks", now , false);
 
-    final RepositorySessionCreationDelegate createDelegate = new SimpleSuccessCreationDelegate() {
-      @Override
-      public void onSessionCreated(RepositorySession session) {
-        Logger.debug(getName(), "Session created: " + session);
-        try {
-          session.begin();
-        } catch (SyncException e) {
-          e.printStackTrace();
-          performNotify(e);
-        }
-
-        doTestStoreRetrieveByGUID(r, session, expectedGUID, record);
-      }
-    };
-
     final Context applicationContext = getApplicationContext();
 
-    // This has to happen on a new thread so that we
-    // can wait for it!
-    Runnable create = onThreadRunnable(new Runnable() {
-      @Override
-      public void run() {
-        r.createSession(createDelegate, applicationContext);
-      }
-    });
+    final RepositorySession session = r.createSession(applicationContext);
+    session.begin();
+    doTestStoreRetrieveByGUID(r, session, expectedGUID, record);
 
-    Runnable retrieve = onThreadRunnable(new Runnable() {
-      @Override
-      public void run() {
-        doTestNewSessionRetrieveByTime(r, expectedGUID);
-        performNotify();
-      }
-    });
-
-    performWait(create);
-    performWait(retrieve);
+    doTestNewSessionRetrieveByTime(r, expectedGUID);
   }
 
   private Runnable onThreadRunnable(final Runnable r) {
@@ -276,9 +244,8 @@ public class TestStoreTracking extends AndroidSyncTestCase {
     }
 
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate,
-                              Context context) {
-      delegate.deferredCreationDelegate().onSessionCreated(new CountingWBORepositorySession(this));
+    public RepositorySession createSession(Context context) {
+      return new CountingWBORepositorySession(this);
     }
   }
 
