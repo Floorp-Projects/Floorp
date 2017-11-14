@@ -17,6 +17,14 @@ namespace dom {
 
 static const double sRadPerDegree = 2.0 * M_PI / 360.0;
 
+static bool
+IsStyledByServo(JSContext* aContext)
+{
+  nsGlobalWindowInner* win = xpc::CurrentWindowOrNull(aContext);
+  nsIDocument* doc = win ? win->GetDoc() : nullptr;
+  return doc ? doc->IsStyledByServo() : false;
+}
+
 bool
 WebKitCSSMatrix::FeatureEnabled(JSContext* aCx, JSObject* aObj)
 {
@@ -27,7 +35,9 @@ WebKitCSSMatrix::FeatureEnabled(JSContext* aCx, JSObject* aObj)
 already_AddRefed<WebKitCSSMatrix>
 WebKitCSSMatrix::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  RefPtr<WebKitCSSMatrix> obj = new WebKitCSSMatrix(aGlobal.GetAsSupports());
+  RefPtr<WebKitCSSMatrix> obj =
+    new WebKitCSSMatrix(aGlobal.GetAsSupports(),
+                        IsStyledByServo(aGlobal.Context()));
   return obj.forget();
 }
 
@@ -35,7 +45,9 @@ already_AddRefed<WebKitCSSMatrix>
 WebKitCSSMatrix::Constructor(const GlobalObject& aGlobal,
                              const nsAString& aTransformList, ErrorResult& aRv)
 {
-  RefPtr<WebKitCSSMatrix> obj = new WebKitCSSMatrix(aGlobal.GetAsSupports());
+  RefPtr<WebKitCSSMatrix> obj =
+    new WebKitCSSMatrix(aGlobal.GetAsSupports(),
+                        IsStyledByServo(aGlobal.Context()));
   obj = obj->SetMatrixValue(aTransformList, aRv);
   return obj.forget();
 }

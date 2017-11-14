@@ -341,17 +341,27 @@ DOMMatrixReadOnly::Stringify(nsAString& aResult)
   aResult = matrixStr;
 }
 
+static bool
+IsStyledByServo(JSContext* aContext)
+{
+  nsGlobalWindowInner* win = xpc::CurrentWindowOrNull(aContext);
+  nsIDocument* doc = win ? win->GetDoc() : nullptr;
+  return doc ? doc->IsStyledByServo() : false;
+}
+
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
+  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(),
+                                        IsStyledByServo(aGlobal.Context()));
   return obj.forget();
 }
 
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, const nsAString& aTransformList, ErrorResult& aRv)
 {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
+  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(),
+                                        IsStyledByServo(aGlobal.Context()));
 
   obj = obj->SetMatrixValue(aTransformList, aRv);
   return obj.forget();
@@ -398,7 +408,8 @@ template <typename T> void SetDataInMatrix(DOMMatrix* aMatrix, const T* aData, i
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, const Float32Array& aArray32, ErrorResult& aRv)
 {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
+  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(),
+                                        IsStyledByServo(aGlobal.Context()));
   aArray32.ComputeLengthAndData();
   SetDataInMatrix(obj, aArray32.Data(), aArray32.Length(), aRv);
 
@@ -408,7 +419,8 @@ DOMMatrix::Constructor(const GlobalObject& aGlobal, const Float32Array& aArray32
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, const Float64Array& aArray64, ErrorResult& aRv)
 {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
+  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(),
+                                        IsStyledByServo(aGlobal.Context()));
   aArray64.ComputeLengthAndData();
   SetDataInMatrix(obj, aArray64.Data(), aArray64.Length(), aRv);
 
@@ -418,7 +430,8 @@ DOMMatrix::Constructor(const GlobalObject& aGlobal, const Float64Array& aArray64
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, const Sequence<double>& aNumberSequence, ErrorResult& aRv)
 {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
+  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(),
+                                        IsStyledByServo(aGlobal.Context()));
   SetDataInMatrix(obj, aNumberSequence.Elements(), aNumberSequence.Length(), aRv);
 
   return obj.forget();
