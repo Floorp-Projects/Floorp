@@ -481,7 +481,13 @@ FunctionBox::FunctionBox(JSContext* cx, LifoAlloc& alloc, ObjectBox* traceListHe
     usesReturn(false),
     hasRest_(false),
     isExprBody_(false),
-    funCxFlags()
+    hasExtensibleScope_(false),
+    argumentsHasLocalBinding_(false),
+    definitelyNeedsArgsObj_(false),
+    needsHomeObject_(false),
+    isDerivedClassConstructor_(false),
+    hasThisBinding_(false),
+    hasInnerFunctions_(false)
 {
     // Functions created at parse time may be set singleton after parsing and
     // baked into JIT code, so they must be allocated tenured. They are held by
