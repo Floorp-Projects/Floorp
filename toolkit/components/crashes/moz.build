@@ -6,26 +6,28 @@
 
 SPHINX_TREES['crash-manager'] = 'docs'
 
-EXTRA_COMPONENTS += [
-    'CrashService.js',
-    'CrashService.manifest',
-]
-
-EXTRA_JS_MODULES += [
-    'CrashManager.jsm',
-]
-
-TESTING_JS_MODULES += [
-    'CrashManagerTest.jsm',
-]
-
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
-
 XPIDL_MODULE = 'toolkit_crashservice'
 
 XPIDL_SOURCES += [
     'nsICrashService.idl',
 ]
 
+if CONFIG['MOZ_CRASHREPORTER']:
+    EXTRA_COMPONENTS += [
+        'CrashService.js',
+        'CrashService.manifest',
+    ]
+
+    EXTRA_JS_MODULES += [
+        'CrashManager.jsm',
+    ]
+
+    TESTING_JS_MODULES += [
+        'CrashManagerTest.jsm',
+    ]
+
+    XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Crash Reporting')
+
