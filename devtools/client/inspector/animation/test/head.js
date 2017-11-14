@@ -24,6 +24,7 @@ Services.prefs.setBoolPref("devtools.new-animationinspector.enabled", true);
 // (safer here because if the test fails, then the pref is never reverted)
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.new-animationinspector.enabled");
+  Services.prefs.clearUserPref("devtools.toolsidebar-width.inspector");
 });
 
 /**
@@ -102,5 +103,20 @@ const selectNodeAndWaitForAnimations = async function (data, inspector, reason =
   // be properly displayed (wait for all target DOM nodes to be previewed).
   const onUpdated = inspector.once("inspector-updated");
   await selectNode(data, inspector, reason);
+  await onUpdated;
+};
+
+/**
+ * Set the sidebar width by given parameter.
+ *
+ * @param {String} width
+ *        Change sidebar width by given parameter.
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox
+ * @return {Promise} Resolves when the sidebar size changed.
+ */
+const setSidebarWidth = async function (width, inspector) {
+  const onUpdated = inspector.toolbox.once("inspector-sidebar-resized");
+  inspector._splitter.setState({ width });
   await onUpdated;
 };

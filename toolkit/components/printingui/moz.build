@@ -7,14 +7,16 @@
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Printing')
 
-toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
-
 DIRS += ['ipc']
 
 if CONFIG['NS_PRINTING']:
-    if toolkit == 'windows':
-        DIRS += ['win']
-    elif toolkit == 'cocoa':
-        DIRS += ['mac']
-    elif CONFIG['MOZ_PDF_PRINTING']:
-        DIRS += ['unixshared']
+    UNIFIED_SOURCES += [
+        'nsPrintingPromptService.cpp',
+    ]
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows' or CONFIG['MOZ_PDF_PRINTING']:
+        UNIFIED_SOURCES += [
+            'nsPrintProgress.cpp',
+            'nsPrintProgressParams.cpp',
+        ]
+
+FINAL_LIBRARY = 'xul'

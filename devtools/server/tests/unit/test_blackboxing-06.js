@@ -40,7 +40,7 @@ function run_test() {
 }
 
 function setup_code() {
-  /* eslint-disable */
+  /* eslint-disable no-multi-spaces */
   let { code, map } = (new SourceNode(null, null, null, [
     new SourceNode(1, 0, "a.js", "" + function a() {
       return b();
@@ -59,7 +59,7 @@ function setup_code() {
     file: "abc.js",
     sourceRoot: "http://example.com/"
   });
-  /* eslint-enable */
+  /* eslint-enable no-multi-spaces */
 
   code += "//# sourceMappingURL=data:text/json," + map.toString();
 

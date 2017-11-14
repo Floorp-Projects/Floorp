@@ -55,7 +55,7 @@ function stored(needles) {
 
 add_task(async function testPluginData() {
   function background() {
-    browser.test.onMessage.addListener(async(msg, options) => {
+    browser.test.onMessage.addListener(async (msg, options) => {
       if (msg == "removePluginData") {
         await browser.browsingData.removePluginData(options);
       } else {

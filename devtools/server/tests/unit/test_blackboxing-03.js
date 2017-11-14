@@ -42,7 +42,7 @@ function test_black_box() {
     });
   });
 
-  /* eslint-disable */
+  /* eslint-disable no-multi-spaces */
   Components.utils.evalInSandbox(
     "" + function doStuff(k) { // line 1
       debugger;                // line 2 - Break here
@@ -68,7 +68,7 @@ function test_black_box() {
     SOURCE_URL,
     1
   );
-  /* eslint-enable */
+  /* eslint-enable no-multi-spaces */
 }
 
 function test_black_box_dbg_statement() {

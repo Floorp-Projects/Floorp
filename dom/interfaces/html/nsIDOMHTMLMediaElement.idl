@@ -62,7 +62,6 @@ interface nsIDOMHTMLMediaElement : nsISupports
   readonly attribute nsIDOMTimeRanges played;
   readonly attribute nsIDOMTimeRanges seekable;
   readonly attribute boolean ended;
-  readonly attribute boolean mozAutoplayEnabled;
            attribute boolean autoplay;
            attribute boolean loop;
   void pause();

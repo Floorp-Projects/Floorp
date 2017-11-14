@@ -289,6 +289,7 @@ typedef nsTArray<Link*> LinkArray;
 
 static LazyLogModule gDocumentLeakPRLog("DocumentLeak");
 static LazyLogModule gCspPRLog("CSP");
+static LazyLogModule gUserInteractionPRLog("UserInteraction");
 
 static const char kChromeInContentPref[] = "security.allow_chrome_frames_inside_content";
 static bool sChromeInContentAllowed = false;
@@ -1572,6 +1573,7 @@ nsIDocument::nsIDocument()
     mNotifiedPageForUseCounter(0),
     mIncCounters(),
     mUserHasInteracted(false),
+    mUserHasActivatedInteraction(false),
     mServoRestyleRootDirtyBits(0),
     mThrowOnDynamicMarkupInsertionCounter(0),
     mIgnoreOpensDuringUnloadCounter(0)
@@ -3052,7 +3054,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     (cspSandboxFlags & SANDBOXED_ORIGIN) && !(mSandboxFlags & SANDBOXED_ORIGIN);
 
   mSandboxFlags |= cspSandboxFlags;
-  
+
   if (needNewNullPrincipal) {
     principal = NullPrincipal::CreateWithInheritedAttributes(principal);
     principal->SetCsp(csp);
@@ -13682,6 +13684,81 @@ nsIDocument::UpdateStyleBackendType()
     mStyleBackendType = StyleBackendType::Servo;
   }
 #endif
+}
+
+void
+nsIDocument::SetUserHasInteracted(bool aUserHasInteracted)
+{
+  MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug,
+          ("Document %p has been interacted by user.", this));
+  mUserHasInteracted = aUserHasInteracted;
+}
+
+void
+nsIDocument::NotifyUserActivation()
+{
+  if (mUserHasActivatedInteraction) {
+    return;
+  }
+
+  MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug,
+          ("Document %p has been activated by user.", this));
+  mUserHasActivatedInteraction = true;
+}
+
+bool
+nsIDocument::HasBeenUserActivated()
+{
+  if (!mUserHasActivatedInteraction) {
+    // If one of its parent on the parent chain has been activated and has same
+    // principal, then this child would also be treated as activated.
+    nsIDocument* parent =
+      GetFirstParentDocumentWithSamePrincipal(NodePrincipal());
+    if (parent) {
+      mUserHasActivatedInteraction = parent->HasBeenUserActivated();
+    }
+  }
+
+  return mUserHasActivatedInteraction;
+}
+
+nsIDocument*
+nsIDocument::GetFirstParentDocumentWithSamePrincipal(nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(aPrincipal);
+  nsIDocument* parent = GetSameTypeParentDocument(this);
+  while (parent) {
+    bool isEqual = false;
+    nsresult rv = aPrincipal->Equals(parent->NodePrincipal(), &isEqual);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+
+    if (isEqual) {
+      return parent;
+    }
+    parent = GetSameTypeParentDocument(parent);
+  }
+  MOZ_ASSERT(!parent);
+  return nullptr;
+}
+
+nsIDocument*
+nsIDocument::GetSameTypeParentDocument(const nsIDocument* aDoc)
+{
+  MOZ_ASSERT(aDoc);
+  nsCOMPtr<nsIDocShellTreeItem> current = aDoc->GetDocShell();
+  if (!current) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  current->GetSameTypeParent(getter_AddRefs(parent));
+  if (!parent) {
+    return nullptr;
+  }
+
+  return parent->GetDocument();
 }
 
 /**

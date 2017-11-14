@@ -264,7 +264,7 @@
             // or decrement our currently viewed page.
             this.mPageTextBox.valueNumber += aDirection;
             navType = nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM;
-            pageNum = this.mPageTextBox.value;  // TODO: back to valueNumber?
+            pageNum = this.mPageTextBox.value; // TODO: back to valueNumber?
           } else {
             // We're going to a specific page (aPageNum)
             navType = nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM;
