@@ -776,12 +776,12 @@ nsWindow::AndroidView::GetSettings(JSContext* aCx, JS::MutableHandleValue aOut)
  * separate from GeckoViewSupport.
  */
 class nsWindow::LayerViewSupport final
-    : public LayerView::Compositor::Natives<LayerViewSupport>
+    : public LayerSession::Compositor::Natives<LayerViewSupport>
 {
     using LockedWindowPtr = WindowPtr<LayerViewSupport>::Locked;
 
     WindowPtr<LayerViewSupport> mWindow;
-    LayerView::Compositor::GlobalRef mCompositor;
+    LayerSession::Compositor::GlobalRef mCompositor;
     GeckoLayerClient::GlobalRef mLayerClient;
     Atomic<bool, ReleaseAcquire> mCompositorPaused;
     jni::Object::GlobalRef mSurface;
@@ -820,7 +820,7 @@ class nsWindow::LayerViewSupport final
     };
 
 public:
-    typedef LayerView::Compositor::Natives<LayerViewSupport> Base;
+    typedef LayerSession::Compositor::Natives<LayerViewSupport> Base;
 
     template<class Functor>
     static void OnNativeCall(Functor&& aCall)
@@ -836,13 +836,13 @@ public:
     }
 
     static LayerViewSupport*
-    FromNative(const LayerView::Compositor::LocalRef& instance)
+    FromNative(const LayerSession::Compositor::LocalRef& instance)
     {
         return GetNative(instance);
     }
 
     LayerViewSupport(NativePtr<LayerViewSupport>* aPtr, nsWindow* aWindow,
-                     const LayerView::Compositor::LocalRef& aInstance)
+                     const LayerSession::Compositor::LocalRef& aInstance)
         : mWindow(aPtr, aWindow)
         , mCompositor(aInstance)
         , mCompositorPaused(true)
@@ -858,7 +858,14 @@ public:
 
     void OnDetach()
     {
-        mCompositor->Destroy();
+        if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+            LayerSession::Compositor::GlobalRef compositor(mCompositor);
+            uiThread->Dispatch(NS_NewRunnableFunction(
+                    "LayerViewSupport::OnDetach",
+                    [compositor] {
+                        compositor->OnCompositorDetached();
+                    }));
+        }
     }
 
     const GeckoLayerClient::Ref& GetLayerClient() const
@@ -877,20 +884,13 @@ public:
     }
 
 private:
-    void OnResumedCompositor()
+    already_AddRefed<UiCompositorControllerChild> GetUiCompositorControllerChild()
     {
-        MOZ_ASSERT(NS_IsMainThread());
-
-        // When we receive this, the compositor has already been told to
-        // resume. (It turns out that waiting till we reach here to tell
-        // the compositor to resume takes too long, resulting in a black
-        // flash.) This means it's now safe for layer updates to occur.
-        // Since we might have prevented one or more draw events from
-        // occurring while the compositor was paused, we need to schedule
-        // a draw event now.
-        if (!mCompositorPaused) {
-            mWindow->RedrawAll();
+        RefPtr<UiCompositorControllerChild> child;
+        if (LockedWindowPtr window{mWindow}) {
+            child = window->GetUiCompositorControllerChild();
         }
+        return child.forget();
     }
 
     /**
@@ -912,7 +912,14 @@ public:
                 NativePanZoomController::Ref::From(aNPZC));
         mWindow->mNPZCSupport.Attach(npzc, mWindow, npzc);
 
-        mLayerClient->OnGeckoReady();
+        if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+            LayerSession::Compositor::GlobalRef compositor(mCompositor);
+            uiThread->Dispatch(NS_NewRunnableFunction(
+                    "LayerViewSupport::AttachToJava",
+                    [compositor] {
+                        compositor->OnCompositorAttached();
+                    }));
+        }
 
         // Set the first-paint flag so that we (re-)link any new Java objects
         // to Gecko, co-ordinate viewports, etc.
@@ -947,7 +954,6 @@ public:
         mWindow->CreateLayerManager(aWidth, aHeight);
 
         mCompositorPaused = false;
-        OnResumedCompositor();
     }
 
     void SyncPauseCompositor()
@@ -970,7 +976,7 @@ public:
         }
     }
 
-    void SyncResumeResizeCompositor(const LayerView::Compositor::LocalRef& aObj,
+    void SyncResumeResizeCompositor(const LayerSession::Compositor::LocalRef& aObj,
                                     int32_t aWidth, int32_t aHeight,
                                     jni::Object::Param aSurface)
     {
@@ -986,10 +992,10 @@ public:
 
         class OnResumedEvent : public nsAppShell::Event
         {
-            LayerView::Compositor::GlobalRef mCompositor;
+            LayerSession::Compositor::GlobalRef mCompositor;
 
         public:
-            OnResumedEvent(LayerView::Compositor::GlobalRef&& aCompositor)
+            OnResumedEvent(LayerSession::Compositor::GlobalRef&& aCompositor)
                 : mCompositor(mozilla::Move(aCompositor))
             {}
 
@@ -999,14 +1005,21 @@ public:
 
                 JNIEnv* const env = jni::GetGeckoThreadEnv();
                 LayerViewSupport* const lvs = GetNative(
-                        LayerView::Compositor::LocalRef(env, mCompositor));
+                        LayerSession::Compositor::LocalRef(env, mCompositor));
 
                 if (!lvs || !lvs->mWindow) {
                     env->ExceptionClear();
                     return; // Already shut down.
                 }
 
-                lvs->OnResumedCompositor();
+                // When we get here, the compositor has already been told to
+                // resume. This means it's now safe for layer updates to occur.
+                // Since we might have prevented one or more draw events from
+                // occurring while the compositor was paused, we need to
+                // schedule a draw event now.
+                if (!lvs->mCompositorPaused) {
+                    lvs->mWindow->RedrawAll();
+                }
             }
         };
 
@@ -1022,18 +1035,17 @@ public:
             return;
         }
 
-        if (!AndroidBridge::IsJavaUiThread()) {
-            RefPtr<nsThread> uiThread = GetAndroidUiThread();
-            if (uiThread) {
-                uiThread->Dispatch(NewRunnableMethod("layers::UiCompositorControllerChild::InvalidateAndRender",
-                                                     child,
-                                                     &UiCompositorControllerChild::InvalidateAndRender),
-                                   nsIThread::DISPATCH_NORMAL);
-            }
+        if (AndroidBridge::IsJavaUiThread()) {
+            child->InvalidateAndRender();
             return;
         }
 
-        child->InvalidateAndRender();
+        if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+            uiThread->Dispatch(NewRunnableMethod<>(
+                    "LayerViewSupport::InvalidateAndRender",
+                    child, &UiCompositorControllerChild::InvalidateAndRender),
+                    nsIThread::DISPATCH_NORMAL);
+        }
     }
 
     void SetMaxToolbarHeight(int32_t aHeight)
@@ -1049,44 +1061,41 @@ public:
     {
         RefPtr<UiCompositorControllerChild> child = GetUiCompositorControllerChild();
         if (!child) {
-          return;
-        }
-
-        if (!AndroidBridge::IsJavaUiThread()) {
-            RefPtr<nsThread> uiThread = GetAndroidUiThread();
-            if (uiThread) {
-                uiThread->Dispatch(NewRunnableMethod<bool, int32_t>(
-                                       "layers::UiCompositorControllerChild::SetPinned",
-                                       child, &UiCompositorControllerChild::SetPinned, aPinned, aReason),
-                                   nsIThread::DISPATCH_NORMAL);
-            }
             return;
         }
 
-        child->SetPinned(aPinned, aReason);
+        if (AndroidBridge::IsJavaUiThread()) {
+            child->SetPinned(aPinned, aReason);
+            return;
+        }
+
+        if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+            uiThread->Dispatch(NewRunnableMethod<bool, int32_t>(
+                    "LayerViewSupport::SetPinned",
+                    child, &UiCompositorControllerChild::SetPinned,
+                    aPinned, aReason), nsIThread::DISPATCH_NORMAL);
+        }
     }
 
 
     void SendToolbarAnimatorMessage(int32_t aMessage)
     {
         RefPtr<UiCompositorControllerChild> child = GetUiCompositorControllerChild();
-
         if (!child) {
-          return;
-        }
-
-        if (!AndroidBridge::IsJavaUiThread()) {
-            RefPtr<nsThread> uiThread = GetAndroidUiThread();
-            if (uiThread) {
-                uiThread->Dispatch(NewRunnableMethod<int32_t>(
-                                       "layers::UiCompositorControllerChild::ToolbarAnimatorMessageFromUI",
-                                       child, &UiCompositorControllerChild::ToolbarAnimatorMessageFromUI, aMessage),
-                                   nsIThread::DISPATCH_NORMAL);
-            }
             return;
         }
 
-        child->ToolbarAnimatorMessageFromUI(aMessage);
+        if (AndroidBridge::IsJavaUiThread()) {
+            child->ToolbarAnimatorMessageFromUI(aMessage);
+            return;
+        }
+
+        if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+            uiThread->Dispatch(NewRunnableMethod<int32_t>(
+                    "LayerViewSupport::ToolbarAnimatorMessageFromUI",
+                    child, &UiCompositorControllerChild::ToolbarAnimatorMessageFromUI,
+                    aMessage), nsIThread::DISPATCH_NORMAL);
+        }
     }
 
     void RecvToolbarAnimatorMessage(int32_t aMessage)
@@ -1144,16 +1153,6 @@ public:
            }
         }
     }
-
-    already_AddRefed<UiCompositorControllerChild> GetUiCompositorControllerChild()
-    {
-        RefPtr<UiCompositorControllerChild> child;
-        if (LockedWindowPtr window{mWindow}) {
-            child = window->GetUiCompositorControllerChild();
-        }
-        MOZ_ASSERT(child);
-        return child.forget();
-    }
 };
 
 template<> const char
@@ -1169,8 +1168,8 @@ class nsWindow::PMPMSupport final
     {
         const auto& layerView = LayerView::Ref::From(aView);
 
-        LayerView::Compositor::LocalRef compositor = layerView->GetCompositor();
-        if (!layerView->IsCompositorReady() || !compositor) {
+        LayerSession::Compositor::LocalRef compositor = layerView->GetCompositor();
+        if (!compositor) {
             return nullptr;
         }
 
