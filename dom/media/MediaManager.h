@@ -127,30 +127,6 @@ public:
   Source* GetSource() override;
 };
 
-typedef enum {
-  MEDIA_STOP,
-  MEDIA_STOP_TRACK,
-  MEDIA_DIRECT_LISTENERS,
-} MediaOperation;
-
-class ReleaseMediaOperationResource : public Runnable
-{
-public:
-  ReleaseMediaOperationResource(
-    already_AddRefed<DOMMediaStream> aStream,
-    already_AddRefed<media::Refcountable<UniquePtr<OnTracksAvailableCallback>>>
-      aOnTracksAvailableCallback)
-    : Runnable("ReleaseMediaOperationResource")
-    , mStream(aStream)
-    , mOnTracksAvailableCallback(aOnTracksAvailableCallback)
-  {
-  }
-  NS_IMETHOD Run() override {return NS_OK;}
-private:
-  RefPtr<DOMMediaStream> mStream;
-  RefPtr<media::Refcountable<UniquePtr<OnTracksAvailableCallback>>> mOnTracksAvailableCallback;
-};
-
 typedef nsRefPtrHashtable<nsUint64HashKey, GetUserMediaWindowListener> WindowTable;
 
 // we could add MediaManager if needed
