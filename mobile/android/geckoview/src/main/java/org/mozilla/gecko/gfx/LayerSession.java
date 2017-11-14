@@ -17,6 +17,12 @@ public class LayerSession {
     private static final String LOGTAG = "GeckoLayerSession";
     private static final boolean DEBUG = false;
 
+    // Sent from compositor when the static toolbar image has been updated and
+    // is ready to animate.
+    /* package */ final static int STATIC_TOOLBAR_READY = 1;
+    // Sent from compositor when the static toolbar has been made visible so
+    // the real toolbar should be shown.
+    /* package */ final static int TOOLBAR_SHOW = 4;
     // Special message sent from UiCompositorControllerChild once it is open.
     /* package */ final static int COMPOSITOR_CONTROLLER_OPEN = 20;
     // Special message sent from controller to query if the compositor controller is open.
@@ -53,7 +59,7 @@ public class LayerSession {
                                         NativePanZoomController npzc);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
-        public native void onSizeChanged(int windowWidth, int windowHeight);
+        public native void onBoundsChanged(int left, int top, int width, int height);
 
         // Gecko thread creates compositor; blocks UI thread.
         @WrapForJNI(calledFrom = "ui", dispatchTo = "proxy")
@@ -96,6 +102,10 @@ public class LayerSession {
             if (layerView != null) {
                 layerView.handleToolbarAnimatorMessage(message);
             }
+
+            if (message == STATIC_TOOLBAR_READY || message == TOOLBAR_SHOW) {
+                LayerSession.this.onWindowBoundsChanged();
+            }
         }
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
@@ -127,6 +137,8 @@ public class LayerSession {
     private boolean mCalledCreateCompositor;
     private boolean mCompositorReady;
     private Surface mSurface;
+    private int mLeft;
+    private int mTop;
     private int mWidth;
     private int mHeight;
 
@@ -180,19 +192,20 @@ public class LayerSession {
         }
     }
 
-    private void onWindowResize() {
+    /* protected */ void onWindowBoundsChanged() {
         if (DEBUG) {
             ThreadUtils.assertOnUiThread();
         }
 
         if (mAttachedCompositor) {
-            final int viewportHeight;
+            final int toolbarHeight;
             if (mCompositor.layerView != null) {
-                viewportHeight = mHeight - mCompositor.layerView.getCurrentToolbarHeight();
+                toolbarHeight = mCompositor.layerView.getCurrentToolbarHeight();
             } else {
-                viewportHeight = mHeight;
+                toolbarHeight = 0;
             }
-            mCompositor.onSizeChanged(mWidth, viewportHeight);
+            mCompositor.onBoundsChanged(mLeft, mTop + toolbarHeight,
+                                        mWidth, mHeight - toolbarHeight);
 
             if (mCompositor.layerView != null) {
                 mCompositor.layerView.onSizeChanged(mWidth, mHeight);
@@ -206,10 +219,10 @@ public class LayerSession {
 
         mWidth = width;
         mHeight = height;
-        onWindowResize();
 
         if (mCompositorReady) {
             mCompositor.syncResumeResizeCompositor(width, height, surface);
+            onWindowBoundsChanged();
             return;
         }
 
@@ -237,6 +250,18 @@ public class LayerSession {
         mSurface = null;
     }
 
+    /* package */ void onScreenOriginChanged(final int left, final int top) {
+        ThreadUtils.assertOnUiThread();
+
+        if (mLeft == left && mTop == top) {
+            return;
+        }
+
+        mLeft = left;
+        mTop = top;
+        onWindowBoundsChanged();
+    }
+
     public void addDisplay(final GeckoDisplay display) {
         ThreadUtils.assertOnUiThread();
 
@@ -257,6 +282,11 @@ public class LayerSession {
             @Override
             public void surfaceDestroyed() {
                 onSurfaceDestroyed();
+            }
+
+            @Override
+            public void screenOriginChanged(final int left, final int top) {
+                onScreenOriginChanged(left, top);
             }
         });
     }
