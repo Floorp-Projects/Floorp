@@ -228,7 +228,7 @@ def stringToAccessDescription(string):
     location. Returns an AccessDescription usable by pyasn1."""
     accessMethod = rfc2459.id_ad_ocsp
     accessLocation = rfc2459.GeneralName()
-    accessLocation.setComponentByName('uniformResourceIdentifier', string)
+    accessLocation['uniformResourceIdentifier'] = string
     sequence = univ.Sequence()
     sequence.setComponentByPosition(0, accessMethod)
     sequence.setComponentByPosition(1, accessLocation)
@@ -253,25 +253,25 @@ def stringToDN(string, tag=None):
     for pos, (nameType, value) in enumerate(zip(split[1::2], split[2::2])):
         ava = rfc2459.AttributeTypeAndValue()
         if nameType == 'C':
-            ava.setComponentByName('type', rfc2459.id_at_countryName)
+            ava['type'] = rfc2459.id_at_countryName
             nameComponent = rfc2459.X520countryName(value)
         elif nameType == 'ST':
-            ava.setComponentByName('type', rfc2459.id_at_stateOrProvinceName)
+            ava['type'] = rfc2459.id_at_stateOrProvinceName
             nameComponent = rfc2459.X520StateOrProvinceName()
         elif nameType == 'L':
-            ava.setComponentByName('type', rfc2459.id_at_localityName)
+            ava['type'] = rfc2459.id_at_localityName
             nameComponent = rfc2459.X520LocalityName()
         elif nameType == 'O':
-            ava.setComponentByName('type', rfc2459.id_at_organizationName)
+            ava['type'] = rfc2459.id_at_organizationName
             nameComponent = rfc2459.X520OrganizationName()
         elif nameType == 'OU':
-            ava.setComponentByName('type', rfc2459.id_at_organizationalUnitName)
+            ava['type'] = rfc2459.id_at_organizationalUnitName
             nameComponent = rfc2459.X520OrganizationalUnitName()
         elif nameType == 'CN':
-            ava.setComponentByName('type', rfc2459.id_at_commonName)
+            ava['type'] = rfc2459.id_at_commonName
             nameComponent = rfc2459.X520CommonName()
         elif nameType == 'emailAddress':
-            ava.setComponentByName('type', rfc2459.emailAddress)
+            ava['type'] = rfc2459.emailAddress
             nameComponent = rfc2459.Pkcs9email(value)
         else:
             raise UnknownDNTypeError(nameType)
@@ -279,8 +279,8 @@ def stringToDN(string, tag=None):
             # The value may have things like '\0' (i.e. a slash followed by
             # the number zero) that have to be decoded into the resulting
             # '\x00' (i.e. a byte with value zero).
-            nameComponent.setComponentByName(encoding, value.decode(encoding='string_escape'))
-        ava.setComponentByName('value', nameComponent)
+            nameComponent[encoding] = value.decode(encoding='string_escape')
+        ava['value'] = nameComponent
         rdn = rfc2459.RelativeDistinguishedName()
         rdn.setComponentByPosition(0, ava)
         rdns.setComponentByPosition(pos, rdn)
@@ -334,7 +334,7 @@ def datetimeToTime(dt):
     """Takes a datetime object and returns an rfc2459.Time object with
     that time as its value as a GeneralizedTime"""
     time = rfc2459.Time()
-    time.setComponentByName('generalTime', useful.GeneralizedTime(dt.strftime('%Y%m%d%H%M%SZ')))
+    time['generalTime'] = useful.GeneralizedTime(dt.strftime('%Y%m%d%H%M%SZ'))
     return time
 
 def serialBytesToString(serialBytes):
@@ -515,25 +515,24 @@ class Certificate(object):
             self.extensions = []
         encapsulated = univ.OctetString(encoder.encode(extensionValue))
         extension = rfc2459.Extension()
-        extension.setComponentByName('extnID', extensionType)
+        extension['extnID'] = extensionType
         # critical is either the string '[critical]' or None.
         # We only care whether or not it is truthy.
         if critical:
-            extension.setComponentByName('critical', True)
-        extension.setComponentByName('extnValue', encapsulated)
+            extension['critical'] = True
+        extension['extnValue'] = encapsulated
         self.extensions.append(extension)
 
     def addBasicConstraints(self, basicConstraints, critical):
         cA = basicConstraints.split(',')[0]
         pathLenConstraint = basicConstraints.split(',')[1]
         basicConstraintsExtension = rfc2459.BasicConstraints()
-        basicConstraintsExtension.setComponentByName('cA', cA == 'cA')
+        basicConstraintsExtension['cA'] = cA == 'cA'
         if pathLenConstraint:
             pathLenConstraintValue = \
                 univ.Integer(int(pathLenConstraint)).subtype(
                     subtypeSpec=constraint.ValueRangeConstraint(0, float('inf')))
-            basicConstraintsExtension.setComponentByName('pathLenConstraint',
-                                                         pathLenConstraintValue)
+            basicConstraintsExtension['pathLenConstraint'] = pathLenConstraintValue
         self.addExtension(rfc2459.id_ce_basicConstraints, basicConstraintsExtension, critical)
 
     def addKeyUsage(self, keyUsage, critical):
@@ -570,12 +569,12 @@ class Certificate(object):
             if '/' in name:
                 directoryName = stringToDN(name,
                                            tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 4))
-                generalName.setComponentByName('directoryName', directoryName)
+                generalName['directoryName'] = directoryName
             else:
                 # The string may have things like '\0' (i.e. a slash
                 # followed by the number zero) that have to be decoded into
                 # the resulting '\x00' (i.e. a byte with value zero).
-                generalName.setComponentByName('dNSName', name.decode(encoding='string_escape'))
+                generalName['dNSName'] = name.decode(encoding='string_escape')
             subjectAlternativeName.setComponentByPosition(count, generalName)
         self.addExtension(rfc2459.id_ce_subjectAltName, subjectAlternativeName, critical)
 
@@ -592,7 +591,7 @@ class Certificate(object):
                 policyOID = '2.5.29.32.0'
             policy = rfc2459.PolicyInformation()
             policyIdentifier = rfc2459.CertPolicyId(policyOID)
-            policy.setComponentByName('policyIdentifier', policyIdentifier)
+            policy['policyIdentifier'] = policyIdentifier
             policies.setComponentByPosition(pos, policy)
         self.addExtension(rfc2459.id_ce_certificatePolicies, policies, critical)
 
@@ -612,13 +611,13 @@ class Certificate(object):
             if '/' in name:
                 directoryName = stringToDN(name,
                                            tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 4))
-                generalName.setComponentByName('directoryName', directoryName)
+                generalName['directoryName'] = directoryName
             else:
-                generalName.setComponentByName('dNSName', name)
+                generalName['dNSName'] = name
             generalSubtree = rfc2459.GeneralSubtree()
-            generalSubtree.setComponentByName('base', generalName)
+            generalSubtree['base'] = generalName
             generalSubtrees.setComponentByPosition(pos, generalSubtree)
-        nameConstraints.setComponentByName(subtreesType, generalSubtrees)
+        nameConstraints[subtreesType] = generalSubtrees
         self.addExtension(rfc2459.id_ce_nameConstraints, nameConstraints, critical)
 
     def addNSCertType(self, certType, critical):
@@ -679,8 +678,8 @@ class Certificate(object):
 
     def getValidity(self):
         validity = rfc2459.Validity()
-        validity.setComponentByName('notBefore', self.getNotBefore())
-        validity.setComponentByName('notAfter', self.getNotAfter())
+        validity['notBefore'] = self.getNotBefore()
+        validity['notAfter'] = self.getNotAfter()
         return validity
 
     def getNotBefore(self):
@@ -695,30 +694,29 @@ class Certificate(object):
     def getTBSCertificate(self):
         (signatureOID, _) = stringToAlgorithmIdentifiers(self.signature)
         tbsCertificate = rfc2459.TBSCertificate()
-        tbsCertificate.setComponentByName('version', self.getVersion())
-        tbsCertificate.setComponentByName('serialNumber', self.getSerialNumber())
-        tbsCertificate.setComponentByName('signature', signatureOID)
-        tbsCertificate.setComponentByName('issuer', self.getIssuer())
-        tbsCertificate.setComponentByName('validity', self.getValidity())
-        tbsCertificate.setComponentByName('subject', self.getSubject())
-        tbsCertificate.setComponentByName('subjectPublicKeyInfo',
-                                          self.subjectKey.asSubjectPublicKeyInfo())
+        tbsCertificate['version'] = self.getVersion()
+        tbsCertificate['serialNumber'] = self.getSerialNumber()
+        tbsCertificate['signature'] = signatureOID
+        tbsCertificate['issuer'] = self.getIssuer()
+        tbsCertificate['validity'] = self.getValidity()
+        tbsCertificate['subject'] = self.getSubject()
+        tbsCertificate['subjectPublicKeyInfo'] = self.subjectKey.asSubjectPublicKeyInfo()
         if self.extensions:
             extensions = rfc2459.Extensions().subtype(
                 explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 3))
             for count, extension in enumerate(self.extensions):
                 extensions.setComponentByPosition(count, extension)
-            tbsCertificate.setComponentByName('extensions', extensions)
+            tbsCertificate['extensions'] = extensions
         return tbsCertificate
 
     def toDER(self):
         (signatureOID, hashAlgorithm) = stringToAlgorithmIdentifiers(self.signature)
         certificate = rfc2459.Certificate()
         tbsCertificate = self.getTBSCertificate()
-        certificate.setComponentByName('tbsCertificate', tbsCertificate)
-        certificate.setComponentByName('signatureAlgorithm', signatureOID)
+        certificate['tbsCertificate'] = tbsCertificate
+        certificate['signatureAlgorithm'] = signatureOID
         tbsDER = encoder.encode(tbsCertificate)
-        certificate.setComponentByName('signatureValue', self.issuerKey.sign(tbsDER, hashAlgorithm))
+        certificate['signatureValue'] = self.issuerKey.sign(tbsDER, hashAlgorithm)
         return encoder.encode(certificate)
 
     def toPEM(self):
