@@ -15,7 +15,6 @@
 #include "mozilla/dom/MediaTrackSettingsBinding.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/WeakPtr.h"
-#include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsID.h"
 #include "nsIPrincipal.h"
