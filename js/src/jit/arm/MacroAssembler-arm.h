@@ -664,6 +664,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void jump(JitCode* code) {
         branch(code);
     }
+    void jump(ImmPtr code) {
+        ScratchRegisterScope scratch(asMasm());
+        movePtr(code, scratch);
+        ma_bx(scratch);
+    }
     void jump(Register reg) {
         ma_bx(reg);
     }

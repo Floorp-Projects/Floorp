@@ -1188,7 +1188,7 @@ TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame)
         return;
     }
 
-    TraceRoot(trc, footer->addressOfJitCode(), "ion-exit-code");
+    MOZ_ASSERT(frame.exitFrame()->isWrapperExit());
 
     const VMFunction* f = footer->function();
     if (f == nullptr)

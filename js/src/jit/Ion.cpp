@@ -37,6 +37,7 @@
 #include "jit/JitCompartment.h"
 #include "jit/JitSpewer.h"
 #include "jit/LICM.h"
+#include "jit/Linker.h"
 #include "jit/LIR.h"
 #include "jit/LoopUnroller.h"
 #include "jit/Lowering.h"
@@ -203,6 +204,7 @@ JitRuntime::JitRuntime(JSRuntime* rt)
     invalidator_(nullptr),
     debugTrapHandler_(nullptr),
     baselineDebugModeOSRHandler_(nullptr),
+    functionWrapperCode_(nullptr),
     functionWrappers_(nullptr),
     preventBackedgePatching_(false),
     jitcodeGlobalTable_(nullptr)
@@ -334,11 +336,27 @@ JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
     if (!freeStub_)
         return false;
 
-    JitSpew(JitSpew_Codegen, "# Emitting VM function wrappers");
-    for (VMFunction* fun = VMFunction::functions; fun; fun = fun->next) {
-        JitSpew(JitSpew_Codegen, "# VM function wrapper");
-        if (!generateVMWrapper(cx, *fun))
+    {
+        JitSpew(JitSpew_Codegen, "# Emitting VM function wrappers");
+        MacroAssembler masm;
+        for (VMFunction* fun = VMFunction::functions; fun; fun = fun->next) {
+            JitSpew(JitSpew_Codegen, "# VM function wrapper");
+            if (!generateVMWrapper(cx, masm, *fun))
+                return false;
+        }
+
+        Linker linker(masm);
+        AutoFlushICache afc("VMWrappers");
+        functionWrapperCode_ = linker.newCode<NoGC>(cx, OTHER_CODE);
+        if (!functionWrapperCode_)
             return false;
+
+#ifdef JS_ION_PERF
+        writePerfSpewerJitCodeProfile(functionWrapperCode_, "VMWrappers");
+#endif
+#ifdef MOZ_VTUNE
+        vtune::MarkStub(functionWrapperCode_, "VMWrappers");
+#endif
     }
 
     JitSpew(JitSpew_Codegen, "# Emitting lazy link stub");
@@ -718,15 +736,20 @@ JitRuntime::getBailoutTable(const FrameSizeClass& frameClass) const
     return bailoutTables_.ref()[frameClass.classId()];
 }
 
-JitCode*
+uint8_t*
 JitRuntime::getVMWrapper(const VMFunction& f) const
 {
     MOZ_ASSERT(functionWrappers_);
     MOZ_ASSERT(functionWrappers_->initialized());
+    MOZ_ASSERT(functionWrapperCode_);
+
     JitRuntime::VMWrapperMap::Ptr p = functionWrappers_->readonlyThreadsafeLookup(&f);
     MOZ_ASSERT(p);
 
-    return p->value();
+    uint32_t offset = p->value();
+    MOZ_ASSERT(offset < functionWrapperCode_->instructionsSize());
+
+    return functionWrapperCode_->raw() + offset;
 }
 
 template <AllowGC allowGC>
