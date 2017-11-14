@@ -76,6 +76,11 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
     },
+    'windows10-64-ccov': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
+      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+    },
     'windows10-64-pgo': {
       'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
@@ -658,10 +663,9 @@ def handle_suite_category(config, tests):
 
 @transforms.add
 def enable_code_coverage(config, tests):
-    """Enable code coverage for the linux64-ccov/opt & linux64-jsdcov/opt build-platforms"""
+    """Enable code coverage for the linux64-ccov/opt & linux64-jsdcov/opt & win64-ccov/debug build-platforms"""
     for test in tests:
-        if test['build-platform'] == 'linux64-ccov/opt' and \
-                not test['test-name'].startswith('test-verify'):
+        if 'ccov' in test['build-platform'] and not test['test-name'].startswith('test-verify'):
             test['mozharness'].setdefault('extra-options', []).append('--code-coverage')
             test['when'] = {}
             test['instance-size'] = 'xlarge'
@@ -670,6 +674,7 @@ def enable_code_coverage(config, tests):
                     test['run-on-projects'] == 'built-projects':
                 test['run-on-projects'] = ['mozilla-central', 'try']
 
+            # TODO: Fix talos on Windows coverage build.
             if test['test-name'].startswith('talos'):
                 test['max-run-time'] = 7200
                 test['docker-image'] = {"in-tree": "desktop1604-test"}
