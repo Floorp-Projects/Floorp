@@ -12,6 +12,7 @@
 #include "mozilla/RefCounted.h"
 #include "mozilla/UniquePtr.h"
 #include "double-conversion/utils.h" // for DISALLOW_COPY_AND_ASSIGN
+#include "RtpSourceObserver.h"
 #include "CodecConfig.h"
 #include "VideoTypes.h"
 #include "MediaConduitErrors.h"
@@ -551,6 +552,9 @@ public:
 
   virtual bool InsertDTMFTone(int channel, int eventCode, bool outOfBand,
                               int lengthMs, int attenuationDb) = 0;
+
+  virtual void GetRtpSources(int64_t aTimeNow,
+                             nsTArray<dom::RTCRtpSourceEntry>& outSources) = 0;
 
 };
 }

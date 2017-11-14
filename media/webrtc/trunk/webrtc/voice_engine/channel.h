@@ -50,6 +50,7 @@ class RateLimiter;
 class ReceiveStatistics;
 class RemoteNtpTimeEstimator;
 class RtcEventLog;
+class RtpPacketObserver;
 class RTPPayloadRegistry;
 class RtpReceiver;
 class RTPReceiverAudio;
@@ -432,6 +433,8 @@ class Channel
                                  uint64_t* bytesReceived,
                                  double* packetsFractionLost,
                                  int64_t* rtt) const;
+  virtual void SetRtpPacketObserver(RtpPacketObserver* observer);
+
  protected:
   void OnIncomingFractionLoss(int fraction_lost);
   void OnIncomingReceiverReports(const ReportBlockList& aReportBlocks,
@@ -570,6 +573,8 @@ class Channel
 
   // TODO(ossu): Remove once GetAudioDecoderFactory() is no longer needed.
   rtc::scoped_refptr<AudioDecoderFactory> decoder_factory_;
+
+  RtpPacketObserver* rtp_source_observer_ = nullptr;
 };
 
 }  // namespace voe
