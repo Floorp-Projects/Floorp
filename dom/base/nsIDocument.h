@@ -3135,11 +3135,7 @@ public:
     mIncCounters[aIncCounter] += inc;
   }
 
-  void SetUserHasInteracted(bool aUserHasInteracted)
-  {
-    mUserHasInteracted = aUserHasInteracted;
-  }
-
+  void SetUserHasInteracted(bool aUserHasInteracted);
   bool UserHasInteracted()
   {
     return mUserHasInteracted;
