@@ -377,6 +377,25 @@ module.exports = {
   },
 
   /**
+   * Check whether a node is a function.
+   *
+   * @param {Object} node
+   *        The AST node to check
+   *
+   * @return {Boolean}
+   *         True or false
+   */
+  getIsFunctionNode(node) {
+    switch (node.type) {
+      case "ArrowFunctionExpression":
+      case "FunctionDeclaration":
+      case "FunctionExpression":
+        return true;
+    }
+    return false;
+  },
+
+  /**
    * Check whether the context is the global scope.
    *
    * @param {Array} ancestors
@@ -387,9 +406,7 @@ module.exports = {
    */
   getIsGlobalScope(ancestors) {
     for (let parent of ancestors) {
-      if (parent.type == "FunctionExpression" ||
-          parent.type == "FunctionDeclaration" ||
-          parent.type == "ArrowFunctionExpression") {
+      if (this.getIsFunctionNode(parent)) {
         return false;
       }
     }

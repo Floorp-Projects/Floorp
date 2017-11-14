@@ -36,6 +36,7 @@ add_task(async function test_hide_skip_button_via_perf() {
   await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
   await promiseOnboardingOverlayOpened(tab.linkedBrowser);
 
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   ok(!content.document.querySelector("#onboarding-skip-tour-button"), "should not render the skip button");
 
   await BrowserTestUtils.removeTab(tab);
