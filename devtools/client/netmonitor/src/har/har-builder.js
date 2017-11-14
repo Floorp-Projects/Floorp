@@ -51,7 +51,7 @@ HarBuilder.prototype = {
    * @returns {Promise} A promise that resolves to the HAR object when
    * the entire build process is done.
    */
-  build: function () {
+  build: async function () {
     this.promises = [];
 
     // Build basic structure for data.
@@ -59,12 +59,14 @@ HarBuilder.prototype = {
 
     // Build entries.
     for (let file of this._options.items) {
-      log.entries.push(this.buildEntry(log, file));
+      log.entries.push(await this.buildEntry(log, file));
     }
 
     // Some data needs to be fetched from the backend during the
     // build process, so wait till all is done.
-    return Promise.all(this.promises).then(() => ({ log }));
+    await Promise.all(this.promises);
+
+    return { log };
   },
 
   // Helpers
@@ -110,7 +112,7 @@ HarBuilder.prototype = {
     return page;
   },
 
-  buildEntry: function (log, file) {
+  buildEntry: async function (log, file) {
     let page = this.getPage(log, file);
 
     let entry = {};
@@ -119,7 +121,7 @@ HarBuilder.prototype = {
     entry.time = file.endedMillis - file.startedMillis;
 
     entry.request = this.buildRequest(file);
-    entry.response = this.buildResponse(file);
+    entry.response = await this.buildResponse(file);
     entry.cache = this.buildCache(file);
     entry.timings = file.eventTimings ? file.eventTimings.timings : {};
 
@@ -286,7 +288,7 @@ HarBuilder.prototype = {
     return postData;
   },
 
-  buildResponse: function (file) {
+  buildResponse: async function (file) {
     let response = {
       status: 0
     };
@@ -303,7 +305,7 @@ HarBuilder.prototype = {
 
     response.headers = this.buildHeaders(responseHeaders);
     response.cookies = this.buildCookies(file.responseCookies);
-    response.content = this.buildContent(file);
+    response.content = await this.buildContent(file);
 
     let headers = responseHeaders ? responseHeaders.headers : null;
     let headersSize = responseHeaders ? responseHeaders.headersSize : -1;
@@ -323,13 +325,19 @@ HarBuilder.prototype = {
     return response;
   },
 
-  buildContent: function (file) {
+  buildContent: async function (file) {
     let content = {
       mimeType: file.mimeType,
       size: -1
     };
 
+    // When using HarAutomation, HarCollector will automatically fetch responseContent,
+    // but when we use it from netmonitor, FirefoxDataProvider should fetch it itself
+    // lazily, via requestData.
     let responseContent = file.responseContent;
+    if (!responseContent && this._options.requestData) {
+      responseContent = await this._options.requestData(file.id, "responseContent");
+    }
     if (responseContent && responseContent.content) {
       content.size = responseContent.content.size;
       content.encoding = responseContent.content.encoding;

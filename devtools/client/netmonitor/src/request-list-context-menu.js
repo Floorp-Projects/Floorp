@@ -20,6 +20,7 @@ const {
   getUrlQuery,
   parseQueryString,
   getUrlBaseName,
+  formDataURI,
 } = require("./utils/request-utils");
 
 function RequestListContextMenu({
@@ -27,11 +28,13 @@ function RequestListContextMenu({
   getLongString,
   getTabTarget,
   openStatistics,
+  requestData,
 }) {
   this.cloneSelectedRequest = cloneSelectedRequest;
   this.getLongString = getLongString;
   this.getTabTarget = getTabTarget;
   this.openStatistics = openStatistics;
+  this.requestData = requestData;
 }
 
 RequestListContextMenu.prototype = {
@@ -114,10 +117,7 @@ RequestListContextMenu.prototype = {
       id: "request-list-context-copy-response",
       label: L10N.getStr("netmonitor.context.copyResponse"),
       accesskey: L10N.getStr("netmonitor.context.copyResponse.accesskey"),
-      visible: !!(selectedRequest &&
-               selectedRequest.responseContent &&
-               selectedRequest.responseContent.content.text &&
-               selectedRequest.responseContent.content.text.length !== 0),
+      visible: !!(selectedRequest && selectedRequest.responseContentAvailable),
       click: () => this.copyResponse(),
     });
 
@@ -126,8 +126,8 @@ RequestListContextMenu.prototype = {
       label: L10N.getStr("netmonitor.context.copyImageAsDataUri"),
       accesskey: L10N.getStr("netmonitor.context.copyImageAsDataUri.accesskey"),
       visible: !!(selectedRequest &&
-               selectedRequest.responseContent &&
-               selectedRequest.responseContent.content.mimeType.includes("image/")),
+               selectedRequest.mimeType &&
+               selectedRequest.mimeType.includes("image/")),
       click: () => this.copyImageAsDataUri(),
     });
 
@@ -164,8 +164,8 @@ RequestListContextMenu.prototype = {
       label: L10N.getStr("netmonitor.context.saveImageAs"),
       accesskey: L10N.getStr("netmonitor.context.saveImageAs.accesskey"),
       visible: !!(selectedRequest &&
-               selectedRequest.responseContent &&
-               selectedRequest.responseContent.content.mimeType.includes("image/")),
+               selectedRequest.mimeType &&
+               selectedRequest.mimeType.includes("image/")),
       click: () => this.saveImageAs(),
     });
 
@@ -200,8 +200,8 @@ RequestListContextMenu.prototype = {
       label: L10N.getStr("netmonitor.context.openInDebugger"),
       accesskey: L10N.getStr("netmonitor.context.openInDebugger.accesskey"),
       visible: !!(selectedRequest &&
-               selectedRequest.responseContent &&
-               selectedRequest.responseContent.content.mimeType.includes("javascript")),
+               selectedRequest.mimeType &&
+               selectedRequest.mimeType.includes("javascript")),
       click: () => this.openInDebugger()
     });
 
@@ -210,9 +210,9 @@ RequestListContextMenu.prototype = {
       label: L10N.getStr("netmonitor.context.openInStyleEditor"),
       accesskey: L10N.getStr("netmonitor.context.openInStyleEditor.accesskey"),
       visible: !!(selectedRequest &&
-               selectedRequest.responseContent &&
                Services.prefs.getBoolPref("devtools.styleeditor.enabled") &&
-               selectedRequest.responseContent.content.mimeType.includes("css")),
+               selectedRequest.mimeType &&
+               selectedRequest.mimeType.includes("css")),
       click: () => this.openInStyleEditor()
     });
 
@@ -338,15 +338,22 @@ RequestListContextMenu.prototype = {
   /**
    * Copy image as data uri.
    */
-  copyImageAsDataUri() {
-    copyString(this.selectedRequest.responseContentDataUri);
+  async copyImageAsDataUri() {
+    let responseContent = await this.requestData(this.selectedRequest.id,
+      "responseContent");
+    let { mimeType } = this.selectedRequest;
+    let { encoding, text } = responseContent.content;
+    let src = formDataURI(mimeType, encoding, text);
+    copyString(src);
   },
 
   /**
    * Save image as.
    */
-  saveImageAs() {
-    let { encoding, text } = this.selectedRequest.responseContent.content;
+  async saveImageAs() {
+    let responseContent = await this.requestData(this.selectedRequest.id,
+      "responseContent");
+    let { encoding, text } = responseContent.content;
     let fileName = getUrlBaseName(this.selectedRequest.url);
     let data;
     if (encoding === "base64") {
@@ -364,8 +371,10 @@ RequestListContextMenu.prototype = {
   /**
    * Copy response data as a string.
    */
-  copyResponse() {
-    copyString(this.selectedRequest.responseContent.content.text);
+  async copyResponse() {
+    let responseContent = await this.requestData(this.selectedRequest.id,
+      "responseContent");
+    copyString(responseContent.content.text);
   },
 
   /**
@@ -391,6 +400,7 @@ RequestListContextMenu.prototype = {
     let title = form.title || form.url;
 
     return {
+      requestData: this.requestData,
       getString: this.getLongString,
       items: this.sortedRequests,
       title: title

@@ -56,19 +56,23 @@ add_task(function* () {
   yield onRequests;
 
   // Check the resent requests
-  ITEMS.forEach((item, i) => {
+  for (let i = 0; i < ITEMS.length; i++) {
+    let item = ITEMS[i];
     is(item.method, METHODS[i], `The ${item.method} request has the right method`);
     is(item.url, requestUrl, `The ${item.method} request has the right URL`);
     is(item.status, 200, `The ${item.method} response has the right status`);
 
     if (item.method === "POST") {
+      // Force fetching response content
+      let responseContent = yield connector.requestData(item.id, "responseContent");
+
       is(item.requestPostData.postData.text, "post-data",
         "The POST request has the right POST data");
       // eslint-disable-next-line mozilla/no-cpows-in-tests
-      is(item.responseContent.content.text, "Access-Control-Allow-Origin: *",
+      is(responseContent.content.text, "Access-Control-Allow-Origin: *",
         "The POST response has the right content");
     }
-  });
+  }
 
   info("Finishing the test");
   return teardown(monitor);

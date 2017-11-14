@@ -20,7 +20,7 @@ function* throttleUploadTest(actuallyThrottle) {
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let RequestListContextMenu = windowRequire(
     "devtools/client/netmonitor/src/request-list-context-menu");
-  let { getLongString, getTabTarget, setPreferences } = connector;
+  let { getLongString, getTabTarget, setPreferences, requestData } = connector;
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -53,7 +53,8 @@ function* throttleUploadTest(actuallyThrottle) {
   yield wait;
 
   // Copy HAR into the clipboard (asynchronous).
-  let contextMenu = new RequestListContextMenu({ getTabTarget, getLongString });
+  let contextMenu = new RequestListContextMenu({
+    getTabTarget, getLongString, requestData });
   let jsonString = yield contextMenu.copyAllAsHar();
   let har = JSON.parse(jsonString);
 

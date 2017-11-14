@@ -70,7 +70,6 @@ if CONFIG['NS_PRINTING']:
     UNIFIED_SOURCES += [
         'nsCUPSShim.cpp',
         'nsDeviceContextSpecG.cpp',
-        'nsPaperPS.cpp',
         'nsPrintDialogGTK.cpp',
         'nsPrintOptionsGTK.cpp',
         'nsPrintSettingsGTK.cpp',
