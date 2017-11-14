@@ -9,11 +9,6 @@ with Files("**"):
 
 TEST_DIRS += ['tests']
 
-# On win we build two mfbt libs - mfbt linked to crt dlls here and in
-# staticruntime we build a statically linked mfbt lib.
-if CONFIG['OS_ARCH'] == 'WINNT':
-    DIRS += ['staticruntime']
-
 Library('mfbt')
 
 EXPORTS.mozilla = [
@@ -127,13 +122,32 @@ elif CONFIG['OS_ARCH'] == 'Linux':
         'LinuxSignal.h',
     ]
 
-include('objs.mozbuild')
-
-UNIFIED_SOURCES += mfbt_src_cppsrcs
+UNIFIED_SOURCES += [
+    'Assertions.cpp',
+    'ChaosMode.cpp',
+    'double-conversion/double-conversion/bignum-dtoa.cc',
+    'double-conversion/double-conversion/bignum.cc',
+    'double-conversion/double-conversion/cached-powers.cc',
+    'double-conversion/double-conversion/diy-fp.cc',
+    'double-conversion/double-conversion/double-conversion.cc',
+    'double-conversion/double-conversion/fast-dtoa.cc',
+    'double-conversion/double-conversion/fixed-dtoa.cc',
+    'double-conversion/double-conversion/strtod.cc',
+    'FloatingPoint.cpp',
+    'HashFunctions.cpp',
+    'JSONWriter.cpp',
+    'Poison.cpp',
+    'SHA1.cpp',
+    'TaggedAnonymousMemory.cpp',
+    'Unused.cpp',
+]
 
 DEFINES['IMPL_MFBT'] = True
 
-SOURCES += mfbt_nonunified_src_cppsrcs
+SOURCES += [
+    'Compression.cpp',
+    'decimal/Decimal.cpp',
+]
 
 DisableStlWrapping()
 
@@ -141,16 +155,16 @@ DisableStlWrapping()
 # TODO: Remove these suppressions after bug 993267 is fixed.
 
 if CONFIG['GNU_CXX']:
-    SOURCES['/mfbt/Compression.cpp'].flags += ['-Wno-unused-function']
+    SOURCES['Compression.cpp'].flags += ['-Wno-unused-function']
     CXXFLAGS += ['-Wno-error=shadow']
 
 if CONFIG['CLANG_CXX']:
     # Suppress warnings from third-party V8 Decimal code.
-    SOURCES['/mfbt/decimal/Decimal.cpp'].flags += ['-Wno-implicit-fallthrough']
+    SOURCES['decimal/Decimal.cpp'].flags += ['-Wno-implicit-fallthrough']
 
 if CONFIG['_MSC_VER']:
     # Error 4804 is "'>' : unsafe use of type 'bool' in operation"
-    SOURCES['/mfbt/Compression.cpp'].flags += ['-wd4804']
+    SOURCES['Compression.cpp'].flags += ['-wd4804']
 
 if CONFIG['MOZ_NEEDS_LIBATOMIC']:
     OS_LIBS += ['atomic']
