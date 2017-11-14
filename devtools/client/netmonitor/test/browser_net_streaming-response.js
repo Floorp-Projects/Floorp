@@ -65,29 +65,15 @@ add_task(function* () {
 
   store.dispatch(Actions.selectRequest(null));
 
-  yield selectIndexAndWaitForSourceEditor(0);
+  yield selectIndexAndWaitForSourceEditor(monitor, 0);
   // the hls-m3u8 part
   testEditorContent(REQUESTS[0]);
 
-  yield selectIndexAndWaitForSourceEditor(1);
+  yield selectIndexAndWaitForSourceEditor(monitor, 1);
   // the mpeg-dash part
   testEditorContent(REQUESTS[1]);
 
   return teardown(monitor);
-
-  function* selectIndexAndWaitForSourceEditor(index) {
-    let editor = document.querySelector("#response-panel .CodeMirror-code");
-    if (!editor) {
-      let waitDOM = waitForDOM(document, "#response-panel .CodeMirror-code");
-      EventUtils.sendMouseEvent({ type: "mousedown" },
-        document.querySelectorAll(".request-list-item")[index]);
-      document.querySelector("#response-tab").click();
-      yield waitDOM;
-    } else {
-      EventUtils.sendMouseEvent({ type: "mousedown" },
-        document.querySelectorAll(".request-list-item")[index]);
-    }
-  }
 
   function testEditorContent([ fmt, textRe ]) {
     ok(document.querySelector(".CodeMirror-line").textContent.match(textRe),

@@ -177,6 +177,13 @@ function enableNetProvider(hud) {
           actions,
           webConsoleClient: proxy.webConsoleClient
         });
+
+        // /!\ This is terrible, but it allows ResponsePanel to be able to call
+        // `dataProvider.requestData` to fetch response content lazily.
+        // `proxy.networkDataProvider` is put by NewConsoleOutputWrapper on
+        // `serviceContainer` which allow NetworkEventMessage to expose requestData on
+        // the fake `connector` object it hands over to ResponsePanel.
+        proxy.networkDataProvider = dataProvider;
       }
 
       let type = action.type;
