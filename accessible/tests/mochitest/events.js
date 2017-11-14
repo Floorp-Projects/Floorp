@@ -746,13 +746,13 @@ function eventQueue(aEventType) {
         var eventType = eventSeq[idx].type;
         if (typeof eventType == "string") {
           // DOM event
-          var target = eventSeq[idx].target;
+          var target = eventQueue.getEventTarget(eventSeq[idx]);
           if (!target) {
             ok(false, "no target for DOM event!");
             return false;
           }
           var phase = eventQueue.getEventPhase(eventSeq[idx]);
-          target.ownerDocument.addEventListener(eventType, this, phase);
+          target.addEventListener(eventType, this, phase);
 
         } else {
           // A11y event
@@ -774,9 +774,9 @@ function eventQueue(aEventType) {
         var eventType = eventSeq[idx].type;
         if (typeof eventType == "string") {
           // DOM event
-          var target = eventSeq[idx].target;
+          var target = eventQueue.getEventTarget(eventSeq[idx]);
           var phase = eventQueue.getEventPhase(eventSeq[idx]);
-          target.ownerDocument.removeEventListener(eventType, this, phase);
+          target.removeEventListener(eventType, this, phase);
 
         } else {
           // A11y event
@@ -851,6 +851,19 @@ eventQueue.getEventTargetDescr =
 
 eventQueue.getEventPhase = function eventQueue_getEventPhase(aChecker) {
   return ("phase" in aChecker) ? aChecker.phase : true;
+};
+
+eventQueue.getEventTarget = function eventQueue_getEventTarget(aChecker) {
+  if ("eventTarget" in aChecker) {
+    switch (aChecker.eventTarget) {
+      case "element":
+        return aChecker.target;
+      case "document":
+      default:
+        return aChecker.target.ownerDocument;
+    }
+  }
+  return aChecker.target.ownerDocument;
 };
 
 eventQueue.compareEventTypes =
