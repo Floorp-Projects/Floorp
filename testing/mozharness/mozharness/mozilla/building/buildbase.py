@@ -399,9 +399,6 @@ class BuildOptionParser(object):
     # TODO add nosetests for this class
     platform = None
     bits = None
-    config_file_search_path = [
-        DEFAULT_CONFIG_PATH,
-    ]
 
     # add to this list and you can automagically do things like
     # --custom-build-variant-cfg asan
@@ -521,9 +518,15 @@ class BuildOptionParser(object):
             # now let's see if we were given a valid pathname
             valid_variant_cfg_path = value
         else:
+            # FIXME: We should actually wait until we have parsed all arguments
+            # before looking at this, otherwise the behavior will depend on the
+            # order of arguments. But that isn't a problem as long as --extra-config-path
+            # is always passed first.
+            extra_config_paths = parser.values.config_paths or []
+            config_paths = extra_config_paths + [DEFAULT_CONFIG_PATH]
             # let's take our prospective_cfg_path and see if we can
             # determine an existing file
-            for path in cls.config_file_search_path:
+            for path in config_paths:
                 if os.path.exists(os.path.join(path, prospective_cfg_path)):
                     # success! we found a config file
                     valid_variant_cfg_path = os.path.join(path,
