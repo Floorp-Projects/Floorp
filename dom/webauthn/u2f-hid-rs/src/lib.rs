@@ -27,6 +27,9 @@ pub mod platform;
 #[path = "stub/mod.rs"]
 pub mod platform;
 
+#[cfg(not(any(target_os = "macos")))]
+mod khmatcher;
+
 #[macro_use]
 extern crate log;
 extern crate rand;
@@ -35,7 +38,6 @@ extern crate boxfnonce;
 extern crate runloop;
 
 mod consts;
-mod khmatcher;
 mod u2ftypes;
 mod u2fprotocol;
 
