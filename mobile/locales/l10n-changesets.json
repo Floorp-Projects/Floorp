@@ -445,6 +445,13 @@
         ], 
         "revision": "60c04fa5a1d2"
     }, 
+    "ltg": {
+        "platforms": [
+            "android", 
+            "android-api-16"
+        ], 
+        "revision": "247fc64db5f3"
+    }, 
     "lv": {
         "platforms": [
             "android", 
@@ -634,7 +641,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "f646ab139718"
+        "revision": "3f6fb5cdf736"
     }, 
     "sv-SE": {
         "platforms": [
