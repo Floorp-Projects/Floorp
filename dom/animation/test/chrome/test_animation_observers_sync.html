@@ -471,7 +471,7 @@ function runTest() {
       { prop: "playbackRate", val: 0.5 },
       { prop: "startTime",    val: 50 * MS_PER_SEC },
       { prop: "currentTime",  val: 50 * MS_PER_SEC },
-    ].forEach(function(aChangeTest) {
+    ].forEach(aChangeTest => {
       test(t => {
         // We use a forwards fill mode so that even if the change we make causes
         // the animation to become finished, it will still be "relevant" so we

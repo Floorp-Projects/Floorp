@@ -1,4 +1,4 @@
-this.blobConverters = (function () {
+this.blobConverters = (function() {
   let exports = {};
 
   exports.dataUrlToBlob = function(url) {

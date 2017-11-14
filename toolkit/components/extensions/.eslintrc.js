@@ -56,7 +56,7 @@ module.exports = {
     "curly": ["error", "all"],
 
     // Two space indent
-    "indent": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
+    "indent-legacy": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
 
     // Always require parenthesis for new calls
     "new-parens": "error",
