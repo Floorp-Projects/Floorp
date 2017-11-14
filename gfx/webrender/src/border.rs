@@ -10,7 +10,6 @@ use ellipse::Ellipse;
 use frame_builder::FrameBuilder;
 use gpu_cache::GpuDataRequest;
 use prim_store::{BorderPrimitiveCpu, RectangleContent, PrimitiveContainer, TexelRect};
-use tiling::PrimitiveFlags;
 use util::{lerp, pack_as_float};
 
 #[repr(u8)]
@@ -388,7 +387,7 @@ impl FrameBuilder {
                     clip_and_scroll,
                     &info,
                     RectangleContent::Fill(border.top.color),
-                    PrimitiveFlags::None,
+                    None,
                 );
             }
             if left_edge == BorderEdgeKind::Solid {
@@ -401,7 +400,7 @@ impl FrameBuilder {
                     clip_and_scroll,
                     &info,
                     RectangleContent::Fill(border.left.color),
-                    PrimitiveFlags::None,
+                    None,
                 );
             }
             if right_edge == BorderEdgeKind::Solid {
@@ -414,7 +413,7 @@ impl FrameBuilder {
                     clip_and_scroll,
                     &info,
                     RectangleContent::Fill(border.right.color),
-                    PrimitiveFlags::None,
+                    None,
                 );
             }
             if bottom_edge == BorderEdgeKind::Solid {
@@ -427,7 +426,7 @@ impl FrameBuilder {
                     clip_and_scroll,
                     &info,
                     RectangleContent::Fill(border.bottom.color),
-                    PrimitiveFlags::None,
+                    None,
                 );
             }
         } else {

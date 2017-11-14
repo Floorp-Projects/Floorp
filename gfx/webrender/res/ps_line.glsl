@@ -181,7 +181,7 @@ void main(void) {
         vec2 local_pos = vLocalPos;
     #endif
 
-        alpha = min(alpha, do_clip());
+        alpha *= do_clip();
 #endif
 
     // Find the appropriate distance to apply the step over.
@@ -259,6 +259,6 @@ void main(void) {
         }
     }
 
-    oFragColor = vColor * vec4(1.0, 1.0, 1.0, alpha);
+    oFragColor = vColor * alpha;
 }
 #endif

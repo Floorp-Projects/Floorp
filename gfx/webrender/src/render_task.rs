@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ClipId, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use api::{ColorF, FilterOp, LayerPoint, MixBlendMode};
-use api::{LayerRect, PipelineId};
+use api::{FilterOp, LayerPoint, LayerRect, MixBlendMode};
+use api::{PipelineId, PremultipliedColorF};
 use clip::{ClipSource, ClipSourcesWeakHandle, ClipStore};
 use clip_scroll_tree::CoordinateSystemId;
 use gpu_cache::GpuCacheHandle;
@@ -204,7 +204,7 @@ pub enum MaskGeometryKind {
 
 #[derive(Debug, Clone)]
 pub struct ClipWorkItem {
-    pub scroll_node_id: ClipScrollNodeIndex,
+    pub scroll_node_data_index: ClipScrollNodeIndex,
     pub clip_sources: ClipSourcesWeakHandle,
     pub coordinate_system_id: CoordinateSystemId,
 }
@@ -263,7 +263,7 @@ pub struct PictureTask {
     pub prim_index: PrimitiveIndex,
     pub target_kind: RenderTargetKind,
     pub content_origin: LayerPoint,
-    pub color: ColorF,
+    pub color: PremultipliedColorF,
 }
 
 #[derive(Debug)]
@@ -271,7 +271,7 @@ pub struct BlurTask {
     pub blur_std_deviation: f32,
     pub target_kind: RenderTargetKind,
     pub regions: Vec<LayerRect>,
-    pub color: ColorF,
+    pub color: PremultipliedColorF,
     pub scale_factor: f32,
 }
 
@@ -316,7 +316,7 @@ impl RenderTask {
         screen_origin: DeviceIntPoint,
         location: RenderTaskLocation,
         frame_output_pipeline_id: Option<PipelineId>,
-    ) -> RenderTask {
+    ) -> Self {
         RenderTask {
             cache_key: None,
             children: Vec::new(),
@@ -333,7 +333,7 @@ impl RenderTask {
     pub fn new_dynamic_alpha_batch(
         rect: &DeviceIntRect,
         frame_output_pipeline_id: Option<PipelineId>,
-    ) -> RenderTask {
+    ) -> Self {
         let location = RenderTaskLocation::Dynamic(None, rect.size);
         Self::new_alpha_batch(rect.origin, location, frame_output_pipeline_id)
     }
@@ -343,9 +343,9 @@ impl RenderTask {
         prim_index: PrimitiveIndex,
         target_kind: RenderTargetKind,
         content_origin: LayerPoint,
-        color: ColorF,
+        color: PremultipliedColorF,
         clear_mode: ClearMode,
-    ) -> RenderTask {
+    ) -> Self {
         RenderTask {
             cache_key: None,
             children: Vec::new(),
@@ -360,7 +360,7 @@ impl RenderTask {
         }
     }
 
-    pub fn new_readback(screen_rect: DeviceIntRect) -> RenderTask {
+    pub fn new_readback(screen_rect: DeviceIntRect) -> Self {
         RenderTask {
             cache_key: None,
             children: Vec::new(),
@@ -379,7 +379,7 @@ impl RenderTask {
         clip_store: &ClipStore,
         is_axis_aligned: bool,
         prim_coordinate_system_id: CoordinateSystemId,
-    ) -> Option<RenderTask> {
+    ) -> Option<Self> {
         // Filter out all the clip instances that don't contribute to the result
         let mut current_coordinate_system_id = prim_coordinate_system_id;
         let mut inner_rect = Some(task_rect);
@@ -399,7 +399,7 @@ impl RenderTask {
                 let clip_info = clip_store
                     .get_opt(&node.work_item.clip_sources)
                     .expect("bug: clip item should exist");
-                debug_assert!(clip_info.is_masking());
+                debug_assert!(clip_info.has_clips());
 
                 match clip_info.bounds.inner {
                     Some(ref inner) if !inner.device_rect.is_empty() => {
@@ -453,7 +453,7 @@ impl RenderTask {
         })
     }
 
-    // Construct a render task to apply a blur to a primitive. 
+    // Construct a render task to apply a blur to a primitive.
     // The render task chain that is constructed looks like:
     //
     //    PrimitiveCacheTask: Draw the primitives.
@@ -478,8 +478,8 @@ impl RenderTask {
         target_kind: RenderTargetKind,
         regions: &[LayerRect],
         clear_mode: ClearMode,
-        color: ColorF,
-    ) -> RenderTask {
+        color: PremultipliedColorF,
+    ) -> Self {
         // Adjust large std deviation value.
         let mut adjusted_blur_std_deviation = blur_std_deviation;
         let blur_target_size = render_tasks.get(src_task_id).get_dynamic_size();
@@ -540,7 +540,7 @@ impl RenderTask {
         target_kind: RenderTargetKind,
         src_task_id: RenderTaskId,
         target_size: DeviceIntSize,
-    ) -> RenderTask {
+    ) -> Self {
         RenderTask {
             cache_key: None,
             children: vec![src_task_id],
@@ -649,8 +649,8 @@ impl RenderTask {
                     ],
                 }
             }
-            RenderTaskKind::VerticalBlur(ref task_info) |
-            RenderTaskKind::HorizontalBlur(ref task_info) => {
+            RenderTaskKind::VerticalBlur(ref task) |
+            RenderTaskKind::HorizontalBlur(ref task) => {
                 let (target_rect, target_index) = self.get_target_rect();
                 RenderTaskData {
                     data: [
@@ -659,13 +659,13 @@ impl RenderTask {
                         target_rect.size.width as f32,
                         target_rect.size.height as f32,
                         target_index.0 as f32,
-                        task_info.blur_std_deviation,
-                        task_info.scale_factor,
+                        task.blur_std_deviation,
+                        task.scale_factor,
                         0.0,
-                        task_info.color.r,
-                        task_info.color.g,
-                        task_info.color.b,
-                        task_info.color.a,
+                        task.color.r,
+                        task.color.g,
+                        task.color.b,
+                        task.color.a,
                     ],
                 }
             }
