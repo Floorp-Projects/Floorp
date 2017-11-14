@@ -20,8 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySend",
                                   "resource://gre/modules/TelemetrySend.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
                                   "resource://gre/modules/Log.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
 
 const gIsWindows = AppConstants.platform == "win";
 const gIsMac = AppConstants.platform == "macosx";
@@ -131,6 +129,7 @@ const PingServer = {
 function decodeRequestPayload(request) {
   let s = request.bodyInputStream;
   let payload = null;
+  let decoder = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
 
   if (request.hasHeader("content-encoding") &&
       request.getHeader("content-encoding") == "gzip") {
@@ -158,8 +157,7 @@ function decodeRequestPayload(request) {
     utf8string += unicodeConverter.Finish();
     payload = JSON.parse(utf8string);
   } else {
-    let bytes = NetUtil.readInputStream(s, s.available());
-    payload = JSON.parse((new TextDecoder()).decode(bytes));
+    payload = decoder.decodeFromStream(s, s.available());
   }
 
   return payload;

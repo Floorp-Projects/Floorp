@@ -91,6 +91,7 @@
 #include "nsContentCID.h"
 #include "nsError.h"
 #include "nsPresContext.h"
+#include "nsIJSON.h"
 #include "nsThreadUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsIFileChannel.h"
