@@ -70,6 +70,7 @@ public:
   int32_t
     GetRequestType(imgIRequest* aRequest, mozilla::ErrorResult& aError);
   already_AddRefed<nsIURI> GetCurrentURI(mozilla::ErrorResult& aError);
+  already_AddRefed<nsIURI> GetCurrentRequestFinalURI();
   void ForceReload(const mozilla::dom::Optional<bool>& aNotify,
                    mozilla::ErrorResult& aError);
 
