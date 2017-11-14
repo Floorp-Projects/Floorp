@@ -862,8 +862,8 @@ BrowserElementChild.prototype = {
               documentURI: documentURI,
               text: elem.textContent.substring(0, kLongestReturnedString)};
     }
-    if (elem instanceof Ci.nsIImageLoadingContent && elem.currentURI) {
-      return {uri: elem.currentURI.spec, documentURI: documentURI};
+    if (elem instanceof Ci.nsIImageLoadingContent && elem.currentRequestFinalURI) {
+      return {uri: elem.currentRequestFinalURI.spec, documentURI: documentURI};
     }
     if (ChromeUtils.getClassName(elem) === "HTMLImageElement") {
       return {uri: elem.src, documentURI: documentURI};
