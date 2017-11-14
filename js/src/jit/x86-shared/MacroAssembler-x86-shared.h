@@ -541,6 +541,9 @@ class MacroAssemblerX86Shared : public Assembler
     void jump(JitCode* code) {
         jmp(code);
     }
+    void jump(ImmPtr code) {
+        jmp(code);
+    }
     void jump(RepatchLabel* label) {
         jmp(label);
     }
