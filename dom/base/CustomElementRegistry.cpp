@@ -324,6 +324,24 @@ CustomElementRegistry::RegisterUnresolvedElement(Element* aElement, nsAtom* aTyp
   aElement->AddStates(NS_EVENT_STATE_UNRESOLVED);
 }
 
+void
+CustomElementRegistry::UnregisterUnresolvedElement(Element* aElement,
+                                                   nsAtom* aTypeName)
+{
+  nsTArray<nsWeakPtr>* candidates;
+  if (mCandidatesMap.Get(aTypeName, &candidates)) {
+    MOZ_ASSERT(candidates);
+    // We don't need to iterate the candidates array and remove the element from
+    // the array for performance reason. It'll be handled by bug 1396620.
+    for (size_t i = 0; i < candidates->Length(); ++i) {
+      nsCOMPtr<Element> elem = do_QueryReferent(candidates->ElementAt(i));
+      if (elem && elem.get() == aElement) {
+        candidates->RemoveElementAt(i);
+      }
+    }
+  }
+}
+
 /* static */ UniquePtr<CustomElementCallback>
 CustomElementRegistry::CreateCustomElementCallback(
   nsIDocument::ElementCallbackType aType, Element* aCustomElement,
