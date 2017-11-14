@@ -4,7 +4,7 @@ buildscript {
     ext.support_libraries_version = '26.1.0'
     ext.architecture_components_version = '1.0.0-rc1'
     ext.espresso_version = '3.0.1'
-    ext.kotlin_version = '1.1.51'
+    ext.kotlin_version = '1.1.60'
 
     repositories {
         jcenter()
