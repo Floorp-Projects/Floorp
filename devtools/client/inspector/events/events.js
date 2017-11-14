@@ -14,7 +14,6 @@ const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 class EventsView {
-
   constructor(inspector, window) {
     this.document = window.document;
     this.inspector = inspector;
@@ -46,7 +45,6 @@ class EventsView {
     this.inspector = null;
     this.store = null;
   }
-
 }
 
 module.exports = EventsView;

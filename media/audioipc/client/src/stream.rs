@@ -83,6 +83,11 @@ fn stream_thread(
                 set_in_callback(true);
                 state_cb(ptr::null_mut(), user_ptr as *mut _, state);
                 set_in_callback(false);
+                let r = conn.send(ServerMessage::StreamStateCallback);
+                if r.is_err() {
+                    debug!("stream_thread: Failed to send StreamStateCallback: {:?}", r);
+                    return;
+                }
             },
             m => {
                 info!("Unexpected ClientMessage: {:?}", m);

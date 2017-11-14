@@ -18,7 +18,7 @@ add_task(async function test_show_abort_dialog() {
     is(win.closed, false, "dialog should not be closed");
 
     // abort the payment request
-    ContentTask.spawn(browser, null, async() => content.rq.abort());
+    ContentTask.spawn(browser, null, async () => content.rq.abort());
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
 });

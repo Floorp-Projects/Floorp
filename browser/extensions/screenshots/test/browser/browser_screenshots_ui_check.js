@@ -1,4 +1,3 @@
-/* eslint disable */
 "use strict";
 
 const BUTTON_ID = "pageAction-panel-screenshots";

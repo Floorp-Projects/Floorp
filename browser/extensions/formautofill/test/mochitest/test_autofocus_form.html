@@ -55,6 +55,7 @@ add_task(async function check_autocomplete_on_autofocus_field() {
     <p>This is a basic form.</p>
     <p><label>organization: <input id="organization" name="organization" autocomplete="organization" type="text"></label></p>
     <script>
+      "use strict";
       // Focuses the input before DOMContentLoaded
       document.getElementById("organization").focus();
     </script>

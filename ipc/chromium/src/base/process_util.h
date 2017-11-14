@@ -95,15 +95,35 @@ void SetAllFDsToCloseOnExec();
 // given multimap. Only call this function in a child process where you know
 // that there aren't any other threads.
 void CloseSuperfluousFds(const base::InjectiveMultimap& saved_map);
+
+typedef std::vector<std::pair<int, int> > file_handle_mapping_vector;
+typedef std::map<std::string, std::string> environment_map;
 #endif
+
+struct LaunchOptions {
+  // If true, wait for the process to terminate.  Otherwise, return
+  // immediately.
+  bool wait = false;
+
+#if defined(OS_WIN)
+  bool start_hidden = false;
+#endif
+
+#if defined(OS_POSIX)
+  // Environment variables to be applied in addition to the current
+  // process's environment, replacing them where necessary.
+  environment_map environ;
+
+  // A mapping of (src fd -> dest fd) to propagate into the child
+  // process.  All other fds will be closed, except std{in,out,err}.
+  file_handle_mapping_vector fds_to_remap;
+#endif
+};
 
 #if defined(OS_WIN)
 // Runs the given application name with the given command line. Normally, the
 // first command line argument should be the path to the process, and don't
 // forget to quote it.
-//
-// If wait is true, it will block and wait for the other process to finish,
-// otherwise, it will just continue asynchronously.
 //
 // Example (including literal quotes)
 //  cmdline = "c:\windows\explorer.exe" -foo "c:\bar\"
@@ -113,28 +133,20 @@ void CloseSuperfluousFds(const base::InjectiveMultimap& saved_map);
 // NOTE: In this case, the caller is responsible for closing the handle so
 //       that it doesn't leak!
 bool LaunchApp(const std::wstring& cmdline,
-               bool wait, bool start_hidden, ProcessHandle* process_handle);
+               const LaunchOptions& options,
+               ProcessHandle* process_handle);
+
 #elif defined(OS_POSIX)
 // Runs the application specified in argv[0] with the command line argv.
-// Before launching all FDs open in the parent process will be marked as
-// close-on-exec.  |fds_to_remap| defines a mapping of src fd->dest fd to
-// propagate FDs into the child process.
 //
-// As above, if wait is true, execute synchronously. The pid will be stored
-// in process_handle if that pointer is non-null.
+// The pid will be stored in process_handle if that pointer is
+// non-null.
 //
 // Note that the first argument in argv must point to the filename,
-// and must be fully specified.
-typedef std::vector<std::pair<int, int> > file_handle_mapping_vector;
+// and must be fully specified (i.e., this will not search $PATH).
 bool LaunchApp(const std::vector<std::string>& argv,
-               const file_handle_mapping_vector& fds_to_remap,
-               bool wait, ProcessHandle* process_handle);
-
-typedef std::map<std::string, std::string> environment_map;
-bool LaunchApp(const std::vector<std::string>& argv,
-               const file_handle_mapping_vector& fds_to_remap,
-               const environment_map& env_vars_to_set,
-               bool wait, ProcessHandle* process_handle);
+               const LaunchOptions& options,
+               ProcessHandle* process_handle);
 
 // Deleter for the array of strings allocated within BuildEnvironmentArray.
 struct FreeEnvVarsArray
@@ -152,7 +164,8 @@ EnvironmentArray BuildEnvironmentArray(const environment_map& env_vars_to_set);
 // Executes the application specified by cl. This function delegates to one
 // of the above two platform-specific functions.
 bool LaunchApp(const CommandLine& cl,
-               bool wait, bool start_hidden, ProcessHandle* process_handle);
+               const LaunchOptions&,
+               ProcessHandle* process_handle);
 
 // Used to filter processes by process ID.
 class ProcessFilter {

@@ -1008,6 +1008,13 @@ private:
   // Update the last known ref point to the current event's mRefPoint.
   static void UpdateLastPointerPosition(WidgetMouseEvent* aMouseEvent);
 
+  /**
+   * Notify target when user has been interaction with some speicific user
+   * gestures which are eKeyUp, eMouseUp, eTouchEnd.
+   */
+  void NotifyTargetUserActivation(WidgetEvent* aEvent,
+                                  nsIContent* aTargetContent);
+
   int32_t     mLockCursor;
   bool mLastFrameConsumedSetCursor;
 

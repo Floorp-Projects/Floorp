@@ -16,4 +16,13 @@ module.exports = {
   "settings": {
     "html/xml-extensions": [ ".xhtml" ]
   },
+
+  "overrides": [{
+    // eslint-plugin-html handles eol-last slightly different - it applies to
+    // each set of script tags, so we turn it off here.
+    "files": "**/*.*html",
+    "rules": {
+      "eol-last": "off",
+    }
+  }]
 };

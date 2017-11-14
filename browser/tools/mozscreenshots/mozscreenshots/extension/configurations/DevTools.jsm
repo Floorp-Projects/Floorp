@@ -34,6 +34,7 @@ this.DevTools = {
       this.configurations[panel] = {};
       this.configurations[panel].selectors = [selectToolbox];
       this.configurations[panel].applyConfig = async function() {
+        Services.prefs.setIntPref("devtools.toolbox.footer.height", 800);
         await gDevTools.showToolbox(getTargetForSelectedTab(), panel, "bottom");
         await new Promise(resolve => setTimeout(resolve, 500));
       };
@@ -44,6 +45,7 @@ this.DevTools = {
     bottomToolbox: {
       selectors: [selectToolbox],
       async applyConfig() {
+        Services.prefs.clearUserPref("devtools.toolbox.footer.height");
         await gDevTools.showToolbox(getTargetForSelectedTab(), "inspector", "bottom");
         await new Promise(resolve => setTimeout(resolve, 1000));
       },
