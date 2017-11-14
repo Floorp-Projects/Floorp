@@ -1063,10 +1063,6 @@ pref("toolkit.dump.emit", false);
 pref("devtools.discovery.log", false);
 // Whether to scan for DevTools devices via WiFi
 pref("devtools.remote.wifi.scan", true);
-// Whether UI options for controlling device visibility over WiFi are shown
-// N.B.: This does not set whether the device can be discovered via WiFi, only
-// whether the UI control to make such a choice is shown to the user
-pref("devtools.remote.wifi.visible", true);
 // Client must complete TLS handshake within this window (ms)
 pref("devtools.remote.tls-handshake-timeout", 10000);
 
@@ -1091,12 +1087,6 @@ pref("devtools.gcli.imgurUploadURL", "https://api.imgur.com/3/image");
 
 // GCLI commands directory
 pref("devtools.commands.dir", "");
-
-// Allows setting the performance marks for which telemetry metrics will be recorded.
-pref("devtools.telemetry.supported_performance_marks", "contentInteractive,navigationInteractive,navigationLoaded,visuallyLoaded,fullyLoaded,mediaEnumerated,scanEnd");
-
-// Deprecation warnings after DevTools file migration.
-pref("devtools.migration.warnings", true);
 
 // view source
 pref("view_source.syntax_highlight", true);
