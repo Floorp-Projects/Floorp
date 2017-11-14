@@ -279,6 +279,7 @@ public:
     // Create and attach a window.
     static void Open(const jni::Class::LocalRef& aCls,
                      GeckoSession::Window::Param aWindow,
+                     jni::Object::Param aCompositor,
                      jni::Object::Param aDispatcher,
                      jni::Object::Param aSettings,
                      jni::String::Param aChromeURI,
@@ -290,12 +291,13 @@ public:
 
     // Transfer this nsWindow to new GeckoSession objects.
     void Transfer(const GeckoSession::Window::LocalRef& inst,
+                  jni::Object::Param aCompositor,
                   jni::Object::Param aDispatcher,
                   jni::Object::Param aSettings);
 
     // Reattach this nsWindow to a new GeckoView.
     void Attach(const GeckoSession::Window::LocalRef& inst,
-                jni::Object::Param aView, jni::Object::Param aCompositor);
+                jni::Object::Param aView);
 
     void EnableEventDispatcher();
 };
@@ -1264,6 +1266,7 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport()
 /* static */ void
 nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  GeckoSession::Window::Param aWindow,
+                                 jni::Object::Param aCompositor,
                                  jni::Object::Param aDispatcher,
                                  jni::Object::Param aSettings,
                                  jni::String::Param aChromeURI,
@@ -1287,12 +1290,11 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
         }
     }
 
+    // Prepare an nsIAndroidView to pass as argument to the window.
     RefPtr<AndroidView> androidView = new AndroidView();
     androidView->mEventDispatcher->Attach(
             java::EventDispatcher::Ref::From(aDispatcher), nullptr);
-    if (aSettings) {
-        androidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
-    }
+    androidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
 
     nsAutoCString chromeFlags("chrome,dialog=0,resizable,scrollbars");
     if (aPrivateMode) {
@@ -1312,10 +1314,15 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     window->SetScreenId(aScreenId);
 
     // Attach a new GeckoView support object to the new window.
-    window->mGeckoViewSupport = mozilla::MakeUnique<GeckoViewSupport>(
-        window, (GeckoSession::Window::LocalRef(aCls.Env(), aWindow)));
-
+    GeckoSession::Window::LocalRef sessionWindow(aCls.Env(), aWindow);
+    window->mGeckoViewSupport =
+            mozilla::MakeUnique<GeckoViewSupport>(window, sessionWindow);
     window->mGeckoViewSupport->mDOMWindow = pdomWindow;
+    window->mAndroidView = androidView;
+
+    // Attach other session support objects.
+    window->mGeckoViewSupport->Transfer(
+            sessionWindow, aCompositor, aDispatcher, aSettings);
 
     // Attach a new GeckoEditable support object to the new window.
     auto editable = GeckoEditable::New();
@@ -1323,11 +1330,6 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     editable->SetDefaultEditableChild(editableChild);
     window->mEditable = editable;
     window->mEditableSupport.Attach(editableChild, window, editableChild);
-
-    // Attach again using the new window.
-    androidView->mEventDispatcher->Attach(
-            java::EventDispatcher::Ref::From(aDispatcher), pdomWindow);
-    window->mAndroidView = androidView;
 
     if (window->mWidgetListener) {
         nsCOMPtr<nsIXULWindow> xulWindow(
@@ -1358,31 +1360,10 @@ nsWindow::GeckoViewSupport::Close()
 
 void
 nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
+                                     jni::Object::Param aCompositor,
                                      jni::Object::Param aDispatcher,
                                      jni::Object::Param aSettings)
 {
-    if (!window.mAndroidView) {
-        return;
-    }
-
-    window.mAndroidView->mEventDispatcher->Attach(
-            java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
-    window.mAndroidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
-
-    inst->OnTransfer(aDispatcher);
-}
-
-void
-nsWindow::GeckoViewSupport::Attach(const GeckoSession::Window::LocalRef& inst,
-                                   jni::Object::Param aView,
-                                   jni::Object::Param aCompositor)
-{
-    // Associate our previous GeckoEditable with the new GeckoView.
-    MOZ_ASSERT(window.mEditable);
-    window.mEditable->OnViewChange(aView);
-
-    // mNPZCSupport might have already been detached through the Java side calling
-    // NativePanZoomController.destroy().
     if (window.mNPZCSupport) {
         window.mNPZCSupport.Detach();
     }
@@ -1391,12 +1372,26 @@ nsWindow::GeckoViewSupport::Attach(const GeckoSession::Window::LocalRef& inst,
         window.mLayerViewSupport.Detach();
     }
 
-    if (aCompositor) {
-        auto compositor = LayerView::Compositor::LocalRef(
-                inst.Env(), LayerView::Compositor::Ref::From(aCompositor));
-        window.mLayerViewSupport.Attach(compositor, &window, compositor);
-        compositor->Reattach();
+    auto compositor = LayerSession::Compositor::LocalRef(
+            inst.Env(), LayerSession::Compositor::Ref::From(aCompositor));
+    window.mLayerViewSupport.Attach(compositor, &window, compositor);
+
+    if (window.mAndroidView) {
+        window.mAndroidView->mEventDispatcher->Attach(
+                java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
+        window.mAndroidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
     }
+
+    inst->OnTransfer(aDispatcher);
+}
+
+void
+nsWindow::GeckoViewSupport::Attach(const GeckoSession::Window::LocalRef& inst,
+                                   jni::Object::Param aView)
+{
+    // Associate our previous GeckoEditable with the new GeckoView.
+    MOZ_ASSERT(window.mEditable);
+    window.mEditable->OnViewChange(aView);
 }
 
 void

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.gfx.LayerSession;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -31,7 +32,8 @@ import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
-public class GeckoSession implements Parcelable {
+public class GeckoSession extends LayerSession
+                          implements Parcelable {
     private static final String LOGTAG = "GeckoSession";
     private static final boolean DEBUG = false;
 
@@ -299,18 +301,20 @@ public class GeckoSession implements Parcelable {
         }
 
         @WrapForJNI(dispatchTo = "proxy")
-        static native void open(Window instance, EventDispatcher dispatcher,
-                                GeckoBundle settings, String chromeUri,
-                                int screenId, boolean privateMode);
+        public static native void open(Window instance, Compositor compositor,
+                                       EventDispatcher dispatcher,
+                                       GeckoBundle settings, String chromeUri,
+                                       int screenId, boolean privateMode);
 
         @WrapForJNI(dispatchTo = "proxy")
         @Override protected native void disposeNative();
 
         @WrapForJNI(dispatchTo = "proxy")
-        native void close();
+        public native void close();
 
         @WrapForJNI(dispatchTo = "proxy")
-        native void transfer(EventDispatcher dispatcher, GeckoBundle settings);
+        public native void transfer(Compositor compositor, EventDispatcher dispatcher,
+                                    GeckoBundle settings);
 
         @WrapForJNI(calledFrom = "gecko")
         private synchronized void onTransfer(final EventDispatcher dispatcher) {
@@ -322,7 +326,7 @@ public class GeckoSession implements Parcelable {
         }
 
         @WrapForJNI(dispatchTo = "proxy")
-        native void attach(GeckoView view, Object compositor);
+        public native void attach(GeckoView view);
 
         @WrapForJNI(calledFrom = "gecko")
         private synchronized void onReady() {
@@ -380,10 +384,11 @@ public class GeckoSession implements Parcelable {
 
         if (mWindow != null) {
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-                mWindow.transfer(mEventDispatcher, mSettings.asBundle());
+                mWindow.transfer(mCompositor, mEventDispatcher, mSettings.asBundle());
             } else {
                 GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
                         mWindow, "transfer",
+                        Compositor.class, mCompositor,
                         EventDispatcher.class, mEventDispatcher,
                         GeckoBundle.class, mSettings.asBundle());
             }
@@ -483,13 +488,14 @@ public class GeckoSession implements Parcelable {
         mWindow = new Window(mNativeQueue);
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            Window.open(mWindow, mEventDispatcher, mSettings.asBundle(),
-                        chromeUri, screenId, isPrivate);
+            Window.open(mWindow, mCompositor, mEventDispatcher,
+                        mSettings.asBundle(), chromeUri, screenId, isPrivate);
         } else {
             GeckoThread.queueNativeCallUntil(
                 GeckoThread.State.PROFILE_READY,
                 Window.class, "open",
                 Window.class, mWindow,
+                Compositor.class, mCompositor,
                 EventDispatcher.class, mEventDispatcher,
                 GeckoBundle.class, mSettings.asBundle(),
                 String.class, chromeUri,
@@ -503,12 +509,11 @@ public class GeckoSession implements Parcelable {
         }
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            mWindow.attach(view, view.getCompositor());
+            mWindow.attach(view);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
                     mWindow, "attach",
-                    GeckoView.class, view,
-                    Object.class, view.getCompositor());
+                    GeckoView.class, view);
         }
     }
 
