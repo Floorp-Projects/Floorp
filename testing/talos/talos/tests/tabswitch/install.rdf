@@ -5,8 +5,6 @@
     <em:type>2</em:type>
     <em:name>Tab Switch Test</em:name>
     <em:version>1.0.7</em:version>
-    <em:optionsType>2</em:optionsType>
-    <em:optionsURL>chrome://tabswitch/content/options.xul</em:optionsURL>
     <em:bootstrap>true</em:bootstrap>
     <em:description>Measures the performance of switching tabs</em:description>
     <em:creator>Brad Lassey</em:creator>
