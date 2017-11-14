@@ -39,6 +39,10 @@ add_task(async function() {
       XPCOM: false, MainProcess: true, PlatformAPI: false
     }, "Accessibility service consumers in content are correct."));
 
+    Assert.deepEqual(JSON.parse(accService.getConsumers()), {
+      XPCOM: true, MainProcess: false, PlatformAPI: false
+    }, "Accessibility service consumers in parent are correct.");
+
     info("Removing a service in parent and waiting for service to be shut " +
       "down in content");
     // Remove a11y service reference in the main process.

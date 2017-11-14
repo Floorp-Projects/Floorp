@@ -429,7 +429,6 @@ GMPDownloader.prototype = {
       log.info("gmpAddon is not valid, will not continue");
       return Promise.reject({
         target: this,
-        status,
         type: "downloaderr"
       });
     }

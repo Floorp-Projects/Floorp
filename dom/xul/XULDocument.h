@@ -188,7 +188,7 @@ public:
 
     NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULDocument, XMLDocument)
 
-    void TraceProtos(JSTracer* aTrc, uint32_t aGCNumber);
+    void TraceProtos(JSTracer* aTrc);
 
     // WebIDL API
     already_AddRefed<nsINode> GetPopupNode();
