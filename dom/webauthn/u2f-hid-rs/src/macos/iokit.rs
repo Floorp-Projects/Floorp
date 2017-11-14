@@ -7,11 +7,12 @@
 extern crate core_foundation_sys;
 extern crate libc;
 
-use libc::c_void;
-use core_foundation_sys::base::{CFIndex, CFAllocatorRef};
+use core_foundation_sys::base::{Boolean, CFIndex, CFAllocatorRef, CFOptionFlags};
 use core_foundation_sys::string::CFStringRef;
-use core_foundation_sys::runloop::CFRunLoopRef;
+use core_foundation_sys::runloop::{CFRunLoopRef, CFRunLoopObserverRef, CFRunLoopObserverCallBack};
 use core_foundation_sys::dictionary::CFDictionaryRef;
+use libc::c_void;
+use std::ops::Deref;
 
 type IOOptionBits = u32;
 
@@ -28,7 +29,7 @@ pub type IOHIDDeviceCallback = extern "C" fn(context: *mut c_void,
 pub type IOHIDReportType = IOOptionBits;
 pub type IOHIDReportCallback = extern "C" fn(context: *mut c_void,
                                              result: IOReturn,
-                                             sender: *mut c_void,
+                                             sender: IOHIDDeviceRef,
                                              report_type: IOHIDReportType,
                                              report_id: u32,
                                              report: *mut u8,
@@ -50,8 +51,51 @@ pub struct IOHIDDeviceRef(*const c_void);
 unsafe impl Send for IOHIDDeviceRef {}
 unsafe impl Sync for IOHIDDeviceRef {}
 
+pub struct SendableRunLoop(pub CFRunLoopRef);
+
+unsafe impl Send for SendableRunLoop {}
+
+impl Deref for SendableRunLoop {
+    type Target = CFRunLoopRef;
+
+    fn deref(&self) -> &CFRunLoopRef {
+        &self.0
+    }
+}
+
+#[repr(C)]
+pub struct CFRunLoopObserverContext {
+    pub version: CFIndex,
+    pub info: *mut c_void,
+    pub retain: Option<extern "C" fn(info: *const c_void) -> *const c_void>,
+    pub release: Option<extern "C" fn(info: *const c_void)>,
+    pub copyDescription: Option<extern "C" fn(info: *const c_void) -> CFStringRef>,
+}
+
+impl CFRunLoopObserverContext {
+    pub fn new(context: *mut c_void) -> Self {
+        Self {
+            version: 0 as CFIndex,
+            info: context,
+            retain: None,
+            release: None,
+            copyDescription: None,
+        }
+    }
+}
+
 #[link(name = "IOKit", kind = "framework")]
 extern "C" {
+    // CFRunLoop
+    pub fn CFRunLoopObserverCreate(
+        allocator: CFAllocatorRef,
+        activities: CFOptionFlags,
+        repeats: Boolean,
+        order: CFIndex,
+        callout: CFRunLoopObserverCallBack,
+        context: *mut CFRunLoopObserverContext,
+    ) -> CFRunLoopObserverRef;
+
     // IOHIDManager
     pub fn IOHIDManagerCreate(
         allocator: CFAllocatorRef,
@@ -66,6 +110,11 @@ extern "C" {
     pub fn IOHIDManagerRegisterDeviceRemovalCallback(
         manager: IOHIDManagerRef,
         callback: IOHIDDeviceCallback,
+        context: *mut c_void,
+    );
+    pub fn IOHIDManagerRegisterInputReportCallback(
+        manager: IOHIDManagerRef,
+        callback: IOHIDReportCallback,
         context: *mut c_void,
     );
     pub fn IOHIDManagerOpen(manager: IOHIDManagerRef, options: IOHIDManagerOptions) -> IOReturn;
@@ -84,11 +133,4 @@ extern "C" {
         report: *const u8,
         reportLength: CFIndex,
     ) -> IOReturn;
-    pub fn IOHIDDeviceRegisterInputReportCallback(
-        device: IOHIDDeviceRef,
-        report: *const u8,
-        reportLength: CFIndex,
-        callback: IOHIDReportCallback,
-        context: *mut c_void,
-    );
 }

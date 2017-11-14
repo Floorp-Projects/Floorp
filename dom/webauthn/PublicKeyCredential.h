@@ -47,7 +47,7 @@ public:
   SetResponse(RefPtr<AuthenticatorResponse>);
 
   static already_AddRefed<Promise>
-  IsPlatformAuthenticatorAvailable(GlobalObject& aGlobal);
+  IsUserVerifyingPlatformAuthenticatorAvailable(GlobalObject& aGlobal);
 
 private:
   CryptoBuffer mRawId;

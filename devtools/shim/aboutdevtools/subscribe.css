@@ -7,6 +7,13 @@
  * It is largely inspired from https://mozilla.github.io/basket-example/
  */
 
+.newsletter-title {
+  font-size: 17px;
+  font-weight: 500;
+  margin-top: 26px;
+  margin-bottom: -4px;
+}
+
 #newsletter-errors {
   /* Hidden by default */
   display: none;
@@ -52,8 +59,10 @@
 
   /* The privacy section is hidden by default and only displayed on focus */
   height: 0;
-  margin-bottom: -20px;
   overflow: hidden;
+
+  padding: 3px 0 0 3px;
+  margin: -3px 0 -20px -3px;
 }
 
 #newsletter-privacy.animate {
@@ -67,7 +76,7 @@
 #privacy {
   width: 20px;
   height: 20px;
-  margin: 2px;
+  margin-top: 2px;
   margin-inline-end: 10px;
   flex-shrink: 0;
 }
@@ -75,7 +84,7 @@
 #email {
   width: 100%;
   box-sizing: border-box;
-  padding: 12px 15px;
+  padding: 8px;
 }
 
 #newsletter-form input {
@@ -87,8 +96,8 @@
 }
 
 #newsletter-form input:focus {
-  border-color: var(--teal-60);
-  box-shadow: 0 0 2px 0 var(--teal-60);
+  border-color: var(--blue-50);
+  box-shadow: 0 0 0px 3px var(--blue-50-alpha20);
 }
 
 #newsletter-form::placeholder {
@@ -97,4 +106,5 @@
 
 #newsletter-submit {
   display: block;
+  padding: 8px 20px;
 }
