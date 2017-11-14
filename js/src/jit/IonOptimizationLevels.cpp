@@ -18,6 +18,9 @@ namespace jit {
 
 OptimizationLevelInfo IonOptimizations;
 
+const uint32_t OptimizationInfo::CompilerWarmupThreshold = 1000;
+const uint32_t OptimizationInfo::CompilerSmallFunctionWarmupThreshold = CompilerWarmupThreshold;
+
 void
 OptimizationInfo::initNormalOptimizationInfo()
 {
@@ -83,14 +86,12 @@ OptimizationInfo::compilerWarmUpThreshold(JSScript* script, jsbytecode* pc) cons
     if (pc == script->code())
         pc = nullptr;
 
-    uint32_t warmUpThreshold = compilerWarmUpThreshold_;
-    if (JitOptions.forcedDefaultIonWarmUpThreshold.isSome())
-        warmUpThreshold = JitOptions.forcedDefaultIonWarmUpThreshold.ref();
+    uint32_t warmUpThreshold = JitOptions.forcedDefaultIonWarmUpThreshold
+        .valueOr(compilerWarmUpThreshold_);
 
     if (JitOptions.isSmallFunction(script)) {
-        warmUpThreshold = compilerSmallFunctionWarmUpThreshold_;
-        if (JitOptions.forcedDefaultIonSmallFunctionWarmUpThreshold.isSome())
-            warmUpThreshold = JitOptions.forcedDefaultIonSmallFunctionWarmUpThreshold.ref();
+        warmUpThreshold = JitOptions.forcedDefaultIonSmallFunctionWarmUpThreshold
+            .valueOr(compilerSmallFunctionWarmUpThreshold_);
     }
 
     // If the script is too large to compile on the active thread, we can still
