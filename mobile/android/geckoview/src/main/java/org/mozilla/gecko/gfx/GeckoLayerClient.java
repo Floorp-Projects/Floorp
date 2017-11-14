@@ -10,13 +10,11 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.SystemClock;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.MotionEvent;
@@ -27,8 +25,6 @@ class GeckoLayerClient implements LayerView.Listener
 {
     private static final String LOGTAG = "GeckoLayerClient";
 
-    private final Context mContext;
-    private IntSize mScreenSize;
     private IntSize mWindowSize;
 
     private boolean mForceRedraw;
@@ -65,16 +61,13 @@ class GeckoLayerClient implements LayerView.Listener
 
     private SynthesizedEventState mPointerState;
 
-    public GeckoLayerClient(Context context, LayerView view) {
+    public GeckoLayerClient(LayerView view) {
         // we can fill these in with dummy values because they are always written
         // to before being read
-        mContext = context;
-        mScreenSize = new IntSize(0, 0);
         mWindowSize = new IntSize(0, 0);
 
         mForceRedraw = true;
-        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-        mViewportMetrics = new ImmutableViewportMetrics(displayMetrics)
+        mViewportMetrics = new ImmutableViewportMetrics()
                            .setViewportSize(view.getWidth(), view.getHeight());
 
         mToolbarAnimator = new DynamicToolbarAnimator(this);
@@ -174,33 +167,23 @@ class GeckoLayerClient implements LayerView.Listener
 
     /* Informs Gecko that the screen size has changed. */
     private void sendResizeEventIfNecessary(boolean force) {
-        DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
-
-        IntSize newScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
         IntSize newWindowSize = new IntSize(mViewportMetrics.viewportRectWidth,
                                             mViewportMetrics.viewportRectHeight);
 
-        boolean screenSizeChanged = !mScreenSize.equals(newScreenSize);
         boolean windowSizeChanged = !mWindowSize.equals(newWindowSize);
 
-        if (!force && !screenSizeChanged && !windowSizeChanged) {
+        if (!force && !windowSizeChanged) {
             return;
         }
 
-        mScreenSize = newScreenSize;
         mWindowSize = newWindowSize;
-
-        if (screenSizeChanged) {
-            Log.d(LOGTAG, "Screen-size changed to " + mScreenSize);
-        }
 
         if (windowSizeChanged) {
             Log.d(LOGTAG, "Window-size changed to " + mWindowSize);
         }
 
         if (mView != null) {
-            mView.notifySizeChanged(mWindowSize.width, mWindowSize.height,
-                                    mScreenSize.width, mScreenSize.height);
+            mView.notifySizeChanged(mWindowSize.width, mWindowSize.height);
         }
     }
 

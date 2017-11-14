@@ -4068,12 +4068,10 @@ public:
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 int32_t,
-                int32_t,
-                int32_t,
                 int32_t> Args;
         static constexpr char name[] = "onSizeChanged";
         static constexpr char signature[] =
-                "(IIII)V";
+                "(II)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;

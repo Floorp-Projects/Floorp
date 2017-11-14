@@ -921,8 +921,7 @@ public:
         }
     }
 
-    void OnSizeChanged(int32_t aWindowWidth, int32_t aWindowHeight,
-                       int32_t aScreenWidth, int32_t aScreenHeight)
+    void OnSizeChanged(int32_t aWindowWidth, int32_t aWindowHeight)
     {
         MOZ_ASSERT(NS_IsMainThread());
         if (!mWindow) {
