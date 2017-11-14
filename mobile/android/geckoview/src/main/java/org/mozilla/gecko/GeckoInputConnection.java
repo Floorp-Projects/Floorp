@@ -9,7 +9,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -366,12 +365,6 @@ class GeckoInputConnection
             return;
         }
 
-        int[] viewCoords = new int[2];
-        view.getLocationOnScreen(viewCoords);
-
-        DynamicToolbarAnimator animator = view.getDynamicToolbarAnimator();
-        float toolbarHeight = (float) animator.getCurrentToolbarHeight();
-
         Matrix matrix = view.getMatrixForLayerRectToViewRect();
         if (matrix == null) {
             if (DEBUG) {
@@ -379,7 +372,6 @@ class GeckoInputConnection
             }
             return;
         }
-        matrix.postTranslate(viewCoords[0], viewCoords[1] + toolbarHeight);
         mCursorAnchorInfoBuilder.setMatrix(matrix);
 
         final Editable content = getEditable();

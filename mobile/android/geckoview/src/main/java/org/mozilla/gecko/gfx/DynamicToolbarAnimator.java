@@ -49,7 +49,7 @@ public class DynamicToolbarAnimator {
     private final Set<PinReason> mPinFlags = Collections.synchronizedSet(EnumSet.noneOf(PinReason.class));
 
     private final GeckoLayerClient mTarget;
-    private LayerView.Compositor mCompositor;
+    private LayerSession.Compositor mCompositor;
     private final List<MetricsListener> mListeners;
     private ToolbarChromeProxy mToolbarChromeProxy;
     private int mMaxToolbarHeight;
@@ -181,7 +181,7 @@ public class DynamicToolbarAnimator {
         }
     }
 
-    /* package-private */ void notifyCompositorCreated(LayerView.Compositor aCompositor) {
+    /* package-private */ void notifyCompositorCreated(LayerSession.Compositor aCompositor) {
         ThreadUtils.assertOnUiThread();
         mCompositor = aCompositor;
     }

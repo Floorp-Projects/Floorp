@@ -186,7 +186,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
 
     @Override @WrapForJNI(calledFrom = "ui") // PanZoomController
     public void destroy() {
-        if (mDestroyed || !mView.isGeckoReady()) {
+        if (mDestroyed || !mView.isCompositorReady()) {
             return;
         }
         mDestroyed = true;
