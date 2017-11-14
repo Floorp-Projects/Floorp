@@ -658,6 +658,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       case WidgetMouseEvent::eRightButton:
       case WidgetMouseEvent::eMiddleButton:
         SetClickCount(mouseEvent, aStatus);
+        NotifyTargetUserActivation(aEvent, aTargetContent);
         break;
     }
     break;
@@ -819,6 +820,9 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           !IsRemoteTarget(content)) {
         aEvent->ResetWaitingReplyFromRemoteProcessState();
       }
+      if (aEvent->mMessage == eKeyUp) {
+        NotifyTargetUserActivation(aEvent, aTargetContent);
+      }
     }
     break;
   case eWheel:
@@ -882,10 +886,51 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       compositionEvent->mData = selectedText.mReply.mString;
     }
     break;
+  case eTouchEnd:
+    NotifyTargetUserActivation(aEvent, aTargetContent);
+    break;
   default:
     break;
   }
   return NS_OK;
+}
+
+void
+EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
+                                              nsIContent* aTargetContent)
+{
+  if (!aEvent->IsTrusted()) {
+    return;
+  }
+
+  WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+  if (mouseEvent && !mouseEvent->IsReal()) {
+    return;
+  }
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(aTargetContent);
+  if (!node) {
+    return;
+  }
+
+  nsIDocument* doc = node->OwnerDoc();
+  if (!doc || doc->HasBeenUserActivated()) {
+    return;
+  }
+
+  MOZ_ASSERT(aEvent->mMessage == eKeyUp   ||
+             aEvent->mMessage == eMouseUp ||
+             aEvent->mMessage == eTouchEnd);
+  doc->NotifyUserActivation();
+
+  // Activate parent document which has same principle on the parent chain.
+  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+  nsCOMPtr<nsIDocument> parent =
+    doc->GetFirstParentDocumentWithSamePrincipal(principal);
+  while (parent) {
+    parent->NotifyUserActivation();
+    parent = parent->GetFirstParentDocumentWithSamePrincipal(principal);
+  }
 }
 
 void
