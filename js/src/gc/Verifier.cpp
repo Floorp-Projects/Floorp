@@ -690,10 +690,12 @@ CheckGrayMarkingTracer::checkCell(Cell* cell)
         fprintf(stderr, "\n");
         dumpCellPath();
 
+#ifdef DEBUG
         if (cell->getTraceKind() == JS::TraceKind::Object) {
             fprintf(stderr, "\n");
             DumpObject(static_cast<JSObject*>(cell), stderr);
         }
+#endif /* DEBUG */
     }
 }
 
