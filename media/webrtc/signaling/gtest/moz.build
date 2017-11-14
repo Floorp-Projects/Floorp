@@ -27,6 +27,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit' and CONFIG['OS_TARGET'] != 'Android':
         'jsep_session_unittest.cpp',
         'jsep_track_unittest.cpp',
         'mediaconduit_unittests.cpp',
+        'rtpsources_unittests.cpp',
         'sdp_unittests.cpp',
         'videoconduit_unittests.cpp',
     ]
