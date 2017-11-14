@@ -961,7 +961,8 @@ nsAppStartup::TrackStartupCrashEnd()
     // in regular mode before returning to safe mode.
     int32_t maxResumedCrashes = 0;
     int32_t prefType;
-    rv = Preferences::GetDefaultRootBranch()->GetPrefType(kPrefMaxResumedCrashes, &prefType);
+    rv = Preferences::GetRootBranch(
+      PrefValueKind::Default)->GetPrefType(kPrefMaxResumedCrashes, &prefType);
     NS_ENSURE_SUCCESS(rv, rv);
     if (prefType == nsIPrefBranch::PREF_INT) {
       rv = Preferences::GetInt(kPrefMaxResumedCrashes, &maxResumedCrashes);
