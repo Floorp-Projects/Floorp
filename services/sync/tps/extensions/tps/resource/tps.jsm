@@ -56,13 +56,6 @@ XPCOMUtils.defineLazyGetter(this, "fileProtocolHandler", () => {
   return fileHandler.QueryInterface(Ci.nsIFileProtocolHandler);
 });
 
-XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
-  return new TextDecoder();
-});
-
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
-
 // Options for wiping data during a sync
 const SYNC_RESET_CLIENT = "resetClient";
 const SYNC_WIPE_CLIENT  = "wipeClient";
@@ -801,10 +794,11 @@ var TPS = {
       let stream = Cc["@mozilla.org/network/file-input-stream;1"]
                    .createInstance(Ci.nsIFileInputStream);
 
-      stream.init(schemaFile, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
+      let jsonReader = Cc["@mozilla.org/dom/json;1"]
+                       .createInstance(Components.interfaces.nsIJSON);
 
-      let bytes = NetUtil.readInputStream(stream, stream.available());
-      let schema = JSON.parse(gTextDecoder.decode(bytes));
+      stream.init(schemaFile, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
+      let schema = jsonReader.decodeFromStream(stream, stream.available());
       Logger.logInfo("Successfully loaded schema");
 
       // Importing resource://testing-common/* isn't possible from within TPS,
