@@ -284,12 +284,6 @@ MOZ_BEGIN_EXTERN_C
 #define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
 #include "malloc_decls.h"
 
-/* mozjemalloc relies on DllMain to initialize, but DllMain is not invoked
- * for executables, so manually invoke mozjemalloc initialization. */
-#if defined(_WIN32)
-void malloc_init_hard(void);
-#endif
-
 #ifdef ANDROID
 /* mozjemalloc uses MozTagAnonymousMemory, which doesn't have an inline
  * implementation on Android */
@@ -474,10 +468,6 @@ main()
   size_t first_pid = 0;
   FdReader reader(0);
   Replay replay;
-
-#if defined(_WIN32)
-  malloc_init_hard();
-#endif
 
   /* Read log from stdin and dispatch function calls to the Replay instance.
    * The log format is essentially:
