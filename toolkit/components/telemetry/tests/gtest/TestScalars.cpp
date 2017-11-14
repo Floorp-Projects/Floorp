@@ -12,127 +12,12 @@
 #include "nsThreadUtils.h"
 #include "Telemetry.h"
 #include "TelemetryFixture.h"
+#include "TelemetryTestHelpers.h"
 
 using namespace mozilla;
+using namespace TelemetryTestHelpers;
 
 #define EXPECTED_STRING "Nice, expected and creative string."
-
-namespace {
-
-void
-CheckUintScalar(const char* aName, JSContext* aCx, JS::HandleValue aSnapshot, uint32_t expectedValue)
-{
-  // Validate the value of the test scalar.
-  JS::RootedValue value(aCx);
-  JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
-  ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &value)) << "The test scalar must be reported.";
-  ASSERT_TRUE(value.isInt32()) << "The scalar value must be of the correct type.";
-  ASSERT_TRUE(value.toInt32() >= 0) << "The uint scalar type must contain a value >= 0.";
-  ASSERT_EQ(static_cast<uint32_t>(value.toInt32()), expectedValue) << "The scalar value must match the expected value.";
-}
-
-void
-CheckBoolScalar(const char* aName, JSContext* aCx, JS::HandleValue aSnapshot, bool expectedValue)
-{
-  // Validate the value of the test scalar.
-  JS::RootedValue value(aCx);
-  JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
-  ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &value)) << "The test scalar must be reported.";
-  ASSERT_TRUE(value.isBoolean()) << "The scalar value must be of the correct type.";
-  ASSERT_EQ(static_cast<bool>(value.toBoolean()), expectedValue) << "The scalar value must match the expected value.";
-}
-
-void
-CheckStringScalar(const char* aName, JSContext* aCx, JS::HandleValue aSnapshot, const char* expectedValue)
-{
-  // Validate the value of the test scalar.
-  JS::RootedValue value(aCx);
-  JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
-  ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &value)) << "The test scalar must be reported.";
-  ASSERT_TRUE(value.isString()) << "The scalar value must be of the correct type.";
-
-  bool sameString;
-  ASSERT_TRUE(JS_StringEqualsAscii(aCx, value.toString(), expectedValue, &sameString)) << "JS String comparison failed";
-  ASSERT_TRUE(sameString) << "The scalar value must match the expected string";
-}
-
-void
-CheckKeyedUintScalar(const char* aName, const char* aKey, JSContext* aCx, JS::HandleValue aSnapshot,
-                     uint32_t expectedValue)
-{
-  JS::RootedValue keyedScalar(aCx);
-  JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
-  // Get the aName keyed scalar object from the scalars snapshot.
-  ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &keyedScalar))
-    << "The keyed scalar must be reported.";
-
-  CheckUintScalar(aKey, aCx, keyedScalar, expectedValue);
-}
-
-void
-CheckKeyedBoolScalar(const char* aName, const char* aKey, JSContext* aCx, JS::HandleValue aSnapshot,
-                     bool expectedValue)
-{
-  JS::RootedValue keyedScalar(aCx);
-  JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
-  // Get the aName keyed scalar object from the scalars snapshot.
-  ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &keyedScalar))
-    << "The keyed scalar must be reported.";
-
-  CheckBoolScalar(aKey, aCx, keyedScalar, expectedValue);
-}
-
-void
-CheckNumberOfProperties(const char* aName, JSContext* aCx, JS::HandleValue aSnapshot,
-                        uint32_t expectedNumProperties)
-{
-  JS::RootedValue keyedScalar(aCx);
-  JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
-  // Get the aName keyed scalar object from the scalars snapshot.
-  ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &keyedScalar))
-    << "The keyed scalar must be reported.";
-
-  JS::RootedObject keyedScalarObj(aCx, &keyedScalar.toObject());
-  JS::Rooted<JS::IdVector> ids(aCx, JS::IdVector(aCx));
-  ASSERT_TRUE(JS_Enumerate(aCx, keyedScalarObj, &ids))
-    << "We must be able to get keyed scalar members.";
-
-  ASSERT_EQ(expectedNumProperties, ids.length())
-    << "The scalar must report the expected number of properties.";
-}
-
-void
-GetScalarsSnapshot(bool aKeyed, JSContext* aCx, JS::MutableHandle<JS::Value> aResult)
-{
-  nsCOMPtr<nsITelemetry> telemetry = do_GetService("@mozilla.org/base/telemetry;1");
-
-  // Get a snapshot of the scalars.
-  JS::RootedValue scalarsSnapshot(aCx);
-  nsresult rv;
-
-  if (aKeyed) {
-    rv = telemetry->SnapshotKeyedScalars(nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
-                                         false, aCx, 0, &scalarsSnapshot);
-  } else {
-    rv = telemetry->SnapshotScalars(nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
-                                    false, aCx, 0, &scalarsSnapshot);
-  }
-
-  // Validate the snapshot.
-  ASSERT_EQ(rv, NS_OK) << "Creating a snapshot of the data must not fail.";
-  ASSERT_TRUE(scalarsSnapshot.isObject()) << "The snapshot must be an object.";
-
-  // We currently only support scalars from the parent process in the gtests.
-  JS::RootedValue parentScalars(aCx);
-  JS::RootedObject scalarObj(aCx, &scalarsSnapshot.toObject());
-  // Don't complain if no scalars for the parent process can be found. Just
-  // return an empty object.
-  Unused << JS_GetProperty(aCx, scalarObj, "parent", &parentScalars);
-
-  aResult.set(parentScalars);
-}
-
-} // Anonymous namespace.
 
 // Test that we can properly write unsigned scalars using the C++ API.
 TEST_F(TelemetryTestFixture, ScalarUnsigned) {
