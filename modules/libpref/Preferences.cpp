@@ -532,97 +532,6 @@ PREF_HasUserPref(const char* aPrefName)
   return pref && pref->mPrefFlags.HasUserValue();
 }
 
-static nsresult
-PREF_GetCStringPref(const char* aPrefName,
-                    nsACString& aValueOut,
-                    bool aGetDefault)
-{
-  aValueOut.SetIsVoid(true);
-
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->mPrefFlags.IsTypeString()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  const char* stringVal = nullptr;
-  if (aGetDefault || pref->mPrefFlags.IsLocked() ||
-      !pref->mPrefFlags.HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->mPrefFlags.HasDefault()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    stringVal = pref->mDefaultPref.mStringVal;
-  } else {
-    stringVal = pref->mUserPref.mStringVal;
-  }
-
-  if (!stringVal) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  aValueOut = stringVal;
-  return NS_OK;
-}
-
-static nsresult
-PREF_GetIntPref(const char* aPrefName, int32_t* aValueOut, bool aGetDefault)
-{
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->mPrefFlags.IsTypeInt()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aGetDefault || pref->mPrefFlags.IsLocked() ||
-      !pref->mPrefFlags.HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->mPrefFlags.HasDefault()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    *aValueOut = pref->mDefaultPref.mIntVal;
-  } else {
-    *aValueOut = pref->mUserPref.mIntVal;
-  }
-
-  return NS_OK;
-}
-
-static nsresult
-PREF_GetBoolPref(const char* aPrefName, bool* aValueOut, bool aGetDefault)
-{
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->mPrefFlags.IsTypeBool()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aGetDefault || pref->mPrefFlags.IsLocked() ||
-      !pref->mPrefFlags.HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->mPrefFlags.HasDefault()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    *aValueOut = pref->mDefaultPref.mBoolVal;
-  } else {
-    *aValueOut = pref->mUserPref.mBoolVal;
-  }
-
-  return NS_OK;
-}
-
 // Clears the given pref (reverts it to its default value).
 static nsresult
 PREF_ClearUserPref(const char* aPrefName)
@@ -2119,7 +2028,7 @@ nsPrefBranch::GetBoolPref(const char* aPrefName, bool* aRetVal)
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_GetBoolPref(pref.get(), aRetVal, mKind == PrefValueKind::Default);
+  return Preferences::GetBool(pref.get(), aRetVal, mKind);
 }
 
 NS_IMETHODIMP
@@ -2181,9 +2090,9 @@ NS_IMETHODIMP
 nsPrefBranch::GetCharPref(const char* aPrefName, nsACString& aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
+
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_GetCStringPref(
-    pref.get(), aRetVal, mKind == PrefValueKind::Default);
+  return Preferences::GetCString(pref.get(), aRetVal, mKind);
 }
 
 NS_IMETHODIMP
@@ -2259,7 +2168,7 @@ nsPrefBranch::GetIntPref(const char* aPrefName, int32_t* aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_GetIntPref(pref.get(), aRetVal, mKind == PrefValueKind::Default);
+  return Preferences::GetInt(pref.get(), aRetVal, mKind);
 }
 
 NS_IMETHODIMP
@@ -2873,7 +2782,8 @@ nsPrefBranch::GetDefaultFromPropertiesFile(const char* aPrefName,
   // The default value contains a URL to a .properties file.
 
   nsAutoCString propertyFileURL;
-  nsresult rv = PREF_GetCStringPref(aPrefName, propertyFileURL, true);
+  nsresult rv =
+    Preferences::GetCString(aPrefName, propertyFileURL, PrefValueKind::Default);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -3469,8 +3379,8 @@ Preferences::GetInstanceForService()
     // Check if there is a deployment configuration file. If so, set up the
     // pref config machinery, which will actually read the file.
     nsAutoCString lockFileName;
-    nsresult rv =
-      PREF_GetCStringPref("general.config.filename", lockFileName, false);
+    nsresult rv = Preferences::GetCString(
+      "general.config.filename", lockFileName, PrefValueKind::User);
     if (NS_SUCCEEDED(rv)) {
       NS_CreateServicesFromCategory(
         "pref-config-startup",
@@ -4486,7 +4396,25 @@ Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetBoolPref(aPrefName, aResult, aKind == PrefValueKind::Default);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (!pref || !pref->mPrefFlags.IsTypeBool()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (aKind == PrefValueKind::Default || pref->mPrefFlags.IsLocked() ||
+      !pref->mPrefFlags.HasUserValue()) {
+
+    // Do we have a default?
+    if (!pref->mPrefFlags.HasDefault()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    *aResult = pref->mDefaultPref.mBoolVal;
+  } else {
+    *aResult = pref->mUserPref.mBoolVal;
+  }
+
+  return NS_OK;
 }
 
 /* static */ nsresult
@@ -4496,7 +4424,25 @@ Preferences::GetInt(const char* aPrefName,
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetIntPref(aPrefName, aResult, aKind == PrefValueKind::Default);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (!pref || !pref->mPrefFlags.IsTypeInt()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (aKind == PrefValueKind::Default || pref->mPrefFlags.IsLocked() ||
+      !pref->mPrefFlags.HasUserValue()) {
+
+    // Do we have a default?
+    if (!pref->mPrefFlags.HasDefault()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    *aResult = pref->mDefaultPref.mIntVal;
+  } else {
+    *aResult = pref->mUserPref.mIntVal;
+  }
+
+  return NS_OK;
 }
 
 /* static */ nsresult
@@ -4505,10 +4451,9 @@ Preferences::GetFloat(const char* aPrefName,
                       PrefValueKind aKind)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+
   nsAutoCString result;
-  nsresult rv =
-    PREF_GetCStringPref(aPrefName, result, aKind == PrefValueKind::Default);
+  nsresult rv = Preferences::GetCString(aPrefName, result, aKind);
   if (NS_SUCCEEDED(rv)) {
     *aResult = result.ToFloat(&rv);
   }
@@ -4521,8 +4466,33 @@ Preferences::GetCString(const char* aPrefName,
                         PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetCStringPref(
-    aPrefName, aResult, aKind == PrefValueKind::Default);
+
+  aResult.SetIsVoid(true);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (!pref || !pref->mPrefFlags.IsTypeString()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  const char* stringVal = nullptr;
+  if (aKind == PrefValueKind::Default || pref->mPrefFlags.IsLocked() ||
+      !pref->mPrefFlags.HasUserValue()) {
+
+    // Do we have a default?
+    if (!pref->mPrefFlags.HasDefault()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    stringVal = pref->mDefaultPref.mStringVal;
+  } else {
+    stringVal = pref->mUserPref.mStringVal;
+  }
+
+  if (!stringVal) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  aResult = stringVal;
+  return NS_OK;
 }
 
 /* static */ nsresult
@@ -4530,10 +4500,8 @@ Preferences::GetString(const char* aPrefName,
                        nsAString& aResult,
                        PrefValueKind aKind)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsAutoCString result;
-  nsresult rv =
-    PREF_GetCStringPref(aPrefName, result, aKind == PrefValueKind::Default);
+  nsresult rv = Preferences::GetCString(aPrefName, result, aKind);
   if (NS_SUCCEEDED(rv)) {
     CopyUTF8toUTF16(result, aResult);
   }
