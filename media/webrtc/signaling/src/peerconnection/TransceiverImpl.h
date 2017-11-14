@@ -33,6 +33,7 @@ class JsepTrackNegotiatedDetails;
 
 namespace dom {
 class RTCRtpTransceiver;
+struct RTCRtpSourceEntry;
 }
 
 /**
@@ -108,6 +109,15 @@ public:
   void AddRIDFilter(const nsAString& aRid);
 
   bool IsVideo() const;
+
+  void GetRtpSources(const int64_t aTimeNow,
+                     nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
+
+  // test-only: insert fake CSRCs and audio levels for testing
+  void InsertAudioLevelForContributingSource(uint32_t aSource,
+                                             int64_t aTimestamp,
+                                             bool aHasLevel,
+                                             uint8_t aLevel);
 
   NS_DECL_THREADSAFE_ISUPPORTS
 

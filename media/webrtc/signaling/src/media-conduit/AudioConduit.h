@@ -13,6 +13,7 @@
 
 #include "MediaConduitInterface.h"
 #include "MediaEngineWrapper.h"
+#include "RtpSourceObserver.h"
 
 // Audio Engine Includes
 #include "webrtc/common_types.h"
@@ -49,7 +50,8 @@ NTPtoDOMHighResTimeStamp(uint32_t ntpHigh, uint32_t ntpLow);
  *  - media-source and target to external transport
  */
 class WebrtcAudioConduit: public AudioSessionConduit
-	      		, public webrtc::Transport
+                        , public webrtc::Transport
+                        , public webrtc::RtpPacketObserver
 {
 public:
   //VoiceEngine defined constant for Payload Name Size.
@@ -251,6 +253,18 @@ public:
   bool InsertDTMFTone(int channel, int eventCode, bool outOfBand,
                       int lengthMs, int attenuationDb) override;
 
+  void GetRtpSources(const int64_t aTimeNow,
+                     nsTArray<dom::RTCRtpSourceEntry>& outSources) override;
+
+  void OnRtpPacket(const webrtc::WebRtcRTPHeader* aRtpHeader,
+                   const int64_t aTimestamp,
+                   const uint32_t aJitter) override;
+
+  // test-only: inserts fake CSRCs and audio level data
+  void InsertAudioLevelForContributingSource(uint32_t aSource,
+                                             int64_t aTimestamp,
+                                             bool aHasLevel,
+                                             uint8_t aLevel);
 private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) = delete;
   void operator=(const WebrtcAudioConduit& other) = delete;
@@ -322,6 +336,8 @@ private:
 
   uint32_t mSamples;
   uint32_t mLastSyncLog;
+
+  RtpSourceObserver mRtpSourceObserver;
 };
 
 } // end namespace

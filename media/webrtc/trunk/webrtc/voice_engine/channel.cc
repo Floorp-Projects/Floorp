@@ -29,6 +29,7 @@
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/pacing/packet_router.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_packet_observer.h"
 #include "webrtc/modules/rtp_rtcp/include/receive_statistics.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_payload_registry.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_receiver.h"
@@ -596,6 +597,10 @@ bool Channel::GetRTCPReceiverStatistics(int64_t* timestamp,
   return true;
 }
 
+void Channel::SetRtpPacketObserver(RtpPacketObserver* observer) {
+  rtp_source_observer_ = observer;
+}
+
 int32_t Channel::SendData(FrameType frameType,
                           uint8_t payloadType,
                           uint32_t timeStamp,
@@ -781,7 +786,18 @@ int32_t Channel::OnReceivedPayloadData(const uint8_t* payloadData,
         "Channel::OnReceivedPayloadData() unable to push data to the ACM");
     return -1;
   }
-
+  // Observe incoming packets for getContributingSources and
+  // getSynchronizationSources.
+  if (rtp_source_observer_) {
+    const auto playoutFrequency = audio_coding_->PlayoutFrequency();
+    uint32_t jitter = 0;
+    if (playoutFrequency > 0) {
+      const ChannelStatistics stats = statistics_proxy_->GetStats();
+      jitter = stats.rtcp.jitter / (playoutFrequency / 1000);
+    }
+    rtp_source_observer_->OnRtpPacket(rtpHeader,
+        webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds(), jitter);
+  }
   int64_t round_trip_time = 0;
   _rtpRtcpModule->RTT(rtp_receiver_->SSRC(), &round_trip_time, NULL, NULL,
                       NULL);
