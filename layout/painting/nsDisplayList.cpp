@@ -4309,6 +4309,19 @@ nsDisplayThemedBackground::PaintInternal(nsDisplayListBuilder* aBuilder,
   theme->DrawWidgetBackground(aCtx, mFrame, mAppearance, mBackgroundRect, drawing);
 }
 
+
+bool
+nsDisplayThemedBackground::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                   mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                   const StackingContextHelper& aSc,
+                                                   mozilla::layers::WebRenderLayerManager* aManager,
+                                                   nsDisplayListBuilder* aDisplayListBuilder)
+{
+  nsITheme *theme = mFrame->PresContext()->GetTheme();
+  return theme->CreateWebRenderCommandsForWidget(aBuilder, aResources, aSc, aManager,
+                                                 mFrame, mAppearance, mBackgroundRect);
+}
+
 bool
 nsDisplayThemedBackground::IsWindowActive() const
 {
