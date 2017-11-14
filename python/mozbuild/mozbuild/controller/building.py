@@ -1353,10 +1353,23 @@ class BuildDriver(MozbuildObject):
                                         mozpath.normsep(mozconfig['path']))
             mozconfig_make_lines.append(b'export FOUND_MOZCONFIG')
 
+        # The .mozconfig.mk file only contains exported variables and lines with
+        # UPLOAD_EXTRA_FILES.
+        mozconfig_filtered_lines = [
+            line for line in mozconfig_make_lines
+            # Bug 1418122 investigate why UPLOAD_EXTRA_FILES is special and
+            # remove it.
+            if line.startswith(b'export ') or b'UPLOAD_EXTRA_FILES' in line
+        ]
+
         mozconfig_client_mk = os.path.join(self.topobjdir,
                                            '.mozconfig-client-mk')
         with FileAvoidWrite(mozconfig_client_mk) as fh:
             fh.write(b'\n'.join(mozconfig_make_lines))
+
+        mozconfig_mk = os.path.join(self.topobjdir, '.mozconfig.mk')
+        with FileAvoidWrite(mozconfig_mk) as fh:
+            fh.write(b'\n'.join(mozconfig_filtered_lines))
 
         if mozconfig_make_lines:
             self.log(logging.WARNING, 'mozconfig_content', {
