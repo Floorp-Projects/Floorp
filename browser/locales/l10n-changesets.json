@@ -487,7 +487,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0b227d6c8428"
+        "revision": "1c329f73cedc"
     }, 
     "ja": {
         "platforms": [
@@ -692,7 +692,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f09f5c591dbb"
+        "revision": "761778436f17"
     }, 
     "or": {
         "platforms": [
@@ -942,7 +942,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "fa56c49d5d0f"
+        "revision": "6a4fb3eaa63e"
     }, 
     "zh-TW": {
         "platforms": [
