@@ -165,3 +165,6 @@ subinclude:servo/.hgignore
 
 # Ignore Infer output
 ^infer-out/
+
+# https://bz.mercurial-scm.org/show_bug.cgi?id=5322
+^comm/
