@@ -562,7 +562,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "48b264d1e013"
+        "revision": "f31518542450"
     }, 
     "lij": {
         "platforms": [
@@ -832,7 +832,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f646ab139718"
+        "revision": "3f6fb5cdf736"
     }, 
     "sv-SE": {
         "platforms": [
