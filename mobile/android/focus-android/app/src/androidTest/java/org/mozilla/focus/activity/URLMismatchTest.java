@@ -40,7 +40,7 @@ import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 @RunWith(AndroidJUnit4.class)
 public class URLMismatchTest {
     private static final String MOZILLA_WEBSITE_SLOGAN_SELECTOR = ".content h2";
-    private static final String MOZILLA_WEBSITE_SLOGAN_TEXT = "Internet for people,\nnot profit.";
+    private static final String MOZILLA_WEBSITE_SLOGAN_TEXT = "We make the internet safer, healthier and faster for good.";
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<MainActivity>(MainActivity.class) {
