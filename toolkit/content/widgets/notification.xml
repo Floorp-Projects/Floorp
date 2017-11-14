@@ -399,20 +399,18 @@
 
   <binding id="notification" role="xul:alert">
     <content>
-      <xul:hbox class="notification-inner" flex="1" xbl:inherits="type">
-        <xul:hbox anonid="details" align="center" flex="1"
-                  oncommand="this.parentNode.parentNode._doButtonCommand(event);">
-          <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image,type,value"/>
-          <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>
-          <xul:spacer flex="1"/>
-          <children/>
-        </xul:hbox>
-        <xul:toolbarbutton ondblclick="event.stopPropagation();"
-                           class="messageCloseButton close-icon tabbable"
-                           xbl:inherits="hidden=hideclose"
-                           tooltiptext="&closeNotification.tooltip;"
-                           oncommand="document.getBindingParent(this).dismiss();"/>
+      <xul:hbox anonid="details" align="center" flex="1"
+                oncommand="this.parentNode._doButtonCommand(event);">
+        <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image,type,value"/>
+        <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>
+        <xul:spacer flex="1"/>
+        <children/>
       </xul:hbox>
+      <xul:toolbarbutton ondblclick="event.stopPropagation();"
+                         class="messageCloseButton close-icon tabbable"
+                         xbl:inherits="hidden=hideclose"
+                         tooltiptext="&closeNotification.tooltip;"
+                         oncommand="document.getBindingParent(this).dismiss();"/>
     </content>
     <resources>
       <stylesheet src="chrome://global/skin/notification.css"/>
