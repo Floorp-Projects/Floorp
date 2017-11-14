@@ -6,15 +6,20 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.gecko.gfx.LayerView;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
@@ -23,8 +28,11 @@ public class GeckoView extends LayerView {
     private static final String LOGTAG = "GeckoView";
     private static final boolean DEBUG = false;
 
+    private final Display mDisplay = new Display();
     protected GeckoSession mSession;
     private boolean mStateSaved;
+
+    protected SurfaceView mSurfaceView;
 
     private InputConnectionListener mInputConnectionListener;
     private boolean mIsResettingFocus;
@@ -61,20 +69,112 @@ public class GeckoView extends LayerView {
         };
     }
 
-    public GeckoView(Context context) {
-        super(context);
-        initializeView();
+    private class Display implements GeckoDisplay,
+                                     SurfaceHolder.Callback {
+        private Listener mListener;
+        private boolean mValid;
+
+        @Override // GeckoDisplay
+        public Listener getListener() {
+            return mListener;
+        }
+
+        @Override // GeckoDisplay
+        public void setListener(final Listener listener) {
+            if (mValid && mListener != null) {
+                // Tell old listener the surface is gone.
+                mListener.surfaceDestroyed();
+            }
+
+            mListener = listener;
+
+            if (!mValid || listener == null) {
+                return;
+            }
+
+            // Tell new listener there is already a surface.
+            if (GeckoView.this.mSurfaceView != null) {
+                final SurfaceHolder holder = GeckoView.this.mSurfaceView.getHolder();
+                final Rect frame = holder.getSurfaceFrame();
+                listener.surfaceChanged(holder.getSurface(), frame.right, frame.bottom);
+            }
+        }
+
+        @Override // SurfaceHolder.Callback
+        public void surfaceCreated(final SurfaceHolder holder) {
+        }
+
+        @Override // SurfaceHolder.Callback
+        public void surfaceChanged(final SurfaceHolder holder, final int format,
+                                   final int width, final int height) {
+            if (mListener != null) {
+                mListener.surfaceChanged(holder.getSurface(), width, height);
+            }
+            mValid = true;
+        }
+
+        @Override // SurfaceHolder.Callback
+        public void surfaceDestroyed(final SurfaceHolder holder) {
+            if (mListener != null) {
+                mListener.surfaceDestroyed();
+            }
+            mValid = false;
+        }
     }
 
-    public GeckoView(Context context, AttributeSet attrs) {
+    public GeckoView(final Context context) {
+        super(context);
+        init();
+    }
+
+    public GeckoView(final Context context, final AttributeSet attrs) {
         super(context, attrs);
+        init();
+    }
+
+    private void init() {
         initializeView();
+
+        setFocusable(true);
+        setFocusableInTouchMode(true);
+
+        // We are adding descendants to this LayerView, but we don't want the
+        // descendants to affect the way LayerView retains its focus.
+        setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
+
+        // This will stop PropertyAnimator from creating a drawing cache (i.e. a
+        // bitmap) from a SurfaceView, which is just not possible (the bitmap will be
+        // transparent).
+        setWillNotCacheDrawing(false);
+
+        mSurfaceView = new SurfaceView(getContext());
+        mSurfaceView.setBackgroundColor(Color.WHITE);
+        addView(mSurfaceView,
+                new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                           ViewGroup.LayoutParams.MATCH_PARENT));
+
+        mSurfaceView.getHolder().addCallback(mDisplay);
+    }
+
+    @Override
+    public void setSurfaceBackgroundColor(final int newColor) {
+        if (mSurfaceView != null) {
+            mSurfaceView.setBackgroundColor(newColor);
+        }
     }
 
     public void setSession(final GeckoSession session) {
         if (mSession != null && mSession.isOpen()) {
             throw new IllegalStateException("Current session is open");
         }
+
+        if (mSession != null) {
+            mSession.removeDisplay(mDisplay);
+        }
+        if (session != null) {
+            session.addDisplay(mDisplay);
+        }
+
         mSession = session;
     }
 
@@ -90,20 +190,17 @@ public class GeckoView extends LayerView {
         return mSession.getSettings();
     }
 
-    protected Object getCompositor() {
-        return super.getCompositor();
-    }
-
     @Override
     public void onAttachedToWindow() {
         if (mSession == null) {
-            mSession = new GeckoSession();
+            setSession(new GeckoSession());
         }
 
         if (!mSession.isOpen()) {
             mSession.openWindow(getContext().getApplicationContext());
         }
         mSession.attachView(this);
+        attachCompositor(mSession);
 
         super.onAttachedToWindow();
     }
@@ -142,7 +239,7 @@ public class GeckoView extends LayerView {
         super.onRestoreInstanceState(ss.getSuperState());
 
         if (mSession == null) {
-            mSession = ss.session;
+            setSession(ss.session);
         } else if (ss.session != null) {
             mSession.transferFrom(ss.session);
         }
