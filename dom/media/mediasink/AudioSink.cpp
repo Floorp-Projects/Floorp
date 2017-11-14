@@ -51,7 +51,7 @@ AudioSink::AudioSink(AbstractThread* aThread,
   bool resampling = MediaPrefs::AudioSinkResampling();
 
   if (resampling) {
-    mOutputRate = MediaPrefs::AudioSinkResampleRate();
+    mOutputRate = 48000;
   } else if (mInfo.mRate == 44100 || mInfo.mRate == 48000) {
     // The original rate is of good quality and we want to minimize unecessary
     // resampling. The common scenario being that the sampling rate is one or

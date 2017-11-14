@@ -4867,9 +4867,7 @@ BaselineCompiler::emit_JSOP_RESUME()
         pushArg(genObj);
         pushArg(scratch2);
 
-        JitCode* code = cx->runtime()->jitRuntime()->getVMWrapper(GeneratorThrowInfo);
-        if (!code)
-            return false;
+        uint8_t* code = cx->runtime()->jitRuntime()->getVMWrapper(GeneratorThrowInfo);
 
         // Create the frame descriptor.
         masm.subStackPtrFrom(scratch1);
@@ -4884,7 +4882,7 @@ BaselineCompiler::emit_JSOP_RESUME()
 #ifndef JS_CODEGEN_ARM64
         masm.push(ImmWord(0));
 #endif
-        masm.jump(code);
+        masm.jump(ImmPtr(code));
     }
 
     // If the generator script has no JIT code, call into the VM.

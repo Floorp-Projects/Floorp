@@ -934,10 +934,6 @@ XHTMLHandler.prototype = {
   characters: function XH_characters(data) {
     this._buf += xmlEscape(data);
   },
-  startPrefixMapping: function XH_startPrefixMapping(prefix, uri) {
-  },
-  endPrefixMapping: function FP_endPrefixMapping(prefix) {
-  },
   processingInstruction: function XH_processingInstruction() {
   },
 };
@@ -991,10 +987,6 @@ ExtensionHandler.prototype = {
   characters: function EH_characters(data) {
     if (!this._hasChildElements)
       this._buf += data;
-  },
-  startPrefixMapping: function EH_startPrefixMapping() {
-  },
-  endPrefixMapping: function EH_endPrefixMapping() {
   },
   processingInstruction: function EH_processingInstruction() {
   },
@@ -1464,14 +1456,6 @@ FeedProcessor.prototype = {
   // opening element.
   characters: function FP_characters(data) {
     this._buf += data;
-  },
-  // TODO: It would be nice to check new prefixes here, and if they
-  // don't conflict with the ones we've defined, throw them in a
-  // dictionary to check.
-  startPrefixMapping: function FP_startPrefixMapping(prefix, uri) {
-  },
-
-  endPrefixMapping: function FP_endPrefixMapping(prefix) {
   },
 
   processingInstruction: function FP_processingInstruction(target, data) {

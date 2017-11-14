@@ -5,9 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaResource.h"
-#include "mozilla/DebugOnly.h"
 #include "MediaPrefs.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ErrorNames.h"
 
@@ -42,11 +43,15 @@ MediaResource::Destroy()
 NS_IMPL_ADDREF(MediaResource)
 NS_IMPL_RELEASE_WITH_DESTROY(MediaResource, Destroy())
 
+static const uint32_t kMediaResourceIndexCacheSize = 8192;
+static_assert(IsPowerOfTwo(kMediaResourceIndexCacheSize),
+              "kMediaResourceIndexCacheSize cache size must be a power of 2");
+
 MediaResourceIndex::MediaResourceIndex(MediaResource* aResource)
   : mResource(aResource)
   , mOffset(0)
   , mCacheBlockSize(aResource->ShouldCacheReads()
-                      ? SelectCacheSize(MediaPrefs::MediaResourceIndexCache())
+                      ? kMediaResourceIndexCacheSize
                       : 0)
   , mCachedOffset(0)
   , mCachedBytes(0)
@@ -511,32 +516,6 @@ int64_t
 MediaResourceIndex::GetLength() const
 {
   return mResource->GetLength();
-}
-
-// Select the next power of 2 (in range 32B-128KB, or 0 -> no cache)
-/* static */
-uint32_t
-MediaResourceIndex::SelectCacheSize(uint32_t aHint)
-{
-  if (aHint == 0) {
-    return 0;
-  }
-  if (aHint <= 32) {
-    return 32;
-  }
-  if (aHint > 64 * 1024) {
-    return 128 * 1024;
-  }
-  // 32-bit next power of 2, from:
-  // http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-  aHint--;
-  aHint |= aHint >> 1;
-  aHint |= aHint >> 2;
-  aHint |= aHint >> 4;
-  aHint |= aHint >> 8;
-  aHint |= aHint >> 16;
-  aHint++;
-  return aHint;
 }
 
 uint32_t

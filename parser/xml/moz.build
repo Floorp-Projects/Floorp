@@ -10,15 +10,9 @@ with Files('**'):
 TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
-    'nsIMozSAXXMLDeclarationHandler.idl',
     'nsISAXAttributes.idl',
     'nsISAXContentHandler.idl',
-    'nsISAXDTDHandler.idl',
     'nsISAXErrorHandler.idl',
-    'nsISAXLexicalHandler.idl',
-    'nsISAXLocator.idl',
-    'nsISAXMutableAttributes.idl',
-    'nsISAXXMLFilter.idl',
     'nsISAXXMLReader.idl',
 ]
 
@@ -26,13 +20,11 @@ XPIDL_MODULE = 'saxparser'
 
 EXPORTS += [
     'nsSAXAttributes.h',
-    'nsSAXLocator.h',
     'nsSAXXMLReader.h',
 ]
 
 UNIFIED_SOURCES += [
     'nsSAXAttributes.cpp',
-    'nsSAXLocator.cpp',
     'nsSAXXMLReader.cpp',
 ]
 

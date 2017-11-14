@@ -74,15 +74,9 @@ WMFDecoderModule::GetNumDecoderThreads()
   int32_t numCores = PR_GetNumberOfProcessors();
 
   // If we have more than 4 cores, let the decoder decide how many threads.
-  // On an 8 core machine, WMF chooses 4 decoder threads
-  const int WMF_DECODER_DEFAULT = -1;
-  int32_t prefThreadCount = WMF_DECODER_DEFAULT;
-  if (XRE_GetProcessType() != GeckoProcessType_GPU) {
-    prefThreadCount = MediaPrefs::PDMWMFThreadCount();
-  }
-  if (prefThreadCount != WMF_DECODER_DEFAULT) {
-    return std::max(prefThreadCount, 1);
-  } else if (numCores > 4) {
+  // On an 8 core machine, WMF chooses 4 decoder threads.
+  static const int WMF_DECODER_DEFAULT = -1;
+  if (numCores > 4) {
     return WMF_DECODER_DEFAULT;
   }
   return std::max(numCores - 1, 1);

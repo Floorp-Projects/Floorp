@@ -758,7 +758,7 @@ logging::MsgBegin(const char* aTitle, const char* aMsgText, ...)
   uint32_t mins = (PR_IntervalToSeconds(time) / 60) % 60;
   uint32_t secs = PR_IntervalToSeconds(time) % 60;
   uint32_t msecs = PR_IntervalToMilliseconds(time) % 1000;
-  printf("; %02d:%02d.%03d", mins, secs, msecs);
+  printf("; %02u:%02u.%03u", mins, secs, msecs);
 
   printf("\n  {\n");
 }

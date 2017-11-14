@@ -47,6 +47,7 @@ LOCAL_INCLUDES += [
     '/caps',
     '/docshell/base',  # for nsDocShell.h
     '/netwerk/base',
+    '/netwerk/protocol/data', # for nsDataHandler.h
 ]
 
 if CONFIG['GNU_CC']:

@@ -209,8 +209,10 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType)
       name = "MediaPlayback";
       break;
   }
+
+  static const uint32_t kMediaThreadPoolDefaultCount = 4;
   return SharedThreadPool::
-    Get(nsDependentCString(name), MediaPrefs::MediaThreadPoolDefaultCount());
+    Get(nsDependentCString(name), kMediaThreadPoolDefaultCount);
 }
 
 bool

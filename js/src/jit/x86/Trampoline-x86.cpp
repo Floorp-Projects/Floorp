@@ -682,17 +682,14 @@ JitRuntime::generateBailoutHandler(JSContext* cx)
     return code;
 }
 
-JitCode*
-JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
+bool
+JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunction& f)
 {
     MOZ_ASSERT(functionWrappers_);
     MOZ_ASSERT(functionWrappers_->initialized());
-    VMWrapperMap::AddPtr p = functionWrappers_->lookupForAdd(&f);
-    if (p)
-        return p->value();
 
-    // Generate a separated code for the wrapper.
-    MacroAssembler masm;
+    masm.flushBuffer();
+    uint32_t wrapperOffset = masm.currentOffset();
 
     // Avoid conflicts with argument registers while discarding the result after
     // the function call.
@@ -756,7 +753,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
     }
 
     if (!generateTLEnterVM(cx, masm, f))
-        return nullptr;
+        return false;
 
     masm.setupUnalignedABICall(regs.getAny());
     masm.passABIArg(cxreg);
@@ -799,7 +796,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
     masm.callWithABI(f.wrapped, MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
     if (!generateTLExitVM(cx, masm, f))
-        return nullptr;
+        return false;
 
     // Test for failure.
     switch (f.failType()) {
@@ -852,24 +849,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
                     f.explicitStackSlots() * sizeof(void*) +
                     f.extraValuesToPop * sizeof(Value)));
 
-    Linker linker(masm);
-    JitCode* wrapper = linker.newCode<NoGC>(cx, OTHER_CODE);
-    if (!wrapper)
-        return nullptr;
-
-#ifdef JS_ION_PERF
-    writePerfSpewerJitCodeProfile(wrapper, "VMWrapper");
-#endif
-#ifdef MOZ_VTUNE
-    vtune::MarkStub(wrapper, "VMWrapper");
-#endif
-
-    // linker.newCode may trigger a GC and sweep functionWrappers_ so we have to
-    // use relookupOrAdd instead of add.
-    if (!functionWrappers_->relookupOrAdd(p, &f, wrapper))
-        return nullptr;
-
-    return wrapper;
+    return functionWrappers_->putNew(&f, wrapperOffset);
 }
 
 JitCode*
@@ -942,10 +922,7 @@ JitRuntime::generateDebugTrapHandler(JSContext* cx)
     masm.movePtr(ImmPtr(nullptr), ICStubReg);
     EmitBaselineEnterStubFrame(masm, scratch3);
 
-    JitCode* code = cx->runtime()->jitRuntime()->getVMWrapper(HandleDebugTrapInfo);
-    if (!code)
-        return nullptr;
-
+    uint8_t* code = cx->runtime()->jitRuntime()->getVMWrapper(HandleDebugTrapInfo);
     masm.push(scratch1);
     masm.push(scratch2);
     EmitBaselineCallVM(code, masm);
