@@ -151,20 +151,7 @@ _ContextualIdentityService.prototype = {
       }
 
       try {
-        let data = JSON.parse(gTextDecoder.decode(bytes));
-        if (data.version == 1) {
-          this.resetDefault();
-        }
-        if (data.version != 2) {
-          dump("ERROR - ContextualIdentityService - Unknown version found in " + this._path + "\n");
-          this.loadError(null);
-          return;
-        }
-
-        this._identities = data.identities;
-        this._lastUserContextId = data.lastUserContextId;
-
-        this._dataReady = true;
+        this.parseData(bytes);
       } catch (error) {
         this.loadError(error);
       }
@@ -305,6 +292,23 @@ _ContextualIdentityService.prototype = {
     return {wrappedJSObject};
   },
 
+  parseData(bytes) {
+    let data = JSON.parse(gTextDecoder.decode(bytes));
+    if (data.version == 1) {
+      this.resetDefault();
+    }
+    if (data.version != 2) {
+      dump("ERROR - ContextualIdentityService - Unknown version found in " + this._path + "\n");
+      this.loadError(null);
+      return;
+    }
+
+    this._identities = data.identities;
+    this._lastUserContextId = data.lastUserContextId;
+
+    this._dataReady = true;
+  },
+
   ensureDataReady() {
     if (this._dataReady) {
       return;
@@ -317,12 +321,8 @@ _ContextualIdentityService.prototype = {
       inputStream.init(new FileUtils.File(this._path),
                        FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
       try {
-        let bytes = NetUtil.readInputStreamToString(inputStream, inputStream.available());
-        let data = JSON.parse(gTextDecoder.decode(bytes));
-        this._identities = data.identities;
-        this._lastUserContextId = data.lastUserContextId;
-
-        this._dataReady = true;
+        let bytes = NetUtil.readInputStream(inputStream, inputStream.available());
+        this.parseData(bytes);
       } finally {
         inputStream.close();
       }
