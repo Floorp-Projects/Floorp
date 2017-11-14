@@ -36,6 +36,7 @@
 
 #ifdef MOZ_ENABLE_SKIA_PDF
 #include "mozilla/gfx/PrintTargetSkPDF.h"
+#include "mozilla/gfx/PrintTargetEMF.h"
 #include "nsIUUIDGenerator.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsPrintfCString.h"
@@ -227,7 +228,14 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget()
     }
 
     if (mDevMode) {
-      // TBD: Implement a new PrintTarget to serve EMF OOP.
+      NS_WARNING_ASSERTION(!mDriverName.IsEmpty(), "No driver!");
+      HDC dc = ::CreateDCW(mDriverName.get(), mDeviceName.get(), nullptr, mDevMode);
+      if (!dc) {
+        gfxCriticalError(gfxCriticalError::DefaultOptions(false))
+          << "Failed to create device context in GetSurfaceForPrinter";
+        return nullptr;
+      }
+      return PrintTargetEMF::CreateOrNull(dc, size);
     }
   }
 #endif
