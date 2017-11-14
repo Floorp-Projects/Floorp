@@ -2,9 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* import-globals-from ../../framework/test/shared-head.js */
+/* import-globals-from shared-head.js */
 /* exported Toolbox, restartNetMonitor, teardown, waitForExplicitFinish,
    verifyRequestItemTarget, waitFor, testFilterButtons, loadCommonFrameScript,
-   performRequestsInContent, waitForNetworkEvents */
+   performRequestsInContent, waitForNetworkEvents, selectIndexAndWaitForSourceEditor */
 
 "use strict";
 
@@ -13,7 +14,10 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 
-const { EVENTS } = require("devtools/client/netmonitor/src/constants");
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/netmonitor/test/shared-head.js",
+  this);
+
 const {
   getFormattedIPAndPort,
   getFormattedTime,
@@ -281,6 +285,12 @@ function teardown(monitor) {
   return Task.spawn(function* () {
     let tab = monitor.toolbox.target.tab;
 
+    // Ensure that there is no pending RDP requests related to payload request
+    // done from FirefoxDataProvider.
+    info("Wait for completion of all pending RDP requests...");
+    yield waitForExistingRequests(monitor);
+    info("All pending requests finished.");
+
     let onDestroyed = monitor.once("destroyed");
     yield removeTab(tab);
     yield onDestroyed;
@@ -306,13 +316,14 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
       ["RECEIVED_RESPONSE_HEADERS", onGenericEvent],
       ["UPDATING_RESPONSE_COOKIES", onGenericEvent],
       ["RECEIVED_RESPONSE_COOKIES", onGenericEvent],
-      ["STARTED_RECEIVING_RESPONSE", onGenericEvent],
-      ["UPDATING_RESPONSE_CONTENT", onGenericEvent],
-      ["RECEIVED_RESPONSE_CONTENT", onGenericEvent],
       ["UPDATING_EVENT_TIMINGS", onGenericEvent],
       ["RECEIVED_EVENT_TIMINGS", onGenericEvent],
       ["PAYLOAD_READY", onPayloadReady]
     ];
+    let expectedGenericEvents = awaitedEventsToListeners
+      .filter(([, listener]) => listener == onGenericEvent).length;
+    let expectedPostEvents = awaitedEventsToListeners
+      .filter(([, listener]) => listener == onPostEvent).length;
 
     function initProgressForURL(url) {
       if (progress[url]) {
@@ -365,8 +376,10 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
 
     function maybeResolve(event, actor, networkInfo) {
       info("> Network events progress: " +
-        genericEvents + "/" + ((getRequests + postRequests) * 13) + ", " +
-        postEvents + "/" + (postRequests * 2) + ", " +
+        "Payload: " + payloadReady + "/" + (getRequests + postRequests) + ", " +
+        "Generic: " + genericEvents + "/" +
+          ((getRequests + postRequests) * expectedGenericEvents) + ", " +
+        "Post: " + postEvents + "/" + (postRequests * expectedPostEvents) + ", " +
         "got " + event + " for " + actor);
 
       let url = networkInfo.request.url;
@@ -375,12 +388,12 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
       // Uncomment this to get a detailed progress logging (when debugging a test)
       // info("> Current state: " + JSON.stringify(progress, null, 2));
 
-      // There are 15 updates which need to be fired for a request to be
-      // considered finished. The "requestPostData" packet isn't fired for
-      // non-POST requests.
+      // There are `expectedGenericEvents` updates which need to be fired for a request
+      // to be considered finished. The "requestPostData" packet isn't fired for non-POST
+      // requests.
       if (payloadReady >= (getRequests + postRequests) &&
-        genericEvents >= (getRequests + postRequests) * 13 &&
-        postEvents >= postRequests * 2) {
+        genericEvents >= (getRequests + postRequests) * expectedGenericEvents &&
+        postEvents >= postRequests * expectedPostEvents) {
         awaitedEventsToListeners.forEach(([e, l]) => panel.off(EVENTS[e], l));
         executeSoon(resolve);
       }
@@ -683,4 +696,26 @@ function waitForContentMessage(name) {
       resolve(msg);
     });
   });
+}
+
+/**
+ * Select a request and switch to its response panel.
+ *
+ * @param {Number} index The request index to be selected
+ */
+async function selectIndexAndWaitForSourceEditor(monitor, index) {
+  let document = monitor.panelWin.document;
+  let onResponseContent = monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
+  // Select the request first, as it may try to fetch whatever is the current request's
+  // responseContent if we select the ResponseTab first.
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[index]);
+  // We may already be on the ResponseTab, so only select it if needed.
+  let editor = document.querySelector("#response-panel .CodeMirror-code");
+  if (!editor) {
+    let waitDOM = waitForDOM(document, "#response-panel .CodeMirror-code");
+    document.querySelector("#response-tab").click();
+    await waitDOM;
+  }
+  await onResponseContent;
 }

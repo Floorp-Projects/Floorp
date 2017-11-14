@@ -19,7 +19,7 @@ add_task(function* () {
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let RequestListContextMenu = windowRequire(
     "devtools/client/netmonitor/src/request-list-context-menu");
-  let { getLongString, getTabTarget } = connector;
+  let { getLongString, getTabTarget, requestData } = connector;
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -27,7 +27,8 @@ add_task(function* () {
   tab.linkedBrowser.reload();
   yield wait;
 
-  let contextMenu = new RequestListContextMenu({ getTabTarget, getLongString });
+  let contextMenu = new RequestListContextMenu({
+    getTabTarget, getLongString, requestData });
 
   yield contextMenu.copyAllAsHar();
 

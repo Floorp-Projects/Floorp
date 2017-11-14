@@ -47,7 +47,6 @@ class RequestListContent extends Component {
       onItemMouseDown: PropTypes.func.isRequired,
       onSecurityIconMouseDown: PropTypes.func.isRequired,
       onSelectDelta: PropTypes.func.isRequired,
-      onThumbnailMouseDown: PropTypes.func.isRequired,
       onWaterfallMouseDown: PropTypes.func.isRequired,
       scale: PropTypes.number,
       selectedRequestId: PropTypes.string,
@@ -71,6 +70,7 @@ class RequestListContent extends Component {
       getTabTarget: connector.getTabTarget,
       getLongString: connector.getLongString,
       openStatistics: (open) => dispatch(Actions.openStatistics(connector, open)),
+      requestData: connector.requestData,
     });
     this.tooltip = new HTMLTooltip(window.parent.document, { type: "arrow" });
   }
@@ -148,7 +148,7 @@ class RequestListContent extends Component {
     }
 
     let { connector } = this.props;
-    if (requestItem.responseContent && target.closest(".requests-list-icon")) {
+    if (target.closest(".requests-list-file")) {
       return setTooltipImageContent(connector, tooltip, itemEl, requestItem);
     }
 
@@ -221,7 +221,6 @@ class RequestListContent extends Component {
       onCauseBadgeMouseDown,
       onItemMouseDown,
       onSecurityIconMouseDown,
-      onThumbnailMouseDown,
       onWaterfallMouseDown,
       scale,
       selectedRequestId,
@@ -251,7 +250,6 @@ class RequestListContent extends Component {
               onMouseDown: () => onItemMouseDown(item.id),
               onCauseBadgeMouseDown: () => onCauseBadgeMouseDown(item.cause),
               onSecurityIconMouseDown: () => onSecurityIconMouseDown(item.securityState),
-              onThumbnailMouseDown: () => onThumbnailMouseDown(),
               onWaterfallMouseDown: () => onWaterfallMouseDown(),
             }))
           )
@@ -290,13 +288,6 @@ module.exports = connect(
       }
     },
     onSelectDelta: (delta) => dispatch(Actions.selectDelta(delta)),
-    /**
-     * A handler that opens the response tab in the details view if
-     * the thumbnail is clicked.
-     */
-    onThumbnailMouseDown: () => {
-      dispatch(Actions.selectDetailsPanelTab("response"));
-    },
     /**
      * A handler that opens the timing sidebar panel if the waterfall is clicked.
      */

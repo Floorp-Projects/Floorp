@@ -5,6 +5,9 @@
 
 "use strict";
 
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/netmonitor/test/shared-head.js", this);
+
 const TEST_URI = "data:text/html;charset=utf8,Test that the netmonitor " +
                  "displays requests that have been recorded in the " +
                  "web console, even if the netmonitor hadn't opened yet.";
@@ -76,4 +79,6 @@ function* testNetmonitor(toolbox) {
   let item = getSortedRequests(store.getState()).get(0);
   is(item.method, "GET", "The attached method is correct.");
   is(item.url, TEST_PATH, "The attached url is correct.");
+
+  yield waitForExistingRequests(monitor);
 }

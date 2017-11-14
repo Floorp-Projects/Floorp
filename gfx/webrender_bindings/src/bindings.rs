@@ -892,6 +892,12 @@ pub extern "C" fn wr_api_set_root_pipeline(dh: &mut DocumentHandle,
 }
 
 #[no_mangle]
+pub extern "C" fn wr_api_remove_pipeline(dh: &mut DocumentHandle,
+                                         pipeline_id: WrPipelineId) {
+    dh.api.remove_pipeline(dh.document_id, pipeline_id);
+}
+
+#[no_mangle]
 pub extern "C" fn wr_api_set_window_parameters(dh: &mut DocumentHandle,
                                                width: i32,
                                                height: i32) {
