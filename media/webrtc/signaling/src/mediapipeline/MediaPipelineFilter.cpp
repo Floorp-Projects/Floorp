@@ -109,8 +109,7 @@ MediaPipelineFilter::FilterSenderReport(const unsigned char* data,
   uint8_t payload_type = data[PT_OFFSET];
 
   if (payload_type != SENDER_REPORT_T) {
-    // Not a sender report, let it through
-    return true;
+    return false;
   }
 
   uint32_t ssrc = 0;
