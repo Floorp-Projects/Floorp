@@ -9,14 +9,78 @@
 #include "ClientHandleParent.h"
 #include "ClientManagerService.h"
 #include "ClientSourceOpParent.h"
+#include "ClientValidation.h"
 #include "mozilla/dom/ClientIPCTypes.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/PClientManagerParent.h"
+#include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace dom {
 
+using mozilla::ipc::BackgroundParent;
 using mozilla::ipc::IPCResult;
 using mozilla::ipc::PrincipalInfo;
+
+namespace {
+
+// It would be nice to use a lambda instead of this class, but we cannot
+// move capture in lambdas yet and ContentParent cannot be AddRef'd off
+// the main thread.
+class KillContentParentRunnable final : public Runnable
+{
+  RefPtr<ContentParent> mContentParent;
+
+public:
+  explicit KillContentParentRunnable(RefPtr<ContentParent>&& aContentParent)
+    : Runnable("KillContentParentRunnable")
+    , mContentParent(Move(aContentParent))
+  {
+    MOZ_ASSERT(mContentParent);
+  }
+
+  NS_IMETHOD
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    mContentParent->KillHard("invalid ClientSourceParent actor");
+    mContentParent = nullptr;
+    return NS_OK;
+  }
+};
+
+} // anonymous namespace
+
+void
+ClientSourceParent::KillInvalidChild()
+{
+  // Try to get the content process before we destroy the actor below.
+  RefPtr<ContentParent> process =
+    BackgroundParent::GetContentParent(Manager()->Manager());
+
+  // First, immediately teardown the ClientSource actor.  No matter what
+  // we want to start this process as soon as possible.
+  Unused << ClientSourceParent::Send__delete__(this);
+
+  // If we are running in non-e10s, then there is nothing else to do here.
+  // There is no child process and we don't want to crash the entire browser
+  // in release builds.  In general, though, this should not happen in non-e10s
+  // so we do assert this condition.
+  if (!process) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "invalid ClientSourceParent in non-e10s");
+    return;
+  }
+
+  // In e10s mode we also want to kill the child process.  Validation failures
+  // typically mean someone sent us bogus data over the IPC link.  We can't
+  // trust that process any more.  We have to do this on the main thread, so
+  // there is a small window of time before we kill the process.  This is why
+  // we start the actor destruction immediately above.
+  nsCOMPtr<nsIRunnable> r = new KillContentParentRunnable(Move(process));
+  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+}
 
 IPCResult
 ClientSourceParent::RecvTeardown()
@@ -28,7 +92,8 @@ ClientSourceParent::RecvTeardown()
 void
 ClientSourceParent::ActorDestroy(ActorDestroyReason aReason)
 {
-  mService->RemoveSource(this);
+  DebugOnly<bool> removed = mService->RemoveSource(this);
+  MOZ_ASSERT(removed);
 
   nsTArray<ClientHandleParent*> handleList(mHandleList);
   for (ClientHandleParent* handle : handleList) {
@@ -57,12 +122,31 @@ ClientSourceParent::ClientSourceParent(const ClientSourceConstructorArgs& aArgs)
   : mClientInfo(aArgs.id(), aArgs.type(), aArgs.principalInfo(), aArgs.creationTime())
   , mService(ClientManagerService::GetOrCreateInstance())
 {
-  mService->AddSource(this);
 }
 
 ClientSourceParent::~ClientSourceParent()
 {
   MOZ_DIAGNOSTIC_ASSERT(mHandleList.IsEmpty());
+}
+
+void
+ClientSourceParent::Init()
+{
+  // Ensure the principal is reasonable before adding ourself to the service.
+  // Since we validate the principal on the child side as well, any failure
+  // here is treated as fatal.
+  if (NS_WARN_IF(!ClientIsValidPrincipalInfo(mClientInfo.PrincipalInfo()))) {
+    KillInvalidChild();
+    return;
+  }
+
+  // Its possible for AddSource() to fail if there is already an entry for
+  // our UUID.  This should not normally happen, but could if someone is
+  // spoofing IPC messages.
+  if (NS_WARN_IF(!mService->AddSource(this))) {
+    KillInvalidChild();
+    return;
+  }
 }
 
 const ClientInfo&
