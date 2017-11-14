@@ -2,115 +2,175 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::io;
-use std::sync::mpsc::{channel, Sender, Receiver, TryIter};
-use std::thread;
-
-use super::iohid::*;
-use super::iokit::*;
-use core_foundation_sys::runloop::*;
-use runloop::RunLoop;
-
 extern crate log;
 extern crate libc;
+
+use core_foundation_sys::base::*;
+use core_foundation_sys::runloop::*;
 use libc::c_void;
+use platform::iohid::*;
+use platform::iokit::*;
+use runloop::RunLoop;
+use std::{io, slice};
+use std::collections::HashMap;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use util::io_err;
 
-pub enum Event {
-    Add(IOHIDDeviceRef),
-    Remove(IOHIDDeviceRef),
+struct DeviceData {
+    tx: Sender<Vec<u8>>,
+    runloop: RunLoop,
 }
 
-pub struct Monitor {
-    // Receive events from the thread.
-    rx: Receiver<Event>,
-    // Handle to the thread loop.
-    thread: RunLoop,
+pub struct Monitor<F>
+where
+    F: Fn(IOHIDDeviceRef, Receiver<Vec<u8>>, &Fn() -> bool) + Sync,
+{
+    manager: IOHIDManagerRef,
+    // Keep alive until the monitor goes away.
+    _matcher: IOHIDDeviceMatcher,
+    map: HashMap<IOHIDDeviceRef, DeviceData>,
+    new_device_cb: F,
 }
 
-impl Monitor {
-    pub fn new() -> io::Result<Self> {
+impl<F> Monitor<F>
+where
+    F: Fn(IOHIDDeviceRef, Receiver<Vec<u8>>, &Fn() -> bool) + Sync + 'static,
+{
+    pub fn new(new_device_cb: F) -> Self {
+        let manager = unsafe { IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDManagerOptionNone) };
+
+        // Match FIDO devices only.
+        let _matcher = IOHIDDeviceMatcher::new();
+        unsafe { IOHIDManagerSetDeviceMatching(manager, _matcher.get()) };
+
+        Self {
+            manager,
+            _matcher,
+            new_device_cb,
+            map: HashMap::new(),
+        }
+    }
+
+    pub fn start(&mut self) -> io::Result<()> {
+        let context = self as *mut Self as *mut c_void;
+
+        unsafe {
+            IOHIDManagerRegisterDeviceMatchingCallback(
+                self.manager,
+                Monitor::<F>::on_device_matching,
+                context,
+            );
+            IOHIDManagerRegisterDeviceRemovalCallback(
+                self.manager,
+                Monitor::<F>::on_device_removal,
+                context,
+            );
+            IOHIDManagerRegisterInputReportCallback(
+                self.manager,
+                Monitor::<F>::on_input_report,
+                context,
+            );
+
+            IOHIDManagerScheduleWithRunLoop(
+                self.manager,
+                CFRunLoopGetCurrent(),
+                kCFRunLoopDefaultMode,
+            );
+
+            let rv = IOHIDManagerOpen(self.manager, kIOHIDManagerOptionNone);
+            if rv == 0 {
+                Ok(())
+            } else {
+                Err(io_err(&format!("Couldn't open HID Manager, rv={}", rv)))
+            }
+        }
+    }
+
+    pub fn stop(&mut self) {
+        // Remove all devices.
+        while !self.map.is_empty() {
+            let device_ref = *self.map.keys().next().unwrap();
+            self.remove_device(&device_ref);
+        }
+
+        // Close the manager and its devices.
+        unsafe { IOHIDManagerClose(self.manager, kIOHIDManagerOptionNone) };
+    }
+
+    fn remove_device(&mut self, device_ref: &IOHIDDeviceRef) {
+        if let Some(DeviceData { tx, runloop }) = self.map.remove(device_ref) {
+            // Dropping `tx` will make Device::read() fail eventually.
+            drop(tx);
+
+            // Wait until the runloop stopped.
+            runloop.cancel();
+        }
+    }
+
+    extern "C" fn on_input_report(
+        context: *mut c_void,
+        _: IOReturn,
+        device_ref: IOHIDDeviceRef,
+        _: IOHIDReportType,
+        _: u32,
+        report: *mut u8,
+        report_len: CFIndex,
+    ) {
+        let this = unsafe { &mut *(context as *mut Self) };
+        let mut send_failed = false;
+
+        // Ignore the report if we can't find a device for it.
+        if let Some(&DeviceData { ref tx, .. }) = this.map.get(&device_ref) {
+            let data = unsafe { slice::from_raw_parts(report, report_len as usize).to_vec() };
+            send_failed = tx.send(data).is_err();
+        }
+
+        // Remove the device if sending fails.
+        if send_failed {
+            this.remove_device(&device_ref);
+        }
+    }
+
+    extern "C" fn on_device_matching(
+        context: *mut c_void,
+        _: IOReturn,
+        _: *mut c_void,
+        device_ref: IOHIDDeviceRef,
+    ) {
+        let this = unsafe { &mut *(context as *mut Self) };
+
         let (tx, rx) = channel();
+        let f = &this.new_device_cb;
 
-        let thread = RunLoop::new(move |alive| -> io::Result<()> {
-            let tx_box = Box::new(tx);
-            let tx_ptr = Box::into_raw(tx_box) as *mut libc::c_void;
-
-            // This will keep `tx` alive only for the scope.
-            let _tx = unsafe { Box::from_raw(tx_ptr as *mut Sender<Event>) };
-
-            // Create and initialize a scoped HID manager.
-            let manager = IOHIDManager::new()?;
-
-            // Match only U2F devices.
-            let dict = IOHIDDeviceMatcher::new();
-            unsafe { IOHIDManagerSetDeviceMatching(manager.get(), dict.get()) };
-
-            // Register callbacks.
-            unsafe {
-                IOHIDManagerRegisterDeviceMatchingCallback(
-                    manager.get(),
-                    Monitor::device_add_cb,
-                    tx_ptr,
-                );
-                IOHIDManagerRegisterDeviceRemovalCallback(
-                    manager.get(),
-                    Monitor::device_remove_cb,
-                    tx_ptr,
-                );
+        // Create a new per-device runloop.
+        let runloop = RunLoop::new(move |alive| {
+            // Ensure that the runloop is still alive.
+            if alive() {
+                f(device_ref, rx, alive);
             }
+        });
 
-            // Run the Event Loop. CFRunLoopRunInMode() will dispatch HID
-            // input reports into the various callbacks
-            while alive() {
-                trace!("OSX Runloop running, handle={:?}", thread::current());
-
-                if unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.1, 0) } ==
-                    kCFRunLoopRunStopped
-                {
-                    debug!("OSX Runloop device stopped.");
-                    break;
-                }
-            }
-            debug!("OSX Runloop completed, handle={:?}", thread::current());
-
-            Ok(())
-        })?;
-
-        Ok(Self { rx, thread })
+        if let Ok(runloop) = runloop {
+            this.map.insert(device_ref, DeviceData { tx, runloop });
+        }
     }
 
-    pub fn events(&self) -> TryIter<Event> {
-        self.rx.try_iter()
-    }
-
-    pub fn alive(&self) -> bool {
-        self.thread.alive()
-    }
-
-    extern "C" fn device_add_cb(
+    extern "C" fn on_device_removal(
         context: *mut c_void,
         _: IOReturn,
         _: *mut c_void,
-        device: IOHIDDeviceRef,
+        device_ref: IOHIDDeviceRef,
     ) {
-        let tx = unsafe { &*(context as *mut Sender<Event>) };
-        let _ = tx.send(Event::Add(device));
-    }
-
-    extern "C" fn device_remove_cb(
-        context: *mut c_void,
-        _: IOReturn,
-        _: *mut c_void,
-        device: IOHIDDeviceRef,
-    ) {
-        let tx = unsafe { &*(context as *mut Sender<Event>) };
-        let _ = tx.send(Event::Remove(device));
+        let this = unsafe { &mut *(context as *mut Self) };
+        this.remove_device(&device_ref);
     }
 }
 
-impl Drop for Monitor {
+impl<F> Drop for Monitor<F>
+where
+    F: Fn(IOHIDDeviceRef, Receiver<Vec<u8>>, &Fn() -> bool) + Sync,
+{
     fn drop(&mut self) {
-        debug!("OSX Runloop dropped");
-        self.thread.cancel();
+        unsafe { CFRelease(self.manager as *mut libc::c_void) };
     }
 }
