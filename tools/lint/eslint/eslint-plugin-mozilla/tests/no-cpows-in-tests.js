@@ -33,7 +33,13 @@ ruleTester.run("no-cpows-in-tests", rule, {
     wrapCode("ContentTask.spawn(browser, null, () => { content.document; });"),
     wrapCode("let x = cssDocs.tooltip.content.contentDocument;"),
     wrapCode("function test(content) { let x = content; }"),
-    wrapCode('let content = "content"; foo(content);')
+    wrapCode('let content = "content"; foo(content);'),
+    wrapCode("helper(() => content.document);"),
+    wrapCode("add_task(() => helper(() => content.document));"),
+    wrapCode("add_task(() => { let content = {}; content.document; })"),
+    wrapCode("add_task(content => content.document)"),
+    wrapCode("add_task(function(content) { content.document; })"),
+    wrapCode("add_task(() => ContentTask.spawn(browser, null, () => content.document));")
   ],
   invalid: [
     invalidCode("let x = gBrowser.contentWindow;", "gBrowser.contentWindow"),
@@ -42,7 +48,8 @@ ruleTester.run("no-cpows-in-tests", rule, {
     invalidCode("let x = browser.contentDocument;", "browser.contentDocument"),
     invalidCode("let x = window.content;", "window.content"),
     invalidCode("content.document;", "content.document"),
+    invalidCode("add_task(() => content.document.querySelectorAll())", "content.document.querySelectorAll"),
     invalidCode("let x = content;", "content", "Identifier"),
-    invalidCode("let x = gBrowser.contentWindow.wrappedJSObject", "gBrowser.contentWindow")
+    invalidCode("let x = gBrowser.contentWindow.wrappedJSObject", "gBrowser.contentWindow.wrappedJSObject")
   ]
 });
