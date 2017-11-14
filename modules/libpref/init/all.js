@@ -2510,8 +2510,6 @@ pref("font.blacklist.underline_offset", "FangSong,Gulim,GulimChe,MingLiU,MingLiU
 pref("security.directory",              "");
 
 pref("signed.applets.codebase_principal_support", false);
-pref("security.checkloaduri", true);
-pref("security.xpconnect.plugin.unrestricted", true);
 // security-sensitive dialogs should delay button enabling. In milliseconds.
 pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
@@ -3102,9 +3100,6 @@ pref("layout.animation.prerender.viewport-ratio-limit-x", "1.125");
 pref("layout.animation.prerender.viewport-ratio-limit-y", "1.125");
 pref("layout.animation.prerender.absolute-limit-x", 4096);
 pref("layout.animation.prerender.absolute-limit-y", 4096);
-
-// pref to permit users to make verified SOAP calls by default
-pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");
 
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);
