@@ -62,76 +62,6 @@ StatementKindIsUnlabeledBreakTarget(StatementKind kind)
     return StatementKindIsLoop(kind) || kind == StatementKind::Switch;
 }
 
-class FunctionContextFlags
-{
-    // This class's data is all private and so only visible to these friends.
-    friend class FunctionBox;
-
-    // This function does something that can extend the set of bindings in its
-    // call objects --- it does a direct eval in non-strict code, or includes a
-    // function statement (as opposed to a function definition).
-    //
-    // This flag is *not* inherited by enclosed or enclosing functions; it
-    // applies only to the function in whose flags it appears.
-    //
-    bool hasExtensibleScope:1;
-
-    // Technically, every function has a binding named 'arguments'. Internally,
-    // this binding is only added when 'arguments' is mentioned by the function
-    // body. This flag indicates whether 'arguments' has been bound either
-    // through implicit use:
-    //   function f() { return arguments }
-    // or explicit redeclaration:
-    //   function f() { var arguments; return arguments }
-    //
-    // Note 1: overwritten arguments (function() { arguments = 3 }) will cause
-    // this flag to be set but otherwise require no special handling:
-    // 'arguments' is just a local variable and uses of 'arguments' will just
-    // read the local's current slot which may have been assigned. The only
-    // special semantics is that the initial value of 'arguments' is the
-    // arguments object (not undefined, like normal locals).
-    //
-    // Note 2: if 'arguments' is bound as a formal parameter, there will be an
-    // 'arguments' in Bindings, but, as the "LOCAL" in the name indicates, this
-    // flag will not be set. This is because, as a formal, 'arguments' will
-    // have no special semantics: the initial value is unconditionally the
-    // actual argument (or undefined if nactual < nformal).
-    //
-    bool argumentsHasLocalBinding:1;
-
-    // In many cases where 'arguments' has a local binding (as described above)
-    // we do not need to actually create an arguments object in the function
-    // prologue: instead we can analyze how 'arguments' is used (using the
-    // simple dataflow analysis in analyzeSSA) to determine that uses of
-    // 'arguments' can just read from the stack frame directly. However, the
-    // dataflow analysis only looks at how JSOP_ARGUMENTS is used, so it will
-    // be unsound in several cases. The frontend filters out such cases by
-    // setting this flag which eagerly sets script->needsArgsObj to true.
-    //
-    bool definitelyNeedsArgsObj:1;
-
-    bool needsHomeObject:1;
-    bool isDerivedClassConstructor:1;
-
-    // Whether this function has a .this binding. If true, we need to emit
-    // JSOP_FUNCTIONTHIS in the prologue to initialize it.
-    bool hasThisBinding:1;
-
-    // Whether this function has nested functions.
-    bool hasInnerFunctions:1;
-
-  public:
-    FunctionContextFlags()
-     :  hasExtensibleScope(false),
-        argumentsHasLocalBinding(false),
-        definitelyNeedsArgsObj(false),
-        needsHomeObject(false),
-        isDerivedClassConstructor(false),
-        hasThisBinding(false),
-        hasInnerFunctions(false)
-    { }
-};
-
 // List of directives that may be encountered in a Directive Prologue (ES5 15.1).
 class Directives
 {
@@ -414,7 +344,58 @@ class FunctionBox : public ObjectBox, public SharedContext
                                              * body or expression closure:
                                              * function(x) x*x */
 
-    FunctionContextFlags funCxFlags;
+    // This function does something that can extend the set of bindings in its
+    // call objects --- it does a direct eval in non-strict code, or includes a
+    // function statement (as opposed to a function definition).
+    //
+    // This flag is *not* inherited by enclosed or enclosing functions; it
+    // applies only to the function in whose flags it appears.
+    //
+    bool hasExtensibleScope_:1;
+
+    // Technically, every function has a binding named 'arguments'. Internally,
+    // this binding is only added when 'arguments' is mentioned by the function
+    // body. This flag indicates whether 'arguments' has been bound either
+    // through implicit use:
+    //   function f() { return arguments }
+    // or explicit redeclaration:
+    //   function f() { var arguments; return arguments }
+    //
+    // Note 1: overwritten arguments (function() { arguments = 3 }) will cause
+    // this flag to be set but otherwise require no special handling:
+    // 'arguments' is just a local variable and uses of 'arguments' will just
+    // read the local's current slot which may have been assigned. The only
+    // special semantics is that the initial value of 'arguments' is the
+    // arguments object (not undefined, like normal locals).
+    //
+    // Note 2: if 'arguments' is bound as a formal parameter, there will be an
+    // 'arguments' in Bindings, but, as the "LOCAL" in the name indicates, this
+    // flag will not be set. This is because, as a formal, 'arguments' will
+    // have no special semantics: the initial value is unconditionally the
+    // actual argument (or undefined if nactual < nformal).
+    //
+    bool argumentsHasLocalBinding_:1;
+
+    // In many cases where 'arguments' has a local binding (as described above)
+    // we do not need to actually create an arguments object in the function
+    // prologue: instead we can analyze how 'arguments' is used (using the
+    // simple dataflow analysis in analyzeSSA) to determine that uses of
+    // 'arguments' can just read from the stack frame directly. However, the
+    // dataflow analysis only looks at how JSOP_ARGUMENTS is used, so it will
+    // be unsound in several cases. The frontend filters out such cases by
+    // setting this flag which eagerly sets script->needsArgsObj to true.
+    //
+    bool definitelyNeedsArgsObj_:1;
+
+    bool needsHomeObject_:1;
+    bool isDerivedClassConstructor_:1;
+
+    // Whether this function has a .this binding. If true, we need to emit
+    // JSOP_FUNCTIONTHIS in the prologue to initialize it.
+    bool hasThisBinding_:1;
+
+    // Whether this function has nested functions.
+    bool hasInnerFunctions_:1;
 
     FunctionBox(JSContext* cx, LifoAlloc& alloc, ObjectBox* traceListHead, JSFunction* fun,
                 uint32_t toStringStart, Directives directives, bool extraWarnings,
@@ -505,24 +486,24 @@ class FunctionBox : public ObjectBox, public SharedContext
         isExprBody_ = true;
     }
 
-    bool hasExtensibleScope()        const { return funCxFlags.hasExtensibleScope; }
-    bool hasThisBinding()            const { return funCxFlags.hasThisBinding; }
-    bool argumentsHasLocalBinding()  const { return funCxFlags.argumentsHasLocalBinding; }
-    bool definitelyNeedsArgsObj()    const { return funCxFlags.definitelyNeedsArgsObj; }
-    bool needsHomeObject()           const { return funCxFlags.needsHomeObject; }
-    bool isDerivedClassConstructor() const { return funCxFlags.isDerivedClassConstructor; }
-    bool hasInnerFunctions()         const { return funCxFlags.hasInnerFunctions; }
+    bool hasExtensibleScope()        const { return hasExtensibleScope_; }
+    bool hasThisBinding()            const { return hasThisBinding_; }
+    bool argumentsHasLocalBinding()  const { return argumentsHasLocalBinding_; }
+    bool definitelyNeedsArgsObj()    const { return definitelyNeedsArgsObj_; }
+    bool needsHomeObject()           const { return needsHomeObject_; }
+    bool isDerivedClassConstructor() const { return isDerivedClassConstructor_; }
+    bool hasInnerFunctions()         const { return hasInnerFunctions_; }
 
-    void setHasExtensibleScope()           { funCxFlags.hasExtensibleScope       = true; }
-    void setHasThisBinding()               { funCxFlags.hasThisBinding           = true; }
-    void setArgumentsHasLocalBinding()     { funCxFlags.argumentsHasLocalBinding = true; }
-    void setDefinitelyNeedsArgsObj()       { MOZ_ASSERT(funCxFlags.argumentsHasLocalBinding);
-                                             funCxFlags.definitelyNeedsArgsObj   = true; }
+    void setHasExtensibleScope()           { hasExtensibleScope_       = true; }
+    void setHasThisBinding()               { hasThisBinding_           = true; }
+    void setArgumentsHasLocalBinding()     { argumentsHasLocalBinding_ = true; }
+    void setDefinitelyNeedsArgsObj()       { MOZ_ASSERT(argumentsHasLocalBinding_);
+                                             definitelyNeedsArgsObj_   = true; }
     void setNeedsHomeObject()              { MOZ_ASSERT(function()->allowSuperProperty());
-                                             funCxFlags.needsHomeObject          = true; }
+                                             needsHomeObject_          = true; }
     void setDerivedClassConstructor()      { MOZ_ASSERT(function()->isClassConstructor());
-                                             funCxFlags.isDerivedClassConstructor = true; }
-    void setHasInnerFunctions()            { funCxFlags.hasInnerFunctions         = true; }
+                                             isDerivedClassConstructor_ = true; }
+    void setHasInnerFunctions()            { hasInnerFunctions_         = true; }
 
     bool hasSimpleParameterList() const {
         return !hasRest() && !hasParameterExprs && !hasDestructuringArgs;
