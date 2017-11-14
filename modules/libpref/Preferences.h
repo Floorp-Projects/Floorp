@@ -323,7 +323,7 @@ public:
   nsresult SavePrefFileBlocking();
   nsresult SavePrefFileAsynchronous();
 
-protected:
+private:
   virtual ~Preferences();
 
   nsresult NotifyServiceObservers(const char* aSubject);
@@ -361,7 +361,7 @@ public:
     ExactMatch,
   };
 
-protected:
+private:
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const char* aPref,
                                    void* aClosure,
