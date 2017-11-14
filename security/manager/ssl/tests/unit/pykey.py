@@ -535,25 +535,25 @@ class RSAKey(object):
 
     def toDER(self):
         privateKeyInfo = PrivateKeyInfo()
-        privateKeyInfo.setComponentByName('version', 0)
+        privateKeyInfo['version'] = 0
         algorithmIdentifier = rfc2459.AlgorithmIdentifier()
-        algorithmIdentifier.setComponentByName('algorithm', rfc2459.rsaEncryption)
+        algorithmIdentifier['algorithm'] = rfc2459.rsaEncryption
         # Directly setting parameters to univ.Null doesn't currently work.
         nullEncapsulated = encoder.encode(univ.Null())
         algorithmIdentifier['parameters'] = univ.Any(nullEncapsulated)
-        privateKeyInfo.setComponentByName('privateKeyAlgorithm', algorithmIdentifier)
+        privateKeyInfo['privateKeyAlgorithm'] = algorithmIdentifier
         rsaPrivateKey = RSAPrivateKey()
-        rsaPrivateKey.setComponentByName('version', 0)
-        rsaPrivateKey.setComponentByName('modulus', self.RSA_N)
-        rsaPrivateKey.setComponentByName('publicExponent', self.RSA_E)
-        rsaPrivateKey.setComponentByName('privateExponent', self.RSA_D)
-        rsaPrivateKey.setComponentByName('prime1', self.RSA_P)
-        rsaPrivateKey.setComponentByName('prime2', self.RSA_Q)
-        rsaPrivateKey.setComponentByName('exponent1', self.RSA_exp1)
-        rsaPrivateKey.setComponentByName('exponent2', self.RSA_exp2)
-        rsaPrivateKey.setComponentByName('coefficient', self.RSA_coef)
+        rsaPrivateKey['version'] = 0
+        rsaPrivateKey['modulus'] = self.RSA_N
+        rsaPrivateKey['publicExponent'] = self.RSA_E
+        rsaPrivateKey['privateExponent'] = self.RSA_D
+        rsaPrivateKey['prime1'] = self.RSA_P
+        rsaPrivateKey['prime2'] = self.RSA_Q
+        rsaPrivateKey['exponent1'] = self.RSA_exp1
+        rsaPrivateKey['exponent2'] = self.RSA_exp2
+        rsaPrivateKey['coefficient'] = self.RSA_coef
         rsaPrivateKeyEncoded = encoder.encode(rsaPrivateKey)
-        privateKeyInfo.setComponentByName('privateKey', univ.OctetString(rsaPrivateKeyEncoded))
+        privateKeyInfo['privateKey'] = univ.OctetString(rsaPrivateKeyEncoded)
         return encoder.encode(privateKeyInfo)
 
     def toPEM(self):
@@ -570,17 +570,17 @@ class RSAKey(object):
         """Returns a subject public key info representing
         this key for use by pyasn1."""
         algorithmIdentifier = rfc2459.AlgorithmIdentifier()
-        algorithmIdentifier.setComponentByName('algorithm', rfc2459.rsaEncryption)
+        algorithmIdentifier['algorithm'] = rfc2459.rsaEncryption
         # Directly setting parameters to univ.Null doesn't currently work.
         nullEncapsulated = encoder.encode(univ.Null())
         algorithmIdentifier['parameters'] = univ.Any(nullEncapsulated)
         spki = rfc2459.SubjectPublicKeyInfo()
-        spki.setComponentByName('algorithm', algorithmIdentifier)
+        spki['algorithm'] = algorithmIdentifier
         rsaKey = RSAPublicKey()
-        rsaKey.setComponentByName('N', univ.Integer(self.RSA_N))
-        rsaKey.setComponentByName('E', univ.Integer(self.RSA_E))
+        rsaKey['N'] = univ.Integer(self.RSA_N)
+        rsaKey['E'] = univ.Integer(self.RSA_E)
         subjectPublicKey = univ.BitString(byteStringToHexifiedBitString(encoder.encode(rsaKey)))
-        spki.setComponentByName('subjectPublicKey', subjectPublicKey)
+        spki['subjectPublicKey'] = subjectPublicKey
         return spki
 
     def sign(self, data, hashAlgorithm):
@@ -688,10 +688,10 @@ class ECCKey(object):
         """Returns a subject public key info representing
         this key for use by pyasn1."""
         algorithmIdentifier = rfc2459.AlgorithmIdentifier()
-        algorithmIdentifier.setComponentByName('algorithm', ecPublicKey)
-        algorithmIdentifier.setComponentByName('parameters', self.keyOID)
+        algorithmIdentifier['algorithm'] = ecPublicKey
+        algorithmIdentifier['parameters'] = self.keyOID
         spki = rfc2459.SubjectPublicKeyInfo()
-        spki.setComponentByName('algorithm', algorithmIdentifier)
+        spki['algorithm'] = algorithmIdentifier
         # We need to extract the point that represents this key.
         # The library encoding of the key is an 8-byte id, followed by 2
         # bytes for the key length in bits, followed by the point on the
@@ -704,7 +704,7 @@ class ECCKey(object):
         hexifiedBitString = "'%s%s%s'H" % ('04', longToEvenLengthHexString(points[0]),
                                            longToEvenLengthHexString(points[1]))
         subjectPublicKey = univ.BitString(hexifiedBitString)
-        spki.setComponentByName('subjectPublicKey', subjectPublicKey)
+        spki['subjectPublicKey'] = subjectPublicKey
         return spki
 
     def sign(self, data, hashAlgorithm):
@@ -724,8 +724,8 @@ class ECCKey(object):
             else:
                 x, y = encoding.dec_point(self.key.sign(data, hashAlgorithm.split(':')[-1]))
             point = ECPoint()
-            point.setComponentByName('x', x)
-            point.setComponentByName('y', y)
+            point['x'] = x
+            point['y'] = y
             return byteStringToHexifiedBitString(encoder.encode(point))
 
 
