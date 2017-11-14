@@ -76,15 +76,8 @@ NS_IMETHODIMP ProxyHandlerInfo::SetPreferredApplicationHandler(nsIHandlerApp *aA
     aApp->GetName(name);
     aApp->GetDetailedDescription(detailedDescription);
   }
-  HandlerApp happ(name, detailedDescription);
-  mHandlerInfo = HandlerInfo(mHandlerInfo.type(),
-                             mHandlerInfo.isMIMEInfo(),
-                             mHandlerInfo.description(),
-                             mHandlerInfo.alwaysAskBeforeHandling(),
-                             mHandlerInfo.extensions(),
-                             happ,
-                             mHandlerInfo.possibleApplicationHandlers(),
-                             mHandlerInfo.preferredAction());
+
+  mHandlerInfo.preferredApplicationHandler() = HandlerApp(name, detailedDescription);
   return NS_OK;
 }
 
@@ -122,14 +115,7 @@ NS_IMETHODIMP ProxyHandlerInfo::GetPreferredAction(nsHandlerInfoAction *aPreferr
 }
 NS_IMETHODIMP ProxyHandlerInfo::SetPreferredAction(nsHandlerInfoAction aPreferredAction)
 {
-  mHandlerInfo = HandlerInfo(mHandlerInfo.type(),
-                             mHandlerInfo.isMIMEInfo(),
-                             mHandlerInfo.description(),
-                             mHandlerInfo.alwaysAskBeforeHandling(),
-                             mHandlerInfo.extensions(),
-                             mHandlerInfo.preferredApplicationHandler(),
-                             mHandlerInfo.possibleApplicationHandlers(),
-                             aPreferredAction);
+  mHandlerInfo.preferredAction() = aPreferredAction;
   mPrefAction = aPreferredAction;
   return NS_OK;
 }
@@ -142,14 +128,7 @@ NS_IMETHODIMP ProxyHandlerInfo::GetAlwaysAskBeforeHandling(bool *aAlwaysAskBefor
 }
 NS_IMETHODIMP ProxyHandlerInfo::SetAlwaysAskBeforeHandling(bool aAlwaysAskBeforeHandling)
 {
-  mHandlerInfo = HandlerInfo(mHandlerInfo.type(),
-                             mHandlerInfo.isMIMEInfo(),
-                             mHandlerInfo.description(),
-                             aAlwaysAskBeforeHandling,
-                             mHandlerInfo.extensions(),
-                             mHandlerInfo.preferredApplicationHandler(),
-                             mHandlerInfo.possibleApplicationHandlers(),
-                             mHandlerInfo.preferredAction());
+  mHandlerInfo.alwaysAskBeforeHandling() = aAlwaysAskBeforeHandling;
   return NS_OK;
 }
 
