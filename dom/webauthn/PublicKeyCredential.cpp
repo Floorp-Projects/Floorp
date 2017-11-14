@@ -84,7 +84,7 @@ PublicKeyCredential::SetResponse(RefPtr<AuthenticatorResponse> aResponse)
 }
 
 /* static */ already_AddRefed<Promise>
-PublicKeyCredential::IsPlatformAuthenticatorAvailable(GlobalObject& aGlobal)
+PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(GlobalObject& aGlobal)
 {
   nsIGlobalObject* globalObject =
     xpc::NativeGlobal(JS::CurrentGlobalOrNull(aGlobal.Context()));
@@ -94,15 +94,24 @@ PublicKeyCredential::IsPlatformAuthenticatorAvailable(GlobalObject& aGlobal)
 
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(globalObject, rv);
-  if(rv.Failed()) {
+  if (rv.Failed()) {
     return nullptr;
   }
 
-  // Complete in Bug 1406468. This shouldn't just always return true, it should
-  // follow the guidelines in
-  // https://w3c.github.io/webauthn/#isPlatformAuthenticatorAvailable
-  // such as ensuring that U2FTokenManager isn't in some way disabled.
-  promise->MaybeResolve(true);
+  // https://w3c.github.io/webauthn/#isUserVerifyingPlatformAuthenticatorAvailable
+  //
+  // We currently implement no platform authenticators, so this would always
+  // resolve to false. For those cases, the spec recommends a resolve timeout
+  // on the order of 10 minutes to avoid fingerprinting.
+  //
+  // A simple solution is thus to never resolve the promise, otherwise we'd
+  // have to track every single call to this method along with a promise
+  // and timer to resolve it after exactly X minutes.
+  //
+  // A Relying Party has to deal with a non-response in a timely fashion, so
+  // we can keep this as-is (and not resolve) even when we support platform
+  // authenticators but they're not available, or a user rejects a website's
+  // request to use them.
   return promise.forget();
 }
 

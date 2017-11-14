@@ -4,6 +4,8 @@
 
 :root {
   /* Photon color variables used on the aboutdevtools page */
+  --blue-50: #0a84ff;
+  --blue-50-alpha20: rgba(10, 132, 255, 0.2);
   --blue-60: #0060df;
   --blue-70: #003eaa;
   --blue-80: #002275;
@@ -14,7 +16,6 @@
   --grey-90-alpha-30: rgba(12, 12, 13, 0.3);
   --grey-90-alpha-40: rgba(12, 12, 13, 0.4);
   --grey-90-alpha-50: rgba(12, 12, 13, 0.5);
-  --teal-60: #00c8d7;
   --red-50: #ff0039;
   --white: #ffffff;
 
@@ -36,7 +37,14 @@ p {
   max-width: 850px;
   display: flex;
   flex-shrink: 0;
-  padding: 34px 0 50px 0;
+}
+
+#install-page .box {
+  padding: 17% 0 50px 0;
+}
+
+#welcome-page .box {
+  padding: 50px 0;
 }
 
 .wrapper {
@@ -93,6 +101,7 @@ p {
 
 .feature-link {
   display: block;
+  margin-top: 10px;
 }
 
 .external,
@@ -129,6 +138,7 @@ p {
 
 .buttons-container {
   display: flex;
+  margin-top: 5px;
 }
 
 .buttons-container button:not(:last-child) {
@@ -195,6 +205,7 @@ footer {
   width: 100%;
   min-height: 300px;
   flex-grow: 1;
+  padding-bottom: 15px;
   color: var(--white);
   background: linear-gradient(0, var(--blue-60), var(--blue-80));
 }

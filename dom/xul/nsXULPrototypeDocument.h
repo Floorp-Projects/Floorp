@@ -114,7 +114,7 @@ public:
 
     NS_DECL_CYCLE_COLLECTION_CLASS(nsXULPrototypeDocument)
 
-    void TraceProtos(JSTracer* aTrc, uint32_t aGCNumber);
+    void TraceProtos(JSTracer* aTrc);
 
 protected:
     nsCOMPtr<nsIURI> mURI;
