@@ -50,6 +50,12 @@ union IPCClientState
   IPCClientWorkerState;
 };
 
+struct ClientSourceExecutionReadyArgs
+{
+  nsCString url;
+  FrameType frameType;
+};
+
 struct ClientOpenWindowArgs
 {
 };

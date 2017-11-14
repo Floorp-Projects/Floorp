@@ -89,6 +89,12 @@ ClientHandle::Activate(PClientManagerChild* aActor)
   ActivateThing(static_cast<ClientHandleChild*>(actor));
 }
 
+void
+ClientHandle::ExecutionReady(const ClientInfo& aClientInfo)
+{
+  mClientInfo = aClientInfo;
+}
+
 const ClientInfo&
 ClientHandle::Info() const
 {
