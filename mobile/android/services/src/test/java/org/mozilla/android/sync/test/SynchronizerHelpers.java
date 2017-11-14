@@ -12,8 +12,8 @@ import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -57,9 +57,8 @@ public class SynchronizerHelpers {
     }
 
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate,
-                              Context context) {
-      delegate.deferredCreationDelegate().onSessionCreated(new WBORepositorySession(this) {
+    public RepositorySession createSession(Context context) {
+      return new WBORepositorySession(this) {
         @Override
         public void fetchModified(final RepositorySessionFetchRecordsDelegate delegate) {
           super.fetchModified(new RepositorySessionFetchRecordsDelegate() {
@@ -93,7 +92,7 @@ public class SynchronizerHelpers {
             }
           });
         }
-      });
+      };
     }
   }
 
@@ -108,9 +107,8 @@ public class SynchronizerHelpers {
     }
 
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate,
-                              Context context) {
-      delegate.deferredCreationDelegate().onSessionCreated(new WBORepositorySession(this) {
+    public RepositorySession createSession(Context context) {
+      return new WBORepositorySession(this) {
         @Override
         public void store(final Record record) throws NoStoreDelegateException {
           if (storeDelegate == null) {
@@ -127,7 +125,7 @@ public class SynchronizerHelpers {
             super.store(record);
           }
         }
-      });
+      };
     }
   }
 
@@ -216,9 +214,8 @@ public class SynchronizerHelpers {
     }
 
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate,
-                              Context context) {
-      delegate.deferredCreationDelegate().onSessionCreated(new BatchFailStoreWBORepositorySession(this));
+    public RepositorySession createSession(Context context) {
+      return new BatchFailStoreWBORepositorySession(this);
     }
   }
 
@@ -239,9 +236,8 @@ public class SynchronizerHelpers {
 
   public static class BeginErrorWBORepository extends TrackingWBORepository {
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate,
-                              Context context) {
-      delegate.deferredCreationDelegate().onSessionCreated(new BeginErrorWBORepositorySession(this));
+    public RepositorySession createSession(Context context) {
+      return new BeginErrorWBORepositorySession(this);
     }
 
     public class BeginErrorWBORepositorySession extends WBORepositorySession {
@@ -258,9 +254,8 @@ public class SynchronizerHelpers {
 
   public static class FinishErrorWBORepository extends TrackingWBORepository {
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate,
-                              Context context) {
-      delegate.deferredCreationDelegate().onSessionCreated(new FinishErrorWBORepositorySession(this));
+    public RepositorySession createSession(Context context) {
+      return new FinishErrorWBORepositorySession(this);
     }
 
     public class FinishErrorWBORepositorySession extends WBORepositorySession {
@@ -283,9 +278,8 @@ public class SynchronizerHelpers {
     }
 
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate,
-                              Context context) {
-      delegate.deferredCreationDelegate().onSessionCreated(new DataAvailableWBORepositorySession(this));
+    public RepositorySession createSession(Context context) {
+      return new DataAvailableWBORepositorySession(this);
     }
 
     public class DataAvailableWBORepositorySession extends WBORepositorySession {
@@ -308,9 +302,8 @@ public class SynchronizerHelpers {
     }
 
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate,
-                              Context context) {
-      delegate.deferredCreationDelegate().onSessionCreated(new ShouldSkipWBORepositorySession(this));
+    public RepositorySession createSession(Context context) {
+      return new ShouldSkipWBORepositorySession(this);
     }
 
     public class ShouldSkipWBORepositorySession extends WBORepositorySession {

@@ -85,11 +85,6 @@ public class TestSynchronizerSession {
     synchronizer.repositoryB = repoB;
     syncSession = new SynchronizerSession(synchronizer, new SynchronizerSessionDelegate() {
       @Override
-      public void onInitialized(SynchronizerSession session) {
-        session.synchronize();
-      }
-
-      @Override
       public void onSynchronized(SynchronizerSession session) {
         WaitHelper.getTestWaiter().performNotify();
       }
@@ -128,7 +123,7 @@ public class TestSynchronizerSession {
       @Override
       public void run() {
         final Context context = null;
-        syncSession.init(context,
+        syncSession.initAndSynchronize(context,
             new RepositorySessionBundle(0),
             new RepositorySessionBundle(0));
       }
@@ -248,11 +243,6 @@ public class TestSynchronizerSession {
 
     syncSession = new SynchronizerSession(synchronizer, new SynchronizerSessionDelegate() {
       @Override
-      public void onInitialized(SynchronizerSession session) {
-        session.synchronize();
-      }
-
-      @Override
       public void onSynchronized(SynchronizerSession session) {
         WaitHelper.getTestWaiter().performNotify(new RuntimeException("Not expecting onSynchronized"));
       }
@@ -272,7 +262,7 @@ public class TestSynchronizerSession {
       @Override
       public void run() {
         final Context context = null;
-        syncSession.init(context,
+        syncSession.initAndSynchronize(context,
             new RepositorySessionBundle(100),
             new RepositorySessionBundle(200));
       }

@@ -18,7 +18,6 @@ import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
@@ -62,8 +61,8 @@ public class BookmarksValidationRepository extends Repository {
     }
 
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate, Context context) {
-        delegate.onSessionCreated(new BookmarksValidationRepositorySession(this, context));
+    public RepositorySession createSession(Context context) {
+        return new BookmarksValidationRepositorySession(this, context);
     }
 
     public class BookmarksValidationRepositorySession extends RepositorySession {

@@ -11,15 +11,14 @@ import org.mozilla.gecko.background.sync.helpers.HistoryHelpers;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
+import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.android.HistoryDataAccessor;
 import org.mozilla.gecko.sync.repositories.android.HistoryRepository;
 import org.mozilla.gecko.sync.repositories.android.HistoryRepositorySession;
-import org.mozilla.gecko.sync.repositories.android.ThreadedRepository;
 import org.mozilla.gecko.sync.repositories.android.DataAccessor;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
@@ -31,7 +30,7 @@ import android.net.Uri;
 public class TestAndroidBrowserHistoryRepository extends ThreadedRepositoryTestCase {
 
   @Override
-  protected ThreadedRepository getRepository() {
+  protected Repository getRepository() {
 
     /**
      * Override this chain in order to avoid our test code having to create two
@@ -39,15 +38,13 @@ public class TestAndroidBrowserHistoryRepository extends ThreadedRepositoryTestC
      */
     return new HistoryRepository() {
       @Override
-      protected void sessionCreator(RepositorySessionCreationDelegate delegate, Context context) {
-        HistoryRepositorySession session;
-        session = new HistoryRepositorySession(this, context) {
+      public RepositorySession createSession(Context context) {
+        return new HistoryRepositorySession(this, context) {
           @Override
           protected synchronized void trackGUID(String guid) {
             System.out.println("Ignoring trackGUID call: this is a test!");
           }
         };
-        delegate.onSessionCreated(session);
       }
     };
   }
@@ -202,7 +199,7 @@ public class TestAndroidBrowserHistoryRepository extends ThreadedRepositoryTestC
    * and doing a fetch.
    */
   @SuppressWarnings("unchecked")
-  public void testAddOneVisit() {
+  public void testAddOneVisit() throws Exception {
     final RepositorySession session = createAndBeginSession();
 
     HistoryRecord record0 = HistoryHelpers.createHistory3();
@@ -229,7 +226,7 @@ public class TestAndroidBrowserHistoryRepository extends ThreadedRepositoryTestC
   }
 
   @SuppressWarnings("unchecked")
-  public void testAddMultipleVisits() {
+  public void testAddMultipleVisits() throws Exception {
     final RepositorySession session = createAndBeginSession();
 
     HistoryRecord record0 = HistoryHelpers.createHistory4();
@@ -270,7 +267,7 @@ public class TestAndroidBrowserHistoryRepository extends ThreadedRepositoryTestC
     closeDataAccessor(dataAccessor);
   }
 
-  public void testInvalidHistoryItemIsSkipped() throws NullCursorException {
+  public void testInvalidHistoryItemIsSkipped() throws Exception {
     final HistoryRepositorySession session = (HistoryRepositorySession) createAndBeginSession();
     final DataAccessor dbHelper = new HistoryDataAccessor(getApplicationContext());
 
@@ -312,7 +309,7 @@ public class TestAndroidBrowserHistoryRepository extends ThreadedRepositoryTestC
     session.abort();
   }
 
-  public void testSqlInjectPurgeDelete() {
+  public void testSqlInjectPurgeDelete() throws Exception {
     // Some setup.
     RepositorySession session = createAndBeginSession();
     final DataAccessor db = getDataAccessor();
@@ -397,7 +394,7 @@ public class TestAndroidBrowserHistoryRepository extends ThreadedRepositoryTestC
     return cur;
   }
 
-  public void testDataAccessorBulkInsert() throws NullCursorException {
+  public void testDataAccessorBulkInsert() throws Exception {
     final HistoryRepositorySession session = (HistoryRepositorySession) createAndBeginSession();
     final HistoryDataAccessor db = new HistoryDataAccessor(getApplicationContext());
 

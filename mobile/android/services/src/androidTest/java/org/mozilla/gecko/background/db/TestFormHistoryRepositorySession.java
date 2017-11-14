@@ -13,13 +13,13 @@ import org.mozilla.gecko.background.sync.helpers.ExpectStoredDelegate;
 import org.mozilla.gecko.background.sync.helpers.SessionTestHelper;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.sync.SessionCreateException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.NoContentProviderException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.FormHistoryRepositorySession;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.FormHistoryRecord;
@@ -69,17 +69,15 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
      */
     return new FormHistoryRepositorySession.FormHistoryRepository() {
       @Override
-      public void createSession(RepositorySessionCreationDelegate delegate,
-                                Context context) {
+      public RepositorySession createSession(Context context) throws SessionCreateException {
         try {
-          final FormHistoryRepositorySession session = new FormHistoryRepositorySession(this, context) {
+          return new FormHistoryRepositorySession(this, context) {
             @Override
             protected synchronized void trackGUID(String guid) {
             }
           };
-          delegate.onSessionCreated(session);
         } catch (Exception e) {
-          delegate.onSessionCreateFailed(e);
+          throw new SessionCreateException(e);
         }
       }
     };
@@ -98,7 +96,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
         getRepository());
   }
 
-  public void testAcquire() throws NoContentProviderException {
+  public void testAcquire() throws Exception {
     final FormHistoryRepositorySession session = createAndBeginSession();
     assertNotNull(session.getFormsProvider());
     session.abort();
@@ -186,7 +184,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     after4 = System.currentTimeMillis();
   }
 
-  public void testWipe() throws NoContentProviderException, RemoteException {
+  public void testWipe() throws Exception {
     final FormHistoryRepositorySession session = createAndBeginSession();
 
     insertTwoRecords(session);
@@ -248,7 +246,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     };
   }
 
-  public void testFetchAll() throws NoContentProviderException, RemoteException {
+  public void testFetchAll() throws Exception {
     final FormHistoryRepositorySession session = createAndBeginSession();
 
     insertTwoRecords(session);
@@ -258,7 +256,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     session.abort();
   }
 
-  public void testFetchByGuid() throws NoContentProviderException, RemoteException {
+  public void testFetchByGuid() throws Exception {
     final FormHistoryRepositorySession session = createAndBeginSession();
 
     insertTwoRecords(session);
@@ -279,7 +277,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     session.abort();
   }
 
-  public void testFetchSince() throws NoContentProviderException, RemoteException {
+  public void testFetchSince() throws Exception {
     final FormHistoryRepositorySession session = createAndBeginSession();
 
     insertFourRecords(session);
@@ -313,7 +311,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     };
   }
 
-  public void testStoreRemoteNew() throws NoContentProviderException, RemoteException {
+  public void testStoreRemoteNew() throws Exception {
     final FormHistoryRepositorySession session = createAndBeginSession();
 
     insertTwoRecords(session);
@@ -335,7 +333,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     session.abort();
   }
 
-  public void testStoreRemoteNewer() throws NoContentProviderException, RemoteException {
+  public void testStoreRemoteNewer() throws Exception {
     final FormHistoryRepositorySession session = createAndBeginSession();
 
     insertFourRecords(session);
@@ -370,7 +368,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     session.abort();
   }
 
-  public void testStoreRemoteOlder() throws NoContentProviderException, RemoteException {
+  public void testStoreRemoteOlder() throws Exception {
     final FormHistoryRepositorySession session = createAndBeginSession();
 
     long oldTimestamp = System.currentTimeMillis() - 100;
@@ -401,7 +399,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     session.abort();
   }
 
-  public void testStoreDifferentGuid() throws NoContentProviderException, RemoteException {
+  public void testStoreDifferentGuid() throws Exception {
     final FormHistoryRepositorySession session = createAndBeginSession();
 
     insertTwoRecords(session);

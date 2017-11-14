@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
+import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
@@ -18,7 +19,7 @@ public abstract class MiddlewareRepositorySession extends RepositorySession {
   private static final String LOG_TAG = "MiddlewareSession";
   protected final RepositorySession inner;
 
-  public MiddlewareRepositorySession(RepositorySession innerSession, MiddlewareRepository repository) {
+  /* package-private */ MiddlewareRepositorySession(RepositorySession innerSession, Repository repository) {
     super(repository);
     this.inner = innerSession;
   }
@@ -37,7 +38,7 @@ public abstract class MiddlewareRepositorySession extends RepositorySession {
     private final MiddlewareRepositorySession outerSession;
     private final RepositorySessionFinishDelegate next;
 
-    public MiddlewareRepositorySessionFinishDelegate(MiddlewareRepositorySession outerSession, RepositorySessionFinishDelegate next) {
+    /* package-private */ MiddlewareRepositorySessionFinishDelegate(MiddlewareRepositorySession outerSession, RepositorySessionFinishDelegate next) {
       this.outerSession = outerSession;
       this.next = next;
     }
