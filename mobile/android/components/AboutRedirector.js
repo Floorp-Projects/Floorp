@@ -9,21 +9,15 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var modules = {
-  // about:
-  "": {
-    uri: "chrome://browser/content/about.xhtml",
-    privileged: true
-  },
-
-  // about:fennec and about:firefox are aliases for about:,
-  // but hidden from about:about
   fennec: {
     uri: "chrome://browser/content/about.xhtml",
     privileged: true,
     hide: true
   },
+
+  // about:firefox is an alias for about:fennec, but not hidden from about:about
   get firefox() {
-    return this.fennec;
+    return Object.assign({}, this.fennec, {hide: false});
   },
 
   // about:blank has some bad loading behavior we can avoid, if we use an alias
