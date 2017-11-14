@@ -9,6 +9,7 @@
 #include "ClientManager.h"
 #include "ClientManagerChild.h"
 #include "ClientSourceChild.h"
+#include "ClientValidation.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 
 namespace mozilla {
@@ -44,6 +45,15 @@ ClientSource::Activate(PClientManagerChild* aActor)
   MOZ_ASSERT(!GetActor());
 
   if (IsShutdown()) {
+    return;
+  }
+
+  // Fast fail if we don't understand this particular kind of PrincipalInfo.
+  // This can happen since we use MozURL for validation which does not handle
+  // some of the more obscure internal principal/url combinations.  Normal
+  // content pages will pass this check.
+  if (NS_WARN_IF(!ClientIsValidPrincipalInfo(mClientInfo.PrincipalInfo()))) {
+    Shutdown();
     return;
   }
 
