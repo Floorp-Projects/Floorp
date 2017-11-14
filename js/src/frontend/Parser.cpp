@@ -2686,7 +2686,6 @@ Parser<ParseHandler, CharT>::functionBody(InHandling inHandling, YieldHandling y
                                           FunctionSyntaxKind kind, FunctionBodyType type)
 {
     MOZ_ASSERT(pc->isFunctionBox());
-    MOZ_ASSERT(!pc->funHasReturnExpr && !pc->funHasReturnVoid);
 
 #ifdef DEBUG
     uint32_t startYieldOffset = pc->lastYieldOffset;
@@ -6550,13 +6549,11 @@ Parser<ParseHandler, CharT>::returnStatement(YieldHandling yieldHandling)
       case TOK_SEMI:
       case TOK_RC:
         exprNode = null();
-        pc->funHasReturnVoid = true;
         break;
       default: {
         exprNode = expr(InAllowed, yieldHandling, TripledotProhibited);
         if (!exprNode)
             return null();
-        pc->funHasReturnExpr = true;
       }
     }
 
