@@ -3593,6 +3593,33 @@ nsLayoutUtils::AddExtraBackgroundItems(nsDisplayListBuilder& aBuilder,
   }
 }
 
+/**
+ * Returns a retained display list builder for frame |aFrame|. If there is no
+ * retained display list builder property set for the frame, and if the flag
+ * |aRetainingEnabled| is true, a new retained display list builder is created,
+ * stored as a property for the frame, and returned.
+ */
+static RetainedDisplayListBuilder*
+GetOrCreateRetainedDisplayListBuilder(nsIFrame* aFrame, bool aRetainingEnabled,
+                                      bool aBuildCaret)
+{
+  RetainedDisplayListBuilder* retainedBuilder =
+    aFrame->GetProperty(RetainedDisplayListBuilder::Cached());
+
+  if (retainedBuilder) {
+    return retainedBuilder;
+  }
+
+  if (aRetainingEnabled) {
+    retainedBuilder =
+      new RetainedDisplayListBuilder(aFrame, nsDisplayListBuilderMode::PAINTING,
+                                     aBuildCaret);
+    aFrame->SetProperty(RetainedDisplayListBuilder::Cached(), retainedBuilder);
+  }
+
+  return retainedBuilder;
+}
+
 nsresult
 nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
@@ -3629,31 +3656,28 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
   TimeStamp startBuildDisplayList = TimeStamp::Now();
 
+  const bool buildCaret = !(aFlags & PaintFrameFlags::PAINT_HIDE_CARET);
+  const bool isForPainting = (aFlags & PaintFrameFlags::PAINT_WIDGET_LAYERS) &&
+    aBuilderMode == nsDisplayListBuilderMode::PAINTING;
+
+  // Retained display list builder is currently only used for content processes.
+  const bool retainingEnabled = isForPainting &&
+    gfxPrefs::LayoutRetainDisplayList() && XRE_IsContentProcess();
+
+  RetainedDisplayListBuilder* retainedBuilder =
+    GetOrCreateRetainedDisplayListBuilder(aFrame, retainingEnabled, buildCaret);
+
+  // Only use the retained display list builder if the retaining is currently
+  // enabled. This check is needed because it is possible that the pref has been
+  // disabled after creating the retained display list builder.
+  const bool useRetainedBuilder = retainedBuilder && retainingEnabled;
+
   Maybe<nsDisplayListBuilder> nonRetainedBuilder;
   Maybe<nsDisplayList> nonRetainedList;
   nsDisplayListBuilder* builderPtr = nullptr;
   nsDisplayList* listPtr = nullptr;
-  RetainedDisplayListBuilder* retainedBuilder = nullptr;
 
-  const bool buildCaret = !(aFlags & PaintFrameFlags::PAINT_HIDE_CARET);
-
-  // Enable display list retaining if the pref is set and if we are in a
-  // content process.
-  const bool retainDisplayList =
-    gfxPrefs::LayoutRetainDisplayList() && XRE_IsContentProcess();
-
-  if (retainDisplayList &&
-      aBuilderMode == nsDisplayListBuilderMode::PAINTING &&
-      (aFlags & PaintFrameFlags::PAINT_WIDGET_LAYERS)) {
-    retainedBuilder = aFrame->GetProperty(RetainedDisplayListBuilder::Cached());
-
-    if (!retainedBuilder) {
-      retainedBuilder =
-        new RetainedDisplayListBuilder(aFrame, aBuilderMode, buildCaret);
-      aFrame->SetProperty(RetainedDisplayListBuilder::Cached(), retainedBuilder);
-    }
-
-    MOZ_ASSERT(retainedBuilder);
+  if (useRetainedBuilder) {
     builderPtr = retainedBuilder->Builder();
     listPtr = retainedBuilder->List();
   } else {
@@ -3662,6 +3686,16 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     nonRetainedList.emplace(builderPtr);
     listPtr = nonRetainedList.ptr();
   }
+
+  // Retained builder exists, but display list retaining is disabled.
+  if (!useRetainedBuilder && retainedBuilder) {
+    // Clear the modified frames lists and frame properties.
+    retainedBuilder->ClearModifiedFrameProps();
+
+    // Clear the retained display list.
+    retainedBuilder->List()->DeleteAll(retainedBuilder->Builder());
+  }
+
   nsDisplayListBuilder& builder = *builderPtr;
   nsDisplayList& list = *listPtr;
 
@@ -3791,14 +3825,12 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
           builder.IsBuildingLayerEventRegions() &&
           nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell));
 
-      const bool paintedPreviously =
-        aFrame->HasProperty(nsIFrame::ModifiedFrameList());
-
       // Attempt to do a partial build and merge into the existing list.
       // This calls BuildDisplayListForStacking context on a subset of the
       // viewport.
       bool merged = false;
-      if (retainedBuilder && paintedPreviously) {
+
+      if (useRetainedBuilder) {
         merged = retainedBuilder->AttemptPartialUpdate(aBackstop);
       }
 
@@ -4026,12 +4058,11 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     AUTO_PROFILER_TRACING("Paint", "DisplayListResources");
 
     // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
-    if (!retainedBuilder) {
+    if (!useRetainedBuilder) {
       list.DeleteAll(&builder);
-      builder.EndFrame();
-    } else {
-      builder.EndFrame();
     }
+
+    builder.EndFrame();
   }
   return NS_OK;
 }

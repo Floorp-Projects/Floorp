@@ -76,6 +76,9 @@
   "tourBodyIntro": {
     "message": "۔Firefox کو چھوڑے بغیر اسکرینشاٹس لیں، محفوظ کریں اور شیئر کریں۔"
   },
+  "tourHeaderPageAction": {
+    "message": "محفوظ کرنے کا نیا طریقہ"
+  },
   "tourHeaderClickAndDrag": {
     "message": "جو آپ چاہتے ہیں وہ گرفت کریں"
   },

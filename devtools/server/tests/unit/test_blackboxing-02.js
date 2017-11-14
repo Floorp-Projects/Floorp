@@ -1,8 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-/* eslint-disable no-shadow */
 
 "use strict";
+
+/* eslint-disable no-shadow */
 
 /**
  * Test that we don't hit breakpoints in black boxed sources, and that when we
@@ -51,7 +52,7 @@ function test_black_box() {
     }
   });
 
-  /* eslint-disable */
+  /* eslint-disable no-multi-spaces */
   Components.utils.evalInSandbox(
     "" + function doStuff(k) { // line 1
       let arg = 15;            // line 2 - Break here
@@ -77,7 +78,7 @@ function test_black_box() {
     SOURCE_URL,
     1
   );
-  /* eslint-enable */
+  /* eslint-enable no-multi-spaces */
 }
 
 function test_black_box_breakpoint() {

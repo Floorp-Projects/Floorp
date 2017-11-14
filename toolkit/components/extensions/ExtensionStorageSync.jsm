@@ -347,6 +347,7 @@ async function storageSyncInit() {
           adapter: FirefoxAdapter,
           adapterOptions: {sqliteHandle: connection},
           timeout: KINTO_REQUEST_TIMEOUT,
+          retry: 0,
         }),
       };
     }).catch(e => {

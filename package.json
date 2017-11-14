@@ -4,8 +4,8 @@
   "repository": {},
   "license": "MPL-2.0",
   "dependencies": {
-    "eslint": "3.19.0",
-    "eslint-plugin-html": "2.0.3",
+    "eslint": "4.8.0",
+    "eslint-plugin-html": "4.0.0",
     "eslint-plugin-mozilla": "file:tools/lint/eslint/eslint-plugin-mozilla",
     "eslint-plugin-no-unsanitized": "2.0.1",
     "eslint-plugin-react": "7.1.0",

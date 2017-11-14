@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Testcase for bug 1416620</title>
+  <style>
+  #a, #b {
+    width: 100px;
+    height: 100px;
+    background-color: green;
+    -moz-appearance: none;
+    box-shadow: inset 4px 4px 30px black;
+    border: none;
+    position: absolute;
+  }
+
+  #a {
+    top: 20px;
+    left: 20px;
+  }
+
+  #b {
+    top: 170px;
+    left: 20px;
+  </style>
+</head>
+<body>
+  <div id="a">&nbsp;</div>
+  <div id="b">&nbsp;</div>
+</body>
+</html>

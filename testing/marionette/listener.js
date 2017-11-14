@@ -72,9 +72,11 @@ let legacyactions = new legacyaction.Chain(checkForInterrupted);
 // last touch for each fingerId
 let multiLast = {};
 
+// TODO: Log.jsm is not e10s compatible (see https://bugzil.la/1411513),
+// query the main process for the current log level
 const logger = Log.repository.getLogger("Marionette");
-// Append only once to avoid duplicated output after listener.js gets reloaded
 if (logger.ownAppenders.length == 0) {
+  logger.level = sendSyncMessage("Marionette:GetLogLevel");
   logger.addAppender(new Log.DumpAppender());
 }
 

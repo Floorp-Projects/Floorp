@@ -118,6 +118,7 @@ DIRS += [
     'broker',
     'glue',
     'interfaces',
+    'launch',
     'reporter',
 ]
 

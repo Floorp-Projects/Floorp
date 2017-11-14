@@ -7,10 +7,15 @@
 #define __nsPrintingPromptService_h
 
 // {E042570C-62DE-4bb6-A6E0-798E3C07B4DF}
-#define NS_PRINTINGPROMPTSERVICE_CID \
- {0xe042570c, 0x62de, 0x4bb6, { 0xa6, 0xe0, 0x79, 0x8e, 0x3c, 0x7, 0xb4, 0xdf}}
-#define NS_PRINTINGPROMPTSERVICE_CONTRACTID \
- "@mozilla.org/embedcomp/printingprompt-service;1"
+#define NS_PRINTINGPROMPTSERVICE_CID                                           \
+  {                                                                            \
+    0xe042570c, 0x62de, 0x4bb6,                                                \
+    {                                                                          \
+      0xa6, 0xe0, 0x79, 0x8e, 0x3c, 0x7, 0xb4, 0xdf                            \
+    }                                                                          \
+  }
+#define NS_PRINTINGPROMPTSERVICE_CONTRACTID                                    \
+  "@mozilla.org/embedcomp/printingprompt-service;1"
 
 #include "nsCOMPtr.h"
 #include "nsIPrintingPromptService.h"
@@ -18,18 +23,20 @@
 #include "nsIWindowWatcher.h"
 
 // Printing Progress Includes
-#include "nsPrintProgress.h"
 #include "nsIWebProgressListener.h"
+#if !defined(XP_MACOSX)
+#include "nsPrintProgress.h"
 
 class nsIDOMWindow;
 class nsIDialogParamBlock;
+#endif
 
-class nsPrintingPromptService: public nsIPrintingPromptService,
-                               public nsIWebProgressListener
+class nsPrintingPromptService
+  : public nsIPrintingPromptService
+  , public nsIWebProgressListener
 {
 
 public:
-
   nsPrintingPromptService();
 
   nsresult Init();
@@ -42,10 +49,11 @@ protected:
   virtual ~nsPrintingPromptService();
 
 private:
+#if !defined(XP_MACOSX)
   nsCOMPtr<nsIWindowWatcher> mWatcher;
   nsCOMPtr<nsIPrintProgress> mPrintProgress;
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
+#endif
 };
 
 #endif
-
