@@ -658,6 +658,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void jump(JitCode* code) {
         branch(code);
     }
+    void jump(ImmPtr code) {
+        syncStackPtr();
+        BufferOffset loc = b(-1); // The jump target will be patched by executableCopy().
+        addPendingJump(loc, code, Relocation::HARDCODED);
+    }
     void jump(RepatchLabel* label) {
         MOZ_CRASH("jump (repatchlabel)");
     }

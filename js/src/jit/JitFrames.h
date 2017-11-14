@@ -514,6 +514,7 @@ enum class ExitFrameToken : uint8_t
     IonOOLPropertyOp  = 0x6,
     IonOOLSetterOp    = 0x7,
     IonOOLProxy       = 0x8,
+    VMFunction        = 0xFD,
     LazyLink          = 0xFE,
     Bare              = 0xFF
 };
@@ -529,6 +530,7 @@ class ExitFrameLayout : public CommonFrameLayout
     // Pushed for "bare" fake exit frames that have no GC things on stack to be
     // traced.
     static JitCode* BareToken() { return (JitCode*)ExitFrameToken::Bare; }
+    static JitCode* VMFunctionToken() { return (JitCode*)ExitFrameToken::VMFunction; }
 
     static inline size_t Size() {
         return sizeof(ExitFrameLayout);
@@ -551,7 +553,7 @@ class ExitFrameLayout : public CommonFrameLayout
     }
 
     inline bool isWrapperExit() {
-        return footer()->function() != nullptr;
+        return footer()->jitCode() == VMFunctionToken();
     }
     inline bool isBareExit() {
         return footer()->jitCode() == BareToken();
