@@ -10123,7 +10123,7 @@ nsContentUtils::HttpsStateIsModern(nsIDocument* aDocument)
 nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
                                               const nsAString& aLocalName,
                                               uint32_t aNameSpaceID,
-                                              const nsAString* aIs)
+                                              nsAtom* aTypeAtom)
 {
   MOZ_ASSERT(aDoc);
 
@@ -10142,37 +10142,7 @@ nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
     return nullptr;
   }
 
-  return registry->LookupCustomElementDefinition(aLocalName, aIs);
-}
-
-/* static */ void
-nsContentUtils::SetupCustomElement(Element* aElement,
-                                   const nsAString* aTypeExtension)
-{
-  MOZ_ASSERT(aElement);
-
-  nsCOMPtr<nsIDocument> doc = aElement->OwnerDoc();
-
-  if (!doc) {
-    return;
-  }
-
-  if (aElement->GetNameSpaceID() != kNameSpaceID_XHTML ||
-      !doc->GetDocShell()) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> window(doc->GetInnerWindow());
-  if (!window) {
-    return;
-  }
-
-  RefPtr<CustomElementRegistry> registry(window->CustomElements());
-  if (!registry) {
-    return;
-  }
-
-  return registry->SetupCustomElement(aElement, aTypeExtension);
+  return registry->LookupCustomElementDefinition(aLocalName, aTypeAtom);
 }
 
 /* static */ CustomElementDefinition*
