@@ -141,15 +141,6 @@ configure-preqs = \
   $(OBJDIR)/.mozconfig.json \
   $(NULL)
 
-CREATE_MOZCONFIG_JSON = $(shell $(TOPSRCDIR)/mach environment --format=json -o $(OBJDIR)/.mozconfig.json)
-# Force CREATE_MOZCONFIG_JSON above to be resolved, without side effects in
-# case the result is non empty, and allowing an override on the make command
-# line not running the command (using := $(shell) still runs the shell command).
-ifneq (,$(CREATE_MOZCONFIG_JSON))
-endif
-
-$(OBJDIR)/.mozconfig.json: ;
-
 configure:: $(configure-preqs)
 	$(call BUILDSTATUS,TIERS configure)
 	$(call BUILDSTATUS,TIER_START configure)
@@ -168,7 +159,7 @@ $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
 else
 $(OBJDIR)/Makefile: $(CONFIG_STATUS_DEPS)
 endif
-	@$(MAKE) -f $(TOPSRCDIR)/client.mk configure CREATE_MOZCONFIG_JSON=
+	@$(MAKE) -f $(TOPSRCDIR)/client.mk configure
 
 ####################################
 # Build it
