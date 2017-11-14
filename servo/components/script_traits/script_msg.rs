@@ -157,10 +157,6 @@ pub enum ScriptMsg {
     RegisterServiceWorker(ScopeThings, ServoUrl),
     /// Enter or exit fullscreen
     SetFullscreenState(bool),
-    /// Get the screen size (pixel)
-    GetScreenSize(IpcSender<(Size2D<u32>)>),
-    /// Get the available screen size (pixel)
-    GetScreenAvailSize(IpcSender<(Size2D<u32>)>),
     /// Requests that the compositor shut down.
     Exit,
 }
