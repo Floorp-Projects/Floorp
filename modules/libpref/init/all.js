@@ -286,15 +286,12 @@ pref("browser.display.focus_ring_on_anything", false);
 // 0 = solid border, 1 = dotted border
 pref("browser.display.focus_ring_style", 1);
 
-pref("browser.helperApps.alwaysAsk.force",  false);
 pref("browser.helperApps.neverAsk.saveToDisk", "");
 pref("browser.helperApps.neverAsk.openFile", "");
 pref("browser.helperApps.deleteTempFileOnExit", false);
 
 // xxxbsmedberg: where should prefs for the toolkit go?
 pref("browser.chrome.toolbar_tips",         true);
-// 0 = Pictures Only, 1 = Text Only, 2 = Pictures and Text
-pref("browser.chrome.toolbar_style",        2);
 // max image size for which it is placed in the tab icon for tabbrowser.
 // if 0, no images are used for tab icons for image documents.
 pref("browser.chrome.image_icons.max_size", 1024);
@@ -1125,9 +1122,6 @@ pref("layout.framevisibility.numscrollportheights", 1);
 // 1 and higher - slider thickness multiple
 pref("slider.snapMultiplier", 0);
 
-// option to choose plug-in finder
-pref("application.use_ns_plugin_finder", false);
-
 // URI fixup prefs
 pref("browser.fixup.alternate.enabled", true);
 pref("browser.fixup.alternate.prefix", "www.");
@@ -1324,12 +1318,6 @@ pref("dom.input.dirpicker", false);
 // Enable not moving the cursor to end when a text input or textarea has .value
 // set to the value it already has.  By default, enabled.
 pref("dom.input.skip_cursor_move_for_same_value_set", true);
-
-// Enables system messages and activities
-pref("dom.sysmsg.enabled", false);
-
-// Enable pre-installed applications.
-pref("dom.webapps.useCurrentProfile", false);
 
 pref("dom.cycle_collector.incremental", true);
 
@@ -2625,14 +2613,12 @@ pref("ui.key.chromeAccess", 4);
 pref("ui.key.contentAccess", 5);
 
 pref("ui.key.menuAccessKeyFocuses", false); // overridden below
-pref("ui.key.saveLink.shift", true); // true = shift, false = meta
 
 // Disable page loading activity cursor by default.
 pref("ui.use_activity_cursor", false);
 
 // Middle-mouse handling
 pref("middlemouse.paste", false);
-pref("middlemouse.openNewWindow", true);
 pref("middlemouse.contentLoadURL", false);
 pref("middlemouse.scrollbarPosition", false);
 
@@ -2779,8 +2765,6 @@ pref("general.smoothScroll.msdPhysics.regularSpringConstant", 1000);
 
 // We can show it anytime from menus
 pref("profile.manage_only_at_launch", false);
-
-pref("prefs.converted-to-utf8",false);
 
 // ------------------
 //  Text Direction
@@ -3124,14 +3108,6 @@ pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess")
 
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);
-
-// See bug 136985.  Gives embedders a pref to hook into to show
-// a popup blocker if they choose.
-pref("browser.popups.showPopupBlocker", true);
-
-// Pref to control whether the viewmanager code does double-buffering or not
-// See http://bugzilla.mozilla.org/show_bug.cgi?id=169483 for further details...
-pref("viewmanager.do_doublebuffering", true);
 
 // enable single finger gesture input (win7+ tablets)
 pref("gestures.enable_single_finger_input", true);
@@ -4211,10 +4187,6 @@ pref("browser.urlbar.clickSelectsAll", false);
 // Leave this at the default, 7, to match mozilla1.0-era user expectations.
 // pref("accessibility.tabfocus", 1);
 
-// autocomplete keyboard grab workaround
-pref("autocomplete.grab_during_popup", true);
-pref("autocomplete.ungrab_during_mode_switch", true);
-
 // Default to using the system filepicker if possible, but allow
 // toggling to use the XUL filepicker
 pref("ui.allow_platform_file_picker", true);
@@ -4269,10 +4241,6 @@ pref("browser.urlbar.clickSelectsAll", false);
 // 1 focuses text controls, 2 focuses other form elements, 4 adds links.
 // Leave this at the default, 7, to match mozilla1.0-era user expectations.
 // pref("accessibility.tabfocus", 1);
-
-// autocomplete keyboard grab workaround
-pref("autocomplete.grab_during_popup", true);
-pref("autocomplete.ungrab_during_mode_switch", true);
 
 // Default to using the system filepicker if possible, but allow
 // toggling to use the XUL filepicker
@@ -4994,9 +4962,6 @@ pref("full-screen-api.warning.delay", 500);
 // time for the warning box stays on the screen before sliding out, unit: ms
 pref("pointer-lock-api.warning.timeout", 3000);
 
-// DOM idle observers API
-pref("dom.idle-observers-api.enabled", true);
-
 // Time limit, in milliseconds, for EventStateManager::IsHandlingUserInput().
 // Used to detect long running handlers of user-generated events.
 pref("dom.event.handling-user-input-time-limit", 1000);
@@ -5460,10 +5425,6 @@ pref("dom.wakelock.enabled", false);
 pref("identity.fxaccounts.auth.uri", "https://api.accounts.firefox.com/v1");
 
 pref("beacon.enabled", true);
-
-// Camera prefs
-pref("camera.control.face_detection.enabled", true);
-
 
 // SW Cache API
 pref("dom.caches.enabled", true);
