@@ -7,22 +7,43 @@ const BASE_URI =
 const emptyDoc = BASE_URI + "empty.html";
 const fakeDoc = BASE_URI + "fake.html";
 const helloDoc = BASE_URI + "hello.html";
+
+const CROSS_URI = "http://example.com/browser/dom/workers/test/serviceworkers/";
+const crossRedirect = CROSS_URI + "redirect";
+const crossHelloDoc = CROSS_URI + "hello.html";
+
 const sw = BASE_URI + "fetch.js";
 
 // XXXtt: We should be able to move this check to chrome process after we move
 // the interception logic to chrome process.
 async function checkObserverInContent(aInput) {
+  let interceptedChannel = null;
   let promiseResolve;
 
   function observer(aSubject) {
-    var channel = aSubject.QueryInterface(Ci.nsIChannel);
+    let channel = aSubject.QueryInterface(Ci.nsIChannel);
     // Since we cannot make sure that the network event triggered by the fetch()
     // in this testcase is the very next event processed by ObserverService, we
     // have to wait until we catch the one we want.
-    if (!channel.URI.spec.endsWith(aInput.url)) {
+    if (!(aInput.redirect && channel.URI.spec.includes(aInput.redirect)) &&
+        !(!aInput.redirect && channel.URI.spec.includes(aInput.url))) {
       return;
     }
-    var tc = aSubject.QueryInterface(Ci.nsITimedChannel);
+
+    // Wait for the service worker to intercept the request if it's expected to
+    // be intercepted
+    if (aInput.intercepted && interceptedChannel === null) {
+      return;
+    } else if (interceptedChannel) {
+      ok(aInput.intercepted,
+         "Service worker intercepted the channel as expected");
+    } else {
+      ok(!aInput.intercepted, "The channel doesn't be intercepted");
+    }
+
+    var tc = interceptedChannel
+               ? interceptedChannel.QueryInterface(Ci.nsITimedChannel)
+               : aSubject.QueryInterface(Ci.nsITimedChannel);
 
     // Check service worker related timings.
     var serviceWorkerTimings = [{start: tc.launchServiceWorkerStartTime,
@@ -31,8 +52,9 @@ async function checkObserverInContent(aInput) {
                                  end:   tc.dispatchFetchEventEndTime},
                                 {start: tc.handleFetchEventStartTime,
                                  end:   tc.handleFetchEventEndTime}];
-    if (aInput.intercepted) {
+    if (aInput.swPresent) {
       serviceWorkerTimings.reduce((aPreviousTimings, aCurrentTimings) => {
+        ok(aPreviousTimings.start !== 0, "Start time check.");
         ok(aPreviousTimings.start <= aCurrentTimings.start,
            "Start time order check.");
         ok(aPreviousTimings.end <= aCurrentTimings.end,
@@ -66,17 +88,39 @@ async function checkObserverInContent(aInput) {
                                            "Network timings should be 0."));
     }
 
+    interceptedChannel = null;
     Services.obs.removeObserver(observer, topic);
     promiseResolve();
   }
 
-  const topic =  "http-on-stop-request";
+  function addInterceptedChannel(aSubject) {
+    let channel = aSubject.QueryInterface(Ci.nsIChannel);
+    if (!channel.URI.spec.includes(aInput.url)) {
+      return;
+    }
+
+    // Hold the interceptedChannel until checking timing information.
+    // Note: It's a interceptedChannel in the type of httpChannel
+    interceptedChannel = channel;
+    Services.obs.removeObserver(addInterceptedChannel, topic_SW);
+  }
+
+  const topic = "http-on-stop-request";
+  const topic_SW = "service-worker-synthesized-response";
+
   Services.obs.addObserver(observer, topic);
+  if (aInput.intercepted) {
+    Services.obs.addObserver(addInterceptedChannel, topic_SW);
+  }
 
   await new Promise(resolve => { promiseResolve = resolve; });
 }
 
 async function contentFetch(aURL) {
+  if (aURL.includes("redirect")) {
+    await content.window.fetch(aURL, { mode: "no-cors" });
+    return;
+  }
   await content.window.fetch(aURL);
 }
 
@@ -127,16 +171,26 @@ add_task(async function test_serivce_worker_interception() {
   let testcases = [
     {
       url: helloDoc,
+      swPresent: false,
       intercepted: false,
       fetch: true
     },
     {
       url: fakeDoc,
+      swPresent: true,
       intercepted: true,
       fetch: false // should use HTTP cache
     },
-    {
+    { // Bypass http cache
       url: helloDoc + "?ForBypassingHttpCache=" + Date.now(),
+      swPresent: true,
+      intercepted: false,
+      fetch: true
+    },
+    { // no-cors mode redirect to no-cors mode (trigger internal redirect)
+      url: crossRedirect + "?url=" + crossHelloDoc + "&mode=no-cors",
+      swPresent: true,
+      redirect: "hello.html",
       intercepted: true,
       fetch: true
     }
@@ -164,6 +218,13 @@ add_task(async function test_serivce_worker_interception() {
                               testcases[2],
                               checkObserverInContent);
   await ContentTask.spawn(tabBrowser, testcases[2].url, contentFetch);
+  await promise;
+
+  info("Test 4: make a internal redirect");
+  promise = ContentTask.spawn(tabBrowser_observer,
+                              testcases[3],
+                              checkObserverInContent);
+  await ContentTask.spawn(tabBrowser, testcases[3].url, contentFetch);
   await promise;
 
   info("Clean up");

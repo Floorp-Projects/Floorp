@@ -1,8 +1,28 @@
+function get_query_params(url) {
+  var search = (new URL(url)).search;
+  if (!search) {
+    return {};
+  }
+  var ret = {};
+  var params = search.substring(1).split('&');
+  params.forEach(function(param) {
+      var element = param.split('=');
+      ret[decodeURIComponent(element[0])] = decodeURIComponent(element[1]);
+  });
+  return ret;
+}
+
 addEventListener('fetch', function(event) {
-  if (event.request.url.indexOf("fail.html") !== -1) {
-    event.respondWith(fetch("hello.html", {"integrity": "abc"}));
-  } else if (event.request.url.indexOf("fake.html") !== -1) {
-    event.respondWith(fetch("hello.html"));
+  if (event.request.url.includes('fail.html')) {
+    event.respondWith(fetch('hello.html', { integrity: 'abc' }));
+  } else if (event.request.url.includes('fake.html')) {
+    event.respondWith(fetch('hello.html'));
+  } else if (event.request.url.includes('redirect')) {
+    let param = get_query_params(event.request.url);
+    let url = param['url'];
+    let mode = param['mode'];
+
+    event.respondWith(fetch(url, { mode: mode }));
   }
 });
 
