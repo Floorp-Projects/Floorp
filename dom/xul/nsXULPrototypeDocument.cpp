@@ -530,14 +530,17 @@ nsXULPrototypeDocument::NotifyLoadDone()
 }
 
 void
-nsXULPrototypeDocument::TraceProtos(JSTracer* aTrc, uint32_t aGCNumber)
+nsXULPrototypeDocument::TraceProtos(JSTracer* aTrc)
 {
-  // Only trace the protos once per GC.
-  if (mGCNumber == aGCNumber) {
-    return;
+  // Only trace the protos once per GC if we are marking.
+  if (aTrc->isMarkingTracer()) {
+    uint32_t currentGCNumber = aTrc->gcNumberForMarking();
+    if (mGCNumber == currentGCNumber) {
+      return;
+    }
+    mGCNumber = currentGCNumber;
   }
 
-  mGCNumber = aGCNumber;
   if (mRoot) {
     mRoot->TraceAllScripts(aTrc);
   }

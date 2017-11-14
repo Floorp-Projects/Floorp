@@ -476,7 +476,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void
-mozilla::dom::TraceBlackJS(JSTracer* aTrc, uint32_t aGCNumber, bool aIsShutdownGC)
+mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC)
 {
 #ifdef MOZ_XUL
   // Mark the scripts held in the XULPrototypeCache. This is required to keep
@@ -544,7 +544,7 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, uint32_t aGCNumber, bool aIsShutdownG
         nsIDocument* doc = window->GetExtantDoc();
         if (doc && doc->IsXULDocument()) {
           XULDocument* xulDoc = static_cast<XULDocument*>(doc);
-          xulDoc->TraceProtos(aTrc, aGCNumber);
+          xulDoc->TraceProtos(aTrc);
         }
 #endif
       }
