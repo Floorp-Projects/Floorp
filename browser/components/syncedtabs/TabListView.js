@@ -46,7 +46,6 @@ function TabListView(window, props) {
   this.tabsFilter = this._doc.querySelector(".tabsFilter");
   this.clearFilter = this._doc.querySelector(".textbox-search-clear");
   this.searchBox = this._doc.querySelector(".search-box");
-  this.searchIcon = this._doc.querySelector(".textbox-search-icon");
 
   this.container = this._doc.createElement("div");
 
@@ -179,7 +178,6 @@ TabListView.prototype = {
     this.tabsFilter.addEventListener("focus", this.onFilterFocus.bind(this));
     this.tabsFilter.addEventListener("blur", this.onFilterBlur.bind(this));
     this.clearFilter.addEventListener("click", this.onClearFilter.bind(this));
-    this.searchIcon.addEventListener("click", this.onFilterFocus.bind(this));
   },
 
   // These listeners have to be re-created every time since we re-create the list
