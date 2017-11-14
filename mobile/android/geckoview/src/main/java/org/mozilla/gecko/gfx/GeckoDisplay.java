@@ -38,6 +38,15 @@ public interface GeckoDisplay {
          * while pausing drawing.
          */
         void surfaceDestroyed();
+
+        /**
+         * The display's coordinates on the screen has changed. Must be called on the
+         * application main thread.
+         *
+         * @param left The X coordinate of the display on the screen, in screen pixels.
+         * @param top The Y coordinate of the display on the screen, in screen pixels.
+         */
+        void screenOriginChanged(int left, int top);
     }
 
     /**

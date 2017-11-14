@@ -930,18 +930,15 @@ public:
         }
     }
 
-    void OnSizeChanged(int32_t aWindowWidth, int32_t aWindowHeight)
+    void OnBoundsChanged(int32_t aLeft, int32_t aTop,
+                         int32_t aWidth, int32_t aHeight)
     {
         MOZ_ASSERT(NS_IsMainThread());
         if (!mWindow) {
             return; // Already shut down.
         }
 
-        if (aWindowWidth != mWindow->mBounds.width ||
-            aWindowHeight != mWindow->mBounds.height) {
-
-            mWindow->Resize(aWindowWidth, aWindowHeight, /* repaint */ false);
-        }
+        mWindow->Resize(aLeft, aTop, aWidth, aHeight, /* repaint */ false);
     }
 
     void CreateCompositor(int32_t aWidth, int32_t aHeight,
@@ -1879,15 +1876,15 @@ LayoutDeviceIntPoint
 nsWindow::WidgetToScreenOffset()
 {
     LayoutDeviceIntPoint p(0, 0);
-    nsWindow *w = this;
 
-    while (w && !w->IsTopLevel()) {
+    for (nsWindow *w = this; !!w; w = w->mParent) {
         p.x += w->mBounds.x;
         p.y += w->mBounds.y;
 
-        w = w->mParent;
+        if (w->IsTopLevel()) {
+            break;
+        }
     }
-
     return p;
 }
 
