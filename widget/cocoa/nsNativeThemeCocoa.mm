@@ -2299,6 +2299,18 @@ IsHiDPIContext(nsDeviceContext* aContext)
     2 * aContext->AppUnitsPerDevPixelAtUnitFullZoom();
 }
 
+static void
+SetCGContextFillColor(CGContextRef cgContext, const Color& aColor)
+{
+  CGContextSetRGBFillColor(cgContext, aColor.r, aColor.g, aColor.b, aColor.a);
+}
+
+static const Color kTooltipBackgroundColor(0.996, 1.000, 0.792, 0.950);
+static const Color kMultilineTextFieldTopBorderColor(0.4510, 0.4510, 0.4510, 1.0);
+static const Color kMultilineTextFieldSidesAndBottomBorderColor(0.6, 0.6, 0.6, 1.0);
+static const Color kListboxTopBorderColor(0.557, 0.557, 0.557, 1.0);
+static const Color kListBoxSidesAndBottomBorderColor(0.745, 0.745, 0.745, 1.0);
+
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
                                          nsIFrame* aFrame,
@@ -2482,7 +2494,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       if (VibrancyManager::SystemSupportsVibrancy()) {
         DrawVibrancyBackground(cgContext, macRect, aFrame, ThemeGeometryTypeForWidget(aFrame, aWidgetType));
       } else {
-        CGContextSetRGBFillColor(cgContext, 0.996, 1.000, 0.792, 0.950);
+        SetCGContextFillColor(cgContext, kTooltipBackgroundColor);
         CGContextFillRect(cgContext, macRect);
       }
       break;
@@ -2855,12 +2867,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
 
       CGContextFillRect(cgContext, macRect);
 
-      // #737373 for the top border, #999999 for the rest.
       float x = macRect.origin.x, y = macRect.origin.y;
       float w = macRect.size.width, h = macRect.size.height;
-      CGContextSetRGBFillColor(cgContext, 0.4510, 0.4510, 0.4510, 1.0);
+      SetCGContextFillColor(cgContext, kMultilineTextFieldTopBorderColor);
       CGContextFillRect(cgContext, CGRectMake(x, y, w, 1));
-      CGContextSetRGBFillColor(cgContext, 0.6, 0.6, 0.6, 1.0);
+      SetCGContextFillColor(cgContext, kMultilineTextFieldSidesAndBottomBorderColor);
       CGContextFillRect(cgContext, CGRectMake(x, y + 1, 1, h - 1));
       CGContextFillRect(cgContext, CGRectMake(x + w - 1, y + 1, 1, h - 1));
       CGContextFillRect(cgContext, CGRectMake(x + 1, y + h - 1, w - 2, 1));
@@ -2884,12 +2895,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
       CGContextFillRect(cgContext, macRect);
 
-      // #8E8E8E for the top border, #BEBEBE for the rest.
       float x = macRect.origin.x, y = macRect.origin.y;
       float w = macRect.size.width, h = macRect.size.height;
-      CGContextSetRGBFillColor(cgContext, 0.557, 0.557, 0.557, 1.0);
+      SetCGContextFillColor(cgContext, kListboxTopBorderColor);
       CGContextFillRect(cgContext, CGRectMake(x, y, w, 1));
-      CGContextSetRGBFillColor(cgContext, 0.745, 0.745, 0.745, 1.0);
+      SetCGContextFillColor(cgContext, kListBoxSidesAndBottomBorderColor);
       CGContextFillRect(cgContext, CGRectMake(x, y + 1, 1, h - 1));
       CGContextFillRect(cgContext, CGRectMake(x + w - 1, y + 1, 1, h - 1));
       CGContextFillRect(cgContext, CGRectMake(x + 1, y + h - 1, w - 2, 1));
@@ -3028,7 +3038,7 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
                           wr::ToColorF(VibrancyFillColor(aFrame, type)));
       } else {
         aBuilder.PushRect(bounds, bounds, true,
-                          wr::ToColorF(Color(0.996, 1.000, 0.792, 0.950)));
+                          wr::ToColorF(kTooltipBackgroundColor));
       }
       return true;
 
@@ -3083,12 +3093,11 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
       aBuilder.PushRect(bounds, bounds, true,
                         wr::ToColorF(Color(1.0, 1.0, 1.0, 1.0)));
 
-      // #737373 for the top border, #999999 for the rest.
       wr::BorderSide side[4] = {
-        wr::ToBorderSide(Color(0.4510, 0.4510, 0.4510, 1.0), NS_STYLE_BORDER_STYLE_SOLID),
-        wr::ToBorderSide(Color(0.6, 0.6, 0.6, 1.0), NS_STYLE_BORDER_STYLE_SOLID),
-        wr::ToBorderSide(Color(0.6, 0.6, 0.6, 1.0), NS_STYLE_BORDER_STYLE_SOLID),
-        wr::ToBorderSide(Color(0.6, 0.6, 0.6, 1.0), NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kMultilineTextFieldTopBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kMultilineTextFieldSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kMultilineTextFieldSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kMultilineTextFieldSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
       };
 
       wr::BorderRadius borderRadius = wr::EmptyBorderRadius();
@@ -3107,12 +3116,11 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
       aBuilder.PushRect(bounds, bounds, true,
                         wr::ToColorF(Color(1.0, 1.0, 1.0, 1.0)));
 
-      // #8E8E8E for the top border, #BEBEBE for the rest.
       wr::BorderSide side[4] = {
-        wr::ToBorderSide(Color(0.557, 0.557, 0.557, 1.00), NS_STYLE_BORDER_STYLE_SOLID),
-        wr::ToBorderSide(Color(0.745, 0.745, 0.745, 1.0), NS_STYLE_BORDER_STYLE_SOLID),
-        wr::ToBorderSide(Color(0.745, 0.745, 0.745, 1.0), NS_STYLE_BORDER_STYLE_SOLID),
-        wr::ToBorderSide(Color(0.745, 0.745, 0.745, 1.0), NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kListboxTopBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kListBoxSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kListBoxSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kListBoxSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
       };
 
       wr::BorderRadius borderRadius = wr::EmptyBorderRadius();
