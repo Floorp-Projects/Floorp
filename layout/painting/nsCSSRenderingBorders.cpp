@@ -3588,7 +3588,10 @@ bool
 nsCSSBorderRenderer::CanCreateWebRenderCommands()
 {
   NS_FOR_CSS_SIDES(i) {
-    if (mCompositeColors[i] != nullptr) {
+    if (mCompositeColors[i] != nullptr &&
+        mBorderWidths[i] > 0.0f &&
+        mBorderStyles[i] != NS_STYLE_BORDER_STYLE_HIDDEN &&
+        mBorderStyles[i] != NS_STYLE_BORDER_STYLE_NONE) {
       return false;
     }
   }
