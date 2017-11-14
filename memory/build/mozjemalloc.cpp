@@ -542,7 +542,7 @@ base_alloc(size_t aSize);
 struct Mutex
 {
 #if defined(XP_WIN)
-  CRITICAL_SECTION mMutex;
+  SRWLOCK mMutex;
 #elif defined(XP_DARWIN)
   OSSpinLock mMutex;
 #else
@@ -576,7 +576,7 @@ private:
 static Atomic<bool> malloc_initialized(false);
 
 #if defined(XP_WIN)
-// No init lock for Windows.
+static Mutex gInitLock = { SRWLOCK_INIT };
 #elif defined(XP_DARWIN)
 static Mutex gInitLock = { OS_SPINLOCK_INIT };
 #elif defined(XP_LINUX) && !defined(ANDROID)
@@ -1258,13 +1258,8 @@ static void*
 huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena);
 static void
 huge_dalloc(void* aPtr, arena_t* aArena);
-#ifdef XP_WIN
-extern "C"
-#else
-static
-#endif
-  bool
-  malloc_init_hard();
+static bool
+malloc_init_hard();
 
 #ifdef XP_DARWIN
 #define FORK_HOOK extern "C"
@@ -1284,9 +1279,6 @@ _malloc_postfork_child(void);
 // FreeBSD's pthreads implementation calls malloc(3), so the malloc
 // implementation has to take pains to avoid infinite recursion during
 // initialization.
-#if defined(XP_WIN)
-#define malloc_init() true
-#else
 // Returns whether the allocator was successfully initialized.
 static inline bool
 malloc_init()
@@ -1298,7 +1290,6 @@ malloc_init()
 
   return true;
 }
-#endif
 
 static void
 _malloc_message(const char* p)
@@ -1338,9 +1329,7 @@ bool
 Mutex::Init()
 {
 #if defined(XP_WIN)
-  if (!InitializeCriticalSectionAndSpinCount(&mMutex, 5000)) {
-    return false;
-  }
+  InitializeSRWLock(&mMutex);
 #elif defined(XP_DARWIN)
   mMutex = OS_SPINLOCK_INIT;
 #elif defined(XP_LINUX) && !defined(ANDROID)
@@ -1366,7 +1355,7 @@ void
 Mutex::Lock()
 {
 #if defined(XP_WIN)
-  EnterCriticalSection(&mMutex);
+  AcquireSRWLockExclusive(&mMutex);
 #elif defined(XP_DARWIN)
   OSSpinLockLock(&mMutex);
 #else
@@ -1378,7 +1367,7 @@ void
 Mutex::Unlock()
 {
 #if defined(XP_WIN)
-  LeaveCriticalSection(&mMutex);
+  ReleaseSRWLockExclusive(&mMutex);
 #elif defined(XP_DARWIN)
   OSSpinLockUnlock(&mMutex);
 #else
@@ -4071,19 +4060,14 @@ GetKernelPageSize()
 }
 
 // Returns whether the allocator was successfully initialized.
-#if !defined(XP_WIN)
-static
-#endif
-  bool
-  malloc_init_hard()
+static bool
+malloc_init_hard()
 {
   unsigned i;
   const char* opts;
   long result;
 
-#ifndef XP_WIN
   MutexAutoLock lock(gInitLock);
-#endif
 
   if (malloc_initialized) {
     // Another thread initialized the allocator before this one
@@ -5077,28 +5061,5 @@ size_t
 _msize(void* aPtr)
 {
   return DefaultMalloc::malloc_usable_size(aPtr);
-}
-
-// In the new style jemalloc integration jemalloc is built as a separate
-// shared library.  Since we're no longer hooking into the CRT binary,
-// we need to initialize the heap at the first opportunity we get.
-// DLL_PROCESS_ATTACH in DllMain is that opportunity.
-BOOL APIENTRY
-DllMain(HINSTANCE hModule, DWORD reason, LPVOID lpReserved)
-{
-  switch (reason) {
-    case DLL_PROCESS_ATTACH:
-      // Don't force the system to page DllMain back in every time
-      // we create/destroy a thread
-      DisableThreadLibraryCalls(hModule);
-      // Initialize the heap
-      malloc_init_hard();
-      break;
-
-    case DLL_PROCESS_DETACH:
-      break;
-  }
-
-  return TRUE;
 }
 #endif
