@@ -403,6 +403,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/GeckoSurfaceTexture.java',
     'gfx/ImmutableViewportMetrics.java',
     'gfx/IntSize.java',
+    'gfx/LayerSession.java',
     'gfx/LayerView.java',
     'gfx/NativePanZoomController.java',
     'gfx/Overscroll.java',
