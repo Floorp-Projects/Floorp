@@ -8,66 +8,10 @@
 #include "nsITelemetry.h"
 #include "Telemetry.h"
 #include "TelemetryFixture.h"
+#include "TelemetryTestHelpers.h"
 
 using namespace mozilla;
-
-namespace {
-
-void
-GetAndClearHistogram(JSContext* cx, nsCOMPtr<nsITelemetry> mTelemetry,
-                     const nsACString &name, bool is_keyed)
-{
-  JS::RootedValue testHistogram(cx);
-  nsresult rv = is_keyed ? mTelemetry->GetKeyedHistogramById(name, cx, &testHistogram)
-                         : mTelemetry->GetHistogramById(name, cx, &testHistogram);
-
-  ASSERT_EQ(rv, NS_OK) << "Cannot fetch histogram";
-
-  // Clear the stored value
-  JS::RootedObject testHistogramObj(cx, &testHistogram.toObject());
-  JS::RootedValue rval(cx);
-  ASSERT_TRUE(JS_CallFunctionName(cx, testHistogramObj, "clear",
-                  JS::HandleValueArray::empty(), &rval)) << "Cannot clear histogram";
-}
-
-void
-GetProperty(JSContext* cx, const char* name, JS::HandleValue valueIn,
-            JS::MutableHandleValue valueOut)
-{
-  JS::RootedValue property(cx);
-  JS::RootedObject valueInObj(cx, &valueIn.toObject());
-  ASSERT_TRUE(JS_GetProperty(cx, valueInObj, name, &property))
-    << "Cannot get property '" << name << "'";
-  valueOut.set(property);
-}
-
-void
-GetElement(JSContext* cx, uint32_t index, JS::HandleValue valueIn,
-           JS::MutableHandleValue valueOut)
-{
-  JS::RootedValue element(cx);
-  JS::RootedObject valueInObj(cx, &valueIn.toObject());
-  ASSERT_TRUE(JS_GetElement(cx, valueInObj, index, &element))
-    << "Cannot get element at index '" << index << "'";
-  valueOut.set(element);
-}
-
-void
-GetSnapshots(JSContext* cx, nsCOMPtr<nsITelemetry> mTelemetry,
-             const char* name, JS::MutableHandleValue valueOut, bool is_keyed)
-{
-  JS::RootedValue snapshots(cx);
-  nsresult rv = is_keyed ? mTelemetry->SnapshotKeyedHistograms(nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN, false, false, cx, &snapshots)
-                         : mTelemetry->SnapshotHistograms(nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN, false, false, cx, &snapshots);
-
-  JS::RootedValue snapshot(cx);
-  GetProperty(cx, "parent", snapshots, &snapshot);
-
-  ASSERT_EQ(rv, NS_OK) << "Cannot call histogram snapshots";
-  valueOut.set(snapshot);
-}
-
-}
+using namespace TelemetryTestHelpers;
 
 TEST_F(TelemetryTestFixture, AccumulateCountHistogram)
 {
@@ -181,6 +125,16 @@ TEST_F(TelemetryTestFixture, TestKeyedKeysHistogram)
   GetProperty(cx.GetJSContext(), "not-allowed", histogram,  &expectedKeyData);
   ASSERT_TRUE(expectedKeyData.isUndefined())
     << "Unallowed keys must not be recorded in the histogram data";
+
+  // The 'not-allowed' key accumulation for 'TELEMETRY_TESTED_KEYED_KEYS' was
+  // attemtped twice, so we expect the count of
+  // 'telemetry.accumulate_unknown_histogram_keys' to be 2
+  const uint32_t expectedAccumulateUnknownCount = 2;
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(true, cx.GetJSContext(),&scalarsSnapshot);
+  CheckKeyedUintScalar("telemetry.accumulate_unknown_histogram_keys",
+                       "TELEMETRY_TEST_KEYED_KEYS", cx.GetJSContext(),
+                       scalarsSnapshot, expectedAccumulateUnknownCount);
 }
 
 TEST_F(TelemetryTestFixture, AccumulateCategoricalHistogram)
