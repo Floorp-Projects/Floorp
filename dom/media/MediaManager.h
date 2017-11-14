@@ -14,14 +14,12 @@
 #include "nsIMediaManager.h"
 
 #include "nsHashKeys.h"
-#include "nsGlobalWindow.h"
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIObserver.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
-#include "nsPIDOMWindow.h"
 #include "nsIDOMNavigatorUserMedia.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Attributes.h"
@@ -129,34 +127,6 @@ public:
   Source* GetSource() override;
 };
 
-class GetUserMediaNotificationEvent: public Runnable
-{
-  public:
-    enum GetUserMediaStatus {
-      STARTING,
-      STOPPING,
-    };
-    GetUserMediaNotificationEvent(GetUserMediaStatus aStatus,
-                                  uint64_t aWindowID);
-
-    GetUserMediaNotificationEvent(GetUserMediaStatus aStatus,
-                                  already_AddRefed<DOMMediaStream> aStream,
-                                  already_AddRefed<media::Refcountable<UniquePtr<OnTracksAvailableCallback>>> aOnTracksAvailableCallback,
-                                  uint64_t aWindowID,
-                                  already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError);
-    virtual ~GetUserMediaNotificationEvent();
-
-    NS_IMETHOD Run() override;
-
-  protected:
-    RefPtr<GetUserMediaWindowListener> mListener; // threadsafe
-    RefPtr<DOMMediaStream> mStream;
-    RefPtr<media::Refcountable<UniquePtr<OnTracksAvailableCallback>>> mOnTracksAvailableCallback;
-    GetUserMediaStatus mStatus;
-    uint64_t mWindowID;
-    RefPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
-};
-
 typedef enum {
   MEDIA_STOP,
   MEDIA_STOP_TRACK,
@@ -213,8 +183,7 @@ public:
     return !!sSingleton;
   }
 
-  static nsresult NotifyRecordingStatusChange(nsPIDOMWindowInner* aWindow,
-                                              const nsString& aMsg);
+  static nsresult NotifyRecordingStatusChange(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
