@@ -877,7 +877,6 @@ class AssemblerMIPSShared : public AssemblerShared
     };
 
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
-    js::Vector<uint32_t, 8, SystemAllocPolicy> longJumps_;
 
     CompactBufferWriter jumpRelocations_;
     CompactBufferWriter dataRelocations_;
@@ -1280,18 +1279,13 @@ class AssemblerMIPSShared : public AssemblerShared
             writeRelocation(src);
     }
 
-    void addLongJump(BufferOffset src) {
-        enoughMemory_ &= longJumps_.append(src.getOffset());
+    void addLongJump(BufferOffset src, BufferOffset dst) {
+        CodeOffset patchAt(src.getOffset());
+        CodeOffset target(dst.getOffset());
+        addCodeLabel(CodeLabel(patchAt, target));
     }
 
   public:
-    size_t numLongJumps() const {
-        return longJumps_.length();
-    }
-    uint32_t longJump(size_t i) {
-        return longJumps_[i];
-    }
-
     void flushBuffer() {
     }
 

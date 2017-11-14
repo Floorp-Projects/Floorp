@@ -5,11 +5,8 @@
 "use strict";
 
 const Services = require("Services");
-const {
-  createFactory,
-  PropTypes,
-  PureComponent,
-} = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 

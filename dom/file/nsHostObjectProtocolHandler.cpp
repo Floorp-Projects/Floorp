@@ -913,6 +913,18 @@ nsFontTableProtocolHandler::GetScheme(nsACString &result)
   return NS_OK;
 }
 
+/* static */ void
+nsHostObjectProtocolHandler::StoreClonedURI(const nsACString& aSpec,
+                                            nsIURI* aURI)
+{
+  MOZ_ASSERT(aURI);
+
+  DataInfo* info = GetDataInfo(aSpec);
+  if (info) {
+    info->mURIs.AppendElement(do_GetWeakReference(aURI));
+  }
+}
+
 nsresult
 NS_GetBlobForBlobURI(nsIURI* aURI, BlobImpl** aBlob)
 {

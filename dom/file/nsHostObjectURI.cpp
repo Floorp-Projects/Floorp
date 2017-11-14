@@ -187,6 +187,9 @@ nsHostObjectURI::CloneInternal(mozilla::net::nsSimpleURI::RefHandlingEnum aRefHa
   u->mPrincipal = mPrincipal;
   u->mBlobImpl = mBlobImpl;
 
+  nsHostObjectProtocolHandler::StoreClonedURI(newRef, simpleClone);
+
+  NS_TryToSetImmutable(simpleClone);
   simpleClone.forget(aClone);
   return NS_OK;
 }

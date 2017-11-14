@@ -22,14 +22,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=739038
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_print", true]]}, function() {
-  var caughtException = false;
-  try {
-    window.print();
-  } catch (e) {
-    caughtException = true;
+  var ifr = document.createElement("iframe");
+  ifr.onload = function() {
+    var win = ifr.contentWindow;
+    var caughtException = false;
+    try {
+      win.print();
+    } catch (e) {
+      caughtException = true;
+    }
+    ok(caughtException, "window.print() should throw an exception");
+    is(win.print, undefined, "window.print shouldn't even exist");
+    SimpleTest.finish();
   }
-  ok(caughtException, "window.print should throw an exception");
-  SimpleTest.finish();
+  document.body.appendChild(ifr);
 });
 
 </script>

@@ -51,87 +51,35 @@ function updateDocumentSourceMaps(source) {
       do_parse_check(aNodeName, "Missing element node name (endElement)");
     },
 
-    inCDataSection: false,
-
     characters: function characters(aData) {
     },
 
     processingInstruction: function processingInstruction(aTarget, aData) {
       do_parse_check(aTarget, "Missing processing instruction target");
-    },
-
-    ignorableWhitespace: function ignorableWhitespace(aWhitespace) {
-    },
-
-    startPrefixMapping: function startPrefixMapping(aPrefix, aURI) {
-    },
-
-    endPrefixMapping: function endPrefixMapping(aPrefix) {
-    }
-  };
-
-  var lexicalHandler = {
-    comment: function comment(aContents) {
-    },
-
-    startDTD: function startDTD(aName, aPublicId, aSystemId) {
-      do_parse_check(aName, "Missing DTD name");
-    },
-
-    endDTD: function endDTD() {
-    },
-
-    startCDATA: function startCDATA() {
-    },
-
-    endCDATA: function endCDATA() {
-    },
-
-    startEntity: function startEntity(aName) {
-      do_parse_check(aName, "Missing entity name (startEntity)");
-    },
-
-    endEntity: function endEntity(aName) {
-      do_parse_check(aName, "Missing entity name (endEntity)");
-    }
-  };
-
-  var dtdHandler = {
-    notationDecl: function notationDecl(aName, aPublicId, aSystemId) {
-      do_parse_check(aName, "Missing notation name");
-    },
-
-    unparsedEntityDecl:
-    function unparsedEntityDecl(aName, aPublicId, aSystemId, aNotationName) {
-      do_parse_check(aName, "Missing entity name (unparsedEntityDecl)");
     }
   };
 
   var errorHandler = {
-    error: function error(aLocator, aError) {
+    error: function error(aError) {
       do_parse_check(!aError, "XML error");
     },
 
-    fatalError: function fatalError(aLocator, aError) {
+    fatalError: function fatalError(aError) {
       do_parse_check(!aError, "XML fatal error");
     },
 
-    ignorableWarning: function ignorableWarning(aLocator, aError) {
+    ignorableWarning: function ignorableWarning(aError) {
       do_parse_check(!aError, "XML ignorable warning");
     }
   };
 
   saxReader.contentHandler = contentHandler;
-  saxReader.lexicalHandler = lexicalHandler;
-  saxReader.dtdHandler     = dtdHandler;
   saxReader.errorHandler   = errorHandler;
 
   saxReader.parseFromString(source, "application/xml");
 
   // Just in case it leaks.
   saxReader.contentHandler = null;
-  saxReader.lexicalHandler = null;
-  saxReader.dtdHandler     = null;
   saxReader.errorHandler   = null;
 
   return parseErrorLog;

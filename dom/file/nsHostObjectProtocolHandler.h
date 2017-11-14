@@ -89,6 +89,9 @@ public:
   GetAllBlobURLEntries(nsTArray<mozilla::dom::BlobURLRegistrationData>& aRegistrations,
                        mozilla::dom::ContentParent* aCP);
 
+  // This is for nsHostObjectURI.
+  static void StoreClonedURI(const nsACString& aSpec, nsIURI* aURI);
+
 protected:
   virtual ~nsHostObjectProtocolHandler() {}
 

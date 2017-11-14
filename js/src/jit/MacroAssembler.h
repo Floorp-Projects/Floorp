@@ -651,6 +651,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline uint32_t callJitNoProfiler(Register callee);
     inline uint32_t callJit(Register callee);
     inline uint32_t callJit(JitCode* code);
+    inline uint32_t callJit(ImmPtr code);
 
     // The frame descriptor is the second field of all Jit frames, pushed before
     // calling the Jit function.  It is a composite value defined in JitFrames.h
