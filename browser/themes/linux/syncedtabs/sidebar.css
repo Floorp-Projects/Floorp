@@ -35,17 +35,18 @@ html {
   height: 16px;
 }
 
-.textbox-search-icon {
-  width: 16px;
-  height: 16px;
+.search-box > .textbox-input-box > .textbox-input {
   background-image: url(chrome://global/skin/icons/search-textbox.svg);
   background-repeat: no-repeat;
-  background-position: center;
-  display: inline-block;
-  vertical-align: middle;
+  background-size: 12px 12px;
+  background-position: left center;
+  text-indent: 14px;
 }
 
-.textbox-search-icon[searchbutton]:not([disabled]) ,
+.search-box > .textbox-input-box > .textbox-input:-moz-locale-dir(rtl) {
+  background-position: right center;
+}
+
 .textbox-search-clear:not([disabled]) {
   cursor: pointer;
 }
