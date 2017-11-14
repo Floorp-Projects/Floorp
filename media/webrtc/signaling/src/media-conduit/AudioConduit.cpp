@@ -589,16 +589,27 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
 }
 
 MediaConduitErrorCode
-WebrtcAudioConduit::EnableAudioLevelExtension(bool enabled, uint8_t id)
+WebrtcAudioConduit::EnableAudioLevelExtension(bool aEnabled,
+                                              uint8_t aId,
+                                              bool aDirectionIsSend)
 {
-  CSFLogDebug(LOGTAG,  "%s %d %d ", __FUNCTION__, enabled, id);
+  CSFLogDebug(LOGTAG,  "%s %d %d %d", __FUNCTION__, aEnabled, aId,
+              aDirectionIsSend);
 
-  if (mPtrVoERTP_RTCP->SetSendAudioLevelIndicationStatus(mChannel, enabled, id) == -1)
-  {
+  bool ret;
+  if (aDirectionIsSend) {
+    ret = mPtrVoERTP_RTCP->SetSendAudioLevelIndicationStatus(mChannel,
+                                                             aEnabled,
+                                                             aId) == -1;
+  } else {
+    ret = mPtrRTP->SetReceiveAudioLevelIndicationStatus(mChannel,
+                                                        aEnabled,
+                                                        aId) == -1;
+  }
+  if (ret) {
     CSFLogError(LOGTAG, "%s SetSendAudioLevelIndicationStatus Failed", __FUNCTION__);
     return kMediaConduitUnknownError;
   }
-
   return kMediaConduitNoError;
 }
 

@@ -107,6 +107,9 @@ struct RtpExtension {
   static const char* kMIdUri;
   static const int kMIdDefaultId;
 
+  static const char* kCsrcAudioLevelUri;
+  static const int kCsrcAudioLevelDefaultId;
+
   std::string uri;
   int id;
 };
