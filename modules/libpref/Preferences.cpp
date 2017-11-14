@@ -2017,7 +2017,8 @@ private:
                                         nsAString& aReturn);
 
   // As SetCharPref, but without any check on the length of |aValue|.
-  nsresult SetCharPrefInternal(const char* aPrefName, const nsACString& aValue);
+  nsresult SetCharPrefNoLengthCheck(const char* aPrefName,
+                                    const nsACString& aValue);
 
   // Reject strings that are more than 1Mb, warn if strings are more than 16kb.
   nsresult CheckSanityOfStringLength(const char* aPrefName,
@@ -2252,12 +2253,12 @@ nsPrefBranch::SetCharPref(const char* aPrefName, const nsACString& aValue)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return SetCharPrefInternal(aPrefName, aValue);
+  return SetCharPrefNoLengthCheck(aPrefName, aValue);
 }
 
 nsresult
-nsPrefBranch::SetCharPrefInternal(const char* aPrefName,
-                                  const nsACString& aValue)
+nsPrefBranch::SetCharPrefNoLengthCheck(const char* aPrefName,
+                                       const nsACString& aValue)
 {
   ENSURE_MAIN_PROCESS("SetCharPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
@@ -2296,7 +2297,7 @@ nsPrefBranch::SetStringPref(const char* aPrefName, const nsACString& aValue)
     return rv;
   }
 
-  return SetCharPrefInternal(aPrefName, aValue);
+  return SetCharPrefNoLengthCheck(aPrefName, aValue);
 }
 
 NS_IMETHODIMP
@@ -2542,7 +2543,7 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
     nsAutoCString descriptorString;
     rv = file->GetPersistentDescriptor(descriptorString);
     if (NS_SUCCEEDED(rv)) {
-      rv = SetCharPrefInternal(aPrefName, descriptorString);
+      rv = SetCharPrefNoLengthCheck(aPrefName, descriptorString);
     }
     return rv;
   }
@@ -2586,7 +2587,7 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
     descriptorString.Append(relativeToKey);
     descriptorString.Append(']');
     descriptorString.Append(relDescriptor);
-    return SetCharPrefInternal(aPrefName, descriptorString);
+    return SetCharPrefNoLengthCheck(aPrefName, descriptorString);
   }
 
   if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
@@ -2602,7 +2603,8 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
         if (NS_FAILED(rv)) {
           return rv;
         }
-        rv = SetCharPrefInternal(aPrefName, NS_ConvertUTF16toUTF8(wideString));
+        rv = SetCharPrefNoLengthCheck(aPrefName,
+                                      NS_ConvertUTF16toUTF8(wideString));
       }
     }
     return rv;
