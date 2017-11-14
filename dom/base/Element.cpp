@@ -1759,8 +1759,13 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Connected callback must be enqueued whenever a custom element becomes
     // connected.
     CustomElementData* data = GetCustomElementData();
-    if (data && data->mState == CustomElementData::State::eCustom) {
-      nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eConnected, this);
+    if (data) {
+      if (data->mState == CustomElementData::State::eCustom) {
+        nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eConnected, this);
+      } else {
+        // Step 7.7.2.2 https://dom.spec.whatwg.org/#concept-node-insert
+        nsContentUtils::TryToUpgradeElement(this);
+      }
     }
   }
 
@@ -2088,9 +2093,16 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
      // disconnected.
     if (CustomElementRegistry::IsCustomElementEnabled()) {
       CustomElementData* data  = GetCustomElementData();
-      if (data && data->mState == CustomElementData::State::eCustom) {
-        nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eDisconnected,
-                                                 this);
+      if (data) {
+        if (data->mState == CustomElementData::State::eCustom) {
+          nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eDisconnected,
+                                                   this);
+        } else {
+          // Remove an unresolved custom element that is a candidate for
+          // upgrade when a custom element is disconnected.
+          // We will make sure it's shadow-including tree order in bug 1326028.
+          nsContentUtils::UnregisterUnresolvedElement(this);
+        }
       }
     }
   }
