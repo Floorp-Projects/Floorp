@@ -289,6 +289,7 @@ typedef nsTArray<Link*> LinkArray;
 
 static LazyLogModule gDocumentLeakPRLog("DocumentLeak");
 static LazyLogModule gCspPRLog("CSP");
+static LazyLogModule gUserInteractionPRLog("UserInteraction");
 
 static const char kChromeInContentPref[] = "security.allow_chrome_frames_inside_content";
 static bool sChromeInContentAllowed = false;
@@ -13686,12 +13687,22 @@ nsIDocument::UpdateStyleBackendType()
 }
 
 void
+nsIDocument::SetUserHasInteracted(bool aUserHasInteracted)
+{
+  MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug,
+          ("Document %p has been interacted by user.", this));
+  mUserHasInteracted = aUserHasInteracted;
+}
+
+void
 nsIDocument::NotifyUserActivation()
 {
   if (mUserHasActivatedInteraction) {
     return;
   }
 
+  MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug,
+          ("Document %p has been activated by user.", this));
   mUserHasActivatedInteraction = true;
 }
 
