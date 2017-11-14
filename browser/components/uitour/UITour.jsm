@@ -1619,7 +1619,7 @@ this.UITour = {
   },
 
   getAppInfo(aMessageManager, aWindow, aCallbackID) {
-    (async() => {
+    (async () => {
       let props = ["defaultUpdateChannel", "version"];
       let appinfo = {};
       props.forEach(property => appinfo[property] = Services.appinfo[property]);

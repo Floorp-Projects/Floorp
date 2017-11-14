@@ -58,7 +58,7 @@
         <![CDATA[
           if (this.hasAttribute("defaultButton"))
             return this.getAttribute("defaultButton");
-          return "accept";  // default to the accept button
+          return "accept"; // default to the accept button
         ]]>
         </getter>
         <setter>

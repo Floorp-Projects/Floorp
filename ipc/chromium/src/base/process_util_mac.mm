@@ -1,7 +1,8 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
 
 #include "base/process_util.h"
 
@@ -24,16 +25,9 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 namespace base {
 
 bool LaunchApp(const std::vector<std::string>& argv,
-               const file_handle_mapping_vector& fds_to_remap,
-               bool wait, ProcessHandle* process_handle) {
-  return LaunchApp(argv, fds_to_remap, environment_map(),
-                   wait, process_handle);
-}
-
-bool LaunchApp(const std::vector<std::string>& argv,
-               const file_handle_mapping_vector& fds_to_remap,
-               const environment_map& env_vars_to_set,
-               bool wait, ProcessHandle* process_handle) {
+               const LaunchOptions& options,
+               ProcessHandle* process_handle)
+{
   bool retval = true;
 
   char* argv_copy[argv.size() + 1];
@@ -42,7 +36,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
   }
   argv_copy[argv.size()] = NULL;
 
-  EnvironmentArray vars = BuildEnvironmentArray(env_vars_to_set);
+  EnvironmentArray vars = BuildEnvironmentArray(options.environ);
 
   posix_spawn_file_actions_t file_actions;
   if (posix_spawn_file_actions_init(&file_actions) != 0) {
@@ -53,11 +47,9 @@ bool LaunchApp(const std::vector<std::string>& argv,
   });
 
   // Turn fds_to_remap array into a set of dup2 calls.
-  for (file_handle_mapping_vector::const_iterator it = fds_to_remap.begin();
-       it != fds_to_remap.end();
-       ++it) {
-    int src_fd = it->first;
-    int dest_fd = it->second;
+  for (const auto& fd_map : options.fds_to_remap) {
+    int src_fd = fd_map.first;
+    int dest_fd = fd_map.second;
 
     if (src_fd == dest_fd) {
       int flags = fcntl(src_fd, F_GETFD);
@@ -71,6 +63,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
     }
   }
 
+  // Initialize spawn attributes.
   posix_spawnattr_t spawnattr;
   if (posix_spawnattr_init(&spawnattr) != 0) {
     return false;
@@ -107,7 +100,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
   } else {
     gProcessLog.print("==> process %d launched child process %d\n",
                       GetCurrentProcId(), pid);
-    if (wait)
+    if (options.wait)
       HANDLE_EINTR(waitpid(pid, 0, 0));
 
     if (process_handle)
@@ -118,10 +111,9 @@ bool LaunchApp(const std::vector<std::string>& argv,
 }
 
 bool LaunchApp(const CommandLine& cl,
-               bool wait, bool start_hidden, ProcessHandle* process_handle) {
-  // TODO(playmobil): Do we need to respect the start_hidden flag?
-  file_handle_mapping_vector no_files;
-  return LaunchApp(cl.argv(), no_files, wait, process_handle);
+               const LaunchOptions& options,
+               ProcessHandle* process_handle) {
+  return LaunchApp(cl.argv(), options, process_handle);
 }
 
 }  // namespace base
