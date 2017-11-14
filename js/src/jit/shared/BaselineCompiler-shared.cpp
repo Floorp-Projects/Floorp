@@ -58,9 +58,7 @@ BaselineCompilerShared::prepareVMCall()
 bool
 BaselineCompilerShared::callVM(const VMFunction& fun, CallVMPhase phase)
 {
-    JitCode* code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
-    if (!code)
-        return false;
+    uint8_t* code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
 
 #ifdef DEBUG
     // Assert prepareVMCall() has been called.
@@ -125,7 +123,7 @@ BaselineCompilerShared::callVM(const VMFunction& fun, CallVMPhase phase)
     }
     MOZ_ASSERT(fun.expectTailCall == NonTailCall);
     // Perform the call.
-    masm.call(code);
+    masm.call(ImmPtr(code));
     uint32_t callOffset = masm.currentOffset();
     masm.pop(BaselineFrameReg);
 
