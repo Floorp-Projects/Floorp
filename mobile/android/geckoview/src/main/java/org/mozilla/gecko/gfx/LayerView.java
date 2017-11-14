@@ -54,24 +54,14 @@ public class LayerView extends FrameLayout {
     private DynamicToolbarAnimator mToolbarAnimator;
     private FullScreenState mFullScreenState;
 
-    private SurfaceView mSurfaceView;
-    private TextureView mTextureView;
-
     private Listener mListener;
 
     /* This should only be modified on the Java UI thread. */
     private final Overscroll mOverscroll;
 
-    private boolean mServerSurfaceValid;
-    private int mWidth, mHeight;
-
     private int mDefaultClearColor = Color.WHITE;
     /* package */ GetPixelsResult mGetPixelsResult;
     private final List<DrawListener> mDrawListeners;
-
-    /* This is written by the Gecko thread and the UI thread, and read by the UI thread. */
-    /* package */ volatile boolean mCompositorCreated;
-    /* package */ volatile boolean mCompositorControllerOpen;
 
     //
     // NOTE: These values are also defined in gfx/layers/ipc/UiCompositorControllerMessageTypes.h
@@ -90,7 +80,6 @@ public class LayerView extends FrameLayout {
     /* package */ final static int LAYERS_UPDATED                   = 10; // Sent from compositor when a layer has been updated
     /* package */ final static int TOOLBAR_SNAPSHOT_FAILED          = 11; // Sent to compositor when the toolbar snapshot fails.
     /* package */ final static int COMPOSITOR_CONTROLLER_OPEN       = 20; // Special message sent from UiCompositorControllerChild once it is open
-    /* package */ final static int IS_COMPOSITOR_CONTROLLER_OPEN    = 21; // Special message sent from controller to query if the compositor controller is open
 
     private void postCompositorMessage(final int message) {
         ThreadUtils.postToUiThread(new Runnable() {
@@ -101,106 +90,9 @@ public class LayerView extends FrameLayout {
         });
     }
 
-    @WrapForJNI(calledFrom = "ui")
     /* package */ boolean isCompositorReady() {
         ThreadUtils.assertOnUiThread();
-        return mCompositorCreated && mCompositorControllerOpen;
-    }
-
-    /* package */ class Compositor extends JNIObject {
-        public Compositor() {
-        }
-
-        /* package */ boolean isReady() {
-            return isCompositorReady();
-        }
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
-        @Override protected native void disposeNative();
-
-        // Gecko thread sets its Java instances; does not block UI thread.
-        @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")
-        /* package */ native void attachToJava(GeckoLayerClient layerClient,
-                                               NativePanZoomController npzc);
-
-        @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")
-        /* package */ native void onSizeChanged(int windowWidth, int windowHeight);
-
-        // Gecko thread creates compositor; blocks UI thread.
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "proxy")
-        /* package */ native void createCompositor(int width, int height, Object surface);
-
-        // Gecko thread pauses compositor; blocks UI thread.
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-        /* package */ native void syncPauseCompositor();
-
-        // UI thread resumes compositor and notifies Gecko thread; does not block UI thread.
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-        /* package */ native void syncResumeResizeCompositor(int width, int height, Object surface);
-
-        @WrapForJNI(calledFrom = "any", dispatchTo = "current")
-        /* package */ native void syncInvalidateAndScheduleComposite();
-
-        @WrapForJNI(calledFrom = "any", dispatchTo = "current")
-        /* package */ native void setMaxToolbarHeight(int height);
-
-        @WrapForJNI(calledFrom = "any", dispatchTo = "current")
-        /* package */ native void setPinned(boolean pinned, int reason);
-
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-        /* package */ native void sendToolbarAnimatorMessage(int message);
-
-        @WrapForJNI(calledFrom = "ui")
-        /* package */ void recvToolbarAnimatorMessage(int message) {
-            handleToolbarAnimatorMessage(message);
-        }
-
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-        /* package */ native void setDefaultClearColor(int color);
-
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-        /* package */ native void requestScreenPixels();
-
-        @WrapForJNI(calledFrom = "ui")
-        /* package */ void recvScreenPixels(int width, int height, int[] pixels) {
-            if (mGetPixelsResult != null) {
-                mGetPixelsResult.onPixelsResult(width, height, IntBuffer.wrap(pixels));
-                mGetPixelsResult = null;
-            }
-        }
-
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-        /* package */ native void enableLayerUpdateNotifications(boolean enable);
-
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-        /* package */ native void sendToolbarPixelsToCompositor(final int width, final int height, final int[] pixels);
-
-        @WrapForJNI(calledFrom = "gecko")
-        private void reattach() {
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    updateCompositor();
-                }
-            });
-        }
-
-        @WrapForJNI(calledFrom = "gecko")
-        private void destroy() {
-            // The nsWindow has been closed. First mark our compositor as destroyed.
-            LayerView.this.mCompositorCreated = false;
-            LayerView.this.mCompositorControllerOpen = false;
-
-            LayerView.this.mLayerClient.setGeckoReady(false);
-
-            // Then clear out any pending calls on the UI thread by disposing on the UI thread.
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    LayerView.this.mDrawListeners.clear();
-                    disposeNative();
-                }
-            });
-        }
+        return mCompositor != null && mCompositor.isReady();
     }
 
     /* package */ void handleToolbarAnimatorMessage(int message) {
@@ -243,19 +135,12 @@ public class LayerView extends FrameLayout {
                 }
                 break;
             case COMPOSITOR_CONTROLLER_OPEN:
-                // It is possible to get this message multiple times. Only act on it if we didn't know the compositor controller was open
-                if (mCompositorControllerOpen) {
-                    break;
-                }
-                mCompositorControllerOpen = true;
-                // updateCompositor makes a synchronous call to the compositor which will dead lock if called directly from here
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         mCompositor.setDefaultClearColor(mDefaultClearColor);
                         mCompositor.enableLayerUpdateNotifications(!mDrawListeners.isEmpty());
                         mToolbarAnimator.updateCompositor();
-                        updateCompositor();
                     }
                 });
                 break;
@@ -265,30 +150,7 @@ public class LayerView extends FrameLayout {
         }
     }
 
-    private final Compositor mCompositor = new Compositor();
-
-    public boolean shouldUseTextureView() {
-        // Disable TextureView support for now as it causes panning/zooming
-        // performance regressions (see bug 792259). Uncomment the code below
-        // once this bug is fixed.
-        return false;
-
-        /*
-        // we can only use TextureView on ICS or higher
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            Log.i(LOGTAG, "Not using TextureView: not on ICS+");
-            return false;
-        }
-
-        try {
-            // and then we can only use it if we have a hardware accelerated window
-            Method m = View.class.getMethod("isHardwareAccelerated", (Class[]) null);
-            return (Boolean) m.invoke(this);
-        } catch (Exception e) {
-            Log.i(LOGTAG, "Not using TextureView: caught exception checking for hw accel: " + e.toString());
-            return false;
-        } */
-    }
+    private LayerSession.Compositor mCompositor;
 
     public LayerView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -311,10 +173,6 @@ public class LayerView extends FrameLayout {
 
         mPanZoomController = mLayerClient.getPanZoomController();
         mToolbarAnimator = mLayerClient.getDynamicToolbarAnimator();
-        mToolbarAnimator.notifyCompositorCreated(mCompositor);
-
-        setFocusable(true);
-        setFocusableInTouchMode(true);
     }
 
     /**
@@ -335,16 +193,6 @@ public class LayerView extends FrameLayout {
     private static Point getEventRadius(MotionEvent event) {
         return new Point((int)event.getToolMajor() / 2,
                          (int)event.getToolMinor() / 2);
-    }
-
-    public void showSurface() {
-        // Fix this if TextureView support is turned back on above
-        mSurfaceView.setVisibility(View.VISIBLE);
-    }
-
-    public void hideSurface() {
-        // Fix this if TextureView support is turned back on above
-        mSurfaceView.setVisibility(View.INVISIBLE);
     }
 
     public void destroy() {
@@ -369,7 +217,7 @@ public class LayerView extends FrameLayout {
             requestFocus();
         }
 
-        if (!mLayerClient.isGeckoReady()) {
+        if (!isCompositorReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;
@@ -398,7 +246,7 @@ public class LayerView extends FrameLayout {
             return false;
         }
 
-        if (!mLayerClient.isGeckoReady()) {
+        if (!isCompositorReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;
@@ -414,7 +262,7 @@ public class LayerView extends FrameLayout {
         if (AndroidGamepadManager.handleMotionEvent(event)) {
             return true;
         }
-        if (!mLayerClient.isGeckoReady()) {
+        if (!isCompositorReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;
@@ -425,50 +273,8 @@ public class LayerView extends FrameLayout {
         return false;
     }
 
-    @Override
-    protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
-
-        // We are adding descendants to this LayerView, but we don't want the
-        // descendants to affect the way LayerView retains its focus.
-        setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
-
-        // This check should not be done before the view is attached to a window
-        // as hardware acceleration will not be enabled at that point.
-        // We must create and add the SurfaceView instance before the view tree
-        // is fully created to avoid flickering (see bug 801477).
-        if (shouldUseTextureView()) {
-            mTextureView = new TextureView(getContext());
-            mTextureView.setSurfaceTextureListener(new SurfaceTextureListener());
-
-            // The background is set to this color when the LayerView is
-            // created, and it will be shown immediately at startup. Shortly
-            // after, the tab's background color will be used before any content
-            // is shown.
-            mTextureView.setBackgroundColor(Color.WHITE);
-            addView(mTextureView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        } else {
-            // This will stop PropertyAnimator from creating a drawing cache (i.e. a bitmap)
-            // from a SurfaceView, which is just not possible (the bitmap will be transparent).
-            setWillNotCacheDrawing(false);
-
-            mSurfaceView = new LayerSurfaceView(getContext(), this);
-            mSurfaceView.setBackgroundColor(Color.WHITE);
-            addView(mSurfaceView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-            SurfaceHolder holder = mSurfaceView.getHolder();
-            holder.addCallback(new SurfaceListener());
-        }
-
-        attachCompositor();
-    }
-
     // Don't expose GeckoLayerClient to things outside this package; only expose it as an Object
     GeckoLayerClient getLayerClient() { return mLayerClient; }
-
-    /* package */ boolean isGeckoReady() {
-        return mLayerClient.isGeckoReady();
-    }
 
     public PanZoomController getPanZoomController() { return mPanZoomController; }
     public DynamicToolbarAnimator getDynamicToolbarAnimator() { return mToolbarAnimator; }
@@ -482,15 +288,6 @@ public class LayerView extends FrameLayout {
     }
 
     public void setSurfaceBackgroundColor(int newColor) {
-        if (mSurfaceView != null) {
-            mSurfaceView.setBackgroundColor(newColor);
-        }
-    }
-
-    public void requestRender() {
-        if (isCompositorReady()) {
-            mCompositor.syncInvalidateAndScheduleComposite();
-        }
     }
 
     public interface GetPixelsResult {
@@ -517,6 +314,13 @@ public class LayerView extends FrameLayout {
         }
     }
 
+    /* package */ void recvScreenPixels(int width, int height, int[] pixels) {
+        if (mGetPixelsResult != null) {
+            mGetPixelsResult.onPixelsResult(width, height, IntBuffer.wrap(pixels));
+            mGetPixelsResult = null;
+        }
+    }
+
     public void setListener(Listener listener) {
         mListener = listener;
     }
@@ -525,7 +329,12 @@ public class LayerView extends FrameLayout {
         return mListener;
     }
 
-    private void attachCompositor() {
+    protected void attachCompositor(final LayerSession session) {
+        mCompositor = session.mCompositor;
+        mCompositor.layerView = this;
+
+        mToolbarAnimator.notifyCompositorCreated(mCompositor);
+
         final NativePanZoomController npzc = (NativePanZoomController) mPanZoomController;
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
@@ -539,89 +348,11 @@ public class LayerView extends FrameLayout {
     }
 
     @WrapForJNI(calledFrom = "ui")
-    protected Object getCompositor() {
-        return mCompositor;
+    private Object getCompositor() {
+        return isCompositorReady() ? mCompositor : null;
     }
 
-    void serverSurfaceChanged(int newWidth, int newHeight) {
-        ThreadUtils.assertOnUiThread();
-
-        mWidth = newWidth;
-        mHeight = newHeight;
-        mServerSurfaceValid = true;
-
-        updateCompositor();
-    }
-
-    void updateCompositor() {
-        ThreadUtils.assertOnUiThread();
-
-        if (isCompositorReady()) {
-            // If the compositor has already been created, just resume it instead. We don't need
-            // to block here because if the surface is destroyed before the compositor grabs it,
-            // we can handle that gracefully (i.e. the compositor will remain paused).
-            if (!mServerSurfaceValid) {
-                return;
-            }
-            // Asking Gecko to resume the compositor takes too long (see
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=735230#c23), so we
-            // resume the compositor directly. We still need to inform Gecko about
-            // the compositor resuming, so that Gecko knows that it can now draw.
-            // It is important to not notify Gecko until after the compositor has
-            // been resumed, otherwise Gecko may send updates that get dropped.
-            mCompositor.syncResumeResizeCompositor(mWidth, mHeight, getSurface());
-            return;
-        }
-
-        // Only try to create the compositor if we have a valid surface and gecko is up. When these
-        // two conditions are satisfied, we can be relatively sure that the compositor creation will
-        // happen without needing to block anywhere.
-        if (!mCompositorCreated && mServerSurfaceValid && getLayerClient().isGeckoReady()) {
-            mCompositorCreated = true;
-            mCompositor.createCompositor(mWidth, mHeight, getSurface());
-        }
-
-        if (mCompositorCreated && !mCompositorControllerOpen) {
-            mCompositor.sendToolbarAnimatorMessage(IS_COMPOSITOR_CONTROLLER_OPEN);
-        }
-    }
-
-    /* When using a SurfaceView (mSurfaceView != null), resizing happens in two
-     * phases. First, the LayerView changes size, then, often some frames later,
-     * the SurfaceView changes size. Because of this, we need to split the
-     * resize into two phases to avoid jittering.
-     *
-     * The first phase is the LayerView size change. mListener is notified so
-     * that a synchronous draw can be performed (otherwise a blank frame will
-     * appear).
-     *
-     * The second phase is the SurfaceView size change. At this point, the
-     * backing GL surface is resized and another synchronous draw is performed.
-     * Gecko is also sent the new window size, and this will likely cause an
-     * extra draw a few frames later, after it's re-rendered and caught up.
-     *
-     * In the case that there is no valid GL surface (for example, when
-     * resuming, or when coming back from the awesomescreen), or we're using a
-     * TextureView instead of a SurfaceView, the first phase is skipped.
-     */
-    private void onSizeChanged(int width, int height) {
-        if (!mServerSurfaceValid || mSurfaceView == null) {
-            surfaceChanged(width, height);
-            return;
-        }
-
-        if (isCompositorReady()) {
-            mCompositor.syncResumeResizeCompositor(width, height, getSurface());
-        }
-
-        if (mOverscroll != null) {
-            mOverscroll.setSize(width, height);
-        }
-    }
-
-    private void surfaceChanged(int width, int height) {
-        serverSurfaceChanged(width, height);
-
+    /* package */ void onSizeChanged(int width, int height) {
         if (mListener != null) {
             mListener.surfaceChanged();
         }
@@ -631,110 +362,8 @@ public class LayerView extends FrameLayout {
         }
     }
 
-    void notifySizeChanged(int windowWidth, int windowHeight) {
-        mCompositor.onSizeChanged(windowWidth, windowHeight);
-    }
-
-    void serverSurfaceDestroyed() {
-        ThreadUtils.assertOnUiThread();
-
-        // We need to coordinate with Gecko when pausing composition, to ensure
-        // that Gecko never executes a draw event while the compositor is paused.
-        // This is sent synchronously to make sure that we don't attempt to use
-        // any outstanding Surfaces after we call this (such as from a
-        // serverSurfaceDestroyed notification), and to make sure that any in-flight
-        // Gecko draw events have been processed.  When this returns, composition is
-        // definitely paused -- it'll synchronize with the Gecko event loop, which
-        // in turn will synchronize with the compositor thread.
-        if (isCompositorReady()) {
-            mCompositor.syncPauseCompositor();
-        }
-
-        mServerSurfaceValid = false;
-    }
-
-    private void onDestroyed() {
-        serverSurfaceDestroyed();
-    }
-
-    public Object getNativeWindow() {
-        if (mSurfaceView != null)
-            return mSurfaceView.getHolder();
-
-        return mTextureView.getSurfaceTexture();
-    }
-
-    public Object getSurface() {
-      if (mSurfaceView != null) {
-        return mSurfaceView.getHolder().getSurface();
-      }
-      return null;
-    }
-
     public interface Listener {
         void surfaceChanged();
-    }
-
-    private class SurfaceListener implements SurfaceHolder.Callback {
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width,
-                                                int height) {
-            onSizeChanged(width, height);
-        }
-
-        @Override
-        public void surfaceCreated(SurfaceHolder holder) {
-        }
-
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-            onDestroyed();
-        }
-    }
-
-    /* A subclass of SurfaceView to listen to layout changes, as
-     * View.OnLayoutChangeListener requires API level 11.
-     */
-    private class LayerSurfaceView extends SurfaceView {
-        private LayerView mParent;
-
-        public LayerSurfaceView(Context context, LayerView parent) {
-            super(context);
-            mParent = parent;
-        }
-
-        @Override
-        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-            super.onLayout(changed, left, top, right, bottom);
-            if (changed && mParent.mServerSurfaceValid) {
-                mParent.surfaceChanged(right - left, bottom - top);
-            }
-        }
-    }
-
-    private class SurfaceTextureListener implements TextureView.SurfaceTextureListener {
-        @Override
-        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-            // We don't do this for surfaceCreated above because it is always followed by a surfaceChanged,
-            // but that is not the case here.
-            onSizeChanged(width, height);
-        }
-
-        @Override
-        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-            onDestroyed();
-            return true; // allow Android to call release() on the SurfaceTexture, we are done drawing to it
-        }
-
-        @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-            onSizeChanged(width, height);
-        }
-
-        @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
-        }
     }
 
     @RobocopTarget
@@ -773,6 +402,10 @@ public class LayerView extends FrameLayout {
         if (isCompositorReady() && notEmpty && mDrawListeners.isEmpty()) {
             mCompositor.enableLayerUpdateNotifications(false);
         }
+    }
+
+    /* package */ void clearDrawListeners() {
+        mDrawListeners.clear();
     }
 
     @RobocopTarget
