@@ -7,52 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
-DEFINES['ANDROID_SMP'] = 0
-DEFINES['LOG_NDEBUG'] = 1
-
-if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['OS_TARGET'] != 'SunOS':
-   DEFINES['_GLIBCXX_OS_DEFINES'] = True
-
-if CONFIG['OS_TARGET'] == 'WINNT':
-    if CONFIG['_MSC_VER']:
-        DEFINES['ssize_t'] = 'intptr_t'
-        DEFINES['off64_t'] = 'int64_t'
-        DEFINES['strcasecmp'] = 'stricmp'
-        DEFINES['strncasecmp'] = 'strnicmp'
-    DEFINES['HAVE_MS_C_RUNTIME'] = True
-    DEFINES['__PRETTY_FUNCTION__'] = '__FUNCTION__'
-    if CONFIG['CC_TYPE'] == 'gcc':
-        LOCAL_INCLUDES += [ 'ports/mingw32/include' ]
-    else:
-        LOCAL_INCLUDES += [ 'ports/win32/include' ]
-elif CONFIG['OS_TARGET'] == 'Darwin':
-    DEFINES['HAVE_SYS_UIO_H'] = True
-    DEFINES['off64_t'] = 'off_t'
-    LOCAL_INCLUDES += [ 'ports/darwin/include' ]
-elif CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'OpenBSD', 'NetBSD',
-        'GNU/kFreeBSD'):
-    if CONFIG['OS_TARGET'] != 'NetBSD':
-        DEFINES['ENODATA'] = '-0x80000003'
-    if CONFIG['OS_TARGET'] == 'OpenBSD':
-        DEFINES['EBADMSG'] = '-0x80000006'
-    DEFINES['HAVE_SYS_UIO_H'] = True
-    if CONFIG['OS_TARGET'] != 'GNU/kFreeBSD':
-        DEFINES['off64_t'] = 'off_t'
-        LOCAL_INCLUDES += [ 'ports/bsd/include' ]
-else:
-    DEFINES['HAVE_SYS_UIO_H'] = True
-
-if CONFIG['OS_TARGET'] != 'Android':
-    DEFINES['FAKE_LOG_DEVICE'] = True
-    SOURCES += [
-        'system/core/liblog/fake_log_device.c',
-    ]
-    UNIFIED_SOURCES += [
-        'system/core/libcutils/strdup16to8.c',
-        'system/core/liblog/logd_write.c',
-        'system/core/liblog/logprint.c',
-    ]
-
 EXPORTS.mp4_demuxer += [
     'binding/include/mp4_demuxer/Adts.h',
     'binding/include/mp4_demuxer/AnnexB.h',
@@ -77,15 +31,6 @@ EXPORTS.demuxer += [
     'binding/include/demuxer/TrackDemuxer.h',
 ]
 
-SOURCES += [
-    'frameworks/av/media/libstagefright/foundation/hexdump.cpp',
-    'frameworks/av/media/libstagefright/MetaData.cpp',
-    'system/core/libutils/RefBase.cpp',
-    'system/core/libutils/String16.cpp',
-    'system/core/libutils/String8.cpp',
-    'system/core/libutils/VectorImpl.cpp',
-]
-
 EXPORTS += [
     'binding/include/mp4parse.h',
 ]
@@ -103,41 +48,15 @@ UNIFIED_SOURCES += [
     'binding/MP4Metadata.cpp',
     'binding/ResourceStream.cpp',
     'binding/SinfParser.cpp',
-    'frameworks/av/media/libstagefright/DataSource.cpp',
-    'frameworks/av/media/libstagefright/ESDS.cpp',
-    'frameworks/av/media/libstagefright/foundation/AAtomizer.cpp',
-    'frameworks/av/media/libstagefright/foundation/ABitReader.cpp',
-    'frameworks/av/media/libstagefright/foundation/ABuffer.cpp',
-    'frameworks/av/media/libstagefright/foundation/AString.cpp',
-    'frameworks/av/media/libstagefright/MediaBuffer.cpp',
-    'frameworks/av/media/libstagefright/MediaDefs.cpp',
-    'frameworks/av/media/libstagefright/MediaSource.cpp',
-    'frameworks/av/media/libstagefright/MPEG4Extractor.cpp',
-    'frameworks/av/media/libstagefright/SampleIterator.cpp',
-    'frameworks/av/media/libstagefright/SampleTable.cpp',
-    'frameworks/av/media/libstagefright/Utils.cpp',
-    'system/core/libutils/SharedBuffer.cpp',
-    'system/core/libutils/Static.cpp',
-    'system/core/libutils/Unicode.cpp',
 ]
 
 LOCAL_INCLUDES += [
     'binding/include',
-    'frameworks/av/include',
-    'frameworks/av/include/media/stagefright/foundation',
-    'frameworks/av/media/libstagefright/',
-    'stubs/empty',
-    'stubs/include',
-    'stubs/include/media/stagefright/foundation',
-    'system/core/include',
 ]
 
 TEST_DIRS += [
     'gtest',
 ]
-
-# We allow warnings for third-party code that can be updated from upstream.
-AllowCompilerWarnings()
 
 FINAL_LIBRARY = 'xul'
 
