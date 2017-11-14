@@ -400,23 +400,12 @@ pref("media.ffmpeg.low-latency.enabled", false);
 pref("media.gmp.decoder.enabled", false);
 pref("media.gmp.decoder.aac", 0);
 pref("media.gmp.decoder.h264", 0);
-#ifdef MOZ_RAW
-pref("media.raw.enabled", true);
-#endif
 pref("media.ogg.enabled", true);
 pref("media.opus.enabled", true);
 pref("media.wave.enabled", true);
 pref("media.webm.enabled", true);
 
 pref("media.eme.chromium-api.video-shmems", 6);
-
-#ifdef MOZ_APPLEMEDIA
-#ifdef MOZ_WIDGET_UIKIT
-pref("media.mp3.enabled", true);
-#endif
-pref("media.apple.mp3.enabled", true);
-pref("media.apple.mp4.enabled", true);
-#endif
 
 // GMP storage version number. At startup we check the version against
 // media.gmp.storage.version.observed, and if the versions don't match,
@@ -453,12 +442,6 @@ pref("media.resume-bkgnd-video-on-tabhover", true);;
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
 pref("media.navigator.video.enabled", true);
-pref("media.navigator.load_adapt", true);
-pref("media.navigator.load_adapt.encoder_only", true);
-pref("media.navigator.load_adapt.measure_interval",1000);
-pref("media.navigator.load_adapt.avg_seconds",3);
-pref("media.navigator.load_adapt.high_load","0.90");
-pref("media.navigator.load_adapt.low_load","0.40");
 pref("media.navigator.video.default_fps",30);
 pref("media.navigator.video.use_remb", true);
 pref("media.navigator.video.use_tmmbr", false);
@@ -481,7 +464,6 @@ pref("media.navigator.video.max_fr", 60);
 pref("media.navigator.video.h264.level", 31); // 0x42E01f - level 3.1
 pref("media.navigator.video.h264.max_br", 0);
 pref("media.navigator.video.h264.max_mbps", 0);
-pref("media.peerconnection.video.h264_enabled", false);
 pref("media.peerconnection.video.vp9_enabled", true);
 pref("media.peerconnection.video.vp9_preferred", false);
 pref("media.getusermedia.aec", 1);
@@ -526,7 +508,6 @@ pref("media.getusermedia.aec_enabled", true);
 pref("media.getusermedia.noise_enabled", true);
 #endif
 pref("media.getusermedia.aec_extended_filter", true);
-pref("media.getusermedia.aec_delay_agnostic", true);
 pref("media.getusermedia.noise", 1);
 pref("media.getusermedia.agc_enabled", false);
 pref("media.getusermedia.agc", 1);
@@ -4765,10 +4746,6 @@ pref("webgl.dxgl.needs-finish", false);
 #endif
 
 pref("gfx.offscreencanvas.enabled", false);
-
-// Stagefright prefs
-pref("stagefright.force-enabled", false);
-pref("stagefright.disabled", false);
 
 // sendbuffer of 0 means use OS default, sendbuffer unset means use
 // gecko default which varies depending on windows version and is OS

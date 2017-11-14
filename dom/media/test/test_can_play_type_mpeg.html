@@ -165,7 +165,7 @@ var haveMp3 = getPref("media.wmf.enabled") ||
               (IsSupportedAndroid() &&
                ((IsJellyBeanOrLater() && getPref("media.android-media-codec.enabled")) ||
                 getPref("media.plugins.enabled"))) ||
-              getPref("media.apple.mp3.enabled");
+              IsMacOSSnowLeopardOrLater();
 check_mp3(document.getElementById('v'), haveMp3);
 
 mediaTestCleanup();
