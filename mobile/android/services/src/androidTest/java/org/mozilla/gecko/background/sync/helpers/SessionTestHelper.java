@@ -5,71 +5,34 @@ package org.mozilla.gecko.background.sync.helpers;
 
 import static junit.framework.Assert.assertNotNull;
 
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.testhelpers.WaitHelper;
+import org.mozilla.gecko.sync.SessionCreateException;
 import org.mozilla.gecko.sync.SyncException;
-import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 
 import android.content.Context;
 
 public class SessionTestHelper {
-
-  protected static RepositorySession prepareRepositorySession(
+  private static RepositorySession prepareRepositorySession(
       final Context context,
       final boolean begin,
       final Repository repository) {
 
-    final WaitHelper testWaiter = WaitHelper.getTestWaiter();
-
-    final String logTag = "prepareRepositorySession";
-    class CreationDelegate extends DefaultSessionCreationDelegate {
-      private RepositorySession session;
-      synchronized void setSession(RepositorySession session) {
-        this.session = session;
-      }
-      synchronized RepositorySession getSession() {
-        return this.session;
-      }
-
-      @Override
-      public void onSessionCreated(final RepositorySession session) {
-        assertNotNull(session);
-        Logger.info(logTag, "Setting session to " + session);
-        setSession(session);
-        if (begin) {
-          Logger.info(logTag, "Calling session.begin on new session.");
-          // The begin callbacks will notify.
-          try {
-            session.begin();
-          } catch (SyncException e) {
-            testWaiter.performNotify(e);
-          }
-          testWaiter.performNotify();
-        } else {
-          Logger.info(logTag, "Notifying after setting new session.");
-          testWaiter.performNotify();
-        }
-      }
-    }
-
-    final CreationDelegate delegate = new CreationDelegate();
+    final RepositorySession session;
     try {
-      Runnable runnable = new Runnable() {
-        @Override
-        public void run() {
-          repository.createSession(delegate, context);
-        }
-      };
-      testWaiter.performWait(runnable);
-    } catch (IllegalArgumentException ex) {
-      Logger.warn(logTag, "Caught IllegalArgumentException.");
+      session = repository.createSession(context);
+      assertNotNull(session);
+    } catch (SessionCreateException e) {
+      throw new IllegalStateException(e);
     }
 
-    Logger.info(logTag, "Retrieving new session.");
-    final RepositorySession session = delegate.getSession();
-    assertNotNull(session);
+    if (begin) {
+      try {
+        session.begin();
+      } catch (SyncException e) {
+        throw new IllegalStateException(e);
+      }
+    }
 
     return session;
   }

@@ -10,7 +10,6 @@ import java.net.URISyntaxException;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -73,9 +72,8 @@ public class Server15Repository extends Repository {
   }
 
   @Override
-  public void createSession(RepositorySessionCreationDelegate delegate,
-                            Context context) {
-    delegate.onSessionCreated(new Server15RepositorySession(this));
+  public RepositorySession createSession(Context context) {
+    return new Server15RepositorySession(this);
   }
 
   public URI collectionURI() {

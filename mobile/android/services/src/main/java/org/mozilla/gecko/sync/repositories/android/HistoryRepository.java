@@ -4,21 +4,33 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
+import org.mozilla.gecko.sync.repositories.Repository;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCleanDelegate;
 
 import android.content.Context;
 
-public class HistoryRepository extends ThreadedRepository implements org.mozilla.gecko.sync.repositories.HistoryRepository {
-
+public class HistoryRepository extends Repository {
   @Override
-  protected void sessionCreator(RepositorySessionCreationDelegate delegate, Context context) {
-    HistoryRepositorySession session = new HistoryRepositorySession(HistoryRepository.this, context);
-    delegate.onSessionCreated(session);
+  public RepositorySession createSession(Context context) {
+    return new HistoryRepositorySession(this, context);
   }
 
   @Override
-  protected DataAccessor getDataAccessor(Context context) {
-    return new HistoryDataAccessor(context);
-  }
+  public void clean(boolean success, RepositorySessionCleanDelegate delegate, Context context) {
+    if (!success) {
+      return;
+    }
 
+    final HistoryDataAccessor dataAccessor = new HistoryDataAccessor(context);
+
+    try {
+      dataAccessor.purgeDeleted();
+    } catch (Exception e) {
+      delegate.onCleanFailed(this, e);
+      return;
+    }
+
+    delegate.onCleaned(this);
+  }
 }

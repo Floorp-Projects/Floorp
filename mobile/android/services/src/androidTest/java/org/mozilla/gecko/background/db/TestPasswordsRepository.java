@@ -23,7 +23,6 @@ import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.PasswordsRepositorySession;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -32,7 +31,6 @@ import android.content.ContentProviderClient;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.os.RemoteException;
 
 public class TestPasswordsRepository extends AndroidSyncTestCase {
   private final String NEW_PASSWORD1 = "password";
@@ -44,7 +42,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
     assertTrue(WaitHelper.getTestWaiter().isIdle());
   }
 
-  public void testFetchAll() {
+  public void testFetchAll() throws Exception {
     RepositorySession session = createAndBeginSession();
     Record[] expected = new Record[] { PasswordHelpers.createPassword1(),
                                        PasswordHelpers.createPassword2() };
@@ -56,7 +54,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
     dispose(session);
   }
 
-  public void testFetchSinceOneRecord() {
+  public void testFetchSinceOneRecord() throws Exception {
     RepositorySession session = createAndBeginSession();
 
     // Passwords fetchModified checks timePasswordChanged, not insertion time.
@@ -77,7 +75,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
     dispose(session);
   }
 
-  public void testFetchSinceReturnNoRecords() {
+  public void testFetchSinceReturnNoRecords() throws Exception {
    RepositorySession session = createAndBeginSession();
 
     performWait(storeRunnable(session, PasswordHelpers.createPassword2()));
@@ -88,7 +86,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
     dispose(session);
   }
 
-  public void testFetchOneRecordByGuid() {
+  public void testFetchOneRecordByGuid() throws Exception {
     RepositorySession session = createAndBeginSession();
     Record record = PasswordHelpers.createPassword1();
     performWait(storeRunnable(session, record));
@@ -100,7 +98,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
     dispose(session);
   }
 
-  public void testFetchMultipleRecordsByGuids() {
+  public void testFetchMultipleRecordsByGuids() throws Exception {
     RepositorySession session = createAndBeginSession();
     PasswordRecord record1 = PasswordHelpers.createPassword1();
     PasswordRecord record2 = PasswordHelpers.createPassword2();
@@ -116,7 +114,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
     dispose(session);
   }
 
-  public void testFetchNoRecordByGuid() {
+  public void testFetchNoRecordByGuid() throws Exception {
     RepositorySession session = createAndBeginSession();
     Record record = PasswordHelpers.createPassword1();
 
@@ -127,13 +125,13 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
     dispose(session);
   }
 
-  public void testStore() {
+  public void testStore() throws Exception {
     final RepositorySession session = createAndBeginSession();
     performWait(storeRunnable(session, PasswordHelpers.createPassword1()));
     dispose(session);
   }
 
-  public void testRemoteNewerTimeStamp() {
+  public void testRemoteNewerTimeStamp() throws Exception {
     final RepositorySession session = createAndBeginSession();
 
     // Store updated local record.
@@ -183,7 +181,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
     dispose(session);
   }
 
-  public void testLocalNewerTimeStamp() {
+  public void testLocalNewerTimeStamp() throws Exception {
     final RepositorySession session = createAndBeginSession();
     // Remote record updated before local record.
     PasswordRecord remote = PasswordHelpers.createPassword1();
@@ -242,7 +240,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
    * Store two records that are identical except for guid. Expect to find the
    * remote one after reconciling.
    */
-  public void testStoreIdenticalExceptGuid() {
+  public void testStoreIdenticalExceptGuid() throws Exception {
     RepositorySession session = createAndBeginSession();
     PasswordRecord record = PasswordHelpers.createPassword1();
     record.guid = "before1";
@@ -276,7 +274,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
    * to the same site and there are multiple records for that site. Expect to
    * find the remote one after reconciling.
    */
-  public void testStoreIdenticalExceptGuidOnSameSite() {
+  public void testStoreIdenticalExceptGuidOnSameSite() throws Exception {
     RepositorySession session = createAndBeginSession();
     PasswordRecord record1 = PasswordHelpers.createPassword1();
     record1.encryptedUsername = "original";
@@ -304,7 +302,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
     dispose(session);
   }
 
-  public void testRawFetch() throws RemoteException {
+  public void testRawFetch() throws Exception {
     RepositorySession session = createAndBeginSession();
     Record[] expected = new Record[] { PasswordHelpers.createPassword1(),
                                        PasswordHelpers.createPassword2() };
@@ -343,15 +341,12 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
      */
     return new PasswordsRepositorySession.PasswordsRepository() {
       @Override
-      public void createSession(RepositorySessionCreationDelegate delegate,
-          Context context) {
-        PasswordsRepositorySession session;
-        session = new PasswordsRepositorySession(this, context) {
+      public RepositorySession createSession(Context context) {
+        return new PasswordsRepositorySession(this, context) {
           @Override
           protected synchronized void trackGUID(String guid) {
           }
         };
-        delegate.onSessionCreated(session);
       }
     };
   }

@@ -7,7 +7,6 @@ import junit.framework.AssertionFailedError;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionCreationDelegate;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionFetchRecordsDelegate;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionFinishDelegate;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionStoreDelegate;
@@ -17,21 +16,16 @@ import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.CryptoRecord;
-import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.middleware.Crypto5MiddlewareRepository;
 import org.mozilla.gecko.sync.middleware.Crypto5MiddlewareRepositorySession;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
-import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -77,68 +71,50 @@ public class TestCrypto5MiddlewareRepositorySession {
     cmwSession = null;
   }
 
-  /**
-   * Run `runnable` in performWait(... onBeginSucceeded { } ).
-   *
-   * The Crypto5MiddlewareRepositorySession is available in self.cmwSession.
-   *
-   * @param runnable
-   */
-  public void runInOnBeginSucceeded(final Runnable runnable) {
-    final TestCrypto5MiddlewareRepositorySession self = this;
-    performWait(onThreadRunnable(new Runnable() {
-      @Override
-      public void run() {
-        cmwRepo.createSession(new ExpectSuccessRepositorySessionCreationDelegate(getTestWaiter()) {
-          @Override
-          public void onSessionCreated(RepositorySession session) {
-            self.cmwSession = (Crypto5MiddlewareRepositorySession)session;
-            assertSame(RepositorySession.SessionStatus.UNSTARTED, cmwSession.getStatus());
-
-            try {
-              session.begin();
-            } catch (SyncException e) {
-              TestCrypto5MiddlewareRepositorySession.performNotify(e);
-            }
-            runnable.run();
-          }
-        }, null);
-      }
-    }));
+  public void beginSessionAndAssertSuccess() throws Exception{
+    cmwSession = (Crypto5MiddlewareRepositorySession) cmwRepo.createSession(null);
+    assertSame(RepositorySession.SessionStatus.UNSTARTED, cmwSession.getStatus());
+    cmwSession.begin();
+    assertSame(RepositorySession.SessionStatus.ACTIVE, cmwSession.getStatus());
   }
 
   @Test
   /**
    * Verify that the status is actually being advanced.
    */
-  public void testStatus() {
-    runInOnBeginSucceeded(new Runnable() {
-      @Override public void run() {
-        assertSame(RepositorySession.SessionStatus.ACTIVE, cmwSession.getStatus());
+  public void testStatus() throws Exception {
+    beginSessionAndAssertSuccess();
+    performWait(onThreadRunnable(new Runnable() {
+      @Override
+      public void run() {
         try {
           cmwSession.finish(new ExpectSuccessRepositorySessionFinishDelegate(getTestWaiter()));
         } catch (InactiveSessionException e) {
           performNotify(e);
         }
-        assertSame(RepositorySession.SessionStatus.DONE, cmwSession.getStatus());
       }
-    });
+    }));
+    assertSame(RepositorySession.SessionStatus.DONE, cmwSession.getStatus());
   }
 
   @Test
   /**
    * Verify that wipe is actually wiping the underlying repository.
    */
-  public void testWipe() {
+  public void testWipe() throws Exception {
     Record record = new MockRecord("nncdefghiaaa", "coll", System.currentTimeMillis(), false);
     wboRepo.wbos.put(record.guid, record);
     assertEquals(1, wboRepo.wbos.size());
 
-    runInOnBeginSucceeded(new Runnable() {
-      @Override public void run() {
+    beginSessionAndAssertSuccess();
+
+    performWait(onThreadRunnable(new Runnable() {
+      @Override
+      public void run() {
         cmwSession.wipe(new ExpectSuccessRepositoryWipeDelegate(getTestWaiter()));
       }
-    });
+    }));
+
     performWait(onThreadRunnable(new Runnable() {
       @Override public void run() {
         try {
@@ -155,12 +131,15 @@ public class TestCrypto5MiddlewareRepositorySession {
   /**
    * Verify that store is actually writing encrypted data to the underlying repository.
    */
-  public void testStoreEncrypts() throws NonObjectJSONException, CryptoException, IOException {
+  public void testStoreEncrypts() throws Exception {
     final BookmarkRecord record = new BookmarkRecord("nncdefghiaaa", "coll", System.currentTimeMillis(), false);
     record.title = "unencrypted title";
 
-    runInOnBeginSucceeded(new Runnable() {
-      @Override public void run() {
+    beginSessionAndAssertSuccess();
+
+    performWait(onThreadRunnable(new Runnable() {
+      @Override
+      public void run() {
         try {
           try {
             cmwSession.setStoreDelegate(new ExpectSuccessRepositorySessionStoreDelegate(getTestWaiter()));
@@ -174,7 +153,8 @@ public class TestCrypto5MiddlewareRepositorySession {
           performNotify(e);
         }
       }
-    });
+    }));
+
     assertEquals(1, wboRepo.wbos.size());
     assertTrue(wboRepo.wbos.containsKey(record.guid));
 
@@ -192,7 +172,7 @@ public class TestCrypto5MiddlewareRepositorySession {
   /**
    * Verify that fetch is actually retrieving encrypted data from the underlying repository and is correctly decrypting it.
    */
-  public void testFetchDecrypts() throws UnsupportedEncodingException, CryptoException {
+  public void testFetchDecrypts() throws Exception {
     final BookmarkRecord record1 = new BookmarkRecord("nncdefghiaaa", "coll", System.currentTimeMillis(), false);
     record1.title = "unencrypted title";
     final BookmarkRecord record2 = new BookmarkRecord("XXXXXXXXXXXX", "coll", System.currentTimeMillis(), false);
@@ -209,7 +189,8 @@ public class TestCrypto5MiddlewareRepositorySession {
     wboRepo.wbos.put(record2.guid, encryptedRecord2);
 
     final ExpectSuccessRepositorySessionFetchRecordsDelegate fetchRecordsDelegate = new ExpectSuccessRepositorySessionFetchRecordsDelegate(getTestWaiter());
-    runInOnBeginSucceeded(new Runnable() {
+    beginSessionAndAssertSuccess();
+    performWait(onThreadRunnable(new Runnable() {
       @Override public void run() {
         try {
           cmwSession.fetch(new String[] { record1.guid }, fetchRecordsDelegate);
@@ -217,7 +198,7 @@ public class TestCrypto5MiddlewareRepositorySession {
           performNotify(e);
         }
       }
-    });
+    }));
     performWait(onThreadRunnable(new Runnable() {
       @Override public void run() {
         try {
@@ -238,7 +219,7 @@ public class TestCrypto5MiddlewareRepositorySession {
   /**
    * Verify that fetchAll is actually retrieving encrypted data from the underlying repository and is correctly decrypting it.
    */
-  public void testFetchAllDecrypts() throws UnsupportedEncodingException, CryptoException {
+  public void testFetchAllDecrypts() throws Exception {
     final BookmarkRecord record1 = new BookmarkRecord("nncdefghiaaa", "coll", System.currentTimeMillis(), false);
     record1.title = "unencrypted title";
     final BookmarkRecord record2 = new BookmarkRecord("XXXXXXXXXXXX", "coll", System.currentTimeMillis(), false);
@@ -255,11 +236,12 @@ public class TestCrypto5MiddlewareRepositorySession {
     wboRepo.wbos.put(record2.guid, encryptedRecord2);
 
     final ExpectSuccessRepositorySessionFetchRecordsDelegate fetchAllRecordsDelegate = new ExpectSuccessRepositorySessionFetchRecordsDelegate(getTestWaiter());
-    runInOnBeginSucceeded(new Runnable() {
+    beginSessionAndAssertSuccess();
+    performWait(onThreadRunnable(new Runnable() {
       @Override public void run() {
         cmwSession.fetchAll(fetchAllRecordsDelegate);
       }
-    });
+    }));
     performWait(onThreadRunnable(new Runnable() {
       @Override public void run() {
         try {
