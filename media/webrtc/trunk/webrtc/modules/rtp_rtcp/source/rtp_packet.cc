@@ -175,6 +175,7 @@ void Packet::GetHeader(RTPHeader* header) const {
   GetExtension<RepairedRtpStreamId>(&header->extension.repairedRtpStreamId);
   GetExtension<PlayoutDelayLimits>(&header->extension.playout_delay);
   GetExtension<MId>(&header->extension.mId);
+  GetExtension<CsrcAudioLevel>(&header->extension.csrcAudioLevels);
 }
 
 size_t Packet::headers_size() const {

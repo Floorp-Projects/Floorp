@@ -23,6 +23,7 @@
         'include/flexfec_sender.h',
         'include/receive_statistics.h',
         'include/remote_ntp_time_estimator.h',
+        'include/rtp_audio_level_observer.h',
         'include/rtp_header_parser.h',
         'include/rtp_payload_registry.h',
         'include/rtp_receiver.h',
