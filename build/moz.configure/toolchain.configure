@@ -1351,7 +1351,7 @@ def rust_compiler_flags(opt_level_option, debug_rust, debug_symbols,
     debug_assertions = None
     debug_info = None
 
-    if opt_level_option.origin != 'default':
+    if opt_level_option:
         opt_level = opt_level_option[0]
     else:
         opt_level = '1' if optimize else '0'
