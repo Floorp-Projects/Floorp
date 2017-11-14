@@ -84,8 +84,9 @@ namespace mozilla {
 
 MOZ_MTLOG_MODULE("mtransport")
 
-TransportLayerIce::TransportLayerIce()
-    : stream_(nullptr), component_(0),
+TransportLayerIce::TransportLayerIce(const std::string& name)
+    : name_(name),
+      ctx_(nullptr), stream_(nullptr), component_(0),
       old_stream_(nullptr)
 {
   // setup happens later
@@ -95,7 +96,8 @@ TransportLayerIce::~TransportLayerIce() {
   // No need to do anything here, since we use smart pointers
 }
 
-void TransportLayerIce::SetParameters(RefPtr<NrIceMediaStream> stream,
+void TransportLayerIce::SetParameters(RefPtr<NrIceCtx> ctx,
+                                      RefPtr<NrIceMediaStream> stream,
                                       int component) {
   // Stream could be null in the case of some badly written js that causes
   // us to be in an ICE restart case, but not have valid streams due to
@@ -119,6 +121,7 @@ void TransportLayerIce::SetParameters(RefPtr<NrIceMediaStream> stream,
                                   << old_stream_->name() << ")");
   }
 
+  ctx_ = ctx;
   stream_ = stream;
   component_ = component;
 
@@ -126,6 +129,8 @@ void TransportLayerIce::SetParameters(RefPtr<NrIceMediaStream> stream,
 }
 
 void TransportLayerIce::PostSetup() {
+  target_ = ctx_->thread();
+
   stream_->SignalReady.connect(this, &TransportLayerIce::IceReady);
   stream_->SignalFailed.connect(this, &TransportLayerIce::IceFailed);
   stream_->SignalPacketReceived.connect(this,

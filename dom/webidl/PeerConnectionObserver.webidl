@@ -23,10 +23,15 @@ interface PeerConnectionObserver
   void onAddIceCandidateSuccess();
   void onAddIceCandidateError(unsigned long name, DOMString message);
   void onIceCandidate(unsigned short level, DOMString mid, DOMString candidate);
+  void onNegotiationNeeded();
 
   /* Stats callbacks */
   void onGetStatsSuccess(optional RTCStatsReportInternal report);
   void onGetStatsError(unsigned long name, DOMString message);
+
+  /* replaceTrack callbacks */
+  void onReplaceTrackSuccess();
+  void onReplaceTrackError(unsigned long name, DOMString message);
 
   /* Data channel callbacks */
   void notifyDataChannel(DataChannel channel);
@@ -35,20 +40,15 @@ interface PeerConnectionObserver
   void onStateChange(PCObserverStateType state);
 
   /* Changes to MediaStreamTracks */
+  void onAddStream(MediaStream stream);
   void onRemoveStream(MediaStream stream);
-  void onTrack(DOMString webrtcTrackId, sequence<DOMString> streamIds);
-
-  /* Transceiver management; called when setRemoteDescription causes a
-     transceiver to be created on the C++ side */
-  void onTransceiverNeeded(DOMString kind, TransceiverImpl transceiverImpl);
+  void onAddTrack(MediaStreamTrack track, sequence<MediaStream> streams);
+  void onRemoveTrack(MediaStreamTrack track);
 
   /* DTMF callback */
-  void onDTMFToneChange(MediaStreamTrack track, DOMString tone);
+  void onDTMFToneChange(DOMString trackId, DOMString tone);
 
   /* Packet dump callback */
   void onPacket(unsigned long level, mozPacketDumpType type, boolean sending,
                 ArrayBuffer packet);
-
-  /* Transceiver sync */
-  void syncTransceivers();
 };
