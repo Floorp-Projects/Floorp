@@ -38,7 +38,6 @@
     <issue id="ResourceAsColor" severity="warning" />
     <issue id="ResourceType" severity="warning" />
     <issue id="ValidFragment" severity="warning" />
-    <issue id="WrongConstant" severity="warning" />
 
     <!-- New Android-Gradle lint integration regressed this check. -->
     <issue id="MissingRegistered" severity="warning" />
