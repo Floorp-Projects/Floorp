@@ -817,7 +817,6 @@ pref("gfx.font_rendering.wordcache.maxentries", 10000);
 pref("gfx.font_rendering.graphite.enabled", true);
 
 #ifdef XP_WIN
-pref("gfx.font_rendering.directwrite.force-enabled", false);
 pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 
@@ -2520,7 +2519,6 @@ pref("font.name-list.monospace.x-math", "monospace");
 // These fonts are ignored the underline offset, instead of it, the underline is lowered to bottom of its em descent.
 pref("font.blacklist.underline_offset", "FangSong,Gulim,GulimChe,MingLiU,MingLiU-ExtB,MingLiU_HKSCS,MingLiU-HKSCS-ExtB,MS Gothic,MS Mincho,MS PGothic,MS PMincho,MS UI Gothic,PMingLiU,PMingLiU-ExtB,SimHei,SimSun,SimSun-ExtB,Hei,Kai,Apple LiGothic,Apple LiSung,Osaka");
 
-pref("images.dither", "auto");
 pref("security.directory",              "");
 
 pref("signed.applets.codebase_principal_support", false);
@@ -4884,10 +4882,6 @@ pref("layers.shared-buffer-provider.enabled", false);
 
 // Force all possible layers to be always active layers
 pref("layers.force-active", false);
-
-// Never use gralloc surfaces, even when they're available on this
-// platform and are the optimal surface type.
-pref("layers.gralloc.disable", false);
 
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
