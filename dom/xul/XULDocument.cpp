@@ -2160,15 +2160,15 @@ XULDocument::ApplyPersistentAttributesToElements(const nsAString &aID,
 }
 
 void
-XULDocument::TraceProtos(JSTracer* aTrc, uint32_t aGCNumber)
+XULDocument::TraceProtos(JSTracer* aTrc)
 {
     uint32_t i, count = mPrototypes.Length();
     for (i = 0; i < count; ++i) {
-        mPrototypes[i]->TraceProtos(aTrc, aGCNumber);
+        mPrototypes[i]->TraceProtos(aTrc);
     }
 
     if (mCurrentPrototype) {
-        mCurrentPrototype->TraceProtos(aTrc, aGCNumber);
+        mCurrentPrototype->TraceProtos(aTrc);
     }
 }
 

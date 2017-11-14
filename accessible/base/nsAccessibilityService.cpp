@@ -1877,6 +1877,19 @@ nsAccessibilityService::UnsetConsumers(uint32_t aConsumers) {
 }
 
 void
+nsAccessibilityService::GetConsumers(nsAString& aString)
+{
+  const char16_t* kJSONFmt =
+    u"{ \"XPCOM\": %s, \"MainProcess\": %s, \"PlatformAPI\": %s }";
+  nsString json;
+  nsTextFormatter::ssprintf(json, kJSONFmt,
+    gConsumers & eXPCOM ? "true" : "false",
+    gConsumers & eMainProcess ? "true" : "false",
+    gConsumers & ePlatformAPI ? "true" : "false");
+  aString.Assign(json);
+}
+
+void
 nsAccessibilityService::NotifyOfConsumersChange()
 {
   nsCOMPtr<nsIObserverService> observerService =
@@ -1886,15 +1899,10 @@ nsAccessibilityService::NotifyOfConsumersChange()
     return;
   }
 
-  const char16_t* kJSONFmt =
-    u"{ \"XPCOM\": %s, \"MainProcess\": %s, \"PlatformAPI\": %s }";
-  nsString json;
-  nsTextFormatter::ssprintf(json, kJSONFmt,
-    gConsumers & eXPCOM ? "true" : "false",
-    gConsumers & eMainProcess ? "true" : "false",
-    gConsumers & ePlatformAPI ? "true" : "false");
+  nsAutoString consumers;
+  GetConsumers(consumers);
   observerService->NotifyObservers(
-    nullptr, "a11y-consumers-changed", json.get());
+    nullptr, "a11y-consumers-changed", consumers.get());
 }
 
 nsAccessibilityService*

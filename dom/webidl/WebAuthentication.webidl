@@ -19,7 +19,7 @@ interface PublicKeyCredential : Credential {
 
 [SecureContext]
 partial interface PublicKeyCredential {
-    static Promise<boolean> isPlatformAuthenticatorAvailable();
+    static Promise<boolean> isUserVerifyingPlatformAuthenticatorAvailable();
 };
 
 [SecureContext, Pref="security.webauth.webauthn"]
@@ -125,3 +125,4 @@ typedef long COSEAlgorithmIdentifier;
 typedef sequence<AAGUID>      AuthenticatorSelectionList;
 
 typedef BufferSource      AAGUID;
+

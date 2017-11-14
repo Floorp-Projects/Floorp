@@ -5,17 +5,14 @@
 extern crate log;
 extern crate libc;
 
-use std::io;
-
-use super::iokit::*;
+use consts::{FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID};
 use core_foundation_sys::base::*;
 use core_foundation_sys::dictionary::*;
 use core_foundation_sys::number::*;
 use core_foundation_sys::runloop::*;
 use core_foundation_sys::string::*;
-
-use consts::{FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID};
-use util::io_err;
+use libc::c_void;
+use platform::iokit::{CFRunLoopObserverContext, CFRunLoopObserverCreate};
 
 pub struct IOHIDDeviceMatcher {
     dict: CFDictionaryRef,
@@ -92,36 +89,48 @@ impl Drop for IOHIDDeviceMatcher {
     }
 }
 
-pub struct IOHIDManager {
-    manager: IOHIDManagerRef,
+pub struct CFRunLoopEntryObserver {
+    observer: CFRunLoopObserverRef,
+    // Keep alive until the observer goes away.
+    context_ptr: *mut CFRunLoopObserverContext,
 }
 
-impl IOHIDManager {
-    pub fn new() -> io::Result<Self> {
-        let manager = unsafe { IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDManagerOptionNone) };
+impl CFRunLoopEntryObserver {
+    pub fn new(callback: CFRunLoopObserverCallBack, context: *mut c_void) -> Self {
+        let context = CFRunLoopObserverContext::new(context);
+        let context_ptr = Box::into_raw(Box::new(context));
 
-        let rv = unsafe { IOHIDManagerOpen(manager, kIOHIDManagerOptionNone) };
-        if rv != 0 {
-            return Err(io_err("Couldn't open HID Manager"));
-        }
-
-        unsafe {
-            IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode)
+        let observer = unsafe {
+            CFRunLoopObserverCreate(
+                kCFAllocatorDefault,
+                kCFRunLoopEntry,
+                false as Boolean,
+                0,
+                callback,
+                context_ptr,
+            )
         };
 
-        Ok(Self { manager })
+        Self {
+            observer,
+            context_ptr,
+        }
     }
 
-    pub fn get(&self) -> IOHIDManagerRef {
-        self.manager
+    pub fn add_to_current_runloop(&self) {
+        unsafe {
+            CFRunLoopAddObserver(CFRunLoopGetCurrent(), self.observer, kCFRunLoopDefaultMode)
+        };
     }
 }
 
-impl Drop for IOHIDManager {
+impl Drop for CFRunLoopEntryObserver {
     fn drop(&mut self) {
-        let rv = unsafe { IOHIDManagerClose(self.manager, kIOHIDManagerOptionNone) };
-        if rv != 0 {
-            warn!("Couldn't close the HID Manager");
-        }
+        unsafe {
+            CFRelease(self.observer as *mut c_void);
+
+            // Drop the CFRunLoopObserverContext.
+            let _ = Box::from_raw(self.context_ptr);
+        };
     }
 }

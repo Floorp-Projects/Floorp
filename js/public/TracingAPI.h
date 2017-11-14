@@ -91,6 +91,10 @@ class JS_PUBLIC_API(JSTracer)
     bool checkEdges() { return checkEdges_; }
 #endif
 
+    // Get the current GC number. Only call this method if |isMarkingTracer()|
+    // is true.
+    uint32_t gcNumberForMarking() const;
+
   protected:
     JSTracer(JSRuntime* rt, TracerKindTag tag,
              WeakMapTraceKind weakTraceKind = TraceWeakMapValues)
