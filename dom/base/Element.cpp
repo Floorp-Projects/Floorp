@@ -3822,7 +3822,7 @@ Element::GetTransformToAncestor(Element& aAncestor)
       ancestorFrame, nsIFrame::IN_CSS_UNITS);
   }
 
-  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform);
+  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform, IsStyledByServo());
   RefPtr<DOMMatrixReadOnly> result(matrix);
   return result.forget();
 }
@@ -3839,7 +3839,7 @@ Element::GetTransformToParent()
       parentFrame, nsIFrame::IN_CSS_UNITS);
   }
 
-  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform);
+  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform, IsStyledByServo());
   RefPtr<DOMMatrixReadOnly> result(matrix);
   return result.forget();
 }
@@ -3854,7 +3854,7 @@ Element::GetTransformToViewport()
       nsLayoutUtils::GetDisplayRootFrame(primaryFrame), nsIFrame::IN_CSS_UNITS);
   }
 
-  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform);
+  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform, IsStyledByServo());
   RefPtr<DOMMatrixReadOnly> result(matrix);
   return result.forget();
 }
