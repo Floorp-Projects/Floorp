@@ -1012,10 +1012,6 @@
           .getService(Ci.nsISerializationHelper);
       </field>
 
-      <field name="mIconLoadingPrincipal">
-        null
-      </field>
-
       <method name="storeIcon">
         <parameter name="aBrowser"/>
         <parameter name="aURI"/>

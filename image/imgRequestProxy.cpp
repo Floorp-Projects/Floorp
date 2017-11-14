@@ -517,8 +517,14 @@ imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
   mCanceled = true;
   mForceDispatchLoadGroup = true;
 
-  if (GetOwner()) {
-    GetOwner()->RemoveProxy(this, aStatus);
+  imgRequest* owner = GetOwner();
+  if (owner) {
+    imgCacheValidator* validator = owner->GetValidator();
+    if (validator) {
+      validator->RemoveProxy(this);
+    }
+
+    owner->RemoveProxy(this, aStatus);
   }
 
   RemoveFromLoadGroup();
