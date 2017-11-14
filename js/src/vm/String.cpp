@@ -212,6 +212,7 @@ JSString::dumpRepresentationHeader(js::GenericPrinter& out, int indent, const ch
     if (isPermanentAtom())              out.put(" PERMANENT");
     if (flags & LATIN1_CHARS_BIT)       out.put(" LATIN1");
     if (flags & INDEX_VALUE_BIT)        out.put(" INDEX_VALUE(%u)", getIndexValue());
+    if (!isTenured())                   out.put(" NURSERY");
     out.putChar('\n');
 }
 
