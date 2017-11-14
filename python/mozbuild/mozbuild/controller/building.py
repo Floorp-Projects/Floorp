@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import errno
 import getpass
 import io
 import json
@@ -1370,6 +1371,19 @@ class BuildDriver(MozbuildObject):
         mozconfig_mk = os.path.join(self.topobjdir, '.mozconfig.mk')
         with FileAvoidWrite(mozconfig_mk) as fh:
             fh.write(b'\n'.join(mozconfig_filtered_lines))
+
+        # Copy the original mozconfig to the objdir.
+        mozconfig_objdir = os.path.join(self.topobjdir, '.mozconfig')
+        if mozconfig['path']:
+            with open(mozconfig['path'], 'rb') as ifh:
+                with FileAvoidWrite(mozconfig_objdir) as ofh:
+                    ofh.write(ifh.read())
+        else:
+            try:
+                os.unlink(mozconfig_objdir)
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
 
         if mozconfig_make_lines:
             self.log(logging.WARNING, 'mozconfig_content', {
