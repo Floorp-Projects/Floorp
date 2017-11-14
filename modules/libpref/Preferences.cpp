@@ -454,28 +454,6 @@ PREF_SetBoolPref(const char* aPrefName, bool aValue, bool aSetDefault)
     aPrefName, pref, PrefType::Bool, aSetDefault ? kPrefSetDefault : 0);
 }
 
-static nsresult
-SetPrefValue(const char* aPrefName,
-             const dom::PrefValue& aValue,
-             PrefValueKind aKind)
-{
-  bool setDefault = (aKind == PrefValueKind::Default);
-
-  switch (aValue.type()) {
-    case dom::PrefValue::TnsCString:
-      return PREF_SetCStringPref(aPrefName, aValue.get_nsCString(), setDefault);
-
-    case dom::PrefValue::Tint32_t:
-      return PREF_SetIntPref(aPrefName, aValue.get_int32_t(), setDefault);
-
-    case dom::PrefValue::Tbool:
-      return PREF_SetBoolPref(aPrefName, aValue.get_bool(), setDefault);
-
-    default:
-      MOZ_CRASH();
-  }
-}
-
 static PrefSaveData
 pref_savePrefs()
 {
@@ -3107,9 +3085,6 @@ Preferences::HandleDirty()
 static nsresult
 openPrefFile(nsIFile* aFile);
 
-static Result<Ok, const char*>
-pref_InitInitialObjects();
-
 static nsresult
 pref_LoadPrefsInDirList(const char* aListId);
 
@@ -3535,7 +3510,7 @@ Preferences::GetInstanceForService()
   gHashTable = new PLDHashTable(
     &pref_HashTableOps, sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
 
-  Result<Ok, const char*> res = pref_InitInitialObjects();
+  Result<Ok, const char*> res = InitInitialObjects();
   if (res.isErr()) {
     sPreferences = nullptr;
     gCacheDataDesc = res.unwrapErr();
@@ -3750,7 +3725,7 @@ Preferences::Observe(nsISupports* aSubject,
 
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
     // Reload the default prefs from file.
-    Unused << pref_InitInitialObjects();
+    Unused << InitInitialObjects();
 
   } else if (!nsCRT::strcmp(aTopic, "suspend_process_notification")) {
     // Our process is being suspended. The OS may wake our process later,
@@ -3785,7 +3760,7 @@ Preferences::ResetPrefs()
   gHashTable->ClearAndPrepareForLength(PREF_HASHTABLE_INITIAL_LENGTH);
   gPrefNameArena.Clear();
 
-  return pref_InitInitialObjects().isOk() ? NS_OK : NS_ERROR_FAILURE;
+  return InitInitialObjects().isOk() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -3844,6 +3819,26 @@ Preferences::SavePrefFile(nsIFile* aFile)
   return SavePrefFileInternal(aFile, SaveMethod::Asynchronous);
 }
 
+/* static */ nsresult
+Preferences::SetValueFromDom(const char* aPrefName,
+                             const dom::PrefValue& aValue,
+                             PrefValueKind aKind)
+{
+  switch (aValue.type()) {
+    case dom::PrefValue::TnsCString:
+      return Preferences::SetCString(aPrefName, aValue.get_nsCString(), aKind);
+
+    case dom::PrefValue::Tint32_t:
+      return Preferences::SetInt(aPrefName, aValue.get_int32_t(), aKind);
+
+    case dom::PrefValue::Tbool:
+      return Preferences::SetBool(aPrefName, aValue.get_bool(), aKind);
+
+    default:
+      MOZ_CRASH();
+  }
+}
+
 void
 Preferences::SetPreference(const PrefSetting& aPref)
 {
@@ -3852,7 +3847,7 @@ Preferences::SetPreference(const PrefSetting& aPref)
   const dom::MaybePrefValue& userValue = aPref.userValue();
 
   if (defaultValue.type() == dom::MaybePrefValue::TPrefValue) {
-    nsresult rv = SetPrefValue(
+    nsresult rv = SetValueFromDom(
       prefName, defaultValue.get_PrefValue(), PrefValueKind::Default);
     if (NS_FAILED(rv)) {
       return;
@@ -3860,7 +3855,7 @@ Preferences::SetPreference(const PrefSetting& aPref)
   }
 
   if (userValue.type() == dom::MaybePrefValue::TPrefValue) {
-    SetPrefValue(prefName, userValue.get_PrefValue(), PrefValueKind::User);
+    SetValueFromDom(prefName, userValue.get_PrefValue(), PrefValueKind::User);
   } else {
     PREF_ClearUserPref(prefName);
   }
@@ -4341,8 +4336,8 @@ pref_ReadPrefFromJar(nsZipArchive* aJarReader, const char* aName)
 
 // Initialize default preference JavaScript buffers from appropriate TEXT
 // resources.
-static Result<Ok, const char*>
-pref_InitInitialObjects()
+/* static */ Result<Ok, const char*>
+Preferences::InitInitialObjects()
 {
   // In the omni.jar case, we load the following prefs:
   // - jar:$gre/omni.jar!/greprefs.js
