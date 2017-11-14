@@ -466,7 +466,7 @@ public:
   GetParameters(dom::MediaStreamTrack& aTrack,
                 std::vector<JsepTrack::JsConstraints>* aOutConstraints);
 
-  // test-onlg: called from contributing sources mochitests.
+  // test-only: called from contributing sources mochitests.
   NS_IMETHODIMP_TO_ERRORRESULT(InsertAudioLevelForContributingSource,
                                ErrorResult &rv,
                                dom::MediaStreamTrack& aRecvTrack,
