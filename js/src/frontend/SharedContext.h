@@ -209,7 +209,7 @@ class Directives
 // The kind of this-binding for the current scope. Note that arrow functions
 // have a lexical this-binding so their ThisBinding is the same as the
 // ThisBinding of their enclosing scope and can be any value.
-enum class ThisBinding { Global, Function, Module };
+enum class ThisBinding : uint8_t { Global, Function, Module };
 
 class GlobalSharedContext;
 class EvalSharedContext;
@@ -225,12 +225,9 @@ class SharedContext
   public:
     JSContext* const context;
     AnyContextFlags anyCxFlags;
-    bool strictScript;
-    bool localStrict;
-    bool extraWarnings;
 
   protected:
-    enum class Kind {
+    enum class Kind : uint8_t {
         FunctionBox,
         Global,
         Eval,
@@ -241,11 +238,17 @@ class SharedContext
 
     ThisBinding thisBinding_;
 
-    bool allowNewTarget_;
-    bool allowSuperProperty_;
-    bool allowSuperCall_;
-    bool inWith_;
-    bool needsThisTDZChecks_;
+  public:
+    bool strictScript:1;
+    bool localStrict:1;
+    bool extraWarnings:1;
+
+  protected:
+    bool allowNewTarget_:1;
+    bool allowSuperProperty_:1;
+    bool allowSuperCall_:1;
+    bool inWith_:1;
+    bool needsThisTDZChecks_:1;
 
     void computeAllowSyntax(Scope* scope);
     void computeInWith(Scope* scope);
@@ -255,11 +258,11 @@ class SharedContext
     SharedContext(JSContext* cx, Kind kind, Directives directives, bool extraWarnings)
       : context(cx),
         anyCxFlags(),
+        kind_(kind),
+        thisBinding_(ThisBinding::Global),
         strictScript(directives.strict()),
         localStrict(false),
         extraWarnings(extraWarnings),
-        kind_(kind),
-        thisBinding_(ThisBinding::Global),
         allowNewTarget_(false),
         allowSuperProperty_(false),
         allowSuperCall_(false),
