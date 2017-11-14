@@ -9,8 +9,6 @@
 
 add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
-  let { getRequestFilterTypes } = monitor.panelWin
-    .windowRequire("devtools/client/netmonitor/src/selectors/index");
   let Actions = monitor.panelWin
     .windowRequire("devtools/client/netmonitor/src/actions/index");
   info("Starting test... ");
@@ -34,7 +32,8 @@ add_task(function* () {
       newValue: ["html", "css"],
       // Getter used to retrieve the current value from the frontend, in order
       // to verify that the pref was applied properly.
-      validateValue: () => getRequestFilterTypes(getState())
+      validateValue: () => getState().filters.requestFilterTypes
+        .entrySeq().toArray()
         .filter(([type, check]) => check)
         .map(([type, check]) => type),
       // Predicate used to modify the frontend when setting the new pref value,

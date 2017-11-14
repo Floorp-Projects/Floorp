@@ -164,6 +164,8 @@ public:
 
   void SetRootPipeline(wr::PipelineId aPipeline);
 
+  void RemovePipeline(wr::PipelineId aPipeline);
+
   void UpdateResources(ResourceUpdateQueue& aUpdates);
 
   void UpdatePipelineResources(ResourceUpdateQueue& aUpdates, PipelineId aPipeline, Epoch aEpoch);

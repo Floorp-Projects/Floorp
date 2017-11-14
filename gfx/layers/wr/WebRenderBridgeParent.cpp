@@ -855,6 +855,7 @@ WebRenderBridgeParent::RecvRemovePipelineIdForCompositable(const wr::PipelineId&
   wrHost->ClearWrBridge();
   mAsyncImageManager->RemoveAsyncImagePipeline(aPipelineId);
   mAsyncCompositables.Remove(wr::AsUint64(aPipelineId));
+  mApi->RemovePipeline(aPipelineId);
   return IPC_OK();
 }
 

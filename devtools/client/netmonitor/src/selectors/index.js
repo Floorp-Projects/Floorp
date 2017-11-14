@@ -4,13 +4,11 @@
 
 "use strict";
 
-const filters = require("./filters");
 const requests = require("./requests");
 const timingMarkers = require("./timing-markers");
 const ui = require("./ui");
 
 Object.assign(exports,
-  filters,
   requests,
   timingMarkers,
   ui

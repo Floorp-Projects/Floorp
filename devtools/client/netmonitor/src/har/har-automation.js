@@ -168,6 +168,7 @@ HarAutomation.prototype = {
     let title = form.title || form.url;
 
     let options = {
+      requestData: null,
       getString: this.getString.bind(this),
       view: this,
       items: items,

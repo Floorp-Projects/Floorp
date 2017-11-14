@@ -10,7 +10,6 @@
 #include "mp4_demuxer/BufferReader.h"
 #include "mp4_demuxer/ByteWriter.h"
 #include "mp4_demuxer/H264.h"
-#include <media/stagefright/foundation/ABitReader.h>
 #include <limits>
 #include <cmath>
 

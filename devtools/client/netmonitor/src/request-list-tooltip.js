@@ -13,20 +13,21 @@ const { formDataURI } = require("./utils/request-utils");
 const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400; // px
 
 async function setTooltipImageContent(connector, tooltip, itemEl, requestItem) {
-  let { mimeType, text, encoding } = requestItem.responseContent.content;
+  let { mimeType } = requestItem;
 
   if (!mimeType || !mimeType.includes("image/")) {
     return false;
   }
 
-  let string = await connector.getLongString(text);
-  let src = formDataURI(mimeType, encoding, string);
+  let responseContent = await connector.requestData(requestItem.id, "responseContent");
+  let { encoding, text } = responseContent.content;
+  let src = formDataURI(mimeType, encoding, text);
   let maxDim = REQUESTS_TOOLTIP_IMAGE_MAX_DIM;
   let { naturalWidth, naturalHeight } = await getImageDimensions(tooltip.doc, src);
   let options = { maxDim, naturalWidth, naturalHeight };
   setImageTooltip(tooltip, tooltip.doc, src, options);
 
-  return itemEl.querySelector(".requests-list-icon");
+  return itemEl.querySelector(".requests-list-file");
 }
 
 module.exports = {
