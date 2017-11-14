@@ -37,26 +37,7 @@ PYTHON ?= $(shell which python2.7 > /dev/null 2>&1 && echo python2.7 || echo pyt
 ####################################
 # Load mozconfig Options
 
-# See build pages, http://www.mozilla.org/build/ for how to set up mozconfig.
-
-define CR
-
-
-endef
-
-# As $(shell) doesn't preserve newlines, use sed to replace them with an
-# unlikely sequence (||), which is then replaced back to newlines by make
-# before evaluation. $(shell) replacing newlines with spaces, || is always
-# followed by a space (since sed doesn't remove newlines), except on the
-# last line, so replace both '|| ' and '||'.
-MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell cat $(OBJDIR)/.mozconfig-client-mk | sed 's/$$/||/')))
 include $(OBJDIR)/.mozconfig-client-mk
-
-# As '||' was used as a newline separator, it means it's not occurring in
-# lines themselves. It can thus safely be used to replaces normal spaces,
-# to then replace newlines with normal spaces. This allows to get a list
-# of mozconfig output lines.
-MOZCONFIG_OUT_LINES := $(subst $(CR), ,$(subst $(NULL) $(NULL),||,$(MOZCONFIG_CONTENT)))
 
 ifdef MOZ_PARALLEL_BUILD
   MOZ_MAKE_FLAGS := $(filter-out -j%,$(MOZ_MAKE_FLAGS))
@@ -91,16 +72,6 @@ ifndef MACH
 $(error client.mk must be used via `mach`. Try running \
 `./mach $(firstword $(MAKECMDGOALS) $(.DEFAULT_GOAL))`)
 endif
-
-# For now, only output "export" lines and lines containing UPLOAD_EXTRA_FILES.
-MOZCONFIG_MK_LINES := $(filter export||% UPLOAD_EXTRA_FILES% %UPLOAD_EXTRA_FILES%,$(MOZCONFIG_OUT_LINES))
-$(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG)
-	$(if $(MOZCONFIG_MK_LINES),( $(foreach line,$(MOZCONFIG_MK_LINES), echo '$(subst ||, ,$(line))';) )) > $@
-
-# Include that makefile so that it is created. This should not actually change
-# the environment since MOZCONFIG_CONTENT, which MOZCONFIG_OUT_LINES derives
-# from, has already been eval'ed.
-include $(OBJDIR)/.mozconfig.mk
 
 # In automation, manage an sccache daemon. The starting of the server
 # needs to be in a make file so sccache inherits the jobserver.
