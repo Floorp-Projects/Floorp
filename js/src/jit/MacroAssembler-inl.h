@@ -233,6 +233,14 @@ MacroAssembler::callJit(JitCode* callee)
     return currentOffset();
 }
 
+uint32_t
+MacroAssembler::callJit(ImmPtr code)
+{
+    AutoProfilerCallInstrumentation profiler(*this);
+    call(code);
+    return currentOffset();
+}
+
 void
 MacroAssembler::makeFrameDescriptor(Register frameSizeReg, FrameType type, uint32_t headerSize)
 {
@@ -308,8 +316,7 @@ void
 MacroAssembler::enterExitFrame(Register cxreg, Register scratch, const VMFunction* f)
 {
     linkExitFrame(cxreg, scratch);
-    // Push the JitCode pointer. (Keep the code alive, when on the stack)
-    PushStubCode();
+    Push(Imm32(int32_t(ExitFrameToken::VMFunction)));
     // Push VMFunction pointer, to mark arguments.
     Push(ImmPtr(f));
 }

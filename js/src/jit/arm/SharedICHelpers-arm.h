@@ -79,7 +79,7 @@ EmitChangeICReturnAddress(MacroAssembler& masm, Register reg)
 }
 
 inline void
-EmitBaselineTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t argSize)
+EmitBaselineTailCallVM(uint8_t* target, MacroAssembler& masm, uint32_t argSize)
 {
     // We assume during this that R0 and R1 have been pushed, and that R2 is
     // unused.
@@ -105,11 +105,11 @@ EmitBaselineTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t argSize)
     masm.makeFrameDescriptor(r0, JitFrame_BaselineJS, ExitFrameLayout::Size());
     masm.push(r0);
     masm.push(lr);
-    masm.branch(target);
+    masm.jump(ImmPtr(target));
 }
 
 inline void
-EmitIonTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t stackSize)
+EmitIonTailCallVM(uint8_t* target, MacroAssembler& masm, uint32_t stackSize)
 {
     // We assume during this that R0 and R1 have been pushed, and that R2 is
     // unused.
@@ -127,7 +127,7 @@ EmitIonTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t stackSize)
     masm.makeFrameDescriptor(r0, JitFrame_IonJS, ExitFrameLayout::Size());
     masm.push(r0);
     masm.push(lr);
-    masm.branch(target);
+    masm.jump(ImmPtr(target));
 }
 
 inline void
@@ -143,11 +143,11 @@ EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32
 }
 
 inline void
-EmitBaselineCallVM(JitCode* target, MacroAssembler& masm)
+EmitBaselineCallVM(uint8_t* target, MacroAssembler& masm)
 {
     EmitBaselineCreateStubFrameDescriptor(masm, r0, ExitFrameLayout::Size());
     masm.push(r0);
-    masm.call(target);
+    masm.call(ImmPtr(target));
 }
 
 // Size of vales pushed by EmitEnterStubFrame.

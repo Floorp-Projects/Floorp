@@ -92,7 +92,6 @@ private:
   DECL_MEDIA_PREF("media.memory_caches_combined_limit_kb",    MediaMemoryCachesCombinedLimitKb, uint32_t, 524288);
   DECL_MEDIA_PREF("media.memory_caches_combined_limit_pc_sysmem",
                                                               MediaMemoryCachesCombinedLimitPcSysmem, uint32_t, 5);
-  DECL_MEDIA_PREF("media.cache.resource-index",               MediaResourceIndexCache, uint32_t, 8192);
 
   DECL_MEDIA_PREF("media.cache_resume_threshold",             MediaCacheResumeThreshold, int32_t, 10);
   DECL_MEDIA_PREF("media.cache_readahead_limit",              MediaCacheReadaheadLimit, int32_t, 30);
@@ -100,7 +99,6 @@ private:
   // AudioSink
   DECL_MEDIA_PREF("accessibility.monoaudio.enable",           MonoAudio, bool, false);
   DECL_MEDIA_PREF("media.resampling.enabled",                 AudioSinkResampling, bool, false);
-  DECL_MEDIA_PREF("media.resampling.rate",                    AudioSinkResampleRate, uint32_t, 48000);
 #if defined(XP_WIN) || defined(XP_DARWIN) || defined(MOZ_PULSEAUDIO)
   // libcubeb backend implement .get_preferred_channel_layout
   DECL_MEDIA_PREF("media.forcestereo.enabled",                AudioSinkForceStereo, bool, false);
@@ -114,7 +112,6 @@ private:
   DECL_MEDIA_PREF("media.clearkey.persistent-license.enabled", ClearKeyPersistentLicenseEnabled, bool, false);
 
   // PlatformDecoderModule
-  DECL_MEDIA_PREF("media.apple.forcevda",                     AppleForceVDA, bool, false);
   DECL_MEDIA_PREF("media.gmp.insecure.allow",                 GMPAllowInsecure, bool, false);
   DECL_MEDIA_PREF("media.eme.enabled",                        EMEEnabled, bool, false);
   DECL_MEDIA_PREF("media.use-blank-decoder",                  PDMUseBlankDecoder, bool, false);
@@ -141,16 +138,10 @@ private:
   DECL_MEDIA_PREF("media.wmf.skip-blacklist",                 PDMWMFSkipBlacklist, bool, false);
   DECL_MEDIA_PREF("media.decoder-doctor.wmf-disabled-is-failure", DecoderDoctorWMFDisabledIsFailure, bool, false);
   DECL_MEDIA_PREF("media.wmf.vp9.enabled",                    PDMWMFVP9DecoderEnabled, bool, true);
-  DECL_MEDIA_PREF("media.wmf.decoder.thread-count",           PDMWMFThreadCount, int32_t, -1);
 #endif
-  DECL_MEDIA_PREF("media.decoder.fuzzing.enabled",            PDMFuzzingEnabled, bool, false);
-  DECL_MEDIA_PREF("media.decoder.fuzzing.video-output-minimum-interval-ms", PDMFuzzingInterval, uint32_t, 0);
-  DECL_MEDIA_PREF("media.decoder.fuzzing.dont-delay-inputexhausted", PDMFuzzingDelayInputExhausted, bool, true);
   DECL_MEDIA_PREF("media.decoder.recycle.enabled",            MediaDecoderCheckRecycling, bool, false);
   DECL_MEDIA_PREF("media.decoder.skip-to-next-key-frame.enabled", MFRSkipToNextKeyFrameEnabled, bool, true);
   DECL_MEDIA_PREF("media.gmp.decoder.enabled",                PDMGMPEnabled, bool, true);
-  DECL_MEDIA_PREF("media.gmp.decoder.aac",                    GMPAACPreferred, uint32_t, 0);
-  DECL_MEDIA_PREF("media.gmp.decoder.h264",                   GMPH264Preferred, uint32_t, 0);
   DECL_MEDIA_PREF("media.eme.audio.blank",                    EMEBlankAudio, bool, false);
   DECL_MEDIA_PREF("media.eme.video.blank",                    EMEBlankVideo, bool, false);
   DECL_MEDIA_PREF("media.eme.chromium-api.video-shmems",
@@ -170,9 +161,6 @@ private:
   DECL_MEDIA_PREF(TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE,   WebSpeechFakeRecognitionService, bool, false);
   DECL_MEDIA_PREF("media.webspeech.recognition.enable",       WebSpeechRecognitionEnabled, bool, false);
   DECL_MEDIA_PREF("media.webspeech.recognition.force_enable", WebSpeechRecognitionForceEnabled, bool, false);
-
-  DECL_MEDIA_PREF("media.num-decode-threads",                 MediaThreadPoolDefaultCount, uint32_t, 4);
-  DECL_MEDIA_PREF("media.decoder.limit",                      MediaDecoderLimit, int32_t, MediaDecoderLimitDefault());
 
 #if defined(RELEASE_OR_BETA)
   DECL_MEDIA_PREF("media.audio-max-decode-error",             MaxAudioDecodeError, uint32_t, 3);
@@ -221,20 +209,6 @@ public:
 private:
   template<class T> friend class StaticAutoPtr;
   static StaticAutoPtr<MediaPrefs> sInstance;
-
-  // Default value functions
-  static int32_t MediaDecoderLimitDefault()
-  {
-#ifdef MOZ_WIDGET_ANDROID
-    if (jni::GetAPIVersion() < 18) {
-      // Older Android versions have broken support for multiple simultaneous
-      // decoders, see bug 1278574.
-      return 1;
-    }
-#endif
-    // Otherwise, set no decoder limit.
-    return -1;
-  }
 
   // Creating these to avoid having to include Preferences.h in the .h
   static void PrefAddVarCache(bool*, const char*, bool);
