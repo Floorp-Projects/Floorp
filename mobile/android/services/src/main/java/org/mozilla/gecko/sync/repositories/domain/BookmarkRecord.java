@@ -285,7 +285,7 @@ public class BookmarkRecord extends Record {
     // creation date. `created` is not a NOT NULL field in the bookmarks table. Either way, it pays
     // to be cautious here.
     if (this.dateAdded != null) {
-      putPayload(payload, "dateAdded", Long.toString(this.dateAdded));
+      payload.put("dateAdded", this.dateAdded);
     }
 
     if (isFolder()) {
