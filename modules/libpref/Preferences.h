@@ -13,6 +13,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Result.h"
 #include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
@@ -47,6 +48,7 @@ namespace mozilla {
 
 namespace dom {
 class PrefSetting;
+class PrefValue;
 } // namespace dom
 
 enum class PrefValueKind : bool
@@ -362,6 +364,12 @@ public:
   };
 
 private:
+  static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects();
+
+  static nsresult SetValueFromDom(const char* aPrefName,
+                                  const dom::PrefValue& aValue,
+                                  PrefValueKind aKind);
+
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const char* aPref,
                                    void* aClosure,
