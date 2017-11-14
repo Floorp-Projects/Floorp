@@ -13,8 +13,7 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     'JsepSessionImpl.cpp',
-    'JsepTrack.cpp',
-    'SsrcGenerator.cpp'
+    'JsepTrack.cpp'
 ]
 
 FINAL_LIBRARY = 'xul'

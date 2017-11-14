@@ -30,11 +30,12 @@ namespace mozilla {
 
 class TransportLayerIce : public TransportLayer {
  public:
-  TransportLayerIce();
+  explicit TransportLayerIce(const std::string& name);
 
   virtual ~TransportLayerIce();
 
-  void SetParameters(RefPtr<NrIceMediaStream> stream,
+  void SetParameters(RefPtr<NrIceCtx> ctx,
+                     RefPtr<NrIceMediaStream> stream,
                      int component);
 
   void ResetOldStream(); // called after successful ice restart
@@ -56,6 +57,8 @@ class TransportLayerIce : public TransportLayer {
   DISALLOW_COPY_ASSIGN(TransportLayerIce);
   void PostSetup();
 
+  const std::string name_;
+  RefPtr<NrIceCtx> ctx_;
   RefPtr<NrIceMediaStream> stream_;
   int component_;
 
