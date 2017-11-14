@@ -1195,7 +1195,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
 
 #ifdef MOZ_CRASHREPORTER
         const char* val = getenv("MOZ_CRASHREPORTER");
-        if (val && *val) {
+        if (val && *val && !CrashReporter::IsDummy()) {
             rv = CrashReporter::SetExceptionHandler(greDir, true);
             if (NS_FAILED(rv)) {
                 printf("CrashReporter::SetExceptionHandler failed!\n");
