@@ -1163,7 +1163,7 @@ gbjar.extra_jars += [CONFIG['ANDROID_DESIGN_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_CUSTOMTABS_AAR_LIB']]
 
-gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
+gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough,-cast', '-J-Xmx512m', '-J-Xms128m']
 
 # gecko-thirdparty is a good place to put small independent libraries
 gtjar = add_java_jar('gecko-thirdparty')
