@@ -40,9 +40,6 @@ _register_modules_protocol_handler();
 var _Promise = Components.utils.import("resource://gre/modules/Promise.jsm", {}).Promise;
 var _PromiseTestUtils = Components.utils.import("resource://testing-common/PromiseTestUtils.jsm", {}).PromiseTestUtils;
 var _Task = Components.utils.import("resource://gre/modules/Task.jsm", {}).Task;
-
-let _NetUtil = Components.utils.import("resource://gre/modules/NetUtil.jsm", {}).NetUtil;
-
 Components.utils.importGlobalProperties(["XMLHttpRequest"]);
 
 // Support a common assertion library, Assert.jsm.
@@ -1568,8 +1565,9 @@ function _load_mozinfo() {
   let stream = Components.classes["@mozilla.org/network/file-input-stream;1"]
     .createInstance(Components.interfaces.nsIFileInputStream);
   stream.init(mozinfoFile, -1, 0, 0);
-  let bytes = _NetUtil.readInputStream(stream, stream.available());
-  let mozinfo = JSON.parse((new TextDecoder()).decode(bytes));
+  let json = Components.classes["@mozilla.org/dom/json;1"]
+    .createInstance(Components.interfaces.nsIJSON);
+  let mozinfo = json.decodeFromStream(stream, stream.available());
   stream.close();
   return mozinfo;
 }

@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+interface nsIInputStream;
+interface nsIScriptGlobalObject;
+
+[ptr] native JSValPtr(JS::Value);
+[ptr] native JSContext(JSContext);
+
+%{C++
+#include "js/TypeDecls.h"
+%}
+
+/**
+ * Don't use this!  Use JSON.parse and JSON.stringify directly.
+ */
+[scriptable, uuid(083aebb0-7790-43b2-ae81-9e404e626236)]
+interface nsIJSON : nsISupports
+{
+  [implicit_jscontext]
+  jsval decodeFromStream(in nsIInputStream stream,
+                         in long contentLength);
+
+  [noscript] AString  encodeFromJSVal(in JSValPtr value, in JSContext cx);
+
+  // Make sure you GCroot the result of this function before using it.
+  [noscript] jsval    decodeToJSVal(in AString str, in JSContext cx);
+};

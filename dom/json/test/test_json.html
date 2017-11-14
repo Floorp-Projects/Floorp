@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=408838
+-->
+<head>
+  <title>Test for Bug 408838</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=408838">Mozilla Bug 408838</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 408838 **/
+
+is(typeof JSON, "object", "JSON should be present");
+is(typeof JSON.parse, "function", "JSON.parse should be present");
+is(typeof JSON.stringify, "function", "JSON.stringify should be present");
+
+var str = '{"foo":[1,{"bar":"baz"}],"qux":1234.1234,"quux":[true,false,null,"hmm",9,[]]}';
+var x = JSON.parse(str);
+
+is(x.foo[0], 1, "JSON integer");
+is(x.foo[1].bar, "baz", "JSON string in object");
+is(x.qux, 1234.1234, "JSON float");
+
+var y = JSON.stringify(x);
+is(y, str, "JSON round trip");
+
+</script>
+</pre>
+</body>
+</html>
+
