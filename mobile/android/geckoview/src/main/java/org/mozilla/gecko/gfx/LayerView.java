@@ -123,8 +123,7 @@ public class LayerView extends FrameLayout {
                                                NativePanZoomController npzc);
 
         @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")
-        /* package */ native void onSizeChanged(int windowWidth, int windowHeight,
-                                                int screenWidth, int screenHeight);
+        /* package */ native void onSizeChanged(int windowWidth, int windowHeight);
 
         // Gecko thread creates compositor; blocks UI thread.
         @WrapForJNI(calledFrom = "ui", dispatchTo = "proxy")
@@ -305,7 +304,7 @@ public class LayerView extends FrameLayout {
     }
 
     public void initializeView() {
-        mLayerClient = new GeckoLayerClient(getContext(), this);
+        mLayerClient = new GeckoLayerClient(this);
         if (mOverscroll != null) {
             mLayerClient.setOverscrollHandler(mOverscroll);
         }
@@ -632,8 +631,8 @@ public class LayerView extends FrameLayout {
         }
     }
 
-    void notifySizeChanged(int windowWidth, int windowHeight, int screenWidth, int screenHeight) {
-        mCompositor.onSizeChanged(windowWidth, windowHeight, screenWidth, screenHeight);
+    void notifySizeChanged(int windowWidth, int windowHeight) {
+        mCompositor.onSizeChanged(windowWidth, windowHeight);
     }
 
     void serverSurfaceDestroyed() {
