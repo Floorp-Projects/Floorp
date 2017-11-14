@@ -1614,14 +1614,14 @@ static void*
 AllocateString(JSContext* cx)
 {
     AutoUnsafeCallWithABI unsafe;
-    return js::Allocate<JSString, NoGC>(cx);
+    return js::Allocate<JSString, NoGC>(cx, js::gc::TenuredHeap);
 }
 
 static void*
 AllocateFatInlineString(JSContext* cx)
 {
     AutoUnsafeCallWithABI unsafe;
-    return js::Allocate<JSFatInlineString, NoGC>(cx);
+    return js::Allocate<JSFatInlineString, NoGC>(cx, js::gc::TenuredHeap);
 }
 
 void
