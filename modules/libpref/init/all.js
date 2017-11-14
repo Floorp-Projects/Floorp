@@ -1200,9 +1200,6 @@ pref("print.use_global_printsettings", true);
 // Save the Printings after each print job
 pref("print.save_print_settings", true);
 
-// Cache old Presentation when going into Print Preview
-pref("print.always_cache_old_pres", false);
-
 // Enables you to specify the amount of the paper that is to be treated
 // as unwriteable.  The print_edge_XXX and print_margin_XXX preferences
 // are treated as offsets that are added to this pref.
@@ -3865,10 +3862,6 @@ pref("layout.word_select.eat_space_to_next_word", true);
 // scrollbar snapping region
 pref("slider.snapMultiplier", 6);
 
-// print_extra_margin enables platforms to specify an extra gap or margin
-// around the content of the page for Print Preview only
-pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
-
 // Whether to extend the native dialog with information on printing frames.
 pref("print.extend_native_print_dialog", true);
 
@@ -4235,10 +4228,6 @@ pref("ui.key.generalAccessKey", -1);
 pref("ui.key.chromeAccess", 2);
 pref("ui.key.contentAccess", 6);
 
-// print_extra_margin enables platforms to specify an extra gap or margin
-// around the content of the page for Print Preview only
-pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
-
 // See bug 404131, topmost <panel> element wins to Dashboard on MacOSX.
 pref("ui.panel.default_level_parent", false);
 
@@ -4283,13 +4272,7 @@ pref("helpers.private_mime_types_file", "~/.mime.types");
 pref("helpers.private_mailcap_file", "~/.mailcap");
 pref("print.printer_list", ""); // list of printers, separated by spaces
 pref("print.print_reversed", false);
-pref("print.print_color", true);
-pref("print.print_landscape", false);
-pref("print.print_paper_size", 0);
-
-// print_extra_margin enables platforms to specify an extra gap or margin
-// around the content of the page for Print Preview only
-pref("print.print_extra_margin", 0); // twips
+pref("print.print_in_color", true);
 
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
@@ -4348,13 +4331,7 @@ pref("helpers.private_mime_types_file", "~/.mime.types");
 pref("helpers.private_mailcap_file", "~/.mailcap");
 pref("print.printer_list", ""); // list of printers, separated by spaces
 pref("print.print_reversed", false);
-pref("print.print_color", true);
-pref("print.print_landscape", false);
-pref("print.print_paper_size", 0);
-
-// print_extra_margin enables platforms to specify an extra gap or margin
-// around the content of the page for Print Preview only
-pref("print.print_extra_margin", 0); // twips
+pref("print.print_in_color", true);
 
 // font names
 
