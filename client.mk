@@ -176,11 +176,6 @@ $(OBJDIR)/Makefile: $(CONFIG_STATUS_DEPS)
 endif
 	@$(MAKE) -f $(TOPSRCDIR)/client.mk configure CREATE_MOZCONFIG_JSON=
 
-ifneq (,$(CONFIG_STATUS))
-$(OBJDIR)/config/autoconf.mk: $(TOPSRCDIR)/config/autoconf.mk.in
-	$(PYTHON) $(OBJDIR)/config.status -n --file=$(OBJDIR)/config/autoconf.mk
-endif
-
 ####################################
 # Build it
 
