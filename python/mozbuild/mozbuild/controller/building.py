@@ -1337,21 +1337,26 @@ class BuildDriver(MozbuildObject):
         if self._check_clobber(mozconfig, os.environ):
             return 1
 
+        mozconfig_make_lines = []
+        for arg in mozconfig['make_extra'] or []:
+            mozconfig_make_lines.append(arg)
+
+        if mozconfig['make_flags']:
+            mozconfig_make_lines.append(b'MOZ_MAKE_FLAGS=%s' %
+                                        b' '.join(mozconfig['make_flags']))
+        objdir = mozpath.normsep(self.topobjdir)
+        mozconfig_make_lines.append(b'MOZ_OBJDIR=%s' % objdir)
+        mozconfig_make_lines.append(b'OBJDIR=%s' % objdir)
+
+        if mozconfig['path']:
+            mozconfig_make_lines.append(b'FOUND_MOZCONFIG=%s' %
+                                        mozpath.normsep(mozconfig['path']))
+            mozconfig_make_lines.append(b'export FOUND_MOZCONFIG')
+
         mozconfig_client_mk = os.path.join(self.topobjdir,
                                            '.mozconfig-client-mk')
         with FileAvoidWrite(mozconfig_client_mk) as fh:
-            for arg in mozconfig['make_extra'] or []:
-                fh.write(arg)
-                fh.write(b'\n')
-            if mozconfig['make_flags']:
-                fh.write(b'MOZ_MAKE_FLAGS=%s\n' % b' '.join(mozconfig['make_flags']))
-            objdir = mozpath.normsep(self.topobjdir)
-            fh.write(b'MOZ_OBJDIR=%s\n' % objdir)
-            fh.write(b'OBJDIR=%s\n' % objdir)
-            if mozconfig['path']:
-                fh.write(b'FOUND_MOZCONFIG=%s\n' %
-                         mozpath.normsep(mozconfig['path']))
-                fh.write(b'export FOUND_MOZCONFIG\n')
+            fh.write(b'\n'.join(mozconfig_make_lines))
 
         append_env['OBJDIR'] = mozpath.normsep(self.topobjdir)
 
