@@ -1372,6 +1372,14 @@ class BuildDriver(MozbuildObject):
         with FileAvoidWrite(mozconfig_mk) as fh:
             fh.write(b'\n'.join(mozconfig_filtered_lines))
 
+        mozconfig_json = os.path.join(self.topobjdir, '.mozconfig.json')
+        with FileAvoidWrite(mozconfig_json) as fh:
+            json.dump({
+                'topsrcdir': self.topsrcdir,
+                'topobjdir': self.topobjdir,
+                'mozconfig': mozconfig,
+            }, fh, sort_keys=True, indent=2)
+
         # Copy the original mozconfig to the objdir.
         mozconfig_objdir = os.path.join(self.topobjdir, '.mozconfig')
         if mozconfig['path']:
