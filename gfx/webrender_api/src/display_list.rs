@@ -533,6 +533,12 @@ impl<'a> Write for SizeCounter {
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }
 
+/// Serializes a value assuming the Serialize impl has a stable size across two 
+/// invocations.
+///
+/// If this assumption is incorrect, the result will be Undefined Behaviour. This
+/// assumption should hold for all derived Serialize impls, which is all we currently
+/// use.
 fn serialize_fast<T: Serialize>(vec: &mut Vec<u8>, e: &T) {
     // manually counting the size is faster than vec.reserve(bincode::serialized_size(&e) as usize) for some reason
     let mut size = SizeCounter(0);
@@ -548,7 +554,55 @@ fn serialize_fast<T: Serialize>(vec: &mut Vec<u8>, e: &T) {
     unsafe { vec.set_len(old_len + size.0); }
 
     // make sure we wrote the right amount
-    debug_assert!(((w.0 as usize) - (vec.as_ptr() as usize)) == vec.len());
+    debug_assert_eq!(((w.0 as usize) - (vec.as_ptr() as usize)), vec.len());
+}
+
+/// Serializes an iterator, assuming: 
+///
+/// * The Clone impl is trivial (e.g. we're just memcopying a slice iterator)
+/// * The ExactSizeIterator impl is stable and correct across a Clone
+/// * The Serialize impl has a stable size across two invocations
+///
+/// If the first is incorrect, webrender will be very slow. If the other two are
+/// incorrect, the result will be Undefined Behaviour! The ExactSizeIterator
+/// bound would ideally be replaced with a TrustedLen bound to protect us a bit
+/// better, but that trait isn't stable (and won't be for a good while, if ever).
+///
+/// Debug asserts are included that should catch all Undefined Behaviour, but
+/// we can't afford to include these in release builds.
+fn serialize_iter_fast<I>(vec: &mut Vec<u8>, iter: I) -> usize
+where I: ExactSizeIterator + Clone,
+      I::Item: Serialize,
+{
+    // manually counting the size is faster than vec.reserve(bincode::serialized_size(&e) as usize) for some reason
+    let mut size = SizeCounter(0);
+    let mut count1 = 0;
+
+    for e in iter.clone() {
+        bincode::serialize_into(&mut size, &e, bincode::Infinite).unwrap();
+        count1 += 1;
+    }
+
+    vec.reserve(size.0);
+
+    let old_len = vec.len();
+    let ptr = unsafe { vec.as_mut_ptr().offset(old_len as isize) };
+    let mut w = UnsafeVecWriter(ptr);
+    let mut count2 = 0;
+
+    for e in iter {
+        bincode::serialize_into(&mut w, &e, bincode::Infinite).unwrap();
+        count2 += 1;
+    }
+
+    // fix up the length
+    unsafe { vec.set_len(old_len + size.0); }
+
+    // make sure we wrote the right amount
+    debug_assert_eq!(((w.0 as usize) - (vec.as_ptr() as usize)), vec.len());
+    debug_assert_eq!(count1, count2);
+
+    count1
 }
 
 // This uses a (start, end) representation instead of (start, len) so that
@@ -754,12 +808,11 @@ impl DisplayListBuilder {
     fn push_iter<I>(&mut self, iter: I)
     where
         I: IntoIterator,
-        I::IntoIter: ExactSizeIterator,
+        I::IntoIter: ExactSizeIterator + Clone,
         I::Item: Serialize,
     {
         let iter = iter.into_iter();
         let len = iter.len();
-        let mut count = 0;
 
         // Format:
         // payload_byte_size: usize, item_count: usize, [I; item_count]
@@ -770,10 +823,7 @@ impl DisplayListBuilder {
         serialize_fast(&mut self.data, &len);
         let payload_offset = self.data.len();
 
-        for elem in iter {
-            count += 1;
-            serialize_fast(&mut self.data, &elem);
-        }
+        let count = serialize_iter_fast(&mut self.data, iter.into_iter());
 
         // Now write the actual byte_size
         let final_offset = self.data.len();
@@ -1165,7 +1215,7 @@ impl DisplayListBuilder {
     ) -> ClipId
     where
         I: IntoIterator<Item = ComplexClipRegion>,
-        I::IntoIter: ExactSizeIterator,
+        I::IntoIter: ExactSizeIterator + Clone,
     {
         let parent = self.clip_stack.last().unwrap().scroll_node_id;
         self.define_scroll_frame_with_parent(
@@ -1190,7 +1240,7 @@ impl DisplayListBuilder {
     ) -> ClipId
     where
         I: IntoIterator<Item = ComplexClipRegion>,
-        I::IntoIter: ExactSizeIterator,
+        I::IntoIter: ExactSizeIterator + Clone,
     {
         let id = self.generate_clip_id(id);
         let item = SpecificDisplayItem::ScrollFrame(ScrollFrameDisplayItem {
@@ -1215,7 +1265,7 @@ impl DisplayListBuilder {
     ) -> ClipId
     where
         I: IntoIterator<Item = ComplexClipRegion>,
-        I::IntoIter: ExactSizeIterator,
+        I::IntoIter: ExactSizeIterator + Clone,
     {
         let parent = self.clip_stack.last().unwrap().scroll_node_id;
         self.define_clip_with_parent(
@@ -1236,7 +1286,7 @@ impl DisplayListBuilder {
     ) -> ClipId
     where
         I: IntoIterator<Item = ComplexClipRegion>,
-        I::IntoIter: ExactSizeIterator,
+        I::IntoIter: ExactSizeIterator + Clone,
     {
         let id = self.generate_clip_id(id);
         let item = SpecificDisplayItem::Clip(ClipDisplayItem {

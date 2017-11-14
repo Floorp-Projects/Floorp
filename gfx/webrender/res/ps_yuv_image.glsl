@@ -194,6 +194,6 @@ void main(void) {
 
     // See the YuvColorMatrix definition for an explanation of where the constants come from.
     vec3 rgb = YuvColorMatrix * (yuv_value - vec3(0.06275, 0.50196, 0.50196));
-    oFragColor = vec4(rgb, alpha);
+    oFragColor = vec4(rgb * alpha, alpha);
 }
 #endif

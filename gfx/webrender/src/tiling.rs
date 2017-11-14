@@ -62,7 +62,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
                         if font.bg_color.a != 0 {
                             BlendMode::SubpixelWithBgColor
                         } else {
-                            BlendMode::SubpixelConstantTextColor(font.color)
+                            BlendMode::SubpixelConstantTextColor(font.color.into())
                         }
                     }
                     FontRenderMode::Alpha |
@@ -89,18 +89,14 @@ impl AlphaBatchHelpers for PrimitiveStore {
             },
             PrimitiveKind::Border |
             PrimitiveKind::Image |
+            PrimitiveKind::YuvImage |
             PrimitiveKind::AlignedGradient |
             PrimitiveKind::AngleGradient |
             PrimitiveKind::RadialGradient |
+            PrimitiveKind::Line |
+            PrimitiveKind::Brush |
             PrimitiveKind::Picture => if needs_blending {
                 BlendMode::PremultipliedAlpha
-            } else {
-                BlendMode::None
-            },
-            PrimitiveKind::YuvImage |
-            PrimitiveKind::Line |
-            PrimitiveKind::Brush => if needs_blending {
-                BlendMode::Alpha
             } else {
                 BlendMode::None
             },
@@ -112,7 +108,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
 pub struct ScrollbarPrimitive {
     pub clip_id: ClipId,
     pub prim_index: PrimitiveIndex,
-    pub border_radius: f32,
+    pub frame_rect: LayerRect,
 }
 
 #[derive(Debug)]
@@ -120,12 +116,6 @@ pub enum PrimitiveRunCmd {
     PushStackingContext(StackingContextIndex),
     PopStackingContext,
     PrimitiveRun(PrimitiveRun),
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum PrimitiveFlags {
-    None,
-    Scrollbar(ClipId, f32),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -282,7 +272,7 @@ impl BatchList {
     ) -> &mut Vec<PrimitiveInstance> {
         match key.blend_mode {
             BlendMode::None => self.opaque_batch_list.get_suitable_batch(key),
-            BlendMode::Alpha | BlendMode::PremultipliedAlpha |
+            BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
             BlendMode::SubpixelConstantTextColor(..) |
             BlendMode::SubpixelVariableTextColor |
@@ -399,7 +389,7 @@ impl AlphaRenderItem {
                         source_id,
                         backdrop_id,
                     },
-                    BlendMode::Alpha,
+                    BlendMode::PremultipliedAlpha,
                     BatchTextures::no_texture(),
                 );
                 let batch = batch_list.get_suitable_batch(key, &stacking_context.screen_bounds);
@@ -881,7 +871,7 @@ impl ClipBatcher {
         for work_item in clips.iter() {
             let instance = ClipMaskInstance {
                 render_task_address: task_address,
-                scroll_node_id: work_item.scroll_node_id,
+                scroll_node_data_index: work_item.scroll_node_data_index,
                 segment: 0,
                 clip_data_address: GpuCacheAddress::invalid(),
                 resource_address: GpuCacheAddress::invalid(),
