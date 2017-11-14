@@ -1061,7 +1061,7 @@ public:
     MediaStreamGraph* msg =
       MediaStreamGraph::GetInstance(graphDriverType, window);
 
-    RefPtr<DOMMediaStream> domStream;
+    nsMainThreadPtrHandle<DOMMediaStream> domStream;
     RefPtr<SourceMediaStream> stream;
     // AudioCapture is a special case, here, in the sense that we're not really
     // using the audio source and the SourceMediaStream, which acts as
@@ -1072,8 +1072,9 @@ public:
       // It should be possible to pipe the capture stream to anything. CORS is
       // not a problem here, we got explicit user content.
       nsCOMPtr<nsIPrincipal> principal = window->GetExtantDoc()->NodePrincipal();
-      domStream =
-        DOMMediaStream::CreateAudioCaptureStreamAsInput(window, principal, msg);
+      domStream = new nsMainThreadPtrHolder<DOMMediaStream>(
+        "GetUserMediaStreamRunnable::AudioCaptureDOMStreamMainThreadHolder",
+        DOMMediaStream::CreateAudioCaptureStreamAsInput(window, principal, msg));
 
       stream = msg->CreateSourceStream(); // Placeholder
       msg->RegisterCaptureStreamForWindow(
@@ -1168,9 +1169,10 @@ public:
       // Normal case, connect the source stream to the track union stream to
       // avoid us blocking. Pass a simple TrackSourceGetter for potential
       // fake tracks. Apart from them gUM never adds tracks dynamically.
-      domStream =
+      domStream = new nsMainThreadPtrHolder<DOMMediaStream>(
+        "GetUserMediaStreamRunnable::DOMMediaStreamMainThreadHolder",
         DOMLocalMediaStream::CreateSourceStreamAsInput(window, msg,
-                                                       new FakeTrackSourceGetter(principal));
+                                                       new FakeTrackSourceGetter(principal)));
       stream = domStream->GetInputStream()->AsSourceStream();
 
       if (mAudioDevice) {
@@ -1223,8 +1225,15 @@ public:
     mWindowListener->Activate(mSourceListener, stream, mAudioDevice, mVideoDevice);
 
     // Note: includes JS callbacks; must be released on MainThread
-    auto callback = MakeRefPtr<Refcountable<UniquePtr<OnTracksAvailableCallback>>>(
-        new TracksAvailableCallback(mManager, mOnSuccess.forget(), mWindowID, domStream));
+    typedef Refcountable<UniquePtr<TracksAvailableCallback>> Callback;
+    nsMainThreadPtrHandle<Callback> callback(
+      new nsMainThreadPtrHolder<Callback>(
+        "GetUserMediaStreamRunnable::TracksAvailableCallbackMainThreadHolder",
+        MakeAndAddRef<Callback>(
+          new TracksAvailableCallback(mManager,
+                                      mOnSuccess.forget(),
+                                      mWindowID,
+                                      domStream))));
 
     // Dispatch to the media thread to ask it to start the sources,
     // because that can take a while.
@@ -1264,10 +1273,6 @@ public:
       }
 
       if (error) {
-        // The DOM stream and track callback must be released on main thread.
-        NS_DispatchToMainThread(do_AddRef(new ReleaseMediaOperationResource(
-          domStream.forget(), callback.forget())));
-
         // Dispatch the error callback on main thread.
         nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess;
         NS_DispatchToMainThread(do_AddRef(
