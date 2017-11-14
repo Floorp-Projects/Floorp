@@ -281,6 +281,10 @@ class BaseConfig(object):
             help="Specify the absolute path of the parent of the working directory"
         )
         self.config_parser.add_option(
+            "--extra-config-path", action='extend', dest="config_paths",
+            type="string", help="Specify additional paths to search for config files.",
+        )
+        self.config_parser.add_option(
             "-c", "--config-file", "--cfg", action="extend", dest="config_files",
             type="string", help="Specify a config file; can be repeated"
         )
@@ -433,6 +437,7 @@ class BaseConfig(object):
         way that self.config is made up.  See
         `mozharness.mozilla.building.buildbase.BuildingConfig` for an example.
         """
+        config_paths = options.config_paths or ['.']
         all_cfg_files_and_dicts = []
         for cf in all_config_files:
             try:
@@ -444,7 +449,9 @@ class BaseConfig(object):
                         (file_path, parse_config_file(file_path, search_path=["."]))
                     )
                 else:
-                    all_cfg_files_and_dicts.append((cf, parse_config_file(cf)))
+                    all_cfg_files_and_dicts.append(
+                        (cf, parse_config_file(cf, search_path=config_paths + [DEFAULT_CONFIG_PATH]))
+                    )
             except Exception:
                 if cf in options.opt_config_files:
                     print(
