@@ -78,8 +78,7 @@ def runESLint(print_func, files):
         if not setup_helper.check_node_executables_valid():
             return False
 
-        if setup_helper.eslint_module_needs_setup():
-            setup_helper.eslint_setup()
+        setup_helper.eslint_maybe_setup()
 
         dir = os.path.join(basepath, "node_modules", ".bin")
 

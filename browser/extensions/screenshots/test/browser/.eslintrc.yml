@@ -1,10 +1,5 @@
 env:
   node: true
 
-# TODO: re-enable
-#extends:
-#  - plugin:mozilla/browser-test
-
-rules:
-  no-unused-vars: off
-  no-undef: off
+extends:
+  - plugin:mozilla/browser-test

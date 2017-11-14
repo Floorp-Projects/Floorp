@@ -67,9 +67,17 @@
       accumulateCharacters(aBuf, aStart, aLength);
     }
 
-    void MarkAsBrokenAndRequestSuspension(nsresult aRv)
+    void
+    MarkAsBrokenAndRequestSuspensionWithBuilder(nsresult aRv)
     {
       mBuilder->MarkAsBroken(aRv);
+      requestSuspension();
+    }
+
+    void
+    MarkAsBrokenAndRequestSuspensionWithoutBuilder(nsresult aRv)
+    {
+      MarkAsBroken(aRv);
       requestSuspension();
     }
 

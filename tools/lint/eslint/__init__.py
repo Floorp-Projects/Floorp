@@ -44,8 +44,7 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
     if setup:
         return setup_helper.eslint_setup()
 
-    if setup_helper.eslint_module_needs_setup():
-        setup_helper.eslint_setup()
+    setup_helper.eslint_maybe_setup()
 
     # Valid binaries are:
     #  - Any provided by the binary argument.

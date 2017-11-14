@@ -3479,6 +3479,9 @@ GeckoDriver.prototype.receiveMessage = function(message) {
         this.curBrowser.flushPendingCommands();
       }
       break;
+
+    case "Marionette:GetLogLevel":
+      return logger.level;
   }
 };
 /* eslint-enable consistent-return */
