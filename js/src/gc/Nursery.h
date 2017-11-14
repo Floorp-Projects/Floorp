@@ -330,6 +330,8 @@ class Nursery
      */
     unsigned chunkCountLimit_;
 
+    mozilla::TimeDuration timeInChunkAlloc_;
+
     /* Promotion rate for the previous minor collection. */
     float previousPromotionRate_;
 
