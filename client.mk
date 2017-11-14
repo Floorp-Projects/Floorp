@@ -138,7 +138,6 @@ configure-files: $(CONFIGURES)
 
 configure-preqs = \
   configure-files \
-  save-mozconfig \
   $(OBJDIR)/.mozconfig.json \
   $(NULL)
 
@@ -150,11 +149,6 @@ ifneq (,$(CREATE_MOZCONFIG_JSON))
 endif
 
 $(OBJDIR)/.mozconfig.json: ;
-
-save-mozconfig: $(FOUND_MOZCONFIG)
-ifdef FOUND_MOZCONFIG
-	-cp $(FOUND_MOZCONFIG) $(OBJDIR)/.mozconfig
-endif
 
 configure:: $(configure-preqs)
 	$(call BUILDSTATUS,TIERS configure)
