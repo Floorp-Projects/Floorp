@@ -214,7 +214,7 @@ TabSources.prototype = {
     }
   },
 
-  getSourceActor: function (source) {
+  _getSourceActor: function (source) {
     if (source.url in this._sourceMappedSourceActors) {
       return this._sourceMappedSourceActors[source.url];
     }
@@ -223,8 +223,22 @@ TabSources.prototype = {
       return this._sourceActors.get(source);
     }
 
-    throw new Error("getSource: could not find source actor for " +
-                    (source.url || "source"));
+    return null;
+  },
+
+  hasSourceActor: function (source) {
+    return !!this._getSourceActor(source);
+  },
+
+  getSourceActor: function (source) {
+    const sourceActor = this._getSourceActor(source);
+
+    if (!sourceActor) {
+      throw new Error("getSource: could not find source actor for " +
+                      (source.url || "source"));
+    }
+
+    return sourceActor;
   },
 
   getSourceActorByURL: function (url) {
