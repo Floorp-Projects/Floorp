@@ -91,100 +91,84 @@ public:
   }
 
   // Returns shared pref branch instance. NOTE: not addreffed.
-  static nsIPrefBranch* GetRootBranch()
+  static nsIPrefBranch* GetRootBranch(PrefValueKind aKind = PrefValueKind::User)
   {
     NS_ENSURE_TRUE(InitStaticMembers(), nullptr);
-    return sPreferences->mRootBranch;
-  }
-
-  // Returns shared default pref branch instance. NOTE: not addreffed.
-  static nsIPrefBranch* GetDefaultRootBranch()
-  {
-    NS_ENSURE_TRUE(InitStaticMembers(), nullptr);
-    return sPreferences->mDefaultRootBranch;
+    return (aKind == PrefValueKind::Default) ? sPreferences->mDefaultRootBranch
+                                             : sPreferences->mRootBranch;
   }
 
   // Gets the type of the pref.
-  static int32_t GetDefaultType(const char* aPref);
+  static int32_t GetType(const char* aPrefName,
+                         PrefValueKind aKind = PrefValueKind::User);
 
-  // Fallible getters of default values.
-  static nsresult GetDefaultBool(const char* aPref, bool* aResult);
-  static nsresult GetDefaultInt(const char* aPref, int32_t* aResult);
-  static nsresult GetDefaultUint(const char* aPref, uint32_t* aResult)
+  // Fallible value getters.
+  static nsresult GetBool(const char* aPrefName,
+                          bool* aResult,
+                          PrefValueKind aKind = PrefValueKind::User);
+  static nsresult GetInt(const char* aPrefName,
+                         int32_t* aResult,
+                         PrefValueKind aKind = PrefValueKind::User);
+  static nsresult GetUint(const char* aPrefName,
+                          uint32_t* aResult,
+                          PrefValueKind aKind = PrefValueKind::User)
   {
-    return GetDefaultInt(aPref, reinterpret_cast<int32_t*>(aResult));
+    return GetInt(aPrefName, reinterpret_cast<int32_t*>(aResult), aKind);
   }
-  static nsresult GetDefaultCString(const char* aPref, nsACString& aResult);
-  static nsresult GetDefaultString(const char* aPref, nsAString& aResult);
-  static nsresult GetDefaultLocalizedCString(const char* aPref,
-                                             nsACString& aResult);
-  static nsresult GetDefaultLocalizedString(const char* aPref,
-                                            nsAString& aResult);
-  static nsresult GetDefaultComplex(const char* aPref,
-                                    const nsIID& aType,
-                                    void** aResult);
-
-  // Infallible getters of default values, with fallback results on failure.
-  static bool GetDefaultBool(const char* aPref, bool aFailedResult)
-  {
-    bool result;
-    return NS_SUCCEEDED(GetDefaultBool(aPref, &result)) ? result
-                                                        : aFailedResult;
-  }
-  static int32_t GetDefaultInt(const char* aPref, int32_t aFailedResult)
-  {
-    int32_t result;
-    return NS_SUCCEEDED(GetDefaultInt(aPref, &result)) ? result : aFailedResult;
-  }
-  static uint32_t GetDefaultUint(const char* aPref, uint32_t aFailedResult)
-  {
-    return static_cast<uint32_t>(
-      GetDefaultInt(aPref, static_cast<int32_t>(aFailedResult)));
-  }
-
-  // Gets the type of the pref.
-  static int32_t GetType(const char* aPref);
-
-  // Fallible getters of user or default values.
-  static nsresult GetBool(const char* aPref, bool* aResult);
-  static nsresult GetInt(const char* aPref, int32_t* aResult);
-  static nsresult GetUint(const char* aPref, uint32_t* aResult)
-  {
-    return GetInt(aPref, reinterpret_cast<int32_t*>(aResult));
-  }
-  static nsresult GetFloat(const char* aPref, float* aResult);
-  static nsresult GetCString(const char* aPref, nsACString& aResult);
-  static nsresult GetString(const char* aPref, nsAString& aResult);
-  static nsresult GetLocalizedCString(const char* aPref, nsACString& aResult);
-  static nsresult GetLocalizedString(const char* aPref, nsAString& aResult);
-  static nsresult GetComplex(const char* aPref,
+  static nsresult GetFloat(const char* aPrefName,
+                           float* aResult,
+                           PrefValueKind aKind = PrefValueKind::User);
+  static nsresult GetCString(const char* aPrefName,
+                             nsACString& aResult,
+                             PrefValueKind aKind = PrefValueKind::User);
+  static nsresult GetString(const char* aPrefName,
+                            nsAString& aResult,
+                            PrefValueKind aKind = PrefValueKind::User);
+  static nsresult GetLocalizedCString(
+    const char* aPrefName,
+    nsACString& aResult,
+    PrefValueKind aKind = PrefValueKind::User);
+  static nsresult GetLocalizedString(const char* aPrefName,
+                                     nsAString& aResult,
+                                     PrefValueKind aKind = PrefValueKind::User);
+  static nsresult GetComplex(const char* aPrefName,
                              const nsIID& aType,
-                             void** aResult);
+                             void** aResult,
+                             PrefValueKind aKind = PrefValueKind::User);
 
   // Infallible getters of user or default values, with fallback results on
   // failure.
-  static bool GetBool(const char* aPref, bool aDefault = false)
+  // Infallible value getters.
+  static bool GetBool(const char* aPrefName,
+                      bool aFallback = false,
+                      PrefValueKind aKind = PrefValueKind::User)
   {
-    bool result = aDefault;
-    GetBool(aPref, &result);
+    bool result = aFallback;
+    GetBool(aPrefName, &result);
     return result;
   }
-  static int32_t GetInt(const char* aPref, int32_t aDefault = 0)
+  static int32_t GetInt(const char* aPrefName,
+                        int32_t aFallback = 0,
+                        PrefValueKind aKind = PrefValueKind::User)
   {
-    int32_t result = aDefault;
-    GetInt(aPref, &result);
+    int32_t result = aFallback;
+    GetInt(aPrefName, &result);
     return result;
   }
-  static uint32_t GetUint(const char* aPref, uint32_t aDefault = 0)
+  static uint32_t GetUint(const char* aPrefName,
+                          uint32_t aFallback = 0,
+                          PrefValueKind aKind = PrefValueKind::User)
   {
-    uint32_t result = aDefault;
-    GetUint(aPref, &result);
+    uint32_t result = aFallback;
+    GetUint(aPrefName, &result);
     return result;
   }
-  static float GetFloat(const char* aPref, float aDefault = 0)
+  static float GetFloat(const char* aPrefName,
+                        float aFallback = 0.0f,
+                        PrefValueKind aKind = PrefValueKind::User)
   {
-    float result = aDefault;
-    GetFloat(aPref, &result);
+    float result = aFallback;
+    GetFloat(aPrefName, &result);
     return result;
   }
 

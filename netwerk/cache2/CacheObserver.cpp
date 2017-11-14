@@ -186,8 +186,9 @@ CacheObserver::AttachToPreferences()
   // First check the default value.  If it is at -1, the experient
   // is turned off.  If it is at 0, then use the user pref value
   // instead.
-  sHalfLifeExperiment = mozilla::Preferences::GetDefaultInt(
-    "browser.cache.frecency_experiment", kDefaultHalfLifeExperiment);
+  sHalfLifeExperiment = mozilla::Preferences::GetInt(
+    "browser.cache.frecency_experiment", kDefaultHalfLifeExperiment,
+    PrefValueKind::Default);
 
   if (sHalfLifeExperiment == 0) {
     // Default preferences indicate we want to run the experiment,

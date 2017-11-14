@@ -4483,14 +4483,14 @@ pref_InitInitialObjects()
   // has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta channel, telemetry
   // is on by default, otherwise not. This is necessary so that beta users who
   // are testing final release builds don't flipflop defaults.
-  if (Preferences::GetDefaultType(kTelemetryPref) ==
+  if (Preferences::GetType(kTelemetryPref, PrefValueKind::Default) ==
       nsIPrefBranch::PREF_INVALID) {
     bool prerelease = false;
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     prerelease = true;
 #else
     nsAutoCString prefValue;
-    Preferences::GetDefaultCString(kChannelPref, prefValue);
+    Preferences::GetCString(kChannelPref, prefValue, PrefValueKind::Default);
     if (prefValue.EqualsLiteral("beta")) {
       prerelease = true;
     }
@@ -4537,28 +4537,33 @@ pref_InitInitialObjects()
 //----------------------------------------------------------------------------
 
 /* static */ nsresult
-Preferences::GetBool(const char* aPref, bool* aResult)
+Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetBoolPref(aPref, aResult, false);
+  return PREF_GetBoolPref(aPrefName, aResult, aKind == PrefValueKind::Default);
 }
 
 /* static */ nsresult
-Preferences::GetInt(const char* aPref, int32_t* aResult)
+Preferences::GetInt(const char* aPrefName,
+                    int32_t* aResult,
+                    PrefValueKind aKind)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetIntPref(aPref, aResult, false);
+  return PREF_GetIntPref(aPrefName, aResult, aKind == PrefValueKind::Default);
 }
 
 /* static */ nsresult
-Preferences::GetFloat(const char* aPref, float* aResult)
+Preferences::GetFloat(const char* aPrefName,
+                      float* aResult,
+                      PrefValueKind aKind)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsAutoCString result;
-  nsresult rv = PREF_GetCStringPref(aPref, result, false);
+  nsresult rv =
+    PREF_GetCStringPref(aPrefName, result, aKind == PrefValueKind::Default);
   if (NS_SUCCEEDED(rv)) {
     *aResult = result.ToFloat(&rv);
   }
@@ -4566,18 +4571,24 @@ Preferences::GetFloat(const char* aPref, float* aResult)
 }
 
 /* static */ nsresult
-Preferences::GetCString(const char* aPref, nsACString& aResult)
+Preferences::GetCString(const char* aPrefName,
+                        nsACString& aResult,
+                        PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetCStringPref(aPref, aResult, false);
+  return PREF_GetCStringPref(
+    aPrefName, aResult, aKind == PrefValueKind::Default);
 }
 
 /* static */ nsresult
-Preferences::GetString(const char* aPref, nsAString& aResult)
+Preferences::GetString(const char* aPrefName,
+                       nsAString& aResult,
+                       PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsAutoCString result;
-  nsresult rv = PREF_GetCStringPref(aPref, result, false);
+  nsresult rv =
+    PREF_GetCStringPref(aPrefName, result, aKind == PrefValueKind::Default);
   if (NS_SUCCEEDED(rv)) {
     CopyUTF8toUTF16(result, aResult);
   }
@@ -4585,10 +4596,12 @@ Preferences::GetString(const char* aPref, nsAString& aResult)
 }
 
 /* static */ nsresult
-Preferences::GetLocalizedCString(const char* aPref, nsACString& aResult)
+Preferences::GetLocalizedCString(const char* aPrefName,
+                                 nsACString& aResult,
+                                 PrefValueKind aKind)
 {
   nsAutoString result;
-  nsresult rv = GetLocalizedString(aPref, result);
+  nsresult rv = GetLocalizedString(aPrefName, result);
   if (NS_SUCCEEDED(rv)) {
     CopyUTF16toUTF8(result, aResult);
   }
@@ -4596,12 +4609,16 @@ Preferences::GetLocalizedCString(const char* aPref, nsACString& aResult)
 }
 
 /* static */ nsresult
-Preferences::GetLocalizedString(const char* aPref, nsAString& aResult)
+Preferences::GetLocalizedString(const char* aPrefName,
+                                nsAString& aResult,
+                                PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
-  nsresult rv = sPreferences->mRootBranch->GetComplexValue(
-    aPref, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(prefLocalString));
+  nsresult rv =
+    GetRootBranch(aKind)->GetComplexValue(aPrefName,
+                                          NS_GET_IID(nsIPrefLocalizedString),
+                                          getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
     prefLocalString->GetData(aResult);
@@ -4610,10 +4627,13 @@ Preferences::GetLocalizedString(const char* aPref, nsAString& aResult)
 }
 
 /* static */ nsresult
-Preferences::GetComplex(const char* aPref, const nsIID& aType, void** aResult)
+Preferences::GetComplex(const char* aPrefName,
+                        const nsIID& aType,
+                        void** aResult,
+                        PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sPreferences->mRootBranch->GetComplexValue(aPref, aType, aResult);
+  return GetRootBranch(aKind)->GetComplexValue(aPrefName, aType, aResult);
 }
 
 /* static */ nsresult
@@ -4689,10 +4709,7 @@ Preferences::SetComplex(const char* aPrefName,
                         PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  nsIPrefBranch* branch = (aKind == PrefValueKind::Default)
-                            ? sPreferences->mDefaultRootBranch
-                            : sPreferences->mRootBranch;
-  return branch->SetComplexValue(aPrefName, aType, aValue);
+  return GetRootBranch(aKind)->SetComplexValue(aPrefName, aType, aValue);
 }
 
 /* static */ nsresult
@@ -4711,11 +4728,11 @@ Preferences::HasUserValue(const char* aPref)
 }
 
 /* static */ int32_t
-Preferences::GetType(const char* aPref)
+Preferences::GetType(const char* aPrefName, PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
   int32_t result;
-  return NS_SUCCEEDED(sPreferences->mRootBranch->GetPrefType(aPref, &result))
+  return NS_SUCCEEDED(GetRootBranch(aKind)->GetPrefType(aPrefName, &result))
            ? result
            : nsIPrefBranch::PREF_INVALID;
 }
@@ -4995,87 +5012,6 @@ Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
   CacheDataAppendElement(data);
   RegisterVarCacheCallback(FloatVarChanged, aPref, data);
   return NS_OK;
-}
-
-/* static */ nsresult
-Preferences::GetDefaultBool(const char* aPref, bool* aResult)
-{
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetBoolPref(aPref, aResult, true);
-}
-
-/* static */ nsresult
-Preferences::GetDefaultInt(const char* aPref, int32_t* aResult)
-{
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetIntPref(aPref, aResult, true);
-}
-
-/* static */ nsresult
-Preferences::GetDefaultCString(const char* aPref, nsACString& aResult)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetCStringPref(aPref, aResult, true);
-}
-
-/* static */ nsresult
-Preferences::GetDefaultString(const char* aPref, nsAString& aResult)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  nsAutoCString result;
-  nsresult rv = PREF_GetCStringPref(aPref, result, true);
-  if (NS_SUCCEEDED(rv)) {
-    CopyUTF8toUTF16(result, aResult);
-  }
-  return rv;
-}
-
-/* static */ nsresult
-Preferences::GetDefaultLocalizedCString(const char* aPref, nsACString& aResult)
-{
-  nsAutoString result;
-  nsresult rv = GetDefaultLocalizedString(aPref, result);
-  if (NS_SUCCEEDED(rv)) {
-    CopyUTF16toUTF8(result, aResult);
-  }
-  return rv;
-}
-
-/* static */ nsresult
-Preferences::GetDefaultLocalizedString(const char* aPref, nsAString& aResult)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
-  nsresult rv = sPreferences->mDefaultRootBranch->GetComplexValue(
-    aPref, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(prefLocalString));
-  if (NS_SUCCEEDED(rv)) {
-    NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
-    prefLocalString->GetData(aResult);
-  }
-  return rv;
-}
-
-/* static */ nsresult
-Preferences::GetDefaultComplex(const char* aPref,
-                               const nsIID& aType,
-                               void** aResult)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sPreferences->mDefaultRootBranch->GetComplexValue(
-    aPref, aType, aResult);
-}
-
-/* static */ int32_t
-Preferences::GetDefaultType(const char* aPref)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
-  int32_t result;
-  return NS_SUCCEEDED(
-           sPreferences->mDefaultRootBranch->GetPrefType(aPref, &result))
-           ? result
-           : nsIPrefBranch::PREF_INVALID;
 }
 
 } // namespace mozilla
