@@ -1976,7 +1976,7 @@ public:
   NS_DECL_NSIPREFBRANCH
   NS_DECL_NSIOBSERVER
 
-  nsPrefBranch(const char* aPrefRoot, bool aDefaultBranch);
+  nsPrefBranch(const char* aPrefRoot, PrefValueKind aKind);
   nsPrefBranch() = delete;
 
   int32_t GetRootLength() const { return mPrefRoot.Length(); }
@@ -2056,7 +2056,7 @@ private:
   void FreeObserverList(void);
 
   const nsCString mPrefRoot;
-  bool mIsDefault;
+  PrefValueKind mKind;
 
   bool mFreeingObserverList;
   nsClassHashtable<PrefCallback, PrefCallback> mObservers;
@@ -2098,9 +2098,9 @@ private:
 // nsPrefBranch
 //----------------------------------------------------------------------------
 
-nsPrefBranch::nsPrefBranch(const char* aPrefRoot, bool aDefaultBranch)
+nsPrefBranch::nsPrefBranch(const char* aPrefRoot, PrefValueKind aKind)
   : mPrefRoot(aPrefRoot)
-  , mIsDefault(aDefaultBranch)
+  , mKind(aKind)
   , mFreeingObserverList(false)
   , mObservers()
 {
@@ -2199,7 +2199,7 @@ nsPrefBranch::GetBoolPref(const char* aPrefName, bool* aRetVal)
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_GetBoolPref(pref.get(), aRetVal, mIsDefault);
+  return PREF_GetBoolPref(pref.get(), aRetVal, mKind == PrefValueKind::Default);
 }
 
 NS_IMETHODIMP
@@ -2209,7 +2209,7 @@ nsPrefBranch::SetBoolPref(const char* aPrefName, bool aValue)
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_SetBoolPref(pref.get(), aValue, mIsDefault);
+  return PREF_SetBoolPref(pref.get(), aValue, mKind == PrefValueKind::Default);
 }
 
 NS_IMETHODIMP
@@ -2263,7 +2263,8 @@ nsPrefBranch::GetCharPref(const char* aPrefName, nsACString& aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_GetCStringPref(pref.get(), aRetVal, mIsDefault);
+  return PREF_GetCStringPref(
+    pref.get(), aRetVal, mKind == PrefValueKind::Default);
 }
 
 NS_IMETHODIMP
@@ -2284,7 +2285,8 @@ nsPrefBranch::SetCharPrefInternal(const char* aPrefName,
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_SetCStringPref(pref.get(), aValue, mIsDefault);
+  return PREF_SetCStringPref(
+    pref.get(), aValue, mKind == PrefValueKind::Default);
 }
 
 NS_IMETHODIMP
@@ -2340,7 +2342,7 @@ nsPrefBranch::GetIntPref(const char* aPrefName, int32_t* aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_GetIntPref(pref.get(), aRetVal, mIsDefault);
+  return PREF_GetIntPref(pref.get(), aRetVal, mKind == PrefValueKind::Default);
 }
 
 NS_IMETHODIMP
@@ -2349,7 +2351,7 @@ nsPrefBranch::SetIntPref(const char* aPrefName, int32_t aValue)
   ENSURE_MAIN_PROCESS("SetIntPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_SetIntPref(pref.get(), aValue, mIsDefault);
+  return PREF_SetIntPref(pref.get(), aValue, mKind == PrefValueKind::Default);
 }
 
 NS_IMETHODIMP
@@ -2373,7 +2375,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
     const PrefName& pref = GetPrefName(aPrefName);
     bool bNeedDefault = false;
 
-    if (mIsDefault) {
+    if (mKind == PrefValueKind::Default) {
       bNeedDefault = true;
     } else {
       // if there is no user (or locked) value
@@ -3638,8 +3640,8 @@ Preferences::Shutdown()
 //
 
 Preferences::Preferences()
-  : mRootBranch(new nsPrefBranch("", false))
-  , mDefaultRootBranch(new nsPrefBranch("", true))
+  : mRootBranch(new nsPrefBranch("", PrefValueKind::User))
+  , mDefaultRootBranch(new nsPrefBranch("", PrefValueKind::Default))
 {
 }
 
@@ -3916,7 +3918,8 @@ Preferences::GetBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal)
   if ((nullptr != aPrefRoot) && (*aPrefRoot != '\0')) {
     // TODO: Cache this stuff and allow consumers to share branches (hold weak
     // references, I think).
-    RefPtr<nsPrefBranch> prefBranch = new nsPrefBranch(aPrefRoot, false);
+    RefPtr<nsPrefBranch> prefBranch =
+      new nsPrefBranch(aPrefRoot, PrefValueKind::User);
     prefBranch.forget(aRetVal);
   } else {
     // Special case: caching the default root.
@@ -3938,7 +3941,8 @@ Preferences::GetDefaultBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal)
 
   // TODO: Cache this stuff and allow consumers to share branches (hold weak
   // references, I think).
-  RefPtr<nsPrefBranch> prefBranch = new nsPrefBranch(aPrefRoot, true);
+  RefPtr<nsPrefBranch> prefBranch =
+    new nsPrefBranch(aPrefRoot, PrefValueKind::Default);
   if (!prefBranch) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
