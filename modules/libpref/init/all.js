@@ -333,10 +333,6 @@ pref("media.memory_cache_max_size", 8192);
 pref("media.memory_caches_combined_limit_kb", 524288);
 pref("media.memory_caches_combined_limit_pc_sysmem", 5);
 
-// Cache size hint (in bytes) for each MediaResourceIndex.
-// 0 -> no cache. Will use next power of 2, clamped to 32B-128KB.
-pref("media.cache.resource-index", 8192);
-
 // We'll throttle the download if the download rate is throttle-factor times
 // the estimated playback rate, AND we satisfy the cache readahead_limit
 // above. The estimated playback rate is time_duration/length_in_bytes.
@@ -368,7 +364,6 @@ pref("media.mp4.enabled", true);
 pref("media.use-blank-decoder", false);
 #ifdef MOZ_WMF
 pref("media.wmf.enabled", true);
-pref("media.wmf.decoder.thread-count", -1);
 pref("media.wmf.dxva.enabled", true);
 pref("media.wmf.dxva.d3d11.enabled", true);
 pref("media.wmf.dxva.max-videos", 8);
@@ -5813,14 +5808,10 @@ pref("security.mixed_content.hsts_priming_request_timeout", 2000);
 // behavior of Firefox.
 pref("security.data_uri.unique_opaque_origin", true);
 
-#ifdef EARLY_BETA_OR_EARLIER
 // If true, all toplevel data: URI navigations will be blocked.
 // Please note that manually entering a data: URI in the
 // URL-Bar will not be blocked when flipping this pref.
 pref("security.data_uri.block_toplevel_data_uri_navigations", true);
-#else
-pref("security.data_uri.block_toplevel_data_uri_navigations", false);
-#endif
 
 // Enable Storage API for all platforms except Android.
 #if !defined(MOZ_WIDGET_ANDROID)

@@ -4,8 +4,9 @@
 
 "use strict";
 
-const { DOM: dom, PropTypes, PureComponent } =
-  require("devtools/client/shared/vendor/react");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 class AnimationItem extends PureComponent {
   static get propTypes() {

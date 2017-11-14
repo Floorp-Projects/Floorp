@@ -16,7 +16,6 @@
 #include "nsStringStream.h"
 #include "nsIScriptError.h"
 #include "nsSAXAttributes.h"
-#include "nsSAXLocator.h"
 #include "nsCharsetSource.h"
 
 using mozilla::Encoding;
@@ -28,10 +27,7 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
 NS_IMPL_CYCLE_COLLECTION(nsSAXXMLReader,
                          mContentHandler,
-                         mDTDHandler,
                          mErrorHandler,
-                         mLexicalHandler,
-                         mDeclarationHandler,
                          mBaseURI,
                          mListener,
                          mParserObserver)
@@ -40,20 +36,19 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSAXXMLReader)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSAXXMLReader)
   NS_INTERFACE_MAP_ENTRY(nsISAXXMLReader)
   NS_INTERFACE_MAP_ENTRY(nsIExpatSink)
-  NS_INTERFACE_MAP_ENTRY(nsIExtendedExpatSink)
   NS_INTERFACE_MAP_ENTRY(nsIContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISAXXMLReader)
 NS_INTERFACE_MAP_END
 
-nsSAXXMLReader::nsSAXXMLReader() :
-    mIsAsyncParse(false),
-    mEnableNamespacePrefixes(false)
+nsSAXXMLReader::nsSAXXMLReader()
+  : mIsAsyncParse(false)
 {
 }
 
 // nsIContentSink
+
 NS_IMETHODIMP
 nsSAXXMLReader::WillBuildModel(nsDTDMode)
 {
@@ -78,7 +73,8 @@ nsSAXXMLReader::SetParser(nsParserBase *aParser)
   return NS_OK;
 }
 
-// nsIExtendedExpatSink
+// nsIExpatSink
+
 NS_IMETHODIMP
 nsSAXXMLReader::HandleStartElement(const char16_t *aName,
                                    const char16_t **aAtts,
@@ -97,7 +93,7 @@ nsSAXXMLReader::HandleStartElement(const char16_t *aName,
     // XXX don't have attr type information
     NS_NAMED_LITERAL_STRING(cdataType, "CDATA");
     // could support xmlns reporting, it's a standard SAX feature
-    if (mEnableNamespacePrefixes || !uri.EqualsLiteral(XMLNS_URI)) {
+    if (!uri.EqualsLiteral(XMLNS_URI)) {
       NS_ASSERTION(aAtts[1], "null passed to handler");
       atts->AddAttribute(uri, localName, qName, cdataType,
                          nsDependentString(aAtts[1]));
@@ -124,9 +120,6 @@ NS_IMETHODIMP
 nsSAXXMLReader::HandleComment(const char16_t *aName)
 {
   NS_ASSERTION(aName, "null passed to handler");
-  if (mLexicalHandler)
-    return mLexicalHandler->Comment(nsDependentString(aName));
- 
   return NS_OK;
 }
 
@@ -134,46 +127,10 @@ NS_IMETHODIMP
 nsSAXXMLReader::HandleCDataSection(const char16_t *aData,
                                    uint32_t aLength)
 {
-  nsresult rv;
-  if (mLexicalHandler) {
-    rv = mLexicalHandler->StartCDATA();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   if (mContentHandler) {
-    rv = mContentHandler->Characters(Substring(aData, aData+aLength));
+    nsresult rv = mContentHandler->Characters(Substring(aData, aData+aLength));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  if (mLexicalHandler) {
-    rv = mLexicalHandler->EndCDATA();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::HandleStartDTD(const char16_t *aName,
-                               const char16_t *aSystemId,
-                               const char16_t *aPublicId)
-{
-  char16_t nullChar = char16_t(0);
-  if (!aName)
-    aName = &nullChar;
-  if (!aSystemId)
-    aSystemId = &nullChar;
-  if (!aPublicId)
-    aPublicId = &nullChar;
-
-  mSystemId = aSystemId;
-  mPublicId = aPublicId;
-  if (mLexicalHandler) {
-    return mLexicalHandler->StartDTD(nsDependentString(aName),
-                                     nsDependentString(aPublicId),
-                                     nsDependentString(aSystemId));
-  }
-
   return NS_OK;
 }
 
@@ -184,9 +141,6 @@ nsSAXXMLReader::HandleDoctypeDecl(const nsAString & aSubset,
                                   const nsAString & aPublicId,
                                   nsISupports* aCatalogData)
 {
-  if (mLexicalHandler)
-    return mLexicalHandler->EndDTD();
-
   return NS_OK;
 }
 
@@ -198,35 +152,6 @@ nsSAXXMLReader::HandleCharacterData(const char16_t *aData,
     return mContentHandler->Characters(Substring(aData, aData+aLength));
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::HandleStartNamespaceDecl(const char16_t *aPrefix,
-                                         const char16_t *aUri)
-{
-  if (!mContentHandler)
-    return NS_OK;
-  
-  char16_t nullChar = char16_t(0);
-  if (!aPrefix)
-    aPrefix = &nullChar;
-  if (!aUri)
-    aUri = &nullChar;
-
-  return mContentHandler->StartPrefixMapping(nsDependentString(aPrefix),
-                                             nsDependentString(aUri));
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::HandleEndNamespaceDecl(const char16_t *aPrefix)
-{
-  if (!mContentHandler)
-    return NS_OK;
-  
-  if (aPrefix)
-    return mContentHandler->EndPrefixMapping(nsDependentString(aPrefix));
-
-  return mContentHandler->EndPrefixMapping(EmptyString());
 }
 
 NS_IMETHODIMP
@@ -243,63 +168,11 @@ nsSAXXMLReader::HandleProcessingInstruction(const char16_t *aTarget,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleNotationDecl(const char16_t *aNotationName,
-                                   const char16_t *aSystemId,
-                                   const char16_t *aPublicId)
-{
-  NS_ASSERTION(aNotationName, "null passed to handler");
-  if (mDTDHandler) {
-    char16_t nullChar = char16_t(0);
-    if (!aSystemId)
-      aSystemId = &nullChar;
-    if (!aPublicId)
-      aPublicId = &nullChar;
-
-    return mDTDHandler->NotationDecl(nsDependentString(aNotationName),
-                                     nsDependentString(aSystemId),
-                                     nsDependentString(aPublicId));
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::HandleUnparsedEntityDecl(const char16_t *aEntityName,
-                                         const char16_t *aSystemId,
-                                         const char16_t *aPublicId,
-                                         const char16_t *aNotationName)
-{
-  NS_ASSERTION(aEntityName && aNotationName, "null passed to handler");
-  if (mDTDHandler) {
-    char16_t nullChar = char16_t(0);
-    if (!aSystemId)
-      aSystemId = &nullChar;
-    if (!aPublicId)
-      aPublicId = &nullChar;
-
-    return mDTDHandler->UnparsedEntityDecl(nsDependentString(aEntityName),
-                                           nsDependentString(aSystemId),
-                                           nsDependentString(aPublicId),
-                                           nsDependentString(aNotationName));
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSAXXMLReader::HandleXMLDeclaration(const char16_t *aVersion,
                                      const char16_t *aEncoding,
                                      int32_t aStandalone)
 {
   NS_ASSERTION(aVersion, "null passed to handler");
-  if (mDeclarationHandler) {
-    char16_t nullChar = char16_t(0);
-    if (!aEncoding)
-      aEncoding = &nullChar;
-    mDeclarationHandler->HandleXMLDeclaration(nsDependentString(aVersion),
-                                              nsDependentString(aEncoding),
-                                              aStandalone > 0);
-  }
   return NS_OK;
 }
 
@@ -314,22 +187,7 @@ nsSAXXMLReader::ReportError(const char16_t* aErrorText,
   *_retval = true;
 
   if (mErrorHandler) {
-    uint32_t lineNumber;
-    nsresult rv = aError->GetLineNumber(&lineNumber);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint32_t columnNumber;
-    rv = aError->GetColumnNumber(&columnNumber);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsISAXLocator> locator = new nsSAXLocator(mPublicId,
-                                                       mSystemId,
-                                                       lineNumber,
-                                                       columnNumber);
-    if (!locator)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = mErrorHandler->FatalError(locator, nsDependentString(aErrorText));
+    nsresult rv = mErrorHandler->FatalError(nsDependentString(aErrorText));
     if (NS_SUCCEEDED(rv)) {
       // The error handler has handled the script error.  Don't log to console.
       *_retval = false;
@@ -370,20 +228,6 @@ nsSAXXMLReader::SetContentHandler(nsISAXContentHandler *aContentHandler)
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::GetDtdHandler(nsISAXDTDHandler **aDtdHandler)
-{
-  NS_IF_ADDREF(*aDtdHandler = mDTDHandler);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::SetDtdHandler(nsISAXDTDHandler *aDtdHandler)
-{
-  mDTDHandler = aDtdHandler;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSAXXMLReader::GetErrorHandler(nsISAXErrorHandler **aErrorHandler)
 {
   NS_IF_ADDREF(*aErrorHandler = mErrorHandler);
@@ -395,64 +239,6 @@ nsSAXXMLReader::SetErrorHandler(nsISAXErrorHandler *aErrorHandler)
 {
   mErrorHandler = aErrorHandler;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::SetFeature(const nsAString &aName, bool aValue)
-{
-  if (aName.EqualsLiteral("http://xml.org/sax/features/namespace-prefixes")) {
-    mEnableNamespacePrefixes = aValue;
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::GetFeature(const nsAString &aName, bool *aResult)
-{
-  if (aName.EqualsLiteral("http://xml.org/sax/features/namespace-prefixes")) {
-    *aResult = mEnableNamespacePrefixes;
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::GetDeclarationHandler(nsIMozSAXXMLDeclarationHandler **aDeclarationHandler) {
-  NS_IF_ADDREF(*aDeclarationHandler = mDeclarationHandler);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::SetDeclarationHandler(nsIMozSAXXMLDeclarationHandler *aDeclarationHandler) {
-  mDeclarationHandler = aDeclarationHandler;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::GetLexicalHandler(nsISAXLexicalHandler **aLexicalHandler)
-{
-  NS_IF_ADDREF(*aLexicalHandler = mLexicalHandler);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::SetLexicalHandler(nsISAXLexicalHandler *aLexicalHandler)
-{
-  mLexicalHandler = aLexicalHandler;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::SetProperty(const nsAString &aName, nsISupports* aValue)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::GetProperty(const nsAString &aName, bool *aResult)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -523,17 +309,9 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStreamPtr,
   if (NS_FAILED(rv))
     parserChannel->Cancel(rv);
 
-  /* When parsing a new document, we need to clear the XML identifiers.
-     HandleStartDTD will set these values from the DTD declaration tag.
-     We won't have them, of course, if there's a well-formedness error
-     before the DTD tag (such as a space before an XML declaration).
-   */
-  mSystemId.Truncate();
-  mPublicId.Truncate();
-
   nsresult status;
   parserChannel->GetStatus(&status);
-  
+
   uint64_t offset = 0;
   while (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
     uint64_t available;

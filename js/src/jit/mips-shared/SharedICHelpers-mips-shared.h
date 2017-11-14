@@ -78,7 +78,7 @@ EmitChangeICReturnAddress(MacroAssembler& masm, Register reg)
 }
 
 inline void
-EmitBaselineTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t argSize)
+EmitBaselineTailCallVM(uint8_t* target, MacroAssembler& masm, uint32_t argSize)
 {
     Register scratch = R2.scratchReg();
 
@@ -106,7 +106,7 @@ EmitBaselineTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t argSize)
 }
 
 inline void
-EmitIonTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t stackSize)
+EmitIonTailCallVM(uint8_t* target, MacroAssembler& masm, uint32_t stackSize)
 {
     Register scratch = R2.scratchReg();
 
@@ -135,7 +135,7 @@ EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32
 }
 
 inline void
-EmitBaselineCallVM(JitCode* target, MacroAssembler& masm)
+EmitBaselineCallVM(uint8_t* target, MacroAssembler& masm)
 {
     Register scratch = R2.scratchReg();
     EmitBaselineCreateStubFrameDescriptor(masm, scratch, ExitFrameLayout::Size());

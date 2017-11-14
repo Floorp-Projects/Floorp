@@ -8,15 +8,12 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContentSink.h"
-#include "nsIExtendedExpatSink.h"
+#include "nsIExpatSink.h"
 #include "nsIParser.h"
 #include "nsIURI.h"
 #include "nsISAXXMLReader.h"
 #include "nsISAXContentHandler.h"
-#include "nsISAXDTDHandler.h"
 #include "nsISAXErrorHandler.h"
-#include "nsISAXLexicalHandler.h"
-#include "nsIMozSAXXMLDeclarationHandler.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/NotNull.h"
@@ -27,14 +24,13 @@
 { 0x96, 0xd0, 0x47, 0xa8, 0x28, 0x2a, 0xe3, 0xdb} }
 
 class nsSAXXMLReader final : public nsISAXXMLReader,
-                             public nsIExtendedExpatSink,
+                             public nsIExpatSink,
                              public nsIContentSink
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsSAXXMLReader, nsISAXXMLReader)
   NS_DECL_NSIEXPATSINK
-  NS_DECL_NSIEXTENDEDEXPATSINK
   NS_DECL_NSISAXXMLREADER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
@@ -78,10 +74,7 @@ private:
   ~nsSAXXMLReader() {}
 
   nsCOMPtr<nsISAXContentHandler> mContentHandler;
-  nsCOMPtr<nsISAXDTDHandler> mDTDHandler;
   nsCOMPtr<nsISAXErrorHandler> mErrorHandler;
-  nsCOMPtr<nsISAXLexicalHandler> mLexicalHandler;
-  nsCOMPtr<nsIMozSAXXMLDeclarationHandler> mDeclarationHandler;
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIRequestObserver> mParserObserver;
@@ -95,11 +88,6 @@ private:
                           nsString &aURI,
                           nsString &aLocalName,
                           nsString &aQName);
-  nsString mPublicId;
-  nsString mSystemId;
-
-  // Feature flags
-  bool mEnableNamespacePrefixes;
 };
 
 #endif // nsSAXXMLReader_h__
