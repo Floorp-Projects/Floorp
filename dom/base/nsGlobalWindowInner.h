@@ -468,30 +468,9 @@ public:
   void EnableDialogs();
   void DisableDialogs();
 
-  class MOZ_RAII TemporarilyDisableDialogs
-  {
-  public:
-    explicit TemporarilyDisableDialogs(nsGlobalWindowOuter* aWindow
-                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~TemporarilyDisableDialogs();
-
-  private:
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    // Always an inner window; this is the window whose dialog state we messed
-    // with.  We just want to keep it alive, because we plan to poke at its
-    // members in our destructor.
-    RefPtr<nsGlobalWindowInner> mTopWindow;
-    // This is not a AutoRestore<bool> because that would require careful
-    // member destructor ordering, which is a bit fragile.  This way we can
-    // explicitly restore things before we drop our ref to mTopWindow.
-    bool mSavedDialogsEnabled;
-  };
-  friend class TemporarilyDisableDialogs;
-
   nsIScriptContext *GetContextInternal();
 
-  nsGlobalWindowOuter *GetOuterWindowInternal();
+  nsGlobalWindowOuter *GetOuterWindowInternal() const;
 
   bool IsCreatingInnerWindow() const
   {
@@ -1253,8 +1232,6 @@ public:
 
   void FlushPendingNotifications(mozilla::FlushType aType);
 
-  static bool CanSetProperty(const char *aPrefName);
-
   void ScrollTo(const mozilla::CSSIntPoint& aScroll,
                 const mozilla::dom::ScrollOptions& aOptions);
 
@@ -1320,10 +1297,6 @@ protected:
                       JS::Handle<JS::Value> aTransfer,
                       nsIPrincipal& aSubjectPrincipal,
                       mozilla::ErrorResult& aError);
-
-  // Helper called after moving/resizing, to update docShell's presContext
-  // if we have caused a resolution change by moving across monitors.
-  void CheckForDPIChange();
 
 private:
   // Fire the JS engine's onNewGlobalObject hook.  Only used on inner windows.
@@ -1675,7 +1648,7 @@ nsGlobalWindowInner::GetContextInternal()
 }
 
 inline nsGlobalWindowOuter*
-nsGlobalWindowInner::GetOuterWindowInternal()
+nsGlobalWindowInner::GetOuterWindowInternal() const
 {
   return nsGlobalWindowOuter::Cast(GetOuterWindow());
 }

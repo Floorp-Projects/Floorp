@@ -1408,34 +1408,14 @@ nsGlobalWindowInner::IsBlackForCC(bool aTracingNeeded)
 nsresult
 nsGlobalWindowInner::EnsureScriptEnvironment()
 {
+  // NOTE: We can't use FORWARD_TO_OUTER here because we don't want to fail if
+  // we're called on an inactive inner window.
   nsGlobalWindowOuter* outer = GetOuterWindowInternal();
   if (!outer) {
     NS_WARNING("No outer window available!");
     return NS_ERROR_FAILURE;
   }
-
-  if (outer->GetWrapperPreserveColor()) {
-    return NS_OK;
-  }
-
-  NS_ASSERTION(!outer->GetCurrentInnerWindowInternal(),
-               "No cached wrapper, but we have an inner window?");
-
-  // If this window is a [i]frame, don't bother GC'ing when the frame's context
-  // is destroyed since a GC will happen when the frameset or host document is
-  // destroyed anyway.
-  nsCOMPtr<nsIScriptContext> context = new nsJSContext(!IsFrame(), outer);
-
-  NS_ASSERTION(!outer->mContext, "Will overwrite mContext!");
-
-  // should probably assert the context is clean???
-  context->WillInitializeContext();
-
-  nsresult rv = context->InitContext();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  outer->mContext = context;
-  return NS_OK;
+  return outer->EnsureScriptEnvironment();
 }
 
 nsIScriptContext *
@@ -1445,7 +1425,7 @@ nsGlobalWindowInner::GetScriptContext()
   if (!outer) {
     return nullptr;
   }
-  return outer->mContext;
+  return outer->GetScriptContext();
 }
 
 JSObject *
@@ -1549,6 +1529,10 @@ nsGlobalWindowInner::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
 void
 nsGlobalWindowInner::UpdateParentTarget()
 {
+  // NOTE: This method is identical to
+  // nsGlobalWindowOuter::UpdateParentTarget(). IF YOU UPDATE THIS METHOD,
+  // UPDATE THE OTHER ONE TOO!
+
   // Try to get our frame element's tab child global (its in-process message
   // manager).  If that fails, fall back to the chrome event handler's tab
   // child global, and if it doesn't have one, just use the chrome event
@@ -1672,33 +1656,13 @@ nsGlobalWindowInner::DialogsAreBeingAbused()
 void
 nsGlobalWindowInner::DisableDialogs()
 {
-  nsGlobalWindowOuter *topWindowOuter = GetScriptableTopInternal();
-  if (!topWindowOuter) {
-    NS_ERROR("DisableDialogs() called without a top window?");
-    return;
-  }
-
-  nsGlobalWindowInner* topWindow = topWindowOuter->GetCurrentInnerWindowInternal();
-  // TODO: Warn if no top window?
-  if (topWindow) {
-    topWindow->mAreDialogsEnabled = false;
-  }
+  FORWARD_TO_OUTER_VOID(DisableDialogs, ());
 }
 
 void
 nsGlobalWindowInner::EnableDialogs()
 {
-  nsGlobalWindowOuter *topWindowOuter = GetScriptableTopInternal();
-  if (!topWindowOuter) {
-    NS_ERROR("EnableDialogs() called without a top window?");
-    return;
-  }
-
-  // TODO: Warn if no top window?
-  nsGlobalWindowInner* topWindow = topWindowOuter->GetCurrentInnerWindowInternal();
-  if (topWindow) {
-    topWindow->mAreDialogsEnabled = true;
-  }
+  FORWARD_TO_OUTER_VOID(EnableDialogs, ());
 }
 
 nsresult
@@ -3143,14 +3107,10 @@ nsGlobalWindowInner::GetTop(mozilla::ErrorResult& aError)
 nsPIDOMWindowOuter*
 nsGlobalWindowInner::GetChildWindow(const nsAString& aName)
 {
-  nsCOMPtr<nsIDocShell> docShell(GetDocShell());
-  NS_ENSURE_TRUE(docShell, nullptr);
-
-  nsCOMPtr<nsIDocShellTreeItem> child;
-  docShell->FindChildWithName(aName, false, true, nullptr, nullptr,
-                              getter_AddRefs(child));
-
-  return child ? child->GetWindow() : nullptr;
+  if (GetOuterWindowInternal()) {
+    return GetOuterWindowInternal()->GetChildWindow(aName);
+  }
+  return nullptr;
 }
 
 bool
@@ -3177,13 +3137,10 @@ nsGlobalWindowInner::GetMainWidget()
 nsIWidget*
 nsGlobalWindowInner::GetNearestWidget() const
 {
-  nsIDocShell* docShell = GetDocShell();
-  NS_ENSURE_TRUE(docShell, nullptr);
-  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
-  NS_ENSURE_TRUE(presShell, nullptr);
-  nsIFrame* rootFrame = presShell->GetRootFrame();
-  NS_ENSURE_TRUE(rootFrame, nullptr);
-  return rootFrame->GetView()->GetNearestWidget(nullptr);
+  if (GetOuterWindowInternal()) {
+    return GetOuterWindowInternal()->GetNearestWidget();
+  }
+  return nullptr;
 }
 
 void
@@ -3667,20 +3624,6 @@ nsGlobalWindowInner::FirePopupBlockedEvent(nsIDocument* aDoc,
   MOZ_CRASH("Virtual outer window only function");
 }
 
-// static
-bool
-nsGlobalWindowInner::CanSetProperty(const char *aPrefName)
-{
-  // Chrome can set any property.
-  if (nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-    return true;
-  }
-
-  // If the pref is set to true, we can not set the property
-  // and vice versa.
-  return !Preferences::GetBool(aPrefName, true);
-}
-
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowInner::Open(const nsAString& aUrl, const nsAString& aName,
                           const nsAString& aOptions, ErrorResult& aError)
@@ -3849,15 +3792,7 @@ nsGlobalWindowInner::LeaveModalState()
 bool
 nsGlobalWindowInner::IsInModalState()
 {
-  nsGlobalWindowOuter *topWin = GetScriptableTopInternal();
-
-  if (!topWin) {
-    // IsInModalState() getting called w/o a reachable top window is a bit
-    // iffy, but valid enough not to make noise about it.  See bug 404828
-    return false;
-  }
-
-  return topWin->mModalStateDepth != 0;
+  FORWARD_TO_OUTER(IsInModalState, (), false);
 }
 
 // static
@@ -4094,37 +4029,9 @@ nsGlobalWindowInner::UpdateCommands(const nsAString& anAction,
                                     nsISelection* aSel,
                                     int16_t aReason)
 {
-  // If this is a child process, redirect to the parent process.
-  if (nsIDocShell* docShell = GetDocShell()) {
-    if (nsCOMPtr<nsITabChild> child = docShell->GetTabChild()) {
-      nsCOMPtr<nsPIWindowRoot> root = GetTopWindowRoot();
-      if (root) {
-        nsContentUtils::AddScriptRunner(
-          new ChildCommandDispatcher(root, child, anAction));
-      }
-      return NS_OK;
-    }
+  if (GetOuterWindowInternal()) {
+    return GetOuterWindowInternal()->UpdateCommands(anAction, aSel, aReason);
   }
-
-  nsPIDOMWindowOuter *rootWindow = GetPrivateRoot();
-  if (!rootWindow)
-    return NS_OK;
-
-  nsCOMPtr<nsIDOMXULDocument> xulDoc =
-    do_QueryInterface(rootWindow->GetExtantDoc());
-  // See if we contain a XUL document.
-  // selectionchange action is only used for mozbrowser, not for XUL. So we bypass
-  // XUL command dispatch if anAction is "selectionchange".
-  if (xulDoc && !anAction.EqualsLiteral("selectionchange")) {
-    // Retrieve the command dispatcher and call updateCommands on it.
-    nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher;
-    xulDoc->GetCommandDispatcher(getter_AddRefs(xulCommandDispatcher));
-    if (xulCommandDispatcher) {
-      nsContentUtils::AddScriptRunner(new CommandDispatcher(xulCommandDispatcher,
-                                                            anAction));
-    }
-  }
-
   return NS_OK;
 }
 
@@ -4314,14 +4221,7 @@ nsIScriptContext*
 nsGlobalWindowInner::GetContextForEventHandlers(nsresult* aRv)
 {
   *aRv = NS_ERROR_UNEXPECTED;
-  NS_ENSURE_TRUE(IsCurrentInnerWindow(), nullptr);
-
-  nsIScriptContext* scx;
-  if ((scx = GetContext())) {
-    *aRv = NS_OK;
-    return scx;
-  }
-  return nullptr;
+  FORWARD_TO_OUTER(GetContextForEventHandlers, (aRv), nullptr);
 }
 
 //*****************************************************************************
@@ -4366,19 +4266,10 @@ nsGlobalWindowInner::SetActive(bool aActive)
 bool
 nsGlobalWindowInner::IsTopLevelWindowActive()
 {
-   nsCOMPtr<nsIDocShellTreeItem> treeItem(GetDocShell());
-   if (!treeItem) {
-     return false;
-   }
-
-   nsCOMPtr<nsIDocShellTreeItem> rootItem;
-   treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
-   if (!rootItem) {
-     return false;
-   }
-
-   nsCOMPtr<nsPIDOMWindowOuter> domWindow = rootItem->GetWindow();
-   return domWindow && domWindow->IsActive();
+  if (GetOuterWindowInternal()) {
+    return GetOuterWindowInternal()->IsTopLevelWindowActive();
+  }
+  return false;
 }
 
 void
@@ -5003,69 +4894,14 @@ nsGlobalWindowInner::GetIndexedDB(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindowInner::GetInterface(const nsIID & aIID, void **aSink)
 {
-  NS_ENSURE_ARG_POINTER(aSink);
-  *aSink = nullptr;
+  nsGlobalWindowOuter* outer = GetOuterWindowInternal();
+  NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
 
-  if (aIID.Equals(NS_GET_IID(nsIDocCharset))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    NS_WARNING("Using deprecated nsIDocCharset: use nsIDocShell.GetCharset() instead ");
-    nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(outer->mDocShell));
-    docCharset.forget(aSink);
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIWebNavigation))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(outer->mDocShell));
-    webNav.forget(aSink);
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIDocShell))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    nsCOMPtr<nsIDocShell> docShell = outer->mDocShell;
-    docShell.forget(aSink);
-  }
-#ifdef NS_PRINTING
-  else if (aIID.Equals(NS_GET_IID(nsIWebBrowserPrint))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    if (outer->mDocShell) {
-      nsCOMPtr<nsIContentViewer> viewer;
-      outer->mDocShell->GetContentViewer(getter_AddRefs(viewer));
-      if (viewer) {
-        nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint(do_QueryInterface(viewer));
-        webBrowserPrint.forget(aSink);
-      }
-    }
-  }
-#endif
-  else if (aIID.Equals(NS_GET_IID(nsIDOMWindowUtils))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    if (!mWindowUtils) {
-      mWindowUtils = new nsDOMWindowUtils(outer);
-    }
-
-    *aSink = mWindowUtils;
-    NS_ADDREF(((nsISupports *) *aSink));
-  }
-  else if (aIID.Equals(NS_GET_IID(nsILoadContext))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(outer->mDocShell));
-    loadContext.forget(aSink);
-  }
-  else {
+  nsresult rv = outer->GetInterfaceInternal(aIID, aSink);
+  if (rv == NS_ERROR_NO_INTERFACE) {
     return QueryInterface(aIID, aSink);
   }
-
-  return *aSink ? NS_OK : NS_ERROR_NO_INTERFACE;
+  return rv;
 }
 
 void
@@ -7771,23 +7607,6 @@ nsGlobalWindowInner::CreateImageBitmap(JSContext* aCx,
   return nullptr;
 }
 
-// Helper called by methods that move/resize the window,
-// to ensure the presContext (if any) is aware of resolution
-// change that may happen in multi-monitor configuration.
-void
-nsGlobalWindowInner::CheckForDPIChange()
-{
-  if (mDocShell) {
-    RefPtr<nsPresContext> presContext;
-    mDocShell->GetPresContext(getter_AddRefs(presContext));
-    if (presContext) {
-      if (presContext->DeviceContext()->CheckDPIChange()) {
-        presContext->UIResolutionChanged();
-      }
-    }
-  }
-}
-
 mozilla::dom::TabGroup*
 nsGlobalWindowInner::TabGroupInner()
 {
@@ -7847,36 +7666,6 @@ nsGlobalWindowInner::AbstractMainThreadFor(TaskCategory aCategory)
     return GetDocGroup()->AbstractMainThreadFor(aCategory);
   }
   return DispatcherTrait::AbstractMainThreadFor(aCategory);
-}
-
-nsGlobalWindowInner::TemporarilyDisableDialogs::TemporarilyDisableDialogs(
-  nsGlobalWindowOuter* aWindow MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-{
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-
-  MOZ_ASSERT(aWindow);
-  nsGlobalWindowOuter* topWindowOuter = aWindow->GetScriptableTopInternal();
-  if (!topWindowOuter) {
-    NS_ERROR("nsGlobalWindowInner::TemporarilyDisableDialogs used without a top "
-             "window?");
-    return;
-  }
-
-  // TODO: Warn if no top window?
-  nsGlobalWindowInner* topWindow =
-    topWindowOuter->GetCurrentInnerWindowInternal();
-  if (topWindow) {
-    mTopWindow = topWindow;
-    mSavedDialogsEnabled = mTopWindow->mAreDialogsEnabled;
-    mTopWindow->mAreDialogsEnabled = false;
-  }
-}
-
-nsGlobalWindowInner::TemporarilyDisableDialogs::~TemporarilyDisableDialogs()
-{
-  if (mTopWindow) {
-    mTopWindow->mAreDialogsEnabled = mSavedDialogsEnabled;
-  }
 }
 
 Worklet*
