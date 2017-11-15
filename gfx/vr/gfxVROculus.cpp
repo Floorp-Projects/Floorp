@@ -1347,7 +1347,7 @@ VRControllerOculus::UpdateVibrateHaptic(ovrSession aSession,
                                         const VRManagerPromise& aPromise)
 {
   // UpdateVibrateHaptic() only can be called by mVibrateThread
-  MOZ_ASSERT(mVibrateThread == NS_GetCurrentThread());
+  MOZ_ASSERT(mVibrateThread->GetThread() == NS_GetCurrentThread());
 
   // It has been interrupted by loss focus.
   if (mIsVibrateStopped) {
@@ -1406,8 +1406,7 @@ VRControllerOculus::UpdateVibrateHaptic(ovrSession aSession,
           "VRControllerOculus::UpdateVibrateHaptic",
           this, &VRControllerOculus::UpdateVibrateHaptic, aSession,
           aHapticIndex, aIntensity, (duration > kVibrateRate) ? remainingTime : 0, aVibrateIndex, aPromise);
-    NS_DelayedDispatchToCurrentThread(runnable.forget(),
-                                      (duration > kVibrateRate) ? kVibrateRate : remainingTime);
+    mVibrateThread->PostDelayedTask(runnable.forget(), (duration > kVibrateRate) ? kVibrateRate : remainingTime);
   } else {
     VibrateHapticComplete(aSession, aPromise, true);
   }
@@ -1457,23 +1456,19 @@ VRControllerOculus::VibrateHaptic(ovrSession aSession,
 {
   // Spinning up the haptics thread at the first haptics call.
   if (!mVibrateThread) {
-    nsresult rv = NS_NewThread(getter_AddRefs(mVibrateThread));
-    MOZ_ASSERT(mVibrateThread);
-
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT(false, "Failed to create async thread.");
-    }
+    mVibrateThread = new VRThread(NS_LITERAL_CSTRING("Oculus_Vibration"));
   }
+  mVibrateThread->Start();
   ++mVibrateIndex;
   mIsVibrateStopped = false;
 
   RefPtr<Runnable> runnable =
-       NewRunnableMethod<ovrSession, uint32_t, double, double, uint64_t,
-        StoreCopyPassByConstLRef<VRManagerPromise>>(
-          "VRControllerOculus::UpdateVibrateHaptic",
-          this, &VRControllerOculus::UpdateVibrateHaptic, aSession,
-          aHapticIndex, aIntensity, aDuration, mVibrateIndex, aPromise);
-  mVibrateThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+    NewRunnableMethod<ovrSession, uint32_t, double, double, uint64_t,
+      StoreCopyPassByConstLRef<VRManagerPromise>>(
+        "VRControllerOculus::UpdateVibrateHaptic",
+        this, &VRControllerOculus::UpdateVibrateHaptic, aSession,
+        aHapticIndex, aIntensity, aDuration, mVibrateIndex, aPromise);
+  mVibrateThread->PostTask(runnable.forget());
 }
 
 void
