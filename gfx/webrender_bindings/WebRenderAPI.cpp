@@ -11,7 +11,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/widget/CompositorWidget.h"
-#include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/SynchronousTask.h"
 
 #define WRDL_LOG(...)
@@ -220,6 +219,18 @@ WebRenderAPI::UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
                                    const wr::LayoutPoint& aScrollPosition)
 {
   wr_scroll_layer_with_id(mDocHandle, aPipelineId, aScrollId, aScrollPosition);
+}
+
+bool
+WebRenderAPI::HitTest(const wr::WorldPoint& aPoint,
+                      wr::WrPipelineId& aOutPipelineId,
+                      layers::FrameMetrics::ViewID& aOutScrollId,
+                      gfx::CompositorHitTestInfo& aOutHitInfo)
+{
+  static_assert(sizeof(gfx::CompositorHitTestInfo) == sizeof(uint8_t),
+                "CompositorHitTestInfo should be u8-sized");
+  return wr_api_hit_test(mDocHandle, aPoint,
+          &aOutPipelineId, &aOutScrollId, (uint8_t*)&aOutHitInfo);
 }
 
 void
@@ -1246,6 +1257,21 @@ DisplayListBuilder::TopmostIsClip()
     return false;
   }
   return mClipStack.back().is<wr::WrClipId>();
+}
+
+void
+DisplayListBuilder::SetHitTestInfo(const layers::FrameMetrics::ViewID& aScrollId,
+                                   gfx::CompositorHitTestInfo aHitInfo)
+{
+  static_assert(sizeof(gfx::CompositorHitTestInfo) == sizeof(uint8_t),
+                "CompositorHitTestInfo should be u8-sized");
+  wr_set_item_tag(mWrState, aScrollId, static_cast<uint8_t>(aHitInfo));
+}
+
+void
+DisplayListBuilder::ClearHitTestInfo()
+{
+  wr_clear_item_tag(mWrState);
 }
 
 } // namespace wr
