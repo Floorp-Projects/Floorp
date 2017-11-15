@@ -10,7 +10,7 @@
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { MemoryFront } = require("devtools/shared/fronts/memory");
 const HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
-const { PropTypes } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   snapshotState: states,
   diffingState,

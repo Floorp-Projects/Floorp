@@ -5,7 +5,9 @@
 "use strict";
 
 const { assert, isSavedFrame } = require("devtools/shared/DevToolsUtils");
-const { DOM: dom, Component, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { L10N, formatNumber, formatPercent } = require("../utils");
 const Frame = createFactory(require("devtools/client/shared/components/Frame"));
 const { TREE_ROW_HEIGHT } = require("../constants");

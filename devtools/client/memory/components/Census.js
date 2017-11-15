@@ -4,7 +4,8 @@
 
 "use strict";
 
-const { Component, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Tree = createFactory(require("devtools/client/shared/components/Tree"));
 const CensusTreeItem = createFactory(require("./CensusTreeItem"));
 const { TREE_ROW_HEIGHT } = require("../constants");
