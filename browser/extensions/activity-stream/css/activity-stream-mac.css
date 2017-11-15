@@ -42,6 +42,11 @@ input {
     background-image: url("chrome://browser/skin/bookmark-hollow.svg"); }
   .icon.icon-delete {
     background-image: url("../data/content/assets/glyph-delete-16.svg"); }
+  .icon.icon-modal-delete {
+    background-image: url("../data/content/assets/glyph-modal-delete-32.svg");
+    width: 32px;
+    height: 32px;
+    background-size: 32px; }
   .icon.icon-dismiss {
     background-image: url("../data/content/assets/glyph-dismiss-16.svg"); }
   .icon.icon-info {
@@ -162,7 +167,7 @@ a {
   justify-content: flex-start;
   flex-wrap: wrap; }
   .actions button {
-    background: #F9F9FA;
+    background-color: #F9F9FA;
     border: 1px solid #B1B1B3;
     border-radius: 4px;
     color: inherit;
@@ -337,6 +342,8 @@ main {
       display: flex;
       align-items: center;
       justify-content: center; }
+      .top-sites-list .top-site-outer .tile::before {
+        content: attr(data-fallback); }
     .top-sites-list .top-site-outer.placeholder .tile {
       box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1); }
     .top-sites-list .top-site-outer.placeholder .screenshot {
@@ -379,6 +386,8 @@ main {
       align-items: center;
       justify-content: center;
       font-size: 20px; }
+      .top-sites-list .top-site-outer .default-icon[data-fallback]::before {
+        content: attr(data-fallback); }
     .top-sites-list .top-site-outer .title {
       font: message-box;
       height: 30px;
@@ -583,8 +592,7 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
   height: 266px;
   display: flex;
   border: 1px solid #D7D7DB;
-  border-radius: 3px;
-  margin-bottom: 16px; }
+  border-radius: 3px; }
   .sections-list .section-empty-state .empty-state {
     margin: auto;
     max-width: 350px; }
@@ -601,7 +609,6 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
     .sections-list .section-empty-state .empty-state .empty-state-message {
       margin-bottom: 0;
       font-size: 13px;
-      font-weight: 300;
       color: #737373;
       text-align: center; }
 
@@ -897,15 +904,27 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
   margin: 0; }
 
 .confirmation-dialog .modal-message {
-  padding: 24px; }
+  padding: 16px;
+  padding-bottom: 0;
+  display: flex; }
+  .confirmation-dialog .modal-message p {
+    margin: 0;
+    margin-bottom: 16px; }
 
 .confirmation-dialog .actions {
-  justify-content: flex-end; }
+  padding: 0px 16px 0 16px;
+  border: none;
+  flex-wrap: nowrap;
+  display: flex; }
   .confirmation-dialog .actions button {
-    margin-inline-end: 16px; }
+    margin-inline-end: 16px;
+    width: 50%; }
     .confirmation-dialog .actions button.done {
       margin-inline-start: 0;
       margin-inline-end: 0; }
+
+.confirmation-dialog .icon {
+  margin-inline-end: 16px; }
 
 .modal-overlay {
   background: #EDEDF0;
@@ -920,8 +939,8 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
 .modal {
   background: #FFF;
   border: 1px solid #D7D7DB;
-  border-radius: 3px;
-  font-size: 14px;
+  border-radius: 5px;
+  font-size: 15px;
   z-index: 11002; }
 
 .card-outer {
@@ -1029,7 +1048,9 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
     color: #737373;
     font-size: 10px;
     padding-bottom: 4px;
-    text-transform: uppercase; }
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis; }
   .card-outer .card-title {
     margin: 0 0 2px;
     font-size: 14px;
@@ -1089,7 +1110,8 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
 
 .manual-migration-actions {
   border: none;
-  display: block; }
+  display: block;
+  flex-wrap: nowrap; }
   @media (min-width: 544px) {
     .manual-migration-actions {
       display: flex;
@@ -1147,7 +1169,7 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
       offset-inline-end: 0;
       position: absolute; }
     .collapsible-section .section-top-bar .section-info-option .info-option::before {
-      background-image: url(chrome://global/skin/arrow/panelarrow-vertical-themed.svg), url(chrome://global/skin/arrow/panelarrow-vertical@2x.png);
+      background-image: url("chrome://global/skin/arrow/panelarrow-vertical@2x.png");
       background-position: right 7px bottom;
       background-repeat: no-repeat;
       background-size: 18px 10px;
@@ -1217,7 +1239,8 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
 .collapsible-section .section-disclaimer {
   color: #4A4A4F;
   font-size: 13px;
-  margin-bottom: 16px; }
+  margin-bottom: 16px;
+  position: relative; }
   .collapsible-section .section-disclaimer .section-disclaimer-text {
     display: inline-block; }
     @media (min-width: 416px) {
@@ -1225,17 +1248,18 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
         width: 224px; } }
     @media (min-width: 544px) {
       .collapsible-section .section-disclaimer .section-disclaimer-text {
-        width: 336px; } }
+        width: 340px; } }
     @media (min-width: 800px) {
       .collapsible-section .section-disclaimer .section-disclaimer-text {
-        width: 640px; } }
+        width: 610px; } }
   .collapsible-section .section-disclaimer a {
     color: #008EA4;
     padding-left: 3px; }
   .collapsible-section .section-disclaimer button {
     margin-top: 2px;
     offset-inline-end: 0;
-    height: 26px;
+    min-height: 26px;
+    max-width: 130px;
     background: #F9F9FA;
     border: 1px solid #B1B1B3;
     border-radius: 4px;
@@ -1243,19 +1267,16 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
     .collapsible-section .section-disclaimer button:hover:not(.dismiss) {
       box-shadow: 0 0 0 5px #D7D7DB;
       transition: box-shadow 150ms; }
-    @media (min-width: 224px) {
-      .collapsible-section .section-disclaimer button {
-        position: relative; } }
     @media (min-width: 416px) {
       .collapsible-section .section-disclaimer button {
         position: absolute; } }
 
 .collapsible-section .section-body {
-  max-height: 1100px;
   margin: 0 -7px;
   padding: 0 7px; }
   .collapsible-section .section-body.animating {
-    overflow: hidden; }
+    overflow: hidden;
+    pointer-events: none; }
 
 .collapsible-section.animation-enabled .section-title .icon-arrowhead-down,
 .collapsible-section.animation-enabled .section-title .icon-arrowhead-forward {
@@ -1267,9 +1288,6 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
 .collapsible-section.collapsed .section-body {
   max-height: 0;
   overflow: hidden; }
-
-.collapsible-section.collapsed .section-disclaimer {
-  position: relative; }
 
 .collapsible-section.collapsed .section-info-option {
   pointer-events: none; }

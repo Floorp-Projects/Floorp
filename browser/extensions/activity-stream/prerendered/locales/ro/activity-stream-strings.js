@@ -57,9 +57,9 @@ window.gActivityStreamStrings = {
   "settings_pane_topsites_body": "Accesează site-urile pe care le vizitezi mai des.",
   "settings_pane_topsites_options_showmore": "Arată două rânduri",
   "settings_pane_bookmarks_header": "Marcaje recente",
-  "settings_pane_bookmarks_body": "Your newly created bookmarks in one handy location.",
+  "settings_pane_bookmarks_body": "Marcajele memorate recent, organizate și accesibile într-un singur log.",
   "settings_pane_visit_again_header": "Vizitează din nou",
-  "settings_pane_visit_again_body": "Firefox will show you parts of your browsing history that you might want to remember or get back to.",
+  "settings_pane_visit_again_body": "Firefox îți va arăta părți din istoricul navigării tale la care ai vrea să revii mai târziu.",
   "settings_pane_highlights_header": "Evidențieri",
   "settings_pane_highlights_body2": "Find your way back to interesting things you’ve recently visited or bookmarked.",
   "settings_pane_highlights_options_bookmarks": "Marcaje",
@@ -88,11 +88,11 @@ window.gActivityStreamStrings = {
   "topsites_form_url_validation": "URL valid necesar",
   "pocket_read_more": "Subiecte populare:",
   "pocket_read_even_more": "Vezi mai multe articole",
-  "pocket_feedback_header": "The best of the web, curated by over 25 million people.",
+  "pocket_feedback_header": "Cel mai bun de pe web, întreţinut de peste 25 de milioane de oameni.",
   "pocket_description": "Discover high-quality content you might otherwise miss, with help from Pocket, now part of Mozilla.",
   "highlights_empty_state": "Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.",
   "topstories_empty_state": "You’ve caught up. Check back later for more top stories from {provider}. Can’t wait? Select a popular topic to find more great stories from around the web.",
-  "manual_migration_explanation2": "Try Firefox with the bookmarks, history and passwords from another browser.",
+  "manual_migration_explanation2": "Încearcă Firefox cu marcajele, istoricul și parolele din alt navigator.",
   "manual_migration_cancel_button": "Nu, mulțumesc",
-  "manual_migration_import_button": "Import Now"
+  "manual_migration_import_button": "Importă acum"
 };

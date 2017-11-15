@@ -16,6 +16,7 @@ function getDomain(url) {
   }
   return domain;
 }
+this.getDomain = getDomain;
 
 function getPath(url) {
   return new URL(url).pathname;
@@ -60,4 +61,4 @@ this.TippyTopProvider = class TippyTopProvider {
   }
 };
 
-this.EXPORTED_SYMBOLS = ["TippyTopProvider"];
+this.EXPORTED_SYMBOLS = ["TippyTopProvider", "getDomain"];
