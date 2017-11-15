@@ -389,10 +389,6 @@ class GeckoLayerClient implements LayerView.Listener
     }
 
     Matrix getMatrixForLayerRectToViewRect() {
-        if (!mView.isCompositorReady()) {
-            return null;
-        }
-
         ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
         PointF origin = viewportMetrics.getOrigin();
         float zoom = viewportMetrics.zoomFactor;
