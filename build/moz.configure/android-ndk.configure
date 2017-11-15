@@ -241,14 +241,16 @@ def stlport_cppflags(value, ndk, _):
 add_old_configure_assignment('stlport_cppflags', stlport_cppflags)
 
 
-@depends(android_platform, android_toolchain)
-def extra_toolchain_flags(platform_dir, toolchain_dir):
+@depends(android_platform, android_toolchain, stlport_cppflags)
+def extra_toolchain_flags(platform_dir, toolchain_dir, stlport_cppflags):
     if not platform_dir:
         return []
-    return ['-isystem',
-            os.path.join(platform_dir, 'usr', 'include'),
-            '-gcc-toolchain',
-            toolchain_dir]
+    flags = ['-isystem',
+             os.path.join(platform_dir, 'usr', 'include'),
+             '-gcc-toolchain',
+             toolchain_dir]
+    flags.extend(stlport_cppflags if stlport_cppflags else [])
+    return flags
 
 
 @depends(android_toolchain_prefix_base, android_toolchain)
