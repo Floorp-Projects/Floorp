@@ -23,7 +23,7 @@ describe("Release actor enhancer:", () => {
   });
 
   describe("Client proxy", () => {
-    it("properly releases backend actors when limit is reached", () => {
+    it("releases backend actors when limit reached adding a single message", () => {
       const logLimit = 100;
       let releasedActors = [];
       const { dispatch, getState } = setupStore([], {
@@ -56,6 +56,54 @@ describe("Release actor enhancer:", () => {
         packet.message.arguments.push(`message num ${i}`);
         dispatch(actions.messageAdd(packet));
       }
+
+      expect(releasedActors.length).toBe(3);
+      expect(releasedActors).toInclude(firstMessageActor);
+      expect(releasedActors).toInclude(secondMessageActor);
+      expect(releasedActors).toInclude(thirdMessageActor);
+    });
+
+    it("releases backend actors when limit reached adding multiple messages", () => {
+      const logLimit = 100;
+      let releasedActors = [];
+      const { dispatch, getState } = setupStore([], {
+        proxy: {
+          releaseActor: (actor) => {
+            releasedActors.push(actor);
+          }
+        }
+      }, { logLimit });
+
+      // Add a log message.
+      dispatch(actions.messageAdd(
+        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")));
+
+      let messages = getAllMessagesById(getState());
+      const firstMessage = messages.first();
+      const firstMessageActor = firstMessage.parameters[1].actor;
+
+      // Add an evaluation result message (see Bug 1408321).
+      const evaluationResultPacket = stubPackets.get("new Date(0)");
+      dispatch(actions.messageAdd(evaluationResultPacket));
+      const secondMessageActor = evaluationResultPacket.result.actor;
+
+      // Add an assertion message.
+      const assertPacket = stubPackets.get("console.assert(false, {message: 'foobar'})");
+      dispatch(actions.messageAdd(assertPacket));
+      const thirdMessageActor = assertPacket.message.arguments[0].actor;
+
+      // Add ${logLimit} messages so we prune the ones we added before.
+      const packets = [];
+      // Alternate between 2 packets so we don't trigger the repeat message mechanism.
+      const oddPacket = stubPackets.get("console.log(undefined)");
+      const evenPacket = stubPackets.get("console.log('foobar', 'test')");
+      for (let i = 0; i < logLimit; i++) {
+        const packet = i % 2 === 0 ? evenPacket : oddPacket;
+        packets.push(packet);
+      }
+
+      // Add all the packets at once. This will prune the first 3 messages.
+      dispatch(actions.messagesAdd(packets));
 
       expect(releasedActors.length).toBe(3);
       expect(releasedActors).toInclude(firstMessageActor);
