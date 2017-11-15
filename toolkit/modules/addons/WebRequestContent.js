@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebRequestCommon",
 
 // Websockets will get handled via httpchannel notifications same as http
 // requests, treat them the same as http in ContentPolicy.
-const IS_HTTP = /^https?:|wss?:/;
+const IS_HTTP = /^(?:http|ws)s?:/;
 
 var ContentPolicy = {
   _classDescription: "WebRequest content policy",
