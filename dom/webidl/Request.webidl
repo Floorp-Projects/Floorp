@@ -51,6 +51,11 @@ dictionary RequestInit {
   RequestRedirect redirect;
   DOMString integrity;
 
+  // If a main-thread fetch() promise rejects, the error passed will be a
+  // nsresult code.
+  [ChromeOnly]
+  boolean mozErrors;
+
   AbortSignal? signal;
 
   [Func="FetchObserver::IsEnabled"]
