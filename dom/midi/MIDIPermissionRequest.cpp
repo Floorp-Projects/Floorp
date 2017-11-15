@@ -6,12 +6,9 @@
 
 #include "mozilla/dom/MIDIPermissionRequest.h"
 #include "mozilla/dom/MIDIAccessManager.h"
-#include "mozilla/dom/Promise.h"
 #include "nsIGlobalObject.h"
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ipc/PBackgroundChild.h"
-#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/Preferences.h"
+#include "nsContentUtils.h"
 
 //-------------------------------------------------
 // MIDI Permission Requests
@@ -40,6 +37,7 @@ MIDIPermissionRequest::MIDIPermissionRequest(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aPromise, "aPromise should not be null!");
   MOZ_ASSERT(aWindow->GetDoc());
   mPrincipal = aWindow->GetDoc()->NodePrincipal();
+  MOZ_ASSERT(mPrincipal);
 }
 
 MIDIPermissionRequest::~MIDIPermissionRequest()
@@ -130,12 +128,13 @@ MIDIPermissionRequest::Run()
     return NS_OK;
   }
 
-  // If we don't need sysex, just allow. (Similar to what chrome does)
-  if (!mNeedsSysex) {
+  // If we already have sysex perms, allow.
+  if (nsContentUtils::IsExactSitePermAllow(mPrincipal, "midi-sysex")) {
     Allow(JS::UndefinedHandleValue);
     return NS_OK;
   }
 
+  // If we have no perms, or only have midi and are asking for sysex, pop dialog
   if (NS_FAILED(nsContentPermissionUtils::AskPermission(this, mWindow))) {
     Cancel();
     return NS_ERROR_FAILURE;

@@ -168,8 +168,14 @@ function checkEvents(events, expectedEvents) {
  * @returns A nsIContentPermissionRequest-ish object.
  */
 function makeMockPermissionRequest(browser) {
+  let type = {
+    options: [],
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType]),
+  };
+  let types = Cc["@mozilla.org/array;1"].createInstance(Components.interfaces.nsIMutableArray);
+  types.appendElement(type);
   let result = {
-    types: null,
+    types,
     principal: browser.contentPrincipal,
     requester: null,
     _cancelled: false,

@@ -8,6 +8,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const STORAGE_MANAGER_ENABLED = Services.prefs.getBoolPref("browser.storageManager.enabled");
 const RESIST_FINGERPRINTING_ENABLED = Services.prefs.getBoolPref("privacy.resistFingerprinting");
+const MIDI_ENABLED = Services.prefs.getBoolPref("dom.webmidi.enabled");
 
 add_task(async function testPermissionsListing() {
   let expectedPermissions = ["camera", "cookie", "desktop-notification", "focus-tab-by-prompt",
@@ -22,6 +23,11 @@ add_task(async function testPermissionsListing() {
     // Canvas permission should be hidden unless privacy.resistFingerprinting
     // is true.
     expectedPermissions.push("canvas");
+  }
+  if (MIDI_ENABLED) {
+    // Should remove this checking and add it as default after it is fully pref'd-on.
+    expectedPermissions.push("midi");
+    expectedPermissions.push("midi-sysex");
   }
   Assert.deepEqual(SitePermissions.listPermissions().sort(), expectedPermissions.sort(),
     "Correct list of all permissions");
@@ -118,6 +124,12 @@ add_task(async function testExactHostMatch() {
     // Canvas permission should be hidden unless privacy.resistFingerprinting
     // is true.
     exactHostMatched.push("canvas");
+  }
+  if (MIDI_ENABLED) {
+    // WebMIDI is only pref'd on in nightly.
+    // Should remove this checking and add it as default after it is fully pref-on.
+    exactHostMatched.push("midi");
+    exactHostMatched.push("midi-sysex");
   }
   let nonExactHostMatched = ["image", "cookie", "popup", "install", "shortcuts"];
 

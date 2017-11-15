@@ -689,3 +689,107 @@ PersistentStoragePermissionPrompt.prototype = {
 };
 
 PermissionUI.PersistentStoragePermissionPrompt = PersistentStoragePermissionPrompt;
+
+/**
+ * Creates a PermissionPrompt for a nsIContentPermissionRequest for
+ * the WebMIDI API.
+ *
+ * @param request (nsIContentPermissionRequest)
+ *        The request for a permission from content.
+ */
+function MIDIPermissionPrompt(request) {
+  this.request = request;
+  let types = request.types.QueryInterface(Ci.nsIArray);
+  let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
+  this.isSysexPerm = (perm.options.length > 0 &&
+                      perm.options.queryElementAt(0, Ci.nsISupportsString) == "sysex");
+  this.permName = "midi";
+  if (this.isSysexPerm) {
+    this.permName = "midi-sysex";
+  }
+}
+
+MIDIPermissionPrompt.prototype = {
+  __proto__: PermissionPromptForRequestPrototype,
+
+  get permissionKey() {
+    return this.permName;
+  },
+
+  get popupOptions() {
+    // TODO (bug 1433235) We need a security/permissions explanation URL for this
+    let options = {
+      displayURI: false
+    };
+
+    if (this.principal.URI.schemeIs("file")) {
+      options.checkbox = { show: false };
+    } else {
+      // Don't offer "always remember" action in PB mode
+      options.checkbox = {
+        show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal)
+      };
+    }
+
+    if (options.checkbox.show) {
+      options.checkbox.label = gBrowserBundle.GetStringFromName("midi.remember");
+    }
+
+    return options;
+  },
+
+  get notificationID() {
+    return "midi";
+  },
+
+  get anchorID() {
+    return "";
+  },
+
+  get message() {
+    let message = {};
+    if (this.principal.URI.schemeIs("file")) {
+      if (this.isSysexPerm) {
+        message.start = gBrowserBundle.formatStringFromName("midi.shareSysexWithFile.message");
+      } else {
+        message.start = gBrowserBundle.formatStringFromName("midi.shareWithFile.message");
+      }
+    } else {
+      let header;
+      if (this.isSysexPerm) {
+        header = gBrowserBundle.formatStringFromName("midi.shareSysexWithSite.message",
+                                                     ["<>"], 1);
+      } else {
+        header = gBrowserBundle.formatStringFromName("midi.shareWithSite.message",
+                                                     ["<>"], 1);
+      }
+      header = header.split("<>");
+      message.end = header[1];
+      message.start = header[0];
+
+      message.host = "<>";
+      try {
+        message.host = this.principal.URI.hostPort;
+      } catch (ex) { }
+    }
+    return message;
+  },
+
+  get promptActions() {
+    return [{
+        label: gBrowserBundle.GetStringFromName("midi.Allow.label"),
+        accessKey: gBrowserBundle.GetStringFromName("midi.Allow.accesskey"),
+        action: Ci.nsIPermissionManager.ALLOW_ACTION
+      },
+      {
+        label: gBrowserBundle.GetStringFromName("midi.DontAllow.label"),
+        accessKey: gBrowserBundle.GetStringFromName("midi.DontAllow.accesskey"),
+        action: Ci.nsIPermissionManager.DENY_ACTION
+    }];
+  },
+
+  onBeforeShow() {
+  },
+};
+
+PermissionUI.MIDIPermissionPrompt = MIDIPermissionPrompt;
