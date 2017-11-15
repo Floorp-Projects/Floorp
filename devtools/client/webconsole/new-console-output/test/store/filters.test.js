@@ -6,7 +6,7 @@
 const expect = require("expect");
 
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
-const { messageAdd } = require("devtools/client/webconsole/new-console-output/actions/index");
+const { messagesAdd } = require("devtools/client/webconsole/new-console-output/actions/index");
 const { ConsoleCommand } = require("devtools/client/webconsole/new-console-output/types");
 const { getVisibleMessages } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
@@ -87,7 +87,7 @@ describe("Filtering", () => {
       let message = stubPreparedMessages.get(
         "Unknown property ‘such-unknown-property’.  Declaration dropped."
       );
-      store.dispatch(messageAdd(message));
+      store.dispatch(messagesAdd([message]));
 
       let messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numUnfilterableMessages);
@@ -99,7 +99,7 @@ describe("Filtering", () => {
 
     it("filters xhr messages", () => {
       let message = stubPreparedMessages.get("XHR GET request");
-      store.dispatch(messageAdd(message));
+      store.dispatch(messagesAdd([message]));
 
       let messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numUnfilterableMessages);
@@ -111,7 +111,7 @@ describe("Filtering", () => {
 
     it("filters network messages", () => {
       let message = stubPreparedMessages.get("GET request");
-      store.dispatch(messageAdd(message));
+      store.dispatch(messagesAdd([message]));
 
       let messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numUnfilterableMessages);
@@ -152,7 +152,7 @@ describe("Filtering", () => {
         Object.assign({}, stubPackets.get("console.log('foobar', 'test')"));
       locationMsg.message =
         Object.assign({}, locationMsg.message, { filename: "search-location-test.js" });
-      store.dispatch(messageAdd(locationMsg));
+      store.dispatch(messagesAdd([locationMsg]));
 
       store.dispatch(actions.filterTextSet("search-location-test.js"));
 
@@ -162,7 +162,7 @@ describe("Filtering", () => {
 
     it("matches stacktrace functionName", () => {
       let traceMessage = stubPackets.get("console.trace()");
-      store.dispatch(messageAdd(traceMessage));
+      store.dispatch(messagesAdd([traceMessage]));
 
       store.dispatch(actions.filterTextSet("testStacktraceFiltering"));
 
@@ -179,7 +179,7 @@ describe("Filtering", () => {
           columnNumber: 13
         });
 
-      store.dispatch(messageAdd(traceMessage));
+      store.dispatch(messagesAdd([traceMessage]));
 
       store.dispatch(actions.filterTextSet("search-location-test.js:85:13"));
 
@@ -351,7 +351,7 @@ function prepareBaseStore() {
   ]);
 
   // Console Command - never filtered
-  store.dispatch(messageAdd(new ConsoleCommand({ messageText: `console.warn("x")` })));
+  store.dispatch(messagesAdd([new ConsoleCommand({ messageText: `console.warn("x")` })]));
 
   return store;
 }

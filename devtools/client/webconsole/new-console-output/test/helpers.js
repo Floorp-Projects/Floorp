@@ -23,23 +23,30 @@ const {
 function setupActions() {
   // Some actions use dependency injection. This helps them avoid using state in
   // a hard-to-test way. We need to inject stubbed versions of these dependencies.
+  const wrappedActions = Object.assign({}, actions);
+
   const idGenerator = new IdGenerator();
-  return Object.assign({}, actions, {
-    messageAdd: packet => actions.messageAdd(packet, idGenerator),
+  wrappedActions.messagesAdd = (packets) => {
+    return actions.messagesAdd(packets, idGenerator);
+  };
+
+  return {
+    ...actions,
     messagesAdd: packets => actions.messagesAdd(packets, idGenerator)
-  });
+  };
 }
 
 /**
  * Prepare the store for use in testing.
  */
-function setupStore(input = [], hud, options) {
+function setupStore(input = [], hud, options, wrappedActions) {
   const store = configureStore(hud, options);
 
   // Add the messages from the input commands to the store.
-  input.forEach((cmd) => {
-    store.dispatch(actions.messageAdd(stubPackets.get(cmd)));
-  });
+  const messagesAdd = wrappedActions
+    ? wrappedActions.messagesAdd
+    : actions.messagesAdd;
+  store.dispatch(messagesAdd(input.map(cmd => stubPackets.get(cmd))));
 
   return store;
 }
@@ -80,9 +87,32 @@ function getMessageAt(state, index) {
   return messages.get([...messages.keys()][index]);
 }
 
+/**
+ * Return the first message in the store.
+ *
+ * @param {object} state - The redux state of the console.
+ * @return {Message} - The last message, or undefined if there are no message in store.
+ */
+function getFirstMessage(state) {
+  return getMessageAt(state, 0);
+}
+
+/**
+ * Return the last message in the store.
+ *
+ * @param {object} state - The redux state of the console.
+ * @return {Message} - The last message, or undefined if there are no message in store.
+ */
+function getLastMessage(state) {
+  const lastIndex = getAllMessagesById(state).size - 1;
+  return getMessageAt(state, lastIndex);
+}
+
 module.exports = {
   clonePacket,
   getMessageAt,
+  getFirstMessage,
+  getLastMessage,
   renderComponent,
   setupActions,
   setupStore,
