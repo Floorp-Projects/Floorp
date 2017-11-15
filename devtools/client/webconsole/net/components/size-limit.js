@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, DOM, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 /**
  * This template represents a size limit notification message
@@ -47,14 +48,14 @@ class SizeLimit extends Component {
     let m = message.match(reLink);
 
     return (
-        DOM.div({className: "netInfoSizeLimit"},
-          DOM.span({}, m[1]),
-          DOM.a({
+        dom.div({className: "netInfoSizeLimit"},
+          dom.span({}, m[1]),
+          dom.a({
             className: "objectLink",
             onClick: this.onClickLimit},
               link
           ),
-          DOM.span({}, m[2])
+          dom.span({}, m[2])
         )
     );
   }

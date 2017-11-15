@@ -4,10 +4,8 @@
 
 "use strict";
 
-const {
-  createFactory,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { L10N } = require("../utils/l10n");
 const { PANELS } = require("../constants");

@@ -421,10 +421,17 @@ private:
       MOZ_ASSERT(mOwner->OnTaskQueue());
       return !mWaitingPromise.IsEmpty();
     }
-    bool IsWaiting() const
+
+    bool IsWaitingForData() const
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
-      return mWaitingForData || mWaitingForKey;
+      return mWaitingForData;
+    }
+
+    bool IsWaitingForKey() const
+    {
+      MOZ_ASSERT(mOwner->OnTaskQueue());
+      return mWaitingForKey && mDecodeRequest.Exists();
     }
 
     // MediaDataDecoder handler's variables.
@@ -521,7 +528,7 @@ private:
         return false;
       }
       mWaitingForKey = false;
-      if (IsWaiting() || !HasWaitingPromise()) {
+      if (IsWaitingForData() || !HasWaitingPromise()) {
         return false;
       }
       mWaitingPromise.Resolve(mType, __func__);

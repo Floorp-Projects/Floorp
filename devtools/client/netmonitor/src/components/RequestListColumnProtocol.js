@@ -4,14 +4,12 @@
 
 "use strict";
 
-const {
-  Component,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getFormattedProtocol } = require("../utils/request-utils");
 
-const { div } = DOM;
+const { div } = dom;
 
 class RequestListColumnProtocol extends Component {
   static get propTypes() {

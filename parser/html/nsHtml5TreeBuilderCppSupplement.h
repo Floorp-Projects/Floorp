@@ -76,8 +76,8 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
 {
   NS_PRECONDITION(aAttributes, "Got null attributes.");
   NS_PRECONDITION(aName, "Got null name.");
-  NS_PRECONDITION(aNamespace == kNameSpaceID_XHTML || 
-                  aNamespace == kNameSpaceID_SVG || 
+  NS_PRECONDITION(aNamespace == kNameSpaceID_XHTML ||
+                  aNamespace == kNameSpaceID_SVG ||
                   aNamespace == kNameSpaceID_MathML,
                   "Bogus namespace.");
 
@@ -367,7 +367,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
       }
       treeOp->Init(eTreeOpSetScriptLineNumberAndFreeze, content, tokenizer->getLineNumber());
       if (aNamespace == kNameSpaceID_XHTML) {
-        mCurrentHtmlScriptIsAsyncOrDefer = 
+        mCurrentHtmlScriptIsAsyncOrDefer =
           aAttributes->contains(nsHtml5AttributeName::ATTR_SRC) &&
           (aAttributes->contains(nsHtml5AttributeName::ATTR_ASYNC) ||
            aAttributes->contains(nsHtml5AttributeName::ATTR_DEFER));
@@ -396,13 +396,13 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
           aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
         if (url) {
           mViewSource->AddBase(url);
-        } 
+        }
       }
     }
   }
 
   // End wall of code for speculative loading
-  
+
   return content;
 }
 
@@ -595,7 +595,7 @@ nsHtml5TreeBuilder::insertFosterParentedCharacters(char16_t* aBuffer, int32_t aS
     return;
   }
 
-  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  auto bufferCopy = MakeUniqueFallible<char16_t[]>(aLength);
   if (!bufferCopy) {
     // Just assigning mBroken instead of generating tree op. The caller
     // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
@@ -604,14 +604,14 @@ nsHtml5TreeBuilder::insertFosterParentedCharacters(char16_t* aBuffer, int32_t aS
     return;
   }
 
-  memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
+  memcpy(bufferCopy.get(), aBuffer, aLength * sizeof(char16_t));
 
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
   if (MOZ_UNLIKELY(!treeOp)) {
     MarkAsBrokenAndRequestSuspensionWithoutBuilder(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
-  treeOp->Init(eTreeOpFosterParentText, bufferCopy, aLength, aStackParent, aTable);
+  treeOp->Init(eTreeOpFosterParentText, bufferCopy.release(), aLength, aStackParent, aTable);
 }
 
 void
@@ -661,7 +661,7 @@ nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent, char16_t* aBuffe
     return;
   }
 
-  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  auto bufferCopy = MakeUniqueFallible<char16_t[]>(aLength);
   if (!bufferCopy) {
     // Just assigning mBroken instead of generating tree op. The caller
     // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
@@ -670,14 +670,14 @@ nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent, char16_t* aBuffe
     return;
   }
 
-  memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
+  memcpy(bufferCopy.get(), aBuffer, aLength * sizeof(char16_t));
 
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
   if (MOZ_UNLIKELY(!treeOp)) {
     MarkAsBrokenAndRequestSuspensionWithoutBuilder(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
-  treeOp->Init(eTreeOpAppendText, bufferCopy, aLength,
+  treeOp->Init(eTreeOpAppendText, bufferCopy.release(), aLength,
       deepTreeSurrogateParent ? deepTreeSurrogateParent : aParent);
 }
 
@@ -704,7 +704,7 @@ nsHtml5TreeBuilder::appendComment(nsIContentHandle* aParent, char16_t* aBuffer, 
     return;
   }
 
-  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  auto bufferCopy = MakeUniqueFallible<char16_t[]>(aLength);
   if (!bufferCopy) {
     // Just assigning mBroken instead of generating tree op. The caller
     // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
@@ -713,14 +713,14 @@ nsHtml5TreeBuilder::appendComment(nsIContentHandle* aParent, char16_t* aBuffer, 
     return;
   }
 
-  memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
+  memcpy(bufferCopy.get(), aBuffer, aLength * sizeof(char16_t));
 
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
   if (MOZ_UNLIKELY(!treeOp)) {
     MarkAsBrokenAndRequestSuspensionWithoutBuilder(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
-  treeOp->Init(eTreeOpAppendComment, bufferCopy, aLength, aParent);
+  treeOp->Init(eTreeOpAppendComment, bufferCopy.release(), aLength, aParent);
 }
 
 void
@@ -740,7 +740,7 @@ nsHtml5TreeBuilder::appendCommentToDocument(char16_t* aBuffer, int32_t aStart, i
     return;
   }
 
-  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  auto bufferCopy = MakeUniqueFallible<char16_t[]>(aLength);
   if (!bufferCopy) {
     // Just assigning mBroken instead of generating tree op. The caller
     // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
@@ -749,14 +749,14 @@ nsHtml5TreeBuilder::appendCommentToDocument(char16_t* aBuffer, int32_t aStart, i
     return;
   }
 
-  memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
+  memcpy(bufferCopy.get(), aBuffer, aLength * sizeof(char16_t));
 
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
   if (MOZ_UNLIKELY(!treeOp)) {
     MarkAsBrokenAndRequestSuspensionWithoutBuilder(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
-  treeOp->Init(eTreeOpAppendCommentToDocument, bufferCopy, aLength);
+  treeOp->Init(eTreeOpAppendCommentToDocument, bufferCopy.release(), aLength);
 }
 
 void
@@ -958,14 +958,14 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsAtom* aName, nsIContentH
       return;
     }
     if (mCurrentHtmlScriptIsAsyncOrDefer) {
-      NS_ASSERTION(aNamespace == kNameSpaceID_XHTML, 
+      NS_ASSERTION(aNamespace == kNameSpaceID_XHTML,
                    "Only HTML scripts may be async/defer.");
       nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
       if (MOZ_UNLIKELY(!treeOp)) {
         MarkAsBrokenAndRequestSuspensionWithoutBuilder(NS_ERROR_OUT_OF_MEMORY);
         return;
       }
-      treeOp->Init(eTreeOpRunScriptAsyncDefer, aElement);      
+      treeOp->Init(eTreeOpRunScriptAsyncDefer, aElement);
       mCurrentHtmlScriptIsAsyncOrDefer = false;
       return;
     }
@@ -1191,7 +1191,7 @@ nsHtml5TreeBuilder::FlushLoads()
 }
 
 void
-nsHtml5TreeBuilder::SetDocumentCharset(NotNull<const Encoding*> aEncoding, 
+nsHtml5TreeBuilder::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
                                        int32_t aCharsetSource)
 {
   if (mBuilder) {

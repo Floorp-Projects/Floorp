@@ -4,15 +4,13 @@
 
 "use strict";
 
-const {
-  Component,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { getFormattedTime } = require("../utils/format-utils");
 const { getEndTime } = require("../utils/request-utils");
 
-const { div } = DOM;
+const { div } = dom;
 
 class RequestListColumnEndTime extends Component {
   static get propTypes() {

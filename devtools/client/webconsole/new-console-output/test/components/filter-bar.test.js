@@ -6,7 +6,8 @@ const expect = require("expect");
 const sinon = require("sinon");
 const { render, mount, shallow } = require("enzyme");
 
-const { createFactory, DOM } = require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Provider = createFactory(require("react-redux").Provider);
 
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
@@ -221,7 +222,7 @@ describe("FilterBar component:", () => {
       filterBtn({ label: "Logs", filterKey: FILTERS.LOG }),
       filterBtn({ label: "Info", filterKey: FILTERS.INFO }),
       filterBtn({ label: "Debug", filterKey: FILTERS.DEBUG }),
-      DOM.div({
+      dom.div({
         className: "devtools-separator",
       }),
       filterBtn({ label: "CSS", filterKey: "css", active: false }),

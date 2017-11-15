@@ -4,12 +4,9 @@
 
 "use strict";
 
-const {
-  Component,
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { L10N } = require("../utils/l10n");
 const { getUrlQuery, parseQueryString, parseFormData } = require("../utils/request-utils");
@@ -20,7 +17,7 @@ const Actions = require("../actions/index");
 // Components
 const PropertiesView = createFactory(require("./PropertiesView"));
 
-const { div } = DOM;
+const { div } = dom;
 
 const JSON_SCOPE_NAME = L10N.getStr("jsonScopeName");
 const PARAMS_EMPTY_TEXT = L10N.getStr("paramsEmptyText");

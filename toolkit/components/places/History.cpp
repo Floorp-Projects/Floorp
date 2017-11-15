@@ -1070,6 +1070,16 @@ public:
       }
     }
 
+    {
+      // Trigger an update for all the hosts of the places we inserted
+      nsAutoCString query("DELETE FROM moz_updatehostsinsert_temp");
+      nsCOMPtr<mozIStorageStatement> stmt = mHistory->GetStatement(query);
+      NS_ENSURE_STATE(stmt);
+      mozStorageStatementScoper scoper(stmt);
+      nsresult rv = stmt->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     nsresult rv = transaction.Commit();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1849,7 +1859,7 @@ private:
     {
       // Hosts accumulated during the places delete are updated through a trigger
       // (see nsPlacesTriggers.h).
-      nsAutoCString query("DELETE FROM moz_updatehosts_temp");
+      nsAutoCString query("DELETE FROM moz_updatehostsdelete_temp");
       nsCOMPtr<mozIStorageStatement> stmt = mHistory->GetStatement(query);
       NS_ENSURE_STATE(stmt);
       mozStorageStatementScoper scoper(stmt);

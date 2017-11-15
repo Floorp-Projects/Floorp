@@ -188,6 +188,7 @@ Register new events from add-ons.
   * ``objects`` - *(required, list of strings)* The valid event objects.
   * ``extra_keys`` - *(optional, list of strings)* The valid extra keys for the event.
   * ``record_on_release`` - *(optional, bool)*
+  * ``expired`` - *(optional, bool)* Whether this event entry is expired. This allows recording it without error, but it will be discarded. Defaults to false.
 
 For events recorded from add-ons, registration happens at runtime. Any new events must first be registered through this function before they can be recorded.
 The registered categories will automatically be enabled for recording.

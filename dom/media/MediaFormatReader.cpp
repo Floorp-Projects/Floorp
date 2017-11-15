@@ -2073,7 +2073,8 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
       LOG("Attempting Internal Seek");
       InternalSeek(aTrack, decoder.mTimeThreshold.ref());
     }
-    if (decoder.HasWaitingPromise() && !decoder.IsWaiting()) {
+    if (decoder.HasWaitingPromise() && !decoder.IsWaitingForKey() &&
+        !decoder.IsWaitingForData()) {
       MOZ_ASSERT(!decoder.HasPromise());
       LOG("We have new data. Resolving WaitingPromise");
       decoder.mWaitingPromise.Resolve(decoder.mType, __func__);
@@ -2579,9 +2580,9 @@ MediaFormatReader::Update(TrackType aTrack)
     return;
   }
 
-  if ((decoder.mWaitingForData &&
+  if ((decoder.IsWaitingForData() &&
        (!decoder.mTimeThreshold || decoder.mTimeThreshold.ref().mWaiting)) ||
-      (decoder.mWaitingForKey && decoder.mDecodeRequest.Exists())) {
+      (decoder.IsWaitingForKey())) {
     // Nothing more we can do at present.
     LOGV("Still waiting for data or key. data(%d)/key(%d)",
          decoder.mWaitingForData,
@@ -2676,7 +2677,7 @@ MediaFormatReader::WaitForData(MediaData::Type aType)
   TrackType trackType = aType == MediaData::VIDEO_DATA ?
     TrackType::kVideoTrack : TrackType::kAudioTrack;
   auto& decoder = GetDecoderData(trackType);
-  if (!decoder.IsWaiting()) {
+  if (!decoder.IsWaitingForData() && !decoder.IsWaitingForKey()) {
     // We aren't waiting for anything.
     return WaitForDataPromise::CreateAndResolve(decoder.mType, __func__);
   }

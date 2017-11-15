@@ -337,14 +337,10 @@ function addDeviceForTest(device) {
   });
 }
 
-function waitForClientClose(ui) {
-  return new Promise(resolve => {
-    info("Waiting for RDM debugger client to close");
-    ui.client.addOneTimeListener("closed", () => {
-      info("RDM's debugger client is now closed");
-      resolve();
-    });
-  });
+async function waitForClientClose(ui) {
+  info("Waiting for RDM debugger client to close");
+  await ui.client.addOneTimeListener("closed");
+  info("RDM's debugger client is now closed");
 }
 
 function* testTouchEventsOverride(ui, expected) {

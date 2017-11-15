@@ -1,4 +1,5 @@
 const URL = "ftp://localhost/bug543805/";
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 var year = new Date().getFullYear().toString();
@@ -57,11 +58,7 @@ function storeData(status, entry) {
                createInstance(Ci.nsIStringInputStream);
   stream.data = tests[0][0];
 
-  var url = {
-    password: "",
-    asciiSpec: URL,
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIURI])
-  };
+  var url = NetUtil.newURI(URL);
 
   var channel = {
     URI: url,

@@ -1422,6 +1422,8 @@ ServoRestyleManager::TakeSnapshotForAttributeChange(Element* aElement,
 // For some attribute changes we must restyle the whole subtree:
 //
 // * <td> is affected by the cellpadding on its ancestor table
+// * lwtheme and lwthemetextcolor on root element of XUL document
+//   affects all descendants due to :-moz-lwtheme* pseudo-classes
 // * lang="" and xml:lang="" can affect all descendants due to :lang()
 //
 static inline bool
@@ -1429,6 +1431,11 @@ AttributeChangeRequiresSubtreeRestyle(const Element& aElement, nsAtom* aAttr)
 {
   if (aAttr == nsGkAtoms::cellpadding) {
     return aElement.IsHTMLElement(nsGkAtoms::table);
+  }
+  if (aAttr == nsGkAtoms::lwtheme ||
+      aAttr == nsGkAtoms::lwthemetextcolor) {
+    return aElement.GetNameSpaceID() == kNameSpaceID_XUL &&
+      &aElement == aElement.OwnerDoc()->GetRootElement();
   }
 
   return aAttr == nsGkAtoms::lang;

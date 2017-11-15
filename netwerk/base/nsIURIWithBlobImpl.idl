@@ -10,7 +10,7 @@ interface nsIURI;
  * nsIURIWithBlobImpl is implemented by URIs which are associated with a
  * specific BlobImpl.
  */
-[builtinclass, uuid(331b41d3-3506-4ab5-bef9-aab41e3202a3)]
+[builtinclass, builtinclass, uuid(331b41d3-3506-4ab5-bef9-aab41e3202a3)]
 interface nsIURIWithBlobImpl : nsISupports
 {
     /**
