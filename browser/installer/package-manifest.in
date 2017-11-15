@@ -246,6 +246,9 @@
 @RESPATH@/components/jsdownloads.xpt
 @RESPATH@/browser/components/jsinspector.xpt
 @RESPATH@/components/layout_base.xpt
+#ifdef MOZ_DEBUG
+@RESPATH@/components/layout_debug.xpt
+#endif
 #ifdef NS_PRINTING
 @RESPATH@/components/layout_printing.xpt
 #endif
