@@ -499,28 +499,24 @@ def check_compiler(compiler, language, target):
         if info.type in ('clang-cl', 'clang', 'gcc'):
             append_flag('-std=gnu99')
 
-    # Note: MSVC, while supporting C++11, still reports 199711L for __cplusplus.
+    # Note: MSVC, while supporting C++14, still reports 199711L for __cplusplus.
     # Note: this is a strict version check because we used to always add
-    # -std=gnu++11.
+    # -std=gnu++14.
     draft_cxx14_version = 201300
     cxx14_version = 201402
     if info.language == 'C++':
-        if target.kernel != 'WINNT':
-            if info.type in ('clang', 'gcc') and info.language_version != 201103:
-                append_flag('-std=gnu++11')
-        else:
-            if info.type == 'clang' and info.language_version != 201103:
-                append_flag('-std=gnu++11')
-            # MSVC 2015 headers include C++14 features, but don't guard them
-            # with appropriate checks.
-            if info.type == 'clang-cl' and info.language_version != cxx14_version:
-                append_flag('-std=c++14')
-            # GCC 4.9 indicates that it implements draft C++14 features
-            # instead of the full language.
-            elif info.type == 'gcc' and not \
-                (info.language_version == draft_cxx14_version or
-                 info.language_version == cxx14_version):
-                append_flag('-std=gnu++14')
+        if info.type == 'clang' and info.language_version != cxx14_version:
+            append_flag('-std=gnu++14')
+        # MSVC 2015 headers include C++14 features, but don't guard them
+        # with appropriate checks.
+        elif info.type == 'clang-cl' and info.language_version != cxx14_version:
+            append_flag('-std=c++14')
+        # GCC 4.9 indicates that it implements draft C++14 features
+        # instead of the full language.
+        elif info.type == 'gcc' and \
+                info.language_version not in (draft_cxx14_version,
+                                              cxx14_version):
+            append_flag('-std=gnu++14')
 
     # We force clang-cl to emulate Visual C++ 2017 version 15.4
     if info.type == 'clang-cl' and info.version != '19.11.25547':
