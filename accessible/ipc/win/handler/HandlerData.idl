@@ -7,12 +7,29 @@
 #include "mozilla-config.h"
 #include "AccessibleHandler.h"
 
+import "oaidl.idl";
 import "ocidl.idl";
 import "ServProv.idl";
 
-import "AccessibleText.idl";
+import "Accessible2_3.idl";
+import "AccessibleHypertext2.idl";
+import "AccessibleHyperlink.idl";
+import "AccessibleTable.idl";
+import "AccessibleTable2.idl";
+import "AccessibleTableCell.idl";
 
-typedef struct _IA2Data
+typedef struct _StaticIA2Data
+{
+  NEWEST_IA2_INTERFACE* mIA2;
+  IEnumVARIANT* mIEnumVARIANT;
+  IAccessibleHypertext2* mIAHypertext;
+  IAccessibleHyperlink* mIAHyperlink;
+  IAccessibleTable* mIATable;
+  IAccessibleTable2* mIATable2;
+  IAccessibleTableCell* mIATableCell;
+} StaticIA2Data;
+
+typedef struct _DynamicIA2Data
 {
   VARIANT           mRole;
   long              mState;
@@ -32,7 +49,7 @@ typedef struct _IA2Data
   BSTR              mAttributes;
   IA2Locale         mIA2Locale;
   long              mUniqueId;
-} IA2Data;
+} DynamicIA2Data;
 
 interface IGeckoBackChannel;
 
@@ -100,7 +117,8 @@ interface HandlerData
 {
   typedef struct _IA2Payload
   {
-    IA2Data mData;
+    StaticIA2Data mStaticData;
+    DynamicIA2Data mDynamicData;
     IGeckoBackChannel* mGeckoBackChannel;
   } IA2Payload;
 }
@@ -123,7 +141,7 @@ interface IHandlerControl : IUnknown
 interface IGeckoBackChannel : IUnknown
 {
   [propput] HRESULT HandlerControl([in] long aPid, [in] IHandlerControl* aCtrl);
-  HRESULT Refresh([out] IA2Data* aOutData);
+  HRESULT Refresh([out] DynamicIA2Data* aOutData);
 }
 
 [uuid(1e545f07-f108-4912-9471-546827a80983)]
