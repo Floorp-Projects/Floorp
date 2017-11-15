@@ -36,12 +36,14 @@ UNIFIED_SOURCES += [
   'ClientOpenWindowOpActors.cpp',
   'ClientOpenWindowOpChild.cpp',
   'ClientOpenWindowOpParent.cpp',
+  'ClientPrefs.cpp',
   'ClientSource.cpp',
   'ClientSourceChild.cpp',
   'ClientSourceOpChild.cpp',
   'ClientSourceOpParent.cpp',
   'ClientSourceParent.cpp',
   'ClientState.cpp',
+  'ClientValidation.cpp',
 ]
 
 IPDL_SOURCES += [
