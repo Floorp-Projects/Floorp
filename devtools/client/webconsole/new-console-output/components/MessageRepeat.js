@@ -7,11 +7,8 @@
 
 "use strict";
 
-// React & Redux
-const {
-  DOM: dom,
-  PropTypes
-} = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { PluralForm } = require("devtools/shared/plural-form");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const messageRepeatsTooltip = l10n.getStr("messageRepeats.tooltip2");

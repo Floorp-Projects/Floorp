@@ -62,7 +62,7 @@ StreamTracks::GetAllTracksEnd() const
 }
 
 StreamTracks::Track*
-StreamTracks::FindTrack(TrackID aID)
+StreamTracks::FindTrack(TrackID aID) const
 {
   if (aID == TRACK_NONE || mTracks.IsEmpty()) {
     return nullptr;

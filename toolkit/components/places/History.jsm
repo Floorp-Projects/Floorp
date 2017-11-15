@@ -769,7 +769,7 @@ var clear = async function(db) {
     // Remove all non-bookmarked places entries first, this will speed up the
     // triggers work.
     await db.execute(`DELETE FROM moz_places WHERE foreign_count = 0`);
-    await db.execute(`DELETE FROM moz_updatehosts_temp`);
+    await db.execute(`DELETE FROM moz_updatehostsdelete_temp`);
 
     // Expire orphan icons.
     await db.executeCached(`DELETE FROM moz_pages_w_icons
@@ -858,7 +858,7 @@ var cleanupPages = async function(db, pages) {
                     AND foreign_count = 0 AND last_visit_date ISNULL`);
   // Hosts accumulated during the places delete are updated through a trigger
   // (see nsPlacesTriggers.h).
-  await db.executeCached(`DELETE FROM moz_updatehosts_temp`);
+  await db.executeCached(`DELETE FROM moz_updatehostsdelete_temp`);
 
   // Expire orphans.
   let hashesToRemove = pagesToRemove.map(p => p.hash);

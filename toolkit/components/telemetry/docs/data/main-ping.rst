@@ -157,7 +157,7 @@ Note: Before Firefox 51 and bug 1218576, content process histograms and keyedHis
 
 simpleMeasurements
 ------------------
-This section contains a list of simple measurements, or counters. In addition to the ones highlighted below, Telemetry timestamps (see `here <https://dxr.mozilla.org/mozilla-central/search?q=%22TelemetryTimestamps.add%22&redirect=false&case=true>`_ and `here <https://dxr.mozilla.org/mozilla-central/search?q=%22recordTimestamp%22&redirect=false&case=true>`_) can be reported.
+This section contains a list of simple measurements, or counters. In addition to the ones highlighted below, Telemetry timestamps (see `here <https://dxr.mozilla.org/mozilla-central/search?q=%22TelemetryTimestamps.add%22&redirect=false&case=true>`__ and `here <https://dxr.mozilla.org/mozilla-central/search?q=%22recordTimestamp%22&redirect=false&case=true>`__) can be reported.
 
 totalTime
 ~~~~~~~~~
@@ -169,7 +169,7 @@ A non-monotonic integer representing the number of minutes the session has been 
 
 addonManager
 ~~~~~~~~~~~~
-Only available in the extended set of measures, it contains a set of counters related to Addons. See `here <https://dxr.mozilla.org/mozilla-central/search?q=%22AddonManagerPrivate.recordSimpleMeasure%22&redirect=false&case=true>`_ for a list of recorded measures.
+Only available in the extended set of measures, it contains a set of counters related to Addons. See `here <https://dxr.mozilla.org/mozilla-central/search?q=%22AddonManagerPrivate.recordSimpleMeasure%22&redirect=false&case=true>`__ for a list of recorded measures.
 
 UITelemetry
 ~~~~~~~~~~~

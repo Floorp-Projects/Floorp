@@ -10,7 +10,7 @@ The helper — described below — reports predefined update status, which event
 * its evolution over time;
 * the distribution of error causes.
 
-.. notes::
+.. note::
 
    Examples of update sources: *remote settings, add-ons update, add-ons, gfx, and plugins blocklists, certificate revocation, certificate pinning, system add-ons delivery…*
 

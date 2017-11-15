@@ -133,7 +133,11 @@ CloneableWithRangeMediaResource::MaybeInitialize()
 {
   if (!mInitialized) {
     mInitialized = true;
-    mCallback->NotifyDataEnded(NS_OK);
+    mCallback->AbstractMainThread()->Dispatch(
+      NewRunnableMethod<nsresult>("MediaResourceCallback::NotifyDataEnded",
+                                  mCallback.get(),
+                                  &MediaResourceCallback::NotifyDataEnded,
+                                  NS_OK));
   }
 }
 

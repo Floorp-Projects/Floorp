@@ -1,6 +1,6 @@
 
 "backgroundhangmonitor" ping
-==========
+============================
 
 Whenever a thread monitored by the Background Hang Monitor hangs, a stack and
 some non-identifying information about the hang is captured. When 50 of these

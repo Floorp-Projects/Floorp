@@ -7,11 +7,9 @@
 "use strict";
 
 // React & Redux
-const {
-  createFactory,
-  DOM: dom,
-  PropTypes
-} = require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const GripMessageBody = require("devtools/client/webconsole/new-console-output/components/GripMessageBody");
 const ConsoleTable = createFactory(require("devtools/client/webconsole/new-console-output/components/ConsoleTable"));
 const {isGroupType, l10n} = require("devtools/client/webconsole/new-console-output/utils/messages");
