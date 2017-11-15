@@ -243,8 +243,8 @@ public:
   /**
    * Finds the nsTextFrame for the closest rendered run to the specified point.
    */
-  virtual void FindCloserFrameForSelection(nsPoint aPoint,
-                                          FrameWithDistance* aCurrentBestFrame) override;
+  virtual void FindCloserFrameForSelection(const nsPoint& aPoint,
+                                           FrameWithDistance* aCurrentBestFrame) override;
 
 
 

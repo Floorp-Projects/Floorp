@@ -168,7 +168,7 @@ public:
     return mClipRect;
   }
 
-  void MoveBy(nsPoint aPoint);
+  void MoveBy(const nsPoint& aPoint);
 
   nsCString ToString() const;
 
