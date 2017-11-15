@@ -295,21 +295,17 @@ ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus)
   LOG("NotifyDownloadEnded, status=%" PRIx32, static_cast<uint32_t>(aStatus));
 
   MediaDecoderOwner* owner = GetOwner();
-  if (aStatus == NS_BINDING_ABORTED) {
-    // Download has been cancelled by user.
-    owner->LoadAborted();
-    return;
-  }
-
-  UpdatePlaybackRate();
-
-  if (NS_SUCCEEDED(aStatus)) {
+  if (NS_SUCCEEDED(aStatus) || aStatus == NS_BASE_STREAM_CLOSED) {
+    UpdatePlaybackRate();
     owner->DownloadSuspended();
     // NotifySuspendedStatusChanged will tell the element that download
     // has been suspended "by the cache", which is true since we never
     // download anything. The element can then transition to HAVE_ENOUGH_DATA.
     owner->NotifySuspendedByCache(true);
-  } else if (aStatus != NS_BASE_STREAM_CLOSED) {
+  } else if (aStatus == NS_BINDING_ABORTED) {
+    // Download has been cancelled by user.
+    owner->LoadAborted();
+  } else {
     NetworkError();
   }
 }
