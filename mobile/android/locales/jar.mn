@@ -40,7 +40,6 @@
 # overrides for toolkit l10n, also for en-US
 # keep this file list in sync with l10n.toml and filter.py
 relativesrcdir toolkit/locales:
-  locale/@AB_CD@/browser/overrides/about.dtd                       (%chrome/global/about.dtd)
   locale/@AB_CD@/browser/overrides/aboutAbout.dtd                  (%chrome/global/aboutAbout.dtd)
   locale/@AB_CD@/browser/overrides/aboutReader.properties          (%chrome/global/aboutReader.properties)
   locale/@AB_CD@/browser/overrides/aboutRights.dtd                 (%chrome/global/aboutRights.dtd)
