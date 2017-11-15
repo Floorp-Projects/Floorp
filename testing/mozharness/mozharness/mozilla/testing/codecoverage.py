@@ -192,7 +192,7 @@ class CodeCoverageMixin(object):
                 return_type='files'
             )
             output_file_name = 'grcov_lcov_output.info'
-            os.rename(grcov_output, os.path.join(self.grcov_dir, output_file_name))
+            shutil.move(grcov_output, os.path.join(self.grcov_dir, output_file_name))
 
             # Zip the grcov output and upload it.
             self.run_command(
