@@ -230,7 +230,6 @@ windows10-64/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - desktop-instrumentation
         - windows-talos
         - windows-talos-stylo-disabled
         - windows-tests
@@ -250,6 +249,7 @@ windows10-64-nightly/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
+        - desktop-instrumentation
         - windows-tests
 
 windows10-64-devedition/opt:
