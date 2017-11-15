@@ -1229,8 +1229,8 @@ var gBuiltInActions = [
     onPlacedInPanel(buttonNode) {
       browserPageActions(buttonNode).sendToDevice.onPlacedInPanel(buttonNode);
     },
-    onShowingInPanel(buttonNode) {
-      browserPageActions(buttonNode).sendToDevice.onShowingInPanel(buttonNode);
+    onLocationChange(browserWindow) {
+      browserPageActions(browserWindow).sendToDevice.onLocationChange();
     },
     subview: {
       buttons: [
