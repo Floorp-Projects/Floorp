@@ -718,7 +718,7 @@ class ICCallStubCompiler : public ICStubCompiler
     void guardSpreadCall(MacroAssembler& masm, Register argcReg, Label* failure,
                          bool isConstructing);
     Register guardFunApply(MacroAssembler& masm, AllocatableGeneralRegisterSet regs,
-                           Register argcReg, bool checkNative, FunApplyThing applyThing,
+                           Register argcReg, FunApplyThing applyThing,
                            Label* failure);
     void pushCallerArguments(MacroAssembler& masm, AllocatableGeneralRegisterSet regs);
     void pushArrayArguments(MacroAssembler& masm, Address arrayVal,
