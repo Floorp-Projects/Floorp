@@ -544,7 +544,6 @@ var FormAutofillContent = {
 
   onPopupClosed() {
     ProfileAutocomplete._clearProfilePreview();
-    ProfileAutocomplete.lastProfileAutoCompleteResult = null;
   },
 
   _markAsAutofillField(field) {
