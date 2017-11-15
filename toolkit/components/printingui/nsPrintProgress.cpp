@@ -15,6 +15,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsPIDOMWindow.h"
+#include "nsXULAppAPI.h"
 
 
 NS_IMPL_ADDREF(nsPrintProgress)
@@ -133,6 +134,10 @@ NS_IMETHODIMP nsPrintProgress::GetProcessCanceledByUser(bool *aProcessCanceledBy
 }
 NS_IMETHODIMP nsPrintProgress::SetProcessCanceledByUser(bool aProcessCanceledByUser)
 {
+  if (XRE_IsE10sParentProcess()) {
+    MOZ_ASSERT(m_observer);
+    m_observer->Observe(nullptr, "cancelled", nullptr);
+  }
   if(m_PrintSetting)
     m_PrintSetting->SetIsCancelled(true);
   m_processCanceled = aProcessCanceledByUser;
