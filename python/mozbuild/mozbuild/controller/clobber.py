@@ -189,7 +189,8 @@ class Clobberer(object):
             return True, False, self._message(
                 'Cannot clobber while the shell is inside the object directory.')
 
-        print('Automatically clobbering %s' % self.topobjdir, file=fh)
+        objdir = self.topobjdir.encode('utf-8', 'replace')
+        print('Automatically clobbering %s' % objdir, file=fh)
         try:
             self.remove_objdir(False)
             self.ensure_objdir_state()
