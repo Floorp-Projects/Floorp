@@ -54,18 +54,14 @@
                 },
                 "optional": true
               },
-              "textcolor": {
-                "type": "string",
-                "optional": true
-              },
-              "background_tab_text": {
+              "tab_text": {
                 "type": "array",
                 "items": {
                   "type": "number"
                 },
                 "optional": true
               },
-              "tab_text": {
+              "textcolor": {
                 "type": "string",
                 "optional": true
               },

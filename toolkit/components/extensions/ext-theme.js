@@ -130,7 +130,7 @@ class Theme {
           this.lwtStyles.accentcolor = cssColor;
           break;
         case "textcolor":
-        case "background_tab_text":
+        case "tab_text":
           this.lwtStyles.textcolor = cssColor;
           break;
         case "toolbar":
@@ -140,7 +140,6 @@ class Theme {
         case "bookmark_text":
           this.lwtStyles.toolbar_text = cssColor;
           break;
-        case "tab_text":
         case "toolbar_field":
         case "toolbar_field_text":
         case "toolbar_top_separator":
