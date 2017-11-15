@@ -662,17 +662,6 @@ pref_savePrefs()
   return savedPrefs;
 }
 
-static bool
-PREF_HasUserPref(const char* aPrefName)
-{
-  if (!gHashTable) {
-    return false;
-  }
-
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  return pref && pref->HasUserValue();
-}
-
 // Function that sets whether or not the preference is locked and therefore
 // cannot be changed.
 static nsresult
@@ -2152,7 +2141,8 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
       bNeedDefault = true;
     } else {
       // if there is no user (or locked) value
-      if (!PREF_HasUserPref(pref.get()) && !PREF_PrefIsLocked(pref.get())) {
+      if (!Preferences::HasUserValue(pref.get()) &&
+          !PREF_PrefIsLocked(pref.get())) {
         bNeedDefault = true;
       }
     }
@@ -2410,7 +2400,7 @@ nsPrefBranch::PrefHasUserValue(const char* aPrefName, bool* aRetVal)
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  *aRetVal = PREF_HasUserPref(pref.get());
+  *aRetVal = Preferences::HasUserValue(pref.get());
   return NS_OK;
 }
 
@@ -4616,10 +4606,12 @@ Preferences::ClearUser(const char* aPrefName)
 }
 
 /* static */ bool
-Preferences::HasUserValue(const char* aPref)
+Preferences::HasUserValue(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), false);
-  return PREF_HasUserPref(aPref);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  return pref && pref->HasUserValue();
 }
 
 /* static */ int32_t
