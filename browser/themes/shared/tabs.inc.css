@@ -66,7 +66,7 @@ tabbrowser {
   padding: 0 @horizontalTabPadding@;
 }
 
-.tab-content[pinned] {
+:root:not([uidensity=compact]) .tab-content[pinned] {
   padding: 0 12px;
 }
 
