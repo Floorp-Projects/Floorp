@@ -861,7 +861,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     for (let i = 0, line; (line = lines[i++]);) {
       let linePos = line.start;
-      let negativeLineNumber = i - lines.length - 1;
+      let negativeLineNumber = line.negativeNumber;
+
+      // Don't render any negative line number greater than -1.
+      if (negativeLineNumber == 0) {
+        break;
+      }
 
       // Check for overlapping lines. We render a second box beneath the last overlapping
       // line number to indicate there are lines beneath it.
