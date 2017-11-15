@@ -132,7 +132,7 @@ WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
   HRESULT hr = mMFTManager->Input(aSample);
   if (hr == MF_E_NOTACCEPTING) {
     hr = ProcessOutput(results);
-    if (FAILED(hr)) {
+    if (FAILED(hr) && hr != MF_E_TRANSFORM_NEED_MORE_INPUT) {
       return ProcessError(hr, "MFTManager::Output(1)");
     }
     hr = mMFTManager->Input(aSample);
