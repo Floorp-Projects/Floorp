@@ -1008,7 +1008,7 @@ BrowserPageActions.sendToDevice = {
       bodyNode.setAttribute("state", "notready");
       // Force a background Sync
       Services.tm.dispatchToMainThread(async () => {
-        await Weave.Service.sync([]); // [] = clients engine only
+        await Weave.Service.sync({why: "pageactions", engines: []}); // [] = clients engine only
         // There's no way Sync is still syncing at this point, but we check
         // anyway to avoid infinite looping.
         if (!window.closed && !gSync.syncConfiguredAndLoading) {
