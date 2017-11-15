@@ -1163,6 +1163,14 @@ auto GeckoSurfaceTexture::DecrementUse() const -> void
     return mozilla::jni::Method<DecrementUse_t>::Call(GeckoSurfaceTexture::mCtx, nullptr);
 }
 
+constexpr char GeckoSurfaceTexture::DestroyUnused_t::name[];
+constexpr char GeckoSurfaceTexture::DestroyUnused_t::signature[];
+
+auto GeckoSurfaceTexture::DestroyUnused(int64_t a0) -> void
+{
+    return mozilla::jni::Method<DestroyUnused_t>::Call(GeckoSurfaceTexture::Context(), nullptr, a0);
+}
+
 constexpr char GeckoSurfaceTexture::DetachFromGLContext_t::name[];
 constexpr char GeckoSurfaceTexture::DetachFromGLContext_t::signature[];
 
