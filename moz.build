@@ -71,7 +71,7 @@ DIRS += [
     'third_party/python',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] or not CONFIG['MOZ_BUILD_APP']:
+if not CONFIG['JS_STANDALONE'] or not CONFIG['MOZ_BUILD_APP']:
     CONFIGURE_DEFINE_FILES += [
         'mozilla-config.h',
     ]
