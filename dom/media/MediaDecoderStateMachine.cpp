@@ -1500,8 +1500,7 @@ public:
     // seek is actually performed, the ThenValue of SeekPromise has already
     // been set so that it won't be postponed.
     RefPtr<Runnable> r = mAsyncSeekTask = new AysncNextFrameSeekTask(this);
-    nsresult rv = OwnerThread()->Dispatch(r.forget());
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    OwnerThread()->Dispatch(r.forget());
   }
 
 private:
@@ -3498,12 +3497,10 @@ MediaDecoderStateMachine::ScheduleStateMachine()
   }
   mDispatchedStateMachine = true;
 
-  nsresult rv =
-    OwnerThread()->Dispatch(
-      NewRunnableMethod("MediaDecoderStateMachine::RunStateMachine",
-                        this,
-                        &MediaDecoderStateMachine::RunStateMachine));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  OwnerThread()->Dispatch(
+    NewRunnableMethod("MediaDecoderStateMachine::RunStateMachine",
+                      this,
+                      &MediaDecoderStateMachine::RunStateMachine));
 }
 
 void
@@ -3733,12 +3730,12 @@ MediaDecoderStateMachine::RequestDebugInfo()
   using PromiseType = MediaDecoder::DebugInfoPromise;
   RefPtr<PromiseType::Private> p = new PromiseType::Private(__func__);
   RefPtr<MediaDecoderStateMachine> self = this;
-  nsresult rv = OwnerThread()->Dispatch(
+  OwnerThread()->Dispatch(
     NS_NewRunnableFunction(
       "MediaDecoderStateMachine::RequestDebugInfo",
       [self, p]() { p->Resolve(self->GetDebugInfo(), __func__); }),
+    AbstractThread::AssertDispatchSuccess,
     AbstractThread::TailDispatch);
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   return p.forget();
 }
 
@@ -3753,8 +3750,7 @@ void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
                             this,
                             &MediaDecoderStateMachine::SetAudioCaptured,
                             true);
-  nsresult rv = OwnerThread()->Dispatch(r.forget());
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  OwnerThread()->Dispatch(r.forget());
 }
 
 void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
@@ -3768,8 +3764,7 @@ void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
                               this,
                               &MediaDecoderStateMachine::SetAudioCaptured,
                               false);
-    nsresult rv = OwnerThread()->Dispatch(r.forget());
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    OwnerThread()->Dispatch(r.forget());
   }
 }
 

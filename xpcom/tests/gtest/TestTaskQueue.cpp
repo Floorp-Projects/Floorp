@@ -7,7 +7,6 @@
 #include "gtest/gtest.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/TaskQueue.h"
-#include "mozilla/Unused.h"
 #include "VideoUtils.h"
 
 namespace TestTaskQueue {
@@ -30,15 +29,15 @@ TEST(TaskQueue, EventOrder)
 
   // We expect task1 happens before task3.
   for (int i = 0; i < 10000; ++i) {
-    Unused << tq1->Dispatch(
+    tq1->Dispatch(
       NS_NewRunnableFunction(
         "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
         [&]() {
-          Unused << tq2->Dispatch(NS_NewRunnableFunction(
+          tq2->Dispatch(NS_NewRunnableFunction(
             "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
             []() { // task0
             }));
-          Unused << tq3->Dispatch(NS_NewRunnableFunction(
+          tq3->Dispatch(NS_NewRunnableFunction(
             "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
             [&]() { // task1
               EXPECT_EQ(1, ++counter);
@@ -47,10 +46,10 @@ TEST(TaskQueue, EventOrder)
               ++sync;
               mon.Notify();
             }));
-          Unused << tq2->Dispatch(NS_NewRunnableFunction(
+          tq2->Dispatch(NS_NewRunnableFunction(
             "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
             [&]() { // task2
-              Unused << tq3->Dispatch(NS_NewRunnableFunction(
+              tq3->Dispatch(NS_NewRunnableFunction(
                 "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
                 [&]() { // task3
                   EXPECT_EQ(0, --counter);
@@ -61,6 +60,7 @@ TEST(TaskQueue, EventOrder)
                 }));
             }));
         }),
+      AbstractThread::AssertDispatchSuccess,
       AbstractThread::TailDispatch);
 
     // Ensure task1 and task3 are done before next loop.

@@ -64,8 +64,7 @@ MediaSourceDemuxer::AddSizeOfResources(
       }
     });
 
-  nsresult rv = GetTaskQueue()->Dispatch(task.forget());
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 void MediaSourceDemuxer::NotifyInitDataArrived()
@@ -80,8 +79,7 @@ void MediaSourceDemuxer::NotifyInitDataArrived()
         self->mInitPromise.ResolveIfExists(NS_OK, __func__);
       }
     });
-  nsresult rv = GetTaskQueue()->Dispatch(task.forget());
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 bool
@@ -172,8 +170,7 @@ MediaSourceDemuxer::AttachSourceBuffer(
     this,
     &MediaSourceDemuxer::DoAttachSourceBuffer,
     aSourceBuffer);
-  nsresult rv = GetTaskQueue()->Dispatch(task.forget());
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 void
@@ -194,8 +191,7 @@ MediaSourceDemuxer::DetachSourceBuffer(
     this,
     &MediaSourceDemuxer::DoDetachSourceBuffer,
     aSourceBuffer);
-  nsresult rv = GetTaskQueue()->Dispatch(task.forget());
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 void
@@ -368,8 +364,7 @@ MediaSourceTrackDemuxer::Reset()
           self->mType, MediaSourceDemuxer::EOS_FUZZ);
       }
     });
-  nsresult rv = mParent->GetTaskQueue()->Dispatch(task.forget());
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  mParent->GetTaskQueue()->Dispatch(task.forget());
 }
 
 nsresult
@@ -409,8 +404,7 @@ MediaSourceTrackDemuxer::BreakCycles()
       self->DetachManager();
       self->mParent = nullptr;
     });
-  nsresult rv = mParent->GetTaskQueue()->Dispatch(task.forget());
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  mParent->GetTaskQueue()->Dispatch(task.forget());
 }
 
 RefPtr<MediaSourceTrackDemuxer::SeekPromise>

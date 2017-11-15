@@ -1025,11 +1025,9 @@ public:
   void Reset() override
   {
     RefPtr<Wrapper> self = this;
-    nsresult rv =
-      mTaskQueue->Dispatch(
-        NS_NewRunnableFunction("MediaFormatReader::DemuxerProxy::Wrapper::Reset",
-                               [self]() { self->mTrackDemuxer->Reset(); }));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    mTaskQueue->Dispatch(
+      NS_NewRunnableFunction("MediaFormatReader::DemuxerProxy::Wrapper::Reset",
+                             [self]() { self->mTrackDemuxer->Reset(); }));
   }
 
   nsresult GetNextRandomAccessPoint(TimeUnit* aTime) override
@@ -1086,11 +1084,9 @@ private:
   ~Wrapper()
   {
     RefPtr<MediaTrackDemuxer> trackDemuxer = mTrackDemuxer.forget();
-    nsresult rv =
-      mTaskQueue->Dispatch(NS_NewRunnableFunction(
-        "MediaFormatReader::DemuxerProxy::Wrapper::~Wrapper",
-        [trackDemuxer]() { trackDemuxer->BreakCycles(); }));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    mTaskQueue->Dispatch(NS_NewRunnableFunction(
+      "MediaFormatReader::DemuxerProxy::Wrapper::~Wrapper",
+      [trackDemuxer]() { trackDemuxer->BreakCycles(); }));
   }
 
   void UpdateRandomAccessPoint()
@@ -1998,8 +1994,7 @@ MediaFormatReader::ScheduleUpdate(TrackType aTrack)
   decoder.mUpdateScheduled = true;
   RefPtr<nsIRunnable> task(NewRunnableMethod<TrackType>(
     "MediaFormatReader::Update", this, &MediaFormatReader::Update, aTrack));
-  nsresult rv = OwnerThread()->Dispatch(task.forget());
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  OwnerThread()->Dispatch(task.forget());
 }
 
 bool
@@ -2897,10 +2892,8 @@ MediaFormatReader::ScheduleSeek()
     return;
   }
   mSeekScheduled = true;
-  nsresult rv =
-    OwnerThread()->Dispatch(NewRunnableMethod(
-      "MediaFormatReader::AttemptSeek", this, &MediaFormatReader::AttemptSeek));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  OwnerThread()->Dispatch(NewRunnableMethod(
+    "MediaFormatReader::AttemptSeek", this, &MediaFormatReader::AttemptSeek));
 }
 
 void
