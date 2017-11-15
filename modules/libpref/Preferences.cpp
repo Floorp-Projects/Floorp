@@ -695,40 +695,6 @@ PREF_ClearUserPref(const char* aPrefName)
   return NS_OK;
 }
 
-// Clears all user prefs.
-static nsresult
-PREF_ClearAllUserPrefs()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  Vector<const char*> prefNames;
-  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
-
-    if (pref->HasUserValue()) {
-      if (!prefNames.append(pref->Name())) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      pref->ClearUserValue();
-      if (!pref->HasDefaultValue()) {
-        iter.Remove();
-      }
-    }
-  }
-
-  for (const char* prefName : prefNames) {
-    NotifyCallbacks(prefName);
-  }
-
-  Preferences::HandleDirty();
-  return NS_OK;
-}
-
 // Function that sets whether or not the preference is locked and therefore
 // cannot be changed.
 static nsresult
@@ -3671,8 +3637,30 @@ NS_IMETHODIMP
 Preferences::ResetUserPrefs()
 {
   ENSURE_PARENT_PROCESS("Preferences::ResetUserPrefs", "all prefs");
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  MOZ_ASSERT(NS_IsMainThread());
 
-  PREF_ClearAllUserPrefs();
+  Vector<const char*> prefNames;
+  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+
+    if (pref->HasUserValue()) {
+      if (!prefNames.append(pref->Name())) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      pref->ClearUserValue();
+      if (!pref->HasDefaultValue()) {
+        iter.Remove();
+      }
+    }
+  }
+
+  for (const char* prefName : prefNames) {
+    NotifyCallbacks(prefName);
+  }
+
+  Preferences::HandleDirty();
   return NS_OK;
 }
 
