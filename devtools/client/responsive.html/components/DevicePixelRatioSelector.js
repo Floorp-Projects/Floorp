@@ -35,7 +35,7 @@ const createHiddenOption = value => {
 };
 
 module.exports = createClass({
-  displayName: "DPRSelector",
+  displayName: "DevicePixelRatioSelector",
 
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
@@ -94,9 +94,9 @@ module.exports = createClass({
 
     if (isDisabled) {
       selectorClass += " disabled";
-      title = getFormatStr("responsive.autoDPR", selectedDevice);
+      title = getFormatStr("responsive.devicePixelRatio.auto", selectedDevice);
     } else {
-      title = getStr("responsive.devicePixelRatio");
+      title = getStr("responsive.changeDevicePixelRatio");
 
       if (selectedPixelRatio.value) {
         selectorClass += " selected";
@@ -115,7 +115,7 @@ module.exports = createClass({
 
     return dom.select(
       {
-        id: "global-dpr-selector",
+        id: "global-device-pixel-ratio-selector",
         value: selectedPixelRatio.value || displayPixelRatio,
         disabled: isDisabled,
         onChange: this.onSelectChange,
