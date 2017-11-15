@@ -35,7 +35,7 @@
 
       this.invoke = function testTabRelations_invoke()
       {
-        var docURIs = ["about:", "about:mozilla"];
+        var docURIs = ["about:license", "about:mozilla"];
         tabBrowser().loadTabs(docURIs, {
           inBackground: false,
           replace: true,
