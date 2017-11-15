@@ -389,6 +389,9 @@ ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotificationInfo
       ++end;
     }
     RefPtr<ImageBridgeParent> bridge = GetInstance(pid);
+    if (!bridge || bridge->mClosed) {
+      continue;
+    }
     bridge->SendPendingAsyncMessages();
     if (!bridge->SendDidComposite(notifications)) {
       ok = false;
