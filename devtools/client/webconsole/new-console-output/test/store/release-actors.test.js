@@ -3,16 +3,13 @@
 "use strict";
 
 const {
+  clonePacket,
+  getFirstMessage,
   setupActions,
   setupStore,
-  clonePacket
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
+
 const { stubPackets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
-
-const {
-  getAllMessagesById,
-} = require("devtools/client/webconsole/new-console-output/selectors/messages");
-
 const expect = require("expect");
 
 describe("Release actor enhancer:", () => {
@@ -35,16 +32,15 @@ describe("Release actor enhancer:", () => {
       }, { logLimit });
 
       // Add a log message.
-      dispatch(actions.messageAdd(
-        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")));
+      dispatch(actions.messagesAdd([
+        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")]));
 
-      let messages = getAllMessagesById(getState());
-      const firstMessage = messages.first();
+      const firstMessage = getFirstMessage(getState());
       const firstMessageActor = firstMessage.parameters[1].actor;
 
       // Add an evaluation result message (see Bug 1408321).
       const evaluationResultPacket = stubPackets.get("new Date(0)");
-      dispatch(actions.messageAdd(evaluationResultPacket));
+      dispatch(actions.messagesAdd([evaluationResultPacket]));
       const secondMessageActor = evaluationResultPacket.result.actor;
 
       const logCount = logLimit + 1;
@@ -54,7 +50,7 @@ describe("Release actor enhancer:", () => {
 
       for (let i = 1; i <= logCount; i++) {
         packet.message.arguments.push(`message num ${i}`);
-        dispatch(actions.messageAdd(packet));
+        dispatch(actions.messagesAdd([packet]));
       }
 
       expect(releasedActors.length).toBe(3);
@@ -78,8 +74,7 @@ describe("Release actor enhancer:", () => {
       dispatch(actions.messageAdd(
         stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")));
 
-      let messages = getAllMessagesById(getState());
-      const firstMessage = messages.first();
+      const firstMessage = getFirstMessage(getState());
       const firstMessageActor = firstMessage.parameters[1].actor;
 
       // Add an evaluation result message (see Bug 1408321).
@@ -122,26 +117,25 @@ describe("Release actor enhancer:", () => {
       });
 
       // Add a log message.
-      dispatch(actions.messageAdd(
-        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")));
+      dispatch(actions.messagesAdd([
+        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")]));
 
-      let messages = getAllMessagesById(getState());
-      const firstMessage = messages.first();
+      const firstMessage = getFirstMessage(getState());
       const firstMessageActor = firstMessage.parameters[1].actor;
 
       const packet = clonePacket(stubPackets.get(
         "console.assert(false, {message: 'foobar'})"));
       const secondMessageActor = packet.message.arguments[0].actor;
-      dispatch(actions.messageAdd(packet));
+      dispatch(actions.messagesAdd([packet]));
 
       // Add an evaluation result message (see Bug 1408321).
       const evaluationResultPacket = stubPackets.get("new Date(0)");
-      dispatch(actions.messageAdd(evaluationResultPacket));
+      dispatch(actions.messagesAdd([evaluationResultPacket]));
       const thirdMessageActor = evaluationResultPacket.result.actor;
 
       // Add a message with a long string messageText property.
       const longStringPacket = stubPackets.get("TypeError longString message");
-      dispatch(actions.messageAdd(longStringPacket));
+      dispatch(actions.messagesAdd([longStringPacket]));
       const fourthMessageActor = longStringPacket.pageError.errorMessage.actor;
 
       // Kick-off the actor release.

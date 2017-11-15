@@ -51,8 +51,8 @@ describe("Filtering - Hidden messages", () => {
   });
 
   it("updates when messages are added", () => {
-    MESSAGES.forEach(message =>
-      store.dispatch(actions.messageAdd(stubPackets.get(message))));
+    const packets = MESSAGES.map(key => stubPackets.get(key));
+    store.dispatch(actions.messagesAdd(packets));
 
     let counter = getFilteredMessagesCount(store.getState());
     expect(counter).toEqual({
