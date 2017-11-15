@@ -22,6 +22,8 @@ include protocol PPendingIPCBlob;
 include protocol PTemporaryIPCBlob;
 include protocol PMessagePort;
 include protocol PCameras;
+include protocol PMIDIManager;
+include protocol PMIDIPort;
 include protocol PQuota;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
@@ -36,6 +38,7 @@ include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
 include PFileSystemParams;
 include ProtocolTypes;
+include MIDITypes;
 
 include "mozilla/dom/cache/IPCUtils.h";
 
@@ -73,6 +76,8 @@ sync protocol PBackground
   manages PTemporaryIPCBlob;
   manages PMessagePort;
   manages PCameras;
+  manages PMIDIManager;
+  manages PMIDIPort;
   manages PQuota;
   manages PChildToParentStream;
   manages PParentToChildStream;
@@ -139,6 +144,9 @@ parent:
   async PTemporaryIPCBlob();
 
   async PClientManager();
+
+  async PMIDIManager();
+  async PMIDIPort(MIDIPortInfo portInfo, bool sysexEnabled);
 
 child:
   async PCache();
