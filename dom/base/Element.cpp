@@ -16,6 +16,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Attr.h"
+#include "mozilla/dom/Flex.h"
 #include "mozilla/dom/Grid.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsDOMAttributeMap.h"
@@ -27,6 +28,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIContentIterator.h"
+#include "nsFlexContainerFrame.h"
 #include "nsFocusManager.h"
 #include "nsFrameManager.h"
 #include "nsILinkHandler.h"
@@ -3705,6 +3707,23 @@ void
 Element::RequestPointerLock(CallerType aCallerType)
 {
   OwnerDoc()->RequestPointerLock(this, aCallerType);
+}
+
+already_AddRefed<Flex>
+Element::GetAsFlexContainer()
+{
+  nsIFrame* frame = GetPrimaryFrame();
+
+  // We need the flex frame to compute additional info, and use
+  // that annotated version of the frame.
+  nsFlexContainerFrame* flexFrame =
+    nsFlexContainerFrame::GetFlexFrameWithComputedInfo(frame);
+
+  if (flexFrame) {
+    RefPtr<Flex> flex = new Flex(this, flexFrame);
+    return flex.forget();
+  }
+  return nullptr;
 }
 
 void
