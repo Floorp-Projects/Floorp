@@ -8,6 +8,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/InlineTranslator.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/RecordedEvent.h"
 #include "WebRenderTypes.h"
 #include "webrender_ffi.h"
@@ -124,10 +125,15 @@ GetUnscaledFont(Translator *aTranslator, wr::FontKey key) {
                                                                               type,
                                                                               aTranslator->GetFontContext());
   RefPtr<UnscaledFont> unscaledFont;
-  if (fontResource) {
+  if (!fontResource) {
+    gfxDevCrash(LogReason::NativeFontResourceNotFound) << "Failed to creative NativeFontResource for FontKey " << key.mHandle;
+  } else {
     // Instance data is only needed for GDI fonts which webrender does not
     // support.
     unscaledFont = fontResource->CreateUnscaledFont(data.mIndex, nullptr, 0);
+    if (!unscaledFont) {
+      gfxDevCrash(LogReason::UnscaledFontNotFound) << "Failed to create UnscaledFont for FontKey " << key.mHandle;
+    }
   }
   data.mUnscaledFont = unscaledFont;
   return unscaledFont;
