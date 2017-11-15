@@ -8087,6 +8087,12 @@ nsGlobalWindowOuter::TemporarilyDisableDialogs::~TemporarilyDisableDialogs()
   }
 }
 
+mozilla::dom::TabGroup*
+nsPIDOMWindowOuter::TabGroup()
+{
+  return nsGlobalWindowOuter::Cast(this)->TabGroupOuter();
+}
+
 /* static */ already_AddRefed<nsGlobalWindowOuter>
 nsGlobalWindowOuter::Create(bool aIsChrome)
 {

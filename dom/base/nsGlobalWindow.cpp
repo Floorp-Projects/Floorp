@@ -794,18 +794,6 @@ IsInterval(const Optional<int32_t>& aTimeout, int32_t& aResultTimeout)
   return false;
 }
 
-mozilla::dom::TabGroup*
-nsPIDOMWindowInner::TabGroup()
-{
-  return nsGlobalWindowInner::Cast(this)->TabGroupInner();
-}
-
-mozilla::dom::TabGroup*
-nsPIDOMWindowOuter::TabGroup()
-{
-  return nsGlobalWindowOuter::Cast(this)->TabGroupOuter();
-}
-
 template<typename T>
 mozilla::dom::DocGroup*
 nsPIDOMWindow<T>::GetDocGroup() const
