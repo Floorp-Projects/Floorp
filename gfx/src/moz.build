@@ -47,6 +47,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.gfx += [
+    'CompositorHitTestInfo.h',
     'TiledRegion.h',
 ]
 
