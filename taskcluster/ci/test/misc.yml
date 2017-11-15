@@ -66,7 +66,6 @@ test-verify:
             default: built-projects
     tier:
         by-test-platform:
-            android.*: 3
             windows10-64-asan.*: 3
             default: 2
     mozharness:
