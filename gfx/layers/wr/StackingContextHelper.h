@@ -31,7 +31,7 @@ public:
                         wr::DisplayListBuilder& aBuilder,
                         const nsTArray<wr::WrFilterOp>& aFilters = nsTArray<wr::WrFilterOp>(),
                         const gfx::Matrix4x4* aBoundTransform = nullptr,
-                        uint64_t aAnimationsId = 0,
+                        const wr::WrAnimationProperty* aAnimation = nullptr,
                         float* aOpacityPtr = nullptr,
                         gfx::Matrix4x4* aTransformPtr = nullptr,
                         gfx::Matrix4x4* aPerspectivePtr = nullptr,
