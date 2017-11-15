@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.1.29 */
+/* Generated with cbindgen:0.2.0 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -198,6 +198,13 @@ enum class SubpixelDirection : uint32_t {
 enum class TransformStyle : uint32_t {
   Flat = 0,
   Preserve3D = 1,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class WrAnimationType : uint32_t {
+  Transform = 0,
+  Opacity = 1,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -650,6 +657,16 @@ struct Shadow {
     return offset == aOther.offset &&
            color == aOther.color &&
            blur_radius == aOther.blur_radius;
+  }
+};
+
+struct WrAnimationProperty {
+  WrAnimationType effect_type;
+  uint64_t id;
+
+  bool operator==(const WrAnimationProperty& aOther) const {
+    return effect_type == aOther.effect_type &&
+           id == aOther.id;
   }
 };
 
@@ -1276,7 +1293,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_stacking_context(WrState *aState,
                                  LayoutRect aBounds,
-                                 uint64_t aAnimationId,
+                                 const WrAnimationProperty *aAnimation,
                                  const float *aOpacity,
                                  const LayoutTransform *aTransform,
                                  TransformStyle aTransformStyle,
