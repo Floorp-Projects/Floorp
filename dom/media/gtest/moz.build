@@ -61,8 +61,8 @@ include('/ipc/chromium/chromium-config.mozbuild')
 LOCAL_INCLUDES += [
     '/dom/media',
     '/dom/media/encoder',
-    '/dom/media/fmp4',
     '/dom/media/gmp',
+    '/dom/media/mp4',
     '/dom/media/platforms',
     '/dom/media/platforms/agnostic',
     '/security/certverifier',
