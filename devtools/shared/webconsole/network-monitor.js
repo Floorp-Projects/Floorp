@@ -439,13 +439,34 @@ NetworkResponseListener.prototype = {
     // we pass the data from our pipe to the converter.
     this.offset = 0;
 
+    let channel = this.request;
+
+    // Bug 1372115 - We should load bytecode cached requests from cache as the actual
+    // channel content is going to be optimized data that reflects platform internals
+    // instead of the content user expects (i.e. content served by HTTP server)
+    // Note that bytecode cached is one example, there may be wasm or other usecase in
+    // future.
+    let isOptimizedContent = false;
+    try {
+      if (channel instanceof Ci.nsICacheInfoChannel) {
+        isOptimizedContent = channel.alternativeDataType;
+      }
+    } catch (e) {
+      // Accessing `alternativeDataType` for some SW requests throws.
+    }
+    if (isOptimizedContent) {
+      let charset = this.request.contentCharset || this.httpActivity.charset;
+      NetworkHelper.loadFromCache(this.httpActivity.url, charset,
+                                  this._onComplete.bind(this));
+      return;
+    }
+
     // In the multi-process mode, the conversion happens on the child
     // side while we can only monitor the channel on the parent
     // side. If the content is gzipped, we have to unzip it
     // ourself. For that we use the stream converter services.  Do not
     // do that for Service workers as they are run in the child
     // process.
-    let channel = this.request;
     if (!this.httpActivity.fromServiceWorker &&
         channel instanceof Ci.nsIEncodedChannel &&
         channel.contentEncodings &&
