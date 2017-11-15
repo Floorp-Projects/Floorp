@@ -1447,7 +1447,7 @@ MediaCache::Update()
       for (uint32_t j = 0; j < i; ++j) {
         MediaCacheStream* other = mStreams[j];
         if (other->mResourceID == stream->mResourceID && !other->mClosed &&
-            !other->mClientSuspended &&
+            !other->mClientSuspended && !other->mChannelEnded &&
             OffsetToBlockIndexUnchecked(other->mSeekTarget != -1
                                           ? other->mSeekTarget
                                           : other->mChannelOffset) ==
@@ -2160,25 +2160,29 @@ MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
     // is called from MediaCache::Update().
   }
 
-  if (NS_FAILED(aStatus)) {
-    // Disconnect from other streams sharing our resource, since they
-    // should continue trying to load. Our load might have been deliberately
-    // canceled and that shouldn't affect other streams.
-    mResourceID = mMediaCache->AllocateResourceID();
-  }
-
   // It is prudent to update channel/cache status before calling
   // CacheClientNotifyDataEnded() which will read |mChannelEnded|.
-  FlushPartialBlockInternal(true, mon);
   mChannelEnded = true;
   mMediaCache->QueueUpdate();
 
+  if (NS_FAILED(aStatus)) {
+    // Notify the client about this network error.
+    mDidNotifyDataEnded = true;
+    mNotifyDataEndedStatus = aStatus;
+    mClient->CacheClientNotifyDataEnded(aStatus);
+    // Wake up the readers so they can fail gracefully.
+    mon.NotifyAll();
+    return;
+  }
+
+  // Note we don't flush the partial block when download ends abnormally for
+  // the padding zeros will give wrong data to other streams.
+  FlushPartialBlockInternal(true, mon);
+
   MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
   while (MediaCacheStream* stream = iter.Next()) {
-    if (NS_SUCCEEDED(aStatus)) {
-      // We read the whole stream, so remember the true length
-      stream->mStreamLength = mChannelOffset;
-    }
+    // We read the whole stream, so remember the true length
+    stream->mStreamLength = mChannelOffset;
     if (!stream->mDidNotifyDataEnded) {
       stream->mDidNotifyDataEnded = true;
       stream->mNotifyDataEndedStatus = aStatus;
@@ -2580,6 +2584,11 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   while (!buffer.IsEmpty()) {
     if (mClosed) {
       return NS_ERROR_ABORT;
+    }
+
+    if (mDidNotifyDataEnded && NS_FAILED(mNotifyDataEndedStatus)) {
+      // Abort reading since download ends abnormally.
+      return NS_ERROR_FAILURE;
     }
 
     if (!IsOffsetAllowed(streamOffset)) {
