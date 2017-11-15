@@ -182,6 +182,11 @@ interface nsIContentPolicy : nsISupports
   const nsContentPolicyType TYPE_WEB_MANIFEST = 22;
 
   /**
+   * Indicates an save-as link download from the front-end code.
+   */
+  const nsContentPolicyType TYPE_SAVEAS_DOWNLOAD = 43;
+
+  /**
    * Indicates an internal constant for scripts loaded through script
    * elements.
    *
