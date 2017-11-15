@@ -958,14 +958,11 @@ BrowserPageActions.sendToDevice = {
     }
   },
 
-  onShowingInPanel(buttonNode) {
+  onLocationChange() {
+    let action = PageActions.actionForID("sendToDevice");
     let browser = gBrowser.selectedBrowser;
     let url = browser.currentURI.spec;
-    if (gSync.isSendableURI(url)) {
-      buttonNode.removeAttribute("disabled");
-    } else {
-      buttonNode.setAttribute("disabled", "true");
-    }
+    action.setDisabled(!gSync.isSendableURI(url), window);
   },
 
   onShowingSubview(panelViewNode) {

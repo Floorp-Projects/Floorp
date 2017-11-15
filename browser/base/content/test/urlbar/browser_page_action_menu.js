@@ -174,34 +174,27 @@ add_task(async function copyURLFromURLBar() {
 });
 
 add_task(async function sendToDevice_nonSendable() {
-  // Open a tab that's not sendable.  An about: page like about:home is
-  // convenient.
-  await BrowserTestUtils.withNewTab("about:home", async () => {
-    // ... but the page actions should be hidden on about:home, including the
-    // main button.  (It's not easy to load a page that's both actionable and
-    // not sendable.)  So first check that that's the case, and then unhide the
-    // main button so that this test can continue.
-    Assert.equal(
-      window.getComputedStyle(BrowserPageActions.mainButtonNode).display,
-      "none",
-      "Main button should be hidden on about:home"
-    );
-    BrowserPageActions.mainButtonNode.style.display = "-moz-box";
+  // Open a tab that's not sendable but where the page action buttons still
+  // appear.  about:about is convenient.
+  await BrowserTestUtils.withNewTab("about:about", async () => {
     await promiseSyncReady();
     // Open the panel.  Send to Device should be disabled.
     await promisePageActionPanelOpen();
-    Assert.equal(BrowserPageActions.mainButtonNode.getAttribute("open"),
-      "true", "Main button has 'open' attribute");
-    let sendToDeviceButton =
-      document.getElementById("pageAction-panel-sendToDevice");
-    Assert.ok(sendToDeviceButton.disabled);
+    Assert.equal(BrowserPageActions.mainButtonNode.getAttribute("open"), "true",
+                 "Main button has 'open' attribute");
+    let panelButton =
+      BrowserPageActions.panelButtonNodeForActionID("sendToDevice");
+    Assert.equal(panelButton.disabled, true,
+                 "The panel button should be disabled");
     let hiddenPromise = promisePageActionPanelHidden();
     BrowserPageActions.panelNode.hidePopup();
     await hiddenPromise;
     Assert.ok(!BrowserPageActions.mainButtonNode.hasAttribute("open"),
-      "Main button no longer has 'open' attribute");
-    // Remove the `display` style set above.
-    BrowserPageActions.mainButtonNode.style.removeProperty("display");
+              "Main button no longer has 'open' attribute");
+    // The urlbar button shouldn't exist.
+    let urlbarButton =
+      BrowserPageActions.urlbarButtonNodeForActionID("sendToDevice");
+    Assert.equal(urlbarButton, null, "The urlbar button shouldn't exist");
   });
 });
 
@@ -550,7 +543,9 @@ add_task(async function sendToDevice_inUrlbar() {
     let urlbarButton = document.getElementById(
       BrowserPageActions.urlbarButtonNodeIDForActionID(action.id)
     );
-    Assert.ok(!urlbarButton.disabled);
+    Assert.notEqual(urlbarButton, null, "The urlbar button should exist");
+    Assert.ok(!urlbarButton.disabled,
+              "The urlbar button should not be disabled");
     let panelPromise =
       promisePanelShown(BrowserPageActions._activatedActionPanelID);
     EventUtils.synthesizeMouseAtCenter(urlbarButton, {});
