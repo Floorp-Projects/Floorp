@@ -25,7 +25,6 @@
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/layers/ShadowLayers.h"
-#include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
@@ -1100,7 +1099,8 @@ MediaDecoder::NotifyCompositor()
         mReader,
         &MediaFormatReader::UpdateCompositor,
         knowsCompositor.forget());
-    Unused << mReader->OwnerThread()->Dispatch(r.forget());
+    mReader->OwnerThread()->Dispatch(r.forget(),
+                                     AbstractThread::DontAssertDispatchSuccess);
   }
 }
 
@@ -1380,13 +1380,10 @@ MediaDecoder::NotifyDataArrivedInternal()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-
-  nsresult rv =
-    mReader->OwnerThread()->Dispatch(
-      NewRunnableMethod("MediaFormatReader::NotifyDataArrived",
-                        mReader.get(),
-                        &MediaFormatReader::NotifyDataArrived));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  mReader->OwnerThread()->Dispatch(
+    NewRunnableMethod("MediaFormatReader::NotifyDataArrived",
+                      mReader.get(),
+                      &MediaFormatReader::NotifyDataArrived));
 }
 
 void
