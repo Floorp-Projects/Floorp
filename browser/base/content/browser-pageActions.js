@@ -247,24 +247,26 @@ var BrowserPageActions = {
     let popupSet = document.getElementById("mainPopupSet");
     popupSet.appendChild(panelNode);
     panelNode.addEventListener("popuphidden", () => {
-      if (iframeNode) {
-        action.onIframeHidden(iframeNode, panelNode);
-      }
       panelNode.remove();
     }, { once: true });
 
     if (iframeNode) {
-      panelNode.addEventListener("popupshown", () => {
-        action.onIframeShown(iframeNode, panelNode);
+      panelNode.addEventListener("popupshowing", () => {
+        action.onIframeShowing(iframeNode, panelNode);
       }, { once: true });
       panelNode.addEventListener("popuphiding", () => {
         action.onIframeHiding(iframeNode, panelNode);
+      }, { once: true });
+      panelNode.addEventListener("popuphidden", () => {
+        action.onIframeHidden(iframeNode, panelNode);
       }, { once: true });
     }
 
     if (panelViewNode) {
       action.subview.onPlaced(panelViewNode);
-      action.subview.onShowing(panelViewNode);
+      panelNode.addEventListener("popupshowing", () => {
+        action.subview.onShowing(panelViewNode);
+      }, { once: true });
     }
 
     return panelNode;
