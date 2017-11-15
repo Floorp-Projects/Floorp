@@ -5700,6 +5700,7 @@ var gUIDensity = {
     }
 
     TabsInTitlebar.updateAppearance(true);
+    gBrowser.tabContainer.uiDensityChanged();
   },
 };
 
