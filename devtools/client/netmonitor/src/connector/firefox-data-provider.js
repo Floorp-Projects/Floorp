@@ -533,26 +533,28 @@ class FirefoxDataProvider {
    */
   async _requestData(actor, method) {
     // Calculate real name of the client getter.
-    let clientMethodName = "get" + method.charAt(0).toUpperCase() +
-      method.slice(1);
+    let clientMethodName = `get${method.charAt(0).toUpperCase()}${method.slice(1)}`;
     // The name of the callback that processes request response
-    let callbackMethodName = "on" + method.charAt(0).toUpperCase() +
-      method.slice(1);
+    let callbackMethodName = `on${method.charAt(0).toUpperCase()}${method.slice(1)}`;
     // And the event to fire before updating this data
-    let updatingEventName = "UPDATING_" + method.replace(/([A-Z])/g, "_$1").toUpperCase();
+    let updatingEventName = `UPDATING_${method.replace(/([A-Z])/g, "_$1").toUpperCase()}`;
 
-    if (typeof this.webConsoleClient[clientMethodName] == "function") {
-      // Emit event that tell we just start fetching some data
-      emit(EVENTS[updatingEventName], actor);
+    // Emit event that tell we just start fetching some data
+    emit(EVENTS[updatingEventName], actor);
 
+    let response = await new Promise((resolve, reject) => {
       // Do a RDP request to fetch data from the actor.
-      let response = await this.webConsoleClient[clientMethodName](actor);
+      if (typeof this.webConsoleClient[clientMethodName] === "function") {
+        this.webConsoleClient[clientMethodName](actor, (res) => {
+          resolve(res);
+        });
+      } else {
+        reject(new Error(`Error: No such client method '${clientMethodName}'!`));
+      }
+    });
 
-      // Call data processing method.
-      response = await this[callbackMethodName](response);
-      return response;
-    }
-    throw new Error("Error: No such client method '" + clientMethodName + "'!");
+    // Call data processing method.
+    return this[callbackMethodName](response);
   }
 
   /**
