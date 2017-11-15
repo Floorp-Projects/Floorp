@@ -1783,7 +1783,8 @@ class EventSourceWorkerHolder final : public WorkerHolder
 {
 public:
   explicit EventSourceWorkerHolder(EventSourceImpl* aEventSourceImpl)
-    : mEventSourceImpl(aEventSourceImpl)
+    : WorkerHolder("EventSourceWorkerHolder")
+    , mEventSourceImpl(aEventSourceImpl)
   {
   }
 

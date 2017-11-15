@@ -29,7 +29,8 @@ class FetchBodyWorkerHolder final : public workers::WorkerHolder
 
 public:
   explicit FetchBodyWorkerHolder(FetchBodyConsumer<Derived>* aConsumer)
-    : mConsumer(aConsumer)
+    : workers::WorkerHolder("FetchBodyWorkerHolder")
+    , mConsumer(aConsumer)
     , mWasNotified(false)
   {
     MOZ_ASSERT(aConsumer);

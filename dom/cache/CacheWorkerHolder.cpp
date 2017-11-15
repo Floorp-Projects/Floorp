@@ -116,7 +116,7 @@ CacheWorkerHolder::Notify(Status aStatus)
 }
 
 CacheWorkerHolder::CacheWorkerHolder(Behavior aBehavior)
-  : WorkerHolder(aBehavior)
+  : WorkerHolder("CacheWorkerHolder", aBehavior)
   , mNotified(false)
 {
 }

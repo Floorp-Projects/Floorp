@@ -104,7 +104,8 @@ NS_IMPL_ISUPPORTS(IPCStreamSource::Callback, nsIInputStreamCallback,
                                              nsICancelableRunnable);
 
 IPCStreamSource::IPCStreamSource(nsIAsyncInputStream* aInputStream)
-  : mStream(aInputStream)
+  : WorkerHolder("IPCStreamSource")
+  , mStream(aInputStream)
   , mWorkerPrivate(nullptr)
   , mState(ePending)
 {
