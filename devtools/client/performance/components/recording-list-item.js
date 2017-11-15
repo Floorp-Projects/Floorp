@@ -3,22 +3,24 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {DOM, createClass, PropTypes} = require("devtools/client/shared/vendor/react");
-const {div, li, span, button} = DOM;
-const {L10N} = require("devtools/client/performance/modules/global");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const { div, li, span, button } = dom;
+const { L10N } = require("devtools/client/performance/modules/global");
 
-module.exports = createClass({
-  displayName: "Recording List Item",
-
-  propTypes: {
-    label: PropTypes.string.isRequired,
-    duration: PropTypes.string,
-    onSelect: PropTypes.func.isRequired,
-    onSave: PropTypes.func.isRequired,
-    isLoading: PropTypes.bool,
-    isSelected: PropTypes.bool,
-    isRecording: PropTypes.bool
-  },
+class RecordingListItem extends Component {
+  static get propTypes() {
+    return {
+      label: PropTypes.string.isRequired,
+      duration: PropTypes.string,
+      onSelect: PropTypes.func.isRequired,
+      onSave: PropTypes.func.isRequired,
+      isLoading: PropTypes.bool,
+      isSelected: PropTypes.bool,
+      isRecording: PropTypes.bool
+    };
+  }
 
   render() {
     const {
@@ -56,4 +58,6 @@ module.exports = createClass({
       )
     );
   }
-});
+}
+
+module.exports = RecordingListItem;
