@@ -40,7 +40,7 @@ struct ImmTag : public Imm32
     { }
 };
 
-static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg);
+static constexpr ValueOperand JSReturnOperand{JSReturnReg};
 
 static const int defaultShift = 3;
 static_assert(1 << defaultShift == sizeof(JS::Value), "The defaultShift is wrong");
