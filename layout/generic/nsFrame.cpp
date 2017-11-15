@@ -3022,6 +3022,13 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
         eventRegions = nullptr;
       }
     }
+    if (aBuilder->BuildCompositorHitTestInfo()) {
+      CompositorHitTestInfo info = GetCompositorHitTestInfo(aBuilder);
+      if (info != CompositorHitTestInfo::eInvisibleToHitTest) {
+        set.BorderBackground()->AppendNewToBottom(
+            new (aBuilder) nsDisplayCompositorHitTestInfo(aBuilder, this, info));
+      }
+    }
   }
 
   if (aBuilder->IsBackgroundOnly()) {
@@ -3452,6 +3459,13 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
     CheckForApzAwareEventHandlers(aBuilder, child);
 
+    if (aBuilder->BuildCompositorHitTestInfo()) {
+      CompositorHitTestInfo info = child->GetCompositorHitTestInfo(aBuilder);
+      if (info != CompositorHitTestInfo::eInvisibleToHitTest) {
+        aLists.BorderBackground()->AppendNewToTop(
+            new (aBuilder) nsDisplayCompositorHitTestInfo(aBuilder, child, info));
+      }
+    }
     nsDisplayLayerEventRegions* eventRegions = aBuilder->GetLayerEventRegions();
     if (eventRegions) {
       eventRegions->AddFrame(aBuilder, child);
@@ -3669,6 +3683,18 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
     child->MarkAbsoluteFramesForDisplayList(aBuilder);
 
+    if (aBuilder->BuildCompositorHitTestInfo()) {
+      CompositorHitTestInfo info = child->GetCompositorHitTestInfo(aBuilder);
+      if (info != CompositorHitTestInfo::eInvisibleToHitTest) {
+        nsDisplayItem* item =
+            new (aBuilder) nsDisplayCompositorHitTestInfo(aBuilder, child, info);
+        if (isPositioned) {
+          list.AppendNewToTop(item);
+        } else {
+          aLists.BorderBackground()->AppendNewToTop(item);
+        }
+      }
+    }
     if (aBuilder->IsBuildingLayerEventRegions()) {
       // If this frame has a different animated geometry root than its parent,
       // make sure we accumulate event regions for its layer.
