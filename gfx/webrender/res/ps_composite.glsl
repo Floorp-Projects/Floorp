@@ -298,6 +298,8 @@ void main(void) {
     result.rgb = (1.0 - Cb.a) * Cs.rgb + Cb.a * result.rgb;
     result.a = Cs.a;
 
+    result.rgb *= result.a;
+
     oFragColor = result;
 }
 #endif

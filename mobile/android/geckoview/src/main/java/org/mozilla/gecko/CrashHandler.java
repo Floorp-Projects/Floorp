@@ -27,6 +27,8 @@ import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
 
+import org.mozilla.geckoview.BuildConfig;
+
 public class CrashHandler implements Thread.UncaughtExceptionHandler {
 
     private static final String LOGTAG = "GeckoCrashHandler";
@@ -308,8 +310,6 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
                 return true;
             }
 
-            // Avoid AppConstants dependency for SDK version constants,
-            // because CrashHandler could be used outside of Fennec code.
             if (Build.VERSION.SDK_INT < 17) {
                 pb = new ProcessBuilder(
                     "/system/bin/am", "start",
@@ -456,18 +456,18 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
             protected Bundle getCrashExtras(final Thread thread, final Throwable exc) {
                 final Bundle extras = super.getCrashExtras(thread, exc);
 
-                extras.putString("ProductName", AppConstants.MOZ_APP_BASENAME);
-                extras.putString("ProductID", AppConstants.MOZ_APP_ID);
-                extras.putString("Version", AppConstants.MOZ_APP_VERSION);
-                extras.putString("BuildID", AppConstants.MOZ_APP_BUILDID);
-                extras.putString("Vendor", AppConstants.MOZ_APP_VENDOR);
-                extras.putString("ReleaseChannel", AppConstants.MOZ_UPDATE_CHANNEL);
+                extras.putString("ProductName", BuildConfig.MOZ_APP_BASENAME);
+                extras.putString("ProductID", BuildConfig.MOZ_APP_ID);
+                extras.putString("Version", BuildConfig.MOZ_APP_VERSION);
+                extras.putString("BuildID", BuildConfig.MOZ_APP_BUILDID);
+                extras.putString("Vendor", BuildConfig.MOZ_APP_VENDOR);
+                extras.putString("ReleaseChannel", BuildConfig.MOZ_UPDATE_CHANNEL);
                 return extras;
             }
 
             @Override
             public boolean reportException(final Thread thread, final Throwable exc) {
-                if (AppConstants.MOZ_CRASHREPORTER && AppConstants.MOZILLA_OFFICIAL) {
+                if (BuildConfig.MOZ_CRASHREPORTER && BuildConfig.MOZILLA_OFFICIAL) {
                     // Only use Java crash reporter if enabled on official build.
                     return super.reportException(thread, exc);
                 }

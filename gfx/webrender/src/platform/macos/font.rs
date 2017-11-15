@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorU, FontKey, FontRenderMode, GlyphDimensions};
-use api::{FontInstance, FontVariation, NativeFontHandle};
+use api::{FontVariation, NativeFontHandle};
 use api::{GlyphKey, SubpixelDirection};
 use app_units::Au;
 use core_foundation::array::{CFArray, CFArrayRef};
@@ -22,7 +22,7 @@ use core_text;
 use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
 use gamma_lut::{ColorLut, GammaLut};
-use glyph_rasterizer::{GlyphFormat, RasterizedGlyph};
+use glyph_rasterizer::{FontInstance, GlyphFormat, RasterizedGlyph};
 use internal_types::FastHashMap;
 use std::collections::hash_map::Entry;
 use std::ptr;

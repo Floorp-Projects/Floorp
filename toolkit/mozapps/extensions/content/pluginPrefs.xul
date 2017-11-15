@@ -4,21 +4,54 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 
-<!DOCTYPE window SYSTEM "chrome://pluginproblem/locale/pluginproblem.dtd">
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/content/extensions/extensions.css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/extensions/extensions.css"?>
 
-<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <setting type="control" title="&plugin.file;">
-    <label class="text-list" id="pluginLibraries"/>
-  </setting>
-  <setting type="control" title="&plugin.mimeTypes;">
-    <label class="text-list" id="pluginMimeTypes"/>
-  </setting>
-  <setting type="bool" pref="plugins.flashBlock.enabled"
-           id="pluginFlashBlocking"
-           title="&plugin.enableBlocklists.label;"
-           learnmore="https://support.mozilla.org/kb/flash-blocklists" />
-  <setting type="bool" pref="dom.ipc.plugins.flash.disable-protected-mode"
-           inverted="true" title="&plugin.flashProtectedMode.label;"
-           id="pluginEnableProtectedMode"
-           learnmore="https://support.mozilla.org/kb/flash-protected-mode-settings" />
-</vbox>
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % pluginsDTD SYSTEM "chrome://pluginproblem/locale/pluginproblem.dtd">
+%pluginsDTD;
+<!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
+%extensionsDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mozapps/content/extensions/pluginPrefs.js"/>
+
+  <vbox class="detail-view-container">
+    <grid id="detail-grid">
+      <columns>
+          <column flex="1"/>
+          <column flex="2"/>
+      </columns>
+      <rows id="detail-rows">
+        <row class="detail-row-complex">
+          <label>&plugin.file;</label>
+          <label class="text-list" id="pluginLibraries"/>
+        </row>
+        <row class="detail-row-complex">
+          <label>&plugin.mimeTypes;</label>
+          <label class="text-list" id="pluginMimeTypes"/>
+        </row>
+        <row id="pluginFlashBlocking" class="detail-row-complex">
+          <vbox>
+            <label>&plugin.enableBlocklists.label;</label>
+            <label class="preferences-learnmore text-link">&setting.learnmore;</label>
+          </vbox>
+          <checkbox id="pluginFlashBlockingCheckbox"/>
+        </row>
+        <row id="pluginEnableProtectedMode" class="detail-row-complex">
+          <vbox>
+            <label>&plugin.flashProtectedMode.label;</label>
+            <label class="preferences-learnmore text-link">&setting.learnmore;</label>
+          </vbox>
+          <checkbox id="pluginEnableProtectedModeCheckbox"/>
+        </row>
+      </rows>
+    </grid>
+  </vbox>
+</window>

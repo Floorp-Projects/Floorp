@@ -3,6 +3,7 @@
 #include "nsIHandlerService.h"
 #include "nsIMIMEInfo.h"
 #include "ContentHandlerService.h"
+#include "nsStringEnumerator.h"
 #ifdef MOZ_WIDGET_GTK
 #include "unix/nsGNOMERegistry.h"
 #endif
@@ -19,6 +20,11 @@ public:
   explicit ProxyHandlerInfo(const HandlerInfo& aHandlerInfo);
   NS_DECL_ISUPPORTS;
   NS_DECL_NSIHANDLERINFO;
+
+  nsTArray<nsCString>& Extensions() {
+    return mHandlerInfo.extensions();
+  }
+
 protected:
   ~ProxyHandlerInfo() {}
   HandlerInfo mHandlerInfo;
@@ -28,7 +34,9 @@ protected:
 
 NS_IMPL_ISUPPORTS(ProxyHandlerInfo, nsIHandlerInfo)
 
-ProxyHandlerInfo::ProxyHandlerInfo(const HandlerInfo& aHandlerInfo) : mHandlerInfo(aHandlerInfo), mPossibleApps(do_CreateInstance(NS_ARRAY_CONTRACTID))
+ProxyHandlerInfo::ProxyHandlerInfo(const HandlerInfo& aHandlerInfo)
+  : mHandlerInfo(aHandlerInfo),
+    mPossibleApps(do_CreateInstance(NS_ARRAY_CONTRACTID))
 {
   for (auto& happ : aHandlerInfo.possibleApplicationHandlers()) {
     mPossibleApps->AppendElement(new RemoteHandlerApp(happ));
@@ -68,14 +76,8 @@ NS_IMETHODIMP ProxyHandlerInfo::SetPreferredApplicationHandler(nsIHandlerApp *aA
     aApp->GetName(name);
     aApp->GetDetailedDescription(detailedDescription);
   }
-  HandlerApp happ(name, detailedDescription);
-  mHandlerInfo = HandlerInfo(mHandlerInfo.type(),
-                             mHandlerInfo.isMIMEInfo(),
-                             mHandlerInfo.description(),
-                             mHandlerInfo.alwaysAskBeforeHandling(),
-                             happ,
-                             mHandlerInfo.possibleApplicationHandlers(),
-                             mHandlerInfo.preferredAction());
+
+  mHandlerInfo.preferredApplicationHandler() = HandlerApp(name, detailedDescription);
   return NS_OK;
 }
 
@@ -113,13 +115,7 @@ NS_IMETHODIMP ProxyHandlerInfo::GetPreferredAction(nsHandlerInfoAction *aPreferr
 }
 NS_IMETHODIMP ProxyHandlerInfo::SetPreferredAction(nsHandlerInfoAction aPreferredAction)
 {
-  mHandlerInfo = HandlerInfo(mHandlerInfo.type(),
-                             mHandlerInfo.isMIMEInfo(),
-                             mHandlerInfo.description(),
-                             mHandlerInfo.alwaysAskBeforeHandling(),
-                             mHandlerInfo.preferredApplicationHandler(),
-                             mHandlerInfo.possibleApplicationHandlers(),
-                             aPreferredAction);
+  mHandlerInfo.preferredAction() = aPreferredAction;
   mPrefAction = aPreferredAction;
   return NS_OK;
 }
@@ -132,13 +128,7 @@ NS_IMETHODIMP ProxyHandlerInfo::GetAlwaysAskBeforeHandling(bool *aAlwaysAskBefor
 }
 NS_IMETHODIMP ProxyHandlerInfo::SetAlwaysAskBeforeHandling(bool aAlwaysAskBeforeHandling)
 {
-  mHandlerInfo = HandlerInfo(mHandlerInfo.type(),
-                             mHandlerInfo.isMIMEInfo(),
-                             mHandlerInfo.description(),
-                             aAlwaysAskBeforeHandling,
-                             mHandlerInfo.preferredApplicationHandler(),
-                             mHandlerInfo.possibleApplicationHandlers(),
-                             mHandlerInfo.preferredAction());
+  mHandlerInfo.alwaysAskBeforeHandling() = aAlwaysAskBeforeHandling;
   return NS_OK;
 }
 
@@ -150,11 +140,14 @@ public:
   NS_DECL_NSIMIMEINFO
   NS_FORWARD_NSIHANDLERINFO(mProxyHandlerInfo->);
 
-  explicit ProxyMIMEInfo(HandlerInfo aHandlerInfo) : mProxyHandlerInfo(new ProxyHandlerInfo(aHandlerInfo)) {}
+  explicit ProxyMIMEInfo(const HandlerInfo &aHandlerInfo)
+    : mProxyHandlerInfo(new ProxyHandlerInfo(aHandlerInfo))
+  {
+  }
 
 private:
   virtual ~ProxyMIMEInfo() {}
-  nsCOMPtr<nsIHandlerInfo> mProxyHandlerInfo;
+  RefPtr<ProxyHandlerInfo> mProxyHandlerInfo;
 
 protected:
   /* additional members */
@@ -165,7 +158,7 @@ NS_IMPL_ISUPPORTS(ProxyMIMEInfo, nsIMIMEInfo, nsIHandlerInfo)
 /* nsIUTF8StringEnumerator getFileExtensions (); */
 NS_IMETHODIMP ProxyMIMEInfo::GetFileExtensions(nsIUTF8StringEnumerator * *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_NewUTF8StringEnumerator(_retval, &mProxyHandlerInfo->Extensions(), this);
 }
 
 /* void setFileExtensions (in AUTF8String aExtensions); */
@@ -177,19 +170,26 @@ NS_IMETHODIMP ProxyMIMEInfo::SetFileExtensions(const nsACString & aExtensions)
 /* boolean extensionExists (in AUTF8String aExtension); */
 NS_IMETHODIMP ProxyMIMEInfo::ExtensionExists(const nsACString & aExtension, bool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = mProxyHandlerInfo->Extensions().Contains(aExtension);
+  return NS_OK;
 }
 
 /* void appendExtension (in AUTF8String aExtension); */
 NS_IMETHODIMP ProxyMIMEInfo::AppendExtension(const nsACString & aExtension)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mProxyHandlerInfo->Extensions().AppendElement(aExtension);
+  return NS_OK;
 }
 
 /* attribute AUTF8String primaryExtension; */
 NS_IMETHODIMP ProxyMIMEInfo::GetPrimaryExtension(nsACString & aPrimaryExtension)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  const auto& extensions = mProxyHandlerInfo->Extensions();
+  if (extensions.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+  aPrimaryExtension = extensions[0];
+  return NS_OK;
 }
 
 NS_IMETHODIMP ProxyMIMEInfo::SetPrimaryExtension(const nsACString & aPrimaryExtension)

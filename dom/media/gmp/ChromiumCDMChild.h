@@ -128,6 +128,8 @@ protected:
                                   const nsCString& aSessionId) override;
   ipc::IPCResult RecvRemoveSession(const uint32_t& aPromiseId,
                                    const nsCString& aSessionId) override;
+  ipc::IPCResult RecvGetStatusForPolicy(const uint32_t& aPromiseId,
+                                        const nsCString& aMinHdcpVersion) override;
   ipc::IPCResult RecvDecrypt(const uint32_t& aId,
                              const CDMInputBuffer& aBuffer) override;
   ipc::IPCResult RecvInitializeVideoDecoder(

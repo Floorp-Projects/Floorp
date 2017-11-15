@@ -384,16 +384,6 @@ nsCSSValue::GetPossiblyStaticImageValue(nsIDocument* aDocument,
   return nsContentUtils::GetStaticRequest(aDocument, req);
 }
 
-nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const
-{
-  MOZ_ASSERT(mUnit == eCSSUnit_PhysicalMillimeter,
-             "not a fixed length unit");
-
-  float inches = mValue.mFloat / MM_PER_INCH_FLOAT;
-  return NSToCoordFloorClamped(inches *
-    float(aPresContext->DeviceContext()->AppUnitsPerPhysicalInch()));
-}
-
 nscoord nsCSSValue::GetPixelLength() const
 {
   MOZ_ASSERT(IsPixelLengthUnit(), "not a fixed length unit");
@@ -2064,7 +2054,6 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty,
 
     case eCSSUnit_Inch:         aResult.AppendLiteral("in");   break;
     case eCSSUnit_Millimeter:   aResult.AppendLiteral("mm");   break;
-    case eCSSUnit_PhysicalMillimeter: aResult.AppendLiteral("mozmm");   break;
     case eCSSUnit_Centimeter:   aResult.AppendLiteral("cm");   break;
     case eCSSUnit_Point:        aResult.AppendLiteral("pt");   break;
     case eCSSUnit_Pica:         aResult.AppendLiteral("pc");   break;
@@ -2249,7 +2238,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     // Float: nothing extra to measure.
     case eCSSUnit_Percent:
     case eCSSUnit_Number:
-    case eCSSUnit_PhysicalMillimeter:
     case eCSSUnit_ViewportWidth:
     case eCSSUnit_ViewportHeight:
     case eCSSUnit_ViewportMin:

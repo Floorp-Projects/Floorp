@@ -530,8 +530,7 @@ WebRenderLayerManager::WrUpdated()
 }
 
 void
-WebRenderLayerManager::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier,
-                                                      uint64_t aDeviceResetSeqNo)
+WebRenderLayerManager::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier)
 {
   WrBridge()->IdentifyTextureHost(aNewIdentifier);
 }

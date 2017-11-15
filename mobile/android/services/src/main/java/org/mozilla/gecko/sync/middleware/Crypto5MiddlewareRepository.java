@@ -4,13 +4,13 @@
 
 package org.mozilla.gecko.sync.middleware;
 
+import org.mozilla.gecko.sync.SessionCreateException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.repositories.IdentityRecordFactory;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCleanDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 
 import android.content.Context;
 
@@ -21,38 +21,8 @@ import android.content.Context;
  * @author rnewman
  *
  */
-public class Crypto5MiddlewareRepository extends MiddlewareRepository {
-
+public class Crypto5MiddlewareRepository extends Repository {
   public RecordFactory recordFactory = new IdentityRecordFactory();
-
-  public class Crypto5MiddlewareRepositorySessionCreationDelegate extends MiddlewareRepository.SessionCreationDelegate {
-    private final Crypto5MiddlewareRepository repository;
-    private final RepositorySessionCreationDelegate outerDelegate;
-
-    public Crypto5MiddlewareRepositorySessionCreationDelegate(Crypto5MiddlewareRepository repository, RepositorySessionCreationDelegate outerDelegate) {
-      this.repository = repository;
-      this.outerDelegate = outerDelegate;
-    }
-
-    @Override
-    public void onSessionCreateFailed(Exception ex) {
-      this.outerDelegate.onSessionCreateFailed(ex);
-    }
-
-    @Override
-    public void onSessionCreated(RepositorySession session) {
-      // Do some work, then report success with the wrapping session.
-      Crypto5MiddlewareRepositorySession cryptoSession;
-      try {
-        // Synchronous, baby.
-        cryptoSession = new Crypto5MiddlewareRepositorySession(session, this.repository, recordFactory);
-      } catch (Exception ex) {
-        this.outerDelegate.onSessionCreateFailed(ex);
-        return;
-      }
-      this.outerDelegate.onSessionCreated(cryptoSession);
-    }
-  }
 
   public KeyBundle keyBundle;
   private final Repository inner;
@@ -62,10 +32,11 @@ public class Crypto5MiddlewareRepository extends MiddlewareRepository {
     this.inner = inner;
     this.keyBundle = keys;
   }
+
   @Override
-  public void createSession(RepositorySessionCreationDelegate delegate, Context context) {
-    Crypto5MiddlewareRepositorySessionCreationDelegate delegateWrapper = new Crypto5MiddlewareRepositorySessionCreationDelegate(this, delegate);
-    inner.createSession(delegateWrapper, context);
+  public RepositorySession createSession(Context context) throws SessionCreateException {
+    final RepositorySession innerSession = inner.createSession(context);
+    return new Crypto5MiddlewareRepositorySession(innerSession, this, recordFactory);
   }
 
   @Override

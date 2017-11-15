@@ -86,13 +86,6 @@
 
 # GeckoView specific rules.
 
-# Keep classes, and all their contents, compiled before annotation.*.
--keep class org.mozilla.gecko.AppConstants {
-    *;
-}
--keep class org.mozilla.gecko.AppConstants$Versions {
-    *;
-}
 -keep class org.mozilla.gecko.SysInfo {
     *;
 }

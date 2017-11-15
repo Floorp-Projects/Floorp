@@ -13,17 +13,15 @@ import org.mozilla.gecko.background.sync.helpers.ExpectFinishDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectInvalidTypeStoreDelegate;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
+import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.android.BookmarksDataAccessor;
 import org.mozilla.gecko.sync.repositories.android.BookmarksRepository;
 import org.mozilla.gecko.sync.repositories.android.BookmarksRepositorySession;
-import org.mozilla.gecko.sync.repositories.android.ThreadedRepository;
 import org.mozilla.gecko.sync.repositories.android.DataAccessor;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
@@ -34,7 +32,7 @@ import android.database.Cursor;
 public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTestCase {
 
   @Override
-  protected ThreadedRepository getRepository() {
+  protected Repository getRepository() {
 
     /**
      * Override this chain in order to avoid our test code having to create two
@@ -42,15 +40,13 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
      */
     return new BookmarksRepository() {
       @Override
-      protected void sessionCreator(RepositorySessionCreationDelegate delegate, Context context) {
-        BookmarksRepositorySession session;
-        session = new BookmarksRepositorySession(this, context) {
+      public RepositorySession createSession(Context context) {
+        return new BookmarksRepositorySession(this, context) {
           @Override
           protected synchronized void trackGUID(String guid) {
             System.out.println("Ignoring trackGUID call: this is a test!");
           }
         };
-        delegate.deferredCreationDelegate().onSessionCreated(session);
       }
     };
   }
@@ -87,7 +83,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
   // to store a folder first, store your record in "mobile" or one of the folders
   // that always exists.
 
-  public void testFetchOneWithChildren() {
+  public void testFetchOneWithChildren() throws Exception {
     BookmarkRecord folder = BookmarkHelpers.createFolder1();
     BookmarkRecord bookmark1 = BookmarkHelpers.createBookmark1();
     BookmarkRecord bookmark2 = BookmarkHelpers.createBookmark2();
@@ -159,7 +155,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
   }
 
 
-  public void testStoreFolder() {
+  public void testStoreFolder() throws Exception {
     basicStoreTest(BookmarkHelpers.createFolder1());
   }
 
@@ -190,7 +186,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
   }
    */
 
-  protected void basicStoreFailTest(Record record) {
+  protected void basicStoreFailTest(Record record) throws Exception {
     final RepositorySession session = createAndBeginSession();
     performWait(storeRunnable(session, record, new ExpectInvalidTypeStoreDelegate()));
     dispose(session);
@@ -201,7 +197,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
    */
   // Insert two records missing parent, then insert their parent.
   // Make sure they end up with the correct parent on fetch.
-  public void testBasicReparenting() throws InactiveSessionException {
+  public void testBasicReparenting() throws Exception {
     Record[] expected = new Record[] {
         BookmarkHelpers.createBookmark1(),
         BookmarkHelpers.createBookmark2(),
@@ -212,7 +208,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
 
   // Insert 3 folders and 4 bookmarks in different orders
   // and make sure they come out parented correctly
-  public void testMultipleFolderReparenting1() throws InactiveSessionException {
+  public void testMultipleFolderReparenting1() throws Exception {
     Record[] expected = new Record[] {
         BookmarkHelpers.createBookmark1(),
         BookmarkHelpers.createBookmark2(),
@@ -225,7 +221,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
     doMultipleFolderReparentingTest(expected);
   }
 
-  public void testMultipleFolderReparenting2() throws InactiveSessionException {
+  public void testMultipleFolderReparenting2() throws Exception {
     Record[] expected = new Record[] {
         BookmarkHelpers.createBookmark1(),
         BookmarkHelpers.createBookmark2(),
@@ -238,7 +234,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
     doMultipleFolderReparentingTest(expected);
   }
 
-  public void testMultipleFolderReparenting3() throws InactiveSessionException {
+  public void testMultipleFolderReparenting3() throws Exception {
     Record[] expected = new Record[] {
         BookmarkHelpers.createBookmark1(),
         BookmarkHelpers.createBookmark2(),
@@ -251,7 +247,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
     doMultipleFolderReparentingTest(expected);
   }
 
-  private void doMultipleFolderReparentingTest(Record[] expected) throws InactiveSessionException {
+  private void doMultipleFolderReparentingTest(Record[] expected) throws Exception {
     final RepositorySession session = createAndBeginSession();
     doStore(session, expected);
     ExpectFetchDelegate delegate = preparedExpectFetchDelegate(expected);
@@ -277,7 +273,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
    * Store a record after with the new guid as the parent
    * and make sure it works as well.
    */
-  public void testStoreIdenticalFoldersWithChildren() {
+  public void testStoreIdenticalFoldersWithChildren() throws Exception {
     final RepositorySession session = createAndBeginSession();
     Record record0 = BookmarkHelpers.createFolder1();
 
@@ -368,7 +364,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
         BookmarkHelpers.createFolder1());
   }
 
-  public void testBasicPositioning() {
+  public void testBasicPositioning() throws Exception {
     final RepositorySession session = createAndBeginSession();
     Record[] expected = new Record[] {
         BookmarkHelpers.createBookmark1(),
@@ -404,7 +400,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
     dispose(session);
   }
 
-  public void testSqlInjectPurgeDeleteAndUpdateByGuid() {
+  public void testSqlInjectPurgeDeleteAndUpdateByGuid() throws Exception {
     // Some setup.
     RepositorySession session = createAndBeginSession();
     DataAccessor db = getDataAccessor();
@@ -485,7 +481,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
     return cur;
   }
 
-  public void testSqlInjectFetch() {
+  public void testSqlInjectFetch() throws Exception {
     // Some setup.
     RepositorySession session = createAndBeginSession();
     DataAccessor db = getDataAccessor();
@@ -533,7 +529,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
     dispose(session);
   }
 
-  public void testSqlInjectDelete() {
+  public void testSqlInjectDelete() throws Exception {
     // Some setup.
     RepositorySession session = createAndBeginSession();
     DataAccessor db = getDataAccessor();
@@ -578,7 +574,7 @@ public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTes
    * Verify that data accessor's bulkInsert actually inserts.
    * @throws NullCursorException
    */
-  public void testBulkInsert() throws NullCursorException {
+  public void testBulkInsert() throws Exception {
     RepositorySession session = createAndBeginSession();
     DataAccessor db = getDataAccessor();
 

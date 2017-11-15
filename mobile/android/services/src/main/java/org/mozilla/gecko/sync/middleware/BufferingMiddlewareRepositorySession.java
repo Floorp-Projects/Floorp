@@ -11,6 +11,7 @@ import org.mozilla.gecko.sync.SyncDeadlineReachedException;
 import org.mozilla.gecko.sync.middleware.storage.BufferStorage;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
+import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
@@ -33,7 +34,7 @@ import java.util.Collection;
     private final long syncDeadlineMillis;
 
     /* package-local */ BufferingMiddlewareRepositorySession(
-            RepositorySession repositorySession, MiddlewareRepository repository,
+            RepositorySession repositorySession, BufferingMiddlewareRepository repository,
             long syncDeadlineMillis, BufferStorage bufferStorage) {
         super(repositorySession, repository);
         this.syncDeadlineMillis = syncDeadlineMillis;

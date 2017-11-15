@@ -324,6 +324,19 @@ nsDOMWindowUtils::GetDocCharsetIsForced(bool *aIsForced)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetPhysicalMillimeterInCSSPixels(float* aPhysicalMillimeter)
+{
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aPhysicalMillimeter = presContext->AppUnitsToFloatCSSPixels(
+    presContext->PhysicalMillimetersToAppUnits(1));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
                                       nsAString& aValue)
 {

@@ -559,7 +559,12 @@ MOZ_DOING_LTO(lto_is_enabled)
 dnl ========================================================
 dnl Add optional and non-optional hardening flags
 dnl ========================================================
-if test "$GNU_CC" -o test -n "${CLANG_CC}${CLANG_CL}"; then
+
+dnl Note that in the top-level old-configure.in, we don't enable
+dnl FORTIFY_SOURCE on Android. But in js/ we *can* enable it on
+dnl Android, so we do.
+
+if test "$GNU_CC" -o -n "${CLANG_CC}${CLANG_CL}"; then
    CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
    CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=2"
    CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"
@@ -1959,7 +1964,7 @@ AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
 AC_SUBST(AR_EXTRACT)
 AC_SUBST(AS)
-AC_SUBST(ASFLAGS)
+AC_SUBST_LIST(ASFLAGS)
 AC_SUBST(AS_DASH_C_FLAG)
 AC_SUBST(RC)
 AC_SUBST(RCFLAGS)

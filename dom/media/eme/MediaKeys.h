@@ -16,6 +16,7 @@
 #include "nsRefPtrHashtable.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/MediaKeysBinding.h"
+#include "mozilla/dom/MediaKeyStatusMapBinding.h" // For MediaKeyStatus
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/DetailedPromise.h"
@@ -29,6 +30,7 @@ namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;
 class MediaKeySession;
+struct MediaKeysPolicy;
 class HTMLMediaElement;
 
 typedef nsRefPtrHashtable<nsStringHashKey, MediaKeySession> KeySessionHashMap;
@@ -129,6 +131,12 @@ public:
   bool IsBoundToMediaElement() const;
 
   void GetSessionsInfo(nsString& sessionsInfo);
+
+  // JavaScript: MediaKeys.GetStatusForPolicy()
+  already_AddRefed<Promise> GetStatusForPolicy(const MediaKeysPolicy& aPolicy,
+                                               ErrorResult& aR);
+  // Called by CDMProxy when CDM successfully GetStatusForPolicy.
+  void ResolvePromiseWithKeyStatus(PromiseId aId, dom::MediaKeyStatus aMediaKeyStatus);
 
 private:
 

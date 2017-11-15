@@ -17,7 +17,6 @@ const {
 } = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/event.js");
 const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
-Cu.import("chrome://marionette/content/interaction.js");
 
 this.EXPORTED_SYMBOLS = ["action"];
 
@@ -1012,8 +1011,7 @@ action.dispatch = function(chain, window) {
 action.dispatchTickActions = function(
     tickActions, tickDuration, window) {
   let pendingEvents = tickActions.map(toEvents(tickDuration, window));
-  return Promise.all(pendingEvents).then(
-      () => interaction.flushEventLoop(window));
+  return Promise.all(pendingEvents);
 };
 
 /**

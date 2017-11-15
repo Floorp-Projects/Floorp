@@ -66,6 +66,9 @@ public:
 
   void RemoveSession(const nsCString& aSessionId, uint32_t aPromiseId);
 
+  void GetStatusForPolicy(uint32_t aPromiseId,
+                          const nsCString& aMinHdcpVersion);
+
   RefPtr<DecryptPromise> Decrypt(MediaRawData* aSample);
 
   // TODO: Add functions for clients to send data to CDM, and
@@ -90,6 +93,9 @@ protected:
   ~ChromiumCDMParent() {}
 
   ipc::IPCResult Recv__delete__() override;
+  ipc::IPCResult RecvOnResolvePromiseWithKeyStatus(
+    const uint32_t& aPromiseId,
+    const uint32_t& aKeyStatus) override;
   ipc::IPCResult RecvOnResolveNewSessionPromise(
     const uint32_t& aPromiseId,
     const nsCString& aSessionId) override;

@@ -306,6 +306,7 @@ def old_configure_options(*options):
 @imports('sys')
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.shellutil', _import='split')
+@imports(_from='mozbuild.util', _import='encode')
 def old_configure(prepare_configure, extra_old_configure_args, all_options,
                   *options):
     cmd = prepare_configure
@@ -319,7 +320,7 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
         if value.origin != 'default'
     ]
 
-    env = os.environ
+    env = dict(os.environ)
     extra_env = {}
 
     # We also pass it the options from js/moz.configure so that it can pass
@@ -335,7 +336,6 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
                 extra_env[k] = v
 
     if extra_env:
-        env = dict(env)
         env.update(extra_env)
 
     # For debugging purpose, in case it's not what we'd expect.
@@ -356,7 +356,7 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
 
     log_size = os.path.getsize('config.log')
 
-    ret = subprocess.call(cmd)
+    ret = subprocess.call(cmd, env=encode(env))
     if ret:
         with log.queue_debug():
             with encoded_open('config.log', 'r') as fh:

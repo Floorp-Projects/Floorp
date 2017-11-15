@@ -58,8 +58,15 @@ child:
 
   async PurgeShmems();
 
+  // cdm::ContentDecryptionModule9
+  async GetStatusForPolicy(uint32_t aPromiseId,
+                           nsCString aMinHdcpVersion);
+
 parent:
   async __delete__();
+
+  // cdm::Host9
+  async OnResolvePromiseWithKeyStatus(uint32_t aPromiseId, uint32_t aKeyStatus);
 
   // cdm::Host8
   async OnResolveNewSessionPromise(uint32_t aPromiseId, nsCString aSessionId);

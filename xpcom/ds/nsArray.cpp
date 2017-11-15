@@ -8,17 +8,6 @@
 #include "nsArrayEnumerator.h"
 #include "nsThreadUtils.h"
 
-// used by IndexOf()
-struct MOZ_STACK_CLASS findIndexOfClosure
-{
-  // This is only used for pointer comparison, so we can just use a void*.
-  void* targetElement;
-  uint32_t startIndex;
-  uint32_t resultIndex;
-};
-
-static bool FindElementCallback(void* aElement, void* aClosure);
-
 NS_INTERFACE_MAP_BEGIN(nsArray)
   NS_INTERFACE_MAP_ENTRY(nsIArray)
   NS_INTERFACE_MAP_ENTRY(nsIArrayExtensions)
@@ -80,24 +69,12 @@ NS_IMETHODIMP
 nsArrayBase::IndexOf(uint32_t aStartIndex, nsISupports* aElement,
                      uint32_t* aResult)
 {
-  // optimize for the common case by forwarding to mArray
-  if (aStartIndex == 0) {
-    uint32_t idx = mArray.IndexOf(aElement);
-    if (idx == UINT32_MAX) {
-      return NS_ERROR_FAILURE;
-    }
-
-    *aResult = idx;
-    return NS_OK;
-  }
-
-  findIndexOfClosure closure = { aElement, aStartIndex, 0 };
-  bool notFound = mArray.EnumerateForwards(FindElementCallback, &closure);
-  if (notFound) {
+  int32_t idx = mArray.IndexOf(aElement, aStartIndex);
+  if (idx == -1) {
     return NS_ERROR_FAILURE;
   }
 
-  *aResult = closure.resultIndex;
+  *aResult = static_cast<uint32_t>(idx);
   return NS_OK;
 }
 
@@ -158,25 +135,6 @@ nsArrayBase::GetElementAt(uint32_t aIndex, nsISupports** aResult)
   nsCOMPtr<nsISupports> obj = mArray.SafeObjectAt(aIndex);
   obj.forget(aResult);
   return NS_OK;
-}
-
-//
-// static helper routines
-//
-bool
-FindElementCallback(void* aElement, void* aClosure)
-{
-  findIndexOfClosure* closure = static_cast<findIndexOfClosure*>(aClosure);
-  nsISupports* element = static_cast<nsISupports*>(aElement);
-
-  // don't start searching until we're past the startIndex
-  if (closure->resultIndex >= closure->startIndex &&
-      element == closure->targetElement) {
-    return false;    // stop! We found it
-  }
-  closure->resultIndex++;
-
-  return true;
 }
 
 nsresult

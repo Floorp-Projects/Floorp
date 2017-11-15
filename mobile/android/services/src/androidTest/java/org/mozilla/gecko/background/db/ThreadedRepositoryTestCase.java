@@ -7,14 +7,10 @@ import java.util.concurrent.ExecutorService;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
-import org.mozilla.gecko.background.sync.helpers.DefaultBeginDelegate;
 import org.mozilla.gecko.background.sync.helpers.DefaultCleanDelegate;
 import org.mozilla.gecko.background.sync.helpers.DefaultFetchDelegate;
 import org.mozilla.gecko.background.sync.helpers.DefaultFinishDelegate;
-import org.mozilla.gecko.background.sync.helpers.DefaultSessionCreationDelegate;
 import org.mozilla.gecko.background.sync.helpers.DefaultStoreDelegate;
-import org.mozilla.gecko.background.sync.helpers.ExpectBeginDelegate;
-import org.mozilla.gecko.background.sync.helpers.ExpectBeginFailDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectFetchDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectFetchSinceDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectFinishDelegate;
@@ -153,15 +149,18 @@ public abstract class ThreadedRepositoryTestCase extends AndroidSyncTestCase {
     return storeRunnable(session, record, new ExpectStoreCompletedDelegate());
   }
 
-  public static Runnable beginRunnable(final RepositorySession session, final DefaultBeginDelegate delegate) {
+  public static Runnable beginRunnable(final RepositorySession session) {
     return new Runnable() {
       @Override
       public void run() {
         try {
-          session.begin(delegate);
+          session.begin();
         } catch (InvalidSessionTransitionException e) {
           performNotify(e);
+        } catch (org.mozilla.gecko.sync.SyncException e) {
+          e.printStackTrace();
         }
+        performNotify();
       }
     };
   }
@@ -624,8 +623,9 @@ public abstract class ThreadedRepositoryTestCase extends AndroidSyncTestCase {
    public void testCreateSessionNullContext() {
      Logger.debug(LOG_TAG, "In testCreateSessionNullContext.");
      Repository repo = getRepository();
+
      try {
-       repo.createSession(new DefaultSessionCreationDelegate(), null);
+       repo.createSession(null);
        fail("Should throw.");
      } catch (Exception ex) {
        assertNotNull(ex);
@@ -658,26 +658,28 @@ public abstract class ThreadedRepositoryTestCase extends AndroidSyncTestCase {
 
    public void testBeginOnNewSession() {
      final RepositorySession session = createSession();
-     performWait(beginRunnable(session, new ExpectBeginDelegate()));
+     performWait(beginRunnable(session));
      dispose(session);
    }
 
    public void testBeginOnRunningSession() {
      final RepositorySession session = createAndBeginSession();
      try {
-       session.begin(new ExpectBeginFailDelegate());
+       session.begin();
      } catch (InvalidSessionTransitionException e) {
        dispose(session);
        return;
+     } catch (org.mozilla.gecko.sync.SyncException e) {
+       e.printStackTrace();
      }
      fail("Should have caught InvalidSessionTransitionException.");
    }
 
-   public void testBeginOnFinishedSession() throws InactiveSessionException {
+   public void testBeginOnFinishedSession() {
      final RepositorySession session = createAndBeginSession();
      performWait(finishRunnable(session, new ExpectFinishDelegate()));
      try {
-       session.begin(new ExpectBeginFailDelegate());
+       session.begin();
      } catch (InvalidSessionTransitionException e) {
        Logger.debug(getName(), "Yay! Got an exception.", e);
        dispose(session);
@@ -690,7 +692,7 @@ public abstract class ThreadedRepositoryTestCase extends AndroidSyncTestCase {
      fail("Should have caught InvalidSessionTransitionException.");
    }
 
-   public void testFinishOnFinishedSession() throws InactiveSessionException {
+   public void testFinishOnFinishedSession() {
      final RepositorySession session = createAndBeginSession();
      performWait(finishRunnable(session, new ExpectFinishDelegate()));
      try {
@@ -702,7 +704,7 @@ public abstract class ThreadedRepositoryTestCase extends AndroidSyncTestCase {
      fail("Should have caught InactiveSessionException.");
    }
 
-   public void testFetchOnInactiveSession() throws InactiveSessionException {
+   public void testFetchOnInactiveSession() {
      final RepositorySession session = createSession();
      try {
        session.fetch(new String[] { Utils.generateGuid() }, new DefaultFetchDelegate());
@@ -726,12 +728,6 @@ public abstract class ThreadedRepositoryTestCase extends AndroidSyncTestCase {
        return;
      };
      fail("Should have caught InactiveSessionException.");
-   }
-
-   private static void verifyInactiveException(Exception ex) {
-     if (!(ex instanceof InactiveSessionException)) {
-       fail("Wrong exception type");
-     }
    }
 
    protected void closeDataAccessor(DataAccessor dataAccessor) {

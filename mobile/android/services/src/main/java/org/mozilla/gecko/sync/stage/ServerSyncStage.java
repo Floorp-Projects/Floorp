@@ -15,6 +15,7 @@ import org.mozilla.gecko.sync.MetaGlobalException;
 import org.mozilla.gecko.sync.NoCollectionKeysSetException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.ReflowIsNecessaryException;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
@@ -26,7 +27,6 @@ import org.mozilla.gecko.sync.net.SyncStorageRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
-import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
@@ -34,8 +34,6 @@ import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 import org.mozilla.gecko.sync.repositories.RepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.Server15Repository;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.synchronizer.ServerLocalSynchronizer;
@@ -313,81 +311,57 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
     final Runnable doWipe = new Runnable() {
       @Override
       public void run() {
-        r.createSession(new RepositorySessionCreationDelegate() {
+        final RepositorySession localSession;
+        try {
+          localSession = r.createSession(context);
+        } catch (Exception e) {
+          synchronized (monitor) {
+            monitor.notify(e, false);
+          }
+          return;
+        }
 
+        try {
+          localSession.begin();
+        } catch (SyncException e) {
+          Logger.error(LOG_TAG, "Couldn't begin session", e);
+          localSession.abort();
+          synchronized (monitor) {
+            monitor.notify(e, true);
+          }
+          return;
+        }
+
+        localSession.wipe(new RepositorySessionWipeDelegate() {
           @Override
-          public void onSessionCreated(final RepositorySession session) {
+          public void onWipeSucceeded() {
             try {
-              session.begin(new RepositorySessionBeginDelegate() {
+              localSession.finish(new RepositorySessionFinishDelegate() {
 
                 @Override
-                public void onBeginSucceeded(final RepositorySession session) {
-                  session.wipe(new RepositorySessionWipeDelegate() {
-                    @Override
-                    public void onWipeSucceeded() {
-                      try {
-                        session.finish(new RepositorySessionFinishDelegate() {
-
-                          @Override
-                          public void onFinishSucceeded(RepositorySession session,
-                                                        RepositorySessionBundle bundle) {
-                            // Hurrah.
-                            synchronized (monitor) {
-                              monitor.notify();
-                            }
-                          }
-
-                          @Override
-                          public void onFinishFailed(Exception ex) {
-                            // Assume that no finish => no wipe.
-                            synchronized (monitor) {
-                              monitor.notify(ex, true);
-                            }
-                          }
-
-                          @Override
-                          public RepositorySessionFinishDelegate deferredFinishDelegate(ExecutorService executor) {
-                            return this;
-                          }
-                        });
-                      } catch (InactiveSessionException e) {
-                        // Cannot happen. Call for safety.
-                        synchronized (monitor) {
-                          monitor.notify(e, true);
-                        }
-                      }
-                    }
-
-                    @Override
-                    public void onWipeFailed(Exception ex) {
-                      session.abort();
-                      synchronized (monitor) {
-                        monitor.notify(ex, true);
-                      }
-                    }
-
-                    @Override
-                    public RepositorySessionWipeDelegate deferredWipeDelegate(ExecutorService executor) {
-                      return this;
-                    }
-                  });
+                public void onFinishSucceeded(RepositorySession session,
+                                              RepositorySessionBundle bundle) {
+                  // Hurrah.
+                  synchronized (monitor) {
+                    monitor.notify();
+                  }
                 }
 
                 @Override
-                public void onBeginFailed(Exception ex) {
-                  session.abort();
+                public void onFinishFailed(Exception ex) {
+                  // Assume that no finish => no wipe.
                   synchronized (monitor) {
                     monitor.notify(ex, true);
                   }
                 }
 
                 @Override
-                public RepositorySessionBeginDelegate deferredBeginDelegate(ExecutorService executor) {
+                public RepositorySessionFinishDelegate deferredFinishDelegate(ExecutorService executor) {
                   return this;
                 }
               });
-            } catch (InvalidSessionTransitionException e) {
-              session.abort();
+            } catch (InactiveSessionException e) {
+              // Cannot happen. Call for safety.
               synchronized (monitor) {
                 monitor.notify(e, true);
               }
@@ -395,17 +369,18 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
           }
 
           @Override
-          public void onSessionCreateFailed(Exception ex) {
+          public void onWipeFailed(Exception ex) {
+            localSession.abort();
             synchronized (monitor) {
-              monitor.notify(ex, false);
+              monitor.notify(ex, true);
             }
           }
 
           @Override
-          public RepositorySessionCreationDelegate deferredCreationDelegate() {
+          public RepositorySessionWipeDelegate deferredWipeDelegate(ExecutorService executor) {
             return this;
           }
-        }, context);
+        });
       }
     };
 

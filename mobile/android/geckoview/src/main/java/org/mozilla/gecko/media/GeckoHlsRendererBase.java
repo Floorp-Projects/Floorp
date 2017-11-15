@@ -6,7 +6,7 @@ package org.mozilla.gecko.media;
 
 import android.util.Log;
 
-import org.mozilla.gecko.AppConstants;
+import org.mozilla.geckoview.BuildConfig;
 
 import com.google.android.exoplayer2.BaseRenderer;
 import com.google.android.exoplayer2.C;
@@ -289,7 +289,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
      */
     @Override
     public void render(long positionUs, long elapsedRealtimeUs) {
-        if (AppConstants.DEBUG_BUILD) {
+        if (BuildConfig.DEBUG_BUILD) {
             Log.d(LOGTAG, "positionUs = " + positionUs +
                           ", mInputStreamEnded = " + mInputStreamEnded);
         }

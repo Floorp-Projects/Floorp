@@ -32,27 +32,7 @@ ifeq "$(CWD)" "/"
 CWD   := /.
 endif
 
-ifndef TOPSRCDIR
-ifeq (,$(wildcard client.mk))
-TOPSRCDIR := $(patsubst %/,%,$(dir $(MAKEFILE_LIST)))
-else
-TOPSRCDIR := $(CWD)
-endif
-endif
-
 PYTHON ?= $(shell which python2.7 > /dev/null 2>&1 && echo python2.7 || echo python)
-
-CONFIG_GUESS := $(shell $(TOPSRCDIR)/build/autoconf/config.guess)
-
-####################################
-# Sanity checks
-
-# Windows checks.
-ifneq (,$(findstring mingw,$(CONFIG_GUESS)))
-
-# Set this for baseconfig.mk
-HOST_OS_ARCH=WINNT
-endif
 
 ####################################
 # Load mozconfig Options
@@ -69,23 +49,14 @@ endef
 # before evaluation. $(shell) replacing newlines with spaces, || is always
 # followed by a space (since sed doesn't remove newlines), except on the
 # last line, so replace both '|| ' and '||'.
-MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell $(TOPSRCDIR)/mach environment --format=client.mk | sed 's/$$/||/')))
-$(eval $(MOZCONFIG_CONTENT))
-
-export FOUND_MOZCONFIG
+MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell cat $(OBJDIR)/.mozconfig-client-mk | sed 's/$$/||/')))
+include $(OBJDIR)/.mozconfig-client-mk
 
 # As '||' was used as a newline separator, it means it's not occurring in
 # lines themselves. It can thus safely be used to replaces normal spaces,
 # to then replace newlines with normal spaces. This allows to get a list
 # of mozconfig output lines.
 MOZCONFIG_OUT_LINES := $(subst $(CR), ,$(subst $(NULL) $(NULL),||,$(MOZCONFIG_CONTENT)))
-# Filter-out comments from those lines.
-START_COMMENT = \#
-MOZCONFIG_OUT_FILTERED := $(filter-out $(START_COMMENT)%,$(MOZCONFIG_OUT_LINES))
-
-ifdef AUTOCLOBBER
-export AUTOCLOBBER=1
-endif
 
 ifdef MOZ_PARALLEL_BUILD
   MOZ_MAKE_FLAGS := $(filter-out -j%,$(MOZ_MAKE_FLAGS))
@@ -110,9 +81,6 @@ MOZ_MAKE = $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
 CONFIGURES := $(TOPSRCDIR)/configure
 CONFIGURES += $(TOPSRCDIR)/js/src/configure
 
-# Make targets that are going to be passed to the real build system
-OBJDIR_TARGETS = install export libs clean realclean distclean upload sdk installer package package-compare stage-package source-package l10n-check automation/build
-
 #######################################################################
 # Rules
 
@@ -124,17 +92,9 @@ $(error client.mk must be used via `mach`. Try running \
 `./mach $(firstword $(MAKECMDGOALS) $(.DEFAULT_GOAL))`)
 endif
 
-# Include baseconfig.mk for its $(MAKE) validation.
-include $(TOPSRCDIR)/config/baseconfig.mk
-
-# Define mkdir
-include $(TOPSRCDIR)/config/makefiles/makeutils.mk
-include $(TOPSRCDIR)/config/makefiles/autotargets.mk
-
-# For now, only output "export" lines and lines containing UPLOAD_EXTRA_FILES
-# from mach environment --format=client.mk output.
+# For now, only output "export" lines and lines containing UPLOAD_EXTRA_FILES.
 MOZCONFIG_MK_LINES := $(filter export||% UPLOAD_EXTRA_FILES% %UPLOAD_EXTRA_FILES%,$(MOZCONFIG_OUT_LINES))
-$(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG) $(call mkdir_deps,$(OBJDIR)) $(OBJDIR)/CLOBBER
+$(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG)
 	$(if $(MOZCONFIG_MK_LINES),( $(foreach line,$(MOZCONFIG_MK_LINES), echo '$(subst ||, ,$(line))';) )) > $@
 
 # Include that makefile so that it is created. This should not actually change
@@ -144,13 +104,10 @@ include $(OBJDIR)/.mozconfig.mk
 
 # Print out any options loaded from mozconfig.
 all build clean distclean export libs install realclean::
-ifneq (,$(strip $(MOZCONFIG_OUT_FILTERED)))
+ifneq (,$(strip $(MOZCONFIG_OUT_LINES)))
 	$(info Adding client.mk options from $(FOUND_MOZCONFIG):)
-	$(foreach line,$(MOZCONFIG_OUT_FILTERED),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
+	$(foreach line,$(MOZCONFIG_OUT_LINES),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
 endif
-
-# helper target for mobile
-build_and_deploy: build package install
 
 # In automation, manage an sccache daemon. The starting of the server
 # needs to be in a make file so sccache inherits the jobserver.
@@ -186,7 +143,6 @@ $(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
 CONFIG_STATUS_DEPS := \
   $(wildcard $(TOPSRCDIR)/*/confvars.sh) \
   $(CONFIGURES) \
-  $(TOPSRCDIR)/CLOBBER \
   $(TOPSRCDIR)/nsprpub/configure \
   $(TOPSRCDIR)/config/milestone.txt \
   $(TOPSRCDIR)/browser/config/version.txt \
@@ -214,16 +170,10 @@ else
   CONFIGURE = $(TOPSRCDIR)/configure
 endif
 
-$(OBJDIR)/CLOBBER: $(TOPSRCDIR)/CLOBBER
-	$(PYTHON) $(TOPSRCDIR)/config/pythonpath.py -I $(TOPSRCDIR)/testing/mozbase/mozfile \
-	    $(TOPSRCDIR)/python/mozbuild/mozbuild/controller/clobber.py $(TOPSRCDIR) $(OBJDIR)
-
 configure-files: $(CONFIGURES)
 
 configure-preqs = \
-  $(OBJDIR)/CLOBBER \
   configure-files \
-  $(call mkdir_deps,$(OBJDIR)) \
   save-mozconfig \
   $(OBJDIR)/.mozconfig.json \
   $(NULL)
@@ -235,7 +185,7 @@ CREATE_MOZCONFIG_JSON = $(shell $(TOPSRCDIR)/mach environment --format=json -o $
 ifneq (,$(CREATE_MOZCONFIG_JSON))
 endif
 
-$(OBJDIR)/.mozconfig.json: $(call mkdir_deps,$(OBJDIR)) ;
+$(OBJDIR)/.mozconfig.json: ;
 
 save-mozconfig: $(FOUND_MOZCONFIG)
 ifdef FOUND_MOZCONFIG
@@ -247,7 +197,7 @@ configure:: $(configure-preqs)
 	$(call BUILDSTATUS,TIER_START configure)
 	@echo cd $(OBJDIR);
 	@echo $(CONFIGURE) $(CONFIGURE_ARGS)
-	@cd $(OBJDIR) && $(BUILD_PROJECT_ARG) $(CONFIGURE_ENV_ARGS) $(CONFIGURE) $(CONFIGURE_ARGS) \
+	@cd $(OBJDIR) && $(CONFIGURE_ENV_ARGS) $(CONFIGURE) $(CONFIGURE_ARGS) \
 	  || ( echo '*** Fix above errors and then restart with\
                "$(MAKE) -f client.mk build"' && exit 1 )
 	@touch $(OBJDIR)/Makefile
@@ -273,16 +223,9 @@ endif
 build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	+$(MOZ_MAKE)
 
-####################################
-# Other targets
-
-# Pass these target onto the real build system
-$(OBJDIR_TARGETS):: $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	+$(MOZ_MAKE) $@
-
 ifdef MOZ_AUTOMATION
 build::
-	$(MAKE) -f $(TOPSRCDIR)/client.mk automation/build
+	+$(MOZ_MAKE) automation/build
 endif
 
 ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
@@ -298,5 +241,4 @@ endif
 
 .PHONY: \
     build \
-    configure \
-    $(OBJDIR_TARGETS)
+    configure

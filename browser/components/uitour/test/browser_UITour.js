@@ -9,6 +9,7 @@ var gContentWindow;
 
 Components.utils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
 Components.utils.import("resource://gre/modules/ProfileAge.jsm", this);
+Components.utils.import("resource://gre/modules/UpdateUtils.jsm", this);
 
 
 function test() {
@@ -291,11 +292,9 @@ var tests = [
   }),
   function test_getConfigurationVersion(done) {
     function callback(result) {
-      let props = ["defaultUpdateChannel", "version"];
-      for (let property of props) {
-        ok(typeof(result[property]) !== "undefined", "Check " + property + " isn't undefined.");
-        is(result[property], Services.appinfo[property], "Should have the same " + property + " property.");
-      }
+      ok(typeof result.version !== "undefined", "Check version isn't undefined.");
+      is(result.version, Services.appinfo.version, "Should have the same version property.");
+      is(result.defaultUpdateChannel, UpdateUtils.getUpdateChannel(false), "Should have the correct update channel.");
       done();
     }
 

@@ -10,15 +10,13 @@ import java.util.Map;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
-import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
-import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.ProfileDatabaseException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
 import org.mozilla.gecko.sync.repositories.VersioningDelegateHelper;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
@@ -216,30 +214,20 @@ public class BookmarksRepositorySession extends StoreTrackingRepositorySession {
   }
 
   @Override
-  public void begin(RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
+  public void begin() throws SyncException {
     // Check for the existence of special folders
     // and insert them if they don't exist.
     try {
       Logger.debug(LOG_TAG, "Check and build special GUIDs.");
       dataAccessor.checkAndBuildSpecialGuids();
       Logger.debug(LOG_TAG, "Got GUIDs for folders.");
-    } catch (android.database.sqlite.SQLiteConstraintException e) {
-      Logger.error(LOG_TAG, "Got sqlite constraint exception working with Fennec bookmark DB.", e);
-      delegate.onBeginFailed(e);
-      return;
     } catch (Exception e) {
-      delegate.onBeginFailed(e);
-      return;
+      Logger.error(LOG_TAG, "Got an exception while working with Fennec bookmark DB.", e);
+      throw e;
     }
 
-    try {
-      sessionHelper.doBegin();
-    } catch (NullCursorException e) {
-      delegate.onBeginFailed(e);
-      return;
-    }
+    sessionHelper.doBegin();
 
-    RepositorySessionBeginDelegate deferredDelegate = delegate.deferredBeginDelegate(delegateQueue);
     super.sharedBegin();
 
     try {
@@ -249,14 +237,12 @@ public class BookmarksRepositorySession extends StoreTrackingRepositorySession {
       sessionHelper.checkDatabase();
     } catch (ProfileDatabaseException e) {
       Logger.error(LOG_TAG, "ProfileDatabaseException from begin. Fennec must be launched once until this error is fixed");
-      deferredDelegate.onBeginFailed(e);
-      return;
+      throw e;
     } catch (Exception e) {
-      deferredDelegate.onBeginFailed(e);
-      return;
+      Logger.error(LOG_TAG, "Hit an exception while checking a database in begin.", e);
+      throw e;
     }
     storeTracker = createStoreTracker();
-    deferredDelegate.onBeginSucceeded(this);
   }
 
   @Override

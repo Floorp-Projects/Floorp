@@ -412,8 +412,6 @@ ImageDocument::DOMRestoreImageTo(int32_t aX, int32_t aY)
 void
 ImageDocument::ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage)
 {
-  float ratio = GetRatio();
-
   if (restoreImage) {
     RestoreImage();
     FlushPendingNotifications(FlushType::Layout);
@@ -429,6 +427,12 @@ ImageDocument::ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage)
     return;
   }
 
+  float ratio = GetRatio();
+  // Don't try to scroll image if the document is not visible (mVisibleWidth or
+  // mVisibleHeight is zero).
+  if (ratio <= 0.0) {
+    return;
+  }
   nsRect portRect = sf->GetScrollPortRect();
   sf->ScrollTo(nsPoint(nsPresContext::CSSPixelsToAppUnits(aX/ratio) - portRect.width/2,
                        nsPresContext::CSSPixelsToAppUnits(aY/ratio) - portRect.height/2),

@@ -7,12 +7,12 @@ package org.mozilla.gecko.util;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.AppConstants;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -745,7 +745,7 @@ public final class GeckoBundle implements Parcelable {
                     jsonArray.put(array[j] == null ? JSONObject.NULL : array[j].toJSONObject());
                 }
                 jsonValue = jsonArray;
-            } else if (AppConstants.Versions.feature19Plus) {
+            } else if (Build.VERSION.SDK_INT >= 19) {
                 final Object wrapped = JSONObject.wrap(value);
                 jsonValue = wrapped != null ? wrapped : value.toString();
             } else if (value == null) {

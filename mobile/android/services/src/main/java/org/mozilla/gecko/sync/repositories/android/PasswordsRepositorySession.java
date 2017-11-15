@@ -14,9 +14,9 @@ import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.RecordFilter;
 import org.mozilla.gecko.sync.repositories.Repository;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils.QueryHelper;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
@@ -36,11 +36,8 @@ public class PasswordsRepositorySession extends
 
   public static class PasswordsRepository extends Repository {
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate,
-        Context context) {
-      PasswordsRepositorySession session = new PasswordsRepositorySession(PasswordsRepository.this, context);
-      final RepositorySessionCreationDelegate deferredCreationDelegate = delegate.deferredCreationDelegate();
-      deferredCreationDelegate.onSessionCreated(session);
+    public RepositorySession createSession(Context context) {
+      return new PasswordsRepositorySession(this, context);
     }
   }
 

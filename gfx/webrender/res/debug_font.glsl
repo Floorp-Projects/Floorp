@@ -23,6 +23,6 @@ void main(void) {
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
     float alpha = texture(sColor0, vec3(vColorTexCoord.xy, 0.0)).r;
-    oFragColor = vec4(vColor.xyz, vColor.w * alpha);
+    oFragColor = vColor * alpha;
 }
 #endif

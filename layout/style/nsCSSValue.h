@@ -534,9 +534,6 @@ enum nsCSSUnit {
   eCSSUnit_Percent      = 100,     // (float) 1.0 == 100%) value is percentage of something
   eCSSUnit_Number       = 101,     // (float) value is numeric (usually multiplier, different behavior than percent)
 
-  // Physical length units
-  eCSSUnit_PhysicalMillimeter = 200,   // (float) 1/25.4 inch
-
   // Length units - relative
   // Viewport relative measure
   eCSSUnit_ViewportWidth  = 700,    // (float) 1% of the width of the initial containing block
@@ -644,16 +641,9 @@ public:
 
   nsCSSUnit GetUnit() const { return mUnit; }
   bool      IsLengthUnit() const
-    { return eCSSUnit_PhysicalMillimeter <= mUnit && mUnit <= eCSSUnit_Pixel; }
+    { return eCSSUnit_ViewportWidth <= mUnit && mUnit <= eCSSUnit_Pixel; }
   bool      IsLengthPercentCalcUnit() const
     { return IsLengthUnit() || mUnit == eCSSUnit_Percent || IsCalcUnit(); }
-  /**
-   * A "fixed" length unit is one that means a specific physical length
-   * which we try to match based on the physical characteristics of an
-   * output device.
-   */
-  bool      IsFixedLengthUnit() const
-    { return mUnit == eCSSUnit_PhysicalMillimeter; }
   /**
    * What the spec calls relative length units is, for us, split
    * between relative length units and pixel length units.
@@ -885,7 +875,6 @@ public:
   already_AddRefed<imgRequestProxy> GetPossiblyStaticImageValue(
       nsIDocument* aDocument, nsPresContext* aPresContext) const;
 
-  nscoord GetFixedLength(nsPresContext* aPresContext) const;
   nscoord GetPixelLength() const;
 
   nsCSSValueFloatColor* GetFloatColorValue() const

@@ -15,8 +15,6 @@
 <div id="in" style="width:1in; height:1in; background:magenta;">in</div>
 <div id="q" style="width:101.6q; height:101.6q; background:blue;">q</div>
 
-<div id="mozmm" style="width:25.4mozmm; height:25.4mozmm; background:cyan;">mozmm</div>
-
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -47,25 +45,13 @@ SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv({'set': [['layout.css.dpi', dpi=96]]}, test1);
 
-var mozmmSize;
 function test1() {
-  var mozmm = document.getElementById("mozmm");
-  mozmmSize = mozmm.getBoundingClientRect().width;
-  is(Math.round(mozmmSize), Math.round(mozmm.getBoundingClientRect().height),
-     "mozmm div should be square");
-
   checkPixelRelativeUnits();
-
   SpecialPowers.pushPrefEnv({'set': [['layout.css.dpi', dpi=192]]}, test2);
 }
 
 function test2() {
-  // At 192 dpi, a one-inch box should be twice the number of device pixels,
-  // and since we haven't changed the device-pixels-per-CSS-pixel ratio, the
-  // mozmm box should be twice the size in CSS pixels.
-  check("mozmm", mozmmSize*2);
   checkPixelRelativeUnits();
-
   SimpleTest.finish();
 }
 

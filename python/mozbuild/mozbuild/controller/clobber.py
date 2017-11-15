@@ -204,34 +204,3 @@ class Clobberer(object):
 
         return CLOBBER_MESSAGE.format(clobber_reason='\n'.join(lines),
             no_reason='  ' + reason, clobber_file=self.obj_clobber)
-
-
-def main(args, env, cwd, fh=sys.stderr):
-    if len(args) != 2:
-        print('Usage: clobber.py topsrcdir topobjdir', file=fh)
-        return 1
-
-    topsrcdir, topobjdir = args
-
-    if not os.path.isabs(topsrcdir):
-        topsrcdir = os.path.abspath(topsrcdir)
-
-    if not os.path.isabs(topobjdir):
-        topobjdir = os.path.abspath(topobjdir)
-
-    auto = True if env.get('AUTOCLOBBER', False) else False
-    clobber = Clobberer(topsrcdir, topobjdir)
-    required, performed, message = clobber.maybe_do_clobber(cwd, auto, fh)
-
-    if not required or performed:
-        if performed and env.get('TINDERBOX_OUTPUT'):
-            print('TinderboxPrint: auto clobber', file=fh)
-        return 0
-
-    print(message, file=fh)
-    return 1
-
-
-if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:], os.environ, os.getcwd(), sys.stdout))
-

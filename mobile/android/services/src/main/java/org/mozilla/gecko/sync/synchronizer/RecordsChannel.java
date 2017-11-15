@@ -13,13 +13,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ReflowIsNecessaryException;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
-import org.mozilla.gecko.sync.repositories.delegates.DeferredRepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.DeferredRepositorySessionStoreDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -67,8 +66,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 public class RecordsChannel implements
   RepositorySessionFetchRecordsDelegate,
   RepositorySessionStoreDelegate,
-  RecordsConsumerDelegate,
-  RepositorySessionBeginDelegate {
+  RecordsConsumerDelegate {
 
   private static final String LOG_TAG = "RecordsChannel";
   public RepositorySession source;
@@ -199,8 +197,17 @@ public class RecordsChannel implements
    * @throws InvalidSessionTransitionException
    */
   public void beginAndFlow() throws InvalidSessionTransitionException {
-    Logger.trace(LOG_TAG, "Beginning source.");
-    source.begin(this);
+    try {
+      Logger.trace(LOG_TAG, "Beginning source.");
+      source.begin();
+      Logger.trace(LOG_TAG, "Beginning sink.");
+      sink.begin();
+    } catch (SyncException e) {
+      delegate.onFlowBeginFailed(this, e);
+      return;
+    }
+
+    this.flow();
   }
 
   @Override
@@ -333,38 +340,8 @@ public class RecordsChannel implements
   }
 
   @Override
-  public void onBeginFailed(Exception ex) {
-    delegate.onFlowBeginFailed(this, ex);
-  }
-
-  @Override
-  public void onBeginSucceeded(RepositorySession session) {
-    if (session == source) {
-      Logger.trace(LOG_TAG, "Source session began. Beginning sink session.");
-      try {
-        sink.begin(this);
-      } catch (InvalidSessionTransitionException e) {
-        onBeginFailed(e);
-        return;
-      }
-    }
-    if (session == sink) {
-      Logger.trace(LOG_TAG, "Sink session began. Beginning flow.");
-      this.flow();
-      return;
-    }
-
-    // TODO: error!
-  }
-
-  @Override
   public RepositorySessionStoreDelegate deferredStoreDelegate(final ExecutorService executor) {
     return new DeferredRepositorySessionStoreDelegate(this, executor);
-  }
-
-  @Override
-  public RepositorySessionBeginDelegate deferredBeginDelegate(final ExecutorService executor) {
-    return new DeferredRepositorySessionBeginDelegate(this, executor);
   }
 
   @Override

@@ -105,6 +105,9 @@ public:
   void GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
                              nsTArray<nsCString>& aSessionIds) override;
 
+  void GetStatusForPolicy(PromiseId aPromiseId,
+                          const nsAString& aMinHdcpVersion) override;
+
 #ifdef DEBUG
   bool IsOnOwnerThread() override;
 #endif
@@ -114,6 +117,9 @@ public:
   // Threadsafe. Note this may return a reference to a shutdown
   // CDM, which will fail on all operations.
   already_AddRefed<gmp::ChromiumCDMParent> GetCDMParent();
+
+  void OnResolvePromiseWithKeyStatus(uint32_t aPromiseId,
+                                     dom::MediaKeyStatus aKeyStatus);
 
 private:
   void OnCDMCreated(uint32_t aPromiseId);

@@ -6,13 +6,12 @@ package org.mozilla.gecko.sync.repositories.android;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
-import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.ProfileDatabaseException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
@@ -27,14 +26,14 @@ public class HistoryRepositorySession extends StoreTrackingRepositorySession {
   private final HistorySessionHelper sessionHelper;
   private int storeCount = 0;
 
-  public HistoryRepositorySession(Repository repository, Context context) {
+  protected HistoryRepositorySession(Repository repository, Context context) {
     super(repository);
     dbHelper = new HistoryDataAccessor(context);
     sessionHelper = new HistorySessionHelper(this, dbHelper);
   }
 
   @Override
-  public void begin(RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
+  public void begin() throws SyncException {
     // HACK: Fennec creates history records without a GUID. Mercilessly drop
     // them on the floor. See Bug 739514.
     try {
@@ -42,7 +41,7 @@ public class HistoryRepositorySession extends StoreTrackingRepositorySession {
     } catch (Exception e) {
       // Ignore.
     }
-    RepositorySessionBeginDelegate deferredDelegate = delegate.deferredBeginDelegate(delegateQueue);
+
     super.sharedBegin();
 
     try {
@@ -52,14 +51,12 @@ public class HistoryRepositorySession extends StoreTrackingRepositorySession {
       sessionHelper.checkDatabase();
     } catch (ProfileDatabaseException e) {
       Logger.error(LOG_TAG, "ProfileDatabaseException from begin. Fennec must be launched once until this error is fixed");
-      deferredDelegate.onBeginFailed(e);
-      return;
+      throw e;
     } catch (Exception e) {
-      deferredDelegate.onBeginFailed(e);
-      return;
+      Logger.error(LOG_TAG, "Hit an exception while checking a database in begin.", e);
+      throw e;
     }
     storeTracker = createStoreTracker();
-    deferredDelegate.onBeginSucceeded(this);
   }
 
   @Override

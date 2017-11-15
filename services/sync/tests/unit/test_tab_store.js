@@ -109,11 +109,15 @@ add_task(async function test_createRecord() {
   ok(record instanceof TabSetRecord);
   equal(record.tabs.length, 2501);
 
-  store.getMaxRecordPayloadSize = () => 512 * 1024;
-  numtabs = 5200;
-  _("Modify the max record payload size and create a big record");
-  store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, numtabs);
-  record = await store.createRecord("fake-guid");
-  ok(record instanceof TabSetRecord);
-  equal(record.tabs.length, 5021);
+  let maxSizeStub = sinon.stub(Service, "getMemcacheMaxRecordPayloadSize", () => 512 * 1024);
+  try {
+    numtabs = 5200;
+    _("Modify the max record payload size and create a big record");
+    store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, numtabs);
+    record = await store.createRecord("fake-guid");
+    ok(record instanceof TabSetRecord);
+    equal(record.tabs.length, 5021);
+  } finally {
+    maxSizeStub.restore();
+  }
 });
