@@ -22,12 +22,12 @@ add_task(function* () {
   });
   yield wait;
 
-  wait = waitForDOM(document, "#security-panel");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#security-tab"));
-  yield wait;
+  yield waitUntil(() => document.querySelector(
+    "#security-panel .security-info-value"));
 
   let tabpanel = document.querySelector("#security-panel");
   let textboxes = tabpanel.querySelectorAll(".textbox-input");
