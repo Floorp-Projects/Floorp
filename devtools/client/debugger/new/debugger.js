@@ -26986,7 +26986,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = FrameMenu;
 
-var _devtoolsLaunchpad = __webpack_require__(1362);
+var _devtoolsContextmenu = __webpack_require__(1413);
 
 var _clipboard = __webpack_require__(1388);
 
@@ -27052,7 +27052,7 @@ function FrameMenu(frame, frameworkGroupingOn, callbacks, event) {
 
   menuOptions.push(copyStackTraceItem);
 
-  (0, _devtoolsLaunchpad.showMenu)(event, menuOptions);
+  (0, _devtoolsContextmenu.showMenu)(event, menuOptions);
 }
 
 /***/ }),
@@ -35317,7 +35317,7 @@ var _sourcesTree = __webpack_require__(1442);
 
 var _immutable = __webpack_require__(146);
 
-var _devtoolsLaunchpad = __webpack_require__(1362);
+var _devtoolsContextmenu = __webpack_require__(1413);
 
 var _clipboard = __webpack_require__(1388);
 
@@ -35495,7 +35495,7 @@ class SourcesTree extends _react.Component {
         click: () => (0, _ui.setProjectDirectoryRoot)(item.path)
       });
     }
-    (0, _devtoolsLaunchpad.showMenu)(event, menuOptions);
+    (0, _devtoolsContextmenu.showMenu)(event, menuOptions);
   }
 
   renderItem(item, depth, focused, _, expanded, { setExpanded }) {
@@ -40608,7 +40608,7 @@ exports.gutterMenu = gutterMenu;
 
 var _react = __webpack_require__(0);
 
-var _devtoolsLaunchpad = __webpack_require__(1362);
+var _devtoolsContextmenu = __webpack_require__(1413);
 
 var _redux = __webpack_require__(3);
 
@@ -40709,7 +40709,7 @@ function gutterMenu({
     items.push(disableBreakpoint);
   }
 
-  (0, _devtoolsLaunchpad.showMenu)(event, items);
+  (0, _devtoolsContextmenu.showMenu)(event, items);
 }
 
 class GutterContextMenuComponent extends _react.PureComponent {
@@ -40773,7 +40773,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _react = __webpack_require__(0);
 
-var _devtoolsLaunchpad = __webpack_require__(1362);
+var _devtoolsContextmenu = __webpack_require__(1413);
 
 var _devtoolsSourceMap = __webpack_require__(1360);
 
@@ -40858,6 +40858,7 @@ function getMenuItems(event, {
   const isPrettyPrinted = (0, _source.isPretty)(selectedSource.toJS());
 
   const jumpLabel = {
+    id: "node-menu-jump",
     accesskey: L10N.getStr("editor.jumpToMappedLocation1.accesskey"),
     disabled: _devtoolsSourceMap.isGeneratedId && !hasSourceMap,
     label: L10N.getFormatStr("editor.jumpToMappedLocation1", isOriginal ? L10N.getStr("generated") : L10N.getStr("original")),
@@ -40865,6 +40866,7 @@ function getMenuItems(event, {
   };
 
   const watchExpressionLabel = {
+    id: "node-menu-add-watch-expression",
     accesskey: L10N.getStr("expressions.accesskey"),
     label: L10N.getStr("expressions.label"),
     click: () => addExpression(editor.codeMirror.getSelection())
@@ -40935,7 +40937,7 @@ class EditorMenu extends _react.PureComponent {
     const { contextMenu } = nextProps,
           options = _objectWithoutProperties(nextProps, ["contextMenu"]);
     const { event } = contextMenu;
-    (0, _devtoolsLaunchpad.showMenu)(event, getMenuItems(event, options));
+    (0, _devtoolsContextmenu.showMenu)(event, getMenuItems(event, options));
   }
 
   render() {
@@ -41174,10 +41176,6 @@ var _redux = __webpack_require__(3);
 
 var _prefs = __webpack_require__(226);
 
-var _reactImmutableProptypes = __webpack_require__(150);
-
-var _reactImmutableProptypes2 = _interopRequireDefault(_reactImmutableProptypes);
-
 var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
@@ -41238,11 +41236,9 @@ __webpack_require__(1342);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const Scopes = (0, _devtoolsConfig.isEnabled)("chromeScopes") ? _ChromeScopes2.default : _Scopes3.default;
+const Scopes = (0, _devtoolsConfig.isEnabled)("chromeScopes") ? _ChromeScopes2.default : _Scopes3.default; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                            * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                            * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function debugBtn(onClick, type, className, tooltip) {
   return _react2.default.createElement(
@@ -41433,7 +41429,7 @@ SecondaryPanes.propTypes = {
   evaluateExpressions: _propTypes2.default.func.isRequired,
   pauseData: _propTypes2.default.object,
   horizontal: _propTypes2.default.bool,
-  breakpoints: _reactImmutableProptypes2.default.map.isRequired,
+  breakpoints: _propTypes2.default.object,
   breakpointsDisabled: _propTypes2.default.bool,
   breakpointsLoading: _propTypes2.default.bool,
   toggleAllBreakpoints: _propTypes2.default.func.isRequired,
@@ -41498,7 +41494,7 @@ var _utils = __webpack_require__(1366);
 
 var _source = __webpack_require__(1356);
 
-var _devtoolsLaunchpad = __webpack_require__(1362);
+var _devtoolsContextmenu = __webpack_require__(1413);
 
 var _Close = __webpack_require__(1374);
 
@@ -41733,7 +41729,7 @@ class Breakpoints extends _react.PureComponent {
       hidden: () => !breakpoint.condition
     }];
 
-    (0, _devtoolsLaunchpad.showMenu)(e, (0, _devtoolsLaunchpad.buildMenu)(items));
+    (0, _devtoolsContextmenu.showMenu)(e, (0, _devtoolsContextmenu.buildMenu)(items));
   }
 
   selectBreakpoint(breakpoint) {
@@ -42301,7 +42297,15 @@ var _Frame = __webpack_require__(1453);
 
 var _Frame2 = _interopRequireDefault(_Frame);
 
+var _Badge = __webpack_require__(1704);
+
+var _Badge2 = _interopRequireDefault(_Badge);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function FrameLocation({ frame }) {
   const library = (0, _frame.getLibraryFromUrl)(frame);
@@ -42315,9 +42319,7 @@ function FrameLocation({ frame }) {
     library,
     _react2.default.createElement(_Svg2.default, { name: library.toLowerCase(), className: "annotation-logo" })
   );
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 FrameLocation.displayName = "FrameLocation";
 
@@ -42392,8 +42394,17 @@ class Group extends _react.Component {
       },
       _react2.default.createElement(
         "div",
-        { className: "title" },
-        displayName
+        { className: "d-flex align-items-center min-width-0" },
+        _react2.default.createElement(
+          "div",
+          { className: "title" },
+          displayName
+        ),
+        _react2.default.createElement(
+          _Badge2.default,
+          null,
+          this.props.group.length
+        )
       ),
       _react2.default.createElement(FrameLocation, { frame: frame })
     );
@@ -43775,7 +43786,7 @@ var _Close = __webpack_require__(1374);
 
 var _Close2 = _interopRequireDefault(_Close);
 
-var _devtoolsLaunchpad = __webpack_require__(1362);
+var _devtoolsContextmenu = __webpack_require__(1413);
 
 var _lodash = __webpack_require__(2);
 
@@ -43993,7 +44004,7 @@ class SourceTabs extends _react.PureComponent {
       items.push({ item: prettyPrint });
     }
 
-    (0, _devtoolsLaunchpad.showMenu)(e, (0, _devtoolsLaunchpad.buildMenu)(items));
+    (0, _devtoolsContextmenu.showMenu)(e, (0, _devtoolsContextmenu.buildMenu)(items));
   }
 
   /*
@@ -45937,6 +45948,79 @@ function timing(store) {
     return result;
   };
 }
+
+/***/ }),
+/* 1664 */,
+/* 1665 */,
+/* 1666 */,
+/* 1667 */,
+/* 1668 */,
+/* 1669 */,
+/* 1670 */,
+/* 1671 */,
+/* 1672 */,
+/* 1673 */,
+/* 1674 */,
+/* 1675 */,
+/* 1676 */,
+/* 1677 */,
+/* 1678 */,
+/* 1679 */,
+/* 1680 */,
+/* 1681 */,
+/* 1682 */,
+/* 1683 */,
+/* 1684 */,
+/* 1685 */,
+/* 1686 */,
+/* 1687 */,
+/* 1688 */,
+/* 1689 */,
+/* 1690 */,
+/* 1691 */,
+/* 1692 */,
+/* 1693 */,
+/* 1694 */,
+/* 1695 */,
+/* 1696 */,
+/* 1697 */,
+/* 1698 */,
+/* 1699 */,
+/* 1700 */,
+/* 1701 */,
+/* 1702 */,
+/* 1703 */,
+/* 1704 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+__webpack_require__(1705);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const Badge = ({ children }) => _react2.default.createElement(
+  "div",
+  { className: "badge text-white text-center" },
+  children
+);
+
+exports.default = Badge;
+
+/***/ }),
+/* 1705 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
 
 /***/ })
 /******/ ]);
