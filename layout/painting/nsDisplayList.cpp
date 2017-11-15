@@ -963,6 +963,11 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
 
+  mBuildCompositorHitTestInfo = gfxVars::UseWebRender()
+      && gfxPrefs::WebRenderHitTest()
+      && mAsyncPanZoomEnabled
+      && mMode == nsDisplayListBuilderMode::PAINTING;
+
   nsPresContext* pc = aReferenceFrame->PresContext();
   nsIPresShell *shell = pc->PresShell();
   if (pc->IsRenderingOnlySelection()) {
@@ -4829,6 +4834,72 @@ nsDisplayEventReceiver::HitTest(nsDisplayListBuilder* aBuilder,
   }
 
   aOutFrames->AppendElement(mFrame);
+}
+
+bool
+nsDisplayEventReceiver::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                const StackingContextHelper& aSc,
+                                                mozilla::layers::WebRenderLayerManager* aManager,
+                                                nsDisplayListBuilder* aDisplayListBuilder)
+{
+  // This display item should never be getting created when building a display
+  // list for WebRender consumption, so this function should never get called.
+  MOZ_ASSERT(false);
+  return true;
+}
+
+bool
+nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                        const StackingContextHelper& aSc,
+                                                        mozilla::layers::WebRenderLayerManager* aManager,
+                                                        nsDisplayListBuilder* aDisplayListBuilder)
+{
+  nsRect borderBox;
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(mFrame);
+  if (scrollFrame) {
+    // If the frame is content of a scrollframe, then we need to pick up the
+    // area corresponding to the overflow rect as well. Otherwise the parts of
+    // the overflow that are not occupied by descendants get skipped and the
+    // APZ code sends touch events to the content underneath instead.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
+    borderBox = mFrame->GetScrollableOverflowRect();
+  } else {
+    borderBox = nsRect(nsPoint(0, 0), mFrame->GetSize());
+  }
+
+  if (borderBox.IsEmpty()) {
+    return true;
+  }
+
+  wr::LayoutRect rect = aSc.ToRelativeLayoutRect(
+      LayoutDeviceRect::FromAppUnits(
+          borderBox + aDisplayListBuilder->ToReferenceFrame(mFrame),
+          mFrame->PresContext()->AppUnitsPerDevPixel()));
+
+  // XXX: eventually this scrollId computation and the SetHitTestInfo
+  // call will get moved out into the WR display item iteration code so that
+  // we don't need to do it as often, and so that we can do it for other
+  // display item types as well (reducing the need for as many instances of
+  // this display item).
+  FrameMetrics::ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
+  if (const ActiveScrolledRoot* asr = GetActiveScrolledRoot()) {
+    scrollId = nsLayoutUtils::ViewIDForASR(asr);
+  }
+
+  // Insert a transparent rectangle with the hit-test info
+  aBuilder.SetHitTestInfo(scrollId, mHitTestInfo);
+  aBuilder.PushRect(rect, rect, true, wr::ToColorF(gfx::Color()));
+  aBuilder.ClearHitTestInfo();
+
+  return true;
+}
+
+void
+nsDisplayCompositorHitTestInfo::WriteDebugInfo(std::stringstream& aStream)
+{
+  aStream << nsPrintfCString(" (hitTestInfo 0x%x)", (int)mHitTestInfo).get();
 }
 
 void
