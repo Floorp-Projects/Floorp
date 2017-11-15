@@ -228,7 +228,7 @@ public:
                 wr::BuiltDisplayList& aOutDisplayList);
 
   void PushStackingContext(const wr::LayoutRect& aBounds, // TODO: We should work with strongly typed rects
-                           const uint64_t& aAnimationId,
+                           const wr::WrAnimationProperty* aAnimation,
                            const float* aOpacity,
                            const gfx::Matrix4x4* aTransform,
                            wr::TransformStyle aTransformStyle,

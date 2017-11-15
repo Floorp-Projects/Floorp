@@ -6515,10 +6515,14 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
   // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
   // are no active animations.
   uint64_t animationsId = animationInfo.GetCompositorAnimationsId();
+  wr::WrAnimationProperty prop;
 
   if (!animationInfo.GetAnimations().IsEmpty()) {
     opacityForSC = nullptr;
     OptionalOpacity opacityForCompositor = mOpacity;
+    prop.id = animationsId;
+    prop.effect_type = wr::WrAnimationType::Opacity;
+
 
     OpAddCompositorAnimations
       anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
@@ -6531,7 +6535,8 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
   }
 
   nsTArray<mozilla::wr::WrFilterOp> filters;
-  StackingContextHelper sc(aSc, aBuilder, filters, nullptr, animationsId,
+  StackingContextHelper sc(aSc, aBuilder, filters, nullptr,
+                           animationsId ? &prop : nullptr,
                            opacityForSC);
 
   aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(&mList,
@@ -6820,8 +6825,13 @@ nsDisplayOwnLayer::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
   animationInfo.EnsureAnimationsId();
   mWrAnimationId = animationInfo.GetCompositorAnimationsId();
 
-  StackingContextHelper sc(aSc, aBuilder, nsTArray<wr::WrFilterOp>(), nullptr,
-                           mWrAnimationId);
+
+  wr::WrAnimationProperty prop;
+  prop.id = mWrAnimationId;
+  prop.effect_type = wr::WrAnimationType::Transform;
+
+  StackingContextHelper sc(aSc, aBuilder, nsTArray<wr::WrFilterOp>(),
+                           nullptr, &prop);
 
   nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, sc,
                                              aManager, aDisplayListBuilder);
@@ -8329,12 +8339,15 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
   // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
   // are no active animations.
   uint64_t animationsId = animationInfo.GetCompositorAnimationsId();
-
+  wr::WrAnimationProperty prop;
   if (!animationInfo.GetAnimations().IsEmpty()) {
     // Update transfrom as nullptr in stacking context if there exists
     // transform animation, the transform value will be resolved
     // after animation sampling on the compositor
     transformForSC = nullptr;
+
+    prop.id = animationsId;
+    prop.effect_type = wr::WrAnimationType::Transform;
 
     // Pass default transform to compositor in case gecko fails to
     // get animated value after animation sampling.
@@ -8355,7 +8368,7 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            aBuilder,
                            filters,
                            &newTransformMatrix,
-                           animationsId,
+                           animationsId ? &prop : nullptr,
                            nullptr,
                            transformForSC,
                            nullptr,
