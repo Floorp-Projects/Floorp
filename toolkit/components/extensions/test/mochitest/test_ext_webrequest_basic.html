@@ -349,6 +349,7 @@ add_task(async function test_webRequest_frames() {
       type: "sub_frame",
       status: 404,
       events: ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders", "onErrorOccurred"],
+      error: "NS_ERROR_UNKNOWN_HOST",
     },
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
