@@ -18,7 +18,7 @@ ClientHandleOpChild::ActorDestroy(ActorDestroyReason aReason)
   }
 }
 
-IPCResult
+mozilla::ipc::IPCResult
 ClientHandleOpChild::Recv__delete__(const ClientOpResult& aResult)
 {
   if (aResult.type() == ClientOpResult::Tnsresult &&

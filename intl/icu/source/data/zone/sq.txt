@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sq{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     zoneStrings{
         "meta:Acre"{
             ld{"Ora verore e Ejkrit [Ako]"}
@@ -51,14 +51,14 @@ sq{
             ls{"Ora standarde e SHBA-së Lindore"}
         }
         "meta:America_Mountain"{
-            ld{"Ora verore amerikane e Brezit Malor"}
-            lg{"Ora amerikane e Brezit Malor"}
-            ls{"Ora standarde amerikane e Brezit Malor"}
+            ld{"Ora verore e Territoreve Amerikane të Brezit Malor"}
+            lg{"Ora e Territoreve Amerikane të Brezit Malor"}
+            ls{"Ora standarde e Territoreve Amerikane të Brezit Malor"}
         }
         "meta:America_Pacific"{
-            ld{"Ora verore amerikane e Bregut të Paqësorit"}
-            lg{"Ora amerikane e Bregut të Paqësorit"}
-            ls{"Ora standarde amerikane e Bregut të Paqësorit"}
+            ld{"Ora verore e Territoreve Amerikane të Bregut të Paqësorit"}
+            lg{"Ora e Territoreve Amerikane të Bregut të Paqësorit"}
+            ls{"Ora standarde e Territoreve Amerikane të Bregut të Paqësorit"}
         }
         "meta:Anadyr"{
             ld{"Ora verore e Anadirit"}
@@ -258,7 +258,7 @@ sq{
             ls{"Ora e Territoreve Jugore dhe Antarktike Franceze"}
         }
         "meta:GMT"{
-            ls{"Ora e Meridianit të Grinuiçit"}
+            ls{"Ora e Grinuiçit"}
         }
         "meta:Galapagos"{
             ls{"Ora e Galapagosit"}
@@ -401,7 +401,7 @@ sq{
             ls{"Ora e Malajzisë"}
         }
         "meta:Maldives"{
-            ls{"Ora e Maldivit"}
+            ls{"Ora e Maldiveve"}
         }
         "meta:Marquesas"{
             ls{"Ora e Ishujve Markezë"}
@@ -423,9 +423,9 @@ sq{
             ls{"Ora standarde e Meksikës Veriperëndimore"}
         }
         "meta:Mexico_Pacific"{
-            ld{"Ora verore meksikane e Bregut të Paqësorit"}
-            lg{"Ora meksikane e Bregut të Paqësorit"}
-            ls{"Ora standarde meksikane e Bregut të Paqësorit"}
+            ld{"Ora verore e Territoreve Meksikane të Bregut të Paqësorit"}
+            lg{"Ora e Territoreve Meksikane të Bregut të Paqësorit"}
+            ls{"Ora standarde e Territoreve Meksikane të Bregut të Paqësorit"}
         }
         "meta:Mongolia"{
             ld{"Ora verore e Ulan-Batorit"}
@@ -515,9 +515,9 @@ sq{
             ls{"Ora e Ishujve Feniks"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"Ora verore e Shën-Pier dhe Mikuelon"}
-            lg{"Ora e Shën-Pier dhe Mikuelon"}
-            ls{"Ora standarde e Shën-Pier dhe Mikuelon"}
+            ld{"Ora verore e Shën-Pier dhe Mikelon"}
+            lg{"Ora e Shën-Pier dhe Mikelon"}
+            ls{"Ora standarde e Shën-Pier dhe Mikelon"}
         }
         "meta:Pitcairn"{
             ls{"Ora e Pitkernit"}
@@ -555,7 +555,7 @@ sq{
             ls{"Ora standarde e Samoas"}
         }
         "meta:Seychelles"{
-            ls{"Ora e Sishelës"}
+            ls{"Ora e Sejshelleve"}
         }
         "meta:Singapore"{
             ls{"Ora e Singaporit"}
@@ -650,8 +650,8 @@ sq{
             ls{"Ora standarde e Ekaterinburgut"}
         }
         fallbackFormat{"{1} ({0})"}
-        gmtFormat{"Ora e Grinuiçit: {0}"}
-        gmtZeroFormat{"Ora e Grinuiçit"}
+        gmtFormat{"GMT{0}"}
+        gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Ora: {0}"}
         regionFormatDaylight{"Ora verore: {0}"}

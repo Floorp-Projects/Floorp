@@ -1,7 +1,7 @@
 g = newGlobal();
 g.parent = this;
 g.eval(`(function() {
-  Debugger(parent).onExceptionUnwind = function(frame) frame.eval("")
+  Debugger(parent).onExceptionUnwind = function(frame) { return frame.eval(""); }
 })()`);
 
 var module = new WebAssembly.Module(wasmTextToBinary(`

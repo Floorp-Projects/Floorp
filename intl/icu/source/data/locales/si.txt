@@ -19,6 +19,7 @@ si{
         "[අ ආ ඇ ඈ ඉ ඊ උ ඌ ඍ එ ඒ ඓ ඔ ඕ ඖ ක ඛ ග ඝ ඞ ඟ ච ඡ ජ ඣ ඥ ඤ ට ඨ ඩ ඪ ණ ඬ ත ථ ද ධ න"
         " ඳ ප ඵ බ භ ම ඹ ය ර ල ව ශ ෂ ස හ ළ ෆ]"
     }
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
         "″]"
@@ -218,7 +219,7 @@ si{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.33.28"}
+    Version{"2.1.37.5"}
     calendar{
         generic{
             DateTimePatterns{
@@ -237,8 +238,17 @@ si{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"B h"}
+                Bhm{"B h:mm"}
+                Bhms{"B h:mm:ss"}
                 E{"ccc"}
+                EBhm{"E B h:mm"}
+                EBhms{"E B h:mm:ss"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"d E"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"G y"}
                 GyMMM{"G y MMM"}
                 GyMMMEd{"G y MMM d, E"}
@@ -398,7 +408,12 @@ si{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH.mm"}
                 EHms{"E HH.mm.ss"}
                 Ed{"d E"}
@@ -442,8 +457,8 @@ si{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    one{"y සතිය w"}
-                    other{"y සතිය w"}
+                    one{"Y සතිය w"}
+                    other{"Y සතිය w"}
                 }
             }
             dayNames{
@@ -923,7 +938,9 @@ si{
         technical_symbols{"තාක්ෂණික සංකේත"}
         tone_marks{"නාද සලකුණු"}
         travel{"සංචාරය"}
+        travel_places{"ගම්න් කිරීම් සහ ස්තාන"}
         upwards_arrows{"උඩු ඊතල"}
+        variant_forms{"වෙනස් පෝරම"}
         vocalic_jamo{"වොකාලික් ජාමො"}
         weather{"කාලගුණය"}
         western_asian_scripts{"බටහිර ආසියානු පිටපත්"}
@@ -982,10 +999,31 @@ si{
                 }
             }
         }
+        dayOfYear{
+            dn{"වසරේ දිනය"}
+        }
+        dayOfYear-narrow{
+            dn{"වසරේ දිනය"}
+        }
+        dayOfYear-short{
+            dn{"වසරේ දිනය"}
+        }
         dayperiod{
             dn{"පෙ.ව/ප.ව"}
         }
+        dayperiod-narrow{
+            dn{"පෙ.ව/ප.ව"}
+        }
+        dayperiod-short{
+            dn{"පෙ.ව/ප.ව"}
+        }
         era{
+            dn{"යුගය"}
+        }
+        era-narrow{
+            dn{"යුගය"}
+        }
+        era-short{
             dn{"යුගය"}
         }
         fri{
@@ -1056,7 +1094,7 @@ si{
             }
         }
         hour-narrow{
-            dn{"පැ"}
+            dn{"පැය"}
             relativeTime{
                 future{
                     one{"පැය {0}කින්"}
@@ -1098,7 +1136,7 @@ si{
             }
         }
         minute-narrow{
-            dn{"මි"}
+            dn{"මිනි."}
             relativeTime{
                 future{
                     one{"මිනිත්තු {0}කින්"}
@@ -1350,7 +1388,7 @@ si{
             }
         }
         second-narrow{
-            dn{"ත"}
+            dn{"තත්."}
             relativeTime{
                 future{
                     one{"තත්පර {0}කින්"}
@@ -1636,8 +1674,32 @@ si{
                 }
             }
         }
+        weekOfMonth{
+            dn{"මාසයේ සතිය"}
+        }
+        weekOfMonth-narrow{
+            dn{"මාසයේ සතිය"}
+        }
+        weekOfMonth-short{
+            dn{"මාසයේ සතිය"}
+        }
         weekday{
             dn{"සතියේ දිනය"}
+        }
+        weekday-narrow{
+            dn{"සතියේ දිනය"}
+        }
+        weekday-short{
+            dn{"සතියේ දිනය"}
+        }
+        weekdayOfMonth{
+            dn{"මාසයේ සතියේ දිනය"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"මාසයේ සතියේ දිනය"}
+        }
+        weekdayOfMonth-short{
+            dn{"මාසයේ සතියේ දිනය"}
         }
         year{
             dn{"වර්ෂය"}
@@ -1694,10 +1756,22 @@ si{
             }
         }
         zone{
-            dn{"කාල කලාපය"}
+            dn{"වේලා කලාපය"}
+        }
+        zone-narrow{
+            dn{"කලාපය"}
+        }
+        zone-short{
+            dn{"කලාපය"}
         }
     }
     listPattern{
+        or{
+            2{"{0} හෝ {1}"}
+            end{"{0}, හෝ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} සහ {1}"}
             end{"{0}, සහ {1}"}
@@ -1733,5 +1807,32 @@ si{
         UK{"එංගලන්ත"}
         US{"ඇමරිකානු"}
         metric{"මෙට්රික්"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

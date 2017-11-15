@@ -1112,10 +1112,12 @@ function test_syntax(postfixes, check_error, ignore_opts) {
 
   // Expression closures
 
-  test("function f() 1 ");
-  test("function f() 1; ");
-  test("(function () 1 ");
-  test("(function () 1); ");
+  if (getBuildConfiguration().release_or_beta) {
+    test("function f() 1 ");
+    test("function f() 1; ");
+    test("(function () 1 ");
+    test("(function () 1); ");
+  }
 
   // for each...in
 

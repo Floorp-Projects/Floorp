@@ -51,7 +51,7 @@ WebRenderUserData::WrBridge() const
 
 WebRenderImageData::WebRenderImageData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
   : WebRenderUserData(aWRManager, aItem)
-  , mGeneration(0)
+  , mOwnsKey(false)
 {
 }
 
@@ -61,12 +61,23 @@ WebRenderImageData::~WebRenderImageData()
 }
 
 void
-WebRenderImageData::ClearCachedResources()
+WebRenderImageData::ClearImageKey()
 {
   if (mKey) {
-    mWRManager->AddImageKeyForDiscard(mKey.value());
+    // If we don't own the key, then the owner is responsible for discarding the
+    // key when appropriate.
+    if (mOwnsKey) {
+      mWRManager->AddImageKeyForDiscard(mKey.value());
+    }
     mKey.reset();
   }
+  mOwnsKey = false;
+}
+
+void
+WebRenderImageData::ClearCachedResources()
+{
+  ClearImageKey();
 
   if (mExternalImageId) {
     WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
@@ -90,49 +101,46 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
     mContainer = aContainer;
   }
 
-  wr::ExternalImageId externalId;
-  uint32_t generation;
-  nsresult rv = SharedSurfacesChild::Share(aContainer, externalId, generation);
+  wr::WrImageKey key;
+  nsresult rv = SharedSurfacesChild::Share(aContainer, mWRManager, aResources,
+                                           aForceUpdate, key);
   if (NS_SUCCEEDED(rv)) {
-    if (mExternalImageId.isSome() && mExternalImageId.ref() == externalId) {
-      // The image container has the same surface as before, we can reuse the
-      // key if the generation matches and the caller allows us.
-      if (mKey && mGeneration == generation && !aForceUpdate) {
-        return mKey;
-      }
-    } else {
-      // The image container has a new surface, generate a new image key.
-      mExternalImageId = Some(externalId);
-    }
+    // Ensure that any previously owned keys are released before replacing. We
+    // don't own this key, the surface itself owns it, so that it can be shared
+    // across multiple elements.
+    ClearImageKey();
+    mKey = Some(key);
+    return mKey;
+  }
 
-    mGeneration = generation;
-  } else if (rv == NS_ERROR_NOT_IMPLEMENTED) {
-    CreateImageClientIfNeeded();
-    CreateExternalImageIfNeeded();
+  if (rv != NS_ERROR_NOT_IMPLEMENTED) {
+    // We should be using the shared surface but somehow sharing it failed.
+    ClearImageKey();
+    return Nothing();
+  }
 
-    if (!mImageClient || !mExternalImageId) {
-      return Nothing();
-    }
+  CreateImageClientIfNeeded();
+  CreateExternalImageIfNeeded();
 
-    MOZ_ASSERT(mImageClient->AsImageClientSingle());
+  if (!mImageClient || !mExternalImageId) {
+    return Nothing();
+  }
 
-    ImageClientSingle* imageClient = mImageClient->AsImageClientSingle();
-    uint32_t oldCounter = imageClient->GetLastUpdateGenerationCounter();
+  MOZ_ASSERT(mImageClient->AsImageClientSingle());
 
-    bool ret = imageClient->UpdateImage(aContainer, /* unused */0);
-    if (!ret || imageClient->IsEmpty()) {
-      // Delete old key
-      if (mKey) {
-        mWRManager->AddImageKeyForDiscard(mKey.value());
-        mKey = Nothing();
-      }
-      return Nothing();
-    }
+  ImageClientSingle* imageClient = mImageClient->AsImageClientSingle();
+  uint32_t oldCounter = imageClient->GetLastUpdateGenerationCounter();
 
-    // Reuse old key if generation is not updated.
-    if (!aForceUpdate && oldCounter == imageClient->GetLastUpdateGenerationCounter() && mKey) {
-      return mKey;
-    }
+  bool ret = imageClient->UpdateImage(aContainer, /* unused */0);
+  if (!ret || imageClient->IsEmpty()) {
+    // Delete old key
+    ClearImageKey();
+    return Nothing();
+  }
+
+  // Reuse old key if generation is not updated.
+  if (!aForceUpdate && oldCounter == imageClient->GetLastUpdateGenerationCounter() && mKey) {
+    return mKey;
   }
 
   // Delete old key, we are generating a new key.
@@ -141,9 +149,10 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
     mWRManager->AddImageKeyForDiscard(mKey.value());
   }
 
-  wr::WrImageKey key = WrBridge()->GetNextImageKey();
+  key = WrBridge()->GetNextImageKey();
   aResources.AddExternalImage(mExternalImageId.value(), key);
   mKey = Some(key);
+  mOwnsKey = true;
 
   return mKey;
 }

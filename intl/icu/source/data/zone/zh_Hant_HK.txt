@@ -1,13 +1,13 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hant_HK{
-    Version{"2.1.31.33"}
+    Version{"2.1.37.6"}
     zoneStrings{
         "meta:Africa_Southern"{
             ls{"南非時間"}
         }
         "meta:America_Central"{
-            ld{"中部夏令時間"}
+            ld{"北美中部夏令時間"}
             lg{"北美中部時間"}
             ls{"北美中部標準時間"}
         }

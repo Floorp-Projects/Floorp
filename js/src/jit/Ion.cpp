@@ -340,6 +340,10 @@ JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
         JitSpew(JitSpew_Codegen, "# Emitting VM function wrappers");
         MacroAssembler masm;
         for (VMFunction* fun = VMFunction::functions; fun; fun = fun->next) {
+            if (functionWrappers_->has(fun)) {
+                // Duplicate VMFunction definition. See VMFunction::hash.
+                continue;
+            }
             JitSpew(JitSpew_Codegen, "# VM function wrapper");
             if (!generateVMWrapper(cx, masm, *fun))
                 return false;

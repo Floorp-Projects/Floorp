@@ -12,7 +12,7 @@ ne_IN{
                 "y MMMM d, EEEE",
                 "y MMMM d",
                 "y MMM d",
-                "y-MM-dd",
+                "yy/M/d",
                 "{1}, {0}",
                 "{1} {0}",
                 "{1} {0}",

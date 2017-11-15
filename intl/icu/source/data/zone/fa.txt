@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fa{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"وقت افغانستان"}
@@ -634,7 +634,7 @@ fa{
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"{0} گرینویچ"}
         gmtZeroFormat{"گرینویچ"}
-        hourFormat{"+HH:mm;−HH:mm"}
+        hourFormat{"‎+HH:mm;‎−HH:mm"}
         regionFormat{"وقت {0}"}
         regionFormatDaylight{"وقت تابستانی {0}"}
         regionFormatStandard{"وقت عادی {0}"}

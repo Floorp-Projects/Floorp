@@ -714,6 +714,7 @@ fo{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1192,7 +1193,7 @@ fo{
         }
         RON{
             one{"Rumenia leu"}
-            other{"Rumenia leu"}
+            other{"Rumenia lei"}
         }
         RSD{
             one{"Serbia dinar"}
@@ -1387,5 +1388,5 @@ fo{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.37.5"}
 }

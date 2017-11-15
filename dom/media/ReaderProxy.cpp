@@ -135,7 +135,8 @@ ReaderProxy::ReleaseResources()
     NewRunnableMethod("MediaFormatReader::ReleaseResources",
                       mReader,
                       &MediaFormatReader::ReleaseResources);
-  mReader->OwnerThread()->Dispatch(r.forget());
+  nsresult rv = mReader->OwnerThread()->Dispatch(r.forget());
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void
@@ -147,7 +148,8 @@ ReaderProxy::ResetDecode(TrackSet aTracks)
                                 mReader,
                                 &MediaFormatReader::ResetDecode,
                                 aTracks);
-  mReader->OwnerThread()->Dispatch(r.forget());
+  nsresult rv = mReader->OwnerThread()->Dispatch(r.forget());
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 }
 
 RefPtr<ShutdownPromise>
@@ -193,7 +195,8 @@ ReaderProxy::SetVideoBlankDecode(bool aIsBlankDecode)
                             mReader,
                             &MediaFormatReader::SetVideoNullDecode,
                             aIsBlankDecode);
-  mReader->OwnerThread()->Dispatch(r.forget());
+  nsresult rv = mReader->OwnerThread()->Dispatch(r.forget());
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void
@@ -215,7 +218,8 @@ ReaderProxy::SetCanonicalDuration(
       mDuration.Connect(canonical);
       mWatchManager.Watch(mDuration, &ReaderProxy::UpdateDuration);
     });
-  mReader->OwnerThread()->Dispatch(r.forget());
+  nsresult rv = mReader->OwnerThread()->Dispatch(r.forget());
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 }
 
 } // namespace mozilla

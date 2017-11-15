@@ -73,7 +73,7 @@ WorkerHolderToken::GetWorkerPrivate() const
 
 WorkerHolderToken::WorkerHolderToken(Status aShutdownStatus,
                                      Behavior aBehavior)
-  : WorkerHolder(aBehavior)
+  : WorkerHolder("WorkerHolderToken", aBehavior)
   , mShutdownStatus(aShutdownStatus)
   , mShuttingDown(false)
 {

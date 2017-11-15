@@ -764,6 +764,10 @@ WorkerProxyToMainThreadRunnable::HoldWorker()
   class SimpleWorkerHolder final : public WorkerHolder
   {
   public:
+    SimpleWorkerHolder()
+      : WorkerHolder("WorkerProxyToMainThreadRunnable::SimpleWorkerHolder")
+    {}
+
     bool Notify(Status aStatus) override
     {
       // We don't care about the notification. We just want to keep the

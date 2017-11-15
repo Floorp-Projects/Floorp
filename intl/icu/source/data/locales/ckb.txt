@@ -6,6 +6,7 @@ ckb{
         "ؤ إ ة ث ذ ص ض ط ظ ك ه ى ي]"
     }
     ExemplarCharacters{"[ئ ا ب پ ت ج چ ح خ د ر ز ڕ ژ س ش ع غ ف ڤ ق ک گ ل ڵ م ن ھ ە و ۆ ی ێ]"}
+    ExemplarCharactersNumbers{"[\u200E\u200F \\- , ٫ ٬ . % ٪ ‰ ؉ + 0٠ 1١ 2٢ 3٣ 4٤ 5٥ 6٦ 7٧ 8٨ 9٩]"}
     NumberElements{
         arab{
             patterns{
@@ -19,9 +20,11 @@ ckb{
                 exponential{"اس"}
                 group{"٬"}
                 infinity{"∞"}
+                minusSign{"‏-"}
                 nan{"NaN"}
                 perMille{"؉"}
                 percentSign{"٪"}
+                plusSign{"‏+"}
                 superscriptingExponent{"×"}
             }
         }
@@ -54,7 +57,7 @@ ckb{
         minimumGroupingDigits{"1"}
         native{"arab"}
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.36.86"}
     calendar{
         generic{
             DateTimePatterns{
@@ -245,8 +248,8 @@ ckb{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    one{"هەفتەی w ی y"}
-                    other{"هەفتەی w ی y"}
+                    one{"هەفتەی w ی Y"}
+                    other{"هەفتەی w ی Y"}
                 }
             }
             dayNames{

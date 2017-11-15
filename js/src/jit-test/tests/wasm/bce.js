@@ -132,10 +132,7 @@ function testOOB(mod, args) {
 }
 
 function testOk(mod, args, expected, expectedType) {
-    if (expectedType === 'i64')
-        assertEqI64(mod(...args), createI64(expected));
-    else
-        assertEq(mod(...args), expected);
+    assertEq(mod(...args), expected);
 }
 
 // TODO: It would be nice to verify how many BCs are eliminated on positive tests.

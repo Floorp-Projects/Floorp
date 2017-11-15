@@ -162,6 +162,10 @@ is{
             "CLP",
             "síleskur pesi",
         }
+        CNH{
+            "CNH",
+            "kínverskt júan (utan heimalands)",
+        }
         CNY{
             "CN¥",
             "kínverskt júan",
@@ -892,14 +896,18 @@ is{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
         BYN{"р."}
         BZD{"$"}
         CAD{"$"}
@@ -907,36 +915,68 @@ is{
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
         IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
         TRY{"₺"}
@@ -945,10 +985,15 @@ is{
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
     }
     Currencies%variant{
         GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -1071,6 +1116,10 @@ is{
             one{"síleskur pesi"}
             other{"síleskir pesar"}
         }
+        CNH{
+            one{"kínverskt júan (utan heimalands)"}
+            other{"kínverskt júan (utan heimalands)"}
+        }
         CNY{
             one{"kínverskt júan"}
             other{"kínversk júön"}
@@ -1115,6 +1164,10 @@ is{
             one{"alsírskur denari"}
             other{"alsírskir denarar"}
         }
+        EEK{
+            one{"eistnesk króna"}
+            other{"eistneskar krónur"}
+        }
         EGP{
             one{"egypskt pund"}
             other{"egypsk pund"}
@@ -1152,7 +1205,7 @@ is{
             other{"ganverskir sedar"}
         }
         GIP{
-            one{"Gíbraltarpund"}
+            one{"Gíbraltarspund"}
             other{"Gíbraltarspund"}
         }
         GMD{
@@ -1600,5 +1653,5 @@ is{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

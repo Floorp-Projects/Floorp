@@ -7,6 +7,9 @@ function testWarn(code) {
     // Warning for expression closure is non-release-only (not Release/Beta).
     testPass(code);
     return;
+  } else {
+    // !!! expression closures are currently completely disabled in Nightly
+    return;
   }
 
   enableLastWarning();

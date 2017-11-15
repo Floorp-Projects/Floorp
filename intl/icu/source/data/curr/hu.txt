@@ -226,6 +226,10 @@ hu{
             "CLP",
             "chilei peso",
         }
+        CNH{
+            "CNH",
+            "kínai jüan (offshore)",
+        }
         CNY{
             "CNY",
             "kínai jüan",
@@ -1178,6 +1182,7 @@ hu{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1410,6 +1415,10 @@ hu{
         CLP{
             one{"chilei peso"}
             other{"chilei peso"}
+        }
+        CNH{
+            one{"kínai jüan (offshore)"}
+            other{"kínai jüan (offshore)"}
         }
         CNY{
             one{"kínai jüan"}
@@ -2012,5 +2021,5 @@ hu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

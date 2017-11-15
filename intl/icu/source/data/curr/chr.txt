@@ -698,6 +698,7 @@ chr{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1355,5 +1356,5 @@ chr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.31.74"}
+    Version{"2.1.37.1"}
 }

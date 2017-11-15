@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 lv{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"Afganistānas laiks"}
@@ -238,7 +238,7 @@ lv{
             ls{"Fidži ziemas laiks"}
         }
         "meta:French_Guiana"{
-            ls{"Franču Gviānas laiks"}
+            ls{"Francijas Gviānas laiks"}
         }
         "meta:French_Southern"{
             ls{"Francijas Dienvidjūru un Antarktikas teritorijas laiks"}
@@ -437,7 +437,7 @@ lv{
             ls{"Ņūfaundlendas ziemas laiks"}
         }
         "meta:Niue"{
-            ls{"Niue laiks"}
+            ls{"Niues laiks"}
         }
         "meta:Norfolk"{
             ls{"Norfolkas salas laiks"}

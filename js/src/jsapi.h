@@ -6258,7 +6258,6 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(JUMP_THRESHOLD, "jump-threshold")                              \
     Register(SIMULATOR_ALWAYS_INTERRUPT, "simulator.always-interrupt")      \
     Register(ASMJS_ATOMICS_ENABLE, "asmjs.atomics.enable")                  \
-    Register(WASM_TEST_MODE, "wasm.test-mode")                              \
     Register(WASM_FOLD_OFFSETS, "wasm.fold-offsets")
 
 typedef enum JSJitCompilerOption {

@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_CA{
     %%Parent{"en_001"}
-    Version{"2.1.31.33"}
+    Version{"2.1.37.22"}
     zoneStrings{
         "meta:Alaska"{
             sd{"AKDT"}
@@ -29,6 +29,10 @@ en_CA{
             sg{"PT"}
             ss{"PST"}
         }
+        "meta:Argentina"{
+            lg{"Argentina Time"}
+            ls{"Argentina Standard Time"}
+        }
         "meta:Atlantic"{
             sd{"ADT"}
             sg{"AT"}
@@ -44,5 +48,6 @@ en_CA{
             sg{"NT"}
             ss{"NST"}
         }
+        regionFormatDaylight{"{0} Daylight Saving Time"}
     }
 }
