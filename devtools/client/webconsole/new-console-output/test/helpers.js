@@ -23,14 +23,11 @@ const {
 function setupActions() {
   // Some actions use dependency injection. This helps them avoid using state in
   // a hard-to-test way. We need to inject stubbed versions of these dependencies.
-  const wrappedActions = Object.assign({}, actions);
-
   const idGenerator = new IdGenerator();
-  wrappedActions.messageAdd = (packet) => {
-    return actions.messageAdd(packet, idGenerator);
-  };
-
-  return wrappedActions;
+  return Object.assign({}, actions, {
+    messageAdd: packet => actions.messageAdd(packet, idGenerator),
+    messagesAdd: packets => actions.messagesAdd(packets, idGenerator)
+  });
 }
 
 /**
