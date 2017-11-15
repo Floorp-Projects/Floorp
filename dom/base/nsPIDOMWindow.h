@@ -22,7 +22,8 @@
 #define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"
 #define DOM_WINDOW_THAWED_TOPIC "dom-window-thawed"
 
-class nsGlobalWindow;
+class nsGlobalWindowInner;
+class nsGlobalWindowOuter;
 class nsIArray;
 class nsIContent;
 class nsICSSDeclaration;
@@ -765,7 +766,8 @@ protected:
 // and memory layout!
 class nsPIDOMWindowInner : public nsPIDOMWindow<mozIDOMWindow>
 {
-  friend nsGlobalWindow;
+  friend nsGlobalWindowInner;
+  friend nsGlobalWindowOuter;
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWINNER_IID)
