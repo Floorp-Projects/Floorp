@@ -281,9 +281,6 @@ public:
   static already_AddRefed<nsGlobalWindowInner>
   Create(nsGlobalWindowOuter* aOuter, bool aIsChrome);
 
-  nsGlobalWindowInner* AssertInner();
-  nsGlobalWindowOuter* AssertOuter();
-
   // callback for close event
   void ReallyCloseWindow();
 
@@ -1076,8 +1073,6 @@ public:
 
   already_AddRefed<nsWindowRoot> GetWindowRoot(mozilla::ErrorResult& aError);
 
-  mozilla::dom::Performance* GetPerformance();
-
   void UpdateTopInnerWindow();
 
   virtual bool IsInSyncOperation() override
@@ -1699,19 +1694,6 @@ inline bool
 nsGlobalWindowInner::IsFrame()
 {
   return GetParentInternal() != nullptr;
-}
-
-inline nsGlobalWindowInner*
-nsGlobalWindowInner::AssertInner()
-{
-  MOZ_RELEASE_ASSERT(IsInnerWindow());
-  return static_cast<nsGlobalWindowInner*>(this);
-}
-
-inline nsGlobalWindowOuter*
-nsGlobalWindowInner::AssertOuter()
-{
-  MOZ_CRASH("nsGlobalWindowInner is not an outer window");
 }
 
 inline void

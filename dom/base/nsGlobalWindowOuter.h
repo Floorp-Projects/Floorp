@@ -271,9 +271,6 @@ public:
 
   static already_AddRefed<nsGlobalWindowOuter> Create(bool aIsChrome);
 
-  nsGlobalWindowInner* AssertInner();
-  nsGlobalWindowOuter* AssertOuter();
-
   // public methods
   nsPIDOMWindowOuter* GetPrivateParent();
 
@@ -1530,19 +1527,6 @@ inline bool
 nsGlobalWindowOuter::IsFrame()
 {
   return GetParentInternal() != nullptr;
-}
-
-inline nsGlobalWindowInner*
-nsGlobalWindowOuter::AssertInner()
-{
-  MOZ_CRASH("nsGlobalWindowOuter is not an inner window");
-}
-
-inline nsGlobalWindowOuter*
-nsGlobalWindowOuter::AssertOuter()
-{
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-  return static_cast<nsGlobalWindowOuter*>(this);
 }
 
 inline void
