@@ -79,10 +79,7 @@ LangGroupFontPrefs::Initialize(nsAtom* aLangGroupAtom)
      Not all prefs are needed upfront. Some are fallback prefs intended
      for the GFX font sub-system...
 
-  1) unit : assumed to be the same for all language groups -------------
-  font.size.unit = px | pt    XXX could be folded in the size... bug 90440
-
-  2) attributes for generic fonts --------------------------------------
+  -- attributes for generic fonts --------------------------------------
   font.default.[langGroup] = serif | sans-serif - fallback generic font
   font.name.[generic].[langGroup] = current user' selected font on the pref dialog
   font.name-list.[generic].[langGroup] = fontname1, fontname2, ... [factory pre-built list]
@@ -99,39 +96,12 @@ LangGroupFontPrefs::Initialize(nsAtom* aLangGroupAtom)
 
   nsAutoCString pref;
 
-  // get the current applicable font-size unit
-  enum {eUnit_unknown = -1, eUnit_px, eUnit_pt};
-  int32_t unit = eUnit_px;
-
-  nsAutoCString cvalue;
-  Preferences::GetCString("font.size.unit", cvalue);
-
-  if (!cvalue.IsEmpty()) {
-    if (cvalue.EqualsLiteral("px")) {
-      unit = eUnit_px;
-    }
-    else if (cvalue.EqualsLiteral("pt")) {
-      unit = eUnit_pt;
-    }
-    else {
-      // XXX should really send this warning to the user (Error Console?).
-      // And just default to unit = eUnit_px?
-      NS_WARNING("unexpected font-size unit -- expected: 'px' or 'pt'");
-      unit = eUnit_unknown;
-    }
-  }
-
   // get font.minimum-size.[langGroup]
 
   MAKE_FONT_PREF_KEY(pref, "font.minimum-size.", langGroup);
 
   int32_t size = Preferences::GetInt(pref.get());
-  if (unit == eUnit_px) {
-    mMinimumFontSize = nsPresContext::CSSPixelsToAppUnits(size);
-  }
-  else if (unit == eUnit_pt) {
-    mMinimumFontSize = nsPresContext::CSSPointsToAppUnits(size);
-  }
+  mMinimumFontSize = nsPresContext::CSSPixelsToAppUnits(size);
 
   nsFont* fontTypes[] = {
     &mDefaultVariableFont,
@@ -219,18 +189,13 @@ LangGroupFontPrefs::Initialize(nsAtom* aLangGroupAtom)
     MAKE_FONT_PREF_KEY(pref, "font.size", generic_dot_langGroup);
     size = Preferences::GetInt(pref.get());
     if (size > 0) {
-      if (unit == eUnit_px) {
-        font->size = nsPresContext::CSSPixelsToAppUnits(size);
-      }
-      else if (unit == eUnit_pt) {
-        font->size = nsPresContext::CSSPointsToAppUnits(size);
-      }
+      font->size = nsPresContext::CSSPixelsToAppUnits(size);
     }
 
     // get font.size-adjust.[generic].[langGroup]
     // XXX only applicable on GFX ports that handle |font-size-adjust|
     MAKE_FONT_PREF_KEY(pref, "font.size-adjust", generic_dot_langGroup);
-    cvalue.Truncate();
+    nsAutoCString cvalue;
     Preferences::GetCString(pref.get(), cvalue);
     if (!cvalue.IsEmpty()) {
       font->sizeAdjust = (float)atof(cvalue.get());
