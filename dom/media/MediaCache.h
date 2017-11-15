@@ -453,8 +453,6 @@ private:
 
   // These fields are main-thread-only.
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  // True if CacheClientNotifyDataEnded has been called for this stream.
-  bool                   mDidNotifyDataEnded;
 
   // The following fields must be written holding the cache's monitor and
   // only on the main thread, thus can be read either on the main thread
@@ -503,6 +501,8 @@ private:
   // The number of times this stream has been Pinned without a
   // corresponding Unpin
   uint32_t          mPinCount;
+  // True if CacheClientNotifyDataEnded has been called for this stream.
+  bool              mDidNotifyDataEnded = false;
   // The status used when we did CacheClientNotifyDataEnded. Only valid
   // when mDidNotifyDataEnded is true.
   nsresult          mNotifyDataEndedStatus;

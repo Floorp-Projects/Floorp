@@ -481,7 +481,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
                                    bool aIsPrivateBrowsing)
   : mMediaCache(nullptr)
   , mClient(aClient)
-  , mDidNotifyDataEnded(false)
   , mIsTransportSeekable(false)
   , mCacheSuspended(false)
   , mChannelEnded(false)
@@ -2704,6 +2703,8 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
   MOZ_ASSERT(!mMediaCache, "Has been initialized.");
   MOZ_ASSERT(aOriginal->mMediaCache, "Don't clone an uninitialized stream.");
 
+  ReentrantMonitorAutoEnter mon(aOriginal->mMediaCache->GetReentrantMonitor());
+
   if (aOriginal->mDidNotifyDataEnded &&
       NS_FAILED(aOriginal->mNotifyDataEndedStatus)) {
     // Streams that ended abnormally are ineligible for cloning.
@@ -2719,8 +2720,6 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
   mResourceID = aOriginal->mResourceID;
 
   // Grab cache blocks from aOriginal as readahead blocks for our stream
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-
   mPrincipal = aOriginal->mPrincipal;
   mStreamLength = aOriginal->mStreamLength;
   mIsTransportSeekable = aOriginal->mIsTransportSeekable;
