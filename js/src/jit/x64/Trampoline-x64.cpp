@@ -231,7 +231,7 @@ JitRuntime::generateEnterJIT(JSContext* cx)
         masm.push(Imm32(0)); // Fake return address.
         // No GC things to mark, push a bare token.
         masm.loadJSContext(scratch);
-        masm.enterFakeExitFrame(scratch, scratch, ExitFrameToken::Bare);
+        masm.enterFakeExitFrame(scratch, scratch, ExitFrameType::Bare);
 
         regs.add(valuesSize);
 
