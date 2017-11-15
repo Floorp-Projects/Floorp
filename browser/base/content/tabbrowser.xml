@@ -6827,6 +6827,14 @@
         ]]></body>
       </method>
 
+      <method name="uiDensityChanged">
+        <body><![CDATA[
+          this._positionPinnedTabs();
+          this._updateCloseButtons();
+          this._handleTabSelect(true);
+        ]]></body>
+      </method>
+
       <field name="_lastNumPinned">0</field>
       <field name="_pinnedTabsLayoutCache">null</field>
       <method name="_positionPinnedTabs">
@@ -6839,9 +6847,12 @@
             this.setAttribute("positionpinnedtabs", "true");
 
             let layoutData = this._pinnedTabsLayoutCache;
-            if (!layoutData) {
+            let uiDensity = document.documentElement.getAttribute("uidensity");
+            if (!layoutData ||
+                layoutData.uiDensity != uiDensity) {
               let arrowScrollbox = this.arrowScrollbox;
               layoutData = this._pinnedTabsLayoutCache = {
+                uiDensity,
                 pinnedTabWidth: this.childNodes[0].getBoundingClientRect().width,
                 scrollButtonWidth: arrowScrollbox._scrollButtonDown.getBoundingClientRect().width
               };
