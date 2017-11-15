@@ -97,7 +97,7 @@ FlyWebFetchEvent::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   }
 
   if (!intResponse) {
-    intResponse = InternalResponse::NetworkError();
+    intResponse = InternalResponse::NetworkError(NS_ERROR_FAILURE);
   }
 
   NotifyServer(intResponse);
@@ -112,7 +112,7 @@ FlyWebFetchEvent::NotifyServer(InternalResponse* aResponse)
 void
 FlyWebFetchEvent::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  RefPtr<InternalResponse> err = InternalResponse::NetworkError();
+  RefPtr<InternalResponse> err = InternalResponse::NetworkError(NS_ERROR_FAILURE);
 
   NotifyServer(err);
 }

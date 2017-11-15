@@ -94,11 +94,21 @@ function testNonGetBlobURL() {
   });
 }
 
+function testMozErrors() {
+  // mozErrors shouldn't be available to content and be ignored.
+  return fetch("http://localhost:4/should/fail", { mozErrors: true }).then(res => {
+    ok(false, "Request should not succeed");
+  }).catch(err => {
+    ok(err instanceof TypeError);
+  });
+}
+
 function runTest() {
   return Promise.resolve()
     .then(testAboutURL)
     .then(testDataURL)
     .then(testSameOriginBlobURL)
     .then(testNonGetBlobURL)
+    .then(testMozErrors)
     // Put more promise based tests here.
 }
