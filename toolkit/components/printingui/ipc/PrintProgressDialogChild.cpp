@@ -43,6 +43,12 @@ PrintProgressDialogChild::RecvDialogOpened()
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+PrintProgressDialogChild::RecvCancelledCurrentJob()
+{
+  return IPC_OK();
+}
+
 // nsIWebProgressListener
 
 NS_IMETHODIMP

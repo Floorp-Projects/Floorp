@@ -27,6 +27,8 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvDialogOpened() override;
 
+  virtual mozilla::ipc::IPCResult RecvCancelledCurrentJob() override;
+
 private:
   virtual ~PrintProgressDialogChild();
   nsCOMPtr<nsIObserver> mOpenObserver;
