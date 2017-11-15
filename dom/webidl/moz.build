@@ -208,6 +208,9 @@ with Files("*Record*"):
 with Files("Media*Track*"):
     BUG_COMPONENT = ("Core", "WebRTC: Audio/Video")
 
+with Files("MIDI*"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
 with Files("Mouse*"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
@@ -676,6 +679,14 @@ WEBIDL_FILES = [
     'MessageChannel.webidl',
     'MessageEvent.webidl',
     'MessagePort.webidl',
+    'MIDIAccess.webidl',
+    'MIDIInput.webidl',
+    'MIDIInputMap.webidl',
+    'MIDIMessageEvent.webidl',
+    'MIDIOptions.webidl',
+    'MIDIOutput.webidl',
+    'MIDIOutputMap.webidl',
+    'MIDIPort.webidl',
     'MimeType.webidl',
     'MimeTypeArray.webidl',
     'MouseEvent.webidl',
@@ -1060,6 +1071,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'MediaRecorderErrorEvent.webidl',
     'MediaStreamEvent.webidl',
     'MediaStreamTrackEvent.webidl',
+    'MIDIConnectionEvent.webidl',
     'OfflineAudioCompletionEvent.webidl',
     'PageTransitionEvent.webidl',
     'PerformanceEntryEvent.webidl',
