@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { DOM: dom, Component, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { createParentMap } = require("devtools/shared/heapsnapshot/CensusUtils");
 const Tree = createFactory(require("devtools/client/shared/components/Tree"));

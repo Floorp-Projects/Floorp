@@ -4,7 +4,8 @@
 
 "use strict";
 
-const { DOM: dom, Component } = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { treeMapModel } = require("../models");
 const startVisualization = require("./tree-map/start");
 
