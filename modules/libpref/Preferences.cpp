@@ -662,34 +662,6 @@ pref_savePrefs()
   return savedPrefs;
 }
 
-// Function that sets whether or not the preference is locked and therefore
-// cannot be changed.
-static nsresult
-PREF_LockPref(const char* aPrefName, bool aLockIt)
-{
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aLockIt) {
-    if (!pref->IsLocked()) {
-      pref->SetIsLocked(true);
-      gIsAnyPrefLocked = true;
-      NotifyCallbacks(aPrefName);
-    }
-  } else if (pref->IsLocked()) {
-    pref->SetIsLocked(false);
-    NotifyCallbacks(aPrefName);
-  }
-
-  return NS_OK;
-}
-
   //
   // Hash table functions
   //
@@ -810,22 +782,6 @@ pref_SetPref(const char* aPrefName,
   }
 
   return NS_OK;
-}
-
-// Bool function that returns whether or not the preference is locked and
-// therefore cannot be changed.
-static bool
-PREF_PrefIsLocked(const char* aPrefName)
-{
-  bool result = false;
-  if (gIsAnyPrefLocked && gHashTable) {
-    PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-    if (pref && pref->IsLocked()) {
-      result = true;
-    }
-  }
-
-  return result;
 }
 
 // Adds a node to the callback list; the position depends on aIsPriority. The
@@ -2142,7 +2098,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
     } else {
       // if there is no user (or locked) value
       if (!Preferences::HasUserValue(pref.get()) &&
-          !PREF_PrefIsLocked(pref.get())) {
+          !Preferences::IsLocked(pref.get())) {
         bNeedDefault = true;
       }
     }
@@ -2407,33 +2363,30 @@ nsPrefBranch::PrefHasUserValue(const char* aPrefName, bool* aRetVal)
 NS_IMETHODIMP
 nsPrefBranch::LockPref(const char* aPrefName)
 {
-  ENSURE_PARENT_PROCESS("LockPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_LockPref(pref.get(), true);
+  return Preferences::Lock(pref.get());
 }
 
 NS_IMETHODIMP
 nsPrefBranch::PrefIsLocked(const char* aPrefName, bool* aRetVal)
 {
-  ENSURE_PARENT_PROCESS("PrefIsLocked", aPrefName);
   NS_ENSURE_ARG_POINTER(aRetVal);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  *aRetVal = PREF_PrefIsLocked(pref.get());
+  *aRetVal = Preferences::IsLocked(pref.get());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPrefBranch::UnlockPref(const char* aPrefName)
 {
-  ENSURE_PARENT_PROCESS("UnlockPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_LockPref(pref.get(), false);
+  return Preferences::Unlock(pref.get());
 }
 
 NS_IMETHODIMP
@@ -4369,7 +4322,7 @@ Preferences::InitInitialObjects()
     Preferences::SetBoolInAnyProcess(
       kTelemetryPref, false, PrefValueKind::Default);
   }
-  PREF_LockPref(kTelemetryPref, true);
+  Preferences::LockInAnyProcess(kTelemetryPref);
 #endif // MOZ_WIDGET_ANDROID
 
   NS_CreateServicesFromCategory(NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID,
@@ -4577,6 +4530,66 @@ Preferences::SetComplex(const char* aPrefName,
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return GetRootBranch(aKind)->SetComplexValue(aPrefName, aType, aValue);
+}
+
+/* static */ nsresult
+Preferences::LockInAnyProcess(const char* aPrefName)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (!pref) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!pref->IsLocked()) {
+    pref->SetIsLocked(true);
+    gIsAnyPrefLocked = true;
+    NotifyCallbacks(aPrefName);
+  }
+
+  return NS_OK;
+}
+
+/* static */ nsresult
+Preferences::Lock(const char* aPrefName)
+{
+  ENSURE_PARENT_PROCESS("Lock", aPrefName);
+  return Preferences::LockInAnyProcess(aPrefName);
+}
+
+/* static */ nsresult
+Preferences::Unlock(const char* aPrefName)
+{
+  ENSURE_PARENT_PROCESS("Unlock", aPrefName);
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (!pref) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (pref->IsLocked()) {
+    pref->SetIsLocked(false);
+    NotifyCallbacks(aPrefName);
+  }
+
+  return NS_OK;
+}
+
+/* static */ bool
+Preferences::IsLocked(const char* aPrefName)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), false);
+
+  if (gIsAnyPrefLocked) {
+    PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+    if (pref && pref->IsLocked()) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /* static */ nsresult
