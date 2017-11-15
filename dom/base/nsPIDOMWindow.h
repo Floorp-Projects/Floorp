@@ -269,24 +269,10 @@ public:
     return !IsInnerWindow();
   }
 
-  // Outer windows only.
-  virtual bool WouldReuseInnerWindow(nsIDocument* aNewDocument) = 0;
-
   /**
    * Get the docshell in this window.
    */
   nsIDocShell *GetDocShell() const;
-
-  /**
-   * Set the docshell in the window.  Must not be called with a null docshell
-   * (use DetachFromDocShell for that).
-   */
-  virtual void SetDocShell(nsIDocShell *aDocShell) = 0;
-
-  /**
-   * Detach an outer window from its docshell.
-   */
-  virtual void DetachFromDocShell() = 0;
 
   /**
    * Set a new document in the window. Calling this method will in

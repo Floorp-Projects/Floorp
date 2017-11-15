@@ -4,6 +4,91 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// XXX(nika): Temporary redefines
+#define FORWARD_TO_OUTER(method, args, err_rval)                              \
+  PR_BEGIN_MACRO                                                              \
+  if (IsInnerWindow()) {                                                      \
+    nsGlobalWindowOuter *outer = GetOuterWindowInternal();                    \
+    if (!AsInner()->HasActiveDocument()) {                                    \
+      NS_WARNING(outer ?                                                      \
+                 "Inner window does not have active document." :              \
+                 "No outer window available!");                               \
+      return err_rval;                                                        \
+    }                                                                         \
+    return outer->method args;                                                \
+  }                                                                           \
+  PR_END_MACRO
+
+#define FORWARD_TO_OUTER_OR_THROW(method, args, errorresult, err_rval)        \
+  PR_BEGIN_MACRO                                                              \
+  MOZ_RELEASE_ASSERT(IsInnerWindow());                                        \
+  nsGlobalWindowOuter *outer = GetOuterWindowInternal();                      \
+  if (MOZ_LIKELY(AsInner()->HasActiveDocument())) {                           \
+    return outer->method args;                                                \
+  }                                                                           \
+  if (!outer) {                                                               \
+    NS_WARNING("No outer window available!");                                 \
+    errorresult.Throw(NS_ERROR_NOT_INITIALIZED);                              \
+  } else {                                                                    \
+    errorresult.Throw(NS_ERROR_XPC_SECURITY_MANAGER_VETO);                    \
+  }                                                                           \
+  return err_rval;                                                            \
+  PR_END_MACRO
+
+#define FORWARD_TO_OUTER_VOID(method, args)                                   \
+  PR_BEGIN_MACRO                                                              \
+  if (IsInnerWindow()) {                                                      \
+    nsGlobalWindowOuter *outer = GetOuterWindowInternal();                    \
+    if (!AsInner()->HasActiveDocument()) {                                    \
+      NS_WARNING(outer ?                                                      \
+                 "Inner window does not have active document." :              \
+                 "No outer window available!");                               \
+      return;                                                                 \
+    }                                                                         \
+    outer->method args;                                                       \
+    return;                                                                   \
+  }                                                                           \
+  PR_END_MACRO
+
+#define FORWARD_TO_INNER(method, args, err_rval)                        \
+  PR_BEGIN_MACRO                                                        \
+  MOZ_RELEASE_ASSERT(IsOuterWindow());                                  \
+  if (!mInnerWindow) {                                                  \
+    NS_WARNING("No inner window available!");                           \
+    return err_rval;                                                    \
+  }                                                                     \
+  return GetCurrentInnerWindowInternal()->method args;                  \
+  PR_END_MACRO
+
+#define FORWARD_TO_INNER_VOID(method, args)                             \
+  PR_BEGIN_MACRO                                                        \
+  MOZ_RELEASE_ASSERT(IsOuterWindow());                                  \
+  if (!mInnerWindow) {                                                  \
+    NS_WARNING("No inner window available!");                           \
+    return;                                                             \
+  }                                                                     \
+  GetCurrentInnerWindowInternal()->method args;                         \
+  return;                                                               \
+  PR_END_MACRO
+
+// Same as FORWARD_TO_INNER, but this will create a fresh inner if an
+// inner doesn't already exists.
+#define FORWARD_TO_INNER_CREATE(method, args, err_rval)                 \
+  PR_BEGIN_MACRO                                                        \
+  MOZ_RELEASE_ASSERT(IsOuterWindow());                                  \
+  if (!mInnerWindow) {                                                  \
+    if (mIsClosed) {                                                    \
+      return err_rval;                                                  \
+    }                                                                   \
+    nsCOMPtr<nsIDocument> kungFuDeathGrip = GetDoc();                   \
+    ::mozilla::Unused << kungFuDeathGrip;                               \
+    if (!mInnerWindow) {                                                \
+      return err_rval;                                                  \
+    }                                                                   \
+  }                                                                     \
+  return GetCurrentInnerWindowInternal()->method args;                  \
+  PR_END_MACRO
+
 nsGlobalWindowOuter::OuterWindowByIdTable *nsGlobalWindowOuter::sOuterWindowsById = nullptr;
 
 static already_AddRefed<nsIVariant>
@@ -12963,3 +13048,7 @@ nsGlobalWindowOuter::Create(bool aIsChrome)
   window->InitWasOffline();
   return window.forget();
 }
+
+#undef FORWARD_TO_OUTER
+#undef FORWARD_TO_OUTER_OR_THROW
+#undef FORWARD_TO_OUTER_VOID
