@@ -834,7 +834,7 @@ Sync11Service.prototype = {
   async login() {
     async function onNotify() {
       this._loggedIn = false;
-      if (Services.io.offline) {
+      if (this.scheduler.offline) {
         this.status.login = LOGIN_FAILED_NETWORK_ERROR;
         throw new Error("Application is offline, login should not be called");
       }
@@ -1044,7 +1044,7 @@ Sync11Service.prototype = {
    */
   _shouldLogin: function _shouldLogin() {
     return this.enabled &&
-           !Services.io.offline &&
+           !this.scheduler.offline &&
            !this.isLoggedIn &&
            Async.isAppReady();
   },
@@ -1064,7 +1064,7 @@ Sync11Service.prototype = {
       reason = kSyncNotConfigured;
     else if (Status.service == STATUS_DISABLED || !this.enabled)
       reason = kSyncWeaveDisabled;
-    else if (Services.io.offline)
+    else if (this.scheduler.offline)
       reason = kSyncNetworkOffline;
     else if (this.status.minimumNextSync > Date.now())
       reason = kSyncBackoffNotMet;
