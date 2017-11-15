@@ -212,6 +212,7 @@ talos-h2:
     description: "Talos h2"
     try-name: h2
     treeherder-symbol: tc-T(h2)
+    max-run-time: 7200
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['mozilla-central', 'try']
@@ -368,6 +369,7 @@ talos-tp6:
     description: "Talos Tp6"
     try-name: tp6
     treeherder-symbol: tc-T(tp6)
+    max-run-time: 7200
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
@@ -383,6 +385,7 @@ talos-tp6-stylo-disabled:
     description: "Talos Stylo disabled Tp6"
     try-name: tp6-stylo-disabled
     treeherder-symbol: tc-Tsd(tp6)
+    max-run-time: 7200
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-beta', 'mozilla-central', 'try']
@@ -396,6 +399,7 @@ talos-tp6-stylo-threads:
     description: "Talos Stylo sequential Tp6"
     try-name: tp6-stylo-threads
     treeherder-symbol: tc-Tss(tp6)
+    max-run-time: 7200
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
