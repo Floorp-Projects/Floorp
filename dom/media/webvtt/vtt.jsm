@@ -1400,8 +1400,9 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
             break;
           case "BADCUE": // BADCUE
             // 54-62 - Collect and discard the remaining cue.
-            if (!line) {
-              self.state = "ID";
+            self.state = "ID";
+            if (line) { // keep this line to ID state.
+              continue;
             }
             break;
           }
