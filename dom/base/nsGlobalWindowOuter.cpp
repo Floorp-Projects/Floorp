@@ -95,8 +95,8 @@ nsGlobalWindowOuter::RemoveIdleCallback(mozilla::dom::IdleRequest* aRequest)
 
 nsresult
 nsGlobalWindowOuter::RunIdleRequest(IdleRequest* aRequest,
-                               DOMHighResTimeStamp aDeadline,
-                               bool aDidTimeout)
+                                    DOMHighResTimeStamp aDeadline,
+                                    bool aDidTimeout)
 {
   AssertIsOnMainThread();
   RefPtr<IdleRequest> request(aRequest);
@@ -1461,7 +1461,7 @@ nsGlobalWindowOuter::SetInitialPrincipalToSubject()
 
 PopupControlState
 nsGlobalWindowOuter::PushPopupControlState(PopupControlState aState,
-                                      bool aForce) const
+                                           bool aForce) const
 {
   return ::PushPopupControlState(aState, aForce);
 }
@@ -1622,8 +1622,8 @@ nsGlobalWindowOuter::ComputeIsSecureContext(nsIDocument* aDocument, SecureContex
 
 nsresult
 nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
-                               nsISupports* aState,
-                               bool aForceReuseInnerWindow)
+                                    nsISupports* aState,
+                                    bool aForceReuseInnerWindow)
 {
   NS_PRECONDITION(mDocumentPrincipal == nullptr,
                   "mDocumentPrincipal prematurely set!");
@@ -2217,7 +2217,7 @@ nsGlobalWindowOuter::DetachFromDocShell()
 
 void
 nsGlobalWindowOuter::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
-                                bool aOriginalOpener)
+                                     bool aOriginalOpener)
 {
   nsWeakPtr opener = do_GetWeakReference(aOpener);
   if (opener == mOpener) {
@@ -2841,9 +2841,9 @@ nsGlobalWindowOuter::GetTop()
 
 void
 nsGlobalWindowOuter::GetContentOuter(JSContext* aCx,
-                                JS::MutableHandle<JSObject*> aRetval,
-                                CallerType aCallerType,
-                                ErrorResult& aError)
+                                     JS::MutableHandle<JSObject*> aRetval,
+                                     CallerType aCallerType,
+                                     ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -3265,8 +3265,8 @@ nsGlobalWindowOuter::GetInnerWidth(int32_t* aInnerWidth)
 
 void
 nsGlobalWindowOuter::SetInnerWidthOuter(int32_t aInnerWidth,
-                                   CallerType aCallerType,
-                                   ErrorResult& aError)
+                                        CallerType aCallerType,
+                                        ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -3319,8 +3319,8 @@ nsGlobalWindowOuter::GetInnerHeight(int32_t* aInnerHeight)
 
 void
 nsGlobalWindowOuter::SetInnerHeightOuter(int32_t aInnerHeight,
-                                    CallerType aCallerType,
-                                    ErrorResult& aError)
+                                         CallerType aCallerType,
+                                         ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -3396,7 +3396,7 @@ nsGlobalWindowOuter::GetOuterHeightOuter(CallerType aCallerType, ErrorResult& aE
 
 void
 nsGlobalWindowOuter::SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth,
-                             CallerType aCallerType, ErrorResult& aError)
+                                  CallerType aCallerType, ErrorResult& aError)
 {
   MOZ_ASSERT(IsOuterWindow());
 
@@ -3429,8 +3429,8 @@ nsGlobalWindowOuter::SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth,
 
 void
 nsGlobalWindowOuter::SetOuterWidthOuter(int32_t aOuterWidth,
-                                   CallerType aCallerType,
-                                   ErrorResult& aError)
+                                        CallerType aCallerType,
+                                        ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -3439,8 +3439,8 @@ nsGlobalWindowOuter::SetOuterWidthOuter(int32_t aOuterWidth,
 
 void
 nsGlobalWindowOuter::SetOuterHeightOuter(int32_t aOuterHeight,
-                                    CallerType aCallerType,
-                                    ErrorResult& aError)
+                                         CallerType aCallerType,
+                                         ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -3608,7 +3608,7 @@ nsGlobalWindowOuter::GetMozPaintCountOuter()
 
 already_AddRefed<MediaQueryList>
 nsGlobalWindowOuter::MatchMediaOuter(const nsAString& aMediaQueryList,
-                                CallerType aCallerType)
+                                     CallerType aCallerType)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -3621,8 +3621,8 @@ nsGlobalWindowOuter::MatchMediaOuter(const nsAString& aMediaQueryList,
 
 void
 nsGlobalWindowOuter::SetScreenXOuter(int32_t aScreenX,
-                                CallerType aCallerType,
-                                ErrorResult& aError)
+                                     CallerType aCallerType,
+                                     ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -3657,8 +3657,8 @@ nsGlobalWindowOuter::GetScreenYOuter(CallerType aCallerType, ErrorResult& aError
 
 void
 nsGlobalWindowOuter::SetScreenYOuter(int32_t aScreenY,
-                                CallerType aCallerType,
-                                ErrorResult& aError)
+                                     CallerType aCallerType,
+                                     ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -3686,7 +3686,7 @@ nsGlobalWindowOuter::SetScreenYOuter(int32_t aScreenY,
 // CSS pixels, not device pixels.
 void
 nsGlobalWindowOuter::CheckSecurityWidthAndHeight(int32_t* aWidth, int32_t* aHeight,
-                                            CallerType aCallerType)
+                                                 CallerType aCallerType)
 {
   MOZ_ASSERT(IsOuterWindow());
 
@@ -3751,7 +3751,7 @@ nsGlobalWindowOuter::SetCSSViewportWidthAndHeight(nscoord aInnerWidth, nscoord a
 // CSS pixels, not device pixels.
 void
 nsGlobalWindowOuter::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop,
-                                        CallerType aCallerType)
+                                             CallerType aCallerType)
 {
   MOZ_ASSERT(IsOuterWindow());
 
@@ -3984,8 +3984,8 @@ GetCallerDocShellTreeItem()
 
 bool
 nsGlobalWindowOuter::WindowExists(const nsAString& aName,
-                             bool aForceNoOpener,
-                             bool aLookForCallerOnJSStack)
+                                  bool aForceNoOpener,
+                                  bool aLookForCallerOnJSStack)
 {
   NS_PRECONDITION(IsOuterWindow(), "Must be outer window");
   NS_PRECONDITION(mDocShell, "Must have docshell");
@@ -4330,7 +4330,7 @@ MakeWidgetFullscreen(nsGlobalWindowOuter* aWindow, FullscreenReason aReason,
 
 nsresult
 nsGlobalWindowOuter::SetFullscreenInternal(FullscreenReason aReason,
-                                      bool aFullScreen)
+                                           bool aFullScreen)
 {
   MOZ_ASSERT(IsOuterWindow());
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
@@ -4424,7 +4424,7 @@ nsGlobalWindowOuter::SetFullscreenInternal(FullscreenReason aReason,
 
 bool
 nsGlobalWindowOuter::SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen,
-                                    nsIWidget* aWidget, nsIScreen* aScreen)
+                                         nsIWidget* aWidget, nsIScreen* aScreen)
 {
   MOZ_ASSERT(IsOuterWindow());
   MOZ_ASSERT(this == GetTopInternal(), "Only topmost window should call this");
@@ -4594,7 +4594,7 @@ nsGlobalWindowOuter::EnsureReflowFlushAndPaint()
 // static
 void
 nsGlobalWindowOuter::MakeScriptDialogTitle(nsAString& aOutTitle,
-                                      nsIPrincipal* aSubjectPrincipal)
+                                           nsIPrincipal* aSubjectPrincipal)
 {
   MOZ_ASSERT(aSubjectPrincipal);
 
@@ -4710,9 +4710,9 @@ nsGlobalWindowOuter::CanMoveResizeWindows(CallerType aCallerType)
 
 bool
 nsGlobalWindowOuter::AlertOrConfirm(bool aAlert,
-                               const nsAString& aMessage,
-                               nsIPrincipal& aSubjectPrincipal,
-                               ErrorResult& aError)
+                                    const nsAString& aMessage,
+                                    nsIPrincipal& aSubjectPrincipal,
+                                    ErrorResult& aError)
 {
   // XXX This method is very similar to nsGlobalWindowOuter::Prompt, make
   // sure any modifications here don't need to happen over there!
@@ -4789,8 +4789,8 @@ nsGlobalWindowOuter::AlertOrConfirm(bool aAlert,
 
 void
 nsGlobalWindowOuter::AlertOuter(const nsAString& aMessage,
-                           nsIPrincipal& aSubjectPrincipal,
-                           ErrorResult& aError)
+                                nsIPrincipal& aSubjectPrincipal,
+                                ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
   AlertOrConfirm(/* aAlert = */ true, aMessage, aSubjectPrincipal, aError);
@@ -4798,8 +4798,8 @@ nsGlobalWindowOuter::AlertOuter(const nsAString& aMessage,
 
 bool
 nsGlobalWindowOuter::ConfirmOuter(const nsAString& aMessage,
-                             nsIPrincipal& aSubjectPrincipal,
-                             ErrorResult& aError)
+                                  nsIPrincipal& aSubjectPrincipal,
+                                  ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -4809,10 +4809,10 @@ nsGlobalWindowOuter::ConfirmOuter(const nsAString& aMessage,
 
 void
 nsGlobalWindowOuter::PromptOuter(const nsAString& aMessage,
-                            const nsAString& aInitial,
-                            nsAString& aReturn,
-                            nsIPrincipal& aSubjectPrincipal,
-                            ErrorResult& aError)
+                                 const nsAString& aInitial,
+                                 nsAString& aReturn,
+                                 nsIPrincipal& aSubjectPrincipal,
+                                 ErrorResult& aError)
 {
   // XXX This method is very similar to nsGlobalWindowOuter::AlertOrConfirm, make
   // sure any modifications here don't need to happen over there!
@@ -5224,7 +5224,7 @@ nsGlobalWindowOuter::PrintOuter(ErrorResult& aError)
 
 void
 nsGlobalWindowOuter::MoveToOuter(int32_t aXPos, int32_t aYPos,
-                            CallerType aCallerType, ErrorResult& aError)
+                                 CallerType aCallerType, ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
   /*
@@ -5283,7 +5283,7 @@ nsGlobalWindowOuter::MoveToOuter(int32_t aXPos, int32_t aYPos,
 
 void
 nsGlobalWindowOuter::MoveByOuter(int32_t aXDif, int32_t aYDif,
-                            CallerType aCallerType, ErrorResult& aError)
+                                 CallerType aCallerType, ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -5338,8 +5338,8 @@ nsGlobalWindowOuter::MoveBy(int32_t aXDif, int32_t aYDif)
 
 void
 nsGlobalWindowOuter::ResizeToOuter(int32_t aWidth, int32_t aHeight,
-                              CallerType aCallerType,
-                              ErrorResult& aError)
+                                   CallerType aCallerType,
+                                   ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -5383,7 +5383,7 @@ nsGlobalWindowOuter::ResizeToOuter(int32_t aWidth, int32_t aHeight,
 
 void
 nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
-                              CallerType aCallerType, ErrorResult& aError)
+                                   CallerType aCallerType, ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -5529,9 +5529,9 @@ bool IsPopupBlocked(nsIDocument* aDoc)
 
 void
 nsGlobalWindowOuter::FirePopupBlockedEvent(nsIDocument* aDoc,
-                                      nsIURI* aPopupURI,
-                                      const nsAString& aPopupWindowName,
-                                      const nsAString& aPopupWindowFeatures)
+                                           nsIURI* aPopupURI,
+                                           const nsAString& aPopupWindowName,
+                                           const nsAString& aPopupWindowFeatures)
 {
   MOZ_ASSERT(IsOuterWindow(), "All callers seem to assume we're an outer window?");
   MOZ_ASSERT(aDoc);
@@ -5638,8 +5638,8 @@ nsGlobalWindowOuter::RevisePopupAbuseLevel(PopupControlState aControl)
 /* If a window open is blocked, fire the appropriate DOM events. */
 void
 nsGlobalWindowOuter::FireAbuseEvents(const nsAString &aPopupURL,
-                                const nsAString &aPopupWindowName,
-                                const nsAString &aPopupWindowFeatures)
+                                     const nsAString &aPopupWindowName,
+                                     const nsAString &aPopupWindowFeatures)
 {
   MOZ_ASSERT(IsOuterWindow());
   // fetch the URI of the window requesting the opened window
@@ -5676,7 +5676,7 @@ nsGlobalWindowOuter::FireAbuseEvents(const nsAString &aPopupURL,
 
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowOuter::OpenOuter(const nsAString& aUrl, const nsAString& aName,
-                          const nsAString& aOptions, ErrorResult& aError)
+                               const nsAString& aOptions, ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
   nsCOMPtr<nsPIDOMWindowOuter> window;
@@ -5686,8 +5686,8 @@ nsGlobalWindowOuter::OpenOuter(const nsAString& aUrl, const nsAString& aName,
 
 nsresult
 nsGlobalWindowOuter::Open(const nsAString& aUrl, const nsAString& aName,
-                     const nsAString& aOptions, nsIDocShellLoadInfo* aLoadInfo,
-                     bool aForceNoOpener, nsPIDOMWindowOuter **_retval)
+                          const nsAString& aOptions, nsIDocShellLoadInfo* aLoadInfo,
+                          bool aForceNoOpener, nsPIDOMWindowOuter **_retval)
 {
   return OpenInternal(aUrl, aName, aOptions,
                       false,          // aDialog
@@ -5703,7 +5703,7 @@ nsGlobalWindowOuter::Open(const nsAString& aUrl, const nsAString& aName,
 
 nsresult
 nsGlobalWindowOuter::OpenJS(const nsAString& aUrl, const nsAString& aName,
-                       const nsAString& aOptions, nsPIDOMWindowOuter **_retval)
+                            const nsAString& aOptions, nsPIDOMWindowOuter **_retval)
 {
   MOZ_ASSERT(IsOuterWindow());
   return OpenInternal(aUrl, aName, aOptions,
@@ -5722,9 +5722,9 @@ nsGlobalWindowOuter::OpenJS(const nsAString& aUrl, const nsAString& aName,
 // [features] as a JS property named "arguments"
 nsresult
 nsGlobalWindowOuter::OpenDialog(const nsAString& aUrl, const nsAString& aName,
-                           const nsAString& aOptions,
-                           nsISupports* aExtraArgument,
-                           nsPIDOMWindowOuter** _retval)
+                                const nsAString& aOptions,
+                                nsISupports* aExtraArgument,
+                                nsPIDOMWindowOuter** _retval)
 {
   MOZ_ASSERT(IsOuterWindow());
   return OpenInternal(aUrl, aName, aOptions,
@@ -5742,9 +5742,9 @@ nsGlobalWindowOuter::OpenDialog(const nsAString& aUrl, const nsAString& aName,
 // Like Open, but passes aNavigate=false.
 /* virtual */ nsresult
 nsGlobalWindowOuter::OpenNoNavigate(const nsAString& aUrl,
-                               const nsAString& aName,
-                               const nsAString& aOptions,
-                               nsPIDOMWindowOuter **_retval)
+                                    const nsAString& aName,
+                                    const nsAString& aOptions,
+                                    nsPIDOMWindowOuter **_retval)
 {
   MOZ_ASSERT(IsOuterWindow());
   return OpenInternal(aUrl, aName, aOptions,
@@ -5762,9 +5762,9 @@ nsGlobalWindowOuter::OpenNoNavigate(const nsAString& aUrl,
 
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowOuter::OpenDialogOuter(JSContext* aCx, const nsAString& aUrl,
-                                const nsAString& aName, const nsAString& aOptions,
-                                const Sequence<JS::Value>& aExtraArgument,
-                                ErrorResult& aError)
+                                     const nsAString& aName, const nsAString& aOptions,
+                                     const Sequence<JS::Value>& aExtraArgument,
+                                     ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -5835,10 +5835,10 @@ nsGlobalWindowOuter::CallerInnerWindow()
 
 void
 nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                                    const nsAString& aTargetOrigin,
-                                    JS::Handle<JS::Value> aTransfer,
-                                    nsIPrincipal& aSubjectPrincipal,
-                                    ErrorResult& aError)
+                                         const nsAString& aTargetOrigin,
+                                         JS::Handle<JS::Value> aTransfer,
+                                         nsIPrincipal& aSubjectPrincipal,
+                                         ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -6407,7 +6407,7 @@ nsGlobalWindowOuter::GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey)
 
 void
 nsGlobalWindowOuter::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                                         JS::Handle<JSObject*> aHandler)
+                                              JS::Handle<JSObject*> aHandler)
 {
   if (!mCachedXBLPrototypeHandlers) {
     mCachedXBLPrototypeHandlers = MakeUnique<XBLPrototypeHandlerTable>();
@@ -6534,9 +6534,9 @@ nsGlobalWindowOuter::GetSelection()
 
 bool
 nsGlobalWindowOuter::FindOuter(const nsAString& aString, bool aCaseSensitive,
-                          bool aBackwards, bool aWrapAround, bool aWholeWord,
-                          bool aSearchInFrames, bool aShowDialog,
-                          ErrorResult& aError)
+                               bool aBackwards, bool aWrapAround, bool aWholeWord,
+                               bool aSearchInFrames, bool aShowDialog,
+                               ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -6596,8 +6596,8 @@ nsGlobalWindowOuter::GetOwnerGlobalForBindings()
 
 NS_IMETHODIMP
 nsGlobalWindowOuter::RemoveEventListener(const nsAString& aType,
-                                    nsIDOMEventListener* aListener,
-                                    bool aUseCapture)
+                                         nsIDOMEventListener* aListener,
+                                         bool aUseCapture)
 {
   if (RefPtr<EventListenerManager> elm = GetExistingListenerManager()) {
     elm->RemoveEventListener(aType, aListener, aUseCapture);
@@ -6615,9 +6615,9 @@ nsGlobalWindowOuter::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
 
 NS_IMETHODIMP
 nsGlobalWindowOuter::AddEventListener(const nsAString& aType,
-                                 nsIDOMEventListener *aListener,
-                                 bool aUseCapture, bool aWantsUntrusted,
-                                 uint8_t aOptionalArgc)
+                                      nsIDOMEventListener *aListener,
+                                      bool aUseCapture, bool aWantsUntrusted,
+                                      uint8_t aOptionalArgc)
 {
   NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "
@@ -6637,10 +6637,10 @@ nsGlobalWindowOuter::AddEventListener(const nsAString& aType,
 
 void
 nsGlobalWindowOuter::AddEventListener(const nsAString& aType,
-                                 EventListener* aListener,
-                                 const AddEventListenerOptionsOrBoolean& aOptions,
-                                 const Nullable<bool>& aWantsUntrusted,
-                                 ErrorResult& aRv)
+                                      EventListener* aListener,
+                                      const AddEventListenerOptionsOrBoolean& aOptions,
+                                      const Nullable<bool>& aWantsUntrusted,
+                                      ErrorResult& aRv)
 {
   if (mInnerWindow && !nsContentUtils::CanCallerAccess(mInnerWindow)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -6665,10 +6665,10 @@ nsGlobalWindowOuter::AddEventListener(const nsAString& aType,
 
 NS_IMETHODIMP
 nsGlobalWindowOuter::AddSystemEventListener(const nsAString& aType,
-                                       nsIDOMEventListener *aListener,
-                                       bool aUseCapture,
-                                       bool aWantsUntrusted,
-                                       uint8_t aOptionalArgc)
+                                            nsIDOMEventListener *aListener,
+                                            bool aUseCapture,
+                                            bool aWantsUntrusted,
+                                            uint8_t aOptionalArgc)
 {
   NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "
@@ -6924,8 +6924,8 @@ nsGlobalWindowOuter::SetChromeEventHandler(EventTarget* aChromeEventHandler)
 
 void
 nsGlobalWindowOuter::SetFocusedNode(nsIContent* aNode,
-                               uint32_t aFocusMethod,
-                               bool aNeedsFocus)
+                                    uint32_t aFocusMethod,
+                                    bool aNeedsFocus)
 {
   FORWARD_TO_INNER_VOID(SetFocusedNode, (aNode, aFocusMethod, aNeedsFocus));
 }
@@ -6944,7 +6944,7 @@ nsGlobalWindowOuter::ShouldShowFocusRing()
 
 void
 nsGlobalWindowOuter::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
-                                      UIStateChangeType aShowFocusRings)
+                                           UIStateChangeType aShowFocusRings)
 {
   MOZ_ASSERT(IsOuterWindow());
 
@@ -7019,15 +7019,15 @@ nsGlobalWindowOuter::DispatchSyncPopState()
 
 already_AddRefed<nsICSSDeclaration>
 nsGlobalWindowOuter::GetComputedStyle(Element& aElt, const nsAString& aPseudoElt,
-                                 ErrorResult& aError)
+                                      ErrorResult& aError)
 {
   MOZ_CRASH("Virtual inner window only function");
 }
 
 already_AddRefed<nsICSSDeclaration>
 nsGlobalWindowOuter::GetComputedStyleHelperOuter(Element& aElt,
-                                            const nsAString& aPseudoElt,
-                                            bool aDefaultStylesOnly)
+                                                 const nsAString& aPseudoElt,
+                                                 bool aDefaultStylesOnly)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -7223,14 +7223,14 @@ public:
 
 nsresult
 nsGlobalWindowOuter::OpenInternal(const nsAString& aUrl, const nsAString& aName,
-                             const nsAString& aOptions, bool aDialog,
-                             bool aContentModal, bool aCalledNoScript,
-                             bool aDoJSFixups, bool aNavigate,
-                             nsIArray *argv,
-                             nsISupports *aExtraArgument,
-                             nsIDocShellLoadInfo* aLoadInfo,
-                             bool aForceNoOpener,
-                             nsPIDOMWindowOuter **aReturn)
+                                  const nsAString& aOptions, bool aDialog,
+                                  bool aContentModal, bool aCalledNoScript,
+                                  bool aDoJSFixups, bool aNavigate,
+                                  nsIArray *argv,
+                                  nsISupports *aExtraArgument,
+                                  nsIDocShellLoadInfo* aLoadInfo,
+                                  bool aForceNoOpener,
+                                  nsPIDOMWindowOuter **aReturn)
 {
   MOZ_ASSERT(IsOuterWindow());
 
@@ -7820,7 +7820,7 @@ nsGlobalWindowOuter::GetMessageManager(nsIMessageBroadcaster** aManager)
 
 NS_IMETHODIMP
 nsGlobalWindowOuter::GetGroupMessageManager(const nsAString& aGroup,
-                                       nsIMessageBroadcaster** aManager)
+                                            nsIMessageBroadcaster** aManager)
 {
   MOZ_RELEASE_ASSERT(IsChromeWindow());
   FORWARD_TO_INNER(GetGroupMessageManager, (aGroup, aManager), NS_ERROR_UNEXPECTED);
@@ -8028,7 +8028,7 @@ nsGlobalWindowOuter::TabGroupOuter()
 
 nsresult
 nsGlobalWindowOuter::Dispatch(TaskCategory aCategory,
-                         already_AddRefed<nsIRunnable>&& aRunnable)
+                              already_AddRefed<nsIRunnable>&& aRunnable)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   if (GetDocGroup()) {
