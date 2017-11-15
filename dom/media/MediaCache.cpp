@@ -2006,8 +2006,8 @@ MediaCacheStream::NotifyDataReceived(uint32_t aLoadID,
                                      uint32_t aCount,
                                      const uint8_t* aData)
 {
+  MOZ_ASSERT(OwnerThread()->IsOnCurrentThread());
   MOZ_ASSERT(aLoadID > 0);
-  // This might happen off the main thread.
 
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   if (mClosed) {
