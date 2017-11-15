@@ -225,6 +225,9 @@ pref("dom.keyboardevent.dispatch_during_composition", false);
 // cause inputting printable character.
 pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", false);
 
+// Whether the WebMIDI API is enabled
+pref("dom.webmidi.enabled", false);
+
 // Whether to run add-on code in different compartments from browser code. This
 // causes a separate compartment for each (addon, global) combination, which may
 // significantly increase the number of compartments in the system.
