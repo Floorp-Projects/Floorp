@@ -226,7 +226,7 @@ option(env='STLPORT_CPPFLAGS',
 @imports(_from='os.path', _import='isdir')
 def stlport_cppflags(value, ndk, _):
     if value and len(value):
-        return value
+        return value.split()
     if not ndk:
         return
 
@@ -251,10 +251,10 @@ def stlport_cppflags(value, ndk, _):
     # Add android/support/include/ for prototyping long double math
     # functions, locale-specific C library functions, multibyte support,
     # etc.
-    return "-I%s -I%s -I%s" % (cxx_include,
-                               os.path.join(ndk, 'sources', 'android',
-                                            'support', 'include'),
-                               cxxabi_include)
+    return [
+        '-I%s' % cxx_include,
+        '-I%s' % os.path.join(ndk, 'sources', 'android', 'support', 'include'),
+        '-I%s' % cxxabi_include]
 
 
 add_old_configure_assignment('stlport_cppflags', stlport_cppflags)
@@ -275,7 +275,7 @@ def bindgen_cflags_defaults(stlport_cppflags, android_platform, toolchain,
             toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
 
     cflags_format = "%s -isystem %s -gcc-toolchain %s -I%s -I%s"
-    return cflags_format % (stlport_cppflags,
+    return cflags_format % (' '.join(stlport_cppflags),
                             os.path.join(android_platform, 'usr', 'include'),
                             toolchain,
                             os.path.join(gcc_include, 'include'),
