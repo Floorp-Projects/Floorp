@@ -342,14 +342,11 @@ WebRenderCommandBuilder::PushImage(nsDisplayItem* aItem,
 static bool
 PaintByLayer(nsDisplayItem* aItem,
              nsDisplayListBuilder* aDisplayListBuilder,
-             RefPtr<BasicLayerManager>& aManager,
+             const RefPtr<BasicLayerManager>& aManager,
              gfxContext* aContext,
+             const gfx::Size& aScale,
              const std::function<void()>& aPaintFunc)
 {
-  if (aManager == nullptr) {
-    aManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
-  }
-
   UniquePtr<LayerProperties> props;
   if (aManager->GetRoot()) {
     props = Move(LayerProperties::CloneFrom(aManager->GetRoot()));
@@ -361,7 +358,7 @@ PaintByLayer(nsDisplayItem* aItem,
   aManager->BeginTransactionWithTarget(aContext);
   bool isInvalidated = false;
 
-  ContainerLayerParameters param;
+  ContainerLayerParameters param(aScale.width, aScale.height);
   RefPtr<Layer> root = aItem->BuildLayer(aDisplayListBuilder, aManager, param);
 
   if (root) {
@@ -406,8 +403,7 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
                       const LayerRect& aImageRect,
                       const LayoutDevicePoint& aOffset,
                       nsDisplayListBuilder* aDisplayListBuilder,
-                      RefPtr<BasicLayerManager>& aManager,
-                      WebRenderLayerManager* aWrManager,
+                      const RefPtr<BasicLayerManager>& aManager,
                       const gfx::Size& aScale,
                       Maybe<gfx::Color>& aHighlight)
 {
@@ -418,16 +414,16 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT);
   MOZ_ASSERT(context);
 
-  context->SetMatrix(context->CurrentMatrix().PreScale(aScale.width, aScale.height).PreTranslate(-aOffset.x, -aOffset.y));
-
   switch (aItem->GetType()) {
   case DisplayItemType::TYPE_MASK:
+    context->SetMatrix(context->CurrentMatrix().PreScale(aScale.width, aScale.height).PreTranslate(-aOffset.x, -aOffset.y));
     static_cast<nsDisplayMask*>(aItem)->PaintMask(aDisplayListBuilder, context);
     isInvalidated = true;
     break;
   case DisplayItemType::TYPE_SVG_WRAPPER:
     {
-      isInvalidated = PaintByLayer(aItem, aDisplayListBuilder, aManager, context, [&]() {
+      context->SetMatrix(context->CurrentMatrix().PreTranslate(-aOffset.x, -aOffset.y));
+      isInvalidated = PaintByLayer(aItem, aDisplayListBuilder, aManager, context, aScale, [&]() {
         aManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aDisplayListBuilder);
       });
       break;
@@ -435,7 +431,8 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
 
   case DisplayItemType::TYPE_FILTER:
     {
-      isInvalidated = PaintByLayer(aItem, aDisplayListBuilder, aManager, context, [&]() {
+      context->SetMatrix(context->CurrentMatrix().PreTranslate(-aOffset.x, -aOffset.y));
+      isInvalidated = PaintByLayer(aItem, aDisplayListBuilder, aManager, context, aScale, [&]() {
         static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aDisplayListBuilder,
                                                            context, aManager);
       });
@@ -443,6 +440,7 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
     }
 
   default:
+    context->SetMatrix(context->CurrentMatrix().PreScale(aScale.width, aScale.height).PreTranslate(-aOffset.x, -aOffset.y));
     aItem->Paint(aDisplayListBuilder, context);
     isInvalidated = true;
     break;
@@ -573,8 +571,11 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       RefPtr<gfx::DrawTarget> dummyDt =
         gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, paintSize.ToUnknownSize());
+      if (!fallbackData->mBasicLayerManager) {
+        fallbackData->mBasicLayerManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
+      }
       bool isInvalidated = PaintItemByDrawTarget(aItem, dt, paintRect, offset, aDisplayListBuilder,
-                                                 fallbackData->mBasicLayerManager, mManager, scale, highlight);
+                                                 fallbackData->mBasicLayerManager, scale, highlight);
       recorder->FlushItem(IntRect());
       recorder->Finish();
 
@@ -593,8 +594,6 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
           return nullptr;
         }
       }
-
-
     } else {
       fallbackData->CreateImageClientIfNeeded();
       RefPtr<ImageClient> imageClient = fallbackData->GetImageClient();
@@ -608,9 +607,12 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
           if (!dt) {
             return nullptr;
           }
+          if (!fallbackData->mBasicLayerManager) {
+            fallbackData->mBasicLayerManager = new BasicLayerManager(mManager->GetWidget());
+          }
           isInvalidated = PaintItemByDrawTarget(aItem, dt, paintRect, offset,
                                                aDisplayListBuilder,
-                                               fallbackData->mBasicLayerManager, mManager, scale,
+                                               fallbackData->mBasicLayerManager, scale,
                                                highlight);
         }
 
