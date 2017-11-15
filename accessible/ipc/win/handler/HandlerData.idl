@@ -31,6 +31,7 @@ typedef struct _StaticIA2Data
 
 typedef struct _DynamicIA2Data
 {
+  // From IAccessible/IAccessible2
   VARIANT           mRole;
   long              mState;
   long              mChildCount;
@@ -48,6 +49,9 @@ typedef struct _DynamicIA2Data
   BSTR              mValue;
   BSTR              mAttributes;
   IA2Locale         mIA2Locale;
+  // From IAccessibleAction
+  long              mNActions;
+  // From IAccessible2
   long              mUniqueId;
 } DynamicIA2Data;
 
