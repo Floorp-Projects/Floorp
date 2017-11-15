@@ -1548,8 +1548,7 @@ private:
         MonitorAutoLock lock(mMonitor);
 
         nsCOMPtr<nsIRunnable> runnable = this;
-        nsresult rv = mTaskQueue->Dispatch(runnable.forget(),
-                                           AbstractThread::DontAssertDispatchSuccess);
+        nsresult rv = mTaskQueue->Dispatch(runnable.forget());
         NS_ENSURE_SUCCESS(rv, rv);
 
         lock.Wait();
@@ -1600,8 +1599,7 @@ private:
             }
 
             nsCOMPtr<nsIRunnable> runnable = this;
-            rv = mTaskQueue->Dispatch(runnable.forget(),
-                                      AbstractThread::DontAssertDispatchSuccess);
+            rv = mTaskQueue->Dispatch(runnable.forget());
             if (NS_WARN_IF(NS_FAILED(rv))) {
                 OperationCompleted(rv);
             }
