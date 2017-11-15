@@ -12,10 +12,7 @@ EXPORTS.mp4_demuxer += [
     'binding/include/mp4_demuxer/AnnexB.h',
     'binding/include/mp4_demuxer/Atom.h',
     'binding/include/mp4_demuxer/AtomType.h',
-    'binding/include/mp4_demuxer/BitReader.h',
-    'binding/include/mp4_demuxer/BufferReader.h',
     'binding/include/mp4_demuxer/BufferStream.h',
-    'binding/include/mp4_demuxer/ByteWriter.h',
     'binding/include/mp4_demuxer/DecoderData.h',
     'binding/include/mp4_demuxer/H264.h',
     'binding/include/mp4_demuxer/Index.h',
@@ -34,7 +31,6 @@ EXPORTS.demuxer += [
 UNIFIED_SOURCES += [
     'binding/Adts.cpp',
     'binding/AnnexB.cpp',
-    'binding/BitReader.cpp',
     'binding/Box.cpp',
     'binding/BufferStream.cpp',
     'binding/DecoderData.cpp',
