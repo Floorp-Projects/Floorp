@@ -59,7 +59,7 @@ if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
     DIRS += ['hls']
 
 if CONFIG['MOZ_FMP4']:
-    DIRS += ['fmp4']
+    DIRS += ['mp4']
 
 if CONFIG['MOZ_WEBRTC']:
     DIRS += ['bridge']
