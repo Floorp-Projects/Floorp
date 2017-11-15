@@ -334,6 +334,18 @@ impl ExternalImageHandler for WrExternalImageHandler {
 }
 
 #[repr(u32)]
+pub enum WrAnimationType {
+    Transform = 0,
+    Opacity = 1,
+}
+
+#[repr(C)]
+pub struct WrAnimationProperty {
+    effect_type: WrAnimationType,
+    id: u64,
+}
+
+#[repr(u32)]
 #[derive(Copy, Clone)]
 pub enum WrFilterOpType {
   Blur = 0,
@@ -1224,7 +1236,7 @@ pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               bounds: LayoutRect,
-                                              animation_id: u64,
+                                              animation: *const WrAnimationProperty,
                                               opacity: *const f32,
                                               transform: *const LayoutTransform,
                                               transform_style: TransformStyle,
