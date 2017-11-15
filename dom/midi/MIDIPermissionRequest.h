@@ -7,10 +7,12 @@
 #ifndef mozilla_dom_MIDIPermissionRequest_h
 #define mozilla_dom_MIDIPermissionRequest_h
 
-#include "nsIContentPermissionRequest.h"
+#include "mozilla/dom/Promise.h"
 
 namespace mozilla {
 namespace dom {
+
+struct MIDIOptions;
 
 /**
  * Handles permission dialog management when requesting MIDI permissions.

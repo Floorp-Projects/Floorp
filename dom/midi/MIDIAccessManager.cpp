@@ -7,6 +7,7 @@
 #include "mozilla/dom/MIDIAccessManager.h"
 #include "mozilla/dom/MIDIAccess.h"
 #include "mozilla/dom/MIDIManagerChild.h"
+#include "mozilla/dom/MIDIPermissionRequest.h"
 #include "mozilla/dom/Promise.h"
 #include "nsIGlobalObject.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -69,8 +70,11 @@ MIDIAccessManager::RequestMIDIAccess(nsPIDOMWindowInner* aWindow,
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  // TODO: Implement permissions checking in later patch.
-  p->MaybeReject(NS_ERROR_FAILURE);
+  nsCOMPtr<nsIRunnable> permRunnable = new MIDIPermissionRequest(aWindow, p, aOptions);
+  aRv = NS_DispatchToMainThread(permRunnable);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
   return p.forget();
 }
 

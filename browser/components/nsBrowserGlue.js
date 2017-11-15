@@ -2847,6 +2847,9 @@ const ContentPermissionIntegration = {
           return new PermissionUI.PersistentStoragePermissionPrompt(request);
         }
       }
+      case "midi": {
+        return new PermissionUI.MIDIPermissionPrompt(request);
+      }
     }
     return undefined;
   },
