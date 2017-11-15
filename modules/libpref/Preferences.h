@@ -237,6 +237,10 @@ public:
                              nsISupports* aValue,
                              PrefValueKind aKind = PrefValueKind::User);
 
+  static nsresult Lock(const char* aPrefName);
+  static nsresult Unlock(const char* aPrefName);
+  static bool IsLocked(const char* aPrefName);
+
   // Clears user set pref. Fails if run outside the parent process.
   static nsresult ClearUser(const char* aPrefName);
 
@@ -428,6 +432,8 @@ private:
     PrefValueKind aKind = PrefValueKind::User);
 
   static nsresult ClearUserInAnyProcess(const char* aPrefName);
+
+  static nsresult LockInAnyProcess(const char* aPrefName);
 
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const char* aPref,
