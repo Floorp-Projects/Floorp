@@ -28,7 +28,7 @@ vi{
         }
         ANG{
             "ANG",
-            "Guilder Tây Ấn Hà Lan",
+            "Guilder Antille Hà Lan",
         }
         AOA{
             "AOA",
@@ -257,6 +257,10 @@ vi{
         CLP{
             "CLP",
             "Peso Chile",
+        }
+        CNH{
+            "CNH",
+            "Nhân dân tệ (hải ngoại)",
         }
         CNY{
             "CN¥",
@@ -1238,6 +1242,7 @@ vi{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1280,7 +1285,7 @@ vi{
             other{"Dram Armenia"}
         }
         ANG{
-            other{"Guilder Tây Ấn Hà Lan"}
+            other{"Guilder Antille Hà Lan"}
         }
         AOA{
             other{"Kwanza Angola"}
@@ -1356,6 +1361,9 @@ vi{
         }
         CLP{
             other{"Peso Chile"}
+        }
+        CNH{
+            other{"Nhân dân tệ (hải ngoại)"}
         }
         CNY{
             other{"Nhân dân tệ"}
@@ -1748,5 +1756,5 @@ vi{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

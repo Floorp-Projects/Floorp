@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ja{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     zoneStrings{
         "meta:Acre"{
             ld{"アクレ夏時間"}
@@ -374,7 +374,7 @@ ja{
             ls{"クラスノヤルスク標準時"}
         }
         "meta:Kyrgystan"{
-            ls{"キルギスタン時間"}
+            ls{"キルギス時間"}
         }
         "meta:Lanka"{
             ls{"ランカ時間"}

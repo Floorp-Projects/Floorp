@@ -50,6 +50,8 @@ using mozilla::IsSame;
 using mozilla::Nothing;
 using mozilla::RangedPtr;
 
+extern mozilla::Atomic<bool> fuzzingSafe;
+
 bool
 wasm::HasCompilerSupport(JSContext* cx)
 {
@@ -80,116 +82,6 @@ wasm::HasSupport(JSContext* cx)
 
 // ============================================================================
 // Imports
-
-template<typename T>
-JSObject*
-wasm::CreateCustomNaNObject(JSContext* cx, T* addr)
-{
-    MOZ_ASSERT(IsNaN(*addr));
-
-    RootedObject obj(cx, JS_NewPlainObject(cx));
-    if (!obj)
-        return nullptr;
-
-    int32_t* i32 = (int32_t*)addr;
-    RootedValue intVal(cx, Int32Value(i32[0]));
-    if (!JS_DefineProperty(cx, obj, "nan_low", intVal, JSPROP_ENUMERATE))
-        return nullptr;
-
-    if (IsSame<double, T>::value) {
-        intVal = Int32Value(i32[1]);
-        if (!JS_DefineProperty(cx, obj, "nan_high", intVal, JSPROP_ENUMERATE))
-            return nullptr;
-    }
-
-    return obj;
-}
-
-template JSObject* wasm::CreateCustomNaNObject(JSContext* cx, float* addr);
-template JSObject* wasm::CreateCustomNaNObject(JSContext* cx, double* addr);
-
-bool
-wasm::ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret)
-{
-    RootedObject obj(cx, &v.toObject());
-    RootedValue val(cx);
-
-    int32_t i32;
-    if (!JS_GetProperty(cx, obj, "nan_low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-
-    *ret = i32;
-    return true;
-}
-
-bool
-wasm::ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, uint64_t* ret)
-{
-    RootedObject obj(cx, &v.toObject());
-    RootedValue val(cx);
-
-    int32_t i32;
-    if (!JS_GetProperty(cx, obj, "nan_high", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-    *ret = uint32_t(i32);
-    *ret <<= 32;
-
-    if (!JS_GetProperty(cx, obj, "nan_low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-    *ret |= uint32_t(i32);
-
-    return true;
-}
-
-JSObject*
-wasm::CreateI64Object(JSContext* cx, int64_t i64)
-{
-    RootedObject result(cx, JS_NewPlainObject(cx));
-    if (!result)
-        return nullptr;
-
-    RootedValue val(cx, Int32Value(uint32_t(i64)));
-    if (!JS_DefineProperty(cx, result, "low", val, JSPROP_ENUMERATE))
-        return nullptr;
-
-    val = Int32Value(uint32_t(i64 >> 32));
-    if (!JS_DefineProperty(cx, result, "high", val, JSPROP_ENUMERATE))
-        return nullptr;
-
-    return result;
-}
-
-bool
-wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
-{
-    if (!v.isObject()) {
-        JS_ReportErrorASCII(cx, "i64 JS value must be an object");
-        return false;
-    }
-
-    RootedObject obj(cx, &v.toObject());
-
-    int32_t* i32 = (int32_t*)i64;
-
-    RootedValue val(cx);
-    if (!JS_GetProperty(cx, obj, "low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32[0]))
-        return false;
-
-    if (!JS_GetProperty(cx, obj, "high", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32[1]))
-        return false;
-
-    return true;
-}
 
 static bool
 ThrowBadImportArg(JSContext* cx)
@@ -288,23 +180,10 @@ GetImports(JSContext* cx,
                 break;
               }
               case ValType::I64: {
-                MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in JS");
-                int64_t i64;
-                if (!ReadI64Object(cx, v, &i64))
-                    return false;
-                val = Val(uint64_t(i64));
-                break;
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
+                return false;
               }
               case ValType::F32: {
-                if (JitOptions.wasmTestMode && v.isObject()) {
-                    uint32_t bits;
-                    if (!ReadCustomFloat32NaNObject(cx, v, &bits))
-                        return false;
-                    float f;
-                    BitwiseCast(bits, &f);
-                    val = Val(f);
-                    break;
-                }
                 if (!v.isNumber())
                     return ThrowBadImportType(cx, import.field.get(), "Number");
                 double d;
@@ -314,15 +193,6 @@ GetImports(JSContext* cx,
                 break;
               }
               case ValType::F64: {
-                if (JitOptions.wasmTestMode && v.isObject()) {
-                    uint64_t bits;
-                    if (!ReadCustomDoubleNaNObject(cx, v, &bits))
-                        return false;
-                    double d;
-                    BitwiseCast(bits, &d);
-                    val = Val(d);
-                    break;
-                }
                 if (!v.isNumber())
                     return ThrowBadImportType(cx, import.field.get(), "Number");
                 double d;
@@ -677,7 +547,7 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
             return false;
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
-        if (JitOptions.wasmTestMode && import.kind == DefinitionKind::Function) {
+        if (fuzzingSafe && import.kind == DefinitionKind::Function) {
             JSString* sigStr = SigToString(cx, funcImports[numFuncImport++].sig());
             if (!sigStr)
                 return false;
@@ -735,7 +605,7 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
             return false;
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
-        if (JitOptions.wasmTestMode && exp.kind() == DefinitionKind::Function) {
+        if (fuzzingSafe && exp.kind() == DefinitionKind::Function) {
             JSString* sigStr = SigToString(cx, funcExports[numFuncExport++].sig());
             if (!sigStr)
                 return false;

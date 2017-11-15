@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ar_IQ{
-    Version{"2.1.31.33"}
+    Version{"2.1.36.32"}
     calendar{
         gregorian{
             monthNames{
@@ -16,7 +16,7 @@ ar_IQ{
                         "تموز",
                         "آب",
                         "أيلول",
-                        "تشرین الأول",
+                        "تشرين الأول",
                         "تشرين الثاني",
                         "كانون الأول",
                     }

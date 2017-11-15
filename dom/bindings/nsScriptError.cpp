@@ -319,7 +319,7 @@ ToStringHelper(const char* aSeverity, const nsString& aMessage,
     static const char format2[] =
         "[%s: \"%s\"]";
 
-    UniqueChars temp;
+    JS::UniqueChars temp;
     char* tempMessage = nullptr;
     char* tempSourceName = nullptr;
     char* tempSourceLine = nullptr;

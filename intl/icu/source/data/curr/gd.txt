@@ -1226,6 +1226,7 @@ gd{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1268,6 +1269,7 @@ gd{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"leu"}
         RUB{"₽"}
         RUR{"р."}
         RWF{"RF"}
@@ -3092,5 +3094,5 @@ gd{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.37.1"}
 }

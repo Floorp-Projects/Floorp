@@ -8,6 +8,8 @@
 
 #include "mozilla/dom/ClientOpPromise.h"
 #include "mozilla/dom/ClientThing.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "nsIPrincipal.h"
 
 namespace mozilla {
 namespace ipc {

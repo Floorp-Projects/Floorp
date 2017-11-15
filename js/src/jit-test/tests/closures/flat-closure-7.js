@@ -6,7 +6,7 @@ expected = '0 0 0 0 0 0 0 0 0,';
         var unused = 0;
         let zero = 0;
         for (var ee = 0; ee < 1; ++ee) {
-          o.push((function () zero)());
+          o.push((function () { return zero; })());
         }
     }
     appendToActual(o.join(" "));

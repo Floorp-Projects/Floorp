@@ -6,6 +6,7 @@ ig{
         " p r s {sh} t u ụ v w y z]"
     }
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         arab{
             patterns{
@@ -17,8 +18,11 @@ ig{
                 group{"٬"}
                 infinity{"∞"}
                 list{"؛"}
+                minusSign{"‏-"}
                 nan{"NaN"}
                 perMille{"؉"}
+                percentSign{"٪‏"}
+                plusSign{"‏+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -86,7 +90,7 @@ ig{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.1"}
     calendar{
         generic{
             DateTimePatterns{
@@ -204,7 +208,7 @@ ig{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    other{"'week' w 'of' y"}
+                    other{"'week' w 'of' Y"}
                 }
             }
             dayNames{

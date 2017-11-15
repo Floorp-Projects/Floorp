@@ -803,7 +803,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
   NS_ENSURE_TRUE(nameSpaceManager, NS_OK);
 
   JS::Rooted<JS::PropertyDescriptor> desc(cx);
-  nsresult rv = ResolvePrototype(sXPConnect, win->AssertInner(), cx, global,
+  nsresult rv = ResolvePrototype(sXPConnect, win, cx, global,
                                  mData->mNameUTF16, mData, nullptr,
                                  nameSpaceManager, proto, &desc);
   NS_ENSURE_SUCCESS(rv, rv);

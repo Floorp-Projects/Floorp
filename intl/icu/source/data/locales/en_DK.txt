@@ -12,7 +12,7 @@ en_DK{
             }
         }
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.6"}
     calendar{
         generic{
             availableFormats{

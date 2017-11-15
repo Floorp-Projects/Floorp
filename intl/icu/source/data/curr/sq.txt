@@ -122,6 +122,10 @@ sq{
             "CLP",
             "Pesoja kiliane",
         }
+        CNH{
+            "CNH",
+            "Juani kinez (tregu i jashtëm)",
+        }
         CNY{
             "CN¥",
             "Juani kinez",
@@ -224,7 +228,7 @@ sq{
         }
         HKD{
             "HK$",
-            "Dollari i Hong Kongut",
+            "Dollari i Hong-Kongut",
         }
         HNL{
             "HNL",
@@ -348,7 +352,7 @@ sq{
         }
         MDL{
             "MDL",
-            "Leu moldav",
+            "Leuja moldave",
         }
         MGA{
             "MGA",
@@ -436,7 +440,7 @@ sq{
         }
         PGK{
             "PGK",
-            "Kina e Papua-Guineas së Re",
+            "Kina e Guinesë së Re-Papua",
         }
         PHP{
             "PHP",
@@ -460,7 +464,7 @@ sq{
         }
         RON{
             "RON",
-            "Leu rumun",
+            "Leuja rumune",
         }
         RSD{
             "RSD",
@@ -760,6 +764,10 @@ sq{
             one{"peso kiliane"}
             other{"peso kiliane"}
         }
+        CNH{
+            one{"juan kinez (tregu i jashtëm)"}
+            other{"juanë kinez (tregu i jashtëm)"}
+        }
         CNY{
             one{"juan kinez"}
             other{"juanë kinez"}
@@ -861,8 +869,8 @@ sq{
             other{"dollarë guajanez"}
         }
         HKD{
-            one{"dollar Hong Kongu"}
-            other{"dollarë Hong Kongu"}
+            one{"dollar hong-kongu"}
+            other{"dollarë hong-kongu"}
         }
         HNL{
             one{"lempirë hondurase"}
@@ -985,8 +993,8 @@ sq{
             other{"dirhamë maroken"}
         }
         MDL{
-            one{"leu moldav"}
-            other{"leu moldav"}
+            one{"leu moldave"}
+            other{"leu moldave"}
         }
         MGA{
             one{"arier malagez"}
@@ -1073,8 +1081,8 @@ sq{
             other{"sola peruane"}
         }
         PGK{
-            one{"kinë e Papua-Guineas së Re"}
-            other{"kina të Papua-Guineas së Re"}
+            one{"kinë e Guinesë së Re-Papua"}
+            other{"kina të Guinesë së Re-Papua"}
         }
         PHP{
             one{"peso filipinase"}
@@ -1097,8 +1105,8 @@ sq{
             other{"rialë katari"}
         }
         RON{
-            one{"leu rumun"}
-            other{"leu rumun"}
+            one{"leu rumune"}
+            other{"leu rumune"}
         }
         RSD{
             one{"dinar serb"}
@@ -1266,7 +1274,7 @@ sq{
         }
         ZAR{
             one{"rand afrikano-jugor"}
-            other{"randë afrikano-jugorë"}
+            other{"randë afrikano-jugor"}
         }
         ZMW{
             one{"kuaçë zambiku"}
@@ -1277,5 +1285,5 @@ sq{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
 }

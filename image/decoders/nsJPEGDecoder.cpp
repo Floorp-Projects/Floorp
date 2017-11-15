@@ -24,6 +24,7 @@
 
 #include "gfxPlatform.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/gfx/Types.h"
 #include "mozilla/Telemetry.h"
 
 extern "C" {
@@ -37,6 +38,8 @@ extern "C" {
 #endif
 
 static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width);
+
+using mozilla::gfx::SurfaceFormat;
 
 namespace mozilla {
 namespace image {

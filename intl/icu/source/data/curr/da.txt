@@ -222,6 +222,10 @@ da{
             "CLP",
             "chilensk peso",
         }
+        CNH{
+            "CNH",
+            "kinesisk yuan (offshore)",
+        }
         CNY{
             "CN¥",
             "kinesisk yuan",
@@ -1286,11 +1290,11 @@ da{
         }
         BGN{
             one{"bulgarsk lev"}
-            other{"bulgarske lev"}
+            other{"bulgarske leva"}
         }
         BHD{
             one{"bahrainsk dinar"}
-            other{"bahrainske dinar"}
+            other{"bahrainske dinarer"}
         }
         BIF{
             one{"burundisk franc"}
@@ -1330,7 +1334,7 @@ da{
         }
         BRL{
             one{"brasiliansk real"}
-            other{"brasilianske real"}
+            other{"brasilianske realer"}
         }
         BRN{
             one{"Brasiliansk cruzado novo (1989–1990)"}
@@ -1396,6 +1400,10 @@ da{
             one{"chilensk peso"}
             other{"chilenske pesos"}
         }
+        CNH{
+            one{"kinesisk yuan (offshore)"}
+            other{"kinesisk yuan (offshore)"}
+        }
         CNY{
             one{"kinesisk yuan"}
             other{"kinesiske yuan"}
@@ -1418,7 +1426,7 @@ da{
         }
         CUC{
             one{"cubanske konvertible pesos"}
-            other{"Cubanske konvertible pesos"}
+            other{"cubanske konvertible pesos"}
         }
         CUP{
             one{"cubanske pesos"}
@@ -1426,7 +1434,7 @@ da{
         }
         CVE{
             one{"kapverdisk escudo"}
-            other{"kapverdiske escodus"}
+            other{"kapverdiske escudos"}
         }
         CYP{
             one{"Cypriotisk pund"}
@@ -1622,7 +1630,7 @@ da{
         }
         IRR{
             one{"iransk rial"}
-            other{"iranske rial"}
+            other{"iranske rialer"}
         }
         ISK{
             one{"islandsk krone"}
@@ -1878,7 +1886,7 @@ da{
         }
         PHP{
             one{"filippinsk peso"}
-            other{"filippinske peso"}
+            other{"filippinske pesos"}
         }
         PKR{
             one{"pakistansk rupee"}
@@ -1910,7 +1918,7 @@ da{
         }
         RON{
             one{"rumænsk leu"}
-            other{"rumænske leu"}
+            other{"rumænske lei"}
         }
         RSD{
             one{"serbisk dinar"}
@@ -2217,5 +2225,5 @@ da{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

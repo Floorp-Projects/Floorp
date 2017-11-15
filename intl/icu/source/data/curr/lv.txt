@@ -134,6 +134,10 @@ lv{
             "CLP",
             "Čīles peso",
         }
+        CNH{
+            "CNH",
+            "Ķīnas juaņa (ofšors)",
+        }
         CNY{
             "CN¥",
             "Ķīnas juaņs",
@@ -894,6 +898,7 @@ lv{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1082,6 +1087,11 @@ lv{
             one{"Čīles peso"}
             other{"Čīles peso"}
             zero{"Čīles peso"}
+        }
+        CNH{
+            one{"Ķīnas juaņa (ofšors)"}
+            other{"Ķīnas juaņas (ofšors)"}
+            zero{"Ķīnas juaņa (ofšors)"}
         }
         CNY{
             one{"Ķīnas juaņs"}
@@ -1784,5 +1794,5 @@ lv{
         other{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

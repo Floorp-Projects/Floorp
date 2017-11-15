@@ -122,6 +122,10 @@ eu{
             "CLP",
             "Txileko pesoa",
         }
+        CNH{
+            "CNH",
+            "yuan txinatar (itsasoz haraindikoa)",
+        }
         CNY{
             "CN¥",
             "Txinako yuana",
@@ -871,6 +875,10 @@ eu{
             one{"Txileko peso"}
             other{"Txileko peso"}
         }
+        CNH{
+            one{"yuan txinatar (itsasoz haraindikoa)"}
+            other{"yuan txinatar (itsasoz haraindikoa)"}
+        }
         CNY{
             one{"Txinako yuan"}
             other{"Txinako yuan"}
@@ -1388,5 +1396,5 @@ eu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

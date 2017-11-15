@@ -88,6 +88,10 @@ SUPPORTS_DRAFT_CXX14_VERSION = {
     '-std=gnu++14': DRAFT_CXX_14,
 }
 
+SUPPORTS_DRAFT_CXX14_VERSION = {
+    '-std=gnu++14': DRAFT_CXX_14,
+}
+
 GCC_4_7 = GCC('4.7.3')
 GXX_4_7 = GXX('4.7.3')
 GCC_4_9 = GCC('4.9.3')
@@ -433,7 +437,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         language='C',
     )
     GXX_4_9_RESULT = CompilerResult(
-        flags=['-std=gnu++11'],
+        flags=['-std=gnu++14'],
         version='4.9.3',
         type='gcc',
         compiler='/usr/bin/g++',
@@ -447,7 +451,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         language='C',
     )
     GXX_5_RESULT = CompilerResult(
-        flags=['-std=gnu++11'],
+        flags=['-std=gnu++14'],
         version='5.2.1',
         type='gcc',
         compiler='/usr/bin/g++-5',
@@ -469,7 +473,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         language='C',
     )
     CLANGXX_3_6_RESULT = CompilerResult(
-        flags=['-std=gnu++11'],
+        flags=['-std=gnu++14'],
         version='3.6.2',
         type='clang',
         compiler='/usr/bin/clang++',

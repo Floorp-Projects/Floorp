@@ -36,7 +36,6 @@
     _(FreeMallocedBuffers,      "frSlts")                                     \
     _(ClearStoreBuffer,         "clrSB")                                      \
     _(ClearNursery,             "clear")                                      \
-    _(Resize,                   "resize")                                     \
     _(Pretenure,                "pretnr")
 
 template<typename T> class SharedMem;
@@ -330,6 +329,8 @@ class Nursery
      * the nursery is permitted to tune itself to in maybeResizeNursery();
      */
     unsigned chunkCountLimit_;
+
+    mozilla::TimeDuration timeInChunkAlloc_;
 
     /* Promotion rate for the previous minor collection. */
     float previousPromotionRate_;

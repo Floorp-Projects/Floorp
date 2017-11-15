@@ -381,7 +381,7 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
     return true;
   }
 
-  RefPtr<DataSourceSurface> dSurf = SharedSurfacesParent::Acquire(aExtId);
+  RefPtr<DataSourceSurface> dSurf = SharedSurfacesParent::Get(aExtId);
   if (dSurf) {
     if (!gfxEnv::EnableWebRenderRecording()) {
       wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
@@ -902,10 +902,6 @@ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvRemoveExternalImageId(const ExternalImageId& aImageId)
 {
   if (mDestroyed) {
-    return IPC_OK();
-  }
-
-  if (SharedSurfacesParent::Release(aImageId)) {
     return IPC_OK();
   }
 

@@ -72,14 +72,13 @@ enum Status
 class WorkerHolder
 {
 public:
-  NS_DECL_OWNINGTHREAD
-
   enum Behavior {
     AllowIdleShutdownStart,
     PreventIdleShutdownStart,
   };
 
-  explicit WorkerHolder(Behavior aBehavior = PreventIdleShutdownStart);
+  explicit WorkerHolder(const char* aName,
+                        Behavior aBehavior = PreventIdleShutdownStart);
   virtual ~WorkerHolder();
 
   bool HoldWorker(WorkerPrivate* aWorkerPrivate, Status aFailStatus);
@@ -88,6 +87,12 @@ public:
   virtual bool Notify(Status aStatus) = 0;
 
   Behavior GetBehavior() const;
+
+  const char*
+  Name() const
+  {
+    return mName;
+  }
 
 protected:
   void ReleaseWorkerInternal();
@@ -98,6 +103,10 @@ private:
   void AssertIsOwningThread() const;
 
   const Behavior mBehavior;
+
+  // For debugging only.
+  void* mThread;
+  const char* mName;
 };
 
 END_WORKERS_NAMESPACE

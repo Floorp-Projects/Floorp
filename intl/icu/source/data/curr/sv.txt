@@ -262,6 +262,10 @@ sv{
             "CLP",
             "chilensk peso",
         }
+        CNH{
+            "CNH",
+            "CNH",
+        }
         CNX{
             "CNX",
             "kinesisk dollar",
@@ -1557,6 +1561,10 @@ sv{
             one{"chilensk peso"}
             other{"chilenska pesos"}
         }
+        CNH{
+            one{"CNH"}
+            other{"CNH"}
+        }
         CNX{
             one{"kinesisk dollar"}
             other{"kinesiska dollar"}
@@ -2494,5 +2502,5 @@ sv{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

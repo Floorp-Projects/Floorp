@@ -190,7 +190,7 @@ JitRuntime::generateEnterJIT(JSContext* cx)
         masm.asVIXL().Push(x19, xzr); // Push xzr for a fake return address.
         // No GC things to mark: push a bare token.
         masm.loadJSContext(r19);
-        masm.enterFakeExitFrame(r19, r19, ExitFrameToken::Bare);
+        masm.enterFakeExitFrame(r19, r19, ExitFrameType::Bare);
 
         masm.push(BaselineFrameReg, reg_code);
 

@@ -47,7 +47,8 @@ class IDBTransaction::WorkerHolder final
 
 public:
   WorkerHolder(WorkerPrivate* aWorkerPrivate, IDBTransaction* aTransaction)
-    : mWorkerPrivate(aWorkerPrivate)
+    : mozilla::dom::workers::WorkerHolder("IDBTransaction::WorkerHolder")
+    , mWorkerPrivate(aWorkerPrivate)
     , mTransaction(aTransaction)
   {
     MOZ_ASSERT(aWorkerPrivate);

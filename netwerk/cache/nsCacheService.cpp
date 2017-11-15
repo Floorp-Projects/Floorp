@@ -3065,9 +3065,9 @@ void
 nsCacheService::LogCacheStatistics()
 {
     uint32_t hitPercentage = 0;
-    if (!mCacheHits || !mCacheMisses) {
-        hitPercentage = (uint32_t)((((double)mCacheHits) /
-            ((double)(mCacheHits + mCacheMisses))) * 100);
+    double sum = (double)(mCacheHits + mCacheMisses);
+    if (sum != 0) {
+        hitPercentage = (uint32_t)((((double)mCacheHits) / sum) * 100);
     }
     CACHE_LOG_INFO(("\nCache Service Statistics:\n\n"));
     CACHE_LOG_INFO(("    TotalEntries   = %d\n", mTotalEntries));

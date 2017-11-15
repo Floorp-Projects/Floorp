@@ -118,6 +118,7 @@ js::Nursery::Nursery(JSRuntime* rt)
   , currentChunk_(0)
   , maxChunkCount_(0)
   , chunkCountLimit_(0)
+  , timeInChunkAlloc_(0)
   , previousPromotionRate_(0)
   , profileThreshold_(0)
   , enableProfiling_(false)
@@ -323,9 +324,13 @@ js::Nursery::allocate(size_t size)
         if (chunkno == maxChunkCount())
             return nullptr;
         if (MOZ_UNLIKELY(chunkno == allocatedChunkCount())) {
-            AutoLockGCBgAlloc lock(runtime());
-            if (!allocateNextChunk(chunkno, lock))
-                return nullptr;
+            mozilla::TimeStamp start = TimeStamp::Now();
+            {
+                AutoLockGCBgAlloc lock(runtime());
+                if (!allocateNextChunk(chunkno, lock))
+                    return nullptr;
+            }
+            timeInChunkAlloc_ += TimeStamp::Now() - start;
             MOZ_ASSERT(chunkno < allocatedChunkCount());
         }
         setCurrentChunk(chunkno);
@@ -548,6 +553,8 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
     json.property("cur_capacity", previousGC.nurseryCapacity);
     json.property("new_capacity", spaceToEnd());
     json.property("lazy_capacity", allocatedChunkCount() * ChunkSize);
+    if (!timeInChunkAlloc_.IsZero())
+        json.property("chunk_alloc_us", timeInChunkAlloc_, json.MICROSECONDS);
 
     json.beginObjectProperty("phase_times");
 
@@ -673,9 +680,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     }
 
     // Resize the nursery.
-    startProfile(ProfileKey::Resize);
     maybeResizeNursery(reason);
-    endProfile(ProfileKey::Resize);
 
     // If we are promoting the nursery, or exhausted the store buffer with
     // pointers to nursery things, which will force a collection well before
@@ -726,6 +731,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
 
     rt->gc.stats().endNurseryCollection(reason);
     TraceMinorGCEnd();
+    timeInChunkAlloc_ = mozilla::TimeDuration();
 
     if (enableProfiling_ && totalTime >= profileThreshold_) {
         rt->gc.stats().maybePrintProfileHeaders();

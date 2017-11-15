@@ -17,6 +17,7 @@
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Grid.h"
+#include "mozilla/gfx/Matrix.h"
 #include "nsDOMAttributeMap.h"
 #include "nsAtom.h"
 #include "nsIContentInlines.h"
@@ -160,6 +161,8 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+
+using mozilla::gfx::Matrix4x4;
 
 //
 // Verify sizes of elements on 64-bit platforms. This should catch most memory

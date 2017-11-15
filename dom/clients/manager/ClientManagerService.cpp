@@ -6,13 +6,16 @@
 
 #include "ClientManagerService.h"
 
+#include "ClientSourceParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 
 namespace mozilla {
 namespace dom {
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
 using mozilla::ipc::ContentPrincipalInfo;
+using mozilla::ipc::PrincipalInfo;
 
 namespace {
 

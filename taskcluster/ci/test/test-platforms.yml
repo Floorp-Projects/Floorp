@@ -210,6 +210,15 @@ windows7-32-devedition/opt:
         - windows-tests
 
 # win64
+windows10-64-ccov/debug:
+    build-platform: win64-ccov/debug
+    test-sets:
+        - awsy
+        - desktop-screenshot-capture
+        - windows-reftest-gpu
+        - windows-talos
+        - windows-tests
+
 windows10-64/debug:
     build-platform: win64/debug
     test-sets:

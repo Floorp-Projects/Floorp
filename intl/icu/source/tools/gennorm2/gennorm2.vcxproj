@@ -20,6 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C7891A65-80AB-4245-912E-5F1E17B0E6C4}</ProjectGuid>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
     <RootNamespace>gennorm2</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -248,11 +249,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="extradata.cpp" />
     <ClCompile Include="gennorm2.cpp" />
     <ClCompile Include="n2builder.cpp" />
+    <ClCompile Include="norms.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="extradata.h" />
     <ClInclude Include="n2builder.h" />
+    <ClInclude Include="norms.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\common\common.vcxproj">

@@ -2950,6 +2950,34 @@ PresShell::DestroyFramesForAndRestyle(Element* aElement)
   bool didReconstruct = fc->DestroyFramesFor(aElement);
   fc->EndUpdate();
 
+  if (aElement->IsStyledByServo()) {
+    if (aElement->GetFlattenedTreeParentNode()) {
+      // The element is still in the flat tree, but their children may not be
+      // anymore in a second.
+      //
+      // This is the case of a new shadow root or XBL binding about to be
+      // attached.
+      //
+      // Clear the style data from all the flattened tree descendants, but _not_
+      // from us, since otherwise we wouldn't see the reframe.
+      //
+      // FIXME(emilio): It'd be more ergonomic to just map the no data -> data
+      // case to a reframe from the style system.
+      StyleChildrenIterator iter(aElement);
+      for (nsIContent* child = iter.GetNextChild();
+           child;
+           child = iter.GetNextChild()) {
+        if (child->IsElement()) {
+          ServoRestyleManager::ClearServoDataFromSubtree(child->AsElement());
+        }
+      }
+    } else {
+      // This is the case of an element that was redistributed but is no longer
+      // bound to any insertion point. Just forget about all the data.
+      ServoRestyleManager::ClearServoDataFromSubtree(aElement);
+    }
+  }
+
   auto changeHint = didReconstruct
     ? nsChangeHint(0)
     : nsChangeHint_ReconstructFrame;

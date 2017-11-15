@@ -230,6 +230,10 @@ fr{
             "$CL",
             "peso chilien",
         }
+        CNH{
+            "CNH",
+            "yuan chinois (zone extracôtière)",
+        }
         CNY{
             "CNY",
             "yuan renminbi chinois",
@@ -464,7 +468,7 @@ fr{
         }
         IRR{
             "IRR",
-            "rial iranien",
+            "riyal iranien",
         }
         ISK{
             "ISK",
@@ -700,7 +704,7 @@ fr{
         }
         OMR{
             "OMR",
-            "rial omanais",
+            "riyal omanais",
         }
         PAB{
             "PAB",
@@ -748,7 +752,7 @@ fr{
         }
         QAR{
             "QAR",
-            "rial qatari",
+            "riyal qatari",
         }
         RHD{
             "$RH",
@@ -780,7 +784,7 @@ fr{
         }
         SAR{
             "SAR",
-            "rial saoudien",
+            "riyal saoudien",
         }
         SBD{
             "$SB",
@@ -1060,7 +1064,7 @@ fr{
         }
         YER{
             "YER",
-            "rial yéménite",
+            "riyal yéménite",
         }
         YUD{
             "YUD",
@@ -1440,6 +1444,10 @@ fr{
             one{"peso chilien"}
             other{"pesos chiliens"}
         }
+        CNH{
+            one{"yuan chinois (zone extracôtière)"}
+            other{"yuans chinois (zone extracôtière)"}
+        }
         CNY{
             one{"yuan renminbi chinois"}
             other{"yuans renminbi chinois"}
@@ -1673,8 +1681,8 @@ fr{
             other{"dinars irakiens"}
         }
         IRR{
-            one{"rial iranien"}
-            other{"rials iraniens"}
+            one{"riyal iranien"}
+            other{"riyals iraniens"}
         }
         ISK{
             one{"couronne islandaise"}
@@ -1909,8 +1917,8 @@ fr{
             other{"dollars néo-zélandais"}
         }
         OMR{
-            one{"rial omanais"}
-            other{"rials omanis"}
+            one{"riyal omanais"}
+            other{"riyals omanis"}
         }
         PAB{
             one{"balboa panaméen"}
@@ -1957,8 +1965,8 @@ fr{
             other{"guaranís paraguayens"}
         }
         QAR{
-            one{"rial qatari"}
-            other{"rials qataris"}
+            one{"riyal qatari"}
+            other{"riyals qataris"}
         }
         RHD{
             one{"dollar rhodésien"}
@@ -1989,8 +1997,8 @@ fr{
             other{"francs rwandais"}
         }
         SAR{
-            one{"rial saoudien"}
-            other{"rials saoudiens"}
+            one{"riyal saoudien"}
+            other{"riyals saoudiens"}
         }
         SBD{
             one{"dollar des îles Salomon"}
@@ -2265,8 +2273,8 @@ fr{
             other{"dinars nord-yéménites"}
         }
         YER{
-            one{"rial yéménite"}
-            other{"rials yéménites"}
+            one{"riyal yéménite"}
+            other{"riyals yéménites"}
         }
         YUD{
             one{"dinar fort yougoslave (1966–1989)"}
@@ -2321,5 +2329,5 @@ fr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
 }

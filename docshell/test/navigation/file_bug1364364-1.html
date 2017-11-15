@@ -10,7 +10,7 @@
     </div>
     <script type="application/javascript">
     function waitForLoad(frame) {
-      return new Promise(r => frame.onload = r);
+      return new Promise(r => frame.onload = () => setTimeout(r, 0));
     }
 
     async function loadFramesAndNavigate() {

@@ -16,6 +16,7 @@ vi{
         " ụ ư ừ ử ữ ứ ự v w x y ỳ ỷ ỹ ý ỵ z]"
     }
     ExemplarCharactersIndex{"[A Ă Â B C D Đ E Ê F G H I J K L M N O Ô Ơ P Q R S T U Ư V W X Y Z]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
         "″]"
@@ -30,7 +31,7 @@ vi{
             }
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
-                currencyFormat{"¤ #,##0.00"}
+                currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -181,7 +182,7 @@ vi{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -227,6 +228,50 @@ vi{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
+                E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                Ed{"d, E"}
+                Gy{"r U"}
+                GyMMM{"r(U) MMM"}
+                GyMMMEd{"r(U) MMM d, E"}
+                GyMMMd{"r MMM d"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"MM-dd, E"}
+                MMM{"LLL"}
+                MMMEd{"MMM d, E"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"MM-dd"}
+                UM{"U MM"}
+                UMMM{"U MMM"}
+                UMMMd{"U MMM d"}
+                UMd{"U MM-d"}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"r(U)"}
+                yMd{"r-MM-dd"}
+                yyyy{"r(U)"}
+                yyyyM{"r-MM"}
+                yyyyMEd{"r-MM-dd, E"}
+                yyyyMMM{"r(U) MMM"}
+                yyyyMMMEd{"r(U) MMM d, E"}
+                yyyyMMMM{"r(U) MMMM"}
+                yyyyMMMd{"r MMM d"}
+                yyyyMd{"r-MM-dd"}
+                yyyyQQQ{"r(U) QQQ"}
+                yyyyQQQQ{"r(U) QQQQ"}
             }
             cyclicNameSets{
                 dayParts{
@@ -623,8 +668,17 @@ vi{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E, dd"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM, y G"}
@@ -633,14 +687,14 @@ vi{
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
-                MEd{"E, dd-M"}
+                MEd{"E, dd/M"}
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, dd MMMM"}
                 MMMMd{"dd MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd-MM"}
-                Md{"dd-M"}
+                Md{"dd/M"}
                 d{"'Ngày' dd"}
                 h{"h'h' a"}
                 hm{"h:mm a"}
@@ -787,7 +841,12 @@ vi{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E, 'ngày' d"}
@@ -834,7 +893,7 @@ vi{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ 'năm' y"}
                 yw{
-                    other{"'tuần' w 'của' 'năm' y"}
+                    other{"'tuần' w 'của' 'năm' Y"}
                 }
             }
             dayNames{
@@ -1465,92 +1524,92 @@ vi{
         }
     }
     characterLabel{
-        activities{"Hoạt động"}
-        african_scripts{"Chữ viết Châu Phi"}
-        american_scripts{"Chữ viết Châu Mỹ"}
+        activities{"hoạt động"}
+        african_scripts{"chữ viết Châu Phi"}
+        american_scripts{"chữ viết Châu Mỹ"}
         animal{"động vật"}
-        animals_nature{"Động vật & Tự nhiên"}
-        arrows{"Mũi tên"}
-        body{"vật thể"}
-        box_drawing{"Vẽ hộp"}
-        braille{"Chữ nổi Braille"}
-        building{"xây dựng"}
-        bullets_stars{"Dấu đầu dòng/Sao"}
-        consonantal_jamo{"Jamo Phụ âm"}
-        currency_symbols{"Ký hiệu Tiền tệ"}
-        dash_connector{"Gạch ngang/Gạch nối"}
-        digits{"Chữ số"}
-        dingbats{"Dingbat"}
-        divination_symbols{"Ký hiệu Tiên tri"}
-        downwards_arrows{"Mũi tên Hướng xuống"}
-        downwards_upwards_arrows{"Mũi tên Lên xuống"}
-        east_asian_scripts{"Chữ viết Đông Á"}
-        emoji{"Biểu tượng"}
-        european_scripts{"Chữ viết Châu Âu"}
+        animals_nature{"động vật hoặc tự nhiên"}
+        arrows{"mũi tên"}
+        body{"cơ thể"}
+        box_drawing{"vẽ hộp"}
+        braille{"chữ nổi Braille"}
+        building{"tòa nhà"}
+        bullets_stars{"dấu đầu dòng hoặc sao"}
+        consonantal_jamo{"jamo phụ âm"}
+        currency_symbols{"ký hiệu tiền tệ"}
+        dash_connector{"dấu gạch ngang hoặc gạch nối"}
+        digits{"chữ số"}
+        dingbats{"dingbat"}
+        divination_symbols{"ký hiệu tiên tri"}
+        downwards_arrows{"mũi tên hướng xuống"}
+        downwards_upwards_arrows{"mũi tên lên xuống"}
+        east_asian_scripts{"chữ viết Đông Á"}
+        emoji{"biểu tượng"}
+        european_scripts{"chữ viết Châu Âu"}
         female{"nữ"}
         flag{"cờ"}
-        flags{"Cờ"}
-        food_drink{"Đồ ăn & Đồ uống"}
-        format{"Định dạng"}
-        format_whitespace{"Định dạng & Dấu cách"}
-        full_width_form_variant{"Biến thể Mẫu rộng Đầy đủ"}
-        geometric_shapes{"Hình dạng Hình học"}
-        half_width_form_variant{"Biến thể Mẫu rộng"}
-        han_characters{"Ký tự chữ Hán"}
-        han_radicals{"Gốc chữ Hán"}
-        hanja{"Hanja"}
-        hanzi_simplified{"Hán tự (Giản thể)"}
-        hanzi_traditional{"Hán tự (Phồn thể)"}
+        flags{"cờ"}
+        food_drink{"đồ ăn & đồ uống"}
+        format{"định dạng"}
+        format_whitespace{"định dạng & dấu cách"}
+        full_width_form_variant{"biến thể mẫu rộng đầy đủ"}
+        geometric_shapes{"hình dạng hình học"}
+        half_width_form_variant{"biến thể nửa chiều rộng"}
+        han_characters{"ký tự chữ Hán"}
+        han_radicals{"gốc chữ Hán"}
+        hanja{"hanja"}
+        hanzi_simplified{"Hán tự (giản thể)"}
+        hanzi_traditional{"Hán tự (phồn thể)"}
         heart{"trái tim"}
-        historic_scripts{"Chữ cái Lịch sử"}
-        ideographic_desc_characters{"Ký tự Mô tả Tượng hình"}
-        japanese_kana{"Kana Tiếng Nhật"}
-        kanbun{"Kanbun"}
-        kanji{"Kanji"}
+        historic_scripts{"chữ viết lịch sử"}
+        ideographic_desc_characters{"ký tự mô tả tượng hình"}
+        japanese_kana{"kana tiếng Nhật"}
+        kanbun{"kanbun"}
+        kanji{"kanji"}
         keycap{"mũ phím"}
-        leftwards_arrows{"Mũi tên Hướng sang trái"}
-        leftwards_rightwards_arrows{"Mũi tên Hai chiều"}
-        letterlike_symbols{"Ký hiệu Giống chữ cái"}
-        limited_use{"Sử dụng Hạn chế"}
+        leftwards_arrows{"mũi tên hướng sang trái"}
+        leftwards_rightwards_arrows{"mũi tên hai chiều"}
+        letterlike_symbols{"ký hiệu giống chữ cái"}
+        limited_use{"sử dụng hạn chế"}
         male{"nam"}
-        math_symbols{"Ký hiệu Toán học"}
-        middle_eastern_scripts{"Chữ viết Trung Đông"}
-        miscellaneous{"Khác"}
-        modern_scripts{"Chữ viết Hiện đại"}
-        modifier{"Bổ trợ"}
-        musical_symbols{"Ký hiệu Âm nhạc"}
+        math_symbols{"ký hiệu toán học"}
+        middle_eastern_scripts{"chữ viết Trung Đông"}
+        miscellaneous{"khác"}
+        modern_scripts{"chữ viết hiện đại"}
+        modifier{"ký tự bổ trợ"}
+        musical_symbols{"ký hiệu âm nhạc"}
         nature{"tự nhiên"}
-        nonspacing{"Không giãn cách"}
-        numbers{"Số"}
-        objects{"Đồ vật"}
-        other{"Khác"}
-        paired{"Được ghép đôi"}
+        nonspacing{"không giãn cách"}
+        numbers{"số"}
+        objects{"đồ vật"}
+        other{"khác"}
+        paired{"được ghép đôi"}
         person{"người"}
-        phonetic_alphabet{"Bảng chữ cái Phiên âm"}
-        pictographs{"Chữ tượng hình"}
+        phonetic_alphabet{"bảng chữ cái phiên âm"}
+        pictographs{"chữ tượng hình"}
         place{"địa điểm"}
         plant{"thực vật"}
-        punctuation{"Dấu câu"}
-        rightwards_arrows{"Mũi tên Hướng sang phải"}
-        sign_standard_symbols{"Ký hiệu/Ký hiệu chuẩn"}
-        small_form_variant{"Biến thể Mẫu nhỏ"}
+        punctuation{"dấu câu"}
+        rightwards_arrows{"mũi tên hướng sang phải"}
+        sign_standard_symbols{"ký hiệu hoặc biểu tượng"}
+        small_form_variant{"biến thể mẫu nhỏ"}
         smiley{"mặt cười"}
-        smileys_people{"Mặt cười & Người"}
-        south_asian_scripts{"Chữ viết Nam Á"}
-        southeast_asian_scripts{"Chữ viết Đông Nam Á"}
-        spacing{"Giãn cách"}
+        smileys_people{"mặt cười hoặc người"}
+        south_asian_scripts{"chữ viết Nam Á"}
+        southeast_asian_scripts{"chữ viết Đông Nam Á"}
+        spacing{"giãn cách"}
         sport{"thể thao"}
-        symbols{"Ký hiệu"}
-        technical_symbols{"Ký hiệu Kỹ thuật"}
-        tone_marks{"Dấu thanh"}
+        symbols{"ký hiệu"}
+        technical_symbols{"ký hiệu kỹ thuật"}
+        tone_marks{"dấu thanh"}
         travel{"du lịch"}
-        travel_places{"Du lịch & Địa điểm"}
-        upwards_arrows{"Mũi tên Hướng lên"}
-        variant_forms{"Mẫu Biến thể"}
-        vocalic_jamo{"Jamo Nguyên âm"}
+        travel_places{"du lịch hoặc địa điểm"}
+        upwards_arrows{"mũi tên hướng lên"}
+        variant_forms{"mẫu biến thể"}
+        vocalic_jamo{"jamo nguyên âm"}
         weather{"thời tiết"}
-        western_asian_scripts{"Chữ viết Tây Á"}
-        whitespace{"Dấu cách"}
+        western_asian_scripts{"chữ viết Tây Á"}
+        whitespace{"dấu cách"}
     }
     delimiters{
         alternateQuotationEnd{"’"}
@@ -1579,6 +1638,10 @@ vi{
         }
         day-narrow{
             dn{"Ngày"}
+            relative{
+                "-2"{"Hôm kia"}
+                "2"{"Ngày kia"}
+            }
             relativeTime{
                 future{
                     other{"sau {0} ngày nữa"}
@@ -1590,6 +1653,10 @@ vi{
         }
         day-short{
             dn{"Ngày"}
+            relative{
+                "-2"{"Hôm kia"}
+                "2"{"Ngày kia"}
+            }
             relativeTime{
                 future{
                     other{"sau {0} ngày nữa"}
@@ -1599,11 +1666,32 @@ vi{
                 }
             }
         }
+        dayOfYear{
+            dn{"ngày trong năm"}
+        }
+        dayOfYear-narrow{
+            dn{"ngày trong năm"}
+        }
+        dayOfYear-short{
+            dn{"ngày trong năm"}
+        }
         dayperiod{
             dn{"SA/CH"}
         }
+        dayperiod-narrow{
+            dn{"SA/CH"}
+        }
+        dayperiod-short{
+            dn{"SA/CH"}
+        }
         era{
-            dn{"Thời đại"}
+            dn{"thời đại"}
+        }
+        era-narrow{
+            dn{"thời đại"}
+        }
+        era-short{
+            dn{"thời đại"}
         }
         fri{
             relative{
@@ -2175,8 +2263,29 @@ vi{
                 }
             }
         }
+        weekOfMonth{
+            dn{"tuần trong tháng"}
+        }
+        weekOfMonth-narrow{
+            dn{"tuần trong tháng"}
+        }
+        weekOfMonth-short{
+            dn{"tuần trong tháng"}
+        }
         weekday{
-            dn{"Ngày trong tuần"}
+            dn{"ngày trong tuần"}
+        }
+        weekday-short{
+            dn{"ngày trong tuần"}
+        }
+        weekdayOfMonth{
+            dn{"ngày thường trong tháng"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"ngày thường trong tháng"}
+        }
+        weekdayOfMonth-short{
+            dn{"ngày thường trong tháng"}
         }
         year{
             dn{"Năm"}
@@ -2229,8 +2338,20 @@ vi{
         zone{
             dn{"Múi giờ"}
         }
+        zone-narrow{
+            dn{"Múi giờ"}
+        }
+        zone-short{
+            dn{"Múi giờ"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} hoặc {1}"}
+            end{"{0} hoặc {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} và {1}"}
             end{"{0} và {1}"}
@@ -2266,5 +2387,32 @@ vi{
         UK{"Hệ Anh"}
         US{"Hệ Mỹ"}
         metric{"Hệ mét"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

@@ -95,6 +95,10 @@ private:
 class IPCBlobInputStreamWorkerHolder final : public WorkerHolder
 {
 public:
+  IPCBlobInputStreamWorkerHolder()
+    : WorkerHolder("IPCBlobInputStreamWorkerHolder")
+  {}
+
   bool Notify(Status aStatus) override
   {
     // We must keep the worker alive until the migration is completed.

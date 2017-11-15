@@ -36,9 +36,6 @@ assertSameBitPattern(0, 8, 8);
 
 wasmEvalText('(module (import "" "float64" (param f64)) (func (call 0 (f64.const nan:0x123456))) (export "" 0))', checkBitPatterns).exports[""]();
 
-// Enable test mode.
-setJitCompilerOption('wasm.test-mode', 1);
-
 // SANITY CHECKS
 
 // There are two kinds of NaNs: signaling and quiet. Usually, the first bit of
@@ -48,83 +45,86 @@ setJitCompilerOption('wasm.test-mode', 1);
 
 // A float32 has 32 bits, 23 bits of them being reserved for the mantissa
 // (= NaN payload).
-var f32_nan_base = 0x7f800000;
-
-var f32_snan_code = '(f32.const nan:0x200000)';
-var f32_snan = wasmEvalText(`(module (func (result f32) ${f32_snan_code}) (export "" 0))`).exports[""]();
-assertEqNaN(f32_snan, { nan_low: f32_nan_base | 0x200000 });
-
 var f32_qnan_code = '(f32.const nan:0x600000)';
-var f32_qnan = wasmEvalText(`(module (func (result f32) ${f32_qnan_code}) (export "" 0))`).exports[""]();
-assertEqNaN(f32_qnan, { nan_low: f32_nan_base | 0x600000 });
+var f32_snan_code = '(f32.const nan:0x200000)';
+
+var f32_snan = '0x7fa00000';
+var f32_qnan = '0x7fe00000';
 
 // A float64 has 64 bits, 1 for the sign, 11 for the exponent, the rest for the
 // mantissa (payload).
 var f64_nan_base_high = 0x7ff00000;
 
 var f64_snan_code = '(f64.const nan:0x4000000000000)';
-var f64_snan = wasmEvalText(`(module (func (result f64) ${f64_snan_code}) (export "" 0))`).exports[""]();
-assertEqNaN(f64_snan, { nan_low: 0x0, nan_high: f64_nan_base_high | 0x40000 });
-
 var f64_qnan_code = '(f64.const nan:0xc000000000000)';
-var f64_qnan = wasmEvalText(`(module (func (result f64) ${f64_qnan_code}) (export "" 0))`).exports[""]();
-assertEqNaN(f64_qnan, { nan_low: 0x0, nan_high: f64_nan_base_high | 0xc0000 });
+
+var f64_snan = '0x7ff4000000000000';
+var f64_qnan = '0x7ffc000000000000';
+
+wasmAssert(`(module
+    (func $f32_snan (result f32) ${f32_snan_code})
+    (func $f32_qnan (result f32) ${f32_qnan_code})
+    (func $f64_snan (result f64) ${f64_snan_code})
+    (func $f64_qnan (result f64) ${f64_qnan_code})
+)`, [
+    { type: 'f32', func: '$f32_snan', expected: f32_snan },
+    { type: 'f32', func: '$f32_qnan', expected: f32_qnan },
+    { type: 'f64', func: '$f64_snan', expected: f64_snan },
+    { type: 'f64', func: '$f64_qnan', expected: f64_qnan },
+]);
 
 // Actual tests.
 
-// An example where a signaling nan gets transformed into a quiet nan:
-// snan + 0.0 = qnan
-var nan = wasmEvalText(`(module (func (result f32) (f32.add ${f32_snan_code} (f32.const 0))) (export "" 0))`).exports[""]();
-assertEqNaN(nan, f32_qnan);
+wasmAssert(`(module
+    (global (mut f32) (f32.const 0))
+    (global (mut f64) (f64.const 0))
 
-// Globals.
-var m = wasmEvalText(`(module
-    (import "globals" "x" (global f32))
-    (func (result f32) (get_global 0))
-    (export "global" global 0)
-    (export "test" 0))
-`, { globals: { x: f32_snan } }).exports;
+    ;; An example where a signaling nan gets transformed into a quiet nan:
+    ;; snan + 0.0 = qnan
+    (func $add (result f32) (f32.add ${f32_snan_code} (f32.const 0)))
 
-assertEqNaN(m.test(), f32_snan);
-assertEqNaN(m.global, f32_snan);
+    ;; Shouldn't affect NaNess.
+    (func $set_get_global_f32 (result f32)
+        ${f32_snan_code}
+        set_global 0
+        get_global 0
+    )
 
-var m = wasmEvalText(`(module
-    (import "globals" "x" (global f64))
-    (func (result f64) (get_global 0))
-    (export "global" global 0)
-    (export "test" 0))
-`, { globals: { x: f64_snan } }).exports;
-
-assertEqNaN(m.test(), f64_snan);
-assertEqNaN(m.global, f64_snan);
+    ;; Shouldn't affect NaNess.
+    (func $set_get_global_f64 (result f64)
+        ${f64_snan_code}
+        set_global 1
+        get_global 1
+    )
+)`, [
+    { type: 'f32', func: '$add', expected: f32_qnan },
+    { type: 'f32', func: '$set_get_global_f32', expected: f32_snan },
+    { type: 'f64', func: '$set_get_global_f64', expected: f64_snan },
+]);
 
 // NaN propagation behavior.
-var constantCache = new Map;
-function getConstant(code) {
-    if (typeof code === 'number')
-        return code;
-    if (constantCache.has(code)) {
-        return constantCache.get(code);
-    }
-    let type = code.indexOf('f32') >= 0 ? 'f32' : 'f64';
-    let val = wasmEvalText(`(module (func (result ${type}) ${code}) (export "" 0))`).exports[""]();
-    constantCache.set(code, val);
-    return val;
-}
+function test(type, opcode, lhs_code, rhs_code) {
+    let qnan_code = type === 'f32' ? f32_qnan : f64_qnan;
 
-function test(type, opcode, snan_code, rhs_code, qnan_val) {
-    var snan_val = getConstant(snan_code);
-    var rhs = getConstant(rhs_code);
+    let t = type;
+    let op = opcode;
 
     // Test all forms:
     // - (constant, constant),
     // - (constant, variable),
     // - (variable, constant),
     // - (variable, variable)
-    assertEqNaN(wasmEvalText(`(module (func (result ${type}) (${type}.${opcode} ${snan_code} ${rhs_code})) (export "" 0))`).exports[""](), qnan_val);
-    assertEqNaN(wasmEvalText(`(module (func (param ${type}) (result ${type}) (${type}.${opcode} (get_local 0) ${rhs_code})) (export "" 0))`).exports[""](snan_val), qnan_val);
-    assertEqNaN(wasmEvalText(`(module (func (param ${type}) (result ${type}) (${type}.${opcode} ${snan_code} (get_local 0))) (export "" 0))`).exports[""](rhs), qnan_val);
-    assertEqNaN(wasmEvalText(`(module (func (param ${type}) (param ${type}) (result ${type}) (${type}.${opcode} (get_local 0) (get_local 1))) (export "" 0))`).exports[""](snan_val, rhs), qnan_val);
+    wasmAssert(`(module
+        (func $1 (result ${t}) (${t}.${op} ${lhs_code} ${rhs_code}))
+        (func $2 (param ${t}) (result ${t}) (${t}.${op} (get_local 0) ${rhs_code}))
+        (func $3 (param ${t}) (result ${t}) (${t}.${op} ${lhs_code} (get_local 0)))
+        (func $4 (param ${t}) (param ${t}) (result ${t}) (${t}.${op} (get_local 0) (get_local 1)))
+    )`, [
+        { type, func: '$1', expected: qnan_code },
+        { type, func: '$2', args: [lhs_code], expected: qnan_code },
+        { type, func: '$3', args: [rhs_code], expected: qnan_code },
+        { type, func: '$4', args: [lhs_code, rhs_code], expected: qnan_code },
+    ]);
 }
 
 var f32_zero = '(f32.const 0)';
@@ -137,39 +137,37 @@ var f32_negone = '(f32.const -1)';
 var f64_negone = '(f64.const -1)';
 
 // x - 0.0 doesn't get folded into x:
-test('f32', 'sub', f32_snan_code, f32_zero, f32_qnan);
-test('f64', 'sub', f64_snan_code, f64_zero, f64_qnan);
+test('f32', 'sub', f32_snan_code, f32_zero);
+test('f64', 'sub', f64_snan_code, f64_zero);
 
 // x * 1.0 doesn't get folded into x:
-test('f32', 'mul', f32_snan_code, f32_one, f32_qnan);
-test('f32', 'mul', f32_one, f32_snan_code, f32_qnan);
+test('f32', 'mul', f32_snan_code, f32_one);
+test('f32', 'mul', f32_one, f32_snan_code);
 
-test('f64', 'mul', f64_snan_code, f64_one, f64_qnan);
-test('f64', 'mul', f64_one, f64_snan_code, f64_qnan);
+test('f64', 'mul', f64_snan_code, f64_one);
+test('f64', 'mul', f64_one, f64_snan_code);
 
 // x * -1.0 doesn't get folded into -x:
-test('f32', 'mul', f32_snan_code, f32_negone, f32_qnan);
-test('f32', 'mul', f32_negone, f32_snan_code, f32_qnan);
+test('f32', 'mul', f32_snan_code, f32_negone);
+test('f32', 'mul', f32_negone, f32_snan_code);
 
-test('f64', 'mul', f64_snan_code, f64_negone, f64_qnan);
-test('f64', 'mul', f64_negone, f64_snan_code, f64_qnan);
+test('f64', 'mul', f64_snan_code, f64_negone);
+test('f64', 'mul', f64_negone, f64_snan_code);
 
 // x / -1.0 doesn't get folded into -1 * x:
-test('f32', 'div', f32_snan_code, f32_negone, f32_qnan);
-test('f64', 'div', f64_snan_code, f64_negone, f64_qnan);
+test('f32', 'div', f32_snan_code, f32_negone);
+test('f64', 'div', f64_snan_code, f64_negone);
 
 // min doesn't get folded when one of the operands is a NaN
-test('f32', 'min', f32_snan_code, f32_zero, f32_qnan);
-test('f32', 'min', f32_zero, f32_snan_code, f32_qnan);
+test('f32', 'min', f32_snan_code, f32_zero);
+test('f32', 'min', f32_zero, f32_snan_code);
 
-test('f64', 'min', f64_snan_code, f64_zero, f64_qnan);
-test('f64', 'min', f64_zero, f64_snan_code, f64_qnan);
+test('f64', 'min', f64_snan_code, f64_zero);
+test('f64', 'min', f64_zero, f64_snan_code);
 
 // ditto for max
-test('f32', 'max', f32_snan_code, f32_zero, f32_qnan);
-test('f32', 'max', f32_zero, f32_snan_code, f32_qnan);
+test('f32', 'max', f32_snan_code, f32_zero);
+test('f32', 'max', f32_zero, f32_snan_code);
 
-test('f64', 'max', f64_snan_code, f64_zero, f64_qnan);
-test('f64', 'max', f64_zero, f64_snan_code, f64_qnan);
-
-setJitCompilerOption('wasm.test-mode', 0);
+test('f64', 'max', f64_snan_code, f64_zero);
+test('f64', 'max', f64_zero, f64_snan_code);

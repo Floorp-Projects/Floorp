@@ -144,6 +144,7 @@ private:
 class WebCryptoTask::InternalWorkerHolder final : public WorkerHolder
 {
   InternalWorkerHolder()
+    : WorkerHolder("WebCryptoTask::InternalWorkerHolder")
   { }
 
   ~InternalWorkerHolder()

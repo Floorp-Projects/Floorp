@@ -390,6 +390,9 @@ SOURCES += [
     'nsFrameMessageManager.cpp',
     # This file has a #error "Never include windows.h in this file!"
     'nsGlobalWindow.cpp',
+    # These files are included by nsGlobalWindow.cpp
+    # 'nsGlobalWindowInner.cpp',
+    # 'nsGlobalWindowOuter.cpp',
     # Conflicts with windows.h's definition of LoadImage.
     'nsImageLoadingContent.cpp',
     # Because of OS X headers.

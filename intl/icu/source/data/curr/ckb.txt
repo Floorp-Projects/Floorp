@@ -1,5 +1,11 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ckb{
-    Version{"2.1.31.33"}
+    Currencies{
+        IQD{
+            "د.ع.‏",
+            "IQD",
+        }
+    }
+    Version{"2.1.36.86"}
 }

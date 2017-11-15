@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hant{
     %%Parent{"root"}
-    Version{"2.1.33.94"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Acre"{
             ld{"艾克夏令時間"}
@@ -30,6 +30,9 @@ zh_Hant{
             ld{"阿拉斯加夏令時間"}
             lg{"阿拉斯加時間"}
             ls{"阿拉斯加標準時間"}
+            sd{"AKDT"}
+            sg{"AKT"}
+            ss{"AKST"}
         }
         "meta:Almaty"{
             ld{"阿拉木圖夏令時間"}
@@ -45,21 +48,33 @@ zh_Hant{
             ld{"中部夏令時間"}
             lg{"中部時間"}
             ls{"中部標準時間"}
+            sd{"CDT"}
+            sg{"CT"}
+            ss{"CST"}
         }
         "meta:America_Eastern"{
             ld{"東部夏令時間"}
             lg{"東部時間"}
             ls{"東部標準時間"}
+            sd{"EDT"}
+            sg{"ET"}
+            ss{"EST"}
         }
         "meta:America_Mountain"{
             ld{"山區夏令時間"}
             lg{"山區時間"}
             ls{"山區標準時間"}
+            sd{"MDT"}
+            sg{"MT"}
+            ss{"MST"}
         }
         "meta:America_Pacific"{
             ld{"太平洋夏令時間"}
             lg{"太平洋時間"}
             ls{"太平洋標準時間"}
+            sd{"PDT"}
+            sg{"PT"}
+            ss{"PST"}
         }
         "meta:Anadyr"{
             ld{"阿那底河夏令時間"}
@@ -105,6 +120,9 @@ zh_Hant{
             ld{"大西洋夏令時間"}
             lg{"大西洋時間"}
             ls{"大西洋標準時間"}
+            sd{"ADT"}
+            sg{"AT"}
+            ss{"AST"}
         }
         "meta:Australia_Central"{
             ld{"澳洲中部夏令時間"}
@@ -260,6 +278,7 @@ zh_Hant{
         }
         "meta:GMT"{
             ls{"格林威治標準時間"}
+            ss{"GMT"}
         }
         "meta:Galapagos"{
             ls{"加拉巴哥群島時間"}
@@ -298,6 +317,9 @@ zh_Hant{
             ld{"夏威夷-阿留申夏令時間"}
             lg{"夏威夷-阿留申時間"}
             ls{"夏威夷-阿留申標準時間"}
+            sd{"HADT"}
+            sg{"HAT"}
+            ss{"HAST"}
         }
         "meta:Hong_Kong"{
             ld{"香港夏令時間"}
@@ -516,9 +538,9 @@ zh_Hant{
             ls{"鳳凰群島時間"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"聖皮埃爾和密克隆群島夏令時間"}
-            lg{"聖皮埃爾和密克隆群島時間"}
-            ls{"聖皮埃爾和密克隆群島標準時間"}
+            ld{"聖皮埃與密克隆群島夏令時間"}
+            lg{"聖皮埃與密克隆群島時間"}
+            ls{"聖皮埃與密克隆群島標準時間"}
         }
         "meta:Pitcairn"{
             ls{"皮特肯時間"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.22"}
     zoneStrings{
         "meta:Acre"{
             ld{"Hora de verano de Acre"}
@@ -46,9 +46,9 @@ es{
             ls{"hora estándar oriental"}
         }
         "meta:America_Mountain"{
-            ld{"hora de verano de las Montañas"}
-            lg{"hora de las Montañas"}
-            ls{"hora estándar de las Montañas"}
+            ld{"hora de verano de las Montañas Rocosas"}
+            lg{"hora de las Montañas Rocosas"}
+            ls{"hora estándar de las Montañas Rocosas"}
         }
         "meta:America_Pacific"{
             ld{"hora de verano del Pacífico"}
@@ -56,9 +56,9 @@ es{
             ls{"hora estándar del Pacífico"}
         }
         "meta:Anadyr"{
-            ld{"Hora de verano de Anadyr"}
-            lg{"Hora de Anadyr"}
-            ls{"Hora estándar de Anadyr"}
+            ld{"hora de verano de Anadyr"}
+            lg{"hora de Anadyr"}
+            ls{"hora estándar de Anadyr"}
         }
         "meta:Apia"{
             ld{"horario de verano de Apia"}
@@ -232,7 +232,7 @@ es{
             ss{"EET"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"hora de Europa oriental lejana"}
+            ls{"hora del extremo oriental de Europa"}
         }
         "meta:Europe_Western"{
             ld{"hora de verano de Europa occidental"}
@@ -296,9 +296,9 @@ es{
             ls{"hora de Guyana"}
         }
         "meta:Hawaii_Aleutian"{
-            ld{"hora de verano de Hawái-Aleutiano"}
-            lg{"hora de Hawái-Aleutiano"}
-            ls{"hora estándar de Hawái-Aleutiano"}
+            ld{"hora de verano de Hawái-Aleutianas"}
+            lg{"hora de Hawái-Aleutianas"}
+            ls{"hora estándar de Hawái-Aleutianas"}
         }
         "meta:Hong_Kong"{
             ld{"hora de verano de Hong Kong"}
@@ -349,9 +349,9 @@ es{
             ls{"hora estándar de Japón"}
         }
         "meta:Kamchatka"{
-            ld{"Hora de verano de Kamchatka"}
-            lg{"Hora de Kamchatka"}
-            ls{"Hora de estándar de Kamchatka"}
+            ld{"hora de verano de Kamchatka"}
+            lg{"hora de Kamchatka"}
+            ls{"hora estándar de Kamchatka"}
         }
         "meta:Kazakhstan_Eastern"{
             ls{"hora de Kazajistán oriental"}
@@ -440,7 +440,7 @@ es{
             ls{"hora estándar de Moscú"}
         }
         "meta:Myanmar"{
-            ls{"hora de Birmania"}
+            ls{"hora de Myanmar (Birmania)"}
         }
         "meta:Nauru"{
             ls{"hora de Nauru"}
@@ -547,9 +547,9 @@ es{
             ls{"hora estándar de Sajalín"}
         }
         "meta:Samara"{
-            ld{"Hora de verano de Samara"}
-            lg{"Hora de Samara"}
-            ls{"Hora estándar de Samara"}
+            ld{"hora de verano de Samara"}
+            lg{"hora de Samara"}
+            ls{"hora estándar de Samara"}
         }
         "meta:Samoa"{
             ld{"hora de verano de Samoa"}
@@ -566,7 +566,7 @@ es{
             ls{"hora de las Islas Salomón"}
         }
         "meta:South_Georgia"{
-            ls{"hora de Georgia meridional"}
+            ls{"hora de Georgia del Sur"}
         }
         "meta:Suriname"{
             ls{"hora de Surinam"}
