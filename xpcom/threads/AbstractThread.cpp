@@ -47,19 +47,15 @@ public:
   }
 
   virtual nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                            DispatchFailureHandling aFailureHandling = AssertDispatchSuccess,
                             DispatchReason aReason = NormalDispatch) override
   {
     AbstractThread* currentThread;
     if (aReason != TailDispatch && (currentThread = GetCurrent()) && RequiresTailDispatch(currentThread)) {
-      currentThread->TailDispatcher().AddTask(this, Move(aRunnable), aFailureHandling);
-      return NS_OK;
+      return currentThread->TailDispatcher().AddTask(this, Move(aRunnable));
     }
 
     RefPtr<nsIRunnable> runner(new Runner(this, Move(aRunnable), false /* already drained by TaskGroupRunnable  */));
-    nsresult rv = mTarget->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
-    MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
-    return rv;
+    return mTarget->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
   }
 
   // Prevent a GCC warning about the other overload of Dispatch being hidden.
@@ -223,8 +219,7 @@ AbstractThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 NS_IMETHODIMP
 AbstractThread::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 {
-  Dispatch(Move(aEvent), DontAssertDispatchSuccess, NormalDispatch);
-  return NS_OK;
+  return Dispatch(Move(aEvent), NormalDispatch);
 }
 
 NS_IMETHODIMP
@@ -234,12 +229,14 @@ AbstractThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void
+nsresult
 AbstractThread::TailDispatchTasksFor(AbstractThread* aThread)
 {
   if (MightHaveTailTasks()) {
-    TailDispatcher().DispatchTasksFor(aThread);
+    return TailDispatcher().DispatchTasksFor(aThread);
   }
+
+  return NS_OK;
 }
 
 bool

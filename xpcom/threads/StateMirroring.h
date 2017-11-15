@@ -155,8 +155,7 @@ private:
         mMirrors[i]->OwnerThread()->Dispatch(
           NewRunnableMethod("AbstractMirror::NotifyDisconnected",
                             mMirrors[i],
-                            &AbstractMirror<T>::NotifyDisconnected),
-          AbstractThread::DontAssertDispatchSuccess);
+                            &AbstractMirror<T>::NotifyDisconnected));
       }
       mMirrors.Clear();
     }
@@ -338,7 +337,7 @@ private:
           aCanonical,
           &AbstractCanonical<T>::AddMirror,
           this);
-      aCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
+      aCanonical->OwnerThread()->Dispatch(r.forget());
       mCanonical = aCanonical;
     }
   public:
@@ -357,7 +356,7 @@ private:
           mCanonical,
           &AbstractCanonical<T>::RemoveMirror,
           this);
-      mCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
+      mCanonical->OwnerThread()->Dispatch(r.forget());
       mCanonical = nullptr;
     }
 
