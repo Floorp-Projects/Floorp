@@ -353,6 +353,17 @@ HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data)
     return;
   }
 
+  RefPtr<IAccessibleAction> action;
+  // It is not an error if this fails.
+  hr = mTargetUnk.get()->QueryInterface(IID_IAccessibleAction,
+    getter_AddRefs(action));
+  if (SUCCEEDED(hr)) {
+    hr = action->nActions(&aOutIA2Data->mNActions);
+    if (FAILED(hr)) {
+      return;
+    }
+  }
+
   // NB: get_uniqueID should be the final property retrieved in this method,
   // as its presence is used to determine whether the rest of this data
   // retrieval was successful.
