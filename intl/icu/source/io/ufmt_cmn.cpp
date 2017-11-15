@@ -187,7 +187,7 @@ ufmt_utop(const UChar     *buffer,
     }
 
     /* iterate through buffer, stop when you hit the end */
-    while(ufmt_isdigit(buffer[count], 16) && count < *len) {
+    while(count < *len && ufmt_isdigit(buffer[count], 16)) {
         /* increment the count consumed */
         ++count;
     }

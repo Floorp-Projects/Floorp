@@ -57,7 +57,6 @@ check_and_add_gcc_warning('-Wclass-varargs')
 check_and_add_gcc_warning('-Wloop-analysis')
 
 # catches C++ version forward-compat issues
-check_and_add_gcc_warning('-Wc++11-compat-pedantic', cxx_compiler)
 check_and_add_gcc_warning('-Wc++14-compat', cxx_compiler)
 check_and_add_gcc_warning('-Wc++14-compat-pedantic', cxx_compiler)
 check_and_add_gcc_warning('-Wc++1z-compat', cxx_compiler)

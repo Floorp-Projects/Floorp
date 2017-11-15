@@ -2255,7 +2255,8 @@ class WebSocketWorkerHolder final : public WorkerHolder
 {
 public:
   explicit WebSocketWorkerHolder(WebSocketImpl* aWebSocketImpl)
-    : mWebSocketImpl(aWebSocketImpl)
+    : WorkerHolder("WebSocketWorkerHolder")
+    , mWebSocketImpl(aWebSocketImpl)
   {
   }
 

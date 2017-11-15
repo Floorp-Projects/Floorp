@@ -45,5 +45,3 @@ let assert_false = (x, errMsg) => { assertEq(x, false); }
 function assert_unreached(description) {
     throw new Error(`unreachable:\n${description}`);
 }
-
-setJitCompilerOption('wasm.test-mode', 1);

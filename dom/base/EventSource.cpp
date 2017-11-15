@@ -19,6 +19,7 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsAutoPtr.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsNetUtil.h"
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
@@ -1783,7 +1784,8 @@ class EventSourceWorkerHolder final : public WorkerHolder
 {
 public:
   explicit EventSourceWorkerHolder(EventSourceImpl* aEventSourceImpl)
-    : mEventSourceImpl(aEventSourceImpl)
+    : WorkerHolder("EventSourceWorkerHolder")
+    , mEventSourceImpl(aEventSourceImpl)
   {
   }
 

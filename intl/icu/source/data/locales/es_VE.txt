@@ -13,7 +13,7 @@ es_VE{
             }
         }
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.6"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -98,20 +98,6 @@ es_VE{
                         "oct.",
                         "nov.",
                         "dic.",
-                    }
-                    narrow{
-                        "E",
-                        "F",
-                        "M",
-                        "A",
-                        "M",
-                        "J",
-                        "J",
-                        "A",
-                        "S",
-                        "O",
-                        "N",
-                        "D",
                     }
                 }
                 stand-alone{

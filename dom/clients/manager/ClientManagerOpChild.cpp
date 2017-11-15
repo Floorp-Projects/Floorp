@@ -6,6 +6,8 @@
 
 #include "ClientManagerOpChild.h"
 
+#include "mozilla/ipc/ProtocolUtils.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -18,7 +20,7 @@ ClientManagerOpChild::ActorDestroy(ActorDestroyReason aReason)
   }
 }
 
-IPCResult
+mozilla::ipc::IPCResult
 ClientManagerOpChild::Recv__delete__(const ClientOpResult& aResult)
 {
   if (aResult.type() == ClientOpResult::Tnsresult &&

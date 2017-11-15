@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 am{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"የአፍጋኒስታን ሰዓት"}
@@ -106,9 +106,9 @@ am{
             ls{"የአውስትራሊያ ምስራቃዊ መደበኛ ሰዓት አቆጣጠር"}
         }
         "meta:Azerbaijan"{
-            ld{"የአዘርባይጃን ክረምት ሰዓት"}
-            lg{"የአዘርባይጃን ሰዓት"}
-            ls{"የአዘርባይጃን መደበኛ ሰዓት"}
+            ld{"የአዘርባጃን ክረምት ሰዓት"}
+            lg{"የአዘርባጃን ሰዓት"}
+            ls{"የአዘርባጃን መደበኛ ሰዓት"}
         }
         "meta:Azores"{
             ld{"የአዞረስ ክረምት ሰዓት"}
@@ -158,7 +158,7 @@ am{
             ls{"የቻይና መደበኛ ሰዓት"}
         }
         "meta:Choibalsan"{
-            ld{"የቾይባልሳን የበጋ የሰአት አቆጣጠር"}
+            ld{"የቾይባልሳን የበጋ የሰዓት አቆጣጠር"}
             lg{"የቾይባልሳ ሰዓት አቆጣጠር"}
             ls{"የቾይባልሳን መደበኛ የሰዓት አቆጣጠር"}
         }

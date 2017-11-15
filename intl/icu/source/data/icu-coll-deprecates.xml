@@ -27,6 +27,9 @@
 	<alias from="sr_BA" to="sr_Cyrl_BA" />
 	<alias from="sr_ME" to="sr_Cyrl_ME" />
 	<alias from="sr_RS" to="sr_Cyrl_RS" />
+	<alias from="yue" to="zh_Hant" />
+	<alias from="yue_CN" to="zh_Hans" />
+	<alias from="yue_Hans" to="zh_Hans" />
 	<alias from="zh_CN" to="zh_Hans_CN" />
 	<alias from="zh_SG" to="zh_Hans_SG" />
 	<alias from="zh_HK" to="zh_Hant_HK" />

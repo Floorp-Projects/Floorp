@@ -242,6 +242,8 @@ public:
 
   uint32_t ClampedHardwareConcurrency() const;
 
+  void CrashIfHanging();
+
 private:
   RuntimeService();
   ~RuntimeService();

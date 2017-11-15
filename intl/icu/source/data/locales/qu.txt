@@ -7,6 +7,7 @@ qu{
     }
     ExemplarCharacters{"[a {ch} {chʼ} h i k {kʼ} l {ll} m n ñ p {pʼ} q {qʼ} s t {tʼ} u w y]"}
     ExemplarCharactersIndex{"[A {Ch} H I K L {Ll} M N Ñ P Q S T U W Y]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         latn{
             miscPatterns{
@@ -19,6 +20,124 @@ qu{
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
                 scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        other{"0K"}
+                    }
+                    10000{
+                        other{"00K"}
+                    }
+                    100000{
+                        other{"000K"}
+                    }
+                    1000000{
+                        other{"0M"}
+                    }
+                    10000000{
+                        other{"00M"}
+                    }
+                    100000000{
+                        other{"000M"}
+                    }
+                    1000000000{
+                        other{"0G"}
+                    }
+                    10000000000{
+                        other{"00G"}
+                    }
+                    100000000000{
+                        other{"000G"}
+                    }
+                    1000000000000{
+                        other{"0T"}
+                    }
+                    10000000000000{
+                        other{"00T"}
+                    }
+                    100000000000000{
+                        other{"000T"}
+                    }
+                }
+            }
+            patternsShort{
+                currencyFormat{
+                    1000{
+                        other{"¤ 0K"}
+                    }
+                    10000{
+                        other{"¤ 00K"}
+                    }
+                    100000{
+                        other{"¤ 000K"}
+                    }
+                    1000000{
+                        other{"¤ 0M"}
+                    }
+                    10000000{
+                        other{"¤ 00M"}
+                    }
+                    100000000{
+                        other{"¤ 000M"}
+                    }
+                    1000000000{
+                        other{"¤ 0G"}
+                    }
+                    10000000000{
+                        other{"¤ 00G"}
+                    }
+                    100000000000{
+                        other{"¤ 000G"}
+                    }
+                    1000000000000{
+                        other{"¤ 0T"}
+                    }
+                    10000000000000{
+                        other{"¤ 00T"}
+                    }
+                    100000000000000{
+                        other{"¤ 000T"}
+                    }
+                }
+                decimalFormat{
+                    1000{
+                        other{"0K"}
+                    }
+                    10000{
+                        other{"00K"}
+                    }
+                    100000{
+                        other{"000K"}
+                    }
+                    1000000{
+                        other{"0M"}
+                    }
+                    10000000{
+                        other{"00M"}
+                    }
+                    100000000{
+                        other{"000M"}
+                    }
+                    1000000000{
+                        other{"0G"}
+                    }
+                    10000000000{
+                        other{"00G"}
+                    }
+                    100000000000{
+                        other{"000G"}
+                    }
+                    1000000000000{
+                        other{"0T"}
+                    }
+                    10000000000000{
+                        other{"00T"}
+                    }
+                    100000000000000{
+                        other{"000T"}
+                    }
+                }
             }
             symbols{
                 decimal{"."}
@@ -34,7 +153,7 @@ qu{
             }
         }
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.5"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -68,16 +187,21 @@ qu{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d, E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
                 Gy{"G y"}
-                GyMMM{"G y MMM"}
-                GyMMMEd{"G y MMM d, E"}
-                GyMMMd{"G y MMM d"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d MMM, y G"}
+                GyMMMd{"d MMM, y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -86,12 +210,12 @@ qu{
                 M{"L"}
                 MEd{"MM-dd, E"}
                 MMM{"LLL"}
-                MMMEd{"MMM d, E"}
+                MMMEd{"E, d MMM"}
                 MMMMW{
-                    other{"W 'semana' MMM 'killapa'"}
+                    other{"W 'semana' MMMM 'killapa'"}
                 }
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
                 Md{"MM-dd"}
                 d{"d"}
                 h{"h a"}
@@ -103,15 +227,15 @@ qu{
                 y{"y"}
                 yM{"y-MM"}
                 yMEd{"E, dd-MM-y"}
-                yMMM{"y MMM"}
+                yMMM{"MMM y"}
                 yMMMEd{"E, d MMM, y"}
-                yMMMM{"y MMMM"}
-                yMMMd{"y MMM d"}
+                yMMMM{"MMMM y"}
+                yMMMd{"d MMM y"}
                 yMd{"dd-MM-y"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    other{"w 'semana' y 'watapa'"}
+                    other{"w 'semana' Y 'watapa'"}
                 }
             }
             dayNames{
@@ -230,21 +354,116 @@ qu{
                     "CE",
                 }
             }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"MM–MM"}
+                }
+                MEd{
+                    M{"E, d/M – E, d/M"}
+                    d{"E, d/M – E, d/M"}
+                }
+                MMM{
+                    M{"LLL–LLL"}
+                }
+                MMMEd{
+                    M{"E, d MMM – E, d MMM"}
+                    d{"E, d MMM – E, d MMM"}
+                }
+                MMMd{
+                    M{"d MMM – d MMM"}
+                    d{"d – d MMM"}
+                }
+                Md{
+                    M{"d/M – d/M"}
+                    d{"d/M – d/M"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y"}
+                }
+                yM{
+                    M{"M/y – M/y"}
+                    y{"M/y – M/y"}
+                }
+                yMEd{
+                    M{"E, d/M/y – E, d/M/y"}
+                    d{"E, d/M/y – E, d/M/y"}
+                    y{"E, d/M/y – E, d/M/y"}
+                }
+                yMMM{
+                    M{"MMM – MMM y"}
+                    y{"MMM y – MMM y"}
+                }
+                yMMMEd{
+                    M{"E, d MMM – E, d MMM, y"}
+                    d{"E, d MMM – E, d MMM, y"}
+                    y{"E, d MMM, y – E, d MMM, y"}
+                }
+                yMMMM{
+                    M{"MMMM – MMMM y"}
+                    y{"MMMM y – MMMM y"}
+                }
+                yMMMd{
+                    M{"d MMM – d MMM, y"}
+                    d{"d – d MMM, y"}
+                    y{"d MMM, y – d MMM, y"}
+                }
+                yMd{
+                    M{"d/M/y – d/M/y"}
+                    d{"d/M/y – d/M/y"}
+                    y{"d/M/y – d/M/y"}
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
-                        "Qul",
-                        "Hat",
-                        "Pau",
-                        "Ayr",
-                        "Aym",
-                        "Int",
-                        "Ant",
-                        "Qha",
-                        "Uma",
-                        "Kan",
-                        "Aya",
-                        "Kap",
+                        "Ene",
+                        "Feb",
+                        "Mar",
+                        "Abr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Ago",
+                        "Set",
+                        "Oct",
+                        "Nov",
+                        "Dic",
                     }
                     narrow{
                         "1",
@@ -261,34 +480,34 @@ qu{
                         "12",
                     }
                     wide{
-                        "Qulla puquy",
-                        "Hatun puquy",
-                        "Pauqar waray",
-                        "Ayriwa",
-                        "Aymuray",
-                        "Inti raymi",
-                        "Anta Sitwa",
-                        "Qhapaq Sitwa",
-                        "Uma raymi",
-                        "Kantaray",
-                        "Ayamarqʼa",
-                        "Kapaq Raymi",
+                        "Enero",
+                        "Febrero",
+                        "Marzo",
+                        "Abril",
+                        "Mayo",
+                        "Junio",
+                        "Julio",
+                        "Agosto",
+                        "Setiembre",
+                        "Octubre",
+                        "Noviembre",
+                        "Diciembre",
                     }
                 }
                 stand-alone{
                     abbreviated{
-                        "Qul",
-                        "Hat",
-                        "Pau",
-                        "Ayr",
-                        "Aym",
-                        "Int",
-                        "Ant",
-                        "Qha",
-                        "Uma",
-                        "Kan",
-                        "Aya",
-                        "Kap",
+                        "Ene",
+                        "Feb",
+                        "Mar",
+                        "Abr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Ago",
+                        "Set",
+                        "Oct",
+                        "Nov",
+                        "Dic",
                     }
                     narrow{
                         "1",
@@ -305,18 +524,18 @@ qu{
                         "12",
                     }
                     wide{
-                        "Qulla puquy",
-                        "Hatun puquy",
-                        "Pauqar waray",
-                        "Ayriwa",
-                        "Aymuray",
-                        "Inti raymi",
-                        "Anta Sitwa",
-                        "Qhapaq Sitwa",
-                        "Uma raymi",
-                        "Kantaray",
-                        "Ayamarqʼa",
-                        "Kapaq Raymi",
+                        "Enero",
+                        "Febrero",
+                        "Marzo",
+                        "Abril",
+                        "Mayo",
+                        "Junio",
+                        "Julio",
+                        "Agosto",
+                        "Setiembre",
+                        "Octubre",
+                        "Noviembre",
+                        "Diciembre",
                     }
                 }
             }

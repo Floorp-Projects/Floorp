@@ -3,9 +3,9 @@
 zh_Hant{
     %%Parent{"root"}
     AuxExemplarCharacters{
-        "[乍 仂 伏 佐 侶 僳 兆 兌 兹 别 券 勳 卑 卞 占 叶 堤 墎 壤 奥 孜 峇 嶼 巽 栗 楔 涅 渾 澎 燦 狄 琳 瑚 甫 碑 礁 芒 苗"
-        " 茨 蓬 蚩 蜀 裘 謬 酋 隴 乳 划 匕 匙 匣 叉 吻 嘟 噘 妖 巾 帆 廁 廚 弋 弓 懸 戟 扳 捂 摔 暈 框 桶 桿 櫃 煎 燭 牡 皺"
-        " 盒 眨 眩 筒 簍 糰 紋 紗 纏 纜 羯 聳 肖 艇 虹 蛛 蜘 蝴 蝸 蠟 裙 豚 躬 釘 鈔 鈕 鉛 鎚 鎬 鐺 鑰 鑽 霄 鞠 骰 骷 髏 鯉"
+        "[乍 乳 仂 伏 佐 侶 僳 兆 兌 兹 划 别 券 勳 匕 匙 匣 卑 卞 占 叉 叶 吻 嘟 噘 堤 墎 壤 奥 妖 孜 峇 嶼 巽 巾 帆 廁 廚"
+        " 弋 弓 懸 戟 扳 捂 摔 暈 栗 框 桶 桿 楔 櫃 涅 渾 澎 煎 燦 燭 牡 狄 琳 瑚 甫 皺 盒 眨 眩 碑 礁 筒 簍 糰 紋 紗 纏 纜"
+        " 羯 聳 肖 艇 芒 苗 茨 蓬 虹 蚩 蛛 蜀 蜘 蝴 蝸 蠟 裘 裙 謬 豚 躬 酋 釘 鈔 鈕 鉛 鎚 鎬 鐺 鑰 鑽 隴 霄 鞠 骰 骷 髏 鯉"
         " 鳶]"
     }
     Ellipsis{
@@ -75,6 +75,7 @@ zh_Hant{
         "]"
     }
     ExemplarCharactersIndex{"[一 丁 丈 不 且 丞 並 串 乘 乾 亂 亭 傀 僎 僵 儐 償 儳 儷 儻 叢 嚴 囌 囑 廳]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9 〇 一 七 三 九 二 五 八 六 四]"}
     ExemplarCharactersPunctuation{
         "[‾ ﹉﹊﹋﹌ _ ＿ ﹍﹎﹏ ︳︴ \\- － ﹣ ‐ – ︲ — ﹘ ︱ , ， ﹐ 、 ﹑ ; ； ﹔ \\: ： ﹕ ! ！ ﹗ ? ？ ﹖ ."
         " ． ﹒ ‥ ︰ … 。 · ＇ ‘ ’ \u0022 ＂ “ ” 〝 〞 ( （ ﹙ ︵ ) ） ﹚ ︶ \\[ ［ \\] ］ \\{ ｛ ﹛ ︷ "
@@ -83,10 +84,64 @@ zh_Hant{
     }
     MoreInformation{"？"}
     NumberElements{
-        default{"latn"}
-        finance{"hantfin"}
-        hanidec{
+        arab{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
             patterns{
+                decimalFormat{"#,##0.###"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"٫"}
+                exponential{"اس"}
+                group{"٬"}
+                infinity{"∞"}
+                list{"؛"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"؉"}
+                percentSign{"٪؜"}
+                plusSign{"؜+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        arabext{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"٫"}
+                exponential{"×۱۰^"}
+                group{"٬"}
+                infinity{"∞"}
+                list{"؛"}
+                minusSign{"‎-‎"}
+                nan{"非數值"}
+                perMille{"؉"}
+                percentSign{"٪"}
+                plusSign{"+‎"}
+                superscriptingExponent{"×"}
+                timeSeparator{"٫"}
+            }
+        }
+        bali{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -97,6 +152,468 @@ zh_Hant{
                 exponential{"E"}
                 group{","}
                 infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        beng{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        brah{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        cakm{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        cham{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        default{"latn"}
+        deva{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        finance{"hantfin"}
+        fullwide{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        gonm{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        gujr{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        guru{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        hanidec{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        java{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        kali{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        khmr{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        knda{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        lana{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        lanatham{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        laoo{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
                 minusSign{"-"}
                 nan{"非數值"}
                 perMille{"‰"}
@@ -251,6 +768,60 @@ zh_Hant{
                 timeSeparator{":"}
             }
         }
+        lepc{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        limb{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
         minimalPairs{
             ordinal{
                 other{"在第 {0} 個路口右轉。"}
@@ -259,10 +830,551 @@ zh_Hant{
                 other{"{0} 日"}
             }
         }
+        minimumGroupingDigits{"1"}
+        mlym{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        mong{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        mtei{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        mymr{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        mymrshan{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
         native{"hanidec"}
+        nkoo{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        olck{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        orya{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        osma{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        saur{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        shrd{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        sora{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        sund{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        takr{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        talu{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        tamldec{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        telu{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        thai{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        tibt{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
         traditional{"hant"}
+        vaii{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
     }
-    Version{"2.1.33.94"}
+    Version{"2.1.37.5"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -281,6 +1393,7 @@ zh_Hant{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d日（E）"}
                 Gy{"Gy年"}
                 GyMMM{"Gy年M月"}
@@ -310,6 +1423,109 @@ zh_Hant{
                 abbreviated{
                     "佛曆",
                 }
+                narrow{
+                    "佛曆",
+                }
+                wide{
+                    "佛曆",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm [v]"}
+                    m{"HH:mm–HH:mm [v]"}
+                }
+                Hv{
+                    H{"HH–HH [v]"}
+                }
+                M{
+                    M{"M月至M月"}
+                }
+                MEd{
+                    M{"M/d E至M/d E"}
+                    d{"M/d E至M/d E"}
+                }
+                MMM{
+                    M{"LLL至LLL"}
+                }
+                MMMEd{
+                    M{"M月d日E至M月d日E"}
+                    d{"M月d日E至d日E"}
+                }
+                MMMM{
+                    M{"LLLL至LLLL"}
+                }
+                MMMd{
+                    M{"M月d日至M月d日"}
+                    d{"M月d日至d日"}
+                }
+                Md{
+                    M{"M/d至M/d"}
+                    d{"M/d至M/d"}
+                }
+                d{
+                    d{"d日至d日"}
+                }
+                h{
+                    a{"ah時至ah時"}
+                    h{"ah時至h時"}
+                }
+                hm{
+                    a{"ah:mm至ah:mm"}
+                    h{"ah:mm至h:mm"}
+                    m{"ah:mm至h:mm"}
+                }
+                hmv{
+                    a{"ah:mm至ah:mm [v]"}
+                    h{"ah:mm至h:mm [v]"}
+                    m{"ah:mm至h:mm [v]"}
+                }
+                hv{
+                    a{"ah時至ah時 [v]"}
+                    h{"ah時至h時 [v]"}
+                }
+                y{
+                    y{"G y至y"}
+                }
+                yM{
+                    M{"G y/M至y/M"}
+                    y{"G y/M至y/M"}
+                }
+                yMEd{
+                    M{"G y/M/dE至y/M/dE"}
+                    d{"G y/M/dE至y/M/dE"}
+                    y{"G y/M/dE至y/M/dE"}
+                }
+                yMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMEd{
+                    M{"G y年M月d日E至M月d日E"}
+                    d{"G y年M月d日E至d日E"}
+                    y{"G y年M月d日E至y年M月d日E"}
+                }
+                yMMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMd{
+                    M{"G y年M月d日至M月d日"}
+                    d{"G y年M月d日至d日"}
+                    y{"G y年M月d日至y年M月d日"}
+                }
+                yMd{
+                    M{"G y/M/d至y/M/d"}
+                    d{"G y/M/d至y/M/d"}
+                    y{"G y/M/d至y/M/d"}
+                }
             }
         }
         chinese{
@@ -338,13 +1554,23 @@ zh_Hant{
                 "{1} {0}",
             }
             availableFormats{
-                Ed{"d日E"}
+                Bh{"Bh時"}
+                Bhm{"Bh:mm"}
+                Bhms{"Bh:mm:ss"}
+                E{"ccc"}
+                EBhm{"E Bh:mm"}
+                EBhms{"E Bh:mm:ss"}
+                Ed{"d E"}
                 Gy{"rU年"}
                 GyMMM{"rU年MMM"}
                 GyMMMEd{"rU年MMMdE"}
                 GyMMMd{"r年MMMd"}
+                H{"HH時"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
                 M{"MMM"}
                 MEd{"M/dE"}
+                MMM{"LLL"}
                 MMMEd{"MMMd日E"}
                 MMMMd{"MMMMd日"}
                 MMMd{"MMMd日"}
@@ -354,6 +1580,10 @@ zh_Hant{
                 UMMMd{"U年MMMd"}
                 UMd{"U年MMMd"}
                 d{"d日"}
+                h{"ah時"}
+                hm{"ah:mm"}
+                hms{"ah:mm:ss"}
+                ms{"mm:ss"}
                 y{"rU年"}
                 yMd{"r年MMMd"}
                 yyyy{"rU年"}
@@ -384,11 +1614,471 @@ zh_Hant{
                             "戌",
                             "亥",
                         }
+                        narrow{
+                            "子",
+                            "丑",
+                            "寅",
+                            "卯",
+                            "辰",
+                            "巳",
+                            "午",
+                            "未",
+                            "申",
+                            "酉",
+                            "戌",
+                            "亥",
+                        }
+                        wide{
+                            "子",
+                            "丑",
+                            "寅",
+                            "卯",
+                            "辰",
+                            "巳",
+                            "午",
+                            "未",
+                            "申",
+                            "酉",
+                            "戌",
+                            "亥",
+                        }
+                    }
+                }
+                days{
+                    format{
+                        abbreviated{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        narrow{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        wide{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                    }
+                }
+                months{
+                    format{
+                        abbreviated{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        narrow{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        wide{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
                     }
                 }
                 solarTerms{
                     format{
                         abbreviated{
+                            "立春",
+                            "雨水",
+                            "驚蟄",
+                            "春分",
+                            "清明",
+                            "穀雨",
+                            "立夏",
+                            "小滿",
+                            "芒種",
+                            "夏至",
+                            "小暑",
+                            "大暑",
+                            "立秋",
+                            "處暑",
+                            "白露",
+                            "秋分",
+                            "寒露",
+                            "霜降",
+                            "立冬",
+                            "小雪",
+                            "大雪",
+                            "冬至",
+                            "小寒",
+                            "大寒",
+                        }
+                        narrow{
+                            "立春",
+                            "雨水",
+                            "驚蟄",
+                            "春分",
+                            "清明",
+                            "穀雨",
+                            "立夏",
+                            "小滿",
+                            "芒種",
+                            "夏至",
+                            "小暑",
+                            "大暑",
+                            "立秋",
+                            "處暑",
+                            "白露",
+                            "秋分",
+                            "寒露",
+                            "霜降",
+                            "立冬",
+                            "小雪",
+                            "大雪",
+                            "冬至",
+                            "小寒",
+                            "大寒",
+                        }
+                        wide{
                             "立春",
                             "雨水",
                             "驚蟄",
@@ -480,6 +2170,130 @@ zh_Hant{
                             "壬戌",
                             "癸亥",
                         }
+                        narrow{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        wide{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
                     }
                 }
                 zodiacs{
@@ -498,10 +2312,45 @@ zh_Hant{
                             "狗",
                             "豬",
                         }
+                        narrow{
+                            "鼠",
+                            "牛",
+                            "虎",
+                            "兔",
+                            "龍",
+                            "蛇",
+                            "馬",
+                            "羊",
+                            "猴",
+                            "雞",
+                            "狗",
+                            "豬",
+                        }
+                        wide{
+                            "鼠",
+                            "牛",
+                            "虎",
+                            "兔",
+                            "龍",
+                            "蛇",
+                            "馬",
+                            "羊",
+                            "猴",
+                            "雞",
+                            "狗",
+                            "豬",
+                        }
                     }
                 }
             }
             intervalFormats{
+                H{
+                    H{"HH至HH"}
+                }
+                Hm{
+                    H{"HH:mm至HH:mm"}
+                    m{"HH:mm至HH:mm"}
+                }
                 Hmv{
                     H{"HH:mm–HH:mm [v]"}
                     m{"HH:mm–HH:mm [v]"}
@@ -684,6 +2533,12 @@ zh_Hant{
             }
             monthPatterns{
                 format{
+                    abbreviated{
+                        leap{"閏{0}"}
+                    }
+                    narrow{
+                        leap{"閏{0}"}
+                    }
                     wide{
                         leap{"閏{0}"}
                     }
@@ -694,13 +2549,172 @@ zh_Hant{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        leap{"閏{0}"}
+                    }
                     narrow{
+                        leap{"閏{0}"}
+                    }
+                    wide{
                         leap{"閏{0}"}
                     }
                 }
             }
         }
         coptic{
+            DateTimePatterns{
+                "ah:mm:ss [zzzz]",
+                "ah:mm:ss [z]",
+                "ah:mm:ss",
+                "ah:mm",
+                "G y年M月d日 EEEE",
+                "G y年M月d日",
+                "G y年M月d日",
+                "G y/M/d",
+                "{1} {0}",
+                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"d E"}
+                Gy{"G y年"}
+                GyMMM{"G y年M月"}
+                GyMMMEd{"G y年M月d日 E"}
+                GyMMMd{"G y年M月d日"}
+                M{"M月"}
+                MEd{"M/d（E）"}
+                MMM{"LLL"}
+                MMMEd{"M月d日 E"}
+                MMMMd{"M月d日"}
+                MMMd{"M月d日"}
+                Md{"M/d"}
+                d{"d日"}
+                y{"G y年"}
+                yyyy{"G y年"}
+                yyyyM{"G y/M"}
+                yyyyMEd{"G y/M/d（E）"}
+                yyyyMMM{"G y年M月"}
+                yyyyMMMEd{"G y年M月d日 E"}
+                yyyyMMMM{"G y年M月"}
+                yyyyMMMd{"G y年M月d日"}
+                yyyyMd{"G y/M/d"}
+                yyyyQQQ{"G y年QQQ"}
+                yyyyQQQQ{"G y年QQQQ"}
+            }
+            eras{
+                abbreviated{
+                    "ERA0",
+                    "ERA1",
+                }
+                narrow{
+                    "ERA0",
+                    "ERA1",
+                }
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm [v]"}
+                    m{"HH:mm–HH:mm [v]"}
+                }
+                Hv{
+                    H{"HH–HH [v]"}
+                }
+                M{
+                    M{"M月至M月"}
+                }
+                MEd{
+                    M{"M/d E至M/d E"}
+                    d{"M/d E至M/d E"}
+                }
+                MMM{
+                    M{"LLL至LLL"}
+                }
+                MMMEd{
+                    M{"M月d日E至M月d日E"}
+                    d{"M月d日E至d日E"}
+                }
+                MMMM{
+                    M{"LLLL至LLLL"}
+                }
+                MMMd{
+                    M{"M月d日至M月d日"}
+                    d{"M月d日至d日"}
+                }
+                Md{
+                    M{"M/d至M/d"}
+                    d{"M/d至M/d"}
+                }
+                d{
+                    d{"d日至d日"}
+                }
+                h{
+                    a{"ah時至ah時"}
+                    h{"ah時至h時"}
+                }
+                hm{
+                    a{"ah:mm至ah:mm"}
+                    h{"ah:mm至h:mm"}
+                    m{"ah:mm至h:mm"}
+                }
+                hmv{
+                    a{"ah:mm至ah:mm [v]"}
+                    h{"ah:mm至h:mm [v]"}
+                    m{"ah:mm至h:mm [v]"}
+                }
+                hv{
+                    a{"ah時至ah時 [v]"}
+                    h{"ah時至h時 [v]"}
+                }
+                y{
+                    y{"G y至y"}
+                }
+                yM{
+                    M{"G y/M至y/M"}
+                    y{"G y/M至y/M"}
+                }
+                yMEd{
+                    M{"G y/M/dE至y/M/dE"}
+                    d{"G y/M/dE至y/M/dE"}
+                    y{"G y/M/dE至y/M/dE"}
+                }
+                yMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMEd{
+                    M{"G y年M月d日E至M月d日E"}
+                    d{"G y年M月d日E至d日E"}
+                    y{"G y年M月d日E至y年M月d日E"}
+                }
+                yMMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMd{
+                    M{"G y年M月d日至M月d日"}
+                    d{"G y年M月d日至d日"}
+                    y{"G y年M月d日至y年M月d日"}
+                }
+                yMd{
+                    M{"G y/M/d至y/M/d"}
+                    d{"G y/M/d至y/M/d"}
+                    y{"G y/M/d至y/M/d"}
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -814,6 +2828,36 @@ zh_Hant{
                 "{1} {0}",
                 "{1} {0}",
             }
+            availableFormats{
+                Ed{"d日E"}
+                Gy{"rU年"}
+                GyMMM{"rU年MMM"}
+                GyMMMEd{"rU年MMMdE"}
+                GyMMMd{"r年MMMd"}
+                M{"MMM"}
+                MEd{"M/dE"}
+                MMMEd{"MMMd日E"}
+                MMMMd{"MMMMd日"}
+                MMMd{"MMMd日"}
+                Md{"M/d"}
+                UM{"U年MMM"}
+                UMMM{"U年MMM"}
+                UMMMd{"U年MMMd"}
+                UMd{"U年MMMd"}
+                d{"d日"}
+                y{"rU年"}
+                yMd{"r年MMMd"}
+                yyyy{"rU年"}
+                yyyyM{"rU年MMM"}
+                yyyyMEd{"rU年MMMd，E"}
+                yyyyMMM{"rU年MMM"}
+                yyyyMMMEd{"rU年MMMdE"}
+                yyyyMMMM{"rU年MMMM"}
+                yyyyMMMd{"r年MMMd"}
+                yyyyMd{"r年MMMd"}
+                yyyyQQQ{"rU年QQQQ"}
+                yyyyQQQQ{"rU年QQQQ"}
+            }
             cyclicNameSets{
                 dayParts{
                     format{
@@ -831,11 +2875,625 @@ zh_Hant{
                             "戌",
                             "亥",
                         }
+                        narrow{
+                            "子",
+                            "丑",
+                            "寅",
+                            "卯",
+                            "辰",
+                            "巳",
+                            "午",
+                            "未",
+                            "申",
+                            "酉",
+                            "戌",
+                            "亥",
+                        }
+                        wide{
+                            "子",
+                            "丑",
+                            "寅",
+                            "卯",
+                            "辰",
+                            "巳",
+                            "午",
+                            "未",
+                            "申",
+                            "酉",
+                            "戌",
+                            "亥",
+                        }
+                    }
+                }
+                days{
+                    format{
+                        abbreviated{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        narrow{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        wide{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                    }
+                }
+                months{
+                    format{
+                        abbreviated{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        narrow{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        wide{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                    }
+                }
+                solarTerms{
+                    format{
+                        abbreviated{
+                            "立春",
+                            "雨水",
+                            "驚蟄",
+                            "春分",
+                            "清明",
+                            "穀雨",
+                            "立夏",
+                            "小滿",
+                            "芒種",
+                            "夏至",
+                            "小暑",
+                            "大暑",
+                            "立秋",
+                            "處暑",
+                            "白露",
+                            "秋分",
+                            "寒露",
+                            "霜降",
+                            "立冬",
+                            "小雪",
+                            "大雪",
+                            "冬至",
+                            "小寒",
+                            "大寒",
+                        }
+                        narrow{
+                            "立春",
+                            "雨水",
+                            "驚蟄",
+                            "春分",
+                            "清明",
+                            "穀雨",
+                            "立夏",
+                            "小滿",
+                            "芒種",
+                            "夏至",
+                            "小暑",
+                            "大暑",
+                            "立秋",
+                            "處暑",
+                            "白露",
+                            "秋分",
+                            "寒露",
+                            "霜降",
+                            "立冬",
+                            "小雪",
+                            "大雪",
+                            "冬至",
+                            "小寒",
+                            "大寒",
+                        }
+                        wide{
+                            "立春",
+                            "雨水",
+                            "驚蟄",
+                            "春分",
+                            "清明",
+                            "穀雨",
+                            "立夏",
+                            "小滿",
+                            "芒種",
+                            "夏至",
+                            "小暑",
+                            "大暑",
+                            "立秋",
+                            "處暑",
+                            "白露",
+                            "秋分",
+                            "寒露",
+                            "霜降",
+                            "立冬",
+                            "小雪",
+                            "大雪",
+                            "冬至",
+                            "小寒",
+                            "大寒",
+                        }
                     }
                 }
                 years{
                     format{
                         abbreviated{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        narrow{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        wide{
                             "甲子",
                             "乙丑",
                             "丙寅",
@@ -915,7 +3573,126 @@ zh_Hant{
                             "狗",
                             "豬",
                         }
+                        narrow{
+                            "鼠",
+                            "牛",
+                            "虎",
+                            "兔",
+                            "龍",
+                            "蛇",
+                            "馬",
+                            "羊",
+                            "猴",
+                            "雞",
+                            "狗",
+                            "豬",
+                        }
+                        wide{
+                            "鼠",
+                            "牛",
+                            "虎",
+                            "兔",
+                            "龍",
+                            "蛇",
+                            "馬",
+                            "羊",
+                            "猴",
+                            "雞",
+                            "狗",
+                            "豬",
+                        }
                     }
+                }
+            }
+            intervalFormats{
+                Hmv{
+                    H{"HH:mm–HH:mm [v]"}
+                    m{"HH:mm–HH:mm [v]"}
+                }
+                Hv{
+                    H{"HH–HH [v]"}
+                }
+                M{
+                    M{"MMM至MMM"}
+                }
+                MEd{
+                    M{"M/dE至M/dE"}
+                    d{"M/dE至M/dE"}
+                }
+                MMM{
+                    M{"LLL至LLL"}
+                }
+                MMMEd{
+                    M{"MMMd日E至MMMd日E"}
+                    d{"MMMd日E至d日E"}
+                }
+                MMMM{
+                    M{"LLLL至LLLL"}
+                }
+                MMMd{
+                    M{"MMMd日至MMMd日"}
+                    d{"MMMd日至d日"}
+                }
+                Md{
+                    M{"M/d至M/d"}
+                    d{"M/d至M/d"}
+                }
+                d{
+                    d{"d日至d日"}
+                }
+                fallback{"{0}至{1}"}
+                h{
+                    a{"ah時至ah時"}
+                    h{"ah時至h時"}
+                }
+                hm{
+                    a{"ah:mm至ah:mm"}
+                    h{"ah:mm至h:mm"}
+                    m{"ah:mm至h:mm"}
+                }
+                hmv{
+                    a{"ah:mm至ah:mm [v]"}
+                    h{"ah:mm至h:mm [v]"}
+                    m{"ah:mm至h:mm [v]"}
+                }
+                hv{
+                    a{"ah時至ah時 [v]"}
+                    h{"ah時至h時 [v]"}
+                }
+                y{
+                    y{"rU至rU"}
+                }
+                yM{
+                    M{"r/M至r/M"}
+                    y{"r/M至r/M"}
+                }
+                yMEd{
+                    M{"r/M/dE至r/M/dE"}
+                    d{"r/M/dE至r/M/dE"}
+                    y{"r/M/dE至r/M/dE"}
+                }
+                yMMM{
+                    M{"rU年MMM至MMM"}
+                    y{"rU年MMM至rU年MMM"}
+                }
+                yMMMEd{
+                    M{"rU年MMMdE至MMMdE"}
+                    d{"rU年MMMdE至dE"}
+                    y{"rU年MMMdE至rU年MMMdE"}
+                }
+                yMMMM{
+                    M{"rU年MMMM至MMMM"}
+                    y{"rU年MMMM至rU年MMMM"}
+                }
+                yMMMd{
+                    M{"r年MMMd至MMMd"}
+                    d{"r年MMMd至d"}
+                    y{"r年MMMd至r年MMMd"}
+                }
+                yMd{
+                    M{"r/M/d至r/M/d"}
+                    d{"r/M/d至r/M/d"}
+                    y{"r/M/d至r/M/d"}
                 }
             }
             monthNames{
@@ -1005,109 +3782,40 @@ zh_Hant{
                         "十月",
                         "十一月",
                         "十二月",
+                    }
+                }
+            }
+            monthPatterns{
+                format{
+                    abbreviated{
+                        leap{"閏{0}"}
+                    }
+                    narrow{
+                        leap{"閏{0}"}
+                    }
+                    wide{
+                        leap{"閏{0}"}
+                    }
+                }
+                numeric{
+                    all{
+                        leap{"閏{0}"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        leap{"閏{0}"}
+                    }
+                    narrow{
+                        leap{"閏{0}"}
+                    }
+                    wide{
+                        leap{"閏{0}"}
                     }
                 }
             }
         }
         ethiopic{
-            monthNames{
-                format{
-                    abbreviated{
-                        "1月",
-                        "2月",
-                        "3月",
-                        "4月",
-                        "5月",
-                        "6月",
-                        "7月",
-                        "8月",
-                        "9月",
-                        "10月",
-                        "11月",
-                        "12月",
-                        "13月",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
-                    wide{
-                        "1月",
-                        "2月",
-                        "3月",
-                        "4月",
-                        "5月",
-                        "6月",
-                        "7月",
-                        "8月",
-                        "9月",
-                        "10月",
-                        "11月",
-                        "12月",
-                        "13月",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "1月",
-                        "2月",
-                        "3月",
-                        "4月",
-                        "5月",
-                        "6月",
-                        "7月",
-                        "8月",
-                        "9月",
-                        "10月",
-                        "11月",
-                        "12月",
-                        "13月",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
-                    wide{
-                        "1月",
-                        "2月",
-                        "3月",
-                        "4月",
-                        "5月",
-                        "6月",
-                        "7月",
-                        "8月",
-                        "9月",
-                        "10月",
-                        "11月",
-                        "12月",
-                        "13月",
-                    }
-                }
-            }
-        }
-        generic{
             DateTimePatterns{
                 "ah:mm:ss [zzzz]",
                 "ah:mm:ss [z]",
@@ -1130,9 +3838,6 @@ zh_Hant{
                 GyMMM{"G y年M月"}
                 GyMMMEd{"G y年M月d日 E"}
                 GyMMMd{"G y年M月d日"}
-                H{"H時"}
-                Hm{"H:mm"}
-                Hms{"H:mm:ss"}
                 M{"M月"}
                 MEd{"M/d（E）"}
                 MMM{"LLL"}
@@ -1141,10 +3846,6 @@ zh_Hant{
                 MMMd{"M月d日"}
                 Md{"M/d"}
                 d{"d日"}
-                h{"ah時"}
-                hm{"ah:mm"}
-                hms{"ah:mm:ss"}
-                ms{"mm:ss"}
                 y{"G y年"}
                 yyyy{"G y年"}
                 yyyyM{"G y/M"}
@@ -1157,12 +3858,27 @@ zh_Hant{
                 yyyyQQQ{"G y年QQQ"}
                 yyyyQQQQ{"G y年QQQQ"}
             }
+            eras{
+                abbreviated{
+                    "ERA0",
+                    "ERA1",
+                }
+                narrow{
+                    "ERA0",
+                    "ERA1",
+                }
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
             intervalFormats{
                 H{
                     H{"HH–HH"}
                 }
                 Hm{
                     H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
                 }
                 Hmv{
                     H{"HH:mm–HH:mm [v]"}
@@ -1253,6 +3969,273 @@ zh_Hant{
                     y{"G y/M/d至y/M/d"}
                 }
             }
+            monthNames{
+                format{
+                    abbreviated{
+                        "1月",
+                        "2月",
+                        "3月",
+                        "4月",
+                        "5月",
+                        "6月",
+                        "7月",
+                        "8月",
+                        "9月",
+                        "10月",
+                        "11月",
+                        "12月",
+                        "13月",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
+                    wide{
+                        "1月",
+                        "2月",
+                        "3月",
+                        "4月",
+                        "5月",
+                        "6月",
+                        "7月",
+                        "8月",
+                        "9月",
+                        "10月",
+                        "11月",
+                        "12月",
+                        "13月",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "1月",
+                        "2月",
+                        "3月",
+                        "4月",
+                        "5月",
+                        "6月",
+                        "7月",
+                        "8月",
+                        "9月",
+                        "10月",
+                        "11月",
+                        "12月",
+                        "13月",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
+                    wide{
+                        "1月",
+                        "2月",
+                        "3月",
+                        "4月",
+                        "5月",
+                        "6月",
+                        "7月",
+                        "8月",
+                        "9月",
+                        "10月",
+                        "11月",
+                        "12月",
+                        "13月",
+                    }
+                }
+            }
+        }
+        ethiopic-amete-alem{
+            eras{
+                abbreviated{
+                    "ERA0",
+                }
+                narrow{
+                    "ERA0",
+                }
+                wide{
+                    "ERA0",
+                }
+            }
+        }
+        generic{
+            DateTimePatterns{
+                "ah:mm:ss [zzzz]",
+                "ah:mm:ss [z]",
+                "ah:mm:ss",
+                "ah:mm",
+                "G y年M月d日 EEEE",
+                "G y年M月d日",
+                "G y年M月d日",
+                "G y/M/d",
+                "{1} {0}",
+                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Bh{"Bh時"}
+                Bhm{"Bh:mm"}
+                Bhms{"Bh:mm:ss"}
+                E{"ccc"}
+                EBhm{"E Bh:mm"}
+                EBhms{"E Bh:mm:ss"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
+                Ed{"d E"}
+                Ehm{"E ah:mm"}
+                Ehms{"E ah:mm:ss"}
+                Gy{"G y年"}
+                GyMMM{"G y年M月"}
+                GyMMMEd{"G y年M月d日 E"}
+                GyMMMd{"G y年M月d日"}
+                H{"H時"}
+                Hm{"H:mm"}
+                Hms{"H:mm:ss"}
+                M{"M月"}
+                MEd{"M/d（E）"}
+                MMM{"LLL"}
+                MMMEd{"M月d日 E"}
+                MMMMd{"M月d日"}
+                MMMd{"M月d日"}
+                Md{"M/d"}
+                d{"d日"}
+                h{"ah時"}
+                hm{"ah:mm"}
+                hms{"ah:mm:ss"}
+                ms{"mm:ss"}
+                y{"G y年"}
+                yyyy{"G y年"}
+                yyyyM{"G y/M"}
+                yyyyMEd{"G y/M/d（E）"}
+                yyyyMMM{"G y年M月"}
+                yyyyMMMEd{"G y年M月d日 E"}
+                yyyyMMMM{"G y年M月"}
+                yyyyMMMd{"G y年M月d日"}
+                yyyyMd{"G y/M/d"}
+                yyyyQQQ{"G y年QQQ"}
+                yyyyQQQQ{"G y年QQQQ"}
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm [v]"}
+                    m{"HH:mm–HH:mm [v]"}
+                }
+                Hv{
+                    H{"HH–HH [v]"}
+                }
+                M{
+                    M{"M月至M月"}
+                }
+                MEd{
+                    M{"M/d E至M/d E"}
+                    d{"M/d E至M/d E"}
+                }
+                MMM{
+                    M{"LLL至LLL"}
+                }
+                MMMEd{
+                    M{"M月d日E至M月d日E"}
+                    d{"M月d日E至d日E"}
+                }
+                MMMM{
+                    M{"LLLL至LLLL"}
+                }
+                MMMd{
+                    M{"M月d日至M月d日"}
+                    d{"M月d日至d日"}
+                }
+                Md{
+                    M{"M/d至M/d"}
+                    d{"M/d至M/d"}
+                }
+                d{
+                    d{"d日至d日"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"ah時至ah時"}
+                    h{"ah時至h時"}
+                }
+                hm{
+                    a{"ah:mm至ah:mm"}
+                    h{"ah:mm至h:mm"}
+                    m{"ah:mm至h:mm"}
+                }
+                hmv{
+                    a{"ah:mm至ah:mm [v]"}
+                    h{"ah:mm至h:mm [v]"}
+                    m{"ah:mm至h:mm [v]"}
+                }
+                hv{
+                    a{"ah時至ah時 [v]"}
+                    h{"ah時至h時 [v]"}
+                }
+                y{
+                    y{"G y至y"}
+                }
+                yM{
+                    M{"G y/M至y/M"}
+                    y{"G y/M至y/M"}
+                }
+                yMEd{
+                    M{"G y/M/dE至y/M/dE"}
+                    d{"G y/M/dE至y/M/dE"}
+                    y{"G y/M/dE至y/M/dE"}
+                }
+                yMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMEd{
+                    M{"G y年M月d日E至M月d日E"}
+                    d{"G y年M月d日E至d日E"}
+                    y{"G y年M月d日E至y年M月d日E"}
+                }
+                yMMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMd{
+                    M{"G y年M月d日至M月d日"}
+                    d{"G y年M月d日至d日"}
+                    y{"G y年M月d日至y年M月d日"}
+                }
+                yMd{
+                    M{"G y/M/d至y/M/d"}
+                    d{"G y/M/d至y/M/d"}
+                    y{"G y/M/d至y/M/d"}
+                }
+            }
         }
         gregorian{
             AmPmMarkers{
@@ -1286,7 +4269,12 @@ zh_Hant{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"Bh時"}
+                Bhm{"Bh:mm"}
+                Bhms{"Bh:mm:ss"}
                 E{"ccc"}
+                EBhm{"E Bh:mm"}
+                EBhms{"E Bh:mm:ss"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d E"}
@@ -1331,7 +4319,7 @@ zh_Hant{
                 yQQQ{"y年QQQ"}
                 yQQQQ{"y年QQQQ"}
                 yw{
-                    other{"y年的第w週"}
+                    other{"Y年的第w週"}
                 }
             }
             dayNames{
@@ -1547,6 +4535,7 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     a{"ah時至ah時"}
                     h{"ah時至h時"}
@@ -1693,12 +4682,6 @@ zh_Hant{
             }
             quarters{
                 format{
-                    abbreviated{
-                        "1季",
-                        "2季",
-                        "3季",
-                        "4季",
-                    }
                     narrow{
                         "1",
                         "2",
@@ -1713,12 +4696,6 @@ zh_Hant{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "1季",
-                        "2季",
-                        "3季",
-                        "4季",
-                    }
                     narrow{
                         "1",
                         "2",
@@ -1750,9 +4727,139 @@ zh_Hant{
                 "{1} {0}",
                 "{1} {0}",
             }
+            availableFormats{
+                E{"ccc"}
+                Ed{"d E"}
+                Gy{"G y年"}
+                GyMMM{"G y年M月"}
+                GyMMMEd{"G y年M月d日 E"}
+                GyMMMd{"G y年M月d日"}
+                M{"M月"}
+                MEd{"M/d（E）"}
+                MMM{"LLL"}
+                MMMEd{"M月d日 E"}
+                MMMMd{"M月d日"}
+                MMMd{"M月d日"}
+                Md{"M/d"}
+                d{"d日"}
+                y{"G y年"}
+                yyyy{"G y年"}
+                yyyyM{"G y/M"}
+                yyyyMEd{"G y/M/d（E）"}
+                yyyyMMM{"G y年M月"}
+                yyyyMMMEd{"G y年M月d日 E"}
+                yyyyMMMM{"G y年M月"}
+                yyyyMMMd{"G y年M月d日"}
+                yyyyMd{"G y/M/d"}
+                yyyyQQQ{"G y年QQQ"}
+                yyyyQQQQ{"G y年QQQQ"}
+            }
             eras{
                 abbreviated{
                     "創世紀元",
+                }
+                narrow{
+                    "創世紀元",
+                }
+                wide{
+                    "創世紀元",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm [v]"}
+                    m{"HH:mm–HH:mm [v]"}
+                }
+                Hv{
+                    H{"HH–HH [v]"}
+                }
+                M{
+                    M{"M月至M月"}
+                }
+                MEd{
+                    M{"M/d E至M/d E"}
+                    d{"M/d E至M/d E"}
+                }
+                MMM{
+                    M{"LLL至LLL"}
+                }
+                MMMEd{
+                    M{"M月d日E至M月d日E"}
+                    d{"M月d日E至d日E"}
+                }
+                MMMM{
+                    M{"LLLL至LLLL"}
+                }
+                MMMd{
+                    M{"M月d日至M月d日"}
+                    d{"M月d日至d日"}
+                }
+                Md{
+                    M{"M/d至M/d"}
+                    d{"M/d至M/d"}
+                }
+                d{
+                    d{"d日至d日"}
+                }
+                h{
+                    a{"ah時至ah時"}
+                    h{"ah時至h時"}
+                }
+                hm{
+                    a{"ah:mm至ah:mm"}
+                    h{"ah:mm至h:mm"}
+                    m{"ah:mm至h:mm"}
+                }
+                hmv{
+                    a{"ah:mm至ah:mm [v]"}
+                    h{"ah:mm至h:mm [v]"}
+                    m{"ah:mm至h:mm [v]"}
+                }
+                hv{
+                    a{"ah時至ah時 [v]"}
+                    h{"ah時至h時 [v]"}
+                }
+                y{
+                    y{"G y至y"}
+                }
+                yM{
+                    M{"G y/M至y/M"}
+                    y{"G y/M至y/M"}
+                }
+                yMEd{
+                    M{"G y/M/dE至y/M/dE"}
+                    d{"G y/M/dE至y/M/dE"}
+                    y{"G y/M/dE至y/M/dE"}
+                }
+                yMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMEd{
+                    M{"G y年M月d日E至M月d日E"}
+                    d{"G y年M月d日E至d日E"}
+                    y{"G y年M月d日E至y年M月d日E"}
+                }
+                yMMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMd{
+                    M{"G y年M月d日至M月d日"}
+                    d{"G y年M月d日至d日"}
+                    y{"G y年M月d日至y年M月d日"}
+                }
+                yMd{
+                    M{"G y/M/d至y/M/d"}
+                    d{"G y/M/d至y/M/d"}
+                    y{"G y/M/d至y/M/d"}
                 }
             }
             monthNames{
@@ -1859,9 +4966,154 @@ zh_Hant{
             }
         }
         indian{
+            DateTimePatterns{
+                "ah:mm:ss [zzzz]",
+                "ah:mm:ss [z]",
+                "ah:mm:ss",
+                "ah:mm",
+                "G y年M月d日 EEEE",
+                "G y年M月d日",
+                "G y年M月d日",
+                "G y/M/d",
+                "{1} {0}",
+                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"d E"}
+                Gy{"G y年"}
+                GyMMM{"G y年M月"}
+                GyMMMEd{"G y年M月d日 E"}
+                GyMMMd{"G y年M月d日"}
+                M{"M月"}
+                MEd{"M/d（E）"}
+                MMM{"LLL"}
+                MMMEd{"M月d日 E"}
+                MMMMd{"M月d日"}
+                MMMd{"M月d日"}
+                Md{"M/d"}
+                d{"d日"}
+                y{"G y年"}
+                yyyy{"G y年"}
+                yyyyM{"G y/M"}
+                yyyyMEd{"G y/M/d（E）"}
+                yyyyMMM{"G y年M月"}
+                yyyyMMMEd{"G y年M月d日 E"}
+                yyyyMMMM{"G y年M月"}
+                yyyyMMMd{"G y年M月d日"}
+                yyyyMd{"G y/M/d"}
+                yyyyQQQ{"G y年QQQ"}
+                yyyyQQQQ{"G y年QQQQ"}
+            }
             eras{
                 abbreviated{
                     "印度曆",
+                }
+                narrow{
+                    "印度曆",
+                }
+                wide{
+                    "印度曆",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm [v]"}
+                    m{"HH:mm–HH:mm [v]"}
+                }
+                Hv{
+                    H{"HH–HH [v]"}
+                }
+                M{
+                    M{"M月至M月"}
+                }
+                MEd{
+                    M{"M/d E至M/d E"}
+                    d{"M/d E至M/d E"}
+                }
+                MMM{
+                    M{"LLL至LLL"}
+                }
+                MMMEd{
+                    M{"M月d日E至M月d日E"}
+                    d{"M月d日E至d日E"}
+                }
+                MMMM{
+                    M{"LLLL至LLLL"}
+                }
+                MMMd{
+                    M{"M月d日至M月d日"}
+                    d{"M月d日至d日"}
+                }
+                Md{
+                    M{"M/d至M/d"}
+                    d{"M/d至M/d"}
+                }
+                d{
+                    d{"d日至d日"}
+                }
+                h{
+                    a{"ah時至ah時"}
+                    h{"ah時至h時"}
+                }
+                hm{
+                    a{"ah:mm至ah:mm"}
+                    h{"ah:mm至h:mm"}
+                    m{"ah:mm至h:mm"}
+                }
+                hmv{
+                    a{"ah:mm至ah:mm [v]"}
+                    h{"ah:mm至h:mm [v]"}
+                    m{"ah:mm至h:mm [v]"}
+                }
+                hv{
+                    a{"ah時至ah時 [v]"}
+                    h{"ah時至h時 [v]"}
+                }
+                y{
+                    y{"G y至y"}
+                }
+                yM{
+                    M{"G y/M至y/M"}
+                    y{"G y/M至y/M"}
+                }
+                yMEd{
+                    M{"G y/M/dE至y/M/dE"}
+                    d{"G y/M/dE至y/M/dE"}
+                    y{"G y/M/dE至y/M/dE"}
+                }
+                yMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMEd{
+                    M{"G y年M月d日E至M月d日E"}
+                    d{"G y年M月d日E至d日E"}
+                    y{"G y年M月d日E至y年M月d日E"}
+                }
+                yMMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMd{
+                    M{"G y年M月d日至M月d日"}
+                    d{"G y年M月d日至d日"}
+                    y{"G y年M月d日至y年M月d日"}
+                }
+                yMd{
+                    M{"G y/M/d至y/M/d"}
+                    d{"G y/M/d至y/M/d"}
+                    y{"G y/M/d至y/M/d"}
                 }
             }
             monthNames{
@@ -1972,6 +5224,7 @@ zh_Hant{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d日（E）"}
                 Gy{"Gy年"}
                 GyMMM{"Gy年M月"}
@@ -2000,6 +5253,109 @@ zh_Hant{
             eras{
                 abbreviated{
                     "伊斯蘭曆",
+                }
+                narrow{
+                    "伊斯蘭曆",
+                }
+                wide{
+                    "伊斯蘭曆",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm [v]"}
+                    m{"HH:mm–HH:mm [v]"}
+                }
+                Hv{
+                    H{"HH–HH [v]"}
+                }
+                M{
+                    M{"M月至M月"}
+                }
+                MEd{
+                    M{"M/d E至M/d E"}
+                    d{"M/d E至M/d E"}
+                }
+                MMM{
+                    M{"LLL至LLL"}
+                }
+                MMMEd{
+                    M{"M月d日E至M月d日E"}
+                    d{"M月d日E至d日E"}
+                }
+                MMMM{
+                    M{"LLLL至LLLL"}
+                }
+                MMMd{
+                    M{"M月d日至M月d日"}
+                    d{"M月d日至d日"}
+                }
+                Md{
+                    M{"M/d至M/d"}
+                    d{"M/d至M/d"}
+                }
+                d{
+                    d{"d日至d日"}
+                }
+                h{
+                    a{"ah時至ah時"}
+                    h{"ah時至h時"}
+                }
+                hm{
+                    a{"ah:mm至ah:mm"}
+                    h{"ah:mm至h:mm"}
+                    m{"ah:mm至h:mm"}
+                }
+                hmv{
+                    a{"ah:mm至ah:mm [v]"}
+                    h{"ah:mm至h:mm [v]"}
+                    m{"ah:mm至h:mm [v]"}
+                }
+                hv{
+                    a{"ah時至ah時 [v]"}
+                    h{"ah時至h時 [v]"}
+                }
+                y{
+                    y{"G y至y"}
+                }
+                yM{
+                    M{"G y/M至y/M"}
+                    y{"G y/M至y/M"}
+                }
+                yMEd{
+                    M{"G y/M/dE至y/M/dE"}
+                    d{"G y/M/dE至y/M/dE"}
+                    y{"G y/M/dE至y/M/dE"}
+                }
+                yMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMEd{
+                    M{"G y年M月d日E至M月d日E"}
+                    d{"G y年M月d日E至d日E"}
+                    y{"G y年M月d日E至y年M月d日E"}
+                }
+                yMMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMd{
+                    M{"G y年M月d日至M月d日"}
+                    d{"G y年M月d日至d日"}
+                    y{"G y年M月d日至y年M月d日"}
+                }
+                yMd{
+                    M{"G y/M/d至y/M/d"}
+                    d{"G y/M/d至y/M/d"}
+                    y{"G y/M/d至y/M/d"}
                 }
             }
             monthNames{
@@ -2110,6 +5466,7 @@ zh_Hant{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d日（E）"}
                 Gy{"Gy年"}
                 GyMMM{"Gy年M月"}
@@ -2381,15 +5738,730 @@ zh_Hant{
                     "昭和",
                     "平成",
                 }
+                narrow{
+                    "大化",
+                    "白雉",
+                    "白鳳",
+                    "朱鳥",
+                    "大寶",
+                    "慶雲",
+                    "和銅",
+                    "靈龜",
+                    "養老",
+                    "神龜",
+                    "天平",
+                    "天平感寶",
+                    "天平勝寶",
+                    "天平寶字",
+                    "天平神護",
+                    "神護景雲",
+                    "寶龜",
+                    "天應",
+                    "延曆",
+                    "大同",
+                    "弘仁",
+                    "天長",
+                    "承和",
+                    "嘉祥",
+                    "仁壽",
+                    "齊衡",
+                    "天安",
+                    "貞觀",
+                    "元慶",
+                    "仁和",
+                    "寬平",
+                    "昌泰",
+                    "延喜",
+                    "延長",
+                    "承平",
+                    "天慶",
+                    "天曆",
+                    "天德",
+                    "應和",
+                    "康保",
+                    "安和",
+                    "天祿",
+                    "天延",
+                    "貞元",
+                    "天元",
+                    "永觀",
+                    "寬和",
+                    "永延",
+                    "永祚",
+                    "正曆",
+                    "長德",
+                    "長保",
+                    "寬弘",
+                    "長和",
+                    "寬仁",
+                    "治安",
+                    "萬壽",
+                    "長元",
+                    "長曆",
+                    "長久",
+                    "寬德",
+                    "永承",
+                    "天喜",
+                    "康平",
+                    "治曆",
+                    "延久",
+                    "承保",
+                    "承曆",
+                    "永保",
+                    "應德",
+                    "寬治",
+                    "嘉保",
+                    "永長",
+                    "承德",
+                    "康和",
+                    "長治",
+                    "嘉承",
+                    "天仁",
+                    "天永",
+                    "永久",
+                    "元永",
+                    "保安",
+                    "天治",
+                    "大治",
+                    "天承",
+                    "長承",
+                    "保延",
+                    "永治",
+                    "康治",
+                    "天養",
+                    "久安",
+                    "仁平",
+                    "久壽",
+                    "保元",
+                    "平治",
+                    "永曆",
+                    "應保",
+                    "長寬",
+                    "永萬",
+                    "仁安",
+                    "嘉應",
+                    "承安",
+                    "安元",
+                    "治承",
+                    "養和",
+                    "壽永",
+                    "元曆",
+                    "文治",
+                    "建久",
+                    "正治",
+                    "建仁",
+                    "元久",
+                    "建永",
+                    "承元",
+                    "建曆",
+                    "建保",
+                    "承久",
+                    "貞應",
+                    "元仁",
+                    "嘉祿",
+                    "安貞",
+                    "寬喜",
+                    "貞永",
+                    "天福",
+                    "文曆",
+                    "嘉禎",
+                    "曆仁",
+                    "延應",
+                    "仁治",
+                    "寬元",
+                    "寶治",
+                    "建長",
+                    "康元",
+                    "正嘉",
+                    "正元",
+                    "文應",
+                    "弘長",
+                    "文永",
+                    "建治",
+                    "弘安",
+                    "正應",
+                    "永仁",
+                    "正安",
+                    "乾元",
+                    "嘉元",
+                    "德治",
+                    "延慶",
+                    "應長",
+                    "正和",
+                    "文保",
+                    "元應",
+                    "元亨",
+                    "正中",
+                    "嘉曆",
+                    "元德",
+                    "元弘",
+                    "建武",
+                    "延元",
+                    "興國",
+                    "正平",
+                    "建德",
+                    "文中",
+                    "天授",
+                    "康曆",
+                    "弘和",
+                    "元中",
+                    "至德",
+                    "嘉慶",
+                    "康應",
+                    "明德",
+                    "應永",
+                    "正長",
+                    "永享",
+                    "嘉吉",
+                    "文安",
+                    "寶德",
+                    "享德",
+                    "康正",
+                    "長祿",
+                    "寬正",
+                    "文正",
+                    "應仁",
+                    "文明",
+                    "長享",
+                    "延德",
+                    "明應",
+                    "文龜",
+                    "永正",
+                    "大永",
+                    "享祿",
+                    "天文",
+                    "弘治",
+                    "永祿",
+                    "元龜",
+                    "天正",
+                    "文祿",
+                    "慶長",
+                    "元和",
+                    "寬永",
+                    "正保",
+                    "慶安",
+                    "承應",
+                    "明曆",
+                    "萬治",
+                    "寬文",
+                    "延寶",
+                    "天和",
+                    "貞享",
+                    "元祿",
+                    "寶永",
+                    "正德",
+                    "享保",
+                    "元文",
+                    "寬保",
+                    "延享",
+                    "寬延",
+                    "寶曆",
+                    "明和",
+                    "安永",
+                    "天明",
+                    "寬政",
+                    "享和",
+                    "文化",
+                    "文政",
+                    "天保",
+                    "弘化",
+                    "嘉永",
+                    "安政",
+                    "萬延",
+                    "文久",
+                    "元治",
+                    "慶應",
+                    "明治",
+                    "大正",
+                    "昭和",
+                    "平成",
+                }
+                wide{
+                    "大化",
+                    "白雉",
+                    "白鳳",
+                    "朱鳥",
+                    "大寶",
+                    "慶雲",
+                    "和銅",
+                    "靈龜",
+                    "養老",
+                    "神龜",
+                    "天平",
+                    "天平感寶",
+                    "天平勝寶",
+                    "天平寶字",
+                    "天平神護",
+                    "神護景雲",
+                    "寶龜",
+                    "天應",
+                    "延曆",
+                    "大同",
+                    "弘仁",
+                    "天長",
+                    "承和",
+                    "嘉祥",
+                    "仁壽",
+                    "齊衡",
+                    "天安",
+                    "貞觀",
+                    "元慶",
+                    "仁和",
+                    "寬平",
+                    "昌泰",
+                    "延喜",
+                    "延長",
+                    "承平",
+                    "天慶",
+                    "天曆",
+                    "天德",
+                    "應和",
+                    "康保",
+                    "安和",
+                    "天祿",
+                    "天延",
+                    "貞元",
+                    "天元",
+                    "永觀",
+                    "寬和",
+                    "永延",
+                    "永祚",
+                    "正曆",
+                    "長德",
+                    "長保",
+                    "寬弘",
+                    "長和",
+                    "寬仁",
+                    "治安",
+                    "萬壽",
+                    "長元",
+                    "長曆",
+                    "長久",
+                    "寬德",
+                    "永承",
+                    "天喜",
+                    "康平",
+                    "治曆",
+                    "延久",
+                    "承保",
+                    "承曆",
+                    "永保",
+                    "應德",
+                    "寬治",
+                    "嘉保",
+                    "永長",
+                    "承德",
+                    "康和",
+                    "長治",
+                    "嘉承",
+                    "天仁",
+                    "天永",
+                    "永久",
+                    "元永",
+                    "保安",
+                    "天治",
+                    "大治",
+                    "天承",
+                    "長承",
+                    "保延",
+                    "永治",
+                    "康治",
+                    "天養",
+                    "久安",
+                    "仁平",
+                    "久壽",
+                    "保元",
+                    "平治",
+                    "永曆",
+                    "應保",
+                    "長寬",
+                    "永萬",
+                    "仁安",
+                    "嘉應",
+                    "承安",
+                    "安元",
+                    "治承",
+                    "養和",
+                    "壽永",
+                    "元曆",
+                    "文治",
+                    "建久",
+                    "正治",
+                    "建仁",
+                    "元久",
+                    "建永",
+                    "承元",
+                    "建曆",
+                    "建保",
+                    "承久",
+                    "貞應",
+                    "元仁",
+                    "嘉祿",
+                    "安貞",
+                    "寬喜",
+                    "貞永",
+                    "天福",
+                    "文曆",
+                    "嘉禎",
+                    "曆仁",
+                    "延應",
+                    "仁治",
+                    "寬元",
+                    "寶治",
+                    "建長",
+                    "康元",
+                    "正嘉",
+                    "正元",
+                    "文應",
+                    "弘長",
+                    "文永",
+                    "建治",
+                    "弘安",
+                    "正應",
+                    "永仁",
+                    "正安",
+                    "乾元",
+                    "嘉元",
+                    "德治",
+                    "延慶",
+                    "應長",
+                    "正和",
+                    "文保",
+                    "元應",
+                    "元亨",
+                    "正中",
+                    "嘉曆",
+                    "元德",
+                    "元弘",
+                    "建武",
+                    "延元",
+                    "興國",
+                    "正平",
+                    "建德",
+                    "文中",
+                    "天授",
+                    "康曆",
+                    "弘和",
+                    "元中",
+                    "至德",
+                    "嘉慶",
+                    "康應",
+                    "明德",
+                    "應永",
+                    "正長",
+                    "永享",
+                    "嘉吉",
+                    "文安",
+                    "寶德",
+                    "享德",
+                    "康正",
+                    "長祿",
+                    "寬正",
+                    "文正",
+                    "應仁",
+                    "文明",
+                    "長享",
+                    "延德",
+                    "明應",
+                    "文龜",
+                    "永正",
+                    "大永",
+                    "享祿",
+                    "天文",
+                    "弘治",
+                    "永祿",
+                    "元龜",
+                    "天正",
+                    "文祿",
+                    "慶長",
+                    "元和",
+                    "寬永",
+                    "正保",
+                    "慶安",
+                    "承應",
+                    "明曆",
+                    "萬治",
+                    "寬文",
+                    "延寶",
+                    "天和",
+                    "貞享",
+                    "元祿",
+                    "寶永",
+                    "正德",
+                    "享保",
+                    "元文",
+                    "寬保",
+                    "延享",
+                    "寬延",
+                    "寶曆",
+                    "明和",
+                    "安永",
+                    "天明",
+                    "寬政",
+                    "享和",
+                    "文化",
+                    "文政",
+                    "天保",
+                    "弘化",
+                    "嘉永",
+                    "安政",
+                    "萬延",
+                    "文久",
+                    "元治",
+                    "慶應",
+                    "明治",
+                    "大正",
+                    "昭和",
+                    "平成",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm [v]"}
+                    m{"HH:mm–HH:mm [v]"}
+                }
+                Hv{
+                    H{"HH–HH [v]"}
+                }
+                M{
+                    M{"M月至M月"}
+                }
+                MEd{
+                    M{"M/d E至M/d E"}
+                    d{"M/d E至M/d E"}
+                }
+                MMM{
+                    M{"LLL至LLL"}
+                }
+                MMMEd{
+                    M{"M月d日E至M月d日E"}
+                    d{"M月d日E至d日E"}
+                }
+                MMMM{
+                    M{"LLLL至LLLL"}
+                }
+                MMMd{
+                    M{"M月d日至M月d日"}
+                    d{"M月d日至d日"}
+                }
+                Md{
+                    M{"M/d至M/d"}
+                    d{"M/d至M/d"}
+                }
+                d{
+                    d{"d日至d日"}
+                }
+                h{
+                    a{"ah時至ah時"}
+                    h{"ah時至h時"}
+                }
+                hm{
+                    a{"ah:mm至ah:mm"}
+                    h{"ah:mm至h:mm"}
+                    m{"ah:mm至h:mm"}
+                }
+                hmv{
+                    a{"ah:mm至ah:mm [v]"}
+                    h{"ah:mm至h:mm [v]"}
+                    m{"ah:mm至h:mm [v]"}
+                }
+                hv{
+                    a{"ah時至ah時 [v]"}
+                    h{"ah時至h時 [v]"}
+                }
+                y{
+                    y{"G y至y"}
+                }
+                yM{
+                    M{"G y/M至y/M"}
+                    y{"G y/M至y/M"}
+                }
+                yMEd{
+                    M{"G y/M/dE至y/M/dE"}
+                    d{"G y/M/dE至y/M/dE"}
+                    y{"G y/M/dE至y/M/dE"}
+                }
+                yMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMEd{
+                    M{"G y年M月d日E至M月d日E"}
+                    d{"G y年M月d日E至d日E"}
+                    y{"G y年M月d日E至y年M月d日E"}
+                }
+                yMMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMd{
+                    M{"G y年M月d日至M月d日"}
+                    d{"G y年M月d日至d日"}
+                    y{"G y年M月d日至y年M月d日"}
+                }
+                yMd{
+                    M{"G y/M/d至y/M/d"}
+                    d{"G y/M/d至y/M/d"}
+                    y{"G y/M/d至y/M/d"}
+                }
             }
         }
         persian{
+            DateTimePatterns{
+                "ah:mm:ss [zzzz]",
+                "ah:mm:ss [z]",
+                "ah:mm:ss",
+                "ah:mm",
+                "G y年M月d日 EEEE",
+                "G y年M月d日",
+                "G y年M月d日",
+                "G y/M/d",
+                "{1} {0}",
+                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"d E"}
+                Gy{"G y年"}
+                GyMMM{"G y年M月"}
+                GyMMMEd{"G y年M月d日 E"}
+                GyMMMd{"G y年M月d日"}
+                M{"M月"}
+                MEd{"M/d（E）"}
+                MMM{"LLL"}
+                MMMEd{"M月d日 E"}
+                MMMMd{"M月d日"}
+                MMMd{"M月d日"}
+                Md{"M/d"}
+                d{"d日"}
+                y{"G y年"}
+                yyyy{"G y年"}
+                yyyyM{"G y/M"}
+                yyyyMEd{"G y/M/d（E）"}
+                yyyyMMM{"G y年M月"}
+                yyyyMMMEd{"G y年M月d日 E"}
+                yyyyMMMM{"G y年M月"}
+                yyyyMMMd{"G y年M月d日"}
+                yyyyMd{"G y/M/d"}
+                yyyyQQQ{"G y年QQQ"}
+                yyyyQQQQ{"G y年QQQQ"}
+            }
             eras{
                 abbreviated{
                     "波斯曆",
                 }
+                narrow{
+                    "波斯曆",
+                }
                 wide{
                     "波斯曆",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm [v]"}
+                    m{"HH:mm–HH:mm [v]"}
+                }
+                Hv{
+                    H{"HH–HH [v]"}
+                }
+                M{
+                    M{"M月至M月"}
+                }
+                MEd{
+                    M{"M/d E至M/d E"}
+                    d{"M/d E至M/d E"}
+                }
+                MMM{
+                    M{"LLL至LLL"}
+                }
+                MMMEd{
+                    M{"M月d日E至M月d日E"}
+                    d{"M月d日E至d日E"}
+                }
+                MMMM{
+                    M{"LLLL至LLLL"}
+                }
+                MMMd{
+                    M{"M月d日至M月d日"}
+                    d{"M月d日至d日"}
+                }
+                Md{
+                    M{"M/d至M/d"}
+                    d{"M/d至M/d"}
+                }
+                d{
+                    d{"d日至d日"}
+                }
+                h{
+                    a{"ah時至ah時"}
+                    h{"ah時至h時"}
+                }
+                hm{
+                    a{"ah:mm至ah:mm"}
+                    h{"ah:mm至h:mm"}
+                    m{"ah:mm至h:mm"}
+                }
+                hmv{
+                    a{"ah:mm至ah:mm [v]"}
+                    h{"ah:mm至h:mm [v]"}
+                    m{"ah:mm至h:mm [v]"}
+                }
+                hv{
+                    a{"ah時至ah時 [v]"}
+                    h{"ah時至h時 [v]"}
+                }
+                y{
+                    y{"G y至y"}
+                }
+                yM{
+                    M{"G y/M至y/M"}
+                    y{"G y/M至y/M"}
+                }
+                yMEd{
+                    M{"G y/M/dE至y/M/dE"}
+                    d{"G y/M/dE至y/M/dE"}
+                    y{"G y/M/dE至y/M/dE"}
+                }
+                yMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMEd{
+                    M{"G y年M月d日E至M月d日E"}
+                    d{"G y年M月d日E至d日E"}
+                    y{"G y年M月d日E至y年M月d日E"}
+                }
+                yMMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMd{
+                    M{"G y年M月d日至M月d日"}
+                    d{"G y年M月d日至d日"}
+                    y{"G y年M月d日至y年M月d日"}
+                }
+                yMd{
+                    M{"G y/M/d至y/M/d"}
+                    d{"G y/M/d至y/M/d"}
+                    y{"G y/M/d至y/M/d"}
                 }
             }
             monthNames{
@@ -2531,6 +6603,111 @@ zh_Hant{
                     "民國前",
                     "民國",
                 }
+                narrow{
+                    "民國前",
+                    "民國",
+                }
+                wide{
+                    "民國前",
+                    "民國",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm [v]"}
+                    m{"HH:mm–HH:mm [v]"}
+                }
+                Hv{
+                    H{"HH–HH [v]"}
+                }
+                M{
+                    M{"M月至M月"}
+                }
+                MEd{
+                    M{"M/d E至M/d E"}
+                    d{"M/d E至M/d E"}
+                }
+                MMM{
+                    M{"LLL至LLL"}
+                }
+                MMMEd{
+                    M{"M月d日E至M月d日E"}
+                    d{"M月d日E至d日E"}
+                }
+                MMMM{
+                    M{"LLLL至LLLL"}
+                }
+                MMMd{
+                    M{"M月d日至M月d日"}
+                    d{"M月d日至d日"}
+                }
+                Md{
+                    M{"M/d至M/d"}
+                    d{"M/d至M/d"}
+                }
+                d{
+                    d{"d日至d日"}
+                }
+                h{
+                    a{"ah時至ah時"}
+                    h{"ah時至h時"}
+                }
+                hm{
+                    a{"ah:mm至ah:mm"}
+                    h{"ah:mm至h:mm"}
+                    m{"ah:mm至h:mm"}
+                }
+                hmv{
+                    a{"ah:mm至ah:mm [v]"}
+                    h{"ah:mm至h:mm [v]"}
+                    m{"ah:mm至h:mm [v]"}
+                }
+                hv{
+                    a{"ah時至ah時 [v]"}
+                    h{"ah時至h時 [v]"}
+                }
+                y{
+                    y{"G y至y"}
+                }
+                yM{
+                    M{"G y/M至y/M"}
+                    y{"G y/M至y/M"}
+                }
+                yMEd{
+                    M{"G y/M/dE至y/M/dE"}
+                    d{"G y/M/dE至y/M/dE"}
+                    y{"G y/M/dE至y/M/dE"}
+                }
+                yMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMEd{
+                    M{"G y年M月d日E至M月d日E"}
+                    d{"G y年M月d日E至d日E"}
+                    y{"G y年M月d日E至y年M月d日E"}
+                }
+                yMMMM{
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                yMMMd{
+                    M{"G y年M月d日至M月d日"}
+                    d{"G y年M月d日至d日"}
+                    y{"G y年M月d日至y年M月d日"}
+                }
+                yMd{
+                    M{"G y/M/d至y/M/d"}
+                    d{"G y/M/d至y/M/d"}
+                    y{"G y/M/d至y/M/d"}
+                }
             }
         }
     }
@@ -2649,6 +6826,13 @@ zh_Hant{
         }
         day-narrow{
             dn{"日"}
+            relative{
+                "-1"{"昨天"}
+                "-2"{"前天"}
+                "0"{"今天"}
+                "1"{"明天"}
+                "2"{"後天"}
+            }
             relativeTime{
                 future{
                     other{"{0} 天後"}
@@ -2660,6 +6844,13 @@ zh_Hant{
         }
         day-short{
             dn{"日"}
+            relative{
+                "-1"{"昨天"}
+                "-2"{"前天"}
+                "0"{"今天"}
+                "1"{"明天"}
+                "2"{"後天"}
+            }
             relativeTime{
                 future{
                     other{"{0} 天後"}
@@ -2669,10 +6860,31 @@ zh_Hant{
                 }
             }
         }
+        dayOfYear{
+            dn{"年天"}
+        }
+        dayOfYear-narrow{
+            dn{"年天"}
+        }
+        dayOfYear-short{
+            dn{"年天"}
+        }
         dayperiod{
             dn{"上午/下午"}
         }
+        dayperiod-narrow{
+            dn{"上午/下午"}
+        }
+        dayperiod-short{
+            dn{"上午/下午"}
+        }
         era{
+            dn{"年代"}
+        }
+        era-narrow{
+            dn{"年代"}
+        }
+        era-short{
             dn{"年代"}
         }
         fri{
@@ -2736,6 +6948,9 @@ zh_Hant{
         }
         hour-narrow{
             dn{"小時"}
+            relative{
+                "0"{"這一小時"}
+            }
             relativeTime{
                 future{
                     other{"{0} 小時後"}
@@ -2747,6 +6962,9 @@ zh_Hant{
         }
         hour-short{
             dn{"小時"}
+            relative{
+                "0"{"這一小時"}
+            }
             relativeTime{
                 future{
                     other{"{0} 小時後"}
@@ -2772,6 +6990,9 @@ zh_Hant{
         }
         minute-narrow{
             dn{"分鐘"}
+            relative{
+                "0"{"這一分鐘"}
+            }
             relativeTime{
                 future{
                     other{"{0} 分鐘後"}
@@ -2783,6 +7004,9 @@ zh_Hant{
         }
         minute-short{
             dn{"分鐘"}
+            relative{
+                "0"{"這一分鐘"}
+            }
             relativeTime{
                 future{
                     other{"{0} 分鐘後"}
@@ -2855,6 +7079,11 @@ zh_Hant{
         }
         month-narrow{
             dn{"月"}
+            relative{
+                "-1"{"上個月"}
+                "0"{"本月"}
+                "1"{"下個月"}
+            }
             relativeTime{
                 future{
                     other{"{0} 個月後"}
@@ -2866,6 +7095,11 @@ zh_Hant{
         }
         month-short{
             dn{"月"}
+            relative{
+                "-1"{"上個月"}
+                "0"{"本月"}
+                "1"{"下個月"}
+            }
             relativeTime{
                 future{
                     other{"{0} 個月後"}
@@ -2984,6 +7218,9 @@ zh_Hant{
         }
         second-narrow{
             dn{"秒"}
+            relative{
+                "0"{"現在"}
+            }
             relativeTime{
                 future{
                     other{"{0} 秒後"}
@@ -2995,6 +7232,9 @@ zh_Hant{
         }
         second-short{
             dn{"秒"}
+            relative{
+                "0"{"現在"}
+            }
             relativeTime{
                 future{
                     other{"{0} 秒後"}
@@ -3203,6 +7443,11 @@ zh_Hant{
         }
         week-narrow{
             dn{"週"}
+            relative{
+                "-1"{"上週"}
+                "0"{"本週"}
+                "1"{"下週"}
+            }
             relativePeriod{"{0} 當週"}
             relativeTime{
                 future{
@@ -3215,6 +7460,11 @@ zh_Hant{
         }
         week-short{
             dn{"週"}
+            relative{
+                "-1"{"上週"}
+                "0"{"本週"}
+                "1"{"下週"}
+            }
             relativePeriod{"{0} 當週"}
             relativeTime{
                 future{
@@ -3225,8 +7475,32 @@ zh_Hant{
                 }
             }
         }
+        weekOfMonth{
+            dn{"週"}
+        }
+        weekOfMonth-narrow{
+            dn{"週"}
+        }
+        weekOfMonth-short{
+            dn{"週"}
+        }
         weekday{
             dn{"週天"}
+        }
+        weekday-narrow{
+            dn{"週天"}
+        }
+        weekday-short{
+            dn{"週天"}
+        }
+        weekdayOfMonth{
+            dn{"每月平日"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"每月平日"}
+        }
+        weekdayOfMonth-short{
+            dn{"每月平日"}
         }
         year{
             dn{"年"}
@@ -3246,6 +7520,11 @@ zh_Hant{
         }
         year-narrow{
             dn{"年"}
+            relative{
+                "-1"{"去年"}
+                "0"{"今年"}
+                "1"{"明年"}
+            }
             relativeTime{
                 future{
                     other{"{0} 年後"}
@@ -3257,6 +7536,11 @@ zh_Hant{
         }
         year-short{
             dn{"年"}
+            relative{
+                "-1"{"去年"}
+                "0"{"今年"}
+                "1"{"明年"}
+            }
             relativeTime{
                 future{
                     other{"{0} 年後"}
@@ -3269,8 +7553,20 @@ zh_Hant{
         zone{
             dn{"時區"}
         }
+        zone-narrow{
+            dn{"時區"}
+        }
+        zone-short{
+            dn{"時區"}
+        }
     }
     listPattern{
+        or{
+            2{"{0}或{1}"}
+            end{"{0}或{1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
         standard{
             2{"{0}和{1}"}
             end{"{0}和{1}"}

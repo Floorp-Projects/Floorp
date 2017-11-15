@@ -22,9 +22,8 @@
 #include "nsTextFragment.h"
 #include "nsThreadUtils.h"
 
-using mozilla::Maybe;
-using mozilla::Move;
-using mozilla::NonOwningAnimationTarget;
+using namespace mozilla;
+
 using mozilla::dom::TreeOrderComparator;
 using mozilla::dom::Animation;
 using mozilla::dom::Element;

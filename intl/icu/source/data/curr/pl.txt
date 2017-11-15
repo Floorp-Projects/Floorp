@@ -222,6 +222,10 @@ pl{
             "CLP",
             "peso chilijskie",
         }
+        CNH{
+            "CNH",
+            "juan chiński (rynek zewnętrzny)",
+        }
         CNY{
             "CNY",
             "juan chiński",
@@ -1126,6 +1130,7 @@ pl{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lej"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1394,6 +1399,12 @@ pl{
             many{"pesos chilijskich"}
             one{"peso chilijskie"}
             other{"peso chilijskiego"}
+        }
+        CNH{
+            few{"juany chińskie (rynek zewnętrzny)"}
+            many{"juanów chińskich (rynek zewnętrzny)"}
+            one{"juan chiński (rynek zewnętrzny)"}
+            other{"juana chińskiego (rynek zewnętrzny)"}
         }
         CNY{
             few{"juany chińskie"}
@@ -2290,5 +2301,5 @@ pl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

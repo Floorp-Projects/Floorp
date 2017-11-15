@@ -262,6 +262,10 @@ hr{
             "CLP",
             "čileanski pezo",
         }
+        CNH{
+            "CNH",
+            "kineski juan (offshore)",
+        }
         CNX{
             "CNX",
             "kineski narodni dolar",
@@ -1267,6 +1271,7 @@ hr{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RUR{"р."}
         RWF{"RF"}
@@ -1304,7 +1309,7 @@ hr{
         }
         AED{
             few{"UAE dirhama"}
-            one{"UAE diram"}
+            one{"UAE dirham"}
             other{"UAE dirhama"}
         }
         AFA{
@@ -1616,6 +1621,11 @@ hr{
             few{"čileanska peza"}
             one{"čileanski pezo"}
             other{"čileanskih peza"}
+        }
+        CNH{
+            few{"kineska juana (offshore)"}
+            one{"kineski juan (offshore)"}
+            other{"kineskih juana (offshore)"}
         }
         CNX{
             few{"kineska narodna dolara"}
@@ -2783,5 +2793,5 @@ hr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
 }

@@ -34,9 +34,11 @@ subdir = .
 @LAYOUTEX_TRUE@LAYOUTEX = layoutex
 @ICUIO_TRUE@ICUIO = io
 @EXTRAS_TRUE@EXTRA = extra
-@TESTS_TRUE@TEST = test
+# need tools for tests
+@TOOLS_TRUE@@TESTS_TRUE@TEST = test
 @SAMPLES_TRUE@SAMPLE = samples
 @TOOLS_TRUE@TOOLS = tools
+@TOOLS_TRUE@DATASUBDIR = data
 
 ## pkgconfig setup. Always have uc and i18n. Others are optional.
 ALL_PKGCONFIG_SUFFIX=uc i18n
@@ -58,7 +60,7 @@ INSTALLED_BUILT_FILES = $(top_builddir)/config/Makefile.inc $(top_builddir)/conf
 LOCAL_BUILT_FILES = icudefs.mk config/icucross.mk config/icucross.inc
 
 DOCDIRS = common i18n
-SUBDIRS =  stubdata common i18n $(LAYOUTEX) $(ICUIO) $(TOOLS) data $(EXTRA) $(SAMPLE) $(TEST)
+SUBDIRS =  stubdata common i18n $(LAYOUTEX) $(ICUIO) $(TOOLS) $(DATASUBDIR) $(EXTRA) $(SAMPLE) $(TEST)
 
 SECTION = 1
 
@@ -85,7 +87,7 @@ all: all-local all-recursive
 install: install-recursive install-local
 clean: clean-recursive-with-twist clean-local
 distclean : distclean-recursive distclean-local
-dist: dist-recursive dist-local
+dist: dist-recursive
 check: all check-recursive
 check-recursive: all
 xcheck: all xcheck-recursive

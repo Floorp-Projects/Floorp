@@ -2,10 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_SV{
     %%Parent{"es_419"}
-    NumberElements{
-        minimumGroupingDigits{"2"}
-    }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.6"}
     calendar{
         gregorian{
             AmPmMarkers{

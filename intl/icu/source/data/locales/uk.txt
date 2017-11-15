@@ -15,6 +15,7 @@ uk{
     }
     ExemplarCharacters{"[а б в г ґ д е є ж з и і ї й к л м н о п р с т у ф х ц ч ш щ ь ю я ʼ]"}
     ExemplarCharactersIndex{"[А Б В Г Ґ Д Е Є Ж З И І Ї Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ю Я]"}
+    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[\\- – , ; \\: ! ? . ' ’ \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ * / \\\\ №]"}
     MoreInformation{"?"}
     NumberElements{
@@ -287,11 +288,85 @@ uk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.60"}
+    Version{"2.1.37.12"}
     calendar{
+        buddhist{
+            eras{
+                abbreviated{
+                    "б. е.",
+                }
+                narrow{
+                    "б.е.",
+                }
+                wide{
+                    "б. е.",
+                }
+            }
+        }
         coptic{
+            eras{
+                abbreviated{
+                    "ERA0",
+                    "ERA1",
+                }
+                narrow{
+                    "ERA0",
+                    "ERA1",
+                }
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
             monthNames{
                 format{
+                    abbreviated{
+                        "тот",
+                        "баб.",
+                        "хат.",
+                        "кіх.",
+                        "тоб.",
+                        "амш.",
+                        "барам.",
+                        "барм.",
+                        "баш.",
+                        "баун.",
+                        "аб.",
+                        "мис.",
+                        "нас.",
+                    }
+                    wide{
+                        "тот",
+                        "бабе",
+                        "хатур",
+                        "кіхак",
+                        "тобе",
+                        "амшир",
+                        "барамхат",
+                        "бармуда",
+                        "башнас",
+                        "бауна",
+                        "абіб",
+                        "мисра",
+                        "насі",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "тот",
+                        "баб",
+                        "хат",
+                        "кіх",
+                        "тоб",
+                        "амш",
+                        "барам",
+                        "барм",
+                        "баш",
+                        "баун",
+                        "аб",
+                        "мис",
+                        "нас",
+                    }
                     wide{
                         "тот",
                         "бабе",
@@ -439,8 +514,17 @@ uk{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E, d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"LLL y G"}
                 GyMMMEd{"E, d MMM y G"}
@@ -601,7 +685,12 @@ uk{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E, d"}
@@ -648,10 +737,10 @@ uk{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y 'р'."}
                 yw{
-                    few{"w-'й' 'тиж'. y 'р'."}
-                    many{"w-'й' 'тиж'. y 'р'."}
-                    one{"w-'й' 'тиж'. y 'р'."}
-                    other{"w-'й' 'тиж'. y 'р'."}
+                    few{"w-'й' 'тиж'. Y 'р'."}
+                    many{"w-'й' 'тиж'. Y 'р'."}
+                    one{"w-'й' 'тиж'. Y 'р'."}
+                    other{"w-'й' 'тиж'. Y 'р'."}
                 }
             }
             dayNames{
@@ -1039,8 +1128,51 @@ uk{
             }
         }
         hebrew{
+            eras{
+                abbreviated{
+                    "AM",
+                }
+                narrow{
+                    "AM",
+                }
+                wide{
+                    "AM",
+                }
+            }
             monthNames{
                 format{
+                    abbreviated{
+                        "тішри",
+                        "марчешван",
+                        "числьов",
+                        "тебет",
+                        "шеват",
+                        "адар I",
+                        "адар",
+                        "нісан",
+                        "іар",
+                        "сиван",
+                        "таммуз",
+                        "аб",
+                        "елул",
+                        "адар II",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
+                    }
                     wide{
                         "тішри",
                         "марчешван",
@@ -1056,6 +1188,24 @@ uk{
                         "аб",
                         "елул",
                         "адар II",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
                     }
                 }
             }
@@ -1088,6 +1238,20 @@ uk{
                         "маг.",
                         "фаль.",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "чайтра",
                         "вайсакха",
@@ -1118,6 +1282,20 @@ uk{
                         "маг.",
                         "фаль.",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "чайтра",
                         "вайсакха",
@@ -1136,8 +1314,91 @@ uk{
             }
         }
         islamic{
+            eras{
+                abbreviated{
+                    "AH",
+                }
+                narrow{
+                    "AH",
+                }
+                wide{
+                    "AH",
+                }
+            }
             monthNames{
                 format{
+                    abbreviated{
+                        "мух.",
+                        "саф.",
+                        "рабі I",
+                        "рабі II",
+                        "джум. I",
+                        "джум. II",
+                        "радж.",
+                        "шааб.",
+                        "рам.",
+                        "дав.",
+                        "зу-ль-к.",
+                        "зу-ль-х.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "мухаррам",
+                        "сафар",
+                        "рабі I",
+                        "рабі II",
+                        "джумада I",
+                        "джумада II",
+                        "раджаб",
+                        "шаабан",
+                        "рамадан",
+                        "даввал",
+                        "зу-ль-каада",
+                        "зу-ль-хіджа",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "мух",
+                        "саф",
+                        "рабі I",
+                        "рабі II",
+                        "джум I",
+                        "джум II",
+                        "радж",
+                        "шааб",
+                        "рам",
+                        "дав",
+                        "зу-ль-к",
+                        "зу-ль-х",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "мухаррам",
                         "сафар",
@@ -1178,89 +1439,90 @@ uk{
     }
     characterLabel{
         activities{"Заняття"}
-        african_scripts{"Африканські шрифти"}
-        american_scripts{"Американські шрифти"}
+        african_scripts{"африканське письмо"}
+        american_scripts{"американське письмо"}
         animal{"тварина"}
-        arrows{"Стрілки"}
+        animals_nature{"тварина чи природа"}
+        arrows{"стрілка"}
         body{"тіло"}
-        box_drawing{"Псевдографіка"}
-        braille{"Шрифт Брайля"}
+        box_drawing{"псевдографіка"}
+        braille{"брайль"}
         building{"будівля"}
-        bullets_stars{"Маркери/зірочки"}
-        consonantal_jamo{"Корейські приголосні"}
-        currency_symbols{"Символи валют"}
-        dash_connector{"Тире/сполучний символ"}
-        digits{"Цифри"}
+        bullets_stars{"маркер чи зірка"}
+        consonantal_jamo{"приголосний чамо"}
+        currency_symbols{"символ валюти"}
+        dash_connector{"тире чи сполучний знак"}
+        digits{"цифра"}
         dingbats{"Дінгбати"}
-        divination_symbols{"Символи віщування"}
-        downwards_arrows{"Стрілки вниз"}
-        downwards_upwards_arrows{"Стрілки вгору-вниз"}
-        east_asian_scripts{"Східноазіатські шрифти"}
-        emoji{"Емодзі"}
-        european_scripts{"Європейські шрифти"}
+        divination_symbols{"символ віщування"}
+        downwards_arrows{"стрілка вниз"}
+        downwards_upwards_arrows{"стрілка вниз-вгору"}
+        east_asian_scripts{"східноазійське письмо"}
+        emoji{"емодзі"}
+        european_scripts{"європейське письмо"}
         female{"жінка"}
         flag{"прапор"}
-        flags{"Прапори"}
-        food_drink{"Їжа і напої"}
-        format{"Форматування"}
-        format_whitespace{"Форматування й пробіли"}
-        full_width_form_variant{"Варіантні форми повної ширини"}
-        geometric_shapes{"Геометричні фігури"}
-        half_width_form_variant{"Варіантні форми половинної ширини"}
-        han_characters{"Китайські символи"}
-        han_radicals{"Китайські ієрогліфи"}
-        hanja{"Ханча"}
-        hanzi_simplified{"Китайська (спрощена)"}
-        hanzi_traditional{"Китайська (традиційна)"}
+        flags{"прапори"}
+        food_drink{"їжа і напої"}
+        format{"формат"}
+        format_whitespace{"формат і пробільний знак"}
+        full_width_form_variant{"варіант повної ширини"}
+        geometric_shapes{"геометрична фігура"}
+        half_width_form_variant{"варіант половинної ширини"}
+        han_characters{"китайський ієрогліф"}
+        han_radicals{"ієрогліфічний ключ"}
+        hanja{"ханча"}
+        hanzi_simplified{"ханьцзи (спрощена)"}
+        hanzi_traditional{"ханьцзи (традиційна)"}
         heart{"серце"}
-        historic_scripts{"Історичні шрифти"}
-        ideographic_desc_characters{"Символи опису ієрогліфів"}
-        japanese_kana{"Японська кана"}
-        kanbun{"Камбун"}
-        kanji{"Кандзі"}
+        historic_scripts{"історичне письмо"}
+        ideographic_desc_characters{"ідеографічний описовий знак"}
+        japanese_kana{"японська кана"}
+        kanbun{"камбун"}
+        kanji{"кандзі"}
         keycap{"клавіша"}
-        leftwards_arrows{"Стрілки вліво"}
-        leftwards_rightwards_arrows{"Стрілки вправо-вліво"}
-        letterlike_symbols{"Буквоподібні символи"}
-        limited_use{"Обмежене використання"}
+        leftwards_arrows{"стрілка вліво"}
+        leftwards_rightwards_arrows{"стрілка вліво-вправо"}
+        letterlike_symbols{"буквоподібний символ"}
+        limited_use{"обмеженого вжитку"}
         male{"чоловік"}
-        math_symbols{"Математичні символи"}
-        middle_eastern_scripts{"Шрифти Середнього Сходу"}
-        miscellaneous{"Різне"}
-        modern_scripts{"Сучасні шрифти"}
-        modifier{"Модифікатор"}
-        musical_symbols{"Музичні символи"}
+        math_symbols{"математичний символ"}
+        middle_eastern_scripts{"письмо Середнього Сходу"}
+        miscellaneous{"некласифікований"}
+        modern_scripts{"сучасне письмо"}
+        modifier{"модифікатор"}
+        musical_symbols{"музичний символ"}
         nature{"природа"}
-        nonspacing{"Нерозривні"}
-        numbers{"Числа"}
-        objects{"Обʼєкти"}
-        other{"Інше"}
-        paired{"Парні"}
+        nonspacing{"нерозривний"}
+        numbers{"числа"}
+        objects{"обʼєкт"}
+        other{"інше"}
+        paired{"парний"}
         person{"людина"}
-        phonetic_alphabet{"Фонетичний алфавіт"}
-        pictographs{"Піктограми"}
+        phonetic_alphabet{"фонетична абетка"}
+        pictographs{"піктограма"}
         place{"місце"}
         plant{"рослина"}
-        punctuation{"Пунктуаційні знаки"}
+        punctuation{"пунктуація"}
         rightwards_arrows{"Стрілки вправо"}
-        sign_standard_symbols{"Знаки/стандартні символи"}
-        small_form_variant{"Малі варіантні форми"}
-        smiley{"смайлик"}
-        smileys_people{"Смайли та люди"}
-        south_asian_scripts{"Південноазіатські шрифти"}
-        southeast_asian_scripts{"Південносхідні азіатські шрифти"}
-        spacing{"Пробіли"}
+        sign_standard_symbols{"знак чи символ"}
+        small_form_variant{"малі варіанти"}
+        smiley{"смалик"}
+        smileys_people{"смайлик чи людина"}
+        south_asian_scripts{"південноазійське письмо"}
+        southeast_asian_scripts{"південно-східне азійське письмо"}
+        spacing{"інтервал"}
         sport{"спорт"}
-        symbols{"Символи"}
-        technical_symbols{"Технічні символи"}
-        tone_marks{"Діактричні знаки"}
+        symbols{"символ"}
+        technical_symbols{"технічний символ"}
+        tone_marks{"позначка тону"}
         travel{"подорож"}
-        travel_places{"Подорожі й місця"}
-        upwards_arrows{"Стрілки вгору"}
-        variant_forms{"Варіантні форми"}
+        travel_places{"подорож чи місце"}
+        upwards_arrows{"стрілки вгору"}
+        variant_forms{"варіант"}
         vocalic_jamo{"Корейські голосні"}
         weather{"погода"}
-        western_asian_scripts{"Західноазіатські шрифти"}
+        western_asian_scripts{"західноазійське письмо"}
         whitespace{"Пробіл"}
     }
     contextTransforms{
@@ -1331,10 +1593,10 @@ uk{
             }
             relativeTime{
                 future{
-                    few{"+{0} дн."}
-                    many{"+{0} дн."}
+                    few{"за {0} д."}
+                    many{"за {0} д."}
                     one{"за {0} д."}
-                    other{"+{0} дн."}
+                    other{"за {0} д."}
                 }
                 past{
                     few{"-{0} дн."}
@@ -1368,11 +1630,32 @@ uk{
                 }
             }
         }
+        dayOfYear{
+            dn{"день року"}
+        }
+        dayOfYear-narrow{
+            dn{"день року"}
+        }
+        dayOfYear-short{
+            dn{"день року"}
+        }
         dayperiod{
-            dn{"частина доби"}
+            dn{"дп/пп"}
+        }
+        dayperiod-narrow{
+            dn{"дп/пп"}
+        }
+        dayperiod-short{
+            dn{"дп/пп"}
         }
         era{
             dn{"ера"}
+        }
+        era-narrow{
+            dn{"е"}
+        }
+        era-short{
+            dn{"е."}
         }
         fri{
             relative{
@@ -1644,6 +1927,11 @@ uk{
         }
         month-narrow{
             dn{"міс."}
+            relative{
+                "-1"{"минулого місяця"}
+                "0"{"цього місяця"}
+                "1"{"наступного місяця"}
+            }
             relativeTime{
                 future{
                     few{"за {0} міс."}
@@ -1661,6 +1949,11 @@ uk{
         }
         month-short{
             dn{"міс."}
+            relative{
+                "-1"{"минулого місяця"}
+                "0"{"цього місяця"}
+                "1"{"наступного місяця"}
+            }
             relativeTime{
                 future{
                     few{"через {0} міс."}
@@ -1827,6 +2120,9 @@ uk{
         }
         second-narrow{
             dn{"с"}
+            relative{
+                "0"{"зараз"}
+            }
             relativeTime{
                 future{
                     few{"за {0} с"}
@@ -1844,6 +2140,9 @@ uk{
         }
         second-short{
             dn{"с"}
+            relative{
+                "0"{"зараз"}
+            }
             relativeTime{
                 future{
                     few{"через {0} с"}
@@ -2136,6 +2435,11 @@ uk{
         }
         week-narrow{
             dn{"тиж."}
+            relative{
+                "-1"{"минулого тижня"}
+                "0"{"цього тижня"}
+                "1"{"наступного тижня"}
+            }
             relativePeriod{"тиждень з {0}"}
             relativeTime{
                 future{
@@ -2154,6 +2458,11 @@ uk{
         }
         week-short{
             dn{"тиж."}
+            relative{
+                "-1"{"минулого тижня"}
+                "0"{"цього тижня"}
+                "1"{"наступного тижня"}
+            }
             relativePeriod{"тиждень з {0}"}
             relativeTime{
                 future{
@@ -2170,8 +2479,32 @@ uk{
                 }
             }
         }
+        weekOfMonth{
+            dn{"тиждень місяця"}
+        }
+        weekOfMonth-narrow{
+            dn{"тиж. місяця"}
+        }
+        weekOfMonth-short{
+            dn{"тиж. місяця"}
+        }
         weekday{
             dn{"день тижня"}
+        }
+        weekday-narrow{
+            dn{"день тижня"}
+        }
+        weekday-short{
+            dn{"день тижня"}
+        }
+        weekdayOfMonth{
+            dn{"день місяця"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"день місяця"}
+        }
+        weekdayOfMonth-short{
+            dn{"день місяця"}
         }
         year{
             dn{"рік"}
@@ -2242,8 +2575,20 @@ uk{
         zone{
             dn{"часовий пояс"}
         }
+        zone-narrow{
+            dn{"часовий пояс"}
+        }
+        zone-short{
+            dn{"часовий пояс"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} або {1}"}
+            end{"{0} або {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} і {1}"}
             end{"{0} і {1}"}
@@ -2279,5 +2624,32 @@ uk{
         UK{"Британська"}
         US{"Американська"}
         metric{"Метрична"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

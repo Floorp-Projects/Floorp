@@ -22,7 +22,8 @@
 #define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"
 #define DOM_WINDOW_THAWED_TOPIC "dom-window-thawed"
 
-class nsGlobalWindow;
+class nsGlobalWindowInner;
+class nsGlobalWindowOuter;
 class nsIArray;
 class nsIContent;
 class nsICSSDeclaration;
@@ -253,9 +254,11 @@ public:
   // the window was frozen.
   virtual nsresult FireDelayedDOMEvents() = 0;
 
-  nsPIDOMWindowOuter* GetOuterWindow()
+  nsPIDOMWindowOuter* GetOuterWindow() const
   {
-    return mIsInnerWindow ? mOuterWindow.get() : AsOuter();
+    return mIsInnerWindow
+      ? mOuterWindow.get()
+      : const_cast<nsPIDOMWindowOuter*>(AsOuter());
   }
 
   bool IsInnerWindow() const
@@ -268,24 +271,10 @@ public:
     return !IsInnerWindow();
   }
 
-  // Outer windows only.
-  virtual bool WouldReuseInnerWindow(nsIDocument* aNewDocument) = 0;
-
   /**
    * Get the docshell in this window.
    */
   nsIDocShell *GetDocShell() const;
-
-  /**
-   * Set the docshell in the window.  Must not be called with a null docshell
-   * (use DetachFromDocShell for that).
-   */
-  virtual void SetDocShell(nsIDocShell *aDocShell) = 0;
-
-  /**
-   * Detach an outer window from its docshell.
-   */
-  virtual void DetachFromDocShell() = 0;
 
   /**
    * Set a new document in the window. Calling this method will in
@@ -602,8 +591,6 @@ public:
   virtual nsresult MoveBy(int32_t aXDif, int32_t aYDif) = 0;
   virtual nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) = 0;
 
-  mozilla::dom::TabGroup* TabGroup();
-
   mozilla::dom::DocGroup* GetDocGroup() const;
 
   virtual nsISerialEventTarget*
@@ -765,7 +752,12 @@ protected:
 // and memory layout!
 class nsPIDOMWindowInner : public nsPIDOMWindow<mozIDOMWindow>
 {
-  friend nsGlobalWindow;
+  friend nsGlobalWindowInner;
+  friend nsGlobalWindowOuter;
+
+  explicit nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow)
+    : nsPIDOMWindow<mozIDOMWindow>(aOuterWindow)
+  {}
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWINNER_IID)
@@ -939,6 +931,7 @@ public:
   // timeout-throttling.
   bool HasOpenWebSockets() const;
 
+  mozilla::dom::TabGroup* TabGroup();
 protected:
   void CreatePerformanceObjectIfNeeded();
 };
@@ -950,6 +943,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
 class nsPIDOMWindowOuter : public nsPIDOMWindow<mozIDOMWindowProxy>
 {
 protected:
+  explicit nsPIDOMWindowOuter()
+    : nsPIDOMWindow<mozIDOMWindowProxy>(nullptr)
+  {}
+
   void RefreshMediaElementsVolume();
   void RefreshMediaElementsSuspend(SuspendTypes aSuspend);
   bool IsDisposableSuspend(SuspendTypes aSuspend) const;
@@ -1030,6 +1027,8 @@ public:
 
   bool IsTopLevelWindow();
   bool HadOriginalOpener() const;
+
+  mozilla::dom::TabGroup* TabGroup();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)

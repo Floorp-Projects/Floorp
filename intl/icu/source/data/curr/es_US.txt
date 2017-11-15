@@ -7,13 +7,67 @@ es_US{
             "¥",
             "yen",
         }
+        MYR{
+            "MYR",
+            "ringit",
+        }
+        THB{
+            "THB",
+            "bat",
+        }
         USD{
             "$",
             "dólar estadounidense",
         }
+        UZS{
+            "UZS",
+            "sum",
+        }
+        XAF{
+            "XAF",
+            "franco CFA de África central",
+        }
+        XOF{
+            "XOF",
+            "franco CFA de África Occidental",
+        }
     }
     Currencies%narrow{
+        FKP{"£"}
         RON{"lei"}
+        SSP{"£"}
+        SYP{"£"}
     }
-    Version{"2.1.31.74"}
+    CurrencyPlurals{
+        KGS{
+            one{"som"}
+        }
+        MWK{
+            one{"kwacha malauí"}
+        }
+        MYR{
+            one{"ringit"}
+            other{"ringits"}
+        }
+        RON{
+            one{"leu rumano"}
+        }
+        THB{
+            one{"bat"}
+            other{"bats"}
+        }
+        UZS{
+            one{"sum"}
+            other{"sums"}
+        }
+        XAF{
+            one{"franco CFA de África central"}
+            other{"francos CFA de África central"}
+        }
+        XOF{
+            one{"franco CFA de África Occidental"}
+            other{"francos CFA de África Occidental"}
+        }
+    }
+    Version{"2.1.37.22"}
 }

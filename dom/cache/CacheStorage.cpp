@@ -7,7 +7,9 @@
 #include "mozilla/dom/cache/CacheStorage.h"
 
 #include "mozilla/Unused.h"
+#include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/CacheStorageBinding.h"
+#include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/cache/AutoUtils.h"

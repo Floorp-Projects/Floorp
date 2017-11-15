@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 nb{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Acre"{
             ld{"Acre sommertid"}
@@ -116,9 +116,9 @@ nb{
             ls{"armensk normaltid"}
         }
         "meta:Atlantic"{
-            ld{"atlanterhavskystlig sommertid"}
-            lg{"atlanterhavskystlig tid"}
-            ls{"atlanterhavskystlig standardtid"}
+            ld{"sommertid for den nordamerikanske atlanterhavskysten"}
+            lg{"tidssone for den nordamerikanske atlanterhavskysten"}
+            ls{"normaltid for den nordamerikanske atlanterhavskysten"}
             sd{"ADT"}
             sg{"AT"}
             ss{"AST"}
@@ -173,9 +173,9 @@ nb{
             ls{"tidssone for Brunei Darussalam"}
         }
         "meta:Cape_Verde"{
-            ld{"sommertid for Kapp Verde"}
-            lg{"tidssone for Kapp Verde"}
-            ls{"normaltid for Kapp Verde"}
+            ld{"kappverdisk sommertid"}
+            lg{"kappverdisk tid"}
+            ls{"kappverdisk normaltid"}
         }
         "meta:Casey"{
             ls{"Casey-tid"}
@@ -438,7 +438,7 @@ nb{
             ls{"tidssone for Marquesasøyene"}
         }
         "meta:Marshall_Islands"{
-            ls{"tidssone for Marshalløyene"}
+            ls{"marshallesisk tid"}
         }
         "meta:Mauritius"{
             ld{"mauritisk sommertid"}
@@ -592,7 +592,7 @@ nb{
             ls{"singaporsk tid"}
         }
         "meta:Solomon"{
-            ls{"tidssone for Salomonøyene"}
+            ls{"salomonsk tid"}
         }
         "meta:South_Georgia"{
             ls{"tidssone for Sør-Georgia"}

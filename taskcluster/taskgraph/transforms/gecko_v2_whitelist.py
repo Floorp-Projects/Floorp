@@ -111,6 +111,7 @@ JOB_NAME_WHITELIST = set([
     'win32-st-an-debug',
     'win32-st-an-opt',
     'win32-dmd-opt',
+    'win64-ccov-debug',
     'win64-add-on-devel',
     'win64-clang-tidy',
     'win64-debug',

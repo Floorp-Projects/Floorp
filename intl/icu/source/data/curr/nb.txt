@@ -220,7 +220,7 @@ nb{
         }
         BYN{
             "BYN",
-            "hviterussiske rubler",
+            "nye hviterussiske rubler",
         }
         BYR{
             "BYR",
@@ -261,6 +261,10 @@ nb{
         CLP{
             "CLP",
             "chilenske pesos",
+        }
+        CNH{
+            "CNH",
+            "kinesiske yuan (offshore)",
         }
         CNX{
             "CNX",
@@ -912,7 +916,7 @@ nb{
         }
         STD{
             "STD",
-            "São Tomé og Príncipe-dobra",
+            "saotomesiske dobra",
         }
         SUR{
             "SUR",
@@ -1515,8 +1519,8 @@ nb{
             other{"hviterussiske nye rubler (1994–1999)"}
         }
         BYN{
-            one{"hviterussisk rubel"}
-            other{"hviterussiske rubler"}
+            one{"ny hviterussisk rubel"}
+            other{"nye hviterussiske rubler"}
         }
         BYR{
             one{"hviterussisk rubel (2000–2016)"}
@@ -1549,6 +1553,10 @@ nb{
         CLP{
             one{"chilensk peso"}
             other{"chilenske pesos"}
+        }
+        CNH{
+            one{"kinesisk yuan (offshore)"}
+            other{"kinesiske yuan (offshore)"}
         }
         CNX{
             one{"Kinas folkebank dollar"}
@@ -1932,7 +1940,7 @@ nb{
         }
         MDL{
             one{"moldovsk leu"}
-            other{"moldovske leu"}
+            other{"moldovske lei"}
         }
         MGA{
             one{"madagassisk ariary"}
@@ -2116,7 +2124,7 @@ nb{
         }
         RON{
             one{"rumensk leu"}
-            other{"rumenske leu"}
+            other{"rumenske lei"}
         }
         RSD{
             one{"serbisk dinar"}
@@ -2199,8 +2207,8 @@ nb{
             other{"sørsudanske pund"}
         }
         STD{
-            one{"São Tomé og Príncipe-dobra"}
-            other{"São Tomé og Príncipe-dobra"}
+            one{"saotomesisk dobra"}
+            other{"saotomesiske dobra"}
         }
         SUR{
             one{"sovjetisk rubel"}
@@ -2483,5 +2491,5 @@ nb{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

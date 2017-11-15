@@ -12,6 +12,7 @@ ro{
     }
     ExemplarCharacters{"[a ă â b c d e f g h i î j k l m n o p r s ș t ț u v x z]"}
     ExemplarCharactersIndex{"[A Ă Â B C D E F G H I Î J K L M N O P Q R S Ș T Ț U V W X Y Z]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! ? . … ' ‘ \u0022 “ ” „ « » ( ) \\[ \\] @ * /]"}
     MoreInformation{"..."}
     NumberElements{
@@ -247,11 +248,14 @@ ro{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.60"}
+    Version{"2.1.37.5"}
     calendar{
         buddhist{
             eras{
                 abbreviated{
+                    "e.b.",
+                }
+                narrow{
                     "e.b.",
                 }
                 wide{
@@ -323,6 +327,230 @@ ro{
                 }
             }
         }
+        coptic{
+            eras{
+                abbreviated{
+                    "î.A.M.",
+                    "A.M.",
+                }
+                narrow{
+                    "î.A.M.",
+                    "A.M.",
+                }
+                wide{
+                    "înainte de Anno Martyrum",
+                    "după Anno Martyrum",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Thout",
+                        "Paopi",
+                        "Hathor",
+                        "Koiak",
+                        "Tobi",
+                        "Meshir",
+                        "Paremhat",
+                        "Paremoude",
+                        "Pashons",
+                        "Paoni",
+                        "Epip",
+                        "Mesori",
+                        "Pi Kogi Enavot",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
+                    wide{
+                        "Thout",
+                        "Paopi",
+                        "Hathor",
+                        "Koiak",
+                        "Tobi",
+                        "Meshir",
+                        "Paremhat",
+                        "Paremoude",
+                        "Pashons",
+                        "Paoni",
+                        "Epip",
+                        "Mesori",
+                        "Pi Kogi Enavot",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Thout",
+                        "Paopi",
+                        "Hathor",
+                        "Koiak",
+                        "Tobi",
+                        "Meshir",
+                        "Paremhat",
+                        "Paremoude",
+                        "Pashons",
+                        "Paoni",
+                        "Epip",
+                        "Mesori",
+                        "Pi Kogi Enavot",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
+                    wide{
+                        "Thout",
+                        "Paopi",
+                        "Hathor",
+                        "Koiak",
+                        "Tobi",
+                        "Meshir",
+                        "Paremhat",
+                        "Paremoude",
+                        "Pashons",
+                        "Paoni",
+                        "Epip",
+                        "Mesori",
+                        "Pi Kogi Enavot",
+                    }
+                }
+            }
+        }
+        ethiopic{
+            eras{
+                abbreviated{
+                    "î.Într.",
+                    "d.Într.",
+                }
+                narrow{
+                    "î.Într.",
+                    "d.Într.",
+                }
+                wide{
+                    "înainte de Întrupare",
+                    "după Întrupare",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "meskerem",
+                        "taqemt",
+                        "hedar",
+                        "tahsas",
+                        "ter",
+                        "yekatit",
+                        "megabit",
+                        "miazia",
+                        "genbot",
+                        "sene",
+                        "hamle",
+                        "nehase",
+                        "pagumen",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
+                    wide{
+                        "meskerem",
+                        "taqemt",
+                        "hedar",
+                        "tahsas",
+                        "ter",
+                        "yekatit",
+                        "megabit",
+                        "miazia",
+                        "genbot",
+                        "sene",
+                        "hamle",
+                        "nehase",
+                        "pagumen",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "meskerem",
+                        "taqemt",
+                        "hedar",
+                        "tahsas",
+                        "ter",
+                        "yekatit",
+                        "megabit",
+                        "miazia",
+                        "genbot",
+                        "sene",
+                        "hamle",
+                        "nehase",
+                        "pagumen",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
+                    wide{
+                        "meskerem",
+                        "taqemt",
+                        "hedar",
+                        "tahsas",
+                        "ter",
+                        "yekatit",
+                        "megabit",
+                        "miazia",
+                        "genbot",
+                        "sene",
+                        "hamle",
+                        "nehase",
+                        "pagumen",
+                    }
+                }
+            }
+        }
         generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -340,8 +568,17 @@ ro{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
@@ -358,6 +595,7 @@ ro{
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
                 d{"d"}
+                h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"mm:ss"}
@@ -501,7 +739,12 @@ ro{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E d"}
@@ -549,9 +792,9 @@ ro{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    few{"'săptămâna' w 'din' y"}
-                    one{"'săptămâna' w 'din' y"}
-                    other{"'săptămâna' w 'din' y"}
+                    few{"'săptămâna' w 'din' Y"}
+                    one{"'săptămâna' w 'din' Y"}
+                    other{"'săptămâna' w 'din' Y"}
                 }
             }
             dayNames{
@@ -643,12 +886,12 @@ ro{
                         noon{"amiază"}
                     }
                     narrow{
-                        afternoon1{"după-amiază"}
+                        afternoon1{"după-amiaza"}
                         evening1{"seara"}
                         midnight{"miezul nopții"}
-                        morning1{"dimineață"}
+                        morning1{"dimineața"}
                         night1{"noaptea"}
-                        noon{"amiază"}
+                        noon{"la amiază"}
                     }
                     wide{
                         afternoon1{"după-amiaza"}
@@ -698,6 +941,14 @@ ro{
                     "d.Hr.",
                 }
                 abbreviated%variant{
+                    "î.e.n",
+                    "e.n.",
+                }
+                narrow{
+                    "î.Hr.",
+                    "d.Hr.",
+                }
+                narrow%variant{
                     "î.e.n",
                     "e.n.",
                 }
@@ -939,6 +1190,17 @@ ro{
             }
         }
         hebrew{
+            eras{
+                abbreviated{
+                    "A.M.",
+                }
+                narrow{
+                    "AM",
+                }
+                wide{
+                    "A.M.",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -956,6 +1218,22 @@ ro{
                         "Av",
                         "Elul",
                         "Adar II",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
                     }
                     wide{
                         "Tișrei",
@@ -991,6 +1269,22 @@ ro{
                         "Elul",
                         "Adar II",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
+                    }
                     wide{
                         "Tișrei",
                         "Heșvan",
@@ -1010,101 +1304,419 @@ ro{
                 }
             }
         }
+        indian{
+            eras{
+                abbreviated{
+                    "Saka",
+                }
+                narrow{
+                    "Saka",
+                }
+                wide{
+                    "Saka",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyeshta",
+                        "Aashaadha",
+                        "Shraavana",
+                        "Bhadrapada",
+                        "Ashwin",
+                        "Kartik",
+                        "Margashirsha",
+                        "Pausha",
+                        "Magh",
+                        "Phalguna",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyeshta",
+                        "Aashaadha",
+                        "Shraavana",
+                        "Bhadrapada",
+                        "Ashwin",
+                        "Kartik",
+                        "Margashirsha",
+                        "Pausha",
+                        "Magh",
+                        "Phalguna",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyeshta",
+                        "Aashaadha",
+                        "Shraavana",
+                        "Bhadrapada",
+                        "Ashwin",
+                        "Kartik",
+                        "Margashirsha",
+                        "Pausha",
+                        "Magh",
+                        "Phalguna",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyeshta",
+                        "Aashaadha",
+                        "Shraavana",
+                        "Bhadrapada",
+                        "Ashwin",
+                        "Kartik",
+                        "Margashirsha",
+                        "Pausha",
+                        "Magh",
+                        "Phalguna",
+                    }
+                }
+            }
+        }
         islamic{
             eras{
                 abbreviated{
                     "AH",
                 }
+                narrow{
+                    "AH",
+                }
+                wide{
+                    "A.H.",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Muh.",
+                        "Saf.",
+                        "Rab. I",
+                        "Rab. II",
+                        "Jum. I",
+                        "Jum. II",
+                        "Raj.",
+                        "Sha.",
+                        "Ram.",
+                        "Shaw.",
+                        "Dhuʻl-Q.",
+                        "Dhuʻl-H.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabiʻ I",
+                        "Rabiʻ II",
+                        "Jumada I",
+                        "Jumada II",
+                        "Rajab",
+                        "Shaʻban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dhuʻl-Qiʻdah",
+                        "Dhuʻl-Hijjah",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Muh.",
+                        "Saf.",
+                        "Rab. I",
+                        "Rab. II",
+                        "Jum. I",
+                        "Jum. II",
+                        "Raj.",
+                        "Sha.",
+                        "Ram.",
+                        "Shaw.",
+                        "Dhuʻl-Q.",
+                        "Dhuʻl-H.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabiʻ I",
+                        "Rabiʻ II",
+                        "Jumada I",
+                        "Jumada II",
+                        "Rajab",
+                        "Shaʻban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dhuʻl-Qiʻdah",
+                        "Dhuʻl-Hijjah",
+                    }
+                }
+            }
+        }
+        persian{
+            eras{
+                abbreviated{
+                    "A.P.",
+                }
+                narrow{
+                    "A.P.",
+                }
+                wide{
+                    "Anno Persico",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "A-Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "A-Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "A-Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "A-Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                }
+            }
+        }
+        roc{
+            eras{
+                abbreviated{
+                    "î.R.C.",
+                    "R.C.",
+                }
+                narrow{
+                    "î.R.C.",
+                    "R.C.",
+                }
+                wide{
+                    "înainte de Republica China",
+                    "Republica China",
+                }
             }
         }
     }
     characterLabel{
-        activities{"Activități"}
-        african_scripts{"Scrieri africane"}
-        american_scripts{"Scrieri americane"}
+        activities{"activitate"}
+        african_scripts{"scriere africană"}
+        american_scripts{"scriere americană"}
         animal{"animal"}
-        animals_nature{"Animale și natură"}
-        arrows{"Săgeți"}
+        animals_nature{"animal sau natură"}
+        arrows{"săgeată"}
         body{"corp"}
-        box_drawing{"Desen casetă"}
-        braille{"Braille"}
+        box_drawing{"desen casetă"}
+        braille{"scriere Braille"}
         building{"construcție"}
-        bullets_stars{"Marcatori/stele"}
-        consonantal_jamo{"Jamo consonantic"}
-        currency_symbols{"Simboluri monetare"}
-        dash_connector{"Liniuță/conector"}
-        digits{"Cifre"}
-        dingbats{"Ornamente"}
-        divination_symbols{"Simboluri divinație"}
-        downwards_arrows{"Săgeți în jos"}
-        downwards_upwards_arrows{"Săgeți în sus și în jos"}
-        east_asian_scripts{"Scrieri est-asiatice"}
-        emoji{"Emoji"}
-        european_scripts{"Scrieri europene"}
+        bullets_stars{"marcator sau steluță"}
+        consonantal_jamo{"jamo consonantic"}
+        currency_symbols{"simbol monetar"}
+        dash_connector{"liniuță sau conector"}
+        digits{"cifră"}
+        dingbats{"ornament"}
+        divination_symbols{"simbol divinație"}
+        downwards_arrows{"săgeată în jos"}
+        downwards_upwards_arrows{"săgeată în sus și în jos"}
+        east_asian_scripts{"scriere est-asiatică"}
+        emoji{"emoji"}
+        european_scripts{"scriere europeană"}
         female{"femeie"}
         flag{"steag"}
-        flags{"Steaguri"}
-        food_drink{"Mâncare și băutură"}
-        format{"Formatare"}
-        format_whitespace{"Formatare și spații albe"}
-        full_width_form_variant{"Variantă de formă cu lățime completă"}
-        geometric_shapes{"Forme geometrice"}
-        half_width_form_variant{"Variante de formă cu semilățime"}
-        han_characters{"Caractere han"}
-        han_radicals{"Radicali han"}
-        hanja{"Hanja"}
-        hanzi_simplified{"Hanzi (simplificată)"}
-        hanzi_traditional{"Hanzi (tradițională)"}
+        flags{"steaguri"}
+        food_drink{"mâncare și băutură"}
+        format{"formatare"}
+        format_whitespace{"formatare și spații albe"}
+        full_width_form_variant{"variantă cu lățime completă"}
+        geometric_shapes{"formă geometrică"}
+        half_width_form_variant{"variante cu semilățime"}
+        han_characters{"caracter han"}
+        han_radicals{"radical han"}
+        hanja{"hanja"}
+        hanzi_simplified{"hanzi (simplificată)"}
+        hanzi_traditional{"hanzi (tradițională)"}
         heart{"inimă"}
-        historic_scripts{"Scrieri istorice"}
-        ideographic_desc_characters{"Caractere desc. ideografice"}
-        japanese_kana{"Kana japoneză"}
-        kanbun{"Kanbun"}
-        kanji{"Kanji"}
+        historic_scripts{"scriere istorică"}
+        ideographic_desc_characters{"caracter desc. ideografic"}
+        japanese_kana{"kana japoneză"}
+        kanbun{"kanbun"}
+        kanji{"kanji"}
         keycap{"tastă"}
-        leftwards_arrows{"Săgeți spre stânga"}
-        leftwards_rightwards_arrows{"Săgeți spre stânga și spre dreapta"}
-        letterlike_symbols{"Simboluri asemănătoare literelor"}
-        limited_use{"Utilizare limitată"}
+        leftwards_arrows{"săgeată spre stânga"}
+        leftwards_rightwards_arrows{"săgeată spre stânga și spre dreapta"}
+        letterlike_symbols{"simbol bazat pe o literă"}
+        limited_use{"utilizare limitată"}
         male{"bărbat"}
-        math_symbols{"Simboluri matematice"}
-        middle_eastern_scripts{"Scrieri mijlociu-orientale"}
-        miscellaneous{"Diverse"}
-        modern_scripts{"Scrieri moderne"}
-        modifier{"Modificator"}
-        musical_symbols{"Simboluri muzicale"}
+        math_symbols{"simbol matematic"}
+        middle_eastern_scripts{"scriere din Orientul Mijlociu"}
+        miscellaneous{"diverse"}
+        modern_scripts{"scriere modernă"}
+        modifier{"modificator"}
+        musical_symbols{"simbol muzical"}
         nature{"natură"}
-        nonspacing{"Fără spațiere"}
-        numbers{"Numere"}
-        objects{"Obiecte"}
-        other{"Altele"}
-        paired{"Asociate"}
+        nonspacing{"fără spațiere"}
+        numbers{"numere"}
+        objects{"obiect"}
+        other{"altele"}
+        paired{"perechi"}
         person{"persoană"}
-        phonetic_alphabet{"Alfabet fonetic"}
-        pictographs{"Pictografe"}
+        phonetic_alphabet{"alfabet fonetic"}
+        pictographs{"pictografă"}
         place{"loc"}
         plant{"plantă"}
-        punctuation{"Punctuație"}
-        rightwards_arrows{"Săgeți spre dreapta"}
-        sign_standard_symbols{"Semne/simboluri standard"}
-        small_form_variant{"Variante de forme mici"}
-        smiley{"smiley"}
-        smileys_people{"Emoticoane și persoane"}
-        south_asian_scripts{"Scrieri sud-asiatice"}
-        southeast_asian_scripts{"Scrieri sud-est asiatice"}
-        spacing{"Spațiere"}
+        punctuation{"punctuație"}
+        rightwards_arrows{"săgeată spre dreapta"}
+        sign_standard_symbols{"semn sau simbol"}
+        small_form_variant{"variante mici"}
+        smiley{"emoticon"}
+        smileys_people{"emoticon sau persoană"}
+        south_asian_scripts{"scriere sud-asiatică"}
+        southeast_asian_scripts{"scriere sud-est asiatică"}
+        spacing{"spațiere"}
         sport{"sport"}
-        symbols{"Simboluri"}
-        technical_symbols{"Simboluri tehnice"}
-        tone_marks{"Marcaje de ton"}
-        travel{"călătorii"}
-        travel_places{"Călătorii și locuri"}
-        upwards_arrows{"Săgeți în sus"}
-        variant_forms{"Variante de forme"}
-        vocalic_jamo{"Jamo vocalic"}
+        symbols{"simbol"}
+        technical_symbols{"simbol tehnic"}
+        tone_marks{"marcaj de ton"}
+        travel{"călătorie"}
+        travel_places{"călătorie sau loc"}
+        upwards_arrows{"săgeți în sus"}
+        variant_forms{"variantă"}
+        vocalic_jamo{"jamo vocalic"}
         weather{"vreme"}
-        western_asian_scripts{"Scrieri vest-asiatice"}
-        whitespace{"Spațiu alb"}
+        western_asian_scripts{"scriere vest-asiatică"}
+        whitespace{"spațiu alb"}
     }
     delimiters{
         alternateQuotationEnd{"»"}
@@ -1156,19 +1768,40 @@ ro{
                 future{
                     few{"peste {0} zile"}
                     one{"peste {0} zi"}
-                    other{"peste {0} zile"}
+                    other{"peste {0} de zile"}
                 }
                 past{
                     few{"acum {0} zile"}
                     one{"acum {0} zi"}
-                    other{"acum {0} zile"}
+                    other{"acum {0} de zile"}
                 }
             }
+        }
+        dayOfYear{
+            dn{"ziua din an"}
+        }
+        dayOfYear-narrow{
+            dn{"ziua din an"}
+        }
+        dayOfYear-short{
+            dn{"ziua din an"}
         }
         dayperiod{
             dn{"a.m/p.m."}
         }
+        dayperiod-narrow{
+            dn{"a.m/p.m."}
+        }
+        dayperiod-short{
+            dn{"a.m/p.m."}
+        }
         era{
+            dn{"eră"}
+        }
+        era-narrow{
+            dn{"eră"}
+        }
+        era-short{
             dn{"eră"}
         }
         fri{
@@ -1693,8 +2326,8 @@ ro{
         }
         thu-short{
             relative{
-                "-1"{"joi trecută"}
-                "0"{"joi aceasta"}
+                "-1"{"joia trecută"}
+                "0"{"joia aceasta"}
                 "1"{"joia viitoare"}
             }
             relativeTime{
@@ -1877,8 +2510,32 @@ ro{
                 }
             }
         }
+        weekOfMonth{
+            dn{"săptămâna din lună"}
+        }
+        weekOfMonth-narrow{
+            dn{"săpt. din lună"}
+        }
+        weekOfMonth-short{
+            dn{"săpt. din lună"}
+        }
         weekday{
-            dn{"Zi a săptămânii"}
+            dn{"ziua din săptămână"}
+        }
+        weekday-narrow{
+            dn{"ziua din săpt."}
+        }
+        weekday-short{
+            dn{"ziua din săpt."}
+        }
+        weekdayOfMonth{
+            dn{"ziua săptămânii din lună"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"ziua săpt. din lună"}
+        }
+        weekdayOfMonth-short{
+            dn{"ziua săpt. din lună"}
         }
         year{
             dn{"an"}
@@ -1921,7 +2578,7 @@ ro{
                 future{
                     few{"peste {0} ani"}
                     one{"peste {0} an"}
-                    other{"peste {0} ani"}
+                    other{"peste {0} de ani"}
                 }
                 past{
                     few{"acum {0} ani"}
@@ -1933,8 +2590,20 @@ ro{
         zone{
             dn{"fus orar"}
         }
+        zone-narrow{
+            dn{"fus"}
+        }
+        zone-short{
+            dn{"fus"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} sau {1}"}
+            end{"{0} sau {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} și {1}"}
             end{"{0} și {1}"}

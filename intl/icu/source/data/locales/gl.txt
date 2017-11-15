@@ -12,6 +12,7 @@ gl{
     }
     ExemplarCharacters{"[a á b c d e é f g h i í j k l m n ñ o ó p q r s t u ú ü v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N Ñ O P Q R S T U V W X Y Z]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
         "″]"
@@ -86,16 +87,16 @@ gl{
             patternsShort{
                 currencyFormat{
                     1000{
-                        one{"0"}
-                        other{"0"}
+                        one{"0 ¤"}
+                        other{"0 ¤"}
                     }
                     10000{
-                        one{"0"}
-                        other{"0"}
+                        one{"0 ¤"}
+                        other{"0 ¤"}
                     }
                     100000{
-                        one{"0"}
-                        other{"0"}
+                        one{"0 ¤"}
+                        other{"0 ¤"}
                     }
                     1000000{
                         one{"0 M¤"}
@@ -110,28 +111,28 @@ gl{
                         other{"000 M¤"}
                     }
                     1000000000{
-                        one{"0"}
-                        other{"0"}
+                        one{"0 ¤"}
+                        other{"0 ¤"}
                     }
                     10000000000{
-                        one{"0"}
-                        other{"0"}
+                        one{"0 ¤"}
+                        other{"0 ¤"}
                     }
                     100000000000{
-                        one{"0"}
-                        other{"0"}
+                        one{"0 ¤"}
+                        other{"0 ¤"}
                     }
                     1000000000000{
-                        one{"0"}
-                        other{"0"}
+                        one{"0 B¤"}
+                        other{"0 B¤"}
                     }
                     10000000000000{
-                        one{"0"}
-                        other{"0"}
+                        one{"00 B¤"}
+                        other{"00 B¤"}
                     }
                     100000000000000{
-                        one{"0"}
-                        other{"0"}
+                        one{"000 B¤"}
+                        other{"000 B¤"}
                     }
                 }
                 decimalFormat{
@@ -156,8 +157,8 @@ gl{
                         other{"00 mill'.'"}
                     }
                     100000000{
-                        one{"000 mill"}
-                        other{"000 mill"}
+                        one{"000 mill'.'"}
+                        other{"000 mill'.'"}
                     }
                     1000000000{
                         one{"0"}
@@ -212,7 +213,7 @@ gl{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     calendar{
         generic{
             DateTimePatterns{
@@ -231,12 +232,21 @@ gl{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E, h:mm B"}
+                EBhms{"E, h:mm:ss B"}
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
                 Ed{"E d"}
+                Ehm{"E, h:mm a"}
+                Ehms{"E, h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM 'de' y G"}
                 GyMMMEd{"ccc, d 'de' MMM 'de' y G"}
-                GyMMMd{"d 'de' MMM 'de' y G"}
+                GyMMMd{"d /MM/y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -392,7 +402,7 @@ gl{
                 "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y",
                 "d 'de' MMMM 'de' y",
-                "d 'de' MMM 'de' y",
+                "dd/MM/y",
                 "dd/MM/yy",
                 "{0}, {1}",
                 "{0} 'do' {1}",
@@ -404,26 +414,31 @@ gl{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
-                EHm{"ccc, HH:mm"}
-                EHms{"ccc, HH:mm:ss"}
-                Ed{"d 'de' E"}
+                EBhm{"E, h:mm B"}
+                EBhms{"E, h:mm:ss B"}
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
+                Ed{"E d"}
                 Ehm{"E, h:mm a"}
                 Ehms{"E, h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM 'de' y G"}
-                GyMMMEd{"E, d 'de' MMM 'de' y G"}
+                GyMMMEd{"E, d/MM/y G"}
                 GyMMMd{"d 'de' MMMM 'de' y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss (v)"}
-                Hmv{"HH:mm (v)"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, d/M"}
                 MMM{"LLL"}
-                MMMEd{"ccc, d 'de' MMM"}
-                MMMMEd{"ccc, d 'de' MMMM"}
+                MMMEd{"E, d 'de' MMM"}
+                MMMMEd{"E, d 'de' MMMM"}
                 MMMMW{
                     one{"W.'ª' 'semana' 'de' MMMM"}
                     other{"W.'ª' 'semana' 'de' MMMM"}
@@ -441,18 +456,18 @@ gl{
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
-                yMEd{"ccc, d/M/y"}
+                yMEd{"E, d/M/y"}
                 yMM{"MM/y"}
-                yMMM{"LLL 'de' y"}
-                yMMMEd{"ccc, d 'de' MMM 'de' y"}
-                yMMMM{"LLLL 'de' y"}
-                yMMMd{"d 'de' MMM 'de' y"}
+                yMMM{"MMM 'de' y"}
+                yMMMEd{"EEE, d/MM/y"}
+                yMMMM{"MMMM 'de' y"}
+                yMMMd{"d/MM/y"}
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ 'de' y"}
                 yw{
-                    one{"w.'ª' 'semana' 'de' y"}
-                    other{"w.'ª' 'semana' 'de' y"}
+                    one{"w.'ª' 'semana' 'de' Y"}
+                    other{"w.'ª' 'semana' 'de' Y"}
                 }
             }
             dayNames{
@@ -476,13 +491,13 @@ gl{
                         "s.",
                     }
                     short{
-                        "dom.",
-                        "luns",
-                        "mar.",
-                        "mér.",
-                        "xov.",
-                        "ven.",
-                        "sáb.",
+                        "do.",
+                        "lu.",
+                        "ma.",
+                        "mé.",
+                        "xo.",
+                        "ve.",
+                        "sá.",
                     }
                     wide{
                         "domingo",
@@ -599,16 +614,16 @@ gl{
                     "d.C.",
                 }
                 abbreviated%variant{
-                    "a.E.C.",
-                    "E.C.",
+                    "a.e.c.",
+                    "e.c.",
                 }
                 wide{
                     "antes de Cristo",
                     "despois de Cristo",
                 }
                 wide%variant{
-                    "antes da Era Común",
-                    "da Era Común",
+                    "antes da era común",
+                    "da era común",
                 }
             }
             intervalFormats{
@@ -841,92 +856,92 @@ gl{
         }
     }
     characterLabel{
-        activities{"Actividades"}
-        african_scripts{"Sistemas de escrita africanos"}
-        american_scripts{"Sistemas de escrita americanos"}
-        animal{"animal"}
-        animals_nature{"Animais e natureza"}
-        arrows{"Frechas"}
+        activities{"actividades"}
+        african_scripts{"sistemas de escrita africanos"}
+        american_scripts{"sistemas de escrita americanos"}
+        animal{"animais"}
+        animals_nature{"animais e natureza"}
+        arrows{"frechas"}
         body{"corpo"}
-        box_drawing{"Deseño de caixas"}
-        braille{"Braile"}
-        building{"edificio"}
-        bullets_stars{"Viñetas/estrelas"}
-        consonantal_jamo{"Jamo consonántico"}
-        currency_symbols{"Símbolos de moedas"}
-        dash_connector{"Trazos/conectores"}
-        digits{"Díxitos"}
-        dingbats{"Pictogramas"}
-        divination_symbols{"Símbolos astrolóxicos"}
-        downwards_arrows{"Frechas cara arriba"}
-        downwards_upwards_arrows{"Frechas cara abaixo"}
-        east_asian_scripts{"Sistemas de escrita de Asia Oriental"}
-        emoji{"Emojis"}
-        european_scripts{"Sistemas de escrita europeos"}
-        female{"muller"}
+        box_drawing{"deseño de caixas"}
+        braille{"braille"}
+        building{"edificios"}
+        bullets_stars{"viñetas/estrelas"}
+        consonantal_jamo{"jamos consonánticos"}
+        currency_symbols{"símbolos de moedas"}
+        dash_connector{"trazos/conectores"}
+        digits{"díxitos"}
+        dingbats{"pictogramas"}
+        divination_symbols{"símbolos astrolóxicos"}
+        downwards_arrows{"frechas cara arriba"}
+        downwards_upwards_arrows{"frechas cara abaixo"}
+        east_asian_scripts{"sistemas de escrita de Asia Oriental"}
+        emoji{"emojis"}
+        european_scripts{"sistemas de escrita europeos"}
+        female{"mulleres"}
         flag{"bandeira"}
-        flags{"Bandeiras"}
-        food_drink{"Comida e bebida"}
-        format{"Formato"}
-        format_whitespace{"Formato e espazos en branco"}
-        full_width_form_variant{"Variacións de forma de ancho completo"}
-        geometric_shapes{"Figuras xeométricas"}
-        half_width_form_variant{"Variacións de forma de ancho medio"}
-        han_characters{"Caracteres han"}
-        han_radicals{"Radicais han"}
-        hanja{"Hanja"}
-        hanzi_simplified{"Hanzi (simplificado)"}
-        hanzi_traditional{"Hanzi (tradicional)"}
-        heart{"corazón"}
-        historic_scripts{"Sistemas de escrita históricos"}
-        ideographic_desc_characters{"Caracteres de descrición ideográfica"}
-        japanese_kana{"Kana xaponés"}
-        kanbun{"Kanbun"}
-        kanji{"Kanji"}
-        keycap{"tecla"}
-        leftwards_arrows{"Frechas á esquerda"}
-        leftwards_rightwards_arrows{"Frechas á esquerda e dereita"}
-        letterlike_symbols{"Símbolos con letras"}
-        limited_use{"Uso limitado"}
-        male{"home"}
-        math_symbols{"Símbolos matemáticos"}
-        middle_eastern_scripts{"Sistemas de escritura de Oriente Medio"}
-        miscellaneous{"Varios"}
-        modern_scripts{"Sistemas de escritura modernos"}
-        modifier{"Modificador"}
-        musical_symbols{"Símbolos musicais"}
+        flags{"bandeiras"}
+        food_drink{"comida e bebida"}
+        format{"formato"}
+        format_whitespace{"formato e espazos en branco"}
+        full_width_form_variant{"variacións de forma de ancho completo"}
+        geometric_shapes{"figuras xeométricas"}
+        half_width_form_variant{"variacións de forma de ancho medio"}
+        han_characters{"caracteres han"}
+        han_radicals{"radicais han"}
+        hanja{"hanja"}
+        hanzi_simplified{"hanzi (simplificado)"}
+        hanzi_traditional{"hanzi (tradicional)"}
+        heart{"corazóns"}
+        historic_scripts{"sistemas de escrita históricos"}
+        ideographic_desc_characters{"caracteres de descrición ideográfica"}
+        japanese_kana{"kanas xaponeses"}
+        kanbun{"kanbun"}
+        kanji{"kanjis"}
+        keycap{"teclas"}
+        leftwards_arrows{"frechas á esquerda"}
+        leftwards_rightwards_arrows{"frechas á esquerda e dereita"}
+        letterlike_symbols{"símbolos con letras"}
+        limited_use{"uso limitado"}
+        male{"homes"}
+        math_symbols{"símbolos matemáticos"}
+        middle_eastern_scripts{"sistemas de escritura de Oriente Medio"}
+        miscellaneous{"varios"}
+        modern_scripts{"sistemas de escritura modernos"}
+        modifier{"modificadores"}
+        musical_symbols{"símbolos musicais"}
         nature{"natureza"}
-        nonspacing{"Sen espazo"}
-        numbers{"Números"}
-        objects{"Obxectos"}
-        other{"Outros"}
-        paired{"Emparellado"}
-        person{"persoa"}
-        phonetic_alphabet{"Alfabeto fonético"}
-        pictographs{"Pictogramas"}
-        place{"lugar"}
-        plant{"planta"}
-        punctuation{"Puntuación"}
-        rightwards_arrows{"Frechas cara a dereita"}
-        sign_standard_symbols{"Signos/símbolos estándar"}
-        small_form_variant{"Variacións de forma pequena"}
-        smiley{"cara riseira"}
-        smileys_people{"Emoticonas e persoas"}
-        south_asian_scripts{"Sistemas de escrita de Asia Meridional"}
-        southeast_asian_scripts{"Sistemas de escrita do Sueste asiático"}
-        spacing{"Espazamento"}
+        nonspacing{"sen espazo"}
+        numbers{"números"}
+        objects{"obxectos"}
+        other{"outros"}
+        paired{"emparellados"}
+        person{"persoas"}
+        phonetic_alphabet{"alfabeto fonético"}
+        pictographs{"pictogramas"}
+        place{"lugares"}
+        plant{"plantas"}
+        punctuation{"puntuación"}
+        rightwards_arrows{"frechas á dereita"}
+        sign_standard_symbols{"signos/símbolos estándar"}
+        small_form_variant{"pequenas variantes"}
+        smiley{"emoticonas"}
+        smileys_people{"emoticonas e persoas"}
+        south_asian_scripts{"sistemas de escrita de Asia Meridional"}
+        southeast_asian_scripts{"sistemas de escrita do Sueste asiático"}
+        spacing{"espazamento"}
         sport{"deporte"}
-        symbols{"Símbolos"}
-        technical_symbols{"Símbolos técnicos"}
-        tone_marks{"Marcas tonais"}
+        symbols{"símbolos"}
+        technical_symbols{"símbolos técnicos"}
+        tone_marks{"marcas tonais"}
         travel{"viaxar"}
-        travel_places{"Viaxes e lugares"}
-        upwards_arrows{"Frechas cara arriba"}
-        variant_forms{"Formas variantes"}
-        vocalic_jamo{"Jamo vocálico"}
+        travel_places{"viaxar/lugares"}
+        upwards_arrows{"frechas cara arriba"}
+        variant_forms{"variantes"}
+        vocalic_jamo{"jamos vocálicos"}
         weather{"meteoroloxía"}
-        western_asian_scripts{"Sistemas de escrita de Asia Occidental"}
-        whitespace{"Espazo en branco"}
+        western_asian_scripts{"sistemas de escrita de Asia Occidental"}
+        whitespace{"espazos en branco"}
     }
     delimiters{
         alternateQuotationEnd{"’"}
@@ -946,8 +961,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} día"}
-                    other{"en {0} días"}
+                    one{"dentro de {0} día"}
+                    other{"dentro de {0} días"}
                 }
                 past{
                     one{"hai {0} día"}
@@ -956,24 +971,24 @@ gl{
             }
         }
         day-narrow{
-            dn{"d"}
+            dn{"d."}
             relativeTime{
                 future{
-                    one{"en {0} d"}
-                    other{"en {0} d"}
+                    one{"en {0} d."}
+                    other{"en {0} d."}
                 }
                 past{
-                    one{"hai {0} d"}
-                    other{"hai {0} d"}
+                    one{"hai {0} d."}
+                    other{"hai {0} d."}
                 }
             }
         }
         day-short{
-            dn{"d"}
+            dn{"día"}
             relativeTime{
                 future{
-                    one{"en {0} día"}
-                    other{"en {0} días"}
+                    one{"dentro de {0} día"}
+                    other{"dentro de {0} días"}
                 }
                 past{
                     one{"hai {0} día"}
@@ -981,10 +996,31 @@ gl{
                 }
             }
         }
+        dayOfYear{
+            dn{"día do ano"}
+        }
+        dayOfYear-narrow{
+            dn{"d. do a."}
+        }
+        dayOfYear-short{
+            dn{"día do ano"}
+        }
         dayperiod{
             dn{"a.m./p.m."}
         }
+        dayperiod-narrow{
+            dn{"a.m./p.m."}
+        }
+        dayperiod-short{
+            dn{"a.m./p.m."}
+        }
         era{
+            dn{"era"}
+        }
+        era-narrow{
+            dn{"e."}
+        }
+        era-short{
             dn{"era"}
         }
         fri{
@@ -995,8 +1031,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} venres"}
-                    other{"en {0} venres"}
+                    one{"dentro de {0} venres"}
+                    other{"dentro de {0} venres"}
                 }
                 past{
                     one{"hai {0} venres"}
@@ -1029,8 +1065,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} ven."}
-                    other{"en {0} ven."}
+                    one{"dentro de {0} ven."}
+                    other{"dentro de {0} ven."}
                 }
                 past{
                     one{"hai {0} ven."}
@@ -1041,12 +1077,12 @@ gl{
         hour{
             dn{"hora"}
             relative{
-                "0"{"nesta hora"}
+                "0"{"esta hora"}
             }
             relativeTime{
                 future{
-                    one{"en {0} hora"}
-                    other{"en {0} horas"}
+                    one{"dentro de {0} hora"}
+                    other{"dentro de {0} horas"}
                 }
                 past{
                     one{"hai {0} hora"}
@@ -1071,8 +1107,8 @@ gl{
             dn{"h"}
             relativeTime{
                 future{
-                    one{"en {0} h"}
-                    other{"en {0} h"}
+                    one{"dentro de {0} h"}
+                    other{"dentro de {0} h"}
                 }
                 past{
                     one{"hai {0} h"}
@@ -1083,12 +1119,12 @@ gl{
         minute{
             dn{"minuto"}
             relative{
-                "0"{"neste minuto"}
+                "0"{"este minuto"}
             }
             relativeTime{
                 future{
-                    one{"en {0} minuto"}
-                    other{"en {0} minutos"}
+                    one{"dentro de {0} minuto"}
+                    other{"dentro de {0} minutos"}
                 }
                 past{
                     one{"hai {0} minuto"}
@@ -1113,8 +1149,8 @@ gl{
             dn{"min"}
             relativeTime{
                 future{
-                    one{"en {0} min"}
-                    other{"en {0} min"}
+                    one{"dentro de {0} min"}
+                    other{"dentro de {0} min"}
                 }
                 past{
                     one{"hai {0} min"}
@@ -1130,8 +1166,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} luns"}
-                    other{"en {0} luns"}
+                    one{"dentro de {0} luns"}
+                    other{"dentro de {0} luns"}
                 }
                 past{
                     one{"hai {0} luns"}
@@ -1164,8 +1200,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} luns"}
-                    other{"en {0} luns"}
+                    one{"dentro de {0} luns"}
+                    other{"dentro de {0} luns"}
                 }
                 past{
                     one{"hai {0} luns"}
@@ -1182,8 +1218,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} mes"}
-                    other{"en {0} meses"}
+                    one{"dentro de {0} mes"}
+                    other{"dentro de {0} meses"}
                 }
                 past{
                     one{"hai {0} mes"}
@@ -1213,8 +1249,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} mes"}
-                    other{"en {0} mes."}
+                    one{"dentro de {0} mes"}
+                    other{"dentro de {0} mes."}
                 }
                 past{
                     one{"hai {0} mes"}
@@ -1231,8 +1267,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} trimestre"}
-                    other{"en {0} trimestres"}
+                    one{"dentro de {0} trimestre"}
+                    other{"dentro de {0} trimestres"}
                 }
                 past{
                     one{"hai {0} trimestre"}
@@ -1267,8 +1303,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} trim."}
-                    other{"en {0} trim."}
+                    one{"dentro de {0} trim."}
+                    other{"dentro de {0} trim."}
                 }
                 past{
                     one{"hai {0} trim."}
@@ -1284,8 +1320,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} sábado"}
-                    other{"en {0} sábados"}
+                    one{"dentro de {0} sábado"}
+                    other{"dentro de {0} sábados"}
                 }
                 past{
                     one{"hai {0} sábado"}
@@ -1318,8 +1354,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} sáb."}
-                    other{"en {0} sáb."}
+                    one{"dentro de {0} sáb."}
+                    other{"dentro de {0} sáb."}
                 }
                 past{
                     one{"hai {0} sáb."}
@@ -1334,8 +1370,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} segundo"}
-                    other{"en {0} segundos"}
+                    one{"dentro de {0} segundo"}
+                    other{"dentro de {0} segundos"}
                 }
                 past{
                     one{"hai {0} segundo"}
@@ -1360,8 +1396,8 @@ gl{
             dn{"s"}
             relativeTime{
                 future{
-                    one{"en {0} s"}
-                    other{"en {0} s"}
+                    one{"dentro de {0} s"}
+                    other{"dentro de {0} s"}
                 }
                 past{
                     one{"hai {0} s"}
@@ -1377,8 +1413,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} domingo"}
-                    other{"en {0} domingos"}
+                    one{"dentro de {0} domingo"}
+                    other{"dentro de {0} domingos"}
                 }
                 past{
                     one{"hai {0} domingo"}
@@ -1411,8 +1447,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} dom."}
-                    other{"en {0} dom."}
+                    one{"dentro de {0} dom."}
+                    other{"dentro de {0} dom."}
                 }
                 past{
                     one{"hai {0} dom."}
@@ -1428,8 +1464,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} xoves"}
-                    other{"en {0} xoves"}
+                    one{"dentro de {0} xoves"}
+                    other{"dentro de {0} xoves"}
                 }
                 past{
                     one{"hai {0} xoves"}
@@ -1462,8 +1498,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} xov."}
-                    other{"en {0} xov."}
+                    one{"dentro de {0} xov."}
+                    other{"dentro de {0} xov."}
                 }
                 past{
                     one{"hai {0} xov."}
@@ -1479,8 +1515,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} martes"}
-                    other{"en {0} martes"}
+                    one{"dentro de {0} martes"}
+                    other{"dentro de {0} martes"}
                 }
                 past{
                     one{"hai {0} martes"}
@@ -1513,8 +1549,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} mar."}
-                    other{"en {0} mar."}
+                    one{"dentro de {0} mar."}
+                    other{"dentro de {0} mar."}
                 }
                 past{
                     one{"hai {0} mar."}
@@ -1530,8 +1566,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} mércores"}
-                    other{"en {0} mércores"}
+                    one{"dentro de {0} mércores"}
+                    other{"dentro de {0} mércores"}
                 }
                 past{
                     one{"hai {0} mércores"}
@@ -1564,8 +1600,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} mér."}
-                    other{"en {0} mér."}
+                    one{"dentro de {0} mér."}
+                    other{"dentro de {0} mér."}
                 }
                 past{
                     one{"hai {0} mér."}
@@ -1583,8 +1619,8 @@ gl{
             relativePeriod{"a semana do {0}"}
             relativeTime{
                 future{
-                    one{"en {0} semana"}
-                    other{"en {0} semanas"}
+                    one{"dentro de {0} semana"}
+                    other{"dentro de {0} semanas"}
                 }
                 past{
                     one{"hai {0} semana"}
@@ -1616,8 +1652,8 @@ gl{
             relativePeriod{"a semana do {0}"}
             relativeTime{
                 future{
-                    one{"en {0} sem."}
-                    other{"en {0} sem."}
+                    one{"dentro de {0} sem."}
+                    other{"dentro de {0} sem."}
                 }
                 past{
                     one{"hai {0} sem."}
@@ -1625,8 +1661,32 @@ gl{
                 }
             }
         }
+        weekOfMonth{
+            dn{"semana do mes"}
+        }
+        weekOfMonth-narrow{
+            dn{"sem. do m."}
+        }
+        weekOfMonth-short{
+            dn{"sem. do mes"}
+        }
         weekday{
             dn{"día da semana"}
+        }
+        weekday-narrow{
+            dn{"d. da sem."}
+        }
+        weekday-short{
+            dn{"día da sem."}
+        }
+        weekdayOfMonth{
+            dn{"semana do mes"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"sem. do m."}
+        }
+        weekdayOfMonth-short{
+            dn{"sem. do mes"}
         }
         year{
             dn{"ano"}
@@ -1637,8 +1697,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} ano"}
-                    other{"en {0} anos"}
+                    one{"dentro de {0} ano"}
+                    other{"dentro de {0} anos"}
                 }
                 past{
                     one{"hai {0} ano"}
@@ -1673,8 +1733,8 @@ gl{
             }
             relativeTime{
                 future{
-                    one{"en {0} ano"}
-                    other{"en {0} anos"}
+                    one{"dentro de {0} ano"}
+                    other{"dentro de {0} anos"}
                 }
                 past{
                     one{"hai {0} ano"}
@@ -1685,8 +1745,20 @@ gl{
         zone{
             dn{"fuso horario"}
         }
+        zone-narrow{
+            dn{"fuso"}
+        }
+        zone-short{
+            dn{"fuso"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} ou {1}"}
+            end{"{0} ou {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} e {1}"}
             end{"{0} e {1}"}

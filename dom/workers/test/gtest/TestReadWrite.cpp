@@ -155,7 +155,7 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   nsAutoCString buffer(SERVICEWORKERREGISTRAR_VERSION "\n");
 
   buffer.AppendLiteral("^appId=123&inBrowser=1\n");
-  buffer.AppendLiteral("scope 0\ncurrentWorkerURL 0\n");
+  buffer.AppendLiteral("https://scope_0.org\ncurrentWorkerURL 0\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TRUE "\n");
   buffer.AppendLiteral("cacheName 0\n");
   buffer.AppendInt(nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_IMPORTS, 16);
@@ -169,7 +169,7 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.AppendLiteral("\n");
-  buffer.AppendLiteral("scope 1\ncurrentWorkerURL 1\n");
+  buffer.AppendLiteral("https://scope_1.org\ncurrentWorkerURL 1\n");
   buffer.Append(SERVICEWORKERREGISTRAR_FALSE "\n");
   buffer.AppendLiteral("cacheName 1\n");
   buffer.AppendInt(nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_ALL, 16);
@@ -201,8 +201,8 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   cInfo0.attrs().CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
-  ASSERT_STREQ("scope 0", cInfo0.spec().get());
-  ASSERT_STREQ("scope 0", data[0].scope().get());
+  ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
+  ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   ASSERT_TRUE(data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
@@ -220,8 +220,8 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   cInfo1.attrs().CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
-  ASSERT_STREQ("scope 1", cInfo1.spec().get());
-  ASSERT_STREQ("scope 1", data[1].scope().get());
+  ASSERT_STREQ("https://scope_1.org", cInfo1.spec().get());
+  ASSERT_STREQ("https://scope_1.org", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_FALSE(data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
@@ -257,7 +257,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
     for (int i = 0; i < 10; ++i) {
       ServiceWorkerRegistrationData reg;
 
-      reg.scope() = nsPrintfCString("scope write %d", i);
+      reg.scope() = nsPrintfCString("https://scope_write_%d.org", i);
       reg.currentWorkerURL() = nsPrintfCString("currentWorkerURL write %d", i);
       reg.currentWorkerHandlesFetch() = true;
       reg.cacheName() =
@@ -273,7 +273,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
       spec.AppendPrintf("spec write %d", i);
       reg.principal() =
         mozilla::ipc::ContentPrincipalInfo(mozilla::OriginAttributes(i, i % 2),
-                                           mozilla::void_t(), spec);
+                                           spec, spec);
 
       swr->TestRegisterServiceWorker(reg);
     }
@@ -303,11 +303,11 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
 
     ASSERT_STREQ(expectSuffix.get(), suffix.get());
 
-    test.AppendPrintf("scope write %d", i);
+    test.AppendPrintf("https://scope_write_%d.org", i);
     ASSERT_STREQ(test.get(), cInfo.spec().get());
 
     test.Truncate();
-    test.AppendPrintf("scope write %d", i);
+    test.AppendPrintf("https://scope_write_%d.org", i);
     ASSERT_STREQ(test.get(), data[i].scope().get());
 
     test.Truncate();
@@ -334,11 +334,11 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration)
   nsAutoCString buffer("2" "\n");
 
   buffer.AppendLiteral("^appId=123&inBrowser=1\n");
-  buffer.AppendLiteral("spec 0\nscope 0\nscriptSpec 0\ncurrentWorkerURL 0\nactiveCache 0\nwaitingCache 0\n");
+  buffer.AppendLiteral("spec 0\nhttps://scope_0.org\nscriptSpec 0\ncurrentWorkerURL 0\nactiveCache 0\nwaitingCache 0\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.AppendLiteral("\n");
-  buffer.AppendLiteral("spec 1\nscope 1\nscriptSpec 1\ncurrentWorkerURL 1\nactiveCache 1\nwaitingCache 1\n");
+  buffer.AppendLiteral("spec 1\nhttps://scope_1.org\nscriptSpec 1\ncurrentWorkerURL 1\nactiveCache 1\nwaitingCache 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
@@ -359,8 +359,8 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration)
   cInfo0.attrs().CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
-  ASSERT_STREQ("scope 0", cInfo0.spec().get());
-  ASSERT_STREQ("scope 0", data[0].scope().get());
+  ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
+  ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   ASSERT_EQ(true, data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("activeCache 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
@@ -378,8 +378,8 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration)
   cInfo1.attrs().CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
-  ASSERT_STREQ("scope 1", cInfo1.spec().get());
-  ASSERT_STREQ("scope 1", data[1].scope().get());
+  ASSERT_STREQ("https://scope_1.org", cInfo1.spec().get());
+  ASSERT_STREQ("https://scope_1.org", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_EQ(true, data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("activeCache 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
@@ -395,11 +395,11 @@ TEST(ServiceWorkerRegistrar, TestVersion3Migration)
   nsAutoCString buffer("3" "\n");
 
   buffer.AppendLiteral("^appId=123&inBrowser=1\n");
-  buffer.AppendLiteral("spec 0\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.AppendLiteral("spec 0\nhttps://scope_0.org\ncurrentWorkerURL 0\ncacheName 0\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.AppendLiteral("\n");
-  buffer.AppendLiteral("spec 1\nscope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.AppendLiteral("spec 1\nhttps://scope_1.org\ncurrentWorkerURL 1\ncacheName 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
@@ -420,8 +420,8 @@ TEST(ServiceWorkerRegistrar, TestVersion3Migration)
   cInfo0.attrs().CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
-  ASSERT_STREQ("scope 0", cInfo0.spec().get());
-  ASSERT_STREQ("scope 0", data[0].scope().get());
+  ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
+  ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   ASSERT_EQ(true, data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
@@ -439,8 +439,8 @@ TEST(ServiceWorkerRegistrar, TestVersion3Migration)
   cInfo1.attrs().CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
-  ASSERT_STREQ("scope 1", cInfo1.spec().get());
-  ASSERT_STREQ("scope 1", data[1].scope().get());
+  ASSERT_STREQ("https://scope_1.org", cInfo1.spec().get());
+  ASSERT_STREQ("https://scope_1.org", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_EQ(true, data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
@@ -456,11 +456,11 @@ TEST(ServiceWorkerRegistrar, TestVersion4Migration)
   nsAutoCString buffer("4" "\n");
 
   buffer.AppendLiteral("^appId=123&inBrowser=1\n");
-  buffer.AppendLiteral("scope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.AppendLiteral("https://scope_0.org\ncurrentWorkerURL 0\ncacheName 0\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.AppendLiteral("\n");
-  buffer.AppendLiteral("scope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.AppendLiteral("https://scope_1.org\ncurrentWorkerURL 1\ncacheName 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
@@ -481,8 +481,8 @@ TEST(ServiceWorkerRegistrar, TestVersion4Migration)
   cInfo0.attrs().CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
-  ASSERT_STREQ("scope 0", cInfo0.spec().get());
-  ASSERT_STREQ("scope 0", data[0].scope().get());
+  ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
+  ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   // default is true
   ASSERT_EQ(true, data[0].currentWorkerHandlesFetch());
@@ -501,8 +501,8 @@ TEST(ServiceWorkerRegistrar, TestVersion4Migration)
   cInfo1.attrs().CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
-  ASSERT_STREQ("scope 1", cInfo1.spec().get());
-  ASSERT_STREQ("scope 1", data[1].scope().get());
+  ASSERT_STREQ("https://scope_1.org", cInfo1.spec().get());
+  ASSERT_STREQ("https://scope_1.org", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   // default is true
   ASSERT_EQ(true, data[1].currentWorkerHandlesFetch());
@@ -519,13 +519,13 @@ TEST(ServiceWorkerRegistrar, TestVersion5Migration)
   nsAutoCString buffer("5" "\n");
 
   buffer.AppendLiteral("^appId=123&inBrowser=1\n");
-  buffer.AppendLiteral("scope 0\ncurrentWorkerURL 0\n");
+  buffer.AppendLiteral("https://scope_0.org\ncurrentWorkerURL 0\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TRUE "\n");
   buffer.AppendLiteral("cacheName 0\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.AppendLiteral("\n");
-  buffer.AppendLiteral("scope 1\ncurrentWorkerURL 1\n");
+  buffer.AppendLiteral("https://scope_1.org\ncurrentWorkerURL 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_FALSE "\n");
   buffer.AppendLiteral("cacheName 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
@@ -548,8 +548,8 @@ TEST(ServiceWorkerRegistrar, TestVersion5Migration)
   cInfo0.attrs().CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
-  ASSERT_STREQ("scope 0", cInfo0.spec().get());
-  ASSERT_STREQ("scope 0", data[0].scope().get());
+  ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
+  ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   ASSERT_TRUE(data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
@@ -567,8 +567,8 @@ TEST(ServiceWorkerRegistrar, TestVersion5Migration)
   cInfo1.attrs().CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
-  ASSERT_STREQ("scope 1", cInfo1.spec().get());
-  ASSERT_STREQ("scope 1", data[1].scope().get());
+  ASSERT_STREQ("https://scope_1.org", cInfo1.spec().get());
+  ASSERT_STREQ("https://scope_1.org", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_FALSE(data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
@@ -584,7 +584,7 @@ TEST(ServiceWorkerRegistrar, TestVersion6Migration)
   nsAutoCString buffer("6" "\n");
 
   buffer.AppendLiteral("^appId=123&inBrowser=1\n");
-  buffer.AppendLiteral("scope 0\ncurrentWorkerURL 0\n");
+  buffer.AppendLiteral("https://scope_0.org\ncurrentWorkerURL 0\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TRUE "\n");
   buffer.AppendLiteral("cacheName 0\n");
   buffer.AppendInt(nsIRequest::LOAD_NORMAL, 16);
@@ -592,7 +592,7 @@ TEST(ServiceWorkerRegistrar, TestVersion6Migration)
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.AppendLiteral("\n");
-  buffer.AppendLiteral("scope 1\ncurrentWorkerURL 1\n");
+  buffer.AppendLiteral("https://scope_1.org\ncurrentWorkerURL 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_FALSE "\n");
   buffer.AppendLiteral("cacheName 1\n");
   buffer.AppendInt(nsIRequest::VALIDATE_ALWAYS, 16);
@@ -617,8 +617,8 @@ TEST(ServiceWorkerRegistrar, TestVersion6Migration)
   cInfo0.attrs().CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
-  ASSERT_STREQ("scope 0", cInfo0.spec().get());
-  ASSERT_STREQ("scope 0", data[0].scope().get());
+  ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
+  ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   ASSERT_TRUE(data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
@@ -636,8 +636,8 @@ TEST(ServiceWorkerRegistrar, TestVersion6Migration)
   cInfo1.attrs().CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
-  ASSERT_STREQ("scope 1", cInfo1.spec().get());
-  ASSERT_STREQ("scope 1", data[1].scope().get());
+  ASSERT_STREQ("https://scope_1.org", cInfo1.spec().get());
+  ASSERT_STREQ("https://scope_1.org", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_FALSE(data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
@@ -653,7 +653,7 @@ TEST(ServiceWorkerRegistrar, TestVersion7Migration)
   nsAutoCString buffer("7" "\n");
 
   buffer.AppendLiteral("^appId=123&inBrowser=1\n");
-  buffer.AppendLiteral("scope 0\ncurrentWorkerURL 0\n");
+  buffer.AppendLiteral("https://scope_0.org\ncurrentWorkerURL 0\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TRUE "\n");
   buffer.AppendLiteral("cacheName 0\n");
   buffer.AppendInt(nsIRequest::LOAD_NORMAL, 16);
@@ -667,7 +667,7 @@ TEST(ServiceWorkerRegistrar, TestVersion7Migration)
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.AppendLiteral("\n");
-  buffer.AppendLiteral("scope 1\ncurrentWorkerURL 1\n");
+  buffer.AppendLiteral("https://scope_1.org\ncurrentWorkerURL 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_FALSE "\n");
   buffer.AppendLiteral("cacheName 1\n");
   buffer.AppendInt(nsIRequest::VALIDATE_ALWAYS, 16);
@@ -699,8 +699,8 @@ TEST(ServiceWorkerRegistrar, TestVersion7Migration)
   cInfo0.attrs().CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
-  ASSERT_STREQ("scope 0", cInfo0.spec().get());
-  ASSERT_STREQ("scope 0", data[0].scope().get());
+  ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
+  ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   ASSERT_TRUE(data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
@@ -718,8 +718,8 @@ TEST(ServiceWorkerRegistrar, TestVersion7Migration)
   cInfo1.attrs().CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
-  ASSERT_STREQ("scope 1", cInfo1.spec().get());
-  ASSERT_STREQ("scope 1", data[1].scope().get());
+  ASSERT_STREQ("https://scope_1.org", cInfo1.spec().get());
+  ASSERT_STREQ("https://scope_1.org", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_FALSE(data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
@@ -736,24 +736,24 @@ TEST(ServiceWorkerRegistrar, TestDedupeRead)
 
   // unique entries
   buffer.AppendLiteral("^appId=123&inBrowser=1\n");
-  buffer.AppendLiteral("spec 0\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.AppendLiteral("spec 0\nhttps://scope_0.org\ncurrentWorkerURL 0\ncacheName 0\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.AppendLiteral("\n");
-  buffer.AppendLiteral("spec 1\nscope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.AppendLiteral("spec 1\nhttps://scope_1.org\ncurrentWorkerURL 1\ncacheName 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   // dupe entries
   buffer.AppendLiteral("^appId=123&inBrowser=1\n");
-  buffer.AppendLiteral("spec 1\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.AppendLiteral("spec 1\nhttps://scope_0.org\ncurrentWorkerURL 0\ncacheName 0\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.AppendLiteral("^appId=123&inBrowser=1\n");
-  buffer.AppendLiteral("spec 2\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.AppendLiteral("spec 2\nhttps://scope_0.org\ncurrentWorkerURL 0\ncacheName 0\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.AppendLiteral("\n");
-  buffer.AppendLiteral("spec 3\nscope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.AppendLiteral("spec 3\nhttps://scope_1.org\ncurrentWorkerURL 1\ncacheName 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
@@ -774,8 +774,8 @@ TEST(ServiceWorkerRegistrar, TestDedupeRead)
   cInfo0.attrs().CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
-  ASSERT_STREQ("scope 0", cInfo0.spec().get());
-  ASSERT_STREQ("scope 0", data[0].scope().get());
+  ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
+  ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   ASSERT_EQ(true, data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
@@ -793,8 +793,8 @@ TEST(ServiceWorkerRegistrar, TestDedupeRead)
   cInfo1.attrs().CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
-  ASSERT_STREQ("scope 1", cInfo1.spec().get());
-  ASSERT_STREQ("scope 1", data[1].scope().get());
+  ASSERT_STREQ("https://scope_1.org", cInfo1.spec().get());
+  ASSERT_STREQ("https://scope_1.org", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_EQ(true, data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
@@ -813,7 +813,7 @@ TEST(ServiceWorkerRegistrar, TestDedupeWrite)
     for (int i = 0; i < 10; ++i) {
       ServiceWorkerRegistrationData reg;
 
-      reg.scope() = NS_LITERAL_CSTRING("scope write dedupe");
+      reg.scope() = NS_LITERAL_CSTRING("https://scope_write.dedupe");
       reg.currentWorkerURL() = nsPrintfCString("currentWorkerURL write %d", i);
       reg.currentWorkerHandlesFetch() = true;
       reg.cacheName() =
@@ -825,7 +825,7 @@ TEST(ServiceWorkerRegistrar, TestDedupeWrite)
       spec.AppendPrintf("spec write dedupe/%d", i);
       reg.principal() =
         mozilla::ipc::ContentPrincipalInfo(mozilla::OriginAttributes(0, false),
-                                           mozilla::void_t(), spec);
+                                           spec, spec);
 
       swr->TestRegisterServiceWorker(reg);
     }
@@ -854,8 +854,8 @@ TEST(ServiceWorkerRegistrar, TestDedupeWrite)
   // Last entry passed to RegisterServiceWorkerInternal() should overwrite
   // previous values.  So expect "9" in values here.
   ASSERT_STREQ(expectSuffix.get(), suffix.get());
-  ASSERT_STREQ("scope write dedupe", cInfo.spec().get());
-  ASSERT_STREQ("scope write dedupe", data[0].scope().get());
+  ASSERT_STREQ("https://scope_write.dedupe", cInfo.spec().get());
+  ASSERT_STREQ("https://scope_write.dedupe", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL write 9", data[0].currentWorkerURL().get());
   ASSERT_EQ(true, data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName write 9",

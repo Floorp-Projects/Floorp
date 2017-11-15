@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
+#include "mozilla/net/MozURL.h"
 
 #include "nsIEventTarget.h"
 #include "nsIInputStream.h"
@@ -51,6 +52,80 @@ static const char* gSupportedRegistrarVersions[] = {
 };
 
 StaticRefPtr<ServiceWorkerRegistrar> gServiceWorkerRegistrar;
+
+nsresult
+GetOrigin(const nsACString& aURL, nsACString& aOrigin)
+{
+  RefPtr<MozURL> url;
+  nsresult rv = MozURL::Init(getter_AddRefs(url), aURL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = url->GetOrigin(aOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+ReadLine(nsILineInputStream* aStream, nsACString& aValue)
+{
+  bool hasMoreLines;
+  nsresult rv = aStream->ReadLine(aValue, &hasMoreLines);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (NS_WARN_IF(!hasMoreLines)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+CreatePrincipalInfo(nsILineInputStream* aStream,
+                    ServiceWorkerRegistrationData* aEntry,
+                    bool aSkipSpec = false)
+{
+  nsAutoCString suffix;
+  nsresult rv = ReadLine(aStream, suffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  OriginAttributes attrs;
+  if (!attrs.PopulateFromSuffix(suffix)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (aSkipSpec) {
+    nsAutoCString unused;
+    nsresult rv = ReadLine(aStream, unused);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  rv = ReadLine(aStream, aEntry->scope());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString origin;
+  rv = GetOrigin(aEntry->scope(), origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  aEntry->principal() =
+    mozilla::ipc::ContentPrincipalInfo(attrs, origin, aEntry->scope());
+
+  return NS_OK;
+}
 
 } // namespace
 
@@ -340,20 +415,11 @@ ServiceWorkerRegistrar::ReadData()
     }
 
     nsAutoCString line;
-    nsAutoCString unused;
     if (version.EqualsLiteral(SERVICEWORKERREGISTRAR_VERSION)) {
-      nsAutoCString suffix;
-      GET_LINE(suffix);
-
-      OriginAttributes attrs;
-      if (!attrs.PopulateFromSuffix(suffix)) {
-        return NS_ERROR_INVALID_ARG;
+      rv = CreatePrincipalInfo(lineInputStream, entry);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
-
-      GET_LINE(entry->scope());
-
-      entry->principal() =
-        mozilla::ipc::ContentPrincipalInfo(attrs, void_t(), entry->scope());
 
       GET_LINE(entry->currentWorkerURL());
 
@@ -403,18 +469,10 @@ ServiceWorkerRegistrar::ReadData()
       }
       entry->lastUpdateTime() = lastUpdateTime;
     } else if (version.EqualsLiteral("7")) {
-      nsAutoCString suffix;
-      GET_LINE(suffix);
-
-      OriginAttributes attrs;
-      if (!attrs.PopulateFromSuffix(suffix)) {
-        return NS_ERROR_INVALID_ARG;
+      rv = CreatePrincipalInfo(lineInputStream, entry);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
-
-      GET_LINE(entry->scope());
-
-      entry->principal() =
-        mozilla::ipc::ContentPrincipalInfo(attrs, void_t(), entry->scope());
 
       GET_LINE(entry->currentWorkerURL());
 
@@ -466,18 +524,10 @@ ServiceWorkerRegistrar::ReadData()
       }
       entry->lastUpdateTime() = lastUpdateTime;
     } else if (version.EqualsLiteral("6")) {
-      nsAutoCString suffix;
-      GET_LINE(suffix);
-
-      OriginAttributes attrs;
-      if (!attrs.PopulateFromSuffix(suffix)) {
-        return NS_ERROR_INVALID_ARG;
+      rv = CreatePrincipalInfo(lineInputStream, entry);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
-
-      GET_LINE(entry->scope());
-
-      entry->principal() =
-        mozilla::ipc::ContentPrincipalInfo(attrs, void_t(), entry->scope());
 
       GET_LINE(entry->currentWorkerURL());
 
@@ -512,18 +562,10 @@ ServiceWorkerRegistrar::ReadData()
       overwrite = true;
       dedupe = true;
 
-      nsAutoCString suffix;
-      GET_LINE(suffix);
-
-      OriginAttributes attrs;
-      if (!attrs.PopulateFromSuffix(suffix)) {
-        return NS_ERROR_INVALID_ARG;
+      rv = CreatePrincipalInfo(lineInputStream, entry);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
-
-      GET_LINE(entry->scope());
-
-      entry->principal() =
-        mozilla::ipc::ContentPrincipalInfo(attrs, void_t(), entry->scope());
 
       GET_LINE(entry->currentWorkerURL());
 
@@ -550,18 +592,10 @@ ServiceWorkerRegistrar::ReadData()
       overwrite = true;
       dedupe = true;
 
-      nsAutoCString suffix;
-      GET_LINE(suffix);
-
-      OriginAttributes attrs;
-      if (!attrs.PopulateFromSuffix(suffix)) {
-        return NS_ERROR_INVALID_ARG;
+      rv = CreatePrincipalInfo(lineInputStream, entry);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
-
-      GET_LINE(entry->scope());
-
-      entry->principal() =
-        mozilla::ipc::ContentPrincipalInfo(attrs, void_t(), entry->scope());
 
       GET_LINE(entry->currentWorkerURL());
 
@@ -582,21 +616,10 @@ ServiceWorkerRegistrar::ReadData()
       overwrite = true;
       dedupe = true;
 
-      nsAutoCString suffix;
-      GET_LINE(suffix);
-
-      OriginAttributes attrs;
-      if (!attrs.PopulateFromSuffix(suffix)) {
-        return NS_ERROR_INVALID_ARG;
+      rv = CreatePrincipalInfo(lineInputStream, entry, true);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
-
-      // principal spec is no longer used; we use scope directly instead
-      GET_LINE(unused);
-
-      GET_LINE(entry->scope());
-
-      entry->principal() =
-        mozilla::ipc::ContentPrincipalInfo(attrs, void_t(), entry->scope());
 
       GET_LINE(entry->currentWorkerURL());
 
@@ -617,23 +640,13 @@ ServiceWorkerRegistrar::ReadData()
       overwrite = true;
       dedupe = true;
 
-      nsAutoCString suffix;
-      GET_LINE(suffix);
-
-      OriginAttributes attrs;
-      if (!attrs.PopulateFromSuffix(suffix)) {
-        return NS_ERROR_INVALID_ARG;
+      rv = CreatePrincipalInfo(lineInputStream, entry, true);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
 
-      // principal spec is no longer used; we use scope directly instead
-      GET_LINE(unused);
-
-      GET_LINE(entry->scope());
-
-      entry->principal() =
-        mozilla::ipc::ContentPrincipalInfo(attrs, void_t(), entry->scope());
-
       // scriptSpec is no more used in latest version.
+      nsAutoCString unused;
       GET_LINE(unused);
 
       GET_LINE(entry->currentWorkerURL());

@@ -220,7 +220,7 @@ tr{
         }
         BYN{
             "BYN",
-            "Beyaz Rusya Rublesi",
+            "Belarus Rublesi",
         }
         BYR{
             "BYR",
@@ -261,6 +261,10 @@ tr{
         CLP{
             "CLP",
             "Şili Pesosu",
+        }
+        CNH{
+            "CNH",
+            "Çin Yuanı (offshore)",
         }
         CNX{
             "CNX",
@@ -1508,8 +1512,8 @@ tr{
             other{"Yeni Beyaz Rusya Rublesi (1994–1999)"}
         }
         BYN{
-            one{"Beyaz Rusya rublesi"}
-            other{"Beyaz Rusya rublesi"}
+            one{"Belarus rublesi"}
+            other{"Belarus rublesi"}
         }
         BYR{
             one{"Beyaz Rusya rublesi (2000–2016)"}
@@ -1550,6 +1554,10 @@ tr{
         CLP{
             one{"Şili pesosu"}
             other{"Şili pesosu"}
+        }
+        CNH{
+            one{"Çin yuanı (offshore)"}
+            other{"Çin yuanı (offshore)"}
         }
         CNX{
             one{"Çin Halk Cumhuriyeti Merkez Bankası doları"}
@@ -2368,5 +2376,5 @@ tr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

@@ -101,6 +101,7 @@ public:
   void CreateImageClientIfNeeded();
   void ClearCachedResources() override;
 protected:
+  void ClearImageKey();
   void CreateExternalImageIfNeeded();
 
   wr::MaybeExternalImageId mExternalImageId;
@@ -108,7 +109,7 @@ protected:
   RefPtr<ImageClient> mImageClient;
   Maybe<wr::PipelineId> mPipelineId;
   RefPtr<ImageContainer> mContainer;
-  uint32_t mGeneration;
+  bool mOwnsKey;
 };
 
 class WebRenderFallbackData : public WebRenderImageData

@@ -20,6 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E7611F49-F088-4175-9446-6111444E72C8}</ProjectGuid>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
     <RootNamespace>icuinfo</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>

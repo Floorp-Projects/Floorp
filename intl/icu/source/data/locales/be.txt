@@ -15,6 +15,7 @@ be{
     }
     ExemplarCharacters{"[а б в г д {дж} {дз} е ё ж з і й к л м н о п р с т у ў ф х ц ч ш ы ь э ю я]"}
     ExemplarCharactersIndex{"[А Б В Г Д Е Ж З І Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Ы Э Ю Я]"}
+    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . « » ( ) \\[ \\] \\{ \\}]"}
     MoreInformation{"?"}
     NumberElements{
@@ -280,13 +281,13 @@ be{
                 few{"з {0} кніг за {0} дні"}
                 many{"з {0} кніг за {0} дзён"}
                 one{"з {0} кнігі за {0} дзень"}
-                other{"з {0} кніги за {0} дні"}
+                other{"з {0} кнігі за {0} дня"}
             }
         }
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.37.5"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -344,12 +345,22 @@ be{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E, d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"LLL y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                H{"HH"}
                 Hm{"HH.mm"}
                 Hms{"HH.mm.ss"}
                 M{"L"}
@@ -360,9 +371,10 @@ be{
                 MMMd{"d MMM"}
                 Md{"d.M"}
                 d{"d"}
+                h{"h a"}
                 hm{"h.mm a"}
                 hms{"h.mm.ss a"}
-                ms{"mm.ss"}
+                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M.y G"}
@@ -471,7 +483,12 @@ be{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d, E"}
@@ -518,10 +535,10 @@ be{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    few{"w 'тыдзень' y"}
-                    many{"w 'тыдзень' y"}
-                    one{"w 'тыдзень' y"}
-                    other{"w 'тыдзень' y"}
+                    few{"w 'тыдзень' Y"}
+                    many{"w 'тыдзень' Y"}
+                    one{"w 'тыдзень' Y"}
+                    other{"w 'тыдзень' Y"}
                 }
             }
             dayNames{
@@ -868,10 +885,10 @@ be{
         animal{"жывёліна"}
         animals_nature{"Жывёлы і прырода"}
         arrows{"Стрэлкі"}
-        body{"цела смак"}
+        body{"цела"}
         box_drawing{"Рысаванне квадратаў"}
         braille{"Брайль"}
-        building{"будынак прамысловасць вытворчасць"}
+        building{"будынак"}
         bullets_stars{"Маркеры/Зоркі"}
         consonantal_jamo{"Кансанантнае чамо"}
         currency_symbols{"Знакі валют"}
@@ -929,7 +946,7 @@ be{
         plant{"расліна"}
         punctuation{"Пунктуацыя"}
         rightwards_arrows{"Стрэлкі ўправа"}
-        sign_standard_symbols{"Шыльды/Знакі/Стандартныя сімвалы"}
+        sign_standard_symbols{"Знакі і сімвалы"}
         small_form_variant{"Варыянты малых формаў"}
         smiley{"смайлік"}
         smileys_people{"Смайлікі і людзі"}
@@ -984,16 +1001,16 @@ be{
             dn{"д."}
             relativeTime{
                 future{
-                    few{"праз {0} д."}
-                    many{"праз {0} д."}
-                    one{"праз {0} д."}
-                    other{"праз {0} д."}
+                    few{"праз {0} дні"}
+                    many{"праз {0} дзён"}
+                    one{"праз {0} дзень"}
+                    other{"праз {0} дня"}
                 }
                 past{
-                    few{"{0} д. таму"}
-                    many{"{0} д. таму"}
-                    one{"{0} д. таму"}
-                    other{"{0} д. таму"}
+                    few{"{0} дні таму"}
+                    many{"{0} дзён таму"}
+                    one{"{0} дзень таму"}
+                    other{"{0} дня таму"}
                 }
             }
         }
@@ -1014,10 +1031,31 @@ be{
                 }
             }
         }
+        dayOfYear{
+            dn{"дзень года"}
+        }
+        dayOfYear-narrow{
+            dn{"дзень года"}
+        }
+        dayOfYear-short{
+            dn{"дзень года"}
+        }
         dayperiod{
             dn{"AM/PM"}
         }
+        dayperiod-narrow{
+            dn{"AM/PM"}
+        }
+        dayperiod-short{
+            dn{"AM/PM"}
+        }
         era{
+            dn{"эра"}
+        }
+        era-narrow{
+            dn{"эра"}
+        }
+        era-short{
             dn{"эра"}
         }
         fri{
@@ -1794,8 +1832,32 @@ be{
                 }
             }
         }
+        weekOfMonth{
+            dn{"тыдзень месяца"}
+        }
+        weekOfMonth-narrow{
+            dn{"тыдзень месяца"}
+        }
+        weekOfMonth-short{
+            dn{"тыдзень месяца"}
+        }
         weekday{
             dn{"дзень тыдня"}
+        }
+        weekday-narrow{
+            dn{"дзень тыдня"}
+        }
+        weekday-short{
+            dn{"дзень тыдня"}
+        }
+        weekdayOfMonth{
+            dn{"дзень месяца"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"дзень месяца"}
+        }
+        weekdayOfMonth-short{
+            dn{"дзень месяца"}
         }
         year{
             dn{"год"}
@@ -1856,8 +1918,20 @@ be{
         zone{
             dn{"часавы пояс"}
         }
+        zone-narrow{
+            dn{"часавы пояс"}
+        }
+        zone-short{
+            dn{"часавы пояс"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} ці {1}"}
+            end{"{0} ці {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} і {1}"}
             end{"{0} і {1}"}
@@ -1871,10 +1945,10 @@ be{
             start{"{0}, {1}"}
         }
         unit{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
         }
         unit-narrow{
             2{"{0} {1}"}
@@ -1883,10 +1957,10 @@ be{
             start{"{0} {1}"}
         }
         unit-short{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
         }
     }
     measurementSystemNames{

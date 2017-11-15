@@ -188,7 +188,7 @@ nl{
         }
         BRN{
             "BRN",
-            "Braziliaanse cruzado novo",
+            "Braziliaanse nieuwe cruzado (1989–1990)",
         }
         BRR{
             "BRR",
@@ -262,13 +262,17 @@ nl{
             "CLP",
             "Chileense peso",
         }
+        CNH{
+            "CNH",
+            "Chinese renminbi (offshore)",
+        }
         CNX{
             "CNX",
             "dollar van de Chinese Volksbank",
         }
         CNY{
             "CN¥",
-            "Chinese renminbi",
+            "Chinese Yuan",
         }
         COP{
             "COP",
@@ -1267,6 +1271,7 @@ nl{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RUR{"р."}
         RWF{"RF"}
@@ -1556,6 +1561,10 @@ nl{
         CLP{
             one{"Chileense peso"}
             other{"Chileense peso"}
+        }
+        CNH{
+            one{"Chinese yuan (offshore)"}
+            other{"Chinese yuan (offshore)"}
         }
         CNX{
             one{"dollar van de Chinese Volksbank"}
@@ -2494,5 +2503,5 @@ nl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
 }

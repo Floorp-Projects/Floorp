@@ -15,7 +15,7 @@ top_builddir = .
 
 include $(top_builddir)/icudefs.mk
 
-
+DISTY_DIR=dist
 DISTY_TMP=dist/tmp
 DISTY_ICU=$(DISTY_TMP)/icu
 DISTY_DATA=$(DISTY_ICU)/source/data
@@ -34,10 +34,12 @@ DISTY_FILE_TGZ=$(DISTY_FILE_DIR)/$(DISTY_PREFIX)-src-$(DISTY_VER)-r$(SVNVER).tgz
 DISTY_FILE_ZIP=$(DISTY_FILE_DIR)/$(DISTY_PREFIX)-src-$(DISTY_VER)-r$(SVNVER).zip
 DISTY_DOC_ZIP=$(DISTY_FILE_DIR)/$(DISTY_PREFIX)-docs-$(DISTY_VER)-r$(SVNVER).zip
 DISTY_DATA_ZIP=$(DISTY_FILE_DIR)/$(DISTY_PREFIX)-data-$(DISTY_VER)-r$(SVNVER).zip
-DISTY_DAT=$(firstword $(wildcard data/out/tmp/icudt$(SO_TARGET_VERSION_MAJOR)*.dat))
+DISTY_DAT:=$(firstword $(wildcard data/out/tmp/icudt$(SO_TARGET_VERSION_MAJOR)*.dat))
 
 DISTY_FILES_SRC=$(DISTY_FILE_TGZ) $(DISTY_FILE_ZIP)
 DISTY_FILES=$(DISTY_FILES_SRC) $(DISTY_DOC_ZIP)
+# colon-equals because we watn to run this once!
+EXCLUDES_FILE:=$(shell mktemp)
 
 $(DISTY_FILE_DIR):
 	$(MKINSTALLDIRS) $(DISTY_FILE_DIR)
@@ -47,21 +49,27 @@ $(DISTY_TMP):
 
 $(DISTY_DOC_ZIP):  $(DOCZIP) $(DISTY_FILE_DIR)
 	cp $(DOCZIP) $(DISTY_DOC_ZIP)
+	ln -sf $(DISTY_DOC_ZIP) $(DISTY_FILE_DIR)/icu4c-docs.zip
 
 $(DISTY_DAT): 
 	echo Missing $@
 	/bin/false
 
+# make sure we get the non-lgpl docs
 $(DOCZIP):
-	$(MAKE) -C . srcdir="$(srcdir)" top_srcdir="$(top_srcdir)" builddir=. $@
+	-$(RMV) "$(top_builddir)"/doc
+	"$(MAKE)" -C . srcdir="$(srcdir)" top_srcdir="$(top_srcdir)" builddir=. $@
 
 $(DISTY_FILE_TGZ) $(DISTY_FILE_ZIP) $(DISTY_DATA_ZIP):  $(DISTY_DAT) $(DISTY_TMP)
 	@echo "svnversion of $(SVNTOP) is as follows (if this fails, make sure svn is installed..)"
 	svnversion $(SVNTOP)
 	-$(RMV) $(DISTY_FILE) $(DISTY_TMP)
 	$(MKINSTALLDIRS) $(DISTY_TMP)
-	echo exporting $(SVNVER)
-	svn export -r $(shell echo $(SVNVER) | tr -d 'a-zA-Z' ) $(SVNURL) "$(DISTY_TMP)/icu"
+	@echo collecting excludes to $(EXCLUDES_FILE)
+	(cd "$(SVNTOP)" ; svn status --no-ignore  | grep '^I' | cut -c2- > "$(EXCLUDES_FILE)" ) 
+	@echo pseudo-exporting $(SVNVER)
+	@#svn export -r $(shell echo $(SVNVER) | tr -d 'a-zA-Z' ) $(SVNURL) "$(DISTY_TMP)/icu"
+	rsync -a --exclude-from="$(EXCLUDES_FILE)" "$(SVNTOP)" "$(DISTY_TMP)/icu"
 	( cd $(DISTY_TMP)/icu/source ; zip -rlq $(DISTY_DATA_ZIP) data )
 	$(MKINSTALLDIRS) $(DISTY_IN)
 	echo DISTY_DAT=$(DISTY_DAT)
@@ -71,7 +79,11 @@ $(DISTY_FILE_TGZ) $(DISTY_FILE_ZIP) $(DISTY_DATA_ZIP):  $(DISTY_DAT) $(DISTY_TMP
 	$(RMV) $(DISTY_RMDIR)
 	( cd $(DISTY_TMP)/icu ; python as_is/bomlist.py > as_is/bomlist.txt || rm -f as_is/bomlist.txt )
 	( cd $(DISTY_TMP) ; tar cfpz $(DISTY_FILE_TGZ) icu )
-	ls -l $(DISTY_FILE)
+	ln -sf $(DISTY_FILE_ZIP) $(DISTY_FILE_DIR)/icu4c-src.zip
+	ln -sf $(DISTY_FILE_TGZ) $(DISTY_FILE_DIR)/icu4c-src.tgz
+	ln -sf $(DISTY_DATA_ZIP) $(DISTY_FILE_DIR)/icu4c-data.zip
+	ls -l $(DISTY_FILE_TGZ) $(DISTY_FILE_ZIP) $(DISTY_DATA_ZIP)
+
 
 dist-local: $(DISTY_FILES)
 

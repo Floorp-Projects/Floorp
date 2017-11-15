@@ -72,7 +72,10 @@ function runTests()
   function onkeydownInSystemEventGroup(aEvent)
   {
     keyDownEventConsumedByJS = aEvent.defaultPrevented;
-    keyDownEventConsumed = aEvent.getPreventDefault();
+    // If defaultPrevented is true via SpecialPowers, that means default was
+    // prevented, possibly in a non-content-visible way (e.g. by a system
+    // group handler).
+    keyDownEventConsumed = SpecialPowers.wrap(aEvent).defaultPrevented;
   }
 
   function reset()
