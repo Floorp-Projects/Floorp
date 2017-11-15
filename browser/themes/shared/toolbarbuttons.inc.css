@@ -302,6 +302,10 @@ toolbarbutton.bookmark-item {
   display: -moz-box !important;
 }
 
+#PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon {
+  margin-inline-end: 0;
+}
+
 #PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon[label]:not([label=""]) {
   margin-inline-end: 4px;
 }
