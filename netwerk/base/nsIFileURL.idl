@@ -12,7 +12,7 @@ interface nsIFile;
  * an URL.  The URL scheme need not be file:, since other local protocols may
  * map URLs to files (e.g., resource:).
  */
-[scriptable, builtinclass, uuid(e91ac988-27c2-448b-b1a1-3822e1ef1987)]
+[scriptable, uuid(e91ac988-27c2-448b-b1a1-3822e1ef1987)]
 interface nsIFileURL : nsIURL
 {
     /**
