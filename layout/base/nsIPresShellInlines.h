@@ -18,6 +18,12 @@ nsIPresShell::SetNeedLayoutFlush()
       shell->mNeedLayoutFlush = true;
     }
   }
+
+#ifdef MOZ_GECKO_PROFILER
+  if (!mReflowCause) {
+    mReflowCause = profiler_get_backtrace();
+  }
+#endif
 }
 
 void
@@ -29,6 +35,12 @@ nsIPresShell::SetNeedStyleFlush()
       shell->mNeedStyleFlush = true;
     }
   }
+
+#ifdef MOZ_GECKO_PROFILER
+  if (!mStyleCause) {
+    mStyleCause = profiler_get_backtrace();
+  }
+#endif
 }
 
 void
