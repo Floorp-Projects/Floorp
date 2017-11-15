@@ -37,7 +37,7 @@ rm -rf mp4parse_capi
 mkdir -p mp4parse_capi/src
 cp _upstream/mp4parse/mp4parse_capi/Cargo.toml mp4parse_capi/
 cp _upstream/mp4parse/mp4parse_capi/build.rs mp4parse_capi/
-cp _upstream/mp4parse/mp4parse_capi/include/mp4parse.h include/
+cp _upstream/mp4parse/mp4parse_capi/include/mp4parse.h ../../dom/media/mp4/
 cp _upstream/mp4parse/mp4parse_capi/src/*.rs mp4parse_capi/src/
 rm -rf mp4parse_fallible
 mkdir -p mp4parse_fallible
@@ -50,10 +50,10 @@ echo "Cleaning up..."
 rm -rf _upstream
 
 echo "Updating gecko Cargo.lock..."
-pushd ../../../toolkit/library/rust/
+pushd ../../toolkit/library/rust/
 cargo update --package mp4parse_capi
 popd
-pushd ../../../toolkit/library/gtest/rust/
+pushd ../../toolkit/library/gtest/rust/
 cargo update --package mp4parse_capi
 popd
 
