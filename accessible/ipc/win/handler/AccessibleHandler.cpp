@@ -240,6 +240,13 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
     }
   }
 
+  if (aIid == IID_IAccessibleAction || aIid == IID_IAccessibleHyperlink) {
+    RefPtr<IAccessibleHyperlink> iaLink(
+      static_cast<IAccessibleHyperlink*>(this));
+    iaLink.forget(aOutInterface);
+    return S_OK;
+  }
+
   if (aIid == IID_IAccessibleText || aIid == IID_IAccessibleHypertext ||
       aIid == IID_IAccessibleHypertext2) {
     RefPtr<IAccessibleHypertext2> textTearoff(new AccessibleTextTearoff(this));
