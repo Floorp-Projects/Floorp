@@ -36,6 +36,8 @@
 #include "mozilla/dom/GamepadServiceTest.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
+#include "mozilla/dom/MIDIAccessManager.h"
+#include "mozilla/dom/MIDIOptionsBinding.h"
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/Presentation.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
@@ -1473,6 +1475,18 @@ Navigator::RequestVRPresentation(VRDisplay& aDisplay)
 {
   nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
   win->DispatchVRDisplayActivate(aDisplay.DisplayId(), VRDisplayEventReason::Requested);
+}
+
+already_AddRefed<Promise>
+Navigator::RequestMIDIAccess(const MIDIOptions& aOptions,
+                             ErrorResult& aRv)
+{
+  if (!mWindow) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+  MIDIAccessManager* accessMgr = MIDIAccessManager::Get();
+  return accessMgr->RequestMIDIAccess(mWindow, aOptions, aRv);
 }
 
 nsINetworkProperties*
