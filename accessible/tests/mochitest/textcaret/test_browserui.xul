@@ -46,7 +46,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    openBrowserWindow(doTests, "about:");
+    openBrowserWindow(doTests, "about:mozilla");
   ]]>
   </script>
 
