@@ -635,34 +635,26 @@ private:
 };
 
 /**
- * Send an error back to content.
- * Do this only on the main thread. The onSuccess callback is also passed here
- * so it can be released correctly.
+ * Send an error back to content. Do this only on the main thread.
  */
-template<class SuccessCallbackType>
 class ErrorCallbackRunnable : public Runnable
 {
 public:
-  ErrorCallbackRunnable(nsCOMPtr<SuccessCallbackType>&& aOnSuccess,
-                        nsCOMPtr<nsIDOMGetUserMediaErrorCallback>&& aOnFailure,
+  ErrorCallbackRunnable(const nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
                         MediaMgrError& aError,
                         uint64_t aWindowID)
     : Runnable("ErrorCallbackRunnable")
+    , mOnFailure(aOnFailure)
     , mError(&aError)
     , mWindowID(aWindowID)
     , mManager(MediaManager::GetInstance())
   {
-    mOnSuccess.swap(aOnSuccess);
-    mOnFailure.swap(aOnFailure);
   }
 
   NS_IMETHOD
   Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
-
-    nsCOMPtr<SuccessCallbackType> onSuccess = mOnSuccess.forget();
-    nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure = mOnFailure.forget();
 
     // Only run if the window is still active.
     if (!(mManager->IsWindowStillActive(mWindowID))) {
@@ -673,18 +665,14 @@ public:
     if (auto* window = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID)) {
       RefPtr<MediaStreamError> error =
         new MediaStreamError(window->AsInner(), *mError);
-      onFailure->OnError(error);
+      mOnFailure->OnError(error);
     }
     return NS_OK;
   }
 private:
-  ~ErrorCallbackRunnable()
-  {
-    MOZ_ASSERT(!mOnSuccess && !mOnFailure);
-  }
+  ~ErrorCallbackRunnable() override = default;
 
-  nsCOMPtr<SuccessCallbackType> mOnSuccess;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
+  nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback> mOnFailure;
   RefPtr<MediaMgrError> mError;
   uint64_t mWindowID;
   RefPtr<MediaManager> mManager; // get ref to this when creating the runnable
@@ -973,8 +961,8 @@ class GetUserMediaStreamRunnable : public Runnable
 {
 public:
   GetUserMediaStreamRunnable(
-    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback>& aOnSuccess,
-    nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
+    const nsMainThreadPtrHandle<nsIDOMGetUserMediaSuccessCallback>& aOnSuccess,
+    const nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
     uint64_t aWindowID,
     GetUserMediaWindowListener* aWindowListener,
     SourceListener* aSourceListener,
@@ -984,6 +972,8 @@ public:
     VideoDevice* aVideoDevice,
     PeerIdentity* aPeerIdentity)
     : Runnable("GetUserMediaStreamRunnable")
+    , mOnSuccess(aOnSuccess)
+    , mOnFailure(aOnFailure)
     , mConstraints(aConstraints)
     , mAudioDevice(aAudioDevice)
     , mVideoDevice(aVideoDevice)
@@ -994,8 +984,6 @@ public:
     , mPeerIdentity(aPeerIdentity)
     , mManager(MediaManager::GetInstance())
   {
-    mOnSuccess.swap(aOnSuccess);
-    mOnFailure.swap(aOnFailure);
   }
 
   ~GetUserMediaStreamRunnable() {}
@@ -1004,7 +992,7 @@ public:
   {
   public:
     TracksAvailableCallback(MediaManager* aManager,
-                            already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
+                            const nsMainThreadPtrHandle<nsIDOMGetUserMediaSuccessCallback>& aSuccess,
                             uint64_t aWindowID,
                             DOMMediaStream* aStream)
       : mWindowID(aWindowID), mOnSuccess(aSuccess), mManager(aManager),
@@ -1026,7 +1014,7 @@ public:
       mOnSuccess->OnSuccess(aStream);
     }
     uint64_t mWindowID;
-    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
+    nsMainThreadPtrHandle<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
     RefPtr<MediaManager> mManager;
     // Keep the DOMMediaStream alive until the NotifyTracksAvailable callback
     // has fired, otherwise we might immediately destroy the DOMMediaStream and
@@ -1206,7 +1194,6 @@ public:
     }
 
     if (!domStream || !stream || sHasShutdown) {
-      nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure = mOnFailure.forget();
       LOG(("Returning error for getUserMedia() - no stream"));
 
       if (auto* window = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID)) {
@@ -1214,7 +1201,7 @@ public:
             NS_LITERAL_STRING("InternalError"),
             sHasShutdown ? NS_LITERAL_STRING("In shutdown") :
                           NS_LITERAL_STRING("No stream."));
-        onFailure->OnError(error);
+        mOnFailure->OnError(error);
       }
       return NS_OK;
     }
@@ -1231,7 +1218,7 @@ public:
         "GetUserMediaStreamRunnable::TracksAvailableCallbackMainThreadHolder",
         MakeAndAddRef<Callback>(
           new TracksAvailableCallback(mManager,
-                                      mOnSuccess.forget(),
+                                      mOnSuccess,
                                       mWindowID,
                                       domStream))));
 
@@ -1274,13 +1261,8 @@ public:
 
       if (error) {
         // Dispatch the error callback on main thread.
-        nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess;
-        NS_DispatchToMainThread(do_AddRef(
-          new ErrorCallbackRunnable<nsIDOMGetUserMediaSuccessCallback>(
-            Move(onSuccess), Move(self->mOnFailure), *error, self->mWindowID)));
-
-        // This should be empty now
-        MOZ_ASSERT(!self->mOnFailure);
+        NS_DispatchToMainThread(MakeAndAddRef<ErrorCallbackRunnable>(
+          self->mOnFailure, *error, self->mWindowID));
         return NS_OK;
       }
 
@@ -1331,8 +1313,8 @@ public:
   }
 
 private:
-  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
+  nsMainThreadPtrHandle<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
+  nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback> mOnFailure;
   MediaStreamConstraints mConstraints;
   RefPtr<AudioDevice> mAudioDevice;
   RefPtr<VideoDevice> mVideoDevice;
@@ -1471,8 +1453,8 @@ class GetUserMediaTask : public Runnable
 public:
   GetUserMediaTask(
     const MediaStreamConstraints& aConstraints,
-    already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aOnSuccess,
-    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aOnFailure,
+    const nsMainThreadPtrHandle<nsIDOMGetUserMediaSuccessCallback>& aOnSuccess,
+    const nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
     uint64_t aWindowID,
     GetUserMediaWindowListener* aWindowListener,
     SourceListener* aSourceListener,
@@ -1503,11 +1485,8 @@ public:
        const nsAString& aMessage = EmptyString(),
        const nsAString& aConstraint = EmptyString()) {
     RefPtr<MediaMgrError> error = new MediaMgrError(aName, aMessage, aConstraint);
-    auto errorRunnable = MakeRefPtr<ErrorCallbackRunnable<nsIDOMGetUserMediaSuccessCallback>>(
-        Move(mOnSuccess), Move(mOnFailure), *error, mWindowID);
-    // These should be empty now
-    MOZ_ASSERT(!mOnSuccess);
-    MOZ_ASSERT(!mOnFailure);
+    auto errorRunnable = MakeRefPtr<ErrorCallbackRunnable>(
+        mOnFailure, *error, mWindowID);
 
     NS_DispatchToMainThread(errorRunnable.forget());
     // Do after ErrorCallbackRunnable Run()s, as it checks active window list
@@ -1595,8 +1574,6 @@ public:
                                        mPrincipalInfo, mConstraints,
                                        mAudioDevice, mVideoDevice,
                                        peerIdentity)));
-    MOZ_ASSERT(!mOnSuccess);
-    MOZ_ASSERT(!mOnFailure);
     return NS_OK;
   }
 
@@ -1610,26 +1587,17 @@ public:
     // We add a disabled listener to the StreamListeners array until accepted
     // If this was the only active MediaStream, remove the window from the list.
     if (NS_IsMainThread()) {
-      // This is safe since we're on main-thread, and the window can only
-      // be invalidated from the main-thread (see OnNavigation)
-      nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess = mOnSuccess.forget();
-      nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure = mOnFailure.forget();
-
       if (auto* window = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID)) {
         RefPtr<MediaStreamError> error = new MediaStreamError(window->AsInner(),
                                                               aName, aMessage);
-        onFailure->OnError(error);
+        mOnFailure->OnError(error);
       }
       // Should happen *after* error runs for consistency, but may not matter
       mWindowListener->Remove(mSourceListener);
     } else {
       // This will re-check the window being alive on main-thread
-      // and remove the listener on MainThread as well
       Fail(aName, aMessage);
     }
-
-    MOZ_ASSERT(!mOnSuccess);
-    MOZ_ASSERT(!mOnFailure);
 
     return NS_OK;
   }
@@ -1672,8 +1640,8 @@ public:
 private:
   MediaStreamConstraints mConstraints;
 
-  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
+  nsMainThreadPtrHandle<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
+  nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback> mOnFailure;
   uint64_t mWindowID;
   RefPtr<GetUserMediaWindowListener> mWindowListener;
   RefPtr<SourceListener> mSourceListener;
@@ -2230,8 +2198,12 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aOnFailure);
   MOZ_ASSERT(aOnSuccess);
-  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess(aOnSuccess);
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure(aOnFailure);
+  nsMainThreadPtrHandle<nsIDOMGetUserMediaSuccessCallback> onSuccess(
+      new nsMainThreadPtrHolder<nsIDOMGetUserMediaSuccessCallback>(
+          "GetUserMedia::SuccessCallback", aOnSuccess));
+  nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback> onFailure(
+      new nsMainThreadPtrHolder<nsIDOMGetUserMediaErrorCallback>(
+          "GetUserMedia::FailureCallback", aOnFailure));
   uint64_t windowID = aWindow->WindowID();
 
   MediaStreamConstraints c(aConstraintsPassedIn); // use a modifiable copy
@@ -2630,8 +2602,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 
       // Pass callbacks and listeners along to GetUserMediaTask.
       RefPtr<GetUserMediaTask> task (new GetUserMediaTask(c,
-                                                          onSuccess.forget(),
-                                                          onFailure.forget(),
+                                                          onSuccess,
+                                                          onFailure,
                                                           windowID,
                                                           windowListener,
                                                           sourceListener,
