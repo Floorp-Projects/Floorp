@@ -510,7 +510,8 @@ AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
     // we might evaluate the task.forget() before calling Reader(). Enforce
     // a non-crashy order-of-operations.
     TaskQueue* taskQueue = task->Reader()->OwnerThread();
-    taskQueue->Dispatch(task.forget());
+    nsresult rv = taskQueue->Dispatch(task.forget());
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   }
 }
 
