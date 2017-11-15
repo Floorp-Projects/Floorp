@@ -8,6 +8,7 @@
 #define jit_VMFunctions_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/HashFunctions.h"
 
 #include "jspubtd.h"
 
@@ -269,6 +270,38 @@ struct VMFunction
                    returnType == Type_Bool ||
                    returnType == Type_Object);
         addToFunctions();
+    }
+
+    typedef const VMFunction* Lookup;
+
+    static HashNumber hash(const VMFunction* f) {
+        // The hash is based on the wrapped function, not the VMFunction*, to
+        // avoid generating duplicate wrapper code.
+        HashNumber hash = 0;
+        hash = mozilla::AddToHash(hash, f->wrapped);
+        hash = mozilla::AddToHash(hash, f->expectTailCall);
+        return hash;
+    }
+    static bool match(const VMFunction* f1, const VMFunction* f2) {
+        if (f1->wrapped != f2->wrapped ||
+            f1->expectTailCall != f2->expectTailCall)
+        {
+            return false;
+        }
+
+        // If this starts failing, add extraValuesToPop to the if-statement and
+        // hash() method above.
+        MOZ_ASSERT(f1->extraValuesToPop == f2->extraValuesToPop);
+
+        MOZ_ASSERT(strcmp(f1->name_, f2->name_) == 0);
+        MOZ_ASSERT(f1->explicitArgs == f2->explicitArgs);
+        MOZ_ASSERT(f1->argumentProperties == f2->argumentProperties);
+        MOZ_ASSERT(f1->argumentPassedInFloatRegs == f2->argumentPassedInFloatRegs);
+        MOZ_ASSERT(f1->outParam == f2->outParam);
+        MOZ_ASSERT(f1->returnType == f2->returnType);
+        MOZ_ASSERT(f1->argumentRootTypes == f2->argumentRootTypes);
+        MOZ_ASSERT(f1->outParamRootType == f2->outParamRootType);
+        return true;
     }
 
   private:

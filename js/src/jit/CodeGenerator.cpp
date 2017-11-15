@@ -6308,7 +6308,7 @@ CodeGenerator::visitInitElem(LInitElem* lir)
 typedef bool (*InitElemGetterSetterFn)(JSContext*, jsbytecode*, HandleObject, HandleValue,
                                        HandleObject);
 static const VMFunction InitElemGetterSetterInfo =
-    FunctionInfo<InitElemGetterSetterFn>(InitGetterSetterOperation, "InitGetterSetterOperation");
+    FunctionInfo<InitElemGetterSetterFn>(InitGetterSetterOperation, "InitElemGetterSetterOperation");
 
 void
 CodeGenerator::visitInitElemGetterSetter(LInitElemGetterSetter* lir)
@@ -6342,7 +6342,7 @@ CodeGenerator::visitMutateProto(LMutateProto* lir)
 typedef bool(*InitPropGetterSetterFn)(JSContext*, jsbytecode*, HandleObject, HandlePropertyName,
                                       HandleObject);
 static const VMFunction InitPropGetterSetterInfo =
-    FunctionInfo<InitPropGetterSetterFn>(InitGetterSetterOperation, "InitGetterSetterOperation");
+    FunctionInfo<InitPropGetterSetterFn>(InitGetterSetterOperation, "InitPropGetterSetterOperation");
 
 void
 CodeGenerator::visitInitPropGetterSetter(LInitPropGetterSetter* lir)
@@ -10399,9 +10399,9 @@ CodeGenerator::visitCallSetProperty(LCallSetProperty* ins)
 
 typedef bool (*DeletePropertyFn)(JSContext*, HandleValue, HandlePropertyName, bool*);
 static const VMFunction DeletePropertyStrictInfo =
-    FunctionInfo<DeletePropertyFn>(DeletePropertyJit<true>, "DeletePropertyStrictJit");
+    FunctionInfo<DeletePropertyFn>(DeletePropertyJit<true>, "DeletePropertyStrict");
 static const VMFunction DeletePropertyNonStrictInfo =
-    FunctionInfo<DeletePropertyFn>(DeletePropertyJit<false>, "DeletePropertyNonStrictJit");
+    FunctionInfo<DeletePropertyFn>(DeletePropertyJit<false>, "DeletePropertyNonStrict");
 
 void
 CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty* lir)
@@ -10417,9 +10417,9 @@ CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty* lir)
 
 typedef bool (*DeleteElementFn)(JSContext*, HandleValue, HandleValue, bool*);
 static const VMFunction DeleteElementStrictInfo =
-    FunctionInfo<DeleteElementFn>(DeleteElementJit<true>, "DeleteElementStrictJit");
+    FunctionInfo<DeleteElementFn>(DeleteElementJit<true>, "DeleteElementStrict");
 static const VMFunction DeleteElementNonStrictInfo =
-    FunctionInfo<DeleteElementFn>(DeleteElementJit<false>, "DeleteElementNonStrictJit");
+    FunctionInfo<DeleteElementFn>(DeleteElementJit<false>, "DeleteElementNonStrict");
 
 void
 CodeGenerator::visitCallDeleteElement(LCallDeleteElement* lir)
