@@ -9,3 +9,51 @@ IPDL_SOURCES += [
     'PMIDIManager.ipdl',
     'PMIDIPort.ipdl',
 ]
+
+EXPORTS.mozilla.dom += [
+    'MIDIAccess.h',
+    'MIDIAccessManager.h',
+    'MIDIInput.h',
+    'MIDIInputMap.h',
+    'MIDIManagerChild.h',
+    'MIDIMessageEvent.h',
+    'MIDIMessageQueue.h',
+    'MIDIOutput.h',
+    'MIDIOutputMap.h',
+    'MIDIPlatformRunnables.h',
+    'MIDIPlatformService.h',
+    'MIDIPort.h',
+    'MIDIPortChild.h',
+    'MIDIPortInterface.h',
+    'MIDIUtils.h'
+]
+
+UNIFIED_SOURCES = [
+    'MIDIAccess.cpp',
+    'MIDIAccessManager.cpp',
+    'MIDIInput.cpp',
+    'MIDIInputMap.cpp',
+    'MIDIManagerChild.cpp',
+    'MIDIMessageEvent.cpp',
+    'MIDIMessageQueue.cpp',
+    'MIDIOutput.cpp',
+    'MIDIOutputMap.cpp',
+    'MIDIPlatformRunnables.cpp',
+    'MIDIPlatformService.cpp',
+    'MIDIPort.cpp',
+    'MIDIPortChild.cpp',
+    'MIDIPortInterface.cpp',
+    'MIDIUtils.cpp',
+    'TestMIDIPlatformService.cpp'
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
+# TEST_DIRS += [
+#     'test',
+# ]
