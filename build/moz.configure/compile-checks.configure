@@ -184,3 +184,45 @@ def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
 @template
 def add_gcc_warning(warning, compiler=None, when=None):
     check_and_add_gcc_warning(warning, compiler, when, check=False)
+
+
+# Like the warning checks above, but for general compilation flags.
+@dependable
+def compilation_cflags():
+    return []
+
+
+@dependable
+def compilation_cxxflags():
+    return []
+
+
+# Tests whether GCC or clang support the given compilation flag; if the flag
+# is supported, add it to the list of compilation flags for the build.
+# - `flag` is the flag to test
+# - `compiler` (optional) is the compiler to test against (c_compiler or
+#   cxx_compiler, from toolchain.configure). When omitted, both compilers
+#   are tested.
+# - `when` (optional) is a @depends function or option name conditioning
+#   when the warning flag is wanted.
+# - `check`, when not set, skips checking whether the flag is supported and
+#   adds it to the list of flags unconditionally. This is only meant for
+#   add_gcc_flag().
+@template
+def check_and_add_gcc_flag(flag, compiler=None, when=None, check=True):
+    flags = ['-Werror', flag]
+
+    check_and_add_flags(flag, compilation_cflags, compilation_cxxflags,
+                        flags, compiler=compiler, when=when, check=check)
+
+
+# Add the given flag to the list of flags for the build.
+# - `flag` is the flag (e.g. -fno-sized-deallocation)
+# - `compiler` (optional) is the compiler to add the flag for (c_compiler or
+#   cxx_compiler, from toolchain.configure). When omitted, the flag is added
+#   for both compilers.
+# - `when` (optional) is a @depends function or option name conditioning
+#   when the flag is wanted.
+@template
+def add_gcc_flag(warning, compiler=None, when=None):
+    check_and_add_gcc_flag(warning, compiler, when, check=False)
