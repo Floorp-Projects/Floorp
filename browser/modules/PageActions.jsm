@@ -525,9 +525,9 @@ this.PageActions = {
  *        onIframeHidden(iframeNode, parentPanelNode)
  *        * iframeNode: The iframe.
  *        * parentPanelNode: The panel node in which the iframe is shown.
- * @param onIframeShown (function, optional)
- *        Called when the action's iframe is shown to the user:
- *        onIframeShown(iframeNode, parentPanelNode)
+ * @param onIframeShowing (function, optional)
+ *        Called when the action's iframe is showing to the user:
+ *        onIframeShowing(iframeNode, parentPanelNode)
  *        * iframeNode: The iframe.
  *        * parentPanelNode: The panel node in which the iframe is shown.
  * @param onLocationChange (function, optional)
@@ -584,7 +584,7 @@ function Action(options) {
     onCommand: false,
     onIframeHiding: false,
     onIframeHidden: false,
-    onIframeShown: false,
+    onIframeShowing: false,
     onLocationChange: false,
     onPlacedInPanel: false,
     onPlacedInUrlbar: false,
@@ -901,16 +901,16 @@ Action.prototype = {
   },
 
   /**
-   * Call this when the action's iframe is shown.
+   * Call this when the action's iframe is showing.
    *
    * @param  iframeNode (DOM node, required)
    *         The iframe that's being shown.
    * @param  parentPanelNode (DOM node, required)
    *         The panel in which the iframe is shown.
    */
-  onIframeShown(iframeNode, parentPanelNode) {
-    if (this._onIframeShown) {
-      this._onIframeShown(iframeNode, parentPanelNode);
+  onIframeShowing(iframeNode, parentPanelNode) {
+    if (this._onIframeShowing) {
+      this._onIframeShowing(iframeNode, parentPanelNode);
     }
   },
 
