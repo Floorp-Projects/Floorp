@@ -610,7 +610,11 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
   // which will recreate the channel. This way, if all of the media data
   // is already in the cache we don't create an unnecessary HTTP channel
   // and perform a useless HTTP transaction.
-  resource->mCacheStream.InitAsClone(&mCacheStream);
+  nsresult rv = resource->mCacheStream.InitAsClone(&mCacheStream);
+  if (NS_FAILED(rv)) {
+    resource->Close();
+    return nullptr;
+  }
   // mSuspendAgent.Suspend() accesses mCacheStream which is not ready
   // until InitAsClone() is done.
   resource->mSuspendAgent.Suspend();

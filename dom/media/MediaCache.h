@@ -210,7 +210,7 @@ public:
   // as the aOriginal stream.
   // Exactly one of InitAsClone or Init must be called before any other method
   // on this class.
-  void InitAsClone(MediaCacheStream* aOriginal);
+  nsresult InitAsClone(MediaCacheStream* aOriginal);
 
   nsIEventTarget* OwnerThread() const;
 
@@ -223,11 +223,7 @@ public:
   bool IsClosed() const { return mClosed; }
   // Returns true when this stream is can be shared by a new resource load.
   // Called on the main thread only.
-  bool IsAvailableForSharing() const
-  {
-    return !mClosed && !mIsPrivateBrowsing &&
-      (!mDidNotifyDataEnded || NS_SUCCEEDED(mNotifyDataEndedStatus));
-  }
+  bool IsAvailableForSharing() const { return !mClosed && !mIsPrivateBrowsing; }
   // Get the principal for this stream. Anything accessing the contents of
   // this stream must have a principal that subsumes this principal.
   nsIPrincipal* GetCurrentPrincipal() { return mPrincipal; }
