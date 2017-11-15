@@ -17,6 +17,7 @@
 #include "mozilla/dom/cache/SavedTypes.h"
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/cache/TypeUtils.h"
+#include "mozilla/net/MozURL.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozStorageHelper.h"
@@ -2114,8 +2115,23 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
       return NS_ERROR_FAILURE;
     }
 
+    RefPtr<net::MozURL> url;
+    rv = net::MozURL::Init(getter_AddRefs(url), specNoSuffix);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+#ifdef DEBUG
+    nsCString scheme;
+    rv = url->GetScheme(scheme);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    MOZ_ASSERT(scheme == "http" || scheme == "https" || scheme == "file");
+#endif
+
+    nsCString origin;
+    rv = url->GetOrigin(origin);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
     aSavedResponseOut->mValue.principalInfo() =
-      mozilla::ipc::ContentPrincipalInfo(attrs, void_t(), specNoSuffix);
+      mozilla::ipc::ContentPrincipalInfo(attrs, origin, specNoSuffix);
   }
 
   bool nullPadding = false;
