@@ -359,8 +359,7 @@ public:
   static bool IsCustomElementEnabled(JSContext* aCx = nullptr,
                                      JSObject* aObject = nullptr)
   {
-    return nsContentUtils::IsCustomElementsEnabled() ||
-           nsContentUtils::IsWebComponentsEnabled();
+    return nsContentUtils::IsCustomElementsEnabled();
   }
 
   explicit CustomElementRegistry(nsPIDOMWindowInner* aWindow);
