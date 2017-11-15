@@ -104,19 +104,8 @@ void
 ChannelMediaDecoder::ResourceCallback::NotifyDataEnded(nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mDecoder) {
-    return;
-  }
-  mDecoder->NotifyDownloadEnded(aStatus);
-  if (NS_SUCCEEDED(aStatus)) {
-    MediaDecoderOwner* owner = GetMediaOwner();
-    MOZ_ASSERT(owner);
-    owner->DownloadSuspended();
-
-    // NotifySuspendedStatusChanged will tell the element that download
-    // has been suspended "by the cache", which is true since we never
-    // download anything. The element can then transition to HAVE_ENOUGH_DATA.
-    owner->NotifySuspendedByCache(true);
+  if (mDecoder) {
+    mDecoder->NotifyDownloadEnded(aStatus);
   }
 }
 
@@ -305,19 +294,21 @@ ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus)
 
   LOG("NotifyDownloadEnded, status=%" PRIx32, static_cast<uint32_t>(aStatus));
 
+  MediaDecoderOwner* owner = GetOwner();
   if (aStatus == NS_BINDING_ABORTED) {
     // Download has been cancelled by user.
-    GetOwner()->LoadAborted();
+    owner->LoadAborted();
     return;
   }
 
   UpdatePlaybackRate();
 
   if (NS_SUCCEEDED(aStatus)) {
-    // A final progress event will be fired by the MediaResource calling
-    // DownloadSuspended on the element.
-    // Also NotifySuspendedStatusChanged() will be called to update readyState
-    // if download ended with success.
+    owner->DownloadSuspended();
+    // NotifySuspendedStatusChanged will tell the element that download
+    // has been suspended "by the cache", which is true since we never
+    // download anything. The element can then transition to HAVE_ENOUGH_DATA.
+    owner->NotifySuspendedByCache(true);
   } else if (aStatus != NS_BASE_STREAM_CLOSED) {
     NetworkError();
   }
