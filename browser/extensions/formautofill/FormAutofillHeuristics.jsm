@@ -195,8 +195,12 @@ this.LabelUtils = {
 
   // An array consisting of label elements whose correponding form field doesn't
   // have an id attribute.
-  // @type {Array.<HTMLLabelElement>}
+  // @type {Array<HTMLLabelElement>}
   _unmappedLabels: null,
+
+  // A weak map consisting of label element and extracted strings pairs.
+  // @type {WeakMap<HTMLLabelElement, array>}
+  _labelStrings: null,
 
   /**
    * Extract all strings of an element's children to an array.
@@ -209,6 +213,9 @@ this.LabelUtils = {
    *          All strings in an element.
    */
   extractLabelStrings(element) {
+    if (this._labelStrings.has(element)) {
+      return this._labelStrings.get(element);
+    }
     let strings = [];
     let _extractLabelStrings = (el) => {
       if (this.EXCLUDED_TAGS.includes(el.tagName)) {
@@ -232,6 +239,7 @@ this.LabelUtils = {
       }
     };
     _extractLabelStrings(element);
+    this._labelStrings.set(element, strings);
     return strings;
   },
 
@@ -262,11 +270,13 @@ this.LabelUtils = {
 
     this._mappedLabels = mappedLabels;
     this._unmappedLabels = unmappedLabels;
+    this._labelStrings = new WeakMap();
   },
 
   clearLabelMap() {
     this._mappedLabels = null;
     this._unmappedLabels = null;
+    this._labelStrings = null;
   },
 
   findLabelElements(element) {
@@ -372,7 +382,7 @@ this.FormAutofillHeuristics = {
       let ruleStart = i;
       for (; i < GRAMMARS.length && GRAMMARS[i][0] && fieldScanner.elementExisting(detailStart); i++, detailStart++) {
         let detail = fieldScanner.getFieldDetailByIndex(detailStart);
-        if (!detail || GRAMMARS[i][0] != detail.fieldName || detail._reason == "autocomplete") {
+        if (!detail || GRAMMARS[i][0] != detail.fieldName || (detail._reason && detail._reason == "autocomplete")) {
           break;
         }
         let element = detail.elementWeakRef.get();
@@ -475,8 +485,9 @@ this.FormAutofillHeuristics = {
     const detail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
     const element = detail.elementWeakRef.get();
 
-    // Skip the uninteresting fields
-    if (!detail || !["cc-exp", ...monthAndYearFieldNames].includes(detail.fieldName)) {
+    // Respect to autocomplete attr and skip the uninteresting fields
+    if (!detail || (detail._reason && detail._reason == "autocomplete") ||
+        !["cc-exp", ...monthAndYearFieldNames].includes(detail.fieldName)) {
       return false;
     }
 
@@ -531,15 +542,43 @@ this.FormAutofillHeuristics = {
     }
     fieldScanner.parsingIndex = savedIndex;
 
-    // If no possible regular expiration fields are detected in current parsing window
-    // fallback to "cc-exp" as there's no such case that cc-exp-month or cc-exp-year
-    // presents alone.
-    // TODO: bug 1392947 - We should eventually remove this fallback, since we don't
-    // want to mess up deduplication if meanwhile a birthday was fallback to cc-exp
-    // that preceding the actual expiration fields.
-    fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp");
-    fieldScanner.parsingIndex++;
+    // Look for MM and/or YY(YY).
+    if (this._matchRegexp(element, /^mm$/ig)) {
+      fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-month");
+      fieldScanner.parsingIndex++;
+      if (!fieldScanner.parsingFinished) {
+        const nextDetail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
+        const nextElement = nextDetail.elementWeakRef.get();
+        if (this._matchRegexp(nextElement, /^(yy|yyyy)$/)) {
+          fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-year");
+          fieldScanner.parsingIndex++;
 
+          return true;
+        }
+      }
+    }
+    fieldScanner.parsingIndex = savedIndex;
+
+    // Look for a cc-exp with 2-digit or 4-digit year.
+    if (this._matchRegexp(element, /(?:exp.*date[^y\\n\\r]*|mm\\s*[-/]?\\s*)yy(?:[^y]|$)/ig) ||
+        this._matchRegexp(element, /(?:exp.*date[^y\\n\\r]*|mm\\s*[-/]?\\s*)yyyy(?:[^y]|$)/ig)) {
+      fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp");
+      fieldScanner.parsingIndex++;
+      return true;
+    }
+    fieldScanner.parsingIndex = savedIndex;
+
+    // Match general cc-exp regexp at last.
+    if (this._findMatchedFieldName(element, ["cc-exp"])) {
+      fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp");
+      fieldScanner.parsingIndex++;
+      return true;
+    }
+    fieldScanner.parsingIndex = savedIndex;
+
+    // Set current field name to null as it failed to match any patterns.
+    fieldScanner.updateFieldName(fieldScanner.parsingIndex, null);
+    fieldScanner.parsingIndex++;
     return true;
   },
 
@@ -604,7 +643,7 @@ this.FormAutofillHeuristics = {
     if (!this._regexpList) {
       return null;
     }
-    return this._regexpList[this._regExpTableHashValue(b0, b1, b2)];
+    return this._regexpList[this._regExpTableHashValue(b0, b1, b2)] || null;
   },
 
   _getRegExpList(isAutoCompleteOff, elementTagName) {
@@ -699,7 +738,6 @@ this.FormAutofillHeuristics = {
     return null;
   },
 
-
   /**
    * @typedef ElementStrings
    * @type {object}
@@ -757,6 +795,24 @@ this.FormAutofillHeuristics = {
     }
 
     return null;
+  },
+
+  /**
+   * Determine whether the regexp can match any of element strings.
+   *
+   * @param {HTMLElement} element
+   * @param {RegExp} regexp
+   *
+   * @returns {boolean}
+   */
+  _matchRegexp(element, regexp) {
+    const elemStrings = this._getElementStrings(element);
+    for (const str of elemStrings) {
+      if (regexp.test(str)) {
+        return true;
+      }
+    }
+    return false;
   },
 
 /**
