@@ -43,7 +43,8 @@ if CONFIG['OS_TARGET'] == 'Android' and CONFIG['CC_TYPE'] == 'clang':
         '-Wno-tautological-pointer-compare',
     ]
 
-FINAL_LIBRARY = 'mozglue'
+if CONFIG['MOZ_BUILD_APP'] != 'memory':
+    FINAL_LIBRARY = 'mozglue'
 
 if CONFIG['_MSC_VER']:
     CXXFLAGS += ['-wd4273'] # inconsistent dll linkage (bug 558163)
