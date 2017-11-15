@@ -661,7 +661,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/HomeConfigLoader.java',
     'home/HomeConfigPrefsBackend.java',
     'home/HomeContextMenuInfo.java',
-    'home/HomeExpandableListView.java',
     'home/HomeFragment.java',
     'home/HomeListView.java',
     'home/HomePager.java',
