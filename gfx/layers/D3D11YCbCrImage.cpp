@@ -206,6 +206,13 @@ D3D11YCbCrImage::GetAsSourceSurface()
   desc.Usage = D3D11_USAGE_STAGING;
 
   dev->CreateTexture2D(&desc, nullptr, getter_AddRefs(softTexCb));
+
+  texCr->GetDesc(&desc);
+  desc.BindFlags = 0;
+  desc.MiscFlags = 0;
+  desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+  desc.Usage = D3D11_USAGE_STAGING;
+
   dev->CreateTexture2D(&desc, nullptr, getter_AddRefs(softTexCr));
 
   RefPtr<ID3D11DeviceContext> ctx;
