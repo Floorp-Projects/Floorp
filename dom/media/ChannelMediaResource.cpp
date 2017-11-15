@@ -837,8 +837,11 @@ ChannelMediaResource::CacheClientNotifyDataReceived()
 void
 ChannelMediaResource::CacheClientNotifyDataEnded(nsresult aStatus)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  mCallback->NotifyDataEnded(aStatus);
+  mCallback->AbstractMainThread()->Dispatch(
+    NewRunnableMethod<nsresult>("MediaResourceCallback::NotifyDataEnded",
+                                mCallback.get(),
+                                &MediaResourceCallback::NotifyDataEnded,
+                                aStatus));
 }
 
 void

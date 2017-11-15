@@ -4,15 +4,13 @@
 
 "use strict";
 
-const {
-  Component,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Editor = require("devtools/client/sourceeditor/editor");
 const { SOURCE_EDITOR_SYNTAX_HIGHLIGHT_MAX_SIZE } = require("../constants");
 
-const { div } = DOM;
+const { div } = dom;
 
 /**
  * CodeMirror editor as a React component

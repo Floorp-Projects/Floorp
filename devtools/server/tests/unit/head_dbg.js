@@ -663,6 +663,10 @@ const assert = do_check_true;
  * @returns Promise
  */
 function waitForEvent(client, type, predicate) {
+  if (!predicate) {
+    return client.addOneTimeListener(type);
+  }
+
   return new Promise(function (resolve) {
     function listener(type, packet) {
       if (!predicate(packet)) {
@@ -671,14 +675,7 @@ function waitForEvent(client, type, predicate) {
       client.removeListener(listener);
       resolve(packet);
     }
-
-    if (predicate) {
-      client.addListener(type, listener);
-    } else {
-      client.addOneTimeListener(type, function (type, packet) {
-        resolve(packet);
-      });
-    }
+    client.addListener(type, listener);
   });
 }
 

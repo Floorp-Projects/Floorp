@@ -235,7 +235,7 @@ const EXPIRATION_QUERIES = {
   // Hosts accumulated during the places delete are updated through a trigger
   // (see nsPlacesTriggers.h).
   QUERY_UPDATE_HOSTS: {
-    sql: `DELETE FROM moz_updatehosts_temp`,
+    sql: `DELETE FROM moz_updatehostsdelete_temp`,
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
              ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },

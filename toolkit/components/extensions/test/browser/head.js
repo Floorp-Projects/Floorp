@@ -1,5 +1,5 @@
 /* exported ACCENT_COLOR, BACKGROUND, ENCODED_IMAGE_DATA, FRAME_COLOR, TAB_TEXT_COLOR,
-   TEXT_COLOR, imageBufferFromDataURI, hexToRGB */
+   TEXT_COLOR, BACKGROUND_TAB_TEXT_COLOR, imageBufferFromDataURI, hexToRGB */
 
 "use strict";
 
@@ -34,7 +34,7 @@ const ACCENT_COLOR = "#a14040";
 const TEXT_COLOR = "#fac96e";
 // For testing aliases of the colors above:
 const FRAME_COLOR = [71, 105, 91];
-const TAB_TEXT_COLOR = [207, 221, 192, .9];
+const BACKGROUND_TAB_TEXT_COLOR = [207, 221, 192, .9];
 
 function hexToRGB(hex) {
   hex = parseInt((hex.indexOf("#") > -1 ? hex.substring(1) : hex), 16);

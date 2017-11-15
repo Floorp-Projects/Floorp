@@ -6,12 +6,9 @@
 
 "use strict";
 
-const {
-  Component,
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
@@ -26,7 +23,7 @@ const TreeRow = createFactory(require("devtools/client/shared/components/tree/Tr
 const SourceEditor = createFactory(require("./SourceEditor"));
 const HTMLPreview = createFactory(require("./HtmlPreview"));
 
-const { div, tr, td } = DOM;
+const { div, tr, td } = dom;
 const AUTO_EXPAND_MAX_LEVEL = 7;
 const AUTO_EXPAND_MAX_NODES = 50;
 const EDITOR_CONFIG_ID = "EDITOR_CONFIG";

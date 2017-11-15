@@ -2347,9 +2347,9 @@ async function(db, folderGuids, options) {
  *        A valid URL object.
  * @return {Promise} resolved when the operation is complete.
  */
-function maybeInsertPlace(db, url) {
+async function maybeInsertPlace(db, url) {
   // The IGNORE conflict can trigger on `guid`.
-  return db.executeCached(
+  await db.executeCached(
     `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid)
      VALUES (:url, hash(:url), :rev_host, 0, :frecency,
              IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
@@ -2357,6 +2357,7 @@ function maybeInsertPlace(db, url) {
     `, { url: url.href,
          rev_host: PlacesUtils.getReversedHost(url),
          frecency: url.protocol == "place:" ? 0 : -1 });
+  await db.executeCached("DELETE FROM moz_updatehostsinsert_temp");
 }
 
 /**
@@ -2367,8 +2368,8 @@ function maybeInsertPlace(db, url) {
  *        An array with all the url objects to insert.
  * @return {Promise} resolved when the operation is complete.
  */
-function maybeInsertManyPlaces(db, urls) {
-  return db.executeCached(
+async function maybeInsertManyPlaces(db, urls) {
+  await db.executeCached(
     `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid) VALUES
      (:url, hash(:url), :rev_host, 0, :frecency,
      IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :maybeguid))`,
@@ -2378,6 +2379,7 @@ function maybeInsertManyPlaces(db, urls) {
        frecency: url.protocol == "place:" ? 0 : -1,
        maybeguid: PlacesUtils.history.makeGuid(),
      })));
+  await db.executeCached("DELETE FROM moz_updatehostsinsert_temp");
 }
 
 // Indicates whether we should write a tombstone for an item that has been

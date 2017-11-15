@@ -1,6 +1,6 @@
 
 "health" ping
-============
+=============
 
 This ping is intended to provide data about problems arise when submitting other pings.
 The ping is submitted at most once per hour. On shutdown an additional ping is submitted

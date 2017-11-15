@@ -411,43 +411,54 @@ nsNavHistory::GetOrCreateIdForPage(nsIURI* aURI,
     return NS_OK;
   }
 
-  // Create a new hidden, untyped and unvisited entry.
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "INSERT INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid) "
-    "VALUES (:page_url, hash(:page_url), :rev_host, :hidden, :frecency, :guid) "
-  );
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
+  {
+    // Create a new hidden, untyped and unvisited entry.
+    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
+      "INSERT INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid) "
+      "VALUES (:page_url, hash(:page_url), :rev_host, :hidden, :frecency, :guid) "
+    );
+    NS_ENSURE_STATE(stmt);
+    mozStorageStatementScoper scoper(stmt);
 
-  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // host (reversed with trailing period)
-  nsAutoString revHost;
-  rv = GetReversedHostname(aURI, revHost);
-  // Not all URI types have hostnames, so this is optional.
-  if (NS_SUCCEEDED(rv)) {
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"), revHost);
-  } else {
-    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("rev_host"));
+    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // host (reversed with trailing period)
+    nsAutoString revHost;
+    rv = GetReversedHostname(aURI, revHost);
+    // Not all URI types have hostnames, so this is optional.
+    if (NS_SUCCEEDED(rv)) {
+      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"), revHost);
+    } else {
+      rv = stmt->BindNullByName(NS_LITERAL_CSTRING("rev_host"));
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), 1);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsAutoCString spec;
+    rv = aURI->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("frecency"),
+                               IsQueryURI(spec) ? 0 : -1);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = GenerateGUID(_GUID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), _GUID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *_pageId = sLastInsertedPlaceId;
   }
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), 1);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoCString spec;
-  rv = aURI->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("frecency"),
-                             IsQueryURI(spec) ? 0 : -1);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = GenerateGUID(_GUID);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), _GUID);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *_pageId = sLastInsertedPlaceId;
+  {
+    // Trigger the updates to moz_hosts
+    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
+      "DELETE FROM moz_updatehostsinsert_temp"
+    );
+    NS_ENSURE_STATE(stmt);
+    mozStorageStatementScoper scoper(stmt);
+  }
 
   return NS_OK;
 }
@@ -2518,7 +2529,7 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
   // Hosts accumulated during the places delete are updated through a trigger
   // (see nsPlacesTriggers.h).
   rv = conn->ExecuteSimpleSQL(
-    NS_LITERAL_CSTRING("DELETE FROM moz_updatehosts_temp")
+    NS_LITERAL_CSTRING("DELETE FROM moz_updatehostsdelete_temp")
   );
   NS_ENSURE_SUCCESS(rv, rv);
 

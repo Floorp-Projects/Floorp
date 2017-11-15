@@ -3252,8 +3252,7 @@ nsComputedDOMStyle::DoGetGridTemplateColumns()
   const ComputedGridTrackInfo* info = nullptr;
 
   nsGridContainerFrame* gridFrame =
-    nsGridContainerFrame::GetGridFrameWithComputedInfo(
-      mContent->GetPrimaryFrame());
+    nsGridContainerFrame::GetGridFrameWithComputedInfo(mInnerFrame);
 
   if (gridFrame) {
     info = gridFrame->GetComputedTemplateColumns();
@@ -3269,14 +3268,14 @@ nsComputedDOMStyle::DoGetGridTemplateRows()
   const ComputedGridTrackInfo* info = nullptr;
 
   nsGridContainerFrame* gridFrame =
-    nsGridContainerFrame::GetGridFrameWithComputedInfo(
-      mContent->GetPrimaryFrame());
+    nsGridContainerFrame::GetGridFrameWithComputedInfo(mInnerFrame);
 
   if (gridFrame) {
     info = gridFrame->GetComputedTemplateRows();
   }
 
-  return GetGridTemplateColumnsRows(StylePosition()->GridTemplateRows(), info);
+  return GetGridTemplateColumnsRows(
+    StylePosition()->GridTemplateRows(), info);
 }
 
 already_AddRefed<CSSValue>

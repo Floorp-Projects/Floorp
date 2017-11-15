@@ -241,7 +241,7 @@ public:
   void DumpTrackInfo() const;
 #endif
 
-  Track* FindTrack(TrackID aID);
+  Track* FindTrack(TrackID aID) const;
 
   class MOZ_STACK_CLASS TrackIter final
   {
@@ -256,13 +256,13 @@ public:
      */
     TrackIter(const StreamTracks& aBuffer, MediaSegment::Type aType) :
       mBuffer(&aBuffer.mTracks), mIndex(0), mType(aType), mMatchType(true) { FindMatch(); }
-    bool IsEnded() { return mIndex >= mBuffer->Length(); }
+    bool IsEnded() const { return mIndex >= mBuffer->Length(); }
     void Next()
     {
       ++mIndex;
       FindMatch();
     }
-    Track* get() { return mBuffer->ElementAt(mIndex); }
+    Track* get() const { return mBuffer->ElementAt(mIndex); }
     Track& operator*() { return *mBuffer->ElementAt(mIndex); }
     Track* operator->() { return mBuffer->ElementAt(mIndex); }
   private:
@@ -297,7 +297,7 @@ public:
   /**
    * Returns the latest time passed to ForgetUpTo.
    */
-  StreamTime GetForgottenDuration()
+  StreamTime GetForgottenDuration() const
   {
     return mForgottenTime;
   }

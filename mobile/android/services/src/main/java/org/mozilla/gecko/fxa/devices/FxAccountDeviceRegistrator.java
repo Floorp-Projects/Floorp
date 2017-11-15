@@ -295,7 +295,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
       final SharedPreferencesClientsDataDelegate clientsDataDelegate =
           new SharedPreferencesClientsDataDelegate(fxAccount.getSyncPrefs(), context);
       return clientsDataDelegate.getClientName();
-    } catch (IOException | GeneralSecurityException e) {
+    } catch (Exception e) {
       Log.e(LOG_TAG, "Unable to get client name.", e);
       // It's possible we're racing against account pickler.
       // In either case, it should be always safe to perform registration using our default name.
