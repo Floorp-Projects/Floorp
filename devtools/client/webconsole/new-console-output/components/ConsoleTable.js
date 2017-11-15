@@ -3,12 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {
-  Component,
-  createFactory,
-  DOM: dom,
-  PropTypes
-} = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ObjectClient = require("devtools/shared/client/object-client");
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");

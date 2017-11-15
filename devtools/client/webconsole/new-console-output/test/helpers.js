@@ -5,6 +5,8 @@
 
 let ReactDOM = require("devtools/client/shared/vendor/react-dom");
 let React = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const { createElement } = React;
 var TestUtils = React.addons.TestUtils;
 
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
@@ -46,17 +48,17 @@ function setupStore(input = [], hud, options) {
 }
 
 function renderComponent(component, props) {
-  const el = React.createElement(component, props, {});
+  const el = createElement(component, props, {});
   // By default, renderIntoDocument() won't work for stateless components, but
   // it will work if the stateless component is wrapped in a stateful one.
   // See https://github.com/facebook/react/issues/4839
-  const wrappedEl = React.DOM.span({}, [el]);
+  const wrappedEl = dom.span({}, [el]);
   const renderedComponent = TestUtils.renderIntoDocument(wrappedEl);
   return ReactDOM.findDOMNode(renderedComponent).children[0];
 }
 
 function shallowRenderComponent(component, props) {
-  const el = React.createElement(component, props);
+  const el = createElement(component, props);
   const renderer = TestUtils.createRenderer();
   renderer.render(el, {});
   return renderer.getRenderOutput();

@@ -6,11 +6,8 @@
 
 "use strict";
 
-// React & Redux
-const {
-  DOM: dom,
-  PropTypes
-} = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {l10n} = require("devtools/client/webconsole/new-console-output/utils/messages");
 
 // Store common icons so they can be used without recreating the element

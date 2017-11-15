@@ -3,11 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {
-  Component,
-  DOM: dom,
-  PropTypes
-} = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const { getFilteredMessagesCount } = require("devtools/client/webconsole/new-console-output/selectors/messages");

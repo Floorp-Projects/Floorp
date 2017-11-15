@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory, DOM, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const NetInfoParams = createFactory(require("./net-info-params"));
 
 /**
@@ -58,18 +59,18 @@ class NetInfoGroup extends Component {
     let className = open ? "opened" : "";
 
     return (
-      DOM.div({className: "netInfoGroup" + " " + className + " " +
+      dom.div({className: "netInfoGroup" + " " + className + " " +
         this.props.type},
-        DOM.span({
+        dom.span({
           className: "netInfoGroupTwisty",
           onClick: this.onToggle
         }),
-        DOM.span({
+        dom.span({
           className: "netInfoGroupTitle",
           onClick: this.onToggle},
           this.props.name
         ),
-        DOM.div({className: "netInfoGroupContent"},
+        dom.div({className: "netInfoGroupContent"},
           content
         )
       )

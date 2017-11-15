@@ -4,18 +4,16 @@
 
 "use strict";
 
-const {
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 // Components
 const MonitorPanel = createFactory(require("./MonitorPanel"));
 const StatisticsPanel = createFactory(require("./StatisticsPanel"));
 
-const { div } = DOM;
+const { div } = dom;
 
 /**
  * App component

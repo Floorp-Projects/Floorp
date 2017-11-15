@@ -1314,33 +1314,11 @@ PlacesController.prototype = {
 
     let itemsToSelect = [];
     if (PlacesUIUtils.useAsyncTransactions) {
-      if (ip.isTag) {
-        let urls = items.filter(item => "uri" in item).map(item => Services.io.newURI(item.uri));
-        await PlacesTransactions.Tag({ urls, tag: ip.tagName }).transact();
-      } else {
-        let transactions = [];
+      let doCopy = action == "copy";
+      let guidsToSelect = await handleTransferItems(items, ip, doCopy, this._view);
 
-        let insertionIndex = await ip.getIndex();
-        let doCopy = action == "copy";
-        let newTransactions = await getTransactionsForTransferItems(type,
-          items, insertionIndex, ip.guid, doCopy);
-        if (newTransactions.length) {
-          transactions = [...transactions, ...newTransactions];
-        }
-
-        // Note: this._view may be a view or the tree element.
-        let resultForBatching = getResultForBatching(this._view);
-
-        await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
-          transactions.length, async () => {
-            await PlacesTransactions.batch(async () => {
-              for (let transaction of transactions) {
-                let guid = await transaction.transact();
-                itemsToSelect.push(await PlacesUtils.promiseItemId(guid));
-              }
-            });
-          });
-      }
+      let guidsToIdMap = await PlacesUtils.promiseManyItemIds(guidsToSelect);
+      itemsToSelect = Array.from(guidsToIdMap.values());
     } else {
       let transactions = [];
       let insertionIndex = await ip.getIndex();
@@ -1622,7 +1600,6 @@ var PlacesControllerDragHelper = {
     let transactions = [];
     let dropCount = dt.mozItemCount;
     let parentGuid = insertionPoint.guid;
-    let tagName = insertionPoint.tagName;
 
     // Following flavors may contain duplicated data.
     let duplicable = new Map();
@@ -1648,34 +1625,44 @@ var PlacesControllerDragHelper = {
       dtItems.push({flavor, data});
     }
 
-    for (let {flavor, data} of dtItems) {
-      let nodes;
-      if (flavor != TAB_DROP_TYPE) {
-        nodes = PlacesUtils.unwrapNodes(data, flavor);
-      } else if (data instanceof XULElement && data.localName == "tab" &&
-               data.ownerGlobal.isChromeWindow) {
-        let uri = data.linkedBrowser.currentURI;
-        let spec = uri ? uri.spec : "about:blank";
-        nodes = [{ uri: spec,
-                   title: data.label,
-                   type: PlacesUtils.TYPE_X_MOZ_URL}];
-      } else
-        throw new Error("bogus data was passed as a tab");
-
-      if (PlacesUIUtils.useAsyncTransactions) {
-        // If dragging over a tag container we should tag the item.
-        if (insertionPoint.isTag) {
-          let urls = nodes.filter(item => "uri" in item).map(item => item.uri);
-          transactions.push(PlacesTransactions.Tag({ urls, tag: tagName }));
+    if (PlacesUIUtils.useAsyncTransactions) {
+      let nodes = [];
+      // TODO: When sync transactions are removed, merge the for loop here into the
+      // one above.
+      for (let {flavor, data} of dtItems) {
+        if (flavor != TAB_DROP_TYPE) {
+          nodes = [...nodes, ...PlacesUtils.unwrapNodes(data, flavor)];
+        } else if (data instanceof XULElement && data.localName == "tab" &&
+                 data.ownerGlobal.isChromeWindow) {
+          let uri = data.linkedBrowser.currentURI;
+          let spec = uri ? uri.spec : "about:blank";
+          nodes.push({
+            uri: spec,
+            title: data.label,
+            type: PlacesUtils.TYPE_X_MOZ_URL
+          });
         } else {
-          let insertionIndex = await insertionPoint.getIndex();
-          let newTransactions = await getTransactionsForTransferItems(flavor,
-            nodes, insertionIndex, parentGuid, doCopy);
-          if (newTransactions.length) {
-            transactions = [...transactions, ...newTransactions];
-          }
+          throw new Error("bogus data was passed as a tab");
         }
-      } else {
+      }
+
+      await handleTransferItems(nodes, insertionPoint, doCopy, view);
+    } else {
+      for (let {flavor, data} of dtItems) {
+        let nodes;
+        if (flavor != TAB_DROP_TYPE) {
+          nodes = PlacesUtils.unwrapNodes(data, flavor);
+        } else if (data instanceof XULElement && data.localName == "tab" &&
+                 data.ownerGlobal.isChromeWindow) {
+          let uri = data.linkedBrowser.currentURI;
+          let spec = uri ? uri.spec : "about:blank";
+          nodes = [{ uri: spec,
+                     title: data.label,
+                     type: PlacesUtils.TYPE_X_MOZ_URL}];
+        } else {
+          throw new Error("bogus data was passed as a tab");
+        }
+
         let movedCount = 0;
         for (let unwrapped of nodes) {
           let index = await insertionPoint.getIndex();
@@ -1718,22 +1705,16 @@ var PlacesControllerDragHelper = {
                                 index, doCopy));
           }
         }
+
+        // Check if we actually have something to add, if we don't it probably wasn't
+        // valid, or it was moving to the same location, so just ignore it.
+        if (!transactions.length) {
+          return;
+        }
+
+        let txn = new PlacesAggregatedTransaction("DropItems", transactions);
+        PlacesUtils.transactionManager.doTransaction(txn);
       }
-    }
-    // Check if we actually have something to add, if we don't it probably wasn't
-    // valid, or it was moving to the same location, so just ignore it.
-    if (!transactions.length) {
-      return;
-    }
-    if (PlacesUIUtils.useAsyncTransactions) {
-      let resultForBatching = getResultForBatching(view);
-      await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
-        transactions.length, async () => {
-          await PlacesTransactions.batch(transactions);
-        });
-    } else {
-      let txn = new PlacesAggregatedTransaction("DropItems", transactions);
-      PlacesUtils.transactionManager.doTransaction(txn);
     }
   },
 
@@ -1840,10 +1821,63 @@ function getResultForBatching(viewOrElement) {
 }
 
 /**
+ * Processes a set of transfer items that have been dropped or pasted.
+ * Batching will be applied where necessary.
+ *
+ * @param {Array} items A list of unwrapped nodes to process.
+ * @param {Object} insertionPoint The requested point for insertion.
+ * @param {Boolean} doCopy Set to true to copy the items, false will move them
+ *                         if possible.
+ * @return {Array} Returns an empty array when the insertion point is a tag, else
+ *                 returns an array of copied or moved guids.
+ */
+async function handleTransferItems(items, insertionPoint, doCopy, view) {
+  let transactions;
+  if (insertionPoint.isTag) {
+    let urls = items.filter(item => "uri" in item).map(item => item.uri);
+    transactions = [PlacesTransactions.Tag({ urls, tag: insertionPoint.tagName })];
+  } else {
+    let insertionIndex = await insertionPoint.getIndex();
+    transactions = await getTransactionsForTransferItems(
+      items, insertionIndex, insertionPoint.guid, doCopy);
+  }
+
+  // Check if we actually have something to add, if we don't it probably wasn't
+  // valid, or it was moving to the same location, so just ignore it.
+  if (!transactions.length) {
+    return [];
+  }
+
+  let guidsToSelect = [];
+  let resultForBatching = getResultForBatching(view);
+
+  // If we're inserting into a tag, we don't get the guid, so we'll just
+  // pass the transactions direct to the batch function.
+  let batchingItem = transactions;
+  if (!insertionPoint.isTag) {
+    // If we're not a tag, then we need to get the ids of the items to select.
+    batchingItem = async () => {
+      for (let transaction of transactions) {
+        let guid = await transaction.transact();
+        if (guid) {
+          guidsToSelect.push(guid);
+        }
+      }
+    };
+  }
+
+  await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
+    transactions.length, async () => {
+      await PlacesTransactions.batch(batchingItem);
+    });
+
+  return guidsToSelect;
+}
+
+/**
  * Processes a set of transfer items and returns transactions to insert or
  * move them.
  *
- * @param {String} dataFlavor The transfer flavor for the items.
  * @param {Array} items A list of unwrapped nodes to get transactions for.
  * @param {Integer} insertionIndex The requested index for insertion.
  * @param {String} insertionParentGuid The guid of the parent folder to insert
@@ -1852,7 +1886,7 @@ function getResultForBatching(viewOrElement) {
  *                         if possible.
  * @return {Array} Returns an array of created PlacesTransactions.
  */
-async function getTransactionsForTransferItems(dataFlavor, items, insertionIndex,
+async function getTransactionsForTransferItems(items, insertionIndex,
                                                insertionParentGuid, doCopy) {
   let transactions = [];
   let index = insertionIndex;
@@ -1888,7 +1922,6 @@ async function getTransactionsForTransferItems(dataFlavor, items, insertionIndex
     }
     transactions.push(
       PlacesUIUtils.getTransactionForData(item,
-                                          dataFlavor,
                                           insertionParentGuid,
                                           index,
                                           doCopy));

@@ -165,6 +165,10 @@ add_task(async function browseraction_theme_icons_dynamic_theme() {
           "light": "light.png",
           "dark": "dark.png",
           "size": 16,
+        }, {
+          "light": "light.png",
+          "dark": "dark.png",
+          "size": 32,
         }],
       },
     },

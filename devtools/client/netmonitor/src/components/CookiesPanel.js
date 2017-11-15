@@ -4,18 +4,16 @@
 
 "use strict";
 
-const {
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("../utils/l10n");
 const { sortObjectKeys } = require("../utils/sort-utils");
 
 // Component
 const PropertiesView = createFactory(require("./PropertiesView"));
 
-const { div } = DOM;
+const { div } = dom;
 
 const COOKIES_EMPTY_TEXT = L10N.getStr("cookiesEmptyText");
 const COOKIES_FILTER_TEXT = L10N.getStr("cookiesFilterText");

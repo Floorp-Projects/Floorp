@@ -35,7 +35,7 @@ The JAR location may be preceded with a base path between square brackets::
    [base/path] <jarfile>.jar:
      path/in/jar/file_name.xul     (source/tree/location/file_name.xul)
 
-In this case, the jar will be directly located under the given ``base/bath``,
+In this case, the jar will be directly located under the given ``base/path``,
 while without a base path, it will be under a ``chrome`` directory.
 
 If the JAR manifest and packaged file live in the same directory, the path and

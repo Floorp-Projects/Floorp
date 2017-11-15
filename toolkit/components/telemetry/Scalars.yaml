@@ -956,6 +956,19 @@ devtools.aboutdevtools:
     record_in_processes:
       - 'main'
 
+devtools.onboarding:
+  is_devtools_user:
+    bug_numbers:
+      - 1408339
+    description: >
+      How many users are flagged as existing devtools users.
+    expires: "60"
+    kind: boolean
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com
+    record_in_processes:
+      - 'main'
+
 navigator.storage:
   estimate_count:
     bug_numbers:

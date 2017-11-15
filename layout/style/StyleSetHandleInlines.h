@@ -318,7 +318,7 @@ void
 StyleSetHandle::Ptr::RootStyleContextRemoved()
 {
   if (IsGecko()) {
-    RootStyleContextAdded();
+    AsGecko()->RootStyleContextRemoved();
   } else {
     // Not needed.
   }

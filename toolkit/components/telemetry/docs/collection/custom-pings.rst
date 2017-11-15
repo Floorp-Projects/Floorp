@@ -21,7 +21,7 @@ If preferences allow the upload of Telemetry pings, the ping will be uploaded at
 
 .. important::
 
-    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for one of the data peers. We try to reply within a business day.
+    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`__ from a data collection peer. Just set the feedback? flag for one of the data peers. We try to reply within a business day.
 
 Submission constraints
 ----------------------
@@ -51,7 +51,7 @@ Designing custom pings
 
 In general, creating a new custom ping means you don't benefit automatically from the existing tooling. Further work is needed to make data show up in re:dash or other analysis tools.
 
-In addition to the `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection>`_, questions to guide a new ping design are:
+In addition to the `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection>`__, questions to guide a new ping design are:
 
 - Submission interval & triggers:
    - What events trigger ping submission?

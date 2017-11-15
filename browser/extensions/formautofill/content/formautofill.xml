@@ -160,6 +160,10 @@
 
     <handlers>
       <handler event="click" button="0"><![CDATA[
+        if (this._warningTextBox.contains(event.originalTarget)) {
+          return;
+        }
+
         window.openPreferences("panePrivacy", {origin: "autofillFooter"});
       ]]></handler>
     </handlers>

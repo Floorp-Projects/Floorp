@@ -232,7 +232,11 @@ function background(events) {
         checkHeaders("response", expected, details);
       }
     },
-    onErrorOccurred() {},
+    onErrorOccurred(expected, details, result) {
+      if (expected.error) {
+        browser.test.assertEq(expected.error, details.error, "expected error message received in onErrorOccurred");
+      }
+    },
   };
 
   function getListener(name) {
