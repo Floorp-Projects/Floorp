@@ -240,7 +240,8 @@ class BroadcastChannelWorkerHolder final : public workers::WorkerHolder
 
 public:
   explicit BroadcastChannelWorkerHolder(BroadcastChannel* aChannel)
-    : mChannel(aChannel)
+    : workers::WorkerHolder("BroadcastChannelWorkerHolder")
+    , mChannel(aChannel)
   {
     MOZ_COUNT_CTOR(BroadcastChannelWorkerHolder);
   }

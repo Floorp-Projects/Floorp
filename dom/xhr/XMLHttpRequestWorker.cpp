@@ -1533,7 +1533,7 @@ SendRunnable::RunOnMainThread(ErrorResult& aRv)
 }
 
 XMLHttpRequestWorker::XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate)
-: mWorkerPrivate(aWorkerPrivate),
+: WorkerHolder("XMLHttpRequestWorker"), mWorkerPrivate(aWorkerPrivate),
   mResponseType(XMLHttpRequestResponseType::Text), mTimeout(0),
   mRooted(false), mBackgroundRequest(false), mWithCredentials(false),
   mCanceled(false), mMozAnon(false), mMozSystem(false)

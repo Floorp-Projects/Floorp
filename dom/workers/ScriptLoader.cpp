@@ -1371,7 +1371,8 @@ class MOZ_STACK_CLASS ScriptLoaderHolder final : public WorkerHolder
 
 public:
   explicit ScriptLoaderHolder(ScriptLoaderRunnable* aRunnable)
-    : mRunnable(aRunnable)
+    : WorkerHolder("ScriptLoaderHolder")
+    , mRunnable(aRunnable)
   {
     MOZ_ASSERT(aRunnable);
   }

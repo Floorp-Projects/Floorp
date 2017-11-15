@@ -696,7 +696,8 @@ class PromiseWorkerHolder final : public WorkerHolder
 
 public:
   explicit PromiseWorkerHolder(PromiseWorkerProxy* aProxy)
-    : mProxy(aProxy)
+    : WorkerHolder("PromiseWorkerHolder")
+    , mProxy(aProxy)
   {
     MOZ_ASSERT(aProxy);
   }
