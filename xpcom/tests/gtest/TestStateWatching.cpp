@@ -8,6 +8,7 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StateWatching.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Unused.h"
 #include "nsISupportsImpl.h"
 #include "VideoUtils.h"
 
@@ -32,7 +33,7 @@ TEST(WatchManager, Shutdown)
   WatchManager<Foo> manager(p, queue);
   Watchable<bool> notifier(false, "notifier");
 
-  queue->Dispatch(NS_NewRunnableFunction(
+  Unused << queue->Dispatch(NS_NewRunnableFunction(
     "TestStateWatching::WatchManager_Shutdown_Test::TestBody", [&]() {
       manager.Watch(notifier, &Foo::Notify);
       notifier = true;    // Trigger the call to Foo::Notify().
