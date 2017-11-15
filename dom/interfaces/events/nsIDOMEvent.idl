@@ -198,12 +198,6 @@ interface nsIDOMEvent : nsISupports
    */
   readonly attribute nsIDOMEventTarget  explicitOriginalTarget;
 
-  /**
-   * @deprecated Use nsIDOMEvent::defaultPrevented.
-   * To be removed in bug 691151.
-   */
-  boolean                   getPreventDefault();
-
   readonly attribute boolean isTrusted;
   attribute boolean cancelBubble;
 
