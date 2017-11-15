@@ -25,6 +25,11 @@ add_task(async function test_persistent_storage_permission_prompt() {
   await testPrompt(PermissionUI.PersistentStoragePermissionPrompt);
 });
 
+// Tests that MidiPrompt works as expected
+add_task(async function test_midi_permission_prompt() {
+  await testPrompt(PermissionUI.MIDIPermissionPrompt);
+});
+
 async function testPrompt(Prompt) {
   await BrowserTestUtils.withNewTab({
     gBrowser,
