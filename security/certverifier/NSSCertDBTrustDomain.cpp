@@ -1065,10 +1065,7 @@ InitializeNSS(const nsACString& dir, bool readOnly, bool loadPKCS11Modules)
   }
   bool useSQLDB = Preferences::GetBool("security.use_sqldb", false);
   nsAutoCString dbTypeAndDirectory;
-  // Don't change any behavior if the user has specified an alternative database
-  // location with MOZPSM_NSSDBDIR_OVERRIDE.
-  const char* dbDirOverride = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
-  if (useSQLDB && (!dbDirOverride || strlen(dbDirOverride) == 0)) {
+  if (useSQLDB) {
     dbTypeAndDirectory.Append("sql:");
   }
   dbTypeAndDirectory.Append(dir);
