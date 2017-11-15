@@ -28,7 +28,8 @@ class FetchStreamWorkerHolder final : public WorkerHolder
 {
 public:
   explicit FetchStreamWorkerHolder(FetchStream* aStream)
-    : WorkerHolder(WorkerHolder::Behavior::AllowIdleShutdownStart)
+    : WorkerHolder("FetchStreamWorkerHolder",
+                   WorkerHolder::Behavior::AllowIdleShutdownStart)
     , mStream(aStream)
     , mWasNotified(false)
   {}

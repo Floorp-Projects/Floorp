@@ -332,6 +332,7 @@
                     <arg name="--sourcedir" value="${env.CLDR_DIR}/common/transforms" />
                     <arg name="--destdir"   value="${env.ICU4C_DIR}/source/data/translit"/>
                     <arg name="--commentSkip"/>
+                    <arg name="--approvedOnly"/>
                 </args>
                 <!-- http://ant.apache.org/faq.html#xml-entity-include -->
 

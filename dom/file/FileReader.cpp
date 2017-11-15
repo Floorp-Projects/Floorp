@@ -103,6 +103,7 @@ FileReader::RootResultArrayBuffer()
 FileReader::FileReader(nsIGlobalObject* aGlobal,
                        WorkerPrivate* aWorkerPrivate)
   : DOMEventTargetHelper(aGlobal)
+  , WorkerHolder("FileReader")
   , mFileData(nullptr)
   , mDataLen(0)
   , mDataFormat(FILE_AS_BINARY)

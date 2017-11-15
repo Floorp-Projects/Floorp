@@ -4,6 +4,7 @@
 
 #include "gtest/gtest.h"
 
+#include "Common.h"
 #include "mozilla/Vector.h"
 #include "StreamingLexer.h"
 

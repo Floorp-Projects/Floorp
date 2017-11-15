@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 tr{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Acre"{
             ld{"Acre Yaz Saati"}
@@ -111,9 +111,9 @@ tr{
             ls{"Orta Avustralya Standart Saati"}
         }
         "meta:Australia_CentralWestern"{
-            ld{"İçbatı Avustralya Yaz Saati"}
-            lg{"İçbatı Avustralya Saati"}
-            ls{"İçbatı Avustralya Standart Saati"}
+            ld{"İç Batı Avustralya Yaz Saati"}
+            lg{"İç Batı Avustralya Saati"}
+            ls{"İç Batı Avustralya Standart Saati"}
         }
         "meta:Australia_Eastern"{
             ld{"Doğu Avustralya Yaz Saati"}
@@ -141,7 +141,7 @@ tr{
             ls{"Bangladeş Standart Saati"}
         }
         "meta:Bhutan"{
-            ls{"Bhutan Saati"}
+            ls{"Butan Saati"}
         }
         "meta:Bolivia"{
             ls{"Bolivya Saati"}
@@ -234,7 +234,7 @@ tr{
             ls{"Doğu Avrupa Standart Saati"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"Daha Doğu Avrupa Saati"}
+            ls{"İleri Doğu Avrupa Saati"}
         }
         "meta:Europe_Western"{
             ld{"Batı Avrupa Yaz Saati"}

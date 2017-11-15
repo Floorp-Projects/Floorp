@@ -7,8 +7,6 @@
 #include "nsGkAtoms.h"
 #include "nsStaticAtom.h"
 
-using namespace mozilla;
-
 #define GK_ATOM(name_, value_) NS_STATIC_ATOM_DEFN(nsGkAtoms, name_)
 #include "nsGkAtomList.h"
 #undef GK_ATOM

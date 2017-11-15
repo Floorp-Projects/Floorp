@@ -20,6 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0178B127-6269-407D-B112-93877BB62776}</ProjectGuid>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -112,7 +113,7 @@
       <AdditionalIncludeDirectories>../common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin\icuin59.dll</OutputFile>
+      <OutputFile>..\..\bin\icuin60.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\..\..\lib\icuin.pdb</ProgramDatabaseFile>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -157,7 +158,7 @@
       <AdditionalIncludeDirectories>../common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin\icuin59d.dll</OutputFile>
+      <OutputFile>..\..\bin\icuin60d.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\..\..\lib\icuind.pdb</ProgramDatabaseFile>
@@ -199,7 +200,7 @@
       <AdditionalIncludeDirectories>../common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuin59.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuin60.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\..\..\lib64\icuin.pdb</ProgramDatabaseFile>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -242,7 +243,7 @@
       <AdditionalIncludeDirectories>../common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuin59d.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuin60d.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\..\..\lib64\icuind.pdb</ProgramDatabaseFile>
@@ -351,6 +352,24 @@
     <ClCompile Include="nfrs.cpp" />
     <ClCompile Include="nfrule.cpp" />
     <ClCompile Include="nfsubs.cpp" />
+    <ClCompile Include="nounit.cpp" />
+    <ClCompile Include="number_affixutils.cpp" />
+    <ClCompile Include="number_compact.cpp" />
+    <ClCompile Include="number_decimalquantity.cpp" />
+    <ClCompile Include="number_decimfmtprops.cpp" />
+    <ClCompile Include="number_fluent.cpp" />
+    <ClCompile Include="number_formatimpl.cpp" />
+    <ClCompile Include="number_grouping.cpp" />
+    <ClCompile Include="number_integerwidth.cpp" />
+    <ClCompile Include="number_longnames.cpp" />
+    <ClCompile Include="number_modifiers.cpp" />
+    <ClCompile Include="number_notation.cpp" />
+    <ClCompile Include="number_padding.cpp" />
+    <ClCompile Include="number_patternmodifier.cpp" />
+    <ClCompile Include="number_patternstring.cpp" />
+    <ClCompile Include="number_rounding.cpp" />
+    <ClCompile Include="number_scientific.cpp" />
+    <ClCompile Include="number_stringbuilder.cpp" />
     <ClCompile Include="numfmt.cpp" />
     <ClCompile Include="numsys.cpp" />
     <ClCompile Include="olsontz.cpp" />
@@ -1691,6 +1710,28 @@
     <ClInclude Include="scriptset.h" />
     <ClInclude Include="uspoof_conf.h" />
     <ClInclude Include="uspoof_impl.h" />
+    <ClInclude Include="number_affixutils.h" />
+    <ClInclude Include="number_compact.h" />
+    <ClInclude Include="number_decimalquantity.h" />
+    <ClInclude Include="number_decimfmtprops.h" />
+    <ClInclude Include="number_formatimpl.h" />
+    <ClInclude Include="number_longnames.h" />
+    <ClInclude Include="number_modifiers.h" />
+    <ClInclude Include="number_patternmodifier.h" />
+    <ClInclude Include="number_patternstring.h" />
+    <ClInclude Include="number_roundingutils.h" />
+    <ClInclude Include="number_scientific.h" />
+    <ClInclude Include="number_stringbuilder.h" />
+    <ClInclude Include="number_types.h" />
+    <ClInclude Include="number_utils.h" />
+    <CustomBuild Include="unicode\nounit.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode </Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\numberformatter.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode </Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="i18n.rc" />

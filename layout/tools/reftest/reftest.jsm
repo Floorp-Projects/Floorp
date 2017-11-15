@@ -273,6 +273,9 @@ function InitAndStartRefTests()
         g.startAfter = undefined;
     }
 
+    try {
+        g.compareRetainedDisplayLists = prefs.getBoolPref("reftest.compareRetainedDisplayLists");
+    } catch (e) {}
 #ifdef MOZ_STYLO
     try {
         g.compareStyloToGecko = prefs.getBoolPref("reftest.compareStyloToGecko");

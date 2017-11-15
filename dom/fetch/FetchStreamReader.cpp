@@ -24,7 +24,8 @@ class FetchStreamReaderWorkerHolder final : public WorkerHolder
 {
 public:
   explicit FetchStreamReaderWorkerHolder(FetchStreamReader* aReader)
-    : WorkerHolder(WorkerHolder::Behavior::AllowIdleShutdownStart)
+    : WorkerHolder("FetchStreamReaderWorkerHolder",
+                   WorkerHolder::Behavior::AllowIdleShutdownStart)
     , mReader(aReader)
     , mWasNotified(false)
   {}

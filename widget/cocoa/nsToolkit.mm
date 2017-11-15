@@ -204,7 +204,7 @@ nsToolkit::RegisterForAllProcessMouseEvents()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (getenv("MOZ_DEBUG"))
+  if (getenv("MOZ_NO_OSX_EVENT_TAPS"))
     return;
 
   // Don't do this for apps that use native context menus.

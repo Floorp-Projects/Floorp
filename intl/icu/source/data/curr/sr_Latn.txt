@@ -227,6 +227,10 @@ sr_Latn{
             "CLP",
             "Čileanski pezos",
         }
+        CNH{
+            "CNH",
+            "Kineski juan (ostrvski)",
+        }
         CNY{
             "CN¥",
             "Kineski juan",
@@ -1191,6 +1195,7 @@ sr_Latn{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1499,6 +1504,11 @@ sr_Latn{
             few{"čileanska pezosa"}
             one{"čileanski pezos"}
             other{"čileanskih pezosa"}
+        }
+        CNH{
+            few{"kineska juana (ostrvska)"}
+            one{"kineski juan (ostrvski)"}
+            other{"kineskih juana (ostrvskih)"}
         }
         CNY{
             few{"kineska juana"}
@@ -2621,5 +2631,5 @@ sr_Latn{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.73"}
+    Version{"2.1.37.8"}
 }

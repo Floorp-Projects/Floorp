@@ -12,6 +12,7 @@ bg{
     }
     ExemplarCharacters{"[а б в г д е ж з и й к л м н о п р с т у ф х ц ч ш щ ъ ь ю я]"}
     ExemplarCharactersIndex{"[А Б В Г Д Е Ж З И Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ю Я]"}
+    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! ? . … ' ‘ ‚ \u0022 “ „ ( ) \\[ \\] § * / ″ №]"}
     MoreInformation{"?"}
     NumberElements{
@@ -153,8 +154,8 @@ bg{
                         other{"00 млн'.'"}
                     }
                     100000000{
-                        one{"000 млн"}
-                        other{"000 млн"}
+                        one{"000 млн'.'"}
+                        other{"000 млн'.'"}
                     }
                     1000000000{
                         one{"0 млрд'.'"}
@@ -193,7 +194,7 @@ bg{
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
-                superscriptingExponent{"·"}
+                superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
         }
@@ -209,14 +210,14 @@ bg{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.33.75"}
+    Version{"2.1.37.59"}
     calendar{
         generic{
             DateTimePatterns{
-                "H:mm:ss zzzz",
-                "H:mm:ss z",
-                "H:mm:ss",
-                "H:mm",
+                "H:mm:ss 'ч'. zzzz",
+                "H:mm:ss 'ч'. z",
+                "H:mm:ss 'ч'.",
+                "H:mm 'ч'.",
                 "EEEE, d MMMM y 'г'. G",
                 "d MMMM y 'г'. G",
                 "d.MM.y 'г'. G",
@@ -228,8 +229,17 @@ bg{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h 'ч' .B"}
+                Bhm{"h:mm 'ч'. B"}
+                Bhms{"h:mm:ss 'ч'. B"}
                 E{"ccc"}
+                EBhm{"E, h:mm 'ч'. B"}
+                EBhms{"E, h:mm:ss 'ч'. B"}
+                EHm{"E, HH:mm 'ч'."}
+                EHms{"E, HH:mm:ss 'ч'."}
                 Ed{"E, d"}
+                Ehm{"E, h:mm 'ч'. a"}
+                Ehms{"E, h:mm:ss 'ч'. a"}
                 Gy{"y 'г'. G"}
                 GyMMM{"MM.y 'г'. G"}
                 GyMMMEd{"E, d.MM.y 'г'. G"}
@@ -251,8 +261,8 @@ bg{
                 Md{"d.MM"}
                 d{"d"}
                 h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
+                hm{"h:mm 'ч'. a"}
+                hms{"h:mm:ss 'ч'. a"}
                 ms{"mm:ss"}
                 y{"y 'г'. G"}
                 yyyy{"y 'г'. G"}
@@ -399,10 +409,10 @@ bg{
                 "pm",
             }
             DateTimePatterns{
-                "H:mm:ss zzzz",
-                "H:mm:ss z",
-                "H:mm:ss",
-                "H:mm",
+                "H:mm:ss 'ч'. zzzz",
+                "H:mm:ss 'ч'. z",
+                "H:mm:ss 'ч'.",
+                "H:mm 'ч'.",
                 "EEEE, d MMMM y 'г'.",
                 "d MMMM y 'г'.",
                 "d.MM.y 'г'.",
@@ -417,12 +427,17 @@ bg{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h 'ч'. B"}
+                Bhm{"h:mm 'ч'. B"}
+                Bhms{"h:mm:ss 'ч'. B"}
                 E{"ccc"}
-                EHm{"E, HH:mm"}
-                EHms{"E, H:mm:ss"}
+                EBhm{"E, h:mm 'ч'. B"}
+                EBhms{"E, h:mm:ss 'ч'. B"}
+                EHm{"E, HH:mm 'ч'."}
+                EHms{"E, H:mm:ss 'ч'."}
                 Ed{"E, d"}
-                Ehm{"E, h:mm a"}
-                Ehms{"E, h:mm:ss a"}
+                Ehm{"E, h:mm 'ч'. a"}
+                Ehms{"E, h:mm:ss 'ч'. a"}
                 Gy{"y 'г'. G"}
                 GyMMM{"MM.y 'г'. G"}
                 GyMMMEd{"E, d.MM.y 'г'. G"}
@@ -430,11 +445,11 @@ bg{
                 GyMMMMEd{"E, d MMMM y 'г'. G"}
                 GyMMMMd{"d MMMM y 'г'. G"}
                 GyMMMd{"d.MM.y 'г'. G"}
-                H{"H"}
-                Hm{"H:mm"}
-                Hms{"H:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
+                H{"H 'ч'."}
+                Hm{"H:mm 'ч'."}
+                Hms{"H:mm:ss 'ч'."}
+                Hmsv{"HH:mm:ss 'ч'. v"}
+                Hmv{"HH:mm 'ч'. v"}
                 M{"L"}
                 MEd{"E, d.MM"}
                 MMM{"MM"}
@@ -450,11 +465,11 @@ bg{
                 MMMd{"d.MM"}
                 Md{"d.MM"}
                 d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                hmsv{"h:mm:ss a v"}
-                hmv{"h:mm a v"}
+                h{"h 'ч'. a"}
+                hm{"h:mm 'ч'. a"}
+                hms{"h:mm:ss 'ч'. a"}
+                hmsv{"h:mm:ss 'ч'. a v"}
+                hmv{"h:mm 'ч'. a v"}
                 ms{"m:ss"}
                 y{"y 'г'."}
                 yM{"MM.y 'г'."}
@@ -469,8 +484,8 @@ bg{
                 yQQQ{"QQQ y 'г'."}
                 yQQQQ{"QQQQ y 'г'."}
                 yw{
-                    one{"'седмица' w 'от' y 'г'."}
-                    other{"'седмица' w 'от' y 'г'."}
+                    one{"'седмица' w 'от' Y 'г'."}
+                    other{"'седмица' w 'от' Y 'г'."}
                 }
             }
             dayNames{
@@ -595,7 +610,7 @@ bg{
                         evening1{"вечерта"}
                         midnight{"полунощ"}
                         morning1{"сутринта"}
-                        morning2{"на обед"}
+                        morning2{"наобед"}
                         night1{"през нощта"}
                         pm{"pm"}
                     }
@@ -631,18 +646,18 @@ bg{
             }
             intervalFormats{
                 H{
-                    H{"H – H"}
+                    H{"H – H 'ч'."}
                 }
                 Hm{
-                    H{"H:mm – H:mm"}
-                    m{"H:mm – H:mm"}
+                    H{"H:mm 'ч'. – H:mm 'ч'."}
+                    m{"H:mm 'ч'. – H:mm 'ч'."}
                 }
                 Hmv{
-                    H{"H:mm – H:mm v"}
-                    m{"H:mm – H:mm v"}
+                    H{"H:mm 'ч'. – H:mm 'ч'. v"}
+                    m{"H:mm 'ч'. – H:mm 'ч'. v"}
                 }
                 Hv{
-                    H{"H – H v"}
+                    H{"H – H 'ч'. v"}
                 }
                 M{
                     M{"M – M"}
@@ -682,22 +697,22 @@ bg{
                 }
                 fallback{"{0} – {1}"}
                 h{
-                    a{"h a – h a"}
-                    h{"h – h a"}
+                    a{"h 'ч'. a – h 'ч'. a"}
+                    h{"h – h 'ч'. a"}
                 }
                 hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm – h:mm a"}
-                    m{"h:mm – h:mm a"}
+                    a{"h:mm 'ч'. a – h:mm 'ч'. a"}
+                    h{"h:mm 'ч'. – h:mm 'ч'. a"}
+                    m{"h:mm 'ч'. – h:mm 'ч'. a"}
                 }
                 hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm a – h:mm a v"}
-                    m{"h:mm a – h:mm a v"}
+                    a{"h:mm 'ч'. a – h:mm 'ч'. a v"}
+                    h{"h:mm 'ч'. a – h:mm 'ч'. a v"}
+                    m{"h:mm 'ч'. a – h:mm 'ч'. a v"}
                 }
                 hv{
-                    a{"h a – h a v"}
-                    h{"h – h a v"}
+                    a{"h 'ч'. a – h 'ч'. a v"}
+                    h{"h – h 'ч'. a v"}
                 }
                 y{
                     y{"y – y 'г'."}
@@ -945,13 +960,13 @@ bg{
         activities{"Дейности"}
         african_scripts{"Африкански писмени знаци"}
         american_scripts{"Американски писмени знаци"}
-        animal{"животно"}
+        animal{"Животно"}
         animals_nature{"Животни и природа"}
         arrows{"Стрелки"}
-        body{"тяло"}
+        body{"Тяло"}
         box_drawing{"Чертаене на линии"}
         braille{"Брайлово писмо"}
-        building{"сграда"}
+        building{"Сграда"}
         bullets_stars{"Водещи символи/звезди"}
         consonantal_jamo{"Джамо за съгласни"}
         currency_symbols{"Символи на валути"}
@@ -964,8 +979,8 @@ bg{
         east_asian_scripts{"Източноазиатски писмени знаци"}
         emoji{"Емотикони"}
         european_scripts{"Европейски писмени знаци"}
-        female{"жена"}
-        flag{"знаме"}
+        female{"Жена"}
+        flag{"Флаг"}
         flags{"Флагове"}
         food_drink{"Храна и напитки"}
         format{"Формат"}
@@ -978,54 +993,54 @@ bg{
         hanja{"Ханджа"}
         hanzi_simplified{"Ханзи (опростен)"}
         hanzi_traditional{"Ханзи (традиционен)"}
-        heart{"сърце"}
+        heart{"Сърце"}
         historic_scripts{"Исторически писмени знаци"}
         ideographic_desc_characters{"Идеографски описателни знаци"}
         japanese_kana{"Японска писменост кана"}
         kanbun{"Канбун"}
         kanji{"Канджи"}
-        keycap{"клавиш"}
+        keycap{"Клавиш"}
         leftwards_arrows{"Сочещи наляво стрелки"}
         leftwards_rightwards_arrows{"Сочещи наляво и сочещи надясно стрелки"}
         letterlike_symbols{"Буквоподобни символи"}
         limited_use{"Ограничена употреба"}
-        male{"мъж"}
+        male{"Мъж"}
         math_symbols{"Математически символи"}
         middle_eastern_scripts{"Средноевропейски писмени знаци"}
         miscellaneous{"Разни"}
         modern_scripts{"Модерни писмени знаци"}
         modifier{"Модификатори"}
         musical_symbols{"Музикални символи"}
-        nature{"природа"}
+        nature{"Природа"}
         nonspacing{"Знаци с нулева ширина"}
         numbers{"Числа"}
         objects{"Предмети"}
         other{"Други"}
         paired{"Двойни"}
-        person{"човек"}
+        person{"Човек"}
         phonetic_alphabet{"Фонетична азбука"}
         pictographs{"Пиктограми"}
-        place{"място"}
-        plant{"растение"}
+        place{"Място"}
+        plant{"Растение"}
         punctuation{"Препинателни знаци"}
         rightwards_arrows{"Сочещи надясно стрелки"}
         sign_standard_symbols{"Знак/стандартен символ"}
         small_form_variant{"Варианти на малки форми"}
-        smiley{"усмихнато лице"}
+        smiley{"Усмихнато лице"}
         smileys_people{"Емотикони и хора"}
         south_asian_scripts{"Южноазиатски писмености"}
         southeast_asian_scripts{"Югоизточноазиатски писмени знаци"}
         spacing{"Знаци с ненулева ширина"}
-        sport{"спорт"}
+        sport{"Спорт"}
         symbols{"Символи"}
         technical_symbols{"Технически символи"}
         tone_marks{"Маркирания на тонове"}
-        travel{"пътуване"}
+        travel{"Пътуване"}
         travel_places{"Пътувания и места"}
         upwards_arrows{"Сочещи нагоре стрелки"}
         variant_forms{"Форми с варианти"}
         vocalic_jamo{"Джамо за гласни"}
-        weather{"времето"}
+        weather{"Времето"}
         western_asian_scripts{"Западноазиатски писмени знаци"}
         whitespace{"Бели полета"}
     }
@@ -1096,10 +1111,25 @@ bg{
                 }
             }
         }
+        dayOfYear{
+            dn{"ден от годината"}
+        }
         dayperiod{
             dn{"пр.об./сл.об."}
         }
+        dayperiod-narrow{
+            dn{"пр.об./сл.об."}
+        }
+        dayperiod-short{
+            dn{"пр.об./сл.об."}
+        }
         era{
+            dn{"ера"}
+        }
+        era-narrow{
+            dn{"ера"}
+        }
+        era-short{
             dn{"ера"}
         }
         fri{
@@ -1127,29 +1157,29 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} петък"}
-                    other{"след {0} петъка"}
+                    one{"сл. {0} пт"}
+                    other{"сл. {0} пт"}
                 }
                 past{
-                    one{"преди {0} петък"}
-                    other{"преди {0} петъка"}
+                    one{"пр. {0} пт"}
+                    other{"пр. {0} пт"}
                 }
             }
         }
         fri-short{
             relative{
-                "-1"{"предходният петък"}
+                "-1"{"предходният пт"}
                 "0"{"този пт"}
                 "1"{"следващият пт"}
             }
             relativeTime{
                 future{
-                    one{"след {0} петък"}
-                    other{"след {0} петъка"}
+                    one{"след {0} пт"}
+                    other{"след {0} пт"}
                 }
                 past{
-                    one{"преди {0} петък"}
-                    other{"преди {0} петъка"}
+                    one{"преди {0} пт"}
+                    other{"преди {0} пт"}
                 }
             }
         }
@@ -1262,12 +1292,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} понеделник"}
-                    other{"след {0} понеделника"}
+                    one{"сл. {0} пн"}
+                    other{"сл. {0} пн"}
                 }
                 past{
-                    one{"преди {0} понеделник"}
-                    other{"преди {0} понеделника"}
+                    one{"пр. {0} пн"}
+                    other{"пр. {0} пн"}
                 }
             }
         }
@@ -1279,12 +1309,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} понеделник"}
-                    other{"след {0} понеделника"}
+                    one{"след {0} пн"}
+                    other{"след {0} пн"}
                 }
                 past{
-                    one{"преди {0} понеделник"}
-                    other{"преди {0} понеделника"}
+                    one{"преди {0} пн"}
+                    other{"преди {0} пн"}
                 }
             }
         }
@@ -1307,7 +1337,7 @@ bg{
             }
         }
         month-narrow{
-            dn{"м"}
+            dn{"мес."}
             relative{
                 "-1"{"мин. м."}
                 "0"{"т. м."}
@@ -1325,7 +1355,7 @@ bg{
             }
         }
         month-short{
-            dn{"м"}
+            dn{"мес."}
             relative{
                 "-1"{"мин. мес."}
                 "0"{"този мес."}
@@ -1387,12 +1417,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"сл. {0} трим."}
-                    other{"сл. {0} трим."}
+                    one{"след {0} трим."}
+                    other{"след {0} трим."}
                 }
                 past{
-                    one{"пр. {0} трим."}
-                    other{"пр. {0} трим."}
+                    one{"преди {0} трим."}
+                    other{"преди {0} трим."}
                 }
             }
         }
@@ -1421,12 +1451,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} събота"}
-                    other{"след {0} съботи"}
+                    one{"сл. {0} сб"}
+                    other{"сл. {0} сб"}
                 }
                 past{
-                    one{"преди {0} събота"}
-                    other{"преди {0} съботи"}
+                    one{"пр. {0} сб"}
+                    other{"пр. {0} сб"}
                 }
             }
         }
@@ -1438,12 +1468,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} събота"}
-                    other{"след {0} съботи"}
+                    one{"след {0} сб"}
+                    other{"след {0} сб"}
                 }
                 past{
-                    one{"преди {0} събота"}
-                    other{"преди {0} съботи"}
+                    one{"преди {0} сб"}
+                    other{"преди {0} сб"}
                 }
             }
         }
@@ -1514,12 +1544,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} неделя"}
-                    other{"след {0} недели"}
+                    one{"сл. {0} нд"}
+                    other{"сл. {0} нд"}
                 }
                 past{
-                    one{"преди {0} неделя"}
-                    other{"преди {0} недели"}
+                    one{"пр. {0} нд"}
+                    other{"пр. {0} нд"}
                 }
             }
         }
@@ -1531,12 +1561,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} неделя"}
-                    other{"след {0} недели"}
+                    one{"след {0} нд"}
+                    other{"след {0} нд"}
                 }
                 past{
-                    one{"преди {0} неделя"}
-                    other{"преди {0} недели"}
+                    one{"преди {0} нд"}
+                    other{"преди {0} нд"}
                 }
             }
         }
@@ -1569,25 +1599,25 @@ bg{
                     other{"след {0} четвъртъка"}
                 }
                 past{
-                    one{"преди {0} четвъртък"}
-                    other{"преди {0} четвъртъка"}
+                    one{"пр. {0} чт"}
+                    other{"пр. {0} чт"}
                 }
             }
         }
         thu-short{
             relative{
-                "-1"{"предходният четвъртък"}
+                "-1"{"предходният чт"}
                 "0"{"този чт"}
                 "1"{"следващият чт"}
             }
             relativeTime{
                 future{
-                    one{"след {0} четвъртък"}
-                    other{"след {0} четвъртъка"}
+                    one{"след {0} чт"}
+                    other{"след {0} чт"}
                 }
                 past{
-                    one{"преди {0} четвъртък"}
-                    other{"преди {0} четвъртъка"}
+                    one{"преди {0} чт"}
+                    other{"преди {0} чт"}
                 }
             }
         }
@@ -1616,12 +1646,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} вторник"}
-                    other{"след {0} вторника"}
+                    one{"сл. {0} вт."}
+                    other{"сл. {0} вт."}
                 }
                 past{
-                    one{"преди {0} вторник"}
-                    other{"преди {0} вторника"}
+                    one{"пр. {0} вт."}
+                    other{"пр. {0} вт."}
                 }
             }
         }
@@ -1633,12 +1663,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} вторник"}
-                    other{"след {0} вторника"}
+                    one{"след {0} вт"}
+                    other{"след {0} вт"}
                 }
                 past{
-                    one{"преди {0} вторник"}
-                    other{"преди {0} вторника"}
+                    one{"преди {0} вт"}
+                    other{"преди {0} вт"}
                 }
             }
         }
@@ -1667,12 +1697,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} сряда"}
-                    other{"след {0} среди"}
+                    one{"сл. {0} ср"}
+                    other{"сл. {0} ср"}
                 }
                 past{
-                    one{"преди {0} сряда"}
-                    other{"преди {0} среди"}
+                    one{"пр. {0} ср"}
+                    other{"пр. {0} ср"}
                 }
             }
         }
@@ -1684,12 +1714,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} сряда"}
-                    other{"след {0} среди"}
+                    one{"след {0} ср"}
+                    other{"след {0} ср"}
                 }
                 past{
-                    one{"преди {0} сряда"}
-                    other{"преди {0} среди"}
+                    one{"преди {0} ср"}
+                    other{"преди {0} ср"}
                 }
             }
         }
@@ -1750,8 +1780,26 @@ bg{
                 }
             }
         }
+        weekOfMonth{
+            dn{"седмица от месеца"}
+        }
+        weekOfMonth-narrow{
+            dn{"седмица от месеца"}
+        }
+        weekOfMonth-short{
+            dn{"седмица от месеца"}
+        }
         weekday{
             dn{"ден от седмицата"}
+        }
+        weekday-narrow{
+            dn{"ден от седм."}
+        }
+        weekday-short{
+            dn{"ден от седм."}
+        }
+        weekdayOfMonth{
+            dn{"работен ден от месеца"}
         }
         year{
             dn{"година"}
@@ -1810,8 +1858,20 @@ bg{
         zone{
             dn{"часова зона"}
         }
+        zone-narrow{
+            dn{"час. зона"}
+        }
+        zone-short{
+            dn{"час. зона"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} или {1}"}
+            end{"{0} или {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} и {1}"}
             end{"{0} и {1}"}

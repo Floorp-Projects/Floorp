@@ -10,7 +10,7 @@ es_BO{
             }
         }
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.6"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -49,24 +49,6 @@ es_BO{
                     wide{
                         am{"a. m."}
                         pm{"p. m."}
-                    }
-                }
-            }
-            monthNames{
-                format{
-                    narrow{
-                        "E",
-                        "F",
-                        "M",
-                        "A",
-                        "M",
-                        "J",
-                        "J",
-                        "A",
-                        "S",
-                        "O",
-                        "N",
-                        "D",
                     }
                 }
             }

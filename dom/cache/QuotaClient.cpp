@@ -6,10 +6,13 @@
 
 #include "mozilla/dom/cache/QuotaClient.h"
 
+#include "DBAction.h"
+#include "FileUtils.h"
 #include "mozilla/dom/cache/Manager.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/Unused.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsThreadUtils.h"

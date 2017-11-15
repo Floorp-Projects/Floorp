@@ -97,6 +97,9 @@
     <ClCompile Include="rbbitblb.cpp">
       <Filter>break iteration</Filter>
     </ClCompile>
+    <ClCompile Include="rbbi_cache.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
     <ClCompile Include="ubrk.cpp">
       <Filter>break iteration</Filter>
     </ClCompile>
@@ -460,6 +463,9 @@
     <ClCompile Include="usprep.cpp">
       <Filter>sprep</Filter>
     </ClCompile>
+    <ClCompile Include="bytesinkutil.cpp">
+      <Filter>strings</Filter>
+    </ClCompile>
     <ClCompile Include="bytestream.cpp">
       <Filter>strings</Filter>
     </ClCompile>
@@ -634,6 +640,9 @@
       <Filter>break iteration</Filter>
     </ClInclude>
     <ClInclude Include="rbbitblb.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="rbbi_cache.h">
       <Filter>break iteration</Filter>
     </ClInclude>
     <ClInclude Include="ubrkimpl.h">
@@ -860,6 +869,9 @@
     </ClInclude>
     <ClInclude Include="sprpimpl.h">
       <Filter>sprep</Filter>
+    </ClInclude>
+    <ClInclude Include="bytesinkutil.h">
+      <Filter>strings</Filter>
     </ClInclude>
     <ClInclude Include="charstr.h">
       <Filter>strings</Filter>

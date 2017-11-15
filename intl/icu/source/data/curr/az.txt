@@ -226,6 +226,10 @@ az{
             "CLP",
             "Çili Pesosu",
         }
+        CNH{
+            "CNH",
+            "CNH",
+        }
         CNY{
             "CN¥",
             "Çin Yuanı",
@@ -1388,6 +1392,10 @@ az{
             one{"Çili pesosu"}
             other{"Çili pesosu"}
         }
+        CNH{
+            one{"CNH"}
+            other{"CNH"}
+        }
         CNY{
             one{"Çin yuanı"}
             other{"Çin yuanı"}
@@ -2229,5 +2237,5 @@ az{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
 }

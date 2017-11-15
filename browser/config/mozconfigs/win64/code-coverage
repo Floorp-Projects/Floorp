@@ -1,0 +1,36 @@
+. "$topsrcdir/build/mozconfig.win-common"
+MOZ_AUTOMATION_L10N_CHECK=0
+. "$topsrcdir/browser/config/mozconfigs/common"
+
+ac_add_options --target=x86_64-pc-mingw32
+ac_add_options --host=x86_64-pc-mingw32
+
+ac_add_options --enable-optimize
+ac_add_options --enable-debug
+ac_add_options --disable-sandbox
+ac_add_options --enable-coverage
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+# Enable Telemetry
+export MOZ_TELEMETRY_REPORTING=1
+
+. $topsrcdir/build/win64/mozconfig.vs-latest
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+if [ -d "$topsrcdir/clang" ]; then
+    CLANG_LIB_DIR="$(cd $topsrcdir/clang/lib/clang/* && cd lib/windows && pwd)"
+
+    export LIB=$LIB:$CLANG_LIB_DIR
+    mk_export_correct_style LIB
+    export LDFLAGS="clang_rt.profile-x86_64.lib"
+fi
+
+export CFLAGS="--coverage"
+export CXXFLAGS="--coverage"
+
+. "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.clang-cl"

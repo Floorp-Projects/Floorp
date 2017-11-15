@@ -1,3 +1,4 @@
+// |reftest| skip-if(!release_or_beta)
 /* -*- indent-tabs-mode: nil; js-indent-level: 4 -*- */
 /*
  * Any copyright is dedicated to the Public Domain.

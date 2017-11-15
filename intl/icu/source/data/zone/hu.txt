@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hu{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Acre"{
             ld{"Acre nyári idő"}
@@ -86,7 +86,7 @@ hu{
             ls{"arab téli idő"}
         }
         "meta:Argentina"{
-            ld{"Argentínai nyári idő"}
+            ld{"argentínai nyári idő"}
             lg{"argentínai idő"}
             ls{"argentínai téli idő"}
         }
@@ -127,7 +127,7 @@ hu{
         }
         "meta:Azerbaijan"{
             ld{"azerbajdzsáni nyári idő"}
-            lg{"Azerbajdzsáni idő"}
+            lg{"azerbajdzsáni idő"}
             ls{"azerbajdzsáni téli idő"}
         }
         "meta:Azores"{
@@ -258,7 +258,7 @@ hu{
             ls{"fidzsi téli idő"}
         }
         "meta:French_Guiana"{
-            ls{"francia-guianai idő"}
+            ls{"francia-guyanai idő"}
         }
         "meta:French_Southern"{
             ls{"francia déli és antarktiszi idő"}
@@ -302,7 +302,7 @@ hu{
         }
         "meta:Hawaii_Aleutian"{
             ld{"hawaii-aleuti nyári idő"}
-            lg{"hawaii-aleut időzóna"}
+            lg{"hawaii-aleuti időzóna"}
             ls{"hawaii-aleuti téli idő"}
         }
         "meta:Hong_Kong"{
@@ -522,9 +522,9 @@ hu{
             ls{"phoenix-szigeteki téli idő"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"Saint Pierre és Miquelon-i nyári idő"}
-            lg{"Saint Pierre és Miquelon-i idő"}
-            ls{"Saint Pierre és Miquelon-i zónaidő"}
+            ld{"Saint-Pierre és Miquelon-i nyári idő"}
+            lg{"Saint-Pierre és Miquelon-i idő"}
+            ls{"Saint-Pierre és Miquelon-i zónaidő"}
         }
         "meta:Pitcairn"{
             ls{"pitcairn-szigeteki idő"}
@@ -647,13 +647,13 @@ hu{
             ls{"Wallis és Futuna-i idő"}
         }
         "meta:Yakutsk"{
-            ld{"Jakutszki nyári idő"}
+            ld{"jakutszki nyári idő"}
             lg{"jakutszki idő"}
             ls{"jakutszki téli idő"}
         }
         "meta:Yekaterinburg"{
-            ld{"Jekatyerinburgi nyári idő"}
-            lg{"Jekatyerinburgi idő"}
+            ld{"jekatyerinburgi nyári idő"}
+            lg{"jekatyerinburgi idő"}
             ls{"jekatyerinburgi téli idő"}
         }
         fallbackFormat{"{1} ({0})"}

@@ -11,7 +11,7 @@ en_IN{
             }
         }
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.11"}
     calendar{
         generic{
             DateTimePatterns{
@@ -19,9 +19,9 @@ en_IN{
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE d MMMM y G",
-                "d MMMM y G",
-                "dd-MMM-y G",
+                "EEEE, d MMMM, y G",
+                "d MMMM, y G",
+                "d MMM, y G",
                 "dd/MM/y GGGGG",
                 "{1}, {0}",
                 "{1} 'at' {0}",
@@ -30,19 +30,39 @@ en_IN{
                 "{1}, {0}",
             }
             availableFormats{
-                yyyyMEd{"E d/M/y G"}
-                yyyyMMMEd{"E d MMM, y G"}
+                EBhm{"E, h:mm B"}
+                EBhms{"E, h:mm:ss B"}
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
+                Ehm{"E, h:mm a"}
+                Ehms{"E, h:mm:ss a"}
+                GyMMM{"MMM, y G"}
+                GyMMMEd{"E, d MMM, y G"}
+                GyMMMd{"d MMM, y G"}
+                yyyyMEd{"E, d/M/y GGGGG"}
+                yyyyMMM{"MMM, y G"}
+                yyyyMMMEd{"E, d MMM, y G"}
+                yyyyMMMM{"MMMM, y G"}
+                yyyyMMMd{"d MMM, y G"}
                 yyyyMd{"d/M/y G"}
             }
             intervalFormats{
+                MEd{
+                    M{"E, dd/MM – E, dd/MM"}
+                    d{"E, dd/MM – E, dd/MM"}
+                }
+                MMMEd{
+                    M{"E, d MMM – E, d MMM"}
+                    d{"E, d – E, d MMM"}
+                }
                 yM{
                     M{"MM/y – MM/y G"}
                     y{"MM/y – MM/y G"}
                 }
                 yMEd{
-                    M{"E dd/MM/y – E dd/MM/y G"}
-                    d{"E dd/MM/y – E dd/MM/y G"}
-                    y{"E dd/MM/y – E dd/MM/y G"}
+                    M{"E, dd/MM/y – E, dd/MM/y G"}
+                    d{"E, dd/MM/y – E, dd/MM/y G"}
+                    y{"E, dd/MM/y – E, dd/MM/y G"}
                 }
                 yMMMEd{
                     M{"E d MMM – E d MMM y G"}
@@ -62,7 +82,7 @@ en_IN{
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE d MMMM y",
+                "EEEE, d MMMM, y",
                 "d MMMM y",
                 "dd-MMM-y",
                 "dd/MM/yy",
@@ -73,9 +93,57 @@ en_IN{
                 "{1}, {0}",
             }
             availableFormats{
-                yMEd{"E d/M/y"}
-                yMMMEd{"E d MMM, y"}
+                EBhm{"E, h:mm B"}
+                EBhms{"E, h:mm:ss B"}
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
+                Ehm{"E, h:mm a"}
+                Ehms{"E, h:mm:ss a"}
+                yMEd{"E, d/M/y"}
+                yMMMEd{"E, d MMM, y"}
                 yMd{"d/M/y"}
+            }
+            intervalFormats{
+                MEd{
+                    M{"E, dd/MM – E, dd/MM"}
+                    d{"E, dd/MM – E, dd/MM"}
+                }
+                MMMEd{
+                    M{"E, d MMM – E, d MMM"}
+                    d{"E, d – E, d MMM"}
+                }
+            }
+        }
+        islamic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE d MMMM y G",
+                "d MMMM, y G",
+                "dd-MMM-y G",
+                "dd/MM/y GGGGG",
+                "{1}, {0}",
+                "{1} 'at' {0}",
+                "{1} 'at' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                yyyyMEd{"E d/M/y G"}
+            }
+        }
+    }
+    fields{
+        dayperiod{
+            dn{"AM/PM"}
+        }
+        wed-short{
+            relativeTime{
+                future{
+                    other{"in {0} Wed."}
+                }
             }
         }
     }

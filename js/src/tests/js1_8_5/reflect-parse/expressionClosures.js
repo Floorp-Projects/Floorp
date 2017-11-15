@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!xulRuntime.shell||!release_or_beta)
 function test() {
 
 // expression closures

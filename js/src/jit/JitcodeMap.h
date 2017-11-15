@@ -1368,16 +1368,23 @@ class JitcodeRegionEntry
     class ScriptPcIterator
     {
       private:
-        uint32_t count_;
         const uint8_t* start_;
         const uint8_t* end_;
-
+#ifdef DEBUG
+        uint32_t count_;
+#endif
         uint32_t idx_;
         const uint8_t* cur_;
 
       public:
-        ScriptPcIterator(uint32_t count, const uint8_t* start, const uint8_t* end)
-          : count_(count), start_(start), end_(end), idx_(0), cur_(start_)
+        ScriptPcIterator(const uint8_t* start, const uint8_t* end, uint32_t count)
+          : start_(start),
+            end_(end),
+#ifdef DEBUG
+            count_(count),
+#endif
+            idx_(0),
+            cur_(start_)
         {}
 
         bool hasMore() const
@@ -1411,7 +1418,7 @@ class JitcodeRegionEntry
 
     ScriptPcIterator scriptPcIterator() const {
         // End of script+pc sequence is the start of the delta run.
-        return ScriptPcIterator(scriptDepth_, scriptPcStack_,  deltaRun_);
+        return ScriptPcIterator(scriptPcStack_,  deltaRun_, scriptDepth_);
     }
 
     class DeltaIterator {

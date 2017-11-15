@@ -255,7 +255,8 @@ public:
 
   explicit KeepAliveHandler(const nsMainThreadPtrHandle<KeepAliveToken>& aKeepAliveToken,
                             ExtendableEventCallback* aCallback)
-    : mKeepAliveToken(aKeepAliveToken)
+    : WorkerHolder("KeepAliveHolder")
+    , mKeepAliveToken(aKeepAliveToken)
     , mWorkerPrivate(GetCurrentThreadWorkerPrivate())
     , mWorkerHolderAdded(false)
     , mCallback(aCallback)
@@ -694,7 +695,8 @@ public:
 
   LifeCycleEventWatcher(WorkerPrivate* aWorkerPrivate,
                         LifeCycleEventCallback* aCallback)
-    : mWorkerPrivate(aWorkerPrivate)
+    : WorkerHolder("LifeCycleEventWatcher")
+    , mWorkerPrivate(aWorkerPrivate)
     , mCallback(aCallback)
     , mDone(false)
   {
@@ -1158,6 +1160,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   explicit AllowWindowInteractionHandler(WorkerPrivate* aWorkerPrivate)
+    : WorkerHolder("AllowWindowInteractionHandler")
   {
     StartClearWindowTimer(aWorkerPrivate);
   }

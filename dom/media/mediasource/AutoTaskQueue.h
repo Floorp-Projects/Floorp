@@ -36,11 +36,11 @@ public:
     return mTaskQueue->TailDispatcher();
   }
 
-  nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                    DispatchFailureHandling aFailureHandling = AssertDispatchSuccess,
-                    DispatchReason aReason = NormalDispatch) override
+  MOZ_MUST_USE nsresult
+  Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+           DispatchReason aReason = NormalDispatch) override
   {
-    return mTaskQueue->Dispatch(Move(aRunnable), aFailureHandling, aReason);
+    return mTaskQueue->Dispatch(Move(aRunnable), aReason);
   }
 
   // Prevent a GCC warning about the other overload of Dispatch being hidden.

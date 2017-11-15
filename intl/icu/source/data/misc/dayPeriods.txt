@@ -10,8 +10,10 @@ dayPeriods:table(nofallback){
         bn{"set34"}
         bs{"set25"}
         ca{"set15"}
+        ccp{"set34"}
         chr{"set76"}
         cs{"set27"}
+        cy{"set78"}
         da{"set7"}
         de{"set6"}
         ee{"set77"}
@@ -81,83 +83,85 @@ dayPeriods:table(nofallback){
         zu{"set72"}
     }
     locales_selection{
-        af{"set80"}
-        am{"set149"}
-        ar{"set140"}
-        az{"set131"}
-        bg{"set103"}
-        bn{"set116"}
-        bs{"set97"}
-        ca{"set92"}
-        chr{"set153"}
-        cs{"set100"}
-        da{"set84"}
-        de{"set83"}
-        ee{"set154"}
-        el{"set109"}
-        en{"set79"}
-        es{"set90"}
-        es_CO{"set91"}
-        et{"set135"}
-        eu{"set150"}
-        fa{"set110"}
-        fi{"set136"}
-        fil{"set144"}
-        fr{"set95"}
-        gl{"set89"}
-        gsw{"set82"}
-        gu{"set117"}
-        he{"set141"}
-        hi{"set115"}
-        hr{"set96"}
-        hu{"set137"}
-        hy{"set111"}
-        id{"set142"}
-        is{"set87"}
-        it{"set93"}
-        ja{"set128"}
-        ka{"set112"}
-        kk{"set132"}
-        km{"set146"}
-        kn{"set125"}
-        ko{"set129"}
-        ky{"set133"}
-        lo{"set139"}
-        lt{"set107"}
-        lv{"set108"}
-        mk{"set104"}
-        ml{"set124"}
-        mn{"set151"}
-        mr{"set118"}
-        ms{"set143"}
-        my{"set152"}
-        nb{"set85"}
-        ne{"set119"}
-        nl{"set81"}
-        pa{"set120"}
-        pl{"set102"}
-        pt{"set88"}
-        ro{"set94"}
-        root{"set78"}
-        ru{"set105"}
-        si{"set121"}
-        sk{"set101"}
-        sl{"set99"}
-        sq{"set113"}
-        sr{"set98"}
-        sv{"set86"}
-        sw{"set147"}
-        ta{"set122"}
-        te{"set123"}
-        th{"set138"}
-        tr{"set130"}
-        uk{"set106"}
-        ur{"set114"}
-        uz{"set134"}
-        vi{"set145"}
-        yue{"set127"}
-        zh{"set126"}
-        zu{"set148"}
+        af{"set81"}
+        am{"set150"}
+        ar{"set141"}
+        az{"set132"}
+        bg{"set104"}
+        bn{"set117"}
+        bs{"set98"}
+        ca{"set93"}
+        ccp{"set117"}
+        chr{"set154"}
+        cs{"set101"}
+        cy{"set156"}
+        da{"set85"}
+        de{"set84"}
+        ee{"set155"}
+        el{"set110"}
+        en{"set80"}
+        es{"set91"}
+        es_CO{"set92"}
+        et{"set136"}
+        eu{"set151"}
+        fa{"set111"}
+        fi{"set137"}
+        fil{"set145"}
+        fr{"set96"}
+        gl{"set90"}
+        gsw{"set83"}
+        gu{"set118"}
+        he{"set142"}
+        hi{"set116"}
+        hr{"set97"}
+        hu{"set138"}
+        hy{"set112"}
+        id{"set143"}
+        is{"set88"}
+        it{"set94"}
+        ja{"set129"}
+        ka{"set113"}
+        kk{"set133"}
+        km{"set147"}
+        kn{"set126"}
+        ko{"set130"}
+        ky{"set134"}
+        lo{"set140"}
+        lt{"set108"}
+        lv{"set109"}
+        mk{"set105"}
+        ml{"set125"}
+        mn{"set152"}
+        mr{"set119"}
+        ms{"set144"}
+        my{"set153"}
+        nb{"set86"}
+        ne{"set120"}
+        nl{"set82"}
+        pa{"set121"}
+        pl{"set103"}
+        pt{"set89"}
+        ro{"set95"}
+        root{"set79"}
+        ru{"set106"}
+        si{"set122"}
+        sk{"set102"}
+        sl{"set100"}
+        sq{"set114"}
+        sr{"set99"}
+        sv{"set87"}
+        sw{"set148"}
+        ta{"set123"}
+        te{"set124"}
+        th{"set139"}
+        tr{"set131"}
+        uk{"set107"}
+        ur{"set115"}
+        uz{"set135"}
+        vi{"set146"}
+        yue{"set128"}
+        zh{"set127"}
+        zu{"set149"}
     }
     rules{
         set1{
@@ -204,15 +208,15 @@ dayPeriods:table(nofallback){
                 from{"18:00"}
             }
             morning1{
-                before{"09:00"}
-                from{"04:00"}
+                before{"10:00"}
+                from{"06:00"}
             }
             morning2{
                 before{"12:00"}
-                from{"09:00"}
+                from{"10:00"}
             }
             night1{
-                before{"04:00"}
+                before{"06:00"}
                 from{"22:00"}
             }
         }
@@ -244,6 +248,28 @@ dayPeriods:table(nofallback){
                 from{"12:00"}
             }
             evening1{
+                before{"22:00"}
+                from{"18:00"}
+            }
+            morning1{
+                before{"09:00"}
+                from{"04:00"}
+            }
+            morning2{
+                before{"12:00"}
+                from{"09:00"}
+            }
+            night1{
+                before{"04:00"}
+                from{"22:00"}
+            }
+        }
+        set103{
+            afternoon1{
+                before{"18:00"}
+                from{"12:00"}
+            }
+            evening1{
                 before{"21:00"}
                 from{"18:00"}
             }
@@ -260,7 +286,7 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set103{
+        set104{
             afternoon1{
                 before{"18:00"}
                 from{"14:00"}
@@ -282,7 +308,7 @@ dayPeriods:table(nofallback){
                 from{"22:00"}
             }
         }
-        set104{
+        set105{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -298,24 +324,6 @@ dayPeriods:table(nofallback){
             morning2{
                 before{"12:00"}
                 from{"10:00"}
-            }
-            night1{
-                before{"04:00"}
-                from{"00:00"}
-            }
-        }
-        set105{
-            afternoon1{
-                before{"18:00"}
-                from{"12:00"}
-            }
-            evening1{
-                before{"24:00"}
-                from{"18:00"}
-            }
-            morning1{
-                before{"12:00"}
-                from{"04:00"}
             }
             night1{
                 before{"04:00"}
@@ -351,6 +359,24 @@ dayPeriods:table(nofallback){
             }
             morning1{
                 before{"12:00"}
+                from{"04:00"}
+            }
+            night1{
+                before{"04:00"}
+                from{"00:00"}
+            }
+        }
+        set108{
+            afternoon1{
+                before{"18:00"}
+                from{"12:00"}
+            }
+            evening1{
+                before{"24:00"}
+                from{"18:00"}
+            }
+            morning1{
+                before{"12:00"}
                 from{"06:00"}
             }
             night1{
@@ -358,7 +384,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set108{
+        set109{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -374,24 +400,6 @@ dayPeriods:table(nofallback){
             night1{
                 before{"06:00"}
                 from{"23:00"}
-            }
-        }
-        set109{
-            afternoon1{
-                before{"17:00"}
-                from{"12:00"}
-            }
-            evening1{
-                before{"20:00"}
-                from{"17:00"}
-            }
-            morning1{
-                before{"12:00"}
-                from{"04:00"}
-            }
-            night1{
-                before{"04:00"}
-                from{"20:00"}
             }
         }
         set11{
@@ -424,6 +432,24 @@ dayPeriods:table(nofallback){
                 from{"12:00"}
             }
             evening1{
+                before{"20:00"}
+                from{"17:00"}
+            }
+            morning1{
+                before{"12:00"}
+                from{"04:00"}
+            }
+            night1{
+                before{"04:00"}
+                from{"20:00"}
+            }
+        }
+        set111{
+            afternoon1{
+                before{"17:00"}
+                from{"12:00"}
+            }
+            evening1{
                 before{"19:00"}
                 from{"17:00"}
             }
@@ -436,7 +462,7 @@ dayPeriods:table(nofallback){
                 from{"19:00"}
             }
         }
-        set111{
+        set112{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -454,7 +480,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set112{
+        set113{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -472,7 +498,7 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set113{
+        set114{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -494,7 +520,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set114{
+        set115{
             afternoon1{
                 before{"16:00"}
                 from{"12:00"}
@@ -516,7 +542,7 @@ dayPeriods:table(nofallback){
                 from{"20:00"}
             }
         }
-        set115{
+        set116{
             afternoon1{
                 before{"16:00"}
                 from{"12:00"}
@@ -534,7 +560,7 @@ dayPeriods:table(nofallback){
                 from{"20:00"}
             }
         }
-        set116{
+        set117{
             afternoon1{
                 before{"16:00"}
                 from{"12:00"}
@@ -560,7 +586,7 @@ dayPeriods:table(nofallback){
                 from{"20:00"}
             }
         }
-        set117{
+        set118{
             afternoon1{
                 before{"16:00"}
                 from{"12:00"}
@@ -578,7 +604,7 @@ dayPeriods:table(nofallback){
                 from{"20:00"}
             }
         }
-        set118{
+        set119{
             afternoon1{
                 before{"16:00"}
                 from{"12:00"}
@@ -602,28 +628,6 @@ dayPeriods:table(nofallback){
             night1{
                 before{"04:00"}
                 from{"21:00"}
-            }
-        }
-        set119{
-            afternoon1{
-                before{"16:00"}
-                from{"12:00"}
-            }
-            afternoon2{
-                before{"19:00"}
-                from{"16:00"}
-            }
-            evening1{
-                before{"22:00"}
-                from{"19:00"}
-            }
-            morning1{
-                before{"12:00"}
-                from{"04:00"}
-            }
-            night1{
-                before{"04:00"}
-                from{"22:00"}
             }
         }
         set12{
@@ -656,6 +660,28 @@ dayPeriods:table(nofallback){
                 before{"16:00"}
                 from{"12:00"}
             }
+            afternoon2{
+                before{"19:00"}
+                from{"16:00"}
+            }
+            evening1{
+                before{"22:00"}
+                from{"19:00"}
+            }
+            morning1{
+                before{"12:00"}
+                from{"04:00"}
+            }
+            night1{
+                before{"04:00"}
+                from{"22:00"}
+            }
+        }
+        set121{
+            afternoon1{
+                before{"16:00"}
+                from{"12:00"}
+            }
             evening1{
                 before{"21:00"}
                 from{"16:00"}
@@ -669,7 +695,7 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set121{
+        set122{
             afternoon1{
                 before{"14:00"}
                 from{"12:00"}
@@ -695,7 +721,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set122{
+        set123{
             afternoon1{
                 before{"14:00"}
                 from{"12:00"}
@@ -725,7 +751,7 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set123{
+        set124{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -743,7 +769,7 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set124{
+        set125{
             afternoon1{
                 before{"14:00"}
                 from{"12:00"}
@@ -773,7 +799,7 @@ dayPeriods:table(nofallback){
                 from{"19:00"}
             }
         }
-        set125{
+        set126{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -789,32 +815,6 @@ dayPeriods:table(nofallback){
             night1{
                 before{"06:00"}
                 from{"21:00"}
-            }
-        }
-        set126{
-            afternoon1{
-                before{"13:00"}
-                from{"12:00"}
-            }
-            afternoon2{
-                before{"19:00"}
-                from{"13:00"}
-            }
-            evening1{
-                before{"24:00"}
-                from{"19:00"}
-            }
-            morning1{
-                before{"08:00"}
-                from{"05:00"}
-            }
-            morning2{
-                before{"12:00"}
-                from{"08:00"}
-            }
-            night1{
-                before{"05:00"}
-                from{"00:00"}
             }
         }
         set127{
@@ -845,6 +845,32 @@ dayPeriods:table(nofallback){
         }
         set128{
             afternoon1{
+                before{"13:00"}
+                from{"12:00"}
+            }
+            afternoon2{
+                before{"19:00"}
+                from{"13:00"}
+            }
+            evening1{
+                before{"24:00"}
+                from{"19:00"}
+            }
+            morning1{
+                before{"08:00"}
+                from{"05:00"}
+            }
+            morning2{
+                before{"12:00"}
+                from{"08:00"}
+            }
+            night1{
+                before{"05:00"}
+                from{"00:00"}
+            }
+        }
+        set129{
+            afternoon1{
                 before{"16:00"}
                 from{"12:00"}
             }
@@ -863,28 +889,6 @@ dayPeriods:table(nofallback){
             night2{
                 before{"04:00"}
                 from{"23:00"}
-            }
-        }
-        set129{
-            afternoon1{
-                before{"18:00"}
-                from{"12:00"}
-            }
-            evening1{
-                before{"21:00"}
-                from{"18:00"}
-            }
-            morning1{
-                before{"06:00"}
-                from{"03:00"}
-            }
-            morning2{
-                before{"12:00"}
-                from{"06:00"}
-            }
-            night1{
-                before{"03:00"}
-                from{"21:00"}
             }
         }
         set13{
@@ -913,6 +917,28 @@ dayPeriods:table(nofallback){
                 before{"18:00"}
                 from{"12:00"}
             }
+            evening1{
+                before{"21:00"}
+                from{"18:00"}
+            }
+            morning1{
+                before{"06:00"}
+                from{"03:00"}
+            }
+            morning2{
+                before{"12:00"}
+                from{"06:00"}
+            }
+            night1{
+                before{"03:00"}
+                from{"21:00"}
+            }
+        }
+        set131{
+            afternoon1{
+                before{"18:00"}
+                from{"12:00"}
+            }
             afternoon2{
                 before{"19:00"}
                 from{"18:00"}
@@ -934,7 +960,7 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set131{
+        set132{
             afternoon1{
                 before{"17:00"}
                 from{"12:00"}
@@ -960,24 +986,6 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set132{
-            afternoon1{
-                before{"18:00"}
-                from{"12:00"}
-            }
-            evening1{
-                before{"21:00"}
-                from{"18:00"}
-            }
-            morning1{
-                before{"12:00"}
-                from{"06:00"}
-            }
-            night1{
-                before{"06:00"}
-                from{"21:00"}
-            }
-        }
         set133{
             afternoon1{
                 before{"18:00"}
@@ -999,6 +1007,24 @@ dayPeriods:table(nofallback){
         set134{
             afternoon1{
                 before{"18:00"}
+                from{"12:00"}
+            }
+            evening1{
+                before{"21:00"}
+                from{"18:00"}
+            }
+            morning1{
+                before{"12:00"}
+                from{"06:00"}
+            }
+            night1{
+                before{"06:00"}
+                from{"21:00"}
+            }
+        }
+        set135{
+            afternoon1{
+                before{"18:00"}
                 from{"11:00"}
             }
             evening1{
@@ -1014,7 +1040,7 @@ dayPeriods:table(nofallback){
                 from{"22:00"}
             }
         }
-        set135{
+        set136{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -1032,7 +1058,7 @@ dayPeriods:table(nofallback){
                 from{"23:00"}
             }
         }
-        set136{
+        set137{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -1054,7 +1080,7 @@ dayPeriods:table(nofallback){
                 from{"23:00"}
             }
         }
-        set137{
+        set138{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -1080,7 +1106,7 @@ dayPeriods:table(nofallback){
                 from{"04:00"}
             }
         }
-        set138{
+        set139{
             afternoon1{
                 before{"13:00"}
                 from{"12:00"}
@@ -1106,24 +1132,6 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set139{
-            afternoon1{
-                before{"16:00"}
-                from{"12:00"}
-            }
-            evening1{
-                before{"20:00"}
-                from{"16:00"}
-            }
-            morning1{
-                before{"12:00"}
-                from{"05:00"}
-            }
-            night1{
-                before{"05:00"}
-                from{"20:00"}
-            }
-        }
         set14{
             evening1{
                 before{"20:00"}
@@ -1142,6 +1150,24 @@ dayPeriods:table(nofallback){
             }
         }
         set140{
+            afternoon1{
+                before{"16:00"}
+                from{"12:00"}
+            }
+            evening1{
+                before{"20:00"}
+                from{"16:00"}
+            }
+            morning1{
+                before{"12:00"}
+                from{"05:00"}
+            }
+            night1{
+                before{"05:00"}
+                from{"20:00"}
+            }
+        }
+        set141{
             afternoon1{
                 before{"13:00"}
                 from{"12:00"}
@@ -1171,7 +1197,7 @@ dayPeriods:table(nofallback){
                 from{"01:00"}
             }
         }
-        set141{
+        set142{
             afternoon1{
                 before{"16:00"}
                 from{"12:00"}
@@ -1197,7 +1223,7 @@ dayPeriods:table(nofallback){
                 from{"03:00"}
             }
         }
-        set142{
+        set143{
             afternoon1{
                 before{"15:00"}
                 from{"10:00"}
@@ -1215,7 +1241,7 @@ dayPeriods:table(nofallback){
                 from{"18:00"}
             }
         }
-        set143{
+        set144{
             afternoon1{
                 before{"14:00"}
                 from{"12:00"}
@@ -1237,7 +1263,7 @@ dayPeriods:table(nofallback){
                 from{"19:00"}
             }
         }
-        set144{
+        set145{
             afternoon1{
                 before{"16:00"}
                 from{"12:00"}
@@ -1259,7 +1285,7 @@ dayPeriods:table(nofallback){
                 from{"18:00"}
             }
         }
-        set145{
+        set146{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -1277,7 +1303,7 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set146{
+        set147{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -1295,7 +1321,7 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set147{
+        set148{
             afternoon1{
                 before{"16:00"}
                 from{"12:00"}
@@ -1317,7 +1343,7 @@ dayPeriods:table(nofallback){
                 from{"19:00"}
             }
         }
-        set148{
+        set149{
             afternoon1{
                 before{"13:00"}
                 from{"10:00"}
@@ -1337,24 +1363,6 @@ dayPeriods:table(nofallback){
             night1{
                 before{"24:00"}
                 from{"19:00"}
-            }
-        }
-        set149{
-            afternoon1{
-                before{"18:00"}
-                from{"12:00"}
-            }
-            evening1{
-                before{"24:00"}
-                from{"18:00"}
-            }
-            morning1{
-                before{"12:00"}
-                from{"06:00"}
-            }
-            night1{
-                before{"06:00"}
-                from{"00:00"}
             }
         }
         set15{
@@ -1388,6 +1396,24 @@ dayPeriods:table(nofallback){
         }
         set150{
             afternoon1{
+                before{"18:00"}
+                from{"12:00"}
+            }
+            evening1{
+                before{"24:00"}
+                from{"18:00"}
+            }
+            morning1{
+                before{"12:00"}
+                from{"06:00"}
+            }
+            night1{
+                before{"06:00"}
+                from{"00:00"}
+            }
+        }
+        set151{
+            afternoon1{
                 before{"14:00"}
                 from{"12:00"}
             }
@@ -1412,7 +1438,7 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set151{
+        set152{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -1430,7 +1456,7 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set152{
+        set153{
             afternoon1{
                 before{"16:00"}
                 from{"12:00"}
@@ -1448,7 +1474,7 @@ dayPeriods:table(nofallback){
                 from{"19:00"}
             }
         }
-        set153{
+        set154{
             afternoon1{
                 before{"24:00"}
                 from{"12:00"}
@@ -1458,7 +1484,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set154{
+        set155{
             afternoon1{
                 before{"14:00"}
                 from{"12:00"}
@@ -1482,6 +1508,20 @@ dayPeriods:table(nofallback){
             night1{
                 before{"04:00"}
                 from{"21:00"}
+            }
+        }
+        set156{
+            afternoon1{
+                before{"18:00"}
+                from{"12:00"}
+            }
+            evening1{
+                before{"24:00"}
+                from{"18:00"}
+            }
+            morning1{
+                before{"12:00"}
+                from{"00:00"}
             }
         }
         set16{
@@ -3234,6 +3274,26 @@ dayPeriods:table(nofallback){
             }
         }
         set78{
+            afternoon1{
+                before{"18:00"}
+                from{"12:00"}
+            }
+            evening1{
+                before{"24:00"}
+                from{"18:00"}
+            }
+            midnight{
+                at{"00:00"}
+            }
+            morning1{
+                before{"12:00"}
+                from{"00:00"}
+            }
+            noon{
+                at{"12:00"}
+            }
+        }
+        set79{
             am{
                 before{"12:00"}
                 from{"00:00"}
@@ -3241,24 +3301,6 @@ dayPeriods:table(nofallback){
             pm{
                 before{"24:00"}
                 from{"12:00"}
-            }
-        }
-        set79{
-            afternoon1{
-                before{"18:00"}
-                from{"12:00"}
-            }
-            evening1{
-                before{"21:00"}
-                from{"18:00"}
-            }
-            morning1{
-                before{"12:00"}
-                from{"06:00"}
-            }
-            night1{
-                before{"06:00"}
-                from{"21:00"}
             }
         }
         set8{
@@ -3292,6 +3334,24 @@ dayPeriods:table(nofallback){
                 from{"12:00"}
             }
             evening1{
+                before{"21:00"}
+                from{"18:00"}
+            }
+            morning1{
+                before{"12:00"}
+                from{"06:00"}
+            }
+            night1{
+                before{"06:00"}
+                from{"21:00"}
+            }
+        }
+        set81{
+            afternoon1{
+                before{"18:00"}
+                from{"12:00"}
+            }
+            evening1{
                 before{"24:00"}
                 from{"18:00"}
             }
@@ -3304,7 +3364,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set81{
+        set82{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -3322,7 +3382,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set82{
+        set83{
             afternoon1{
                 before{"14:00"}
                 from{"12:00"}
@@ -3347,7 +3407,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set83{
+        set84{
             afternoon1{
                 before{"13:00"}
                 from{"12:00"}
@@ -3355,28 +3415,6 @@ dayPeriods:table(nofallback){
             afternoon2{
                 before{"18:00"}
                 from{"13:00"}
-            }
-            evening1{
-                before{"24:00"}
-                from{"18:00"}
-            }
-            morning1{
-                before{"10:00"}
-                from{"05:00"}
-            }
-            morning2{
-                before{"12:00"}
-                from{"10:00"}
-            }
-            night1{
-                before{"05:00"}
-                from{"00:00"}
-            }
-        }
-        set84{
-            afternoon1{
-                before{"18:00"}
-                from{"12:00"}
             }
             evening1{
                 before{"24:00"}
@@ -3406,6 +3444,28 @@ dayPeriods:table(nofallback){
             }
             morning1{
                 before{"10:00"}
+                from{"05:00"}
+            }
+            morning2{
+                before{"12:00"}
+                from{"10:00"}
+            }
+            night1{
+                before{"05:00"}
+                from{"00:00"}
+            }
+        }
+        set86{
+            afternoon1{
+                before{"18:00"}
+                from{"12:00"}
+            }
+            evening1{
+                before{"24:00"}
+                from{"18:00"}
+            }
+            morning1{
+                before{"10:00"}
                 from{"06:00"}
             }
             morning2{
@@ -3417,7 +3477,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set86{
+        set87{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -3439,7 +3499,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set87{
+        set88{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -3457,7 +3517,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set88{
+        set89{
             afternoon1{
                 before{"19:00"}
                 from{"12:00"}
@@ -3473,28 +3533,6 @@ dayPeriods:table(nofallback){
             night1{
                 before{"06:00"}
                 from{"00:00"}
-            }
-        }
-        set89{
-            afternoon1{
-                before{"13:00"}
-                from{"12:00"}
-            }
-            evening1{
-                before{"21:00"}
-                from{"13:00"}
-            }
-            morning1{
-                before{"06:00"}
-                from{"00:00"}
-            }
-            morning2{
-                before{"12:00"}
-                from{"06:00"}
-            }
-            night1{
-                before{"24:00"}
-                from{"21:00"}
             }
         }
         set9{
@@ -3523,6 +3561,28 @@ dayPeriods:table(nofallback){
             }
         }
         set90{
+            afternoon1{
+                before{"13:00"}
+                from{"12:00"}
+            }
+            evening1{
+                before{"21:00"}
+                from{"13:00"}
+            }
+            morning1{
+                before{"06:00"}
+                from{"00:00"}
+            }
+            morning2{
+                before{"12:00"}
+                from{"06:00"}
+            }
+            night1{
+                before{"24:00"}
+                from{"21:00"}
+            }
+        }
+        set91{
             evening1{
                 before{"20:00"}
                 from{"12:00"}
@@ -3540,7 +3600,7 @@ dayPeriods:table(nofallback){
                 from{"20:00"}
             }
         }
-        set91{
+        set92{
             evening1{
                 before{"20:00"}
                 from{"12:00"}
@@ -3554,7 +3614,7 @@ dayPeriods:table(nofallback){
                 from{"20:00"}
             }
         }
-        set92{
+        set93{
             afternoon1{
                 before{"13:00"}
                 from{"12:00"}
@@ -3580,7 +3640,7 @@ dayPeriods:table(nofallback){
                 from{"21:00"}
             }
         }
-        set93{
+        set94{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -3598,7 +3658,7 @@ dayPeriods:table(nofallback){
                 from{"00:00"}
             }
         }
-        set94{
+        set95{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -3616,7 +3676,7 @@ dayPeriods:table(nofallback){
                 from{"22:00"}
             }
         }
-        set95{
+        set96{
             afternoon1{
                 before{"18:00"}
                 from{"12:00"}
@@ -3632,24 +3692,6 @@ dayPeriods:table(nofallback){
             night1{
                 before{"04:00"}
                 from{"00:00"}
-            }
-        }
-        set96{
-            afternoon1{
-                before{"18:00"}
-                from{"12:00"}
-            }
-            evening1{
-                before{"21:00"}
-                from{"18:00"}
-            }
-            morning1{
-                before{"12:00"}
-                from{"04:00"}
-            }
-            night1{
-                before{"04:00"}
-                from{"21:00"}
             }
         }
         set97{
@@ -3681,10 +3723,10 @@ dayPeriods:table(nofallback){
             }
             morning1{
                 before{"12:00"}
-                from{"06:00"}
+                from{"04:00"}
             }
             night1{
-                before{"06:00"}
+                before{"04:00"}
                 from{"21:00"}
             }
         }
@@ -3694,20 +3736,16 @@ dayPeriods:table(nofallback){
                 from{"12:00"}
             }
             evening1{
-                before{"22:00"}
+                before{"21:00"}
                 from{"18:00"}
             }
             morning1{
-                before{"10:00"}
-                from{"06:00"}
-            }
-            morning2{
                 before{"12:00"}
-                from{"10:00"}
+                from{"06:00"}
             }
             night1{
                 before{"06:00"}
-                from{"22:00"}
+                from{"21:00"}
             }
         }
     }

@@ -7,6 +7,7 @@ se{
         "[A Á B C Č D Đ E É F G H I J K L M N Ŋ O P Q R S Š T Ŧ U V W X Y Z Ž Ø Æ Å Ä"
         " Ö]"
     }
+    ExemplarCharactersNumbers{"[  , % ‰ + − 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         latn{
             miscPatterns{
@@ -165,7 +166,7 @@ se{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.1"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -244,9 +245,9 @@ se{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    one{"'week' w 'of' y"}
-                    other{"'week' w 'of' y"}
-                    two{"'week' w 'of' y"}
+                    one{"'week' w 'of' Y"}
+                    other{"'week' w 'of' Y"}
+                    two{"'week' w 'of' Y"}
                 }
             }
             dayNames{

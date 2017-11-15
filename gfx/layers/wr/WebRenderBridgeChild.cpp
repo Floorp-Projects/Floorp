@@ -231,7 +231,7 @@ WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aC
 }
 
 void
-WebRenderBridgeChild::DeallocExternalImageId(wr::ExternalImageId& aImageId)
+WebRenderBridgeChild::DeallocExternalImageId(const wr::ExternalImageId& aImageId)
 {
   if (mDestroyed) {
     // This can happen if the IPC connection was torn down, because, e.g.

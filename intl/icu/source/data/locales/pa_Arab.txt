@@ -7,6 +7,7 @@ pa_Arab{
         "[\u064F ء آ ؤ ئ ا ب پ ت ث ٹ ج چ ح خ د ذ ڈ ر ز ڑ ژ س ش ص ض ط ظ ع غ ف ق ک گ ل "
         "م ن ں ه ھ ہ و ی ے]"
     }
+    ExemplarCharactersNumbers{"[\u200E \\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         default{"arabext"}
         latn{
@@ -17,7 +18,7 @@ pa_Arab{
         }
         native{"arabext"}
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.1"}
     calendar{
         generic{
             DateTimePatterns{

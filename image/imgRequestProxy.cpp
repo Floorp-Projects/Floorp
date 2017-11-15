@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ImageLogging.h"
 #include "imgRequestProxy.h"
+
+#include "ImageLogging.h"
 #include "imgLoader.h"
 #include "Image.h"
 #include "ImageOps.h"
@@ -14,8 +15,10 @@
 #include "imgINotificationObserver.h"
 #include "mozilla/dom/TabGroup.h"       // for TabGroup
 #include "mozilla/dom/DocGroup.h"       // for DocGroup
+#include "mozilla/Move.h"
 #include "mozilla/Telemetry.h"          // for Telemetry
 
+using namespace mozilla;
 using namespace mozilla::image;
 
 // The split of imgRequestProxy and imgRequestProxyStatic means that

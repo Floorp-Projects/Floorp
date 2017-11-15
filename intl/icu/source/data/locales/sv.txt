@@ -12,6 +12,7 @@ sv{
     }
     ExemplarCharacters{"[a à b c d e é f g h i j k l m n o p q r s t u v w x y z å ä ö]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z Å Ä Ö]"}
+    ExemplarCharactersNumbers{"[  , % ‰ + − 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
         "″]"
@@ -20,21 +21,42 @@ sv{
     NumberElements{
         arab{
             symbols{
+                decimal{"٫"}
+                exponential{"×۱۰^"}
+                group{" "}
+                infinity{"∞"}
+                list{"؛"}
                 minusSign{"؜−"}
                 nan{"¤¤¤"}
                 perMille{"؉‏"}
+                percentSign{"٪؜"}
+                plusSign{"؜+"}
+                superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
         }
         arabext{
             symbols{
+                decimal{","}
+                exponential{"×۱۰^"}
+                group{" "}
+                infinity{"∞"}
+                list{"؛"}
                 minusSign{"‎−‎"}
                 nan{"¤¤¤"}
+                perMille{"؉"}
+                percentSign{"٪"}
                 plusSign{"‎+‎"}
+                superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
         }
         default{"latn"}
+        fullwide{
+            symbols{
+                timeSeparator{"："}
+            }
+        }
         latn{
             miscPatterns{
                 atLeast{"⩾{0}"}
@@ -229,12 +251,18 @@ sv{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     calendar{
         buddhist{
             eras{
                 abbreviated{
                     "BE",
+                }
+                narrow{
+                    "BE",
+                }
+                wide{
+                    "Buddhistisk era",
                 }
             }
             intervalFormats{
@@ -491,8 +519,17 @@ sv{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E d MMM y G"}
@@ -656,7 +693,12 @@ sv{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E d"}
@@ -704,8 +746,8 @@ sv{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    one{"'vecka' w, y"}
-                    other{"'vecka' w, y"}
+                    one{"'vecka' w, Y"}
+                    other{"'vecka' w, Y"}
                 }
             }
             dayNames{
@@ -860,8 +902,8 @@ sv{
                     "e.Kr.",
                 }
                 narrow%variant{
-                    "fvt",
-                    "vt",
+                    "f.v.t.",
+                    "v.t.",
                 }
                 wide{
                     "före Kristus",
@@ -1105,6 +1147,12 @@ sv{
                 abbreviated{
                     "AM",
                 }
+                narrow{
+                    "AM",
+                }
+                wide{
+                    "Anno Mundi",
+                }
             }
             intervalFormats{
                 Hm{
@@ -1192,6 +1240,9 @@ sv{
                 abbreviated{
                     "SAKA",
                 }
+                narrow{
+                    "SAKA",
+                }
                 wide{
                     "Saka-eran",
                 }
@@ -1272,6 +1323,12 @@ sv{
             eras{
                 abbreviated{
                     "AH",
+                }
+                narrow{
+                    "AH",
+                }
+                wide{
+                    "efter Hirja",
                 }
             }
             intervalFormats{
@@ -1581,6 +1638,9 @@ sv{
                 abbreviated{
                     "AP",
                 }
+                narrow{
+                    "AP",
+                }
             }
             intervalFormats{
                 Hm{
@@ -1661,6 +1721,14 @@ sv{
                     "före R.K.",
                     "R.K.",
                 }
+                narrow{
+                    "f.R.K.",
+                    "R.K.",
+                }
+                wide{
+                    "före Republiken Kina",
+                    "Minguo",
+                }
             }
             intervalFormats{
                 Hm{
@@ -1684,7 +1752,7 @@ sv{
         body{"kropp"}
         box_drawing{"boxritning"}
         braille{"blindskrift"}
-        building{"byggnad"}
+        building{"byggnader"}
         bullets_stars{"punkter/stjärnor"}
         consonantal_jamo{"jamokonsonanter"}
         currency_symbols{"valutasymboler"}
@@ -1702,6 +1770,7 @@ sv{
         flags{"flaggor"}
         food_drink{"mat och dryck"}
         format{"formattecken"}
+        format_whitespace{"formattecken och blanktecken"}
         full_width_form_variant{"fullbreddsvarianter"}
         geometric_shapes{"geometriska former"}
         half_width_form_variant{"breddvarianter"}
@@ -1717,6 +1786,8 @@ sv{
         kanbun{"kanbun-tecken"}
         kanji{"japanska kanji"}
         keycap{"keycap"}
+        leftwards_arrows{"vänsterpilar"}
+        leftwards_rightwards_arrows{"vänster/höger-pilar"}
         letterlike_symbols{"bokstavsliknande symboler"}
         limited_use{"begränsad användning"}
         male{"manlig"}
@@ -1728,7 +1799,7 @@ sv{
         musical_symbols{"musiksymboler"}
         nature{"natur"}
         nonspacing{"icke-stegande tecken"}
-        numbers{"numeralsymboler"}
+        numbers{"siffror"}
         objects{"objekt"}
         other{"annat"}
         paired{"tecken i par"}
@@ -1738,9 +1809,10 @@ sv{
         place{"plats"}
         plant{"växt"}
         punctuation{"interpunktion"}
+        rightwards_arrows{"högerpilar"}
         sign_standard_symbols{"vanliga symboler"}
         small_form_variant{"småformvarianter"}
-        smiley{"smiley"}
+        smiley{"smileys"}
         smileys_people{"smileys och människor"}
         south_asian_scripts{"sydasiatiska skriftsystem"}
         southeast_asian_scripts{"sydöstasiatiska skriftsystem"}
@@ -1749,7 +1821,7 @@ sv{
         symbols{"symboler"}
         technical_symbols{"tekniska symboler"}
         tone_marks{"tonmarkeringar"}
-        travel{"resa"}
+        travel{"resor"}
         travel_places{"resor och platser"}
         upwards_arrows{"uppåtpilar"}
         variant_forms{"formvarianter"}
@@ -1798,10 +1870,10 @@ sv{
         day-narrow{
             dn{"dag"}
             relative{
-                "-1"{"i går"}
+                "-1"{"igår"}
                 "-2"{"i förrgår"}
-                "0"{"i dag"}
-                "1"{"i morgon"}
+                "0"{"idag"}
+                "1"{"imorgon"}
                 "2"{"i övermorgon"}
             }
             relativeTime{
@@ -1835,10 +1907,31 @@ sv{
                 }
             }
         }
+        dayOfYear{
+            dn{"dag under året"}
+        }
+        dayOfYear-narrow{
+            dn{"dag under året"}
+        }
+        dayOfYear-short{
+            dn{"dag under året"}
+        }
         dayperiod{
             dn{"fm/em"}
         }
+        dayperiod-narrow{
+            dn{"fm/em"}
+        }
+        dayperiod-short{
+            dn{"fm/em"}
+        }
         era{
+            dn{"era"}
+        }
+        era-narrow{
+            dn{"era"}
+        }
+        era-short{
             dn{"era"}
         }
         fri{
@@ -1983,8 +2076,8 @@ sv{
                     other{"om {0} min"}
                 }
                 past{
-                    one{"för {0} min sedan"}
-                    other{"för {0} min sedan"}
+                    one{"för {0} min sen"}
+                    other{"för {0} min sen"}
                 }
             }
         }
@@ -2013,8 +2106,8 @@ sv{
             }
             relativeTime{
                 future{
-                    one{"+{0} må."}
-                    other{"+{0} må."}
+                    one{"+{0} månd"}
+                    other{"+{0} månd"}
                 }
                 past{
                     one{"–{0} månd"}
@@ -2088,8 +2181,8 @@ sv{
                     other{"om {0} mån."}
                 }
                 past{
-                    one{"för {0} mån. sedan"}
-                    other{"för {0} mån. sedan"}
+                    one{"för {0} mån. sen"}
+                    other{"för {0} mån. sen"}
                 }
             }
         }
@@ -2142,8 +2235,8 @@ sv{
                     other{"om {0} kv."}
                 }
                 past{
-                    one{"för {0} kv. sedan"}
-                    other{"för {0} kv. sedan"}
+                    one{"för {0} kv. sen"}
+                    other{"för {0} kv. sen"}
                 }
             }
         }
@@ -2241,8 +2334,8 @@ sv{
                     other{"om {0} sek"}
                 }
                 past{
-                    one{"för {0} sek sedan"}
-                    other{"för {0} sek sedan"}
+                    one{"för {0} s sen"}
+                    other{"för {0} s sen"}
                 }
             }
         }
@@ -2507,8 +2600,32 @@ sv{
                 }
             }
         }
+        weekOfMonth{
+            dn{"vecka i månaden"}
+        }
+        weekOfMonth-narrow{
+            dn{"vk.i mån."}
+        }
+        weekOfMonth-short{
+            dn{"vk. i mån."}
+        }
         weekday{
             dn{"veckodag"}
+        }
+        weekday-narrow{
+            dn{"veckodag"}
+        }
+        weekday-short{
+            dn{"veckodag"}
+        }
+        weekdayOfMonth{
+            dn{"veckodag i månad"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"veckodag i mån."}
+        }
+        weekdayOfMonth-short{
+            dn{"veckodag i mån."}
         }
         year{
             dn{"år"}
@@ -2559,16 +2676,28 @@ sv{
                     other{"om {0} år"}
                 }
                 past{
-                    one{"för {0} år sedan"}
-                    other{"för {0} år sedan"}
+                    one{"för {0} år sen"}
+                    other{"för {0} år sen"}
                 }
             }
         }
         zone{
             dn{"tidszon"}
         }
+        zone-narrow{
+            dn{"tidszon"}
+        }
+        zone-short{
+            dn{"tidszon"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} eller {1}"}
+            end{"{0} eller {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} och {1}"}
             end{"{0} och {1}"}

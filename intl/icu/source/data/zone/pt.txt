@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pt{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     zoneStrings{
         "meta:Acre"{
             ld{"Horário de Verão do Acre"}
@@ -52,14 +52,14 @@ pt{
             ls{"Horário Padrão Central"}
         }
         "meta:America_Eastern"{
-            ld{"Horário de Verão Oriental"}
-            lg{"Horário Oriental"}
-            ls{"Horário Padrão Oriental"}
+            ld{"Horário de Verão do Leste"}
+            lg{"Horário do Leste"}
+            ls{"Horário Padrão do Leste"}
         }
         "meta:America_Mountain"{
-            ld{"Horário de Verão da Montanha"}
-            lg{"Horário da Montanha"}
-            ls{"Horário Padrão da Montanha"}
+            ld{"Horário de Verão das Montanhas"}
+            lg{"Horário das Montanhas"}
+            ls{"Horário Padrão das Montanhas"}
         }
         "meta:America_Pacific"{
             ld{"Horário de Verão do Pacífico"}
@@ -164,9 +164,9 @@ pt{
             ls{"Horário de Brunei Darussalam"}
         }
         "meta:Cape_Verde"{
-            ld{"Horário de Verão do Cabo Verde"}
-            lg{"Horário do Cabo Verde"}
-            ls{"Horário Padrão do Cabo Verde"}
+            ld{"Horário de Verão de Cabo Verde"}
+            lg{"Horário de Cabo Verde"}
+            ls{"Horário Padrão de Cabo Verde"}
         }
         "meta:Chamorro"{
             ls{"Horário de Chamorro"}
@@ -248,9 +248,9 @@ pt{
             ls{"Horário Padrão da Europa Ocidental"}
         }
         "meta:Falkland"{
-            ld{"Horário de Verão das Ilhas Falkland"}
-            lg{"Horário das Ilhas Falkland"}
-            ls{"Horário Padrão das Ilhas Falkland"}
+            ld{"Horário de Verão das Ilhas Malvinas"}
+            lg{"Horário das Ilhas Malvinas"}
+            ls{"Horário Padrão das Ilhas Malvinas"}
         }
         "meta:Fiji"{
             ld{"Horário de Verão de Fiji"}
@@ -416,9 +416,9 @@ pt{
             ls{"Horário das Ilhas Marshall"}
         }
         "meta:Mauritius"{
-            ld{"Horário de Verão das Ilhas Maurício"}
-            lg{"Horário das Ilhas Maurício"}
-            ls{"Horário Padrão das Ilhas Maurício"}
+            ld{"Horário de Verão de Maurício"}
+            lg{"Horário de Maurício"}
+            ls{"Horário Padrão de Maurício"}
         }
         "meta:Mawson"{
             ls{"Horário de Mawson"}
@@ -429,9 +429,9 @@ pt{
             ls{"Horário Padrão do Noroeste do México"}
         }
         "meta:Mexico_Pacific"{
-            ld{"Horário de Verão do Pacífico do México"}
-            lg{"Horário do Pacífico do México"}
-            ls{"Horário Padrão do Pacífico do México"}
+            ld{"Horário de Verão do Pacífico Mexicano"}
+            lg{"Horário do Pacífico Mexicano"}
+            ls{"Horário Padrão do Pacífico Mexicano"}
         }
         "meta:Mongolia"{
             ld{"Horário de Verão de Ulan Bator"}
@@ -463,9 +463,9 @@ pt{
             ls{"Horário Padrão da Nova Zelândia"}
         }
         "meta:Newfoundland"{
-            ld{"Horário de Verão de Terra Nova"}
-            lg{"Horário de Terra Nova"}
-            ls{"Horário Padrão de Terra Nova"}
+            ld{"Horário de Verão da Terra Nova"}
+            lg{"Horário da Terra Nova"}
+            ls{"Horário Padrão da Terra Nova"}
         }
         "meta:Niue"{
             ls{"Horário de Niue"}
@@ -540,7 +540,7 @@ pt{
             ls{"Horário Padrão de Qyzylorda"}
         }
         "meta:Reunion"{
-            ls{"Horário das Ilhas Reunião"}
+            ls{"Horário de Reunião"}
         }
         "meta:Rothera"{
             ls{"Horário de Rothera"}
@@ -561,7 +561,7 @@ pt{
             ls{"Horário Padrão de Samoa"}
         }
         "meta:Seychelles"{
-            ls{"Horário das Ilhas Seychelles"}
+            ls{"Horário de Seicheles"}
         }
         "meta:Singapore"{
             ls{"Horário Padrão de Cingapura"}
@@ -660,7 +660,7 @@ pt{
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Horário {0}"}
-        regionFormatDaylight{"{0} (+1)"}
-        regionFormatStandard{"{0} (+0)"}
+        regionFormatDaylight{"Horário de Verão: {0}"}
+        regionFormatStandard{"Horário Padrão: {0}"}
     }
 }

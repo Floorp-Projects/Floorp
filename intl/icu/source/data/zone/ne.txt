@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ne{
-    Version{"2.1.32.59"}
+    Version{"2.1.36.86"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"अफगानिस्तान समय"}
@@ -26,9 +26,9 @@ ne{
             ls{"अलस्काको मानक समय"}
         }
         "meta:Amazon"{
-            ld{"अमेजन ग्रीष्मकालीन समय"}
-            lg{"अमेजन समय"}
-            ls{"अमेजन मानक समय"}
+            ld{"एमाजोन ग्रीष्मकालीन समय"}
+            lg{"एमाजोन समय"}
+            ls{"एमाजोन मानक समय"}
         }
         "meta:America_Central"{
             ld{"केन्द्रीय दिवा समय"}

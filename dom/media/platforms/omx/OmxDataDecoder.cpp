@@ -396,7 +396,8 @@ OmxDataDecoder::EmptyBufferDone(BufferData* aData)
         mDecodedData.Clear();
       });
 
-    mOmxTaskQueue->Dispatch(r.forget());
+    nsresult rv = mOmxTaskQueue->Dispatch(r.forget());
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   }
 }
 

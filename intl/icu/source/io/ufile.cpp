@@ -160,7 +160,7 @@ u_fopen_u(const UChar   *filename,
         // TODO: test this code path, including wperm.
         wchar_t wperm[40] = {};
         size_t  retVal;
-        mbstowcs_s(&retVal, wperm, perm, _TRUNCATE);
+        mbstowcs_s(&retVal, wperm, UPRV_LENGTHOF(wperm), perm, _TRUNCATE);
         FILE *systemFile = _wfopen((const wchar_t *)filename, wperm);
         if (systemFile) {
             result = finit_owner(systemFile, locale, codepage, TRUE);

@@ -218,6 +218,10 @@ it{
             "CLP",
             "peso cileno",
         }
+        CNH{
+            "CNH",
+            "CNH",
+        }
         CNY{
             "CN¥",
             "renminbi cinese",
@@ -912,7 +916,7 @@ it{
             "scellino ugandese",
         }
         USD{
-            "US$",
+            "USD",
             "dollaro statunitense",
         }
         USN{
@@ -1155,7 +1159,7 @@ it{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
-        RON{"L"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1308,6 +1312,10 @@ it{
         CLP{
             one{"peso cileno"}
             other{"pesos cileni"}
+        }
+        CNH{
+            one{"CNH"}
+            other{"CNH"}
         }
         CNY{
             one{"renmimbi cinese"}
@@ -1846,5 +1854,5 @@ it{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.60"}
+    Version{"2.1.37.1"}
 }

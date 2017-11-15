@@ -166,7 +166,8 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-  nsGlobalWindow::Init();
+  nsGlobalWindowInner::Init();
+  nsGlobalWindowOuter::Init();
   Navigator::Init();
   nsXBLService::Init();
 
@@ -380,7 +381,8 @@ nsLayoutStatics::Shutdown()
   RuleProcessorCache::Shutdown();
 
   ShutdownJSEnvironment();
-  nsGlobalWindow::ShutDown();
+  nsGlobalWindowInner::ShutDown();
+  nsGlobalWindowOuter::ShutDown();
   nsDOMClassInfo::ShutDown();
   WebIDLGlobalNameHash::Shutdown();
   nsListControlFrame::Shutdown();

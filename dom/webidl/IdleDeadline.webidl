@@ -8,7 +8,7 @@
  */
 
 [Exposed=(Window,System),
- Func="nsGlobalWindow::IsRequestIdleCallbackEnabled"]
+ Func="nsGlobalWindowInner::IsRequestIdleCallbackEnabled"]
 interface IdleDeadline {
   DOMHighResTimeStamp timeRemaining();
   readonly attribute boolean didTimeout;

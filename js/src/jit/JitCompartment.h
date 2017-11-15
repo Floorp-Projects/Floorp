@@ -140,7 +140,7 @@ class JitRuntime
 
     // Map VMFunction addresses to the offset of the wrapper in
     // functionWrapperCode_.
-    using VMWrapperMap = HashMap<const VMFunction*, uint32_t>;
+    using VMWrapperMap = HashMap<const VMFunction*, uint32_t, VMFunction>;
     ExclusiveAccessLockWriteOnceData<VMWrapperMap*> functionWrappers_;
 
     // If true, the signal handler to interrupt Ion code should not attempt to
