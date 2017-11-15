@@ -7,8 +7,9 @@ lkt{
         "{ph} {pȟ} {pʼ} s š t {th} {tȟ} {tʼ} u ú {uŋ} w y z ž ʼ]"
     }
     ExemplarCharactersIndex{"[A B Č E G Ǧ H Ȟ I K L M N Ŋ O P S Š T U W Y Z Ž]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! ? . \u0022 “ ” ( ) \\[ \\] @ * / \\& #]"}
-    Version{"2.1.31.33"}
+    Version{"2.1.37.1"}
     calendar{
         gregorian{
             dayNames{

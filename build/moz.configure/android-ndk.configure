@@ -198,25 +198,6 @@ def android_toolchain_prefix_base(target):
     return target.toolchain
 
 
-@depends(android_platform, android_toolchain)
-def extra_toolchain_flags(platform_dir, toolchain_dir):
-    if not platform_dir:
-        return []
-    return ['-isystem',
-            os.path.join(platform_dir, 'usr', 'include'),
-            '-gcc-toolchain',
-            toolchain_dir]
-
-
-@depends(android_toolchain_prefix_base, android_toolchain)
-def android_toolchain_prefix(prefix_base, toolchain):
-    if toolchain:
-        return '%s/bin/%s-' % (toolchain, prefix_base)
-
-
-imply_option('--with-toolchain-prefix', android_toolchain_prefix,
-             reason='--with-android-ndk')
-
 option(env='STLPORT_CPPFLAGS',
        nargs=1,
        help='Options compiler should pass for standard C++ library')
@@ -226,7 +207,7 @@ option(env='STLPORT_CPPFLAGS',
 @imports(_from='os.path', _import='isdir')
 def stlport_cppflags(value, ndk, _):
     if value and len(value):
-        return value
+        return value.split()
     if not ndk:
         return
 
@@ -251,21 +232,42 @@ def stlport_cppflags(value, ndk, _):
     # Add android/support/include/ for prototyping long double math
     # functions, locale-specific C library functions, multibyte support,
     # etc.
-    return "-I%s -I%s -I%s" % (cxx_include,
-                               os.path.join(ndk, 'sources', 'android',
-                                            'support', 'include'),
-                               cxxabi_include)
+    return [
+        '-I%s' % cxx_include,
+        '-I%s' % os.path.join(ndk, 'sources', 'android', 'support', 'include'),
+        '-I%s' % cxxabi_include]
 
 
 add_old_configure_assignment('stlport_cppflags', stlport_cppflags)
 
 
-@depends(stlport_cppflags, android_platform, android_toolchain,
+@depends(android_platform, android_toolchain, stlport_cppflags)
+def extra_toolchain_flags(platform_dir, toolchain_dir, stlport_cppflags):
+    if not platform_dir:
+        return []
+    flags = ['-isystem',
+             os.path.join(platform_dir, 'usr', 'include'),
+             '-gcc-toolchain',
+             toolchain_dir]
+    flags.extend(stlport_cppflags if stlport_cppflags else [])
+    return flags
+
+
+@depends(android_toolchain_prefix_base, android_toolchain)
+def android_toolchain_prefix(prefix_base, toolchain):
+    if toolchain:
+        return '%s/bin/%s-' % (toolchain, prefix_base)
+
+
+imply_option('--with-toolchain-prefix', android_toolchain_prefix,
+             reason='--with-android-ndk')
+
+
+@depends(extra_toolchain_flags, android_toolchain,
          android_toolchain_prefix_base, '--help')
 @imports(_from='os.path', _import='isdir')
-def bindgen_cflags_defaults(stlport_cppflags, android_platform, toolchain,
-                            toolchain_prefix, _):
-    if not stlport_cppflags:
+def bindgen_cflags_defaults(toolchain_flags, toolchain, toolchain_prefix, _):
+    if not toolchain_flags:
         return
 
     gcc_include = os.path.join(
@@ -274,10 +276,8 @@ def bindgen_cflags_defaults(stlport_cppflags, android_platform, toolchain,
         gcc_include = os.path.join(
             toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
 
-    cflags_format = "%s -isystem %s -gcc-toolchain %s -I%s -I%s"
-    return cflags_format % (stlport_cppflags,
-                            os.path.join(android_platform, 'usr', 'include'),
-                            toolchain,
+    cflags_format = "%s -I%s -I%s"
+    return cflags_format % (' '.join(toolchain_flags),
                             os.path.join(gcc_include, 'include'),
                             os.path.join(gcc_include, 'include-fixed'))
 

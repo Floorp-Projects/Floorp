@@ -5,17 +5,20 @@
 
 #include "Decoder.h"
 
-#include "mozilla/gfx/2D.h"
 #include "DecodePool.h"
 #include "GeckoProfiler.h"
 #include "IDecodingTask.h"
 #include "ISurfaceProvider.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/Telemetry.h"
+#include "nsComponentManagerUtils.h"
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
-#include "nsComponentManagerUtils.h"
-#include "mozilla/Telemetry.h"
 
+using mozilla::gfx::IntPoint;
 using mozilla::gfx::IntSize;
+using mozilla::gfx::IntRect;
 using mozilla::gfx::SurfaceFormat;
 
 namespace mozilla {

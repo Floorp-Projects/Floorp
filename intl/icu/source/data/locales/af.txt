@@ -12,6 +12,7 @@ af{
     }
     ExemplarCharacters{"[a á â b c d e é è ê ë f g h i î ï j k l m n o ô ö p q r s t u û v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
+    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
         "″]"
@@ -86,16 +87,16 @@ af{
             patternsShort{
                 currencyFormat{
                     1000{
-                        one{"¤0K"}
-                        other{"¤0K"}
+                        one{"¤0 k"}
+                        other{"¤0 k"}
                     }
                     10000{
-                        one{"¤00K"}
-                        other{"¤00K"}
+                        one{"¤00 k"}
+                        other{"¤00 k"}
                     }
                     100000{
-                        one{"¤ 000K"}
-                        other{"¤ 000K"}
+                        one{"¤000 k"}
+                        other{"¤000 k"}
                     }
                     1000000{
                         one{"¤0 m"}
@@ -136,16 +137,16 @@ af{
                 }
                 decimalFormat{
                     1000{
-                        one{"0"}
-                        other{"0"}
+                        one{"0 k"}
+                        other{"0 k"}
                     }
                     10000{
-                        one{"0"}
-                        other{"0"}
+                        one{"00 k"}
+                        other{"00 k"}
                     }
                     100000{
-                        one{"0"}
-                        other{"0"}
+                        one{"000 k"}
+                        other{"000 k"}
                     }
                     1000000{
                         one{"0 m"}
@@ -212,7 +213,7 @@ af{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     calendar{
         generic{
             DateTimePatterns{
@@ -231,8 +232,17 @@ af{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"hh:mm B"}
+                Bhms{"hh:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E hh:mm B"}
+                EBhms{"E hh:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
+                Ehm{"E hh:mm a"}
+                Ehms{"E hh:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E d MMM y G"}
@@ -250,8 +260,8 @@ af{
                 Md{"d/M"}
                 d{"d"}
                 h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
+                hm{"hh:mm a"}
+                hms{"hh:mm:ss a"}
                 ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
@@ -393,6 +403,7 @@ af{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
                 E{"ccc"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
@@ -438,8 +449,8 @@ af{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    one{"'week' w 'van' y"}
-                    other{"'week' w 'van' y"}
+                    one{"'week' w 'van' Y"}
+                    other{"'week' w 'van' Y"}
                 }
             }
             dayNames{
@@ -862,13 +873,13 @@ af{
         hanja{"Hanja"}
         hanzi_simplified{"Hanzi (vereenvoudig)"}
         hanzi_traditional{"Hanzi (tradisioneel)"}
-        heart{"hart"}
+        heart{"hartjie"}
         historic_scripts{"Historiese skrifte"}
         ideographic_desc_characters{"Ideografies-beskrywende karakters"}
         japanese_kana{"Japannese Kana"}
         kanbun{"Kanbun"}
         kanji{"Kanji"}
-        keycap{"toets"}
+        keycap{"sleutelbordtoets"}
         leftwards_arrows{"Links-pyltjies"}
         leftwards_rightwards_arrows{"Links-Regs-pyltjies"}
         letterlike_symbols{"Letterige simbole"}
@@ -931,8 +942,8 @@ af{
             }
             relativeTime{
                 future{
-                    one{"oor {0} minuut"}
-                    other{"oor {0} minuut"}
+                    one{"oor {0} dag"}
+                    other{"oor {0} dae"}
                 }
                 past{
                     one{"{0} dag gelede"}
@@ -980,10 +991,31 @@ af{
                 }
             }
         }
+        dayOfYear{
+            dn{"dag van jaar"}
+        }
+        dayOfYear-narrow{
+            dn{"dag van j."}
+        }
+        dayOfYear-short{
+            dn{"dag van j."}
+        }
         dayperiod{
             dn{"VM/NM"}
         }
+        dayperiod-narrow{
+            dn{"vm./nm."}
+        }
+        dayperiod-short{
+            dn{"vm./nm."}
+        }
         era{
+            dn{"era"}
+        }
+        era-narrow{
+            dn{"era"}
+        }
+        era-short{
             dn{"era"}
         }
         fri{
@@ -1604,8 +1636,32 @@ af{
                 }
             }
         }
+        weekOfMonth{
+            dn{"week van maand"}
+        }
+        weekOfMonth-narrow{
+            dn{"wk. v. md."}
+        }
+        weekOfMonth-short{
+            dn{"wk. v. md."}
+        }
         weekday{
             dn{"dag van die week"}
+        }
+        weekday-narrow{
+            dn{"dag van wk."}
+        }
+        weekday-short{
+            dn{"dag van wk."}
+        }
+        weekdayOfMonth{
+            dn{"weekdag van die jaar"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"wk.-dag van md."}
+        }
+        weekdayOfMonth-short{
+            dn{"wk.-dag van md."}
         }
         year{
             dn{"jaar"}
@@ -1654,8 +1710,20 @@ af{
         zone{
             dn{"tydsone"}
         }
+        zone-narrow{
+            dn{"sone"}
+        }
+        zone-short{
+            dn{"sone"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} of {1}"}
+            end{"{0} of {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} en {1}"}
             end{"{0} en {1}"}

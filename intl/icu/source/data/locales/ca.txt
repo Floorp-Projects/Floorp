@@ -12,6 +12,7 @@ ca{
     }
     ExemplarCharacters{"[· a à b c ç d e é è f g h i í ï j k l m n o ó ò p q r s t u ú ü v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ¡ ? ¿ . … ' ‘ ’ \u0022 “ ” « » ( ) \\[ \\] § @ * / "
         "\\\\ \\& # † ‡ ′ ″]"
@@ -215,7 +216,7 @@ ca{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.22"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -245,6 +246,12 @@ ca{
             }
             eras{
                 abbreviated{
+                    "eB",
+                }
+                narrow{
+                    "eB",
+                }
+                wide{
                     "eB",
                 }
             }
@@ -460,6 +467,60 @@ ca{
                 }
             }
         }
+        coptic{
+            eras{
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "Tout",
+                        "Baba",
+                        "Hator",
+                        "Kiahk",
+                        "Toba",
+                        "Amshir",
+                        "Baramhat",
+                        "Baramouda",
+                        "Bashans",
+                        "Paona",
+                        "Epep",
+                        "Mesra",
+                        "Nasie",
+                    }
+                }
+            }
+        }
+        ethiopic{
+            eras{
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "Meskerem",
+                        "Tekemt",
+                        "Hedar",
+                        "Tahsas",
+                        "Ter",
+                        "Yekatit",
+                        "Megabit",
+                        "Miazia",
+                        "Genbot",
+                        "Sene",
+                        "Hamle",
+                        "Nehasse",
+                        "Pagumen",
+                    }
+                }
+            }
+        }
         generic{
             DateTimePatterns{
                 "H:mm:ss zzzz",
@@ -477,8 +538,17 @@ ca{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"LLL y G"}
                 GyMMMEd{"E, d MMM y G"}
@@ -654,7 +724,12 @@ ca{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E H:mm"}
                 EHms{"E H:mm:ss"}
                 Ed{"E d"}
@@ -668,10 +743,10 @@ ca{
                 GyMMMMd{"d MMMM 'de' y G"}
                 GyMMMd{"d MMM 'de' y G"}
                 H{"H"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
+                Hm{"H:mm"}
+                Hms{"H:mm:ss"}
+                Hmsv{"H:mm:ss v"}
+                Hmv{"H:mm v"}
                 M{"L"}
                 MEd{"E d/M"}
                 MMM{"LLL"}
@@ -699,13 +774,13 @@ ca{
                 yMMMM{"LLLL 'de' y"}
                 yMMMMEd{"E, d MMMM 'de' y"}
                 yMMMMd{"d MMMM 'de' y"}
-                yMMMd{"d LLL y"}
+                yMMMd{"d MMM 'de' y"}
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    one{"'setmana' w 'de' y"}
-                    other{"'setmana' w 'de' y"}
+                    one{"'setmana' w 'de' Y"}
+                    other{"'setmana' w 'de' Y"}
                 }
             }
             dayNames{
@@ -1116,6 +1191,120 @@ ca{
                 }
             }
         }
+        hebrew{
+            eras{
+                abbreviated{
+                    "AM",
+                }
+                narrow{
+                    "AM",
+                }
+                wide{
+                    "AM",
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "Tishri",
+                        "Heshvan",
+                        "Kislev",
+                        "Tevet",
+                        "Shevat",
+                        "Adar I",
+                        "Adar",
+                        "Nisan",
+                        "Iyar",
+                        "Sivan",
+                        "Tamuz",
+                        "Av",
+                        "Elul",
+                        "Adar II",
+                    }
+                }
+            }
+        }
+        indian{
+            eras{
+                wide{
+                    "Saka",
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyaistha",
+                        "Asadha",
+                        "Sravana",
+                        "Bhadra",
+                        "Asvina",
+                        "Kartika",
+                        "Agrahayana",
+                        "Pausa",
+                        "Magha",
+                        "Phalguna",
+                    }
+                }
+            }
+        }
+        islamic{
+            eras{
+                abbreviated{
+                    "AH",
+                }
+                narrow{
+                    "AH",
+                }
+                wide{
+                    "AH",
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabiʻ I",
+                        "Rabiʻ II",
+                        "Jumada I",
+                        "Jumada II",
+                        "Rajab",
+                        "Shaʻban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dhuʻl-Qiʻdah",
+                        "Dhuʻl-Hijjah",
+                    }
+                }
+            }
+        }
+        persian{
+            eras{
+                wide{
+                    "AP",
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                }
+            }
+        }
         roc{
             DateTimePatterns{
                 "H:mm:ss zzzz",
@@ -1131,6 +1320,12 @@ ca{
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            eras{
+                wide{
+                    "Abans de ROC",
+                    "ROC",
+                }
             }
         }
     }
@@ -1289,10 +1484,31 @@ ca{
                 }
             }
         }
+        dayOfYear{
+            dn{"dia de l’any"}
+        }
+        dayOfYear-narrow{
+            dn{"dia de l’any"}
+        }
+        dayOfYear-short{
+            dn{"dia de l’any"}
+        }
         dayperiod{
             dn{"a. m./p. m."}
         }
+        dayperiod-narrow{
+            dn{"a. m./p. m."}
+        }
+        dayperiod-short{
+            dn{"a. m./p. m."}
+        }
         era{
+            dn{"era"}
+        }
+        era-narrow{
+            dn{"era"}
+        }
+        era-short{
             dn{"era"}
         }
         fri{
@@ -1670,6 +1886,9 @@ ca{
         }
         second-narrow{
             dn{"s"}
+            relative{
+                "0"{"ara"}
+            }
             relativeTime{
                 future{
                     one{"d’aquí a {0} s"}
@@ -1683,6 +1902,9 @@ ca{
         }
         second-short{
             dn{"s"}
+            relative{
+                "0"{"ara"}
+            }
             relativeTime{
                 future{
                     one{"d’aquí a {0} s"}
@@ -1955,8 +2177,32 @@ ca{
                 }
             }
         }
+        weekOfMonth{
+            dn{"setmana del mes"}
+        }
+        weekOfMonth-narrow{
+            dn{"setm. del mes"}
+        }
+        weekOfMonth-short{
+            dn{"setm. del mes"}
+        }
         weekday{
             dn{"dia de la setmana"}
+        }
+        weekday-narrow{
+            dn{"dia de la setm."}
+        }
+        weekday-short{
+            dn{"dia de la setm."}
+        }
+        weekdayOfMonth{
+            dn{"dia de la setmana del mes"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"dia de la setm. del mes"}
+        }
+        weekdayOfMonth-short{
+            dn{"dia de la setm. del mes"}
         }
         year{
             dn{"any"}
@@ -2015,8 +2261,20 @@ ca{
         zone{
             dn{"fus horari"}
         }
+        zone-narrow{
+            dn{"fus horari"}
+        }
+        zone-short{
+            dn{"fus horari"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} o {1}"}
+            end{"{0} o {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} i {1}"}
             end{"{0} i {1}"}
@@ -2052,5 +2310,32 @@ ca{
         UK{"RU"}
         US{"EUA"}
         metric{"mètric"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

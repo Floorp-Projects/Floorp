@@ -6,6 +6,7 @@
 #ifndef _mozilla_dom_ClientManagerService_h
 #define _mozilla_dom_ClientManagerService_h
 
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsDataHashtable.h"
 
 namespace mozilla {

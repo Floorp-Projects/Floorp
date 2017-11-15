@@ -4,13 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Local Includes
 #include "nsDOMWindowList.h"
 
-// Helper classes
+#include "FlushType.h"
 #include "nsCOMPtr.h"
-
-// Interfaces needed
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
@@ -18,6 +15,8 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebNavigation.h"
+
+using namespace mozilla;
 
 nsDOMWindowList::nsDOMWindowList(nsIDocShell *aDocShell)
 {

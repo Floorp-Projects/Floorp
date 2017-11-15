@@ -962,10 +962,12 @@ private:
     }
 
     mEncoderListener = MakeAndAddRef<EncoderListener>(mEncoderThread, this);
-    mEncoderThread->Dispatch(
-      NewRunnableMethod<RefPtr<EncoderListener>>(
-        "mozilla::MediaEncoder::RegisterListener",
-        mEncoder, &MediaEncoder::RegisterListener, mEncoderListener));
+    nsresult rv =
+      mEncoderThread->Dispatch(
+        NewRunnableMethod<RefPtr<EncoderListener>>(
+          "mozilla::MediaEncoder::RegisterListener",
+          mEncoder, &MediaEncoder::RegisterListener, mEncoderListener));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 
     if (mRecorder->mAudioNode) {
       mEncoder->ConnectAudioNode(mRecorder->mAudioNode,

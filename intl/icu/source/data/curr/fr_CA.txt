@@ -70,6 +70,10 @@ fr_CA{
             "INR",
             "roupie indienne",
         }
+        IRR{
+            "IRR",
+            "rial iranien",
+        }
         JPY{
             "¥",
             "yen japonais",
@@ -93,6 +97,14 @@ fr_CA{
         NZD{
             "$ NZ",
             "dollar néo-zélandais",
+        }
+        OMR{
+            "OMR",
+            "rial omanais",
+        }
+        SAR{
+            "SAR",
+            "rial saoudien",
         }
         SBD{
             "SBD",
@@ -142,8 +154,13 @@ fr_CA{
             "XXX",
             "Devise inconnue",
         }
+        YER{
+            "YER",
+            "rial yéménite",
+        }
     }
     Currencies%narrow{
+        BYN{"Br"}
         GEL{"GEL"}
         KMF{"CF"}
         NIO{"C$"}
@@ -157,6 +174,18 @@ fr_CA{
             one{"livre des Îles Malouines"}
             other{"livres des Îles Malouines"}
         }
+        IRR{
+            one{"rial iranien"}
+            other{"rials iraniens"}
+        }
+        OMR{
+            one{"rial omanais"}
+            other{"rials omanis"}
+        }
+        SAR{
+            one{"rial saoudien"}
+            other{"rials saoudiens"}
+        }
         TOP{
             one{"pa’anga"}
             other{"pa’angas"}
@@ -165,6 +194,10 @@ fr_CA{
             one{"(devise inconnue)"}
             other{"(devise inconnue)"}
         }
+        YER{
+            one{"rial yéménite"}
+            other{"rials yéménites"}
+        }
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.22"}
 }

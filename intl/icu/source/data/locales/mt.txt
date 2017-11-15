@@ -12,6 +12,7 @@ mt{
     }
     ExemplarCharacters{"[a à b ċ d e è f ġ g {għ} h ħ i ì j k l m n o ò p q r s t u ù v w x ż z]"}
     ExemplarCharactersIndex{"[A B Ċ C D E F Ġ G {GĦ} H Ħ I {IE*} J K L M N O P Q R S T U V W X Y Ż Z]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\}]"}
     MoreInformation{"?"}
     NumberElements{
@@ -44,7 +45,7 @@ mt{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     calendar{
         generic{
             DateTimePatterns{

@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/cache/Types.h"
+#include "mozIStorageConnection.h"
 #include "nsStreamUtils.h"
 #include "nsTArrayForwardDeclare.h"
 
@@ -18,6 +19,9 @@ class nsIFile;
 namespace mozilla {
 namespace dom {
 namespace cache {
+
+#define PADDING_FILE_NAME ".padding"
+#define PADDING_TMP_FILE_NAME ".padding-tmp"
 
 enum DirPaddingFile
 {
@@ -55,7 +59,8 @@ BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
 
 nsresult
 BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
-                           const nsID& aId, int64_t* aPaddingSizeOut);
+                           const nsID& aId, const uint32_t aPaddingInfo,
+                           int64_t* aPaddingSizeOut);
 
 nsresult
 BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,

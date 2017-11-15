@@ -11,6 +11,8 @@ sw{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{"[a b {ch} d e f g h i j k l m n o p r s t u v w y z]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . ' \u0022 ( ) \\[ \\] \\{ \\}]"}
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
@@ -29,52 +31,52 @@ sw{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"Elfu 0;Elfu -0"}
-                        other{"Elfu 0;Elfu -0"}
+                        one{"elfu 0;elfu -0"}
+                        other{"elfu 0;elfu -0"}
                     }
                     10000{
-                        one{"Elfu 00;Elfu -00"}
-                        other{"Elfu 00;Elfu -00"}
+                        one{"elfu 00;elfu -00"}
+                        other{"elfu 00;elfu -00"}
                     }
                     100000{
-                        one{"Elfu 000;Elfu -000"}
-                        other{"Elfu 000;Elfu -000"}
+                        one{"elfu 000;elfu -000"}
+                        other{"elfu 000;elfu -000"}
                     }
                     1000000{
-                        one{"Milioni 0;Milioni -0"}
-                        other{"Milioni 0;Milioni -0"}
+                        one{"milioni 0;milioni -0"}
+                        other{"milioni 0;milioni -0"}
                     }
                     10000000{
-                        one{"Milioni 00;Milioni -00"}
-                        other{"Milioni 00;Milioni -00"}
+                        one{"milioni 00;milioni -00"}
+                        other{"milioni 00;milioni -00"}
                     }
                     100000000{
-                        one{"Milioni 000;Milioni -000"}
-                        other{"Milioni 000;Milioni -000"}
+                        one{"milioni 000;milioni -000"}
+                        other{"milioni 000;milioni -000"}
                     }
                     1000000000{
-                        one{"Bilioni 0;Bilioni -0"}
-                        other{"Bilioni 0;Bilioni -0"}
+                        one{"bilioni 0;bilioni -0"}
+                        other{"bilioni 0;bilioni -0"}
                     }
                     10000000000{
-                        one{"Bilioni 00;Bilioni -00"}
-                        other{"Bilioni 00;Bilioni -00"}
+                        one{"bilioni 00;bilioni -00"}
+                        other{"bilioni 00;bilioni -00"}
                     }
                     100000000000{
-                        one{"Bilioni 000;Bilioni -000"}
-                        other{"Bilioni 000;Bilioni -000"}
+                        one{"bilioni 000;bilioni -000"}
+                        other{"bilioni 000;bilioni -000"}
                     }
                     1000000000000{
-                        one{"Trilioni 0;Trilioni -0"}
-                        other{"Trilioni 0;Trilioni -0"}
+                        one{"trilioni 0;trilioni -0"}
+                        other{"trilioni 0;trilioni -0"}
                     }
                     10000000000000{
-                        one{"Trilioni 00;Trilioni -00"}
-                        other{"Trilioni 00;Trilioni -00"}
+                        one{"trilioni 00;trilioni -00"}
+                        other{"trilioni 00;trilioni -00"}
                     }
                     100000000000000{
-                        one{"Trilioni 000;Trilioni -000"}
-                        other{"Trilioni 000;Trilioni -000"}
+                        one{"trilioni 000;trilioni -000"}
+                        other{"trilioni 000;trilioni -000"}
                     }
                 }
             }
@@ -207,7 +209,7 @@ sw{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.33.73"}
+    Version{"2.1.37.34"}
     calendar{
         generic{
             DateTimePatterns{
@@ -226,8 +228,17 @@ sw{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
@@ -244,7 +255,9 @@ sw{
                 MMMd{"d MMM"}
                 Md{"d-M"}
                 d{"d"}
+                h{"h a"}
                 hm{"h:mm a"}
+                hms{"h:mm:ss a"}
                 ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
@@ -356,8 +369,8 @@ sw{
         }
         gregorian{
             AmPmMarkers{
-                "Asubuhi",
-                "Mchana",
+                "AM",
+                "PM",
             }
             AmPmMarkersAbbr{
                 "AM",
@@ -386,7 +399,12 @@ sw{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E d"}
@@ -431,8 +449,8 @@ sw{
                 yQQQ{"y QQQ"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    one{"'wiki' w 'ya' y"}
-                    other{"'wiki' w 'ya' y"}
+                    one{"'wiki' w 'ya' Y"}
+                    other{"'wiki' w 'ya' Y"}
                 }
             }
             dayNames{
@@ -527,11 +545,11 @@ sw{
                     narrow{
                         afternoon1{"mchana"}
                         evening1{"jioni"}
-                        midnight{"saa sita za usiku"}
+                        midnight{"usiku"}
                         morning1{"alfajiri"}
                         morning2{"asubuhi"}
                         night1{"usiku"}
-                        noon{"saa sita za mchana"}
+                        noon{"mchana"}
                     }
                     wide{
                         afternoon1{"mchana"}
@@ -545,7 +563,7 @@ sw{
                 }
                 stand-alone{
                     abbreviated{
-                        afternoon1{"mchana"}
+                        afternoon1{"alasiri"}
                         am{"AM"}
                         evening1{"jioni"}
                         midnight{"saa sita za usiku"}
@@ -557,14 +575,14 @@ sw{
                     }
                     narrow{
                         afternoon1{"mchana"}
-                        am{"am"}
+                        am{"AM"}
                         evening1{"jioni"}
                         midnight{"saa sita za usiku"}
                         morning1{"alfajiri"}
                         morning2{"asubuhi"}
                         night1{"usiku"}
                         noon{"saa sita za mchana"}
-                        pm{"pm"}
+                        pm{"PM"}
                     }
                     wide{
                         afternoon1{"mchana"}
@@ -827,91 +845,92 @@ sw{
         }
     }
     characterLabel{
-        activities{"Shughuli"}
-        african_scripts{"Hati za Afrika"}
-        american_scripts{"Hati za Marekani"}
+        activities{"shughuli"}
+        african_scripts{"hati za Afrika"}
+        american_scripts{"hati za Marekani"}
         animal{"mnyama"}
-        animals_nature{"Wanyama na Asili"}
-        arrows{"Mishale"}
+        animals_nature{"wanyama au ulimwengu"}
+        arrows{"mishale"}
         body{"mwili"}
-        box_drawing{"Mchoro wa Kisanduku"}
-        braille{"Nukta Vinundu"}
+        box_drawing{"mchoro wa kisanduku"}
+        braille{"nukta vinundu"}
         building{"jengo"}
-        bullets_stars{"Nukta/Nyota"}
-        consonantal_jamo{"Alama za Konsonanti"}
-        currency_symbols{"Alama za Sarafu"}
-        dash_connector{"Kistari/Kinachounganisha"}
-        digits{"Tarakimu"}
-        dingbats{"Dingibati"}
-        divination_symbols{"Alama za Kugawa"}
-        downwards_arrows{"Mishale Inayoelekea Chini"}
-        downwards_upwards_arrows{"Mishale ya Kuwili"}
-        east_asian_scripts{"Hati za Mashariki wa Asia"}
-        emoji{"Emoji"}
-        european_scripts{"Hati za Ulaya"}
+        bullets_stars{"nukta au nyota"}
+        consonantal_jamo{"alama za konsonanti"}
+        currency_symbols{"alama za sarafu"}
+        dash_connector{"kistari au dashi"}
+        digits{"tarakimu"}
+        dingbats{"dingibati"}
+        divination_symbols{"alama za kugawa"}
+        downwards_arrows{"mishale inayoelekea chini"}
+        downwards_upwards_arrows{"mishale ya kuwili"}
+        east_asian_scripts{"hati za mashariki wa Asia"}
+        emoji{"emoji"}
+        european_scripts{"hati za Ulaya"}
         female{"mwanamke"}
         flag{"bendera"}
-        flags{"Bendera"}
-        food_drink{"Vyakula na Vinywaji"}
-        format{"Miundo"}
-        format_whitespace{"Miundo na Sehemu Wazi"}
-        full_width_form_variant{"Sehemu za Fomu ya Upana Kamili"}
-        geometric_shapes{"Maumbo ya jiometri"}
-        half_width_form_variant{"Sehemu za Fomu ya Upana Nusu"}
-        han_characters{"Vibambo vya Han"}
-        han_radicals{"Herufi za Han"}
-        hanja{"Hanja"}
-        hanzi_simplified{"Hanzi (Iliyosanifishwa)"}
-        hanzi_traditional{"Hanzi (ya Jadi)"}
+        flags{"bendera"}
+        food_drink{"vyakula na vinywaji"}
+        format{"miundo"}
+        format_whitespace{"miundo na sehemu wazi"}
+        full_width_form_variant{"sehemu za fomu ya upana kamili"}
+        geometric_shapes{"maumbo ya jiometri"}
+        half_width_form_variant{"sehemu za fomu ya upana nusu"}
+        han_characters{"vibambo vya Han"}
+        han_radicals{"herufi za Han"}
+        hanja{"hanja"}
+        hanzi_simplified{"hanzi (iliyosanifishwa)"}
+        hanzi_traditional{"hanzi (ya jadi)"}
         heart{"moyo"}
-        historic_scripts{"Hati za Kihistoria"}
-        ideographic_desc_characters{"Herufi za Maelezo ya Idiografia"}
-        japanese_kana{"Herufi za Kijapani"}
-        kanbun{"Herufi za Kanbun"}
-        kanji{"Kanji"}
+        historic_scripts{"hati za kihistoria"}
+        ideographic_desc_characters{"herufi za maelezo ya idiografia"}
+        japanese_kana{"herufi za kijapani"}
+        kanbun{"herufi za kanbun"}
+        kanji{"kanji"}
         keycap{"kitufe"}
-        leftwards_arrows{"Mishale Inayoelekea Kushoto"}
-        leftwards_rightwards_arrows{"Mishale Inayoelekea Kulia na Kushoto"}
-        letterlike_symbols{"Alama Zinazofanana na Herufi"}
-        limited_use{"Matumizi Machache"}
+        leftwards_arrows{"mishale inayoelekea kushoto"}
+        leftwards_rightwards_arrows{"mishale inayoelekea kulia na kushoto"}
+        letterlike_symbols{"alama Zinazofanana na Herufi"}
+        limited_use{"matumizi machache"}
         male{"mwanamume"}
-        math_symbols{"Alama za Hesabu"}
-        middle_eastern_scripts{"Hati za Mashariki ya Kati"}
-        modern_scripts{"Hati ya Kisasa"}
-        modifier{"Kibadilisha Hati"}
-        musical_symbols{"Alama za Muziki"}
+        math_symbols{"alama za hesabu"}
+        middle_eastern_scripts{"hati za mashariki ya kati"}
+        miscellaneous{"anuwai"}
+        modern_scripts{"hati za kisasa"}
+        modifier{"kibadilisha hati"}
+        musical_symbols{"alama za muziki"}
         nature{"asili"}
-        nonspacing{"Bila Nafasi"}
-        numbers{"Nambari"}
-        objects{"Vitu"}
-        other{"Nyingine"}
-        paired{"Imeoanishwa"}
+        nonspacing{"bila nafasi"}
+        numbers{"nambari"}
+        objects{"vitu"}
+        other{"nyingine"}
+        paired{"imeoanishwa"}
         person{"mtu"}
-        phonetic_alphabet{"Abjadi za Fonetiki"}
-        pictographs{"Picha"}
+        phonetic_alphabet{"abjadi za fonetiki"}
+        pictographs{"picha"}
         place{"mahali"}
         plant{"mmea"}
-        punctuation{"Uakifishaji"}
-        rightwards_arrows{"Mishale Inayoelekea Kulia"}
-        sign_standard_symbols{"Ishara/Alama za Kawaida"}
-        small_form_variant{"Aina za Fomu Ndogo"}
+        punctuation{"uakifishaji"}
+        rightwards_arrows{"mishale inayoelekea kulia"}
+        sign_standard_symbols{"ishara au alama"}
+        small_form_variant{"aina za fomu ndogo"}
         smiley{"tabasamu"}
-        smileys_people{"Tabasamu na Watu"}
-        south_asian_scripts{"Hati za Kusini mwa Asia"}
-        southeast_asian_scripts{"Hati za Kusini Mashariki mwa Asia"}
-        spacing{"Kuacha Nafasi"}
+        smileys_people{"tabasamu au mtu"}
+        south_asian_scripts{"hati za kusini mwa Asia"}
+        southeast_asian_scripts{"hati za kusini mashariki mwa Asia"}
+        spacing{"kuacha nafasi"}
         sport{"michezo"}
-        symbols{"Alama"}
-        technical_symbols{"Alama za Kiufundi"}
-        tone_marks{"Alama za Toni"}
+        symbols{"alama"}
+        technical_symbols{"alama za kiufundi"}
+        tone_marks{"alama za toni"}
         travel{"kusafiri"}
-        travel_places{"Safari na Miji"}
-        upwards_arrows{"Mishale Inayoelekea Juu"}
-        variant_forms{"Maumbo Mbalimbali"}
-        vocalic_jamo{"Vibambo vya Jamo vya Sauti"}
+        travel_places{"safari au maeneo"}
+        upwards_arrows{"mishale inayoelekea juu"}
+        variant_forms{"maumbo mbalimbali"}
+        vocalic_jamo{"vibambo vya jamo vya sauti"}
         weather{"hali ya hewa"}
-        western_asian_scripts{"Hati za Magharibi wa Asia"}
-        whitespace{"Sehemu Wazi"}
+        western_asian_scripts{"hati za magharibi wa Asia"}
+        whitespace{"sehemu wazi"}
     }
     delimiters{
         alternateQuotationEnd{"’"}
@@ -966,10 +985,31 @@ sw{
                 }
             }
         }
+        dayOfYear{
+            dn{"siku ya mwaka"}
+        }
+        dayOfYear-narrow{
+            dn{"siku ya mwaka"}
+        }
+        dayOfYear-short{
+            dn{"siku ya mwaka"}
+        }
         dayperiod{
             dn{"AM/PM"}
         }
+        dayperiod-narrow{
+            dn{"AM/PM"}
+        }
+        dayperiod-short{
+            dn{"AM/PM"}
+        }
         era{
+            dn{"enzi"}
+        }
+        era-narrow{
+            dn{"enzi"}
+        }
+        era-short{
             dn{"enzi"}
         }
         fri{
@@ -1590,8 +1630,32 @@ sw{
                 }
             }
         }
+        weekOfMonth{
+            dn{"wiki ya mwezi"}
+        }
+        weekOfMonth-narrow{
+            dn{"wiki ya mwezi"}
+        }
+        weekOfMonth-short{
+            dn{"wiki ya mwezi"}
+        }
         weekday{
             dn{"siku ya wiki"}
+        }
+        weekday-narrow{
+            dn{"siku ya wiki"}
+        }
+        weekday-short{
+            dn{"siku ya wiki"}
+        }
+        weekdayOfMonth{
+            dn{"siku ya mwezi"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"siku ya mwezi"}
+        }
+        weekdayOfMonth-short{
+            dn{"siku ya mwezi"}
         }
         year{
             dn{"mwaka"}
@@ -1640,8 +1704,20 @@ sw{
         zone{
             dn{"saa za eneo"}
         }
+        zone-narrow{
+            dn{"saa za eneo"}
+        }
+        zone-short{
+            dn{"saa za eneo"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} au {1}"}
+            end{"{0} au {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} na {1}"}
             end{"{0} na {1}"}
@@ -1677,5 +1753,32 @@ sw{
         UK{"Uingereza"}
         US{"Marekani"}
         metric{"Mfumo wa Mita"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Thu Sep 21 20:35:51 2017 from UCD data files with version info:
+ * Created on Wed Nov  1 19:09:25 2017 from UCD data files with version info:
  *
 
 # Unicode Character Database
@@ -237,8 +237,11 @@ enum class Script : int16_t {
   HAN_WITH_BOPOMOFO = 172,
   JAMO = 173,
   SYMBOLS_EMOJI = 174,
+  MASARAM_GONDI = 175,
+  SOYOMBO = 176,
+  ZANABAZAR_SQUARE = 177,
 
-  NUM_SCRIPT_CODES = 175,
+  NUM_SCRIPT_CODES = 178,
 
   INVALID = -1
 };

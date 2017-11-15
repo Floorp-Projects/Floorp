@@ -68,7 +68,6 @@ partial interface Event {
   [ChromeOnly] readonly attribute EventTarget? composedTarget;
   [ChromeOnly] readonly attribute boolean multipleActionsPrevented;
   [ChromeOnly] readonly attribute boolean isSynthesized;
-  boolean getPreventDefault();
 };
 
 dictionary EventInit {

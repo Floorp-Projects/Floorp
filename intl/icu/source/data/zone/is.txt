@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 is{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"Afganistantími"}
@@ -487,6 +487,9 @@ is{
         }
         "meta:Ponape"{
             ls{"Ponape-tími"}
+        }
+        "meta:Pyongyang"{
+            ls{"Tími í Pjongjang"}
         }
         "meta:Reunion"{
             ls{"Réunion-tími"}

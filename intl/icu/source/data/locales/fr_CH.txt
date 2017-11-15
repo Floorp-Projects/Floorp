@@ -4,6 +4,7 @@ fr_CH{
     NumberElements{
         latn{
             patterns{
+                currencyFormat{"#,##0.00 ¤ ;-#,##0.00 ¤"}
                 percentFormat{"#,##0%"}
             }
             symbols{
@@ -11,7 +12,7 @@ fr_CH{
             }
         }
     }
-    Version{"2.1.32.48"}
+    Version{"2.1.37.6"}
     calendar{
         generic{
             DateTimePatterns{
@@ -125,14 +126,6 @@ fr_CH{
                         midnight{"min."}
                         morning1{"du mat."}
                         night1{"du mat."}
-                        noon{"midi"}
-                    }
-                    wide{
-                        afternoon1{"de l’après-midi"}
-                        evening1{"du soir"}
-                        midnight{"minuit"}
-                        morning1{"du matin"}
-                        night1{"du matin"}
                         noon{"midi"}
                     }
                 }

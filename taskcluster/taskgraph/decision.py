@@ -63,13 +63,13 @@ PER_PROJECT_PARAMETERS = {
 
     'mozilla-beta': {
         'target_tasks_method': 'mozilla_beta_tasks',
-        'optimize_target_tasks': False,
+        'optimize_target_tasks': True,
         'include_nightly': True,
     },
 
     'mozilla-release': {
         'target_tasks_method': 'mozilla_release_tasks',
-        'optimize_target_tasks': False,
+        'optimize_target_tasks': True,
         'include_nightly': True,
     },
 

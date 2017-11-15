@@ -15,6 +15,7 @@ ka{
     }
     ExemplarCharacters{"[ა ბ გ დ ე ვ ზ თ ი კ ლ მ ნ ო პ ჟ რ ს ტ უ ფ ქ ღ ყ შ ჩ ც ძ წ ჭ ხ ჯ ჰ]"}
     ExemplarCharactersIndex{"[ა ბ გ დ ე ვ ზ თ ი კ ლ მ ნ ო პ ჟ რ ს ტ უ ფ ქ ღ ყ შ ჩ ც ძ წ ჭ ხ ჯ ჰ]"}
+    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ჻ ' ‘ ‚ “ „ « » ( ) \\[ \\] \\{ \\} § @ * / \\& #"
         " † ‡ ′ ″ №]"
@@ -31,7 +32,7 @@ ka{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0 %"}
+                percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             patternsLong{
@@ -218,7 +219,7 @@ ka{
         native{"latn"}
         traditional{"geor"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     calendar{
         generic{
             DateTimePatterns{
@@ -237,8 +238,17 @@ ka{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"d E"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM, y G"}
                 GyMMMEd{"E, d MMM, y G"}
@@ -398,7 +408,12 @@ ka{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E, HH:mm"}
                 EHms{"E, HH:mm:ss"}
                 Ed{"d E"}
@@ -442,8 +457,8 @@ ka{
                 yQQQ{"QQQ, y"}
                 yQQQQ{"QQQQ, y"}
                 yw{
-                    one{"კვირა w, y"}
-                    other{"კვირა w, y"}
+                    one{"კვირა w, Y"}
+                    other{"კვირა w, Y"}
                 }
             }
             dayNames{
@@ -986,10 +1001,19 @@ ka{
                 }
             }
         }
+        dayOfYear{
+            dn{"წლის დღე"}
+        }
         dayperiod{
             dn{"დღის ნახევარი"}
         }
         era{
+            dn{"ეპოქა"}
+        }
+        era-narrow{
+            dn{"ეპოქა"}
+        }
+        era-short{
             dn{"ეპოქა"}
         }
         fri{
@@ -1630,8 +1654,14 @@ ka{
                 }
             }
         }
+        weekOfMonth{
+            dn{"თვის კვირა"}
+        }
         weekday{
             dn{"კვირის დღე"}
+        }
+        weekdayOfMonth{
+            dn{"კვირის დღე თვეში"}
         }
         year{
             dn{"წელი"}
@@ -1692,6 +1722,12 @@ ka{
         }
     }
     listPattern{
+        or{
+            2{"{0} ან {1}"}
+            end{"{0} ან {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} და {1}"}
             end{"{0} და {1}"}

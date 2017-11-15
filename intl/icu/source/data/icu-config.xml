@@ -95,6 +95,9 @@
 		<include locales="ca_ES"/>
 		<include locales="ca_FR"/>
 		<include locales="ca_IT"/>
+		<include locales="ccp"/>
+		<include locales="ccp_BD"/>
+		<include locales="ccp_IN"/>
 		<include locales="ce"/>
 		<include locales="ce_RU"/>
 		<include locales="cgg"/>
@@ -686,6 +689,8 @@
 		<include locales="teo"/>
 		<include locales="teo_KE"/>
 		<include locales="teo_UG"/>
+		<include locales="tg"/>
+		<include locales="tg_TJ"/>
 		<include locales="th"/>
 		<include locales="th_TH"/>
 		<include locales="ti"/>
@@ -698,6 +703,8 @@
 		<include locales="tr"/>
 		<include locales="tr_CY"/>
 		<include locales="tr_TR"/>
+		<include locales="tt"/>
+		<include locales="tt_RU"/>
 		<include locales="twq"/>
 		<include locales="twq_NE"/>
 		<include locales="tzm"/>
@@ -730,6 +737,8 @@
 		<include locales="vun_TZ"/>
 		<include locales="wae"/>
 		<include locales="wae_CH"/>
+		<include locales="wo"/>
+		<include locales="wo_SN"/>
 		<include locales="xog"/>
 		<include locales="xog_UG"/>
 		<include locales="yav"/>
@@ -740,7 +749,10 @@
 		<include locales="yo_BJ"/>
 		<include locales="yo_NG"/>
 		<include locales="yue"/>
-		<include locales="yue_HK"/>
+ 		<include locales="yue_Hans"/>
+ 		<include locales="yue_Hans_CN"/>
+ 		<include locales="yue_Hant"/>
+ 		<include locales="yue_Hant_HK"/>
 		<include locales="zgh"/>
 		<include locales="zgh_MA"/>
 		<include locales="zh"/>

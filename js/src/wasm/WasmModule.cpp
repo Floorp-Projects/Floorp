@@ -1019,34 +1019,16 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
         return true;
       }
       case ValType::I64: {
-        MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in asm.js/wasm");
-        RootedObject obj(cx, CreateI64Object(cx, val.i64()));
-        if (!obj)
-            return false;
-        jsval.set(ObjectValue(*obj));
-        return true;
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
+        return false;
       }
       case ValType::F32: {
         float f = val.f32();
-        if (JitOptions.wasmTestMode && IsNaN(f)) {
-            RootedObject obj(cx, CreateCustomNaNObject(cx, &f));
-            if (!obj)
-                return false;
-            jsval.set(ObjectValue(*obj));
-            return true;
-        }
         jsval.set(DoubleValue(JS::CanonicalizeNaN(double(f))));
         return true;
       }
       case ValType::F64: {
         double d = val.f64();
-        if (JitOptions.wasmTestMode && IsNaN(d)) {
-            RootedObject obj(cx, CreateCustomNaNObject(cx, &d));
-            if (!obj)
-                return false;
-            jsval.set(ObjectValue(*obj));
-            return true;
-        }
         jsval.set(DoubleValue(JS::CanonicalizeNaN(d)));
         return true;
       }

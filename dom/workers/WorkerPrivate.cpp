@@ -1600,6 +1600,10 @@ PRThreadFromThread(nsIThread* aThread)
 class SimpleWorkerHolder final : public WorkerHolder
 {
 public:
+  SimpleWorkerHolder()
+    : WorkerHolder("SimpleWorkerHolder")
+  {}
+
   virtual bool Notify(Status aStatus) { return true; }
 };
 
@@ -7097,6 +7101,19 @@ WorkerPrivate::AssertIsOnWorkerThread() const
 }
 
 #endif // DEBUG
+
+void
+WorkerPrivate::DumpCrashInformation(nsACString& aString)
+{
+  AssertIsOnWorkerThread();
+
+  nsTObserverArray<WorkerHolder*>::ForwardIterator iter(mHolders);
+  while (iter.HasMore()) {
+    WorkerHolder* holder = iter.GetNext();
+    aString.Append("|");
+    aString.Append(holder->Name());
+  }
+}
 
 NS_IMPL_ISUPPORTS_INHERITED0(ExternalRunnableWrapper, WorkerRunnable)
 

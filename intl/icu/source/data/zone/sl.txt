@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sl{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"Afganistanski čas"}
@@ -384,14 +384,14 @@ sl{
             ls{"Mawsonski čas"}
         }
         "meta:Mexico_Northwest"{
-            ld{"mehiški severozahodni poletni čas"}
-            lg{"mehiški severozahodni čas"}
-            ls{"mehiški severozahodni standardni čas"}
+            ld{"Mehiški severozahodni poletni čas"}
+            lg{"Mehiški severozahodni čas"}
+            ls{"Mehiški severozahodni standardni čas"}
         }
         "meta:Mexico_Pacific"{
-            ld{"mehiški pacifiški poletni čas"}
-            lg{"mehiški pacifiški čas"}
-            ls{"mehiški pacifiški standardni čas"}
+            ld{"Mehiški pacifiški poletni čas"}
+            lg{"Mehiški pacifiški čas"}
+            ls{"Mehiški pacifiški standardni čas"}
         }
         "meta:Mongolia"{
             ld{"Ulanbatorski poletni čas"}
@@ -589,7 +589,7 @@ sl{
             ls{"Volgograjski standardni čas"}
         }
         "meta:Vostok"{
-            ls{"vostoški čas"}
+            ls{"Vostoški čas"}
         }
         "meta:Wake"{
             ls{"Čas: Otok Wake"}

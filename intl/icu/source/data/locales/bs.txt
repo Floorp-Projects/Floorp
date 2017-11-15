@@ -11,6 +11,7 @@ bs{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{"[a b c č ć d {dž} đ e f g h i j k l {lj} m n {nj} o p r s š t u v z ž]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
@@ -230,21 +231,10 @@ bs{
                 timeSeparator{":"}
             }
         }
-        minimalPairs{
-            ordinal{
-                other{"Skrenite na {0}. križanju desno."}
-            }
-            plural{
-                few{"za {0} mjeseca"}
-                many{"za {0} mjeseci"}
-                one{"za {0} mjesec"}
-                other{"za {0} mjeseci"}
-            }
-        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.37.5"}
     calendar{
         generic{
             DateTimePatterns{
@@ -263,12 +253,22 @@ bs{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E, d."}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y. G"}
                 GyMMM{"MMM y. G"}
                 GyMMMEd{"E, d. MMM y. G"}
                 GyMMMd{"d. MMM y. G"}
+                H{"H"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
@@ -280,6 +280,7 @@ bs{
                 MMMd{"d. MMM"}
                 Md{"d.M."}
                 d{"d"}
+                h{"h a"}
                 hm{"hh:mm a"}
                 hms{"hh:mm:ss a"}
                 ms{"mm:ss"}
@@ -379,7 +380,7 @@ bs{
                 "HH:mm",
                 "EEEE, d. MMMM y.",
                 "d. MMMM y.",
-                "d. MMM. y.",
+                "d. MMM y.",
                 "d.M.yy.",
                 "{1} {0}",
                 "{1} 'u' {0}",
@@ -391,7 +392,12 @@ bs{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E, d."}
@@ -436,12 +442,12 @@ bs{
                 yMMMM{"LLLL y."}
                 yMMMd{"d. MMM y."}
                 yMd{"d.M.y."}
-                yQQQ{"QQQ y"}
-                yQQQQ{"QQQQ y"}
+                yQQQ{"QQQ y."}
+                yQQQQ{"QQQQ y."}
                 yw{
-                    few{"w. 'sedmica' 'u' y."}
-                    one{"w. 'sedmica' 'u' y."}
-                    other{"w. 'sedmica' 'u' y."}
+                    few{"w. 'sedmica' 'u' Y."}
+                    one{"w. 'sedmica' 'u' Y."}
+                    other{"w. 'sedmica' 'u' Y."}
                 }
             }
             dayNames{
@@ -591,6 +597,10 @@ bs{
                     "prije nove ere",
                     "nove ere",
                 }
+                wide%variant{
+                    "BCE",
+                    "n. e.",
+                }
             }
             intervalFormats{
                 H{
@@ -626,8 +636,8 @@ bs{
                     d{"d.–d. MMM"}
                 }
                 Md{
-                    M{"d.M–d.M."}
-                    d{"d.M–d.M."}
+                    M{"d. M – d. M."}
+                    d{"d. M – d. M."}
                 }
                 d{
                     d{"d–d."}
@@ -780,10 +790,10 @@ bs{
             quarters{
                 format{
                     abbreviated{
-                        "K1",
-                        "K2",
-                        "K3",
-                        "K4",
+                        "KV1",
+                        "KV2",
+                        "KV3",
+                        "KV4",
                     }
                     narrow{
                         "1.",
@@ -800,10 +810,10 @@ bs{
                 }
                 stand-alone{
                     abbreviated{
-                        "K1",
-                        "K2",
-                        "K3",
-                        "K4",
+                        "KV1",
+                        "KV2",
+                        "KV3",
+                        "KV4",
                     }
                     narrow{
                         "1.",
@@ -871,13 +881,13 @@ bs{
         activities{"Aktivnosti"}
         african_scripts{"Afrička pisma"}
         american_scripts{"Američka pisma"}
-        animal{"životinja"}
-        animals_nature{"Životinje i priroda"}
+        animal{"Životinja"}
+        animals_nature{"Životinje ili priroda"}
         arrows{"Strjelice"}
-        body{"tijelo"}
+        body{"Tijelo"}
         box_drawing{"Linije"}
         braille{"Brajevo pismo"}
-        building{"zgrada"}
+        building{"Zgrada"}
         bullets_stars{"Znakovi/zvjezdice za isticanje"}
         consonantal_jamo{"Konsonantski jamo"}
         currency_symbols{"Simboli valuta"}
@@ -890,8 +900,8 @@ bs{
         east_asian_scripts{"Istočnoazijska pisma"}
         emoji{"Emoji sličice"}
         european_scripts{"Evropska pisma"}
-        female{"žensko"}
-        flag{"zastava"}
+        female{"Žensko"}
+        flag{"Zastava"}
         flags{"Zastave"}
         food_drink{"Hrana i piće"}
         format{"Format"}
@@ -904,54 +914,54 @@ bs{
         hanja{"Hanja"}
         hanzi_simplified{"Hanzi (pojednostavljeni)"}
         hanzi_traditional{"Hanzi (tradicionalni)"}
-        heart{"srce"}
+        heart{"Srce"}
         historic_scripts{"Stara pisma"}
         ideographic_desc_characters{"Znakovi za ideografski opis"}
         japanese_kana{"Japanski kana"}
         kanbun{"Kanbun"}
         kanji{"Kanji"}
-        keycap{"kapica za tipku"}
+        keycap{"Kapica za tipku"}
         leftwards_arrows{"Strjelice ulijevo"}
         leftwards_rightwards_arrows{"Strjelice ulijevo udesno"}
         letterlike_symbols{"Simboli nalik slovima"}
         limited_use{"Ograničena upotreba"}
-        male{"muško"}
+        male{"Muško"}
         math_symbols{"Matematički simboli"}
         middle_eastern_scripts{"Bliskoistočna pisma"}
         miscellaneous{"Razno"}
         modern_scripts{"Moderna pisma"}
         modifier{"Modifikator"}
         musical_symbols{"Muzički simboli"}
-        nature{"priroda"}
+        nature{"Priroda"}
         nonspacing{"Nerazdvajajući znakovi"}
         numbers{"Brojevi"}
         objects{"Objekti"}
         other{"Ostalo"}
         paired{"Upareno"}
-        person{"osoba"}
+        person{"Osoba"}
         phonetic_alphabet{"Fonetska abeceda"}
         pictographs{"Piktogrami"}
-        place{"mjesto"}
-        plant{"biljka"}
+        place{"Mjesto"}
+        plant{"Biljka"}
         punctuation{"Interpunkcija"}
         rightwards_arrows{"Strjelice udesno"}
         sign_standard_symbols{"Znakovni/standardni simboli"}
         small_form_variant{"Varijante malih oblika"}
-        smiley{"smajli"}
+        smiley{"Smajli"}
         smileys_people{"Nasmiješena lica i ljudi"}
         south_asian_scripts{"Južnoazijska pisma"}
         southeast_asian_scripts{"Jugoistočnoazijska pisma"}
         spacing{"Razmak"}
-        sport{"sport"}
+        sport{"Sport"}
         symbols{"Simboli"}
         technical_symbols{"Tehnički simboli"}
         tone_marks{"Tonske oznake"}
-        travel{"putovanja"}
+        travel{"Putovanja"}
         travel_places{"Putovanja i mjesta"}
         upwards_arrows{"Strjelica nagore"}
         variant_forms{"Varijante oblika"}
         vocalic_jamo{"Vokalni jamo"}
-        weather{"vrijeme"}
+        weather{"Vrijeme"}
         western_asian_scripts{"Zapadnoazijska pisma"}
         whitespace{"Prazan prostor"}
     }
@@ -1014,10 +1024,31 @@ bs{
                 }
             }
         }
+        dayOfYear{
+            dn{"dan u godini"}
+        }
+        dayOfYear-narrow{
+            dn{"dan u g."}
+        }
+        dayOfYear-short{
+            dn{"dan u god."}
+        }
         dayperiod{
             dn{"prijepodne/poslijepodne"}
         }
+        dayperiod-narrow{
+            dn{"prijepodne/poslijepodne"}
+        }
+        dayperiod-short{
+            dn{"prijepodne/poslijepodne"}
+        }
         era{
+            dn{"era"}
+        }
+        era-narrow{
+            dn{"era"}
+        }
+        era-short{
             dn{"era"}
         }
         fri{
@@ -1196,7 +1227,7 @@ bs{
             relative{
                 "-1"{"prošli pon."}
                 "0"{"ovaj pon."}
-                "1"{"sljedeći pon"}
+                "1"{"sljedeći pon."}
             }
             relativeTime{
                 future{
@@ -1296,7 +1327,7 @@ bs{
                 past{
                     few{"prije {0} kvartala"}
                     one{"prije {0} kvartal"}
-                    other{"-{0} kv."}
+                    other{"prije {0} kvartala"}
                 }
             }
         }
@@ -1670,7 +1701,7 @@ bs{
                 "0"{"ove sedmice"}
                 "1"{"sljedeće sedmice"}
             }
-            relativePeriod{"sedmica od {0}"}
+            relativePeriod{"sedmica u kojoj je {0}"}
             relativeTime{
                 future{
                     few{"za {0} sedmice"}
@@ -1686,7 +1717,7 @@ bs{
         }
         week-narrow{
             dn{"sed."}
-            relativePeriod{"sedmica od {0}"}
+            relativePeriod{"sedmica u kojoj je {0}"}
             relativeTime{
                 future{
                     few{"za {0} sed."}
@@ -1702,7 +1733,7 @@ bs{
         }
         week-short{
             dn{"sed."}
-            relativePeriod{"sedmica od {0}"}
+            relativePeriod{"sedmica u kojoj je {0}"}
             relativeTime{
                 future{
                     few{"za {0} sed."}
@@ -1716,8 +1747,32 @@ bs{
                 }
             }
         }
+        weekOfMonth{
+            dn{"sedmica u mjesecu"}
+        }
+        weekOfMonth-narrow{
+            dn{"s. u mj."}
+        }
+        weekOfMonth-short{
+            dn{"sed. u mj."}
+        }
         weekday{
             dn{"dan u sedmici"}
+        }
+        weekday-narrow{
+            dn{"dan u sed."}
+        }
+        weekday-short{
+            dn{"dan u sed."}
+        }
+        weekdayOfMonth{
+            dn{"dan u mjesecu"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"d. u mj."}
+        }
+        weekdayOfMonth-short{
+            dn{"dan u mj."}
         }
         year{
             dn{"godina"}
@@ -1772,8 +1827,20 @@ bs{
         zone{
             dn{"vremenska zona"}
         }
+        zone-narrow{
+            dn{"zona"}
+        }
+        zone-short{
+            dn{"zona"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} ili {1}"}
+            end{"{0} ili {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} i {1}"}
             end{"{0} i {1}"}

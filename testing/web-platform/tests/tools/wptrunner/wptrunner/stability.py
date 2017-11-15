@@ -86,6 +86,8 @@ class LogHandler(reader.LogHandler):
 
 def is_inconsistent(results_dict, iterations):
     """Return whether or not a single test is inconsistent."""
+    if 'SKIP' in results_dict:
+        return False
     return len(results_dict) > 1 or sum(results_dict.values()) != iterations
 
 

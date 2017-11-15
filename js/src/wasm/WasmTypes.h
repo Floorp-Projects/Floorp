@@ -550,6 +550,16 @@ class Sig
         return !(*this == rhs);
     }
 
+    bool hasI64ArgOrRet() const {
+        if (ret() == ExprType::I64)
+            return true;
+        for (ValType a : args()) {
+            if (a == ValType::I64)
+                return true;
+        }
+        return false;
+    }
+
     WASM_DECLARE_SERIALIZABLE(Sig)
 };
 

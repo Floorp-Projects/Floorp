@@ -928,10 +928,7 @@ GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
       case ValType::I32:
       case ValType::F32:
       case ValType::F64:
-        break;
       case ValType::I64:
-        if (!jit::JitOptions.wasmTestMode)
-            return d.fail("can't import/export an Int64 global to JS");
         break;
       default:
         return d.fail("unexpected variable type in global import/export");

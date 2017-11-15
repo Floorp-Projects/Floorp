@@ -180,22 +180,23 @@ class CodeCoverageMixin(object):
                 os.path.join(self.grcov_dir, 'target.code-coverage-gcno.zip'), file_path_gcda
             ]
 
+            if mozinfo.os == 'win':
+                grcov_command += ['--llvm']
+
             # 'grcov_output' will be a tuple, the first variable is the path to the lcov output,
             # the other is the path to the standard error output.
-            grcov_output = self.get_output_from_command(
+            grcov_output, _ = self.get_output_from_command(
                 grcov_command,
-                cwd=self.grcov_dir,
                 silent=True,
-                tmpfile_base_path=os.path.join(self.grcov_dir, 'grcov_lcov_output'),
                 save_tmpfiles=True,
                 return_type='files'
             )
-            new_output_name = grcov_output[0] + '.info'
-            os.rename(grcov_output[0], new_output_name)
+            output_file_name = 'grcov_lcov_output.info'
+            shutil.move(grcov_output, os.path.join(self.grcov_dir, output_file_name))
 
             # Zip the grcov output and upload it.
             self.run_command(
-                ['zip', os.path.join(dirs['abs_blob_upload_dir'], 'code-coverage-grcov.zip'), new_output_name],
+                ['zip', os.path.join(dirs['abs_blob_upload_dir'], 'code-coverage-grcov.zip'), output_file_name],
                 cwd=self.grcov_dir
             )
 

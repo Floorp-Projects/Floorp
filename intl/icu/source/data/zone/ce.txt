@@ -1,10 +1,10 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ce{
-    Version{"2.1.31.86"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Afghanistan"{
-            ls{"ОвхӀан-пачхьалкх"}
+            ls{"ОвхӀан мохк"}
         }
         "meta:Africa_Central"{
             ls{"Юккъера Африка"}
@@ -56,9 +56,9 @@ ce{
             ls{"стандартан хан Апиа, Самоа"}
         }
         "meta:Arabian"{
-            ld{"СаӀудийн Арави, аьхкенан хан"}
-            lg{"СаӀудийн Арави"}
-            ls{"СаӀудийн Арави, стандартан хан"}
+            ld{"СаӀудийн Ӏаьрбийчоьнан, аьхкенан хан"}
+            lg{"СаӀудийн Ӏаьрбийчоь"}
+            ls{"СаӀудийн Ӏаьрбийчоьнан стандартан хан"}
         }
         "meta:Argentina"{
             ld{"Аргентина, аьхкенан хан"}

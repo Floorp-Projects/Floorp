@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ar{
-    Version{"2.1.32.86"}
+    Version{"2.1.36.86"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"توقيت أفغانستان"}
@@ -116,9 +116,9 @@ ar{
             ls{"توقيت أزورس الرسمي"}
         }
         "meta:Bangladesh"{
-            ld{"توقيت بنجلاديش الصيفي"}
-            lg{"توقيت بنجلاديش"}
-            ls{"توقيت بنجلاديش الرسمي"}
+            ld{"توقيت بنغلاديش الصيفي"}
+            lg{"توقيت بنغلاديش"}
+            ls{"توقيت بنغلاديش الرسمي"}
         }
         "meta:Bhutan"{
             ls{"توقيت بوتان"}
@@ -348,7 +348,7 @@ ar{
             ls{"توقيت كراسنويارسك الرسمي"}
         }
         "meta:Kyrgystan"{
-            ls{"توقيت قرغيزستان"}
+            ls{"توقيت قيرغيزستان"}
         }
         "meta:Line_Islands"{
             ls{"توقيت جزر لاين"}
@@ -567,9 +567,9 @@ ar{
             ls{"توقيت توفالو"}
         }
         "meta:Uruguay"{
-            ld{"توقيت أورغواي الصيفي"}
-            lg{"توقيت أورغواي"}
-            ls{"توقيت أورغواي الرسمي"}
+            ld{"توقيت أوروغواي الصيفي"}
+            lg{"توقيت أوروغواي"}
+            ls{"توقيت أوروغواي الرسمي"}
         }
         "meta:Uzbekistan"{
             ld{"توقيت أوزبكستان الصيفي"}
@@ -614,8 +614,8 @@ ar{
             ls{"توقيت يكاترينبورغ الرسمي"}
         }
         fallbackFormat{"{1} ({0})"}
-        gmtFormat{"جرينتش{0}"}
-        gmtZeroFormat{"جرينتش"}
+        gmtFormat{"غرينتش{0}"}
+        gmtZeroFormat{"غرينتش"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"توقيت {0}"}
         regionFormatDaylight{"توقيت {0} الصيفي"}

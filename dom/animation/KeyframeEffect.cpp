@@ -11,6 +11,7 @@
 #include "mozilla/dom/AnimationEffectTiming.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
+#include "nsStyleContext.h"
 
 namespace mozilla {
 namespace dom {

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 vi{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Acre"{
             ld{"Giờ Mùa Hè Acre"}
@@ -41,14 +41,14 @@ vi{
             ls{"Giờ Chuẩn Amazon"}
         }
         "meta:America_Central"{
-            ld{"Giờ mùa hè miền trung"}
-            lg{"Giờ miền trung"}
-            ls{"Giờ chuẩn miền trung"}
+            ld{"Giờ mùa hè miền Trung"}
+            lg{"Giờ miền Trung"}
+            ls{"Giờ chuẩn miền Trung"}
         }
         "meta:America_Eastern"{
-            ld{"Giờ mùa hè miền đông"}
-            lg{"Giờ miền đông"}
-            ls{"Giờ chuẩn miền đông"}
+            ld{"Giờ mùa hè miền Đông"}
+            lg{"Giờ miền Đông"}
+            ls{"Giờ chuẩn miền Đông"}
         }
         "meta:America_Mountain"{
             ld{"Giờ mùa hè miền núi"}
@@ -56,7 +56,7 @@ vi{
             ls{"Giờ chuẩn miền núi"}
         }
         "meta:America_Pacific"{
-            ld{"Giờ Mùa hè Thái Bình Dương"}
+            ld{"Giờ mùa hè Thái Bình Dương"}
             lg{"Giờ Thái Bình Dương"}
             ls{"Giờ chuẩn Thái Bình Dương"}
         }
@@ -93,7 +93,7 @@ vi{
         "meta:Argentina_Western"{
             ld{"Giờ mùa hè miền tây Argentina"}
             lg{"Giờ miền tây Argentina"}
-            ls{"Giờ chuẩn miền mây Argentina"}
+            ls{"Giờ chuẩn miền tây Argentina"}
         }
         "meta:Armenia"{
             ld{"Giờ Mùa Hè Armenia"}
@@ -101,29 +101,29 @@ vi{
             ls{"Giờ Chuẩn Armenia"}
         }
         "meta:Atlantic"{
-            ld{"Giờ Mùa hè Đại Tây Dương"}
+            ld{"Giờ mùa hè Đại Tây Dương"}
             lg{"Giờ Đại Tây Dương"}
             ls{"Giờ Chuẩn Đại Tây Dương"}
         }
         "meta:Australia_Central"{
-            ld{"Giờ Mùa Hè Miền Trung Nước Úc"}
-            lg{"Giờ Miền Trung Nước Úc"}
-            ls{"Giờ Chuẩn Miền Trung Nước Úc"}
+            ld{"Giờ Mùa Hè Miền Trung Australia"}
+            lg{"Giờ Miền Trung Australia"}
+            ls{"Giờ Chuẩn Miền Trung Australia"}
         }
         "meta:Australia_CentralWestern"{
-            ld{"Giờ Mùa Hè Miền Trung Tây Nước Úc"}
-            lg{"Giờ Miền Trung Tây Nước Úc"}
-            ls{"Giờ Chuẩn Miền Trung Tây Nước Úc"}
+            ld{"Giờ Mùa Hè Miền Trung Tây Australia"}
+            lg{"Giờ Miền Trung Tây Australia"}
+            ls{"Giờ Chuẩn Miền Trung Tây Australia"}
         }
         "meta:Australia_Eastern"{
-            ld{"Giờ Mùa Hè Miền Đông Nước Úc"}
-            lg{"Giờ Miền Đông Nước Úc"}
-            ls{"Giờ Chuẩn Miền Đông Nước Úc"}
+            ld{"Giờ Mùa Hè Miền Đông Australia"}
+            lg{"Giờ Miền Đông Australia"}
+            ls{"Giờ Chuẩn Miền Đông Australia"}
         }
         "meta:Australia_Western"{
-            ld{"Giờ Mùa Hè Miền Tây Nước Úc"}
-            lg{"Giờ Miền Tây Nước Úc"}
-            ls{"Giờ Chuẩn Miền Tây Nước Úc"}
+            ld{"Giờ Mùa Hè Miền Tây Australia"}
+            lg{"Giờ Miền Tây Australia"}
+            ls{"Giờ Chuẩn Miền Tây Australia"}
         }
         "meta:Azerbaijan"{
             ld{"Giờ Mùa Hè Azerbaijan"}
@@ -221,20 +221,20 @@ vi{
             ls{"Giờ Ecuador"}
         }
         "meta:Europe_Central"{
-            ld{"Giờ Mùa Hè Trung Âu"}
+            ld{"Giờ mùa hè Trung Âu"}
             lg{"Giờ Trung Âu"}
-            ls{"Giờ Chuẩn Trung Âu"}
+            ls{"Giờ chuẩn Trung Âu"}
         }
         "meta:Europe_Eastern"{
-            ld{"Giờ Mùa Hè Đông Âu"}
+            ld{"Giờ mùa hè Đông Âu"}
             lg{"Giờ Đông Âu"}
-            ls{"Giờ Chuẩn Đông Âu"}
+            ls{"Giờ chuẩn Đông Âu"}
         }
         "meta:Europe_Further_Eastern"{
             ls{"Giờ Châu Âu Viễn Đông"}
         }
         "meta:Europe_Western"{
-            ld{"Giờ Mùa hè Tây Âu"}
+            ld{"Giờ mùa hè Tây Âu"}
             lg{"Giờ Tây Âu"}
             ls{"Giờ Chuẩn Tây Âu"}
         }
@@ -291,9 +291,9 @@ vi{
             ls{"Giờ Guyana"}
         }
         "meta:Hawaii_Aleutian"{
-            ld{"Giờ Mùa Hè Hawaii-Aleutian"}
-            lg{"Giờ Hawaii-Aleutian"}
-            ls{"Giờ Chuẩn Hawaii-Aleutian"}
+            ld{"Giờ Mùa Hè Hawaii-Aleut"}
+            lg{"Giờ Hawaii-Aleut"}
+            ls{"Giờ Chuẩn Hawaii-Aleut"}
         }
         "meta:Hong_Kong"{
             ld{"Giờ Mùa Hè Hồng Kông"}

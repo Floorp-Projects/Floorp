@@ -2382,7 +2382,8 @@ Notification::ReleaseObject()
 }
 
 NotificationWorkerHolder::NotificationWorkerHolder(Notification* aNotification)
-  : mNotification(aNotification)
+  : WorkerHolder("NotificationWorkerHolder")
+  , mNotification(aNotification)
 {
   MOZ_ASSERT(mNotification->mWorkerPrivate);
   mNotification->mWorkerPrivate->AssertIsOnWorkerThread();

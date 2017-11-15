@@ -1,1 +1,1 @@
-function d([{ [yield]: {} } ]) f
+function d([{ [yield]: {} } ]) { f }

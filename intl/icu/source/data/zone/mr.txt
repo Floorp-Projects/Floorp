@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 mr{
-    Version{"2.1.31.86"}
+    Version{"2.1.37.22"}
     zoneStrings{
         "meta:Acre"{
             ld{"ऐकर ग्रीष्म वेळ"}
@@ -513,9 +513,9 @@ mr{
             ls{"‍फोनिक्स बेटे वेळ"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"सेंट पियर आणि मिक्वेलोन सूर्यप्रकाश वेळ"}
+            ld{"सेंट पियरे आणि मिक्वेलोन सूर्यप्रकाश वेळ"}
             lg{"सेंट पियर आणि मिक्वेलोन वेळ"}
-            ls{"सेंट पियर आणि मिक्वेलोन प्रमाण वेळ"}
+            ls{"सेंट पियरे आणि मिक्वेलोन प्रमाण वेळ"}
         }
         "meta:Pitcairn"{
             ls{"पिटकैर्न वेळ"}
@@ -524,7 +524,7 @@ mr{
             ls{"पोनॅपे वेळ"}
         }
         "meta:Pyongyang"{
-            ls{"प्योंगयंँग वेळ"}
+            ls{"प्योंगयांग वेळ"}
         }
         "meta:Qyzylorda"{
             ld{"क़िझीलोर्डा ग्रीष्मकालीन वेळ"}

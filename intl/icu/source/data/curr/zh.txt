@@ -262,6 +262,10 @@ zh{
             "CLP",
             "智利比索",
         }
+        CNH{
+            "CNH",
+            "人民币（离岸）",
+        }
         CNY{
             "￥",
             "人民币",
@@ -1255,7 +1259,7 @@ zh{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
-        RON{"L"}
+        RON{"lei"}
         RUB{"₽"}
         RUR{"р."}
         RWF{"RF"}
@@ -1341,7 +1345,7 @@ zh{
             other{"澳大利亚元"}
         }
         AWG{
-            other{"阿鲁巴基尔德元"}
+            other{"阿鲁巴弗罗林"}
         }
         AZM{
             other{"阿塞拜疆马纳特 (1993–2006)"}
@@ -1474,6 +1478,9 @@ zh{
         }
         CLP{
             other{"智利比索"}
+        }
+        CNH{
+            other{"人民币（离岸）"}
         }
         CNY{
             other{"人民币"}
@@ -2118,5 +2125,5 @@ zh{
     CurrencyUnitPatterns{
         other{"{0}{1}"}
     }
-    Version{"2.1.33.94"}
+    Version{"2.1.37.42"}
 }
