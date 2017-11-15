@@ -1195,11 +1195,21 @@ AccessibleHandler::GetClassInfo(ITypeInfo** aOutTypeInfo)
 HRESULT
 AccessibleHandler::nActions(long* nActions)
 {
-  HRESULT hr = ResolveIAHyperlink();
-  if (FAILED(hr)) {
-    return hr;
+  if (!nActions) {
+    return E_INVALIDARG;
   }
-  return mIAHyperlinkPassThru->nActions(nActions);
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIAHyperlink();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIAHyperlinkPassThru->nActions(nActions);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mNActions, *nActions);
+  return S_OK;
 }
 
 HRESULT
