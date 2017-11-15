@@ -906,21 +906,16 @@ IsInterval(const Optional<int32_t>& aTimeout, int32_t& aResultTimeout)
   return false;
 }
 
-template<typename T>
 mozilla::dom::TabGroup*
-nsPIDOMWindow<T>::TabGroup()
+nsPIDOMWindowInner::TabGroup()
 {
-  if (IsInnerWindow()) {
-    nsGlobalWindowInner* globalWindow =
-      static_cast<nsGlobalWindowInner*>(
-        reinterpret_cast<nsPIDOMWindow<nsISupports>*>(this));
-    return globalWindow->TabGroupInner();
-  } else {
-    nsGlobalWindowOuter* globalWindow =
-      static_cast<nsGlobalWindowOuter*>(
-        reinterpret_cast<nsPIDOMWindow<nsISupports>*>(this));
-    return globalWindow->TabGroupOuter();
-  }
+  return nsGlobalWindowInner::Cast(this)->TabGroupInner();
+}
+
+mozilla::dom::TabGroup*
+nsPIDOMWindowOuter::TabGroup()
+{
+  return nsGlobalWindowOuter::Cast(this)->TabGroupOuter();
 }
 
 template<typename T>
@@ -957,4 +952,3 @@ EnsurePrefCaches()
 
 template class nsPIDOMWindow<mozIDOMWindowProxy>;
 template class nsPIDOMWindow<mozIDOMWindow>;
-template class nsPIDOMWindow<nsISupports>;

@@ -637,7 +637,7 @@ NewOuterWindowProxy(JSContext *cx, JS::Handle<JSObject*> global, bool isChrome)
 //*****************************************************************************
 
 nsGlobalWindowOuter::nsGlobalWindowOuter()
-  : nsPIDOMWindow<nsISupports>(nullptr),
+  : nsPIDOMWindowOuter(),
     mIdleFuzzFactor(0),
     mIdleCallbackIndex(-1),
     mCurrentlyIdle(false),

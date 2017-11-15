@@ -206,18 +206,8 @@ private:
 // belonging to the same outer window, but that's an unimportant
 // side effect of inheriting PRCList).
 
-// NB: Currently nsPIDOMWindowInner and nsPIDOMWindowOuter are identical classes
-// with identical member variables and identical vtables, that only differ in
-// type name. nsGlobalWindow doesn't want to doubly inherit (and have two
-// copies of everything), and it also doesn't want to privilege one over
-// the other by making it possible to convert types through the C++ type system
-// instead of our accessor methods (AsInner and AsOuter) that do dynamic
-// checking. So we inherit from nsPIDOMWindow<nsISupports>, which is also
-// identical to both nsPIDOMWindowInner and nsPIDOMWindowOuter, but not
-// convertible to either.
-
 class nsGlobalWindowOuter : public mozilla::dom::EventTarget,
-                            public nsPIDOMWindow<nsISupports>,
+                            public nsPIDOMWindowOuter,
                             private nsIDOMWindow,
                             // NOTE: This interface is private, as it's only
                             // implemented on chrome windows.
@@ -243,12 +233,10 @@ public:
 #endif
 
   static nsGlobalWindowOuter* Cast(nsPIDOMWindowOuter* aPIWin) {
-    return static_cast<nsGlobalWindowOuter*>(
-      reinterpret_cast<nsPIDOMWindow<nsISupports>*>(aPIWin));
+    return static_cast<nsGlobalWindowOuter*>(aPIWin);
   }
   static const nsGlobalWindowOuter* Cast(const nsPIDOMWindowOuter* aPIWin) {
-    return static_cast<const nsGlobalWindowOuter*>(
-      reinterpret_cast<const nsPIDOMWindow<nsISupports>*>(aPIWin));
+    return static_cast<const nsGlobalWindowOuter*>(aPIWin);
   }
   static nsGlobalWindowOuter* Cast(mozIDOMWindowProxy* aWin) {
     return Cast(nsPIDOMWindowOuter::From(aWin));
@@ -1685,6 +1673,8 @@ private:
   friend class nsPIDOMWindow<mozIDOMWindowProxy>;
   friend class nsPIDOMWindow<mozIDOMWindow>;
   friend class nsPIDOMWindow<nsISupports>;
+  friend class nsPIDOMWindowInner;
+  friend class nsPIDOMWindowOuter;
 
   mozilla::dom::TabGroup* TabGroupInner();
   mozilla::dom::TabGroup* TabGroupOuter();
