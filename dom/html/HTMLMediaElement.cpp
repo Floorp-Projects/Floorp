@@ -1723,7 +1723,7 @@ void HTMLMediaElement::ShutdownDecoder()
 {
   RemoveMediaElementFromURITable();
   NS_ASSERTION(mDecoder, "Must have decoder to shut down");
-  mSetCDMRequest.DisconnectIfExists();
+
   mWaitingForKeyListener.DisconnectIfExists();
   if (mMediaSource) {
     mMediaSource->CompletePendingTransactions();
@@ -4064,6 +4064,8 @@ HTMLMediaElement::~HTMLMediaElement()
     mVideoFrameContainer->ForgetElement();
   }
   UnregisterActivityObserver();
+
+  mSetCDMRequest.DisconnectIfExists();
   if (mDecoder) {
     ShutdownDecoder();
   }
