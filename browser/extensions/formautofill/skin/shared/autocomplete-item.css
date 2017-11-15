@@ -155,6 +155,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   background-color: #EDEDED;
   font-size: calc(var(--option-btn-font-size) / var(--default-font-size) * 1em);
   color: var(--option-btn-text-color);
+  text-align: center;
 }
 
 .autofill-footer[no-warning="true"] > .autofill-warning {
