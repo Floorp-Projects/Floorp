@@ -148,7 +148,7 @@ nsPrintingProxy::ShowProgress(mozIDOMWindowProxy*      parent,
   TabChild* pBrowser = static_cast<TabChild*>(tabchild.get());
 
   RefPtr<PrintProgressDialogChild> dialogChild =
-    new PrintProgressDialogChild(openDialogObserver);
+    new PrintProgressDialogChild(openDialogObserver, printSettings);
 
   SendPPrintProgressDialogConstructor(dialogChild);
 
