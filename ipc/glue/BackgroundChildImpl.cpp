@@ -43,6 +43,8 @@
 #include "mozilla/net/PUDPSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
 #include "mozilla/dom/WebAuthnTransactionChild.h"
+#include "mozilla/dom/MIDIPortChild.h"
+#include "mozilla/dom/MIDIManagerChild.h"
 #include "nsID.h"
 #include "nsTraceRefcnt.h"
 
@@ -87,6 +89,9 @@ using mozilla::dom::LocalStorage;
 using mozilla::dom::StorageDBChild;
 
 using mozilla::dom::WebAuthnTransactionChild;
+
+using mozilla::dom::PMIDIPortChild;
+using mozilla::dom::PMIDIManagerChild;
 
 // -----------------------------------------------------------------------------
 // BackgroundChildImpl::ThreadLocal
@@ -519,8 +524,48 @@ bool
 BackgroundChildImpl::DeallocPQuotaChild(PQuotaChild* aActor)
 {
   MOZ_ASSERT(aActor);
-
   delete aActor;
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+// WebMIDI API
+// -----------------------------------------------------------------------------
+
+PMIDIPortChild*
+BackgroundChildImpl::AllocPMIDIPortChild(const MIDIPortInfo& aPortInfo, const bool& aSysexEnabled)
+{
+    MOZ_CRASH("Should be created manually");
+    return nullptr;
+}
+
+bool
+BackgroundChildImpl::DeallocPMIDIPortChild(PMIDIPortChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  // The reference is increased in dom/midi/MIDIPort.cpp. We should
+  // decrease it after IPC.
+  RefPtr<dom::MIDIPortChild> child =
+    dont_AddRef(static_cast<dom::MIDIPortChild*>(aActor));
+  child->Teardown();
+  return true;
+}
+
+PMIDIManagerChild*
+BackgroundChildImpl::AllocPMIDIManagerChild()
+{
+  MOZ_CRASH("Should be created manually");
+  return nullptr;
+}
+
+bool
+BackgroundChildImpl::DeallocPMIDIManagerChild(PMIDIManagerChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  // The reference is increased in dom/midi/MIDIAccessManager.cpp. We should
+  // decrease it after IPC.
+  RefPtr<dom::MIDIManagerChild> child =
+    dont_AddRef(static_cast<dom::MIDIManagerChild*>(aActor));
   return true;
 }
 

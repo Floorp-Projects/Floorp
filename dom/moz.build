@@ -61,6 +61,7 @@ DIRS += [
     'asmjscache',
     'mathml',
     'media',
+    'midi',
     'notification',
     'offline',
     'power',

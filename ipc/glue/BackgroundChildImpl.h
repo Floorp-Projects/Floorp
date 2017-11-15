@@ -237,6 +237,13 @@ protected:
 
   bool
   GetMessageSchedulerGroups(const Message& aMsg, SchedulerGroupSet& aGroups) override;
+
+  virtual PMIDIPortChild* AllocPMIDIPortChild(const MIDIPortInfo& aPortInfo,
+                                              const bool& aSysexEnabled) override;
+  virtual bool DeallocPMIDIPortChild(PMIDIPortChild*) override;
+
+  virtual PMIDIManagerChild* AllocPMIDIManagerChild() override;
+  virtual bool DeallocPMIDIManagerChild(PMIDIManagerChild*) override;
 };
 
 class BackgroundChildImpl::ThreadLocal final

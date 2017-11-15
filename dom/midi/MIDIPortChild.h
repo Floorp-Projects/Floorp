@@ -1,0 +1,55 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_dom_MIDIPortChild_h
+#define mozilla_dom_MIDIPortChild_h
+
+#include "mozilla/dom/PMIDIPortChild.h"
+#include "mozilla/dom/MIDIPortInterface.h"
+
+namespace mozilla {
+namespace dom {
+
+class MIDIPort;
+class MIDIPortInfo;
+
+/**
+ * Child actor for a MIDIPort object. Each MIDIPort DOM object in JS has a its
+ * own child actor. The lifetime of the actor object is dependent on the
+ * lifetime of the JS object.
+ *
+ */
+class MIDIPortChild final :
+    public PMIDIPortChild,
+    public MIDIPortInterface
+{
+public:
+  NS_INLINE_DECL_REFCOUNTING(MIDIPortChild);
+  virtual mozilla::ipc::IPCResult
+  RecvReceive(nsTArray<MIDIMessage>&& aMsgs) override;
+
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvUpdateStatus(const uint32_t& aDeviceState, const uint32_t& aConnectionState) override;
+
+  MIDIPortChild(const MIDIPortInfo& aPortInfo, bool aSysexEnabled, MIDIPort* aPort);
+  //virtual void Shutdown() override;
+  void SetActorAlive();
+
+  void Teardown();
+private:
+  ~MIDIPortChild() = default;
+  // Pointer to the DOM object this actor represents. The actor cannot outlive
+  // the DOM object.
+  MIDIPort* mDOMPort;
+  bool mActorWasAlive;
+};
+}
+}
+
+#endif
