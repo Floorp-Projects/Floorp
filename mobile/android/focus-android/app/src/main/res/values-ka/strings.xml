@@ -15,7 +15,7 @@
   <string name="menu_about">შესახებ</string>
   <string name="menu_help">დახმარება</string>
   <string name="menu_rights">თქვენი უფლებები</string>
-  <string name="menu_trackers_blocked_title">მეთვალყურე ელემენტები შეიზღუდა</string>
+  <string name="menu_trackers_blocked_title">შეზღუდული მეთვალყურეები</string>
   <string name="share_dialog_title">გაზიარება</string>
   <string name="notification_erase_text">ისტორიის წაშლა</string>
   <string name="notification_action_open">გახსნა</string>
@@ -30,12 +30,12 @@
   <string name="preference_language_systemdefault">სისტემის ნაგულისხმევი</string>
   <string name="preference_dialog_title_search_engine">ნაგულისხმევი საძიებო სისტემა</string>
   <string name="preference_category_privacy">პირადულობა</string>
-  <string name="preference_privacy_block_ads">სარეკლამო ელემენტების შეზღუდვა</string>
+  <string name="preference_privacy_block_ads">სარეკლამო მეთვალყურეების შეზღუდვა</string>
   <string name="preference_privacy_block_ads_summary">ზოგიერთი სარეკლამო ელემენტი, თვალს ადევნებს თქვენს გადაადგილებას საიტებზე, მაშინაც კი როცა მათზე არ აწკაპებთ</string>
   <string name="preference_privacy_block_analytics">სტატისტიკური აღრიცხვის ელემენტების შეზღუდვა</string>
-  <string name="preference_privacy_block_analytics_summary">გამოიყენება აღრიცხვისთვის, დამუშავებისა და ისეთი მოქმედებების შესამოწმებლად, როგორიცაა თითის შეხება და გვერდის გადაადგილება</string>
-  <string name="preference_privacy_block_social">სოციალური ელემენტების შეზღუდვა</string>
-  <string name="preference_privacy_block_social_summary">საიტებზე ჩაშენებულია, თქვენს გადაადგილებაზე თვალყურის მისადევნებლად და ისეთი ელემენტების გამოსაჩენად, როგორიცაა მოწონების, ან გაზიარების ღილაკები</string>
+  <string name="preference_privacy_block_analytics_summary">გამოიყენება მონაცემთა აღრიცხვისთვის, დამუშავებისა და ისეთი მოქმედებების შესამოწმებლად, როგორიცაა თითის შეხება და გვერდის გადაადგილება</string>
+  <string name="preference_privacy_block_social">სოც. ქსელების ელემენტების შეზღუდვა</string>
+  <string name="preference_privacy_block_social_summary">საიტებზე ჩაშენებულია, თქვენს გადაადგილებაზე თვალყურის მისადევნებლად ისეთი ელემენტების სახით, როგორიცაა მოწონების, ან გაზიარების ღილაკები</string>
   <string name="preference_privacy_block_content">სხვა მეთვალყურე ელემენტების შეზღუდვა</string>
   <string name="preference_privacy_block_content_summary2">ჩართვის შედეგად, ზოგიერთმა ვებგვერდმა, შესაძლოა გამართულად ვერ იმუშაოს</string>
   <string name="preference_privacy_secure_mode">ფარული რეჟიმი</string>

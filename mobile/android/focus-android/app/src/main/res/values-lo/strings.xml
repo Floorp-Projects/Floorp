@@ -59,9 +59,13 @@
   <string name="tutorial_search_manually_add">ເພີ່ມເອງ</string>
   <string name="tutorial_search_title">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
   <string name="action_option_add_search_engine">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
+  <string name="search_add_manually_name">ຊື່ທີຈະສະແດງ</string>
   <string name="search_add_manually_name_hint">ຊື່ເຄື່ອງມືການຄົ້ນຫາ</string>
+  <string name="search_add_manually_string">ຊອກຫາສະຕຣິງທີ່ຈະໃຊ້</string>
   <string name="search_add_manually_save">ບັນທຶກ</string>
+  <string name="search_add_manually_example">ຕົວຢ່າງ: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
+  <string name="search_add_confirmation">ໄດ້ເພີ້ມເຄືອງມີການຄົ້ນຫາຕົວໃຫມ່ແລ້ວ</string>
   <string name="content_description_clear_input">ລົບລ້າງຂໍ້ມູນທີ່ປ້ອນເຂົ້າ</string>
   <string name="content_description_dismiss_input">ຍົກເລີກ</string>
   <string name="content_description_erase">ລຶບປະຫວັດການທ່ອງເວັບ</string>

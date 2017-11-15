@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">%1$s ব্যবহার করে খুলুন</string>
   <string name="menu_open_with_a_browser">এর সাথে খুলুন…</string>
   <string name="menu_add_to_home_screen">হোম স্ক্রিনে যুক্ত করুন</string>
+  <string name="menu_whats_new">নতুন কি</string>
   <string name="menu_settings">সেটিংস</string>
   <string name="menu_about">পরিচিতি</string>
   <string name="menu_help">সাহায্য</string>
@@ -39,13 +40,18 @@
   <string name="preference_performance_block_webfonts">ওয়েব ফন্টকে অবরুদ্ধ করুন</string>
   <string name="preference_performance_block_webfonts_summary">ছবি অথবা আইকন দৃশ্যমান নাও হতে পারে</string>
   <string name="preference_performance_block_images">ছবি অবরুদ্ধ করুন</string>
+  <string name="preference_default_browser2">ডিফল্ট ব্রাউজার করুন %1$s কে</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">ব্যবহারের তথ্য পাঠান</string>
   <string name="preference_mozilla_telemetry_summary">আরও জানুন</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla কেবলমাত্র সেটি সংগ্রহ করে যেটা আমাদের দেওয়া প্রয়োজন এবং সকলের জন্য %1$s এর উন্নতি করে।</string>
+  <string name="preference_privacy_notice">গোপনীয়তা বিজ্ঞপ্তি</string>
   <string name="preference_about">%1$s সম্বন্ধে</string>
   <string name="content_description_clear_input">ইনপুট করা তথ্য মুছে ফেলুন</string>
   <string name="content_description_dismiss_input">খারিজ করুন</string>
   <string name="content_description_erase">ব্রাউসারের পূর্ববর্তী তথ্য মুছে ফেলুন</string>
   <string name="content_description_fab_expand">প্রসারিত করুন</string>
+  <string name="content_description_tab_counter">ট্যাব খোলা: %1$s</string>
   <string name="content_description_open_tab">ট্যাব খুলুন</string>
   <string name="content_description_close_tab">ট্যাব বন্ধ করুন</string>
   <string name="content_description_lock">সুরক্ষিত সংযোগ</string>
@@ -67,6 +73,10 @@
   <string name="external_multiple_apps_matched_exit">ব্যক্তিগত ব্রাউজিং থেকে প্রস্থান করুন?</string>
   <string name="download_snackbar_finished">%1$s শেষ হয়েছে</string>
   <string name="download_snackbar_open">খুলুন</string>
+  <string name="download_dialog_warning"><![CDATA["ডাউনলোড করা ফাইলগুলি "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2478;&#2497;&#2459;&#2503; &#2475;&#2503;&#2482;&#2494; &#2489;&#2476;&#2503; &#2472;&#2494;</b>" যখন আপনি %1$s ইতিহাস মুছবেন।"]]></string>
+  <string name="download_dialog_title">ফাইল ডাউনলোড করুন</string>
+  <string name="download_dialog_action_cancel">বাতিল</string>
+  <string name="download_dialog_action_download">ডাউনলোড</string>
   <string name="errorpage_title">পেজ লোড করতে সমস্যা</string>
   <string name="errorpage_refresh">পুনরায় চেষ্টা করুন</string>
   <string name="error_connectionfailure_title">সংযোগ করতে ব্যর্থ</string>
@@ -84,5 +94,38 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#2488;&#2494;&#2480;&#2509;&#2477;&#2494;&#2480;&#2503;&#2480; &#2453;&#2472;&#2475;&#2495;&#2455;&#2494;&#2480;&#2503;&#2486;&#2472;&#2503;&#2480; &#2468;&#2509;&#2480;&#2497;&#2463;&#2495;&#2480; &#2453;&#2494;&#2480;&#2467;&#2503; &#2447;&#2439; &#2488;&#2478;&#2488;&#2509;&#2479;&#2494;&#2463;&#2495; &#2489;&#2468;&#2503; &#2474;&#2494;&#2480;&#2503;, &#2437;&#2469;&#2476;&#2494; &#2489;&#2468;&#2503; &#2474;&#2494;&#2480;&#2503; \n&#2453;&#2503;&#2441; &#2488;&#2494;&#2480;&#2509;&#2477;&#2494;&#2480;&#2503;&#2480; &#2459;&#2470;&#2509;&#2478;&#2476;&#2503;&#2486; &#2471;&#2494;&#2480;&#2467; &#2453;&#2480;&#2494;&#2480; &#2458;&#2503;&#2487;&#2509;&#2463;&#2494; &#2453;&#2480;&#2459;&#2503;&#2472;&#2404;</li>"\n  "<li>&#2479;&#2470;&#2495; &#2474;&#2498;&#2480;&#2509;&#2476;&#2503; &#2438;&#2474;&#2472;&#2495; &#2453;&#2454;&#2472;&#2507; &#2447;&#2439; &#2488;&#2494;&#2480;&#2509;&#2477;&#2494;&#2480;&#2503;&#2480; &#2488;&#2494;&#2469;&#2503; &#2488;&#2434;&#2479;&#2497;&#2453;&#2509;&#2468; &#2489;&#2527;&#2503; &#2469;&#2494;&#2453;&#2503;&#2472;, &#2468;&#2494;&#2489;&#2482;&#2503; &#2488;&#2478;&#2488;&#2509;&#2479;&#2494;&#2463;&#2495;\n&#2437;&#2488;&#2509;&#2469;&#2494;&#2479;&#2492;&#2496; &#2489;&#2468;&#2503; &#2474;&#2494;&#2480;&#2503;, &#2447;&#2476;&#2434; &#2438;&#2474;&#2472;&#2495; &#2453;&#2495;&#2459;&#2497;&#2453;&#2509;&#2487;&#2467; &#2474;&#2480; &#2438;&#2476;&#2494;&#2480; &#2458;&#2503;&#2487;&#2509;&#2463;&#2494; &#2453;&#2480;&#2503; &#2470;&#2503;&#2454;&#2468;&#2503; &#2474;&#2494;&#2480;&#2503;&#2472;&#2404;</li>\n</ul>]]></string>
   <string name="error_generic_title">ওহো</string>
   <string name="error_generic_message">আমরা কিছু কারণবশতঃ এই পৃষ্ঠাটি লোড করতে পারছি না।</string>
+  <string name="contextmenu_link_share">লিংক শেয়ার করুন</string>
+  <string name="contextmenu_link_copy">লিংকের ঠিকানা অনুলিপি করুন</string>
+  <string name="contextmenu_image_share">ছবি শেয়ার করুন</string>
+  <string name="contextmenu_image_copy">ছবির ঠিকানা অনুলিপি করুন</string>
+  <string name="contextmenu_image_save">ছবি সংরক্ষণ করুন</string>
+  <string name="contextmenu_open_in_new_tab">নতুন ট্যাবে লিঙ্ক খুলুন</string>
+  <string name="contextmenu_image_warning"><![CDATA["সংরক্ষিত এবং শেয়ার করা ছবিগুলি "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2478;&#2497;&#2459;&#2503; &#2475;&#2503;&#2482;&#2494; &#2489;&#2476;&#2503; &#2472;&#2494;</b>" যখন আপনি %1$s ইতিহাস মুছবেন।"]]></string>
+  <string name="firstrun_defaultbrowser_title">আপনার গোপনীয়তা দৃঢ় করুন</string>
+  <string name="firstrun_defaultbrowser_text2">ব্যক্তিগত ব্রাউজিং কে আরও উন্নত করুন। বিজ্ঞাপনগুলি এবং অন্যান্য সামগ্রী অবরোধ করুন যা আপনাকে সাইট জুড়ে ট্র্যাক করতে পারে এবং পেজ লোডিং এর সময় কমান।</string>
+  <string name="firstrun_search_title">আপনার অনুসন্ধান, আপনার পথ</string>
+  <string name="firstrun_search_text">আলাদা কিছু খুঁজছেন? সেটিংসে গিয়ে অন্য ডিফল্ট সার্চ ইঞ্জিন চয়ন করুন।</string>
+  <string name="firstrun_shortcut_title">আপনার হোম স্ক্রিনে শর্টকাট যুক্ত করুন</string>
+  <string name="firstrun_shortcut_text">%1$s এ আপনার প্রিয় সাইটগুলিতে দ্রুত ফিরে আসুন। %1$s মেনু থেকে \"হোম স্ক্রীনে যোগ করুন\" নির্বাচন করুন।</string>
+  <string name="firstrun_privacy_title">গোপনীয়তাকে একটি অভ্যাসে পরিণত করুন</string>
+  <string name="firstrun_privacy_text">আপনার ডিফল্ট ব্রাউজার হিসাবে %1$s সেট করুন এবং আপনি অন্যান্য অ্যাপ্লিকেশানগুলি থেকে ওয়েবপেজ খুললে ব্যক্তিগত ব্রাউজিংয়ের সুবিধাগুলি পান।</string>
+  <string name="firstrun_close_button">ঠিক আছে, বুঝেছি!</string>
+  <string name="firstrun_skip_button">উপেক্ষা করুন</string>
+  <string name="firstrun_next_button">পরবর্তী</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">হোম স্ক্রীনে যোগ করুন</string>
+  <string name="dialog_addtohomescreen_action_add">যোগ করুন</string>
+  <string name="dialog_addtohomescreen_action_cancel">বাতিল</string>
+  <string name="dialog_addtohomescreen_tracking_protection">শর্টকাট খুলবে ট্র্যাকিং সুরক্ষা নিষ্ক্রিয় হয়ে</string>
+  <string name="dialog_opentab_title">নির্বাচিত ট্যাবে লিঙ্ক খুলুন</string>
   <string name="dialog_opentab_action_open">খুলুন</string>
+  <string name="notification_browsing_session_channel_name">ব্যক্তিগত ব্রাউজিং সেশন</string>
+  <string name="notification_browsing_session_channel_description">বিজ্ঞপ্তিগুলি যা আপনাকে আপনার মুছতে দেয় আপনার %1$s সেশন একটি ট্যাপেই। আপনাকে অ্যাপ্লিকেশন খুলতে বা আপনার ব্রাউজারে কি চলছে দেখতে হবে না।</string>
+  <string name="tabs_tray_action_erase">ব্রাউজিং ইতিহাস মুছুন</string>
+  <string name="download_firefox">Firefox ডাউনলোড করুন</string>
+  <string name="your_rights_content1">%1$s মুক্ত এবং ওপেন সোর্স সফটওয়্যার Mozilla এবং অন্যান্য অবদানকারীর দ্বারা তৈরি।</string>
+  <string name="your_rights_content2"><![CDATA["%1$s আপনার কাছে "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">"Mozilla Public License "</a>" এবং অন্যান্য ওপেন সোর্স লাইসেন্সের শর্তাবলী অনুসারে উপলব্ধ করা হয়েছে।"]]></string>
+  <string name="your_rights_content3"><![CDATA["Mozilla ফাউন্ডেশন বা অন্য দল, যেমন Mozilla, Firefox অথবা %1$s এর নাম বা লোগো সহ কোনও পক্ষের ট্রেডমার্কের জন্য আপনার কোন অধিকার বা লাইসেন্স নেই। অতিরিক্ত তথ্য "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2447;&#2454;&#2494;&#2472;&#2503;</a>" পাওয়া যেতে পারে।"]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s এর জন্য অতিরিক্ত সোর্স কোড অন্যান্য বিনামূল্যে এবং ওপেন সোর্স "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2482;&#2494;&#2439;&#2488;&#2503;&#2472;&#2509;&#2488;&#2455;&#2497;&#2482;&#2495;</a>" এর অধীনে উপলব্ধ।"]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s ও Disconnect, Inc, দ্বারা প্রদত্ত ব্লকস্ট্রিস্ট ব্যবহার করে, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU &#2460;&#2503;&#2472;&#2494;&#2480;&#2503;&#2482; &#2474;&#2494;&#2476;&#2482;&#2495;&#2453; &#2482;&#2494;&#2439;&#2488;&#2503;&#2472;&#2509;&#2488; v3</a>" র অধীনে পৃথক এবং স্বাধীন কাজ হিসাবে এবং "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#2447;&#2454;&#2494;&#2472;&#2503;</a>" পাওয়া যাবে।"]]></string>
 </resources>

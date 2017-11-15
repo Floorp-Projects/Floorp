@@ -9,7 +9,7 @@
   <string name="menu_share">শেয়ার…</string>
   <string name="menu_open_with_default_browser">%1$s ব্যবহার করে খোলা হবে</string>
   <string name="menu_open_with_a_browser">এটির সাহায্যে খুলুন…</string>
-  <string name="menu_add_to_home_screen">হোমস্ক্রিনে যোগ</string>
+  <string name="menu_add_to_home_screen">নীড় স্ক্রিনে যোগ</string>
   <string name="menu_whats_new">নতুন কি আছে</string>
   <string name="menu_settings">সেটিং</string>
   <string name="menu_about">পরিচিতি</string>
@@ -46,6 +46,7 @@
   <string name="preference_performance_block_images">ইমেজ ব্লক করুন</string>
   <string name="preference_default_browser2">%1$s কে ডিফল্ট ব্রাউজার করুন</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">ব্যবহারের তথ্য পাঠাও</string>
   <string name="preference_mozilla_telemetry_summary">আরও জানুন</string>
   <string name="preference_privacy_notice">গোপনীয়তা নীতি</string>
   <string name="preference_about">%1$s সম্পর্কে</string>
@@ -55,8 +56,17 @@
   <string name="preference_search_remove_title">অনুসন্ধান ইঞ্জিন অপসারণ করুন</string>
   <string name="preference_search_remove">অপসারণ</string>
   <string name="tutorial_search_title">অনুসন্ধান ইঞ্জিন যোগ</string>
+  <string name="tutorial_search_step1">1. অনুসন্ধান ইঞ্জিন নীড়পাতায় যান।</string>
   <string name="action_option_add_search_engine">অনুসন্ধান ইঞ্জিন যোগ</string>
+  <string name="search_add_manually_name">যে নাম দেখাবে</string>
+  <string name="search_add_manually_name_hint">অনুসন্ধান ইঞ্জিন নাম</string>
+  <string name="search_add_manually_string">ব্যবহারের জন্য অনুসন্ধান বাক্য</string>
   <string name="search_add_manually_save">সংরক্ষণ</string>
+  <string name="search_add_manually_string_hint">অনুসন্ধান বাক্য প্রতিলেপন করুন বা লিখুন। প্রয়োজনে, অনুসন্ধান শব্দ এ দ্বারা বদল করুন: %s।</string>
+  <string name="search_add_manually_example">উদাহরণ: example.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">অনুসন্ধান ইঞ্জিন যোগ</string>
+  <string name="search_add_confirmation">নতুন অনুসন্ধান ইঞ্জিন যোগ হয়েছে।</string>
+  <string name="search_add_error">অনুসন্ধান বাক্য যাচাই করুন এবং পুনরায় চেষ্টা করুন</string>
   <string name="content_description_clear_input">ইনপুট পরিস্কার</string>
   <string name="content_description_dismiss_input">খারিজ</string>
   <string name="content_description_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
@@ -110,6 +120,7 @@
   <string name="contextmenu_open_in_new_tab">নতুন ট্যাবে লিঙ্ক খুলুন</string>
   <string name="firstrun_defaultbrowser_title">আপনার গোপনীয়তা কঠোর করুন</string>
   <string name="firstrun_defaultbrowser_text2">ব্যাক্তিগত ব্রাউজিং কে আরেক উচ্চতায় নিয়ে যান। বিজ্ঞাপন আর অন্যান্য কনটেন্ট ব্লক করুন, যারা আপনাকে সকল ওয়েবসাইটে অনুসরণ করে বেড়ায় আর আপনার পেজ লোডিং টাইম অনেকগুন বাড়িয়ে দেয়।</string>
+  <string name="firstrun_shortcut_title">নীড় স্ক্রিনে শর্টকাট যোগ করুন</string>
   <string name="firstrun_close_button">ঠিক আছে, বুঝতে পেরেছি!</string>
   <string name="firstrun_skip_button">উপেক্ষা</string>
   <string name="firstrun_next_button">পরবর্তী</string>
@@ -117,7 +128,9 @@
   <string name="dialog_addtohomescreen_title">হোমস্ক্রিনে যোগ</string>
   <string name="dialog_addtohomescreen_action_add">যোগ</string>
   <string name="dialog_addtohomescreen_action_cancel">বাতিল</string>
+  <string name="dialog_opentab_title">নির্বাচিত ট্যাবে লিঙ্ক খুলুন</string>
   <string name="dialog_opentab_action_open">খুলুন</string>
+  <string name="notification_browsing_session_channel_name">ব্যক্তিগত ব্রাউজিং সেশন</string>
   <string name="tabs_tray_action_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
   <string name="download_firefox">Firefox ডাউনলোড করুন</string>
 </resources>

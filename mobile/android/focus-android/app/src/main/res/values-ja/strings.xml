@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">既定の検索エンジン</string>
   <string name="preference_category_privacy">プライバシー</string>
   <string name="preference_privacy_block_ads">追跡広告をブロック</string>
+  <string name="preference_privacy_block_ads_summary">一部の広告は、あなたがその広告をクリックしなくても訪れたサイトを追跡します</string>
   <string name="preference_privacy_block_analytics">アクセス解析をブロック</string>
+  <string name="preference_privacy_block_analytics_summary">タップやスクロールなどの操作統計を収集、解析、計測するために利用されます</string>
   <string name="preference_privacy_block_social">ソーシャル追跡をブロック</string>
+  <string name="preference_privacy_block_social_summary">ユーザーの訪問を追跡するためサイトに埋め込まれ、共有ボタンのように表示されます</string>
   <string name="preference_privacy_block_content">他の追跡コンテンツをブロック</string>
+  <string name="preference_privacy_block_content_summary2">有効にすると、ページによっては予期せぬ動作をする原因になります</string>
   <string name="preference_privacy_secure_mode">ステルス</string>
   <string name="preference_privacy_stealth_summary">アプリ切り替え時にウェブページを隠す</string>
   <string name="preference_category_performance">パフォーマンス</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">%1$s について</string>
   <string name="preference_search_installed_search_engines">インストールされた検索エンジン</string>
   <string name="preference_search_restore">既定の検索エンジンを復元</string>
+  <string name="preference_search_add2">+別の検索エンジンを追加</string>
   <string name="preference_search_remove_title">検索エンジンを削除</string>
   <string name="preference_search_remove">削除</string>
   <string name="tutorial_search_manually_add">手動で追加</string>
