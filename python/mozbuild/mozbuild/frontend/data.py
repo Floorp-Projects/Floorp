@@ -244,6 +244,18 @@ class IPDLFile(ContextDerived):
 
         self.basename = path
 
+class PreprocessedIPDLFile(ContextDerived):
+    """Describes an individual .ipdl source file that requires preprocessing."""
+
+    __slots__ = (
+        'basename',
+    )
+
+    def __init__(self, context, path):
+        ContextDerived.__init__(self, context)
+
+        self.basename = path
+
 class WebIDLFile(ContextDerived):
     """Describes an individual .webidl source file."""
 
