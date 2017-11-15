@@ -1194,3 +1194,16 @@ def enable_asan_reporter(value):
 
 set_config('MOZ_ASAN_REPORTER', enable_asan_reporter)
 set_define('MOZ_ASAN_REPORTER', enable_asan_reporter)
+
+# Elfhack
+# ==============================================================
+@depends(host, target)
+def has_elfhack(host, target):
+    return target.kernel == 'Linux' and host.kernel == 'Linux' and \
+           target.cpu in ('arm', 'x86', 'x86_64')
+
+with only_when(has_elfhack):
+    option('--disable-elf-hack', help='Disable elf hacks')
+
+    set_config('USE_ELF_HACK',
+               depends_if('--enable-elf-hack')(lambda _: True))

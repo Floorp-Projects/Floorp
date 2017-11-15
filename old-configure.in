@@ -3890,37 +3890,6 @@ MOZ_ARG_ENABLE_BOOL(install-strip,
     PKG_SKIP_STRIP=1)
 
 dnl ========================================================
-dnl = --disable-elf-hack
-dnl ========================================================
-
-if test -n "$MOZ_WIDGET_TOOLKIT"; then
-    USE_ELF_HACK=1
-fi
-MOZ_ARG_DISABLE_BOOL(elf-hack,
-[  --disable-elf-hack      Disable elf hacks],
-    [USE_ELF_HACK=],
-    [USE_ELF_HACK=1])
-
-# Only enable elfhack where supported
-if test "$USE_ELF_HACK" = 1; then
-    case "${HOST_OS_ARCH},${OS_ARCH}" in
-    Linux,Linux)
-        case "${CPU_ARCH}" in
-        arm | x86 | x86_64)
-            USE_ELF_HACK=1
-            ;;
-        *)
-            USE_ELF_HACK=
-            ;;
-        esac
-        ;;
-    *)
-        USE_ELF_HACK=
-        ;;
-    esac
-fi
-
-dnl ========================================================
 dnl = libstdc++ compatibility hacks
 dnl ========================================================
 
@@ -4536,7 +4505,6 @@ AC_SUBST(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)
-AC_SUBST(USE_ELF_HACK)
 AC_SUBST(INCREMENTAL_LINKER)
 
 AC_SUBST_LIST(MOZ_FIX_LINK_PATHS)
