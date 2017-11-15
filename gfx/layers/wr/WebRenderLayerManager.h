@@ -161,6 +161,7 @@ public:
 
   void WrUpdated();
   void WindowOverlayChanged() { mWindowOverlayChanged = true; }
+  nsIWidget* GetWidget() { return mWidget; }
 
   dom::TabGroup* GetTabGroup();
 
