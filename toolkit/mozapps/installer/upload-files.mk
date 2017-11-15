@@ -320,16 +320,6 @@ GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
 
 PKG_ARG = , '$(pkg)'
 
-# MOZ_PKG_MANIFEST is the canonical way to define the package manifest (which
-# the packager will preprocess), but for a smooth transition, we derive it
-# from the now deprecated MOZ_PKG_MANIFEST_P when MOZ_PKG_MANIFEST is not
-# defined.
-ifndef MOZ_PKG_MANIFEST
-  ifdef MOZ_PKG_MANIFEST_P
-    MOZ_PKG_MANIFEST := $(MOZ_PKG_MANIFEST_P)
-  endif # MOZ_PKG_MANIFEST_P
-endif # MOZ_PKG_MANIFEST
-
 ifndef MOZ_PACKAGER_FORMAT
   MOZ_PACKAGER_FORMAT = $(error MOZ_PACKAGER_FORMAT is not set)
 endif
