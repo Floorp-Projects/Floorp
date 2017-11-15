@@ -2611,16 +2611,17 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     }
 
     if (resolveStyle) {
-      // FIXME: Should this use ResolveStyleContext?  (The calls in this
-      // function are the only case in nsCSSFrameConstructor where we
-      // don't do so for the construction of a style context for an
-      // element.)
-      //
-      // FIXME(emilio): This looks fishy. It really wants to fully re-resolve
-      // the style, but it wont if the element is already styled afaict... It
-      // seems we handle it on a subsequent restyle?
-      styleContext = mPresShell->StyleSet()->ResolveStyleFor(
-          aDocElement, nullptr, LazyComputeBehavior::Assert);
+      if (styleContext->IsServo()) {
+        styleContext = mPresShell->StyleSet()->AsServo()->
+          ReresolveStyleForBindings(aDocElement);
+      } else {
+        // FIXME: Should this use ResolveStyleContext?  (The calls in
+        // this function are the only case in nsCSSFrameConstructor
+        // where we don't do so for the construction of a style context
+        // for an element.)
+        styleContext = mPresShell->StyleSet()->ResolveStyleFor(
+            aDocElement, nullptr, LazyComputeBehavior::Assert);
+      }
       display = styleContext->StyleDisplay();
     }
   } else if (display->mBinding.ForceGet() && aDocElement->IsStyledByServo()) {
@@ -5925,23 +5926,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
       if (resolveStyle) {
         if (styleContext->IsServo()) {
-          Element* element = aContent->AsElement();
-          ServoStyleSet* styleSet = mPresShell->StyleSet()->AsServo();
-
-          // XXX: We should have a better way to restyle ourselves.
-          ServoRestyleManager::ClearServoDataFromSubtree(element);
-          styleSet->StyleNewSubtree(element);
-
-          // Servo's should_traverse_children() in traversal.rs skips
-          // styling descendants of elements with a -moz-binding the
-          // first time. Thus call StyleNewChildren() again.
-          styleSet->StyleNewChildren(element);
-
-          // Because of LazyComputeBehavior::Assert we never create a style
-          // context here, so it's fine to pass a null parent.
-          styleContext =
-            styleSet->ResolveStyleFor(element, nullptr,
-                                      LazyComputeBehavior::Assert);
+          styleContext = mPresShell->StyleSet()->AsServo()->
+            ReresolveStyleForBindings(aContent->AsElement());
         } else {
           styleContext =
             ResolveStyleContext(styleContext->AsGecko()->GetParent(),
