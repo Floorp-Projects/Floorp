@@ -263,12 +263,11 @@ imply_option('--with-toolchain-prefix', android_toolchain_prefix,
              reason='--with-android-ndk')
 
 
-@depends(stlport_cppflags, extra_toolchain_flags, android_toolchain,
+@depends(extra_toolchain_flags, android_toolchain,
          android_toolchain_prefix_base, '--help')
 @imports(_from='os.path', _import='isdir')
-def bindgen_cflags_defaults(stlport_cppflags, toolchain_flags,
-                            toolchain, toolchain_prefix, _):
-    if not stlport_cppflags:
+def bindgen_cflags_defaults(toolchain_flags, toolchain, toolchain_prefix, _):
+    if not toolchain_flags:
         return
 
     gcc_include = os.path.join(
@@ -277,9 +276,8 @@ def bindgen_cflags_defaults(stlport_cppflags, toolchain_flags,
         gcc_include = os.path.join(
             toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
 
-    cflags_format = "%s %s -I%s -I%s"
-    return cflags_format % (' '.join(stlport_cppflags),
-                            ' '.join(toolchain_flags),
+    cflags_format = "%s -I%s -I%s"
+    return cflags_format % (' '.join(toolchain_flags),
                             os.path.join(gcc_include, 'include'),
                             os.path.join(gcc_include, 'include-fixed'))
 
