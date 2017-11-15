@@ -1190,6 +1190,7 @@ impl WebRenderFrameBuilder {
 pub struct WrState {
     pipeline_id: WrPipelineId,
     frame_builder: WebRenderFrameBuilder,
+    current_tag: Option<ItemTag>,
 }
 
 #[no_mangle]
@@ -1203,6 +1204,7 @@ pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId,
                              frame_builder: WebRenderFrameBuilder::with_capacity(pipeline_id,
                                                                                  content_size,
                                                                                  capacity),
+                             current_tag: None,
                          });
 
     Box::into_raw(state)
@@ -1292,6 +1294,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
 
     let mut prim_info = LayoutPrimitiveInfo::new(bounds);
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
 
     state.frame_builder
          .dl_builder
@@ -1482,6 +1485,7 @@ pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
 
     let mut prim_info = LayoutPrimitiveInfo::new(rect);
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder.dl_builder.push_iframe(&prim_info, pipeline_id);
 }
 
@@ -1495,6 +1499,7 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder.dl_builder.push_rect(&prim_info,
                                              color);
 }
@@ -1521,6 +1526,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_image(&prim_info,
@@ -1545,6 +1551,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
@@ -1567,6 +1574,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
@@ -1588,6 +1596,7 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
@@ -1612,6 +1621,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_text(&prim_info,
@@ -1631,6 +1641,7 @@ pub extern "C" fn wr_dp_push_shadow(state: &mut WrState,
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder.dl_builder.push_shadow(&prim_info, shadow.into());
 }
 
@@ -1654,6 +1665,7 @@ pub extern "C" fn wr_dp_push_line(state: &mut WrState,
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(*bounds, (*clip).into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_line(&prim_info,
@@ -1686,6 +1698,7 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                                });
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_border(&prim_info,
@@ -1716,6 +1729,7 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                              });
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_border(&prim_info,
@@ -1752,6 +1766,7 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                                  });
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_border(&prim_info,
@@ -1789,6 +1804,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                       });
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_border(&prim_info,
@@ -1821,6 +1837,7 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                          extend_mode.into());
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_gradient(&prim_info,
@@ -1854,6 +1871,7 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                                 extend_mode.into());
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_radial_gradient(&prim_info,
@@ -1878,6 +1896,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
          .push_box_shadow(&prim_info,
@@ -1903,6 +1922,38 @@ pub unsafe extern "C" fn wr_api_finalize_builder(state: &mut WrState,
     let (data, descriptor) = dl.into_data();
     *dl_data = WrVecU8::from_vec(data);
     *dl_descriptor = descriptor;
+}
+
+#[no_mangle]
+pub extern "C" fn wr_set_item_tag(state: &mut WrState,
+                                  scroll_id: u64,
+                                  hit_info: u8) {
+    state.current_tag = Some((scroll_id, hit_info));
+}
+
+#[no_mangle]
+pub extern "C" fn wr_clear_item_tag(state: &mut WrState) {
+    state.current_tag = None;
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_hit_test(dh: &mut DocumentHandle,
+                                  point: WorldPoint,
+                                  out_pipeline_id: &mut WrPipelineId,
+                                  out_scroll_id: &mut u64,
+                                  out_hit_info: &mut u8) -> bool {
+    let result = dh.api.hit_test(dh.document_id, None, point, HitTestFlags::empty());
+    for item in &result.items {
+        // For now we should never be getting results back for which the tag is
+        // 0 (== CompositorHitTestInfo::eInvisibleToHitTest). In the future if
+        // we allow this, we'll want to |continue| on the loop in this scenario.
+        debug_assert!(item.tag.1 != 0);
+        *out_pipeline_id = item.pipeline;
+        *out_scroll_id = item.tag.0;
+        *out_hit_info = item.tag.1;
+        return true;
+    }
+    return false;
 }
 
 pub type VecU8 = Vec<u8>;
