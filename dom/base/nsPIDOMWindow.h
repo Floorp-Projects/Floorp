@@ -603,8 +603,6 @@ public:
   virtual nsresult MoveBy(int32_t aXDif, int32_t aYDif) = 0;
   virtual nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) = 0;
 
-  mozilla::dom::TabGroup* TabGroup();
-
   mozilla::dom::DocGroup* GetDocGroup() const;
 
   virtual nsISerialEventTarget*
@@ -768,6 +766,10 @@ class nsPIDOMWindowInner : public nsPIDOMWindow<mozIDOMWindow>
 {
   friend nsGlobalWindowInner;
   friend nsGlobalWindowOuter;
+
+  explicit nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow)
+    : nsPIDOMWindow<mozIDOMWindow>(aOuterWindow)
+  {}
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWINNER_IID)
@@ -941,6 +943,7 @@ public:
   // timeout-throttling.
   bool HasOpenWebSockets() const;
 
+  mozilla::dom::TabGroup* TabGroup();
 protected:
   void CreatePerformanceObjectIfNeeded();
 };
@@ -952,6 +955,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
 class nsPIDOMWindowOuter : public nsPIDOMWindow<mozIDOMWindowProxy>
 {
 protected:
+  explicit nsPIDOMWindowOuter()
+    : nsPIDOMWindow<mozIDOMWindowProxy>(nullptr)
+  {}
+
   void RefreshMediaElementsVolume();
   void RefreshMediaElementsSuspend(SuspendTypes aSuspend);
   bool IsDisposableSuspend(SuspendTypes aSuspend) const;
@@ -1032,6 +1039,8 @@ public:
 
   bool IsTopLevelWindow();
   bool HadOriginalOpener() const;
+
+  mozilla::dom::TabGroup* TabGroup();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)

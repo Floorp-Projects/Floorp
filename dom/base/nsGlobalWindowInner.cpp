@@ -526,7 +526,7 @@ nsGlobalWindowInner::IsBackgroundInternal() const
 //*****************************************************************************
 
 nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
-  : nsPIDOMWindow<nsISupports>(aOuterWindow->AsOuter()),
+  : nsPIDOMWindowInner(aOuterWindow->AsOuter()),
     mIdleFuzzFactor(0),
     mIdleCallbackIndex(-1),
     mCurrentlyIdle(false),
