@@ -163,9 +163,29 @@ function* run_test_1(generator)
   // Check that the cookie service accepted the new cookie.
   do_check_eq(Services.cookiemgr.countCookiesFromHost(cookie.host), 1);
 
-  // Wait for the cookie service to rename the old database and rebuild.
-  new _observer(sub_generator, "cookie-db-rebuilding");
-  yield;
+  let isRebuildingDone = false;
+  let rebuildingObserve = function (subject, topic, data) {
+    isRebuildingDone = true;
+    Services.obs.removeObserver(rebuildingObserve, "cookie-db-rebuilding");
+  };
+  Services.obs.addObserver(rebuildingObserve, "cookie-db-rebuilding");
+
+  // Crash test: we're going to rebuild the cookie database. Close all the db
+  // connections in the main thread and initialize a new database file in the
+  // cookie thread. Trigger some access of cookies to ensure we won't crash in
+  // the chaos status.
+  for (let i = 0; i < 10; ++i) {
+    do_check_eq(Services.cookiemgr.countCookiesFromHost(cookie.host), 1);
+    do_execute_soon(function() { do_run_generator(sub_generator); });
+    yield;
+  }
+
+  // Wait for the cookie service to rename the old database and rebuild if not yet.
+  if (!isRebuildingDone) {
+    Services.obs.removeObserver(rebuildingObserve, "cookie-db-rebuilding");
+    new _observer(sub_generator, "cookie-db-rebuilding");
+    yield;
+  }
   do_execute_soon(function() { do_run_generator(sub_generator); });
   yield;
 
