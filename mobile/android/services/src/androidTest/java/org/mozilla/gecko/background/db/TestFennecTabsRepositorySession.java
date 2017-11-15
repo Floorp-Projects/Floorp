@@ -10,13 +10,13 @@ import org.mozilla.gecko.background.sync.helpers.SessionTestHelper;
 import org.mozilla.gecko.background.testhelpers.MockClientsDataDelegate;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Clients;
+import org.mozilla.gecko.sync.SessionCreateException;
 import org.mozilla.gecko.sync.repositories.NoContentProviderException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository.FennecTabsRepositorySession;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.repositories.domain.TabsRecord;
@@ -106,10 +106,9 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
      */
     return new FennecTabsRepository(clientsDataDelegate) {
       @Override
-      public void createSession(RepositorySessionCreationDelegate delegate,
-                                Context context) {
+      public RepositorySession createSession(Context context) throws SessionCreateException {
         try {
-          final FennecTabsRepositorySession session = new FennecTabsRepositorySession(this, context) {
+          return new FennecTabsRepositorySession(this, context) {
             @Override
             protected synchronized void trackGUID(String guid) {
             }
@@ -124,9 +123,8 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
               return TEST_TABS_CLIENT_GUID_IS_LOCAL_SELECTION_ARGS;
             }
           };
-          delegate.onSessionCreated(session);
         } catch (Exception e) {
-          delegate.onSessionCreateFailed(e);
+          throw new SessionCreateException(e);
         }
       }
     };
@@ -212,7 +210,7 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
     }
   }
 
-  public void testFetchAll() throws NoContentProviderException, RemoteException {
+  public void testFetchAll() throws Exception {
     final TabsRecord tabsRecord = insertTestTabsAndExtractTabsRecord();
 
     final FennecTabsRepositorySession session = createAndBeginSession();
@@ -221,7 +219,7 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
     session.abort();
   }
 
-  public void testFetchSince() throws NoContentProviderException, RemoteException {
+  public void testFetchSince() throws Exception {
     final TabsRecord tabsRecord = insertTestTabsAndExtractTabsRecord();
 
     final FennecTabsRepositorySession session = createAndBeginSession();
@@ -248,7 +246,7 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
 
   // Verify that storing a tabs record writes a clients record with the correct
   // device type to the Fennec clients provider.
-  public void testStore() throws NoContentProviderException, RemoteException {
+  public void testStore() throws Exception {
     // Get a valid tabsRecord to write.
     final TabsRecord tabsRecord = insertTestTabsAndExtractTabsRecord();
     deleteAllTestTabs(tabsClient);

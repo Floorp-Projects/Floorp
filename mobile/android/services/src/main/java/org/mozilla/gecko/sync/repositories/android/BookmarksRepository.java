@@ -4,21 +4,33 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
+import org.mozilla.gecko.sync.repositories.Repository;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCleanDelegate;
 
 import android.content.Context;
 
-public class BookmarksRepository extends ThreadedRepository implements org.mozilla.gecko.sync.repositories.BookmarksRepository {
-
+public class BookmarksRepository extends Repository {
   @Override
-  protected void sessionCreator(RepositorySessionCreationDelegate delegate, Context context) {
-    BookmarksRepositorySession session = new BookmarksRepositorySession(BookmarksRepository.this, context);
-    final RepositorySessionCreationDelegate deferredCreationDelegate = delegate.deferredCreationDelegate();
-    deferredCreationDelegate.onSessionCreated(session);
+  public RepositorySession createSession(Context context) {
+    return new BookmarksRepositorySession(this, context);
   }
 
   @Override
-  protected DataAccessor getDataAccessor(Context context) {
-    return new BookmarksDataAccessor(context);
+  public void clean(boolean success, RepositorySessionCleanDelegate delegate, Context context) {
+    if (!success) {
+      return;
+    }
+
+    final BookmarksDataAccessor dataAccessor = new BookmarksDataAccessor(context);
+
+    try {
+      dataAccessor.purgeDeleted();
+    } catch (Exception e) {
+      delegate.onCleanFailed(this, e);
+      return;
+    }
+
+    delegate.onCleaned(this);
   }
 }

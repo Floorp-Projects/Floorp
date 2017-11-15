@@ -37,7 +37,7 @@ pub use self::background::{BackgroundSize, BackgroundRepeat};
 pub use self::border::{BorderImageSlice, BorderImageWidth, BorderImageSideWidth};
 pub use self::border::{BorderRadius, BorderCornerRadius, BorderSpacing};
 pub use self::font::{FontSize, FontSizeAdjust, FontSynthesis, FontWeight, FontVariantAlternates};
-pub use self::font::{FontLanguageOverride, MozScriptLevel, MozScriptMinSize, XTextZoom};
+pub use self::font::{FontLanguageOverride, FontVariantSettings, MozScriptLevel, MozScriptMinSize, XTextZoom};
 pub use self::box_::{AnimationIterationCount, AnimationName, ScrollSnapType, VerticalAlign};
 pub use self::color::{Color, ColorPropertyValue, RGBAColor};
 pub use self::effects::{BoxShadow, Filter, SimpleShadow};
@@ -47,7 +47,7 @@ pub use self::image::{Gradient, GradientItem, Image, ImageLayer, LineDirection, 
 pub use self::gecko::ScrollSnapPoint;
 pub use self::rect::LengthOrNumberRect;
 pub use super::{Auto, Either, None_};
-pub use super::specified::BorderStyle;
+pub use super::specified::{BorderStyle, TextDecorationLine};
 pub use self::length::{CalcLengthOrPercentage, Length, LengthOrNone, LengthOrNumber, LengthOrPercentage};
 pub use self::length::{LengthOrPercentageOrAuto, LengthOrPercentageOrNone, MaxLength, MozLength};
 pub use self::length::{CSSPixelLength, NonNegativeLength, NonNegativeLengthOrPercentage};

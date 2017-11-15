@@ -10,13 +10,11 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.SystemClock;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.MotionEvent;
@@ -27,8 +25,6 @@ class GeckoLayerClient implements LayerView.Listener
 {
     private static final String LOGTAG = "GeckoLayerClient";
 
-    private final Context mContext;
-    private IntSize mScreenSize;
     private IntSize mWindowSize;
 
     private boolean mForceRedraw;
@@ -48,8 +44,6 @@ class GeckoLayerClient implements LayerView.Listener
      *    fields. */
     private volatile ImmutableViewportMetrics mViewportMetrics;
 
-    private volatile boolean mGeckoIsReady;
-
     private final PanZoomController mPanZoomController;
     private final DynamicToolbarAnimator mToolbarAnimator;
     private final LayerView mView;
@@ -65,16 +59,13 @@ class GeckoLayerClient implements LayerView.Listener
 
     private SynthesizedEventState mPointerState;
 
-    public GeckoLayerClient(Context context, LayerView view) {
+    public GeckoLayerClient(LayerView view) {
         // we can fill these in with dummy values because they are always written
         // to before being read
-        mContext = context;
-        mScreenSize = new IntSize(0, 0);
         mWindowSize = new IntSize(0, 0);
 
         mForceRedraw = true;
-        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-        mViewportMetrics = new ImmutableViewportMetrics(displayMetrics)
+        mViewportMetrics = new ImmutableViewportMetrics()
                            .setViewportSize(view.getWidth(), view.getHeight());
 
         mToolbarAnimator = new DynamicToolbarAnimator(this);
@@ -88,37 +79,8 @@ class GeckoLayerClient implements LayerView.Listener
         mPanZoomController.setOverscrollHandler(listener);
     }
 
-    public void setGeckoReady(boolean ready) {
-        mGeckoIsReady = ready;
-    }
-
-    public boolean isGeckoReady() {
-        return mGeckoIsReady;
-    }
-
-    /** Attaches to root layer so that Gecko appears. */
-    @WrapForJNI(calledFrom = "gecko")
-    private void onGeckoReady() {
-        mGeckoIsReady = true;
-
-        sendResizeEventIfNecessary(true);
-
-        // Gecko being ready is one of the two conditions (along with having an available
-        // surface) that cause us to create the compositor. So here, now that we know gecko
-        // is ready, call updateCompositor() to see if we can actually do the creation.
-        // This needs to run on the UI thread so that the surface validity can't change on
-        // us while we're in the middle of creating the compositor.
-        mView.post(new Runnable() {
-            @Override
-            public void run() {
-                getView().updateCompositor();
-            }
-        });
-    }
-
     public void destroy() {
         mPanZoomController.destroy();
-        mGeckoIsReady = false;
     }
 
     public LayerView getView() {
@@ -144,12 +106,7 @@ class GeckoLayerClient implements LayerView.Listener
         }
         mViewportMetrics = mViewportMetrics.setViewportSize(width, height);
 
-        if (mGeckoIsReady) {
-            // here we send gecko a resize message. The code in browser.js is responsible for
-            // picking up on that resize event, modifying the viewport as necessary, and informing
-            // us of the new viewport.
-            sendResizeEventIfNecessary(true);
-
+        if (mView.isCompositorReady()) {
             // the following call also sends gecko a message, which will be processed after the resize
             // message above has updated the viewport. this message ensures that if we have just put
             // focus in a text field, we scroll the content so that the text field is in view.
@@ -170,38 +127,6 @@ class GeckoLayerClient implements LayerView.Listener
 
     DynamicToolbarAnimator getDynamicToolbarAnimator() {
         return mToolbarAnimator;
-    }
-
-    /* Informs Gecko that the screen size has changed. */
-    private void sendResizeEventIfNecessary(boolean force) {
-        DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
-
-        IntSize newScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
-        IntSize newWindowSize = new IntSize(mViewportMetrics.viewportRectWidth,
-                                            mViewportMetrics.viewportRectHeight);
-
-        boolean screenSizeChanged = !mScreenSize.equals(newScreenSize);
-        boolean windowSizeChanged = !mWindowSize.equals(newWindowSize);
-
-        if (!force && !screenSizeChanged && !windowSizeChanged) {
-            return;
-        }
-
-        mScreenSize = newScreenSize;
-        mWindowSize = newWindowSize;
-
-        if (screenSizeChanged) {
-            Log.d(LOGTAG, "Screen-size changed to " + mScreenSize);
-        }
-
-        if (windowSizeChanged) {
-            Log.d(LOGTAG, "Window-size changed to " + mWindowSize);
-        }
-
-        if (mView != null) {
-            mView.notifySizeChanged(mWindowSize.width, mWindowSize.height,
-                                    mScreenSize.width, mScreenSize.height);
-        }
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -228,7 +153,7 @@ class GeckoLayerClient implements LayerView.Listener
         mContentDocumentIsDisplayed = true;
     }
 
-    class PointerInfo {
+    private static class PointerInfo {
         // We reserve one pointer ID for the mouse, so that tests don't have
         // to worry about tracking pointer IDs if they just want to test mouse
         // event synthesization. If somebody tries to use this ID for a
@@ -252,7 +177,7 @@ class GeckoLayerClient implements LayerView.Listener
         }
     }
 
-    class SynthesizedEventState {
+    private static class SynthesizedEventState {
         public final ArrayList<PointerInfo> pointers;
         public long downTime;
 
@@ -326,6 +251,11 @@ class GeckoLayerClient implements LayerView.Listener
     {
         Log.d(LOGTAG, "Synthesizing pointer from " + source + " id " + pointerId + " at " + screenX + ", " + screenY);
 
+        final int[] origin = new int[2];
+        mView.getLocationOnScreen(origin);
+        screenX -= origin[0];
+        screenY -= origin[1];
+
         if (mPointerState == null) {
             mPointerState = new SynthesizedEventState();
         }
@@ -383,9 +313,6 @@ class GeckoLayerClient implements LayerView.Listener
         PointerInfo info = mPointerState.pointers.get(pointerIndex);
         info.screenX = screenX;
         info.screenY = screenY;
-        if (mView != null) {
-            info.screenY += mView.getCurrentToolbarHeight();
-        }
         info.pressure = pressure;
         info.orientation = orientation;
 
@@ -462,7 +389,7 @@ class GeckoLayerClient implements LayerView.Listener
     }
 
     Matrix getMatrixForLayerRectToViewRect() {
-        if (!mGeckoIsReady) {
+        if (!mView.isCompositorReady()) {
             return null;
         }
 

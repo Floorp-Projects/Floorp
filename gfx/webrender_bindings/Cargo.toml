@@ -5,7 +5,7 @@ authors = ["The Mozilla Project Developers"]
 license = "MPL-2.0"
 
 [dependencies]
-webrender_api = {path = "../webrender_api", version = "0.53.1"}
+webrender_api = {path = "../webrender_api", version = "0.53.2"}
 rayon = "0.8"
 thread_profiler = "0.1.1"
 euclid = "0.15"
@@ -15,7 +15,7 @@ log = "0.3"
 
 [dependencies.webrender]
 path = "../webrender"
-version = "0.53.1"
+version = "0.53.2"
 default-features = false
 
 [target.'cfg(target_os = "windows")'.dependencies]

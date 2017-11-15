@@ -9,21 +9,32 @@ import shutil
 import tempfile
 import unittest
 
-from StringIO import StringIO
-
 from mozunit import main
 
-from mozbuild.controller.clobber import Clobberer
-from mozbuild.controller.clobber import main as clobber
+from mozbuild.base import (
+    MozbuildObject,
+)
+from mozbuild.controller.building import (
+    BuildDriver,
+)
+from mozbuild.controller.clobber import (
+    Clobberer,
+)
 
 
 class TestClobberer(unittest.TestCase):
     def setUp(self):
         self._temp_dirs = []
+        self._old_env = dict(os.environ)
+        os.environ.pop('MOZCONFIG', None)
+        os.environ.pop('MOZ_OBJDIR', None)
 
         return unittest.TestCase.setUp(self)
 
     def tearDown(self):
+        os.environ.clear()
+        os.environ.update(self._old_env)
+
         for d in self._temp_dirs:
             shutil.rmtree(d, ignore_errors=True)
 
@@ -193,19 +204,19 @@ class TestClobberer(unittest.TestCase):
         if env.get('AUTOCLOBBER', False):
             del env['AUTOCLOBBER']
 
-        s = StringIO()
-        status = clobber([topsrcdir, topobjdir], env, os.getcwd(), s)
-        self.assertEqual(status, 1)
-        self.assertIn('Automatic clobbering is not enabled', s.getvalue())
+        mbo = MozbuildObject(topsrcdir, None, None, topobjdir)
+        build = mbo._spawn(BuildDriver)
+
+        status = build._check_clobber(build.mozconfig, env)
+
+        self.assertEqual(status, True)
         self.assertTrue(os.path.exists(dummy_file))
 
         # Check auto clobber opt-in works
         env['AUTOCLOBBER'] = '1'
 
-        s = StringIO()
-        status = clobber([topsrcdir, topobjdir], env, os.getcwd(), s)
-        self.assertEqual(status, 0)
-        self.assertIn('Successfully completed auto clobber', s.getvalue())
+        status = build._check_clobber(build.mozconfig, env)
+        self.assertFalse(status)
         self.assertFalse(os.path.exists(dummy_file))
 
 

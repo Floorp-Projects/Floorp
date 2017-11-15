@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[cfg(test)]
-use api::{ColorF, ColorU, IdNamespace, LayoutPoint, SubpixelDirection};
-use api::{DevicePoint, DeviceUintSize, FontInstance, FontRenderMode};
-use api::{FontKey, FontTemplate, GlyphDimensions, GlyphKey};
+use api::{IdNamespace, LayoutPoint};
+use api::{ColorF, ColorU, DevicePoint, DeviceUintSize};
+use api::{FontInstancePlatformOptions, FontRenderMode, FontVariation};
+use api::{FontKey, FontTemplate, GlyphDimensions, GlyphKey, SubpixelDirection};
 use api::{ImageData, ImageDescriptor, ImageFormat};
-#[cfg(test)]
 use app_units::Au;
 use device::TextureFilter;
 use glyph_cache::{CachedGlyphInfo, GlyphCache};
@@ -22,6 +22,58 @@ use std::mem;
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use texture_cache::{TextureCache, TextureCacheHandle};
+
+#[derive(Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
+pub struct FontInstance {
+    pub font_key: FontKey,
+    // The font size is in *device* pixels, not logical pixels.
+    // It is stored as an Au since we need sub-pixel sizes, but
+    // can't store as a f32 due to use of this type as a hash key.
+    // TODO(gw): Perhaps consider having LogicalAu and DeviceAu
+    //           or something similar to that.
+    pub size: Au,
+    pub color: ColorU,
+    pub bg_color: ColorU,
+    pub render_mode: FontRenderMode,
+    pub subpx_dir: SubpixelDirection,
+    pub platform_options: Option<FontInstancePlatformOptions>,
+    pub variations: Vec<FontVariation>,
+    pub synthetic_italics: bool,
+}
+
+impl FontInstance {
+    pub fn new(
+        font_key: FontKey,
+        size: Au,
+        color: ColorF,
+        bg_color: ColorU,
+        render_mode: FontRenderMode,
+        subpx_dir: SubpixelDirection,
+        platform_options: Option<FontInstancePlatformOptions>,
+        variations: Vec<FontVariation>,
+        synthetic_italics: bool,
+    ) -> Self {
+        FontInstance {
+            font_key,
+            size,
+            color: color.into(),
+            bg_color,
+            render_mode,
+            subpx_dir,
+            platform_options,
+            variations,
+            synthetic_italics,
+        }
+    }
+
+    pub fn get_subpx_offset(&self, glyph: &GlyphKey) -> (f64, f64) {
+        match self.subpx_dir {
+            SubpixelDirection::None => (0.0, 0.0),
+            SubpixelDirection::Horizontal => (glyph.subpixel_offset.into(), 0.0),
+            SubpixelDirection::Vertical => (0.0, glyph.subpixel_offset.into()),
+        }
+    }
+}
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum GlyphFormat {

@@ -568,8 +568,8 @@ impl ProfileGraph {
             rect.origin.y,
             rect.origin.x + rect.size.width + 10.0,
             rect.origin.y + rect.size.height,
-            ColorF::new(0.1, 0.1, 0.1, 0.8).into(),
-            ColorF::new(0.2, 0.2, 0.2, 0.8).into(),
+            ColorU::new(25, 25, 25, 200),
+            ColorU::new(51, 51, 51, 200),
         );
 
         let bx0 = x + 10.0;
@@ -655,8 +655,8 @@ impl GpuFrameCollection {
             bounding_rect.origin.y,
             bounding_rect.origin.x + bounding_rect.size.width,
             bounding_rect.origin.y + bounding_rect.size.height,
-            ColorF::new(0.1, 0.1, 0.1, 0.8).into(),
-            ColorF::new(0.2, 0.2, 0.2, 0.8).into(),
+            ColorU::new(25, 25, 25, 200),
+            ColorU::new(51, 51, 51, 200),
         );
 
         let w = graph_rect.size.width;

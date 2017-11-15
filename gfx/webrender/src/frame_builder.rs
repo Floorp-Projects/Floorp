@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderDetails, BorderDisplayItem, BuiltDisplayList};
-use api::{ClipAndScrollInfo, ClipId, ColorF};
+use api::{ClipAndScrollInfo, ClipId, ColorF, PremultipliedColorF};
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect, DeviceUintSize};
-use api::{ExtendMode, FilterOp, FontInstance, FontRenderMode};
+use api::{ExtendMode, FilterOp, FontRenderMode};
 use api::{GlyphInstance, GlyphOptions, GradientStop, HitTestFlags, HitTestItem, HitTestResult};
 use api::{ImageKey, ImageRendering, ItemRange, ItemTag, LayerPoint, LayerPrimitiveInfo, LayerRect};
 use api::{LayerPixel, LayerSize, LayerToScrollTransform, LayerVector2D, LayoutVector2D, LineOrientation};
@@ -15,13 +15,14 @@ use api::{WorldPixel, WorldPoint, YuvColorSpace, YuvData, device_length};
 use app_units::Au;
 use border::ImageBorderSegment;
 use clip::{ClipRegion, ClipSource, ClipSources, ClipStore, Contains};
-use clip_scroll_node::{ClipInfo, ClipScrollNode, NodeType};
-use clip_scroll_tree::{ClipScrollTree};
+use clip_scroll_node::{ClipScrollNode, NodeType};
+use clip_scroll_tree::ClipScrollTree;
 use euclid::{SideOffsets2D, TypedTransform3D, vec2, vec3};
 use frame::FrameId;
+use glyph_rasterizer::FontInstance;
 use gpu_cache::GpuCache;
 use internal_types::{FastHashMap, FastHashSet, HardwareCompositeOp};
-use picture::{PicturePrimitive};
+use picture::{PictureKind, PicturePrimitive};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{TexelRect, YuvImagePrimitiveCpu};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, LinePrimitive, PrimitiveKind};
@@ -34,12 +35,14 @@ use render_task::RenderTaskTree;
 use resource_cache::ResourceCache;
 use scene::ScenePipeline;
 use std::{mem, usize, f32, i32};
-use tiling::{CompositeOps, Frame};
-use tiling::{ContextIsolation, RenderTargetKind, StackingContextIndex};
-use tiling::{PrimitiveFlags, PrimitiveRunCmd, RenderPass};
-use tiling::{RenderTargetContext, ScrollbarPrimitive, StackingContext};
+use tiling::{CompositeOps, ContextIsolation, Frame, PrimitiveRunCmd, RenderPass};
+use tiling::{RenderTargetContext, RenderTargetKind, ScrollbarPrimitive, StackingContext};
+use tiling::StackingContextIndex;
 use util::{self, pack_as_float, RectHelpers, recycle_vec};
 use box_shadow::BLUR_SAMPLE_SCALE;
+
+#[derive(Debug)]
+pub struct ScrollbarInfo(pub ClipId, pub LayerRect);
 
 /// Construct a polygon from stacking context boundaries.
 /// `anchor` here is an index that's going to be preserved in all the
@@ -473,11 +476,12 @@ impl FrameBuilder {
         clip_scroll_tree: &mut ClipScrollTree,
     ) {
         let clip_rect = clip_region.main;
-        let clip_info = ClipInfo::new(
-            clip_region,
-            &mut self.clip_store,
-        );
-        let node = ClipScrollNode::new_clip_node(pipeline_id, parent_id, clip_info, clip_rect);
+        let clip_sources = ClipSources::from(clip_region);
+        debug_assert!(clip_sources.has_clips());
+
+        let handle = self.clip_store.insert(clip_sources);
+
+        let node = ClipScrollNode::new_clip_node(pipeline_id, parent_id, handle, clip_rect);
         clip_scroll_tree.add_node(node, new_node_id);
     }
 
@@ -565,7 +569,7 @@ impl FrameBuilder {
         clip_and_scroll: ClipAndScrollInfo,
         info: &LayerPrimitiveInfo,
         content: RectangleContent,
-        flags: PrimitiveFlags,
+        scrollbar_info: Option<ScrollbarInfo>,
     ) {
         if let RectangleContent::Fill(ColorF{a, ..}) = content {
             if a == 0.0 {
@@ -587,15 +591,12 @@ impl FrameBuilder {
             PrimitiveContainer::Rectangle(prim),
         );
 
-        match flags {
-            PrimitiveFlags::None => {}
-            PrimitiveFlags::Scrollbar(clip_id, border_radius) => {
-                self.scrollbar_prims.push(ScrollbarPrimitive {
-                    prim_index,
-                    clip_id,
-                    border_radius,
-                });
-            }
+        if let Some(ScrollbarInfo(clip_id, frame_rect)) = scrollbar_info {
+            self.scrollbar_prims.push(ScrollbarPrimitive {
+                prim_index,
+                clip_id,
+                frame_rect,
+            });
         }
     }
 
@@ -605,31 +606,33 @@ impl FrameBuilder {
         info: &LayerPrimitiveInfo,
         wavy_line_thickness: f32,
         orientation: LineOrientation,
-        color: &ColorF,
+        line_color: &ColorF,
         style: LineStyle,
     ) {
         let line = LinePrimitive {
             wavy_line_thickness,
-            color: *color,
-            style: style,
-            orientation: orientation,
+            color: line_color.premultiplied(),
+            style,
+            orientation,
         };
 
         let mut fast_shadow_prims = Vec::new();
         for (idx, &(shadow_prim_index, _)) in self.shadow_prim_stack.iter().enumerate() {
             let shadow_metadata = &self.prim_store.cpu_metadata[shadow_prim_index.0];
             let picture = &self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
-            let shadow = picture.as_text_shadow();
-            if shadow.blur_radius == 0.0 {
-                fast_shadow_prims.push((idx, shadow.clone()));
+            match picture.kind {
+                PictureKind::TextShadow { offset, color, blur_radius } if blur_radius == 0.0 => {
+                    fast_shadow_prims.push((idx, offset, color));
+                }
+                _ => {}
             }
         }
 
-        for (idx, shadow) in fast_shadow_prims {
+        for (idx, shadow_offset, shadow_color) in fast_shadow_prims {
             let mut line = line.clone();
-            line.color = shadow.color;
+            line.color = shadow_color.premultiplied();
             let mut info = info.clone();
-            info.rect = info.rect.translate(&shadow.offset);
+            info.rect = info.rect.translate(&shadow_offset);
             let prim_index = self.create_primitive(
                 &info,
                 Vec::new(),
@@ -644,7 +647,7 @@ impl FrameBuilder {
             PrimitiveContainer::Line(line),
         );
 
-        if color.a > 0.0 {
+        if line_color.a > 0.0 {
             if self.shadow_prim_stack.is_empty() {
                 self.add_primitive_to_hit_testing_list(&info, clip_and_scroll);
                 self.add_primitive_to_draw_list(prim_index, clip_and_scroll);
@@ -658,15 +661,17 @@ impl FrameBuilder {
             debug_assert_eq!(shadow_metadata.prim_kind, PrimitiveKind::Picture);
             let picture =
                 &mut self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
-            let blur_radius = picture.as_text_shadow().blur_radius;
 
-            // Only run real blurs here (fast path zero blurs are handled above).
-            if blur_radius > 0.0 {
-                picture.add_primitive(
-                    prim_index,
-                    &info.rect,
-                    clip_and_scroll,
-                );
+            match picture.kind {
+                // Only run real blurs here (fast path zero blurs are handled above).
+                PictureKind::TextShadow { blur_radius, .. } if blur_radius > 0.0 => {
+                    picture.add_primitive(
+                        prim_index,
+                        &info.rect,
+                        clip_and_scroll,
+                    );
+                }
+                _ => {}
             }
         }
     }
@@ -1043,12 +1048,12 @@ impl FrameBuilder {
         run_offset: LayoutVector2D,
         info: &LayerPrimitiveInfo,
         font: &FontInstance,
-        color: &ColorF,
+        text_color: &ColorF,
         glyph_range: ItemRange<GlyphInstance>,
         glyph_count: usize,
         glyph_options: Option<GlyphOptions>,
     ) {
-        let rect = info.rect;
+        let original_rect = info.rect;
         // Trivial early out checks
         if font.size.0 <= 0 {
             return;
@@ -1093,7 +1098,7 @@ impl FrameBuilder {
         let prim_font = FontInstance::new(
             font.font_key,
             font.size,
-            *color,
+            *text_color,
             font.bg_color,
             render_mode,
             font.subpx_dir,
@@ -1122,12 +1127,14 @@ impl FrameBuilder {
         for (idx, &(shadow_prim_index, _)) in self.shadow_prim_stack.iter().enumerate() {
             let shadow_metadata = &self.prim_store.cpu_metadata[shadow_prim_index.0];
             let picture_prim = &self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
-            let shadow = picture_prim.as_text_shadow();
-            if shadow.blur_radius == 0.0 {
-                let mut text_prim = prim.clone();
-                text_prim.font.color = shadow.color.into();
-                text_prim.offset += shadow.offset;
-                fast_shadow_prims.push((idx, text_prim));
+            match picture_prim.kind {
+                PictureKind::TextShadow { offset, color, blur_radius } if blur_radius == 0.0 => {
+                    let mut text_prim = prim.clone();
+                    text_prim.font.color = color.into();
+                    text_prim.offset += offset;
+                    fast_shadow_prims.push((idx, text_prim));
+                }
+                _ => {}
             }
         }
 
@@ -1152,7 +1159,7 @@ impl FrameBuilder {
         );
 
         // Only add a visual element if it can contribute to the scene.
-        if color.a > 0.0 {
+        if text_color.a > 0.0 {
             if self.shadow_prim_stack.is_empty() {
                 self.add_primitive_to_hit_testing_list(info, clip_and_scroll);
                 self.add_primitive_to_draw_list(prim_index, clip_and_scroll);
@@ -1171,17 +1178,19 @@ impl FrameBuilder {
         for &(shadow_prim_index, _) in &self.shadow_prim_stack {
             let shadow_metadata = &mut self.prim_store.cpu_metadata[shadow_prim_index.0];
             debug_assert_eq!(shadow_metadata.prim_kind, PrimitiveKind::Picture);
-            let picture_prim =
+            let picture =
                 &mut self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
 
-            // Only run real blurs here (fast path zero blurs are handled above).
-            let blur_radius = picture_prim.as_text_shadow().blur_radius;
-            if blur_radius > 0.0 {
-                picture_prim.add_primitive(
-                    prim_index,
-                    &rect,
-                    clip_and_scroll,
-                );
+            match picture.kind {
+                // Only run real blurs here (fast path zero blurs are handled above).
+                PictureKind::TextShadow { blur_radius, .. } if blur_radius > 0.0 => {
+                    picture.add_primitive(
+                        prim_index,
+                        &original_rect,
+                        clip_and_scroll,
+                    );
+                }
+                _ => {}
             }
         }
     }
@@ -1515,45 +1524,31 @@ impl FrameBuilder {
     }
 
     fn update_scroll_bars(&mut self, clip_scroll_tree: &ClipScrollTree, gpu_cache: &mut GpuCache) {
-        let distance_from_edge = 8.0;
+        static SCROLLBAR_PADDING: f32 = 8.0;
 
         for scrollbar_prim in &self.scrollbar_prims {
             let metadata = &mut self.prim_store.cpu_metadata[scrollbar_prim.prim_index.0];
-            let clip_scroll_node = &clip_scroll_tree.nodes[&scrollbar_prim.clip_id];
+            let scroll_frame = &clip_scroll_tree.nodes[&scrollbar_prim.clip_id];
 
             // Invalidate what's in the cache so it will get rebuilt.
             gpu_cache.invalidate(&metadata.gpu_location);
 
-            let scrollable_distance = clip_scroll_node.scrollable_size().height;
-
+            let scrollable_distance = scroll_frame.scrollable_size().height;
             if scrollable_distance <= 0.0 {
                 metadata.local_clip_rect.size = LayerSize::zero();
                 continue;
             }
+            let amount_scrolled = -scroll_frame.scroll_offset().y / scrollable_distance;
 
-            let scroll_offset = clip_scroll_node.scroll_offset();
-            let f = -scroll_offset.y / scrollable_distance;
+            let frame_rect = scrollbar_prim.frame_rect;
+            let min_y = frame_rect.origin.y + SCROLLBAR_PADDING;
+            let max_y = frame_rect.origin.y + frame_rect.size.height -
+                (SCROLLBAR_PADDING + metadata.local_rect.size.height);
 
-            let min_y = clip_scroll_node.local_viewport_rect.origin.y - scroll_offset.y +
-                distance_from_edge;
-
-            let max_y = clip_scroll_node.local_viewport_rect.origin.y +
-                clip_scroll_node.local_viewport_rect.size.height -
-                scroll_offset.y - metadata.local_rect.size.height -
-                distance_from_edge;
-
-            metadata.local_rect.origin.x = clip_scroll_node.local_viewport_rect.origin.x +
-                clip_scroll_node.local_viewport_rect.size.width -
-                metadata.local_rect.size.width -
-                distance_from_edge;
-
-            metadata.local_rect.origin.y = util::lerp(min_y, max_y, f);
+            metadata.local_rect.origin.x = frame_rect.origin.x + frame_rect.size.width -
+                (metadata.local_rect.size.width + SCROLLBAR_PADDING);
+            metadata.local_rect.origin.y = util::lerp(min_y, max_y, amount_scrolled);
             metadata.local_clip_rect = metadata.local_rect;
-
-            // TODO(gw): The code to set / update border clips on scroll bars
-            //           has been broken for a long time, so I've removed it
-            //           for now. We can re-add that code once the clips
-            //           data is moved over to the GPU cache!
         }
     }
 
@@ -1716,7 +1711,7 @@ impl FrameBuilder {
                                     RenderTargetKind::Color,
                                     &[],
                                     ClearMode::Transparent,
-                                    ColorF::new(0.0, 0.0, 0.0, 0.0),
+                                    PremultipliedColorF::TRANSPARENT,
                                 );
                                 let blur_render_task_id = render_tasks.add(blur_render_task);
                                 let item = AlphaRenderItem::HardwareComposite(
@@ -1856,7 +1851,12 @@ impl FrameBuilder {
                             self.prim_store
                                 .add_render_tasks_for_prim(prim_index, &mut current_task);
                             let item =
-                                AlphaRenderItem::Primitive(clip_node.id, scroll_node.id, prim_index, next_z);
+                                AlphaRenderItem::Primitive(
+                                    clip_node.node_data_index,
+                                    scroll_node.node_data_index,
+                                    prim_index,
+                                    next_z
+                                );
                             current_task.as_alpha_batch_mut().items.push(item);
                             next_z += 1;
                         }
@@ -1903,7 +1903,7 @@ impl FrameBuilder {
 
         let mut node_data = Vec::new();
 
-        clip_scroll_tree.update_all_node_transforms(
+        clip_scroll_tree.update_tree(
             &screen_rect,
             device_pixel_ratio,
             &mut self.clip_store,

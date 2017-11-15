@@ -57,11 +57,11 @@ add_task(async function test() {
   is(gBrowser.selectedTab, tab1,
      "Tab1 should be activated by pressing Ctrl+PageUp on Tab2");
 
-  if (gBrowser.mTabBox._handleMetaAltArrows) {
+  if (gBrowser.tabbox._handleMetaAltArrows) {
     gBrowser.selectedTab = tab1;
     browser1.focus();
 
-    let ltr = window.getComputedStyle(gBrowser.mTabBox).direction == "ltr";
+    let ltr = window.getComputedStyle(gBrowser.tabbox).direction == "ltr";
     let advanceKey = ltr ? "VK_RIGHT" : "VK_LEFT";
     let reverseKey = ltr ? "VK_LEFT" : "VK_RIGHT";
 
@@ -109,7 +109,7 @@ add_task(async function test() {
     // XXX Currently, Command + "{" and "}" don't work if keydown event is
     //     consumed because following keypress event isn't fired.
 
-    let ltr = window.getComputedStyle(gBrowser.mTabBox).direction == "ltr";
+    let ltr = window.getComputedStyle(gBrowser.tabbox).direction == "ltr";
     let advanceKey = ltr ? "}" : "{";
     let reverseKey = ltr ? "{" : "}";
 

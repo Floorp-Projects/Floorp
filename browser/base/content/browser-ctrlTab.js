@@ -547,7 +547,7 @@ var ctrlTab = {
     tabContainer[toggleEventListener]("TabClose", this);
 
     document[toggleEventListener]("keypress", this);
-    gBrowser.mTabBox.handleCtrlTab = !enable;
+    gBrowser.tabbox.handleCtrlTab = !enable;
 
     if (enable)
       PageThumbs.addExpirationFilter(this);

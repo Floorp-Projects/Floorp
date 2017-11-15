@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.FailFetchWBORepository;
-import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionCreationDelegate;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionFinishDelegate;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
@@ -109,24 +108,8 @@ public class TestRecordsChannel {
   }
 
   private void createSessions() {
-    WaitHelper.getTestWaiter().performWait(new Runnable() {
-      @Override
-      public void run() {
-        sourceRepository.createSession(new ExpectSuccessRepositorySessionCreationDelegate(WaitHelper.getTestWaiter()) {
-          @Override
-          public void onSessionCreated(RepositorySession session) {
-            sourceSession = session;
-            sinkRepository.createSession(new ExpectSuccessRepositorySessionCreationDelegate(WaitHelper.getTestWaiter()) {
-              @Override
-              public void onSessionCreated(RepositorySession session) {
-                sinkSession = session;
-                WaitHelper.getTestWaiter().performNotify();
-              }
-            }, null);
-          }
-        }, null);
-      }
-    });
+    sourceSession = sourceRepository.createSession(null);
+    sinkSession = sinkRepository.createSession(null);
   }
 
   public void doFlow() throws Exception {

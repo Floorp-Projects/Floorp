@@ -717,6 +717,8 @@ public:
   { return NSToCoordRound(aPoints * mozilla::AppUnitsPerCSSInch() /
                           POINTS_PER_INCH_FLOAT); }
 
+  nscoord PhysicalMillimetersToAppUnits(float aMM) const;
+
   nscoord RoundAppUnitsToNearestDevPixels(nscoord aAppUnits) const
   { return DevPixelsToAppUnits(AppUnitsToDevPixels(aAppUnits)); }
 

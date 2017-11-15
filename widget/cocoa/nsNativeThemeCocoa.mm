@@ -30,6 +30,7 @@
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/Range.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
 #include "nsLookAndFeel.h"
@@ -2226,6 +2227,26 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+static Color
+NSColorToColor(NSColor* aColor)
+{
+  NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+  return Color([deviceColor redComponent],
+               [deviceColor greenComponent],
+               [deviceColor blueComponent],
+               [deviceColor alphaComponent]);
+}
+
+static Color
+VibrancyFillColor(nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType)
+{
+  ChildView* childView = ChildViewForFrame(aFrame);
+  if (childView) {
+    return NSColorToColor([childView vibrancyFillColorForThemeGeometryType:aThemeGeometryType]);
+  }
+  return Color();
+}
+
 static void
 DrawVibrancyBackground(CGContextRef cgContext, CGRect inBoxRect,
                        nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType,
@@ -2277,6 +2298,18 @@ IsHiDPIContext(nsDeviceContext* aContext)
   return nsPresContext::AppUnitsPerCSSPixel() >=
     2 * aContext->AppUnitsPerDevPixelAtUnitFullZoom();
 }
+
+static void
+SetCGContextFillColor(CGContextRef cgContext, const Color& aColor)
+{
+  CGContextSetRGBFillColor(cgContext, aColor.r, aColor.g, aColor.b, aColor.a);
+}
+
+static const Color kTooltipBackgroundColor(0.996, 1.000, 0.792, 0.950);
+static const Color kMultilineTextFieldTopBorderColor(0.4510, 0.4510, 0.4510, 1.0);
+static const Color kMultilineTextFieldSidesAndBottomBorderColor(0.6, 0.6, 0.6, 1.0);
+static const Color kListboxTopBorderColor(0.557, 0.557, 0.557, 1.0);
+static const Color kListBoxSidesAndBottomBorderColor(0.745, 0.745, 0.745, 1.0);
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
@@ -2461,7 +2494,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       if (VibrancyManager::SystemSupportsVibrancy()) {
         DrawVibrancyBackground(cgContext, macRect, aFrame, ThemeGeometryTypeForWidget(aFrame, aWidgetType));
       } else {
-        CGContextSetRGBFillColor(cgContext, 0.996, 1.000, 0.792, 0.950);
+        SetCGContextFillColor(cgContext, kTooltipBackgroundColor);
         CGContextFillRect(cgContext, macRect);
       }
       break;
@@ -2834,12 +2867,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
 
       CGContextFillRect(cgContext, macRect);
 
-      // #737373 for the top border, #999999 for the rest.
       float x = macRect.origin.x, y = macRect.origin.y;
       float w = macRect.size.width, h = macRect.size.height;
-      CGContextSetRGBFillColor(cgContext, 0.4510, 0.4510, 0.4510, 1.0);
+      SetCGContextFillColor(cgContext, kMultilineTextFieldTopBorderColor);
       CGContextFillRect(cgContext, CGRectMake(x, y, w, 1));
-      CGContextSetRGBFillColor(cgContext, 0.6, 0.6, 0.6, 1.0);
+      SetCGContextFillColor(cgContext, kMultilineTextFieldSidesAndBottomBorderColor);
       CGContextFillRect(cgContext, CGRectMake(x, y + 1, 1, h - 1));
       CGContextFillRect(cgContext, CGRectMake(x + w - 1, y + 1, 1, h - 1));
       CGContextFillRect(cgContext, CGRectMake(x + 1, y + h - 1, w - 2, 1));
@@ -2863,12 +2895,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
       CGContextFillRect(cgContext, macRect);
 
-      // #8E8E8E for the top border, #BEBEBE for the rest.
       float x = macRect.origin.x, y = macRect.origin.y;
       float w = macRect.size.width, h = macRect.size.height;
-      CGContextSetRGBFillColor(cgContext, 0.557, 0.557, 0.557, 1.0);
+      SetCGContextFillColor(cgContext, kListboxTopBorderColor);
       CGContextFillRect(cgContext, CGRectMake(x, y, w, 1));
-      CGContextSetRGBFillColor(cgContext, 0.745, 0.745, 0.745, 1.0);
+      SetCGContextFillColor(cgContext, kListBoxSidesAndBottomBorderColor);
       CGContextFillRect(cgContext, CGRectMake(x, y + 1, 1, h - 1));
       CGContextFillRect(cgContext, CGRectMake(x + w - 1, y + 1, 1, h - 1));
       CGContextFillRect(cgContext, CGRectMake(x + 1, y + h - 1, w - 2, 1));
@@ -2955,6 +2986,178 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+bool
+nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                     mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                     const mozilla::layers::StackingContextHelper& aSc,
+                                                     mozilla::layers::WebRenderLayerManager* aManager,
+                                                     nsIFrame* aFrame,
+                                                     uint8_t aWidgetType,
+                                                     const nsRect& aRect)
+{
+  nsPresContext* presContext = aFrame->PresContext();
+  wr::LayoutRect bounds = aSc.ToRelativeLayoutRect(
+    LayoutDeviceRect::FromAppUnits(aRect, presContext->AppUnitsPerDevPixel()));
+
+  EventStates eventState = GetContentState(aFrame, aWidgetType);
+
+  // This list needs to stay consistent with the list in DrawWidgetBackground.
+  // For every switch case in DrawWidgetBackground, there are three choices:
+  //  - If the case in DrawWidgetBackground draws nothing for the given widget
+  //    type, then don't list it here. We will hit the "default: return true;"
+  //    case.
+  //  - If the case in DrawWidgetBackground draws something simple for the given
+  //    widget type, imitate that drawing using WebRender commands.
+  //  - If the case in DrawWidgetBackground draws something complicated for the
+  //    given widget type, return false here.
+  switch (aWidgetType) {
+    case NS_THEME_DIALOG:
+      if (IsWindowSheet(aFrame) && VibrancyManager::SystemSupportsVibrancy()) {
+        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
+        aBuilder.PushRect(bounds, bounds, true,
+                          wr::ToColorF(VibrancyFillColor(aFrame, type)));
+        return true;
+      }
+      return false;
+
+    case NS_THEME_MENUPOPUP:
+    case NS_THEME_MENUARROW:
+    case NS_THEME_MENUITEM:
+    case NS_THEME_CHECKMENUITEM:
+    case NS_THEME_MENUSEPARATOR:
+    case NS_THEME_BUTTON_ARROW_UP:
+    case NS_THEME_BUTTON_ARROW_DOWN:
+      return false;
+
+    case NS_THEME_TOOLTIP:
+      if (VibrancyManager::SystemSupportsVibrancy()) {
+        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
+        aBuilder.PushRect(bounds, bounds, true,
+                          wr::ToColorF(VibrancyFillColor(aFrame, type)));
+      } else {
+        aBuilder.PushRect(bounds, bounds, true,
+                          wr::ToColorF(kTooltipBackgroundColor));
+      }
+      return true;
+
+    case NS_THEME_CHECKBOX:
+    case NS_THEME_RADIO:
+    case NS_THEME_BUTTON:
+    case NS_THEME_FOCUS_OUTLINE:
+    case NS_THEME_MAC_HELP_BUTTON:
+    case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
+    case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED:
+    case NS_THEME_BUTTON_BEVEL:
+    case NS_THEME_SPINNER:
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON:
+    case NS_THEME_TOOLBARBUTTON:
+    case NS_THEME_SEPARATOR:
+    case NS_THEME_TOOLBAR:
+    case NS_THEME_WINDOW_TITLEBAR:
+    case NS_THEME_STATUSBAR:
+    case NS_THEME_MENULIST:
+    case NS_THEME_MENULIST_TEXTFIELD:
+    case NS_THEME_MENULIST_BUTTON:
+    case NS_THEME_GROUPBOX:
+    case NS_THEME_TEXTFIELD:
+    case NS_THEME_NUMBER_INPUT:
+    case NS_THEME_SEARCHFIELD:
+    case NS_THEME_PROGRESSBAR:
+    case NS_THEME_PROGRESSBAR_VERTICAL:
+    case NS_THEME_METERBAR:
+    case NS_THEME_TREETWISTY:
+    case NS_THEME_TREETWISTYOPEN:
+    case NS_THEME_TREEHEADERCELL:
+    case NS_THEME_TREEITEM:
+    case NS_THEME_TREEVIEW:
+    case NS_THEME_SCALE_HORIZONTAL:
+    case NS_THEME_SCALE_VERTICAL:
+    case NS_THEME_RANGE:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBARTRACK_VERTICAL:
+      return false;
+
+    case NS_THEME_TEXTFIELD_MULTILINE: {
+      if (eventState.HasState(NS_EVENT_STATE_FOCUS)) {
+        // We can't draw the focus ring using webrender, so fall back to regular
+        // drawing if we're focused.
+        return false;
+      }
+
+      // White background
+      aBuilder.PushRect(bounds, bounds, true,
+                        wr::ToColorF(Color(1.0, 1.0, 1.0, 1.0)));
+
+      wr::BorderSide side[4] = {
+        wr::ToBorderSide(kMultilineTextFieldTopBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kMultilineTextFieldSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kMultilineTextFieldSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kMultilineTextFieldSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+      };
+
+      wr::BorderRadius borderRadius = wr::EmptyBorderRadius();
+      float borderWidth = presContext->CSSPixelsToDevPixels(1.0f);
+      wr::BorderWidths borderWidths =
+        wr::ToBorderWidths(borderWidth, borderWidth, borderWidth, borderWidth);
+
+      mozilla::Range<const wr::BorderSide> wrsides(side, 4);
+      aBuilder.PushBorder(bounds, bounds, true, borderWidths, wrsides, borderRadius);
+
+      return true;
+    }
+
+    case NS_THEME_LISTBOX: {
+      // White background
+      aBuilder.PushRect(bounds, bounds, true,
+                        wr::ToColorF(Color(1.0, 1.0, 1.0, 1.0)));
+
+      wr::BorderSide side[4] = {
+        wr::ToBorderSide(kListboxTopBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kListBoxSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kListBoxSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+        wr::ToBorderSide(kListBoxSidesAndBottomBorderColor, NS_STYLE_BORDER_STYLE_SOLID),
+      };
+
+      wr::BorderRadius borderRadius = wr::EmptyBorderRadius();
+      float borderWidth = presContext->CSSPixelsToDevPixels(1.0f);
+      wr::BorderWidths borderWidths =
+        wr::ToBorderWidths(borderWidth, borderWidth, borderWidth, borderWidth);
+
+      mozilla::Range<const wr::BorderSide> wrsides(side, 4);
+      aBuilder.PushBorder(bounds, bounds, true, borderWidths, wrsides, borderRadius);
+      return true;
+    }
+
+    case NS_THEME_MAC_SOURCE_LIST:
+      if (VibrancyManager::SystemSupportsVibrancy()) {
+        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
+        aBuilder.PushRect(bounds, bounds, true,
+                          wr::ToColorF(VibrancyFillColor(aFrame, type)));
+        return true;
+      }
+      return false;
+
+    case NS_THEME_MAC_VIBRANCY_LIGHT:
+    case NS_THEME_MAC_VIBRANCY_DARK: {
+      ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
+      aBuilder.PushRect(bounds, bounds, true,
+                        wr::ToColorF(VibrancyFillColor(aFrame, type)));
+      return true;
+    }
+
+    case NS_THEME_TAB:
+    case NS_THEME_TABPANELS:
+    case NS_THEME_RESIZER:
+      return false;
+
+    default:
+      return true;
+  }
 }
 
 nsIntMargin

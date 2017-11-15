@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DevicePoint, DeviceUintSize, FontInstance, GlyphKey};
-use glyph_rasterizer::GlyphFormat;
+use api::{DevicePoint, DeviceUintSize, GlyphKey};
+use glyph_rasterizer::{FontInstance, GlyphFormat};
 use internal_types::FastHashMap;
 use resource_cache::ResourceClassCache;
 use std::sync::Arc;

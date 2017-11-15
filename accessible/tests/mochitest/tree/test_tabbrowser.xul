@@ -213,7 +213,7 @@
           ]
         };
 
-        testAccessibleTree(tabBrowser().mTabBox.tabpanels, tabboxAccTree);
+        testAccessibleTree(tabBrowser().tabbox.tabpanels, tabboxAccTree);
       }
 
       this.getID = function testTabHierarchy_getID()

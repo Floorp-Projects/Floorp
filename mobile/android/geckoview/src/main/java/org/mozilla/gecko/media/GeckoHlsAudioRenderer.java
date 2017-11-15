@@ -7,9 +7,10 @@ package org.mozilla.gecko.media;
 import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
 import android.media.MediaCodec.CryptoInfo;
+import android.os.Build;
 import android.util.Log;
 
-import org.mozilla.gecko.AppConstants;
+import org.mozilla.geckoview.BuildConfig;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
@@ -22,14 +23,12 @@ import com.google.android.exoplayer2.util.MimeTypes;
 
 import java.nio.ByteBuffer;
 
-import org.mozilla.gecko.AppConstants.Versions;
-
 public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
     public GeckoHlsAudioRenderer(GeckoHlsPlayer.ComponentEventDispatcher eventDispatcher) {
         super(C.TRACK_TYPE_AUDIO, eventDispatcher);
-        assertTrue(Versions.feature16Plus);
+        assertTrue(Build.VERSION.SDK_INT >= 16);
         LOGTAG = getClass().getSimpleName();
-        DEBUG = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD;;
+        DEBUG = BuildConfig.NIGHTLY_BUILD || BuildConfig.DEBUG_BUILD;;
     }
 
     @Override
@@ -73,7 +72,7 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
          *         SDK version is less than 21, otherwise, further check is needed
          *         if there's no sampleRate/channelCount in format.
          */
-        boolean decoderCapable = Versions.preLollipop ||
+        boolean decoderCapable = (Build.VERSION.SDK_INT < 21) ||
                                  ((format.sampleRate == Format.NO_VALUE ||
                                   decoderInfo.isAudioSampleRateSupportedV21(format.sampleRate)) &&
                                  (format.channelCount == Format.NO_VALUE ||
@@ -140,7 +139,7 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
 
         mDemuxedInputSamples.offer(sample);
 
-        if (AppConstants.DEBUG_BUILD) {
+        if (BuildConfig.DEBUG_BUILD) {
             Log.d(LOGTAG, "Demuxed sample PTS : " +
                           sample.info.presentationTimeUs + ", duration :" +
                           sample.duration + ", formatIndex(" +

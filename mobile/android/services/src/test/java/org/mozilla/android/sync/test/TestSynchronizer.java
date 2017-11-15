@@ -4,6 +4,7 @@
 package org.mozilla.android.sync.test;
 
 import android.content.Context;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -87,18 +88,6 @@ public class TestSynchronizer {
     synchronizer.repositoryA = repoA;
     synchronizer.repositoryB = repoB;
     final SynchronizerSession syncSession = new SynchronizerSession(synchronizer, new SynchronizerSessionDelegate() {
-
-      @Override
-      public void onInitialized(SynchronizerSession session) {
-        assertFalse(repoA.wbos.containsKey(guidB));
-        assertFalse(repoA.wbos.containsKey(guidC));
-        assertFalse(repoB.wbos.containsKey(guidA));
-        assertTrue(repoA.wbos.containsKey(guidA));
-        assertTrue(repoB.wbos.containsKey(guidB));
-        assertTrue(repoB.wbos.containsKey(guidC));
-        session.synchronize();
-      }
-
       @Override
       public void onSynchronized(SynchronizerSession session) {
         try {
@@ -125,7 +114,13 @@ public class TestSynchronizer {
     WaitHelper.getTestWaiter().performWait(new Runnable() {
       @Override
       public void run() {
-        syncSession.init(context, new RepositorySessionBundle(0), new RepositorySessionBundle(0));
+        assertFalse(repoA.wbos.containsKey(guidB));
+        assertFalse(repoA.wbos.containsKey(guidC));
+        assertFalse(repoB.wbos.containsKey(guidA));
+        assertTrue(repoA.wbos.containsKey(guidA));
+        assertTrue(repoB.wbos.containsKey(guidB));
+        assertTrue(repoB.wbos.containsKey(guidC));
+        syncSession.initAndSynchronize(context, new RepositorySessionBundle(0), new RepositorySessionBundle(0));
       }
     });
 

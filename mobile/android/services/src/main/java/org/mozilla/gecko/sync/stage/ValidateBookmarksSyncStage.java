@@ -8,16 +8,10 @@ package org.mozilla.gecko.sync.stage;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.SystemClock;
-import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.MetaGlobalException;
-import org.mozilla.gecko.sync.NonObjectJSONException;
-import org.mozilla.gecko.sync.SynchronizerConfiguration;
-import org.mozilla.gecko.sync.middleware.BufferingMiddlewareRepository;
-import org.mozilla.gecko.sync.middleware.MiddlewareRepository;
-import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
 import org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
@@ -28,7 +22,6 @@ import org.mozilla.gecko.sync.repositories.domain.VersionConstants;
 import org.mozilla.gecko.sync.telemetry.TelemetryCollector;
 import org.mozilla.gecko.sync.telemetry.TelemetryStageCollector;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 

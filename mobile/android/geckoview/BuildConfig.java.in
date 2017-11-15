@@ -54,4 +54,53 @@ public class BuildConfig {
      * Target CPU architecture: "armeabi-v7a", "arm64-v8a", "x86", "mips", ..
      */
     public static final String ANDROID_CPU_ARCH = "@ANDROID_CPU_ARCH@";
+
+    public static final String MOZ_UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";
+
+    public static final int MIN_SDK_VERSION = @MOZ_ANDROID_MIN_SDK_VERSION@;
+
+    // Is the underlying compiled C/C++ code compiled with --enable-debug?
+    public static final boolean DEBUG_BUILD =
+//#ifdef MOZ_DEBUG
+    true;
+//#else
+    false;
+//#endif
+
+    // See this wiki page for more details about channel specific build defines:
+    // https://wiki.mozilla.org/Platform/Channel-specific_build_defines
+    // This makes no sense for GeckoView and should be removed as soon as possible.
+    public static final boolean RELEASE_OR_BETA =
+//#ifdef RELEASE_OR_BETA
+    true;
+//#else
+    false;
+//#endif
+
+    // This makes no sense for GeckoView and should be removed as soon as possible.
+    public static final boolean NIGHTLY_BUILD =
+//#ifdef NIGHTLY_BUILD
+    true;
+//#else
+    false;
+//#endif
+
+    // This makes no sense for GeckoView and should be removed as soon as possible.
+    public static final boolean MOZ_CRASHREPORTER =
+//#ifdef MOZ_CRASHREPORTER
+    true;
+//#else
+    false;
+//#endif
+
+    // Official corresponds, roughly, to whether this build is performed on
+    // Mozilla's continuous integration infrastructure. You should disable
+    // developer-only functionality when this flag is set.
+    // This makes no sense for GeckoView and should be removed as soon as possible.
+    public static final boolean MOZILLA_OFFICIAL =
+//#ifdef MOZILLA_OFFICIAL
+    true;
+//#else
+    false;
+//#endif
 }

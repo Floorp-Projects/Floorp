@@ -507,10 +507,19 @@ CFLAGS="$CFLAGS $HARDENING_CFLAGS"
 CPPFLAGS="$CPPFLAGS $HARDENING_CFLAGS"
 CXXFLAGS="$CXXFLAGS $HARDENING_CFLAGS"
 
-if test "$GNU_CC" -o test -n "${CLANG_CC}${CLANG_CL}"; then
-   CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
-   CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=2"
-   CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"
+if test "$GNU_CC" -o -n "${CLANG_CC}${CLANG_CL}"; then
+    case $OS_TARGET in
+    Android)
+         dnl FORTIFY_SOURCE is not supported on Android on the
+         dnl top-level old-configure.in at this time.
+         dnl See Bug 1415595
+         ;;
+    *)
+        CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
+        CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=2"
+        CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"
+        ;;
+    esac
 fi
 
 dnl ========================================================
@@ -4485,7 +4494,7 @@ AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
 AC_SUBST(AR_EXTRACT)
 AC_SUBST(AS)
-AC_SUBST(ASFLAGS)
+AC_SUBST_LIST(ASFLAGS)
 AC_SUBST(AS_DASH_C_FLAG)
 AC_SUBST(RC)
 AC_SUBST(RCFLAGS)
@@ -5108,7 +5117,6 @@ export HOST_CFLAGS
 export HOST_CPPFLAGS
 export HOST_CXXFLAGS
 export HOST_LDFLAGS
-export MOZ_PGO
 
 if ! test -e js; then
     mkdir js
