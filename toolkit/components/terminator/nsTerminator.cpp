@@ -51,6 +51,8 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Telemetry.h"
 
+#include "mozilla/dom/workers/RuntimeService.h"
+
 // Normally, the number of milliseconds that AsyncShutdown waits until
 // it decides to crash is specified as a preference. We use the
 // following value as a fallback if for some reason the preference is
@@ -154,6 +156,12 @@ RunWatchdog(void* arg)
 
     if (gHeartbeat++ < timeToLive) {
       continue;
+    }
+
+    mozilla::dom::workers::RuntimeService* runtimeService =
+      mozilla::dom::workers::RuntimeService::GetService();
+    if (runtimeService) {
+     runtimeService->CrashIfHanging();
     }
 
     // Shutdown is apparently dead. Crash the process.
