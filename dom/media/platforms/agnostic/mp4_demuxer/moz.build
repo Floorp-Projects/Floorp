@@ -4,46 +4,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS += [
-    'MP4Decoder.h',
-    'MP4Demuxer.h',
-]
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
 EXPORTS.mp4_demuxer += [
-    'Atom.h',
-    'AtomType.h',
-    'Box.h',
-    'BufferStream.h',
-    'DecoderData.h',
-    'Index.h',
-    'Interval.h',
-    'MoofParser.h',
-    'MP4Metadata.h',
-    'ResourceStream.h',
-    'SinfParser.h',
-    'Stream.h',
+    'Adts.h',
+    'AnnexB.h',
+    'H264.h',
 ]
 
 UNIFIED_SOURCES += [
-    'Box.cpp',
-    'BufferStream.cpp',
-    'DecoderData.cpp',
-    'Index.cpp',
-    'MoofParser.cpp',
-    'MP4Decoder.cpp',
-    'MP4Metadata.cpp',
-    'ResourceStream.cpp',
-    'SinfParser.cpp',
+    'Adts.cpp',
+    'AnnexB.cpp',
+    'H264.cpp',
 ]
 
-
-SOURCES += [
-    'MP4Demuxer.cpp',
+LOCAL_INCLUDES += [
+    '../../../mp4/',
 ]
 
 FINAL_LIBRARY = 'xul'
 
-# Supress warnnings for now.
+# Suppress warnings in third-party code.
 if CONFIG['_MSC_VER']:
     CFLAGS += [
         '-wd4013', # 'function' undefined; assuming extern returning int
