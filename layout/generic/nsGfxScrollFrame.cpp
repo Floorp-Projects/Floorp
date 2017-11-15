@@ -1333,7 +1333,7 @@ ScrollFrameHelper::WantAsyncScroll() const
 }
 
 static nsRect
-GetOnePixelRangeAroundPoint(nsPoint aPoint, bool aIsHorizontal)
+GetOnePixelRangeAroundPoint(const nsPoint& aPoint, bool aIsHorizontal)
 {
   nsRect allowedRange(aPoint, nsSize());
   nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
