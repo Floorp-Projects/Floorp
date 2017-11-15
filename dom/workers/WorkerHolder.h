@@ -72,8 +72,6 @@ enum Status
 class WorkerHolder
 {
 public:
-  NS_DECL_OWNINGTHREAD
-
   enum Behavior {
     AllowIdleShutdownStart,
     PreventIdleShutdownStart,
@@ -98,6 +96,9 @@ private:
   void AssertIsOwningThread() const;
 
   const Behavior mBehavior;
+
+  // For debugging only.
+  void* mThread;
 };
 
 END_WORKERS_NAMESPACE
