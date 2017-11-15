@@ -9,8 +9,6 @@ import shutil
 import tempfile
 import unittest
 
-from StringIO import StringIO
-
 from mozunit import main
 
 from mozbuild.base import (
@@ -27,10 +25,16 @@ from mozbuild.controller.clobber import (
 class TestClobberer(unittest.TestCase):
     def setUp(self):
         self._temp_dirs = []
+        self._old_env = dict(os.environ)
+        os.environ.pop('MOZCONFIG', None)
+        os.environ.pop('MOZ_OBJDIR', None)
 
         return unittest.TestCase.setUp(self)
 
     def tearDown(self):
+        os.environ.clear()
+        os.environ.update(self._old_env)
+
         for d in self._temp_dirs:
             shutil.rmtree(d, ignore_errors=True)
 
