@@ -33,6 +33,9 @@
 #include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/StorageIPC.h"
+#include "mozilla/dom/MIDIManagerParent.h"
+#include "mozilla/dom/MIDIPortParent.h"
+#include "mozilla/dom/MIDIPlatformService.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
@@ -71,6 +74,11 @@ using mozilla::dom::PMessagePortParent;
 using mozilla::dom::UDPSocketParent;
 using mozilla::dom::WebAuthnTransactionParent;
 using mozilla::AssertIsOnMainThread;
+using mozilla::dom::PMIDIPortParent;
+using mozilla::dom::PMIDIManagerParent;
+using mozilla::dom::MIDIPortParent;
+using mozilla::dom::MIDIManagerParent;
+using mozilla::dom::MIDIPlatformService;
 
 namespace {
 
@@ -959,6 +967,53 @@ BackgroundParentImpl::DeallocPHttpBackgroundChannelParent(
   RefPtr<net::HttpBackgroundChannelParent> actor =
     dont_AddRef(static_cast<net::HttpBackgroundChannelParent*>(aActor));
 
+  return true;
+}
+
+PMIDIPortParent*
+BackgroundParentImpl::AllocPMIDIPortParent(const MIDIPortInfo& aPortInfo, const bool& aSysexEnabled)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  RefPtr<MIDIPortParent> result = new MIDIPortParent(aPortInfo, aSysexEnabled);
+  return result.forget().take();
+}
+
+bool
+BackgroundParentImpl::DeallocPMIDIPortParent(PMIDIPortParent* aActor)
+{
+  MOZ_ASSERT(aActor);
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  RefPtr<MIDIPortParent> parent =
+    dont_AddRef(static_cast<MIDIPortParent*>(aActor));
+  parent->Teardown();
+  return true;
+}
+
+PMIDIManagerParent*
+BackgroundParentImpl::AllocPMIDIManagerParent()
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  RefPtr<MIDIManagerParent> result = new MIDIManagerParent();
+  MIDIPlatformService::Get()->AddManager(result);
+  return result.forget().take();
+}
+
+bool
+BackgroundParentImpl::DeallocPMIDIManagerParent(PMIDIManagerParent* aActor)
+{
+  MOZ_ASSERT(aActor);
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  RefPtr<MIDIManagerParent> parent =
+    dont_AddRef(static_cast<MIDIManagerParent*>(aActor));
+  parent->Teardown();
   return true;
 }
 

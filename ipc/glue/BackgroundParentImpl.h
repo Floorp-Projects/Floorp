@@ -271,6 +271,19 @@ protected:
 
   virtual mozilla::ipc::IPCResult
   RecvPClientManagerConstructor(PClientManagerParent* aActor) override;
+
+  virtual PMIDIPortParent*
+  AllocPMIDIPortParent(const MIDIPortInfo& aPortInfo,
+                       const bool& aSysexEnabled) override;
+
+  virtual bool
+  DeallocPMIDIPortParent(PMIDIPortParent* aActor) override;
+
+  virtual PMIDIManagerParent*
+  AllocPMIDIManagerParent() override;
+
+  virtual bool
+  DeallocPMIDIManagerParent(PMIDIManagerParent* aActor) override;
 };
 
 } // namespace ipc

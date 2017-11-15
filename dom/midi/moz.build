@@ -16,6 +16,7 @@ EXPORTS.mozilla.dom += [
     'MIDIInput.h',
     'MIDIInputMap.h',
     'MIDIManagerChild.h',
+    'MIDIManagerParent.h',
     'MIDIMessageEvent.h',
     'MIDIMessageQueue.h',
     'MIDIOutput.h',
@@ -25,6 +26,7 @@ EXPORTS.mozilla.dom += [
     'MIDIPort.h',
     'MIDIPortChild.h',
     'MIDIPortInterface.h',
+    'MIDIPortParent.h',
     'MIDIUtils.h'
 ]
 
@@ -34,6 +36,7 @@ UNIFIED_SOURCES = [
     'MIDIInput.cpp',
     'MIDIInputMap.cpp',
     'MIDIManagerChild.cpp',
+    'MIDIManagerParent.cpp',
     'MIDIMessageEvent.cpp',
     'MIDIMessageQueue.cpp',
     'MIDIOutput.cpp',
@@ -43,6 +46,7 @@ UNIFIED_SOURCES = [
     'MIDIPort.cpp',
     'MIDIPortChild.cpp',
     'MIDIPortInterface.cpp',
+    'MIDIPortParent.cpp',
     'MIDIUtils.cpp',
     'TestMIDIPlatformService.cpp'
 ]
