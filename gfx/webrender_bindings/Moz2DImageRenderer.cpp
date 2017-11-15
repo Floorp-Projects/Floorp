@@ -126,7 +126,7 @@ GetUnscaledFont(Translator *aTranslator, wr::FontKey key) {
                                                                               aTranslator->GetFontContext());
   RefPtr<UnscaledFont> unscaledFont;
   if (!fontResource) {
-    gfxDevCrash(LogReason::NativeFontResourceNotFound) << "Failed to creative NativeFontResource for FontKey " << key.mHandle;
+    gfxDevCrash(LogReason::NativeFontResourceNotFound) << "Failed to create NativeFontResource for FontKey " << key.mHandle;
   } else {
     // Instance data is only needed for GDI fonts which webrender does not
     // support.
