@@ -8,13 +8,10 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
 EXPORTS.mp4_demuxer += [
-    'binding/include/mp4_demuxer/Adts.h',
-    'binding/include/mp4_demuxer/AnnexB.h',
     'binding/include/mp4_demuxer/Atom.h',
     'binding/include/mp4_demuxer/AtomType.h',
     'binding/include/mp4_demuxer/BufferStream.h',
     'binding/include/mp4_demuxer/DecoderData.h',
-    'binding/include/mp4_demuxer/H264.h',
     'binding/include/mp4_demuxer/Index.h',
     'binding/include/mp4_demuxer/Interval.h',
     'binding/include/mp4_demuxer/MoofParser.h',
@@ -29,12 +26,9 @@ EXPORTS.demuxer += [
 ]
 
 UNIFIED_SOURCES += [
-    'binding/Adts.cpp',
-    'binding/AnnexB.cpp',
     'binding/Box.cpp',
     'binding/BufferStream.cpp',
     'binding/DecoderData.cpp',
-    'binding/H264.cpp',
     'binding/Index.cpp',
     'binding/MoofParser.cpp',
     'binding/MP4Metadata.cpp',
