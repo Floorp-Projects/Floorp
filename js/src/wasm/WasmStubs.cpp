@@ -263,20 +263,18 @@ GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe, Offsets* offsets
     offsets->begin = masm.currentOffset();
 
     // Save the return address if it wasn't already saved by the call insn.
-#if defined(JS_CODEGEN_ARM)
-    masm.push(lr);
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    masm.push(ra);
+#ifdef JS_USE_LINK_REGISTER
+    masm.pushReturnAddress();
 #endif
 
     // Save all caller non-volatile registers before we clobber them here and in
-    // the asm.js callee (which does not preserve non-volatile registers).
+    // the wasm callee (which does not preserve non-volatile registers).
     masm.setFramePushed(0);
     masm.PushRegsInMask(NonVolatileRegs);
     MOZ_ASSERT(masm.framePushed() == NonVolatileRegsPushSize);
 
     // Put the 'argv' argument into a non-argument/return/TLS register so that
-    // we can use 'argv' while we fill in the arguments for the asm.js callee.
+    // we can use 'argv' while we fill in the arguments for the wasm callee.
     // Use a second non-argument/return register as temporary scratch.
     Register argv = ABINonArgReturnReg0;
     Register scratch = ABINonArgReturnReg1;

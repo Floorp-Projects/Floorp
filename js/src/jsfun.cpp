@@ -831,7 +831,6 @@ CreateFunctionConstructor(JSContext* cx, JSProtoKey key)
         return nullptr;
 
     return functionCtor;
-
 }
 
 static JSObject*

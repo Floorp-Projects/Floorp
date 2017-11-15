@@ -3182,7 +3182,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
 #endif
 
         // Reset the register set from here on in.
-        MOZ_ASSERT(JSReturnOperand == R0);
+        static_assert(JSReturnOperand == R0, "The code below needs to be adapted.");
         regs = availableGeneralRegs(0);
         regs.take(R0);
         argcReg = regs.takeAny();

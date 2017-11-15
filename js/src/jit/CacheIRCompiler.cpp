@@ -1144,14 +1144,14 @@ FailurePath::canShareFailurePath(const FailurePath& other) const
 
     for (size_t i = 0; i < spilledRegs_.length(); i++) {
         if (spilledRegs_[i] != other.spilledRegs_[i])
-	    return false;
+            return false;
     }
 
     MOZ_ASSERT(inputs_.length() == other.inputs_.length());
 
     for (size_t i = 0; i < inputs_.length(); i++) {
         if (inputs_[i] != other.inputs_[i])
-	    return false;
+            return false;
     }
     return true;
 }
