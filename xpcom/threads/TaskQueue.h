@@ -61,20 +61,14 @@ public:
 
   TaskQueue* AsTaskQueue() override { return this; }
 
-  nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                    DispatchFailureHandling aFailureHandling = AssertDispatchSuccess,
-                    DispatchReason aReason = NormalDispatch) override
+  MOZ_MUST_USE nsresult
+  Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+           DispatchReason aReason = NormalDispatch) override
   {
     nsCOMPtr<nsIRunnable> r = aRunnable;
     {
       MonitorAutoLock mon(mQueueMonitor);
-      nsresult rv = DispatchLocked(/* passed by ref */r, aFailureHandling, aReason);
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA) || defined(EARLY_BETA_OR_EARLIER)
-      if (NS_FAILED(rv) && aFailureHandling == AssertDispatchSuccess) {
-        MOZ_CRASH_UNSAFE_PRINTF("%s: Dispatch failed. rv=%x", mName, uint32_t(rv));
-      }
-#endif
-      return rv;
+      return DispatchLocked(/* passed by ref */r, aReason);
     }
     // If the ownership of |r| is not transferred in DispatchLocked() due to
     // dispatch failure, it will be deleted here outside the lock. We do so
@@ -121,7 +115,6 @@ protected:
   void AwaitIdleLocked();
 
   nsresult DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
-                          DispatchFailureHandling aFailureHandling,
                           DispatchReason aReason = NormalDispatch);
 
   void MaybeResolveShutdown()
