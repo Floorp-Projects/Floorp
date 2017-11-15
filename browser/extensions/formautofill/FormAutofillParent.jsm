@@ -445,19 +445,22 @@ FormAutofillParent.prototype = {
       setUsedStatus(3);
 
       let originalCCData = this.profileStorage.creditCards.get(creditCard.guid);
-      let unchanged = Object.keys(creditCard.record).every(field => {
+      let recordUnchanged = true;
+      for (let field in creditCard.record) {
         if (creditCard.record[field] === "" && !originalCCData[field]) {
-          return true;
+          continue;
         }
-        // Avoid updating the fields that users don't modify.
+        // Avoid updating the fields that users don't modify, but skip number field
+        // because we don't want to trigger decryption here.
         let untouched = creditCard.untouchedFields.includes(field);
-        if (untouched) {
+        if (untouched && field !== "cc-number") {
           creditCard.record[field] = originalCCData[field];
         }
-        return untouched;
-      });
+        // recordUnchanged will be false if one of the field is changed.
+        recordUnchanged &= untouched;
+      }
 
-      if (unchanged) {
+      if (recordUnchanged) {
         this.profileStorage.creditCards.notifyUsed(creditCard.guid);
         // Add probe to record credit card autofill(without modification).
         Services.telemetry.scalarAdd("formautofill.creditCards.fill_type_autofill", 1);
