@@ -554,9 +554,8 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
     const size_t newCapacity = spaceToEnd(maxChunkCount());
     if (newCapacity != previousGC.nurseryCapacity)
         json.property("new_capacity", newCapacity);
-    const size_t lazyCapacity = spaceToEnd(allocatedChunkCount());
-    if (lazyCapacity != previousGC.nurseryCapacity)
-        json.property("lazy_capacity", lazyCapacity);
+    if (previousGC.nurseryLazyCapacity != previousGC.nurseryCapacity)
+        json.property("lazy_capacity", previousGC.nurseryLazyCapacity);
     if (!timeInChunkAlloc_.IsZero())
         json.property("chunk_alloc_us", timeInChunkAlloc_, json.MICROSECONDS);
 
@@ -680,6 +679,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     } else {
         previousGC.nurseryUsedBytes = 0;
         previousGC.nurseryCapacity = spaceToEnd(maxChunkCount());
+        previousGC.nurseryLazyCapacity = spaceToEnd(allocatedChunkCount());
         previousGC.tenuredBytes = 0;
     }
 
@@ -867,6 +867,7 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
 
     previousGC.reason = reason;
     previousGC.nurseryCapacity = initialNurseryCapacity;
+    previousGC.nurseryLazyCapacity = spaceToEnd(allocatedChunkCount());
     previousGC.nurseryUsedBytes = initialNurseryUsedBytes;
     previousGC.tenuredBytes = mover.tenuredSize;
 }
