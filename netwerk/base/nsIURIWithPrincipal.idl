@@ -11,7 +11,7 @@ interface nsIURI;
  * nsIURIWithPrincipal is implemented by URIs which are associated with a
  * specific principal.
  */
-[scriptable, uuid(626a5c0c-bfd8-4531-8b47-a8451b0daa33)]
+[scriptable, builtinclass, uuid(626a5c0c-bfd8-4531-8b47-a8451b0daa33)]
 interface nsIURIWithPrincipal : nsISupports
 {
     /**
