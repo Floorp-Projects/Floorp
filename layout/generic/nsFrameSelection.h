@@ -608,9 +608,9 @@ public:
    */
   nsresult MaintainSelection(nsSelectionAmount aAmount = eSelectNoAmount);
 
-  nsresult ConstrainFrameAndPointToAnchorSubtree(nsIFrame *aFrame,
-                                                 nsPoint& aPoint,
-                                                 nsIFrame **aRetFrame,
+  nsresult ConstrainFrameAndPointToAnchorSubtree(nsIFrame* aFrame,
+                                                 const nsPoint& aPoint,
+                                                 nsIFrame** aRetFrame,
                                                  nsPoint& aRetPoint);
 
   nsFrameSelection();
