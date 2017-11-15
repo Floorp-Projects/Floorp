@@ -79,7 +79,7 @@ interface XULControllers;
   [Throws, UnsafeInPrerendering, NeedsSubjectPrincipal] void alert(DOMString message);
   [Throws, UnsafeInPrerendering, NeedsSubjectPrincipal] boolean confirm(optional DOMString message = "");
   [Throws, UnsafeInPrerendering, NeedsSubjectPrincipal] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
-  [Throws, UnsafeInPrerendering, Func="nsGlobalWindow::IsWindowPrintEnabled"]
+  [Throws, UnsafeInPrerendering, Func="nsGlobalWindowInner::IsWindowPrintEnabled"]
   void print();
 
   [Throws, CrossOriginCallable, NeedsSubjectPrincipal]
