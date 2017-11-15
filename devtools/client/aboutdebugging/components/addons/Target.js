@@ -6,8 +6,9 @@
 
 "use strict";
 
-const { Component, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { debugAddon, isTemporaryID, parseFileUri, uninstallAddon } =
   require("../../modules/addon");
 const Services = require("Services");
