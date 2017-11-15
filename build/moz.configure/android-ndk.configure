@@ -198,25 +198,6 @@ def android_toolchain_prefix_base(target):
     return target.toolchain
 
 
-@depends(android_platform, android_toolchain)
-def extra_toolchain_flags(platform_dir, toolchain_dir):
-    if not platform_dir:
-        return []
-    return ['-isystem',
-            os.path.join(platform_dir, 'usr', 'include'),
-            '-gcc-toolchain',
-            toolchain_dir]
-
-
-@depends(android_toolchain_prefix_base, android_toolchain)
-def android_toolchain_prefix(prefix_base, toolchain):
-    if toolchain:
-        return '%s/bin/%s-' % (toolchain, prefix_base)
-
-
-imply_option('--with-toolchain-prefix', android_toolchain_prefix,
-             reason='--with-android-ndk')
-
 option(env='STLPORT_CPPFLAGS',
        nargs=1,
        help='Options compiler should pass for standard C++ library')
@@ -258,6 +239,26 @@ def stlport_cppflags(value, ndk, _):
 
 
 add_old_configure_assignment('stlport_cppflags', stlport_cppflags)
+
+
+@depends(android_platform, android_toolchain)
+def extra_toolchain_flags(platform_dir, toolchain_dir):
+    if not platform_dir:
+        return []
+    return ['-isystem',
+            os.path.join(platform_dir, 'usr', 'include'),
+            '-gcc-toolchain',
+            toolchain_dir]
+
+
+@depends(android_toolchain_prefix_base, android_toolchain)
+def android_toolchain_prefix(prefix_base, toolchain):
+    if toolchain:
+        return '%s/bin/%s-' % (toolchain, prefix_base)
+
+
+imply_option('--with-toolchain-prefix', android_toolchain_prefix,
+             reason='--with-android-ndk')
 
 
 @depends(stlport_cppflags, extra_toolchain_flags, android_toolchain,
