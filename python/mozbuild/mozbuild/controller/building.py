@@ -5,6 +5,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import getpass
+import io
 import json
 import logging
 import os
@@ -32,6 +33,9 @@ from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 
 import mozpack.path as mozpath
 
+from .clobber import (
+    Clobberer,
+)
 from ..base import (
     BuildEnvironmentNotFoundException,
     MozbuildObject,
@@ -50,6 +54,7 @@ from ..shellutil import (
     quote as shell_quote,
 )
 from ..util import (
+    FileAvoidWrite,
     mkdir,
     resolve_target_to_make,
 )
@@ -1117,10 +1122,10 @@ class BuildDriver(MozbuildObject):
                 # If the backend doesn't specify a build() method, then just
                 # call client.mk directly.
                 if status is None:
-                    status = self._run_make(srcdir=True, filename='client.mk',
-                        line_handler=output.on_line, log=False, print_directory=False,
-                        allow_parallel=False, ensure_exit_code=False, num_jobs=jobs,
-                        silent=not verbose, keep_going=keep_going)
+                    status = self._run_client_mk(line_handler=output.on_line,
+                                                 jobs=jobs,
+                                                 verbose=verbose,
+                                                 keep_going=keep_going)
 
                 self.log(logging.WARNING, 'warning_summary',
                     {'count': len(monitor.warnings_database)},
@@ -1277,6 +1282,10 @@ class BuildDriver(MozbuildObject):
 
     def configure(self, options=None, buildstatus_messages=False,
                   line_handler=None):
+        # Disable indexing in objdir because it is not necessary and can slow
+        # down builds.
+        mkdir(self.topobjdir, not_indexed=True)
+
         def on_line(line):
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
 
@@ -1289,10 +1298,9 @@ class BuildDriver(MozbuildObject):
         # monitor.
         if not buildstatus_messages:
             append_env[b'NO_BUILDSTATUS_MESSAGES'] =  b'1'
-        status = self._run_make(srcdir=True, filename='client.mk',
-            target='configure', line_handler=line_handler, log=False,
-            print_directory=False, allow_parallel=False, ensure_exit_code=False,
-            append_env=append_env)
+        status = self._run_client_mk(target='configure',
+                                     line_handler=line_handler,
+                                     append_env=append_env)
 
         if not status:
             print('Configure complete!')
@@ -1316,3 +1324,75 @@ class BuildDriver(MozbuildObject):
         else:
             install_test_files(mozpath.normpath(self.topsrcdir), self.topobjdir,
                                '_tests', test_objs)
+
+    def _run_client_mk(self, target=None, line_handler=None, jobs=0,
+                       verbose=None, keep_going=False, append_env=None):
+        append_env = dict(append_env or {})
+        append_env['TOPSRCDIR'] = self.topsrcdir
+
+        append_env['CONFIG_GUESS'] = self.resolve_config_guess()
+
+        mozconfig = self.mozconfig
+
+        if self._check_clobber(mozconfig, os.environ):
+            return 1
+
+        mozconfig_client_mk = os.path.join(self.topobjdir,
+                                           '.mozconfig-client-mk')
+        with FileAvoidWrite(mozconfig_client_mk) as fh:
+            for arg in mozconfig['make_extra'] or []:
+                fh.write(arg)
+                fh.write(b'\n')
+            if mozconfig['make_flags']:
+                fh.write(b'MOZ_MAKE_FLAGS=%s\n' % b' '.join(mozconfig['make_flags']))
+            objdir = mozpath.normsep(self.topobjdir)
+            fh.write(b'MOZ_OBJDIR=%s\n' % objdir)
+            fh.write(b'OBJDIR=%s\n' % objdir)
+            if mozconfig['path']:
+                fh.write(b'FOUND_MOZCONFIG=%s\n' %
+                         mozpath.normsep(mozconfig['path']))
+                fh.write(b'export FOUND_MOZCONFIG\n')
+
+        append_env['OBJDIR'] = mozpath.normsep(self.topobjdir)
+
+        return self._run_make(srcdir=True,
+                              filename='client.mk',
+                              allow_parallel=False,
+                              ensure_exit_code=False,
+                              print_directory=False,
+                              target=target,
+                              line_handler=line_handler,
+                              log=False,
+                              num_jobs=jobs,
+                              silent=not verbose,
+                              keep_going=keep_going,
+                              append_env=append_env)
+
+    def _check_clobber(self, mozconfig, env):
+        auto_clobber = any([
+            env.get('AUTOCLOBBER', False),
+            (mozconfig['env'] or {}).get('added', {}).get('AUTOCLOBBER', False),
+            'AUTOCLOBBER=1' in (mozconfig['make_extra'] or []),
+        ])
+
+        clobberer = Clobberer(self.topsrcdir, self.topobjdir)
+        clobber_output = io.BytesIO()
+        res = clobberer.maybe_do_clobber(os.getcwd(), auto_clobber,
+                                         clobber_output)
+        clobber_output.seek(0)
+        for line in clobber_output.readlines():
+            self.log(logging.WARNING, 'clobber',
+                     {'msg': line.rstrip()}, '{msg}')
+
+        clobber_required, clobber_performed, clobber_message = res
+        if not clobber_required or clobber_performed:
+            if clobber_performed and env.get('TINDERBOX_OUTPUT'):
+                self.log(logging.WARNING, 'clobber',
+                         {'msg': 'TinderboxPrint: auto clobber'}, '{msg}')
+        else:
+            for line in clobber_message.splitlines():
+                self.log(logging.WARNING, 'clobber',
+                         {'msg': line.rstrip()}, '{msg}')
+            return True
+
+        return False

@@ -15,7 +15,6 @@ import android.util.Log;
 import java.util.HashMap;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.AppConstants.Versions;
 
 public final class GeckoSurface extends Surface {
     private static final String LOGTAG = "GeckoSurface";

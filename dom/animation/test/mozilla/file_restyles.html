@@ -55,11 +55,11 @@ function observeStyling(frameCount, onFrame) {
   docShell.recordProfileTimelineMarkers = true;
   docShell.popProfileTimelineMarkers();
 
-  return new Promise(function(resolve) {
-    return waitForAnimationFrames(frameCount, onFrame).then(function() {
+  return new Promise(resolve => {
+    return waitForAnimationFrames(frameCount, onFrame).then(() => {
       var markers = docShell.popProfileTimelineMarkers();
       docShell.recordProfileTimelineMarkers = false;
-      var stylingMarkers = markers.filter(function(marker, index) {
+      var stylingMarkers = markers.filter((marker, index) => {
         return marker.name == 'Styles' && marker.isAnimationOnly;
       });
       resolve(stylingMarkers);
@@ -68,14 +68,14 @@ function observeStyling(frameCount, onFrame) {
 }
 
 function ensureElementRemoval(aElement) {
-  return new Promise(function(resolve) {
+  return new Promise(resolve => {
     aElement.remove();
     waitForAllPaintsFlushed(resolve);
   });
 }
 
 function waitForWheelEvent(aTarget) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(resolve => {
     // Get the scrollable target element position in this window coordinate
     // system to send a wheel event to the element.
     var targetRect = aTarget.getBoundingClientRect();
@@ -106,7 +106,7 @@ function add_task_if_omta_enabled(test) {
 
 // We need to wait for all paints before running tests to avoid contaminations
 // from styling of this document itself.
-waitForAllPaints(function() {
+waitForAllPaints(() => {
   add_task(async function restyling_for_main_thread_animations() {
     var div = addDiv(null, { style: 'animation: background-color 100s' });
     var animation = div.getAnimations()[0];
@@ -196,7 +196,7 @@ waitForAllPaints(function() {
 
     var mouseX = initialRect.left + initialRect.width / 2;
     var mouseY = initialRect.top + initialRect.height / 2;
-    var markers = await observeStyling(5, function() {
+    var markers = await observeStyling(5, () => {
       // We can't use synthesizeMouse here since synthesizeMouse causes
       // layout flush.
       synthesizeMouseAtPoint(mouseX++, mouseY++,
@@ -219,7 +219,7 @@ waitForAllPaints(function() {
 
     var mouseX = initialRect.left + initialRect.width / 2;
     var mouseY = initialRect.top + initialRect.height / 2;
-    var markers = await observeStyling(5, function() {
+    var markers = await observeStyling(5, () => {
       // We can't use synthesizeMouse here since synthesizeMouse causes
       // layout flush.
       synthesizeMouseAtPoint(mouseX++, mouseY++,
@@ -492,7 +492,7 @@ waitForAllPaints(function() {
 
     await animation.ready;
 
-    var markers = await observeStyling(1, function() {
+    var markers = await observeStyling(1, () => {
       parentElement.style.height = '100px';
     });
 
@@ -712,11 +712,25 @@ waitForAllPaints(function() {
     await waitForAnimationFrames(5);
     // Apply another animation style
     div.style.animation = 'background-color 110s';
-    var animation = div.getAnimations()[0];
-    var markers = await observeStyling(5);
-    is(markers.length, 5,
-       'Applying animation style with different duration '  +
-       'should cause restyles on every frame.');
+    var markers = await observeStyling(1);
+    if (isServo) {
+      // There should be two restyles.
+      // 1) Animation-only restyle for before applying the new animation style
+      // 2) Animation-only restyle for after applying the new animation style
+      is(markers.length, 2,
+         'Applying animation style with different duration '  +
+         'should restyle twice');
+    } else {
+      // There should be three restyles.
+      // 1) Animation-only restyle for before applying the new animation style
+      // 2) Restyle for applying the new animation style
+      //    Note: In gecko styling for animations is not separated.
+      // 3) Restyle triggered by updating an existing animation (specifically
+      //    the animation-duration)
+      is(markers.length, 3,
+         'Applying animation style with different duration '  +
+         'should restyles three times');
+    }
     await ensureElementRemoval(div);
   });
 

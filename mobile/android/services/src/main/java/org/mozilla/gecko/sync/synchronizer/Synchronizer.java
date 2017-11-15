@@ -41,11 +41,6 @@ public class Synchronizer implements SynchronizerSessionDelegate {
   }
 
   @Override
-  public void onInitialized(SynchronizerSession session) {
-    session.synchronize();
-  }
-
-  @Override
   public void onSynchronized(SynchronizerSession synchronizerSession) {
     Logger.debug(LOG_TAG, "Got onSynchronized.");
     Logger.debug(LOG_TAG, "Notifying SynchronizerDelegate.");
@@ -83,7 +78,7 @@ public class Synchronizer implements SynchronizerSessionDelegate {
   public void synchronize(Context context, SynchronizerDelegate delegate) {
     this.synchronizerDelegate = delegate;
     this.session = newSynchronizerSession();
-    this.session.init(context, bundleA, bundleB);
+    this.session.initAndSynchronize(context, bundleA, bundleB);
   }
 
   public SynchronizerConfiguration save() {

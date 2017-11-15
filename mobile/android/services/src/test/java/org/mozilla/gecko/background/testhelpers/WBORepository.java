@@ -5,14 +5,13 @@ package org.mozilla.gecko.background.testhelpers;
 
 import android.content.Context;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
-import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.RecordFilter;
 import org.mozilla.gecko.sync.repositories.Repository;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
@@ -175,10 +174,10 @@ public class WBORepository extends Repository {
     }
 
     @Override
-    public void begin(RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
+    public void begin() throws SyncException {
       this.wbos = wboRepository.cloneWBOs();
+      super.begin();
       stats.begun = now();
-      super.begin(delegate);
     }
 
     @Override
@@ -212,9 +211,8 @@ public class WBORepository extends Repository {
   }
 
   @Override
-  public void createSession(RepositorySessionCreationDelegate delegate,
-                            Context context) {
-    delegate.deferredCreationDelegate().onSessionCreated(new WBORepositorySession(this));
+  public RepositorySession createSession(Context context) {
+    return new WBORepositorySession(this);
   }
 
   public ConcurrentHashMap<String, Record> cloneWBOs() {

@@ -23,6 +23,17 @@ class nsIFrame;
 class nsAtom;
 class nsIWidget;
 
+namespace mozilla {
+namespace layers {
+class StackingContextHelper;
+class WebRenderLayerManager;
+}
+namespace wr {
+class DisplayListBuilder;
+class IpcResourceUpdateQueue;
+}
+}
+
 // IID for the nsITheme interface
 // {7329f760-08cb-450f-8225-dae729096dec}
  #define NS_ITHEME_IID     \
@@ -60,6 +71,20 @@ public:
                                   uint8_t aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) = 0;
+
+  /**
+   * Create WebRender commands for the theme background.
+   * @return true if the theme knows how to create WebRender commands for the
+   *         given widget type, false if DrawWidgetBackground need sto be called
+   *         instead.
+   */
+  virtual bool CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                const mozilla::layers::StackingContextHelper& aSc,
+                                                mozilla::layers::WebRenderLayerManager* aManager,
+                                                nsIFrame* aFrame,
+                                                uint8_t aWidgetType,
+                                                const nsRect& aRect) { return false; }
 
   /**
    * Get the computed CSS border for the widget, in pixels.

@@ -7,7 +7,6 @@ package org.mozilla.gecko.gfx;
 
 import android.graphics.PointF;
 import android.graphics.RectF;
-import android.util.DisplayMetrics;
 
 /**
  * ImmutableViewportMetrics are used to store the viewport metrics
@@ -25,11 +24,11 @@ public class ImmutableViewportMetrics {
 
     public final float zoomFactor;
 
-    public ImmutableViewportMetrics(DisplayMetrics metrics) {
-        viewportRectLeft   = 0;
-        viewportRectTop    = 0;
-        viewportRectWidth = metrics.widthPixels;
-        viewportRectHeight = metrics.heightPixels;
+    public ImmutableViewportMetrics() {
+        viewportRectLeft = 0;
+        viewportRectTop = 0;
+        viewportRectWidth = 0;
+        viewportRectHeight = 0;
         zoomFactor = 1.0f;
     }
 

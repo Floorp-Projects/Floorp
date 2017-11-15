@@ -54,6 +54,6 @@ void main(void) {
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
     float a = texture(sColor0, vUv).a;
-    oFragColor = vec4(vColor.rgb, vColor.a * a);
+    oFragColor = vColor * a;
 }
 #endif

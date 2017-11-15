@@ -10,7 +10,7 @@
 //! [renderer]: struct.Renderer.html
 
 use api::{channel, BlobImageRenderer, FontRenderMode};
-use api::{ColorF, ColorU, Epoch, PipelineId, RenderApiSender, RenderNotifier};
+use api::{ColorF, Epoch, PipelineId, RenderApiSender, RenderNotifier};
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect, DeviceUintSize};
 use api::{ExternalImageId, ExternalImageType, ImageFormat};
 use api::{YUV_COLOR_SPACES, YUV_FORMATS};
@@ -639,10 +639,9 @@ impl SourceTextureResolver {
 #[allow(dead_code)] // SubpixelVariableTextColor is not used at the moment.
 pub enum BlendMode {
     None,
-    Alpha,
     PremultipliedAlpha,
     PremultipliedDestOut,
-    SubpixelConstantTextColor(ColorU),
+    SubpixelConstantTextColor(ColorF),
     SubpixelWithBgColor,
     SubpixelVariableTextColor,
 }
@@ -1013,7 +1012,6 @@ impl BrushShader {
             BlendMode::None => {
                 self.opaque.bind(device, projection, mode, renderer_errors)
             }
-            BlendMode::Alpha |
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
             BlendMode::SubpixelConstantTextColor(..) |
@@ -2517,7 +2515,6 @@ impl Renderer {
                 TransformBatchKind::Rectangle(needs_clipping) => {
                     debug_assert!(
                         !needs_clipping || match key.blend_mode {
-                            BlendMode::Alpha |
                             BlendMode::PremultipliedAlpha |
                             BlendMode::PremultipliedDestOut |
                             BlendMode::SubpixelConstantTextColor(..) |
@@ -2759,7 +2756,6 @@ impl Renderer {
             self.device.disable_depth();
             self.device.enable_depth_write();
             self.device.set_blend(false);
-            self.device.set_blend_mode_alpha();
             match render_target {
                 Some(..) if self.enable_clear_scissor => {
                     // TODO(gw): Applying a scissor rect and minimal clear here
@@ -2818,7 +2814,7 @@ impl Renderer {
         // to multiple tiles in the normal text run case.
         if !target.text_run_cache_prims.is_empty() {
             self.device.set_blend(true);
-            self.device.set_blend_mode_alpha();
+            self.device.set_blend_mode_premultiplied_alpha();
 
             let _gm = self.gpu_profile.add_marker(GPU_TAG_CACHE_TEXT_RUN);
             self.cs_text_run
@@ -2835,7 +2831,7 @@ impl Renderer {
             // TODO(gw): Technically, we don't need blend for solid
             //           lines. We could check that here?
             self.device.set_blend(true);
-            self.device.set_blend_mode_alpha();
+            self.device.set_blend_mode_premultiplied_alpha();
 
             let _gm = self.gpu_profile.add_marker(GPU_TAG_CACHE_LINE);
             self.cs_line
@@ -2888,7 +2884,6 @@ impl Renderer {
                 if self.debug_flags.contains(DebugFlags::ALPHA_PRIM_DBG) {
                     let color = match batch.key.blend_mode {
                         BlendMode::None => debug_colors::BLACK,
-                        BlendMode::Alpha => debug_colors::YELLOW,
                         BlendMode::PremultipliedAlpha => debug_colors::GREY,
                         BlendMode::PremultipliedDestOut => debug_colors::SALMON,
                         BlendMode::SubpixelConstantTextColor(..) => debug_colors::GREEN,
@@ -2932,7 +2927,7 @@ impl Renderer {
                                 );
                             }
                             BlendMode::SubpixelConstantTextColor(color) => {
-                                self.device.set_blend_mode_subpixel_constant_text_color(color.into());
+                                self.device.set_blend_mode_subpixel_constant_text_color(color);
 
                                 self.ps_text_run.bind(
                                     &mut self.device,
@@ -3038,7 +3033,7 @@ impl Renderer {
                                 self.device
                                     .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
                             }
-                            BlendMode::Alpha | BlendMode::PremultipliedDestOut | BlendMode::None => {
+                            BlendMode::PremultipliedDestOut | BlendMode::None => {
                                 unreachable!("bug: bad blend mode for text");
                             }
                         }
@@ -3051,10 +3046,6 @@ impl Renderer {
                             match batch.key.blend_mode {
                                 BlendMode::None => {
                                     self.device.set_blend(false);
-                                }
-                                BlendMode::Alpha => {
-                                    self.device.set_blend(true);
-                                    self.device.set_blend_mode_alpha();
                                 }
                                 BlendMode::PremultipliedAlpha => {
                                     self.device.set_blend(true);

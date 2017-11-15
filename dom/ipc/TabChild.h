@@ -628,8 +628,6 @@ public:
   void InvalidateLayers();
   void ReinitRendering();
   void ReinitRenderingForDeviceReset();
-  void CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier,
-                         uint64_t aDeviceResetSeqNo);
 
   static inline TabChild* GetFrom(nsIDOMWindow* aWindow)
   {

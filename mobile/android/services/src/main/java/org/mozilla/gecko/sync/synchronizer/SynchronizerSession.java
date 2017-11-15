@@ -9,11 +9,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
-import org.mozilla.gecko.sync.repositories.delegates.DeferrableRepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.DeferredRepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 
@@ -46,10 +46,7 @@ import android.content.Context;
  * I always call exactly one of my delegate's `onSynchronized` or
  * `onSynchronizeFailed` callback methods if I have not seen an error.
  */
-public class SynchronizerSession
-extends DeferrableRepositorySessionCreationDelegate
-implements RecordsChannelDelegate,
-           RepositorySessionFinishDelegate {
+public class SynchronizerSession implements RecordsChannelDelegate, RepositorySessionFinishDelegate {
 
   protected static final String LOG_TAG = "SynchronizerSession";
   protected Synchronizer synchronizer;
@@ -104,12 +101,63 @@ implements RecordsChannelDelegate,
     this.synchronizer = synchronizer;
   }
 
-  public void init(Context context, RepositorySessionBundle bundleA, RepositorySessionBundle bundleB) {
+  public void initAndSynchronize(Context context, RepositorySessionBundle bundleA, RepositorySessionBundle bundleB) {
     this.context = context;
     this.bundleA = bundleA;
     this.bundleB = bundleB;
-    // Begin sessionA and sessionB, call onInitialized in callbacks.
-    this.getSynchronizer().repositoryA.createSession(this, context);
+
+    try {
+      this.sessionA = this.getSynchronizer().repositoryA.createSession(context);
+    } catch (SyncException e) {
+      // We no longer need a reference to our context.
+      this.context = null;
+      this.delegate.onSynchronizeFailed(this, e, "Failed to create session");
+      return;
+    }
+
+    try {
+      this.sessionA.unbundle(bundleA);
+    } catch (Exception e) {
+      this.delegate.onSynchronizeFailed(this, new UnbundleError(e, sessionA), "Failed to unbundle first session.");
+      return;
+    }
+
+    try {
+      this.sessionB = this.getSynchronizer().repositoryB.createSession(context);
+    } catch (final SyncException createException) {
+      // We no longer need a reference to our context.
+      this.context = null;
+      // Finish already created sessionA.
+      try {
+        this.sessionA.finish(new RepositorySessionFinishDelegate() {
+          @Override
+          public void onFinishFailed(Exception ex) {
+            SynchronizerSession.this.delegate.onSynchronizeFailed(SynchronizerSession.this, createException, "Failed to create second session.");
+          }
+
+          @Override
+          public void onFinishSucceeded(RepositorySession session, RepositorySessionBundle bundle) {
+            SynchronizerSession.this.delegate.onSynchronizeFailed(SynchronizerSession.this, createException, "Failed to create second session.");
+          }
+
+          @Override
+          public RepositorySessionFinishDelegate deferredFinishDelegate(ExecutorService executor) {
+            return new DeferredRepositorySessionFinishDelegate(this, executor);
+          }
+        });
+      } catch (InactiveSessionException finishException) {
+        SynchronizerSession.this.delegate.onSynchronizeFailed(SynchronizerSession.this, createException, "Failed to create second session.");
+      }
+      return;
+    }
+
+    try {
+      this.sessionB.unbundle(bundleB);
+    } catch (Exception e) {
+      this.delegate.onSynchronizeFailed(this, new UnbundleError(e, sessionA), "Failed to unbundle second session.");
+    }
+
+    synchronize();
   }
 
   /**
@@ -172,7 +220,7 @@ implements RecordsChannelDelegate,
   /**
    * Please don't call this until you've been notified with onInitialized.
    */
-  public synchronized void synchronize() {
+  private synchronized void synchronize() {
     numInboundRecords.set(-1);
     numInboundRecordsStored.set(-1);
     numInboundRecordsFailed.set(-1);
@@ -302,82 +350,6 @@ implements RecordsChannelDelegate,
   @Override
   public void onFlowStoreFailed(RecordsChannel recordsChannel, Exception ex, String recordGuid) {
     Logger.warn(LOG_TAG, "Second RecordsChannel onFlowStoreFailed. Logging remote store error.", ex);
-  }
-
-  /*
-   * RepositorySessionCreationDelegate methods.
-   */
-
-  /**
-   * I could be called twice: once for sessionA and once for sessionB.
-   *
-   * I try to clean up sessionA if it is not null, since the creation of
-   * sessionB must have failed.
-   */
-  @Override
-  public void onSessionCreateFailed(Exception ex) {
-    // Attempt to finish the first session, if the second is the one that failed.
-    if (this.sessionA != null) {
-      try {
-        // We no longer need a reference to our context.
-        this.context = null;
-        this.sessionA.finish(this);
-      } catch (Exception e) {
-        // Never mind; best-effort finish.
-      }
-    }
-    // We no longer need a reference to our context.
-    this.context = null;
-    this.delegate.onSynchronizeFailed(this, ex, "Failed to create session");
-  }
-
-  /**
-   * I should be called twice: first for sessionA and second for sessionB.
-   *
-   * If I am called for sessionB, I call my delegate's `onInitialized` callback
-   * method because my repository sessions are correctly initialized.
-   */
-  // TODO: some of this "finish and clean up" code can be refactored out.
-  @Override
-  public void onSessionCreated(RepositorySession session) {
-    if (session == null ||
-        this.sessionA == session) {
-      // TODO: clean up sessionA.
-      this.delegate.onSynchronizeFailed(this, new UnexpectedSessionException(session), "Failed to create session.");
-      return;
-    }
-    if (this.sessionA == null) {
-      this.sessionA = session;
-
-      // Unbundle.
-      try {
-        this.sessionA.unbundle(this.bundleA);
-      } catch (Exception e) {
-        this.delegate.onSynchronizeFailed(this, new UnbundleError(e, sessionA), "Failed to unbundle first session.");
-        // TODO: abort
-        return;
-      }
-      this.getSynchronizer().repositoryB.createSession(this, this.context);
-      return;
-    }
-    if (this.sessionB == null) {
-      this.sessionB = session;
-      // We no longer need a reference to our context.
-      this.context = null;
-
-      // Unbundle. We unbundled sessionA when that session was created.
-      try {
-        this.sessionB.unbundle(this.bundleB);
-      } catch (Exception e) {
-        this.delegate.onSynchronizeFailed(this, new UnbundleError(e, sessionA), "Failed to unbundle second session.");
-        return;
-      }
-
-      this.delegate.onInitialized(this);
-      return;
-    }
-    // TODO: need a way to make sure we don't call any more delegate methods.
-    this.delegate.onSynchronizeFailed(this, new UnexpectedSessionException(session), "Failed to create session.");
   }
 
   /*

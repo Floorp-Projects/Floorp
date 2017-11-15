@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.media;
-import org.mozilla.gecko.AppConstants;
 
 import java.util.ArrayList;
 
 import android.media.MediaCrypto;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -146,12 +146,12 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
     }
 
     RemoteMediaDrmBridgeStub(String keySystem, String stubId) throws RemoteException {
-        if (AppConstants.Versions.preLollipop) {
+        if (Build.VERSION.SDK_INT < 21) {
             Log.e(LOGTAG, "Pre-Lollipop should never enter here!!");
             throw new RemoteException("Error, unsupported version!");
         }
         try {
-            if (AppConstants.Versions.preMarshmallow) {
+            if (Build.VERSION.SDK_INT < 23) {
                 mBridge = new GeckoMediaDrmBridgeV21(keySystem);
             } else {
                 mBridge = new GeckoMediaDrmBridgeV23(keySystem);

@@ -10,32 +10,34 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 
-XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
-  "resource://gre/modules/LightweightThemeManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ResetProfile",
-  "resource://gre/modules/ResetProfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
-  "resource://gre/modules/UITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+  "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
+  "resource://gre/modules/LightweightThemeManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
+  "resource:///modules/PageActions.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
   "resource:///modules/ReaderParent.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
-  "resource:///modules/PageActions.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ResetProfile",
+  "resource://gre/modules/ResetProfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
+  "resource://gre/modules/UITelemetry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm");
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
@@ -1620,9 +1622,7 @@ this.UITour = {
 
   getAppInfo(aMessageManager, aWindow, aCallbackID) {
     (async () => {
-      let props = ["defaultUpdateChannel", "version"];
-      let appinfo = {};
-      props.forEach(property => appinfo[property] = Services.appinfo[property]);
+      let appinfo = {version: Services.appinfo.version};
 
       // Identifier of the partner repack, as stored in preference "distribution.id"
       // and included in Firefox and other update pings. Note this is not the same as
@@ -1630,6 +1630,9 @@ this.UITour = {
       let distribution =
           Services.prefs.getDefaultBranch("distribution.").getCharPref("id", "default");
       appinfo.distribution = distribution;
+
+      // Update channel, in a way that preserves 'beta' for RC beta builds:
+      appinfo.defaultUpdateChannel = UpdateUtils.getUpdateChannel(false /* no partner ID */);
 
       let isDefaultBrowser = null;
       try {

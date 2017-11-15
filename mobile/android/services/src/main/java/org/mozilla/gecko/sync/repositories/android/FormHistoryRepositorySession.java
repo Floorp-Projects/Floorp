@@ -13,14 +13,15 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.DeletedFormHistory;
 import org.mozilla.gecko.db.BrowserContract.FormHistory;
+import org.mozilla.gecko.sync.SessionCreateException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.NoContentProviderException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.RecordFilter;
 import org.mozilla.gecko.sync.repositories.Repository;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
@@ -49,13 +50,11 @@ public class FormHistoryRepositorySession extends
   public static class FormHistoryRepository extends Repository {
 
     @Override
-    public void createSession(RepositorySessionCreationDelegate delegate,
-                              Context context) {
+    public RepositorySession createSession(Context context) throws SessionCreateException {
       try {
-        final FormHistoryRepositorySession session = new FormHistoryRepositorySession(this, context);
-        delegate.onSessionCreated(session);
+        return new FormHistoryRepositorySession(this, context);
       } catch (Exception e) {
-        delegate.onSessionCreateFailed(e);
+        throw new SessionCreateException(e);
       }
     }
   }

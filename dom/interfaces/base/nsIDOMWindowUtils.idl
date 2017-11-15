@@ -80,6 +80,11 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean docCharsetIsForced;
 
   /**
+   * Return the conversion of a physical millimeter in CSS pixels.
+   */
+  readonly attribute float physicalMillimeterInCSSPixels;
+
+  /**
    * Function to get metadata associated with the window's current document
    * @param aName the name of the metadata.  This should be all lowercase.
    * @return the value of the metadata, or the empty string if it's not set

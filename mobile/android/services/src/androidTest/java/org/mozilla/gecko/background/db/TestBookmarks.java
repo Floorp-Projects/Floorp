@@ -14,16 +14,14 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
 import org.mozilla.gecko.background.sync.helpers.BookmarkHelpers;
-import org.mozilla.gecko.background.sync.helpers.SimpleSuccessBeginDelegate;
-import org.mozilla.gecko.background.sync.helpers.SimpleSuccessCreationDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessFetchDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessFinishDelegate;
 import org.mozilla.gecko.background.sync.helpers.SimpleSuccessStoreDelegate;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
-import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
@@ -31,8 +29,6 @@ import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 import org.mozilla.gecko.sync.repositories.android.BookmarksDataAccessor;
 import org.mozilla.gecko.sync.repositories.android.BookmarksRepository;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
@@ -51,7 +47,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
   /**
    * Trivial test that pinned items will be skipped if present in the DB.
    */
-  public void testPinnedItemsAreNotRetrieved() {
+  public void testPinnedItemsAreNotRetrieved() throws SyncException {
     final BookmarksRepository repo = new BookmarksRepository();
 
     // Ensure that they exist.
@@ -72,7 +68,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
     assertFalse(guids.contains("dapinneditem"));
   }
 
-  public void testRetrieveFolderHasAccurateChildren() {
+  public void testRetrieveFolderHasAccurateChildren() throws SyncException {
     BookmarksRepository repo = new BookmarksRepository();
 
     final long now = System.currentTimeMillis();
@@ -182,7 +178,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
     assertChildrenAreOrdered(repo, folderGUID, children);
   }
 
-  public void testMergeFoldersPreservesSaneOrder() {
+  public void testMergeFoldersPreservesSaneOrder() throws SyncException {
     BookmarksRepository repo = new BookmarksRepository();
 
     final long now = System.currentTimeMillis();
@@ -274,7 +270,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * stored in the database. Verify that the parent folder is not flagged
    * for reupload (i.e., that its modified time is *ahem* unmodified).
    */
-  public void testNoReorderingMeansNoReupload() {
+  public void testNoReorderingMeansNoReupload() throws SyncException {
     BookmarksRepository repo = new BookmarksRepository();
 
     final long now = System.currentTimeMillis();
@@ -358,7 +354,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * marked as deleted. In a database with constraints, this would fail
    * if we simply deleted the records, so we move them first.
    */
-  public void testFolderDeletionOrphansChildren() {
+  public void testFolderDeletionOrphansChildren() throws SyncException {
     BookmarksRepository repo = new BookmarksRepository();
 
     long now = System.currentTimeMillis();
@@ -470,7 +466,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * new GUID), whilst adding children to it. Verifies that replace and insert
    * co-operate.
    */
-  public void testInsertAndReplaceGuid() {
+  public void testInsertAndReplaceGuid() throws SyncException {
     BookmarksRepository repo = new BookmarksRepository();
     wipe();
 
@@ -520,7 +516,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * new title but the same GUID), whilst adding children to it. Verifies that
    * replace and insert co-operate.
    */
-  public void testInsertAndReplaceTitle() {
+  public void testInsertAndReplaceTitle() throws SyncException {
     BookmarksRepository repo = new BookmarksRepository();
     wipe();
 
@@ -566,31 +562,6 @@ public class TestBookmarks extends AndroidSyncTestCase {
   }
 
   /**
-   * Create and begin a new session, handing control to the delegate when started.
-   * Returns when the delegate has notified.
-   */
-  public void inBegunSession(final BookmarksRepository repo,
-                             final RepositorySessionBeginDelegate beginDelegate) {
-    Runnable go = new Runnable() {
-      @Override
-      public void run() {
-        RepositorySessionCreationDelegate delegate = new SimpleSuccessCreationDelegate() {
-          @Override
-          public void onSessionCreated(final RepositorySession session) {
-            try {
-              session.begin(beginDelegate);
-            } catch (InvalidSessionTransitionException e) {
-              performNotify(e);
-            }
-          }
-        };
-        repo.createSession(delegate, getApplicationContext());
-      }
-    };
-    performWait(go);
-  }
-
-  /**
    * Finish the provided session, notifying on success.
    *
    * @param session
@@ -610,75 +581,6 @@ public class TestBookmarks extends AndroidSyncTestCase {
   }
 
   /**
-   * Simple helper class for fetching all records.
-   * The fetched records' GUIDs are stored in `fetchedGUIDs`.
-   */
-  public class SimpleFetchAllBeginDelegate extends SimpleSuccessBeginDelegate {
-    public final ArrayList<String> fetchedGUIDs = new ArrayList<String>();
-
-    @Override
-    public void onBeginSucceeded(final RepositorySession session) {
-      RepositorySessionFetchRecordsDelegate fetchDelegate = new SimpleSuccessFetchDelegate() {
-
-        @Override
-        public void onFetchedRecord(Record record) {
-          fetchedGUIDs.add(record.guid);
-        }
-
-        @Override
-        public void onFetchCompleted() {
-          finishAndNotify(session);
-        }
-
-        @Override
-        public void onBatchCompleted() {
-
-        }
-      };
-      session.fetchModified(fetchDelegate);
-    }
-  }
-
-  /**
-   * Simple helper class for fetching a single record by GUID.
-   * The fetched record is stored in `fetchedRecord`.
-   */
-  public class SimpleFetchOneBeginDelegate extends SimpleSuccessBeginDelegate {
-    public final String guid;
-    public Record fetchedRecord = null;
-
-    public SimpleFetchOneBeginDelegate(String guid) {
-      this.guid = guid;
-    }
-
-    @Override
-    public void onBeginSucceeded(final RepositorySession session) {
-      RepositorySessionFetchRecordsDelegate fetchDelegate = new SimpleSuccessFetchDelegate() {
-
-        @Override
-        public void onFetchedRecord(Record record) {
-          fetchedRecord = record;
-        }
-
-        @Override
-        public void onFetchCompleted() {
-          finishAndNotify(session);
-        }
-
-        @Override
-        public void onBatchCompleted() {
-
-        }
-      };
-      try {
-        session.fetch(new String[] { guid }, fetchDelegate);
-      } catch (InactiveSessionException e) {
-        performNotify("Session is inactive.", e);
-      }
-    }
-  }
-
-  /**
    * Create a new session for the given repository, storing each record
    * from the provided array. Notifies on failure or success.
    *
@@ -687,71 +589,121 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * @param records
    * @param tracked
    */
-  public void storeRecordsInSession(BookmarksRepository repo,
+  private void storeRecordsInSession(BookmarksRepository repo,
                                     final BookmarkRecord[] records,
-                                    final Collection<String> tracked) {
-    SimpleSuccessBeginDelegate beginDelegate = new SimpleSuccessBeginDelegate() {
+                                    final Collection<String> tracked) throws SyncException {
+    final RepositorySession session = repo.createSession(getApplicationContext());
+    session.begin();
+
+    RepositorySessionStoreDelegate storeDelegate = new SimpleSuccessStoreDelegate() {
       @Override
-      public void onBeginSucceeded(final RepositorySession session) {
-        RepositorySessionStoreDelegate storeDelegate = new SimpleSuccessStoreDelegate() {
-
-          @Override
-          public void onStoreCompleted() {
-            // Pass back whatever we tracked.
-            if (tracked != null) {
-              Iterator<String> iter = session.getTrackedRecordIDs();
-              while (iter.hasNext()) {
-                tracked.add(iter.next());
-              }
-            }
-            finishAndNotify(session);
-          }
-
-          @Override
-          public void onRecordStoreSucceeded(String guid) {
-          }
-
-          @Override
-          public void onRecordStoreReconciled(String guid, String oldGuid, Integer newVersion) {
-          }
-
-          @Override
-          public void onStoreFailed(Exception e) {
-
-          }
-        };
-        session.setStoreDelegate(storeDelegate);
-        for (BookmarkRecord record : records) {
-          try {
-            session.store(record);
-          } catch (NoStoreDelegateException e) {
-            // Never happens.
+      public void onStoreCompleted() {
+        // Pass back whatever we tracked.
+        if (tracked != null) {
+          Iterator<String> iter = session.getTrackedRecordIDs();
+          while (iter.hasNext()) {
+            tracked.add(iter.next());
           }
         }
-        session.storeDone();
+        finishAndNotify(session);
+      }
+
+      @Override
+      public void onRecordStoreSucceeded(String guid) {
+      }
+
+      @Override
+      public void onRecordStoreReconciled(String guid, String oldGuid, Integer newVersion) {
+      }
+
+      @Override
+      public void onStoreFailed(Exception e) {
+
       }
     };
-    inBegunSession(repo, beginDelegate);
+    session.setStoreDelegate(storeDelegate);
+    for (BookmarkRecord record : records) {
+      try {
+        session.store(record);
+      } catch (NoStoreDelegateException e) {
+        // Never happens.
+      }
+    }
+    session.storeDone();
   }
 
-  public ArrayList<String> fetchGUIDs(BookmarksRepository repo) {
-    SimpleFetchAllBeginDelegate beginDelegate = new SimpleFetchAllBeginDelegate();
-    inBegunSession(repo, beginDelegate);
-    return beginDelegate.fetchedGUIDs;
+  private ArrayList<String> fetchGUIDs(BookmarksRepository repo) throws SyncException {
+    final ArrayList<String> fetchedGUIDs = new ArrayList<>();
+
+    final RepositorySession session = repo.createSession(getApplicationContext());
+    session.begin();
+
+    RepositorySessionFetchRecordsDelegate fetchDelegate = new SimpleSuccessFetchDelegate() {
+      @Override
+      public void onFetchedRecord(Record record) {
+        fetchedGUIDs.add(record.guid);
+      }
+
+      @Override
+      public void onFetchCompleted() {
+        finishAndNotify(session);
+      }
+
+      @Override
+      public void onBatchCompleted() {
+
+      }
+    };
+    session.fetchModified(fetchDelegate);
+
+    return fetchedGUIDs;
   }
 
-  public BookmarkRecord fetchGUID(BookmarksRepository repo,
-                                  final String guid) {
+  private BookmarkRecord fetchGUID(BookmarksRepository repo,
+                                  final String guid) throws SyncException {
     Logger.info(LOG_TAG, "Fetching for " + guid);
-    SimpleFetchOneBeginDelegate beginDelegate = new SimpleFetchOneBeginDelegate(guid);
-    inBegunSession(repo, beginDelegate);
-    Logger.info(LOG_TAG, "Fetched " + beginDelegate.fetchedRecord);
-    assertTrue(beginDelegate.fetchedRecord != null);
-    return (BookmarkRecord) beginDelegate.fetchedRecord;
+    final ArrayList<Record> fetchedRecords = new ArrayList<>();
+
+    final RepositorySession session = repo.createSession(getApplicationContext());
+    session.begin();
+
+    final RepositorySessionFetchRecordsDelegate fetchDelegate = new SimpleSuccessFetchDelegate() {
+      @Override
+      public void onFetchedRecord(Record record) {
+        fetchedRecords.add(record);
+      }
+
+      @Override
+      public void onFetchCompleted() {
+        finishAndNotify(session);
+      }
+
+      @Override
+      public void onBatchCompleted() {
+
+      }
+    };
+
+    performWait(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          session.fetch(new String[]{guid}, fetchDelegate);
+        } catch (InactiveSessionException e) {
+          performNotify(e);
+        }
+      }
+    });
+
+    assertEquals(1, fetchedRecords.size());
+    Record fetchedRecord = fetchedRecords.get(0);
+
+    Logger.info(LOG_TAG, "Fetched " + fetchedRecord);
+    return (BookmarkRecord) fetchedRecord;
   }
 
   public JSONArray fetchChildrenForGUID(BookmarksRepository repo,
-      final String guid) {
+      final String guid) throws SyncException {
     return fetchGUID(repo, guid).children;
   }
 
@@ -932,7 +884,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
     getDataAccessor().wipe();
   }
 
-  protected void assertChildrenAreOrdered(BookmarksRepository repo, String guid, Record[] expected) {
+  protected void assertChildrenAreOrdered(BookmarksRepository repo, String guid, Record[] expected) throws SyncException {
     Logger.debug(getName(), "Fetching children...");
     JSONArray folderChildren = fetchChildrenForGUID(repo, guid);
 
@@ -944,7 +896,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
     }
   }
 
-  protected void assertChildrenAreUnordered(BookmarksRepository repo, String guid, Record[] expected) {
+  protected void assertChildrenAreUnordered(BookmarksRepository repo, String guid, Record[] expected) throws SyncException {
     Logger.debug(getName(), "Fetching children...");
     JSONArray folderChildren = fetchChildrenForGUID(repo, guid);
 

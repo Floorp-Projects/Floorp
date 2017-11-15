@@ -466,6 +466,17 @@ ChromiumCDMProxy::OnResolveLoadSessionPromise(uint32_t aPromiseId,
 }
 
 void
+ChromiumCDMProxy::OnResolvePromiseWithKeyStatus(uint32_t aPromiseId,
+                                                dom::MediaKeyStatus aKeyStatus)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  mKeys->ResolvePromiseWithKeyStatus(aPromiseId, aKeyStatus);
+}
+
+void
 ChromiumCDMProxy::OnSessionMessage(const nsAString& aSessionId,
                                    dom::MediaKeyMessageType aMessageType,
                                    const nsTArray<uint8_t>& aMessage)
@@ -596,6 +607,31 @@ ChromiumCDMProxy::GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
 {
   CDMCaps::AutoLock caps(Capabilites());
   caps.GetSessionIdsForKeyId(aKeyId, aSessionIds);
+}
+
+void
+ChromiumCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
+                                     const nsAString& aMinHdcpVersion)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  EME_LOG("ChromiumCDMProxy::GetStatusForPolicy(pid=%u) minHdcpVersion=%s",
+          aPromiseId,
+          NS_ConvertUTF16toUTF8(aMinHdcpVersion).get());
+
+  RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
+  if (!cdm) {
+    RejectPromise(aPromiseId,
+                  NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in GetStatusForPolicy"));
+    return;
+  }
+
+  mGMPThread->Dispatch(NewRunnableMethod<uint32_t, nsCString>(
+    "gmp::ChromiumCDMParent::GetStatusForPolicy",
+    cdm,
+    &gmp::ChromiumCDMParent::GetStatusForPolicy,
+    aPromiseId,
+    NS_ConvertUTF16toUTF8(aMinHdcpVersion)));
 }
 
 void

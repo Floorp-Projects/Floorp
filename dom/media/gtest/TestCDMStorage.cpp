@@ -1072,6 +1072,9 @@ private:
     void ResolveLoadSessionPromise(uint32_t aPromiseId,
                                    bool aSuccessful) override { }
 
+    void ResolvePromiseWithKeyStatus(uint32_t aPromiseId,
+                                     uint32_t aKeyStatus) override { }
+
     void ResolvePromise(uint32_t aPromiseId) override { }
 
     void RejectPromise(uint32_t aPromiseId,

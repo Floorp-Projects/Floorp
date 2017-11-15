@@ -68,7 +68,7 @@ const BackgroundPageThumbs = {
    * @opt backgroundColor The background colour when capturing an image.
    */
   capture(url, options = {}) {
-    if (!PageThumbs._prefEnabled()) {
+    if (!PageThumbs._prefEnabled() || this.isBlacklistedUrl(url)) {
       if (options.onDone)
         schedule(() => options.onDone(url));
       return;
@@ -94,6 +94,23 @@ const BackgroundPageThumbs = {
   },
 
   /**
+   * Determine if a url should not allow background captures.
+   *
+   * @param {string} url The URL to check.
+   *
+   * @return {bool} True or false.
+   */
+  isBlacklistedUrl(url) {
+    try {
+      const domain = Services.eTLD.getBaseDomain(Services.io.newURI(url));
+      // Don't allow *.twitch.tv as its javascript causes high CPU when media
+      // (<video>s) fail to load. See bug 1412505.
+      return domain === "twitch.tv";
+    } catch (ex) {}
+    return false;
+  },
+
+  /**
    * Asynchronously captures a thumbnail of the given URL if one does not
    * already exist.  Otherwise does nothing.
    *
@@ -107,7 +124,7 @@ const BackgroundPageThumbs = {
   async captureIfMissing(url, options = {}) {
     // Short circuit this function if pref is enabled, or else we leak observers.
     // See Bug 1400562
-    if (!PageThumbs._prefEnabled()) {
+    if (!PageThumbs._prefEnabled() || this.isBlacklistedUrl(url)) {
       if (options.onDone)
         options.onDone(url);
       return url;
