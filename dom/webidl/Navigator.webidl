@@ -236,6 +236,12 @@ partial interface Navigator {
   VRServiceTest requestVRServiceTest();
 };
 
+// http://webaudio.github.io/web-midi-api/#requestmidiaccess
+partial interface Navigator {
+  [Throws, Pref="dom.webmidi.enabled"]
+  Promise<MIDIAccess> requestMIDIAccess(optional MIDIOptions options);
+};
+
 callback NavigatorUserMediaSuccessCallback = void (MediaStream stream);
 callback NavigatorUserMediaErrorCallback = void (MediaStreamError error);
 
