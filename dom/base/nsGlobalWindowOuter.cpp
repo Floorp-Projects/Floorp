@@ -4,501 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsGlobalWindow.h"
-
-#include <algorithm>
-
-#include "mozilla/MemoryReporting.h"
-
-// Local Includes
-#include "Navigator.h"
-#include "nsContentSecurityManager.h"
-#include "nsScreen.h"
-#include "nsHistory.h"
-#include "nsDOMNavigationTiming.h"
-#include "nsIDOMStorageManager.h"
-#include "mozilla/dom/LocalStorage.h"
-#include "mozilla/dom/Storage.h"
-#include "mozilla/dom/IdleRequest.h"
-#include "mozilla/dom/Performance.h"
-#include "mozilla/dom/StorageEvent.h"
-#include "mozilla/dom/StorageEventBinding.h"
-#include "mozilla/dom/StorageNotifierService.h"
-#include "mozilla/dom/StorageUtils.h"
-#include "mozilla/dom/Timeout.h"
-#include "mozilla/dom/TimeoutHandler.h"
-#include "mozilla/dom/TimeoutManager.h"
-#include "mozilla/IntegerPrintfMacros.h"
-#if defined(MOZ_WIDGET_ANDROID)
-#include "mozilla/dom/WindowOrientationObserver.h"
-#endif
-#include "nsDOMOfflineResourceList.h"
-#include "nsError.h"
-#include "nsIIdleService.h"
-#include "nsISizeOfEventTarget.h"
-#include "nsDOMJSUtils.h"
-#include "nsArrayUtils.h"
-#include "nsIDOMWindowCollection.h"
-#include "nsDOMWindowList.h"
-#include "mozilla/dom/WakeLock.h"
-#include "mozilla/dom/power/PowerManagerService.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIPermissionManager.h"
-#include "nsIScriptContext.h"
-#include "nsIScriptTimeoutHandler.h"
-#include "nsITimeoutHandler.h"
-#include "nsIController.h"
-#include "nsScriptNameSpaceManager.h"
-#include "nsISlowScriptDebug.h"
-#include "nsWindowMemoryReporter.h"
-#include "nsWindowSizes.h"
-#include "WindowNamedPropertiesHandler.h"
-#include "nsFrameSelection.h"
-#include "nsNetUtil.h"
-#include "nsVariant.h"
-#include "nsPrintfCString.h"
-#include "mozilla/intl/LocaleService.h"
-
-// Helper Classes
-#include "nsJSUtils.h"
-#include "jsapi.h"              // for JSAutoRequest
-#include "jswrapper.h"
-#include "nsCharSeparatedTokenizer.h"
-#include "nsReadableUtils.h"
-#include "nsDOMClassInfo.h"
-#include "nsJSEnvironment.h"
-#include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/Likely.h"
-#include "mozilla/Sprintf.h"
-#include "mozilla/Unused.h"
-
-// Other Classes
-#include "mozilla/dom/BarProps.h"
-#include "nsContentCID.h"
-#include "nsLayoutStatics.h"
-#include "nsCCUncollectableMarker.h"
-#include "mozilla/dom/workers/Workers.h"
-#include "mozilla/dom/ToJSValue.h"
-#include "nsJSPrincipals.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/Debug.h"
-#include "mozilla/EventListenerManager.h"
-#include "mozilla/EventStates.h"
-#include "mozilla/MouseEvents.h"
-#include "mozilla/ProcessHangMonitor.h"
-#include "mozilla/ThrottledEventQueue.h"
-#include "AudioChannelService.h"
-#include "nsAboutProtocolUtils.h"
-#include "nsCharTraits.h" // NS_IS_HIGH/LOW_SURROGATE
-#include "PostMessageEvent.h"
-#include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/TabGroup.h"
-
-// Interfaces Needed
-#include "nsIFrame.h"
-#include "nsCanvasFrame.h"
-#include "nsIWidget.h"
-#include "nsIWidgetListener.h"
-#include "nsIBaseWindow.h"
-#include "nsIDeviceSensors.h"
-#include "nsIContent.h"
-#include "nsIDocShell.h"
-#include "nsIDocCharset.h"
-#include "nsIDocument.h"
-#include "Crypto.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMEvent.h"
-#include "nsIDOMOfflineResourceList.h"
-#include "nsDOMString.h"
-#include "nsIEmbeddingSiteWindow.h"
-#include "nsThreadUtils.h"
-#include "nsILoadContext.h"
-#include "nsIPresShell.h"
-#include "nsIScrollableFrame.h"
-#include "nsView.h"
-#include "nsViewManager.h"
-#include "nsISelectionController.h"
-#include "nsISelection.h"
-#include "nsIPrompt.h"
-#include "nsIPromptService.h"
-#include "nsIPromptFactory.h"
-#include "nsIAddonPolicyService.h"
-#include "nsIWritablePropertyBag2.h"
-#include "nsIWebNavigation.h"
-#include "nsIWebBrowserChrome.h"
-#include "nsIWebBrowserFind.h"  // For window.find()
-#include "nsIWindowMediator.h"  // For window.find()
-#include "nsComputedDOMStyle.h"
-#include "nsDOMCID.h"
-#include "nsDOMWindowUtils.h"
-#include "nsIWindowWatcher.h"
-#include "nsPIWindowWatcher.h"
-#include "nsIContentViewer.h"
-#include "nsIScriptError.h"
-#include "nsIControllers.h"
-#include "nsIControllerContext.h"
-#include "nsGlobalWindowCommands.h"
-#include "nsQueryObject.h"
-#include "nsContentUtils.h"
-#include "nsCSSProps.h"
-#include "nsIDOMFileList.h"
-#include "nsIURIFixup.h"
-#ifndef DEBUG
-#include "nsIAppStartup.h"
-#include "nsToolkitCompsCID.h"
-#endif
-#include "nsCDefaultURIFixup.h"
-#include "mozilla/EventDispatcher.h"
-#include "mozilla/EventStateManager.h"
-#include "nsIObserverService.h"
-#include "nsFocusManager.h"
-#include "nsIXULWindow.h"
-#include "nsITimedChannel.h"
-#include "nsServiceManagerUtils.h"
-#ifdef MOZ_XUL
-#include "nsIDOMXULControlElement.h"
-#include "nsMenuPopupFrame.h"
-#endif
-#include "mozilla/dom/CustomEvent.h"
-#include "nsIJARChannel.h"
-#include "nsIScreenManager.h"
-#include "nsIEffectiveTLDService.h"
-
-#include "xpcprivate.h"
-
-#ifdef NS_PRINTING
-#include "nsIPrintSettings.h"
-#include "nsIPrintSettingsService.h"
-#include "nsIWebBrowserPrint.h"
-#endif
-
-#include "nsWindowRoot.h"
-#include "nsNetCID.h"
-#include "nsIArray.h"
-
-// XXX An unfortunate dependency exists here (two XUL files).
-#include "nsIDOMXULDocument.h"
-#include "nsIDOMXULCommandDispatcher.h"
-
-#include "nsBindingManager.h"
-#include "nsXBLService.h"
-
-// used for popup blocking, needs to be converted to something
-// belonging to the back-end like nsIContentPolicy
-#include "nsIPopupWindowManager.h"
-
-#include "nsIDragService.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/Selection.h"
-#include "nsFrameLoader.h"
-#include "nsISupportsPrimitives.h"
-#include "nsXPCOMCID.h"
-#include "mozilla/Logging.h"
-#include "prenv.h"
-
-#include "mozilla/dom/IDBFactory.h"
-#include "mozilla/dom/MessageChannel.h"
-#include "mozilla/dom/Promise.h"
-
-#include "mozilla/dom/Gamepad.h"
-#include "mozilla/dom/GamepadManager.h"
-
-#include "gfxVR.h"
-#include "mozilla/dom/VRDisplay.h"
-#include "mozilla/dom/VRDisplayEvent.h"
-#include "mozilla/dom/VRDisplayEventBinding.h"
-#include "mozilla/dom/VREventObserver.h"
-
-#include "nsRefreshDriver.h"
-#include "Layers.h"
-
-#include "mozilla/AddonPathService.h"
-#include "mozilla/BasePrincipal.h"
-#include "mozilla/Services.h"
-#include "mozilla/Telemetry.h"
-#include "mozilla/dom/Location.h"
-#include "nsHTMLDocument.h"
-#include "nsWrapperCacheInlines.h"
-#include "mozilla/DOMEventTargetHelper.h"
-#include "prrng.h"
-#include "nsSandboxFlags.h"
-#include "TimeChangeObserver.h"
-#include "mozilla/dom/AudioContext.h"
-#include "mozilla/dom/BrowserElementDictionariesBinding.h"
-#include "mozilla/dom/cache/CacheStorage.h"
-#include "mozilla/dom/Console.h"
-#include "mozilla/dom/Fetch.h"
-#include "mozilla/dom/FunctionBinding.h"
-#include "mozilla/dom/HashChangeEvent.h"
-#include "mozilla/dom/IntlUtils.h"
-#include "mozilla/dom/MozSelfSupportBinding.h"
-#include "mozilla/dom/PopStateEvent.h"
-#include "mozilla/dom/PopupBlockedEvent.h"
-#include "mozilla/dom/PrimitiveConversions.h"
-#include "mozilla/dom/WindowBinding.h"
-#include "nsITabChild.h"
-#include "mozilla/dom/MediaQueryList.h"
-#include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/NavigatorBinding.h"
-#include "mozilla/dom/ImageBitmap.h"
-#include "mozilla/dom/ImageBitmapBinding.h"
-#include "mozilla/dom/ServiceWorkerRegistration.h"
-#include "mozilla/dom/U2F.h"
-#include "mozilla/dom/WebIDLGlobalNameHash.h"
-#include "mozilla/dom/Worklet.h"
-#ifdef HAVE_SIDEBAR
-#include "mozilla/dom/ExternalBinding.h"
-#endif
-
-#ifdef MOZ_WEBSPEECH
-#include "mozilla/dom/SpeechSynthesis.h"
-#endif
-
-// Apple system headers seem to have a check() macro.  <sigh>
-#ifdef check
-class nsIScriptTimeoutHandler;
-#undef check
-#endif // check
-#include "AccessCheck.h"
-
-#ifdef ANDROID
-#include <android/log.h>
-#endif
-
-#ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
-#else
-#include <unistd.h> // for getpid()
-#endif
-
-static const char kStorageEnabled[] = "dom.storage.enabled";
-
-using namespace mozilla;
-using namespace mozilla::dom;
-using namespace mozilla::dom::ipc;
-using mozilla::BasePrincipal;
-using mozilla::OriginAttributes;
-using mozilla::TimeStamp;
-using mozilla::TimeDuration;
-using mozilla::dom::cache::CacheStorage;
-
-static LazyLogModule gDOMLeakPRLog("DOMLeak");
-
-nsGlobalWindowInner::InnerWindowByIdTable *nsGlobalWindowInner::sInnerWindowsById = nullptr;
 nsGlobalWindowOuter::OuterWindowByIdTable *nsGlobalWindowOuter::sOuterWindowsById = nullptr;
-
-static int32_t              gRefCnt                           = 0;
-static int32_t              gOpenPopupSpamCount               = 0;
-static PopupControlState    gPopupControlState                = openAbused;
-static bool                 gMouseDown                        = false;
-static bool                 gDragServiceDisabled              = false;
-static FILE                *gDumpFile                         = nullptr;
-static uint32_t             gSerialCounter                    = 0;
-static bool                 gIdleObserversAPIFuzzTimeDisabled = false;
-
-#ifdef DEBUG_jst
-int32_t gTimeoutCnt                                    = 0;
-#endif
-
-#if defined(DEBUG_bryner) || defined(DEBUG_chb)
-#define DEBUG_PAGE_CACHE
-#endif
-
-#define DOM_TOUCH_LISTENER_ADDED "dom-touch-listener-added"
-
-#define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
-
-// The interval at which we execute idle callbacks
-static uint32_t gThrottledIdlePeriodLength;
-
-#define DEFAULT_THROTTLED_IDLE_PERIOD_LENGTH 10000
-
-#define FORWARD_TO_OUTER(method, args, err_rval)                              \
-  PR_BEGIN_MACRO                                                              \
-  if (IsInnerWindow()) {                                                      \
-    nsGlobalWindowOuter *outer = GetOuterWindowInternal();                    \
-    if (!AsInner()->HasActiveDocument()) {                                    \
-      NS_WARNING(outer ?                                                      \
-                 "Inner window does not have active document." :              \
-                 "No outer window available!");                               \
-      return err_rval;                                                        \
-    }                                                                         \
-    return outer->method args;                                                \
-  }                                                                           \
-  PR_END_MACRO
-
-#define FORWARD_TO_OUTER_OR_THROW(method, args, errorresult, err_rval)        \
-  PR_BEGIN_MACRO                                                              \
-  MOZ_RELEASE_ASSERT(IsInnerWindow());                                        \
-  nsGlobalWindowOuter *outer = GetOuterWindowInternal();                      \
-  if (MOZ_LIKELY(AsInner()->HasActiveDocument())) {                           \
-    return outer->method args;                                                \
-  }                                                                           \
-  if (!outer) {                                                               \
-    NS_WARNING("No outer window available!");                                 \
-    errorresult.Throw(NS_ERROR_NOT_INITIALIZED);                              \
-  } else {                                                                    \
-    errorresult.Throw(NS_ERROR_XPC_SECURITY_MANAGER_VETO);                    \
-  }                                                                           \
-  return err_rval;                                                            \
-  PR_END_MACRO
-
-#define FORWARD_TO_OUTER_VOID(method, args)                                   \
-  PR_BEGIN_MACRO                                                              \
-  if (IsInnerWindow()) {                                                      \
-    nsGlobalWindowOuter *outer = GetOuterWindowInternal();                    \
-    if (!AsInner()->HasActiveDocument()) {                                    \
-      NS_WARNING(outer ?                                                      \
-                 "Inner window does not have active document." :              \
-                 "No outer window available!");                               \
-      return;                                                                 \
-    }                                                                         \
-    outer->method args;                                                       \
-    return;                                                                   \
-  }                                                                           \
-  PR_END_MACRO
-
-#define FORWARD_TO_OUTER_MODAL_CONTENT_WINDOW(method, args, err_rval)         \
-  PR_BEGIN_MACRO                                                              \
-  if (IsInnerWindow()) {                                                      \
-    nsGlobalWindowOuter *outer = GetOuterWindowInternal();                    \
-    if (!AsInner()->HasActiveDocument()) {                                    \
-      NS_WARNING(outer ?                                                      \
-                 "Inner window does not have active document." :              \
-                 "No outer window available!");                               \
-      return err_rval;                                                        \
-    }                                                                         \
-    return ((nsGlobalModalWindow *)outer)->method args;                       \
-  }                                                                           \
-  PR_END_MACRO
-
-#define FORWARD_TO_INNER(method, args, err_rval)                              \
-  PR_BEGIN_MACRO                                                              \
-  if (IsOuterWindow()) {                                                      \
-    if (!mInnerWindow) {                                                      \
-      NS_WARNING("No inner window available!");                               \
-      return err_rval;                                                        \
-    }                                                                         \
-    return GetCurrentInnerWindowInternal()->method args;                      \
-  }                                                                           \
-  PR_END_MACRO
-
-#define FORWARD_TO_INNER_MODAL_CONTENT_WINDOW(method, args, err_rval)         \
-  PR_BEGIN_MACRO                                                              \
-  if (IsOuterWindow()) {                                                      \
-    if (!mInnerWindow) {                                                      \
-      NS_WARNING("No inner window available!");                               \
-      return err_rval;                                                        \
-    }                                                                         \
-    return ((nsGlobalModalWindow*)GetCurrentInnerWindowInternal())->method args; \
-  }                                                                           \
-  PR_END_MACRO
-
-#define FORWARD_TO_INNER_VOID(method, args)                                   \
-  PR_BEGIN_MACRO                                                              \
-  if (IsOuterWindow()) {                                                      \
-    if (!mInnerWindow) {                                                      \
-      NS_WARNING("No inner window available!");                               \
-      return;                                                                 \
-    }                                                                         \
-    GetCurrentInnerWindowInternal()->method args;                             \
-    return;                                                                   \
-  }                                                                           \
-  PR_END_MACRO
-
-// Same as FORWARD_TO_INNER, but this will create a fresh inner if an
-// inner doesn't already exists.
-#define FORWARD_TO_INNER_CREATE(method, args, err_rval)                       \
-  PR_BEGIN_MACRO                                                              \
-  if (IsOuterWindow()) {                                                      \
-    if (!mInnerWindow) {                                                      \
-      if (mIsClosed) {                                                        \
-        return err_rval;                                                      \
-      }                                                                       \
-      nsCOMPtr<nsIDocument> kungFuDeathGrip = GetDoc();                       \
-      ::mozilla::Unused << kungFuDeathGrip;                                   \
-      if (!mInnerWindow) {                                                    \
-        return err_rval;                                                      \
-      }                                                                       \
-    }                                                                         \
-    return GetCurrentInnerWindowInternal()->method args;                      \
-  }                                                                           \
-  PR_END_MACRO
-
-// CIDs
-static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
-
-#define NETWORK_UPLOAD_EVENT_NAME     NS_LITERAL_STRING("moznetworkupload")
-#define NETWORK_DOWNLOAD_EVENT_NAME   NS_LITERAL_STRING("moznetworkdownload")
-
-/**
- * An indirect observer object that means we don't have to implement nsIObserver
- * on nsGlobalWindow, where any script could see it.
- */
-class nsGlobalWindowObserver final : public nsIObserver
-                                   , public nsIInterfaceRequestor
-                                   , public StorageNotificationObserver
-{
-public:
-  explicit nsGlobalWindowObserver(nsGlobalWindowInner* aWindow) : mWindow(aWindow) {}
-  NS_DECL_ISUPPORTS
-  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData) override
-  {
-    if (!mWindow)
-      return NS_OK;
-    return mWindow->Observe(aSubject, aTopic, aData);
-  }
-  void Forget() { mWindow = nullptr; }
-  NS_IMETHOD GetInterface(const nsIID& aIID, void** aResult) override
-  {
-    if (mWindow && aIID.Equals(NS_GET_IID(nsIDOMWindow)) && mWindow) {
-      return mWindow->QueryInterface(aIID, aResult);
-    }
-    return NS_NOINTERFACE;
-  }
-
-  void
-  ObserveStorageNotification(StorageEvent* aEvent,
-                             const char16_t* aStorageType,
-                             bool aPrivateBrowsing) override
-  {
-    if (mWindow) {
-      mWindow->ObserveStorageNotification(aEvent, aStorageType,
-                                          aPrivateBrowsing);
-    }
-  }
-
-  nsIPrincipal*
-  GetPrincipal() const override
-  {
-    return mWindow ? mWindow->GetPrincipal() : nullptr;
-  }
-
-  bool
-  IsPrivateBrowsing() const override
-  {
-    return mWindow ? mWindow->IsPrivateBrowsing() : false;
-  }
-
-  nsIEventTarget*
-  GetEventTarget() const override
-  {
-    return mWindow ? mWindow->EventTargetFor(TaskCategory::Other) : nullptr;
-  }
-
-private:
-  ~nsGlobalWindowObserver() = default;
-
-  // This reference is non-owning and safe because it's cleared by
-  // nsGlobalWindow::CleanUp().
-  nsGlobalWindowInner* MOZ_NON_OWNING_REF mWindow;
-};
-
-NS_IMPL_ISUPPORTS(nsGlobalWindowObserver, nsIObserver, nsIInterfaceRequestor)
 
 static already_AddRefed<nsIVariant>
 CreateVoidVariant()
@@ -535,281 +41,28 @@ DialogValueHolder::Get(JSContext* aCx, JS::Handle<JSObject*> aScope,
   }
 }
 
-class IdleRequestExecutor;
-
-class IdleRequestExecutorTimeoutHandler final : public TimeoutHandler
-{
-public:
-  explicit IdleRequestExecutorTimeoutHandler(IdleRequestExecutor* aExecutor)
-    : mExecutor(aExecutor)
-  {
-  }
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IdleRequestExecutorTimeoutHandler,
-                                           TimeoutHandler)
-
-  nsresult Call() override;
-
-private:
-  ~IdleRequestExecutorTimeoutHandler() override {}
-  RefPtr<IdleRequestExecutor> mExecutor;
-};
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(IdleRequestExecutorTimeoutHandler, TimeoutHandler, mExecutor)
-
-NS_IMPL_ADDREF_INHERITED(IdleRequestExecutorTimeoutHandler, TimeoutHandler)
-NS_IMPL_RELEASE_INHERITED(IdleRequestExecutorTimeoutHandler, TimeoutHandler)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IdleRequestExecutorTimeoutHandler)
-NS_INTERFACE_MAP_END_INHERITING(TimeoutHandler)
-
-
-class IdleRequestExecutor final : public nsIRunnable
-                                , public nsICancelableRunnable
-                                , public nsINamed
-                                , public nsIIdleRunnable
-{
-public:
-  explicit IdleRequestExecutor(nsGlobalWindowInner* aWindow)
-    : mDispatched(false)
-    , mDeadline(TimeStamp::Now())
-    , mWindow(aWindow)
-  {
-    MOZ_DIAGNOSTIC_ASSERT(mWindow);
-    MOZ_DIAGNOSTIC_ASSERT(mWindow->IsInnerWindow());
-
-    mIdlePeriodLimit = { mDeadline, mWindow->LastIdleRequestHandle() };
-    mDelayedExecutorDispatcher = new IdleRequestExecutorTimeoutHandler(this);
-  }
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(IdleRequestExecutor, nsIRunnable)
-
-  NS_DECL_NSIRUNNABLE
-  NS_DECL_NSINAMED
-  nsresult Cancel() override;
-  void SetDeadline(TimeStamp aDeadline) override;
-
-  bool IsCancelled() const { return !mWindow || mWindow->AsInner()->InnerObjectsFreed(); }
-  // Checks if aRequest shouldn't execute in the current idle period
-  // since it has been queued from a chained call to
-  // requestIdleCallback from within a running idle callback.
-  bool IneligibleForCurrentIdlePeriod(IdleRequest* aRequest) const
-  {
-    return aRequest->Handle() >= mIdlePeriodLimit.mLastRequestIdInIdlePeriod &&
-           TimeStamp::Now() <= mIdlePeriodLimit.mEndOfIdlePeriod;
-  }
-
-  void MaybeUpdateIdlePeriodLimit();
-
-  // Maybe dispatch the IdleRequestExecutor. MabyeDispatch will
-  // schedule a delayed dispatch if the associated window is in the
-  // background or if given a time to wait until dispatching.
-  void MaybeDispatch(TimeStamp aDelayUntil = TimeStamp());
-  void ScheduleDispatch();
-private:
-  struct IdlePeriodLimit
-  {
-    TimeStamp mEndOfIdlePeriod;
-    uint32_t mLastRequestIdInIdlePeriod;
-  };
-
-  void DelayedDispatch(uint32_t aDelay);
-
-  ~IdleRequestExecutor() override {}
-
-  bool mDispatched;
-  TimeStamp mDeadline;
-  IdlePeriodLimit mIdlePeriodLimit;
-  RefPtr<nsGlobalWindowInner> mWindow;
-  // The timeout handler responsible for dispatching this executor in
-  // the case of immediate dispatch to the idle queue isn't
-  // desirable. This is used if we've dispatched all idle callbacks
-  // that are allowed to run in the current idle period, or if the
-  // associated window is currently in the background.
-  nsCOMPtr<nsITimeoutHandler> mDelayedExecutorDispatcher;
-  // If not Nothing() then this value is the handle to the currently
-  // scheduled delayed executor dispatcher. This is needed to be able
-  // to cancel the timeout handler in case of the executor being
-  // cancelled.
-  Maybe<int32_t> mDelayedExecutorHandle;
-};
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(IdleRequestExecutor)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(IdleRequestExecutor)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(IdleRequestExecutor)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IdleRequestExecutor)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDelayedExecutorDispatcher)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IdleRequestExecutor)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDelayedExecutorDispatcher)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IdleRequestExecutor)
-  NS_INTERFACE_MAP_ENTRY(nsIRunnable)
-  NS_INTERFACE_MAP_ENTRY(nsICancelableRunnable)
-  NS_INTERFACE_MAP_ENTRY(nsINamed)
-  NS_INTERFACE_MAP_ENTRY(nsIIdleRunnable)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRunnable)
-NS_INTERFACE_MAP_END
-
-NS_IMETHODIMP
-IdleRequestExecutor::GetName(nsACString& aName)
-{
-    aName.AssignASCII("IdleRequestExecutor");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-IdleRequestExecutor::Run()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mDispatched = false;
-  if (mWindow) {
-    return mWindow->ExecuteIdleRequest(mDeadline);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-IdleRequestExecutor::Cancel()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mDelayedExecutorHandle && mWindow) {
-    mWindow->AsInner()->TimeoutManager().ClearTimeout(
-      mDelayedExecutorHandle.value(),
-      Timeout::Reason::eIdleCallbackTimeout);
-  }
-
-  mWindow = nullptr;
-  return NS_OK;
-}
-
-void
-IdleRequestExecutor::SetDeadline(TimeStamp aDeadline)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mWindow) {
-    return;
-  }
-
-  mDeadline = aDeadline;
-}
-
-void
-IdleRequestExecutor::MaybeUpdateIdlePeriodLimit()
-{
-  if (TimeStamp::Now() > mIdlePeriodLimit.mEndOfIdlePeriod) {
-    mIdlePeriodLimit = { mDeadline, mWindow->LastIdleRequestHandle() };
-  }
-}
-
-void
-IdleRequestExecutor::MaybeDispatch(TimeStamp aDelayUntil)
-{
-  // If we've already dispatched the executor we don't want to do it
-  // again. Also, if we've called IdleRequestExecutor::Cancel mWindow
-  // will be null, which indicates that we shouldn't dispatch this
-  // executor either.
-  if (mDispatched || IsCancelled()) {
-    return;
-  }
-
-  mDispatched = true;
-
-  nsPIDOMWindowOuter* outer = mWindow->GetOuterWindow();
-  if (outer && outer->AsOuter()->IsBackground()) {
-    // Set a timeout handler with a timeout of 0 ms to throttle idle
-    // callback requests coming from a backround window using
-    // background timeout throttling.
-    DelayedDispatch(0);
-    return;
-  }
-
-  TimeStamp now = TimeStamp::Now();
-  if (!aDelayUntil || aDelayUntil < now) {
-    ScheduleDispatch();
-    return;
-  }
-
-  TimeDuration delay = aDelayUntil - now;
-  DelayedDispatch(static_cast<uint32_t>(delay.ToMilliseconds()));
-}
-
-void
-IdleRequestExecutor::ScheduleDispatch()
-{
-  MOZ_ASSERT(mWindow);
-  mDelayedExecutorHandle = Nothing();
-  RefPtr<IdleRequestExecutor> request = this;
-  NS_IdleDispatchToCurrentThread(request.forget());
-}
-
-void
-IdleRequestExecutor::DelayedDispatch(uint32_t aDelay)
-{
-  MOZ_ASSERT(mWindow);
-  MOZ_ASSERT(mDelayedExecutorHandle.isNothing());
-  int32_t handle;
-  mWindow->AsInner()->TimeoutManager().SetTimeout(
-    mDelayedExecutorDispatcher, aDelay, false, Timeout::Reason::eIdleCallbackTimeout, &handle);
-  mDelayedExecutorHandle = Some(handle);
-}
-
-nsresult
-IdleRequestExecutorTimeoutHandler::Call()
-{
-  if (!mExecutor->IsCancelled()) {
-    mExecutor->ScheduleDispatch();
-  }
-  return NS_OK;
-}
-
 void
 nsGlobalWindowOuter::ScheduleIdleRequestDispatch()
 {
-  AssertIsOnMainThread();
-
-  if (!mIdleRequestExecutor) {
-    mIdleRequestExecutor = new IdleRequestExecutor(AssertInner());
-  }
-
-  mIdleRequestExecutor->MaybeDispatch();
+  MOZ_CRASH("Inner Window Only");
 }
 
 void
 nsGlobalWindowOuter::SuspendIdleRequests()
 {
-  if (mIdleRequestExecutor) {
-    mIdleRequestExecutor->Cancel();
-    mIdleRequestExecutor = nullptr;
-  }
+  MOZ_CRASH("Inner window only");
 }
 
 void
 nsGlobalWindowOuter::ResumeIdleRequests()
 {
-  MOZ_ASSERT(!mIdleRequestExecutor);
-
-  ScheduleIdleRequestDispatch();
+  MOZ_CRASH("Inner window only");
 }
 
 void
 nsGlobalWindowOuter::InsertIdleCallback(IdleRequest* aRequest)
 {
-  AssertIsOnMainThread();
-  mIdleRequestCallbacks.insertBack(aRequest);
-  aRequest->AddRef();
+  MOZ_CRASH("Inner Window Only");
 }
 
 void
@@ -840,78 +93,8 @@ nsGlobalWindowOuter::RunIdleRequest(IdleRequest* aRequest,
 nsresult
 nsGlobalWindowOuter::ExecuteIdleRequest(TimeStamp aDeadline)
 {
-  AssertIsOnMainThread();
-  RefPtr<IdleRequest> request = mIdleRequestCallbacks.getFirst();
-
-  if (!request) {
-    // There are no more idle requests, so stop scheduling idle
-    // request callbacks.
-    return NS_OK;
-  }
-
-  // If the request that we're trying to execute has been queued
-  // during the current idle period, then dispatch it again at the end
-  // of the idle period.
-  if (mIdleRequestExecutor->IneligibleForCurrentIdlePeriod(request)) {
-    mIdleRequestExecutor->MaybeDispatch(aDeadline);
-    return NS_OK;
-  }
-
-  DOMHighResTimeStamp deadline = 0.0;
-
-  if (Performance* perf = GetPerformance()) {
-    deadline = perf->GetDOMTiming()->TimeStampToDOMHighRes(aDeadline);
-  }
-
-  mIdleRequestExecutor->MaybeUpdateIdlePeriodLimit();
-  nsresult result = RunIdleRequest(request, deadline, false);
-
-  // Running the idle callback could've suspended the window, in which
-  // case mIdleRequestExecutor will be null.
-  if (mIdleRequestExecutor) {
-    mIdleRequestExecutor->MaybeDispatch();
-  }
-  return result;
+  MOZ_CRASH("Inner window only");
 }
-
-class IdleRequestTimeoutHandler final : public TimeoutHandler
-{
-public:
-  IdleRequestTimeoutHandler(JSContext* aCx,
-                            IdleRequest* aIdleRequest,
-                            nsPIDOMWindowInner* aWindow)
-    : TimeoutHandler(aCx)
-    , mIdleRequest(aIdleRequest)
-    , mWindow(aWindow)
-  {
-  }
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IdleRequestTimeoutHandler,
-                                           TimeoutHandler)
-
-  nsresult Call() override
-  {
-    return nsGlobalWindowInner::Cast(mWindow)->RunIdleRequest(mIdleRequest, 0.0, true);
-  }
-
-private:
-  ~IdleRequestTimeoutHandler() override {}
-
-  RefPtr<IdleRequest> mIdleRequest;
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
-};
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(IdleRequestTimeoutHandler,
-                                   TimeoutHandler,
-                                   mIdleRequest,
-                                   mWindow)
-
-NS_IMPL_ADDREF_INHERITED(IdleRequestTimeoutHandler, TimeoutHandler)
-NS_IMPL_RELEASE_INHERITED(IdleRequestTimeoutHandler, TimeoutHandler)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IdleRequestTimeoutHandler)
-NS_INTERFACE_MAP_END_INHERITING(TimeoutHandler)
 
 uint32_t
 nsGlobalWindowOuter::RequestIdleCallback(JSContext* aCx,
@@ -919,37 +102,7 @@ nsGlobalWindowOuter::RequestIdleCallback(JSContext* aCx,
                                     const IdleRequestOptions& aOptions,
                                     ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsInnerWindow());
-  AssertIsOnMainThread();
-
-  uint32_t handle = mIdleRequestCallbackCounter++;
-
-  RefPtr<IdleRequest> request =
-    new IdleRequest(&aCallback, handle);
-
-  if (aOptions.mTimeout.WasPassed()) {
-    int32_t timeoutHandle;
-    nsCOMPtr<nsITimeoutHandler> handler(new IdleRequestTimeoutHandler(aCx, request, AsInner()));
-
-    nsresult rv = mTimeoutManager->SetTimeout(
-        handler, aOptions.mTimeout.Value(), false,
-        Timeout::Reason::eIdleCallbackTimeout, &timeoutHandle);
-
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return 0;
-    }
-
-    request->SetTimeoutHandle(timeoutHandle);
-  }
-
-  // mIdleRequestCallbacks now owns request
-  InsertIdleCallback(request);
-
-  if (!IsSuspended()) {
-    ScheduleIdleRequestDispatch();
-  }
-
-  return handle;
+  MOZ_CRASH("Inner window only");
 }
 
 void
@@ -968,15 +121,7 @@ nsGlobalWindowOuter::CancelIdleCallback(uint32_t aHandle)
 void
 nsGlobalWindowOuter::DisableIdleCallbackRequests()
 {
-  if (mIdleRequestExecutor) {
-    mIdleRequestExecutor->Cancel();
-    mIdleRequestExecutor = nullptr;
-  }
-
-  while (!mIdleRequestCallbacks.isEmpty()) {
-    RefPtr<IdleRequest> request = mIdleRequestCallbacks.getFirst();
-    RemoveIdleCallback(request);
-  }
+  MOZ_CRASH("Inner window only");
 }
 
 bool
@@ -984,45 +129,6 @@ nsGlobalWindowOuter::IsBackgroundInternal() const
 {
   return !mOuterWindow || mOuterWindow->IsBackground();
 }
-namespace mozilla {
-namespace dom {
-extern uint64_t
-NextWindowID();
-} // namespace dom
-} // namespace mozilla
-
-template<class T>
-nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
-: mFrameElement(nullptr), mDocShell(nullptr), mModalStateDepth(0),
-  mMutationBits(0), mActivePeerConnections(0), mIsDocumentLoaded(false),
-  mIsHandlingResizeEvent(false), mIsInnerWindow(aOuterWindow != nullptr),
-  mMayHavePaintEventListener(false), mMayHaveTouchEventListener(false),
-  mMayHaveSelectionChangeEventListener(false),
-  mMayHaveMouseEnterLeaveEventListener(false),
-  mMayHavePointerEnterLeaveEventListener(false),
-  mInnerObjectsFreed(false),
-  mIsActive(false), mIsBackground(false),
-  mMediaSuspend(Preferences::GetBool("media.block-autoplay-until-in-foreground", true) ?
-    nsISuspendedTypes::SUSPENDED_BLOCK : nsISuspendedTypes::NONE_SUSPENDED),
-  mAudioMuted(false), mAudioVolume(1.0), mAudioCaptured(false),
-  mDesktopModeViewport(false), mIsRootOuterWindow(false), mInnerWindow(nullptr),
-  mOuterWindow(aOuterWindow),
-  // Make sure no actual window ends up with mWindowID == 0
-  mWindowID(NextWindowID()), mHasNotifiedGlobalCreated(false),
-  mMarkedCCGeneration(0), mServiceWorkersTestingEnabled(false),
-  mLargeAllocStatus(LargeAllocStatus::NONE),
-  mHasTriedToCacheTopInnerWindow(false),
-  mNumOfIndexedDBDatabases(0),
-  mNumOfOpenWebSockets(0)
-{
-  if (aOuterWindow) {
-    mTimeoutManager =
-      MakeUnique<mozilla::dom::TimeoutManager>(*nsGlobalWindowInner::Cast(AsInner()));
-  }
-}
-
-template<class T>
-nsPIDOMWindow<T>::~nsPIDOMWindow() {}
 
 /* static */
 nsPIDOMWindowOuter*
@@ -1606,18 +712,7 @@ nsGlobalWindowOuter::nsGlobalWindowOuter()
 
   gRefCnt++;
 
-  static bool sFirstTime = true;
-  if (sFirstTime) {
-    TimeoutManager::Initialize();
-    Preferences::AddBoolVarCache(&gIdleObserversAPIFuzzTimeDisabled,
-                                 "dom.idle-observers-api.fuzz_time.disabled",
-                                 false);
-
-    Preferences::AddUintVarCache(&gThrottledIdlePeriodLength,
-                                 "dom.idle_period.throttled_length",
-                                 DEFAULT_THROTTLED_IDLE_PERIOD_LENGTH);
-    sFirstTime = false;
-  }
+  EnsurePrefCaches();
 
   if (gDumpFile == nullptr) {
     nsAutoCString fname;
@@ -1677,10 +772,7 @@ nsGlobalWindowOuter::Init()
 
   NS_ASSERTION(gDOMLeakPRLog, "gDOMLeakPRLog should have been initialized!");
 
-  nsGlobalWindowOuter::sOuterWindowsById =
-    new nsGlobalWindowOuter::OuterWindowByIdTable();
-  nsGlobalWindowInner::sInnerWindowsById =
-    new nsGlobalWindowInner::InnerWindowByIdTable();
+  sOuterWindowsById = new OuterWindowByIdTable();
 }
 
 nsGlobalWindowOuter::~nsGlobalWindowOuter()
@@ -1847,10 +939,8 @@ nsGlobalWindowOuter::ShutDown()
   }
   gDumpFile = nullptr;
 
-  delete nsGlobalWindowInner::sInnerWindowsById;
-  nsGlobalWindowInner::sInnerWindowsById = nullptr;
-  delete nsGlobalWindowOuter::sOuterWindowsById;
-  nsGlobalWindowOuter::sOuterWindowsById = nullptr;
+  delete sOuterWindowsById;
+  sOuterWindowsById = nullptr;
 }
 
 // static
@@ -1908,28 +998,7 @@ nsGlobalWindowOuter::CleanUp()
 
   DisconnectEventTargetObjects();
 
-  if (mObserver) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
-      os->RemoveObserver(mObserver, MEMORY_PRESSURE_OBSERVER_TOPIC);
-    }
-
-    RefPtr<StorageNotifierService> sns = StorageNotifierService::GetOrCreate();
-    if (sns) {
-     sns->Unregister(mObserver);
-    }
-
-    if (mIdleService) {
-      mIdleService->RemoveIdleObserver(mObserver, MIN_IDLE_NOTIFICATION_TIME_S);
-    }
-
-    Preferences::RemoveObserver(mObserver, "intl.accept_languages");
-
-    // Drop its reference to this dying window, in case for some bogus reason
-    // the object stays around.
-    mObserver->Forget();
-  }
+  MOZ_RELEASE_ASSERT(!mObserver, "mObserver should only be set on the inner window");
 
   if (mNavigator) {
     mNavigator->Invalidate();
@@ -1991,7 +1060,6 @@ nsGlobalWindowOuter::CleanUp()
     DisableVRUpdates();
     mHasVREvents = false;
     mHasVRDisplayActivateEvents = false;
-    DisableIdleCallbackRequests();
   } else {
     MOZ_ASSERT(!mHasGamepad);
     MOZ_ASSERT(!mHasVREvents);
@@ -2073,8 +1141,6 @@ nsGlobalWindowOuter::FreeInnerObjects()
   }
 
   mIdleObservers.Clear();
-
-  DisableIdleCallbackRequests();
 
   mChromeEventHandler = nullptr;
 
@@ -2215,15 +1281,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsGlobalWindowOuter)
   return tmp->IsBlackForCC(false);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
-
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            IdleObserverHolder& aField,
-                            const char* aName,
-                            unsigned aFlags)
-{
-  CycleCollectionNoteChild(aCallback, aField.mIdleObserver.get(), aName, aFlags);
-}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalWindowOuter)
 
@@ -2407,7 +1464,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
   tmp->UnlinkHostObjectURIs();
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleRequestExecutor)
-  tmp->DisableIdleCallbackRequests();
 
   if (tmp->IsChromeWindow()) {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mBrowserDOMWindow)
@@ -2615,28 +1671,6 @@ nsGlobalWindowOuter::SetInitialPrincipalToSubject()
 }
 
 PopupControlState
-PushPopupControlState(PopupControlState aState, bool aForce)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  PopupControlState oldState = gPopupControlState;
-
-  if (aState < gPopupControlState || aForce) {
-    gPopupControlState = aState;
-  }
-
-  return oldState;
-}
-
-void
-PopPopupControlState(PopupControlState aState)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  gPopupControlState = aState;
-}
-
-PopupControlState
 nsGlobalWindowOuter::PushPopupControlState(PopupControlState aState,
                                       bool aForce) const
 {
@@ -2712,59 +1746,6 @@ WindowStateHolder::~WindowStateHolder()
 }
 
 NS_IMPL_ISUPPORTS(WindowStateHolder, WindowStateHolder)
-
-// We need certain special behavior for remote XUL whitelisted domains, but we
-// don't want that behavior to take effect in automation, because we whitelist
-// all the mochitest domains. So we need to check a pref here.
-static bool
-TreatAsRemoteXUL(nsIPrincipal* aPrincipal)
-{
-  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(aPrincipal));
-  return nsContentUtils::AllowXULXBLForPrincipal(aPrincipal) &&
-         !Preferences::GetBool("dom.use_xbl_scopes_for_remote_xul", false);
-}
-
-static bool
-EnablePrivilege(JSContext* cx, unsigned argc, JS::Value* vp)
-{
-  Telemetry::Accumulate(Telemetry::ENABLE_PRIVILEGE_EVER_CALLED, true);
-  return xpc::EnableUniversalXPConnect(cx);
-}
-
-static const JSFunctionSpec EnablePrivilegeSpec[] = {
-  JS_FN("enablePrivilege", EnablePrivilege, 1, 0),
-  JS_FS_END
-};
-
-static bool
-InitializeLegacyNetscapeObject(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
-{
-  JSAutoCompartment ac(aCx, aGlobal);
-
-  // Note: MathJax depends on window.netscape being exposed. See bug 791526.
-  JS::Rooted<JSObject*> obj(aCx);
-  obj = JS_DefineObject(aCx, aGlobal, "netscape", nullptr);
-  NS_ENSURE_TRUE(obj, false);
-
-  obj = JS_DefineObject(aCx, obj, "security", nullptr);
-  NS_ENSURE_TRUE(obj, false);
-
-  // We hide enablePrivilege behind a pref because it has been altered in a
-  // way that makes it fundamentally insecure to use in production. Mozilla
-  // uses this pref during automated testing to support legacy test code that
-  // uses enablePrivilege. If you're not doing test automation, you _must_ not
-  // flip this pref, or you will be exposing all your users to security
-  // vulnerabilities.
-  if (!xpc::IsInAutomation()) {
-    return true;
-  }
-
-  /* Define PrivilegeManager object with the necessary "static" methods. */
-  obj = JS_DefineObject(aCx, obj, "PrivilegeManager", nullptr);
-  NS_ENSURE_TRUE(obj, false);
-
-  return JS_DefineFunctions(aCx, obj, EnablePrivilegeSpec);
-}
 
 bool
 nsGlobalWindowOuter::ComputeIsSecureContext(nsIDocument* aDocument, SecureContextFlags aFlags)
@@ -2848,102 +1829,6 @@ nsGlobalWindowOuter::ComputeIsSecureContext(nsIDocument* aDocument, SecureContex
   }
 
   return false;
-}
-
-static JS::CompartmentCreationOptions&
-SelectZoneGroup(nsGlobalWindowInner* aNewInner,
-                JS::CompartmentCreationOptions& aOptions)
-{
-  JS::CompartmentCreationOptions options;
-
-  if (aNewInner->GetOuterWindow()) {
-    nsGlobalWindowOuter *top = aNewInner->GetTopInternal();
-
-    // If we have a top-level window, use its zone (and zone group).
-    if (top && top->GetGlobalJSObject()) {
-      return aOptions.setExistingZone(top->GetGlobalJSObject());
-    }
-  }
-
-  // If we're in the parent process, don't bother with zone groups.
-  if (XRE_IsParentProcess()) {
-    return aOptions.setNewZoneInSystemZoneGroup();
-  }
-
-  // Otherwise, find a zone group from the TabGroup. Typically we only have to
-  // go through one iteration of this loop.
-  RefPtr<TabGroup> tabGroup = aNewInner->TabGroup();
-  for (nsPIDOMWindowOuter* outer : tabGroup->GetWindows()) {
-    nsGlobalWindowOuter* window = nsGlobalWindowOuter::Cast(outer);
-    if (JSObject* global = window->GetGlobalJSObject()) {
-      return aOptions.setNewZoneInExistingZoneGroup(global);
-    }
-  }
-
-  return aOptions.setNewZoneInNewZoneGroup();
-}
-
-/**
- * Create a new global object that will be used for an inner window.
- * Return the native global and an nsISupports 'holder' that can be used
- * to manage the lifetime of it.
- */
-static nsresult
-CreateNativeGlobalForInner(JSContext* aCx,
-                           nsGlobalWindowInner* aNewInner,
-                           nsIURI* aURI,
-                           nsIPrincipal* aPrincipal,
-                           JS::MutableHandle<JSObject*> aGlobal,
-                           bool aIsSecureContext)
-{
-  MOZ_ASSERT(aCx);
-  MOZ_ASSERT(aNewInner);
-  MOZ_ASSERT(aNewInner->IsInnerWindow());
-  MOZ_ASSERT(aPrincipal);
-
-  // DOMWindow with nsEP is not supported, we have to make sure
-  // no one creates one accidentally.
-  nsCOMPtr<nsIExpandedPrincipal> nsEP = do_QueryInterface(aPrincipal);
-  MOZ_RELEASE_ASSERT(!nsEP, "DOMWindow with nsEP is not supported");
-
-  JS::CompartmentOptions options;
-
-  SelectZoneGroup(aNewInner, options.creationOptions());
-
-  // Sometimes add-ons load their own XUL windows, either as separate top-level
-  // windows or inside a browser element. In such cases we want to tag the
-  // window's compartment with the add-on ID. See bug 1092156.
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    options.creationOptions().setAddonId(MapURIToAddonID(aURI));
-  }
-
-  options.creationOptions().setSecureContext(aIsSecureContext);
-
-  xpc::InitGlobalObjectOptions(options, aPrincipal);
-
-  // Determine if we need the Components object.
-  bool needComponents = nsContentUtils::IsSystemPrincipal(aPrincipal) ||
-                        TreatAsRemoteXUL(aPrincipal);
-  uint32_t flags = needComponents ? 0 : xpc::OMIT_COMPONENTS_OBJECT;
-  flags |= xpc::DONT_FIRE_ONNEWGLOBALHOOK;
-
-  if (!WindowBinding::Wrap(aCx, aNewInner, aNewInner, options,
-                           nsJSPrincipals::get(aPrincipal), false, aGlobal) ||
-      !xpc::InitGlobalObject(aCx, aGlobal, flags)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  MOZ_ASSERT(aNewInner->GetWrapperPreserveColor() == aGlobal);
-
-  // Set the location information for the new global, so that tools like
-  // about:memory may use that information
-  xpc::SetLocationForGlobal(aGlobal, aURI);
-
-  if (!InitializeLegacyNetscapeObject(aCx, aGlobal)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
 }
 
 nsresult
@@ -3629,24 +2514,6 @@ nsGlobalWindowOuter::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
 #endif
 }
 
-static
-already_AddRefed<EventTarget>
-TryGetTabChildGlobalAsEventTarget(nsISupports *aFrom)
-{
-  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(aFrom);
-  if (!frameLoaderOwner) {
-    return nullptr;
-  }
-
-  RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
-  if (!frameLoader) {
-    return nullptr;
-  }
-
-  nsCOMPtr<EventTarget> target = frameLoader->GetTabChildGlobalAsEventTarget();
-  return target.forget();
-}
-
 void
 nsGlobalWindowOuter::UpdateParentTarget()
 {
@@ -4054,34 +2921,6 @@ nsGlobalWindowOuter::GetPrincipal()
 // nsGlobalWindowOuter::nsIDOMWindow
 //*****************************************************************************
 
-template <class T>
-nsIURI*
-nsPIDOMWindow<T>::GetDocumentURI() const
-{
-  return mDoc ? mDoc->GetDocumentURI() : mDocumentURI.get();
-}
-
-template <class T>
-nsIURI*
-nsPIDOMWindow<T>::GetDocBaseURI() const
-{
-  return mDoc ? mDoc->GetDocBaseURI() : mDocBaseURI.get();
-}
-
-template <class T>
-void
-nsPIDOMWindow<T>::MaybeCreateDoc()
-{
-  MOZ_ASSERT(!mDoc);
-  if (nsIDocShell* docShell = GetDocShell()) {
-    // Note that |document| here is the same thing as our mDoc, but we
-    // don't have to explicitly set the member variable because the docshell
-    // has already called SetNewDocument().
-    nsCOMPtr<nsIDocument> document = docShell->GetDocument();
-    Unused << document;
-  }
-}
-
 void
 nsPIDOMWindowOuter::SetInitialKeyboardIndicators(
   UIStateChangeType aShowAccelerators, UIStateChangeType aShowFocusRings)
@@ -4126,50 +2965,6 @@ nsPIDOMWindowOuter::SetFrameElementInternal(Element* aFrameElement)
 {
   MOZ_ASSERT(IsOuterWindow());
   mFrameElement = aFrameElement;
-}
-
-bool
-nsPIDOMWindowInner::AddAudioContext(AudioContext* aAudioContext)
-{
-  MOZ_ASSERT(IsInnerWindow());
-
-  mAudioContexts.AppendElement(aAudioContext);
-
-  // Return true if the context should be muted and false if not.
-  nsIDocShell* docShell = GetDocShell();
-  return docShell && !docShell->GetAllowMedia() && !aAudioContext->IsOffline();
-}
-
-void
-nsPIDOMWindowInner::RemoveAudioContext(AudioContext* aAudioContext)
-{
-  MOZ_ASSERT(IsInnerWindow());
-
-  mAudioContexts.RemoveElement(aAudioContext);
-}
-
-void
-nsPIDOMWindowInner::MuteAudioContexts()
-{
-  MOZ_ASSERT(IsInnerWindow());
-
-  for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-    if (!mAudioContexts[i]->IsOffline()) {
-      mAudioContexts[i]->Mute();
-    }
-  }
-}
-
-void
-nsPIDOMWindowInner::UnmuteAudioContexts()
-{
-  MOZ_ASSERT(IsInnerWindow());
-
-  for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-    if (!mAudioContexts[i]->IsOffline()) {
-      mAudioContexts[i]->Unmute();
-    }
-  }
 }
 
 nsGlobalWindowInner*
@@ -4256,80 +3051,9 @@ nsGlobalWindowOuter::CustomElements()
 }
 
 Performance*
-nsPIDOMWindowInner::GetPerformance()
-{
-  MOZ_ASSERT(IsInnerWindow());
-  CreatePerformanceObjectIfNeeded();
-  return mPerformance;
-}
-
-Performance*
 nsGlobalWindowOuter::GetPerformance()
 {
   return AsInner()->GetPerformance();
-}
-
-void
-nsPIDOMWindowInner::CreatePerformanceObjectIfNeeded()
-{
-  MOZ_ASSERT(IsInnerWindow());
-
-  if (mPerformance || !mDoc) {
-    return;
-  }
-  RefPtr<nsDOMNavigationTiming> timing = mDoc->GetNavigationTiming();
-  nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(mDoc->GetChannel()));
-  bool timingEnabled = false;
-  if (!timedChannel ||
-      !NS_SUCCEEDED(timedChannel->GetTimingEnabled(&timingEnabled)) ||
-      !timingEnabled) {
-    timedChannel = nullptr;
-  }
-  if (timing) {
-    mPerformance = Performance::CreateForMainThread(this, timing, timedChannel);
-  }
-}
-
-bool
-nsPIDOMWindowInner::IsSecureContext() const
-{
-  return nsGlobalWindowInner::Cast(this)->IsSecureContext();
-}
-
-bool
-nsPIDOMWindowInner::IsSecureContextIfOpenerIgnored() const
-{
-  return nsGlobalWindowInner::Cast(this)->IsSecureContextIfOpenerIgnored();
-}
-
-void
-nsPIDOMWindowInner::Suspend()
-{
-  nsGlobalWindowInner::Cast(this)->Suspend();
-}
-
-void
-nsPIDOMWindowInner::Resume()
-{
-  nsGlobalWindowInner::Cast(this)->Resume();
-}
-
-void
-nsPIDOMWindowInner::Freeze()
-{
-  nsGlobalWindowInner::Cast(this)->Freeze();
-}
-
-void
-nsPIDOMWindowInner::Thaw()
-{
-  nsGlobalWindowInner::Cast(this)->Thaw();
-}
-
-void
-nsPIDOMWindowInner::SyncStateFromParentWindow()
-{
-  nsGlobalWindowInner::Cast(this)->SyncStateFromParentWindow();
 }
 
 void
@@ -4340,164 +3064,6 @@ nsGlobalWindowOuter::UpdateTopInnerWindow()
   }
 
   mTopInnerWindow->UpdateWebSocketCount(-(int32_t)mNumOfOpenWebSockets);
-}
-
-void
-nsPIDOMWindowInner::AddPeerConnection()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(IsInnerWindow());
-  mTopInnerWindow ? mTopInnerWindow->mActivePeerConnections++
-                  : mActivePeerConnections++;
-}
-
-void
-nsPIDOMWindowInner::RemovePeerConnection()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(IsInnerWindow());
-  MOZ_ASSERT(mTopInnerWindow ? mTopInnerWindow->mActivePeerConnections
-                             : mActivePeerConnections);
-
-  mTopInnerWindow ? mTopInnerWindow->mActivePeerConnections--
-                  : mActivePeerConnections--;
-}
-
-bool
-nsPIDOMWindowInner::HasActivePeerConnections()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(IsInnerWindow());
-  return mTopInnerWindow ? mTopInnerWindow->mActivePeerConnections
-                         : mActivePeerConnections;
-}
-
-bool
-nsPIDOMWindowInner::IsPlayingAudio()
-{
-  for (uint32_t i = 0; i < mAudioContexts.Length(); i++) {
-    if (mAudioContexts[i]->IsRunning()) {
-      return true;
-    }
-  }
-  RefPtr<AudioChannelService> acs = AudioChannelService::Get();
-  if (!acs) {
-    return false;
-  }
-  auto outer = GetOuterWindow();
-  if (!outer) {
-    // We've been unlinked and are about to die.  Not a good time to pretend to
-    // be playing audio.
-    return false;
-  }
-  return acs->IsWindowActive(outer);
-}
-
-bool
-nsPIDOMWindowInner::IsDocumentLoaded() const
-{
-  return mIsDocumentLoaded;
-}
-
-mozilla::dom::TimeoutManager&
-nsPIDOMWindowInner::TimeoutManager()
-{
-  return *mTimeoutManager;
-}
-
-bool
-nsPIDOMWindowInner::IsRunningTimeout()
-{
-  return TimeoutManager().IsRunningTimeout();
-}
-
-void
-nsPIDOMWindowInner::TryToCacheTopInnerWindow()
-{
-  if (mHasTriedToCacheTopInnerWindow) {
-    return;
-  }
-
-  MOZ_ASSERT(!mInnerObjectsFreed);
-
-  mHasTriedToCacheTopInnerWindow = true;
-
-  nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(AsInner());
-
-  MOZ_ASSERT(window);
-
-  if (nsCOMPtr<nsPIDOMWindowOuter> topOutter = window->GetScriptableTop()) {
-    mTopInnerWindow = topOutter->GetCurrentInnerWindow();
-  }
-}
-
-void
-nsPIDOMWindowInner::UpdateActiveIndexedDBTransactionCount(int32_t aDelta)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (aDelta == 0) {
-    return;
-  }
-
-  TabGroup()->IndexedDBTransactionCounter() += aDelta;
-}
-
-void
-nsPIDOMWindowInner::UpdateActiveIndexedDBDatabaseCount(int32_t aDelta)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (aDelta == 0) {
-    return;
-  }
-
-  // We count databases but not transactions because only active databases
-  // could block throttling.
-  uint32_t& counter = mTopInnerWindow ?
-    mTopInnerWindow->mNumOfIndexedDBDatabases : mNumOfIndexedDBDatabases;
-
-  counter+= aDelta;
-
-  TabGroup()->IndexedDBDatabaseCounter() += aDelta;
-}
-
-bool
-nsPIDOMWindowInner::HasActiveIndexedDBDatabases()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  return mTopInnerWindow ?
-    mTopInnerWindow->mNumOfIndexedDBDatabases > 0 :
-    mNumOfIndexedDBDatabases > 0;
-}
-
-void
-nsPIDOMWindowInner::UpdateWebSocketCount(int32_t aDelta)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (aDelta == 0) {
-    return;
-  }
-
-  if (mTopInnerWindow && !IsTopInnerWindow()) {
-    mTopInnerWindow->UpdateWebSocketCount(aDelta);
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(
-    aDelta > 0 || ((aDelta + mNumOfOpenWebSockets) < mNumOfOpenWebSockets));
-
-  mNumOfOpenWebSockets += aDelta;
-}
-
-bool
-nsPIDOMWindowInner::HasOpenWebSockets() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  return mNumOfOpenWebSockets ||
-         (mTopInnerWindow && mTopInnerWindow->mNumOfOpenWebSockets);
 }
 
 void
@@ -4660,28 +3226,6 @@ nsPIDOMWindowOuter::GetServiceWorkersTestingEnabled()
     return false;
   }
   return topWindow->mServiceWorkersTestingEnabled;
-}
-
-bool
-nsPIDOMWindowInner::GetAudioCaptured() const
-{
-  MOZ_ASSERT(IsInnerWindow());
-  return mAudioCaptured;
-}
-
-nsresult
-nsPIDOMWindowInner::SetAudioCapture(bool aCapture)
-{
-  MOZ_ASSERT(IsInnerWindow());
-
-  mAudioCaptured = aCapture;
-
-  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  if (service) {
-    service->SetWindowAudioCaptured(GetOuterWindow(), mWindowID, aCapture);
-  }
-
-  return NS_OK;
 }
 
 // nsISpeechSynthesisGetter
@@ -9696,144 +8240,6 @@ nsGlobalWindowOuter::NotifyDOMWindowDestroyed(nsGlobalWindowInner* aWindow) {
   }
 }
 
-// Try to match compartments that are not web content by matching compartments
-// with principals that are either the system principal or an expanded principal.
-// This may not return true for all non-web-content compartments.
-struct BrowserCompartmentMatcher : public js::CompartmentFilter {
-  bool match(JSCompartment* aC) const override
-  {
-    nsCOMPtr<nsIPrincipal> pc = nsJSPrincipals::get(JS_GetCompartmentPrincipals(aC));
-    return nsContentUtils::IsSystemOrExpandedPrincipal(pc);
-  }
-};
-
-
-class WindowDestroyedEvent final : public Runnable
-{
-public:
-  WindowDestroyedEvent(nsGlobalWindowInner* aWindow, uint64_t aID, const char* aTopic)
-    : mozilla::Runnable("WindowDestroyedEvent")
-    , mID(aID)
-    , mPhase(Phase::Destroying)
-    , mTopic(aTopic)
-    , mIsInnerWindow(true)
-  {
-    mWindow = do_GetWeakReference(aWindow);
-  }
-  WindowDestroyedEvent(nsGlobalWindowOuter* aWindow, uint64_t aID, const char* aTopic)
-    : mozilla::Runnable("WindowDestroyedEvent")
-    , mID(aID)
-    , mPhase(Phase::Destroying)
-    , mTopic(aTopic)
-    , mIsInnerWindow(false)
-  {
-    mWindow = do_GetWeakReference(aWindow);
-  }
-
-  enum class Phase
-  {
-    Destroying,
-    Nuking
-  };
-
-  NS_IMETHOD Run() override
-  {
-    AUTO_PROFILER_LABEL("WindowDestroyedEvent::Run", OTHER);
-
-    nsCOMPtr<nsIObserverService> observerService =
-      services::GetObserverService();
-    if (!observerService) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsISupportsPRUint64> wrapper =
-      do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
-    if (wrapper) {
-      wrapper->SetData(mID);
-      observerService->NotifyObservers(wrapper, mTopic.get(), nullptr);
-    }
-
-    switch (mPhase) {
-      case Phase::Destroying:
-      {
-        bool skipNukeCrossCompartment = false;
-#ifndef DEBUG
-        nsCOMPtr<nsIAppStartup> appStartup =
-          do_GetService(NS_APPSTARTUP_CONTRACTID);
-
-        if (appStartup) {
-          appStartup->GetShuttingDown(&skipNukeCrossCompartment);
-        }
-#endif
-
-        if (!skipNukeCrossCompartment) {
-          // The compartment nuking phase might be too expensive, so do that
-          // part off of idle dispatch.
-
-          // For the compartment nuking phase, we dispatch either an
-          // inner-window-nuked or an outer-window-nuked notification.
-          // This will allow tests to wait for compartment nuking to happen.
-          if (mTopic.EqualsLiteral("inner-window-destroyed")) {
-            mTopic.AssignLiteral("inner-window-nuked");
-          } else if (mTopic.EqualsLiteral("outer-window-destroyed")) {
-            mTopic.AssignLiteral("outer-window-nuked");
-          }
-          mPhase = Phase::Nuking;
-
-          nsCOMPtr<nsIRunnable> copy(this);
-          NS_IdleDispatchToCurrentThread(copy.forget(), 1000);
-        }
-      }
-      break;
-
-      case Phase::Nuking:
-      {
-        nsCOMPtr<nsISupports> window = do_QueryReferent(mWindow);
-        if (window) {
-          nsGlobalWindowInner* currentInner;
-          if (mIsInnerWindow) {
-            currentInner = nsGlobalWindowInner::FromSupports(window);
-          } else {
-            nsGlobalWindowOuter* outer = nsGlobalWindowOuter::FromSupports(window);
-            currentInner = outer->GetCurrentInnerWindowInternal();
-          }
-          NS_ENSURE_TRUE(currentInner, NS_OK);
-
-          AutoSafeJSContext cx;
-          JS::Rooted<JSObject*> obj(cx, currentInner->FastGetGlobalJSObject());
-          if (obj && !js::IsSystemCompartment(js::GetObjectCompartment(obj))) {
-            JSCompartment* cpt = js::GetObjectCompartment(obj);
-            nsCOMPtr<nsIPrincipal> pc = nsJSPrincipals::get(JS_GetCompartmentPrincipals(cpt));
-
-            if (BasePrincipal::Cast(pc)->AddonPolicy()) {
-              // We want to nuke all references to the add-on compartment.
-              xpc::NukeAllWrappersForCompartment(cx, cpt,
-                                                 mIsInnerWindow ? js::DontNukeWindowReferences
-                                                                : js::NukeWindowReferences);
-            } else {
-              // We only want to nuke wrappers for the chrome->content case
-              js::NukeCrossCompartmentWrappers(cx, BrowserCompartmentMatcher(), cpt,
-                                               mIsInnerWindow ? js::DontNukeWindowReferences
-                                                              : js::NukeWindowReferences,
-                                               js::NukeIncomingReferences);
-            }
-          }
-        }
-      }
-      break;
-    }
-
-    return NS_OK;
-  }
-
-private:
-  uint64_t mID;
-  Phase mPhase;
-  nsCString mTopic;
-  nsWeakPtr mWindow;
-  bool mIsInnerWindow;
-};
-
 void
 nsGlobalWindowOuter::NotifyWindowIDDestroyed(const char* aTopic)
 {
@@ -10096,56 +8502,6 @@ nsGlobalWindowOuter::ConvertDialogOptions(const nsAString& aOptions,
     }
   }
 }
-
-class ChildCommandDispatcher : public Runnable
-{
-public:
-  ChildCommandDispatcher(nsPIWindowRoot* aRoot,
-                         nsITabChild* aTabChild,
-                         const nsAString& aAction)
-    : mozilla::Runnable("ChildCommandDispatcher")
-    , mRoot(aRoot)
-    , mTabChild(aTabChild)
-    , mAction(aAction)
-  {
-  }
-
-  NS_IMETHOD Run() override
-  {
-    nsTArray<nsCString> enabledCommands, disabledCommands;
-    mRoot->GetEnabledDisabledCommands(enabledCommands, disabledCommands);
-    if (enabledCommands.Length() || disabledCommands.Length()) {
-      mTabChild->EnableDisableCommands(mAction, enabledCommands, disabledCommands);
-    }
-
-    return NS_OK;
-  }
-
-private:
-  nsCOMPtr<nsPIWindowRoot>             mRoot;
-  nsCOMPtr<nsITabChild>                mTabChild;
-  nsString                             mAction;
-};
-
-class CommandDispatcher : public Runnable
-{
-public:
-  CommandDispatcher(nsIDOMXULCommandDispatcher* aDispatcher,
-                    const nsAString& aAction)
-    : mozilla::Runnable("CommandDispatcher")
-    , mDispatcher(aDispatcher)
-    , mAction(aAction)
-  {
-  }
-
-  NS_IMETHOD Run() override
-  {
-    return mDispatcher->UpdateCommands(mAction);
-  }
-
-  nsCOMPtr<nsIDOMXULCommandDispatcher> mDispatcher;
-  nsString                             mAction;
-};
 
 nsresult
 nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason)
@@ -10601,6 +8957,7 @@ NotifyDocumentTree(nsIDocument* aDocument, void* aData)
 void
 nsGlobalWindowOuter::SetActive(bool aActive)
 {
+  MOZ_RELEASE_ASSERT(IsOuterWindow());
   nsPIDOMWindow::SetActive(aActive);
   if (mDoc) {
     NotifyDocumentTree(mDoc, nullptr);
@@ -10625,7 +8982,8 @@ nsGlobalWindowOuter::IsTopLevelWindowActive()
    return domWindow && domWindow->IsActive();
 }
 
-void nsGlobalWindowOuter::SetIsBackground(bool aIsBackground)
+void
+nsGlobalWindowOuter::SetIsBackground(bool aIsBackground)
 {
   MOZ_ASSERT(IsOuterWindow());
 
@@ -10669,7 +9027,8 @@ nsGlobalWindowOuter::SetIsBackgroundInternal(bool aIsBackground)
   mIsBackground = aIsBackground;
 }
 
-void nsGlobalWindowOuter::MaybeUpdateTouchState()
+void
+nsGlobalWindowOuter::MaybeUpdateTouchState()
 {
   FORWARD_TO_INNER_VOID(MaybeUpdateTouchState, ());
 
@@ -10757,22 +9116,6 @@ nsGlobalWindowOuter::SetChromeEventHandler(EventTarget* aChromeEventHandler)
                  "bad outer window pointer");
     inner->SetChromeEventHandlerInternal(aChromeEventHandler);
   }
-}
-
-static bool IsLink(nsIContent* aContent)
-{
-  return aContent && (aContent->IsHTMLElement(nsGkAtoms::a) ||
-                      aContent->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
-                                            nsGkAtoms::simple, eCaseMatters));
-}
-
-static bool ShouldShowFocusRingIfFocusedByMouse(nsIContent* aNode)
-{
-  if (!aNode) {
-    return true;
-  }
-  return !IsLink(aNode) &&
-         !aNode->IsAnyOfHTMLElements(nsGkAtoms::video, nsGkAtoms::audio);
 }
 
 void
@@ -10950,62 +9293,10 @@ nsGlobalWindowOuter::PageHidden()
   mNeedsFocus = true;
 }
 
-class HashchangeCallback : public Runnable
-{
-public:
-  HashchangeCallback(const nsAString& aOldURL,
-                     const nsAString& aNewURL,
-                     nsGlobalWindowInner* aWindow)
-    : mozilla::Runnable("HashchangeCallback")
-    , mWindow(aWindow)
-  {
-    MOZ_ASSERT(mWindow);
-    MOZ_ASSERT(mWindow->IsInnerWindow());
-    mOldURL.Assign(aOldURL);
-    mNewURL.Assign(aNewURL);
-  }
-
-  NS_IMETHOD Run() override
-  {
-    NS_PRECONDITION(NS_IsMainThread(), "Should be called on the main thread.");
-    return mWindow->FireHashchange(mOldURL, mNewURL);
-  }
-
-private:
-  nsString mOldURL;
-  nsString mNewURL;
-  RefPtr<nsGlobalWindowInner> mWindow;
-};
-
 nsresult
 nsGlobalWindowOuter::DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI)
 {
-  MOZ_RELEASE_ASSERT(IsInnerWindow());
-
-  // Make sure that aOldURI and aNewURI are identical up to the '#', and that
-  // their hashes are different.
-  bool equal = false;
-  NS_ENSURE_STATE(NS_SUCCEEDED(aOldURI->EqualsExceptRef(aNewURI, &equal)) && equal);
-  nsAutoCString oldHash, newHash;
-  bool oldHasHash, newHasHash;
-  NS_ENSURE_STATE(NS_SUCCEEDED(aOldURI->GetRef(oldHash)) &&
-                  NS_SUCCEEDED(aNewURI->GetRef(newHash)) &&
-                  NS_SUCCEEDED(aOldURI->GetHasRef(&oldHasHash)) &&
-                  NS_SUCCEEDED(aNewURI->GetHasRef(&newHasHash)) &&
-                  (oldHasHash != newHasHash || !oldHash.Equals(newHash)));
-
-  nsAutoCString oldSpec, newSpec;
-  nsresult rv = aOldURI->GetSpec(oldSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aNewURI->GetSpec(newSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ConvertUTF8toUTF16 oldWideSpec(oldSpec);
-  NS_ConvertUTF8toUTF16 newWideSpec(newSpec);
-
-  nsCOMPtr<nsIRunnable> callback =
-    new HashchangeCallback(oldWideSpec, newWideSpec, AssertInner());
-  return Dispatch(TaskCategory::Other, callback.forget());
+  MOZ_CRASH("Inner window only");
 }
 
 nsresult
@@ -11097,69 +9388,12 @@ nsGlobalWindowOuter::DispatchSyncPopState()
   return DispatchEvent(event, &dummy);
 }
 
-// Find an nsICanvasFrame under aFrame.  Only search the principal
-// child lists.  aFrame must be non-null.
-static nsCanvasFrame* FindCanvasFrame(nsIFrame* aFrame)
-{
-    nsCanvasFrame* canvasFrame = do_QueryFrame(aFrame);
-    if (canvasFrame) {
-        return canvasFrame;
-    }
-
-    for (nsIFrame* kid : aFrame->PrincipalChildList()) {
-        canvasFrame = FindCanvasFrame(kid);
-        if (canvasFrame) {
-            return canvasFrame;
-        }
-    }
-
-    return nullptr;
-}
-
 //-------------------------------------------------------
 // Tells the HTMLFrame/CanvasFrame that is now has focus
 void
 nsGlobalWindowOuter::UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent)
 {
-  MOZ_ASSERT(IsInnerWindow());
-
-  // this is called from the inner window so use GetDocShell
-  nsIDocShell* docShell = GetDocShell();
-  if (!docShell)
-    return;
-
-  bool editable;
-  docShell->GetEditable(&editable);
-  if (editable)
-    return;
-
-  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
-  if (!presShell || !mDoc)
-    return;
-
-  Element *rootElement = mDoc->GetRootElement();
-  if (rootElement) {
-      if ((mHasFocus || aFocusChanged) &&
-          (mFocusedNode == rootElement || aNewContent == rootElement)) {
-          nsIFrame* frame = rootElement->GetPrimaryFrame();
-          if (frame) {
-              frame = frame->GetParent();
-              nsCanvasFrame* canvasFrame = do_QueryFrame(frame);
-              if (canvasFrame) {
-                  canvasFrame->SetHasFocus(mHasFocus && rootElement == aNewContent);
-              }
-          }
-      }
-  } else {
-      // Look for the frame the hard way
-      nsIFrame* frame = presShell->GetRootFrame();
-      if (frame) {
-          nsCanvasFrame* canvasFrame = FindCanvasFrame(frame);
-          if (canvasFrame) {
-              canvasFrame->SetHasFocus(false);
-          }
-      }
-  }
+  MOZ_CRASH("Inner window only");
 }
 
 already_AddRefed<nsICSSDeclaration>
@@ -11507,25 +9741,6 @@ nsGlobalWindowOuter::GetCaches(ErrorResult& aRv)
   return ref.forget();
 }
 
-already_AddRefed<ServiceWorkerRegistration>
-nsPIDOMWindowInner::GetServiceWorkerRegistration(const nsAString& aScope)
-{
-  RefPtr<ServiceWorkerRegistration> registration;
-  if (!mServiceWorkerRegistrationTable.Get(aScope,
-                                           getter_AddRefs(registration))) {
-    registration =
-      ServiceWorkerRegistration::CreateForMainThread(this, aScope);
-    mServiceWorkerRegistrationTable.Put(aScope, registration);
-  }
-  return registration.forget();
-}
-
-void
-nsPIDOMWindowInner::InvalidateServiceWorkerRegistration(const nsAString& aScope)
-{
-  mServiceWorkerRegistrationTable.Remove(aScope);
-}
-
 void
 nsGlobalWindowOuter::FireOfflineStatusEventIfChanged()
 {
@@ -11563,52 +9778,11 @@ nsGlobalWindowOuter::FireOfflineStatusEventIfChanged()
   nsContentUtils::DispatchTrustedEvent(mDoc, eventTarget, name, true, false);
 }
 
-class NotifyIdleObserverRunnable : public Runnable
-{
-public:
-  NotifyIdleObserverRunnable(nsIIdleObserver* aIdleObserver,
-                             uint32_t aTimeInS,
-                             bool aCallOnidle,
-                             nsGlobalWindowInner* aIdleWindow)
-    : mozilla::Runnable("NotifyIdleObserverRunnable")
-    , mIdleObserver(aIdleObserver)
-    , mTimeInS(aTimeInS)
-    , mIdleWindow(aIdleWindow)
-    , mCallOnidle(aCallOnidle)
-  { }
-
-  NS_IMETHOD Run() override
-  {
-    if (mIdleWindow->ContainsIdleObserver(mIdleObserver, mTimeInS)) {
-      return mCallOnidle ? mIdleObserver->Onidle() : mIdleObserver->Onactive();
-    }
-    return NS_OK;
-  }
-
-private:
-  nsCOMPtr<nsIIdleObserver> mIdleObserver;
-  uint32_t mTimeInS;
-  RefPtr<nsGlobalWindowInner> mIdleWindow;
-
-  // If false then call on active
-  bool mCallOnidle;
-};
-
 void
 nsGlobalWindowOuter::NotifyIdleObserver(IdleObserverHolder* aIdleObserverHolder,
                                    bool aCallOnidle)
 {
-  MOZ_ASSERT(IsInnerWindow());
-  MOZ_ASSERT(aIdleObserverHolder);
-  aIdleObserverHolder->mPrevNotificationIdle = aCallOnidle;
-
-  nsCOMPtr<nsIRunnable> caller =
-    new NotifyIdleObserverRunnable(aIdleObserverHolder->mIdleObserver,
-                                   aIdleObserverHolder->mTimeInS,
-                                   aCallOnidle, AssertInner());
-  if (NS_FAILED(Dispatch(TaskCategory::Other, caller.forget()))) {
-    NS_WARNING("Failed to dispatch thread for idle observer notification.");
-  }
+  MOZ_CRASH("Inner window only");
 }
 
 bool
@@ -11629,24 +9803,6 @@ nsGlobalWindowOuter::ContainsIdleObserver(nsIIdleObserver* aIdleObserver, uint32
 }
 
 void
-IdleActiveTimerCallback(nsITimer* aTimer, void* aClosure)
-{
-  RefPtr<nsGlobalWindowInner> idleWindow =
-    static_cast<nsGlobalWindowInner*>(aClosure);
-  MOZ_ASSERT(idleWindow, "Idle window has not been instantiated.");
-  idleWindow->HandleIdleActiveEvent();
-}
-
-void
-IdleObserverTimerCallback(nsITimer* aTimer, void* aClosure)
-{
-  RefPtr<nsGlobalWindowInner> idleWindow =
-    static_cast<nsGlobalWindowInner*>(aClosure);
-  MOZ_ASSERT(idleWindow, "Idle window has not been instantiated.");
-  idleWindow->HandleIdleObserverCallback();
-}
-
-void
 nsGlobalWindowOuter::HandleIdleObserverCallback()
 {
   MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
@@ -11663,36 +9819,7 @@ nsGlobalWindowOuter::HandleIdleObserverCallback()
 nsresult
 nsGlobalWindowOuter::ScheduleNextIdleObserverCallback()
 {
-  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
-  MOZ_ASSERT(mIdleService, "No idle service!");
-
-  if (mIdleCallbackIndex < 0 ||
-      static_cast<uint32_t>(mIdleCallbackIndex) >= mIdleObservers.Length()) {
-    return NS_OK;
-  }
-
-  IdleObserverHolder& idleObserver =
-    mIdleObservers.ElementAt(mIdleCallbackIndex);
-
-  uint32_t userIdleTimeMS = 0;
-  nsresult rv = mIdleService->GetIdleTime(&userIdleTimeMS);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t callbackTimeMS = 0;
-  if (idleObserver.mTimeInS * 1000 + mIdleFuzzFactor > userIdleTimeMS) {
-    callbackTimeMS = idleObserver.mTimeInS * 1000 - userIdleTimeMS + mIdleFuzzFactor;
-  }
-
-  mIdleTimer->Cancel();
-  rv = mIdleTimer->InitWithNamedFuncCallback(
-    IdleObserverTimerCallback,
-    AssertInner(),
-    callbackTimeMS,
-    nsITimer::TYPE_ONE_SHOT,
-    "nsGlobalWindowOuter::ScheduleNextIdleObserverCallback");
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  MOZ_CRASH("Inner window only");
 }
 
 uint32_t
@@ -11721,24 +9848,7 @@ nsGlobalWindowOuter::GetFuzzTimeMS()
 nsresult
 nsGlobalWindowOuter::ScheduleActiveTimerCallback()
 {
-  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
-
-  if (!mAddActiveEventFuzzTime) {
-    return HandleIdleActiveEvent();
-  }
-
-  MOZ_ASSERT(mIdleTimer);
-  mIdleTimer->Cancel();
-
-  uint32_t fuzzFactorInMS = GetFuzzTimeMS();
-  nsresult rv = mIdleTimer->InitWithNamedFuncCallback(
-    IdleActiveTimerCallback,
-    AssertInner(),
-    fuzzFactorInMS,
-    nsITimer::TYPE_ONE_SHOT,
-    "nsGlobalWindowOuter::ScheduleActiveTimerCallback");
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+  MOZ_CRASH("Inner window only");
 }
 
 nsresult
@@ -12026,72 +10136,7 @@ nsGlobalWindowOuter::FindInsertionIndex(IdleObserverHolder* aIdleObserver)
 nsresult
 nsGlobalWindowOuter::RegisterIdleObserver(nsIIdleObserver* aIdleObserver)
 {
-  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
-
-  nsresult rv;
-  if (mIdleObservers.IsEmpty()) {
-    mIdleService = do_GetService("@mozilla.org/widget/idleservice;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mIdleService->AddIdleObserver(mObserver, MIN_IDLE_NOTIFICATION_TIME_S);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!mIdleTimer) {
-      mIdleTimer = NS_NewTimer();
-      NS_ENSURE_TRUE(mIdleTimer, NS_ERROR_OUT_OF_MEMORY);
-    } else {
-      mIdleTimer->Cancel();
-    }
-  }
-
-  MOZ_ASSERT(mIdleService);
-  MOZ_ASSERT(mIdleTimer);
-
-  IdleObserverHolder tmpIdleObserver;
-  tmpIdleObserver.mIdleObserver = aIdleObserver;
-  rv = aIdleObserver->GetTime(&tmpIdleObserver.mTimeInS);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_ARG_MAX(tmpIdleObserver.mTimeInS, UINT32_MAX / 1000);
-  NS_ENSURE_ARG_MIN(tmpIdleObserver.mTimeInS, MIN_IDLE_NOTIFICATION_TIME_S);
-
-  uint32_t insertAtIndex = FindInsertionIndex(&tmpIdleObserver);
-  if (insertAtIndex == mIdleObservers.Length()) {
-    mIdleObservers.AppendElement(tmpIdleObserver);
-  }
-  else {
-    mIdleObservers.InsertElementAt(insertAtIndex, tmpIdleObserver);
-  }
-
-  bool userIsIdle = false;
-  rv = nsContentUtils::IsUserIdle(MIN_IDLE_NOTIFICATION_TIME_S, &userIsIdle);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Special case. First idle observer added to empty list while the user is idle.
-  // Haven't received 'idle' topic notification from slow idle service yet.
-  // Need to wait for the idle notification and then notify idle observers in the list.
-  if (userIsIdle && mIdleCallbackIndex == -1) {
-    return NS_OK;
-  }
-
-  if (!mCurrentlyIdle) {
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(mIdleCallbackIndex >= 0);
-
-  if (static_cast<int32_t>(insertAtIndex) < mIdleCallbackIndex) {
-    IdleObserverHolder& idleObserver = mIdleObservers.ElementAt(insertAtIndex);
-    NotifyIdleObserver(&idleObserver, true);
-    mIdleCallbackIndex++;
-    return NS_OK;
-  }
-
-  if (static_cast<int32_t>(insertAtIndex) == mIdleCallbackIndex) {
-    mIdleTimer->Cancel();
-    rv = ScheduleNextIdleObserverCallback();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
+  MOZ_CRASH("Inner window only");
 }
 
 nsresult
@@ -12127,57 +10172,7 @@ nsGlobalWindowOuter::FindIndexOfElementToRemove(nsIIdleObserver* aIdleObserver,
 nsresult
 nsGlobalWindowOuter::UnregisterIdleObserver(nsIIdleObserver* aIdleObserver)
 {
-  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
-
-  int32_t removeElementIndex;
-  nsresult rv = FindIndexOfElementToRemove(aIdleObserver, &removeElementIndex);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Idle observer not found in list of idle observers. No idle observer removed.");
-    return NS_OK;
-  }
-  mIdleObservers.RemoveElementAt(removeElementIndex);
-
-  MOZ_ASSERT(mIdleTimer);
-  if (mIdleObservers.IsEmpty() && mIdleService) {
-    rv = mIdleService->RemoveIdleObserver(mObserver, MIN_IDLE_NOTIFICATION_TIME_S);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mIdleService = nullptr;
-
-    mIdleTimer->Cancel();
-    mIdleCallbackIndex = -1;
-    return NS_OK;
-  }
-
-  if (!mCurrentlyIdle) {
-    return NS_OK;
-  }
-
-  if (removeElementIndex < mIdleCallbackIndex) {
-    mIdleCallbackIndex--;
-    return NS_OK;
-  }
-
-  if (removeElementIndex != mIdleCallbackIndex) {
-    return NS_OK;
-  }
-
-  mIdleTimer->Cancel();
-
-  // If the last element in the array had been notified then decrement
-  // mIdleCallbackIndex because an idle was removed from the list of
-  // idle observers.
-  // Example: add idle observer with time 1, 2, 3,
-  // Idle notifications for idle observers with time 1, 2, 3 are complete
-  // Remove idle observer with time 3 while the user is still idle.
-  // The user never transitioned to active state.
-  // Add an idle observer with idle time 4
-  if (static_cast<uint32_t>(mIdleCallbackIndex) == mIdleObservers.Length()) {
-    mIdleCallbackIndex--;
-  }
-  rv = ScheduleNextIdleObserverCallback();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  MOZ_CRASH("Inner window only");
 }
 
 nsresult
@@ -13073,20 +11068,6 @@ nsGlobalWindowOuter::SetTimeout(JSContext* aCx, const nsAString& aHandler,
                            ErrorResult& aError)
 {
   return SetTimeoutOrInterval(aCx, aHandler, aTimeout, false, aError);
-}
-
-static bool
-IsInterval(const Optional<int32_t>& aTimeout, int32_t& aResultTimeout)
-{
-  if (aTimeout.WasPassed()) {
-    aResultTimeout = aTimeout.Value();
-    return true;
-  }
-
-  // If no interval was specified, treat this like a timeout, to avoid setting
-  // an interval of 0 milliseconds.
-  aResultTimeout = 0;
-  return false;
 }
 
 int32_t
@@ -13988,37 +11969,10 @@ nsGlobalWindowOuter::DispatchVRDisplayPresentChange(uint32_t aDisplayID)
   }
 }
 
-enum WindowState {
-  // These constants need to match the constants in Window.webidl
-  STATE_MAXIMIZED = 1,
-  STATE_MINIMIZED = 2,
-  STATE_NORMAL = 3,
-  STATE_FULLSCREEN = 4
-};
-
 uint16_t
 nsGlobalWindowOuter::WindowState()
 {
-  MOZ_ASSERT(IsInnerWindow());
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-
-  int32_t mode = widget ? widget->SizeMode() : 0;
-
-  switch (mode) {
-    case nsSizeMode_Minimized:
-      return STATE_MINIMIZED;
-    case nsSizeMode_Maximized:
-      return STATE_MAXIMIZED;
-    case nsSizeMode_Fullscreen:
-      return STATE_FULLSCREEN;
-    case nsSizeMode_Normal:
-      return STATE_NORMAL;
-    default:
-      NS_WARNING("Illegal window state for this chrome window");
-      break;
-  }
-
-  return STATE_NORMAL;
+  MOZ_CRASH("Inner window only");
 }
 
 bool
@@ -14877,34 +12831,6 @@ nsGlobalWindowOuter::TabGroupInner()
   return mTabGroup;
 }
 
-template<typename T>
-mozilla::dom::TabGroup*
-nsPIDOMWindow<T>::TabGroup()
-{
-  if (IsInnerWindow()) {
-    nsGlobalWindowInner* globalWindow =
-      static_cast<nsGlobalWindowInner*>(
-        reinterpret_cast<nsPIDOMWindow<nsISupports>*>(this));
-    return globalWindow->TabGroupInner();
-  } else {
-    nsGlobalWindowOuter* globalWindow =
-      static_cast<nsGlobalWindowOuter*>(
-        reinterpret_cast<nsPIDOMWindow<nsISupports>*>(this));
-    return globalWindow->TabGroupOuter();
-  }
-}
-
-template<typename T>
-mozilla::dom::DocGroup*
-nsPIDOMWindow<T>::GetDocGroup() const
-{
-  nsIDocument* doc = GetExtantDoc();
-  if (doc) {
-    return doc->GetDocGroup();
-  }
-  return nullptr;
-}
-
 nsresult
 nsGlobalWindowOuter::Dispatch(TaskCategory aCategory,
                          already_AddRefed<nsIRunnable>&& aRunnable)
@@ -15037,8 +12963,3 @@ nsGlobalWindowOuter::Create(bool aIsChrome)
   window->InitWasOffline();
   return window.forget();
 }
-
-// XXX: Don't know what to do with these :-S
-template class nsPIDOMWindow<mozIDOMWindowProxy>;
-template class nsPIDOMWindow<mozIDOMWindow>;
-template class nsPIDOMWindow<nsISupports>;

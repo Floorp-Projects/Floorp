@@ -182,6 +182,15 @@ struct IdleObserverHolder
   }
 };
 
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            IdleObserverHolder& aField,
+                            const char* aName,
+                            unsigned aFlags)
+{
+  CycleCollectionNoteChild(aCallback, aField.mIdleObserver.get(), aName, aFlags);
+}
+
 // NOTE: Currently this file, despite being named mozilla/dom/Window.h, exports
 // the class nsGlobalWindowInner. It will be renamed in the future to
 // mozilla::dom::Window.
