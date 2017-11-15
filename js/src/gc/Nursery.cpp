@@ -551,8 +551,12 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
     json.property("bytes_tenured", previousGC.tenuredBytes);
     json.property("bytes_used", previousGC.nurseryUsedBytes);
     json.property("cur_capacity", previousGC.nurseryCapacity);
-    json.property("new_capacity", spaceToEnd());
-    json.property("lazy_capacity", allocatedChunkCount() * ChunkSize);
+    const size_t newCapacity = spaceToEnd(maxChunkCount());
+    if (newCapacity != previousGC.nurseryCapacity)
+        json.property("new_capacity", newCapacity);
+    const size_t lazyCapacity = spaceToEnd(allocatedChunkCount());
+    if (lazyCapacity != previousGC.nurseryCapacity)
+        json.property("lazy_capacity", lazyCapacity);
     if (!timeInChunkAlloc_.IsZero())
         json.property("chunk_alloc_us", timeInChunkAlloc_, json.MICROSECONDS);
 
@@ -675,7 +679,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
         doCollection(reason, tenureCounts);
     } else {
         previousGC.nurseryUsedBytes = 0;
-        previousGC.nurseryCapacity = spaceToEnd();
+        previousGC.nurseryCapacity = spaceToEnd(maxChunkCount());
         previousGC.tenuredBytes = 0;
     }
 
@@ -764,7 +768,7 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
     AutoDisableProxyCheck disableStrictProxyChecking;
     mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
 
-    const size_t initialNurseryCapacity = spaceToEnd();
+    const size_t initialNurseryCapacity = spaceToEnd(maxChunkCount());
     const size_t initialNurseryUsedBytes = initialNurseryCapacity - freeSpace();
 
     // Move objects pointed to by roots from the nursery to the major heap.
@@ -966,9 +970,9 @@ js::Nursery::clear()
 }
 
 size_t
-js::Nursery::spaceToEnd() const
+js::Nursery::spaceToEnd(unsigned chunkCount) const
 {
-    unsigned lastChunk = maxChunkCount() - 1;
+    unsigned lastChunk = chunkCount - 1;
 
     MOZ_ASSERT(lastChunk >= currentStartChunk_);
     MOZ_ASSERT(currentStartPosition_ - chunk(currentStartChunk_).start() <= NurseryChunkUsableSize);
