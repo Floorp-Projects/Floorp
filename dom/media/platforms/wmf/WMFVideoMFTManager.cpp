@@ -1248,9 +1248,14 @@ WMFVideoMFTManager::GetDescriptionName() const
   if (mAMDVP9InUse) {
       return NS_LITERAL_CSTRING("amd vp9 hardware video decoder");
   }
-  return nsPrintfCString("wmf %s video decoder",
-                         IsHardwareAccelerated(failureReason) ? "hardware"
-                                                              : "software");
+  bool hw = IsHardwareAccelerated(failureReason);
+  return nsPrintfCString("wmf %s video decoder - %s",
+                         hw ? "hardware" : "software",
+                         hw ? gfxPrefs::PDMWMFUseNV12Format() &&
+                              gfx::DeviceManagerDx::Get()->CanUseNV12()
+                              ? "nv12"
+                              : "rgba32"
+                            : "yuv420");
 }
 
 } // namespace mozilla
