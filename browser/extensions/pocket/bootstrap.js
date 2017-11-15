@@ -139,7 +139,7 @@ var PocketPageAction = {
         onPlacedInPanel(panelNode, urlbarNode) {
           PocketOverlay.onWindowOpened(panelNode.ownerGlobal);
         },
-        onIframeShown(iframe, panel) {
+        onIframeShowing(iframe, panel) {
           Pocket.onShownInPhotonPageActionPanel(panel, iframe);
 
           let doc = panel.ownerDocument;
