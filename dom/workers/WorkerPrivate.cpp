@@ -1600,6 +1600,10 @@ PRThreadFromThread(nsIThread* aThread)
 class SimpleWorkerHolder final : public WorkerHolder
 {
 public:
+  SimpleWorkerHolder()
+    : WorkerHolder("SimpleWorkerHolder")
+  {}
+
   virtual bool Notify(Status aStatus) { return true; }
 };
 

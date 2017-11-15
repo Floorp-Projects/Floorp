@@ -274,7 +274,8 @@ class WorkerStreamOwner final : public WorkerHolder
 
 public:
   explicit WorkerStreamOwner(nsIAsyncInputStream* aStream)
-    : WorkerHolder(WorkerHolder::Behavior::AllowIdleShutdownStart)
+    : WorkerHolder("WorkerStreamOwner",
+                   WorkerHolder::Behavior::AllowIdleShutdownStart)
     , mStream(aStream)
   {}
 
