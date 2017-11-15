@@ -4,11 +4,9 @@
 
 "use strict";
 
-const {
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("../utils/l10n");
 const { getUrlHost } = require("../utils/request-utils");
 
@@ -16,7 +14,7 @@ const { getUrlHost } = require("../utils/request-utils");
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 const PropertiesView = createFactory(require("./PropertiesView"));
 
-const { div, input, span } = DOM;
+const { div, input, span } = dom;
 const NOT_AVAILABLE = L10N.getStr("netmonitor.security.notAvailable");
 const ERROR_LABEL = L10N.getStr("netmonitor.security.error");
 const CIPHER_SUITE_LABEL = L10N.getStr("netmonitor.security.cipherSuite");

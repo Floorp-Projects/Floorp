@@ -4,8 +4,9 @@
 
 "use strict";
 
-const { DOM, PropTypes } = require("devtools/client/shared/vendor/react");
-const { div, iframe } = DOM;
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { div, iframe } = dom;
 
 /*
  * Response preview component

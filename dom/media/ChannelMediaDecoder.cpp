@@ -103,26 +103,10 @@ ChannelMediaDecoder::ResourceCallback::NotifyDataArrived()
 void
 ChannelMediaDecoder::ResourceCallback::NotifyDataEnded(nsresult aStatus)
 {
-  RefPtr<ResourceCallback> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "ChannelMediaDecoder::ResourceCallback::NotifyDataEnded",
-    [=]() {
-    if (!self->mDecoder) {
-      return;
-    }
-    self->mDecoder->NotifyDownloadEnded(aStatus);
-    if (NS_SUCCEEDED(aStatus)) {
-      MediaDecoderOwner* owner = self->GetMediaOwner();
-      MOZ_ASSERT(owner);
-      owner->DownloadSuspended();
-
-      // NotifySuspendedStatusChanged will tell the element that download
-      // has been suspended "by the cache", which is true since we never
-      // download anything. The element can then transition to HAVE_ENOUGH_DATA.
-      owner->NotifySuspendedByCache(true);
-    }
-  });
-  mAbstractMainThread->Dispatch(r.forget());
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mDecoder) {
+    mDecoder->NotifyDownloadEnded(aStatus);
+  }
 }
 
 void
@@ -310,20 +294,18 @@ ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus)
 
   LOG("NotifyDownloadEnded, status=%" PRIx32, static_cast<uint32_t>(aStatus));
 
-  if (aStatus == NS_BINDING_ABORTED) {
+  MediaDecoderOwner* owner = GetOwner();
+  if (NS_SUCCEEDED(aStatus) || aStatus == NS_BASE_STREAM_CLOSED) {
+    UpdatePlaybackRate();
+    owner->DownloadSuspended();
+    // NotifySuspendedStatusChanged will tell the element that download
+    // has been suspended "by the cache", which is true since we never
+    // download anything. The element can then transition to HAVE_ENOUGH_DATA.
+    owner->NotifySuspendedByCache(true);
+  } else if (aStatus == NS_BINDING_ABORTED) {
     // Download has been cancelled by user.
-    GetOwner()->LoadAborted();
-    return;
-  }
-
-  UpdatePlaybackRate();
-
-  if (NS_SUCCEEDED(aStatus)) {
-    // A final progress event will be fired by the MediaResource calling
-    // DownloadSuspended on the element.
-    // Also NotifySuspendedStatusChanged() will be called to update readyState
-    // if download ended with success.
-  } else if (aStatus != NS_BASE_STREAM_CLOSED) {
+    owner->LoadAborted();
+  } else {
     NetworkError();
   }
 }

@@ -4,18 +4,16 @@
 
 "use strict";
 
-const {
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Components
 const RequestListContent = createFactory(require("./RequestListContent"));
 const RequestListEmptyNotice = createFactory(require("./RequestListEmptyNotice"));
 const StatusBar = createFactory(require("./StatusBar"));
 
-const { div } = DOM;
+const { div } = dom;
 
 /**
  * Request panel component

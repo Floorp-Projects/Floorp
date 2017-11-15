@@ -13,10 +13,8 @@ if (typeof define === "undefined") {
 }
 
 // React
-const {
-  createFactory,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ObjectClient = require("devtools/shared/client/object-client");
 const {
   MESSAGE_TYPE,

@@ -7,109 +7,65 @@
 
 "use strict";
 
-function test() {
-  let hud;
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
+  "new-console-output/test/mochitest/test-cd-iframe-parent.html";
 
-  const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                   "test/test-bug-609872-cd-iframe-parent.html";
+add_task(async function () {
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  const parentMessages = [{
-    name: "document.title in parent iframe",
-    text: "bug 609872 - iframe parent",
-    category: CATEGORY_OUTPUT,
-  }, {
-    name: "paragraph content",
-    text: "p: test for bug 609872 - iframe parent",
-    category: CATEGORY_OUTPUT,
-  }, {
-    name: "object content",
-    text: "obj: parent!",
-    category: CATEGORY_OUTPUT,
-  }];
+  info("Test initial state");
+  await executeWindowTest(hud, "parent");
 
-  const childMessages = [{
-    name: "document.title in child iframe",
-    text: "bug 609872 - iframe child",
-    category: CATEGORY_OUTPUT,
-  }, {
-    name: "paragraph content",
-    text: "p: test for bug 609872 - iframe child",
-    category: CATEGORY_OUTPUT,
-  }, {
-    name: "object content",
-    text: "obj: child!",
-    category: CATEGORY_OUTPUT,
-  }];
+  info("cd() into the iframe using a selector");
+  await hud.jsterm.execute(`cd("iframe")`);
+  await executeWindowTest(hud, "child");
 
-  Task.spawn(runner).then(finishTest);
+  info("cd() out of the iframe, reset to default window");
+  await hud.jsterm.execute("cd()");
+  await executeWindowTest(hud, "parent");
 
-  function* runner() {
-    const {tab} = yield loadTab(TEST_URI);
-    hud = yield openConsole(tab);
+  info("cd() into the iframe using an iframe DOM element");
+  await hud.jsterm.execute(`cd($("iframe"))`);
+  await executeWindowTest(hud, "child");
 
-    yield executeWindowTest();
+  info("cd(window.parent)");
+  await hud.jsterm.execute("cd(window.parent)");
+  await executeWindowTest(hud, "parent");
 
-    yield waitForMessages({ webconsole: hud, messages: parentMessages });
+  info("call cd() with unexpected arguments");
+  let onCdErrorMessage = waitForMessage(hud, "Cannot cd()");
+  hud.jsterm.execute("cd(document)");
+  let cdErrorMessage = await onCdErrorMessage;
+  ok(cdErrorMessage.node.classList.contains("error"),
+    "An error message is shown when calling the cd command with `document`");
 
-    info("cd() into the iframe using a selector");
-    hud.jsterm.clearOutput();
-    yield hud.jsterm.execute("cd('iframe')");
-    yield executeWindowTest();
+  onCdErrorMessage = waitForMessage(hud, "Cannot cd()");
+  hud.jsterm.execute(`cd("p")`);
+  cdErrorMessage = await onCdErrorMessage;
+  ok(cdErrorMessage.node.classList.contains("error"),
+    "An error message is shown when calling the cd command with a non iframe selector");
+});
 
-    yield waitForMessages({ webconsole: hud, messages: childMessages });
+async function executeWindowTest(hud, iframeRole) {
+  const BASE_TEXT = "Test for the cd() command (bug 609872) - iframe";
+  let onMessages = waitForMessages({
+    hud,
+    messages: [{
+      text: `${BASE_TEXT} ${iframeRole}`
+    }, {
+      text: `p: ${BASE_TEXT} ${iframeRole}`
+    }, {
+      text: `obj: ${iframeRole}!`
+    }]
+  });
 
-    info("cd() out of the iframe, reset to default window");
-    hud.jsterm.clearOutput();
-    yield hud.jsterm.execute("cd()");
-    yield executeWindowTest();
+  hud.jsterm.execute(`document.title`);
+  hud.jsterm.execute(`"p: " + document.querySelector("p").textContent`);
+  hud.jsterm.execute(`"obj: " + window.foobar`);
 
-    yield waitForMessages({ webconsole: hud, messages: parentMessages });
+  const messages = await onMessages;
+  ok(messages, `Expected evaluation result messages are shown in ${iframeRole} iframe`);
 
-    info("call cd() with unexpected arguments");
-    hud.jsterm.clearOutput();
-    yield hud.jsterm.execute("cd(document)");
-
-    yield waitForMessages({
-      webconsole: hud,
-      messages: [{
-        text: "Cannot cd()",
-        category: CATEGORY_OUTPUT,
-        severity: SEVERITY_ERROR,
-      }],
-    });
-
-    hud.jsterm.clearOutput();
-    yield hud.jsterm.execute("cd('p')");
-
-    yield waitForMessages({
-      webconsole: hud,
-      messages: [{
-        text: "Cannot cd()",
-        category: CATEGORY_OUTPUT,
-        severity: SEVERITY_ERROR,
-      }],
-    });
-
-    info("cd() into the iframe using an iframe DOM element");
-    hud.jsterm.clearOutput();
-    yield hud.jsterm.execute("cd($('iframe'))");
-    yield executeWindowTest();
-
-    yield waitForMessages({ webconsole: hud, messages: childMessages });
-
-    info("cd(window.parent)");
-    hud.jsterm.clearOutput();
-    yield hud.jsterm.execute("cd(window.parent)");
-    yield executeWindowTest();
-
-    yield waitForMessages({ webconsole: hud, messages: parentMessages });
-
-    yield closeConsole(tab);
-  }
-
-  function* executeWindowTest() {
-    yield hud.jsterm.execute("document.title");
-    yield hud.jsterm.execute("'p: ' + document.querySelector('p').textContent");
-    yield hud.jsterm.execute("'obj: ' + window.foobarBug609872");
-  }
+  // Clear the output so we don't pollute the next assertions.
+  hud.jsterm.clearOutput();
 }

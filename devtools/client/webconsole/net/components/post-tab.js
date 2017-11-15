@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory, DOM, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const TreeView =
   createFactory(require("devtools/client/shared/components/tree/TreeView"));
@@ -47,6 +48,15 @@ class PostTab extends Component {
     this.renderMultiPart = this.renderMultiPart.bind(this);
     this.renderUrlEncoded = this.renderUrlEncoded.bind(this);
     this.renderRawData = this.renderRawData.bind(this);
+  }
+
+  componentDidMount() {
+    let { actions, data: file } = this.props;
+
+    if (!file.request.postData) {
+      // TODO: use async action objects as soon as Redux is in place
+      actions.requestData("requestPostData");
+    }
   }
 
   isJson(file) {
@@ -154,8 +164,6 @@ class PostTab extends Component {
     if (NetUtils.isMultiPartRequest(file)) {
       // TODO: render multi part request (bug: 1247423)
     }
-
-    return;
   }
 
   /**
@@ -193,7 +201,7 @@ class PostTab extends Component {
       group = {
         key: "raw-longstring",
         name: Locale.$STR("netRequest.rawData"),
-        content: DOM.div({className: "netInfoResponseContent"},
+        content: dom.div({className: "netInfoResponseContent"},
           sanitize(text.initial),
           SizeLimit({
             actions: this.props.actions,
@@ -207,7 +215,7 @@ class PostTab extends Component {
       group = {
         key: "raw",
         name: Locale.$STR("netRequest.rawData"),
-        content: DOM.div({className: "netInfoResponseContent"},
+        content: dom.div({className: "netInfoResponseContent"},
           sanitize(text)
         )
       };
@@ -216,20 +224,11 @@ class PostTab extends Component {
     return group;
   }
 
-  componentDidMount() {
-    let { actions, data: file } = this.props;
-
-    if (!file.request.postData) {
-      // TODO: use async action objects as soon as Redux is in place
-      actions.requestData("requestPostData");
-    }
-  }
-
   render() {
-    let { actions, data: file } = this.props;
+    let { data: file } = this.props;
 
     if (file.discardRequestBody) {
-      return DOM.span({className: "netInfoBodiesDiscarded"},
+      return dom.span({className: "netInfoBodiesDiscarded"},
         Locale.$STR("netRequest.requestBodyDiscarded")
       );
     }
@@ -260,8 +259,8 @@ class PostTab extends Component {
     }
 
     return (
-      DOM.div({className: "postTabBox"},
-        DOM.div({className: "panelContent"},
+      dom.div({className: "postTabBox"},
+        dom.div({className: "panelContent"},
           NetInfoGroupList({
             groups: groups
           })

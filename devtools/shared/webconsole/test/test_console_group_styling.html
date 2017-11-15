@@ -38,7 +38,7 @@ window.onload = async function () {
 
 async function testSingleCustomStyleGroup(debuggerClient) {
   info("Testing console.group with a custom style");
-  let {packet} = await consoleAPICall(
+  let packet = await consoleAPICall(
     debuggerClient,
     () => top.console.group("%cfoobar", "color:red")
   );
@@ -51,7 +51,7 @@ async function testSingleCustomStyleGroup(debuggerClient) {
 
 async function testSingleCustomStyleGroupCollapsed(debuggerClient) {
   info("Testing console.groupCollapsed with a custom style");
-  let {packet} = await consoleAPICall(
+  let packet = await consoleAPICall(
     debuggerClient,
     () => top.console.groupCollapsed("%cfoobaz", "color:blue")
   );
@@ -64,7 +64,7 @@ async function testSingleCustomStyleGroupCollapsed(debuggerClient) {
 
 async function testMultipleCustomStyleGroup(debuggerClient) {
   info("Testing console.group with multiple custom styles");
-  let {packet} = await consoleAPICall(
+  let packet = await consoleAPICall(
     debuggerClient,
     () => top.console.group("%cfoo%cbar", "color:red", "color:blue")
   );
@@ -77,7 +77,7 @@ async function testMultipleCustomStyleGroup(debuggerClient) {
 
 async function testMultipleCustomStyleGroupCollapsed(debuggerClient) {
   info("Testing console.groupCollapsed with multiple custom styles");
-  let {packet} = await consoleAPICall(
+  let packet = await consoleAPICall(
     debuggerClient,
     () => top.console.group("%cfoo%cbaz", "color:red", "color:green")
   );
@@ -90,7 +90,7 @@ async function testMultipleCustomStyleGroupCollapsed(debuggerClient) {
 
 async function testFormatterWithNoStyleGroup(debuggerClient) {
   info("Testing console.group with one formatter but no style");
-  let {packet} = await consoleAPICall(
+  let packet = await consoleAPICall(
     debuggerClient,
     () => top.console.group("%cfoobar")
   );
@@ -103,7 +103,7 @@ async function testFormatterWithNoStyleGroup(debuggerClient) {
 
 async function testFormatterWithNoStyleGroupCollapsed(debuggerClient) {
   info("Testing console.groupCollapsed with one formatter but no style");
-  let {packet} = await consoleAPICall(
+  let packet = await consoleAPICall(
     debuggerClient,
     () => top.console.groupCollapsed("%cfoobaz")
   );
@@ -115,12 +115,7 @@ async function testFormatterWithNoStyleGroupCollapsed(debuggerClient) {
 }
 
 function consoleAPICall(debuggerClient, consoleCall) {
-  const onConsoleAPICall = new Promise((resolve, reject) => {
-    debuggerClient.addOneTimeListener(
-      "consoleAPICall",
-      (type, packet) => resolve({type, packet})
-    );
-  });
+  const onConsoleAPICall = debuggerClient.addOneTimeListener("consoleAPICall");
   consoleCall();
   return onConsoleAPICall;
 }

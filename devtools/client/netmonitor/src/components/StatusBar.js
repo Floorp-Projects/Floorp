@@ -4,10 +4,8 @@
 
 "use strict";
 
-const {
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { PluralForm } = require("devtools/shared/plural-form");
 const Actions = require("../actions/index");
@@ -21,7 +19,7 @@ const {
 } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 
-const { button, div } = DOM;
+const { button, div } = dom;
 
 const REQUESTS_COUNT_EMPTY = L10N.getStr("networkMenu.summary.requestsCountEmpty");
 const TOOLTIP_PERF = L10N.getStr("networkMenu.summary.tooltip.perf");
