@@ -71,7 +71,7 @@ class Encoding;
  * we will need to add additional checks there for all intermediate IIDs, until
  * ContentPrincipal is fixed to serialize its URIs as nsISupports (bug 662693).
  */
-[scriptable, builtinclass, uuid(92073a54-6d78-4f30-913a-b871813208c6)]
+[scriptable, uuid(92073a54-6d78-4f30-913a-b871813208c6)]
 interface nsIURI : nsISupports
 {
     /************************************************************************

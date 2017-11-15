@@ -21,7 +21,7 @@ interface nsIURI;
  * should implement nsINestedURI and return the http://example.com URI as its
  * inner URI.
  */
-[scriptable, builtinclass, uuid(6de2c874-796c-46bf-b57f-0d7bd7d6cab0)]
+[scriptable, uuid(6de2c874-796c-46bf-b57f-0d7bd7d6cab0)]
 interface nsINestedURI : nsISupports
 {
   /**
