@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IntlUtils.h"
+
+#include "mozilla/dom/ToJSValue.h"
 #include "mozIMozIntl.h"
 #include "nsContentUtils.h"
 

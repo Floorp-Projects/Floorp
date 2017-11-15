@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 et{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.22"}
     zoneStrings{
         "meta:Acre"{
             ld{"Acre suveaeg"}
@@ -111,9 +111,9 @@ et{
             ls{"Kesk-Austraalia standardaeg"}
         }
         "meta:Australia_CentralWestern"{
-            ld{"Kesk-Lääne Austraalia suveaeg"}
-            lg{"Kesk-Lääne Austraalia aeg"}
-            ls{"Kesk-Lääne Austraalia standardaeg"}
+            ld{"Austraalia Kesk-Lääne suveaeg"}
+            lg{"Austraalia Kesk-Lääne aeg"}
+            ls{"Austraalia Kesk-Lääne standardaeg"}
         }
         "meta:Australia_Eastern"{
             ld{"Ida-Austraalia suveaeg"}
@@ -158,6 +158,9 @@ et{
             ld{"Roheneemesaarte suveaeg"}
             lg{"Roheneemesaarte aeg"}
             ls{"Roheneemesaarte standardaeg"}
+        }
+        "meta:Casey"{
+            ls{"Casey aeg"}
         }
         "meta:Chamorro"{
             ls{"Tšamorro standardaeg"}
@@ -292,7 +295,7 @@ et{
         }
         "meta:Hawaii_Aleutian"{
             ld{"Hawaii-Aleuudi suveaeg"}
-            lg{"Hawaii-aleuudi aeg"}
+            lg{"Hawaii-Aleuudi aeg"}
             ls{"Hawaii-Aleuudi standardaeg"}
         }
         "meta:Hong_Kong"{
@@ -370,6 +373,9 @@ et{
         "meta:Kyrgystan"{
             ls{"Kõrgõzstani aeg"}
         }
+        "meta:Lanka"{
+            ls{"Sri Lanka aeg"}
+        }
         "meta:Line_Islands"{
             ls{"Line’i saarte aeg"}
         }
@@ -377,6 +383,11 @@ et{
             ld{"Lord Howe’i suveaeg"}
             lg{"Lord Howe’i aeg"}
             ls{"Lord Howe’i standardaeg"}
+        }
+        "meta:Macau"{
+            ld{"Macau suveaeg"}
+            lg{"Macau aeg"}
+            ls{"Macau standardaeg"}
         }
         "meta:Macquarie"{
             ls{"Macquarie saare aeg"}
@@ -460,6 +471,9 @@ et{
             ld{"Fernando de Noronha suveaeg"}
             lg{"Fernando de Noronha aeg"}
             ls{"Fernando de Noronha standardaeg"}
+        }
+        "meta:North_Mariana"{
+            ls{"Põhja-Mariaani aeg"}
         }
         "meta:Novosibirsk"{
             ld{"Novosibirski suveaeg"}
@@ -636,7 +650,7 @@ et{
             ls{"Jekaterinburgi standardaeg"}
         }
         fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
+        gmtFormat{"GMT {0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;−HH:mm"}
         regionFormat{"({0})"}

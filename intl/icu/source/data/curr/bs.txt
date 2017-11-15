@@ -242,6 +242,10 @@ bs{
             "CLP",
             "Čileanski pezos",
         }
+        CNH{
+            "CNH",
+            "Kineski juan (izvanteritorijalni)",
+        }
         CNY{
             "CNY",
             "Kineski juan",
@@ -1214,6 +1218,7 @@ bs{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1508,7 +1513,7 @@ bs{
             other{"belizeanskih dolara"}
         }
         CAD{
-            few{"kanadski dolari"}
+            few{"kanadska dolara"}
             one{"kanadski dolar"}
             other{"kanadskih dolara"}
         }
@@ -1541,6 +1546,11 @@ bs{
             few{"čileanska pezosa"}
             one{"čileanski pezos"}
             other{"čileanskih pezosa"}
+        }
+        CNH{
+            few{"kineska juana (izvanteritorijalni)"}
+            one{"kineski juan (izvanteritorijalni)"}
+            other{"kineskih juana (izvanteritorijalni)"}
         }
         CNY{
             few{"kineska juana"}
@@ -1713,9 +1723,9 @@ bs{
             other{"ganskih ceda (1979–2007)"}
         }
         GHS{
-            few{"ganska ceda"}
+            few{"ganska cedija"}
             one{"ganski cedi"}
-            other{"ganskih ceda"}
+            other{"ganskih cedija"}
         }
         GIP{
             few{"gibraltarske funte"}
@@ -2125,7 +2135,7 @@ bs{
         NIO{
             few{"nikaragvanske kordobe"}
             one{"nikaragvanska kordoba"}
-            other{"nikaragvanska kordoba"}
+            other{"nikaragvanskih kordoba"}
         }
         NLG{
             few{"holandska guldena"}
@@ -2155,7 +2165,7 @@ bs{
         PAB{
             few{"panamske balboe"}
             one{"panamska balboa"}
-            other{"panamska balboa"}
+            other{"panamskih balboa"}
         }
         PEI{
             few{"peruanske inte"}
@@ -2673,5 +2683,5 @@ bs{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.37.5"}
 }

@@ -786,7 +786,7 @@ EnsureBareExitFrame(JSContext* cx, JitFrameLayout* frame)
 #endif
 
     cx->activation()->asJit()->setJSExitFP((uint8_t*)frame);
-    *exitFrame->footer()->addressOfJitCode() = ExitFrameLayout::BareToken();
+    exitFrame->footer()->setBareExitFrame();
     MOZ_ASSERT(exitFrame->isBareExit());
 }
 
@@ -1100,13 +1100,6 @@ TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame)
 {
     ExitFooterFrame* footer = frame.exitFrame()->footer();
 
-    // Trace the code of the code handling the exit path.  This is needed because
-    // invalidated script are no longer traced because data are erased by the
-    // invalidation and relocation data are no longer reliable.  So the VM
-    // wrapper or the invalidation code may be GC if no JitCode keep reference
-    // on them.
-    MOZ_ASSERT(uintptr_t(footer->jitCode()) != uintptr_t(-1));
-
     // This corresponds to the case where we have build a fake exit frame which
     // handles the case of a native function call. We need to trace the argument
     // vector of the function call, and also new.target if it was a constructing
@@ -1128,23 +1121,6 @@ TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame)
         TraceRoot(trc, oolnative->vp(), "iol-ool-native-vp");
         size_t len = oolnative->argc() + 1;
         TraceRootRange(trc, len, oolnative->thisp(), "ion-ool-native-thisargs");
-        return;
-    }
-
-    if (frame.isExitFrameLayout<IonOOLPropertyOpExitFrameLayout>() ||
-        frame.isExitFrameLayout<IonOOLSetterOpExitFrameLayout>())
-    {
-        // A SetterOp frame is a different size, but that's the only relevant
-        // difference between the two. The fields that need tracing are all in
-        // the common base class.
-        IonOOLPropertyOpExitFrameLayout* oolgetter =
-            frame.isExitFrameLayout<IonOOLPropertyOpExitFrameLayout>()
-            ? frame.exitFrame()->as<IonOOLPropertyOpExitFrameLayout>()
-            : frame.exitFrame()->as<IonOOLSetterOpExitFrameLayout>();
-        TraceRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
-        TraceRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
-        TraceRoot(trc, oolgetter->id(), "ion-ool-property-op-id");
-        TraceRoot(trc, oolgetter->obj(), "ion-ool-property-op-obj");
         return;
     }
 
@@ -1191,8 +1167,7 @@ TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame)
     MOZ_ASSERT(frame.exitFrame()->isWrapperExit());
 
     const VMFunction* f = footer->function();
-    if (f == nullptr)
-        return;
+    MOZ_ASSERT(f);
 
     // Trace arguments of the VM wrapper.
     uint8_t* argBase = frame.exitFrame()->argBase();

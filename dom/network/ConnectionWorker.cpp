@@ -53,7 +53,8 @@ public:
 
 private:
   ConnectionProxy(WorkerPrivate* aWorkerPrivate, ConnectionWorker* aConnection)
-    : mConnection(aConnection)
+    : WorkerHolder("ConnectionProxy")
+    , mConnection(aConnection)
     , mWorkerPrivate(aWorkerPrivate)
   {
     MOZ_ASSERT(mWorkerPrivate);

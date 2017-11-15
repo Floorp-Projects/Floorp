@@ -96,7 +96,7 @@ pt{
         }
         BAM{
             "BAM",
-            "Marco bósnio-herzegovino conversível",
+            "Marco conversível da Bósnia e Herzegovina",
         }
         BAN{
             "BAN",
@@ -262,6 +262,10 @@ pt{
             "CLP",
             "Peso chileno",
         }
+        CNH{
+            "CNH",
+            "Yuan (offshore)",
+        }
         CNX{
             "CNX",
             "Dólar do Banco Popular da China",
@@ -320,7 +324,7 @@ pt{
         }
         DJF{
             "DJF",
-            "Franco djibutiense",
+            "Franco djiboutiano",
         }
         DKK{
             "DKK",
@@ -392,7 +396,7 @@ pt{
         }
         GBP{
             "£",
-            "Libra britânica",
+            "Libra esterlina",
         }
         GEK{
             "GEK",
@@ -436,7 +440,7 @@ pt{
         }
         GTQ{
             "GTQ",
-            "Quetzal guatemalense",
+            "Quetzal guatemalteco",
         }
         GWE{
             "GWE",
@@ -472,7 +476,7 @@ pt{
         }
         HUF{
             "HUF",
-            "Forint húngaro",
+            "Florim húngaro",
         }
         IDR{
             "IDR",
@@ -544,7 +548,7 @@ pt{
         }
         KMF{
             "KMF",
-            "Franco comorense",
+            "Franco comoriano",
         }
         KPW{
             "KPW",
@@ -568,7 +572,7 @@ pt{
         }
         KYD{
             "KYD",
-            "Dólar das Ilhas Caiman",
+            "Dólar das Ilhas Cayman",
         }
         KZT{
             "KZT",
@@ -628,7 +632,7 @@ pt{
         }
         MAD{
             "MAD",
-            "Dirrã marroquino",
+            "Dirham marroquino",
         }
         MAF{
             "MAF",
@@ -700,7 +704,7 @@ pt{
         }
         MWK{
             "MWK",
-            "Kwacha malawiana",
+            "Kwacha malauiana",
         }
         MXN{
             "MX$",
@@ -768,7 +772,7 @@ pt{
         }
         PAB{
             "PAB",
-            "Balboa panamenha",
+            "Balboa panamenho",
         }
         PEI{
             "PEI",
@@ -1377,8 +1381,8 @@ pt{
             other{"Dinares da Bósnia Herzegovina"}
         }
         BAM{
-            one{"Marco bósnio-herzegovino conversível"}
-            other{"Marco bósnio-herzegovino conversível"}
+            one{"Marco conversível da Bósnia e Herzegovina"}
+            other{"Marcos conversíveis da Bósnia e Herzegovina"}
         }
         BAN{
             one{"Novo dinar da Bósnia-Herzegovina"}
@@ -1544,6 +1548,10 @@ pt{
             one{"Peso chileno"}
             other{"Pesos chilenos"}
         }
+        CNH{
+            one{"Yuan (offshore)"}
+            other{"Yuans (offshore)"}
+        }
         CNX{
             one{"Dólar do Banco Popular da China"}
             other{"Dólares do Banco Popular da China"}
@@ -1601,8 +1609,8 @@ pt{
             other{"Marcos alemães"}
         }
         DJF{
-            one{"Franco djibutiense"}
-            other{"Francos djibutienses"}
+            one{"Franco djiboutiano"}
+            other{"Francos djiboutianos"}
         }
         DKK{
             one{"Coroa dinamarquesa"}
@@ -1673,8 +1681,8 @@ pt{
             other{"Francos franceses"}
         }
         GBP{
-            one{"Libra britânica"}
-            other{"Libras britânicas"}
+            one{"Libra esterlina"}
+            other{"Libras esterlinas"}
         }
         GEK{
             one{"Kupon larit da Geórgia"}
@@ -1717,8 +1725,8 @@ pt{
             other{"Dracmas gregos"}
         }
         GTQ{
-            one{"Quetzal guatemalense"}
-            other{"Quetzais guatemalenses"}
+            one{"Quetzal guatemalteco"}
+            other{"Quetzais guatemaltecos"}
         }
         GWE{
             one{"Escudo da Guiné Portuguesa"}
@@ -1753,8 +1761,8 @@ pt{
             other{"Gourdes haitianos"}
         }
         HUF{
-            one{"Forint húngaro"}
-            other{"Forints húngaros"}
+            one{"Florim húngaro"}
+            other{"Florins húngaros"}
         }
         IDR{
             one{"Rupia indonésia"}
@@ -1825,8 +1833,8 @@ pt{
             other{"Rieles cambojanos"}
         }
         KMF{
-            one{"Franco comorense"}
-            other{"Francos comorenses"}
+            one{"Franco comoriano"}
+            other{"Francos comorianos"}
         }
         KPW{
             one{"Won norte-coreano"}
@@ -1849,8 +1857,8 @@ pt{
             other{"Dinares kuwaitianos"}
         }
         KYD{
-            one{"Dólar das Ilhas Caiman"}
-            other{"Dólares das Ilhas Caiman"}
+            one{"Dólar das Ilhas Cayman"}
+            other{"Dólares das Ilhas Cayman"}
         }
         KZT{
             one{"Tenge cazaque"}
@@ -1909,8 +1917,8 @@ pt{
             other{"Dinares líbios"}
         }
         MAD{
-            one{"Dirrã marroquino"}
-            other{"Dirrãs marroquinos"}
+            one{"Dirham marroquino"}
+            other{"Dirhams marroquinos"}
         }
         MAF{
             one{"Franco marroquino"}
@@ -1981,8 +1989,8 @@ pt{
             other{"Rupias maldivas"}
         }
         MWK{
-            one{"Kwacha malawiana"}
-            other{"Kwachas malawianas"}
+            one{"Kwacha malauiana"}
+            other{"Kwachas malauianas"}
         }
         MXN{
             one{"Peso mexicano"}
@@ -2010,7 +2018,7 @@ pt{
         }
         MZN{
             one{"Metical moçambicano"}
-            other{"Meticales moçambicanos"}
+            other{"Meticais moçambicanos"}
         }
         NAD{
             one{"Dólar namibiano"}
@@ -2049,8 +2057,8 @@ pt{
             other{"Riales omanenses"}
         }
         PAB{
-            one{"Balboa panamenha"}
-            other{"Balboas panamenhas"}
+            one{"Balboa panamenho"}
+            other{"Balboas panamenhos"}
         }
         PEI{
             one{"Inti peruano"}
@@ -2469,5 +2477,5 @@ pt{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
 }

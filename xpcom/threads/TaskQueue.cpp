@@ -39,7 +39,6 @@ public:
     nsCOMPtr<nsIRunnable> runnable = aEvent;
     MonitorAutoLock mon(mTaskQueue->mQueueMonitor);
     return mTaskQueue->DispatchLocked(/* passed by ref */runnable,
-                                      DontAssertDispatchSuccess,
                                       NormalDispatch);
   }
 
@@ -106,7 +105,6 @@ TaskQueue::TailDispatcher()
 // See Dispatch() in TaskQueue.h for more details.
 nsresult
 TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
-                          DispatchFailureHandling aFailureHandling,
                           DispatchReason aReason)
 {
   mQueueMonitor.AssertCurrentThreadOwns();
@@ -116,8 +114,7 @@ TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
 
   AbstractThread* currentThread;
   if (aReason != TailDispatch && (currentThread = GetCurrent()) && RequiresTailDispatch(currentThread)) {
-    currentThread->TailDispatcher().AddTask(this, aRunnable.forget(), aFailureHandling);
-    return NS_OK;
+    return currentThread->TailDispatcher().AddTask(this, aRunnable.forget());
   }
 
   mTasks.push(aRunnable.forget());

@@ -42,6 +42,19 @@ SharedSurfacesParent::Shutdown()
 }
 
 /* static */ already_AddRefed<DataSourceSurface>
+SharedSurfacesParent::Get(const wr::ExternalImageId& aId)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  if (!sInstance) {
+    return nullptr;
+  }
+
+  RefPtr<SourceSurfaceSharedDataWrapper> surface;
+  sInstance->mSurfaces.Get(wr::AsUint64(aId), getter_AddRefs(surface));
+  return surface.forget();
+}
+
+/* static */ already_AddRefed<DataSourceSurface>
 SharedSurfacesParent::Acquire(const wr::ExternalImageId& aId)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
@@ -56,7 +69,6 @@ SharedSurfacesParent::Acquire(const wr::ExternalImageId& aId)
     DebugOnly<bool> rv = surface->AddConsumer();
     MOZ_ASSERT(!rv);
   }
-
   return surface.forget();
 }
 

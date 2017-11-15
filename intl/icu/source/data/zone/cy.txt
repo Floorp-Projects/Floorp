@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 cy{
-    Version{"2.1.31.86"}
+    Version{"2.1.37.17"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"Amser Afghanistan"}
@@ -236,7 +236,7 @@ cy{
             ls{"Amser Guyane Ffrengig"}
         }
         "meta:French_Southern"{
-            ls{"Amser Deheuol ac Antarctig Frengig"}
+            ls{"Amser Tiroedd Ffrainc yn y De a’r Antarctig"}
         }
         "meta:GMT"{
             ls{"Amser Safonol Greenwich"}
@@ -326,7 +326,7 @@ cy{
             ls{"Amser Safonol Siapan"}
         }
         "meta:Kazakhstan_Eastern"{
-            ls{"Amser Dwyrain Casachstan"}
+            ls{"Amser Dwyrain Kazakhstan"}
         }
         "meta:Kazakhstan_Western"{
             ls{"Amser Gorllewin Casachstan"}
@@ -345,7 +345,7 @@ cy{
             ls{"Amser Safonol Krasnoyarsk"}
         }
         "meta:Kyrgystan"{
-            ls{"Amser Casachstan"}
+            ls{"Amser Kyrgyzstan"}
         }
         "meta:Line_Islands"{
             ls{"Amser Ynysoedd Line"}
@@ -501,6 +501,11 @@ cy{
             ld{"Amser Haf Sakhalin"}
             lg{"Amser Sakhalin"}
             ls{"Amser Safonol Sakhalin"}
+        }
+        "meta:Samara"{
+            ld{"Amser Haf Samara"}
+            lg{"Amser Samara"}
+            ls{"Amser Safonol Samara"}
         }
         "meta:Samoa"{
             ld{"Amser Haf Samoa"}

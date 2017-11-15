@@ -428,7 +428,8 @@ class IDBOpenDBRequest::WorkerHolder final
 public:
   explicit
   WorkerHolder(WorkerPrivate* aWorkerPrivate)
-    : mWorkerPrivate(aWorkerPrivate)
+    : mozilla::dom::workers::WorkerHolder("IDBOpenDBRequest::WorkerHolder")
+    , mWorkerPrivate(aWorkerPrivate)
 #ifdef DEBUG
     , mWorkerPrivateDEBUG(aWorkerPrivate)
 #endif

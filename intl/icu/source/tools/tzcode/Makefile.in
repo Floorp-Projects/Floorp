@@ -74,6 +74,10 @@ tzorig:	$(TZCODE) $(TZDATA)
 	cp $(srcdir)/zdump.c $(TZORIG)/zdump.c
 	-mv $(TZORIG)/factory $(TZORIG)/factory.orig
 	cat $(TZORIG)/factory.orig $(srcdir)/icuzones > $(TZORIG)/factory
+	-mv $(TZORIG)/zishrink.awk $(TZORIG)/zishrink.awk.orig
+	sed -e '/if (line ~ \/^R SystemV \/) return/s/^/#/' $(TZORIG)/zishrink.awk.orig > $(TZORIG)/zishrink.awk
+	-mv $(TZORIG)/Makefile $(TZORIG)/Makefile.orig
+	sed -e "s/BACKWARD=\$$(BACKWARD)/BACKWARD='\$$(BACKWARD)'/" $(TZORIG)/Makefile.orig > $(TZORIG)/Makefile
 	$(MAKE) -C $@ $(TZORIG_OPTS) zdump zones
 
 $(ZDUMPOUT): tzorig

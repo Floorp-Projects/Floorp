@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pt_PT{
-    Version{"2.1.31.86"}
+    Version{"2.1.37.6"}
     zoneStrings{
         "meta:Acre"{
             ld{"Hora de verão do Acre"}
@@ -172,12 +172,12 @@ pt_PT{
             ls{"Hora padrão de Cabo Verde"}
         }
         "meta:Chamorro"{
-            ls{"Hora padrão do Chamorro"}
+            ls{"Hora padrão de Chamorro"}
         }
         "meta:Chatham"{
-            ld{"Hora de verão do Chatham"}
-            lg{"Hora do Chatham"}
-            ls{"Hora padrão do Chatham"}
+            ld{"Hora de verão de Chatham"}
+            lg{"Hora de Chatham"}
+            ls{"Hora padrão de Chatham"}
         }
         "meta:Chile"{
             ld{"Hora de verão do Chile"}
@@ -480,7 +480,7 @@ pt_PT{
             ls{"Hora padrão da Terra Nova"}
         }
         "meta:Niue"{
-            ls{"Hora de Niue"}
+            ls{"Hora de Niuê"}
         }
         "meta:Norfolk"{
             ls{"Hora da Ilha Norfolk"}

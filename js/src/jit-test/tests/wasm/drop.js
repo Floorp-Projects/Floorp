@@ -30,9 +30,7 @@ assertEq(wasmEvalText(`
     )
 `).exports.test(0x1337abc0, 0xffffffff), 0x1337abc0);
 
-setJitCompilerOption('wasm.test-mode', 1);
-
-assertEqI64(wasmEvalText(`
+wasmAssert(`
     (module
      (func $test (result i64) (param $p i64) (param $p2 i64)
         get_local $p
@@ -42,4 +40,6 @@ assertEqI64(wasmEvalText(`
      )
      (export "test" $test)
     )
-`).exports.test(createI64(0x1337abc0), createI64(0xffffffff | 0)), createI64(0x1337abc0));
+`, [
+    { type: 'i64', func: '$test', args: ['(i64.const 0x1337abc0)', '(i64.const -1)'], expected: '0x1337abc0' }
+]);

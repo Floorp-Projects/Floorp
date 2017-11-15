@@ -2,5 +2,23 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_GB{
     %%Parent{"en_001"}
-    Version{"2.1.31.33"}
+    Currencies{
+        SHP{
+            "SHP",
+            "St Helena Pound",
+        }
+    }
+    CurrencyPlurals{
+        MKD{
+            other{"Macedonian denari"}
+        }
+        SHP{
+            one{"St Helena pound"}
+            other{"St Helena pounds"}
+        }
+        XOF{
+            other{"West African CFA francs"}
+        }
+    }
+    Version{"2.1.37.22"}
 }

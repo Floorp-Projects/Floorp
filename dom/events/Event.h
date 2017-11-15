@@ -236,8 +236,6 @@ public:
   EventTarget* GetExplicitOriginalTarget() const;
   EventTarget* GetComposedTarget() const;
 
-  bool GetPreventDefault() const;
-
   /**
    * @param aCalledByDefaultHandler     Should be true when this is called by
    *                                    C++ or Chrome.  Otherwise, e.g., called
@@ -398,7 +396,6 @@ private:
   NS_IMETHOD StopImmediatePropagation(void) override { return _to StopImmediatePropagation(); } \
   NS_IMETHOD GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget) override { return _to GetOriginalTarget(aOriginalTarget); } \
   NS_IMETHOD GetExplicitOriginalTarget(nsIDOMEventTarget** aExplicitOriginalTarget) override { return _to GetExplicitOriginalTarget(aExplicitOriginalTarget); } \
-  NS_IMETHOD GetPreventDefault(bool* aRetval) override { return _to GetPreventDefault(aRetval); } \
   NS_IMETHOD GetIsTrusted(bool* aIsTrusted) override { return _to GetIsTrusted(aIsTrusted); } \
   NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget) override { return _to SetTarget(aTarget); } \
   NS_IMETHOD_(bool) IsDispatchStopped(void) override { return _to IsDispatchStopped(); } \

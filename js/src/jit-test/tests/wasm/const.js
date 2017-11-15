@@ -1,12 +1,11 @@
-function testConst(type, str, expect) {
+function testConst(type, str, expected) {
     if (type === 'i64')
-        wasmFullPassI64(`(module (func (result i64) (i64.const ${str})) (export "run" 0))`, expect);
+        wasmFullPassI64(`(module (func $run (result i64) (i64.const ${str})))`, expected);
     else
-        wasmFullPass(`(module (func (result ${type}) (${type}.const ${str})) (export "run" 0))`, expect);
+        wasmFullPass(`(module (func (result ${type}) (${type}.const ${str})) (export "run" 0))`, expected);
 }
 
 function testConstError(type, str) {
-  // For now at least, we don't distinguish between parse errors and OOMs.
   assertErrorMessage(() => wasmEvalText(`(module (func (result ${type}) (${type}.const ${str})) (export "" 0))`).exports[""](), Error, /parsing wasm text/);
 }
 
@@ -24,52 +23,46 @@ testConst('i32', '0x80000000', -2147483648);
 testConst('i32', '-0x80000000', -2147483648);
 testConst('i32', '0xffffffff', -1);
 
-{
-    setJitCompilerOption('wasm.test-mode', 1);
+testConst('i64', '0', 0);
+testConst('i64', '-0', 0);
 
-    testConst('i64', '0', 0);
-    testConst('i64', '-0', 0);
+testConst('i64', '23', 23);
+testConst('i64', '-23', -23);
 
-    testConst('i64', '23', 23);
-    testConst('i64', '-23', -23);
+testConst('i64', '0x23', 35);
+testConst('i64', '-0x23', -35);
 
-    testConst('i64', '0x23', 35);
-    testConst('i64', '-0x23', -35);
+testConst('i64', '-0x1', -1);
+testConst('i64', '-1', -1);
+testConst('i64', '0xffffffffffffffff', -1);
 
-    testConst('i64', '-0x1', -1);
-    testConst('i64', '-1', -1);
-    testConst('i64', '0xffffffffffffffff', -1);
+testConst('i64', '0xdeadc0de', 0xdeadc0de);
+testConst('i64', '0x1337c0de00000000', 0x1337c0de);
 
-    testConst('i64', '0xdeadc0de', {low: 0xdeadc0de, high: 0x0});
-    testConst('i64', '0x1337c0de00000000', {low: 0x0, high: 0x1337c0de});
+testConst('i64', '0x0102030405060708', '0x0102030405060708');
+testConst('i64', '-0x0102030405060708', '-0x0102030505060708');
 
-    testConst('i64', '0x0102030405060708', {low: 0x05060708, high: 0x01020304});
-    testConst('i64', '-0x0102030405060708', {low: -0x05060708, high: -0x01020305});
+// INT64_MAX
+testConst('i64', '9223372036854775807', '0x7fffffffffffffff');
+testConst('i64', '0x7fffffffffffffff',  '0x7fffffffffffffff');
 
-    // INT64_MAX
-    testConst('i64', '9223372036854775807', {low: 0xffffffff, high: 0x7fffffff});
-    testConst('i64', '0x7fffffffffffffff',  {low: 0xffffffff, high: 0x7fffffff});
+// INT64_MAX + 1
+testConst('i64', '9223372036854775808', '0x8000000000000000');
+testConst('i64', '0x8000000000000000', '0x8000000000000000');
 
-    // INT64_MAX + 1
-    testConst('i64', '9223372036854775808', {low: 0x00000000, high: 0x80000000});
-    testConst('i64', '0x8000000000000000', {low: 0x00000000, high: 0x80000000});
+// UINT64_MAX
+testConst('i64', '18446744073709551615', '0xffffffffffffffff');
 
-    // UINT64_MAX
-    testConst('i64', '18446744073709551615', {low: 0xffffffff, high: 0xffffffff});
+// INT64_MIN
+testConst('i64', '-9223372036854775808', '0x8000000000000000');
+testConst('i64', '-0x8000000000000000',  '0x8000000000000000');
 
-    // INT64_MIN
-    testConst('i64', '-9223372036854775808', {low: 0x00000000, high: 0x80000000});
-    testConst('i64', '-0x8000000000000000',  {low: 0x00000000, high: 0x80000000});
+// INT64_MIN - 1
+testConstError('i64', '-9223372036854775809');
 
-    // INT64_MIN - 1
-    testConstError('i64', '-9223372036854775809');
-
-    testConstError('i64', '');
-    testConstError('i64', '0.0');
-    testConstError('i64', 'not an i64');
-
-    setJitCompilerOption('wasm.test-mode', 0);
-}
+testConstError('i64', '');
+testConstError('i64', '0.0');
+testConstError('i64', 'not an i64');
 
 testConst('f32', '0.0', 0.0);
 testConst('f32', '-0', -0.0);

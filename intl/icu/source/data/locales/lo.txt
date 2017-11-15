@@ -12,12 +12,17 @@ lo{
     }
     ExemplarCharacters{
         "[\u0EC8 \u0EC9 \u0ECA \u0ECB \u0ECC \u0ECD ໆ ກ ຂ ຄ ງ ຈ ສ ຊ ຍ ດ ຕ ຖ ທ ນ ບ ປ ຜ"
-        " ຝ ພ ຟ ມ ຢ ຣ ລ ວ ຫ ໜ ໝ ອ ຮ ຯ ະ \u0EB1 າ ຳ \u0EB4 \u0EB5 \u0EB6 \u0EB7 \u0EB8"
-        " \u0EB9 \u0EBB \u0EBC ຽ ເ ແ ໂ ໃ ໄ]"
+        " ຝ ພ ຟ ມ ຢ ຣ ລ ວ ຫ ໜ ໝ ອ ຮ ຯ ະ \u0EB1 າ ຳ \u0EB4 \u0EB5 \u0EB6 \u0EB7 "
+        "\u0EB8 \u0EB9 \u0EBB \u0EBC ຽ ເ ແ ໂ ໃ ໄ]"
     }
     ExemplarCharactersIndex{
         "[ກ ຂ ຄ ງ ຈ ສ ຊ ຍ ດ ຕ ຖ ທ ນ ບ ປ ຜ ຝ ພ ຟ ມ ຢ ຣ ລ ວ ຫ {ຫງ} {ຫຍ} {ຫນ} {ຫມ} {ຫລ} "
         "{ຫວ} ອ ຮ]"
+    }
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
+        "″]"
     }
     MoreInformation{"?"}
     NumberElements{
@@ -261,7 +266,7 @@ lo{
         minimumGroupingDigits{"1"}
         native{"laoo"}
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.37.1"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -687,8 +692,17 @@ lo{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"G y"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
@@ -848,7 +862,12 @@ lo{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E, d"}
@@ -891,7 +910,7 @@ lo{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    other{"ອາທິດທີ່ w ຂອງປີ y"}
+                    other{"ອາທິດທີ່ w ຂອງປີ Y"}
                 }
             }
             dayNames{
@@ -987,7 +1006,7 @@ lo{
                         evening1{"ຕອນແລງ"}
                         midnight{"ທຄ"}
                         morning1{"ຕອນເຊົ້າ"}
-                        night1{"ກາງຄືນ1"}
+                        night1{"ກາງຄືນ"}
                         noon{"ທ"}
                     }
                     wide{
@@ -2084,10 +2103,31 @@ lo{
                 }
             }
         }
+        dayOfYear{
+            dn{"ມື້ຂອງປີ"}
+        }
+        dayOfYear-narrow{
+            dn{"ມື້ຂອງປີ"}
+        }
+        dayOfYear-short{
+            dn{"ມື້ຂອງປີ"}
+        }
         dayperiod{
             dn{"ກ່ອນທ່ຽງ/ຫຼັງທ່ຽງ"}
         }
+        dayperiod-narrow{
+            dn{"ກ່ອນທ່ຽງ/ຫຼັງທ່ຽງ"}
+        }
+        dayperiod-short{
+            dn{"ກ່ອນທ່ຽງ/ຫຼັງທ່ຽງ"}
+        }
         era{
+            dn{"ສະໄໝ"}
+        }
+        era-narrow{
+            dn{"ສະໄໝ"}
+        }
+        era-short{
             dn{"ສະໄໝ"}
         }
         fri{
@@ -2630,8 +2670,32 @@ lo{
                 }
             }
         }
+        weekOfMonth{
+            dn{"ອາທິດຂອງເດືອນ"}
+        }
+        weekOfMonth-narrow{
+            dn{"ອທ ຂອງ ດ"}
+        }
+        weekOfMonth-short{
+            dn{"ອທ ຂອງ ດ"}
+        }
         weekday{
             dn{"ມື້ຂອງອາທິດ"}
+        }
+        weekday-narrow{
+            dn{"ມື້ຂອງອາທິດ"}
+        }
+        weekday-short{
+            dn{"ມື້ຂອງອາທິດ"}
+        }
+        weekdayOfMonth{
+            dn{"ມື້ເຮັດວຽກຂອງເດືອນ"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"ມຮວ ຂອງ ດ"}
+        }
+        weekdayOfMonth-short{
+            dn{"ມຮວ ຂອງ ດ"}
         }
         year{
             dn{"ປີ"}
@@ -2674,8 +2738,20 @@ lo{
         zone{
             dn{"ເຂດເວລາ"}
         }
+        zone-narrow{
+            dn{"ເຂດເວລາ"}
+        }
+        zone-short{
+            dn{"ເຂດເວລາ"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} ຫຼື {1}"}
+            end{"{0} ຫຼື {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} ແລະ {1}"}
             end{"{0}, {1}"}

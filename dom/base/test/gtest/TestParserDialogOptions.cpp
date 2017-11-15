@@ -7,6 +7,8 @@
 #include "gtest/gtest.h"
 #include "nsGlobalWindow.h"
 
+// XXX(nika): I can't find any non-test callers of this code, can we remove it?
+
 struct dialog_test {
   const char* input;
   const char* output;
@@ -25,7 +27,7 @@ void runTokenizeTest(dialog_test& test)
   nsAutoString result;
   nsAutoString token;
 
-  while (nsGlobalWindow::TokenizeDialogOptions(token, iter, end)) {
+  while (nsGlobalWindowInner::TokenizeDialogOptions(token, iter, end)) {
     if (!result.IsEmpty()) {
       result.Append(',');
     }
@@ -41,7 +43,7 @@ void runTest(dialog_test& test)
   NS_ConvertUTF8toUTF16 input(test.input);
 
   nsAutoString result;
-  nsGlobalWindow::ConvertDialogOptions(input, result);
+  nsGlobalWindowInner::ConvertDialogOptions(input, result);
 
   ASSERT_STREQ(test.output, NS_ConvertUTF16toUTF8(result).get()) << "Testing " << test.input;
 }

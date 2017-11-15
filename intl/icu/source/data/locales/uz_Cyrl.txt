@@ -12,6 +12,7 @@ uz_Cyrl{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{"[а б в г ғ д е ё ж з и й к қ л м н о п р с т у ў ф х ҳ ч ш ъ э ю я]"}
+    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     MoreInformation{"?"}
     NumberElements{
         arabext{
@@ -164,7 +165,7 @@ uz_Cyrl{
             }
         }
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.37.1"}
     calendar{
         generic{
             DateTimePatterns{
@@ -345,8 +346,8 @@ uz_Cyrl{
                 yQQQ{"y, QQQ"}
                 yQQQQ{"y, QQQQ"}
                 yw{
-                    one{"y, w-'ҳафта'"}
-                    other{"y, w-'ҳафта'"}
+                    one{"Y, w-'ҳафта'"}
+                    other{"Y, w-'ҳафта'"}
                 }
             }
             dayNames{

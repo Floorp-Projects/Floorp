@@ -8225,9 +8225,6 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
                              .setAsyncStack(enableAsyncStacks)
                              .setStreams(enableStreams);
 
-    if (op.getBoolOption("wasm-test-mode"))
-        jit::JitOptions.wasmTestMode = true;
-
     if (op.getBoolOption("no-unboxed-objects"))
         jit::JitOptions.disableUnboxedObjects = true;
 
@@ -8719,8 +8716,6 @@ main(int argc, char** argv, char** envp)
                                    "instantiation on completion of tier2")
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addBoolOption('\0', "no-unboxed-objects", "Disable creating unboxed plain objects")
-        || !op.addBoolOption('\0', "wasm-test-mode", "Enable wasm testing mode, creating synthetic "
-                                   "objects for non-canonical NaNs and i64 returned from wasm.")
         || !op.addBoolOption('\0', "enable-streams", "Enable WHATWG Streams")
 #ifdef ENABLE_SHARED_ARRAY_BUFFER
         || !op.addStringOption('\0', "shared-memory", "on/off",

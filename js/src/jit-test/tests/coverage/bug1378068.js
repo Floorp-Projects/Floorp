@@ -1,3 +1,5 @@
+if (getBuildConfiguration().release_or_beta)
+eval(`
 m = {
     i() {},
     n() {},
@@ -39,3 +41,4 @@ function ()[{
 t = function () {};
 getLcovInfo();
 relazifyFunctions();
+`);

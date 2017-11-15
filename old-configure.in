@@ -183,45 +183,52 @@ case "$target" in
         AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         AC_DEFINE(_USE_MATH_DEFINES) # Otherwise MSVC's math.h doesn't #define M_PI.
 
-        case "$CC_VERSION" in
-        19*)
-            _CC_SUITE=14
-            MSVC_C_RUNTIME_DLL=vcruntime140.dll
-            MSVC_CXX_RUNTIME_DLL=msvcp140.dll
+        _CC_SUITE=14
+        MSVC_C_RUNTIME_DLL=vcruntime140.dll
+        MSVC_CXX_RUNTIME_DLL=msvcp140.dll
 
-            MOZ_CHECK_HEADER(dia2.h, MSVC_HAS_DIA_SDK=1)
-            if test -n "$MSVC_HAS_DIA_SDK"; then
-                AC_DEFINE(MSVC_HAS_DIA_SDK)
-            fi
+        MOZ_CHECK_HEADER(dia2.h, MSVC_HAS_DIA_SDK=1)
+        if test -n "$MSVC_HAS_DIA_SDK"; then
+            AC_DEFINE(MSVC_HAS_DIA_SDK)
+        fi
 
-            # C5026: move constructor was implicitly defined as deleted
-            CXXFLAGS="$CXXFLAGS -wd5026"
+        if test "$_MSC_VER" -ge "1910"; then # VS2017+
+            # C5038: Enable initializer list order warnings
+            # The -w1#### flag treats warning C#### as if it was a warning level
+            # 1 warning, and thus enables it because we enable /W3 warnings. We
+            # don't use -we#### because it would enable warning C#### but treat
+            # it as an error, even in third-party code.
+            # https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level
+            CXXFLAGS="$CXXFLAGS -w15038"
+        fi
 
-            # C5027: move assignment operator was implicitly defined as deleted
-            CXXFLAGS="$CXXFLAGS -wd5027"
+        # C5026: move constructor was implicitly defined as deleted
+        CXXFLAGS="$CXXFLAGS -wd5026"
 
-            # -Zc:sizedDealloc- disables C++14 global sized deallocation (see bug 1160146)
-            CXXFLAGS="$CXXFLAGS -Zc:sizedDealloc-"
+        # C5027: move assignment operator was implicitly defined as deleted
+        CXXFLAGS="$CXXFLAGS -wd5027"
 
-            # https://connect.microsoft.com/VisualStudio/feedback/details/888527/warnings-on-dbghelp-h
-            # for dbghelp.h, imagehlp.h, and shobj.h
-            # C4091: 'typedef ': ignored on left of '' when no variable is declared
-            CFLAGS="$CFLAGS -wd4091"
-            CXXFLAGS="$CXXFLAGS -wd4091"
+        # -Zc:sizedDealloc- disables C++14 global sized deallocation (see bug 1160146)
+        CXXFLAGS="$CXXFLAGS -Zc:sizedDealloc-"
 
-            # This is intended as a temporary hack to support building with VS2015.
-            # 'noexcept' used with no exception handling mode specified;
-            # termination on exception is not guaranteed. Specify /EHsc
-            CXXFLAGS="$CXXFLAGS -wd4577"
+        # https://connect.microsoft.com/VisualStudio/feedback/details/888527/warnings-on-dbghelp-h
+        # for dbghelp.h, imagehlp.h, and shobj.h
+        # C4091: 'typedef ': ignored on left of '' when no variable is declared
+        CFLAGS="$CFLAGS -wd4091"
+        CXXFLAGS="$CXXFLAGS -wd4091"
 
-            if test -n "$WIN_UCRT_REDIST_DIR"; then
-              if test ! -d "$WIN_UCRT_REDIST_DIR"; then
-                AC_MSG_ERROR([Invalid Windows UCRT Redist directory: ${WIN_UCRT_REDIST_DIR}])
-              fi
-              WIN_UCRT_REDIST_DIR=`cd "$WIN_UCRT_REDIST_DIR" && pwd -W`
-            fi
-            ;;
-        esac
+        # This is intended as a temporary hack to support building with VS2015.
+        # 'noexcept' used with no exception handling mode specified;
+        # termination on exception is not guaranteed. Specify /EHsc
+        CXXFLAGS="$CXXFLAGS -wd4577"
+
+        if test -n "$WIN_UCRT_REDIST_DIR"; then
+          if test ! -d "$WIN_UCRT_REDIST_DIR"; then
+            AC_MSG_ERROR([Invalid Windows UCRT Redist directory: ${WIN_UCRT_REDIST_DIR}])
+          fi
+          WIN_UCRT_REDIST_DIR=`cd "$WIN_UCRT_REDIST_DIR" && pwd -W`
+        fi
+
         AC_SUBST(MSVC_HAS_DIA_SDK)
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
@@ -4767,10 +4774,12 @@ MOZ_CONFIG_ICU()
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
     $_WARNINGS_CFLAGS \
+    $_COMPILATION_CFLAGS \
     $CFLAGS`
 
 CXXFLAGS=`echo \
     $_WARNINGS_CXXFLAGS \
+    $_COMPILATION_CXXFLAGS \
     $CXXFLAGS`
 
 COMPILE_CFLAGS=`echo \

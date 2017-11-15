@@ -12,6 +12,7 @@ az{
     }
     ExemplarCharacters{"[a b c ç d e ə f g ğ h x ı i İ j k q l m n o ö p r s ş t u ü v y z]"}
     ExemplarCharactersIndex{"[A B C Ç D E Ə F G Ğ H X I İ J K Q L M N O Ö P R S Ş T U Ü V Y Z W]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
         "″]"
@@ -34,52 +35,52 @@ az{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"0K"}
-                        other{"0K"}
+                        one{"0 min"}
+                        other{"0 min"}
                     }
                     10000{
-                        one{"00K"}
-                        other{"00K"}
+                        one{"00 min"}
+                        other{"00 min"}
                     }
                     100000{
-                        one{"000K"}
-                        other{"000K"}
+                        one{"000 min"}
+                        other{"000 min"}
                     }
                     1000000{
-                        one{"0M"}
-                        other{"0M"}
+                        one{"0 milyon"}
+                        other{"0 milyon"}
                     }
                     10000000{
-                        one{"00M"}
-                        other{"00M"}
+                        one{"00 milyon"}
+                        other{"00 milyon"}
                     }
                     100000000{
-                        one{"000M"}
-                        other{"000M"}
+                        one{"000 milyon"}
+                        other{"000 milyon"}
                     }
                     1000000000{
-                        one{"0G"}
-                        other{"0G"}
+                        one{"0 milyard"}
+                        other{"0 milyard"}
                     }
                     10000000000{
-                        one{"00G"}
-                        other{"00G"}
+                        one{"00 milyard"}
+                        other{"00 milyard"}
                     }
                     100000000000{
-                        one{"000G"}
-                        other{"000G"}
+                        one{"000 milyard"}
+                        other{"000 milyard"}
                     }
                     1000000000000{
-                        one{"0T"}
-                        other{"0T"}
+                        one{"0 trilyon"}
+                        other{"0 trilyon"}
                     }
                     10000000000000{
-                        one{"00T"}
-                        other{"00T"}
+                        one{"00 trilyon"}
+                        other{"00 trilyon"}
                     }
                     100000000000000{
-                        one{"000T"}
-                        other{"000T"}
+                        one{"000 trilyon"}
+                        other{"000 trilyon"}
                     }
                 }
             }
@@ -215,7 +216,7 @@ az{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     calendar{
         generic{
             DateTimePatterns{
@@ -234,12 +235,24 @@ az{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"d, E"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"G y"}
                 GyMMM{"G MMM y"}
                 GyMMMEd{"G d MMM y, E"}
                 GyMMMd{"G d MMM y"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
                 M{"L"}
                 MEd{"dd.MM, E"}
                 MMM{"LLL"}
@@ -248,6 +261,10 @@ az{
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
                 d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
                 y{"G y"}
                 yyyy{"G y"}
                 yyyyM{"GGGGG MM y"}
@@ -356,7 +373,12 @@ az{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"B h"}
+                Bhm{"B h:mm"}
+                Bhms{"B h:mm:ss"}
                 E{"ccc"}
+                EBhm{"E B h:mm"}
+                EBhms{"E B h:mm:ss"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d E"}
@@ -379,7 +401,7 @@ az{
                     one{"MMM, W 'həftə'"}
                     other{"MMM, W 'həftə'"}
                 }
-                MMMMd{"MMMM d"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
                 d{"d"}
@@ -400,8 +422,8 @@ az{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    one{"y, w 'həftə'"}
-                    other{"y, w 'həftə'"}
+                    one{"Y, w 'həftə'"}
+                    other{"Y, w 'həftə'"}
                 }
             }
             dayNames{
@@ -940,10 +962,31 @@ az{
                 }
             }
         }
+        dayOfYear{
+            dn{"ilin günü"}
+        }
+        dayOfYear-narrow{
+            dn{"ilin günü"}
+        }
+        dayOfYear-short{
+            dn{"ilin günü"}
+        }
         dayperiod{
             dn{"AM/PM"}
         }
+        dayperiod-narrow{
+            dn{"AM/PM"}
+        }
+        dayperiod-short{
+            dn{"AM/PM"}
+        }
         era{
+            dn{"Era"}
+        }
+        era-narrow{
+            dn{"Era"}
+        }
+        era-short{
             dn{"Era"}
         }
         fri{
@@ -1564,8 +1607,32 @@ az{
                 }
             }
         }
+        weekOfMonth{
+            dn{"Ayın həftəsi"}
+        }
+        weekOfMonth-narrow{
+            dn{"ay hft."}
+        }
+        weekOfMonth-short{
+            dn{"ay hft."}
+        }
         weekday{
             dn{"Həftənin Günü"}
+        }
+        weekday-narrow{
+            dn{"hft. günü"}
+        }
+        weekday-short{
+            dn{"hft. günü"}
+        }
+        weekdayOfMonth{
+            dn{"ayın həftə günü"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"ay hft. günü"}
+        }
+        weekdayOfMonth-short{
+            dn{"ay hft. günü"}
         }
         year{
             dn{"İl"}
@@ -1614,8 +1681,20 @@ az{
         zone{
             dn{"Saat Qurşağı"}
         }
+        zone-narrow{
+            dn{"qurşaq"}
+        }
+        zone-short{
+            dn{"qurşaq"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} yaxud {1}"}
+            end{"{0}, yaxud {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} və {1}"}
             end{"{0} və {1}"}
@@ -1651,5 +1730,32 @@ az{
         UK{"Britaniya"}
         US{"ABŞ"}
         metric{"Metrik"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

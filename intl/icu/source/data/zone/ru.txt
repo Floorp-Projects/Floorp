@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ru{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.58"}
     zoneStrings{
         "meta:Acre"{
             ld{"Акри летнее время"}
@@ -51,9 +51,9 @@ ru{
             ls{"Восточная Америка, стандартное время"}
         }
         "meta:America_Mountain"{
-            ld{"Горное летнее время (США)"}
-            lg{"Горное время (США)"}
-            ls{"Горное стандартное время (США)"}
+            ld{"Летнее горное время (Северная Америка)"}
+            lg{"Горное время (Северная Америка)"}
+            ls{"Стандартное горное время (Северная Америка)"}
         }
         "meta:America_Pacific"{
             ld{"Тихоокеанское летнее время"}
@@ -555,13 +555,13 @@ ru{
             ls{"Самоа, стандартное время"}
         }
         "meta:Seychelles"{
-            ls{"Сейшельские Острова"}
+            ls{"Сейшельские острова"}
         }
         "meta:Singapore"{
             ls{"Сингапур"}
         }
         "meta:Solomon"{
-            ls{"Соломоновы Острова"}
+            ls{"Соломоновы острова"}
         }
         "meta:South_Georgia"{
             ls{"Южная Георгия"}
@@ -654,7 +654,7 @@ ru{
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0}"}
-        regionFormatDaylight{"{0} (+1)"}
-        regionFormatStandard{"{0} (+0)"}
+        regionFormatDaylight{"{0}, летнее время"}
+        regionFormatStandard{"{0}, стандартное время"}
     }
 }

@@ -51,6 +51,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Navigator.h"
+#include "mozilla/Monitor.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
@@ -2082,6 +2083,133 @@ RuntimeService::Shutdown()
       }
     }
   }
+}
+
+namespace {
+
+class CrashIfHangingRunnable : public WorkerControlRunnable
+{
+public:
+  explicit CrashIfHangingRunnable(WorkerPrivate* aWorkerPrivate)
+    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+    , mMonitor("CrashIfHangingRunnable::mMonitor")
+  {}
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    aWorkerPrivate->DumpCrashInformation(mMsg);
+
+    MonitorAutoLock lock(mMonitor);
+    lock.Notify();
+    return true;
+  }
+
+  nsresult
+  Cancel() override
+  {
+    mMsg.Assign("Canceled");
+
+    MonitorAutoLock lock(mMonitor);
+    lock.Notify();
+
+    return NS_OK;
+  }
+
+  void
+  DispatchAndWait()
+  {
+    MonitorAutoLock lock(mMonitor);
+
+    if (!Dispatch()) {
+      mMsg.Assign("Dispatch Error");
+      return;
+    }
+
+    lock.Wait();
+  }
+
+  const nsCString&
+  MsgData() const
+  {
+    return mMsg;
+  }
+
+private:
+  bool
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  {
+    return true;
+  }
+
+  void
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {}
+
+  Monitor mMonitor;
+  nsCString mMsg;
+};
+
+} // anonymous
+
+void
+RuntimeService::CrashIfHanging()
+{
+  MutexAutoLock lock(mMutex);
+
+  if (mDomainMap.IsEmpty()) {
+    return;
+  }
+
+  uint32_t activeWorkers = 0;
+  uint32_t activeServiceWorkers = 0;
+  uint32_t inactiveWorkers = 0;
+
+  nsTArray<WorkerPrivate*> workers;
+
+  for (auto iter = mDomainMap.Iter(); !iter.Done(); iter.Next()) {
+    WorkerDomainInfo* aData = iter.UserData();
+
+    activeWorkers += aData->mActiveWorkers.Length();
+    activeServiceWorkers += aData->mActiveServiceWorkers.Length();
+
+    workers.AppendElements(aData->mActiveWorkers);
+    workers.AppendElements(aData->mActiveServiceWorkers);
+
+    // These might not be top-level workers...
+    for (uint32_t index = 0; index < aData->mQueuedWorkers.Length(); index++) {
+      WorkerPrivate* worker = aData->mQueuedWorkers[index];
+      if (!worker->GetParent()) {
+        ++inactiveWorkers;
+      }
+    }
+  }
+
+  // We must have something pending...
+  MOZ_DIAGNOSTIC_ASSERT(activeWorkers + activeServiceWorkers + inactiveWorkers);
+
+  nsCString msg;
+
+  // A: active Workers | S: active ServiceWorkers | Q: queued Workers
+  msg.AppendPrintf("Workers Hanging - A:%d|S:%d|Q:%d", activeWorkers,
+                   activeServiceWorkers, inactiveWorkers);
+
+  // For each thread, let's print some data to know what is going wrong.
+  for (uint32_t i = 0; i < workers.Length(); ++i) {
+    WorkerPrivate* workerPrivate = workers[i];
+
+    // BC: Busy Count
+    msg.AppendPrintf("-BC:%d", workerPrivate->BusyCount());
+
+    RefPtr<CrashIfHangingRunnable> runnable = new
+      CrashIfHangingRunnable(workerPrivate);
+    runnable->DispatchAndWait();
+
+    msg.Append(runnable->MsgData());
+  }
+
+  // This string will be leaked.
+  MOZ_CRASH_UNSAFE_OOL(strdup(msg.BeginReading()));
 }
 
 // This spins the event loop until all workers are finished and their threads

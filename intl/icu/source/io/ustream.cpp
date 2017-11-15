@@ -29,8 +29,6 @@
 
 // console IO
 
-#if U_IOSTREAM_SOURCE >= 199711
-
 #define STD_NAMESPACE std::
 
 #define STD_OSTREAM STD_NAMESPACE ostream
@@ -169,5 +167,4 @@ STOP_READING:
 
 U_NAMESPACE_END
 
-#endif
 #endif

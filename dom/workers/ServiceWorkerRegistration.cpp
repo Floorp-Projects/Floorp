@@ -1121,6 +1121,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 ServiceWorkerRegistrationWorkerThread::ServiceWorkerRegistrationWorkerThread(WorkerPrivate* aWorkerPrivate,
                                                                              const nsAString& aScope)
   : ServiceWorkerRegistration(nullptr, aScope)
+  , WorkerHolder("ServiceWorkerRegistrationWorkerThread")
   , mWorkerPrivate(aWorkerPrivate)
 {
   InitListener();

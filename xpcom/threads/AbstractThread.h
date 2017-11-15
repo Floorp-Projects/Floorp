@@ -67,10 +67,8 @@ public:
   NS_IMETHOD DispatchFromScript(nsIRunnable *event, uint32_t flags) override;
   NS_IMETHOD DelayedDispatch(already_AddRefed<nsIRunnable> event, uint32_t delay) override;
 
-  enum DispatchFailureHandling { AssertDispatchSuccess, DontAssertDispatchSuccess };
   enum DispatchReason { NormalDispatch, TailDispatch };
   virtual nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                            DispatchFailureHandling aHandling = AssertDispatchSuccess,
                             DispatchReason aReason = NormalDispatch) = 0;
 
   virtual bool IsCurrentThreadIn() = 0;
@@ -89,7 +87,7 @@ public:
   // Helper functions for methods on the tail TasklDispatcher. These check
   // HasTailTasks to avoid allocating a TailDispatcher if it isn't
   // needed.
-  void TailDispatchTasksFor(AbstractThread* aThread);
+  nsresult TailDispatchTasksFor(AbstractThread* aThread);
   bool HasTailTasksFor(AbstractThread* aThread);
 
   // Returns true if this supports the tail dispatcher.

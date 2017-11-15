@@ -711,13 +711,13 @@ XPCJSContext::InterruptCallback(JSContext* cx)
     }
 
     // Show the prompt to the user, and kill if requested.
-    nsGlobalWindow::SlowScriptResponse response = win->ShowSlowScriptDialog(addonId);
-    if (response == nsGlobalWindow::KillSlowScript) {
+    nsGlobalWindowInner::SlowScriptResponse response = win->ShowSlowScriptDialog(addonId);
+    if (response == nsGlobalWindowInner::KillSlowScript) {
         if (Preferences::GetBool("dom.global_stop_script", true))
             xpc::Scriptability::Get(global).Block();
         return false;
     }
-    if (response == nsGlobalWindow::KillScriptGlobal) {
+    if (response == nsGlobalWindowInner::KillScriptGlobal) {
         nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
 
         if (!IsSandbox(global) || !obs)
@@ -742,10 +742,10 @@ XPCJSContext::InterruptCallback(JSContext* cx)
 
     // The user chose to continue the script. Reset the timer, and disable this
     // machinery with a pref of the user opted out of future slow-script dialogs.
-    if (response != nsGlobalWindow::ContinueSlowScriptAndKeepNotifying)
+    if (response != nsGlobalWindowInner::ContinueSlowScriptAndKeepNotifying)
         self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
 
-    if (response == nsGlobalWindow::AlwaysContinueSlowScript)
+    if (response == nsGlobalWindowInner::AlwaysContinueSlowScript)
         Preferences::SetInt(prefName, 0);
 
     return true;

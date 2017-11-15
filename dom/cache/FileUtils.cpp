@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/cache/FileUtils.h"
 
+#include "DBSchema.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -25,9 +26,6 @@
 namespace mozilla {
 namespace dom {
 namespace cache {
-
-#define PADDING_FILE_NAME ".padding"
-#define PADDING_TMP_FILE_NAME ".padding-tmp"
 
 using mozilla::dom::quota::FileInputStream;
 using mozilla::dom::quota::FileOutputStream;

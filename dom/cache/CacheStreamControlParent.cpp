@@ -6,20 +6,24 @@
 
 #include "mozilla/dom/cache/CacheStreamControlParent.h"
 
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/StreamList.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/PFileDescriptorSetParent.h"
 #include "nsISupportsImpl.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
 namespace cache {
 
 using mozilla::dom::OptionalFileDescriptorSet;
+using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::FileDescriptor;
 using mozilla::ipc::FileDescriptorSetParent;
 using mozilla::ipc::PFileDescriptorSetParent;

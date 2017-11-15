@@ -160,6 +160,9 @@ if CONFIG['GNU_CXX']:
             '-Wno-shadow-local',
         ]
 
+if CONFIG['_MSC_VER']:
+    CXXFLAGS += ['-wd5038'] # C5038: initializer list order warnings
+
 if CONFIG['MOZ_DIRECTX_SDK_PATH'] and not CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
     LOCAL_INCLUDES += ['%' + '%s/include/' % CONFIG['MOZ_DIRECTX_SDK_PATH']]
 

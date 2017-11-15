@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh{
-    Version{"2.1.33.94"}
+    Version{"2.1.37.42"}
     zoneStrings{
         "meta:Acre"{
             ld{"阿克里夏令时间"}
@@ -18,7 +18,7 @@ zh{
             ls{"东部非洲时间"}
         }
         "meta:Africa_Southern"{
-            ls{"南部非洲时间"}
+            ls{"南非标准时间"}
         }
         "meta:Africa_Western"{
             ld{"西部非洲夏令时间"}

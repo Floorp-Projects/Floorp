@@ -21,6 +21,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
+#include "SourceBuffer.h"
 
 namespace mozilla {
 namespace image {

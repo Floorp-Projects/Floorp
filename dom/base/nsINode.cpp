@@ -2584,9 +2584,9 @@ nsINode::GetAccessibleNode()
 #ifdef ACCESSIBILITY
   RefPtr<AccessibleNode> anode = new AccessibleNode(this);
   return anode.forget();
-#endif
-
+#else
   return nullptr;
+#endif
 }
 
 void

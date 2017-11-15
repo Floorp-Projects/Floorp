@@ -13,6 +13,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "PLDHashTable.h"
 
 class nsIDocument;
 class nsIURI;
