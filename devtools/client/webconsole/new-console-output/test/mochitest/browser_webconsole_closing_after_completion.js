@@ -9,17 +9,15 @@
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-console.html";
+                 "new-console-output/test/mochitest/test-console.html";
 
-add_task(function* () {
-  let { browser } = yield loadTab(TEST_URI);
+add_task(async function () {
+  let tab = await addTab(TEST_URI);
+  const browser = tab.linkedBrowser;
+  const hud = await openConsole();
 
-  let hud = yield openConsole();
-  yield testClosingAfterCompletion(hud, browser);
-});
-
-function testClosingAfterCompletion(hud, browser) {
-  let deferred = defer();
+  // Fire a completion.
+  await jstermSetValueAndComplete(hud.jsterm, "doc");
 
   let errorWhileClosing = false;
   function errorListener() {
@@ -27,21 +25,17 @@ function testClosingAfterCompletion(hud, browser) {
   }
 
   browser.addEventListener("error", errorListener);
+  const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
 
   // Focus the jsterm and perform the keycombo to close the WebConsole.
   hud.jsterm.focus();
-
-  gDevTools.once("toolbox-destroyed", function () {
-    browser.removeEventListener("error", errorListener);
-    is(errorWhileClosing, false, "no error while closing the WebConsole");
-    deferred.resolve();
+  EventUtils.synthesizeKey("i", {
+    accelKey: true,
+    [Services.appinfo.OS == "Darwin" ? "altKey" : "shiftKey"]: true
   });
 
-  if (Services.appinfo.OS == "Darwin") {
-    EventUtils.synthesizeKey("i", { accelKey: true, altKey: true });
-  } else {
-    EventUtils.synthesizeKey("i", { accelKey: true, shiftKey: true });
-  }
+  await onToolboxDestroyed;
 
-  return deferred.promise;
-}
+  browser.removeEventListener("error", errorListener);
+  is(errorWhileClosing, false, "no error while closing the WebConsole");
+});
