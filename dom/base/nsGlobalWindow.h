@@ -7,6 +7,24 @@
 #ifndef nsGlobalWindow_h___
 #define nsGlobalWindow_h___
 
+// XXX(nika): Figure out where to put this?
+#define DEFAULT_HOME_PAGE "www.mozilla.org"
+#define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
+
+// Amount of time allowed between alert/prompt/confirm before enabling
+// the stop dialog checkbox.
+#define DEFAULT_SUCCESSIVE_DIALOG_TIME_LIMIT 3 // 3 sec
+
+// Maximum number of successive dialogs before we prompt users to disable
+// dialogs for this window.
+#define MAX_SUCCESSIVE_DIALOG_COUNT 5
+
+// Idle fuzz time upper limit
+#define MAX_IDLE_FUZZ_TIME_MS 90000
+
+// Min idle notification time in seconds.
+#define MIN_IDLE_NOTIFICATION_TIME_S 1
+
 // NOTE: This is so that I can rewrite the includes in a separate patch.
 // Specificially I don't think I want to change this until I've moved everything
 // to mozilla/dom/Window.h and mozilla/dom/WindowProxy.h.

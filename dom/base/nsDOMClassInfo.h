@@ -20,8 +20,8 @@
 #endif
 
 struct nsGlobalNameStruct;
-class nsGlobalWindow;
 class nsGlobalWindowInner;
+class nsGlobalWindowOuter;
 
 struct nsDOMClassInfoData;
 
@@ -145,7 +145,8 @@ protected:
                                 JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                                 JS::MutableHandle<JS::PropertyDescriptor> desc);
 
-  friend class nsGlobalWindow;
+  friend class nsGlobalWindowInner;
+  friend class nsGlobalWindowOuter;
 public:
   static bool NameStructEnabled(JSContext* aCx, nsGlobalWindowInner *aWin,
                                 const nsAString& aName,
