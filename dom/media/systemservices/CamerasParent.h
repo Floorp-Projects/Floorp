@@ -164,6 +164,8 @@ protected:
   // read cross-thread.
   mozilla::Atomic<bool> mWebRTCAlive;
   RefPtr<InputObserver> mCameraObserver;
+  std::map<nsCString, std::map<uint32_t, webrtc::VideoCaptureCapability>>
+    mAllCandidateCapabilities;
 };
 
 PCamerasParent* CreateCamerasParent();
