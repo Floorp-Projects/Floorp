@@ -150,10 +150,6 @@ exclude-multi-locale = [
     l10n = "{l}dom/chrome/plugins.properties"
 
 [[paths]]
-    reference = "toolkit/locales/en-US/chrome/global/about.dtd"
-    l10n = "{l}toolkit/chrome/global/about.dtd"
-
-[[paths]]
     reference = "toolkit/locales/en-US/chrome/global/aboutAbout.dtd"
     l10n = "{l}toolkit/chrome/global/aboutAbout.dtd"
 
