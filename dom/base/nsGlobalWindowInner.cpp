@@ -7932,6 +7932,12 @@ nsGlobalWindowInner::GetIntlUtils(ErrorResult& aError)
   return mIntlUtils;
 }
 
+mozilla::dom::TabGroup*
+nsPIDOMWindowInner::TabGroup()
+{
+  return nsGlobalWindowInner::Cast(this)->TabGroupInner();
+}
+
 /* static */ already_AddRefed<nsGlobalWindowInner>
 nsGlobalWindowInner::Create(nsGlobalWindowOuter *aOuterWindow, bool aIsChrome)
 {
