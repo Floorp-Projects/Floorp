@@ -499,7 +499,6 @@ class ExitFooterFrame
 
 class NativeExitFrameLayout;
 class IonOOLNativeExitFrameLayout;
-class IonOOLPropertyOpExitFrameLayout;
 class IonOOLProxyExitFrameLayout;
 class IonDOMExitFrameLayout;
 
@@ -511,8 +510,6 @@ enum class ExitFrameToken : uint8_t
     IonDOMSetter      = 0x3,
     IonDOMMethod      = 0x4,
     IonOOLNative      = 0x5,
-    IonOOLPropertyOp  = 0x6,
-    IonOOLSetterOp    = 0x7,
     IonOOLProxy       = 0x8,
     VMFunction        = 0xFD,
     LazyLink          = 0xFE,
@@ -661,76 +658,6 @@ class IonOOLNativeExitFrameLayout
     }
     inline uintptr_t argc() const {
         return argc_;
-    }
-};
-
-class IonOOLPropertyOpExitFrameLayout
-{
-  protected:
-    ExitFooterFrame footer_;
-    ExitFrameLayout exit_;
-
-    // Object for HandleObject
-    JSObject* obj_;
-
-    // id for HandleId
-    jsid id_;
-
-    // space for MutableHandleValue result
-    // use two uint32_t so compiler doesn't align.
-    uint32_t vp0_;
-    uint32_t vp1_;
-
-    // pointer to root the stub's JitCode
-    JitCode* stubCode_;
-
-  public:
-    static JitCode* Token() { return (JitCode*)ExitFrameToken::IonOOLPropertyOp; }
-
-    static inline size_t Size() {
-        return sizeof(IonOOLPropertyOpExitFrameLayout);
-    }
-
-    static size_t offsetOfObject() {
-        return offsetof(IonOOLPropertyOpExitFrameLayout, obj_);
-    }
-
-    static size_t offsetOfId() {
-        return offsetof(IonOOLPropertyOpExitFrameLayout, id_);
-    }
-
-    static size_t offsetOfResult() {
-        return offsetof(IonOOLPropertyOpExitFrameLayout, vp0_);
-    }
-
-    inline JitCode** stubCode() {
-        return &stubCode_;
-    }
-    inline Value* vp() {
-        return reinterpret_cast<Value*>(&vp0_);
-    }
-    inline jsid* id() {
-        return &id_;
-    }
-    inline JSObject** obj() {
-        return &obj_;
-    }
-};
-
-class IonOOLSetterOpExitFrameLayout : public IonOOLPropertyOpExitFrameLayout
-{
-  protected: // only to silence a clang warning about unused private fields
-    JS::ObjectOpResult result_;
-
-  public:
-    static JitCode* Token() { return (JitCode*)ExitFrameToken::IonOOLSetterOp; }
-
-    static size_t offsetOfObjectOpResult() {
-        return offsetof(IonOOLSetterOpExitFrameLayout, result_);
-    }
-
-    static size_t Size() {
-        return sizeof(IonOOLSetterOpExitFrameLayout);
     }
 };
 
