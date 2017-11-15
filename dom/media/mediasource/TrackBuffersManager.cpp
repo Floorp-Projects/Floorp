@@ -165,11 +165,13 @@ TrackBuffersManager::QueueTask(SourceBufferTask* aTask)
   }
 
   if (!taskQueue->IsCurrentThreadIn()) {
-    taskQueue->Dispatch(NewRunnableMethod<RefPtr<SourceBufferTask>>(
-      "TrackBuffersManager::QueueTask",
-      this,
-      &TrackBuffersManager::QueueTask,
-      aTask));
+    nsresult rv =
+        taskQueue->Dispatch(NewRunnableMethod<RefPtr<SourceBufferTask>>(
+        "TrackBuffersManager::QueueTask",
+        this,
+        &TrackBuffersManager::QueueTask,
+        aTask));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     return;
   }
   mQueue.Push(aTask);
