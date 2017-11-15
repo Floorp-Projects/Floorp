@@ -4268,11 +4268,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
         masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor, calleereg, objreg, &invoke);
     }
 
-    // Knowing that calleereg is a non-native function, load the JSScript.
-    masm.loadPtr(Address(calleereg, JSFunction::offsetOfScript()), objreg);
-
-    // Load script jitcode.
-    masm.loadBaselineOrIonRaw(objreg, objreg, &invoke);
+    // Knowing that calleereg is a non-native function, load the jit code.
+    masm.loadJitCodeRaw(calleereg, objreg, &invoke);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -4380,14 +4377,11 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     // a LazyScript instead of a JSScript.
     masm.branchIfFunctionHasNoScript(calleereg, &uncompiled);
 
-    // Knowing that calleereg is a non-native function, load the JSScript.
-    masm.loadPtr(Address(calleereg, JSFunction::offsetOfScript()), objreg);
-
-    // Load script jitcode.
+    // Load non-native jitcode from the script.
     if (call->mir()->needsArgCheck())
-        masm.loadBaselineOrIonRaw(objreg, objreg, &uncompiled);
+        masm.loadJitCodeRaw(calleereg, objreg, &uncompiled);
     else
-        masm.loadBaselineOrIonNoArgCheck(objreg, objreg, &uncompiled);
+        masm.loadJitCodeNoArgCheck(calleereg, objreg, &uncompiled);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -4686,11 +4680,8 @@ CodeGenerator::emitApplyGeneric(T* apply)
     masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor,
                             calleereg, objreg, &invoke);
 
-    // Knowing that calleereg is a non-native function, load the JSScript.
-    masm.loadPtr(Address(calleereg, JSFunction::offsetOfScript()), objreg);
-
-    // Load script jitcode.
-    masm.loadBaselineOrIonRaw(objreg, objreg, &invoke);
+    // Knowing that calleereg is a non-native function, load script's jitcode.
+    masm.loadJitCodeRaw(calleereg, objreg, &invoke);
 
     // Call with an Ion frame or a rectifier frame.
     {
