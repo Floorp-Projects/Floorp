@@ -3,8 +3,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-// Tests changing viewport DPR
-const TEST_URL = "data:text/html;charset=utf-8,DPR list test";
+// Tests changing viewport device pixel ratio
+const TEST_URL = "data:text/html;charset=utf-8,DevicePixelRatio list test";
 const DEFAULT_DPPX = window.devicePixelRatio;
 const VIEWPORT_DPPX = DEFAULT_DPPX + 2;
 const Types = require("devtools/client/responsive.html/types");
@@ -30,7 +30,7 @@ addRDMTask(TEST_URL, function* ({ ui, manager }) {
   yield testDefaults(ui);
   yield testChangingDevice(ui);
   yield testResetWhenResizingViewport(ui);
-  yield testChangingDPR(ui);
+  yield testChangingDevicePixelRatio(ui);
 });
 
 function* waitStartup(ui) {
@@ -45,7 +45,10 @@ function* testDefaults(ui) {
   info("Test Defaults");
 
   yield testDevicePixelRatio(ui, window.devicePixelRatio);
-  testViewportDPRSelect(ui, {value: window.devicePixelRatio, disabled: false});
+  testViewportDevicePixelRatioSelect(ui, {
+    value: window.devicePixelRatio,
+    disabled: false,
+  });
   testViewportDeviceSelectLabel(ui, "no device selected");
 }
 
@@ -58,7 +61,10 @@ function* testChangingDevice(ui) {
   yield waitForViewportResizeTo(ui, testDevice.width, testDevice.height);
   yield waitPixelRatioChange;
   yield testDevicePixelRatio(ui, testDevice.pixelRatio);
-  testViewportDPRSelect(ui, {value: testDevice.pixelRatio, disabled: true});
+  testViewportDevicePixelRatioSelect(ui, {
+    value: testDevice.pixelRatio,
+    disabled: true,
+  });
   testViewportDeviceSelectLabel(ui, testDevice.name);
 }
 
@@ -75,30 +81,37 @@ function* testResetWhenResizingViewport(ui) {
   yield waitPixelRatioChange;
   yield testDevicePixelRatio(ui, window.devicePixelRatio);
 
-  testViewportDPRSelect(ui, {value: window.devicePixelRatio, disabled: false});
+  testViewportDevicePixelRatioSelect(ui, {
+    value: window.devicePixelRatio,
+    disabled: false,
+  });
   testViewportDeviceSelectLabel(ui, "no device selected");
 }
 
-function* testChangingDPR(ui) {
+function* testChangingDevicePixelRatio(ui) {
   info("Test changing device pixel ratio");
 
   let waitPixelRatioChange = onceDevicePixelRatioChange(ui);
 
-  yield selectDPR(ui, VIEWPORT_DPPX);
+  yield selectDevicePixelRatio(ui, VIEWPORT_DPPX);
   yield waitPixelRatioChange;
   yield testDevicePixelRatio(ui, VIEWPORT_DPPX);
-  testViewportDPRSelect(ui, {value: VIEWPORT_DPPX, disabled: false});
+  testViewportDevicePixelRatioSelect(ui, {
+    value: VIEWPORT_DPPX,
+    disabled: false,
+  });
   testViewportDeviceSelectLabel(ui, "no device selected");
 }
 
-function testViewportDPRSelect(ui, expected) {
-  info("Test viewport's DPR Select");
+function testViewportDevicePixelRatioSelect(ui, expected) {
+  info("Test viewport's DevicePixelRatio Select");
 
-  let select = ui.toolWindow.document.querySelector("#global-dpr-selector");
+  let select =
+    ui.toolWindow.document.querySelector("#global-device-pixel-ratio-selector");
   is(select.value, expected.value,
-     `DPR Select value should be: ${expected.value}`);
+     `DevicePixelRatio Select value should be: ${expected.value}`);
   is(select.disabled, expected.disabled,
-    `DPR Select should be ${expected.disabled ? "disabled" : "enabled"}.`);
+    `DevicePixelRatio Select should be ${expected.disabled ? "disabled" : "enabled"}.`);
 }
 
 function* testDevicePixelRatio(ui, expected) {

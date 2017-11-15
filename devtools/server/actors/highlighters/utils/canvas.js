@@ -334,7 +334,7 @@ function getPointsFromDiagonal(x1, y1, x2, y2, matrix = identity()) {
 
 /**
  * Updates the <canvas> element's style in accordance with the current window's
- * devicePixelRatio, and the position calculated in `getCanvasPosition`. It also
+ * device pixel ratio, and the position calculated in `getCanvasPosition`. It also
  * clears the drawing context. This is called on canvas update after a scroll event where
  * `getCanvasPosition` updates the new canvasPosition.
  *

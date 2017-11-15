@@ -180,29 +180,30 @@ select > option.divider {
   width: 103px;
 }
 
-#global-dpr-selector {
+#global-device-pixel-ratio-selector {
   -moz-user-select: none;
   color: var(--viewport-color);
   height: 15px;
-  /* `max-width` is here to keep the UI compact if the DPR changes to a repeating decimal value.
-  This can happen if you try to zoom the UI (Cmd + Plus / Minus on macOS for example) */
+  /* `max-width` is here to keep the UI compact if the device pixel ratio changes to a
+     repeating decimal value.  This can happen if you zoom the UI (Cmd + Plus / Minus on
+     macOS for example). */
   max-width: 8em;
 }
 
-#global-dpr-selector.focused,
-#global-dpr-selector:not(.disabled):hover {
+#global-device-pixel-ratio-selector.focused,
+#global-device-pixel-ratio-selector:not(.disabled):hover {
   color: var(--viewport-hover-color);
 }
 
-#global-dpr-selector:focus {
+#global-device-pixel-ratio-selector:focus {
   color: var(--viewport-active-color);
 }
 
-#global-dpr-selector.selected {
+#global-device-pixel-ratio-selector.selected {
   color: var(--viewport-active-color);
 }
 
-#global-dpr-selector > option {
+#global-device-pixel-ratio-selector > option {
   padding: 5px;
 }
 
