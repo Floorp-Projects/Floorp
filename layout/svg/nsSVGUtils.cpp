@@ -1188,6 +1188,7 @@ nsSVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
         } else if (aFrame->IsSVGForeignObjectFrame()) {
           matrix = gfxMatrix();
         }
+        matrix = clipContent->PrependLocalTransformsTo(matrix, eUserSpaceToParent);
         bbox =
           clipPathFrame->GetBBoxForClipPathFrame(bbox, matrix).ToThebesRect();
       }
