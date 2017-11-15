@@ -22,6 +22,7 @@
 #include "nsCOMPtr.h"
 #include "nsFrameList.h"
 #include "nsPlaceholderFrame.h"
+#include "nsPluginFrame.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsContentUtils.h"
@@ -11180,6 +11181,80 @@ nsIFrame::AddSizeOfExcludingThisForTree(nsWindowSizes& aSizes) const
     }
     iter.Next();
   }
+}
+
+CompositorHitTestInfo
+nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
+{
+  CompositorHitTestInfo result = CompositorHitTestInfo::eInvisibleToHitTest;
+
+  if (aBuilder->IsInsidePointerEventsNoneDoc()) {
+    // Somewhere up the parent document chain is a subdocument with pointer-
+    // events:none set on it.
+    return result;
+  }
+  if (!GetParent()) {
+    MOZ_ASSERT(IsViewportFrame());
+    // Viewport frames are never event targets, other frames, like canvas frames,
+    // are the event targets for any regions viewport frames may cover.
+    return result;
+  }
+  uint8_t pointerEvents = StyleUserInterface()->GetEffectivePointerEvents(this);
+  if (pointerEvents == NS_STYLE_POINTER_EVENTS_NONE) {
+    return result;
+  }
+  if (!StyleVisibility()->IsVisible()) {
+    return result;
+  }
+
+  // Anything that didn't match the above conditions is visible to hit-testing.
+  result |= CompositorHitTestInfo::eVisibleToHitTest;
+
+  if (aBuilder->IsBuildingNonLayerizedScrollbar() ||
+      aBuilder->GetAncestorHasApzAwareEventHandler()) {
+    // Scrollbars may be painted into a layer below the actual layer they will
+    // scroll, and therefore wheel events may be dispatched to the outer frame
+    // instead of the intended scrollframe. To address this, we force a d-t-c
+    // region on scrollbar frames that won't be placed in their own layer. See
+    // bug 1213324 for details.
+    result |= CompositorHitTestInfo::eDispatchToContent;
+  } else if (IsObjectFrame()) {
+    // If the frame is a plugin frame and wants to handle wheel events as
+    // default action, we should add the frame to dispatch-to-content region.
+    nsPluginFrame* pluginFrame = do_QueryFrame(this);
+    if (pluginFrame && pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
+      result |= CompositorHitTestInfo::eDispatchToContent;
+    }
+  }
+
+  nsIFrame* touchActionFrame = this;
+  if (nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this)) {
+    touchActionFrame = do_QueryFrame(scrollFrame);
+  }
+  uint32_t touchAction = nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
+  // The CSS allows the syntax auto | none | [pan-x || pan-y] | manipulation
+  // so we can eliminate some combinations of things.
+  if (touchAction == NS_STYLE_TOUCH_ACTION_AUTO) {
+    // nothing to do
+  } else if (touchAction & NS_STYLE_TOUCH_ACTION_MANIPULATION) {
+    result |= CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
+  } else {
+    if (!(touchAction & NS_STYLE_TOUCH_ACTION_PAN_X)) {
+      result |= CompositorHitTestInfo::eTouchActionPanXDisabled;
+    }
+    if (!(touchAction & NS_STYLE_TOUCH_ACTION_PAN_Y)) {
+      result |= CompositorHitTestInfo::eTouchActionPanYDisabled;
+    }
+    if (touchAction & NS_STYLE_TOUCH_ACTION_NONE) {
+      result |= CompositorHitTestInfo::eTouchActionPinchZoomDisabled
+              | CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
+      // pan-x and pan-y disabled flags will already have been set above
+      MOZ_ASSERT(result & CompositorHitTestInfo::eTouchActionPanXDisabled);
+      MOZ_ASSERT(result & CompositorHitTestInfo::eTouchActionPanYDisabled);
+    }
+  }
+
+  return result;
 }
 
 // Box layout debugging
