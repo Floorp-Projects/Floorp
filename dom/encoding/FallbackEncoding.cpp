@@ -18,11 +18,32 @@ using mozilla::intl::LocaleService;
 namespace mozilla {
 namespace dom {
 
-static constexpr nsUConvProp localesFallbacks[] = {
+struct EncodingProp
+{
+  const char* const mKey;
+  NotNull<const Encoding*> mValue;
+};
+
+template <int32_t N>
+static NotNull<const Encoding*>
+SearchEncodingProp(const EncodingProp (&aProperties)[N],
+                   const nsACString& aKey)
+{
+  const nsCString& flat = PromiseFlatCString(aKey);
+  size_t index;
+  if (!BinarySearchIf(aProperties, 0, ArrayLength(aProperties),
+                      [&flat](const EncodingProp& aProperty)
+                      { return flat.Compare(aProperty.mKey); }, &index)) {
+    return WINDOWS_1252_ENCODING;
+  }
+  return aProperties[index].mValue;
+}
+
+static const EncodingProp localesFallbacks[] = {
 #include "localesfallbacks.properties.h"
 };
 
-static constexpr nsUConvProp domainsFallbacks[] = {
+static const EncodingProp domainsFallbacks[] = {
 #include "domainsfallbacks.properties.h"
 };
 
@@ -91,15 +112,10 @@ FallbackEncoding::Get()
     locale.Truncate(index);
   }
 
-  nsAutoCString fallback;
-  if (NS_FAILED(nsUConvPropertySearch::SearchPropertyValue(
-      localesFallbacks, ArrayLength(localesFallbacks), locale, fallback))) {
-    mFallback = WINDOWS_1252_ENCODING;
-  } else {
-    mFallback = Encoding::ForName(fallback);
-  }
+  auto fallback = SearchEncodingProp(localesFallbacks, locale);
+  mFallback = fallback;
 
-  return WrapNotNull(mFallback);
+  return fallback;
 }
 
 NotNull<const Encoding*>
@@ -176,12 +192,7 @@ FallbackEncoding::IsParticipatingTopLevelDomain(const nsACString& aTLD)
 NotNull<const Encoding*>
 FallbackEncoding::FromTopLevelDomain(const nsACString& aTLD)
 {
-  nsAutoCString fallback;
-  if (NS_FAILED(nsUConvPropertySearch::SearchPropertyValue(
-      domainsFallbacks, ArrayLength(domainsFallbacks), aTLD, fallback))) {
-    return WINDOWS_1252_ENCODING;
-  }
-  return Encoding::ForName(fallback);
+  return SearchEncodingProp(domainsFallbacks, aTLD);
 }
 
 } // namespace dom
