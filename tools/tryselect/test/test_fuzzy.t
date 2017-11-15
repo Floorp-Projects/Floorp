@@ -5,7 +5,7 @@ Test fuzzy selector
 
   $ ./mach try fuzzy $testargs -q "'foo"
   Commit message:
-  Fuzzy with query: 'foo
+  Fuzzy query='foo
   
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
@@ -20,7 +20,7 @@ Test fuzzy selector
   no tasks selected
   $ ./mach try fuzzy $testargs --full -q "'bar"
   Commit message:
-  Fuzzy with query: 'bar
+  Fuzzy query='bar
   
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
@@ -36,7 +36,7 @@ Test templates
 
   $ ./mach try fuzzy --no-push --artifact -q "'foo"
   Commit message:
-  Fuzzy with query: 'foo
+  Fuzzy query='foo
   
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
@@ -54,7 +54,7 @@ Test templates
   
   $ ./mach try fuzzy $testargs --env FOO=1 --env BAR=baz -q "'foo"
   Commit message:
-  Fuzzy with query: 'foo
+  Fuzzy query='foo
   
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:

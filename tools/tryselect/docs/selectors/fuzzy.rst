@@ -68,6 +68,58 @@ For example:
 
     ^start 'exact | !ignore fuzzy end$
 
+Test Paths
+----------
+
+One or more paths to a file or directory may be specified as positional arguments. When
+specifying paths, the list of available tasks to choose from is filtered down such that
+only suites that have tests in a specified path can be selected. Notably, only the first
+chunk of each suite/platform appears. When the tasks are scheduled, only tests that live
+under one of the specified paths will be run.
+
+.. note::
+
+    When using paths, be aware that all tests under the specified paths will run in the
+    same chunk. This might produce a different ordering from what gets run on production
+    branches, and may yield different results.
+
+    For suites that restart the browser between each manifest (like mochitest), this
+    shouldn't be as big of a concern.
+
+Paths can be used with the interactive fzf window, or using the ``-q/--query`` argument.
+For example, running:
+
+.. code-block:: shell
+
+    $ mach try fuzzy layout/reftests/reftest-sanity -q "!pgo !cov !asan 'linux64"
+
+Would produce the following ``try_task_config.json``:
+
+.. code-block:: json
+
+    {
+      "templates":{
+        "env":{
+          "MOZHARNESS_TEST_PATHS":"layout/reftests/reftest-sanity"
+        }
+      },
+      "tasks":[
+        "test-linux64-qr/debug-reftest-e10s-1",
+        "test-linux64-qr/opt-reftest-e10s-1",
+        "test-linux64-stylo-disabled/debug-reftest-e10s-1",
+        "test-linux64-stylo-disabled/opt-reftest-e10s-1",
+        "test-linux64/debug-reftest-e10s-1",
+        "test-linux64/debug-reftest-no-accel-e10s-1",
+        "test-linux64/debug-reftest-stylo-e10s-1",
+        "test-linux64/opt-reftest-e10s-1",
+        "test-linux64/opt-reftest-no-accel-e10s-1",
+        "test-linux64/opt-reftest-stylo-e10s-1"
+      ]
+    }
+
+Inside of these tasks, the reftest harness will only run tests that live under
+``layout/reftests/reftest-sanity``.
+
 Additional Arguments
 --------------------
 
