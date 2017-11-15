@@ -1729,6 +1729,7 @@ nsCookieService::CloseDBStates()
   CleanupDefaultDBConnection();
 
   mDefaultDBState = nullptr;
+  mInitializedDBConn = false;
   mInitializedDBStates = false;
 }
 
@@ -1765,8 +1766,6 @@ nsCookieService::CleanupDefaultDBConnection()
   mDefaultDBState->updateListener = nullptr;
   mDefaultDBState->removeListener = nullptr;
   mDefaultDBState->closeListener = nullptr;
-
-  mInitializedDBConn = false;
 }
 
 void
@@ -1916,7 +1915,7 @@ nsCookieService::RebuildCorruptDB(DBState* aDBState)
             os->NotifyObservers(nullptr, "cookie-db-rebuilding", nullptr);
           }
 
-          gCookieService->InitDBConn();
+          gCookieService->InitDBConnInternal();
 
           // Enumerate the hash, and add cookies to the params array.
           mozIStorageAsyncStatement* stmt = gCookieService->mDefaultDBState->stmtInsert;
