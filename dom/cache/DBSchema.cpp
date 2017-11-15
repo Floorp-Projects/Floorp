@@ -311,6 +311,7 @@ static_assert(nsIContentPolicy::TYPE_INVALID == 0 &&
               nsIContentPolicy::TYPE_FETCH == 20 &&
               nsIContentPolicy::TYPE_IMAGESET == 21 &&
               nsIContentPolicy::TYPE_WEB_MANIFEST == 22 &&
+              nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD == 43 &&
               nsIContentPolicy::TYPE_INTERNAL_SCRIPT == 23 &&
               nsIContentPolicy::TYPE_INTERNAL_WORKER == 24 &&
               nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER == 25 &&
