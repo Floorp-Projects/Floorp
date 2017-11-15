@@ -13,6 +13,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Unused.h"
 
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
@@ -109,7 +110,7 @@ template <>
 struct EventTarget<AbstractThread> {
   static void
   Dispatch(AbstractThread* aTarget, already_AddRefed<nsIRunnable> aTask) {
-    aTarget->Dispatch(Move(aTask), AbstractThread::DontAssertDispatchSuccess);
+    Unused << aTarget->Dispatch(Move(aTask));
   }
 };
 
