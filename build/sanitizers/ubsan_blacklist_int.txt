@@ -57,7 +57,6 @@ fun:*nsTArray_base*ShiftData*
 # However, some of them are so frequent that suppressing them at compile-time
 # makes sense to increase runtime performance.
 #
-src:*/media/libstagefright/system/core/include/utils/TypeHelpers.h
 src:*/netwerk/base/nsSocketTransportService2.cpp
 src:*/dom/xul/XULDocument.cpp
 src:*/nsCharTraits.h
