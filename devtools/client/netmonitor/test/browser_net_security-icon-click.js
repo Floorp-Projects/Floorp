@@ -46,9 +46,9 @@ add_task(function* () {
 
   function* clickAndTestSecurityIcon() {
     let icon = document.querySelector(".requests-security-state-icon");
-
     info("Clicking security icon of the first request and waiting for panel update.");
     EventUtils.synthesizeMouseAtCenter(icon, {}, monitor.panelWin);
+    yield waitUntil(() => document.querySelector("#security-panel .security-info-value"));
 
     ok(document.querySelector("#security-tab[aria-selected=true]"),
        "Security tab is selected.");

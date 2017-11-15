@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("../utils/l10n");
@@ -47,128 +50,157 @@ const SHA1_FINGERPRINT_LABEL = L10N.getStr("certmgr.certdetail.sha1fingerprint")
  * This contains details about the secure connection used including the protocol,
  * the cipher suite, and certificate details
  */
-function SecurityPanel({
-  openLink,
-  request,
-}) {
-  const { securityInfo, url } = request;
-
-  if (!securityInfo || !url) {
-    return null;
-  }
-
-  let object;
-
-  if (securityInfo.state === "secure" || securityInfo.state === "weak") {
-    const { subject, issuer, validity, fingerprint } = securityInfo.cert;
-    const HOST_HEADER_LABEL = L10N.getFormatStr("netmonitor.security.hostHeader",
-      getUrlHost(url));
-
-    object = {
-      [CONNECTION_LABEL]: {
-        [PROTOCOL_VERSION_LABEL]:
-          securityInfo.protocolVersion || NOT_AVAILABLE,
-        [CIPHER_SUITE_LABEL]:
-          securityInfo.cipherSuite || NOT_AVAILABLE,
-        [KEA_GROUP_LABEL]:
-          securityInfo.keaGroupName || NOT_AVAILABLE,
-        [SIGNATURE_SCHEME_LABEL]:
-          securityInfo.signatureSchemeName || NOT_AVAILABLE,
-      },
-      [HOST_HEADER_LABEL]: {
-        [HSTS_LABEL]:
-          securityInfo.hsts ? ENABLED_LABEL : DISABLED_LABEL,
-        [HPKP_LABEL]:
-          securityInfo.hpkp ? ENABLED_LABEL : DISABLED_LABEL,
-      },
-      [CERTIFICATE_LABEL]: {
-        [SUBJECT_INFO_LABEL]: {
-          [CERT_DETAIL_COMMON_NAME_LABEL]:
-            subject.commonName || NOT_AVAILABLE,
-          [CERT_DETAIL_ORG_LABEL]:
-            subject.organization || NOT_AVAILABLE,
-          [CERT_DETAIL_ORG_UNIT_LABEL]:
-            subject.organizationUnit || NOT_AVAILABLE,
-        },
-        [ISSUER_INFO_LABEL]: {
-          [CERT_DETAIL_COMMON_NAME_LABEL]:
-            issuer.commonName || NOT_AVAILABLE,
-          [CERT_DETAIL_ORG_LABEL]:
-            issuer.organization || NOT_AVAILABLE,
-          [CERT_DETAIL_ORG_UNIT_LABEL]:
-            issuer.organizationUnit || NOT_AVAILABLE,
-        },
-        [PERIOD_OF_VALIDITY_LABEL]: {
-          [BEGINS_LABEL]:
-            validity.start || NOT_AVAILABLE,
-          [EXPIRES_LABEL]:
-            validity.end || NOT_AVAILABLE,
-        },
-        [FINGERPRINTS_LABEL]: {
-          [SHA256_FINGERPRINT_LABEL]:
-            fingerprint.sha256 || NOT_AVAILABLE,
-          [SHA1_FINGERPRINT_LABEL]:
-            fingerprint.sha1 || NOT_AVAILABLE,
-        },
-      },
-    };
-  } else {
-    object = {
-      [ERROR_LABEL]:
-        new DOMParser().parseFromString(securityInfo.errorMessage, "text/html")
-          .body.textContent || NOT_AVAILABLE
+class SecurityPanel extends Component {
+  static get propTypes() {
+    return {
+      connector: PropTypes.object.isRequired,
+      openLink: PropTypes.func,
+      request: PropTypes.object.isRequired,
     };
   }
 
-  return div({ className: "panel-container security-panel" },
-    PropertiesView({
-      object,
-      renderValue: (props) => renderValue(props, securityInfo.weaknessReasons),
-      enableFilter: false,
-      expandedNodes: TreeViewClass.getExpandedNodes(object),
-      openLink,
-    })
-  );
-}
-
-SecurityPanel.displayName = "SecurityPanel";
-
-SecurityPanel.propTypes = {
-  request: PropTypes.object.isRequired,
-  openLink: PropTypes.func,
-};
-
-function renderValue(props, weaknessReasons = []) {
-  const { member, value } = props;
-
-  // Hide object summary
-  if (typeof member.value === "object") {
-    return null;
+  /**
+   * `componentDidMount` is called when opening the SecurityPanel for the first time
+   */
+  componentDidMount() {
+    this.maybeFetchSecurityInfo(this.props);
   }
 
-  return span({ className: "security-info-value" },
-    member.name === ERROR_LABEL ?
-      // Display multiline text for security error
-      value
-      :
-      // Display one line selectable text for security details
-      input({
-        className: "textbox-input",
-        readOnly: "true",
-        value,
+  /**
+   * `componentWillReceiveProps` is the only method called when switching between two
+   * requests while the security panel is displayed.
+   */
+  componentWillReceiveProps(nextProps) {
+    this.maybeFetchSecurityInfo(nextProps);
+  }
+
+  /**
+   * When switching to another request, lazily fetch securityInfo
+   * from the backend. The Security Panel will first be empty and then
+   * display the content.
+   */
+  maybeFetchSecurityInfo(props) {
+    if (!props.request.securityInfo) {
+      // This method will set `props.request.securityInfo`
+      // asynchronously and force another render.
+      props.connector.requestData(props.request.id, "securityInfo");
+    }
+  }
+
+  renderValue(props, weaknessReasons = []) {
+    const { member, value } = props;
+
+    // Hide object summary
+    if (typeof member.value === "object") {
+      return null;
+    }
+
+    return span({ className: "security-info-value" },
+      member.name === ERROR_LABEL ?
+        // Display multiline text for security error
+        value
+        :
+        // Display one line selectable text for security details
+        input({
+          className: "textbox-input",
+          readOnly: "true",
+          value,
+        })
+      ,
+      weaknessReasons.indexOf("cipher") !== -1 &&
+      member.name === CIPHER_SUITE_LABEL ?
+        // Display an extra warning icon after the cipher suite
+        div({
+          id: "security-warning-cipher",
+          className: "security-warning-icon",
+          title: WARNING_CIPHER_LABEL,
+        })
+        :
+        null
+    );
+  }
+
+  render() {
+    let { openLink, request } = this.props;
+    const { securityInfo, url } = request;
+
+    if (!securityInfo || !url) {
+      return null;
+    }
+
+    let object;
+
+    if (securityInfo.state === "secure" || securityInfo.state === "weak") {
+      const { subject, issuer, validity, fingerprint } = securityInfo.cert;
+      const HOST_HEADER_LABEL = L10N.getFormatStr("netmonitor.security.hostHeader",
+        getUrlHost(url));
+
+      object = {
+        [CONNECTION_LABEL]: {
+          [PROTOCOL_VERSION_LABEL]:
+            securityInfo.protocolVersion || NOT_AVAILABLE,
+          [CIPHER_SUITE_LABEL]:
+            securityInfo.cipherSuite || NOT_AVAILABLE,
+          [KEA_GROUP_LABEL]:
+            securityInfo.keaGroupName || NOT_AVAILABLE,
+          [SIGNATURE_SCHEME_LABEL]:
+            securityInfo.signatureSchemeName || NOT_AVAILABLE,
+        },
+        [HOST_HEADER_LABEL]: {
+          [HSTS_LABEL]:
+            securityInfo.hsts ? ENABLED_LABEL : DISABLED_LABEL,
+          [HPKP_LABEL]:
+            securityInfo.hpkp ? ENABLED_LABEL : DISABLED_LABEL,
+        },
+        [CERTIFICATE_LABEL]: {
+          [SUBJECT_INFO_LABEL]: {
+            [CERT_DETAIL_COMMON_NAME_LABEL]:
+              subject.commonName || NOT_AVAILABLE,
+            [CERT_DETAIL_ORG_LABEL]:
+              subject.organization || NOT_AVAILABLE,
+            [CERT_DETAIL_ORG_UNIT_LABEL]:
+              subject.organizationUnit || NOT_AVAILABLE,
+          },
+          [ISSUER_INFO_LABEL]: {
+            [CERT_DETAIL_COMMON_NAME_LABEL]:
+              issuer.commonName || NOT_AVAILABLE,
+            [CERT_DETAIL_ORG_LABEL]:
+              issuer.organization || NOT_AVAILABLE,
+            [CERT_DETAIL_ORG_UNIT_LABEL]:
+              issuer.organizationUnit || NOT_AVAILABLE,
+          },
+          [PERIOD_OF_VALIDITY_LABEL]: {
+            [BEGINS_LABEL]:
+              validity.start || NOT_AVAILABLE,
+            [EXPIRES_LABEL]:
+              validity.end || NOT_AVAILABLE,
+          },
+          [FINGERPRINTS_LABEL]: {
+            [SHA256_FINGERPRINT_LABEL]:
+              fingerprint.sha256 || NOT_AVAILABLE,
+            [SHA1_FINGERPRINT_LABEL]:
+              fingerprint.sha1 || NOT_AVAILABLE,
+          },
+        },
+      };
+    } else {
+      object = {
+        [ERROR_LABEL]:
+          new DOMParser().parseFromString(securityInfo.errorMessage, "text/html")
+            .body.textContent || NOT_AVAILABLE
+      };
+    }
+
+    return div({ className: "panel-container security-panel" },
+      PropertiesView({
+        object,
+        renderValue: (props) => this.renderValue(props, securityInfo.weaknessReasons),
+        enableFilter: false,
+        expandedNodes: TreeViewClass.getExpandedNodes(object),
+        openLink,
       })
-    ,
-    weaknessReasons.indexOf("cipher") !== -1 &&
-    member.name === CIPHER_SUITE_LABEL ?
-      // Display an extra warning icon after the cipher suite
-      div({
-        id: "security-warning-cipher",
-        className: "security-warning-icon",
-        title: WARNING_CIPHER_LABEL,
-      })
-      :
-      null
-  );
+    );
+  }
 }
 
 module.exports = SecurityPanel;

@@ -257,14 +257,11 @@ class FirefoxDataProvider {
     // The payload is ready when all values in the record are true. (i.e. all data
     // received, but the lazy one. responseContent is the only one for now).
     // Note that we never fetch response header/cookies for request with security issues.
-    // (Be careful, securityState can be undefined, for example for WebSocket requests)
-    // Also note that service worker don't have security info set.
     // Bug 1404917 should simplify this heuristic by making all these field be lazily
     // fetched, only on-demand.
     return record.requestHeaders &&
       record.requestCookies &&
       record.eventTimings &&
-      (record.securityInfo || record.fromServiceWorker) &&
       (
        (record.responseHeaders && record.responseCookies) ||
        payload.securityState == "broken" ||
@@ -344,12 +341,7 @@ class FirefoxDataProvider {
       requestCookies: false,
       responseHeaders: false,
       responseCookies: false,
-      securityInfo: false,
       eventTimings: false,
-
-      // This isn't a request data, but we need to know about request being served from
-      // service worker later, from isRequestPayloadReady.
-      fromServiceWorker,
     });
 
     this.addRequest(actor, {
@@ -391,12 +383,10 @@ class FirefoxDataProvider {
       case "responseCookies":
         this.requestPayloadData(actor, updateType);
         break;
+      // (Be careful, securityState can be undefined, for example for WebSocket requests)
+      // Also note that service worker don't have security info set.
       case "securityInfo":
-        this.updateRequest(actor, {
-          securityState: networkInfo.securityInfo,
-        }).then(() => {
-          this.requestPayloadData(actor, updateType);
-        });
+        this.updateRequest(actor, { securityState: networkInfo.securityInfo });
         break;
       case "responseStart":
         this.updateRequest(actor, {
@@ -422,10 +412,8 @@ class FirefoxDataProvider {
         });
         break;
       case "eventTimings":
-        this.updateRequest(actor, { totalTime: networkInfo.totalTime })
-          .then(() => {
-            this.requestPayloadData(actor, updateType);
-          });
+        this.pushRequestToQueue(actor, { totalTime: networkInfo.totalTime });
+        this.requestPayloadData(actor, updateType);
         break;
     }
 
@@ -491,7 +479,7 @@ class FirefoxDataProvider {
   /**
    * Public connector API to lazily request HTTP details from the backend.
    *
-   * This is internal method that focus on:
+   * The method focus on:
    * - calling the right actor method,
    * - emitting an event to tell we start fetching some request data,
    * - call data processing method.
