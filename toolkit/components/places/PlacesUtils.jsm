@@ -2241,17 +2241,20 @@ var Keywords = {
         } else {
           // An entry for the given page could be missing, in such a case we need to
           // create it.  The IGNORE conflict can trigger on `guid`.
-          await db.executeCached(
-            `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid)
-             VALUES (:url, hash(:url), :rev_host, 0, :frecency,
-                     IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
-                            GENERATE_GUID()))
-            `, { url: url.href, rev_host: PlacesUtils.getReversedHost(url),
-                 frecency: url.protocol == "place:" ? 0 : -1 });
-          await db.executeCached(
-            `INSERT INTO moz_keywords (keyword, place_id, post_data)
-             VALUES (:keyword, (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :post_data)
-            `, { url: url.href, keyword, post_data: postData });
+          await db.executeTransaction(async function() {
+            await db.executeCached(
+              `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid)
+               VALUES (:url, hash(:url), :rev_host, 0, :frecency,
+                       IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
+                              GENERATE_GUID()))
+              `, { url: url.href, rev_host: PlacesUtils.getReversedHost(url),
+                   frecency: url.protocol == "place:" ? 0 : -1 });
+            await db.executeCached("DELETE FROM moz_updatehostsinsert_temp");
+            await db.executeCached(
+              `INSERT INTO moz_keywords (keyword, place_id, post_data)
+               VALUES (:keyword, (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :post_data)
+              `, { url: url.href, keyword, post_data: postData });
+          });
         }
 
         await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(

@@ -309,29 +309,23 @@ protected:
    *                        split the paragraph, marked as handled.
    */
   EditActionResult ReturnInParagraph(Selection& aSelection,
-                                     nsINode& aParentDivOrP);
+                                     Element& aParentDivOrP);
 
   /**
    * SplitParagraph() splits the parent block, aPara, at aSelNode - aOffset.
    *
+   * @param aSelection  The selection.
    * @param aPara       The parent block to be split.
    * @param aBRNode     Next <br> node if there is.  Otherwise, nullptr.
    *                    If this is not nullptr, the <br> node may be removed.
-   * @param aSelection  The selection.
    * @param aSelNode    Set the selection container to split aPara at.
-   *                    Actual container node will be set by this method.
-   *                    XXX: The only caller ReturnInParagraph() doesn't need
-   *                         this result.
    * @param aOffset     Set the offset in the container.
-   *                    Actual offset will be set by this method.
-   *                    XXX: The only caller ReturnInParagraph() doesn't need
-   *                         this result.
    */
-  nsresult SplitParagraph(nsIDOMNode* aPara,
+  nsresult SplitParagraph(Selection& aSelection,
+                          Element& aPara,
                           nsIContent* aBRNode,
-                          Selection* aSelection,
-                          nsCOMPtr<nsIDOMNode>* aSelNode,
-                          int32_t* aOffset);
+                          nsINode& aSelNode,
+                          int32_t aOffset);
 
   nsresult ReturnInListItem(Selection& aSelection, Element& aHeader,
                             nsINode& aNode, int32_t aOffset);

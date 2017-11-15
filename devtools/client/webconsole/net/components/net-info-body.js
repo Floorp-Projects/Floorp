@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { createFactories } = require("devtools/client/shared/react-utils");
 const { Tabs, TabPanel } = createFactories(require("devtools/client/shared/components/tabs/Tabs"));
 

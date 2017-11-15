@@ -4,14 +4,15 @@
 
 "use strict";
 
-const { DOM, PropTypes } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("../utils/l10n");
 const { getNetMonitorTimingsURL } = require("../utils/mdn-utils");
 
 // Components
 const MDNLink = require("./MdnLink");
 
-const { div, span } = DOM;
+const { div, span } = dom;
 const types = ["blocked", "dns", "connect", "ssl", "send", "wait", "receive"];
 const TIMINGS_END_PADDING = "80px";
 

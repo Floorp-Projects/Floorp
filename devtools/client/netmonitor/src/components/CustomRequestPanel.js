@@ -4,10 +4,8 @@
 
 "use strict";
 
-const {
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { L10N } = require("../utils/l10n");
 const Actions = require("../actions/index");
@@ -23,7 +21,7 @@ const {
   div,
   input,
   textarea,
-} = DOM;
+} = dom;
 
 const CUSTOM_CANCEL = L10N.getStr("netmonitor.custom.cancel");
 const CUSTOM_HEADERS = L10N.getStr("netmonitor.custom.headers");

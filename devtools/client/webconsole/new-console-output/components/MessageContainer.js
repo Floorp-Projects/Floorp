@@ -7,10 +7,8 @@
 "use strict";
 
 // React & Redux
-const {
-  Component,
-  PropTypes
-} = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const {
   MESSAGE_SOURCE,

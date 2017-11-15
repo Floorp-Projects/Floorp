@@ -256,6 +256,14 @@ function transformEvaluationResultPacket(packet) {
     ? helperResult.object
     : result;
 
+  if (helperResult && helperResult.type === "error") {
+    try {
+      messageText = l10n.getStr(helperResult.message);
+    } catch (ex) {
+      messageText = helperResult.message;
+    }
+  }
+
   const level = messageText ? MESSAGE_LEVEL.ERROR : MESSAGE_LEVEL.LOG;
   return new ConsoleMessage({
     source: MESSAGE_SOURCE.JAVASCRIPT,

@@ -7,10 +7,8 @@
 "use strict";
 
 // React & Redux
-const {
-  createFactory,
-  PropTypes
-} = require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/Message"));
 
 ConsoleCommand.displayName = "ConsoleCommand";

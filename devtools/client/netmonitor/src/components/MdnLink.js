@@ -5,14 +5,12 @@
 "use strict";
 
 const Services = require("Services");
-const {
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { L10N } = require("../utils/l10n");
 
-const { a } = DOM;
+const { a } = dom;
 
 const LEARN_MORE = L10N.getStr("netmonitor.headers.learnMore");
 

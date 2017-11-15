@@ -4,11 +4,9 @@
 
 "use strict";
 
-const {
-  Component,
-  PropTypes,
-  DOM,
-} = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { getTheme, addThemeObserver, removeThemeObserver } =
   require("devtools/client/shared/theme");
@@ -20,7 +18,7 @@ const { L10N } = require("../utils/l10n");
 const WaterfallBackground = require("../waterfall-background");
 const RequestListHeaderContextMenu = require("../request-list-header-context-menu");
 
-const { div, button } = DOM;
+const { div, button } = dom;
 
 /**
  * Render the request list header with sorting arrows for columns.

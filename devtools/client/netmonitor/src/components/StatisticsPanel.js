@@ -6,28 +6,22 @@
 
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { FILTER_TAGS } = require("../constants");
-const {
-  Component,
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { Chart } = require("devtools/client/shared/widgets/Chart");
 const { PluralForm } = require("devtools/shared/plural-form");
 const Actions = require("../actions/index");
 const { Filters } = require("../utils/filter-predicates");
-const {
-  getSizeWithDecimals,
-  getTimeWithDecimals
-} = require("../utils/format-utils");
+const { getSizeWithDecimals, getTimeWithDecimals } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
 
 // Components
 const MDNLink = createFactory(require("./MdnLink"));
 
-const { button, div } = DOM;
+const { button, div } = dom;
 const MediaQueryList = window.matchMedia("(min-width: 700px)");
 
 const NETWORK_ANALYSIS_PIE_CHART_DIAMETER = 200;

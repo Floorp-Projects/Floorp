@@ -143,6 +143,29 @@ stubPreparedMessages.set("inspect({a: 1})", new ConsoleMessage({
   "indent": 0
 }));
 
+stubPreparedMessages.set("cd(document)", new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "javascript",
+  "timeStamp": 1510650094657,
+  "type": "result",
+  "helperType": "error",
+  "level": "error",
+  "messageText": "Cannot cd() to the given window. Invalid argument.",
+  "parameters": [
+    {
+      "type": "undefined"
+    }
+  ],
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"Cannot cd() to the given window. Invalid argument.\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
+  "stacktrace": null,
+  "frame": null,
+  "groupId": null,
+  "userProvidedStyles": null,
+  "notes": null,
+  "indent": 0
+}));
+
 stubPreparedMessages.set("longString message Error", new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
@@ -301,6 +324,22 @@ stubPackets.set("inspect({a: 1})", {
         "safeGetterValues": {}
       }
     }
+  },
+  "notes": null
+});
+
+stubPackets.set("cd(document)", {
+  "from": "server1.conn0.child1/consoleActor2",
+  "input": "cd(document)",
+  "result": {
+    "type": "undefined"
+  },
+  "timestamp": 1510650094657,
+  "exception": null,
+  "frame": null,
+  "helperResult": {
+    "type": "error",
+    "message": "cdFunctionInvalidArgument"
   },
   "notes": null
 });
