@@ -266,7 +266,8 @@ public:
     mCDM->OnQueryOutputProtectionStatus(aResult, aLinkMask, aOutputProtectionMask);
   }
 
-  void OnStorageId(const uint8_t* aStorageId,
+  void OnStorageId(uint32_t aVersion,
+                   const uint8_t* aStorageId,
                    uint32_t aStorageIdSize) override
   {
     //Only support on version 9 CDM.
