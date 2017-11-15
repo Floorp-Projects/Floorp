@@ -10,7 +10,6 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Unused.h"
 #include "MockMediaResource.h"
 #include "VideoUtils.h"
 
@@ -150,7 +149,7 @@ private:
   {
     RefPtr<Runnable> r =
       NS_NewRunnableFunction("MP4DemuxerBinding::DispatchTask", aFun);
-    Unused << mTaskQueue->Dispatch(r.forget());
+    mTaskQueue->Dispatch(r.forget());
   }
 
   virtual ~MP4DemuxerBinding()

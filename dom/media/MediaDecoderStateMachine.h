@@ -204,8 +204,7 @@ public:
                                    ? aEndTime
                                    : media::TimeUnit::Invalid();
       });
-    nsresult rv = OwnerThread()->Dispatch(r.forget());
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    OwnerThread()->Dispatch(r.forget());
   }
 
   void DispatchCanPlayThrough(bool aCanPlayThrough)

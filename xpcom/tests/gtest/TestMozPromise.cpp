@@ -9,7 +9,6 @@
 
 #include "mozilla/TaskQueue.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/Unused.h"
 
 #include "nsISupportsImpl.h"
 #include "mozilla/SharedThreadPool.h"
@@ -61,11 +60,12 @@ public:
 
     if (--mIterations == 0) {
       mPromise->ResolveOrReject(mValue, __func__);
-      return NS_OK;
+    } else {
+      nsCOMPtr<nsIRunnable> r = this;
+      mTaskQueue->Dispatch(r.forget());
     }
 
-    nsCOMPtr<nsIRunnable> r = this;
-    return mTaskQueue->Dispatch(r.forget());
+    return NS_OK;
   }
 
   void Cancel() {
@@ -87,7 +87,7 @@ void
 RunOnTaskQueue(TaskQueue* aQueue, FunctionType aFun)
 {
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("RunOnTaskQueue", aFun);
-  Unused << aQueue->Dispatch(r.forget());
+  aQueue->Dispatch(r.forget());
 }
 
 // std::function can't come soon enough. :-(
@@ -162,11 +162,11 @@ TEST(MozPromise, AsyncResolve)
     RefPtr<DelayedResolveOrReject> c = new DelayedResolveOrReject(queue, p, RRValue::MakeReject(32.0), 7);
 
     nsCOMPtr<nsIRunnable> ref = a.get();
-    Unused << queue->Dispatch(ref.forget());
+    queue->Dispatch(ref.forget());
     ref = b.get();
-    Unused << queue->Dispatch(ref.forget());
+    queue->Dispatch(ref.forget());
     ref = c.get();
-    Unused << queue->Dispatch(ref.forget());
+    queue->Dispatch(ref.forget());
 
     p->Then(queue, __func__, [queue, a, b, c] (int aResolveValue) -> void {
       EXPECT_EQ(aResolveValue, 42);
@@ -197,7 +197,7 @@ TEST(MozPromise, CompletionPromises)
       [queue] (int aVal) -> RefPtr<TestPromise> {
         RefPtr<TestPromise::Private> p = new TestPromise::Private(__func__);
         nsCOMPtr<nsIRunnable> resolver = new DelayedResolveOrReject(queue, p, RRValue::MakeResolve(aVal - 8), 10);
-        Unused << queue->Dispatch(resolver.forget());
+        queue->Dispatch(resolver.forget());
         return RefPtr<TestPromise>(p);
       },
       DO_FAIL)
