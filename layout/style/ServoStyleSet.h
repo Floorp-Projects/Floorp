@@ -181,6 +181,12 @@ public:
                   ServoStyleContext* aParentContext,
                   LazyComputeBehavior aMayCompute);
 
+  // Clear style data and resolve style for the given element and its
+  // subtree for changes to -moz-binding. It returns the new style
+  // context of the given element.
+  already_AddRefed<ServoStyleContext>
+  ReresolveStyleForBindings(Element* aElement);
+
   // Get a style context for a text node (which no rules will match).
   //
   // The returned style context will have nsCSSAnonBoxes::mozText as its pseudo.
