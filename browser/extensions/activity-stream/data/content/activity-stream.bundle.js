@@ -94,7 +94,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -705,9 +705,10 @@ const LinkMenu = __webpack_require__(8);
 const { TOP_SITES_SOURCE, TOP_SITES_CONTEXT_MENU_OPTIONS, MIN_RICH_FAVICON_SIZE, MIN_CORNER_FAVICON_SIZE } = __webpack_require__(5);
 
 const TopSiteLink = props => {
-  const { link } = props;
+  const { link, title } = props;
   const topSiteOuterClassName = `top-site-outer${props.className ? ` ${props.className}` : ""}`;
   const { tippyTopIcon, faviconSize } = link;
+  const letterFallback = title[0];
   let imageClassName;
   let imageStyle;
   let showSmallFavicon = false;
@@ -744,18 +745,12 @@ const TopSiteLink = props => {
       { href: link.url, onClick: props.onClick },
       React.createElement(
         "div",
-        { className: "tile", "aria-hidden": true },
-        React.createElement(
-          "span",
-          { className: "letter-fallback" },
-          props.title[0]
-        ),
+        { className: "tile", "aria-hidden": true, "data-fallback": letterFallback },
         React.createElement("div", { className: imageClassName, style: imageStyle }),
-        showSmallFavicon && React.createElement(
-          "div",
-          { className: "top-site-icon default-icon", style: smallFaviconStyle },
-          smallFaviconFallback && props.title[0]
-        )
+        showSmallFavicon && React.createElement("div", {
+          className: "top-site-icon default-icon",
+          "data-fallback": smallFaviconFallback && letterFallback,
+          style: smallFaviconStyle })
       ),
       React.createElement(
         "div",
@@ -764,7 +759,7 @@ const TopSiteLink = props => {
         React.createElement(
           "span",
           { dir: "auto" },
-          props.title
+          title
         )
       )
     ),
@@ -986,6 +981,9 @@ function getFormattedMessage(message) {
     message
   ) : React.createElement(FormattedMessage, message);
 }
+function getCollapsed(props) {
+  return props.Prefs.values[props.prefName];
+}
 
 class Info extends React.PureComponent {
   constructor(props) {
@@ -1113,6 +1111,7 @@ const DisclaimerIntl = injectIntl(Disclaimer);
 class CollapsibleSection extends React.PureComponent {
   constructor(props) {
     super(props);
+    this.onBodyMount = this.onBodyMount.bind(this);
     this.onInfoEnter = this.onInfoEnter.bind(this);
     this.onInfoLeave = this.onInfoLeave.bind(this);
     this.onHeaderClick = this.onHeaderClick.bind(this);
@@ -1123,6 +1122,16 @@ class CollapsibleSection extends React.PureComponent {
 
   componentWillMount() {
     this.props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
+  }
+  componentWillUpdate(nextProps) {
+    // Check if we're about to go from expanded to collapsed
+    if (!getCollapsed(this.props) && getCollapsed(nextProps)) {
+      // This next line forces a layout flush of the section body, which has a
+      // max-height style set, so that the upcoming collapse animation can
+      // animate from that height to the collapsed height. Without this, the
+      // update is coalesced and there's no animation from no-max-height to 0.
+      this.sectionBody.scrollHeight; // eslint-disable-line no-unused-expressions
+    }
   }
   componentWillUnmount() {
     this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
@@ -1141,6 +1150,9 @@ class CollapsibleSection extends React.PureComponent {
       this.setState({ infoActive });
     }
   }
+  onBodyMount(node) {
+    this.sectionBody = node;
+  }
   onInfoEnter() {
     // We're getting focus or hover, so info state should be true if not yet.
     this._setInfoState(true);
@@ -1152,22 +1164,29 @@ class CollapsibleSection extends React.PureComponent {
     this._setInfoState(event && event.relatedTarget && (event.relatedTarget === event.currentTarget || event.relatedTarget.compareDocumentPosition(event.currentTarget) & Node.DOCUMENT_POSITION_CONTAINS));
   }
   onHeaderClick() {
-    this.setState({ isAnimating: true });
-    this.props.dispatch(ac.SetPref(this.props.prefName, !this.props.Prefs.values[this.props.prefName]));
+    // Get the current height of the body so max-height transitions can work
+    this.setState({
+      isAnimating: true,
+      maxHeight: `${this.sectionBody.scrollHeight}px`
+    });
+    this.props.dispatch(ac.SetPref(this.props.prefName, !getCollapsed(this.props)));
   }
-  onTransitionEnd() {
-    this.setState({ isAnimating: false });
+  onTransitionEnd(event) {
+    // Only update the animating state for our own transition (not a child's)
+    if (event.target === event.currentTarget) {
+      this.setState({ isAnimating: false });
+    }
   }
   renderIcon() {
     const icon = this.props.icon;
     if (icon && icon.startsWith("moz-extension://")) {
-      return React.createElement("span", { className: "icon icon-small-spacer", style: { "background-image": `url('${icon}')` } });
+      return React.createElement("span", { className: "icon icon-small-spacer", style: { backgroundImage: `url('${icon}')` } });
     }
     return React.createElement("span", { className: `icon icon-small-spacer icon-${icon || "webextension"}` });
   }
   render() {
-    const isCollapsed = this.props.Prefs.values[this.props.prefName];
-    const { enableAnimation, isAnimating } = this.state;
+    const isCollapsed = getCollapsed(this.props);
+    const { enableAnimation, isAnimating, maxHeight } = this.state;
     const { id, infoOption, eventSource, disclaimer } = this.props;
     const disclaimerPref = `section.${id}.showDisclaimer`;
     const needsDisclaimer = disclaimer && this.props.Prefs.values[disclaimerPref];
@@ -1193,7 +1212,11 @@ class CollapsibleSection extends React.PureComponent {
       ),
       React.createElement(
         "div",
-        { className: `section-body${isAnimating ? " animating" : ""}`, onTransitionEnd: this.onTransitionEnd },
+        {
+          className: `section-body${isAnimating ? " animating" : ""}`,
+          onTransitionEnd: this.onTransitionEnd,
+          ref: this.onBodyMount,
+          style: isAnimating && !isCollapsed ? { maxHeight } : null },
         needsDisclaimer && React.createElement(DisclaimerIntl, { disclaimerPref: disclaimerPref, disclaimer: disclaimer, eventSource: eventSource, dispatch: this.props.dispatch }),
         this.props.children
       )
@@ -1689,7 +1712,7 @@ const { MIN_RICH_FAVICON_SIZE, MIN_CORNER_FAVICON_SIZE } = __webpack_require__(5
  */
 function countTopSitesIconsTypes(topSites) {
   const countTopSitesTypes = (acc, link) => {
-    if (link.tippyTopIcon) {
+    if (link.tippyTopIcon || link.faviconRef === "tippytop") {
       acc.tippytop++;
     } else if (link.faviconSize >= MIN_RICH_FAVICON_SIZE) {
       acc.rich_icon++;
@@ -1714,10 +1737,11 @@ function countTopSitesIconsTypes(topSites) {
 }
 
 class TopSites extends React.PureComponent {
-  componentDidUpdate() {
-    const realTopSites = this.props.TopSites.rows.slice(0, this.props.TopSitesCount);
-
-    const topSitesIconsStats = countTopSitesIconsTypes(realTopSites);
+  /**
+   * Dispatch session statistics about the quality of TopSites icons.
+   */
+  _dispatchTopSitesIconStats() {
+    const topSitesIconsStats = countTopSitesIconsTypes(this._getTopSites());
     // Dispatch telemetry event with the count of TopSites images types.
     this.props.dispatch(ac.SendToMain({
       type: at.SAVE_SESSION_PERF_DATA,
@@ -1725,22 +1749,26 @@ class TopSites extends React.PureComponent {
     }));
   }
 
-  componentDidMount() {
-    const realTopSites = this.props.TopSites.rows.slice(0, this.props.TopSitesCount);
+  /**
+   * Return the TopSites to display based on prefs.
+   */
+  _getTopSites() {
+    return this.props.TopSites.rows.slice(0, this.props.TopSitesCount);
+  }
 
-    const topSitesIconsStats = countTopSitesIconsTypes(realTopSites);
-    // Dispatch telemetry event with the count of TopSites images types.
-    this.props.dispatch(ac.SendToMain({
-      type: at.SAVE_SESSION_PERF_DATA,
-      data: { topsites_icon_stats: topSitesIconsStats }
-    }));
+  componentDidUpdate() {
+    this._dispatchTopSitesIconStats();
+  }
+
+  componentDidMount() {
+    this._dispatchTopSitesIconStats();
   }
 
   render() {
     const props = this.props;
-    const realTopSites = props.TopSites.rows.slice(0, props.TopSitesCount);
+    const topSites = this._getTopSites();
 
-    const placeholderCount = props.TopSitesCount - realTopSites.length;
+    const placeholderCount = props.TopSitesCount - topSites.length;
     const infoOption = {
       header: { id: "settings_pane_topsites_header" },
       body: { id: "settings_pane_topsites_body" }
@@ -1754,7 +1782,7 @@ class TopSites extends React.PureComponent {
         React.createElement(
           "ul",
           { className: "top-sites-list" },
-          realTopSites.map((link, index) => link && React.createElement(TopSite, {
+          topSites.map((link, index) => link && React.createElement(TopSite, {
             key: link.guid || link.url,
             dispatch: props.dispatch,
             link: link,
@@ -2299,7 +2327,9 @@ module.exports = {
       data: {
         onConfirm: [ac.SendToMain({ type: at.DELETE_HISTORY_URL, data: { url: site.url, forceBlock: site.bookmarkGuid } }), ac.UserEvent({ event: "DELETE" })],
         body_string_id: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
-        confirm_button_string_id: "menu_action_delete"
+        confirm_button_string_id: "menu_action_delete",
+        cancel_button_string_id: "topsites_form_cancel_button",
+        icon: "modal-delete"
       }
     },
     userEvent: "DIALOG_OPEN"
@@ -2586,6 +2616,7 @@ class ConfirmDialog extends React.PureComponent {
         React.createElement(
           "section",
           { className: "modal-message" },
+          this.props.data.icon && React.createElement("span", { className: `icon icon-spacer icon-${this.props.data.icon}` }),
           this._renderModalMessage()
         ),
         React.createElement(
@@ -2594,7 +2625,7 @@ class ConfirmDialog extends React.PureComponent {
           React.createElement(
             "button",
             { onClick: this._handleCancelBtn },
-            React.createElement(FormattedMessage, { id: "topsites_form_cancel_button" })
+            React.createElement(FormattedMessage, { id: this.props.data.cancel_button_string_id })
           ),
           React.createElement(
             "button",

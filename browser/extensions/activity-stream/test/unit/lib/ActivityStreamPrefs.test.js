@@ -101,8 +101,12 @@ describe("ActivityStreamPrefs", () => {
         defaultPrefs.init();
         assert.calledWith(defaultPrefs.branch.setIntPref, "baz", 1);
       });
+      it("should initialize a pref with value if Firefox is not a local build", () => {
+        defaultPrefs.init();
+        assert.calledWith(defaultPrefs.branch.setStringPref, "qux", "foo");
+      });
       it("should initialize a pref with value_local_dev if Firefox is a local build", () => {
-        sandbox.stub(global.Services.prefs, "getStringPref").returns("default");
+        sandbox.stub(global.AppConstants, "MOZILLA_OFFICIAL").value(false);
         defaultPrefs.init();
         assert.calledWith(defaultPrefs.branch.setStringPref, "qux", "foofoo");
       });

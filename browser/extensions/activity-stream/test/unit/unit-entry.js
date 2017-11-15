@@ -1,6 +1,17 @@
 const {GlobalOverrider, FakePrefs, FakePerformance, EventEmitter} = require("test/unit/utils");
 const {chaiAssertions} = require("test/schemas/pings");
 
+// Cause React warnings to make tests that trigger them fail
+const origConsoleError = console.error; // eslint-disable-line no-console
+console.error = function(msg, ...args) { // eslint-disable-line no-console
+  // eslint-disable-next-line no-console
+  origConsoleError.apply(console, [msg, ...args]);
+
+  if (/(Invalid prop|Failed prop type|Check the render method)/.test(msg)) {
+    throw new Error(msg);
+  }
+};
+
 const req = require.context(".", true, /\.test\.jsx?$/);
 const files = req.keys();
 
@@ -12,6 +23,7 @@ chai.use(chaiAssertions);
 let overrider = new GlobalOverrider();
 
 overrider.set({
+  AppConstants: {MOZILLA_OFFICIAL: true},
   Components: {
     classes: {},
     interfaces: {},
@@ -75,7 +87,8 @@ overrider.set({
       init(cb) { cb(); },
       getVisibleEngines: () => [{identifier: "google"}, {identifier: "bing"}],
       defaultEngine: {identifier: "google"}
-    }
+    },
+    scriptSecurityManager: {getSystemPrincipal() {}}
   },
   XPCOMUtils: {
     defineLazyGetter(_1, _2, f) { f(); },

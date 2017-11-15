@@ -148,9 +148,10 @@ user_pref("media.openUnsupportedTypeWithExternalApp", false);
 // consumer automation; not vendor testing.
 user_pref("marionette.prefs.recommended", false);
 
-// Make sure we don't reach out to the network with pocket or snippets
+// Make sure we don't reach out to the network for activity stream services
 user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
 user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
+user_pref("browser.newtabpage.activity-stream.tippyTop.service.endpoint", "");
 
 // Don't forcibly kill content processes after a timeout
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
