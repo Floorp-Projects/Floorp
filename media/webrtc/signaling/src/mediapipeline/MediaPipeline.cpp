@@ -207,7 +207,8 @@ public:
         "VideoFrameConverter::ProcessVideoFrame",
         this, &VideoFrameConverter::ProcessVideoFrame,
         aChunk.mFrame.GetImage(), forceBlack);
-    mTaskQueue->Dispatch(runnable.forget());
+    nsresult rv = mTaskQueue->Dispatch(runnable.forget());
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   }
 
   void AddListener(VideoConverterListener* aListener)
