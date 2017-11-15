@@ -1,8 +1,4 @@
 Reflect.parse(`
-function a()f1()
-f2()
-`);
-Reflect.parse(`
 let a
 f2()
 `);

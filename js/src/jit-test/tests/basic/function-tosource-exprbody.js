@@ -1,3 +1,5 @@
+if (getBuildConfiguration().release_or_beta)
+eval(`
 function f1(foo, bar) foo + bar;
 assertEq(f1.toString(), "function f1(foo, bar) foo + bar");
 assertEq(f1.toString(), f1.toSource());
@@ -29,3 +31,4 @@ test\
 
 assertEq(f7.toString(), "function (foo, bar) foo + bar + '\\\nlong\\\nstring\\\ntest\\\n'");
 assertEq(f7.toSource(), "(" + f7.toString() + ")");
+`);
