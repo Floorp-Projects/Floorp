@@ -333,7 +333,6 @@ public:
   // These methods must be called on a different thread from the main
   // thread. They should always be called on the same thread for a given
   // stream.
-  int64_t Tell();
   // *aBytes gets the number of bytes that were actually read. This can
   // be less than aCount. If the first byte of data is not in the cache,
   // this will block until the data is available or the stream is
