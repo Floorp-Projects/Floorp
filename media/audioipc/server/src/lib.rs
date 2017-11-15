@@ -693,6 +693,7 @@ impl Server {
 
         match poll.poll(&mut events, None) {
             Ok(_) => {},
+            Err(ref e) if e.kind() == std::io::ErrorKind::Interrupted => return Ok(()),
             Err(e) => warn!("server poll error: {}", e),
         }
 

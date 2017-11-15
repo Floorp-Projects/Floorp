@@ -83,24 +83,33 @@ ClientManagerService::GetOrCreateInstance()
   return ref.forget();
 }
 
-void
+bool
 ClientManagerService::AddSource(ClientSourceParent* aSource)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aSource);
   auto entry = mSourceTable.LookupForAdd(aSource->Info().Id());
-  MOZ_DIAGNOSTIC_ASSERT(!entry);
+  // Do not permit overwriting an existing ClientSource with the same
+  // UUID.  This would allow a spoofed ClientParentSource actor to
+  // intercept postMessage() intended for the real actor.
+  if (NS_WARN_IF(!!entry)) {
+    return false;
+  }
   entry.OrInsert([&] { return aSource; });
+  return true;
 }
 
-void
+bool
 ClientManagerService::RemoveSource(ClientSourceParent* aSource)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aSource);
   auto entry = mSourceTable.Lookup(aSource->Info().Id());
-  MOZ_DIAGNOSTIC_ASSERT(entry);
+  if (NS_WARN_IF(!entry)) {
+    return false;
+  }
   entry.Remove();
+  return true;
 }
 
 ClientSourceParent*

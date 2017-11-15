@@ -147,6 +147,10 @@ class ToolboxController extends Component {
     this.updateButtonIds();
   }
 
+  get panelDefinitions() {
+    return this.state.panelDefinitions;
+  }
+
   setToolboxButtons(toolboxButtons) {
     // Listen for updates of the checked attribute.
     this.state.toolboxButtons.forEach(button => {

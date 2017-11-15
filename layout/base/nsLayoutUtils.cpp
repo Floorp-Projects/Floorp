@@ -475,6 +475,20 @@ MayHaveAnimationOfProperty(EffectSet* effects, nsCSSPropertyID aProperty)
   return true;
 }
 
+static bool
+MayHaveAnimationOfProperty(const nsIFrame* aFrame, nsCSSPropertyID aProperty)
+{
+  switch (aProperty) {
+    case eCSSProperty_transform:
+      return aFrame->MayHaveTransformAnimation();
+    case eCSSProperty_opacity:
+      return aFrame->MayHaveOpacityAnimation();
+    default:
+      MOZ_ASSERT_UNREACHABLE("unexpected property");
+      return false;
+  }
+}
+
 bool
 nsLayoutUtils::HasAnimationOfProperty(EffectSet* aEffectSet,
                                       nsCSSPropertyID aProperty)
@@ -496,7 +510,18 @@ bool
 nsLayoutUtils::HasAnimationOfProperty(const nsIFrame* aFrame,
                                       nsCSSPropertyID aProperty)
 {
-  return HasAnimationOfProperty(EffectSet::GetEffectSet(aFrame), aProperty);
+  if (!MayHaveAnimationOfProperty(aFrame, aProperty)) {
+    return false;
+  }
+
+  return HasMatchingAnimations(aFrame,
+    [&aProperty](KeyframeEffectReadOnly& aEffect)
+    {
+      return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
+             aEffect.HasAnimationOfProperty(aProperty);
+    }
+  );
+
 }
 
 bool

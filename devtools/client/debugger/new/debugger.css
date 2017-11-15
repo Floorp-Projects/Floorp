@@ -604,6 +604,30 @@ button:focus {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+.d-flex {
+  display: flex;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.rounded-circle {
+  border-radius: 50%;
+}
+
+.text-white {
+  color: white;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.min-width-0 {
+  min-width: 0;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2875,6 +2899,22 @@ html .breakpoints-list .breakpoint.paused {
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
 }
+
+.frames ul .frames-group.expanded .badge {
+  color: var(--theme-highlight-blue);
+}
+.badge {
+  --size: 17px;
+  --radius: calc(var(--size) / 2);
+  height: var(--size);
+  min-width: var(--size);
+  line-height: var(--size);
+  background: var(--theme-toolbar-background-hover);
+  color: var(--theme-body-color);
+  border-radius: var(--radius);
+  padding: 0 4px;
+  font-size: 0.9em;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2918,7 +2958,7 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 .frames ul li {
-  padding: 7px 10px 7px 21px;
+  padding: 0 10px 0 21px;
   overflow: hidden;
   display: flex;
   justify-content: space-between;
@@ -2932,6 +2972,11 @@ html .breakpoints-list .breakpoint.paused {
   user-select: none;
 }
 
+.frames .badge {
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
 .frames .location {
   font-weight: lighter;
   display: flex;
@@ -2939,6 +2984,7 @@ html .breakpoints-list .breakpoint.paused {
   flex-direction: row;
   align-items: center;
   margin: 0;
+  flex-shrink: 0;
 }
 
 .theme-light .frames .location,
@@ -2954,7 +3000,7 @@ html .breakpoints-list .breakpoint.paused {
 .frames .title {
   text-overflow: ellipsis;
   overflow: hidden;
-  margin-right: 1em;
+  margin: 7px 0.5em 7px 0;
 }
 
 .frames ul li:hover,
@@ -3594,7 +3640,7 @@ html .welcomebox .toggle-button-end.collapsed {
   top: 23px;
   width: var(--width);
   z-index: 1000;
-  overflow: scroll;
+  overflow: auto;
 }
 
 html[dir="rtl"] .dropdown {
