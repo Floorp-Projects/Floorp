@@ -1855,9 +1855,11 @@ AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath,
   return NS_OK;
 }
 
-// We may be using the legacy databases, in which case we need to use
-// "secmod.db". We may be using the sqlite-backed databases, in which case we
-// need to use "pkcs11.txt".
+// The platform now only uses the sqlite-backed databases, so we'll try to
+// rename "pkcs11.txt". However, if we're upgrading from a version that used the
+// old format, we need to try to rename the old "secmod.db" as well (if we were
+// to only rename "pkcs11.txt", initializing NSS will still fail due to the old
+// database being in FIPS mode).
 static nsresult
 AttemptToRenameBothPKCS11ModuleDBVersions(const nsACString& profilePath)
 {
