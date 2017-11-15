@@ -56,6 +56,10 @@ TEST_HARNESS_FILES.gtest += [
     'test_case_1224369.vp8.ivf',
 ]
 
+TEST_DIRS += [
+    'mp4_demuxer',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [

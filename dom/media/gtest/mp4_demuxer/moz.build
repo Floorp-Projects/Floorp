@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('stagefright_gtest')
+Library('mp4_demuxer_gtest')
 
 SOURCES += [
     'TestInterval.cpp',
@@ -44,12 +44,12 @@ TEST_HARNESS_FILES.gtest += [
     'test_case_1410565.mp4',
 ]
 
-UNIFIED_SOURCES += ['TestMP4Rust.cpp',]
+UNIFIED_SOURCES += ['TestMP4.cpp',]
 TEST_HARNESS_FILES.gtest += [
-    '../../../dom/media/test/street.mp4',
+    '../../test/street.mp4',
 ]
 LOCAL_INCLUDES += [
-    '../binding/include',
+    '../../mp4',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
