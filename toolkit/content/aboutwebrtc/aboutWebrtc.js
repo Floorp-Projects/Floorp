@@ -479,11 +479,17 @@ SDPStats.prototype = {
     let div = document.createElement("div");
     let elem = document.createElement("h4");
 
+    let localSdpHeading = getString("local_sdp_heading");
+    let remoteSdpHeading = getString("remote_sdp_heading");
+    let offerLabel = `(${getString("offer")})`;
+    let answerLabel = `(${getString("answer")})`;
+
     elem.textContent = getString("sdp_heading");
     div.appendChild(elem);
 
     elem = document.createElement("h5");
-    elem.textContent = getString("local_sdp_heading");
+    elem.textContent =
+      `${localSdpHeading} ${this._report.offerer ? offerLabel : answerLabel}`;
     div.appendChild(elem);
 
     elem = document.createElement("pre");
@@ -491,7 +497,8 @@ SDPStats.prototype = {
     div.appendChild(elem);
 
     elem = document.createElement("h5");
-    elem.textContent = getString("remote_sdp_heading");
+    elem.textContent =
+      `${remoteSdpHeading} ${this._report.offerer ? answerLabel : offerLabel}`;
     div.appendChild(elem);
 
     elem = document.createElement("pre");
