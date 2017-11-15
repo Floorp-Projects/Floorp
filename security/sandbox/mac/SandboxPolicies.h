@@ -220,6 +220,7 @@ static const char contentSandboxRules[] = R"(
       (home-subpath "/Library/Input Methods")
       (home-subpath "/Library/Spelling")
       (home-subpath "/Library/Application Support/Adobe/CoreSync/plugins/livetype")
+      (home-subpath "/Library/Application Support/FontAgent")
 
       (subpath appdir-path)
 
