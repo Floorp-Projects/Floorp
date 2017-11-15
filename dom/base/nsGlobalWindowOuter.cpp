@@ -1308,25 +1308,19 @@ nsGlobalWindowOuter::IsBlackForCC(bool aTracingNeeded)
 nsresult
 nsGlobalWindowOuter::EnsureScriptEnvironment()
 {
-  nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-  if (!outer) {
-    NS_WARNING("No outer window available!");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (outer->GetWrapperPreserveColor()) {
+  if (GetWrapperPreserveColor()) {
     return NS_OK;
   }
 
-  NS_ASSERTION(!outer->GetCurrentInnerWindowInternal(),
+  NS_ASSERTION(!GetCurrentInnerWindowInternal(),
                "No cached wrapper, but we have an inner window?");
 
   // If this window is a [i]frame, don't bother GC'ing when the frame's context
   // is destroyed since a GC will happen when the frameset or host document is
   // destroyed anyway.
-  nsCOMPtr<nsIScriptContext> context = new nsJSContext(!IsFrame(), outer);
+  nsCOMPtr<nsIScriptContext> context = new nsJSContext(!IsFrame(), this);
 
-  NS_ASSERTION(!outer->mContext, "Will overwrite mContext!");
+  NS_ASSERTION(!mContext, "Will overwrite mContext!");
 
   // should probably assert the context is clean???
   context->WillInitializeContext();
@@ -1334,18 +1328,14 @@ nsGlobalWindowOuter::EnsureScriptEnvironment()
   nsresult rv = context->InitContext();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  outer->mContext = context;
+  mContext = context;
   return NS_OK;
 }
 
 nsIScriptContext *
 nsGlobalWindowOuter::GetScriptContext()
 {
-  nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-  if (!outer) {
-    return nullptr;
-  }
-  return outer->mContext;
+  return mContext;
 }
 
 JSObject *
@@ -2259,6 +2249,10 @@ nsGlobalWindowOuter::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
 void
 nsGlobalWindowOuter::UpdateParentTarget()
 {
+  // NOTE: This method is identical to
+  // nsGlobalWindowInner::UpdateParentTarget(). IF YOU UPDATE THIS METHOD,
+  // UPDATE THE OTHER ONE TOO!
+
   // Try to get our frame element's tab child global (its in-process message
   // manager).  If that fails, fall back to the chrome event handler's tab
   // child global, and if it doesn't have one, just use the chrome event
@@ -6398,23 +6392,14 @@ nsGlobalWindowOuter::NotifyWindowIDDestroyed(const char* aTopic)
 JSObject*
 nsGlobalWindowOuter::GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey)
 {
-  JS::Rooted<JSObject*> handler(RootingCx());
-  if (mCachedXBLPrototypeHandlers) {
-    mCachedXBLPrototypeHandlers->Get(aKey, handler.address());
-  }
-  return handler;
+  MOZ_CRASH("Virtual inner window only function");
 }
 
 void
 nsGlobalWindowOuter::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
                                               JS::Handle<JSObject*> aHandler)
 {
-  if (!mCachedXBLPrototypeHandlers) {
-    mCachedXBLPrototypeHandlers = MakeUnique<XBLPrototypeHandlerTable>();
-    PreserveWrapper(ToSupports(this));
-  }
-
-  mCachedXBLPrototypeHandlers->Put(aKey, aHandler);
+  MOZ_CRASH("Virtual inner window only function");
 }
 
 Element*
@@ -6599,10 +6584,7 @@ nsGlobalWindowOuter::RemoveEventListener(const nsAString& aType,
                                          nsIDOMEventListener* aListener,
                                          bool aUseCapture)
 {
-  if (RefPtr<EventListenerManager> elm = GetExistingListenerManager()) {
-    elm->RemoveEventListener(aType, aListener, aUseCapture);
-  }
-  return NS_OK;
+  FORWARD_TO_INNER(RemoveEventListener, (aType, aListener, aUseCapture), NS_OK);
 }
 
 NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsGlobalWindowOuter)
@@ -6619,20 +6601,9 @@ nsGlobalWindowOuter::AddEventListener(const nsAString& aType,
                                       bool aUseCapture, bool aWantsUntrusted,
                                       uint8_t aOptionalArgc)
 {
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  if (!aWantsUntrusted &&
-      (aOptionalArgc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
-    aWantsUntrusted = true;
-  }
-
-  EventListenerManager* manager = GetOrCreateListenerManager();
-  NS_ENSURE_STATE(manager);
-  manager->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
-  return NS_OK;
+  FORWARD_TO_INNER_CREATE(AddEventListener,
+                          (aType, aListener, aUseCapture, aWantsUntrusted, aOptionalArgc),
+                          NS_ERROR_UNEXPECTED);
 }
 
 void
@@ -6647,20 +6618,8 @@ nsGlobalWindowOuter::AddEventListener(const nsAString& aType,
     return;
   }
 
-  bool wantsUntrusted;
-  if (aWantsUntrusted.IsNull()) {
-    wantsUntrusted = !nsContentUtils::IsChromeDoc(mDoc);
-  } else {
-    wantsUntrusted = aWantsUntrusted.Value();
-  }
-
-  EventListenerManager* manager = GetOrCreateListenerManager();
-  if (!manager) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  manager->AddEventListener(aType, aListener, aOptions, wantsUntrusted);
+  FORWARD_TO_INNER_CREATE(AddEventListener,
+                          (aType, aListener, aOptions, aWantsUntrusted, aRv),);
 }
 
 NS_IMETHODIMP
@@ -7070,8 +7029,8 @@ nsGlobalWindowOuter::GetComputedStyleHelperOuter(Element& aElt,
 // nsGlobalWindowOuter::nsIInterfaceRequestor
 //*****************************************************************************
 
-NS_IMETHODIMP
-nsGlobalWindowOuter::GetInterface(const nsIID & aIID, void **aSink)
+nsresult
+nsGlobalWindowOuter::GetInterfaceInternal(const nsIID& aIID, void** aSink)
 {
   NS_ENSURE_ARG_POINTER(aSink);
   *aSink = nullptr;
@@ -7131,11 +7090,18 @@ nsGlobalWindowOuter::GetInterface(const nsIID & aIID, void **aSink)
     nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(outer->mDocShell));
     loadContext.forget(aSink);
   }
-  else {
-    return QueryInterface(aIID, aSink);
-  }
 
   return *aSink ? NS_OK : NS_ERROR_NO_INTERFACE;
+}
+
+NS_IMETHODIMP
+nsGlobalWindowOuter::GetInterface(const nsIID & aIID, void **aSink)
+{
+  nsresult rv = GetInterfaceInternal(aIID, aSink);
+  if (rv == NS_ERROR_NO_INTERFACE) {
+    return QueryInterface(aIID, aSink);
+  }
+  return rv;
 }
 
 nsresult
@@ -7924,23 +7890,6 @@ nsGlobalWindowOuter::ReportLargeAllocStatus()
                                   mDoc,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   message);
-}
-
-void
-nsGlobalWindowOuter::RedefineProperty(JSContext* aCx, const char* aPropName,
-                                 JS::Handle<JS::Value> aValue,
-                                 ErrorResult& aError)
-{
-  JS::Rooted<JSObject*> thisObj(aCx, GetWrapperPreserveColor());
-  if (!thisObj) {
-    aError.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  if (!JS_WrapObject(aCx, &thisObj) ||
-      !JS_DefineProperty(aCx, thisObj, aPropName, aValue, JSPROP_ENUMERATE)) {
-    aError.Throw(NS_ERROR_FAILURE);
-  }
 }
 
 #ifdef _WINDOWS_

@@ -823,26 +823,6 @@ public:
     return GetExtantDoc() && GetExtantDoc()->IsInSyncOperation();
   }
 
-protected:
-  // Web IDL helpers
-
-  // Redefine the property called aPropName on this window object to be a value
-  // property with the value aValue, much like we would do for a [Replaceable]
-  // property in IDL.
-  void RedefineProperty(JSContext* aCx, const char* aPropName,
-                        JS::Handle<JS::Value> aValue,
-                        mozilla::ErrorResult& aError);
-
-  // Implementation guts for our writable IDL attributes that are really
-  // supposed to be readonly replaceable.
-  typedef int32_t
-    (nsGlobalWindowOuter::*WindowCoordGetter)(mozilla::dom::CallerType aCallerType,
-                                              mozilla::ErrorResult&);
-  typedef void
-    (nsGlobalWindowOuter::*WindowCoordSetter)(int32_t,
-                                              mozilla::dom::CallerType aCallerType,
-                                              mozilla::ErrorResult&);
-  // And the implementations of WindowCoordGetter/WindowCoordSetter.
 public:
   int32_t GetInnerWidthOuter(mozilla::ErrorResult& aError);
 protected:
@@ -1177,6 +1157,8 @@ private:
     }
     mChromeFields.mGroupMessageManagers.Clear();
   }
+
+  nsresult GetInterfaceInternal(const nsIID& aIID, void** aSink);
 
 public:
   // Dispatch a runnable related to the global.
