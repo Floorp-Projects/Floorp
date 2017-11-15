@@ -11,8 +11,9 @@ loader.lazyImporter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
 const { Cc, Ci } = require("chrome");
-const { createFactory, Component, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { createFactory, Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
 const AddonsInstallError = createFactory(require("./InstallError"));
 

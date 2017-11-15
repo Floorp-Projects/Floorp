@@ -8,8 +8,8 @@
 
 loader.lazyImporter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-const { Component, DOM: dom } =
-  require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
 const { Ci } = require("chrome");
 
