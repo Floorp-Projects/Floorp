@@ -258,7 +258,7 @@ EXTRA_JS_MODULES.sessionstore += [
     'sessionstore/Utils.jsm',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'cocoa'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'cocoa', 'gtk3'):
     DEFINES['CAN_DRAW_IN_TITLEBAR'] = 1
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3'):
