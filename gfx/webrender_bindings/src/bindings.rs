@@ -1262,25 +1262,27 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         }
     }).collect();
 
-    let opacity = unsafe { opacity.as_ref() };
-    if let Some(opacity) = opacity {
+    let opacity_ref = unsafe { opacity.as_ref() };
+    if let Some(opacity) = opacity_ref {
         if *opacity < 1.0 {
             filters.push(FilterOp::Opacity(PropertyBinding::Value(*opacity)));
         }
-    } else {
-        if animation_id > 0 {
-            filters.push(FilterOp::Opacity(PropertyBinding::Binding(PropertyBindingKey::new(animation_id))));
-        }
     }
 
-    let transform = unsafe { transform.as_ref() };
-    let transform_binding = match animation_id {
-        0 => match transform {
-            Some(transform) => Some(PropertyBinding::Value(transform.clone())),
-            None => None,
-        },
-        _ => Some(PropertyBinding::Binding(PropertyBindingKey::new(animation_id))),
+    let transform_ref = unsafe { transform.as_ref() };
+    let mut transform_binding = match transform_ref {
+        Some(transform) => Some(PropertyBinding::Value(transform.clone())),
+        None => None,
     };
+
+    let anim = unsafe { animation.as_ref() };
+    if let Some(anim) = anim {
+        debug_assert!(anim.id > 0);
+        match anim.effect_type {
+            WrAnimationType::Opacity => filters.push(FilterOp::Opacity(PropertyBinding::Binding(PropertyBindingKey::new(anim.id)))),
+            WrAnimationType::Transform => transform_binding = Some(PropertyBinding::Binding(PropertyBindingKey::new(anim.id))),
+        }
+    }
 
     let perspective_ref = unsafe { perspective.as_ref() };
     let perspective = match perspective_ref {
