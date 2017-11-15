@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { DOM: dom, Component, PropTypes } = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   L10N,
   getSnapshotTitle,
