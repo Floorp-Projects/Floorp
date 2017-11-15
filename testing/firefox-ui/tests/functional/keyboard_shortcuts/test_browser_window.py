@@ -12,7 +12,7 @@ class TestBrowserWindowShortcuts(PuppeteerMixin, MarionetteTestCase):
     def test_addons_manager(self):
         # If an about:xyz page is visible, no new tab will be opened
         with self.marionette.using_context('content'):
-            self.marionette.navigate('about:')
+            self.marionette.navigate('about:about')
 
         # TODO: To be moved to the upcoming add-ons library
         def opener(tab):

@@ -40,7 +40,7 @@
           children: [
             {
               role: ROLE_DOCUMENT,
-              name: aURL == "about:" ? "About:" : aURL
+              name: aURL == "about:license" ? "Licenses" : aURL
             }
           ]
         });
@@ -53,7 +53,7 @@
 
     function doTests() {
       const gQueue = new eventQueue();
-      gQueue.push(new changeIframeSrc("iframe", "about:"));
+      gQueue.push(new changeIframeSrc("iframe", "about:license"));
       gQueue.push(new changeIframeSrc("iframe", "about:buildconfig"));
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

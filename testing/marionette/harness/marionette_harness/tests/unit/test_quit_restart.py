@@ -78,8 +78,8 @@ class TestQuitRestart(MarionetteTestCase):
         # Use a preference to check that the restart was successful. If its
         # value has not been forced, a restart will cause a reset of it.
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
-                            "about:")
-        self.marionette.set_pref("startup.homepage_welcome_url", "about:")
+                            "about:about")
+        self.marionette.set_pref("startup.homepage_welcome_url", "about:about")
 
     def tearDown(self):
         # Ensure to restart a session if none exist for clean-up
@@ -116,7 +116,7 @@ class TestQuitRestart(MarionetteTestCase):
         # A forced restart will cause a new process id
         self.assertNotEqual(self.marionette.process_id, self.pid)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
-                            "about:")
+                            "about:about")
 
     def test_force_restart(self):
         self.marionette.restart()
@@ -125,7 +125,7 @@ class TestQuitRestart(MarionetteTestCase):
         # A forced restart will cause a new process id
         self.assertNotEqual(self.marionette.process_id, self.pid)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
-                            "about:")
+                            "about:about")
 
     def test_force_clean_quit(self):
         self.marionette.quit(clean=True)
@@ -138,7 +138,7 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertNotEqual(self.marionette.profile, self.profile)
         self.assertNotEqual(self.marionette.session_id, self.session_id)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
-                            "about:")
+                            "about:about")
 
     def test_force_quit(self):
         self.marionette.quit()
@@ -151,7 +151,7 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertEqual(self.marionette.profile, self.profile)
         self.assertNotEqual(self.marionette.session_id, self.session_id)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
-                            "about:")
+                            "about:about")
 
     @skip("Bug 1363368 - Wrong window handles after in_app restarts")
     def test_no_in_app_clean_restart(self):
@@ -175,7 +175,7 @@ class TestQuitRestart(MarionetteTestCase):
             self.assertNotEqual(self.marionette.process_id, self.pid)
 
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
-                            "about:")
+                            "about:about")
 
     @skip("Bug 1363368 - Wrong window handles after in_app restarts")
     def test_in_app_restart_with_callback(self):
@@ -195,7 +195,7 @@ class TestQuitRestart(MarionetteTestCase):
             self.assertNotEqual(self.marionette.process_id, self.pid)
 
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
-                            "about:")
+                            "about:about")
 
     def test_in_app_restart_safe_mode(self):
         if self.marionette.session_capabilities["platformName"] != "linux":
@@ -255,7 +255,7 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertEqual(self.marionette.profile, self.profile)
         self.assertNotEqual(self.marionette.session_id, self.session_id)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
-                            "about:")
+                            "about:about")
 
     @skip("Bug 1363368 - Wrong window handles after in_app restarts")
     def test_in_app_quit_with_callback(self):
@@ -271,7 +271,7 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertEqual(self.marionette.profile, self.profile)
         self.assertNotEqual(self.marionette.session_id, self.session_id)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
-                            "about:")
+                            "about:about")
 
     def test_in_app_quit_with_callback_missing_shutdown(self):
         try:
