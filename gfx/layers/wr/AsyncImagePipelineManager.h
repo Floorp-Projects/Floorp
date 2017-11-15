@@ -120,6 +120,23 @@ private:
 
   struct AsyncImagePipeline {
     AsyncImagePipeline();
+    void Update(const LayoutDeviceRect& aScBounds,
+                const gfx::Matrix4x4& aScTransform,
+                const gfx::MaybeIntSize& aScaleToSize,
+                const wr::ImageRendering& aFilter,
+                const wr::MixBlendMode& aMixBlendMode)
+    {
+      mIsChanged |= !mScBounds.IsEqualEdges(aScBounds) ||
+                    mScTransform != aScTransform ||
+                    mScaleToSize != aScaleToSize ||
+                    mFilter != aFilter ||
+                    mMixBlendMode != aMixBlendMode;
+      mScBounds = aScBounds;
+      mScTransform = aScTransform;
+      mScaleToSize = aScaleToSize;
+      mFilter = aFilter;
+      mMixBlendMode = aMixBlendMode;
+    }
 
     bool mInitialised;
     bool mIsChanged;
