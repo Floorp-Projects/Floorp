@@ -124,14 +124,13 @@ class JSFunction : public js::NativeObject
                                           used by the JIT; use the accessor! */
         } native;
         struct {
+            JSObject* env_;            /* environment for new activations */
             union {
                 JSScript* script_;     /* interpreted bytecode descriptor or
                                           null; use the accessor! */
                 js::LazyScript* lazy_; /* lazily compiled script, or nullptr */
             } s;
-            JSObject* env_;            /* environment for new activations */
         } scripted;
-        void* nativeOrScript_;
     } u;
     js::GCPtrAtom atom_; /* name for diagnostics and decompiling */
 
@@ -412,10 +411,10 @@ class JSFunction : public js::NativeObject
     }
 
   public:
-    static inline size_t offsetOfNargs() { return offsetof(JSFunction, nargs_); }
-    static inline size_t offsetOfFlags() { return offsetof(JSFunction, flags_); }
-    static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.scripted.env_); }
-    static inline size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
+    static constexpr size_t offsetOfNargs() { return offsetof(JSFunction, nargs_); }
+    static constexpr size_t offsetOfFlags() { return offsetof(JSFunction, flags_); }
+    static size_t offsetOfEnvironment() { return offsetof(JSFunction, u.scripted.env_); }
+    static size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
     static bool createScriptForLazilyInterpretedFunction(JSContext* cx, js::HandleFunction fun);
     void maybeRelazify(JSRuntime* rt);
@@ -587,15 +586,21 @@ class JSFunction : public js::NativeObject
 
     bool isDerivedClassConstructor();
 
-    static unsigned offsetOfNativeOrScript() {
-        static_assert(offsetof(U, native.func_) == offsetof(U, scripted.s.script_),
-                      "native and script pointers must be in the same spot "
-                      "for offsetOfNativeOrScript() have any sense");
-        static_assert(offsetof(U, native.func_) == offsetof(U, nativeOrScript_),
-                      "U::nativeOrScript must be at the same offset as "
-                      "native");
-
-        return offsetof(JSFunction, u.nativeOrScript_);
+    static unsigned offsetOfNative() {
+        return offsetof(JSFunction, u.native.func_);
+    }
+    static unsigned offsetOfScript() {
+        return offsetof(JSFunction, u.scripted.s.script_);
+    }
+    static unsigned offsetOfNativeOrEnv() {
+        static_assert(offsetof(U, native.func_) == offsetof(U, scripted.env_),
+                      "U.native.func_ must be at the same offset as U.scripted.env_");
+        return offsetOfNative();
+    }
+    static unsigned offsetOfScriptOrLazyScript() {
+        static_assert(offsetof(U, scripted.s.script_) == offsetof(U, scripted.s.lazy_),
+                      "U.scripted.s.script_ must be at the same offset as lazy_");
+        return offsetof(JSFunction, u.scripted.s.script_);
     }
 
     static unsigned offsetOfJitInfo() {

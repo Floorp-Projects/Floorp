@@ -2755,7 +2755,7 @@ ICCallStubCompiler::pushSpreadCallArguments(MacroAssembler& masm,
 
 Register
 ICCallStubCompiler::guardFunApply(MacroAssembler& masm, AllocatableGeneralRegisterSet regs,
-                                  Register argcReg, bool checkNative, FunApplyThing applyThing,
+                                  Register argcReg, FunApplyThing applyThing,
                                   Label* failure)
 {
     // Ensure argc == 2
@@ -2845,7 +2845,7 @@ ICCallStubCompiler::guardFunApply(MacroAssembler& masm, AllocatableGeneralRegist
 
     masm.branchTestObjClass(Assembler::NotEqual, callee, regs.getAny(), &JSFunction::class_,
                             failure);
-    masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
+    masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrEnv()), callee);
 
     masm.branchPtr(Assembler::NotEqual, callee, ImmPtr(fun_apply), failure);
 
@@ -2862,17 +2862,13 @@ ICCallStubCompiler::guardFunApply(MacroAssembler& masm, AllocatableGeneralRegist
     masm.branchTestObjClass(Assembler::NotEqual, target, regs.getAny(), &JSFunction::class_,
                             failure);
 
-    if (checkNative) {
-        masm.branchIfInterpreted(target, failure);
-    } else {
-        Register temp = regs.takeAny();
-        masm.branchIfFunctionHasNoScript(target, failure);
-        masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor,
-                                callee, temp, failure);
-        masm.loadPtr(Address(target, JSFunction::offsetOfNativeOrScript()), temp);
-        masm.loadBaselineOrIonRaw(temp, temp, failure);
-        regs.add(temp);
-    }
+    Register temp = regs.takeAny();
+    masm.branchIfFunctionHasNoScript(target, failure);
+    masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor,
+                            callee, temp, failure);
+    masm.loadPtr(Address(target, JSFunction::offsetOfScript()), temp);
+    masm.loadBaselineOrIonRaw(temp, temp, failure);
+    regs.add(temp);
     return target;
 }
 
@@ -3126,7 +3122,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
     }
 
     // Load the JSScript.
-    masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
+    masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), callee);
 
     // Load the start of the target JitCode.
     Register code;
@@ -3207,9 +3203,9 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
         masm.loadPtr(Address(masm.getStackPointer(), STUB_FRAME_SAVED_STUB_OFFSET), ICStubReg);
 
         // Reload callee script. Note that a GC triggered by CreateThis may
-        // have destroyed the callee BaselineScript and IonScript. CreateThis is
-        // safely repeatable though, so in this case we just leave the stub frame
-        // and jump to the next stub.
+        // have destroyed the callee BaselineScript and IonScript. CreateThis
+        // is safely repeatable though, so in this case we just leave the stub
+        // frame and jump to the next stub.
 
         // Just need to load the script now.
         if (isSpread_) {
@@ -3224,7 +3220,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
         callee = masm.extractObject(R0, ExtractTemp0);
         regs.add(R0);
         regs.takeUnchecked(callee);
-        masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
+        masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), callee);
 
         code = regs.takeAny();
         masm.loadBaselineOrIonRaw(callee, code, &failureLeaveStubFrame);
@@ -3379,7 +3375,7 @@ ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm)
                                 &JSFunction::class_, &failureRestoreArgc);
 
         // Ensure that callee's function impl is the native intrinsic_StringSplitString.
-        masm.loadPtr(Address(calleeObj, JSFunction::offsetOfNativeOrScript()), scratchReg);
+        masm.loadPtr(Address(calleeObj, JSFunction::offsetOfNativeOrEnv()), scratchReg);
         masm.branchPtr(Assembler::NotEqual, scratchReg, ImmPtr(js::intrinsic_StringSplitString),
                        &failureRestoreArgc);
 
@@ -3573,7 +3569,7 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
         masm.loadPtr(Address(callee, JSFunction::offsetOfJitInfo()), callee);
         masm.callWithABI(Address(callee, JSJitInfo::offsetOfIgnoresReturnValueNative()));
     } else {
-        masm.callWithABI(Address(callee, JSFunction::offsetOfNativeOrScript()));
+        masm.callWithABI(Address(callee, JSFunction::offsetOfNative()));
     }
 #endif
 
@@ -3694,8 +3690,7 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler& masm)
     // Validate inputs
     //
 
-    Register target = guardFunApply(masm, regs, argcReg, /*checkNative=*/false,
-                                    FunApply_Array, &failure);
+    Register target = guardFunApply(masm, regs, argcReg, FunApply_Array, &failure);
     if (regs.has(target)) {
         regs.take(target);
     } else {
@@ -3748,7 +3743,7 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Load nargs into scratch for underflow check, and then load jitcode pointer into target.
     masm.load16ZeroExtend(Address(target, JSFunction::offsetOfNargs()), scratch);
-    masm.loadPtr(Address(target, JSFunction::offsetOfNativeOrScript()), target);
+    masm.loadPtr(Address(target, JSFunction::offsetOfScript()), target);
     masm.loadBaselineOrIonRaw(target, target, nullptr);
 
     // Handle arguments underflow.
@@ -3790,8 +3785,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler& masm)
     // Validate inputs
     //
 
-    Register target = guardFunApply(masm, regs, argcReg, /*checkNative=*/false,
-                                    FunApply_MagicArgs, &failure);
+    Register target = guardFunApply(masm, regs, argcReg, FunApply_MagicArgs, &failure);
     if (regs.has(target)) {
         regs.take(target);
     } else {
@@ -3838,7 +3832,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Load nargs into scratch for underflow check, and then load jitcode pointer into target.
     masm.load16ZeroExtend(Address(target, JSFunction::offsetOfNargs()), scratch);
-    masm.loadPtr(Address(target, JSFunction::offsetOfNativeOrScript()), target);
+    masm.loadPtr(Address(target, JSFunction::offsetOfScript()), target);
     masm.loadBaselineOrIonRaw(target, target, nullptr);
 
     // Handle arguments underflow.
@@ -3889,7 +3883,7 @@ ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler& masm)
     Register callee = masm.extractObject(R1, ExtractTemp0);
     masm.branchTestObjClass(Assembler::NotEqual, callee, regs.getAny(), &JSFunction::class_,
                             &failure);
-    masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
+    masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrEnv()), callee);
     masm.branchPtr(Assembler::NotEqual, callee, ImmPtr(fun_call), &failure);
 
     // Ensure |this| is a scripted function with JIT code.
@@ -3904,7 +3898,7 @@ ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchIfFunctionHasNoScript(callee, &failure);
     masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor,
                             callee, regs.getAny(), &failure);
-    masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
+    masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), callee);
 
     // Load the start of the target JitCode.
     Register code = regs.takeAny();
