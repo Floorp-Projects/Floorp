@@ -15,10 +15,6 @@ LOCAL_INCLUDES += [
     'binding/include',
 ]
 
-TEST_DIRS += [
-    'gtest',
-]
-
 FINAL_LIBRARY = 'xul'
 
 # Suppress warnings in third-party code.
