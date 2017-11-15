@@ -9,15 +9,28 @@
 
 BEGIN_WORKERS_NAMESPACE
 
+namespace {
+
+void
+AssertOnOwningThread(void* aThread)
+{
+  if (MOZ_UNLIKELY(aThread != GetCurrentVirtualThread())) {
+    MOZ_CRASH_UNSAFE_OOL("WorkerHolder on the wrong thread.");
+  }
+}
+
+} // anonymous
+
 WorkerHolder::WorkerHolder(Behavior aBehavior)
   : mWorkerPrivate(nullptr)
   , mBehavior(aBehavior)
+  , mThread(GetCurrentVirtualThread())
 {
 }
 
 WorkerHolder::~WorkerHolder()
 {
-  NS_ASSERT_OWNINGTHREAD(WorkerHolder);
+  AssertOnOwningThread(mThread);
   ReleaseWorkerInternal();
   MOZ_ASSERT(mWorkerPrivate == nullptr);
 }
@@ -25,7 +38,7 @@ WorkerHolder::~WorkerHolder()
 bool
 WorkerHolder::HoldWorker(WorkerPrivate* aWorkerPrivate, Status aFailStatus)
 {
-  NS_ASSERT_OWNINGTHREAD(WorkerHolder);
+  AssertOnOwningThread(mThread);
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -40,7 +53,7 @@ WorkerHolder::HoldWorker(WorkerPrivate* aWorkerPrivate, Status aFailStatus)
 void
 WorkerHolder::ReleaseWorker()
 {
-  NS_ASSERT_OWNINGTHREAD(WorkerHolder);
+  AssertOnOwningThread(mThread);
   MOZ_ASSERT(mWorkerPrivate);
 
   ReleaseWorkerInternal();
@@ -55,7 +68,7 @@ WorkerHolder::GetBehavior() const
 void
 WorkerHolder::ReleaseWorkerInternal()
 {
-  NS_ASSERT_OWNINGTHREAD(WorkerHolder);
+  AssertOnOwningThread(mThread);
 
   if (mWorkerPrivate) {
     mWorkerPrivate->AssertIsOnWorkerThread();
