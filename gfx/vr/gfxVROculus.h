@@ -27,6 +27,8 @@ struct VertexShaderConstants;
 struct PixelShaderConstants;
 }
 namespace gfx {
+class VRThread;
+
 namespace impl {
 
 enum class OculusControllerAxisType : uint16_t {
@@ -164,7 +166,7 @@ private:
                   OculusControllerAxisType::NumVRControllerAxisType)];
   float mIndexTrigger;
   float mHandTrigger;
-  nsCOMPtr<nsIThread> mVibrateThread;
+  RefPtr<VRThread> mVibrateThread;
   Atomic<bool> mIsVibrateStopped;
 };
 
