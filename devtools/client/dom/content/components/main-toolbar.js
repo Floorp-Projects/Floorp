@@ -6,44 +6,49 @@
 "use strict";
 
 // React
-const React = require("devtools/client/shared/vendor/react");
-const { l10n } = require("../utils");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const { l10n } = require("../utils");
 // Reps
 const { createFactories } = require("devtools/client/shared/react-utils");
+
 const { Toolbar, ToolbarButton } = createFactories(require("devtools/client/jsonview/components/reps/Toolbar"));
 
 // DOM Panel
-const SearchBox = React.createFactory(require("devtools/client/shared/components/SearchBox"));
-
+const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
 // Actions
 const { fetchProperties } = require("../actions/grips");
-const { setVisibilityFilter } = require("../actions/filter");
 
-// Shortcuts
-const PropTypes = React.PropTypes;
+const { setVisibilityFilter } = require("../actions/filter");
 
 /**
  * This template is responsible for rendering a toolbar
  * within the 'Headers' panel.
  */
-var MainToolbar = React.createClass({
-  displayName: "MainToolbar",
+class MainToolbar extends Component {
+  static get propTypes() {
+    return {
+      object: PropTypes.any.isRequired,
+      dispatch: PropTypes.func.isRequired,
+    };
+  }
 
-  propTypes: {
-    object: PropTypes.any.isRequired,
-    dispatch: PropTypes.func.isRequired,
-  },
+  constructor(props) {
+    super(props);
+    this.onRefresh = this.onRefresh.bind(this);
+    this.onSearch = this.onSearch.bind(this);
+  }
 
-  onRefresh: function () {
+  onRefresh() {
     this.props.dispatch(fetchProperties(this.props.object));
-  },
+  }
 
-  onSearch: function (value) {
+  onSearch(value) {
     this.props.dispatch(setVisibilityFilter(value));
-  },
+  }
 
-  render: function () {
+  render() {
     return (
       Toolbar({},
         ToolbarButton({
@@ -61,7 +66,7 @@ var MainToolbar = React.createClass({
       )
     );
   }
-});
+}
 
 // Exports from this module
 module.exports = MainToolbar;

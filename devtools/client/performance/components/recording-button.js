@@ -3,18 +3,20 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {L10N} = require("devtools/client/performance/modules/global");
-const {DOM, createClass, PropTypes} = require("devtools/client/shared/vendor/react");
-const {button} = DOM;
+const { L10N } = require("devtools/client/performance/modules/global");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const { button } = dom;
 
-module.exports = createClass({
-  displayName: "Recording Button",
-
-  propTypes: {
-    onRecordButtonClick: PropTypes.func.isRequired,
-    isRecording: PropTypes.bool,
-    isLocked: PropTypes.bool
-  },
+class RecordingButton extends Component {
+  static get propTypes() {
+    return {
+      onRecordButtonClick: PropTypes.func.isRequired,
+      isRecording: PropTypes.bool,
+      isLocked: PropTypes.bool
+    };
+  }
 
   render() {
     let {
@@ -40,4 +42,6 @@ module.exports = createClass({
       isRecording ? L10N.getStr("recordings.stop") : L10N.getStr("recordings.start")
     );
   }
-});
+}
+
+module.exports = RecordingButton;

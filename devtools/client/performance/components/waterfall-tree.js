@@ -3,7 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Tree = createFactory(require("devtools/client/shared/components/Tree"));
 const WaterfallTreeRow = createFactory(require("./waterfall-tree-row"));
 
@@ -38,30 +39,43 @@ function isMarkerInRange(e, start, end) {
   );
 }
 
-const WaterfallTree = createClass({
-  displayName: "WaterfallTree",
-
-  propTypes: {
-    marker: PropTypes.object.isRequired,
-    startTime: PropTypes.number.isRequired,
-    endTime: PropTypes.number.isRequired,
-    dataScale: PropTypes.number.isRequired,
-    sidebarWidth: PropTypes.number.isRequired,
-    waterfallWidth: PropTypes.number.isRequired,
-    onFocus: PropTypes.func,
-  },
-
-  getInitialState() {
+class WaterfallTree extends Component {
+  static get propTypes() {
     return {
+      marker: PropTypes.object.isRequired,
+      startTime: PropTypes.number.isRequired,
+      endTime: PropTypes.number.isRequired,
+      dataScale: PropTypes.number.isRequired,
+      sidebarWidth: PropTypes.number.isRequired,
+      waterfallWidth: PropTypes.number.isRequired,
+      onFocus: PropTypes.func,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       focused: null,
       expanded: new Set()
     };
-  },
+
+    this._getRoots = this._getRoots.bind(this);
+    this._getParent = this._getParent.bind(this);
+    this._getChildren = this._getChildren.bind(this);
+    this._getKey = this._getKey.bind(this);
+    this._isExpanded = this._isExpanded.bind(this);
+    this._onExpand = this._onExpand.bind(this);
+    this._onCollapse = this._onCollapse.bind(this);
+    this._onFocus = this._onFocus.bind(this);
+    this._filter = this._filter.bind(this);
+    this._renderItem = this._renderItem.bind(this);
+  }
 
   _getRoots(node) {
     let roots = this.props.marker.submarkers || [];
     return roots.filter(this._filter);
-  },
+  }
 
   /**
    * Find the parent node of 'node' with a depth-first search of the marker tree
@@ -90,20 +104,20 @@ const WaterfallTree = createClass({
     // We are interested only in parent markers that are rendered,
     // which rootMarker is not. Return null if the parent is rootMarker.
     return parent !== rootMarker ? parent : null;
-  },
+  }
 
   _getChildren(node) {
     let submarkers = node.submarkers || [];
     return submarkers.filter(this._filter);
-  },
+  }
 
   _getKey(node) {
     return `marker-${node.index}`;
-  },
+  }
 
   _isExpanded(node) {
     return this.state.expanded.has(node);
-  },
+  }
 
   _onExpand(node) {
     this.setState(state => {
@@ -111,7 +125,7 @@ const WaterfallTree = createClass({
       expanded.add(node);
       return { expanded };
     });
-  },
+  }
 
   _onCollapse(node) {
     this.setState(state => {
@@ -119,19 +133,19 @@ const WaterfallTree = createClass({
       expanded.delete(node);
       return { expanded };
     });
-  },
+  }
 
   _onFocus(node) {
     this.setState({ focused: node });
     if (this.props.onFocus) {
       this.props.onFocus(node);
     }
-  },
+  }
 
   _filter(node) {
     let { startTime, endTime } = this.props;
     return isMarkerInRange(node, startTime, endTime);
-  },
+  }
 
   _renderItem(marker, level, focused, arrow, expanded) {
     let { startTime, dataScale, sidebarWidth } = this.props;
@@ -145,7 +159,7 @@ const WaterfallTree = createClass({
       dataScale,
       sidebarWidth
     });
-  },
+  }
 
   render() {
     return Tree({
@@ -162,6 +176,6 @@ const WaterfallTree = createClass({
       itemHeight: WATERFALL_TREE_ROW_HEIGHT
     });
   }
-});
+}
 
 module.exports = WaterfallTree;
