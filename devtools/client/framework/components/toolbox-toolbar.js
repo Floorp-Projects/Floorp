@@ -3,8 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {DOM, Component, createFactory, PropTypes} = require("devtools/client/shared/vendor/react");
-const {div, button} = DOM;
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {div, button} = dom;
 
 const ToolboxTab = createFactory(require("devtools/client/framework/components/toolbox-tab"));
 const ToolboxTabs = createFactory(require("devtools/client/framework/components/toolbox-tabs"));
