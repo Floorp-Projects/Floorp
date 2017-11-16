@@ -122,27 +122,9 @@ const roundTo = (value, exp) => {
   return +(value[0] + "e" + (value[1] ? (+value[1] + exp) : exp));
 };
 
-/**
- * Scale a given x/y coordinate pair by translating, multiplying by the given factor,
- * then translating back.
- * @param {Number} x the x coordinate
- * @param {Number} y the y coordinate
- * @param {Number} transX the amount to translate the x coord by
- * @param {Number} transY the amount ot translate the y coord by
- * @param {Number} scale the scaling factor
- * @param {String} axis the axis to scale on. "x", "y", or "xy" for both.
- * @returns {Array} of the form [newX, newY], containing the coord pair after scaling.
- */
-const scalePoint = (x, y, transX, transY, scale, axis = "xy") => {
-  let newX = (axis === "y") ? x : (x - transX) * scale + transX;
-  let newY = (axis === "x") ? y : (y - transY) * scale + transY;
-  return [newX, newY];
-};
-
 exports.getDistance = getDistance;
 exports.clickedOnEllipseEdge = clickedOnEllipseEdge;
 exports.distanceToLine = distanceToLine;
 exports.projection = projection;
 exports.clickedOnPoint = clickedOnPoint;
 exports.roundTo = roundTo;
-exports.scalePoint = scalePoint;
