@@ -34,8 +34,6 @@ ASTDEF(AST_ARRAY_EXPR,            "ArrayExpression",                "arrayExpres
 ASTDEF(AST_SPREAD_EXPR,           "SpreadExpression",               "spreadExpression")
 ASTDEF(AST_OBJECT_EXPR,           "ObjectExpression",               "objectExpression")
 ASTDEF(AST_THIS_EXPR,             "ThisExpression",                 "thisExpression")
-ASTDEF(AST_COMP_EXPR,             "ComprehensionExpression",        "comprehensionExpression")
-ASTDEF(AST_GENERATOR_EXPR,        "GeneratorExpression",            "generatorExpression")
 ASTDEF(AST_YIELD_EXPR,            "YieldExpression",                "yieldExpression")
 ASTDEF(AST_CLASS_EXPR,            "ClassExpression",                "classExpression")
 ASTDEF(AST_METAPROPERTY,          "MetaProperty",                   "metaProperty")
@@ -68,8 +66,6 @@ ASTDEF(AST_EXPORT_BATCH_SPEC,     "ExportBatchSpecifier",           "exportBatch
 
 ASTDEF(AST_CASE,                  "SwitchCase",                     "switchCase")
 ASTDEF(AST_CATCH,                 "CatchClause",                    "catchClause")
-ASTDEF(AST_COMP_BLOCK,            "ComprehensionBlock",             "comprehensionBlock")
-ASTDEF(AST_COMP_IF,               "ComprehensionIf",                "comprehensionIf")
 
 ASTDEF(AST_ARRAY_PATT,            "ArrayPattern",                   "arrayPattern")
 ASTDEF(AST_OBJECT_PATT,           "ObjectPattern",                  "objectPattern")
