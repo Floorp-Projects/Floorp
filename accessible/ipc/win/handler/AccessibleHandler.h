@@ -36,6 +36,7 @@ import NEWEST_IA2_IDL;
 
 #include "Accessible2_3.h"
 #include "AccessibleHyperlink.h"
+#include "AccessibleTableCell.h"
 #include "Handler.h"
 #include "mozilla/mscom/StructStream.h"
 #include "mozilla/UniquePtr.h"
@@ -51,6 +52,7 @@ class AccessibleHandler final : public mscom::Handler
                               , public IServiceProvider
                               , public IProvideClassInfo
                               , public IAccessibleHyperlink
+                              , public IAccessibleTableCell
 {
 public:
   static HRESULT Create(IUnknown* aOuter, REFIID aIid, void** aOutInterface);
@@ -173,6 +175,21 @@ public:
   STDMETHODIMP get_endIndex(long* index) override;
   STDMETHODIMP get_valid(boolean* valid) override;
 
+  // IAccessibleTableCell
+  STDMETHODIMP get_columnExtent(long* nColumnsSpanned) override;
+  STDMETHODIMP get_columnHeaderCells(IUnknown*** cellAccessibles,
+                                     long* nColumnHeaderCells) override;
+  STDMETHODIMP get_columnIndex(long* columnIndex) override;
+  STDMETHODIMP get_rowExtent(long* nRowsSpanned) override;
+  STDMETHODIMP get_rowHeaderCells(IUnknown*** cellAccessibles,
+                                  long* nRowHeaderCells) override;
+  STDMETHODIMP get_rowIndex(long* rowIndex) override;
+  STDMETHODIMP get_isSelected(boolean* isSelected) override;
+  STDMETHODIMP get_rowColumnExtents(long* row, long* column,
+                                    long* rowExtents, long* columnExtents,
+                                    boolean* isSelected) override;
+  STDMETHODIMP get_table(IUnknown** table) override;
+
 private:
   AccessibleHandler(IUnknown* aOuter, HRESULT* aResult);
   virtual ~AccessibleHandler();
@@ -180,6 +197,7 @@ private:
   HRESULT ResolveIA2();
   HRESULT ResolveIDispatch();
   HRESULT ResolveIAHyperlink();
+  HRESULT ResolveIATableCell();
   HRESULT MaybeUpdateCachedData();
 
   RefPtr<IUnknown>                  mDispatchUnk;
@@ -206,6 +224,7 @@ private:
   NEWEST_IA2_INTERFACE*             mIA2PassThru;      // weak
   IServiceProvider*                 mServProvPassThru; // weak
   IAccessibleHyperlink*             mIAHyperlinkPassThru; // weak
+  IAccessibleTableCell*             mIATableCellPassThru; // weak
   IA2Payload                        mCachedData;
   UniquePtr<mscom::StructToStream>  mSerializer;
   uint32_t                          mCacheGen;
