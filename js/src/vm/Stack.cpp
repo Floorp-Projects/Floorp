@@ -14,7 +14,6 @@
 #include "jit/BaselineFrame.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitCompartment.h"
-#include "js/GCAPI.h"
 #include "vm/Debugger.h"
 #include "vm/Opcodes.h"
 

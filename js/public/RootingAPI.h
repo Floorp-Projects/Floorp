@@ -19,7 +19,6 @@
 #include "jspubtd.h"
 
 #include "js/GCAnnotations.h"
-#include "js/GCAPI.h"
 #include "js/GCPolicyAPI.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
