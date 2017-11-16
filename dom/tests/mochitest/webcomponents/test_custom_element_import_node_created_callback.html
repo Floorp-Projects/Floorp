@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1093680
+-->
+<head>
+  <title>Test created callback order for imported custom element.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<template id="template"><x-foo><span></span></x-foo></template>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1093680">Bug 1093680</a>
+<script>
+
+var fooProtoCreatedCallbackCalled = false;
+var fooProto = Object.create(HTMLElement.prototype);
+fooProto.createdCallback = function() {
+  ok(this.firstElementChild, "When the created callback is called, the element should already have a child because the callback should only be called after cloning all the contents.");
+  fooProtoCreatedCallbackCalled = true;
+};
+
+document.registerElement("x-foo", { prototype: fooProto });
+
+var template = document.getElementById("template");
+
+// Importing node will implicityly clone the conent in the main document.
+var adoptedFoo = document.importNode(template.content, true);
+
+ok(fooProtoCreatedCallbackCalled, "Created callback should be called after importing custom element into document");
+
+</script>
+</body>
+</html>

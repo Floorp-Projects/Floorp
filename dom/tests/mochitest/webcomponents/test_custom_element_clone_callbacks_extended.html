@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1081039
+-->
+<head>
+  <title>Test callbacks for cloned extended custom elements.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1081039">Bug 1081039</a>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+// Test to make sure created callback is called on clones created after
+// registering the custom element.
+
+var count = 0;
+var p = Object.create(HTMLButtonElement.prototype);
+p.createdCallback = function() { // should be called by createElement and cloneNode
+  is(this.__proto__, p, "Correct prototype should be set on custom elements.");
+
+  if (++count == 2) {
+    SimpleTest.finish();
+  }
+};
+
+document.registerElement("x-foo", { prototype: p, extends: "button" });
+var foo = document.createElement("button", {is: "x-foo"});
+is(foo.getAttribute("is"), "x-foo");
+
+var fooClone = foo.cloneNode(true);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
