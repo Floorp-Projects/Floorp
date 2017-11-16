@@ -67,6 +67,7 @@ AccessibleHandler::AccessibleHandler(IUnknown* aOuter, HRESULT* aResult)
   , mIA2PassThru(nullptr)
   , mServProvPassThru(nullptr)
   , mIAHyperlinkPassThru(nullptr)
+  , mIATableCellPassThru(nullptr)
   , mCachedData()
   , mCacheGen(0)
 {
@@ -129,6 +130,29 @@ AccessibleHandler::ResolveIAHyperlink()
     // mIAHyperlinkPassThru is a weak reference
     // (see comments in AccesssibleHandler.h)
     mIAHyperlinkPassThru->Release();
+  }
+
+  return hr;
+}
+
+HRESULT
+AccessibleHandler::ResolveIATableCell()
+{
+  if (mIATableCellPassThru) {
+    return S_OK;
+  }
+
+  RefPtr<IUnknown> proxy(GetProxy());
+  if (!proxy) {
+    return E_UNEXPECTED;
+  }
+
+  HRESULT hr = proxy->QueryInterface(IID_IAccessibleTableCell,
+    reinterpret_cast<void**>(&mIATableCellPassThru));
+  if (SUCCEEDED(hr)) {
+    // mIATableCellPassThru is a weak reference
+    // (see comments in AccesssibleHandler.h)
+    mIATableCellPassThru->Release();
   }
 
   return hr;
@@ -244,6 +268,13 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
     RefPtr<IAccessibleHyperlink> iaLink(
       static_cast<IAccessibleHyperlink*>(this));
     iaLink.forget(aOutInterface);
+    return S_OK;
+  }
+
+  if (aIid == IID_IAccessibleTableCell) {
+    RefPtr<IAccessibleTableCell> iaCell(
+      static_cast<IAccessibleTableCell*>(this));
+    iaCell.forget(aOutInterface);
     return S_OK;
   }
 
@@ -1316,6 +1347,172 @@ AccessibleHandler::get_valid(boolean* valid)
     return hr;
   }
   return mIAHyperlinkPassThru->get_valid(valid);
+}
+
+/*** IAccessibleTableCell ***/
+
+HRESULT
+AccessibleHandler::get_columnExtent(long* nColumnsSpanned)
+{
+  if (!nColumnsSpanned) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_columnExtent(nColumnsSpanned);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mColumnExtent, *nColumnsSpanned);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_columnHeaderCells(IUnknown*** cellAccessibles,
+                                     long* nColumnHeaderCells)
+{
+  HRESULT hr = ResolveIATableCell();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIATableCellPassThru->get_columnHeaderCells(cellAccessibles,
+             nColumnHeaderCells);
+}
+
+HRESULT
+AccessibleHandler::get_columnIndex(long* columnIndex)
+{
+  if (!columnIndex) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_columnIndex(columnIndex);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mColumnIndex, *columnIndex);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_rowExtent(long* nRowsSpanned)
+{
+  if (!nRowsSpanned) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_rowExtent(nRowsSpanned);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mRowExtent, *nRowsSpanned);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_rowHeaderCells(IUnknown*** cellAccessibles,
+                                  long* nRowHeaderCells)
+{
+  HRESULT hr = ResolveIATableCell();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIATableCellPassThru->get_rowHeaderCells(cellAccessibles,
+             nRowHeaderCells);
+}
+
+HRESULT
+AccessibleHandler::get_rowIndex(long* rowIndex)
+{
+  if (!rowIndex) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_rowIndex(rowIndex);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mRowIndex, *rowIndex);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_isSelected(boolean* isSelected)
+{
+  if (!isSelected) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_isSelected(isSelected);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mCellIsSelected, *isSelected);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_rowColumnExtents(long* row, long* column,
+                                     long* rowExtents, long* columnExtents,
+                                     boolean* isSelected)
+{
+  if (!row || !column || !rowExtents || !columnExtents || !isSelected) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_rowColumnExtents(row, column, rowExtents,
+               columnExtents, isSelected);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mRowIndex, *row);
+  GET_FIELD(mColumnIndex, *column);
+  GET_FIELD(mRowExtent, *rowExtents);
+  GET_FIELD(mColumnExtent, *columnExtents);
+  GET_FIELD(mCellIsSelected, *isSelected);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_table(IUnknown** table)
+{
+  HRESULT hr = ResolveIATableCell();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIATableCellPassThru->get_table(table);
 }
 
 } // namespace a11y
