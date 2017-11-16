@@ -472,14 +472,6 @@ typedef void
 (* JSFinalizeOp)(JSFreeOp* fop, JSObject* obj);
 
 /**
- * Finalizes external strings created by JS_NewExternalString. The finalizer
- * can be called off the main thread.
- */
-struct JSStringFinalizer {
-    void (*finalize)(const JSStringFinalizer* fin, char16_t* chars);
-};
-
-/**
  * Check whether v is an instance of obj.  Return false on error or exception,
  * true on success with true in *bp if v is an instance of obj, false in
  * *bp otherwise.

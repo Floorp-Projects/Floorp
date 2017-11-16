@@ -107,13 +107,6 @@ template<typename T> struct JSConstScalarSpec;
 typedef JSConstScalarSpec<double> JSConstDoubleSpec;
 typedef JSConstScalarSpec<int32_t> JSConstIntegerSpec;
 
-/*
- * Generic trace operation that calls JS::TraceEdge on each traceable thing's
- * location reachable from data.
- */
-typedef void
-(* JSTraceDataOp)(JSTracer* trc, void* data);
-
 namespace js {
 namespace gc {
 class AutoTraceSession;
