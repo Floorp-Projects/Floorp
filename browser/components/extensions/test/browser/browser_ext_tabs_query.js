@@ -132,6 +132,44 @@ add_task(async function() {
   await extension.awaitFinish("tabs.query");
   await extension.unload();
 
+  // match title pattern
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    async background() {
+      let tabs = await browser.tabs.query({
+        title: "mochitest index /",
+      });
+
+      browser.test.assertEq(tabs.length, 2, "should have two tabs");
+
+      tabs.sort((tab1, tab2) => tab1.index - tab2.index);
+
+      browser.test.assertEq(tabs[0].title, "mochitest index /", "tab 0 title correct");
+      browser.test.assertEq(tabs[1].title, "mochitest index /", "tab 1 title correct");
+
+      tabs = await browser.tabs.query({
+        title: "?ochitest index /*",
+      });
+
+      browser.test.assertEq(tabs.length, 3, "should have three tabs");
+
+      tabs.sort((tab1, tab2) => tab1.index - tab2.index);
+
+      browser.test.assertEq(tabs[0].title, "mochitest index /", "tab 0 title correct");
+      browser.test.assertEq(tabs[1].title, "mochitest index /", "tab 1 title correct");
+      browser.test.assertEq(tabs[2].title, "mochitest index /MochiKit/", "tab 2 title correct");
+
+      browser.test.notifyPass("tabs.query");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("tabs.query");
+  await extension.unload();
+
   // test width and height
   extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -200,7 +238,7 @@ add_task(async function testQueryPermissions() {
   await extension.unload();
 });
 
-add_task(async function testQueryWithURLPermissions() {
+add_task(async function testQueryWithoutURLOrTitlePermissions() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": [],
@@ -209,16 +247,21 @@ add_task(async function testQueryWithURLPermissions() {
     async background() {
       await browser.test.assertRejects(
         browser.tabs.query({"url": "http://www.bbc.com/"}),
-        'The "tabs" permission is required to use the query API with the "url" parameter',
-        "Expected tabs.query with 'url' to fail with permissions error message");
+        'The "tabs" permission is required to use the query API with the "url" or "title" parameters',
+        "Expected tabs.query with 'url' or 'title' to fail with permissions error message");
 
-      browser.test.notifyPass("queryWithURLPermissions");
+      await browser.test.assertRejects(
+        browser.tabs.query({"title": "Foo"}),
+        'The "tabs" permission is required to use the query API with the "url" or "title" parameters',
+        "Expected tabs.query with 'url' or 'title' to fail with permissions error message");
+
+      browser.test.notifyPass("testQueryWithoutURLOrTitlePermissions");
     },
   });
 
   await extension.startup();
 
-  await extension.awaitFinish("queryWithURLPermissions");
+  await extension.awaitFinish("testQueryWithoutURLOrTitlePermissions");
 
   await extension.unload();
 });

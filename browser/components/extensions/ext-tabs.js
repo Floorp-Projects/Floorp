@@ -532,13 +532,19 @@ this.tabs = class extends ExtensionAPI {
         },
 
         async query(queryInfo) {
-          if (queryInfo.url !== null) {
-            if (!extension.hasPermission("tabs")) {
-              return Promise.reject({message: 'The "tabs" permission is required to use the query API with the "url" parameter'});
+          if (!extension.hasPermission("tabs")) {
+            if (queryInfo.url !== null || queryInfo.title !== null) {
+              return Promise.reject({message: 'The "tabs" permission is required to use the query API with the "url" or "title" parameters'});
             }
+          }
 
-            queryInfo = Object.assign({}, queryInfo);
+          queryInfo = Object.assign({}, queryInfo);
+
+          if (queryInfo.url !== null) {
             queryInfo.url = new MatchPatternSet([].concat(queryInfo.url));
+          }
+          if (queryInfo.title !== null) {
+            queryInfo.title = new MatchGlob(queryInfo.title);
           }
 
           return Array.from(tabManager.query(queryInfo, context),
