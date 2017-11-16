@@ -687,12 +687,20 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   margin-left: 32px;
 }
 
-.fxaSyncIllustration {
+.fxaSyncIllustration,
+.fxaSyncIllustrationIssue {
   width: 180px;
   height: var(--panel-ui-sync-illustration-height);
-  list-style-image: url(chrome://browser/skin/fxa/sync-illustration.svg);
   -moz-context-properties: fill;
   fill: #cdcdcd;
+}
+
+.fxaSyncIllustration {
+  list-style-image: url(chrome://browser/skin/fxa/sync-illustration.svg);
+}
+
+.fxaSyncIllustrationIssue {
+  list-style-image: url(chrome://browser/skin/fxa/sync-illustration-issue.svg);
 }
 
 .PanelUI-remotetabs-prefs-button > .toolbarbutton-text {
