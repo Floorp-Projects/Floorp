@@ -23,6 +23,8 @@ import buildconfig
 def main(argv):
     parser = argparse.ArgumentParser('Generate a file from a Python script',
                                      add_help=False)
+    parser.add_argument('--locale', metavar='locale', type=str,
+                        help='The locale in use.')
     parser.add_argument('python_script', metavar='python-script', type=str,
                         help='The Python script to run')
     parser.add_argument('method_name', metavar='method-name', type=str,
@@ -37,6 +39,9 @@ def main(argv):
 
     args = parser.parse_args(argv)
 
+    kwargs = {}
+    if args.locale:
+        kwargs['locale'] = args.locale
     script = args.python_script
     # Permit the script to import modules from the same directory in which it
     # resides.  The justification for doing this is that if we were invoking
@@ -60,7 +65,7 @@ def main(argv):
     ret = 1
     try:
         with FileAvoidWrite(args.output_file) as output:
-            ret = module.__dict__[method](output, *args.additional_arguments)
+            ret = module.__dict__[method](output, *args.additional_arguments, **kwargs)
             # The following values indicate a statement of success:
             #  - a set() (see below)
             #  - 0
