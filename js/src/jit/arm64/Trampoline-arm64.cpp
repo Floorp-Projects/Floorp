@@ -30,10 +30,10 @@ static const LiveRegisterSet AllRegs =
  *   bool blah(void* code, int argc, Value* argv, JSObject* scopeChain, Value* vp)
  *   ...using standard AArch64 calling convention
  */
-JitCode*
-JitRuntime::generateEnterJIT(JSContext* cx)
+void
+JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
 {
-    MacroAssembler masm(cx);
+    enterJITOffset_ = startTrampolineCode(masm);
 
     const Register reg_code      = IntArgReg0; // EnterJitData::jitcode.
     const Register reg_argc      = IntArgReg1; // EnterJitData::maxArgc.
@@ -272,21 +272,14 @@ JitRuntime::generateEnterJIT(JSContext* cx)
     // Return using the value popped into x30.
     masm.abiret();
 
-    Linker linker(masm);
-    AutoFlushICache afc("EnterJIT");
-    JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
-
-#ifdef JS_ION_PERF
-    writePerfSpewerJitCodeProfile(code, "EnterJIT");
-#endif
-
-    return code;
+    // Reset stack pointer.
+    masm.SetStackPointer64(PseudoStackPointer64);
 }
 
-JitCode*
-JitRuntime::generateInvalidator(JSContext* cx)
+void
+JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail)
 {
-    MacroAssembler masm;
+    invalidatorOffset_ = startTrampolineCode(masm);
 
     masm.push(r0, r1, r2, r3);
 
@@ -312,18 +305,13 @@ JitRuntime::generateInvalidator(JSContext* cx)
              Operand(sizeof(InvalidationBailoutStack)));
     masm.syncStackPtr();
 
-    JitCode* bailoutTail = cx->runtime()->jitRuntime()->getBailoutTail();
-    masm.branch(bailoutTail);
-
-    Linker linker(masm);
-    AutoFlushICache afc("Invalidator");
-    return linker.newCode<NoGC>(cx, OTHER_CODE);
+    masm.jump(bailoutTail);
 }
 
-JitCode*
-JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
+void
+JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
 {
-    MacroAssembler masm;
+    argumentsRectifierOffset_ = startTrampolineCode(masm);
 
     // Save the return address for later.
     masm.push(lr);
@@ -411,7 +399,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     // Load the address of the code that is getting called.
     masm.Ldr(x3, MemOperand(x5, JSFunction::offsetOfNativeOrScript()));
     masm.loadBaselineOrIonRaw(r3, r3, nullptr);
-    uint32_t returnOffset = masm.callJitNoProfiler(r3);
+    argumentsRectifierReturnOffset_ = masm.callJitNoProfiler(r3);
 
     // Clean up!
     // Get the size of the stack frame, and clean up the later fixed frame.
@@ -424,15 +412,6 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
 
     // Pop the return address from earlier and branch.
     masm.ret();
-
-    Linker linker(masm);
-    AutoFlushICache afc("ArgumentsRectifier");
-    JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
-
-    if (returnAddrOut)
-        *returnAddrOut = (void*) (code->raw() + returnOffset);
-
-    return code;
 }
 
 static void
@@ -487,7 +466,7 @@ PushBailoutFrame(MacroAssembler& masm, uint32_t frameClass, Register spArg)
 }
 
 static void
-GenerateBailoutThunk(JSContext* cx, MacroAssembler& masm, uint32_t frameClass)
+GenerateBailoutThunk(MacroAssembler& masm, uint32_t frameClass, Label* bailoutTail)
 {
     PushBailoutFrame(masm, frameClass, r0);
 
@@ -524,36 +503,21 @@ GenerateBailoutThunk(JSContext* cx, MacroAssembler& masm, uint32_t frameClass)
     }
 
     // Jump to shared bailout tail. The BailoutInfo pointer has to be in r9.
-    JitCode* bailoutTail = cx->runtime()->jitRuntime()->getBailoutTail();
-    masm.branch(bailoutTail);
+    masm.jump(bailoutTail);
 }
 
-JitCode*
-JitRuntime::generateBailoutTable(JSContext* cx, uint32_t frameClass)
+JitRuntime::BailoutTable
+JitRuntime::generateBailoutTable(MacroAssembler& masm, Label* bailoutTail, uint32_t frameClass)
 {
-    // FIXME: Implement.
-    MacroAssembler masm;
-    masm.breakpoint();
-    Linker linker(masm);
-    AutoFlushICache afc("BailoutTable");
-    return linker.newCode<NoGC>(cx, OTHER_CODE);
+    MOZ_CRASH("arm64 does not use bailout tables");
 }
 
-JitCode*
-JitRuntime::generateBailoutHandler(JSContext* cx)
+void
+JitRuntime::generateBailoutHandler(MacroAssembler& masm, Label* bailoutTail)
 {
-    MacroAssembler masm(cx);
-    GenerateBailoutThunk(cx, masm, NO_FRAME_SIZE_CLASS_ID);
+    bailoutHandlerOffset_ = startTrampolineCode(masm);
 
-    Linker linker(masm);
-    AutoFlushICache afc("BailoutHandler");
-    JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
-
-#ifdef JS_ION_PERF
-    writePerfSpewerJitCodeProfile(code, "BailoutHandler");
-#endif
-
-    return code;
+    GenerateBailoutThunk(masm, NO_FRAME_SIZE_CLASS_ID, bailoutTail);
 }
 
 bool
@@ -562,8 +526,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
     MOZ_ASSERT(functionWrappers_);
     MOZ_ASSERT(functionWrappers_->initialized());
 
-    masm.flushBuffer();
-    uint32_t wrapperOffset = masm.currentOffset();
+    uint32_t wrapperOffset = startTrampolineCode(masm);
 
     // Avoid conflicts with argument registers while discarding the result after
     // the function call.
@@ -747,10 +710,10 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
     return functionWrappers_->putNew(&f, wrapperOffset);
 }
 
-JitCode*
-JitRuntime::generatePreBarrier(JSContext* cx, MIRType type)
+uint32_t
+JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm, MIRType type)
 {
-    MacroAssembler masm(cx);
+    uint32_t offset = startTrampolineCode(masm);
 
     LiveRegisterSet regs = LiveRegisterSet(GeneralRegisterSet(Registers::VolatileMask),
                                            FloatRegisterSet(FloatRegisters::VolatileMask));
@@ -773,9 +736,7 @@ JitRuntime::generatePreBarrier(JSContext* cx, MIRType type)
 
     masm.abiret();
 
-    Linker linker(masm);
-    AutoFlushICache afc("PreBarrier");
-    return linker.newCode<NoGC>(cx, OTHER_CODE);
+    return offset;
 }
 
 typedef bool (*HandleDebugTrapFn)(JSContext*, BaselineFrame*, uint8_t*, bool*);
@@ -804,7 +765,7 @@ JitRuntime::generateDebugTrapHandler(JSContext* cx)
     masm.movePtr(ImmPtr(nullptr), ICStubReg);
     EmitBaselineEnterStubFrame(masm, scratch2);
 
-    uint8_t* code = cx->runtime()->jitRuntime()->getVMWrapper(HandleDebugTrapInfo);
+    TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(HandleDebugTrapInfo);
     masm.asVIXL().Push(vixl::lr, ARMRegister(scratch1, 64));
     EmitBaselineCallVM(code, masm);
 
@@ -837,45 +798,29 @@ JitRuntime::generateDebugTrapHandler(JSContext* cx)
     return codeDbg;
 }
 
-JitCode*
-JitRuntime::generateExceptionTailStub(JSContext* cx, void* handler)
+void
+JitRuntime::generateExceptionTailStub(MacroAssembler& masm, void* handler, Label* profilerExitTail)
 {
-    MacroAssembler masm(cx);
+    exceptionTailOffset_ = startTrampolineCode(masm);
 
-    masm.handleFailureWithHandlerTail(handler);
-
-    Linker linker(masm);
-    AutoFlushICache afc("ExceptionTailStub");
-    JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
-
-#ifdef JS_ION_PERF
-    writePerfSpewerJitCodeProfile(code, "ExceptionTailStub");
-#endif
-
-    return code;
+    masm.bind(masm.failureLabel());
+    masm.handleFailureWithHandlerTail(handler, profilerExitTail);
 }
 
-JitCode*
-JitRuntime::generateBailoutTailStub(JSContext* cx)
+void
+JitRuntime::generateBailoutTailStub(MacroAssembler& masm, Label* bailoutTail)
 {
-    MacroAssembler masm(cx);
+    bailoutTailOffset_ = startTrampolineCode(masm);
+    masm.bind(bailoutTail);
 
     masm.generateBailoutTail(r1, r2);
-
-    Linker linker(masm);
-    AutoFlushICache afc("BailoutTailStub");
-    JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
-
-#ifdef JS_ION_PERF
-    writePerfSpewerJitCodeProfile(code, "BailoutTailStub");
-#endif
-
-    return code;
 }
-JitCode*
-JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
+
+void
+JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profilerExitTail)
 {
-    MacroAssembler masm;
+    profilerExitFrameTailOffset_ = startTrampolineCode(masm);
+    masm.bind(profilerExitTail);
 
     Register scratch1 = r8;
     Register scratch2 = r9;
@@ -1208,14 +1153,4 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
         masm.storePtr(scratch1, lastProfilingFrame);
         masm.ret();
     }
-
-    Linker linker(masm);
-    AutoFlushICache afc("ProfilerExitFrameTailStub");
-    JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
-
-#ifdef JS_ION_PERF
-    writePerfSpewerJitCodeProfile(code, "ProfilerExitFrameStub");
-#endif
-
-    return code;
 }

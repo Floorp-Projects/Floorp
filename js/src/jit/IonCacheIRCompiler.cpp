@@ -358,13 +358,13 @@ IonCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun)
 {
     MOZ_ASSERT(calledPrepareVMCall_);
 
-    uint8_t* code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
+    TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
 
     uint32_t frameSize = fun.explicitStackSlots() * sizeof(void*);
     uint32_t descriptor = MakeFrameDescriptor(frameSize, JitFrame_IonICCall,
                                               ExitFrameLayout::Size());
     masm.Push(Imm32(descriptor));
-    masm.callJit(ImmPtr(code));
+    masm.callJit(code);
 
     // Remove rest of the frame left on the stack. We remove the return address
     // which is implicitly poped when returning.
