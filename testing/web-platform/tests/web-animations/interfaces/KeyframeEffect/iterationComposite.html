@@ -9,9 +9,9 @@
 <script>
 'use strict';
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ alignContent: ['flex-start', 'flex-end'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -29,9 +29,9 @@ test(function(t) {
     'Animated align-content style at 50s of the third iteration');
 }, 'iterationComposite of discrete type animation (align-content)');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ marginLeft: ['0px', '10px'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -50,13 +50,13 @@ test(function(t) {
     'Animated margin-left style at 50s of the third iteration');
 }, 'iterationComposite of <length> type animation');
 
-test(function(t) {
-  var parent = createDiv(t);
+test(t => {
+  const parent = createDiv(t);
   parent.style.width = '100px';
-  var div = createDiv(t);
+  const div = createDiv(t);
   parent.appendChild(div);
 
-  var anim =
+  const anim =
     div.animate({ width: ['0%', '50%'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -75,9 +75,9 @@ test(function(t) {
     'Animated width style at 50s of the third iteration');
 }, 'iterationComposite of <percentage> type animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ color: ['rgb(0, 0, 0)', 'rgb(120, 120, 120)'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -96,9 +96,9 @@ test(function(t) {
     'Animated color style at 50s of the third iteration');
 }, 'iterationComposite of <color> type animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ color: ['rgb(0, 120, 0)', 'rgb(60, 60, 60)'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -119,9 +119,9 @@ test(function(t) {
 }, 'iterationComposite of <color> type animation that green component is ' +
    'decreasing');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+   test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ flexGrow: [0, 10] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -140,10 +140,10 @@ test(function(t) {
     'Animated flex-grow style at 50s of the third iteration');
 }, 'iterationComposite of <number> type animation');
 
-test(function(t) {
-  var div = createDiv(t);
+test(t => {
+  const div = createDiv(t);
   div.style.position = 'absolute';
-  var anim =
+  const anim =
     div.animate({ clip: ['rect(0px, 0px, 0px, 0px)',
                          'rect(10px, 10px, 10px, 10px)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -163,9 +163,9 @@ test(function(t) {
     'Animated clip style at 50s of the third iteration');
 }, 'iterationComposite of <shape> type animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ width: ['calc(0vw + 0px)', 'calc(0vw + 10px)'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -184,13 +184,13 @@ test(function(t) {
     'Animated calc width style at 50s of the third iteration');
 }, 'iterationComposite of <calc()> value animation');
 
-test(function(t) {
-  var parent = createDiv(t);
+test(t => {
+  const parent = createDiv(t);
   parent.style.width = '100px';
-  var div = createDiv(t);
+  const div = createDiv(t);
   parent.appendChild(div);
 
-  var anim =
+  const anim =
     div.animate({ width: ['calc(0% + 0px)', 'calc(10% + 10px)'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -213,9 +213,9 @@ test(function(t) {
 }, 'iterationComposite of <calc()> value animation that the values can\'t' +
    'be reduced');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ opacity: [0, 0.4] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -234,9 +234,9 @@ test(function(t) {
     'Animated opacity style at 50s of the third iteration');
 }, 'iterationComposite of opacity animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ boxShadow: ['rgb(0, 0, 0) 0px 0px 0px 0px',
                               'rgb(120, 120, 120) 10px 10px 10px 0px'] },
                 { duration: 100 * MS_PER_SEC,
@@ -259,9 +259,9 @@ test(function(t) {
     'Animated box-shadow style at 50s of the third iteration');
 }, 'iterationComposite of box-shadow animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ filter: ['blur(0px)', 'blur(10px)'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -280,9 +280,9 @@ test(function(t) {
     'Animated filter blur style at 50s of the third iteration');
 }, 'iterationComposite of filter blur animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ filter: ['brightness(1)',
                            'brightness(180%)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -305,9 +305,9 @@ test(function(t) {
     'Animated filter brightness style at 50s of the third iteration');
 }, 'iterationComposite of filter brightness for different unit animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ filter: ['brightness(0)',
                            'brightness(1)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -330,9 +330,9 @@ test(function(t) {
     'Animated filter brightness style at 50s of the third iteration');
 }, 'iterationComposite of filter brightness animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ filter: ['drop-shadow(rgb(0, 0, 0) 0px 0px 0px)',
                            'drop-shadow(rgb(120, 120, 120) 10px 10px 10px)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -355,9 +355,9 @@ test(function(t) {
     'Animated filter drop-shadow style at 50s of the third iteration');
 }, 'iterationComposite of filter drop-shadow animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ filter: ['brightness(1) contrast(1)',
                            'brightness(2) contrast(2)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -380,9 +380,9 @@ test(function(t) {
     'Animated filter list at 50s of the third iteration');
 }, 'iterationComposite of same filter list animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ filter: ['brightness(1) contrast(1)',
                            'contrast(2) brightness(2)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -411,9 +411,9 @@ test(function(t) {
 }, 'iterationComposite of discrete filter list because of mismatch ' +
    'of the order');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+   test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ filter: ['sepia(0)',
                            'sepia(1) contrast(2)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -436,9 +436,9 @@ test(function(t) {
     'Animated filter list at 50s of the third iteration');
 }, 'iterationComposite of different length filter list animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ transform: ['rotate(0deg)', 'rotate(180deg)'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -460,9 +460,9 @@ test(function(t) {
     'Animated transform(rotate) style at 50s of the third iteration');
 }, 'iterationComposite of transform(rotate) animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ transform: ['scale(0)', 'scale(1)'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -486,9 +486,9 @@ test(function(t) {
     'Animated transform(scale) style at 50s of the third iteration');
 }, 'iterationComposite of transform: [ scale(0), scale(1) ] animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ transform: ['scale(1)', 'scale(2)'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -510,9 +510,9 @@ test(function(t) {
     'Animated transform(scale) style at 50s of the third iteration');
 }, 'iterationComposite of transform: [ scale(1), scale(2) ] animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ transform: ['scale(0)', 'scale(2)'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -534,9 +534,9 @@ test(function(t) {
     'Animated transform(scale) style at 50s of the third iteration');
 }, 'iterationComposite of transform: scale(2) animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ transform: ['rotate(0deg) translateX(0px)',
                               'rotate(180deg) translateX(10px)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -559,9 +559,9 @@ test(function(t) {
     'Animated transform list at 50s of the third iteration');
 }, 'iterationComposite of transform list animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ transform: ['matrix(2, 0, 0, 2, 0, 0)',
                               'matrix(3, 0, 0, 3, 30, 0)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -588,9 +588,9 @@ test(function(t) {
     'Animated transform of matrix function at 50s of the third iteration');
 }, 'iterationComposite of transform of matrix function');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ transform: ['translateX(0px) scale(2)',
                               'scale(3) translateX(10px)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -620,11 +620,11 @@ test(function(t) {
     'Animated transform list at 50s of the third iteration');
 }, 'iterationComposite of transform list animation whose order is mismatched');
 
-test(function(t) {
-  var div = createDiv(t);
+test(t => {
+  const div = createDiv(t);
   // Even if each transform list does not have functions which exist in
   // other pair of the list, we don't fill any missing functions at all.
-  var anim =
+  const anim =
     div.animate({ transform: ['translateX(0px)',
                               'scale(2) translateX(10px)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -656,9 +656,9 @@ test(function(t) {
 }, 'iterationComposite of transform list animation whose order is mismatched ' +
    'because of missing functions');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+   test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ transform: ['none',
                               'translateX(10px)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -684,9 +684,9 @@ test(function(t) {
     'Animated transform list at 50s of the third iteration');
 }, 'iterationComposite of transform from none to translate');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ transform: ['matrix3d(1, 0,  0, 0, ' +
                                        '0, 1,  0, 0, ' +
                                        '0, 0,  1, 0, ' +
@@ -718,9 +718,9 @@ test(function(t) {
     'Animated transform of matrix3d function at 50s of the third iteration');
 }, 'iterationComposite of transform of matrix3d function');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ transform: ['rotate3d(1, 1, 0, 0deg)',
                               'rotate3d(1, 1, 0, 90deg)'] },
                 { duration: 100 * MS_PER_SEC,
@@ -743,9 +743,9 @@ test(function(t) {
     'Animated transform of rotate3d function at 50s of the third iteration');
 }, 'iterationComposite of transform of rotate3d function');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ marginLeft: ['10px', '20px'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -764,9 +764,9 @@ test(function(t) {
     'Animated margin-left style at 50s of the third iteration');
 }, 'iterationComposite starts with non-zero value animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim =
+test(t => {
+  const div = createDiv(t);
+  const anim =
     div.animate({ marginLeft: ['10px', '-10px'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
@@ -788,13 +788,13 @@ test(function(t) {
     'Animated margin-left style at 50s of the third iteration');
 }, 'iterationComposite with negative final value animation');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim = div.animate({ marginLeft: ['0px', '10px'] },
-                         { duration: 100 * MS_PER_SEC,
-                           easing: 'linear',
-                           iterations: 10,
-                           iterationComposite: 'accumulate' });
+test(t => {
+  const div = createDiv(t);
+  const anim = div.animate({ marginLeft: ['0px', '10px'] },
+                           { duration: 100 * MS_PER_SEC,
+                             easing: 'linear',
+                             iterations: 10,
+                             iterationComposite: 'accumulate' });
   anim.pause();
 
   anim.currentTime =
@@ -811,13 +811,13 @@ test(function(t) {
     'Animated style at 50s of the third iteration');
 }, 'interationComposite changes');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim = div.animate({ marginLeft: ['0px', '10px'] },
-                         { duration: 100 * MS_PER_SEC,
-                           easing: 'linear',
-                           iterations: 10,
-                           iterationComposite: 'accumulate' });
+test(t => {
+  const div = createDiv(t);
+  const anim = div.animate({ marginLeft: ['0px', '10px'] },
+                           { duration: 100 * MS_PER_SEC,
+                             easing: 'linear',
+                             iterations: 10,
+                             iterationComposite: 'accumulate' });
   anim.pause();
 
   anim.currentTime =

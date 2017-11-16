@@ -42,8 +42,6 @@ pref("security.password_lifetime",       30);
 // If false, use the default format. Currently the default in NSS is the old
 // BerkeleyDB format, but this will change in bug 1377940.
 // Changing this requires a restart to take effect.
-// Note that the environment variable MOZPSM_NSSDBDIR_OVERRIDE can override both
-// the behavior of this preference and the NSS default.
 pref("security.use_sqldb", true);
 
 // The supported values of this pref are:

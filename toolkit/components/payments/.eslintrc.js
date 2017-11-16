@@ -2,7 +2,6 @@
 
 module.exports = {
   rules: {
-    "mozilla/balanced-listeners": "error",
     "mozilla/var-only-at-top-level": "error",
 
     "array-bracket-spacing": ["error", "never"],

@@ -33,7 +33,6 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
     'vcs_share_base': os.path.join('y:', os.sep, 'hg-shared'),
-    'objdir': 'obj-firefox',
     'tooltool_script': [
       sys.executable,
       os.path.join(os.environ['MOZILLABUILD'], 'tooltool.py')
@@ -54,7 +53,7 @@ config = {
     'env': {
         'HG_SHARE_BASE_DIR': os.path.join('y:', os.sep, 'hg-shared'),
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'PDBSTR_PATH': 'C:/Program Files (x86)/Windows Kits/10/Debuggers/x64/srcsrv/pdbstr.exe',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': 'c:/builds/tooltool_cache',
@@ -70,7 +69,8 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s\\breakpad\\win64\\minidump_stackwalk.exe',
         'MINIDUMP_SAVE_PATH': os.path.join(os.getcwd(), 'public', 'build'),
     },
-    'src_mozconfig': 'browser\\config\\mozconfigs\\win64\\code-coverage',
+    'mozconfig_platform': 'win64',
+    'mozconfig_variant': 'code-coverage',
     'artifact_flag_build_variant_in_try': None,
     #########################################################################
 }

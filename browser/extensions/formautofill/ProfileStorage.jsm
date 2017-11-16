@@ -412,8 +412,9 @@ class AutofillRecords {
     this._stripComputedFields(recordFound);
 
     let recordToUpdate = this._clone(record);
-    this._normalizeRecord(recordToUpdate);
+    this._normalizeRecord(recordToUpdate, true);
 
+    let hasValidField = false;
     for (let field of this.VALID_FIELDS) {
       let oldValue = recordFound[field];
       let newValue = recordToUpdate[field];
@@ -426,10 +427,15 @@ class AutofillRecords {
       if (newValue === undefined || newValue === "") {
         delete recordFound[field];
       } else {
+        hasValidField = true;
         recordFound[field] = newValue;
       }
 
       this._maybeStoreLastSyncedField(recordFound, field, oldValue);
+    }
+
+    if (!hasValidField) {
+      throw new Error("Record contains no valid field.");
     }
 
     recordFound.timeLastModified = Date.now();
@@ -1139,7 +1145,7 @@ class AutofillRecords {
     return hasChanges;
   }
 
-  _normalizeRecord(record) {
+  _normalizeRecord(record, preserveEmptyFields = false) {
     this._normalizeFields(record);
 
     for (let key in record) {
@@ -1150,6 +1156,13 @@ class AutofillRecords {
           typeof record[key] !== "number") {
         throw new Error(`"${key}" contains invalid data type.`);
       }
+      if (!preserveEmptyFields && record[key] === "") {
+        delete record[key];
+      }
+    }
+
+    if (!Object.keys(record).length) {
+      throw new Error("Record contains no valid field.");
     }
   }
 
@@ -1214,7 +1227,10 @@ class Addresses extends AutofillRecords {
   _computeFields(address) {
     // NOTE: Remember to bump the schema version number if any of the existing
     //       computing algorithm changes. (No need to bump when just adding new
-    //       computed fields)
+    //       computed fields.)
+
+    // NOTE: Computed fields should be always present in the storage no matter
+    //       it's empty or not.
 
     let hasNewComputedFields = false;
 
@@ -1403,8 +1419,8 @@ class Addresses extends AutofillRecords {
       throw new Error("No matching address.");
     }
 
-    let addressToMerge = strict ? this._clone(address) : this._cloneAndCleanUp(address);
-    this._normalizeRecord(addressToMerge);
+    let addressToMerge = this._clone(address);
+    this._normalizeRecord(addressToMerge, strict);
     let hasMatchingField = false;
 
     for (let field of this.VALID_FIELDS) {
@@ -1475,7 +1491,10 @@ class CreditCards extends AutofillRecords {
   _computeFields(creditCard) {
     // NOTE: Remember to bump the schema version number if any of the existing
     //       computing algorithm changes. (No need to bump when just adding new
-    //       computed fields)
+    //       computed fields.)
+
+    // NOTE: Computed fields should be always present in the storage no matter
+    //       it's empty or not.
 
     let hasNewComputedFields = false;
 
@@ -1492,23 +1511,23 @@ class CreditCards extends AutofillRecords {
       hasNewComputedFields = true;
     }
 
-    let year = creditCard["cc-exp-year"];
-    let month = creditCard["cc-exp-month"];
-    if (!creditCard["cc-exp"] && month && year) {
-      creditCard["cc-exp"] = String(year) + "-" + String(month).padStart(2, "0");
+    // Compute credit card expiration date
+    if (!("cc-exp" in creditCard)) {
+      if (creditCard["cc-exp-month"] && creditCard["cc-exp-year"]) {
+        creditCard["cc-exp"] = String(creditCard["cc-exp-year"]) + "-" + String(creditCard["cc-exp-month"]).padStart(2, "0");
+      } else {
+        creditCard["cc-exp"] = "";
+      }
       hasNewComputedFields = true;
     }
 
     // Encrypt credit card number
     if (!("cc-number-encrypted" in creditCard)) {
-      let ccNumber = (creditCard["cc-number"] || "").replace(/\s/g, "");
-      if (FormAutofillUtils.isCCNumber(ccNumber)) {
+      if ("cc-number" in creditCard) {
+        let ccNumber = creditCard["cc-number"];
         creditCard["cc-number"] = this._getMaskedCCNumber(ccNumber);
         creditCard["cc-number-encrypted"] = MasterPassword.encryptSync(ccNumber);
       } else {
-        delete creditCard["cc-number"];
-        // Computed fields are always present in the storage no matter it's
-        // empty or not.
         creditCard["cc-number-encrypted"] = "";
       }
     }
@@ -1525,6 +1544,7 @@ class CreditCards extends AutofillRecords {
 
   _normalizeFields(creditCard) {
     this._normalizeCCName(creditCard);
+    this._normalizeCCNumber(creditCard);
     this._normalizeCCExpirationDate(creditCard);
   }
 
@@ -1541,6 +1561,15 @@ class CreditCards extends AutofillRecords {
       delete creditCard["cc-given-name"];
       delete creditCard["cc-additional-name"];
       delete creditCard["cc-family-name"];
+    }
+  }
+
+  _normalizeCCNumber(creditCard) {
+    if (creditCard["cc-number"]) {
+      creditCard["cc-number"] = FormAutofillUtils.normalizeCCNumber(creditCard["cc-number"]);
+      if (!creditCard["cc-number"]) {
+        delete creditCard["cc-number"];
+      }
     }
   }
 
@@ -1655,6 +1684,7 @@ class CreditCards extends AutofillRecords {
 
   /**
    * Merge new credit card into the specified record if cc-number is identical.
+   * (Note that credit card records always do non-strict merge.)
    *
    * @param  {string} guid
    *         Indicates which credit card to merge.
@@ -1672,7 +1702,7 @@ class CreditCards extends AutofillRecords {
       throw new Error("No matching credit card.");
     }
 
-    let creditCardToMerge = this._cloneAndCleanUp(creditCard);
+    let creditCardToMerge = this._clone(creditCard);
     this._normalizeRecord(creditCardToMerge);
 
     for (let field of this.VALID_FIELDS) {

@@ -6,7 +6,9 @@
 
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { appinfo } = require("Services");
-const { DOM: dom, Component, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { censusDisplays, labelDisplays, treeMapDisplays, diffingState, viewState } = require("./constants");
 const { toggleRecordingAllocationStacks } = require("./actions/allocations");

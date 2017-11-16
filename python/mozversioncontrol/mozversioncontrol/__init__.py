@@ -116,6 +116,10 @@ class Repository(object):
     def head_ref(self):
         """Hash of HEAD revision."""
 
+    @abc.abstractproperty
+    def base_ref(self):
+        """Hash of revision the current topic branch is based on."""
+
     @abc.abstractmethod
     def sparse_checkout_present(self):
         """Whether the working directory is using a sparse checkout.
@@ -211,6 +215,10 @@ class HgRepository(Repository):
     @property
     def head_ref(self):
         return self._run('log', '-r', '.', '-T', '{node}')
+
+    @property
+    def base_ref(self):
+        return self._run('log', '-r', 'last(ancestors(.) and public())', '-T', '{node}')
 
     def __enter__(self):
         if self._client.server is None:
@@ -323,7 +331,16 @@ class GitRepository(Repository):
 
     @property
     def head_ref(self):
-        return self._run('rev-parse', 'HEAD')
+        return self._run('rev-parse', 'HEAD').strip()
+
+    @property
+    def base_ref(self):
+        refs = self._run('for-each-ref', 'refs/heads', 'refs/remotes',
+                         '--format=%(objectname)').splitlines()
+        head = self.head_ref
+        if head in refs:
+            refs.remove(head)
+        return self._run('merge-base', 'HEAD', *refs).strip()
 
     def sparse_checkout_present(self):
         # Not yet implemented.
@@ -353,11 +370,12 @@ class GitRepository(Repository):
         assert all(f.lower() in self._valid_diff_filter for f in diff_filter)
 
         if upstream == 'default':
-            upstream = self.get_upstream()
+            upstream = self.base_ref
 
         compare = '{}..HEAD'.format(upstream)
-        return self._run('log', '--name-only', '--diff-filter={}'.format(diff_filter.upper()),
-                         '--oneline', '--pretty=format:', compare).splitlines()
+        files = self._run('log', '--name-only', '--diff-filter={}'.format(diff_filter.upper()),
+                          '--oneline', '--pretty=format:', compare).splitlines()
+        return [f for f in files if f]
 
     def add_remove_files(self, path):
         self._run('add', path)

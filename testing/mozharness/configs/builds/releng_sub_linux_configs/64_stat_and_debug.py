@@ -14,7 +14,6 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': False,
     'vcs_share_base': '/builds/hg-shared',
-    'objdir': 'obj-firefox',
     'tooltool_script': ["/builds/tooltool.py"],
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': True,
@@ -34,7 +33,7 @@ config = {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'DISPLAY': ':2',
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/builds/worker/tooltool-cache',
         'TOOLTOOL_HOME': '/builds',
@@ -76,7 +75,9 @@ config = {
         'gstreamer-plugins-base-devel', 'freetype-2.3.11-6.el6_1.8.x86_64',
         'freetype-devel-2.3.11-6.el6_1.8.x86_64'
     ],
-    'src_mozconfig': 'browser/config/mozconfigs/linux64/debug-static-analysis-clang',
+    # This doesn't actually inherit from anything.
+    'mozconfig_platform': 'linux64',
+    'mozconfig_variant': 'debug-static-analysis-clang',
     #######################
     'artifact_flag_build_variant_in_try': None,
 }

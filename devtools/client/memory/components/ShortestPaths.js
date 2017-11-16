@@ -4,11 +4,9 @@
 
 "use strict";
 
-const {
-  DOM: dom,
-  Component,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { isSavedFrame } = require("devtools/shared/DevToolsUtils");
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 const { L10N } = require("../utils");

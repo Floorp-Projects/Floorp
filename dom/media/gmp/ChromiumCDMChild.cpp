@@ -460,7 +460,7 @@ ChromiumCDMChild::OnLegacySessionError(const char* aSessionId,
   CallOnMessageLoopThread("gmp::ChromiumCDMChild::OnLegacySessionError",
                           &ChromiumCDMChild::SendOnLegacySessionError,
                           nsCString(aSessionId, aSessionIdLength),
-                          static_cast<uint32_t>(aError),
+                          ConvertCDMErrorToCDMException(aError),
                           aSystemCode,
                           nsCString(aErrorMessage, aErrorMessageLength));
 }

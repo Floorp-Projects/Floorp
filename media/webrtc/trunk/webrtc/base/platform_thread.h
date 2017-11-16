@@ -96,6 +96,7 @@ class PlatformThread {
   bool stop_;
   HANDLE thread_;
   DWORD thread_id_;
+  CriticalSection cs_;
 #else
   static void* StartThread(void* param);
 

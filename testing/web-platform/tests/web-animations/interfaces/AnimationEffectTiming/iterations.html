@@ -10,56 +10,56 @@
 <script>
 'use strict';
 
-test(function(t) {
-  var anim = createDiv(t).animate(null);
+test(t => {
+  const anim = createDiv(t).animate(null);
   assert_equals(anim.effect.timing.iterations, 1);
 }, 'Has the default value 1');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
+test(t => {
+  const div = createDiv(t);
+  const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
   anim.effect.timing.iterations = 2;
   assert_equals(anim.effect.timing.iterations, 2, 'set duration 2');
   assert_equals(anim.effect.getComputedTiming().iterations, 2,
                        'getComputedTiming() after set iterations 2');
 }, 'Can be set to a double value');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
+test(t => {
+  const div = createDiv(t);
+  const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
   anim.effect.timing.iterations = Infinity;
   assert_equals(anim.effect.timing.iterations, Infinity, 'set duration Infinity');
   assert_equals(anim.effect.getComputedTiming().iterations, Infinity,
                        'getComputedTiming() after set iterations Infinity');
 }, 'Can be set to infinity');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
-  assert_throws({ name: 'TypeError' }, function() {
+test(t => {
+  const div = createDiv(t);
+  const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
+  assert_throws({ name: 'TypeError' }, () => {
     anim.effect.timing.iterations = -1;
   });
 }, 'Throws when setting a negative number');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
-  assert_throws({ name: 'TypeError' }, function() {
+test(t => {
+  const div = createDiv(t);
+  const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
+  assert_throws({ name: 'TypeError' }, () => {
     anim.effect.timing.iterations = -Infinity;
   });
 }, 'Throws when setting negative infinity');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
-  assert_throws({ name: 'TypeError' }, function() {
+test(t => {
+  const div = createDiv(t);
+  const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
+  assert_throws({ name: 'TypeError' }, () => {
     anim.effect.timing.iterations = NaN;
   });
 }, 'Throws when setting a NaN value');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim = div.animate(null, { duration: 100000, fill: 'both' });
+test(t => {
+  const div = createDiv(t);
+  const anim = div.animate(null, { duration: 100000, fill: 'both' });
 
   anim.finish();
 

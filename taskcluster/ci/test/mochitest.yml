@@ -126,6 +126,10 @@ browser-instrumentation:
     treeherder-symbol: tc-M(inst)
     loopback-video: true
     tier: 3
+    run-on-projects:
+        by-test-platform:
+            windows.*-nightly/.*: ["mozilla-central"]
+            default: []
     max-run-time: 14400
     mozharness:
         mochitest-flavor: browser

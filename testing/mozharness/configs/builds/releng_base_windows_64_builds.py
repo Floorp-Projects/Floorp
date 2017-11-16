@@ -35,7 +35,6 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
     'vcs_share_base': 'C:/builds/hg-shared',
-    'objdir': 'obj-firefox',
     'tooltool_script': [sys.executable,
                         'C:/mozilla-build/tooltool.py'],
     'tooltool_bootstrap': "setup.sh",
@@ -55,7 +54,7 @@ config = {
     'env': {
         'HG_SHARE_BASE_DIR': 'C:/builds/hg-shared',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'PATH': 'C:/mozilla-build/nsis-3.01;C:/mozilla-build/python27;'
                 'C:/mozilla-build/buildbotve/scripts;'
                 '%s' % (os.environ.get('path')),
@@ -76,7 +75,8 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/win64/minidump_stackwalk.exe',
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/win64/nightly',
+    'mozconfig_platform': 'win64',
+    'mozconfig_variant': 'nightly',
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win64/releng.manifest",
     #########################################################################
 }

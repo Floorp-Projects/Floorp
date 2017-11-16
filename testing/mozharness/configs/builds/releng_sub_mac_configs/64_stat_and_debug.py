@@ -1,7 +1,5 @@
 import os
 
-MOZ_OBJDIR = 'obj-firefox'
-
 config = {
     'default_actions': [
         'clobber',
@@ -22,13 +20,12 @@ clang.manifest",
     'enable_signing': False,
     'enable_talos_sendchange': False,
     'enable_unittest_sendchange': False,
-    'objdir': MOZ_OBJDIR,
     'perfherder_extra_options': ['static-analysis'],
     #### 64 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': MOZ_OBJDIR,
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/builds',
@@ -42,6 +39,6 @@ clang.manifest",
         'PATH': '/tools/python/bin:/opt/local/bin:/usr/bin:'
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/macosx64/debug-static-analysis',
+    'mozconfig_variant': 'debug-static-analysis',
     #######################
 }

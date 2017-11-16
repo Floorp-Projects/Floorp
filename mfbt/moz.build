@@ -147,24 +147,16 @@ DEFINES['IMPL_MFBT'] = True
 SOURCES += [
     'Compression.cpp',
     'decimal/Decimal.cpp',
+    'lz4.c',
 ]
 
 DisableStlWrapping()
-
-# Suppress warnings in third-party LZ4 code.
-# TODO: Remove these suppressions after bug 993267 is fixed.
-
-if CONFIG['GNU_CXX']:
-    SOURCES['Compression.cpp'].flags += ['-Wno-unused-function']
-    CXXFLAGS += ['-Wno-error=shadow']
 
 if CONFIG['CLANG_CXX']:
     # Suppress warnings from third-party V8 Decimal code.
     SOURCES['decimal/Decimal.cpp'].flags += ['-Wno-implicit-fallthrough']
 
-if CONFIG['_MSC_VER']:
-    # Error 4804 is "'>' : unsafe use of type 'bool' in operation"
-    SOURCES['Compression.cpp'].flags += ['-wd4804']
-
 if CONFIG['MOZ_NEEDS_LIBATOMIC']:
     OS_LIBS += ['atomic']
+
+DEFINES['LZ4LIB_VISIBILITY'] = ''

@@ -438,7 +438,6 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id)
     _apiCs(*CriticalSectionWrapper::CreateCriticalSection()),
     _requestedCapability(),
     _callBackCs(*CriticalSectionWrapper::CreateCriticalSection()),
-    _dataCallBack(NULL),
     _rotateFrame(kVideoRotation_0),
     last_capture_time_(rtc::TimeNanos()/rtc::kNumNanosecsPerMillisec),
     // XXX Note that this won't capture drift!
@@ -466,7 +465,6 @@ DesktopCaptureImpl::~DesktopCaptureImpl() {
   time_event_->Set();
   capturer_thread_->Stop();
 
-  DeRegisterCaptureDataCallback();
   delete &_callBackCs;
   delete &_apiCs;
 }
@@ -475,14 +473,26 @@ void DesktopCaptureImpl::RegisterCaptureDataCallback(rtc::VideoSinkInterface<Vid
 {
   CriticalSectionScoped cs(&_apiCs);
   CriticalSectionScoped cs2(&_callBackCs);
-  _dataCallBack = dataCallback;
+  _dataCallBacks.insert(dataCallback);
 }
 
-void DesktopCaptureImpl::DeRegisterCaptureDataCallback()
+void DesktopCaptureImpl::DeRegisterCaptureDataCallback(
+  rtc::VideoSinkInterface<VideoFrame> *dataCallback)
 {
   CriticalSectionScoped cs(&_apiCs);
   CriticalSectionScoped cs2(&_callBackCs);
-  _dataCallBack = nullptr;
+  auto it = _dataCallBacks.find(dataCallback);
+  if (it != _dataCallBacks.end()) {
+    _dataCallBacks.erase(it);
+  }
+}
+
+int32_t DesktopCaptureImpl::StopCaptureIfAllClientsClose() {
+  if (_dataCallBacks.empty()) {
+    return StopCapture();
+  } else {
+    return 0;
+  }
 }
 
 int32_t DesktopCaptureImpl::DeliverCapturedFrame(webrtc::VideoFrame& captureFrame,
@@ -502,8 +512,8 @@ int32_t DesktopCaptureImpl::DeliverCapturedFrame(webrtc::VideoFrame& captureFram
   }
   last_capture_time_ = captureFrame.render_time_ms();
 
-  if (_dataCallBack) {
-    _dataCallBack->OnFrame(captureFrame);
+  for (auto dataCallBack : _dataCallBacks) {
+    dataCallBack->OnFrame(captureFrame);
   }
 
   return 0;
@@ -688,6 +698,10 @@ int32_t DesktopCaptureImpl::StartCapture(const VideoCaptureCapability& capabilit
   uint32_t maxFPSNeeded = 1000/_requestedCapability.maxFPS;
   capturer_thread_->RequestCallbackTimer(maxFPSNeeded);
 #endif
+
+  if (started_) {
+    return 0;
+  }
 
   desktop_capturer_cursor_composer_->Start(this);
   capturer_thread_->Start();

@@ -52,23 +52,23 @@ config = {
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
         'platform_overrides': {
             'linux': {
-                'src_mozconfig': 'browser/config/mozconfigs/linux32/release',
+                'mozconfig_variant': 'release',
                 'force_clobber': True,
             },
             'linux64': {
-                'src_mozconfig': 'browser/config/mozconfigs/linux64/release',
+                'mozconfig_variant': 'release',
                 'force_clobber': True,
             },
             'macosx64': {
-                'src_mozconfig': 'browser/config/mozconfigs/macosx64/release',
+                'mozconfig_variant': 'release',
                 'force_clobber': True,
             },
             'win32': {
-                'src_mozconfig': 'browser/config/mozconfigs/win32/release',
+                'mozconfig_variant': 'release',
                 'force_clobber': True,
             },
             'win64': {
-                'src_mozconfig': 'browser/config/mozconfigs/win64/release',
+                'mozconfig_variant': 'release',
                 'force_clobber': True,
             },
             'linux-debug': {
@@ -126,23 +126,23 @@ config = {
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
         'platform_overrides': {
             'linux': {
-                'src_mozconfig': 'browser/config/mozconfigs/linux32/beta',
+                'mozconfig_variant': 'beta',
                 'force_clobber': True,
             },
             'linux64': {
-                'src_mozconfig': 'browser/config/mozconfigs/linux64/beta',
+                'mozconfig_variant': 'beta',
                 'force_clobber': True,
             },
             'macosx64': {
-                'src_mozconfig': 'browser/config/mozconfigs/macosx64/beta',
+                'mozconfig_variant': 'beta',
                 'force_clobber': True,
             },
             'win32': {
-                'src_mozconfig': 'browser/config/mozconfigs/win32/beta',
+                'mozconfig_variant': 'beta',
                 'force_clobber': True,
             },
             'win64': {
-                'src_mozconfig': 'browser/config/mozconfigs/win64/beta',
+                'mozconfig_variant': 'beta',
                 'force_clobber': True,
             },
             'linux-devedition': {
@@ -291,13 +291,13 @@ config = {
         'enable_release_promotion': 1,
         'platform_overrides': {
             'linux': {
-                'src_mozconfig': 'browser/config/mozconfigs/linux32/release',
+                'mozconfig_variant': 'release',
             },
             'linux-debug': {
                 'update_channel': 'default',
             },
             'linux64': {
-                'src_mozconfig': 'browser/config/mozconfigs/linux64/release',
+                'mozconfig_variant': 'release',
             },
             'linux64-debug': {
                 'update_channel': 'default',
@@ -315,7 +315,7 @@ config = {
                 'update_channel': 'default',
             },
             'macosx64': {
-                'src_mozconfig': 'browser/config/mozconfigs/macosx64/release',
+                'mozconfig_variant': 'release',
             },
             'macosx64-debug': {
                 'update_channel': 'default',
@@ -327,13 +327,13 @@ config = {
                 'update_channel': 'default',
             },
             'win32': {
-                'src_mozconfig': 'browser/config/mozconfigs/win32/release',
+                'mozconfig_variant': 'release',
             },
             'win32-debug': {
                 'update_channel': 'default',
             },
             'win64': {
-                'src_mozconfig': 'browser/config/mozconfigs/win64/release',
+                'mozconfig_variant': 'release',
             },
             'win64-debug': {
                 'update_channel': 'default',

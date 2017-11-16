@@ -15,6 +15,7 @@ linux64/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -45,6 +46,7 @@ linux64-dmd/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
         custom-build-variant-cfg: dmd
@@ -76,6 +78,7 @@ linux64/pgo:
         actions: [get-secrets build check-test update]
         options: [enable-pgo]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -105,6 +108,7 @@ linux64/debug:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -138,6 +142,7 @@ linux64-devedition-nightly/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - disable_signing.py
             - balrog/production.py
@@ -171,6 +176,7 @@ linux64-base-toolchains/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -201,6 +207,7 @@ linux64-base-toolchains/debug:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -231,6 +238,7 @@ linux/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -260,6 +268,7 @@ linux/debug:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -291,6 +300,7 @@ linux/pgo:
         actions: [get-secrets build check-test update]
         options: [enable-pgo]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -321,6 +331,7 @@ linux-rusttests/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -354,6 +365,7 @@ linux-rusttests/debug:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -389,6 +401,7 @@ linux-devedition-nightly/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
             - disable_signing.py
             - balrog/production.py
@@ -424,6 +437,7 @@ linux-nightly/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
             - disable_signing.py
             - taskcluster_nightly.py
@@ -456,6 +470,7 @@ linux64-asan/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -488,6 +503,7 @@ linux64-asan-fuzzing/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -519,6 +535,7 @@ linux64-asan-reporter/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -550,6 +567,7 @@ linux64-asan/debug:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -583,6 +601,7 @@ linux64-nightly/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - disable_signing.py
             - taskcluster_nightly.py
@@ -614,6 +633,7 @@ linux64-noopt/debug:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -647,6 +667,7 @@ linux64-rusttests/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -680,6 +701,7 @@ linux64-rusttests/debug:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -714,6 +736,7 @@ linux64-jsdcov/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -745,6 +768,7 @@ linux64-ccov/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -775,6 +799,7 @@ linux64-add-on-devel/opt:
         using: mozharness
         actions: [get-secrets build check-test update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"

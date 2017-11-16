@@ -27,23 +27,16 @@
   color: -moz-FieldText;
 }
 
-.textbox-search-icon {
-  width: 12px;
-  height: 12px;
+.search-box > .textbox-input-box > .textbox-input {
   background-image: url(chrome://global/skin/icons/search-textbox.svg);
   background-repeat: no-repeat;
-  background-position: center;
-  display: inline-block;
-  vertical-align: middle;
-  margin-bottom: 1px;
+  background-size: 12px 12px;
+  background-position: left center;
+  text-indent: 14px;
 }
 
-.textbox-search-icon:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
-.textbox-search-icon[searchbutton]:not([disabled]) {
-  cursor: pointer;
+.search-box > .textbox-input-box > .textbox-input:-moz-locale-dir(rtl) {
+  background-position: right center;
 }
 
 .textbox-search-clear {
@@ -55,10 +48,6 @@
 
 .textbox-search-clear:not([disabled]) {
   cursor: default;
-}
-
-.textbox-search-icon:not([disabled]) {
-  cursor: text;
 }
 
 .textbox-search-clear:not([disabled]):hover {

@@ -23,7 +23,7 @@ Test that we don't display `JS::ubi::RootList` for the root, and instead show "G
              yield renderComponent(DominatorTreeItem({
                item: makeTestDominatorTreeNode({ label: ["other", "JS::ubi::RootList"] }),
                depth: 0,
-               arrow: React.DOM.div(),
+               arrow: dom.div(),
                focused: true,
                getPercentSize: _ => 50,
                onViewSourceInDebugger: _ => { },

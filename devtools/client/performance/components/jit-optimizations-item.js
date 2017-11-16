@@ -7,8 +7,10 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/client/locales/jit-optimizations.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
-const {PluralForm} = require("devtools/shared/plural-form");
-const { DOM: dom, PropTypes, createClass, createFactory } = require("devtools/client/shared/vendor/react");
+const { PluralForm } = require("devtools/shared/plural-form");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Frame = createFactory(require("devtools/client/shared/components/Frame"));
 const PROPNAME_MAX_LENGTH = 4;
 // If TREE_ROW_HEIGHT changes, be sure to change `var(--jit-tree-row-height)`
@@ -30,20 +32,31 @@ const OPTIMIZATION_FAILURE = L10N.getStr("jit.optimizationFailure");
 const JIT_SAMPLES = L10N.getStr("jit.samples");
 const JIT_TYPES = L10N.getStr("jit.types");
 const JIT_ATTEMPTS = L10N.getStr("jit.attempts");
+
 /* eslint-enable no-unused-vars */
 
-const JITOptimizationsItem = createClass({
-  displayName: "JITOptimizationsItem",
+class JITOptimizationsItem extends Component {
+  static get propTypes() {
+    return {
+      onViewSourceInDebugger: PropTypes.func.isRequired,
+      frameData: PropTypes.object.isRequired,
+      type: PropTypes.oneOf(OPTIMIZATION_ITEM_TYPES).isRequired,
+      depth: PropTypes.number.isRequired,
+      arrow: PropTypes.element.isRequired,
+      item: PropTypes.object,
+      focused: PropTypes.bool
+    };
+  }
 
-  propTypes: {
-    onViewSourceInDebugger: PropTypes.func.isRequired,
-    frameData: PropTypes.object.isRequired,
-    type: PropTypes.oneOf(OPTIMIZATION_ITEM_TYPES).isRequired,
-    depth: PropTypes.number.isRequired,
-    arrow: PropTypes.element.isRequired,
-    item: PropTypes.object,
-    focused: PropTypes.bool
-  },
+  constructor(props) {
+    super(props);
+    this._renderSite = this._renderSite.bind(this);
+    this._renderAttempts = this._renderAttempts.bind(this);
+    this._renderTypes = this._renderTypes.bind(this);
+    this._renderAttempt = this._renderAttempt.bind(this);
+    this._renderType = this._renderType.bind(this);
+    this._renderObservedType = this._renderObservedType.bind(this);
+  }
 
   _renderSite({ item: site, onViewSourceInDebugger, frameData }) {
     let attempts = site.data.attempts;
@@ -81,19 +94,19 @@ const JITOptimizationsItem = createClass({
     }
 
     return dom.span({ className: "optimization-site" }, ...children);
-  },
+  }
 
   _renderAttempts({ item: attempts }) {
     return dom.span({ className: "optimization-attempts" },
       `${JIT_ATTEMPTS} (${attempts.length})`
     );
-  },
+  }
 
   _renderTypes({ item: types }) {
     return dom.span({ className: "optimization-types" },
       `${JIT_TYPES} (${types.length})`
     );
-  },
+  }
 
   _renderAttempt({ item: attempt }) {
     let success = isSuccessfulOutcome(attempt.outcome);
@@ -104,12 +117,12 @@ const JITOptimizationsItem = createClass({
       dom.span({ className: `optimization-outcome ${success ? "success" : "failure"}` },
                outcome)
     );
-  },
+  }
 
   _renderType({ item: type }) {
     return dom.span({ className: "optimization-ion-type" },
                     `${type.site}:${type.mirType}`);
-  },
+  }
 
   _renderObservedType({ onViewSourceInDebugger, item: type }) {
     let children = [
@@ -135,7 +148,7 @@ const JITOptimizationsItem = createClass({
     }
 
     return dom.span({ className: "optimization-observed-type" }, ...children);
-  },
+  }
 
   render() {
     /* eslint-disable no-unused-vars */
@@ -173,7 +186,7 @@ const JITOptimizationsItem = createClass({
       arrow,
       content
     );
-  },
-});
+  }
+}
 
 module.exports = JITOptimizationsItem;
