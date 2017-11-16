@@ -133,10 +133,6 @@ return {
         return elts;
     },
 
-    graphExpression: reject,
-    graphIndexExpression: reject,
-    comprehensionExpression: reject,
-    generatorExpression: reject,
     yieldExpression: reject,
 
     emptyStatement: () => ["EmptyStmt", {}],
@@ -204,7 +200,6 @@ return {
         param[0] = "IdPatt";
         return ["CatchClause", {}, param, body];
     },
-    comprehensionBlock: reject,
 
     arrayPattern: reject,
     objectPattern: reject,
