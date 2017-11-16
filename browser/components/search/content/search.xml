@@ -945,7 +945,7 @@
         <xul:treecols anonid="treecols">
           <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1" overflow="true"/>
         </xul:treecols>
-        <xul:treechildren class="autocomplete-treebody searchbar-treebody"/>
+        <xul:treechildren class="autocomplete-treebody searchbar-treebody" noSelectOnMouseMove="true"/>
       </xul:tree>
       <xul:vbox anonid="search-one-off-buttons" class="search-one-offs"/>
     </content>
@@ -1151,19 +1151,6 @@
       ]]></handler>
     </handlers>
 
-  </binding>
-
-
-  <!-- This is the same as the autocomplete-treebody binding except it does not
-       select rows on mousemove. -->
-  <binding id="searchbar-treebody"
-           extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-treebody">
-    <handlers>
-      <handler event="mousemove"><![CDATA[
-        // Cancel the event so that the base binding doesn't select the row.
-        event.preventDefault();
-      ]]></handler>
-    </handlers>
   </binding>
 
   <!-- Used for additional open search providers in the search panel. -->
