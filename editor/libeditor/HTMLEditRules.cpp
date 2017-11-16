@@ -6861,9 +6861,8 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
     }
   }
   EditActionResult result(
-    SplitParagraph(aSelection, aParentDivOrP, brNode,
-                   *pointToSplitParentDivOrP.Container(),
-                   pointToSplitParentDivOrP.Offset()));
+    SplitParagraph(aSelection, aParentDivOrP, pointToSplitParentDivOrP.AsRaw(),
+                   brNode));
   result.MarkAsHandled();
   if (NS_WARN_IF(result.Failed())) {
     return result;
@@ -6873,10 +6872,9 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
 
 nsresult
 HTMLEditRules::SplitParagraph(Selection& aSelection,
-                              Element& aPara,
-                              nsIContent* aBRNode,
-                              nsINode& aSelNode,
-                              int32_t aOffset)
+                              Element& aParentDivOrP,
+                              const EditorRawDOMPoint& aStartOfRightNode,
+                              nsIContent* aNextBRNode)
 {
   if (NS_WARN_IF(!mHTMLEditor)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -6887,26 +6885,28 @@ HTMLEditRules::SplitParagraph(Selection& aSelection,
   // split para
   // get ws code to adjust any ws
   nsCOMPtr<nsIContent> leftPara, rightPara;
-  nsCOMPtr<nsINode> selNode = &aSelNode;
+  nsCOMPtr<nsINode> selNode = aStartOfRightNode.Container();
+  int32_t selOffset = aStartOfRightNode.Offset();
   nsresult rv =
     WSRunObject::PrepareToSplitAcrossBlocks(htmlEditor,
-                                            address_of(selNode), &aOffset);
+                                            address_of(selNode), &selOffset);
   // XXX When it fails, why do we need to return selection node?  (Why can the
   //     caller trust the result even when it returns error?)
   NS_ENSURE_SUCCESS(rv, rv);
   // split the paragraph
   NS_ENSURE_STATE(selNode->IsContent());
   int32_t offset =
-    htmlEditor->SplitNodeDeep(aPara, *selNode->AsContent(), aOffset,
+    htmlEditor->SplitNodeDeep(aParentDivOrP, *selNode->AsContent(), selOffset,
                               HTMLEditor::EmptyContainers::yes,
                               getter_AddRefs(leftPara),
                               getter_AddRefs(rightPara));
   if (NS_WARN_IF(offset == -1)) {
     return NS_ERROR_FAILURE;
   }
-  // get rid of the break, if it is visible (otherwise it may be needed to prevent an empty p)
-  if (aBRNode && htmlEditor->IsVisibleBRElement(aBRNode)) {
-    rv = htmlEditor->DeleteNode(aBRNode);
+  // Get rid of the break, if it is visible (otherwise it may be needed to
+  // prevent an empty p).
+  if (aNextBRNode && htmlEditor->IsVisibleBRElement(aNextBRNode)) {
+    rv = htmlEditor->DeleteNode(aNextBRNode);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
