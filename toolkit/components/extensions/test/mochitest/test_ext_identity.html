@@ -2,12 +2,11 @@
 <html>
 <head>
   <title>Test for WebExtension Identity</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="chrome_head.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
 
@@ -99,7 +98,7 @@ add_task(async function test_badRequestURI() {
       ],
     },
     async background() {
-      let base_uri = "https://example.com/chrome/toolkit/components/extensions/test/mochitest/";
+      let base_uri = "https://example.com/tests/toolkit/components/extensions/test/mochitest/";
       let url = `${base_uri}?redirect_uri=badrobot}`;
       await browser.test.assertRejects(browser.identity.launchWebAuthFlow({interactive: true, url}),
                                        "redirect_uri is invalid", "invalid redirect url");
@@ -121,7 +120,7 @@ add_task(async function test_otherRedirectURL() {
       ],
     },
     async background() {
-      let base_uri = "https://example.com/chrome/toolkit/components/extensions/test/mochitest/";
+      let base_uri = "https://example.com/tests/toolkit/components/extensions/test/mochitest/";
       let url = `${base_uri}?redirect_uri=https://somesite.com/redirect`;
       await browser.test.assertRejects(browser.identity.launchWebAuthFlow({interactive: false, url}),
                                        "Requires user interaction", "alternate redirect_uri ok");
@@ -136,7 +135,7 @@ add_task(async function test_otherRedirectURL() {
 
 function background_launchWebAuthFlow(interactive, path, redirect = true) {
   let expected_redirect = "https://35b64b676900f491c00e7f618d43f7040e88422e.example.com/identity_cb";
-  let base_uri = "https://example.com/chrome/toolkit/components/extensions/test/mochitest/";
+  let base_uri = "https://example.com/tests/toolkit/components/extensions/test/mochitest/";
   let redirect_uri = browser.identity.getRedirectURL("/identity_cb");
   browser.test.assertEq(expected_redirect, redirect_uri, "expected redirect uri matches hash");
   let url = `${base_uri}${path}?redirect_uri=${encodeURIComponent(redirect_uri)}`;
