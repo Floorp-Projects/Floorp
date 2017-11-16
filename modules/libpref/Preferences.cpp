@@ -397,91 +397,6 @@ StrEscape(const char* aOriginal, nsCString& aResult)
   aResult.Append('"');
 }
 
-//
-// External calls
-//
-
-// Set a char* pref. This function takes a dotted notation of the preference
-// name (e.g. "browser.startup.homepage"). Note that this will cause the
-// preference to be saved to the file if it is different from the default. In
-// other words, this is used to set the _user_ preferences.
-//
-// If aSetDefault is set to true however, it sets the default value. This will
-// only affect the program behavior if the user does not have a value saved
-// over it for the particular preference. In addition, these will never be
-// saved out to disk.
-//
-// Each set returns PREF_VALUECHANGED if the user value changed (triggering a
-// callback), or PREF_NOERROR if the value was unchanged.
-static nsresult
-PREF_SetCStringPref(const char* aPrefName,
-                    const nsACString& aValue,
-                    bool aSetDefault)
-{
-  if (aValue.Length() > MAX_PREF_LENGTH) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  // It's ok to stash a pointer to the temporary PromiseFlatCString's chars in
-  // pref because pref_SetPref() duplicates those chars.
-  PrefValue pref;
-  const nsCString& flat = PromiseFlatCString(aValue);
-  pref.mStringVal = flat.get();
-
-  return pref_SetPref(
-    aPrefName, pref, PrefType::String, aSetDefault ? kPrefSetDefault : 0);
-}
-
-// Like PREF_SetCStringPref(), but for integers.
-static nsresult
-PREF_SetIntPref(const char* aPrefName, int32_t aValue, bool aSetDefault)
-{
-  PrefValue pref;
-  pref.mIntVal = aValue;
-
-  return pref_SetPref(
-    aPrefName, pref, PrefType::Int, aSetDefault ? kPrefSetDefault : 0);
-}
-
-// Like PREF_SetCStringPref(), but for booleans.
-static nsresult
-PREF_SetBoolPref(const char* aPrefName, bool aValue, bool aSetDefault)
-{
-  PrefValue pref;
-  pref.mBoolVal = aValue;
-
-  return pref_SetPref(
-    aPrefName, pref, PrefType::Bool, aSetDefault ? kPrefSetDefault : 0);
-}
-
-enum WhichValue
-{
-  DEFAULT_VALUE,
-  USER_VALUE
-};
-
-static nsresult
-SetPrefValue(const char* aPrefName,
-             const dom::PrefValue& aValue,
-             WhichValue aWhich)
-{
-  bool setDefault = (aWhich == DEFAULT_VALUE);
-
-  switch (aValue.type()) {
-    case dom::PrefValue::TnsCString:
-      return PREF_SetCStringPref(aPrefName, aValue.get_nsCString(), setDefault);
-
-    case dom::PrefValue::Tint32_t:
-      return PREF_SetIntPref(aPrefName, aValue.get_int32_t(), setDefault);
-
-    case dom::PrefValue::Tbool:
-      return PREF_SetBoolPref(aPrefName, aValue.get_bool(), setDefault);
-
-    default:
-      MOZ_CRASH();
-  }
-}
-
 static PrefSaveData
 pref_savePrefs()
 {
@@ -554,11 +469,11 @@ pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry)
 static void
 GetPrefValueFromEntry(PrefHashEntry* aHashEntry,
                       dom::PrefSetting* aPref,
-                      WhichValue aWhich)
+                      PrefValueKind aKind)
 {
   PrefValue* value;
   dom::PrefValue* settingValue;
-  if (aWhich == USER_VALUE) {
+  if (aKind == PrefValueKind::User) {
     value = &aHashEntry->mUserPref;
     aPref->userValue() = dom::PrefValue();
     settingValue = &aPref->userValue().get_PrefValue();
@@ -589,13 +504,13 @@ pref_GetPrefFromEntry(PrefHashEntry* aHashEntry, dom::PrefSetting* aPref)
   aPref->name() = aHashEntry->mKey;
 
   if (aHashEntry->mPrefFlags.HasDefault()) {
-    GetPrefValueFromEntry(aHashEntry, aPref, DEFAULT_VALUE);
+    GetPrefValueFromEntry(aHashEntry, aPref, PrefValueKind::Default);
   } else {
     aPref->defaultValue() = null_t();
   }
 
   if (aHashEntry->mPrefFlags.HasUserValue()) {
-    GetPrefValueFromEntry(aHashEntry, aPref, USER_VALUE);
+    GetPrefValueFromEntry(aHashEntry, aPref, PrefValueKind::User);
   } else {
     aPref->userValue() = null_t();
   }
@@ -615,97 +530,6 @@ PREF_HasUserPref(const char* aPrefName)
 
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
   return pref && pref->mPrefFlags.HasUserValue();
-}
-
-static nsresult
-PREF_GetCStringPref(const char* aPrefName,
-                    nsACString& aValueOut,
-                    bool aGetDefault)
-{
-  aValueOut.SetIsVoid(true);
-
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->mPrefFlags.IsTypeString()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  const char* stringVal = nullptr;
-  if (aGetDefault || pref->mPrefFlags.IsLocked() ||
-      !pref->mPrefFlags.HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->mPrefFlags.HasDefault()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    stringVal = pref->mDefaultPref.mStringVal;
-  } else {
-    stringVal = pref->mUserPref.mStringVal;
-  }
-
-  if (!stringVal) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  aValueOut = stringVal;
-  return NS_OK;
-}
-
-static nsresult
-PREF_GetIntPref(const char* aPrefName, int32_t* aValueOut, bool aGetDefault)
-{
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->mPrefFlags.IsTypeInt()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aGetDefault || pref->mPrefFlags.IsLocked() ||
-      !pref->mPrefFlags.HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->mPrefFlags.HasDefault()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    *aValueOut = pref->mDefaultPref.mIntVal;
-  } else {
-    *aValueOut = pref->mUserPref.mIntVal;
-  }
-
-  return NS_OK;
-}
-
-static nsresult
-PREF_GetBoolPref(const char* aPrefName, bool* aValueOut, bool aGetDefault)
-{
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->mPrefFlags.IsTypeBool()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aGetDefault || pref->mPrefFlags.IsLocked() ||
-      !pref->mPrefFlags.HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->mPrefFlags.HasDefault()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    *aValueOut = pref->mDefaultPref.mBoolVal;
-  } else {
-    *aValueOut = pref->mUserPref.mBoolVal;
-  }
-
-  return NS_OK;
 }
 
 // Clears the given pref (reverts it to its default value).
@@ -1836,8 +1660,6 @@ namespace mozilla {
 class PreferenceServiceReporter;
 } // namespace mozilla
 
-class nsPrefBranch;
-
 class PrefCallback : public PLDHashEntryHdr
 {
   friend class mozilla::PreferenceServiceReporter;
@@ -1982,7 +1804,7 @@ public:
   NS_DECL_NSIPREFBRANCH
   NS_DECL_NSIOBSERVER
 
-  nsPrefBranch(const char* aPrefRoot, bool aDefaultBranch);
+  nsPrefBranch(const char* aPrefRoot, PrefValueKind aKind);
   nsPrefBranch() = delete;
 
   int32_t GetRootLength() const { return mPrefRoot.Length(); }
@@ -2045,7 +1867,8 @@ private:
                                         nsAString& aReturn);
 
   // As SetCharPref, but without any check on the length of |aValue|.
-  nsresult SetCharPrefInternal(const char* aPrefName, const nsACString& aValue);
+  nsresult SetCharPrefNoLengthCheck(const char* aPrefName,
+                                    const nsACString& aValue);
 
   // Reject strings that are more than 1Mb, warn if strings are more than 16kb.
   nsresult CheckSanityOfStringLength(const char* aPrefName,
@@ -2062,7 +1885,7 @@ private:
   void FreeObserverList(void);
 
   const nsCString mPrefRoot;
-  bool mIsDefault;
+  PrefValueKind mKind;
 
   bool mFreeingObserverList;
   nsClassHashtable<PrefCallback, PrefCallback> mObservers;
@@ -2104,9 +1927,9 @@ private:
 // nsPrefBranch
 //----------------------------------------------------------------------------
 
-nsPrefBranch::nsPrefBranch(const char* aPrefRoot, bool aDefaultBranch)
+nsPrefBranch::nsPrefBranch(const char* aPrefRoot, PrefValueKind aKind)
   : mPrefRoot(aPrefRoot)
-  , mIsDefault(aDefaultBranch)
+  , mKind(aKind)
   , mFreeingObserverList(false)
   , mObservers()
 {
@@ -2205,17 +2028,16 @@ nsPrefBranch::GetBoolPref(const char* aPrefName, bool* aRetVal)
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_GetBoolPref(pref.get(), aRetVal, mIsDefault);
+  return Preferences::GetBool(pref.get(), aRetVal, mKind);
 }
 
 NS_IMETHODIMP
 nsPrefBranch::SetBoolPref(const char* aPrefName, bool aValue)
 {
-  ENSURE_MAIN_PROCESS("SetBoolPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_SetBoolPref(pref.get(), aValue, mIsDefault);
+  return Preferences::SetBool(pref.get(), aValue, mKind);
 }
 
 NS_IMETHODIMP
@@ -2268,8 +2090,9 @@ NS_IMETHODIMP
 nsPrefBranch::GetCharPref(const char* aPrefName, nsACString& aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
+
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_GetCStringPref(pref.get(), aRetVal, mIsDefault);
+  return Preferences::GetCString(pref.get(), aRetVal, mKind);
 }
 
 NS_IMETHODIMP
@@ -2279,18 +2102,17 @@ nsPrefBranch::SetCharPref(const char* aPrefName, const nsACString& aValue)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return SetCharPrefInternal(aPrefName, aValue);
+  return SetCharPrefNoLengthCheck(aPrefName, aValue);
 }
 
 nsresult
-nsPrefBranch::SetCharPrefInternal(const char* aPrefName,
-                                  const nsACString& aValue)
+nsPrefBranch::SetCharPrefNoLengthCheck(const char* aPrefName,
+                                       const nsACString& aValue)
 {
-  ENSURE_MAIN_PROCESS("SetCharPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_SetCStringPref(pref.get(), aValue, mIsDefault);
+  return Preferences::SetCString(pref.get(), aValue, mKind);
 }
 
 NS_IMETHODIMP
@@ -2322,7 +2144,7 @@ nsPrefBranch::SetStringPref(const char* aPrefName, const nsACString& aValue)
     return rv;
   }
 
-  return SetCharPrefInternal(aPrefName, aValue);
+  return SetCharPrefNoLengthCheck(aPrefName, aValue);
 }
 
 NS_IMETHODIMP
@@ -2346,16 +2168,16 @@ nsPrefBranch::GetIntPref(const char* aPrefName, int32_t* aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_GetIntPref(pref.get(), aRetVal, mIsDefault);
+  return Preferences::GetInt(pref.get(), aRetVal, mKind);
 }
 
 NS_IMETHODIMP
 nsPrefBranch::SetIntPref(const char* aPrefName, int32_t aValue)
 {
-  ENSURE_MAIN_PROCESS("SetIntPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
+
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_SetIntPref(pref.get(), aValue, mIsDefault);
+  return Preferences::SetInt(pref.get(), aValue, mKind);
 }
 
 NS_IMETHODIMP
@@ -2379,7 +2201,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
     const PrefName& pref = GetPrefName(aPrefName);
     bool bNeedDefault = false;
 
-    if (mIsDefault) {
+    if (mKind == PrefValueKind::Default) {
       bNeedDefault = true;
     } else {
       // if there is no user (or locked) value
@@ -2568,7 +2390,7 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
     nsAutoCString descriptorString;
     rv = file->GetPersistentDescriptor(descriptorString);
     if (NS_SUCCEEDED(rv)) {
-      rv = SetCharPrefInternal(aPrefName, descriptorString);
+      rv = SetCharPrefNoLengthCheck(aPrefName, descriptorString);
     }
     return rv;
   }
@@ -2612,7 +2434,7 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
     descriptorString.Append(relativeToKey);
     descriptorString.Append(']');
     descriptorString.Append(relDescriptor);
-    return SetCharPrefInternal(aPrefName, descriptorString);
+    return SetCharPrefNoLengthCheck(aPrefName, descriptorString);
   }
 
   if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
@@ -2628,7 +2450,8 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
         if (NS_FAILED(rv)) {
           return rv;
         }
-        rv = SetCharPrefInternal(aPrefName, NS_ConvertUTF16toUTF8(wideString));
+        rv = SetCharPrefNoLengthCheck(aPrefName,
+                                      NS_ConvertUTF16toUTF8(wideString));
       }
     }
     return rv;
@@ -2959,7 +2782,8 @@ nsPrefBranch::GetDefaultFromPropertiesFile(const char* aPrefName,
   // The default value contains a URL to a .properties file.
 
   nsAutoCString propertyFileURL;
-  nsresult rv = PREF_GetCStringPref(aPrefName, propertyFileURL, true);
+  nsresult rv =
+    Preferences::GetCString(aPrefName, propertyFileURL, PrefValueKind::Default);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -3110,9 +2934,6 @@ Preferences::HandleDirty()
 
 static nsresult
 openPrefFile(nsIFile* aFile);
-
-static Result<Ok, const char*>
-pref_InitInitialObjects();
 
 static nsresult
 pref_LoadPrefsInDirList(const char* aListId);
@@ -3539,7 +3360,7 @@ Preferences::GetInstanceForService()
   gHashTable = new PLDHashTable(
     &pref_HashTableOps, sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
 
-  Result<Ok, const char*> res = pref_InitInitialObjects();
+  Result<Ok, const char*> res = InitInitialObjects();
   if (res.isErr()) {
     sPreferences = nullptr;
     gCacheDataDesc = res.unwrapErr();
@@ -3558,8 +3379,8 @@ Preferences::GetInstanceForService()
     // Check if there is a deployment configuration file. If so, set up the
     // pref config machinery, which will actually read the file.
     nsAutoCString lockFileName;
-    nsresult rv =
-      PREF_GetCStringPref("general.config.filename", lockFileName, false);
+    nsresult rv = Preferences::GetCString(
+      "general.config.filename", lockFileName, PrefValueKind::User);
     if (NS_SUCCEEDED(rv)) {
       NS_CreateServicesFromCategory(
         "pref-config-startup",
@@ -3644,8 +3465,8 @@ Preferences::Shutdown()
 //
 
 Preferences::Preferences()
-  : mRootBranch(new nsPrefBranch("", false))
-  , mDefaultRootBranch(new nsPrefBranch("", true))
+  : mRootBranch(new nsPrefBranch("", PrefValueKind::User))
+  , mDefaultRootBranch(new nsPrefBranch("", PrefValueKind::Default))
 {
 }
 
@@ -3718,7 +3539,7 @@ Preferences::InitializeUserPrefs()
 
   // Migrate the old prerelease telemetry pref.
   if (!Preferences::GetBool(kOldTelemetryPref, true)) {
-    Preferences::SetBool(kTelemetryPref, false);
+    Preferences::SetBoolInAnyProcess(kTelemetryPref, false);
     Preferences::ClearUser(kOldTelemetryPref);
   }
 
@@ -3754,7 +3575,7 @@ Preferences::Observe(nsISupports* aSubject,
 
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
     // Reload the default prefs from file.
-    Unused << pref_InitInitialObjects();
+    Unused << InitInitialObjects();
 
   } else if (!nsCRT::strcmp(aTopic, "suspend_process_notification")) {
     // Our process is being suspended. The OS may wake our process later,
@@ -3789,7 +3610,7 @@ Preferences::ResetPrefs()
   gHashTable->ClearAndPrepareForLength(PREF_HASHTABLE_INITIAL_LENGTH);
   gPrefNameArena.Clear();
 
-  return pref_InitInitialObjects().isOk() ? NS_OK : NS_ERROR_FAILURE;
+  return InitInitialObjects().isOk() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -3848,6 +3669,29 @@ Preferences::SavePrefFile(nsIFile* aFile)
   return SavePrefFileInternal(aFile, SaveMethod::Asynchronous);
 }
 
+/* static */ nsresult
+Preferences::SetValueFromDom(const char* aPrefName,
+                             const dom::PrefValue& aValue,
+                             PrefValueKind aKind)
+{
+  switch (aValue.type()) {
+    case dom::PrefValue::TnsCString:
+      return Preferences::SetCStringInAnyProcess(
+        aPrefName, aValue.get_nsCString(), aKind);
+
+    case dom::PrefValue::Tint32_t:
+      return Preferences::SetIntInAnyProcess(
+        aPrefName, aValue.get_int32_t(), aKind);
+
+    case dom::PrefValue::Tbool:
+      return Preferences::SetBoolInAnyProcess(
+        aPrefName, aValue.get_bool(), aKind);
+
+    default:
+      MOZ_CRASH();
+  }
+}
+
 void
 Preferences::SetPreference(const PrefSetting& aPref)
 {
@@ -3856,15 +3700,15 @@ Preferences::SetPreference(const PrefSetting& aPref)
   const dom::MaybePrefValue& userValue = aPref.userValue();
 
   if (defaultValue.type() == dom::MaybePrefValue::TPrefValue) {
-    nsresult rv =
-      SetPrefValue(prefName, defaultValue.get_PrefValue(), DEFAULT_VALUE);
+    nsresult rv = SetValueFromDom(
+      prefName, defaultValue.get_PrefValue(), PrefValueKind::Default);
     if (NS_FAILED(rv)) {
       return;
     }
   }
 
   if (userValue.type() == dom::MaybePrefValue::TPrefValue) {
-    SetPrefValue(prefName, userValue.get_PrefValue(), USER_VALUE);
+    SetValueFromDom(prefName, userValue.get_PrefValue(), PrefValueKind::User);
   } else {
     PREF_ClearUserPref(prefName);
   }
@@ -3922,7 +3766,8 @@ Preferences::GetBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal)
   if ((nullptr != aPrefRoot) && (*aPrefRoot != '\0')) {
     // TODO: Cache this stuff and allow consumers to share branches (hold weak
     // references, I think).
-    RefPtr<nsPrefBranch> prefBranch = new nsPrefBranch(aPrefRoot, false);
+    RefPtr<nsPrefBranch> prefBranch =
+      new nsPrefBranch(aPrefRoot, PrefValueKind::User);
     prefBranch.forget(aRetVal);
   } else {
     // Special case: caching the default root.
@@ -3944,7 +3789,8 @@ Preferences::GetDefaultBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal)
 
   // TODO: Cache this stuff and allow consumers to share branches (hold weak
   // references, I think).
-  RefPtr<nsPrefBranch> prefBranch = new nsPrefBranch(aPrefRoot, true);
+  RefPtr<nsPrefBranch> prefBranch =
+    new nsPrefBranch(aPrefRoot, PrefValueKind::Default);
   if (!prefBranch) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -4343,8 +4189,8 @@ pref_ReadPrefFromJar(nsZipArchive* aJarReader, const char* aName)
 
 // Initialize default preference JavaScript buffers from appropriate TEXT
 // resources.
-static Result<Ok, const char*>
-pref_InitInitialObjects()
+/* static */ Result<Ok, const char*>
+Preferences::InitInitialObjects()
 {
   // In the omni.jar case, we load the following prefs:
   // - jar:$gre/omni.jar!/greprefs.js
@@ -4489,19 +4335,20 @@ pref_InitInitialObjects()
   // has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta channel, telemetry
   // is on by default, otherwise not. This is necessary so that beta users who
   // are testing final release builds don't flipflop defaults.
-  if (Preferences::GetDefaultType(kTelemetryPref) ==
+  if (Preferences::GetType(kTelemetryPref, PrefValueKind::Default) ==
       nsIPrefBranch::PREF_INVALID) {
     bool prerelease = false;
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     prerelease = true;
 #else
     nsAutoCString prefValue;
-    Preferences::GetDefaultCString(kChannelPref, prefValue);
+    Preferences::GetCString(kChannelPref, prefValue, PrefValueKind::Default);
     if (prefValue.EqualsLiteral("beta")) {
       prerelease = true;
     }
 #endif
-    PREF_SetBoolPref(kTelemetryPref, prerelease, true);
+    Preferences::SetBoolInAnyProcess(
+      kTelemetryPref, prerelease, PrefValueKind::Default);
   }
 #else
   // For platforms with Unified Telemetry (here meaning not-Android),
@@ -4517,9 +4364,11 @@ pref_InitInitialObjects()
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "nightly") ||
       !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "aurora") ||
       !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") || developerBuild) {
-    PREF_SetBoolPref(kTelemetryPref, true, true);
+    Preferences::SetBoolInAnyProcess(
+      kTelemetryPref, true, PrefValueKind::Default);
   } else {
-    PREF_SetBoolPref(kTelemetryPref, false, true);
+    Preferences::SetBoolInAnyProcess(
+      kTelemetryPref, false, PrefValueKind::Default);
   }
   PREF_LockPref(kTelemetryPref, true);
 #endif // MOZ_WIDGET_ANDROID
@@ -4543,28 +4392,68 @@ pref_InitInitialObjects()
 //----------------------------------------------------------------------------
 
 /* static */ nsresult
-Preferences::GetBool(const char* aPref, bool* aResult)
+Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetBoolPref(aPref, aResult, false);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (!pref || !pref->mPrefFlags.IsTypeBool()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (aKind == PrefValueKind::Default || pref->mPrefFlags.IsLocked() ||
+      !pref->mPrefFlags.HasUserValue()) {
+
+    // Do we have a default?
+    if (!pref->mPrefFlags.HasDefault()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    *aResult = pref->mDefaultPref.mBoolVal;
+  } else {
+    *aResult = pref->mUserPref.mBoolVal;
+  }
+
+  return NS_OK;
 }
 
 /* static */ nsresult
-Preferences::GetInt(const char* aPref, int32_t* aResult)
+Preferences::GetInt(const char* aPrefName,
+                    int32_t* aResult,
+                    PrefValueKind aKind)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetIntPref(aPref, aResult, false);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (!pref || !pref->mPrefFlags.IsTypeInt()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (aKind == PrefValueKind::Default || pref->mPrefFlags.IsLocked() ||
+      !pref->mPrefFlags.HasUserValue()) {
+
+    // Do we have a default?
+    if (!pref->mPrefFlags.HasDefault()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    *aResult = pref->mDefaultPref.mIntVal;
+  } else {
+    *aResult = pref->mUserPref.mIntVal;
+  }
+
+  return NS_OK;
 }
 
 /* static */ nsresult
-Preferences::GetFloat(const char* aPref, float* aResult)
+Preferences::GetFloat(const char* aPrefName,
+                      float* aResult,
+                      PrefValueKind aKind)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+
   nsAutoCString result;
-  nsresult rv = PREF_GetCStringPref(aPref, result, false);
+  nsresult rv = Preferences::GetCString(aPrefName, result, aKind);
   if (NS_SUCCEEDED(rv)) {
     *aResult = result.ToFloat(&rv);
   }
@@ -4572,18 +4461,47 @@ Preferences::GetFloat(const char* aPref, float* aResult)
 }
 
 /* static */ nsresult
-Preferences::GetCString(const char* aPref, nsACString& aResult)
+Preferences::GetCString(const char* aPrefName,
+                        nsACString& aResult,
+                        PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetCStringPref(aPref, aResult, false);
+
+  aResult.SetIsVoid(true);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (!pref || !pref->mPrefFlags.IsTypeString()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  const char* stringVal = nullptr;
+  if (aKind == PrefValueKind::Default || pref->mPrefFlags.IsLocked() ||
+      !pref->mPrefFlags.HasUserValue()) {
+
+    // Do we have a default?
+    if (!pref->mPrefFlags.HasDefault()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    stringVal = pref->mDefaultPref.mStringVal;
+  } else {
+    stringVal = pref->mUserPref.mStringVal;
+  }
+
+  if (!stringVal) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  aResult = stringVal;
+  return NS_OK;
 }
 
 /* static */ nsresult
-Preferences::GetString(const char* aPref, nsAString& aResult)
+Preferences::GetString(const char* aPrefName,
+                       nsAString& aResult,
+                       PrefValueKind aKind)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsAutoCString result;
-  nsresult rv = PREF_GetCStringPref(aPref, result, false);
+  nsresult rv = Preferences::GetCString(aPrefName, result, aKind);
   if (NS_SUCCEEDED(rv)) {
     CopyUTF8toUTF16(result, aResult);
   }
@@ -4591,10 +4509,12 @@ Preferences::GetString(const char* aPref, nsAString& aResult)
 }
 
 /* static */ nsresult
-Preferences::GetLocalizedCString(const char* aPref, nsACString& aResult)
+Preferences::GetLocalizedCString(const char* aPrefName,
+                                 nsACString& aResult,
+                                 PrefValueKind aKind)
 {
   nsAutoString result;
-  nsresult rv = GetLocalizedString(aPref, result);
+  nsresult rv = GetLocalizedString(aPrefName, result);
   if (NS_SUCCEEDED(rv)) {
     CopyUTF16toUTF8(result, aResult);
   }
@@ -4602,12 +4522,16 @@ Preferences::GetLocalizedCString(const char* aPref, nsACString& aResult)
 }
 
 /* static */ nsresult
-Preferences::GetLocalizedString(const char* aPref, nsAString& aResult)
+Preferences::GetLocalizedString(const char* aPrefName,
+                                nsAString& aResult,
+                                PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
-  nsresult rv = sPreferences->mRootBranch->GetComplexValue(
-    aPref, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(prefLocalString));
+  nsresult rv =
+    GetRootBranch(aKind)->GetComplexValue(aPrefName,
+                                          NS_GET_IID(nsIPrefLocalizedString),
+                                          getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
     prefLocalString->GetData(aResult);
@@ -4616,73 +4540,98 @@ Preferences::GetLocalizedString(const char* aPref, nsAString& aResult)
 }
 
 /* static */ nsresult
-Preferences::GetComplex(const char* aPref, const nsIID& aType, void** aResult)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sPreferences->mRootBranch->GetComplexValue(aPref, aType, aResult);
-}
-
-/* static */ nsresult
-Preferences::SetCString(const char* aPref, const char* aValue)
-{
-  ENSURE_MAIN_PROCESS("SetCString", aPref);
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCStringPref(aPref, nsDependentCString(aValue), false);
-}
-
-/* static */ nsresult
-Preferences::SetCString(const char* aPref, const nsACString& aValue)
-{
-  ENSURE_MAIN_PROCESS("SetCString", aPref);
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCStringPref(aPref, aValue, false);
-}
-
-/* static */ nsresult
-Preferences::SetString(const char* aPref, const char16ptr_t aValue)
-{
-  ENSURE_MAIN_PROCESS("SetString", aPref);
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCStringPref(aPref, NS_ConvertUTF16toUTF8(aValue), false);
-}
-
-/* static */ nsresult
-Preferences::SetString(const char* aPref, const nsAString& aValue)
-{
-  ENSURE_MAIN_PROCESS("SetString", aPref);
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCStringPref(aPref, NS_ConvertUTF16toUTF8(aValue), false);
-}
-
-/* static */ nsresult
-Preferences::SetBool(const char* aPref, bool aValue)
-{
-  ENSURE_MAIN_PROCESS("SetBool", aPref);
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetBoolPref(aPref, aValue, false);
-}
-
-/* static */ nsresult
-Preferences::SetInt(const char* aPref, int32_t aValue)
-{
-  ENSURE_MAIN_PROCESS("SetInt", aPref);
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetIntPref(aPref, aValue, false);
-}
-
-/* static */ nsresult
-Preferences::SetFloat(const char* aPref, float aValue)
-{
-  return SetCString(aPref, nsPrintfCString("%f", aValue).get());
-}
-
-/* static */ nsresult
-Preferences::SetComplex(const char* aPref,
+Preferences::GetComplex(const char* aPrefName,
                         const nsIID& aType,
-                        nsISupports* aValue)
+                        void** aResult,
+                        PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sPreferences->mRootBranch->SetComplexValue(aPref, aType, aValue);
+  return GetRootBranch(aKind)->GetComplexValue(aPrefName, aType, aResult);
+}
+
+/* static */ nsresult
+Preferences::SetCStringInAnyProcess(const char* aPrefName,
+                                    const nsACString& aValue,
+                                    PrefValueKind aKind)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+
+  if (aValue.Length() > MAX_PREF_LENGTH) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  // It's ok to stash a pointer to the temporary PromiseFlatCString's chars in
+  // pref because pref_SetPref() duplicates those chars.
+  PrefValue prefValue;
+  const nsCString& flat = PromiseFlatCString(aValue);
+  prefValue.mStringVal = flat.get();
+  return pref_SetPref(aPrefName,
+                      prefValue,
+                      PrefType::String,
+                      aKind == PrefValueKind::Default ? kPrefSetDefault : 0);
+}
+
+/* static */ nsresult
+Preferences::SetCString(const char* aPrefName,
+                        const nsACString& aValue,
+                        PrefValueKind aKind)
+{
+  ENSURE_MAIN_PROCESS("SetCString", aPrefName);
+  return SetCStringInAnyProcess(aPrefName, aValue, aKind);
+}
+
+/* static */ nsresult
+Preferences::SetBoolInAnyProcess(const char* aPrefName,
+                                 bool aValue,
+                                 PrefValueKind aKind)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+
+  PrefValue prefValue;
+  prefValue.mBoolVal = aValue;
+  return pref_SetPref(aPrefName,
+                      prefValue,
+                      PrefType::Bool,
+                      aKind == PrefValueKind::Default ? kPrefSetDefault : 0);
+}
+
+/* static */ nsresult
+Preferences::SetBool(const char* aPrefName, bool aValue, PrefValueKind aKind)
+{
+  ENSURE_MAIN_PROCESS("SetBool", aPrefName);
+  return SetBoolInAnyProcess(aPrefName, aValue, aKind);
+}
+
+/* static */ nsresult
+Preferences::SetIntInAnyProcess(const char* aPrefName,
+                                int32_t aValue,
+                                PrefValueKind aKind)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+
+  PrefValue prefValue;
+  prefValue.mIntVal = aValue;
+  return pref_SetPref(aPrefName,
+                      prefValue,
+                      PrefType::Int,
+                      aKind == PrefValueKind::Default ? kPrefSetDefault : 0);
+}
+
+/* static */ nsresult
+Preferences::SetInt(const char* aPrefName, int32_t aValue, PrefValueKind aKind)
+{
+  ENSURE_MAIN_PROCESS("SetInt", aPrefName);
+  return SetIntInAnyProcess(aPrefName, aValue, aKind);
+}
+
+/* static */ nsresult
+Preferences::SetComplex(const char* aPrefName,
+                        const nsIID& aType,
+                        nsISupports* aValue,
+                        PrefValueKind aKind)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  return GetRootBranch(aKind)->SetComplexValue(aPrefName, aType, aValue);
 }
 
 /* static */ nsresult
@@ -4701,11 +4650,11 @@ Preferences::HasUserValue(const char* aPref)
 }
 
 /* static */ int32_t
-Preferences::GetType(const char* aPref)
+Preferences::GetType(const char* aPrefName, PrefValueKind aKind)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
   int32_t result;
-  return NS_SUCCEEDED(sPreferences->mRootBranch->GetPrefType(aPref, &result))
+  return NS_SUCCEEDED(GetRootBranch(aKind)->GetPrefType(aPrefName, &result))
            ? result
            : nsIPrefBranch::PREF_INVALID;
 }
@@ -4985,87 +4934,6 @@ Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
   CacheDataAppendElement(data);
   RegisterVarCacheCallback(FloatVarChanged, aPref, data);
   return NS_OK;
-}
-
-/* static */ nsresult
-Preferences::GetDefaultBool(const char* aPref, bool* aResult)
-{
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetBoolPref(aPref, aResult, true);
-}
-
-/* static */ nsresult
-Preferences::GetDefaultInt(const char* aPref, int32_t* aResult)
-{
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetIntPref(aPref, aResult, true);
-}
-
-/* static */ nsresult
-Preferences::GetDefaultCString(const char* aPref, nsACString& aResult)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_GetCStringPref(aPref, aResult, true);
-}
-
-/* static */ nsresult
-Preferences::GetDefaultString(const char* aPref, nsAString& aResult)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  nsAutoCString result;
-  nsresult rv = PREF_GetCStringPref(aPref, result, true);
-  if (NS_SUCCEEDED(rv)) {
-    CopyUTF8toUTF16(result, aResult);
-  }
-  return rv;
-}
-
-/* static */ nsresult
-Preferences::GetDefaultLocalizedCString(const char* aPref, nsACString& aResult)
-{
-  nsAutoString result;
-  nsresult rv = GetDefaultLocalizedString(aPref, result);
-  if (NS_SUCCEEDED(rv)) {
-    CopyUTF16toUTF8(result, aResult);
-  }
-  return rv;
-}
-
-/* static */ nsresult
-Preferences::GetDefaultLocalizedString(const char* aPref, nsAString& aResult)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
-  nsresult rv = sPreferences->mDefaultRootBranch->GetComplexValue(
-    aPref, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(prefLocalString));
-  if (NS_SUCCEEDED(rv)) {
-    NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
-    prefLocalString->GetData(aResult);
-  }
-  return rv;
-}
-
-/* static */ nsresult
-Preferences::GetDefaultComplex(const char* aPref,
-                               const nsIID& aType,
-                               void** aResult)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sPreferences->mDefaultRootBranch->GetComplexValue(
-    aPref, aType, aResult);
-}
-
-/* static */ int32_t
-Preferences::GetDefaultType(const char* aPref)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
-  int32_t result;
-  return NS_SUCCEEDED(
-           sPreferences->mDefaultRootBranch->GetPrefType(aPref, &result))
-           ? result
-           : nsIPrefBranch::PREF_INVALID;
 }
 
 } // namespace mozilla

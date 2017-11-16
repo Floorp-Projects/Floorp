@@ -1,5 +1,3 @@
-// |jit-test| need-for-each
-
 // Debugger.prototype.{addDebuggee,hasDebuggee,removeDebuggee} recognize globals
 // regardless of how they are specified.
 
@@ -8,11 +6,11 @@ var dbg = new Debugger;
 // Assert that dbg's debuggees are exactly the set passed as arguments.
 // The arguments are assumed to be Debugger.Object instances referring to
 // globals without wrappers --- which is the sort returned by addDebuggee.
-function assertDebuggees() {
-  print("assertDebuggees([" + Array.prototype.slice.call(arguments).map((g) => g.toSource()) + "])");
+function assertDebuggees(...expected) {
+  print("assertDebuggees([" + expected.map((g) => g.toSource()) + "])");
   var debuggees = dbg.getDebuggees();
-  assertEq(arguments.length, debuggees.length);
-  for each (g in arguments)
+  assertEq(expected.length, debuggees.length);
+  for (let g of expected)
     assertEq(debuggees.indexOf(g) != -1, true);
 }
 

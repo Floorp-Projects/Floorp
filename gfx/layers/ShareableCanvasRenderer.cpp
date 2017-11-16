@@ -226,7 +226,7 @@ ShareableCanvasRenderer::UpdateCompositableClient()
 
   FirePreTransactionCallback();
   if (mBufferProvider && mBufferProvider->GetTextureClient()) {
-    if (!mBufferProvider->SetForwarder(GetForwarder()->AsLayerForwarder())) {
+    if (!mBufferProvider->SetKnowsCompositor(GetForwarder())) {
       gfxCriticalNote << "BufferProvider::SetForwarder failed";
       return;
     }

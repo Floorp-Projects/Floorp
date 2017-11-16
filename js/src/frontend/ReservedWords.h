@@ -63,7 +63,6 @@
     macro(as, as, TOK_AS) \
     macro(async, async, TOK_ASYNC) \
     macro(await, await, TOK_AWAIT) \
-    macro(each, each, TOK_EACH) \
     macro(from, from, TOK_FROM) \
     macro(get, get, TOK_GET) \
     macro(let, let, TOK_LET) \

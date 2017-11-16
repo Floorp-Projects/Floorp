@@ -215,6 +215,10 @@ html|select:not([size]):not([multiple]) {
   text-overflow: ellipsis;
 }
 
+html|select:not([size]):not([multiple]):dir(rtl){
+  background-position: left 3px center;
+}
+
 html|button:enabled:hover,
 html|select:not([size]):not([multiple]):enabled:hover,
 xul|button:not([disabled="true"]):hover,
