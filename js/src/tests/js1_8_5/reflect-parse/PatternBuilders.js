@@ -126,9 +126,6 @@ function catchClause(id, guard, body) {
 function tryStmt(body, guarded, unguarded, fin) {
     return Pattern({ type: "TryStatement", block: body, guardedHandlers: guarded, handler: unguarded, finalizer: fin });
 }
-function letStmt(head, body) {
-    return Pattern({ type: "LetStatement", head: head, body: body });
-}
 
 function superProp(id) {
     return dotExpr(Pattern({ type: "Super" }), id);
@@ -251,35 +248,6 @@ function taggedTemplate(tagPart, templatePart) {
 }
 function template(raw, cooked, ...args) {
     return Pattern([{ type: "CallSiteObject", raw: raw, cooked: cooked}, ...args]);
-}
-
-function compExpr(body, blocks, filter, style) {
-    if (style == "legacy" || !filter)
-        return Pattern({ type: "ComprehensionExpression", body, blocks, filter, style });
-    else
-        return Pattern({ type: "ComprehensionExpression", body, blocks: blocks.concat(compIf(filter)), filter: null, style });
-}
-function genExpr(body, blocks, filter, style) {
-    if (style == "legacy" || !filter)
-        return Pattern({ type: "GeneratorExpression", body, blocks, filter, style });
-    else
-        return Pattern({ type: "GeneratorExpression", body, blocks: blocks.concat(compIf(filter)), filter: null, style });
-}
-function graphExpr(idx, body) {
-    return Pattern({ type: "GraphExpression", index: idx, expression: body });
-}
-function idxExpr(idx) {
-    return Pattern({ type: "GraphIndexExpression", index: idx });
-}
-
-function compBlock(left, right) {
-    return Pattern({ type: "ComprehensionBlock", left: left, right: right, of: false });
-}
-function compOfBlock(left, right) {
-    return Pattern({ type: "ComprehensionBlock", left: left, right: right, of: true });
-}
-function compIf(test) {
-    return Pattern({ type: "ComprehensionIf", test: test });
 }
 
 function arrPatt(elts) {

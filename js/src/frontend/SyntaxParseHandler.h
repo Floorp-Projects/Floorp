@@ -113,14 +113,6 @@ class SyntaxParseHandler
         // |("use strict");| as a useless statement.
         NodeUnparenthesizedString,
 
-        // Legacy generator expressions of the form |(expr for (...))| and
-        // array comprehensions of the form |[expr for (...)]|) don't permit
-        // |expr| to be a comma expression.  Thus we need this to treat
-        // |(a(), b for (x in []))| as a syntax error and
-        // |((a(), b) for (x in []))| as a generator that calls |a| and then
-        // yields |b| each time it's resumed.
-        NodeUnparenthesizedCommaExpr,
-
         // Assignment expressions in condition contexts could be typos for
         // equality checks.  (Think |if (x = y)| versus |if (x == y)|.)  Thus
         // we need this to treat |if (x = y)| as a possible typo and
@@ -434,14 +426,13 @@ class SyntaxParseHandler
     }
 
     Node newCommaExpressionList(Node kid) {
-        return NodeUnparenthesizedCommaExpr;
+        return NodeGeneric;
     }
 
     void addList(Node list, Node kid) {
         MOZ_ASSERT(list == NodeGeneric ||
                    list == NodeUnparenthesizedArray ||
                    list == NodeUnparenthesizedObject ||
-                   list == NodeUnparenthesizedCommaExpr ||
                    list == NodeVarDeclaration ||
                    list == NodeLexicalDeclaration ||
                    list == NodeFunctionCall);
@@ -453,10 +444,6 @@ class SyntaxParseHandler
 
     Node newAssignment(ParseNodeKind kind, Node lhs, Node rhs) {
         return kind == PNK_ASSIGN ? NodeUnparenthesizedAssignment : NodeGeneric;
-    }
-
-    bool isUnparenthesizedCommaExpression(Node node) {
-        return node == NodeUnparenthesizedCommaExpr;
     }
 
     bool isUnparenthesizedAssignment(Node node) {
@@ -503,7 +490,6 @@ class SyntaxParseHandler
         // Other nodes need not be recognizable after parenthesization; convert
         // them to a generic node.
         if (node == NodeUnparenthesizedString ||
-            node == NodeUnparenthesizedCommaExpr ||
             node == NodeUnparenthesizedAssignment ||
             node == NodeUnparenthesizedUnary)
         {

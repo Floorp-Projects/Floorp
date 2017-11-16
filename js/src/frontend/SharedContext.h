@@ -207,9 +207,8 @@ class Directives
 };
 
 // The kind of this-binding for the current scope. Note that arrow functions
-// (and generator expression lambdas) have a lexical this-binding so their
-// ThisBinding is the same as the ThisBinding of their enclosing scope and can
-// be any value.
+// have a lexical this-binding so their ThisBinding is the same as the
+// ThisBinding of their enclosing scope and can be any value.
 enum class ThisBinding { Global, Function, Module };
 
 class GlobalSharedContext;
