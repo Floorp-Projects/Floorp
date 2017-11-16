@@ -87,7 +87,7 @@ gKeyframesTests.forEach(subtest => {
     const div = createDiv(t);
     const anim = div.animate(subtest.input, 2000);
     assert_frame_lists_equal(anim.effect.getKeyframes(), subtest.output);
-  }, 'Element.animate() accepts ' + subtest.desc);
+  }, `Element.animate() accepts ${subtest.desc}`);
 });
 
 gInvalidKeyframesTests.forEach(subtest => {
@@ -96,7 +96,7 @@ gInvalidKeyframesTests.forEach(subtest => {
     assert_throws(new TypeError, () => {
       div.animate(subtest.input, 2000);
     });
-  }, 'Element.animate() does not accept ' + subtest.desc);
+  }, `Element.animate() does not accept ${subtest.desc}`);
 });
 
 gInvalidEasings.forEach(invalidEasing => {

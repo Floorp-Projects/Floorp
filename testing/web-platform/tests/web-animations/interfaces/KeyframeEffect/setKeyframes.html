@@ -28,7 +28,7 @@ gKeyframesTests.forEach(subtest => {
     const effect = new KeyframeEffect(target, {});
     effect.setKeyframes(subtest.input);
     assert_frame_lists_equal(effect.getKeyframes(), subtest.output);
-  }, 'Keyframes can be replaced with ' + subtest.desc);
+  }, `Keyframes can be replaced with ${subtest.desc}`);
 });
 
 gInvalidKeyframesTests.forEach(subtest => {
@@ -37,7 +37,7 @@ gInvalidKeyframesTests.forEach(subtest => {
     assert_throws(new TypeError, () => {
       effect.setKeyframes(subtest.input);
     });
-  }, 'KeyframeEffect constructor throws with ' + subtest.desc);
+  }, `KeyframeEffect constructor throws with ${subtest.desc}`);
 });
 </script>
 </body>

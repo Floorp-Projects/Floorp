@@ -18,8 +18,7 @@ test(t => {
   tests.forEach(test => {
     const anim = createDiv(t).animate(null, { delay: 1, fill: test.fill });
     assert_equals(anim.effect.getComputedTiming().progress, test.progress,
-                  'Progress in before phase when using \'' + test.fill
-                  + '\' fill');
+                  `Progress in before phase when using '${test.fill}' fill`);
   });
 }, 'Active time in before phase');
 
