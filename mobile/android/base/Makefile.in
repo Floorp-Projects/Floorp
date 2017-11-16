@@ -273,19 +273,6 @@ endif
 
 proguard_config_dir=$(topsrcdir)/mobile/android/config/proguard
 
-# This stanza ensures that the set of GeckoView classes does not depend on too
-# much of Fennec, where "too much" is defined as the set of potentially
-# non-GeckoView classes that GeckoView already depended on at a certain point in
-# time.  The idea is to set a high-water mark that is not to be crossed.
-classycle_jar := $(topsrcdir)/mobile/android/build/classycle/classycle-1.4.1.jar
-.geckoview.deps: geckoview.ddf $(classycle_jar) $(ALL_JARS)
-	$(JAVA) -cp $(classycle_jar) \
-		classycle.dependency.DependencyChecker \
-		-mergeInnerClasses \
-		-dependencies=@$< \
-		$(ALL_JARS)
-	@$(TOUCH) $@
-
 # First, we delete debugging information from libraries. Having line-number
 # information for libraries for which we lack the source isn't useful, so this
 # saves us a bit of space. Importantly, Proguard has a bug causing it to
@@ -312,7 +299,7 @@ classycle_jar := $(topsrcdir)/mobile/android/build/classycle/classycle-1.4.1.jar
 # outputs are fresher than the target, preventing a subsequent
 # invocation from thinking Proguard's outputs are stale.  This is safe
 # because Make removes the target file if any recipe command fails.
-.proguard.deps: .geckoview.deps .bundled.proguard.deps $(ALL_JARS) $(proguard_config_dir)/proguard.cfg $(PROGUARD_JAR)
+.proguard.deps: .bundled.proguard.deps $(ALL_JARS) $(proguard_config_dir)/proguard.cfg $(PROGUARD_JAR)
 	$(REPORT_BUILD)
 	@$(TOUCH) $@
 	$(JAVA) \

@@ -22,9 +22,6 @@ with Files('pocket-api-sandbox.token'):
 with Files('android-services.mozbuild'):
     BUG_COMPONENT = ('Android Background Services', 'Android Sync')
 
-with Files('geckoview.ddf'):
-    BUG_COMPONENT = ('Firefox for Android', 'GeckoView')
-
 with Files('crashreporter/**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
