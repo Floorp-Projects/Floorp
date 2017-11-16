@@ -608,9 +608,19 @@ CustomizeMode.prototype = {
         resolve();
       }
 
-      animationNode.classList.add("animate-out");
-      animationNode.ownerGlobal.gNavToolbox.addEventListener("customizationending", cleanupCustomizationExit);
-      animationNode.addEventListener("animationend", cleanupWidgetAnimationEnd);
+      // Wait until the next frame before setting the class to ensure
+      // we do start the animation. We cannot use promiseLayoutFlushed
+      // here because callback is only invoked when any actual reflow
+      // happens, while that may not happen soonish enough. If we have
+      // an observer for style flush, we may be able to replace the
+      // nested rAFs with that.
+      this.window.requestAnimationFrame(() => {
+        this.window.requestAnimationFrame(() => {
+          animationNode.classList.add("animate-out");
+          animationNode.ownerGlobal.gNavToolbox.addEventListener("customizationending", cleanupCustomizationExit);
+          animationNode.addEventListener("animationend", cleanupWidgetAnimationEnd);
+        });
+      });
     });
   },
 
