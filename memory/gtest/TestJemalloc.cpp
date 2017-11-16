@@ -454,11 +454,6 @@ TEST(Jemalloc, JunkPoison)
     ASSERT_EQ(junk_buf[i], junk);
   }
 
-  // There are a few cases where we currently *don't* junk memory when
-  // junk is enabled, but *do* zero it when zeroing is enabled.
-  // TODO: we may want to change that.
-  char* zero_buf = (char*)moz_arena_calloc(buf_arena, stats.page_size, 1);
-
   char* poison_buf = (char*)moz_arena_malloc(buf_arena, stats.page_size);
   memset(poison_buf, 0xe5, stats.page_size);
 
@@ -540,12 +535,9 @@ TEST(Jemalloc, JunkPoison)
         } else {
           ASSERT_NO_FATAL_FAILURE(
             bulk_compare(ptr, 0, from_size, fill_buf, stats.page_size));
-          if (stats.opt_junk && to_size <= stats.page_size) {
+          if (stats.opt_junk || stats.opt_zero) {
             ASSERT_NO_FATAL_FAILURE(
               bulk_compare(ptr, from_size, to_size, junk_buf, stats.page_size));
-          } else if (stats.opt_zero) {
-            ASSERT_NO_FATAL_FAILURE(
-              bulk_compare(ptr, from_size, to_size, zero_buf, stats.page_size));
           }
         }
         moz_arena_free(arena, ptr2);
@@ -625,7 +617,6 @@ TEST(Jemalloc, JunkPoison)
   moz_dispose_arena(arena);
 
   moz_arena_free(buf_arena, poison_buf);
-  moz_arena_free(buf_arena, zero_buf);
   moz_arena_free(buf_arena, junk_buf);
   moz_dispose_arena(buf_arena);
 }
