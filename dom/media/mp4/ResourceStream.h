@@ -6,7 +6,7 @@
 #define RESOURCESTREAM_H_
 
 #include "MediaResource.h"
-#include "mp4_demuxer/Stream.h"
+#include "Stream.h"
 #include "mozilla/RefPtr.h"
 
 namespace mp4_demuxer

@@ -11,7 +11,7 @@
 #include "nsTArray.h"
 #include "MediaResource.h"
 #include "mozilla/EndianUtils.h"
-#include "mp4_demuxer/AtomType.h"
+#include "AtomType.h"
 #include "BufferReader.h"
 
 using namespace mozilla;

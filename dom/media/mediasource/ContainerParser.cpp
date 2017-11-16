@@ -10,15 +10,15 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/ErrorResult.h"
-#include "mp4_demuxer/MoofParser.h"
+#include "MoofParser.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "MediaData.h"
 #ifdef MOZ_FMP4
-#include "mp4_demuxer/AtomType.h"
+#include "AtomType.h"
 #include "BufferReader.h"
-#include "mp4_demuxer/Stream.h"
+#include "Stream.h"
 #endif
 #include "nsAutoPtr.h"
 #include "SourceBufferResource.h"

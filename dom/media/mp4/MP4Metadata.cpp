@@ -10,9 +10,9 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "VideoUtils.h"
-#include "mp4_demuxer/MoofParser.h"
-#include "mp4_demuxer/MP4Metadata.h"
-#include "mp4_demuxer/Stream.h"
+#include "MoofParser.h"
+#include "MP4Metadata.h"
+#include "Stream.h"
 #include "MediaPrefs.h"
 #include "mp4parse.h"
 
