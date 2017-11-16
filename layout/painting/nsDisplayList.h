@@ -375,8 +375,7 @@ class nsDisplayListBuilder {
       : mAccumulatedTransform()
       , mAccumulatedRect()
       , mAccumulatedRectLevels(0)
-      , mVisibleRect(aOther.mVisibleRect)
-      , mDirtyRect(aOther.mDirtyRect) {}
+      , mVisibleRect(aOther.mVisibleRect) {}
 
     // Accmulate transforms of ancestors on the preserves-3d chain.
     Matrix4x4 mAccumulatedTransform;
@@ -385,7 +384,6 @@ class nsDisplayListBuilder {
     // How far this frame is from the root of the current 3d context.
     int mAccumulatedRectLevels;
     nsRect mVisibleRect;
-    nsRect mDirtyRect;
   };
 
   /**
@@ -1588,13 +1586,11 @@ public:
     Preserves3DContext mSavedCtx;
   };
 
-  const nsRect GetPreserves3DRects(nsRect* aOutVisibleRect) const {
-    *aOutVisibleRect = mPreserves3DCtx.mVisibleRect;
-    return mPreserves3DCtx.mDirtyRect;
+  const nsRect GetPreserves3DRect() const {
+    return mPreserves3DCtx.mVisibleRect;
   }
-  void SavePreserves3DRects() {
+  void SavePreserves3DRect() {
     mPreserves3DCtx.mVisibleRect = mVisibleRect;
-    mPreserves3DCtx.mDirtyRect = mDirtyRect;
   }
 
   bool IsBuildingInvisibleItems() const { return mBuildingInvisibleItems; }
