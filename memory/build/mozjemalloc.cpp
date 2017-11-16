@@ -3694,9 +3694,7 @@ arena_t::RallocSmallOrLarge(void* aPtr, size_t aSize, size_t aOldSize)
       return aPtr;
     }
     if (RallocGrowLarge(chunk, aPtr, sizeClass.Size(), aOldSize)) {
-      if (opt_zero) {
-        memset((void*)((uintptr_t)aPtr + aOldSize), 0, aSize - aOldSize);
-      }
+      ApplyZeroOrJunk((void*)((uintptr_t)aPtr + aOldSize), aSize - aOldSize);
       return aPtr;
     }
   }
@@ -3952,8 +3950,8 @@ arena_t::RallocHuge(void* aPtr, size_t aSize, size_t aOldSize)
       node->mSize = psize;
     }
 
-    if (opt_zero && aSize > aOldSize) {
-      memset((void*)((uintptr_t)aPtr + aOldSize), 0, aSize - aOldSize);
+    if (aSize > aOldSize) {
+      ApplyZeroOrJunk((void*)((uintptr_t)aPtr + aOldSize), aSize - aOldSize);
     }
     return aPtr;
   }
