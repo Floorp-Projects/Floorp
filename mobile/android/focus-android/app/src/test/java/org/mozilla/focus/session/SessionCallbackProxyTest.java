@@ -12,9 +12,6 @@ import org.robolectric.RobolectricTestRunner;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 @RunWith(RobolectricTestRunner.class)
@@ -36,20 +33,12 @@ public class SessionCallbackProxyTest {
 
     @Test
     public void testOnPageFinished() {
-        final Session session = spy(new Session(Source.NONE, TEST_URL));
+        final Session session = mock(Session.class);
         final SessionCallbackProxy proxy = new SessionCallbackProxy(session, mock(IWebView.Callback.class));
 
-        session.setLoading(true);
         proxy.onPageFinished(true);
 
         verify(session).setLoading(false);
-        verify(session).setSecure(true);
-
-        session.setLoading(false);
-        reset(session);
-        proxy.onPageFinished(true);
-
-        verify(session, never()).setLoading(false);
         verify(session).setSecure(true);
     }
 
