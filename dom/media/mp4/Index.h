@@ -8,9 +8,9 @@
 #include "MediaData.h"
 #include "MediaResource.h"
 #include "TimeUnits.h"
-#include "mp4_demuxer/MoofParser.h"
-#include "mp4_demuxer/Interval.h"
-#include "mp4_demuxer/Stream.h"
+#include "MoofParser.h"
+#include "Interval.h"
+#include "Stream.h"
 #include "nsISupportsImpl.h"
 
 template<class T> class nsAutoPtr;

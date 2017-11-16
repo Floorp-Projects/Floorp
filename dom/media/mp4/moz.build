@@ -5,11 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'MP4Decoder.h',
-    'MP4Demuxer.h',
-]
-
-EXPORTS.mp4_demuxer += [
     'Atom.h',
     'AtomType.h',
     'Box.h',
@@ -18,6 +13,8 @@ EXPORTS.mp4_demuxer += [
     'Index.h',
     'Interval.h',
     'MoofParser.h',
+    'MP4Decoder.h',
+    'MP4Demuxer.h',
     'MP4Metadata.h',
     'ResourceStream.h',
     'SinfParser.h',

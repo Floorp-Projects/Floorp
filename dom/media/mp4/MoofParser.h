@@ -6,11 +6,11 @@
 #define MOOF_PARSER_H_
 
 #include "mozilla/ResultExtensions.h"
-#include "mp4_demuxer/Atom.h"
-#include "mp4_demuxer/AtomType.h"
-#include "mp4_demuxer/SinfParser.h"
-#include "mp4_demuxer/Stream.h"
-#include "mp4_demuxer/Interval.h"
+#include "Atom.h"
+#include "AtomType.h"
+#include "SinfParser.h"
+#include "Stream.h"
+#include "Interval.h"
 #include "MediaResource.h"
 
 namespace mp4_demuxer {

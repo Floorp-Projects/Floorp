@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Unused.h"
-#include "mp4_demuxer/SinfParser.h"
-#include "mp4_demuxer/AtomType.h"
-#include "mp4_demuxer/Box.h"
-#include "mp4_demuxer/Stream.h"
+#include "SinfParser.h"
+#include "AtomType.h"
+#include "Box.h"
+#include "Stream.h"
 
 namespace mp4_demuxer {
 

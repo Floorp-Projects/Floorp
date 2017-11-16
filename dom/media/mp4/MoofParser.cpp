@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mp4_demuxer/MoofParser.h"
-#include "mp4_demuxer/Box.h"
-#include "mp4_demuxer/SinfParser.h"
+#include "MoofParser.h"
+#include "Box.h"
+#include "SinfParser.h"
 #include <limits>
 #include "Intervals.h"
 

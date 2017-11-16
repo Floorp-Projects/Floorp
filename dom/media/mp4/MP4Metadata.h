@@ -7,8 +7,8 @@
 
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
-#include "mp4_demuxer/DecoderData.h"
-#include "mp4_demuxer/Index.h"
+#include "DecoderData.h"
+#include "Index.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "MediaResult.h"
