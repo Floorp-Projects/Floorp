@@ -9,9 +9,9 @@
 <div id="log"></div>
 <div id="target"></div>
 <script>
-"use strict";
+'use strict';
 
-const gTarget = document.getElementById("target");
+const gTarget = document.getElementById('target');
 
 function createEffect() {
   return new KeyframeEffectReadOnly(gTarget, { opacity: [0, 1] });
@@ -26,41 +26,41 @@ const gTestArguments = [
     createEffect: createNull,
     timeline: null,
     expectedTimeline: null,
-    expectedTimelineDescription: "null",
-    description: "with null effect and null timeline"
+    expectedTimelineDescription: 'null',
+    description: 'with null effect and null timeline'
   },
   {
     createEffect: createNull,
     timeline: document.timeline,
     expectedTimeline: document.timeline,
-    expectedTimelineDescription: "document.timeline",
-    description: "with null effect and non-null timeline"
+    expectedTimelineDescription: 'document.timeline',
+    description: 'with null effect and non-null timeline'
   },
   {
     createEffect: createNull,
     expectedTimeline: document.timeline,
-    expectedTimelineDescription: "document.timeline",
-    description: "with null effect and no timeline parameter"
+    expectedTimelineDescription: 'document.timeline',
+    description: 'with null effect and no timeline parameter'
   },
   {
     createEffect: createEffect,
     timeline: null,
     expectedTimeline: null,
-    expectedTimelineDescription: "null",
-    description: "with non-null effect and null timeline"
+    expectedTimelineDescription: 'null',
+    description: 'with non-null effect and null timeline'
   },
   {
     createEffect: createEffect,
     timeline: document.timeline,
     expectedTimeline: document.timeline,
-    expectedTimelineDescription: "document.timeline",
-    description: "with non-null effect and non-null timeline"
+    expectedTimelineDescription: 'document.timeline',
+    description: 'with non-null effect and non-null timeline'
   },
   {
     createEffect: createEffect,
     expectedTimeline: document.timeline,
-    expectedTimelineDescription: "document.timeline",
-    description: "with non-null effect and no timeline parameter"
+    expectedTimelineDescription: 'document.timeline',
+    description: 'with non-null effect and no timeline parameter'
   },
 ];
 
@@ -70,22 +70,22 @@ gTestArguments.forEach(args => {
     const animation = new Animation(effect, args.timeline);
 
     assert_not_equals(animation, null,
-                      "An animation sohuld be created");
+                      'An animation sohuld be created');
     assert_equals(animation.effect, effect,
-                  "Animation returns the same effect passed to " +
-                  "the Constructor");
+                  'Animation returns the same effect passed to ' +
+                  'the Constructor');
     assert_equals(animation.timeline, args.expectedTimeline,
-                  "Animation timeline should be " + args.expectedTimelineDescription);
-    assert_equals(animation.playState, "idle",
-                  "Animation.playState should be initially 'idle'");
-  }, "Animation can be constructed " + args.description);
+                  'Animation timeline should be ' + args.expectedTimelineDescription);
+    assert_equals(animation.playState, 'idle',
+                  'Animation.playState should be initially \'idle\'');
+  }, 'Animation can be constructed ' + args.description);
 });
 
 test(t => {
   const effect = new KeyframeEffectReadOnly(null,
-                                            { left: ["10px", "20px"] },
+                                            { left: ['10px', '20px'] },
                                             { duration: 10000,
-                                              fill: "forwards" });
+                                              fill: 'forwards' });
   const anim = new Animation(effect, document.timeline);
   anim.pause();
   assert_equals(effect.getComputedTiming().progress, 0.0);
@@ -93,7 +93,7 @@ test(t => {
   assert_equals(effect.getComputedTiming().progress, 0.5);
   anim.finish();
   assert_equals(effect.getComputedTiming().progress, 1.0);
-}, "Animation constructed by an effect with null target runs normally");
+}, 'Animation constructed by an effect with null target runs normally');
 
 async_test(t => {
   const iframe = document.createElement('iframe');
@@ -108,7 +108,7 @@ async_test(t => {
   }));
 
   document.body.appendChild(iframe);
-}, "Animation constructed with a keyframe that target element is in iframe");
+}, 'Animation constructed with a keyframe that target element is in iframe');
 
 </script>
 </body>
