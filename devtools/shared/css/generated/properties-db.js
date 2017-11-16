@@ -10076,6 +10076,10 @@ exports.PREFERENCES = [
     "layout.css.prefixes.font-features"
   ],
   [
+    "-moz-column-span",
+    "layout.css.column-span.enabled"
+  ],
+  [
     "-webkit-animation",
     "layout.css.prefixes.webkit"
   ],

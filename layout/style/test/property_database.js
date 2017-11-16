@@ -8159,6 +8159,13 @@ if (IsCSSPropertyPrefEnabled("layout.css.column-span.enabled")) {
     other_values: [ "all" ],
     invalid_values: [ "-1", "0", "auto", "2px" ]
   };
+  gCSSProperties["-moz-column-span"] = {
+    domProp: "MozColumnSpan",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "column-span",
+    subproperties: [ "column-span" ]
+  };
 }
 
 if (false) {
