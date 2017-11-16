@@ -47,7 +47,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
     current(nullptr),
     snapshots_(),
     recovers_(),
-    deoptTable_(nullptr),
+    deoptTable_(),
 #ifdef DEBUG
     pushedArgs_(0),
 #endif
@@ -1366,7 +1366,7 @@ CodeGeneratorShared::callVM(const VMFunction& fun, LInstruction* ins, const Regi
 #endif
 
     // Get the wrapper of the VM function.
-    uint8_t* wrapper = gen->jitRuntime()->getVMWrapper(fun);
+    TrampolinePtr wrapper = gen->jitRuntime()->getVMWrapper(fun);
 
 #ifdef CHECK_OSIPOINT_REGISTERS
     if (shouldVerifyOsiPointRegs(ins->safepoint()))
@@ -1388,7 +1388,7 @@ CodeGeneratorShared::callVM(const VMFunction& fun, LInstruction* ins, const Regi
     // when returning from the call.  Failures are handled with exceptions based
     // on the return value of the C functions.  To guard the outcome of the
     // returned value, use another LIR instruction.
-    uint32_t callOffset = masm.callJit(ImmPtr(wrapper));
+    uint32_t callOffset = masm.callJit(wrapper);
     markSafepointAt(callOffset, ins);
 
     // Remove rest of the frame left on the stack. We remove the return address
