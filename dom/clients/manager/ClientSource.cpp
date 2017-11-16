@@ -75,12 +75,15 @@ ClientSource::GetDocShell() const
 }
 
 ClientSource::ClientSource(ClientManager* aManager,
+                           nsISerialEventTarget* aEventTarget,
                            const ClientSourceConstructorArgs& aArgs)
   : mManager(aManager)
+  , mEventTarget(aEventTarget)
   , mOwner(AsVariant(Nothing()))
   , mClientInfo(aArgs.id(), aArgs.type(), aArgs.principalInfo(), aArgs.creationTime())
 {
   MOZ_ASSERT(mManager);
+  MOZ_ASSERT(mEventTarget);
 }
 
 void
@@ -236,6 +239,12 @@ const ClientInfo&
 ClientSource::Info() const
 {
   return mClientInfo;
+}
+
+nsISerialEventTarget*
+ClientSource::EventTarget() const
+{
+  return mEventTarget;
 }
 
 } // namespace dom

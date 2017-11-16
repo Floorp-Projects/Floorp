@@ -98,6 +98,7 @@ ClientManager::Shutdown()
 
 UniquePtr<ClientSource>
 ClientManager::CreateSourceInternal(ClientType aType,
+                                    nsISerialEventTarget* aEventTarget,
                                     const PrincipalInfo& aPrincipal)
 {
   NS_ASSERT_OWNINGTHREAD(ClientManager);
@@ -113,7 +114,7 @@ ClientManager::CreateSourceInternal(ClientType aType,
   }
 
   ClientSourceConstructorArgs args(id, aType, aPrincipal, TimeStamp::Now());
-  UniquePtr<ClientSource> source(new ClientSource(this, args));
+  UniquePtr<ClientSource> source(new ClientSource(this, aEventTarget, args));
   source->Activate(GetActor());
 
   return Move(source);
@@ -210,7 +211,8 @@ ClientManager::Startup()
 
 // static
 UniquePtr<ClientSource>
-ClientManager::CreateSource(ClientType aType, nsIPrincipal* aPrincipal)
+ClientManager::CreateSource(ClientType aType, nsISerialEventTarget* aEventTarget,
+                            nsIPrincipal* aPrincipal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
@@ -222,15 +224,16 @@ ClientManager::CreateSource(ClientType aType, nsIPrincipal* aPrincipal)
   }
 
   RefPtr<ClientManager> mgr = GetOrCreateForCurrentThread();
-  return mgr->CreateSourceInternal(aType, principalInfo);
+  return mgr->CreateSourceInternal(aType, aEventTarget, principalInfo);
 }
 
 // static
 UniquePtr<ClientSource>
-ClientManager::CreateSource(ClientType aType, const PrincipalInfo& aPrincipal)
+ClientManager::CreateSource(ClientType aType, nsISerialEventTarget* aEventTarget,
+                            const PrincipalInfo& aPrincipal)
 {
   RefPtr<ClientManager> mgr = GetOrCreateForCurrentThread();
-  return mgr->CreateSourceInternal(aType, aPrincipal);
+  return mgr->CreateSourceInternal(aType, aEventTarget, aPrincipal);
 }
 
 // static
