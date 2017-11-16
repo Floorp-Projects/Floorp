@@ -232,5 +232,11 @@ ClientSource::DocShellExecutionReady(nsIDocShell* aDocShell)
   return NS_OK;
 }
 
+const ClientInfo&
+ClientSource::Info() const
+{
+  return mClientInfo;
+}
+
 } // namespace dom
 } // namespace mozilla
