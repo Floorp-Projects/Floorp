@@ -119,6 +119,8 @@ fuzzy-if(skiaContent,1,15) == textpath.svg textpath-ref.svg
 == textpath-multiline-2.svg textpath-multiline-2-ref.svg
 == textpath-after.svg textpath-after-ref.svg
 == textpath-after-anchor-end.svg textpath-after-anchor-end-ref.svg
+== textpath-reset-position.svg textpath-reset-position-ref.svg
+== textpath-inherit-position.svg textpath-inherit-position-ref.svg
 
 == textLength.svg textLength-ref.svg
 fuzzy-if(skiaContent,1,200) == textLength-2.svg textLength-2-ref.svg
