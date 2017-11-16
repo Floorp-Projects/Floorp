@@ -441,8 +441,9 @@ class CDM_CLASS_API FileIO {
   // - When the file is opened by a CDM instance, it will be classified as "in
   //   use". In this case other CDM instances in the same domain may receive
   //   kInUse status when trying to open it.
-  // - |file_name| must not contain forward slash ('/') or backslash ('\'), and
-  //   must not start with an underscore ('_').
+  // - |file_name| must only contain letters (A-Za-z), digits(0-9), or "._-".
+  //   It must not start with an underscore ('_'), and must be at least 1
+  //   character and no more than 256 characters long.
   virtual void Open(const char* file_name, uint32_t file_name_size) = 0;
 
   // Reads the contents of the file. FileIOClient::OnReadComplete() will be
@@ -799,8 +800,8 @@ class CDM_CLASS_API ContentDecryptionModule_9 {
   //
   // Returns kSuccess if the |audio_decoder_config| is supported and the CDM
   // audio decoder is successfully initialized.
-  // Returns kSessionError if |audio_decoder_config| is not supported. The CDM
-  // may still be able to do Decrypt().
+  // Returns kInitializationError if |audio_decoder_config| is not supported.
+  // The CDM may still be able to do Decrypt().
   // Returns kDeferredInitialization if the CDM is not ready to initialize the
   // decoder at this time. Must call Host::OnDeferredInitializationDone() once
   // initialization is complete.
@@ -812,8 +813,8 @@ class CDM_CLASS_API ContentDecryptionModule_9 {
   //
   // Returns kSuccess if the |video_decoder_config| is supported and the CDM
   // video decoder is successfully initialized.
-  // Returns kSessionError if |video_decoder_config| is not supported. The CDM
-  // may still be able to do Decrypt().
+  // Returns kInitializationError if |video_decoder_config| is not supported.
+  // The CDM may still be able to do Decrypt().
   // Returns kDeferredInitialization if the CDM is not ready to initialize the
   // decoder at this time. Must call Host::OnDeferredInitializationDone() once
   // initialization is complete.
@@ -883,9 +884,16 @@ class CDM_CLASS_API ContentDecryptionModule_9 {
       uint32_t link_mask,
       uint32_t output_protection_mask) = 0;
 
-  // Called by the host after a call to Host::RequestStorageId(). If the storage
-  // ID is not available, null/zero will be provided.
-  virtual void OnStorageId(const uint8_t* storage_id,
+  // Called by the host after a call to Host::RequestStorageId(). If the
+  // version of the storage ID requested is available, |storage_id| and
+  // |storage_id_size| are set appropriately. |version| will be the same as
+  // what was requested, unless 0 (latest) was requested, in which case
+  // |version| will be the actual version number for the |storage_id| returned.
+  // If the requested version is not available, null/zero will be provided as
+  // |storage_id| and |storage_id_size|, respectively, and |version| should be
+  // ignored.
+  virtual void OnStorageId(uint32_t version,
+                           const uint8_t* storage_id,
                            uint32_t storage_id_size) = 0;
 
   // Destroys the object in the same context as it was created.
@@ -1176,11 +1184,14 @@ class CDM_CLASS_API Host_9 {
   // CDM can call this method multiple times to operate on different files.
   virtual FileIO* CreateFileIO(FileIOClient* client) = 0;
 
-  // Requests the storage ID. The ID will be returned by the host via
-  // ContentDecryptionModule::OnStorageId(). A storage ID is a stable, device
-  // specific ID used by the CDM to securely store persistent data. The CDM must
-  // not expose the ID outside the client device, even in encrypted form.
-  virtual void RequestStorageId() = 0;
+  // Requests a specific version of the storage ID. A storage ID is a stable,
+  // device specific ID used by the CDM to securely store persistent data. The
+  // ID will be returned by the host via ContentDecryptionModule::OnStorageId().
+  // If |version| is 0, the latest version will be returned. All |version|s
+  // that are greater than or equal to 0x80000000 are reserved for the CDM and
+  // should not be supported or returned by the host. The CDM must not expose
+  // the ID outside the client device, even in encrypted form.
+  virtual void RequestStorageId(uint32_t version) = 0;
 
  protected:
   Host_9() {}

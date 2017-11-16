@@ -349,6 +349,21 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
   return ResolveServoStyle(aElement);
 }
 
+already_AddRefed<ServoStyleContext>
+ServoStyleSet::ReresolveStyleForBindings(Element* aElement)
+{
+  // XXX: We should have a better way to restyle ourselves.
+  ServoRestyleManager::ClearServoDataFromSubtree(aElement);
+  StyleNewSubtree(aElement);
+
+  // Servo's should_traverse_children() in traversal.rs skips
+  // styling descendants of elements with a -moz-binding the
+  // first time. Thus call StyleNewChildren() again.
+  StyleNewChildren(aElement);
+
+  return ResolveServoStyle(aElement);
+}
+
 /**
  * Clears any stale Servo element data that might existing in the specified
  * element's document.  Upon destruction, asserts that the element and all

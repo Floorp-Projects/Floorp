@@ -35,6 +35,7 @@ jobs:
             using: mozharness
             actions: [get-secrets build]
             config:
+                - builds/releng_base_firefox.py
                 - builds/releng_sub_linux_configs/64_artifact.py
                 - balrog/production.py
             script: "mozharness/scripts/fx_desktop_build.py"

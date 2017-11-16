@@ -43,8 +43,17 @@ int VideoEngine::SetAndroidObjects(JavaVM* javaVM) {
 void
 VideoEngine::CreateVideoCapture(int32_t& id, const char* deviceUniqueIdUTF8) {
   LOG((__PRETTY_FUNCTION__));
+
   id = GenerateId();
   LOG(("CaptureDeviceInfo.type=%s id=%d",mCaptureDevInfo.TypeName(),id));
+
+  for (auto &it : mCaps) {
+    if (strcmp(it.second.VideoCapture()->CurrentDeviceName(), deviceUniqueIdUTF8) == 0) {
+      mIdMap.emplace(id, it.first);
+      return;
+    }
+  }
+
   CaptureEntry entry = {-1, nullptr};
 
   if (mCaptureDevInfo.type == webrtc::CaptureDeviceType::Camera) {
@@ -60,15 +69,42 @@ VideoEngine::CreateVideoCapture(int32_t& id, const char* deviceUniqueIdUTF8) {
 #endif
   }
   mCaps.emplace(id, std::move(entry));
+  mIdMap.emplace(id, id);
 }
 
 int
 VideoEngine::ReleaseVideoCapture(const int32_t id) {
   bool found = false;
-  WithEntry(id, [&found](CaptureEntry& cap) {
-         cap.mVideoCaptureModule = nullptr;
-        found = true;
-   });
+
+#ifdef DEBUG
+  {
+    auto it = mIdMap.find(id);
+    MOZ_ASSERT(it != mIdMap.end());
+    Unused << it;
+  }
+#endif
+
+  for (auto &it : mIdMap) {
+    if (it.first != id && it.second == mIdMap[id]) {
+      // There are other tracks still using this hardware.
+      found = true;
+    }
+  }
+
+  if (!found) {
+    WithEntry(id, [&found](CaptureEntry& cap) {
+      cap.mVideoCaptureModule = nullptr;
+      found = true;
+    });
+    MOZ_ASSERT(found);
+    if (found) {
+      auto it = mCaps.find(mIdMap[id]);
+      MOZ_ASSERT(it != mCaps.end());
+      mCaps.erase(it);
+    }
+  }
+
+  mIdMap.erase(id);
   return found ? 0 : (-1);
 }
 
@@ -165,7 +201,16 @@ VideoEngine::CaptureEntry::Capnum() const {
 
 bool VideoEngine::WithEntry(const int32_t entryCapnum,
 			    const std::function<void(CaptureEntry &entry)>&& fn) {
-  auto it = mCaps.find(entryCapnum);
+#ifdef DEBUG
+  {
+    auto it = mIdMap.find(entryCapnum);
+    MOZ_ASSERT(it != mIdMap.end());
+    Unused << it;
+  }
+#endif
+
+  auto it = mCaps.find(mIdMap[entryCapnum]);
+  MOZ_ASSERT(it != mCaps.end());
   if (it == mCaps.end()) {
     return false;
   }

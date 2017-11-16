@@ -1,8 +1,6 @@
 import os
 import sys
 
-MOZ_OBJDIR = 'obj-firefox'
-
 config = {
     #########################################################################
     ######## MACOSX GENERIC CONFIG KEYS/VAlUES
@@ -20,7 +18,6 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': False,
     'vcs_share_base': '/builds/hg-shared',
-    'objdir': MOZ_OBJDIR,
     # debug specific
     'debug_build': True,
     'enable_talos_sendchange': False,
@@ -39,7 +36,7 @@ config = {
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': MOZ_OBJDIR,
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/builds',
@@ -55,6 +52,6 @@ config = {
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
         ##
     },
-    'src_mozconfig': 'browser/config/mozconfigs/macosx64/debug-artifact',
+    'mozconfig_variant': 'debug-artifact',
     #########################################################################
 }

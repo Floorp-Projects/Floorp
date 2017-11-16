@@ -9,14 +9,14 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   const evt = new AnimationPlaybackEvent('finish');
   assert_equals(evt.type, 'finish');
   assert_equals(evt.currentTime, null);
   assert_equals(evt.timelineTime, null);
 }, 'Event created without an event parameter has null time values');
 
-test(function(t) {
+test(t => {
   const evt =
     new AnimationPlaybackEvent('cancel', {
       currentTime: -100,

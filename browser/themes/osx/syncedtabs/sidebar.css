@@ -130,10 +130,6 @@
   height: 11px;
 }
 
-.search-box.compact > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
-  display: none;
-}
-
 .search-box[focused="true"] {
   -moz-border-top-colors: -moz-mac-focusring -moz-mac-focusring #000000;
   -moz-border-right-colors: -moz-mac-focusring -moz-mac-focusring #000000;
@@ -147,7 +143,6 @@
     font-size: 11px;
 }
 
-.textbox-search-clear,
-.textbox-search-icon {
+.textbox-search-clear {
   margin-top: 1px;
 }
