@@ -414,17 +414,6 @@ def get_compiler_info(compiler, language):
         #endif
     ''')
 
-    # Try including a header to ensure that cross-compilers are set up
-    # correctly.
-    header = {
-        'C': 'stddef.h',
-        'C++': 'cstddef',
-    }[language]
-
-    check += dedent('''\
-        #include <%(header)s>
-    ''' % {'header': header})
-
     result = try_preprocess(compiler, language, check)
 
     if not result:
@@ -812,12 +801,11 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                           input=provided_compiler.compiler,
                           paths=toolchain_search_path)
 
-    @depends(compiler, provided_compiler, compiler_wrapper, host_or_target,
-             extra_toolchain_flags)
+    @depends(compiler, provided_compiler, compiler_wrapper, host_or_target)
     @checking('whether %s can be used' % what, lambda x: bool(x))
     @imports(_from='mozbuild.shellutil', _import='quote')
     def valid_compiler(compiler, provided_compiler, compiler_wrapper,
-                       host_or_target, extra_flags):
+                       host_or_target):
         wrapper = list(compiler_wrapper or ())
         if provided_compiler:
             provided_wrapper = list(provided_compiler.wrapper)
@@ -830,9 +818,6 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             flags = provided_compiler.flags
         else:
             flags = []
-        toolchain_flags = []
-        if host_or_target_str == 'target' and extra_flags:
-            toolchain_flags = extra_flags
 
         # Ideally, we'd always use the absolute path, but unfortunately, on
         # Windows, the compiler is very often in a directory containing spaces.
@@ -854,8 +839,8 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                     quote(os.path.dirname(found_compiler)),
                     quote(os.path.dirname(full_path)))
 
-        info = check_compiler(wrapper + [compiler] + flags + toolchain_flags,
-                              language, host_or_target)
+        info = check_compiler(wrapper + [compiler] + flags, language,
+                              host_or_target)
 
         # Check that the additional flags we got are enough to not require any
         # more flags. If we get an exception, just ignore it; it's liable to be
@@ -865,9 +850,8 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
         try:
             if info.flags:
                 flags += info.flags
-                info = check_compiler(wrapper + [compiler] + flags +
-                                      toolchain_flags,
-                                      language, host_or_target)
+                info = check_compiler(wrapper + [compiler] + flags, language,
+                                      host_or_target)
         except FatalCheckError:
             pass
 
