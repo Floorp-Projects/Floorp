@@ -288,18 +288,18 @@ ClearPrefEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 static bool
 MatchPrefEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
 {
-  auto prefEntry = static_cast<const PrefHashEntry*>(aEntry);
+  auto pref = static_cast<const PrefHashEntry*>(aEntry);
 
-  if (prefEntry->mKey == aKey) {
+  if (pref->mKey == aKey) {
     return true;
   }
 
-  if (!prefEntry->mKey || !aKey) {
+  if (!pref->mKey || !aKey) {
     return false;
   }
 
   auto otherKey = static_cast<const char*>(aKey);
-  return (strcmp(prefEntry->mKey, otherKey) == 0);
+  return (strcmp(pref->mKey, otherKey) == 0);
 }
 
 struct CallbackNode
@@ -457,22 +457,22 @@ pref_savePrefs()
 }
 
 static bool
-pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry)
+pref_EntryHasAdvisablySizedValues(PrefHashEntry* aPref)
 {
-  if (aHashEntry->mPrefFlags.GetPrefType() != PrefType::String) {
+  if (aPref->mPrefFlags.GetPrefType() != PrefType::String) {
     return true;
   }
 
   const char* stringVal;
-  if (aHashEntry->mPrefFlags.HasDefaultValue()) {
-    stringVal = aHashEntry->mDefaultValue.mStringVal;
+  if (aPref->mPrefFlags.HasDefaultValue()) {
+    stringVal = aPref->mDefaultValue.mStringVal;
     if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
       return false;
     }
   }
 
-  if (aHashEntry->mPrefFlags.HasUserValue()) {
-    stringVal = aHashEntry->mUserValue.mStringVal;
+  if (aPref->mPrefFlags.HasUserValue()) {
+    stringVal = aPref->mUserValue.mStringVal;
     if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
       return false;
     }
@@ -482,23 +482,23 @@ pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry)
 }
 
 static void
-GetPrefValueFromEntry(PrefHashEntry* aHashEntry,
-                      dom::PrefSetting* aPref,
+GetPrefValueFromEntry(PrefHashEntry* aPref,
+                      dom::PrefSetting* aSetting,
                       PrefValueKind aKind)
 {
   PrefValue* value;
   dom::PrefValue* settingValue;
   if (aKind == PrefValueKind::User) {
-    value = &aHashEntry->mUserValue;
-    aPref->userValue() = dom::PrefValue();
-    settingValue = &aPref->userValue().get_PrefValue();
+    value = &aPref->mUserValue;
+    aSetting->userValue() = dom::PrefValue();
+    settingValue = &aSetting->userValue().get_PrefValue();
   } else {
-    value = &aHashEntry->mDefaultValue;
-    aPref->defaultValue() = dom::PrefValue();
-    settingValue = &aPref->defaultValue().get_PrefValue();
+    value = &aPref->mDefaultValue;
+    aSetting->defaultValue() = dom::PrefValue();
+    settingValue = &aSetting->defaultValue().get_PrefValue();
   }
 
-  switch (aHashEntry->mPrefFlags.GetPrefType()) {
+  switch (aPref->mPrefFlags.GetPrefType()) {
     case PrefType::String:
       *settingValue = nsDependentCString(value->mStringVal);
       return;
@@ -514,26 +514,26 @@ GetPrefValueFromEntry(PrefHashEntry* aHashEntry,
 }
 
 static void
-pref_GetPrefFromEntry(PrefHashEntry* aHashEntry, dom::PrefSetting* aPref)
+pref_GetPrefFromEntry(PrefHashEntry* aPref, dom::PrefSetting* aSetting)
 {
-  aPref->name() = aHashEntry->mKey;
+  aSetting->name() = aPref->mKey;
 
-  if (aHashEntry->mPrefFlags.HasDefaultValue()) {
-    GetPrefValueFromEntry(aHashEntry, aPref, PrefValueKind::Default);
+  if (aPref->mPrefFlags.HasDefaultValue()) {
+    GetPrefValueFromEntry(aPref, aSetting, PrefValueKind::Default);
   } else {
-    aPref->defaultValue() = null_t();
+    aSetting->defaultValue() = null_t();
   }
 
-  if (aHashEntry->mPrefFlags.HasUserValue()) {
-    GetPrefValueFromEntry(aHashEntry, aPref, PrefValueKind::User);
+  if (aPref->mPrefFlags.HasUserValue()) {
+    GetPrefValueFromEntry(aPref, aSetting, PrefValueKind::User);
   } else {
-    aPref->userValue() = null_t();
+    aSetting->userValue() = null_t();
   }
 
-  MOZ_ASSERT(aPref->defaultValue().type() == dom::MaybePrefValue::Tnull_t ||
-             aPref->userValue().type() == dom::MaybePrefValue::Tnull_t ||
-             (aPref->defaultValue().get_PrefValue().type() ==
-              aPref->userValue().get_PrefValue().type()));
+  MOZ_ASSERT(aSetting->defaultValue().type() == dom::MaybePrefValue::Tnull_t ||
+             aSetting->userValue().type() == dom::MaybePrefValue::Tnull_t ||
+             (aSetting->defaultValue().get_PrefValue().type() ==
+              aSetting->userValue().get_PrefValue().type()));
 }
 
 static bool
@@ -2007,12 +2007,12 @@ nsPrefBranch::GetPrefType(const char* aPrefName, int32_t* aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
 
-  const PrefName& pref = GetPrefName(aPrefName);
+  const PrefName& prefName = GetPrefName(aPrefName);
   PrefType type = PrefType::Invalid;
   if (gHashTable) {
-    PrefHashEntry* entry = pref_HashTableLookup(pref.get());
-    if (entry) {
-      type = entry->mPrefFlags.GetPrefType();
+    PrefHashEntry* pref = pref_HashTableLookup(prefName.get());
+    if (pref) {
+      type = pref->mPrefFlags.GetPrefType();
     }
   }
 
@@ -2575,13 +2575,13 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt)
     Substring(branchName, 0, branchName.Length() - 1);
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
     // The first disjunct matches branches: e.g. a branch name "foo.bar."
     // matches an mKey "foo.bar.baz" (but it won't match "foo.barrel.baz").
     // The second disjunct matches leaf nodes: e.g. a branch name "foo.bar."
     // matches an mKey "foo.bar" (by ignoring the trailing '.').
-    nsDependentCString key(entry->mKey);
+    nsDependentCString key(pref->mKey);
     if (StringBeginsWith(key, branchName) || key.Equals(branchNameNoDot)) {
       iter.Remove();
     }
@@ -2614,9 +2614,9 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
   const PrefName& parent = GetPrefName(aStartingAt);
   size_t parentLen = parent.Length();
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<PrefHashEntry*>(iter.Get());
-    if (strncmp(entry->mKey, parent.get(), parentLen) == 0) {
-      prefArray.AppendElement(entry->mKey);
+    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    if (strncmp(pref->mKey, parent.get(), parentLen) == 0) {
+      prefArray.AppendElement(pref->mKey);
     }
   }
 
@@ -3277,8 +3277,8 @@ PreferenceServiceReporter::CollectReports(
   if (gHashTable) {
     sizes.mHashTable += gHashTable->ShallowSizeOfIncludingThis(mallocSizeOf);
     for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-      auto entry = static_cast<PrefHashEntry*>(iter.Get());
-      sizes.mStringValues += entry->SizeOfExcludingThis(mallocSizeOf);
+      auto pref = static_cast<PrefHashEntry*>(iter.Get());
+      sizes.mStringValues += pref->SizeOfExcludingThis(mallocSizeOf);
     }
   }
 
@@ -3446,7 +3446,7 @@ public:
 
 } // namespace
 
-static InfallibleTArray<Preferences::PrefSetting>* gInitPrefs;
+static InfallibleTArray<Preferences::PrefSetting>* gInitSettings;
 
 /* static */ already_AddRefed<Preferences>
 Preferences::GetInstanceForService()
@@ -3474,12 +3474,12 @@ Preferences::GetInstanceForService()
   }
 
   if (!XRE_IsParentProcess()) {
-    MOZ_ASSERT(gInitPrefs);
-    for (unsigned int i = 0; i < gInitPrefs->Length(); i++) {
-      Preferences::SetPreference(gInitPrefs->ElementAt(i));
+    MOZ_ASSERT(gInitSettings);
+    for (unsigned int i = 0; i < gInitSettings->Length(); i++) {
+      Preferences::SetPreference(gInitSettings->ElementAt(i));
     }
-    delete gInitPrefs;
-    gInitPrefs = nullptr;
+    delete gInitSettings;
+    gInitSettings = nullptr;
 
   } else {
     // Check if there is a deployment configuration file. If so, set up the
@@ -3620,9 +3620,9 @@ NS_INTERFACE_MAP_END
 //
 
 /* static */ void
-Preferences::SetInitPreferences(nsTArray<PrefSetting>* aPrefs)
+Preferences::SetInitPreferences(nsTArray<PrefSetting>* aSettings)
 {
-  gInitPrefs = new InfallibleTArray<PrefSetting>(mozilla::Move(*aPrefs));
+  gInitSettings = new InfallibleTArray<PrefSetting>(mozilla::Move(*aSettings));
 }
 
 /* static */ void
@@ -3799,11 +3799,11 @@ Preferences::SetValueFromDom(const char* aPrefName,
 }
 
 void
-Preferences::SetPreference(const PrefSetting& aPref)
+Preferences::SetPreference(const PrefSetting& aSetting)
 {
-  const char* prefName = aPref.name().get();
-  const dom::MaybePrefValue& defaultValue = aPref.defaultValue();
-  const dom::MaybePrefValue& userValue = aPref.userValue();
+  const char* prefName = aSetting.name().get();
+  const dom::MaybePrefValue& defaultValue = aSetting.defaultValue();
+  const dom::MaybePrefValue& userValue = aSetting.userValue();
 
   if (defaultValue.type() == dom::MaybePrefValue::TPrefValue) {
     nsresult rv = SetValueFromDom(
@@ -3824,31 +3824,31 @@ Preferences::SetPreference(const PrefSetting& aPref)
 }
 
 void
-Preferences::GetPreference(PrefSetting* aPref)
+Preferences::GetPreference(PrefSetting* aSetting)
 {
-  PrefHashEntry* entry = pref_HashTableLookup(aPref->name().get());
-  if (!entry) {
+  PrefHashEntry* pref = pref_HashTableLookup(aSetting->name().get());
+  if (!pref) {
     return;
   }
 
-  if (pref_EntryHasAdvisablySizedValues(entry)) {
-    pref_GetPrefFromEntry(entry, aPref);
+  if (pref_EntryHasAdvisablySizedValues(pref)) {
+    pref_GetPrefFromEntry(pref, aSetting);
   }
 }
 
 void
-Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aPrefs)
+Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aSettings)
 {
-  aPrefs->SetCapacity(gHashTable->Capacity());
+  aSettings->SetCapacity(gHashTable->Capacity());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
-    if (!pref_EntryHasAdvisablySizedValues(entry)) {
+    if (!pref_EntryHasAdvisablySizedValues(pref)) {
       continue;
     }
 
-    dom::PrefSetting* pref = aPrefs->AppendElement();
-    pref_GetPrefFromEntry(entry, pref);
+    dom::PrefSetting* setting = aSettings->AppendElement();
+    pref_GetPrefFromEntry(pref, setting);
   }
 }
 
