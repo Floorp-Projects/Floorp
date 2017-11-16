@@ -796,9 +796,6 @@ ChannelMediaResource::RecreateChannel()
     cos->AddClassFlags(nsIClassOfService::DontThrottle);
   }
 
-  // Tell the cache to reset the download status when the channel is reopened.
-  mCacheStream.NotifyChannelRecreated();
-
   return rv;
 }
 
