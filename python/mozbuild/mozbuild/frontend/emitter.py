@@ -1276,45 +1276,47 @@ class TreeMetadataEmitter(LoggingMixin):
                                 unicode(path),
                                 [Path(context, path + '.in')])
 
-        generated_files = context.get('GENERATED_FILES')
-        if not generated_files:
+        generated_files = context.get('GENERATED_FILES') or []
+        localized_generated_files = context.get('LOCALIZED_GENERATED_FILES') or []
+        if not (generated_files or localized_generated_files):
             return
 
-        for f in generated_files:
-            flags = generated_files[f]
-            outputs = f
-            inputs = []
-            if flags.script:
-                method = "main"
-                script = SourcePath(context, flags.script).full_path
+        for (localized, gen) in ((False, generated_files), (True, localized_generated_files)):
+            for f in gen:
+                flags = gen[f]
+                outputs = f
+                inputs = []
+                if flags.script:
+                    method = "main"
+                    script = SourcePath(context, flags.script).full_path
 
-                # Deal with cases like "C:\\path\\to\\script.py:function".
-                if '.py:' in script:
-                    script, method = script.rsplit('.py:', 1)
-                    script += '.py'
+                    # Deal with cases like "C:\\path\\to\\script.py:function".
+                    if '.py:' in script:
+                        script, method = script.rsplit('.py:', 1)
+                        script += '.py'
 
-                if not os.path.exists(script):
-                    raise SandboxValidationError(
-                        'Script for generating %s does not exist: %s'
-                        % (f, script), context)
-                if os.path.splitext(script)[1] != '.py':
-                    raise SandboxValidationError(
-                        'Script for generating %s does not end in .py: %s'
-                        % (f, script), context)
-
-                for i in flags.inputs:
-                    p = Path(context, i)
-                    if (isinstance(p, SourcePath) and
-                            not os.path.exists(p.full_path)):
+                    if not os.path.exists(script):
                         raise SandboxValidationError(
-                            'Input for generating %s does not exist: %s'
-                            % (f, p.full_path), context)
-                    inputs.append(p)
-            else:
-                script = None
-                method = None
-            yield GeneratedFile(context, script, method, outputs, inputs,
-                                flags.flags)
+                            'Script for generating %s does not exist: %s'
+                            % (f, script), context)
+                    if os.path.splitext(script)[1] != '.py':
+                        raise SandboxValidationError(
+                            'Script for generating %s does not end in .py: %s'
+                            % (f, script), context)
+
+                    for i in flags.inputs:
+                        p = Path(context, i)
+                        if (isinstance(p, SourcePath) and
+                                not os.path.exists(p.full_path)):
+                            raise SandboxValidationError(
+                                'Input for generating %s does not exist: %s'
+                                % (f, p.full_path), context)
+                        inputs.append(p)
+                else:
+                    script = None
+                    method = None
+                yield GeneratedFile(context, script, method, outputs, inputs,
+                                    flags.flags, localized=localized)
 
     def _process_test_manifests(self, context):
         for prefix, info in TEST_MANIFESTS.items():

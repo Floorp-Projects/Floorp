@@ -901,6 +901,11 @@ SchedulingComponents = ContextDerivedTypedRecord(
         ('inclusive', TypedList(unicode, StrictOrderingOnAppendList)),
         ('exclusive', TypedList(unicode, StrictOrderingOnAppendList)))
 
+GeneratedFilesList = StrictOrderingOnAppendListWithFlagsFactory({
+    'script': unicode,
+    'inputs': list,
+    'flags': list, })
+
 
 class Files(SubContext):
     """Metadata attached to files.
@@ -1282,10 +1287,7 @@ VARIABLES = {
         size.
         """),
 
-    'GENERATED_FILES': (StrictOrderingOnAppendListWithFlagsFactory({
-                'script': unicode,
-                'inputs': list,
-                'flags': list, }), list,
+    'GENERATED_FILES': (GeneratedFilesList, list,
         """Generic generated files.
 
         This variable contains a list of files for the build system to
@@ -1460,6 +1462,20 @@ VARIABLES = {
 
         Note that the ``AB_CD`` define is available and expands to the current
         locale being packaged, as with preprocessed entries in jar manifests.
+        """),
+
+    'LOCALIZED_GENERATED_FILES': (GeneratedFilesList, list,
+        """Like ``GENERATED_FILES``, but for files whose content varies based on the locale in use.
+
+        For simple cases of text substitution, prefer ``LOCALIZED_PP_FILES``.
+
+        Refer to the documentation of ``GENERATED_FILES``; for the most part things work the same.
+        The two major differences are:
+        1. The function in the Python script will be passed an additional keyword argument `locale`
+           which provides the locale in use, i.e. ``en-US``.
+        2. The ``inputs`` list may contain paths to files that will be taken from the locale
+           source directory (see ``LOCALIZED_FILES`` for a discussion of the specifics). Paths
+           in ``inputs`` starting with ``en-US/`` are considered localized files.
         """),
 
     'OBJDIR_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
