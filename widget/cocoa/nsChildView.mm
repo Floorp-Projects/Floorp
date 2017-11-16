@@ -2484,9 +2484,10 @@ FindTitlebarBottom(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
                    int32_t aWindowWidth)
 {
   int32_t titlebarBottom = 0;
-  for (uint32_t i = 0; i < aThemeGeometries.Length(); ++i) {
-    const nsIWidget::ThemeGeometry& g = aThemeGeometries[i];
-    if ((g.mType == nsNativeThemeCocoa::eThemeGeometryTypeTitlebar) &&
+  for (auto& g : aThemeGeometries) {
+    if ((g.mType == nsNativeThemeCocoa::eThemeGeometryTypeTitlebar ||
+         g.mType == nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarLight ||
+         g.mType == nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarDark) &&
         g.mRect.X() <= 0 &&
         g.mRect.XMost() >= aWindowWidth &&
         g.mRect.Y() <= 0) {
@@ -2565,8 +2566,10 @@ ThemeGeometryTypeToVibrancyType(nsITheme::ThemeGeometryType aThemeGeometryType)
 {
   switch (aThemeGeometryType) {
     case nsNativeThemeCocoa::eThemeGeometryTypeVibrancyLight:
+    case nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarLight:
       return Some(VibrancyType::LIGHT);
     case nsNativeThemeCocoa::eThemeGeometryTypeVibrancyDark:
+    case nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarDark:
       return Some(VibrancyType::DARK);
     case nsNativeThemeCocoa::eThemeGeometryTypeSheet:
       return Some(VibrancyType::SHEET);
