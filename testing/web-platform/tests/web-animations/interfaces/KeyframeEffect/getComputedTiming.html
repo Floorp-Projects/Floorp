@@ -93,8 +93,8 @@ gGetComputedTimingTests.forEach(stest => {
     assert_equals(ct.direction, expected('direction', 'normal'),
                   'computed direction');
 
-  }, 'values of getComputedTiming() when a KeyframeEffectReadOnly is ' +
-     'constructed by ' + stest.desc);
+  }, 'values of getComputedTiming() when a KeyframeEffectReadOnly is'
+     + ` constructed by ${stest.desc}`);
 });
 
 const gActiveDurationTests = [
@@ -151,7 +151,7 @@ gActiveDurationTests.forEach(stest => {
     assert_equals(effect.getComputedTiming().activeDuration,
                   stest.expected);
 
-  }, 'getComputedTiming().activeDuration for ' + stest.desc);
+  }, `getComputedTiming().activeDuration for ${stest.desc}`);
 });
 
 const gEndTimeTests = [
@@ -203,7 +203,7 @@ gEndTimeTests.forEach(stest => {
     assert_equals(effect.getComputedTiming().endTime,
                   stest.expected);
 
-  }, 'getComputedTiming().endTime for ' + stest.desc);
+  }, `getComputedTiming().endTime for ${stest.desc}`);
 });
 
 done();

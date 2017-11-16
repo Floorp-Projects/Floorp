@@ -19,7 +19,7 @@
     anim.currentTime = 50;
     assert_equals(getComputedStyle(div).marginLeft, '15px',
       'Animated margin-left style at 50%');
-  }, composite + ' onto the base value');
+  }, `${composite} onto the base value`);
 
   test(t => {
     const div = createDiv(t);
@@ -37,7 +37,7 @@
 
     assert_equals(getComputedStyle(div).marginLeft, '20px',
       'Animated style at 50%');
-  }, composite + ' onto an underlying animation value');
+  }, `${composite} onto an underlying animation value`);
 
   test(t => {
     const div = createDiv(t);
@@ -50,7 +50,7 @@
     anim.currentTime = 50;
     assert_equals(getComputedStyle(div).marginLeft, '25px',
       'Animated style at 50%');
-  }, 'Composite when mixing ' + composite + ' and replace');
+  }, `Composite when mixing ${composite} and replace`);
 
   test(t => {
     const div = createDiv(t);
@@ -63,8 +63,8 @@
     anim.currentTime = 50;
     assert_equals(getComputedStyle(div).marginLeft, '20px',
       'Animated style at 50%');
-  }, composite + ' specified on a keyframe overrides the composite mode of ' +
-     'the effect');
+  }, `${composite} specified on a keyframe overrides the composite mode of`
+     + ' the effect');
 
   test(t => {
     const div = createDiv(t);
@@ -78,8 +78,8 @@
     anim.currentTime = 50;                       // (10 + (10 + 20)) * 0.5
     assert_equals(getComputedStyle(div).marginLeft, '20px',
       'Animated style at 50%');
-  }, 'unspecified composite mode on a keyframe is overriden by setting ' +
-     composite + ' of the effect');
+  }, 'unspecified composite mode on a keyframe is overriden by setting'
+      + ` ${composite} of the effect`);
 });
 
 </script>

@@ -66,7 +66,7 @@ function createStyle(test, rules, doc) {
   if (rules) {
     const sheet = extraStyle.sheet;
     for (const selector in rules) {
-      sheet.insertRule(selector + '{' + rules[selector] + '}',
+      sheet.insertRule(`${selector}{${rules[selector]}}`,
                        sheet.cssRules.length);
     }
   }
@@ -78,7 +78,7 @@ function createStyle(test, rules, doc) {
 // Create a pseudo element
 function createPseudo(test, type) {
   createStyle(test, { '@keyframes anim': '',
-                      ['.pseudo::' + type]: 'animation: anim 10s; ' +
+                      [`.pseudo::${type}`]: 'animation: anim 10s; ' +
                                             'content: \'\';'  });
   const div = createDiv(test);
   div.classList.add('pseudo');
@@ -86,7 +86,7 @@ function createPseudo(test, type) {
   assert_true(anims.length >= 1);
   const anim = anims[anims.length - 1];
   assert_equals(anim.effect.target.parentElement, div);
-  assert_equals(anim.effect.target.type, '::' + type);
+  assert_equals(anim.effect.target.type, `::${type}`);
   anim.cancel();
   return anim.effect.target;
 }
@@ -178,8 +178,7 @@ function waitForAnimationFramesWithDelay(minDelay) {
 
 // Returns 'matrix()' or 'matrix3d()' function string generated from an array.
 function createMatrixFromArray(array) {
-  return (array.length == 16 ? 'matrix3d' : 'matrix') +
-         '(' + array.join() + ')';
+  return (array.length == 16 ? 'matrix3d' : 'matrix') + `(${array.join()})`;
 }
 
 // Returns 'matrix3d()' function string equivalent to
@@ -234,9 +233,9 @@ function assert_matrix_equals(actual, expected, description) {
     expected.match(matrixRegExp)[1].split(',').map(Number);
 
   assert_equals(actualMatrixArray.length, expectedMatrixArray.length,
-    'dimension of the matrix: ' + description);
+    `dimension of the matrix: ${description}`);
   for (let i = 0; i < actualMatrixArray.length; i++) {
     assert_approx_equals(actualMatrixArray[i], expectedMatrixArray[i], 0.0001,
-      'expected ' + expected + ' but got ' + actual + ': ' + description);
+      `expected ${expected} but got ${actual}: ${description}`);
   }
 }

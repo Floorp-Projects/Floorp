@@ -22,8 +22,8 @@ function assert_progress(animation, currentTime, easingFunction) {
   assert_approx_equals(animation.effect.getComputedTiming().progress,
                        easingFunction(portion),
                        0.01,
-                       'The progress of the animation should be approximately ' +
-                       easingFunction(portion) + ' at ' + currentTime + 'ms');
+                       'The progress of the animation should be approximately'
+                       + ` ${easingFunction(portion)} at ${currentTime}ms`);
 }
 
 gEasingTests.forEach(options => {
@@ -53,7 +53,7 @@ gInvalidEasings.forEach(invalidEasing => {
                   () => {
                     anim.effect.timing.easing = invalidEasing;
                   });
-  }, 'Throws on invalid easing: \'' + invalidEasing + '\'');
+  }, `Throws on invalid easing: '${invalidEasing}'`);
 });
 
 gRoundtripEasings.forEach(easing => {

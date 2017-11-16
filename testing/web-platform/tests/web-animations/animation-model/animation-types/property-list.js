@@ -1520,8 +1520,8 @@ function testAnimationSampleMatrices(animation, idlName, testSamples) {
     const actual = getComputedStyle(target)[idlName];
     const expected = createMatrixFromArray(testSample.expected);
     assert_matrix_equals(actual, expected,
-                         'The value should be ' + expected +
-                         ' at ' + testSample.time + 'ms but got ' + actual);
+                         `The value should be ${expected} at`
+                         + ` ${testSample.time}ms but got ${actual}`);
   });
 }
 

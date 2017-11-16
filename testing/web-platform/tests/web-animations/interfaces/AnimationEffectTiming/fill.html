@@ -23,7 +23,7 @@ test(t => {
     assert_equals(anim.effect.timing.fill, fill, 'set fill ' + fill);
     assert_equals(anim.effect.getComputedTiming().fill, fill,
                   'getComputedTiming() after set fill ' + fill);
-  }, 'Can set fill to ' + fill);
+  }, `Can set fill to ${fill}`);
 });
 
 </script>

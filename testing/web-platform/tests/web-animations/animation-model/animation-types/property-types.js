@@ -12,8 +12,8 @@ const discreteType = {
                               { time: 499,  expected: from.toLowerCase() },
                               { time: 500,  expected: to.toLowerCase() },
                               { time: 1000, expected: to.toLowerCase() }]);
-      }, property + ' uses discrete animation when animating between "'
-         + from + '" and "' + to + '" with linear easing');
+      }, `${property} uses discrete animation when animating between`
+         + ` "${from}" and "${to}" with linear easing`);
 
       test(t => {
         // Easing: http://cubic-bezier.com/#.68,0,1,.01
@@ -34,8 +34,8 @@ const discreteType = {
                              [{ time: 0,    expected: from.toLowerCase() },
                               { time: 940,  expected: from.toLowerCase() },
                               { time: 960,  expected: to.toLowerCase() }]);
-      }, property + ' uses discrete animation when animating between "'
-         + from + '" and "' + to + '" with effect easing');
+      }, `${property} uses discrete animation when animating between`
+         + ` "${from}" and "${to}" with effect easing`);
 
       test(t => {
         // Easing: http://cubic-bezier.com/#.68,0,1,.01
@@ -54,8 +54,8 @@ const discreteType = {
                              [{ time: 0,    expected: from.toLowerCase() },
                               { time: 940,  expected: from.toLowerCase() },
                               { time: 960,  expected: to.toLowerCase() }]);
-      }, property + ' uses discrete animation when animating between "'
-         + from + '" and "' + to + '" with keyframe easing');
+      }, `${property} uses discrete animation when animating between`
+         + ` "${from}" and "${to}" with keyframe easing`);
     });
   },
 
@@ -72,7 +72,7 @@ const discreteType = {
         );
         testAnimationSamples(animation, idlName,
                              [{ time: 0, expected: to.toLowerCase() }]);
-      }, property + ': "' + to + '" onto "' + from + '"');
+      }, `${property}: "${to}" onto "${from}"`);
 
       test(t => {
         const idlName = propertyToIDL(property);
@@ -84,7 +84,7 @@ const discreteType = {
         );
         testAnimationSamples(animation, idlName,
                              [{ time: 0, expected: from.toLowerCase() }]);
-      }, property + ': "' + from + '" onto "' + to + '"');
+      }, `${property}: "${from}" onto "${to}"`);
     });
   },
 
@@ -106,7 +106,7 @@ const lengthType = {
                                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: '30px' }]);
-    }, property + ' supports animating as a length');
+    }, `${property} supports animating as a length`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -115,7 +115,7 @@ const lengthType = {
                                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: '30px' }]);
-    }, property + ' supports animating as a length of rem');
+    }, `${property} supports animating as a length of rem`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -128,7 +128,7 @@ const lengthType = {
         { duration: 1000, composite }
       );
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px' }]);
-    }, property + ': length');
+    }, `${property}: length`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -139,7 +139,7 @@ const lengthType = {
         { duration: 1000, composite }
       );
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px' }]);
-    }, property + ': length of rem');
+    }, `${property}: length of rem`);
   },
 
   testAddition: function(property, setup) {
@@ -162,7 +162,7 @@ const lengthPairType = {
       );
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: '30px 30px' }]);
-    }, property + ' supports animating as a length pair');
+    }, `${property} supports animating as a length pair`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -173,7 +173,7 @@ const lengthPairType = {
       );
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: '30px 30px' }]);
-    }, property + ' supports animating as a length pair of rem');
+    }, `${property} supports animating as a length pair of rem`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -190,7 +190,7 @@ const lengthPairType = {
         idlName,
         [{ time: 0, expected: '20px 20px' }]
       );
-    }, property + ': length pair');
+    }, `${property}: length pair`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -205,7 +205,7 @@ const lengthPairType = {
         idlName,
         [{ time: 0, expected: '20px 20px' }]
       );
-    }, property + ': length pair of rem');
+    }, `${property}: length pair of rem`);
   },
 
   testAddition: function(property, setup) {
@@ -226,7 +226,7 @@ const percentageType = {
                                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: '30%' }]);
-    }, property + ' supports animating as a percentage');
+    }, `${property} supports animating as a percentage`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -239,7 +239,7 @@ const percentageType = {
         { duration: 1000, composite }
       );
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '130%' }]);
-    }, property + ': percentage');
+    }, `${property}: percentage`);
   },
 
   testAddition: function(property, setup) {
@@ -260,7 +260,7 @@ const integerType = {
                                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: '0' }]);
-    }, property + ' supports animating as an integer');
+    }, `${property} supports animating as an integer`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -274,7 +274,7 @@ const integerType = {
       );
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: '-3' }]);
-    }, property + ': integer');
+    }, `${property}: integer`);
   },
 
   testAddition: function(property, setup) {
@@ -295,7 +295,7 @@ const positiveIntegerType = {
                                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [ { time: 500,  expected: '2' } ]);
-    }, property + ' supports animating as a positive integer');
+    }, `${property} supports animating as a positive integer`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -309,7 +309,7 @@ const positiveIntegerType = {
       );
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: '3' }]);
-    }, property + ': positive integer');
+    }, `${property}: positive integer`);
   },
 
   testAddition: function(property, setup) {
@@ -333,7 +333,7 @@ const lengthPercentageOrCalcType = {
                                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: 'calc(5px + 10%)' }]);
-    }, property + ' supports animating as combination units "px" and "%"');
+    }, `${property} supports animating as combination units "px" and "%"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -342,7 +342,7 @@ const lengthPercentageOrCalcType = {
                                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: 'calc(10px + 5%)' }]);
-    }, property + ' supports animating as combination units "%" and "em"');
+    }, `${property} supports animating as combination units "%" and "em"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -351,7 +351,7 @@ const lengthPercentageOrCalcType = {
                                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: '15px' }]);
-    }, property + ' supports animating as combination units "em" and "rem"');
+    }, `${property} supports animating as combination units "em" and "rem"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -362,7 +362,7 @@ const lengthPercentageOrCalcType = {
       );
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: 'calc(10px + 10%)' }]);
-    }, property + ' supports animating as combination units "px" and "calc"');
+    }, `${property} supports animating as combination units "px" and "calc"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -373,7 +373,7 @@ const lengthPercentageOrCalcType = {
       testAnimationSamples(animation, idlName,
                            [{ time: 500,
                               expected: 'calc(15px + 15%)' }]);
-    }, property + ' supports animating as a calc');
+    }, `${property} supports animating as a calc`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -388,7 +388,7 @@ const lengthPercentageOrCalcType = {
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(10px + 10%)' }]);
-    }, property + ': units "%" onto "px"');
+    }, `${property}: units "%" onto "px"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -398,7 +398,7 @@ const lengthPercentageOrCalcType = {
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(10px + 10%)' }]);
-    }, property + ': units "px" onto "%"');
+    }, `${property}: units "px" onto "%"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -408,7 +408,7 @@ const lengthPercentageOrCalcType = {
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(20px + 10%)' }]);
-    }, property + ': units "rem" onto "%"');
+    }, `${property}: units "rem" onto "%"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -418,7 +418,7 @@ const lengthPercentageOrCalcType = {
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(20px + 10%)' }]);
-    }, property + ': units "%" onto "rem"');
+    }, `${property}: units "%" onto "rem"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -427,7 +427,7 @@ const lengthPercentageOrCalcType = {
       const animation = target.animate({ [idlName]: ['2rem', '5rem'] },
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '40px' }]);
-    }, property + ': units "rem" onto "em"');
+    }, `${property}: units "rem" onto "em"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -436,7 +436,7 @@ const lengthPercentageOrCalcType = {
       const animation = target.animate({ [idlName]: ['2em', '5em'] },
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '40px' }]);
-    }, property + ': units "em" onto "rem"');
+    }, `${property}: units "em" onto "rem"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -447,7 +447,7 @@ const lengthPercentageOrCalcType = {
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(30px + 20%)' }]);
-    }, property + ': units "calc" onto "px"');
+    }, `${property}: units "calc" onto "px"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -458,7 +458,7 @@ const lengthPercentageOrCalcType = {
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(30px + 30%)' }]);
-    }, property + ': calc');
+    }, `${property}: calc`);
   },
 
   testAddition: function(property, setup) {
@@ -479,7 +479,7 @@ const positiveNumberType = {
                                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: '1.3' }]);
-    }, property + ' supports animating as a positive number');
+    }, `${property} supports animating as a positive number`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -490,7 +490,7 @@ const positiveNumberType = {
       const animation = target.animate({ [idlName]: [1.1, 1.5] },
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '2.2' }]);
-    }, property + ': positive number');
+    }, `${property}: positive number`);
   },
 
   testAddition: function(property, setup) {
@@ -512,7 +512,7 @@ const opacityType = {
                                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: '0.55' }]);
-    }, property + ' supports animating as a [0, 1] number');
+    }, `${property} supports animating as a [0, 1] number`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -523,7 +523,7 @@ const opacityType = {
       const animation = target.animate({ [idlName]: [0.3, 0.8] },
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '0.6' }]);
-    }, property + ': [0, 1] number');
+    }, `${property}: [0, 1] number`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -532,7 +532,7 @@ const opacityType = {
       const animation = target.animate({ [idlName]: [0.3, 0.8] },
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '1' }]);
-    }, property + ': [0, 1] number (clamped)');
+    }, `${property}: [0, 1] number (clamped)`);
   },
 
   testAddition: function(property, setup) {
@@ -555,8 +555,8 @@ const visibilityType = {
                            [{ time: 0,    expected: 'visible' },
                             { time: 999,  expected: 'visible' },
                             { time: 1000, expected: 'hidden' }]);
-    }, property + ' uses visibility animation when animating '
-       + 'from "visible" to "hidden"');
+    }, `${property} uses visibility animation when animating`
+       + ' from "visible" to "hidden"');
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -567,8 +567,8 @@ const visibilityType = {
                            [{ time: 0,    expected: 'hidden' },
                             { time: 1,    expected: 'visible' },
                             { time: 1000, expected: 'visible' }]);
-    }, property + ' uses visibility animation when animating '
-     + 'from "hidden" to "visible"');
+    }, `${property} uses visibility animation when animating`
+       + ' from "hidden" to "visible"');
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -580,8 +580,8 @@ const visibilityType = {
                             { time: 499,  expected: 'hidden' },
                             { time: 500,  expected: 'collapse' },
                             { time: 1000, expected: 'collapse' }]);
-    }, property + ' uses visibility animation when animating '
-     + 'from "hidden" to "collapse"');
+    }, `${property} uses visibility animation when animating`
+       + ' from "hidden" to "collapse"');
 
     test(t => {
       // Easing: http://cubic-bezier.com/#.68,-.55,.26,1.55
@@ -601,8 +601,8 @@ const visibilityType = {
                             { time: 620,  expected: 'visible' },
                             { time: 630,  expected: 'hidden' },
                             { time: 1000, expected: 'hidden' }]);
-    }, property + ' uses visibility animation when animating '
-     + 'from "visible" to "hidden" with easeInOutBack easing');
+    }, `${property} uses visibility animation when animating`
+       + ' from "visible" to "hidden" with easeInOutBack easing');
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -616,7 +616,7 @@ const visibilityType = {
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: 'visible' },
                             { time: 1000, expected: 'visible' }]);
-    }, property + ': onto "visible"');
+    }, `${property}: onto "visible"`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -628,7 +628,7 @@ const visibilityType = {
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: 'hidden' },
                             { time: 1000, expected: 'visible' }]);
-    }, property + ': onto "hidden"');
+    }, `${property}: onto "hidden"`);
   },
 
   testAddition: function(property, setup) {
@@ -650,7 +650,7 @@ const colorType = {
                                        1000);
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: 'rgb(128, 0, 128)' }]);
-    }, property + ' supports animating as color of rgb()');
+    }, `${property} supports animating as color of rgb()`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -659,7 +659,7 @@ const colorType = {
                                        1000);
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: 'rgb(128, 0, 128)' }]);
-    }, property + ' supports animating as color of #RGB');
+    }, `${property} supports animating as color of #RGB`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -669,7 +669,7 @@ const colorType = {
                                        1000);
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: 'rgb(128, 0, 128)' }]);
-    }, property + ' supports animating as color of hsl()');
+    }, `${property} supports animating as color of hsl()`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -682,7 +682,7 @@ const colorType = {
       // B: 255 * (0.8 * 0.5) / 0.6 = 170
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: 'rgba(85, 0, 170, 0.6)' }]);
-    }, property + ' supports animating as color of #RGBa');
+    }, `${property} supports animating as color of #RGBa`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -695,7 +695,7 @@ const colorType = {
       );
       testAnimationSamples(animation, idlName,      // Same as above.
                            [{ time: 500,  expected: 'rgba(85, 0, 170, 0.6)' }]);
-    }, property + ' supports animating as color of rgba()');
+    }, `${property} supports animating as color of rgba()`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -708,7 +708,7 @@ const colorType = {
       );
       testAnimationSamples(animation, idlName,      // Same as above.
                            [{ time: 500,  expected: 'rgba(85, 0, 170, 0.6)' }]);
-    }, property + ' supports animating as color of hsla()');
+    }, `${property} supports animating as color of hsla()`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -728,8 +728,8 @@ const colorType = {
                             // from 'rgb(128+255, 128, 128)'
                             // to   'rgb(128,     128, 128+255)'.
                             { time: 500, expected: 'rgb(255, 128, 255)' }]);
-    }, property + ' supports animating as color of rgb() with overflowed ' +
-       'from and to values');
+    }, `${property} supports animating as color of rgb() with overflowed `
+       + ' from and to values');
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -739,7 +739,7 @@ const colorType = {
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,  expected: 'rgb(255, 128, 128)' }]);
-    }, property + ' supports animating as color of #RGB');
+    }, `${property} supports animating as color of #RGB`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -750,7 +750,7 @@ const colorType = {
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,  expected: 'rgb(255, 128, 128)' }]);
-    }, property + ' supports animating as color of hsl()');
+    }, `${property} supports animating as color of hsl()`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -762,7 +762,7 @@ const colorType = {
       );
       testAnimationSamples(animation, idlName,
                            [{ time: 0,  expected: 'rgb(230, 128, 128)' }]);
-    }, property + ' supports animating as color of #RGBa');
+    }, `${property} supports animating as color of #RGBa`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -773,7 +773,7 @@ const colorType = {
                                        { duration: 1000, composite });
       testAnimationSamples(animation, idlName,      // Same as above.
                            [{ time: 0,  expected: 'rgb(230, 128, 128)' }]);
-    }, property + ' supports animating as color of rgba()');
+    }, `${property} supports animating as color of rgba()`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -787,7 +787,7 @@ const colorType = {
       );
       testAnimationSamples(animation, idlName,      // Same as above.
                            [{ time: 0,  expected: 'rgb(230, 128, 128)' }]);
-    }, property + ' supports animating as color of hsla()');
+    }, `${property} supports animating as color of hsla()`);
   },
 
   testAddition: function(property, setup) {
@@ -812,7 +812,7 @@ const transformListType = {
       );
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 500,  expected: [ 1, 0, 0, 1, 300, 100 ] }]);
-    }, property + ': translate');
+    }, `${property}: translate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -830,7 +830,7 @@ const transformListType = {
                                   -Math.sin(Math.PI / 2),
                                    Math.cos(Math.PI / 2),
                                    0, 0] }]);
-    }, property + ': rotate');
+    }, `${property}: rotate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -840,7 +840,7 @@ const transformListType = {
 
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 500,  expected: [ 4, 0, 0, 4, 0, 0 ] }]);
-    }, property + ': scale');
+    }, `${property}: scale`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -853,7 +853,7 @@ const transformListType = {
         [{ time: 500,  expected: [ 1, Math.tan(Math.PI / 4),
                                    Math.tan(Math.PI / 4), 1,
                                    0, 0] }]);
-    }, property + ': skew');
+    }, `${property}: skew`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -869,7 +869,7 @@ const transformListType = {
                                   -Math.sin(Math.PI / 2),
                                    Math.cos(Math.PI / 2),
                                    150, 0 ] }]);
-    }, property + ': rotate and translate');
+    }, `${property}: rotate and translate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -886,7 +886,7 @@ const transformListType = {
                                   Math.cos(Math.PI / 2),
                                   150 * Math.cos(Math.PI / 2),
                                   150 * Math.sin(Math.PI / 2) ] }]);
-    }, property + ': translate and rotate');
+    }, `${property}: translate and rotate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -903,7 +903,7 @@ const transformListType = {
                                  -Math.sin(Math.PI * 3 / 4),
                                   Math.cos(Math.PI * 3 / 4),
                                   100, 50 ] }]);
-    }, property + ': mismatch order of translate and rotate');
+    }, `${property}: mismatch order of translate and rotate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -919,7 +919,7 @@ const transformListType = {
                                  -Math.sin(Math.PI * 3 / 4),
                                   Math.cos(Math.PI * 3 / 4),
                                   100, 50 ] }]);
-    }, property + ': matrix');
+    }, `${property}: matrix`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -931,7 +931,7 @@ const transformListType = {
 
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 500, expected: rotate3dToMatrix(1, 1, 0, Math.PI / 4) }]);
-    }, property + ': rotate3d');
+    }, `${property}: rotate3d`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -944,7 +944,7 @@ const transformListType = {
 
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 500, expected: rotate3dToMatrix(1, 1, 0, Math.PI * 2 / 4) }]);
-    }, property + ': matrix3d');
+    }, `${property}: matrix3d`);
 
     // This test aims for forcing the two mismatched transforms to be
     // decomposed into matrix3d before interpolation. Therefore, we not only
@@ -968,7 +968,7 @@ const transformListType = {
                                    0,   0.4, 0,   0,
                                    0,   0,   1,   0,
                                    0,   0,   0.5, 1] }]);
-    }, property + ': mismatched 3D transforms');
+    }, `${property}: mismatched 3D transforms`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -979,7 +979,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
                    // rotateY(30deg) == rotate3D(0, 1, 0, 30deg)
         [{ time: 500, expected: rotate3dToMatrix(0, 1, 0, Math.PI / 6) }]);
-    }, property + ': rotateY');
+    }, `${property}: rotateY`);
 
     // Following tests aim for test the fallback discrete interpolation behavior
     // for non-invertible matrices. The non-invertible matrix that we use is the
@@ -997,7 +997,7 @@ const transformListType = {
           { time: 499,  expected: [ -1, 0, 0, -1, 200,   0 ] },
           { time: 500,  expected: [  1, 1, 0,  0,   0, 100 ] },
           { time: 1000, expected: [  1, 1, 0,  0,   0, 100 ] }]);
-    }, property + ': non-invertible matrices');
+    }, `${property}: non-invertible matrices`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1019,7 +1019,7 @@ const transformListType = {
           { time: 499,  expected: [  0, -1, 1, 0, 250,   0 ] },
           { time: 500,  expected: [ -1, -1, 0, 0, 100, 100 ] },
           { time: 1000, expected: [ -1, -1, 0, 0, 100, 100 ] }]);
-    }, property + ': non-invertible matrices in matched transform lists');
+    }, `${property}: non-invertible matrices in matched transform lists`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1041,7 +1041,7 @@ const transformListType = {
           { time: 499,  expected: [ -2, 0, 0, -2, 250,   0 ] },
           { time: 500,  expected: [  1, 1, 1,  1, 100, 100 ] },
           { time: 1000, expected: [  1, 1, 1,  1, 100, 100 ] }]);
-    }, property + ': non-invertible matrices in mismatched transform lists');
+    }, `${property}: non-invertible matrices in mismatched transform lists`);
   },
 
   testAddition: function(property, setup) {
@@ -1056,7 +1056,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [ { time: 0,    expected: [ 1, 0, 0, 1, -100, 0 ] },
           { time: 1000, expected: [ 1, 0, 0, 1,  600, 0 ] }]);
-    }, property + ': translate');
+    }, `${property}: translate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1078,7 +1078,7 @@ const transformListType = {
                                   -Math.sin(Math.PI * 3 / 4),
                                    Math.cos(Math.PI * 3 / 4),
                                    0, 0] }]);
-    }, property + ': rotate');
+    }, `${property}: rotate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1091,7 +1091,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: [ -6, 0, 0, -6, 0, 0 ] }, // scale(-3) scale(2)
          { time: 1000, expected: [ 10, 0, 0, 10, 0, 0 ] }]); // scale(5) scale(2)
-    }, property + ': scale');
+    }, `${property}: scale`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1129,7 +1129,7 @@ const transformListType = {
                                    Math.tan(Math.PI/9) + Math.tan(Math.PI/18),
                                    1 + Math.tan(Math.PI/18) * Math.tan(Math.PI/9),
                                    0, 0] }]);
-    }, property + ': skew');
+    }, `${property}: skew`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1145,7 +1145,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: [  0, 1, -1,  0, 100, 0 ] },
          { time: 1000, expected: [ -1, 0,  0, -1, 100, 0 ] }]);
-    }, property + ': rotate on translate');
+    }, `${property}: rotate on translate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1161,7 +1161,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: [ 0, 1, -1, 0, 0, 100 ] },
          { time: 1000, expected: [ 0, 1, -1, 0, 0, 200 ] }]);
-    }, property + ': translate on rotate');
+    }, `${property}: translate on rotate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1175,7 +1175,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: [ 0, 1, -1, 0, 0, 100 ] },
          { time: 1000, expected: [ 0, 1, -1, 0, 0, 200 ] }]);
-    }, property + ': matrix');
+    }, `${property}: matrix`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1189,7 +1189,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: rotate3dToMatrix(1, 1, 0,    -Math.PI / 4) },
          { time: 1000, expected: rotate3dToMatrix(1, 1, 0, 3 * Math.PI / 4) }]);
-    }, property + ': rotate3d');
+    }, `${property}: rotate3d`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1206,7 +1206,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: rotate3dToMatrix(1, 1, 0,    -Math.PI / 4) },
          { time: 1000, expected: rotate3dToMatrix(1, 1, 0, 3 * Math.PI / 4) }]);
-    }, property + ': matrix3d');
+    }, `${property}: matrix3d`);
 
     // Following tests aim for test the addition behavior for non-invertible
     // matrices. Note that the addition for non-invertible matrices should be
@@ -1225,7 +1225,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [ { time: 0,    expected: [ -1, 0, 0, -1, 250,   0 ] },
           { time: 1000, expected: [  1, 1, 0,  0,  50, 100 ] }]);
-    }, property + ': non-invertible matrices');
+    }, `${property}: non-invertible matrices`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1240,7 +1240,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [ { time: 0,    expected: [  0, -1, 1, 0, 250,   0 ] },
           { time: 1000, expected: [ -1, -1, 0, 0,  50, 100 ] }]);
-    }, property + ': non-invertible matrices in matched transform lists');
+    }, `${property}: non-invertible matrices in matched transform lists`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1255,7 +1255,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [ { time: 0,    expected: [ -2, 0, 0, -2, 250,   0 ] },
           { time: 1000, expected: [  1, 1, 1,  1,  50, 100 ] }]);
-    }, property + ': non-invertible matrices in mismatched transform lists');
+    }, `${property}: non-invertible matrices in mismatched transform lists`);
   },
 
   testAccumulation: function(property, setup) {
@@ -1270,7 +1270,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [ { time: 0,    expected: [ 1, 0, 0, 1, -100, 0 ] },
           { time: 1000, expected: [ 1, 0, 0, 1,  600, 0 ] }]);
-    }, property + ': translate');
+    }, `${property}: translate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1292,7 +1292,7 @@ const transformListType = {
                                   -Math.sin(Math.PI * 3 / 4),
                                    Math.cos(Math.PI * 3 / 4),
                                    0, 0] }]);
-    }, property + ': rotate');
+    }, `${property}: rotate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1307,7 +1307,7 @@ const transformListType = {
         [{ time: 0,    expected: [ -2, 0, 0, -2, 0, 0 ] },
                                   // scale((2 - 1) + (5 - 1) + 1)
          { time: 1000, expected: [  6, 0, 0,  6, 0, 0 ] }]);
-    }, property + ': scale');
+    }, `${property}: scale`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1327,7 +1327,7 @@ const transformListType = {
          { time: 1000, expected: [ 1, Math.tan(-Math.PI/9),
                                    Math.tan(Math.PI/6), 1,
                                    0, 0] }]);
-    }, property + ': skew');
+    }, `${property}: skew`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1343,7 +1343,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: [  0, 1, -1,  0, 100, 0 ] },
          { time: 1000, expected: [ -1, 0,  0, -1, 100, 0 ] }]);
-    }, property + ': rotate on translate');
+    }, `${property}: rotate on translate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1359,7 +1359,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: [ 0, 1, -1, 0, 100, 0 ] },
          { time: 1000, expected: [ 0, 1, -1, 0, 200, 0 ] }]);
-    }, property + ': translate on rotate');
+    }, `${property}: translate on rotate`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1373,7 +1373,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: [ 0, 1, -1, 0, 100, 0 ] },
          { time: 1000, expected: [ 0, 1, -1, 0, 200, 0 ] }]);
-    }, property + ': matrix');
+    }, `${property}: matrix`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1387,7 +1387,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: rotate3dToMatrix(1, 1, 0,    -Math.PI / 4) },
          { time: 1000, expected: rotate3dToMatrix(1, 1, 0, 3 * Math.PI / 4) }]);
-    }, property + ': rotate3d');
+    }, `${property}: rotate3d`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1404,7 +1404,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: rotate3dToMatrix(1, 1, 0,    -Math.PI / 4) },
          { time: 1000, expected: rotate3dToMatrix(1, 1, 0, 3 * Math.PI / 4) }]);
-    }, property + ': matrix3d');
+    }, `${property}: matrix3d`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1422,7 +1422,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName,
         [{ time: 0,    expected: matrixArray },
          { time: 1000, expected: matrixArray }]);
-    }, property + ': none');
+    }, `${property}: none`);
 
     // Following tests aim for test the fallback discrete accumulation behavior
     // for non-invertible matrices. The non-invertible matrix that we use is the
@@ -1444,7 +1444,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName, [
         { time: 0, expected: [1, 1, 0, 0, 0, 100] },
       ]);
-    }, property + ': non-invertible matrices (non-invertible onto invertible)');
+    }, `${property}: non-invertible matrices (non-invertible onto invertible)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1463,7 +1463,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName, [
         { time: 0, expected: [-1, 0, 0, -1, 200, 0] },
       ]);
-    }, property + ': non-invertible matrices (invertible onto non-invertible)');
+    }, `${property}: non-invertible matrices (invertible onto non-invertible)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1491,7 +1491,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName, [
         { time: 0, expected: [-1, -1, 0, 0, 100, 100] },
       ]);
-    }, property + ': non-invertible matrices in matched transform lists (non-invertible onto invertible)');
+    }, `${property}: non-invertible matrices in matched transform lists (non-invertible onto invertible)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1519,7 +1519,7 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName, [
         { time: 0, expected: [0, -1, 1, 0, 250, 0] },
       ]);
-    }, property + ': non-invertible matrices in matched transform lists (invertible onto non-invertible)');
+    }, `${property}: non-invertible matrices in matched transform lists (invertible onto non-invertible)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1547,8 +1547,8 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName, [
         { time: 0, expected: [1, 1, 1, 1, 100, 100] },
       ]);
-    }, property + ': non-invertible matrices in mismatched transform lists' +
-                  ' (non-invertible onto invertible)');
+    }, `${property}: non-invertible matrices in mismatched transform lists`
+       + ' (non-invertible onto invertible)');
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1576,8 +1576,8 @@ const transformListType = {
       testAnimationSampleMatrices(animation, idlName, [
         { time: 0, expected: [-2, 0, 0, -2, 250, 0] },
       ]);
-    }, property + ': non-invertible matrices in mismatched transform lists' +
-                  ' (invertible onto non-invertible)');
+    }, `${property}: non-invertible matrices in mismatched transform lists`
+       + ' (invertible onto non-invertible)');
   },
 };
 
@@ -1592,7 +1592,7 @@ const filterListType = {
 
       testAnimationSamples(animation, idlName,
         [{ time: 500,    expected: 'blur(30px)' }]);
-    }, property + ': blur function' );
+    }, `${property}: blur function`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1603,7 +1603,7 @@ const filterListType = {
 
       testAnimationSamples(animation, idlName,
         [{ time: 500,    expected: 'hue-rotate(50deg)' }]);
-    }, property + ': hue-rotate function with same unit(deg)' );
+    }, `${property}: hue-rotate function with same unit(deg)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1615,7 +1615,7 @@ const filterListType = {
       // 10deg = 0.1745rad.
       testAnimationSamples(animation, idlName,
         [{ time: 500,    expected: 'hue-rotate(50.0873rad)' }]);
-    }, property + ': hue-rotate function with different unit(deg -> rad)');
+    }, `${property}: hue-rotate function with different unit(deg -> rad)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1630,7 +1630,7 @@ const filterListType = {
         animation, idlName,
         [{ time: 500,
             expected: 'drop-shadow(rgba(85, 0, 170, 0.6) 30px 30px 30px)' }]);
-    }, property + ': drop-shadow function' );
+    }, `${property}: drop-shadow function`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1647,8 +1647,8 @@ const filterListType = {
         [{ time: 500,
            expected: 'brightness(0.3) contrast(0.3) grayscale(0.3) ' +
            'invert(0.3) opacity(0.3) saturate(0.3) sepia(0.3)' }]);
-    }, property + ': percentage or numeric-specifiable functions' +
-       '(number value)');
+    }, `${property}: percentage or numeric-specifiable functions`
+       + ' (number value)');
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1665,8 +1665,8 @@ const filterListType = {
         [{ time: 500,
            expected: 'brightness(0.3) contrast(0.3) grayscale(0.3) ' +
            'invert(0.3) opacity(0.3) saturate(0.3) sepia(0.3)' }]);
-    }, property + ': percentage or numeric-specifiable functions' +
-       '(percentage value)');
+    }, `${property}: percentage or numeric-specifiable functions`
+       + ' (percentage value)');
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1682,8 +1682,8 @@ const filterListType = {
         [{ time: 500,
            expected: 'grayscale(0.5) brightness(0.5) contrast(0.5) ' +
                      'opacity(0.5) saturate(0.5)' }]);
-    }, property + ': interpolate different length of filter-function-list ' +
-       ' with function which lacuna value is 1');
+    }, `${property}: interpolate different length of filter-function-list`
+       + ' with function which lacuna value is 1');
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1699,8 +1699,8 @@ const filterListType = {
         [{ time: 500,
            expected:
            'opacity(0.5) grayscale(0.5) invert(0.5) sepia(0.5) blur(5px)' }]);
-    }, property + ': interpolate different length of filter-function-list ' +
-       ' with function which lacuna value is 0');
+    }, `${property}: interpolate different length of filter-function-list`
+       + ' with function which lacuna value is 0');
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1717,8 +1717,8 @@ const filterListType = {
            // The lacuna value of drop-shadow's color is taken from
            // the color property.
            expected: 'blur(5px) drop-shadow(rgba(85, 0, 170, 0.6) 5px 5px 5px' }]);
-    }, property + ': interpolate different length of filter-function-list ' +
-       'with drop-shadow function');
+    }, `${property}: interpolate different length of filter-function-list`
+       + ' with drop-shadow function');
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1728,7 +1728,7 @@ const filterListType = {
 
       testAnimationSamples(animation, idlName,
         [{ time: 500, expected: 'blur(5px)' }]);
-    }, property + ': interpolate from none');
+    }, `${property}: interpolate from none`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1741,7 +1741,7 @@ const filterListType = {
       testAnimationSamples(animation, idlName,
         [{ time: 499, expected: 'blur(0px) url(\"#f1\")' },
          { time: 500, expected: 'blur(10px) url(\"#f2\")' }]);
-    }, property + ': url function (interpoalte as discrete)');
+    }, `${property}: url function (interpoalte as discrete)`);
   },
 
   testAddition: function(property, setup) {
@@ -1754,7 +1754,7 @@ const filterListType = {
                                        { duration: 1000, composite: 'add' });
       testAnimationSamples(animation, idlName,
         [ { time: 0,    expected: 'blur(10px) blur(20px)' }]);
-    }, property + ': blur on blur');
+    }, `${property}: blur on blur`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1765,7 +1765,7 @@ const filterListType = {
                                        { duration: 1000, composite: 'add' });
       testAnimationSamples(animation, idlName,
         [ { time: 0,    expected: 'blur(10px) brightness(0.8)' }]);
-    }, property + ': different filter functions');
+    }, `${property}: different filter functions`);
   },
 
   testAccumulation: function(property, setup) {
@@ -1787,7 +1787,7 @@ const filterListType = {
       // is brightness(-0.6) that means brightness(0.0).
       testAnimationSamples(animation, idlName,
         [ { time: 0,    expected: 'blur(30px) brightness(0)' }]);
-    }, property + ': same ordered filter functions');
+    }, `${property}: same ordered filter functions`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1805,7 +1805,7 @@ const filterListType = {
       // Mismatched ordered functions can't be accumulated.
       testAnimationSamples(animation, idlName,
         [ { time: 0,    expected: 'brightness(1.2) blur(20px)' }]);
-    }, property + ': mismatched ordered filter functions');
+    }, `${property}: mismatched ordered filter functions`);
   },
 };
 
@@ -1821,7 +1821,7 @@ const textShadowListType = {
       testAnimationSamples(animation, idlName,
                                   // Premultiplied
         [{ time: 500,  expected: 'rgba(100, 100, 100, 0.5) 5px 5px 5px' }]);
-    }, property + ': from none to other');
+    }, `${property}: from none to other`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1833,7 +1833,7 @@ const textShadowListType = {
       testAnimationSamples(animation, idlName,
                                   // Premultiplied
         [{ time: 500,  expected: 'rgba(100, 100, 100, 0.5) 5px 5px 5px' }]);
-    }, property + ': from other to none');
+    }, `${property}: from other to none`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1844,7 +1844,7 @@ const textShadowListType = {
                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
         [{ time: 500,  expected: 'rgb(50, 50, 50) 5px 5px 5px' }]);
-    }, property + ': single shadow');
+    }, `${property}: single shadow`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1858,7 +1858,7 @@ const textShadowListType = {
       testAnimationSamples(animation, idlName,
         [{ time: 500,  expected: 'rgb(50, 50, 50) 5px 5px 5px, '
                                + 'rgb(150, 150, 150) 15px 15px 15px' }]);
-    }, property + ': shadow list');
+    }, `${property}: shadow list`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1871,7 +1871,7 @@ const textShadowListType = {
       testAnimationSamples(animation, idlName,
         [{ time: 500,  expected: 'rgb(150, 150, 150) 15px 15px 15px, '
                                + 'rgba(100, 100, 100, 0.5) 5px 5px 5px' }]);
-    }, property + ': mismatched list length (from longer to shorter)');
+    }, `${property}: mismatched list length (from longer to shorter)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1884,7 +1884,7 @@ const textShadowListType = {
       testAnimationSamples(animation, idlName,
         [{ time: 500,  expected: 'rgb(150, 150, 150) 15px 15px 15px, '
                                + 'rgba(100, 100, 100, 0.5) 5px 5px 5px' }]);
-    }, property + ': mismatched list length (from shorter to longer)');
+    }, `${property}: mismatched list length (from shorter to longer)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1896,7 +1896,7 @@ const textShadowListType = {
                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
         [{ time: 500,  expected: 'rgb(0, 255, 0) 5px 5px 5px' }]);
-    }, property + ': with currentcolor');
+    }, `${property}: with currentcolor`);
   },
 
   testAddition: function(property, setup) {
@@ -1911,7 +1911,7 @@ const textShadowListType = {
       testAnimationSamples(animation, idlName,
         [ { time: 0, expected: 'rgb(0, 0, 0) 0px 0px 0px, ' +
                                'rgb(120, 120, 120) 10px 10px 10px' }]);
-    }, property + ': shadow');
+    }, `${property}: shadow`);
   },
 
   testAccumulation: function(property, setup) {
@@ -1925,7 +1925,7 @@ const textShadowListType = {
                        { duration: 1000, composite: 'accumulate' });
       testAnimationSamples(animation, idlName,
         [ { time: 0, expected: 'rgb(240, 240, 240) 20px 20px 20px' }]);
-    }, property + ': shadow');
+    }, `${property}: shadow`);
   },
 };
 
@@ -1942,7 +1942,7 @@ const boxShadowListType = {
       testAnimationSamples(animation, idlName,
                                   // Premultiplied
         [{ time: 500,  expected: 'rgba(100, 100, 100, 0.5) 5px 5px 5px 0px' }]);
-    }, property + ': from none to other');
+    }, `${property}: from none to other`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1954,7 +1954,7 @@ const boxShadowListType = {
       testAnimationSamples(animation, idlName,
                                   // Premultiplied
         [{ time: 500,  expected: 'rgba(100, 100, 100, 0.5) 5px 5px 5px 0px' }]);
-    }, property + ': from other to none');
+    }, `${property}: from other to none`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1965,7 +1965,7 @@ const boxShadowListType = {
                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
         [{ time: 500,  expected: 'rgb(50, 50, 50) 5px 5px 5px 0px' }]);
-    }, property + ': single shadow');
+    }, `${property}: single shadow`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1979,7 +1979,7 @@ const boxShadowListType = {
       testAnimationSamples(animation, idlName,
         [{ time: 500,  expected: 'rgb(50, 50, 50) 5px 5px 5px 0px, '
                                + 'rgb(150, 150, 150) 15px 15px 15px 10px' }]);
-    }, property + ': shadow list');
+    }, `${property}: shadow list`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -1992,7 +1992,7 @@ const boxShadowListType = {
       testAnimationSamples(animation, idlName,
         [{ time: 500,  expected: 'rgb(150, 150, 150) 15px 15px 15px 10px, '
                                + 'rgba(100, 100, 100, 0.5) 5px 5px 5px 0px' }]);
-    }, property + ': mismatched list length (from shorter to longer)');
+    }, `${property}: mismatched list length (from shorter to longer)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -2005,7 +2005,7 @@ const boxShadowListType = {
       testAnimationSamples(animation, idlName,
         [{ time: 500,  expected: 'rgb(150, 150, 150) 15px 15px 15px 10px, '
                                + 'rgba(100, 100, 100, 0.5) 5px 5px 5px 0px' }]);
-    }, property + ': mismatched list length (from longer to shorter)');
+    }, `${property}: mismatched list length (from longer to shorter)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -2017,7 +2017,7 @@ const boxShadowListType = {
                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
         [{ time: 500,  expected: 'rgb(0, 255, 0) 5px 5px 5px 5px' }]);
-    }, property + ': with currentcolor');
+    }, `${property}: with currentcolor`);
   },
 
   testAddition: function(property, setup) {
@@ -2032,7 +2032,7 @@ const boxShadowListType = {
       testAnimationSamples(animation, idlName,
         [ { time: 0, expected: 'rgb(0, 0, 0) 0px 0px 0px 0px, ' +
                                'rgb(120, 120, 120) 10px 10px 10px 0px' }]);
-    }, property + ': shadow');
+    }, `${property}: shadow`);
   },
 
   testAccumulation: function(property, setup) {
@@ -2046,7 +2046,7 @@ const boxShadowListType = {
                        { duration: 1000, composite: 'accumulate' });
       testAnimationSamples(animation, idlName,
         [ { time: 0, expected: 'rgb(240, 240, 240) 20px 20px 20px 20px' }]);
-    }, property + ': shadow');
+    }, `${property}: shadow`);
   },
 };
 
@@ -2062,7 +2062,7 @@ const positionType = {
       testAnimationSamples(
         animation, idlName,
         [{ time: 500,  expected: calcFromPercentage(idlName, '30% 30%') }]);
-    }, property + ' supports animating as a position of percent');
+    }, `${property} supports animating as a position of percent`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -2077,7 +2077,7 @@ const positionType = {
       testAnimationSamples(
         animation, idlName,
         [{ time: 0, expected: calcFromPercentage(idlName, '130% 130%') }]);
-    }, property + ': position of percentage');
+    }, `${property}: position of percentage`);
   },
 
   testAddition: function(property, setup) {
@@ -2101,7 +2101,7 @@ const rectType = {
       testAnimationSamples(
           animation, idlName,
           [{ time: 500,  expected: 'rect(30px, 30px, 30px, 30px)' }]);
-    }, property + ' supports animating as a rect');
+    }, `${property} supports animating as a rect`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -2116,7 +2116,7 @@ const rectType = {
       testAnimationSamples(
         animation, idlName,
         [{ time: 0, expected: 'rect(110px, 110px, 110px, 110px)' }]);
-    }, property + ': rect');
+    }, `${property}: rect`);
   },
 
   testAddition: function(property, setup) {
@@ -2144,7 +2144,7 @@ const dasharrayType = {
       testAnimationSamples(
           animation, idlName,
           [{ time: 500,  expected: '6, 12, 8, 12, 10, 6, 10, 16, 4, 8, 14, 10' }]);
-    }, property + ' supports animating as a dasharray (mismatched length)');
+    }, `${property} supports animating as a dasharray (mismatched length)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -2156,7 +2156,7 @@ const dasharrayType = {
       testAnimationSamples(
           animation, idlName,
           [{ time: 500,  expected: '4, 40%, 4, 6' }]);
-    }, property + ' supports animating as a dasharray (mixed number and percentage)');
+    }, `${property} supports animating as a dasharray (mixed number and percentage)`);
 
   },
 
@@ -2176,7 +2176,7 @@ const dasharrayType = {
       testAnimationSamples(
           animation, idlName,
           [{ time: 0, expected: '1, 2, 3, 4, 5' }]);
-    }, property + ': dasharray');
+    }, `${property}: dasharray`);
   },
 
   testAddition: function(property, setup) {
@@ -2199,7 +2199,7 @@ const fontStretchType = {
       testAnimationSamples(animation, idlName,
                            [{ time: 499,  expected: 'ultra-condensed' },
                             { time: 500,  expected: 'extra-condensed' }]);
-    }, property + ' supports animating as a font-stretch (adjacent values)');
+    }, `${property} supports animating as a font-stretch (adjacent values)`);
 
     test(t => {
       const idlName = propertyToIDL(property);
@@ -2209,7 +2209,7 @@ const fontStretchType = {
                        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 500,  expected: 'extra-condensed' }]);
-    }, property + ' supports animating as a font-stretch (between value)');
+    }, `${property} supports animating as a font-stretch (between value)`);
   },
 
   testAdditionOrAccumulation: (property, setup, composite) => {
@@ -2223,7 +2223,8 @@ const fontStretchType = {
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'normal' },
                             { time: 250, expected: 'semi-expanded' }]);
-    }, property + ' uses font-stretch behavior for composite type ' + composite);
+    },
+    `${property} uses font-stretch behavior for composite type ${composite}`);
   },
 
   testAddition: function(property, setup) {

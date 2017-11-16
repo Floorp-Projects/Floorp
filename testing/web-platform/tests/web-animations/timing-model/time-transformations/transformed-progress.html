@@ -27,9 +27,9 @@ gEasingTests.forEach(params => {
                            expectedProgress,
                            0.01,
                            'The progress should be approximately ' +
-                           expectedProgress + ` at ${sampleTime}ms`);
+                           `${expectedProgress} at ${sampleTime}ms`);
     });
-  }, 'Transformed progress for ' + params.desc);
+  }, `Transformed progress for ${params.desc}`);
 });
 
 // Additional tests for various boundary conditions of step timing functions and
@@ -299,7 +299,7 @@ gStepAndFramesTimingFunctionTests.forEach(options => {
       animation.currentTime = condition.currentTime;
       assert_equals(animation.effect.getComputedTiming().progress,
                     condition.progress,
-                    'Progress at ' + animation.currentTime + 'ms');
+                    `Progress at ${animation.currentTime}ms`);
     });
   }, options.description);
 });
