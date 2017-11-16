@@ -15,14 +15,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1091425
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1091425">Bug 1091425</a>
 <script>
 
-var p = {};
-p.createdCallback = function() {
-  ok(false, "Created callback should not be called for custom elements in templates.");
+class XFoo extends HTMLElement {
+  connectedCallback() {
+    ok(false, "Connected callback should not be called for custom elements in templates.");
+  }
 };
 
-document.registerElement("x-foo", { prototype: p });
+customElements.define("x-foo", XFoo);
 
-ok(true, "Created callback should not be called for custom elements in templates.");
+ok(true, "Connected callback should not be called for custom elements in templates.");
 
 </script>
 <template>

@@ -18,19 +18,19 @@ SimpleTest.waitForExplicitFinish();
 
 var connectedCallbackCount = 0;
 
-var p = Object.create(HTMLElement.prototype);
-
-p.connectedCallback = function() {
-  ok(true, "connectedCallback should be called when the parser creates an element in the document.");
-  connectedCallbackCount++;
-  // connectedCallback should be called twice, once for the element created for innerHTML and
-  // once for the element created in this document.
-  if (connectedCallbackCount == 2) {
-    SimpleTest.finish();
+class Foo extends HTMLElement {
+  connectedCallback() {
+    ok(true, "connectedCallback should be called when the parser creates an element in the document.");
+    connectedCallbackCount++;
+    // connectedCallback should be called twice, once for the element created for innerHTML and
+    // once for the element created in this document.
+    if (connectedCallbackCount == 2) {
+      SimpleTest.finish();
+    }
   }
-}
+};
 
-document.registerElement("x-foo", { prototype: p });
+customElements.define("x-foo", Foo);
 
 var container = document.getElementById("container");
 container.innerHTML = '<x-foo></x-foo>';

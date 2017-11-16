@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=783129
+-->
+<head>
+  <title>Test for customElements.define for elements created by the parser</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+
+var uncaughtError;
+window.onerror = function(message, url, lineNumber, columnNumber, error) {
+  uncaughtError = error;
+};
+
+var isConnectedCallbackCalled = false;
+class XButton extends HTMLButtonElement {
+  connectedCallback() {
+    ok(!isConnectedCallbackCalled, "ConnectedCallback should only be called once.");
+    is(this.tagName, "BUTTON", "Only the <button> element should be upgraded.");
+    isConnectedCallbackCalled = true;
+  }
+};
+
+customElements.define("x-button", XButton, { extends: "button" });
+
+class XDiv extends HTMLDivElement {
+  constructor() {
+    // Queue a task to check error and callbacks.
+    setTimeout(() => {
+      ok(isConnectedCallbackCalled, "ConnectedCallback should be called.");
+      ok(uncaughtError instanceof TypeError,
+       "TypeError should be filed for upgrading <x-div> element.");
+      SimpleTest.finish();
+    }, 0);
+    super();
+  }
+
+  connectedCallback() {
+    ok(false, "Connected callback for x-div should not be called.");
+  }
+};
+
+customElements.define("x-div", XDiv);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783129">Bug 783129</a>
+<button is="x-button"></button><!-- should be upgraded -->
+<x-button></x-button><!-- should not be upgraded -->
+<span is="x-button"></span><!-- should not be upgraded -->
+<div is="x-div"></div><!-- should not be upgraded -->
+<x-div></x-div><!-- should be upgraded, but failed -->
+<script>
+</script>
+</body>
+</html>

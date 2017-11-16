@@ -408,19 +408,6 @@ CustomElementRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType
 }
 
 void
-CustomElementRegistry::GetCustomPrototype(nsAtom* aAtom,
-                                          JS::MutableHandle<JSObject*> aPrototype)
-{
-  mozilla::dom::CustomElementDefinition* definition =
-    mCustomDefinitions.GetWeak(aAtom);
-  if (definition) {
-    aPrototype.set(definition->mPrototype);
-  } else {
-    aPrototype.set(nullptr);
-  }
-}
-
-void
 CustomElementRegistry::UpgradeCandidates(nsAtom* aKey,
                                          CustomElementDefinition* aDefinition,
                                          ErrorResult& aRv)
@@ -620,9 +607,9 @@ CustomElementRegistry::Define(const nsAString& aName,
        */
       JSAutoCompartment ac(cx, constructor);
       JS::Rooted<JS::Value> prototypev(cx);
-      // The .prototype on the constructor passed from document.registerElement
-      // is the "expando" of a wrapper. So we should get it from wrapper instead
-      // instead of underlying object.
+      // The .prototype on the constructor passed could be an "expando" of a
+      // wrapper. So we should get it from wrapper instead of the underlying
+      // object.
       if (!JS_GetProperty(cx, constructor, "prototype", &prototypev)) {
         aRv.StealExceptionFromJSContext(cx);
         return;

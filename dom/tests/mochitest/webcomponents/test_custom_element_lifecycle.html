@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=783129
 -->
 <head>
-  <title>Test for document.registerElement lifecycle callback</title>
+  <title>Test for custom elements lifecycle callback</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -18,67 +18,69 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783129
 
 var container = document.getElementById("container");
 
-// Tests callbacks after registering element type that is already in the document.
-// create element in document -> register -> remove from document
+// Tests callbacks after defining element type that is already in the document.
+// create element in document -> define -> remove from document
 function testRegisterUnresolved() {
   var helloElem = document.getElementById("hello");
 
   var connectedCallbackCalled = false;
   var disconnectedCallbackCalled = false;
 
-  var p = Object.create(HTMLElement.prototype);
-  p.connectedCallback = function() {
-    is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
-    is(this, helloElem, "The 'this' value should be the custom element.");
-    connectedCallbackCalled = true;
+  class Hello extends HTMLElement {
+    connectedCallback() {
+      is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
+      is(this, helloElem, "The 'this' value should be the custom element.");
+      connectedCallbackCalled = true;
+    }
+
+    disconnectedCallback() {
+      is(connectedCallbackCalled, true, "Connected callback should be called before detached");
+      is(disconnectedCallbackCalled, false, "Disconnected callback should only be called once in this test.");
+      disconnectedCallbackCalled = true;
+      is(this, helloElem, "The 'this' value should be the custom element.");
+      runNextTest();
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      ok(false, "attributeChanged callback should never be called in this test.");
+    }
   };
 
-  p.disconnectedCallback = function() {
-    is(connectedCallbackCalled, true, "Connected callback should be called before detached");
-    is(disconnectedCallbackCalled, false, "Disconnected callback should only be called once in this test.");
-    disconnectedCallbackCalled = true;
-    is(this, helloElem, "The 'this' value should be the custom element.");
-    runNextTest();
-  };
-
-  p.attributeChangedCallback = function(name, oldValue, newValue) {
-    ok(false, "attributeChanged callback should never be called in this test.");
-  };
-
-  document.registerElement("x-hello", { prototype: p });
+  customElements.define("x-hello", Hello);
 
   // Remove element from document to trigger disconnected callback.
   container.removeChild(helloElem);
 }
 
-// Tests callbacks after registering an extended element type that is already in the document.
-// create element in document -> register -> remove from document
+// Tests callbacks after defining an extended element type that is already in the document.
+// create element in document -> define -> remove from document
 function testRegisterUnresolvedExtended() {
   var buttonElem = document.getElementById("extbutton");
 
   var connectedCallbackCalled = false;
   var disconnectedCallbackCalled = false;
 
-  var p = Object.create(HTMLButtonElement.prototype);
-  p.connectedCallback = function() {
-    is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
-    is(this, buttonElem, "The 'this' value should be the custom element.");
-    connectedCallbackCalled = true;
+  class XButton extends HTMLButtonElement {
+    connectedCallback() {
+      is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
+      is(this, buttonElem, "The 'this' value should be the custom element.");
+      connectedCallbackCalled = true;
+    }
+
+    disconnectedCallback() {
+      is(connectedCallbackCalled, true, "Connected callback should be called before detached");
+      is(disconnectedCallbackCalled, false, "Disconnected callback should only be called once in this test.");
+      disconnectedCallbackCalled = true;
+      is(this, buttonElem, "The 'this' value should be the custom element.");
+      runNextTest();
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      ok(false, "attributeChanged callback should never be called in this test.");
+    }
   };
 
-  p.disconnectedCallback = function() {
-    is(connectedCallbackCalled, true, "Connected callback should be called before detached");
-    is(disconnectedCallbackCalled, false, "Disconnected callback should only be called once in this test.");
-    disconnectedCallbackCalled = true;
-    is(this, buttonElem, "The 'this' value should be the custom element.");
-    runNextTest();
-  };
-
-  p.attributeChangedCallback = function(name, oldValue, newValue) {
-    ok(false, "attributeChanged callback should never be called in this test.");
-  };
-
-  document.registerElement("x-button", { prototype: p, extends: "button" });
+  customElements.define("x-button", XButton, { extends: "button" });
 
   // Remove element from document to trigger disconnected callback.
   container.removeChild(buttonElem);
@@ -87,13 +89,14 @@ function testRegisterUnresolvedExtended() {
 function testInnerHTML() {
   var connectedCallbackCalled = false;
 
-  var p = Object.create(HTMLElement.prototype);
-  p.connectedCallback = function() {
-    is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
-    connectedCallbackCalled = true;
+  class XInnerHTML extends HTMLElement {
+    connectedCallback() {
+      is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
+      connectedCallbackCalled = true;
+    }
   };
 
-  document.registerElement("x-inner-html", { prototype: p });
+  customElements.define("x-inner-html", XInnerHTML);
   var div = document.createElement(div);
   document.documentElement.appendChild(div);
   div.innerHTML = '<x-inner-html></x-inner-html>';
@@ -104,13 +107,14 @@ function testInnerHTML() {
 function testInnerHTMLExtended() {
   var connectedCallbackCalled = false;
 
-  var p = Object.create(HTMLButtonElement.prototype);
-  p.connectedCallback = function() {
-    is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
-    connectedCallbackCalled = true;
+  class XInnerHTMLExtend extends HTMLButtonElement {
+    connectedCallback() {
+      is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
+      connectedCallbackCalled = true;
+    }
   };
 
-  document.registerElement("x-inner-html-extended", { prototype: p, extends: "button" });
+  customElements.define("x-inner-html-extended", XInnerHTMLExtend, { extends: "button" });
   var div = document.createElement(div);
   document.documentElement.appendChild(div);
   div.innerHTML = '<button is="x-inner-html-extended"></button>';
@@ -125,13 +129,14 @@ function testInnerHTMLUpgrade() {
   document.documentElement.appendChild(div);
   div.innerHTML = '<x-inner-html-upgrade></x-inner-html-upgrade>';
 
-  var p = Object.create(HTMLElement.prototype);
-  p.connectedCallback = function() {
-    is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
-    connectedCallbackCalled = true;
+  class XInnerHTMLUpgrade extends HTMLElement {
+    connectedCallback() {
+      is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
+      connectedCallbackCalled = true;
+    }
   };
 
-  document.registerElement("x-inner-html-upgrade", { prototype: p });
+  customElements.define("x-inner-html-upgrade", XInnerHTMLUpgrade);
   is(connectedCallbackCalled, true, "Connected callback should be called after registering.");
   runNextTest();
 }
@@ -143,46 +148,48 @@ function testInnerHTMLExtendedUpgrade() {
   document.documentElement.appendChild(div);
   div.innerHTML = '<button is="x-inner-html-extended-upgrade"></button>';
 
-  var p = Object.create(HTMLButtonElement.prototype);
-  p.connectedCallback = function() {
-    is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
-    connectedCallbackCalled = true;
+  class XInnerHTMLExtnedUpgrade extends HTMLButtonElement {
+    connectedCallback() {
+      is(connectedCallbackCalled, false, "Connected callback should only be called once in this test.");
+      connectedCallbackCalled = true;
+    }
   };
 
-  document.registerElement("x-inner-html-extended-upgrade", { prototype: p, extends: "button" });
+  customElements.define("x-inner-html-extended-upgrade", XInnerHTMLExtnedUpgrade, { extends: "button" });
   is(connectedCallbackCalled, true, "Connected callback should be called after registering.");
   runNextTest();
 }
 
-// Test callback when creating element after registering an element type.
-// register -> create element -> insert into document -> remove from document
+// Test callback when creating element after defining an element type.
+// define -> create element -> insert into document -> remove from document
 function testRegisterResolved() {
   var connectedCallbackCalled = false;
   var disconnectedCallbackCalled = false;
 
-  var p = Object.create(HTMLElement.prototype);
-  p.connectedCallback = function() {
-    is(connectedCallbackCalled, false, "Connected callback should only be called on in this test.");
-    is(this, createdElement, "The 'this' value should be the custom element.");
-    connectedCallbackCalled = true;
+  class Resolved extends HTMLElement {
+    connectedCallback() {
+      is(connectedCallbackCalled, false, "Connected callback should only be called on in this test.");
+      is(this, createdElement, "The 'this' value should be the custom element.");
+      connectedCallbackCalled = true;
+    }
+
+    disconnectedCallback() {
+      is(connectedCallbackCalled, true, "Connected callback should be called before detached");
+      is(disconnectedCallbackCalled, false, "Disconnected callback should only be called once in this test.");
+      is(this, createdElement, "The 'this' value should be the custom element.");
+      disconnectedCallbackCalled = true;
+      runNextTest();
+    }
+
+    attributeChangedCallback() {
+      ok(false, "attributeChanged callback should never be called in this test.");
+    }
   };
 
-  p.disconnectedCallback = function() {
-    is(connectedCallbackCalled, true, "Connected callback should be called before detached");
-    is(disconnectedCallbackCalled, false, "Disconnected callback should only be called once in this test.");
-    is(this, createdElement, "The 'this' value should be the custom element.");
-    disconnectedCallbackCalled = true;
-    runNextTest();
-  };
-
-  p.attributeChangedCallback = function() {
-    ok(false, "attributeChanged callback should never be called in this test.");
-  };
-
-  document.registerElement("x-resolved", { prototype: p });
+  customElements.define("x-resolved", Resolved);
 
   var createdElement = document.createElement("x-resolved");
-  is(createdElement.__proto__, p, "Prototype of custom element should be the registered prototype.");
+  is(createdElement.__proto__, Resolved.prototype, "Prototype of custom element should be the defined prototype.");
 
   // Insert element into document to trigger attached callback.
   container.appendChild(createdElement);
@@ -298,19 +305,19 @@ function testUpgradeCandidate() {
 }
 
 function testNotInDocEnterLeave() {
-  var p = Object.create(HTMLElement.prototype);
+  class DestinedForFragment extends HTMLElement {
+    connectedCallback() {
+      ok(false, "Connected callback should not be called.");
+    }
 
-  p.attached = function() {
-    ok(false, "attached should not be called when not entering the document.");
-  };
-
-  p.detached = function() {
-    ok(false, "leaveView should not be called when not leaving the document.");
+    disconnectedCallback() {
+      ok(false, "Disconnected callback should not be called.");
+    }
   };
 
   var createdElement = document.createElement("x-destined-for-fragment");
 
-  document.registerElement("x-destined-for-fragment", { prototype: p });
+  customElements.define("x-destined-for-fragment", DestinedForFragment);
 
   var fragment = new DocumentFragment();
   fragment.appendChild(createdElement);
@@ -327,21 +334,22 @@ function testEnterLeaveView() {
   var connectedCallbackCalled = false;
   var disconnectedCallbackCalled = false;
 
-  var p = Object.create(HTMLElement.prototype);
-  p.connectedCallback = function() {
-    is(connectedCallbackCalled, false, "Connected callback should only be called on in this test.");
-    connectedCallbackCalled = true;
-  };
+  class ElementInDiv extends HTMLElement {
+    connectedCallback() {
+      is(connectedCallbackCalled, false, "Connected callback should only be called on in this test.");
+      connectedCallbackCalled = true;
+    }
 
-  p.disconnectedCallback = function() {
-    is(connectedCallbackCalled, true, "Connected callback should be called before detached");
-    is(disconnectedCallbackCalled, false, "Disconnected callback should only be called once in this test.");
-    disconnectedCallbackCalled = true;
-    runNextTest();
+    disconnectedCallback() {
+      is(connectedCallbackCalled, true, "Connected callback should be called before detached");
+      is(disconnectedCallbackCalled, false, "Disconnected callback should only be called once in this test.");
+      disconnectedCallbackCalled = true;
+      runNextTest();
+    }
   };
 
   var div = document.createElement("div");
-  document.registerElement("x-element-in-div", { prototype: p });
+  customElements.define("x-element-in-div", ElementInDiv);
   var customElement = document.createElement("x-element-in-div");
   div.appendChild(customElement);
   is(connectedCallbackCalled, false, "Appending a custom element to a node that is not in the document should not call the connected callback.");

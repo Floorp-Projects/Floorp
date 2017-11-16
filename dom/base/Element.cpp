@@ -515,48 +515,9 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
 JSObject*
 Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  JS::Rooted<JSObject*> givenProto(aCx, aGivenProto);
-  JS::Rooted<JSObject*> customProto(aCx);
-
-  if (!givenProto) {
-    // Custom element prototype swizzling.
-    CustomElementData* data = GetCustomElementData();
-    if (data) {
-      // If this is a registered custom element then fix the prototype.
-      nsContentUtils::GetCustomPrototype(OwnerDoc(), NodeInfo()->NamespaceID(),
-                                         data->GetCustomElementType(), &customProto);
-      if (customProto &&
-          NodePrincipal()->SubsumesConsideringDomain(nsContentUtils::ObjectPrincipal(customProto))) {
-        // The custom element prototype could be in different compartment.
-        if (!JS_WrapObject(aCx, &customProto)) {
-          return nullptr;
-        }
-        // Just go ahead and create with the right proto up front.  Set
-        // customProto to null to flag that we don't need to do any post-facto
-        // proto fixups here.
-        givenProto = customProto;
-        customProto = nullptr;
-      }
-    }
-  }
-
-  JS::Rooted<JSObject*> obj(aCx, nsINode::WrapObject(aCx, givenProto));
+  JS::Rooted<JSObject*> obj(aCx, nsINode::WrapObject(aCx, aGivenProto));
   if (!obj) {
     return nullptr;
-  }
-
-  if (customProto) {
-    // We want to set the custom prototype in the compartment where it was
-    // registered. In the case that |obj| and |prototype| are in different
-    // compartments, this will set the prototype on the |obj|'s wrapper and
-    // thus only visible in the wrapper's compartment, since we know obj's
-    // principal does not subsume customProto's in this case.
-    JSAutoCompartment ac(aCx, customProto);
-    JS::Rooted<JSObject*> wrappedObj(aCx, obj);
-    if (!JS_WrapObject(aCx, &wrappedObj) ||
-        !JS_SetPrototype(aCx, wrappedObj, customProto)) {
-      return nullptr;
-    }
   }
 
   nsIDocument* doc;
