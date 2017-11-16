@@ -8,9 +8,9 @@
 #include "MediaPrefs.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
-#include "mp4_demuxer/BufferStream.h"
-#include "mp4_demuxer/MP4Metadata.h"
-#include "mp4_demuxer/MoofParser.h"
+#include "BufferStream.h"
+#include "MP4Metadata.h"
+#include "MoofParser.h"
 
 using namespace mozilla;
 using namespace mp4_demuxer;

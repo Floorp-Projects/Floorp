@@ -7,8 +7,8 @@
 #define SINF_PARSER_H_
 
 #include "mozilla/ResultExtensions.h"
-#include "mp4_demuxer/Atom.h"
-#include "mp4_demuxer/AtomType.h"
+#include "Atom.h"
+#include "AtomType.h"
 
 namespace mp4_demuxer {
 
