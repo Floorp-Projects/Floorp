@@ -10,11 +10,11 @@
 <script>
 'use strict';
 
-promise_test(function(t) {
+promise_test(t => {
   var div = createDiv(t);
   var animation = div.animate({transform: ['translate(100px)', 'translate(100px)']},
                               100 * MS_PER_SEC);
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_not_equals(getComputedStyle(div).transform, 'none',
                       'transform style is animated before cancelling');
     animation.cancel();
@@ -23,7 +23,7 @@ promise_test(function(t) {
   });
 }, 'Animated style is cleared after calling Animation.cancel()');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var animation = div.animate({marginLeft: ['100px', '200px']},
                               100 * MS_PER_SEC);
@@ -38,11 +38,11 @@ test(function(t) {
                 + ' seeked');
 }, 'After cancelling an animation, it can still be seeked');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = createDiv(t);
   var animation = div.animate({marginLeft:['100px', '200px']},
                               100 * MS_PER_SEC);
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     animation.cancel();
     assert_equals(getComputedStyle(div).marginLeft, '0px',
                   'margin-left style is not animated after cancelling');
@@ -50,7 +50,7 @@ promise_test(function(t) {
     assert_equals(getComputedStyle(div).marginLeft, '100px',
                   'margin-left style is animated after re-starting animation');
     return animation.ready;
-  }).then(function() {
+  }).then(() => {
     assert_equals(animation.playState, 'running',
                   'Animation succeeds in running after being re-started');
   });

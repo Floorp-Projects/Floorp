@@ -38,11 +38,11 @@ function runTests(tests, description) {
   }
 }
 
-async_test(function(t) {
+async_test(t => {
   var div = createDiv(t);
   var anim = div.animate({ opacity: [ 0, 1 ] }, { delay: 1 });
   assert_equals(anim.effect.getComputedTiming().currentIteration, null);
-  anim.finished.then(t.step_func(function() {
+  anim.finished.then(t.step_func(() => {
     assert_equals(anim.effect.getComputedTiming().currentIteration, null);
     t.done();
   }));

@@ -13,7 +13,7 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate({ visibility: ['hidden','visible'] },
                          { duration: 100 * MS_PER_SEC, fill: 'both' });
@@ -32,7 +32,7 @@ test(function(t) {
 
 }, 'Visibility clamping behavior');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate({ visibility: ['hidden', 'visible'] },
                          { duration: 100 * MS_PER_SEC, fill: 'both',

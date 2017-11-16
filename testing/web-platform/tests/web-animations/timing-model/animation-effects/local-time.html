@@ -9,7 +9,7 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, 10 * MS_PER_SEC);
   for (var seconds of [-1, 0, 5, 10, 20]) {
     anim.currentTime = seconds * MS_PER_SEC;
@@ -17,7 +17,7 @@ test(function(t) {
   }
 }, 'Local time is current time for animation effects associated with an animation');
 
-test(function(t) {
+test(t => {
   var effect = new KeyframeEffect(createDiv(t), null, 10 * MS_PER_SEC);
   assert_equals(effect.getComputedTiming().localTime, null);
 }, 'Local time is unresolved for animation effects not associated with an animation');

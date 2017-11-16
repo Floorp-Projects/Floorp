@@ -10,12 +10,12 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null);
   assert_equals(anim.effect.timing.delay, 0);
 }, 'Has the default value 0');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate({ opacity: [ 0, 1 ] }, 100);
   anim.effect.timing.delay = 100;
@@ -24,7 +24,7 @@ test(function(t) {
                   'getComputedTiming() after set delay 100');
 }, 'Can be set to a positive number');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate({ opacity: [ 0, 1 ] }, 100);
   anim.effect.timing.delay = -100;
@@ -33,7 +33,7 @@ test(function(t) {
                 'getComputedTiming() after set delay -100');
 }, 'Can be set to a negative number');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate({ opacity: [ 0, 1 ] }, 100);
   anim.effect.timing.delay = 100;
@@ -42,7 +42,7 @@ test(function(t) {
 }, 'Can set a positive delay on an animation without a backwards fill to'
    + ' make it no longer active');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate({ opacity: [ 0, 1 ] },
                          { fill: 'both',
@@ -51,7 +51,7 @@ test(function(t) {
   assert_equals(anim.effect.getComputedTiming().progress, 0.5);
 }, 'Can set a negative delay to seek into the active interval');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate({ opacity: [ 0, 1 ] },
                          { fill: 'both',
@@ -61,14 +61,14 @@ test(function(t) {
   assert_equals(anim.effect.getComputedTiming().currentIteration, 0);
 }, 'Can set a large negative delay to finishing an animation');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate(null);
   for (let invalid of [NaN, Infinity]) {
-    assert_throws({ name: 'TypeError' }, function() {
+    assert_throws({ name: 'TypeError' }, () => {
       anim.effect.timing.delay = invalid;
     }, 'setting ' + invalid);
-    assert_throws({ name: 'TypeError' }, function() {
+    assert_throws({ name: 'TypeError' }, () => {
       div.animate({}, { delay: invalid });
     }, 'animate() with ' + invalid);
   }

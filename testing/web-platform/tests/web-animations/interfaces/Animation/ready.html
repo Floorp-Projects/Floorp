@@ -10,13 +10,13 @@
 <script>
 "use strict";
 
-promise_test(function(t) {
+promise_test(t => {
   var div = createDiv(t);
   var animation = div.animate(null, 100 * MS_PER_SEC);
   var originalReadyPromise = animation.ready;
   var pauseReadyPromise;
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_equals(animation.ready, originalReadyPromise,
                   'Ready promise is the same object when playing completes');
     animation.pause();
@@ -26,18 +26,18 @@ promise_test(function(t) {
     // Wait for the promise to fulfill since if we abort the pause the ready
     // promise object is reused.
     return animation.ready;
-  }).then(function() {
+  }).then(() => {
     animation.play();
     assert_not_equals(animation.ready, pauseReadyPromise,
                       'A new ready promise is created when playing');
   });
 }, 'A new ready promise is created when play()/pause() is called');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = createDiv(t);
   var animation = div.animate(null, 100 * MS_PER_SEC);
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     var promiseBeforeCallingPlay = animation.ready;
     animation.play();
     assert_equals(animation.ready, promiseBeforeCallingPlay,
@@ -46,11 +46,11 @@ promise_test(function(t) {
   });
 }, 'Redundant calls to play() do not generate new ready promise objects');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = createDiv(t);
   var animation = div.animate(null, 100 * MS_PER_SEC);
 
-  return animation.ready.then(function(resolvedAnimation) {
+  return animation.ready.then(resolvedAnimation => {
     assert_equals(resolvedAnimation, animation,
                   'Object identity of Animation passed to Promise callback'
                   + ' matches the Animation object owning the Promise');

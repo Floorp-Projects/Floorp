@@ -13,13 +13,13 @@
 
 var gKeyFrames = { 'marginLeft': ['100px', '200px'] };
 
-test(function(t) {
+test(t => {
   assert_equals(document.getAnimations().length, 0,
                 'getAnimations returns an empty sequence for a document ' +
                 'with no animations');
 }, 'Test document.getAnimations for non-animated content');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim1 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   var anim2 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
@@ -32,7 +32,7 @@ test(function(t) {
                 'getAnimation only returns running animations');
 }, 'Test document.getAnimations for script-generated animations')
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim1 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   var anim2 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
@@ -41,7 +41,7 @@ test(function(t) {
                       'getAnimations() returns running animations');
 }, 'Test the order of document.getAnimations with script generated animations')
 
-test(function(t) {
+test(t => {
   var effect = new KeyframeEffectReadOnly(null, gKeyFrames, 100 * MS_PER_SEC);
   var anim = new Animation(effect, document.timeline);
   anim.play();
