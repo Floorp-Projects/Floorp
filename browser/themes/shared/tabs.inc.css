@@ -249,7 +249,6 @@ tabbrowser {
   animation: 3s linear tab-sharing-icon-pulse infinite;
 }
 
-/* This should remain identical to identity-box-sharing-icon-pulse in identity-block.inc.css */
 @keyframes tab-sharing-icon-pulse {
   0%, 16.66%, 83.33%, 100% {
     opacity: 0;
