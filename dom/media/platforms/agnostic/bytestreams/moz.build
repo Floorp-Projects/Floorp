@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
-EXPORTS.mp4_demuxer += [
+EXPORTS += [
     'Adts.h',
     'AnnexB.h',
     'H264.h',

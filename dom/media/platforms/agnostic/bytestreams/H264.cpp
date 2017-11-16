@@ -5,11 +5,11 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ResultExtensions.h"
-#include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/BitReader.h"
 #include "mp4_demuxer/BufferReader.h"
 #include "mp4_demuxer/ByteWriter.h"
-#include "mp4_demuxer/H264.h"
+#include "AnnexB.h"
+#include "H264.h"
 #include <limits>
 #include <cmath>
 

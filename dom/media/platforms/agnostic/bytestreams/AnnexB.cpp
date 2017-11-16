@@ -6,7 +6,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
-#include "mp4_demuxer/AnnexB.h"
+#include "AnnexB.h"
 #include "mp4_demuxer/BufferReader.h"
 #include "mp4_demuxer/ByteWriter.h"
 #include "MediaData.h"
