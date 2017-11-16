@@ -132,7 +132,7 @@ MacroAssemblerCompat::loadPrivate(const Address& src, Register dest)
 }
 
 void
-MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler)
+MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler, Label* profilerExitTail)
 {
     // Reserve space for exception information.
     int64_t size = (sizeof(ResumeFromException) + 7) & ~7;

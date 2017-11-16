@@ -844,7 +844,6 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
         masm.bind(&rectify);
         masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, instance)), callee);
         masm.loadPtr(Address(callee, Instance::offsetOfJSJitArgsRectifier()), callee);
-        masm.loadPtr(Address(callee, JitCode::offsetOfCode()), callee);
         masm.jump(&rejoinBeforeCall);
     }
 

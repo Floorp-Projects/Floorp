@@ -4485,8 +4485,8 @@ JSScript::updateBaselineOrIonRaw(JSRuntime* maybeRuntime)
     if (hasBaselineScript() && baseline->hasPendingIonBuilder()) {
         MOZ_ASSERT(maybeRuntime);
         MOZ_ASSERT(!isIonCompilingOffThread());
-        baselineOrIonRaw = maybeRuntime->jitRuntime()->lazyLinkStub()->raw();
-        baselineOrIonSkipArgCheck = maybeRuntime->jitRuntime()->lazyLinkStub()->raw();
+        baselineOrIonRaw = maybeRuntime->jitRuntime()->lazyLinkStub().value;
+        baselineOrIonSkipArgCheck = maybeRuntime->jitRuntime()->lazyLinkStub().value;
     } else if (hasIonScript()) {
         baselineOrIonRaw = ion->method()->raw();
         baselineOrIonSkipArgCheck = ion->method()->raw() + ion->getSkipArgCheckEntryOffset();
