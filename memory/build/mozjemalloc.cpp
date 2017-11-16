@@ -4470,7 +4470,7 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
   if (!aStats) {
     return;
   }
-  if (!malloc_initialized) {
+  if (!malloc_init()) {
     memset(aStats, 0, sizeof(*aStats));
     return;
   }
