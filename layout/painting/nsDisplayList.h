@@ -674,11 +674,11 @@ public:
 
   void RecomputeCurrentAnimatedGeometryRoot();
 
+  void Check() {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  bool DebugContains(void* aPtr) {
-    return mPool.DebugContains(aPtr);
-  }
+    mPool.Check();
 #endif
+  }
 
   /**
    * Returns true if merging and flattening of display lists should be
@@ -1832,7 +1832,6 @@ class nsDisplayItemLink {
 protected:
   nsDisplayItemLink() : mAbove(nullptr) {}
   nsDisplayItemLink(const nsDisplayItemLink&) : mAbove(nullptr) {}
-  uint64_t mSentinel = 0xDEADBEEFDEADBEEF;
   nsDisplayItem* mAbove;
 
   friend class nsDisplayList;
@@ -2706,9 +2705,8 @@ public:
   /**
    * Create an empty list.
    */
-  explicit nsDisplayList(nsDisplayListBuilder* aBuilder)
-    : mBuilder(aBuilder)
-    , mLength(0)
+  nsDisplayList()
+    : mLength(0)
     , mIsOpaque(false)
     , mForceTransparentSurface(false)
   {
@@ -2728,7 +2726,6 @@ public:
   void AppendToTop(nsDisplayItem* aItem) {
     NS_ASSERTION(aItem, "No item to append!");
     NS_ASSERTION(!aItem->mAbove, "Already in a list!");
-    MOZ_DIAGNOSTIC_ASSERT(mBuilder->DebugContains(aItem));
     mTop->mAbove = aItem;
     mTop = aItem;
     mLength++;
@@ -2761,7 +2758,6 @@ public:
   void AppendToBottom(nsDisplayItem* aItem) {
     NS_ASSERTION(aItem, "No item to append!");
     NS_ASSERTION(!aItem->mAbove, "Already in a list!");
-    MOZ_DIAGNOSTIC_ASSERT(mBuilder->DebugContains(aItem));
     aItem->mAbove = mSentinel.mAbove;
     mSentinel.mAbove = aItem;
     if (mTop == &mSentinel) {
@@ -2774,7 +2770,6 @@ public:
    * Removes all items from aList and appends them to the top of this list
    */
   void AppendToTop(nsDisplayList* aList) {
-    MOZ_DIAGNOSTIC_ASSERT(mBuilder == aList->mBuilder);
     if (aList->mSentinel.mAbove) {
       mTop->mAbove = aList->mSentinel.mAbove;
       mTop = aList->mTop;
@@ -2789,7 +2784,6 @@ public:
    * Removes all items from aList and prepends them to the bottom of this list
    */
   void AppendToBottom(nsDisplayList* aList) {
-    MOZ_DIAGNOSTIC_ASSERT(mBuilder == aList->mBuilder);
     if (aList->mSentinel.mAbove) {
       aList->mTop->mAbove = mSentinel.mAbove;
       mSentinel.mAbove = aList->mSentinel.mAbove;
@@ -3003,8 +2997,6 @@ public:
     mForceTransparentSurface = true;
   }
 
-  nsDisplayListBuilder* mBuilder;
-  
   void RestoreState() {
     mIsOpaque = false;
     mForceTransparentSurface = false;
@@ -3129,24 +3121,10 @@ protected:
 struct nsDisplayListCollection : public nsDisplayListSet {
   explicit nsDisplayListCollection(nsDisplayListBuilder* aBuilder) :
     nsDisplayListSet(&mLists[0], &mLists[1], &mLists[2], &mLists[3], &mLists[4],
-                     &mLists[5]),
-    mLists{ nsDisplayList(aBuilder),
-            nsDisplayList(aBuilder),
-            nsDisplayList(aBuilder),
-            nsDisplayList(aBuilder),
-            nsDisplayList(aBuilder),
-            nsDisplayList(aBuilder) }
-  {}
+                     &mLists[5]) {}
   explicit nsDisplayListCollection(nsDisplayListBuilder* aBuilder, nsDisplayList* aBorderBackground) :
     nsDisplayListSet(aBorderBackground, &mLists[1], &mLists[2], &mLists[3], &mLists[4],
-                     &mLists[5]),
-    mLists{ nsDisplayList(aBuilder),
-            nsDisplayList(aBuilder),
-            nsDisplayList(aBuilder),
-            nsDisplayList(aBuilder),
-            nsDisplayList(aBuilder),
-            nsDisplayList(aBuilder) }
-  {}
+                     &mLists[5]) {}
 
   /**
    * Sort all lists by content order.
@@ -4573,7 +4551,6 @@ public:
                     nsDisplayItem* aItem);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame)
-    , mList(aBuilder)
     , mFrameActiveScrolledRoot(aBuilder->CurrentActiveScrolledRoot())
     , mOverrideZIndex(0)
     , mHasZIndexOverride(false)
@@ -4590,7 +4567,6 @@ public:
   nsDisplayWrapList(const nsDisplayWrapList& aOther) = delete;
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, const nsDisplayWrapList& aOther)
     : nsDisplayItem(aBuilder, aOther)
-    , mList(aOther.mList.mBuilder)
     , mListPtr(&mList)
     , mFrameActiveScrolledRoot(aOther.mFrameActiveScrolledRoot)
     , mMergedFrames(aOther.mMergedFrames)
