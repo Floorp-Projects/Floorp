@@ -10,7 +10,7 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
@@ -21,12 +21,12 @@ test(function(t) {
     'state');
 }, 'The current time returns the hold time when set');
 
-promise_test(function(t) {
+promise_test(t => {
   var animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_equals(animation.currentTime, null);
   });
 }, 'The current time is unresolved when there is no associated timeline ' +
@@ -35,7 +35,7 @@ promise_test(function(t) {
 // FIXME: Test that the current time is unresolved when we have an inactive
 // timeline if we find a way of creating an inactive timeline!
 
-test(function(t) {
+test(t => {
   var animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
@@ -45,7 +45,7 @@ test(function(t) {
 }, 'The current time is unresolved when the start time is unresolved ' +
    '(and no hold time is set)');
 
-test(function(t) {
+test(t => {
   var animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
@@ -62,13 +62,12 @@ test(function(t) {
 }, 'The current time is calculated from the timeline time, start time and ' +
    'playback rate');
 
-promise_test(function(t) {
+promise_test(t => {
   var animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   animation.playbackRate = 0;
 
-  return animation.ready.then(function() {
-    return waitForAnimationFrames(1);
-  }).then(function() {
+  return animation.ready.then(() => waitForAnimationFrames(1))
+  .then(() => {
     assert_times_equal(animation.currentTime, 0);
   });
 }, 'The current time does not progress if playback rate is 0');

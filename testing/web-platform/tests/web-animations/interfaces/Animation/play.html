@@ -10,19 +10,19 @@
 <script>
 'use strict';
 
-promise_test(function(t) {
+promise_test(t => {
   var div = createDiv(t);
   var animation = div.animate({ transform: ['none', 'translate(10px)']},
                               { duration : 100 * MS_PER_SEC,
                                 iterations : Infinity});
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     // Seek to a time outside the active range so that play() will have to
     // snap back to the start
     animation.currentTime = -5 * MS_PER_SEC;
     animation.playbackRate = -1;
 
     assert_throws('InvalidStateError',
-                  function () { animation.play(); },
+                  () => { animation.play(); },
                   'Expected InvalidStateError exception on calling play() ' +
                   'with a negative playbackRate and infinite-duration ' +
                   'animation');

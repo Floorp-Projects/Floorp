@@ -11,7 +11,7 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null);
   assert_equals(anim.effect.timing.easing, 'linear');
 }, 'Has the default value \'linear\'');
@@ -26,8 +26,8 @@ function assert_progress(animation, currentTime, easingFunction) {
                        easingFunction(portion) + ' at ' + currentTime + 'ms');
 }
 
-gEasingTests.forEach(function(options) {
-  test(function(t) {
+gEasingTests.forEach(options => {
+  test(t => {
     var target = createDiv(t);
     var anim = target.animate([ { opacity: 0 }, { opacity: 1 } ],
                               { duration: 1000 * MS_PER_SEC,
@@ -45,26 +45,26 @@ gEasingTests.forEach(function(options) {
   }, options.desc);
 });
 
-gInvalidEasings.forEach(function(invalidEasing) {
-  test(function(t) {
+gInvalidEasings.forEach(invalidEasing => {
+  test(t => {
     var div = createDiv(t);
     var anim = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
     assert_throws({ name: 'TypeError' },
-                  function() {
+                  () => {
                     anim.effect.timing.easing = invalidEasing;
                   });
   }, 'Throws on invalid easing: \'' + invalidEasing + '\'');
 });
 
 gRoundtripEasings.forEach(easing => {
-  test(function(t) {
+  test(t => {
     const anim = createDiv(t).animate(null);
     anim.effect.timing.easing = easing;
     assert_equals(anim.effect.timing.easing, easing);
   }, `Canonical easing '${easing}' is returned as set`);
 });
 
-test(function(t) {
+test(t => {
   var delay = 1000 * MS_PER_SEC;
 
   var target = createDiv(t);

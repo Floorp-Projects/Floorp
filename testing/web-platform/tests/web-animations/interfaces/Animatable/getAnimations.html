@@ -9,19 +9,19 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   assert_array_equals(div.getAnimations(), []);
 }, 'Returns an empty array for an element with no animations');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var animationA = div.animate(null, 100 * MS_PER_SEC);
   var animationB = div.animate(null, 100 * MS_PER_SEC);
   assert_array_equals(div.getAnimations(), [animationA, animationB]);
 }, 'Returns both animations for an element with two animations');
 
-test(function(t) {
+test(t => {
   var divA = createDiv(t);
   var divB = createDiv(t);
   var animationA = divA.animate(null, 100 * MS_PER_SEC);
@@ -30,7 +30,7 @@ test(function(t) {
   assert_array_equals(divB.getAnimations(), [animationB], 'divB');
 }, 'Returns only the animations specific to each sibling element');
 
-test(function(t) {
+test(t => {
   var divParent = createDiv(t);
   var divChild = createDiv(t);
   divParent.appendChild(divChild);
@@ -41,14 +41,14 @@ test(function(t) {
   assert_array_equals(divChild.getAnimations(), [animationChild], 'divChild');
 }, 'Returns only the animations specific to each parent/child element');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var animation = div.animate(null, 100 * MS_PER_SEC);
   animation.finish();
   assert_array_equals(div.getAnimations(), []);
 }, 'Does not return finished animations that do not fill forwards');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var animation = div.animate(null, {
     duration: 100 * MS_PER_SEC,
@@ -58,7 +58,7 @@ test(function(t) {
   assert_array_equals(div.getAnimations(), [animation]);
 }, 'Returns finished animations that fill forwards');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var animation = div.animate(null, {
     duration: 100 * MS_PER_SEC,
@@ -67,7 +67,7 @@ test(function(t) {
   assert_array_equals(div.getAnimations(), [animation]);
 }, 'Returns animations in their delay phase');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var animation = div.animate(null, 100 * MS_PER_SEC);
 
@@ -87,7 +87,7 @@ test(function(t) {
 }, 'Returns animations based on dynamic changes to individual'
    + ' animations\' duration');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var animation = div.animate(null, 100 * MS_PER_SEC);
 
@@ -105,7 +105,7 @@ test(function(t) {
 }, 'Returns animations based on dynamic changes to individual'
    + ' animations\' end delay');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var animation = div.animate(null, 100 * MS_PER_SEC);
 
@@ -130,7 +130,7 @@ test(function(t) {
 }, 'Returns animations based on dynamic changes to individual'
    + ' animations\' iteration count');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var animation = div.animate(null,
                               { duration: 100 * MS_PER_SEC,

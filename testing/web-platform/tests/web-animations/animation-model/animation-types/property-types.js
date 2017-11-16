@@ -1,8 +1,8 @@
 const discreteType = {
-  testInterpolation: function(property, setup, options) {
-    options.forEach(function(keyframes) {
+  testInterpolation: (property, setup, options) => {
+    options.forEach(keyframes => {
       var [ from, to ] = keyframes;
-      test(function(t) {
+      test(t => {
         var idlName = propertyToIDL(property);
         var target = createTestElement(t, setup);
         var animation = target.animate({ [idlName]: [from, to] },
@@ -15,7 +15,7 @@ const discreteType = {
       }, property + ' uses discrete animation when animating between "'
          + from + '" and "' + to + '" with linear easing');
 
-      test(function(t) {
+      test(t => {
         // Easing: http://cubic-bezier.com/#.68,0,1,.01
         // With this curve, we don't reach the 50% point until about 95% of
         // the time has expired.
@@ -32,7 +32,7 @@ const discreteType = {
       }, property + ' uses discrete animation when animating between "'
          + from + '" and "' + to + '" with effect easing');
 
-      test(function(t) {
+      test(t => {
         // Easing: http://cubic-bezier.com/#.68,0,1,.01
         // With this curve, we don't reach the 50% point until about 95% of
         // the time has expired.
@@ -50,10 +50,10 @@ const discreteType = {
     });
   },
 
-  testAdditionOrAccumulation: function(property, setup, options, composite) {
-    options.forEach(function(keyframes) {
+  testAdditionOrAccumulation: (property, setup, options, composite) => {
+    options.forEach(keyframes => {
       var [ from, to ] = keyframes;
-      test(function(t) {
+      test(t => {
         var idlName = propertyToIDL(property);
         var target = createTestElement(t, setup);
         target.animate({ [idlName]: [from, from] }, 1000);
@@ -63,7 +63,7 @@ const discreteType = {
                              [{ time: 0, expected: to.toLowerCase() }]);
       }, property + ': "' + to + '" onto "' + from + '"');
 
-      test(function(t) {
+      test(t => {
         var idlName = propertyToIDL(property);
         var target = createTestElement(t, setup);
         target.animate({ [idlName]: [to, to] }, 1000);
@@ -85,8 +85,8 @@ const discreteType = {
 };
 
 const lengthType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10px', '50px'] },
@@ -95,7 +95,7 @@ const lengthType = {
                            [{ time: 500,  expected: '30px' }]);
     }, property + ' supports animating as a length');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['1rem', '5rem'] },
@@ -105,8 +105,8 @@ const lengthType = {
     }, property + ' supports animating as a length of rem');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '10px';
@@ -115,7 +115,7 @@ const lengthType = {
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px' }]);
     }, property + ': length');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '1rem';
@@ -135,8 +135,8 @@ const lengthType = {
 };
 
 const lengthPairType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10px 10px', '50px 50px'] },
@@ -145,7 +145,7 @@ const lengthPairType = {
                            [{ time: 500,  expected: '30px 30px' }]);
     }, property + ' supports animating as a length pair');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['1rem 1rem', '5rem 5rem'] },
@@ -155,8 +155,8 @@ const lengthPairType = {
     }, property + ' supports animating as a length pair of rem');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '10px 10px';
@@ -165,7 +165,7 @@ const lengthPairType = {
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px 20px' }]);
     }, property + ': length pair');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '1rem 1rem';
@@ -185,8 +185,8 @@ const lengthPairType = {
 };
 
 const percentageType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10%', '50%'] },
@@ -196,8 +196,8 @@ const percentageType = {
     }, property + ' supports animating as a percentage');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '60%';
@@ -217,8 +217,8 @@ const percentageType = {
 };
 
 const integerType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: [-2, 2] },
@@ -228,8 +228,8 @@ const integerType = {
     }, property + ' supports animating as an integer');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = -1;
@@ -250,8 +250,8 @@ const integerType = {
 };
 
 const positiveIntegerType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: [1, 3] },
@@ -261,8 +261,8 @@ const positiveIntegerType = {
     }, property + ' supports animating as a positive integer');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 1;
@@ -283,11 +283,11 @@ const positiveIntegerType = {
 };
 
 const lengthPercentageOrCalcType = {
-  testInterpolation: function(property, setup) {
+  testInterpolation: (property, setup) => {
     lengthType.testInterpolation(property, setup);
     percentageType.testInterpolation(property, setup);
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10px', '20%'] },
@@ -296,7 +296,7 @@ const lengthPercentageOrCalcType = {
                            [{ time: 500,  expected: 'calc(5px + 10%)' }]);
     }, property + ' supports animating as combination units "px" and "%"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10%', '2em'] },
@@ -305,7 +305,7 @@ const lengthPercentageOrCalcType = {
                            [{ time: 500,  expected: 'calc(10px + 5%)' }]);
     }, property + ' supports animating as combination units "%" and "em"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['1em', '2rem'] },
@@ -314,7 +314,7 @@ const lengthPercentageOrCalcType = {
                            [{ time: 500,  expected: '15px' }]);
     }, property + ' supports animating as combination units "em" and "rem"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10px', 'calc(1em + 20%)'] },
@@ -323,7 +323,7 @@ const lengthPercentageOrCalcType = {
                            [{ time: 500,  expected: 'calc(10px + 10%)' }]);
     }, property + ' supports animating as combination units "px" and "calc"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate(
@@ -335,11 +335,11 @@ const lengthPercentageOrCalcType = {
     }, property + ' supports animating as a calc');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
     lengthType.testAddition(property, setup);
     percentageType.testAddition(property, setup);
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '10px';
@@ -349,7 +349,7 @@ const lengthPercentageOrCalcType = {
                            [{ time: 0, expected: 'calc(10px + 10%)' }]);
     }, property + ': units "%" onto "px"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '10%';
@@ -359,7 +359,7 @@ const lengthPercentageOrCalcType = {
                            [{ time: 0, expected: 'calc(10px + 10%)' }]);
     }, property + ': units "px" onto "%"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '10%';
@@ -369,7 +369,7 @@ const lengthPercentageOrCalcType = {
                            [{ time: 0, expected: 'calc(20px + 10%)' }]);
     }, property + ': units "rem" onto "%"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '2rem';
@@ -379,7 +379,7 @@ const lengthPercentageOrCalcType = {
                            [{ time: 0, expected: 'calc(20px + 10%)' }]);
     }, property + ': units "%" onto "rem"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '2em';
@@ -388,7 +388,7 @@ const lengthPercentageOrCalcType = {
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '40px' }]);
     }, property + ': units "rem" onto "em"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '2rem';
@@ -397,7 +397,7 @@ const lengthPercentageOrCalcType = {
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '40px' }]);
     }, property + ': units "em" onto "rem"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '10px';
@@ -408,7 +408,7 @@ const lengthPercentageOrCalcType = {
                            [{ time: 0, expected: 'calc(30px + 20%)' }]);
     }, property + ': units "calc" onto "px"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'calc(10px + 10%)';
@@ -430,8 +430,8 @@ const lengthPercentageOrCalcType = {
 };
 
 const positiveNumberType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: [1.1, 1.5] },
@@ -441,8 +441,8 @@ const positiveNumberType = {
     }, property + ' supports animating as a positive number');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 1.1;
@@ -463,8 +463,8 @@ const positiveNumberType = {
 
 // Test using float values in the range [0, 1]
 const opacityType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: [0.3, 0.8] },
@@ -474,8 +474,8 @@ const opacityType = {
     }, property + ' supports animating as a [0, 1] number');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 0.3;
@@ -484,7 +484,7 @@ const opacityType = {
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '0.6' }]);
     }, property + ': [0, 1] number');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 0.8;
@@ -504,8 +504,8 @@ const opacityType = {
 };
 
 const visibilityType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['visible', 'hidden'] },
@@ -517,7 +517,7 @@ const visibilityType = {
     }, property + ' uses visibility animation when animating '
        + 'from "visible" to "hidden"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['hidden', 'visible'] },
@@ -529,7 +529,7 @@ const visibilityType = {
     }, property + ' uses visibility animation when animating '
      + 'from "hidden" to "visible"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['hidden', 'collapse'] },
@@ -542,7 +542,7 @@ const visibilityType = {
     }, property + ' uses visibility animation when animating '
      + 'from "hidden" to "collapse"');
 
-    test(function(t) {
+    test(t => {
       // Easing: http://cubic-bezier.com/#.68,-.55,.26,1.55
       // With this curve, the value is less than 0 till about 34%
       // also more than 1 since about 63%
@@ -564,8 +564,8 @@ const visibilityType = {
      + 'from "visible" to "hidden" with easeInOutBack easing');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'visible';
@@ -577,7 +577,7 @@ const visibilityType = {
                             { time: 1000, expected: 'visible' }]);
     }, property + ': onto "visible"');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'hidden';
@@ -600,8 +600,8 @@ const visibilityType = {
 };
 
 const colorType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['rgb(255, 0, 0)',
@@ -611,7 +611,7 @@ const colorType = {
                            [{ time: 500,  expected: 'rgb(128, 0, 128)' }]);
     }, property + ' supports animating as color of rgb()');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['#ff0000', '#0000ff'] },
@@ -620,7 +620,7 @@ const colorType = {
                            [{ time: 500,  expected: 'rgb(128, 0, 128)' }]);
     }, property + ' supports animating as color of #RGB');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['hsl(0,   100%, 50%)',
@@ -630,7 +630,7 @@ const colorType = {
                            [{ time: 500,  expected: 'rgb(128, 0, 128)' }]);
     }, property + ' supports animating as color of hsl()');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['#ff000066', '#0000ffcc'] },
@@ -641,7 +641,7 @@ const colorType = {
                            [{ time: 500,  expected: 'rgba(85, 0, 170, 0.6)' }]);
     }, property + ' supports animating as color of #RGBa');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['rgba(255, 0, 0, 0.4)',
@@ -651,7 +651,7 @@ const colorType = {
                            [{ time: 500,  expected: 'rgba(85, 0, 170, 0.6)' }]);
     }, property + ' supports animating as color of rgba()');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['hsla(0,   100%, 50%, 0.4)',
@@ -662,8 +662,8 @@ const colorType = {
     }, property + ' supports animating as color of hsla()');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(128, 128, 128)';
@@ -679,7 +679,7 @@ const colorType = {
     }, property + ' supports animating as color of rgb() with overflowed ' +
        'from and to values');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(128, 128, 128)';
@@ -689,7 +689,7 @@ const colorType = {
                            [{ time: 0,  expected: 'rgb(255, 128, 128)' }]);
     }, property + ' supports animating as color of #RGB');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(128, 128, 128)';
@@ -700,7 +700,7 @@ const colorType = {
                            [{ time: 0,  expected: 'rgb(255, 128, 128)' }]);
     }, property + ' supports animating as color of hsl()');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(128, 128, 128)';
@@ -710,7 +710,7 @@ const colorType = {
                            [{ time: 0,  expected: 'rgb(230, 128, 128)' }]);
     }, property + ' supports animating as color of #RGBa');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(128, 128, 128)';
@@ -721,7 +721,7 @@ const colorType = {
                            [{ time: 0,  expected: 'rgb(230, 128, 128)' }]);
     }, property + ' supports animating as color of rgba()');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(128, 128, 128)';
@@ -743,8 +743,8 @@ const colorType = {
 };
 
 const transformListType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['translate(200px, -200px)',
@@ -754,7 +754,7 @@ const transformListType = {
         [{ time: 500,  expected: [ 1, 0, 0, 1, 300, 100 ] }]);
     }, property + ': translate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['rotate(45deg)',
@@ -769,7 +769,7 @@ const transformListType = {
                                    0, 0] }]);
     }, property + ': rotate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['scale(3)', 'scale(5)'] },
@@ -779,7 +779,7 @@ const transformListType = {
         [{ time: 500,  expected: [ 4, 0, 0, 4, 0, 0 ] }]);
     }, property + ': scale');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['skew(30deg, 60deg)',
@@ -792,7 +792,7 @@ const transformListType = {
                                    0, 0] }]);
     }, property + ': skew');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -808,7 +808,7 @@ const transformListType = {
                                    150, 0 ] }]);
     }, property + ': rotate and translate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -825,7 +825,7 @@ const transformListType = {
                                   150 * Math.sin(Math.PI / 2) ] }]);
     }, property + ': translate and rotate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =                // matrix(0, 1, -1, 0, 0, 100)
@@ -842,7 +842,7 @@ const transformListType = {
                                   100, 50 ] }]);
     }, property + ': mismatch order of translate and rotate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =                 // Same matrices as above.
@@ -858,7 +858,7 @@ const transformListType = {
                                   100, 50 ] }]);
     }, property + ': matrix');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -870,7 +870,7 @@ const transformListType = {
         [{ time: 500, expected: rotate3dToMatrix(1, 1, 0, Math.PI / 4) }]);
     }, property + ': rotate3d');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       // To calculate expected matrices easily, generate input matrices from
@@ -887,7 +887,7 @@ const transformListType = {
     // This test aims for forcing the two mismatched transforms to be
     // decomposed into matrix3d before interpolation. Therefore, we not only
     // test the interpolation, but also test the 3D matrix decomposition.
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -903,7 +903,7 @@ const transformListType = {
                                    0,   0,   0.5, 1] }]);
     }, property + ': mismatched 3D transforms');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -916,8 +916,8 @@ const transformListType = {
 
     // Following tests aim for test the fallback discrete interpolation behavior
     // for non-invertible matrices. The non-invertible matrix that we use is the
-    // singuler matrix, matrix(1, 1, 0, 0, 0, 100).
-    test(function(t) {
+    // singular matrix, matrix(1, 1, 0, 0, 0, 100).
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -932,7 +932,7 @@ const transformListType = {
           { time: 1000, expected: [  1, 1, 0,  0,   0, 100 ] }]);
     }, property + ': non-invertible matrices');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =                // matrix(0, -1, 1, 0, 250, 0)
@@ -948,7 +948,7 @@ const transformListType = {
           { time: 1000, expected: [ -1, -1, 0, 0, 100, 100 ] }]);
     }, property + ': non-invertible matrices in matched transform lists');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =                // matrix(-2, 0, 0, -2, 250, 0)
@@ -966,7 +966,7 @@ const transformListType = {
   },
 
   testAddition: function(property, setup) {
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'translateX(100px)';
@@ -979,7 +979,7 @@ const transformListType = {
           { time: 1000, expected: [ 1, 0, 0, 1,  600, 0 ] }]);
     }, property + ': translate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rotate(45deg)';
@@ -1001,7 +1001,7 @@ const transformListType = {
                                    0, 0] }]);
     }, property + ': rotate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'scale(2)';
@@ -1014,7 +1014,7 @@ const transformListType = {
          { time: 1000, expected: [ 10, 0, 0, 10, 0, 0 ] }]); // scale(5) scale(2)
     }, property + ': scale');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
                               // matrix(1, tan(10deg), tan(10deg), 1)
@@ -1052,7 +1052,7 @@ const transformListType = {
                                    0, 0] }]);
     }, property + ': skew');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
                                // matrix(1, 0, 0, 1, 100, 0)
@@ -1068,7 +1068,7 @@ const transformListType = {
          { time: 1000, expected: [ -1, 0,  0, -1, 100, 0 ] }]);
     }, property + ': rotate on translate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
                                // matrix(0, 1, -1, 0, 0, 0)
@@ -1084,7 +1084,7 @@ const transformListType = {
          { time: 1000, expected: [ 0, 1, -1, 0, 0, 200 ] }]);
     }, property + ': translate on rotate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'matrix(0, 1, -1, 0, 0, 0)';
@@ -1098,7 +1098,7 @@ const transformListType = {
          { time: 1000, expected: [ 0, 1, -1, 0, 0, 200 ] }]);
     }, property + ': matrix');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rotate3d(1, 1, 0, 45deg)';
@@ -1112,7 +1112,7 @@ const transformListType = {
          { time: 1000, expected: rotate3dToMatrix(1, 1, 0, 3 * Math.PI / 4) }]);
     }, property + ': rotate3d');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       // To calculate expected matrices easily, generate input matrices from
@@ -1133,8 +1133,8 @@ const transformListType = {
     // matrices. Note that the addition for non-invertible matrices should be
     // the same, just like addition for invertible matrices. With these tests,
     // we can assure that addition never behaves as discrete. The non-invertible
-    // matrix that we use is the singuler matrix, matrix(1, 1, 0, 0, 0, 100).
-    test(function(t) {
+    // matrix that we use is the singular matrix, matrix(1, 1, 0, 0, 0, 100).
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'translateX(50px)';
@@ -1148,7 +1148,7 @@ const transformListType = {
           { time: 1000, expected: [  1, 1, 0,  0,  50, 100 ] }]);
     }, property + ': non-invertible matrices');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'translateX(50px)';
@@ -1163,7 +1163,7 @@ const transformListType = {
           { time: 1000, expected: [ -1, -1, 0, 0,  50, 100 ] }]);
     }, property + ': non-invertible matrices in matched transform lists');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'translateX(50px)';
@@ -1180,7 +1180,7 @@ const transformListType = {
   },
 
   testAccumulation: function(property, setup) {
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'translateX(100px)';
@@ -1193,7 +1193,7 @@ const transformListType = {
           { time: 1000, expected: [ 1, 0, 0, 1,  600, 0 ] }]);
     }, property + ': translate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rotate(45deg)';
@@ -1215,7 +1215,7 @@ const transformListType = {
                                    0, 0] }]);
     }, property + ': rotate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'scale(2)';
@@ -1230,7 +1230,7 @@ const transformListType = {
          { time: 1000, expected: [  6, 0, 0,  6, 0, 0 ] }]);
     }, property + ': scale');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
                               // matrix(1, tan(10deg), tan(10deg), 1)
@@ -1250,7 +1250,7 @@ const transformListType = {
                                    0, 0] }]);
     }, property + ': skew');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
                                // matrix(1, 0, 0, 1, 100, 0)
@@ -1266,7 +1266,7 @@ const transformListType = {
          { time: 1000, expected: [ -1, 0,  0, -1, 100, 0 ] }]);
     }, property + ': rotate on translate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
                                // matrix(0, 1, -1, 0, 0, 0)
@@ -1282,7 +1282,7 @@ const transformListType = {
          { time: 1000, expected: [ 0, 1, -1, 0, 200, 0 ] }]);
     }, property + ': translate on rotate');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'matrix(0, 1, -1, 0, 0, 0)';
@@ -1296,7 +1296,7 @@ const transformListType = {
          { time: 1000, expected: [ 0, 1, -1, 0, 200, 0 ] }]);
     }, property + ': matrix');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rotate3d(1, 1, 0, 45deg)';
@@ -1310,7 +1310,7 @@ const transformListType = {
          { time: 1000, expected: rotate3dToMatrix(1, 1, 0, 3 * Math.PI / 4) }]);
     }, property + ': rotate3d');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       // To calculate expected matrices easily, generate input matrices from
@@ -1327,7 +1327,7 @@ const transformListType = {
          { time: 1000, expected: rotate3dToMatrix(1, 1, 0, 3 * Math.PI / 4) }]);
     }, property + ': matrix3d');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var matrixArray = [ 1, 0, 0, 0,
@@ -1347,8 +1347,8 @@ const transformListType = {
 
     // Following tests aim for test the fallback discrete accumulation behavior
     // for non-invertible matrices. The non-invertible matrix that we use is the
-    // singuler matrix, matrix(1, 1, 0, 0, 0, 100).
-    test(function(t) {
+    // singular matrix, matrix(1, 1, 0, 0, 0, 100).
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.animate({ [idlName]: ['matrix(-1, 0, 0, -1, 200, 0)',
@@ -1360,7 +1360,7 @@ const transformListType = {
                                   [{ time: 0, expected: [ 1, 1, 0, 0, 0, 100 ] }]);
     }, property + ': non-invertible matrices (non-invertible onto invertible)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.animate({ [idlName]: ['matrix( 1, 1, 0, 0, 0, 100)',
@@ -1372,7 +1372,7 @@ const transformListType = {
                                   [{ time: 0, expected: [ -1, 0, 0, -1, 200, 0 ] }]);
     }, property + ': non-invertible matrices (invertible onto non-invertible)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
                                    // matrix(0, -1, 1, 0, 250, 0)
@@ -1386,7 +1386,7 @@ const transformListType = {
                                   [{ time: 0, expected: [ -1, -1, 0, 0, 100, 100 ] }]);
     }, property + ': non-invertible matrices in matched transform lists (non-invertible onto invertible)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
                                    // matrix(-1, -1, 0, 0, 100, 100)
@@ -1400,7 +1400,7 @@ const transformListType = {
                                   [{ time: 0, expected: [ 0, -1, 1, 0, 250, 0 ] }]);
     }, property + ': non-invertible matrices in matched transform lists (invertible onto non-invertible)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
                                    // matrix(-2, 0, 0, -2, 250, 0)
@@ -1415,7 +1415,7 @@ const transformListType = {
     }, property + ': non-invertible matrices in mismatched transform lists' +
                   ' (non-invertible onto invertible)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
                                    // matrix(1, 1, 1, 1, 100, 100)
@@ -1433,8 +1433,8 @@ const transformListType = {
 };
 
 const filterListType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]:
@@ -1445,7 +1445,7 @@ const filterListType = {
         [{ time: 500,    expected: 'blur(30px)' }]);
     }, property + ': blur function' );
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['hue-rotate(0deg)',
@@ -1456,7 +1456,7 @@ const filterListType = {
         [{ time: 500,    expected: 'hue-rotate(50deg)' }]);
     }, property + ': hue-rotate function with same unit(deg)' );
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['hue-rotate(10deg)',
@@ -1468,7 +1468,7 @@ const filterListType = {
         [{ time: 500,    expected: 'hue-rotate(50.0873rad)' }]);
     }, property + ': hue-rotate function with different unit(deg -> rad)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate(
@@ -1483,7 +1483,7 @@ const filterListType = {
             expected: 'drop-shadow(rgba(85, 0, 170, 0.6) 30px 30px 30px)' }]);
     }, property + ': drop-shadow function' );
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate(
@@ -1501,7 +1501,7 @@ const filterListType = {
     }, property + ': percentage or numeric-specifiable functions' +
        '(number value)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate(
@@ -1519,7 +1519,7 @@ const filterListType = {
     }, property + ': percentage or numeric-specifiable functions' +
        '(percentage value)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate(
@@ -1536,7 +1536,7 @@ const filterListType = {
     }, property + ': interpolate different length of filter-function-list ' +
        ' with function which lacuna value is 1');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate(
@@ -1553,7 +1553,7 @@ const filterListType = {
     }, property + ': interpolate different length of filter-function-list ' +
        ' with function which lacuna value is 0');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style.color = "rgba(255, 0, 0, 0.4)";
@@ -1571,7 +1571,7 @@ const filterListType = {
     }, property + ': interpolate different length of filter-function-list ' +
        'with drop-shadow function');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['none', 'blur(10px)'] },
@@ -1581,7 +1581,7 @@ const filterListType = {
         [{ time: 500, expected: 'blur(5px)' }]);
     }, property + ': interpolate from none');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate(
@@ -1596,7 +1596,7 @@ const filterListType = {
   },
 
   testAddition: function(property, setup) {
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'blur(10px)';
@@ -1607,7 +1607,7 @@ const filterListType = {
         [ { time: 0,    expected: 'blur(10px) blur(20px)' }]);
     }, property + ': blur on blur');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'blur(10px)';
@@ -1620,7 +1620,7 @@ const filterListType = {
   },
 
   testAccumulation: function(property, setup) {
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'blur(10px) brightness(0.3)';
@@ -1634,7 +1634,7 @@ const filterListType = {
         [ { time: 0,    expected: 'blur(30px) brightness(0)' }]);
     }, property + ': same ordered filter functions');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'blur(10px) brightness(1.3)';
@@ -1649,8 +1649,8 @@ const filterListType = {
 };
 
 const textShadowListType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1662,7 +1662,7 @@ const textShadowListType = {
         [{ time: 500,  expected: 'rgba(100, 100, 100, 0.5) 5px 5px 5px' }]);
     }, property + ': from none to other');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1674,7 +1674,7 @@ const textShadowListType = {
         [{ time: 500,  expected: 'rgba(100, 100, 100, 0.5) 5px 5px 5px' }]);
     }, property + ': from other to none');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1685,7 +1685,7 @@ const textShadowListType = {
         [{ time: 500,  expected: 'rgb(50, 50, 50) 5px 5px 5px' }]);
     }, property + ': single shadow');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1699,7 +1699,7 @@ const textShadowListType = {
                                + 'rgb(150, 150, 150) 15px 15px 15px' }]);
     }, property + ': shadow list');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1712,7 +1712,7 @@ const textShadowListType = {
                                + 'rgba(100, 100, 100, 0.5) 5px 5px 5px' }]);
     }, property + ': mismatched list length (from longer to shorter)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1725,7 +1725,7 @@ const textShadowListType = {
                                + 'rgba(100, 100, 100, 0.5) 5px 5px 5px' }]);
     }, property + ': mismatched list length (from shorter to longer)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style.color = 'rgb(0, 255, 0)';
@@ -1739,7 +1739,7 @@ const textShadowListType = {
   },
 
   testAddition: function(property, setup) {
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(0, 0, 0) 0px 0px 0px';
@@ -1754,7 +1754,7 @@ const textShadowListType = {
   },
 
   testAccumulation: function(property, setup) {
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(120, 120, 120) 10px 10px 10px';
@@ -1770,8 +1770,8 @@ const textShadowListType = {
 
 
 const boxShadowListType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1783,7 +1783,7 @@ const boxShadowListType = {
         [{ time: 500,  expected: 'rgba(100, 100, 100, 0.5) 5px 5px 5px 0px' }]);
     }, property + ': from none to other');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1795,7 +1795,7 @@ const boxShadowListType = {
         [{ time: 500,  expected: 'rgba(100, 100, 100, 0.5) 5px 5px 5px 0px' }]);
     }, property + ': from other to none');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1806,7 +1806,7 @@ const boxShadowListType = {
         [{ time: 500,  expected: 'rgb(50, 50, 50) 5px 5px 5px 0px' }]);
     }, property + ': single shadow');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1820,7 +1820,7 @@ const boxShadowListType = {
                                + 'rgb(150, 150, 150) 15px 15px 15px 10px' }]);
     }, property + ': shadow list');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1833,7 +1833,7 @@ const boxShadowListType = {
                                + 'rgba(100, 100, 100, 0.5) 5px 5px 5px 0px' }]);
     }, property + ': mismatched list length (from shorter to longer)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -1846,7 +1846,7 @@ const boxShadowListType = {
                                + 'rgba(100, 100, 100, 0.5) 5px 5px 5px 0px' }]);
     }, property + ': mismatched list length (from longer to shorter)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style.color = 'rgb(0, 255, 0)';
@@ -1860,7 +1860,7 @@ const boxShadowListType = {
   },
 
   testAddition: function(property, setup) {
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(0, 0, 0) 0px 0px 0px 0px';
@@ -1875,7 +1875,7 @@ const boxShadowListType = {
   },
 
   testAccumulation: function(property, setup) {
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(120, 120, 120) 10px 10px 10px 10px';
@@ -1890,10 +1890,10 @@ const boxShadowListType = {
 };
 
 const positionType = {
-  testInterpolation: function(property, setup) {
+  testInterpolation: (property, setup) => {
     lengthPairType.testInterpolation(property, setup);
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10% 10%', '50% 50%'] },
@@ -1904,10 +1904,10 @@ const positionType = {
     }, property + ' supports animating as a position of percent');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
     lengthPairType.testAddition(property, setup);
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '60% 60%';
@@ -1929,8 +1929,8 @@ const positionType = {
 };
 
 const rectType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]:
@@ -1943,8 +1943,8 @@ const rectType = {
     }, property + ' supports animating as a rect');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rect(100px, 100px, 100px, 100px)';
@@ -1969,11 +1969,11 @@ const rectType = {
 
 // stroke-dasharray: none | [ <length> | <percentage> | <number> ]*
 const dasharrayType = {
-  testInterpolation: function(property, setup) {
+  testInterpolation: (property, setup) => {
     percentageType.testInterpolation(property, setup);
     positiveNumberType.testInterpolation(property, setup);
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]:
@@ -1985,7 +1985,7 @@ const dasharrayType = {
           [{ time: 500,  expected: '6, 12, 8, 12, 10, 6, 10, 16, 4, 8, 14, 10' }]);
     }, property + ' supports animating as a dasharray (mismatched length)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]:
@@ -2003,8 +2003,8 @@ const dasharrayType = {
   // write this additive test case that animating value replaces underlying
   // values.
   // See https://www.w3.org/TR/SVG2/painting.html#StrokeDashing.
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '6, 30%, 2px';
@@ -2028,8 +2028,8 @@ const dasharrayType = {
 }
 
 const fontStretchType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
+  testInterpolation: (property, setup) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -2040,7 +2040,7 @@ const fontStretchType = {
                             { time: 500,  expected: 'extra-condensed' }]);
     }, property + ' supports animating as a font-stretch (adjacent values)');
 
-    test(function(t) {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       var animation =
@@ -2051,8 +2051,8 @@ const fontStretchType = {
     }, property + ' supports animating as a font-stretch (between value)');
   },
 
-  testAdditionOrAccumulation: function(property, setup, composite) {
-    test(function(t) {
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'condensed';

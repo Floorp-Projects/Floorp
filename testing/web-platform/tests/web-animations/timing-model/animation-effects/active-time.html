@@ -10,12 +10,12 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var tests = [ { fill: 'none', progress: null },
                 { fill: 'backwards', progress: 0 },
                 { fill: 'forwards', progress: null },
                 { fill: 'both', progress: 0 } ];
-  tests.forEach(function(test) {
+  tests.forEach(test => {
     var anim = createDiv(t).animate(null, { delay: 1, fill: test.fill });
     assert_equals(anim.effect.getComputedTiming().progress, test.progress,
                   'Progress in before phase when using \'' + test.fill
@@ -23,36 +23,36 @@ test(function(t) {
   });
 }, 'Active time in before phase');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, 1000);
   anim.currentTime = 500;
   assert_times_equal(anim.effect.getComputedTiming().progress, 0.5);
 }, 'Active time in active phase and no start delay is the local time');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, { duration: 1000, delay: 500 });
   anim.currentTime = 1000;
   assert_times_equal(anim.effect.getComputedTiming().progress, 0.5);
 }, 'Active time in active phase and positive start delay is the local time'
    + ' minus the start delay');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, { duration: 1000, delay: -500 });
   assert_times_equal(anim.effect.getComputedTiming().progress, 0.5);
 }, 'Active time in active phase and negative start delay is the local time'
    + ' minus the start delay');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null);
   assert_equals(anim.effect.getComputedTiming().progress, null);
 }, 'Active time in after phase with no fill is unresolved');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, { fill: 'backwards' });
   assert_equals(anim.effect.getComputedTiming().progress, null);
 }, 'Active time in after phase with backwards-only fill is unresolved');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, { duration: 1000,
                                           iterations: 2.3,
                                           delay: 500, // Should have no effect
@@ -62,7 +62,7 @@ test(function(t) {
   assert_times_equal(anim.effect.getComputedTiming().progress, 0.3);
 }, 'Active time in after phase with forwards fill is the active duration');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, { duration: 0,
                                           iterations: Infinity,
                                           fill: 'forwards' });
@@ -72,7 +72,7 @@ test(function(t) {
 }, 'Active time in after phase with forwards fill, zero-duration, and '
    + ' infinite iteration count is the active duration');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, { duration: 1000,
                                           iterations: 2.3,
                                           delay: 500,
@@ -84,7 +84,7 @@ test(function(t) {
 }, 'Active time in after phase with forwards fill and positive end delay'
    + ' is the active duration');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, { duration: 1000,
                                           iterations: 2.3,
                                           delay: 500,
@@ -96,7 +96,7 @@ test(function(t) {
 }, 'Active time in after phase with forwards fill and negative end delay'
    + ' is the active duration + end delay');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, { duration: 1000,
                                           iterations: 2.3,
                                           delay: 500,
@@ -108,7 +108,7 @@ test(function(t) {
 }, 'Active time in after phase with forwards fill and negative end delay'
    + ' greater in magnitude than the active duration is zero');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, { duration: 1000,
                                           iterations: 2.3,
                                           delay: 500,
@@ -121,7 +121,7 @@ test(function(t) {
    + ' greater in magnitude than the sum of the active duration and start delay'
    + ' is zero');
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null, { duration: 1000,
                                           iterations: 2.3,
                                           delay: 500,
@@ -131,7 +131,7 @@ test(function(t) {
   assert_times_equal(anim.effect.getComputedTiming().progress, 0.3);
 }, 'Active time in after phase with \'both\' fill is the active duration');
 
-test(function(t) {
+test(t => {
   // Create an effect with a non-zero duration so we ensure we're not just
   // testing the after-phase behavior.
   var effect = new KeyframeEffect(null, null, 1);
