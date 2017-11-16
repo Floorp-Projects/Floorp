@@ -1477,13 +1477,13 @@ function testAnimationSamples(animation, idlName, testSamples) {
   const target = animation.effect.target.constructor.name === 'CSSPseudoElement'
                  ? animation.effect.target.parentElement
                  : animation.effect.target;
-  testSamples.forEach(testSample => {
+  for (const testSample of testSamples) {
     animation.currentTime = testSample.time;
     assert_equals(getComputedStyle(target, type)[idlName],
                   testSample.expected,
                   `The value should be ${testSample.expected}` +
                   ` at ${testSample.time}ms`);
-  });
+  }
 }
 
 function toOrderedArray(string) {
@@ -1498,7 +1498,7 @@ function testAnimationSamplesWithAnyOrder(animation, idlName, testSamples) {
   const target = animation.effect.target.constructor.name === 'CSSPseudoElement'
                  ? animation.effect.target.parentElement
                  : animation.effect.target;
-  testSamples.forEach(testSample => {
+  for (const testSample of testSamples) {
     animation.currentTime = testSample.time;
 
     // Convert to array and sort the expected and actual value lists first
@@ -1510,19 +1510,19 @@ function testAnimationSamplesWithAnyOrder(animation, idlName, testSamples) {
     assert_array_equals(computedValues, expectedValues,
                         `The computed values should be ${expectedValues}` +
                         ` at ${testSample.time}ms`);
-  });
+  }
 }
 
 function testAnimationSampleMatrices(animation, idlName, testSamples) {
   const target = animation.effect.target;
-  testSamples.forEach(function(testSample) {
+  for (const testSample of testSamples) {
     animation.currentTime = testSample.time;
     const actual = getComputedStyle(target)[idlName];
     const expected = createMatrixFromArray(testSample.expected);
     assert_matrix_equals(actual, expected,
                          `The value should be ${expected} at`
                          + ` ${testSample.time}ms but got ${actual}`);
-  });
+  }
 }
 
 function createTestElement(t, setup) {

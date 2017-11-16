@@ -64,7 +64,7 @@ const gTestArguments = [
   },
 ];
 
-gTestArguments.forEach(args => {
+for (const args of gTestArguments) {
   test(t => {
     const effect = args.createEffect();
     const animation = new Animation(effect, args.timeline);
@@ -79,7 +79,7 @@ gTestArguments.forEach(args => {
     assert_equals(animation.playState, 'idle',
                   'Animation.playState should be initially \'idle\'');
   }, 'Animation can be constructed ' + args.description);
-});
+}
 
 test(t => {
   const effect = new KeyframeEffectReadOnly(null,

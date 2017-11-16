@@ -15,7 +15,7 @@ test(t => {
   assert_equals(anim.effect.timing.fill, 'auto');
 }, 'Has the default value \'auto\'');
 
-['none', 'forwards', 'backwards', 'both', ].forEach(fill => {
+for (const fill of ['none', 'forwards', 'backwards', 'both']) {
   test(t => {
     const div = createDiv(t);
     const anim = div.animate({ opacity: [ 0, 1 ] }, 100);
@@ -24,7 +24,7 @@ test(t => {
     assert_equals(anim.effect.getComputedTiming().fill, fill,
                   'getComputedTiming() after set fill ' + fill);
   }, `Can set fill to ${fill}`);
-});
+}
 
 </script>
 </body>

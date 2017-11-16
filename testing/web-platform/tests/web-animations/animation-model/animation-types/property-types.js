@@ -2,7 +2,7 @@
 
 const discreteType = {
   testInterpolation: (property, setup, options) => {
-    options.forEach(keyframes => {
+    for (const keyframes of options) {
       const [ from, to ] = keyframes;
       test(t => {
         const idlName = propertyToIDL(property);
@@ -58,11 +58,11 @@ const discreteType = {
                               { time: 960,  expected: to.toLowerCase() }]);
       }, `${property} uses discrete animation when animating between`
          + ` "${from}" and "${to}" with keyframe easing`);
-    });
+    }
   },
 
   testAdditionOrAccumulation: (property, setup, options, composite) => {
-    options.forEach(keyframes => {
+    for (const keyframes of options) {
       const [ from, to ] = keyframes;
       test(t => {
         const idlName = propertyToIDL(property);
@@ -87,7 +87,7 @@ const discreteType = {
         testAnimationSamples(animation, idlName,
                              [{ time: 0, expected: from.toLowerCase() }]);
       }, `${property}: "${from}" onto "${to}"`);
-    });
+    }
   },
 
   testAddition: function(property, setup, options) {

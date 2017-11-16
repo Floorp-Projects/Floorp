@@ -69,7 +69,7 @@ const gGetComputedTimingTests = [
     expected: { fill: 'forwards' } }
 ];
 
-gGetComputedTimingTests.forEach(stest => {
+for (const stest of gGetComputedTimingTests) {
   test(t => {
     const effect = new KeyframeEffectReadOnly(target,
                                               { left: ['10px', '20px'] },
@@ -95,7 +95,7 @@ gGetComputedTimingTests.forEach(stest => {
 
   }, 'values of getComputedTiming() when a KeyframeEffectReadOnly is'
      + ` constructed by ${stest.desc}`);
-});
+}
 
 const gActiveDurationTests = [
   { desc:     'an empty KeyframeEffectOptions object',
@@ -142,7 +142,7 @@ const gActiveDurationTests = [
     expected: Infinity },
 ];
 
-gActiveDurationTests.forEach(stest => {
+for (const stest of gActiveDurationTests) {
   test(t => {
     const effect = new KeyframeEffectReadOnly(target,
                                               { left: ['10px', '20px'] },
@@ -152,7 +152,7 @@ gActiveDurationTests.forEach(stest => {
                   stest.expected);
 
   }, `getComputedTiming().activeDuration for ${stest.desc}`);
-});
+}
 
 const gEndTimeTests = [
   { desc:     'an empty KeyframeEffectOptions object',
@@ -194,7 +194,7 @@ const gEndTimeTests = [
     expected: 0 }
 ];
 
-gEndTimeTests.forEach(stest => {
+for (const stest of gEndTimeTests) {
   test(t => {
     const effect = new KeyframeEffectReadOnly(target,
                                               { left: ['10px', '20px'] },
@@ -204,7 +204,7 @@ gEndTimeTests.forEach(stest => {
                   stest.expected);
 
   }, `getComputedTiming().endTime for ${stest.desc}`);
-});
+}
 
 done();
 </script>

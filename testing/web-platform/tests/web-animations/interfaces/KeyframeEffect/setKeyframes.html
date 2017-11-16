@@ -16,28 +16,28 @@
 const target = document.getElementById('target');
 
 test(t => {
-  gEmptyKeyframeListTests.forEach(frame => {
+  for (const frame of gEmptyKeyframeListTests) {
     const effect = new KeyframeEffect(target, {});
     effect.setKeyframes(frame);
     assert_frame_lists_equal(effect.getKeyframes(), []);
-  });
+  }
 }, 'Keyframes can be replaced with an empty keyframe');
 
-gKeyframesTests.forEach(subtest => {
+for (const subtest of gKeyframesTests) {
   test(t => {
     const effect = new KeyframeEffect(target, {});
     effect.setKeyframes(subtest.input);
     assert_frame_lists_equal(effect.getKeyframes(), subtest.output);
   }, `Keyframes can be replaced with ${subtest.desc}`);
-});
+}
 
-gInvalidKeyframesTests.forEach(subtest => {
+for (const subtest of gInvalidKeyframesTests) {
   test(t => {
     const effect = new KeyframeEffect(target, {});
     assert_throws(new TypeError, () => {
       effect.setKeyframes(subtest.input);
     });
   }, `KeyframeEffect constructor throws with ${subtest.desc}`);
-});
+}
 </script>
 </body>

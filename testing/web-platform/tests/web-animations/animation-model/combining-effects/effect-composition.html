@@ -9,7 +9,7 @@
 <script>
 'use strict';
 
-[ 'accumulate', 'add' ].forEach(composite => {
+for (const composite of ['accumulate', 'add']) {
   test(t => {
     const div = createDiv(t);
     div.style.marginLeft = '10px';
@@ -31,9 +31,9 @@
                              composite },
                            100));
 
-    anims.forEach(anim => {
+    for (const anim of anims) {
       anim.currentTime = 50;
-    });
+    }
 
     assert_equals(getComputedStyle(div).marginLeft, '20px',
       'Animated style at 50%');
@@ -80,6 +80,6 @@
       'Animated style at 50%');
   }, 'unspecified composite mode on a keyframe is overriden by setting'
       + ` ${composite} of the effect`);
-});
+}
 
 </script>
