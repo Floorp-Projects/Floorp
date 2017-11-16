@@ -213,6 +213,45 @@ body {
   opacity: 100;
 }
 
+.deck .syncIllustration {
+  height: 150px;
+  margin-top: 20px;
+  background-image: url(chrome://browser/skin/fxa/sync-illustration.svg);
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.deck .instructions {
+  text-align: center;
+  padding: 0 11px;
+  max-width: 15em;
+  margin: 1em auto;
+}
+
+.deck .button {
+  display: block;
+  background-color: #0060df;
+  color: white;
+  border: 0;
+  border-radius: 2px;
+  margin: 15px auto;
+  padding: 8px;
+  text-shadow: none;
+  width: calc(100% - 22px);
+  max-width: 200px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.deck .button:hover {
+  background-color: #003eaa;
+}
+
+.deck .button:hover:active {
+  background-color: #002275;
+}
+
 .sidebar-search-container.tabs-container:not(.selected) {
   display: none;
 }
