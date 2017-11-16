@@ -66,7 +66,7 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     BuildDisplayListForChild(aBuilder, kid, aLists);
   }
 
-  nsDisplayList topLayerList;
+  nsDisplayList topLayerList(aBuilder);
   BuildDisplayListForTopLayer(aBuilder, &topLayerList);
   if (!topLayerList.IsEmpty()) {
     // Wrap the whole top layer in a single item with maximum z-index,
@@ -130,7 +130,7 @@ BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
     buildingForChild(aBuilder, aFrame, visible, dirty,
                      aBuilder->IsAtRootOfPseudoStackingContext());
 
-  nsDisplayList list;
+  nsDisplayList list(aBuilder);
   aFrame->BuildDisplayListForStackingContext(aBuilder, &list);
   aList->AppendToTop(&list);
 }

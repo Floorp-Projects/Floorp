@@ -783,7 +783,7 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
        NS_SVGDisplayListHitTestingEnabled()) ||
       (!aBuilder->IsForEventDelivery() &&
        NS_SVGDisplayListPaintingEnabled())) {
-    nsDisplayList newList;
+    nsDisplayList newList(aBuilder);
     nsDisplayListSet set(&newList, &newList, &newList,
                          &newList, &newList, &newList);
     BuildDisplayListForNonBlockChildren(aBuilder, set);

@@ -111,8 +111,8 @@ public:
   void AddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const;
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  void Check() {
-    mPool.Check();
+  bool DebugContains(void* aPtr) {
+    return mPool.DebugContains(aPtr);
   }
 #endif
 

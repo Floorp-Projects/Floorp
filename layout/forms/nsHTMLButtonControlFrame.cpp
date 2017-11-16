@@ -106,7 +106,7 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     eventClipState->ClipContainingBlockDescendants(rect, hasRadii ? radii : nullptr);
   }
 
-  nsDisplayList onTop;
+  nsDisplayList onTop(aBuilder);
   if (IsVisibleForPainting(aBuilder)) {
     mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
   }
