@@ -315,6 +315,11 @@ HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data)
     return;
   }
 
+  hr = target->get_accDefaultAction(kChildIdSelf, &aOutIA2Data->mDefaultAction);
+  if (FAILED(hr)) {
+    return;
+  }
+
   hr = target->get_accChildCount(&aOutIA2Data->mChildCount);
   if (FAILED(hr)) {
     return;

@@ -1280,6 +1280,24 @@ AccessibleHandler::get_keyBinding(long actionIndex,
 HRESULT
 AccessibleHandler::get_name(long actionIndex, BSTR* name)
 {
+  if (!name) {
+    return E_INVALIDARG;
+  }
+
+  if (HasPayload()) {
+    if (actionIndex >= mCachedData.mDynamicData.mNActions) {
+      // Action does not exist.
+      return E_INVALIDARG;
+    }
+
+    if (actionIndex == 0) {
+      // same as accDefaultAction.
+      GET_BSTR(mDefaultAction, *name);
+      return S_OK;
+    }
+  }
+
+  // At this point, there's either no payload or actionIndex is > 0.
   HRESULT hr = ResolveIAHyperlink();
   if (FAILED(hr)) {
     return hr;
