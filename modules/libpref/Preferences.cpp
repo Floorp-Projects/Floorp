@@ -708,20 +708,20 @@ InInitArray(const char* aKey)
   return BinarySearchIf(list, 0, prefsLen, StringComparator(aKey), &found);
 }
 
-static bool gWatchingPref = false;
+static bool gInstallingCallback = false;
 
-class WatchingPrefRAII
+class AutoInstallingCallback
 {
 public:
-  WatchingPrefRAII() { gWatchingPref = true; }
-  ~WatchingPrefRAII() { gWatchingPref = false; }
+  AutoInstallingCallback() { gInstallingCallback = true; }
+  ~AutoInstallingCallback() { gInstallingCallback = false; }
 };
 
-#define WATCHING_PREF_RAII() WatchingPrefRAII watchingPrefRAII
+#define AUTO_INSTALLING_CALLBACK() AutoInstallingCallback installingRAII
 
 #else // DEBUG
 
-#define WATCHING_PREF_RAII()
+#define AUTO_INSTALLING_CALLBACK()
 
 #endif // DEBUG
 
@@ -735,9 +735,14 @@ pref_HashTableLookup(const char* aKey)
   // If you're hitting this assertion, you've added a pref access to start up.
   // Consider moving it later or add it to the whitelist in ContentPrefs.cpp
   // and get review from a DOM peer.
+  //
+  // Note that accesses of non-whitelisted prefs that happen while installing a
+  // callback (e.g. VarCache) are considered acceptable. These accesses will
+  // fail, but once the proper pref value is set the callback will be
+  // immediately called, so things should work out.
 #ifdef DEBUG
-  if (!XRE_IsParentProcess() && gPhase <= END_INIT_PREFS && !gWatchingPref &&
-      !InInitArray(aKey)) {
+  if (!XRE_IsParentProcess() && gPhase <= END_INIT_PREFS &&
+      !gInstallingCallback && !InInitArray(aKey)) {
     MOZ_CRASH_UNSAFE_PRINTF(
       "accessing non-init pref %s before the rest of the prefs are sent", aKey);
   }
@@ -4859,9 +4864,9 @@ Preferences::RegisterCallbackAndCall(PrefChangedFunc aCallback,
                                      MatchKind aMatchKind)
 {
   MOZ_ASSERT(aCallback);
-  WATCHING_PREF_RAII();
   nsresult rv = RegisterCallback(aCallback, aPref, aClosure, aMatchKind);
   if (NS_SUCCEEDED(rv)) {
+    AUTO_INSTALLING_CALLBACK();
     (*aCallback)(aPref, aClosure);
   }
   return rv;
@@ -4903,12 +4908,14 @@ CacheDataAppendElement(CacheData* aData)
 /* static */ nsresult
 Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
 {
-  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
 #endif
-  *aCache = GetBool(aPref, aDefault);
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = GetBool(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueBool = aDefault;
@@ -4930,12 +4937,14 @@ Preferences::AddIntVarCache(int32_t* aCache,
                             const char* aPref,
                             int32_t aDefault)
 {
-  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
 #endif
-  *aCache = Preferences::GetInt(aPref, aDefault);
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = Preferences::GetInt(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueInt = aDefault;
@@ -4957,12 +4966,14 @@ Preferences::AddUintVarCache(uint32_t* aCache,
                              const char* aPref,
                              uint32_t aDefault)
 {
-  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
 #endif
-  *aCache = Preferences::GetUint(aPref, aDefault);
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = Preferences::GetUint(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
@@ -4986,12 +4997,14 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
                                    const char* aPref,
                                    uint32_t aDefault)
 {
-  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
 #endif
-  *aCache = Preferences::GetUint(aPref, aDefault);
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = Preferences::GetUint(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
@@ -5019,12 +5032,14 @@ FloatVarChanged(const char* aPref, void* aClosure)
 /* static */ nsresult
 Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
 {
-  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("float", aPref, aCache);
 #endif
-  *aCache = Preferences::GetFloat(aPref, aDefault);
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = Preferences::GetFloat(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueFloat = aDefault;
