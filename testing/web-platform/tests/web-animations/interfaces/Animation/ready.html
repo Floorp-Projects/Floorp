@@ -11,10 +11,10 @@
 "use strict";
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(null, 100 * MS_PER_SEC);
-  var originalReadyPromise = animation.ready;
-  var pauseReadyPromise;
+  const div = createDiv(t);
+  const animation = div.animate(null, 100 * MS_PER_SEC);
+  const originalReadyPromise = animation.ready;
+  let pauseReadyPromise;
 
   return animation.ready.then(() => {
     assert_equals(animation.ready, originalReadyPromise,
@@ -34,11 +34,11 @@ promise_test(t => {
 }, 'A new ready promise is created when play()/pause() is called');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(null, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(null, 100 * MS_PER_SEC);
 
   return animation.ready.then(() => {
-    var promiseBeforeCallingPlay = animation.ready;
+    const promiseBeforeCallingPlay = animation.ready;
     animation.play();
     assert_equals(animation.ready, promiseBeforeCallingPlay,
                   'Ready promise has same object identity after redundant call'
@@ -47,8 +47,8 @@ promise_test(t => {
 }, 'Redundant calls to play() do not generate new ready promise objects');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(null, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(null, 100 * MS_PER_SEC);
 
   return animation.ready.then(resolvedAnimation => {
     assert_equals(resolvedAnimation, animation,

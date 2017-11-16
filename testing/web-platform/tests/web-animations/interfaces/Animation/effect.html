@@ -11,19 +11,19 @@
 "use strict";
 
 test(t => {
-  var anim = new Animation();
+  const anim = new Animation();
   assert_equals(anim.effect, null, "initial effect is null");
 
-  var newEffect = new KeyframeEffectReadOnly(createDiv(t), null);
+  const newEffect = new KeyframeEffectReadOnly(createDiv(t), null);
   anim.effect = newEffect;
   assert_equals(anim.effect, newEffect, "new effect is set");
 }, "effect is set correctly.");
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({ left: ['100px', '100px'] },
-                              { fill: 'forwards' });
-  var effect = animation.effect;
+  const div = createDiv(t);
+  const animation = div.animate({ left: ['100px', '100px'] },
+                                { fill: 'forwards' });
+  const effect = animation.effect;
 
   assert_equals(getComputedStyle(div).left, '100px',
                 'animation is initially having an effect');

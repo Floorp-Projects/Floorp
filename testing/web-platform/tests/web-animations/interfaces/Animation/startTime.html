@@ -12,40 +12,40 @@ href="https://w3c.github.io/web-animations/#dom-animation-starttime">
 'use strict';
 
 test(t => {
-  var animation = new Animation(new KeyframeEffect(createDiv(t), null),
-                                document.timeline);
+  const animation = new Animation(new KeyframeEffect(createDiv(t), null),
+                                  document.timeline);
   assert_equals(animation.startTime, null, 'startTime is unresolved');
 }, 'startTime of a newly created (idle) animation is unresolved');
 
 test(t => {
-  var animation = new Animation(new KeyframeEffect(createDiv(t), null),
-                                document.timeline);
+  const animation = new Animation(new KeyframeEffect(createDiv(t), null),
+                                  document.timeline);
   animation.play();
   assert_equals(animation.startTime, null, 'startTime is unresolved');
 }, 'startTime of a play-pending animation is unresolved');
 
 test(t => {
-  var animation = new Animation(new KeyframeEffect(createDiv(t), null),
-                                document.timeline);
+  const animation = new Animation(new KeyframeEffect(createDiv(t), null),
+                                  document.timeline);
   animation.pause();
   assert_equals(animation.startTime, null, 'startTime is unresolved');
 }, 'startTime of a pause-pending animation is unresolved');
 
 test(t => {
-  var animation = createDiv(t).animate(null);
+  const animation = createDiv(t).animate(null);
   assert_equals(animation.startTime, null, 'startTime is unresolved');
 }, 'startTime of a play-pending animation created using Element.animate'
    + ' shortcut is unresolved');
 
 promise_test(t => {
-  var animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   return animation.ready.then(() => {
     assert_greater_than(animation.startTime, 0, 'startTime when running');
   });
 }, 'startTime is resolved when running');
 
 test(t => {
-  var animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   animation.cancel();
   assert_equals(animation.startTime, null);
   assert_equals(animation.currentTime, null);

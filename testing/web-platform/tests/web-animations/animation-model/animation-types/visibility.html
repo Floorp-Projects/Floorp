@@ -14,9 +14,9 @@
 'use strict';
 
 test(t => {
-  var div = createDiv(t);
-  var anim = div.animate({ visibility: ['hidden','visible'] },
-                         { duration: 100 * MS_PER_SEC, fill: 'both' });
+  const div = createDiv(t);
+  const anim = div.animate({ visibility: ['hidden','visible'] },
+                           { duration: 100 * MS_PER_SEC, fill: 'both' });
 
   anim.currentTime = 0;
   assert_equals(getComputedStyle(div).visibility, 'hidden',
@@ -33,10 +33,10 @@ test(t => {
 }, 'Visibility clamping behavior');
 
 test(t => {
-  var div = createDiv(t);
-  var anim = div.animate({ visibility: ['hidden', 'visible'] },
-                         { duration: 100 * MS_PER_SEC, fill: 'both',
-                           easing: 'cubic-bezier(0.25, -0.6, 0, 0.5)' });
+  const div = createDiv(t);
+  const anim = div.animate({ visibility: ['hidden', 'visible'] },
+                           { duration: 100 * MS_PER_SEC, fill: 'both',
+                             easing: 'cubic-bezier(0.25, -0.6, 0, 0.5)' });
 
   anim.currentTime = 0;
   assert_equals(getComputedStyle(div).visibility, 'hidden',

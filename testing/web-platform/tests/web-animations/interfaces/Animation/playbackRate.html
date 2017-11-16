@@ -14,10 +14,10 @@ function assert_playbackrate(animation,
                              previousAnimationCurrentTime,
                              previousTimelineCurrentTime,
                              description) {
-  var accuracy = 0.001; /* accuracy of DOMHighResTimeStamp */
-  var animationCurrentTimeDifference =
+  const accuracy = 0.001; /* accuracy of DOMHighResTimeStamp */
+  const animationCurrentTimeDifference =
     animation.currentTime - previousAnimationCurrentTime;
-  var timelineCurrentTimeDifference =
+  const timelineCurrentTimeDifference =
     animation.timeline.currentTime - previousTimelineCurrentTime;
 
   assert_approx_equals(animationCurrentTimeDifference,
@@ -27,8 +27,8 @@ function assert_playbackrate(animation,
 }
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(null, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(null, 100 * MS_PER_SEC);
   return animation.ready.then(() => {
     animation.currentTime = 7 * MS_PER_SEC; // ms
     animation.playbackRate = 0.5;
@@ -44,11 +44,11 @@ promise_test(t => {
 }, 'Test the initial effect of setting playbackRate on currentTime');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(null, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(null, 100 * MS_PER_SEC);
   animation.playbackRate = 2;
-  var previousTimelineCurrentTime;
-  var previousAnimationCurrentTime;
+  let previousTimelineCurrentTime;
+  let previousAnimationCurrentTime;
   return animation.ready.then(() => {
     previousAnimationCurrentTime = animation.currentTime;
     previousTimelineCurrentTime = animation.timeline.currentTime;
@@ -62,11 +62,11 @@ promise_test(t => {
 }, 'Test the effect of setting playbackRate on currentTime');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(null, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(null, 100 * MS_PER_SEC);
   animation.playbackRate = 2;
-  var previousTimelineCurrentTime;
-  var previousAnimationCurrentTime;
+  let previousTimelineCurrentTime;
+  let previousAnimationCurrentTime;
   return animation.ready.then(() => {
     previousAnimationCurrentTime = animation.currentTime;
     previousTimelineCurrentTime = animation.timeline.currentTime;

@@ -11,13 +11,13 @@
 'use strict';
 
 test(t => {
-  var anim = createDiv(t).animate(null);
+  const anim = createDiv(t).animate(null);
   assert_equals(anim.effect.timing.endDelay, 0);
 }, 'Has the default value 0');
 
 test(t => {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
+  const div = createDiv(t);
+  const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
   anim.effect.timing.endDelay = 123.45;
   assert_times_equal(anim.effect.timing.endDelay, 123.45,
                      'set endDelay 123.45');
@@ -26,8 +26,8 @@ test(t => {
 }, 'Can be set to a positive number');
 
 test(t => {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
+  const div = createDiv(t);
+  const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
   anim.effect.timing.endDelay = -1000;
   assert_equals(anim.effect.timing.endDelay, -1000, 'set endDelay -1000');
   assert_equals(anim.effect.getComputedTiming().endDelay, -1000,
@@ -35,25 +35,25 @@ test(t => {
 }, 'Can be set to a negative number');
 
 test(t => {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
+  const div = createDiv(t);
+  const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
   assert_throws({name: "TypeError"}, () => {
     anim.effect.timing.endDelay = Infinity;
   }, 'we can not assign Infinity to timing.endDelay');
 }, 'Throws when setting infinity');
 
 test(t => {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
+  const div = createDiv(t);
+  const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
   assert_throws({name: "TypeError"}, () => {
     anim.effect.timing.endDelay = -Infinity;
   }, 'we can not assign negative Infinity to timing.endDelay');
 }, 'Throws when setting negative infinity');
 
 async_test(t => {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] },
-                         { duration: 100000, endDelay: 50000 });
+  const div = createDiv(t);
+  const anim = div.animate({ opacity: [ 0, 1 ] },
+                           { duration: 100000, endDelay: 50000 });
   anim.onfinish = t.step_func(event => {
     assert_unreached('finish event should not be fired');
   });
@@ -68,9 +68,9 @@ async_test(t => {
    + ' endDelay has not expired');
 
 async_test(t => {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] },
-                         { duration: 100000, endDelay: 30000 });
+  const div = createDiv(t);
+  const anim = div.animate({ opacity: [ 0, 1 ] },
+                           { duration: 100000, endDelay: 30000 });
   anim.ready.then(() => {
     anim.currentTime = 110000; // during endDelay
     anim.onfinish = t.step_func(event => {

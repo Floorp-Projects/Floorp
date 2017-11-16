@@ -11,9 +11,9 @@
 
 [ 'accumulate', 'add' ].forEach(composite => {
   test(t => {
-    var div = createDiv(t);
+    const div = createDiv(t);
     div.style.marginLeft = '10px';
-    var anim =
+    const anim =
       div.animate({ marginLeft: ['0px', '10px'], composite }, 100);
 
     anim.currentTime = 50;
@@ -22,8 +22,8 @@
   }, composite + ' onto the base value');
 
   test(t => {
-    var div = createDiv(t);
-    var anims = [];
+    const div = createDiv(t);
+    const anims = [];
     anims.push(div.animate({ marginLeft: ['10px', '20px'],
                              composite: 'replace' },
                            100));
@@ -40,9 +40,9 @@
   }, composite + ' onto an underlying animation value');
 
   test(t => {
-    var div = createDiv(t);
+    const div = createDiv(t);
     div.style.marginLeft = '10px';
-    var anim =
+    const anim =
       div.animate([{ marginLeft: '10px', composite },
                    { marginLeft: '30px', composite: 'replace' }],
                   100);
@@ -53,9 +53,9 @@
   }, 'Composite when mixing ' + composite + ' and replace');
 
   test(t => {
-    var div = createDiv(t);
+    const div = createDiv(t);
     div.style.marginLeft = '10px';
-    var anim =
+    const anim =
       div.animate([{ marginLeft: '10px', composite: 'replace' },
                    { marginLeft: '20px' }],
                   { duration: 100 , composite });
@@ -67,9 +67,9 @@
      'the effect');
 
   test(t => {
-    var div = createDiv(t);
+    const div = createDiv(t);
     div.style.marginLeft = '10px';
-    var anim =
+    const anim =
       div.animate([{ marginLeft: '10px', composite: 'replace' },
                    { marginLeft: '20px' }],
                   100);
