@@ -8,7 +8,6 @@
 #define nsWrapperCacheInline_h___
 
 #include "nsWrapperCache.h"
-#include "js/GCAPI.h"
 #include "js/TracingAPI.h"
 
 inline JSObject*
