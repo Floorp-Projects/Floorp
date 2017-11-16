@@ -19,6 +19,7 @@
 #include "gc/Heap.h"
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
+#include "js/GCAPI.h"
 #include "js/RootingAPI.h"
 
 #include "vm/Printer.h"

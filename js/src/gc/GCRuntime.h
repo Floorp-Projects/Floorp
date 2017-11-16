@@ -11,6 +11,7 @@
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 
+#include "jsapi.h"
 #include "jsatom.h"
 
 #include "gc/ArenaList.h"

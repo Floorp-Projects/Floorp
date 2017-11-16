@@ -25,6 +25,7 @@
 #include "gc/AllocKind.h"
 #include "gc/GCEnum.h"
 #include "gc/Memory.h"
+#include "js/GCAPI.h"
 #include "js/HeapAPI.h"
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
