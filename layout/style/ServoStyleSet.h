@@ -597,7 +597,8 @@ private:
     ResolveStyleLazilyInternal(dom::Element* aElement,
                                CSSPseudoElementType aPseudoType,
                                StyleRuleInclusion aRules =
-                                 StyleRuleInclusion::All);
+                                 StyleRuleInclusion::All,
+                               bool aIgnoreExistingStyles = false);
 
   void RunPostTraversalTasks();
 
