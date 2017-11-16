@@ -336,11 +336,13 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
     // requires the use of the private API
     // -[NSVisualEffectView fontSmoothingBackgroundColor].
     case eColorID__moz_mac_vibrancy_light:
+    case eColorID__moz_mac_vibrant_titlebar_light:
     case eColorID__moz_mac_source_list:
     case eColorID__moz_mac_tooltip:
       aColor = NS_RGB(0xf7,0xf7,0xf7);
       break;
     case eColorID__moz_mac_vibrancy_dark:
+    case eColorID__moz_mac_vibrant_titlebar_dark:
       aColor = NS_RGB(0x28,0x28,0x28);
       break;
     case eColorID__moz_mac_menupopup:
