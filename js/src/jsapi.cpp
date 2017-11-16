@@ -653,6 +653,40 @@ JS_SetCompartmentNameCallback(JSContext* cx, JSCompartmentNameCallback callback)
     cx->runtime()->compartmentNameCallback = callback;
 }
 
+#if defined(NIGHTLY_BUILD)
+JS_PUBLIC_API(void)
+JS_SetErrorInterceptorCallback(JSRuntime* rt, JSErrorInterceptor* callback)
+{
+    rt->errorInterception.interceptor = callback;
+}
+
+JS_PUBLIC_API(JSErrorInterceptor*)
+JS_GetErrorInterceptorCallback(JSRuntime* rt)
+{
+    return rt->errorInterception.interceptor;
+}
+
+JS_PUBLIC_API(Maybe<JSExnType>)
+JS_GetErrorType(const JS::Value& val)
+{
+    // All errors are objects.
+    if (!val.isObject())
+        return mozilla::Nothing();
+
+    const JSObject& obj = val.toObject();
+
+    // All errors are `ErrorObject`.
+    if (!obj.is<js::ErrorObject>()) {
+        // Not one of the primitive errors.
+        return mozilla::Nothing();
+    }
+
+    const js::ErrorObject& err = obj.as<js::ErrorObject>();
+    return mozilla::Some(err.type());
+}
+
+#endif // defined(NIGHTLY_BUILD)
+
 JS_PUBLIC_API(void)
 JS_SetWrapObjectCallbacks(JSContext* cx, const JSWrapObjectCallbacks* callbacks)
 {
