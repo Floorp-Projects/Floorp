@@ -124,6 +124,7 @@ const UPDATE_PROPS = [
   "requestHeadersFromUploadStream",
   "requestCookies",
   "requestPostData",
+  "requestPostDataAvailable",
   "responseHeaders",
   "responseCookies",
   "responseContent",
