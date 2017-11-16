@@ -1152,7 +1152,6 @@ var Histogram = {
     outerDiv.appendChild(divStats);
 
     if (isRTL()) {
-      hgram.buckets.reverse();
       hgram.values.reverse();
     }
 
