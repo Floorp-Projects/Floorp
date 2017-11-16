@@ -10,7 +10,6 @@ import mozinfo
 import moznetwork
 import re
 import subprocess
-import unittest
 from distutils.spawn import find_executable
 
 import mozunit
@@ -65,31 +64,30 @@ def verify_ip_in_list(ip):
         return False
 
 
-class TestGetIP(unittest.TestCase):
+def test_get_ip():
+    """ Attempt to test the IP address returned by
+    moznetwork.get_ip() is valid """
 
-    def test_get_ip(self):
-        """ Attempt to test the IP address returned by
-        moznetwork.get_ip() is valid """
+    ip = moznetwork.get_ip()
 
-        ip = moznetwork.get_ip()
+    # Check the IP returned by moznetwork is in the list
+    assert verify_ip_in_list(ip)
 
-        # Check the IP returned by moznetwork is in the list
-        assert verify_ip_in_list(ip)
 
-    def test_get_ip_using_get_interface(self):
-        """ Test that the control flow path for get_ip() using
-        _get_interface_list() is works """
+def test_get_ip_using_get_interface():
+    """ Test that the control flow path for get_ip() using
+    _get_interface_list() is works """
 
-        if mozinfo.isLinux or mozinfo.isMac:
+    if mozinfo.isLinux or mozinfo.isMac:
 
-            with mock.patch('socket.gethostbyname') as byname:
-                # Force socket.gethostbyname to return None
-                byname.return_value = None
+        with mock.patch('socket.gethostbyname') as byname:
+            # Force socket.gethostbyname to return None
+            byname.return_value = None
 
-                ip = moznetwork.get_ip()
+            ip = moznetwork.get_ip()
 
-                # Check the IP returned by moznetwork is in the list
-                assert verify_ip_in_list(ip)
+            # Check the IP returned by moznetwork is in the list
+            assert verify_ip_in_list(ip)
 
 
 if __name__ == '__main__':
