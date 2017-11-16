@@ -62,7 +62,8 @@ class AddonsControls extends Component {
       let file = fp.file;
       // AddonManager.installTemporaryAddon accepts either
       // addon directory or final xpi file.
-      if (!file.isDirectory() && !file.leafName.endsWith(".xpi")) {
+      if (!file.isDirectory() &&
+          !file.leafName.endsWith(".xpi") && !file.leafName.endsWith(".zip")) {
         file = file.parent;
       }
 
