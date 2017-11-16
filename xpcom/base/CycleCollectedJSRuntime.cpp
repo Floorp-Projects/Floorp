@@ -97,6 +97,11 @@
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"
 
+#ifdef NIGHTLY_BUILD
+// For performance reasons, we make the JS Dev Error Interceptor a Nightly-only feature.
+#define MOZ_JS_DEV_ERROR_INTERCEPTOR = 1
+#endif // NIGHTLY_BUILD
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -556,11 +561,18 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
   js::SetScriptEnvironmentPreparer(aCx, &mEnvironmentPreparer);
 
   JS::dbg::SetDebuggerMallocSizeOf(aCx, moz_malloc_size_of);
+
+#ifdef MOZ_JS_DEV_ERROR_INTERCEPTOR
+  JS_SetErrorInterceptorCallback(mJSRuntime, &mErrorInterceptor);
+#endif // MOZ_JS_DEV_ERROR_INTERCEPTOR
 }
 
 void
 CycleCollectedJSRuntime::Shutdown(JSContext* cx)
 {
+#ifdef MOZ_JS_DEV_ERROR_INTERCEPTOR
+  mErrorInterceptor.Shutdown(mJSRuntime);
+#endif // MOZ_JS_DEV_ERROR_INTERCEPTOR
   JS_RemoveExtraGCRootsTracer(cx, TraceBlackJS, this);
   JS_RemoveExtraGCRootsTracer(cx, TraceGrayJS, this);
 #ifdef DEBUG
@@ -1557,3 +1569,113 @@ CycleCollectedJSRuntime::Get()
   }
   return nullptr;
 }
+
+#ifdef MOZ_JS_DEV_ERROR_INTERCEPTOR
+
+namespace js {
+extern void DumpValue(const JS::Value& val);
+}
+
+void
+CycleCollectedJSRuntime::ErrorInterceptor::Shutdown(JSRuntime* rt)
+{
+  JS_SetErrorInterceptorCallback(rt, nullptr);
+  mThrownError.reset();
+}
+
+/* virtual */ void
+CycleCollectedJSRuntime::ErrorInterceptor::interceptError(JSContext* cx, const JS::Value& exn)
+{
+  if (mThrownError) {
+    // We already have an error, we don't need anything more.
+    return;
+  }
+
+  if (!nsContentUtils::ThreadsafeIsSystemCaller(cx)) {
+    // We are only interested in chrome code.
+    return;
+  }
+
+  const auto type = JS_GetErrorType(exn);
+  if (!type) {
+    // This is not one of the primitive error types.
+    return;
+  }
+
+  switch (*type) {
+    case JSExnType::JSEXN_REFERENCEERR:
+    case JSExnType::JSEXN_SYNTAXERR:
+    case JSExnType::JSEXN_TYPEERR:
+      break;
+    default:
+      // Not one of the errors we are interested in.
+      return;
+  }
+
+  // Now copy the details of the exception locally.
+  // While copying the details of an exception could be expensive, in most runs,
+  // this will be done at most once during the execution of the process, so the
+  // total cost should be reasonable.
+  JS::RootedValue value(cx, exn);
+
+  ErrorDetails details;
+  details.mType = *type;
+  // If `exn` isn't an exception object, `ExtractErrorValues` could end up calling
+  // `toString()`, which could in turn end up throwing an error. While this should
+  // work, we want to avoid that complex use case.
+  // Fortunately, we have already checked above that `exn` is an exception object,
+  // so nothing such should happen.
+  nsContentUtils::ExtractErrorValues(cx, value, details.mFilename, &details.mLine, &details.mColumn, details.mMessage);
+
+  nsAutoCString stack;
+  JS::UniqueChars buf = JS::FormatStackDump(cx, nullptr, /* showArgs = */ false, /* showLocals = */ false, /* showThisProps = */ false);
+  stack.Append(buf.get());
+  CopyUTF8toUTF16(buf.get(), details.mStack);
+
+  mThrownError.emplace(Move(details));
+}
+
+void
+CycleCollectedJSRuntime::ClearRecentDevError()
+{
+  mErrorInterceptor.mThrownError.reset();
+}
+
+bool
+CycleCollectedJSRuntime::GetRecentDevError(JSContext*cx, JS::MutableHandle<JS::Value> error)
+{
+  if (!mErrorInterceptor.mThrownError) {
+    return true;
+  }
+
+  // Create a copy of the exception.
+  JS::RootedObject obj(cx, JS_NewPlainObject(cx));
+  if (!obj) {
+    return false;
+  }
+
+  JS::RootedValue message(cx);
+  JS::RootedValue filename(cx);
+  JS::RootedValue stack(cx);
+  if (!ToJSValue(cx, mErrorInterceptor.mThrownError->mMessage, &message) ||
+      !ToJSValue(cx, mErrorInterceptor.mThrownError->mFilename, &filename) ||
+      !ToJSValue(cx, mErrorInterceptor.mThrownError->mStack, &stack)) {
+    return false;
+  }
+
+  // Build the object.
+  const auto FLAGS = JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT;
+  if (!JS_DefineProperty(cx, obj, "message", message, FLAGS) ||
+      !JS_DefineProperty(cx, obj, "fileName", filename, FLAGS) ||
+      !JS_DefineProperty(cx, obj, "lineNumber", mErrorInterceptor.mThrownError->mLine, FLAGS) ||
+      !JS_DefineProperty(cx, obj, "stack", stack, FLAGS)) {
+    return false;
+  }
+
+  // Pass the result.
+  error.setObject(*obj);
+  return true;
+}
+#endif // MOZ_JS_DEV_ERROR_INTERCEPTOR
+
+#undef MOZ_JS_DEV_ERROR_INTERCEPTOR
