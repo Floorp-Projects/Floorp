@@ -1419,15 +1419,17 @@ EditorBase::SetSpellcheckUserOverride(bool enable)
 
 already_AddRefed<Element>
 EditorBase::CreateNode(nsAtom* aTag,
-                       EditorRawDOMPoint& aPointToInsert)
+                       const EditorRawDOMPoint& aPointToInsert)
 {
   MOZ_ASSERT(aTag);
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
+  EditorRawDOMPoint pointToInsert(aPointToInsert);
+
   // XXX We need offset at new node for mRangeUpdater.  Therefore, we need
   //     to compute the offset now but this is expensive.  So, if it's possible,
   //     we need to redesign mRangeUpdater as avoiding using indices.
-  int32_t offset = static_cast<int32_t>(aPointToInsert.Offset());
+  int32_t offset = static_cast<int32_t>(pointToInsert.Offset());
 
   AutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
 
@@ -1435,14 +1437,14 @@ EditorBase::CreateNode(nsAtom* aTag,
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillCreateNode(nsDependentAtomString(aTag),
-                               GetAsDOMNode(aPointToInsert.GetChildAtOffset()));
+                               GetAsDOMNode(pointToInsert.GetChildAtOffset()));
     }
   }
 
   nsCOMPtr<Element> ret;
 
   RefPtr<CreateElementTransaction> transaction =
-    CreateTxnForCreateElement(*aTag, aPointToInsert);
+    CreateTxnForCreateElement(*aTag, pointToInsert);
   nsresult rv = DoTransaction(transaction);
   if (NS_SUCCEEDED(rv)) {
     ret = transaction->GetNewNode();
@@ -1450,10 +1452,10 @@ EditorBase::CreateNode(nsAtom* aTag,
     // Now, aPointToInsert may be invalid.  I.e., ChildAtOffset() keeps
     // referring the next sibling of new node but Offset() refers the
     // new node.  Let's make refer the new node.
-    aPointToInsert.Set(ret);
+    pointToInsert.Set(ret);
   }
 
-  mRangeUpdater.SelAdjCreateNode(aPointToInsert.Container(), offset);
+  mRangeUpdater.SelAdjCreateNode(pointToInsert.Container(), offset);
 
   {
     AutoActionListenerArray listeners(mActionListeners);
@@ -4042,48 +4044,28 @@ EditorBase::IsPreformatted(nsIDOMNode* aNode,
   return NS_OK;
 }
 
-
-/**
- * This splits a node "deeply", splitting children as appropriate.  The place
- * to split is represented by a DOM point at {splitPointParent,
- * splitPointOffset}.  That DOM point must be inside aNode, which is the node
- * to split.  We return the offset in the parent of aNode where the split
- * terminates - where you would want to insert a new element, for instance, if
- * that's why you were splitting the node.
- *
- * -1 is returned on failure, in unlikely cases like the selection being
- * unavailable or cloning the node failing.  Make sure not to use the returned
- * offset for anything without checking that it's valid!  If you're not using
- * the offset, it's okay to ignore the return value.
- */
-int32_t
-EditorBase::SplitNodeDeep(nsIContent& aNode,
-                          nsIContent& aSplitPointParent,
-                          int32_t aSplitPointOffset,
-                          SplitAtEdges aSplitAtEdges,
-                          nsIContent** aOutLeftNode,
-                          nsIContent** aOutRightNode,
-                          nsCOMPtr<nsIContent>* ioChildAtSplitPointOffset)
+SplitNodeResult
+EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
+                          const EditorRawDOMPoint& aStartOfDeepestRightNode,
+                          SplitAtEdges aSplitAtEdges)
 {
-  MOZ_ASSERT(&aSplitPointParent == &aNode ||
-             EditorUtils::IsDescendantOf(aSplitPointParent, aNode));
+  MOZ_ASSERT(aStartOfDeepestRightNode.IsSetAndValid());
+  MOZ_ASSERT(aStartOfDeepestRightNode.Container() == &aMostAncestorToSplit ||
+             EditorUtils::IsDescendantOf(*aStartOfDeepestRightNode.Container(),
+                                         aMostAncestorToSplit));
 
-  int32_t offset =
-    std::min(std::max(aSplitPointOffset, 0),
-             static_cast<int32_t>(aSplitPointParent.Length()));
-  EditorDOMPoint atStartOfRightNode(&aSplitPointParent, offset);
-  if (NS_WARN_IF(!atStartOfRightNode.IsSet())) {
-    return -1;
+  if (NS_WARN_IF(!aStartOfDeepestRightNode.IsSet())) {
+    return SplitNodeResult(NS_ERROR_INVALID_ARG);
   }
-  MOZ_ASSERT(atStartOfRightNode.IsSetAndValid());
 
-  nsCOMPtr<nsIContent> leftNode, rightNode;
+  nsCOMPtr<nsIContent> newLeftNodeOfMostAncestor;
+  EditorDOMPoint atStartOfRightNode(aStartOfDeepestRightNode);
   while (true) {
-    // If we meet an orphan node before meeting aNode, we need to stop
-    // splitting.  This is a bug of the caller.
-    if (NS_WARN_IF(atStartOfRightNode.Container() != &aNode &&
+    // If we meet an orphan node before meeting aMostAncestorToSplit, we need
+    // to stop splitting.  This is a bug of the caller.
+    if (NS_WARN_IF(atStartOfRightNode.Container() != &aMostAncestorToSplit &&
                    !atStartOfRightNode.Container()->GetParent())) {
-      return -1;
+      return SplitNodeResult(NS_ERROR_FAILURE);
     }
 
     // Need to insert rules code call here to do things like not split a list
@@ -4092,7 +4074,7 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
     // should be universal enough to put straight in this EditorBase routine.
 
     if (NS_WARN_IF(!atStartOfRightNode.Container()->IsContent())) {
-      return -1;
+      return SplitNodeResult(NS_ERROR_FAILURE);
     }
     nsIContent* currentRightNode = atStartOfRightNode.Container()->AsContent();
 
@@ -4103,11 +4085,15 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
         (!atStartOfRightNode.IsStartOfContainer() &&
          !atStartOfRightNode.IsEndOfContainer())) {
       ErrorResult error;
-      rightNode = currentRightNode;
-      leftNode = SplitNode(atStartOfRightNode.AsRaw(), error);
+      nsCOMPtr<nsIContent> newLeftNode =
+        SplitNode(atStartOfRightNode.AsRaw(), error);
       if (NS_WARN_IF(error.Failed())) {
-        error.SuppressException();
-        return -1;
+        return SplitNodeResult(NS_ERROR_FAILURE);
+      }
+
+      if (currentRightNode == &aMostAncestorToSplit) {
+        // Actually, we split aMostAncestorToSplit.
+        return SplitNodeResult(newLeftNode, &aMostAncestorToSplit);
       }
 
       // Then, try to split its parent before current node.
@@ -4116,12 +4102,9 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
     // If the split point is end of the node and it is a text node or we're not
     // allowed to create empty container node, try to split its parent after it.
     else if (!atStartOfRightNode.IsStartOfContainer()) {
-      // XXX Making current node which wasn't split treated as new left node
-      //     here.  However, rightNode still may keep referring a descendant
-      //     of the leftNode, which was split.  This must be odd behavior for
-      //     the callers.
-      //     Perhaps, we should set rightNode to currentRightNode?
-      leftNode = currentRightNode;
+      if (currentRightNode == &aMostAncestorToSplit) {
+        return SplitNodeResult(&aMostAncestorToSplit, nullptr);
+      }
 
       // Try to split its parent after current node.
       atStartOfRightNode.Set(currentRightNode);
@@ -4132,34 +4115,16 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
     // If the split point is start of the node and it is a text node or we're
     // not allowed to create empty container node, try to split its parent.
     else {
-      // XXX Making current node which wasn't split treated as exiting right
-      //     node here.  However, leftNode still may keep referring a
-      //     descendant of rightNode, which was created at splitting.  This
-      //     must be odd behavior for the callers.
-      //     Perhaps, we should set leftNode to nullptr?
-      rightNode = currentRightNode;
+      if (currentRightNode == &aMostAncestorToSplit) {
+        return SplitNodeResult(nullptr, &aMostAncestorToSplit);
+      }
 
       // Try to split its parent before current node.
       atStartOfRightNode.Set(currentRightNode);
     }
-
-    if (currentRightNode == &aNode) {
-      // we split all the way up to (and including) aNode; we're done
-      break;
-    }
   }
 
-  if (aOutLeftNode) {
-    leftNode.forget(aOutLeftNode);
-  }
-  if (aOutRightNode) {
-    rightNode.forget(aOutRightNode);
-  }
-  if (ioChildAtSplitPointOffset) {
-    *ioChildAtSplitPointOffset = atStartOfRightNode.GetChildAtOffset();
-  }
-
-  return atStartOfRightNode.Offset();
+  return SplitNodeResult(NS_ERROR_FAILURE);
 }
 
 /**
