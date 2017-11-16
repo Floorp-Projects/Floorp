@@ -10,12 +10,12 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null);
   assert_equals(anim.effect.timing.iterationStart, 0);
 }, 'Has the default value 0');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate({ opacity: [ 0, 1 ] },
                          { iterationStart: 0.2,
@@ -28,7 +28,7 @@ test(function(t) {
   assert_equals(anim.effect.getComputedTiming().currentIteration, 2);
 }, 'Changing the value updates computed timing when backwards-filling');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate({ opacity: [ 0, 1 ] },
                          { iterationStart: 0.2,
@@ -41,7 +41,7 @@ test(function(t) {
   assert_equals(anim.effect.getComputedTiming().currentIteration, 2);
 }, 'Changing the value updates computed timing during the active phase');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate({ opacity: [ 0, 1 ] },
                          { iterationStart: 0.2,
@@ -55,14 +55,14 @@ test(function(t) {
   assert_equals(anim.effect.getComputedTiming().currentIteration, 3);
 }, 'Changing the value updates computed timing when forwards-filling');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var anim = div.animate(null);
   for (let invalid of [-1, NaN, Infinity]) {
-    assert_throws({ name: 'TypeError' }, function() {
+    assert_throws({ name: 'TypeError' }, () => {
       anim.effect.timing.iterationStart = invalid;
     }, 'setting ' + invalid);
-    assert_throws({ name: 'TypeError' }, function() {
+    assert_throws({ name: 'TypeError' }, () => {
       div.animate({}, { iterationStart: invalid });
     }, 'animate() with ' + invalid);
   }

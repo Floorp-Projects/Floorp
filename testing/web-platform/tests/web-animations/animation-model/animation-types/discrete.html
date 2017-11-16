@@ -10,7 +10,7 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
 
   var anim = div.animate({ fontStyle: [ 'normal', 'italic' ] },
@@ -31,7 +31,7 @@ test(function(t) {
                 'Animation produces \'to\' value during forwards fill');
 }, 'Test animating discrete values');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var originalHeight = getComputedStyle(div).height;
 
@@ -53,7 +53,7 @@ test(function(t) {
                 'Animation produces \'to\' value during forwards fill');
 }, 'Test discrete animation is used when interpolation fails');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var originalHeight = getComputedStyle(div).height;
 
@@ -83,7 +83,7 @@ test(function(t) {
 }, 'Test discrete animation is used only for pairs of values that cannot'
    + ' be interpolated');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var originalHeight = getComputedStyle(div).height;
 
@@ -107,7 +107,7 @@ test(function(t) {
 }, 'Test the 50% switch point for discrete animation is based on the'
    + ' effect easing');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var originalHeight = getComputedStyle(div).height;
 

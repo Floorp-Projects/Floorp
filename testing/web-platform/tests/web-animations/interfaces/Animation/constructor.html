@@ -64,8 +64,8 @@ var gTestArguments = [
   },
 ];
 
-gTestArguments.forEach(function(args) {
-  test(function(t) {
+gTestArguments.forEach(args => {
+  test(t => {
     var effect = args.createEffect();
     var animation = new Animation(effect, args.timeline);
 
@@ -81,7 +81,7 @@ gTestArguments.forEach(function(args) {
   }, "Animation can be constructed " + args.description);
 });
 
-test(function(t) {
+test(t => {
   var effect = new KeyframeEffectReadOnly(null,
                                           { left: ["10px", "20px"] },
                                           { duration: 10000,
@@ -95,10 +95,10 @@ test(function(t) {
   assert_equals(effect.getComputedTiming().progress, 1.0);
 }, "Animation constructed by an effect with null target runs normally");
 
-async_test(function(t) {
+async_test(t => {
   var iframe = document.createElement('iframe');
 
-  iframe.addEventListener('load', t.step_func(function() {
+  iframe.addEventListener('load', t.step_func(() => {
     var div = createDiv(t, iframe.contentDocument);
     var effect = new KeyframeEffectReadOnly(div, null, 10000);
     var anim = new Animation(effect);

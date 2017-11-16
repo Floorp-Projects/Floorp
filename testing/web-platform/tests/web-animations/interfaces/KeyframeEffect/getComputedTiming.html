@@ -13,7 +13,7 @@
 
 var target = document.getElementById("target");
 
-test(function(t) {
+test(t => {
   var effect = new KeyframeEffectReadOnly(target,
                                           { left: ["10px", "20px"] });
 
@@ -69,15 +69,15 @@ var gGetComputedTimingTests = [
     expected: { fill: "forwards" } }
 ];
 
-gGetComputedTimingTests.forEach(function(stest) {
-  test(function(t) {
+gGetComputedTimingTests.forEach(stest => {
+  test(t => {
     var effect = new KeyframeEffectReadOnly(target,
                                             { left: ["10px", "20px"] },
                                             stest.input);
 
     // Helper function to provide default expected values when the test does
     // not supply them.
-    var expected = function(field, defaultValue) {
+    var expected = (field, defaultValue) => {
       return field in stest.expected ? stest.expected[field] : defaultValue;
     };
 
@@ -142,8 +142,8 @@ var gActiveDurationTests = [
     expected: Infinity },
 ];
 
-gActiveDurationTests.forEach(function(stest) {
-  test(function(t) {
+gActiveDurationTests.forEach(stest => {
+  test(t => {
     var effect = new KeyframeEffectReadOnly(target,
                                             { left: ["10px", "20px"] },
                                             stest.input);
@@ -194,8 +194,8 @@ var gEndTimeTests = [
     expected: 0 }
 ];
 
-gEndTimeTests.forEach(function(stest) {
-  test(function(t) {
+gEndTimeTests.forEach(stest => {
+  test(t => {
     var effect = new KeyframeEffectReadOnly(target,
                                             { left: ["10px", "20px"] },
                                             stest.input);

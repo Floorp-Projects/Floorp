@@ -24,7 +24,7 @@ for (var property in gCSSProperties) {
 
   var animationTypes = gCSSProperties[property].types;
   var setupFunction = gCSSProperties[property].setup;
-  animationTypes.forEach(function(animationType) {
+  animationTypes.forEach(animationType => {
     var typeObject;
     var animationTypeString;
     if (typeof animationType === 'string') {
@@ -39,7 +39,7 @@ for (var property in gCSSProperties) {
     // First, test that the animation type object has 'testInterpolation'.
     // We use test() function() here so that we can continue the remainder tests
     // even if this test fails.
-    test(function(t) {
+    test(t => {
       assert_own_property(typeObject, 'testInterpolation', animationTypeString +
                           ' should have testInterpolation property');
       assert_equals(typeof typeObject.testInterpolation, 'function',

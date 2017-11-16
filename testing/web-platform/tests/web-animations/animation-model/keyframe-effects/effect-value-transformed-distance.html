@@ -14,7 +14,7 @@
 // Test that applying easing to keyframes is applied as expected
 
 gEasingTests.forEach(params => {
-  test(function(t) {
+  test(t => {
     const target = createDiv(t);
     const anim   = target.animate([ { width: '0px' },
                                     // We put the easing on the second keyframe
@@ -47,7 +47,7 @@ gEasingTests.forEach(params => {
 gEasingTests.forEach(params => {
   const linearEquivalentEasings = [ 'cubic-bezier(0, 0, 0, 0)',
                                     'cubic-bezier(1, 1, 1, 1)' ];
-  test(function(t) {
+  test(t => {
     linearEquivalentEasings.forEach(linearEquivalentEasing => {
       const timing = { duration: 1000,
                        fill: 'forwards',

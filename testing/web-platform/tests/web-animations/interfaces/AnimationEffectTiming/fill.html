@@ -10,13 +10,13 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var anim = createDiv(t).animate(null);
   assert_equals(anim.effect.timing.fill, 'auto');
 }, 'Has the default value \'auto\'');
 
-["none", "forwards", "backwards", "both", ].forEach(function(fill){
-  test(function(t) {
+["none", "forwards", "backwards", "both", ].forEach(fill => {
+  test(t => {
     var div = createDiv(t);
     var anim = div.animate({ opacity: [ 0, 1 ] }, 100);
     anim.effect.timing.fill = fill;

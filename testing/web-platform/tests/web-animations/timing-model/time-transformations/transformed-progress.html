@@ -13,7 +13,7 @@
 'use strict';
 
 gEasingTests.forEach(params => {
-  test(function(t) {
+  test(t => {
     const target = createDiv(t);
     const anim   = target.animate(null, { duration: 1000,
                                           fill: 'forwards',
@@ -291,11 +291,11 @@ var gStepAndFramesTimingFunctionTests = [
   }
 ];
 
-gStepAndFramesTimingFunctionTests.forEach(function(options) {
-  test(function(t) {
+gStepAndFramesTimingFunctionTests.forEach(options => {
+  test(t => {
     var target = createDiv(t);
     var animation = target.animate(null, options.effect);
-    options.conditions.forEach(function(condition) {
+    options.conditions.forEach(condition => {
       animation.currentTime = condition.currentTime;
       assert_equals(animation.effect.getComputedTiming().progress,
                     condition.progress,

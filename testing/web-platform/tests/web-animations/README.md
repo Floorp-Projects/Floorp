@@ -51,24 +51,24 @@ Guidelines for writing tests
     e.g.
 
       ```javascript
-      test(function(t) {
+      test(t => {
         const animation = createDiv(t).animate(null);
         assert_class_string(animation, 'Animation', 'Returned object is an Animation');
       }, 'Element.animate() creates an Animation object');
       ```
 
       ```javascript
-      test(function(t) {
-        assert_throws({ name: 'TypeError' }, function() {
+      test(t => {
+        assert_throws({ name: 'TypeError' }, () => {
           createDiv(t).animate(null, -1);
         });
       }, 'Setting a negative duration throws a TypeError');
       ```
 
       ```javascript
-      promise_test(function(t) {
+      promise_test(t => {
         const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
-        return animation.ready.then(function() {
+        return animation.ready.then(() => {
           assert_greater_than(animation.startTime, 0, 'startTime when running');
         });
       }, 'startTime is resolved when running');

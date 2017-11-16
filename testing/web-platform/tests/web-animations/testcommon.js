@@ -20,9 +20,9 @@ var TIME_PRECISION = 0.0005; // ms
 // Allow implementations to substitute an alternative method for comparing
 // times based on their precision requirements.
 if (!window.assert_times_equal) {
-  window.assert_times_equal = function(actual, expected, description) {
+  window.assert_times_equal = (actual, expected, description) => {
     assert_approx_equals(actual, expected, TIME_PRECISION, description);
-  }
+  };
 }
 
 // creates div element, appends it to the document body and
@@ -40,7 +40,7 @@ function createElement(test, tagName, doc) {
   }
   var element = doc.createElement(tagName || 'div');
   doc.body.appendChild(element);
-  test.add_cleanup(function() {
+  test.add_cleanup(() => {
     element.remove();
   });
   return element;
@@ -70,7 +70,7 @@ function createStyle(test, rules, doc) {
                        sheet.cssRules.length);
     }
   }
-  test.add_cleanup(function() {
+  test.add_cleanup(() => {
     extraStyle.remove();
   });
 }
@@ -93,17 +93,17 @@ function createPseudo(test, type) {
 
 // Cubic bezier with control points (0, 0), (x1, y1), (x2, y2), and (1, 1).
 function cubicBezier(x1, y1, x2, y2) {
-  function xForT(t) {
+  const xForT = t => {
     var omt = 1-t;
     return 3 * omt * omt * t * x1 + 3 * omt * t * t * x2 + t * t * t;
-  }
+  };
 
-  function yForT(t) {
+  const yForT = t => {
     var omt = 1-t;
     return 3 * omt * omt * t * y1 + 3 * omt * t * t * y2 + t * t * t;
-  }
+  };
 
-  function tForX(x) {
+  const tForX = x => {
     // Binary subdivision.
     var mint = 0, maxt = 1;
     for (var i = 0; i < 30; ++i) {
@@ -116,9 +116,9 @@ function cubicBezier(x1, y1, x2, y2) {
       }
     }
     return (mint + maxt) / 2;
-  }
+  };
 
-  return function bezierClosure(x) {
+  return x => {
     if (x == 0) {
       return 0;
     }
@@ -126,31 +126,29 @@ function cubicBezier(x1, y1, x2, y2) {
       return 1;
     }
     return yForT(tForX(x));
-  }
+  };
 }
 
 function stepEnd(nsteps) {
-  return function stepEndClosure(x) {
-    return Math.floor(x * nsteps) / nsteps;
-  }
+  return x => Math.floor(x * nsteps) / nsteps;
 }
 
 function stepStart(nsteps) {
-  return function stepStartClosure(x) {
+  return x => {
     var result = Math.floor(x * nsteps + 1.0) / nsteps;
     return (result > 1.0) ? 1.0 : result;
-  }
+  };
 }
 
 function framesTiming(nframes) {
-  return function framesClosure(x) {
+  return x => {
     var result = Math.floor(x * nframes) / (nframes - 1);
     return (result > 1.0 && x <= 1.0) ? 1.0 : result;
-  }
+  };
 }
 
 function waitForAnimationFrames(frameCount) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(resolve => {
     function handleFrame() {
       if (--frameCount <= 0) {
         resolve();
@@ -167,7 +165,7 @@ function waitForAnimationFrames(frameCount) {
 // wall-clock time).
 function waitForAnimationFramesWithDelay(minDelay) {
   var startTime = document.timeline.currentTime;
-  return new Promise(function(resolve) {
+  return new Promise(resolve => {
     (function handleFrame() {
       if (document.timeline.currentTime - startTime >= minDelay) {
         resolve();

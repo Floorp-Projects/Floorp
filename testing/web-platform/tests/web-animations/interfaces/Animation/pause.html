@@ -10,26 +10,26 @@
 <script>
 "use strict";
 
-promise_test(function(t) {
+promise_test(t => {
   var div = createDiv(t);
   var animation = div.animate({}, 1000 * MS_PER_SEC);
   var previousCurrentTime = animation.currentTime;
 
-  return animation.ready.then(waitForAnimationFrames(1)).then(function() {
+  return animation.ready.then(waitForAnimationFrames(1)).then(() => {
     assert_true(animation.currentTime >= previousCurrentTime,
                 'currentTime is initially increasing');
     animation.pause();
     return animation.ready;
-  }).then(function() {
+  }).then(() => {
     previousCurrentTime = animation.currentTime;
     return waitForAnimationFrames(1);
-  }).then(function() {
+  }).then(() => {
     assert_equals(animation.currentTime, previousCurrentTime,
                   'currentTime does not increase after calling pause()');
   });
 }, 'pause() a running animation');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = createDiv(t);
   var animation = div.animate({}, 1000 * MS_PER_SEC);
 
@@ -42,7 +42,7 @@ promise_test(function(t) {
   assert_equals(animation.playState, 'pending', 'initially pause-pending');
 
   // Check it still resolves as expected
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_equals(animation.playState, 'paused',
                   'resolves to paused state asynchronously');
     assert_equals(animation.currentTime, 0,
@@ -50,7 +50,7 @@ promise_test(function(t) {
   });
 }, 'pause() from idle');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = createDiv(t);
   var animation = div.animate({}, 1000 * MS_PER_SEC);
   animation.cancel();
@@ -60,13 +60,13 @@ promise_test(function(t) {
   assert_equals(animation.currentTime, 1000 * MS_PER_SEC,
                 'currentTime is set to the effect end');
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_equals(animation.currentTime, 1000 * MS_PER_SEC,
                   'keeps the initially set currentTime');
   });
 }, 'pause() from idle with a negative playbackRate');
 
-test(function(t) {
+test(t => {
   var div = createDiv(t);
   var animation = div.animate({}, {duration: 1000 * MS_PER_SEC,
                                    iterations: Infinity});
@@ -74,21 +74,21 @@ test(function(t) {
   animation.playbackRate = -1;
 
   assert_throws('InvalidStateError',
-                function () { animation.pause(); },
+                () => { animation.pause(); },
                 'Expect InvalidStateError exception on calling pause() ' +
                 'from idle with a negative playbackRate and ' +
                 'infinite-duration animation');
 }, 'pause() from idle with a negative playbackRate and endless effect');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = createDiv(t);
   var animation = div.animate({}, 1000 * MS_PER_SEC);
   return animation.ready
-    .then(function(animation) {
+    .then(animation => {
       animation.finish();
       animation.pause();
       return animation.ready;
-    }).then(function(animation) {
+    }).then(animation => {
       assert_equals(animation.currentTime, 1000 * MS_PER_SEC,
                     'currentTime after pausing finished animation');
     });
