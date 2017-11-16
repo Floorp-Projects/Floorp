@@ -1383,6 +1383,7 @@ WebRenderBridgeParent::ClearResources()
   mAsyncCompositables.Clear();
 
   mAsyncImageManager->RemovePipeline(mPipelineId, wr::NewEpoch(wrEpoch));
+  mApi->RemovePipeline(mPipelineId);
 
   for (std::unordered_set<uint64_t>::iterator iter = mActiveAnimations.begin(); iter != mActiveAnimations.end(); iter++) {
     mAnimStorage->ClearById(*iter);
