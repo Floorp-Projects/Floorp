@@ -11,6 +11,7 @@
 
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/IdleDeadline.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -432,6 +433,33 @@ ChromeUtils::IsOriginAttributesEqual(const dom::OriginAttributesDictionary& aA,
          aA.mUserContextId == aB.mUserContextId &&
          aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
 }
+
+#ifdef NIGHTLY_BUILD
+/* static */ void
+ChromeUtils::GetRecentJSDevError(GlobalObject& aGlobal,
+                                JS::MutableHandleValue aRetval,
+                                ErrorResult& aRv)
+{
+  aRetval.setUndefined();
+  auto runtime = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(runtime);
+
+  auto cx = aGlobal.Context();
+  if (!runtime->GetRecentDevError(cx, aRetval)) {
+    aRv.NoteJSContextException(cx);
+    return;
+  }
+}
+
+/* static */ void
+ChromeUtils::ClearRecentJSDevError(GlobalObject&)
+{
+  auto runtime = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(runtime);
+
+  runtime->ClearRecentDevError();
+}
+#endif // NIGHTLY_BUILD
 
 } // namespace dom
 } // namespace mozilla
