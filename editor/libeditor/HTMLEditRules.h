@@ -314,18 +314,20 @@ protected:
   /**
    * SplitParagraph() splits the parent block, aPara, at aSelNode - aOffset.
    *
-   * @param aSelection  The selection.
-   * @param aPara       The parent block to be split.
-   * @param aBRNode     Next <br> node if there is.  Otherwise, nullptr.
-   *                    If this is not nullptr, the <br> node may be removed.
-   * @param aSelNode    Set the selection container to split aPara at.
-   * @param aOffset     Set the offset in the container.
+   * @param aSelection          The selection.
+   * @param aParentDivOrP       The parent block to be split.  This must be <p>
+   *                            or <div> element.
+   * @param aStartOfRightNode   The point to be start of right node after
+   *                            split.  This must be descendant of
+   *                            aParentDivOrP.
+   * @param aNextBRNode         Next <br> node if there is.  Otherwise, nullptr.
+   *                            If this is not nullptr, the <br> node may be
+   *                            removed.
    */
   nsresult SplitParagraph(Selection& aSelection,
-                          Element& aPara,
-                          nsIContent* aBRNode,
-                          nsINode& aSelNode,
-                          int32_t aOffset);
+                          Element& aParentDivOrP,
+                          const EditorRawDOMPoint& aStartOfRightNode,
+                          nsIContent* aBRNode);
 
   nsresult ReturnInListItem(Selection& aSelection, Element& aHeader,
                             nsINode& aNode, int32_t aOffset);
