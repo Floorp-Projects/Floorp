@@ -192,6 +192,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
 
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(aRequest);
   bool seekable = false;
+  int64_t length = -1;
   int64_t startOffset = aRequestOffset;
 
   if (hc) {
@@ -275,7 +276,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
     if (aRequestOffset == 0 && contentLength >= 0 &&
         (responseStatus == HTTP_OK_CODE ||
          responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
-      mCacheStream.NotifyDataLength(contentLength);
+      length = contentLength;
     }
     // XXX we probably should examine the Content-Range header in case
     // the server gave us a range which is not quite what we asked for
@@ -294,7 +295,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
   // any consumer can see the new data.
   UpdatePrincipal();
 
-  mCacheStream.NotifyDataStarted(mLoadID, startOffset, seekable);
+  mCacheStream.NotifyDataStarted(mLoadID, startOffset, seekable, length);
   mIsTransportSeekable = seekable;
   mChannelStatistics.Start();
 
