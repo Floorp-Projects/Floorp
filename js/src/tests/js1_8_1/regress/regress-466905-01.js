@@ -19,7 +19,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  function f(a) { for each (let c in a) [(c > 5) ? 'A' : 'B']; }
+  function f(a) { for (let c of a) [(c > 5) ? 'A' : 'B']; }
   f([true, 8]);
   f([2]);
 

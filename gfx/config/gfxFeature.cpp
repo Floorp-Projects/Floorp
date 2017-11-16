@@ -60,7 +60,8 @@ FeatureState::SetDefaultFromPref(const char* aPrefName,
                                  bool aIsEnablePref,
                                  bool aDefaultValue)
 {
-  bool baseValue = Preferences::GetDefaultBool(aPrefName, aDefaultValue);
+  bool baseValue =
+    Preferences::GetBool(aPrefName, aDefaultValue, PrefValueKind::Default);
   SetDefault(baseValue == aIsEnablePref, FeatureStatus::Disabled, "Disabled by default");
 
   if (Preferences::HasUserValue(aPrefName)) {

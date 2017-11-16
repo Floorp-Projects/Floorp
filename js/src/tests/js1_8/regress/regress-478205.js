@@ -20,7 +20,7 @@ function test()
   printStatus (summary);
  
 
-  for each (let x in ['', '']) { switch([]) {} }
+  for (let x of ['', '']) { switch([]) {} }
 
 
   reportCompare(expect, actual, summary);

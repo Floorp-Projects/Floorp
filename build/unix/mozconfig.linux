@@ -25,8 +25,6 @@ else
   CXX="/tools/gcc-4.7.3-0moz1/bin/g++"
 fi
 
-ac_add_options --enable-elf-hack
-
 . "$topsrcdir/build/unix/mozconfig.stdcxx"
 
 # PKG_CONFIG_LIBDIR is appropriately overridden in mozconfig.linux32

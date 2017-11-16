@@ -19,11 +19,11 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  for each (let b in [eval, eval, 4, 4]) { 
+  for (let b of [eval, eval, 4, 4]) { 
       ++b; 
-      for each (b in [(void 0), (void 0), (void 0), 3, (void 0), 3]) { 
+      for (b of [(void 0), (void 0), (void 0), 3, (void 0), 3]) { 
           b ^= b; 
-          for each (var c in [1/0]) {
+          for (var c of [1/0]) {
           }
       } 
   }

@@ -240,20 +240,20 @@ def main(argv):
     # skip-if = coverage
     if os.getenv('GCOV_PREFIX') is not None:
         # GCOV errors.
-        options.exclude += ['asm.js/testSIMD.js']               # Bug 1347245
+        options.exclude += [os.path.join('asm.js', 'testSIMD.js')]               # Bug 1347245
 
         # JSVM errors.
-        options.exclude += ['basic/functionnames.js']           # Bug 1369783
-        options.exclude += ['debug/Debugger-findScripts-23.js']
-        options.exclude += ['debug/bug1160182.js']
-        options.exclude += ['xdr/incremental-encoder.js']
-        options.exclude += ['xdr/bug1186973.js']                # Bug 1369785
-        options.exclude += ['xdr/relazify.js']
-        options.exclude += ['basic/werror.js']
+        options.exclude += [os.path.join('basic', 'functionnames.js')]           # Bug 1369783
+        options.exclude += [os.path.join('debug', 'Debugger-findScripts-23.js')]
+        options.exclude += [os.path.join('debug', 'bug1160182.js')]
+        options.exclude += [os.path.join('xdr', 'incremental-encoder.js')]
+        options.exclude += [os.path.join('xdr', 'bug1186973.js')]                # Bug 1369785
+        options.exclude += [os.path.join('xdr', 'relazify.js')]
+        options.exclude += [os.path.join('basic', 'werror.js')]
 
         # Prevent code coverage test that expects coverage
         # to be off when it starts.
-        options.exclude += ['debug/Script-getOffsetsCoverage-02.js']
+        options.exclude += [os.path.join('debug', 'Script-getOffsetsCoverage-02.js')]
 
     if options.exclude_from:
         with open(options.exclude_from) as fh:

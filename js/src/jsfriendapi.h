@@ -1004,7 +1004,7 @@ IsObjectInContextCompartment(JSObject* obj, const JSContext* cx);
  * The first two are omitted because they shouldn't be used in new code.
  */
 #define JSITER_ENUMERATE  0x1   /* for-in compatible hidden default iterator */
-#define JSITER_FOREACH    0x2   /* get obj[key] for each property */
+/* 0x2 is no longer used */
 /* 0x4 is no longer used */
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */

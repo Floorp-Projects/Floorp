@@ -335,7 +335,7 @@ nsSHistory::Startup()
   // The goal of this is to unbreak users who have inadvertently set their
   // session history size to less than the default value.
   int32_t defaultHistoryMaxSize =
-    Preferences::GetDefaultInt(PREF_SHISTORY_SIZE, 50);
+    Preferences::GetInt(PREF_SHISTORY_SIZE, 50, PrefValueKind::Default);
   if (gHistoryMaxSize < defaultHistoryMaxSize) {
     gHistoryMaxSize = defaultHistoryMaxSize;
   }
