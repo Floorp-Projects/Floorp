@@ -151,23 +151,6 @@ ifeq (WINNT,$(OS_ARCH))
 endif
 	@echo 'repackaging done'
 
-ifdef MOZ_UPDATER
-# Note that we want updater.ini to be in the top directory, not the browser/
-# subdirectory, because that's where the updater is installed and runs.
-libs:: $(call MERGE_FILE,updater/updater.ini) $(call mkdir_deps,$(DIST)/bin)
-ifeq ($(OS_ARCH),WINNT)
-	cat $< $(srcdir)/../installer/windows/nsis/updater_append.ini | \
-	  sed -e 's/^InfoText=/Info=/' -e 's/^TitleText=/Title=/' | \
-	  sed -e 's/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/' > \
-	  $(FINAL_TARGET)/../updater.ini
-else
-	cat $< | \
-	  sed -e 's/^InfoText=/Info=/' -e 's/^TitleText=/Title=/' | \
-	  sed -e 's/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/' > \
-	  $(FINAL_TARGET)/../updater.ini
-endif
-endif
-
 ident:
 	@printf 'fx_revision '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
