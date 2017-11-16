@@ -91,14 +91,15 @@ ReadRequestedLocales(nsTArray<nsCString>& aRetVal)
   // we'll want to allow user to specify a list of requested locales.
   aRetVal.AppendElement(locale);
 
-  // en-US is a LastResort locale. LastResort locale is a fallback locale
-  // for the requested locale chain. In the future we'll want to make the
-  // fallback chain differ per-locale. For now, it'll always fallback on en-US.
+  // Last fallback locale is a locale for the requested locale chain.
+  // In the future we'll want to make the fallback chain differ per-locale.
+  // For now, it'll always fallback on en-US.
   //
   // Notice: This is not the same as DefaultLocale,
   // which follows the default locale the build is in.
-  if (!locale.Equals("en-US")) {
-    aRetVal.AppendElement("en-US");
+  LocaleService::GetInstance()->GetLastFallbackLocale(locale);
+  if (!aRetVal.Contains(locale)) {
+    aRetVal.AppendElement(locale);
   }
   return true;
 }
@@ -142,7 +143,7 @@ LocaleService::LocaleService(bool aIsServer)
  * This function performs the actual language negotiation for the API.
  *
  * Currently it collects the locale ID used by nsChromeRegistry and
- * adds hardcoded "en-US" locale as a fallback.
+ * adds hardcoded default locale as a fallback.
  */
 void
 LocaleService::NegotiateAppLocales(nsTArray<nsCString>& aRetVal)
@@ -314,7 +315,6 @@ LocaleService::GetAvailableLocales(nsTArray<nsCString>& aRetVal)
   aRetVal = mAvailableLocales;
   return true;
 }
-
 
 void
 LocaleService::AvailableLocalesChanged()
@@ -632,15 +632,21 @@ LocaleService::GetDefaultLocale(nsACString& aRetVal)
       }
       mDefaultLocale.Assign(item.Buffer(), len);
     }
+
     // Hard-coded fallback, e.g. for non-packaged developer builds.
-    // XXX Is there any reason to make this a compile-time #define that
-    // can be set via configure or something?
     if (mDefaultLocale.IsEmpty()) {
-      mDefaultLocale.AssignLiteral("en-US");
+      GetLastFallbackLocale(mDefaultLocale);
     }
   }
 
   aRetVal = mDefaultLocale;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LocaleService::GetLastFallbackLocale(nsACString& aRetVal)
+{
+  aRetVal.AssignLiteral("en-US");
   return NS_OK;
 }
 
@@ -971,9 +977,11 @@ NS_IMETHODIMP
 LocaleService::SetRequestedLocales(const char** aRequested,
                                    uint32_t aRequestedCount)
 {
+  nsAutoCString lastFallbackLocale;
+  GetLastFallbackLocale(lastFallbackLocale);
   MOZ_ASSERT(aRequestedCount < 2 ||
-             (aRequestedCount == 2 && strcmp(aRequested[1], "en-US") == 0),
-      "We can only handle one requested locale (optionally with en-US last fallback)");
+             (aRequestedCount == 2 && lastFallbackLocale.Equals(aRequested[1])),
+      "We can only handle one requested locale (optionally with last fallback)");
 
   if (aRequestedCount == 0) {
     Preferences::ClearUser(SELECTED_LOCALE_PREF);
