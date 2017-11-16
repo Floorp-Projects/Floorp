@@ -145,13 +145,13 @@ protected:
   // Update carets based on current selection status. This function will flush
   // layout, so caller must ensure the PresShell is still valid after calling
   // this method.
-  void UpdateCarets(UpdateCaretsHintSet aHints = UpdateCaretsHint::Default);
+  void UpdateCarets(const UpdateCaretsHintSet& aHints = UpdateCaretsHint::Default);
 
   // Force hiding all carets regardless of the current selection status.
   void HideCarets();
 
-  void UpdateCaretsForCursorMode(UpdateCaretsHintSet aHints);
-  void UpdateCaretsForSelectionMode(UpdateCaretsHintSet aHints);
+  void UpdateCaretsForCursorMode(const UpdateCaretsHintSet& aHints);
+  void UpdateCaretsForSelectionMode(const UpdateCaretsHintSet& aHints);
 
   // Provide haptic / touch feedback, primarily for select on longpress.
   void ProvideHapticFeedback();

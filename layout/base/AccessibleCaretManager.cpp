@@ -215,7 +215,7 @@ AccessibleCaretManager::HideCarets()
 }
 
 void
-AccessibleCaretManager::UpdateCarets(UpdateCaretsHintSet aHint)
+AccessibleCaretManager::UpdateCarets(const UpdateCaretsHintSet& aHint)
 {
   FlushLayout();
   if (IsTerminated()) {
@@ -276,7 +276,7 @@ AccessibleCaretManager::HasNonEmptyTextContent(nsINode* aNode) const
 }
 
 void
-AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHintSet aHints)
+AccessibleCaretManager::UpdateCaretsForCursorMode(const UpdateCaretsHintSet& aHints)
 {
   AC_LOG("%s, selection: %p", __FUNCTION__, GetSelection());
 
@@ -335,7 +335,7 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHintSet aHints)
 }
 
 void
-AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHintSet aHints)
+AccessibleCaretManager::UpdateCaretsForSelectionMode(const UpdateCaretsHintSet& aHints)
 {
   AC_LOG("%s: selection: %p", __FUNCTION__, GetSelection());
 
