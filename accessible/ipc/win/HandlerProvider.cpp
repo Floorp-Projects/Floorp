@@ -364,6 +364,21 @@ HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data)
     }
   }
 
+  RefPtr<IAccessibleTableCell> cell;
+  // It is not an error if this fails.
+  hr = mTargetUnk.get()->QueryInterface(IID_IAccessibleTableCell,
+    getter_AddRefs(cell));
+  if (SUCCEEDED(hr)) {
+    hr = cell->get_rowColumnExtents(&aOutIA2Data->mRowIndex,
+                                    &aOutIA2Data->mColumnIndex,
+                                    &aOutIA2Data->mRowExtent,
+                                    &aOutIA2Data->mColumnExtent,
+                                    &aOutIA2Data->mCellIsSelected);
+    if (FAILED(hr)) {
+      return;
+    }
+  }
+
   // NB: get_uniqueID should be the final property retrieved in this method,
   // as its presence is used to determine whether the rest of this data
   // retrieval was successful.
