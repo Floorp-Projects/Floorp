@@ -859,6 +859,8 @@ const KTableEntry nsCSSProps::kAppearanceKTable[] = {
   { eCSSKeyword__moz_win_exclude_glass,         NS_THEME_WIN_EXCLUDE_GLASS },
   { eCSSKeyword__moz_mac_vibrancy_light,        NS_THEME_MAC_VIBRANCY_LIGHT },
   { eCSSKeyword__moz_mac_vibrancy_dark,         NS_THEME_MAC_VIBRANCY_DARK },
+  { eCSSKeyword__moz_mac_vibrant_titlebar_light, NS_THEME_MAC_VIBRANT_TITLEBAR_LIGHT },
+  { eCSSKeyword__moz_mac_vibrant_titlebar_dark,  NS_THEME_MAC_VIBRANT_TITLEBAR_DARK },
   { eCSSKeyword__moz_mac_disclosure_button_open,   NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN },
   { eCSSKeyword__moz_mac_disclosure_button_closed, NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED },
   { eCSSKeyword__moz_gtk_info_bar,              NS_THEME_GTK_INFO_BAR },
