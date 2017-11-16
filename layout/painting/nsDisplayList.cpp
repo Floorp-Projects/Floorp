@@ -2611,6 +2611,7 @@ nsDisplayItem* nsDisplayList::RemoveBottom() {
   nsDisplayItem* item = mSentinel.mAbove;
   if (!item)
     return nullptr;
+  MOZ_DIAGNOSTIC_ASSERT(item->mSentinel == 0xDEADBEEFDEADBEEF);
   mSentinel.mAbove = item->mAbove;
   if (item == mTop) {
     // must have been the only item
@@ -2622,8 +2623,10 @@ nsDisplayItem* nsDisplayList::RemoveBottom() {
 }
 
 void nsDisplayList::DeleteAll(nsDisplayListBuilder* aBuilder) {
+  MOZ_DIAGNOSTIC_ASSERT(aBuilder == mBuilder);
   nsDisplayItem* item;
   while ((item = RemoveBottom()) != nullptr) {
+    MOZ_DIAGNOSTIC_ASSERT(aBuilder->DebugContains(item));
     item->Destroy(aBuilder);
   }
 }
@@ -3512,7 +3515,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   // An auxiliary list is necessary in case we have background blending; if that
   // is the case, background items need to be wrapped by a blend container to
   // isolate blending to the background
-  nsDisplayList bgItemList;
+  nsDisplayList bgItemList(aBuilder);
   // Even if we don't actually have a background color to paint, we may still need
   // to create an item for hit testing.
   if ((drawBackgroundColor && color != NS_RGBA(0,0,0,0)) ||
@@ -3602,7 +3605,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                               layer, bgRect, willPaintBorder);
     }
 
-    nsDisplayList thisItemList;
+    nsDisplayList thisItemList(aBuilder);
     nsDisplayBackgroundImage::InitData bgData =
       nsDisplayBackgroundImage::GetInitData(aBuilder, aFrame, i, bgOriginRect, bg,
                                             LayerizeFixed::DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS);
@@ -5919,6 +5922,7 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      const ActiveScrolledRoot* aActiveScrolledRoot,
                                      bool aClearClipChain)
   : nsDisplayItem(aBuilder, aFrame, aActiveScrolledRoot)
+  , mList(aBuilder)
   , mFrameActiveScrolledRoot(aBuilder->CurrentActiveScrolledRoot())
   , mOverrideZIndex(0)
   , mHasZIndexOverride(false)
@@ -5962,6 +5966,7 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayItem* aItem)
   : nsDisplayItem(aBuilder, aFrame)
+  , mList(aBuilder)
   , mOverrideZIndex(0)
   , mHasZIndexOverride(false)
 {
@@ -6180,7 +6185,7 @@ WrapDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
 static nsresult
 WrapEachDisplayItem(nsDisplayListBuilder* aBuilder,
                     nsDisplayList* aList, nsDisplayWrapper* aWrapper) {
-  nsDisplayList newList;
+  nsDisplayList newList(aBuilder);
   nsDisplayItem* item;
   while ((item = aList->RemoveBottom())) {
     item = aWrapper->WrapItem(aBuilder, item);
@@ -7070,7 +7075,7 @@ nsDisplayFixedPosition::CreateForFixedBackground(nsDisplayListBuilder* aBuilder,
                                                  nsDisplayBackgroundImage* aImage,
                                                  uint32_t aIndex)
 {
-  nsDisplayList temp;
+  nsDisplayList temp(aBuilder);
   temp.AppendToTop(aImage);
 
   return new (aBuilder) nsDisplayFixedPosition(aBuilder, aFrame, &temp, aIndex + 1);
@@ -7183,7 +7188,7 @@ nsDisplayTableFixedPosition::CreateForFixedBackground(nsDisplayListBuilder* aBui
                                                       uint32_t aIndex,
                                                       nsIFrame* aAncestorFrame)
 {
-  nsDisplayList temp;
+  nsDisplayList temp(aBuilder);
   temp.AppendToTop(aImage);
 
   return new (aBuilder) nsDisplayTableFixedPosition(aBuilder, aFrame, &temp, aIndex + 1, aAncestorFrame);
