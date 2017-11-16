@@ -2215,7 +2215,7 @@ Selection::StopAutoScrollTimer()
 }
 
 nsresult
-Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint& aPoint)
+Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint)
 {
   NS_PRECONDITION(aFrame, "Need a frame");
 
