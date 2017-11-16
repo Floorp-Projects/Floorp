@@ -12,7 +12,7 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
-
+  let contextMenuDoc = monitor.panelWin.parent.document;
   // Avoid async processing
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
@@ -23,10 +23,12 @@ add_task(function* () {
   });
   yield wait;
 
+  wait = waitForDOM(contextMenuDoc, "#request-list-context-open-in-style-editor");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]);
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[1]);
+  yield wait;
 
   let onStyleEditorReady = toolbox.once("styleeditor-ready");
   monitor.panelWin.parent.document

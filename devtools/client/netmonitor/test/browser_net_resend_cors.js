@@ -63,10 +63,11 @@ add_task(function* () {
     is(item.status, 200, `The ${item.method} response has the right status`);
 
     if (item.method === "POST") {
-      // Force fetching response content
+      // Force fetching lazy load data
       let responseContent = yield connector.requestData(item.id, "responseContent");
+      let { requestPostData } = yield connector.requestData(item.id, "requestPostData");
 
-      is(item.requestPostData.postData.text, "post-data",
+      is(requestPostData.postData.text, "post-data",
         "The POST request has the right POST data");
       // eslint-disable-next-line mozilla/no-cpows-in-tests
       is(responseContent.content.text, "Access-Control-Allow-Origin: *",
