@@ -1560,21 +1560,16 @@
           if (!tab)
             return;
 
-          let sharing;
-          if (aState.screen) {
-            sharing = "screen";
-          } else if (aState.camera) {
-            sharing = "camera";
-          } else if (aState.microphone) {
-            sharing = "microphone";
-          }
-
-          if (sharing) {
-            tab.setAttribute("sharing", sharing);
+          if (aState.sharing) {
             tab._sharingState = aState;
+            if (aState.paused) {
+              tab.removeAttribute("sharing");
+            } else {
+              tab.setAttribute("sharing", aState.sharing);
+            }
           } else {
-            tab.removeAttribute("sharing");
             tab._sharingState = null;
+            tab.removeAttribute("sharing");
           }
           this._tabAttrModified(tab, ["sharing"]);
 
@@ -1588,10 +1583,11 @@
         <body><![CDATA[
           // Normalize the state object for consumers (ie.extensions).
           let state = Object.assign({}, aTab._sharingState);
-          // ensure bool if undefined
-          state.camera = !!state.camera;
-          state.microphone = !!state.microphone;
-          return state;
+          return {
+            camera: !!state.camera,
+            microphone: !!state.microphone,
+            screen: state.screen && state.screen.replace("Paused", ""),
+          };
         ]]></body>
       </method>
 
