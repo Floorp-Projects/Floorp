@@ -12,6 +12,19 @@ LOCALIZED_PP_FILES.defaults.preferences += ['en-US/firefox-l10n.js']
 if CONFIG['MOZ_CRASHREPORTER']:
     LOCALIZED_FILES += ['en-US/crashreporter/crashreporter-override.ini']
 
+if CONFIG['MOZ_UPDATER']:
+    LOCALIZED_GENERATED_FILES += ['updater.ini']
+    updater = LOCALIZED_GENERATED_FILES['updater.ini']
+    updater.script = 'generate_updater_ini.py'
+    updater.inputs = [
+        'en-US/updater/updater.ini',
+        '../installer/windows/nsis/updater_append.ini',
+    ]
+    # Yes, this is weird, but what can you do? This file doesn't want to be in the DIST_SUBDIR,
+    # but we can't really move it to a different directory until we change how locale repacks
+    # work.
+    LOCALIZED_FILES['..'] += ['!updater.ini']
+
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Build Config")
 
