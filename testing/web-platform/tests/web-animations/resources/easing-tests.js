@@ -1,3 +1,5 @@
+'use strict';
+
 const gEasingTests = [
   {
     desc: 'step-start function',
