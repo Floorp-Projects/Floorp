@@ -2780,161 +2780,181 @@ js::AsyncGeneratorReject(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenOb
 static MOZ_MUST_USE bool
 AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
                          ResumeNextKind kind,
-                         HandleValue valueOrException /* = UndefinedHandleValue */,
+                         HandleValue valueOrException_ /* = UndefinedHandleValue */,
                          bool done /* = false */)
 {
-    switch (kind) {
-      case ResumeNextKind::Enqueue:
-        // No further action required.
-        break;
-      case ResumeNextKind::Reject: {
-        // 11.4.3.4 AsyncGeneratorReject ( generator, exception )
-        HandleValue& exception = valueOrException;
+    RootedValue valueOrException(cx, valueOrException_);
+
+    while (true) {
+        switch (kind) {
+          case ResumeNextKind::Enqueue:
+            // No further action required.
+            break;
+          case ResumeNextKind::Reject: {
+            // 11.4.3.4 AsyncGeneratorReject ( generator, exception )
+            HandleValue exception = valueOrException;
+
+            // Step 1 (implicit).
+
+            // Steps 2-3.
+            MOZ_ASSERT(!asyncGenObj->isQueueEmpty());
+
+            // Step 4.
+            Rooted<AsyncGeneratorRequest*> request(
+                cx, AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj));
+            if (!request)
+                return false;
+
+            // Step 5.
+            RootedObject resultPromise(cx, request->promise());
+
+            asyncGenObj->cacheRequest(request);
+
+            // Step 6.
+            if (!RejectMaybeWrappedPromise(cx, resultPromise, exception))
+                return false;
+
+            // Steps 7-8.
+            break;
+          }
+          case ResumeNextKind::Resolve: {
+            // 11.4.3.3 AsyncGeneratorResolve ( generator, value, done )
+            HandleValue value = valueOrException;
+
+            // Step 1 (implicit).
+
+            // Steps 2-3.
+            MOZ_ASSERT(!asyncGenObj->isQueueEmpty());
+
+            // Step 4.
+            Rooted<AsyncGeneratorRequest*> request(
+                cx, AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj));
+            if (!request)
+                return false;
+
+            // Step 5.
+            RootedObject resultPromise(cx, request->promise());
+
+            asyncGenObj->cacheRequest(request);
+
+            // Step 6.
+            RootedObject resultObj(cx, CreateIterResultObject(cx, value, done));
+            if (!resultObj)
+                return false;
+
+            RootedValue resultValue(cx, ObjectValue(*resultObj));
+
+            // Step 7.
+            if (!ResolvePromiseInternal(cx, resultPromise, resultValue))
+                return false;
+
+            // Steps 8-9.
+            break;
+          }
+        }
 
         // Step 1 (implicit).
 
         // Steps 2-3.
-        MOZ_ASSERT(!asyncGenObj->isQueueEmpty());
+        MOZ_ASSERT(!asyncGenObj->isExecuting());
 
         // Step 4.
-        Rooted<AsyncGeneratorRequest*> request(
-            cx, AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj));
-        if (!request)
-            return false;
+        if (asyncGenObj->isAwaitingYieldReturn() || asyncGenObj->isAwaitingReturn())
+            return true;
 
-        // Step 5.
-        RootedObject resultPromise(cx, request->promise());
-
-        asyncGenObj->cacheRequest(request);
-
-        // Step 6.
-        if (!RejectMaybeWrappedPromise(cx, resultPromise, exception))
-            return false;
+        // Steps 5-6.
+        if (asyncGenObj->isQueueEmpty())
+            return true;
 
         // Steps 7-8.
-        break;
-      }
-      case ResumeNextKind::Resolve: {
-        // 11.4.3.3 AsyncGeneratorResolve ( generator, value, done )
-        HandleValue& value = valueOrException;
-
-        // Step 1 (implicit).
-
-        // Steps 2-3.
-        MOZ_ASSERT(!asyncGenObj->isQueueEmpty());
-
-        // Step 4.
         Rooted<AsyncGeneratorRequest*> request(
-            cx, AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj));
+            cx, AsyncGeneratorObject::peekRequest(cx, asyncGenObj));
         if (!request)
             return false;
 
-        // Step 5.
-        RootedObject resultPromise(cx, request->promise());
+        // Step 9.
+        CompletionKind completionKind = request->completionKind();
 
-        asyncGenObj->cacheRequest(request);
+        // Step 10.
+        if (completionKind != CompletionKind::Normal) {
+            // Step 10.a.
+            if (asyncGenObj->isSuspendedStart())
+                asyncGenObj->setCompleted();
 
-        // Step 6.
-        RootedObject resultObj(cx, CreateIterResultObject(cx, value, done));
-        if (!resultObj)
-            return false;
+            // Step 10.b.
+            if (asyncGenObj->isCompleted()) {
+                RootedValue value(cx, request->completionValue());
 
-        RootedValue resultValue(cx, ObjectValue(*resultObj));
+                // Step 10.b.i.
+                if (completionKind == CompletionKind::Return) {
+                    // Steps 10.b.i.1.
+                    asyncGenObj->setAwaitingReturn();
 
-        // Step 7.
-        if (!ResolvePromiseInternal(cx, resultPromise, resultValue))
-            return false;
+                    // Steps 10.b.i.4-6 (reordered).
+                    static constexpr int32_t ResumeNextReturnFulfilled =
+                            PromiseHandlerAsyncGeneratorResumeNextReturnFulfilled;
+                    static constexpr int32_t ResumeNextReturnRejected =
+                            PromiseHandlerAsyncGeneratorResumeNextReturnRejected;
 
-        // Steps 8-9.
-        break;
-      }
-    }
+                    RootedValue onFulfilled(cx, Int32Value(ResumeNextReturnFulfilled));
+                    RootedValue onRejected(cx, Int32Value(ResumeNextReturnRejected));
 
-    // Step 1 (implicit).
+                    // Steps 10.b.i.2-3, 7-10.
+                    auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
+                        reaction->setIsAsyncGenerator(asyncGenObj);
+                    };
+                    return InternalAwait(cx, value, nullptr, onFulfilled, onRejected, extra);
+                }
 
-    // Steps 2-3.
-    MOZ_ASSERT(!asyncGenObj->isExecuting());
+                // Step 10.b.ii.1.
+                MOZ_ASSERT(completionKind == CompletionKind::Throw);
 
-    // Step 4.
-    if (asyncGenObj->isAwaitingYieldReturn() || asyncGenObj->isAwaitingReturn())
-        return true;
-
-    // Steps 5-6.
-    if (asyncGenObj->isQueueEmpty())
-        return true;
-
-    // Steps 7-8.
-    Rooted<AsyncGeneratorRequest*> request(
-        cx, AsyncGeneratorObject::peekRequest(cx, asyncGenObj));
-    if (!request)
-        return false;
-
-    // Step 9.
-    CompletionKind completionKind = request->completionKind();
-
-    // Step 10.
-    if (completionKind != CompletionKind::Normal) {
-        // Step 10.a.
-        if (asyncGenObj->isSuspendedStart())
-            asyncGenObj->setCompleted();
-
-        // Step 10.b.
-        if (asyncGenObj->isCompleted()) {
-            RootedValue value(cx, request->completionValue());
-
-            // Step 10.b.i.
-            if (completionKind == CompletionKind::Return) {
-                // Steps 10.b.i.1.
-                asyncGenObj->setAwaitingReturn();
-
-                // Steps 10.b.i.4-6 (reordered).
-                RootedValue onFulfilled(cx, Int32Value(PromiseHandlerAsyncGeneratorResumeNextReturnFulfilled));
-                RootedValue onRejected(cx, Int32Value(PromiseHandlerAsyncGeneratorResumeNextReturnRejected));
-
-                // Steps 10.b.i.2-3, 7-10.
-                auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
-                    reaction->setIsAsyncGenerator(asyncGenObj);
-                };
-                return InternalAwait(cx, value, nullptr, onFulfilled, onRejected, extra);
+                // Steps 10.b.ii.2-3.
+                kind = ResumeNextKind::Reject;
+                valueOrException.set(value);
+                // |done| is unused for ResumeNextKind::Reject.
+                continue;
             }
-
-            // Step 10.b.ii.1.
-            MOZ_ASSERT(completionKind == CompletionKind::Throw);
-
-            // Steps 10.b.ii.2-3.
-            return AsyncGeneratorReject(cx, asyncGenObj, value);
+        } else if (asyncGenObj->isCompleted()) {
+            // Step 11.
+            kind = ResumeNextKind::Resolve;
+            valueOrException.setUndefined();
+            done = true;
+            continue;
         }
-    } else if (asyncGenObj->isCompleted()) {
-        // Step 11.
-        return AsyncGeneratorResolve(cx, asyncGenObj, UndefinedHandleValue, true);
+
+        // Step 12.
+        MOZ_ASSERT(asyncGenObj->isSuspendedStart() || asyncGenObj->isSuspendedYield());
+
+        // Step 16 (reordered).
+        asyncGenObj->setExecuting();
+
+        RootedValue argument(cx, request->completionValue());
+
+        if (completionKind == CompletionKind::Return) {
+            // 11.4.3.7 AsyncGeneratorYield step 8.b-e.
+            // Since we don't have the place that handles return from yield
+            // inside the generator, handle the case here, with extra state
+            // State_AwaitingYieldReturn.
+            asyncGenObj->setAwaitingYieldReturn();
+
+            static constexpr int32_t YieldReturnAwaitedFulfilled =
+                    PromiseHandlerAsyncGeneratorYieldReturnAwaitedFulfilled;
+            static constexpr int32_t YieldReturnAwaitedRejected =
+                    PromiseHandlerAsyncGeneratorYieldReturnAwaitedRejected;
+
+            RootedValue onFulfilled(cx, Int32Value(YieldReturnAwaitedFulfilled));
+            RootedValue onRejected(cx, Int32Value(YieldReturnAwaitedRejected));
+
+            auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
+                reaction->setIsAsyncGenerator(asyncGenObj);
+            };
+            return InternalAwait(cx, argument, nullptr, onFulfilled, onRejected, extra);
+        }
+
+        // Steps 13-15, 17-21.
+        return AsyncGeneratorResume(cx, asyncGenObj, completionKind, argument);
     }
-
-    // Step 12.
-    MOZ_ASSERT(asyncGenObj->isSuspendedStart() || asyncGenObj->isSuspendedYield());
-
-    // Step 16 (reordered).
-    asyncGenObj->setExecuting();
-
-    RootedValue argument(cx, request->completionValue());
-
-    if (completionKind == CompletionKind::Return) {
-        // 11.4.3.7 AsyncGeneratorYield step 8.b-e.
-        // Since we don't have the place that handles return from yield
-        // inside the generator, handle the case here, with extra state
-        // State_AwaitingYieldReturn.
-        asyncGenObj->setAwaitingYieldReturn();
-
-        RootedValue onFulfilled(cx, Int32Value(PromiseHandlerAsyncGeneratorYieldReturnAwaitedFulfilled));
-        RootedValue onRejected(cx, Int32Value(PromiseHandlerAsyncGeneratorYieldReturnAwaitedRejected));
-
-        auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
-            reaction->setIsAsyncGenerator(asyncGenObj);
-        };
-        return InternalAwait(cx, argument, nullptr, onFulfilled, onRejected, extra);
-    }
-
-    // Steps 13-15, 17-21.
-    return AsyncGeneratorResume(cx, asyncGenObj, completionKind, argument);
 }
 
 // Async Iteration proposal 11.4.3.6.
