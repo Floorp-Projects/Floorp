@@ -1982,6 +1982,10 @@ MediaCacheStream::NotifyDataStarted(uint32_t aLoadID,
   // Reset mSeekTarget since the seek is completed so MediaCache::Update() will
   // make decisions based on mChannelOffset instead of mSeekTarget.
   mSeekTarget = -1;
+
+  // Reset these flags since a new load has begun.
+  mChannelEnded = false;
+  mDidNotifyDataEnded = false;
 }
 
 void
@@ -2189,15 +2193,6 @@ MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
       stream->mClient->CacheClientNotifyDataEnded(aStatus);
     }
   }
-}
-
-void
-MediaCacheStream::NotifyChannelRecreated()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  mChannelEnded = false;
-  mDidNotifyDataEnded = false;
 }
 
 void

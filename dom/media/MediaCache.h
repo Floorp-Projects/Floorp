@@ -278,10 +278,6 @@ public:
                        nsresult aStatus,
                        bool aReopenOnError = false);
 
-  // Notifies the stream that the channel is reopened. The stream should
-  // reset variables such as |mDidNotifyDataEnded|.
-  void NotifyChannelRecreated();
-
   // Notifies the stream that the suspend status of the client has changed.
   // Main thread only.
   void NotifyClientSuspended(bool aSuspended);
