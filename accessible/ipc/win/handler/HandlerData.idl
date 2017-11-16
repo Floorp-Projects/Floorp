@@ -51,6 +51,12 @@ typedef struct _DynamicIA2Data
   IA2Locale         mIA2Locale;
   // From IAccessibleAction
   long              mNActions;
+  // From IAccessibleTableCell
+  long              mRowIndex;
+  long              mColumnIndex;
+  long              mRowExtent;
+  long              mColumnExtent;
+  boolean           mCellIsSelected;
   // From IAccessible2
   long              mUniqueId;
 } DynamicIA2Data;
