@@ -142,6 +142,114 @@ EditActionCanceled(nsresult aRv = NS_OK)
 }
 
 /***************************************************************************
+ * SplitNodeResult is a simple class for EditorBase::SplitNodeDeep().
+ * This makes the callers' code easier to read.
+ */
+class MOZ_STACK_CLASS SplitNodeResult final
+{
+public:
+  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
+  bool Failed() const { return NS_FAILED(mRv); }
+  nsresult Rv() const { return mRv; }
+
+  /**
+   * DidSplit() returns true if a node was actually split.
+   */
+  bool DidSplit() const
+  {
+    return mPreviousNode && mNextNode;
+  }
+
+  /**
+   * GetLeftNode() simply returns the left node which was created at splitting.
+   * This returns nullptr if the node wasn't split.
+   */
+  nsIContent* GetLeftNode() const
+  {
+    return mPreviousNode && mNextNode ? mPreviousNode.get() : nullptr;
+  }
+
+  /**
+   * GetRightNode() simply returns the right node which was split.
+   * This won't return nullptr unless failed to split due to invalid arguments.
+   */
+  nsIContent* GetRightNode() const
+  {
+    return mPreviousNode && !mNextNode ? mPreviousNode : mNextNode;
+  }
+
+  /**
+   * GetPreviousNode() returns previous node at the split point.
+   */
+  nsIContent* GetPreviousNode() const { return mPreviousNode; }
+
+  /**
+   * GetNextNode() returns next node at the split point.
+   */
+  nsIContent* GetNextNode() const { return mNextNode; }
+
+  /**
+   * SplitPoint() returns the split point in the container.
+   * This is useful when callers insert an element at split point with
+   * EditorBase::CreateNode() or something similar methods.
+   *
+   * Note that the result is EditorRawDOMPoint but the nodes are grabbed
+   * by this instance.  Therefore, the life time of both container node
+   * and child node are guaranteed while using the result temporarily.
+   */
+  EditorRawDOMPoint SplitPoint() const
+  {
+    if (Failed()) {
+      return EditorRawDOMPoint();
+    }
+    if (!mPreviousNode) {
+      return EditorRawDOMPoint(mNextNode);
+    }
+    EditorRawDOMPoint point(mPreviousNode);
+    DebugOnly<bool> advanced = point.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced,
+      "Failed to advance offset to after previous node");
+    return point;
+  }
+
+  /**
+   * This constructor shouldn't be used by anybody except methods which
+   * use this as result when it succeeds.
+   *
+   * @param aPreviousNodeOfSplitPoint   Previous node immediately before
+   *                                    split point.
+   * @param aNextNodeOfSplitPoint       Next node immediately after split
+   *                                    point.
+   */
+  SplitNodeResult(nsIContent* aPreviousNodeOfSplitPoint,
+                  nsIContent* aNextNodeOfSplitPoint)
+    : mPreviousNode(aPreviousNodeOfSplitPoint)
+    , mNextNode(aNextNodeOfSplitPoint)
+    , mRv(NS_OK)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mPreviousNode || mNextNode);
+  }
+
+  /**
+   * This constructor shouldn't be used by anybody except methods which
+   * use this as error result when it fails.
+   */
+  explicit SplitNodeResult(nsresult aRv)
+    : mRv(aRv)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
+  }
+
+private:
+  nsCOMPtr<nsIContent> mPreviousNode;
+  nsCOMPtr<nsIContent> mNextNode;
+
+  nsresult mRv;
+
+  SplitNodeResult() = delete;
+};
+
+/***************************************************************************
  * stack based helper class for batching a collection of transactions inside a
  * placeholder transaction.
  */
