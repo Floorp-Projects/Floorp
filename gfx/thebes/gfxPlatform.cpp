@@ -2596,7 +2596,7 @@ gfxPlatform::InitOMTPConfig()
   omtp.SetDefaultFromPref(
     "layers.omtp.enabled",
     true,
-    Preferences::GetDefaultBool("layers.omtp.enabled", false));
+    Preferences::GetBool("layers.omtp.enabled", false, PrefValueKind::Default));
 
   if (mContentBackend == BackendType::CAIRO) {
     omtp.ForceDisable(FeatureStatus::Broken, "OMTP is not supported when using cairo",

@@ -13,7 +13,7 @@ printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 
-(function f() { for each (let i in [0, {}, 0, 1.5, {}, 0, 1.5, 0, 0]) { }})();
+(function f() { for (let i of [0, {}, 0, 1.5, {}, 0, 1.5, 0, 0]) { }})();
 
 
 reportCompare(expect, actual, summary);

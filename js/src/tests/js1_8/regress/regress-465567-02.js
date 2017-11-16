@@ -15,7 +15,7 @@ printStatus (summary);
 
 try
 {
-  eval("for each (e in ['', true, 1, true, 1]) { e = null; if (0) { let e; var e; } }");
+  eval("for (e of ['', true, 1, true, 1]) { e = null; if (0) { let e; var e; } }");
 }
 catch(ex)
 {

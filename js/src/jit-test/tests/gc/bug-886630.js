@@ -1,5 +1,3 @@
-// |jit-test| need-for-each
-
 function errorToString(e) {
     try {} catch (e2) {}
 }
@@ -11,8 +9,8 @@ if (false) {
 var tryRunning = tryRunningDirectly;
 function unlikelyToHang(code) {
     var codeL = code.replace(/\s/g, " ");
-    return true && code.indexOf("infloop") == -1 && !(codeL.match(/const.*for/)) // can be an infinite loop: function() { const x = 1; for each(x in ({a1:1})) dumpln(3); }
-    && !(codeL.match(/for.*const/)) // can be an infinite loop: for each(x in ...); const x;
+    return true && code.indexOf("infloop") == -1 && !(codeL.match(/const.*for/)) // can be an infinite loop: function() { const x = 1; for(x in ({a1:1})) dumpln(3); }
+    && !(codeL.match(/for.*const/)) // can be an infinite loop: for (x in ...); const x;
     && !(codeL.match(/for.*in.*uneval/)) // can be slow to loop through the huge string uneval(this), for example
     && !(codeL.match(/for.*for.*for/)) // nested for loops (including for..in, array comprehensions, etc) can take a while
     && !(codeL.match(/for.*for.*gc/))

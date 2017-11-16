@@ -1,4 +1,4 @@
-// |jit-test| error: 42; need-for-each
+// |jit-test| error: 42
 load(libdir + "immutable-prototype.js");
 
 // Suppress the large quantity of output on stdout (eg from calling
@@ -15,7 +15,7 @@ var blacklist = {
 };
 
 function f(y) {}
-for each(let e in newGlobal()) {
+for (let e of Object.values(newGlobal())) {
     if (e.name in blacklist)
 	continue;
     print(e.name);
@@ -32,7 +32,7 @@ for each(let e in newGlobal()) {
     }
     var arr = [];
     arr.__proto__ = newGlobal();
-    for each (b in arr) {
+    for (b of Object.values(arr)) {
         if (b.name in blacklist)
             continue;
         try {

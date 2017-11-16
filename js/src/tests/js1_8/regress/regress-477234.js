@@ -22,7 +22,7 @@ function test()
 
  
   for (iters = 0; iters < 11500; ++iters) {
-    for each (let x in ['', '', '']){}
+    for (let x of ['', '', '']){}
     eval("Object.defineProperty(__proto__, 'x', " +
          "{" +
          "  enumerable: true, configurable: true," +

@@ -21,7 +21,7 @@ function test()
 
   x = 0;
   x = x.prop;
-  for each (let [] in ['', '']) { switch(x) { default: (function(){}); } };
+  for (let [] of ['', '']) { switch(x) { default: (function(){}); } };
 
 
   reportCompare(expect, actual, summary);
