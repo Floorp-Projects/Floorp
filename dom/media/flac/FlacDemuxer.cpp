@@ -7,7 +7,7 @@
 #include "FlacDemuxer.h"
 
 #include "mozilla/Maybe.h"
-#include "mp4_demuxer/BitReader.h"
+#include "BitReader.h"
 #include "nsAutoPtr.h"
 #include "prenv.h"
 #include "FlacFrameParser.h"

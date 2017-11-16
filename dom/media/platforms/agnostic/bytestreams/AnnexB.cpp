@@ -7,8 +7,8 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
 #include "AnnexB.h"
-#include "mp4_demuxer/BufferReader.h"
-#include "mp4_demuxer/ByteWriter.h"
+#include "BufferReader.h"
+#include "ByteWriter.h"
 #include "MediaData.h"
 #include "nsAutoPtr.h"
 
