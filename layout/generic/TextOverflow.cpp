@@ -326,6 +326,7 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
   , mBuilder(aBuilder)
   , mBlock(aBlockFrame)
   , mScrollableFrame(nsLayoutUtils::GetScrollableFrameFor(aBlockFrame))
+  , mMarkerList(aBuilder)
   , mBlockSize(aBlockFrame->GetSize())
   , mBlockWM(aBlockFrame->GetWritingMode())
   , mAdjustForPixelSnapping(false)
@@ -754,7 +755,7 @@ TextOverflow::PruneDisplayListContents(nsDisplayList* aList,
                                        const FrameHashtable& aFramesToHide,
                                        const LogicalRect& aInsideMarkersArea)
 {
-  nsDisplayList saved;
+  nsDisplayList saved(mBuilder);
   nsDisplayItem* item;
   while ((item = aList->RemoveBottom())) {
     nsIFrame* itemFrame = item->Frame();

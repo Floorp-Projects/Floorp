@@ -15,6 +15,7 @@ struct RetainedDisplayListBuilder {
                              nsDisplayListBuilderMode aMode,
                              bool aBuildCaret)
     : mBuilder(aReferenceFrame, aMode, aBuildCaret, true)
+    , mList(&mBuilder)
   {}
   ~RetainedDisplayListBuilder()
   {
