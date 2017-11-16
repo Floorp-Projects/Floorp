@@ -245,6 +245,8 @@ private:
 
     void               UpdateClientOffset();
 
+    void               DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
+                                                              GdkEventButton *aEvent);
 public:
     void               ThemeChanged(void);
     void               OnDPIChanged(void);

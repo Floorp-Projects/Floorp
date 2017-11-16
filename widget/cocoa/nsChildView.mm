@@ -4700,8 +4700,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  // Let the superclass do the context menu stuff.
-  [super rightMouseDown:theEvent];
+  if (!nsBaseWidget::ShowContextMenuAfterMouseUp()) {
+    // Let the superclass do the context menu stuff.
+    [super rightMouseDown:theEvent];
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4724,6 +4726,23 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchInputEvent(&geckoEvent);
+  if (!mGeckoChild)
+    return;
+
+  if (nsBaseWidget::ShowContextMenuAfterMouseUp()) {
+    // Let the superclass do the context menu stuff, but pretend it's rightMouseDown.
+    NSEvent *dupeEvent = [NSEvent mouseEventWithType:NSRightMouseDown
+                                            location:theEvent.locationInWindow
+                                       modifierFlags:theEvent.modifierFlags
+                                           timestamp:theEvent.timestamp
+                                        windowNumber:theEvent.windowNumber
+                                             context:theEvent.context
+                                         eventNumber:theEvent.eventNumber
+                                          clickCount:theEvent.clickCount
+                                            pressure:theEvent.pressure];
+
+    [super rightMouseDown:dupeEvent];
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
