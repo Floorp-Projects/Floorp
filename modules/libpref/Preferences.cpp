@@ -3156,6 +3156,10 @@ struct CacheData
 // gCacheDataDesc holds information about prefs startup. It's being used for
 // diagnosing prefs startup problems in bug 1276488.
 static const char* gCacheDataDesc = "untouched";
+
+// gCacheData holds the CacheData objects used for VarCache prefs. It owns
+// those objects, and also is used to detect if multiple VarCaches get tied to
+// a single global variable.
 static nsTArray<nsAutoPtr<CacheData>>* gCacheData = nullptr;
 
 #ifdef DEBUG
