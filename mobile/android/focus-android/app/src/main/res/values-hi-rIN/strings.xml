@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">%1$s के साथ खोलें</string>
   <string name="menu_open_with_a_browser">इसके साथ खोलें…</string>
   <string name="menu_add_to_home_screen">मुख्य स्क्रीन में जोड़ें</string>
+  <string name="menu_whats_new">क्या नया है</string>
   <string name="menu_settings">सेटिंग्स</string>
   <string name="menu_about">के बारे में</string>
   <string name="menu_help">सहायता</string>
@@ -30,17 +31,25 @@
   <string name="preference_dialog_title_search_engine">तयशुदा खोज़</string>
   <string name="preference_category_privacy">गोपनीयता</string>
   <string name="preference_privacy_block_ads">विज्ञापन ट्रैकर्स को अवरुद्ध करें</string>
+  <string name="preference_privacy_block_ads_summary">कुछ विज्ञापन साइट पर जाने को ट्रैक करते हैं, भले ही आप उन्हें क्लिक न करें</string>
   <string name="preference_privacy_block_analytics">विश्लेषणात्मक ट्रैकर्स को अवरुद्ध करें</string>
+  <string name="preference_privacy_block_analytics_summary">टैपिंग और स्क्रॉलिंग जैसी गतिविधियाँ एकत्र, विश्लेषण और मापने के लिए उपयोग</string>
   <string name="preference_privacy_block_social">सामाजिक ट्रैकर्स को अवरुद्ध करें</string>
+  <string name="preference_privacy_block_social_summary">साइटों पर आपके आने जाने पर निगाह रखने और साझा बटन जैसी कार्यक्षमता प्रदर्शित करने के लिए अंत:स्थापित</string>
   <string name="preference_privacy_block_content">अन्य सामग्री ट्रैकर्स को अवरुद्ध करें</string>
+  <string name="preference_privacy_block_content_summary2">सक्षम करने पर कुछ पृष्ठ अनपेक्षित व्यवहार कर सकते हैं</string>
   <string name="preference_privacy_secure_mode">तरक़ीब</string>
   <string name="preference_privacy_stealth_summary">ऐप्स को स्विच करते समय वेबपेज छिपाएं</string>
   <string name="preference_category_performance">प्रदर्शन</string>
   <string name="preference_performance_block_webfonts">वेब लिपियों को अवरुद्ध करें</string>
   <string name="preference_performance_block_webfonts_summary">अनुपस्थित प्रतीकों या छवियों के रूप में परिणाम हो सकता है</string>
   <string name="preference_performance_block_images">चित्रों को बाधित करें</string>
+  <string name="preference_default_browser2">%1$s को डिफ़ॉल्ट ब्राउज़र बनाएँ</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">उपयोग डेटा भेजें</string>
   <string name="preference_mozilla_telemetry_summary">और अधिक जानें</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla मात्र वही एकत्रित करने का प्रयास करता है जिसकी हमें %1$s को बेहतर बनाने और सबको उपलब्ध कराने के लिए आवश्यकता है.</string>
+  <string name="preference_privacy_notice">गोपनीयता सूचना</string>
   <string name="preference_about">%1$s के बारे में</string>
   <string name="preference_search_installed_search_engines">संस्थापित खोज इंजन</string>
   <string name="preference_search_restore">तयशुदा खोज इंजिन पुनर्बहाल करें</string>
@@ -49,17 +58,30 @@
   <string name="preference_search_remove">हटाएँ</string>
   <string name="tutorial_search_manually_add">हस्तचालित रूप से जोड़ें</string>
   <string name="tutorial_search_title">खोज इंजन जोड़ें</string>
+  <string name="tutorial_search_step1">1. खोज इंजन के मुखपृष्ठ पर जाएँ.</string>
+  <string name="tutorial_search_step2">2. खोज इंजन के खोज क्षेत्र में टैप करें.</string>
+  <string name="tutorial_search_step2_alternative">2. खोज इंजन के खोज क्षेत्र को लंबे समय तक दबाएँ.</string>
+  <string name="tutorial_search_step3">3. खोज इंजन को जोड़ने के लिए कुंजीपटल के ऊपर आवर्धक लेंस आइकन टैप करें.</string>
   <string name="action_option_add_search_engine">खोज इंजन जोड़ें</string>
   <string name="tutorial_search_step3_alternative">3. %1$s टैप करें</string>
+  <string name="tutorial_search_step4">4. अगर आपको आवर्धक लेंस नहीं दिखता, तो ख़ुद से खोज इंजन जोड़ने की कोशिश करें.</string>
+  <string name="tutorial_search_step4_alternative">4. अगर आपको %1$s नहीं दिखता, तो ख़ुद से खोज इंजन जोड़ने की कोशिश करें.</string>
   <string name="tutorial_search_finish">GET STARTED</string>
+  <string name="search_add_hint">इस खोज इंजन को जोड़ने के लिए कीबोर्ड के ऊपर आवर्धक लेंस दबाएं.</string>
   <string name="search_add_manually_name">प्रदर्शित करने के लिए नाम</string>
   <string name="search_add_manually_name_hint">खोज इंजन का नाम</string>
+  <string name="search_add_manually_string">उपयोग के लिए खोज स्ट्रिंग</string>
   <string name="search_add_manually_save">सहेजें</string>
+  <string name="search_add_manually_string_hint">खोज स्ट्रिंग चिपकाएँ या दर्ज करें. यदि ज़रूरी हो, तो खोज शब्द को %s से बदलें.</string>
+  <string name="search_add_manually_example">उदाहरण: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">खोज इंजन जोड़ें</string>
+  <string name="search_add_confirmation">नया खोज इंजन संकलित.</string>
+  <string name="search_add_error">खोज स्ट्रिंग को जाँचें और फिर से कोशिश करें</string>
   <string name="content_description_clear_input">इनपुट मिटाएँ</string>
   <string name="content_description_dismiss_input">निरस्त करें</string>
   <string name="content_description_erase">ब्राउज़िंग इतिहास मिटाएँ</string>
   <string name="content_description_fab_expand">विस्तार</string>
+  <string name="content_description_tab_counter">खुले टैब: %1$s</string>
   <string name="content_description_open_tab">टैब खोलें</string>
   <string name="content_description_close_tab">टैब बंद करें</string>
   <string name="content_description_lock">सुरक्षित संपर्क</string>
@@ -124,6 +146,16 @@
   <string name="dialog_addtohomescreen_title">मुख्य स्क्रीन में जोड़ें</string>
   <string name="dialog_addtohomescreen_action_add">जोड़ें</string>
   <string name="dialog_addtohomescreen_action_cancel">रद्द करें</string>
+  <string name="dialog_addtohomescreen_tracking_protection">शॉर्टकट अक्षम ट्रैकिंग सुरक्षा के साथ खुलेगा</string>
   <string name="dialog_opentab_title">चयनित टैब में कड़ी खोलें</string>
   <string name="dialog_opentab_action_open">खोलें</string>
+  <string name="notification_browsing_session_channel_name">निजी ब्राउज़िंग सत्र</string>
+  <string name="notification_browsing_session_channel_description">अधिसूचनाएँ आपको आपका %1$s सत्र एक टैप के साथ मिटाने देती हैं. आपको ऐप खोलने या ब्राउज़र में क्या चल रहा है, देखने की ज़रूरत नहीं है.</string>
+  <string name="tabs_tray_action_erase">ब्राउज़िंग इतिहास मिटाएँ</string>
+  <string name="download_firefox">फ़ायरफ़ॉक्स डाउनलोड करें</string>
+  <string name="your_rights_content1">%1$s मोज़िला और अन्य योगदानकर्ताओं द्वारा बनाया गया स्वतंत्र और मुक्त स्रोत सॉफ्टवेयर है.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2350;&#2379;&#2332;&#2364;&#2367;&#2354;&#2366; &#2360;&#2366;&#2352;&#2381;&#2357;&#2332;&#2344;&#2367;&#2325; &#2354;&#2366;&#2311;&#2360;&#2375;&#2306;&#2360;</a>" और अन्य मुक्त स्रोत लाइसेंस के नियमों के अंतर्गत आपको उपलब्ध कराया जाता है."]]></string>
+  <string name="your_rights_content3"><![CDATA["आपको Mozilla Foundation अथवा Mozilla, Firefox या %1$s नाम या प्रतीकचिन्हों सहित किसी भी पक्ष के ट्रेडमार्कों के कोई भी अधिकार या लाइसेन्स प्रदान नहीं किए गए हैं. अतिरिक्त जानकारी "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2351;&#2361;&#2366;&#2305;</a>" मिल सकती है."]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s के लिए अतिरिक्त स्रोत कोड कई अन्य निशुल्क और मुक्त स्रोत "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2354;&#2366;&#2311;&#2360;&#2375;&#2344;&#2381;&#2360;&#2379;&#2306;</a>" के अंतर्गत उपलब्ध हैं."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s Disconnect, Inc. द्वारा प्रदत्त अवरुद्धसूची का भी उपयोग "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" के अंतर्गत पृथक और स्वतंत्र कार्यों के रूप में करता है, और "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#2351;&#2361;&#2366;&#2305;</a>" उपलब्ध है."]]></string>
 </resources>

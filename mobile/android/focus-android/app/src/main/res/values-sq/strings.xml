@@ -110,7 +110,7 @@
   <string name="errorpage_title">Problem në ngarkimin e faqes</string>
   <string name="errorpage_refresh">Riprovoni</string>
   <string name="error_connectionfailure_title">S’arrihet të lidhet</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sajti mund t&#235; jet&#235; p&#235;rkoh&#235;sisht jasht&#235; funksionimit ose shum&#235; i zon&#235;. Riprovoni pas pak &#231;astesh.</li>"\n        "<li>N&#235;se s&#8217;jeni n&#235; gjendje t&#235; ngarkoni asnj&#235; faqe, kontrolloni lidhjen data ose Wi-Fi t&#235; pajisjes suaj celulare.</li>"\n      "</ul>]]></string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sajti mund t&#235; jet&#235; p&#235;rkoh&#235;sisht jasht&#235; funksionimit ose shum&#235; i z&#235;n&#235;. Riprovoni pas pak &#231;astesh.</li>"\n        "<li>N&#235;se s&#8217;jeni n&#235; gjendje t&#235; ngarkoni asnj&#235; faqe, kontrolloni lidhjen data ose Wi-Fi t&#235; pajisjes suaj celulare.</li>"\n      "</ul>]]></string>
   <string name="error_timeout_title">Lidhjes i mbaroi koha</string>
   <string name="error_hostLookup_title">S’u gjet shërbyes</string>
   <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontrolloni adres&#235;n p&#235;r gabime shkrimi, t&#235; tilla si\n          "<strong>ww</strong>".example.com, n&#235; vend se\n          "<strong>www</strong>.example.com</li>"\n        "<li>If you are unable to load any pages, check your device&#8217;s data or Wi-Fi connection.</li>"\n      "</ul>]]></string>
@@ -138,7 +138,7 @@
   <string name="firstrun_shortcut_title">Shtoni shkurtore te skena juaj e kreut</string>
   <string name="firstrun_shortcut_text">Rikthehuni shpejt te sajtet tuaj të parapëlqyer, me %1$s. Thjesht përzgjidhni \"Shtoje te skena e Kreut\" që nga menuja e %1$s-it.</string>
   <string name="firstrun_privacy_title">Bëjeni zakon privatësinë</string>
-  <string name="firstrun_privacy_text">Vëreni %1$s si shfletuesin tuaj parazgjedhje dhe kijini përfitimet e shfletimit privat kur hapni faqe në web që nga aplikacione të tjera.</string>
+  <string name="firstrun_privacy_text">Vëreni %1$s si shfletuesin tuaj parazgjedhje dhe përfitoni të mirat e shfletimit privat kur hapni faqe në web që nga aplikacione të tjera.</string>
   <string name="firstrun_close_button">OK, e mora vesh!</string>
   <string name="firstrun_skip_button">Anashkaloje</string>
   <string name="firstrun_next_button">Pasuesja</string>

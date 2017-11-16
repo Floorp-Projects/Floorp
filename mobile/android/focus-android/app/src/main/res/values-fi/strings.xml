@@ -34,6 +34,7 @@
   <string name="preference_privacy_block_analytics">Estä analytiikkaseuraimet</string>
   <string name="preference_privacy_block_social">Estä sosiaalisen median seuraimet</string>
   <string name="preference_privacy_block_content">Estä muut sisältöseuraimet</string>
+  <string name="preference_privacy_block_content_summary2">Tämän käyttöönotto saattaa johtaa joidenkin sivustojen odottamattomaan käytökseen</string>
   <string name="preference_privacy_secure_mode">Häivetila</string>
   <string name="preference_privacy_stealth_summary">Piilota verkkosivut vaihdettaessa sovellusta</string>
   <string name="preference_category_performance">Suorituskyky</string>
@@ -49,6 +50,7 @@
   <string name="preference_about">Tietoja %1$sesta</string>
   <string name="preference_search_installed_search_engines">Asennetut hakukoneet</string>
   <string name="preference_search_restore">Palauta oletushakukoneet</string>
+  <string name="preference_search_add2">+ Lisää toinen hakukone</string>
   <string name="preference_search_remove_title">Poista hakukone</string>
   <string name="preference_search_remove">Poista</string>
   <string name="tutorial_search_manually_add">Lisää käsin</string>
