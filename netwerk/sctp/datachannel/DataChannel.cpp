@@ -196,7 +196,12 @@ DataChannelConnectionShutdown::Notify(nsITimer* aTimer)
 {
   // safely release reference to ourself
   RefPtr<DataChannelConnectionShutdown> grip(this);
-  sDataChannelShutdown->RemoveConnectionShutdown(this);
+  // Might not be set. We don't actually use the |this| pointer in
+  // RemoveConnectionShutdown right now, which makes this a bit gratuitous
+  // anyway...
+  if (sDataChannelShutdown) {
+    sDataChannelShutdown->RemoveConnectionShutdown(this);
+  }
   return NS_OK;
 }
 
