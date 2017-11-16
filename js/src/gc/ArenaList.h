@@ -12,7 +12,6 @@
 #define gc_ArenaList_h
 
 #include "gc/AllocKind.h"
-#include "js/GCAPI.h"
 #include "js/SliceBudget.h"
 #include "threading/ProtectedData.h"
 

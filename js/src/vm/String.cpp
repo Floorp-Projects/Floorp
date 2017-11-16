@@ -14,7 +14,6 @@
 #include "mozilla/Unused.h"
 
 #include "gc/Marking.h"
-#include "js/GCAPI.h"
 #include "js/UbiNode.h"
 #include "vm/GeckoProfiler.h"
 
