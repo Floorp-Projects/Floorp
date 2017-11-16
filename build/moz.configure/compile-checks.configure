@@ -105,6 +105,8 @@ def check_and_add_flags(flag, cflags, cxxflags, test_flags,
     if when is None:
         when = always
 
+    results = []
+
     if test_flags:
         flags = test_flags
     else:
@@ -131,6 +133,10 @@ def check_and_add_flags(flag, cflags, cxxflags, test_flags,
         def maybe_add_flag(result, list_of_flags):
             if result:
                 list_of_flags.append(flag)
+
+        results.append(result)
+
+    return tuple(results)
 
 
 @dependable
@@ -168,8 +174,8 @@ def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
     else:
         flags = ['-Werror', warning]
 
-    check_and_add_flags(warning, warnings_cflags, warnings_cxxflags,
-                        flags, compiler=compiler, when=when, check=check)
+    return check_and_add_flags(warning, warnings_cflags, warnings_cxxflags,
+                               flags, compiler=compiler, when=when, check=check)
 
 
 # Add the given warning to the list of warning flags for the build.
@@ -212,8 +218,8 @@ def compilation_cxxflags():
 def check_and_add_gcc_flag(flag, compiler=None, when=None, check=True):
     flags = ['-Werror', flag]
 
-    check_and_add_flags(flag, compilation_cflags, compilation_cxxflags,
-                        flags, compiler=compiler, when=when, check=check)
+    return check_and_add_flags(flag, compilation_cflags, compilation_cxxflags,
+                               flags, compiler=compiler, when=when, check=check)
 
 
 # Add the given flag to the list of flags for the build.
