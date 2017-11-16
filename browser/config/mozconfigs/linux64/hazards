@@ -16,7 +16,6 @@ MOZ_AUTOMATION_PACKAGE_TESTS=0
 MOZ_AUTOMATION_UPLOAD=0
 
 . "$topsrcdir/build/mozconfig.common"
-ac_add_options --enable-elf-hack
 
 . "$topsrcdir/build/unix/mozconfig.stdcxx"
 

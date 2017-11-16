@@ -67,7 +67,7 @@ function test()
   {
     eval(
       "for (a in (function(){" +
-      "      for each (let x in ['']) { return new function x1 (\u3056) { yield x } ();" +
+      "      for (let x of ['']) { return new function x1 (\u3056) { yield x } ();" +
       "        }})())" +
       "  function(){}"
       );

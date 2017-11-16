@@ -40,8 +40,6 @@ elif [ ! -f /etc/redhat-release ] || [ "$(< /etc/redhat-release)" != "CentOS rel
     HOST_CXX="$topsrcdir/gcc/bin/g++"
 fi
 
-ac_add_options --enable-elf-hack
-
 ANDROID_NDK_VERSION="r10e"
 ANDROID_NDK_VERSION_32BIT="r8c"
 

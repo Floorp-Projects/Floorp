@@ -13,7 +13,7 @@ printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 
-for each (let x in ['']) {
+for (let x of ['']) {
   for (var b = 0; b < 5; ++b) {
     if (b % 5 == 3) {
       with([]) this;
