@@ -22,9 +22,8 @@ for (const property in gCSSProperties) {
     continue;
   }
 
-  const animationTypes = gCSSProperties[property].types;
   const setupFunction = gCSSProperties[property].setup;
-  animationTypes.forEach(animationType => {
+  for (const animationType of gCSSProperties[property].types) {
     let typeObject;
     let animationTypeString;
     if (typeof animationType === 'string') {
@@ -53,6 +52,6 @@ for (const property in gCSSProperties) {
                               setupFunction,
                               animationType.options);
     }
-  });
+  }
 }
 </script>

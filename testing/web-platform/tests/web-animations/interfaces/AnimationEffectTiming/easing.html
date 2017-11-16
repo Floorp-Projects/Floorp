@@ -26,7 +26,7 @@ function assert_progress(animation, currentTime, easingFunction) {
                        + ` ${easingFunction(portion)} at ${currentTime}ms`);
 }
 
-gEasingTests.forEach(options => {
+for (const options of gEasingTests) {
   test(t => {
     const target = createDiv(t);
     const anim = target.animate([ { opacity: 0 }, { opacity: 1 } ],
@@ -43,9 +43,9 @@ gEasingTests.forEach(options => {
     assert_progress(anim, 750 * MS_PER_SEC, easing);
     assert_progress(anim, 1000 * MS_PER_SEC, easing);
   }, options.desc);
-});
+}
 
-gInvalidEasings.forEach(invalidEasing => {
+for (const invalidEasing of gInvalidEasings) {
   test(t => {
     const div = createDiv(t);
     const anim = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
@@ -54,15 +54,15 @@ gInvalidEasings.forEach(invalidEasing => {
                     anim.effect.timing.easing = invalidEasing;
                   });
   }, `Throws on invalid easing: '${invalidEasing}'`);
-});
+}
 
-gRoundtripEasings.forEach(easing => {
+for (const easing of gRoundtripEasings) {
   test(t => {
     const anim = createDiv(t).animate(null);
     anim.effect.timing.easing = easing;
     assert_equals(anim.effect.timing.easing, easing);
   }, `Canonical easing '${easing}' is returned as set`);
-});
+}
 
 test(t => {
   const delay = 1000 * MS_PER_SEC;

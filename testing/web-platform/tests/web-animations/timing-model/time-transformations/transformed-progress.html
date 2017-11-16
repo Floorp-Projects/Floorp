@@ -12,14 +12,14 @@
 <script>
 'use strict';
 
-gEasingTests.forEach(params => {
+for (const params of gEasingTests) {
   test(t => {
     const target = createDiv(t);
     const anim   = target.animate(null, { duration: 1000,
                                           fill: 'forwards',
                                           easing: params.easing });
 
-    [ 0, 250, 500, 750, 1000 ].forEach(sampleTime => {
+    for (const sampleTime of [0, 250, 500, 750, 1000]) {
       anim.currentTime = sampleTime;
       const portion = sampleTime / anim.effect.getComputedTiming().duration;
       const expectedProgress = params.easingFunction(portion);
@@ -28,9 +28,9 @@ gEasingTests.forEach(params => {
                            0.01,
                            'The progress should be approximately ' +
                            `${expectedProgress} at ${sampleTime}ms`);
-    });
+    }
   }, `Transformed progress for ${params.desc}`);
-});
+}
 
 // Additional tests for various boundary conditions of step timing functions and
 // frames timing functions.
@@ -291,18 +291,18 @@ const gStepAndFramesTimingFunctionTests = [
   }
 ];
 
-gStepAndFramesTimingFunctionTests.forEach(options => {
+for (const options of gStepAndFramesTimingFunctionTests) {
   test(t => {
     const target = createDiv(t);
     const animation = target.animate(null, options.effect);
-    options.conditions.forEach(condition => {
+    for (const condition of options.conditions) {
       animation.currentTime = condition.currentTime;
       assert_equals(animation.effect.getComputedTiming().progress,
                     condition.progress,
                     `Progress at ${animation.currentTime}ms`);
-    });
+    }
   }, options.description);
-});
+}
 
 </script>
 </body>

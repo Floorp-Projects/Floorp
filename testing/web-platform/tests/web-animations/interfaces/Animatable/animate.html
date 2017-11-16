@@ -73,40 +73,40 @@ test(t => {
    + ' whose AnimationEffectTiming object is created in the relevant realm'
    + ' of the target element');
 
-gEmptyKeyframeListTests.forEach(subTest => {
+for (const subtest of gEmptyKeyframeListTests) {
   test(t => {
     const div = createDiv(t);
-    const anim = div.animate(subTest, 2000);
+    const anim = div.animate(subtest, 2000);
     assert_not_equals(anim, null);
   }, 'Element.animate() accepts empty keyframe lists ' +
-     `(input: ${JSON.stringify(subTest)})`);
-});
+     `(input: ${JSON.stringify(subtest)})`);
+}
 
-gKeyframesTests.forEach(subtest => {
+for (const subtest of gKeyframesTests) {
   test(t => {
     const div = createDiv(t);
     const anim = div.animate(subtest.input, 2000);
     assert_frame_lists_equal(anim.effect.getKeyframes(), subtest.output);
   }, `Element.animate() accepts ${subtest.desc}`);
-});
+}
 
-gInvalidKeyframesTests.forEach(subtest => {
+for (const subtest of gInvalidKeyframesTests) {
   test(t => {
     const div = createDiv(t);
     assert_throws(new TypeError, () => {
       div.animate(subtest.input, 2000);
     });
   }, `Element.animate() does not accept ${subtest.desc}`);
-});
+}
 
-gInvalidEasings.forEach(invalidEasing => {
+for (const invalidEasing of gInvalidEasings) {
   test(t => {
     const div = createDiv(t);
     assert_throws(new TypeError, () => {
       div.animate({ easing: invalidEasing }, 2000);
     });
   }, `Element.animate() does not accept invalid easing: '${invalidEasing}'`);
-});
+}
 
 test(t => {
   const div = createDiv(t);
