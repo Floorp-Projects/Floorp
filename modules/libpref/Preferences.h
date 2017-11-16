@@ -55,6 +55,8 @@ class PrefSetting;
 class PrefValue;
 } // namespace dom
 
+struct PrefsSizes;
+
 enum class PrefValueKind : bool
 {
   Default,
@@ -341,8 +343,8 @@ public:
   static pref_initPhase InitPhase();
 #endif
 
-  static int64_t SizeOfIncludingThisAndOtherStuff(
-    mozilla::MallocSizeOf aMallocSizeOf);
+  static void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                     PrefsSizes& aSizes);
 
   static void HandleDirty();
 
