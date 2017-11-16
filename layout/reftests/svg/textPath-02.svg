@@ -8,7 +8,7 @@
     <path id="path" d="M20,20 C20,150 150,150 150,20" pathLength="100" transform="scale(2,1)" fill="none" stroke="black"/>
   </defs>
   <rect width="100%" height="100%" fill="lime"/>
-  <text y="50">
+  <text>
     <textPath xlink:href="#path" font-size="20" fill="red" startOffset="50">FAIL</textPath>
   </text>
   <rect x="160" y="80" width="100" height="60" fill="lime"/>
