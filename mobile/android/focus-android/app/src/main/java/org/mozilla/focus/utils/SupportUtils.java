@@ -19,7 +19,7 @@ public class SupportUtils {
     public static final String DEFAULT_BROWSER_URL = "https://support.mozilla.org/kb/set-firefox-focus-default-browser-android";
 
     public static String getWhatsNewUrl(Context context) {
-        return getSumoURLForTopic(context, "whats-new-firefox-focus-android");
+        return getSumoURLForTopic(context, "whats-new-focus-android-24");
     }
 
     public static String getSumoURLForTopic(final Context context, final String topic) {
