@@ -341,22 +341,25 @@ EvalSharedContext::EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
     computeInWith(enclosingScope);
     computeThisBinding(enclosingScope);
 
-    // Like all things Debugger, Debugger.Frame.eval needs special
-    // handling. Since the environment chain of such evals are non-syntactic
-    // (DebuggerEnvironmentProxy is not an EnvironmentObject), computing the
-    // this binding with respect to enclosingScope is incorrect if the
-    // Debugger.Frame is a function frame. Recompute the this binding if we
-    // are such an eval.
+    // If this eval is in response to Debugger.Frame.eval, we may have been
+    // passed an incomplete scope chain. In order to better determine the 'this'
+    // binding type, we traverse the environment chain, looking for a CallObject
+    // and recompute the binding type based on its body scope.
+    //
+    // NOTE: A non-debug eval in a non-syntactic environment will also trigger
+    // this code. In that case, we should still compute the same binding type.
     if (enclosingEnv && enclosingScope->hasOnChain(ScopeKind::NonSyntactic)) {
-        // For Debugger.Frame.eval with bindings, the environment chain may
-        // have more than the DebugEnvironmentProxy.
         JSObject* env = enclosingEnv;
         while (env) {
+            // Look at target of any DebugEnvironmentProxy, but be sure to use
+            // enclosingEnvironment() of the proxy itself.
+            JSObject* unwrapped = env;
             if (env->is<DebugEnvironmentProxy>())
-                env = &env->as<DebugEnvironmentProxy>().environment();
+                unwrapped = &env->as<DebugEnvironmentProxy>().environment();
 
-            if (env->is<CallObject>()) {
-                computeThisBinding(env->as<CallObject>().callee().nonLazyScript()->bodyScope());
+            if (unwrapped->is<CallObject>()) {
+                JSFunction* callee = &unwrapped->as<CallObject>().callee();
+                computeThisBinding(callee->nonLazyScript()->bodyScope());
                 break;
             }
 
