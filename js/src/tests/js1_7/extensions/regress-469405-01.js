@@ -16,7 +16,7 @@ try
 { 
   (function() {
     var a, b;
-    for each (a in [{}, {__iterator__: function(){}}]) for (b in a) { }
+    for (a of [{}, {__iterator__: function(){}}]) for (b in a) { }
   })();
 }
 catch(ex)

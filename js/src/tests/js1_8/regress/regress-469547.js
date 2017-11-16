@@ -5,7 +5,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 469547;
-var summary = 'Do not crash with: for each (let [,] in [[], [], null]) {}';
+var summary = 'Do not crash with: for (let [,] of [[], [], null]) {}';
 var actual = '';
 var expect = '';
 
@@ -21,7 +21,7 @@ function test()
  
   try
   {
-    for each (let [,] in [[], [], null]) {}
+    for (let [,] of [[], [], null]) {}
   }
   catch(ex)
   {

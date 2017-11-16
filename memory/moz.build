@@ -9,9 +9,14 @@ with Files("**"):
 
 DIRS += [
     'build',
-    'mozalloc',
     'fallible',
 ]
+
+# For now, don't build mozalloc when building with --enable-project=memory
+if CONFIG['MOZ_BUILD_APP'] != 'memory':
+    DIRS += [
+        'mozalloc',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT']:
     DIRS += ['volatile']

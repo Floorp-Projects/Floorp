@@ -15,10 +15,10 @@ printStatus (summary);
 
 var v = 0;
 
-for each (var a in [0, {}, {}, {}]) {
+for (var a of [0, {}, {}, {}]) {
   print(v);
   v = v >>> 0;
-  for each (var b in [{}, {}, new String(''), 42, new String(''), {}, 42]) 
+  for (var b of [{}, {}, new String(''), 42, new String(''), {}, 42]) 
            {
            }
          }

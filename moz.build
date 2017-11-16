@@ -71,18 +71,7 @@ DIRS += [
     'third_party/python',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] or not CONFIG['MOZ_BUILD_APP']:
-    # These python manifests are included here so they get picked up without an objdir
-    PYTHON_UNITTEST_MANIFESTS += [
-        'layout/tools/reftest/selftest/python.ini',
-        'testing/marionette/harness/marionette_harness/tests/harness_unit/python.ini',
-        'testing/mochitest/tests/python/python.ini',
-        'testing/talos/talos/unittests/python.ini'
-    ]
-
-    CONFIGURE_SUBST_FILES += [
-        'tools/update-packaging/Makefile',
-    ]
+if not CONFIG['JS_STANDALONE'] or not CONFIG['MOZ_BUILD_APP']:
     CONFIGURE_DEFINE_FILES += [
         'mozilla-config.h',
     ]
@@ -102,44 +91,17 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] or not CONFIG['MOZ_BUILD_APP']:
 
     DIRS += [
         'build',
-        'tools',
     ]
 
-if CONFIG['COMPILE_ENVIRONMENT'] and (CONFIG['MOZ_WIDGET_TOOLKIT'] or
-                                      CONFIG['JS_STANDALONE']):
-    DIRS += ['js/src']
-
 DIRS += [
-    'config/external/fdlibm',
-    'config/external/nspr',
-    'config/external/zlib',
-    'memory',
     'mfbt',
-    'mozglue',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT']:
-    DIRS += ['xpcom/xpidl']
-
-if CONFIG['USE_ICU']:
-    DIRS += ['config/external/icu']
-
-if CONFIG['COMPILE_ENVIRONMENT']:
-    if CONFIG['MOZ_WIDGET_TOOLKIT']:
-        DIRS += [
-            'config/external',
-            'security',
-        ]
-
-    if CONFIG['BUILD_CTYPES']:
-        DIRS += ['config/external/ffi']
-
-else:
-    TEST_DIRS += ['js/src/tests']
-
-if not CONFIG['JS_STANDALONE'] and CONFIG['MOZ_BUILD_APP']:
+if CONFIG['MOZ_BUILD_APP']:
     # Bring in the configuration for the configured application.
     include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')
+else:
+    include('/toolkit/toolkit.mozbuild')
 
 CONFIGURE_SUBST_FILES += ['.cargo/config']
 

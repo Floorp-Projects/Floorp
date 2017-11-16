@@ -137,7 +137,6 @@ const PSEUDO_RESERVED =
     r("true"),
     r("false"),
     r("null"),
-    r("each"),  // |for each|
     ];
 
 // new-in-ES4 reserved words -- fill this as each is implemented
