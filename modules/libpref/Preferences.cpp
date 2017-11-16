@@ -209,11 +209,11 @@ public:
     SetFlag(PREF_FLAG_HAS_DEFAULT_VALUE, aSetOrUnset);
   }
 
-  bool HasStickyDefault() const { return mValue & PREF_FLAG_STICKY_DEFAULT; }
+  bool IsSticky() const { return mValue & PREF_FLAG_STICKY; }
 
-  void SetHasStickyDefault(bool aSetOrUnset)
+  void SetIsSticky(bool aSetOrUnset)
   {
-    SetFlag(PREF_FLAG_STICKY_DEFAULT, aSetOrUnset);
+    SetFlag(PREF_FLAG_STICKY, aSetOrUnset);
   }
 
   bool IsLocked() const { return mValue & PREF_FLAG_LOCKED; }
@@ -242,7 +242,7 @@ private:
     PREF_FLAG_LOCKED = 4,
     PREF_FLAG_HAS_USER_VALUE = 8,
     PREF_FLAG_HAS_DEFAULT_VALUE = 16,
-    PREF_FLAG_STICKY_DEFAULT = 32,
+    PREF_FLAG_STICKY = 32,
   };
   uint16_t mValue;
 };
@@ -350,7 +350,7 @@ enum
 {
   kPrefSetDefault = 1,
   kPrefForceSet = 2,
-  kPrefStickyDefault = 4,
+  kPrefSticky = 4,
 };
 
 static nsresult
@@ -428,7 +428,7 @@ pref_savePrefs()
                            pref->mUserPref,
                            pref->mPrefFlags.GetPrefType()) ||
          !pref->mPrefFlags.HasDefaultValue() ||
-         pref->mPrefFlags.HasStickyDefault())) {
+         pref->mPrefFlags.IsSticky())) {
       sourcePref = &pref->mUserPref;
     } else {
       // do not save default prefs that haven't changed
@@ -800,8 +800,8 @@ pref_SetPref(const char* aKey,
           &pref->mDefaultPref, pref->mPrefFlags.GetPrefType(), aValue, aType);
         pref->mPrefFlags.SetPrefType(aType);
         pref->mPrefFlags.SetHasDefaultValue(true);
-        if (aFlags & kPrefStickyDefault) {
-          pref->mPrefFlags.SetHasStickyDefault(true);
+        if (aFlags & kPrefSticky) {
+          pref->mPrefFlags.SetIsSticky(true);
         }
         if (!pref->mPrefFlags.HasUserValue()) {
           valueChanged = true;
@@ -815,7 +815,7 @@ pref_SetPref(const char* aKey,
     // then un-set the user value. Otherwise, set the user value only if it has
     // changed.
     if ((pref->mPrefFlags.HasDefaultValue()) &&
-        !(pref->mPrefFlags.HasStickyDefault()) &&
+        !(pref->mPrefFlags.IsSticky()) &&
         !pref_ValueChanged(pref->mDefaultPref, aValue, aType) &&
         !(aFlags & kPrefForceSet)) {
       if (pref->mPrefFlags.HasUserValue()) {
@@ -1013,13 +1013,13 @@ PREF_ReaderCallback(void* aClosure,
                     PrefValue aValue,
                     PrefType aType,
                     bool aIsDefault,
-                    bool aIsStickyDefault)
+                    bool aIsSticky)
 {
   uint32_t flags = 0;
   if (aIsDefault) {
     flags |= kPrefSetDefault;
-    if (aIsStickyDefault) {
-      flags |= kPrefStickyDefault;
+    if (aIsSticky) {
+      flags |= kPrefSticky;
     }
   } else {
     flags |= kPrefForceSet;
@@ -1040,13 +1040,13 @@ PREF_ReaderCallback(void* aClosure,
 // |aValue| is the preference value.
 // |aType| is the preference type (PREF_STRING, PREF_INT, or PREF_BOOL).
 // |aIsDefault| indicates if it's a default preference.
-// |aIsStickyDefault| indicates if it's a sticky default preference.
+// |aIsSticky| indicates if it's a sticky preference.
 typedef void (*PrefReader)(void* aClosure,
                            const char* aPref,
                            PrefValue aValue,
                            PrefType aType,
                            bool aIsDefault,
-                           bool aIsStickyDefault);
+                           bool aIsSticky);
 
 // Report any errors or warnings we encounter during parsing.
 typedef void (*PrefParseErrorReporter)(const char* aMessage,
@@ -1073,7 +1073,7 @@ struct PrefParseState
   char* mVb;             // value buffer (ptr into mLb)
   PrefType mVtype;       // PREF_{STRING,INT,BOOL}
   bool mIsDefault;       // true if (default) pref
-  bool mIsStickyDefault; // true if (sticky) pref
+  bool mIsSticky;        // true if (sticky) pref
 };
 
 // Pref parser states.
@@ -1249,7 +1249,7 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
           aPS->mVb = nullptr;
           aPS->mVtype = PrefType::Invalid;
           aPS->mIsDefault = false;
-          aPS->mIsStickyDefault = false;
+          aPS->mIsSticky = false;
         }
         switch (c) {
           case '/': // begin comment block or line?
@@ -1314,7 +1314,7 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
         if (c == '\"' || c == '\'') {
           aPS->mIsDefault =
             (aPS->mStrMatch == kPref || aPS->mStrMatch == kStickyPref);
-          aPS->mIsStickyDefault = (aPS->mStrMatch == kStickyPref);
+          aPS->mIsSticky = (aPS->mStrMatch == kStickyPref);
           aPS->mQuoteChar = c;
           aPS->mNextState = PREF_PARSE_UNTIL_COMMA; // return here when done
           state = PREF_PARSE_QUOTED_STRING;
@@ -1643,7 +1643,7 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
                        value,
                        aPS->mVtype,
                        aPS->mIsDefault,
-                       aPS->mIsStickyDefault);
+                       aPS->mIsSticky);
 
           state = PREF_PARSE_INIT;
         } else if (c == '/') {
