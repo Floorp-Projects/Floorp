@@ -461,8 +461,26 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(len(objs), 3)
         for o in objs:
             self.assertIsInstance(o, GeneratedFile)
+            self.assertFalse(o.localized)
 
         expected = ['bar.c', 'foo.c', ('xpidllex.py', 'xpidlyacc.py'), ]
+        for o, f in zip(objs, expected):
+            expected_filename = f if isinstance(f, tuple) else (f,)
+            self.assertEqual(o.outputs, expected_filename)
+            self.assertEqual(o.script, None)
+            self.assertEqual(o.method, None)
+            self.assertEqual(o.inputs, [])
+
+    def test_localized_generated_files(self):
+        reader = self.reader('localized-generated-files')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 2)
+        for o in objs:
+            self.assertIsInstance(o, GeneratedFile)
+            self.assertTrue(o.localized)
+
+        expected = ['abc.ini', ('bar', 'baz'), ]
         for o, f in zip(objs, expected):
             expected_filename = f if isinstance(f, tuple) else (f,)
             self.assertEqual(o.outputs, expected_filename)
