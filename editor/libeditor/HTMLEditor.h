@@ -17,7 +17,6 @@
 
 #include "nsAttrName.h"
 #include "nsCOMPtr.h"
-#include "nsIContentFilter.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMElement.h"
@@ -649,17 +648,6 @@ protected:
   bool HavePrivateHTMLFlavor(nsIClipboard* clipboard );
   nsresult ParseCFHTML(nsCString& aCfhtml, char16_t** aStuffToPaste,
                        char16_t** aCfcontext);
-  nsresult DoContentFilterCallback(const nsAString& aFlavor,
-                                   nsIDOMDocument* aSourceDoc,
-                                   bool aWillDeleteSelection,
-                                   nsIDOMNode** aFragmentAsNode,
-                                   nsIDOMNode** aFragStartNode,
-                                   int32_t* aFragStartOffset,
-                                   nsIDOMNode** aFragEndNode,
-                                   int32_t* aFragEndOffset,
-                                   nsIDOMNode** aTargetNode,
-                                   int32_t* aTargetOffset,
-                                   bool* aDoContinue);
 
   bool IsInLink(nsIDOMNode* aNode, nsCOMPtr<nsIDOMNode>* outLink = nullptr);
   nsresult StripFormattingNodes(nsIContent& aNode, bool aOnlyList = false);
@@ -924,8 +912,6 @@ protected:
                                   int32_t aDirection, bool aSelected);
 
 protected:
-  nsTArray<OwningNonNull<nsIContentFilter>> mContentFilters;
-
   RefPtr<TypeInState> mTypeInState;
 
   bool mCRInParagraphCreatesParagraph;
