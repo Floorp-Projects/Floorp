@@ -16,7 +16,8 @@ add_task(function* () {
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let RequestListContextMenu = windowRequire(
     "devtools/client/netmonitor/src/request-list-context-menu");
-  let { getLongString, getTabTarget, requestData } = connector;
+  let { getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -28,9 +29,8 @@ add_task(function* () {
   yield wait;
 
   // Copy HAR into the clipboard (asynchronous).
-  let contextMenu = new RequestListContextMenu({
-    getTabTarget, getLongString, requestData });
-  let jsonString = yield contextMenu.copyAllAsHar();
+  let contextMenu = new RequestListContextMenu({ connector });
+  let jsonString = yield contextMenu.copyAllAsHar(getSortedRequests(store.getState()));
   let har = JSON.parse(jsonString);
 
   // Check out the HAR log.
@@ -39,8 +39,8 @@ add_task(function* () {
   is(har.log.entries.length, 1, "There must be one request");
 
   let entry = har.log.entries[0];
-  is(entry.request.postData, undefined,
-    "Check post data is not present");
+
+  is(entry.request.postData, undefined, "Check post data is not present");
 
   // Clean up
   return teardown(monitor);

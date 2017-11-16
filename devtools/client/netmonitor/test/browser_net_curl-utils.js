@@ -18,7 +18,10 @@ add_task(function* () {
   let {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
-  let { getLongString } = connector;
+  let {
+    getLongString,
+    requestData,
+  } = connector;
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -35,22 +38,22 @@ add_task(function* () {
     multipartForm: getSortedRequests(store.getState()).get(3),
   };
 
-  let data = yield createCurlData(requests.get, getLongString);
+  let data = yield createCurlData(requests.get, getLongString, requestData);
   testFindHeader(data);
 
-  data = yield createCurlData(requests.post, getLongString);
+  data = yield createCurlData(requests.post, getLongString, requestData);
   testIsUrlEncodedRequest(data);
   testWritePostDataTextParams(data);
   testWriteEmptyPostDataTextParams(data);
   testDataArgumentOnGeneratedCommand(data);
 
-  data = yield createCurlData(requests.multipart, getLongString);
+  data = yield createCurlData(requests.multipart, getLongString, requestData);
   testIsMultipartRequest(data);
   testGetMultipartBoundary(data);
   testMultiPartHeaders(data);
   testRemoveBinaryDataFromMultipartText(data);
 
-  data = yield createCurlData(requests.multipartForm, getLongString);
+  data = yield createCurlData(requests.multipartForm, getLongString, requestData);
   testMultiPartHeaders(data);
 
   testGetHeadersFromMultipartText({
@@ -231,7 +234,7 @@ function testEscapeStringWin() {
     "Newlines should be escaped.");
 }
 
-function* createCurlData(selected, getLongString) {
+function* createCurlData(selected, getLongString, requestData) {
   let { url, method, httpVersion } = selected;
 
   // Create a sanitized object for the Curl command generator.
@@ -249,9 +252,10 @@ function* createCurlData(selected, getLongString) {
     data.headers.push({ name: name, value: text });
   }
 
+  let { requestPostData } = yield requestData(selected.id, "requestPostData");
   // Fetch the request payload.
-  if (selected.requestPostData) {
-    let postData = selected.requestPostData.postData.text;
+  if (requestPostData) {
+    let postData = requestPostData.postData.text;
     data.postDataText = yield getLongString(postData);
   }
 

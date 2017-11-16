@@ -303,15 +303,12 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
     let { getNetworkRequest } = panel.connector;
     let progress = {};
     let genericEvents = 0;
-    let postEvents = 0;
     let payloadReady = 0;
     let awaitedEventsToListeners = [
       ["UPDATING_REQUEST_HEADERS", onGenericEvent],
       ["RECEIVED_REQUEST_HEADERS", onGenericEvent],
       ["UPDATING_REQUEST_COOKIES", onGenericEvent],
       ["RECEIVED_REQUEST_COOKIES", onGenericEvent],
-      ["UPDATING_REQUEST_POST_DATA", onPostEvent],
-      ["RECEIVED_REQUEST_POST_DATA", onPostEvent],
       ["UPDATING_RESPONSE_HEADERS", onGenericEvent],
       ["RECEIVED_RESPONSE_HEADERS", onGenericEvent],
       ["UPDATING_RESPONSE_COOKIES", onGenericEvent],
@@ -322,8 +319,6 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
     ];
     let expectedGenericEvents = awaitedEventsToListeners
       .filter(([, listener]) => listener == onGenericEvent).length;
-    let expectedPostEvents = awaitedEventsToListeners
-      .filter(([, listener]) => listener == onPostEvent).length;
 
     function initProgressForURL(url) {
       if (progress[url]) {
@@ -351,17 +346,6 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
       maybeResolve(event, actor, networkInfo);
     }
 
-    function onPostEvent(event, actor) {
-      let networkInfo = getNetworkRequest(actor);
-      if (!networkInfo) {
-        // Must have been related to reloading document to disable cache.
-        // Ignore the event.
-        return;
-      }
-      postEvents++;
-      maybeResolve(event, actor, networkInfo);
-    }
-
     function onPayloadReady(event, actor) {
       let networkInfo = getNetworkRequest(actor);
       if (!networkInfo) {
@@ -379,7 +363,6 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
         "Payload: " + payloadReady + "/" + (getRequests + postRequests) + ", " +
         "Generic: " + genericEvents + "/" +
           ((getRequests + postRequests) * expectedGenericEvents) + ", " +
-        "Post: " + postEvents + "/" + (postRequests * expectedPostEvents) + ", " +
         "got " + event + " for " + actor);
 
       let url = networkInfo.request.url;
@@ -392,8 +375,7 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
       // to be considered finished. The "requestPostData" packet isn't fired for non-POST
       // requests.
       if (payloadReady >= (getRequests + postRequests) &&
-        genericEvents >= (getRequests + postRequests) * expectedGenericEvents &&
-        postEvents >= postRequests * expectedPostEvents) {
+        genericEvents >= (getRequests + postRequests) * expectedGenericEvents) {
         awaitedEventsToListeners.forEach(([e, l]) => panel.off(EVENTS[e], l));
         executeSoon(resolve);
       }
