@@ -16,6 +16,32 @@
         }]
       },
       {
+        "id": "ThemeColor",
+        "choices": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          }
+        ]
+      },
+      {
         "id": "ThemeType",
         "type": "object",
         "properties": {
@@ -44,61 +70,55 @@
             "optional": true,
             "properties": {
               "accentcolor": {
-                "type": "string",
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "frame": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "textcolor": {
-                "type": "string",
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "background_tab_text": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "tab_text": {
-                "type": "string",
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "toolbar": {
-                "type": "string",
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "toolbar_text": {
-                "type": "string",
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "bookmark_text": {
-                "type": "string",
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "toolbar_field": {
-                "type": "string",
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "toolbar_field_text": {
-                "type": "string",
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "toolbar_top_separator": {
-                "type": "string",
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "toolbar_bottom_separator": {
-                "type": "string",
+                "$ref": "ThemeColor",
                 "optional": true
               },
               "toolbar_vertical_separator": {
-                "type": "string",
+                "$ref": "ThemeColor",
                 "optional": true
               }
             },
