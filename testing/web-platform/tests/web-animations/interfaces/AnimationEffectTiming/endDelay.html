@@ -37,7 +37,7 @@ test(t => {
 test(t => {
   const div = createDiv(t);
   const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
-  assert_throws({name: "TypeError"}, () => {
+  assert_throws({ name: 'TypeError' }, () => {
     anim.effect.timing.endDelay = Infinity;
   }, 'we can not assign Infinity to timing.endDelay');
 }, 'Throws when setting infinity');
@@ -45,7 +45,7 @@ test(t => {
 test(t => {
   const div = createDiv(t);
   const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
-  assert_throws({name: "TypeError"}, () => {
+  assert_throws({ name: 'TypeError' }, () => {
     anim.effect.timing.endDelay = -Infinity;
   }, 'we can not assign negative Infinity to timing.endDelay');
 }, 'Throws when setting negative infinity');

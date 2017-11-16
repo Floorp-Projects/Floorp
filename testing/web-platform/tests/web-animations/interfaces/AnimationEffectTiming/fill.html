@@ -15,7 +15,7 @@ test(t => {
   assert_equals(anim.effect.timing.fill, 'auto');
 }, 'Has the default value \'auto\'');
 
-["none", "forwards", "backwards", "both", ].forEach(fill => {
+['none', 'forwards', 'backwards', 'both', ].forEach(fill => {
   test(t => {
     const div = createDiv(t);
     const anim = div.animate({ opacity: [ 0, 1 ] }, 100);
