@@ -16,7 +16,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
-#include "js/GCAPI.h"
+#include "js/RootingAPI.h"
 
 namespace mozilla {
 namespace dom {
