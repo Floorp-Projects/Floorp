@@ -4893,20 +4893,20 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
 }
 
 static void
-BoolVarChanged(const char* aPref, void* aClosure)
-{
-  CacheData* cache = static_cast<CacheData*>(aClosure);
-  *static_cast<bool*>(cache->mCacheLocation) =
-    Preferences::GetBool(aPref, cache->mDefaultValueBool);
-}
-
-static void
 CacheDataAppendElement(CacheData* aData)
 {
   if (!gCacheData) {
     MOZ_CRASH_UNSAFE_PRINTF("!gCacheData: %s", gCacheDataDesc);
   }
   gCacheData->AppendElement(aData);
+}
+
+static void
+BoolVarChanged(const char* aPref, void* aClosure)
+{
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<bool*>(cache->mCacheLocation) =
+    Preferences::GetBool(aPref, cache->mDefaultValueBool);
 }
 
 /* static */ nsresult
