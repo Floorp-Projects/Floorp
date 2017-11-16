@@ -35,6 +35,38 @@ js::AtomStateEntry::asPtrUnbarriered() const
 
 namespace js {
 
+struct AtomHasher::Lookup
+{
+    union {
+        const JS::Latin1Char* latin1Chars;
+        const char16_t* twoByteChars;
+    };
+    bool isLatin1;
+    size_t length;
+    const JSAtom* atom; /* Optional. */
+    JS::AutoCheckCannotGC nogc;
+
+    HashNumber hash;
+
+    MOZ_ALWAYS_INLINE Lookup(const char16_t* chars, size_t length)
+      : twoByteChars(chars), isLatin1(false), length(length), atom(nullptr)
+        {
+            hash = mozilla::HashString(chars, length);
+        }
+    MOZ_ALWAYS_INLINE Lookup(const JS::Latin1Char* chars, size_t length)
+      : latin1Chars(chars), isLatin1(true), length(length), atom(nullptr)
+        {
+            hash = mozilla::HashString(chars, length);
+        }
+    inline explicit Lookup(const JSAtom* atom);
+};
+
+inline HashNumber
+AtomHasher::hash(const Lookup& l)
+{
+    return l.hash;
+}
+
 inline jsid
 AtomToId(JSAtom* atom)
 {
