@@ -67,7 +67,7 @@ typedef MozJemalloc DefaultMalloc;
 template<typename T>
 struct DummyArenaAllocator
 {
-  static arena_id_t moz_create_arena(void) { return 0; }
+  static arena_id_t moz_create_arena_with_params(arena_params_t*) { return 0; }
 
   static void moz_dispose_arena(arena_id_t) {}
 

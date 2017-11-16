@@ -999,7 +999,7 @@ public:
   //   --------+------+
   arena_bin_t mBins[1]; // Dynamically sized.
 
-  arena_t();
+  explicit arena_t(arena_params_t* aParams);
 
 private:
   void InitChunk(arena_chunk_t* aChunk, bool aZeroed);
@@ -1101,19 +1101,17 @@ public:
   {
     mArenas.Init();
     mPrivateArenas.Init();
+    arena_params_t params;
+    // The main arena allows more dirty pages than the default for other arenas.
+    params.mMaxDirty = opt_dirty_max;
     mDefaultArena =
-      mLock.Init() ? CreateArena(/* IsPrivate = */ false) : nullptr;
-    if (mDefaultArena) {
-      // arena_t constructor sets this to a lower value for thread local
-      // arenas; Reset to the default value for the main arena.
-      mDefaultArena->mMaxDirty = opt_dirty_max;
-    }
+      mLock.Init() ? CreateArena(/* IsPrivate = */ false, &params) : nullptr;
     return bool(mDefaultArena);
   }
 
   inline arena_t* GetById(arena_id_t aArenaId, bool aIsPrivate);
 
-  arena_t* CreateArena(bool aIsPrivate);
+  arena_t* CreateArena(bool aIsPrivate, arena_params_t* aParams);
 
   void DisposeArena(arena_t* aArena)
   {
@@ -2220,7 +2218,8 @@ thread_local_arena(bool enabled)
     // called with `false`, but it doesn't matter at the moment.
     // because in practice nothing actually calls this function
     // with `false`, except maybe at shutdown.
-    arena = gArenas.CreateArena(/* IsPrivate = */ false);
+    arena =
+      gArenas.CreateArena(/* IsPrivate = */ false, /* Params = */ nullptr);
   } else {
     arena = gArenas.GetDefault();
   }
@@ -3765,7 +3764,7 @@ iralloc(void* aPtr, size_t aSize, arena_t* aArena)
                                    : huge_ralloc(aPtr, aSize, oldsize, aArena);
 }
 
-arena_t::arena_t()
+arena_t::arena_t(arena_params_t* aParams)
 {
   unsigned i;
 
@@ -3782,9 +3781,11 @@ arena_t::arena_t()
   mSpare = nullptr;
 
   mNumDirty = 0;
-  // Reduce the maximum amount of dirty pages we allow to be kept on
-  // thread local arenas. TODO: make this more flexible.
-  mMaxDirty = opt_dirty_max >> 3;
+
+  // The default maximum amount of dirty pages allowed on arenas is a fraction
+  // of opt_dirty_max.
+  mMaxDirty =
+    (aParams && aParams->mMaxDirty) ? aParams->mMaxDirty : (opt_dirty_max / 8);
 
   mRunsAvail.Init();
 
@@ -3810,10 +3811,10 @@ arena_t::arena_t()
 }
 
 arena_t*
-ArenaCollection::CreateArena(bool aIsPrivate)
+ArenaCollection::CreateArena(bool aIsPrivate, arena_params_t* aParams)
 {
   fallible_t fallible;
-  arena_t* ret = new (fallible) arena_t();
+  arena_t* ret = new (fallible) arena_t(aParams);
   if (!ret) {
     // Only reached if there is an OOM error.
 
@@ -4682,10 +4683,10 @@ ArenaCollection::GetById(arena_id_t aArenaId, bool aIsPrivate)
 #ifdef NIGHTLY_BUILD
 template<>
 inline arena_id_t
-MozJemalloc::moz_create_arena()
+MozJemalloc::moz_create_arena_with_params(arena_params_t* aParams)
 {
   if (malloc_init()) {
-    arena_t* arena = gArenas.CreateArena(/* IsPrivate = */ true);
+    arena_t* arena = gArenas.CreateArena(/* IsPrivate = */ true, aParams);
     return arena->mId;
   }
   return 0;
@@ -4950,7 +4951,8 @@ replace_malloc_init_funcs()
     replace_malloc_table.valloc =
       AlignedAllocator<ReplaceMalloc::memalign>::valloc;
   }
-  if (!replace_malloc_table.moz_create_arena && replace_malloc_table.malloc) {
+  if (!replace_malloc_table.moz_create_arena_with_params &&
+      replace_malloc_table.malloc) {
 #define MALLOC_DECL(name, ...)                                                 \
   replace_malloc_table.name = DummyArenaAllocator<ReplaceMalloc>::name;
 #define MALLOC_FUNCS MALLOC_FUNCS_ARENA

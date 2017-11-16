@@ -102,8 +102,9 @@ MALLOC_DECL(jemalloc_ptr_info, void, const void*, jemalloc_ptr_info_t*)
 #if MALLOC_FUNCS & MALLOC_FUNCS_ARENA_BASE
 
 // Creates a separate arena, and returns its id, valid to use with moz_arena_*
-// functions.
-MALLOC_DECL(moz_create_arena, arena_id_t)
+// functions. A helper is provided in mozmemory.h that doesn't take any
+// arena_params_t: moz_create_arena.
+MALLOC_DECL(moz_create_arena_with_params, arena_id_t, arena_params_t*)
 
 // Dispose of the given arena. Subsequent uses of the arena will crash.
 // Passing an invalid id (inexistent or already disposed) to this function
