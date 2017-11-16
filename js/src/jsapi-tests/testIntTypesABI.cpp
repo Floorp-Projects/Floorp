@@ -19,6 +19,7 @@
 #include "js/Class.h"
 #include "js/Date.h"
 #include "js/Debug.h"
+#include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/HeapAPI.h"
 #include "js/Id.h"

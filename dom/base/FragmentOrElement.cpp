@@ -90,6 +90,8 @@
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 
+#include "js/GCAPI.h"
+
 #include "nsNodeInfoManager.h"
 #include "nsICategoryManager.h"
 #include "nsGenericHTMLElement.h"

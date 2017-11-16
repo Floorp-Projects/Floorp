@@ -17,6 +17,7 @@
 
 #include "gc/GCInternals.h"
 #include "gc/Zone.h"
+#include "js/GCAPI.h"
 #include "js/HashTable.h"
 
 #include "jscntxtinlines.h"

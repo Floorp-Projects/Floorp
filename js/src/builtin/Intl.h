@@ -15,6 +15,7 @@
 
 #include "builtin/SelfHostingDefines.h"
 #include "js/Class.h"
+#include "js/GCAPI.h"
 #include "js/GCHashTable.h"
 #include "vm/NativeObject.h"
 

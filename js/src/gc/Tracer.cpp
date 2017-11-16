@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jsapi.h"
 #include "jsfun.h"
 #include "jsprf.h"
 #include "jsscript.h"

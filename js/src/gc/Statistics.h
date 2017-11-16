@@ -19,6 +19,7 @@
 #include "NamespaceImports.h"
 
 #include "gc/GCEnum.h"
+#include "js/GCAPI.h"
 #include "js/SliceBudget.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
