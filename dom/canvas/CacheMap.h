@@ -15,12 +15,12 @@
 namespace mozilla {
 
 namespace detail {
-struct CacheMapUntypedEntry;
+class CacheMapUntypedEntry;
 }
 
 class CacheMapInvalidator
 {
-    friend struct detail::CacheMapUntypedEntry;
+    friend class detail::CacheMapUntypedEntry;
 
     mutable std::unordered_set<const detail::CacheMapUntypedEntry*> mCacheEntries;
 
@@ -34,12 +34,14 @@ public:
 
 namespace detail {
 
-struct CacheMapUntypedEntry
+class CacheMapUntypedEntry
 {
     template<typename, typename> friend class CacheMap;
 
+private:
     const std::vector<const CacheMapInvalidator*> mInvalidators;
 
+protected:
     CacheMapUntypedEntry(std::vector<const CacheMapInvalidator*>&& invalidators);
     ~CacheMapUntypedEntry();
 
@@ -47,8 +49,8 @@ public:
     virtual void Invalidate() const = 0;
 };
 
-template<typename T>
 struct DerefLess final {
+    template<typename T>
     bool operator ()(const T* const a, const T* const b) const {
         return *a < *b;
     }
@@ -60,7 +62,8 @@ struct DerefLess final {
 template<typename KeyT, typename ValueT>
 class CacheMap final
 {
-    struct Entry final : public detail::CacheMapUntypedEntry {
+    class Entry final : public detail::CacheMapUntypedEntry {
+    public:
         CacheMap& mParent;
         const KeyT mKey;
         const ValueT mValue;
@@ -83,7 +86,7 @@ class CacheMap final
         }
     };
 
-    typedef std::map<const KeyT*, UniquePtr<const Entry>, detail::DerefLess<KeyT>> MapT;
+    typedef std::map<const KeyT*, UniquePtr<const Entry>, detail::DerefLess> MapT;
     MapT mMap;
 
 public:
