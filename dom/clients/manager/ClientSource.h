@@ -79,6 +79,9 @@ public:
 
   nsresult
   DocShellExecutionReady(nsIDocShell* aDocShell);
+
+  const ClientInfo&
+  Info() const;
 };
 
 } // namespace dom
