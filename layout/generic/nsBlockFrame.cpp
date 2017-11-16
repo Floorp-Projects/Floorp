@@ -1244,8 +1244,6 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // and reflow them, but just in case it does, this is a safety precaution so
   // we don't end up with a placeholder pointing to frames that have already
   // been deleted as part of removing our next-in-flow.
-  // XXXmats maybe this code isn't needed anymore?
-  // XXXmats (layout/generic/crashtests/600100.xhtml doesn't crash without it)
   if (state.mReflowStatus.IsFullyComplete()) {
     nsBlockFrame* nif = static_cast<nsBlockFrame*>(GetNextInFlow());
     while (nif) {
