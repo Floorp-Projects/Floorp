@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioSampleFormat.h"
+#include "BufferReader.h"
 #include "WAVDecoder.h"
 #include "mozilla/SyncRunnable.h"
 #include "VideoUtils.h"
-#include "mp4_demuxer/BufferReader.h"
 
 namespace mozilla {
 

@@ -4,7 +4,7 @@
 
 #include "Adts.h"
 #include "AnnexB.h"
-#include "mp4_demuxer/BufferReader.h"
+#include "BufferReader.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EndianUtils.h"
