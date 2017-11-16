@@ -4,9 +4,9 @@
 
 /* This file defines specific rules for print preview when using simplify mode.
  * Some of these rules (styling for title and author on the header element)
- * already exist on aboutReaderControls.css, however, we decoupled it from the
- * original file so we don't need to load a bunch of extra queries that will not
- * take effect when using the simplify page checkbox. */
+ * already exist in aboutReader.css, however, we decoupled it from the original
+ * file so we don't need to load a bunch of extra queries that will not take
+ * effect when using the simplify page checkbox. */
 
 body {
   padding-top: 0px;
