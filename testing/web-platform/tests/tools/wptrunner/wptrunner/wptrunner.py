@@ -46,7 +46,8 @@ def get_loader(test_paths, product, ssl_env, debug=None, run_info_extras=None, *
     run_info = wpttest.get_run_info(kwargs["run_info"], product, debug=debug,
                                     extras=run_info_extras)
 
-    test_manifests = testloader.ManifestLoader(test_paths, force_manifest_update=kwargs["manifest_update"]).load()
+    test_manifests = testloader.ManifestLoader(test_paths, force_manifest_update=kwargs["manifest_update"],
+                                               manifest_download=kwargs["manifest_download"]).load()
 
     manifest_filters = []
     meta_filters = []
@@ -235,6 +236,17 @@ def run_tests(config, test_paths, product, **kwargs):
                         logger.test_start(test.id)
                         logger.test_end(test.id, status="SKIP")
 
+                    if test_type == "testharness":
+                        run_tests = {"testharness": []}
+                        for test in test_loader.tests["testharness"]:
+                            if test.testdriver and not executor_cls.supports_testdriver:
+                                logger.test_start(test.id)
+                                logger.test_end(test.id, status="SKIP")
+                            else:
+                                run_tests["testharness"].append(test)
+                    else:
+                        run_tests = test_loader.tests
+
                     with ManagerGroup("web-platform-tests",
                                       kwargs["processes"],
                                       test_source_cls,
@@ -249,7 +261,7 @@ def run_tests(config, test_paths, product, **kwargs):
                                       kwargs["restart_on_unexpected"],
                                       kwargs["debug_info"]) as manager_group:
                         try:
-                            manager_group.run(test_type, test_loader.tests)
+                            manager_group.run(test_type, run_tests)
                         except KeyboardInterrupt:
                             logger.critical("Main thread got signal")
                             manager_group.stop()

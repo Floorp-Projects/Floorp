@@ -40,8 +40,10 @@ function runGenericSensorTests(sensorType) {
     let sensor = new sensorType();
     sensor.onreading = t.step_func_done(() => {
       assert_reading_not_null(sensor);
+      assert_true(sensor.hasReading);
       sensor.stop();
       assert_reading_null(sensor);
+      assert_false(sensor.hasReading);
     });
     sensor.onerror = t.step_func_done(unreached);
     sensor.start();
@@ -50,7 +52,7 @@ function runGenericSensorTests(sensorType) {
   async_test(t => {
     let sensor1 = new sensorType();
     let sensor2 = new sensorType();
-    sensor1.onactivate = t.step_func_done(() => {
+    sensor1.onreading = t.step_func_done(() => {
       // Reading values are correct for both sensors.
       assert_reading_not_null(sensor1);
       assert_reading_not_null(sensor2);
@@ -65,14 +67,14 @@ function runGenericSensorTests(sensorType) {
     });
     sensor1.onerror = t.step_func_done(unreached);
     sensor2.onerror = t.step_func_done(unreached);
-    sensor1.start();
     sensor2.start();
+    sensor1.start();
   }, `${sensorType.name}: sensor reading is correct`);
 
   async_test(t => {
     let sensor = new sensorType();
     let cachedTimeStamp1;
-    sensor.onactivate = () => {
+    sensor.onreading = () => {
       cachedTimeStamp1 = sensor.timestamp;
     };
     sensor.onerror = t.step_func_done(unreached);
@@ -173,7 +175,7 @@ function runGenericSensorTests(sensorType) {
 
   async_test(t => {
     let sensor = new sensorType();
-    sensor.onactivate = t.step_func(() => {
+    sensor.onreading = t.step_func(() => {
       assert_reading_not_null(sensor);
       let cachedSensor1 = reading_to_array(sensor);
       let win = window.open('', '_blank');
@@ -192,8 +194,8 @@ function runGenericSensorTests(sensorType) {
 
 function runGenericSensorInsecureContext(sensorType) {
   test(() => {
-    assert_throws('SecurityError', () => { new sensorType(); });
-  }, `${sensorType.name}: throw a 'SecurityError' when construct sensor in an insecure context`);
+    assert_false(sensorType in window, `${sensorType} must not be exposed`);
+  }, `${sensorType} is not exposed in an insecure context`);
 }
 
 function runGenericSensorOnerror(sensorType) {

@@ -1,12 +1,14 @@
 Introduction
 ------------
 
-This directory contains all testsuites for all CSS specifications still using
-the [CSS test harness][harness]. These should primarily be considered legacy;
-new testsuites should almost always be put at the top level without any level
-suffix.
+This directory contains testsuites for CSS WG specifications, including ones
+that do not strictly speaking define CSS features, e.g.,
+[Geometry Interfaces](https://drafts.fxtf.org/geometry/).
 
-As the test harness relies on the largely undocumented(!) old CSS build system,
+The directories should be named like the specification's shortname, but without
+any level suffix.
+
+As the test harness relies on the largely undocumented old CSS build system,
 this directory has a number of test requirements specific to it:
 
  * support files for a given test must live in an adjacent `support` directory;
