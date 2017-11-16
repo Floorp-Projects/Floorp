@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1130028
   <body xmlns="http://www.w3.org/1999/xhtml">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1130028"
      target="_blank">Mozilla Bug 1130028</a>
-  <iframe onload="startTests()" id="frame" src="http://example.com/chrome/dom/base/test/chrome/frame_registerElement_content.html"></iframe>
+  <iframe onload="startTests()" id="frame" src="http://example.com/chrome/dom/base/test/chrome/frame_custom_element_content.html"></iframe>
   </body>
 
   <!-- test code goes here -->
@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1130028
     // Create a sandbox with an extended principal then run a script that registers a custom element in the sandbox.
     var sandbox = Components.utils.Sandbox([frame.contentWindow], { sandboxPrototype: frame.contentWindow });
     sandbox.finishTest = finishTest;
-    Services.scriptloader.loadSubScript("chrome://mochitests/content/chrome/dom/base/test/chrome/registerElement_ep.js", sandbox);
+    Services.scriptloader.loadSubScript("chrome://mochitests/content/chrome/dom/base/test/chrome/custom_element_ep.js", sandbox);
   }
 
   ]]></script>
