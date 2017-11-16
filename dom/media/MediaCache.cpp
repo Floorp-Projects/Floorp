@@ -1934,16 +1934,6 @@ MediaCache::NoteSeek(MediaCacheStream* aStream, int64_t aOldOffset)
 }
 
 void
-MediaCacheStream::NotifyDataLength(int64_t aLength)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  LOG("Stream %p DataLength: %" PRId64, this, aLength);
-
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  mStreamLength = aLength;
-}
-
-void
 MediaCacheStream::NotifyLoadID(uint32_t aLoadID)
 {
   MOZ_ASSERT(aLoadID > 0);
@@ -1954,16 +1944,24 @@ MediaCacheStream::NotifyLoadID(uint32_t aLoadID)
 void
 MediaCacheStream::NotifyDataStarted(uint32_t aLoadID,
                                     int64_t aOffset,
-                                    bool aSeekable)
+                                    bool aSeekable,
+                                    int64_t aLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   MOZ_ASSERT(aLoadID > 0);
-  LOG("Stream %p DataStarted: %" PRId64 " aLoadID=%u", this, aOffset, aLoadID);
+  LOG("Stream %p DataStarted: %" PRId64 " aLoadID=%u aLength=%" PRId64,
+      this,
+      aOffset,
+      aLoadID,
+      aLength);
 
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   NS_WARNING_ASSERTION(aOffset == mSeekTarget || aOffset == mChannelOffset,
                        "Server is giving us unexpected offset");
   MOZ_ASSERT(aOffset >= 0);
+  if (aLength >= 0) {
+    mStreamLength = aLength;
+  }
   mChannelOffset = aOffset;
   if (mStreamLength >= 0) {
     // If we started reading at a certain offset, then for sure
@@ -2727,7 +2725,7 @@ MediaCacheStream::Init(int64_t aContentLength)
 
   if (aContentLength > 0) {
     uint32_t length = uint32_t(std::min(aContentLength, int64_t(UINT32_MAX)));
-    LOG("MediaCacheStream::NotifyDataLength(this=%p) "
+    LOG("MediaCacheStream::Init(this=%p) "
         "MEDIACACHESTREAM_NOTIFIED_LENGTH=%" PRIu32,
         this,
         length);
