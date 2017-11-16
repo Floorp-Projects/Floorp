@@ -167,6 +167,10 @@ class UnsupportedOperationException(MarionetteException):
     status = "unsupported operation"
 
 
+class UnresponsiveInstanceException(Exception):
+    pass
+
+
 es_ = [e for e in locals().values() if type(e) == type and issubclass(e, MarionetteException)]
 by_string = {e.status: e for e in es_}
 
