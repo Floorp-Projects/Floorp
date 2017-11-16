@@ -26,7 +26,7 @@ from itertools import chain
 import sys
 from datetime import datetime
 import re
-from mozharness.base.config import BaseConfig, parse_config_file, DEFAULT_CONFIG_PATH
+from mozharness.base.config import BaseConfig, parse_config_file
 from mozharness.base.log import ERROR, OutputParser, FATAL
 from mozharness.base.script import PostScriptRun
 from mozharness.base.vcs.vcsbase import MercurialScript
@@ -399,6 +399,10 @@ class BuildOptionParser(object):
     # TODO add nosetests for this class
     platform = None
     bits = None
+    config_file_search_path = [
+        '.', os.path.join(sys.path[0], '..', 'configs'),
+        os.path.join(sys.path[0], '..', '..', 'configs')
+    ]
 
     # add to this list and you can automagically do things like
     # --custom-build-variant-cfg asan
@@ -518,14 +522,9 @@ class BuildOptionParser(object):
             # now let's see if we were given a valid pathname
             valid_variant_cfg_path = value
         else:
-            # FIXME: We should actually wait until we have parsed all arguments
-            # before looking at this, otherwise the behavior will depend on the
-            # order of arguments. But that isn't a problem as long as --extra-config-path
-            # is always passed first.
-            config_paths = parser.values.config_paths + [DEFAULT_CONFIG_PATH]
             # let's take our prospective_cfg_path and see if we can
             # determine an existing file
-            for path in config_paths:
+            for path in cls.config_file_search_path:
                 if os.path.exists(os.path.join(path, prospective_cfg_path)):
                     # success! we found a config file
                     valid_variant_cfg_path = os.path.join(path,
