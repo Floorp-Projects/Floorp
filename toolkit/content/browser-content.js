@@ -677,12 +677,6 @@ var Printing = {
       contentElement.setAttribute("class", "content");
       containerElement.appendChild(contentElement);
 
-      // Create style element for content div and import aboutReaderContent.css
-      let controlContentStyle = content.document.createElement("style");
-      controlContentStyle.setAttribute("scoped", "");
-      controlContentStyle.textContent = "@import url(\"chrome://global/skin/aboutReaderContent.css\");";
-      contentElement.appendChild(controlContentStyle);
-
       // Jam the article's content into content div
       let readerContent = content.document.createElement("div");
       readerContent.setAttribute("id", "moz-reader-content");
