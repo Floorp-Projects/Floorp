@@ -95,7 +95,7 @@ public:
     bool UpdateCaretsForOverlappingTilt() override { return true; }
 
     void UpdateCaretsForAlwaysTilt(nsIFrame* aStartFrame,
-                                   nsIFrame* aEndFrame)
+                                   nsIFrame* aEndFrame) override
     {
       if (mFirstCaret->IsVisuallyVisible()) {
         mFirstCaret->SetAppearance(Appearance::Left);
