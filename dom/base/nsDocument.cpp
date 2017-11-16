@@ -1535,6 +1535,7 @@ nsIDocument::nsIDocument()
     mFrameRequestCallbacksScheduled(false),
     mIsTopLevelContentDocument(false),
     mIsContentDocument(false),
+    mMightHaveStaleServoData(false),
     mDidCallBeginLoad(false),
     mBufferingCSPViolations(false),
     mAllowPaymentRequest(false),
@@ -4117,17 +4118,8 @@ nsDocument::CreateShell(nsPresContext* aContext, nsViewManager* aViewManager,
 
   FillStyleSet(aStyleSet);
 
-  {
-#ifdef DEBUG
-    for (nsINode* node = static_cast<nsINode*>(this)->GetFirstChild();
-         node;
-         node = node->GetNextNode(this)) {
-      if (node->IsElement()) {
-        MOZ_ASSERT(!node->AsElement()->HasServoData());
-      }
-    }
-#endif
-  }
+  // Ensure we start with no stale data in the tree.
+  ClearStaleServoDataFromDocument();
 
   RefPtr<PresShell> shell = new PresShell;
   shell->Init(this, aContext, aViewManager, aStyleSet);
@@ -4252,17 +4244,16 @@ nsDocument::DeleteShell()
   UpdateFrameRequestCallbackSchedulingState(oldShell);
   mStyleSetFilled = false;
 
+  // Record that the tree might have stale Servo element data in it
+  // that would need to be cleared if we ever get a new pres shell
+  // or if we call ServoStyleSet style resolving functions on
+  // elements in the document. Most of the time this lazy clearing
+  // of Servo element data saves us work, since it's not often that a
+  // document gets a new pres shell after its old one is destroyed.
+  // In those cases we rely on the data being cleared in UnbindFromTree
+  // and save this additional traversal.
   if (IsStyledByServo()) {
-    ClearStaleServoData();
-#ifdef DEBUG
-    for (nsINode* node = static_cast<nsINode*>(this)->GetFirstChild();
-         node;
-         node = node->GetNextNode(this)) {
-      if (node->IsElement()) {
-        MOZ_ASSERT(!node->AsElement()->HasServoData());
-      }
-    }
-#endif
+    mMightHaveStaleServoData = true;
   }
 }
 
@@ -14357,12 +14348,17 @@ nsIDocument::IsScopedStyleEnabled()
 }
 
 void
-nsIDocument::ClearStaleServoData()
+nsIDocument::ClearStaleServoDataFromDocument()
 {
+  if (!mMightHaveStaleServoData) {
+    return;
+  }
+
   DocumentStyleRootIterator iter(this);
   while (Element* root = iter.GetNextStyleRoot()) {
     ServoRestyleManager::ClearServoDataFromSubtree(root);
   }
+  mMightHaveStaleServoData = false;
 }
 
 Selection*
