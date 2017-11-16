@@ -30,14 +30,16 @@ namespace wasm {
 static inline uint8_t*
 WriteBytes(uint8_t* dst, const void* src, size_t nbytes)
 {
-    memcpy(dst, src, nbytes);
+    if (nbytes)
+        memcpy(dst, src, nbytes);
     return dst + nbytes;
 }
 
 static inline const uint8_t*
 ReadBytes(const uint8_t* src, void* dst, size_t nbytes)
 {
-    memcpy(dst, src, nbytes);
+    if (nbytes)
+        memcpy(dst, src, nbytes);
     return src + nbytes;
 }
 
