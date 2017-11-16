@@ -6,6 +6,10 @@ html {
   background: -moz-dialog;
 }
 
+#debugging-console {
+  float: right;
+}
+
 #total {
   border: 1px solid black;
   margin: 5px;

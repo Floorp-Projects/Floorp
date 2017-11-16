@@ -1,7 +1,5 @@
 import os
 
-MOZ_OBJDIR = 'obj-firefox'
-
 config = {
     'default_actions': [
         'clobber',
@@ -24,7 +22,7 @@ config = {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'DISPLAY': ':2',
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/builds',
@@ -38,6 +36,6 @@ config = {
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:/tools/python27/bin:\
 /tools/python27-mercurial/bin:/home/cltbld/bin',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/linux64/code-coverage',
+    'mozconfig_variant': 'code-coverage',
     #######################
 }

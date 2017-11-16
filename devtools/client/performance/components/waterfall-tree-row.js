@@ -8,7 +8,8 @@
  * A single row (node) in the waterfall tree
  */
 
-const { DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { MarkerBlueprintUtils } = require("../modules/marker-blueprint-utils");
 
 const LEVEL_INDENT = 10; // px

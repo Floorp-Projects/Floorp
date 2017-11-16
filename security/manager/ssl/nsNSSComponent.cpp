@@ -1745,15 +1745,6 @@ static nsresult
 GetNSSProfilePath(nsAutoCString& aProfilePath)
 {
   aProfilePath.Truncate();
-  const char* dbDirOverride = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
-  if (dbDirOverride && strlen(dbDirOverride) > 0) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("Using specified MOZPSM_NSSDBDIR_OVERRIDE as NSS DB dir: %s\n",
-            dbDirOverride));
-    aProfilePath.Assign(dbDirOverride);
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIFile> profileFile;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                        getter_AddRefs(profileFile));
@@ -1797,15 +1788,6 @@ static nsresult
 AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath,
                               const nsACString& moduleDBFilename)
 {
-  // profilePath may come from the environment variable
-  // MOZPSM_NSSDBDIR_OVERRIDE. If so, the user's NSS DBs are most likely not in
-  // their profile directory and we shouldn't mess with them.
-  const char* dbDirOverride = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
-  if (dbDirOverride && strlen(dbDirOverride) > 0) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("MOZPSM_NSSDBDIR_OVERRIDE set - not renaming PKCS#11 module DB"));
-    return NS_OK;
-  }
   nsAutoCString destModuleDBFilename(moduleDBFilename);
   destModuleDBFilename.Append(".fips");
   nsCOMPtr<nsIFile> dbFile = do_CreateInstance("@mozilla.org/file/local;1");

@@ -1,7 +1,5 @@
 import os
 
-MOZ_OBJDIR = 'obj-firefox'
-
 config = {
     'default_actions': [
         'clobber',
@@ -22,7 +20,7 @@ config = {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'DISPLAY': ':2',
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': MOZ_OBJDIR,
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
         'CCACHE_DIR': '/builds/ccache',
         'CCACHE_COMPRESS': '1',
@@ -32,12 +30,11 @@ config = {
         'PATH': '/usr/local/bin:/usr/lib/ccache:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:/tools/python27/bin:\
 /tools/python27-mercurial/bin:/home/cltbld/bin',
-        'LD_LIBRARY_PATH': '/tools/gcc-4.3.3/installed/lib:\
-%s/dist/bin' % (MOZ_OBJDIR,),
+        'LD_LIBRARY_PATH': '/tools/gcc-4.3.3/installed/lib64:%(abs_obj_dir)s/dist/bin',
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         'TINDERBOX_OUTPUT': '1',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/linux32/rusttests-debug',
+    'mozconfig_variant': 'rusttests-debug',
     'artifact_flag_build_variant_in_try': None,
     #######################
 }

@@ -14,12 +14,13 @@ Debugging
 
 Set the pref ``dom.payments.loglevel`` to "Debug".
 
-To open a debugger in the context of the remote payment frame, run the following while the dialog is the most recent window:
-``
-gDevToolsBrowser.openContentProcessToolbox({
-  selectedBrowser: Services.wm.getMostRecentWindow(null).document.getElementById("paymentRequestFrame").frameLoader,
-})
-``
+To open a debugger in the context of the remote payment frame, run the following while the dialog is the most recent window::
+
+  gDevToolsBrowser.openContentProcessToolbox({
+    selectedBrowser: Services.wm.getMostRecentWindow(null).document.getElementById("paymentRequestFrame").frameLoader,
+  })
+
+To open the debugging console in the dialog, use the keyboard shortcut **Ctrl-Alt-d (Ctrl-Option-d on macOS)**.
 
 
 Communication with the DOM

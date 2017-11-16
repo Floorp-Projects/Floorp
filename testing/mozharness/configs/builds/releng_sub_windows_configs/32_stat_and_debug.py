@@ -1,7 +1,5 @@
 import os
 
-MOZ_OBJDIR = 'obj-firefox'
-
 config = {
     'default_actions': [
         'clobber',
@@ -19,7 +17,6 @@ config = {
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win32/\
 releng.manifest",
     'platform_supports_post_upload_to_latest': False,
-    'objdir': MOZ_OBJDIR,
     'perfherder_extra_options': ['static-analysis'],
     #### 32 bit build specific #####
     'env': {
@@ -27,7 +24,7 @@ releng.manifest",
         'HG_SHARE_BASE_DIR': 'C:/builds/hg-shared',
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'PATH': 'C:/mozilla-build/nsis-3.01;C:/mozilla-build/python27;'
                 'C:/mozilla-build/buildbotve/scripts;'
                 '%s' % (os.environ.get('path')),
@@ -37,7 +34,7 @@ releng.manifest",
         'TOOLTOOL_CACHE': 'c:/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/c/builds',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/win32/debug-static-analysis',
+    'mozconfig_variant': 'debug-static-analysis',
     'purge_minsize': 9,
     'artifact_flag_build_variant_in_try': None,
     #######################

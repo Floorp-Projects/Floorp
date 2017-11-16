@@ -27,7 +27,6 @@ config = {
     ],
     'enable_check_test': False,
     'vcs_share_base': '/builds/hg-shared',
-    'objdir': 'obj-firefox/',
     'tooltool_script': ["/builds/tooltool.py"],
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': False,
@@ -44,7 +43,7 @@ config = {
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/builds/worker/tooltool-cache',
         'TOOLTOOL_HOME': '/builds',
@@ -70,7 +69,8 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux64/minidump_stackwalk',
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/macosx64/nightly',
+    'mozconfig_platform': 'macosx64',
+    'mozconfig_variant': 'nightly',
     'artifact_flag_build_variant_in_try': 'cross-artifact',
     #########################################################################
 }

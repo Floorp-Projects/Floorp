@@ -9,16 +9,16 @@
 <body>
 <div id="log"></div>
 <script>
-"use strict";
+'use strict';
 
-var gKeyFrames = { 'marginLeft': ['0px', '100px'] };
+const gKeyFrames = { 'marginLeft': ['0px', '100px'] };
 
-test(function(t) {
-  var div = createDiv(t);
-  var effect = new KeyframeEffect(null, gKeyFrames, 100 * MS_PER_SEC);
+test(t => {
+  const div = createDiv(t);
+  const effect = new KeyframeEffect(null, gKeyFrames, 100 * MS_PER_SEC);
   effect.target = div;
 
-  var anim = new Animation(effect, document.timeline);
+  const anim = new Animation(effect, document.timeline);
   anim.play();
 
   anim.currentTime = 50 * MS_PER_SEC;
@@ -26,11 +26,11 @@ test(function(t) {
                 'Value at 50% progress');
 }, 'Test setting target before constructing the associated animation');
 
-test(function(t) {
-  var div = createDiv(t);
+test(t => {
+  const div = createDiv(t);
   div.style.marginLeft = '10px';
-  var effect = new KeyframeEffect(null, gKeyFrames, 100 * MS_PER_SEC);
-  var anim = new Animation(effect, document.timeline);
+  const effect = new KeyframeEffect(null, gKeyFrames, 100 * MS_PER_SEC);
+  const anim = new Animation(effect, document.timeline);
   anim.play();
 
   anim.currentTime = 50 * MS_PER_SEC;
@@ -41,10 +41,10 @@ test(function(t) {
                 'Value at 50% progress after setting new target');
 }, 'Test setting target from null to a valid target');
 
-test(function(t) {
-  var div = createDiv(t);
+test(t => {
+  const div = createDiv(t);
   div.style.marginLeft = '10px';
-  var anim = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const anim = div.animate(gKeyFrames, 100 * MS_PER_SEC);
 
   anim.currentTime = 50 * MS_PER_SEC;
   assert_equals(getComputedStyle(div).marginLeft, '50px',
@@ -55,12 +55,12 @@ test(function(t) {
                 'Value after clearing the target')
 }, 'Test setting target from a valid target to null');
 
-test(function(t) {
-  var a = createDiv(t);
-  var b = createDiv(t);
+test(t => {
+  const a = createDiv(t);
+  const b = createDiv(t);
   a.style.marginLeft = '10px';
   b.style.marginLeft = '20px';
-  var anim = a.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const anim = a.animate(gKeyFrames, 100 * MS_PER_SEC);
 
   anim.currentTime = 50 * MS_PER_SEC;
   assert_equals(getComputedStyle(a).marginLeft, '50px',

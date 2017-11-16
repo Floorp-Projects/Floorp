@@ -1,7 +1,5 @@
 import os
 
-MOZ_OBJDIR = 'obj-firefox'
-
 config = {
     'default_actions': [
         'clobber',
@@ -16,14 +14,13 @@ config = {
     ],
     'stage_platform': 'macosx64-debug',
     'debug_build': True,
-    'objdir': 'obj-firefox',
     'enable_talos_sendchange': False,
     'enable_unittest_sendchange': False,
     #### 64 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/builds',
@@ -38,6 +35,6 @@ config = {
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
         ##
     },
-    'src_mozconfig': 'browser/config/mozconfigs/macosx64/debug',
+    'mozconfig_variant': 'debug',
     #######################
 }

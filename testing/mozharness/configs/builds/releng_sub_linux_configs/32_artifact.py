@@ -22,7 +22,6 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': False,
     'vcs_share_base': '/builds/hg-shared',
-    'objdir': 'obj-firefox',
     'tooltool_script': ["/builds/tooltool.py"],
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': True,
@@ -43,7 +42,7 @@ config = {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'DISPLAY': ':2',
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/builds',
@@ -105,7 +104,7 @@ config = {
         'freetype-2.3.11-6.el6_1.8.x86_64',
         ######## 32 bit specific ###########
     ],
-    'src_mozconfig': 'browser/config/mozconfigs/linux32/artifact',
+    'mozconfig_variant': 'artifact',
     'tooltool_manifest_src': "browser/config/tooltool-manifests/linux32/\
 releng.manifest",
     #########################################################################

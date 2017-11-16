@@ -13,13 +13,13 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   const effect = new KeyframeEffectReadOnly(createDiv(t), null);
   const copiedEffect = new KeyframeEffectReadOnly(effect);
   assert_equals(copiedEffect.target, effect.target, 'same target');
 }, 'Copied KeyframeEffectReadOnly has the same target');
 
-test(function(t) {
+test(t => {
   const effect =
     new KeyframeEffectReadOnly(null,
                                [ { marginLeft: '0px' },
@@ -52,7 +52,7 @@ test(function(t) {
   }
 }, 'Copied KeyframeEffectReadOnly has the same keyframes');
 
-test(function(t) {
+test(t => {
   const effect =
     new KeyframeEffectReadOnly(null, null,
                                { iterationComposite: 'accumulate' });
@@ -64,7 +64,7 @@ test(function(t) {
                 'same compositeOperation');
 }, 'Copied KeyframeEffectReadOnly has the same KeyframeEffectOptions');
 
-test(function(t) {
+test(t => {
   const effect = new KeyframeEffectReadOnly(null, null,
                                             { duration: 100 * MS_PER_SEC,
                                               delay: -1 * MS_PER_SEC,
@@ -90,7 +90,7 @@ test(function(t) {
   assert_equals(timingA.easing, timingB.easing, 'same easing');
 }, 'Copied KeyframeEffectReadOnly has the same timing content');
 
-test(function(t) {
+test(t => {
   const effect = new KeyframeEffectReadOnly(createDiv(t), null);
   assert_equals(effect.constructor.name, 'KeyframeEffectReadOnly');
   assert_equals(effect.timing.constructor.name,

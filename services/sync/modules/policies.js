@@ -25,6 +25,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 XPCOMUtils.defineLazyServiceGetter(this, "IdleService",
                                    "@mozilla.org/widget/idleservice;1",
                                    "nsIIdleService");
+XPCOMUtils.defineLazyServiceGetter(this, "NetworkLinkService",
+                                   "@mozilla.org/network/network-link-service;1",
+                                   "nsINetworkLinkService");
+XPCOMUtils.defineLazyServiceGetter(this, "CaptivePortalService",
+                                   "@mozilla.org/network/captive-portal-service;1",
+                                   "nsICaptivePortalService");
 
 // Get the value for an interval that's stored in preferences. To save users
 // from themselves (and us from them!) the minimum time they can specify
@@ -113,11 +119,43 @@ SyncScheduler.prototype = {
     throw new Error("Don't set numClients - the clients engine manages it.");
   },
 
+  get offline() {
+    // Services.io.offline has slowly become fairly useless over the years - it
+    // no longer attempts to track the actual network state by default, but one
+    // thing stays true: if it says we're offline then we are definitely not online.
+    //
+    // There is also a network link service that tracks if there is any network
+    // adaptor connected. Sadly this too is unreliable - eg, an adaptor on a
+    // local private network (eg, a VMWare local network) may be technically
+    // connected but still unable to hit the public network - but it should
+    // only be unreliable in terms of indicating we online when we aren't but
+    // not indicate we are offline when we are online.
+    //
+    // Finally, if both of these services don't tell us we're offline for sure,
+    // we'll ask the captive portal service if we are behind a locked captive
+    // portal.
+    //
+    // With these 3 services combined, we believe we can avoid all false positives
+    // and make a good guess on whether an user is online or not in most cases.
+    try {
+      if (Services.io.offline ||
+          !NetworkLinkService.isLinkUp ||
+          CaptivePortalService.state == CaptivePortalService.LOCKED_PORTAL) {
+        return true;
+      }
+    } catch (ex) {
+      this._log.warn("Could not determine network status.", ex);
+    }
+    return false;
+  },
+
   init: function init() {
     this._log.level = Log.Level[Svc.Prefs.get("log.logger.service.main")];
     this.setDefaults();
     Svc.Obs.add("weave:engine:score:updated", this);
     Svc.Obs.add("network:offline-status-changed", this);
+    Svc.Obs.add("network:link-status-changed", this);
+    Svc.Obs.add("captive-portal-detected", this);
     Svc.Obs.add("weave:service:sync:start", this);
     Svc.Obs.add("weave:service:sync:finish", this);
     Svc.Obs.add("weave:engine:sync:finish", this);
@@ -150,6 +188,8 @@ SyncScheduler.prototype = {
         }
         break;
       case "network:offline-status-changed":
+      case "network:link-status-changed":
+      case "captive-portal-detected":
         // Whether online or offline, we'll reschedule syncs
         this._log.trace("Network offline status change: " + data);
         this.checkSyncStatus();

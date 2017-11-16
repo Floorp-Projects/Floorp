@@ -10,7 +10,7 @@
 <script>
 'use strict';
 
-test(function() {
+test(() => {
   assert_equals(document.timeline, document.timeline,
     'Document.timeline returns the same object every time');
   const iframe = document.getElementById('iframe');

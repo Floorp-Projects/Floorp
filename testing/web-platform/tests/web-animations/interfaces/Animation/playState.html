@@ -10,38 +10,38 @@
 <script>
 'use strict';
 
-promise_test(function(t) {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+promise_test(t => {
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
 
   assert_equals(animation.playState, 'pending');
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_equals(animation.playState, 'running');
   });
 }, 'Animation.playState reports \'pending\'->\'running\' when initially ' +
    'played');
 
-promise_test(function(t) {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+promise_test(t => {
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.pause();
 
   assert_equals(animation.playState, 'pending');
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_equals(animation.playState, 'paused');
   });
 }, 'Animation.playState reports \'pending\'->\'paused\' when pausing');
 
-test(function(t) {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+test(t => {
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.cancel();
   assert_equals(animation.playState, 'idle');
 }, 'Animation.playState is \'idle\' when canceled.');
 
-test(function(t) {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+test(t => {
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.cancel();
   animation.currentTime = 50 * MS_PER_SEC;
   assert_equals(animation.playState, 'paused',
