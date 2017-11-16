@@ -293,7 +293,7 @@ addTest(function() {
                       whitelistedLocationPropNames,
                       "Object.getOwnPropertyNames() gives the right answer for cross-origin Location");
   assert_equals(Object.keys(C.location).length, 0,
-                "Object.keys() gives the right answer for cross-origin Location");
+                      "Object.keys() gives the right answer for cross-origin Location");
 }, "[[OwnPropertyKeys]] should return all properties from cross-origin objects");
 
 addTest(function() {
