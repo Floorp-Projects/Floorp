@@ -1104,7 +1104,7 @@ enum
 
 static const char kUserPref[] = "user_pref";
 static const char kPref[] = "pref";
-static const char kPrefSticky[] = "sticky_pref";
+static const char kStickyPref[] = "sticky_pref";
 static const char kTrue[] = "true";
 static const char kFalse[] = "false";
 
@@ -1264,7 +1264,7 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
             if (c == 'u') {
               aPS->mStrMatch = kUserPref;
             } else if (c == 's') {
-              aPS->mStrMatch = kPrefSticky;
+              aPS->mStrMatch = kStickyPref;
             } else {
               aPS->mStrMatch = kPref;
             }
@@ -1313,8 +1313,8 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
       case PREF_PARSE_UNTIL_NAME:
         if (c == '\"' || c == '\'') {
           aPS->mIsDefault =
-            (aPS->mStrMatch == kPref || aPS->mStrMatch == kPrefSticky);
-          aPS->mIsStickyDefault = (aPS->mStrMatch == kPrefSticky);
+            (aPS->mStrMatch == kPref || aPS->mStrMatch == kStickyPref);
+          aPS->mIsStickyDefault = (aPS->mStrMatch == kStickyPref);
           aPS->mQuoteChar = c;
           aPS->mNextState = PREF_PARSE_UNTIL_COMMA; // return here when done
           state = PREF_PARSE_QUOTED_STRING;
