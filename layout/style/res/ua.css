@@ -12,12 +12,12 @@
 /* Tables */
 
 *|*::-moz-table {
-  display: table !important;
+  display: table;
   box-sizing: border-box; /* XXX do we really want this? */
 }
 
 *|*::-moz-inline-table {
-  display: inline-table !important;
+  display: inline-table;
   box-sizing: border-box; /* XXX do we really want this? */
 }
 
@@ -25,11 +25,9 @@
   /* The inherited properties here need to be safe to have on both the
    * table and the table wrapper, generally because code ignores them
    * for the table. */
-  display: inherit !important; /* table or inline-table */
-  -moz-top-layer: inherit !important;
-  margin: inherit ! important;
-  padding: 0 ! important;
-  border: none ! important;
+  display: inherit; /* table or inline-table */
+  -moz-top-layer: inherit;
+  margin: inherit;
   float: inherit;
   clear: inherit;
   position: inherit;
@@ -60,13 +58,13 @@
 }
 
 *|*::-moz-table-row {
-  display: table-row !important;
+  display: table-row;
 }
 
 /* The ::-moz-table-column pseudo-element is for extra columns at the end
    of a table. */
 *|*::-moz-table-column {
-  display: table-column !important;
+  display: table-column;
   /* Make sure anonymous columns don't interfere with hit testing.  Basically,
    * they should pretend as much as possible to not exist (since in the spec
    * they do not exist).
@@ -75,11 +73,11 @@
    * https://bugzilla.mozilla.org/show_bug.cgi?id=1403293 if you change this
    * bit!
    */
-  visibility: hidden !important;
+  visibility: hidden;
 }
 
 *|*::-moz-table-column-group {
-  display: table-column-group !important;
+  display: table-column-group;
   /* Make sure anonymous colgroups don't interfere with hit testing.  Basically,
    * they should pretend as much as possible to not exist (since in the spec
    * they do not exist).
@@ -88,15 +86,15 @@
    * https://bugzilla.mozilla.org/show_bug.cgi?id=1403293 if you change this
    * bit!
    */
-  visibility: hidden !important;
+  visibility: hidden;
 }
 
 *|*::-moz-table-row-group {
-  display: table-row-group !important;
+  display: table-row-group;
 }
 
 *|*::-moz-table-cell {
-  display: table-cell !important;
+  display: table-cell;
   white-space: inherit;
 }
 
@@ -151,15 +149,14 @@
 /* Miscellaneous */
 
 *|*::-moz-cell-content {
-  display: block !important;
-  position: static !important;
+  display: block;
   unicode-bidi: inherit;
   text-overflow: inherit;
   overflow-clip-box: inherit;
 }
 
 *|*::-moz-block-inside-inline-wrapper {
-  display: block !important;
+  display: block;
   /* we currently inherit from the inline that is split */
   position: inherit; /* static or relative or sticky */
   outline: inherit;
@@ -169,7 +166,7 @@
   mask: inherit;
   opacity: inherit;
   text-decoration: inherit;
-  -moz-box-ordinal-group: inherit !important;
+  -moz-box-ordinal-group: inherit;
   overflow-clip-box: inherit;
   unicode-bidi: inherit;
   text-overflow: inherit;
@@ -184,10 +181,8 @@
 }
 
 *|*::-moz-xul-anonymous-block {
-  display: block ! important;
-  position: static ! important;
-  float: none ! important;
-  -moz-box-ordinal-group: inherit !important;
+  display: block;
+  -moz-box-ordinal-group: inherit;
   text-overflow: inherit;
   overflow-clip-box: inherit;
 }
@@ -235,13 +230,11 @@
   justify-items: inherit;
   /* Do not change these. nsCSSFrameConstructor depends on them to create a good
      frame tree. */
-  position: static !important;
-  float: none !important;
   overflow-clip-box: inherit;
 }
 
 *|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas, *|*::-moz-scrolled-canvas {
-  display: block !important;
+  display: block;
   background-color: inherit;
 }
 
@@ -258,7 +251,7 @@
   unicode-bidi: inherit;
   text-overflow: inherit;
   /* inherit the outer frame's display, otherwise we turn into an inline */
-  display: inherit !important;
+  display: inherit;
   /* Carry through our parent's height so that %-height children get
   their heights set */
   height: 100%;
@@ -274,7 +267,7 @@
 *|*::-moz-page-sequence, *|*::-moz-scrolled-page-sequence {
   /* Collection of pages in print/print preview. Visual styles may only appear
    * in print preview. */
-  display: block !important;
+  display: block;
   background: linear-gradient(#606060, #8a8a8a) fixed;
   height: 100%;
 }
@@ -282,7 +275,7 @@
 *|*::-moz-page {
   /* Individual page in print/print preview. Visual styles may only appear
    * in print preview. */
-  display: block !important;
+  display: block;
   background: white;
   box-shadow: 5px 5px 8px #202020;
   box-decoration-break: clone;
@@ -290,12 +283,12 @@
 }
 
 *|*::-moz-pagecontent {
-  display: block !important;
+  display: block;
   margin: auto;
 }
 
 *|*::-moz-pagebreak {
-  display: block !important;
+  display: block;
 }
 
 /* Printing */
