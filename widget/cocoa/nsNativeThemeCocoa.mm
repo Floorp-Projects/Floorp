@@ -2969,7 +2969,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_MAC_VIBRANCY_LIGHT:
-    case NS_THEME_MAC_VIBRANCY_DARK: {
+    case NS_THEME_MAC_VIBRANCY_DARK:
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_LIGHT:
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_DARK: {
       ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
       DrawVibrancyBackground(cgContext, macRect, aFrame, type);
       break;
@@ -3143,7 +3145,9 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
       return false;
 
     case NS_THEME_MAC_VIBRANCY_LIGHT:
-    case NS_THEME_MAC_VIBRANCY_DARK: {
+    case NS_THEME_MAC_VIBRANCY_DARK:
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_LIGHT:
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_DARK: {
       ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
       aBuilder.PushRect(bounds, bounds, true,
                         wr::ToColorF(VibrancyFillColor(aFrame, type)));
@@ -3736,6 +3740,8 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
     case NS_THEME_METERCHUNK:
     case NS_THEME_MAC_VIBRANCY_LIGHT:
     case NS_THEME_MAC_VIBRANCY_DARK:
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_LIGHT:
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_DARK:
       *aShouldRepaint = false;
       return NS_OK;
   }
@@ -3898,6 +3904,8 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
 
     case NS_THEME_MAC_VIBRANCY_LIGHT:
     case NS_THEME_MAC_VIBRANCY_DARK:
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_LIGHT:
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_DARK:
       return VibrancyManager::SystemSupportsVibrancy();
   }
 
@@ -4005,6 +4013,8 @@ nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
     case NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION:
     case NS_THEME_MAC_VIBRANCY_LIGHT:
     case NS_THEME_MAC_VIBRANCY_DARK:
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_LIGHT:
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_DARK:
     case NS_THEME_TOOLTIP:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_MENUITEM:
@@ -4035,6 +4045,10 @@ nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame, uint8_t aWidget
       return eThemeGeometryTypeVibrancyLight;
     case NS_THEME_MAC_VIBRANCY_DARK:
       return eThemeGeometryTypeVibrancyDark;
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_LIGHT:
+      return eThemeGeometryTypeVibrantTitlebarLight;
+    case NS_THEME_MAC_VIBRANT_TITLEBAR_DARK:
+      return eThemeGeometryTypeVibrantTitlebarDark;
     case NS_THEME_TOOLTIP:
       return eThemeGeometryTypeTooltip;
     case NS_THEME_MENUPOPUP:
