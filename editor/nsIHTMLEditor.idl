@@ -9,7 +9,6 @@
 interface nsIContent;
 interface nsIArray;
 interface nsISelection;
-interface nsIContentFilter;
 
 %{C++
 namespace mozilla {
@@ -453,18 +452,6 @@ interface nsIHTMLEditor : nsISupports
    * @return    true if CSS handled and enabled
    */
   attribute boolean isCSSEnabled;
-
-  /**
-   * Add listener for insertion override
-   * @param inFilter  function which callers want called during insertion
-   */
-  void addInsertionListener(in nsIContentFilter inFilter);
-
-  /**
-   * Remove listener for insertion override
-   * @param inFilter  function which callers do not want called during insertion
-   */
-  void removeInsertionListener(in nsIContentFilter inFilter);
 
   /**
    * returns the deepest container of the selection
