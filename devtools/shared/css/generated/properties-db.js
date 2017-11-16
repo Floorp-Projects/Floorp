@@ -3260,6 +3260,8 @@ exports.CSS_PROPERTIES = {
       "-moz-mac-source-list-selection",
       "-moz-mac-vibrancy-dark",
       "-moz-mac-vibrancy-light",
+      "-moz-mac-vibrant-titlebar-dark",
+      "-moz-mac-vibrant-titlebar-light",
       "-moz-max-content",
       "-moz-middle-with-baseline",
       "-moz-min-content",
