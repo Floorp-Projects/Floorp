@@ -61,20 +61,6 @@ class CompilerPreprocessor(Preprocessor):
         finally:
             self.context = context
 
-    def do_include(self, args, filters=True):
-        # We need to check headers during normal configure to make sure the
-        # user doesn't have a misconfigured environment.  But for the purposes
-        # of tests, we want to ignore headers.
-
-        # stddef.h and cstddef are the headers compiler configure checks use.
-        if type(args) in (str, unicode) and '<' in args:
-            if args in ('<stddef.h>', '<cstddef>'):
-                return
-            raise Preprocessor.Error(self, 'INVALID_INCLUDE_FILE', args)
-
-        # Pass everything else through.
-        Preprocessor.do_include(self, args, filters)
-
     class Context(dict):
         def __missing__(self, key):
             return None
