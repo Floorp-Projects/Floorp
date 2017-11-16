@@ -69,9 +69,12 @@ const openOAuthWindow = (details, redirectURI) => {
 
     wpl = {
       onStateChange(progress, request, flags, status) {
-        if (request instanceof Ci.nsIHttpChannel &&
+        // "request" is now a RemoteWebProgressRequest and is not cancelable
+        // using request.cancel.  We can however, stop everything using
+        // webNavigation.
+        if (request && request.URI &&
           request.URI.spec.startsWith(redirectURI)) {
-          request.cancel(Components.results.NS_BINDING_ABORTED);
+          window.gBrowser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
           window.removeEventListener("unload", unloadlistener);
           window.gBrowser.removeProgressListener(wpl);
           window.close();
