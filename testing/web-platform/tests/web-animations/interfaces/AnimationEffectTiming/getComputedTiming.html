@@ -7,15 +7,11 @@
 <script src="../../testcommon.js"></script>
 <body>
 <div id="log"></div>
-<div id="target"></div>
 <script>
 'use strict';
 
-const target = document.getElementById('target');
-
 test(t => {
-  const effect = new KeyframeEffectReadOnly(target,
-                                            { left: ['10px', '20px'] });
+  const effect = new KeyframeEffect(null, null);
 
   const ct = effect.getComputedTiming();
   assert_equals(ct.delay, 0, 'computed delay');
@@ -23,7 +19,7 @@ test(t => {
   assert_equals(ct.iterations, 1.0, 'computed iterations');
   assert_equals(ct.duration, 0, 'computed duration');
   assert_equals(ct.direction, 'normal', 'computed direction');
-}, 'values of getComputedTiming() when a KeyframeEffectReadOnly is ' +
+}, 'values of getComputedTiming() when a KeyframeEffect is ' +
    'constructed without any KeyframeEffectOptions object');
 
 const gGetComputedTimingTests = [
@@ -71,9 +67,7 @@ const gGetComputedTimingTests = [
 
 for (const stest of gGetComputedTimingTests) {
   test(t => {
-    const effect = new KeyframeEffectReadOnly(target,
-                                              { left: ['10px', '20px'] },
-                                              stest.input);
+    const effect = new KeyframeEffect(null, null, stest.input);
 
     // Helper function to provide default expected values when the test does
     // not supply them.
@@ -93,7 +87,7 @@ for (const stest of gGetComputedTimingTests) {
     assert_equals(ct.direction, expected('direction', 'normal'),
                   'computed direction');
 
-  }, 'values of getComputedTiming() when a KeyframeEffectReadOnly is'
+  }, 'values of getComputedTiming() when a KeyframeEffect is'
      + ` constructed by ${stest.desc}`);
 }
 
@@ -144,9 +138,7 @@ const gActiveDurationTests = [
 
 for (const stest of gActiveDurationTests) {
   test(t => {
-    const effect = new KeyframeEffectReadOnly(target,
-                                              { left: ['10px', '20px'] },
-                                              stest.input);
+    const effect = new KeyframeEffect(null, null, stest.input);
 
     assert_equals(effect.getComputedTiming().activeDuration,
                   stest.expected);
@@ -196,9 +188,7 @@ const gEndTimeTests = [
 
 for (const stest of gEndTimeTests) {
   test(t => {
-    const effect = new KeyframeEffectReadOnly(target,
-                                              { left: ['10px', '20px'] },
-                                              stest.input);
+    const effect = new KeyframeEffect(null, null, stest.input);
 
     assert_equals(effect.getComputedTiming().endTime,
                   stest.expected);
