@@ -2751,47 +2751,21 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
     return true;
 }
 
+enum class ResumeNextKind {
+    Enqueue, Reject, Resolve
+};
+
 static MOZ_MUST_USE bool
-AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj);
+AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+                         ResumeNextKind kind, HandleValue valueOrException = UndefinedHandleValue,
+                         bool done = false);
 
 // Async Iteration proposal 11.4.3.3.
 MOZ_MUST_USE bool
 js::AsyncGeneratorResolve(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
                           HandleValue value, bool done)
 {
-    // Step 1 (implicit).
-
-    // Steps 2-3.
-    MOZ_ASSERT(!asyncGenObj->isQueueEmpty());
-
-    // Step 4.
-    Rooted<AsyncGeneratorRequest*> request(
-        cx, AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj));
-    if (!request)
-        return false;
-
-    // Step 5.
-    RootedObject resultPromise(cx, request->promise());
-
-    asyncGenObj->cacheRequest(request);
-
-    // Step 6.
-    RootedObject resultObj(cx, CreateIterResultObject(cx, value, done));
-    if (!resultObj)
-        return false;
-
-    RootedValue resultValue(cx, ObjectValue(*resultObj));
-
-    // Step 7.
-    if (!ResolvePromiseInternal(cx, resultPromise, resultValue))
-        return false;
-
-    // Step 8.
-    if (!AsyncGeneratorResumeNext(cx, asyncGenObj))
-        return false;
-
-    // Step 9.
-    return true;
+    return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Resolve, value, done);
 }
 
 // Async Iteration proposal 11.4.3.4.
@@ -2799,38 +2773,83 @@ MOZ_MUST_USE bool
 js::AsyncGeneratorReject(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
                          HandleValue exception)
 {
-    // Step 1 (implicit).
-
-    // Steps 2-3.
-    MOZ_ASSERT(!asyncGenObj->isQueueEmpty());
-
-    // Step 4.
-    Rooted<AsyncGeneratorRequest*> request(
-        cx, AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj));
-    if (!request)
-        return false;
-
-    // Step 5.
-    RootedObject resultPromise(cx, request->promise());
-
-    asyncGenObj->cacheRequest(request);
-
-    // Step 6.
-    if (!RejectMaybeWrappedPromise(cx, resultPromise, exception))
-        return false;
-
-    // Step 7.
-    if (!AsyncGeneratorResumeNext(cx, asyncGenObj))
-        return false;
-
-    // Step 8.
-    return true;
+    return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Reject, exception);
 }
 
 // Async Iteration proposal 11.4.3.5.
 static MOZ_MUST_USE bool
-AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj)
+AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+                         ResumeNextKind kind,
+                         HandleValue valueOrException /* = UndefinedHandleValue */,
+                         bool done /* = false */)
 {
+    switch (kind) {
+      case ResumeNextKind::Enqueue:
+        // No further action required.
+        break;
+      case ResumeNextKind::Reject: {
+        // 11.4.3.4 AsyncGeneratorReject ( generator, exception )
+        HandleValue& exception = valueOrException;
+
+        // Step 1 (implicit).
+
+        // Steps 2-3.
+        MOZ_ASSERT(!asyncGenObj->isQueueEmpty());
+
+        // Step 4.
+        Rooted<AsyncGeneratorRequest*> request(
+            cx, AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj));
+        if (!request)
+            return false;
+
+        // Step 5.
+        RootedObject resultPromise(cx, request->promise());
+
+        asyncGenObj->cacheRequest(request);
+
+        // Step 6.
+        if (!RejectMaybeWrappedPromise(cx, resultPromise, exception))
+            return false;
+
+        // Steps 7-8.
+        break;
+      }
+      case ResumeNextKind::Resolve: {
+        // 11.4.3.3 AsyncGeneratorResolve ( generator, value, done )
+        HandleValue& value = valueOrException;
+
+        // Step 1 (implicit).
+
+        // Steps 2-3.
+        MOZ_ASSERT(!asyncGenObj->isQueueEmpty());
+
+        // Step 4.
+        Rooted<AsyncGeneratorRequest*> request(
+            cx, AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj));
+        if (!request)
+            return false;
+
+        // Step 5.
+        RootedObject resultPromise(cx, request->promise());
+
+        asyncGenObj->cacheRequest(request);
+
+        // Step 6.
+        RootedObject resultObj(cx, CreateIterResultObject(cx, value, done));
+        if (!resultObj)
+            return false;
+
+        RootedValue resultValue(cx, ObjectValue(*resultObj));
+
+        // Step 7.
+        if (!ResolvePromiseInternal(cx, resultPromise, resultValue))
+            return false;
+
+        // Steps 8-9.
+        break;
+      }
+    }
+
     // Step 1 (implicit).
 
     // Steps 2-3.
@@ -2964,7 +2983,7 @@ js::AsyncGeneratorEnqueue(JSContext* cx, HandleValue asyncGenVal,
     // Step 7.
     if (!asyncGenObj->isExecuting()) {
         // Step 8.
-        if (!AsyncGeneratorResumeNext(cx, asyncGenObj))
+        if (!AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Enqueue))
             return false;
     }
 
