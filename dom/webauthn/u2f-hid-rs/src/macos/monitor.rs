@@ -8,7 +8,6 @@ extern crate libc;
 use core_foundation_sys::base::*;
 use core_foundation_sys::runloop::*;
 use libc::c_void;
-use platform::iohid::*;
 use platform::iokit::*;
 use runloop::RunLoop;
 use std::{io, slice};
