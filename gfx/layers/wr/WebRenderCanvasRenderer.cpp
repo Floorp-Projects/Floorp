@@ -8,6 +8,7 @@
 
 #include "GLContext.h"
 #include "GLScreenBuffer.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "SharedSurfaceGL.h"
 #include "WebRenderBridgeChild.h"
 #include "WebRenderLayerManager.h"

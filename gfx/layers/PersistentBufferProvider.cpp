@@ -8,6 +8,7 @@
 
 #include "Layers.h"
 #include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/layers/TextureClient.h"
 #include "mozilla/gfx/Logging.h"
 #include "pratom.h"
 #include "gfxPlatform.h"
@@ -88,14 +89,14 @@ PersistentBufferProviderBasic::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFo
 already_AddRefed<PersistentBufferProviderShared>
 PersistentBufferProviderShared::Create(gfx::IntSize aSize,
                                        gfx::SurfaceFormat aFormat,
-                                       ShadowLayerForwarder* aFwd)
+                                       KnowsCompositor* aKnowsCompositor)
 {
-  if (!aFwd || !aFwd->GetTextureForwarder()->IPCOpen()) {
+  if (!aKnowsCompositor || !aKnowsCompositor->GetTextureForwarder()->IPCOpen()) {
     return nullptr;
   }
 
   RefPtr<TextureClient> texture = TextureClient::CreateForDrawing(
-    aFwd, aFormat, aSize,
+    aKnowsCompositor, aFormat, aSize,
     BackendSelector::Canvas,
     TextureFlags::DEFAULT,
     TextureAllocationFlags::ALLOC_DEFAULT
@@ -106,20 +107,21 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
   }
 
   RefPtr<PersistentBufferProviderShared> provider =
-    new PersistentBufferProviderShared(aSize, aFormat, aFwd, texture);
+    new PersistentBufferProviderShared(aSize, aFormat, aKnowsCompositor, texture);
   return provider.forget();
 }
 
 PersistentBufferProviderShared::PersistentBufferProviderShared(gfx::IntSize aSize,
                                                                gfx::SurfaceFormat aFormat,
-                                                               ShadowLayerForwarder* aFwd,
+                                                               KnowsCompositor* aKnowsCompositor,
                                                                RefPtr<TextureClient>& aTexture)
 
 : mSize(aSize)
 , mFormat(aFormat)
-, mFwd(aFwd)
+, mKnowsCompositor(aKnowsCompositor)
 , mFront(Nothing())
 {
+  MOZ_ASSERT(aKnowsCompositor);
   if (mTextures.append(aTexture)) {
     mBack = Some<uint32_t>(0);
   }
@@ -131,31 +133,41 @@ PersistentBufferProviderShared::~PersistentBufferProviderShared()
   MOZ_COUNT_DTOR(PersistentBufferProviderShared);
 
   if (IsActivityTracked()) {
-    mFwd->GetActiveResourceTracker().RemoveObject(this);
+    mKnowsCompositor->GetActiveResourceTracker()->RemoveObject(this);
   }
 
   Destroy();
 }
 
-bool
-PersistentBufferProviderShared::SetForwarder(ShadowLayerForwarder* aFwd)
+LayersBackend
+PersistentBufferProviderShared::GetType()
 {
-  MOZ_ASSERT(aFwd);
-  if (!aFwd) {
+  if (mKnowsCompositor->GetCompositorBackendType() == LayersBackend::LAYERS_WR) {
+    return LayersBackend::LAYERS_WR;
+  } else {
+    return LayersBackend::LAYERS_CLIENT;
+  }
+}
+
+bool
+PersistentBufferProviderShared::SetKnowsCompositor(KnowsCompositor* aKnowsCompositor)
+{
+  MOZ_ASSERT(aKnowsCompositor);
+  if (!aKnowsCompositor) {
     return false;
   }
 
-  if (mFwd == aFwd) {
+  if (mKnowsCompositor == aKnowsCompositor) {
     // The forwarder should not change most of the time.
     return true;
   }
 
   if (IsActivityTracked()) {
-    mFwd->GetActiveResourceTracker().RemoveObject(this);
+    mKnowsCompositor->GetActiveResourceTracker()->RemoveObject(this);
   }
 
-  if (mFwd->GetTextureForwarder() != aFwd->GetTextureForwarder() ||
-      mFwd->GetCompositorBackendType() != aFwd->GetCompositorBackendType()) {
+  if (mKnowsCompositor->GetTextureForwarder() != aKnowsCompositor->GetTextureForwarder() ||
+      mKnowsCompositor->GetCompositorBackendType() != aKnowsCompositor->GetCompositorBackendType()) {
     // We are going to be used with an different and/or incompatible forwarder.
     // This should be extremely rare. We have to copy the front buffer into a
     // texture that is compatible with the new forwarder.
@@ -168,7 +180,7 @@ PersistentBufferProviderShared::SetForwarder(ShadowLayerForwarder* aFwd)
 
     if (prevTexture) {
       RefPtr<TextureClient> newTexture = TextureClient::CreateForDrawing(
-        aFwd, mFormat, mSize,
+        aKnowsCompositor, mFormat, mSize,
         BackendSelector::Canvas,
         TextureFlags::DEFAULT,
         TextureAllocationFlags::ALLOC_DEFAULT
@@ -210,7 +222,7 @@ PersistentBufferProviderShared::SetForwarder(ShadowLayerForwarder* aFwd)
     }
   }
 
-  mFwd = aFwd;
+  mKnowsCompositor = aKnowsCompositor;
 
   return true;
 }
@@ -227,16 +239,16 @@ PersistentBufferProviderShared::GetTexture(const Maybe<uint32_t>& aIndex)
 already_AddRefed<gfx::DrawTarget>
 PersistentBufferProviderShared::BorrowDrawTarget(const gfx::IntRect& aPersistedRect)
 {
-  if (!mFwd->GetTextureForwarder()->IPCOpen()) {
+  if (!mKnowsCompositor->GetTextureForwarder()->IPCOpen()) {
     return nullptr;
   }
 
   MOZ_ASSERT(!mSnapshot);
 
   if (IsActivityTracked()) {
-    mFwd->GetActiveResourceTracker().MarkUsed(this);
+    mKnowsCompositor->GetActiveResourceTracker()->MarkUsed(this);
   } else {
-    mFwd->GetActiveResourceTracker().AddObject(this);
+    mKnowsCompositor->GetActiveResourceTracker()->AddObject(this);
   }
 
   if (mDrawTarget) {
@@ -278,7 +290,7 @@ PersistentBufferProviderShared::BorrowDrawTarget(const gfx::IntRect& aPersistedR
       // especially when switching between layer managers (during tab-switch).
       // To make sure we don't get too far ahead of the compositor, we send a
       // sync ping to the compositor thread...
-      mFwd->SyncWithCompositor();
+      mKnowsCompositor->SyncWithCompositor();
       // ...and try again.
       for (uint32_t i = 0; i < mTextures.length(); ++i) {
         if (!mTextures[i]->IsReadLocked()) {
@@ -300,7 +312,7 @@ PersistentBufferProviderShared::BorrowDrawTarget(const gfx::IntRect& aPersistedR
     }
 
     RefPtr<TextureClient> newTexture = TextureClient::CreateForDrawing(
-      mFwd, mFormat, mSize,
+      mKnowsCompositor, mFormat, mSize,
       BackendSelector::Canvas,
       TextureFlags::DEFAULT,
       TextureAllocationFlags::ALLOC_DEFAULT
