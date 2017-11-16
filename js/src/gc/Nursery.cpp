@@ -13,7 +13,6 @@
 #include "mozilla/Unused.h"
 
 #include "jscompartment.h"
-#include "jsfriendapi.h"
 #include "jsutil.h"
 
 #include "gc/GCInternals.h"
