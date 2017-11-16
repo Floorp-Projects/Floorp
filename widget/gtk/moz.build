@@ -79,6 +79,7 @@ if CONFIG['NS_PRINTING']:
 if CONFIG['MOZ_X11']:
     UNIFIED_SOURCES += [
         'nsClipboard.cpp',
+        'nsClipboardX11.cpp',
         'nsDragService.cpp',
         'WindowSurfaceProvider.cpp',
         'WindowSurfaceX11.cpp',
