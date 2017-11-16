@@ -401,10 +401,6 @@ AccessibleCaretEventHub::AccessibleCaretEventHub(nsIPresShell* aPresShell)
   }
 }
 
-AccessibleCaretEventHub::~AccessibleCaretEventHub()
-{
-}
-
 void
 AccessibleCaretEventHub::Init()
 {

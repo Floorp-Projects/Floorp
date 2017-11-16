@@ -122,10 +122,6 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
   }
 }
 
-AccessibleCaretManager::~AccessibleCaretManager()
-{
-}
-
 void
 AccessibleCaretManager::Terminate()
 {
