@@ -868,7 +868,13 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
               rv = parser.GetParameter("version", versionName);
 
               if (NS_SUCCEEDED(rv)) {
-                  version = JSVERSION_UNKNOWN;
+                  nsContentUtils::ReportToConsoleNonLocalized(
+                      NS_LITERAL_STRING("Versioned JavaScripts are no longer supported. "
+                                        "Please remove the version parameter."),
+                      nsIScriptError::errorFlag,
+                      NS_LITERAL_CSTRING("XUL Document"),
+                      nullptr, mDocumentURL, EmptyString(), aLineNumber);
+                  isJavaScript = false;
               } else if (rv != NS_ERROR_INVALID_ARG) {
                   return rv;
               }
