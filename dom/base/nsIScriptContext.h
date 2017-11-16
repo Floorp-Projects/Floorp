@@ -12,6 +12,7 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "jspubtd.h"
+#include "js/GCAPI.h"
 
 class nsIScriptGlobalObject;
 

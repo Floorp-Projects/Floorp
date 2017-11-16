@@ -14,6 +14,7 @@
 #include "jsobj.h"
 #include "jswrapper.h"
 
+#include "js/GCAPI.h"
 #include "vm/GlobalObject.h"
 
 #include "jsobjinlines.h"

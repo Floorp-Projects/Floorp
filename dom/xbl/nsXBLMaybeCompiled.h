@@ -7,7 +7,7 @@
 #ifndef nsXBLMaybeCompiled_h__
 #define nsXBLMaybeCompiled_h__
 
-#include "js/RootingAPI.h"
+#include "js/GCAPI.h"
 
 /*
  * A union containing either a pointer representing uncompiled source or a

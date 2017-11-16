@@ -5,6 +5,8 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/UniquePtr.h"
 
+#include "js/GCAPI.h"
+
 #include "jsapi-tests/tests.h"
 
 static unsigned gSliceCallbackCount = 0;
