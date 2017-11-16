@@ -418,6 +418,30 @@ class TestRecursiveMakeBackend(BackendTester):
         self.maxDiff = None
         self.assertEqual(lines, expected)
 
+    def test_localized_generated_files(self):
+        """Ensure LOCALIZED_GENERATED_FILES is handled properly."""
+        env = self._consume('localized-generated-files', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'libs:: foo.xyz',
+            'GARBAGE += foo.xyz',
+            'EXTRA_MDDEPEND_FILES += foo.xyz.pp',
+            'foo.xyz: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,
+            '$(REPORT_BUILD)',
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo.xyz $(MDDEPDIR)/foo.xyz.pp $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,
+            '',
+            'LOCALIZED_FILES_0_FILES += foo.xyz',
+            'LOCALIZED_FILES_0_DEST = $(FINAL_TARGET)/',
+            'LOCALIZED_FILES_0_TARGET := libs',
+            'INSTALL_TARGETS += LOCALIZED_FILES_0',
+        ]
+
+        self.maxDiff = None
+        self.assertEqual(lines, expected)
+
     def test_exports_generated(self):
         """Ensure EXPORTS that are listed in GENERATED_FILES
         are handled properly."""
