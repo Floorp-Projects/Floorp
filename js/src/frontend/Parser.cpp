@@ -6173,22 +6173,8 @@ Parser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
 
     ParseContext::Statement stmt(pc, StatementKind::ForLoop);
 
-    bool isForEach = false;
     IteratorKind iterKind = IteratorKind::Sync;
     unsigned iflags = 0;
-
-    if (allowsForEachIn()) {
-        bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_EACH))
-            return null();
-        if (matched) {
-            iflags = JSITER_FOREACH;
-            isForEach = true;
-            addTelemetry(DeprecatedLanguageExtension::ForEach);
-            if (!warnOnceAboutForEach())
-                return null();
-        }
-    }
 
     if (pc->isAsync()) {
         bool matched;
@@ -6251,10 +6237,6 @@ Parser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
 
     if (iterKind == IteratorKind::Async && headKind != PNK_FOROF) {
         errorAt(begin, JSMSG_FOR_AWAIT_NOT_OF);
-        return null();
-    }
-    if (isForEach && headKind != PNK_FORIN) {
-        errorAt(begin, JSMSG_BAD_FOR_EACH_LOOP);
         return null();
     }
 
@@ -9886,20 +9868,6 @@ ParserBase::warnOnceAboutExprClosure()
         context->compartment()->warnedAboutExprClosure = true;
     }
 #endif
-    return true;
-}
-
-bool
-ParserBase::warnOnceAboutForEach()
-{
-    if (context->helperThread())
-        return true;
-
-    if (!context->compartment()->warnedAboutForEach) {
-        if (!warning(JSMSG_DEPRECATED_FOR_EACH))
-            return false;
-        context->compartment()->warnedAboutForEach = true;
-    }
     return true;
 }
 

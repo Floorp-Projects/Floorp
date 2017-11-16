@@ -18,6 +18,6 @@ function f(code)
 }
 x = {};
 f("y = this;");
-f("x, y; for each (let x in [arguments]) {}");
+f("x, y; for (let x of [arguments]) {}");
 
 reportCompare(expect, actual, summary);

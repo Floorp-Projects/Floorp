@@ -7,6 +7,7 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
 #include "gfxPlatform.h"
+#include "mozilla/dom/TabGroup.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
@@ -36,16 +37,20 @@ WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
 {
 }
 
+WebRenderBridgeChild::~WebRenderBridgeChild()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mDestroyed);
+}
+
 void
 WebRenderBridgeChild::Destroy(bool aIsSync)
 {
   if (!IPCOpen()) {
     return;
   }
-  // mDestroyed is used to prevent calling Send__delete__() twice.
-  // When this function is called from CompositorBridgeChild::Destroy().
-  mDestroyed = true;
-  mManager = nullptr;
+
+  DoDestroy();
 
   if (aIsSync) {
     SendShutdownSync();
@@ -57,6 +62,16 @@ WebRenderBridgeChild::Destroy(bool aIsSync)
 void
 WebRenderBridgeChild::ActorDestroy(ActorDestroyReason why)
 {
+  DoDestroy();
+}
+
+void
+WebRenderBridgeChild::DoDestroy()
+{
+  // mDestroyed is used to prevent calling Send__delete__() twice.
+  // When this function is called from CompositorBridgeChild::Destroy().
+  // mActiveResourceTracker is not cleared here, since it is
+  // used by PersistentBufferProviderShared.
   mDestroyed = true;
   mManager = nullptr;
 }
@@ -402,6 +417,15 @@ WebRenderBridgeChild::GetLayersIPCActor()
 }
 
 void
+WebRenderBridgeChild::SyncWithCompositor()
+{
+  auto compositorBridge = GetCompositorBridgeChild();
+  if (compositorBridge && compositorBridge->IPCOpen()) {
+    compositorBridge->SendSyncWithCompositor();
+  }
+}
+
+void
 WebRenderBridgeChild::Connect(CompositableClient* aCompositable,
                               ImageContainer* aImageContainer)
 {
@@ -586,8 +610,16 @@ WebRenderBridgeChild::EndClearCachedResources()
 void
 WebRenderBridgeChild::SetWebRenderLayerManager(WebRenderLayerManager* aManager)
 {
-  MOZ_ASSERT(aManager);
+  MOZ_ASSERT(aManager && !mManager);
   mManager = aManager;
+
+  nsCOMPtr<nsIEventTarget> eventTarget = nullptr;
+  if (dom::TabGroup* tabGroup = mManager->GetTabGroup()) {
+    eventTarget = tabGroup->EventTargetFor(TaskCategory::Other);
+  }
+  MOZ_ASSERT(eventTarget || !XRE_IsContentProcess());
+  mActiveResourceTracker = MakeUnique<ActiveResourceTracker>(
+    1000, "CompositableForwarder", eventTarget);
 }
 
 ipc::IShmemAllocator*

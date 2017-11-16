@@ -27,7 +27,7 @@ function test()
   }
 
   Object.prototype.q = 3;
-  for each (let x in [6, 7]) { } print(actual = "PASS");
+  for (let x of [6, 7]) { } print(actual = "PASS");
 
   if (typeof gczeal == 'function')
   {

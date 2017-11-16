@@ -15,7 +15,7 @@ function b(foo) {
         set: Math.w
     })); {}
 }
-for each(e in [arguments, arguments]) {
+for(e of [arguments, arguments]) {
     try {
         b(e)('')
     } catch (e) {}

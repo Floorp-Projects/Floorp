@@ -20,7 +20,7 @@ function test()
   printStatus (summary);
  
 
-  for each (let x in [1, {}, 1, null, 1, {}, 1, null, 1]) { }
+  for (let x of [1, {}, 1, null, 1, {}, 1, null, 1]) { }
 
 
   reportCompare(expect, actual, summary);

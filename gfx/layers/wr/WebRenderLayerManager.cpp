@@ -10,6 +10,8 @@
 #include "gfxPrefs.h"
 #include "GeckoProfiler.h"
 #include "LayersLogging.h"
+#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/TabGroup.h"
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
@@ -88,6 +90,8 @@ WebRenderLayerManager::Destroy()
 void
 WebRenderLayerManager::DoDestroy(bool aIsSync)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (IsDestroyed()) {
     return;
   }
@@ -529,6 +533,17 @@ WebRenderLayerManager::WrUpdated()
   DiscardLocalImages();
 }
 
+dom::TabGroup*
+WebRenderLayerManager::GetTabGroup()
+{
+  if (mWidget) {
+    if (dom::TabChild* tabChild = mWidget->GetOwningTabChild()) {
+      return tabChild->TabGroup();
+    }
+  }
+  return nullptr;
+}
+
 void
 WebRenderLayerManager::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier)
 {
@@ -606,6 +621,20 @@ WebRenderLayerManager::SetPendingScrollUpdateForNextTransaction(FrameMetrics::Vi
   // If we ever support changing the scroll position in an "empty transactions"
   // properly in WR we can fill this in. Covered by bug 1382259.
   return false;
+}
+
+already_AddRefed<PersistentBufferProvider>
+WebRenderLayerManager::CreatePersistentBufferProvider(const gfx::IntSize& aSize,
+                                                      gfx::SurfaceFormat aFormat)
+{
+  if (gfxPrefs::PersistentBufferProviderSharedEnabled()) {
+    RefPtr<PersistentBufferProvider> provider
+      = PersistentBufferProviderShared::Create(aSize, aFormat, AsKnowsCompositor());
+    if (provider) {
+      return provider.forget();
+    }
+  }
+  return LayerManager::CreatePersistentBufferProvider(aSize, aFormat);
 }
 
 } // namespace layers
