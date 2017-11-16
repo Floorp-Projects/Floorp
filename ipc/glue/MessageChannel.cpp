@@ -484,9 +484,9 @@ private:
     UniquePtr<IPC::Message> mReply;
 };
 
-class PromiseReporter final : public nsIMemoryReporter
+class PendingResponseReporter final : public nsIMemoryReporter
 {
-    ~PromiseReporter() {}
+    ~PendingResponseReporter() {}
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -495,15 +495,15 @@ public:
                    bool aAnonymize) override
     {
         MOZ_COLLECT_REPORT(
-            "unresolved-ipc-promises", KIND_OTHER, UNITS_COUNT, MessageChannel::gUnresolvedPromises,
-            "Outstanding IPC async message promises that is still not resolved.");
+            "unresolved-ipc-responses", KIND_OTHER, UNITS_COUNT, MessageChannel::gUnresolvedResponses,
+            "Outstanding IPC async message responses that are still not resolved.");
         return NS_OK;
     }
 };
 
-NS_IMPL_ISUPPORTS(PromiseReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(PendingResponseReporter, nsIMemoryReporter)
 
-Atomic<size_t> MessageChannel::gUnresolvedPromises;
+Atomic<size_t> MessageChannel::gUnresolvedResponses;
 
 MessageChannel::MessageChannel(const char* aName,
                                IToplevelProtocol *aListener)
@@ -554,7 +554,7 @@ MessageChannel::MessageChannel(const char* aName,
 
     static Atomic<bool> registered;
     if (registered.compareExchange(false, true)) {
-        RegisterStrongMemoryReporter(new PromiseReporter());
+        RegisterStrongMemoryReporter(new PendingResponseReporter());
     }
 }
 
@@ -717,13 +717,11 @@ MessageChannel::Clear()
         mWorkerLoop->RemoveDestructionObserver(this);
     }
 
-    gUnresolvedPromises -= mPendingPromises.size();
-    for (auto& pair : mPendingPromises) {
-        pair.second.mRejectFunction(pair.second.mPromise,
-                                    PromiseRejectReason::ChannelClosed,
-                                    __func__);
+    gUnresolvedResponses -= mPendingResponses.size();
+    for (auto& pair : mPendingResponses) {
+        pair.second.get()->Reject(ResponseRejectReason::ChannelClosed);
     }
-    mPendingPromises.clear();
+    mPendingResponses.clear();
 
     mWorkerLoop = nullptr;
     delete mLink;
@@ -951,36 +949,33 @@ MessageChannel::StopPostponingSends()
     mPostponedSends.clear();
 }
 
-already_AddRefed<MozPromiseRefcountable>
-MessageChannel::PopPromise(const Message& aMsg)
+UniquePtr<MessageChannel::UntypedCallbackHolder>
+MessageChannel::PopCallback(const Message& aMsg)
 {
-    auto iter = mPendingPromises.find(aMsg.seqno());
-    if (iter != mPendingPromises.end()) {
-        PromiseHolder ret = iter->second;
-        mPendingPromises.erase(iter);
-        gUnresolvedPromises--;
-        return ret.mPromise.forget();
+    auto iter = mPendingResponses.find(aMsg.seqno());
+    if (iter != mPendingResponses.end()) {
+        UniquePtr<MessageChannel::UntypedCallbackHolder> ret = Move(iter->second);
+        mPendingResponses.erase(iter);
+        gUnresolvedResponses--;
+        return ret;
     }
     return nullptr;
 }
 
 void
-MessageChannel::RejectPendingPromisesForActor(ActorIdType aActorId)
+MessageChannel::RejectPendingResponsesForActor(ActorIdType aActorId)
 {
-  auto itr = mPendingPromises.begin();
-  while (itr != mPendingPromises.end()) {
-    if (itr->second.mActorId != aActorId) {
+  auto itr = mPendingResponses.begin();
+  while (itr != mPendingResponses.end()) {
+    if (itr->second.get()->mActorId != aActorId) {
       ++itr;
       continue;
     }
-    auto& promise = itr->second.mPromise;
-    itr->second.mRejectFunction(promise,
-                                PromiseRejectReason::ActorDestroyed,
-                                __func__);
+    itr->second.get()->Reject(ResponseRejectReason::ActorDestroyed);
     // Take special care of advancing the iterator since we are
     // removing it while iterating.
-    itr = mPendingPromises.erase(itr);
-    gUnresolvedPromises--;
+    itr = mPendingResponses.erase(itr);
+    gUnresolvedResponses--;
   }
 }
 
