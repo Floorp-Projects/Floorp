@@ -13,8 +13,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Response.h"
 
-#include "js/GCAPI.h"
-
 namespace mozilla {
 namespace dom {
 

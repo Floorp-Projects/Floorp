@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/MediaKeyMessageEvent.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
-#include "js/GCAPI.h"
+#include "js/RootingAPI.h"
 #include "jsfriendapi.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PrimitiveConversions.h"
