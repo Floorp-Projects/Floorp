@@ -591,7 +591,10 @@ GfxInfoBase::Init()
 {
   InitGfxDriverInfoShutdownObserver();
   gfxPrefs::GetSingleton();
-  MediaPrefs::GetSingleton();
+  if (!XRE_IsGPUProcess()) {
+    // MediaPrefs can't run in the GPU process.
+    MediaPrefs::GetSingleton();
+  }
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
