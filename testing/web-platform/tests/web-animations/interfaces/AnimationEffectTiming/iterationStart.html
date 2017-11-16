@@ -61,10 +61,10 @@ test(t => {
   for (let invalid of [-1, NaN, Infinity]) {
     assert_throws({ name: 'TypeError' }, () => {
       anim.effect.timing.iterationStart = invalid;
-    }, 'setting ' + invalid);
+    }, `setting ${invalid}`);
     assert_throws({ name: 'TypeError' }, () => {
       div.animate({}, { iterationStart: invalid });
-    }, 'animate() with ' + invalid);
+    }, `animate() with ${invalid}`);
   }
 }, 'Throws when setting invalid values');
 

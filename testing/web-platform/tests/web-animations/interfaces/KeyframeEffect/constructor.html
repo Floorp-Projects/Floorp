@@ -23,7 +23,7 @@ test(t => {
   gEmptyKeyframeListTests.forEach(frames => {
     assert_equals(new KeyframeEffectReadOnly(target, frames)
                         .getKeyframes().length,
-                  0, 'number of frames for ' + JSON.stringify(frames));
+                  0, `number of frames for ${JSON.stringify(frames)}`);
   });
 }, 'A KeyframeEffectReadOnly can be constructed with no frames');
 
