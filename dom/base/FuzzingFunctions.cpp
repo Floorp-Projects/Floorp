@@ -8,6 +8,8 @@
 
 #include "nsJSEnvironment.h"
 #include "js/GCAPI.h"
+#include "nsIAccessibilityService.h"
+#include "xpcAccessibilityService.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,6 +26,19 @@ FuzzingFunctions::GarbageCollect(const GlobalObject&)
 FuzzingFunctions::CycleCollect(const GlobalObject&)
 {
   nsJSContext::CycleCollectNow();
+}
+
+/* static */ void
+FuzzingFunctions::EnableAccessibility(const GlobalObject&,
+                                      ErrorResult& aRv)
+{
+  RefPtr<nsIAccessibilityService> a11y;
+  nsresult rv;
+
+  rv = NS_GetAccessibilityService(getter_AddRefs(a11y));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
 }
 
 } // namespace dom
