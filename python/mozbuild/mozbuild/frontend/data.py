@@ -1057,15 +1057,17 @@ class GeneratedFile(ContextDerived):
         'inputs',
         'flags',
         'required_for_compile',
+        'localized',
     )
 
-    def __init__(self, context, script, method, outputs, inputs, flags=()):
+    def __init__(self, context, script, method, outputs, inputs, flags=(), localized=False):
         ContextDerived.__init__(self, context)
         self.script = script
         self.method = method
         self.outputs = outputs if isinstance(outputs, tuple) else (outputs,)
         self.inputs = inputs
         self.flags = flags
+        self.localized = localized
 
         suffixes = (
             '.c',
