@@ -1937,17 +1937,23 @@ void
 MediaCacheStream::NotifyLoadID(uint32_t aLoadID)
 {
   MOZ_ASSERT(aLoadID > 0);
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  mLoadID = aLoadID;
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaCacheStream::NotifyLoadID",
+    [ client = RefPtr<ChannelMediaResource>(mClient), this, aLoadID ]() {
+      ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+      mLoadID = aLoadID;
+    });
+  OwnerThread()->Dispatch(r.forget());
 }
 
 void
-MediaCacheStream::NotifyDataStarted(uint32_t aLoadID,
-                                    int64_t aOffset,
-                                    bool aSeekable,
-                                    int64_t aLength)
+MediaCacheStream::NotifyDataStartedInternal(uint32_t aLoadID,
+                                            int64_t aOffset,
+                                            bool aSeekable,
+                                            int64_t aLength)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  MOZ_ASSERT(OwnerThread()->IsOnCurrentThread());
   MOZ_ASSERT(aLoadID > 0);
   LOG("Stream %p DataStarted: %" PRId64 " aLoadID=%u aLength=%" PRId64,
       this,
@@ -1997,6 +2003,23 @@ MediaCacheStream::UpdatePrincipal(nsIPrincipal* aPrincipal)
       stream->mClient->CacheClientNotifyPrincipalChanged();
     }
   }
+}
+
+void
+MediaCacheStream::NotifyDataStarted(uint32_t aLoadID,
+                                    int64_t aOffset,
+                                    bool aSeekable,
+                                    int64_t aLength)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aLoadID > 0);
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaCacheStream::NotifyDataStarted",
+    [ =, client = RefPtr<ChannelMediaResource>(mClient) ]() {
+      NotifyDataStartedInternal(aLoadID, aOffset, aSeekable, aLength);
+    });
+  OwnerThread()->Dispatch(r.forget());
 }
 
 void
@@ -2460,12 +2483,18 @@ MediaCacheStream::SetReadMode(ReadMode aMode)
 void
 MediaCacheStream::SetPlaybackRate(uint32_t aBytesPerSecond)
 {
-  NS_ASSERTION(aBytesPerSecond > 0, "Zero playback rate not allowed");
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  if (aBytesPerSecond == mPlaybackBytesPerSecond)
-    return;
-  mPlaybackBytesPerSecond = aBytesPerSecond;
-  mMediaCache->QueueUpdate();
+  MOZ_ASSERT(aBytesPerSecond > 0, "Zero playback rate not allowed");
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaCacheStream::SetPlaybackRate",
+    [ =, client = RefPtr<ChannelMediaResource>(mClient) ]() {
+      ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+      if (!mClosed && mPlaybackBytesPerSecond != aBytesPerSecond) {
+        mPlaybackBytesPerSecond = aBytesPerSecond;
+        mMediaCache->QueueUpdate();
+      }
+    });
+  OwnerThread()->Dispatch(r.forget());
 }
 
 nsresult
@@ -2493,12 +2522,18 @@ void
 MediaCacheStream::ThrottleReadahead(bool bThrottle)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  if (mThrottleReadahead != bThrottle) {
-    LOGI("Stream %p ThrottleReadahead %d", this, bThrottle);
-    mThrottleReadahead = bThrottle;
-    mMediaCache->QueueUpdate();
-  }
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaCacheStream::ThrottleReadahead",
+    [ client = RefPtr<ChannelMediaResource>(mClient), this, bThrottle ]() {
+      ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+      if (!mClosed && mThrottleReadahead != bThrottle) {
+        LOGI("Stream %p ThrottleReadahead %d", this, bThrottle);
+        mThrottleReadahead = bThrottle;
+        mMediaCache->QueueUpdate();
+      }
+    });
+  OwnerThread()->Dispatch(r.forget());
 }
 
 uint32_t
