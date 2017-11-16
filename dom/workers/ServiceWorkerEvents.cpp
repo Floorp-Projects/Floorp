@@ -669,6 +669,13 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     }
   }
 
+  Telemetry::ScalarAdd(Telemetry::ScalarID::SW_SYNTHESIZED_RES_COUNT, 1);
+
+  if (mRequestMode == RequestMode::Same_origin &&
+      response->Type() == ResponseType::Cors) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::SW_CORS_RES_FOR_SO_REQ_COUNT, 1);
+  }
+
   UniquePtr<RespondWithClosure> closure(new RespondWithClosure(mInterceptedChannel,
                                                                mRegistration,
                                                                mRequestURL,
