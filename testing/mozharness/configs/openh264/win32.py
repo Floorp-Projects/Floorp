@@ -22,14 +22,39 @@ config = {
    'operating_system': 'msvc',
    'partial_env': {
        'PATH': '%s;%s;%s' % (
-           '{_VSPATH}/VC/redist/x86/Microsoft.VC140.CRT;{_VSPATH}/VC/redist/x64/Microsoft.VC140.CRT;{_VSPATH}/SDK/Redist/ucrt/DLLs/x86;{_VSPATH}/SDK/Redist/ucrt/DLLs/x64;{_VSPATH}/VC/bin/amd64_x86;{_VSPATH}/VC/bin/amd64;{_VSPATH}/VC/bin;{_VSPATH}/SDK/bin/x86;{_VSPATH}/SDK/bin/x64;{_VSPATH}/DIA SDK/bin'.format(_VSPATH=VSPATH),
+           (
+               '{_VSPATH}/VC/redist/x86/Microsoft.VC140.CRT;'
+               '{_VSPATH}/VC/redist/x64/Microsoft.VC140.CRT;'
+               '{_VSPATH}/SDK/Redist/ucrt/DLLs/x86;'
+               '{_VSPATH}/SDK/Redist/ucrt/DLLs/x64;'
+               '{_VSPATH}/VC/bin/amd64_x86;'
+               '{_VSPATH}/VC/bin/amd64;'
+               '{_VSPATH}/VC/bin;'
+               '{_VSPATH}/SDK/bin/x86;'
+               '{_VSPATH}/SDK/bin/x64;'
+               '{_VSPATH}/DIA SDK/bin'
+           ).format(_VSPATH=VSPATH),
            os.environ['PATH'],
            'C:\\mozilla-build\\Git\\bin',
        ),
        'WIN32_REDIST_DIR': '{_VSPATH}/VC/redist/x86/Microsoft.VC140.CRT'.format(_VSPATH=VSPATH),
        'WIN_UCRT_REDIST_DIR': '{_VSPATH}/SDK/Redist/ucrt/DLLs/x86'.format(_VSPATH=VSPATH),
-       'INCLUDE': '{_VSPATH}/VC/include;{_VSPATH}/VC/atlmfc/include;{_VSPATH}/SDK/Include/10.0.14393.0/ucrt;{_VSPATH}/SDK/Include/10.0.14393.0/shared;{_VSPATH}/SDK/Include/10.0.14393.0/um;{_VSPATH}/SDK/Include/10.0.14393.0/winrt;{_VSPATH}/DIA SDK/include'.format(_VSPATH=VSPATH),
-       'LIB': '{_VSPATH}/VC/lib;{_VSPATH}/VC/atlmfc/lib;{_VSPATH}/SDK/lib/10.0.14393.0/ucrt/x86;{_VSPATH}/SDK/lib/10.0.14393.0/um/x86;{_VSPATH}/DIA SDK/lib'.format(_VSPATH=VSPATH),
+       'INCLUDE': (
+           '{_VSPATH}/VC/include;'
+           '{_VSPATH}/VC/atlmfc/include;'
+           '{_VSPATH}/SDK/Include/10.0.14393.0/ucrt;'
+           '{_VSPATH}/SDK/Include/10.0.14393.0/shared;'
+           '{_VSPATH}/SDK/Include/10.0.14393.0/um;'
+           '{_VSPATH}/SDK/Include/10.0.14393.0/winrt;'
+           '{_VSPATH}/DIA SDK/include'
+       ).format(_VSPATH=VSPATH),
+       'LIB': (
+           '{_VSPATH}/VC/lib;'
+           '{_VSPATH}/VC/atlmfc/lib;'
+           '{_VSPATH}/SDK/lib/10.0.14393.0/ucrt/x86;'
+           '{_VSPATH}/SDK/lib/10.0.14393.0/um/x86;'
+           '{_VSPATH}/DIA SDK/lib'
+        ).format(_VSPATH=VSPATH),
        'WINDOWSSDKDIR': '{_VSPATH}/SDK'.format(_VSPATH=VSPATH),
    },
 }
