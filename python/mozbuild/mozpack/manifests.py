@@ -282,7 +282,7 @@ class InstallManifest(object):
 
            <base>/foo/bar.h -> <dest>/foo/bar.h
         """
-        self._add_entry(mozpath.join(dest, pattern),
+        self._add_entry(mozpath.join(base, pattern, dest),
             (self.PATTERN_LINK, base, pattern, dest))
 
     def add_pattern_copy(self, base, pattern, dest):
@@ -290,7 +290,7 @@ class InstallManifest(object):
 
         See ``add_pattern_link()`` for usage.
         """
-        self._add_entry(mozpath.join(dest, pattern),
+        self._add_entry(mozpath.join(base, pattern, dest),
             (self.PATTERN_COPY, base, pattern, dest))
 
     def add_preprocess(self, source, dest, deps, marker='#', defines={},
