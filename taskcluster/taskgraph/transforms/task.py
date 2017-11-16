@@ -164,6 +164,8 @@ task_description_schema = Schema({
             # for non-tier-1 tasks.
             'build_date',
         ),
+
+        'channel': optionally_keyed_by('project', basestring),
     },
 
     # The `run_on_projects` attribute, defaulting to "all".  This dictates the
@@ -1133,6 +1135,11 @@ def add_release_index_routes(config, task):
     subs['underscore_version'] = release_config['version'].replace('.', '_')
     subs['product'] = index['product']
     subs['branch'] = subs['project']
+    if 'channel' in index:
+        resolve_keyed_by(
+            index, 'channel', item_name=task['label'], project=config.params['project']
+        )
+        subs['channel'] = index['channel']
 
     for rt in task.get('routes', []):
         routes.append(rt.format(**subs))
