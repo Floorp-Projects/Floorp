@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1081039
+-->
+<head>
+  <title>Test callbacks for adopted custom elements.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<template id="template"><x-foo></x-foo></template>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1081039">Bug 1081039</a>
+<script>
+
+var p = Object.create(HTMLElement.prototype);
+p.createdCallback = function() {
+  ok(false, "Created callback should not be called for adopted node.");
+};
+
+document.registerElement("x-foo", { prototype: p });
+
+var template = document.getElementById("template");
+var adoptedFoo = document.adoptNode(template.content.firstChild);
+is(adoptedFoo.nodeName, "X-FOO");
+
+</script>
+</body>
+</html>
