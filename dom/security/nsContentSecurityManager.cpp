@@ -480,6 +480,12 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
       break;
     }
 
+    case nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD: {
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
+      break;
+    }
+
     default:
       // nsIContentPolicy::TYPE_INVALID
       MOZ_ASSERT(false, "can not perform security check without a valid contentType");

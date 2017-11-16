@@ -114,6 +114,7 @@ NS_CP_ContentTypeName(uint32_t contentType)
     CASE_RETURN( TYPE_FETCH                       );
     CASE_RETURN( TYPE_IMAGESET                    );
     CASE_RETURN( TYPE_WEB_MANIFEST                );
+    CASE_RETURN( TYPE_SAVEAS_DOWNLOAD             );
     CASE_RETURN( TYPE_INTERNAL_SCRIPT             );
     CASE_RETURN( TYPE_INTERNAL_WORKER             );
     CASE_RETURN( TYPE_INTERNAL_SHARED_WORKER      );
