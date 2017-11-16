@@ -320,6 +320,7 @@ pref(gfx.font_rendering.graphite.enabled,true) == glyph-decomposition-graphite.h
 == hyphenation-control-1.html hyphenation-control-1-ref.html
 == hyphenation-control-2.html hyphenation-control-2-ref.html
 == hyphenation-control-3.html hyphenation-control-3-ref.html
+== hyphenation-control-4.html hyphenation-control-4-ref.html
 
 # osx-font-smoothing - with and without subpixel AA, only under OSX
 fails-if(!cocoaWidget) != osx-font-smoothing.html osx-font-smoothing-ref.html
