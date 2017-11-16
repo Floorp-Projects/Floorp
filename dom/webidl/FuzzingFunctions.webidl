@@ -21,4 +21,10 @@ interface FuzzingFunctions {
    * Synchronously perform a cycle collection.
    */
   static void cycleCollect();
+
+  /**
+   * Enable accessibility.
+   */
+  [Throws]
+  static void enableAccessibility();
 };
