@@ -1134,6 +1134,8 @@ const KTableEntry nsCSSProps::kColorKTable[] = {
   { eCSSKeyword__moz_mac_secondaryhighlight, LookAndFeel::eColorID__moz_mac_secondaryhighlight },
   { eCSSKeyword__moz_mac_vibrancy_light, LookAndFeel::eColorID__moz_mac_vibrancy_light },
   { eCSSKeyword__moz_mac_vibrancy_dark, LookAndFeel::eColorID__moz_mac_vibrancy_dark },
+  { eCSSKeyword__moz_mac_vibrant_titlebar_light, LookAndFeel::eColorID__moz_mac_vibrant_titlebar_light },
+  { eCSSKeyword__moz_mac_vibrant_titlebar_dark,  LookAndFeel::eColorID__moz_mac_vibrant_titlebar_dark },
   { eCSSKeyword__moz_mac_menuitem, LookAndFeel::eColorID__moz_mac_menuitem },
   { eCSSKeyword__moz_mac_active_menuitem, LookAndFeel::eColorID__moz_mac_active_menuitem },
   { eCSSKeyword__moz_mac_menupopup, LookAndFeel::eColorID__moz_mac_menupopup },
