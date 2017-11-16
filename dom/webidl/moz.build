@@ -363,6 +363,7 @@ GENERATED_WEBIDL_FILES = [
 ]
 
 PREPROCESSED_WEBIDL_FILES = [
+    'ChromeUtils.webidl',
     'Navigator.webidl',
     'Node.webidl',
     'Window.webidl',
@@ -425,7 +426,6 @@ WEBIDL_FILES = [
     'CheckerboardReportService.webidl',
     'ChildNode.webidl',
     'ChromeNodeList.webidl',
-    'ChromeUtils.webidl',
     'Client.webidl',
     'Clients.webidl',
     'ClipboardEvent.webidl',
