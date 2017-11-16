@@ -92,32 +92,6 @@ function runTest() {
   d.appendChild(c);
   e.appendChild(d);
 
-  var e = $('t12');
-  var c = e.firstChild;
-  e.insertBefore(text("This text"), c);
-  e.insertBefore(b(" should be"), c);
-  e.appendChild(text(" green"));
-
-  var e = $('t13');
-  e.className = 'test';
-
-  var e = $('t14');
-  e.removeAttribute('style')
-
-  var e = $('t15');
-  e.innerHTML=':scope{color:green}';
-  var e = $('t16');
-  e.innerHTML=':scope{color:inherit}';
-  var e = $('t17');
-  e.innerHTML=':scope{color:inherit}';
-  e.parentNode.appendChild(text("green"));
-
-  var e = $('t18');
-  var c = e.appendChild(div("green"));
-  document.body.offsetHeight;
-  document.styleSheets[8].cssRules[0].style.setProperty('color','green');
-  document.body.offsetHeight;
-
   document.documentElement.className = '';
 }
 </script>
@@ -141,17 +115,5 @@ function runTest() {
 <span class="border"><div class="test" id="t9"></div></span>
 <span class="border"><div class="test" id="t10"></div></span>
 <span class="border"><div class="test" style="border:inherit" id="t11"></div></span>
-<br>
-
-<span style="color:red"><div class="test green" id="t12"></div></span>
-<span style="color:red"><span><style scoped>:scope{color:green}</style><di id="t13"v>green</div></span></span>
-<span style="color:red"><span class="test"><style scoped>:scope{color:green}</style><div id="t14" class="test" style="color:red">green</div></span></span>
-<span style="color:red"><div class="test"><style id="t15" scoped></style>green</div></span>
-<span style="color:red"><div class="test"><style scoped>:scope{color:green}</style>
-  <div class="test"><style scoped id="t16"></style>green</div>
-  <div class="test"><style scoped id="t17"></style></div></div></span>
-<span style="color:red"><div class="test"><style scoped>:scope{color:red}</style>
-  <div class="test" id="t18"><style scoped>:scope{color:red}</style></div></div></span>
-
 </body>
 </html>
