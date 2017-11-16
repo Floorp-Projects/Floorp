@@ -9,7 +9,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "mp4_demuxer/BufferReader.h"
+#include "BufferReader.h"
 
 namespace mozilla {
 

@@ -17,7 +17,7 @@
 #include "MediaData.h"
 #ifdef MOZ_FMP4
 #include "mp4_demuxer/AtomType.h"
-#include "mp4_demuxer/BufferReader.h"
+#include "BufferReader.h"
 #include "mp4_demuxer/Stream.h"
 #endif
 #include "nsAutoPtr.h"
