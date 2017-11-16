@@ -743,7 +743,7 @@ ServoStyleSet::AppendStyleSheet(SheetType aType,
 {
   MOZ_ASSERT(aSheet);
   MOZ_ASSERT(aSheet->IsApplicable());
-  MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
+  MOZ_ASSERT(IsCSSSheetType(aType));
   MOZ_ASSERT(aSheet->RawContents(), "Raw sheet should be in place before insertion.");
 
   RemoveSheetOfType(aType, aSheet);
@@ -766,7 +766,7 @@ ServoStyleSet::PrependStyleSheet(SheetType aType,
 {
   MOZ_ASSERT(aSheet);
   MOZ_ASSERT(aSheet->IsApplicable());
-  MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
+  MOZ_ASSERT(IsCSSSheetType(aType));
   MOZ_ASSERT(aSheet->RawContents(),
              "Raw sheet should be in place before insertion.");
 
@@ -789,7 +789,7 @@ ServoStyleSet::RemoveStyleSheet(SheetType aType,
                                 ServoStyleSheet* aSheet)
 {
   MOZ_ASSERT(aSheet);
-  MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
+  MOZ_ASSERT(IsCSSSheetType(aType));
 
   RemoveSheetOfType(aType, aSheet);
   if (mRawSet) {
@@ -863,14 +863,14 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
 int32_t
 ServoStyleSet::SheetCount(SheetType aType) const
 {
-  MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
+  MOZ_ASSERT(IsCSSSheetType(aType));
   return mSheets[aType].Length();
 }
 
 ServoStyleSheet*
 ServoStyleSet::StyleSheetAt(SheetType aType, int32_t aIndex) const
 {
-  MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
+  MOZ_ASSERT(IsCSSSheetType(aType));
   return mSheets[aType][aIndex];
 }
 
