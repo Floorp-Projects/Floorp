@@ -18,6 +18,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 /**
  * External applications can pass values into Intents that can cause us to crash: in defense,
@@ -189,6 +190,23 @@ public class SafeIntent {
             Log.w(LOGTAG, "Couldn't get intent data.", e);
             return null;
         }
+    }
+
+    public Set<String> getCategories() {
+        try {
+            return intent.getCategories();
+        } catch (OutOfMemoryError e) {
+            Log.w(LOGTAG, "Couldn't get intent categories: OOM. Malformed?");
+            return null;
+        } catch (RuntimeException e) {
+            Log.w(LOGTAG, "Couldn't get intent categories.", e);
+            return null;
+        }
+    }
+
+    public boolean isLauncherIntent() {
+        final Set<String> intentCategories = intent.getCategories();
+        return (intentCategories != null && intentCategories.contains(Intent.CATEGORY_LAUNCHER) && intent.getAction().equals(Intent.ACTION_MAIN));
     }
 
     public Intent getUnsafe() {

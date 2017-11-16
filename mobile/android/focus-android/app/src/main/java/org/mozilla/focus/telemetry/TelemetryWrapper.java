@@ -91,6 +91,7 @@ public final class TelemetryWrapper {
         private static final String HOMESCREEN_SHORTCUT = "homescreen_shortcut";
         private static final String TABS_TRAY = "tabs_tray";
         private static final String RECENT_APPS = "recent_apps";
+        private static final String APP_ICON = "app_icon";
     }
 
     private static class Value {
@@ -114,6 +115,7 @@ public final class TelemetryWrapper {
         private static final String ADD_TO_HOMESCREEN = "add_to_homescreen";
         private static final String TAB = "tab";
         private static final String WHATS_NEW = "whats_new";
+        private static final String RESUME = "resume";
     }
 
     private static class Extra {
@@ -428,6 +430,14 @@ public final class TelemetryWrapper {
 
     public static void openDefaultAppEvent() {
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.DEFAULT).queue();
+    }
+
+    public static void openFromIconEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.APP_ICON, Value.OPEN).queue();
+    }
+
+    public static void resumeFromIconEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.APP_ICON, Value.RESUME).queue();
     }
 
     public static void openFirefoxEvent() {

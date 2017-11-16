@@ -62,6 +62,10 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
 
         final SafeIntent intent = new SafeIntent(getIntent());
 
+        if (intent.isLauncherIntent()) {
+            TelemetryWrapper.openFromIconEvent();
+        }
+
         sessionManager.handleIntent(this, intent, savedInstanceState);
 
         sessionManager.getSessions().observe(this,  new NonNullObserver<List<Session>>() {
@@ -145,6 +149,10 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
 
         if (ACTION_ERASE.equals(action)) {
             processEraseAction(intent);
+        }
+
+        if (intent.isLauncherIntent()) {
+            TelemetryWrapper.resumeFromIconEvent();
         }
     }
 
