@@ -253,6 +253,21 @@ struct PrefHashEntry : PLDHashEntryHdr
   const char* mKey;
   PrefValue mDefaultPref;
   PrefValue mUserPref;
+
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
+  {
+    // Note: mKey is allocated in gPrefNameArena, measured elsewhere.
+    size_t n = 0;
+    if (mPrefFlags.IsTypeString()) {
+      if (mPrefFlags.HasDefault()) {
+        n += aMallocSizeOf(mDefaultPref.mStringVal);
+      }
+      if (mPrefFlags.HasUserValue()) {
+        n += aMallocSizeOf(mUserPref.mStringVal);
+      }
+    }
+    return n;
+  }
 };
 
 static void
@@ -1773,6 +1788,16 @@ public:
     return !observer;
   }
 
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    size_t n = aMallocSizeOf(this);
+    n += mDomain.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+
+    // All the other fields are non-owning pointers, so we don't measure them.
+
+    return n;
+  }
+
   enum
   {
     ALLOW_MEMMOVE = true
@@ -1811,7 +1836,7 @@ public:
 
   static void NotifyObserver(const char* aNewpref, void* aData);
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   static void ReportToConsole(const nsAString& aMessage);
 
@@ -2739,11 +2764,18 @@ nsPrefBranch::NotifyObserver(const char* aNewPref, void* aData)
 }
 
 size_t
-nsPrefBranch::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+nsPrefBranch::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
+
   n += mPrefRoot.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+
   n += mObservers.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = mObservers.ConstIter(); !iter.Done(); iter.Next()) {
+    const PrefCallback* data = iter.UserData();
+    n += data->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
   return n;
 }
 
@@ -3163,45 +3195,45 @@ ReportToConsole(const char* aMessage, int aLine, bool aError)
   nsPrefBranch::ReportToConsole(NS_ConvertUTF8toUTF16(message.get()));
 }
 
+struct PrefsSizes
+{
+  PrefsSizes()
+    : mHashTable(0)
+    , mStringValues(0)
+    , mCacheData(0)
+    , mRootBranches(0)
+    , mPrefNameArena(0)
+    , mCallbacks(0)
+    , mMisc(0)
+  {
+  }
+
+  size_t mHashTable;
+  size_t mStringValues;
+  size_t mCacheData;
+  size_t mRootBranches;
+  size_t mPrefNameArena;
+  size_t mCallbacks;
+  size_t mMisc;
+};
+
 // Although this is a member of Preferences, it measures sPreferences and
 // several other global structures.
-/* static */ int64_t
-Preferences::SizeOfIncludingThisAndOtherStuff(
-  mozilla::MallocSizeOf aMallocSizeOf)
+/* static */ void
+Preferences::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
+                                    PrefsSizes& aSizes)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), 0);
-
-  size_t n = aMallocSizeOf(sPreferences);
-  if (gHashTable) {
-    // Pref keys are allocated in a private arena, which we count elsewhere.
-    // Pref stringvals are allocated out of the same private arena.
-    n += gHashTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
+  if (!sPreferences) {
+    return;
   }
 
-  if (gCacheData) {
-    n += gCacheData->ShallowSizeOfIncludingThis(aMallocSizeOf);
-    for (uint32_t i = 0, count = gCacheData->Length(); i < count; ++i) {
-      n += aMallocSizeOf((*gCacheData)[i]);
-    }
-  }
+  aSizes.mMisc += aMallocSizeOf(sPreferences.get());
 
-  if (sPreferences->mRootBranch) {
-    n += static_cast<nsPrefBranch*>(sPreferences->mRootBranch.get())
-           ->SizeOfIncludingThis(aMallocSizeOf);
-  }
-
-  if (sPreferences->mDefaultRootBranch) {
-    n += static_cast<nsPrefBranch*>(sPreferences->mDefaultRootBranch.get())
-           ->SizeOfIncludingThis(aMallocSizeOf);
-  }
-
-  n += gPrefNameArena.SizeOfExcludingThis(aMallocSizeOf);
-  for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
-    n += aMallocSizeOf(node);
-    n += aMallocSizeOf(node->mDomain);
-  }
-
-  return n;
+  aSizes.mRootBranches +=
+    static_cast<nsPrefBranch*>(sPreferences->mRootBranch.get())
+      ->SizeOfIncludingThis(aMallocSizeOf) +
+    static_cast<nsPrefBranch*>(sPreferences->mDefaultRootBranch.get())
+      ->SizeOfIncludingThis(aMallocSizeOf);
 }
 
 class PreferenceServiceReporter final : public nsIMemoryReporter
@@ -3226,12 +3258,77 @@ PreferenceServiceReporter::CollectReports(
   nsISupports* aData,
   bool aAnonymize)
 {
-  MOZ_COLLECT_REPORT("explicit/preferences",
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MallocSizeOf mallocSizeOf = PreferenceServiceMallocSizeOf;
+  PrefsSizes sizes;
+
+  Preferences::AddSizeOfIncludingThis(mallocSizeOf, sizes);
+
+  if (gHashTable) {
+    sizes.mHashTable += gHashTable->ShallowSizeOfIncludingThis(mallocSizeOf);
+    for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<PrefHashEntry*>(iter.Get());
+      sizes.mStringValues += entry->SizeOfExcludingThis(mallocSizeOf);
+    }
+  }
+
+  if (gCacheData) {
+    sizes.mCacheData += gCacheData->ShallowSizeOfIncludingThis(mallocSizeOf);
+    for (uint32_t i = 0, count = gCacheData->Length(); i < count; ++i) {
+      sizes.mCacheData += mallocSizeOf((*gCacheData)[i]);
+    }
+  }
+
+  sizes.mPrefNameArena += gPrefNameArena.SizeOfExcludingThis(mallocSizeOf);
+
+  for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
+    sizes.mCallbacks += mallocSizeOf(node);
+    sizes.mCallbacks += mallocSizeOf(node->mDomain);
+  }
+
+  MOZ_COLLECT_REPORT("explicit/preferences/hash-table",
                      KIND_HEAP,
                      UNITS_BYTES,
-                     Preferences::SizeOfIncludingThisAndOtherStuff(
-                       PreferenceServiceMallocSizeOf),
-                     "Memory used by the preferences system.");
+                     sizes.mHashTable,
+                     "Memory used by libpref's hash table.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/string-values",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mStringValues,
+                     "Memory used by libpref's string pref values.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/cache-data",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mCacheData,
+                     "Memory used by libpref's VarCaches.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/root-branches",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mRootBranches,
+                     "Memory used by libpref's root branches.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/pref-name-arena",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mPrefNameArena,
+                     "Memory used by libpref's arena for pref names.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/callbacks",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mCallbacks,
+                     "Memory used by libpref's callbacks list, including "
+                     "pref names and prefixes.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/misc",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mMisc,
+                     "Miscellaneous memory used by libpref.");
 
   nsPrefBranch* rootBranch =
     static_cast<nsPrefBranch*>(Preferences::GetRootBranch());
