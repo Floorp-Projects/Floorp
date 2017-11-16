@@ -3702,12 +3702,10 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
 
   // Try to avoid moving the allocation.
   if (aSize <= gMaxBinClass) {
-    if (aOldSize <= gMaxBinClass && SizeClass(aSize) == SizeClass(aOldSize)) {
+    if (aOldSize <= gMaxBinClass && SizeClass(aSize).Size() == aOldSize) {
       if (aSize < aOldSize) {
         memset(
           (void*)(uintptr_t(aPtr) + aSize), kAllocPoison, aOldSize - aSize);
-      } else if (opt_zero && aSize > aOldSize) {
-        memset((void*)(uintptr_t(aPtr) + aOldSize), 0, aSize - aOldSize);
       }
       return aPtr;
     }
