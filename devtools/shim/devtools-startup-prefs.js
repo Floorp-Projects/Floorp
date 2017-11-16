@@ -20,3 +20,18 @@ sticky_pref("devtools.theme", "light");
 
 // Should the devtools toolbar be opened on startup
 pref("devtools.toolbar.visible", false);
+
+// Pref to drive the devtools onboarding flow experiment. States:
+// - off: forces devtools.enabled to true
+// - on: devtools.enabled is not forced to true.
+// - force: devtools.enabled is not forced to true and cannot be set to true by checking
+//   devtools.selfxss.count. User will have to go through onboarding to use DevTools.
+pref("devtools.onboarding.experiment", "off");
+
+// If devtools.onboarding.experiment is set to "on" or "force", we will flip the
+// devtools.enabled preference to false once. The flag is used to make sure it is only
+// flipped once.
+pref("devtools.onboarding.experiment.flipped", false);
+
+// Flag to check if we already logged the devtools onboarding related probe.
+pref("devtools.onboarding.telemetry.logged", false);
