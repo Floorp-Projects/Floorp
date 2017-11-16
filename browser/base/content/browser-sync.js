@@ -65,6 +65,10 @@ var gSync = {
            .sort((a, b) => a.name.localeCompare(b.name));
   },
 
+  get offline() {
+    return Weave.Service.scheduler.offline;
+  },
+
   _generateNodeGetters() {
     for (let k of ["Status", "Avatar", "Label", "Container"]) {
       let prop = "appMenu" + k;

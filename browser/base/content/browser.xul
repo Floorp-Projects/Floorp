@@ -436,7 +436,8 @@
            tabspecific="true"
            noautofocus="true"
            copyURLFeedback="&copyURLFeedback.label;"
-           sendToDeviceFeedback="&sendToDeviceFeedback.label;">
+           sendToDeviceFeedback="&sendToDeviceFeedback.label;"
+           sendToDeviceOfflineFeedback="&sendToDeviceOfflineFeedback.label;">
       <hbox id="pageActionFeedbackAnimatableBox">
         <image id="pageActionFeedbackAnimatableImage"/>
       </hbox>
