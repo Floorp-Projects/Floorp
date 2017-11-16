@@ -237,6 +237,6 @@ function assert_matrix_equals(actual, expected, description) {
     'dimension of the matrix: ' + description);
   for (let i = 0; i < actualMatrixArray.length; i++) {
     assert_approx_equals(actualMatrixArray[i], expectedMatrixArray[i], 0.0001,
-      'expected ' + expected + ' but got ' + actual + ": " + description);
+      'expected ' + expected + ' but got ' + actual + ': ' + description);
   }
 }
