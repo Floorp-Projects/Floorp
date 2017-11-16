@@ -785,24 +785,24 @@ AccessibleCaretManager::GetFrameSelection() const
   MOZ_ASSERT(fm);
 
   nsIContent* focusedContent = fm->GetFocusedContent();
-  if (focusedContent) {
-    nsIFrame* focusFrame = focusedContent->GetPrimaryFrame();
-    if (!focusFrame) {
-      return nullptr;
-    }
-
-    // Prevent us from touching the nsFrameSelection associated with other
-    // PresShell.
-    RefPtr<nsFrameSelection> fs = focusFrame->GetFrameSelection();
-    if (!fs || fs->GetShell() != mPresShell) {
-      return nullptr;
-    }
-
-    return fs.forget();
-  } else {
+  if (!focusedContent) {
     // For non-editable content
     return mPresShell->FrameSelection();
   }
+
+  nsIFrame* focusFrame = focusedContent->GetPrimaryFrame();
+  if (!focusFrame) {
+    return nullptr;
+  }
+
+  // Prevent us from touching the nsFrameSelection associated with other
+  // PresShell.
+  RefPtr<nsFrameSelection> fs = focusFrame->GetFrameSelection();
+  if (!fs || fs->GetShell() != mPresShell) {
+    return nullptr;
+  }
+
+  return fs.forget();
 }
 
 nsAutoString
