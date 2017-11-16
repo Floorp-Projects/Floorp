@@ -475,7 +475,7 @@ class TabBase {
    *        True if the tab matches the query.
    */
   matches(queryInfo) {
-    const PROPS = ["active", "audible", "cookieStoreId", "highlighted", "index", "openerTabId", "pinned", "status", "title"];
+    const PROPS = ["active", "audible", "cookieStoreId", "highlighted", "index", "openerTabId", "pinned", "status"];
 
     if (PROPS.some(prop => queryInfo[prop] != null && queryInfo[prop] !== this[prop])) {
       return false;
@@ -488,6 +488,9 @@ class TabBase {
     }
 
     if (queryInfo.url && !queryInfo.url.matches(this.uri)) {
+      return false;
+    }
+    if (queryInfo.title && !queryInfo.title.matches(this.title)) {
       return false;
     }
 
