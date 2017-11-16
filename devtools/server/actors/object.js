@@ -1941,9 +1941,9 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       return false;
     }
 
-    // If no item is going to be displayed in preview, better display as sparse object.
-    // The first key should contain the smallest integer index (if any).
-    if (keys[0] >= OBJECT_PREVIEW_MAX_ITEMS) {
+    // We don't want to represent Objects as sparse arrays, so every property
+    // should match its index, or be the length property.
+    if (keys.some((key, i) => parseInt(key, 10) !== i && key !== "length")) {
       return false;
     }
 
@@ -1956,8 +1956,16 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       // Otherwise, let length be the (presumably) greatest array index plus 1.
       length = +keys[keys.length - 1] + 1;
     }
-    // Check if length is a valid array length, i.e. is a Uint32 number.
-    if (typeof length !== "number" || length >>> 0 !== length) {
+
+    // If they are no numeric keys, or if the length does not represent the actual
+    // object length, or is not a valid array length, i.e. is a Uint32 number,
+    // do not label the object as ArrayLike.
+    if (
+      keys.length === 0 ||
+      keys.length !== length ||
+      typeof length !== "number" ||
+      length >>> 0 !== length
+    ) {
       return false;
     }
 
