@@ -31,7 +31,7 @@ promise_test(t => {
   return animation.ready.then(() => {
     animation.pause();
     // Set up listeners on pause-pending ready promise
-    var retPromise = animation.ready.then(() => {
+    const retPromise = animation.ready.then(() => {
       assert_unreached('ready promise was fulfilled');
     }).catch(err => {
       assert_equals(err.name, 'AbortError',

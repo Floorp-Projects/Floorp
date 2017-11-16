@@ -1,6 +1,6 @@
 'use strict';
 
-var gCSSProperties = {
+const gCSSProperties = {
   'align-content': {
     // https://drafts.csswg.org/css-align/#propdef-align-content
     types: [
@@ -146,7 +146,7 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-backgrounds-3/#border-bottom-width
     types: [ 'length' ],
     setup: t => {
-      var element = createElement(t);
+      const element = createElement(t);
       element.style.borderBottomStyle = 'solid';
       return element;
     }
@@ -233,7 +233,7 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-backgrounds-3/#border-left-width
     types: [ 'length' ],
     setup: t => {
-      var element = createElement(t);
+      const element = createElement(t);
       element.style.borderLeftStyle = 'solid';
       return element;
     }
@@ -252,7 +252,7 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-backgrounds-3/#border-right-width
     types: [ 'length' ],
     setup: t => {
-      var element = createElement(t);
+      const element = createElement(t);
       element.style.borderRightStyle = 'solid';
       return element;
     }
@@ -285,7 +285,7 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-backgrounds-3/#border-top-width
     types: [ 'length' ],
     setup: t => {
-      var element = createElement(t);
+      const element = createElement(t);
       element.style.borderTopStyle = 'solid';
       return element;
     }
@@ -402,7 +402,7 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-multicol/#propdef-column-rule-width
     types: [ 'length' ],
     setup: t => {
-      var element = createElement(t);
+      const element = createElement(t);
       element.style.columnRuleStyle = 'solid';
       return element;
     }
@@ -1044,7 +1044,7 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-ui-3/#propdef-outline-width
     types: [ 'length' ],
     setup: t => {
-      var element = createElement(t);
+      const element = createElement(t);
       element.style.outlineStyle = 'solid';
       return element;
     }
@@ -1368,7 +1368,7 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-text-decor-3/#propdef-text-shadow
     types: [ 'textShadowList' ],
     setup: t => {
-      var element = createElement(t);
+      const element = createElement(t);
       element.style.color = 'green';
       return element;
     }
@@ -1514,11 +1514,11 @@ function testAnimationSamplesWithAnyOrder(animation, idlName, testSamples) {
 }
 
 function testAnimationSampleMatrices(animation, idlName, testSamples) {
-  var target = animation.effect.target;
+  const target = animation.effect.target;
   testSamples.forEach(function(testSample) {
     animation.currentTime = testSample.time;
-    var actual = getComputedStyle(target)[idlName];
-    var expected = createMatrixFromArray(testSample.expected);
+    const actual = getComputedStyle(target)[idlName];
+    const expected = createMatrixFromArray(testSample.expected);
     assert_matrix_equals(actual, expected,
                          'The value should be ' + expected +
                          ' at ' + testSample.time + 'ms but got ' + actual);
@@ -1530,7 +1530,7 @@ function createTestElement(t, setup) {
 }
 
 function isSupported(property) {
-  var testKeyframe = new TestKeyframe(propertyToIDL(property));
+  const testKeyframe = new TestKeyframe(propertyToIDL(property));
   try {
     // Since TestKeyframe returns 'undefined' for |property|,
     // the KeyframeEffect constructor will throw
@@ -1541,7 +1541,7 @@ function isSupported(property) {
 }
 
 function TestKeyframe(testProp) {
-  var _propAccessCount = 0;
+  let _propAccessCount = 0;
 
   Object.defineProperty(this, testProp, {
     get: function() { _propAccessCount++; },
@@ -1563,11 +1563,11 @@ function propertyToIDL(property) {
                             return str.substr(1).toUpperCase(); });
 }
 function calcFromPercentage(idlName, percentageValue) {
-  var examElem = document.createElement('div');
+  const examElem = document.createElement('div');
   document.body.appendChild(examElem);
   examElem.style[idlName] = percentageValue;
 
-  var calcValue = getComputedStyle(examElem)[idlName];
+  const calcValue = getComputedStyle(examElem)[idlName];
   document.body.removeChild(examElem);
 
   return calcValue;

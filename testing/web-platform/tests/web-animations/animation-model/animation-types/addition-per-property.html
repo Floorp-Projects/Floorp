@@ -17,16 +17,16 @@ html {
 <script>
 'use strict';
 
-for (var property in gCSSProperties) {
+for (const property in gCSSProperties) {
   if (!isSupported(property)) {
     continue;
   }
 
-  var animationTypes = gCSSProperties[property].types;
-  var setupFunction = gCSSProperties[property].setup;
+  const animationTypes = gCSSProperties[property].types;
+  const setupFunction = gCSSProperties[property].setup;
   animationTypes.forEach(animationType => {
-    var typeObject;
-    var animationTypeString;
+    let typeObject;
+    let animationTypeString;
     if (typeof animationType === 'string') {
       typeObject = types[animationType];
       animationTypeString = animationType;

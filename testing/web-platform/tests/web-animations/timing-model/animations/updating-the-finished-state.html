@@ -21,7 +21,7 @@
 
 // Did seek = false
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
 
   // Here and in the following tests we wait until ready resolves as
   // otherwise we don't have a resolved start time. We test the case
@@ -38,7 +38,7 @@ promise_test(t => {
 
 // Did seek = true
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   return anim.ready.then(() => {
     anim.currentTime = 200 * MS_PER_SEC;
     return waitForAnimationFrames(1);
@@ -60,7 +60,7 @@ promise_test(t => {
 
 // Did seek = true
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   return anim.ready.then(() => {
     anim.currentTime = 100 * MS_PER_SEC;
     return waitForAnimationFrames(1);
@@ -76,7 +76,7 @@ promise_test(t => {
 
 // Did seek = false
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.playbackRate = -1;
   anim.play(); // Make sure animation is not initially finished
   return anim.ready.then(() => {
@@ -91,7 +91,7 @@ promise_test(t => {
 
 // Did seek = true
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.playbackRate = -1;
   anim.play();
   return anim.ready.then(() => {
@@ -108,7 +108,7 @@ promise_test(t => {
 
 // Did seek = true
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.playbackRate = -1;
   anim.play();
   return anim.ready.then(() => {
@@ -127,7 +127,7 @@ promise_test(t => {
 
 // Did seek = false; playback rate > 0
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
 
   // We want to test that the hold time is cleared so first we need to
   // put the animation in a state where the hold time is set.
@@ -147,7 +147,7 @@ promise_test(t => {
 
 // Did seek = true; playback rate > 0
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.finish();
   return anim.ready.then(() => {
     anim.currentTime = 50 * MS_PER_SEC;
@@ -178,7 +178,7 @@ promise_test(t => {
 
 // Did seek = true; playback rate < 0
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.playbackRate = -1;
   return anim.ready.then(() => {
     anim.currentTime = 50 * MS_PER_SEC;
@@ -194,7 +194,7 @@ promise_test(t => {
 
 // current time < 0
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.playbackRate = 0;
   return anim.ready.then(() => {
     anim.currentTime = -100 * MS_PER_SEC;
@@ -209,7 +209,7 @@ promise_test(t => {
 
 // current time < target end
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.playbackRate = 0;
   return anim.ready.then(() => {
     anim.currentTime = 50 * MS_PER_SEC;
@@ -224,7 +224,7 @@ promise_test(t => {
 
 // current time > target end
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.playbackRate = 0;
   return anim.ready.then(() => {
     anim.currentTime = 200 * MS_PER_SEC;
@@ -240,7 +240,7 @@ promise_test(t => {
 // CASE 5: current time unresolved
 
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.cancel();
   // Trigger a change that will cause the "update the finished state"
   // procedure to run.
@@ -260,7 +260,7 @@ promise_test(t => {
 // CASE 6: has a pending task
 
 test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.cancel();
   anim.currentTime = 75 * MS_PER_SEC;
   anim.play();
@@ -279,7 +279,7 @@ test(t => {
 
 // Did seek = false
 promise_test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.cancel();
   // Make it so that only the start time is unresolved (to avoid overlapping
   // with the test case where current time is unresolved)
@@ -298,7 +298,7 @@ promise_test(t => {
 
 // Did seek = true
 test(t => {
-  var anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   anim.cancel();
   anim.currentTime = 150 * MS_PER_SEC;
   // Trigger a change that will cause the "update the finished state"
@@ -318,14 +318,14 @@ test(t => {
 // --------------------------------------------------------------------
 
 function waitForFinishEventAndPromise(animation) {
-  var eventPromise = new Promise(resolve => {
+  const eventPromise = new Promise(resolve => {
     animation.onfinish = resolve;
   });
   return Promise.all([eventPromise, animation.finished]);
 }
 
 promise_test(t => {
-  var animation = createDiv(t).animate(null, 1);
+  const animation = createDiv(t).animate(null, 1);
   animation.onfinish =
     t.unreached_func('Seeking to finish should not fire finish event');
   animation.finished.then(
@@ -338,14 +338,14 @@ promise_test(t => {
    + ' and then seeks back again');
 
 promise_test(t => {
-  var animation = createDiv(t).animate(null, 1);
+  const animation = createDiv(t).animate(null, 1);
   return animation.ready.then(() => {
     return waitForFinishEventAndPromise(animation);
   });
 }, 'Finish notification steps run when the animation completes normally');
 
 promise_test(t => {
-  var animation = createDiv(t).animate(null, 1);
+  const animation = createDiv(t).animate(null, 1);
   return animation.ready.then(() => {
     animation.currentTime = 10;
     return waitForFinishEventAndPromise(animation);
@@ -353,11 +353,11 @@ promise_test(t => {
 }, 'Finish notification steps run when the animation seeks past finish');
 
 promise_test(t => {
-  var animation = createDiv(t).animate(null, 1);
+  const animation = createDiv(t).animate(null, 1);
   return animation.ready.then(() => {
     // Register for notifications now since once we seek away from being
     // finished the 'finished' promise will be replaced.
-    var finishNotificationSteps = waitForFinishEventAndPromise(animation);
+    const finishNotificationSteps = waitForFinishEventAndPromise(animation);
     animation.finish();
     animation.currentTime = 0;
     animation.pause();
@@ -367,8 +367,8 @@ promise_test(t => {
    + ' even if we then seek away');
 
 promise_test(t => {
-  var animation = createDiv(t).animate(null, 1);
-  var initialFinishedPromise = animation.finished;
+  const animation = createDiv(t).animate(null, 1);
+  const initialFinishedPromise = animation.finished;
 
   return animation.finished.then(target => {
     animation.currentTime = 0;
@@ -377,8 +377,8 @@ promise_test(t => {
 }, 'Animation finished promise is replaced after seeking back to start');
 
 promise_test(t => {
-  var animation = createDiv(t).animate(null, 1);
-  var initialFinishedPromise = animation.finished;
+  const animation = createDiv(t).animate(null, 1);
+  const initialFinishedPromise = animation.finished;
 
   return animation.finished.then(target => {
     animation.play();
@@ -387,7 +387,7 @@ promise_test(t => {
 }, 'Animation finished promise is replaced after replaying from start');
 
 async_test(t => {
-  var animation = createDiv(t).animate(null, 1);
+  const animation = createDiv(t).animate(null, 1);
   animation.onfinish = event => {
     animation.currentTime = 0;
     animation.onfinish = event => {
@@ -397,7 +397,7 @@ async_test(t => {
 }, 'Animation finish event is fired again after seeking back to start');
 
 async_test(t => {
-  var animation = createDiv(t).animate(null, 1);
+  const animation = createDiv(t).animate(null, 1);
   animation.onfinish = event => {
     animation.play();
     animation.onfinish = event => {

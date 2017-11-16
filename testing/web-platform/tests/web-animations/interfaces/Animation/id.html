@@ -11,14 +11,14 @@
 "use strict";
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   assert_equals(animation.id, '', 'id for Animation is initially empty');
 }, 'Animation.id initial value');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.id = 'anim';
 
   assert_equals(animation.id, 'anim', 'animation.id reflects the value set');

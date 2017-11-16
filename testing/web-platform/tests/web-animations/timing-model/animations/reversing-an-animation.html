@@ -12,9 +12,9 @@
 "use strict";
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, {duration: 100 * MS_PER_SEC,
-                                   iterations: Infinity});
+  const div = createDiv(t);
+  const animation = div.animate({}, { duration: 100 * MS_PER_SEC,
+                                      iterations: Infinity });
 
   // Wait a frame because if currentTime is still 0 when we call
   // reverse(), it will throw (per spec).
@@ -22,7 +22,7 @@ promise_test(t => {
     assert_greater_than_equal(animation.currentTime, 0,
       'currentTime expected to be greater than 0, one frame after starting');
     animation.currentTime = 50 * MS_PER_SEC;
-    var previousPlaybackRate = animation.playbackRate;
+    const previousPlaybackRate = animation.playbackRate;
     animation.reverse();
     assert_equals(animation.playbackRate, -previousPlaybackRate,
       'playbackRate should be inverted');
@@ -30,9 +30,9 @@ promise_test(t => {
 }, 'Reversing an animation inverts the playback rate');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, {duration: 100 * MS_PER_SEC,
-                                   iterations: Infinity});
+  const div = createDiv(t);
+  const animation = div.animate({}, { duration: 100 * MS_PER_SEC,
+                                      iterations: Infinity });
   animation.currentTime = 50 * MS_PER_SEC;
   animation.pause();
 
@@ -46,8 +46,8 @@ promise_test(t => {
 }, 'Reversing an animation plays a pausing animation');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.currentTime = 50 * MS_PER_SEC;
   animation.reverse();
 
@@ -57,9 +57,9 @@ test(t => {
 }, 'Reversing an animation maintains the same current time');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, { duration: 200 * MS_PER_SEC,
-                                    delay: -100 * MS_PER_SEC });
+  const div = createDiv(t);
+  const animation = div.animate({}, { duration: 200 * MS_PER_SEC,
+                                      delay: -100 * MS_PER_SEC });
   assert_equals(animation.playState, 'pending',
     'The playState is pending before we call reverse');
 
@@ -70,10 +70,10 @@ test(t => {
 }, 'Reversing an animation does not cause it to leave the pending state');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, { duration: 200 * MS_PER_SEC,
-                                    delay: -100 * MS_PER_SEC });
-  var readyResolved = false;
+  const div = createDiv(t);
+  const animation = div.animate({}, { duration: 200 * MS_PER_SEC,
+                                      delay: -100 * MS_PER_SEC });
+  let readyResolved = false;
   animation.ready.then(() => { readyResolved = true; });
 
   animation.reverse();
@@ -85,8 +85,8 @@ promise_test(t => {
 }, 'Reversing an animation does not cause it to resolve the ready promise');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.currentTime = 200 * MS_PER_SEC;
   animation.reverse();
 
@@ -97,8 +97,8 @@ test(t => {
    'effect end should make it play from the end');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
 
   animation.currentTime = -200 * MS_PER_SEC;
   animation.reverse();
@@ -110,8 +110,8 @@ test(t => {
    'should make it play from the end');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.playbackRate = -1;
   animation.currentTime = -200 * MS_PER_SEC;
   animation.reverse();
@@ -123,8 +123,8 @@ test(t => {
    'should make it play from the start');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.playbackRate = -1;
   animation.currentTime = 200 * MS_PER_SEC;
   animation.reverse();
@@ -136,9 +136,9 @@ test(t => {
    'end should make it play from the start');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, {duration: 100 * MS_PER_SEC,
-                                   iterations: Infinity});
+  const div = createDiv(t);
+  const animation = div.animate({}, { duration: 100 * MS_PER_SEC,
+                                      iterations: Infinity });
   animation.currentTime = -200 * MS_PER_SEC;
 
   assert_throws('InvalidStateError',
@@ -150,8 +150,8 @@ test(t => {
    'and the target effect end is positive infinity should throw an exception');
 
 test(t => {
-  var animation = createDiv(t).animate({}, { duration: 100 * MS_PER_SEC,
-                                             iterations: Infinity });
+  const animation = createDiv(t).animate({}, { duration: 100 * MS_PER_SEC,
+                                               iterations: Infinity });
   animation.currentTime = -200 * MS_PER_SEC;
 
   try { animation.reverse(); } catch(e) { }
@@ -160,9 +160,9 @@ test(t => {
 }, 'When reversing throws an exception, the playback rate remains unchanged');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, {duration: 100 * MS_PER_SEC,
-                                   iterations: Infinity});
+  const div = createDiv(t);
+  const animation = div.animate({}, { duration: 100 * MS_PER_SEC,
+                                      iterations: Infinity });
   animation.currentTime = -200 * MS_PER_SEC;
   animation.playbackRate = 0;
 
@@ -176,9 +176,9 @@ test(t => {
    'exception');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, {duration: 100 * MS_PER_SEC,
-                                   iterations: Infinity});
+  const div = createDiv(t);
+  const animation = div.animate({}, { duration: 100 * MS_PER_SEC,
+                                      iterations: Infinity });
   animation.playbackRate = -1;
   animation.currentTime = -200 * MS_PER_SEC;
   animation.reverse();
@@ -192,8 +192,8 @@ test(t => {
    'from the start');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.playbackRate = 0;
   animation.currentTime = 50 * MS_PER_SEC;
   animation.reverse();
@@ -207,8 +207,8 @@ test(t => {
    'time and playback rate');
 
 test(t => {
-  var div = createDiv(t);
-  var animation =
+  const div = createDiv(t);
+  const animation =
     new Animation(new KeyframeEffect(div, null, 100 * MS_PER_SEC), null);
 
   assert_throws('InvalidStateError', () => { animation.reverse(); });

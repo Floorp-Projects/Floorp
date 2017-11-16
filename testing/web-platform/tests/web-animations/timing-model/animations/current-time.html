@@ -11,7 +11,7 @@
 'use strict';
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
 
@@ -22,7 +22,7 @@ test(t => {
 }, 'The current time returns the hold time when set');
 
 promise_test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
 
@@ -36,7 +36,7 @@ promise_test(t => {
 // timeline if we find a way of creating an inactive timeline!
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
 
@@ -46,16 +46,16 @@ test(t => {
    '(and no hold time is set)');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
 
   animation.playbackRate = 2;
   animation.startTime = document.timeline.currentTime - 25 * MS_PER_SEC;
 
-  var timelineTime = document.timeline.currentTime;
-  var startTime = animation.startTime;
-  var playbackRate = animation.playbackRate;
+  const timelineTime = document.timeline.currentTime;
+  const startTime = animation.startTime;
+  const playbackRate = animation.playbackRate;
   assert_times_equal(animation.currentTime,
                      (timelineTime - startTime) * playbackRate,
                      'Animation has a unresolved start time');
@@ -63,7 +63,7 @@ test(t => {
    'playback rate');
 
 promise_test(t => {
-  var animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   animation.playbackRate = 0;
 
   return animation.ready.then(() => waitForAnimationFrames(1))

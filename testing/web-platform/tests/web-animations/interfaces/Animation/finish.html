@@ -10,11 +10,11 @@
 <script>
 'use strict';
 
-var gKeyFrames = { 'marginLeft': ['100px', '200px'] };
+const gKeyFrames = { 'marginLeft': ['100px', '200px'] };
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   animation.playbackRate = 0;
 
   assert_throws({name: 'InvalidStateError'}, () => {
@@ -23,10 +23,10 @@ test(t => {
 }, 'Test exceptions when finishing non-running animation');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames,
-                              {duration : 100 * MS_PER_SEC,
-                               iterations : Infinity});
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames,
+                                { duration : 100 * MS_PER_SEC,
+                                  iterations : Infinity });
 
   assert_throws({name: 'InvalidStateError'}, () => {
     animation.finish();
@@ -34,8 +34,8 @@ test(t => {
 }, 'Test exceptions when finishing infinite animation');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   animation.finish();
 
   assert_equals(animation.currentTime, 100 * MS_PER_SEC,
@@ -44,8 +44,8 @@ test(t => {
 }, 'Test finishing of animation');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
    // 1s past effect end
   animation.currentTime =
     animation.effect.getComputedTiming().endTime + 1 * MS_PER_SEC;
@@ -57,8 +57,8 @@ test(t => {
 }, 'Test finishing of animation with a current time past the effect end');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   animation.currentTime = 100 * MS_PER_SEC;
   return animation.finished.then(() => {
     animation.playbackRate = -1;
@@ -71,8 +71,8 @@ promise_test(t => {
 }, 'Test finishing of reversed animation');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   animation.currentTime = 100 * MS_PER_SEC;
   return animation.finished.then(() => {
     animation.playbackRate = -1;
@@ -86,8 +86,8 @@ promise_test(t => {
 }, 'Test finishing of reversed animation with a current time less than zero');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   animation.pause();
   return animation.ready.then(() => {
     animation.finish();
@@ -103,8 +103,8 @@ promise_test(t => {
 }, 'Test finish() while paused');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   animation.pause();
   // Update playbackRate so we can test that the calculated startTime
   // respects it
@@ -122,8 +122,8 @@ test(t => {
 }, 'Test finish() while pause-pending with positive playbackRate');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   animation.pause();
   animation.playbackRate = -2;
   animation.finish();
@@ -137,8 +137,8 @@ test(t => {
 }, 'Test finish() while pause-pending with negative playbackRate');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   animation.playbackRate = 0.5;
   animation.finish();
 
@@ -156,8 +156,8 @@ test(t => {
 //   the current time should be updated
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   return animation.ready.then(() => {
     animation.pause();
     animation.play();
@@ -173,12 +173,12 @@ promise_test(t => {
 }, 'Test finish() during aborted pause');
 
 promise_test(t => {
-  var div = createDiv(t);
+  const div = createDiv(t);
   div.style.marginLeft = '10px';
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   return animation.ready.then(() => {
     animation.finish();
-    var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
+    const marginLeft = parseFloat(getComputedStyle(div).marginLeft);
 
     assert_equals(marginLeft, 10,
                   'The computed style should be reset when finish() is ' +
@@ -187,9 +187,9 @@ promise_test(t => {
 }, 'Test resetting of computed style');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
-  var resolvedFinished = false;
+  const div = createDiv(t);
+  const animation = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  let resolvedFinished = false;
   animation.finished.then(() => {
     resolvedFinished = true;
   });
@@ -204,9 +204,9 @@ promise_test(t => {
 }, 'Test finish() resolves finished promise synchronously');
 
 promise_test(t => {
-  var effect = new KeyframeEffectReadOnly(null, gKeyFrames, 100 * MS_PER_SEC);
-  var animation = new Animation(effect, document.timeline);
-  var resolvedFinished = false;
+  const effect = new KeyframeEffectReadOnly(null, gKeyFrames, 100 * MS_PER_SEC);
+  const animation = new Animation(effect, document.timeline);
+  let resolvedFinished = false;
   animation.finished.then(() => {
     resolvedFinished = true;
   });
@@ -222,11 +222,11 @@ promise_test(t => {
    'without a target');
 
 promise_test(t => {
-  var effect = new KeyframeEffectReadOnly(null, gKeyFrames, 100 * MS_PER_SEC);
-  var animation = new Animation(effect, document.timeline);
+  const effect = new KeyframeEffectReadOnly(null, gKeyFrames, 100 * MS_PER_SEC);
+  const animation = new Animation(effect, document.timeline);
   animation.play();
 
-  var resolvedFinished = false;
+  let resolvedFinished = false;
   animation.finished.then(() => {
     resolvedFinished = true;
   });

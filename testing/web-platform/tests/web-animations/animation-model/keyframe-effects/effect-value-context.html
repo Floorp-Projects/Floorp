@@ -10,10 +10,10 @@
 <script>
 
 test(t => {
-  var div = createDiv(t);
+  const div = createDiv(t);
   div.style.fontSize = '10px';
-  var animation = div.animate([ { marginLeft: '10em' },
-                                { marginLeft: '20em' } ], 1000);
+  const animation = div.animate([ { marginLeft: '10em' },
+                                  { marginLeft: '20em' } ], 1000);
   animation.currentTime = 500;
   assert_equals(getComputedStyle(div).marginLeft, '150px',
                 'Effect value before updating font-size');
@@ -23,13 +23,13 @@ test(t => {
 }, 'Effect values reflect changes to font-size on element');
 
 test(t => {
-  var parentDiv = createDiv(t);
-  var div = createDiv(t);
+  const parentDiv = createDiv(t);
+  const div = createDiv(t);
   parentDiv.appendChild(div);
   parentDiv.style.fontSize = '10px';
 
-  var animation = div.animate([ { marginLeft: '10em' },
-                                { marginLeft: '20em' } ], 1000);
+  const animation = div.animate([ { marginLeft: '10em' },
+                                  { marginLeft: '20em' } ], 1000);
   animation.currentTime = 500;
   assert_equals(getComputedStyle(div).marginLeft, '150px',
                 'Effect value before updating font-size on parent element');
@@ -39,12 +39,12 @@ test(t => {
 }, 'Effect values reflect changes to font-size on parent element');
 
 promise_test(t => {
-  var parentDiv = createDiv(t);
-  var div = createDiv(t);
+  const parentDiv = createDiv(t);
+  const div = createDiv(t);
   parentDiv.appendChild(div);
   parentDiv.style.fontSize = '10px';
-  var animation = div.animate([ { marginLeft: '10em' },
-                                { marginLeft: '20em' } ], 1000);
+  const animation = div.animate([ { marginLeft: '10em' },
+                                  { marginLeft: '20em' } ], 1000);
 
   animation.pause();
   animation.currentTime = 500;
@@ -58,15 +58,15 @@ promise_test(t => {
    + ' immediately flushed');
 
 promise_test(t => {
-  var divWith10pxFontSize = createDiv(t);
+  const divWith10pxFontSize = createDiv(t);
   divWith10pxFontSize.style.fontSize = '10px';
-  var divWith20pxFontSize = createDiv(t);
+  const divWith20pxFontSize = createDiv(t);
   divWith20pxFontSize.style.fontSize = '20px';
 
-  var div = createDiv(t);
+  const div = createDiv(t);
   div.remove(); // Detach
-  var animation = div.animate([ { marginLeft: '10em' },
-                                { marginLeft: '20em' } ], 1000);
+  const animation = div.animate([ { marginLeft: '10em' },
+                                  { marginLeft: '20em' } ], 1000);
   animation.pause();
 
   return animation.ready.then(() => {
@@ -82,14 +82,14 @@ promise_test(t => {
 }, 'Effect values reflect changes to font-size from reparenting');
 
 test(t => {
-  var divA = createDiv(t);
+  const divA = createDiv(t);
   divA.style.fontSize = '10px';
 
-  var divB = createDiv(t);
+  const divB = createDiv(t);
   divB.style.fontSize = '20px';
 
-  var animation = divA.animate([ { marginLeft: '10em' },
-                                 { marginLeft: '20em' } ], 1000);
+  const animation = divA.animate([ { marginLeft: '10em' },
+                                   { marginLeft: '20em' } ], 1000);
   animation.currentTime = 500;
   assert_equals(getComputedStyle(divA).marginLeft, '150px',
                 'Effect value before updating target element');

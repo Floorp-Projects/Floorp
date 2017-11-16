@@ -11,7 +11,7 @@
 <script>
 "use strict";
 
-var gKeyFrames = { 'marginLeft': ['100px', '200px'] };
+const gKeyFrames = { 'marginLeft': ['100px', '200px'] };
 
 test(t => {
   assert_equals(document.getAnimations().length, 0,
@@ -20,9 +20,9 @@ test(t => {
 }, 'Test document.getAnimations for non-animated content');
 
 test(t => {
-  var div = createDiv(t);
-  var anim1 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
-  var anim2 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const anim1 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const anim2 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   assert_equals(document.getAnimations().length, 2,
                 'getAnimation returns running animations');
 
@@ -33,17 +33,17 @@ test(t => {
 }, 'Test document.getAnimations for script-generated animations')
 
 test(t => {
-  var div = createDiv(t);
-  var anim1 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
-  var anim2 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const anim1 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const anim2 = div.animate(gKeyFrames, 100 * MS_PER_SEC);
   assert_array_equals(document.getAnimations(),
                       [ anim1, anim2 ],
                       'getAnimations() returns running animations');
 }, 'Test the order of document.getAnimations with script generated animations')
 
 test(t => {
-  var effect = new KeyframeEffectReadOnly(null, gKeyFrames, 100 * MS_PER_SEC);
-  var anim = new Animation(effect, document.timeline);
+  const effect = new KeyframeEffectReadOnly(null, gKeyFrames, 100 * MS_PER_SEC);
+  const anim = new Animation(effect, document.timeline);
   anim.play();
 
   assert_equals(document.getAnimations().length, 0,

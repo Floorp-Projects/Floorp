@@ -48,7 +48,7 @@ function assert_phase_at_time(animation, phase, currentTime) {
 }
 
 test(t => {
-  var animation = createDiv(t).animate(null, 1);
+  const animation = createDiv(t).animate(null, 1);
 
   [ { currentTime: -1, phase: 'before' },
     { currentTime:  0, phase: 'active' },
@@ -59,7 +59,7 @@ test(t => {
 }, 'Phase calculation for a simple animation effect');
 
 test(t => {
-  var animation = createDiv(t).animate(null, { duration: 1, delay: 1 });
+  const animation = createDiv(t).animate(null, { duration: 1, delay: 1 });
 
   [ { currentTime: 0, phase: 'before' },
     { currentTime: 1, phase: 'active' },
@@ -70,7 +70,7 @@ test(t => {
 }, 'Phase calculation for an animation effect with a positive start delay');
 
 test(t => {
-  var animation = createDiv(t).animate(null, { duration: 1, delay: -1 });
+  const animation = createDiv(t).animate(null, { duration: 1, delay: -1 });
 
   [ { currentTime: -2, phase: 'before' },
     { currentTime: -1, phase: 'before' },
@@ -81,7 +81,7 @@ test(t => {
 }, 'Phase calculation for an animation effect with a negative start delay');
 
 test(t => {
-  var animation = createDiv(t).animate(null, { duration: 1, endDelay: 1 });
+  const animation = createDiv(t).animate(null, { duration: 1, endDelay: 1 });
 
   [ { currentTime: -1, phase: 'before' },
     { currentTime:  0, phase: 'active' },
@@ -93,7 +93,7 @@ test(t => {
 }, 'Phase calculation for an animation effect with a positive end delay');
 
 test(t => {
-  var animation = createDiv(t).animate(null, { duration: 2, endDelay: -1 });
+  const animation = createDiv(t).animate(null, { duration: 2, endDelay: -1 });
 
   [ { currentTime: -1,   phase: 'before' },
     { currentTime:  0,   phase: 'active' },
@@ -106,7 +106,7 @@ test(t => {
    + ' in magnitude than the active duration');
 
 test(t => {
-  var animation = createDiv(t).animate(null, { duration: 1, endDelay: -1 });
+  const animation = createDiv(t).animate(null, { duration: 1, endDelay: -1 });
 
   [ { currentTime: -1, phase: 'before' },
     { currentTime:  0, phase: 'after'  },
@@ -118,7 +118,7 @@ test(t => {
    + ' in magnitude to the active duration');
 
 test(t => {
-  var animation = createDiv(t).animate(null, { duration: 1, endDelay: -2 });
+  const animation = createDiv(t).animate(null, { duration: 1, endDelay: -2 });
 
   [ { currentTime: -2, phase: 'before' },
     { currentTime: -1, phase: 'before' },
@@ -130,9 +130,9 @@ test(t => {
    + ' greater in magnitude than the active duration');
 
 test(t => {
-  var animation = createDiv(t).animate(null, { duration: 2,
-                                               delay: 1,
-                                               endDelay: -1 });
+  const animation = createDiv(t).animate(null, { duration: 2,
+                                                 delay: 1,
+                                                 endDelay: -1 });
 
   [ { currentTime: 0, phase: 'before' },
     { currentTime: 1, phase: 'active' },
@@ -144,9 +144,9 @@ test(t => {
    + ' and a negative end delay lesser in magnitude than the active duration');
 
 test(t => {
-  var animation = createDiv(t).animate(null, { duration: 1,
-                                               delay: -1,
-                                               endDelay: -1 });
+  const animation = createDiv(t).animate(null, { duration: 1,
+                                                 delay: -1,
+                                                 endDelay: -1 });
 
   [ { currentTime: -2, phase: 'before' },
     { currentTime: -1, phase: 'before' },
@@ -158,9 +158,9 @@ test(t => {
    + ' and a negative end delay equal in magnitude to the active duration');
 
 test(t => {
-  var animation = createDiv(t).animate(null, { duration: 1,
-                                               delay: -1,
-                                               endDelay: -2 });
+  const animation = createDiv(t).animate(null, { duration: 1,
+                                                 delay: -1,
+                                                 endDelay: -2 });
 
   [ { currentTime: -3, phase: 'before' },
     { currentTime: -2, phase: 'before' },
@@ -174,7 +174,7 @@ test(t => {
    + ' duration');
 
 test(t => {
-  var animation = createDiv(t).animate(null, 1);
+  const animation = createDiv(t).animate(null, 1);
   animation.playbackRate = -1;
 
   [ { currentTime: -1, phase: 'before' },

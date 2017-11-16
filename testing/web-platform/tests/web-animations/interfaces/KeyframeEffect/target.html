@@ -11,14 +11,14 @@
 <script>
 "use strict";
 
-var gKeyFrames = { 'marginLeft': ['0px', '100px'] };
+const gKeyFrames = { 'marginLeft': ['0px', '100px'] };
 
 test(t => {
-  var div = createDiv(t);
-  var effect = new KeyframeEffect(null, gKeyFrames, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const effect = new KeyframeEffect(null, gKeyFrames, 100 * MS_PER_SEC);
   effect.target = div;
 
-  var anim = new Animation(effect, document.timeline);
+  const anim = new Animation(effect, document.timeline);
   anim.play();
 
   anim.currentTime = 50 * MS_PER_SEC;
@@ -27,10 +27,10 @@ test(t => {
 }, 'Test setting target before constructing the associated animation');
 
 test(t => {
-  var div = createDiv(t);
+  const div = createDiv(t);
   div.style.marginLeft = '10px';
-  var effect = new KeyframeEffect(null, gKeyFrames, 100 * MS_PER_SEC);
-  var anim = new Animation(effect, document.timeline);
+  const effect = new KeyframeEffect(null, gKeyFrames, 100 * MS_PER_SEC);
+  const anim = new Animation(effect, document.timeline);
   anim.play();
 
   anim.currentTime = 50 * MS_PER_SEC;
@@ -42,9 +42,9 @@ test(t => {
 }, 'Test setting target from null to a valid target');
 
 test(t => {
-  var div = createDiv(t);
+  const div = createDiv(t);
   div.style.marginLeft = '10px';
-  var anim = div.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const anim = div.animate(gKeyFrames, 100 * MS_PER_SEC);
 
   anim.currentTime = 50 * MS_PER_SEC;
   assert_equals(getComputedStyle(div).marginLeft, '50px',
@@ -56,11 +56,11 @@ test(t => {
 }, 'Test setting target from a valid target to null');
 
 test(t => {
-  var a = createDiv(t);
-  var b = createDiv(t);
+  const a = createDiv(t);
+  const b = createDiv(t);
   a.style.marginLeft = '10px';
   b.style.marginLeft = '20px';
-  var anim = a.animate(gKeyFrames, 100 * MS_PER_SEC);
+  const anim = a.animate(gKeyFrames, 100 * MS_PER_SEC);
 
   anim.currentTime = 50 * MS_PER_SEC;
   assert_equals(getComputedStyle(a).marginLeft, '50px',

@@ -11,10 +11,10 @@
 'use strict';
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({ transform: ['none', 'translate(10px)']},
-                              { duration : 100 * MS_PER_SEC,
-                                iterations : Infinity});
+  const div = createDiv(t);
+  const animation = div.animate({ transform: ['none', 'translate(10px)']},
+                                { duration: 100 * MS_PER_SEC,
+                                  iterations: Infinity });
   return animation.ready.then(() => {
     // Seek to a time outside the active range so that play() will have to
     // snap back to the start
