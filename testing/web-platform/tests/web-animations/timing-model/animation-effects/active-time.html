@@ -15,11 +15,11 @@ test(t => {
                   { fill: 'backwards', progress: 0 },
                   { fill: 'forwards', progress: null },
                   { fill: 'both', progress: 0 } ];
-  tests.forEach(test => {
+  for (const test of tests) {
     const anim = createDiv(t).animate(null, { delay: 1, fill: test.fill });
     assert_equals(anim.effect.getComputedTiming().progress, test.progress,
                   `Progress in before phase when using '${test.fill}' fill`);
-  });
+  }
 }, 'Active time in before phase');
 
 test(t => {

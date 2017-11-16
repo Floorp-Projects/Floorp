@@ -20,11 +20,11 @@ test(t => {
   const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
 
   const directions = ['normal', 'reverse', 'alternate', 'alternate-reverse'];
-  directions.forEach(direction => {
+  for (const direction of directions) {
     anim.effect.timing.direction = direction;
     assert_equals(anim.effect.timing.direction, direction,
                   `set direction to ${direction}`);
-  });
+  }
 }, 'Can be set to each of the possible keywords');
 
 test(t => {
