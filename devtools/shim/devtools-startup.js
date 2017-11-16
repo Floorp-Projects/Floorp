@@ -248,14 +248,40 @@ DevToolsStartup.prototype = {
       this.initDevTools();
     }
 
-    if (this.devtoolsFlag) {
-      this.handleDevToolsFlag(window);
-      // This listener is called for all Firefox windows, but we want to execute
-      // that command only once.
-      this.devtoolsFlag = false;
+    // This listener is called for all Firefox windows, but we want to execute some code
+    // only once.
+    if (!this._firstWindowReadyReceived) {
+      this.onFirstWindowReady(window);
+      this._firstWindowReadyReceived = true;
     }
 
     JsonView.initialize();
+  },
+
+  onFirstWindowReady(window) {
+    if (this.devtoolsFlag) {
+      this.handleDevToolsFlag(window);
+    }
+
+    // Wait until we get a window before sending a ping to telemetry to avoid slowing down
+    // the startup phase.
+    this.pingOnboardingTelemetry();
+  },
+
+  /**
+   * Check if the user is being flagged as DevTools users or not. This probe should only
+   * be logged once per profile.
+   */
+  pingOnboardingTelemetry() {
+    // Only ping telemetry once per profile.
+    let alreadyLoggedPref = "devtools.onboarding.telemetry.logged";
+    if (Services.prefs.getBoolPref(alreadyLoggedPref)) {
+      return;
+    }
+
+    let scalarId = "devtools.onboarding.is_devtools_user";
+    Services.telemetry.scalarSet(scalarId, this.isDevToolsUser());
+    Services.prefs.setBoolPref(alreadyLoggedPref, true);
   },
 
   /**
@@ -447,14 +473,35 @@ DevToolsStartup.prototype = {
    *        true if any DevTools command line argument was passed when starting Firefox.
    */
   setupEnabledPref(hasDevToolsFlag) {
+    // Read the current experiment state.
+    let experimentState = Services.prefs.getCharPref("devtools.onboarding.experiment");
+    let isRegularExperiment = experimentState == "on";
+    let isForcedExperiment = experimentState == "force";
+    let isInExperiment = isRegularExperiment || isForcedExperiment;
+
+    // Force devtools.enabled to true for users that are not part of the experiment.
+    if (!isInExperiment) {
+      Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, true);
+      return;
+    }
+
+    // Force devtools.enabled to false once for each experiment user.
+    if (!Services.prefs.getBoolPref("devtools.onboarding.experiment.flipped")) {
+      Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, false);
+      Services.prefs.setBoolPref("devtools.onboarding.experiment.flipped", true);
+    }
+
     if (Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
       // Nothing to do if DevTools are already enabled.
       return;
     }
 
-    let hasToolbarPref = Services.prefs.getBoolPref(TOOLBAR_VISIBLE_PREF, false);
+    // We only consider checking the actual isDevToolsUser() if the user is in the
+    // "regular" experiment group.
+    let isDevToolsUser = isRegularExperiment && this.isDevToolsUser();
 
-    if (hasDevToolsFlag || hasToolbarPref || this.isDevToolsUser()) {
+    let hasToolbarPref = Services.prefs.getBoolPref(TOOLBAR_VISIBLE_PREF, false);
+    if (hasDevToolsFlag || hasToolbarPref || isDevToolsUser) {
       Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, true);
     }
   },
