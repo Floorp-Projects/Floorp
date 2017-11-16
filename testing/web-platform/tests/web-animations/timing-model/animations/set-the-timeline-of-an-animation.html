@@ -17,7 +17,7 @@
 // ---------------------------------------------------------------------
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
   animation.currentTime = 50 * MS_PER_SEC;
@@ -30,7 +30,7 @@ test(t => {
 }, 'After setting timeline on paused animation it is still paused');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
   animation.currentTime = 200 * MS_PER_SEC;
@@ -44,7 +44,7 @@ test(t => {
    + ' it is still paused');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
   assert_equals(animation.playState, 'idle');
@@ -56,7 +56,7 @@ test(t => {
    + ' it is still idle');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
   animation.startTime = document.timeline.currentTime;
@@ -69,7 +69,7 @@ test(t => {
    + ' it is running');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
   animation.startTime = document.timeline.currentTime - 200 * MS_PER_SEC;
@@ -82,7 +82,7 @@ test(t => {
    + ' start time it is finished');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
   animation.play();
@@ -94,7 +94,7 @@ test(t => {
 }, 'After setting timeline on a play-pending animation it is still pending');
 
 promise_test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
   animation.play();
@@ -109,7 +109,7 @@ promise_test(t => {
    + ' after pending');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
   animation.startTime = document.timeline.currentTime;
@@ -123,7 +123,7 @@ test(t => {
 }, 'After setting timeline on a pause-pending animation it is still pending');
 
 promise_test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
   animation.startTime = document.timeline.currentTime;
@@ -146,7 +146,7 @@ promise_test(t => {
 // ---------------------------------------------------------------------
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
   animation.currentTime = 50 * MS_PER_SEC;
@@ -159,10 +159,10 @@ test(t => {
 }, 'After clearing timeline on paused animation it is still paused');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
-  var initialStartTime = document.timeline.currentTime - 200 * MS_PER_SEC;
+  const initialStartTime = document.timeline.currentTime - 200 * MS_PER_SEC;
   animation.startTime = initialStartTime;
   assert_equals(animation.playState, 'finished');
 
@@ -173,10 +173,10 @@ test(t => {
 }, 'After clearing timeline on finished animation it is idle');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
-  var initialStartTime = document.timeline.currentTime - 50 * MS_PER_SEC;
+  const initialStartTime = document.timeline.currentTime - 50 * MS_PER_SEC;
   animation.startTime = initialStartTime;
   assert_equals(animation.playState, 'running');
 
@@ -187,7 +187,7 @@ test(t => {
 }, 'After clearing timeline on running animation it is idle');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
   assert_equals(animation.playState, 'idle');
@@ -199,7 +199,7 @@ test(t => {
 }, 'After clearing timeline on idle animation it is still idle');
 
 test(t => {
-  var animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   assert_equals(animation.playState, 'pending');
 
   animation.timeline = null;
@@ -208,7 +208,7 @@ test(t => {
 }, 'After clearing timeline on play-pending animation it is still pending');
 
 promise_test(t => {
-  var animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   assert_equals(animation.playState, 'pending');
 
   animation.timeline = null;
@@ -222,7 +222,7 @@ promise_test(t => {
    + ' begins to play');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
   animation.startTime = document.timeline.currentTime;
@@ -235,7 +235,7 @@ test(t => {
 }, 'After clearing timeline on a pause-pending animation it is still pending');
 
 promise_test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
   animation.startTime = document.timeline.currentTime;
@@ -253,10 +253,10 @@ promise_test(t => {
    + ' becomes paused');
 
 promise_test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
-  var initialStartTime = document.timeline.currentTime - 50 * MS_PER_SEC;
+  const initialStartTime = document.timeline.currentTime - 50 * MS_PER_SEC;
   animation.startTime = initialStartTime;
   animation.pause();
   animation.play();

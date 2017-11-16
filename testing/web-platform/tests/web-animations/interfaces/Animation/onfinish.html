@@ -11,9 +11,9 @@
 "use strict";
 
 async_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
-  var finishedTimelineTime;
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
+  let finishedTimelineTime;
   animation.finished.then(() => {
     finishedTimelineTime = animation.timeline.currentTime;
   });
@@ -31,10 +31,10 @@ async_test(t => {
    'the playbackRate < 0');
 
 async_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
 
-  var finishedTimelineTime;
+  let finishedTimelineTime;
   animation.finished.then(() => {
     finishedTimelineTime = animation.timeline.currentTime;
   });
@@ -52,10 +52,10 @@ async_test(t => {
    'the playbackRate > 0');
 
 async_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
 
-  var finishedTimelineTime;
+  let finishedTimelineTime;
   animation.finished.then(() => {
     finishedTimelineTime = animation.timeline.currentTime;
   });
@@ -72,8 +72,8 @@ async_test(t => {
 }, 'onfinish event is fired when animation.finish() is called');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
 
   animation.onfinish = event => {
     assert_unreached('onfinish event should not be fired');
@@ -89,8 +89,8 @@ promise_test(t => {
 }, 'onfinish event is not fired when paused');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.onfinish = event => {
     assert_unreached('onfinish event should not be fired');
   };
@@ -103,8 +103,8 @@ promise_test(t => {
 }, 'onfinish event is not fired when the playbackRate is zero');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.onfinish = event => {
     assert_unreached('onfinish event should not be fired');
   };

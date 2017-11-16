@@ -11,8 +11,8 @@
 'use strict';
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
 
   assert_equals(animation.playState, 'pending');
   return animation.ready.then(() => {
@@ -22,8 +22,8 @@ promise_test(t => {
    'played');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.pause();
 
   assert_equals(animation.playState, 'pending');
@@ -33,15 +33,15 @@ promise_test(t => {
 }, 'Animation.playState reports \'pending\'->\'paused\' when pausing');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.cancel();
   assert_equals(animation.playState, 'idle');
 }, 'Animation.playState is \'idle\' when canceled.');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
   animation.cancel();
   animation.currentTime = 50 * MS_PER_SEC;
   assert_equals(animation.playState, 'paused',

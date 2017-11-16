@@ -10,12 +10,12 @@ policies and contribution forms [3].
 
 'use strict';
 
-var MS_PER_SEC = 1000;
+const MS_PER_SEC = 1000;
 
 // The recommended minimum precision to use for time values[1].
 //
 // [1] https://w3c.github.io/web-animations/#precision-of-time-values
-var TIME_PRECISION = 0.0005; // ms
+const TIME_PRECISION = 0.0005; // ms
 
 // Allow implementations to substitute an alternative method for comparing
 // times based on their precision requirements.
@@ -38,7 +38,7 @@ function createElement(test, tagName, doc) {
   if (!doc) {
     doc = document;
   }
-  var element = doc.createElement(tagName || 'div');
+  const element = doc.createElement(tagName || 'div');
   doc.body.appendChild(element);
   test.add_cleanup(() => {
     element.remove();
@@ -61,11 +61,11 @@ function createStyle(test, rules, doc) {
   if (!doc) {
     doc = document;
   }
-  var extraStyle = doc.createElement('style');
+  const extraStyle = doc.createElement('style');
   doc.head.appendChild(extraStyle);
   if (rules) {
-    var sheet = extraStyle.sheet;
-    for (var selector in rules) {
+    const sheet = extraStyle.sheet;
+    for (const selector in rules) {
       sheet.insertRule(selector + '{' + rules[selector] + '}',
                        sheet.cssRules.length);
     }
@@ -80,11 +80,11 @@ function createPseudo(test, type) {
   createStyle(test, { '@keyframes anim': '',
                       ['.pseudo::' + type]: 'animation: anim 10s; ' +
                                             'content: \'\';'  });
-  var div = createDiv(test);
+  const div = createDiv(test);
   div.classList.add('pseudo');
-  var anims = document.getAnimations();
+  const anims = document.getAnimations();
   assert_true(anims.length >= 1);
-  var anim = anims[anims.length - 1];
+  const anim = anims[anims.length - 1];
   assert_equals(anim.effect.target.parentElement, div);
   assert_equals(anim.effect.target.type, '::' + type);
   anim.cancel();
@@ -94,21 +94,21 @@ function createPseudo(test, type) {
 // Cubic bezier with control points (0, 0), (x1, y1), (x2, y2), and (1, 1).
 function cubicBezier(x1, y1, x2, y2) {
   const xForT = t => {
-    var omt = 1-t;
+    const omt = 1-t;
     return 3 * omt * omt * t * x1 + 3 * omt * t * t * x2 + t * t * t;
   };
 
   const yForT = t => {
-    var omt = 1-t;
+    const omt = 1-t;
     return 3 * omt * omt * t * y1 + 3 * omt * t * t * y2 + t * t * t;
   };
 
   const tForX = x => {
     // Binary subdivision.
-    var mint = 0, maxt = 1;
-    for (var i = 0; i < 30; ++i) {
-      var guesst = (mint + maxt) / 2;
-      var guessx = xForT(guesst);
+    let mint = 0, maxt = 1;
+    for (let i = 0; i < 30; ++i) {
+      const guesst = (mint + maxt) / 2;
+      const guessx = xForT(guesst);
       if (x < guessx) {
         maxt = guesst;
       } else {
@@ -135,14 +135,14 @@ function stepEnd(nsteps) {
 
 function stepStart(nsteps) {
   return x => {
-    var result = Math.floor(x * nsteps + 1.0) / nsteps;
+    const result = Math.floor(x * nsteps + 1.0) / nsteps;
     return (result > 1.0) ? 1.0 : result;
   };
 }
 
 function framesTiming(nframes) {
   return x => {
-    var result = Math.floor(x * nframes) / (nframes - 1);
+    const result = Math.floor(x * nframes) / (nframes - 1);
     return (result > 1.0 && x <= 1.0) ? 1.0 : result;
   };
 }
@@ -164,7 +164,7 @@ function waitForAnimationFrames(frameCount) {
 // as recorded using document.timeline.currentTime (i.e. frame time not
 // wall-clock time).
 function waitForAnimationFramesWithDelay(minDelay) {
-  var startTime = document.timeline.currentTime;
+  const startTime = document.timeline.currentTime;
   return new Promise(resolve => {
     (function handleFrame() {
       if (document.timeline.currentTime - startTime >= minDelay) {
@@ -191,11 +191,11 @@ function rotate3dToMatrix3d(x, y, z, radian) {
 // Returns an array of the 4x4 matrix equivalent to 'rotate3d(x, y, z, radian)'.
 // https://www.w3.org/TR/css-transforms-1/#Rotate3dDefined
 function rotate3dToMatrix(x, y, z, radian) {
-  var sc = Math.sin(radian / 2) * Math.cos(radian / 2);
-  var sq = Math.sin(radian / 2) * Math.sin(radian / 2);
+  const sc = Math.sin(radian / 2) * Math.cos(radian / 2);
+  const sq = Math.sin(radian / 2) * Math.sin(radian / 2);
 
   // Normalize the vector.
-  var length = Math.sqrt(x*x + y*y + z*z);
+  const length = Math.sqrt(x*x + y*y + z*z);
   x /= length;
   y /= length;
   z /= length;
@@ -222,20 +222,20 @@ function rotate3dToMatrix(x, y, z, radian) {
 
 // Compare matrix string like 'matrix(1, 0, 0, 1, 100, 0)' with tolerances.
 function assert_matrix_equals(actual, expected, description) {
-  var matrixRegExp = /^matrix(?:3d)*\((.+)\)/;
+  const matrixRegExp = /^matrix(?:3d)*\((.+)\)/;
   assert_regexp_match(actual, matrixRegExp,
     'Actual value is not a matrix')
   assert_regexp_match(expected, matrixRegExp,
     'Expected value is not a matrix');
 
-  var actualMatrixArray =
+  const actualMatrixArray =
     actual.match(matrixRegExp)[1].split(',').map(Number);
-  var expectedMatrixArray =
+  const expectedMatrixArray =
     expected.match(matrixRegExp)[1].split(',').map(Number);
 
   assert_equals(actualMatrixArray.length, expectedMatrixArray.length,
     'dimension of the matrix: ' + description);
-  for (var i = 0; i < actualMatrixArray.length; i++) {
+  for (let i = 0; i < actualMatrixArray.length; i++) {
     assert_approx_equals(actualMatrixArray[i], expectedMatrixArray[i], 0.0001,
       'expected ' + expected + ' but got ' + actual + ": " + description);
   }

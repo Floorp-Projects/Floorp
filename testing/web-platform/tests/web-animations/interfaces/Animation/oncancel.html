@@ -11,9 +11,9 @@
 "use strict";
 
 async_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
-  var finishedTimelineTime;
+  const div = createDiv(t);
+  const animation = div.animate({}, 100 * MS_PER_SEC);
+  let finishedTimelineTime;
   animation.finished.then().catch(() => {
     finishedTimelineTime = animation.timeline.currentTime;
   });

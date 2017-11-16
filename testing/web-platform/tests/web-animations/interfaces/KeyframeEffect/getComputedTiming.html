@@ -11,13 +11,13 @@
 <script>
 "use strict";
 
-var target = document.getElementById("target");
+const target = document.getElementById("target");
 
 test(t => {
-  var effect = new KeyframeEffectReadOnly(target,
-                                          { left: ["10px", "20px"] });
+  const effect = new KeyframeEffectReadOnly(target,
+                                            { left: ["10px", "20px"] });
 
-  var ct = effect.getComputedTiming();
+  const ct = effect.getComputedTiming();
   assert_equals(ct.delay, 0, "computed delay");
   assert_equals(ct.fill, "none", "computed fill");
   assert_equals(ct.iterations, 1.0, "computed iterations");
@@ -26,7 +26,7 @@ test(t => {
 }, "values of getComputedTiming() when a KeyframeEffectReadOnly is " +
    "constructed without any KeyframeEffectOptions object");
 
-var gGetComputedTimingTests = [
+const gGetComputedTimingTests = [
   { desc:     "an empty KeyframeEffectOptions object",
     input:    { },
     expected: { } },
@@ -71,17 +71,17 @@ var gGetComputedTimingTests = [
 
 gGetComputedTimingTests.forEach(stest => {
   test(t => {
-    var effect = new KeyframeEffectReadOnly(target,
-                                            { left: ["10px", "20px"] },
-                                            stest.input);
+    const effect = new KeyframeEffectReadOnly(target,
+                                              { left: ["10px", "20px"] },
+                                              stest.input);
 
     // Helper function to provide default expected values when the test does
     // not supply them.
-    var expected = (field, defaultValue) => {
+    const expected = (field, defaultValue) => {
       return field in stest.expected ? stest.expected[field] : defaultValue;
     };
 
-    var ct = effect.getComputedTiming();
+    const ct = effect.getComputedTiming();
     assert_equals(ct.delay, expected("delay", 0),
                   "computed delay");
     assert_equals(ct.fill, expected("fill", "none"),
@@ -97,7 +97,7 @@ gGetComputedTimingTests.forEach(stest => {
      "constructed by " + stest.desc);
 });
 
-var gActiveDurationTests = [
+const gActiveDurationTests = [
   { desc:     "an empty KeyframeEffectOptions object",
     input:    { },
     expected: 0 },
@@ -144,9 +144,9 @@ var gActiveDurationTests = [
 
 gActiveDurationTests.forEach(stest => {
   test(t => {
-    var effect = new KeyframeEffectReadOnly(target,
-                                            { left: ["10px", "20px"] },
-                                            stest.input);
+    const effect = new KeyframeEffectReadOnly(target,
+                                              { left: ["10px", "20px"] },
+                                              stest.input);
 
     assert_equals(effect.getComputedTiming().activeDuration,
                   stest.expected);
@@ -154,7 +154,7 @@ gActiveDurationTests.forEach(stest => {
   }, "getComputedTiming().activeDuration for " + stest.desc);
 });
 
-var gEndTimeTests = [
+const gEndTimeTests = [
   { desc:     "an empty KeyframeEffectOptions object",
     input:    { },
     expected: 0 },
@@ -196,9 +196,9 @@ var gEndTimeTests = [
 
 gEndTimeTests.forEach(stest => {
   test(t => {
-    var effect = new KeyframeEffectReadOnly(target,
-                                            { left: ["10px", "20px"] },
-                                            stest.input);
+    const effect = new KeyframeEffectReadOnly(target,
+                                              { left: ["10px", "20px"] },
+                                              stest.input);
 
     assert_equals(effect.getComputedTiming().endTime,
                   stest.expected);

@@ -11,10 +11,10 @@
 'use strict';
 
 test(t => {
-  var div = createDiv(t);
+  const div = createDiv(t);
 
-  var anim = div.animate({ fontStyle: [ 'normal', 'italic' ] },
-                         { duration: 1000, fill: 'forwards' });
+  const anim = div.animate({ fontStyle: [ 'normal', 'italic' ] },
+                           { duration: 1000, fill: 'forwards' });
 
   assert_equals(getComputedStyle(div).fontStyle, 'normal',
                 'Animation produces \'from\' value at start of interval');
@@ -32,11 +32,11 @@ test(t => {
 }, 'Test animating discrete values');
 
 test(t => {
-  var div = createDiv(t);
-  var originalHeight = getComputedStyle(div).height;
+  const div = createDiv(t);
+  const originalHeight = getComputedStyle(div).height;
 
-  var anim = div.animate({ height: [ 'auto', '200px' ] },
-                         { duration: 1000, fill: 'forwards' });
+  const anim = div.animate({ height: [ 'auto', '200px' ] },
+                           { duration: 1000, fill: 'forwards' });
 
   assert_equals(getComputedStyle(div).height, originalHeight,
                 'Animation produces \'from\' value at start of interval');
@@ -54,14 +54,14 @@ test(t => {
 }, 'Test discrete animation is used when interpolation fails');
 
 test(t => {
-  var div = createDiv(t);
-  var originalHeight = getComputedStyle(div).height;
+  const div = createDiv(t);
+  const originalHeight = getComputedStyle(div).height;
 
-  var anim = div.animate({ height: [ 'auto',
-                                     '200px',
-                                     '300px',
-                                     'auto',
-                                     '400px' ] },
+  const anim = div.animate({ height: [ 'auto',
+                                       '200px',
+                                       '300px',
+                                       'auto',
+                                       '400px' ] },
                          { duration: 1000, fill: 'forwards' });
 
   // There are five values, so there are four pairs to try to interpolate.
@@ -84,15 +84,15 @@ test(t => {
    + ' be interpolated');
 
 test(t => {
-  var div = createDiv(t);
-  var originalHeight = getComputedStyle(div).height;
+  const div = createDiv(t);
+  const originalHeight = getComputedStyle(div).height;
 
   // Easing: http://cubic-bezier.com/#.68,0,1,.01
   // With this curve, we don't reach the 50% point until about 95% of
   // the time has expired.
-  var anim = div.animate({ fontStyle: [ 'normal', 'italic' ] },
-                         { duration: 1000, fill: 'forwards',
-                           easing: 'cubic-bezier(0.68,0,1,0.01)' });
+  const anim = div.animate({ fontStyle: [ 'normal', 'italic' ] },
+                           { duration: 1000, fill: 'forwards',
+                             easing: 'cubic-bezier(0.68,0,1,0.01)' });
 
   assert_equals(getComputedStyle(div).fontStyle, 'normal',
                 'Animation produces \'from\' value at start of interval');
@@ -108,14 +108,14 @@ test(t => {
    + ' effect easing');
 
 test(t => {
-  var div = createDiv(t);
-  var originalHeight = getComputedStyle(div).height;
+  const div = createDiv(t);
+  const originalHeight = getComputedStyle(div).height;
 
   // Easing: http://cubic-bezier.com/#.68,0,1,.01
   // With this curve, we don't reach the 50% point until about 95% of
   // the time has expired.
-  var anim = div.animate([ { fontStyle: 'normal',
-                             easing: 'cubic-bezier(0.68,0,1,0.01)' },
+  const anim = div.animate([ { fontStyle: 'normal',
+                               easing: 'cubic-bezier(0.68,0,1,0.01)' },
                            { fontStyle: 'italic' } ],
                          { duration: 1000, fill: 'forwards' });
 

@@ -14,7 +14,7 @@ test(t => {
   // It should only be possible to set *either* the start time or the current
   // time for an animation that does not have an active timeline.
 
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
 
@@ -44,7 +44,7 @@ test(t => {
   // Setting an unresolved start time on an animation without an active
   // timeline should not clear the current time.
 
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
 
@@ -65,7 +65,7 @@ test(t => {
    + ' does not clear the current time');
 
    test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
 
@@ -91,7 +91,7 @@ test(t => {
 }, 'Setting the start time clears the hold time');
 
 test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
 
@@ -112,11 +112,11 @@ test(t => {
 }, 'Setting an unresolved start time sets the hold time');
 
 promise_test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
 
-  var readyPromiseCallbackCalled = false;
+  let readyPromiseCallbackCalled = false;
   animation.ready.then(() => { readyPromiseCallbackCalled = true; } );
 
   // Put the animation in the play-pending state
@@ -141,11 +141,11 @@ promise_test(t => {
 }, 'Setting the start time resolves a pending ready promise');
 
 promise_test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
 
-  var readyPromiseCallbackCalled = false;
+  let readyPromiseCallbackCalled = false;
   animation.ready.then(() => { readyPromiseCallbackCalled = true; } );
 
   // Put the animation in the pause-pending state
@@ -169,7 +169,7 @@ promise_test(t => {
 }, 'Setting the start time resolves a pending pause task');
 
 promise_test(t => {
-  var animation =
+  const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
 
@@ -188,7 +188,7 @@ promise_test(t => {
 
   // Furthermore, that time should persist if we have correctly updated
   // the hold time
-  var finishedCurrentTime = animation.currentTime;
+  const finishedCurrentTime = animation.currentTime;
   return waitForAnimationFrames(1).then(() => {
     assert_equals(animation.currentTime, finishedCurrentTime,
                   'Current time does not change after seeking past the effect'

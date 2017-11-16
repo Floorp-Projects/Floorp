@@ -12,7 +12,7 @@
 'use strict';
 
 test(t => {
-  var animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   animation.currentTime = 1 * MS_PER_SEC;
   assert_times_equal(animation.currentTime, 1 * MS_PER_SEC);
   animation.play();
@@ -20,7 +20,7 @@ test(t => {
 }, 'Playing a running animation leaves the current time unchanged');
 
 test(t => {
-  var animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   animation.finish();
   assert_times_equal(animation.currentTime, 100 * MS_PER_SEC);
   animation.play();
@@ -28,7 +28,7 @@ test(t => {
 }, 'Playing a finished animation seeks back to the start');
 
 test(t => {
-  var animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   animation.playbackRate = -1;
   animation.currentTime = 0;
   assert_times_equal(animation.currentTime, 0);

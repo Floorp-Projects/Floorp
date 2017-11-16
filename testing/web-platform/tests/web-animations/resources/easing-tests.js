@@ -1,4 +1,4 @@
-var gEasingTests = [
+const gEasingTests = [
   {
     desc: 'step-start function',
     easing: 'step-start',

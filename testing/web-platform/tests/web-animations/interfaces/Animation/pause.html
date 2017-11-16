@@ -11,9 +11,9 @@
 "use strict";
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 1000 * MS_PER_SEC);
-  var previousCurrentTime = animation.currentTime;
+  const div = createDiv(t);
+  const animation = div.animate({}, 1000 * MS_PER_SEC);
+  let previousCurrentTime = animation.currentTime;
 
   return animation.ready.then(waitForAnimationFrames(1)).then(() => {
     assert_true(animation.currentTime >= previousCurrentTime,
@@ -30,8 +30,8 @@ promise_test(t => {
 }, 'pause() a running animation');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 1000 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 1000 * MS_PER_SEC);
 
   // Go to idle state then pause
   animation.cancel();
@@ -51,8 +51,8 @@ promise_test(t => {
 }, 'pause() from idle');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 1000 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 1000 * MS_PER_SEC);
   animation.cancel();
   animation.playbackRate = -1;
   animation.pause();
@@ -67,8 +67,8 @@ promise_test(t => {
 }, 'pause() from idle with a negative playbackRate');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, {duration: 1000 * MS_PER_SEC,
+  const div = createDiv(t);
+  const animation = div.animate({}, {duration: 1000 * MS_PER_SEC,
                                    iterations: Infinity});
   animation.cancel();
   animation.playbackRate = -1;
@@ -81,8 +81,8 @@ test(t => {
 }, 'pause() from idle with a negative playbackRate and endless effect');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({}, 1000 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({}, 1000 * MS_PER_SEC);
   return animation.ready
     .then(animation => {
       animation.finish();

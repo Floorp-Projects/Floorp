@@ -11,9 +11,11 @@
 'use strict';
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({transform: ['translate(100px)', 'translate(100px)']},
-                              100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate(
+    { transform: ['translate(100px)', 'translate(100px)'] },
+    100 * MS_PER_SEC
+  );
   return animation.ready.then(() => {
     assert_not_equals(getComputedStyle(div).transform, 'none',
                       'transform style is animated before cancelling');
@@ -24,9 +26,9 @@ promise_test(t => {
 }, 'Animated style is cleared after calling Animation.cancel()');
 
 test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({marginLeft: ['100px', '200px']},
-                              100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({ marginLeft: ['100px', '200px'] },
+                                100 * MS_PER_SEC);
   animation.effect.timing.easing = 'linear';
   animation.cancel();
   assert_equals(getComputedStyle(div).marginLeft, '0px',
@@ -39,9 +41,9 @@ test(t => {
 }, 'After cancelling an animation, it can still be seeked');
 
 promise_test(t => {
-  var div = createDiv(t);
-  var animation = div.animate({marginLeft:['100px', '200px']},
-                              100 * MS_PER_SEC);
+  const div = createDiv(t);
+  const animation = div.animate({ marginLeft:['100px', '200px'] },
+                                100 * MS_PER_SEC);
   return animation.ready.then(() => {
     animation.cancel();
     assert_equals(getComputedStyle(div).marginLeft, '0px',
