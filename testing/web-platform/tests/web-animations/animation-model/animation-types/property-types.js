@@ -1,3 +1,5 @@
+'use strict';
+
 const discreteType = {
   testInterpolation: (property, setup, options) => {
     options.forEach(keyframes => {
