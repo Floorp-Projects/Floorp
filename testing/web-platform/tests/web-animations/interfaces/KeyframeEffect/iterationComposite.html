@@ -30,6 +30,6 @@ test(t => {
   anim.effect.iterationComposite = 'accumulate';
   assert_equals(getComputedStyle(div).marginLeft, '25px',
     'Animated style at 50s of the third iteration');
-}, 'iterationComposite changes');
+}, 'iterationComposite can be updated while an animation is in progress');
 
 </script>

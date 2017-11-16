@@ -29,7 +29,7 @@ test(t => {
   anim.currentTime += anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).alignContent, 'flex-end',
     'Animated align-content style at 50s of the third iteration');
-}, 'iterationComposite of discrete type animation (align-content)');
+}, 'iteration composition of discrete type animation (align-content)');
 
 test(t => {
   const div = createDiv(t);
@@ -50,7 +50,7 @@ test(t => {
   anim.currentTime += anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).marginLeft, '25px',
     'Animated margin-left style at 50s of the third iteration');
-}, 'iterationComposite of <length> type animation');
+}, 'iteration composition of <length> type animation');
 
 test(t => {
   const parent = createDiv(t);
@@ -75,7 +75,7 @@ test(t => {
   anim.currentTime += anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).width, '125px',
     'Animated width style at 50s of the third iteration');
-}, 'iterationComposite of <percentage> type animation');
+}, 'iteration composition of <percentage> type animation');
 
 test(t => {
   const div = createDiv(t);
@@ -96,7 +96,7 @@ test(t => {
   anim.currentTime += anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).color, 'rgb(255, 255, 255)',
     'Animated color style at 50s of the third iteration');
-}, 'iterationComposite of <color> type animation');
+}, 'iteration composition of <color> type animation');
 
 test(t => {
   const div = createDiv(t);
@@ -118,7 +118,7 @@ test(t => {
   // The green color is (240 + 180) / 2 = 210
   assert_equals(getComputedStyle(div).color, 'rgb(150, 210, 150)',
     'Animated color style at 50s of the third iteration');
-}, 'iterationComposite of <color> type animation that green component is ' +
+}, 'iteration composition of <color> type animation that green component is ' +
    'decreasing');
 
    test(t => {
@@ -140,7 +140,7 @@ test(t => {
   anim.currentTime += anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).flexGrow, '25',
     'Animated flex-grow style at 50s of the third iteration');
-}, 'iterationComposite of <number> type animation');
+}, 'iteration composition of <number> type animation');
 
 test(t => {
   const div = createDiv(t);
@@ -163,7 +163,7 @@ test(t => {
   anim.currentTime += anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).clip, 'rect(25px, 25px, 25px, 25px)',
     'Animated clip style at 50s of the third iteration');
-}, 'iterationComposite of <shape> type animation');
+}, 'iteration composition of <shape> type animation');
 
 test(t => {
   const div = createDiv(t);
@@ -184,7 +184,7 @@ test(t => {
   anim.currentTime += anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).width, '25px',
     'Animated calc width style at 50s of the third iteration');
-}, 'iterationComposite of <calc()> value animation');
+}, 'iteration composition of <calc()> value animation');
 
 test(t => {
   const parent = createDiv(t);
@@ -212,7 +212,7 @@ test(t => {
   assert_equals(getComputedStyle(div).width,
     '50px', // (40px + 60px) / 2
     'Animated calc width style at 50s of the third iteration');
-}, 'iterationComposite of <calc()> value animation that the values can\'t' +
+}, 'iteration composition of <calc()> value animation that the values can\'t' +
    'be reduced');
 
 test(t => {
@@ -234,7 +234,7 @@ test(t => {
   anim.currentTime += anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).opacity, '1', // (0.8 + 1.2) * 0.5
     'Animated opacity style at 50s of the third iteration');
-}, 'iterationComposite of opacity animation');
+}, 'iteration composition of opacity animation');
 
 test(t => {
   const div = createDiv(t);
@@ -259,7 +259,7 @@ test(t => {
   assert_equals(getComputedStyle(div).boxShadow,
     'rgb(255, 255, 255) 25px 25px 25px 0px',
     'Animated box-shadow style at 50s of the third iteration');
-}, 'iterationComposite of box-shadow animation');
+}, 'iteration composition of box-shadow animation');
 
 test(t => {
   const div = createDiv(t);
@@ -280,7 +280,7 @@ test(t => {
   anim.currentTime += anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).filter, 'blur(25px)',
     'Animated filter blur style at 50s of the third iteration');
-}, 'iterationComposite of filter blur animation');
+}, 'iteration composition of filter blur animation');
 
 test(t => {
   const div = createDiv(t);
@@ -305,7 +305,7 @@ test(t => {
   assert_equals(getComputedStyle(div).filter,
     'brightness(3)', // (brightness(2.6) + brightness(3.4)) * 0.5
     'Animated filter brightness style at 50s of the third iteration');
-}, 'iterationComposite of filter brightness for different unit animation');
+}, 'iteration composition of filter brightness for different unit animation');
 
 test(t => {
   const div = createDiv(t);
@@ -330,7 +330,7 @@ test(t => {
   assert_equals(getComputedStyle(div).filter,
     'brightness(0.5)', // brightness(1) is an identity element, not accumulated.
     'Animated filter brightness style at 50s of the third iteration');
-}, 'iterationComposite of filter brightness animation');
+}, 'iteration composition of filter brightness animation');
 
 test(t => {
   const div = createDiv(t);
@@ -355,7 +355,7 @@ test(t => {
   assert_equals(getComputedStyle(div).filter,
     'drop-shadow(rgb(255, 255, 255) 25px 25px 25px)',
     'Animated filter drop-shadow style at 50s of the third iteration');
-}, 'iterationComposite of filter drop-shadow animation');
+}, 'iteration composition of filter drop-shadow animation');
 
 test(t => {
   const div = createDiv(t);
@@ -380,7 +380,7 @@ test(t => {
   assert_equals(getComputedStyle(div).filter,
     'brightness(3.5) contrast(3.5)',
     'Animated filter list at 50s of the third iteration');
-}, 'iterationComposite of same filter list animation');
+}, 'iteration composition of same filter list animation');
 
 test(t => {
   const div = createDiv(t);
@@ -410,7 +410,7 @@ test(t => {
     // the same list 'contrast(2) brightness(2)' here.
     'contrast(4) brightness(4)', // discrete
     'Animated filter list at 50s of the third iteration');
-}, 'iterationComposite of discrete filter list because of mismatch ' +
+}, 'iteration composition of discrete filter list because of mismatch ' +
    'of the order');
 
    test(t => {
@@ -436,7 +436,7 @@ test(t => {
   assert_equals(getComputedStyle(div).filter,
     'sepia(2.5) contrast(3.5)',
     'Animated filter list at 50s of the third iteration');
-}, 'iterationComposite of different length filter list animation');
+}, 'iteration composition of different length filter list animation');
 
 test(t => {
   const div = createDiv(t);
@@ -460,7 +460,7 @@ test(t => {
   assert_matrix_equals(getComputedStyle(div).transform,
     'matrix(0, 1, -1, 0, 0, 0)', // rotate(450deg)
     'Animated transform(rotate) style at 50s of the third iteration');
-}, 'iterationComposite of transform(rotate) animation');
+}, 'iteration composition of transform(rotate) animation');
 
 test(t => {
   const div = createDiv(t);
@@ -486,7 +486,7 @@ test(t => {
     'matrix(0.5, 0, 0, 0.5, 0, 0)', // scale(0.5); scale(1) an identity
                                     // element, not accumulated.
     'Animated transform(scale) style at 50s of the third iteration');
-}, 'iterationComposite of transform: [ scale(0), scale(1) ] animation');
+}, 'iteration composition of transform: [ scale(0), scale(1) ] animation');
 
 test(t => {
   const div = createDiv(t);
@@ -510,7 +510,7 @@ test(t => {
   assert_matrix_equals(getComputedStyle(div).transform,
     'matrix(3.5, 0, 0, 3.5, 0, 0)', // (scale(3) + scale(4)) * 0.5
     'Animated transform(scale) style at 50s of the third iteration');
-}, 'iterationComposite of transform: [ scale(1), scale(2) ] animation');
+}, 'iteration composition of transform: [ scale(1), scale(2) ] animation');
 
 test(t => {
   const div = createDiv(t);
@@ -534,7 +534,7 @@ test(t => {
   assert_matrix_equals(getComputedStyle(div).transform,
     'matrix(3, 0, 0, 3, 0, 0)', // (scale(2) + scale(4)) * 0.5
     'Animated transform(scale) style at 50s of the third iteration');
-}, 'iterationComposite of transform: scale(2) animation');
+}, 'iteration composition of transform: scale(2) animation');
 
 test(t => {
   const div = createDiv(t);
@@ -559,7 +559,7 @@ test(t => {
   assert_matrix_equals(getComputedStyle(div).transform,
     'matrix(0, 1, -1, 0, 0, 25)', // rotate(450deg) translateX(25px)
     'Animated transform list at 50s of the third iteration');
-}, 'iterationComposite of transform list animation');
+}, 'iteration composition of transform list animation');
 
 test(t => {
   const div = createDiv(t);
@@ -588,7 +588,7 @@ test(t => {
     //         = scale(3) + (scale(3-1)*2) + translateX(30px)*3
     'matrix(6.5, 0, 0, 6.5, 75, 0)',
     'Animated transform of matrix function at 50s of the third iteration');
-}, 'iterationComposite of transform of matrix function');
+}, 'iteration composition of transform of matrix function');
 
 test(t => {
   const div = createDiv(t);
@@ -620,7 +620,8 @@ test(t => {
     //                 and matrix(7, 0, 0, 7, 210, 0) = scale(7) translate(30px)
     'matrix(6.5, 0, 0, 6.5, 135, 0)',
     'Animated transform list at 50s of the third iteration');
-}, 'iterationComposite of transform list animation whose order is mismatched');
+}, 'iteration composition of transform list animation whose order is'
+   + ' mismatched');
 
 test(t => {
   const div = createDiv(t);
@@ -655,8 +656,8 @@ test(t => {
     //                       scale(2 + (2-1)*2) translate(10px * 3)
     'matrix(3.5, 0, 0, 3.5, 80, 0)',
     'Animated transform list at 50s of the third iteration');
-}, 'iterationComposite of transform list animation whose order is mismatched ' +
-   'because of missing functions');
+}, 'iteration composition of transform list animation whose order is'
+   + ' mismatched because of missing functions');
 
    test(t => {
   const div = createDiv(t);
@@ -684,7 +685,7 @@ test(t => {
     // translateX(10px * 2 + none) -> translateX(10px * 2 + 10px) @ 50%
     'matrix(1, 0, 0, 1, 25, 0)',
     'Animated transform list at 50s of the third iteration');
-}, 'iterationComposite of transform from none to translate');
+}, 'iteration composition of transform from none to translate');
 
 test(t => {
   const div = createDiv(t);
@@ -718,7 +719,7 @@ test(t => {
     // to:   matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 150, 1)
     'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 140, 1)',
     'Animated transform of matrix3d function at 50s of the third iteration');
-}, 'iterationComposite of transform of matrix3d function');
+}, 'iteration composition of transform of matrix3d function');
 
 test(t => {
   const div = createDiv(t);
@@ -743,7 +744,7 @@ test(t => {
   assert_matrix_equals(getComputedStyle(div).transform,
     rotate3dToMatrix3d(1, 1, 0, 225 * Math.PI / 180), //((270 + 180) * 0.5)deg
     'Animated transform of rotate3d function at 50s of the third iteration');
-}, 'iterationComposite of transform of rotate3d function');
+}, 'iteration composition of transform of rotate3d function');
 
 test(t => {
   const div = createDiv(t);
@@ -764,7 +765,7 @@ test(t => {
   anim.currentTime += anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).marginLeft, '55px', // (50px + 60px) * 0.5
     'Animated margin-left style at 50s of the third iteration');
-}, 'iterationComposite starts with non-zero value animation');
+}, 'iteration composition starts with non-zero value animation');
 
 test(t => {
   const div = createDiv(t);
@@ -788,7 +789,7 @@ test(t => {
   assert_equals(getComputedStyle(div).marginLeft,
     '-20px', // (-10px + -30px) * 0.5
     'Animated margin-left style at 50s of the third iteration');
-}, 'iterationComposite with negative final value animation');
+}, 'iteration composition with negative final value animation');
 
 test(t => {
   const div = createDiv(t);
@@ -813,6 +814,6 @@ test(t => {
   anim.effect.timing.duration = anim.effect.timing.duration / 4;
   assert_equals(getComputedStyle(div).marginLeft, '50px',
       'Animated style at 50s of the fourth iteration');
-}, 'duration changes with iterationComposite(accumulate)');
+}, 'duration changes with an iteration composition operation of accumulate');
 
 </script>
