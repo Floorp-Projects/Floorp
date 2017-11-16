@@ -55,10 +55,16 @@ interface mozILocaleService : nsISupports
    * Default locale of the browser. The locale we are guaranteed to have
    * resources for that should be used as a last resort fallack in cases
    * where requested locales do not match available locales.
+   */
+  readonly attribute ACString defaultLocale;
+
+  /**
+   * Last fallback is the final fallback locale we're going to attempt if all
+   * else fails in any language negotiation or locale resource retrieval situations.
    *
    * At the moment it returns `en-US`.
    */
-  readonly attribute ACString defaultLocale;
+  readonly attribute ACString lastFallbackLocale;
 
   /**
    * Returns a list of locales that the application should be localized to.
