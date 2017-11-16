@@ -1218,6 +1218,22 @@ nsBaseWidget::DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent)
   }
 }
 
+// static
+bool
+nsBaseWidget::ShowContextMenuAfterMouseUp()
+{
+  static bool gContextMenuAfterMouseUp = false;
+  static bool gContextMenuAfterMouseUpCached = false;
+  if (!gContextMenuAfterMouseUpCached) {
+    Preferences::AddBoolVarCache(&gContextMenuAfterMouseUp,
+                                 "ui.context_menus.after_mouseup",
+                                 false);
+
+    gContextMenuAfterMouseUpCached = true;
+  }
+  return gContextMenuAfterMouseUp;
+}
+
 nsIDocument*
 nsBaseWidget::GetDocument() const
 {
