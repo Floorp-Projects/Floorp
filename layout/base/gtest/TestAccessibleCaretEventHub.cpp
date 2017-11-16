@@ -112,7 +112,7 @@ public:
     mHub.get()->AddRef();
   }
 
-  ~AccessibleCaretEventHubTester()
+  ~AccessibleCaretEventHubTester() override
   {
     // Release the ref added in the constructor.
     mHub.get()->Release();
