@@ -65,9 +65,23 @@ AddVarCacheFunc(bool* aVar, const char* aPrefName)
 }
 
 void
+AddVarCacheFunc(Atomic<bool, Relaxed>* aVar, const char* aPrefName)
+{
+  nsresult rv = Preferences::AddAtomicBoolVarCache(aVar, aPrefName);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+}
+
+void
 AddVarCacheFunc(int32_t* aVar, const char* aPrefName)
 {
   nsresult rv = Preferences::AddIntVarCache(aVar, aPrefName);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+}
+
+void
+AddVarCacheFunc(Atomic<int32_t, Relaxed>* aVar, const char* aPrefName)
+{
+  nsresult rv = Preferences::AddAtomicIntVarCache(aVar, aPrefName);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 }
 
@@ -141,9 +155,19 @@ TEST(CallbackAndVarCacheOrder, Bool)
   RunTest<bool>("test_pref.bool.1", "test_pref.bool.2", false, true);
 }
 
+TEST(CallbackAndVarCacheOrder, AtomicBool)
+{
+  RunTest<bool, Atomic<bool, Relaxed>>("test_pref.atomic_bool.1", "test_pref.atomic_bool.2", false, true);
+}
+
 TEST(CallbackAndVarCacheOrder, Int)
 {
   RunTest<int32_t>("test_pref.int.1", "test_pref.int.2", -2, 3);
+}
+
+TEST(CallbackAndVarCacheOrder, AtomicInt)
+{
+  RunTest<int32_t, Atomic<int32_t, Relaxed>>("test_pref.atomic_int.1", "test_pref.atomic_int.2", -3, 4);
 }
 
 TEST(CallbackAndVarCacheOrder, Uint)
