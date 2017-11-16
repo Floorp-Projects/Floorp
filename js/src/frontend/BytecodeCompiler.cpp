@@ -52,7 +52,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
                                    const Maybe<uint32_t>& parameterListEnd);
 
     ScriptSourceObject* sourceObjectPtr() const;
-    SourceCompressionTask* sourceCompressionTask() const;
 
   private:
     JSScript* compileScript(HandleObject environment, SharedContext* sc);
@@ -93,19 +92,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     RootedScript script;
 };
-
-AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
-                                           const char* filename, size_t line, size_t column)
-#ifdef JS_TRACE_LOGGING
-  : logger_(TraceLoggerForCurrentThread(cx))
-{
-    frontendEvent_.emplace(TraceLogger_Frontend, filename, line, column);
-    frontendLog_.emplace(logger_, *frontendEvent_);
-    typeLog_.emplace(logger_, id);
-}
-#else
-{ }
-#endif
 
 AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
                                            const ErrorReporter& errorReporter)

@@ -155,11 +155,6 @@ class SyntaxParseHandler
         return node == NodeParenthesizedArray || node == NodeParenthesizedObject;
     }
 
-    static bool isDestructuringPatternAnyParentheses(Node node) {
-        return isUnparenthesizedDestructuringPattern(node) ||
-                isParenthesizedDestructuringPattern(node);
-    }
-
   public:
     SyntaxParseHandler(JSContext* cx, LifoAlloc& alloc, LazyScript* lazyOuterFunction)
       : lastAtom(nullptr)
@@ -169,8 +164,6 @@ class SyntaxParseHandler
 
     void prepareNodeForMutation(Node node) {}
     void freeTree(Node node) {}
-
-    void trace(JSTracer* trc) {}
 
     Node newName(PropertyName* name, const TokenPos& pos, JSContext* cx) {
         lastAtom = name;
@@ -507,17 +500,12 @@ class SyntaxParseHandler
 
     bool isConstant(Node pn) { return false; }
 
-    bool isUnparenthesizedName(Node node) {
+    bool isNameAnyParentheses(Node node) {
         return node == NodeUnparenthesizedArgumentsName ||
                node == NodeUnparenthesizedEvalName ||
                node == NodeUnparenthesizedName ||
-               node == NodePotentialAsyncKeyword;
-    }
-
-    bool isNameAnyParentheses(Node node) {
-        if (isUnparenthesizedName(node))
-            return true;
-        return node == NodeParenthesizedArgumentsName ||
+               node == NodePotentialAsyncKeyword ||
+               node == NodeParenthesizedArgumentsName ||
                node == NodeParenthesizedEvalName ||
                node == NodeParenthesizedName;
     }

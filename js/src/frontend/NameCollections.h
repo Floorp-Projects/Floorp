@@ -47,10 +47,6 @@ class CollectionPool
         purgeAll();
     }
 
-    bool empty() const {
-        return all_.empty();
-    }
-
     void purgeAll() {
         void** end = all_.end();
         for (void** it = all_.begin(); it != end; ++it)
@@ -155,8 +151,6 @@ using DeclaredNameMap = RecyclableNameMap<DeclaredNameInfo>;
 using CheckTDZMap = RecyclableNameMap<MaybeCheckTDZ>;
 using NameLocationMap = RecyclableNameMap<NameLocation>;
 using AtomIndexMap = RecyclableNameMap<uint32_t>;
-
-#undef RECYCLABLE_NAME_MAP_TYPE
 
 template <typename RepresentativeTable>
 class InlineTablePool
