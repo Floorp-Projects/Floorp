@@ -7,6 +7,13 @@
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientSource.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+using namespace mozilla::dom::ipc;
+using mozilla::TimeStamp;
+using mozilla::TimeDuration;
+using mozilla::dom::cache::CacheStorage;
+
 #define FORWARD_TO_OUTER(method, args, err_rval)                        \
   PR_BEGIN_MACRO                                                        \
   MOZ_RELEASE_ASSERT(IsInnerWindow());                                  \
@@ -52,6 +59,8 @@
 
 #define DOM_TOUCH_LISTENER_ADDED "dom-touch-listener-added"
 #define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
+
+static LazyLogModule gDOMLeakPRLogInner("DOMLeakInner");
 
 static bool                 gIdleObserversAPIFuzzTimeDisabled = false;
 static FILE                *gDumpFile                         = nullptr;
@@ -714,7 +723,7 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
   }
 #endif
 
-  MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug,
+  MOZ_LOG(gDOMLeakPRLogInner, LogLevel::Debug,
           ("DOMWINDOW %p created outer=%p", this, aOuterWindow));
 
   // Add ourselves to the inner windows list.
@@ -744,7 +753,7 @@ nsGlobalWindowInner::Init()
 {
   AssertIsOnMainThread();
 
-  NS_ASSERTION(gDOMLeakPRLog, "gDOMLeakPRLog should have been initialized!");
+  NS_ASSERTION(gDOMLeakPRLogInner, "gDOMLeakPRLogInner should have been initialized!");
 
   sInnerWindowsById = new InnerWindowByIdTable();
 }
@@ -801,7 +810,7 @@ nsGlobalWindowInner::~nsGlobalWindowInner()
   }
 #endif
 
-  MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug, ("DOMWINDOW %p destroyed", this));
+  MOZ_LOG(gDOMLeakPRLogInner, LogLevel::Debug, ("DOMWINDOW %p destroyed", this));
 
   Telemetry::Accumulate(Telemetry::INNERWINDOWS_WITH_MUTATION_LISTENERS,
                         mMutationBits ? 1 : 0);
@@ -1516,9 +1525,9 @@ nsGlobalWindowInner::InnerSetNewDocument(JSContext* aCx, nsIDocument* aDocument)
   NS_PRECONDITION(IsInnerWindow(), "Must only be called on inner windows");
   MOZ_ASSERT(aDocument);
 
-  if (MOZ_LOG_TEST(gDOMLeakPRLog, LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(gDOMLeakPRLogInner, LogLevel::Debug)) {
     nsIURI *uri = aDocument->GetDocumentURI();
-    MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug,
+    MOZ_LOG(gDOMLeakPRLogInner, LogLevel::Debug,
             ("DOMWINDOW %p SetNewDocument %s",
              this, uri ? uri->GetSpecOrDefault().get() : ""));
   }
@@ -4869,7 +4878,7 @@ nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError)
   }
 
   if (mSessionStorage) {
-    MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug,
+    MOZ_LOG(gDOMLeakPRLogInner, LogLevel::Debug,
             ("nsGlobalWindowInner %p has %p sessionStorage", this, mSessionStorage.get()));
     bool canAccess = principal->Subsumes(mSessionStorage->Principal());
     NS_ASSERTION(canAccess,
@@ -4920,7 +4929,7 @@ nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError)
     mSessionStorage = static_cast<Storage*>(storage.get());
     MOZ_ASSERT(mSessionStorage);
 
-    MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug,
+    MOZ_LOG(gDOMLeakPRLogInner, LogLevel::Debug,
             ("nsGlobalWindowInner %p tried to get a new sessionStorage %p", this, mSessionStorage.get()));
 
     if (!mSessionStorage) {
@@ -4929,7 +4938,7 @@ nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError)
     }
   }
 
-  MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug,
+  MOZ_LOG(gDOMLeakPRLogInner, LogLevel::Debug,
           ("nsGlobalWindowInner %p returns %p sessionStorage", this, mSessionStorage.get()));
 
   return mSessionStorage;
@@ -5868,7 +5877,7 @@ nsGlobalWindowInner::ObserveStorageNotification(StorageEvent* aEvent,
       return;
     }
 
-    MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug,
+    MOZ_LOG(gDOMLeakPRLogInner, LogLevel::Debug,
             ("nsGlobalWindowInner %p with sessionStorage %p passing event from %p",
              this, mSessionStorage.get(), changingStorage.get()));
 
