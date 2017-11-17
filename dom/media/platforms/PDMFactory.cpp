@@ -119,11 +119,11 @@ public:
         aTrackConfig.GetAsVideoInfo()->mExtraData;
       AddToCheckList([mimeType, extraData]() {
         if (MP4Decoder::IsH264(mimeType)) {
-          mp4_demuxer::SPSData spsdata;
+          SPSData spsdata;
           // WMF H.264 Video Decoder and Apple ATDecoder
           // do not support YUV444 format.
           // For consistency, all decoders should be checked.
-          if (mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata) &&
+          if (H264::DecodeSPSFromExtraData(extraData, spsdata) &&
               (spsdata.profile_idc == 244 /* Hi444PP */ ||
                spsdata.chroma_format_idc == PDMFactory::kYUV444)) {
             return CheckResult(

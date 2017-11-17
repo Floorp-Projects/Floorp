@@ -33,7 +33,7 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
   , mDisplayWidth(aConfig.mDisplay.width)
   , mDisplayHeight(aConfig.mDisplay.height)
   , mTaskQueue(aTaskQueue)
-  , mMaxRefFrames(mp4_demuxer::H264::ComputeMaxRefFrames(aConfig.mExtraData))
+  , mMaxRefFrames(H264::ComputeMaxRefFrames(aConfig.mExtraData))
   , mImageContainer(aImageContainer)
 #ifdef MOZ_WIDGET_UIKIT
   , mUseSoftwareImages(true)

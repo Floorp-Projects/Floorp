@@ -83,8 +83,8 @@ private:
 bool
 AccumulateSPSTelemetry(const MediaByteBuffer* aExtradata)
 {
-  mp4_demuxer::SPSData spsdata;
-  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtradata, spsdata)) {
+  SPSData spsdata;
+  if (H264::DecodeSPSFromExtraData(aExtradata, spsdata)) {
     uint8_t constraints = (spsdata.constraint_set0_flag ? (1 << 0) : 0)
                           | (spsdata.constraint_set1_flag ? (1 << 1) : 0)
                           | (spsdata.constraint_set2_flag ? (1 << 2) : 0)
@@ -369,10 +369,10 @@ MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
     mIsH264 = true;
     RefPtr<MediaByteBuffer> extraData = videoInfo->mExtraData;
     mNeedSPSForTelemetry = AccumulateSPSTelemetry(extraData);
-    mp4_demuxer::SPSData spsdata;
-    if (mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata) &&
+    SPSData spsdata;
+    if (H264::DecodeSPSFromExtraData(extraData, spsdata) &&
         spsdata.pic_width > 0 && spsdata.pic_height > 0 &&
-        mp4_demuxer::H264::EnsureSPSIsSane(spsdata)) {
+        H264::EnsureSPSIsSane(spsdata)) {
       videoInfo->mImage.width = spsdata.pic_width;
       videoInfo->mImage.height = spsdata.pic_height;
       videoInfo->mDisplay.width = spsdata.display_width;
@@ -446,13 +446,12 @@ MP4TrackDemuxer::GetNextSample()
   if (mInfo->GetAsVideoInfo()) {
     sample->mExtraData = mInfo->GetAsVideoInfo()->mExtraData;
     if (mIsH264 && !sample->mCrypto.mValid) {
-      mp4_demuxer::H264::FrameType type =
-        mp4_demuxer::H264::GetFrameType(sample);
+      H264::FrameType type = H264::GetFrameType(sample);
       switch (type) {
-        case mp4_demuxer::H264::FrameType::I_FRAME: MOZ_FALLTHROUGH;
-        case mp4_demuxer::H264::FrameType::OTHER:
+        case H264::FrameType::I_FRAME: MOZ_FALLTHROUGH;
+        case H264::FrameType::OTHER:
         {
-          bool keyframe = type == mp4_demuxer::H264::FrameType::I_FRAME;
+          bool keyframe = type == H264::FrameType::I_FRAME;
           if (sample->mKeyframe != keyframe) {
             NS_WARNING(nsPrintfCString("Frame incorrectly marked as %skeyframe "
                                        "@ pts:%" PRId64 " dur:%" PRId64
@@ -466,7 +465,7 @@ MP4TrackDemuxer::GetNextSample()
           }
           break;
         }
-        case mp4_demuxer::H264::FrameType::INVALID:
+        case H264::FrameType::INVALID:
           NS_WARNING(
             nsPrintfCString("Invalid H264 frame @ pts:%" PRId64 " dur:%" PRId64
                             " dts:%" PRId64,
@@ -530,12 +529,12 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
   for (const auto& sample : samples->mSamples) {
     // Collect telemetry from h264 Annex B SPS.
     if (mNeedSPSForTelemetry && mIsH264 &&
-        mp4_demuxer::AnnexB::IsAVCC(sample)) {
+        AnnexB::IsAVCC(sample)) {
       RefPtr<MediaByteBuffer> extradata =
-        mp4_demuxer::H264::ExtractExtraData(sample);
-      if (mp4_demuxer::H264::HasSPS(extradata)) {
+        H264::ExtractExtraData(sample);
+      if (H264::HasSPS(extradata)) {
         RefPtr<MediaByteBuffer> extradata =
-          mp4_demuxer::H264::ExtractExtraData(sample);
+          H264::ExtractExtraData(sample);
         mNeedSPSForTelemetry = AccumulateSPSTelemetry(extradata);
       }
     }
