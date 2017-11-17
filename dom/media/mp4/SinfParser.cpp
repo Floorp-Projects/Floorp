@@ -6,9 +6,9 @@
 #include "SinfParser.h"
 #include "AtomType.h"
 #include "Box.h"
-#include "Stream.h"
+#include "ByteStream.h"
 
-namespace mp4_demuxer {
+namespace mozilla {
 
 Sinf::Sinf(Box& aBox)
   : mDefaultIVSize(0)

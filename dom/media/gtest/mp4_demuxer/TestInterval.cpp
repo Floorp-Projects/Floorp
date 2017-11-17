@@ -4,54 +4,53 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
-#include "Interval.h"
+#include "MP4Interval.h"
 
-using namespace mp4_demuxer;
-using namespace mozilla;
+using mozilla::MP4Interval;
 
-TEST(Interval, Length)
+TEST(MP4Interval, Length)
 {
-  Interval<int> i(15, 25);
+  MP4Interval<int> i(15, 25);
   EXPECT_EQ(10, i.Length());
 }
 
-TEST(Interval, Intersection)
+TEST(MP4Interval, Intersection)
 {
-  Interval<int> i0(10, 20);
-  Interval<int> i1(15, 25);
-  Interval<int> i = i0.Intersection(i1);
+  MP4Interval<int> i0(10, 20);
+  MP4Interval<int> i1(15, 25);
+  MP4Interval<int> i = i0.Intersection(i1);
   EXPECT_EQ(15, i.start);
   EXPECT_EQ(20, i.end);
 }
 
-TEST(Interval, Equals)
+TEST(MP4Interval, Equals)
 {
-  Interval<int> i0(10, 20);
-  Interval<int> i1(10, 20);
+  MP4Interval<int> i0(10, 20);
+  MP4Interval<int> i1(10, 20);
   EXPECT_EQ(i0, i1);
 
-  Interval<int> i2(5, 20);
+  MP4Interval<int> i2(5, 20);
   EXPECT_NE(i0, i2);
 
-  Interval<int> i3(10, 15);
+  MP4Interval<int> i3(10, 15);
   EXPECT_NE(i0, i2);
 }
 
-TEST(Interval, IntersectionVector)
+TEST(MP4Interval, IntersectionVector)
 {
-  nsTArray<Interval<int>> i0;
-  i0.AppendElement(Interval<int>(5, 10));
-  i0.AppendElement(Interval<int>(20, 25));
-  i0.AppendElement(Interval<int>(40, 60));
+  nsTArray<MP4Interval<int>> i0;
+  i0.AppendElement(MP4Interval<int>(5, 10));
+  i0.AppendElement(MP4Interval<int>(20, 25));
+  i0.AppendElement(MP4Interval<int>(40, 60));
 
-  nsTArray<Interval<int>> i1;
-  i1.AppendElement(Interval<int>(7, 15));
-  i1.AppendElement(Interval<int>(16, 27));
-  i1.AppendElement(Interval<int>(45, 50));
-  i1.AppendElement(Interval<int>(53, 57));
+  nsTArray<MP4Interval<int>> i1;
+  i1.AppendElement(MP4Interval<int>(7, 15));
+  i1.AppendElement(MP4Interval<int>(16, 27));
+  i1.AppendElement(MP4Interval<int>(45, 50));
+  i1.AppendElement(MP4Interval<int>(53, 57));
 
-  nsTArray<Interval<int>> i;
-  Interval<int>::Intersection(i0, i1, &i);
+  nsTArray<MP4Interval<int>> i;
+  MP4Interval<int>::Intersection(i0, i1, &i);
 
   EXPECT_EQ(4u, i.Length());
 
@@ -68,16 +67,16 @@ TEST(Interval, IntersectionVector)
   EXPECT_EQ(57, i[3].end);
 }
 
-TEST(Interval, Normalize)
+TEST(MP4Interval, Normalize)
 {
-  nsTArray<Interval<int>> i;
-  i.AppendElement(Interval<int>(20, 30));
-  i.AppendElement(Interval<int>(1, 8));
-  i.AppendElement(Interval<int>(5, 10));
-  i.AppendElement(Interval<int>(2, 7));
+  nsTArray<MP4Interval<int>> i;
+  i.AppendElement(MP4Interval<int>(20, 30));
+  i.AppendElement(MP4Interval<int>(1, 8));
+  i.AppendElement(MP4Interval<int>(5, 10));
+  i.AppendElement(MP4Interval<int>(2, 7));
 
-  nsTArray<Interval<int>> o;
-  Interval<int>::Normalize(i, &o);
+  nsTArray<MP4Interval<int>> o;
+  MP4Interval<int>::Normalize(i, &o);
 
   EXPECT_EQ(2u, o.Length());
 

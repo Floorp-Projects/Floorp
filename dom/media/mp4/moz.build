@@ -9,16 +9,16 @@ EXPORTS += [
     'AtomType.h',
     'Box.h',
     'BufferStream.h',
+    'ByteStream.h',
     'DecoderData.h',
     'Index.h',
-    'Interval.h',
     'MoofParser.h',
     'MP4Decoder.h',
     'MP4Demuxer.h',
+    'MP4Interval.h',
     'MP4Metadata.h',
     'ResourceStream.h',
     'SinfParser.h',
-    'Stream.h',
 ]
 
 UNIFIED_SOURCES += [

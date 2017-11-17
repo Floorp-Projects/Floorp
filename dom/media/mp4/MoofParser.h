@@ -9,11 +9,11 @@
 #include "Atom.h"
 #include "AtomType.h"
 #include "SinfParser.h"
-#include "Stream.h"
-#include "Interval.h"
+#include "ByteStream.h"
+#include "MP4Interval.h"
 #include "MediaResource.h"
 
-namespace mp4_demuxer {
+namespace mozilla {
 typedef int64_t Microseconds;
 
 class Box;
@@ -160,7 +160,7 @@ struct Sample
   mozilla::MediaByteRange mByteRange;
   mozilla::MediaByteRange mCencRange;
   Microseconds mDecodeTime;
-  Interval<Microseconds> mCompositionRange;
+  MP4Interval<Microseconds> mCompositionRange;
   bool mSync;
 };
 
@@ -262,7 +262,7 @@ public:
 
   mozilla::MediaByteRange mRange;
   mozilla::MediaByteRange mMdatRange;
-  Interval<Microseconds> mTimeRange;
+  MP4Interval<Microseconds> mTimeRange;
   FallibleTArray<Sample> mIndex;
 
   FallibleTArray<CencSampleEncryptionInfoEntry> mFragmentSampleEncryptionInfoEntries;
@@ -286,7 +286,7 @@ private:
 class MoofParser
 {
 public:
-  MoofParser(Stream* aSource, uint32_t aTrackId, bool aIsAudio)
+  MoofParser(ByteStream* aSource, uint32_t aTrackId, bool aIsAudio)
     : mSource(aSource)
     , mOffset(0)
     , mTrex(aTrackId)
@@ -304,7 +304,7 @@ public:
   bool RebuildFragmentedIndex(
     const mozilla::MediaByteRangeSet& aByteRanges, bool* aCanEvict);
   bool RebuildFragmentedIndex(BoxContext& aContext);
-  Interval<Microseconds> GetCompositionRange(
+  MP4Interval<Microseconds> GetCompositionRange(
     const mozilla::MediaByteRangeSet& aByteRanges);
   bool ReachedEnd();
   void ParseMoov(Box& aBox);
@@ -325,7 +325,7 @@ public:
   MediaByteRange FirstCompleteMediaHeader();
 
   mozilla::MediaByteRange mInitRange;
-  RefPtr<Stream> mSource;
+  RefPtr<ByteStream> mSource;
   uint64_t mOffset;
   Mvhd mMvhd;
   Mdhd mMdhd;
