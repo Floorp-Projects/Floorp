@@ -318,6 +318,11 @@ protected:
 
   void SendOnUnlockedDraw(uint32_t aFlags);
 
+#ifdef DEBUG
+  // Records the image drawing for startup performance testing.
+  void NotifyDrawingObservers();
+#endif
+
   // Member data shared by all implementations of this abstract class
   RefPtr<ProgressTracker>     mProgressTracker;
   RefPtr<ImageURL>            mURI;
