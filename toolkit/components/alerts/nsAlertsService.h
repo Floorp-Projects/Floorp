@@ -24,6 +24,7 @@ protected:
   virtual ~nsAlertsService();
 
   bool ShouldShowAlert();
+  bool ShouldUseSystemBackend();
   already_AddRefed<nsIAlertsDoNotDisturb> GetDNDBackend();
   nsCOMPtr<nsIAlertsService> mBackend;
 };
