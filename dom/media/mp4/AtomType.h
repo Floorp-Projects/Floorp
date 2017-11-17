@@ -10,9 +10,7 @@
 #include <stdint.h>
 #include "mozilla/EndianUtils.h"
 
-using namespace mozilla;
-
-namespace mp4_demuxer {
+namespace mozilla {
 
 class AtomType
 {

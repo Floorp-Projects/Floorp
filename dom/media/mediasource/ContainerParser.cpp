@@ -18,7 +18,9 @@
 #ifdef MOZ_FMP4
 #include "AtomType.h"
 #include "BufferReader.h"
-#include "Stream.h"
+#include "Index.h"
+#include "MP4Interval.h"
+#include "ByteStream.h"
 #endif
 #include "nsAutoPtr.h"
 #include "SourceBufferResource.h"
@@ -339,7 +341,7 @@ private:
 
 #ifdef MOZ_FMP4
 
-class MP4Stream : public mp4_demuxer::Stream
+class MP4Stream : public ByteStream
 {
 public:
   explicit MP4Stream(SourceBufferResource* aResource);
@@ -466,12 +468,12 @@ private:
     {
       const MediaContainerType mType(aType); // for logging macro.
       BufferReader reader(aData);
-      mp4_demuxer::AtomType initAtom("moov");
-      mp4_demuxer::AtomType mediaAtom("moof");
-      mp4_demuxer::AtomType dataAtom("mdat");
+      AtomType initAtom("moov");
+      AtomType mediaAtom("moof");
+      AtomType dataAtom("mdat");
 
       // Valid top-level boxes defined in ISO/IEC 14496-12 (Table 1)
-      static const mp4_demuxer::AtomType validBoxes[] = {
+      static const AtomType validBoxes[] = {
         "ftyp", "moov", // init segment
         "pdin", "free", "sidx", // optional prior moov box
         "styp", "moof", "mdat", // media segment
@@ -487,7 +489,7 @@ private:
         uint64_t size = tmp;
         const uint8_t* typec = reader.Peek(4);
         MOZ_TRY_VAR(tmp, reader.ReadU32());
-        mp4_demuxer::AtomType type(tmp);
+        AtomType type(tmp);
         MSE_DEBUGV(AtomParser ,"Checking atom:'%c%c%c%c' @ %u",
                    typec[0], typec[1], typec[2], typec[3],
                    (uint32_t)reader.Offset() - 8);
@@ -502,15 +504,15 @@ private:
           return Err(NS_ERROR_FAILURE);
         }
         if (mInitOffset.isNothing() &&
-            mp4_demuxer::AtomType(type) == initAtom) {
+            AtomType(type) == initAtom) {
           mInitOffset = Some(reader.Offset());
         }
         if (mMediaOffset.isNothing() &&
-            mp4_demuxer::AtomType(type) == mediaAtom) {
+            AtomType(type) == mediaAtom) {
           mMediaOffset = Some(reader.Offset());
         }
         if (mDataOffset.isNothing() &&
-            mp4_demuxer::AtomType(type) == dataAtom) {
+            AtomType(type) == dataAtom) {
           mDataOffset = Some(reader.Offset());
         }
         if (size == 1) {
@@ -578,7 +580,7 @@ public:
       // consumers of ParseStartAndEndTimestamps to add their timestamp offset
       // manually. This allows the ContainerParser to be shared across different
       // timestampOffsets.
-      mParser = new mp4_demuxer::MoofParser(mStream, 0, /* aIsAudio = */ false);
+      mParser = new MoofParser(mStream, 0, /* aIsAudio = */ false);
       mInitData = new MediaByteBuffer();
       mCompleteInitSegmentRange = MediaByteRange();
       mCompleteMediaHeaderRange = MediaByteRange();
@@ -614,7 +616,7 @@ public:
     }
     mTotalParsed += aData->Length();
 
-    mp4_demuxer::Interval<mp4_demuxer::Microseconds> compositionRange =
+    MP4Interval<Microseconds> compositionRange =
       mParser->GetCompositionRange(byteRanges);
 
     mCompleteMediaHeaderRange =
@@ -650,7 +652,7 @@ public:
 
 private:
   RefPtr<MP4Stream> mStream;
-  nsAutoPtr<mp4_demuxer::MoofParser> mParser;
+  nsAutoPtr<MoofParser> mParser;
 };
 #endif // MOZ_FMP4
 

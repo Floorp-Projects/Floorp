@@ -14,21 +14,18 @@
 #include "AtomType.h"
 #include "BufferReader.h"
 
-using namespace mozilla;
-
-namespace mp4_demuxer {
-
-class Stream;
+namespace mozilla {
+class ByteStream;
 
 class BoxContext
 {
 public:
-  BoxContext(Stream* aSource, const MediaByteRangeSet& aByteRanges)
+  BoxContext(ByteStream* aSource, const MediaByteRangeSet& aByteRanges)
     : mSource(aSource), mByteRanges(aByteRanges)
   {
   }
 
-  RefPtr<Stream> mSource;
+  RefPtr<ByteStream> mSource;
   const MediaByteRangeSet& mByteRanges;
 };
 

@@ -66,10 +66,10 @@ private:
   void EnsureUpToDateIndex();
   void SetNextKeyFrameTime();
   RefPtr<MP4Demuxer> mParent;
-  RefPtr<mp4_demuxer::ResourceStream> mStream;
+  RefPtr<ResourceStream> mStream;
   UniquePtr<TrackInfo> mInfo;
-  RefPtr<mp4_demuxer::Index> mIndex;
-  UniquePtr<mp4_demuxer::SampleIterator> mIterator;
+  RefPtr<Index> mIndex;
+  UniquePtr<SampleIterator> mIterator;
   Maybe<media::TimeUnit> mNextKeyframeTime;
   // Queued samples extracted by the demuxer, but not yet returned.
   RefPtr<MediaRawData> mQueuedSample;
@@ -118,14 +118,14 @@ AccumulateSPSTelemetry(const MediaByteBuffer* aExtradata)
 
 MP4Demuxer::MP4Demuxer(MediaResource* aResource)
   : mResource(aResource)
-  , mStream(new mp4_demuxer::ResourceStream(aResource))
+  , mStream(new ResourceStream(aResource))
 {
 }
 
 RefPtr<MP4Demuxer::InitPromise>
 MP4Demuxer::Init()
 {
-  AutoPinned<mp4_demuxer::ResourceStream> stream(mStream);
+  AutoPinned<ResourceStream> stream(mStream);
 
   // 'result' will capture the first warning, if any.
   MediaResult result{NS_OK};
@@ -143,8 +143,8 @@ MP4Demuxer::Init()
     result = Move(initData.Result());
   }
 
-  RefPtr<mp4_demuxer::BufferStream> bufferstream =
-    new mp4_demuxer::BufferStream(initData.Ref());
+  RefPtr<BufferStream> bufferstream =
+    new BufferStream(initData.Ref());
 
   MP4Metadata metadata{bufferstream};
   nsresult rv = metadata.Parse();
@@ -351,13 +351,13 @@ MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
                                  UniquePtr<TrackInfo>&& aInfo,
                                  const IndiceWrapper& aIndices)
   : mParent(aParent)
-  , mStream(new mp4_demuxer::ResourceStream(mParent->mResource))
+  , mStream(new ResourceStream(mParent->mResource))
   , mInfo(Move(aInfo))
-  , mIndex(new mp4_demuxer::Index(aIndices,
-                                  mStream,
-                                  mInfo->mTrackId,
-                                  mInfo->IsAudio()))
-  , mIterator(MakeUnique<mp4_demuxer::SampleIterator>(mIndex))
+  , mIndex(new Index(aIndices,
+                     mStream,
+                     mInfo->mTrackId,
+                     mInfo->IsAudio()))
+  , mIterator(MakeUnique<SampleIterator>(mIndex))
   , mNeedReIndex(true)
 {
   EnsureUpToDateIndex(); // Force update of index
@@ -552,7 +552,7 @@ void
 MP4TrackDemuxer::SetNextKeyFrameTime()
 {
   mNextKeyframeTime.reset();
-  mp4_demuxer::Microseconds frameTime = mIterator->GetNextKeyframeTime();
+  Microseconds frameTime = mIterator->GetNextKeyframeTime();
   if (frameTime != -1) {
     mNextKeyframeTime.emplace(
       media::TimeUnit::FromMicroseconds(frameTime));
