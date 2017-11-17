@@ -1014,9 +1014,12 @@ class TreeMetadataEmitter(LoggingMixin):
                 computed_host_flags.resolve_flags('RTL', [rtl_flag])
 
         generated_files = set()
+        localized_generated_files = set()
         for obj in self._process_generated_files(context):
             for f in obj.outputs:
                 generated_files.add(f)
+                if obj.localized:
+                    localized_generated_files.add(f)
             yield obj
 
         for path in context['CONFIGURE_SUBST_FILES']:
@@ -1109,17 +1112,17 @@ class TreeMetadataEmitter(LoggingMixin):
                 for f in files:
                     if (var in ('FINAL_TARGET_PP_FILES',
                                 'OBJDIR_PP_FILES',
-                                'LOCALIZED_FILES',
                                 'LOCALIZED_PP_FILES') and
                         not isinstance(f, SourcePath)):
                         raise SandboxValidationError(
                                 ('Only source directory paths allowed in ' +
                                  '%s: %s')
                                 % (var, f,), context)
-                    if var.startswith('LOCALIZED_') and not f.startswith('en-US/'):
-                        raise SandboxValidationError(
-                                '%s paths must start with `en-US/`: %s'
-                                % (var, f,), context)
+                    if var.startswith('LOCALIZED_'):
+                        if isinstance(f, SourcePath) and not f.startswith('en-US/'):
+                            raise SandboxValidationError(
+                                    '%s paths must start with `en-US/`: %s'
+                                    % (var, f,), context)
                     if not isinstance(f, ObjDirPath):
                         path = f.full_path
                         if '*' not in path and not os.path.exists(path):
@@ -1136,6 +1139,21 @@ class TreeMetadataEmitter(LoggingMixin):
                             raise SandboxValidationError(
                                 ('Objdir file listed in %s not in ' +
                                  'GENERATED_FILES: %s') % (var, f), context)
+
+                        if var.startswith('LOCALIZED_'):
+                            # Further require that LOCALIZED_FILES are from
+                            # LOCALIZED_GENERATED_FILES.
+                            if f.target_basename not in localized_generated_files:
+                                raise SandboxValidationError(
+                                    ('Objdir file listed in %s not in ' +
+                                     'LOCALIZED_GENERATED_FILES: %s') % (var, f), context)
+                        else:
+                            # Additionally, don't allow LOCALIZED_GENERATED_FILES to be used
+                            # in anything *but* LOCALIZED_FILES.
+                            if f.target_basename in localized_generated_files:
+                                raise SandboxValidationError(
+                                    ('Outputs of LOCALIZED_GENERATED_FILES cannot be used in %s: ' +
+                                     '%s') % (var, f), context)
 
             # Addons (when XPI_NAME is defined) and Applications (when
             # DIST_SUBDIR is defined) use a different preferences directory
