@@ -131,6 +131,7 @@ namespace mozilla {
 namespace layers {
 class ImageContainer;
 class Image;
+class LayersManager;
 } // namespace layers
 
 namespace image {
@@ -311,6 +312,10 @@ private:
     GetFrameInternal(const gfx::IntSize& aSize,
                      uint32_t aWhichFrame,
                      uint32_t aFlags) override;
+
+  gfx::IntSize GetImageContainerSize(layers::LayerManager* aManager,
+                                     const gfx::IntSize& aSize,
+                                     uint32_t aFlags) override;
 
   //////////////////////////////////////////////////////////////////////////////
   // Decoding.

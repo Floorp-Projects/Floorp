@@ -344,6 +344,19 @@ protected:
     return MakePair(DrawResult::BAD_IMAGE, RefPtr<gfx::SourceSurface>());
   }
 
+  /**
+   * Calculate the estimated size to use for an image container with the given
+   * parameters. It may not be the same as the given size, and it may not be
+   * the same as the size of the surface in the image container, but it is the
+   * best effort estimate.
+   */
+  virtual gfx::IntSize GetImageContainerSize(layers::LayerManager* aManager,
+                                             const gfx::IntSize& aSize,
+                                             uint32_t aFlags)
+  {
+    return gfx::IntSize(0, 0);
+  }
+
   already_AddRefed<layers::ImageContainer>
     GetImageContainerImpl(layers::LayerManager* aManager,
                           const gfx::IntSize& aSize,
