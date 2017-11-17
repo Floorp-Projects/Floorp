@@ -570,7 +570,6 @@ private:
 
   const char* mName;
 
-public:
   PrefValue mDefaultValue;
   PrefValue mUserValue;
 };
