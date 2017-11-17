@@ -38,7 +38,7 @@ with Files('tests/xpcshell/test_JSONFile.js'):
     BUG_COMPONENT = ('Toolkit', 'Form Manager')
 
 with Files('tests/xpcshell/test_Match*.js'):
-    BUG_COMPONENT = ('Toolkit', 'WebExtentions: General')
+    BUG_COMPONENT = ('Toolkit', 'WebExtensions: General')
 
 with Files('tests/xpcshell/test_NewTabUtils.js'):
     BUG_COMPONENT = ('Firefox', 'New Tab Page')
@@ -77,7 +77,7 @@ with Files('FormLikeFactory.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Password Manager')
 
 with Files('IndexedDB.jsm'):
-    BUG_COMPONENT = ('Toolkit', 'Web Extensions: General')
+    BUG_COMPONENT = ('Toolkit', 'WebExtensions: General')
 
 with Files('InlineSpellChecker*.jsm'):
     BUG_COMPONENT = ('Core', 'Spell Checker')

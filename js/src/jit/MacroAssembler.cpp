@@ -1700,7 +1700,7 @@ MacroAssembler::handleFailure()
 {
     // Re-entry code is irrelevant because the exception will leave the
     // running function and never come back
-    JitCode* excTail = GetJitContext()->runtime->jitRuntime()->getExceptionTail();
+    TrampolinePtr excTail = GetJitContext()->runtime->jitRuntime()->getExceptionTail();
     jump(excTail);
 }
 
@@ -2361,7 +2361,6 @@ void
 MacroAssembler::link(JitCode* code)
 {
     MOZ_ASSERT(!oom());
-    linkSelfReference(code);
     linkProfilerCallSites(code);
 }
 
@@ -2879,19 +2878,6 @@ MacroAssembler::linkExitFrame(Register cxreg, Register scratch)
 {
     loadPtr(Address(cxreg, JSContext::offsetOfActivation()), scratch);
     storeStackPtr(Address(scratch, JitActivation::offsetOfPackedExitFP()));
-}
-
-void
-MacroAssembler::linkSelfReference(JitCode* code)
-{
-    // If this code can transition to C++ code and witness a GC, then we need to store
-    // the JitCode onto the stack in order to GC it correctly.  exitCodePatch should
-    // be unset if the code never needed to push its JitCode*.
-    if (hasSelfReference()) {
-        PatchDataWithValueCheck(CodeLocationLabel(code, selfReferencePatch_),
-                                ImmPtr(code),
-                                ImmPtr((void*)-1));
-    }
 }
 
 // ===============================================================

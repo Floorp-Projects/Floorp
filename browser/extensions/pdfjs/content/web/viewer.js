@@ -135,7 +135,6 @@ _pdfjsLib.PDFJS.useOnlyCssZoom = _pdfjsLib.PDFJS.useOnlyCssZoom === undefined ? 
 _pdfjsLib.PDFJS.maxCanvasPixels = _pdfjsLib.PDFJS.maxCanvasPixels === undefined ? 16777216 : _pdfjsLib.PDFJS.maxCanvasPixels;
 _pdfjsLib.PDFJS.disableHistory = _pdfjsLib.PDFJS.disableHistory === undefined ? false : _pdfjsLib.PDFJS.disableHistory;
 _pdfjsLib.PDFJS.disableTextLayer = _pdfjsLib.PDFJS.disableTextLayer === undefined ? false : _pdfjsLib.PDFJS.disableTextLayer;
-_pdfjsLib.PDFJS.ignoreCurrentPositionOnZoom = _pdfjsLib.PDFJS.ignoreCurrentPositionOnZoom === undefined ? false : _pdfjsLib.PDFJS.ignoreCurrentPositionOnZoom;
 ;
 function getOutputScale(ctx) {
   let devicePixelRatio = window.devicePixelRatio || 1;
@@ -1831,9 +1830,6 @@ function webViewerInitialized() {
     }
     if ('verbosity' in hashParams) {
       _pdfjsLib.PDFJS.verbosity = hashParams['verbosity'] | 0;
-    }
-    if ('ignorecurrentpositiononzoom' in hashParams) {
-      _pdfjsLib.PDFJS.ignoreCurrentPositionOnZoom = hashParams['ignorecurrentpositiononzoom'] === 'true';
     }
     if ('textlayer' in hashParams) {
       switch (hashParams['textlayer']) {
@@ -5376,7 +5372,19 @@ class PDFThumbnailViewer {
     if (numVisibleThumbs > 0) {
       let first = visibleThumbs.first.id;
       let last = numVisibleThumbs > 1 ? visibleThumbs.last.id : first;
+      let shouldScroll = false;
       if (page <= first || page >= last) {
+        shouldScroll = true;
+      } else {
+        visibleThumbs.views.some(function (view) {
+          if (view.id !== page) {
+            return false;
+          }
+          shouldScroll = view.percent < 100;
+          return true;
+        });
+      }
+      if (shouldScroll) {
         (0, _ui_utils.scrollIntoView)(thumbnail, { top: THUMBNAIL_SCROLL_MARGIN });
       }
     }
@@ -6243,7 +6251,7 @@ class BaseViewer {
     if (!noScroll) {
       let page = this._currentPageNumber,
           dest;
-      if (this._location && !_pdfjsLib.PDFJS.ignoreCurrentPositionOnZoom && !(this.isInPresentationMode || this.isChangingPresentationMode)) {
+      if (this._location && !(this.isInPresentationMode || this.isChangingPresentationMode)) {
         page = this._location.pageNumber;
         dest = [null, { name: 'XYZ' }, this._location.left, this._location.top, null];
       }

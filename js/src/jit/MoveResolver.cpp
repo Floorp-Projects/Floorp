@@ -38,6 +38,8 @@ MoveOperand::MoveOperand(MacroAssembler& masm, const ABIArg& arg)
         code_ = masm.getStackPointer().code();
         disp_ = arg.offsetFromArgBase();
         break;
+      case ABIArg::Uninitialized:
+        MOZ_CRASH("Uninitialized ABIArg kind");
     }
 }
 

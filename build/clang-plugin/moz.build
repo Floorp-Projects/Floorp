@@ -41,6 +41,14 @@ UNIFIED_SOURCES += [
     'VariableUsageHelpers.cpp',
 ]
 
+if CONFIG['ENABLE_MOZSEARCH_PLUGIN']:
+    UNIFIED_SOURCES += [
+        'mozsearch-plugin/FileOperations.cpp',
+        'mozsearch-plugin/JSONFormatter.cpp',
+        'mozsearch-plugin/MozsearchIndexer.cpp',
+        'mozsearch-plugin/StringOperations.cpp',
+    ]
+
 GENERATED_FILES += ['ThirdPartyPaths.cpp']
 third_party_paths = GENERATED_FILES['ThirdPartyPaths.cpp']
 third_party_paths.script = "ThirdPartyPaths.py:generate"

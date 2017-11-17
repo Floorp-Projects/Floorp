@@ -348,7 +348,6 @@ this.TranslationTelemetry = {
    * recording the automatic rejection of the offer.
    */
   recordAutoRejectedTranslationOffer() {
-    if (!this._canRecord) return;
     this.HISTOGRAMS.AUTO_REJECTED().add();
   },
 
@@ -362,7 +361,6 @@ this.TranslationTelemetry = {
    *        The number of characters that were translated
    */
   recordTranslation(langFrom, langTo, numCharacters) {
-    if (!this._canRecord) return;
     this.HISTOGRAMS.PAGES().add();
     this.HISTOGRAMS.PAGES_BY_LANG().add(langFrom + " -> " + langTo);
     this.HISTOGRAMS.CHARACTERS().add(numCharacters);
@@ -381,7 +379,6 @@ this.TranslationTelemetry = {
    *        be passed.
    */
   recordDetectedLanguageChange(beforeFirstTranslation) {
-    if (!this._canRecord) return;
     this.HISTOGRAMS.DETECTION_CHANGES().add(beforeFirstTranslation);
   },
 
@@ -391,7 +388,6 @@ this.TranslationTelemetry = {
    * user changes in the language in the UI.
    */
   recordTargetLanguageChange() {
-    if (!this._canRecord) return;
     this.HISTOGRAMS.TARGET_CHANGES().add();
   },
 
@@ -399,7 +395,6 @@ this.TranslationTelemetry = {
    * Record a denied translation offer.
    */
   recordDeniedTranslationOffer() {
-    if (!this._canRecord) return;
     this.HISTOGRAMS.DENIED().add();
   },
 
@@ -407,7 +402,6 @@ this.TranslationTelemetry = {
    * Record a "Show Original" command use.
    */
   recordShowOriginalContent() {
-    if (!this._canRecord) return;
     this.HISTOGRAMS.SHOW_ORIGINAL().add();
   },
 
@@ -415,7 +409,6 @@ this.TranslationTelemetry = {
    * Record the state of translation preferences.
    */
   recordPreferences() {
-    if (!this._canRecord) return;
     if (Services.prefs.getBoolPref(TRANSLATION_PREF_SHOWUI)) {
       this.HISTOGRAMS.SHOW_UI().add(1);
     }
@@ -425,18 +418,9 @@ this.TranslationTelemetry = {
   },
 
   _recordOpportunity(language, success) {
-    if (!this._canRecord) return;
     this.HISTOGRAMS.OPPORTUNITIES().add(success);
     this.HISTOGRAMS.OPPORTUNITIES_BY_LANG().add(language, success);
   },
-
-  /**
-   * A shortcut for reading the telemetry preference.
-   *
-   */
-  _canRecord() {
-    return Services.prefs.getBoolPref("toolkit.telemetry.enabled");
-  }
 };
 
 this.TranslationTelemetry.init();

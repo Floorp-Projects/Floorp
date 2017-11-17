@@ -407,7 +407,7 @@ PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
                              nsPageFrame* aPage, nsIFrame* aExtraPage,
                              nsDisplayList* aList)
 {
-  nsDisplayList newList(aBuilder);
+  nsDisplayList newList;
 
   while (true) {
     nsDisplayItem* i = aList->RemoveBottom();
@@ -443,7 +443,7 @@ BuildDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
   if (!aExtraPage->HasAnyStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
     return;
   }
-  nsDisplayList list(aBuilder);
+  nsDisplayList list;
   aExtraPage->BuildDisplayListForStackingContext(aBuilder, &list);
   PruneDisplayListForExtraPage(aBuilder, aPage, aExtraPage, &list);
   aList->AppendToTop(&list);
@@ -538,7 +538,7 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
   clipRect += aBuilder->ToReferenceFrame(child);
 
-  nsDisplayList content(aBuilder);
+  nsDisplayList content;
   {
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 

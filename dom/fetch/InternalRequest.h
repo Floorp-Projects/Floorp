@@ -53,7 +53,7 @@ namespace dom {
  * image             | TYPE_INTERNAL_IMAGE, TYPE_INTERNAL_IMAGE_PRELOAD, TYPE_INTERNAL_IMAGE_FAVICON
  * imageset          | TYPE_IMAGESET
  * import            | Not supported by Gecko
- * internal          | TYPE_DOCUMENT, TYPE_XBL, TYPE_OTHER
+ * internal          | TYPE_DOCUMENT, TYPE_XBL, TYPE_OTHER, TYPE_SAVEAS_DOWNLOAD
  * location          |
  * manifest          | TYPE_WEB_MANIFEST
  * object            | TYPE_INTERNAL_OBJECT

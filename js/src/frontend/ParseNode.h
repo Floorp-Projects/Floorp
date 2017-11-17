@@ -639,7 +639,7 @@ class ParseNode
 
     bool functionIsHoisted() const {
         MOZ_ASSERT(pn_arity == PN_CODE && getKind() == PNK_FUNCTION);
-        MOZ_ASSERT(isOp(JSOP_LAMBDA) ||        // lambda, genexpr
+        MOZ_ASSERT(isOp(JSOP_LAMBDA) ||        // lambda
                    isOp(JSOP_LAMBDA_ARROW) ||  // arrow function
                    isOp(JSOP_DEFFUN) ||        // non-body-level function statement
                    isOp(JSOP_NOP) ||           // body-level function stmt in global code

@@ -55,6 +55,8 @@ class PrefSetting;
 class PrefValue;
 } // namespace dom
 
+struct PrefsSizes;
+
 enum class PrefValueKind : bool
 {
   Default,
@@ -328,8 +330,8 @@ public:
 
   // When a content process is created these methods are used to pass prefs in
   // bulk from the parent process.
-  static void GetPreferences(InfallibleTArray<PrefSetting>* aPrefs);
-  static void SetInitPreferences(nsTArray<PrefSetting>* aPrefs);
+  static void GetPreferences(InfallibleTArray<PrefSetting>* aSettings);
+  static void SetInitPreferences(nsTArray<PrefSetting>* aSettings);
 
   // When a pref is changed in the parent process, these methods are used to
   // pass the update to content processes.
@@ -341,8 +343,8 @@ public:
   static pref_initPhase InitPhase();
 #endif
 
-  static int64_t SizeOfIncludingThisAndOtherStuff(
-    mozilla::MallocSizeOf aMallocSizeOf);
+  static void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                     PrefsSizes& aSizes);
 
   static void HandleDirty();
 

@@ -353,7 +353,7 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
       case OP_GROUP11_EvIz:
         // opsize-sized signed immediate
         memcpy(&imm, ptr, opsize);
-        imm = (imm << (32 - opsize * 8)) >> (32 - opsize * 8);
+        imm = int32_t(uint32_t(imm) << (32 - opsize * 8)) >> (32 - opsize * 8);
         ptr += opsize;
         haveImm = true;
         break;

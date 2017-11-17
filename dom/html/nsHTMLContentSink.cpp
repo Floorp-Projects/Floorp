@@ -259,6 +259,8 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
 
   nsAtom *name = nodeInfo->NameAtom();
+  RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
+  RefPtr<nsAtom> typeAtom = aIs ? NS_Atomize(*aIs) : tagAtom;
 
   NS_ASSERTION(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
                "Trying to HTML elements that don't have the XHTML namespace");
@@ -275,7 +277,7 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
       nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
                                                     nodeInfo->LocalName(),
                                                     nodeInfo->NamespaceID(),
-                                                    aIs);
+                                                    typeAtom);
   }
 
   // It might be a problem that parser synchronously calls constructor, so filed
@@ -318,8 +320,6 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
       // SetupCustomElement() should be called with an element that don't have
       // CustomElementData setup, if not we will hit the assertion in
       // SetCustomElementData().
-      RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
-      RefPtr<nsAtom> typeAtom = aIs ? NS_Atomize(*aIs) : tagAtom;
       // Built-in element
       *aResult = CreateHTMLElement(tag, nodeInfo.forget(), aFromParser).take();
       (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
@@ -369,7 +369,7 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
 
   if (CustomElementRegistry::IsCustomElementEnabled() &&
       (isCustomElementName || aIs)) {
-    nsContentUtils::SetupCustomElement(*aResult, aIs);
+    (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
   }
 
   return NS_OK;

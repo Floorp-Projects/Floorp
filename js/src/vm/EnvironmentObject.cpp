@@ -1925,8 +1925,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
 
     static bool isFunctionEnvironmentWithThis(const JSObject& env)
     {
-        // All functions except arrows and generator expression lambdas should
-        // have their own this binding.
+        // All functions except arrows should have their own this binding.
         return isFunctionEnvironment(env) && !env.as<CallObject>().callee().hasLexicalThis();
     }
 

@@ -581,6 +581,14 @@ public:
         "pushed floats must be at the beginning of the float list");
     }
 #endif
+
+    // We may have a pending push of pushed floats too:
+    if (HasPushedFloats()) {
+      // XXX we can return 'true' here once we make HasPushedFloats
+      // not lie.  (see nsBlockFrame::RemoveFloat)
+      auto* pushedFloats = GetPushedFloats();
+      return pushedFloats && !pushedFloats->IsEmpty();
+    }
     return false;
   }
 

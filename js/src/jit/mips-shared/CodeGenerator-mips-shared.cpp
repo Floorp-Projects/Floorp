@@ -207,9 +207,8 @@ CodeGeneratorMIPSShared::generateOutOfLineCode()
         // the same.
         masm.move32(Imm32(frameSize()), ra);
 
-        JitCode* handler = gen->jitRuntime()->getGenericBailoutHandler();
-
-        masm.branch(handler);
+        TrampolinePtr handler = gen->jitRuntime()->getGenericBailoutHandler();
+        masm.jump(handler);
     }
 
     return !masm.oom();
@@ -1843,9 +1842,9 @@ CodeGeneratorMIPSShared::generateInvalidateEpilogue()
     // Push the Ion script onto the stack (when we determine what that
     // pointer is).
     invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
-    JitCode* thunk = gen->jitRuntime()->getInvalidationThunk();
+    TrampolinePtr thunk = gen->jitRuntime()->getInvalidationThunk();
 
-    masm.branch(thunk);
+    masm.jump(thunk);
 
     // We should never reach this point in JIT code -- the invalidation thunk
     // should pop the invalidated JS frame and return directly to its caller.

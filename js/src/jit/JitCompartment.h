@@ -88,45 +88,53 @@ class JitRuntime
     ActiveThreadData<ExecutableAllocator> backedgeExecAlloc_;
 
     // Shared exception-handler tail.
-    ExclusiveAccessLockWriteOnceData<JitCode*> exceptionTail_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> exceptionTailOffset_;
 
     // Shared post-bailout-handler tail.
-    ExclusiveAccessLockWriteOnceData<JitCode*> bailoutTail_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> bailoutTailOffset_;
 
     // Shared profiler exit frame tail.
-    ExclusiveAccessLockWriteOnceData<JitCode*> profilerExitFrameTail_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> profilerExitFrameTailOffset_;
 
     // Trampoline for entering JIT code.
-    ExclusiveAccessLockWriteOnceData<JitCode*> enterJIT_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> enterJITOffset_;
 
     // Vector mapping frame class sizes to bailout tables.
-    typedef Vector<JitCode*, 4, SystemAllocPolicy> BailoutTableVector;
+    struct BailoutTable {
+        uint32_t startOffset;
+        uint32_t size;
+        BailoutTable(uint32_t startOffset, uint32_t size)
+          : startOffset(startOffset), size(size)
+        {}
+    };
+    typedef Vector<BailoutTable, 4, SystemAllocPolicy> BailoutTableVector;
     ExclusiveAccessLockWriteOnceData<BailoutTableVector> bailoutTables_;
 
     // Generic bailout table; used if the bailout table overflows.
-    ExclusiveAccessLockWriteOnceData<JitCode*> bailoutHandler_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> bailoutHandlerOffset_;
 
     // Argument-rectifying thunk, in the case of insufficient arguments passed
     // to a function call site.
-    ExclusiveAccessLockWriteOnceData<JitCode*> argumentsRectifier_;
-    ExclusiveAccessLockWriteOnceData<void*> argumentsRectifierReturnAddr_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> argumentsRectifierOffset_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> argumentsRectifierReturnOffset_;
 
     // Thunk that invalides an (Ion compiled) caller on the Ion stack.
-    ExclusiveAccessLockWriteOnceData<JitCode*> invalidator_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> invalidatorOffset_;
 
     // Thunk that calls the GC pre barrier.
-    ExclusiveAccessLockWriteOnceData<JitCode*> valuePreBarrier_;
-    ExclusiveAccessLockWriteOnceData<JitCode*> stringPreBarrier_;
-    ExclusiveAccessLockWriteOnceData<JitCode*> objectPreBarrier_;
-    ExclusiveAccessLockWriteOnceData<JitCode*> shapePreBarrier_;
-    ExclusiveAccessLockWriteOnceData<JitCode*> objectGroupPreBarrier_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> valuePreBarrierOffset_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> stringPreBarrierOffset_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> objectPreBarrierOffset_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> shapePreBarrierOffset_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> objectGroupPreBarrierOffset_;
 
     // Thunk to call malloc/free.
-    ExclusiveAccessLockWriteOnceData<JitCode*> mallocStub_;
-    ExclusiveAccessLockWriteOnceData<JitCode*> freeStub_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> mallocStubOffset_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> freeStubOffset_;
 
     // Thunk called to finish compilation of an IonScript.
-    ExclusiveAccessLockWriteOnceData<JitCode*> lazyLinkStub_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> lazyLinkStubOffset_;
+    ExclusiveAccessLockWriteOnceData<uint32_t> lazyLinkStubEndOffset_;
 
     // Thunk used by the debugger for breakpoint and step mode.
     ExclusiveAccessLockWriteOnceData<JitCode*> debugTrapHandler_;
@@ -135,11 +143,11 @@ class JitRuntime
     ExclusiveAccessLockWriteOnceData<JitCode*> baselineDebugModeOSRHandler_;
     ExclusiveAccessLockWriteOnceData<void*> baselineDebugModeOSRHandlerNoFrameRegPopAddr_;
 
-    // Code for all VMFunction wrappers.
-    ExclusiveAccessLockWriteOnceData<JitCode*> functionWrapperCode_;
+    // Code for trampolines and VMFunction wrappers.
+    ExclusiveAccessLockWriteOnceData<JitCode*> trampolineCode_;
 
     // Map VMFunction addresses to the offset of the wrapper in
-    // functionWrapperCode_.
+    // trampolineCode_.
     using VMWrapperMap = HashMap<const VMFunction*, uint32_t, VMFunction>;
     ExclusiveAccessLockWriteOnceData<VMWrapperMap*> functionWrappers_;
 
@@ -151,18 +159,18 @@ class JitRuntime
     UnprotectedData<JitcodeGlobalTable*> jitcodeGlobalTable_;
 
   private:
-    JitCode* generateLazyLinkStub(JSContext* cx);
-    JitCode* generateProfilerExitFrameTailStub(JSContext* cx);
-    JitCode* generateExceptionTailStub(JSContext* cx, void* handler);
-    JitCode* generateBailoutTailStub(JSContext* cx);
-    JitCode* generateEnterJIT(JSContext* cx);
-    JitCode* generateArgumentsRectifier(JSContext* cx, void** returnAddrOut);
-    JitCode* generateBailoutTable(JSContext* cx, uint32_t frameClass);
-    JitCode* generateBailoutHandler(JSContext* cx);
-    JitCode* generateInvalidator(JSContext* cx);
-    JitCode* generatePreBarrier(JSContext* cx, MIRType type);
-    JitCode* generateMallocStub(JSContext* cx);
-    JitCode* generateFreeStub(JSContext* cx);
+    void generateLazyLinkStub(MacroAssembler& masm);
+    void generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profilerExitTail);
+    void generateExceptionTailStub(MacroAssembler& masm, void* handler, Label* profilerExitTail);
+    void generateBailoutTailStub(MacroAssembler& masm, Label* bailoutTail);
+    void generateEnterJIT(JSContext* cx, MacroAssembler& masm);
+    void generateArgumentsRectifier(MacroAssembler& masm);
+    BailoutTable generateBailoutTable(MacroAssembler& masm, Label* bailoutTail, uint32_t frameClass);
+    void generateBailoutHandler(MacroAssembler& masm, Label* bailoutTail);
+    void generateInvalidator(MacroAssembler& masm, Label* bailoutTail);
+    uint32_t generatePreBarrier(JSContext* cx, MacroAssembler& masm, MIRType type);
+    void generateMallocStub(MacroAssembler& masm);
+    void generateFreeStub(MacroAssembler& masm);
     JitCode* generateDebugTrapHandler(JSContext* cx);
     JitCode* generateBaselineDebugModeOSRHandler(JSContext* cx, uint32_t* noFrameRegPopOffsetOut);
     bool generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunction& f);
@@ -174,6 +182,14 @@ class JitRuntime
     }
     inline bool generateTLExitVM(JSContext* cx, MacroAssembler& masm, const VMFunction& f) {
         return generateTLEventVM(cx, masm, f, /* enter = */ false);
+    }
+
+    uint32_t startTrampolineCode(MacroAssembler& masm);
+
+    TrampolinePtr trampolineCode(uint32_t offset) const {
+        MOZ_ASSERT(offset > 0);
+        MOZ_ASSERT(offset < trampolineCode_->instructionsSize());
+        return TrampolinePtr(trampolineCode_->raw() + offset);
     }
 
   public:
@@ -228,66 +244,75 @@ class JitRuntime
         return preventBackedgePatching_;
     }
 
-    uint8_t* getVMWrapper(const VMFunction& f) const;
+    TrampolinePtr getVMWrapper(const VMFunction& f) const;
     JitCode* debugTrapHandler(JSContext* cx);
     JitCode* getBaselineDebugModeOSRHandler(JSContext* cx);
     void* getBaselineDebugModeOSRHandlerAddress(JSContext* cx, bool popFrameReg);
 
-    JitCode* getGenericBailoutHandler() const {
-        return bailoutHandler_;
+    TrampolinePtr getGenericBailoutHandler() const {
+        return trampolineCode(bailoutHandlerOffset_);
     }
 
-    JitCode* getExceptionTail() const {
-        return exceptionTail_;
+    TrampolinePtr getExceptionTail() const {
+        return trampolineCode(exceptionTailOffset_);
     }
 
-    JitCode* getBailoutTail() const {
-        return bailoutTail_;
+    TrampolinePtr getBailoutTail() const {
+        return trampolineCode(bailoutTailOffset_);
     }
 
-    JitCode* getProfilerExitFrameTail() const {
-        return profilerExitFrameTail_;
+    TrampolinePtr getProfilerExitFrameTail() const {
+        return trampolineCode(profilerExitFrameTailOffset_);
     }
 
-    JitCode* getBailoutTable(const FrameSizeClass& frameClass) const;
+    TrampolinePtr getBailoutTable(const FrameSizeClass& frameClass) const;
+    uint32_t getBailoutTableSize(const FrameSizeClass& frameClass) const;
 
-    JitCode* getArgumentsRectifier() const {
-        return argumentsRectifier_;
+    TrampolinePtr getArgumentsRectifier() const {
+        return trampolineCode(argumentsRectifierOffset_);
     }
 
-    void* getArgumentsRectifierReturnAddr() const {
-        return argumentsRectifierReturnAddr_;
+    TrampolinePtr getArgumentsRectifierReturnAddr() const {
+        return trampolineCode(argumentsRectifierReturnOffset_);
     }
 
-    JitCode* getInvalidationThunk() const {
-        return invalidator_;
+    TrampolinePtr getInvalidationThunk() const {
+        return trampolineCode(invalidatorOffset_);
     }
 
     EnterJitCode enterJit() const {
-        return enterJIT_->as<EnterJitCode>();
+        return JS_DATA_TO_FUNC_PTR(EnterJitCode, trampolineCode(enterJITOffset_).value);
     }
 
-    JitCode* preBarrier(MIRType type) const {
+    TrampolinePtr preBarrier(MIRType type) const {
         switch (type) {
-          case MIRType::Value: return valuePreBarrier_;
-          case MIRType::String: return stringPreBarrier_;
-          case MIRType::Object: return objectPreBarrier_;
-          case MIRType::Shape: return shapePreBarrier_;
-          case MIRType::ObjectGroup: return objectGroupPreBarrier_;
+          case MIRType::Value:
+            return trampolineCode(valuePreBarrierOffset_);
+          case MIRType::String:
+            return trampolineCode(stringPreBarrierOffset_);
+          case MIRType::Object:
+            return trampolineCode(objectPreBarrierOffset_);
+          case MIRType::Shape:
+            return trampolineCode(shapePreBarrierOffset_);
+          case MIRType::ObjectGroup:
+            return trampolineCode(objectGroupPreBarrierOffset_);
           default: MOZ_CRASH();
         }
     }
 
-    JitCode* mallocStub() const {
-        return mallocStub_;
+    TrampolinePtr mallocStub() const {
+        return trampolineCode(mallocStubOffset_);
     }
 
-    JitCode* freeStub() const {
-        return freeStub_;
+    TrampolinePtr freeStub() const {
+        return trampolineCode(freeStubOffset_);
     }
 
-    JitCode* lazyLinkStub() const {
-        return lazyLinkStub_;
+    TrampolinePtr lazyLinkStub() const {
+        return trampolineCode(lazyLinkStubOffset_);
+    }
+    TrampolinePtr lazyLinkStubEnd() const {
+        return trampolineCode(lazyLinkStubEndOffset_);
     }
 
     bool hasJitcodeGlobalTable() const {
