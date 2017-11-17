@@ -954,7 +954,8 @@ HTMLEditor::TypedText(const nsAString& aString,
 
   if (aAction == eTypedBR) {
     // only inserts a br node
-    return InsertBR();
+    nsCOMPtr<nsIDOMNode> brNode;
+    return InsertBR(address_of(brNode));
   }
 
   return TextEditor::TypedText(aString, aAction);
@@ -1061,8 +1062,11 @@ HTMLEditor::CreateBR(nsIDOMNode* aNode,
 }
 
 nsresult
-HTMLEditor::InsertBR()
+HTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
 {
+  NS_ENSURE_TRUE(outBRNode, NS_ERROR_NULL_POINTER);
+  *outBRNode = nullptr;
+
   // calling it text insertion to trigger moz br treatment by rules
   AutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
 
@@ -1074,18 +1078,27 @@ HTMLEditor::InsertBR()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsINode> selNode;
+  nsCOMPtr<nsIDOMNode> selNode;
   int32_t selOffset;
   nsresult rv =
     GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = CreateBR(selNode, selOffset, outBRNode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  selection->SetInterlinePosition(true);
+
   // position selection after br
-  RefPtr<Element> br = CreateBR(selNode, selOffset, nsIEditor::eNext);
-  if (NS_WARN_IF(!br)) {
+  nsCOMPtr<nsINode> brNode = do_QueryInterface(*outBRNode);
+  if (NS_WARN_IF(!brNode)) {
     return NS_ERROR_FAILURE;
   }
-  return NS_OK;
+  EditorRawDOMPoint afterBrNode(brNode);
+  if (NS_WARN_IF(!afterBrNode.AdvanceOffset())) {
+    return NS_ERROR_FAILURE;
+  }
+  return selection->Collapse(afterBrNode);
 }
 
 void
