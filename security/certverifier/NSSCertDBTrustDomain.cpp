@@ -19,6 +19,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "nsCRTGlue.h"
@@ -1062,7 +1063,11 @@ InitializeNSS(const nsACString& dir, bool readOnly, bool loadPKCS11Modules)
   if (!loadPKCS11Modules) {
     flags |= NSS_INIT_NOMODDB;
   }
-  nsAutoCString dbTypeAndDirectory("sql:");
+  bool useSQLDB = Preferences::GetBool("security.use_sqldb", false);
+  nsAutoCString dbTypeAndDirectory;
+  if (useSQLDB) {
+    dbTypeAndDirectory.Append("sql:");
+  }
   dbTypeAndDirectory.Append(dir);
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           ("InitializeNSS(%s, %d, %d)", dbTypeAndDirectory.get(), readOnly,
