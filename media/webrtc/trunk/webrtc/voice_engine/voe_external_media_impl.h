@@ -41,7 +41,6 @@ class VoEExternalMediaImpl : public VoEExternalMedia {
         int16_t speechData10ms[],
         int samplingFreqHz,
         int num_channels,
-        int current_delay_ms,
         int& lengthSamples) override;
 
   virtual int ExternalPlayoutGetData(int16_t speechData10ms[],

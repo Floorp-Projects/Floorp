@@ -94,7 +94,6 @@ public:
     , mAec(0)
     , mAgc(0)
     , mNoise(0)
-    , mPlayoutDelay(0)
     , mFullDuplex(false)
     , mExtendedFilter(false)
     , mDelayAgnostic(false)
@@ -112,7 +111,6 @@ public:
   int32_t mAec;
   int32_t mAgc;
   int32_t mNoise;
-  int32_t mPlayoutDelay;
   bool mFullDuplex;
   bool mExtendedFilter;
   bool mDelayAgnostic;
