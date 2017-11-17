@@ -228,7 +228,8 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
     return parent;
   }
 
-  RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI()->Clone();
+  RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI();
+  api = api->Clone();
   RefPtr<AsyncImagePipelineManager> holder = root->AsyncImageManager();
   RefPtr<CompositorAnimationStorage> animStorage = cbp->GetAnimationStorage();
   parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, root->CompositorScheduler(), Move(api), Move(holder), Move(animStorage));
