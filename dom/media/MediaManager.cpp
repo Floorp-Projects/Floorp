@@ -194,6 +194,38 @@ struct DeviceState {
   const RefPtr<MediaDevice> mDevice;
 };
 
+/**
+ * This mimics the capture state from nsIMediaManagerService.
+ */
+enum class CaptureState : uint16_t {
+  Off = nsIMediaManagerService::STATE_NOCAPTURE,
+  Enabled = nsIMediaManagerService::STATE_CAPTURE_ENABLED,
+  Disabled = nsIMediaManagerService::STATE_CAPTURE_DISABLED,
+};
+
+static CaptureState
+CombineCaptureState(CaptureState aFirst, CaptureState aSecond)
+{
+  if (aFirst == CaptureState::Enabled || aSecond == CaptureState::Enabled) {
+    return CaptureState::Enabled;
+  }
+  if (aFirst == CaptureState::Disabled || aSecond == CaptureState::Disabled) {
+    return CaptureState::Disabled;
+  }
+  MOZ_ASSERT(aFirst == CaptureState::Off);
+  MOZ_ASSERT(aSecond == CaptureState::Off);
+  return CaptureState::Off;
+}
+
+static uint16_t
+FromCaptureState(CaptureState aState)
+{
+  MOZ_ASSERT(aState == CaptureState::Off ||
+             aState == CaptureState::Enabled ||
+             aState == CaptureState::Disabled);
+  return static_cast<uint16_t>(aState);
+}
+
 class SourceListener : public MediaStreamListener {
 public:
   SourceListener();
@@ -313,13 +345,7 @@ public:
 
   bool CapturingAudio() const;
 
-  bool CapturingScreen() const;
-
-  bool CapturingWindow() const;
-
-  bool CapturingApplication() const;
-
-  bool CapturingBrowser() const;
+  CaptureState CapturingSource(MediaSourceEnum aSource) const;
 
   already_AddRefed<PledgeVoid>
   ApplyConstraintsToTrack(nsPIDOMWindowInner* aWindow,
@@ -598,6 +624,7 @@ public:
     }
     return false;
   }
+
   bool CapturingAudio() const
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -608,45 +635,15 @@ public:
     }
     return false;
   }
-  bool CapturingScreen() const
+
+  CaptureState CapturingSource(MediaSourceEnum aSource) const
   {
     MOZ_ASSERT(NS_IsMainThread());
+    CaptureState result = CaptureState::Off;
     for (auto& l : mActiveListeners) {
-      if (l->CapturingScreen()) {
-        return true;
-      }
+      result = CombineCaptureState(result, l->CapturingSource(aSource));
     }
-    return false;
-  }
-  bool CapturingWindow() const
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    for (auto& l : mActiveListeners) {
-      if (l->CapturingWindow()) {
-        return true;
-      }
-    }
-    return false;
-  }
-  bool CapturingApplication() const
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    for (auto& l : mActiveListeners) {
-      if (l->CapturingApplication()) {
-        return true;
-      }
-    }
-    return false;
-  }
-  bool CapturingBrowser() const
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    for (auto& l : mActiveListeners) {
-      if (l->CapturingBrowser()) {
-        return true;
-      }
-    }
-    return false;
+    return result;
   }
 
   uint64_t WindowID() const
@@ -1119,6 +1116,9 @@ public:
     // them down instead.
     if (mAudioDevice &&
         mAudioDevice->GetMediaSource() == MediaSourceEnum::AudioCapture) {
+      NS_WARNING("MediaCaptureWindowState doesn't handle "
+                 "MediaSourceEnum::AudioCapture. This must be fixed with UX "
+                 "before shipping.");
       // It should be possible to pipe the capture stream to anything. CORS is
       // not a problem here, we got explicit user content.
       nsCOMPtr<nsIPrincipal> principal = window->GetExtantDoc()->NodePrincipal();
@@ -3478,9 +3478,7 @@ MediaManager::GetActiveMediaCaptureWindows(nsIArray** aArray)
       continue;
     }
 
-    if (winListener->CapturingVideo() || winListener->CapturingAudio() ||
-        winListener->CapturingScreen() || winListener->CapturingWindow() ||
-        winListener->CapturingApplication()) {
+    if (winListener->CapturingVideo() || winListener->CapturingAudio()) {
       array->AppendElement(window);
     }
   }
@@ -3489,69 +3487,67 @@ MediaManager::GetActiveMediaCaptureWindows(nsIArray** aArray)
   return NS_OK;
 }
 
-// XXX flags might be better...
 struct CaptureWindowStateData {
-  bool *mVideo;
-  bool *mAudio;
-  bool *mScreenShare;
-  bool *mWindowShare;
-  bool *mAppShare;
-  bool *mBrowserShare;
+  uint16_t* mCamera;
+  uint16_t* mMicrophone;
+  uint16_t* mScreenShare;
+  uint16_t* mWindowShare;
+  uint16_t* mAppShare;
+  uint16_t* mBrowserShare;
 };
 
 static void
 CaptureWindowStateCallback(MediaManager *aThis,
                            uint64_t aWindowID,
-                           GetUserMediaWindowListener  *aListener,
+                           GetUserMediaWindowListener *aListener,
                            void *aData)
 {
-  struct CaptureWindowStateData *data = (struct CaptureWindowStateData *) aData;
+  MOZ_ASSERT(aData);
+
+  auto& data = *static_cast<CaptureWindowStateData*>(aData);
 
   if (!aListener) {
     return;
   }
 
-  if (aListener->CapturingVideo()) {
-    *data->mVideo = true;
-  }
-  if (aListener->CapturingAudio()) {
-    *data->mAudio = true;
-  }
-  if (aListener->CapturingScreen()) {
-    *data->mScreenShare = true;
-  }
-  if (aListener->CapturingWindow()) {
-    *data->mWindowShare = true;
-  }
-  if (aListener->CapturingApplication()) {
-    *data->mAppShare = true;
-  }
-  if (aListener->CapturingBrowser()) {
-    *data->mBrowserShare = true;
-  }
+  *data.mCamera =
+    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Camera));
+  *data.mMicrophone =
+    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Microphone));
+  *data.mScreenShare =
+    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Screen));
+  *data.mWindowShare =
+    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Window));
+  *data.mAppShare =
+    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Application));
+  *data.mBrowserShare =
+    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Browser));
 }
 
 NS_IMETHODIMP
-MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow, bool* aVideo,
-                                      bool* aAudio, bool *aScreenShare,
-                                      bool* aWindowShare, bool *aAppShare,
-                                      bool *aBrowserShare)
+MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow,
+                                      uint16_t* aCamera,
+                                      uint16_t* aMicrophone,
+                                      uint16_t* aScreenShare,
+                                      uint16_t* aWindowShare,
+                                      uint16_t* aAppShare,
+                                      uint16_t* aBrowserShare)
 {
   MOZ_ASSERT(NS_IsMainThread());
   struct CaptureWindowStateData data;
-  data.mVideo = aVideo;
-  data.mAudio = aAudio;
+  data.mCamera = aCamera;
+  data.mMicrophone = aMicrophone;
   data.mScreenShare = aScreenShare;
   data.mWindowShare = aWindowShare;
   data.mAppShare = aAppShare;
   data.mBrowserShare = aBrowserShare;
 
-  *aVideo = false;
-  *aAudio = false;
-  *aScreenShare = false;
-  *aWindowShare = false;
-  *aAppShare = false;
-  *aBrowserShare = false;
+  *aCamera = nsIMediaManagerService::STATE_NOCAPTURE;
+  *aMicrophone = nsIMediaManagerService::STATE_NOCAPTURE;
+  *aScreenShare = nsIMediaManagerService::STATE_NOCAPTURE;
+  *aWindowShare = nsIMediaManagerService::STATE_NOCAPTURE;
+  *aAppShare = nsIMediaManagerService::STATE_NOCAPTURE;
+  *aBrowserShare = nsIMediaManagerService::STATE_NOCAPTURE;
 
   nsCOMPtr<nsPIDOMWindowInner> piWin = do_QueryInterface(aWindow);
   if (piWin) {
@@ -3559,9 +3555,18 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow, bool* aVideo,
   }
 #ifdef DEBUG
   LOG(("%s: window %" PRIu64 " capturing %s %s %s %s %s %s", __FUNCTION__, piWin ? piWin->WindowID() : -1,
-       *aVideo ? "video" : "", *aAudio ? "audio" : "",
-       *aScreenShare ? "screenshare" : "",  *aWindowShare ? "windowshare" : "",
-       *aAppShare ? "appshare" : "", *aBrowserShare ? "browsershare" : ""));
+       *aCamera == nsIMediaManagerService::STATE_CAPTURE_ENABLED
+         ? "camera (enabled)"
+         : (*aCamera == nsIMediaManagerService::STATE_CAPTURE_DISABLED
+            ? "camera (disabled)" : ""),
+       *aMicrophone == nsIMediaManagerService::STATE_CAPTURE_ENABLED
+         ? "microphone (enabled)"
+         : (*aMicrophone == nsIMediaManagerService::STATE_CAPTURE_DISABLED
+            ? "microphone (disabled)" : ""),
+       *aScreenShare ? "screenshare" : "",
+       *aWindowShare ? "windowshare" : "",
+       *aAppShare ? "appshare" : "",
+       *aBrowserShare ? "browsershare" : ""));
 #endif
   return NS_OK;
 }
@@ -4152,9 +4157,7 @@ bool
 SourceListener::CapturingVideo() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return Activated() && mVideoDeviceState &&
-         !mVideoDeviceState->mStopped &&
-         mVideoDeviceState->mDevice->GetMediaSource() == dom::MediaSourceEnum::Camera &&
+  return Activated() && mVideoDeviceState && !mVideoDeviceState->mStopped &&
          (!mVideoDeviceState->mDevice->mSource->IsFake() ||
           Preferences::GetBool("media.navigator.permission.fake"));
 }
@@ -4163,47 +4166,46 @@ bool
 SourceListener::CapturingAudio() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return Activated() && mAudioDeviceState &&
-         !mAudioDeviceState->mStopped &&
-         mAudioDeviceState->mDevice->GetMediaSource() == dom::MediaSourceEnum::Microphone &&
+  return Activated() && mAudioDeviceState && !mAudioDeviceState->mStopped &&
          (mAudioDeviceState->mDevice->mSource->IsFake() ||
           Preferences::GetBool("media.navigator.permission.fake"));
 }
 
-bool
-SourceListener::CapturingScreen() const
+CaptureState
+SourceListener::CapturingSource(MediaSourceEnum aSource) const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return Activated() && mVideoDeviceState &&
-         !mVideoDeviceState->mStopped &&
-         mVideoDeviceState->mDevice->GetMediaSource() == dom::MediaSourceEnum::Screen;
-}
+  if ((!GetVideoDevice() || GetVideoDevice()->GetMediaSource() != aSource) &&
+      (!GetAudioDevice() || GetAudioDevice()->GetMediaSource() != aSource)) {
+    // This SourceListener doesn't capture a matching source
+    return CaptureState::Off;
+  }
 
-bool
-SourceListener::CapturingWindow() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return Activated() && mVideoDeviceState &&
-         !mVideoDeviceState->mStopped &&
-         mVideoDeviceState->mDevice->GetMediaSource() == dom::MediaSourceEnum::Window;
-}
+  DeviceState& state =
+    (GetAudioDevice() && GetAudioDevice()->GetMediaSource() == aSource)
+    ? *mAudioDeviceState : *mVideoDeviceState;
+  MOZ_ASSERT(state.mDevice->GetMediaSource() == aSource);
 
-bool
-SourceListener::CapturingApplication() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return Activated() && mVideoDeviceState &&
-         !mVideoDeviceState->mStopped &&
-         mVideoDeviceState->mDevice->GetMediaSource() == dom::MediaSourceEnum::Application;
-}
+  if (state.mStopped) {
+    // The source is a match but has been permanently stopped
+    return CaptureState::Off;
+  }
 
-bool
-SourceListener::CapturingBrowser() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return Activated() && mVideoDeviceState &&
-         !mVideoDeviceState->mStopped &&
-         mVideoDeviceState->mDevice->GetMediaSource() == dom::MediaSourceEnum::Browser;
+  if ((aSource == MediaSourceEnum::Camera ||
+       aSource == MediaSourceEnum::Microphone) &&
+      state.mDevice->mSource->IsFake() &&
+      !Preferences::GetBool("media.navigator.permission.fake")) {
+    // Fake Camera and Microphone only count if there is no fake permission
+    return CaptureState::Off;
+  }
+
+  // Source is a match and is active
+
+  if (state.mDeviceEnabled) {
+    return CaptureState::Enabled;
+  }
+
+  return CaptureState::Disabled;
 }
 
 already_AddRefed<PledgeVoid>

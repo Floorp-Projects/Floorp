@@ -18,10 +18,19 @@ interface nsIMediaManagerService : nsISupports
   /* return a array of inner windows that have active captures */
   readonly attribute nsIArray activeMediaCaptureWindows;
 
+  /* possible states for camera and microphone capture */
+  const unsigned short STATE_NOCAPTURE = 0;
+  const unsigned short STATE_CAPTURE_ENABLED = 1;
+  const unsigned short STATE_CAPTURE_DISABLED = 2;
+
   /* Get the capture state for the given window and all descendant windows (iframes, etc) */
-  void mediaCaptureWindowState(in nsIDOMWindow aWindow, out boolean aVideo, out boolean aAudio,
-                               [optional] out boolean aScreenShare, [optional] out boolean aWindowShare,
-                               [optional] out boolean aAppShare, [optional] out boolean aBrowserShare);
+  void mediaCaptureWindowState(in nsIDOMWindow aWindow,
+                               out unsigned short aCamera,
+                               out unsigned short aMicrophone,
+                               [optional] out unsigned short aScreenShare,
+                               [optional] out unsigned short aWindowShare,
+                               [optional] out unsigned short aAppShare,
+                               [optional] out unsigned short aBrowserShare);
 
   /* Clear per-orgin list of persistent DeviceIds stored for enumerateDevices
      sinceTime is milliseconds since 1 January 1970 00:00:00 UTC. 0 = clear all */
