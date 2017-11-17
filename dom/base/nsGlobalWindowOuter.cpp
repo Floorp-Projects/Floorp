@@ -1422,10 +1422,32 @@ nsGlobalWindowOuter::SetInitialPrincipalToSubject()
 }
 
 PopupControlState
+PushPopupControlState(PopupControlState aState, bool aForce)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  PopupControlState oldState = gPopupControlState;
+
+  if (aState < gPopupControlState || aForce) {
+    gPopupControlState = aState;
+  }
+
+  return oldState;
+}
+
+PopupControlState
 nsGlobalWindowOuter::PushPopupControlState(PopupControlState aState,
                                            bool aForce) const
 {
   return ::PushPopupControlState(aState, aForce);
+}
+
+void
+PopPopupControlState(PopupControlState aState)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  gPopupControlState = aState;
 }
 
 void
