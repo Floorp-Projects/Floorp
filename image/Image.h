@@ -7,12 +7,13 @@
 #define mozilla_image_Image_h
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Pair.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/TimeStamp.h"
 #include "gfx2DGlue.h"
 #include "imgIContainer.h"
 #include "ImageURL.h"
 #include "ImageContainer.h"
+#include "LookupResult.h"
 #include "nsStringFwd.h"
 #include "ProgressTracker.h"
 #include "SurfaceCache.h"
@@ -336,12 +337,13 @@ protected:
   bool                          mAnimating:1;   // Are we currently animating?
   bool                          mError:1;       // Error handling
 
-  virtual Pair<DrawResult, RefPtr<gfx::SourceSurface>>
+  virtual Tuple<DrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
     GetFrameInternal(const gfx::IntSize& aSize,
                      uint32_t aWhichFrame,
                      uint32_t aFlags)
   {
-    return MakePair(DrawResult::BAD_IMAGE, RefPtr<gfx::SourceSurface>());
+    return MakeTuple(DrawResult::BAD_IMAGE, aSize,
+                     RefPtr<gfx::SourceSurface>());
   }
 
   /**
