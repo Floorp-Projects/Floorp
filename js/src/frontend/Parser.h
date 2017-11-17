@@ -861,6 +861,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
                                        FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
 
   private:
+    const char* nameIsArgumentsOrEval(Node node);
     bool checkIncDecOperand(Node operand, uint32_t operandOffset);
     bool checkStrictAssignment(Node lhs);
 
