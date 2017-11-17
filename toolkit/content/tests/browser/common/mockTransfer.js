@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/MockObjects.js", this);
+Cc["@mozilla.org/moz/jssubscript-loader;1"]
+  .getService(Ci.mozIJSSubScriptLoader)
+  .loadSubScript("chrome://mochikit/content/tests/SimpleTest/MockObjects.js", this);
 
 var mockTransferCallback;
 
