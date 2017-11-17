@@ -52,10 +52,11 @@ ImageMemoryCounter::ImageMemoryCounter(Image* aImage,
 // Image Base Types
 ///////////////////////////////////////////////////////////////////////////////
 
-Pair<DrawResult, RefPtr<layers::Image>>
-ImageResource::GetCurrentImage(ImageContainer* aContainer,
+DrawResult
+ImageResource::AddCurrentImage(ImageContainer* aContainer,
                                const IntSize& aSize,
-                               uint32_t aFlags)
+                               uint32_t aFlags,
+                               bool aInTransaction)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aContainer);
@@ -67,11 +68,24 @@ ImageResource::GetCurrentImage(ImageContainer* aContainer,
   if (!surface) {
     // The OS threw out some or all of our buffer. We'll need to wait for the
     // redecode (which was automatically triggered by GetFrame) to complete.
-    return MakePair(drawResult, RefPtr<layers::Image>());
+    return drawResult;
   }
 
+  // |image| holds a reference to a SourceSurface which in turn holds a lock on
+  // the current frame's data buffer, ensuring that it doesn't get freed as
+  // long as the layer system keeps this ImageContainer alive.
   RefPtr<layers::Image> image = new layers::SourceSurfaceImage(surface);
-  return MakePair(drawResult, Move(image));
+  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
+  imageList.AppendElement(ImageContainer::NonOwningImage(image, TimeStamp(),
+                                                         mLastFrameID++,
+                                                         mImageProducerID));
+
+  if (aInTransaction) {
+    aContainer->SetCurrentImagesInTransaction(imageList);
+  } else {
+    aContainer->SetCurrentImages(imageList);
+  }
+  return drawResult;
 }
 
 already_AddRefed<ImageContainer>
@@ -119,29 +133,13 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
     container = LayerManager::CreateImageContainer();
   }
 
-  DrawResult drawResult;
-  RefPtr<layers::Image> image;
-  Tie(drawResult, image) = GetCurrentImage(container, aSize, aFlags);
-  if (!image) {
-    return nullptr;
-  }
-
 #ifdef DEBUG
   NotifyDrawingObservers();
 #endif
 
-  // |image| holds a reference to a SourceSurface which in turn holds a lock on
-  // the current frame's data buffer, ensuring that it doesn't get freed as
-  // long as the layer system keeps this ImageContainer alive.
-  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
-  imageList.AppendElement(ImageContainer::NonOwningImage(image, TimeStamp(),
-                                                         mLastFrameID++,
-                                                         mImageProducerID));
-  container->SetCurrentImagesInTransaction(imageList);
-
-  mLastImageContainerDrawResult = drawResult;
+  mLastImageContainerDrawResult =
+    AddCurrentImage(container, aSize, aFlags, true);
   mImageContainer = container;
-
   return container.forget();
 }
 
@@ -155,19 +153,8 @@ ImageResource::UpdateImageContainer(const IntSize& aSize)
     return;
   }
 
-  DrawResult drawResult;
-  RefPtr<layers::Image> image;
-  Tie(drawResult, image) = GetCurrentImage(container, aSize, FLAG_NONE);
-  if (!image) {
-    return;
-  }
-
-  mLastImageContainerDrawResult = drawResult;
-  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
-  imageList.AppendElement(ImageContainer::NonOwningImage(image, TimeStamp(),
-                                                         mLastFrameID++,
-                                                         mImageProducerID));
-  container->SetCurrentImages(imageList);
+  mLastImageContainerDrawResult =
+    AddCurrentImage(container, aSize, FLAG_NONE, false);
 }
 
 void
