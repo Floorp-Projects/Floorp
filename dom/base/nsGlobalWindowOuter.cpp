@@ -79,30 +79,6 @@ DialogValueHolder::Get(JSContext* aCx, JS::Handle<JSObject*> aScope,
     aResult.setUndefined();
   }
 }
-void
-nsGlobalWindowOuter::RemoveIdleCallback(mozilla::dom::IdleRequest* aRequest)
-{
-  AssertIsOnMainThread();
-
-  if (aRequest->HasTimeout()) {
-    mTimeoutManager->ClearTimeout(aRequest->GetTimeoutHandle(),
-                                  Timeout::Reason::eIdleCallbackTimeout);
-  }
-
-  aRequest->removeFrom(mIdleRequestCallbacks);
-  aRequest->Release();
-}
-
-nsresult
-nsGlobalWindowOuter::RunIdleRequest(IdleRequest* aRequest,
-                                    DOMHighResTimeStamp aDeadline,
-                                    bool aDidTimeout)
-{
-  AssertIsOnMainThread();
-  RefPtr<IdleRequest> request(aRequest);
-  RemoveIdleCallback(request);
-  return request->IdleRun(AsInner(), aDeadline, aDidTimeout);
-}
 
 bool
 nsGlobalWindowOuter::IsBackgroundInternal() const
