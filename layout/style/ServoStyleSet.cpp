@@ -349,20 +349,6 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
   return ResolveServoStyle(aElement);
 }
 
-void
-ServoStyleSet::ReresolveStyleForBindings(Element* aElement)
-{
-  MOZ_ASSERT(!aElement->HasServoData(), "Should've been cleared before!");
-  StyleNewSubtree(aElement);
-
-  // Servo's should_traverse_children() in traversal.rs skips
-  // styling descendants of elements with a -moz-binding the
-  // first time. Thus call StyleNewChildren() again.
-  //
-  // FIXME(emilio): This is just stupid, we should remove that now.
-  StyleNewChildren(aElement);
-}
-
 /**
  * Clears any stale Servo element data that might existing in the specified
  * element's document.  Upon destruction, asserts that the element and all
@@ -1058,7 +1044,7 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
 void
 ServoStyleSet::StyleNewSubtree(Element* aRoot)
 {
-  MOZ_ASSERT(!aRoot->HasServoData(), "Should have called StyleNewChildren");
+  MOZ_ASSERT(!aRoot->HasServoData());
   PreTraverseSync();
   AutoPrepareTraversal guard(this);
 
@@ -1084,72 +1070,6 @@ ServoStyleSet::StyleNewSubtree(Element* aRoot)
                             ServoTraversalFlags::Forgetful |
                             ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants);
     MOZ_ASSERT(!postTraversalRequired);
-  }
-}
-
-void
-ServoStyleSet::StyleNewChildren(Element* aParent)
-{
-  MOZ_ASSERT(aParent->HasServoData(), "Should have called StyleNewSubtree");
-  if (Servo_Element_IsDisplayNone(aParent)) {
-    return;
-  }
-
-  PreTraverseSync();
-  AutoPrepareTraversal guard(this);
-
-  // Implementing StyleNewChildren correctly is very annoying, for two reasons:
-  // (1) We have to tiptoe around existing invalidations in the tree. In rare
-  //     cases Gecko calls into the frame constructor with pending invalidations,
-  //     and in other rare cases the frame constructor needs to perform
-  //     synchronous styling rather than using the normal lazy frame
-  //     construction mechanism. If both of these cases happen together, then we
-  //     get an |aParent| with dirty style and/or dirty descendants, which we
-  //     can't process right now because we're not set up to update the frames
-  //     and process the change hints. We handle this case by passing the
-  //     UnstyledOnly flag to servo.
-  // (2) We don't have a good way to handle animations. When styling unstyled
-  //     content, a followup animation traversal may be required (for example
-  //     to change the transition style from the after-change style we used in
-  //     the animation cascade to the timeline-correct style). But once we do
-  //     the initial styling, we don't have a good way to distinguish the new
-  //     content and scope our animation processing to that. We should handle
-  //     this somehow, but for now we just don't do the followup animation
-  //     traversal, which is buggy.
-
-  // Set ourselves up to find the children by marking the parent as having
-  // dirty descendants.
-  bool hadDirtyDescendants = aParent->HasDirtyDescendantsForServo();
-  aParent->SetHasDirtyDescendantsForServo();
-
-  auto flags = ServoTraversalFlags::UnstyledOnly;
-  if (ShouldTraverseInParallel()) {
-    flags |= ServoTraversalFlags::ParallelTraversal;
-  }
-
-  // Do the traversal. The snapshots will be ignored.
-  const SnapshotTable& snapshots = Snapshots();
-  Servo_TraverseSubtree(aParent, mRawSet.get(), &snapshots, flags);
-
-  // Restore the old state of the dirty descendants bit.
-  if (!hadDirtyDescendants) {
-    aParent->UnsetHasDirtyDescendantsForServo();
-  }
-}
-
-void
-ServoStyleSet::StyleNewlyBoundElement(Element* aElement)
-{
-  // In general the element is always styled by the time we're applying XBL
-  // bindings, because we need to style the element to know what the binding
-  // URI is. However, programmatic consumers of the XBL service (like the
-  // XML pretty printer) _can_ apply bindings without having styled the bound
-  // element. We could assert against this and require the callers manually
-  // resolve the style first, but it's easy enough to just handle here.
-  if (MOZ_LIKELY(aElement->HasServoData())) {
-    StyleNewChildren(aElement);
-  } else {
-    StyleNewSubtree(aElement);
   }
 }
 

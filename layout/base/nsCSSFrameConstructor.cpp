@@ -2001,25 +2001,17 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   }
 
   uint32_t contentCount = pseudoStyleContext->StyleContent()->ContentCount();
-  bool createdChildElement = false;
   for (uint32_t contentIndex = 0; contentIndex < contentCount; contentIndex++) {
     nsCOMPtr<nsIContent> content =
       CreateGeneratedContent(aState, aParentContent, pseudoStyleContext,
                              contentIndex);
     if (content) {
       container->AppendChildTo(content, false);
-      if (content->IsElement()) {
-        createdChildElement = true;
+      if (content->IsElement() && servoStyle) {
+        // If we created any children elements, Servo needs to traverse them, but
+        // the root is already set up.
+        mPresShell->StyleSet()->AsServo()->StyleNewSubtree(content->AsElement());
       }
-    }
-  }
-
-  // We may need to do a synchronous servo traversal in various uncommon cases.
-  if (servoStyle) {
-    if (createdChildElement) {
-      // If we created any children elements, Servo needs to traverse them, but
-      // the root is already set up.
-      mPresShell->StyleSet()->AsServo()->StyleNewChildren(container);
     }
   }
 
@@ -2619,10 +2611,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
           aDocElement, nullptr, LazyComputeBehavior::Assert);
       display = styleContext->StyleDisplay();
     }
-  } else if (display->mBinding.ForceGet() && aDocElement->IsStyledByServo()) {
-    // See the comment in AddFrameConstructionItemsInternal for why this is
-    // needed.
-    mPresShell->StyleSet()->AsServo()->StyleNewChildren(aDocElement);
   }
 
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------
@@ -5934,18 +5922,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       }
 
       aTag = mDocument->BindingManager()->ResolveTag(aContent, &aNameSpaceID);
-    } else if (display->mBinding.ForceGet()) {
-      if (aContent->IsStyledByServo()) {
-        // Servo's should_traverse_children skips styling descendants of
-        // elements with a -moz-binding value.  For -moz-binding URLs that can
-        // be resolved, we will load the binding above, which will style the
-        // children after they have been rearranged in the flattened tree.
-        // If the URL couldn't be resolved, we still need to style the children,
-        // so we do that here.
-        //
-        // FIXME(emilio): Again, should go away.
-        mPresShell->StyleSet()->AsServo()->StyleNewChildren(aContent->AsElement());
-      }
     }
   }
 
@@ -7519,21 +7495,12 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
 
   for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
-    // Calling StyleNewChildren on one child will end up styling another child,
-    // if they share the same flattened tree parent.  So we check HasServoData()
-    // to avoid a wasteful call to GetFlattenedTreeParent (on the child) and
-    // StyleNewChildren (on the flattened tree parent) when we detect we've
-    // already handled that parent.  In the common case of inserting elements
-    // into a container that does not have an XBL binding or shadow tree with
-    // distributed children, this boils down to a single call to
-    // GetFlattenedTreeParent/StyleNewChildren, and traversing the list of
-    // children checking HasServoData (which is fast).
-    if (child->IsElement() && !child->AsElement()->HasServoData()) {
+    if (child->IsElement()) {
       Element* parent = child->AsElement()->GetFlattenedTreeParentElement();
       // NB: Parent may be null if the content is appended to a shadow root, and
       // isn't assigned to any insertion point.
       if (MOZ_LIKELY(parent) && parent->HasServoData()) {
-        styleSet->StyleNewChildren(parent);
+        styleSet->StyleNewSubtree(child->AsElement());
       }
     }
   }
