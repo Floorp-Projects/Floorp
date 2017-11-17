@@ -62,6 +62,7 @@ private:
   nsTArray<RefPtr<layers::CompositingRenderTargetD3D11>> mRenderTargets;
   IntSize mPresentationSize;
   RefPtr<ID3D11Device> mDevice;
+  RefPtr<VRThread> mSubmitThread;
   // The timestamp of the last time Oculus set ShouldQuit to true.
   TimeStamp mLastShouldQuit;
   // The timestamp of the last ending presentation

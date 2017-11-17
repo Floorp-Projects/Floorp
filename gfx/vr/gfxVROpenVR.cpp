@@ -353,6 +353,7 @@ VRDisplayOpenVR::SubmitFrame(void* aTextureHandle,
                              const gfx::Rect& aLeftEyeRect,
                              const gfx::Rect& aRightEyeRect)
 {
+  MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   if (!mIsPresenting) {
     return false;
   }
