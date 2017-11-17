@@ -7,6 +7,7 @@
 #define mozilla_image_Image_h
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Pair.h"
 #include "mozilla/TimeStamp.h"
 #include "gfx2DGlue.h"
 #include "imgIContainer.h"
@@ -335,6 +336,22 @@ protected:
   bool                          mAnimating:1;   // Are we currently animating?
   bool                          mError:1;       // Error handling
 
+  virtual Pair<DrawResult, RefPtr<layers::Image>>
+    GetCurrentImage(layers::ImageContainer* aContainer, uint32_t aFlags)
+  {
+    return MakePair(DrawResult::BAD_IMAGE, RefPtr<layers::Image>());
+  }
+
+  already_AddRefed<layers::ImageContainer>
+    GetImageContainerImpl(layers::LayerManager* aManager,
+                          const gfx::IntSize& aSize,
+                          uint32_t aFlags);
+
+  void UpdateImageContainer();
+
+  void ReleaseImageContainer();
+
+private:
   // A weak pointer to our ImageContainer, which stays alive only as long as
   // the layer system needs it.
   WeakPtr<layers::ImageContainer> mImageContainer;
