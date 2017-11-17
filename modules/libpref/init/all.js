@@ -5036,6 +5036,11 @@ pref("dom.webnotifications.requireinteraction.enabled", false);
 // Show favicons in web notifications.
 pref("alerts.showFavicons", false);
 
+// Whether to use platform-specific backends for showing desktop notifications.
+// If no such backend is available, or if the pref is false, then XUL
+// notifications are used.
+pref("alerts.useSystemBackend", true);
+
 // DOM full-screen API.
 pref("full-screen-api.enabled", false);
 #ifdef RELEASE_OR_BETA
