@@ -82,6 +82,7 @@ FrozenImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 FrozenImage::GetImageContainerAtSize(layers::LayerManager* aManager,
                                      const IntSize& aSize,
+                                     const Maybe<SVGImageContext>& aSVGContext,
                                      uint32_t aFlags)
 {
   // XXX(seth): GetImageContainer does not currently support anything but the

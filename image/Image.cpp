@@ -91,6 +91,7 @@ ImageResource::SetCurrentImage(ImageContainer* aContainer,
 already_AddRefed<ImageContainer>
 ImageResource::GetImageContainerImpl(LayerManager* aManager,
                                      const IntSize& aSize,
+                                     const Maybe<SVGImageContext>& aSVGContext,
                                      uint32_t aFlags)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -119,7 +120,8 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
   for (; i >= 0; --i) {
     entry = &mImageContainers[i];
     container = entry->mContainer.get();
-    if (size == entry->mSize && flags == entry->mFlags) {
+    if (size == entry->mSize && flags == entry->mFlags &&
+        aSVGContext == entry->mSVGContext) {
       // Lack of a container is handled below.
       break;
     } else if (!container) {
@@ -159,7 +161,8 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
   IntSize bestSize;
   RefPtr<SourceSurface> surface;
   Tie(drawResult, bestSize, surface) =
-    GetFrameInternal(size, FRAME_CURRENT, aFlags | FLAG_ASYNC_NOTIFY);
+    GetFrameInternal(size, aSVGContext, FRAME_CURRENT,
+                     aFlags | FLAG_ASYNC_NOTIFY);
 
   // The requested size might be refused by the surface cache (i.e. due to
   // factor-of-2 mode). In that case we don't want to create an entry for this
@@ -185,7 +188,8 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
     i = mImageContainers.Length() - 1;
     for (; i >= 0; --i) {
       entry = &mImageContainers[i];
-      if (bestSize == entry->mSize && flags == entry->mFlags) {
+      if (bestSize == entry->mSize && flags == entry->mFlags &&
+          aSVGContext == entry->mSVGContext) {
         container = entry->mContainer.get();
         if (container) {
           switch (entry->mLastDrawResult) {
@@ -219,7 +223,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
       entry->mContainer = container;
     } else {
       entry = mImageContainers.AppendElement(
-        ImageContainerEntry(bestSize, container.get(), flags));
+        ImageContainerEntry(bestSize, aSVGContext, container.get(), flags));
     }
   }
 
@@ -240,7 +244,8 @@ ImageResource::UpdateImageContainer()
       IntSize bestSize;
       RefPtr<SourceSurface> surface;
       Tie(entry.mLastDrawResult, bestSize, surface) =
-        GetFrameInternal(entry.mSize, FRAME_CURRENT, entry.mFlags);
+        GetFrameInternal(entry.mSize, entry.mSVGContext,
+                         FRAME_CURRENT, entry.mFlags);
 
       // It is possible that this is a factor-of-2 substitution. Since we
       // managed to convert the weak reference into a strong reference, that

@@ -576,7 +576,7 @@ RasterImage::GetFrameAtSize(const IntSize& aSize,
   NotifyDrawingObservers();
 #endif
 
-  auto result = GetFrameInternal(aSize, aWhichFrame, aFlags);
+  auto result = GetFrameInternal(aSize, Nothing(), aWhichFrame, aFlags);
   RefPtr<SourceSurface> surf = mozilla::Get<2>(result).forget();
 
   // If we are here, it suggests the image is embedded in a canvas or some
@@ -587,6 +587,7 @@ RasterImage::GetFrameAtSize(const IntSize& aSize,
 
 Tuple<DrawResult, IntSize, RefPtr<SourceSurface>>
 RasterImage::GetFrameInternal(const IntSize& aSize,
+                              const Maybe<SVGImageContext>& aSVGContext,
                               uint32_t aWhichFrame,
                               uint32_t aFlags)
 {
@@ -655,7 +656,7 @@ RasterImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 RasterImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
 {
-  return GetImageContainerImpl(aManager, mSize, aFlags);
+  return GetImageContainerImpl(aManager, mSize, Nothing(), aFlags);
 }
 
 NS_IMETHODIMP_(bool)
@@ -680,9 +681,10 @@ RasterImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 RasterImage::GetImageContainerAtSize(LayerManager* aManager,
                                      const IntSize& aSize,
+                                     const Maybe<SVGImageContext>& aSVGContext,
                                      uint32_t aFlags)
 {
-  return GetImageContainerImpl(aManager, aSize, aFlags);
+  return GetImageContainerImpl(aManager, aSize, aSVGContext, aFlags);
 }
 
 size_t

@@ -83,6 +83,7 @@ protected:
 private:
   Tuple<DrawResult, IntSize, RefPtr<SourceSurface>>
     GetFrameInternal(const IntSize& aSize,
+                     const Maybe<SVGImageContext>& aSVGContext,
                      uint32_t aWhichFrame,
                      uint32_t aFlags) override;
 

@@ -73,6 +73,7 @@ TEST_F(ImageContainers, RasterImageContainer)
   RefPtr<layers::ImageContainer> upscaleContainer =
     image->GetImageContainerAtSize(layerManager,
                                    requestedSize,
+                                   Nothing(),
                                    imgIContainer::FLAG_SYNC_DECODE |
                                    imgIContainer::FLAG_HIGH_QUALITY_SCALING);
   ASSERT_TRUE(upscaleContainer != nullptr);
@@ -87,6 +88,7 @@ TEST_F(ImageContainers, RasterImageContainer)
   RefPtr<layers::ImageContainer> downscaleContainer =
     image->GetImageContainerAtSize(layerManager,
                                    requestedSize,
+                                   Nothing(),
                                    imgIContainer::FLAG_SYNC_DECODE |
                                    imgIContainer::FLAG_HIGH_QUALITY_SCALING);
   containerSize = downscaleContainer->GetCurrentSize();
@@ -97,6 +99,7 @@ TEST_F(ImageContainers, RasterImageContainer)
   RefPtr<layers::ImageContainer> againContainer =
     image->GetImageContainerAtSize(layerManager,
                                    testCase.mSize,
+                                   Nothing(),
                                    imgIContainer::FLAG_SYNC_DECODE);
   ASSERT_EQ(nativeContainer.get(), againContainer.get());
 }

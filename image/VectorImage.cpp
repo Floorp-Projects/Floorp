@@ -741,7 +741,7 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
                             uint32_t aWhichFrame,
                             uint32_t aFlags)
 {
-  auto result = GetFrameInternal(aSize, aWhichFrame, aFlags);
+  auto result = GetFrameInternal(aSize, Nothing(), aWhichFrame, aFlags);
   RefPtr<SourceSurface> surf = Get<2>(result).forget();
 
   // If we are here, it suggests the image is embedded in a canvas or some
@@ -752,6 +752,7 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
 
 Tuple<DrawResult, IntSize, RefPtr<SourceSurface>>
 VectorImage::GetFrameInternal(const IntSize& aSize,
+                              const Maybe<SVGImageContext>& aSVGContext,
                               uint32_t aWhichFrame,
                               uint32_t aFlags)
 {
@@ -773,7 +774,7 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
   }
 
   RefPtr<SourceSurface> sourceSurface =
-    LookupCachedSurface(aSize, Nothing(), aFlags);
+    LookupCachedSurface(aSize, aSVGContext, aFlags);
   if (sourceSurface) {
     return MakeTuple(DrawResult::SUCCESS, aSize, Move(sourceSurface));
   }
@@ -797,9 +798,8 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(context); // already checked the draw target above
 
-  Maybe<SVGImageContext> svgContext;
   SVGDrawingParameters params(context, aSize, ImageRegion::Create(aSize),
-                              SamplingFilter::POINT, svgContext,
+                              SamplingFilter::POINT, aSVGContext,
                               mSVGDocumentWrapper->GetCurrentTime(),
                               aFlags, 1.0);
 
@@ -862,12 +862,13 @@ VectorImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 VectorImage::GetImageContainerAtSize(LayerManager* aManager,
                                      const IntSize& aSize,
+                                     const Maybe<SVGImageContext>& aSVGContext,
                                      uint32_t aFlags)
 {
   // Since we do not support high quality scaling with SVG, we mask it off so
   // that container requests with and without it map to the same container.
   uint32_t flags = aFlags & ~FLAG_HIGH_QUALITY_SCALING;
-  return GetImageContainerImpl(aManager, aSize, aFlags);
+  return GetImageContainerImpl(aManager, aSize, aSVGContext, flags);
 }
 
 //******************************************************************************
