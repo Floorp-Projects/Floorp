@@ -1172,12 +1172,8 @@ public:
   AbstractMainThreadFor(mozilla::TaskCategory aCategory) override;
 
   uint32_t LastIdleRequestHandle() const { return mIdleRequestCallbackCounter - 1; }
-  nsresult RunIdleRequest(mozilla::dom::IdleRequest* aRequest,
-                          DOMHighResTimeStamp aDeadline, bool aDidTimeout);
 
   typedef mozilla::LinkedList<mozilla::dom::IdleRequest> IdleRequests;
-
-  void RemoveIdleCallback(mozilla::dom::IdleRequest* aRequest);
 
 protected:
   // These members are only used on outer window objects. Make sure
