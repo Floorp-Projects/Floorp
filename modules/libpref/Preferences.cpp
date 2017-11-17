@@ -233,6 +233,13 @@ StrEscape(const char* aOriginal, nsCString& aResult)
   aResult.Append('"');
 }
 
+enum
+{
+  kPrefSetDefault = 1,
+  kPrefForceSet = 2,
+  kPrefSticky = 4,
+};
+
 static ArenaAllocator<8192, 1> gPrefNameArena;
 
 class PrefHashEntry : public PLDHashEntryHdr
@@ -443,6 +450,7 @@ public:
     return true;
   }
 
+private:
   // Overwrite the type and value of an existing preference. Caller must ensure
   // that they are not changing the type of a preference that has a default
   // value.
@@ -462,6 +470,55 @@ public:
       value->mStringVal = moz_xstrdup(aNewValue.mStringVal);
     } else {
       *value = aNewValue;
+    }
+  }
+
+public:
+  void SetValue(PrefType aType,
+                PrefValue aValue,
+                uint32_t aFlags,
+                bool* aValueChanged,
+                bool* aDirty)
+  {
+    if (aFlags & kPrefSetDefault) {
+      if (!IsLocked()) {
+        // ?? change of semantics?
+        if (!HasDefaultValue() || !mDefaultValue.Equals(aType, aValue)) {
+          ReplaceValue(PrefValueKind::Default, aType, aValue);
+          SetHasDefaultValue(true);
+          if (aFlags & kPrefSticky) {
+            SetIsSticky(true);
+          }
+          if (!HasUserValue()) {
+            *aValueChanged = true;
+          }
+        }
+        // What if we change the default to be the same as the user value?
+        // Should we clear the user value?
+      }
+    } else {
+      // If new value is same as the default value and it's not a "sticky"
+      // pref, then un-set the user value. Otherwise, set the user value only
+      // if it has changed.
+      if (HasDefaultValue() && !IsSticky() &&
+          mDefaultValue.Equals(aType, aValue) && !(aFlags & kPrefForceSet)) {
+        if (HasUserValue()) {
+          // XXX should we free a user-set string value if there is one?
+          SetHasUserValue(false);
+          if (!IsLocked()) {
+            *aDirty = true;
+            *aValueChanged = true;
+          }
+        }
+      } else if (!HasUserValue() || !IsType(aType) ||
+                 !mUserValue.Equals(aType, aValue)) {
+        ReplaceValue(PrefValueKind::User, aType, aValue);
+        SetHasUserValue(true);
+        if (!IsLocked()) {
+          *aDirty = true;
+          *aValueChanged = true;
+        }
+      }
     }
   }
 
@@ -559,13 +616,6 @@ pref_HashTableLookup(const char* aPrefName);
 
 static nsresult
 pref_DoCallback(const char* aChangedPref);
-
-enum
-{
-  kPrefSetDefault = 1,
-  kPrefForceSet = 2,
-  kPrefSticky = 4,
-};
 
 #define PREF_HASHTABLE_INITIAL_LENGTH 1024
 
@@ -798,50 +848,12 @@ pref_SetPref(const char* aPrefName,
     return NS_ERROR_UNEXPECTED;
   }
 
-  bool valueChanged = false;
-  if (aFlags & kPrefSetDefault) {
-    if (!pref->IsLocked()) {
-      // ?? change of semantics?
-      if (!pref->HasDefaultValue() ||
-          !pref->mDefaultValue.Equals(aType, aValue)) {
-        pref->ReplaceValue(PrefValueKind::Default, aType, aValue);
-        pref->SetHasDefaultValue(true);
-        if (aFlags & kPrefSticky) {
-          pref->SetIsSticky(true);
-        }
-        if (!pref->HasUserValue()) {
-          valueChanged = true;
-        }
-      }
-      // What if we change the default to be the same as the user value?
-      // Should we clear the user value?
-    }
-  } else {
-    // If new value is same as the default value and it's not a "sticky" pref,
-    // then un-set the user value. Otherwise, set the user value only if it has
-    // changed.
-    if (pref->HasDefaultValue() && !pref->IsSticky() &&
-        pref->mDefaultValue.Equals(aType, aValue) &&
-        !(aFlags & kPrefForceSet)) {
-      if (pref->HasUserValue()) {
-        // XXX should we free a user-set string value if there is one?
-        pref->SetHasUserValue(false);
-        if (!pref->IsLocked()) {
-          Preferences::HandleDirty();
-          valueChanged = true;
-        }
-      }
-    } else if (!pref->HasUserValue() || !pref->IsType(aType) ||
-               !pref->mUserValue.Equals(aType, aValue)) {
-      pref->ReplaceValue(PrefValueKind::User, aType, aValue);
-      pref->SetHasUserValue(true);
-      if (!pref->IsLocked()) {
-        Preferences::HandleDirty();
-        valueChanged = true;
-      }
-    }
-  }
+  bool valueChanged = false, handleDirty = false;
+  pref->SetValue(aType, aValue, aFlags, &valueChanged, &handleDirty);
 
+  if (handleDirty) {
+    Preferences::HandleDirty();
+  }
   if (valueChanged) {
     return pref_DoCallback(aPrefName);
   }
