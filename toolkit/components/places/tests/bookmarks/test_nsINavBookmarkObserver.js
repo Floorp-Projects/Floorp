@@ -211,7 +211,7 @@ add_task(async function onItemChanged_title_bookmark() {
       "onItemChanged"
     ]),
     gBookmarksObserver.setup([
-      { name: "onItemChanged", // This is an unfortunate effect of bug 653910.
+      { name: "onItemChanged",
         args: [
           { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
           { name: "property", check: v => v === "title" },
@@ -393,23 +393,9 @@ add_task(async function onItemRemoved_bookmark() {
   let uri = Services.io.newURI(url);
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemChanged", "onItemRemoved"
+      "onItemRemoved"
     ]),
     gBookmarksObserver.setup([
-      { name: "onItemChanged", // This is an unfortunate effect of bug 653910.
-        args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
-          { name: "property", check: v => v === "" },
-          { name: "isAnno", check: v => v === true },
-          { name: "newValue", check: v => v === "" },
-          { name: "lastModified", check: v => typeof(v) == "number" && v > 0 },
-          { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
-          { name: "parentId", check: v => v === PlacesUtils.unfiledBookmarksFolderId },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "oldValue", check: v => typeof(v) == "string" },
-          { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
-        ] },
       { name: "onItemRemoved",
         args: [
           { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
@@ -430,23 +416,9 @@ add_task(async function onItemRemoved_separator() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemChanged", "onItemRemoved"
+      "onItemRemoved"
     ]),
     gBookmarksObserver.setup([
-      { name: "onItemChanged", // This is an unfortunate effect of bug 653910.
-        args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
-          { name: "property", check: v => v === "" },
-          { name: "isAnno", check: v => v === true },
-          { name: "newValue", check: v => v === "" },
-          { name: "lastModified", check: v => typeof(v) == "number" && v > 0 },
-          { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_SEPARATOR },
-          { name: "parentId", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "oldValue", check: v => typeof(v) == "string" },
-          { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
-        ] },
       { name: "onItemRemoved",
         args: [
           { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
@@ -467,23 +439,9 @@ add_task(async function onItemRemoved_folder() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemChanged", "onItemRemoved"
+      "onItemRemoved"
     ]),
     gBookmarksObserver.setup([
-      { name: "onItemChanged", // This is an unfortunate effect of bug 653910.
-        args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
-          { name: "property", check: v => v === "" },
-          { name: "isAnno", check: v => v === true },
-          { name: "newValue", check: v => v === "" },
-          { name: "lastModified", check: v => typeof(v) == "number" && v > 0 },
-          { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
-          { name: "parentId", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "oldValue", check: v => typeof(v) == "string" },
-          { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
-        ] },
       { name: "onItemRemoved",
         args: [
           { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
@@ -507,7 +465,7 @@ add_task(async function onItemRemoved_folder_recursive() {
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemAdded", "onItemAdded", "onItemAdded", "onItemAdded",
-      "onItemChanged", "onItemRemoved"
+      "onItemRemoved"
     ]),
     gBookmarksObserver.setup([
       { name: "onItemAdded",
@@ -560,20 +518,6 @@ add_task(async function onItemRemoved_folder_recursive() {
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
           { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
           { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
-        ] },
-      { name: "onItemChanged", // This is an unfortunate effect of bug 653910.
-        args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
-          { name: "property", check: v => v === "" },
-          { name: "isAnno", check: v => v === true },
-          { name: "newValue", check: v => v === "" },
-          { name: "lastModified", check: v => typeof(v) == "number" && v > 0 },
-          { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
-          { name: "parentId", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "oldValue", check: v => typeof(v) == "string" },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemRemoved",
