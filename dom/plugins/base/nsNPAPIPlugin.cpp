@@ -1044,8 +1044,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
                   npp, npobj, script->UTF8Characters));
 
   JS::CompileOptions options(cx);
-  options.setFileAndLine(spec, 0)
-         .setVersion(JSVERSION_DEFAULT);
+  options.setFileAndLine(spec, 0);
   JS::Rooted<JS::Value> rval(cx);
   JS::AutoObjectVector scopeChain(cx);
   if (obj != js::GetGlobalForObjectCrossCompartment(obj) &&

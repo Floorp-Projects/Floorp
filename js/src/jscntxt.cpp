@@ -1596,12 +1596,6 @@ JSContext::initJitStackLimit()
 JSVersion
 JSContext::findVersion()
 {
-    if (JSScript* script = currentScript(nullptr, ALLOW_CROSS_COMPARTMENT))
-        return script->getVersion();
-
-    if (compartment() && compartment()->behaviors().version() != JSVERSION_UNKNOWN)
-        return compartment()->behaviors().version();
-
     if (!CurrentThreadCanAccessRuntime(runtime()))
         return JSVERSION_DEFAULT;
 

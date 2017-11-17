@@ -259,8 +259,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     JS::Rooted<JS::Value> v (cx, JS::UndefinedValue());
     // Finally, we have everything needed to evaluate the expression.
     JS::CompileOptions options(cx);
-    options.setFileAndLine(mURL.get(), 1)
-           .setVersion(JSVERSION_DEFAULT);
+    options.setFileAndLine(mURL.get(), 1);
     {
         nsJSUtils::ExecutionContext exec(cx, globalJSObject);
         exec.SetCoerceToString(true);

@@ -1307,7 +1307,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         options.creationOptions().setNewZoneInSystemZoneGroup();
         if (xpc::SharedMemoryEnabled())
             options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
-        options.behaviors().setVersion(JSVERSION_DEFAULT);
         JS::Rooted<JSObject*> glob(cx);
         rv = xpc::InitClassesWithNewWrappedGlobal(cx,
                                                   static_cast<nsIGlobalObject*>(backstagePass),

@@ -648,7 +648,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 {
     MOZ_ASSERT(cx->compartment() == lazy->functionNonDelazifying()->compartment());
 
-    CompileOptions options(cx, lazy->version());
+    CompileOptions options(cx);
     options.setMutedErrors(lazy->mutedErrors())
            .setFileAndLine(lazy->filename(), lazy->lineno())
            .setColumn(lazy->column())

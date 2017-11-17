@@ -55,19 +55,16 @@ EvalCacheHashPolicy::hash(const EvalCacheLookup& l)
     uint32_t hash = l.str->hasLatin1Chars()
                     ? HashString(l.str->latin1Chars(nogc), l.str->length())
                     : HashString(l.str->twoByteChars(nogc), l.str->length());
-    return AddToHash(hash, l.callerScript.get(), l.version, l.pc);
+    return AddToHash(hash, l.callerScript.get(), l.pc);
 }
 
 /* static */ bool
 EvalCacheHashPolicy::match(const EvalCacheEntry& cacheEntry, const EvalCacheLookup& l)
 {
-    JSScript* script = cacheEntry.script;
-
-    MOZ_ASSERT(IsEvalCacheCandidate(script));
+    MOZ_ASSERT(IsEvalCacheCandidate(cacheEntry.script));
 
     return EqualStrings(cacheEntry.str, l.str) &&
            cacheEntry.callerScript == l.callerScript &&
-           script->getVersion() == l.version &&
            cacheEntry.pc == l.pc;
 }
 
@@ -105,7 +102,6 @@ class EvalScriptGuard
         lookupStr_ = str;
         lookup_.str = str;
         lookup_.callerScript = callerScript;
-        lookup_.version = cx_->findVersion();
         lookup_.pc = pc;
         p_.emplace(cx_, cx_->caches().evalCache, lookup_);
         if (*p_) {
