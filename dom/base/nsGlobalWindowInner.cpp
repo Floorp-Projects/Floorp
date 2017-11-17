@@ -1479,8 +1479,7 @@ nsGlobalWindowInner::PopPopupControlState(PopupControlState aState) const
 PopupControlState
 nsGlobalWindowInner::GetPopupControlState() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  return gPopupControlState;
+  return nsContentUtils::GetPopupControlState();
 }
 
 nsresult
