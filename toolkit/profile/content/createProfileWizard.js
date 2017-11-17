@@ -6,7 +6,6 @@ const C = Components.classes;
 const I = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
 
 const ToolkitProfileService = "@mozilla.org/toolkit/profile-service;1";
 
@@ -27,7 +26,8 @@ function initWizard() {
     gProfileService = C[ToolkitProfileService].getService(I.nsIToolkitProfileService);
     gProfileManagerBundle = document.getElementById("bundle_profileManager");
 
-    gDefaultProfileParent = Services.dirsvc.get("DefProfRt", I.nsIFile);
+    var dirService = C["@mozilla.org/file/directory_service;1"].getService(I.nsIProperties);
+    gDefaultProfileParent = dirService.get("DefProfRt", I.nsIFile);
 
     // Initialize the profile location display.
     gProfileDisplay = document.getElementById("profileDisplay").firstChild;
@@ -183,8 +183,10 @@ function onFinish() {
       gProfileManagerBundle.getString("profileCreationFailed");
     var profileCreationFailedTitle =
       gProfileManagerBundle.getString("profileCreationFailedTitle");
-    Services.prompt.alert(window, profileCreationFailedTitle,
-                          profileCreationFailed + "\n" + e);
+    var promptService = C["@mozilla.org/embedcomp/prompt-service;1"].
+      getService(I.nsIPromptService);
+    promptService.alert(window, profileCreationFailedTitle,
+                        profileCreationFailed + "\n" + e);
 
     return false;
   }

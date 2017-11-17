@@ -10,27 +10,29 @@
  * that accept a browser to be modified.
  **/
 
-var Cu = Components.utils;
-
-Cu.import("resource://gre/modules/Services.jsm");
-
 var ZoomManager = {
+  get _prefBranch() {
+    delete this._prefBranch;
+    return this._prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                        .getService(Components.interfaces.nsIPrefBranch);
+  },
+
   get MIN() {
     delete this.MIN;
-    return this.MIN = Services.prefs.getIntPref("zoom.minPercent") / 100;
+    return this.MIN = this._prefBranch.getIntPref("zoom.minPercent") / 100;
   },
 
   get MAX() {
     delete this.MAX;
-    return this.MAX = Services.prefs.getIntPref("zoom.maxPercent") / 100;
+    return this.MAX = this._prefBranch.getIntPref("zoom.maxPercent") / 100;
   },
 
   get useFullZoom() {
-    return Services.prefs.getBoolPref("browser.zoom.full");
+    return this._prefBranch.getBoolPref("browser.zoom.full");
   },
 
   set useFullZoom(aVal) {
-    Services.prefs.setBoolPref("browser.zoom.full", aVal);
+    this._prefBranch.setBoolPref("browser.zoom.full", aVal);
     return aVal;
   },
 
@@ -64,8 +66,8 @@ var ZoomManager = {
   },
 
   get zoomValues() {
-    var zoomValues = Services.prefs.getCharPref("toolkit.zoomManager.zoomValues")
-                                   .split(",").map(parseFloat);
+    var zoomValues = this._prefBranch.getCharPref("toolkit.zoomManager.zoomValues")
+                                     .split(",").map(parseFloat);
     zoomValues.sort((a, b) => a - b);
 
     while (zoomValues[0] < this.MIN)

@@ -8,7 +8,9 @@ function closeWindow(aClose, aPromptFunction) {
   // Closing the last window doesn't quit the application on OS X.
   if (AppConstants.platform != "macosx") {
     var windowCount = 0;
-    var e = Services.wm.getEnumerator(null);
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var e = wm.getEnumerator(null);
 
     while (e.hasMoreElements()) {
       var w = e.getNext();
@@ -37,10 +39,14 @@ function closeWindow(aClose, aPromptFunction) {
 }
 
 function canQuitApplication(aData) {
+  var os = Components.classes["@mozilla.org/observer-service;1"]
+                     .getService(Components.interfaces.nsIObserverService);
+  if (!os) return true;
+
   try {
     var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
                               .createInstance(Components.interfaces.nsISupportsPRBool);
-    Services.obs.notifyObservers(cancelQuit, "quit-application-requested", aData || null);
+    os.notifyObservers(cancelQuit, "quit-application-requested", aData || null);
 
     // Something aborted the quit process.
     if (cancelQuit.data)
@@ -53,7 +59,10 @@ function goQuitApplication() {
   if (!canQuitApplication())
     return false;
 
-  Services.startup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit);
+  var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"].
+                     getService(Components.interfaces.nsIAppStartup);
+
+  appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit);
   return true;
 }
 

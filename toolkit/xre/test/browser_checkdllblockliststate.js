@@ -4,9 +4,13 @@
 // Tests that the dll blocklist initializes correctly during test runs.
 add_task(async function test() {
   await BrowserTestUtils.withNewTab({gBrowser, url: "about:blank" }, function(browser) {
-    ok(Services.appinfo.windowsDLLBlocklistStatus,
+    ok(Components.classes["@mozilla.org/xre/app-info;1"]
+                 .getService(Ci.nsIXULRuntime)
+                 .windowsDLLBlocklistStatus,
        "Windows dll blocklist status should be true, indicating it is " +
        "running properly. A failure in this test is considered a " +
        "release blocker.");
   });
 });
+
+

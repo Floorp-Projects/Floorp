@@ -6,17 +6,18 @@ const XUL_CACHE_PREF = "nglayout.debug.disable_xul_cache";
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cr = Components.results;
-var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Services.jsm");
-
+var gDirSvc    = Cc["@mozilla.org/file/directory_service;1"].
+  getService(Ci.nsIDirectoryService).QueryInterface(Ci.nsIProperties);
 var gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
                     getService(Ci.nsIXULChromeRegistry);
+var gPrefs     = Cc["@mozilla.org/preferences-service;1"].
+                    getService(Ci.nsIPrefBranch);
 
 // Create the temporary file in the profile, instead of in TmpD, because
 // we know the mochitest harness kills off the profile when it's done.
 function copyToTemporaryFile(f) {
-  let tmpd = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  let tmpd = gDirSvc.get("ProfD", Ci.nsIFile);
   let tmpf = tmpd.clone();
   tmpf.append("temp.manifest");
   tmpf.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
@@ -26,7 +27,9 @@ function copyToTemporaryFile(f) {
 }
 
 function* dirIter(directory) {
-  var testsDir = Services.io.newURI(directory)
+  var ioSvc = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
+  var testsDir = ioSvc.newURI(directory)
                   .QueryInterface(Ci.nsIFileURL).file;
 
   let en = testsDir.directoryEntries;
@@ -54,7 +57,7 @@ function copyDirToTempProfile(path, subdirname) {
     subdirname = "mochikit-tmp";
   }
 
-  let tmpdir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  let tmpdir = gDirSvc.get("ProfD", Ci.nsIFile);
   tmpdir.append(subdirname);
   tmpdir.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o777);
 
@@ -73,7 +76,8 @@ function copyDirToTempProfile(path, subdirname) {
 }
 
 function convertChromeURI(chromeURI) {
-  let uri = Services.io.newURI(chromeURI);
+  let uri = Cc["@mozilla.org/network/io-service;1"].
+    getService(Ci.nsIIOService).newURI(chromeURI);
   return gChromeReg.convertChromeURL(uri);
 }
 
@@ -95,7 +99,7 @@ function chromeURIToFile(chromeURI) {
 // Register a chrome manifest temporarily and return a function which un-does
 // the registrarion when no longer needed.
 function createManifestTemporarily(tempDir, manifestText) {
-  Services.prefs.setBoolPref(XUL_CACHE_PREF, true);
+  gPrefs.setBoolPref(XUL_CACHE_PREF, true);
 
   tempDir.append("temp.manifest");
 
@@ -116,14 +120,14 @@ function createManifestTemporarily(tempDir, manifestText) {
     tempfile.fileSize = 0; // truncate the manifest
     gChromeReg.checkForNewChrome();
     gChromeReg.refreshSkins();
-    Services.prefs.clearUserPref(XUL_CACHE_PREF);
+    gPrefs.clearUserPref(XUL_CACHE_PREF);
   };
 }
 
 // Register a chrome manifest temporarily and return a function which un-does
 // the registrarion when no longer needed.
 function registerManifestTemporarily(manifestURI) {
-  Services.prefs.setBoolPref(XUL_CACHE_PREF, true);
+  gPrefs.setBoolPref(XUL_CACHE_PREF, true);
 
   let file = chromeURIToFile(manifestURI);
 
@@ -137,7 +141,7 @@ function registerManifestTemporarily(manifestURI) {
     tempfile.fileSize = 0; // truncate the manifest
     gChromeReg.checkForNewChrome();
     gChromeReg.refreshSkins();
-    Services.prefs.clearUserPref(XUL_CACHE_PREF);
+    gPrefs.clearUserPref(XUL_CACHE_PREF);
   };
 }
 

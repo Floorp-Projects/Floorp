@@ -1,5 +1,3 @@
-Cu.import("resource://gre/modules/Services.jsm");
-
 function create_subdir(dir, subdirname) {
   let subdir = dir.clone();
   subdir.append(subdirname);
@@ -17,7 +15,9 @@ function make_fake_appdir() {
   // Create a directory inside the profile and register it as UAppData, so
   // we can stick fake crash reports inside there. We put it inside the profile
   // just because we know that will get cleaned up after the mochitest run.
-  let profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
+               .getService(Ci.nsIProperties);
+  let profD = dirSvc.get("ProfD", Ci.nsIFile);
   // create a subdir just to keep our files out of the way
   let appD = create_subdir(profD, "UAppData");
 
@@ -48,21 +48,23 @@ function make_fake_appdir() {
     }
   };
   // register our new provider
-  Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
-                 .registerProvider(_provider);
+  dirSvc.QueryInterface(Ci.nsIDirectoryService)
+        .registerProvider(_provider);
   // and undefine the old value
   try {
-    Services.dirsvc.undefine("UAppData");
+    dirSvc.undefine("UAppData");
   } catch (ex) {} // it's ok if this fails, the value might not be cached yet
   return appD.clone();
 }
 
 function cleanup_fake_appdir() {
-  Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
-                 .unregisterProvider(_provider);
+  let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
+               .getService(Ci.nsIProperties);
+  dirSvc.QueryInterface(Ci.nsIDirectoryService)
+        .unregisterProvider(_provider);
   // undefine our value so future calls get the real value
   try {
-    Services.dirsvc.undefine("UAppData");
+    dirSvc.undefine("UAppData");
   } catch (ex) {
     dump("cleanup_fake_appdir: dirSvc.undefine failed: " + ex.message + "\n");
   }
