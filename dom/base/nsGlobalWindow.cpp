@@ -292,7 +292,6 @@ static LazyLogModule gDOMLeakPRLog("DOMLeak");
 static int32_t              gRefCnt                           = 0;
 static bool                 gMouseDown                        = false;
 static bool                 gDragServiceDisabled              = false;
-static FILE                *gDumpFile                         = nullptr;
 static uint32_t             gSerialCounter                    = 0;
 
 namespace mozilla {
