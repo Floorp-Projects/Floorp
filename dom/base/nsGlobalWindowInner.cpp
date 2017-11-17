@@ -650,6 +650,9 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
     // window list of inners.
     PR_INSERT_AFTER(this, aOuterWindow);
 
+    mTimeoutManager =
+      MakeUnique<mozilla::dom::TimeoutManager>(*nsGlobalWindowInner::Cast(AsInner()));
+
     mObserver = new nsGlobalWindowObserver(this);
     if (mObserver) {
       nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
