@@ -20,6 +20,7 @@
 #define wasm_instance_h
 
 #include "gc/Barrier.h"
+#include "jit/shared/Assembler-shared.h"
 #include "vm/SharedMem.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmDebug.h"
@@ -73,7 +74,7 @@ class Instance
 {
     JSCompartment* const            compartment_;
     ReadBarrieredWasmInstanceObject object_;
-    GCPtrJitCode                    jsJitArgsRectifier_;
+    jit::TrampolinePtr              jsJitArgsRectifier_;
     const SharedCode                code_;
     const UniqueDebugState          debug_;
     const UniqueGlobalSegment       globals_;

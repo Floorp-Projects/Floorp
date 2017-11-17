@@ -76,7 +76,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             using: spidermonkey-package
             spidermonkey-variant: plain
@@ -92,7 +92,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             using: spidermonkey-mozjs-crate
             spidermonkey-variant: plain
@@ -109,7 +109,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             using: spidermonkey-rust-bindings
             spidermonkey-variant: plain
@@ -126,7 +126,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             spidermonkey-variant: plaindebug
 
@@ -155,7 +155,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             spidermonkey-variant: plain
 
@@ -200,7 +200,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             spidermonkey-variant: arm64-sim
 
@@ -214,7 +214,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             spidermonkey-variant: asan
 
@@ -229,7 +229,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             spidermonkey-variant: compacting
 
@@ -258,7 +258,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             spidermonkey-variant: msan
 
@@ -288,7 +288,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             spidermonkey-variant: rootanalysis
 
@@ -303,7 +303,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             spidermonkey-variant: nonunified
 
@@ -318,6 +318,6 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
         run:
             spidermonkey-variant: fuzzing

@@ -554,7 +554,7 @@ ICStubCompiler::getStubCode()
 bool
 ICStubCompiler::tailCallVM(const VMFunction& fun, MacroAssembler& masm)
 {
-    uint8_t* code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
+    TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
     MOZ_ASSERT(fun.expectTailCall == TailCall);
     uint32_t argSize = fun.explicitStackSlots() * sizeof(void*);
     if (engine_ == Engine::Baseline) {
@@ -571,7 +571,7 @@ ICStubCompiler::callVM(const VMFunction& fun, MacroAssembler& masm)
 {
     MOZ_ASSERT(inStubFrame_);
 
-    uint8_t* code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
+    TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
     MOZ_ASSERT(fun.expectTailCall == NonTailCall);
     MOZ_ASSERT(engine_ == Engine::Baseline);
 

@@ -1152,7 +1152,6 @@ TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame)
         LazyLinkExitFrameLayout* ll = frame.exitFrame()->as<LazyLinkExitFrameLayout>();
         JitFrameLayout* layout = ll->jsFrame();
 
-        TraceRoot(trc, ll->stubCode(), "lazy-link-code");
         layout->replaceCalleeToken(TraceCalleeToken(trc, layout->calleeToken()));
         TraceThisAndArguments(trc, frame);
         return;

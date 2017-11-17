@@ -168,9 +168,6 @@ struct IonScript
     // Code pointer containing the actual method.
     PreBarrieredJitCode method_;
 
-    // Deoptimization table used by this method.
-    PreBarrieredJitCode deoptTable_;
-
     // Entrypoint for OSR, or nullptr.
     jsbytecode* osrPc_;
 
@@ -362,9 +359,6 @@ struct IonScript
     void setMethod(JitCode* code) {
         MOZ_ASSERT(!invalidated());
         method_ = code;
-    }
-    void setDeoptTable(JitCode* code) {
-        deoptTable_ = code;
     }
     void setOsrPc(jsbytecode* osrPc) {
         osrPc_ = osrPc;

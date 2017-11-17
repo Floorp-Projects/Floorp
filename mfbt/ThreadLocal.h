@@ -132,7 +132,7 @@ template<typename T>
 class ThreadLocalKeyStorage
 {
 public:
-  ThreadLocalKeyStorage()
+  constexpr ThreadLocalKeyStorage()
     : mKey(0), mInited(false)
   {}
 

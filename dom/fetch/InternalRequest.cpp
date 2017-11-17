@@ -324,6 +324,9 @@ InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aConte
   case nsIContentPolicy::TYPE_WEB_MANIFEST:
     context = RequestContext::Manifest;
     break;
+  case nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD:
+    context = RequestContext::Internal;
+    break;
   default:
     MOZ_ASSERT(false, "Unhandled nsContentPolicyType value");
     break;

@@ -9,7 +9,7 @@ var cases = [
     "var x = VAL; @@",
     "Object.prototype.x = VAL; @@",
 
-    // let, catch, and comprehension bindings
+    // let and catch bindings
     "let x = VAL; @@",
     "{ let x = VAL; @@ }",
     "try { throw VAL; } catch (x) { @@ }",

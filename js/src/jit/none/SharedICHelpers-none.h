@@ -20,10 +20,10 @@ inline void EmitCallIC(CodeOffset*, MacroAssembler&) { MOZ_CRASH(); }
 inline void EmitEnterTypeMonitorIC(MacroAssembler&, size_t v = 0) { MOZ_CRASH(); }
 inline void EmitReturnFromIC(MacroAssembler&) { MOZ_CRASH(); }
 inline void EmitChangeICReturnAddress(MacroAssembler&, Register) { MOZ_CRASH(); }
-inline void EmitBaselineTailCallVM(JitCode*, MacroAssembler&, uint32_t) { MOZ_CRASH(); }
-inline void EmitIonTailCallVM(JitCode*, MacroAssembler&, uint32_t) { MOZ_CRASH(); }
+inline void EmitBaselineTailCallVM(TrampolinePtr, MacroAssembler&, uint32_t) { MOZ_CRASH(); }
+inline void EmitIonTailCallVM(TrampolinePtr, MacroAssembler&, uint32_t) { MOZ_CRASH(); }
 inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler&, Register, uint32_t) { MOZ_CRASH(); }
-inline void EmitBaselineCallVM(JitCode*, MacroAssembler&) { MOZ_CRASH(); }
+inline void EmitBaselineCallVM(TrampolinePtr, MacroAssembler&) { MOZ_CRASH(); }
 inline void EmitBaselineEnterStubFrame(MacroAssembler&, Register) { MOZ_CRASH(); }
 inline void EmitBaselineLeaveStubFrame(MacroAssembler&, bool v = false) { MOZ_CRASH(); }
 inline void EmitStowICValues(MacroAssembler&, int) { MOZ_CRASH(); }

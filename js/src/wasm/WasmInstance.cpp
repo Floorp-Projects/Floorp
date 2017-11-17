@@ -320,6 +320,7 @@ Instance::Instance(JSContext* cx,
                    const ValVector& globalImports)
   : compartment_(cx->compartment()),
     object_(object),
+    jsJitArgsRectifier_(),
     code_(code),
     debug_(Move(debug)),
     globals_(Move(globals)),
@@ -500,8 +501,6 @@ Instance::tracePrivate(JSTracer* trc)
     // we know object_ is already marked.
     MOZ_ASSERT(!gc::IsAboutToBeFinalized(&object_));
     TraceEdge(trc, &object_, "wasm instance object");
-
-    TraceNullableEdge(trc, &jsJitArgsRectifier_, "wasm jit args rectifier");
 
     // OK to just do one tier here; though the tiers have different funcImports
     // tables, they share the tls object.
