@@ -672,16 +672,6 @@ struct JSContext : public JS::RootingContext,
     void resetJitStackLimit();
 
   public:
-    /*
-     * Return:
-     * - The newest scripted frame's version, if there is such a frame.
-     * - The version from the compartment.
-     * - The default version.
-     *
-     * Note: if this ever shows up in a profile, just add caching!
-     */
-    JSVersion findVersion();
-
     JS::ContextOptions& options() {
         return options_.ref();
     }
