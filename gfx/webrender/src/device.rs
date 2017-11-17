@@ -485,308 +485,6 @@ pub struct VBOId(gl::GLuint);
 #[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
 struct IBOId(gl::GLuint);
 
-#[cfg(feature = "query")]
-const MAX_PROFILE_FRAMES: usize = 4;
-
-pub trait NamedTag {
-    fn get_label(&self) -> &str;
-}
-
-#[derive(Debug, Clone)]
-pub struct GpuTimer<T> {
-    pub tag: T,
-    pub time_ns: u64,
-}
-
-#[derive(Debug, Clone)]
-pub struct GpuSampler<T> {
-    pub tag: T,
-    pub count: u64,
-}
-
-#[cfg(feature = "query")]
-pub struct QuerySet<T> {
-    set: Vec<gl::GLuint>,
-    data: Vec<T>,
-    pending: gl::GLuint,
-}
-
-#[cfg(feature = "query")]
-impl<T> QuerySet<T> {
-    fn new(set: Vec<gl::GLuint>) -> Self {
-        QuerySet {
-            set,
-            data: Vec::new(),
-            pending: 0,
-        }
-    }
-
-    fn reset(&mut self) {
-        self.data.clear();
-        self.pending = 0;
-    }
-
-    fn add(&mut self, value: T) -> Option<gl::GLuint> {
-        assert_eq!(self.pending, 0);
-        self.set.get(self.data.len()).cloned().map(|query_id| {
-            self.data.push(value);
-            self.pending = query_id;
-            query_id
-        })
-    }
-
-    fn take<F: Fn(&mut T, gl::GLuint)>(&mut self, fun: F) -> Vec<T> {
-        let mut data = mem::replace(&mut self.data, Vec::new());
-        for (value, &query) in data.iter_mut().zip(self.set.iter()) {
-            fun(value, query)
-        }
-        data
-    }
-}
-
-#[cfg(feature = "query")]
-pub struct GpuFrameProfile<T> {
-    gl: Rc<gl::Gl>,
-    timers: QuerySet<GpuTimer<T>>,
-    samplers: QuerySet<GpuSampler<T>>,
-    frame_id: FrameId,
-    inside_frame: bool,
-}
-
-#[cfg(feature = "query")]
-impl<T> GpuFrameProfile<T> {
-    const MAX_TIMERS_PER_FRAME: usize = 256;
-    // disable samplers on OSX due to driver bugs
-    #[cfg(target_os = "macos")]
-    const MAX_SAMPLERS_PER_FRAME: usize = 0;
-    #[cfg(not(target_os = "macos"))]
-    const MAX_SAMPLERS_PER_FRAME: usize = 16;
-
-    fn new(gl: Rc<gl::Gl>) -> Self {
-        assert_eq!(gl.get_type(), gl::GlType::Gl);
-        let time_queries = gl.gen_queries(Self::MAX_TIMERS_PER_FRAME as _);
-        let sample_queries = gl.gen_queries(Self::MAX_SAMPLERS_PER_FRAME as _);
-
-        GpuFrameProfile {
-            gl,
-            timers: QuerySet::new(time_queries),
-            samplers: QuerySet::new(sample_queries),
-            frame_id: FrameId(0),
-            inside_frame: false,
-        }
-    }
-
-    fn begin_frame(&mut self, frame_id: FrameId) {
-        self.frame_id = frame_id;
-        self.timers.reset();
-        self.samplers.reset();
-        self.inside_frame = true;
-    }
-
-    fn end_frame(&mut self) {
-        self.done_marker();
-        self.done_sampler();
-        self.inside_frame = false;
-    }
-
-    fn done_marker(&mut self) {
-        debug_assert!(self.inside_frame);
-        if self.timers.pending != 0 {
-            self.gl.end_query(gl::TIME_ELAPSED);
-            self.timers.pending = 0;
-        }
-    }
-
-    fn add_marker(&mut self, tag: T) -> GpuMarker
-    where
-        T: NamedTag,
-    {
-        self.done_marker();
-
-        let marker = GpuMarker::new(&self.gl, tag.get_label());
-
-        if let Some(query) = self.timers.add(GpuTimer { tag, time_ns: 0 }) {
-            self.gl.begin_query(gl::TIME_ELAPSED, query);
-        }
-
-        marker
-    }
-
-    fn done_sampler(&mut self) {
-        debug_assert!(self.inside_frame);
-        if self.samplers.pending != 0 {
-            self.gl.end_query(gl::SAMPLES_PASSED);
-            self.samplers.pending = 0;
-        }
-    }
-
-    fn add_sampler(&mut self, tag: T)
-    where
-        T: NamedTag,
-    {
-        self.done_sampler();
-
-        if let Some(query) = self.samplers.add(GpuSampler { tag, count: 0 }) {
-            self.gl.begin_query(gl::SAMPLES_PASSED, query);
-        }
-    }
-
-    fn is_valid(&self) -> bool {
-        !self.timers.set.is_empty() || !self.samplers.set.is_empty()
-    }
-
-    fn build_samples(&mut self) -> (Vec<GpuTimer<T>>, Vec<GpuSampler<T>>) {
-        debug_assert!(!self.inside_frame);
-        let gl = &self.gl;
-
-        (
-            self.timers.take(|timer, query| {
-                timer.time_ns = gl.get_query_object_ui64v(query, gl::QUERY_RESULT)
-            }),
-            self.samplers.take(|sampler, query| {
-                sampler.count = gl.get_query_object_ui64v(query, gl::QUERY_RESULT)
-            }),
-        )
-    }
-}
-
-#[cfg(feature = "query")]
-impl<T> Drop for GpuFrameProfile<T> {
-    fn drop(&mut self) {
-        if !self.timers.set.is_empty() {
-            self.gl.delete_queries(&self.timers.set);
-        }
-        if !self.samplers.set.is_empty() {
-            self.gl.delete_queries(&self.samplers.set);
-        }
-    }
-}
-
-#[cfg(feature = "query")]
-pub struct GpuProfiler<T> {
-    frames: [GpuFrameProfile<T>; MAX_PROFILE_FRAMES],
-    next_frame: usize,
-}
-
-#[cfg(feature = "query")]
-impl<T> GpuProfiler<T> {
-    pub fn new(gl: &Rc<gl::Gl>) -> Self {
-        GpuProfiler {
-            next_frame: 0,
-            frames: [
-                GpuFrameProfile::new(Rc::clone(gl)),
-                GpuFrameProfile::new(Rc::clone(gl)),
-                GpuFrameProfile::new(Rc::clone(gl)),
-                GpuFrameProfile::new(Rc::clone(gl)),
-            ],
-        }
-    }
-
-    pub fn build_samples(&mut self) -> Option<(FrameId, Vec<GpuTimer<T>>, Vec<GpuSampler<T>>)> {
-        let frame = &mut self.frames[self.next_frame];
-        if frame.is_valid() {
-            let (timers, samplers) = frame.build_samples();
-            Some((frame.frame_id, timers, samplers))
-        } else {
-            None
-        }
-    }
-
-    pub fn begin_frame(&mut self, frame_id: FrameId) {
-        let frame = &mut self.frames[self.next_frame];
-        frame.begin_frame(frame_id);
-    }
-
-    pub fn end_frame(&mut self) {
-        let frame = &mut self.frames[self.next_frame];
-        frame.end_frame();
-        self.next_frame = (self.next_frame + 1) % MAX_PROFILE_FRAMES;
-    }
-
-    pub fn add_marker(&mut self, tag: T) -> GpuMarker
-    where
-        T: NamedTag,
-    {
-        self.frames[self.next_frame].add_marker(tag)
-    }
-
-    pub fn add_sampler(&mut self, tag: T)
-    where
-        T: NamedTag,
-    {
-        self.frames[self.next_frame].add_sampler(tag)
-    }
-
-    pub fn done_sampler(&mut self) {
-        self.frames[self.next_frame].done_sampler()
-    }
-}
-
-#[cfg(not(feature = "query"))]
-pub struct GpuProfiler<T>(Option<T>);
-
-#[cfg(not(feature = "query"))]
-impl<T> GpuProfiler<T> {
-    pub fn new(_: &Rc<gl::Gl>) -> Self {
-        GpuProfiler(None)
-    }
-
-    pub fn build_samples(&mut self) -> Option<(FrameId, Vec<GpuTimer<T>>, Vec<GpuSampler<T>>)> {
-        None
-    }
-
-    pub fn begin_frame(&mut self, _: FrameId) {}
-
-    pub fn end_frame(&mut self) {}
-
-    pub fn add_marker(&mut self, _: T) -> GpuMarker {
-        GpuMarker {}
-    }
-
-    pub fn add_sampler(&mut self, _: T) {}
-
-    pub fn done_sampler(&mut self) {}
-}
-
-
-#[must_use]
-pub struct GpuMarker {
-    #[cfg(feature = "query")]
-    gl: Rc<gl::Gl>,
-}
-
-#[cfg(feature = "query")]
-impl GpuMarker {
-    pub fn new(gl: &Rc<gl::Gl>, message: &str) -> Self {
-        debug_assert_eq!(gl.get_type(), gl::GlType::Gl);
-        gl.push_group_marker_ext(message);
-        GpuMarker { gl: Rc::clone(gl) }
-    }
-
-    pub fn fire(gl: &gl::Gl, message: &str) {
-        debug_assert_eq!(gl.get_type(), gl::GlType::Gl);
-        gl.insert_event_marker_ext(message);
-    }
-}
-
-#[cfg(feature = "query")]
-impl Drop for GpuMarker {
-    fn drop(&mut self) {
-        self.gl.pop_group_marker_ext();
-    }
-}
-
-#[cfg(not(feature = "query"))]
-impl GpuMarker {
-    #[inline]
-    pub fn new(_: &Rc<gl::Gl>, _: &str) -> Self {
-        GpuMarker{}
-    }
-    #[inline]
-    pub fn fire(_: &gl::Gl, _: &str) {}
-}
-
-
 #[derive(Debug, Copy, Clone)]
 pub enum VertexUsageHint {
     Static,
@@ -1138,15 +836,14 @@ impl Device {
         let (internal_format, gl_format) = gl_texture_formats_for_image_format(self.gl(), format);
         let type_ = gl_type_for_texture_format(format);
 
+        self.bind_texture(DEFAULT_TEXTURE, texture);
+        self.set_texture_parameters(texture.target, filter);
+
         match mode {
             RenderTargetMode::RenderTarget => {
-                self.bind_texture(DEFAULT_TEXTURE, texture);
-                self.set_texture_parameters(texture.target, filter);
-                self.update_texture_storage(texture, layer_count, resized);
+                self.update_texture_storage(texture, resized);
             }
             RenderTargetMode::None => {
-                self.bind_texture(DEFAULT_TEXTURE, texture);
-                self.set_texture_parameters(texture.target, filter);
                 let expanded_data: Vec<u8>;
                 let actual_pixels = if pixels.is_some() && format == ImageFormat::A8 &&
                     cfg!(any(target_arch = "arm", target_arch = "aarch64"))
@@ -1197,13 +894,13 @@ impl Device {
 
     /// Updates the texture storage for the texture, creating
     /// FBOs as required.
-    fn update_texture_storage(&mut self, texture: &mut Texture, layer_count: i32, resized: bool) {
-        assert!(layer_count > 0);
+    fn update_texture_storage(&mut self, texture: &mut Texture, resized: bool) {
+        assert!(texture.layer_count > 0);
         assert_eq!(texture.target, gl::TEXTURE_2D_ARRAY);
 
-        let current_layer_count = texture.fbo_ids.len() as i32;
+        let needed_layer_count = texture.layer_count - texture.fbo_ids.len() as i32;
         // If the texture is already the required size skip.
-        if current_layer_count == layer_count && !resized {
+        if needed_layer_count == 0 && !resized {
             return;
         }
 
@@ -1217,42 +914,45 @@ impl Device {
             internal_format as gl::GLint,
             texture.width as gl::GLint,
             texture.height as gl::GLint,
-            layer_count,
+            texture.layer_count,
             0,
             gl_format,
             type_,
             None,
         );
 
-        let needed_layer_count = layer_count - current_layer_count;
         if needed_layer_count > 0 {
             // Create more framebuffers to fill the gap
             let new_fbos = self.gl.gen_framebuffers(needed_layer_count);
             texture
                 .fbo_ids
-                .extend(new_fbos.into_iter().map(|id| FBOId(id)));
+                .extend(new_fbos.into_iter().map(FBOId));
         } else if needed_layer_count < 0 {
             // Remove extra framebuffers
-            for old in texture.fbo_ids.drain(layer_count as usize ..) {
+            for old in texture.fbo_ids.drain(texture.layer_count as usize ..) {
                 self.gl.delete_framebuffers(&[old.0]);
             }
         }
 
-        let depth_rb = if let Some(rbo) = texture.depth_rb {
-            rbo.0
-        } else {
-            let renderbuffer_ids = self.gl.gen_renderbuffers(1);
-            let depth_rb = renderbuffer_ids[0];
-            texture.depth_rb = Some(RBOId(depth_rb));
-            depth_rb
+        let (depth_rb, depth_alloc) = match texture.depth_rb {
+            Some(rbo) => (rbo.0, resized),
+            None => {
+                let renderbuffer_ids = self.gl.gen_renderbuffers(1);
+                let depth_rb = renderbuffer_ids[0];
+                texture.depth_rb = Some(RBOId(depth_rb));
+                (depth_rb, true)
+            }
         };
-        self.gl.bind_renderbuffer(gl::RENDERBUFFER, depth_rb);
-        self.gl.renderbuffer_storage(
-            gl::RENDERBUFFER,
-            gl::DEPTH_COMPONENT24,
-            texture.width as gl::GLsizei,
-            texture.height as gl::GLsizei,
-        );
+
+        if depth_alloc {
+            self.gl.bind_renderbuffer(gl::RENDERBUFFER, depth_rb);
+            self.gl.renderbuffer_storage(
+                gl::RENDERBUFFER,
+                gl::DEPTH_COMPONENT24,
+                texture.width as gl::GLsizei,
+                texture.height as gl::GLsizei,
+            );
+        }
 
         for (fbo_index, fbo_id) in texture.fbo_ids.iter().enumerate() {
             self.gl.bind_framebuffer(gl::FRAMEBUFFER, fbo_id.0);

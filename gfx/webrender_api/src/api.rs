@@ -243,19 +243,23 @@ impl fmt::Debug for DocumentMsg {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum DebugCommand {
-    // Display the frame profiler on screen.
+    /// Display the frame profiler on screen.
     EnableProfiler(bool),
-    // Display all texture cache pages on screen.
+    /// Display all texture cache pages on screen.
     EnableTextureCacheDebug(bool),
-    // Display intermediate render targets on screen.
+    /// Display intermediate render targets on screen.
     EnableRenderTargetDebug(bool),
-    // Display alpha primitive rects.
+    /// Display alpha primitive rects.
     EnableAlphaRectsDebug(bool),
-    // Fetch current documents and display lists.
+    /// Display GPU timing results.
+    EnableGpuTimeQueries(bool),
+    /// Display GPU overdraw results
+    EnableGpuSampleQueries(bool),
+    /// Fetch current documents and display lists.
     FetchDocuments,
-    // Fetch current passes and batches.
+    /// Fetch current passes and batches.
     FetchPasses,
-    // Fetch clip-scroll tree.
+    /// Fetch clip-scroll tree.
     FetchClipScrollTree,
 }
 

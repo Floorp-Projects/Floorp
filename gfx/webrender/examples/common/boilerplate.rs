@@ -182,8 +182,7 @@ pub fn main_wrapper(example: &mut Example, options: Option<webrender::RendererOp
         for event in events {
             match event {
                 glutin::Event::Closed |
-                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
-                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Q)) => break 'outer,
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) => break 'outer,
 
                 glutin::Event::KeyboardInput(
                     glutin::ElementState::Pressed,
@@ -220,6 +219,13 @@ pub fn main_wrapper(example: &mut Example, options: Option<webrender::RendererOp
                     let mut flags = renderer.get_debug_flags();
                     flags.toggle(webrender::DebugFlags::ALPHA_PRIM_DBG);
                     renderer.set_debug_flags(flags);
+                }
+                glutin::Event::KeyboardInput(
+                    glutin::ElementState::Pressed,
+                    _,
+                    Some(glutin::VirtualKeyCode::Q),
+                ) => {
+                    renderer.toggle_queries_enabled();
                 }
                 glutin::Event::KeyboardInput(
                     glutin::ElementState::Pressed,

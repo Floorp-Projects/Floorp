@@ -24,7 +24,9 @@ use webrender::api::*;
 
 struct App {
     property_key: PropertyBindingKey<LayoutTransform>,
+    opacity_key: PropertyBindingKey<f32>,
     transform: LayoutTransform,
+    opacity: f32,
 }
 
 impl Example for App {
@@ -49,6 +51,10 @@ impl Example for App {
             .. LayoutPrimitiveInfo::new(bounds)
         };
 
+        let filters = vec![
+            FilterOp::Opacity(PropertyBinding::Binding(self.opacity_key), self.opacity),
+        ];
+
         builder.push_stacking_context(
             &info,
             ScrollPolicy::Scrollable,
@@ -56,7 +62,7 @@ impl Example for App {
             TransformStyle::Flat,
             None,
             MixBlendMode::Normal,
-            Vec::new(),
+            filters,
         );
 
         // Fill it with a white rect
@@ -68,18 +74,21 @@ impl Example for App {
     fn on_event(&mut self, event: glutin::Event, api: &RenderApi, document_id: DocumentId) -> bool {
         match event {
             glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(key)) => {
-                let (offset_x, offset_y, angle) = match key {
-                    glutin::VirtualKeyCode::Down => (0.0, 10.0, 0.0),
-                    glutin::VirtualKeyCode::Up => (0.0, -10.0, 0.0),
-                    glutin::VirtualKeyCode::Right => (10.0, 0.0, 0.0),
-                    glutin::VirtualKeyCode::Left => (-10.0, 0.0, 0.0),
-                    glutin::VirtualKeyCode::Comma => (0.0, 0.0, 0.1),
-                    glutin::VirtualKeyCode::Period => (0.0, 0.0, -0.1),
+                let (offset_x, offset_y, angle, delta_opacity) = match key {
+                    glutin::VirtualKeyCode::Down => (0.0, 10.0, 0.0, 0.0),
+                    glutin::VirtualKeyCode::Up => (0.0, -10.0, 0.0, 0.0),
+                    glutin::VirtualKeyCode::Right => (10.0, 0.0, 0.0, 0.0),
+                    glutin::VirtualKeyCode::Left => (-10.0, 0.0, 0.0, 0.0),
+                    glutin::VirtualKeyCode::Comma => (0.0, 0.0, 0.1, 0.0),
+                    glutin::VirtualKeyCode::Period => (0.0, 0.0, -0.1, 0.0),
+                    glutin::VirtualKeyCode::Z => (0.0, 0.0, 0.0, -0.1),
+                    glutin::VirtualKeyCode::X => (0.0, 0.0, 0.0, 0.1),
                     _ => return false,
                 };
                 // Update the transform based on the keyboard input and push it to
                 // webrender using the generate_frame API. This will recomposite with
                 // the updated transform.
+                self.opacity += delta_opacity;
                 let new_transform = self.transform
                     .pre_rotate(0.0, 0.0, 1.0, Radians::new(angle))
                     .post_translate(LayoutVector3D::new(offset_x, offset_y, 0.0));
@@ -92,7 +101,12 @@ impl Example for App {
                                 value: new_transform,
                             },
                         ],
-                        floats: vec![],
+                        floats: vec![
+                            PropertyValue {
+                                key: self.opacity_key,
+                                value: self.opacity,
+                            }
+                        ],
                     }),
                 );
                 self.transform = new_transform;
@@ -107,7 +121,9 @@ impl Example for App {
 fn main() {
     let mut app = App {
         property_key: PropertyBindingKey::new(42), // arbitrary magic number
+        opacity_key: PropertyBindingKey::new(43),
         transform: LayoutTransform::create_translation(0.0, 0.0, 0.0),
+        opacity: 0.5,
     };
     boilerplate::main_wrapper(&mut app, None);
 }
