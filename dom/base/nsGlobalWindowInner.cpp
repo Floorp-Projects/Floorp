@@ -4440,6 +4440,15 @@ nsGlobalWindowInner::SetChromeEventHandler(EventTarget* aChromeEventHandler)
   MOZ_CRASH("Virtual outer window only function");
 }
 
+static bool ShouldShowFocusRingIfFocusedByMouse(nsIContent* aNode)
+{
+  if (!aNode) {
+    return true;
+  }
+  return !nsContentUtils::ContentIsLink(aNode) &&
+    !aNode->IsAnyOfHTMLElements(nsGkAtoms::video, nsGkAtoms::audio);
+}
+
 void
 nsGlobalWindowInner::SetFocusedNode(nsIContent* aNode,
                                     uint32_t aFocusMethod,
