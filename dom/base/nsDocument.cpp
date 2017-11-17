@@ -6510,7 +6510,8 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
     return;
   }
 
-  AutoCEReaction ceReaction(this->GetDocGroup()->CustomElementReactionsStack());
+  AutoCEReaction ceReaction(this->GetDocGroup()->CustomElementReactionsStack(),
+                            aCx);
   // Unconditionally convert TYPE to lowercase.
   nsAutoString lcType;
   nsContentUtils::ASCIIToLower(aType, lcType);
