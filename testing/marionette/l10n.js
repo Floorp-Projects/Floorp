@@ -35,7 +35,7 @@ this.l10n = {};
  * Retrieve the localized string for the specified entity id.
  *
  * Example:
- *     localizeEntity(["chrome://branding/locale/brand.dtd"], "brandShortName")
+ *     localizeEntity(["chrome://global/locale/about.dtd"], "about.version")
  *
  * @param {Array.<string>} urls
  *     Array of .dtd URLs.

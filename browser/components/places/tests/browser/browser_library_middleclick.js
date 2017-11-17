@@ -7,7 +7,7 @@
  * Tests middle-clicking items in the Library.
  */
 
-const URIs = ["about:license", "about:mozilla"];
+const URIs = ["about:license", "about:"];
 
 var gLibrary = null;
 var gTests = [];
@@ -72,7 +72,7 @@ gTests.push({
 //
 gTests.push({
   desc: "Open a folder in tabs.",
-  URIs: ["about:buildconfig", "about:mozilla"],
+  URIs: ["about:buildconfig", "about:"],
   _bookmarks: null,
 
   async setup() {
@@ -112,7 +112,7 @@ gTests.push({
 
 gTests.push({
   desc: "Open a query in tabs.",
-  URIs: ["about:buildconfig", "about:mozilla"],
+  URIs: ["about:buildconfig", "about:"],
   _bookmarks: null,
   _query: null,
 

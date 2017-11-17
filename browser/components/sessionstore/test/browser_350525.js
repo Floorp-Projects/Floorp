@@ -74,7 +74,7 @@ add_task(async function() {
      "getClosedTabCount returns zero or at most max_tabs_undo");
 
   // create a new tab
-  let testURL = "about:mozilla";
+  let testURL = "about:";
   tab = BrowserTestUtils.addTab(gBrowser, testURL);
   await promiseBrowserLoaded(tab.linkedBrowser);
 

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % aboutDTD SYSTEM "chrome://global/locale/about.dtd" >
+%aboutDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+]>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>About:</title>
+  <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css"/>
+</head>
+
+<body dir="&locale.dir;">
+  <div id="aboutLogoContainer">
+    <a id="vendorURL">
+      <img src="about:logo" alt="&brandShortName;"/>
+      <p id="version">&about.version;</p>
+    </a>
+  </div>
+
+  <ul id="aboutPageList">
+    <li>&about.credits.beforeLink;<a href="about:credits">&about.credits.linkTitle;</a>&about.credits.afterLink;</li>
+    <li>&about.license.beforeTheLink;<a href="about:license">&about.license.linkTitle;</a>&about.license.afterTheLink;</li>
+    <li hidden="true">&about.relnotes.beforeTheLink;<a id="releaseNotesURL">&about.relnotes.linkTitle;</a>&about.relnotes.afterTheLink;</li>
+    <li>&about.buildconfig.beforeTheLink;<a href="about:buildconfig">&about.buildconfig.linkTitle;</a>&about.buildconfig.afterTheLink;</li>
+    <li id="buildID">&about.buildIdentifier;</li>
+    <script type="application/javascript" src="chrome://global/content/about.js"/>
+  </ul>
+
+</body>
+</html>

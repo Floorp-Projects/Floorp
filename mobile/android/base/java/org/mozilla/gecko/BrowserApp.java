@@ -2136,7 +2136,7 @@ public class BrowserApp extends GeckoApp
                  *
                  * This depends on the current channel: Release and Beta both direct to
                  * the Google Play Store. If updating is enabled, Aurora, Nightly, and
-                 * custom builds open about:firefox, which provides an update interface.
+                 * custom builds open about:, which provides an update interface.
                  *
                  * If updating is not enabled, this simply logs an error.
                  */
@@ -2148,7 +2148,7 @@ public class BrowserApp extends GeckoApp
                 }
 
                 if (AppConstants.MOZ_UPDATER) {
-                    Tabs.getInstance().loadUrlInTab(AboutPages.FIREFOX);
+                    Tabs.getInstance().loadUrlInTab(AboutPages.UPDATER);
                     break;
                 }
 
