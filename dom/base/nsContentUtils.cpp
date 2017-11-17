@@ -10991,3 +10991,11 @@ nsContentUtils::DevToolsEnabled(JSContext* aCx)
 
   return workerPrivate->DevToolsEnabled();
 }
+
+/* static */ bool
+nsContentUtils::ContentIsLink(nsIContent* aContent)
+{
+  return aContent && (aContent->IsHTMLElement(nsGkAtoms::a) ||
+                      aContent->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
+                                            nsGkAtoms::simple, eCaseMatters));
+}
