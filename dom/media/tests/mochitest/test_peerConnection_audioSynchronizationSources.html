@@ -11,10 +11,24 @@
     title: "Test audio receiver getSynchronizationSources"
   });
 
-  var testGetSynchronizationSources = (test) => {
+  var waitForSyncSources = async (test) => {
     let receivers = [...test.pcRemote.getReceivers(),
                      ...test.pcLocal.getReceivers()];
     is(receivers.length, 2, "Expected number of receivers");
+    // Wait for sync sources
+    while (true) {
+        if (receivers[0].getSynchronizationSources().length > 0 &&
+            receivers[1].getSynchronizationSources().length > 0) {
+        break;
+      }
+      await wait(250);
+    }
+  }
+
+  var testGetSynchronizationSources = async (test) => {
+    await waitForSyncSources(test);
+    let receivers = [...test.pcRemote.getReceivers(),
+                     ...test.pcLocal.getReceivers()];
     for (let recv of receivers) {
       let syncSources = recv.getSynchronizationSources();
       ok(syncSources,
@@ -34,7 +48,8 @@
     }
   }
 
-  var testSynchronizationSourceCached = (test) => {
+  var testSynchronizationSourceCached = async (test) => {
+    await waitForSyncSources(test);
     let receivers = [...test.pcRemote.getReceivers(),
                      ...test.pcLocal.getReceivers()];
     is(receivers.length, 2, "Expected number of receivers");
