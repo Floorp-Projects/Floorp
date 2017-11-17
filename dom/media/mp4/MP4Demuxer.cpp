@@ -38,7 +38,7 @@ class MP4TrackDemuxer : public MediaTrackDemuxer
 public:
   MP4TrackDemuxer(MP4Demuxer* aParent,
                   UniquePtr<TrackInfo>&& aInfo,
-                  const mp4_demuxer::IndiceWrapper& aIndices);
+                  const IndiceWrapper& aIndices);
 
   UniquePtr<TrackInfo> GetInfo() const override;
 
@@ -130,8 +130,8 @@ MP4Demuxer::Init()
   // 'result' will capture the first warning, if any.
   MediaResult result{NS_OK};
 
-  mp4_demuxer::MP4Metadata::ResultAndByteBuffer initData =
-    mp4_demuxer::MP4Metadata::Metadata(stream);
+  MP4Metadata::ResultAndByteBuffer initData =
+    MP4Metadata::Metadata(stream);
   if (!initData.Ref()) {
     return InitPromise::CreateAndReject(
       NS_FAILED(initData.Result())
@@ -146,7 +146,7 @@ MP4Demuxer::Init()
   RefPtr<mp4_demuxer::BufferStream> bufferstream =
     new mp4_demuxer::BufferStream(initData.Ref());
 
-  mp4_demuxer::MP4Metadata metadata{bufferstream};
+  MP4Metadata metadata{bufferstream};
   nsresult rv = metadata.Parse();
   if (NS_FAILED(rv)) {
     return InitPromise::CreateAndReject(
@@ -154,7 +154,7 @@ MP4Demuxer::Init()
   }
 
   auto audioTrackCount = metadata.GetNumberTracks(TrackInfo::kAudioTrack);
-  if (audioTrackCount.Ref() == mp4_demuxer::MP4Metadata::NumberTracksError()) {
+  if (audioTrackCount.Ref() == MP4Metadata::NumberTracksError()) {
     if (MediaPrefs::MediaWarningsAsErrors()) {
       return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
@@ -166,7 +166,7 @@ MP4Demuxer::Init()
   }
 
   auto videoTrackCount = metadata.GetNumberTracks(TrackInfo::kVideoTrack);
-  if (videoTrackCount.Ref() == mp4_demuxer::MP4Metadata::NumberTracksError()) {
+  if (videoTrackCount.Ref() == MP4Metadata::NumberTracksError()) {
     if (MediaPrefs::MediaWarningsAsErrors()) {
       return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
@@ -195,7 +195,7 @@ MP4Demuxer::Init()
 
   if (audioTrackCount.Ref() != 0) {
     for (size_t i = 0; i < audioTrackCount.Ref(); i++) {
-      mp4_demuxer::MP4Metadata::ResultAndTrackInfo info =
+      MP4Metadata::ResultAndTrackInfo info =
         metadata.GetTrackInfo(TrackInfo::kAudioTrack, i);
       if (!info.Ref()) {
         if (MediaPrefs::MediaWarningsAsErrors()) {
@@ -214,7 +214,7 @@ MP4Demuxer::Init()
       } else if (NS_FAILED(info.Result()) && result == NS_OK) {
         result = Move(info.Result());
       }
-      mp4_demuxer::MP4Metadata::ResultAndIndice indices =
+      MP4Metadata::ResultAndIndice indices =
         metadata.GetTrackIndice(info.Ref()->mTrackId);
       if (!indices.Ref()) {
         if (NS_FAILED(info.Result()) && result == NS_OK) {
@@ -229,7 +229,7 @@ MP4Demuxer::Init()
 
   if (videoTrackCount.Ref() != 0) {
     for (size_t i = 0; i < videoTrackCount.Ref(); i++) {
-      mp4_demuxer::MP4Metadata::ResultAndTrackInfo info =
+      MP4Metadata::ResultAndTrackInfo info =
         metadata.GetTrackInfo(TrackInfo::kVideoTrack, i);
       if (!info.Ref()) {
         if (MediaPrefs::MediaWarningsAsErrors()) {
@@ -248,7 +248,7 @@ MP4Demuxer::Init()
       } else if (NS_FAILED(info.Result()) && result == NS_OK) {
         result = Move(info.Result());
       }
-      mp4_demuxer::MP4Metadata::ResultAndIndice indices =
+      MP4Metadata::ResultAndIndice indices =
         metadata.GetTrackIndice(info.Ref()->mTrackId);
       if (!indices.Ref()) {
         if (NS_FAILED(info.Result()) && result == NS_OK) {
@@ -261,14 +261,14 @@ MP4Demuxer::Init()
     }
   }
 
-  mp4_demuxer::MP4Metadata::ResultAndCryptoFile cryptoFile =
+  MP4Metadata::ResultAndCryptoFile cryptoFile =
     metadata.Crypto();
   if (NS_FAILED(cryptoFile.Result()) && result == NS_OK) {
     result = Move(cryptoFile.Result());
   }
   MOZ_ASSERT(cryptoFile.Ref());
   if (cryptoFile.Ref()->valid) {
-    const nsTArray<mp4_demuxer::PsshInfo>& psshs = cryptoFile.Ref()->pssh;
+    const nsTArray<PsshInfo>& psshs = cryptoFile.Ref()->pssh;
     for (uint32_t i = 0; i < psshs.Length(); i++) {
       mCryptoInitData.AppendElements(psshs[i].data);
     }
@@ -349,7 +349,7 @@ MP4Demuxer::GetCrypto()
 
 MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
                                  UniquePtr<TrackInfo>&& aInfo,
-                                 const mp4_demuxer::IndiceWrapper& aIndices)
+                                 const IndiceWrapper& aIndices)
   : mParent(aParent)
   , mStream(new mp4_demuxer::ResourceStream(mParent->mResource))
   , mInfo(Move(aInfo))
