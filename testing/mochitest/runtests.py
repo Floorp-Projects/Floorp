@@ -439,8 +439,6 @@ class MochitestServer(object):
         args = [
             "-g",
             self._xrePath,
-            "-v",
-            "170",
             "-f",
             os.path.join(
                 self._httpdPath,
