@@ -55,11 +55,10 @@ const char* const kFragHeader_Tex2DRect = "\
     #endif                                                                   \n\
 ";
 const char* const kFragHeader_TexExt = "\
+    #extension GL_OES_EGL_image_external : require                           \n\
     #if __VERSION__ >= 130                                                   \n\
-        #extension GL_OES_EGL_image_external_essl3 : require                 \n\
         #define TEXTURE texture                                              \n\
     #else                                                                    \n\
-        #extension GL_OES_EGL_image_external : require                       \n\
         #define TEXTURE texture2D                                            \n\
     #endif                                                                   \n\
     #define SAMPLER samplerExternalOES                                       \n\
@@ -550,14 +549,14 @@ GLBlitHelper::GLBlitHelper(GLContext* const gl)
     // --
 
     const auto glslVersion = mGL->ShadingLanguageVersion();
+
+    // Always use 100 on ES because some devices have OES_EGL_image_external but not
+    // OES_EGL_image_external_essl3. We could just use 100 in that particular case, but
+    // this is a lot easier and is not harmful to other usages.
     if (mGL->IsGLES()) {
-        if (glslVersion >= 300) {
-            mDrawBlitProg_VersionLine = nsPrintfCString("#version %u es\n", glslVersion);
-        }
-    } else {
-        if (glslVersion >= 130) {
-            mDrawBlitProg_VersionLine = nsPrintfCString("#version %u\n", glslVersion);
-        }
+        mDrawBlitProg_VersionLine = nsCString("#version 100\n");
+    } else if (glslVersion >= 130) {
+        mDrawBlitProg_VersionLine = nsPrintfCString("#version %u\n", glslVersion);
     }
 
     const char kVertSource[] = "\
