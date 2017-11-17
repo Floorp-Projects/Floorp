@@ -377,7 +377,7 @@ def main():
         return 0
 
     with changedir(test_dir), change_env(test_environment):
-        results = ResultsSink('jstests', options, test_count)
+        results = ResultsSink(options, test_count)
         try:
             for out in run_all_tests(test_gen, prefix, results.pb, options):
                 results.push(out)
