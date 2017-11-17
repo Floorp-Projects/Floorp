@@ -90,39 +90,23 @@ void main(void) {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-vec4 Blur(float radius, vec2 direction) {
-    // TODO(gw): Support blur in WR2!
-    return vec4(1.0);
-}
-
 vec4 Contrast(vec4 Cs, float amount) {
-    return vec4(Cs.rgb * amount - 0.5 * amount + 0.5, 1.0);
+    return vec4(Cs.rgb * amount - 0.5 * amount + 0.5, Cs.a);
 }
 
 vec4 Invert(vec4 Cs, float amount) {
-    Cs.rgb /= Cs.a;
-
-    vec3 color = mix(Cs.rgb, vec3(1.0) - Cs.rgb, amount);
-
-    // Pre-multiply the alpha into the output value.
-    return vec4(color.rgb * Cs.a, Cs.a);
+    return vec4(mix(Cs.rgb, vec3(1.0) - Cs.rgb, amount), Cs.a);
 }
 
 vec4 Brightness(vec4 Cs, float amount) {
-    // Un-premultiply the input.
-    Cs.rgb /= Cs.a;
-
     // Apply the brightness factor.
     // Resulting color needs to be clamped to output range
     // since we are pre-multiplying alpha in the shader.
-    vec3 color = clamp(Cs.rgb * amount, vec3(0.0), vec3(1.0));
-
-    // Pre-multiply the alpha into the output value.
-    return vec4(color.rgb * Cs.a, Cs.a);
+    return vec4(clamp(Cs.rgb * amount, vec3(0.0), vec3(1.0)), Cs.a);
 }
 
 vec4 Opacity(vec4 Cs, float amount) {
-    return Cs * amount;
+    return vec4(Cs.rgb, Cs.a * amount);
 }
 
 void main(void) {
@@ -133,10 +117,12 @@ void main(void) {
         discard;
     }
 
+    // Un-premultiply the input.
+    Cs.rgb /= Cs.a;
+
     switch (vOp) {
         case 0:
-            // Gaussian blur is specially handled:
-            oFragColor = Cs;// Blur(vAmount, vec2(0,0));
+            oFragColor = Cs;
             break;
         case 1:
             oFragColor = Contrast(Cs, vAmount);
@@ -153,5 +139,8 @@ void main(void) {
         default:
             oFragColor = vColorMat * Cs;
     }
+
+    // Pre-multiply the alpha into the output value.
+    oFragColor.rgb *= oFragColor.a;
 }
 #endif

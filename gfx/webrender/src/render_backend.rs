@@ -93,6 +93,7 @@ impl Document {
             self.window_size,
             self.inner_rect,
             accumulated_scale_factor,
+            &self.output_pipelines,
         );
     }
 
@@ -116,9 +117,9 @@ impl Document {
                     &self.scene.pipelines,
                     accumulated_scale_factor,
                     pan,
-                    &self.output_pipelines,
                     &mut resource_profile.texture_cache,
                     &mut resource_profile.gpu_cache,
+                    &self.scene.properties,
                 )
             }
             None => {
@@ -410,19 +411,8 @@ impl RenderBackend {
                 profile_scope!("GenerateFrame");
                 let _timer = profile_counters.total_time.timer();
 
-                // Ideally, when there are property bindings present,
-                // we won't need to rebuild the entire frame here.
-                // However, to avoid conflicts with the ongoing work to
-                // refactor how scroll roots + transforms work, this
-                // just rebuilds the frame if there are animated property
-                // bindings present for now.
-                // TODO(gw): Once the scrolling / reference frame changes
-                //           are completed, optimize the internals of
-                //           animated properties to not require a full
-                //           rebuild of the frame!
                 if let Some(property_bindings) = property_bindings {
                     doc.scene.properties.set_properties(property_bindings);
-                    doc.build_scene(&mut self.resource_cache);
                 }
 
                 if let Some(ref mut ros) = doc.render_on_scroll {

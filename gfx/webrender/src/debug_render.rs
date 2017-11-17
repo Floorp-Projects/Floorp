@@ -4,7 +4,7 @@
 
 use api::{ColorU, DeviceIntRect, DeviceUintSize, ImageFormat};
 use debug_font_data;
-use device::{Device, GpuMarker, Program, Texture, TextureSlot, VertexDescriptor, VAO};
+use device::{Device, Program, Texture, TextureSlot, VertexDescriptor, VAO};
 use device::{TextureFilter, TextureTarget, VertexAttribute, VertexAttributeKind, VertexUsageHint};
 use euclid::{Point2D, Rect, Size2D, Transform3D};
 use internal_types::{ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE};
@@ -105,7 +105,7 @@ pub struct DebugRenderer {
 }
 
 impl DebugRenderer {
-    pub fn new(device: &mut Device) -> DebugRenderer {
+    pub fn new(device: &mut Device) -> Self {
         let font_program = device.create_program("debug_font", "", &DESC_FONT).unwrap();
         device.bind_shader_samplers(&font_program, &[("sColor0", DebugSampler::Font)]);
 
@@ -263,7 +263,6 @@ impl DebugRenderer {
     }
 
     pub fn render(&mut self, device: &mut Device, viewport_size: &DeviceUintSize) {
-        let _gm = GpuMarker::new(device.rc_gl(), "debug");
         device.disable_depth();
         device.set_blend(true);
         device.set_blend_mode_premultiplied_alpha();
