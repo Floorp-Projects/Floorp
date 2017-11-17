@@ -119,6 +119,16 @@ add_task(async function setup() {
   video.addEventListener("seeked", verifyExpectedEvent);
   document.addEventListener("mozfullscreenchange", verifyExpectedEvent);
 
+  ["mousedown", "mouseup", "dblclick", "click"]
+    .forEach((eventType) => {
+      window.addEventListener(eventType, (evt) => {
+        // Prevent default action of leaked events and make the tests fail.
+        evt.preventDefault();
+        ok(false, "Event " + eventType + " in videocontrol should not leak to content;" +
+          "the event was dispatched from the " + evt.target.tagName.toLowerCase() + " element.");
+      });
+    });
+
   // Check initial state upon load
   is(video.paused, true, "checking video play state");
   is(video.muted, false, "checking video mute state");
@@ -212,6 +222,13 @@ add_task(async function drag_slider() {
   const endDragX = scrubberOffsetX + (scrubberWidth / 2);
   const expectedTime = videoDuration / 2;
 
+  function mousemoved(evt) {
+    ok(false, "Mousemove event should not be handled by content while dragging; " +
+      "the event was dispatched from the " + evt.target.tagName.toLowerCase() + " element.");
+  }
+
+  window.addEventListener("mousemove", mousemoved);
+
   synthesizeMouse(video, beginDragX, scrubberCenterY, {type: "mousedown", button: 0});
   synthesizeMouse(video, endDragX, scrubberCenterY, {type: "mousemove", button: 0});
   synthesizeMouse(video, endDragX, scrubberCenterY, {type: "mouseup",   button: 0});
@@ -221,6 +238,8 @@ add_task(async function drag_slider() {
   // in duration and position box. We can not precisely drag to expected position, so
   // we just make sure the difference is within 10% of video duration.
   ok(Math.abs(video.currentTime - expectedTime) < videoDuration / 10, "checking expected playback position");
+
+  window.removeEventListener("mousemove", mousemoved);
 });
 
 /*

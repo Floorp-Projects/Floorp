@@ -145,6 +145,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLMediaElement,
                                            nsGenericHTMLElement)
 
+  // nsIDOMEventTarget
+  virtual nsresult
+  GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
+
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsAtom* aAttribute,
                               const nsAString& aValue,
