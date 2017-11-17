@@ -1055,7 +1055,7 @@ protected:
   /**
    * The resource-fetch algorithm step of the load algorithm.
    */
-  nsresult LoadResource();
+  MediaResult LoadResource();
 
   /**
    * Selects the next <source> child from which to load a resource. Called
