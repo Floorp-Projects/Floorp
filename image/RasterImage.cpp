@@ -498,7 +498,7 @@ RasterImage::OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded)
 
   if (aAnimatedFramesDiscarded && mAnimationState) {
     MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
-    mImageContainer = nullptr;
+    ReleaseImageContainer();
     gfx::IntRect rect =
       mAnimationState->UpdateState(mAnimationFinished, this, mSize);
     NotifyProgress(NoProgress, rect);
@@ -656,88 +656,7 @@ RasterImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 RasterImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aManager);
-  MOZ_ASSERT((aFlags & ~(FLAG_SYNC_DECODE |
-                         FLAG_SYNC_DECODE_IF_FAST |
-                         FLAG_ASYNC_NOTIFY))
-               == FLAG_NONE,
-             "Unsupported flag passed to GetImageContainer");
-
-  int32_t maxTextureSize = aManager->GetMaxTextureSize();
-  if (!mHasSize ||
-      mSize.width > maxTextureSize ||
-      mSize.height > maxTextureSize) {
-    return nullptr;
-  }
-
-  if (mAnimationConsumers == 0) {
-    SendOnUnlockedDraw(aFlags);
-  }
-
-  RefPtr<layers::ImageContainer> container = mImageContainer.get();
-
-  bool mustRedecode =
-    (aFlags & (FLAG_SYNC_DECODE | FLAG_SYNC_DECODE_IF_FAST)) &&
-    mLastImageContainerDrawResult != DrawResult::SUCCESS &&
-    mLastImageContainerDrawResult != DrawResult::BAD_IMAGE;
-
-  if (container && !mustRedecode) {
-    return container.forget();
-  }
-
-  // We need a new ImageContainer, so create one.
-  container = LayerManager::CreateImageContainer();
-
-  DrawResult drawResult;
-  RefPtr<layers::Image> image;
-  Tie(drawResult, image) = GetCurrentImage(container, aFlags);
-  if (!image) {
-    return nullptr;
-  }
-
-#ifdef DEBUG
-  NotifyDrawingObservers();
-#endif
-
-  // |image| holds a reference to a SourceSurface which in turn holds a lock on
-  // the current frame's data buffer, ensuring that it doesn't get freed as
-  // long as the layer system keeps this ImageContainer alive.
-  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
-  imageList.AppendElement(ImageContainer::NonOwningImage(image, TimeStamp(),
-                                                         mLastFrameID++,
-                                                         mImageProducerID));
-  container->SetCurrentImagesInTransaction(imageList);
-
-  mLastImageContainerDrawResult = drawResult;
-  mImageContainer = container;
-
-  return container.forget();
-}
-
-void
-RasterImage::UpdateImageContainer()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<layers::ImageContainer> container = mImageContainer.get();
-  if (!container) {
-    return;
-  }
-
-  DrawResult drawResult;
-  RefPtr<layers::Image> image;
-  Tie(drawResult, image) = GetCurrentImage(container, FLAG_NONE);
-  if (!image) {
-    return;
-  }
-
-  mLastImageContainerDrawResult = drawResult;
-  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
-  imageList.AppendElement(ImageContainer::NonOwningImage(image, TimeStamp(),
-                                                         mLastFrameID++,
-                                                         mImageProducerID));
-  container->SetCurrentImages(imageList);
+  return GetImageContainerImpl(aManager, mSize, aFlags);
 }
 
 size_t
@@ -1123,7 +1042,7 @@ RasterImage::Discard()
   SurfaceCache::RemoveImage(ImageKey(this));
 
   if (mAnimationState) {
-    mImageContainer = nullptr;
+    ReleaseImageContainer();
     gfx::IntRect rect =
       mAnimationState->UpdateState(mAnimationFinished, this, mSize);
     NotifyProgress(NoProgress, rect);

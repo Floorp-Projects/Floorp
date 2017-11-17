@@ -4,8 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Image.h"
+#include "Layers.h"               // for LayerManager
 #include "nsRefreshDriver.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Tuple.h"        // for Tie
 
 namespace mozilla {
 namespace image {
@@ -49,6 +51,99 @@ ImageMemoryCounter::ImageMemoryCounter(Image* aImage,
 ///////////////////////////////////////////////////////////////////////////////
 // Image Base Types
 ///////////////////////////////////////////////////////////////////////////////
+
+already_AddRefed<ImageContainer>
+ImageResource::GetImageContainerImpl(LayerManager* aManager,
+                                     const IntSize& aSize,
+                                     uint32_t aFlags)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aManager);
+  MOZ_ASSERT((aFlags & ~(FLAG_SYNC_DECODE |
+                         FLAG_SYNC_DECODE_IF_FAST |
+                         FLAG_ASYNC_NOTIFY))
+               == FLAG_NONE,
+             "Unsupported flag passed to GetImageContainer");
+
+  if (!IsImageContainerAvailable(aManager, aFlags)) {
+    return nullptr;
+  }
+
+  if (mAnimationConsumers == 0) {
+    SendOnUnlockedDraw(aFlags);
+  }
+
+  RefPtr<layers::ImageContainer> container = mImageContainer.get();
+
+  bool mustRedecode =
+    (aFlags & (FLAG_SYNC_DECODE | FLAG_SYNC_DECODE_IF_FAST)) &&
+    mLastImageContainerDrawResult != DrawResult::SUCCESS &&
+    mLastImageContainerDrawResult != DrawResult::BAD_IMAGE;
+
+  if (container && !mustRedecode) {
+    return container.forget();
+  }
+
+  // We need a new ImageContainer, so create one.
+  container = LayerManager::CreateImageContainer();
+
+  DrawResult drawResult;
+  RefPtr<layers::Image> image;
+  Tie(drawResult, image) = GetCurrentImage(container, aFlags);
+  if (!image) {
+    return nullptr;
+  }
+
+#ifdef DEBUG
+  NotifyDrawingObservers();
+#endif
+
+  // |image| holds a reference to a SourceSurface which in turn holds a lock on
+  // the current frame's data buffer, ensuring that it doesn't get freed as
+  // long as the layer system keeps this ImageContainer alive.
+  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
+  imageList.AppendElement(ImageContainer::NonOwningImage(image, TimeStamp(),
+                                                         mLastFrameID++,
+                                                         mImageProducerID));
+  container->SetCurrentImagesInTransaction(imageList);
+
+  mLastImageContainerDrawResult = drawResult;
+  mImageContainer = container;
+
+  return container.forget();
+}
+
+void
+ImageResource::UpdateImageContainer()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<layers::ImageContainer> container = mImageContainer.get();
+  if (!container) {
+    return;
+  }
+
+  DrawResult drawResult;
+  RefPtr<layers::Image> image;
+  Tie(drawResult, image) = GetCurrentImage(container, FLAG_NONE);
+  if (!image) {
+    return;
+  }
+
+  mLastImageContainerDrawResult = drawResult;
+  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
+  imageList.AppendElement(ImageContainer::NonOwningImage(image, TimeStamp(),
+                                                         mLastFrameID++,
+                                                         mImageProducerID));
+  container->SetCurrentImages(imageList);
+}
+
+void
+ImageResource::ReleaseImageContainer()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mImageContainer = nullptr;
+}
 
 // Constructor
 ImageResource::ImageResource(ImageURL* aURI) :
