@@ -199,6 +199,7 @@ WebAuthnManager::ClearTransaction()
   }
 
   mTransaction.reset();
+  Unfollow();
 }
 
 void
@@ -289,7 +290,8 @@ WebAuthnManager::Get()
 
 already_AddRefed<Promise>
 WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
-                                const MakePublicKeyCredentialOptions& aOptions)
+                                const MakePublicKeyCredentialOptions& aOptions,
+                                const Optional<OwningNonNull<AbortSignal>>& aSignal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aParent);
@@ -304,6 +306,12 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   RefPtr<Promise> promise = Promise::Create(global, rv);
   if (rv.Failed()) {
     return nullptr;
+  }
+
+  // Abort the request if aborted flag is already set.
+  if (aSignal.WasPassed() && aSignal.Value().Aborted()) {
+    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return promise.forget();
   }
 
   nsString origin;
@@ -475,11 +483,18 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
 
   ListenForVisibilityEvents(aParent, this);
 
+  AbortSignal* signal = nullptr;
+  if (aSignal.WasPassed()) {
+    signal = &aSignal.Value();
+    Follow(signal);
+  }
+
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(WebAuthnTransaction(aParent,
                                           promise,
                                           Move(info),
-                                          Move(clientDataJSON)));
+                                          Move(clientDataJSON),
+                                          signal));
 
   mChild->SendRequestRegister(mTransaction.ref().mId, mTransaction.ref().mInfo);
   return promise.forget();
@@ -487,7 +502,8 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
 
 already_AddRefed<Promise>
 WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
-                              const PublicKeyCredentialRequestOptions& aOptions)
+                              const PublicKeyCredentialRequestOptions& aOptions,
+                              const Optional<OwningNonNull<AbortSignal>>& aSignal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aParent);
@@ -502,6 +518,12 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   RefPtr<Promise> promise = Promise::Create(global, rv);
   if (rv.Failed()) {
     return nullptr;
+  }
+
+  // Abort the request if aborted flag is already set.
+  if (aSignal.WasPassed() && aSignal.Value().Aborted()) {
+    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return promise.forget();
   }
 
   nsString origin;
@@ -624,11 +646,18 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
 
   ListenForVisibilityEvents(aParent, this);
 
+  AbortSignal* signal = nullptr;
+  if (aSignal.WasPassed()) {
+    signal = &aSignal.Value();
+    Follow(signal);
+  }
+
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(WebAuthnTransaction(aParent,
                                           promise,
                                           Move(info),
-                                          Move(clientDataJSON)));
+                                          Move(clientDataJSON),
+                                          signal));
 
   mChild->SendRequestSign(mTransaction.ref().mId, mTransaction.ref().mInfo);
   return promise.forget();
@@ -908,6 +937,12 @@ WebAuthnManager::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   return NS_OK;
+}
+
+void
+WebAuthnManager::Abort()
+{
+  CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
 }
 
 void
