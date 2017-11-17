@@ -202,7 +202,6 @@ CloneableWithRangeMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset,
     return rv;
   }
 
-  mCurrentPosition = bytes + aOffset;
   return bytes == aCount ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -223,14 +222,7 @@ CloneableWithRangeMediaResource::ReadAt(int64_t aOffset, char* aBuffer,
     return rv;
   }
 
-  mCurrentPosition = *aBytes + aOffset;
   return NS_OK;
-}
-
-int64_t CloneableWithRangeMediaResource::Tell()
-{
-  MaybeInitialize();
-  return mCurrentPosition;
 }
 
 } // mozilla namespace

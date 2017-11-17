@@ -1200,7 +1200,6 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       // 3.4 WebVTT region and WebVTT region settings syntax
       function parseRegion(input) {
         var settings = new Settings();
-
         parseOptions(input, function (k, v) {
           switch (k) {
           case "id":
@@ -1275,6 +1274,16 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
         }
       }
 
+      function parseRegionOrStyle(input) {
+        switch (self.substate) {
+          case "REGION":
+            parseRegion(input);
+          break;
+          case "STYLE":
+            // TODO : not supported yet.
+          break;
+        }
+      }
       // Parsing the region and style information.
       // See spec, https://w3c.github.io/webvtt/#collect-a-webvtt-block
       //
@@ -1290,33 +1299,46 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
         let line = null;
         while (self.buffer && self.state === "HEADER") {
           line = collectNextLine();
+          var tempStr = "";
+          if (/^REGION|^STYLE/.test(line)) {
+            self.substate = /^REGION/.test(line) ? "REGION" : "STYLE";
 
-          if (/^REGION|^STYLE/i.test(line)) {
-            parseOptions(line, function (k, v) {
-              switch (k.toUpperCase()) {
-              case "REGION":
-                parseRegion(v);
+            while (true) {
+              line = collectNextLine();
+              if (!line || maybeIsTimeStampFormat(line) || onlyContainsWhiteSpaces(line) || containsTimeDirectionSymbol(line)) {
+                // parse the tempStr and break the while loop.
+                parseRegionOrStyle(tempStr);
                 break;
-              case "STYLE":
-                // TODO : not supported yet.
-                break;
+              } else if (/^REGION|^STYLE/.test(line)) {
+                // The line is another REGION/STYLE, parse tempStr then reset tempStr.
+                // Don't break the while loop to parse the next REGION/STYLE.
+                parseRegionOrStyle(tempStr);
+                self.substate = /^REGION/.test(line) ? "REGION" : "STYLE";
+                tempStr = "";
+              } else {
+                tempStr += line;;
               }
-            }, ":");
-          } else if (maybeIsTimeStampFormat(line)) {
+            }
+          }
+
+          if (maybeIsTimeStampFormat(line)) {
             self.state = "CUE";
             break;
-          } else if (!line ||
-                     onlyContainsWhiteSpaces(line) ||
-                     containsTimeDirectionSymbol(line)) {
-            // empty line, whitespaces or string contains "-->"
+          } else if (containsTimeDirectionSymbol(line)) {
+            // string contains "-->"
+            break;
+          } else if (!line || onlyContainsWhiteSpaces(line)) {
+            // empty line, whitespaces
+            continue;
+          } else {
+            //It is an ID.
             break;
           }
-        }
+        } // self.state === "HEADER"
 
         // End parsing header part and doesn't see the timestamp.
         if (self.state === "HEADER") {
           self.state = "ID";
-          line = null
         }
         return line;
       }
@@ -1378,8 +1400,9 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
             break;
           case "BADCUE": // BADCUE
             // 54-62 - Collect and discard the remaining cue.
-            if (!line) {
-              self.state = "ID";
+            self.state = "ID";
+            if (line) { // keep this line to ID state.
+              continue;
             }
             break;
           }

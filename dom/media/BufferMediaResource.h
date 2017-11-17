@@ -22,7 +22,6 @@ public:
   BufferMediaResource(const uint8_t* aBuffer, uint32_t aLength)
     : mBuffer(aBuffer)
     , mLength(aLength)
-    , mOffset(0)
   {
   }
 
@@ -41,13 +40,10 @@ private:
     }
     *aBytes = std::min(mLength - static_cast<uint32_t>(aOffset), aCount);
     memcpy(aBuffer, mBuffer + aOffset, *aBytes);
-    mOffset = aOffset + *aBytes;
     return NS_OK;
   }
   // Memory-based and no locks, caching discouraged.
   bool ShouldCacheReads() override { return false; }
-
-  int64_t Tell() override { return mOffset; }
 
   void Pin() override {}
   void Unpin() override {}
@@ -80,7 +76,6 @@ private:
 private:
   const uint8_t * mBuffer;
   uint32_t mLength;
-  uint32_t mOffset;
 };
 
 } // namespace mozilla

@@ -204,6 +204,7 @@ LOCAL_INCLUDES += [
     '../svg',
     '../tables',
     '../xul',
+    '/docshell/base',
     '/dom/base',
     '/dom/html',
     '/dom/xul',

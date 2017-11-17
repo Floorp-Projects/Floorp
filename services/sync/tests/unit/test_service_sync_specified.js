@@ -90,7 +90,7 @@ add_task(async function test_noEngines() {
 
   try {
     _("Sync with no engines specified.");
-    await Service.sync([]);
+    await Service.sync({engines: []});
     deepEqual(syncedEngines, [], "no engines were synced");
 
   } finally {
@@ -108,7 +108,7 @@ add_task(async function test_oneEngine() {
   try {
 
     _("Sync with 1 engine specified.");
-    await Service.sync(["steam"]);
+    await Service.sync({engines: ["steam"]});
     deepEqual(syncedEngines, ["steam"]);
 
   } finally {
@@ -125,7 +125,7 @@ add_task(async function test_bothEnginesSpecified() {
 
   try {
     _("Sync with both engines specified.");
-    await Service.sync(["steam", "stirling"]);
+    await Service.sync({engines: ["steam", "stirling"]});
     deepEqual(syncedEngines, ["steam", "stirling"]);
 
   } finally {
@@ -142,7 +142,7 @@ add_task(async function test_bothEnginesSpecified() {
 
   try {
     _("Sync with both engines specified.");
-    await Service.sync(["stirling", "steam"]);
+    await Service.sync({engines: ["stirling", "steam"]});
     deepEqual(syncedEngines, ["stirling", "steam"]);
 
   } finally {

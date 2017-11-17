@@ -82,6 +82,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
                 'clean-repos',
                 'pull',
                 'lock-update-paths',
+                'set_push_to_ssh',
                 'migrate',
                 'bump_second_digit',
                 'commit-changes',
@@ -90,6 +91,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             default_actions=[
                 'clean-repos',
                 'pull',
+                'set_push_to_ssh',
                 'migrate',
             ],
             require_config_file=require_config_file
@@ -185,6 +187,16 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             return ['--new-branch', '-r', '.']
         else:
             return ['-r', '.']
+
+    def set_push_to_ssh(self):
+        for cwd in self.query_push_dirs():
+            repo_url = self.read_repo_hg_rc(cwd).get('paths', 'default')
+            push_dest = repo_url.replace('https://', 'ssh://')
+
+            if not push_dest.startswith('ssh://'):
+                raise Exception('Warning: path "{}" is not supported. Protocol must be ssh')
+
+            self.edit_repo_hg_rc(cwd, 'paths', 'default-push', push_dest)
 
     def query_from_revision(self):
         """ Shortcut to get the revision for the from repo

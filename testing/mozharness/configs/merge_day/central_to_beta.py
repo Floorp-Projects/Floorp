@@ -60,8 +60,8 @@ config = {
     # "hg_share_base": None,
     "tools_repo_url": "https://hg.mozilla.org/build/tools",
     "tools_repo_branch": "default",
-    "from_repo_url": "ssh://hg.mozilla.org/mozilla-central",
-    "to_repo_url": "ssh://hg.mozilla.org/releases/mozilla-beta",
+    "from_repo_url": "https://hg.mozilla.org/mozilla-central",
+    "to_repo_url": "https://hg.mozilla.org/releases/mozilla-beta",
 
     "base_tag": "FIREFOX_BETA_%(major_version)s_BASE",
     "end_tag": "FIREFOX_BETA_%(major_version)s_END",

@@ -36,13 +36,13 @@ public:
   public:
     MockAccessibleCaret() : AccessibleCaret(nullptr) {}
 
-    virtual void SetAppearance(Appearance aAppearance) override
+    void SetAppearance(Appearance aAppearance) override
     {
       // A simplified version without touching CaretElement().
       mAppearance = aAppearance;
     }
 
-    virtual void SetSelectionBarEnabled(bool aEnabled) override
+    void SetSelectionBarEnabled(bool aEnabled) override
     {
       // A simplified version without touching CaretElement().
       mSelectionBarEnabled = aEnabled;
@@ -80,22 +80,22 @@ public:
       return static_cast<MockAccessibleCaret&>(*mSecondCaret);
     }
 
-    virtual bool CompareTreePosition(nsIFrame* aStartFrame,
-                                     nsIFrame* aEndFrame) const override
+    bool CompareTreePosition(nsIFrame* aStartFrame,
+                             nsIFrame* aEndFrame) const override
     {
       return true;
     }
 
-    virtual bool IsCaretDisplayableInCursorMode(
-      nsIFrame** aOutFrame = nullptr, int32_t* aOutOffset = nullptr) const override
+    bool IsCaretDisplayableInCursorMode(nsIFrame** aOutFrame = nullptr,
+                                        int32_t* aOutOffset = nullptr) const override
     {
       return true;
     }
 
-    virtual bool UpdateCaretsForOverlappingTilt() override { return true; }
+    bool UpdateCaretsForOverlappingTilt() override { return true; }
 
-    virtual void UpdateCaretsForAlwaysTilt(nsIFrame* aStartFrame,
-                                           nsIFrame* aEndFrame)
+    void UpdateCaretsForAlwaysTilt(nsIFrame* aStartFrame,
+                                   nsIFrame* aEndFrame) override
     {
       if (mFirstCaret->IsVisuallyVisible()) {
         mFirstCaret->SetAppearance(Appearance::Left);
@@ -105,7 +105,7 @@ public:
       }
     }
 
-    virtual bool IsTerminated() const override { return false; }
+    bool IsTerminated() const override { return false; }
 
     MOCK_CONST_METHOD0(GetCaretMode, CaretMode());
     MOCK_CONST_METHOD1(DispatchCaretStateChangedEvent,

@@ -43,6 +43,7 @@
 #include "Visibility.h"
 #include "nsChangeHint.h"
 #include "nsStyleContextInlines.h"
+#include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "nsDisplayItemTypes.h"
 
@@ -4144,6 +4145,8 @@ public:
 
   bool BuiltBlendContainer() { return mBuiltBlendContainer; }
   void SetBuiltBlendContainer(bool aBuilt) { mBuiltBlendContainer = aBuilt; }
+
+  mozilla::gfx::CompositorHitTestInfo GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder);
 
 protected:
   static void DestroyAnonymousContent(nsPresContext* aPresContext,

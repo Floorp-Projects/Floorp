@@ -32,6 +32,7 @@ import com.leanplum.LeanplumActivityHelper;
 import com.leanplum.callbacks.ActionCallback;
 import com.leanplum.callbacks.PostponableAction;
 import com.leanplum.callbacks.VariablesChangedCallback;
+import com.leanplum.utils.SizeUtil;
 
 /**
  * Registers a Leanplum action that displays a HTML message.
@@ -50,10 +51,12 @@ public class HTMLTemplate extends BaseMessageDialog {
   @Override
   public boolean dispatchTouchEvent(@NonNull MotionEvent ev) {
     if (!htmlOptions.isFullScreen()) {
+      int height = SizeUtil.dpToPx(Leanplum.getContext(), htmlOptions.getHtmlHeight());
+      int statusBarHeight = SizeUtil.getStatusBarHeight(Leanplum.getContext());
       if (htmlOptions.getHtmlAlign().equals(MessageTemplates.Args.HTML_ALIGN_TOP) && ev.getY()
-          > htmlOptions.getHtmlHeight() ||
+          > height + statusBarHeight ||
           htmlOptions.getHtmlAlign().equals(MessageTemplates.Args.HTML_ALIGN_BOTTOM) && ev.getY()
-              < dialogView.getHeight() - htmlOptions.getHtmlHeight()) {
+              < dialogView.getHeight() + statusBarHeight - height) {
         activity.dispatchTouchEvent(ev);
       }
     }

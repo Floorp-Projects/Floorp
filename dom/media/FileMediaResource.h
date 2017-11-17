@@ -45,7 +45,6 @@ public:
                   uint32_t aCount, uint32_t* aBytes) override;
   // (Probably) file-based, caching recommended.
   bool ShouldCacheReads() override { return true; }
-  int64_t  Tell() override;
 
   // Any thread
   void    Pin() override {}

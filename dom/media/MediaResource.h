@@ -69,12 +69,6 @@ public:
   // each read.
   virtual bool ShouldCacheReads() = 0;
 
-  // Report the current offset in bytes from the start of the stream.
-  // This is used to approximate where we currently are in the playback of a
-  // media.
-  // A call to ReadAt will update this position.
-  virtual int64_t Tell() = 0;
-
   // These can be called on any thread.
   // Cached blocks associated with this stream will not be evicted
   // while the stream is pinned.

@@ -67,10 +67,6 @@ SourceBufferResource::ReadAtInternal(int64_t aOffset,
   uint32_t available = GetLength() - aOffset;
   uint32_t count = std::min(aCount, available);
 
-  // Keep the position of the last read to have Tell() approximately give us
-  // the position we're up to in the stream.
-  mOffset = aOffset + count;
-
   SBR_DEBUGV("offset=%" PRId64 " GetLength()=%" PRId64
              " available=%u count=%u mEnded=%d",
              aOffset,
@@ -160,12 +156,7 @@ SourceBufferResource::~SourceBufferResource()
 SourceBufferResource::SourceBufferResource()
 #if defined(DEBUG)
   : mTaskQueue(AbstractThread::GetCurrent()->AsTaskQueue())
-  , mOffset(0)
-#else
-  : mOffset(0)
 #endif
-  , mClosed(false)
-  , mEnded(false)
 {
   SBR_DEBUG("");
 }

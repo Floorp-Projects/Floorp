@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import errno
 import getpass
 import io
 import json
@@ -1337,21 +1338,66 @@ class BuildDriver(MozbuildObject):
         if self._check_clobber(mozconfig, os.environ):
             return 1
 
+        mozconfig_make_lines = []
+        for arg in mozconfig['make_extra'] or []:
+            mozconfig_make_lines.append(arg)
+
+        if mozconfig['make_flags']:
+            mozconfig_make_lines.append(b'MOZ_MAKE_FLAGS=%s' %
+                                        b' '.join(mozconfig['make_flags']))
+        objdir = mozpath.normsep(self.topobjdir)
+        mozconfig_make_lines.append(b'MOZ_OBJDIR=%s' % objdir)
+        mozconfig_make_lines.append(b'OBJDIR=%s' % objdir)
+
+        if mozconfig['path']:
+            mozconfig_make_lines.append(b'FOUND_MOZCONFIG=%s' %
+                                        mozpath.normsep(mozconfig['path']))
+            mozconfig_make_lines.append(b'export FOUND_MOZCONFIG')
+
+        # The .mozconfig.mk file only contains exported variables and lines with
+        # UPLOAD_EXTRA_FILES.
+        mozconfig_filtered_lines = [
+            line for line in mozconfig_make_lines
+            # Bug 1418122 investigate why UPLOAD_EXTRA_FILES is special and
+            # remove it.
+            if line.startswith(b'export ') or b'UPLOAD_EXTRA_FILES' in line
+        ]
+
         mozconfig_client_mk = os.path.join(self.topobjdir,
                                            '.mozconfig-client-mk')
         with FileAvoidWrite(mozconfig_client_mk) as fh:
-            for arg in mozconfig['make_extra'] or []:
-                fh.write(arg)
-                fh.write(b'\n')
-            if mozconfig['make_flags']:
-                fh.write(b'MOZ_MAKE_FLAGS=%s\n' % b' '.join(mozconfig['make_flags']))
-            objdir = mozpath.normsep(self.topobjdir)
-            fh.write(b'MOZ_OBJDIR=%s\n' % objdir)
-            fh.write(b'OBJDIR=%s\n' % objdir)
-            if mozconfig['path']:
-                fh.write(b'FOUND_MOZCONFIG=%s\n' %
-                         mozpath.normsep(mozconfig['path']))
-                fh.write(b'export FOUND_MOZCONFIG\n')
+            fh.write(b'\n'.join(mozconfig_make_lines))
+
+        mozconfig_mk = os.path.join(self.topobjdir, '.mozconfig.mk')
+        with FileAvoidWrite(mozconfig_mk) as fh:
+            fh.write(b'\n'.join(mozconfig_filtered_lines))
+
+        mozconfig_json = os.path.join(self.topobjdir, '.mozconfig.json')
+        with FileAvoidWrite(mozconfig_json) as fh:
+            json.dump({
+                'topsrcdir': self.topsrcdir,
+                'topobjdir': self.topobjdir,
+                'mozconfig': mozconfig,
+            }, fh, sort_keys=True, indent=2)
+
+        # Copy the original mozconfig to the objdir.
+        mozconfig_objdir = os.path.join(self.topobjdir, '.mozconfig')
+        if mozconfig['path']:
+            with open(mozconfig['path'], 'rb') as ifh:
+                with FileAvoidWrite(mozconfig_objdir) as ofh:
+                    ofh.write(ifh.read())
+        else:
+            try:
+                os.unlink(mozconfig_objdir)
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
+
+        if mozconfig_make_lines:
+            self.log(logging.WARNING, 'mozconfig_content', {
+                'path': mozconfig['path'],
+                'content': '\n    '.join(mozconfig_make_lines),
+            }, 'Adding make options from {path}\n    {content}')
 
         append_env['OBJDIR'] = mozpath.normsep(self.topobjdir)
 

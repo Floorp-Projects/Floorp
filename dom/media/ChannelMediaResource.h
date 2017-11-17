@@ -124,7 +124,6 @@ public:
                   uint32_t aCount, uint32_t* aBytes) override;
   // Data stored in IO&lock-encumbered MediaCacheStream, caching recommended.
   bool ShouldCacheReads() override { return true; }
-  int64_t Tell() override;
 
   // Any thread
   void    Pin() override;

@@ -161,7 +161,7 @@ let SyncedTabsInternal = {
     // Ask Sync to just do the tabs engine if it can.
     try {
       log.info("Doing a tab sync.");
-      await Weave.Service.sync(["tabs"]);
+      await Weave.Service.sync({why: "tabs", engines: ["tabs"]});
       return true;
     } catch (ex) {
       log.error("Sync failed", ex);

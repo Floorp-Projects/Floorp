@@ -455,7 +455,7 @@ add_task(async function withIframe() {
   let onCommandCallCount = 0;
   let onPlacedInPanelCallCount = 0;
   let onPlacedInUrlbarCallCount = 0;
-  let onIframeShownCount = 0;
+  let onIframeShowingCount = 0;
 
   let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
   let urlbarButtonID = BrowserPageActions.urlbarButtonNodeIDForActionID(id);
@@ -469,8 +469,8 @@ add_task(async function withIframe() {
     onCommand(event, buttonNode) {
       onCommandCallCount++;
     },
-    onIframeShown(iframeNode, panelNode) {
-      onIframeShownCount++;
+    onIframeShowing(iframeNode, panelNode) {
+      onIframeShowingCount++;
       Assert.ok(iframeNode, "iframeNode should be non-null: " + iframeNode);
       Assert.equal(iframeNode.localName, "iframe", "iframe localName");
       Assert.ok(panelNode, "panelNode should be non-null: " + panelNode);
@@ -496,8 +496,8 @@ add_task(async function withIframe() {
                "onPlacedInPanelCallCount should be inc'ed");
   Assert.equal(onPlacedInUrlbarCallCount, 1,
                "onPlacedInUrlbarCallCount should be inc'ed");
-  Assert.equal(onIframeShownCount, 0,
-               "onIframeShownCount should remain 0");
+  Assert.equal(onIframeShowingCount, 0,
+               "onIframeShowingCount should remain 0");
   Assert.equal(onCommandCallCount, 0,
                "onCommandCallCount should remain 0");
 
@@ -519,11 +519,11 @@ add_task(async function withIframe() {
 
   // Open the panel, click the action's button.
   await promisePageActionPanelOpen();
-  Assert.equal(onIframeShownCount, 0, "onIframeShownCount should remain 0");
+  Assert.equal(onIframeShowingCount, 0, "onIframeShowingCount should remain 0");
   EventUtils.synthesizeMouseAtCenter(panelButtonNode, {});
   await promisePanelShown(BrowserPageActions._activatedActionPanelID);
   Assert.equal(onCommandCallCount, 0, "onCommandCallCount should remain 0");
-  Assert.equal(onIframeShownCount, 1, "onIframeShownCount should be inc'ed");
+  Assert.equal(onIframeShowingCount, 1, "onIframeShowingCount should be inc'ed");
 
   // The activated-action panel should have opened, anchored to the action's
   // urlbar button.
@@ -538,7 +538,7 @@ add_task(async function withIframe() {
   EventUtils.synthesizeMouseAtCenter(urlbarButtonNode, {});
   await promisePanelShown(BrowserPageActions._activatedActionPanelID);
   Assert.equal(onCommandCallCount, 0, "onCommandCallCount should remain 0");
-  Assert.equal(onIframeShownCount, 2, "onIframeShownCount should be inc'ed");
+  Assert.equal(onIframeShowingCount, 2, "onIframeShowingCount should be inc'ed");
 
   // The activated-action panel should have opened, again anchored to the
   // action's urlbar button.
@@ -558,7 +558,7 @@ add_task(async function withIframe() {
   EventUtils.synthesizeMouseAtCenter(panelButtonNode, {});
   await promisePanelShown(BrowserPageActions._activatedActionPanelID);
   Assert.equal(onCommandCallCount, 0, "onCommandCallCount should remain 0");
-  Assert.equal(onIframeShownCount, 3, "onIframeShownCount should be inc'ed");
+  Assert.equal(onIframeShowingCount, 3, "onIframeShowingCount should be inc'ed");
 
   // The activated-action panel should have opened, this time anchored to the
   // main page action button in the urlbar.

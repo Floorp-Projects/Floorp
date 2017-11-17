@@ -79,6 +79,9 @@ add_task(async function test_cookies() {
       storeId: STORE_ID,
     };
 
+    // Remove all cookies before starting the test.
+    await browser.browsingData.removeCookies({});
+
     let cookie = await browser.cookies.set({url: TEST_URL, name: "name1", value: "value1", expirationDate: THE_FUTURE});
     assertExpected(expected, cookie);
 
@@ -259,7 +262,7 @@ add_task(async function test_cookies() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      permissions: ["cookies", "*://example.org/", "webNavigation"],
+      permissions: ["cookies", "*://example.org/", "webNavigation", "browsingData"],
     },
   });
 

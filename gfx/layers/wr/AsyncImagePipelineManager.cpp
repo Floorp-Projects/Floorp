@@ -289,7 +289,7 @@ AsyncImagePipelineManager::ApplyAsyncImages()
 
     float opacity = 1.0f;
     builder.PushStackingContext(wr::ToLayoutRect(pipeline->mScBounds),
-                                0,
+                                nullptr,
                                 &opacity,
                                 pipeline->mScTransform.IsIdentity() ? nullptr : &pipeline->mScTransform,
                                 wr::TransformStyle::Flat,

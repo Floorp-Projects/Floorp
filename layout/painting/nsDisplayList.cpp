@@ -82,7 +82,6 @@
 #include "nsDOMTokenList.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "nsCSSProps.h"
-#include "nsPluginFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsTableColFrame.h"
@@ -963,6 +962,11 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mInInvalidSubtree(false)
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
+
+  mBuildCompositorHitTestInfo = gfxVars::UseWebRender()
+      && gfxPrefs::WebRenderHitTest()
+      && mAsyncPanZoomEnabled
+      && mMode == nsDisplayListBuilderMode::PAINTING;
 
   nsPresContext* pc = aReferenceFrame->PresContext();
   nsIPresShell *shell = pc->PresShell();
@@ -4829,36 +4833,83 @@ nsDisplayEventReceiver::HitTest(nsDisplayListBuilder* aBuilder,
   aOutFrames->AppendElement(mFrame);
 }
 
+bool
+nsDisplayEventReceiver::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                const StackingContextHelper& aSc,
+                                                mozilla::layers::WebRenderLayerManager* aManager,
+                                                nsDisplayListBuilder* aDisplayListBuilder)
+{
+  // This display item should never be getting created when building a display
+  // list for WebRender consumption, so this function should never get called.
+  MOZ_ASSERT(false);
+  return true;
+}
+
+bool
+nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                        const StackingContextHelper& aSc,
+                                                        mozilla::layers::WebRenderLayerManager* aManager,
+                                                        nsDisplayListBuilder* aDisplayListBuilder)
+{
+  nsRect borderBox;
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(mFrame);
+  if (scrollFrame) {
+    // If the frame is content of a scrollframe, then we need to pick up the
+    // area corresponding to the overflow rect as well. Otherwise the parts of
+    // the overflow that are not occupied by descendants get skipped and the
+    // APZ code sends touch events to the content underneath instead.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
+    borderBox = mFrame->GetScrollableOverflowRect();
+  } else {
+    borderBox = nsRect(nsPoint(0, 0), mFrame->GetSize());
+  }
+
+  if (borderBox.IsEmpty()) {
+    return true;
+  }
+
+  wr::LayoutRect rect = aSc.ToRelativeLayoutRect(
+      LayoutDeviceRect::FromAppUnits(
+          borderBox + aDisplayListBuilder->ToReferenceFrame(mFrame),
+          mFrame->PresContext()->AppUnitsPerDevPixel()));
+
+  // XXX: eventually this scrollId computation and the SetHitTestInfo
+  // call will get moved out into the WR display item iteration code so that
+  // we don't need to do it as often, and so that we can do it for other
+  // display item types as well (reducing the need for as many instances of
+  // this display item).
+  FrameMetrics::ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
+  if (const ActiveScrolledRoot* asr = GetActiveScrolledRoot()) {
+    scrollId = nsLayoutUtils::ViewIDForASR(asr);
+  }
+
+  // Insert a transparent rectangle with the hit-test info
+  aBuilder.SetHitTestInfo(scrollId, mHitTestInfo);
+  aBuilder.PushRect(rect, rect, true, wr::ToColorF(gfx::Color()));
+  aBuilder.ClearHitTestInfo();
+
+  return true;
+}
+
+void
+nsDisplayCompositorHitTestInfo::WriteDebugInfo(std::stringstream& aStream)
+{
+  aStream << nsPrintfCString(" (hitTestInfo 0x%x)", (int)mHitTestInfo).get();
+}
+
 void
 nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame)
 {
   NS_ASSERTION(aBuilder->FindReferenceFrameFor(aFrame) == aBuilder->FindReferenceFrameFor(mFrame),
                "Reference frame mismatch");
-  if (aBuilder->IsInsidePointerEventsNoneDoc()) {
-    // Somewhere up the parent document chain is a subdocument with pointer-
-    // events:none set on it.
+  CompositorHitTestInfo hitInfo =
+      aFrame->GetCompositorHitTestInfo(aBuilder);
+  if (hitInfo == CompositorHitTestInfo::eInvisibleToHitTest) {
     return;
   }
-  if (!aFrame->GetParent()) {
-    MOZ_ASSERT(aFrame->IsViewportFrame());
-    // Viewport frames are never event targets, other frames, like canvas frames,
-    // are the event targets for any regions viewport frames may cover.
-    return;
-  }
-
-  uint8_t pointerEvents =
-    aFrame->StyleUserInterface()->GetEffectivePointerEvents(aFrame);
-  if (pointerEvents == NS_STYLE_POINTER_EVENTS_NONE) {
-    return;
-  }
-  bool simpleRegions = aFrame->HasAnyStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS);
-  if (!simpleRegions) {
-    if (!aFrame->StyleVisibility()->IsVisible()) {
-      return;
-    }
-  }
-
 
   // XXX handle other pointerEvents values for SVG
 
@@ -4889,6 +4940,11 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
   borderBox += aBuilder->ToReferenceFrame(aFrame);
 
   bool borderBoxHasRoundedCorners = false;
+
+  // use the NS_FRAME_SIMPLE_EVENT_REGIONS to avoid calling the slightly
+  // expensive HasNonZeroCorner function if we know from a previous run that
+  // the frame has zero corners.
+  bool simpleRegions = aFrame->HasAnyStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS);
   if (!simpleRegions) {
     if (nsLayoutUtils::HasNonZeroCorner(aFrame->StyleBorder()->mBorderRadius)) {
       borderBoxHasRoundedCorners = true;
@@ -4914,39 +4970,25 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
     mHitRegion.Add(aFrame, borderBox);
   }
 
-  if (aBuilder->IsBuildingNonLayerizedScrollbar() ||
-      aBuilder->GetAncestorHasApzAwareEventHandler())
-  {
-    // Scrollbars may be painted into a layer below the actual layer they will
-    // scroll, and therefore wheel events may be dispatched to the outer frame
-    // instead of the intended scrollframe. To address this, we force a d-t-c
-    // region on scrollbar frames that won't be placed in their own layer. See
-    // bug 1213324 for details.
+  if (hitInfo & CompositorHitTestInfo::eDispatchToContent) {
     mDispatchToContentHitRegion.Add(aFrame, borderBox);
-  } else if (aFrame->IsObjectFrame()) {
-    // If the frame is a plugin frame and wants to handle wheel events as
-    // default action, we should add the frame to dispatch-to-content region.
-    nsPluginFrame* pluginFrame = do_QueryFrame(aFrame);
-    if (pluginFrame && pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
-      mDispatchToContentHitRegion.Add(aFrame, borderBox);
-    }
   }
 
   // Touch action region
 
-  nsIFrame* touchActionFrame = aFrame;
-  if (scrollFrame) {
-    touchActionFrame = do_QueryFrame(scrollFrame);
-  }
-  uint32_t touchAction = nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
-  if (touchAction != NS_STYLE_TOUCH_ACTION_AUTO) {
-    if (touchAction & NS_STYLE_TOUCH_ACTION_NONE) {
+  auto touchFlags = hitInfo & CompositorHitTestInfo::eTouchActionMask;
+  if (touchFlags) {
+    // something was disabled
+    if (touchFlags == CompositorHitTestInfo::eTouchActionMask) {
+      // everything was disabled, so touch-action:none
       mNoActionRegion.Add(aFrame, borderBox);
     } else {
-      if ((touchAction & NS_STYLE_TOUCH_ACTION_PAN_X)) {
+      if (!(hitInfo & CompositorHitTestInfo::eTouchActionPanXDisabled)) {
+        // pan-x is allowed
         mHorizontalPanRegion.Add(aFrame, borderBox);
       }
-      if ((touchAction & NS_STYLE_TOUCH_ACTION_PAN_Y)) {
+      if (!(hitInfo & CompositorHitTestInfo::eTouchActionPanYDisabled)) {
+        // pan-y is allowed
         mVerticalPanRegion.Add(aFrame, borderBox);
       }
     }
@@ -6510,10 +6552,14 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
   // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
   // are no active animations.
   uint64_t animationsId = animationInfo.GetCompositorAnimationsId();
+  wr::WrAnimationProperty prop;
 
   if (!animationInfo.GetAnimations().IsEmpty()) {
     opacityForSC = nullptr;
     OptionalOpacity opacityForCompositor = mOpacity;
+    prop.id = animationsId;
+    prop.effect_type = wr::WrAnimationType::Opacity;
+
 
     OpAddCompositorAnimations
       anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
@@ -6526,7 +6572,8 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
   }
 
   nsTArray<mozilla::wr::WrFilterOp> filters;
-  StackingContextHelper sc(aSc, aBuilder, filters, nullptr, animationsId,
+  StackingContextHelper sc(aSc, aBuilder, filters, nullptr,
+                           animationsId ? &prop : nullptr,
                            opacityForSC);
 
   aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(&mList,
@@ -6815,8 +6862,13 @@ nsDisplayOwnLayer::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
   animationInfo.EnsureAnimationsId();
   mWrAnimationId = animationInfo.GetCompositorAnimationsId();
 
-  StackingContextHelper sc(aSc, aBuilder, nsTArray<wr::WrFilterOp>(), nullptr,
-                           mWrAnimationId);
+
+  wr::WrAnimationProperty prop;
+  prop.id = mWrAnimationId;
+  prop.effect_type = wr::WrAnimationType::Transform;
+
+  StackingContextHelper sc(aSc, aBuilder, nsTArray<wr::WrFilterOp>(),
+                           nullptr, &prop);
 
   nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, sc,
                                              aManager, aDisplayListBuilder);
@@ -8324,12 +8376,15 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
   // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
   // are no active animations.
   uint64_t animationsId = animationInfo.GetCompositorAnimationsId();
-
+  wr::WrAnimationProperty prop;
   if (!animationInfo.GetAnimations().IsEmpty()) {
     // Update transfrom as nullptr in stacking context if there exists
     // transform animation, the transform value will be resolved
     // after animation sampling on the compositor
     transformForSC = nullptr;
+
+    prop.id = animationsId;
+    prop.effect_type = wr::WrAnimationType::Transform;
 
     // Pass default transform to compositor in case gecko fails to
     // get animated value after animation sampling.
@@ -8350,7 +8405,7 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            aBuilder,
                            filters,
                            &newTransformMatrix,
-                           animationsId,
+                           animationsId ? &prop : nullptr,
                            nullptr,
                            transformForSC,
                            nullptr,

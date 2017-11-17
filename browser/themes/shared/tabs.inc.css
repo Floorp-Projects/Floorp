@@ -66,7 +66,7 @@ tabbrowser {
   padding: 0 @horizontalTabPadding@;
 }
 
-.tab-content[pinned] {
+:root:not([uidensity=compact]) .tab-content[pinned] {
   padding: 0 12px;
 }
 
@@ -193,7 +193,7 @@ tabbrowser {
   100% { transform: translateX(100%); }
 }
 
-#TabsToolbar[brighttext] .tab-throbber[busy]:not([visuallyselected=true])::before {
+#TabsToolbar[brighttext] .tab-throbber[busy]:not([selected=true])::before {
   /* Don't change the --tab-loading-fill variable because this should only affect
      tabs that are not visually selected. */
   fill: #717171;
@@ -205,7 +205,7 @@ tabbrowser {
   opacity: 1;
 }
 
-#TabsToolbar[brighttext] .tab-throbber[progress]:not([visuallyselected=true])::before {
+#TabsToolbar[brighttext] .tab-throbber[progress]:not([selected=true])::before {
   /* Don't change the --tab-loading-fill variable because this should only affect
      tabs that are not visually selected. */
   fill: #84c1ff;
