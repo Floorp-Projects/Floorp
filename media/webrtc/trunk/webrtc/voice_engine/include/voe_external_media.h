@@ -106,7 +106,7 @@ class WEBRTC_DLLEXPORT VoEExternalMedia {
   // 48000 kHz sampling rates respectively).
   virtual int ExternalPlayoutData(
                                   int16_t speechData10ms[], int samplingFreqHz, int num_channels,
-                                  int current_delay_ms, int& lengthSamples) = 0;
+                                  int& lengthSamples) = 0;
 
   // This function gets audio for an external playout sink.
   // During transmission, this function should be called every ~10 ms

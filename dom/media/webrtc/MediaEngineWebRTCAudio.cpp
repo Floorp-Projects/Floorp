@@ -207,7 +207,6 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   , mSampleFrequency(MediaEngine::DEFAULT_SAMPLE_RATE)
   , mTotalFrames(0)
   , mLastLogFrames(0)
-  , mPlayoutDelay(0)
   , mNullTransport(nullptr)
   , mSkipProcessing(false)
   , mInputDownmixBuffer(MAX_SAMPLING_FREQ * MAX_CHANNELS / 100)
@@ -309,14 +308,11 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
   // Clamp channelCount to a valid value
   prefs.mChannels = std::max(1, std::min(prefs.mChannels, static_cast<int32_t>(maxChannels)));
 
-  LOG(("Audio config: aec: %d, agc: %d, noise: %d, delay: %d, channels: %d",
+  LOG(("Audio config: aec: %d, agc: %d, noise: %d, channels: %d",
       prefs.mAecOn ? prefs.mAec : -1,
       prefs.mAgcOn ? prefs.mAgc : -1,
       prefs.mNoiseOn ? prefs.mNoise : -1,
-      prefs.mPlayoutDelay,
       prefs.mChannels));
-
-  mPlayoutDelay = prefs.mPlayoutDelay;
 
   switch (mState) {
     case kReleased:
@@ -969,7 +965,6 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
       int res = mVoERender->ExternalPlayoutData(buffer->mData,
                                                 mAudioOutputObserver->PlayoutFrequency(),
                                                 mAudioOutputObserver->PlayoutChannels(),
-                                                mPlayoutDelay,
                                                 length);
       free(buffer);
       if (res == -1) {
