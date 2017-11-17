@@ -7,50 +7,51 @@
 "use strict";
 
 define(function (require, exports, module) {
-  const React = require("devtools/client/shared/vendor/react");
-  const DOM = React.DOM;
+  const { Component } = require("devtools/client/shared/vendor/react");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
   /**
    * Renders a simple toolbar.
    */
-  let Toolbar = React.createClass({
-    displayName: "Toolbar",
+  class Toolbar extends Component {
+    static get propTypes() {
+      return {
+        children: PropTypes.oneOfType([
+          PropTypes.array,
+          PropTypes.element
+        ])
+      };
+    }
 
-    propTypes: {
-      children: React.PropTypes.oneOfType([
-        React.PropTypes.array,
-        React.PropTypes.element
-      ])
-    },
-
-    render: function () {
+    render() {
       return (
-        DOM.div({className: "toolbar"},
+        dom.div({className: "toolbar"},
           this.props.children
         )
       );
     }
-  });
+  }
 
   /**
    * Renders a simple toolbar button.
    */
-  let ToolbarButton = React.createClass({
-    displayName: "ToolbarButton",
+  class ToolbarButton extends Component {
+    static get propTypes() {
+      return {
+        active: PropTypes.bool,
+        disabled: PropTypes.bool,
+        children: PropTypes.string,
+      };
+    }
 
-    propTypes: {
-      active: React.PropTypes.bool,
-      disabled: React.PropTypes.bool,
-      children: React.PropTypes.string,
-    },
-
-    render: function () {
+    render() {
       let props = Object.assign({className: "btn"}, this.props);
       return (
-        DOM.button(props, this.props.children)
+        dom.button(props, this.props.children)
       );
-    },
-  });
+    }
+  }
 
   // Exports from this module
   exports.Toolbar = Toolbar;
