@@ -107,7 +107,7 @@ const JsonSnifferFactory = {
     if (outer) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
-    return new JsonViewSniffer();
+    return new JsonViewSniffer().QueryInterface(iid);
   }
 };
 
@@ -121,7 +121,7 @@ const JsonViewFactory = {
     if (outer) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
-    return JsonViewService.createInstance();
+    return JsonViewService.createInstance().QueryInterface(iid);
   }
 };
 
