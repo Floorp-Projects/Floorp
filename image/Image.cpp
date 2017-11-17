@@ -52,30 +52,24 @@ ImageMemoryCounter::ImageMemoryCounter(Image* aImage,
 // Image Base Types
 ///////////////////////////////////////////////////////////////////////////////
 
-DrawResult
-ImageResource::AddCurrentImage(ImageContainer* aContainer,
-                               const IntSize& aSize,
-                               uint32_t aFlags,
+void
+ImageResource::SetCurrentImage(ImageContainer* aContainer,
+                               SourceSurface* aSurface,
                                bool aInTransaction)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aContainer);
 
-  DrawResult drawResult;
-  IntSize size;
-  RefPtr<SourceSurface> surface;
-  Tie(drawResult, size, surface) =
-    GetFrameInternal(aSize, FRAME_CURRENT, aFlags | FLAG_ASYNC_NOTIFY);
-  if (!surface) {
+  if (!aSurface) {
     // The OS threw out some or all of our buffer. We'll need to wait for the
     // redecode (which was automatically triggered by GetFrame) to complete.
-    return drawResult;
+    return;
   }
 
   // |image| holds a reference to a SourceSurface which in turn holds a lock on
   // the current frame's data buffer, ensuring that it doesn't get freed as
   // long as the layer system keeps this ImageContainer alive.
-  RefPtr<layers::Image> image = new layers::SourceSurfaceImage(surface);
+  RefPtr<layers::Image> image = new layers::SourceSurfaceImage(aSurface);
 
   // We can share the producer ID with other containers because it is only
   // used internally to validate the frames given to a particular container
@@ -92,7 +86,6 @@ ImageResource::AddCurrentImage(ImageContainer* aContainer,
   } else {
     aContainer->SetCurrentImages(imageList);
   }
-  return drawResult;
 }
 
 already_AddRefed<ImageContainer>
@@ -150,7 +143,69 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
         MOZ_ASSERT_UNREACHABLE("Unhandled DrawResult type!");
         return container.forget();
     }
-  } else {
+  }
+
+#ifdef DEBUG
+  NotifyDrawingObservers();
+#endif
+
+  DrawResult drawResult;
+  IntSize bestSize;
+  RefPtr<SourceSurface> surface;
+  Tie(drawResult, bestSize, surface) =
+    GetFrameInternal(size, FRAME_CURRENT, aFlags | FLAG_ASYNC_NOTIFY);
+
+  // The requested size might be refused by the surface cache (i.e. due to
+  // factor-of-2 mode). In that case we don't want to create an entry for this
+  // specific size, but rather re-use the entry for the substituted size.
+  if (bestSize != size) {
+    MOZ_ASSERT(!bestSize.IsEmpty());
+
+    // We can only remove the entry if we no longer have a container, because if
+    // there are strong references to it remaining, we need to still update it
+    // in UpdateImageContainer.
+    if (i >= 0 && !container) {
+      mImageContainers.RemoveElementAt(i);
+    }
+
+    // Forget about the stale container, if any. This lets the entry creation
+    // logic do its job below, if it turns out there is no existing best entry
+    // or the best entry doesn't have a container.
+    container = nullptr;
+
+    // We need to do the entry search again for the new size. We skip pruning
+    // because we did this above once already, but ImageContainer is threadsafe,
+    // so there is a remote possibility it got freed.
+    i = mImageContainers.Length() - 1;
+    for (; i >= 0; --i) {
+      entry = &mImageContainers[i];
+      if (bestSize == entry->mSize) {
+        container = entry->mContainer.get();
+        if (container) {
+          switch (entry->mLastDrawResult) {
+            case DrawResult::SUCCESS:
+            case DrawResult::BAD_IMAGE:
+            case DrawResult::BAD_ARGS:
+              return container.forget();
+            case DrawResult::NOT_READY:
+            case DrawResult::INCOMPLETE:
+            case DrawResult::TEMPORARY_ERROR:
+              // Temporary conditions where we need to rerequest the frame to
+              // recover. We have already done so!
+              break;
+           case DrawResult::WRONG_SIZE:
+              // Unused by GetFrameInternal
+            default:
+              MOZ_ASSERT_UNREACHABLE("Unhandled DrawResult type!");
+              return container.forget();
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  if (!container) {
     // We need a new ImageContainer, so create one.
     container = LayerManager::CreateImageContainer();
 
@@ -158,16 +213,12 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
       entry->mContainer = container;
     } else {
       entry = mImageContainers.AppendElement(
-        ImageContainerEntry(size, container.get()));
+        ImageContainerEntry(bestSize, container.get()));
     }
   }
 
-#ifdef DEBUG
-  NotifyDrawingObservers();
-#endif
-
-  entry->mLastDrawResult =
-    AddCurrentImage(container, size, aFlags, true);
+  SetCurrentImage(container, surface, true);
+  entry->mLastDrawResult = drawResult;
   return container.forget();
 }
 
@@ -180,8 +231,16 @@ ImageResource::UpdateImageContainer()
     ImageContainerEntry& entry = mImageContainers[i];
     RefPtr<ImageContainer> container = entry.mContainer.get();
     if (container) {
-      entry.mLastDrawResult =
-        AddCurrentImage(container, entry.mSize, FLAG_NONE, false);
+      IntSize bestSize;
+      RefPtr<SourceSurface> surface;
+      Tie(entry.mLastDrawResult, bestSize, surface) =
+        GetFrameInternal(entry.mSize, FRAME_CURRENT, FLAG_ASYNC_NOTIFY);
+
+      // It is possible that this is a factor-of-2 substitution. Since we
+      // managed to convert the weak reference into a strong reference, that
+      // means that an imagelib user still is holding onto the container. thus
+      // we cannot consolidate and must keep updating the duplicate container.
+      SetCurrentImage(container, surface, false);
     } else {
       // Stop tracking if our weak pointer to the image container was freed.
       mImageContainers.RemoveElementAt(i);
