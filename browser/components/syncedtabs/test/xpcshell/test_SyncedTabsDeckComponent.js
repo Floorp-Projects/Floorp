@@ -41,10 +41,8 @@ add_task(async function testInitUninit() {
   Assert.ok(ViewMock.calledWithNew(), "view is instantiated");
   Assert.equal(ViewMock.args[0][0], mockWindow);
   Assert.equal(ViewMock.args[0][1], listComponent);
-  Assert.ok(ViewMock.args[0][2].onAndroidClick,
-    "view is passed onAndroidClick prop");
-  Assert.ok(ViewMock.args[0][2].oniOSClick,
-    "view is passed oniOSClick prop");
+  Assert.ok(ViewMock.args[0][2].onConnectDeviceClick,
+    "view is passed onConnectDeviceClick prop");
   Assert.ok(ViewMock.args[0][2].onSyncPrefClick,
     "view is passed onSyncPrefClick prop");
 
@@ -203,16 +201,15 @@ add_task(async function testPanelStatus() {
 });
 
 add_task(async function testActions() {
-  let windowMock = {
-    openUILink() {},
-  };
+  let windowMock = {};
   let chromeWindowMock = {
     gSync: {
-      openPrefs() {}
+      openPrefs() {},
+      openConnectAnotherDevice() {}
     }
   };
-  sinon.spy(windowMock, "openUILink");
   sinon.spy(chromeWindowMock.gSync, "openPrefs");
+  sinon.spy(chromeWindowMock.gSync, "openConnectAnotherDevice");
 
   let getChromeWindowMock = sinon.stub();
   getChromeWindowMock.returns(chromeWindowMock);
@@ -222,13 +219,8 @@ add_task(async function testActions() {
     getChromeWindowMock
   });
 
-  let href = Services.prefs.getCharPref("identity.mobilepromo.android") + "synced-tabs-sidebar";
-  component.openAndroidLink("mock-event");
-  Assert.ok(windowMock.openUILink.calledWith(href, "mock-event"));
-
-  href = Services.prefs.getCharPref("identity.mobilepromo.ios") + "synced-tabs-sidebar";
-  component.openiOSLink("mock-event");
-  Assert.ok(windowMock.openUILink.calledWith(href, "mock-event"));
+  component.openConnectDevice();
+  Assert.ok(chromeWindowMock.gSync.openConnectAnotherDevice.called);
 
   component.openSyncPrefs();
   Assert.ok(getChromeWindowMock.calledWith(windowMock));

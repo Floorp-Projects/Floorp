@@ -79,8 +79,7 @@ SyncedTabsDeckComponent.prototype = {
                     .catch(Cu.reportError);
 
     this._deckView = new this._DeckView(this._window, this.tabListComponent, {
-      onAndroidClick: event => this.openAndroidLink(event),
-      oniOSClick: event => this.openiOSLink(event),
+      onConnectDeviceClick: event => this.openConnectDevice(event),
       onSyncPrefClick: event => this.openSyncPrefs(event)
     });
 
@@ -151,22 +150,12 @@ SyncedTabsDeckComponent.prototype = {
       .catch(Cu.reportError);
   },
 
-  openAndroidLink(event) {
-    let href = Services.prefs.getCharPref("identity.mobilepromo.android") + "synced-tabs-sidebar";
-    this._openUrl(href, event);
-  },
-
-  openiOSLink(event) {
-    let href = Services.prefs.getCharPref("identity.mobilepromo.ios") + "synced-tabs-sidebar";
-    this._openUrl(href, event);
-  },
-
-  _openUrl(url, event) {
-    this._window.openUILink(url, event);
-  },
-
   openSyncPrefs() {
     this._getChromeWindow(this._window).gSync.openPrefs("tabs-sidebar");
-  }
+  },
+
+  openConnectDevice() {
+    this._getChromeWindow(this._window).gSync.openConnectAnotherDevice("tabs-sidebar");
+  },
 };
 
