@@ -180,9 +180,10 @@ bool
 IsIdentifier(JSLinearString* str)
 {
     JS::AutoCheckCannotGC nogc;
-    return str->hasLatin1Chars()
-           ? ::IsIdentifier(str->latin1Chars(nogc), str->length())
-           : ::IsIdentifierMaybeNonBMP(str->twoByteChars(nogc), str->length());
+    MOZ_ASSERT(str);
+    if (str->hasLatin1Chars())
+        return ::IsIdentifier(str->latin1Chars(nogc), str->length());
+    return ::IsIdentifierMaybeNonBMP(str->twoByteChars(nogc), str->length());
 }
 
 bool
