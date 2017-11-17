@@ -267,18 +267,6 @@ nsXBLResourceLoader::NotifyBoundElements()
             }
 
             if (!sc) {
-              if (ServoStyleSet* servoSet = shell->StyleSet()->GetAsServo()) {
-                // Ensure the element has servo data so that
-                // nsChangeHint_ReconstructFrame posted by
-                // PostRecreateFramesFor() is recognized.
-                //
-                // Also check MayTraverseFrom to handle programatic XBL consumers.
-                // See bug 1370793.
-                Element* element = content->AsElement();
-                if (servoSet->MayTraverseFrom(element)) {
-                  servoSet->StyleNewlyBoundElement(element);
-                }
-              }
               shell->PostRecreateFramesFor(content->AsElement());
             }
           }
