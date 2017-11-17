@@ -174,12 +174,6 @@ public:
   {
   }
 
-  PrefTypeFlags& Reset()
-  {
-    mValue = AsInt(PrefType::Invalid);
-    return *this;
-  }
-
   bool IsTypeValid() const { return !IsPrefType(PrefType::Invalid); }
   bool IsTypeString() const { return IsPrefType(PrefType::String); }
   bool IsTypeInt() const { return IsPrefType(PrefType::Int); }
@@ -766,13 +760,10 @@ pref_SetPref(const char* aKey,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // New entry, need to initialize.
   if (!pref->mKey) {
-    // Initialize the pref entry.
-    pref->mPrefFlags.Reset().SetPrefType(aType);
+    // New (zeroed) entry. Initialize it.
+    pref->mPrefFlags.SetPrefType(aType);
     pref->mKey = ArenaStrdup(aKey, gPrefNameArena);
-    memset(&pref->mDefaultValue, 0, sizeof(pref->mDefaultValue));
-    memset(&pref->mUserValue, 0, sizeof(pref->mUserValue));
 
   } else if (pref->mPrefFlags.HasDefaultValue() &&
              !pref->mPrefFlags.IsPrefType(aType)) {
