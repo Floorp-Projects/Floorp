@@ -20,7 +20,6 @@ public:
                   uint32_t* aBytes) override;
   // Data stored in file, caching recommended.
   bool ShouldCacheReads() override { return true; }
-  int64_t Tell() override { return 0; }
   void Pin() override {}
   void Unpin() override {}
   int64_t GetLength() override;

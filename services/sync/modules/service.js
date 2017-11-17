@@ -433,7 +433,7 @@ Sync11Service.prototype = {
           // Sync in the background (it's fine not to wait on the returned promise
           // because sync() has a lock).
           // [] = clients collection only
-          this.sync([]).catch(e => {
+          this.sync({why: "collection_changed", engines: []}).catch(e => {
             this._log.error(e);
           });
         }
@@ -1082,7 +1082,7 @@ Sync11Service.prototype = {
     return reason;
   },
 
-  async sync(engineNamesToSync) {
+  async sync({engines, why} = {}) {
     let dateStr = Utils.formatTimestamp(new Date());
     this._log.debug("User-Agent: " + Utils.userAgent);
     this._log.info(`Starting sync at ${dateStr} in browser session ${browserSessionID}`);
@@ -1097,16 +1097,16 @@ Sync11Service.prototype = {
       } else {
         this._log.trace("In sync: no need to login.");
       }
-      await this._lockedSync(engineNamesToSync);
+      await this._lockedSync(engines, why);
     })();
   },
 
   /**
    * Sync up engines with the server.
    */
-  async _lockedSync(engineNamesToSync) {
+  async _lockedSync(engineNamesToSync, why) {
     return this._lock("service.js: sync",
-                      this._notify("sync", "", async function onNotify() {
+                      this._notify("sync", JSON.stringify({why}), async function onNotify() {
 
       let histogram = Services.telemetry.getHistogramById("WEAVE_START_COUNT");
       histogram.add(1);

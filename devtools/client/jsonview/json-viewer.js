@@ -12,7 +12,6 @@ define(function (require, exports, module) {
   const { MainTabbedArea } = createFactories(require("./components/MainTabbedArea"));
   const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 
-  const json = document.getElementById("json");
   const AUTO_EXPAND_MAX_SIZE = 100 * 1024;
   const AUTO_EXPAND_MAX_LEVEL = 7;
 
@@ -20,17 +19,12 @@ define(function (require, exports, module) {
 
   // Application state object.
   let input = {
-    jsonText: json.textContent,
+    jsonText: JSONView.json.textContent,
     jsonPretty: null,
     headers: JSONView.headers,
     tabActive: 0,
     prettified: false
   };
-
-  // Remove BOM.
-  if (input.jsonText.startsWith("\ufeff")) {
-    input.jsonText = input.jsonText.slice(1);
-  }
 
   try {
     input.json = JSON.parse(input.jsonText);
@@ -47,8 +41,6 @@ define(function (require, exports, module) {
   } else {
     input.expandedNodes = new Set();
   }
-
-  json.remove();
 
   /**
    * Application actions/commands. This list implements all commands

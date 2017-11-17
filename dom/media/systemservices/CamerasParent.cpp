@@ -39,6 +39,31 @@ mozilla::LazyLogModule gCamerasParentLog("CamerasParent");
 namespace mozilla {
 namespace camera {
 
+std::map<uint32_t, const char *> sDeviceUniqueIDs;
+std::map<uint32_t, webrtc::VideoCaptureCapability> sAllRequestedCapabilities;
+
+uint32_t
+ResolutionFeasibilityDistance(int32_t candidate, int32_t requested)
+{
+  // The purpose of this function is to find a smallest resolution
+  // which is larger than all requested capabilities.
+  // Then we can use down-scaling to fulfill each request.
+  uint32_t distance;
+  if (candidate >= requested) {
+    distance = (candidate - requested) * 1000 / std::max(candidate, requested);
+  } else {
+    distance = (UINT32_MAX / 2) + (requested - candidate) *
+      1000 / std::max(candidate, requested);
+  }
+  return distance;
+}
+
+uint32_t
+FeasibilityDistance(int32_t candidate, int32_t requested)
+{
+  return std::abs(candidate - requested) * 1000 / std::max(candidate, requested);
+}
+
 RefPtr<VideoEngine> CamerasParent::sEngines[CaptureEngine::MaxEngine];
 int32_t CamerasParent::sNumOfOpenCamerasParentEngines = 0;
 int32_t CamerasParent::sNumOfCamerasParents = 0;
@@ -556,6 +581,17 @@ CamerasParent::RecvGetCaptureCapability(const CaptureEngine& aCapEngine,
         if (auto devInfo = engine->GetOrCreateVideoCaptureDeviceInfo()){
           error = devInfo->GetCapability(unique_id.get(), num, webrtcCaps);
         }
+
+        if (!error && aCapEngine == CameraEngine) {
+          auto iter = self->mAllCandidateCapabilities.find(unique_id);
+          if (iter == self->mAllCandidateCapabilities.end()) {
+            std::map<uint32_t, webrtc::VideoCaptureCapability> candidateCapabilities;
+            candidateCapabilities.emplace(num, webrtcCaps);
+            self->mAllCandidateCapabilities.emplace(nsCString(unique_id), candidateCapabilities);
+          } else {
+            (iter->second).emplace(num, webrtcCaps);
+          }
+        }
       }
       RefPtr<nsIRunnable> ipc_runnable =
         media::NewRunnableFrom([self, webrtcCaps, error]() -> nsresult {
@@ -816,8 +852,9 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
           new CallbackHelper(static_cast<CaptureEngine>(aCapEngine), capnum, self));
 
         engine = self->sEngines[aCapEngine];
-        engine->WithEntry(capnum, [&error, &ipcCaps, &cbh](VideoEngine::CaptureEntry& cap) {
-          error = 0;
+        engine->WithEntry(capnum,
+          [&capnum, &aCapEngine, &error, &ipcCaps, &cbh, self]
+          (VideoEngine::CaptureEntry& cap) {
           webrtc::VideoCaptureCapability capability;
           capability.width = ipcCaps.width();
           capability.height = ipcCaps.height();
@@ -827,11 +864,59 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
           capability.codecType = static_cast<webrtc::VideoCodecType>(ipcCaps.codecType());
           capability.interlaced = ipcCaps.interlaced();
 
-          if (!error) {
-            error = cap.VideoCapture()->StartCapture(capability);
+          if (aCapEngine == CameraEngine) {
+#ifdef DEBUG
+            auto deviceUniqueID = sDeviceUniqueIDs.find(capnum);
+            MOZ_ASSERT(deviceUniqueID == sDeviceUniqueIDs.end());
+#endif
+            sDeviceUniqueIDs.emplace(capnum, cap.VideoCapture()->CurrentDeviceName());
+            sAllRequestedCapabilities.emplace(capnum, capability);
+
+            for (const auto &it : sDeviceUniqueIDs) {
+              if (strcmp(it.second, cap.VideoCapture()->CurrentDeviceName()) == 0) {
+                capability.width = std::max(
+                  capability.width, sAllRequestedCapabilities[it.first].width);
+                capability.height = std::max(
+                  capability.height, sAllRequestedCapabilities[it.first].height);
+                capability.maxFPS = std::max(
+                  capability.maxFPS, sAllRequestedCapabilities[it.first].maxFPS);
+              }
+            }
+
+            auto candidateCapabilities = self->mAllCandidateCapabilities.find(
+              nsCString(cap.VideoCapture()->CurrentDeviceName()));
+            MOZ_ASSERT(candidateCapabilities != self->mAllCandidateCapabilities.end());
+            MOZ_ASSERT(candidateCapabilities->second.size() > 0);
+            int32_t minIdx = -1;
+            uint64_t minDistance = UINT64_MAX;
+
+            for (auto & candidateCapability : candidateCapabilities->second) {
+              if (candidateCapability.second.rawType != capability.rawType) {
+                continue;
+              }
+              // The first priority is finding a suitable resolution.
+              // So here we raise the weight of width and height
+              uint64_t distance =
+                uint64_t(ResolutionFeasibilityDistance(
+                  candidateCapability.second.width, capability.width)) +
+                uint64_t(ResolutionFeasibilityDistance(
+                  candidateCapability.second.height, capability.height)) +
+                uint64_t(FeasibilityDistance(
+                  candidateCapability.second.maxFPS, capability.maxFPS));
+              if (distance < minDistance) {
+                minIdx = candidateCapability.first;;
+                minDistance = distance;
+              }
+            }
+            MOZ_ASSERT(minIdx != -1);
+            capability = candidateCapabilities->second[minIdx];
           }
+
+          error = cap.VideoCapture()->StartCapture(capability);
+
           if (!error) {
-            cap.VideoCapture()->RegisterCaptureDataCallback(static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(*cbh));
+            cap.VideoCapture()->RegisterCaptureDataCallback(
+              static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(*cbh));
           }
         });
       }
@@ -866,11 +951,16 @@ CamerasParent::StopCapture(const CaptureEngine& aCapEngine,
           mCallbacks[i - 1]->mStreamId == (uint32_t)capnum) {
 
         CallbackHelper* cbh = mCallbacks[i-1];
-        engine->WithEntry(capnum,[cbh](VideoEngine::CaptureEntry& cap) {
+        engine->WithEntry(capnum,[cbh, &capnum, &aCapEngine](VideoEngine::CaptureEntry& cap){
           if (cap.VideoCapture()) {
             cap.VideoCapture()->DeRegisterCaptureDataCallback(
               static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(cbh));
             cap.VideoCapture()->StopCaptureIfAllClientsClose();
+
+            if (aCapEngine == CameraEngine) {
+              sDeviceUniqueIDs.erase(capnum);
+              sAllRequestedCapabilities.erase(capnum);
+            }
           }
         });
 

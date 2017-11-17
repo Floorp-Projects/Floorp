@@ -103,7 +103,10 @@ class RequestListHeader extends Component {
 
     return (
       div({ className: "devtools-toolbar requests-list-headers-wrapper" },
-        div({ className: "devtools-toolbar requests-list-headers" },
+        div({
+          className: "devtools-toolbar requests-list-headers",
+          onContextMenu: this.onContextMenu
+        },
           HEADERS.filter((header) => columns.get(header.name)).map((header) => {
             let name = header.name;
             let boxName = header.boxName || name;
@@ -127,7 +130,6 @@ class RequestListHeader extends Component {
                 ref: `${name}Header`,
                 // Used to style the next column.
                 "data-active": active,
-                onContextMenu: this.onContextMenu,
               },
                 button({
                   id: `requests-list-${name}-button`,

@@ -185,6 +185,7 @@ dictionary RTCStatsReportInternal {
   DOMHighResTimeStamp                     timestamp;
   unsigned long                           iceRestarts;
   unsigned long                           iceRollbacks;
+  boolean                                 offerer; // Is the PC the offerer
   boolean                                 closed; // Is the PC now closed
 };
 

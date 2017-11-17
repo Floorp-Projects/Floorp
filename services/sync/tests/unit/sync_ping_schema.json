@@ -53,7 +53,7 @@
             "service": { "type": "string" }
           }
         },
-        "why": { "enum": ["startup", "schedule", "score", "user", "tabs"] },
+        "why": { "type": "string" },
         "took": { "type": "integer", "minimum": -1 },
         "failureReason": { "$ref": "#/definitions/error" },
         "engines": {

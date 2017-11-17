@@ -37,26 +37,7 @@ PYTHON ?= $(shell which python2.7 > /dev/null 2>&1 && echo python2.7 || echo pyt
 ####################################
 # Load mozconfig Options
 
-# See build pages, http://www.mozilla.org/build/ for how to set up mozconfig.
-
-define CR
-
-
-endef
-
-# As $(shell) doesn't preserve newlines, use sed to replace them with an
-# unlikely sequence (||), which is then replaced back to newlines by make
-# before evaluation. $(shell) replacing newlines with spaces, || is always
-# followed by a space (since sed doesn't remove newlines), except on the
-# last line, so replace both '|| ' and '||'.
-MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell cat $(OBJDIR)/.mozconfig-client-mk | sed 's/$$/||/')))
 include $(OBJDIR)/.mozconfig-client-mk
-
-# As '||' was used as a newline separator, it means it's not occurring in
-# lines themselves. It can thus safely be used to replaces normal spaces,
-# to then replace newlines with normal spaces. This allows to get a list
-# of mozconfig output lines.
-MOZCONFIG_OUT_LINES := $(subst $(CR), ,$(subst $(NULL) $(NULL),||,$(MOZCONFIG_CONTENT)))
 
 ifdef MOZ_PARALLEL_BUILD
   MOZ_MAKE_FLAGS := $(filter-out -j%,$(MOZ_MAKE_FLAGS))
@@ -90,23 +71,6 @@ build::
 ifndef MACH
 $(error client.mk must be used via `mach`. Try running \
 `./mach $(firstword $(MAKECMDGOALS) $(.DEFAULT_GOAL))`)
-endif
-
-# For now, only output "export" lines and lines containing UPLOAD_EXTRA_FILES.
-MOZCONFIG_MK_LINES := $(filter export||% UPLOAD_EXTRA_FILES% %UPLOAD_EXTRA_FILES%,$(MOZCONFIG_OUT_LINES))
-$(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG)
-	$(if $(MOZCONFIG_MK_LINES),( $(foreach line,$(MOZCONFIG_MK_LINES), echo '$(subst ||, ,$(line))';) )) > $@
-
-# Include that makefile so that it is created. This should not actually change
-# the environment since MOZCONFIG_CONTENT, which MOZCONFIG_OUT_LINES derives
-# from, has already been eval'ed.
-include $(OBJDIR)/.mozconfig.mk
-
-# Print out any options loaded from mozconfig.
-all build clean distclean export libs install realclean::
-ifneq (,$(strip $(MOZCONFIG_OUT_LINES)))
-	$(info Adding client.mk options from $(FOUND_MOZCONFIG):)
-	$(foreach line,$(MOZCONFIG_OUT_LINES),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
 endif
 
 # In automation, manage an sccache daemon. The starting of the server
@@ -174,23 +138,8 @@ configure-files: $(CONFIGURES)
 
 configure-preqs = \
   configure-files \
-  save-mozconfig \
   $(OBJDIR)/.mozconfig.json \
   $(NULL)
-
-CREATE_MOZCONFIG_JSON = $(shell $(TOPSRCDIR)/mach environment --format=json -o $(OBJDIR)/.mozconfig.json)
-# Force CREATE_MOZCONFIG_JSON above to be resolved, without side effects in
-# case the result is non empty, and allowing an override on the make command
-# line not running the command (using := $(shell) still runs the shell command).
-ifneq (,$(CREATE_MOZCONFIG_JSON))
-endif
-
-$(OBJDIR)/.mozconfig.json: ;
-
-save-mozconfig: $(FOUND_MOZCONFIG)
-ifdef FOUND_MOZCONFIG
-	-cp $(FOUND_MOZCONFIG) $(OBJDIR)/.mozconfig
-endif
 
 configure:: $(configure-preqs)
 	$(call BUILDSTATUS,TIERS configure)
@@ -210,12 +159,7 @@ $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
 else
 $(OBJDIR)/Makefile: $(CONFIG_STATUS_DEPS)
 endif
-	@$(MAKE) -f $(TOPSRCDIR)/client.mk configure CREATE_MOZCONFIG_JSON=
-
-ifneq (,$(CONFIG_STATUS))
-$(OBJDIR)/config/autoconf.mk: $(TOPSRCDIR)/config/autoconf.mk.in
-	$(PYTHON) $(OBJDIR)/config.status -n --file=$(OBJDIR)/config/autoconf.mk
-endif
+	@$(MAKE) -f $(TOPSRCDIR)/client.mk configure
 
 ####################################
 # Build it

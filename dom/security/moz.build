@@ -49,7 +49,3 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
     '/netwerk/protocol/data', # for nsDataHandler.h
 ]
-
-if CONFIG['GNU_CC']:
-    CFLAGS += ['-Wformat-security']
-    CXXFLAGS += ['-Wformat-security']

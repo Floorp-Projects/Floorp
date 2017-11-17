@@ -212,17 +212,4 @@ FileMediaResource::UnsafeSeek(int32_t aWhence, int64_t aOffset)
   return mSeekable->Seek(aWhence, aOffset);
 }
 
-int64_t
-FileMediaResource::Tell()
-{
-  MutexAutoLock lock(mLock);
-  EnsureSizeInitialized();
-
-  int64_t offset = 0;
-  // Return mSize as offset (end of stream) in case of error
-  if (!mSeekable || NS_FAILED(mSeekable->Tell(&offset)))
-    return mSize;
-  return offset;
-}
-
 } // mozilla namespace
