@@ -28,6 +28,7 @@ const CONFIG_PREFS = [
   "identity.fxaccounts.remote.signup.uri",
   "identity.fxaccounts.remote.signin.uri",
   "identity.fxaccounts.remote.email.uri",
+  "identity.fxaccounts.remote.connectdevice.uri",
   "identity.fxaccounts.remote.force_auth.uri",
 ];
 
@@ -145,6 +146,7 @@ this.FxAccountsConfig = {
       Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri", rootURL + "/signup?service=sync&context=" + contextParam);
       Services.prefs.setCharPref("identity.fxaccounts.remote.signin.uri", rootURL + "/signin?service=sync&context=" + contextParam);
       Services.prefs.setCharPref("identity.fxaccounts.remote.email.uri", rootURL + "/?service=sync&context=" + contextParam + "&action=email");
+      Services.prefs.setCharPref("identity.fxaccounts.remote.connectdevice.uri", rootURL + "/connect_another_device?service=sync&context=" + contextParam);
       Services.prefs.setCharPref("identity.fxaccounts.remote.force_auth.uri", rootURL + "/force_auth?service=sync&context=" + contextParam);
 
       // Ensure the webchannel is pointed at the correct uri
