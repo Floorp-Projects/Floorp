@@ -77,6 +77,12 @@ ifdef MOZ_CODE_COVERAGE
 	$(PYTHON) -mmozbuild.codecoverage.packager \
 		--output-file='$(DIST)/$(PKG_PATH)$(CODE_COVERAGE_ARCHIVE_BASENAME).zip'
 endif
+ifdef ENABLE_MOZSEARCH_PLUGIN
+	@echo 'Generating mozsearch tarball...'
+	$(RM) $(MOZSEARCH_ARCHIVE_BASENAME).zip
+	cd $(topobjdir)/mozsearch_index && \
+          zip -r5D '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_ARCHIVE_BASENAME).zip' .
+endif
 ifeq (Darwin, $(OS_ARCH))
 ifdef MOZ_ASAN
 	@echo "Rewriting ASan runtime dylib paths for all binaries in $(DIST)/$(MOZ_PKG_DIR)$(_BINPATH) ..."

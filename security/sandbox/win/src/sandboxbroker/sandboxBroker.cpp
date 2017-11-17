@@ -476,11 +476,13 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     sandbox::MITIGATION_DEP |
     sandbox::MITIGATION_EXTENSION_POINT_DISABLE;
 
-  if (aSandboxLevel > 3) {
+  if (aSandboxLevel > 4) {
     result = mPolicy->SetAlternateDesktop(false);
     MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                        "Failed to create alternate desktop for sandbox.");
+  }
 
+  if (aSandboxLevel > 3) {
     mitigations |= sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
     // If we're running from a network drive then we can't block loading from
     // remote locations.

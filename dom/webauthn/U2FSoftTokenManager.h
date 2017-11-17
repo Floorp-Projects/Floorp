@@ -46,7 +46,6 @@ public:
 private:
   ~U2FSoftTokenManager();
   nsresult Init();
-  bool IsCompatibleVersion(const nsAString& aVersion);
 
   nsresult IsRegistered(const nsTArray<uint8_t>& aKeyHandle,
                         const nsTArray<uint8_t>& aAppParam,
@@ -56,7 +55,6 @@ private:
   mozilla::UniquePK11SymKey mWrappingKey;
 
   static const nsCString mSecretNickname;
-  static const nsString mVersion;
 
   nsresult GetOrCreateWrappingKey(const mozilla::UniquePK11SlotInfo& aSlot,
                                   const nsNSSShutDownPreventionLock&);

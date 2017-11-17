@@ -524,7 +524,7 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
     if (data) {
       // If this is a registered custom element then fix the prototype.
       nsContentUtils::GetCustomPrototype(OwnerDoc(), NodeInfo()->NamespaceID(),
-                                         data->mType, &customProto);
+                                         data->GetCustomElementType(), &customProto);
       if (customProto &&
           NodePrincipal()->SubsumesConsideringDomain(nsContentUtils::ObjectPrincipal(customProto))) {
         // Just go ahead and create with the right proto up front.  Set
@@ -1758,8 +1758,14 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   if (CustomElementRegistry::IsCustomElementEnabled() && IsInComposedDoc()) {
     // Connected callback must be enqueued whenever a custom element becomes
     // connected.
-    if (GetCustomElementData()) {
-      nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eConnected, this);
+    CustomElementData* data = GetCustomElementData();
+    if (data) {
+      if (data->mState == CustomElementData::State::eCustom) {
+        nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eConnected, this);
+      } else {
+        // Step 7.7.2.2 https://dom.spec.whatwg.org/#concept-node-insert
+        nsContentUtils::TryToUpgradeElement(this);
+      }
     }
   }
 
@@ -2085,10 +2091,19 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
 
      // Disconnected must be enqueued whenever a connected custom element becomes
      // disconnected.
-    if (CustomElementRegistry::IsCustomElementEnabled() &&
-        GetCustomElementData()) {
-      nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eDisconnected,
-                                               this);
+    if (CustomElementRegistry::IsCustomElementEnabled()) {
+      CustomElementData* data  = GetCustomElementData();
+      if (data) {
+        if (data->mState == CustomElementData::State::eCustom) {
+          nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eDisconnected,
+                                                   this);
+        } else {
+          // Remove an unresolved custom element that is a candidate for
+          // upgrade when a custom element is disconnected.
+          // We will make sure it's shadow-including tree order in bug 1326028.
+          nsContentUtils::UnregisterUnresolvedElement(this);
+        }
+      }
     }
   }
 
@@ -2768,8 +2783,11 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     if (CustomElementData* data = GetCustomElementData()) {
       if (CustomElementDefinition* definition =
             nsContentUtils::GetElementDefinitionIfObservingAttr(this,
-                                                                data->mType,
+                                                                data->GetCustomElementType(),
                                                                 aName)) {
+        MOZ_ASSERT(data->mState == CustomElementData::State::eCustom,
+                   "AttributeChanged callback should fire only if "
+                   "custom element state is custom");
         RefPtr<nsAtom> oldValueAtom;
         if (oldValue) {
           oldValueAtom = oldValue->GetAsAtom();
@@ -3072,8 +3090,11 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
     if (CustomElementData* data = GetCustomElementData()) {
       if (CustomElementDefinition* definition =
             nsContentUtils::GetElementDefinitionIfObservingAttr(this,
-                                                                data->mType,
+                                                                data->GetCustomElementType(),
                                                                 aName)) {
+        MOZ_ASSERT(data->mState == CustomElementData::State::eCustom,
+                   "AttributeChanged callback should fire only if "
+                   "custom element state is custom");
         nsAutoString ns;
         nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
 

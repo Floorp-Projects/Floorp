@@ -253,6 +253,22 @@ class ImmGCPtr
     ImmGCPtr() : value(0) {}
 };
 
+// Pointer to trampoline code. Trampoline code is kept alive until the runtime
+// is destroyed, so does not need to be traced.
+struct TrampolinePtr
+{
+    uint8_t* value;
+
+    TrampolinePtr()
+      : value(nullptr)
+    { }
+    explicit TrampolinePtr(uint8_t* value)
+      : value(value)
+    {
+        MOZ_ASSERT(value);
+    }
+};
+
 // Pointer to be embedded as an immediate that is loaded/stored from by an
 // instruction.
 struct AbsoluteAddress
