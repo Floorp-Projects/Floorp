@@ -94,13 +94,11 @@ NS_IMPL_ISUPPORTS(mozJSSubScriptLoader, mozIJSSubScriptLoader)
 static void
 SubscriptCachePath(JSContext* cx, nsIURI* uri, JS::HandleObject targetObj, nsACString& cachePath)
 {
-    // StartupCache must distinguish between non-syntactic vs global, as well as
-    // javascript version when computing the cache key.
+    // StartupCache must distinguish between non-syntactic vs global when
+    // computing the cache key.
     bool hasNonSyntacticScope = !JS_IsGlobalObject(targetObj);
-    JSVersion version = JS_GetVersion(cx);
     cachePath.Assign(hasNonSyntacticScope ? JSSUB_CACHE_PREFIX("non-syntactic")
                                           : JSSUB_CACHE_PREFIX("global"));
-    cachePath.AppendPrintf("/%d", version);
     PathifyURI(uri, cachePath);
 }
 
