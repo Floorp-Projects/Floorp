@@ -1659,7 +1659,8 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
       ScheduleComposition();
     }
     if (mWrBridge && sIndirectLayerTrees[child].mWrBridge) {
-      RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI()->Clone();
+      RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
+      api = api->Clone();
       sIndirectLayerTrees[child].mWrBridge->UpdateWebRender(mWrBridge->CompositorScheduler(),
                                                             api,
                                                             mWrBridge->AsyncImageManager(),
