@@ -7608,6 +7608,9 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
   if (HasView()) {
     aTo += nsPrintfCString(" [view=%p]", static_cast<void*>(GetView()));
   }
+  if (GetParent()) {
+    aTo += nsPrintfCString(" parent=%p", static_cast<void*>(GetParent()));
+  }
   if (GetNextSibling()) {
     aTo += nsPrintfCString(" next=%p", static_cast<void*>(GetNextSibling()));
   }
