@@ -589,12 +589,6 @@ JS::SetSingleThreadedExecutionCallbacks(JSContext* cx,
     cx->runtime()->endSingleThreadedExecutionCallback = end;
 }
 
-JS_PUBLIC_API(JSVersion)
-JS_GetVersion(JSContext* cx)
-{
-    return VersionNumber(cx->findVersion());
-}
-
 static const struct v2smap {
     JSVersion   version;
     const char* string;
