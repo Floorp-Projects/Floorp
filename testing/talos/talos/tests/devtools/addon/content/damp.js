@@ -793,6 +793,35 @@ async _consoleOpenWithCachedMessagesTest() {
     await this.testTeardown();
   },
 
+  async reloadConsoleAndLog(label, toolbox, expectedMessages) {
+    let onReload = async function() {
+      let webconsole = toolbox.getPanel("webconsole");
+      await new Promise(done => {
+        let messages = 0;
+        let receiveMessages = () => {
+          if (++messages == expectedMessages) {
+            webconsole.hud.ui.off("new-messages", receiveMessages);
+            done();
+          }
+        };
+        webconsole.hud.ui.on("new-messages", receiveMessages);
+      });
+    };
+    await this.reloadPageAndLog(label + ".webconsole", toolbox, onReload);
+  },
+
+  async customConsole() {
+    // These numbers controls the number of console api calls we do in the test
+    let sync = 250, stream = 250, async = 250;
+    let page = `console.html?sync=${sync}&stream=${stream}&async=${async}`;
+    let url = CUSTOM_URL.replace(/\$TOOL\.html/, page);
+    await this.testSetup(url);
+    let toolbox = await this.openToolboxAndLog("custom.webconsole", "webconsole");
+    await this.reloadConsoleAndLog("custom", toolbox, sync + stream + async);
+    await this.closeToolboxAndLog("custom.webconsole", toolbox);
+    await this.testTeardown();
+  },
+
   _getToolLoadingTests(url, label, {
     expectedMessages,
     expectedRequests,
@@ -812,20 +841,7 @@ async _consoleOpenWithCachedMessagesTest() {
       async webconsole() {
         await this.testSetup(url);
         let toolbox = await this.openToolboxAndLog(label + ".webconsole", "webconsole");
-        let onReload = async function() {
-          let webconsole = toolbox.getPanel("webconsole");
-          await new Promise(done => {
-            let messages = 0;
-            let receiveMessages = () => {
-              if (++messages == expectedMessages) {
-                webconsole.hud.ui.off("new-messages", receiveMessages);
-                done();
-              }
-            };
-            webconsole.hud.ui.on("new-messages", receiveMessages);
-          });
-        };
-        await this.reloadPageAndLog(label + ".webconsole", toolbox, onReload);
+        await this.reloadConsoleAndLog(label, toolbox, expectedMessages);
         await this.closeToolboxAndLog(label + ".webconsole", toolbox);
         await this.testTeardown();
       },
@@ -1081,6 +1097,7 @@ async _consoleOpenWithCachedMessagesTest() {
     // Run all tests against a document specific to each tool
     tests["custom.inspector"] = this.customInspector;
     tests["custom.debugger"] = this.customDebugger;
+    tests["custom.webconsole"] = this.customConsole;
 
     // Run individual tests covering a very precise tool feature
     tests["console.bulklog"] = this._consoleBulkLoggingTest;
