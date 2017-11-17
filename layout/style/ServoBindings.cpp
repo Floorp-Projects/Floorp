@@ -2029,6 +2029,12 @@ Gecko_NewBasicShape(mozilla::StyleShapeSource* aShape,
 }
 
 void
+Gecko_NewShapeImage(mozilla::StyleShapeSource* aShape)
+{
+  aShape->SetShapeImage(MakeUnique<nsStyleImage>());
+}
+
+void
 Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len)
 {
   effects->mFilters.Clear();
