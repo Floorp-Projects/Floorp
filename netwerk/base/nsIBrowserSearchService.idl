@@ -381,9 +381,7 @@ interface nsIBrowserSearchService : nsISupports
                             [optional] in AString extensionID);
 
   /**
-   * Un-hides all engines installed in the directory corresponding to
-   * the directory service's NS_APP_SEARCH_DIR key. (i.e. the set of
-   * engines returned by getDefaultEngines)
+   * Un-hides all engines in the set of engines returned by getDefaultEngines.
    */
   void restoreDefaultEngines();
 
