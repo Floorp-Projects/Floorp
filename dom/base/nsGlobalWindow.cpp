@@ -305,10 +305,6 @@ int32_t gTimeoutCnt                                    = 0;
 #define DEBUG_PAGE_CACHE
 #endif
 
-#define DOM_TOUCH_LISTENER_ADDED "dom-touch-listener-added"
-
-#define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
-
 namespace mozilla {
 namespace dom {
 extern uint64_t
