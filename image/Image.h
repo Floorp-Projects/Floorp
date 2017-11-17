@@ -375,10 +375,12 @@ private:
 
   struct ImageContainerEntry {
     ImageContainerEntry(const gfx::IntSize& aSize,
-                        layers::ImageContainer* aContainer)
+                        layers::ImageContainer* aContainer,
+                        uint32_t aFlags)
       : mSize(aSize)
       , mContainer(aContainer)
       , mLastDrawResult(DrawResult::NOT_READY)
+      , mFlags(aFlags)
     { }
 
     gfx::IntSize                        mSize;
@@ -388,6 +390,9 @@ private:
     // If mContainer is non-null, this contains the DrawResult we obtained
     // the last time we updated it.
     DrawResult                          mLastDrawResult;
+    // Cached flags to use for decoding. FLAG_ASYNC_NOTIFY should always be set
+    // but FLAG_HIGH_QUALITY_SCALING may vary.
+    uint32_t                            mFlags;
   };
 
   AutoTArray<ImageContainerEntry, 1> mImageContainers;
