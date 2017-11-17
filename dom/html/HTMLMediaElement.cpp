@@ -545,7 +545,8 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest,
           ownerDoc->AddBlockedTrackingNode(element);
         }
       }
-      element->NotifyLoadError();
+      element->NotifyLoadError(
+        nsPrintfCString("%u: %s", uint32_t(status), "Request failed"));
     }
     return status;
   }
@@ -579,7 +580,7 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest,
     if (NS_FAILED(rv) && !mNextListener) {
       // Load failed, attempt to load the next candidate resource. If there
       // are none, this will trigger a MEDIA_ERR_SRC_NOT_SUPPORTED error.
-      element->NotifyLoadError();
+      element->NotifyLoadError(NS_LITERAL_CSTRING("Failed to init decoder"));
     }
     // If InitializeDecoderForChannel did not return a listener (but may
     // have otherwise succeeded), we abort the connection since we aren't
@@ -1226,7 +1227,7 @@ public:
 
     if (NS_FAILED(rv)) {
       // Notify load error so the element will try next resource candidate.
-      aElement->NotifyLoadError();
+      aElement->NotifyLoadError(NS_LITERAL_CSTRING("Fail to create channel"));
       return;
     }
 
@@ -1278,7 +1279,7 @@ public:
     rv = channel->AsyncOpen2(loadListener);
     if (NS_FAILED(rv)) {
       // Notify load error so the element will try next resource candidate.
-      aElement->NotifyLoadError();
+      aElement->NotifyLoadError(NS_LITERAL_CSTRING("Failed to open channel"));
       return;
     }
 
