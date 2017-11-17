@@ -900,13 +900,10 @@ Gecko_MatchLang(RawGeckoElementBorrowed aElement,
   MOZ_ASSERT(!(aOverrideLang && !aHasOverrideLang),
              "aHasOverrideLang should only be set when aOverrideLang is null");
 
-  if (!aHasOverrideLang) {
-    return nsCSSPseudoClasses::LangPseudoMatches(aElement, nullptr, false,
-                                                 aValue, aElement->OwnerDoc());
-  }
-
-  return nsCSSPseudoClasses::LangPseudoMatches(aElement, aOverrideLang, true,
-                                               aValue, aElement->OwnerDoc());
+  return nsCSSPseudoClasses::LangPseudoMatches(
+      aElement,
+      aHasOverrideLang ? aOverrideLang : nullptr,
+      aHasOverrideLang, aValue, aElement->OwnerDoc());
 }
 
 nsAtom*
