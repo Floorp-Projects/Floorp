@@ -284,6 +284,7 @@ VROculusSession::StopPresentation()
 
 VROculusSession::~VROculusSession()
 {
+  mSubmitThread = nullptr;
   Uninitialize(true);
 }
 
@@ -356,16 +357,19 @@ VROculusSession::Refresh(bool aForceRefresh)
       // fill the HMD with black / no layers.
       if (mSession && mTextureSet) {
         if (!aForceRefresh) {
-          // ovr_SubmitFrame is only allowed been run at Compositor thread,
-          // so we post this task to Compositor thread and let it determine
-          // if reloading library.
+          // VROculusSession didn't start submitting frames yet.
+          if (!mSubmitThread) {
+            return;
+          }
+          // ovr_SubmitFrame is running at VR Submit thread,
+          // so we post this task to VR Submit thread and let it paint
+          // a black frame.
           mDrawBlack = true;
-          MessageLoop* loop = layers::CompositorThreadHolder::Loop();
-          loop->PostTask(NewRunnableMethod<bool>(
+          MOZ_ASSERT(mSubmitThread->IsActive());
+          mSubmitThread->PostTask(NewRunnableMethod<bool>(
             "gfx::VROculusSession::Refresh",
             this,
             &VROculusSession::Refresh, true));
-
           return;
         }
         ovrLayerEyeFov layer;
@@ -1095,6 +1099,7 @@ VRDisplayOculus::SubmitFrame(ID3D11Texture2D* aSource,
                              const gfx::Rect& aLeftEyeRect,
                              const gfx::Rect& aRightEyeRect)
 {
+  MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   if (!CreateD3DObjects()) {
     return false;
   }
@@ -1245,6 +1250,7 @@ VRDisplayOculus::SubmitFrame(ID3D11Texture2D* aSource,
     return false;
   }
 
+  mSession->mSubmitThread = mSubmitThread;
   return true;
 }
 
