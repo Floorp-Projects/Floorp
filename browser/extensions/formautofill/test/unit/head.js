@@ -100,13 +100,7 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
       Assert.equal(forms.length, testPattern.expectedResult.length, "Expected form count.");
 
       forms.forEach((form, formIndex) => {
-        let sections = FormAutofillHeuristics.getFormInfo(form);
-        if (testPattern.expectedResult[formIndex].length == 0) {
-          return;
-        }
-        // TODO [Bug 1415077] the test should be able to support traversing all
-        // sections.
-        let formInfo = sections[0];
+        let formInfo = FormAutofillHeuristics.getFormInfo(form);
         do_print("FieldName Prediction Results: " + formInfo.map(i => i.fieldName));
         do_print("FieldName Expected Results:   " + testPattern.expectedResult[formIndex].map(i => i.fieldName));
         Assert.equal(formInfo.length, testPattern.expectedResult[formIndex].length, "Expected field count.");
@@ -173,7 +167,6 @@ add_task(async function head_initialize() {
   Services.prefs.setStringPref("extensions.formautofill.available", "on");
   Services.prefs.setBoolPref("extensions.formautofill.creditCards.available", true);
   Services.prefs.setBoolPref("extensions.formautofill.heuristics.enabled", true);
-  Services.prefs.setBoolPref("extensions.formautofill.section.enabled", false);
   Services.prefs.setBoolPref("dom.forms.autocomplete.formautofill", true);
 
   // Clean up after every test.
@@ -181,7 +174,6 @@ add_task(async function head_initialize() {
     Services.prefs.clearUserPref("extensions.formautofill.available");
     Services.prefs.clearUserPref("extensions.formautofill.creditCards.available");
     Services.prefs.clearUserPref("extensions.formautofill.heuristics.enabled");
-    Services.prefs.clearUserPref("extensions.formautofill.section.enabled");
     Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
   });
 });
