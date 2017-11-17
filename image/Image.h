@@ -359,16 +359,26 @@ private:
                              uint32_t aFlags,
                              bool aInTransaction);
 
-  // A weak pointer to our ImageContainer, which stays alive only as long as
-  // the layer system needs it.
-  WeakPtr<layers::ImageContainer> mImageContainer;
+  struct ImageContainerEntry {
+    ImageContainerEntry(const gfx::IntSize& aSize,
+                        layers::ImageContainer* aContainer)
+      : mSize(aSize)
+      , mContainer(aContainer)
+      , mLastDrawResult(DrawResult::NOT_READY)
+    { }
 
+    gfx::IntSize                        mSize;
+    // A weak pointer to our ImageContainer, which stays alive only as long as
+    // the layer system needs it.
+    WeakPtr<layers::ImageContainer>     mContainer;
+    // If mContainer is non-null, this contains the DrawResult we obtained
+    // the last time we updated it.
+    DrawResult                          mLastDrawResult;
+  };
+
+  AutoTArray<ImageContainerEntry, 1> mImageContainers;
   layers::ImageContainer::ProducerID mImageProducerID;
   layers::ImageContainer::FrameID mLastFrameID;
-
-  // If mImageContainer is non-null, this contains the DrawResult we obtained
-  // the last time we updated it.
-  DrawResult mLastImageContainerDrawResult;
 };
 
 } // namespace image
