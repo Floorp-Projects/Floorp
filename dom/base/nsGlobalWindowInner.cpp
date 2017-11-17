@@ -50,6 +50,9 @@
   return;                                                               \
   PR_END_MACRO
 
+#define DOM_TOUCH_LISTENER_ADDED "dom-touch-listener-added"
+#define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
+
 static bool                 gIdleObserversAPIFuzzTimeDisabled = false;
 
 nsGlobalWindowInner::InnerWindowByIdTable *nsGlobalWindowInner::sInnerWindowsById = nullptr;
