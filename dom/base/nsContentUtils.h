@@ -3250,6 +3250,9 @@ public:
 
   static bool ContentIsLink(nsIContent* aContent);
 
+  static already_AddRefed<mozilla::dom::EventTarget>
+  TryGetTabChildGlobalAsEventTarget(nsISupports* aFrom);
+
 private:
   static bool InitializeEventTable();
 
