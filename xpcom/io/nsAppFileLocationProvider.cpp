@@ -58,7 +58,6 @@
 #define RES_DIR_NAME                NS_LITERAL_CSTRING("res")
 #define CHROME_DIR_NAME             NS_LITERAL_CSTRING("chrome")
 #define PLUGINS_DIR_NAME            NS_LITERAL_CSTRING("plugins")
-#define SEARCH_DIR_NAME             NS_LITERAL_CSTRING("searchplugins")
 
 //*****************************************************************************
 // nsAppFileLocationProvider::Constructor/Destructor
@@ -194,17 +193,7 @@ nsAppFileLocationProvider::GetFile(const char* aProp, bool* aPersistent,
   }
 #endif
 #endif
-  else if (nsCRT::strcmp(aProp, NS_APP_SEARCH_DIR) == 0) {
-    rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-    if (NS_SUCCEEDED(rv)) {
-      rv = localFile->AppendRelativeNativePath(SEARCH_DIR_NAME);
-    }
-  } else if (nsCRT::strcmp(aProp, NS_APP_USER_SEARCH_DIR) == 0) {
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, aResult);
-    if (NS_SUCCEEDED(rv)) {
-      rv = (*aResult)->AppendNative(SEARCH_DIR_NAME);
-    }
-  } else if (nsCRT::strcmp(aProp, NS_APP_INSTALL_CLEANUP_DIR) == 0) {
+  else if (nsCRT::strcmp(aProp, NS_APP_INSTALL_CLEANUP_DIR) == 0) {
     // This is cloned so that embeddors will have a hook to override
     // with their own cleanup dir.  See bugzilla bug #105087
     rv = CloneMozBinDirectory(getter_AddRefs(localFile));
@@ -554,16 +543,6 @@ nsAppFileLocationProvider::GetFiles(const char* aProp,
     }
     *aResult = new nsPathsDirectoryEnumerator(this, keys);
 #endif
-    NS_ADDREF(*aResult);
-    rv = NS_OK;
-  }
-  if (!nsCRT::strcmp(aProp, NS_APP_SEARCH_DIR_LIST)) {
-    static const char* keys[] = { nullptr, NS_APP_USER_SEARCH_DIR, nullptr };
-    if (!keys[0] && !(keys[0] = PR_GetEnv("MOZ_SEARCH_ENGINE_PATH"))) {
-      static const char nullstr = 0;
-      keys[0] = &nullstr;
-    }
-    *aResult = new nsPathsDirectoryEnumerator(this, keys);
     NS_ADDREF(*aResult);
     rv = NS_OK;
   }
