@@ -12,7 +12,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TypeTraits.h"
 
-#include "jsfriendapi.h"
 #include "jsprf.h"
 
 #include "builtin/ModuleObject.h"
@@ -1755,15 +1754,6 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
             traverseEdge(obj, v.toString());
         } else if (v.isObject()) {
             JSObject* obj2 = &v.toObject();
-#ifdef DEBUG
-            if (!obj2) {
-                fprintf(stderr,
-                        "processMarkStackTop found ObjectValue(nullptr) "
-                        "at %zu Values from end of array in object:\n",
-                        end - (vp - 1));
-                DumpObject(obj);
-            }
-#endif
             CheckForCompartmentMismatch(obj, obj2);
             if (mark(obj2)) {
                 // Save the rest of this value array for later and start scanning obj2's children.
