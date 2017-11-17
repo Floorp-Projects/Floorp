@@ -3607,11 +3607,13 @@ var gDetailView = {
 
         const browserContainer = await this.createOptionsBrowser(rows);
 
-        // Make sure the browser is unloaded as soon as we change views,
-        // rather than waiting for the next detail view to load.
-        document.addEventListener("ViewChanged", function() {
-          browserContainer.remove();
-        }, {once: true});
+        if (browserContainer) {
+          // Make sure the browser is unloaded as soon as we change views,
+          // rather than waiting for the next detail view to load.
+          document.addEventListener("ViewChanged", function() {
+            browserContainer.remove();
+          }, {once: true});
+        }
 
         finish(browserContainer);
       });
@@ -3637,8 +3639,17 @@ var gDetailView = {
   },
 
   async createOptionsBrowser(parentNode) {
-    let stack = document.createElement("stack");
-    stack.setAttribute("id", "addon-options-prompts-stack");
+    const containerId = "addon-options-prompts-stack";
+
+    let stack = document.getElementById(containerId);
+
+    if (stack) {
+      // Remove the existent options container (if any).
+      stack.remove();
+    }
+
+    stack = document.createElement("stack");
+    stack.setAttribute("id", containerId);
 
     let browser = document.createElement("browser");
     browser.setAttribute("type", "content");
@@ -3656,7 +3667,7 @@ var gDetailView = {
       event.stopPropagation();
     });
 
-    let {optionsURL} = this._addon;
+    let {optionsURL, optionsBrowserStyle} = this._addon;
     let remote = !E10SUtils.canLoadURIInProcess(optionsURL, Services.appinfo.PROCESS_TYPE_DEFAULT);
 
     let readyPromise;
@@ -3675,6 +3686,15 @@ var gDetailView = {
     browser.clientTop;
 
     await readyPromise;
+
+    if (!browser.messageManager) {
+      // If the browser.messageManager is undefined, the browser element has been
+      // removed from the document in the meantime (e.g. due to a rapid sequence
+      // of addon reload), ensure that the stack is also removed and return null.
+      stack.remove();
+      return null;
+    }
+
     ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
 
     return new Promise(resolve => {
@@ -3688,6 +3708,16 @@ var gDetailView = {
       };
 
       let mm = browser.messageManager;
+
+      if (!mm) {
+        // If the browser.messageManager is undefined, the browser element has been
+        // removed from the document in the meantime (e.g. due to a rapid sequence
+        // of addon reload), ensure that the stack is also removed and return null.
+        stack.remove();
+        resolve(null);
+        return;
+      }
+
       mm.loadFrameScript("chrome://extensions/content/ext-browser-content.js",
                          false);
       mm.addMessageListener("Extension:BrowserContentLoaded", messageListener);
@@ -3698,7 +3728,7 @@ var gDetailView = {
         isInline: true,
       };
 
-      if (this._addon.optionsBrowserStyle) {
+      if (optionsBrowserStyle) {
         browserOptions.stylesheets = extensionStylesheets;
       }
 
