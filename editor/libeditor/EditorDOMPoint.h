@@ -120,6 +120,102 @@ private:
   }
 };
 
+/**
+ * AutoEditorDOMPointOffsetInvalidator is useful if DOM tree will be changed
+ * when EditorDOMPoint instance is available and keeps referring same child
+ * node.
+ *
+ * This class automatically guarantees that given EditorDOMPoint instance
+ * stores the child node and invalidates its offset when the instance is
+ * destroyed.  Additionally, users of this class can invalidate the offset
+ * manually when they need.
+ */
+class MOZ_STACK_CLASS AutoEditorDOMPointOffsetInvalidator final
+{
+public:
+  explicit AutoEditorDOMPointOffsetInvalidator(EditorDOMPoint& aPoint)
+    : mPoint(aPoint)
+  {
+    MOZ_ASSERT(aPoint.IsSetAndValid());
+    mChild = mPoint.GetChildAtOffset();
+  }
+
+  ~AutoEditorDOMPointOffsetInvalidator()
+  {
+    InvalidateOffset();
+  }
+
+  /**
+   * Manually, invalidate offset of the given point.
+   */
+  void InvalidateOffset()
+  {
+    if (mChild) {
+      mPoint.Set(mChild);
+    } else {
+      // If the point referred after the last child, let's keep referring
+      // after current last node of the old container.
+      mPoint.Set(mPoint.Container(), mPoint.Container()->Length());
+    }
+  }
+
+private:
+  EditorDOMPoint& mPoint;
+  // Needs to store child node by ourselves because EditorDOMPoint stores
+  // child node with mRef which is previous sibling of current child node.
+  // Therefore, we cannot keep referring it if it's first child.
+  nsCOMPtr<nsIContent> mChild;
+
+  AutoEditorDOMPointOffsetInvalidator() = delete;
+  AutoEditorDOMPointOffsetInvalidator(
+    const AutoEditorDOMPointOffsetInvalidator& aOther) = delete;
+  const AutoEditorDOMPointOffsetInvalidator& operator=(
+    const AutoEditorDOMPointOffsetInvalidator& aOther) = delete;
+};
+
+/**
+ * AutoEditorDOMPointChildInvalidator is useful if DOM tree will be changed
+ * when EditorDOMPoint instance is available and keeps referring same container
+ * and offset in it.
+ *
+ * This class automatically guarantees that given EditorDOMPoint instance
+ * stores offset and invalidates its child node when the instance is destroyed.
+ * Additionally, users of this class can invalidate the child manually when
+ * they need.
+ */
+class MOZ_STACK_CLASS AutoEditorDOMPointChildInvalidator final
+{
+public:
+  explicit AutoEditorDOMPointChildInvalidator(EditorDOMPoint& aPoint)
+    : mPoint(aPoint)
+  {
+    MOZ_ASSERT(aPoint.IsSetAndValid());
+    Unused << mPoint.Offset();
+  }
+
+  ~AutoEditorDOMPointChildInvalidator()
+  {
+    InvalidateChild();
+  }
+
+  /**
+   * Manually, invalidate child of the given point.
+   */
+  void InvalidateChild()
+  {
+    mPoint.Set(mPoint.Container(), mPoint.Offset());
+  }
+
+private:
+  EditorDOMPoint& mPoint;
+
+  AutoEditorDOMPointChildInvalidator() = delete;
+  AutoEditorDOMPointChildInvalidator(
+    const AutoEditorDOMPointChildInvalidator& aOther) = delete;
+  const AutoEditorDOMPointChildInvalidator& operator=(
+    const AutoEditorDOMPointChildInvalidator& aOther) = delete;
+};
+
 } // namespace mozilla
 
 #endif // #ifndef mozilla_EditorDOMPoint_h
