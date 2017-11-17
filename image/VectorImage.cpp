@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
 #include "nsIDOMEvent.h"
@@ -583,6 +584,8 @@ VectorImage::SendInvalidationNotifications()
     mProgressTracker->SyncNotifyProgress(FLAG_FRAME_COMPLETE,
                                          GetMaxSizedIntRect());
   }
+
+  UpdateImageContainer();
 }
 
 NS_IMETHODIMP_(IntRect)
@@ -801,6 +804,18 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
 }
 
 //******************************************************************************
+IntSize
+VectorImage::GetImageContainerSize(LayerManager* aManager,
+                                   const IntSize& aSize,
+                                   uint32_t aFlags)
+{
+  if (!IsImageContainerAvailableAtSize(aManager, aSize, aFlags)) {
+    return IntSize(0, 0);
+  }
+
+  return aSize;
+}
+
 NS_IMETHODIMP_(bool)
 VectorImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
 {
@@ -820,7 +835,14 @@ VectorImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
                                              const IntSize& aSize,
                                              uint32_t aFlags)
 {
-  return false;
+  if (mError || !mIsFullyLoaded || aSize.IsEmpty() ||
+      mHaveAnimations || !gfxVars::UseWebRender()) {
+    return false;
+  }
+
+  int32_t maxTextureSize = aManager->GetMaxTextureSize();
+  return aSize.width <= maxTextureSize &&
+         aSize.height <= maxTextureSize;
 }
 
 //******************************************************************************
@@ -829,7 +851,10 @@ VectorImage::GetImageContainerAtSize(LayerManager* aManager,
                                      const IntSize& aSize,
                                      uint32_t aFlags)
 {
-  return nullptr;
+  // Since we do not support high quality scaling with SVG, we mask it off so
+  // that container requests with and without it map to the same container.
+  uint32_t flags = aFlags & ~FLAG_HIGH_QUALITY_SCALING;
+  return GetImageContainerImpl(aManager, aSize, aFlags);
 }
 
 //******************************************************************************
