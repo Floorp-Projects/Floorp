@@ -1044,16 +1044,21 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
         w = gCheckboxWidget;
     }
 
-    // XXX we should assert rect->height >= indicator_size too
-    // after bug 369581 is fixed.
-    MOZ_ASSERT(rect->width >= indicator_size,
-               "GetMinimumWidgetSize was ignored");
+    // Clamp the rect and paint it center aligned in the rect.
+    x = rect->x;
+    y = rect->y;
+    width = rect->width;
+    height = rect->height;
 
-    // Paint it center aligned in the rect.
-    x = rect->x + (rect->width - indicator_size) / 2;
-    y = rect->y + (rect->height - indicator_size) / 2;
-    width = indicator_size;
-    height = indicator_size;
+    if (rect->width < rect->height) {
+      y = rect->y + (rect->height - rect->width) / 2;
+      height = rect->width;
+    }
+
+    if (rect->height < rect->width) {
+      x = rect->x + (rect->width - rect->height) / 2;
+      width = rect->height;
+    }
 
     focus_x = x - indicator_spacing;
     focus_y = y - indicator_spacing;
