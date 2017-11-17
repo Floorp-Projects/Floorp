@@ -307,12 +307,6 @@ Gecko_IsPrivateBrowsingEnabled(const nsIDocument* aDoc)
   return loadContext && loadContext->UsePrivateBrowsing();
 }
 
-bool
-Gecko_AreVisitedLinksEnabled()
-{
-  return nsCSSRuleProcessor::VisitedLinksEnabled();
-}
-
 EventStates::ServoType
 Gecko_ElementState(RawGeckoElementBorrowed aElement)
 {
