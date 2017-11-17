@@ -312,9 +312,6 @@ int32_t gTimeoutCnt                                    = 0;
 // CIDs
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 
-#define NETWORK_UPLOAD_EVENT_NAME     NS_LITERAL_STRING("moznetworkupload")
-#define NETWORK_DOWNLOAD_EVENT_NAME   NS_LITERAL_STRING("moznetworkdownload")
-
 namespace mozilla {
 namespace dom {
 extern uint64_t
