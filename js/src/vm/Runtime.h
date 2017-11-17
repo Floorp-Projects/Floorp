@@ -1091,48 +1091,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
 namespace js {
 
-/*
- * Flags accompany script version data so that a) dynamically created scripts
- * can inherit their caller's compile-time properties and b) scripts can be
- * appropriately compared in the eval cache across global option changes. An
- * example of the latter is enabling the top-level-anonymous-function-is-error
- * option: subsequent evals of the same, previously-valid script text may have
- * become invalid.
- */
-namespace VersionFlags {
-static const unsigned MASK      = 0x0FFF; /* see JSVersion in jspubtd.h */
-} /* namespace VersionFlags */
-
-static inline JSVersion
-VersionNumber(JSVersion version)
-{
-    return JSVersion(uint32_t(version) & VersionFlags::MASK);
-}
-
-static inline JSVersion
-VersionExtractFlags(JSVersion version)
-{
-    return JSVersion(uint32_t(version) & ~VersionFlags::MASK);
-}
-
-static inline void
-VersionCopyFlags(JSVersion* version, JSVersion from)
-{
-    *version = JSVersion(VersionNumber(*version) | VersionExtractFlags(from));
-}
-
-static inline bool
-VersionHasFlags(JSVersion version)
-{
-    return !!VersionExtractFlags(version);
-}
-
-static inline bool
-VersionIsKnown(JSVersion version)
-{
-    return VersionNumber(version) != JSVERSION_UNKNOWN;
-}
-
 inline void
 FreeOp::free_(void* p)
 {

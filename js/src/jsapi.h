@@ -1123,9 +1123,6 @@ class MOZ_RAII JSAutoRequest
 #endif
 };
 
-extern JS_PUBLIC_API(JSVersion)
-JS_GetVersion(JSContext* cx);
-
 extern JS_PUBLIC_API(const char*)
 JS_VersionToString(JSVersion version);
 
@@ -2594,18 +2591,10 @@ class JS_PUBLIC_API(CompartmentBehaviors)
     };
 
     CompartmentBehaviors()
-      : version_(JSVERSION_UNKNOWN)
-      , discardSource_(false)
+      : discardSource_(false)
       , disableLazyParsing_(false)
       , singletonsAsTemplates_(true)
     {
-    }
-
-    JSVersion version() const { return version_; }
-    CompartmentBehaviors& setVersion(JSVersion aVersion) {
-        MOZ_ASSERT(aVersion != JSVERSION_UNKNOWN);
-        version_ = aVersion;
-        return *this;
     }
 
     // For certain globals, we know enough about the code that will run in them
@@ -2634,7 +2623,6 @@ class JS_PUBLIC_API(CompartmentBehaviors)
     }
 
   private:
-    JSVersion version_;
     bool discardSource_;
     bool disableLazyParsing_;
     Override extraWarningsOverride_;
@@ -4030,17 +4018,11 @@ class JS_FRIEND_API(TransitiveCompileOptions)
     const char* introducerFilename_;
     const char16_t* sourceMapURL_;
 
-    // This constructor leaves 'version' set to JSVERSION_UNKNOWN. The structure
-    // is unusable until that's set to something more specific; the derived
-    // classes' constructors take care of that, in ways appropriate to their
-    // purpose.
     TransitiveCompileOptions()
       : mutedErrors_(false),
         filename_(nullptr),
         introducerFilename_(nullptr),
         sourceMapURL_(nullptr),
-        version(JSVERSION_UNKNOWN),
-        versionSet(false),
         utf8(false),
         selfHostingMode(false),
         canLazilyParse(true),
@@ -4076,8 +4058,6 @@ class JS_FRIEND_API(TransitiveCompileOptions)
     virtual JSScript* introductionScript() const = 0;
 
     // POD options.
-    JSVersion version;
-    bool versionSet;
     bool utf8;
     bool selfHostingMode;
     bool canLazilyParse;
@@ -4183,10 +4163,7 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     PersistentRootedScript introductionScriptRoot;
 
   public:
-    // A minimal constructor, for use with OwningCompileOptions::copy. This
-    // leaves |this.version| set to JSVERSION_UNKNOWN; the instance
-    // shouldn't be used until we've set that to something real (as |copy|
-    // will).
+    // A minimal constructor, for use with OwningCompileOptions::copy.
     explicit OwningCompileOptions(JSContext* cx);
     ~OwningCompileOptions();
 
@@ -4219,11 +4196,6 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     }
     OwningCompileOptions& setMutedErrors(bool mute) {
         mutedErrors_ = mute;
-        return *this;
-    }
-    OwningCompileOptions& setVersion(JSVersion v) {
-        version = v;
-        versionSet = true;
         return *this;
     }
     OwningCompileOptions& setUTF8(bool u) { utf8 = u; return *this; }
@@ -4266,7 +4238,7 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) final : public ReadOnlyCompi
     RootedScript introductionScriptRoot;
 
   public:
-    explicit CompileOptions(JSContext* cx, JSVersion version = JSVERSION_UNKNOWN);
+    explicit CompileOptions(JSContext* cx);
     CompileOptions(JSContext* cx, const ReadOnlyCompileOptions& rhs)
       : ReadOnlyCompileOptions(), elementRoot(cx), elementAttributeNameRoot(cx),
         introductionScriptRoot(cx)
@@ -4316,11 +4288,6 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) final : public ReadOnlyCompi
     }
     CompileOptions& setMutedErrors(bool mute) {
         mutedErrors_ = mute;
-        return *this;
-    }
-    CompileOptions& setVersion(JSVersion v) {
-        version = v;
-        versionSet = true;
         return *this;
     }
     CompileOptions& setUTF8(bool u) { utf8 = u; return *this; }

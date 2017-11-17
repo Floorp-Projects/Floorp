@@ -181,23 +181,6 @@ FT2FontEntry::CreateScaledFont(const gfxFontStyle *aStyle)
     cairo_matrix_init_scale(&sizeMatrix, aStyle->size, aStyle->size);
     cairo_matrix_init_identity(&identityMatrix);
 
-    // synthetic oblique by skewing via the font matrix
-    bool needsOblique = IsUpright() &&
-                        aStyle->style != NS_FONT_STYLE_NORMAL &&
-                        aStyle->allowSyntheticStyle;
-
-    if (needsOblique) {
-        cairo_matrix_t style;
-        cairo_matrix_init(&style,
-                          1,                //xx
-                          0,                //yx
-                          -1 * OBLIQUE_SKEW_FACTOR, //xy
-                          1,                //yy
-                          0,                //x0
-                          0);               //y0
-        cairo_matrix_multiply(&sizeMatrix, &sizeMatrix, &style);
-    }
-
     cairo_font_options_t *fontOptions = cairo_font_options_create();
 
     if (gfxPlatform::GetPlatform()->RequiresLinearZoom()) {

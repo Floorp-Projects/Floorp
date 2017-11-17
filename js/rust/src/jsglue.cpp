@@ -533,7 +533,6 @@ NewCompileOptions(JSContext* aCx, const char* aFile, unsigned aLine)
 {
     JS::OwningCompileOptions *opts = new JS::OwningCompileOptions(aCx);
     opts->setFileAndLine(aCx, aFile, aLine);
-    opts->setVersion(JSVERSION_DEFAULT);
     return opts;
 }
 

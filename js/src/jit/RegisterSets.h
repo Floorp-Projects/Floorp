@@ -127,10 +127,10 @@ class ValueOperand
     Register scratchReg() const {
         return payloadReg();
     }
-    bool operator==(const ValueOperand& o) const {
+    constexpr bool operator==(const ValueOperand& o) const {
         return type_ == o.type_ && payload_ == o.payload_;
     }
-    bool operator!=(const ValueOperand& o) const {
+    constexpr bool operator!=(const ValueOperand& o) const {
         return !(*this == o);
     }
 
@@ -151,10 +151,10 @@ class ValueOperand
     Register scratchReg() const {
         return valueReg();
     }
-    bool operator==(const ValueOperand& o) const {
+    constexpr bool operator==(const ValueOperand& o) const {
         return value_ == o.value_;
     }
-    bool operator!=(const ValueOperand& o) const {
+    constexpr bool operator!=(const ValueOperand& o) const {
         return !(*this == o);
     }
 #endif
@@ -499,7 +499,6 @@ class RegisterSet {
     bool operator ==(const RegisterSet& other) const {
         return other.gpr_ == gpr_ && other.fpu_ == fpu_;
     }
-
 };
 
 // There are 2 use cases for register sets:

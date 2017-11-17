@@ -1431,7 +1431,6 @@ nsCookieService::TryInitDB(bool aRecreateDB)
       gCookieService->ImportCookies(oldCookieFile);
       oldCookieFile->Remove(false);
       gCookieService->mDBState = initialState;
-      Telemetry::Accumulate(Telemetry::MOZ_SQLITE_COOKIES_OLD_SCHEMA, 0);
     });
 
   NS_DispatchToMainThread(runnable);
@@ -1729,6 +1728,7 @@ nsCookieService::CloseDBStates()
   CleanupDefaultDBConnection();
 
   mDefaultDBState = nullptr;
+  mInitializedDBConn = false;
   mInitializedDBStates = false;
 }
 
@@ -1765,8 +1765,6 @@ nsCookieService::CleanupDefaultDBConnection()
   mDefaultDBState->updateListener = nullptr;
   mDefaultDBState->removeListener = nullptr;
   mDefaultDBState->closeListener = nullptr;
-
-  mInitializedDBConn = false;
 }
 
 void
@@ -1916,7 +1914,7 @@ nsCookieService::RebuildCorruptDB(DBState* aDBState)
             os->NotifyObservers(nullptr, "cookie-db-rebuilding", nullptr);
           }
 
-          gCookieService->InitDBConn();
+          gCookieService->InitDBConnInternal();
 
           // Enumerate the hash, and add cookies to the params array.
           mozIStorageAsyncStatement* stmt = gCookieService->mDefaultDBState->stmtInsert;
@@ -3020,6 +3018,9 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     }
   }
 
+  if (mDefaultDBState->cookieCount - originalCookieCount > 0) {
+    Telemetry::Accumulate(Telemetry::MOZ_SQLITE_COOKIES_OLD_SCHEMA, 0);
+  }
 
   COOKIE_LOGSTRING(LogLevel::Debug, ("ImportCookies(): %" PRIu32 " cookies imported",
     mDefaultDBState->cookieCount));

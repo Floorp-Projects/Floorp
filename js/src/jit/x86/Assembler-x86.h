@@ -228,7 +228,7 @@ HighWord(const Operand& op) {
 }
 
 // Return operand from a JS -> JS call.
-static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
+static constexpr ValueOperand JSReturnOperand{JSReturnReg_Type, JSReturnReg_Data};
 
 class Assembler : public AssemblerX86Shared
 {

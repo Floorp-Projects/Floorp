@@ -168,7 +168,6 @@ class ParserBase : public StrictModeGetter
     ~ParserBase();
 
     const char* getFilename() const { return tokenStream.getFilename(); }
-    JSVersion versionNumber() const { return tokenStream.versionNumber(); }
     TokenPos pos() const { return tokenStream.currentToken().pos; }
 
     // Determine whether |yield| is a valid name in the current context.
@@ -862,6 +861,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
                                        FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
 
   private:
+    const char* nameIsArgumentsOrEval(Node node);
     bool checkIncDecOperand(Node operand, uint32_t operandOffset);
     bool checkStrictAssignment(Node lhs);
 

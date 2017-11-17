@@ -4692,7 +4692,7 @@ BaselineCompiler::emit_JSOP_RESUME()
     // Load the script. Note that we don't relazify generator scripts, so it's
     // guaranteed to be non-lazy.
     Register scratch1 = regs.takeAny();
-    masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), scratch1);
+    masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), scratch1);
 
     // Load the BaselineScript or call a stub if we don't have one.
     Label interpret;

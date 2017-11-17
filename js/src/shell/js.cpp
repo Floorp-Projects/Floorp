@@ -722,7 +722,6 @@ InitModuleLoader(JSContext* cx)
     options.setFileAndLine("shell/ModuleLoader.js", 1);
     options.setSelfHostingMode(false);
     options.setCanLazilyParse(false);
-    options.setVersion(JSVERSION_DEFAULT);
     options.werrorOption = true;
     options.strictOption = true;
 
@@ -1058,36 +1057,6 @@ Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind = File
         MOZ_ASSERT(kind == FileScript);
         if (!ReadEvalPrintLoop(cx, file, compileOnly))
             return false;
-    }
-    return true;
-}
-
-static bool
-Version(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    JSVersion origVersion = JS_GetVersion(cx);
-    if (args.length() == 0 || args[0].isUndefined()) {
-        /* Get version. */
-        args.rval().setInt32(origVersion);
-    } else {
-        /* Set version. */
-        int32_t v = -1;
-        if (args[0].isInt32()) {
-            v = args[0].toInt32();
-        } else if (args[0].isDouble()) {
-            double fv = args[0].toDouble();
-            int32_t fvi;
-            if (NumberEqualsInt32(fv, &fvi))
-                v = fvi;
-        }
-        if (v < 0 || v > JSVERSION_LATEST) {
-            JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
-                                      "version");
-            return false;
-        }
-        SetVersionForCurrentRealm(cx, JSVersion(v));
-        args.rval().setInt32(origVersion);
     }
     return true;
 }
@@ -3277,7 +3246,6 @@ static const JSClass sandbox_class = {
 static void
 SetStandardCompartmentOptions(JS::CompartmentOptions& options)
 {
-    options.behaviors().setVersion(JSVERSION_DEFAULT);
     options.creationOptions().setSharedMemoryAndAtomicsEnabled(enableSharedMemory);
 }
 
@@ -6500,10 +6468,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("clone", Clone, 1, 0,
 "clone(fun[, scope])",
 "  Clone function object."),
-
-    JS_FN_HELP("version", Version, 0, 0,
-"version([number])",
-"  Get or force a script compilation version number."),
 
     JS_FN_HELP("options", Options, 0, 0,
 "options([option ...])",

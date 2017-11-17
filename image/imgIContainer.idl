@@ -280,7 +280,7 @@ interface imgIContainer : nsISupports
                                                          in uint32_t aFlags);
   /**
    * Attempts to create an ImageContainer (and Image) containing the current
-   * frame.
+   * frame at its native size.
    *
    * Avoid calling this unless you're actually going to layerize this image.
    *
@@ -294,6 +294,41 @@ interface imgIContainer : nsISupports
    */
   [noscript, notxpcom] TempRefImageContainer getImageContainer(in LayerManager aManager,
                                                                in uint32_t aFlags);
+
+  /**
+   * @return true if getImageContainer() is expected to return a valid
+   *         ImageContainer when passed the given @Manager, @Size and @Flags
+   *         parameters.
+   */
+  [noscript, notxpcom] boolean isImageContainerAvailableAtSize(in LayerManager aManager,
+                                                               [const] in nsIntSize aSize,
+                                                               in uint32_t aFlags);
+
+  /**
+   * Attempts to create an ImageContainer (and Image) containing the current
+   * frame at the given size. Match the requested size is best effort; it's
+   * not guaranteed that the surface you get will be a perfect match. (Some
+   * reasons you may get a surface of a different size include: if you
+   * requested upscaling, or if downscale-during-decode is disabled.)
+   *
+   * Avoid calling this unless you're actually going to layerize this image.
+   *
+   * @param aManager The LayerManager which will be used to create the
+   *                 ImageContainer.
+   * @param aSVGContext If specified, SVG-related rendering context, such as
+   *                    overridden attributes on the image document's root <svg>
+   *                    node, and the size of the viewport that the full image
+   *                    would occupy. Ignored for raster images.
+   * @param aFlags Decoding / drawing flags (in other words, FLAG_* flags).
+   *               Currently only FLAG_SYNC_DECODE and FLAG_SYNC_DECODE_IF_FAST
+   *               are supported.
+   * @return An ImageContainer for the current frame, or nullptr if one could
+   *         not be created.
+   */
+  [noscript, notxpcom] TempRefImageContainer getImageContainerAtSize(in LayerManager aManager,
+                                                                     [const] in nsIntSize aSize,
+                                                                     [const] in MaybeSVGImageContext aSVGContext,
+                                                                     in uint32_t aFlags);
 
   /**
    * Draw the requested frame of this image onto the context specified.

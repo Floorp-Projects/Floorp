@@ -1010,7 +1010,7 @@ ScriptPreloader::DecodeNextBatch(size_t chunkSize, JS::HandleObject scope)
     JSContext* cx = jsapi.cx();
     JSAutoCompartment ac(cx, scope ? scope : CompilationScope(cx));
 
-    JS::CompileOptions options(cx, JSVERSION_DEFAULT);
+    JS::CompileOptions options(cx);
     options.setNoScriptRval(true)
            .setSourceIsLazy(true);
 

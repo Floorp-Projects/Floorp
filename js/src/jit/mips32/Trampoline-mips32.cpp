@@ -506,8 +506,7 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
     // Call the target function.
     // Note that this code assumes the function is JITted.
     masm.andPtr(Imm32(CalleeTokenMask), calleeTokenReg);
-    masm.loadPtr(Address(calleeTokenReg, JSFunction::offsetOfNativeOrScript()), t1);
-    masm.loadBaselineOrIonRaw(t1, t1, nullptr);
+    masm.loadJitCodeRaw(calleeTokenReg, t1, nullptr);
     argumentsRectifierReturnOffset_ = masm.callJitNoProfiler(t1);
 
     // arg1

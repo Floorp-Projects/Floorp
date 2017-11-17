@@ -718,7 +718,7 @@ class ICCallStubCompiler : public ICStubCompiler
     void guardSpreadCall(MacroAssembler& masm, Register argcReg, Label* failure,
                          bool isConstructing);
     Register guardFunApply(MacroAssembler& masm, AllocatableGeneralRegisterSet regs,
-                           Register argcReg, bool checkNative, FunApplyThing applyThing,
+                           Register argcReg, FunApplyThing applyThing,
                            Label* failure);
     void pushCallerArguments(MacroAssembler& masm, AllocatableGeneralRegisterSet regs);
     void pushArrayArguments(MacroAssembler& masm, Address arrayVal,
@@ -911,7 +911,7 @@ class ICCall_Native : public ICMonitoredStub
     uint32_t pcOffset_;
 
 #ifdef JS_SIMULATOR
-    void *native_;
+    void* native_;
 #endif
 
     ICCall_Native(JitCode* stubCode, ICStub* firstMonitorStub,

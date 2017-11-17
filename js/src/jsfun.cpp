@@ -795,12 +795,12 @@ JSFunction::trace(JSTracer* trc)
         // yet at some points when parsing, and can be lazy with no lazy script
         // for self-hosted code.
         if (hasScript() && !hasUncompiledScript())
-            TraceManuallyBarrieredEdge(trc, &u.i.s.script_, "script");
-        else if (isInterpretedLazy() && u.i.s.lazy_)
-            TraceManuallyBarrieredEdge(trc, &u.i.s.lazy_, "lazyScript");
+            TraceManuallyBarrieredEdge(trc, &u.scripted.s.script_, "script");
+        else if (isInterpretedLazy() && u.scripted.s.lazy_)
+            TraceManuallyBarrieredEdge(trc, &u.scripted.s.lazy_, "lazyScript");
 
-        if (u.i.env_)
-            TraceManuallyBarrieredEdge(trc, &u.i.env_, "fun_environment");
+        if (u.scripted.env_)
+            TraceManuallyBarrieredEdge(trc, &u.scripted.env_, "fun_environment");
     }
 }
 
@@ -831,7 +831,6 @@ CreateFunctionConstructor(JSContext* cx, JSProtoKey key)
         return nullptr;
 
     return functionCtor;
-
 }
 
 static JSObject*
@@ -871,8 +870,7 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
 
     CompileOptions options(cx);
     options.setIntroductionType("Function.prototype")
-           .setNoScriptRval(true)
-           .setVersion(JSVERSION_DEFAULT);
+           .setNoScriptRval(true);
     if (!ss->initFromOptions(cx, options))
         return nullptr;
     RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
@@ -1653,7 +1651,7 @@ JSFunction::maybeRelazify(JSRuntime* rt)
     // Try to relazify functions with a non-lazy script. Note: functions can be
     // marked as interpreted despite having no script yet at some points when
     // parsing.
-    if (!hasScript() || !u.i.s.script_)
+    if (!hasScript() || !u.scripted.s.script_)
         return;
 
     // Don't relazify functions in compartments that are active.
@@ -1675,7 +1673,7 @@ JSFunction::maybeRelazify(JSRuntime* rt)
         return;
 
     // Don't relazify functions with JIT code.
-    if (!u.i.s.script_->isRelazifiable())
+    if (!u.scripted.s.script_->isRelazifiable())
         return;
 
     // To delazify self-hosted builtins we need the name of the function
@@ -1693,7 +1691,7 @@ JSFunction::maybeRelazify(JSRuntime* rt)
     flags_ &= ~INTERPRETED;
     flags_ |= INTERPRETED_LAZY;
     LazyScript* lazy = script->maybeLazyScript();
-    u.i.s.lazy_ = lazy;
+    u.scripted.s.lazy_ = lazy;
     if (lazy) {
         MOZ_ASSERT(!isSelfHostedBuiltin());
     } else {

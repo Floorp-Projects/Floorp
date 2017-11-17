@@ -49,8 +49,7 @@ public:
       , mPromise(aPromise)
       , mCharset(aOptions.mCharset)
     {
-        mOptions.setVersion(JSVERSION_DEFAULT)
-                .setNoScriptRval(!aOptions.mHasReturnValue)
+        mOptions.setNoScriptRval(!aOptions.mHasReturnValue)
                 .setCanLazilyParse(aOptions.mLazilyParse)
                 .setFile(aCx, mURL.get());
     }
