@@ -41,24 +41,25 @@ CapturedBufferState::Unrotate::UnrotateBuffer()
 bool
 CapturedBufferState::PrepareBuffer()
 {
-  return (!mBufferCopy || mBufferCopy->CopyBuffer()) &&
-         (!mBufferUnrotate || mBufferUnrotate->UnrotateBuffer());
+  return (!mBufferFinalize || mBufferFinalize->CopyBuffer()) &&
+         (!mBufferUnrotate || mBufferUnrotate->UnrotateBuffer()) &&
+         (!mBufferInitialize || mBufferInitialize->CopyBuffer());
 }
 
 void
 CapturedBufferState::GetTextureClients(nsTArray<RefPtr<TextureClient>>& aTextureClients)
 {
-  if (mBufferCopy) {
-    if (TextureClient* source = mBufferCopy->mSource->GetClient()) {
+  if (mBufferFinalize) {
+    if (TextureClient* source = mBufferFinalize->mSource->GetClient()) {
       aTextureClients.AppendElement(source);
     }
-    if (TextureClient* sourceOnWhite = mBufferCopy->mSource->GetClientOnWhite()) {
+    if (TextureClient* sourceOnWhite = mBufferFinalize->mSource->GetClientOnWhite()) {
       aTextureClients.AppendElement(sourceOnWhite);
     }
-    if (TextureClient* destination = mBufferCopy->mDestination->GetClient()) {
+    if (TextureClient* destination = mBufferFinalize->mDestination->GetClient()) {
       aTextureClients.AppendElement(destination);
     }
-    if (TextureClient* destinationOnWhite = mBufferCopy->mDestination->GetClientOnWhite()) {
+    if (TextureClient* destinationOnWhite = mBufferFinalize->mDestination->GetClientOnWhite()) {
       aTextureClients.AppendElement(destinationOnWhite);
     }
   }
@@ -69,6 +70,21 @@ CapturedBufferState::GetTextureClients(nsTArray<RefPtr<TextureClient>>& aTexture
     }
     if (TextureClient* clientOnWhite = mBufferUnrotate->mBuffer->GetClientOnWhite()) {
       aTextureClients.AppendElement(clientOnWhite);
+    }
+  }
+
+  if (mBufferInitialize) {
+    if (TextureClient* source = mBufferInitialize->mSource->GetClient()) {
+      aTextureClients.AppendElement(source);
+    }
+    if (TextureClient* sourceOnWhite = mBufferInitialize->mSource->GetClientOnWhite()) {
+      aTextureClients.AppendElement(sourceOnWhite);
+    }
+    if (TextureClient* destination = mBufferInitialize->mDestination->GetClient()) {
+      aTextureClients.AppendElement(destination);
+    }
+    if (TextureClient* destinationOnWhite = mBufferInitialize->mDestination->GetClientOnWhite()) {
+      aTextureClients.AppendElement(destinationOnWhite);
     }
   }
 }
