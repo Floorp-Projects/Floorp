@@ -10,8 +10,6 @@
 const SEARCH_APP_DIR = 1;
 
 function run_test() {
-  removeMetadata();
-  removeCacheFile();
   do_load_manifest("data/chrome.manifest");
 
   configureToLoadJarEngines();
@@ -39,8 +37,6 @@ add_test(function test_identifier() {
     // the filename inside the JAR. (In this case it's the same as the name.)
     do_check_eq(jarEngine.identifier, "bug645970");
 
-    removeMetadata();
-    removeCacheFile();
     run_next_test();
   });
 });
