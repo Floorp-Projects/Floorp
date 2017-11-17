@@ -367,7 +367,7 @@ def main(argv):
     try:
         ok = None
         if options.remote:
-            ok = jittests.run_tests(job_list, job_count, prefix, options, remote=True)
+            ok = jittests.run_tests_remote(job_list, job_count, prefix, options)
         else:
             with change_env(test_environment):
                 ok = jittests.run_tests(job_list, job_count, prefix, options)
