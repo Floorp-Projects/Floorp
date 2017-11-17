@@ -59,7 +59,9 @@ function isAvailable() {
   } else if (availablePref == "detect") {
     let locale = Services.locale.getRequestedLocale();
     let region = Services.prefs.getCharPref("browser.search.region", "");
-    return locale == "en-US" && region == "US";
+    let supportedCountries = Services.prefs.getCharPref("extensions.formautofill.supportedCountries")
+                                           .split(",");
+    return locale == "en-US" && supportedCountries.includes(region);
   }
   return false;
 }
