@@ -57,7 +57,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "307849cc2a84"
+        "revision": "d4f87a91c23b"
     }, 
     "az": {
         "platforms": [
@@ -157,7 +157,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a7a2ff85f459"
+        "revision": "655fff795b82"
     }, 
     "cy": {
         "platforms": [
@@ -327,7 +327,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "eb2091eed154"
+        "revision": "e11a2492bba3"
     }, 
     "fr": {
         "platforms": [
@@ -427,7 +427,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "89837719e958"
+        "revision": "2b567b8b4e29"
     }, 
     "hsb": {
         "platforms": [
@@ -437,7 +437,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "6434e49d9d5c"
+        "revision": "a7c79bf105c8"
     }, 
     "hu": {
         "platforms": [
@@ -467,7 +467,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "792e41f8ab3d"
+        "revision": "7d85cb57529c"
     }, 
     "is": {
         "platforms": [
@@ -477,7 +477,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "c58341d21310"
+        "revision": "bd3090fca94f"
     }, 
     "it": {
         "platforms": [
@@ -487,7 +487,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "1c329f73cedc"
+        "revision": "2cc60e241e66"
     }, 
     "ja": {
         "platforms": [
@@ -512,7 +512,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "707732398dc8"
+        "revision": "6e9ad993b472"
     }, 
     "kab": {
         "platforms": [
@@ -532,7 +532,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a45a8cd885bc"
+        "revision": "33c1b8bfbe84"
     }, 
     "km": {
         "platforms": [
@@ -542,7 +542,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "743e15b55e9f"
+        "revision": "6c80d0f75405"
     }, 
     "kn": {
         "platforms": [
@@ -562,7 +562,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f31518542450"
+        "revision": "f6daefda6bb7"
     }, 
     "lij": {
         "platforms": [
@@ -622,7 +622,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "402d62a72836"
+        "revision": "d137985728ab"
     }, 
     "mr": {
         "platforms": [
@@ -662,7 +662,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "13900971dd15"
+        "revision": "6929ae5335a0"
     }, 
     "ne-NP": {
         "platforms": [
@@ -692,7 +692,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "761778436f17"
+        "revision": "d311549af8fd"
     }, 
     "or": {
         "platforms": [
@@ -742,7 +742,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "2dce2dd94033"
+        "revision": "51d1f3eaf2b0"
     }, 
     "rm": {
         "platforms": [
@@ -762,7 +762,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0bee122f5314"
+        "revision": "0203e4b4411e"
     }, 
     "ru": {
         "platforms": [
@@ -772,7 +772,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f42536d90146"
+        "revision": "450809da135c"
     }, 
     "si": {
         "platforms": [
@@ -882,7 +882,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "9bb2a2293fb8"
+        "revision": "a5a2c3514dc4"
     }, 
     "uk": {
         "platforms": [
@@ -922,7 +922,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0180a2d22ff7"
+        "revision": "963aa391035f"
     }, 
     "xh": {
         "platforms": [
@@ -942,7 +942,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "6a4fb3eaa63e"
+        "revision": "f19af1c796da"
     }, 
     "zh-TW": {
         "platforms": [
