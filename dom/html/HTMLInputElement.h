@@ -578,6 +578,12 @@ public:
   {
     return mIndeterminate;
   }
+
+  bool IsDraggingRange() const
+  {
+    return mIsDraggingRange;
+  }
+
   // XPCOM SetIndeterminate() is OK
 
   void GetInputMode(nsAString& aValue);
@@ -1535,7 +1541,7 @@ protected:
   void ClearGetFilesHelpers();
 
   /**
-   * nsINode::SetMayBeApzAware() will be invoked in this function if necessary 
+   * nsINode::SetMayBeApzAware() will be invoked in this function if necessary
    * to prevent default action of APZC so that we can increase/decrease the
    * value of this InputElement when mouse wheel event comes without scrolling
    * the page.
