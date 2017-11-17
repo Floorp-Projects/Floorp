@@ -333,7 +333,7 @@ add_task(async function test_add() {
 
   // Empty string should be deleted before saving.
   profileStorage.addresses.add(TEST_ADDRESS_WITH_EMPTY_FIELD);
-  let address = profileStorage.addresses.data[2];
+  let address = profileStorage.addresses._data[2];
   do_check_eq(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
   do_check_eq(address["street-address"], undefined);
 
@@ -393,8 +393,8 @@ add_task(async function test_update() {
   do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 2);
 
   // Empty string should be deleted while updating.
-  profileStorage.addresses.update(profileStorage.addresses.data[0].guid, TEST_ADDRESS_WITH_EMPTY_FIELD);
-  address = profileStorage.addresses.data[0];
+  profileStorage.addresses.update(profileStorage.addresses._data[0].guid, TEST_ADDRESS_WITH_EMPTY_FIELD);
+  address = profileStorage.addresses._data[0];
   do_check_eq(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
   do_check_eq(address["street-address"], undefined);
 

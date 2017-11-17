@@ -7,30 +7,33 @@
 "use strict";
 
 define(function (require, exports, module) {
-  const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-
+  const { Component } = require("devtools/client/shared/vendor/react");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
   const { createFactories } = require("devtools/client/shared/react-utils");
-  const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
+  const { TextToolbar } = createFactories(require("./TextToolbar"));
+
   const { div, pre } = dom;
 
   /**
    * This template represents the 'Raw Data' panel displaying
    * JSON as a text received from the server.
    */
-  let TextPanel = createClass({
-    displayName: "TextPanel",
+  class TextPanel extends Component {
+    static get propTypes() {
+      return {
+        isValidJson: PropTypes.bool,
+        actions: PropTypes.object,
+        data: PropTypes.string
+      };
+    }
 
-    propTypes: {
-      isValidJson: PropTypes.bool,
-      actions: PropTypes.object,
-      data: PropTypes.string
-    },
+    constructor(props) {
+      super(props);
+      this.state = {};
+    }
 
-    getInitialState: function () {
-      return {};
-    },
-
-    render: function () {
+    render() {
       return (
         div({className: "textPanelBox tab-panel-inner"},
           TextToolbar({
@@ -45,58 +48,7 @@ define(function (require, exports, module) {
         )
       );
     }
-  });
-
-  /**
-   * This object represents a toolbar displayed within the
-   * 'Raw Data' panel.
-   */
-  let TextToolbar = createFactory(createClass({
-    displayName: "TextToolbar",
-
-    propTypes: {
-      actions: PropTypes.object,
-      isValidJson: PropTypes.bool
-    },
-
-    // Commands
-
-    onPrettify: function (event) {
-      this.props.actions.onPrettify();
-    },
-
-    onSave: function (event) {
-      this.props.actions.onSaveJson();
-    },
-
-    onCopy: function (event) {
-      this.props.actions.onCopyJson();
-    },
-
-    render: function () {
-      return (
-        Toolbar({},
-          ToolbarButton({
-            className: "btn save",
-            onClick: this.onSave},
-            JSONView.Locale.$STR("jsonViewer.Save")
-          ),
-          ToolbarButton({
-            className: "btn copy",
-            onClick: this.onCopy},
-            JSONView.Locale.$STR("jsonViewer.Copy")
-          ),
-          this.props.isValidJson ?
-            ToolbarButton({
-              className: "btn prettyprint",
-              onClick: this.onPrettify},
-              JSONView.Locale.$STR("jsonViewer.PrettyPrint")
-            ) :
-            null
-        )
-      );
-    },
-  }));
+  }
 
   // Exports from this module
   exports.TextPanel = TextPanel;

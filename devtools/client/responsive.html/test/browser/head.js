@@ -260,8 +260,8 @@ const selectDevice = (ui, value) => Promise.all([
   changeSelectValue(ui, ".viewport-device-selector", value)
 ]);
 
-const selectDPR = (ui, value) =>
-  changeSelectValue(ui, "#global-dpr-selector > select", value);
+const selectDevicePixelRatio = (ui, value) =>
+  changeSelectValue(ui, "#global-device-pixel-ratio-selector", value);
 
 const selectNetworkThrottling = (ui, value) => Promise.all([
   once(ui, "network-throttling-changed"),

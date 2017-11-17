@@ -12,8 +12,9 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h" // for KeyNameIndex, temporarily
-#include "mozilla/TextRange.h"
 #include "mozilla/FontRange.h"
+#include "mozilla/TextRange.h"
+#include "mozilla/WritingModes.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsISelectionController.h"
@@ -22,7 +23,6 @@
 #include "nsRect.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
-#include "WritingModes.h"
 
 class nsStringHashKey;
 template<class, class> class nsDataHashtable;

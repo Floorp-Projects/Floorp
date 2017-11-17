@@ -4,7 +4,8 @@
 
 use api::{BorderRadiusKind, ColorF, LayerPoint, LayerRect, LayerSize, LayerVector2D};
 use api::{BorderRadius, BoxShadowClipMode, LayoutSize, LayerPrimitiveInfo};
-use api::{ClipMode, ComplexClipRegion, EdgeAaSegmentMask, LocalClip, ClipAndScrollInfo};
+use api::{ClipMode, ClipAndScrollInfo, ComplexClipRegion, EdgeAaSegmentMask, LocalClip};
+use api::{PipelineId};
 use clip::ClipSource;
 use frame_builder::FrameBuilder;
 use prim_store::{PrimitiveContainer, RectangleContent, RectanglePrimitive};
@@ -24,6 +25,7 @@ pub const MASK_CORNER_PADDING: f32 = 4.0;
 impl FrameBuilder {
     pub fn add_box_shadow(
         &mut self,
+        pipeline_id: PipelineId,
         clip_and_scroll: ClipAndScrollInfo,
         prim_info: &LayerPrimitiveInfo,
         box_offset: &LayerVector2D,
@@ -51,8 +53,8 @@ impl FrameBuilder {
             spread_amount,
         );
         let shadow_rect = prim_info.rect
-                                   .translate(box_offset)
-                                   .inflate(spread_amount, spread_amount);
+            .translate(box_offset)
+            .inflate(spread_amount, spread_amount);
 
         if blur_radius == 0.0 {
             let mut clips = Vec::new();
@@ -185,13 +187,12 @@ impl FrameBuilder {
                         Vec::new(),
                         clip_mode,
                         radii_kind,
+                        pipeline_id,
                     );
                     pic_prim.add_primitive(
                         brush_prim_index,
-                        &brush_rect,
                         clip_and_scroll
                     );
-                    pic_prim.build();
 
                     // TODO(gw): Right now, we always use a clip out
                     //           mask for outset shadows. We can make this
@@ -264,13 +265,12 @@ impl FrameBuilder {
                         BoxShadowClipMode::Inset,
                         // TODO(gw): Make use of optimization for inset.
                         BorderRadiusKind::NonUniform,
+                        pipeline_id,
                     );
                     pic_prim.add_primitive(
                         brush_prim_index,
-                        &brush_rect,
                         clip_and_scroll
                     );
-                    pic_prim.build();
 
                     // Draw the picture one pixel outside the original
                     // rect to account for the inflate above. This

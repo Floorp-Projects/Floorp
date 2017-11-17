@@ -7,7 +7,9 @@
 "use strict";
 
 define(function (require, exports, module) {
-  const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
+  const { Component } = require("devtools/client/shared/vendor/react");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
   const { input } = dom;
 
@@ -18,14 +20,20 @@ define(function (require, exports, module) {
    * This object represents a search box located at the
    * top right corner of the application.
    */
-  let SearchBox = createClass({
-    displayName: "SearchBox",
+  class SearchBox extends Component {
+    static get propTypes() {
+      return {
+        actions: PropTypes.object,
+      };
+    }
 
-    propTypes: {
-      actions: PropTypes.object,
-    },
+    constructor(props) {
+      super(props);
+      this.onSearch = this.onSearch.bind(this);
+      this.doSearch = this.doSearch.bind(this);
+    }
 
-    onSearch: function (event) {
+    onSearch(event) {
       let searchBox = event.target;
       let win = searchBox.ownerDocument.defaultView;
 
@@ -35,20 +43,20 @@ define(function (require, exports, module) {
 
       let callback = this.doSearch.bind(this, searchBox);
       this.searchTimeout = win.setTimeout(callback, searchDelay);
-    },
+    }
 
-    doSearch: function (searchBox) {
+    doSearch(searchBox) {
       this.props.actions.onSearch(searchBox.value);
-    },
+    }
 
-    render: function () {
+    render() {
       return (
         input({className: "searchBox devtools-filterinput",
                placeholder: JSONView.Locale.$STR("jsonViewer.filterJSON"),
                onChange: this.onSearch})
       );
-    },
-  });
+    }
+  }
 
   // Exports from this module
   exports.SearchBox = SearchBox;

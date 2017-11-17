@@ -270,6 +270,7 @@ class ProgramD3D : public ProgramImpl
     void getUniformuiv(const gl::Context *context, GLint location, GLuint *params) const override;
 
     void setUniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformBlockBinding) override;
+    void ensureUniformBlocksInitialized() override;
 
     UniformStorageD3D &getVertexUniformStorage() const { return *mVertexUniformStorage.get(); }
     UniformStorageD3D &getFragmentUniformStorage() const { return *mFragmentUniformStorage.get(); }
@@ -428,7 +429,6 @@ class ProgramD3D : public ProgramImpl
     void initAttribLocationsToD3DSemantic(const gl::Context *context);
 
     void reset();
-    void ensureUniformBlocksInitialized();
 
     void initUniformBlockInfo(const gl::Context *context, gl::Shader *shader);
     size_t getUniformBlockInfo(const sh::InterfaceBlock &interfaceBlock);

@@ -322,7 +322,6 @@ function setupEnvironment() {
       ['media.navigator.permission.disabled', true],
       ['media.navigator.streams.fake', FAKE_ENABLED],
       ['media.getusermedia.screensharing.enabled', true],
-      ['media.getusermedia.screensharing.allowed_domains', "mochi.test"],
       ['media.getusermedia.audiocapture.enabled', true],
       ['media.recorder.audio_node.enabled', true]
     ]

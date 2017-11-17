@@ -199,17 +199,6 @@ static const SheetType gCSSSheetTypes[] = {
   SheetType::Override
 };
 
-/* static */ bool
-nsStyleSet::IsCSSSheetType(SheetType aSheetType)
-{
-  for (SheetType type : gCSSSheetTypes) {
-    if (type == aSheetType) {
-      return true;
-    }
-  }
-  return false;
-}
-
 nsStyleSet::nsStyleSet()
   : mRuleTree(nullptr),
     mBatching(0),

@@ -59,4 +59,10 @@ _malloc_good_size(size_t size)
 #define MALLOC_FUNCS MALLOC_FUNCS_ARENA
 #include "malloc_decls.h"
 
+#ifdef __cplusplus
+#define moz_create_arena() moz_create_arena_with_params(nullptr)
+#else
+#define moz_create_arena() moz_create_arena_with_params(NULL)
+#endif
+
 #endif // mozmemory_h

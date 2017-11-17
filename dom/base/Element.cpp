@@ -527,6 +527,10 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
                                          data->GetCustomElementType(), &customProto);
       if (customProto &&
           NodePrincipal()->SubsumesConsideringDomain(nsContentUtils::ObjectPrincipal(customProto))) {
+        // The custom element prototype could be in different compartment.
+        if (!JS_WrapObject(aCx, &customProto)) {
+          return nullptr;
+        }
         // Just go ahead and create with the right proto up front.  Set
         // customProto to null to flag that we don't need to do any post-facto
         // proto fixups here.

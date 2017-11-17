@@ -58,11 +58,12 @@ ChannelMediaDecoder::ResourceCallback::GetMediaOwner() const
 }
 
 void
-ChannelMediaDecoder::ResourceCallback::NotifyNetworkError()
+ChannelMediaDecoder::ResourceCallback::NotifyNetworkError(
+  const MediaResult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mDecoder) {
-    mDecoder->NetworkError();
+    mDecoder->NetworkError(aError);
   }
 }
 
@@ -306,7 +307,7 @@ ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus)
     // Download has been cancelled by user.
     owner->LoadAborted();
   } else {
-    NetworkError();
+    NetworkError(MediaResult(aStatus, "Download aborted"));
   }
 }
 

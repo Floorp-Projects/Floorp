@@ -42,36 +42,39 @@ impl SceneProperties {
     /// Get the current value for a transform property.
     pub fn resolve_layout_transform(
         &self,
-        property: Option<&PropertyBinding<LayoutTransform>>,
+        property: &PropertyBinding<LayoutTransform>,
     ) -> LayoutTransform {
-        let property = match property {
-            Some(property) => property,
-            None => return LayoutTransform::identity(),
-        };
-
         match *property {
-            PropertyBinding::Value(matrix) => matrix,
-            PropertyBinding::Binding(ref key) => self.transform_properties
-                .get(&key.id)
-                .cloned()
-                .unwrap_or_else(|| {
-                    warn!("Property binding {:?} has an invalid value.", key);
-                    LayoutTransform::identity()
-                }),
+            PropertyBinding::Value(value) => value,
+            PropertyBinding::Binding(ref key) => {
+                self.transform_properties
+                    .get(&key.id)
+                    .cloned()
+                    .unwrap_or_else(|| {
+                        warn!("Property binding {:?} has an invalid value.", key);
+                        LayoutTransform::identity()
+                    })
+            }
         }
     }
 
     /// Get the current value for a float property.
-    pub fn resolve_float(&self, property: &PropertyBinding<f32>, default_value: f32) -> f32 {
+    pub fn resolve_float(
+        &self,
+        property: &PropertyBinding<f32>,
+        default_value: f32
+    ) -> f32 {
         match *property {
             PropertyBinding::Value(value) => value,
-            PropertyBinding::Binding(ref key) => self.float_properties
-                .get(&key.id)
-                .cloned()
-                .unwrap_or_else(|| {
-                    warn!("Property binding {:?} has an invalid value.", key);
-                    default_value
-                }),
+            PropertyBinding::Binding(ref key) => {
+                self.float_properties
+                    .get(&key.id)
+                    .cloned()
+                    .unwrap_or_else(|| {
+                        warn!("Property binding {:?} has an invalid value.", key);
+                        default_value
+                    })
+            }
         }
     }
 }
@@ -141,19 +144,28 @@ impl Scene {
     }
 }
 
+/// An arbitrary number which we assume opacity is invisible below.
+pub const OPACITY_EPSILON: f32 = 0.001;
+
 pub trait FilterOpHelpers {
-    fn resolve(self, properties: &SceneProperties) -> FilterOp;
+    fn is_visible(&self) -> bool;
     fn is_noop(&self) -> bool;
 }
 
 impl FilterOpHelpers for FilterOp {
-    fn resolve(self, properties: &SceneProperties) -> FilterOp {
-        match self {
-            FilterOp::Opacity(ref value) => {
-                let amount = properties.resolve_float(value, 1.0);
-                FilterOp::Opacity(PropertyBinding::Value(amount))
+    fn is_visible(&self) -> bool {
+        match *self {
+            FilterOp::Blur(..) |
+            FilterOp::Brightness(..) |
+            FilterOp::Contrast(..) |
+            FilterOp::Grayscale(..) |
+            FilterOp::HueRotate(..) |
+            FilterOp::Invert(..) |
+            FilterOp::Saturate(..) |
+            FilterOp::Sepia(..) => true,
+            FilterOp::Opacity(_, amount) => {
+                amount > OPACITY_EPSILON
             }
-            _ => self,
         }
     }
 
@@ -165,12 +177,7 @@ impl FilterOpHelpers for FilterOp {
             FilterOp::Grayscale(amount) => amount == 0.0,
             FilterOp::HueRotate(amount) => amount == 0.0,
             FilterOp::Invert(amount) => amount == 0.0,
-            FilterOp::Opacity(value) => match value {
-                PropertyBinding::Value(amount) => amount == 1.0,
-                PropertyBinding::Binding(..) => {
-                    panic!("bug: binding value should be resolved");
-                }
-            },
+            FilterOp::Opacity(_, amount) => amount >= 1.0,
             FilterOp::Saturate(amount) => amount == 1.0,
             FilterOp::Sepia(amount) => amount == 0.0,
         }
@@ -183,7 +190,6 @@ pub trait StackingContextHelpers {
         &self,
         display_list: &BuiltDisplayList,
         input_filters: ItemRange<FilterOp>,
-        properties: &SceneProperties,
     ) -> Vec<FilterOp>;
 }
 
@@ -199,14 +205,12 @@ impl StackingContextHelpers for StackingContext {
         &self,
         display_list: &BuiltDisplayList,
         input_filters: ItemRange<FilterOp>,
-        properties: &SceneProperties,
     ) -> Vec<FilterOp> {
+        // TODO(gw): Now that we resolve these later on,
+        //           we could probably make it a bit
+        //           more efficient than cloning these here.
         let mut filters = vec![];
         for filter in display_list.get(input_filters) {
-            let filter = filter.resolve(properties);
-            if filter.is_noop() {
-                continue;
-            }
             filters.push(filter);
         }
         filters
