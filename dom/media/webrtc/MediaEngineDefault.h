@@ -40,11 +40,6 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource
 public:
   MediaEngineDefaultVideoSource();
 
-  bool IsAvailable() const override
-  {
-    AssertIsOnOwningThread();
-    return mState == kReleased;
-  }
   nsString GetName() const override;
   nsCString GetUUID() const override;
 
@@ -120,11 +115,6 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource
 public:
   MediaEngineDefaultAudioSource();
 
-  bool IsAvailable() const override
-  {
-    AssertIsOnOwningThread();
-    return mState == kReleased;
-  }
   nsString GetName() const override;
   nsCString GetUUID() const override;
 
@@ -169,6 +159,7 @@ public:
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) const override;
 
+  bool IsAvailable() const;
 
 protected:
   ~MediaEngineDefaultAudioSource();
