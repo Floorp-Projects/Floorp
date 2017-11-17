@@ -15,7 +15,7 @@
 using namespace mozilla;
 using namespace mp4_demuxer;
 
-static const uint32_t E = mp4_demuxer::MP4Metadata::NumberTracksError();
+static const uint32_t E = MP4Metadata::NumberTracksError();
 
 class TestStream : public Stream
 {
