@@ -665,8 +665,8 @@ ICEStats.prototype = {
     let tbody = [];
     for (let stat of this.generateICEStats()) {
       tbody.push([
-        stat.localcandidate || "",
-        stat.remotecandidate || "",
+        stat["local-candidate"] || "",
+        stat["remote-candidate"] || "",
         stat.state || "",
         stat.priority || "",
         stat.nominated || "",
@@ -733,7 +733,7 @@ ICEStats.prototype = {
 
       if (local) {
         stat = {
-          localcandidate: this.candidateToString(local),
+          ["local-candidate"]: this.candidateToString(local),
           state: pair.state,
           priority: pair.priority,
           nominated: pair.nominated,
@@ -744,21 +744,17 @@ ICEStats.prototype = {
         matched[local.id] = true;
 
         if (remote) {
-          stat.remotecandidate = this.candidateToString(remote);
+          stat["remote-candidate"] = this.candidateToString(remote);
           matched[remote.id] = true;
         }
         stats.push(stat);
       }
     }
 
-    for (let c of candidates.values()) {
-      if (matched[c.id])
-        continue;
-
-      stat = {};
-      stat[c.type] = this.candidateToString(c);
-      stats.push(stat);
-    }
+    // add the unmatched candidates to the end of the table
+    [...candidates.values()].filter(cand => !matched[cand.id]).forEach(
+      cand => stats.push({[cand.type] : this.candidateToString(cand)})
+    );
 
     return stats.sort((a, b) => (b.priority || 0) - (a.priority || 0));
   },
