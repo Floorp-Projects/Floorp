@@ -205,6 +205,14 @@ class EditAddress extends EditDialog {
     if (this._record) {
       this._elements.title.dataset.localization = "editAddressTitle";
     }
+    let fragment = document.createDocumentFragment();
+    for (let country of FormAutofillUtils.supportedCountries) {
+      let option = new Option();
+      option.value = country;
+      option.dataset.localization = country.toLowerCase();
+      fragment.appendChild(option);
+    }
+    this._elements.country.appendChild(fragment);
     FormAutofillUtils.localizeMarkup(REGIONS_BUNDLE_URI, this._elements.country);
   }
 

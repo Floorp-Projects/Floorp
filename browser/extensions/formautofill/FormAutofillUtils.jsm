@@ -12,9 +12,6 @@ const ADDRESS_METADATA_PATH = "resource://formautofill/addressmetadata/";
 const ADDRESS_REFERENCES = "addressReferences.js";
 const ADDRESS_REFERENCES_EXT = "addressReferencesExt.js";
 
-// TODO: This list should become a pref in Bug 1413494
-const SUPPORTED_COUNTRY_LIST = ["US"];
-
 const ADDRESSES_COLLECTION_NAME = "addresses";
 const CREDITCARDS_COLLECTION_NAME = "creditCards";
 const ADDRESSES_FIRST_TIME_USE_PREF = "extensions.formautofill.firstTimeUse";
@@ -22,6 +19,7 @@ const ENABLED_AUTOFILL_ADDRESSES_PREF = "extensions.formautofill.addresses.enabl
 const CREDITCARDS_USED_STATUS_PREF = "extensions.formautofill.creditCards.used";
 const AUTOFILL_CREDITCARDS_AVAILABLE_PREF = "extensions.formautofill.creditCards.available";
 const ENABLED_AUTOFILL_CREDITCARDS_PREF = "extensions.formautofill.creditCards.enabled";
+const SUPPORTED_COUNTRIES_PREF = "extensions.formautofill.supportedCountries";
 const MANAGE_ADDRESSES_KEYWORDS = ["manageAddressesTitle", "addNewAddressTitle"];
 const EDIT_ADDRESS_KEYWORDS = [
   "givenName", "additionalName", "familyName", "organization2", "streetAddress",
@@ -378,7 +376,7 @@ this.FormAutofillUtils = {
    * @returns {string} The matching country code.
    */
   identifyCountryCode(countryName, countrySpecified) {
-    let countries = countrySpecified ? [countrySpecified] : SUPPORTED_COUNTRY_LIST;
+    let countries = countrySpecified ? [countrySpecified] : this.supportedCountries;
 
     for (let country of countries) {
       let collators = this.getCollators(country);
@@ -696,3 +694,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this.FormAutofillUtils,
                                       "isAutofillAddressesFirstTimeUse", ADDRESSES_FIRST_TIME_USE_PREF);
 XPCOMUtils.defineLazyPreferenceGetter(this.FormAutofillUtils,
                                       "AutofillCreditCardsUsedStatus", CREDITCARDS_USED_STATUS_PREF);
+XPCOMUtils.defineLazyPreferenceGetter(this.FormAutofillUtils,
+                                      "supportedCountries", SUPPORTED_COUNTRIES_PREF, null, null,
+                                      val => val.split(","));
