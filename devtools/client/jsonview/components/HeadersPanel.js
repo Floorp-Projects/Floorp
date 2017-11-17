@@ -7,7 +7,9 @@
 "use strict";
 
 define(function (require, exports, module) {
-  const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
+  const { createFactory, Component } = require("devtools/client/shared/vendor/react");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
   const { createFactories } = require("devtools/client/shared/react-utils");
 
@@ -20,52 +22,59 @@ define(function (require, exports, module) {
    * This template represents the 'Headers' panel
    * s responsible for rendering its content.
    */
-  let HeadersPanel = createClass({
-    displayName: "HeadersPanel",
-
-    propTypes: {
-      actions: PropTypes.object,
-      data: PropTypes.object,
-    },
-
-    getInitialState: function () {
+  class HeadersPanel extends Component {
+    static get propTypes() {
       return {
+        actions: PropTypes.object,
+        data: PropTypes.object,
+      };
+    }
+
+    constructor(props) {
+      super(props);
+
+      this.state = {
         data: {}
       };
-    },
+    }
 
-    render: function () {
+    render() {
       let data = this.props.data;
 
       return (
         div({className: "headersPanelBox tab-panel-inner"},
-          HeadersToolbar({actions: this.props.actions}),
+          HeadersToolbarFactory({actions: this.props.actions}),
           div({className: "panelContent"},
             Headers({data: data})
           )
         )
       );
     }
-  });
+  }
 
   /**
    * This template is responsible for rendering a toolbar
    * within the 'Headers' panel.
    */
-  let HeadersToolbar = createFactory(createClass({
-    displayName: "HeadersToolbar",
+  class HeadersToolbar extends Component {
+    static get propTypes() {
+      return {
+        actions: PropTypes.object,
+      };
+    }
 
-    propTypes: {
-      actions: PropTypes.object,
-    },
+    constructor(props) {
+      super(props);
+      this.onCopy = this.onCopy.bind(this);
+    }
 
     // Commands
 
-    onCopy: function (event) {
+    onCopy(event) {
       this.props.actions.onCopyHeaders();
-    },
+    }
 
-    render: function () {
+    render() {
       return (
         Toolbar({},
           ToolbarButton({className: "btn copy", onClick: this.onCopy},
@@ -73,8 +82,10 @@ define(function (require, exports, module) {
           )
         )
       );
-    },
-  }));
+    }
+  }
+
+  let HeadersToolbarFactory = createFactory(HeadersToolbar);
 
   // Exports from this module
   exports.HeadersPanel = HeadersPanel;

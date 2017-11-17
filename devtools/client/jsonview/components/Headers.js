@@ -7,7 +7,9 @@
 "use strict";
 
 define(function (require, exports, module) {
-  const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
+  const { createFactory, Component } = require("devtools/client/shared/vendor/react");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
   const { div, span, table, tbody, tr, td, } = dom;
 
@@ -16,18 +18,19 @@ define(function (require, exports, module) {
    * of the 'Headers' panel. It displays HTTP headers groups such as
    * received or response headers.
    */
-  let Headers = createClass({
-    displayName: "Headers",
+  class Headers extends Component {
+    static get propTypes() {
+      return {
+        data: PropTypes.object,
+      };
+    }
 
-    propTypes: {
-      data: PropTypes.object,
-    },
+    constructor(props) {
+      super(props);
+      this.state = {};
+    }
 
-    getInitialState: function () {
-      return {};
-    },
-
-    render: function () {
+    render() {
       let data = this.props.data;
 
       return (
@@ -37,7 +40,7 @@ define(function (require, exports, module) {
               JSONView.Locale.$STR("jsonViewer.responseHeaders")
             ),
             table({cellPadding: 0, cellSpacing: 0},
-              HeaderList({headers: data.response})
+              HeaderListFactory({headers: data.response})
             )
           ),
           div({className: "netHeadersGroup"},
@@ -45,35 +48,37 @@ define(function (require, exports, module) {
               JSONView.Locale.$STR("jsonViewer.requestHeaders")
             ),
             table({cellPadding: 0, cellSpacing: 0},
-              HeaderList({headers: data.request})
+              HeaderListFactory({headers: data.request})
             )
           )
         )
       );
     }
-  });
+  }
 
   /**
    * This template renders headers list,
    * name + value pairs.
    */
-  let HeaderList = createFactory(createClass({
-    displayName: "HeaderList",
-
-    propTypes: {
-      headers: PropTypes.arrayOf(PropTypes.shape({
-        name: PropTypes.string,
-        value: PropTypes.string
-      }))
-    },
-
-    getInitialState: function () {
+  class HeaderList extends Component {
+    static get propTypes() {
       return {
+        headers: PropTypes.arrayOf(PropTypes.shape({
+          name: PropTypes.string,
+          value: PropTypes.string
+        }))
+      };
+    }
+
+    constructor(props) {
+      super(props);
+
+      this.state = {
         headers: []
       };
-    },
+    }
 
-    render: function () {
+    render() {
       let headers = this.props.headers;
 
       headers.sort(function (a, b) {
@@ -98,7 +103,9 @@ define(function (require, exports, module) {
         )
       );
     }
-  }));
+  }
+
+  let HeaderListFactory = createFactory(HeaderList);
 
   // Exports from this module
   exports.Headers = Headers;
