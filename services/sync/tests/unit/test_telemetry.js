@@ -525,6 +525,29 @@ add_task(async function test_nserror() {
   }
 });
 
+add_task(async function test_sync_why() {
+  enableValidationPrefs();
+
+  await Service.engineManager.register(SteamEngine);
+  let engine = Service.engineManager.get("steam");
+  engine.enabled = true;
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+  let e = new Error("generic failure message");
+  engine._errToThrow = e;
+
+  try {
+    _(`test_generic_engine_fail: Steam tracker contents: ${
+      JSON.stringify(engine._tracker.changedIDs)}`);
+    let ping = await wait_for_ping(() => Service.sync({why: "user"}), true, false);
+    _(JSON.stringify(ping))
+    equal(ping.why, "user");
+  } finally {
+    await cleanAndGo(engine, server);
+    Service.engineManager.unregister(engine);
+  }
+});
+
 add_task(async function test_discarding() {
   enableValidationPrefs();
 

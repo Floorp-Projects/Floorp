@@ -13,6 +13,6 @@ add_task(function* () {
 
   yield selectJsonViewContentTab("rawdata");
   let rawData = yield getElementText(".textPanelBox .data");
-  is(rawData, "\"foo_\uFFFD_bar\"",
-     "The NUL character has been replaced by the replacement character.");
+  is(rawData, "\"foo_\u0000_bar\"",
+     "The NUL character has been preserved.");
 });

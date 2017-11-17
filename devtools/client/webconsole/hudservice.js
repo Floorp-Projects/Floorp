@@ -190,8 +190,13 @@ HUD_SERVICE.prototype =
 
       if (!DebuggerServer.initialized) {
         DebuggerServer.init();
-        DebuggerServer.addBrowserActors();
       }
+
+      // Ensure that the root actor and the tab actors have been registered on the DebuggerServer,
+      // so that the Browser Console can retrieve the console actors.
+      // (See Bug 1416105 for rationale).
+      DebuggerServer.registerActors({ root: true, browser: false, tab: true });
+
       DebuggerServer.allowChromeProcess = true;
 
       let client = new DebuggerClient(DebuggerServer.connectPipe());

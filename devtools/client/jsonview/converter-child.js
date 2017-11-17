@@ -25,7 +25,6 @@ const BinaryInput = CC("@mozilla.org/binaryinputstream;1",
 const BufferStream = CC("@mozilla.org/io/arraybuffer-input-stream;1",
                        "nsIArrayBufferInputStream", "setData");
 const encodingLength = 2;
-const encoder = new TextEncoder();
 
 // Localization
 loader.lazyGetter(this, "jsonViewStrings", () => {
@@ -58,7 +57,7 @@ Converter.prototype = {
    * 1. asyncConvertData captures the listener
    * 2. onStartRequest fires, initializes stuff, modifies the listener
    *    to match our output type
-   * 3. onDataAvailable converts to UTF-8 and spits back to the listener
+   * 3. onDataAvailable decodes and inserts data into a text node
    * 4. onStopRequest flushes data and spits back to the listener
    * 5. convert does nothing, it's just the synchronous version
    *    of asyncConvertData
@@ -87,20 +86,15 @@ Converter.prototype = {
       this.determineEncoding(request, context);
     }
 
-    // Spit back the data if the encoding is UTF-8, otherwise convert it first.
-    if (!this.decoder) {
-      this.listener.onDataAvailable(request, context, inputStream, offset, count);
-    } else {
-      let buffer = new ArrayBuffer(count);
-      new BinaryInput(inputStream).readArrayBuffer(count, buffer);
-      this.convertAndSendBuffer(request, context, buffer);
-    }
+    // Decode and insert data.
+    let buffer = new ArrayBuffer(count);
+    new BinaryInput(inputStream).readArrayBuffer(count, buffer);
+    this.decodeAndInsertBuffer(request, context, buffer);
   },
 
   onStartRequest: function (request, context) {
     // Set the content type to HTML in order to parse the doctype, styles
-    // and scripts, but later a <plaintext> element will switch the tokenizer
-    // to the plaintext state in order to parse the JSON.
+    // and scripts. The JSON will be manually inserted as text.
     request.QueryInterface(Ci.nsIChannel);
     request.contentType = "text/html";
 
@@ -121,14 +115,14 @@ Converter.prototype = {
     // Initialize stuff.
     let win = NetworkHelper.getWindowForRequest(request);
     this.data = exportData(win, request);
-    win.addEventListener("DOMContentLoaded", event => {
-      win.addEventListener("contentMessage", onContentMessage, false, true);
-    }, {once: true});
+    insertJsonData(win, this.data.json);
+    win.addEventListener("contentMessage", onContentMessage, false, true);
     keepThemeUpdated(win);
 
     // Send the initial HTML code.
-    let bytes = encoder.encode(initialHTML(win.document));
-    this.convertAndSendBuffer(request, context, bytes.buffer);
+    let buffer = new TextEncoder().encode(initialHTML(win.document)).buffer;
+    let stream = new BufferStream(buffer, 0, buffer.byteLength);
+    this.listener.onDataAvailable(request, context, stream, 0, stream.available());
 
     // Create an array to store data until the encoding is determined.
     this.encodingArray = [];
@@ -139,7 +133,7 @@ Converter.prototype = {
     if (this.encodingArray) {
       this.determineEncoding(request, context, true);
     } else {
-      this.convertAndSendBuffer(request, context, new ArrayBuffer(0), true);
+      this.decodeAndInsertBuffer(request, context, new ArrayBuffer(0), true);
     }
 
     // Stop the request.
@@ -168,32 +162,24 @@ Converter.prototype = {
       }
     }
 
-    // Create a decoder unless the data is already in UTF-8.
-    if (encoding !== "UTF-8") {
-      this.decoder = new TextDecoder(encoding, {ignoreBOM: true});
-    }
-
+    // Create a decoder for that encoding.
+    this.decoder = new TextDecoder(encoding);
     this.data.encoding = encoding;
 
-    // Send the bytes in encodingArray, and remove it.
+    // Decode and insert the bytes in encodingArray, and remove it.
     let buffer = new Uint8Array(bytes).buffer;
-    this.convertAndSendBuffer(request, context, buffer, flush);
+    this.decodeAndInsertBuffer(request, context, buffer, flush);
     this.encodingArray = null;
   },
 
-  // Converts an ArrayBuffer to UTF-8 and sends it.
-  convertAndSendBuffer: function (request, context, buffer, flush = false) {
-    // If the encoding is not UTF-8, decode the buffer and encode into UTF-8.
-    if (this.decoder) {
-      let data = this.decoder.decode(buffer, {stream: !flush});
-      buffer = encoder.encode(data).buffer;
-    }
+  // Decodes an ArrayBuffer into a string and inserts it into the page.
+  decodeAndInsertBuffer: function (request, context, buffer, flush = false) {
+    // Decode the buffer into a string.
+    let data = this.decoder.decode(buffer, {stream: !flush});
 
-    // Create an input stream that contains the bytes in the buffer.
-    let stream = new BufferStream(buffer, 0, buffer.byteLength);
-
-    // Send the input stream.
-    this.listener.onDataAvailable(request, context, stream, 0, stream.available());
+    // Using `appendData` instead of `textContent +=` is important to avoid
+    // repainting previous data.
+    this.data.json.appendData(data);
   }
 };
 
@@ -231,6 +217,8 @@ function exportData(win, request) {
 
   data.debug = debug;
 
+  data.json = new win.Text();
+
   let Locale = {
     $STR: key => {
       try {
@@ -266,23 +254,18 @@ function exportData(win, request) {
   return data;
 }
 
-// Serializes a qualifiedName and an optional set of attributes into an HTML
-// start tag. Be aware qualifiedName and attribute names are not validated.
-// Attribute values are escaped with escapingString algorithm in attribute mode
-// (https://html.spec.whatwg.org/multipage/syntax.html#escapingString).
-function startTag(qualifiedName, attributes = {}) {
-  return Object.entries(attributes).reduce(function (prev, [attr, value]) {
-    return prev + " " + attr + "=\"" +
-      value.replace(/&/g, "&amp;")
-           .replace(/\u00a0/g, "&nbsp;")
-           .replace(/"/g, "&quot;") +
-      "\"";
-  }, "<" + qualifiedName) + ">";
-}
-
-// Builds an HTML string that will be used to load stylesheets and scripts,
-// and switch the parser to plaintext state.
+// Builds an HTML string that will be used to load stylesheets and scripts.
 function initialHTML(doc) {
+  // Creates an element with the specified type, attributes and children.
+  function element(type, attributes = {}, children = []) {
+    let el = doc.createElement(type);
+    for (let [attr, value] of Object.entries(attributes)) {
+      el.setAttribute(attr, value);
+    }
+    el.append(...children);
+    return el;
+  }
+
   let os;
   let platform = Services.appinfo.OS;
   if (platform.startsWith("WINNT")) {
@@ -297,29 +280,53 @@ function initialHTML(doc) {
   // because the latter can be blocked by a CSP base-uri directive (bug 1316393)
   let baseURI = "resource://devtools-client-jsonview/";
 
-  let style = doc.createElement("link");
-  style.rel = "stylesheet";
-  style.type = "text/css";
-  style.href = baseURI + "css/main.css";
-
-  let script = doc.createElement("script");
-  script.src = baseURI + "lib/require.js";
-  script.dataset.main = baseURI + "viewer-config.js";
-  script.defer = true;
-
-  let head = doc.createElement("head");
-  head.append(style, script);
-
   return "<!DOCTYPE html>\n" +
-    startTag("html", {
+    element("html", {
       "platform": os,
       "class": "theme-" + Services.prefs.getCharPref("devtools.theme"),
       "dir": Services.locale.isAppLocaleRTL ? "rtl" : "ltr"
-    }) +
-    head.outerHTML +
-    startTag("body") +
-    startTag("div", {"id": "content"}) +
-    startTag("plaintext", {"id": "json"});
+    }, [
+      element("head", {}, [
+        element("link", {
+          rel: "stylesheet",
+          type: "text/css",
+          href: baseURI + "css/main.css",
+        }),
+        element("script", {
+          src: baseURI + "lib/require.js",
+          "data-main": baseURI + "viewer-config.js",
+          defer: true,
+        })
+      ]),
+      element("body", {}, [
+        element("div", {"id": "content"}, [
+          element("div", {"id": "json"})
+        ])
+      ])
+    ]).outerHTML;
+}
+
+// We insert the received data into a text node, which should be appended into
+// the #json element so that the JSON is still displayed even if JS is disabled.
+// However, the HTML parser is not synchronous, so this function uses a mutation
+// observer to detect the creation of the element. Then the text node is appended.
+function insertJsonData(win, json) {
+  new win.MutationObserver(function (mutations, observer) {
+    for (let {target, addedNodes} of mutations) {
+      if (target.nodeType == 1 && target.id == "content") {
+        for (let node of addedNodes) {
+          if (node.nodeType == 1 && node.id == "json") {
+            observer.disconnect();
+            node.append(json);
+            return;
+          }
+        }
+      }
+    }
+  }).observe(win.document, {
+    childList: true,
+    subtree: true,
+  });
 }
 
 function keepThemeUpdated(win) {

@@ -41,6 +41,6 @@
 
 /* Icons */
 :root {
-  --play-icon-url: url("chrome://devtools/skin/images/play.svg");
+  --play-icon-url: url("chrome://devtools/content/netmonitor/src/assets/icons/play.svg");
   --pause-icon-url: url("chrome://devtools/skin/images/pause.svg");
 }

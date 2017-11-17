@@ -247,24 +247,26 @@ var BrowserPageActions = {
     let popupSet = document.getElementById("mainPopupSet");
     popupSet.appendChild(panelNode);
     panelNode.addEventListener("popuphidden", () => {
-      if (iframeNode) {
-        action.onIframeHidden(iframeNode, panelNode);
-      }
       panelNode.remove();
     }, { once: true });
 
     if (iframeNode) {
-      panelNode.addEventListener("popupshown", () => {
-        action.onIframeShown(iframeNode, panelNode);
+      panelNode.addEventListener("popupshowing", () => {
+        action.onIframeShowing(iframeNode, panelNode);
       }, { once: true });
       panelNode.addEventListener("popuphiding", () => {
         action.onIframeHiding(iframeNode, panelNode);
+      }, { once: true });
+      panelNode.addEventListener("popuphidden", () => {
+        action.onIframeHidden(iframeNode, panelNode);
       }, { once: true });
     }
 
     if (panelViewNode) {
       action.subview.onPlaced(panelViewNode);
-      action.subview.onShowing(panelViewNode);
+      panelNode.addEventListener("popupshowing", () => {
+        action.subview.onShowing(panelViewNode);
+      }, { once: true });
     }
 
     return panelNode;
@@ -956,14 +958,11 @@ BrowserPageActions.sendToDevice = {
     }
   },
 
-  onShowingInPanel(buttonNode) {
+  onLocationChange() {
+    let action = PageActions.actionForID("sendToDevice");
     let browser = gBrowser.selectedBrowser;
     let url = browser.currentURI.spec;
-    if (gSync.isSendableURI(url)) {
-      buttonNode.removeAttribute("disabled");
-    } else {
-      buttonNode.setAttribute("disabled", "true");
-    }
+    action.setDisabled(!gSync.isSendableURI(url), window);
   },
 
   onShowingSubview(panelViewNode) {
@@ -1008,7 +1007,7 @@ BrowserPageActions.sendToDevice = {
       bodyNode.setAttribute("state", "notready");
       // Force a background Sync
       Services.tm.dispatchToMainThread(async () => {
-        await Weave.Service.sync([]); // [] = clients engine only
+        await Weave.Service.sync({why: "pageactions", engines: []}); // [] = clients engine only
         // There's no way Sync is still syncing at this point, but we check
         // anyway to avoid infinite looping.
         if (!window.closed && !gSync.syncConfiguredAndLoading) {

@@ -33,8 +33,8 @@ config = {
     # "hg_share_base": None,
     "tools_repo_url": "https://hg.mozilla.org/build/tools",
     "tools_repo_branch": "default",
-    "from_repo_url": "ssh://hg.mozilla.org/releases/mozilla-beta",
-    "to_repo_url": "ssh://hg.mozilla.org/releases/mozilla-release",
+    "from_repo_url": "https://hg.mozilla.org/releases/mozilla-beta",
+    "to_repo_url": "https://hg.mozilla.org/releases/mozilla-release",
 
     "base_tag": "FIREFOX_RELEASE_%(major_version)s_BASE",
     "end_tag": "FIREFOX_RELEASE_%(major_version)s_END",

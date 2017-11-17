@@ -23,7 +23,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              wr::DisplayListBuilder& aBuilder,
                                              const nsTArray<wr::WrFilterOp>& aFilters,
                                              const gfx::Matrix4x4* aBoundTransform,
-                                             uint64_t aAnimationsId,
+                                             const wr::WrAnimationProperty* aAnimation,
                                              float* aOpacityPtr,
                                              gfx::Matrix4x4* aTransformPtr,
                                              gfx::Matrix4x4* aPerspectivePtr,
@@ -44,7 +44,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   }
 
   mBuilder->PushStackingContext(wr::LayoutRect(),
-                                aAnimationsId,
+                                aAnimation,
                                 aOpacityPtr,
                                 aTransformPtr,
                                 aIsPreserve3D ? wr::TransformStyle::Preserve3D : wr::TransformStyle::Flat,

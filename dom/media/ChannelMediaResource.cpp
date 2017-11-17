@@ -675,11 +675,6 @@ ChannelMediaResource::ThrottleReadahead(bool bThrottle)
   mCacheStream.ThrottleReadahead(bThrottle);
 }
 
-int64_t ChannelMediaResource::Tell()
-{
-  return mCacheStream.Tell();
-}
-
 nsresult ChannelMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges)
 {
   return mCacheStream.GetCachedRanges(aRanges);

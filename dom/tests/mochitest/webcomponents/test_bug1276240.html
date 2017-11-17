@@ -47,7 +47,7 @@ test();
 // test with webcomponents disabled
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
-  { 'set': [["dom.webcomponents.enabled", false]]}, runTest);
+  { 'set': [["dom.webcomponents.customelements.enabled", false]]}, runTest);
 
 </script>
 </pre>

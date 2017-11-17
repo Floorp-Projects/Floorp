@@ -32,6 +32,7 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
 import android.graphics.drawable.shapes.Shape;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.TypedValue;
@@ -83,6 +84,20 @@ public class BaseMessageDialog extends Dialog {
   private boolean isWeb = false;
   private boolean isHtml = false;
   private boolean isClosing = false;
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      final Window window = getWindow();
+      window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+      window.setStatusBarColor(Color.TRANSPARENT);
+
+      int flags = window.getDecorView().getSystemUiVisibility();
+      flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+      window.getDecorView().setSystemUiVisibility(flags);
+    }
+  }
 
   protected BaseMessageDialog(Activity activity, boolean fullscreen, BaseMessageOptions options,
       WebInterstitialOptions webOptions, HTMLOptions htmlOptions) {
