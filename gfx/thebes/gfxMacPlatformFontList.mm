@@ -1054,7 +1054,9 @@ gfxMacPlatformFontList::AddFamily(CFStringRef aFamily)
 
     // CTFontManager includes weird internal family names and
     // LastResort, skip over those
-    if (!family || [family caseInsensitiveCompare:@"LastResort"] == NSOrderedSame) {
+    if (!family ||
+        [family caseInsensitiveCompare:@"LastResort"] == NSOrderedSame ||
+        [family caseInsensitiveCompare:@".LastResort"] == NSOrderedSame) {
         return;
     }
 
@@ -1401,6 +1403,8 @@ gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t aCh,
 
         if (familyNameRef &&
             ::CFStringCompare(familyNameRef, CFSTR("LastResort"),
+                              kCFCompareCaseInsensitive) != kCFCompareEqualTo &&
+            ::CFStringCompare(familyNameRef, CFSTR(".LastResort"),
                               kCFCompareCaseInsensitive) != kCFCompareEqualTo)
         {
             AutoTArray<UniChar, 1024> buffer;
