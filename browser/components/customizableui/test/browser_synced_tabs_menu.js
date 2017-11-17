@@ -87,7 +87,7 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   ok(!subpanel.hidden, "sync setup element is visible");
 
   // Find and click the "setup" button.
-  let setupButton = subpanel.querySelector(".PanelUI-remotetabs-prefs-button");
+  let setupButton = subpanel.querySelector(".PanelUI-remotetabs-button");
   setupButton.click();
 
   await new Promise(resolve => {
@@ -145,59 +145,38 @@ add_task(async function() {
   await openPrefsFromMenuPanel("PanelUI-remotetabs-reauthsync", "synced-tabs");
 });
 
-// Test the mobile promo links
+// Test the Connect Another Device button
 add_task(async function() {
-  // change the preferences for the mobile links.
-  Services.prefs.setCharPref("identity.mobilepromo.android", "http://example.com/?os=android&tail=");
-  Services.prefs.setCharPref("identity.mobilepromo.ios", "http://example.com/?os=ios&tail=");
+  Services.prefs.setCharPref("identity.fxaccounts.remote.connectdevice.uri", "http://example.com/connectdevice");
 
   gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com" });
 
-  let syncPanel = document.getElementById("PanelUI-remotetabs");
-  let links = syncPanel.querySelectorAll(".remotetabs-promo-link");
+  let button = document.getElementById("PanelUI-remotetabs-connect-device-button");
+  ok(button, "found the button");
 
-  is(links.length, 2, "found 2 links as expected");
-
-  // test each link and left and middle mouse buttons
-  for (let link of links) {
-    for (let button = 0; button < 2; button++) {
-      await document.getElementById("nav-bar").overflowable.show();
-      EventUtils.sendMouseEvent({ type: "click", button }, link, window);
-      // the panel should have been closed.
-      ok(!isOverflowOpen(), "click closed the panel");
-      // should be a new tab - wait for the load.
-      is(gBrowser.tabs.length, 2, "there's a new tab");
-      await new Promise(resolve => {
-        if (gBrowser.selectedBrowser.currentURI.spec == "about:blank") {
-          gBrowser.selectedBrowser.addEventListener("load", function(e) {
-            resolve();
-          }, {capture: true, once: true});
-          return;
-        }
-        // the new tab has already transitioned away from about:blank so we
-        // are good to go.
-        resolve();
-      });
-
-      let os = link.getAttribute("mobile-promo-os");
-      let expectedUrl = `http://example.com/?os=${os}&tail=synced-tabs`;
-      is(gBrowser.selectedBrowser.currentURI.spec, expectedUrl, "correct URL");
-      gBrowser.removeTab(gBrowser.selectedTab);
-    }
-  }
-
-  // test each link and right mouse button - should be a noop.
   await document.getElementById("nav-bar").overflowable.show();
-  for (let link of links) {
-    EventUtils.sendMouseEvent({ type: "click", button: 2 }, link, window);
-    // the panel should still be open
-    ok(isOverflowOpen(), "panel remains open after right-click");
-    is(gBrowser.tabs.length, 1, "no new tab was opened");
-  }
-  await hideOverflow();
+  button.click();
+  // the panel should have been closed.
+  ok(!isOverflowOpen(), "click closed the panel");
+  // should be a new tab - wait for the load.
+  is(gBrowser.tabs.length, 2, "there's a new tab");
+  await new Promise(resolve => {
+    if (gBrowser.selectedBrowser.currentURI.spec == "about:blank") {
+      gBrowser.selectedBrowser.addEventListener("load", function(e) {
+        resolve();
+      }, {capture: true, once: true});
+      return;
+    }
+    // the new tab has already transitioned away from about:blank so we
+    // are good to go.
+    resolve();
+  });
 
-  Services.prefs.clearUserPref("identity.mobilepromo.android");
-  Services.prefs.clearUserPref("identity.mobilepromo.ios");
+  let expectedUrl = `http://example.com/connectdevice?entrypoint=synced-tabs`;
+  is(gBrowser.selectedBrowser.currentURI.spec, expectedUrl, "correct URL");
+  gBrowser.removeTab(gBrowser.selectedTab);
+
+  Services.prefs.clearUserPref("identity.fxaccounts.remote.connectdevice.uri");
 });
 
 // Test the "Sync Now" button
