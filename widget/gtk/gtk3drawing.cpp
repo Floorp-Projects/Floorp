@@ -392,16 +392,21 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
 
     const ToggleGTKMetrics* metrics = GetToggleMetrics(isradio);
 
-    // XXX we should assert rect->height >= indicator_size too
-    // after bug 369581 is fixed.
-    MOZ_ASSERT(rect->width >= metrics->minSizeWithBorder.width,
-               "GetMinimumWidgetSize was ignored");
+    // Clamp the rect and paint it center aligned in the rect.
+    x = rect->x;
+    y = rect->y;
+    width = rect->width;
+    height = rect->height;
 
-    // Paint it center aligned in the rect.
-    width = metrics->minSizeWithBorder.width;
-    height = metrics->minSizeWithBorder.height;
-    x = rect->x + (rect->width - width) / 2;
-    y = rect->y + (rect->height - height) / 2;
+    if (rect->width < rect->height) {
+      y = rect->y + (rect->height - rect->width) / 2;
+      height = rect->width;
+    }
+
+    if (rect->height < rect->width) {
+      x = rect->x + (rect->width - rect->height) / 2;
+      width = rect->height;
+    }
 
     if (selected)
         state_flags = static_cast<GtkStateFlags>(state_flags|checkbox_check_state);
