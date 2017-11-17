@@ -22,10 +22,12 @@
 
 using mozilla::media::TimeUnit;
 
+namespace mozilla {
+LazyLogModule gMP4MetadataLog("MP4Metadata");
+}
+
 namespace mp4_demuxer
 {
-
-LazyLogModule gMP4MetadataLog("MP4Metadata");
 
 // the owner of mIndice is rust mp4 paser, so lifetime of this class
 // SHOULD NOT longer than rust parser.

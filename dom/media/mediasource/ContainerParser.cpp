@@ -465,7 +465,7 @@ private:
                StopAt aStop)
     {
       const MediaContainerType mType(aType); // for logging macro.
-      mp4_demuxer::BufferReader reader(aData);
+      BufferReader reader(aData);
       mp4_demuxer::AtomType initAtom("moov");
       mp4_demuxer::AtomType mediaAtom("moof");
       mp4_demuxer::AtomType dataAtom("mdat");
