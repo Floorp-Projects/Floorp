@@ -106,12 +106,12 @@ class TcpTransport(object):
         self.application_type = None
         self.last_id = 0
         self.expected_response = None
-        self.sock = None
+        self._sock = None
 
     @property
     def socket_timeout(self):
-        if self.sock:
-            return self.sock.gettimeout()
+        if self._sock:
+            return self._sock.gettimeout()
 
         return self._socket_timeout
 
@@ -119,8 +119,8 @@ class TcpTransport(object):
     def socket_timeout(self, value):
         self._socket_timeout = value
 
-        if self.sock:
-            self.sock.settimeout(value)
+        if self._sock:
+            self._sock.settimeout(value)
 
     def _unmarshal(self, packet):
         msg = None
@@ -148,7 +148,7 @@ class TcpTransport(object):
 
         while self.socket_timeout is None or (time.time() - now < self.socket_timeout):
             try:
-                chunk = self.sock.recv(bytes_to_recv)
+                chunk = self._sock.recv(bytes_to_recv)
                 data += chunk
             except socket.timeout:
                 pass
@@ -187,18 +187,18 @@ class TcpTransport(object):
         Returns a tuple of the protocol level and the application type.
         """
         try:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.settimeout(self.socket_timeout)
+            self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._sock.settimeout(self.socket_timeout)
 
-            self.sock.connect((self.addr, self.port))
+            self._sock.connect((self.addr, self.port))
         except:
-            # Unset self.sock so that the next attempt to send will cause
+            # Unset so that the next attempt to send will cause
             # another connection attempt.
-            self.sock = None
+            self._sock = None
             raise
 
         try:
-            with SocketTimeout(self.sock, 60.0):
+            with SocketTimeout(self._sock, 60.0):
                 # first packet is always a JSON Object
                 # which we can use to tell which protocol level we are at
                 raw = self.receive(unmarshal=False)
@@ -228,7 +228,7 @@ class TcpTransport(object):
         """Send message to the remote server.  Allowed input is a
         ``Message`` instance or a JSON serialisable object.
         """
-        if not self.sock:
+        if not self._sock:
             self.connect()
 
         if isinstance(obj, Message):
@@ -241,7 +241,7 @@ class TcpTransport(object):
 
         totalsent = 0
         while totalsent < len(payload):
-            sent = self.sock.send(payload[totalsent:])
+            sent = self._sock.send(payload[totalsent:])
             if sent == 0:
                 raise IOError("Socket error after sending {0} of {1} bytes"
                               .format(totalsent, len(payload)))
@@ -278,9 +278,9 @@ class TcpTransport(object):
 
         See: https://docs.python.org/2/howto/sockets.html#disconnecting
         """
-        if self.sock:
+        if self._sock:
             try:
-                self.sock.shutdown(socket.SHUT_RDWR)
+                self._sock.shutdown(socket.SHUT_RDWR)
             except IOError as exc:
                 # If the socket is already closed, don't care about:
                 #   Errno  57: Socket not connected
@@ -288,8 +288,8 @@ class TcpTransport(object):
                 if exc.errno not in (57, 107):
                     raise
 
-            self.sock.close()
-            self.sock = None
+            self._sock.close()
+            self._sock = None
 
     def __del__(self):
         self.close()
