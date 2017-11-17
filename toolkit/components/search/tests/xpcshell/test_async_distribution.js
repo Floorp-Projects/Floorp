@@ -4,9 +4,6 @@
 function run_test() {
   do_test_pending();
 
-  removeMetadata();
-  removeCacheFile();
-
   do_load_manifest("data/chrome.manifest");
 
   configureToLoadJarEngines();
