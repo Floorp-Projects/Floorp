@@ -6,13 +6,13 @@
 #define RESOURCESTREAM_H_
 
 #include "MediaResource.h"
-#include "Stream.h"
+#include "ByteStream.h"
 #include "mozilla/RefPtr.h"
 
-namespace mp4_demuxer
+namespace mozilla
 {
 
-class ResourceStream : public Stream
+class ResourceStream : public ByteStream
 {
 public:
   explicit ResourceStream(mozilla::MediaResource* aResource);

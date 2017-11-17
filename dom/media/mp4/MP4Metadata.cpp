@@ -12,7 +12,7 @@
 #include "VideoUtils.h"
 #include "MoofParser.h"
 #include "MP4Metadata.h"
-#include "Stream.h"
+#include "ByteStream.h"
 #include "MediaPrefs.h"
 #include "mp4parse.h"
 
@@ -21,9 +21,6 @@
 #include <vector>
 
 using mozilla::media::TimeUnit;
-using mp4_demuxer::Stream;
-using mp4_demuxer::Index;
-using mp4_demuxer::MoofParser;
 
 namespace mozilla {
 LazyLogModule gMP4MetadataLog("MP4Metadata");
@@ -118,7 +115,7 @@ read_source(uint8_t* buffer, uintptr_t size, void* userdata)
   return bytes_read;
 }
 
-MP4Metadata::MP4Metadata(Stream* aSource)
+MP4Metadata::MP4Metadata(ByteStream* aSource)
   : mSource(aSource)
   , mSourceAdaptor(aSource)
 {
@@ -395,7 +392,7 @@ MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
 }
 
 /*static*/ MP4Metadata::ResultAndByteBuffer
-MP4Metadata::Metadata(Stream* aSource)
+MP4Metadata::Metadata(ByteStream* aSource)
 {
   auto parser = mozilla::MakeUnique<MoofParser>(aSource, 0, false);
   RefPtr<mozilla::MediaByteBuffer> buffer = parser->Metadata();
