@@ -382,8 +382,7 @@ nsXBLService::IsChromeOrResourceURI(nsIURI* aURI)
   return false;
 }
 
-// RAII class to invoke StyleNewChildren for Elements in Servo-backed documents
-// on destruction.
+// RAII class to restyle the XBL bound element when it shuffles the flat tree.
 class MOZ_STACK_CLASS AutoStyleElement
 {
 public:
@@ -403,7 +402,7 @@ public:
     }
 
     if (ServoStyleSet* servoSet = presShell->StyleSet()->GetAsServo()) {
-      servoSet->ReresolveStyleForBindings(mElement);
+      servoSet->StyleNewSubtree(mElement);
     }
   }
 

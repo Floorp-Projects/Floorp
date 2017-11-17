@@ -181,12 +181,6 @@ public:
                   ServoStyleContext* aParentContext,
                   LazyComputeBehavior aMayCompute);
 
-  // Clear style data and resolve style for the given element and its
-  // subtree for changes to -moz-binding.
-  //
-  // TODO(emilio): Remove.
-  void ReresolveStyleForBindings(Element* aElement);
-
   // Get a style context for a text node (which no rules will match).
   //
   // The returned style context will have nsCSSAnonBoxes::mozText as its pseudo.
@@ -316,22 +310,6 @@ public:
    * cannot wait for a future batch restyle.
    */
   void StyleNewSubtree(dom::Element* aRoot);
-
-  /**
-   * Like the above, but skips the root node, and only styles unstyled children.
-   * When potentially appending multiple children, it's preferable to call
-   * StyleNewChildren on the node rather than making multiple calls to
-   * StyleNewSubtree on each child, since it allows for more parallelism.
-   */
-  void StyleNewChildren(dom::Element* aParent);
-
-  /**
-   * Eagerly styles the children of an element that has just had an XBL
-   * binding applied to it.  Some XBL consumers attach bindings to elements
-   * that have not been styled yet, and in such cases, this will do the
-   * equivalent of StyleNewSubtree instead.
-   */
-  void StyleNewlyBoundElement(dom::Element* aElement);
 
   /**
    * Helper for correctly calling UpdateStylist without paying the cost of an
