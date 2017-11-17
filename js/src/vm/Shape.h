@@ -1150,6 +1150,7 @@ class Shape : public gc::TenuredCell
 
 #ifdef DEBUG
     void dump(js::GenericPrinter& out) const;
+    void dump() const;
     void dumpSubtree(int level, js::GenericPrinter& out) const;
 #endif
 
