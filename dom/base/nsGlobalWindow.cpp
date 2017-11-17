@@ -295,7 +295,6 @@ static bool                 gMouseDown                        = false;
 static bool                 gDragServiceDisabled              = false;
 static FILE                *gDumpFile                         = nullptr;
 static uint32_t             gSerialCounter                    = 0;
-static bool                 gIdleObserversAPIFuzzTimeDisabled = false;
 
 #ifdef DEBUG_jst
 int32_t gTimeoutCnt                                    = 0;
@@ -784,19 +783,6 @@ nsPIDOMWindow<T>::GetDocGroup() const
     return doc->GetDocGroup();
   }
   return nullptr;
-}
-
-static void
-EnsurePrefCaches()
-{
-  static bool sFirstTime = true;
-  if (sFirstTime) {
-    TimeoutManager::Initialize();
-    Preferences::AddBoolVarCache(&gIdleObserversAPIFuzzTimeDisabled,
-                                 "dom.idle-observers-api.fuzz_time.disabled",
-                                 false);
-    sFirstTime = false;
-  }
 }
 
 // Include the implementations for the inner and outer windows respectively.

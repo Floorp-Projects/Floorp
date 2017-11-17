@@ -50,6 +50,7 @@
   return;                                                               \
   PR_END_MACRO
 
+static bool                 gIdleObserversAPIFuzzTimeDisabled = false;
 
 nsGlobalWindowInner::InnerWindowByIdTable *nsGlobalWindowInner::sInnerWindowsById = nullptr;
 
@@ -676,7 +677,14 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
 
   gRefCnt++;
 
-  EnsurePrefCaches();
+  static bool sFirstTime = true;
+  if (sFirstTime) {
+    sFirstTime = false;
+    TimeoutManager::Initialize();
+    Preferences::AddBoolVarCache(&gIdleObserversAPIFuzzTimeDisabled,
+                                 "dom.idle-observers-api.fuzz_time.disabled",
+                                 false);
+  }
 
   if (gDumpFile == nullptr) {
     nsAutoCString fname;
