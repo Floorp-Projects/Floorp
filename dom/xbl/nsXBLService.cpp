@@ -54,6 +54,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoRestyleManager.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Element.h"
 
@@ -383,28 +384,32 @@ nsXBLService::IsChromeOrResourceURI(nsIURI* aURI)
 
 // RAII class to invoke StyleNewChildren for Elements in Servo-backed documents
 // on destruction.
-class MOZ_STACK_CLASS AutoStyleNewChildren
+class MOZ_STACK_CLASS AutoStyleElement
 {
 public:
-  explicit AutoStyleNewChildren(Element* aElement) : mElement(aElement) { MOZ_ASSERT(mElement); }
-  ~AutoStyleNewChildren()
+  explicit AutoStyleElement(Element* aElement)
+    : mElement(aElement)
+    , mHadData(aElement->HasServoData())
+  {
+    if (mHadData) {
+      ServoRestyleManager::ClearServoDataFromSubtree(mElement);
+    }
+  }
+  ~AutoStyleElement()
   {
     nsIPresShell* presShell = mElement->OwnerDoc()->GetShell();
-    if (!presShell || !presShell->DidInitialize()) {
+    if (!mHadData || !presShell || !presShell->DidInitialize()) {
       return;
     }
 
     if (ServoStyleSet* servoSet = presShell->StyleSet()->GetAsServo()) {
-      // Check MayTraverseFrom to handle programatic XBL consumers.
-      // See bug 1370793.
-      if (servoSet->MayTraverseFrom(mElement)) {
-        servoSet->StyleNewlyBoundElement(mElement);
-      }
+      servoSet->ReresolveStyleForBindings(mElement);
     }
   }
 
 private:
   Element* mElement;
+  bool mHadData;
 };
 
 // This function loads a particular XBL file and installs all of the bindings
@@ -437,23 +442,22 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
   }
 
   // There are various places in this function where we shuffle content around
-  // the subtree and rebind things to and from insertion points. Once all that's
-  // done, we want to invoke StyleNewChildren to style any unstyled children
-  // that we may have after bindings have been removed and applied. This includes
-  // anonymous content created in this function, explicit children for which we
-  // defer styling until after XBL bindings are applied, and elements whose existing
-  // style was invalidated by a call to SetXBLInsertionParent.
+  // the subtree and rebind things to and from insertion points.
   //
-  // However, we skip this styling if aContent is not in the document, since we
-  // should keep such elements unstyled.  (There are some odd cases where we do
-  // apply bindings to elements not in the document.)
-  Maybe<AutoStyleNewChildren> styleNewChildren;
-  if (aContent->IsInComposedDoc()) {
-    styleNewChildren.emplace(aContent->AsElement());
+  // Once all that's done, we want to invoke StyleNewSubtree to restyle the
+  // whole subtree with the new flattened tree that we may have after bindings
+  // have been removed and applied.
+  //
+  // This includes anonymous content created in this function, explicit children
+  // for which we defer styling until after XBL bindings are applied, and
+  // elements whose existing style was invalidated by a call to
+  // SetXBLInsertionParent.
+  Maybe<AutoStyleElement> styleElement;
+  if (aContent->IsStyledByServo()) {
+    styleElement.emplace(aContent->AsElement());
   }
 
-  nsXBLBinding *binding = aContent->GetXBLBinding();
-  if (binding) {
+  if (nsXBLBinding* binding = aContent->GetXBLBinding()) {
     if (binding->MarkedForDeath()) {
       FlushStyleBindings(aContent);
       binding = nullptr;
