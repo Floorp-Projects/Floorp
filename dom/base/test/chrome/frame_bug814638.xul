@@ -10,6 +10,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=814638
     <key key="T" modifiers="control" oncommand="receivedKeyEvent()"/>
   </keyset>
 
-  <iframe flex="1" src="about:mozilla"/>
+  <iframe flex="1" src="about:"/>
 
 </window>

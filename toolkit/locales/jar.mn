@@ -6,6 +6,7 @@
 
 @AB_CD@.jar:
 % locale global @AB_CD@ %locale/@AB_CD@/global/
+  locale/@AB_CD@/global/about.dtd                       (%chrome/global/about.dtd)
   locale/@AB_CD@/global/aboutAbout.dtd                  (%chrome/global/aboutAbout.dtd)
   locale/@AB_CD@/global/aboutReader.properties          (%chrome/global/aboutReader.properties)
   locale/@AB_CD@/global/aboutRights.dtd                 (%chrome/global/aboutRights.dtd)

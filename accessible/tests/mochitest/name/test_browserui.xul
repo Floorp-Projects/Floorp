@@ -84,7 +84,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    openBrowserWindow(doTests, "about:license");
+    openBrowserWindow(doTests, "about:");
   ]]>
   </script>
 

@@ -6,22 +6,22 @@ package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.Actions;
 
-/* Tests related to the about:firefox page:
- *  - check that about:firefox loads from the URL bar
- *  - check that about:firefox loads from Settings/About...
+/* Tests related to the about: page:
+ *  - check that about: loads from the URL bar
+ *  - check that about: loads from Settings/About...
  */
 public class testAboutPage extends PixelTest {
 
     public void testAboutPage() {
         blockForGeckoReady();
 
-        // Load the about:firefox page and verify its title.
-        String url = mStringHelper.ABOUT_SCHEME + "firefox";
+        // Load the about: page and verify its title.
+        String url = mStringHelper.ABOUT_SCHEME;
         loadAndPaint(url);
 
         verifyUrlInContentDescription(url);
 
-        // Open a new page to remove the about:firefox page from the current tab.
+        // Open a new page to remove the about: page from the current tab.
         url = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         loadUrlAndWait(url);
 
@@ -41,7 +41,7 @@ public class testAboutPage extends PixelTest {
         tabEventExpecter.unregisterListener();
         contentEventExpecter.unregisterListener();
 
-        // Make sure the about:firefox page was loaded.
-        verifyUrlInContentDescription(mStringHelper.ABOUT_SCHEME + "firefox");
+        // Make sure the about: page was loaded.
+        verifyUrlInContentDescription(mStringHelper.ABOUT_SCHEME);
     }
 }
