@@ -220,6 +220,57 @@ public:
     memset(aEntry, 0, aTable->EntrySize());
   }
 
+private:
+  static void AssignPrefValueToDomPrefValue(PrefType aType,
+                                            PrefValue* aValue,
+                                            dom::PrefValue* aDomValue)
+  {
+    switch (aType) {
+      case PrefType::String:
+        *aDomValue = nsDependentCString(aValue->mStringVal);
+        return;
+
+      case PrefType::Int:
+        *aDomValue = aValue->mIntVal;
+        return;
+
+      case PrefType::Bool:
+        *aDomValue = !!aValue->mBoolVal;
+        return;
+
+      default:
+        MOZ_CRASH();
+    }
+  }
+
+public:
+  void ToSetting(dom::PrefSetting* aSetting)
+  {
+    aSetting->name() = mKey;
+
+    if (HasDefaultValue()) {
+      aSetting->defaultValue() = dom::PrefValue();
+      AssignPrefValueToDomPrefValue(
+        Type(), &mDefaultValue, &aSetting->defaultValue().get_PrefValue());
+    } else {
+      aSetting->defaultValue() = null_t();
+    }
+
+    if (HasUserValue()) {
+      aSetting->userValue() = dom::PrefValue();
+      AssignPrefValueToDomPrefValue(
+        Type(), &mUserValue, &aSetting->userValue().get_PrefValue());
+    } else {
+      aSetting->userValue() = null_t();
+    }
+
+    MOZ_ASSERT(aSetting->defaultValue().type() ==
+                 dom::MaybePrefValue::Tnull_t ||
+               aSetting->userValue().type() == dom::MaybePrefValue::Tnull_t ||
+               (aSetting->defaultValue().get_PrefValue().type() ==
+                aSetting->userValue().get_PrefValue().type()));
+  }
+
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
   {
     // Note: mKey is allocated in gPrefNameArena, measured elsewhere.
@@ -429,58 +480,6 @@ pref_EntryHasAdvisablySizedValues(PrefHashEntry* aPref)
   }
 
   return true;
-}
-
-static void
-AssignPrefValueToDomPrefValue(PrefType aType,
-                              PrefValue* aValue,
-                              dom::PrefValue* aDomValue)
-{
-  switch (aType) {
-    case PrefType::String:
-      *aDomValue = nsDependentCString(aValue->mStringVal);
-      return;
-
-    case PrefType::Int:
-      *aDomValue = aValue->mIntVal;
-      return;
-
-    case PrefType::Bool:
-      *aDomValue = !!aValue->mBoolVal;
-      return;
-
-    default:
-      MOZ_CRASH();
-  }
-}
-
-static void
-pref_GetPrefFromEntry(PrefHashEntry* aPref, dom::PrefSetting* aSetting)
-{
-  aSetting->name() = aPref->mKey;
-
-  if (aPref->HasDefaultValue()) {
-    aSetting->defaultValue() = dom::PrefValue();
-    AssignPrefValueToDomPrefValue(aPref->Type(),
-                                  &aPref->mDefaultValue,
-                                  &aSetting->defaultValue().get_PrefValue());
-  } else {
-    aSetting->defaultValue() = null_t();
-  }
-
-  if (aPref->HasUserValue()) {
-    aSetting->userValue() = dom::PrefValue();
-    AssignPrefValueToDomPrefValue(aPref->Type(),
-                                  &aPref->mUserValue,
-                                  &aSetting->userValue().get_PrefValue());
-  } else {
-    aSetting->userValue() = null_t();
-  }
-
-  MOZ_ASSERT(aSetting->defaultValue().type() == dom::MaybePrefValue::Tnull_t ||
-             aSetting->userValue().type() == dom::MaybePrefValue::Tnull_t ||
-             (aSetting->defaultValue().get_PrefValue().type() ==
-              aSetting->userValue().get_PrefValue().type()));
 }
 
 static bool
@@ -3771,7 +3770,7 @@ Preferences::GetPreference(PrefSetting* aSetting)
   }
 
   if (pref_EntryHasAdvisablySizedValues(pref)) {
-    pref_GetPrefFromEntry(pref, aSetting);
+    pref->ToSetting(aSetting);
   }
 }
 
@@ -3787,7 +3786,7 @@ Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aSettings)
     }
 
     dom::PrefSetting* setting = aSettings->AppendElement();
-    pref_GetPrefFromEntry(pref, setting);
+    pref->ToSetting(setting);
   }
 }
 
