@@ -357,28 +357,6 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
 template<class T>
 nsPIDOMWindow<T>::~nsPIDOMWindow() {}
 
-PopupControlState
-PushPopupControlState(PopupControlState aState, bool aForce)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  PopupControlState oldState = gPopupControlState;
-
-  if (aState < gPopupControlState || aForce) {
-    gPopupControlState = aState;
-  }
-
-  return oldState;
-}
-
-void
-PopPopupControlState(PopupControlState aState)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  gPopupControlState = aState;
-}
-
 template <class T>
 nsIURI*
 nsPIDOMWindow<T>::GetDocumentURI() const
