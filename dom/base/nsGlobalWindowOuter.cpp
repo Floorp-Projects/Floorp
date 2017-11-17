@@ -6435,8 +6435,62 @@ nsGlobalWindowOuter::GetFrameElement()
   FORWARD_TO_INNER(GetFrameElement, (), nullptr);
 }
 
+namespace {
+class ChildCommandDispatcher : public Runnable
+{
+public:
+  ChildCommandDispatcher(nsPIWindowRoot* aRoot,
+                         nsITabChild* aTabChild,
+                         const nsAString& aAction)
+    : mozilla::Runnable("ChildCommandDispatcher")
+    , mRoot(aRoot)
+    , mTabChild(aTabChild)
+    , mAction(aAction)
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    nsTArray<nsCString> enabledCommands, disabledCommands;
+    mRoot->GetEnabledDisabledCommands(enabledCommands, disabledCommands);
+    if (enabledCommands.Length() || disabledCommands.Length()) {
+      mTabChild->EnableDisableCommands(mAction, enabledCommands, disabledCommands);
+    }
+
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsPIWindowRoot>             mRoot;
+  nsCOMPtr<nsITabChild>                mTabChild;
+  nsString                             mAction;
+};
+
+class CommandDispatcher : public Runnable
+{
+public:
+  CommandDispatcher(nsIDOMXULCommandDispatcher* aDispatcher,
+                    const nsAString& aAction)
+    : mozilla::Runnable("CommandDispatcher")
+    , mDispatcher(aDispatcher)
+    , mAction(aAction)
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    return mDispatcher->UpdateCommands(mAction);
+  }
+
+  nsCOMPtr<nsIDOMXULCommandDispatcher> mDispatcher;
+  nsString                             mAction;
+};
+} // anonymous namespace
+
 nsresult
-nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason)
+nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction,
+                                    nsISelection* aSel,
+                                    int16_t aReason)
 {
   // If this is a child process, redirect to the parent process.
   if (nsIDocShell* docShell = GetDocShell()) {
