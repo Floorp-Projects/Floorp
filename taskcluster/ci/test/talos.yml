@@ -1,7 +1,10 @@
 job-defaults:
     max-run-time: 3600
     suite: talos
-    virtualization: hardware
+    virtualization:
+        by-test-platform:
+            windows10-64-ccov/.*: virtual
+            default: hardware
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -11,6 +14,10 @@ job-defaults:
                     - talos/mac_config.py
                 windows.*:
                     - talos/windows_config.py
+                windows10-64-ccov/debug:
+                    - talos/windows_vm_config.py
+                linux64-ccov/opt:
+                    - talos/linux64_config_taskcluster.py
                 default:
                     - talos/linux_config.py
 
