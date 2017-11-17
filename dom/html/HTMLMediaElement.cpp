@@ -14,6 +14,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/MediaEncryptedEvent.h"
 #include "mozilla/EMEUtils.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/Sprintf.h"
 
 #include "base/basictypes.h"
@@ -135,6 +136,7 @@ static mozilla::LazyLogModule gMediaElementEventsLog("nsMediaElementEvents");
 
 #include "mozilla/EventStateManager.h"
 
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/VideoPlaybackQuality.h"
 #include "HTMLMediaElement.h"
@@ -4389,6 +4391,60 @@ HTMLMediaElement::OutputMediaStream::~OutputMediaStream()
 {
   for (auto pair : mTrackPorts) {
     pair.second()->Destroy();
+  }
+}
+
+nsresult
+HTMLMediaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
+{
+  if (!this->Controls() || !aVisitor.mEvent->mFlags.mIsTrusted) {
+    return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+  }
+
+  HTMLInputElement* el = nullptr;
+  nsCOMPtr<nsINode> node;
+
+  // We will need to trap pointer, touch, and mouse events within the media
+  // element, allowing media control exclusive consumption on these events,
+  // and preventing the content from handling them.
+  switch (aVisitor.mEvent->mMessage) {
+    case ePointerDown:
+    case ePointerUp:
+    case eTouchEnd:
+    // Always prevent touchmove captured in video element from being handled by content,
+    // since we always do that for touchstart.
+    case eTouchMove:
+    case eTouchStart:
+    case eMouseClick:
+    case eMouseDoubleClick:
+    case eMouseDown:
+    case eMouseUp:
+      aVisitor.mCanHandle = false;
+      return NS_OK;
+
+    // The *move events however are only comsumed when the range input is being
+    // dragged.
+    case ePointerMove:
+    case eMouseMove:
+      node = do_QueryInterface(aVisitor.mEvent->mOriginalTarget);
+      if (node->IsInNativeAnonymousSubtree()) {
+        if (node->IsHTMLElement(nsGkAtoms::input)) {
+          // The node is a <input type="range">
+          el = static_cast<HTMLInputElement*>(node.get());
+        } else if (node->GetParentNode() &&
+                   node->GetParentNode()->IsHTMLElement(nsGkAtoms::input)) {
+          // The node is a child of <input type="range">
+          el = static_cast<HTMLInputElement*>(node->GetParentNode());
+        }
+      }
+      if (el && el->IsDraggingRange()) {
+        aVisitor.mCanHandle = false;
+        return NS_OK;
+      }
+      return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+
+    default:
+      return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
   }
 }
 
