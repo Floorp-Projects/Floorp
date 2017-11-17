@@ -6220,6 +6220,8 @@ public:
 
   nsIFrame* TransformFrame() { return mTransformFrame; }
 
+  virtual nsIFrame* FrameForInvalidation() const override { return mTransformFrame; }
+
   virtual int32_t ZIndex() const override;
 
   virtual void
