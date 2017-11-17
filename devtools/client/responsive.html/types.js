@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { PropTypes } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { createEnum } = require("devtools/client/shared/enum");
 
 // React PropTypes are used to describe the expected "shape" of various common

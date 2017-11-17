@@ -7,10 +7,10 @@
 "use strict";
 
 const Services = require("Services");
-const { Task } = require("devtools/shared/task");
 const flags = require("devtools/shared/flags");
-const { DOM: dom, createClass, addons, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const e10s = require("../utils/e10s");
 const message = require("../utils/message");
@@ -18,23 +18,25 @@ const { getToplevelWindow } = require("../utils/window");
 
 const FRAME_SCRIPT = "resource://devtools/client/responsive.html/browser/content.js";
 
-module.exports = createClass({
-
+class Browser extends PureComponent {
   /**
    * This component is not allowed to depend directly on frequently changing
    * data (width, height) due to the use of `dangerouslySetInnerHTML` below.
    * Any changes in props will cause the <iframe> to be removed and added again,
    * throwing away the current state of the page.
    */
-  displayName: "Browser",
+  static get propTypes() {
+    return {
+      swapAfterMount: PropTypes.bool.isRequired,
+      onBrowserMounted: PropTypes.func.isRequired,
+      onContentResize: PropTypes.func.isRequired,
+    };
+  }
 
-  propTypes: {
-    swapAfterMount: PropTypes.bool.isRequired,
-    onBrowserMounted: PropTypes.func.isRequired,
-    onContentResize: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+  constructor(props) {
+    super(props);
+    this.onContentResize = this.onContentResize.bind(this);
+  }
 
   /**
    * Before the browser is mounted, listen for `remote-browser-shown` so that we know when
@@ -55,29 +57,29 @@ module.exports = createClass({
       };
       Services.obs.addObserver(handler, "remote-browser-shown");
     });
-  },
+  }
 
   /**
    * Once the browser element has mounted, load the frame script and enable
    * various features, like floating scrollbars.
    */
-  componentDidMount: Task.async(function* () {
+  async componentDidMount() {
     // If we are not swapping browsers after mount, it's safe to start the frame
     // script now.
     if (!this.props.swapAfterMount) {
-      yield this.startFrameScript();
+      await this.startFrameScript();
     }
 
     // Notify manager.js that this browser has mounted, so that it can trigger
     // a swap if needed and continue with the rest of its startup.
-    yield this.browserShown;
+    await this.browserShown;
     this.props.onBrowserMounted();
 
     // If we are swapping browsers after mount, wait for the swap to complete
     // and start the frame script after that.
     if (this.props.swapAfterMount) {
-      yield message.wait(window, "start-frame-script");
-      yield this.startFrameScript();
+      await message.wait(window, "start-frame-script");
+      await this.startFrameScript();
       message.post(window, "start-frame-script:done");
     }
 
@@ -85,7 +87,7 @@ module.exports = createClass({
     message.wait(window, "stop-frame-script").then(() => {
       this.stopFrameScript();
     });
-  }),
+  }
 
   onContentResize(msg) {
     let { onContentResize } = this.props;
@@ -94,9 +96,9 @@ module.exports = createClass({
       width,
       height,
     });
-  },
+  }
 
-  startFrameScript: Task.async(function* () {
+  async startFrameScript() {
     let { onContentResize } = this;
     let browser = this.refs.browserContainer.querySelector("iframe.browser");
     let mm = browser.frameLoader.messageManager;
@@ -109,28 +111,28 @@ module.exports = createClass({
 
     let ready = e10s.once(mm, "ChildScriptReady");
     mm.loadFrameScript(FRAME_SCRIPT, true);
-    yield ready;
+    await ready;
 
     let browserWindow = getToplevelWindow(window);
     let requiresFloatingScrollbars =
       !browserWindow.matchMedia("(-moz-overlay-scrollbars)").matches;
 
-    yield e10s.request(mm, "Start", {
+    await e10s.request(mm, "Start", {
       requiresFloatingScrollbars,
       // Tests expect events on resize to yield on various size changes
       notifyOnResize: flags.testing,
     });
-  }),
+  }
 
-  stopFrameScript: Task.async(function* () {
+  async stopFrameScript() {
     let { onContentResize } = this;
     let browser = this.refs.browserContainer.querySelector("iframe.browser");
     let mm = browser.frameLoader.messageManager;
 
     e10s.off(mm, "OnContentResize", onContentResize);
-    yield e10s.request(mm, "Stop");
+    await e10s.request(mm, "Stop");
     message.post(window, "stop-frame-script:done");
-  }),
+  }
 
   render() {
     return dom.div(
@@ -160,6 +162,7 @@ module.exports = createClass({
         }
       }
     );
-  },
+  }
+}
 
-});
+module.exports = Browser;
