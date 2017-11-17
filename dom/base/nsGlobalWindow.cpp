@@ -766,22 +766,6 @@ public:
   nsString                             mAction;
 };
 
-static bool IsLink(nsIContent* aContent)
-{
-  return aContent && (aContent->IsHTMLElement(nsGkAtoms::a) ||
-                      aContent->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
-                                            nsGkAtoms::simple, eCaseMatters));
-}
-
-static bool ShouldShowFocusRingIfFocusedByMouse(nsIContent* aNode)
-{
-  if (!aNode) {
-    return true;
-  }
-  return !IsLink(aNode) &&
-    !aNode->IsAnyOfHTMLElements(nsGkAtoms::video, nsGkAtoms::audio);
-}
-
 static bool
 IsInterval(const Optional<int32_t>& aTimeout, int32_t& aResultTimeout)
 {

@@ -3248,6 +3248,8 @@ public:
 
   static void AsyncPrecreateStringBundles();
 
+  static bool ContentIsLink(nsIContent* aContent);
+
 private:
   static bool InitializeEventTable();
 
