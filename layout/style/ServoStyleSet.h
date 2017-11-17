@@ -182,10 +182,10 @@ public:
                   LazyComputeBehavior aMayCompute);
 
   // Clear style data and resolve style for the given element and its
-  // subtree for changes to -moz-binding. It returns the new style
-  // context of the given element.
-  already_AddRefed<ServoStyleContext>
-  ReresolveStyleForBindings(Element* aElement);
+  // subtree for changes to -moz-binding.
+  //
+  // TODO(emilio): Remove.
+  void ReresolveStyleForBindings(Element* aElement);
 
   // Get a style context for a text node (which no rules will match).
   //
