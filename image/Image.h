@@ -11,6 +11,7 @@
 #include "gfx2DGlue.h"
 #include "imgIContainer.h"
 #include "ImageURL.h"
+#include "ImageContainer.h"
 #include "nsStringFwd.h"
 #include "ProgressTracker.h"
 #include "SurfaceCache.h"
@@ -333,6 +334,17 @@ protected:
   bool                          mInitialized:1; // Have we been initalized?
   bool                          mAnimating:1;   // Are we currently animating?
   bool                          mError:1;       // Error handling
+
+  // A weak pointer to our ImageContainer, which stays alive only as long as
+  // the layer system needs it.
+  WeakPtr<layers::ImageContainer> mImageContainer;
+
+  layers::ImageContainer::ProducerID mImageProducerID;
+  layers::ImageContainer::FrameID mLastFrameID;
+
+  // If mImageContainer is non-null, this contains the DrawResult we obtained
+  // the last time we updated it.
+  DrawResult mLastImageContainerDrawResult;
 };
 
 } // namespace image

@@ -58,7 +58,10 @@ ImageResource::ImageResource(ImageURL* aURI) :
   mAnimationMode(kNormalAnimMode),
   mInitialized(false),
   mAnimating(false),
-  mError(false)
+  mError(false),
+  mImageProducerID(ImageContainer::AllocateProducerID()),
+  mLastFrameID(0),
+  mLastImageContainerDrawResult(DrawResult::NOT_READY)
 { }
 
 ImageResource::~ImageResource()
