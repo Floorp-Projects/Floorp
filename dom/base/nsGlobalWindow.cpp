@@ -309,9 +309,6 @@ int32_t gTimeoutCnt                                    = 0;
 
 #define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
 
-// CIDs
-static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
-
 namespace mozilla {
 namespace dom {
 extern uint64_t
