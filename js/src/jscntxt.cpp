@@ -1593,15 +1593,6 @@ JSContext::initJitStackLimit()
     resetJitStackLimit();
 }
 
-JSVersion
-JSContext::findVersion()
-{
-    if (!CurrentThreadCanAccessRuntime(runtime()))
-        return JSVERSION_DEFAULT;
-
-    return runtime()->defaultVersion();
-}
-
 void
 JSContext::updateMallocCounter(size_t nbytes)
 {
