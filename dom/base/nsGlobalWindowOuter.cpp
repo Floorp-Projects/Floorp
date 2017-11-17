@@ -43,6 +43,7 @@
   return GetCurrentInnerWindowInternal()->method args;                  \
   PR_END_MACRO
 
+static int32_t              gOpenPopupSpamCount               = 0;
 
 nsGlobalWindowOuter::OuterWindowByIdTable *nsGlobalWindowOuter::sOuterWindowsById = nullptr;
 
@@ -1426,45 +1427,22 @@ nsGlobalWindowOuter::SetInitialPrincipalToSubject()
 }
 
 PopupControlState
-PushPopupControlState(PopupControlState aState, bool aForce)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  PopupControlState oldState = gPopupControlState;
-
-  if (aState < gPopupControlState || aForce) {
-    gPopupControlState = aState;
-  }
-
-  return oldState;
-}
-
-PopupControlState
 nsGlobalWindowOuter::PushPopupControlState(PopupControlState aState,
                                            bool aForce) const
 {
-  return ::PushPopupControlState(aState, aForce);
-}
-
-void
-PopPopupControlState(PopupControlState aState)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  gPopupControlState = aState;
+  return nsContentUtils::PushPopupControlState(aState, aForce);
 }
 
 void
 nsGlobalWindowOuter::PopPopupControlState(PopupControlState aState) const
 {
-  ::PopPopupControlState(aState);
+  nsContentUtils::PopPopupControlState(aState);
 }
 
 PopupControlState
 nsGlobalWindowOuter::GetPopupControlState() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  return gPopupControlState;
+  return nsContentUtils::GetPopupControlState();
 }
 
 #define WINDOWSTATEHOLDER_IID \
@@ -5078,7 +5056,7 @@ nsGlobalWindowOuter::FocusOuter(ErrorResult& aError)
   // (bugs 355482 and 369306).
   bool canFocus = CanSetProperty("dom.disable_window_flip") ||
                     (opener == callerOuter &&
-                     RevisePopupAbuseLevel(gPopupControlState) < openBlocked);
+                     RevisePopupAbuseLevel(GetPopupControlState()) < openBlocked);
 
   nsCOMPtr<mozIDOMWindowProxy> activeDOMWindow;
   fm->GetActiveWindow(getter_AddRefs(activeDOMWindow));
@@ -7483,7 +7461,7 @@ nsGlobalWindowOuter::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   if (NS_FAILED(rv))
     return rv;
 
-  PopupControlState abuseLevel = gPopupControlState;
+  PopupControlState abuseLevel = GetPopupControlState();
   if (checkForPopup) {
     abuseLevel = RevisePopupAbuseLevel(abuseLevel);
     if (abuseLevel >= openBlocked) {
@@ -8264,4 +8242,14 @@ nsGlobalWindowOuter::Create(bool aIsChrome)
 
   window->InitWasOffline();
   return window.forget();
+}
+
+nsAutoPopupStatePusherInternal::nsAutoPopupStatePusherInternal(PopupControlState aState, bool aForce)
+  : mOldState(nsContentUtils::PushPopupControlState(aState, aForce))
+{
+}
+
+nsAutoPopupStatePusherInternal::~nsAutoPopupStatePusherInternal()
+{
+  nsContentUtils::PopPopupControlState(mOldState);
 }

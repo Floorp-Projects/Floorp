@@ -1039,12 +1039,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)
 #include "nsPIDOMWindowInlines.h"
 
 #ifdef MOZILLA_INTERNAL_API
-PopupControlState
-PushPopupControlState(PopupControlState aState, bool aForce);
-
-void
-PopPopupControlState(PopupControlState aState);
-
 #define NS_AUTO_POPUP_STATE_PUSHER nsAutoPopupStatePusherInternal
 #else
 #define NS_AUTO_POPUP_STATE_PUSHER nsAutoPopupStatePusherExternal
@@ -1060,15 +1054,8 @@ class NS_AUTO_POPUP_STATE_PUSHER
 {
 public:
 #ifdef MOZILLA_INTERNAL_API
-  explicit NS_AUTO_POPUP_STATE_PUSHER(PopupControlState aState, bool aForce = false)
-    : mOldState(::PushPopupControlState(aState, aForce))
-  {
-  }
-
-  ~NS_AUTO_POPUP_STATE_PUSHER()
-  {
-    PopPopupControlState(mOldState);
-  }
+  explicit NS_AUTO_POPUP_STATE_PUSHER(PopupControlState aState, bool aForce = false);
+  ~NS_AUTO_POPUP_STATE_PUSHER();
 #else
   NS_AUTO_POPUP_STATE_PUSHER(nsPIDOMWindowOuter *aWindow, PopupControlState aState)
     : mWindow(aWindow), mOldState(openAbused)

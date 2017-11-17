@@ -343,6 +343,8 @@ bool nsContentUtils::sDoNotTrackEnabled = false;
 
 mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
 
+PopupControlState nsContentUtils::sPopupControlState = openAbused;
+
 // Subset of http://www.whatwg.org/specs/web-apps/current-work/#autofill-field-name
 enum AutocompleteUnsupportedFieldName : uint8_t
 {

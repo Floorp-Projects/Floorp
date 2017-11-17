@@ -587,7 +587,7 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
   }
 
   if (gRunningTimeoutDepth == 0 &&
-      mWindow.GetPopupControlState() < openBlocked) {
+      nsContentUtils::GetPopupControlState() < openBlocked) {
     // This timeout is *not* set from another timeout and it's set
     // while popups are enabled. Propagate the state to the timeout if
     // its delay (interval) is equal to or less than what
@@ -597,7 +597,7 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     // because our lower bound for |realInterval| could be pretty high
     // in some cases.
     if (interval <= gDisableOpenClickDelay) {
-      timeout->mPopupState = mWindow.GetPopupControlState();
+      timeout->mPopupState = nsContentUtils::GetPopupControlState();
     }
   }
 
