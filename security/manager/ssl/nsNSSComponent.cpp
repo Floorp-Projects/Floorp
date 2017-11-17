@@ -1785,9 +1785,9 @@ GetNSSProfilePath(nsAutoCString& aProfilePath)
 // returns NS_OK even if renaming the file didn't work. This simplifies the
 // logic of the calling code.
 static nsresult
-AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath)
+AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath,
+                              const nsACString& moduleDBFilename)
 {
-  NS_NAMED_LITERAL_CSTRING(moduleDBFilename, "pkcs11.txt");
   nsAutoCString destModuleDBFilename(moduleDBFilename);
   destModuleDBFilename.Append(".fips");
   nsCOMPtr<nsIFile> dbFile = do_CreateInstance("@mozilla.org/file/local;1");
@@ -1853,6 +1853,22 @@ AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath)
   // initializing NSS in no-DB mode.
   Unused << dbFile->MoveToNative(profileDir, destModuleDBFilename);
   return NS_OK;
+}
+
+// We may be using the legacy databases, in which case we need to use
+// "secmod.db". We may be using the sqlite-backed databases, in which case we
+// need to use "pkcs11.txt".
+static nsresult
+AttemptToRenameBothPKCS11ModuleDBVersions(const nsACString& profilePath)
+{
+  NS_NAMED_LITERAL_CSTRING(legacyModuleDBFilename, "secmod.db");
+  NS_NAMED_LITERAL_CSTRING(sqlModuleDBFilename, "pkcs11.txt");
+  nsresult rv = AttemptToRenamePKCS11ModuleDB(profilePath,
+                                              legacyModuleDBFilename);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return AttemptToRenamePKCS11ModuleDB(profilePath, sqlModuleDBFilename);
 }
 #endif // ifndef ANDROID
 
@@ -1931,7 +1947,7 @@ InitializeNSSWithFallbacks(const nsACString& profilePath, bool nocertdb,
       // If this fails non-catastrophically, we'll attempt to initialize NSS
       // again in r/w then r-o mode (both of which will fail), and then we'll
       // fall back to NSS_NoDB_Init, which is the behavior we want.
-      nsresult rv = AttemptToRenamePKCS11ModuleDB(profilePath);
+      nsresult rv = AttemptToRenameBothPKCS11ModuleDBVersions(profilePath);
       if (NS_FAILED(rv)) {
         return rv;
       }
