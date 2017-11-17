@@ -369,10 +369,9 @@ protected:
   void ReleaseImageContainer();
 
 private:
-  DrawResult AddCurrentImage(layers::ImageContainer* aContainer,
-                             const gfx::IntSize& aSize,
-                             uint32_t aFlags,
-                             bool aInTransaction);
+  void SetCurrentImage(layers::ImageContainer* aContainer,
+                       gfx::SourceSurface* aSurface,
+                       bool aInTransaction);
 
   struct ImageContainerEntry {
     ImageContainerEntry(const gfx::IntSize& aSize,
