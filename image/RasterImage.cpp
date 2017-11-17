@@ -620,6 +620,22 @@ RasterImage::GetFrameInternal(const IntSize& aSize,
   return MakePair(DrawResult::SUCCESS, Move(sourceSurface));
 }
 
+IntSize
+RasterImage::GetImageContainerSize(LayerManager* aManager,
+                                   const IntSize& aSize,
+                                   uint32_t aFlags)
+{
+  if (!IsImageContainerAvailableAtSize(aManager, aSize, aFlags)) {
+    return IntSize(0, 0);
+  }
+
+  if (!CanDownscaleDuringDecode(aSize, aFlags)) {
+    return mSize;
+  }
+
+  return aSize;
+}
+
 NS_IMETHODIMP_(bool)
 RasterImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
 {
