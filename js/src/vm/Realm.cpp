@@ -114,6 +114,4 @@ JS::GetRealmIteratorPrototype(JSContext* cx)
 JS_PUBLIC_API(void)
 JS::SetVersionForCurrentRealm(JSContext* cx, JSVersion version)
 {
-    JSCompartment* compartment = GetContextCompartment(cx);
-    compartment->behaviors().setVersion(version);
 }

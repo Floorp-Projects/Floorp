@@ -178,7 +178,7 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, Handle<RegExpObject*>
 static bool
 CheckPatternSyntax(JSContext* cx, HandleAtom pattern, RegExpFlag flags)
 {
-    CompileOptions options(cx, JSVERSION_DEFAULT);
+    CompileOptions options(cx);
     frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
     return irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern,
                                         flags & UnicodeFlag);
