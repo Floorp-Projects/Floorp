@@ -202,29 +202,29 @@ public:
                                 AsInt(PrefType::Bool)));
   }
 
-  bool HasDefault() const { return mValue & PREF_FLAG_HAS_DEFAULT; }
+  bool HasDefaultValue() const { return mValue & PREF_FLAG_HAS_DEFAULT_VALUE; }
 
-  void SetHasDefault(bool aSetOrUnset)
+  void SetHasDefaultValue(bool aSetOrUnset)
   {
-    SetFlag(PREF_FLAG_HAS_DEFAULT, aSetOrUnset);
+    SetFlag(PREF_FLAG_HAS_DEFAULT_VALUE, aSetOrUnset);
   }
 
-  bool HasStickyDefault() const { return mValue & PREF_FLAG_STICKY_DEFAULT; }
+  bool IsSticky() const { return mValue & PREF_FLAG_STICKY; }
 
-  void SetHasStickyDefault(bool aSetOrUnset)
+  void SetIsSticky(bool aSetOrUnset)
   {
-    SetFlag(PREF_FLAG_STICKY_DEFAULT, aSetOrUnset);
+    SetFlag(PREF_FLAG_STICKY, aSetOrUnset);
   }
 
   bool IsLocked() const { return mValue & PREF_FLAG_LOCKED; }
 
   void SetLocked(bool aSetOrUnset) { SetFlag(PREF_FLAG_LOCKED, aSetOrUnset); }
 
-  bool HasUserValue() const { return mValue & PREF_FLAG_USERSET; }
+  bool HasUserValue() const { return mValue & PREF_FLAG_HAS_USER_VALUE; }
 
   void SetHasUserValue(bool aSetOrUnset)
   {
-    SetFlag(PREF_FLAG_USERSET, aSetOrUnset);
+    SetFlag(PREF_FLAG_HAS_USER_VALUE, aSetOrUnset);
   }
 
 private:
@@ -240,9 +240,9 @@ private:
   enum
   {
     PREF_FLAG_LOCKED = 4,
-    PREF_FLAG_USERSET = 8,
-    PREF_FLAG_HAS_DEFAULT = 16,
-    PREF_FLAG_STICKY_DEFAULT = 32,
+    PREF_FLAG_HAS_USER_VALUE = 8,
+    PREF_FLAG_HAS_DEFAULT_VALUE = 16,
+    PREF_FLAG_STICKY = 32,
   };
   uint16_t mValue;
 };
@@ -251,8 +251,23 @@ struct PrefHashEntry : PLDHashEntryHdr
 {
   PrefTypeFlags mPrefFlags; // this field first to minimize 64-bit struct size
   const char* mKey;
-  PrefValue mDefaultPref;
-  PrefValue mUserPref;
+  PrefValue mDefaultValue;
+  PrefValue mUserValue;
+
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
+  {
+    // Note: mKey is allocated in gPrefNameArena, measured elsewhere.
+    size_t n = 0;
+    if (mPrefFlags.IsTypeString()) {
+      if (mPrefFlags.HasDefaultValue()) {
+        n += aMallocSizeOf(mDefaultValue.mStringVal);
+      }
+      if (mPrefFlags.HasUserValue()) {
+        n += aMallocSizeOf(mUserValue.mStringVal);
+      }
+    }
+    return n;
+  }
 };
 
 static void
@@ -260,8 +275,8 @@ ClearPrefEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
   auto pref = static_cast<PrefHashEntry*>(aEntry);
   if (pref->mPrefFlags.IsTypeString()) {
-    free(const_cast<char*>(pref->mDefaultPref.mStringVal));
-    free(const_cast<char*>(pref->mUserPref.mStringVal));
+    free(const_cast<char*>(pref->mDefaultValue.mStringVal));
+    free(const_cast<char*>(pref->mUserValue.mStringVal));
   }
 
   // Don't need to free this because it's allocated in memory owned by
@@ -273,18 +288,18 @@ ClearPrefEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 static bool
 MatchPrefEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
 {
-  auto prefEntry = static_cast<const PrefHashEntry*>(aEntry);
+  auto pref = static_cast<const PrefHashEntry*>(aEntry);
 
-  if (prefEntry->mKey == aKey) {
+  if (pref->mKey == aKey) {
     return true;
   }
 
-  if (!prefEntry->mKey || !aKey) {
+  if (!pref->mKey || !aKey) {
     return false;
   }
 
   auto otherKey = static_cast<const char*>(aKey);
-  return (strcmp(prefEntry->mKey, otherKey) == 0);
+  return (strcmp(pref->mKey, otherKey) == 0);
 }
 
 struct CallbackNode
@@ -302,7 +317,7 @@ struct CallbackNode
 
 static PLDHashTable* gHashTable;
 
-static ArenaAllocator<8192, 4> gPrefNameArena;
+static ArenaAllocator<8192, 1> gPrefNameArena;
 
 // The callback list contains all the priority callbacks followed by the
 // non-priority callbacks. gLastPriorityNode records where the first part ends.
@@ -335,7 +350,7 @@ enum
 {
   kPrefSetDefault = 1,
   kPrefForceSet = 2,
-  kPrefStickyDefault = 4,
+  kPrefSticky = 4,
 };
 
 static nsresult
@@ -406,15 +421,15 @@ pref_savePrefs()
     auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
     // where we're getting our pref from
-    PrefValue* sourcePref;
+    PrefValue* sourceValue;
 
     if (pref->mPrefFlags.HasUserValue() &&
-        (pref_ValueChanged(pref->mDefaultPref,
-                           pref->mUserPref,
+        (pref_ValueChanged(pref->mDefaultValue,
+                           pref->mUserValue,
                            pref->mPrefFlags.GetPrefType()) ||
-         !pref->mPrefFlags.HasDefault() ||
-         pref->mPrefFlags.HasStickyDefault())) {
-      sourcePref = &pref->mUserPref;
+         !pref->mPrefFlags.HasDefaultValue() ||
+         pref->mPrefFlags.IsSticky())) {
+      sourceValue = &pref->mUserValue;
     } else {
       // do not save default prefs that haven't changed
       continue;
@@ -425,13 +440,13 @@ pref_savePrefs()
 
     nsAutoCString prefValue;
     if (pref->mPrefFlags.IsTypeString()) {
-      StrEscape(sourcePref->mStringVal, prefValue);
+      StrEscape(sourceValue->mStringVal, prefValue);
 
     } else if (pref->mPrefFlags.IsTypeInt()) {
-      prefValue.AppendInt(sourcePref->mIntVal);
+      prefValue.AppendInt(sourceValue->mIntVal);
 
     } else if (pref->mPrefFlags.IsTypeBool()) {
-      prefValue = sourcePref->mBoolVal ? "true" : "false";
+      prefValue = sourceValue->mBoolVal ? "true" : "false";
     }
 
     nsPrintfCString str("user_pref(%s, %s);", prefName.get(), prefValue.get());
@@ -442,22 +457,22 @@ pref_savePrefs()
 }
 
 static bool
-pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry)
+pref_EntryHasAdvisablySizedValues(PrefHashEntry* aPref)
 {
-  if (aHashEntry->mPrefFlags.GetPrefType() != PrefType::String) {
+  if (aPref->mPrefFlags.GetPrefType() != PrefType::String) {
     return true;
   }
 
   const char* stringVal;
-  if (aHashEntry->mPrefFlags.HasDefault()) {
-    stringVal = aHashEntry->mDefaultPref.mStringVal;
+  if (aPref->mPrefFlags.HasDefaultValue()) {
+    stringVal = aPref->mDefaultValue.mStringVal;
     if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
       return false;
     }
   }
 
-  if (aHashEntry->mPrefFlags.HasUserValue()) {
-    stringVal = aHashEntry->mUserPref.mStringVal;
+  if (aPref->mPrefFlags.HasUserValue()) {
+    stringVal = aPref->mUserValue.mStringVal;
     if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
       return false;
     }
@@ -467,23 +482,23 @@ pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry)
 }
 
 static void
-GetPrefValueFromEntry(PrefHashEntry* aHashEntry,
-                      dom::PrefSetting* aPref,
+GetPrefValueFromEntry(PrefHashEntry* aPref,
+                      dom::PrefSetting* aSetting,
                       PrefValueKind aKind)
 {
   PrefValue* value;
   dom::PrefValue* settingValue;
   if (aKind == PrefValueKind::User) {
-    value = &aHashEntry->mUserPref;
-    aPref->userValue() = dom::PrefValue();
-    settingValue = &aPref->userValue().get_PrefValue();
+    value = &aPref->mUserValue;
+    aSetting->userValue() = dom::PrefValue();
+    settingValue = &aSetting->userValue().get_PrefValue();
   } else {
-    value = &aHashEntry->mDefaultPref;
-    aPref->defaultValue() = dom::PrefValue();
-    settingValue = &aPref->defaultValue().get_PrefValue();
+    value = &aPref->mDefaultValue;
+    aSetting->defaultValue() = dom::PrefValue();
+    settingValue = &aSetting->defaultValue().get_PrefValue();
   }
 
-  switch (aHashEntry->mPrefFlags.GetPrefType()) {
+  switch (aPref->mPrefFlags.GetPrefType()) {
     case PrefType::String:
       *settingValue = nsDependentCString(value->mStringVal);
       return;
@@ -499,26 +514,26 @@ GetPrefValueFromEntry(PrefHashEntry* aHashEntry,
 }
 
 static void
-pref_GetPrefFromEntry(PrefHashEntry* aHashEntry, dom::PrefSetting* aPref)
+pref_GetPrefFromEntry(PrefHashEntry* aPref, dom::PrefSetting* aSetting)
 {
-  aPref->name() = aHashEntry->mKey;
+  aSetting->name() = aPref->mKey;
 
-  if (aHashEntry->mPrefFlags.HasDefault()) {
-    GetPrefValueFromEntry(aHashEntry, aPref, PrefValueKind::Default);
+  if (aPref->mPrefFlags.HasDefaultValue()) {
+    GetPrefValueFromEntry(aPref, aSetting, PrefValueKind::Default);
   } else {
-    aPref->defaultValue() = null_t();
+    aSetting->defaultValue() = null_t();
   }
 
-  if (aHashEntry->mPrefFlags.HasUserValue()) {
-    GetPrefValueFromEntry(aHashEntry, aPref, PrefValueKind::User);
+  if (aPref->mPrefFlags.HasUserValue()) {
+    GetPrefValueFromEntry(aPref, aSetting, PrefValueKind::User);
   } else {
-    aPref->userValue() = null_t();
+    aSetting->userValue() = null_t();
   }
 
-  MOZ_ASSERT(aPref->defaultValue().type() == dom::MaybePrefValue::Tnull_t ||
-             aPref->userValue().type() == dom::MaybePrefValue::Tnull_t ||
-             (aPref->defaultValue().get_PrefValue().type() ==
-              aPref->userValue().get_PrefValue().type()));
+  MOZ_ASSERT(aSetting->defaultValue().type() == dom::MaybePrefValue::Tnull_t ||
+             aSetting->userValue().type() == dom::MaybePrefValue::Tnull_t ||
+             (aSetting->defaultValue().get_PrefValue().type() ==
+              aSetting->userValue().get_PrefValue().type()));
 }
 
 static bool
@@ -544,7 +559,7 @@ PREF_ClearUserPref(const char* aPrefName)
   if (pref && pref->mPrefFlags.HasUserValue()) {
     pref->mPrefFlags.SetHasUserValue(false);
 
-    if (!pref->mPrefFlags.HasDefault()) {
+    if (!pref->mPrefFlags.HasDefaultValue()) {
       gHashTable->RemoveEntry(pref);
     }
 
@@ -574,7 +589,7 @@ PREF_ClearAllUserPrefs()
       }
 
       pref->mPrefFlags.SetHasUserValue(false);
-      if (!pref->mPrefFlags.HasDefault()) {
+      if (!pref->mPrefFlags.HasDefaultValue()) {
         iter.Remove();
       }
     }
@@ -693,20 +708,20 @@ InInitArray(const char* aKey)
   return BinarySearchIf(list, 0, prefsLen, StringComparator(aKey), &found);
 }
 
-static bool gWatchingPref = false;
+static bool gInstallingCallback = false;
 
-class WatchingPrefRAII
+class AutoInstallingCallback
 {
 public:
-  WatchingPrefRAII() { gWatchingPref = true; }
-  ~WatchingPrefRAII() { gWatchingPref = false; }
+  AutoInstallingCallback() { gInstallingCallback = true; }
+  ~AutoInstallingCallback() { gInstallingCallback = false; }
 };
 
-#define WATCHING_PREF_RAII() WatchingPrefRAII watchingPrefRAII
+#define AUTO_INSTALLING_CALLBACK() AutoInstallingCallback installingRAII
 
 #else // DEBUG
 
-#define WATCHING_PREF_RAII()
+#define AUTO_INSTALLING_CALLBACK()
 
 #endif // DEBUG
 
@@ -720,9 +735,14 @@ pref_HashTableLookup(const char* aKey)
   // If you're hitting this assertion, you've added a pref access to start up.
   // Consider moving it later or add it to the whitelist in ContentPrefs.cpp
   // and get review from a DOM peer.
+  //
+  // Note that accesses of non-whitelisted prefs that happen while installing a
+  // callback (e.g. VarCache) are considered acceptable. These accesses will
+  // fail, but once the proper pref value is set the callback will be
+  // immediately called, so things should work out.
 #ifdef DEBUG
-  if (!XRE_IsParentProcess() && gPhase <= END_INIT_PREFS && !gWatchingPref &&
-      !InInitArray(aKey)) {
+  if (!XRE_IsParentProcess() && gPhase <= END_INIT_PREFS &&
+      !gInstallingCallback && !InInitArray(aKey)) {
     MOZ_CRASH_UNSAFE_PRINTF(
       "accessing non-init pref %s before the rest of the prefs are sent", aKey);
   }
@@ -753,10 +773,10 @@ pref_SetPref(const char* aKey,
     // Initialize the pref entry.
     pref->mPrefFlags.Reset().SetPrefType(aType);
     pref->mKey = ArenaStrdup(aKey, gPrefNameArena);
-    memset(&pref->mDefaultPref, 0, sizeof(pref->mDefaultPref));
-    memset(&pref->mUserPref, 0, sizeof(pref->mUserPref));
+    memset(&pref->mDefaultValue, 0, sizeof(pref->mDefaultValue));
+    memset(&pref->mUserValue, 0, sizeof(pref->mUserValue));
 
-  } else if (pref->mPrefFlags.HasDefault() &&
+  } else if (pref->mPrefFlags.HasDefaultValue() &&
              !pref->mPrefFlags.IsPrefType(aType)) {
     NS_WARNING(
       nsPrintfCString(
@@ -774,14 +794,14 @@ pref_SetPref(const char* aKey,
   if (aFlags & kPrefSetDefault) {
     if (!pref->mPrefFlags.IsLocked()) {
       // ?? change of semantics?
-      if (pref_ValueChanged(pref->mDefaultPref, aValue, aType) ||
-          !pref->mPrefFlags.HasDefault()) {
+      if (pref_ValueChanged(pref->mDefaultValue, aValue, aType) ||
+          !pref->mPrefFlags.HasDefaultValue()) {
         pref_SetValue(
-          &pref->mDefaultPref, pref->mPrefFlags.GetPrefType(), aValue, aType);
+          &pref->mDefaultValue, pref->mPrefFlags.GetPrefType(), aValue, aType);
         pref->mPrefFlags.SetPrefType(aType);
-        pref->mPrefFlags.SetHasDefault(true);
-        if (aFlags & kPrefStickyDefault) {
-          pref->mPrefFlags.SetHasStickyDefault(true);
+        pref->mPrefFlags.SetHasDefaultValue(true);
+        if (aFlags & kPrefSticky) {
+          pref->mPrefFlags.SetIsSticky(true);
         }
         if (!pref->mPrefFlags.HasUserValue()) {
           valueChanged = true;
@@ -794,9 +814,9 @@ pref_SetPref(const char* aKey,
     // If new value is same as the default value and it's not a "sticky" pref,
     // then un-set the user value. Otherwise, set the user value only if it has
     // changed.
-    if ((pref->mPrefFlags.HasDefault()) &&
-        !(pref->mPrefFlags.HasStickyDefault()) &&
-        !pref_ValueChanged(pref->mDefaultPref, aValue, aType) &&
+    if ((pref->mPrefFlags.HasDefaultValue()) &&
+        !(pref->mPrefFlags.IsSticky()) &&
+        !pref_ValueChanged(pref->mDefaultValue, aValue, aType) &&
         !(aFlags & kPrefForceSet)) {
       if (pref->mPrefFlags.HasUserValue()) {
         // XXX should we free a user-set string value if there is one?
@@ -808,9 +828,9 @@ pref_SetPref(const char* aKey,
       }
     } else if (!pref->mPrefFlags.HasUserValue() ||
                !pref->mPrefFlags.IsPrefType(aType) ||
-               pref_ValueChanged(pref->mUserPref, aValue, aType)) {
+               pref_ValueChanged(pref->mUserValue, aValue, aType)) {
       pref_SetValue(
-        &pref->mUserPref, pref->mPrefFlags.GetPrefType(), aValue, aType);
+        &pref->mUserValue, pref->mPrefFlags.GetPrefType(), aValue, aType);
       pref->mPrefFlags.SetPrefType(aType);
       pref->mPrefFlags.SetHasUserValue(true);
       if (!pref->mPrefFlags.IsLocked()) {
@@ -993,13 +1013,13 @@ PREF_ReaderCallback(void* aClosure,
                     PrefValue aValue,
                     PrefType aType,
                     bool aIsDefault,
-                    bool aIsStickyDefault)
+                    bool aIsSticky)
 {
   uint32_t flags = 0;
   if (aIsDefault) {
     flags |= kPrefSetDefault;
-    if (aIsStickyDefault) {
-      flags |= kPrefStickyDefault;
+    if (aIsSticky) {
+      flags |= kPrefSticky;
     }
   } else {
     flags |= kPrefForceSet;
@@ -1020,13 +1040,13 @@ PREF_ReaderCallback(void* aClosure,
 // |aValue| is the preference value.
 // |aType| is the preference type (PREF_STRING, PREF_INT, or PREF_BOOL).
 // |aIsDefault| indicates if it's a default preference.
-// |aIsStickyDefault| indicates if it's a sticky default preference.
+// |aIsSticky| indicates if it's a sticky preference.
 typedef void (*PrefReader)(void* aClosure,
                            const char* aPref,
                            PrefValue aValue,
                            PrefType aType,
                            bool aIsDefault,
-                           bool aIsStickyDefault);
+                           bool aIsSticky);
 
 // Report any errors or warnings we encounter during parsing.
 typedef void (*PrefParseErrorReporter)(const char* aMessage,
@@ -1053,7 +1073,7 @@ struct PrefParseState
   char* mVb;             // value buffer (ptr into mLb)
   PrefType mVtype;       // PREF_{STRING,INT,BOOL}
   bool mIsDefault;       // true if (default) pref
-  bool mIsStickyDefault; // true if (sticky) pref
+  bool mIsSticky;        // true if (sticky) pref
 };
 
 // Pref parser states.
@@ -1084,7 +1104,7 @@ enum
 
 static const char kUserPref[] = "user_pref";
 static const char kPref[] = "pref";
-static const char kPrefSticky[] = "sticky_pref";
+static const char kStickyPref[] = "sticky_pref";
 static const char kTrue[] = "true";
 static const char kFalse[] = "false";
 
@@ -1229,7 +1249,7 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
           aPS->mVb = nullptr;
           aPS->mVtype = PrefType::Invalid;
           aPS->mIsDefault = false;
-          aPS->mIsStickyDefault = false;
+          aPS->mIsSticky = false;
         }
         switch (c) {
           case '/': // begin comment block or line?
@@ -1244,7 +1264,7 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
             if (c == 'u') {
               aPS->mStrMatch = kUserPref;
             } else if (c == 's') {
-              aPS->mStrMatch = kPrefSticky;
+              aPS->mStrMatch = kStickyPref;
             } else {
               aPS->mStrMatch = kPref;
             }
@@ -1293,8 +1313,8 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
       case PREF_PARSE_UNTIL_NAME:
         if (c == '\"' || c == '\'') {
           aPS->mIsDefault =
-            (aPS->mStrMatch == kPref || aPS->mStrMatch == kPrefSticky);
-          aPS->mIsStickyDefault = (aPS->mStrMatch == kPrefSticky);
+            (aPS->mStrMatch == kPref || aPS->mStrMatch == kStickyPref);
+          aPS->mIsSticky = (aPS->mStrMatch == kStickyPref);
           aPS->mQuoteChar = c;
           aPS->mNextState = PREF_PARSE_UNTIL_COMMA; // return here when done
           state = PREF_PARSE_QUOTED_STRING;
@@ -1623,7 +1643,7 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
                        value,
                        aPS->mVtype,
                        aPS->mIsDefault,
-                       aPS->mIsStickyDefault);
+                       aPS->mIsSticky);
 
           state = PREF_PARSE_INIT;
         } else if (c == '/') {
@@ -1773,6 +1793,16 @@ public:
     return !observer;
   }
 
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    size_t n = aMallocSizeOf(this);
+    n += mDomain.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+
+    // All the other fields are non-owning pointers, so we don't measure them.
+
+    return n;
+  }
+
   enum
   {
     ALLOW_MEMMOVE = true
@@ -1811,7 +1841,7 @@ public:
 
   static void NotifyObserver(const char* aNewpref, void* aData);
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   static void ReportToConsole(const nsAString& aMessage);
 
@@ -1977,12 +2007,12 @@ nsPrefBranch::GetPrefType(const char* aPrefName, int32_t* aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
 
-  const PrefName& pref = GetPrefName(aPrefName);
+  const PrefName& prefName = GetPrefName(aPrefName);
   PrefType type = PrefType::Invalid;
   if (gHashTable) {
-    PrefHashEntry* entry = pref_HashTableLookup(pref.get());
-    if (entry) {
-      type = entry->mPrefFlags.GetPrefType();
+    PrefHashEntry* pref = pref_HashTableLookup(prefName.get());
+    if (pref) {
+      type = pref->mPrefFlags.GetPrefType();
     }
   }
 
@@ -2545,13 +2575,13 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt)
     Substring(branchName, 0, branchName.Length() - 1);
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
     // The first disjunct matches branches: e.g. a branch name "foo.bar."
     // matches an mKey "foo.bar.baz" (but it won't match "foo.barrel.baz").
     // The second disjunct matches leaf nodes: e.g. a branch name "foo.bar."
     // matches an mKey "foo.bar" (by ignoring the trailing '.').
-    nsDependentCString key(entry->mKey);
+    nsDependentCString key(pref->mKey);
     if (StringBeginsWith(key, branchName) || key.Equals(branchNameNoDot)) {
       iter.Remove();
     }
@@ -2584,9 +2614,9 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
   const PrefName& parent = GetPrefName(aStartingAt);
   size_t parentLen = parent.Length();
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<PrefHashEntry*>(iter.Get());
-    if (strncmp(entry->mKey, parent.get(), parentLen) == 0) {
-      prefArray.AppendElement(entry->mKey);
+    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    if (strncmp(pref->mKey, parent.get(), parentLen) == 0) {
+      prefArray.AppendElement(pref->mKey);
     }
   }
 
@@ -2739,11 +2769,18 @@ nsPrefBranch::NotifyObserver(const char* aNewPref, void* aData)
 }
 
 size_t
-nsPrefBranch::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+nsPrefBranch::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
+
   n += mPrefRoot.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+
   n += mObservers.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = mObservers.ConstIter(); !iter.Done(); iter.Next()) {
+    const PrefCallback* data = iter.UserData();
+    n += data->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
   return n;
 }
 
@@ -3119,6 +3156,10 @@ struct CacheData
 // gCacheDataDesc holds information about prefs startup. It's being used for
 // diagnosing prefs startup problems in bug 1276488.
 static const char* gCacheDataDesc = "untouched";
+
+// gCacheData holds the CacheData objects used for VarCache prefs. It owns
+// those objects, and also is used to detect if multiple VarCaches get tied to
+// a single global variable.
 static nsTArray<nsAutoPtr<CacheData>>* gCacheData = nullptr;
 
 #ifdef DEBUG
@@ -3163,45 +3204,45 @@ ReportToConsole(const char* aMessage, int aLine, bool aError)
   nsPrefBranch::ReportToConsole(NS_ConvertUTF8toUTF16(message.get()));
 }
 
+struct PrefsSizes
+{
+  PrefsSizes()
+    : mHashTable(0)
+    , mStringValues(0)
+    , mCacheData(0)
+    , mRootBranches(0)
+    , mPrefNameArena(0)
+    , mCallbacks(0)
+    , mMisc(0)
+  {
+  }
+
+  size_t mHashTable;
+  size_t mStringValues;
+  size_t mCacheData;
+  size_t mRootBranches;
+  size_t mPrefNameArena;
+  size_t mCallbacks;
+  size_t mMisc;
+};
+
 // Although this is a member of Preferences, it measures sPreferences and
 // several other global structures.
-/* static */ int64_t
-Preferences::SizeOfIncludingThisAndOtherStuff(
-  mozilla::MallocSizeOf aMallocSizeOf)
+/* static */ void
+Preferences::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
+                                    PrefsSizes& aSizes)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), 0);
-
-  size_t n = aMallocSizeOf(sPreferences);
-  if (gHashTable) {
-    // Pref keys are allocated in a private arena, which we count elsewhere.
-    // Pref stringvals are allocated out of the same private arena.
-    n += gHashTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
+  if (!sPreferences) {
+    return;
   }
 
-  if (gCacheData) {
-    n += gCacheData->ShallowSizeOfIncludingThis(aMallocSizeOf);
-    for (uint32_t i = 0, count = gCacheData->Length(); i < count; ++i) {
-      n += aMallocSizeOf((*gCacheData)[i]);
-    }
-  }
+  aSizes.mMisc += aMallocSizeOf(sPreferences.get());
 
-  if (sPreferences->mRootBranch) {
-    n += static_cast<nsPrefBranch*>(sPreferences->mRootBranch.get())
-           ->SizeOfIncludingThis(aMallocSizeOf);
-  }
-
-  if (sPreferences->mDefaultRootBranch) {
-    n += static_cast<nsPrefBranch*>(sPreferences->mDefaultRootBranch.get())
-           ->SizeOfIncludingThis(aMallocSizeOf);
-  }
-
-  n += gPrefNameArena.SizeOfExcludingThis(aMallocSizeOf);
-  for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
-    n += aMallocSizeOf(node);
-    n += aMallocSizeOf(node->mDomain);
-  }
-
-  return n;
+  aSizes.mRootBranches +=
+    static_cast<nsPrefBranch*>(sPreferences->mRootBranch.get())
+      ->SizeOfIncludingThis(aMallocSizeOf) +
+    static_cast<nsPrefBranch*>(sPreferences->mDefaultRootBranch.get())
+      ->SizeOfIncludingThis(aMallocSizeOf);
 }
 
 class PreferenceServiceReporter final : public nsIMemoryReporter
@@ -3226,12 +3267,77 @@ PreferenceServiceReporter::CollectReports(
   nsISupports* aData,
   bool aAnonymize)
 {
-  MOZ_COLLECT_REPORT("explicit/preferences",
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MallocSizeOf mallocSizeOf = PreferenceServiceMallocSizeOf;
+  PrefsSizes sizes;
+
+  Preferences::AddSizeOfIncludingThis(mallocSizeOf, sizes);
+
+  if (gHashTable) {
+    sizes.mHashTable += gHashTable->ShallowSizeOfIncludingThis(mallocSizeOf);
+    for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+      auto pref = static_cast<PrefHashEntry*>(iter.Get());
+      sizes.mStringValues += pref->SizeOfExcludingThis(mallocSizeOf);
+    }
+  }
+
+  if (gCacheData) {
+    sizes.mCacheData += gCacheData->ShallowSizeOfIncludingThis(mallocSizeOf);
+    for (uint32_t i = 0, count = gCacheData->Length(); i < count; ++i) {
+      sizes.mCacheData += mallocSizeOf((*gCacheData)[i]);
+    }
+  }
+
+  sizes.mPrefNameArena += gPrefNameArena.SizeOfExcludingThis(mallocSizeOf);
+
+  for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
+    sizes.mCallbacks += mallocSizeOf(node);
+    sizes.mCallbacks += mallocSizeOf(node->mDomain);
+  }
+
+  MOZ_COLLECT_REPORT("explicit/preferences/hash-table",
                      KIND_HEAP,
                      UNITS_BYTES,
-                     Preferences::SizeOfIncludingThisAndOtherStuff(
-                       PreferenceServiceMallocSizeOf),
-                     "Memory used by the preferences system.");
+                     sizes.mHashTable,
+                     "Memory used by libpref's hash table.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/string-values",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mStringValues,
+                     "Memory used by libpref's string pref values.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/cache-data",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mCacheData,
+                     "Memory used by libpref's VarCaches.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/root-branches",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mRootBranches,
+                     "Memory used by libpref's root branches.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/pref-name-arena",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mPrefNameArena,
+                     "Memory used by libpref's arena for pref names.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/callbacks",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mCallbacks,
+                     "Memory used by libpref's callbacks list, including "
+                     "pref names and prefixes.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/misc",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mMisc,
+                     "Miscellaneous memory used by libpref.");
 
   nsPrefBranch* rootBranch =
     static_cast<nsPrefBranch*>(Preferences::GetRootBranch());
@@ -3340,7 +3446,7 @@ public:
 
 } // namespace
 
-static InfallibleTArray<Preferences::PrefSetting>* gInitPrefs;
+static InfallibleTArray<Preferences::PrefSetting>* gInitSettings;
 
 /* static */ already_AddRefed<Preferences>
 Preferences::GetInstanceForService()
@@ -3368,12 +3474,12 @@ Preferences::GetInstanceForService()
   }
 
   if (!XRE_IsParentProcess()) {
-    MOZ_ASSERT(gInitPrefs);
-    for (unsigned int i = 0; i < gInitPrefs->Length(); i++) {
-      Preferences::SetPreference(gInitPrefs->ElementAt(i));
+    MOZ_ASSERT(gInitSettings);
+    for (unsigned int i = 0; i < gInitSettings->Length(); i++) {
+      Preferences::SetPreference(gInitSettings->ElementAt(i));
     }
-    delete gInitPrefs;
-    gInitPrefs = nullptr;
+    delete gInitSettings;
+    gInitSettings = nullptr;
 
   } else {
     // Check if there is a deployment configuration file. If so, set up the
@@ -3514,9 +3620,9 @@ NS_INTERFACE_MAP_END
 //
 
 /* static */ void
-Preferences::SetInitPreferences(nsTArray<PrefSetting>* aPrefs)
+Preferences::SetInitPreferences(nsTArray<PrefSetting>* aSettings)
 {
-  gInitPrefs = new InfallibleTArray<PrefSetting>(mozilla::Move(*aPrefs));
+  gInitSettings = new InfallibleTArray<PrefSetting>(mozilla::Move(*aSettings));
 }
 
 /* static */ void
@@ -3693,11 +3799,11 @@ Preferences::SetValueFromDom(const char* aPrefName,
 }
 
 void
-Preferences::SetPreference(const PrefSetting& aPref)
+Preferences::SetPreference(const PrefSetting& aSetting)
 {
-  const char* prefName = aPref.name().get();
-  const dom::MaybePrefValue& defaultValue = aPref.defaultValue();
-  const dom::MaybePrefValue& userValue = aPref.userValue();
+  const char* prefName = aSetting.name().get();
+  const dom::MaybePrefValue& defaultValue = aSetting.defaultValue();
+  const dom::MaybePrefValue& userValue = aSetting.userValue();
 
   if (defaultValue.type() == dom::MaybePrefValue::TPrefValue) {
     nsresult rv = SetValueFromDom(
@@ -3718,31 +3824,31 @@ Preferences::SetPreference(const PrefSetting& aPref)
 }
 
 void
-Preferences::GetPreference(PrefSetting* aPref)
+Preferences::GetPreference(PrefSetting* aSetting)
 {
-  PrefHashEntry* entry = pref_HashTableLookup(aPref->name().get());
-  if (!entry) {
+  PrefHashEntry* pref = pref_HashTableLookup(aSetting->name().get());
+  if (!pref) {
     return;
   }
 
-  if (pref_EntryHasAdvisablySizedValues(entry)) {
-    pref_GetPrefFromEntry(entry, aPref);
+  if (pref_EntryHasAdvisablySizedValues(pref)) {
+    pref_GetPrefFromEntry(pref, aSetting);
   }
 }
 
 void
-Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aPrefs)
+Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aSettings)
 {
-  aPrefs->SetCapacity(gHashTable->Capacity());
+  aSettings->SetCapacity(gHashTable->Capacity());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
-    if (!pref_EntryHasAdvisablySizedValues(entry)) {
+    if (!pref_EntryHasAdvisablySizedValues(pref)) {
       continue;
     }
 
-    dom::PrefSetting* pref = aPrefs->AppendElement();
-    pref_GetPrefFromEntry(entry, pref);
+    dom::PrefSetting* setting = aSettings->AppendElement();
+    pref_GetPrefFromEntry(pref, setting);
   }
 }
 
@@ -4406,12 +4512,12 @@ Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
       !pref->mPrefFlags.HasUserValue()) {
 
     // Do we have a default?
-    if (!pref->mPrefFlags.HasDefault()) {
+    if (!pref->mPrefFlags.HasDefaultValue()) {
       return NS_ERROR_UNEXPECTED;
     }
-    *aResult = pref->mDefaultPref.mBoolVal;
+    *aResult = pref->mDefaultValue.mBoolVal;
   } else {
-    *aResult = pref->mUserPref.mBoolVal;
+    *aResult = pref->mUserValue.mBoolVal;
   }
 
   return NS_OK;
@@ -4434,12 +4540,12 @@ Preferences::GetInt(const char* aPrefName,
       !pref->mPrefFlags.HasUserValue()) {
 
     // Do we have a default?
-    if (!pref->mPrefFlags.HasDefault()) {
+    if (!pref->mPrefFlags.HasDefaultValue()) {
       return NS_ERROR_UNEXPECTED;
     }
-    *aResult = pref->mDefaultPref.mIntVal;
+    *aResult = pref->mDefaultValue.mIntVal;
   } else {
-    *aResult = pref->mUserPref.mIntVal;
+    *aResult = pref->mUserValue.mIntVal;
   }
 
   return NS_OK;
@@ -4479,12 +4585,12 @@ Preferences::GetCString(const char* aPrefName,
       !pref->mPrefFlags.HasUserValue()) {
 
     // Do we have a default?
-    if (!pref->mPrefFlags.HasDefault()) {
+    if (!pref->mPrefFlags.HasDefaultValue()) {
       return NS_ERROR_UNEXPECTED;
     }
-    stringVal = pref->mDefaultPref.mStringVal;
+    stringVal = pref->mDefaultValue.mStringVal;
   } else {
-    stringVal = pref->mUserPref.mStringVal;
+    stringVal = pref->mUserValue.mStringVal;
   }
 
   if (!stringVal) {
@@ -4762,9 +4868,9 @@ Preferences::RegisterCallbackAndCall(PrefChangedFunc aCallback,
                                      MatchKind aMatchKind)
 {
   MOZ_ASSERT(aCallback);
-  WATCHING_PREF_RAII();
   nsresult rv = RegisterCallback(aCallback, aPref, aClosure, aMatchKind);
   if (NS_SUCCEEDED(rv)) {
+    AUTO_INSTALLING_CALLBACK();
     (*aCallback)(aPref, aClosure);
   }
   return rv;
@@ -4787,14 +4893,6 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
 }
 
 static void
-BoolVarChanged(const char* aPref, void* aClosure)
-{
-  CacheData* cache = static_cast<CacheData*>(aClosure);
-  *static_cast<bool*>(cache->mCacheLocation) =
-    Preferences::GetBool(aPref, cache->mDefaultValueBool);
-}
-
-static void
 CacheDataAppendElement(CacheData* aData)
 {
   if (!gCacheData) {
@@ -4803,15 +4901,25 @@ CacheDataAppendElement(CacheData* aData)
   gCacheData->AppendElement(aData);
 }
 
+static void
+BoolVarChanged(const char* aPref, void* aClosure)
+{
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<bool*>(cache->mCacheLocation) =
+    Preferences::GetBool(aPref, cache->mDefaultValueBool);
+}
+
 /* static */ nsresult
 Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
 {
-  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
 #endif
-  *aCache = GetBool(aPref, aDefault);
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = GetBool(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueBool = aDefault;
@@ -4833,12 +4941,14 @@ Preferences::AddIntVarCache(int32_t* aCache,
                             const char* aPref,
                             int32_t aDefault)
 {
-  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
 #endif
-  *aCache = Preferences::GetInt(aPref, aDefault);
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = Preferences::GetInt(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueInt = aDefault;
@@ -4860,12 +4970,14 @@ Preferences::AddUintVarCache(uint32_t* aCache,
                              const char* aPref,
                              uint32_t aDefault)
 {
-  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
 #endif
-  *aCache = Preferences::GetUint(aPref, aDefault);
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = Preferences::GetUint(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
@@ -4889,12 +5001,14 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
                                    const char* aPref,
                                    uint32_t aDefault)
 {
-  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
 #endif
-  *aCache = Preferences::GetUint(aPref, aDefault);
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = Preferences::GetUint(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
@@ -4922,12 +5036,14 @@ FloatVarChanged(const char* aPref, void* aClosure)
 /* static */ nsresult
 Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
 {
-  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("float", aPref, aCache);
 #endif
-  *aCache = Preferences::GetFloat(aPref, aDefault);
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = Preferences::GetFloat(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueFloat = aDefault;

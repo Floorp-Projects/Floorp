@@ -179,6 +179,8 @@ SetupABIArguments(MacroAssembler& masm, const FuncExport& fe, Register argv, Reg
                 MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected stack arg type");
             }
             break;
+          case ABIArg::Uninitialized:
+            MOZ_CRASH("Uninitialized ABIArg kind");
         }
     }
 }
@@ -488,6 +490,8 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
             }
             break;
           }
+          case ABIArg::Uninitialized:
+            MOZ_CRASH("Uninitialized ABIArg kind");
         }
     }
 }
@@ -844,7 +848,6 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
         masm.bind(&rectify);
         masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, instance)), callee);
         masm.loadPtr(Address(callee, Instance::offsetOfJSJitArgsRectifier()), callee);
-        masm.loadPtr(Address(callee, JitCode::offsetOfCode()), callee);
         masm.jump(&rejoinBeforeCall);
     }
 

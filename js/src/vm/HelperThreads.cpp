@@ -701,7 +701,7 @@ EnsureParserCreatedClasses(JSContext* cx, ParseTaskKind kind)
         return false; // needed by regular expression literals
 
     if (!GlobalObject::initGenerators(cx, global))
-        return false; // needed by function*() {} and generator comprehensions
+        return false; // needed by function*() {}
 
     if (kind == ParseTaskKind::Module && !GlobalObject::ensureModulePrototypesCreated(cx, global))
         return false;

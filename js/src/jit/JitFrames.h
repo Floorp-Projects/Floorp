@@ -830,7 +830,6 @@ struct IonDOMMethodExitFrameLayoutTraits {
 class LazyLinkExitFrameLayout
 {
   protected: // silence clang warning about unused private fields
-    JitCode* stubCode_;
     ExitFooterFrame footer_;
     JitFrameLayout exit_;
 
@@ -841,9 +840,6 @@ class LazyLinkExitFrameLayout
         return sizeof(LazyLinkExitFrameLayout);
     }
 
-    inline JitCode** stubCode() {
-        return &stubCode_;
-    }
     inline JitFrameLayout* jsFrame() {
         return &exit_;
     }

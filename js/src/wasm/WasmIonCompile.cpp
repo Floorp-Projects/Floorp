@@ -993,9 +993,10 @@ class FunctionCompiler
             curBlock_->add(mir);
             return call->stackArgs_.append(mir);
           }
-          default:
-            MOZ_CRASH("Unknown ABIArg kind.");
+          case ABIArg::Uninitialized:
+            MOZ_ASSERT_UNREACHABLE("Uninitialized ABIArg kind");
         }
+        MOZ_CRASH("Unknown ABIArg kind.");
     }
 
     void propagateMaxStackArgBytes(uint32_t stackBytes)
