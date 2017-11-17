@@ -2995,6 +2995,13 @@ TabParent::RenderLayers(bool aEnabled)
 }
 
 NS_IMETHODIMP
+TabParent::GetHasLayers(bool* aResult)
+{
+  *aResult = mHasLayers;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TabParent::PreserveLayers(bool aPreserveLayers)
 {
   mPreserveLayers = aPreserveLayers;

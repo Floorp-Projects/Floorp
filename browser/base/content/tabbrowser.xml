@@ -4485,7 +4485,9 @@
               }
               for (let ppBrowser of this.tabbrowser._printPreviewBrowsers) {
                 let ppTab = this.tabbrowser.getTabForBrowser(ppBrowser);
-                this.setTabState(ppTab, this.STATE_LOADING);
+                let state = ppBrowser.hasLayers ? this.STATE_LOADED
+                                                : this.STATE_LOADING;
+                this.setTabState(ppTab, state);
               }
             },
 
