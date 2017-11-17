@@ -81,11 +81,6 @@ public:
 public:
   nsresult ClearRuleCascades();
 
-  static void InitSystemMetrics();
-  static void Shutdown();
-  static void FreeSystemMetrics();
-  static bool HasSystemMetric(nsAtom* aMetric);
-
   /*
    * Returns true if the given aElement matches one of the
    * selectors in aSelectorList.  Note that this method will assume
@@ -245,14 +240,6 @@ public:
   bool IsInRuleProcessorCache() const { return mInRuleProcessorCache; }
   bool IsUsedByMultipleStyleSets() const { return mStyleSetRefCnt > 1; }
 
-#ifdef XP_WIN
-  // Cached theme identifier for the moz-windows-theme media query.
-  static uint8_t GetWindowsThemeIdentifier();
-  static void SetWindowsThemeIdentifier(uint8_t aId) {
-    sWinThemeId = aId;
-  }
-#endif
-
   struct StateSelector {
     StateSelector(mozilla::EventStates aStates, nsCSSSelector* aSelector)
       : mStates(aStates),
@@ -319,10 +306,6 @@ private:
 
 #ifdef DEBUG
   bool mDocumentRulesAndCacheKeyValid;
-#endif
-
-#ifdef XP_WIN
-  static uint8_t sWinThemeId;
 #endif
 };
 
