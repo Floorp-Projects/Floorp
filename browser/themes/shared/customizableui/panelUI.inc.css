@@ -623,8 +623,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .PanelUI-remotetabs-instruction-title,
-.PanelUI-remotetabs-instruction-label,
-#PanelUI-remotetabs-mobile-promo {
+.PanelUI-remotetabs-instruction-label {
   /* If you change the margin here, the min-height of the synced tabs panel
     (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
     need adjusting (see bug 1248506) */
@@ -649,7 +648,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   padding-top: 15px;
 }
 
-.PanelUI-remotetabs-prefs-button {
+.PanelUI-remotetabs-button {
   -moz-appearance: none;
   background-color: #0060df;
   /* !important for the color as an OSX specific rule when a lightweight theme
@@ -666,11 +665,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   min-width: 200px;
 }
 
-.PanelUI-remotetabs-prefs-button:hover {
+.PanelUI-remotetabs-button:hover {
   background-color: #003eaa;
 }
 
-.PanelUI-remotetabs-prefs-button:hover:active {
+.PanelUI-remotetabs-button:hover:active {
   background-color: #002275;
 }
 
@@ -704,7 +703,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   list-style-image: url(chrome://browser/skin/fxa/sync-illustration-issue.svg);
 }
 
-.PanelUI-remotetabs-prefs-button > .toolbarbutton-text {
+.PanelUI-remotetabs-button > .toolbarbutton-text {
   /* !important to override ".cui-widget-panel toolbarbutton > .toolbarbutton-text" above. */
   text-align: center !important;
   text-shadow: none;
@@ -722,8 +721,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-nodevicespane,
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-tabsdisabledpane {
   min-height: calc(var(--panel-ui-sync-illustration-height) +
-                   20px + /* margin of .PanelUI-remotetabs-prefs-button */
-                   16px + /* padding of .PanelUI-remotetabs-prefs-button */
+                   20px + /* margin of .PanelUI-remotetabs-button */
+                   16px + /* padding of .PanelUI-remotetabs-button */
                    30px + /* margin of .PanelUI-remotetabs-instruction-label */
                    30px + 15px + /* padding of .PanelUI-remotetabs-instruction-box */
                    11em);
