@@ -413,12 +413,6 @@ enum
   kPrefSticky = 4,
 };
 
-static nsresult
-pref_SetPref(const char* aPrefName,
-             PrefValue aValue,
-             PrefType aType,
-             uint32_t aFlags);
-
 #define PREF_HASHTABLE_INITIAL_LENGTH 1024
 
 // Assign to aResult a quoted, escaped copy of aOriginal.
