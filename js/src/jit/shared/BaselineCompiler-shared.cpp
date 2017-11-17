@@ -58,7 +58,7 @@ BaselineCompilerShared::prepareVMCall()
 bool
 BaselineCompilerShared::callVM(const VMFunction& fun, CallVMPhase phase)
 {
-    uint8_t* code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
+    TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
 
 #ifdef DEBUG
     // Assert prepareVMCall() has been called.
@@ -123,7 +123,7 @@ BaselineCompilerShared::callVM(const VMFunction& fun, CallVMPhase phase)
     }
     MOZ_ASSERT(fun.expectTailCall == NonTailCall);
     // Perform the call.
-    masm.call(ImmPtr(code));
+    masm.call(code);
     uint32_t callOffset = masm.currentOffset();
     masm.pop(BaselineFrameReg);
 

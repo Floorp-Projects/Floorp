@@ -1109,7 +1109,7 @@ JitcodeRegionEntry::WriteDelta(CompactBufferWriter& writer,
         nativeDelta <= ENC3_NATIVE_DELTA_MAX)
     {
         uint32_t encVal = ENC3_MASK_VAL |
-                          ((pcDelta << ENC3_PC_DELTA_SHIFT) & ENC3_PC_DELTA_MASK) |
+                          ((uint32_t(pcDelta) << ENC3_PC_DELTA_SHIFT) & ENC3_PC_DELTA_MASK) |
                           (nativeDelta << ENC3_NATIVE_DELTA_SHIFT);
         writer.writeByte(encVal & 0xff);
         writer.writeByte((encVal >> 8) & 0xff);
@@ -1122,7 +1122,7 @@ JitcodeRegionEntry::WriteDelta(CompactBufferWriter& writer,
         nativeDelta <= ENC4_NATIVE_DELTA_MAX)
     {
         uint32_t encVal = ENC4_MASK_VAL |
-                          ((pcDelta << ENC4_PC_DELTA_SHIFT) & ENC4_PC_DELTA_MASK) |
+                          ((uint32_t(pcDelta) << ENC4_PC_DELTA_SHIFT) & ENC4_PC_DELTA_MASK) |
                           (nativeDelta << ENC4_NATIVE_DELTA_SHIFT);
         writer.writeByte(encVal & 0xff);
         writer.writeByte((encVal >> 8) & 0xff);

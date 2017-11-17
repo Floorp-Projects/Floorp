@@ -663,12 +663,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                                                     'resources',
                                                     module))
 
-    def _report_line(self, f, tag, info):
-        try:
-            f.write("%s %s\n" % (tag, str(info)))
-        except:
-            f.write("Exception getting system info: %s" % sys.exc_info()[0])
-
     def _report_system_info(self):
         """
            Create the system-info.log artifact file, containing a variety of
@@ -680,27 +674,28 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             self.mkdir_p(dir)
             path = os.path.join(dir, "system-info.log")
             with open(path, "w") as f:
-                self._report_line(f, "System info collected at ", datetime.now())
-                self._report_line(f, "\nBoot time ",
-                                  datetime.fromtimestamp(psutil.boot_time()))
-                self._report_line(f, "\nVirtual memory: ", psutil.virtual_memory())
-                self._report_line(f, "\nDisk partitions: ", psutil.disk_partitions())
-                self._report_line(f, "\nDisk usage (/): ", psutil.disk_usage(os.path.sep))
-                self._report_line(f, "\nUsers: ", psutil.users())
-                self._report_line(f, "\nNetwork connections:", "")
+                f.write("System info collected at %s\n\n" % datetime.now())
+                f.write("\nBoot time %s\n" % datetime.fromtimestamp(psutil.boot_time()))
+                f.write("\nVirtual memory: %s\n" % str(psutil.virtual_memory()))
+                f.write("\nDisk partitions: %s\n" % str(psutil.disk_partitions()))
+                f.write("\nDisk usage (/): %s\n" % str(psutil.disk_usage(os.path.sep)))
+                if not self._is_windows():
+                    # bug 1417189: frequent errors querying users on Windows
+                    f.write("\nUsers: %s\n" % str(psutil.users()))
+                f.write("\nNetwork connections:\n")
                 try:
                     for nc in psutil.net_connections():
-                        self._report_line(f, "  ", nc)
+                        f.write("  %s\n" % str(nc))
                 except:
-                    f.write("Exception getting network info: %s" % sys.exc_info()[0])
-                self._report_line(f, "\nProcesses:", "")
+                    f.write("Exception getting network info: %s\n" % sys.exc_info()[0])
+                f.write("\nProcesses:\n")
                 try:
                     for p in psutil.process_iter():
                         ctime = str(datetime.fromtimestamp(p.create_time()))
-                        self._report_line(f, "  PID", "%d %s %s created at %s" %
-                                          (p.pid, p.name(), str(p.cmdline()), ctime))
+                        f.write("  PID %d %s %s created at %s\n" %
+                                (p.pid, p.name(), str(p.cmdline()), ctime))
                 except:
-                    f.write("Exception getting process info: %s" % sys.exc_info()[0])
+                    f.write("Exception getting process info: %s\n" % sys.exc_info()[0])
         except:
             # psutil throws a variety of intermittent exceptions
             self.info("Unable to complete system-info.log: %s" % sys.exc_info()[0])

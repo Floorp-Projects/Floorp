@@ -376,7 +376,7 @@ CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, b
             // for unsigned element types so that we match what the disassembly
             // code does, as it doesn't know about signedness of stores.
             unsigned shift = 32 - TypedArrayElemSize(type) * 8;
-            i = i << shift >> shift;
+            i = int32_t(uint32_t(i) << shift) >> shift;
             op = OtherOperand(i);
         }
         break;

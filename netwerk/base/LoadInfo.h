@@ -15,6 +15,8 @@
 #include "nsTArray.h"
 
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/ClientInfo.h"
+#include "mozilla/dom/ServiceWorkerDescriptor.h"
 
 class nsINode;
 class nsPIDOMWindowOuter;
@@ -152,6 +154,13 @@ private:
   nsCOMPtr<nsIPrincipal>           mPrincipalToInherit;
   nsCOMPtr<nsIPrincipal>           mSandboxedLoadingPrincipal;
   nsCOMPtr<nsIURI>                 mResultPrincipalURI;
+
+  Maybe<mozilla::dom::ClientInfo>               mClientInfo;
+  UniquePtr<mozilla::dom::ClientSource>         mReservedClientSource;
+  Maybe<mozilla::dom::ClientInfo>               mReservedClientInfo;
+  Maybe<mozilla::dom::ClientInfo>               mInitialClientInfo;
+  Maybe<mozilla::dom::ServiceWorkerDescriptor>  mController;
+
   nsWeakPtr                        mLoadingContext;
   nsWeakPtr                        mContextForTopLevelLoad;
   nsSecurityFlags                  mSecurityFlags;

@@ -79,7 +79,7 @@ EmitChangeICReturnAddress(MacroAssembler& masm, Register reg)
 }
 
 inline void
-EmitBaselineTailCallVM(uint8_t* target, MacroAssembler& masm, uint32_t argSize)
+EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t argSize)
 {
     // We assume that R0 has been pushed, and R2 is unused.
     MOZ_ASSERT(R2 == ValueOperand(r0));
@@ -108,11 +108,11 @@ EmitBaselineTailCallVM(uint8_t* target, MacroAssembler& masm, uint32_t argSize)
     // ICTailCallReg (lr) already contains the return address (as we keep
     // it there through the stub calls).
 
-    masm.jump(ImmPtr(target));
+    masm.jump(target);
 }
 
 inline void
-EmitIonTailCallVM(uint8_t* target, MacroAssembler& masm, uint32_t stackSize)
+EmitIonTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t stackSize)
 {
     MOZ_CRASH("Not implemented yet.");
 }
@@ -130,11 +130,11 @@ EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32
 }
 
 inline void
-EmitBaselineCallVM(uint8_t* target, MacroAssembler& masm)
+EmitBaselineCallVM(TrampolinePtr target, MacroAssembler& masm)
 {
     EmitBaselineCreateStubFrameDescriptor(masm, r0, ExitFrameLayout::Size());
     masm.push(r0);
-    masm.call(ImmPtr(target));
+    masm.call(target);
 }
 
 // Size of values pushed by EmitEnterStubFrame.

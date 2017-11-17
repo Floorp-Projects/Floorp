@@ -458,11 +458,6 @@ function testClasses() {
     assertError("super()", SyntaxError);
     assertError("(function() { super(); })", SyntaxError);
 
-    // SuperCall is invalid in generator comprehensions, even inside derived
-    // class constructors
-    assertError("(super() for (x in y))", SyntaxError);
-    assertClassError("class NAME { constructor() { (super() for (x in y))", SyntaxError);
-
 
     // Even in class constructors
     assertClassError("class NAME { constructor() { super(); } }", SyntaxError);

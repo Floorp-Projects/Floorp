@@ -2829,7 +2829,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   bool usingSVGEffects = usingFilter || usingMask;
 
   nsRect visibleRectOutsideSVGEffects = visibleRect;
-  nsDisplayList hoistedScrollInfoItemsStorage(aBuilder);
+  nsDisplayList hoistedScrollInfoItemsStorage;
   if (usingSVGEffects) {
     dirtyRect =
       nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
@@ -3057,7 +3057,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // element itself.
   set.PositionedDescendants()->SortByZOrder();
 
-  nsDisplayList resultList(aBuilder);
+  nsDisplayList resultList;
   // Now follow the rules of http://www.w3.org/TR/CSS21/zindex.html
   // 1,2: backgrounds and borders
   resultList.AppendToTop(set.BorderBackground());
@@ -3208,8 +3208,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   if (isTransformed && extend3DContext) {
     // Install dummy nsDisplayTransform as a leaf containing
     // descendants not participating this 3D rendering context.
-    nsDisplayList nonparticipants(aBuilder);
-    nsDisplayList participants(aBuilder);
+    nsDisplayList nonparticipants;
+    nsDisplayList participants;
     int index = 1;
 
     while (nsDisplayItem* item = resultList.RemoveBottom()) {
@@ -3653,8 +3653,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     awayFromCommonPath = true;
   }
 
-  nsDisplayList list(aBuilder);
-  nsDisplayList extraPositionedDescendants(aBuilder);
+  nsDisplayList list;
+  nsDisplayList extraPositionedDescendants;
   const ActiveScrolledRoot* wrapListASR = aBuilder->CurrentActiveScrolledRoot();
   bool canSkipWrapList = false;
   if (isStackingContext) {

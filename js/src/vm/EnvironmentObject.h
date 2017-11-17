@@ -925,7 +925,7 @@ class DebugEnvironmentProxy : public ProxyObject
                                       HandleId id, MutableHandleValue vp);
 
     // Returns true iff this is a function environment with its own this-binding
-    // (all functions except arrow functions and generator expression lambdas).
+    // (all functions except arrow functions).
     bool isFunctionEnvironmentWithThis();
 
     // Does this debug environment not have a real counterpart or was never

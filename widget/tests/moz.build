@@ -17,7 +17,7 @@ with Files("TestAppShellSteadyState.cpp"):
     BUG_COMPONENT = ("Core", "DOM: IndexedDB")
 
 with Files("TestChromeMargin.cpp"):
-    BUG_COMPONENT = ("Core", "Widget: win32")
+    BUG_COMPONENT = ("Core", "Widget: Win32")
 
 with Files("*1151186*"):
     BUG_COMPONENT = ("Core", "Event Handling")

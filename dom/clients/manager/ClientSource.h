@@ -38,6 +38,7 @@ class ClientSource final : public ClientThing<ClientSourceChild>
   NS_DECL_OWNINGTHREAD
 
   RefPtr<ClientManager> mManager;
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
 
   Variant<Nothing,
           RefPtr<nsPIDOMWindowInner>,
@@ -60,6 +61,7 @@ class ClientSource final : public ClientThing<ClientSourceChild>
 
   // Private methods called by ClientManager
   ClientSource(ClientManager* aManager,
+               nsISerialEventTarget* aEventTarget,
                const ClientSourceConstructorArgs& aArgs);
 
   void
@@ -79,6 +81,12 @@ public:
 
   nsresult
   DocShellExecutionReady(nsIDocShell* aDocShell);
+
+  const ClientInfo&
+  Info() const;
+
+  nsISerialEventTarget*
+  EventTarget() const;
 };
 
 } // namespace dom

@@ -197,7 +197,7 @@ MacroAssemblerX86::finish()
 }
 
 void
-MacroAssemblerX86::handleFailureWithHandlerTail(void* handler)
+MacroAssemblerX86::handleFailureWithHandlerTail(void* handler, Label* profilerExitTail)
 {
     // Reserve space for exception information.
     subl(Imm32(sizeof(ResumeFromException)), esp);
@@ -273,7 +273,7 @@ MacroAssemblerX86::handleFailureWithHandlerTail(void* handler)
         AbsoluteAddress addressOfEnabled(GetJitContext()->runtime->geckoProfiler().addressOfEnabled());
         asMasm().branch32(Assembler::Equal, addressOfEnabled, Imm32(0),
                           &skipProfilingInstrumentation);
-        profilerExitFrame();
+        jump(profilerExitTail);
         bind(&skipProfilingInstrumentation);
     }
 
@@ -307,7 +307,7 @@ MacroAssemblerX86::profilerEnterFrame(Register framePtr, Register scratch)
 void
 MacroAssemblerX86::profilerExitFrame()
 {
-    jmp(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
+    jump(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
 }
 
 MacroAssembler&

@@ -358,8 +358,10 @@ countMapToObject(JSContext* cx, Map& map, GetName getName) {
     for (auto r = map.all(); !r.empty(); r.popFront())
         entries.infallibleAppend(&r.front());
 
-    qsort(entries.begin(), entries.length(), sizeof(*entries.begin()),
-          compareEntries<typename Map::Entry>);
+    if (entries.length()) {
+        qsort(entries.begin(), entries.length(), sizeof(*entries.begin()),
+              compareEntries<typename Map::Entry>);
+    }
 
     RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj)
@@ -575,7 +577,8 @@ ByUbinodeType::report(JSContext* cx, CountBase& countBase, MutableHandleValue re
         return false;
     for (Table::Range r = count.table.all(); !r.empty(); r.popFront())
         entries.infallibleAppend(&r.front());
-    qsort(entries.begin(), entries.length(), sizeof(*entries.begin()), compareEntries<Entry>);
+    if (entries.length())
+        qsort(entries.begin(), entries.length(), sizeof(*entries.begin()), compareEntries<Entry>);
 
     // Now build the result by iterating over the sorted vector.
     RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
@@ -741,7 +744,8 @@ ByAllocationStack::report(JSContext* cx, CountBase& countBase, MutableHandleValu
         return false;
     for (Table::Range r = count.table.all(); !r.empty(); r.popFront())
         entries.infallibleAppend(&r.front());
-    qsort(entries.begin(), entries.length(), sizeof(*entries.begin()), compareEntries<Entry>);
+    if (entries.length())
+        qsort(entries.begin(), entries.length(), sizeof(*entries.begin()), compareEntries<Entry>);
 
     // Now build the result by iterating over the sorted vector.
     Rooted<MapObject*> map(cx, MapObject::create(cx));

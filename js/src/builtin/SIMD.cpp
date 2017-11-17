@@ -16,6 +16,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/TypeTraits.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -37,6 +38,11 @@ using mozilla::IsFinite;
 using mozilla::IsNaN;
 using mozilla::FloorLog2;
 using mozilla::NumberIsInt32;
+using mozilla::EnableIf;
+using mozilla::IsIntegral;
+using mozilla::IsFloatingPoint;
+using mozilla::IsSigned;
+using mozilla::MakeUnsigned;
 
 ///////////////////////////////////////////////////////////////////////////
 // SIMD
@@ -723,6 +729,21 @@ FOR_EACH_SIMD(InstantiateCreateSimd_)
 #undef FOR_EACH_SIMD
 
 namespace js {
+
+namespace detail {
+
+template<typename T, typename Enable = void>
+struct MaybeMakeUnsigned {
+    using Type = T;
+};
+
+template<typename T>
+struct MaybeMakeUnsigned<T, typename EnableIf<IsIntegral<T>::value && IsSigned<T>::value>::Type> {
+    using Type = typename MakeUnsigned<T>::Type;
+};
+
+} // namespace detail
+
 // Unary SIMD operators
 template<typename T>
 struct Identity {
@@ -734,7 +755,8 @@ struct Abs {
 };
 template<typename T>
 struct Neg {
-    static T apply(T x) { return -1 * x; }
+    using MaybeUnsignedT = typename detail::MaybeMakeUnsigned<T>::Type;
+    static T apply(T x) { return MaybeUnsignedT(-1) * MaybeUnsignedT(x); }
 };
 template<typename T>
 struct Not {
@@ -746,33 +768,40 @@ struct LogicalNot {
 };
 template<typename T>
 struct RecApprox {
+    static_assert(IsFloatingPoint<T>::value, "RecApprox only supported for floating points");
     static T apply(T x) { return 1 / x; }
 };
 template<typename T>
 struct RecSqrtApprox {
+    static_assert(IsFloatingPoint<T>::value, "RecSqrtApprox only supported for floating points");
     static T apply(T x) { return 1 / sqrt(x); }
 };
 template<typename T>
 struct Sqrt {
+    static_assert(IsFloatingPoint<T>::value, "Sqrt only supported for floating points");
     static T apply(T x) { return sqrt(x); }
 };
 
 // Binary SIMD operators
 template<typename T>
 struct Add {
-    static T apply(T l, T r) { return l + r; }
+    using MaybeUnsignedT = typename detail::MaybeMakeUnsigned<T>::Type;
+    static T apply(T l, T r) { return MaybeUnsignedT(l) + MaybeUnsignedT(r); }
 };
 template<typename T>
 struct Sub {
-    static T apply(T l, T r) { return l - r; }
+    using MaybeUnsignedT = typename detail::MaybeMakeUnsigned<T>::Type;
+    static T apply(T l, T r) { return MaybeUnsignedT(l) - MaybeUnsignedT(r); }
 };
 template<typename T>
 struct Div {
+    static_assert(IsFloatingPoint<T>::value, "Div only supported for floating points");
     static T apply(T l, T r) { return l / r; }
 };
 template<typename T>
 struct Mul {
-    static T apply(T l, T r) { return l * r; }
+    using MaybeUnsignedT = typename detail::MaybeMakeUnsigned<T>::Type;
+    static T apply(T l, T r) { return MaybeUnsignedT(l) * MaybeUnsignedT(r); }
 };
 template<typename T>
 struct Minimum {

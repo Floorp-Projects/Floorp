@@ -1545,7 +1545,7 @@ AccessibleWrap::GetIAccessibleFor(const VARIANT& aVarChild, bool* aIsDefunct)
 already_AddRefed<IAccessible>
 AccessibleWrap::GetRemoteIAccessibleFor(const VARIANT& aVarChild)
 {
-  DocAccessible* doc = Document();
+  a11y::RootAccessible* root = RootAccessible();
   const nsTArray<DocAccessibleParent*>* remoteDocs =
     DocManager::TopLevelRemoteDocs();
   if (!remoteDocs) {
@@ -1570,7 +1570,7 @@ AccessibleWrap::GetRemoteIAccessibleFor(const VARIANT& aVarChild)
       continue;
     }
 
-    if (outerDoc->Document() != doc) {
+    if (outerDoc->RootAccessible() != root) {
       continue;
     }
 

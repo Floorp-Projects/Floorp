@@ -1153,14 +1153,11 @@ nsContextMenu.prototype = {
     };
 
     // setting up a new channel for 'right click - save link as ...'
-    // ideally we should use:
-    // * doc            - as the loadingNode, and/or
-    // * this.principal - as the loadingPrincipal
-    // for now lets use systemPrincipal to bypass mixedContentBlocker
-    // checks after redirects, see bug: 1136055
     var channel = NetUtil.newChannel({
                     uri: makeURI(linkURL),
-                    loadUsingSystemPrincipal: true
+                    loadingPrincipal: this.principal,
+                    contentPolicyType: Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD,
+                    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
                   });
 
     if (linkDownload)

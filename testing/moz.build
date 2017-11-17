@@ -100,7 +100,7 @@ with Files("config/mozbase_requirements.txt"):
     BUG_COMPONENT = ("Testing", "Mozbase")
 
 with Files("config/firefox_ui_requirements.txt"):
-    BUG_COMPONENT = ("Testing", "Firfox UI Tests")
+    BUG_COMPONENT = ("Testing", "Firefox UI Tests")
 
 with Files("tools/**"):
     BUG_COMPONENT = ("Testing", "General")

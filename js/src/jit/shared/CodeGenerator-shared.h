@@ -78,7 +78,7 @@ class CodeGeneratorShared : public LElementVisitor
     LBlock* current;
     SnapshotWriter snapshots_;
     RecoverWriter recovers_;
-    JitCode* deoptTable_;
+    mozilla::Maybe<TrampolinePtr> deoptTable_;
 #ifdef DEBUG
     uint32_t pushedArgs_;
 #endif

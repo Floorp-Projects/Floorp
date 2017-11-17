@@ -690,10 +690,6 @@ class FullParseHandler
         return node->isKind(PNK_YIELD) && !node->isInParens();
     }
 
-    bool isUnparenthesizedCommaExpression(ParseNode* node) {
-        return node->isKind(PNK_COMMA) && !node->isInParens();
-    }
-
     bool isUnparenthesizedAssignment(Node node) {
         if (node->isKind(PNK_ASSIGN) && !node->isInParens()) {
             // PNK_ASSIGN is also (mis)used for things like |var name = expr;|.
