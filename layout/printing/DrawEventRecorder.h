@@ -34,11 +34,15 @@ public:
   }
 
   void Close() {
-    Flush();
-    PR_Close(mFd);
-    mFd = nullptr;
-    mBuffer.reset();
-    mBufferPos = 0;
+    // We need to be API compatible with std::ostream, and so we silently handle
+    // closes on a closed FD.
+    if (IsOpen()) {
+      Flush();
+      PR_Close(mFd);
+      mFd = nullptr;
+      mBuffer.reset();
+      mBufferPos = 0;
+    }
   }
 
   bool IsOpen() {
@@ -46,8 +50,7 @@ public:
   }
 
   void Flush() {
-    // We need to be API compatible with std::ostream, and so we silently handle
-    // flushes on a closed FD.
+    // See comment in Close().
     if (IsOpen() && mBufferPos > 0) {
       PR_Write(mFd, static_cast<const void*>(mBuffer.get()), mBufferPos);
       mBufferPos = 0;
@@ -60,7 +63,7 @@ public:
   }
 
   void write(const char* aData, size_t aSize) {
-    // See comment in Flush().
+    // See comment in Close().
     if (IsOpen()) {
       // If we're writing more data than could ever fit in our buffer, flush the
       // buffer and write directly.

@@ -73,10 +73,7 @@
         return;
     }
 
-    // Screensharing must work even without "mochi.test," in allowed_domains
     await pushPrefs(
-      ["media.getusermedia.screensharing.allowed_domains",
-        "mozilla.github.io,*.bugzilla.mozilla.org"],
       ["full-screen-api.enabled", true],
       ["full-screen-api.unprefix.enabled", true],
       ["full-screen-api.allow-trusted-requests-only", false],

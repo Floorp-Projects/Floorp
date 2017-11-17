@@ -90,13 +90,13 @@ add_task(async function test_settings_store() {
   for (let key of KEY_LIST) {
     let extensionIndex = 1;
     let itemToAdd = ITEMS[key][extensionIndex];
-    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex], TEST_TYPE, key);
+    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controllable_by_this_extension",
       "getLevelOfControl returns correct levelOfControl with no settings set for a key.");
     let item = await ExtensionSettingsStore.addSetting(
-      extensions[extensionIndex], TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
+      extensions[extensionIndex].id, TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
     expectedCallbackCount++;
     equal(callbackCount,
       expectedCallbackCount,
@@ -107,13 +107,18 @@ add_task(async function test_settings_store() {
       item,
       itemToAdd,
       "getSetting returns correct item with only one item in the list.");
-    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex], TEST_TYPE, key);
+    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controlled_by_this_extension",
       "getLevelOfControl returns correct levelOfControl with only one item in the list.");
-    ok(ExtensionSettingsStore.hasSetting(extensions[extensionIndex], TEST_TYPE, key),
+    ok(ExtensionSettingsStore.hasSetting(extensions[extensionIndex].id, TEST_TYPE, key),
        "hasSetting returns the correct value when an extension has a setting set.");
+    item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key, extensions[extensionIndex].id);
+    deepEqual(
+      item,
+      itemToAdd,
+      "getSetting with id returns correct item with only one item in the list.");
   }
 
   // Add a setting for the oldest extension.
@@ -121,7 +126,7 @@ add_task(async function test_settings_store() {
     let extensionIndex = 0;
     let itemToAdd = ITEMS[key][extensionIndex];
     let item = await ExtensionSettingsStore.addSetting(
-      extensions[extensionIndex], TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
+      extensions[extensionIndex].id, TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
     equal(callbackCount,
       expectedCallbackCount,
       "initialValueCallback called the expected number of times.");
@@ -131,11 +136,16 @@ add_task(async function test_settings_store() {
       item,
       ITEMS[key][1],
       "getSetting returns correct item with more than one item in the list.");
-    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex], TEST_TYPE, key);
+    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controlled_by_other_extensions",
       "getLevelOfControl returns correct levelOfControl when another extension is in control.");
+    item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key, extensions[extensionIndex].id);
+    deepEqual(
+      item,
+      itemToAdd,
+      "getSetting with id returns correct item with more than one item in the list.");
   }
 
   // Reload the settings store to emulate a browser restart.
@@ -145,13 +155,13 @@ add_task(async function test_settings_store() {
   for (let key of KEY_LIST) {
     let extensionIndex = 2;
     let itemToAdd = ITEMS[key][extensionIndex];
-    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex], TEST_TYPE, key);
+    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controllable_by_this_extension",
       "getLevelOfControl returns correct levelOfControl for a more recent extension.");
     let item = await ExtensionSettingsStore.addSetting(
-      extensions[extensionIndex], TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
+      extensions[extensionIndex].id, TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
     equal(callbackCount,
       expectedCallbackCount,
       "initialValueCallback called the expected number of times.");
@@ -159,31 +169,36 @@ add_task(async function test_settings_store() {
     item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key);
     deepEqual(
       item,
-      ITEMS[key][2],
+      itemToAdd,
       "getSetting returns correct item with more than one item in the list.");
-    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex], TEST_TYPE, key);
+    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controlled_by_this_extension",
       "getLevelOfControl returns correct levelOfControl when this extension is in control.");
+    item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key, extensions[extensionIndex].id);
+    deepEqual(
+      item,
+      itemToAdd,
+      "getSetting with id returns correct item with more than one item in the list.");
   }
 
   for (let extension of extensions) {
-    let items = await ExtensionSettingsStore.getAllForExtension(extension, TEST_TYPE);
+    let items = await ExtensionSettingsStore.getAllForExtension(extension.id, TEST_TYPE);
     deepEqual(items, KEY_LIST, "getAllForExtension returns expected keys.");
   }
 
   // Attempting to remove a setting that has not been set should *not* throw an exception.
-  let removeResult = await ExtensionSettingsStore.removeSetting(extensions[0], "myType", "unset_key");
+  let removeResult = await ExtensionSettingsStore.removeSetting(extensions[0].id, "myType", "unset_key");
   equal(removeResult, null, "Removing a setting that was not previously set returns null.");
 
   // Attempting to disable a setting that has not been set should throw an exception.
-  Assert.throws(() => ExtensionSettingsStore.disable(extensions[0], "myType", "unset_key"),
+  Assert.throws(() => ExtensionSettingsStore.disable(extensions[0].id, "myType", "unset_key"),
                 /Cannot alter the setting for myType:unset_key as it does not exist/,
                 "disable rejects with an unset key.");
 
   // Attempting to enable a setting that has not been set should throw an exception.
-  Assert.throws(() => ExtensionSettingsStore.enable(extensions[0], "myType", "unset_key"),
+  Assert.throws(() => ExtensionSettingsStore.enable(extensions[0].id, "myType", "unset_key"),
                 /Cannot alter the setting for myType:unset_key as it does not exist/,
                 "enable rejects with an unset key.");
 
@@ -192,21 +207,21 @@ add_task(async function test_settings_store() {
   for (let key of KEY_LIST) {
     let extensionIndex = 0;
     let item = await ExtensionSettingsStore.addSetting(
-      extensions[extensionIndex], TEST_TYPE, key, "new value", initialValue);
+      extensions[extensionIndex].id, TEST_TYPE, key, "new value", initialValue);
     equal(callbackCount,
       expectedCallbackCount,
       "initialValueCallback called the expected number of times.");
     equal(item, null, "Updating non-top item for a key returns null");
-    item = await ExtensionSettingsStore.disable(extensions[extensionIndex], TEST_TYPE, key);
+    item = await ExtensionSettingsStore.disable(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(item, null, "Disabling non-top item for a key returns null.");
-    let allForExtension = await ExtensionSettingsStore.getAllForExtension(extensions[extensionIndex], TEST_TYPE);
+    let allForExtension = await ExtensionSettingsStore.getAllForExtension(extensions[extensionIndex].id, TEST_TYPE);
     deepEqual(allForExtension, expectedKeys, "getAllForExtension returns expected keys after a disable.");
     item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key);
     deepEqual(
       item,
       ITEMS[key][2],
       "getSetting returns correct item after a disable.");
-    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex], TEST_TYPE, key);
+    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controlled_by_other_extensions",
@@ -216,16 +231,16 @@ add_task(async function test_settings_store() {
   // Re-enable the non-top item for a key.
   for (let key of KEY_LIST) {
     let extensionIndex = 0;
-    let item = await ExtensionSettingsStore.enable(extensions[extensionIndex], TEST_TYPE, key);
+    let item = await ExtensionSettingsStore.enable(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(item, null, "Enabling non-top item for a key returns null.");
-    let allForExtension = await ExtensionSettingsStore.getAllForExtension(extensions[extensionIndex], TEST_TYPE);
+    let allForExtension = await ExtensionSettingsStore.getAllForExtension(extensions[extensionIndex].id, TEST_TYPE);
     deepEqual(allForExtension, expectedKeys, "getAllForExtension returns expected keys after an enable.");
     item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key);
     deepEqual(
       item,
       ITEMS[key][2],
       "getSetting returns correct item after an enable.");
-    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex], TEST_TYPE, key);
+    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controlled_by_other_extensions",
@@ -235,28 +250,28 @@ add_task(async function test_settings_store() {
   // Remove the non-top item for a key.
   for (let key of KEY_LIST) {
     let extensionIndex = 0;
-    let item = await ExtensionSettingsStore.removeSetting(extensions[extensionIndex], TEST_TYPE, key);
+    let item = await ExtensionSettingsStore.removeSetting(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(item, null, "Removing non-top item for a key returns null.");
     expectedKeys = expectedKeys.filter(expectedKey => expectedKey != key);
-    let allForExtension = await ExtensionSettingsStore.getAllForExtension(extensions[extensionIndex], TEST_TYPE);
+    let allForExtension = await ExtensionSettingsStore.getAllForExtension(extensions[extensionIndex].id, TEST_TYPE);
     deepEqual(allForExtension, expectedKeys, "getAllForExtension returns expected keys after a removal.");
     item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key);
     deepEqual(
       item,
       ITEMS[key][2],
       "getSetting returns correct item after a removal.");
-    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex], TEST_TYPE, key);
+    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controlled_by_other_extensions",
       "getLevelOfControl returns correct levelOfControl after removal of non-top item.");
-    ok(!ExtensionSettingsStore.hasSetting(extensions[extensionIndex], TEST_TYPE, key),
+    ok(!ExtensionSettingsStore.hasSetting(extensions[extensionIndex].id, TEST_TYPE, key),
        "hasSetting returns the correct value when an extension does not have a setting set.");
   }
 
   for (let key of KEY_LIST) {
     // Disable the top item for a key.
-    let item = await ExtensionSettingsStore.disable(extensions[2], TEST_TYPE, key);
+    let item = await ExtensionSettingsStore.disable(extensions[2].id, TEST_TYPE, key);
     deepEqual(
       item,
       ITEMS[key][1],
@@ -266,14 +281,14 @@ add_task(async function test_settings_store() {
       item,
       ITEMS[key][1],
       "getSetting returns correct item after a disable.");
-    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[2], TEST_TYPE, key);
+    let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[2].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controllable_by_this_extension",
       "getLevelOfControl returns correct levelOfControl after disabling of top item.");
 
     // Re-enable the top item for a key.
-    item = await ExtensionSettingsStore.enable(extensions[2], TEST_TYPE, key);
+    item = await ExtensionSettingsStore.enable(extensions[2].id, TEST_TYPE, key);
     deepEqual(
       item,
       ITEMS[key][2],
@@ -283,14 +298,14 @@ add_task(async function test_settings_store() {
       item,
       ITEMS[key][2],
       "getSetting returns correct item after an enable.");
-    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[2], TEST_TYPE, key);
+    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[2].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controlled_by_this_extension",
       "getLevelOfControl returns correct levelOfControl after re-enabling top item.");
 
     // Remove the top item for a key.
-    item = await ExtensionSettingsStore.removeSetting(extensions[2], TEST_TYPE, key);
+    item = await ExtensionSettingsStore.removeSetting(extensions[2].id, TEST_TYPE, key);
     deepEqual(
       item,
       ITEMS[key][1],
@@ -300,7 +315,7 @@ add_task(async function test_settings_store() {
       item,
       ITEMS[key][1],
       "getSetting returns correct item after a removal.");
-    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[2], TEST_TYPE, key);
+    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[2].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controllable_by_this_extension",
@@ -309,7 +324,7 @@ add_task(async function test_settings_store() {
     // Add a setting for the current top item.
     let itemToAdd = {key, value: `new-${key}`, id: "@second"};
     item = await ExtensionSettingsStore.addSetting(
-      extensions[1], TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
+      extensions[1].id, TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
     equal(callbackCount,
       expectedCallbackCount,
       "initialValueCallback called the expected number of times.");
@@ -322,7 +337,7 @@ add_task(async function test_settings_store() {
       item,
       itemToAdd,
       "getSetting returns correct item after updating.");
-    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[1], TEST_TYPE, key);
+    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[1].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controlled_by_this_extension",
@@ -333,7 +348,7 @@ add_task(async function test_settings_store() {
     // We're using the callback to set the expected value, so we need to increment the
     // expectedCallbackCount.
     expectedCallbackCount++;
-    item = await ExtensionSettingsStore.disable(extensions[1], TEST_TYPE, key);
+    item = await ExtensionSettingsStore.disable(extensions[1].id, TEST_TYPE, key);
     deepEqual(
       item,
       expectedItem,
@@ -343,14 +358,14 @@ add_task(async function test_settings_store() {
       item,
       expectedItem,
       "getSetting returns the initial value after all are disabled.");
-    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[1], TEST_TYPE, key);
+    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[1].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controllable_by_this_extension",
       "getLevelOfControl returns correct levelOfControl after all are disabled.");
 
     // Re-enable the last remaining item for a key.
-    item = await ExtensionSettingsStore.enable(extensions[1], TEST_TYPE, key);
+    item = await ExtensionSettingsStore.enable(extensions[1].id, TEST_TYPE, key);
     deepEqual(
       item,
       itemToAdd,
@@ -360,14 +375,14 @@ add_task(async function test_settings_store() {
       item,
       itemToAdd,
       "getSetting returns expected value after re-enabling.");
-    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[1], TEST_TYPE, key);
+    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[1].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controlled_by_this_extension",
       "getLevelOfControl returns correct levelOfControl after re-enabling.");
 
     // Remove the last remaining item for a key.
-    item = await ExtensionSettingsStore.removeSetting(extensions[1], TEST_TYPE, key);
+    item = await ExtensionSettingsStore.removeSetting(extensions[1].id, TEST_TYPE, key);
     deepEqual(
       item,
       expectedItem,
@@ -377,14 +392,14 @@ add_task(async function test_settings_store() {
       item,
       null,
       "getSetting returns null after all are removed.");
-    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[1], TEST_TYPE, key);
+    levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[1].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controllable_by_this_extension",
       "getLevelOfControl returns correct levelOfControl after all are removed.");
 
     // Attempting to remove a setting that has had all extensions removed should *not* throw an exception.
-    removeResult = await ExtensionSettingsStore.removeSetting(extensions[1], TEST_TYPE, key);
+    removeResult = await ExtensionSettingsStore.removeSetting(extensions[1].id, TEST_TYPE, key);
     equal(removeResult, null, "Removing a setting that has had all extensions removed returns null.");
   }
 
@@ -394,7 +409,7 @@ add_task(async function test_settings_store() {
   let callbackArgumentValue = Date.now();
   // Add the setting.
   let item = await ExtensionSettingsStore.addSetting(
-    extensions[extensionIndex], TEST_TYPE, testKey, 1, initialValue, callbackArgumentValue);
+    extensions[extensionIndex].id, TEST_TYPE, testKey, 1, initialValue, callbackArgumentValue);
   expectedCallbackCount++;
   equal(callbackCount,
     expectedCallbackCount,
@@ -404,7 +419,7 @@ add_task(async function test_settings_store() {
   // We're using the callback to set the expected value, so we need to increment the
   // expectedCallbackCount.
   expectedCallbackCount++;
-  item = await ExtensionSettingsStore.removeSetting(extensions[extensionIndex], TEST_TYPE, testKey);
+  item = await ExtensionSettingsStore.removeSetting(extensions[extensionIndex].id, TEST_TYPE, testKey);
   deepEqual(
     item,
     expectedItem,
@@ -420,7 +435,7 @@ add_task(async function test_settings_store() {
     item,
     null,
     "getSetting returns a null item if the setting does not have any records.");
-  let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[1], TEST_TYPE, "not a key");
+  let levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[1].id, TEST_TYPE, "not a key");
   equal(
     levelOfControl,
     "controllable_by_this_extension",
@@ -477,17 +492,17 @@ add_task(async function test_settings_store_setByUser() {
         "getSetting is initially null");
 
   let item = await ExtensionSettingsStore.addSetting(
-    one, type, key, "one", initialCallback);
+    one.id, type, key, "one", initialCallback);
   deepEqual({key, value: "one", id: one.id}, item,
             "addSetting returns the first set item");
 
   item = await ExtensionSettingsStore.addSetting(
-    two, type, key, "two", initialCallback);
+    two.id, type, key, "two", initialCallback);
   deepEqual({key, value: "two", id: two.id}, item,
             "addSetting returns the second set item");
 
   item = await ExtensionSettingsStore.addSetting(
-    three, type, key, "three", initialCallback);
+    three.id, type, key, "three", initialCallback);
   deepEqual({key, value: "three", id: three.id}, item,
             "addSetting returns the third set item");
 
@@ -498,15 +513,15 @@ add_task(async function test_settings_store_setByUser() {
   deepEqual({key, initialValue: "initial"}, ExtensionSettingsStore.getSetting(type, key),
             "getSetting returns the initial value after being set by user");
 
-  item = ExtensionSettingsStore.enable(one, type, key);
+  item = ExtensionSettingsStore.enable(one.id, type, key);
   deepEqual({key, value: "one", id: one.id}, item,
             "enable returns the first set item after enable");
 
-  item = ExtensionSettingsStore.enable(three, type, key);
+  item = ExtensionSettingsStore.enable(three.id, type, key);
   deepEqual({key, value: "three", id: three.id}, item,
             "enable returns the third set item after enable");
 
-  item = ExtensionSettingsStore.enable(two, type, key);
+  item = ExtensionSettingsStore.enable(two.id, type, key);
   deepEqual(undefined, item,
             "enable returns undefined after enabling the second item");
 
@@ -514,9 +529,9 @@ add_task(async function test_settings_store_setByUser() {
   deepEqual({key, value: "three", id: three.id}, item,
             "getSetting returns the third set item after enabling the second item");
 
-  ExtensionSettingsStore.removeSetting(three, type, key);
-  ExtensionSettingsStore.removeSetting(two, type, key);
-  ExtensionSettingsStore.removeSetting(one, type, key);
+  ExtensionSettingsStore.removeSetting(three.id, type, key);
+  ExtensionSettingsStore.removeSetting(two.id, type, key);
+  ExtensionSettingsStore.removeSetting(one.id, type, key);
 
   equal(null, ExtensionSettingsStore.getSetting(type, key),
         "getSetting returns null after removing all settings");

@@ -29,6 +29,7 @@ parent:
 
 child:
   async DialogOpened();
+  async CancelledCurrentJob();
 };
 
 } // namespace embedding

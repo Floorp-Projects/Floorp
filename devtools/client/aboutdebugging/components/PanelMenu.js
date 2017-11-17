@@ -4,8 +4,9 @@
 
 "use strict";
 
-const { Component, createFactory, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PanelMenuEntry = createFactory(require("./PanelMenuEntry"));
 
 class PanelMenu extends Component {

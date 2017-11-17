@@ -96,11 +96,15 @@ NS_IMETHODIMP
 PrintProgressDialogParent::Observe(nsISupports *aSubject, const char *aTopic,
                                    const char16_t *aData)
 {
-  if (mActive) {
-    Unused << SendDialogOpened();
+  if (aTopic && !strcmp(aTopic, "cancelled")) {
+    Unused << SendCancelledCurrentJob();
   } else {
-    NS_WARNING("The print progress dialog finished opening, but communications "
-               "with the child have been closed.");
+    if (mActive) {
+      Unused << SendDialogOpened();
+    } else {
+      NS_WARNING("The print progress dialog finished opening, but communications "
+                 "with the child have been closed.");
+    }
   }
 
   return NS_OK;

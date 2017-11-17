@@ -11,8 +11,9 @@ loader.lazyImporter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
 const { Cc, Ci } = require("chrome");
-const { createFactory, Component, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { createFactory, Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
 const AddonsInstallError = createFactory(require("./InstallError"));
 
@@ -61,7 +62,8 @@ class AddonsControls extends Component {
       let file = fp.file;
       // AddonManager.installTemporaryAddon accepts either
       // addon directory or final xpi file.
-      if (!file.isDirectory() && !file.leafName.endsWith(".xpi")) {
+      if (!file.isDirectory() &&
+          !file.leafName.endsWith(".xpi") && !file.leafName.endsWith(".zip")) {
         file = file.parent;
       }
 

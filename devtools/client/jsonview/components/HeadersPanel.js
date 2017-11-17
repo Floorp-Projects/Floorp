@@ -7,12 +7,14 @@
 "use strict";
 
 define(function (require, exports, module) {
-  const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
+  const { Component } = require("devtools/client/shared/vendor/react");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
   const { createFactories } = require("devtools/client/shared/react-utils");
 
   const { Headers } = createFactories(require("./Headers"));
-  const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
+  const { HeadersToolbar } = createFactories(require("./HeadersToolbar"));
 
   const { div } = dom;
 
@@ -20,21 +22,23 @@ define(function (require, exports, module) {
    * This template represents the 'Headers' panel
    * s responsible for rendering its content.
    */
-  let HeadersPanel = createClass({
-    displayName: "HeadersPanel",
-
-    propTypes: {
-      actions: PropTypes.object,
-      data: PropTypes.object,
-    },
-
-    getInitialState: function () {
+  class HeadersPanel extends Component {
+    static get propTypes() {
       return {
+        actions: PropTypes.object,
+        data: PropTypes.object,
+      };
+    }
+
+    constructor(props) {
+      super(props);
+
+      this.state = {
         data: {}
       };
-    },
+    }
 
-    render: function () {
+    render() {
       let data = this.props.data;
 
       return (
@@ -46,35 +50,7 @@ define(function (require, exports, module) {
         )
       );
     }
-  });
-
-  /**
-   * This template is responsible for rendering a toolbar
-   * within the 'Headers' panel.
-   */
-  let HeadersToolbar = createFactory(createClass({
-    displayName: "HeadersToolbar",
-
-    propTypes: {
-      actions: PropTypes.object,
-    },
-
-    // Commands
-
-    onCopy: function (event) {
-      this.props.actions.onCopyHeaders();
-    },
-
-    render: function () {
-      return (
-        Toolbar({},
-          ToolbarButton({className: "btn copy", onClick: this.onCopy},
-            JSONView.Locale.$STR("jsonViewer.Copy")
-          )
-        )
-      );
-    },
-  }));
+  }
 
   // Exports from this module
   exports.HeadersPanel = HeadersPanel;

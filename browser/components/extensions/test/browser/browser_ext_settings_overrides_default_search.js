@@ -3,36 +3,22 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "Management", () => {
-  const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
-  return Management;
-});
-
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
 const EXTENSION1_ID = "extension1@mozilla.com";
 const EXTENSION2_ID = "extension2@mozilla.com";
 
-function awaitEvent(eventName, id) {
-  return new Promise(resolve => {
-    let listener = (_eventName, ...args) => {
-      let extension = args[0];
-      if (_eventName === eventName &&
-          extension.id == id) {
-        Management.off(eventName, listener);
-        resolve(...args);
-      }
-    };
+let defaultEngineName = Services.search.currentEngine.name;
 
-    Management.on(eventName, listener);
-  });
+function restoreDefaultEngine() {
+  let engine = Services.search.getEngineByName(defaultEngineName);
+  Services.search.currentEngine = engine;
 }
+registerCleanupFunction(restoreDefaultEngine);
 
 /* This tests setting a default engine. */
 add_task(async function test_extension_setting_default_engine() {
-  let defaultEngineName = Services.search.currentEngine.name;
-
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
       "chrome_settings_overrides": {
@@ -58,7 +44,6 @@ add_task(async function test_extension_setting_default_engine() {
 /* This tests that uninstalling add-ons maintains the proper
  * search default. */
 add_task(async function test_extension_setting_multiple_default_engine() {
-  let defaultEngineName = Services.search.currentEngine.name;
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
       "chrome_settings_overrides": {
@@ -105,7 +90,6 @@ add_task(async function test_extension_setting_multiple_default_engine() {
 /* This tests that uninstalling add-ons in reverse order maintains the proper
  * search default. */
 add_task(async function test_extension_setting_multiple_default_engine_reversed() {
-  let defaultEngineName = Services.search.currentEngine.name;
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
       "chrome_settings_overrides": {
@@ -175,6 +159,7 @@ add_task(async function test_user_changing_default_engine() {
   await ext1.unload();
 
   is(Services.search.currentEngine.name, "Twitter", "Default engine is Twitter");
+  restoreDefaultEngine();
 });
 
 /* This tests that when the user changes the search engine while it is
@@ -220,13 +205,13 @@ add_task(async function test_user_change_with_disabling() {
 
   is(Services.search.currentEngine.name, "Twitter", "Default engine is Twitter");
   await ext1.unload();
+  restoreDefaultEngine();
 });
 
 /* This tests that when two add-ons are installed that change default
  * search and the first one is disabled, before the second one is installed,
  * when the first one is reenabled, the second add-on keeps the search. */
 add_task(async function test_two_addons_with_first_disabled_before_second() {
-  let defaultEngineName = Services.search.currentEngine.name;
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
       applications: {
@@ -295,7 +280,6 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
  * search and the first one is disabled, the second one maintains
  * the search. */
 add_task(async function test_two_addons_with_first_disabled() {
-  let defaultEngineName = Services.search.currentEngine.name;
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
       applications: {
@@ -364,7 +348,6 @@ add_task(async function test_two_addons_with_first_disabled() {
  * search and the second one is disabled, the first one properly
  * gets the search. */
 add_task(async function test_two_addons_with_second_disabled() {
-  let defaultEngineName = Services.search.currentEngine.name;
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
       applications: {
