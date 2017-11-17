@@ -7,8 +7,11 @@
 "use strict";
 
 define(function (require, exports, module) {
-  const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-  const TreeView = createFactory(require("devtools/client/shared/components/tree/TreeView"));
+  const { createFactory, Component } = require("devtools/client/shared/vendor/react");
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const TreeView =
+    createFactory(require("devtools/client/shared/components/tree/TreeView"));
 
   const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
   const { createFactories } = require("devtools/client/shared/react-utils");
@@ -28,48 +31,53 @@ define(function (require, exports, module) {
    * responsible for rendering an expandable tree that allows simple
    * inspection of JSON structure.
    */
-  let JsonPanel = createClass({
-    displayName: "JsonPanel",
+  class JsonPanel extends Component {
+    static get propTypes() {
+      return {
+        data: PropTypes.oneOfType([
+          PropTypes.string,
+          PropTypes.array,
+          PropTypes.object,
+          PropTypes.bool,
+          PropTypes.number
+        ]),
+        expandedNodes: PropTypes.instanceOf(Set),
+        searchFilter: PropTypes.string,
+        actions: PropTypes.object,
+      };
+    }
 
-    propTypes: {
-      data: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.array,
-        PropTypes.object,
-        PropTypes.bool,
-        PropTypes.number
-      ]),
-      expandedNodes: PropTypes.instanceOf(Set),
-      searchFilter: PropTypes.string,
-      actions: PropTypes.object,
-    },
+    constructor(props) {
+      super(props);
+      this.state = {};
+      this.onKeyPress = this.onKeyPress.bind(this);
+      this.onFilter = this.onFilter.bind(this);
+      this.renderValue = this.renderValue.bind(this);
+      this.renderTree = this.renderTree.bind(this);
+    }
 
-    getInitialState: function () {
-      return {};
-    },
-
-    componentDidMount: function () {
+    componentDidMount() {
       document.addEventListener("keypress", this.onKeyPress, true);
-    },
+    }
 
-    componentWillUnmount: function () {
+    componentWillUnmount() {
       document.removeEventListener("keypress", this.onKeyPress, true);
-    },
+    }
 
-    onKeyPress: function (e) {
+    onKeyPress(e) {
       // XXX shortcut for focusing the Filter field (see Bug 1178771).
-    },
+    }
 
-    onFilter: function (object) {
+    onFilter(object) {
       if (!this.props.searchFilter) {
         return true;
       }
 
       let json = object.name + JSON.stringify(object.value);
       return json.toLowerCase().indexOf(this.props.searchFilter.toLowerCase()) >= 0;
-    },
+    }
 
-    renderValue: props => {
+    renderValue(props) {
       let member = props.member;
 
       // Hide object summary when non-empty object is expanded (bug 1244912).
@@ -83,9 +91,9 @@ define(function (require, exports, module) {
         noGrip: true,
         omitLinkHref: false,
       }));
-    },
+    }
 
-    renderTree: function () {
+    renderTree() {
       // Append custom column for displaying values. This column
       // Take all available horizontal space.
       let columns = [{
@@ -102,9 +110,9 @@ define(function (require, exports, module) {
         renderValue: this.renderValue,
         expandedNodes: this.props.expandedNodes,
       });
-    },
+    }
 
-    render: function () {
+    render() {
       let content;
       let data = this.props.data;
 
@@ -122,36 +130,42 @@ define(function (require, exports, module) {
 
       return (
         div({className: "jsonPanelBox tab-panel-inner"},
-          JsonToolbar({actions: this.props.actions}),
+          JsonToolbarFactory({actions: this.props.actions}),
           div({className: "panelContent"},
             content
           )
         )
       );
     }
-  });
+  }
 
   /**
    * This template represents a toolbar within the 'JSON' panel.
    */
-  let JsonToolbar = createFactory(createClass({
-    displayName: "JsonToolbar",
+  class JsonToolbar extends Component {
+    static get propTypes() {
+      return {
+        actions: PropTypes.object,
+      };
+    }
 
-    propTypes: {
-      actions: PropTypes.object,
-    },
+    constructor(props) {
+      super(props);
+      this.onSave = this.onSave.bind(this);
+      this.onCopy = this.onCopy.bind(this);
+    }
 
     // Commands
 
-    onSave: function (event) {
+    onSave(event) {
       this.props.actions.onSaveJson();
-    },
+    }
 
-    onCopy: function (event) {
+    onCopy(event) {
       this.props.actions.onCopyJson();
-    },
+    }
 
-    render: function () {
+    render() {
       return (
         Toolbar({},
           ToolbarButton({className: "btn save", onClick: this.onSave},
@@ -165,8 +179,10 @@ define(function (require, exports, module) {
           })
         )
       );
-    },
-  }));
+    }
+  }
+
+  let JsonToolbarFactory = createFactory(JsonToolbar);
 
   // Exports from this module
   exports.JsonPanel = JsonPanel;
