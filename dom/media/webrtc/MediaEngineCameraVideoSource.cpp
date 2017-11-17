@@ -25,10 +25,20 @@ bool MediaEngineCameraVideoSource::AppendToTrack(SourceMediaStream* aSource,
                                                  const PrincipalHandle& aPrincipalHandle)
 {
   MOZ_ASSERT(aSource);
+  MOZ_ASSERT(aImage);
+
+  if (!aImage) {
+    return 0;
+  }
 
   VideoSegment segment;
   RefPtr<layers::Image> image = aImage;
-  IntSize size(image ? mWidth : 0, image ? mHeight : 0);
+  IntSize size = image->GetSize();
+
+  if (!size.width || !size.height) {
+    return 0;
+  }
+
   segment.AppendFrame(image.forget(), delta, size, aPrincipalHandle);
 
   // This is safe from any thread, and is safe if the track is Finished
