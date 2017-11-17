@@ -168,7 +168,6 @@ class ParserBase : public StrictModeGetter
     ~ParserBase();
 
     const char* getFilename() const { return tokenStream.getFilename(); }
-    JSVersion versionNumber() const { return tokenStream.versionNumber(); }
     TokenPos pos() const { return tokenStream.currentToken().pos; }
 
     // Determine whether |yield| is a valid name in the current context.

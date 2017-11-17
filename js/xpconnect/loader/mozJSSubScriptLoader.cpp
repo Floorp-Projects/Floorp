@@ -147,7 +147,6 @@ PrepareScript(nsIURI* uri,
 {
     JS::CompileOptions options(cx);
     options.setFileAndLine(uriStr, 1)
-           .setVersion(JSVERSION_DEFAULT)
            .setNoScriptRval(!wantReturnValue);
     if (!charset.IsVoid()) {
         char16_t* scriptBuf = nullptr;
