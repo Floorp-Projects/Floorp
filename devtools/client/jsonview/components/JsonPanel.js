@@ -10,15 +10,14 @@ define(function (require, exports, module) {
   const { createFactory, Component } = require("devtools/client/shared/vendor/react");
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const { createFactories } = require("devtools/client/shared/react-utils");
+
   const TreeView =
     createFactory(require("devtools/client/shared/components/tree/TreeView"));
+  const { JsonToolbar } = createFactories(require("./JsonToolbar"));
 
   const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-  const { createFactories } = require("devtools/client/shared/react-utils");
   const { Rep } = REPS;
-
-  const { SearchBox } = createFactories(require("./SearchBox"));
-  const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
 
   const { div } = dom;
 
@@ -130,7 +129,7 @@ define(function (require, exports, module) {
 
       return (
         div({className: "jsonPanelBox tab-panel-inner"},
-          JsonToolbarFactory({actions: this.props.actions}),
+          JsonToolbar({actions: this.props.actions}),
           div({className: "panelContent"},
             content
           )
@@ -138,51 +137,6 @@ define(function (require, exports, module) {
       );
     }
   }
-
-  /**
-   * This template represents a toolbar within the 'JSON' panel.
-   */
-  class JsonToolbar extends Component {
-    static get propTypes() {
-      return {
-        actions: PropTypes.object,
-      };
-    }
-
-    constructor(props) {
-      super(props);
-      this.onSave = this.onSave.bind(this);
-      this.onCopy = this.onCopy.bind(this);
-    }
-
-    // Commands
-
-    onSave(event) {
-      this.props.actions.onSaveJson();
-    }
-
-    onCopy(event) {
-      this.props.actions.onCopyJson();
-    }
-
-    render() {
-      return (
-        Toolbar({},
-          ToolbarButton({className: "btn save", onClick: this.onSave},
-            JSONView.Locale.$STR("jsonViewer.Save")
-          ),
-          ToolbarButton({className: "btn copy", onClick: this.onCopy},
-            JSONView.Locale.$STR("jsonViewer.Copy")
-          ),
-          SearchBox({
-            actions: this.props.actions
-          })
-        )
-      );
-    }
-  }
-
-  let JsonToolbarFactory = createFactory(JsonToolbar);
 
   // Exports from this module
   exports.JsonPanel = JsonPanel;

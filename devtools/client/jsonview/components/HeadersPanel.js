@@ -7,14 +7,14 @@
 "use strict";
 
 define(function (require, exports, module) {
-  const { createFactory, Component } = require("devtools/client/shared/vendor/react");
+  const { Component } = require("devtools/client/shared/vendor/react");
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
   const { createFactories } = require("devtools/client/shared/react-utils");
 
   const { Headers } = createFactories(require("./Headers"));
-  const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
+  const { HeadersToolbar } = createFactories(require("./HeadersToolbar"));
 
   const { div } = dom;
 
@@ -43,7 +43,7 @@ define(function (require, exports, module) {
 
       return (
         div({className: "headersPanelBox tab-panel-inner"},
-          HeadersToolbarFactory({actions: this.props.actions}),
+          HeadersToolbar({actions: this.props.actions}),
           div({className: "panelContent"},
             Headers({data: data})
           )
@@ -51,41 +51,6 @@ define(function (require, exports, module) {
       );
     }
   }
-
-  /**
-   * This template is responsible for rendering a toolbar
-   * within the 'Headers' panel.
-   */
-  class HeadersToolbar extends Component {
-    static get propTypes() {
-      return {
-        actions: PropTypes.object,
-      };
-    }
-
-    constructor(props) {
-      super(props);
-      this.onCopy = this.onCopy.bind(this);
-    }
-
-    // Commands
-
-    onCopy(event) {
-      this.props.actions.onCopyHeaders();
-    }
-
-    render() {
-      return (
-        Toolbar({},
-          ToolbarButton({className: "btn copy", onClick: this.onCopy},
-            JSONView.Locale.$STR("jsonViewer.Copy")
-          )
-        )
-      );
-    }
-  }
-
-  let HeadersToolbarFactory = createFactory(HeadersToolbar);
 
   // Exports from this module
   exports.HeadersPanel = HeadersPanel;
