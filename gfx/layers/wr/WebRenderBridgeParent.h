@@ -58,7 +58,7 @@ public:
   static WebRenderBridgeParent* CreateDestroyed(const wr::PipelineId& aPipelineId);
 
   wr::PipelineId PipelineId() { return mPipelineId; }
-  wr::WebRenderAPI* GetWebRenderAPI() { return mApi; }
+  already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI() { return do_AddRef(mApi); }
   wr::Epoch WrEpoch() { return wr::NewEpoch(mWrEpoch); }
   AsyncImagePipelineManager* AsyncImageManager() { return mAsyncImageManager; }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
