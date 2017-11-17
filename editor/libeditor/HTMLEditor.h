@@ -477,7 +477,7 @@ protected:
                nsCOMPtr<nsIDOMNode>* outBRNode,
                nsIEditor::EDirection aSelect = nsIEditor::eNone) override;
 
-  nsresult InsertBR();
+  nsresult InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode);
 
   // Table Editing (implemented in nsTableEditor.cpp)
 
