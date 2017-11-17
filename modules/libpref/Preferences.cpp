@@ -182,6 +182,57 @@ PrefTypeToString(PrefType aType)
 }
 #endif
 
+// Assign to aResult a quoted, escaped copy of aOriginal.
+static void
+StrEscape(const char* aOriginal, nsCString& aResult)
+{
+  if (aOriginal == nullptr) {
+    aResult.AssignLiteral("\"\"");
+    return;
+  }
+
+  // JavaScript does not allow quotes, slashes, or line terminators inside
+  // strings so we must escape them. ECMAScript defines four line terminators,
+  // but we're only worrying about \r and \n here.  We currently feed our pref
+  // script to the JS interpreter as Latin-1 so  we won't encounter \u2028
+  // (line separator) or \u2029 (paragraph separator).
+  //
+  // WARNING: There are hints that we may be moving to storing prefs as utf8.
+  // If we ever feed them to the JS compiler as UTF8 then we'll have to worry
+  // about the multibyte sequences that would be interpreted as \u2028 and
+  // \u2029.
+  const char* p;
+
+  aResult.Assign('"');
+
+  // Paranoid worst case all slashes will free quickly.
+  for (p = aOriginal; *p; ++p) {
+    switch (*p) {
+      case '\n':
+        aResult.AppendLiteral("\\n");
+        break;
+
+      case '\r':
+        aResult.AppendLiteral("\\r");
+        break;
+
+      case '\\':
+        aResult.AppendLiteral("\\\\");
+        break;
+
+      case '\"':
+        aResult.AppendLiteral("\\\"");
+        break;
+
+      default:
+        aResult.Append(*p);
+        break;
+    }
+  }
+
+  aResult.Append('"');
+}
+
 static ArenaAllocator<8192, 1> gPrefNameArena;
 
 class PrefHashEntry : public PLDHashEntryHdr
@@ -351,6 +402,27 @@ public:
     }
   }
 
+  // Returns false if this pref doesn't have a user value worth saving.
+  bool UserValueToStringForSaving(nsCString& aStr)
+  {
+    if (HasUserValue() && (!HasDefaultValue() || IsSticky() ||
+                           !mDefaultValue.Equals(Type(), mUserValue))) {
+      if (IsTypeString()) {
+        StrEscape(mUserValue.mStringVal, aStr);
+
+      } else if (IsTypeInt()) {
+        aStr.AppendInt(mUserValue.mIntVal);
+
+      } else if (IsTypeBool()) {
+        aStr = mUserValue.mBoolVal ? "true" : "false";
+      }
+      return true;
+    }
+
+    // Do not save default prefs that haven't changed.
+    return false;
+  }
+
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
   {
     // Note: mName is allocated in gPrefNameArena, measured elsewhere.
@@ -434,57 +506,6 @@ enum
 
 #define PREF_HASHTABLE_INITIAL_LENGTH 1024
 
-// Assign to aResult a quoted, escaped copy of aOriginal.
-static void
-StrEscape(const char* aOriginal, nsCString& aResult)
-{
-  if (aOriginal == nullptr) {
-    aResult.AssignLiteral("\"\"");
-    return;
-  }
-
-  // JavaScript does not allow quotes, slashes, or line terminators inside
-  // strings so we must escape them. ECMAScript defines four line terminators,
-  // but we're only worrying about \r and \n here.  We currently feed our pref
-  // script to the JS interpreter as Latin-1 so  we won't encounter \u2028
-  // (line separator) or \u2029 (paragraph separator).
-  //
-  // WARNING: There are hints that we may be moving to storing prefs as utf8.
-  // If we ever feed them to the JS compiler as UTF8 then we'll have to worry
-  // about the multibyte sequences that would be interpreted as \u2028 and
-  // \u2029.
-  const char* p;
-
-  aResult.Assign('"');
-
-  // Paranoid worst case all slashes will free quickly.
-  for (p = aOriginal; *p; ++p) {
-    switch (*p) {
-      case '\n':
-        aResult.AppendLiteral("\\n");
-        break;
-
-      case '\r':
-        aResult.AppendLiteral("\\r");
-        break;
-
-      case '\\':
-        aResult.AppendLiteral("\\\\");
-        break;
-
-      case '\"':
-        aResult.AppendLiteral("\\\"");
-        break;
-
-      default:
-        aResult.Append(*p);
-        break;
-    }
-  }
-
-  aResult.Append('"');
-}
-
 static PrefSaveData
 pref_savePrefs()
 {
@@ -493,33 +514,17 @@ pref_savePrefs()
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
-    // where we're getting our pref from
-    PrefValue* sourceValue;
-
-    if (pref->HasUserValue() &&
-        (!pref->HasDefaultValue() || pref->IsSticky() ||
-         !pref->mDefaultValue.Equals(pref->Type(), pref->mUserValue))) {
-      sourceValue = &pref->mUserValue;
-    } else {
-      // do not save default prefs that haven't changed
+    nsAutoCString prefValueStr;
+    if (!pref->UserValueToStringForSaving(prefValueStr)) {
       continue;
     }
 
-    nsAutoCString prefName;
-    StrEscape(pref->Name(), prefName);
+    nsAutoCString prefNameStr;
+    StrEscape(pref->Name(), prefNameStr);
 
-    nsAutoCString prefValue;
-    if (pref->IsTypeString()) {
-      StrEscape(sourceValue->mStringVal, prefValue);
+    nsPrintfCString str(
+      "user_pref(%s, %s);", prefNameStr.get(), prefValueStr.get());
 
-    } else if (pref->IsTypeInt()) {
-      prefValue.AppendInt(sourceValue->mIntVal);
-
-    } else if (pref->IsTypeBool()) {
-      prefValue = sourceValue->mBoolVal ? "true" : "false";
-    }
-
-    nsPrintfCString str("user_pref(%s, %s);", prefName.get(), prefValue.get());
     savedPrefs.AppendElement(str);
   }
 
@@ -621,9 +626,9 @@ PREF_LockPref(const char* aPrefName, bool aLockIt)
   return NS_OK;
 }
 
-//
-// Hash table functions
-//
+  //
+  // Hash table functions
+  //
 
 #ifdef DEBUG
 
