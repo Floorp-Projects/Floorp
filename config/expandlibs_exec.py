@@ -142,7 +142,7 @@ class ExpandArgsMore(ExpandArgs):
         f.writelines(content)
         f.close()
         idx = self.index(objs[0])
-        newlist = self[0:idx] + [ref] + [item for item in self[idx:] if item not in objs]
+        newlist = self[0:idx] + [ref] + [os.path.normpath(item) for item in self[idx:] if item not in objs]
         self[0:] = newlist
 
     def _getFoldedSections(self):
