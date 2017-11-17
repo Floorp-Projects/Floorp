@@ -274,6 +274,12 @@ var gSync = {
     });
   },
 
+  openConnectAnotherDevice(entryPoint) {
+    let url = new URL(Services.prefs.getCharPref("identity.fxaccounts.remote.connectdevice.uri"));
+    url.searchParams.append("entrypoint", entryPoint);
+    openUILinkIn(url.href, "tab");
+  },
+
   openSendToDevicePromo() {
     let url = Services.prefs.getCharPref("app.productInfo.baseURL");
     url += "send-tabs/?utm_source=" + Services.appinfo.name.toLowerCase();
@@ -363,25 +369,24 @@ var gSync = {
   _appendSendTabSingleDevice(fragment, createDeviceNodeFn) {
     const noDevices = this.fxaStrings.GetStringFromName("sendTabToDevice.singledevice.status");
     const learnMore = this.fxaStrings.GetStringFromName("sendTabToDevice.singledevice");
-    this._appendSendTabInfoItems(fragment, createDeviceNodeFn, noDevices, learnMore, () => {
-      this.openSendToDevicePromo();
-    });
+    const connectDevice = this.fxaStrings.GetStringFromName("sendTabToDevice.connectdevice");
+    const actions = [{label: connectDevice, command: () => this.openConnectAnotherDevice("sendtab")},
+                     {label: learnMore,     command: () => this.openSendToDevicePromo()}];
+    this._appendSendTabInfoItems(fragment, createDeviceNodeFn, noDevices, actions);
   },
 
   _appendSendTabVerify(fragment, createDeviceNodeFn) {
     const notVerified = this.fxaStrings.GetStringFromName("sendTabToDevice.verify.status");
     const verifyAccount = this.fxaStrings.GetStringFromName("sendTabToDevice.verify");
-    this._appendSendTabInfoItems(fragment, createDeviceNodeFn, notVerified, verifyAccount, () => {
-      this.openPrefs("sendtab");
-    });
+    const actions = [{label: verifyAccount, command: () => this.openPrefs("sendtab")}];
+    this._appendSendTabInfoItems(fragment, createDeviceNodeFn, notVerified, actions);
   },
 
   _appendSendTabUnconfigured(fragment, createDeviceNodeFn) {
     const notConnected = this.fxaStrings.GetStringFromName("sendTabToDevice.unconfigured.status");
     const learnMore = this.fxaStrings.GetStringFromName("sendTabToDevice.unconfigured");
-    this._appendSendTabInfoItems(fragment, createDeviceNodeFn, notConnected, learnMore, () => {
-      this.openSendToDevicePromo();
-    });
+    const actions = [{label: learnMore, command: () => this.openSendToDevicePromo()}];
+    this._appendSendTabInfoItems(fragment, createDeviceNodeFn, notConnected, actions);
 
     // Now add a 'sign in to sync' item above the 'learn more' item.
     const signInToSync = this.fxaStrings.GetStringFromName("sendTabToDevice.signintosync");
@@ -398,7 +403,7 @@ var gSync = {
     fragment.insertBefore(signInItem, fragment.lastChild);
   },
 
-  _appendSendTabInfoItems(fragment, createDeviceNodeFn, statusLabel, actionLabel, actionCommand) {
+  _appendSendTabInfoItems(fragment, createDeviceNodeFn, statusLabel, actions) {
     const status = createDeviceNodeFn(null, statusLabel, null);
     status.setAttribute("label", statusLabel);
     status.setAttribute("disabled", true);
@@ -409,11 +414,13 @@ var gSync = {
     separator.classList.add("sync-menuitem");
     fragment.appendChild(separator);
 
-    const actionItem = createDeviceNodeFn(null, actionLabel, null);
-    actionItem.addEventListener("command", actionCommand, true);
-    actionItem.classList.add("sync-menuitem");
-    actionItem.setAttribute("label", actionLabel);
-    fragment.appendChild(actionItem);
+    for (let {label, command} of actions) {
+      const actionItem = createDeviceNodeFn(null, label, null);
+      actionItem.addEventListener("command", command, true);
+      actionItem.classList.add("sync-menuitem");
+      actionItem.setAttribute("label", label);
+      fragment.appendChild(actionItem);
+    }
   },
 
   isSendableURI(aURISpec) {
