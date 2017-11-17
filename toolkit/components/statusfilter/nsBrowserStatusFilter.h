@@ -57,13 +57,9 @@ private:
     int64_t                          mMaxProgress;
 
     nsString                         mCurrentStatusMsg;
-    bool                             mStatusIsDirty;
     int32_t                          mCurrentPercentage;
-
-    // used to convert OnStart/OnStop notifications into progress notifications
-    int32_t                          mTotalRequests;
-    int32_t                          mFinishedRequests;
-    bool                             mUseRealProgressFlag;
+    bool                             mStatusIsDirty;
+    bool                             mIsLoadingDocument;
 
     // indicates whether a timeout is pending
     bool                             mDelayedStatus;
