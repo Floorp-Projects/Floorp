@@ -183,8 +183,6 @@ public:
   }
   void AddIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
   void RemoveIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
-  already_AddRefed<WakeLock> RequestWakeLock(const nsAString &aTopic,
-                                             ErrorResult& aRv);
 
   DesktopNotificationCenter* GetMozNotification(ErrorResult& aRv);
   already_AddRefed<LegacyMozTCPSocket> MozTCPSocket();
