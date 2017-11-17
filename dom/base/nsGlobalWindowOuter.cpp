@@ -43,6 +43,7 @@
   return GetCurrentInnerWindowInternal()->method args;                  \
   PR_END_MACRO
 
+
 nsGlobalWindowOuter::OuterWindowByIdTable *nsGlobalWindowOuter::sOuterWindowsById = nullptr;
 
 // CIDs
