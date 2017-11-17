@@ -7,6 +7,8 @@ toolkit.jar:
    content/global/textbox.css
    content/global/menulist.css
    content/global/autocomplete.css
+   content/global/about.js
+   content/global/about.xhtml
    content/global/aboutAbout.js
    content/global/aboutAbout.xhtml
 #ifdef MOZILLA_OFFICIAL

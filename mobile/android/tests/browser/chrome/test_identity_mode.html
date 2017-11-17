@@ -22,8 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1099088
   let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
   let IdentityHandler = chromeWin.IdentityHandler;
 
-  ok(IdentityHandler.getIdentityMode(0, Services.io.newURI("about:firefox")) == IdentityHandler.IDENTITY_MODE_CHROMEUI,
-     "'about:firefox' is a verified internal page");
+  ok(IdentityHandler.getIdentityMode(0, Services.io.newURI("about:")) == IdentityHandler.IDENTITY_MODE_CHROMEUI,
+     "'about:' is a verified internal page");
   ok(IdentityHandler.getIdentityMode(0, Services.io.newURI("about:config")) == IdentityHandler.IDENTITY_MODE_CHROMEUI,
      "'about:config' is a verified internal page");
   ok(IdentityHandler.getIdentityMode(0, Services.io.newURI("about:accounts")) == IdentityHandler.IDENTITY_MODE_CHROMEUI,

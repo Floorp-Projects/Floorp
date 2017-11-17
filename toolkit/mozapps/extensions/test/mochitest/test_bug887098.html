@@ -21,16 +21,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887098
     if (/file_empty/.test(href)) {
       window.evalRef = iwin.eval;
       window.installTriggerRef = iwin.InstallTrigger; // Force lazy instantiation.
-      // about:mozilla is privileged, so we need to be privileged to load it.
-      SpecialPowers.wrap(iwin).location.href = "about:mozilla";
+      // about: is privileged, so we need to be privileged to load it.
+      SpecialPowers.wrap(iwin).location.href = "about:";
     } else {
-      is(href, "about:mozilla", "Successfully navigated to about:mozilla");
+      is(href, "about:", "Successfully navigated to about:");
       try {
         evalRef('InstallTrigger.install({URL: "chrome://global/skin/global.css"});');
         ok(false, "Should have thrown when trying to install restricted URI from InstallTrigger");
       } catch (e) {
         // XXXgijs this test broke because of the switch to webidl. I'm told
-        // it has to do with compartments and the fact that we eval in "about:mozilla".
+        // it has to do with compartments and the fact that we eval in "about:".
         // Tracking in bug 1007671
         todo(/permission/.test(e), "We should throw a security exception. Got: " + e);
       }

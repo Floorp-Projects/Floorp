@@ -95,7 +95,7 @@
       enableLogging("docload");
       gQueue = new eventQueue();
 
-      gQueue.push(new loadURI("about:robots"));
+      gQueue.push(new loadURI("about:about"));
       gQueue.push(new loadOneTab("about:mozilla"));
 
       gQueue.onFinish = function()
@@ -107,7 +107,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    openBrowserWindow(doTests, "about:license");
+    openBrowserWindow(doTests, "about:");
   ]]>
   </script>
 

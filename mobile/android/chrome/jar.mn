@@ -63,6 +63,7 @@ chrome.jar:
 % override chrome://mozapps/content/extensions/extensions.xul chrome://browser/content/aboutAddons.xhtml
 
 # L10n resource overrides.
+% override chrome://global/locale/about.dtd chrome://browser/locale/overrides/about.dtd
 % override chrome://global/locale/aboutAbout.dtd chrome://browser/locale/overrides/aboutAbout.dtd
 % override chrome://global/locale/aboutReader.properties chrome://browser/locale/overrides/aboutReader.properties
 % override chrome://global/locale/aboutRights.dtd chrome://browser/locale/overrides/aboutRights.dtd
