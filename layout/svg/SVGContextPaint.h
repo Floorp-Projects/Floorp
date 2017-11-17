@@ -272,8 +272,14 @@ public:
   void SetFill(nscolor aFill) {
     mFill.emplace(gfx::ToDeviceColor(aFill));
   }
+  const Maybe<Color>& GetFill() const {
+    return mFill;
+  }
   void SetStroke(nscolor aStroke) {
     mStroke.emplace(gfx::ToDeviceColor(aStroke));
+  }
+  const Maybe<Color>& GetStroke() const {
+    return mStroke;
   }
 
   /**
