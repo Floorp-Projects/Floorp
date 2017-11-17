@@ -620,7 +620,7 @@ nsDOMMutationObserver::QueueMutationObserverMicroTask()
 
   RefPtr<MutationObserverMicroTask> momt =
     new MutationObserverMicroTask();
-  ccjs->DispatchMicroTaskRunnable(momt.forget());
+  ccjs->DispatchToMicroTask(momt.forget());
 }
 
 void
@@ -643,7 +643,7 @@ nsDOMMutationObserver::RescheduleForRun()
 
     RefPtr<MutationObserverMicroTask> momt =
       new MutationObserverMicroTask();
-    ccjs->DispatchMicroTaskRunnable(momt.forget());
+    ccjs->DispatchToMicroTask(momt.forget());
     sScheduledMutationObservers = new AutoTArray<RefPtr<nsDOMMutationObserver>, 4>;
   }
 
