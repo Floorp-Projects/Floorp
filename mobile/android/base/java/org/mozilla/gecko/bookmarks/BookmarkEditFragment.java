@@ -175,9 +175,11 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
                     return;
                 }
 
-                // When coming back from SelectFolderFragment, we update view with data stored in `bookmark`,
-                // so before navigating, we have to save current title from nameText into `bookmark`.
+                // When coming back from SelectFolderFragment, we update the view with data stored in
+                // `bookmark`, so before navigating, we have to save the current title and keyword
+                // from the TextInputLayouts into `bookmark`.
                 bookmark.title = nameText.getText().toString();
+                bookmark.keyword = keywordText.getText().toString();
 
                 final SelectFolderFragment dialog = SelectFolderFragment.newInstance(bookmark.parentId, bookmark.id);
                 dialog.setTargetFragment(BookmarkEditFragment.this, 0);
