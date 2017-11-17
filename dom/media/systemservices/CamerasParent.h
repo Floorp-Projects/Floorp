@@ -138,8 +138,8 @@ protected:
   // sEngines will be accessed by VideoCapture thread only
   // sNumOfCamerasParent, sNumOfOpenCamerasParentEngines, and sVideoCaptureThread will
   // be accessed by main thread / PBackground thread / VideoCapture thread
-  // all variables are protected by sThreadMonitor while sThreadMonitor
-  // creation and deletion is protected by sMutex
+  // sNumOfCamerasParent and sThreadMonitor create & delete are protected by sMutex
+  // sNumOfOpenCamerasParentEngines and sVideoCaptureThread are protected by sThreadMonitor
   static RefPtr<VideoEngine> sEngines[CaptureEngine::MaxEngine];
   static int32_t sNumOfOpenCamerasParentEngines;
   static int32_t sNumOfCamerasParents;

@@ -64,16 +64,16 @@ function testActions(aArray) {
     if (events) {
       var elm = getNode(accOrElmOrIDOfTarget);
       if (events & MOUSEDOWN_EVENT)
-        eventSeq.push(new checkerOfActionInvoker("mousedown", elm));
+        eventSeq.push(new checkerOfActionInvoker("mousedown", elm, actionObj));
 
       if (events & MOUSEUP_EVENT)
-        eventSeq.push(new checkerOfActionInvoker("mouseup", elm));
+        eventSeq.push(new checkerOfActionInvoker("mouseup", elm, actionObj));
 
       if (events & CLICK_EVENT)
         eventSeq.push(new checkerOfActionInvoker("click", elm, actionObj));
 
       if (events & COMMAND_EVENT)
-        eventSeq.push(new checkerOfActionInvoker("command", elm));
+        eventSeq.push(new checkerOfActionInvoker("command", elm, actionObj));
 
       if (events & FOCUS_EVENT)
         eventSeq.push(new focusChecker(elm));
@@ -148,6 +148,10 @@ function checkerOfActionInvoker(aType, aTarget, aActionObj) {
 
   this.target = aTarget;
 
+  if (aActionObj && "eventTarget" in aActionObj) {
+    this.eventTarget = aActionObj.eventTarget;
+  }
+
   this.phase = false;
 
   this.getID = function getID() {
@@ -155,7 +159,7 @@ function checkerOfActionInvoker(aType, aTarget, aActionObj) {
   };
 
   this.check = function check(aEvent) {
-    if (aActionObj && "checkOnClickEvent" in aActionObj)
+    if (aType == "click" && aActionObj && "checkOnClickEvent" in aActionObj)
       aActionObj.checkOnClickEvent(aEvent);
   };
 }

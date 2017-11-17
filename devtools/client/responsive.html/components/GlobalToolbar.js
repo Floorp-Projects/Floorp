@@ -9,7 +9,7 @@ const { DOM: dom, createClass, createFactory, PropTypes, addons } =
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
-const DPRSelector = createFactory(require("./DprSelector"));
+const DevicePixelRatioSelector = createFactory(require("./DevicePixelRatioSelector"));
 const NetworkThrottlingSelector = createFactory(require("./NetworkThrottlingSelector"));
 
 module.exports = createClass({
@@ -68,7 +68,7 @@ module.exports = createClass({
         networkThrottling,
         onChangeNetworkThrottling,
       }),
-      DPRSelector({
+      DevicePixelRatioSelector({
         devices,
         displayPixelRatio,
         selectedDevice,

@@ -94,7 +94,7 @@ const certBlocklistJSON = `{
       "id": "5",
       "last_modified": 100000000000000000004,
       "issuerName": "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
-      "serialNumber": "BVio/iQ21GCi2iUven8oJ/gae74="
+      "serialNumber": "a0X7/7DlTaedpgrIJg25iBPOkIM="
     },` +
   // ... and some good
   // In this case, the issuer name and the valid serialNumber correspond
@@ -103,7 +103,7 @@ const certBlocklistJSON = `{
       "id": "6",
       "last_modified": 100000000000000000005,
       "issuerName": "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=",
-      "serialNumber": "exJUIJpq50jgqOwQluhVrAzTF74="
+      "serialNumber": "Rym6o+VN9xgZXT/QLrvN/nv1ZN4="
     },` +
   // These items correspond to an entry in sample_revocations.txt where:
   // isser name is "another imaginary issuer" base-64 encoded, and
@@ -302,9 +302,9 @@ function run_test() {
   let expected = { "MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5":
                      { "\tVCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=": true },
                    "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=":
-                     { " exJUIJpq50jgqOwQluhVrAzTF74=": true},
+                     { " Rym6o+VN9xgZXT/QLrvN/nv1ZN4=": true},
                    "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=":
-                     { " BVio/iQ21GCi2iUven8oJ/gae74=": true},
+                     { " a0X7/7DlTaedpgrIJg25iBPOkIM=": true},
                    "YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy":
                      { " YW5vdGhlciBzZXJpYWwu": true,
                        " c2VyaWFsMi4=": true }

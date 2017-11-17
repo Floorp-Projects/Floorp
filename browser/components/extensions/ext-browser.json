@@ -27,6 +27,7 @@
   "chrome_settings_overrides": {
     "url": "chrome://browser/content/ext-chrome-settings-overrides.js",
     "scopes": [],
+    "events": ["update", "uninstall"],
     "schema": "chrome://browser/content/schemas/chrome_settings_overrides.json",
     "manifest": ["chrome_settings_overrides"]
   },

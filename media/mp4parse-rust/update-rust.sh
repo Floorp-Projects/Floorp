@@ -37,7 +37,7 @@ rm -rf mp4parse_capi
 mkdir -p mp4parse_capi/src
 cp _upstream/mp4parse/mp4parse_capi/Cargo.toml mp4parse_capi/
 cp _upstream/mp4parse/mp4parse_capi/build.rs mp4parse_capi/
-cp _upstream/mp4parse/mp4parse_capi/include/mp4parse.h ../../dom/media/mp4/
+cp _upstream/mp4parse/mp4parse_capi/include/mp4parse.h ./
 cp _upstream/mp4parse/mp4parse_capi/src/*.rs mp4parse_capi/src/
 rm -rf mp4parse_fallible
 mkdir -p mp4parse_fallible

@@ -40,11 +40,9 @@ fn dwrite_measure_mode(
     render_mode: FontRenderMode,
     options: Option<FontInstancePlatformOptions>,
 ) -> dwrote::DWRITE_MEASURING_MODE {
-    if let Some(FontInstancePlatformOptions {
-        force_gdi_rendering: true,
-        ..
-    }) = options
-    {
+    let FontInstancePlatformOptions { force_gdi_rendering, use_embedded_bitmap, .. } =
+        options.unwrap_or_default();
+    if force_gdi_rendering || use_embedded_bitmap {
         return dwrote::DWRITE_MEASURING_MODE_GDI_CLASSIC;
     }
 
@@ -61,18 +59,17 @@ fn dwrite_render_mode(
     measure_mode: dwrote::DWRITE_MEASURING_MODE,
     options: Option<FontInstancePlatformOptions>,
 ) -> dwrote::DWRITE_RENDERING_MODE {
-    if let Some(FontInstancePlatformOptions {
-        force_gdi_rendering: true,
-        ..
-    }) = options
-    {
-        return dwrote::DWRITE_RENDERING_MODE_GDI_CLASSIC;
-    }
+    let FontInstancePlatformOptions { force_gdi_rendering, use_embedded_bitmap, .. } =
+        options.unwrap_or_default();
 
     let dwrite_render_mode = match render_mode {
         FontRenderMode::Mono | FontRenderMode::Bitmap => dwrote::DWRITE_RENDERING_MODE_ALIASED,
         FontRenderMode::Alpha | FontRenderMode::Subpixel => {
-            font_face.get_recommended_rendering_mode_default_params(em_size, 1.0, measure_mode)
+            if force_gdi_rendering || use_embedded_bitmap {
+                dwrote::DWRITE_RENDERING_MODE_GDI_CLASSIC
+            } else {
+                font_face.get_recommended_rendering_mode_default_params(em_size, 1.0, measure_mode)
+            }
         }
     };
 

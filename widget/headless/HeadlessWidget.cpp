@@ -10,6 +10,8 @@
 #include "MouseEvents.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/TextEvents.h"
+#include "HeadlessKeyBindings.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -173,7 +175,9 @@ HeadlessWidget::GetTopLevelWidget()
 void
 HeadlessWidget::RaiseWindow()
 {
-  MOZ_ASSERT(mTopLevel == this || mWindowType == eWindowType_dialog, "Raising a non-toplevel window.");
+  MOZ_ASSERT(mTopLevel == this ||
+             mWindowType == eWindowType_dialog ||
+             mWindowType == eWindowType_sheet, "Raising a non-toplevel window.");
 
   // Do nothing if this is the currently active window.
   RefPtr<HeadlessWidget> activeWindow = GetActiveWindow();
@@ -212,7 +216,9 @@ HeadlessWidget::Show(bool aState)
   LOG(("HeadlessWidget::Show [%p] state %d\n", (void *)this, aState));
 
   // Top-level window and dialogs are activated/raised when shown.
-  if (aState && (mTopLevel == this || mWindowType == eWindowType_dialog)) {
+  if (aState && (mTopLevel == this ||
+                 mWindowType == eWindowType_dialog ||
+                 mWindowType == eWindowType_sheet)) {
     RaiseWindow();
   }
 
@@ -285,7 +291,7 @@ HeadlessWidget::Move(double aX, double aY)
 LayoutDeviceIntPoint
 HeadlessWidget::WidgetToScreenOffset()
 {
-  return LayoutDeviceIntPoint(mBounds.x, mBounds.y);
+  return mTopLevel->GetBounds().TopLeft();
 }
 
 LayerManager*
@@ -425,6 +431,25 @@ HeadlessWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
 }
 
 nsresult
+HeadlessWidget::AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent)
+{
+  HeadlessKeyBindings& bindings = HeadlessKeyBindings::GetInstance();
+  return bindings.AttachNativeKeyEvent(aEvent);
+}
+
+void
+HeadlessWidget::GetEditCommands(NativeKeyBindingsType aType,
+                                const WidgetKeyboardEvent& aEvent,
+                                nsTArray<CommandInt>& aCommands)
+{
+  // Validate the arguments.
+  nsIWidget::GetEditCommands(aType, aEvent, aCommands);
+
+  HeadlessKeyBindings& bindings = HeadlessKeyBindings::GetInstance();
+  bindings.GetEditCommands(aType, aEvent, aCommands);
+}
+
+nsresult
 HeadlessWidget::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
 {
 #ifdef DEBUG
@@ -488,10 +513,11 @@ HeadlessWidget::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint a
                                                  nsIObserver* aObserver)
 {
   AutoObserverNotifier notifier(aObserver, "mousescrollevent");
+  printf(">>> DEBUG_ME: Synth: aDeltaY=%f\n", aDeltaY);
   // The various platforms seem to handle scrolling deltas differently,
   // but the following seems to emulate it well enough.
   WidgetWheelEvent event(true, eWheel, this);
-  event.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
+  event.mDeltaMode = MOZ_HEADLESS_SCROLL_DELTA_MODE;
   event.mIsNoLineOrPageDelta = true;
   event.mDeltaX = -aDeltaX * MOZ_HEADLESS_SCROLL_MULTIPLIER;
   event.mDeltaY = -aDeltaY * MOZ_HEADLESS_SCROLL_MULTIPLIER;

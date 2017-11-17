@@ -113,7 +113,9 @@ class CMS(object):
             raise pykey.UnknownHashAlgorithmError(pykeyHash)
         algorithmIdentifier = rfc2459.AlgorithmIdentifier()
         algorithmIdentifier['algorithm'] = univ.ObjectIdentifier(oidString)
-        algorithmIdentifier['parameters'] = univ.Null()
+        # Directly setting parameters to univ.Null doesn't currently work.
+        nullEncapsulated = encoder.encode(univ.Null())
+        algorithmIdentifier['parameters'] = univ.Any(nullEncapsulated)
         return algorithmIdentifier
 
     def buildSignerInfo(self, certificate, pykeyHash, digestValue):
@@ -192,7 +194,7 @@ class CMS(object):
         while b64:
             output += '\n' + b64[:64]
             b64 = b64[64:]
-        output += '\n-----END PKCS7-----'
+        output += '\n-----END PKCS7-----\n'
         return output
 
 

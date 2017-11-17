@@ -933,7 +933,7 @@ var ActivityStreamProvider = {
       aUri,
       // Package up the icon data in an object if we have it; otherwise null
       (iconUri, faviconLength, favicon, mimeType, faviconSize) =>
-        resolve(iconUri ? {favicon, faviconLength, faviconSize, mimeType} : null),
+        resolve(iconUri ? {favicon, faviconLength, faviconRef: iconUri.ref, faviconSize, mimeType} : null),
       preferredWidth));
   },
 

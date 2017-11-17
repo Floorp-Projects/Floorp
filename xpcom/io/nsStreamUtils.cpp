@@ -744,7 +744,8 @@ TestInputStream(nsIInputStream* aInStr,
 {
   bool* result = static_cast<bool*>(aClosure);
   *result = true;
-  return NS_ERROR_ABORT;  // don't call me anymore
+  *aCountWritten = 0;
+  return NS_ERROR_ABORT; // don't call me anymore
 }
 
 bool
@@ -771,7 +772,8 @@ TestOutputStream(nsIOutputStream* aOutStr,
 {
   bool* result = static_cast<bool*>(aClosure);
   *result = true;
-  return NS_ERROR_ABORT;  // don't call me anymore
+  *aCountRead = 0;
+  return NS_ERROR_ABORT; // don't call me anymore
 }
 
 bool

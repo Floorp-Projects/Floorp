@@ -63,7 +63,7 @@ public:
   // when the resource has a network error during loading.
   // The decoder owner should call Shutdown() on the decoder and drop the
   // reference to the decoder to prevent further calls into the decoder.
-  virtual void NetworkError() = 0;
+  virtual void NetworkError(const MediaResult& aError) = 0;
 
   // Called by the decoder object, on the main thread, when the
   // resource has a decode error during metadata loading or decoding.

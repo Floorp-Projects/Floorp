@@ -26,8 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1130028
   SimpleTest.waitForExplicitFinish();
 
   function finishTest(canSeePrototype) {
-    ok(true, "createdCallback called when reigsterElement was called with an extended principal.");
-    ok(canSeePrototype, "createdCallback should be able to see custom prototype.");
+    ok(true, "connectedCallback called when reigsterElement was called with an extended principal.");
+    ok(canSeePrototype, "connectedCallback should be able to see custom prototype.");
     SimpleTest.finish();
   }
 

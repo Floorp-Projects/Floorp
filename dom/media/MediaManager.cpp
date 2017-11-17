@@ -1792,7 +1792,6 @@ MediaManager::MediaManager()
   mPrefs.mWidth        = 0; // adaptive default
   mPrefs.mHeight       = 0; // adaptive default
   mPrefs.mFPS          = MediaEngine::DEFAULT_VIDEO_FPS;
-  mPrefs.mMinFPS       = MediaEngine::DEFAULT_VIDEO_MIN_FPS;
   mPrefs.mAecOn        = false;
   mPrefs.mAgcOn        = false;
   mPrefs.mNoiseOn      = false;
@@ -1808,7 +1807,6 @@ MediaManager::MediaManager()
   mPrefs.mAgc          = 0;
   mPrefs.mNoise        = 0;
 #endif
-  mPrefs.mPlayoutDelay = 0;
   mPrefs.mFullDuplex = false;
   mPrefs.mChannels     = 0; // max channels default
   nsresult rv;
@@ -1819,14 +1817,14 @@ MediaManager::MediaManager()
       GetPrefs(branch, nullptr);
     }
   }
-  LOG(("%s: default prefs: %dx%d @%dfps (min %d), %dHz test tones, aec: %s,"
+  LOG(("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s,"
        "agc: %s, noise: %s, aec level: %d, agc level: %d, noise level: %d,"
-       "playout delay: %d, %sfull_duplex, extended aec %s, delay_agnostic %s "
+       "%sfull_duplex, extended aec %s, delay_agnostic %s "
        "channels %d",
        __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight,
-       mPrefs.mFPS, mPrefs.mMinFPS, mPrefs.mFreq, mPrefs.mAecOn ? "on" : "off",
+       mPrefs.mFPS, mPrefs.mFreq, mPrefs.mAecOn ? "on" : "off",
        mPrefs.mAgcOn ? "on": "off", mPrefs.mNoiseOn ? "on": "off", mPrefs.mAec,
-       mPrefs.mAgc, mPrefs.mNoise, mPrefs.mPlayoutDelay, mPrefs.mFullDuplex ? "" : "not ",
+       mPrefs.mAgc, mPrefs.mNoise, mPrefs.mFullDuplex ? "" : "not ",
        mPrefs.mExtendedFilter ? "on" : "off", mPrefs.mDelayAgnostic ? "on" : "off",
        mPrefs.mChannels));
 }
@@ -1889,7 +1887,6 @@ MediaManager::Get() {
       prefs->AddObserver("media.navigator.video.default_width", sSingleton, false);
       prefs->AddObserver("media.navigator.video.default_height", sSingleton, false);
       prefs->AddObserver("media.navigator.video.default_fps", sSingleton, false);
-      prefs->AddObserver("media.navigator.video.default_minfps", sSingleton, false);
       prefs->AddObserver("media.navigator.audio.fake_frequency", sSingleton, false);
       prefs->AddObserver("media.navigator.audio.full_duplex", sSingleton, false);
 #ifdef MOZ_WEBRTC
@@ -1899,7 +1896,6 @@ MediaManager::Get() {
       prefs->AddObserver("media.getusermedia.agc", sSingleton, false);
       prefs->AddObserver("media.getusermedia.noise_enabled", sSingleton, false);
       prefs->AddObserver("media.getusermedia.noise", sSingleton, false);
-      prefs->AddObserver("media.getusermedia.playout_delay", sSingleton, false);
       prefs->AddObserver("media.ondevicechange.fakeDeviceChangeEvent.enabled", sSingleton, false);
       prefs->AddObserver("media.getusermedia.channels", sSingleton, false);
 #endif
@@ -3070,7 +3066,6 @@ MediaManager::GetPrefs(nsIPrefBranch *aBranch, const char *aData)
   GetPref(aBranch, "media.navigator.video.default_width", aData, &mPrefs.mWidth);
   GetPref(aBranch, "media.navigator.video.default_height", aData, &mPrefs.mHeight);
   GetPref(aBranch, "media.navigator.video.default_fps", aData, &mPrefs.mFPS);
-  GetPref(aBranch, "media.navigator.video.default_minfps", aData, &mPrefs.mMinFPS);
   GetPref(aBranch, "media.navigator.audio.fake_frequency", aData, &mPrefs.mFreq);
 #ifdef MOZ_WEBRTC
   GetPrefBool(aBranch, "media.getusermedia.aec_enabled", aData, &mPrefs.mAecOn);
@@ -3079,7 +3074,6 @@ MediaManager::GetPrefs(nsIPrefBranch *aBranch, const char *aData)
   GetPref(aBranch, "media.getusermedia.aec", aData, &mPrefs.mAec);
   GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
   GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
-  GetPref(aBranch, "media.getusermedia.playout_delay", aData, &mPrefs.mPlayoutDelay);
   GetPrefBool(aBranch, "media.getusermedia.aec_extended_filter", aData, &mPrefs.mExtendedFilter);
   GetPrefBool(aBranch, "media.getusermedia.aec_aec_delay_agnostic", aData, &mPrefs.mDelayAgnostic);
   GetPref(aBranch, "media.getusermedia.channels", aData, &mPrefs.mChannels);
@@ -3110,7 +3104,6 @@ MediaManager::Shutdown()
     prefs->RemoveObserver("media.navigator.video.default_width", this);
     prefs->RemoveObserver("media.navigator.video.default_height", this);
     prefs->RemoveObserver("media.navigator.video.default_fps", this);
-    prefs->RemoveObserver("media.navigator.video.default_minfps", this);
     prefs->RemoveObserver("media.navigator.audio.fake_frequency", this);
 #ifdef MOZ_WEBRTC
     prefs->RemoveObserver("media.getusermedia.aec_enabled", this);
@@ -3119,7 +3112,6 @@ MediaManager::Shutdown()
     prefs->RemoveObserver("media.getusermedia.agc", this);
     prefs->RemoveObserver("media.getusermedia.noise_enabled", this);
     prefs->RemoveObserver("media.getusermedia.noise", this);
-    prefs->RemoveObserver("media.getusermedia.playout_delay", this);
     prefs->RemoveObserver("media.ondevicechange.fakeDeviceChangeEvent.enabled", this);
     prefs->RemoveObserver("media.getusermedia.channels", this);
 #endif
@@ -3229,8 +3221,8 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsIPrefBranch> branch( do_QueryInterface(aSubject) );
     if (branch) {
       GetPrefs(branch,NS_ConvertUTF16toUTF8(aData).get());
-      LOG(("%s: %dx%d @%dfps (min %d)", __FUNCTION__,
-           mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mMinFPS));
+      LOG(("%s: %dx%d @%dfps", __FUNCTION__,
+           mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS));
     }
   } else if (!strcmp(aTopic, "last-pb-context-exited")) {
     // Clear memory of private-browsing-specific deviceIds. Fire and forget.

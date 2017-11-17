@@ -200,9 +200,8 @@ add_task(async function test_extension_setting_home_page_back() {
 });
 
 add_task(async function test_disable() {
-  let defaultHomePage = getHomePageURL();
-
   const ID = "id@tests.mozilla.org";
+  let defaultHomePage = getHomePageURL();
 
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -222,24 +221,26 @@ add_task(async function test_disable() {
   await ext1.startup();
   await prefPromise;
 
-  ok(getHomePageURL().endsWith(HOME_URI_1),
+  is(getHomePageURL(), HOME_URI_1,
      "Home url should be overridden by the extension.");
 
   let addon = await AddonManager.getAddonByID(ID);
-  is(addon.id, ID);
+  is(addon.id, ID, "Found the correct add-on.");
 
+  let disabledPromise = awaitEvent("shutdown", ID);
   prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
   addon.userDisabled = true;
-  await prefPromise;
+  await Promise.all([disabledPromise, prefPromise]);
 
   is(getHomePageURL(), defaultHomePage,
      "Home url should be the default");
 
+  let enabledPromise = awaitEvent("ready", ID);
   prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
   addon.userDisabled = false;
-  await prefPromise;
+  await Promise.all([enabledPromise, prefPromise]);
 
-  ok(getHomePageURL().endsWith(HOME_URI_1),
+  is(getHomePageURL(), HOME_URI_1,
      "Home url should be overridden by the extension.");
 
   prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
