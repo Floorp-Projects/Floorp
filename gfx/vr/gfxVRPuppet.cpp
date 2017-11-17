@@ -289,6 +289,7 @@ VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
                              const gfx::Rect& aLeftEyeRect,
                              const gfx::Rect& aRightEyeRect)
 {
+  MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   if (!mIsPresenting) {
     return false;
   }
@@ -485,6 +486,7 @@ VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
                              const gfx::Rect& aLeftEyeRect,
                              const gfx::Rect& aRightEyeRect)
 {
+  MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   if (!mIsPresenting || !aMacIOSurface) {
     return false;
   }
@@ -558,8 +560,9 @@ VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
 bool
 VRDisplayPuppet::SubmitFrame(const mozilla::layers::EGLImageDescriptor* aDescriptor,
                            const gfx::Rect& aLeftEyeRect,
-                           const gfx::Rect& aRightEyeRect) {
-
+                           const gfx::Rect& aRightEyeRect)
+{
+  MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   return false;
 }
 
