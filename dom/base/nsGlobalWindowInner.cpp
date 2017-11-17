@@ -54,6 +54,7 @@
 #define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
 
 static bool                 gIdleObserversAPIFuzzTimeDisabled = false;
+static FILE                *gDumpFile                         = nullptr;
 
 nsGlobalWindowInner::InnerWindowByIdTable *nsGlobalWindowInner::sInnerWindowsById = nullptr;
 
@@ -868,7 +869,11 @@ nsGlobalWindowInner::ShutDown()
 {
   AssertIsOnMainThread();
 
-  // nsGlobalWindowOuter::ShutDown() handles closing gDumpFile.
+  if (gDumpFile && gDumpFile != stdout) {
+    fclose(gDumpFile);
+  }
+  gDumpFile = nullptr;
+
   delete sInnerWindowsById;
   sInnerWindowsById = nullptr;
 }

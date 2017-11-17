@@ -673,17 +673,6 @@ nsGlobalWindowOuter::nsGlobalWindowOuter()
 
   gRefCnt++;
 
-  if (gDumpFile == nullptr) {
-    nsAutoCString fname;
-    Preferences::GetCString("browser.dom.window.dump.file", fname);
-    if (!fname.IsEmpty()) {
-      // If this fails to open, Dump() knows to just go to stdout on null.
-      gDumpFile = fopen(fname.get(), "wb+");
-    } else {
-      gDumpFile = stdout;
-    }
-  }
-
   mSerial = ++gSerialCounter;
 
 #ifdef DEBUG
@@ -827,11 +816,6 @@ void
 nsGlobalWindowOuter::ShutDown()
 {
   AssertIsOnMainThread();
-
-  if (gDumpFile && gDumpFile != stdout) {
-    fclose(gDumpFile);
-  }
-  gDumpFile = nullptr;
 
   delete sOuterWindowsById;
   sOuterWindowsById = nullptr;
