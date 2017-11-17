@@ -82,7 +82,9 @@ AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy)
             UniqueFreePtr<char[]> realSysPath(realpath(sysPath.get(), nullptr));
             if (realSysPath) {
               nsPrintfCString ueventPath("%s/uevent", realSysPath.get());
+              nsPrintfCString configPath("%s/config", realSysPath.get());
               aPolicy->AddPath(rdonly, ueventPath.get());
+              aPolicy->AddPath(rdonly, configPath.get());
             }
           }
         }
