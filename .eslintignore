@@ -353,6 +353,7 @@ toolkit/components/microformats/test/**
 toolkit/components/microformats/microformat-shiv.js
 toolkit/components/reader/Readability.js
 toolkit/components/reader/JSDOMParser.js
+toolkit/components/payments/res/vendor/*
 
 # Uses preprocessing
 toolkit/content/widgets/wizard.xml
