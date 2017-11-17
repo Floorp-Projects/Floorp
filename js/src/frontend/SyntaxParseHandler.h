@@ -379,25 +379,8 @@ class SyntaxParseHandler
         return node == NodeVarDeclaration || node == NodeLexicalDeclaration;
     }
 
-    Node singleBindingFromDeclaration(Node decl) {
-        MOZ_ASSERT(isDeclarationList(decl));
-
-        // This is, unfortunately, very dodgy.  Obviously NodeVarDeclaration
-        // and NodeLexicalDeclaration can store no info on the arbitrary
-        // number of bindings it could contain.
-        //
-        // But this method is called only for cloning for-in/of declarations
-        // as initialization targets.  That context simplifies matters.  If the
-        // binding is a single name, it'll always syntax-parse (or it would
-        // already have been rejected as assigning/binding a forbidden name).
-        // Otherwise the binding is a destructuring pattern.  But syntax
-        // parsing would *already* have aborted when it saw a destructuring
-        // pattern.  So we can just say any old thing here, because the only
-        // time we'll be wrong is a case that syntax parsing has already
-        // rejected.  Use NodeName so the SyntaxParseHandler
-        // Parser::cloneLeftHandSide can assert it sees only this.
-        return NodeName;
-    }
+    // This method should only be called from parsers using FullParseHandler.
+    Node singleBindingFromDeclaration(Node decl) = delete;
 
     Node newCatchList(const TokenPos& pos) {
         return NodeGeneric;
