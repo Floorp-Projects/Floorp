@@ -198,7 +198,6 @@ protected:
     gfxContentType mBufferContentType;
     bool mCanReuseBuffer;
     bool mCanKeepBufferContents;
-    bool mMustRemoveFrontBuffer;
   };
 
   /**
@@ -213,8 +212,6 @@ protected:
                               const gfx::IntSize& aBufferSize,
                               const gfx::IntSize& aVisibleBoundsSize);
 
-  virtual RefPtr<RotatedBuffer> GetFrontBuffer() const;
-
   /**
    * Any actions that should be performed at the last moment before we begin
    * rendering the next frame. I.e., after we calculate what we will draw,
@@ -222,8 +219,9 @@ protected:
    * aRegionToDraw is the region which is guaranteed to be overwritten when
    * drawing the next frame.
    */
-  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw,
-                             CapturedBufferState* aState) {}
+  virtual Maybe<CapturedBufferState::Copy> FinalizeFrame(const nsIntRegion& aRegionToDraw) {
+    return Nothing();
+  }
 
   /**
    * Create a new rotated buffer for the specified content type, buffer rect,
@@ -366,10 +364,7 @@ public:
 
   virtual PaintState BeginPaint(PaintedLayer* aLayer, uint32_t aFlags) override;
 
-  virtual RefPtr<RotatedBuffer> GetFrontBuffer() const override;
-
-  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw,
-                             CapturedBufferState* aState) override;
+  virtual Maybe<CapturedBufferState::Copy> FinalizeFrame(const nsIntRegion& aRegionToDraw) override;
 
   virtual TextureInfo GetTextureInfo() const override
   {
@@ -377,6 +372,8 @@ public:
   }
 
 private:
+  void EnsureBackBufferIfFrontBuffer();
+
   RefPtr<RemoteRotatedBuffer> mFrontBuffer;
   nsIntRegion mFrontUpdatedRegion;
   bool mFrontAndBackBufferDiffer;

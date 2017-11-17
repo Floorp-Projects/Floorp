@@ -102,8 +102,9 @@ public:
   bool PrepareBuffer();
   void GetTextureClients(nsTArray<RefPtr<TextureClient>>& aTextureClients);
 
-  Maybe<Copy> mBufferCopy;
+  Maybe<Copy> mBufferFinalize;
   Maybe<Unrotate> mBufferUnrotate;
+  Maybe<Copy> mBufferInitialize;
 
 protected:
   ~CapturedBufferState() {}
