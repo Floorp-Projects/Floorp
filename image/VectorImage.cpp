@@ -742,7 +742,12 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
                             uint32_t aFlags)
 {
   auto result = GetFrameInternal(aSize, aWhichFrame, aFlags);
-  return Get<2>(result).forget();
+  RefPtr<SourceSurface> surf = Get<2>(result).forget();
+
+  // If we are here, it suggests the image is embedded in a canvas or some
+  // other path besides layers, and we won't need the file handle.
+  MarkSurfaceShared(surf);
+  return surf.forget();
 }
 
 Tuple<DrawResult, IntSize, RefPtr<SourceSurface>>
@@ -798,9 +803,17 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
                               mSVGDocumentWrapper->GetCurrentTime(),
                               aFlags, 1.0);
 
-  DrawInternal(params, false);
-  RefPtr<SourceSurface> sourceSurface = dt->Snapshot();
-  return MakeTuple(DrawResult::SUCCESS, aSize, Move(sourceSurface));
+  // DrawInternal may return a surface which is stored in the cache. It is
+  // important to prefer this result over the snapshot because it may be a
+  // different surface type (e.g. SourceSurfaceSharedData for WebRender). If
+  // we did not put anything in the cache, we will need to fallback to the
+  // snapshot surface.
+  RefPtr<SourceSurface> surface = DrawInternal(params, false);
+  if (!surface) {
+    surface = dt->Snapshot();
+  }
+
+  return MakeTuple(DrawResult::SUCCESS, aSize, Move(surface));
 }
 
 //******************************************************************************
@@ -954,11 +967,16 @@ VectorImage::Draw(gfxContext* aContext,
     return DrawResult::TEMPORARY_ERROR;
   }
 
-  DrawInternal(params, haveContextPaint && !blockContextPaint);
+  RefPtr<SourceSurface> surface =
+    DrawInternal(params, haveContextPaint && !blockContextPaint);
+
+  // Image got put into a painted layer, it will not be shared with another
+  // process.
+  MarkSurfaceShared(surface);
   return DrawResult::SUCCESS;
 }
 
-void
+already_AddRefed<SourceSurface>
 VectorImage::DrawInternal(const SVGDrawingParameters& aParams,
                           bool aContextPaint)
 {
@@ -985,7 +1003,7 @@ VectorImage::DrawInternal(const SVGDrawingParameters& aParams,
 
   // We didn't get a hit in the surface cache, so we'll need to rerasterize.
   BackendType backend = aParams.context->GetDrawTarget()->GetBackendType();
-  CreateSurfaceAndShow(aParams, backend);
+  return CreateSurfaceAndShow(aParams, backend);
 }
 
 already_AddRefed<SourceSurface>
@@ -1024,7 +1042,7 @@ VectorImage::LookupCachedSurface(const IntSize& aSize,
   return sourceSurface.forget();
 }
 
-void
+already_AddRefed<SourceSurface>
 VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams, BackendType aBackend)
 {
   mSVGDocumentWrapper->UpdateViewportBounds(aParams.viewportSize);
@@ -1046,7 +1064,8 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams, BackendTy
                      // The image is too big to fit in the cache:
                      !SurfaceCache::CanHold(aParams.size);
   if (bypassCache) {
-    return Show(svgDrawable, aParams);
+    Show(svgDrawable, aParams);
+    return nullptr;
   }
 
   // We're about to rerasterize, which may mean that some of the previous
@@ -1070,14 +1089,16 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams, BackendTy
   // up way too big. Generally it also wouldn't fit in the cache, but the prefs
   // could be set such that the cache isn't the limiting factor.
   if (NS_FAILED(rv)) {
-    return Show(svgDrawable, aParams);
+    Show(svgDrawable, aParams);
+    return nullptr;
   }
 
   // Take a strong reference to the frame's surface and make sure it hasn't
   // already been purged by the operating system.
   RefPtr<SourceSurface> surface = frame->GetSourceSurface();
   if (!surface) {
-    return Show(svgDrawable, aParams);
+    Show(svgDrawable, aParams);
+    return nullptr;
   }
 
   // Attempt to cache the frame.
@@ -1108,6 +1129,8 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams, BackendTy
       }
     }));
   }
+
+  return surface.forget();
 }
 
 
