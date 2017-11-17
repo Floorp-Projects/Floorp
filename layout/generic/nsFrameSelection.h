@@ -704,10 +704,6 @@ private:
   nsresult     UpdateSelectionCacheOnRepaintSelection(mozilla::dom::
                                                       Selection* aSel);
 
-  RefPtr<mozilla::dom::Selection>
-    mDomSelections[
-      sizeof(mozilla::kPresentSelectionTypes) / sizeof(mozilla::SelectionType)];
-
   // Table selection support.
   nsITableCellLayout* GetCellLayout(nsIContent *aCellContent) const;
 
@@ -735,20 +731,26 @@ private:
   nsIContent* GetParentTable(nsIContent *aCellNode) const;
   nsresult CreateAndAddRange(nsINode* aContainer, int32_t aOffset);
 
+  ////////////BEGIN nsFrameSelection members
+
+  RefPtr<mozilla::dom::Selection>
+    mDomSelections[
+      sizeof(mozilla::kPresentSelectionTypes) / sizeof(mozilla::SelectionType)];
+
   nsCOMPtr<nsINode> mCellParent; //used to snap to table selection
   nsCOMPtr<nsIContent> mStartSelectedCell;
   nsCOMPtr<nsIContent> mEndSelectedCell;
   nsCOMPtr<nsIContent> mAppendStartSelectedCell;
   nsCOMPtr<nsIContent> mUnselectCellOnMouseUp;
-  int32_t  mSelectingTableCellMode;
-  int32_t  mSelectedCellIndex;
+  int32_t  mSelectingTableCellMode = 0;
+  int32_t  mSelectedCellIndex = 0;
 
   // maintain selection
   RefPtr<nsRange> mMaintainRange;
   nsSelectionAmount mMaintainedAmount;
 
   //batching
-  int32_t mBatching;
+  int32_t mBatching = 0;
 
   // Limit selection navigation to a child of this node.
   nsCOMPtr<nsIContent> mLimiter;
@@ -756,26 +758,31 @@ private:
   nsCOMPtr<nsIContent> mAncestorLimiter;
 
   nsIPresShell *mShell;
+  // Reason for notifications of selection changing.
+  int16_t mSelectionChangeReason = nsISelectionListener::NO_REASON;
+  // For visual display purposes.
+  int16_t mDisplaySelection = nsISelectionController::SELECTION_OFF;
 
-  int16_t mSelectionChangeReason; // reason for notifications of selection changing
-  int16_t mDisplaySelection; //for visual display purposes.
-
-  CaretAssociateHint mHint;   //hint to tell if the selection is at the end of this line or beginning of next
-  nsBidiLevel mCaretBidiLevel;
-  nsBidiLevel mKbdBidiLevel;
+  // Hint to tell if the selection is at the end of this line or beginning of next.
+  CaretAssociateHint mHint = mozilla::CARET_ASSOCIATE_BEFORE;
+  nsBidiLevel mCaretBidiLevel = BIDI_LEVEL_UNDEFINED;
+  nsBidiLevel mKbdBidiLevel = NSBIDI_LTR;
 
   nsPoint mDesiredPos;
-  uint32_t mDelayedMouseEventClickCount;
-  bool mDelayedMouseEventIsShift;
-  bool mDelayedMouseEventValid;
+  bool mDelayedMouseEventValid = false;
+  // These values are not used since they are only valid when
+  // mDelayedMouseEventValid is true, and setting mDelayedMouseEventValid
+  // always overrides these values.
+  uint32_t mDelayedMouseEventClickCount = 0;
+  bool mDelayedMouseEventIsShift = false;
 
-  bool mChangesDuringBatching;
-  bool mNotifyFrames;
-  bool mDragSelectingCells;
+  bool mChangesDuringBatching = false;
+  bool mNotifyFrames = true;
+  bool mDragSelectingCells = false;
   bool mDragState;   //for drag purposes
-  bool mMouseDoubleDownState; //has the doubleclick down happened
-  bool mDesiredPosSet;
-  bool mAccessibleCaretEnabled;
+  bool mMouseDoubleDownState = false; //has the doubleclick down happened
+  bool mDesiredPosSet = false;
+  bool mAccessibleCaretEnabled = false;
 
   int8_t mCaretMovementStyle;
 
