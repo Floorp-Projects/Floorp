@@ -56,7 +56,6 @@ function search_observer(subject, topic, data) {
 }
 
 function run_test() {
-  removeMetadata();
   useHttpServer();
 
   do_register_cleanup(function cleanup() {
