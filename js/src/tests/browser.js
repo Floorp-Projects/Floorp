@@ -445,50 +445,7 @@
         properties[fields[i]] = true;
       } else {
         properties[propertycaptures[1]] = decodeURIComponent(propertycaptures[2]);
-        if (propertycaptures[1] === "language") {
-          // language=(type|language);mimetype
-          properties.mimetype = fields[i + 1];
-        }
       }
-    }
-
-    if (properties.language !== "type") {
-      var mimetypeVersion = /javascript([.0-9]+)/.exec(properties.mimetype);
-      if (mimetypeVersion !== null) {
-        properties.version = mimetypeVersion[1];
-      }
-    }
-
-    if (!properties.version && navigator.userAgent.indexOf("Gecko/") !== -1) {
-      // If the version is not specified, and the browser is Gecko,
-      // use the default version corresponding to the shell's version(0).
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=522760#c11
-      // Otherwise adjust the version to match the suite version for 1.6,
-      // and later due to the use of for-each, let, yield, etc.
-      //
-      // The logic to upgrade the JS version in the shell lives in the
-      // corresponding shell.js.
-      //
-      // Note that js1_8, js1_8_1, and js1_8_5 are treated identically in
-      // the browser.
-      var versions = [
-         { path: "js1_6", version: "1.6" },
-         { path: "js1_7", version: "1.7" },
-         { path: "js1_8", version: "1.8" },
-      ];
-      for (var {path, version} of versions) {
-        if (properties.test.startsWith(path)) {
-          properties.version = version;
-          break;
-        }
-      }
-    }
-
-    // default to language=type;text/javascript. required for
-    // reftest style manifests.
-    if (!properties.language) {
-      properties.language = "type";
-      properties.mimetype = "text/javascript";
     }
 
     global.gTestPath = properties.test;
@@ -538,24 +495,9 @@
     scripts.push({src: "js-test-driver-end.js", module: false});
 
     if (!moduleTest) {
-      var key, value;
-      if (properties.language !== "type") {
-        key = "language";
-        value = "javascript";
-        if (properties.version) {
-          value += properties.version;
-        }
-      } else {
-        key = "type";
-        value = properties.mimetype;
-        if (properties.version) {
-          value += ";version=" + properties.version;
-        }
-      }
-
       for (var i = 0; i < scripts.length; i++) {
         var src = scripts[i].src;
-        document.write(`<script src="${src}" charset="utf-8" ${key}="${value}"><\/script>`);
+        document.write(`<script src="${src}" charset="utf-8"><\/script>`);
       }
     } else {
       // Modules are loaded asynchronously by default, but for the test harness

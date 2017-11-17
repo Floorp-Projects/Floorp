@@ -21,10 +21,6 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
-
-// various versions of JavaScript -
-var JS_VER = [100, 110, 120, 130, 140, 150];
-
 // Note contrast with local variables i,j,k defined below -
 var i = 999;
 var j = 999;
@@ -41,20 +37,9 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  // Run tests A,B,C on each version of JS and store results
-  for (var n=0; n!=JS_VER.length; n++)
-  {
-    testA(JS_VER[n]);
-  }
-  for (var n=0; n!=JS_VER.length; n++)
-  {
-    testB(JS_VER[n]);
-  }
-  for (var n=0; n!=JS_VER.length; n++)
-  {
-    testC(JS_VER[n]);
-  }
-
+  testA();
+  testB();
+  testC();
 
   // Compare actual values to expected values -
   for (var i=0; i<UBound; i++)
@@ -64,19 +49,13 @@ function test()
 }
 
 
-function testA(ver)
+function testA()
 {
-  // Set the version of JS to test -
-  if (typeof version == 'function')
-  {
-    version(ver);
-  }
-
   // eval the test, so it compiles AFTER version() has executed -
   var sTestScript = "";
 
   // Define a local variable i
-  sTestScript += "status = 'Section A of test; JS ' + ver/100;";
+  sTestScript += "status = 'Section A of test';";
   sTestScript += "var i=1;";
   sTestScript += "actual = eval('i');";
   sTestScript += "expect = 1;";
@@ -86,19 +65,13 @@ function testA(ver)
 }
 
 
-function testB(ver)
+function testB()
 {
-  // Set the version of JS to test -
-  if (typeof version == 'function')
-  {
-    version(ver);
-  }
-
   // eval the test, so it compiles AFTER version() has executed -
   var sTestScript = "";
 
   // Define a local for-loop iterator j
-  sTestScript += "status = 'Section B of test; JS ' + ver/100;";
+  sTestScript += "status = 'Section B of test';";
   sTestScript += "for(var j=1; j<2; j++)";
   sTestScript += "{";
   sTestScript += "  actual = eval('j');";
@@ -110,19 +83,13 @@ function testB(ver)
 }
 
 
-function testC(ver)
+function testC()
 {
-  // Set the version of JS to test -
-  if (typeof version == 'function')
-  {
-    version(ver);
-  }
-
   // eval the test, so it compiles AFTER version() has executed -
   var sTestScript = "";
 
   // Define a local variable k in a try-catch block -
-  sTestScript += "status = 'Section C of test; JS ' + ver/100;";
+  sTestScript += "status = 'Section C of test';";
   sTestScript += "try";
   sTestScript += "{";
   sTestScript += "  var k=1;";
