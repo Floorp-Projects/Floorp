@@ -53,6 +53,7 @@ public:
   NS_IMETHOD_(already_AddRefed<layers::ImageContainer>)
     GetImageContainerAtSize(layers::LayerManager* aManager,
                             const gfx::IntSize& aSize,
+                            const Maybe<SVGImageContext>& aSVGContext,
                             uint32_t aFlags) override;
   NS_IMETHOD_(DrawResult) Draw(gfxContext* aContext,
                                const nsIntSize& aSize,
