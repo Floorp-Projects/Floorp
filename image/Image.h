@@ -344,11 +344,6 @@ protected:
     return MakePair(DrawResult::BAD_IMAGE, RefPtr<gfx::SourceSurface>());
   }
 
-  Pair<DrawResult, RefPtr<layers::Image>>
-    GetCurrentImage(layers::ImageContainer* aContainer,
-                    const gfx::IntSize& aSize,
-                    uint32_t aFlags);
-
   already_AddRefed<layers::ImageContainer>
     GetImageContainerImpl(layers::LayerManager* aManager,
                           const gfx::IntSize& aSize,
@@ -359,6 +354,11 @@ protected:
   void ReleaseImageContainer();
 
 private:
+  DrawResult AddCurrentImage(layers::ImageContainer* aContainer,
+                             const gfx::IntSize& aSize,
+                             uint32_t aFlags,
+                             bool aInTransaction);
+
   // A weak pointer to our ImageContainer, which stays alive only as long as
   // the layer system needs it.
   WeakPtr<layers::ImageContainer> mImageContainer;
