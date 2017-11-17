@@ -432,32 +432,23 @@ pref_EntryHasAdvisablySizedValues(PrefHashEntry* aPref)
 }
 
 static void
-GetPrefValueFromEntry(PrefHashEntry* aPref,
-                      dom::PrefSetting* aSetting,
-                      PrefValueKind aKind)
+AssignPrefValueToDomPrefValue(PrefType aType,
+                              PrefValue* aValue,
+                              dom::PrefValue* aDomValue)
 {
-  PrefValue* value;
-  dom::PrefValue* settingValue;
-  if (aKind == PrefValueKind::User) {
-    value = &aPref->mUserValue;
-    aSetting->userValue() = dom::PrefValue();
-    settingValue = &aSetting->userValue().get_PrefValue();
-  } else {
-    value = &aPref->mDefaultValue;
-    aSetting->defaultValue() = dom::PrefValue();
-    settingValue = &aSetting->defaultValue().get_PrefValue();
-  }
-
-  switch (aPref->Type()) {
+  switch (aType) {
     case PrefType::String:
-      *settingValue = nsDependentCString(value->mStringVal);
+      *aDomValue = nsDependentCString(aValue->mStringVal);
       return;
+
     case PrefType::Int:
-      *settingValue = value->mIntVal;
+      *aDomValue = aValue->mIntVal;
       return;
+
     case PrefType::Bool:
-      *settingValue = !!value->mBoolVal;
+      *aDomValue = !!aValue->mBoolVal;
       return;
+
     default:
       MOZ_CRASH();
   }
@@ -469,13 +460,19 @@ pref_GetPrefFromEntry(PrefHashEntry* aPref, dom::PrefSetting* aSetting)
   aSetting->name() = aPref->mKey;
 
   if (aPref->HasDefaultValue()) {
-    GetPrefValueFromEntry(aPref, aSetting, PrefValueKind::Default);
+    aSetting->defaultValue() = dom::PrefValue();
+    AssignPrefValueToDomPrefValue(aPref->Type(),
+                                  &aPref->mDefaultValue,
+                                  &aSetting->defaultValue().get_PrefValue());
   } else {
     aSetting->defaultValue() = null_t();
   }
 
   if (aPref->HasUserValue()) {
-    GetPrefValueFromEntry(aPref, aSetting, PrefValueKind::User);
+    aSetting->userValue() = dom::PrefValue();
+    AssignPrefValueToDomPrefValue(aPref->Type(),
+                                  &aPref->mUserValue,
+                                  &aSetting->userValue().get_PrefValue());
   } else {
     aSetting->userValue() = null_t();
   }
