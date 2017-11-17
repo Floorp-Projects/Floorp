@@ -6345,7 +6345,7 @@ nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
       nsAutoMicroTask mt;
       AutoEntryScript aes(this, reason, true);
       JS::CompileOptions options(aes.cx());
-      options.setFileAndLine(filename, lineNo).setVersion(JSVERSION_DEFAULT);
+      options.setFileAndLine(filename, lineNo);
       options.setNoScriptRval(true);
       JS::Rooted<JSObject*> global(aes.cx(), FastGetGlobalJSObject());
       nsresult rv = NS_OK;

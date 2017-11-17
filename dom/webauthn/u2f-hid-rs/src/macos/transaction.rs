@@ -6,8 +6,7 @@ extern crate libc;
 
 use core_foundation_sys::runloop::*;
 use libc::c_void;
-use platform::iohid::CFRunLoopEntryObserver;
-use platform::iokit::{IOHIDDeviceRef, SendableRunLoop};
+use platform::iokit::{CFRunLoopEntryObserver, IOHIDDeviceRef, SendableRunLoop};
 use platform::monitor::Monitor;
 use std::io;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -19,7 +18,7 @@ use util::{io_err, to_io_err, OnceCallback};
 // fail through user action, timeout, or be cancelled when overridden by a new
 // transaction.
 pub struct Transaction {
-    runloop: SendableRunLoop,
+    runloop: Option<SendableRunLoop>,
     thread: Option<thread::JoinHandle<()>>,
 }
 
@@ -30,7 +29,6 @@ impl Transaction {
         T: 'static,
     {
         let (tx, rx) = channel();
-        let cbc = callback.clone();
         let timeout = (timeout as f64) / 1000.0;
 
         let builder = thread::Builder::new();
@@ -45,7 +43,7 @@ impl Transaction {
 
             // Create a new HID device monitor and start polling.
             let mut monitor = Monitor::new(new_device_cb);
-            try_or!(monitor.start(), |e| cbc.call(Err(e)));
+            try_or!(monitor.start(), |e| callback.call(Err(e)));
 
             // This will block until completion, abortion, or timeout.
             unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, timeout, 0) };
@@ -54,14 +52,14 @@ impl Transaction {
             monitor.stop();
 
             // Send an error, if the callback wasn't called already.
-            cbc.call(Err(io_err("aborted or timed out")));
+            callback.call(Err(io_err("aborted or timed out")));
         })?;
 
         // Block until we enter the CFRunLoop.
         let runloop = rx.recv().map_err(to_io_err)?;
 
         Ok(Self {
-            runloop,
+            runloop: Some(runloop),
             thread: Some(thread),
         })
     }
@@ -70,12 +68,12 @@ impl Transaction {
         let tx: &Sender<SendableRunLoop> = unsafe { &*(context as *mut _) };
 
         // Send the current runloop to the receiver to unblock it.
-        let _ = tx.send(SendableRunLoop(unsafe { CFRunLoopGetCurrent() }));
+        let _ = tx.send(SendableRunLoop::new(unsafe { CFRunLoopGetCurrent() }));
     }
 
     pub fn cancel(&mut self) {
-        // (This call doesn't block.)
-        unsafe { CFRunLoopStop(*self.runloop) };
+        // This must never be None. This won't block.
+        unsafe { CFRunLoopStop(*self.runloop.take().unwrap()) };
 
         // This must never be None. Ignore return value.
         let _ = self.thread.take().unwrap().join();

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Test for aborting W3C Web Authentication request</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>Test for aborting W3C Web Authentication request</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1415675">Mozilla Bug 1415675</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    function arrivingHereIsBad(aResult) {
+      ok(false, "Bad result! Received a: " + aResult);
+    }
+
+    function expectAbortError(aResult) {
+      is(aResult.code, DOMException.ABORT_ERR, "Expecting an AbortError");
+    }
+
+    add_task(() => {
+      // Enable USB tokens.
+      return SpecialPowers.pushPrefEnv({"set": [
+        ["security.webauth.webauthn", true],
+        ["security.webauth.webauthn_enable_softtoken", false],
+        ["security.webauth.webauthn_enable_usbtoken", true],
+      ]});
+    });
+
+    // Start a new MakeCredential() request.
+    function requestMakeCredential(signal) {
+      let publicKey = {
+        rp: {id: document.domain, name: "none", icon: "none"},
+        user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        timeout: 5000, // the minimum timeout is actually 15 seconds
+        pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+      };
+
+      return navigator.credentials.create({publicKey, signal});
+    }
+
+    // Start a new GetAssertion() request.
+    async function requestGetAssertion(signal) {
+      let newCredential = {
+        type: "public-key",
+        id: crypto.getRandomValues(new Uint8Array(16)),
+        transports: ["usb"],
+      };
+
+      let publicKey = {
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        timeout: 5000, // the minimum timeout is actually 15 seconds
+        rpId: document.domain,
+        allowCredentials: [newCredential]
+      };
+
+      // Start the request, handle failures only.
+      return navigator.credentials.get({publicKey, signal});
+    }
+
+    // Create an AbortController and abort immediately.
+    add_task(async () => {
+      let ctrl = new AbortController();
+      ctrl.abort();
+
+      // The event shouldn't fire.
+      ctrl.signal.onabort = arrivingHereIsBad;
+
+      // MakeCredential() should abort immediately.
+      await requestMakeCredential(ctrl.signal)
+        .then(arrivingHereIsBad)
+        .catch(expectAbortError);
+
+      // GetAssertion() should abort immediately.
+      await requestGetAssertion(ctrl.signal)
+        .then(arrivingHereIsBad)
+        .catch(expectAbortError);
+    });
+
+    // Request a new credential and abort the request.
+    add_task(async () => {
+      let aborted = false;
+      let ctrl = new AbortController();
+
+      ctrl.signal.onabort = () => {
+        ok(!aborted, "abort event fired once");
+        aborted = true;
+      };
+
+      // Request a new credential.
+      let request = requestMakeCredential(ctrl.signal)
+        .then(arrivingHereIsBad)
+        .catch(err => {
+          ok(aborted, "abort event was fired");
+          expectAbortError(err);
+        });
+
+      // Wait a tick for the statemachine to start.
+      await Promise.resolve();
+
+      // Abort the request.
+      ok(!aborted, "request still pending");
+      ctrl.abort();
+      ok(aborted, "request aborted");
+
+      // Wait for the request to terminate.
+      await request;
+    });
+
+    // Request a new assertion and abort the request.
+    add_task(async () => {
+      let aborted = false;
+      let ctrl = new AbortController();
+
+      ctrl.signal.onabort = () => {
+        ok(!aborted, "abort event fired once");
+        aborted = true;
+      };
+
+      // Request a new assertion.
+      let request = requestGetAssertion(ctrl.signal)
+        .then(arrivingHereIsBad)
+        .catch(err => {
+          ok(aborted, "abort event was fired");
+          expectAbortError(err);
+        });
+
+      // Wait a tick for the statemachine to start.
+      await Promise.resolve();
+
+      // Abort the request.
+      ok(!aborted, "request still pending");
+      ctrl.abort();
+      ok(aborted, "request aborted");
+
+      // Wait for the request to terminate.
+      await request;
+    });
+  </script>
+
+</body>
+</html>

@@ -263,20 +263,18 @@ GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe, Offsets* offsets
     offsets->begin = masm.currentOffset();
 
     // Save the return address if it wasn't already saved by the call insn.
-#if defined(JS_CODEGEN_ARM)
-    masm.push(lr);
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    masm.push(ra);
+#ifdef JS_USE_LINK_REGISTER
+    masm.pushReturnAddress();
 #endif
 
     // Save all caller non-volatile registers before we clobber them here and in
-    // the asm.js callee (which does not preserve non-volatile registers).
+    // the wasm callee (which does not preserve non-volatile registers).
     masm.setFramePushed(0);
     masm.PushRegsInMask(NonVolatileRegs);
     MOZ_ASSERT(masm.framePushed() == NonVolatileRegsPushSize);
 
     // Put the 'argv' argument into a non-argument/return/TLS register so that
-    // we can use 'argv' while we fill in the arguments for the asm.js callee.
+    // we can use 'argv' while we fill in the arguments for the wasm callee.
     // Use a second non-argument/return register as temporary scratch.
     Register argv = ABINonArgReturnReg0;
     Register scratch = ABINonArgReturnReg1;
@@ -762,8 +760,7 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
     masm.branch32(Assembler::Above, scratch, Imm32(fi.sig().args().length()), &rectify);
 
     // 7. If we haven't rectified arguments, load callee executable entry point
-    masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
-    masm.loadBaselineOrIonNoArgCheck(callee, callee, nullptr);
+    masm.loadJitCodeNoArgCheck(callee, callee, nullptr);
 
     Label rejoinBeforeCall;
     masm.bind(&rejoinBeforeCall);

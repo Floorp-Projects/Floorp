@@ -1672,17 +1672,19 @@ MacroAssembler::assertRectifierFrameParentType(Register frameType)
 }
 
 void
-MacroAssembler::loadBaselineOrIonRaw(Register script, Register dest, Label* failure)
+MacroAssembler::loadJitCodeRaw(Register func, Register dest, Label* failure)
 {
-    loadPtr(Address(script, JSScript::offsetOfBaselineOrIonRaw()), dest);
+    loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
+    loadPtr(Address(dest, JSScript::offsetOfBaselineOrIonRaw()), dest);
     if (failure)
         branchTestPtr(Assembler::Zero, dest, dest, failure);
 }
 
 void
-MacroAssembler::loadBaselineOrIonNoArgCheck(Register script, Register dest, Label* failure)
+MacroAssembler::loadJitCodeNoArgCheck(Register func, Register dest, Label* failure)
 {
-    loadPtr(Address(script, JSScript::offsetOfBaselineOrIonSkipArgCheck()), dest);
+    loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
+    loadPtr(Address(dest, JSScript::offsetOfBaselineOrIonSkipArgCheck()), dest);
     if (failure)
         branchTestPtr(Assembler::Zero, dest, dest, failure);
 }
@@ -2940,7 +2942,7 @@ MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc, const wasm::Calle
     uint32_t globalDataOffset = callee.importGlobalDataOffset();
     loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, code), ABINonArgReg0);
 
-    MOZ_ASSERT(ABINonArgReg0 != WasmTlsReg, "by constraint");
+    static_assert(ABINonArgReg0 != WasmTlsReg, "by constraint");
 
     // Switch to the callee's TLS and pinned registers and make the call.
     loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, tls), WasmTlsReg);

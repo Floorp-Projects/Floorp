@@ -81,12 +81,33 @@ protected:
   virtual bool     ShouldAnimate() override;
 
 private:
-  /// Attempt to find a cached surface matching @aParams in the SurfaceCache.
-  already_AddRefed<gfxDrawable>
-    LookupCachedSurface(const SVGDrawingParameters& aParams);
+  Tuple<DrawResult, IntSize, RefPtr<SourceSurface>>
+    GetFrameInternal(const IntSize& aSize,
+                     const Maybe<SVGImageContext>& aSVGContext,
+                     uint32_t aWhichFrame,
+                     uint32_t aFlags) override;
 
-  void CreateSurfaceAndShow(const SVGDrawingParameters& aParams,
-                            gfx::BackendType aBackend);
+  IntSize GetImageContainerSize(layers::LayerManager* aManager,
+                                const IntSize& aSize,
+                                uint32_t aFlags) override;
+
+  /// Attempt to find a matching cached surface in the SurfaceCache.
+  already_AddRefed<SourceSurface>
+    LookupCachedSurface(const IntSize& aSize,
+                        const Maybe<SVGImageContext>& aSVGContext,
+                        uint32_t aFlags);
+
+  bool MaybeRestrictSVGContext(Maybe<SVGImageContext>& aNewSVGContext,
+                               const Maybe<SVGImageContext>& aSVGContext,
+                               uint32_t aFlags);
+
+  already_AddRefed<SourceSurface>
+    DrawInternal(const SVGDrawingParameters& aParams, bool aContextPaint);
+
+  already_AddRefed<SourceSurface>
+    CreateSurfaceAndShow(const SVGDrawingParameters& aParams,
+                         gfx::BackendType aBackend);
+
   void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams);
 
   nsresult Init(const char* aMimeType, uint32_t aFlags);

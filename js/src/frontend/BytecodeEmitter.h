@@ -346,7 +346,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter
         varEmitterScope = emitterScope;
     }
 
-    Scope* bodyScope() const { return scopeList.vector[bodyScopeIndex]; }
     Scope* outermostScope() const { return scopeList.vector[0]; }
     Scope* innermostScope() const;
 
@@ -393,7 +392,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     SrcNotesVector& notes() const { return current->notes; }
     ptrdiff_t lastNoteOffset() const { return current->lastNoteOffset; }
     unsigned currentLine() const { return current->currentLine; }
-    unsigned lastColumn() const { return current->lastColumn; }
 
     // Check if the last emitted opcode is a jump target.
     bool lastOpcodeIsJumpTarget() const {

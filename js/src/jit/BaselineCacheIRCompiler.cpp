@@ -623,8 +623,7 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
 
         masm.loadPtr(getterAddr, callee);
         masm.branchIfFunctionHasNoScript(callee, failure->label());
-        masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), code);
-        masm.loadBaselineOrIonRaw(code, code, failure->label());
+        masm.loadJitCodeRaw(callee, code, failure->label());
     }
 
     allocator.discardStack(masm);
@@ -1723,8 +1722,7 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
 
         masm.loadPtr(setterAddr, scratch1);
         masm.branchIfFunctionHasNoScript(scratch1, failure->label());
-        masm.loadPtr(Address(scratch1, JSFunction::offsetOfNativeOrScript()), scratch2);
-        masm.loadBaselineOrIonRaw(scratch2, scratch2, failure->label());
+        masm.loadJitCodeRaw(scratch1, scratch2, failure->label());
     }
 
     allocator.discardStack(masm);
@@ -1755,8 +1753,7 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
     // Load callee->nargs in scratch2 and the JIT code in scratch.
     Label noUnderflow;
     masm.load16ZeroExtend(Address(scratch1, JSFunction::offsetOfNargs()), scratch2);
-    masm.loadPtr(Address(scratch1, JSFunction::offsetOfNativeOrScript()), scratch1);
-    masm.loadBaselineOrIonRaw(scratch1, scratch1, nullptr);
+    masm.loadJitCodeRaw(scratch1, scratch1, nullptr);
 
     // Handle arguments underflow.
     masm.branch32(Assembler::BelowOrEqual, scratch2, Imm32(1), &noUnderflow);

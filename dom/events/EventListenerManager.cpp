@@ -1056,7 +1056,6 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   // Use line 0 to make the function body starts from line 1.
   options.setIntroductionType("eventHandler")
          .setFileAndLine(url.get(), 0)
-         .setVersion(JSVERSION_DEFAULT)
          .setElement(&v.toObject())
          .setElementAttributeName(jsStr);
 
