@@ -116,7 +116,7 @@ public:
   void NotifyXPCOMShutdown();
 
   // Called if the media file encounters a network error.
-  void NetworkError();
+  void NetworkError(const MediaResult& aError);
 
   // Return the principal of the current URI being played or downloaded.
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
