@@ -1036,12 +1036,26 @@ private:
 
   void* MallocLarge(size_t aSize, bool aZero);
 
+  void* MallocHuge(size_t aSize, bool aZero);
+
   void* PallocLarge(size_t aAlignment, size_t aSize, size_t aAllocSize);
 
   void* PallocHuge(size_t aSize, size_t aAlignment, bool aZero);
 
+  void RallocShrinkLarge(arena_chunk_t* aChunk,
+                         void* aPtr,
+                         size_t aSize,
+                         size_t aOldSize);
+
+  bool RallocGrowLarge(arena_chunk_t* aChunk,
+                       void* aPtr,
+                       size_t aSize,
+                       size_t aOldSize);
+
+  void* RallocSmallOrLarge(void* aPtr, size_t aSize, size_t aOldSize);
+
+  void* RallocHuge(void* aPtr, size_t aSize, size_t aOldSize);
 public:
-  void* MallocHuge(size_t aSize, bool aZero);
 
   inline void* Malloc(size_t aSize, bool aZero);
 
@@ -1053,15 +1067,7 @@ public:
 
   void DallocLarge(arena_chunk_t* aChunk, void* aPtr);
 
-  void RallocShrinkLarge(arena_chunk_t* aChunk,
-                         void* aPtr,
-                         size_t aSize,
-                         size_t aOldSize);
-
-  bool RallocGrowLarge(arena_chunk_t* aChunk,
-                       void* aPtr,
-                       size_t aSize,
-                       size_t aOldSize);
+  void* Ralloc(void* aPtr, size_t aSize, size_t aOldSize);
 
   void Purge(bool aAll);
 
@@ -1258,8 +1264,6 @@ static void
 chunk_dealloc(void* aChunk, size_t aSize, ChunkType aType);
 static void
 chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed);
-static void*
-huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena);
 static void
 huge_dalloc(void* aPtr, arena_t* aArena);
 static bool
@@ -3665,8 +3669,8 @@ arena_t::RallocGrowLarge(arena_chunk_t* aChunk,
   return false;
 }
 
-static void*
-arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
+void*
+arena_t::RallocSmallOrLarge(void* aPtr, size_t aSize, size_t aOldSize)
 {
   void* ret;
   size_t copysize;
@@ -3686,10 +3690,10 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
     if (sizeClass.Size() < aOldSize) {
       // Fill before shrinking in order to avoid a race.
       memset((void*)((uintptr_t)aPtr + aSize), kAllocPoison, aOldSize - aSize);
-      aArena->RallocShrinkLarge(chunk, aPtr, sizeClass.Size(), aOldSize);
+      RallocShrinkLarge(chunk, aPtr, sizeClass.Size(), aOldSize);
       return aPtr;
     }
-    if (aArena->RallocGrowLarge(chunk, aPtr, sizeClass.Size(), aOldSize)) {
+    if (RallocGrowLarge(chunk, aPtr, sizeClass.Size(), aOldSize)) {
       if (opt_zero) {
         memset((void*)((uintptr_t)aPtr + aOldSize), 0, aSize - aOldSize);
       }
@@ -3700,7 +3704,7 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   // If we get here, then aSize and aOldSize are different enough that we
   // need to move the object.  In that case, fall back to allocating new
   // space and copying.
-  ret = aArena->Malloc(aSize, false);
+  ret = Malloc(aSize, false);
   if (!ret) {
     return nullptr;
   }
@@ -3715,25 +3719,19 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   {
     memcpy(ret, aPtr, copysize);
   }
-  idalloc(aPtr, aArena);
+  idalloc(aPtr, this);
   return ret;
 }
 
-static inline void*
-iralloc(void* aPtr, size_t aSize, arena_t* aArena)
+void*
+arena_t::Ralloc(void* aPtr, size_t aSize, size_t aOldSize)
 {
+  MOZ_DIAGNOSTIC_ASSERT(mMagic == ARENA_MAGIC);
   MOZ_ASSERT(aPtr);
   MOZ_ASSERT(aSize != 0);
 
-  auto info = AllocInfo::Get(aPtr);
-  auto arena = info.Arena();
-  MOZ_RELEASE_ASSERT(!aArena || arena == aArena);
-  aArena = aArena ? aArena : arena;
-  size_t oldsize = info.Size();
-  MOZ_DIAGNOSTIC_ASSERT(aArena->mMagic == ARENA_MAGIC);
-
-  return (aSize <= gMaxLargeClass) ? arena_ralloc(aPtr, aSize, oldsize, aArena)
-                                   : huge_ralloc(aPtr, aSize, oldsize, aArena);
+  return (aSize <= gMaxLargeClass) ? RallocSmallOrLarge(aPtr, aSize, aOldSize)
+                                   : RallocHuge(aPtr, aSize, aOldSize);
 }
 
 arena_t::arena_t(arena_params_t* aParams)
@@ -3905,8 +3903,8 @@ arena_t::PallocHuge(size_t aSize, size_t aAlignment, bool aZero)
   return ret;
 }
 
-static void*
-huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
+void*
+arena_t::RallocHuge(void* aPtr, size_t aSize, size_t aOldSize)
 {
   void* ret;
   size_t copysize;
@@ -3930,7 +3928,7 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
       extent_node_t* node = huge.Search(&key);
       MOZ_ASSERT(node);
       MOZ_ASSERT(node->mSize == aOldSize);
-      MOZ_RELEASE_ASSERT(node->mArena == aArena);
+      MOZ_RELEASE_ASSERT(node->mArena == this);
       huge_allocated -= aOldSize - psize;
       // No need to change huge_mapped, because we didn't (un)map anything.
       node->mSize = psize;
@@ -3955,7 +3953,7 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
       extent_node_t* node = huge.Search(&key);
       MOZ_ASSERT(node);
       MOZ_ASSERT(node->mSize == aOldSize);
-      MOZ_RELEASE_ASSERT(node->mArena == aArena);
+      MOZ_RELEASE_ASSERT(node->mArena == this);
       huge_allocated += psize - aOldSize;
       // No need to change huge_mapped, because we didn't
       // (un)map anything.
@@ -3971,7 +3969,7 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   // If we get here, then aSize and aOldSize are different enough that we
   // need to use a different size class.  In that case, fall back to
   // allocating new space and copying.
-  ret = aArena->MallocHuge(aSize, false);
+  ret = MallocHuge(aSize, false);
   if (!ret) {
     return nullptr;
   }
@@ -3985,7 +3983,7 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   {
     memcpy(ret, aPtr, copysize);
   }
-  idalloc(aPtr, aArena);
+  idalloc(aPtr, this);
   return ret;
 }
 
@@ -4305,7 +4303,10 @@ BaseAllocator::realloc(void* aPtr, size_t aSize)
   if (aPtr) {
     MOZ_RELEASE_ASSERT(malloc_initialized);
 
-    ret = iralloc(aPtr, aSize, mArena);
+    auto info = AllocInfo::Get(aPtr);
+    auto arena = info.Arena();
+    MOZ_RELEASE_ASSERT(!mArena || arena == mArena);
+    ret = arena->Ralloc(aPtr, aSize, info.Size());
 
     if (!ret) {
       errno = ENOMEM;
