@@ -280,14 +280,6 @@ static const char kStorageEnabled[] = "dom.storage.enabled";
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::ipc;
-using mozilla::BasePrincipal;
-using mozilla::OriginAttributes;
-using mozilla::TimeStamp;
-using mozilla::TimeDuration;
-using mozilla::dom::cache::CacheStorage;
-
-static LazyLogModule gDOMLeakPRLog("DOMLeak");
 
 static int32_t              gRefCnt                           = 0;
 static bool                 gMouseDown                        = false;
