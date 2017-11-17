@@ -4,7 +4,7 @@
             "android", 
             "android-api-16"
         ], 
-        "revision": "f634a7e9ff54"
+        "revision": "3fcd04e165b3"
     }, 
     "an": {
         "platforms": [
@@ -12,7 +12,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "3cf29e9b778c"
+        "revision": "e4f99dfafa0f"
     }, 
     "ar": {
         "platforms": [
@@ -68,7 +68,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "ac1e851bb19e"
+        "revision": "ab7ddbd415e2"
     }, 
     "bn-IN": {
         "platforms": [
@@ -76,7 +76,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "7791c9d6b1e6"
+        "revision": "f76d58dfd6aa"
     }, 
     "br": {
         "platforms": [
@@ -91,7 +91,7 @@
             "android", 
             "android-api-16"
         ], 
-        "revision": "7d63adfd0b2d"
+        "revision": "fe4711a52265"
     }, 
     "ca": {
         "platforms": [
@@ -115,7 +115,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "296c060a233b"
+        "revision": "a7a2ff85f459"
     }, 
     "cy": {
         "platforms": [
@@ -211,7 +211,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "aed521ff002e"
+        "revision": "df41cbcfc4d3"
     }, 
     "et": {
         "platforms": [
@@ -243,7 +243,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "5b039cb81ce6"
+        "revision": "66a2b2b77a7a"
     }, 
     "fi": {
         "platforms": [
@@ -291,7 +291,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "2d61c5c979af"
+        "revision": "123d63eb5578"
     }, 
     "gn": {
         "platforms": [
@@ -315,7 +315,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "fe8abc71c78f"
+        "revision": "630bb7d6c7ae"
     }, 
     "hi-IN": {
         "platforms": [
