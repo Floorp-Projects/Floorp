@@ -319,10 +319,6 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mNumOfIndexedDBDatabases(0),
   mNumOfOpenWebSockets(0)
 {
-  if (aOuterWindow) {
-    mTimeoutManager =
-      MakeUnique<mozilla::dom::TimeoutManager>(*nsGlobalWindowInner::Cast(AsInner()));
-  }
 }
 
 template<class T>

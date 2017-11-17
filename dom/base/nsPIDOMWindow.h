@@ -127,11 +127,6 @@ template<class T>
 class nsPIDOMWindow : public T
 {
 public:
-  nsPIDOMWindowInner* AsInner();
-  const nsPIDOMWindowInner* AsInner() const;
-  nsPIDOMWindowOuter* AsOuter();
-  const nsPIDOMWindowOuter* AsOuter() const;
-
   virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
   virtual mozilla::dom::CustomElementRegistry* CustomElements() = 0;
   // Outer windows only.
@@ -223,10 +218,6 @@ protected:
   void MaybeCreateDoc();
 
 public:
-  // Check whether a document is currently loading
-  inline bool IsLoading() const;
-  inline bool IsHandlingResizeEvent() const;
-
   // Set the window up with an about:blank document with the current subject
   // principal.
   // Outer windows only.
@@ -254,13 +245,6 @@ public:
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
   virtual nsresult FireDelayedDOMEvents() = 0;
-
-  nsPIDOMWindowOuter* GetOuterWindow() const
-  {
-    return mIsInnerWindow
-      ? mOuterWindow.get()
-      : const_cast<nsPIDOMWindowOuter*>(AsOuter());
-  }
 
   bool IsInnerWindow() const
   {
@@ -763,6 +747,17 @@ class nsPIDOMWindowInner : public nsPIDOMWindow<mozIDOMWindow>
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWINNER_IID)
 
+  nsPIDOMWindowInner* AsInner() {
+    return this;
+  }
+  const nsPIDOMWindowInner* AsInner() const {
+    return this;
+  }
+
+  nsPIDOMWindowOuter* GetOuterWindow() const {
+    return mOuterWindow;
+  }
+
   static nsPIDOMWindowInner* From(mozIDOMWindow* aFrom) {
     return static_cast<nsPIDOMWindowInner*>(aFrom);
   }
@@ -778,6 +773,10 @@ public:
 
   // Returns true if this window is the same as mTopInnerWindow
   inline bool IsTopInnerWindow() const;
+
+  // Check whether a document is currently loading
+  inline bool IsLoading() const;
+  inline bool IsHandlingResizeEvent() const;
 
   bool AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
   void RemoveAudioContext(mozilla::dom::AudioContext* aAudioContext);
@@ -958,6 +957,17 @@ protected:
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWOUTER_IID)
 
+  nsPIDOMWindowOuter* AsOuter() {
+    return this;
+  }
+  const nsPIDOMWindowOuter* AsOuter() const {
+    return this;
+  }
+
+  nsPIDOMWindowOuter* GetOuterWindow() const {
+    return const_cast<nsPIDOMWindowOuter*>(this);
+  }
+
   static nsPIDOMWindowOuter* From(mozIDOMWindowProxy* aFrom) {
     return static_cast<nsPIDOMWindowOuter*>(aFrom);
   }
@@ -965,6 +975,10 @@ public:
   // Given an inner window, return its outer if the inner is the current inner.
   // Otherwise (argument null or not an inner or not current) return null.
   static nsPIDOMWindowOuter* GetFromCurrentInner(nsPIDOMWindowInner* aInner);
+
+  // Check whether a document is currently loading
+  inline bool IsLoading() const;
+  inline bool IsHandlingResizeEvent() const;
 
   nsPIDOMWindowInner* GetCurrentInnerWindow() const
   {
