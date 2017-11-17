@@ -38,6 +38,15 @@ if widget_dir == 'gtk':
         'HeadlessThemeGTK.cpp',
     ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    UNIFIED_SOURCES += [
+        'HeadlessKeyBindingsCocoa.mm',
+    ]
+else:
+    UNIFIED_SOURCES += [
+        'HeadlessKeyBindings.cpp',
+    ]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

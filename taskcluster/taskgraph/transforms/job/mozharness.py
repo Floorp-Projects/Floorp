@@ -276,8 +276,17 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         hg_command.append(head_repo)
         hg_command.append(path)
 
+        logging_command = [
+            b":: TinderboxPrint:<a href={source_repo}/rev/{revision} "
+            b"title='Built from {repo_name} revision {revision}'>{revision}</a>\n".format(
+                revision=head_rev,
+                source_repo=head_repo,
+                repo_name=head_repo.split('/')[-1],
+            )]
+
         return [
             ' '.join(hg_command),
+            ' '.join(logging_command),
         ]
 
     hg_commands = checkout_repo(

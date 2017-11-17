@@ -1,6 +1,6 @@
 lxml
-pyasn1 == 0.1.7
-pyasn1_modules == 0.0.5
+pyasn1 == 0.3.7
+pyasn1_modules == 0.1.5
 ecc
 mock
 rsa

@@ -152,7 +152,7 @@ exports.viewport = {
   // The height of the viewport
   height: PropTypes.number,
 
-  // The devicePixelRatio of the viewport
+  // The device pixel ratio of the viewport
   pixelRatio: PropTypes.shape(pixelRatio),
 
 };

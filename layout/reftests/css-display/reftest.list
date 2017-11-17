@@ -7,9 +7,9 @@ fuzzy-if(Android,8,604) == display-contents-acid-dyn-2.html display-contents-aci
 fuzzy-if(Android,8,604) == display-contents-acid-dyn-3.html display-contents-acid-ref.html
 == display-contents-generated-content.html display-contents-generated-content-ref.html
 == display-contents-generated-content-2.html display-contents-generated-content-ref.html
-fails-if(styloVsGecko||stylo) pref(layout.css.scoped-style.enabled,true) == display-contents-style-inheritance-1.html display-contents-style-inheritance-1-ref.html
-fails-if(styloVsGecko||stylo) pref(layout.css.scoped-style.enabled,true) == display-contents-style-inheritance-1-stylechange.html display-contents-style-inheritance-1-ref.html
-fuzzy-if(winWidget,12,100) skip-if(styloVsGecko||stylo) pref(layout.css.scoped-style.enabled,true) == display-contents-style-inheritance-1-dom-mutations.html display-contents-style-inheritance-1-ref.html
+== display-contents-style-inheritance-1.html display-contents-style-inheritance-1-ref.html
+== display-contents-style-inheritance-1-stylechange.html display-contents-style-inheritance-1-ref.html
+fuzzy-if(winWidget,12,100) == display-contents-style-inheritance-1-dom-mutations.html display-contents-style-inheritance-1-ref.html
 == display-contents-tables.xhtml display-contents-tables-ref.xhtml
 == display-contents-tables-2.xhtml display-contents-tables-ref.xhtml
 == display-contents-tables-3.xhtml display-contents-tables-3-ref.xhtml

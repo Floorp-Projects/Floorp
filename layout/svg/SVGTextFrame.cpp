@@ -4581,15 +4581,22 @@ SVGTextFrame::ResolvePositionsForNode(nsIContent* aContent,
   }
 
   if (aContent->IsSVGElement(nsGkAtoms::textPath)) {
-    // <textPath> elements are as if they are specified with x="0" y="0", but
-    // only if they actually have some text content.
+    // <textPath> elements behave as if they have x="0" y="0" on them, but only
+    // if there is not a value for the coordinates that got inherited from a
+    // parent.  We skip this if there is no text content, so that empty
+    // <textPath>s don't interrupt the layout of text in the parent element.
     if (HasTextContent(aContent)) {
       if (MOZ_UNLIKELY(aIndex >= mPositions.Length())) {
         MOZ_ASSERT_UNREACHABLE("length of mPositions does not match characters "
                                "found by iterating content");
         return false;
       }
-      mPositions[aIndex].mPosition = gfxPoint();
+      if (!mPositions[aIndex].IsXSpecified()) {
+        mPositions[aIndex].mPosition.x = 0.0;
+      }
+      if (!mPositions[aIndex].IsYSpecified()) {
+        mPositions[aIndex].mPosition.y = 0.0;
+      }
       mPositions[aIndex].mStartOfChunk = true;
     }
   } else if (!aContent->IsSVGElement(nsGkAtoms::a)) {

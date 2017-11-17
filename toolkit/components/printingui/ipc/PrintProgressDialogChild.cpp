@@ -19,8 +19,10 @@ NS_IMPL_ISUPPORTS(PrintProgressDialogChild,
                   nsIPrintProgressParams)
 
 PrintProgressDialogChild::PrintProgressDialogChild(
-  nsIObserver* aOpenObserver) :
-  mOpenObserver(aOpenObserver)
+  nsIObserver* aOpenObserver,
+  nsIPrintSettings* aPrintSettings) :
+  mOpenObserver(aOpenObserver),
+  mPrintSettings(aPrintSettings)
 {
 }
 
@@ -40,6 +42,15 @@ PrintProgressDialogChild::RecvDialogOpened()
   // what gets passed as the subject, topic or data, so we'll just send
   // nullptrs.
   mOpenObserver->Observe(nullptr, nullptr, nullptr);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+PrintProgressDialogChild::RecvCancelledCurrentJob()
+{
+  if (mPrintSettings) {
+    mPrintSettings->SetIsCancelled(true);
+  }
   return IPC_OK();
 }
 

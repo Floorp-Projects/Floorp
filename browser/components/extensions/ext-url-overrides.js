@@ -17,7 +17,7 @@ const NEW_TAB_SETTING_NAME = "newTabURL";
 this.urlOverrides = class extends ExtensionAPI {
   processNewTabSetting(action) {
     let {extension} = this;
-    let item = ExtensionSettingsStore[action](extension, STORE_TYPE, NEW_TAB_SETTING_NAME);
+    let item = ExtensionSettingsStore[action](extension.id, STORE_TYPE, NEW_TAB_SETTING_NAME);
     if (item) {
       aboutNewTabService.newTabURL = item.value || item.initialValue;
     }
@@ -53,14 +53,14 @@ this.urlOverrides = class extends ExtensionAPI {
       let url = extension.baseURI.resolve(manifest.chrome_url_overrides.newtab);
 
       let item = await ExtensionSettingsStore.addSetting(
-        extension, STORE_TYPE, NEW_TAB_SETTING_NAME, url,
+        extension.id, STORE_TYPE, NEW_TAB_SETTING_NAME, url,
         () => aboutNewTabService.newTabURL);
 
       // If the extension was just re-enabled, change the setting to enabled.
       // This is required because addSetting above is used for both add and update.
       if (["ADDON_ENABLE", "ADDON_UPGRADE", "ADDON_DOWNGRADE"]
           .includes(extension.startupReason)) {
-        item = ExtensionSettingsStore.enable(extension, STORE_TYPE, NEW_TAB_SETTING_NAME);
+        item = ExtensionSettingsStore.enable(extension.id, STORE_TYPE, NEW_TAB_SETTING_NAME);
       }
 
       // Set the newTabURL to the current value of the setting.

@@ -1,3 +1,4 @@
-include CHANGES README LICENSE
+include *.txt *.md
 recursive-include tools *.py
-recursive-include test *.sh
+recursive-include tests *.py
+prune doc/build

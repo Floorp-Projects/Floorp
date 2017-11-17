@@ -127,4 +127,3 @@ add_task(async function test_upgrade_default_position_engine() {
   engine = Services.search.getEngineByName("MozSearch");
   ok(!engine, "Engine should not exist");
 });
-

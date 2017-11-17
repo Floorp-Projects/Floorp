@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   E10SUtils: "resource:///modules/E10SUtils.jsm",
+  ExtensionData: "resource://gre/modules/Extension.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
@@ -77,18 +78,43 @@ let apiManager = new class extends SchemaAPIManager {
     super("main");
     this.initialized = null;
 
-    this.on("startup", (event, extension) => { // eslint-disable-line mozilla/balanced-listeners
+    /* eslint-disable mozilla/balanced-listeners */
+    this.on("startup", (e, extension) => {
       let promises = [];
       for (let apiName of this.eventModules.get("startup")) {
         promises.push(this.asyncGetAPI(apiName, extension).then(api => {
           if (api) {
-            api.onStartup(extension.startupReason);
+            api.onStartup();
           }
         }));
       }
 
       return Promise.all(promises);
     });
+
+    this.on("update", async (e, {id, resourceURI}) => {
+      let modules = this.eventModules.get("update");
+      if (modules.size == 0) {
+        return;
+      }
+
+      let extension = new ExtensionData(resourceURI);
+      await extension.loadManifest();
+
+      return Promise.all(Array.from(modules).map(async apiName => {
+        let module = await this.asyncLoadModule(apiName);
+        module.onUpdate(id, extension.manifest);
+      }));
+    });
+
+    this.on("uninstall", (e, {id}) => {
+      let modules = this.eventModules.get("uninstall");
+      return Promise.all(Array.from(modules).map(async apiName => {
+        let module = await this.asyncLoadModule(apiName);
+        module.onUninstall(id);
+      }));
+    });
+    /* eslint-enable mozilla/balanced-listeners */
   }
 
   getModuleJSONURLs() {
