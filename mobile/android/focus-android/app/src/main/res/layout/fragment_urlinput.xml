@@ -6,12 +6,12 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/background"
+    android:id="@+id/backgroundView"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <org.mozilla.focus.widget.ResizableKeyboardLinearLayout
-        android:id="@+id/brand_background"
+        android:id="@+id/keyboardLinearLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
@@ -48,13 +48,13 @@
         android:clipChildren="false">
 
         <View
-            android:id="@+id/toolbar_background"
+            android:id="@+id/toolbarBackgroundView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/background_inactive" />
 
         <FrameLayout
-            android:id="@+id/url_input_container"
+            android:id="@+id/urlInputContainerView"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_gravity="bottom"
@@ -62,7 +62,7 @@
             android:clipChildren="false">
 
             <View
-                android:id="@+id/url_input_background"
+                android:id="@+id/urlInputBackgroundView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/urlbar_background" />
@@ -73,7 +73,7 @@
                 android:orientation="horizontal">
 
                 <org.mozilla.focus.widget.InlineAutocompleteEditText
-                    android:id="@+id/url_edit"
+                    android:id="@+id/urlView"
                     android:layout_width="0dp"
                     android:layout_height="40dp"
                     android:layout_weight="1"
@@ -98,7 +98,7 @@
                     tools:targetApi="o" /><!-- importantForAutofill is only supported on Android O+ -->
 
                 <ImageButton
-                    android:id="@+id/clear"
+                    android:id="@+id/clearView"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:src="@drawable/ic_clear"
@@ -110,7 +110,7 @@
                     android:contentDescription="@string/content_description_clear_input" />
 
                 <org.mozilla.focus.widget.IndicatorMenuButton
-                    android:id="@+id/menu"
+                    android:id="@+id/menuView"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:visibility="gone"
@@ -124,21 +124,21 @@
     </FrameLayout>
 
     <View
-        android:id="@+id/dismiss"
+        android:id="@+id/dismissView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/colorOverlay"
         android:contentDescription="@string/content_description_dismiss_input" />
 
     <FrameLayout
-        android:id="@+id/search_hint_container"
+        android:id="@+id/searchViewContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
         android:layout_marginTop="81dp">
 
         <TextView
-            android:id="@+id/search_hint"
+            android:id="@+id/searchView"
             android:layout_width="match_parent"
             android:layout_height="54dp"
             android:drawablePadding="16dp"
