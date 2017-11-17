@@ -61,11 +61,11 @@ class gfxMathTable;
 // The skew factor used for synthetic-italic [oblique] fonts;
 // we use a platform-dependent value to harmonize with the platform's own APIs.
 #ifdef XP_WIN
-#define OBLIQUE_SKEW_FACTOR  0.3
+#define OBLIQUE_SKEW_FACTOR  0.3f
 #elif defined(MOZ_WIDGET_GTK)
-#define OBLIQUE_SKEW_FACTOR  0.2
+#define OBLIQUE_SKEW_FACTOR  0.2f
 #else
-#define OBLIQUE_SKEW_FACTOR  0.25
+#define OBLIQUE_SKEW_FACTOR  0.25f
 #endif
 
 struct gfxTextRunDrawCallbacks;
@@ -2338,14 +2338,13 @@ struct MOZ_STACK_CLASS TextRunDrawParams {
 struct MOZ_STACK_CLASS FontDrawParams {
     RefPtr<mozilla::gfx::ScaledFont>            scaledFont;
     mozilla::SVGContextPaint *contextPaint;
-    mozilla::gfx::Matrix     *passedInvMatrix;
-    mozilla::gfx::Matrix      matInv;
     mozilla::gfx::Float       synBoldOnePixelOffset;
     int32_t                   extraStrikes;
     mozilla::gfx::DrawOptions drawOptions;
     bool                      isVerticalFont;
     bool                      haveSVGGlyphs;
     bool                      haveColorGlyphs;
+    bool                      needsOblique;
 };
 
 struct MOZ_STACK_CLASS EmphasisMarkDrawParams {
