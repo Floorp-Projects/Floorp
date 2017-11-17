@@ -13,7 +13,7 @@ use prim_store::{ClipData, ImageMaskData};
 use resource_cache::ResourceCache;
 use util::{extract_inner_rect_safe, TransformedRect};
 
-const MAX_CLIP: f32 = 1000000.0;
+pub const MAX_CLIP: f32 = 1000000.0;
 
 pub type ClipStore = FreeList<ClipSources>;
 pub type ClipSourcesHandle = FreeListHandle<ClipSources>;
