@@ -174,7 +174,7 @@ public:
 
   // Called by the video decoder object, on the main thread,
   // when the resource has a network error during loading.
-  virtual void NetworkError() final override;
+  virtual void NetworkError(const MediaResult& aError) final override;
 
   // Called by the video decoder object, on the main thread, when the
   // resource has a decode error during metadata loading or decoding.
