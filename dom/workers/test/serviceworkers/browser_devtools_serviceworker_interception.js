@@ -18,6 +18,16 @@ const sw = BASE_URI + "fetch.js";
 // the interception logic to chrome process.
 async function checkObserverInContent(aInput) {
   let interceptedChannel = null;
+
+  // We always get two channels which receive the "http-on-stop-request"
+  // notification if the service worker hijacks the request and respondWith an
+  // another fetch. One is for the "outer" window request when the other one is
+  // for the "inner" service worker request. We used to distinguish them by the
+  // channel.URI.spec, but it doesn't work fine with internal redirect case. The
+  // reason is that the two different channels will have the same channel.URI
+  // if it's an internal redirect. Therefore, distinguish them by the order.
+  let waitForSecondOnStopRequest = aInput.redirect;
+
   let promiseResolve;
 
   function observer(aSubject) {
@@ -27,6 +37,11 @@ async function checkObserverInContent(aInput) {
     // have to wait until we catch the one we want.
     if (!(aInput.redirect && channel.URI.spec.includes(aInput.redirect)) &&
         !(!aInput.redirect && channel.URI.spec.includes(aInput.url))) {
+      return;
+    }
+
+    if (waitForSecondOnStopRequest) {
+      waitForSecondOnStopRequest = false;
       return;
     }
 
@@ -125,7 +140,9 @@ async function contentFetch(aURL) {
 }
 
 async function registerSWAndWaitForActive(aServiceWorker) {
-  let swr = await content.navigator.serviceWorker.register(aServiceWorker);
+  let swr =
+    await content.navigator.serviceWorker.register(aServiceWorker,
+                                                   { scope:"empty.html" });
   await new Promise(resolve => {
     let worker = swr.installing || swr.waiting || swr.active;
     if (worker.state === 'activated') {
@@ -140,6 +157,15 @@ async function registerSWAndWaitForActive(aServiceWorker) {
   });
 
   await swr.active.postMessage('claim');
+
+  await new Promise(resolve => {
+    if (content.navigator.serviceWorker.controller) {
+      return resolve();
+    }
+
+    content.navigator.serviceWorker.addEventListener('controllerchange',
+                                                     resolve, { once: true });
+  });
 }
 
 async function unregisterSW() {
