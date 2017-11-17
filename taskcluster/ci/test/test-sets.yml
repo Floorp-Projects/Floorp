@@ -38,6 +38,7 @@ common-tests:
     - reftest-no-accel
     - telemetry-tests-client
     - test-verify
+    - test-verify-wpt
     - xpcshell
 
 web-platform-tests:
@@ -182,6 +183,7 @@ windows-tests:
     - reftest
     - reftest-no-accel
     - test-verify
+    - test-verify-wpt
     - web-platform-tests
     - web-platform-tests-reftests
     - xpcshell
@@ -242,6 +244,7 @@ macosx64-tests:
     - mochitest-webgl
     - reftest
     - test-verify
+    - test-verify-wpt
     - web-platform-tests
     - web-platform-tests-reftests
     - xpcshell
