@@ -93,26 +93,24 @@ class TcpTransport(object):
     max_packet_length = 4096
     min_protocol_level = 3
 
-    def __init__(self, addr, port, socket_timeout=60.0):
+    def __init__(self, host, port, socket_timeout=60.0):
         """If `socket_timeout` is `0` or `0.0`, non-blocking socket mode
         will be used.  Setting it to `1` or `None` disables timeouts on
         socket operations altogether.
         """
-        self.addr = addr
+        self._sock = None
+
+        self.host = host
         self.port = port
-        self._socket_timeout = socket_timeout
+        self.socket_timeout = socket_timeout
 
         self.protocol = self.min_protocol_level
         self.application_type = None
         self.last_id = 0
         self.expected_response = None
-        self._sock = None
 
     @property
     def socket_timeout(self):
-        if self._sock:
-            return self._sock.gettimeout()
-
         return self._socket_timeout
 
     @socket_timeout.setter
@@ -190,7 +188,7 @@ class TcpTransport(object):
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._sock.settimeout(self.socket_timeout)
 
-            self._sock.connect((self.addr, self.port))
+            self._sock.connect((self.host, self.port))
         except:
             # Unset so that the next attempt to send will cause
             # another connection attempt.
