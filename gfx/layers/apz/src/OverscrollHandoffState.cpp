@@ -161,11 +161,23 @@ OverscrollHandoffChain::HasFastFlungApzc() const
 }
 
 RefPtr<AsyncPanZoomController>
-OverscrollHandoffChain::FindFirstScrollable(const InputData& aInput) const
+OverscrollHandoffChain::FindFirstScrollable(
+    const InputData& aInput,
+    ScrollDirections* aOutAllowedScrollDirections) const
 {
+  // Start by allowing scrolling in both directions. As we do handoff
+  // overscroll-behavior may restrict one or both of the directions.
+  *aOutAllowedScrollDirections += ScrollDirection::eVertical;
+  *aOutAllowedScrollDirections += ScrollDirection::eHorizontal;
+
   for (size_t i = 0; i < Length(); i++) {
     if (mChain[i]->CanScroll(aInput)) {
       return mChain[i];
+    }
+
+    *aOutAllowedScrollDirections &= mChain[i]->GetAllowedHandoffDirections();
+    if (aOutAllowedScrollDirections->isEmpty()) {
+      return nullptr;
     }
   }
   return nullptr;
