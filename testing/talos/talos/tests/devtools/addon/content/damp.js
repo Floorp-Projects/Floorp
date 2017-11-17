@@ -1,5 +1,4 @@
 const { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
-const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 XPCOMUtils.defineLazyGetter(this, "require", function() {
@@ -110,17 +109,17 @@ Damp.prototype = {
     };
   },
 
-  closeToolbox: Task.async(function* () {
+  async closeToolbox() {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = TargetFactory.forTab(tab);
-    yield target.client.waitForRequestsToSettle();
+    await target.client.waitForRequestsToSettle();
     let startRecordTimestamp = performance.now();
-    yield gDevTools.closeToolbox(target);
+    await gDevTools.closeToolbox(target);
     let stopRecordTimestamp = performance.now();
     return {
       time: stopRecordTimestamp - startRecordTimestamp
     };
-  }),
+  },
 
   saveHeapSnapshot(label) {
     let tab = getActiveTab(getMostRecentBrowserWindow());
@@ -151,21 +150,21 @@ Damp.prototype = {
     return Promise.resolve();
   },
 
-  waitForNetworkRequests: Task.async(function* (label, toolbox) {
+  async waitForNetworkRequests(label, toolbox) {
     const start = performance.now();
-    yield this.waitForAllRequestsFinished();
+    await this.waitForAllRequestsFinished();
     const end = performance.now();
     this._results.push({
       name: label + ".requestsFinished.DAMP",
       value: end - start
     });
-  }),
+  },
 
-  _consoleBulkLoggingTest: Task.async(function* () {
+  async _consoleBulkLoggingTest() {
     let TOTAL_MESSAGES = 10;
-    let tab = yield this.testSetup(SIMPLE_URL);
+    let tab = await this.testSetup(SIMPLE_URL);
     let messageManager = tab.linkedBrowser.messageManager;
-    let {toolbox} = yield this.openToolbox("webconsole");
+    let {toolbox} = await this.openToolbox("webconsole");
     let webconsole = toolbox.getPanel("webconsole");
 
     // Resolve once the last message has been received.
@@ -198,7 +197,7 @@ Damp.prototype = {
     messageManager.sendAsyncMessage("do-logs");
 
     let start = performance.now();
-    yield allMessagesReceived;
+    await allMessagesReceived;
     let end = performance.now();
 
     this._results.push({
@@ -206,18 +205,18 @@ Damp.prototype = {
       value: end - start
     });
 
-    yield this.closeToolbox(null);
-    yield this.testTeardown();
-  }),
+    await this.closeToolbox(null);
+    await this.testTeardown();
+  },
 
   // Log a stream of console messages, 1 per rAF.  Then record the average
   // time per rAF.  The idea is that the console being slow can slow down
   // content (i.e. Bug 1237368).
-  _consoleStreamLoggingTest: Task.async(function* () {
+  async _consoleStreamLoggingTest() {
     let TOTAL_MESSAGES = 100;
-    let tab = yield this.testSetup(SIMPLE_URL);
+    let tab = await this.testSetup(SIMPLE_URL);
     let messageManager = tab.linkedBrowser.messageManager;
-    yield this.openToolbox("webconsole");
+    await this.openToolbox("webconsole");
 
     // Load a frame script using a data URI so we can do logs
     // from the page.  So this is running in content.
@@ -244,7 +243,7 @@ Damp.prototype = {
       }`
     ) + ")()", true);
 
-    let avgTime = yield new Promise(resolve => {
+    let avgTime = await new Promise(resolve => {
       messageManager.addMessageListener("done", (e) => {
         resolve(e.data);
       });
@@ -255,14 +254,14 @@ Damp.prototype = {
       value: avgTime
     });
 
-    yield this.closeToolbox(null);
-    yield this.testTeardown();
-  }),
+    await this.closeToolbox(null);
+    await this.testTeardown();
+  },
 
-  _consoleObjectExpansionTest: Task.async(function* () {
-    let tab = yield this.testSetup(SIMPLE_URL);
+  async _consoleObjectExpansionTest() {
+    let tab = await this.testSetup(SIMPLE_URL);
     let messageManager = tab.linkedBrowser.messageManager;
-    let {toolbox} = yield this.openToolbox("webconsole");
+    let {toolbox} = await this.openToolbox("webconsole");
     let webconsole = toolbox.getPanel("webconsole");
 
     // Resolve once the first message is received.
@@ -292,12 +291,12 @@ Damp.prototype = {
     messageManager.sendAsyncMessage("do-dir");
 
     let start = performance.now();
-    yield onMessageReceived;
+    await onMessageReceived;
     const tree = webconsole.hud.ui.outputNode.querySelector(".dir.message .tree");
     // The tree can be collapsed since the properties are fetched asynchronously.
     if (tree.querySelectorAll(".node").length === 1) {
       // If this is the case, we wait for the properties to be fetched and displayed.
-      yield new Promise(resolve => {
+      await new Promise(resolve => {
         const observer = new MutationObserver(mutations => {
           resolve(mutations);
           observer.disconnect();
@@ -313,9 +312,9 @@ Damp.prototype = {
       value: performance.now() - start,
     });
 
-    yield this.closeToolboxAndLog("console.objectexpanded");
-    yield this.testTeardown();
-  }),
+    await this.closeToolboxAndLog("console.objectexpanded");
+    await this.testTeardown();
+  },
 
 async _consoleOpenWithCachedMessagesTest() {
   let TOTAL_MESSAGES = 100;
@@ -341,10 +340,10 @@ async _consoleOpenWithCachedMessagesTest() {
    * Measure the time necesssary to perform successive childList mutations in the content
    * page and update the markup-view accordingly.
    */
-  _inspectorMutationsTest: Task.async(function* () {
-    let tab = yield this.testSetup(SIMPLE_URL);
+  async _inspectorMutationsTest() {
+    let tab = await this.testSetup(SIMPLE_URL);
     let messageManager = tab.linkedBrowser.messageManager;
-    let {toolbox} = yield this.openToolbox("inspector");
+    let {toolbox} = await this.openToolbox("inspector");
     let inspector = toolbox.getPanel("inspector");
 
     // Test with n=LIMIT mutations, with t=DELAY ms between each one.
@@ -371,7 +370,7 @@ async _consoleOpenWithCachedMessagesTest() {
 
     let start = performance.now();
 
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       let childListMutationsCounter = 0;
       inspector.on("markupmutation", (evt, mutations) => {
         let childListMutations = mutations.filter(m => m.type === "childList");
@@ -390,9 +389,9 @@ async _consoleOpenWithCachedMessagesTest() {
       value: performance.now() - start
     });
 
-    yield this.closeToolbox(null);
-    yield this.testTeardown();
-  }),
+    await this.closeToolbox(null);
+    await this.testTeardown();
+  },
 
   takeCensus(label) {
     let start = performance.now();
@@ -480,9 +479,9 @@ async _consoleOpenWithCachedMessagesTest() {
 
   _getToolLoadingTests(url, label, { expectedMessages, expectedSources }) {
     let tests = {
-      inspector: Task.async(function* () {
-        yield this.testSetup(url);
-        let toolbox = yield this.openToolboxAndLog(label + ".inspector", "inspector");
+      async inspector() {
+        await this.testSetup(url);
+        let toolbox = await this.openToolboxAndLog(label + ".inspector", "inspector");
         let onReload = async function() {
           let inspector = toolbox.getPanel("inspector");
           // First wait for markup view to be loaded against the new root node
@@ -490,14 +489,14 @@ async _consoleOpenWithCachedMessagesTest() {
           // Then wait for inspector to be updated
           await inspector.once("inspector-updated");
         };
-        yield this.reloadPageAndLog(label + ".inspector", onReload);
-        yield this.closeToolboxAndLog(label + ".inspector");
-        yield this.testTeardown();
-      }),
+        await this.reloadPageAndLog(label + ".inspector", onReload);
+        await this.closeToolboxAndLog(label + ".inspector");
+        await this.testTeardown();
+      },
 
-      webconsole: Task.async(function* () {
-        yield this.testSetup(url);
-        let toolbox = yield this.openToolboxAndLog(label + ".webconsole", "webconsole");
+      async webconsole() {
+        await this.testSetup(url);
+        let toolbox = await this.openToolboxAndLog(label + ".webconsole", "webconsole");
         let onReload = async function() {
           let webconsole = toolbox.getPanel("webconsole");
           await new Promise(done => {
@@ -511,13 +510,13 @@ async _consoleOpenWithCachedMessagesTest() {
             webconsole.hud.ui.on("new-messages", receiveMessages);
           });
         };
-        yield this.reloadPageAndLog(label + ".webconsole", onReload);
-        yield this.closeToolboxAndLog(label + ".webconsole");
-        yield this.testTeardown();
-      }),
+        await this.reloadPageAndLog(label + ".webconsole", onReload);
+        await this.closeToolboxAndLog(label + ".webconsole");
+        await this.testTeardown();
+      },
 
-      debugger: Task.async(function* () {
-        yield this.testSetup(url);
+      async debugger() {
+        await this.testSetup(url);
         let onLoad = async function(toolbox, dbg) {
           await new Promise(done => {
             let { selectors, store } = dbg.panelWin.getGlobalsForTesting();
@@ -533,7 +532,7 @@ async _consoleOpenWithCachedMessagesTest() {
             countSources();
           });
         };
-        let toolbox = yield this.openToolboxAndLog(label + ".jsdebugger", "jsdebugger", onLoad);
+        let toolbox = await this.openToolboxAndLog(label + ".jsdebugger", "jsdebugger", onLoad);
         let onReload = async function() {
           await new Promise(done => {
             let count = 0;
@@ -547,47 +546,47 @@ async _consoleOpenWithCachedMessagesTest() {
             client.addListener("newSource", onSource);
           });
         };
-        yield this.reloadPageAndLog(label + ".jsdebugger", onReload);
-        yield this.closeToolboxAndLog(label + ".jsdebugger");
-        yield this.testTeardown();
-      }),
+        await this.reloadPageAndLog(label + ".jsdebugger", onReload);
+        await this.closeToolboxAndLog(label + ".jsdebugger");
+        await this.testTeardown();
+      },
 
-      styleeditor: Task.async(function* () {
-        yield this.testSetup(url);
-        yield this.openToolboxAndLog(label + ".styleeditor", "styleeditor");
-        yield this.reloadPageAndLog(label + ".styleeditor");
-        yield this.closeToolboxAndLog(label + ".styleeditor");
-        yield this.testTeardown();
-      }),
+      async styleeditor() {
+        await this.testSetup(url);
+        await this.openToolboxAndLog(label + ".styleeditor", "styleeditor");
+        await this.reloadPageAndLog(label + ".styleeditor");
+        await this.closeToolboxAndLog(label + ".styleeditor");
+        await this.testTeardown();
+      },
 
-      performance: Task.async(function* () {
-        yield this.testSetup(url);
-        yield this.openToolboxAndLog(label + ".performance", "performance");
-        yield this.reloadPageAndLog(label + ".performance");
-        yield this.closeToolboxAndLog(label + ".performance");
-        yield this.testTeardown();
-      }),
+      async performance() {
+        await this.testSetup(url);
+        await this.openToolboxAndLog(label + ".performance", "performance");
+        await this.reloadPageAndLog(label + ".performance");
+        await this.closeToolboxAndLog(label + ".performance");
+        await this.testTeardown();
+      },
 
-      netmonitor: Task.async(function* () {
-        yield this.testSetup(url);
-        const toolbox = yield this.openToolboxAndLog(label + ".netmonitor", "netmonitor");
+      async netmonitor() {
+        await this.testSetup(url);
+        const toolbox = await this.openToolboxAndLog(label + ".netmonitor", "netmonitor");
         const requestsDone = this.waitForNetworkRequests(label + ".netmonitor", toolbox);
-        yield this.reloadPageAndLog(label + ".netmonitor");
-        yield requestsDone;
-        yield this.closeToolboxAndLog(label + ".netmonitor");
-        yield this.testTeardown();
-      }),
+        await this.reloadPageAndLog(label + ".netmonitor");
+        await requestsDone;
+        await this.closeToolboxAndLog(label + ".netmonitor");
+        await this.testTeardown();
+      },
 
-      saveAndReadHeapSnapshot: Task.async(function* () {
-        yield this.testSetup(url);
-        yield this.openToolboxAndLog(label + ".memory", "memory");
-        yield this.reloadPageAndLog(label + ".memory");
-        yield this.saveHeapSnapshot(label);
-        yield this.readHeapSnapshot(label);
-        yield this.takeCensus(label);
-        yield this.closeToolboxAndLog(label + ".memory");
-        yield this.testTeardown();
-      }),
+      async saveAndReadHeapSnapshot() {
+        await this.testSetup(url);
+        await this.openToolboxAndLog(label + ".memory", "memory");
+        await this.reloadPageAndLog(label + ".memory");
+        await this.saveHeapSnapshot(label);
+        await this.readHeapSnapshot(label);
+        await this.takeCensus(label);
+        await this.closeToolboxAndLog(label + ".memory");
+        await this.testTeardown();
+      },
     };
     // Prefix all tests with the page type (simple or complicated)
     for (let name in tests) {
@@ -597,18 +596,18 @@ async _consoleOpenWithCachedMessagesTest() {
     return tests;
   },
 
-  testSetup: Task.async(function* (url) {
-    let tab = yield this.addTab(url);
-    yield new Promise(resolve => {
+  async testSetup(url) {
+    let tab = await this.addTab(url);
+    await new Promise(resolve => {
       setTimeout(resolve, this._config.rest);
     });
     return tab;
-  }),
+  },
 
-  testTeardown: Task.async(function* (url) {
+  async testTeardown(url) {
     this.closeCurrentTab();
     this._nextCommand();
-  }),
+  },
 
   // Everything below here are common pieces needed for the test runner to function,
   // just copy and pasted from Tart with /s/TART/DAMP
