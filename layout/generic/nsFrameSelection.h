@@ -747,7 +747,7 @@ private:
 
   // maintain selection
   RefPtr<nsRange> mMaintainRange;
-  nsSelectionAmount mMaintainedAmount;
+  nsSelectionAmount mMaintainedAmount = eSelectNoAmount;
 
   //batching
   int32_t mBatching = 0;
@@ -757,7 +757,7 @@ private:
   // Limit selection navigation to a descendant of this node.
   nsCOMPtr<nsIContent> mAncestorLimiter;
 
-  nsIPresShell *mShell;
+  nsIPresShell* mShell = nullptr;
   // Reason for notifications of selection changing.
   int16_t mSelectionChangeReason = nsISelectionListener::NO_REASON;
   // For visual display purposes.
@@ -779,12 +779,12 @@ private:
   bool mChangesDuringBatching = false;
   bool mNotifyFrames = true;
   bool mDragSelectingCells = false;
-  bool mDragState;   //for drag purposes
+  bool mDragState = false;   //for drag purposes
   bool mMouseDoubleDownState = false; //has the doubleclick down happened
   bool mDesiredPosSet = false;
   bool mAccessibleCaretEnabled = false;
 
-  int8_t mCaretMovementStyle;
+  int8_t mCaretMovementStyle = 0;
 
   static bool sSelectionEventsEnabled;
   static bool sSelectionEventsOnTextControlsEnabled;
