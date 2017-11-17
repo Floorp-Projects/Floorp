@@ -336,18 +336,25 @@ protected:
   bool                          mAnimating:1;   // Are we currently animating?
   bool                          mError:1;       // Error handling
 
-  virtual Pair<DrawResult, RefPtr<layers::Image>>
-    GetCurrentImage(layers::ImageContainer* aContainer, uint32_t aFlags)
+  virtual Pair<DrawResult, RefPtr<gfx::SourceSurface>>
+    GetFrameInternal(const gfx::IntSize& aSize,
+                     uint32_t aWhichFrame,
+                     uint32_t aFlags)
   {
-    return MakePair(DrawResult::BAD_IMAGE, RefPtr<layers::Image>());
+    return MakePair(DrawResult::BAD_IMAGE, RefPtr<gfx::SourceSurface>());
   }
+
+  Pair<DrawResult, RefPtr<layers::Image>>
+    GetCurrentImage(layers::ImageContainer* aContainer,
+                    const gfx::IntSize& aSize,
+                    uint32_t aFlags);
 
   already_AddRefed<layers::ImageContainer>
     GetImageContainerImpl(layers::LayerManager* aManager,
                           const gfx::IntSize& aSize,
                           uint32_t aFlags);
 
-  void UpdateImageContainer();
+  void UpdateImageContainer(const gfx::IntSize& aSize);
 
   void ReleaseImageContainer();
 
