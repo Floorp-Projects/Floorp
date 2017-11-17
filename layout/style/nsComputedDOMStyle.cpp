@@ -6553,8 +6553,11 @@ nsComputedDOMStyle::GetShapeSource(
       val->SetIdent(eCSSKeyword_none);
       return val.forget();
     }
-    default:
-      NS_NOTREACHED("unexpected type");
+    case StyleShapeSourceType::Image: {
+      RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+      SetValueToStyleImage(*aShapeSource.GetShapeImage(), val);
+      return val.forget();
+    }
   }
   return nullptr;
 }

@@ -1073,15 +1073,23 @@ StyleShapeSource::operator==(const StyleShapeSource& aOther) const
     return false;
   }
 
-  if (mType == StyleShapeSourceType::URL) {
-    return DefinitelyEqualURIs(GetURL(), aOther.GetURL());
-  } else if (mType == StyleShapeSourceType::Shape) {
-    return *mBasicShape == *aOther.mBasicShape &&
-      mReferenceBox == aOther.mReferenceBox;
-  } else if (mType == StyleShapeSourceType::Box) {
-    return mReferenceBox == aOther.mReferenceBox;
+  switch (mType) {
+    case StyleShapeSourceType::None:
+      return true;
+
+    case StyleShapeSourceType::URL:
+    case StyleShapeSourceType::Image:
+      return *mShapeImage == *aOther.mShapeImage;
+
+    case StyleShapeSourceType::Shape:
+      return *mBasicShape == *aOther.mBasicShape &&
+        mReferenceBox == aOther.mReferenceBox;
+
+    case StyleShapeSourceType::Box:
+      return mReferenceBox == aOther.mReferenceBox;
   }
 
+  MOZ_ASSERT_UNREACHABLE("Unexpected shape source type!");
   return true;
 }
 
@@ -1097,10 +1105,18 @@ StyleShapeSource::SetURL(css::URLValue* aValue)
 }
 
 void
+StyleShapeSource::SetShapeImage(UniquePtr<nsStyleImage> aShapeImage)
+{
+  MOZ_ASSERT(aShapeImage);
+  mShapeImage = Move(aShapeImage);
+  mType = StyleShapeSourceType::Image;
+}
+
+void
 StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
                                 StyleGeometryBox aReferenceBox)
 {
-  NS_ASSERTION(aBasicShape, "expected pointer");
+  MOZ_ASSERT(aBasicShape);
   mBasicShape = Move(aBasicShape);
   mReferenceBox = aReferenceBox;
   mType = StyleShapeSourceType::Shape;
@@ -1116,7 +1132,6 @@ StyleShapeSource::SetReferenceBox(StyleGeometryBox aReferenceBox)
 void
 StyleShapeSource::DoCopy(const StyleShapeSource& aOther)
 {
-
   switch (aOther.mType) {
     case StyleShapeSourceType::None:
       mReferenceBox = StyleGeometryBox::NoBox;
@@ -1125,6 +1140,10 @@ StyleShapeSource::DoCopy(const StyleShapeSource& aOther)
 
     case StyleShapeSourceType::URL:
       SetURL(aOther.GetURL());
+      break;
+
+    case StyleShapeSourceType::Image:
+      SetShapeImage(MakeUnique<nsStyleImage>(*aOther.GetShapeImage()));
       break;
 
     case StyleShapeSourceType::Shape:
@@ -3695,6 +3714,20 @@ nsStyleDisplay::~nsStyleDisplay()
   }
 
   MOZ_COUNT_DTOR(nsStyleDisplay);
+}
+
+void
+nsStyleDisplay::FinishStyle(nsPresContext* aPresContext)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
+
+  if (mShapeOutside.GetType() == StyleShapeSourceType::Image) {
+    const UniquePtr<nsStyleImage>& shapeImage = mShapeOutside.GetShapeImage();
+    if (shapeImage) {
+      shapeImage->ResolveImage(aPresContext);
+    }
+  }
 }
 
 nsChangeHint
