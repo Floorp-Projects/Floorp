@@ -1,29 +1,24 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const NS_APP_USER_SEARCH_DIR  = "UsrSrchPlugns";
-
-const kTestEngineShortName = "engine";
+const kTestEngineShortName = "test-search-engine";
 const kWhiteListPrefName = "reset.whitelist";
 
-function run_test() {
-  // Copy an engine to [profile]/searchplugin/
-  let dir = Services.dirsvc.get(NS_APP_USER_SEARCH_DIR, Ci.nsIFile);
-  if (!dir.exists())
-    dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  do_get_file("data/engine.xml").copyTo(dir, kTestEngineShortName + ".xml");
-
-  let file = dir.clone();
-  file.append(kTestEngineShortName + ".xml");
-  do_check_true(file.exists());
-
-  do_check_false(Services.search.isInitialized);
-
+add_task(async function run_test() {
   Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF)
           .setBoolPref("reset.enabled", true);
 
-  run_next_test();
-}
+  await asyncInit();
+  await promiseAfterCache();
+
+  // Install kTestEngineName and wait for it to reach the disk.
+  await installTestEngine();
+  await promiseAfterCache();
+
+  // Simulate an engine found in the profile directory and imported
+  // by a previous version of Firefox.
+  await removeLoadPathHash();
+});
 
 async function removeLoadPathHash() {
   // Remove the loadPathHash and re-initialize the search service.
@@ -39,13 +34,9 @@ async function removeLoadPathHash() {
 }
 
 add_task(async function test_no_prompt_when_valid_loadPathHash() {
-  await asyncInit();
-
   // test the engine is loaded ok.
   let engine = Services.search.getEngineByName(kTestEngineName);
   do_check_neq(engine, null);
-
-  await promiseAfterCache();
 
   // The test engine has been found in the profile directory and imported,
   // so it shouldn't have a loadPathHash.

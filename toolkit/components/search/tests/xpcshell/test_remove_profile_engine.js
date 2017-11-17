@@ -1,13 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const NS_APP_USER_SEARCH_DIR  = "UsrSrchPlugns";
-
-function run_test() {
-  do_test_pending();
-
+add_task(async function run_test() {
   // Copy an engine to [profile]/searchplugin/
-  let dir = Services.dirsvc.get(NS_APP_USER_SEARCH_DIR, Ci.nsIFile);
+  let dir = gProfD.clone();
+  dir.append("searchplugins");
   if (!dir.exists())
     dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   do_get_file("data/engine-override.xml").copyTo(dir, "bug645970.xml");
@@ -16,20 +13,33 @@ function run_test() {
   file.append("bug645970.xml");
   do_check_true(file.exists());
 
-  do_check_false(Services.search.isInitialized);
+  await asyncInit();
 
-  Services.search.init(function search_initialized(aStatus) {
-    do_check_true(Components.isSuccessCode(aStatus));
-    do_check_true(Services.search.isInitialized);
+  // Install the same engine through a supported way.
+  useHttpServer();
+  await addTestEngines([
+    { name: "bug645970", xmlFileName: "engine-override.xml" },
+  ]);
+  await promiseAfterCache();
+  let data = await promiseCacheData();
 
-    // test the engine is loaded ok.
-    let engine = Services.search.getEngineByName("bug645970");
-    do_check_neq(engine, null);
+  // Put the filePath inside the cache file, to simulate what a pre-58 version
+  // of Firefox would have done.
+  for (let engine of data.engines) {
+    if (engine._name == "bug645970") {
+      engine.filePath = file.path;
+    }
+  }
 
-    // remove the engine and verify the file has been removed too.
-    Services.search.removeEngine(engine);
-    do_check_false(file.exists());
+  await promiseSaveCacheData(data);
 
-    do_test_finished();
-  });
-}
+  await asyncReInit();
+
+  // test the engine is loaded ok.
+  let engine = Services.search.getEngineByName("bug645970");
+  do_check_neq(engine, null);
+
+  // remove the engine and verify the file has been removed too.
+  Services.search.removeEngine(engine);
+  do_check_false(file.exists());
+});
