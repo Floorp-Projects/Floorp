@@ -2,11 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * test_save_sorted_engines: Start search engine
- * - without search-metadata.json
- * - without search.sqlite
- *
- * Ensure that search-metadata.json is correct after:
+ * Ensure that metadata are stored correctly on disk after:
  * - moving an engine
  * - removing an engine
  * - adding a new engine

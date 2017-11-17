@@ -26,8 +26,6 @@ var getEngine, postEngine, unresolvableEngine;
 function run_test() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 
-  removeMetadata();
-
   let server = useHttpServer();
   server.registerContentType("sjs", "sjs");
 
