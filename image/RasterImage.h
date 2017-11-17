@@ -35,7 +35,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/Pair.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -291,9 +290,9 @@ private:
    * @return a drawable surface, which may be empty if the requested surface
    *         could not be found.
    */
-  DrawableSurface LookupFrame(const gfx::IntSize& aSize,
-                              uint32_t aFlags,
-                              PlaybackType aPlaybackType);
+  LookupResult LookupFrame(const gfx::IntSize& aSize,
+                           uint32_t aFlags,
+                           PlaybackType aPlaybackType);
 
   /// Helper method for LookupFrame().
   LookupResult LookupFrameInternal(const gfx::IntSize& aSize,
@@ -308,7 +307,7 @@ private:
                           uint32_t aFlags,
                           float aOpacity);
 
-  Pair<DrawResult, RefPtr<gfx::SourceSurface>>
+  Tuple<DrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
     GetFrameInternal(const gfx::IntSize& aSize,
                      uint32_t aWhichFrame,
                      uint32_t aFlags) override;

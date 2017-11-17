@@ -62,8 +62,9 @@ ImageResource::AddCurrentImage(ImageContainer* aContainer,
   MOZ_ASSERT(aContainer);
 
   DrawResult drawResult;
+  IntSize size;
   RefPtr<SourceSurface> surface;
-  Tie(drawResult, surface) =
+  Tie(drawResult, size, surface) =
     GetFrameInternal(aSize, FRAME_CURRENT, aFlags | FLAG_ASYNC_NOTIFY);
   if (!surface) {
     // The OS threw out some or all of our buffer. We'll need to wait for the
