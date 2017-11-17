@@ -128,7 +128,7 @@ this.contextualIdentities = class extends ExtensionAPI {
     let {extension} = this;
 
     if (extension.hasPermission("contextualIdentities")) {
-      ExtensionPreferencesManager.setSetting(extension, CONTAINERS_ENABLED_SETTING_NAME, extension.id);
+      ExtensionPreferencesManager.setSetting(extension.id, CONTAINERS_ENABLED_SETTING_NAME, extension.id);
     }
   }
 

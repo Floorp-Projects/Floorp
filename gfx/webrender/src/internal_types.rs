@@ -9,7 +9,6 @@ use api::DebugCommand;
 use device::TextureFilter;
 use fxhash::FxHasher;
 use profiler::BackendProfileCounters;
-use renderer::BlendMode;
 use std::{usize, i32};
 use std::collections::{HashMap, HashSet};
 use std::f32;
@@ -187,24 +186,8 @@ pub enum ResultMsg {
     },
 }
 
-#[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
-pub struct StackingContextIndex(pub usize);
-
 #[derive(Clone, Copy, Debug)]
 pub struct UvRect {
     pub uv0: DevicePoint,
     pub uv1: DevicePoint,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum HardwareCompositeOp {
-    PremultipliedAlpha,
-}
-
-impl HardwareCompositeOp {
-    pub fn to_blend_mode(&self) -> BlendMode {
-        match *self {
-            HardwareCompositeOp::PremultipliedAlpha => BlendMode::PremultipliedAlpha,
-        }
-    }
 }

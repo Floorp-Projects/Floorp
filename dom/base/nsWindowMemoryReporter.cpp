@@ -10,7 +10,6 @@
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindowCollection.h"
-#include "nsIEffectiveTLDService.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -598,8 +597,8 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
     "ghost-windows", KIND_OTHER, UNITS_COUNT, ghostWindows.Count(),
 "The number of ghost windows present (the number of nodes underneath "
 "explicit/window-objects/top(none)/ghost, modulo race conditions).  A ghost "
-"window is not shown in any tab, does not share a domain with any non-detached "
-"windows, and has met these criteria for at least "
+"window is not shown in any tab, is not in a tab group with any "
+"non-detached windows, and has met these criteria for at least "
 "memory.ghost_window_timeout_seconds, or has survived a round of "
 "about:memory's minimize memory usage button.\n\n"
 "Ghost windows can happen legitimately, but they are often indicative of "
@@ -881,13 +880,6 @@ void
 nsWindowMemoryReporter::CheckForGhostWindows(
   nsTHashtable<nsUint64HashKey> *aOutGhostIDs /* = nullptr */)
 {
-  nsCOMPtr<nsIEffectiveTLDService> tldService = do_GetService(
-    NS_EFFECTIVETLDSERVICE_CONTRACTID);
-  if (!tldService) {
-    NS_WARNING("Couldn't get TLDService.");
-    return;
-  }
-
   nsGlobalWindowInner::InnerWindowByIdTable *windowsById =
     nsGlobalWindowInner::GetWindowsTable();
   if (!windowsById) {
@@ -898,30 +890,19 @@ nsWindowMemoryReporter::CheckForGhostWindows(
   mLastCheckForGhostWindows = TimeStamp::NowLoRes();
   KillCheckTimer();
 
-  nsTHashtable<nsCStringHashKey> nonDetachedWindowDomains;
-  nsDataHashtable<nsISupportsHashKey, nsCString> domainMap;
+  nsTHashtable<nsPtrHashKey<TabGroup>> nonDetachedTabGroups;
 
-  // Populate nonDetachedWindowDomains.
+  // Populate nonDetachedTabGroups.
   for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
     // Null outer window implies null top, but calling GetTop() when there's no
     // outer window causes us to spew debug warnings.
     nsGlobalWindowInner* window = iter.UserData();
     if (!window->GetOuterWindow() || !window->GetTopInternal()) {
-      // This window is detached, so we don't care about its domain.
+      // This window is detached, so we don't care about its tab group.
       continue;
     }
 
-    nsCOMPtr<nsIURI> uri = GetWindowURI(window);
-    nsAutoCString domain;
-    if (uri) {
-      domain = domainMap.LookupForAdd(uri).OrInsert([&]() {
-        nsCString d;
-        tldService->GetBaseDomain(uri, 0, d);
-        return d;
-      });
-    }
-
-    nonDetachedWindowDomains.PutEntry(domain);
+    nonDetachedTabGroups.PutEntry(window->TabGroup());
   }
 
   // Update mDetachedWindows and write the ghost window IDs into aOutGhostIDs,
@@ -955,24 +936,15 @@ nsWindowMemoryReporter::CheckForGhostWindows(
       continue;
     }
 
-    nsCOMPtr<nsIURI> uri = GetWindowURI(nsGlobalWindowInner::Cast(window));
-
-    nsAutoCString domain;
-    if (uri) {
-      // GetBaseDomain works fine if |uri| is null, but it outputs a warning
-      // which ends up overrunning the mochitest logs.
-      tldService->GetBaseDomain(uri, 0, domain);
-    }
-
     TimeStamp& timeStamp = iter.Data();
 
-    if (nonDetachedWindowDomains.Contains(domain)) {
-      // This window shares a domain with a non-detached window, so reset its
-      // clock.
+    if (nonDetachedTabGroups.GetEntry(window->TabGroup())) {
+      // This window is in the same tab group as a non-detached
+      // window, so reset its clock.
       timeStamp = TimeStamp();
     } else {
-      // This window does not share a domain with a non-detached window, so it
-      // meets ghost criterion (2).
+      // This window is not in the same tab group as a non-detached
+      // window, so it meets ghost criterion (2).
       if (timeStamp.IsNull()) {
         // This may become a ghost window later; start its clock.
         timeStamp = now;

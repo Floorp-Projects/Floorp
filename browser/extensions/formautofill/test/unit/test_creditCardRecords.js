@@ -256,7 +256,7 @@ add_task(async function test_add() {
 
   // Empty string should be deleted before saving.
   profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_EMPTY_FIELD);
-  let creditCard = profileStorage.creditCards.data[2];
+  let creditCard = profileStorage.creditCards._data[2];
   do_check_eq(creditCard["cc-exp-month"], TEST_CREDIT_CARD_WITH_EMPTY_FIELD["cc-exp-month"]);
   do_check_eq(creditCard["cc-name"], undefined);
 
@@ -299,8 +299,8 @@ add_task(async function test_update() {
   do_check_credit_card_matches(creditCard, TEST_CREDIT_CARD_3);
 
   // Empty string should be deleted while updating.
-  profileStorage.creditCards.update(profileStorage.creditCards.data[0].guid, TEST_CREDIT_CARD_WITH_EMPTY_FIELD);
-  creditCard = profileStorage.creditCards.data[0];
+  profileStorage.creditCards.update(profileStorage.creditCards._data[0].guid, TEST_CREDIT_CARD_WITH_EMPTY_FIELD);
+  creditCard = profileStorage.creditCards._data[0];
   do_check_eq(creditCard["cc-exp-month"], TEST_CREDIT_CARD_WITH_EMPTY_FIELD["cc-exp-month"]);
   do_check_eq(creditCard["cc-name"], undefined);
 

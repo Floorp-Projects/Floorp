@@ -865,11 +865,11 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
 }
 
 void
-MediaDecoder::NetworkError()
+MediaDecoder::NetworkError(const MediaResult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  GetOwner()->NetworkError();
+  GetOwner()->NetworkError(aError);
 }
 
 void

@@ -19,7 +19,6 @@ const testWindow = iframe.contentDocument.defaultView;
 // This is for backward compatibility.
 // We should do the same checks for the callbacks from v0 spec.
 [
-  'createdCallback',
   'attributeChangedCallback',
 ].forEach(callback => {
   var c = class {};

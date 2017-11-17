@@ -507,19 +507,23 @@ CFLAGS="$CFLAGS $HARDENING_CFLAGS"
 CPPFLAGS="$CPPFLAGS $HARDENING_CFLAGS"
 CXXFLAGS="$CXXFLAGS $HARDENING_CFLAGS"
 
-if test "$GNU_CC" -o -n "${CLANG_CC}${CLANG_CL}"; then
-    case $OS_TARGET in
-    Android)
-         dnl FORTIFY_SOURCE is not supported on Android on the
-         dnl top-level old-configure.in at this time.
-         dnl See Bug 1415595
-         ;;
-    *)
-        CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
-        CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=2"
-        CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"
-        ;;
-    esac
+dnl In at least glibc-2.25, _FORTIFY_SOURCE requires compiling
+dnl with optimization (Bug 1417452)
+if test -n "$MOZ_OPTIMIZE"; then
+   if test "$GNU_CC" -o -n "${CLANG_CC}${CLANG_CL}"; then
+      case $OS_TARGET in
+         Android)
+            dnl FORTIFY_SOURCE is not supported on Android on the
+            dnl top-level old-configure.in at this time.
+            dnl See Bug 1415595
+            ;;
+         *)
+            CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
+            CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=2"
+            CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"
+            ;;
+      esac
+   fi
 fi
 
 dnl ========================================================
@@ -4546,7 +4550,11 @@ fi
 AC_SUBST(MOZ_MACBUNDLE_NAME)
 
 dnl Mac bundle identifier (based on MOZ_APP_DISPLAYNAME)
-MOZ_MACBUNDLE_ID=`echo $MOZ_APP_DISPLAYNAME | tr '[A-Z]' '[a-z]'`
+# If the MOZ_MACBUNDLE_ID is defined in the configure.sh, use it
+# Otherwise, use MOZ_APP_DISPLAYNAME
+if test -z "$MOZ_MACBUNDLE_ID"; then
+   MOZ_MACBUNDLE_ID=`echo $MOZ_APP_DISPLAYNAME | tr '[A-Z]' '[a-z]'`
+fi
 MOZ_MACBUNDLE_ID=${MOZ_DISTRIBUTION_ID}.${MOZ_MACBUNDLE_ID}
 if test "$MOZ_DEBUG"; then
   MOZ_MACBUNDLE_ID=${MOZ_MACBUNDLE_ID}debug

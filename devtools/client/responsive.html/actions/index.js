@@ -38,7 +38,7 @@ createEnum([
 
   // The pixel ratio of the viewport has changed. This may be triggered by the user
   // when changing the device displayed in the viewport, or when a pixel ratio is
-  // selected from the DPR dropdown.
+  // selected from the device pixel ratio dropdown.
   "CHANGE_PIXEL_RATIO",
 
   // Change the touch simulation state.

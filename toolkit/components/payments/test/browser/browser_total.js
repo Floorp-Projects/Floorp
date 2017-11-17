@@ -3,12 +3,9 @@
 /* eslint-disable mozilla/no-cpows-in-tests */
 add_task(async function test_total() {
   const testTask = ({methodData, details}) => {
-    is(content.document.querySelector("#total > .value").textContent,
-       details.total.amount.value,
-       "Check total value");
-    is(content.document.querySelector("#total > .currency").textContent,
-       details.total.amount.currency,
-       "Check currency");
+    is(content.document.querySelector("#total > currency-amount").textContent,
+       "$60.00",
+       "Check total currency amount");
   };
   const args = {
     methodData: [PTU.MethodData.basicCard],
