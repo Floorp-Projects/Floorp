@@ -9,8 +9,6 @@
 "use strict";
 
 function run_test() {
-  removeMetadata();
-
   // The test engines used in this test need to be recognized as 'default'
   // engines, or their MozParams used to set the purpose will be ignored.
   let url = "resource://test/data/";

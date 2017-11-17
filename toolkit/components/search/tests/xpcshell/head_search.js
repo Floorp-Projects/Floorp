@@ -147,23 +147,6 @@ function installDistributionEngine() {
   });
 }
 
-/**
- * Clean the profile of any metadata files left from a previous run.
- */
-function removeMetadata() {
-  let file = gProfD.clone();
-  file.append("search-metadata.json");
-  if (file.exists()) {
-    file.remove(false);
-  }
-
-  file = gProfD.clone();
-  file.append("search.sqlite");
-  if (file.exists()) {
-    file.remove(false);
-  }
-}
-
 function promiseCacheData() {
   return new Promise(resolve => (async function() {
     let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
