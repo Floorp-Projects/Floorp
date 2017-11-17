@@ -89,6 +89,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS += [
         'nsWindowsHelpers.h',
     ]
+    OS_LIBS += [
+        'wscapi',
+    ]
 
 EXPORTS.mozilla += [
     'AutoRestore.h',
