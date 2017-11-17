@@ -808,7 +808,8 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
   // different surface type (e.g. SourceSurfaceSharedData for WebRender). If
   // we did not put anything in the cache, we will need to fallback to the
   // snapshot surface.
-  RefPtr<SourceSurface> surface = DrawInternal(params, false);
+  bool contextPaint = aSVGContext && aSVGContext->GetContextPaint();
+  RefPtr<SourceSurface> surface = DrawInternal(params, contextPaint);
   if (!surface) {
     surface = dt->Snapshot();
   }
@@ -865,10 +866,61 @@ VectorImage::GetImageContainerAtSize(LayerManager* aManager,
                                      const Maybe<SVGImageContext>& aSVGContext,
                                      uint32_t aFlags)
 {
+  Maybe<SVGImageContext> newSVGContext;
+  MaybeRestrictSVGContext(newSVGContext, aSVGContext, aFlags);
+
   // Since we do not support high quality scaling with SVG, we mask it off so
   // that container requests with and without it map to the same container.
-  uint32_t flags = aFlags & ~FLAG_HIGH_QUALITY_SCALING;
-  return GetImageContainerImpl(aManager, aSize, aSVGContext, flags);
+  // Similarly the aspect ratio flag was already handled as part of the SVG
+  // context restriction above.
+  uint32_t flags = aFlags & ~(FLAG_HIGH_QUALITY_SCALING |
+                              FLAG_FORCE_PRESERVEASPECTRATIO_NONE);
+  return GetImageContainerImpl(aManager, aSize,
+                               newSVGContext ? newSVGContext : aSVGContext,
+                               flags);
+}
+
+bool
+VectorImage::MaybeRestrictSVGContext(Maybe<SVGImageContext>& aNewSVGContext,
+                                     const Maybe<SVGImageContext>& aSVGContext,
+                                     uint32_t aFlags)
+{
+  bool overridePAR = (aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) && aSVGContext;
+
+  bool haveContextPaint = aSVGContext && aSVGContext->GetContextPaint();
+  bool blockContextPaint = false;
+  if (haveContextPaint) {
+    nsCOMPtr<nsIURI> imageURI = mURI->ToIURI();
+    blockContextPaint = !SVGContextPaint::IsAllowedForImageFromURI(imageURI);
+  }
+
+  if (overridePAR || blockContextPaint) {
+    // The key that we create for the image surface cache must match the way
+    // that the image will be painted, so we need to initialize a new matching
+    // SVGImageContext here in order to generate the correct key.
+
+    aNewSVGContext = aSVGContext; // copy
+
+    if (overridePAR) {
+      // The SVGImageContext must take account of the preserveAspectRatio
+      // overide:
+      MOZ_ASSERT(!aSVGContext->GetPreserveAspectRatio(),
+                 "FLAG_FORCE_PRESERVEASPECTRATIO_NONE is not expected if a "
+                 "preserveAspectRatio override is supplied");
+      Maybe<SVGPreserveAspectRatio> aspectRatio =
+        Some(SVGPreserveAspectRatio(SVG_PRESERVEASPECTRATIO_NONE,
+                                    SVG_MEETORSLICE_UNKNOWN));
+      aNewSVGContext->SetPreserveAspectRatio(aspectRatio);
+    }
+
+    if (blockContextPaint) {
+      // The SVGImageContext must not include context paint if the image is
+      // not allowed to use it:
+      aNewSVGContext->ClearContextPaint();
+    }
+  }
+
+  return haveContextPaint && !blockContextPaint;
 }
 
 //******************************************************************************
@@ -907,44 +959,12 @@ VectorImage::Draw(gfxContext* aContext,
              "Viewport size is required when using "
              "FLAG_FORCE_PRESERVEASPECTRATIO_NONE");
 
-  bool overridePAR = (aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) && aSVGContext;
-
-  bool haveContextPaint = aSVGContext && aSVGContext->GetContextPaint();
-  bool blockContextPaint = false;
-  if (haveContextPaint) {
-    nsCOMPtr<nsIURI> imageURI = mURI->ToIURI();
-    blockContextPaint = !SVGContextPaint::IsAllowedForImageFromURI(imageURI);
-  }
-
-  Maybe<SVGImageContext> newSVGContext;
-  if (overridePAR || blockContextPaint) {
-    // The key that we create for the image surface cache must match the way
-    // that the image will be painted, so we need to initialize a new matching
-    // SVGImageContext here in order to generate the correct key.
-
-    newSVGContext = aSVGContext; // copy
-
-    if (overridePAR) {
-      // The SVGImageContext must take account of the preserveAspectRatio
-      // overide:
-      MOZ_ASSERT(!aSVGContext->GetPreserveAspectRatio(),
-                 "FLAG_FORCE_PRESERVEASPECTRATIO_NONE is not expected if a "
-                 "preserveAspectRatio override is supplied");
-      Maybe<SVGPreserveAspectRatio> aspectRatio =
-        Some(SVGPreserveAspectRatio(SVG_PRESERVEASPECTRATIO_NONE,
-                                    SVG_MEETORSLICE_UNKNOWN));
-      newSVGContext->SetPreserveAspectRatio(aspectRatio);
-    }
-
-    if (blockContextPaint) {
-      // The SVGImageContext must not include context paint if the image is
-      // not allowed to use it:
-      newSVGContext->ClearContextPaint();
-    }
-  }
-
   float animTime = (aWhichFrame == FRAME_FIRST)
                      ? 0.0f : mSVGDocumentWrapper->GetCurrentTime();
+
+  Maybe<SVGImageContext> newSVGContext;
+  bool contextPaint =
+    MaybeRestrictSVGContext(newSVGContext, aSVGContext, aFlags);
 
   SVGDrawingParameters params(aContext, aSize, aRegion, aSamplingFilter,
                               newSVGContext ? newSVGContext : aSVGContext,
@@ -968,8 +988,7 @@ VectorImage::Draw(gfxContext* aContext,
     return DrawResult::TEMPORARY_ERROR;
   }
 
-  RefPtr<SourceSurface> surface =
-    DrawInternal(params, haveContextPaint && !blockContextPaint);
+  RefPtr<SourceSurface> surface = DrawInternal(params, contextPaint);
 
   // Image got put into a painted layer, it will not be shared with another
   // process.
