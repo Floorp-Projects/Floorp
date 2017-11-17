@@ -97,6 +97,10 @@ private:
                         const Maybe<SVGImageContext>& aSVGContext,
                         uint32_t aFlags);
 
+  bool MaybeRestrictSVGContext(Maybe<SVGImageContext>& aNewSVGContext,
+                               const Maybe<SVGImageContext>& aSVGContext,
+                               uint32_t aFlags);
+
   already_AddRefed<SourceSurface>
     DrawInternal(const SVGDrawingParameters& aParams, bool aContextPaint);
 
