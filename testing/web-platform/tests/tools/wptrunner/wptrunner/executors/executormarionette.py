@@ -170,7 +170,7 @@ class MarionetteProtocol(Protocol):
 
     def wait(self):
         try:
-            socket_timeout = self.marionette.client.sock.gettimeout()
+            socket_timeout = self.marionette.client.socket_timeout
         except AttributeError:
             # This can happen if there was a crash
             return
