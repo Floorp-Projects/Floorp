@@ -751,6 +751,17 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
     return nullptr;
   }
 
+  RefPtr<SourceSurface> sourceSurface =
+    LookupCachedSurface(aSize, Nothing(), aFlags);
+  if (sourceSurface) {
+    return sourceSurface.forget();
+  }
+
+  if (mIsDrawing) {
+    NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
+    return nullptr;
+  }
+
   // Make our surface the size of what will ultimately be drawn to it.
   // (either the full image size, or the restricted region)
   RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
@@ -763,11 +774,14 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(context); // already checked the draw target above
 
-  auto result = Draw(context, aSize, ImageRegion::Create(aSize),
-                     aWhichFrame, SamplingFilter::POINT, Nothing(), aFlags,
-                     1.0);
+  Maybe<SVGImageContext> svgContext;
+  SVGDrawingParameters params(context, aSize, ImageRegion::Create(aSize),
+                              SamplingFilter::POINT, svgContext,
+                              mSVGDocumentWrapper->GetCurrentTime(),
+                              aFlags, 1.0);
 
-  return result == DrawResult::SUCCESS ? dt->Snapshot() : nullptr;
+  DrawInternal(params, false);
+  return dt->Snapshot();
 }
 
 //******************************************************************************
@@ -883,8 +897,12 @@ VectorImage::Draw(gfxContext* aContext,
 
   // If we have an prerasterized version of this image that matches the
   // drawing parameters, use that.
-  RefPtr<gfxDrawable> svgDrawable = LookupCachedSurface(params);
-  if (svgDrawable) {
+  RefPtr<SourceSurface> sourceSurface =
+    LookupCachedSurface(aSize, params.svgContext, aFlags);
+
+  if (sourceSurface) {
+    RefPtr<gfxDrawable> svgDrawable =
+      new gfxSurfaceDrawable(sourceSurface, sourceSurface->GetSize());
     Show(svgDrawable, params);
     return DrawResult::SUCCESS;
   }
@@ -895,35 +913,48 @@ VectorImage::Draw(gfxContext* aContext,
     NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
     return DrawResult::TEMPORARY_ERROR;
   }
+
+  DrawInternal(params, haveContextPaint && !blockContextPaint);
+  return DrawResult::SUCCESS;
+}
+
+void
+VectorImage::DrawInternal(const SVGDrawingParameters& aParams,
+                          bool aContextPaint)
+{
+  MOZ_ASSERT(!mIsDrawing);
+
   AutoRestore<bool> autoRestoreIsDrawing(mIsDrawing);
   mIsDrawing = true;
 
   // Apply any 'preserveAspectRatio' override (if specified) to the root
   // element:
-  AutoPreserveAspectRatioOverride autoPAR(newSVGContext ? newSVGContext : aSVGContext,
+  AutoPreserveAspectRatioOverride autoPAR(aParams.svgContext,
                                           mSVGDocumentWrapper->GetRootSVGElem());
 
   // Set the animation time:
   AutoSVGTimeSetRestore autoSVGTime(mSVGDocumentWrapper->GetRootSVGElem(),
-                                    animTime);
+                                    aParams.animationTime);
 
   // Set context paint (if specified) on the document:
   Maybe<AutoSetRestoreSVGContextPaint> autoContextPaint;
-  if (haveContextPaint && !blockContextPaint) {
-    autoContextPaint.emplace(aSVGContext->GetContextPaint(),
+  if (aContextPaint) {
+    autoContextPaint.emplace(aParams.svgContext->GetContextPaint(),
                              mSVGDocumentWrapper->GetDocument());
   }
 
   // We didn't get a hit in the surface cache, so we'll need to rerasterize.
-  CreateSurfaceAndShow(params, aContext->GetDrawTarget()->GetBackendType());
-  return DrawResult::SUCCESS;
+  BackendType backend = aParams.context->GetDrawTarget()->GetBackendType();
+  CreateSurfaceAndShow(aParams, backend);
 }
 
-already_AddRefed<gfxDrawable>
-VectorImage::LookupCachedSurface(const SVGDrawingParameters& aParams)
+already_AddRefed<SourceSurface>
+VectorImage::LookupCachedSurface(const IntSize& aSize,
+                                 const Maybe<SVGImageContext>& aSVGContext,
+                                 uint32_t aFlags)
 {
   // If we're not allowed to use a cached surface, don't attempt a lookup.
-  if (aParams.flags & FLAG_BYPASS_SURFACE_CACHE) {
+  if (aFlags & FLAG_BYPASS_SURFACE_CACHE) {
     return nullptr;
   }
 
@@ -935,7 +966,7 @@ VectorImage::LookupCachedSurface(const SVGDrawingParameters& aParams)
 
   LookupResult result =
     SurfaceCache::Lookup(ImageKey(this),
-                         VectorSurfaceKey(aParams.size, aParams.svgContext));
+                         VectorSurfaceKey(aSize, aSVGContext));
   if (!result) {
     return nullptr;  // No matching surface, or the OS freed the volatile buffer.
   }
@@ -948,9 +979,7 @@ VectorImage::LookupCachedSurface(const SVGDrawingParameters& aParams)
     return nullptr;
   }
 
-  RefPtr<gfxDrawable> svgDrawable =
-    new gfxSurfaceDrawable(sourceSurface, result.Surface()->GetSize());
-  return svgDrawable.forget();
+  return sourceSurface.forget();
 }
 
 void
