@@ -2187,7 +2187,11 @@ nsDocShell::SetForcedCharset(const nsACString& aCharset)
 NS_IMETHODIMP
 nsDocShell::GetForcedCharset(nsACString& aResult)
 {
-  mForcedCharset->Name(aResult);
+  if (mForcedCharset) {
+    mForcedCharset->Name(aResult);
+  } else {
+    aResult.Truncate();
+  }
   return NS_OK;
 }
 
