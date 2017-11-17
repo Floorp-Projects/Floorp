@@ -117,12 +117,7 @@ using namespace mozilla;
 // The old low-level prefs API
 //===========================================================================
 
-struct PrefHashEntry;
-
 typedef nsTArray<nsCString> PrefSaveData;
-
-static PrefHashEntry*
-pref_HashTableLookup(const char* aKey);
 
 // 1 MB should be enough for everyone.
 static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
@@ -339,6 +334,9 @@ static PLDHashTableOps pref_HashTableOps = {
 };
 
 //---------------------------------------------------------------------------
+
+static PrefHashEntry*
+pref_HashTableLookup(const char* aKey);
 
 static bool
 pref_ValueChanged(PrefValue aOldValue, PrefValue aNewValue, PrefType aType);
