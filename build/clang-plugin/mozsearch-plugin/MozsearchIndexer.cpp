@@ -459,7 +459,9 @@ public:
       size_t Length = 0;
       for (std::string &Line : Nodupes) {
         Length += Line.length();
-        fwrite(Line.c_str(), Line.length(), 1, Fp);
+        if (fwrite(Line.c_str(), Line.length(), 1, Fp) != 1) {
+          fprintf(stderr, "Unable to write to output file %s\n", Filename.c_str());
+        }
       }
       fclose(Fp);
 
