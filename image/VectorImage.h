@@ -96,9 +96,13 @@ private:
                         const Maybe<SVGImageContext>& aSVGContext,
                         uint32_t aFlags);
 
-  void DrawInternal(const SVGDrawingParameters& aParams, bool aContextPaint);
-  void CreateSurfaceAndShow(const SVGDrawingParameters& aParams,
-                            gfx::BackendType aBackend);
+  already_AddRefed<SourceSurface>
+    DrawInternal(const SVGDrawingParameters& aParams, bool aContextPaint);
+
+  already_AddRefed<SourceSurface>
+    CreateSurfaceAndShow(const SVGDrawingParameters& aParams,
+                         gfx::BackendType aBackend);
+
   void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams);
 
   nsresult Init(const char* aMimeType, uint32_t aFlags);
