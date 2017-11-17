@@ -2737,8 +2737,8 @@ Gecko_DocumentRule_UseForPresentation(RawGeckoPresContextBorrowed aPresContext,
     NS_ENSURE_SUCCESS(rv, false);
   }
 
-  return css::DocumentRule::UseForPresentation(doc, docURI, docURISpec,
-                                               *aPattern, aURLMatchingFunction);
+  return CSSMozDocumentRule::Match(doc, docURI, docURISpec, *aPattern,
+                                   aURLMatchingFunction);
 }
 
 void
