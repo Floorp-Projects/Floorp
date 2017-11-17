@@ -329,16 +329,14 @@ android-common-tests:
 android-debug-tests:
     # Marionette only available on Fennec debug builds as a security precaution
     - marionette
-    - geckoview
 
 android-opt-tests:
+    # Robocop tests often fail on Debug builds
     - robocop
-    - geckoview
 
 android-gradle-tests:
-    - mochitest-chrome
-    - robocop
-    - test-verify
+    # geckoview_example is only built in gradle builds
+    - geckoview
 
 android-x86-tests:
     - mochitest-chrome
