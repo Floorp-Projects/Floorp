@@ -1166,17 +1166,7 @@ VectorImage::Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams)
                              aParams.flags, aParams.opacity);
 
 #ifdef DEBUG
-  // Record the image drawing for startup performance testing.
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    NS_WARNING_ASSERTION(obs, "Can't get an observer service handle");
-    if (obs) {
-      nsCOMPtr<nsIURI> imageURI = mURI->ToIURI();
-      nsAutoCString spec;
-      imageURI->GetSpec(spec);
-      obs->NotifyObservers(nullptr, "image-drawing", NS_ConvertUTF8toUTF16(spec).get());
-    }
-  }
+  NotifyDrawingObservers();
 #endif
 
   MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");
