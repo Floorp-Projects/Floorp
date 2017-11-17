@@ -1432,10 +1432,12 @@ VARIABLES = {
         * ``$LOCALE_SRCDIR`` with the leading ``en-US`` removed
         * the in-tree en-US location
 
-        Paths specified here must be relative to the source directory and must
-        include a leading ``en-US``. Wildcards are allowed, and will be
-        expanded at the time of locale packaging to match files in the
-        locale directory.
+        Source directory paths specified here must must include a leading ``en-US``.
+        Wildcards are allowed, and will be expanded at the time of locale packaging to match
+        files in the locale directory.
+
+        Object directory paths are allowed here only if the path matches an entry in
+        ``LOCALIZED_GENERATED_FILES``.
 
         Files that are missing from a locale will typically have the en-US
         version used, but for wildcard expansions only files from the
@@ -1476,6 +1478,9 @@ VARIABLES = {
         2. The ``inputs`` list may contain paths to files that will be taken from the locale
            source directory (see ``LOCALIZED_FILES`` for a discussion of the specifics). Paths
            in ``inputs`` starting with ``en-US/`` are considered localized files.
+
+        To place the generated output file in a specific location, list its objdir path in
+        ``LOCALIZED_FILES``.
         """),
 
     'OBJDIR_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
