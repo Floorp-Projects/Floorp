@@ -304,6 +304,14 @@
         </body>
       </method>
 
+      <property name="hasLayers" readonly="true">
+        <getter>
+          <![CDATA[
+            return this.docShellIsActive;
+          ]]>
+        </getter>
+      </property>
+
       <property name="imageDocument"
                 readonly="true">
         <getter>
