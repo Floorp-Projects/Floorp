@@ -2864,10 +2864,8 @@ ICCallStubCompiler::guardFunApply(MacroAssembler& masm, AllocatableGeneralRegist
 
     Register temp = regs.takeAny();
     masm.branchIfFunctionHasNoScript(target, failure);
-    masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor,
-                            callee, temp, failure);
-    masm.loadPtr(Address(target, JSFunction::offsetOfScript()), temp);
-    masm.loadBaselineOrIonRaw(temp, temp, failure);
+    masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor, callee, temp, failure);
+    masm.loadJitCodeRaw(target, temp, failure);
     regs.add(temp);
     return target;
 }
