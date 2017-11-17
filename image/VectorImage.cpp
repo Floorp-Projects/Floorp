@@ -16,6 +16,7 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Tuple.h"
 #include "nsIDOMEvent.h"
 #include "nsIPresShell.h"
 #include "nsIStreamListener.h"
@@ -737,29 +738,42 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
                             uint32_t aWhichFrame,
                             uint32_t aFlags)
 {
+  auto result = GetFrameInternal(aSize, aWhichFrame, aFlags);
+  return Get<2>(result).forget();
+}
+
+Tuple<DrawResult, IntSize, RefPtr<SourceSurface>>
+VectorImage::GetFrameInternal(const IntSize& aSize,
+                              uint32_t aWhichFrame,
+                              uint32_t aFlags)
+{
   MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE);
 
-  if (aSize.IsEmpty()) {
-    return nullptr;
+  if (aSize.IsEmpty() || aWhichFrame > FRAME_MAX_VALUE) {
+    return MakeTuple(DrawResult::BAD_ARGS, aSize,
+                     RefPtr<SourceSurface>());
   }
 
-  if (aWhichFrame > FRAME_MAX_VALUE) {
-    return nullptr;
+  if (mError) {
+    return MakeTuple(DrawResult::BAD_IMAGE, aSize,
+                     RefPtr<SourceSurface>());
   }
 
-  if (mError || !mIsFullyLoaded) {
-    return nullptr;
+  if (!mIsFullyLoaded) {
+    return MakeTuple(DrawResult::NOT_READY, aSize,
+                     RefPtr<SourceSurface>());
   }
 
   RefPtr<SourceSurface> sourceSurface =
     LookupCachedSurface(aSize, Nothing(), aFlags);
   if (sourceSurface) {
-    return sourceSurface.forget();
+    return MakeTuple(DrawResult::SUCCESS, aSize, Move(sourceSurface));
   }
 
   if (mIsDrawing) {
     NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
-    return nullptr;
+    return MakeTuple(DrawResult::TEMPORARY_ERROR, aSize,
+                     RefPtr<SourceSurface>());
   }
 
   // Make our surface the size of what will ultimately be drawn to it.
@@ -768,7 +782,8 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
     CreateOffscreenContentDrawTarget(aSize, SurfaceFormat::B8G8R8A8);
   if (!dt || !dt->IsValid()) {
     NS_ERROR("Could not create a DrawTarget");
-    return nullptr;
+    return MakeTuple(DrawResult::TEMPORARY_ERROR, aSize,
+                     RefPtr<SourceSurface>());
   }
 
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
@@ -781,7 +796,8 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
                               aFlags, 1.0);
 
   DrawInternal(params, false);
-  return dt->Snapshot();
+  RefPtr<SourceSurface> sourceSurface = dt->Snapshot();
+  return MakeTuple(DrawResult::SUCCESS, aSize, Move(sourceSurface));
 }
 
 //******************************************************************************
@@ -899,7 +915,6 @@ VectorImage::Draw(gfxContext* aContext,
   // drawing parameters, use that.
   RefPtr<SourceSurface> sourceSurface =
     LookupCachedSurface(aSize, params.svgContext, aFlags);
-
   if (sourceSurface) {
     RefPtr<gfxDrawable> svgDrawable =
       new gfxSurfaceDrawable(sourceSurface, sourceSurface->GetSize());
@@ -967,6 +982,8 @@ VectorImage::LookupCachedSurface(const IntSize& aSize,
   LookupResult result =
     SurfaceCache::Lookup(ImageKey(this),
                          VectorSurfaceKey(aSize, aSVGContext));
+
+  MOZ_ASSERT(result.SuggestedSize().IsEmpty(), "SVG should not substitute!");
   if (!result) {
     return nullptr;  // No matching surface, or the OS freed the volatile buffer.
   }
