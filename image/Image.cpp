@@ -125,10 +125,14 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
     } else if (!container) {
       // Stop tracking if our weak pointer to the image container was freed.
       mImageContainers.RemoveElementAt(i);
+    } else {
+      // It isn't a match, but still valid. Forget the container so we don't
+      // try to reuse it below.
+      container = nullptr;
     }
   }
 
-  if (i >= 0 && container) {
+  if (container) {
     switch (entry->mLastDrawResult) {
       case DrawResult::SUCCESS:
       case DrawResult::BAD_IMAGE:
