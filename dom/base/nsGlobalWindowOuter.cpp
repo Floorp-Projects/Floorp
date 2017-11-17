@@ -4,6 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using namespace mozilla;
+using namespace mozilla::dom;
+using namespace mozilla::dom::ipc;
+using mozilla::BasePrincipal;
+using mozilla::OriginAttributes;
+using mozilla::TimeStamp;
+
 #define FORWARD_TO_INNER(method, args, err_rval)                        \
   PR_BEGIN_MACRO                                                        \
   MOZ_RELEASE_ASSERT(IsOuterWindow());                                  \
@@ -42,6 +49,8 @@
   }                                                                     \
   return GetCurrentInnerWindowInternal()->method args;                  \
   PR_END_MACRO
+
+static LazyLogModule gDOMLeakPRLogOuter("DOMLeakOuter");
 
 static int32_t              gOpenPopupSpamCount               = 0;
 
@@ -686,7 +695,7 @@ nsGlobalWindowOuter::nsGlobalWindowOuter()
   }
 #endif
 
-  MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug,
+  MOZ_LOG(gDOMLeakPRLogOuter, LogLevel::Debug,
           ("DOMWINDOW %p created outer=nullptr", this));
 
   // Add ourselves to the outer windows list.
@@ -718,7 +727,7 @@ nsGlobalWindowOuter::Init()
 {
   AssertIsOnMainThread();
 
-  NS_ASSERTION(gDOMLeakPRLog, "gDOMLeakPRLog should have been initialized!");
+  NS_ASSERTION(gDOMLeakPRLogOuter, "gDOMLeakPRLogOuter should have been initialized!");
 
   sOuterWindowsById = new OuterWindowByIdTable();
 }
@@ -773,7 +782,7 @@ nsGlobalWindowOuter::~nsGlobalWindowOuter()
   }
 #endif
 
-  MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug, ("DOMWINDOW %p destroyed", this));
+  MOZ_LOG(gDOMLeakPRLogOuter, LogLevel::Debug, ("DOMWINDOW %p destroyed", this));
 
   JSObject *proxy = GetWrapperMaybeDead();
   if (proxy) {
