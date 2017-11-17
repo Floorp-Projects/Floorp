@@ -265,14 +265,12 @@ int VoEExternalMediaImpl::ExternalPlayoutData(
     int16_t speechData10ms[],
     int samplingFreqHz,
     int num_channels,
-    int current_delay_ms,
     int& lengthSamples)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(shared_->instance_id(), -1),
                  "ExternalPlayoutData(speechData10ms=0x%x,"
-                 " lengthSamples=%u, samplingFreqHz=%d, current_delay_ms=%d)",
-                 &speechData10ms[0], lengthSamples, samplingFreqHz,
-                 current_delay_ms);
+                 " lengthSamples=%u, samplingFreqHz=%d)",
+                 &speechData10ms[0], lengthSamples, samplingFreqHz);
 
 #ifdef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
     if (!shared_->statistics().Initialized())
@@ -292,12 +290,6 @@ int VoEExternalMediaImpl::ExternalPlayoutData(
     {
          shared_->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
              "SetExternalRecordingStatus() invalid sample rate");
-        return -1;
-    }
-    if (current_delay_ms < 0)
-    {
-        shared_->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
-            "SetExternalRecordingStatus() invalid delay)");
         return -1;
     }
 

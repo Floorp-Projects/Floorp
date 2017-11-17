@@ -1807,7 +1807,6 @@ MediaManager::MediaManager()
   mPrefs.mAgc          = 0;
   mPrefs.mNoise        = 0;
 #endif
-  mPrefs.mPlayoutDelay = 0;
   mPrefs.mFullDuplex = false;
   mPrefs.mChannels     = 0; // max channels default
   nsresult rv;
@@ -1820,12 +1819,12 @@ MediaManager::MediaManager()
   }
   LOG(("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s,"
        "agc: %s, noise: %s, aec level: %d, agc level: %d, noise level: %d,"
-       "playout delay: %d, %sfull_duplex, extended aec %s, delay_agnostic %s "
+       "%sfull_duplex, extended aec %s, delay_agnostic %s "
        "channels %d",
        __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight,
        mPrefs.mFPS, mPrefs.mFreq, mPrefs.mAecOn ? "on" : "off",
        mPrefs.mAgcOn ? "on": "off", mPrefs.mNoiseOn ? "on": "off", mPrefs.mAec,
-       mPrefs.mAgc, mPrefs.mNoise, mPrefs.mPlayoutDelay, mPrefs.mFullDuplex ? "" : "not ",
+       mPrefs.mAgc, mPrefs.mNoise, mPrefs.mFullDuplex ? "" : "not ",
        mPrefs.mExtendedFilter ? "on" : "off", mPrefs.mDelayAgnostic ? "on" : "off",
        mPrefs.mChannels));
 }
@@ -1897,7 +1896,6 @@ MediaManager::Get() {
       prefs->AddObserver("media.getusermedia.agc", sSingleton, false);
       prefs->AddObserver("media.getusermedia.noise_enabled", sSingleton, false);
       prefs->AddObserver("media.getusermedia.noise", sSingleton, false);
-      prefs->AddObserver("media.getusermedia.playout_delay", sSingleton, false);
       prefs->AddObserver("media.ondevicechange.fakeDeviceChangeEvent.enabled", sSingleton, false);
       prefs->AddObserver("media.getusermedia.channels", sSingleton, false);
 #endif
@@ -3076,7 +3074,6 @@ MediaManager::GetPrefs(nsIPrefBranch *aBranch, const char *aData)
   GetPref(aBranch, "media.getusermedia.aec", aData, &mPrefs.mAec);
   GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
   GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
-  GetPref(aBranch, "media.getusermedia.playout_delay", aData, &mPrefs.mPlayoutDelay);
   GetPrefBool(aBranch, "media.getusermedia.aec_extended_filter", aData, &mPrefs.mExtendedFilter);
   GetPrefBool(aBranch, "media.getusermedia.aec_aec_delay_agnostic", aData, &mPrefs.mDelayAgnostic);
   GetPref(aBranch, "media.getusermedia.channels", aData, &mPrefs.mChannels);
@@ -3115,7 +3112,6 @@ MediaManager::Shutdown()
     prefs->RemoveObserver("media.getusermedia.agc", this);
     prefs->RemoveObserver("media.getusermedia.noise_enabled", this);
     prefs->RemoveObserver("media.getusermedia.noise", this);
-    prefs->RemoveObserver("media.getusermedia.playout_delay", this);
     prefs->RemoveObserver("media.ondevicechange.fakeDeviceChangeEvent.enabled", this);
     prefs->RemoveObserver("media.getusermedia.channels", this);
 #endif
