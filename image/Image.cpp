@@ -169,7 +169,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
 }
 
 void
-ImageResource::UpdateImageContainer(const IntSize&)
+ImageResource::UpdateImageContainer()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
