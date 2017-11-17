@@ -7,11 +7,12 @@
 "use strict";
 
 define(function (require, exports, module) {
-  const { createFactory, Component } = require("devtools/client/shared/vendor/react");
+  const { Component } = require("devtools/client/shared/vendor/react");
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
   const { createFactories } = require("devtools/client/shared/react-utils");
-  const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
+  const { TextToolbar } = createFactories(require("./TextToolbar"));
+
   const { div, pre } = dom;
 
   /**
@@ -35,7 +36,7 @@ define(function (require, exports, module) {
     render() {
       return (
         div({className: "textPanelBox tab-panel-inner"},
-          TextToolbarFactory({
+          TextToolbar({
             actions: this.props.actions,
             isValidJson: this.props.isValidJson
           }),
@@ -48,66 +49,6 @@ define(function (require, exports, module) {
       );
     }
   }
-
-  /**
-   * This object represents a toolbar displayed within the
-   * 'Raw Data' panel.
-   */
-  class TextToolbar extends Component {
-    static get propTypes() {
-      return {
-        actions: PropTypes.object,
-        isValidJson: PropTypes.bool
-      };
-    }
-
-    constructor(props) {
-      super(props);
-      this.onPrettify = this.onPrettify.bind(this);
-      this.onSave = this.onSave.bind(this);
-      this.onCopy = this.onCopy.bind(this);
-    }
-
-    // Commands
-
-    onPrettify(event) {
-      this.props.actions.onPrettify();
-    }
-
-    onSave(event) {
-      this.props.actions.onSaveJson();
-    }
-
-    onCopy(event) {
-      this.props.actions.onCopyJson();
-    }
-
-    render() {
-      return (
-        Toolbar({},
-          ToolbarButton({
-            className: "btn save",
-            onClick: this.onSave},
-            JSONView.Locale.$STR("jsonViewer.Save")
-          ),
-          ToolbarButton({
-            className: "btn copy",
-            onClick: this.onCopy},
-            JSONView.Locale.$STR("jsonViewer.Copy")
-          ),
-          this.props.isValidJson ?
-            ToolbarButton({
-              className: "btn prettyprint",
-              onClick: this.onPrettify},
-              JSONView.Locale.$STR("jsonViewer.PrettyPrint")
-            ) :
-            null
-        )
-      );
-    }
-  }
-
-  let TextToolbarFactory = createFactory(TextToolbar);
 
   // Exports from this module
   exports.TextPanel = TextPanel;
