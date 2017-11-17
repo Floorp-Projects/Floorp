@@ -46,7 +46,7 @@ public:
   // valid CRC.
   bool Parse(const uint8_t* aPacket, size_t aBytes)
   {
-    mp4_demuxer::BitReader br(aPacket, aBytes * 8);
+    BitReader br(aPacket, aBytes * 8);
 
     // Frame sync code.
     if ((br.ReadBits(15) & 0x7fff) != 0x7ffc) {

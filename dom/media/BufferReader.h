@@ -12,7 +12,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Result.h"
 
-namespace mp4_demuxer {
+namespace mozilla {
 
 extern mozilla::LazyLogModule gMP4MetadataLog;
 
@@ -309,6 +309,6 @@ private:
   size_t mLength;
 };
 
-} // namespace mp4_demuxer
+} // namespace mozilla
 
 #endif
