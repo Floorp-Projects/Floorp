@@ -169,5 +169,31 @@ ImageResource::SendOnUnlockedDraw(uint32_t aFlags)
   }
 }
 
+#ifdef DEBUG
+void
+ImageResource::NotifyDrawingObservers()
+{
+  if (!mURI || !NS_IsMainThread()) {
+    return;
+  }
+
+  bool match = false;
+  if ((NS_FAILED(mURI->SchemeIs("resource", &match)) || !match) &&
+      (NS_FAILED(mURI->SchemeIs("chrome", &match)) || !match)) {
+    return;
+  }
+
+  // Record the image drawing for startup performance testing.
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_WARNING_ASSERTION(obs, "Can't get an observer service handle");
+  if (obs) {
+    nsCOMPtr<nsIURI> imageURI = mURI->ToIURI();
+    nsAutoCString spec;
+    imageURI->GetSpec(spec);
+    obs->NotifyObservers(nullptr, "image-drawing", NS_ConvertUTF8toUTF16(spec).get());
+  }
+}
+#endif
+
 } // namespace image
 } // namespace mozilla
