@@ -5,7 +5,7 @@
 use api::{ClipId, DeviceIntRect, LayerPixel, LayerPoint, LayerRect, LayerSize};
 use api::{LayerToScrollTransform, LayerToWorldTransform, LayerVector2D, LayoutVector2D, PipelineId};
 use api::{ScrollClamping, ScrollEventPhase, ScrollLocation, ScrollSensitivity};
-use api::{StickyOffsetBounds, WorldPoint};
+use api::{LayoutTransform, PropertyBinding, StickyOffsetBounds, WorldPoint};
 use clip::{ClipSourcesHandle, ClipStore};
 use clip_scroll_tree::{CoordinateSystemId, TransformUpdateState};
 use euclid::SideOffsets2D;
@@ -14,6 +14,7 @@ use gpu_cache::GpuCache;
 use gpu_types::{ClipScrollNodeIndex, ClipScrollNodeData};
 use render_task::{ClipChain, ClipChainNode, ClipWorkItem};
 use resource_cache::ResourceCache;
+use scene::SceneProperties;
 use spring::{DAMPING, STIFFNESS, Spring};
 use std::rc::Rc;
 use util::{MatrixHelpers, MaxRect};
@@ -185,12 +186,16 @@ impl ClipScrollNode {
     pub fn new_reference_frame(
         parent_id: Option<ClipId>,
         frame_rect: &LayerRect,
-        transform: &LayerToScrollTransform,
+        source_transform: Option<PropertyBinding<LayoutTransform>>,
+        source_perspective: Option<LayoutTransform>,
         origin_in_parent_reference_frame: LayerVector2D,
         pipeline_id: PipelineId,
     ) -> Self {
+        let identity = LayoutTransform::identity();
         let info = ReferenceFrameInfo {
-            transform: *transform,
+            resolved_transform: LayerToScrollTransform::identity(),
+            source_transform: source_transform.unwrap_or(PropertyBinding::Value(identity)),
+            source_perspective: source_perspective.unwrap_or(identity),
             origin_in_parent_reference_frame,
         };
         Self::new(pipeline_id, parent_id, frame_rect, NodeType::ReferenceFrame(info))
@@ -273,12 +278,13 @@ impl ClipScrollNode {
         clip_store: &mut ClipStore,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
+        scene_properties: &SceneProperties,
     ) {
         // We set this earlier so that we can use it before we have all the data necessary
         // to populate the ClipScrollNodeData.
         self.node_data_index = ClipScrollNodeIndex(node_data.len() as u32);
 
-        self.update_transform(state);
+        self.update_transform(state, scene_properties);
         self.update_clip_work_item(
             state,
             device_pixel_ratio,
@@ -309,6 +315,7 @@ impl ClipScrollNode {
             }
             None => {
                 state.combined_outer_clip_bounds = DeviceIntRect::zero();
+                self.combined_clip_outer_bounds = DeviceIntRect::zero();
                 ClipScrollNodeData::invalid()
             }
         };
@@ -365,7 +372,11 @@ impl ClipScrollNode {
         state.parent_clip_chain = self.clip_chain_node.clone();
     }
 
-    pub fn update_transform(&mut self, state: &mut TransformUpdateState) {
+    pub fn update_transform(
+        &mut self,
+        state: &mut TransformUpdateState,
+        scene_properties: &SceneProperties,
+    ) {
         // We calculate this here to avoid a double-borrow later.
         let sticky_offset = self.calculate_sticky_offset(
             &state.nearest_scrolling_ancestor_offset,
@@ -373,12 +384,21 @@ impl ClipScrollNode {
         );
 
         let (local_transform, accumulated_scroll_offset) = match self.node_type {
-            NodeType::ReferenceFrame(ref info) => {
-                self.combined_local_viewport_rect = info.transform
+            NodeType::ReferenceFrame(ref mut info) => {
+                // Resolve the transform against any property bindings.
+                let source_transform = scene_properties.resolve_layout_transform(&info.source_transform);
+                info.resolved_transform = LayerToScrollTransform::create_translation(
+                    info.origin_in_parent_reference_frame.x,
+                    info.origin_in_parent_reference_frame.y,
+                    0.0
+                ).pre_mul(&source_transform)
+                 .pre_mul(&info.source_perspective);
+
+                self.combined_local_viewport_rect = info.resolved_transform
                     .with_destination::<LayerPixel>()
                     .inverse_rect_footprint(&state.parent_combined_viewport_rect);
                 self.reference_frame_relative_scroll_offset = LayerVector2D::zero();
-                (info.transform, state.parent_accumulated_scroll_offset)
+                (info.resolved_transform, state.parent_accumulated_scroll_offset)
             }
             NodeType::Clip(_) | NodeType::ScrollFrame(_) => {
                 // Move the parent's viewport into the local space (of the node origin)
@@ -436,7 +456,7 @@ impl ClipScrollNode {
                     state.nearest_scrolling_ancestor_viewport
                        .translate(&info.origin_in_parent_reference_frame);
 
-                if !info.transform.preserves_2d_axis_alignment() {
+                if !info.resolved_transform.preserves_2d_axis_alignment() {
                     state.current_coordinate_system_id = state.next_coordinate_system_id;
                     state.next_coordinate_system_id = state.next_coordinate_system_id.next();
                 }
@@ -787,7 +807,14 @@ impl ScrollingState {
 pub struct ReferenceFrameInfo {
     /// The transformation that establishes this reference frame, relative to the parent
     /// reference frame. The origin of the reference frame is included in the transformation.
-    pub transform: LayerToScrollTransform,
+    pub resolved_transform: LayerToScrollTransform,
+
+    /// The source transform and perspective matrices provided by the stacking context
+    /// that forms this reference frame. We maintain the property binding information
+    /// here so that we can resolve the animated transform and update the tree each
+    /// frame.
+    pub source_transform: PropertyBinding<LayoutTransform>,
+    pub source_perspective: LayoutTransform,
 
     /// The original, not including the transform and relative to the parent reference frame,
     /// origin of this reference frame. This is already rolled into the `transform' property, but

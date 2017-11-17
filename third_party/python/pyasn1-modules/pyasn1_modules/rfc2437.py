@@ -1,4 +1,9 @@
 #
+# This file is part of pyasn1-modules software.
+#
+# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
+# License: http://pyasn1.sf.net/license.html
+#
 # PKCS#1 syntax
 #
 # ASN.1 source from:
@@ -6,7 +11,7 @@
 #
 # Sample captures could be obtained with "openssl genrsa" command
 #
-from pyasn1.type import tag, namedtype, namedval, univ, constraint
+from pyasn1.type import tag, namedtype, univ
 from pyasn1_modules.rfc2459 import AlgorithmIdentifier
 
 pkcs_1 = univ.ObjectIdentifier('1.2.840.113549.1.1')
@@ -21,9 +26,12 @@ id_mgf1 = univ.ObjectIdentifier('1.2.840.113549.1.1.8')
 id_pSpecified = univ.ObjectIdentifier('1.2.840.113549.1.1.9')
 id_sha1 = univ.ObjectIdentifier('1.3.14.3.2.26')
 
-MAX = 16
+MAX = float('inf')
 
-class Version(univ.Integer): pass
+
+class Version(univ.Integer):
+    pass
+
 
 class RSAPrivateKey(univ.Sequence):
     componentType = namedtype.NamedTypes(
@@ -38,16 +46,21 @@ class RSAPrivateKey(univ.Sequence):
         namedtype.NamedType('coefficient', univ.Integer())
     )
 
+
 class RSAPublicKey(univ.Sequence):
     componentType = namedtype.NamedTypes(
         namedtype.NamedType('modulus', univ.Integer()),
         namedtype.NamedType('publicExponent', univ.Integer())
     )
 
+
 # XXX defaults not set
 class RSAES_OAEP_params(univ.Sequence):
     componentType = namedtype.NamedTypes(
-        namedtype.NamedType('hashFunc', AlgorithmIdentifier().subtype(implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))),
-        namedtype.NamedType('maskGenFunc', AlgorithmIdentifier().subtype(implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 1))),
-        namedtype.NamedType('pSourceFunc', AlgorithmIdentifier().subtype(implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 2)))
+        namedtype.NamedType('hashFunc', AlgorithmIdentifier().subtype(
+            implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))),
+        namedtype.NamedType('maskGenFunc', AlgorithmIdentifier().subtype(
+            implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 1))),
+        namedtype.NamedType('pSourceFunc', AlgorithmIdentifier().subtype(
+            implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 2)))
     )

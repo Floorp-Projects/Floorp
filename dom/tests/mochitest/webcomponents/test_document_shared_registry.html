@@ -14,37 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783129
 <script>
 var container = document.getElementById("container");
 
-function createdCallbackFromMainDoc() {
-  var createdCallbackCalled = false;
-  var assocDoc = document.implementation.createHTMLDocument();
-
-  var proto = Object.create(HTMLElement.prototype);
-  proto.createdCallback = function() {
-    is(createdCallbackCalled, false, "created callback should only be called once in this tests.");
-    createdCallbackCalled = true;
-    runNextTest();
-  };
-
-  assocDoc.registerElement("x-associated-doc-callback-elem", { prototype: proto });
-  document.createElement("x-associated-doc-callback-elem");
-}
-
-function createdCallbackFromDocHTMLNamespace() {
-  var createdCallbackCalled = false;
-  var assocDoc = document.implementation.createDocument("http://www.w3.org/1999/xhtml", "html", null);
-  var somediv = assocDoc.createElement("div");
-
-  var proto = Object.create(HTMLElement.prototype);
-  proto.createdCallback = function() {
-    is(createdCallbackCalled, false, "created callback should only be called once in this tests.");
-    createdCallbackCalled = true;
-    runNextTest();
-  };
-
-  assocDoc.registerElement("x-assoc-doc-with-ns-callback-elem", { prototype: proto });
-  document.createElement("x-assoc-doc-with-ns-callback-elem");
-}
-
 function registerNoRegistryDoc() {
   var assocDoc = document.implementation.createDocument(null, "html");
   try {
@@ -65,8 +34,6 @@ function runNextTest() {
 }
 
 var testFunctions = [
-  createdCallbackFromMainDoc,
-  createdCallbackFromDocHTMLNamespace,
   registerNoRegistryDoc,
   SimpleTest.finish
 ];

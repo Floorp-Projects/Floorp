@@ -26,4 +26,4 @@ MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
 JAR_MANIFESTS += ['jar.mn']
 
 with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Form Manager')
+    BUG_COMPONENT = ('Toolkit', 'Form Autofill')

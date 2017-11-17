@@ -328,6 +328,14 @@ public:
                                             NSEvent *aEvent);
 
   /**
+   * Makes a cocoa event from a widget keyboard event.
+   */
+  static NSEvent* MakeNewCococaEventFromWidgetEvent(
+                    const mozilla::WidgetKeyboardEvent& aKeyEvent,
+                    NSInteger aWindowNumber,
+                    NSGraphicsContext* aContext);
+
+  /**
    * Initializes aNPCocoaEvent.
    */
   static void InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent);

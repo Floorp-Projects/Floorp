@@ -1,6 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+#
+# This file is part of pyasn1-modules software.
+#
+# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
+# License: http://pyasn1.sf.net/license.html
+#
 # Read ASN.1/PEM CMP message on stdin, parse into
 # plain text, then build substrate from it
+#
 from pyasn1.codec.der import decoder, encoder
 from pyasn1_modules import rfc4210, pem
 from pyasn1 import debug
@@ -23,6 +30,4 @@ pkiMsg, rest = decoder.decode(substrate, asn1Spec=pkiMessage)
 
 print(pkiMsg.prettyPrint())
 
-assert encoder.encode(pkiMsg, defMode=False) == substrate or \
-       encoder.encode(pkiMsg, defMode=True) == substrate, \
-       'CMP message recode fails'
+assert encoder.encode(pkiMsg) == substrate, 'CMP message recode fails'

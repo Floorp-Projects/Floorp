@@ -221,9 +221,9 @@ MediaEngineCameraVideoSource::ChooseCapability(
     const nsString& aDeviceId)
 {
   if (MOZ_LOG_TEST(GetMediaManagerLog(), LogLevel::Debug)) {
-    LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
+    LOG(("ChooseCapability: prefs: %dx%d @%dfps",
          aPrefs.GetWidth(), aPrefs.GetHeight(),
-         aPrefs.mFPS, aPrefs.mMinFPS));
+         aPrefs.mFPS));
     LogConstraints(aConstraints);
     if (!aConstraints.mAdvanced.empty()) {
       LOG(("Advanced array[%zu]:", aConstraints.mAdvanced.size()));

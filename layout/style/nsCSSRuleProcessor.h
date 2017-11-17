@@ -81,8 +81,6 @@ public:
 public:
   nsresult ClearRuleCascades();
 
-  static bool VisitedLinksEnabled();
-  static void Startup();
   static void InitSystemMetrics();
   static void Shutdown();
   static void FreeSystemMetrics();

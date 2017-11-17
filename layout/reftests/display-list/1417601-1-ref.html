@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<style>
+#modified {
+  left: 10px;
+}
+</style>
+
+</head>
+<body>
+<div style="opacity:0.9">
+  <div style="position:fixed; left:300px; top:300px; width:200px; height:200px; background-color:red; z-index:-10"></div>
+  <div style="width:200px; height:200px; position:relative; background-color:green" id="modified">
+    <div style="opacity:0.9">
+      <div style="position:fixed; left:300px; top:300px; width:200px; height:200px; background-color:green; z-index:-10"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

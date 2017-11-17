@@ -45,7 +45,7 @@ function DragZoom(container, debounceRate, requestAnimationFrame) {
 
   // The size of the offset between the top/left of the container, and the
   // top/left of the containing element. This value takes into account
-  // the devicePixelRatio for canvas draws.
+  // the device pixel ratio for canvas draws.
   this.offsetX = 0;
   this.offsetY = 0;
 

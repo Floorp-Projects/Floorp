@@ -104,8 +104,9 @@ let PaymentRequest = {
 
     let totalItem = this.request.paymentDetails.totalItem;
     let totalEl = document.getElementById("total");
-    totalEl.querySelector(".value").textContent = totalItem.amount.value;
-    totalEl.querySelector(".currency").textContent = totalItem.amount.currency;
+    let currencyEl = totalEl.querySelector("currency-amount");
+    currencyEl.value = totalItem.amount.value;
+    currencyEl.currency = totalItem.amount.currency;
     totalEl.querySelector(".label").textContent = totalItem.label;
   },
 
