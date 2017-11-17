@@ -797,27 +797,16 @@ class FullParseHandler
         return pn->isConstant();
     }
 
-    bool isNameAnyParentheses(ParseNode* node) {
+    bool isName(ParseNode* node) {
         return node->isKind(PNK_NAME);
     }
 
-    bool isArgumentsAnyParentheses(ParseNode* node, JSContext* cx) {
+    bool isArgumentsName(ParseNode* node, JSContext* cx) {
         return node->isKind(PNK_NAME) && node->pn_atom == cx->names().arguments;
     }
 
-    bool isEvalAnyParentheses(ParseNode* node, JSContext* cx) {
+    bool isEvalName(ParseNode* node, JSContext* cx) {
         return node->isKind(PNK_NAME) && node->pn_atom == cx->names().eval;
-    }
-
-    const char* nameIsArgumentsEvalAnyParentheses(ParseNode* node, JSContext* cx) {
-        MOZ_ASSERT(isNameAnyParentheses(node),
-                   "must only call this function on known names");
-
-        if (isEvalAnyParentheses(node, cx))
-            return js_eval_str;
-        if (isArgumentsAnyParentheses(node, cx))
-            return js_arguments_str;
-        return nullptr;
     }
 
     bool isAsyncKeyword(ParseNode* node, JSContext* cx) {
