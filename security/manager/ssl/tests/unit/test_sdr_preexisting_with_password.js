@@ -53,6 +53,8 @@ function run_test() {
     MockRegistrar.unregister(windowWatcherCID);
   });
 
+  Services.prefs.setBoolPref("security.use_sqldb", true);
+
   let profile = do_get_profile();
   let keyDBFile = do_get_file("test_sdr_preexisting_with_password/key3.db");
   keyDBFile.copyTo(profile, "key3.db");
