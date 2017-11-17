@@ -675,11 +675,10 @@ def enable_code_coverage(config, tests):
                     test['run-on-projects'] == 'built-projects':
                 test['run-on-projects'] = ['mozilla-central', 'try']
 
-            # TODO: Fix talos on Windows coverage build.
-            if test['test-name'].startswith('talos'):
+            if 'talos' in test['test-name']:
                 test['max-run-time'] = 7200
-                test['docker-image'] = {"in-tree": "desktop1604-test"}
-                test['mozharness']['config'] = ['talos/linux64_config_taskcluster.py']
+                if 'linux' in test['build-platform']:
+                    test['docker-image'] = {"in-tree": "desktop1604-test"}
                 test['mozharness']['extra-options'].append('--add-option')
                 test['mozharness']['extra-options'].append('--cycles,1')
                 test['mozharness']['extra-options'].append('--add-option')
@@ -886,7 +885,7 @@ def set_worker_type(config, tests):
             win_worker_type_platform = WINDOWS_WORKER_TYPES[
                 test_platform.split('/')[0]
             ]
-            if test.get('suite', '') == 'talos':
+            if test.get('suite', '') == 'talos' and 'ccov' not in test['build-platform']:
                 if try_options.get('taskcluster_worker'):
                     test['worker-type'] = win_worker_type_platform['hardware']
                 else:
