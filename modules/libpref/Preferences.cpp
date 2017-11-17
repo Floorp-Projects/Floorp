@@ -271,6 +271,30 @@ public:
                 aSetting->userValue().get_PrefValue().type()));
   }
 
+  bool HasAdvisablySizedValues()
+  {
+    if (!IsTypeString()) {
+      return true;
+    }
+
+    const char* stringVal;
+    if (HasDefaultValue()) {
+      stringVal = mDefaultValue.mStringVal;
+      if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
+        return false;
+      }
+    }
+
+    if (HasUserValue()) {
+      stringVal = mUserValue.mStringVal;
+      if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
   {
     // Note: mKey is allocated in gPrefNameArena, measured elsewhere.
@@ -455,31 +479,6 @@ pref_savePrefs()
   }
 
   return savedPrefs;
-}
-
-static bool
-pref_EntryHasAdvisablySizedValues(PrefHashEntry* aPref)
-{
-  if (!aPref->IsTypeString()) {
-    return true;
-  }
-
-  const char* stringVal;
-  if (aPref->HasDefaultValue()) {
-    stringVal = aPref->mDefaultValue.mStringVal;
-    if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
-      return false;
-    }
-  }
-
-  if (aPref->HasUserValue()) {
-    stringVal = aPref->mUserValue.mStringVal;
-    if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 static bool
@@ -3765,11 +3764,7 @@ void
 Preferences::GetPreference(PrefSetting* aSetting)
 {
   PrefHashEntry* pref = pref_HashTableLookup(aSetting->name().get());
-  if (!pref) {
-    return;
-  }
-
-  if (pref_EntryHasAdvisablySizedValues(pref)) {
+  if (pref && pref->HasAdvisablySizedValues()) {
     pref->ToSetting(aSetting);
   }
 }
@@ -3781,12 +3776,10 @@ Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aSettings)
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
-    if (!pref_EntryHasAdvisablySizedValues(pref)) {
-      continue;
+    if (pref->HasAdvisablySizedValues()) {
+      dom::PrefSetting* setting = aSettings->AppendElement();
+      pref->ToSetting(setting);
     }
-
-    dom::PrefSetting* setting = aSettings->AppendElement();
-    pref->ToSetting(setting);
   }
 }
 
