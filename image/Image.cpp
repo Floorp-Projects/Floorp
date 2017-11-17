@@ -103,7 +103,8 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
   MOZ_ASSERT(aManager);
   MOZ_ASSERT((aFlags & ~(FLAG_SYNC_DECODE |
                          FLAG_SYNC_DECODE_IF_FAST |
-                         FLAG_ASYNC_NOTIFY))
+                         FLAG_ASYNC_NOTIFY |
+                         FLAG_HIGH_QUALITY_SCALING))
                == FLAG_NONE,
              "Unsupported flag passed to GetImageContainer");
 
