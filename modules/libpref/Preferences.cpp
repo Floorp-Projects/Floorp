@@ -305,6 +305,69 @@ public:
     memset(aEntry, 0, aTable->EntrySize());
   }
 
+  nsresult GetBoolValue(PrefValueKind aKind, bool* aResult)
+  {
+    if (!IsTypeBool()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (aKind == PrefValueKind::Default || IsLocked() || !HasUserValue()) {
+      // Do we have a default?
+      if (!HasDefaultValue()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      *aResult = mDefaultValue.mBoolVal;
+    } else {
+      *aResult = mUserValue.mBoolVal;
+    }
+
+    return NS_OK;
+  }
+
+  nsresult GetIntValue(PrefValueKind aKind, int32_t* aResult)
+  {
+    if (!IsTypeInt()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (aKind == PrefValueKind::Default || IsLocked() || !HasUserValue()) {
+      // Do we have a default?
+      if (!HasDefaultValue()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      *aResult = mDefaultValue.mIntVal;
+    } else {
+      *aResult = mUserValue.mIntVal;
+    }
+
+    return NS_OK;
+  }
+
+  nsresult GetCStringValue(PrefValueKind aKind, nsACString& aResult)
+  {
+    if (!IsTypeString()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    const char* stringVal = nullptr;
+    if (aKind == PrefValueKind::Default || IsLocked() || !HasUserValue()) {
+      // Do we have a default?
+      if (!HasDefaultValue()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      stringVal = mDefaultValue.mStringVal;
+    } else {
+      stringVal = mUserValue.mStringVal;
+    }
+
+    if (!stringVal) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    aResult = stringVal;
+    return NS_OK;
+  }
+
 private:
   static void AssignPrefValueToDomPrefValue(PrefType aType,
                                             PrefValue* aValue,
@@ -4437,23 +4500,7 @@ Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->IsTypeBool()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aKind == PrefValueKind::Default || pref->IsLocked() ||
-      !pref->HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->HasDefaultValue()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    *aResult = pref->mDefaultValue.mBoolVal;
-  } else {
-    *aResult = pref->mUserValue.mBoolVal;
-  }
-
-  return NS_OK;
+  return pref ? pref->GetBoolValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult
@@ -4465,23 +4512,7 @@ Preferences::GetInt(const char* aPrefName,
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->IsTypeInt()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aKind == PrefValueKind::Default || pref->IsLocked() ||
-      !pref->HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->HasDefaultValue()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    *aResult = pref->mDefaultValue.mIntVal;
-  } else {
-    *aResult = pref->mUserValue.mIntVal;
-  }
-
-  return NS_OK;
+  return pref ? pref->GetIntValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult
@@ -4509,29 +4540,7 @@ Preferences::GetCString(const char* aPrefName,
   aResult.SetIsVoid(true);
 
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->IsTypeString()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  const char* stringVal = nullptr;
-  if (aKind == PrefValueKind::Default || pref->IsLocked() ||
-      !pref->HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->HasDefaultValue()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    stringVal = pref->mDefaultValue.mStringVal;
-  } else {
-    stringVal = pref->mUserValue.mStringVal;
-  }
-
-  if (!stringVal) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  aResult = stringVal;
-  return NS_OK;
+  return pref ? pref->GetCStringValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult
