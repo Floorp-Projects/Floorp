@@ -67,11 +67,6 @@ public:
   }
   nsString GetName() const override;
   nsCString GetUUID() const override;
-  bool IsAvailable() const override
-  {
-    AssertIsOnOwningThread();
-    return false;
-  }
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,
                     const nsString& aDeviceId,
@@ -401,12 +396,6 @@ public:
 
   nsString GetName() const override;
   nsCString GetUUID() const override;
-
-  bool IsAvailable() const override
-  {
-    AssertIsOnOwningThread();
-    return mState == kReleased;
-  }
 
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs& aPrefs,

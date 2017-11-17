@@ -95,11 +95,6 @@ public:
   virtual bool IsFake() const = 0;
 
   /**
-   * Returns true if this source is available to allocate.
-   */
-  virtual bool IsAvailable() const = 0;
-
-  /**
    * Gets the human readable name of this device.
    */
   virtual nsString GetName() const = 0;

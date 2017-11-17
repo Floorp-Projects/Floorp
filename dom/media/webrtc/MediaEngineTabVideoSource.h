@@ -19,12 +19,6 @@ public:
   nsString GetName() const override;
   nsCString GetUUID() const override;
 
-  bool IsAvailable() const override
-  {
-    AssertIsOnOwningThread();
-    return mState == kReleased;
-  }
-
   bool GetScary() const override
   {
     return true;

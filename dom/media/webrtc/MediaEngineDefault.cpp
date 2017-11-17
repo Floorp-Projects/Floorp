@@ -397,6 +397,14 @@ MediaEngineDefaultAudioSource::GetBestFitnessDistance(
   return distance;
 }
 
+bool
+MediaEngineDefaultAudioSource::IsAvailable() const
+{
+  AssertIsOnOwningThread();
+
+  return mState == kReleased;
+}
+
 nsresult
 MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                         const MediaEnginePrefs &aPrefs,

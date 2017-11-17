@@ -112,11 +112,6 @@ public:
                    const camera::VideoFrameProperties& properties) override;
 
   // MediaEngineSource
-  bool IsAvailable() const override
-  {
-    AssertIsOnOwningThread();
-    return mState == kReleased;
-  }
   dom::MediaSourceEnum GetMediaSource() const override
   {
     return mMediaSource;
