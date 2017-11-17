@@ -108,7 +108,8 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
                == FLAG_NONE,
              "Unsupported flag passed to GetImageContainer");
 
-  if (!IsImageContainerAvailable(aManager, aFlags)) {
+  IntSize size = GetImageContainerSize(aManager, aSize, aFlags);
+  if (size.IsEmpty()) {
     return nullptr;
   }
 
@@ -122,7 +123,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
   for (; i >= 0; --i) {
     entry = &mImageContainers[i];
     container = entry->mContainer.get();
-    if (aSize == entry->mSize) {
+    if (size == entry->mSize) {
       // Lack of a container is handled below.
       break;
     } else if (!container) {
@@ -156,7 +157,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
       entry->mContainer = container;
     } else {
       entry = mImageContainers.AppendElement(
-        ImageContainerEntry(aSize, container.get()));
+        ImageContainerEntry(size, container.get()));
     }
   }
 
@@ -165,7 +166,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
 #endif
 
   entry->mLastDrawResult =
-    AddCurrentImage(container, aSize, aFlags, true);
+    AddCurrentImage(container, size, aFlags, true);
   return container.forget();
 }
 
