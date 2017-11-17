@@ -4151,7 +4151,7 @@ IonBuilder::selectInliningTargets(const InliningTargets& targets, CallInfo& call
         InliningDecision decision = makeInliningDecision(target, callInfo);
         switch (decision) {
           case InliningDecision_Error:
-            return abort(AbortReason::Alloc);
+            return abort(AbortReason::Error);
           case InliningDecision_DontInline:
           case InliningDecision_WarmUpCountTooLow:
             inlineable = false;
@@ -4363,7 +4363,7 @@ IonBuilder::inlineCallsite(const InliningTargets& targets, CallInfo& callInfo)
         InliningDecision decision = makeInliningDecision(target, callInfo);
         switch (decision) {
           case InliningDecision_Error:
-            return abort(AbortReason::Alloc);
+            return abort(AbortReason::Error);
           case InliningDecision_DontInline:
             return InliningStatus_NotInlined;
           case InliningDecision_WarmUpCountTooLow:
@@ -5114,7 +5114,7 @@ IonBuilder::jsop_funcall(uint32_t argc)
         InliningDecision decision = makeInliningDecision(target, callInfo);
         switch (decision) {
           case InliningDecision_Error:
-            return abort(AbortReason::Alloc);
+            return abort(AbortReason::Error);
           case InliningDecision_DontInline:
           case InliningDecision_WarmUpCountTooLow:
             break;
@@ -5346,7 +5346,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
     InliningDecision decision = makeInliningDecision(target, callInfo);
     switch (decision) {
       case InliningDecision_Error:
-        return abort(AbortReason::Alloc);
+        return abort(AbortReason::Error);
       case InliningDecision_DontInline:
       case InliningDecision_WarmUpCountTooLow:
         break;
@@ -11089,7 +11089,7 @@ IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName
         InliningDecision decision = makeInliningDecision(commonGetter, callInfo);
         switch (decision) {
           case InliningDecision_Error:
-            return abort(AbortReason::Alloc);
+            return abort(AbortReason::Error);
           case InliningDecision_DontInline:
           case InliningDecision_WarmUpCountTooLow:
             break;
@@ -11665,7 +11665,7 @@ IonBuilder::setPropTryCommonSetter(bool* emitted, MDefinition* obj,
         InliningDecision decision = makeInliningDecision(commonSetter, callInfo);
         switch (decision) {
           case InliningDecision_Error:
-            return abort(AbortReason::Alloc);
+            return abort(AbortReason::Error);
           case InliningDecision_DontInline:
           case InliningDecision_WarmUpCountTooLow:
             break;

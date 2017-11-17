@@ -7,7 +7,7 @@ job-defaults:
         script: awsy_script.py
         config:
             by-test-platform:
-                windows.*/opt:
+                windows.*:
                     - awsy/taskcluster_windows_config.py
                 macosx.*/opt:
                     - awsy/macosx_config.py

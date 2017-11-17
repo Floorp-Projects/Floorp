@@ -29,14 +29,6 @@ class FullParseHandler
         return static_cast<ParseNode*>(allocator.allocNode());
     }
 
-    ParseNode* cloneNode(const ParseNode& other) {
-        ParseNode* node = allocParseNode(sizeof(ParseNode));
-        if (!node)
-            return nullptr;
-        mozilla::PodAssign(node, &other);
-        return node;
-    }
-
     /*
      * If this is a full parse to construct the bytecode for a function that
      * was previously lazily parsed, that lazy function and the current index
@@ -71,11 +63,6 @@ class FullParseHandler
         // consider it a SyntaxError rather than an invalid-left-hand-side
         // ReferenceError.
         return node->isInParens() && (node->isKind(PNK_OBJECT) || node->isKind(PNK_ARRAY));
-    }
-
-    static bool isDestructuringPatternAnyParentheses(ParseNode* node) {
-        return isUnparenthesizedDestructuringPattern(node) ||
-               isParenthesizedDestructuringPattern(node);
     }
 
     FullParseHandler(JSContext* cx, LifoAlloc& alloc, LazyScript* lazyOuterFunction)
@@ -629,7 +616,6 @@ class FullParseHandler
 
     inline MOZ_MUST_USE bool setLastFunctionFormalParameterDefault(ParseNode* funcpn,
                                                                    ParseNode* pn);
-    inline void setLastFunctionFormalParameterDestructuring(ParseNode* funcpn, ParseNode* pn);
 
     void checkAndSetIsDirectRHSAnonFunction(ParseNode* pn) {
         if (IsAnonymousFunctionDefinition(pn))
@@ -684,10 +670,6 @@ class FullParseHandler
 
     ParseNode* newAssignment(ParseNodeKind kind, ParseNode* lhs, ParseNode* rhs) {
         return newBinary(kind, lhs, rhs);
-    }
-
-    bool isUnparenthesizedYieldExpression(ParseNode* node) {
-        return node->isKind(PNK_YIELD) && !node->isInParens();
     }
 
     bool isUnparenthesizedAssignment(Node node) {
@@ -757,10 +739,6 @@ class FullParseHandler
     }
 
   private:
-    ParseNode* newList(ParseNodeKind kind, uint32_t begin) {
-        return newList(kind, TokenPos(begin, begin + 1));
-    }
-
     template<typename T>
     ParseNode* newList(ParseNodeKind kind, const T& begin) = delete;
 
@@ -819,31 +797,16 @@ class FullParseHandler
         return pn->isConstant();
     }
 
-    bool isUnparenthesizedName(ParseNode* node) {
-        return node->isKind(PNK_NAME) && !node->isInParens();
-    }
-
-    bool isNameAnyParentheses(ParseNode* node) {
+    bool isName(ParseNode* node) {
         return node->isKind(PNK_NAME);
     }
 
-    bool isArgumentsAnyParentheses(ParseNode* node, JSContext* cx) {
+    bool isArgumentsName(ParseNode* node, JSContext* cx) {
         return node->isKind(PNK_NAME) && node->pn_atom == cx->names().arguments;
     }
 
-    bool isEvalAnyParentheses(ParseNode* node, JSContext* cx) {
+    bool isEvalName(ParseNode* node, JSContext* cx) {
         return node->isKind(PNK_NAME) && node->pn_atom == cx->names().eval;
-    }
-
-    const char* nameIsArgumentsEvalAnyParentheses(ParseNode* node, JSContext* cx) {
-        MOZ_ASSERT(isNameAnyParentheses(node),
-                   "must only call this function on known names");
-
-        if (isEvalAnyParentheses(node, cx))
-            return js_eval_str;
-        if (isArgumentsAnyParentheses(node, cx))
-            return js_arguments_str;
-        return nullptr;
     }
 
     bool isAsyncKeyword(ParseNode* node, JSContext* cx) {
@@ -852,9 +815,6 @@ class FullParseHandler
                node->pn_atom == cx->names().async;
     }
 
-    bool isCall(ParseNode* pn) {
-        return pn->isKind(PNK_CALL);
-    }
     PropertyName* maybeDottedProperty(ParseNode* pn) {
         return pn->is<PropertyAccess>() ? &pn->as<PropertyAccess>().name() : nullptr;
     }
@@ -876,16 +836,13 @@ class FullParseHandler
     bool canSkipLazyClosedOverBindings() {
         return !!lazyOuterFunction_;
     }
-    LazyScript* lazyOuterFunction() {
-        return lazyOuterFunction_;
-    }
     JSFunction* nextLazyInnerFunction() {
-        MOZ_ASSERT(lazyInnerFunctionIndex < lazyOuterFunction()->numInnerFunctions());
-        return lazyOuterFunction()->innerFunctions()[lazyInnerFunctionIndex++];
+        MOZ_ASSERT(lazyInnerFunctionIndex < lazyOuterFunction_->numInnerFunctions());
+        return lazyOuterFunction_->innerFunctions()[lazyInnerFunctionIndex++];
     }
     JSAtom* nextLazyClosedOverBinding() {
-        MOZ_ASSERT(lazyClosedOverBindingIndex < lazyOuterFunction()->numClosedOverBindings());
-        return lazyOuterFunction()->closedOverBindings()[lazyClosedOverBindingIndex++];
+        MOZ_ASSERT(lazyClosedOverBindingIndex < lazyOuterFunction_->numClosedOverBindings());
+        return lazyOuterFunction_->closedOverBindings()[lazyClosedOverBindingIndex++];
     }
 };
 

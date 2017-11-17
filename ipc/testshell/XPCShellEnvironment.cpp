@@ -174,18 +174,6 @@ Load(JSContext *cx,
 }
 
 static bool
-Version(JSContext *cx,
-        unsigned argc,
-        JS::Value *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-    args.rval().setInt32(JS_GetVersion(cx));
-    if (args.get(0).isInt32())
-        JS::SetVersionForCurrentRealm(cx, JSVersion(args[0].toInt32()));
-    return true;
-}
-
-static bool
 Quit(JSContext *cx,
      unsigned argc,
      JS::Value *vp)
@@ -250,7 +238,6 @@ const JSFunctionSpec gGlobalFunctions[] =
     JS_FN("print",           Print,          0,0),
     JS_FN("load",            Load,           1,0),
     JS_FN("quit",            Quit,           0,0),
-    JS_FN("version",         Version,        1,0),
     JS_FN("dumpXPC",         DumpXPC,        1,0),
     JS_FN("dump",            Dump,           1,0),
     JS_FN("gc",              GC,             0,0),
@@ -444,7 +431,6 @@ XPCShellEnvironment::Init()
 
     JS::CompartmentOptions options;
     options.creationOptions().setSystemZone();
-    options.behaviors().setVersion(JSVERSION_DEFAULT);
     if (xpc::SharedMemoryEnabled())
         options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
 

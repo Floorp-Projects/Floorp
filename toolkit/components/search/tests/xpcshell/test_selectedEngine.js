@@ -8,6 +8,7 @@ const kSelectedEnginePref = "browser.search.selectedEngine";
 // Check that the default engine matches the defaultenginename pref
 add_task(async function test_defaultEngine() {
   await asyncInit();
+  await installTestEngine();
 
   do_check_eq(Services.search.currentEngine.name, getDefaultEngineName());
 });
@@ -143,9 +144,6 @@ add_task(async function test_fallback_kept_after_restart() {
 
 
 function run_test() {
-  removeMetadata();
-  removeCacheFile();
-
   do_check_false(Services.search.isInitialized);
 
   let engineDummyFile = gProfD.clone();
@@ -155,11 +153,6 @@ function run_test() {
   engineDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
   do_get_file("data/engine.xml").copyTo(engineDir, "engine.xml");
-
-  do_register_cleanup(function() {
-    removeMetadata();
-    removeCacheFile();
-  });
 
   run_next_test();
 }

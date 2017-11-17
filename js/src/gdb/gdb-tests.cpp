@@ -79,8 +79,6 @@ main(int argc, const char** argv)
 
     /* Create the global object. */
     JS::CompartmentOptions options;
-    options.behaviors().setVersion(JSVERSION_DEFAULT);
-
     RootedObject global(cx, checkPtr(JS_NewGlobalObject(cx, &global_class,
                         nullptr, JS::FireOnNewGlobalHook, options)));
     JSAutoCompartment ac(cx, global);

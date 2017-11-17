@@ -6,7 +6,6 @@ extern crate log;
 
 mod device;
 mod iokit;
-mod iohid;
 mod monitor;
 mod transaction;
 

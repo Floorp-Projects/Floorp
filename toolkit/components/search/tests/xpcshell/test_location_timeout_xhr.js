@@ -30,8 +30,6 @@ function verifyProbeSum(probe, sum) {
 }
 
 function run_test() {
-  installTestEngine();
-
   let resolveContinuePromise;
   let continuePromise = new Promise(resolve => {
     resolveContinuePromise = resolve;
