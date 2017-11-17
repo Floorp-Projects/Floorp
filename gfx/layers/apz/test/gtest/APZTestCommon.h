@@ -172,7 +172,10 @@ private:
 
 class TestAPZCTreeManager : public APZCTreeManager {
 public:
-  explicit TestAPZCTreeManager(MockContentControllerDelayed* aMcc) : mcc(aMcc) {}
+  explicit TestAPZCTreeManager(MockContentControllerDelayed* aMcc)
+    : APZCTreeManager(0)
+    , mcc(aMcc)
+  {}
 
   RefPtr<InputQueue> GetInputQueue() const {
     return mInputQueue;

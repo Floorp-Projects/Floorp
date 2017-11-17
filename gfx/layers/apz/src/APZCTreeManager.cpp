@@ -217,8 +217,9 @@ APZCTreeManager::CalculatePendingDisplayPort(
     aFrameMetrics, aVelocity);
 }
 
-APZCTreeManager::APZCTreeManager()
+APZCTreeManager::APZCTreeManager(uint64_t aRootLayersId)
     : mInputQueue(new InputQueue()),
+      mRootLayersId(aRootLayersId),
       mTreeLock("APZCTreeLock"),
       mHitResultForInputBlock(HitNothing),
       mRetainedTouchIdentifier(-1),
@@ -453,6 +454,7 @@ APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
 {
   APZThreadUtils::AssertOnCompositorThread();
   MOZ_ASSERT(aWrApi);
+  MOZ_ASSERT(aWrApi == RefPtr<wr::WebRenderAPI>(GetWebRenderAPI()).get());
 
   MutexAutoLock lock(mTreeLock);
 
@@ -2735,6 +2737,18 @@ APZCTreeManager::ComputeTransformForNode(const HitTestingTreeNode* aNode) const
   }
   // Otherwise, the node does not have an async transform.
   return aNode->GetTransform() * AsyncTransformMatrix();
+}
+
+already_AddRefed<wr::WebRenderAPI>
+APZCTreeManager::GetWebRenderAPI() const
+{
+  RefPtr<wr::WebRenderAPI> api;
+  if (LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(mRootLayersId)) {
+    if (state->mWrBridge) {
+      api = state->mWrBridge->GetWebRenderAPI();
+    }
+  }
+  return api.forget();
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
