@@ -13,7 +13,7 @@
   min-width: 58px; /* maximum icon width + icon margin */
 }
 
-#info\.icon {
+#infoIcon {
   max-width: 48px;
   max-height: 48px;
   /* The 'spaced' class does this already. It's repeated here to make it clearer
