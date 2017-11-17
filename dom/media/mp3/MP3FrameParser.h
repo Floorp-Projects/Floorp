@@ -84,7 +84,7 @@ public:
 
   // Parses contents of given BufferReader for a valid ID3v2 header.
   // Returns the total ID3v2 tag size if successful and zero otherwise.
-  Result<uint32_t, nsresult> Parse(mp4_demuxer::BufferReader* aReader);
+  Result<uint32_t, nsresult> Parse(BufferReader* aReader);
 
   // Resets the state to allow for a new parsing session.
   void Reset();
@@ -228,20 +228,20 @@ public:
     // The offset of the passed ByteReader needs to point to an MPEG frame
     // begin, as a VBRI-style header is searched at a fixed offset relative to
     // frame begin. Returns whether a valid VBR header was found in the range.
-    bool Parse(mp4_demuxer::BufferReader* aReader);
+    bool Parse(BufferReader* aReader);
 
   private:
     // Parses contents of given ByteReader for a valid Xing header.
     // The initial ByteReader offset will be preserved.
     // Returns whether a valid Xing header was found in the range.
-    Result<bool, nsresult> ParseXing(mp4_demuxer::BufferReader* aReader);
+    Result<bool, nsresult> ParseXing(BufferReader* aReader);
 
     // Parses contents of given ByteReader for a valid VBRI header.
     // The initial ByteReader offset will be preserved. It also needs to point
     // to the beginning of a valid MPEG frame, as VBRI headers are searched
     // at a fixed offset relative to frame begin.
     // Returns whether a valid VBRI header was found in the range.
-    Result<bool, nsresult> ParseVBRI(mp4_demuxer::BufferReader* aReader);
+    Result<bool, nsresult> ParseVBRI(BufferReader* aReader);
 
     // The total number of frames expected as parsed from a VBR header.
     Maybe<uint32_t> mNumAudioFrames;
@@ -316,13 +316,13 @@ public:
   // true if one was found. After returning, the variable passed to
   // 'aBytesToSkip' holds the amount of bytes to be skipped (if any) in order to
   // jump across a large ID3v2 tag spanning multiple buffers.
-  Result<bool, nsresult> Parse(mp4_demuxer::BufferReader* aReader, uint32_t* aBytesToSkip);
+  Result<bool, nsresult> Parse(BufferReader* aReader, uint32_t* aBytesToSkip);
 
   // Parses contents of given BufferReader for a valid VBR header.
   // The offset of the passed BufferReader needs to point to an MPEG frame begin,
   // as a VBRI-style header is searched at a fixed offset relative to frame
   // begin. Returns whether a valid VBR header was found.
-  bool ParseVBRHeader(mp4_demuxer::BufferReader* aReader);
+  bool ParseVBRHeader(BufferReader* aReader);
 
 private:
   // ID3 header parser.
