@@ -349,19 +349,18 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
   return ResolveServoStyle(aElement);
 }
 
-already_AddRefed<ServoStyleContext>
+void
 ServoStyleSet::ReresolveStyleForBindings(Element* aElement)
 {
-  // XXX: We should have a better way to restyle ourselves.
-  ServoRestyleManager::ClearServoDataFromSubtree(aElement);
+  MOZ_ASSERT(!aElement->HasServoData(), "Should've been cleared before!");
   StyleNewSubtree(aElement);
 
   // Servo's should_traverse_children() in traversal.rs skips
   // styling descendants of elements with a -moz-binding the
   // first time. Thus call StyleNewChildren() again.
+  //
+  // FIXME(emilio): This is just stupid, we should remove that now.
   StyleNewChildren(aElement);
-
-  return ResolveServoStyle(aElement);
 }
 
 /**

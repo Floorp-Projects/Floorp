@@ -2611,17 +2611,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     }
 
     if (resolveStyle) {
-      if (styleContext->IsServo()) {
-        styleContext = mPresShell->StyleSet()->AsServo()->
-          ReresolveStyleForBindings(aDocElement);
-      } else {
-        // FIXME: Should this use ResolveStyleContext?  (The calls in
-        // this function are the only case in nsCSSFrameConstructor
-        // where we don't do so for the construction of a style context
-        // for an element.)
-        styleContext = mPresShell->StyleSet()->ResolveStyleFor(
-            aDocElement, nullptr, LazyComputeBehavior::Assert);
-      }
+      // FIXME: Should this use ResolveStyleContext?  (The calls in
+      // this function are the only case in nsCSSFrameConstructor
+      // where we don't do so for the construction of a style context
+      // for an element.)
+      styleContext = mPresShell->StyleSet()->ResolveStyleFor(
+          aDocElement, nullptr, LazyComputeBehavior::Assert);
       display = styleContext->StyleDisplay();
     }
   } else if (display->mBinding.ForceGet() && aDocElement->IsStyledByServo()) {
@@ -5926,8 +5921,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
       if (resolveStyle) {
         if (styleContext->IsServo()) {
-          styleContext = mPresShell->StyleSet()->AsServo()->
-            ReresolveStyleForBindings(aContent->AsElement());
+          styleContext =
+            mPresShell->StyleSet()->AsServo()->ResolveServoStyle(aContent->AsElement());
         } else {
           styleContext =
             ResolveStyleContext(styleContext->AsGecko()->GetParent(),
@@ -5947,6 +5942,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
         // children after they have been rearranged in the flattened tree.
         // If the URL couldn't be resolved, we still need to style the children,
         // so we do that here.
+        //
+        // FIXME(emilio): Again, should go away.
         mPresShell->StyleSet()->AsServo()->StyleNewChildren(aContent->AsElement());
       }
     }
