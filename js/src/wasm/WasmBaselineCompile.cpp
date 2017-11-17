@@ -2560,6 +2560,8 @@ class BaseCompiler
               case ABIArg::GPR: {
                 MOZ_CRASH("Unexpected parameter passing discipline");
               }
+              case ABIArg::Uninitialized:
+                MOZ_CRASH("Uninitialized ABIArg kind");
             }
             break;
           }
@@ -2587,6 +2589,8 @@ class BaseCompiler
                 MOZ_CRASH("Unexpected parameter passing discipline");
               }
 #endif
+              case ABIArg::Uninitialized:
+                MOZ_CRASH("Uninitialized ABIArg kind");
             }
             break;
           }

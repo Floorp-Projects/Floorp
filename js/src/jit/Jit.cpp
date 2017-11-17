@@ -63,7 +63,7 @@ EnterJit(JSContext* cx, RunState& state, uint8_t* code)
 
         unsigned numFormals = script->functionNonDelazifying()->nargs();
         if (numFormals > numActualArgs)
-            code = cx->runtime()->jitRuntime()->getArgumentsRectifier()->raw();
+            code = cx->runtime()->jitRuntime()->getArgumentsRectifier().value;
     } else {
         numActualArgs = 0;
         constructing = false;

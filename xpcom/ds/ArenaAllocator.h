@@ -17,6 +17,7 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/OperatorNewExtensions.h"
+#include "mozilla/Poison.h"
 #include "mozilla/TemplateLib.h"
 #include "nsDebug.h"
 
@@ -125,20 +126,11 @@ public:
 
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  bool DebugContains(void* aPtr)
+  void Check()
   {
     for (auto arena = mHead.next; arena; arena = arena->next) {
-      if (arena->DebugContains(aPtr)) {
-        return true;
-      }
+      arena->canary.Check();
     }
-    std::stringstream log;
-    log << "Failed to find pointer " << aPtr << " within arena blocks: ";
-    for (ArenaChunk* arena = mHead.next; arena; arena = arena->next) {
-      log << "(" << reinterpret_cast<uintptr_t>(arena + 1) << ", " << arena->header.offset << "), ";
-    }
-    MOZ_CRASH_UNSAFE_OOL(log.str().c_str());
-    return false;
   }
 #endif
 
@@ -165,6 +157,7 @@ private:
     {
     }
 
+    CorruptionCanary canary;
     ArenaHeader header;
     ArenaChunk* next;
 
@@ -186,15 +179,6 @@ private:
     size_t Available() const {
       return header.tail - header.offset;
     }
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    bool DebugContains(void* aPtr)
-    {
-      uintptr_t ptr = reinterpret_cast<uintptr_t>(aPtr);
-      return ptr >= reinterpret_cast<uintptr_t>(this + 1) &&
-             ptr < header.offset;
-    }
-#endif
   };
 
   /**

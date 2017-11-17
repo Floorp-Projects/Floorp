@@ -182,7 +182,6 @@ MSG_DEF(JSMSG_UNKNOWN_FORMAT,          1, JSEXN_INTERNALERR, "unknown bytecode f
 
 // Frontend
 MSG_DEF(JSMSG_ACCESSOR_WRONG_ARGS,     3, JSEXN_SYNTAXERR, "{0} functions must have {1} argument{2}")
-MSG_DEF(JSMSG_ARRAY_COMP_LEFTSIDE,     0, JSEXN_SYNTAXERR, "invalid array comprehension left-hand side")
 MSG_DEF(JSMSG_ARRAY_INIT_TOO_BIG,      0, JSEXN_INTERNALERR, "array initializer too large")
 MSG_DEF(JSMSG_AS_AFTER_IMPORT_STAR,    0, JSEXN_SYNTAXERR, "missing keyword 'as' after import *")
 MSG_DEF(JSMSG_AS_AFTER_RESERVED_WORD,  1, JSEXN_SYNTAXERR, "missing keyword 'as' after reserved word '{0}'")
@@ -201,7 +200,6 @@ MSG_DEF(JSMSG_BAD_FOR_EACH_LOOP,       0, JSEXN_SYNTAXERR, "invalid for each loo
 MSG_DEF(JSMSG_BAD_FOR_LEFTSIDE,        0, JSEXN_SYNTAXERR, "invalid for-in/of left-hand side")
 MSG_DEF(JSMSG_LEXICAL_DECL_DEFINES_LET,0, JSEXN_SYNTAXERR, "a lexical declaration can't define a 'let' binding")
 MSG_DEF(JSMSG_LET_STARTING_FOROF_LHS,  0, JSEXN_SYNTAXERR, "an expression X in 'for (X of Y)' must not start with 'let'")
-MSG_DEF(JSMSG_BAD_GENEXP_BODY,         1, JSEXN_SYNTAXERR, "illegal use of {0} in generator expression")
 MSG_DEF(JSMSG_BAD_INCOP_OPERAND,       0, JSEXN_SYNTAXERR, "invalid increment/decrement operand")
 MSG_DEF(JSMSG_BAD_METHOD_DEF,          0, JSEXN_SYNTAXERR, "bad method definition")
 MSG_DEF(JSMSG_BAD_OCTAL,               1, JSEXN_SYNTAXERR, "{0} is not a legal ECMA-262 octal constant")
@@ -215,7 +213,6 @@ MSG_DEF(JSMSG_BAD_SWITCH,              0, JSEXN_SYNTAXERR, "invalid switch state
 MSG_DEF(JSMSG_BAD_SUPER,               0, JSEXN_SYNTAXERR, "invalid use of keyword 'super'")
 MSG_DEF(JSMSG_BAD_SUPERPROP,           1, JSEXN_SYNTAXERR, "use of super {0} accesses only valid within methods or eval code within methods")
 MSG_DEF(JSMSG_BAD_SUPERCALL,           0, JSEXN_SYNTAXERR, "super() is only valid in derived class constructors")
-MSG_DEF(JSMSG_BRACKET_AFTER_ARRAY_COMPREHENSION, 0, JSEXN_SYNTAXERR, "missing ] after array comprehension")
 MSG_DEF(JSMSG_BRACKET_AFTER_LIST,      0, JSEXN_SYNTAXERR, "missing ] after element list")
 MSG_DEF(JSMSG_BRACKET_IN_INDEX,        0, JSEXN_SYNTAXERR, "missing ] in index expression")
 MSG_DEF(JSMSG_BRACKET_OPENED,          2, JSEXN_NOTE, "[ opened at line {0}, column {1}")
@@ -271,7 +268,6 @@ MSG_DEF(JSMSG_IN_AFTER_LEXICAL_FOR_DECL,0,JSEXN_SYNTAXERR, "a lexical declaratio
 MSG_DEF(JSMSG_INVALID_FOR_IN_DECL_WITH_INIT,0,JSEXN_SYNTAXERR,"for-in loop head declarations may not have initializers")
 MSG_DEF(JSMSG_INVALID_ID,              1, JSEXN_SYNTAXERR, "{0} is an invalid identifier")
 MSG_DEF(JSMSG_LABEL_NOT_FOUND,         0, JSEXN_SYNTAXERR, "label not found")
-MSG_DEF(JSMSG_LET_COMP_BINDING,        0, JSEXN_SYNTAXERR, "'let' is not a valid name for a comprehension variable")
 MSG_DEF(JSMSG_LEXICAL_DECL_NOT_IN_BLOCK,   1, JSEXN_SYNTAXERR, "{0} declaration not directly within block")
 MSG_DEF(JSMSG_LEXICAL_DECL_LABEL,      1, JSEXN_SYNTAXERR, "{0} declarations cannot be labelled")
 MSG_DEF(JSMSG_GENERATOR_LABEL,         0, JSEXN_SYNTAXERR, "generator functions cannot be labelled")

@@ -114,9 +114,7 @@ struct CustomElementData
 
   explicit CustomElementData(nsAtom* aType);
   CustomElementData(nsAtom* aType, State aState);
-  // Custom element type, for <button is="x-button"> or <x-button>
-  // this would be x-button.
-  RefPtr<nsAtom> mType;
+
   // Element is being created flag as described in the custom elements spec.
   bool mElementIsBeingCreated;
   // Flag to determine if the created callback has been invoked, thus it
@@ -134,6 +132,7 @@ struct CustomElementData
 
   void SetCustomElementDefinition(CustomElementDefinition* aDefinition);
   CustomElementDefinition* GetCustomElementDefinition();
+  nsAtom* GetCustomElementType();
 
   void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
   void Unlink();
@@ -141,6 +140,9 @@ struct CustomElementData
 private:
   virtual ~CustomElementData() {}
 
+  // Custom element type, for <button is="x-button"> or <x-button>
+  // this would be x-button.
+  RefPtr<nsAtom> mType;
   RefPtr<CustomElementDefinition> mCustomElementDefinition;
 };
 
@@ -369,17 +371,10 @@ public:
    * https://html.spec.whatwg.org/#look-up-a-custom-element-definition
    */
   CustomElementDefinition* LookupCustomElementDefinition(
-    const nsAString& aLocalName, const nsAString* aIs = nullptr) const;
+    const nsAString& aLocalName, nsAtom* aTypeAtom) const;
 
   CustomElementDefinition* LookupCustomElementDefinition(
     JSContext* aCx, JSObject *aConstructor) const;
-
-  /**
-   * Enqueue created callback or register upgrade candidate for
-   * newly created custom elements, possibly extending an existing type.
-   * ex. <x-button>, <button is="x-button> (type extension)
-   */
-  void SetupCustomElement(Element* aElement, const nsAString* aTypeExtension);
 
   static void EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
                                        Element* aCustomElement,
@@ -400,15 +395,6 @@ public:
    */
   static void Upgrade(Element* aElement, CustomElementDefinition* aDefinition, ErrorResult& aRv);
 
-private:
-  ~CustomElementRegistry();
-
-  static UniquePtr<CustomElementCallback> CreateCustomElementCallback(
-    nsIDocument::ElementCallbackType aType, Element* aCustomElement,
-    LifecycleCallbackArgs* aArgs,
-    LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
-    CustomElementDefinition* aDefinition);
-
   /**
    * Registers an unresolved custom element that is a candidate for
    * upgrade when the definition is registered via registerElement.
@@ -419,6 +405,21 @@ private:
    */
   void RegisterUnresolvedElement(Element* aElement,
                                  nsAtom* aTypeName = nullptr);
+
+  /**
+   * Unregister an unresolved custom element that is a candidate for
+   * upgrade when a custom element is removed from tree.
+   */
+  void UnregisterUnresolvedElement(Element* aElement,
+                                   nsAtom* aTypeName = nullptr);
+private:
+  ~CustomElementRegistry();
+
+  static UniquePtr<CustomElementCallback> CreateCustomElementCallback(
+    nsIDocument::ElementCallbackType aType, Element* aCustomElement,
+    LifecycleCallbackArgs* aArgs,
+    LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
+    CustomElementDefinition* aDefinition);
 
   void UpgradeCandidates(nsAtom* aKey,
                          CustomElementDefinition* aDefinition,

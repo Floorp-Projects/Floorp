@@ -1305,7 +1305,8 @@ class ABIArg
         GPR_PAIR,
 #endif
         FPU,
-        Stack
+        Stack,
+        Uninitialized = -1
     };
 
   private:
@@ -1317,7 +1318,7 @@ class ABIArg
     } u;
 
   public:
-    ABIArg() : kind_(Kind(-1)) { u.offset_ = -1; }
+    ABIArg() : kind_(Uninitialized) { u.offset_ = -1; }
     explicit ABIArg(Register gpr) : kind_(GPR) { u.gpr_ = gpr.code(); }
     explicit ABIArg(Register gprLow, Register gprHigh)
     {
@@ -1333,9 +1334,12 @@ class ABIArg
     explicit ABIArg(FloatRegister fpu) : kind_(FPU) { u.fpu_ = fpu.code(); }
     explicit ABIArg(uint32_t offset) : kind_(Stack) { u.offset_ = offset; }
 
-    Kind kind() const { return kind_; }
+    Kind kind() const {
+        MOZ_ASSERT(kind_ != Uninitialized);
+        return kind_;
+    }
 #ifdef JS_CODEGEN_REGISTER_PAIR
-    bool isGeneralRegPair() const { return kind_ == GPR_PAIR; }
+    bool isGeneralRegPair() const { return kind() == GPR_PAIR; }
 #else
     bool isGeneralRegPair() const { return false; }
 #endif
@@ -1369,22 +1373,22 @@ class ABIArg
     }
 
     bool argInRegister() const { return kind() != Stack; }
-    AnyRegister reg() const { return kind_ == GPR ? AnyRegister(gpr()) : AnyRegister(fpu()); }
+    AnyRegister reg() const { return kind() == GPR ? AnyRegister(gpr()) : AnyRegister(fpu()); }
 
     bool operator==(const ABIArg& rhs) const {
         if (kind_ != rhs.kind_)
             return false;
 
-        switch((int8_t)kind_) {
+        switch(kind_) {
             case GPR:   return u.gpr_ == rhs.u.gpr_;
 #if defined(JS_CODEGEN_REGISTER_PAIR)
             case GPR_PAIR: return u.gpr_ == rhs.u.gpr_;
 #endif
             case FPU:   return u.fpu_ == rhs.u.fpu_;
             case Stack: return u.offset_ == rhs.u.offset_;
-            case -1:    return true;
-            default:    MOZ_CRASH("Invalid value for ABIArg kind");
+            case Uninitialized: return true;
         }
+        MOZ_CRASH("Invalid value for ABIArg kind");
     }
 
     bool operator!=(const ABIArg& rhs) const {

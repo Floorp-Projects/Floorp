@@ -19,6 +19,7 @@ else:
 
 from progressbar import ProgressBar, NullProgressBar
 from results import TestOutput
+from structuredlog import TestLogger
 
 TESTS_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
 JS_DIR = os.path.dirname(os.path.dirname(TESTS_LIB_DIR))
@@ -327,6 +328,10 @@ class JitTest:
 
         if self.valgrind:
             cmd = self.VALGRIND_CMD + cmd
+
+        if self.allow_unhandlable_oom or self.expect_crash:
+            cmd += ['--suppress-minidump']
+
         return cmd
 
     # The test runner expects this to be set to give to get_command.
@@ -463,7 +468,7 @@ def check_output(out, err, rc, timed_out, test, options):
 
     return True
 
-def print_automation_format(ok, res):
+def print_automation_format(ok, res, slog):
     # Output test failures in a parsable format suitable for automation, eg:
     # TEST-RESULT | filename.js | Failure description (code N, args "--foobar")
     #
@@ -482,6 +487,14 @@ def print_automation_format(ok, res):
     jitflags = " ".join(res.test.jitflags)
     print("{} | {} | {} (code {}, args \"{}\") [{:.1f} s]".format(
         result, res.test.relpath_top, message, res.rc, jitflags, res.dt))
+
+    details = {
+        'message': message,
+        'extra': {
+            'jitflags': jitflags,
+        }
+    }
+    slog.test(res.test.relpath_tests, 'PASS' if ok else 'FAIL', res.dt, **details)
 
     # For failed tests, print as much information as we have, to aid debugging.
     if ok:
@@ -557,7 +570,7 @@ def create_progressbar(num_tests, options):
         return ProgressBar(num_tests, fmt)
     return NullProgressBar()
 
-def process_test_results(results, num_tests, pb, options):
+def process_test_results(results, num_tests, pb, options, slog):
     failures = []
     timeouts = 0
     complete = False
@@ -606,7 +619,7 @@ def process_test_results(results, num_tests, pb, options):
                     pb.message("FAIL - {}".format(res.test.relpath_tests))
 
             if options.format == 'automation':
-                print_automation_format(ok, res)
+                print_automation_format(ok, res, slog)
 
             n = i + 1
             pb.update(n, {
@@ -623,7 +636,21 @@ def process_test_results(results, num_tests, pb, options):
     pb.finish(True)
     return print_test_summary(num_tests, failures, complete, doing, options)
 
-def run_tests(tests, num_tests, prefix, options):
+def run_tests(tests, num_tests, prefix, options, remote=False):
+    slog = None
+    if options.format == 'automation':
+        slog = TestLogger("jittests")
+        slog.suite_start()
+
+    if remote:
+        run_tests_remote(tests, num_tests, prefix, options, slog)
+    else:
+        run_tests_local(tests, num_tests, prefix, options, slog)
+
+    if slog:
+        slog.suite_end()
+
+def run_tests_local(tests, num_tests, prefix, options, slog):
     # The jstests tasks runner requires the following options. The names are
     # taken from the jstests options processing code, which are frequently
     # subtly different from the options jit-tests expects. As such, we wrap
@@ -639,7 +666,7 @@ def run_tests(tests, num_tests, prefix, options):
 
     pb = create_progressbar(num_tests, options)
     gen = run_all_tests(tests, prefix, pb, shim_options)
-    ok = process_test_results(gen, num_tests, pb, options)
+    ok = process_test_results(gen, num_tests, pb, options, slog)
     return ok
 
 def get_remote_results(tests, device, prefix, options):
@@ -672,7 +699,7 @@ def push_progs(options, device, progs):
                                      os.path.basename(local_file))
         device.pushFile(local_file, remote_file)
 
-def run_tests_remote(tests, num_tests, prefix, options):
+def run_tests_remote(tests, num_tests, prefix, options, slog):
     # Setup device with everything needed to run our tests.
     from mozdevice import devicemanagerADB
 
@@ -713,7 +740,7 @@ def run_tests_remote(tests, num_tests, prefix, options):
     # Run all tests.
     pb = create_progressbar(num_tests, options)
     gen = get_remote_results(tests, dm, prefix, options)
-    ok = process_test_results(gen, num_tests, pb, options)
+    ok = process_test_results(gen, num_tests, pb, options, slog)
     return ok
 
 def platform_might_be_android():

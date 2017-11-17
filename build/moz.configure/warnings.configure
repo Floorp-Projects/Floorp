@@ -19,9 +19,6 @@ add_old_configure_assignment(
 # lots of useful warnings
 add_gcc_warning('-Wall')
 
-# catches C++ version forward-compat issues
-add_gcc_warning('-Wc++11-compat', cxx_compiler)
-
 # catches bugs, e.g. "if (c); foo();", few false positives
 add_gcc_warning('-Wempty-body')
 

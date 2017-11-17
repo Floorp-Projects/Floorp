@@ -436,7 +436,8 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
     if (!bytecode || !bytecode->bytes.initLengthUninitialized(bytecodeSize))
         return nullptr;
 
-    memcpy(bytecode->bytes.begin(), bytecodeBegin, bytecodeSize);
+    if (bytecodeSize)
+        memcpy(bytecode->bytes.begin(), bytecodeBegin, bytecodeSize);
 
     Assumptions assumptions;
     const uint8_t* cursor = assumptions.deserialize(compiledBegin, compiledSize);

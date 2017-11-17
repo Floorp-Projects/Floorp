@@ -227,7 +227,6 @@ struct RangePaintInfo {
   RangePaintInfo(nsRange* aRange, nsIFrame* aFrame)
     : mRange(aRange)
     , mBuilder(aFrame, nsDisplayListBuilderMode::PAINTING, false)
-    , mList(&mBuilder)
   {
     MOZ_COUNT_CTOR(RangePaintInfo);
     mBuilder.BeginFrame();
@@ -4805,7 +4804,7 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
   // part of the selection. Then, append the wrapper to the top of the list.
   // Otherwise, just delete the item and don't append it.
   nsRect surfaceRect;
-  nsDisplayList tmpList(aBuilder);
+  nsDisplayList tmpList;
 
   nsDisplayItem* i;
   while ((i = aList->RemoveBottom())) {

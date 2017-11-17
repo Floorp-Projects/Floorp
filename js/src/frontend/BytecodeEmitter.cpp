@@ -482,8 +482,6 @@ class BytecodeEmitter::EmitterScope : public Nestable<BytecodeEmitter::EmitterSc
     MOZ_MUST_USE bool enterLexical(BytecodeEmitter* bce, ScopeKind kind,
                                    Handle<LexicalScope::Data*> bindings);
     MOZ_MUST_USE bool enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox);
-    MOZ_MUST_USE bool enterComprehensionFor(BytecodeEmitter* bce,
-                                            Handle<LexicalScope::Data*> bindings);
     MOZ_MUST_USE bool enterFunction(BytecodeEmitter* bce, FunctionBox* funbox);
     MOZ_MUST_USE bool enterFunctionExtraBodyVar(BytecodeEmitter* bce, FunctionBox* funbox);
     MOZ_MUST_USE bool enterParameterExpressionVar(BytecodeEmitter* bce);
@@ -979,36 +977,6 @@ BytecodeEmitter::EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBo
         return false;
 
     return checkEnvironmentChainLength(bce);
-}
-
-bool
-BytecodeEmitter::EmitterScope::enterComprehensionFor(BytecodeEmitter* bce,
-                                                     Handle<LexicalScope::Data*> bindings)
-{
-    if (!enterLexical(bce, ScopeKind::Lexical, bindings))
-        return false;
-
-    // For comprehensions, initialize all lexical names up front to undefined
-    // because they're now a dead feature and don't interact properly with
-    // TDZ.
-    auto nop = [](BytecodeEmitter*, const NameLocation&, bool) {
-        return true;
-    };
-
-    if (!bce->emit1(JSOP_UNDEFINED))
-        return false;
-
-    RootedAtom name(bce->cx);
-    for (BindingIter bi(*bindings, frameSlotStart(), /* isNamedLambda = */ false); bi; bi++) {
-        name = bi.name();
-        if (!bce->emitInitializeName(name, nop))
-            return false;
-    }
-
-    if (!bce->emit1(JSOP_POP))
-        return false;
-
-    return true;
 }
 
 bool
@@ -3168,13 +3136,12 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
-      // These unary cases have side effects on the enclosing object/array,
-      // sure.  But that's not the question this function answers: it's
-      // whether the operation may have a side effect on something *other* than
-      // the result of the overall operation in which it's embedded.  The
-      // answer to that is no, for an object literal having a mutated prototype
-      // and an array comprehension containing no other effectful operations
-      // only produce a value, without affecting anything else.
+      // This unary case has side effects on the enclosing object, sure.  But
+      // that's not the question this function answers: it's whether the
+      // operation may have a side effect on something *other* than the result
+      // of the overall operation in which it's embedded.  The answer to that
+      // is no, because an object literal having a mutated prototype only
+      // produces a value, without affecting anything else.
       case PNK_MUTATEPROTO:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         return checkSideEffects(pn->pn_kid, answer);

@@ -515,7 +515,7 @@ nsLookAndFeel::EnsureInitShowPassword()
 {
     if (!mInitializedShowPassword) {
         if (XRE_IsParentProcess()) {
-            mShowPassword = java::GeckoAppShell::GetShowPasswordSetting();
+            mShowPassword = jni::IsAvailable() && java::GeckoAppShell::GetShowPasswordSetting();
         } else {
             ContentChild::GetSingleton()->SendGetShowPasswordSetting(&mShowPassword);
         }

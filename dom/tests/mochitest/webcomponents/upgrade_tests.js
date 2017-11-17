@@ -8,6 +8,7 @@ function test_upgrade(f, msg) {
   // Run upgrading test on an element created by document.createElement.
   test_with_new_window(function(testWindow, testMsg) {
     let element = testWindow.document.createElement('unresolved-element');
+    testWindow.document.documentElement.appendChild(element);
     f(testWindow, element, testMsg);
   }, msg + ' (document.createElement)');
 }
@@ -20,6 +21,14 @@ test_upgrade(function(testWindow, testElement, msg) {
   SimpleTest.is(Object.getPrototypeOf(Cu.waiveXrays(testElement)),
                 MyCustomElement.prototype, msg);
 }, 'Custom element must be upgraded if there is a matching definition');
+
+test_upgrade(function(testWindow, testElement, msg) {
+  testElement.remove();
+  class MyCustomElement extends testWindow.HTMLElement {};
+  testWindow.customElements.define('unresolved-element', MyCustomElement);
+  SimpleTest.is(Object.getPrototypeOf(testElement),
+                testWindow.HTMLElement.prototype, msg);
+}, 'Custom element must not be upgraded if it has been removed from tree');
 
 test_upgrade(function(testWindow, testElement, msg) {
   let exceptionToThrow = {name: 'exception thrown by a custom constructor'};

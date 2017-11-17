@@ -593,9 +593,9 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
      */
     Node functionStmt(uint32_t toStringStart,
                       YieldHandling yieldHandling, DefaultHandling defaultHandling,
-                      FunctionAsyncKind asyncKind = SyncFunction);
+                      FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction);
     Node functionExpr(uint32_t toStringStart, InvokedPrediction invoked = PredictUninvoked,
-                      FunctionAsyncKind asyncKind = SyncFunction);
+                      FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction);
 
     Node statementList(YieldHandling yieldHandling);
     Node statement(YieldHandling yieldHandling);
@@ -650,12 +650,12 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     bool checkLocalExportNames(Node node);
     Node exportClause(uint32_t begin);
     Node exportFunctionDeclaration(uint32_t begin, uint32_t toStringStart,
-                                   FunctionAsyncKind asyncKind = SyncFunction);
+                                   FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction);
     Node exportVariableStatement(uint32_t begin);
     Node exportClassDeclaration(uint32_t begin);
     Node exportLexicalDeclaration(uint32_t begin, DeclarationKind kind);
     Node exportDefaultFunctionDeclaration(uint32_t begin, uint32_t toStringStart,
-                                          FunctionAsyncKind asyncKind = SyncFunction);
+                                          FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction);
     Node exportDefaultClassDeclaration(uint32_t begin);
     Node exportDefaultAssignExpr(uint32_t begin);
     Node exportDefault(uint32_t begin);

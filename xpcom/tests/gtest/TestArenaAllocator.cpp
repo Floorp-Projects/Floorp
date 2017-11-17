@@ -240,7 +240,7 @@ TEST(ArenaAllocator, Clear)
   // Tests that the Clear function works as expected. The best proxy for
   // checking if a clear is successful is to measure the size. If it's empty we
   // expect the size to be 0.
-  static const size_t kArenaSize = 64;
+  static const size_t kArenaSize = 128;
   ArenaAllocator<kArenaSize> a;
 
   // Clearing an empty arena should work.

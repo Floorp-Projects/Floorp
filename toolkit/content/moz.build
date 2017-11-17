@@ -65,7 +65,7 @@ with Files('tests/browser/*451286*'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
 with Files('tests/browser/*594509*'):
-    BUG_COMPONENT = ('Toolkit Graveyard', 'XULRunner')
+    BUG_COMPONENT = ('Toolkit', 'General')
 
 with Files('tests/browser/*982298*'):
     BUG_COMPONENT = ('Core', 'Layout')

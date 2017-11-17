@@ -156,11 +156,31 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
     AC_DEFINE(MOZ_CLANG_PLUGIN)
 fi
 
+if test -n "$ENABLE_MOZSEARCH_PLUGIN"; then
+    if test -z "${ENABLE_CLANG_PLUGIN}"; then
+        AC_MSG_ERROR([Can't use mozsearch plugin without --enable-clang-plugin.])
+    fi
+
+    dnl We use this construct rather than $_objdir to avoid getting /js/src in the
+    dnl path when compiling JS code.
+    OBJDIR="$(dirname $(dirname $(dirname $CLANG_PLUGIN)))"
+
+    CLANG_PLUGIN_FLAGS="$CLANG_PLUGIN_FLAGS -Xclang -add-plugin -Xclang mozsearch-index"
+
+    dnl Parameters are: srcdir, outdir (path where output JSON is stored), objdir.
+    CLANG_PLUGIN_FLAGS="$CLANG_PLUGIN_FLAGS -Xclang -plugin-arg-mozsearch-index -Xclang $_topsrcdir"
+    CLANG_PLUGIN_FLAGS="$CLANG_PLUGIN_FLAGS -Xclang -plugin-arg-mozsearch-index -Xclang $OBJDIR/mozsearch_index"
+    CLANG_PLUGIN_FLAGS="$CLANG_PLUGIN_FLAGS -Xclang -plugin-arg-mozsearch-index -Xclang $OBJDIR"
+
+    AC_DEFINE(MOZ_MOZSEARCH_PLUGIN)
+fi
+
 AC_SUBST_LIST(CLANG_PLUGIN_FLAGS)
 AC_SUBST_LIST(LLVM_CXXFLAGS)
 AC_SUBST_LIST(LLVM_LDFLAGS)
 AC_SUBST_LIST(CLANG_LDFLAGS)
 
 AC_SUBST(ENABLE_CLANG_PLUGIN)
+AC_SUBST(ENABLE_MOZSEARCH_PLUGIN)
 
 ])

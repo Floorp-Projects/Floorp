@@ -229,7 +229,7 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
             bailoutInfo->bailoutKind = Bailout_IonExceptionDebugMode;
 
         rfe->kind = ResumeFromException::RESUME_BAILOUT;
-        rfe->target = cx->runtime()->jitRuntime()->getBailoutTail()->raw();
+        rfe->target = cx->runtime()->jitRuntime()->getBailoutTail().value;
         rfe->bailoutInfo = bailoutInfo;
     } else {
         // Bailout failed. If the overrecursion check failed, clear the

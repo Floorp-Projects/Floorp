@@ -80,7 +80,7 @@ with Files('css-properties.js'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: CSS Rules Inspector')
 
 with Files('csscoverage.js'):
-    BUG_COMPONENT = ('Firefox', 'Graphics Commandline and Toolbar')
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Graphics Commandline and Toolbar')
 
 with Files('inspector.js'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Inspector')
