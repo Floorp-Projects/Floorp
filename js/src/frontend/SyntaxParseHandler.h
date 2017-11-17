@@ -59,23 +59,17 @@ class SyntaxParseHandler
         // noticed).
         NodeFunctionCall,
 
-        // Nodes representing *parenthesized* IsValidSimpleAssignmentTarget
-        // nodes.  We can't simply treat all such parenthesized nodes
-        // identically, because in assignment and increment/decrement contexts
-        // ES6 says that parentheses constitute a syntax error.
-        //
-        //   var obj = {};
-        //   var val;
-        //   (val) = 3; (obj.prop) = 4;       // okay per ES5's little mind
-        //   [(a)] = [3]; [(obj.prop)] = [4]; // invalid ES6 syntax
-        //   // ...and so on for the other IsValidSimpleAssignmentTarget nodes
-        //
-        // We don't know in advance in the current parser when we're parsing
-        // in a place where name parenthesization changes meaning, so we must
-        // have multiple node values for these cases.
-        NodeParenthesizedArgumentsName,
-        NodeParenthesizedEvalName,
-        NodeParenthesizedName,
+        // Node representing normal names which don't require any special
+        // casing.
+        NodeName,
+
+        // Nodes representing the names "arguments" and "eval".
+        NodeArgumentsName,
+        NodeEvalName,
+
+        // Node representing the "async" name, which may actually be a
+        // contextual keyword.
+        NodePotentialAsyncKeyword,
 
         NodeDottedProperty,
         NodeElement,
@@ -92,15 +86,6 @@ class SyntaxParseHandler
         // different Node value to represent the parenthesized form.  See also
         // is{Unp,P}arenthesized*(Node), parenthesize(Node), and the various
         // functions that deal in NodeUnparenthesized* below.
-
-        // Nodes representing unparenthesized names.
-        NodeUnparenthesizedArgumentsName,
-        NodeUnparenthesizedEvalName,
-        NodeUnparenthesizedName,
-
-        // Node representing the "async" name, which may actually be a
-        // contextual keyword.
-        NodePotentialAsyncKeyword,
 
         // Valuable for recognizing potential destructuring patterns.
         NodeUnparenthesizedArray,
@@ -168,12 +153,12 @@ class SyntaxParseHandler
     Node newName(PropertyName* name, const TokenPos& pos, JSContext* cx) {
         lastAtom = name;
         if (name == cx->names().arguments)
-            return NodeUnparenthesizedArgumentsName;
+            return NodeArgumentsName;
         if (pos.begin + strlen("async") == pos.end && name == cx->names().async)
             return NodePotentialAsyncKeyword;
         if (name == cx->names().eval)
-            return NodeUnparenthesizedEvalName;
-        return NodeUnparenthesizedName;
+            return NodeEvalName;
+        return NodeName;
     }
 
     Node newComputedName(Node expr, uint32_t start, uint32_t end) {
@@ -181,7 +166,7 @@ class SyntaxParseHandler
     }
 
     Node newObjectLiteralPropertyName(JSAtom* atom, const TokenPos& pos) {
-        return NodeUnparenthesizedName;
+        return NodeName;
     }
 
     Node newNumber(double value, DecimalPoint decimalPoint, const TokenPos& pos) { return NodeGeneric; }
@@ -409,9 +394,9 @@ class SyntaxParseHandler
         // parsing would *already* have aborted when it saw a destructuring
         // pattern.  So we can just say any old thing here, because the only
         // time we'll be wrong is a case that syntax parsing has already
-        // rejected.  Use NodeUnparenthesizedName so the SyntaxParseHandler
+        // rejected.  Use NodeName so the SyntaxParseHandler
         // Parser::cloneLeftHandSide can assert it sees only this.
-        return NodeUnparenthesizedName;
+        return NodeName;
     }
 
     Node newCatchList(const TokenPos& pos) {
@@ -468,13 +453,6 @@ class SyntaxParseHandler
         // A number of nodes have different behavior upon parenthesization, but
         // only in some circumstances.  Convert these nodes to special
         // parenthesized forms.
-        if (node == NodeUnparenthesizedArgumentsName)
-            return NodeParenthesizedArgumentsName;
-        if (node == NodeUnparenthesizedEvalName)
-            return NodeParenthesizedEvalName;
-        if (node == NodeUnparenthesizedName || node == NodePotentialAsyncKeyword)
-            return NodeParenthesizedName;
-
         if (node == NodeUnparenthesizedArray)
             return NodeParenthesizedArray;
         if (node == NodeUnparenthesizedObject)
@@ -489,6 +467,10 @@ class SyntaxParseHandler
             return NodeGeneric;
         }
 
+        // Convert parenthesized |async| to a normal name node.
+        if (node == NodePotentialAsyncKeyword)
+            return NodeName;
+
         // In all other cases, the parenthesized form of |node| is equivalent
         // to the unparenthesized form: return |node| unchanged.
         return node;
@@ -500,33 +482,19 @@ class SyntaxParseHandler
 
     bool isConstant(Node pn) { return false; }
 
-    bool isNameAnyParentheses(Node node) {
-        return node == NodeUnparenthesizedArgumentsName ||
-               node == NodeUnparenthesizedEvalName ||
-               node == NodeUnparenthesizedName ||
-               node == NodePotentialAsyncKeyword ||
-               node == NodeParenthesizedArgumentsName ||
-               node == NodeParenthesizedEvalName ||
-               node == NodeParenthesizedName;
+    bool isName(Node node) {
+        return node == NodeName ||
+               node == NodeArgumentsName ||
+               node == NodeEvalName ||
+               node == NodePotentialAsyncKeyword;
     }
 
-    bool isArgumentsAnyParentheses(Node node, JSContext* cx) {
-        return node == NodeUnparenthesizedArgumentsName || node == NodeParenthesizedArgumentsName;
+    bool isArgumentsName(Node node, JSContext* cx) {
+        return node == NodeArgumentsName;
     }
 
-    bool isEvalAnyParentheses(Node node, JSContext* cx) {
-        return node == NodeUnparenthesizedEvalName || node == NodeParenthesizedEvalName;
-    }
-
-    const char* nameIsArgumentsEvalAnyParentheses(Node node, JSContext* cx) {
-        MOZ_ASSERT(isNameAnyParentheses(node),
-                   "must only call this method on known names");
-
-        if (isEvalAnyParentheses(node, cx))
-            return js_eval_str;
-        if (isArgumentsAnyParentheses(node, cx))
-            return js_arguments_str;
-        return nullptr;
+    bool isEvalName(Node node, JSContext* cx) {
+        return node == NodeEvalName;
     }
 
     bool isAsyncKeyword(Node node, JSContext* cx) {
