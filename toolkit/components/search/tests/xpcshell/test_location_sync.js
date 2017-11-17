@@ -33,12 +33,6 @@ function promiseTimezoneMessage() {
   });
 }
 
-function run_test() {
-  installTestEngine();
-
-  run_next_test();
-}
-
 // Force a sync init and ensure the right thing happens (ie, that no xhr
 // request is made and we fall back to the timezone-only trick)
 add_task(async function test_simple() {

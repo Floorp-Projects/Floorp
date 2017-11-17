@@ -4,8 +4,6 @@
 // Here we are testing the "migration" from the isUS pref being true but when
 // no country-code exists.
 function run_test() {
-  installTestEngine();
-
   // Set the pref we care about.
   Services.prefs.setBoolPref("browser.search.isUS", true);
   // And the geoip request that will return *not* US.
