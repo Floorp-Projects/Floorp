@@ -4,7 +4,9 @@ add_task(async function test() {
   crD.append("Crash Reports");
   let crashes = add_fake_crashes(crD, 5);
   // sanity check
-  let appDtest = Services.dirsvc.get("UAppData", Components.interfaces.nsIFile);
+  let dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                         .getService(Components.interfaces.nsIProperties);
+  let appDtest = dirSvc.get("UAppData", Components.interfaces.nsIFile);
   ok(appD.equals(appDtest), "directory service provider registered ok");
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:crashes" }, function(browser) {

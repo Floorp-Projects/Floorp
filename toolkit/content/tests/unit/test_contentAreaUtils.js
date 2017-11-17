@@ -6,13 +6,12 @@
 var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cr = Components.results;
-var Cu = Components.utils;
-
-Cu.import("resource://gre/modules/Services.jsm");
 
 function loadUtilsScript() {
+  var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+               getService(Ci.mozIJSSubScriptLoader);
   /* import-globals-from ../../contentAreaUtils.js */
-  Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js");
+  loader.loadSubScript("chrome://global/content/contentAreaUtils.js");
 }
 
 function test_urlSecurityCheck() {

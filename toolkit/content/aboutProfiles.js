@@ -27,7 +27,9 @@ const bundle = Services.strings.createBundle(
 function findCurrentProfile() {
   let cpd;
   try {
-    cpd = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    cpd = Cc["@mozilla.org/file/directory_service;1"]
+            .getService(Ci.nsIProperties)
+            .get("ProfD", Ci.nsIFile);
   } catch (e) {}
 
   if (cpd) {
