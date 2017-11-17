@@ -692,8 +692,6 @@ nsGlobalWindowOuter::nsGlobalWindowOuter()
 
   gRefCnt++;
 
-  EnsurePrefCaches();
-
   if (gDumpFile == nullptr) {
     nsAutoCString fname;
     Preferences::GetCString("browser.dom.window.dump.file", fname);
