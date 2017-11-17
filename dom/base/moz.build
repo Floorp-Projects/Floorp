@@ -363,6 +363,7 @@ UNIFIED_SOURCES += [
     'TimeoutManager.cpp',
     'TreeWalker.cpp',
     'WebKitCSSMatrix.cpp',
+    'WindowDestroyedEvent.cpp',
     'WindowNamedPropertiesHandler.cpp',
     'WindowOrientationObserver.cpp',
     'XPathGenerator.cpp',
