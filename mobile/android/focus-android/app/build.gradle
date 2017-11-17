@@ -155,9 +155,7 @@ dependencies {
     compile "com.android.support:cardview-v7:$support_libraries_version"
     compile "com.android.support:recyclerview-v7:$support_libraries_version"
 
-    compile "android.arch.lifecycle:runtime:$architecture_components_version"
     compile "android.arch.lifecycle:extensions:$architecture_components_version"
-    kapt "android.arch.lifecycle:compiler:$architecture_components_version"
 
     compile ("com.google.code.findbugs:annotations:3.0.1") {
         // We really only need the SuppressFBWarnings annotation, everything else can be ignored.
