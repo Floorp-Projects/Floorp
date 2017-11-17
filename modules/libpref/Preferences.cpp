@@ -307,6 +307,28 @@ public:
     return true;
   }
 
+  // Overwrite the type and value of an existing preference. Caller must ensure
+  // that they are not changing the type of a preference that has a default
+  // value.
+  void ReplaceValue(PrefValueKind aKind, PrefType aNewType, PrefValue aNewValue)
+  {
+    PrefValue* value =
+      aKind == PrefValueKind::Default ? &mDefaultValue : &mUserValue;
+
+    if (Type() == PrefType::String) {
+      free(const_cast<char*>(value->mStringVal));
+    }
+
+    SetType(aNewType);
+
+    if (aNewType == PrefType::String) {
+      MOZ_ASSERT(aNewValue.mStringVal);
+      value->mStringVal = moz_xstrdup(aNewValue.mStringVal);
+    } else {
+      *value = aNewValue;
+    }
+  }
+
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
   {
     // Note: mName is allocated in gPrefNameArena, measured elsewhere.
@@ -619,28 +641,6 @@ pref_ValueChanged(PrefValue aOldValue, PrefValue aNewValue, PrefType aType)
   return changed;
 }
 
-// Overwrite the type and value of an existing preference. Caller must ensure
-// that they are not changing the type of a preference that has a default
-// value.
-static void
-pref_SetValue(PrefValue* aExistingValue,
-              PrefType aExistingType,
-              PrefValue aNewValue,
-              PrefType aNewType)
-{
-  if (aExistingType == PrefType::String) {
-    free(const_cast<char*>(aExistingValue->mStringVal));
-  }
-
-  if (aNewType == PrefType::String) {
-    MOZ_ASSERT(aNewValue.mStringVal);
-    aExistingValue->mStringVal =
-      aNewValue.mStringVal ? moz_xstrdup(aNewValue.mStringVal) : nullptr;
-  } else {
-    *aExistingValue = aNewValue;
-  }
-}
-
 #ifdef DEBUG
 
 static pref_initPhase gPhase = START;
@@ -752,8 +752,7 @@ pref_SetPref(const char* aPrefName,
       // ?? change of semantics?
       if (pref_ValueChanged(pref->mDefaultValue, aValue, aType) ||
           !pref->HasDefaultValue()) {
-        pref_SetValue(&pref->mDefaultValue, pref->Type(), aValue, aType);
-        pref->SetType(aType);
+        pref->ReplaceValue(PrefValueKind::Default, aType, aValue);
         pref->SetHasDefaultValue(true);
         if (aFlags & kPrefSticky) {
           pref->SetIsSticky(true);
@@ -782,8 +781,7 @@ pref_SetPref(const char* aPrefName,
       }
     } else if (!pref->HasUserValue() || !pref->IsType(aType) ||
                pref_ValueChanged(pref->mUserValue, aValue, aType)) {
-      pref_SetValue(&pref->mUserValue, pref->Type(), aValue, aType);
-      pref->SetType(aType);
+      pref->ReplaceValue(PrefValueKind::User, aType, aValue);
       pref->SetHasUserValue(true);
       if (!pref->IsLocked()) {
         Preferences::HandleDirty();
