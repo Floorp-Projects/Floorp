@@ -104,7 +104,7 @@ class APZCTreeManager : public IAPZCTreeManager {
   struct TreeBuildingState;
 
 public:
-  APZCTreeManager();
+  explicit APZCTreeManager(uint64_t aRootLayersId);
 
   /**
    * Initializes the global state used in AsyncPanZoomController.
@@ -611,6 +611,10 @@ private:
   // Requires the caller to hold mTreeLock.
   LayerToParentLayerMatrix4x4 ComputeTransformForNode(const HitTestingTreeNode* aNode) const;
 
+  // Returns a pointer to the WebRenderAPI for the root layers id this APZCTreeManager
+  // is for. This might be null (for example, if WebRender is not enabled).
+  already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI() const;
+
 protected:
   /* The input queue where input events are held until we know enough to
    * figure out where they're going. Protected so gtests can access it.
@@ -618,6 +622,9 @@ protected:
   RefPtr<InputQueue> mInputQueue;
 
 private:
+  /* Layers id for the root CompositorBridgeParent that owns this APZCTreeManager. */
+  uint64_t mRootLayersId;
+
   /* Whenever walking or mutating the tree rooted at mRootNode, mTreeLock must be held.
    * This lock does not need to be held while manipulating a single APZC instance in
    * isolation (that is, if its tree pointers are not being accessed or mutated). The
