@@ -2,8 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-  installTestEngine();
-
   // We use an invalid port that parses but won't open
   let url = "http://localhost:0";
 
