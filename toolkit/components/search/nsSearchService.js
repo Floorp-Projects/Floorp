@@ -54,15 +54,11 @@ const MODE_TRUNCATE = 0x20;
 const PERMS_FILE    = 0o644;
 
 // Directory service keys
-const NS_APP_SEARCH_DIR_LIST  = "SrchPluginsDL";
 const NS_APP_DISTRIBUTION_SEARCH_DIR_LIST = "SrchPluginsDistDL";
-const NS_APP_USER_SEARCH_DIR  = "UsrSrchPlugns";
-const NS_APP_SEARCH_DIR       = "SrchPlugns";
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 
-// Loading plugins from NS_APP_SEARCH_DIR is no longer supported.
-// Instead, we now load plugins from APP_SEARCH_PREFIX, where a
-// list.txt file needs to exist to list available engines.
+// We load plugins from APP_SEARCH_PREFIX, where a list.txt
+// file needs to exist to list available engines.
 const APP_SEARCH_PREFIX = "resource://search-plugins/";
 
 // See documentation in nsIBrowserSearchService.idl.
@@ -1226,13 +1222,6 @@ function Engine(aLocation, aIsReadOnly) {
   if (typeof aLocation == "string") {
     this._shortName = aLocation;
   } else if (aLocation instanceof Ci.nsIFile) {
-    if (!aIsReadOnly) {
-      // This is an engine that was installed in NS_APP_USER_SEARCH_DIR by a
-      // previous version. We are converting the file to an engine stored only
-      // in JSON, but we need to keep the reference to the profile file to
-      // remove it if the user ever removes the engine.
-      this._filePath = aLocation.persistentDescriptor;
-    }
     file = aLocation;
   } else if (aLocation instanceof Ci.nsIURI) {
     switch (aLocation.scheme) {
@@ -2930,43 +2919,17 @@ SearchService.prototype = {
         distDirs.push(dir);
     }
 
-    let otherDirs = [];
-    let userSearchDir = getDir(NS_APP_USER_SEARCH_DIR);
-    locations = getDir(NS_APP_SEARCH_DIR_LIST, Ci.nsISimpleEnumerator);
-    while (locations.hasMoreElements()) {
-      let dir = locations.getNext().QueryInterface(Ci.nsIFile);
-      if ((!cache.engines || !dir.equals(userSearchDir)) &&
-          dir.directoryEntries.hasMoreElements())
-        otherDirs.push(dir);
-    }
-
-    function modifiedDir(aDir) {
-      return cacheOtherPaths.get(aDir.path) != aDir.lastModifiedTime;
-    }
-
     function notInCacheVisibleEngines(aEngineName) {
       return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
     }
 
     let buildID = Services.appinfo.platformBuildID;
-    let cacheOtherPaths = new Map();
-    if (cache.engines) {
-      for (let engine of cache.engines) {
-        if (engine._dirPath) {
-          cacheOtherPaths.set(engine._dirPath, engine._dirLastModifiedTime);
-        }
-      }
-    }
-
     let rebuildCache = !cache.engines ||
                        cache.version != CACHE_VERSION ||
                        cache.locale != getLocale() ||
                        cache.buildID != buildID ||
-                       cacheOtherPaths.size != otherDirs.length ||
-                       otherDirs.some(d => !cacheOtherPaths.has(d.path)) ||
                        cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
-                       this._visibleDefaultEngines.some(notInCacheVisibleEngines) ||
-                       otherDirs.some(modifiedDir);
+                       this._visibleDefaultEngines.some(notInCacheVisibleEngines);
 
     if (rebuildCache) {
       LOG("_loadEngines: Absent or outdated cache. Loading engines from disk.");
@@ -2976,8 +2939,6 @@ SearchService.prototype = {
 
       LOG("_loadEngines: load user-installed engines from the obsolete cache");
       this._loadEnginesFromCache(cache, true);
-
-      otherDirs.forEach(this._loadEnginesFromDir, this);
 
       this._loadEnginesMetadataFromCache(cache);
       this._buildCache();
@@ -3028,69 +2989,17 @@ SearchService.prototype = {
       }
     }
 
-    // Add the non-empty directories of NS_APP_SEARCH_DIR_LIST to
-    // otherDirs...
-    let otherDirs = [];
-    let userSearchDir = getDir(NS_APP_USER_SEARCH_DIR);
-    locations = getDir(NS_APP_SEARCH_DIR_LIST, Ci.nsISimpleEnumerator);
-    while (locations.hasMoreElements()) {
-      let dir = locations.getNext().QueryInterface(Ci.nsIFile);
-      if (cache.engines && dir.equals(userSearchDir))
-        continue;
-      let iterator = new OS.File.DirectoryIterator(dir.path,
-                                                   { winPattern: "*.xml" });
-      try {
-        // Add dir to otherDirs if it contains any files.
-        let {done} = await checkForSyncCompletion(iterator.next());
-        if (!done) {
-          otherDirs.push(dir);
-        }
-      } finally {
-        iterator.close();
-      }
-    }
-
-    let hasModifiedDir = async function(aList) {
-      let modifiedDir = false;
-
-      for (let dir of aList) {
-        let lastModifiedTime = cacheOtherPaths.get(dir.path);
-        if (!lastModifiedTime) {
-          continue;
-        }
-
-        let info = await OS.File.stat(dir.path);
-        if (lastModifiedTime != info.lastModificationDate.getTime()) {
-          modifiedDir = true;
-          break;
-        }
-      }
-      return modifiedDir;
-    };
-
     function notInCacheVisibleEngines(aEngineName) {
       return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
     }
 
     let buildID = Services.appinfo.platformBuildID;
-    let cacheOtherPaths = new Map();
-    if (cache.engines) {
-      for (let engine of cache.engines) {
-        if (engine._dirPath) {
-          cacheOtherPaths.set(engine._dirPath, engine._dirLastModifiedTime);
-        }
-      }
-    }
-
     let rebuildCache = !cache.engines ||
                        cache.version != CACHE_VERSION ||
                        cache.locale != getLocale() ||
                        cache.buildID != buildID ||
-                       cacheOtherPaths.size != otherDirs.length ||
-                       otherDirs.some(d => !cacheOtherPaths.has(d.path)) ||
                        cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
-                       this._visibleDefaultEngines.some(notInCacheVisibleEngines) ||
-                       (await checkForSyncCompletion(hasModifiedDir(otherDirs)));
+                       this._visibleDefaultEngines.some(notInCacheVisibleEngines);
 
     if (rebuildCache) {
       LOG("_asyncLoadEngines: Absent or outdated cache. Loading engines from disk.");
@@ -3105,12 +3014,6 @@ SearchService.prototype = {
 
       LOG("_asyncLoadEngines: loading user-installed engines from the obsolete cache");
       this._loadEnginesFromCache(cache, true);
-
-      for (let loadDir of otherDirs) {
-        let enginesFromDir =
-          await checkForSyncCompletion(this._asyncLoadEnginesFromDir(loadDir));
-        enginesFromDir.forEach(this._addEngineToStore, this);
-      }
 
       this._loadEnginesMetadataFromCache(cache);
       this._buildCache();
@@ -3431,9 +3334,6 @@ SearchService.prototype = {
   _loadEnginesFromDir: function SRCH_SVC__loadEnginesFromDir(aDir) {
     LOG("_loadEnginesFromDir: Searching in " + aDir.path + " for search engines.");
 
-    // Check whether aDir is the user profile dir
-    var isInProfile = aDir.equals(getDir(NS_APP_USER_SEARCH_DIR));
-
     var files = aDir.directoryEntries
                     .QueryInterface(Ci.nsIDirectoryEnumerator);
 
@@ -3454,9 +3354,9 @@ SearchService.prototype = {
 
       var addedEngine = null;
       try {
-        addedEngine = new Engine(file, !isInProfile);
+        addedEngine = new Engine(file, true);
         addedEngine._initFromFile(file);
-        if (!isInProfile && !addedEngine._isDefault) {
+        if (!addedEngine._isDefault) {
           addedEngine._dirPath = aDir.path;
           addedEngine._dirLastModifiedTime = aDir.lastModifiedTime;
         }
@@ -3480,8 +3380,6 @@ SearchService.prototype = {
   async _asyncLoadEnginesFromDir(aDir) {
     LOG("_asyncLoadEnginesFromDir: Searching in " + aDir.path + " for search engines.");
 
-    // Check whether aDir is the user profile dir
-    let isInProfile = aDir.equals(getDir(NS_APP_USER_SEARCH_DIR));
     let dirPath = aDir.path;
     let iterator = new OS.File.DirectoryIterator(dirPath);
 
@@ -3507,9 +3405,9 @@ SearchService.prototype = {
       try {
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.initWithPath(osfile.path);
-        addedEngine = new Engine(file, !isInProfile);
+        addedEngine = new Engine(file, false);
         await checkForSyncCompletion(addedEngine._asyncInitFromFile(file));
-        if (!isInProfile && !addedEngine._isDefault) {
+        if (!addedEngine._isDefault) {
           addedEngine._dirPath = dirPath;
           let info = await OS.File.stat(dirPath);
           addedEngine._dirLastModifiedTime =
