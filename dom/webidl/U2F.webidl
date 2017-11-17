@@ -4,10 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is a combination of the FIDO U2F Raw Message Formats:
- * https://fidoalliance.org/specs/fido-u2f-v1.0-nfc-bt-amendment-20150514/fido-u2f-raw-message-formats.html
- * and the U2F JavaScript API v1.1, not yet published. While v1.1 is not published,
- * v1.0, is located here:
- * https://fidoalliance.org/specs/fido-u2f-v1.0-nfc-bt-amendment-20150514/fido-u2f-javascript-api.html
+ * https://www.fidoalliance.org/specs/fido-u2f-v1.1-id-20160915/fido-u2f-raw-message-formats-v1.1-id-20160915.html
+ * and the U2F JavaScript API v1.1:
+ * https://www.fidoalliance.org/specs/fido-u2f-v1.1-id-20160915/fido-u2f-javascript-api-v1.1-id-20160915.html
  */
 
 [NoInterfaceObject]
