@@ -638,6 +638,21 @@ RetainedDisplayListBuilder::ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedF
     nsIFrame* currentFrame = f;
 
     while (currentFrame != mBuilder.RootReferenceFrame()) {
+
+      // Preserve-3d frames don't have valid overflow areas, and they might
+      // have singular transforms (despite still being visible when combined
+      // with their ancestors). If we're at one, jump up to the root of the
+      // preserve-3d context and use the whole overflow area.
+      nsIFrame* last = currentFrame;
+      while (currentFrame->Extend3DContext() ||
+             currentFrame->Combines3DTransformWithAncestors()) {
+        last = currentFrame;
+        currentFrame = currentFrame->GetParent();
+      }
+      if (last != currentFrame) {
+        overflow = last->GetVisualOverflowRectRelativeToParent();
+      }
+
       // Convert 'overflow' into the coordinate space of the nearest stacking context
       // or display port ancestor and update 'currentFrame' to point to that frame.
       overflow = nsLayoutUtils::TransformFrameRectToAncestor(currentFrame, overflow, mBuilder.RootReferenceFrame(),
