@@ -6,7 +6,7 @@ certifi==2017.4.17
 cffi==1.10.0
 click==6.7
 construct==2.8.12
-cryptography==1.8.1
+cryptography==1.8.2
 cssutils==1.0.2
 EditorConfig==0.12.1
 h2==2.6.2
