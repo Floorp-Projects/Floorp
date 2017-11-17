@@ -11,6 +11,7 @@
 #include "LayersTypes.h"
 #include "UnitTransforms.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/FloatingPoint.h"
 
 namespace mozilla {
@@ -41,6 +42,8 @@ operator|(CancelAnimationFlags a, CancelAnimationFlags b)
   return static_cast<CancelAnimationFlags>(static_cast<int>(a)
                                          | static_cast<int>(b));
 }
+
+typedef EnumSet<ScrollDirection> ScrollDirections;
 
 enum class ScrollSource {
   // scrollTo() or something similar.
