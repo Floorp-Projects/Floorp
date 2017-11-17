@@ -4,8 +4,6 @@
 // Here we are testing the "migration" when both isUS and countryCode are
 // set.
 function run_test() {
-  installTestEngine();
-
   // Set the prefs we care about.
   Services.prefs.setBoolPref("browser.search.isUS", true);
   Services.prefs.setCharPref("browser.search.countryCode", "US");

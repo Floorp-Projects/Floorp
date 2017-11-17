@@ -2,8 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-  installTestEngine();
-
   Services.prefs.setCharPref("browser.search.geoip.url", 'data:application/json,{"country_code": "AU"}');
   Services.search.init(() => {
     equal(Services.prefs.getCharPref("browser.search.countryCode"), "AU", "got the correct country code.");
