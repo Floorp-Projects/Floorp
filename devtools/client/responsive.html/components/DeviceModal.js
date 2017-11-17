@@ -6,35 +6,39 @@
 
 "use strict";
 
-const { DOM: dom, createClass, createFactory, PropTypes, addons } =
-  require("devtools/client/shared/vendor/react");
+const { PureComponent, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const { getStr, getFormatStr } = require("../utils/l10n");
 const Types = require("../types");
 const DeviceAdder = createFactory(require("./DeviceAdder"));
 
-module.exports = createClass({
-  displayName: "DeviceModal",
+class DeviceModal extends PureComponent {
+  static get propTypes() {
+    return {
+      deviceAdderViewportTemplate: PropTypes.shape(Types.viewport).isRequired,
+      devices: PropTypes.shape(Types.devices).isRequired,
+      onAddCustomDevice: PropTypes.func.isRequired,
+      onDeviceListUpdate: PropTypes.func.isRequired,
+      onRemoveCustomDevice: PropTypes.func.isRequired,
+      onUpdateDeviceDisplayed: PropTypes.func.isRequired,
+      onUpdateDeviceModal: PropTypes.func.isRequired,
+    };
+  }
 
-  propTypes: {
-    deviceAdderViewportTemplate: PropTypes.shape(Types.viewport).isRequired,
-    devices: PropTypes.shape(Types.devices).isRequired,
-    onAddCustomDevice: PropTypes.func.isRequired,
-    onDeviceListUpdate: PropTypes.func.isRequired,
-    onRemoveCustomDevice: PropTypes.func.isRequired,
-    onUpdateDeviceDisplayed: PropTypes.func.isRequired,
-    onUpdateDeviceModal: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
-
-  getInitialState() {
-    return {};
-  },
+  constructor(props) {
+    super(props);
+    this.state = {};
+    this.onAddCustomDevice = this.onAddCustomDevice.bind(this);
+    this.onDeviceCheckboxChange = this.onDeviceCheckboxChange.bind(this);
+    this.onDeviceModalSubmit = this.onDeviceModalSubmit.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+  }
 
   componentDidMount() {
     window.addEventListener("keydown", this.onKeyDown, true);
-  },
+  }
 
   componentWillReceiveProps(nextProps) {
     let {
@@ -54,11 +58,11 @@ module.exports = createClass({
         }
       }
     }
-  },
+  }
 
   componentWillUnmount() {
     window.removeEventListener("keydown", this.onKeyDown, true);
-  },
+  }
 
   onAddCustomDevice(device) {
     this.props.onAddCustomDevice(device);
@@ -66,7 +70,7 @@ module.exports = createClass({
     this.setState({
       [device.name]: true,
     });
-  },
+  }
 
   onDeviceCheckboxChange({ nativeEvent: { button }, target }) {
     if (button !== 0) {
@@ -75,7 +79,7 @@ module.exports = createClass({
     this.setState({
       [target.value]: !this.state[target.value]
     });
-  },
+  }
 
   onDeviceModalSubmit() {
     let {
@@ -108,7 +112,7 @@ module.exports = createClass({
 
     onDeviceListUpdate(preferredDevices);
     onUpdateDeviceModal(false);
-  },
+  }
 
   onKeyDown(event) {
     if (!this.props.devices.isModalOpen) {
@@ -121,7 +125,7 @@ module.exports = createClass({
       } = this.props;
       onUpdateDeviceModal(false);
     }
-  },
+  }
 
   render() {
     let {
@@ -230,5 +234,7 @@ module.exports = createClass({
         }
       )
     );
-  },
-});
+  }
+}
+
+module.exports = DeviceModal;

@@ -5,25 +5,29 @@
 "use strict";
 
 const { getStr } = require("../utils/l10n");
-const { DOM: dom, createClass, PropTypes, addons } =
-  require("devtools/client/shared/vendor/react");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const Types = require("../types");
 const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 
-module.exports = createClass({
-  displayName: "DeviceSelector",
+class DeviceSelector extends PureComponent {
+  static get propTypes() {
+    return {
+      devices: PropTypes.shape(Types.devices).isRequired,
+      selectedDevice: PropTypes.string.isRequired,
+      viewportId: PropTypes.number.isRequired,
+      onChangeDevice: PropTypes.func.isRequired,
+      onResizeViewport: PropTypes.func.isRequired,
+      onUpdateDeviceModal: PropTypes.func.isRequired,
+    };
+  }
 
-  propTypes: {
-    devices: PropTypes.shape(Types.devices).isRequired,
-    selectedDevice: PropTypes.string.isRequired,
-    viewportId: PropTypes.number.isRequired,
-    onChangeDevice: PropTypes.func.isRequired,
-    onResizeViewport: PropTypes.func.isRequired,
-    onUpdateDeviceModal: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+  constructor(props) {
+    super(props);
+    this.onSelectChange = this.onSelectChange.bind(this);
+  }
 
   onSelectChange({ target }) {
     let {
@@ -47,7 +51,7 @@ module.exports = createClass({
         }
       }
     }
-  },
+  }
 
   render() {
     let {
@@ -121,6 +125,7 @@ module.exports = createClass({
       },
       ...listContent
     );
-  },
+  }
+}
 
-});
+module.exports = DeviceSelector;
