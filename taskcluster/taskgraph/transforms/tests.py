@@ -623,6 +623,7 @@ def handle_keyed_by(config, tests):
         'mozharness.requires-signed-builds',
         'mozharness.script',
         'worker-type',
+        'virtualization',
     ]
     for test in tests:
         for field in fields:
