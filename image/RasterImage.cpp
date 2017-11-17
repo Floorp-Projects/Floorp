@@ -639,6 +639,22 @@ RasterImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
   return GetImageContainerImpl(aManager, mSize, aFlags);
 }
 
+NS_IMETHODIMP_(bool)
+RasterImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
+                                             const IntSize& aSize,
+                                             uint32_t aFlags)
+{
+  return false;
+}
+
+NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
+RasterImage::GetImageContainerAtSize(LayerManager* aManager,
+                                     const IntSize& aSize,
+                                     uint32_t aFlags)
+{
+  return nullptr;
+}
+
 size_t
 RasterImage::SizeOfSourceWithComputedFallback(SizeOfState& aState) const
 {
