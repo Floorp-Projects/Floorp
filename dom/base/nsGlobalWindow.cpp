@@ -710,20 +710,6 @@ private:
   bool mIsInnerWindow;
 };
 
-static bool
-IsInterval(const Optional<int32_t>& aTimeout, int32_t& aResultTimeout)
-{
-  if (aTimeout.WasPassed()) {
-    aResultTimeout = aTimeout.Value();
-    return true;
-  }
-
-  // If no interval was specified, treat this like a timeout, to avoid setting
-  // an interval of 0 milliseconds.
-  aResultTimeout = 0;
-  return false;
-}
-
 template<typename T>
 mozilla::dom::DocGroup*
 nsPIDOMWindow<T>::GetDocGroup() const
