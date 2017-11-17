@@ -20,7 +20,7 @@ typedef struct mp4parse_track_audio_info mp4parse_track_audio_info;
 typedef struct mp4parse_track_video_info mp4parse_track_video_info;
 }
 
-namespace mp4_demuxer
+namespace mozilla
 {
 
 class MP4Demuxer;

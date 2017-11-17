@@ -15,11 +15,14 @@
 
 template<class T> class nsAutoPtr;
 
+namespace mozilla {
+class IndiceWrapper;
+}
+
 namespace mp4_demuxer
 {
 
 class Index;
-class IndiceWrapper;
 
 typedef int64_t Microseconds;
 
@@ -94,7 +97,7 @@ public:
     Interval<Microseconds> mTime;
   };
 
-  Index(const IndiceWrapper& aIndices,
+  Index(const mozilla::IndiceWrapper& aIndices,
         Stream* aSource,
         uint32_t aTrackId,
         bool aIsAudio);

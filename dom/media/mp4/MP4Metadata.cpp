@@ -21,13 +21,12 @@
 #include <vector>
 
 using mozilla::media::TimeUnit;
+using mp4_demuxer::Stream;
+using mp4_demuxer::Index;
+using mp4_demuxer::MoofParser;
 
 namespace mozilla {
 LazyLogModule gMP4MetadataLog("MP4Metadata");
-}
-
-namespace mp4_demuxer
-{
 
 // the owner of mIndice is rust mp4 paser, so lifetime of this class
 // SHOULD NOT longer than rust parser.
@@ -408,4 +407,4 @@ MP4Metadata::Metadata(Stream* aSource)
   return {NS_OK, Move(buffer)};
 }
 
-} // namespace mp4_demuxer
+} // namespace mozilla
