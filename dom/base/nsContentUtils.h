@@ -3253,6 +3253,26 @@ public:
   static already_AddRefed<mozilla::dom::EventTarget>
   TryGetTabChildGlobalAsEventTarget(nsISupports* aFrom);
 
+  static PopupControlState
+  PushPopupControlState(PopupControlState aState, bool aForce)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    PopupControlState old = sPopupControlState;
+    if (aState < old || aForce) {
+      sPopupControlState = aState;
+    }
+    return old;
+  }
+
+  static void
+  PopPopupControlState(PopupControlState aState)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    sPopupControlState = aState;
+  }
+
+  static PopupControlState GetPopupControlState() { return sPopupControlState; }
+
 private:
   static bool InitializeEventTable();
 
@@ -3441,6 +3461,8 @@ private:
 #endif
   static bool sDoNotTrackEnabled;
   static mozilla::LazyLogModule sDOMDumpLog;
+
+  static PopupControlState sPopupControlState;
 };
 
 /* static */ inline

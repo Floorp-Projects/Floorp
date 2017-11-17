@@ -290,8 +290,6 @@ using mozilla::dom::cache::CacheStorage;
 static LazyLogModule gDOMLeakPRLog("DOMLeak");
 
 static int32_t              gRefCnt                           = 0;
-static int32_t              gOpenPopupSpamCount               = 0;
-static PopupControlState    gPopupControlState                = openAbused;
 static bool                 gMouseDown                        = false;
 static bool                 gDragServiceDisabled              = false;
 static FILE                *gDumpFile                         = nullptr;
