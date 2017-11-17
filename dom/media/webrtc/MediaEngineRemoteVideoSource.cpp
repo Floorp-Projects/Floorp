@@ -928,7 +928,6 @@ MediaEngineRemoteVideoSource::ChooseCapability(
 void
 MediaEngineRemoteVideoSource::GetSettings(MediaTrackSettings& aOutSettings) const
 {
-  MOZ_ASSERT(NS_IsMainThread());
   aOutSettings = *mSettings;
 }
 
