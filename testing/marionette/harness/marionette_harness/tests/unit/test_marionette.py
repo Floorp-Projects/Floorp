@@ -51,6 +51,14 @@ class TestMarionette(MarionetteTestCase):
         finally:
             self.marionette._send_message("acceptConnections", {"value": True})
 
+    def test_client_socket_uses_expected_socket_timeout(self):
+        current_socket_timeout = self.marionette.socket_timeout
+
+        self.assertEqual(current_socket_timeout,
+                         self.marionette.client.socket_timeout)
+        self.assertEqual(current_socket_timeout,
+                         self.marionette.client._sock.gettimeout())
+
 
 class TestContext(MarionetteTestCase):
 
