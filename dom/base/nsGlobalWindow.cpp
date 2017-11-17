@@ -297,14 +297,6 @@ static bool                 gDragServiceDisabled              = false;
 static FILE                *gDumpFile                         = nullptr;
 static uint32_t             gSerialCounter                    = 0;
 
-#ifdef DEBUG_jst
-int32_t gTimeoutCnt                                    = 0;
-#endif
-
-#if defined(DEBUG_bryner) || defined(DEBUG_chb)
-#define DEBUG_PAGE_CACHE
-#endif
-
 namespace mozilla {
 namespace dom {
 extern uint64_t
