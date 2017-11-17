@@ -124,21 +124,43 @@ static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
 // Actually, 4kb should be enough for everyone.
 static const uint32_t MAX_ADVISABLE_PREF_LENGTH = 4 * 1024;
 
-union PrefValue {
-  const char* mStringVal;
-  int32_t mIntVal;
-  bool mBoolVal;
-};
-
-// Preference flags, including the native type of the preference. Changing any
-// of these values will require modifying the code inside of PrefTypeFlags
-// class.
 enum class PrefType
 {
   Invalid = 0,
   String = 1,
   Int = 2,
   Bool = 3,
+};
+
+union PrefValue {
+  const char* mStringVal;
+  int32_t mIntVal;
+  bool mBoolVal;
+
+  bool Equals(PrefType aType, PrefValue aValue)
+  {
+    switch (aType) {
+      case PrefType::String: {
+        if (mStringVal && aValue.mStringVal) {
+          return strcmp(mStringVal, aValue.mStringVal) == 0;
+        }
+        if (!mStringVal && !aValue.mStringVal) {
+          return true;
+        }
+        return false;
+      }
+
+      case PrefType::Int:
+        return mIntVal == aValue.mIntVal;
+
+      case PrefType::Bool:
+        return mBoolVal == aValue.mBoolVal;
+
+      case PrefType::Invalid:
+      default:
+        MOZ_CRASH("Unhandled enum value");
+    }
+  }
 };
 
 #ifdef DEBUG
@@ -400,9 +422,6 @@ static PLDHashTableOps pref_HashTableOps = {
 static PrefHashEntry*
 pref_HashTableLookup(const char* aPrefName);
 
-static bool
-pref_ValueChanged(PrefValue aOldValue, PrefValue aNewValue, PrefType aType);
-
 static nsresult
 pref_DoCallback(const char* aChangedPref);
 
@@ -478,9 +497,8 @@ pref_savePrefs()
     PrefValue* sourceValue;
 
     if (pref->HasUserValue() &&
-        (pref_ValueChanged(
-           pref->mDefaultValue, pref->mUserValue, pref->Type()) ||
-         !pref->HasDefaultValue() || pref->IsSticky())) {
+        (!pref->HasDefaultValue() || pref->IsSticky() ||
+         !pref->mDefaultValue.Equals(pref->Type(), pref->mUserValue))) {
       sourceValue = &pref->mUserValue;
     } else {
       // do not save default prefs that haven't changed
@@ -607,34 +625,6 @@ PREF_LockPref(const char* aPrefName, bool aLockIt)
 // Hash table functions
 //
 
-static bool
-pref_ValueChanged(PrefValue aOldValue, PrefValue aNewValue, PrefType aType)
-{
-  bool changed = true;
-  switch (aType) {
-    case PrefType::String:
-      if (aOldValue.mStringVal && aNewValue.mStringVal) {
-        changed = (strcmp(aOldValue.mStringVal, aNewValue.mStringVal) != 0);
-      }
-      break;
-
-    case PrefType::Int:
-      changed = aOldValue.mIntVal != aNewValue.mIntVal;
-      break;
-
-    case PrefType::Bool:
-      changed = aOldValue.mBoolVal != aNewValue.mBoolVal;
-      break;
-
-    case PrefType::Invalid:
-    default:
-      changed = false;
-      break;
-  }
-
-  return changed;
-}
-
 #ifdef DEBUG
 
 static pref_initPhase gPhase = START;
@@ -744,8 +734,8 @@ pref_SetPref(const char* aPrefName,
   if (aFlags & kPrefSetDefault) {
     if (!pref->IsLocked()) {
       // ?? change of semantics?
-      if (pref_ValueChanged(pref->mDefaultValue, aValue, aType) ||
-          !pref->HasDefaultValue()) {
+      if (!pref->HasDefaultValue() ||
+          !pref->mDefaultValue.Equals(aType, aValue)) {
         pref->ReplaceValue(PrefValueKind::Default, aType, aValue);
         pref->SetHasDefaultValue(true);
         if (aFlags & kPrefSticky) {
@@ -763,7 +753,7 @@ pref_SetPref(const char* aPrefName,
     // then un-set the user value. Otherwise, set the user value only if it has
     // changed.
     if (pref->HasDefaultValue() && !pref->IsSticky() &&
-        !pref_ValueChanged(pref->mDefaultValue, aValue, aType) &&
+        pref->mDefaultValue.Equals(aType, aValue) &&
         !(aFlags & kPrefForceSet)) {
       if (pref->HasUserValue()) {
         // XXX should we free a user-set string value if there is one?
@@ -774,7 +764,7 @@ pref_SetPref(const char* aPrefName,
         }
       }
     } else if (!pref->HasUserValue() || !pref->IsType(aType) ||
-               pref_ValueChanged(pref->mUserValue, aValue, aType)) {
+               !pref->mUserValue.Equals(aType, aValue)) {
       pref->ReplaceValue(PrefValueKind::User, aType, aValue);
       pref->SetHasUserValue(true);
       if (!pref->IsLocked()) {
