@@ -111,13 +111,15 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
     SendOnUnlockedDraw(aFlags);
   }
 
+  uint32_t flags = (aFlags & ~(FLAG_SYNC_DECODE |
+                               FLAG_SYNC_DECODE_IF_FAST)) | FLAG_ASYNC_NOTIFY;
   RefPtr<layers::ImageContainer> container;
   ImageContainerEntry* entry = nullptr;
   int i = mImageContainers.Length() - 1;
   for (; i >= 0; --i) {
     entry = &mImageContainers[i];
     container = entry->mContainer.get();
-    if (size == entry->mSize) {
+    if (size == entry->mSize && flags == entry->mFlags) {
       // Lack of a container is handled below.
       break;
     } else if (!container) {
@@ -179,7 +181,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
     i = mImageContainers.Length() - 1;
     for (; i >= 0; --i) {
       entry = &mImageContainers[i];
-      if (bestSize == entry->mSize) {
+      if (bestSize == entry->mSize && flags == entry->mFlags) {
         container = entry->mContainer.get();
         if (container) {
           switch (entry->mLastDrawResult) {
@@ -213,7 +215,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
       entry->mContainer = container;
     } else {
       entry = mImageContainers.AppendElement(
-        ImageContainerEntry(bestSize, container.get()));
+        ImageContainerEntry(bestSize, container.get(), flags));
     }
   }
 
@@ -234,7 +236,7 @@ ImageResource::UpdateImageContainer()
       IntSize bestSize;
       RefPtr<SourceSurface> surface;
       Tie(entry.mLastDrawResult, bestSize, surface) =
-        GetFrameInternal(entry.mSize, FRAME_CURRENT, FLAG_ASYNC_NOTIFY);
+        GetFrameInternal(entry.mSize, FRAME_CURRENT, entry.mFlags);
 
       // It is possible that this is a factor-of-2 substitution. Since we
       // managed to convert the weak reference into a strong reference, that
