@@ -1989,10 +1989,6 @@ Engine.prototype = {
     if (aJson.filePath) {
       this._filePath = aJson.filePath;
     }
-    if (aJson.dirPath) {
-      this._dirPath = aJson.dirPath;
-      this._dirLastModifiedTime = aJson.dirLastModifiedTime;
-    }
     if (aJson.extensionID) {
       this._extensionID = aJson.extensionID;
     }
@@ -2039,12 +2035,6 @@ Engine.prototype = {
       // File path is stored so that we can remove legacy xml files
       // from the profile if the user removes the engine.
       json.filePath = this._filePath;
-    }
-    if (this._dirPath) {
-      // The directory path is only stored for extension-shipped engines,
-      // it's used to invalidate the cache.
-      json.dirPath = this._dirPath;
-      json.dirLastModifiedTime = this._dirLastModifiedTime;
     }
     if (this._extensionID) {
       json.extensionID = this._extensionID;
@@ -3318,10 +3308,6 @@ SearchService.prototype = {
       try {
         addedEngine = new Engine(file, true);
         addedEngine._initFromFile(file);
-        if (!addedEngine._isDefault) {
-          addedEngine._dirPath = aDir.path;
-          addedEngine._dirLastModifiedTime = aDir.lastModifiedTime;
-        }
       } catch (ex) {
         LOG("_loadEnginesFromDir: Failed to load " + file.path + "!\n" + ex);
         continue;
@@ -3342,8 +3328,7 @@ SearchService.prototype = {
   async _asyncLoadEnginesFromDir(aDir) {
     LOG("_asyncLoadEnginesFromDir: Searching in " + aDir.path + " for search engines.");
 
-    let dirPath = aDir.path;
-    let iterator = new OS.File.DirectoryIterator(dirPath);
+    let iterator = new OS.File.DirectoryIterator(aDir.path);
 
     let osfiles = await iterator.nextBatch();
     iterator.close();
@@ -3369,12 +3354,6 @@ SearchService.prototype = {
         file.initWithPath(osfile.path);
         addedEngine = new Engine(file, false);
         await checkForSyncCompletion(addedEngine._asyncInitFromFile(file));
-        if (!addedEngine._isDefault) {
-          addedEngine._dirPath = dirPath;
-          let info = await OS.File.stat(dirPath);
-          addedEngine._dirLastModifiedTime =
-            info.lastModificationDate.getTime();
-        }
         engines.push(addedEngine);
       } catch (ex) {
         if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
