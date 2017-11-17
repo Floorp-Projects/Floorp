@@ -528,24 +528,6 @@ CreateNativeGlobalForInner(JSContext* aCx,
   return NS_OK;
 }
 
-static
-already_AddRefed<EventTarget>
-TryGetTabChildGlobalAsEventTarget(nsISupports *aFrom)
-{
-  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(aFrom);
-  if (!frameLoaderOwner) {
-    return nullptr;
-  }
-
-  RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
-  if (!frameLoader) {
-    return nullptr;
-  }
-
-  nsCOMPtr<EventTarget> target = frameLoader->GetTabChildGlobalAsEventTarget();
-  return target.forget();
-}
-
 template <class T>
 nsIURI*
 nsPIDOMWindow<T>::GetDocumentURI() const

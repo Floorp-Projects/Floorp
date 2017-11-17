@@ -2240,18 +2240,20 @@ nsGlobalWindowOuter::UpdateParentTarget()
 
   nsCOMPtr<Element> frameElement = GetOuterWindow()->GetFrameElementInternal();
   nsCOMPtr<EventTarget> eventTarget =
-    TryGetTabChildGlobalAsEventTarget(frameElement);
+    nsContentUtils::TryGetTabChildGlobalAsEventTarget(frameElement);
 
   if (!eventTarget) {
     nsGlobalWindowOuter* topWin = GetScriptableTopInternal();
     if (topWin) {
       frameElement = topWin->GetFrameElementInternal();
-      eventTarget = TryGetTabChildGlobalAsEventTarget(frameElement);
+      eventTarget =
+        nsContentUtils::TryGetTabChildGlobalAsEventTarget(frameElement);
     }
   }
 
   if (!eventTarget) {
-    eventTarget = TryGetTabChildGlobalAsEventTarget(mChromeEventHandler);
+    eventTarget =
+      nsContentUtils::TryGetTabChildGlobalAsEventTarget(mChromeEventHandler);
   }
 
   if (!eventTarget) {
