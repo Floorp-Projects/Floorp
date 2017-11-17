@@ -339,6 +339,7 @@ protected:
 
   virtual Tuple<DrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
     GetFrameInternal(const gfx::IntSize& aSize,
+                     const Maybe<SVGImageContext>& aSVGContext,
                      uint32_t aWhichFrame,
                      uint32_t aFlags)
   {
@@ -362,6 +363,7 @@ protected:
   already_AddRefed<layers::ImageContainer>
     GetImageContainerImpl(layers::LayerManager* aManager,
                           const gfx::IntSize& aSize,
+                          const Maybe<SVGImageContext>& aSVGContext,
                           uint32_t aFlags);
 
   void UpdateImageContainer();
@@ -375,15 +377,18 @@ private:
 
   struct ImageContainerEntry {
     ImageContainerEntry(const gfx::IntSize& aSize,
+                        const Maybe<SVGImageContext>& aSVGContext,
                         layers::ImageContainer* aContainer,
                         uint32_t aFlags)
       : mSize(aSize)
+      , mSVGContext(aSVGContext)
       , mContainer(aContainer)
       , mLastDrawResult(DrawResult::NOT_READY)
       , mFlags(aFlags)
     { }
 
     gfx::IntSize                        mSize;
+    Maybe<SVGImageContext>              mSVGContext;
     // A weak pointer to our ImageContainer, which stays alive only as long as
     // the layer system needs it.
     WeakPtr<layers::ImageContainer>     mContainer;

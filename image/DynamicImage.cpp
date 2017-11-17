@@ -237,6 +237,7 @@ DynamicImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 DynamicImage::GetImageContainerAtSize(LayerManager* aManager,
                                       const IntSize& aSize,
+                                      const Maybe<SVGImageContext>& aSVGContext,
                                       uint32_t aFlags)
 {
   return nullptr;
