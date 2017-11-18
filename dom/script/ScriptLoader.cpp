@@ -1169,6 +1169,32 @@ public:
   }
 };
 
+/**
+ * Returns the JSVersion for a string of the form '1.n', n = 0, ..., 8, and
+ * JSVERSION_UNKNOWN for other strings.
+ */
+static JSVersion
+ParseJavascriptVersion(const nsAString& aVersionStr)
+{
+  if (aVersionStr.Length() != 3 || aVersionStr[0] != '1' ||
+      aVersionStr[1] != '.') {
+    return JSVERSION_UNKNOWN;
+  }
+
+  switch (aVersionStr[2]) {
+  case '0': /* fall through */
+  case '1': /* fall through */
+  case '2': /* fall through */
+  case '3': /* fall through */
+  case '4': /* fall through */
+  case '5': return JSVERSION_DEFAULT;
+  case '6': return JSVERSION_1_6;
+  case '7': return JSVERSION_1_7;
+  case '8': return JSVERSION_1_8;
+  default:  return JSVERSION_UNKNOWN;
+  }
+}
+
 static inline bool
 ParseTypeAttribute(const nsAString& aType, JSVersion* aVersion)
 {
@@ -1191,7 +1217,7 @@ ParseTypeAttribute(const nsAString& aType, JSVersion* aVersion)
   rv = parser.GetParameter("version", versionName);
 
   if (NS_SUCCEEDED(rv)) {
-    *aVersion = nsContentUtils::ParseJavascriptVersion(versionName);
+    *aVersion = ParseJavascriptVersion(versionName);
   } else if (rv != NS_ERROR_INVALID_ARG) {
     return false;
   }
