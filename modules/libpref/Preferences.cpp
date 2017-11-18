@@ -267,9 +267,6 @@ public:
 
   // Other properties.
 
-  bool IsSticky() const { return mIsSticky; }
-  void SetIsSticky(bool aValue) { mIsSticky = aValue; }
-
   bool IsLocked() const { return mIsLocked; }
   void SetIsLocked(bool aValue) { mIsLocked = aValue; }
 
@@ -499,7 +496,7 @@ public:
         if (!mHasDefaultValue || !mDefaultValue.Equals(aType, aValue)) {
           ReplaceValue(PrefValueKind::Default, aType, aValue);
           if (aFlags & kPrefSticky) {
-            SetIsSticky(true);
+            mIsSticky = true;
           }
           if (!mHasUserValue) {
             *aValueChanged = true;
@@ -512,7 +509,7 @@ public:
       // If new value is same as the default value and it's not a "sticky"
       // pref, then un-set the user value. Otherwise, set the user value only
       // if it has changed.
-      if (mHasDefaultValue && !IsSticky() &&
+      if (mHasDefaultValue && !mIsSticky &&
           mDefaultValue.Equals(aType, aValue) && !(aFlags & kPrefForceSet)) {
         if (mHasUserValue) {
           ClearUserValue();
@@ -535,7 +532,7 @@ public:
   // Returns false if this pref doesn't have a user value worth saving.
   bool UserValueToStringForSaving(nsCString& aStr)
   {
-    if (mHasUserValue && (!mHasDefaultValue || IsSticky() ||
+    if (mHasUserValue && (!mHasDefaultValue || mIsSticky ||
                           !mDefaultValue.Equals(Type(), mUserValue))) {
       if (IsTypeString()) {
         StrEscape(mUserValue.mStringVal, aStr);
