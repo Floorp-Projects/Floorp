@@ -24,11 +24,11 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSPseudoElements.h"
-#include "nsCSSRuleProcessor.h"
 #include "nsDeviceContext.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIDocumentInlines.h"
+#include "nsMediaFeatures.h"
 #include "nsPrintfCString.h"
 #include "nsSMILAnimationController.h"
 #include "nsStyleContext.h"
@@ -429,7 +429,7 @@ ServoStyleSet::PreTraverseSync()
 
   ResolveMappedAttrDeclarationBlocks();
 
-  nsCSSRuleProcessor::InitSystemMetrics();
+  nsMediaFeatures::InitSystemMetrics();
 
   LookAndFeel::NativeInit();
 

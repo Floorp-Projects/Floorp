@@ -82,7 +82,9 @@ AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy)
             UniqueFreePtr<char[]> realSysPath(realpath(sysPath.get(), nullptr));
             if (realSysPath) {
               nsPrintfCString ueventPath("%s/uevent", realSysPath.get());
+              nsPrintfCString configPath("%s/config", realSysPath.get());
               aPolicy->AddPath(rdonly, ueventPath.get());
+              aPolicy->AddPath(rdonly, configPath.get());
             }
           }
         }
@@ -279,6 +281,22 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   nsAutoCString xdgConfigDirs(PR_GetEnv("XDG_CONFIG_DIRS"));
   for (const auto& path : xdgConfigDirs.Split(':')) {
     policy->AddDir(rdonly, PromiseFlatCString(path).get());
+  }
+
+  // Allow fonts subdir in XDG_DATA_HOME
+  nsAutoCString xdgDataHome(PR_GetEnv("XDG_DATA_HOME"));
+  if (!xdgDataHome.IsEmpty()) {
+    nsAutoCString fontPath(xdgDataHome);
+    fontPath.Append("/fonts");
+    policy->AddDir(rdonly, PromiseFlatCString(fontPath).get());
+  }
+
+  // Any font subdirs in XDG_DATA_DIRS
+  nsAutoCString xdgDataDirs(PR_GetEnv("XDG_DATA_DIRS"));
+  for (const auto& path : xdgDataDirs.Split(':')) {
+    nsAutoCString fontPath(path);
+    fontPath.Append("/fonts");
+    policy->AddDir(rdonly, PromiseFlatCString(fontPath).get());
   }
 
   // Extra configuration dirs in the homedir that we want to allow read

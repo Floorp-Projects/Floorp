@@ -1,3 +1,4 @@
+trust-domain: gecko
 treeherder:
     group-names:
         'cram': 'Cram tests'

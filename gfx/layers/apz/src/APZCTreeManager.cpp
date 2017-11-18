@@ -217,8 +217,9 @@ APZCTreeManager::CalculatePendingDisplayPort(
     aFrameMetrics, aVelocity);
 }
 
-APZCTreeManager::APZCTreeManager()
+APZCTreeManager::APZCTreeManager(uint64_t aRootLayersId)
     : mInputQueue(new InputQueue()),
+      mRootLayersId(aRootLayersId),
       mTreeLock("APZCTreeLock"),
       mHitResultForInputBlock(HitNothing),
       mRetainedTouchIdentifier(-1),
@@ -453,6 +454,7 @@ APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
 {
   APZThreadUtils::AssertOnCompositorThread();
   MOZ_ASSERT(aWrApi);
+  MOZ_ASSERT(aWrApi == RefPtr<wr::WebRenderAPI>(GetWebRenderAPI()).get());
 
   MutexAutoLock lock(mTreeLock);
 
@@ -973,7 +975,7 @@ APZCTreeManager::FlushApzRepaints(uint64_t aLayersId)
   // Previously, paints were throttled and therefore this method was used to
   // ensure any pending paints were flushed. Now, paints are flushed
   // immediately, so it is safe to simply send a notification now.
-  APZCTM_LOG("Flushing repaints for layers id %" PRIu64, aLayersId);
+  APZCTM_LOG("Flushing repaints for layers id 0x%" PRIx64, aLayersId);
   const LayerTreeState* state =
     CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   MOZ_ASSERT(state && state->mController);
@@ -2185,13 +2187,32 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
                                HitTestResult* aOutHitResult,
                                RefPtr<HitTestingTreeNode>* aOutScrollbarNode)
 {
-  MutexAutoLock lock(mTreeLock);
   HitTestResult hitResult = HitNothing;
   HitTestingTreeNode* scrollbarNode = nullptr;
-  ParentLayerPoint point = ViewAs<ParentLayerPixel>(aPoint,
-    PixelCastJustification::ScreenIsParentLayerForRoot);
-  RefPtr<AsyncPanZoomController> target = GetAPZCAtPoint(mRootNode, point,
-      &hitResult, &scrollbarNode);
+  RefPtr<AsyncPanZoomController> target;
+
+  { // scope mTreeLock
+    MutexAutoLock lock(mTreeLock);
+    target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, &scrollbarNode);
+  }
+
+  if (gfxPrefs::WebRenderHitTest()) {
+    HitTestResult wrHitResult = HitNothing;
+    RefPtr<AsyncPanZoomController> wrTarget = GetAPZCAtPointWR(aPoint, &wrHitResult);
+    // For now just compare the WR and non-WR results.
+    if (wrHitResult != hitResult) {
+      printf_stderr("WR hit result mismatch at %s: got %d, expected %d\n",
+          Stringify(aPoint).c_str(), (int)wrHitResult, (int)hitResult);
+      // MOZ_RELEASE_ASSERT(false);
+    }
+    if (wrTarget.get() != target.get()) {
+      printf_stderr("WR hit target mismatch at %s: got %s, expected %s\n",
+          Stringify(aPoint).c_str(),
+          wrTarget ? Stringify(wrTarget->GetGuid()).c_str() : "null",
+          target ? Stringify(target->GetGuid()).c_str() : "null");
+      // MOZ_RELEASE_ASSERT(false);
+    }
+  }
 
   if (aOutHitResult) {
     *aOutHitResult = hitResult;
@@ -2200,6 +2221,63 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
     *aOutScrollbarNode = scrollbarNode;
   }
   return target.forget();
+}
+
+already_AddRefed<AsyncPanZoomController>
+APZCTreeManager::GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
+                                  HitTestResult* aOutHitResult)
+{
+  MOZ_ASSERT(aOutHitResult);
+
+  RefPtr<AsyncPanZoomController> result;
+  RefPtr<wr::WebRenderAPI> wr = GetWebRenderAPI();
+  if (!wr) {
+    return result.forget();
+  }
+
+  wr::WrPipelineId pipelineId;
+  FrameMetrics::ViewID scrollId;
+  gfx::CompositorHitTestInfo hitInfo;
+  bool hitSomething = wr->HitTest(wr::ToWorldPoint(aHitTestPoint),
+      pipelineId, scrollId, hitInfo);
+  if (!hitSomething) {
+    return result.forget();
+  }
+
+  uint64_t layersId = wr::AsUint64(pipelineId);
+  result = GetTargetAPZC(layersId, scrollId);
+  if (!result) {
+    // It falls back to the root
+    MOZ_ASSERT(scrollId == FrameMetrics::NULL_SCROLL_ID);
+    result = FindRootApzcForLayersId(layersId);
+    MOZ_ASSERT(result);
+  }
+
+  *aOutHitResult = HitLayer;
+  if (hitInfo & gfx::CompositorHitTestInfo::eDispatchToContent) {
+    *aOutHitResult = HitDispatchToContentRegion;
+    return result.forget();
+  }
+
+  auto touchFlags = hitInfo & gfx::CompositorHitTestInfo::eTouchActionMask;
+  if (!touchFlags) {
+    return result.forget();
+  }
+  if (touchFlags == gfx::CompositorHitTestInfo::eTouchActionMask) {
+    *aOutHitResult = HitLayerTouchActionNone;
+    return result.forget();
+  }
+
+  bool panX = !(hitInfo & gfx::CompositorHitTestInfo::eTouchActionPanXDisabled);
+  bool panY = !(hitInfo & gfx::CompositorHitTestInfo::eTouchActionPanYDisabled);
+  if (panX && panY) {
+    *aOutHitResult = HitLayerTouchActionPanXY;
+  } else if (panY) {
+    *aOutHitResult = HitLayerTouchActionPanY;
+  } else if (panX) {
+    *aOutHitResult = HitLayerTouchActionPanX;
+  }
+  return result.forget();
 }
 
 RefPtr<const OverscrollHandoffChain>
@@ -2319,7 +2397,7 @@ APZCTreeManager::GetTargetApzcForNode(HitTestingTreeNode* aNode)
 
 AsyncPanZoomController*
 APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
-                                const ParentLayerPoint& aHitTestPoint,
+                                const ScreenPoint& aHitTestPoint,
                                 HitTestResult* aOutHitResult,
                                 HitTestingTreeNode** aOutScrollbarNode)
 {
@@ -2330,7 +2408,9 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
   HitTestingTreeNode* resultNode;
   HitTestingTreeNode* root = aNode;
   std::stack<LayerPoint> hitTestPoints;
-  hitTestPoints.push(ViewAs<LayerPixel>(aHitTestPoint,
+  ParentLayerPoint point = ViewAs<ParentLayerPixel>(aHitTestPoint,
+      PixelCastJustification::ScreenIsParentLayerForRoot);
+  hitTestPoints.push(ViewAs<LayerPixel>(point,
       PixelCastJustification::MovingDownToChildren));
 
   ForEachNode<ReverseIterator>(root,
@@ -2735,6 +2815,18 @@ APZCTreeManager::ComputeTransformForNode(const HitTestingTreeNode* aNode) const
   }
   // Otherwise, the node does not have an async transform.
   return aNode->GetTransform() * AsyncTransformMatrix();
+}
+
+already_AddRefed<wr::WebRenderAPI>
+APZCTreeManager::GetWebRenderAPI() const
+{
+  RefPtr<wr::WebRenderAPI> api;
+  if (LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(mRootLayersId)) {
+    if (state->mWrBridge) {
+      api = state->mWrBridge->GetWebRenderAPI();
+    }
+  }
+  return api.forget();
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
