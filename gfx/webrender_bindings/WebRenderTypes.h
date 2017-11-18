@@ -283,6 +283,14 @@ static inline wr::LayoutPoint ToLayoutPoint(const mozilla::LayoutDeviceIntPoint&
   return ToLayoutPoint(LayoutDevicePoint(point));
 }
 
+static inline wr::WorldPoint ToWorldPoint(const mozilla::ScreenPoint& point)
+{
+  wr::WorldPoint p;
+  p.x = point.x;
+  p.y = point.y;
+  return p;
+}
+
 static inline wr::LayoutVector2D ToLayoutVector2D(const mozilla::LayoutDevicePoint& point)
 {
   wr::LayoutVector2D p;
