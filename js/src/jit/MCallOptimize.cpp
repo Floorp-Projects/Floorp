@@ -3607,9 +3607,7 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type)
     }
 
     JSNative native = target->native();
-    const JSJitInfo* jitInfo = target->jitInfo();
-    MOZ_ASSERT(jitInfo && jitInfo->type() == JSJitInfo::InlinableNative);
-    SimdOperation simdOp = SimdOperation(jitInfo->nativeOp);
+    SimdOperation simdOp = SimdOperation(target->jitInfo()->nativeOp);
 
     switch(simdOp) {
       case SimdOperation::Constructor:

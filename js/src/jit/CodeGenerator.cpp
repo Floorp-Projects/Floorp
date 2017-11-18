@@ -2791,10 +2791,11 @@ CodeGenerator::emitLambdaInit(Register output, Register envChain,
     u.s.nargs = info.nargs;
     u.s.flags = info.flags;
 
-    MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
+    static_assert(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2,
+                  "the code below needs to be adapted");
     masm.store32(Imm32(u.word), Address(output, JSFunction::offsetOfNargs()));
     masm.storePtr(ImmGCPtr(info.scriptOrLazyScript),
-                  Address(output, JSFunction::offsetOfNativeOrScript()));
+                  Address(output, JSFunction::offsetOfScriptOrLazyScript()));
     masm.storePtr(envChain, Address(output, JSFunction::offsetOfEnvironment()));
     masm.storePtr(ImmGCPtr(info.fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
 }
@@ -4267,11 +4268,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
         masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor, calleereg, objreg, &invoke);
     }
 
-    // Knowing that calleereg is a non-native function, load the JSScript.
-    masm.loadPtr(Address(calleereg, JSFunction::offsetOfNativeOrScript()), objreg);
-
-    // Load script jitcode.
-    masm.loadBaselineOrIonRaw(objreg, objreg, &invoke);
+    // Knowing that calleereg is a non-native function, load the jit code.
+    masm.loadJitCodeRaw(calleereg, objreg, &invoke);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -4292,7 +4290,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
     masm.branch32(Assembler::Above, nargsreg, Imm32(call->numActualArgs()), &thunk);
     masm.jump(&makeCall);
 
-    // Argument fixed needed. Load the ArgumentsRectifier.
+    // Argument fixup needed. Load the ArgumentsRectifier.
     masm.bind(&thunk);
     {
         TrampolinePtr argumentsRectifier = gen->jitRuntime()->getArgumentsRectifier();
@@ -4379,14 +4377,11 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     // a LazyScript instead of a JSScript.
     masm.branchIfFunctionHasNoScript(calleereg, &uncompiled);
 
-    // Knowing that calleereg is a non-native function, load the JSScript.
-    masm.loadPtr(Address(calleereg, JSFunction::offsetOfNativeOrScript()), objreg);
-
-    // Load script jitcode.
+    // Load non-native jitcode from the script.
     if (call->mir()->needsArgCheck())
-        masm.loadBaselineOrIonRaw(objreg, objreg, &uncompiled);
+        masm.loadJitCodeRaw(calleereg, objreg, &uncompiled);
     else
-        masm.loadBaselineOrIonNoArgCheck(objreg, objreg, &uncompiled);
+        masm.loadJitCodeNoArgCheck(calleereg, objreg, &uncompiled);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -4685,11 +4680,8 @@ CodeGenerator::emitApplyGeneric(T* apply)
     masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor,
                             calleereg, objreg, &invoke);
 
-    // Knowing that calleereg is a non-native function, load the JSScript.
-    masm.loadPtr(Address(calleereg, JSFunction::offsetOfNativeOrScript()), objreg);
-
-    // Load script jitcode.
-    masm.loadBaselineOrIonRaw(objreg, objreg, &invoke);
+    // Knowing that calleereg is a non-native function, load script's jitcode.
+    masm.loadJitCodeRaw(calleereg, objreg, &invoke);
 
     // Call with an Ion frame or a rectifier frame.
     {
@@ -12823,7 +12815,7 @@ CodeGenerator::visitFinishBoundFunctionInit(LFinishBoundFunctionInit* lir)
     masm.bind(&isInterpreted);
     {
         // Load the length property of an interpreted function.
-        masm.loadPtr(Address(target, JSFunction::offsetOfNativeOrScript()), temp1);
+        masm.loadPtr(Address(target, JSFunction::offsetOfScript()), temp1);
         masm.load16ZeroExtend(Address(temp1, JSScript::offsetOfFunLength()), temp1);
     }
     masm.bind(&lengthLoaded);

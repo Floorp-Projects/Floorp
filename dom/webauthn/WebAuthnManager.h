@@ -66,11 +66,13 @@ public:
   WebAuthnTransaction(nsPIDOMWindowInner* aParent,
                       const RefPtr<Promise>& aPromise,
                       const WebAuthnTransactionInfo&& aInfo,
-                      const nsAutoCString&& aClientData)
+                      const nsAutoCString&& aClientData,
+                      AbortSignal* aSignal)
     : mParent(aParent)
     , mPromise(aPromise)
     , mInfo(aInfo)
     , mClientData(aClientData)
+    , mSignal(aSignal)
     , mId(NextId())
   {
     MOZ_ASSERT(mId > 0);
@@ -89,6 +91,9 @@ public:
   // Client data used to assemble reply objects.
   nsCString mClientData;
 
+  // An optional AbortSignal instance.
+  RefPtr<AbortSignal> mSignal;
+
   // Unique transaction id.
   uint64_t mId;
 
@@ -103,6 +108,7 @@ private:
 };
 
 class WebAuthnManager final : public nsIDOMEventListener
+                            , public AbortFollower
 {
 public:
   NS_DECL_ISUPPORTS
@@ -113,11 +119,13 @@ public:
 
   already_AddRefed<Promise>
   MakeCredential(nsPIDOMWindowInner* aParent,
-                 const MakePublicKeyCredentialOptions& aOptions);
+                 const MakePublicKeyCredentialOptions& aOptions,
+                 const Optional<OwningNonNull<AbortSignal>>& aSignal);
 
   already_AddRefed<Promise>
   GetAssertion(nsPIDOMWindowInner* aParent,
-               const PublicKeyCredentialRequestOptions& aOptions);
+               const PublicKeyCredentialRequestOptions& aOptions,
+               const Optional<OwningNonNull<AbortSignal>>& aSignal);
 
   already_AddRefed<Promise>
   Store(nsPIDOMWindowInner* aParent, const Credential& aCredential);
@@ -133,6 +141,8 @@ public:
 
   void
   RequestAborted(const uint64_t& aTransactionId, const nsresult& aError);
+
+  void Abort() override;
 
   void ActorDestroyed();
 

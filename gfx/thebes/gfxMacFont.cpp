@@ -85,24 +85,6 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
     cairo_matrix_init_identity(&ctm);
     cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
 
-    // synthetic oblique by skewing via the font matrix
-    bool needsOblique = mFontEntry != nullptr &&
-                        mFontEntry->IsUpright() &&
-                        mStyle.style != NS_FONT_STYLE_NORMAL &&
-                        mStyle.allowSyntheticStyle;
-
-    if (needsOblique) {
-        cairo_matrix_t style;
-        cairo_matrix_init(&style,
-                          1,                //xx
-                          0,                //yx
-                          -1 * OBLIQUE_SKEW_FACTOR, //xy
-                          1,                //yy
-                          0,                //x0
-                          0);               //y0
-        cairo_matrix_multiply(&sizeMatrix, &sizeMatrix, &style);
-    }
-
     cairo_font_options_t *fontOptions = cairo_font_options_create();
 
     // turn off font anti-aliasing based on user pref setting

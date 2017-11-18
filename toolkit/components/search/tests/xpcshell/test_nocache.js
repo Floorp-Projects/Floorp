@@ -11,7 +11,6 @@
  */
 
 function run_test() {
-  removeCacheFile();
   do_load_manifest("data/chrome.manifest");
   useHttpServer();
 
@@ -30,7 +29,7 @@ add_task(async function test_nocache() {
   // Check that the cache is created at startup
   await afterCachePromise;
 
-  // Check that search.json has been created.
+  // Check that search.json.mozlz4 has been created.
   let cacheFile = gProfD.clone();
   cacheFile.append(CACHE_FILENAME);
   do_check_true(cacheFile.exists());
@@ -53,6 +52,4 @@ add_task(async function test_nocache() {
     }
   }
   do_check_true(found);
-
-  removeCacheFile();
 });

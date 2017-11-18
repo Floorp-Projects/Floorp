@@ -356,6 +356,37 @@ ClippedImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
   return nullptr;
 }
 
+NS_IMETHODIMP_(bool)
+ClippedImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
+                                              const IntSize& aSize,
+                                              uint32_t aFlags)
+{
+  if (!ShouldClip()) {
+    return InnerImage()->IsImageContainerAvailableAtSize(aManager, aSize, aFlags);
+  }
+  return false;
+}
+
+NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
+ClippedImage::GetImageContainerAtSize(LayerManager* aManager,
+                                      const IntSize& aSize,
+                                      const Maybe<SVGImageContext>& aSVGContext,
+                                      uint32_t aFlags)
+{
+  // XXX(seth): We currently don't have a way of clipping the result of
+  // GetImageContainer. We work around this by always returning null, but if it
+  // ever turns out that ClippedImage is widely used on codepaths that can
+  // actually benefit from GetImageContainer, it would be a good idea to fix
+  // that method for performance reasons.
+
+  if (!ShouldClip()) {
+    return InnerImage()->GetImageContainerAtSize(aManager, aSize,
+                                                 aSVGContext, aFlags);
+  }
+
+  return nullptr;
+}
+
 static bool
 MustCreateSurface(gfxContext* aContext,
                   const nsIntSize& aSize,

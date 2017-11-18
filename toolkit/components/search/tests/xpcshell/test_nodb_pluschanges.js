@@ -3,9 +3,7 @@
 
 
 /*
- * test_nodb: Start search engine
- * - without search-metadata.json
- * - without search.sqlite
+ * test_nodb: Start search service without existing cache file.
  *
  * Ensure that :
  * - nothing explodes;

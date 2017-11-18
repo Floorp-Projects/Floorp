@@ -532,8 +532,6 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
            .setSystemZone()
            .setAddonId(aAddonID);
 
-    options.behaviors().setVersion(JSVERSION_DEFAULT);
-
     if (xpc::SharedMemoryEnabled())
         options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
 
@@ -778,7 +776,6 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         // See bug 1303754.
         CompileOptions options(cx);
         options.setNoScriptRval(true)
-               .setVersion(JSVERSION_DEFAULT)
                .maybeMakeStrictMode(true)
                .setFileAndLine(nativePath.get(), 1)
                .setSourceIsLazy(cache || ScriptPreloader::GetSingleton().Active());

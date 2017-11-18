@@ -65,12 +65,6 @@ function configureToLoadJarEngines() {
                         .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("search-plugins",
                           Services.io.newURI(url));
-
-  // Ensure a test engine exists in the app dir anyway.
-  let dir = Services.dirsvc.get(NS_APP_SEARCH_DIR, Ci.nsIFile);
-  if (!dir.exists())
-    dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  do_get_file("data/engine-app.xml").copyTo(dir, "app.xml");
 }
 
 /**
@@ -153,23 +147,6 @@ function installDistributionEngine() {
       return null;
     }
   });
-}
-
-/**
- * Clean the profile of any metadata files left from a previous run.
- */
-function removeMetadata() {
-  let file = gProfD.clone();
-  file.append("search-metadata.json");
-  if (file.exists()) {
-    file.remove(false);
-  }
-
-  file = gProfD.clone();
-  file.append("search.sqlite");
-  if (file.exists()) {
-    file.remove(false);
-  }
 }
 
 function promiseCacheData() {
@@ -414,23 +391,10 @@ var addTestEngines = async function(aItems) {
  * Installs a test engine into the test profile.
  */
 function installTestEngine() {
-  removeMetadata();
-  removeCacheFile();
-
-  do_check_false(Services.search.isInitialized);
-
-  let engineDummyFile = gProfD.clone();
-  engineDummyFile.append("searchplugins");
-  engineDummyFile.append("test-search-engine.xml");
-  let engineDir = engineDummyFile.parent;
-  engineDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  do_get_file("data/engine.xml").copyTo(engineDir, "engine.xml");
-
-  do_register_cleanup(function() {
-    removeMetadata();
-    removeCacheFile();
-  });
+  useHttpServer();
+  return addTestEngines([
+    { name: kTestEngineName, xmlFileName: "engine.xml" },
+  ]);
 }
 
 /**
@@ -449,32 +413,16 @@ function setLocalizedDefaultPref(aPrefName, aValue) {
  * Installs two test engines, sets them as default for US vs. general.
  */
 function setUpGeoDefaults() {
-  removeMetadata();
-  removeCacheFile();
-
-  do_check_false(Services.search.isInitialized);
-
-  let engineDummyFile = gProfD.clone();
-  engineDummyFile.append("searchplugins");
-  engineDummyFile.append("test-search-engine.xml");
-  let engineDir = engineDummyFile.parent;
-  engineDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  do_get_file("data/engine.xml").copyTo(engineDir, "engine.xml");
-
-  engineDummyFile = gProfD.clone();
-  engineDummyFile.append("searchplugins");
-  engineDummyFile.append("test-search-engine2.xml");
-
-  do_get_file("data/engine2.xml").copyTo(engineDir, "engine2.xml");
+  const kSecondTestEngineName = "A second test engine";
 
   setLocalizedDefaultPref("defaultenginename", "Test search engine");
   setLocalizedDefaultPref("defaultenginename.US", "A second test engine");
 
-  do_register_cleanup(function() {
-    removeMetadata();
-    removeCacheFile();
-  });
+  useHttpServer();
+  return addTestEngines([
+    { name: kTestEngineName, xmlFileName: "engine.xml" },
+    { name: kSecondTestEngineName, xmlFileName: "engine2.xml" },
+  ]);
 }
 
 /**

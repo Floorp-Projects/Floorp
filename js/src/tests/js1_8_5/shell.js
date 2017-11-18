@@ -22,8 +22,3 @@ if (typeof assertThrowsInstanceOf === 'undefined') {
         throw new Error(fullmsg);
     };
 }
-
-if (typeof version != 'undefined')
-{
-  version(185);
-}

@@ -1,4 +1,3 @@
-version(180)
 function f1(code) {
     var c
     var t = code.replace(/s/, "")

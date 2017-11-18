@@ -2699,8 +2699,7 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
     NS_ENSURE_TRUE(JSVersion(mLangVersion) != JSVERSION_UNKNOWN, NS_OK);
     JS::CompileOptions options(cx);
     options.setIntroductionType("scriptElement")
-           .setFileAndLine(urlspec.get(), aLineNo)
-           .setVersion(JSVersion(mLangVersion));
+           .setFileAndLine(urlspec.get(), aLineNo);
     // If the script was inline, tell the JS parser to save source for
     // Function.prototype.toSource(). If it's out of line, we retrieve the
     // source from the files on demand.

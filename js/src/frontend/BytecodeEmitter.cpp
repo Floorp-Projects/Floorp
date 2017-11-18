@@ -7840,7 +7840,6 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             // Inherit most things (principals, version, etc) from the
             // parent.  Use default values for the rest.
             Rooted<JSScript*> parent(cx, script);
-            MOZ_ASSERT(parent->getVersion() == parser.options().version);
             MOZ_ASSERT(parent->mutedErrors() == parser.options().mutedErrors());
             const TransitiveCompileOptions& transitiveOptions = parser.options();
             CompileOptions options(cx, transitiveOptions);

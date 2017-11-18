@@ -1039,7 +1039,8 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
     }
 
     const Instance& instance = instanceObj->instance();
-    unsigned numArgs = instance.metadata(instance.code().stableTier()).lookupFuncExport(funcIndex).sig().args().length();
+    auto tier = instance.code().stableTier();
+    unsigned numArgs = instance.metadata(tier).lookupFuncExport(funcIndex).sig().args().length();
 
     // asm.js needs to act like a normal JS function which means having the name
     // from the original source and being callable as a constructor.

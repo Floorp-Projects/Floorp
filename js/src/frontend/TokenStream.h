@@ -283,8 +283,6 @@ class TokenStreamAnyChars: public ErrorReporter
     }
 
     bool getMutedErrors() const { return mutedErrors; }
-    JSVersion versionNumber() const { return VersionNumber(options().version); }
-    JSVersion versionWithFlags() const { return options().version; }
 
     MOZ_MUST_USE bool checkOptions();
 

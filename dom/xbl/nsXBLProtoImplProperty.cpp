@@ -199,8 +199,7 @@ nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsString& aClassSt
     if (!getter.IsEmpty()) {
       JSAutoCompartment ac(cx, aClassObject);
       JS::CompileOptions options(cx);
-      options.setFileAndLine(functionUri.get(), getterText->GetLineNumber())
-             .setVersion(JSVERSION_DEFAULT);
+      options.setFileAndLine(functionUri.get(), getterText->GetLineNumber());
       nsCString name = NS_LITERAL_CSTRING("get_") + NS_ConvertUTF16toUTF8(mName);
       JS::Rooted<JSObject*> getterObject(cx);
       JS::AutoObjectVector emptyVector(cx);
@@ -245,8 +244,7 @@ nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsString& aClassSt
     if (!setter.IsEmpty()) {
       JSAutoCompartment ac(cx, aClassObject);
       JS::CompileOptions options(cx);
-      options.setFileAndLine(functionUri.get(), setterText->GetLineNumber())
-             .setVersion(JSVERSION_DEFAULT);
+      options.setFileAndLine(functionUri.get(), setterText->GetLineNumber());
       nsCString name = NS_LITERAL_CSTRING("set_") + NS_ConvertUTF16toUTF8(mName);
       JS::Rooted<JSObject*> setterObject(cx);
       JS::AutoObjectVector emptyVector(cx);
