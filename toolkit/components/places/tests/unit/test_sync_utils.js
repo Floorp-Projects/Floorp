@@ -2899,6 +2899,20 @@ add_task(async function test_ensureMobileQuery() {
     return;
   }
 
+  await PlacesUtils.bookmarks.insert({
+    guid: "bookmarkAAAA",
+    parentGuid: PlacesUtils.bookmarks.mobileGuid,
+    url: "http://example.com/a",
+    title: "A",
+  });
+
+  await PlacesUtils.bookmarks.insert({
+    guid: "bookmarkBBBB",
+    parentGuid: PlacesUtils.bookmarks.mobileGuid,
+    url: "http://example.com/b",
+    title: "B",
+  });
+
   // Creates the organizer queries as a side effect.
   let leftPaneId = PlacesUIUtils.leftPaneFolderId;
   do_print(`Left pane root ID: ${leftPaneId}`);
@@ -2912,7 +2926,7 @@ add_task(async function test_ensureMobileQuery() {
   await PlacesSyncUtils.bookmarks.ensureMobileQuery();
   let queryGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
     "PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
-  equal(queryGuids.length, 1, "Should create query without any mobile bookmarks");
+  equal(queryGuids.length, 1, "Should create query because we have bookmarks A and B");
 
   let queryGuid = queryGuids[0];
 
@@ -2950,6 +2964,14 @@ add_task(async function test_ensureMobileQuery() {
 
   let changes = await PlacesSyncUtils.bookmarks.pullChanges();
   ok(!(queryGuid in changes), "Should not track mobile query");
+
+  await PlacesUtils.bookmarks.remove("bookmarkAAAA");
+  await PlacesUtils.bookmarks.remove("bookmarkBBBB");
+  await PlacesSyncUtils.bookmarks.ensureMobileQuery();
+
+  queryGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+    "PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
+  equal(queryGuids.length, 0, "Should delete query since there are no bookmarks");
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();

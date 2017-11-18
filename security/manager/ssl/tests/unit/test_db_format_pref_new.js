@@ -4,12 +4,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 "use strict";
 
-// Tests that if "security.use_sqldb" is set to true when PSM initializes,
-// we create the sqlite-backed certificate and key databases.
+// Tests that when PSM initializes, we create the sqlite-backed certificate and
+// key databases.
 
 function run_test() {
   let profileDir = do_get_profile();
-  Services.prefs.setBoolPref("security.use_sqldb", true);
   let certificateDBFile = profileDir.clone();
   certificateDBFile.append("cert9.db");
   ok(!certificateDBFile.exists(), "cert9.db should not exist beforehand");

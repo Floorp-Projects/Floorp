@@ -12,35 +12,30 @@
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 
+#include "nsIRemoteService.h"
 #include "nsInterfaceHashtable.h"
 #include "nsXRemoteService.h"
 #include "mozilla/Attributes.h"
 
-class nsGTKRemoteService final : public nsXRemoteService
+class nsGTKRemoteService final : public nsIRemoteService,
+                                 public nsXRemoteService
 {
 public:
-  // We will be a static singleton, so don't use the ordinary methods.
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREMOTESERVICE
 
+  nsGTKRemoteService()
+    : mServerWindow(nullptr)
+    { }
 
-  nsGTKRemoteService() :
-    mServerWindow(nullptr) { }
-
+  static gboolean HandlePropertyChange(GtkWidget *widget,
+                                       GdkEventProperty *event,
+                                       nsIWeakReference* aThis);
 private:
   ~nsGTKRemoteService() { }
 
   void HandleCommandsFor(GtkWidget* aWidget,
                          nsIWeakReference* aWindow);
-
-
-  static gboolean HandlePropertyChange(GtkWidget *widget,
-                                       GdkEventProperty *event,
-                                       nsIWeakReference* aThis);
-
-
-  virtual void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
-                                              uint32_t aTimestamp) override;
 
   nsInterfaceHashtable<nsPtrHashKey<GtkWidget>, nsIWeakReference> mWindows;
   GtkWidget* mServerWindow;

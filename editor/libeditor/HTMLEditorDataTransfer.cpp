@@ -35,7 +35,6 @@
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIContentFilter.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
@@ -225,20 +224,6 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     targetNode = aDestNode;
     targetOffset = aDestOffset;
   }
-
-  bool doContinue = true;
-
-  rv = DoContentFilterCallback(aFlavor, aSourceDoc, aDeleteSelection,
-                               (nsIDOMNode **)address_of(fragmentAsNode),
-                               (nsIDOMNode **)address_of(streamStartParent),
-                               &streamStartOffset,
-                               (nsIDOMNode **)address_of(streamEndParent),
-                               &streamEndOffset,
-                               (nsIDOMNode **)address_of(targetNode),
-                               &targetOffset, &doContinue);
-
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(doContinue, NS_OK);
 
   // if we have a destination / target node, we want to insert there
   // rather than in place of the selection
@@ -667,58 +652,6 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   }
 
   return rules->DidDoAction(selection, &ruleInfo, rv);
-}
-
-NS_IMETHODIMP
-HTMLEditor::AddInsertionListener(nsIContentFilter* aListener)
-{
-  NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
-
-  // don't let a listener be added more than once
-  if (!mContentFilters.Contains(aListener)) {
-    mContentFilters.AppendElement(*aListener);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditor::RemoveInsertionListener(nsIContentFilter* aListener)
-{
-  NS_ENSURE_TRUE(aListener, NS_ERROR_FAILURE);
-
-  mContentFilters.RemoveElement(aListener);
-
-  return NS_OK;
-}
-
-nsresult
-HTMLEditor::DoContentFilterCallback(const nsAString& aFlavor,
-                                    nsIDOMDocument* sourceDoc,
-                                    bool aWillDeleteSelection,
-                                    nsIDOMNode** aFragmentAsNode,
-                                    nsIDOMNode** aFragStartNode,
-                                    int32_t* aFragStartOffset,
-                                    nsIDOMNode** aFragEndNode,
-                                    int32_t* aFragEndOffset,
-                                    nsIDOMNode** aTargetNode,
-                                    int32_t* aTargetOffset,
-                                    bool* aDoContinue)
-{
-  *aDoContinue = true;
-
-  for (auto& listener : mContentFilters) {
-    if (!*aDoContinue) {
-      break;
-    }
-    listener->NotifyOfInsertion(aFlavor, nullptr, sourceDoc,
-                                aWillDeleteSelection, aFragmentAsNode,
-                                aFragStartNode, aFragStartOffset,
-                                aFragEndNode, aFragEndOffset, aTargetNode,
-                                aTargetOffset, aDoContinue);
-  }
-
-  return NS_OK;
 }
 
 bool

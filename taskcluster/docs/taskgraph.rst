@@ -169,3 +169,26 @@ using simple parameterized values, as follows:
     Multiple labels may be substituted in a single string, and ``<<>`` can be
     used to escape a literal ``<``.
 
+Graph Configuration
+-------------------
+
+There are several configuration settings that are pertain to the entire
+taskgraph. These are specified in :file:`config.yml` at the root of the
+taskgraph configuration (typically :file:`taskcluster/ci`). The available
+settings are documented inline in `taskcluster/taskgraph/config.py
+<https://dxr.mozilla.org/mozilla-central/source/taskcluster/taskgraph/config.py>`_.
+
+.. _taskgraph-trust-domain:
+
+Trust Domain
+------------
+
+When publishing and signing releases, that tasks verify their definition and
+all upstream tasks come from a decision task based on a trusted tree. (see
+`chain-of-trust verification <http://scriptworker.readthedocs.io/en/latest/chain_of_trust.html>`).
+Firefox and Thunderbird share the taskgraph code and in particular, they have
+separate taskgraph configurations and in particular distinct decision tasks.
+Although they use identical docker images and toolchains, in order to track the
+province of those artifacts when verifying the chain of trust, they use
+different index paths to cache those artifacts. The ``trust-domain`` graph
+configuration controls the base path for indexing these cached artifacts.

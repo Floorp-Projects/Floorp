@@ -12,7 +12,6 @@ DIRS += [
 ]
 
 XPIDL_SOURCES += [
-    'nsIContentFilter.idl',
     'nsIDocumentStateListener.idl',
     'nsIEditActionListener.idl',
     'nsIEditor.idl',

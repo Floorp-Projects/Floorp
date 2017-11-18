@@ -334,7 +334,8 @@ async function ensureEqualBookmarksTrees(aOriginal,
         await ensureEqualBookmarksTrees(aOriginal.children[i],
                                         aNew.children[i],
                                         false,
-                                        true);
+                                        true,
+                                        aIgnoreAllDates);
       }
     } else if (property == "guid") {
       // guid shouldn't be copied if the item was not restored.

@@ -886,7 +886,7 @@ Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed aElement,
                            const char16_t* aIdent)
 {
   EventStates dummyMask; // mask is never read because we pass aDependence=nullptr
-  return nsCSSRuleProcessor::StringPseudoMatches(aElement, aType, aIdent,
+  return nsCSSPseudoClasses::StringPseudoMatches(aElement, aType, aIdent,
                                                  aElement->OwnerDoc(),
                                                  dummyMask, nullptr);
 }
@@ -900,13 +900,10 @@ Gecko_MatchLang(RawGeckoElementBorrowed aElement,
   MOZ_ASSERT(!(aOverrideLang && !aHasOverrideLang),
              "aHasOverrideLang should only be set when aOverrideLang is null");
 
-  if (!aHasOverrideLang) {
-    return nsCSSRuleProcessor::LangPseudoMatches(aElement, nullptr, false,
-                                                 aValue, aElement->OwnerDoc());
-  }
-
-  return nsCSSRuleProcessor::LangPseudoMatches(aElement, aOverrideLang, true,
-                                               aValue, aElement->OwnerDoc());
+  return nsCSSPseudoClasses::LangPseudoMatches(
+      aElement,
+      aHasOverrideLang ? aOverrideLang : nullptr,
+      aHasOverrideLang, aValue, aElement->OwnerDoc());
 }
 
 nsAtom*

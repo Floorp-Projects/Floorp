@@ -189,7 +189,7 @@ add_task(async function test_addLivemark_noSiteURI_succeeds() {
   do_check_true(livemark.feedURI.equals(FEED_URI));
   do_check_eq(livemark.siteURI, null);
   do_check_true(livemark.lastModified > 0);
-  do_check_true(is_time_ordered(livemark.dateAdded, livemark.lastModified));
+  do_check_eq(livemark.dateAdded, livemark.lastModified);
 
   let bookmark = await PlacesUtils.bookmarks.fetch(livemark.guid);
   do_check_eq(livemark.index, bookmark.index);

@@ -260,16 +260,18 @@ class MainThreadFetchResolver final : public FetchDriverObserver
   RefPtr<Response> mResponse;
   RefPtr<FetchObserver> mFetchObserver;
   RefPtr<AbortSignal> mSignal;
+  const bool mMozErrors;
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   NS_DECL_OWNINGTHREAD
 public:
   MainThreadFetchResolver(Promise* aPromise, FetchObserver* aObserver,
-                          AbortSignal* aSignal)
+                          AbortSignal* aSignal, bool aMozErrors)
     : mPromise(aPromise)
     , mFetchObserver(aObserver)
     , mSignal(aSignal)
+    , mMozErrors(aMozErrors)
   {}
 
   void
@@ -443,8 +445,9 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
 
     Telemetry::Accumulate(Telemetry::FETCH_IS_MAINTHREAD, 1);
 
+    bool mozErrors = aInit.mMozErrors.WasPassed() ? aInit.mMozErrors.Value() : false;
     RefPtr<MainThreadFetchResolver> resolver =
-      new MainThreadFetchResolver(p, observer, signal);
+      new MainThreadFetchResolver(p, observer, signal, mozErrors);
     RefPtr<FetchDriver> fetch =
       new FetchDriver(r, principal, loadGroup,
                       aGlobal->EventTargetFor(TaskCategory::Other), isTrackingFetch);
@@ -497,6 +500,11 @@ MainThreadFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse
   } else {
     if (mFetchObserver) {
       mFetchObserver->SetState(FetchState::Errored);
+    }
+
+    if (mMozErrors) {
+      mPromise->MaybeReject(aResponse->GetErrorCode());
+      return;
     }
 
     ErrorResult result;

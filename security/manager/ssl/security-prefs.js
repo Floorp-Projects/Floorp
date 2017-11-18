@@ -38,12 +38,6 @@ pref("security.remember_cert_checkbox_default_setting", true);
 pref("security.ask_for_password",        0);
 pref("security.password_lifetime",       30);
 
-// If true, use the modern sqlite-backed certificate and key databases in NSS.
-// If false, use the default format. Currently the default in NSS is the old
-// BerkeleyDB format, but this will change in bug 1377940.
-// Changing this requires a restart to take effect.
-pref("security.use_sqldb", true);
-
 // The supported values of this pref are:
 // 0: disable detecting Family Safety mode and importing the root
 // 1: only attempt to detect Family Safety mode (don't import the root)

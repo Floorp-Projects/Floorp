@@ -33,6 +33,7 @@ InternalResponse::InternalResponse(uint16_t aStatus, const nsACString& aStatusTe
   , mHeaders(new InternalHeaders(HeadersGuardEnum::Response))
   , mBodySize(UNKNOWN_BODY_SIZE)
   , mPaddingSize(UNKNOWN_PADDING_SIZE)
+  , mErrorCode(NS_OK)
 {
 }
 
@@ -40,7 +41,7 @@ already_AddRefed<InternalResponse>
 InternalResponse::FromIPC(const IPCInternalResponse& aIPCResponse)
 {
   if (aIPCResponse.type() == ResponseType::Error) {
-    return InternalResponse::NetworkError();
+    return InternalResponse::NetworkError(aIPCResponse.errorCode());
   }
 
   RefPtr<InternalResponse> response =
