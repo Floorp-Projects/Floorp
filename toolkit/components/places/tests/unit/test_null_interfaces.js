@@ -14,8 +14,9 @@ var testServices = [
     ["queryStringToQueries", "removePagesByTimeframe", "removePagesFromHost", "getObservers"]
   ],
   ["browser/nav-bookmarks-service;1",
-    ["nsINavBookmarksService", "nsINavHistoryObserver"],
-    ["createFolder", "getObservers", "onFrecencyChanged", "onTitleChanged", "onDeleteURI"]
+    ["nsINavBookmarksService", "nsINavHistoryObserver", "nsIAnnotationObserver"],
+    ["createFolder", "getObservers", "onFrecencyChanged", "onTitleChanged",
+     "onPageAnnotationSet", "onPageAnnotationRemoved", "onDeleteURI"]
   ],
   ["browser/livemark-service;2", ["mozIAsyncLivemarks"], ["reloadLivemarks"]],
   ["browser/annotation-service;1", ["nsIAnnotationService"], ["getObservers"]],
