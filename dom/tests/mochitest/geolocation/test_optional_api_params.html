@@ -32,7 +32,10 @@ function test1() {
   var exception = null;
   try {
     navigator.geolocation.getCurrentPosition();
-  } catch(ex if ex instanceof TypeError) {
+  } catch (ex) {
+    if (!(ex instanceof TypeError)) {
+      throw ex;
+    }
     exception = ex;
   }
   ok(exception, "Should have got an exception");
@@ -40,7 +43,10 @@ function test1() {
   exception = null;
   try {
     navigator.geolocation.getCurrentPosition(function() {});
-  } catch(ex if ex instanceof TypeError) {
+  } catch (ex) {
+    if (!(ex instanceof TypeError)) {
+      throw ex;
+    }
     exception = ex;
   }
   ok(!exception, exception);
@@ -48,7 +54,10 @@ function test1() {
   exception = null;
   try {
     navigator.geolocation.getCurrentPosition(function() {}, function() {});
-  } catch(ex if ex instanceof TypeError) {
+  } catch (ex) {
+    if (!(ex instanceof TypeError)) {
+      throw ex;
+    }
     exception = ex;
   }
   ok(!exception, exception);
@@ -56,7 +65,10 @@ function test1() {
   exception = null;
   try {
     navigator.geolocation.getCurrentPosition(function() {}, function() {}, {});
-  } catch(ex if ex instanceof TypeError) {
+  } catch (ex) {
+    if (!(ex instanceof TypeError)) {
+      throw ex;
+    }
     exception = ex;
   }
   ok(!exception, exception);
@@ -64,7 +76,10 @@ function test1() {
   exception = null;
   try {
     navigator.geolocation.watchPosition();
-  } catch(ex if ex instanceof TypeError) {
+  } catch (ex) {
+    if (!(ex instanceof TypeError)) {
+      throw ex;
+    }
     exception = ex;
   }
   ok(exception, "Should have got an exception");
@@ -72,7 +87,10 @@ function test1() {
   exception = null;
   try {
     navigator.geolocation.watchPosition(function() {});
-  } catch(ex if ex instanceof TypeError) {
+  } catch (ex) {
+    if (!(ex instanceof TypeError)) {
+      throw ex;
+    }
     exception = ex;
   }
   ok(!exception, exception);
@@ -80,7 +98,10 @@ function test1() {
   exception = null;
   try {
     navigator.geolocation.watchPosition(function() {}, function() {});
-  } catch(ex if ex instanceof TypeError) {
+  } catch (ex) {
+    if (!(ex instanceof TypeError)) {
+      throw ex;
+    }
     exception = ex;
   }
   ok(!exception, exception);
@@ -88,7 +109,10 @@ function test1() {
   exception = null;
   try {
     navigator.geolocation.watchPosition(function() {}, function() {}, {});
-  } catch(ex if ex instanceof TypeError) {
+  } catch (ex) {
+    if (!(ex instanceof TypeError)) {
+      throw ex;
+    }
     exception = ex;
   }
   ok(!exception, exception);
