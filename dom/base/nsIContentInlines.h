@@ -75,17 +75,21 @@ static inline bool FlattenedTreeParentIsParent(const nsINode* aNode)
   }
 
   // Check if we want the flattened parent for style, and the node is the root
-  // of a native anonymous content subtree parented to the document's root element.
-  if (Type == nsIContent::eForStyle && aNode->HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT) &&
+  // of a native anonymous content subtree parented to the document's root
+  // element.
+  if (Type == nsIContent::eForStyle &&
+      aNode->HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT) &&
       aNode->OwnerDoc()->GetRootElement() == aNode->GetParentNode())
   {
     return false;
   }
 
-  // Check if the node is an explicit child of an element with a shadow root,
-  // re-bound to an insertion point.
+  // Check if the node is an explicit child of an element with a shadow root or
+  // an element with an XBL binding, which may be re-bound to an insertion
+  // point, or not be bound to any, and thus won't appear on the flattened tree
+  // at all.
   nsIContent* parent = aNode->GetParent();
-  if (parent && parent->GetShadowRoot()) {
+  if (parent && (parent->GetShadowRoot() || parent->GetXBLBinding())) {
     return false;
   }
 
