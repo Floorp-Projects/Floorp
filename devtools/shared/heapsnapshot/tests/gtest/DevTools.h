@@ -89,7 +89,6 @@ struct DevTools : public ::testing::Test {
     /* Create the global object. */
     JS::RootedObject newGlobal(cx);
     JS::CompartmentOptions options;
-    options.behaviors().setVersion(JSVERSION_DEFAULT);
     newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
                                    JS::FireOnNewGlobalHook, options);
     if (!newGlobal)

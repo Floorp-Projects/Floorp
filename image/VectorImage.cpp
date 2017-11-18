@@ -15,7 +15,9 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Tuple.h"
 #include "nsIDOMEvent.h"
 #include "nsIPresShell.h"
 #include "nsIStreamListener.h"
@@ -582,6 +584,8 @@ VectorImage::SendInvalidationNotifications()
     mProgressTracker->SyncNotifyProgress(FLAG_FRAME_COMPLETE,
                                          GetMaxSizedIntRect());
   }
+
+  UpdateImageContainer();
 }
 
 NS_IMETHODIMP_(IntRect)
@@ -737,18 +741,48 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
                             uint32_t aWhichFrame,
                             uint32_t aFlags)
 {
+  auto result = GetFrameInternal(aSize, Nothing(), aWhichFrame, aFlags);
+  RefPtr<SourceSurface> surf = Get<2>(result).forget();
+
+  // If we are here, it suggests the image is embedded in a canvas or some
+  // other path besides layers, and we won't need the file handle.
+  MarkSurfaceShared(surf);
+  return surf.forget();
+}
+
+Tuple<DrawResult, IntSize, RefPtr<SourceSurface>>
+VectorImage::GetFrameInternal(const IntSize& aSize,
+                              const Maybe<SVGImageContext>& aSVGContext,
+                              uint32_t aWhichFrame,
+                              uint32_t aFlags)
+{
   MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE);
 
-  if (aSize.IsEmpty()) {
-    return nullptr;
+  if (aSize.IsEmpty() || aWhichFrame > FRAME_MAX_VALUE) {
+    return MakeTuple(DrawResult::BAD_ARGS, aSize,
+                     RefPtr<SourceSurface>());
   }
 
-  if (aWhichFrame > FRAME_MAX_VALUE) {
-    return nullptr;
+  if (mError) {
+    return MakeTuple(DrawResult::BAD_IMAGE, aSize,
+                     RefPtr<SourceSurface>());
   }
 
-  if (mError || !mIsFullyLoaded) {
-    return nullptr;
+  if (!mIsFullyLoaded) {
+    return MakeTuple(DrawResult::NOT_READY, aSize,
+                     RefPtr<SourceSurface>());
+  }
+
+  RefPtr<SourceSurface> sourceSurface =
+    LookupCachedSurface(aSize, aSVGContext, aFlags);
+  if (sourceSurface) {
+    return MakeTuple(DrawResult::SUCCESS, aSize, Move(sourceSurface));
+  }
+
+  if (mIsDrawing) {
+    NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
+    return MakeTuple(DrawResult::TEMPORARY_ERROR, aSize,
+                     RefPtr<SourceSurface>());
   }
 
   // Make our surface the size of what will ultimately be drawn to it.
@@ -757,17 +791,43 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
     CreateOffscreenContentDrawTarget(aSize, SurfaceFormat::B8G8R8A8);
   if (!dt || !dt->IsValid()) {
     NS_ERROR("Could not create a DrawTarget");
-    return nullptr;
+    return MakeTuple(DrawResult::TEMPORARY_ERROR, aSize,
+                     RefPtr<SourceSurface>());
   }
 
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(context); // already checked the draw target above
 
-  auto result = Draw(context, aSize, ImageRegion::Create(aSize),
-                     aWhichFrame, SamplingFilter::POINT, Nothing(), aFlags,
-                     1.0);
+  SVGDrawingParameters params(context, aSize, ImageRegion::Create(aSize),
+                              SamplingFilter::POINT, aSVGContext,
+                              mSVGDocumentWrapper->GetCurrentTime(),
+                              aFlags, 1.0);
 
-  return result == DrawResult::SUCCESS ? dt->Snapshot() : nullptr;
+  // DrawInternal may return a surface which is stored in the cache. It is
+  // important to prefer this result over the snapshot because it may be a
+  // different surface type (e.g. SourceSurfaceSharedData for WebRender). If
+  // we did not put anything in the cache, we will need to fallback to the
+  // snapshot surface.
+  bool contextPaint = aSVGContext && aSVGContext->GetContextPaint();
+  RefPtr<SourceSurface> surface = DrawInternal(params, contextPaint);
+  if (!surface) {
+    surface = dt->Snapshot();
+  }
+
+  return MakeTuple(DrawResult::SUCCESS, aSize, Move(surface));
+}
+
+//******************************************************************************
+IntSize
+VectorImage::GetImageContainerSize(LayerManager* aManager,
+                                   const IntSize& aSize,
+                                   uint32_t aFlags)
+{
+  if (!IsImageContainerAvailableAtSize(aManager, aSize, aFlags)) {
+    return IntSize(0, 0);
+  }
+
+  return aSize;
 }
 
 NS_IMETHODIMP_(bool)
@@ -781,6 +841,86 @@ NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 VectorImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
 {
   return nullptr;
+}
+
+//******************************************************************************
+NS_IMETHODIMP_(bool)
+VectorImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
+                                             const IntSize& aSize,
+                                             uint32_t aFlags)
+{
+  if (mError || !mIsFullyLoaded || aSize.IsEmpty() ||
+      mHaveAnimations || !gfxVars::UseWebRender()) {
+    return false;
+  }
+
+  int32_t maxTextureSize = aManager->GetMaxTextureSize();
+  return aSize.width <= maxTextureSize &&
+         aSize.height <= maxTextureSize;
+}
+
+//******************************************************************************
+NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
+VectorImage::GetImageContainerAtSize(LayerManager* aManager,
+                                     const IntSize& aSize,
+                                     const Maybe<SVGImageContext>& aSVGContext,
+                                     uint32_t aFlags)
+{
+  Maybe<SVGImageContext> newSVGContext;
+  MaybeRestrictSVGContext(newSVGContext, aSVGContext, aFlags);
+
+  // Since we do not support high quality scaling with SVG, we mask it off so
+  // that container requests with and without it map to the same container.
+  // Similarly the aspect ratio flag was already handled as part of the SVG
+  // context restriction above.
+  uint32_t flags = aFlags & ~(FLAG_HIGH_QUALITY_SCALING |
+                              FLAG_FORCE_PRESERVEASPECTRATIO_NONE);
+  return GetImageContainerImpl(aManager, aSize,
+                               newSVGContext ? newSVGContext : aSVGContext,
+                               flags);
+}
+
+bool
+VectorImage::MaybeRestrictSVGContext(Maybe<SVGImageContext>& aNewSVGContext,
+                                     const Maybe<SVGImageContext>& aSVGContext,
+                                     uint32_t aFlags)
+{
+  bool overridePAR = (aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) && aSVGContext;
+
+  bool haveContextPaint = aSVGContext && aSVGContext->GetContextPaint();
+  bool blockContextPaint = false;
+  if (haveContextPaint) {
+    nsCOMPtr<nsIURI> imageURI = mURI->ToIURI();
+    blockContextPaint = !SVGContextPaint::IsAllowedForImageFromURI(imageURI);
+  }
+
+  if (overridePAR || blockContextPaint) {
+    // The key that we create for the image surface cache must match the way
+    // that the image will be painted, so we need to initialize a new matching
+    // SVGImageContext here in order to generate the correct key.
+
+    aNewSVGContext = aSVGContext; // copy
+
+    if (overridePAR) {
+      // The SVGImageContext must take account of the preserveAspectRatio
+      // overide:
+      MOZ_ASSERT(!aSVGContext->GetPreserveAspectRatio(),
+                 "FLAG_FORCE_PRESERVEASPECTRATIO_NONE is not expected if a "
+                 "preserveAspectRatio override is supplied");
+      Maybe<SVGPreserveAspectRatio> aspectRatio =
+        Some(SVGPreserveAspectRatio(SVG_PRESERVEASPECTRATIO_NONE,
+                                    SVG_MEETORSLICE_UNKNOWN));
+      aNewSVGContext->SetPreserveAspectRatio(aspectRatio);
+    }
+
+    if (blockContextPaint) {
+      // The SVGImageContext must not include context paint if the image is
+      // not allowed to use it:
+      aNewSVGContext->ClearContextPaint();
+    }
+  }
+
+  return haveContextPaint && !blockContextPaint;
 }
 
 //******************************************************************************
@@ -819,44 +959,12 @@ VectorImage::Draw(gfxContext* aContext,
              "Viewport size is required when using "
              "FLAG_FORCE_PRESERVEASPECTRATIO_NONE");
 
-  bool overridePAR = (aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) && aSVGContext;
-
-  bool haveContextPaint = aSVGContext && aSVGContext->GetContextPaint();
-  bool blockContextPaint = false;
-  if (haveContextPaint) {
-    nsCOMPtr<nsIURI> imageURI = mURI->ToIURI();
-    blockContextPaint = !SVGContextPaint::IsAllowedForImageFromURI(imageURI);
-  }
-
-  Maybe<SVGImageContext> newSVGContext;
-  if (overridePAR || blockContextPaint) {
-    // The key that we create for the image surface cache must match the way
-    // that the image will be painted, so we need to initialize a new matching
-    // SVGImageContext here in order to generate the correct key.
-
-    newSVGContext = aSVGContext; // copy
-
-    if (overridePAR) {
-      // The SVGImageContext must take account of the preserveAspectRatio
-      // overide:
-      MOZ_ASSERT(!aSVGContext->GetPreserveAspectRatio(),
-                 "FLAG_FORCE_PRESERVEASPECTRATIO_NONE is not expected if a "
-                 "preserveAspectRatio override is supplied");
-      Maybe<SVGPreserveAspectRatio> aspectRatio =
-        Some(SVGPreserveAspectRatio(SVG_PRESERVEASPECTRATIO_NONE,
-                                    SVG_MEETORSLICE_UNKNOWN));
-      newSVGContext->SetPreserveAspectRatio(aspectRatio);
-    }
-
-    if (blockContextPaint) {
-      // The SVGImageContext must not include context paint if the image is
-      // not allowed to use it:
-      newSVGContext->ClearContextPaint();
-    }
-  }
-
   float animTime = (aWhichFrame == FRAME_FIRST)
                      ? 0.0f : mSVGDocumentWrapper->GetCurrentTime();
+
+  Maybe<SVGImageContext> newSVGContext;
+  bool contextPaint =
+    MaybeRestrictSVGContext(newSVGContext, aSVGContext, aFlags);
 
   SVGDrawingParameters params(aContext, aSize, aRegion, aSamplingFilter,
                               newSVGContext ? newSVGContext : aSVGContext,
@@ -864,8 +972,11 @@ VectorImage::Draw(gfxContext* aContext,
 
   // If we have an prerasterized version of this image that matches the
   // drawing parameters, use that.
-  RefPtr<gfxDrawable> svgDrawable = LookupCachedSurface(params);
-  if (svgDrawable) {
+  RefPtr<SourceSurface> sourceSurface =
+    LookupCachedSurface(aSize, params.svgContext, aFlags);
+  if (sourceSurface) {
+    RefPtr<gfxDrawable> svgDrawable =
+      new gfxSurfaceDrawable(sourceSurface, sourceSurface->GetSize());
     Show(svgDrawable, params);
     return DrawResult::SUCCESS;
   }
@@ -876,35 +987,52 @@ VectorImage::Draw(gfxContext* aContext,
     NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
     return DrawResult::TEMPORARY_ERROR;
   }
+
+  RefPtr<SourceSurface> surface = DrawInternal(params, contextPaint);
+
+  // Image got put into a painted layer, it will not be shared with another
+  // process.
+  MarkSurfaceShared(surface);
+  return DrawResult::SUCCESS;
+}
+
+already_AddRefed<SourceSurface>
+VectorImage::DrawInternal(const SVGDrawingParameters& aParams,
+                          bool aContextPaint)
+{
+  MOZ_ASSERT(!mIsDrawing);
+
   AutoRestore<bool> autoRestoreIsDrawing(mIsDrawing);
   mIsDrawing = true;
 
   // Apply any 'preserveAspectRatio' override (if specified) to the root
   // element:
-  AutoPreserveAspectRatioOverride autoPAR(newSVGContext ? newSVGContext : aSVGContext,
+  AutoPreserveAspectRatioOverride autoPAR(aParams.svgContext,
                                           mSVGDocumentWrapper->GetRootSVGElem());
 
   // Set the animation time:
   AutoSVGTimeSetRestore autoSVGTime(mSVGDocumentWrapper->GetRootSVGElem(),
-                                    animTime);
+                                    aParams.animationTime);
 
   // Set context paint (if specified) on the document:
   Maybe<AutoSetRestoreSVGContextPaint> autoContextPaint;
-  if (haveContextPaint && !blockContextPaint) {
-    autoContextPaint.emplace(aSVGContext->GetContextPaint(),
+  if (aContextPaint) {
+    autoContextPaint.emplace(aParams.svgContext->GetContextPaint(),
                              mSVGDocumentWrapper->GetDocument());
   }
 
   // We didn't get a hit in the surface cache, so we'll need to rerasterize.
-  CreateSurfaceAndShow(params, aContext->GetDrawTarget()->GetBackendType());
-  return DrawResult::SUCCESS;
+  BackendType backend = aParams.context->GetDrawTarget()->GetBackendType();
+  return CreateSurfaceAndShow(aParams, backend);
 }
 
-already_AddRefed<gfxDrawable>
-VectorImage::LookupCachedSurface(const SVGDrawingParameters& aParams)
+already_AddRefed<SourceSurface>
+VectorImage::LookupCachedSurface(const IntSize& aSize,
+                                 const Maybe<SVGImageContext>& aSVGContext,
+                                 uint32_t aFlags)
 {
   // If we're not allowed to use a cached surface, don't attempt a lookup.
-  if (aParams.flags & FLAG_BYPASS_SURFACE_CACHE) {
+  if (aFlags & FLAG_BYPASS_SURFACE_CACHE) {
     return nullptr;
   }
 
@@ -916,7 +1044,9 @@ VectorImage::LookupCachedSurface(const SVGDrawingParameters& aParams)
 
   LookupResult result =
     SurfaceCache::Lookup(ImageKey(this),
-                         VectorSurfaceKey(aParams.size, aParams.svgContext));
+                         VectorSurfaceKey(aSize, aSVGContext));
+
+  MOZ_ASSERT(result.SuggestedSize().IsEmpty(), "SVG should not substitute!");
   if (!result) {
     return nullptr;  // No matching surface, or the OS freed the volatile buffer.
   }
@@ -929,12 +1059,10 @@ VectorImage::LookupCachedSurface(const SVGDrawingParameters& aParams)
     return nullptr;
   }
 
-  RefPtr<gfxDrawable> svgDrawable =
-    new gfxSurfaceDrawable(sourceSurface, result.Surface()->GetSize());
-  return svgDrawable.forget();
+  return sourceSurface.forget();
 }
 
-void
+already_AddRefed<SourceSurface>
 VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams, BackendType aBackend)
 {
   mSVGDocumentWrapper->UpdateViewportBounds(aParams.viewportSize);
@@ -956,7 +1084,8 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams, BackendTy
                      // The image is too big to fit in the cache:
                      !SurfaceCache::CanHold(aParams.size);
   if (bypassCache) {
-    return Show(svgDrawable, aParams);
+    Show(svgDrawable, aParams);
+    return nullptr;
   }
 
   // We're about to rerasterize, which may mean that some of the previous
@@ -980,14 +1109,16 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams, BackendTy
   // up way too big. Generally it also wouldn't fit in the cache, but the prefs
   // could be set such that the cache isn't the limiting factor.
   if (NS_FAILED(rv)) {
-    return Show(svgDrawable, aParams);
+    Show(svgDrawable, aParams);
+    return nullptr;
   }
 
   // Take a strong reference to the frame's surface and make sure it hasn't
   // already been purged by the operating system.
   RefPtr<SourceSurface> surface = frame->GetSourceSurface();
   if (!surface) {
-    return Show(svgDrawable, aParams);
+    Show(svgDrawable, aParams);
+    return nullptr;
   }
 
   // Attempt to cache the frame.
@@ -1018,6 +1149,8 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams, BackendTy
       }
     }));
   }
+
+  return surface.forget();
 }
 
 
@@ -1033,17 +1166,7 @@ VectorImage::Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams)
                              aParams.flags, aParams.opacity);
 
 #ifdef DEBUG
-  // Record the image drawing for startup performance testing.
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    NS_WARNING_ASSERTION(obs, "Can't get an observer service handle");
-    if (obs) {
-      nsCOMPtr<nsIURI> imageURI = mURI->ToIURI();
-      nsAutoCString spec;
-      imageURI->GetSpec(spec);
-      obs->NotifyObservers(nullptr, "image-drawing", NS_ConvertUTF8toUTF16(spec).get());
-    }
-  }
+  NotifyDrawingObservers();
 #endif
 
   MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");

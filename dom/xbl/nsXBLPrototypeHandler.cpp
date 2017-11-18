@@ -434,8 +434,7 @@ nsXBLPrototypeHandler::EnsureEventHandler(AutoJSAPI& jsapi, nsAtom* aName,
   // Compile the event handler in the xbl scope.
   JSAutoCompartment ac(cx, scopeObject);
   JS::CompileOptions options(cx);
-  options.setFileAndLine(bindingURI.get(), mLineNumber)
-         .setVersion(JSVERSION_DEFAULT);
+  options.setFileAndLine(bindingURI.get(), mLineNumber);
 
   JS::Rooted<JSObject*> handlerFun(cx);
   JS::AutoObjectVector emptyVector(cx);

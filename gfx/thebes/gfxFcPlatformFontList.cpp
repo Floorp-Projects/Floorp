@@ -683,7 +683,7 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
         FcPatternAddBool(aRenderPattern, FC_EMBOLDEN, FcTrue);
     }
 
-    // synthetic oblique by skewing via the font matrix
+    // will synthetic oblique be applied using a transform?
     bool needsOblique = IsUpright() &&
                         aStyle->style != NS_FONT_STYLE_NORMAL &&
                         aStyle->allowSyntheticStyle;
@@ -721,20 +721,6 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
 
     cairo_matrix_init_scale(&sizeMatrix, aAdjustedSize, aAdjustedSize);
     cairo_matrix_init_identity(&identityMatrix);
-
-    if (needsOblique) {
-        const double kSkewFactor = OBLIQUE_SKEW_FACTOR;
-
-        cairo_matrix_t style;
-        cairo_matrix_init(&style,
-                          1,                //xx
-                          0,                //yx
-                          -1 * kSkewFactor,  //xy
-                          1,                //yy
-                          0,                //x0
-                          0);               //y0
-        cairo_matrix_multiply(&sizeMatrix, &sizeMatrix, &style);
-    }
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
     PrepareFontOptions(aRenderPattern, fontOptions);

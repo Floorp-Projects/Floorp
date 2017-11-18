@@ -38,14 +38,14 @@ already_AddRefed<Promise>
 CredentialsContainer::Get(const CredentialRequestOptions& aOptions)
 {
   RefPtr<WebAuthnManager> mgr = WebAuthnManager::GetOrCreate();
-  return mgr->GetAssertion(mParent, aOptions.mPublicKey);
+  return mgr->GetAssertion(mParent, aOptions.mPublicKey, aOptions.mSignal);
 }
 
 already_AddRefed<Promise>
 CredentialsContainer::Create(const CredentialCreationOptions& aOptions)
 {
   RefPtr<WebAuthnManager> mgr = WebAuthnManager::GetOrCreate();
-  return mgr->MakeCredential(mParent, aOptions.mPublicKey);
+  return mgr->MakeCredential(mParent, aOptions.mPublicKey, aOptions.mSignal);
 }
 
 already_AddRefed<Promise>

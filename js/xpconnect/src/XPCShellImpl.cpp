@@ -387,16 +387,6 @@ Load(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-Version(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setInt32(JS_GetVersion(cx));
-    if (args.get(0).isInt32())
-        SetVersionForCurrentRealm(cx, JSVersion(args[0].toInt32()));
-    return true;
-}
-
-static bool
 Quit(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -662,7 +652,6 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FN("readline",        ReadLine,       1,0),
     JS_FN("load",            Load,           1,0),
     JS_FN("quit",            Quit,           0,0),
-    JS_FN("version",         Version,        1,0),
     JS_FN("dumpXPC",         DumpXPC,        1,0),
     JS_FN("dump",            Dump,           1,0),
     JS_FN("gc",              GC,             0,0),
@@ -840,7 +829,7 @@ static int
 usage()
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-WwxiCSsmIp] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-WwxiCSsmIp] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -953,12 +942,6 @@ ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc, XPCShellDirProvider* aDirPr
             break;
         }
         switch (argv[i][1]) {
-        case 'v':
-            if (++i == argc) {
-                return printUsageAndSetExitCode();
-            }
-            SetVersionForCurrentRealm(cx, JSVersion(atoi(argv[i])));
-            break;
         case 'W':
             reportWarnings = false;
             break;
@@ -1307,7 +1290,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         options.creationOptions().setNewZoneInSystemZoneGroup();
         if (xpc::SharedMemoryEnabled())
             options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
-        options.behaviors().setVersion(JSVERSION_DEFAULT);
         JS::Rooted<JSObject*> glob(cx);
         rv = xpc::InitClassesWithNewWrappedGlobal(cx,
                                                   static_cast<nsIGlobalObject*>(backstagePass),

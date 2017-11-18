@@ -1144,14 +1144,14 @@ FailurePath::canShareFailurePath(const FailurePath& other) const
 
     for (size_t i = 0; i < spilledRegs_.length(); i++) {
         if (spilledRegs_[i] != other.spilledRegs_[i])
-	    return false;
+            return false;
     }
 
     MOZ_ASSERT(inputs_.length() == other.inputs_.length());
 
     for (size_t i = 0; i < inputs_.length(); i++) {
         if (inputs_[i] != other.inputs_[i])
-	    return false;
+            return false;
     }
     return true;
 }
@@ -1413,7 +1413,7 @@ CacheIRCompiler::emitGuardIsNativeFunction()
     masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, clasp, failure->label());
 
     // Ensure function native matches.
-    masm.branchPtr(Assembler::NotEqual, Address(obj, JSFunction::offsetOfNativeOrScript()),
+    masm.branchPtr(Assembler::NotEqual, Address(obj, JSFunction::offsetOfNativeOrEnv()),
                    ImmPtr(nativeFunc), failure->label());
     return true;
 }
@@ -1785,7 +1785,7 @@ CacheIRCompiler::emitLoadFunctionLengthResult()
 
     masm.bind(&interpreted);
     // Load the length from the function's script.
-    masm.loadPtr(Address(obj, JSFunction::offsetOfNativeOrScript()), scratch);
+    masm.loadPtr(Address(obj, JSFunction::offsetOfScript()), scratch);
     masm.load16ZeroExtend(Address(scratch, JSScript::offsetOfFunLength()), scratch);
 
     masm.bind(&done);

@@ -2007,7 +2007,6 @@ ScriptLoader::FillCompileOptionsForRequest(const AutoJSAPI&jsapi,
   aOptions->setIntroductionType(isScriptElement ? "scriptElement"
                                                 : "importedModule");
   aOptions->setFileAndLine(aRequest->mURL.get(), aRequest->mLineNo);
-  aOptions->setVersion(JSVersion(aRequest->mJSVersion));
   aOptions->setIsRunOnce(true);
   aOptions->setNoScriptRval(true);
   if (aRequest->mHasSourceMapURL) {

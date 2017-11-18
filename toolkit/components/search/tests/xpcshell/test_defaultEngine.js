@@ -9,7 +9,6 @@
 "use strict";
 
 function run_test() {
-  removeMetadata();
   useHttpServer();
 
   run_next_test();

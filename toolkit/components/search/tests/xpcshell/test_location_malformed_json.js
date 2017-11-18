@@ -18,8 +18,6 @@ function promiseTimezoneMessage() {
 }
 
 function run_test() {
-  installTestEngine();
-
   // setup a console listener for the timezone fallback message.
   let promiseTzMessage = promiseTimezoneMessage();
 

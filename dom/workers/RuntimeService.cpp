@@ -1923,7 +1923,6 @@ RuntimeService::Init()
   if (sDefaultJSSettings.gcSettings[0].key.isNothing()) {
     sDefaultJSSettings.contextOptions = JS::ContextOptions();
     sDefaultJSSettings.chrome.maxScriptRuntime = -1;
-    sDefaultJSSettings.chrome.compartmentOptions.behaviors().setVersion(JSVERSION_DEFAULT);
     sDefaultJSSettings.content.maxScriptRuntime = MAX_SCRIPT_RUN_TIME_SEC;
 #ifdef JS_GC_ZEAL
     sDefaultJSSettings.gcZealFrequency = JS_DEFAULT_ZEAL_FREQ;

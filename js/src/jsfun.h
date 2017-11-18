@@ -117,24 +117,22 @@ class JSFunction : public js::NativeObject
                                      (including defaults and the rest parameter unlike f.length) */
     uint16_t        flags_;       /* bitfield composed of the above Flags enum, as well as the kind */
     union U {
-        class Native {
+        class {
             friend class JSFunction;
-            js::Native          native;       /* native method pointer or null */
-            const JSJitInfo*    jitinfo;     /* Information about this function to be
-                                                used by the JIT;
-                                                use the accessor! */
-        } n;
-        struct Scripted {
+            js::Native func_;          /* native method pointer or null */
+            const JSJitInfo* jitinfo_; /* Information about this function to be
+                                          used by the JIT; use the accessor! */
+        } native;
+        struct {
+            JSObject* env_;            /* environment for new activations */
             union {
-                JSScript* script_; /* interpreted bytecode descriptor or null;
-                                      use the accessor! */
+                JSScript* script_;     /* interpreted bytecode descriptor or
+                                          null; use the accessor! */
                 js::LazyScript* lazy_; /* lazily compiled script, or nullptr */
             } s;
-            JSObject*   env_;    /* environment for new activations */
-        } i;
-        void*           nativeOrScript;
+        } scripted;
     } u;
-    js::GCPtrAtom atom_;      /* name for diagnostics and decompiling */
+    js::GCPtrAtom atom_; /* name for diagnostics and decompiling */
 
   public:
     /* Call objects must be created for each invocation of this function. */
@@ -395,17 +393,17 @@ class JSFunction : public js::NativeObject
      */
     JSObject* environment() const {
         MOZ_ASSERT(isInterpreted());
-        return u.i.env_;
+        return u.scripted.env_;
     }
 
     void setEnvironment(JSObject* obj) {
         MOZ_ASSERT(isInterpreted());
-        *reinterpret_cast<js::GCPtrObject*>(&u.i.env_) = obj;
+        *reinterpret_cast<js::GCPtrObject*>(&u.scripted.env_) = obj;
     }
 
     void initEnvironment(JSObject* obj) {
         MOZ_ASSERT(isInterpreted());
-        reinterpret_cast<js::GCPtrObject*>(&u.i.env_)->init(obj);
+        reinterpret_cast<js::GCPtrObject*>(&u.scripted.env_)->init(obj);
     }
 
     void unsetEnvironment() {
@@ -413,10 +411,10 @@ class JSFunction : public js::NativeObject
     }
 
   public:
-    static inline size_t offsetOfNargs() { return offsetof(JSFunction, nargs_); }
-    static inline size_t offsetOfFlags() { return offsetof(JSFunction, flags_); }
-    static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env_); }
-    static inline size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
+    static constexpr size_t offsetOfNargs() { return offsetof(JSFunction, nargs_); }
+    static constexpr size_t offsetOfFlags() { return offsetof(JSFunction, flags_); }
+    static size_t offsetOfEnvironment() { return offsetof(JSFunction, u.scripted.env_); }
+    static size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
     static bool createScriptForLazilyInterpretedFunction(JSContext* cx, js::HandleFunction fun);
     void maybeRelazify(JSRuntime* rt);
@@ -488,24 +486,24 @@ class JSFunction : public js::NativeObject
     // not from script.
     bool hasUncompiledScript() const {
         MOZ_ASSERT(hasScript());
-        return !u.i.s.script_;
+        return !u.scripted.s.script_;
     }
 
     JSScript* nonLazyScript() const {
         MOZ_ASSERT(!hasUncompiledScript());
-        return u.i.s.script_;
+        return u.scripted.s.script_;
     }
 
     static bool getLength(JSContext* cx, js::HandleFunction fun, uint16_t* length);
 
     js::LazyScript* lazyScript() const {
-        MOZ_ASSERT(isInterpretedLazy() && u.i.s.lazy_);
-        return u.i.s.lazy_;
+        MOZ_ASSERT(isInterpretedLazy() && u.scripted.s.lazy_);
+        return u.scripted.s.lazy_;
     }
 
     js::LazyScript* lazyScriptOrNull() const {
         MOZ_ASSERT(isInterpretedLazy());
-        return u.i.s.lazy_;
+        return u.scripted.s.lazy_;
     }
 
     js::GeneratorKind generatorKind() const {
@@ -558,12 +556,12 @@ class JSFunction : public js::NativeObject
         MOZ_ASSERT(isInterpreted());
         flags_ &= ~INTERPRETED;
         flags_ |= INTERPRETED_LAZY;
-        u.i.s.lazy_ = lazy;
+        u.scripted.s.lazy_ = lazy;
     }
 
     JSNative native() const {
         MOZ_ASSERT(isNative());
-        return u.n.native;
+        return u.native.func_;
     }
 
     JSNative maybeNative() const {
@@ -572,35 +570,41 @@ class JSFunction : public js::NativeObject
 
     void initNative(js::Native native, const JSJitInfo* jitinfo) {
         MOZ_ASSERT(native);
-        u.n.native = native;
-        u.n.jitinfo = jitinfo;
+        u.native.func_ = native;
+        u.native.jitinfo_ = jitinfo;
     }
 
     const JSJitInfo* jitInfo() const {
         MOZ_ASSERT(isNative());
-        return u.n.jitinfo;
+        return u.native.jitinfo_;
     }
 
     void setJitInfo(const JSJitInfo* data) {
         MOZ_ASSERT(isNative());
-        u.n.jitinfo = data;
+        u.native.jitinfo_ = data;
     }
 
     bool isDerivedClassConstructor();
 
-    static unsigned offsetOfNativeOrScript() {
-        static_assert(offsetof(U, n.native) == offsetof(U, i.s.script_),
-                      "native and script pointers must be in the same spot "
-                      "for offsetOfNativeOrScript() have any sense");
-        static_assert(offsetof(U, n.native) == offsetof(U, nativeOrScript),
-                      "U::nativeOrScript must be at the same offset as "
-                      "native");
-
-        return offsetof(JSFunction, u.nativeOrScript);
+    static unsigned offsetOfNative() {
+        return offsetof(JSFunction, u.native.func_);
+    }
+    static unsigned offsetOfScript() {
+        return offsetof(JSFunction, u.scripted.s.script_);
+    }
+    static unsigned offsetOfNativeOrEnv() {
+        static_assert(offsetof(U, native.func_) == offsetof(U, scripted.env_),
+                      "U.native.func_ must be at the same offset as U.scripted.env_");
+        return offsetOfNative();
+    }
+    static unsigned offsetOfScriptOrLazyScript() {
+        static_assert(offsetof(U, scripted.s.script_) == offsetof(U, scripted.s.lazy_),
+                      "U.scripted.s.script_ must be at the same offset as lazy_");
+        return offsetof(JSFunction, u.scripted.s.script_);
     }
 
     static unsigned offsetOfJitInfo() {
-        return offsetof(JSFunction, u.n.jitinfo);
+        return offsetof(JSFunction, u.native.jitinfo_);
     }
 
     inline void trace(JSTracer* trc);
@@ -622,7 +626,7 @@ class JSFunction : public js::NativeObject
   private:
     js::GCPtrScript& mutableScript() {
         MOZ_ASSERT(hasScript());
-        return *(js::GCPtrScript*)&u.i.s.script_;
+        return *(js::GCPtrScript*)&u.scripted.s.script_;
     }
 
     inline js::FunctionExtended* toExtended();
