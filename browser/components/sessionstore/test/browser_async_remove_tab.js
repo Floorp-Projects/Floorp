@@ -75,7 +75,7 @@ function promiseHistoryEntryReplacedNonRemote(browser) {
     let listener = {
       OnHistoryReplaceEntry() {
         shistory.removeSHistoryListener(this);
-        resolve();
+        executeSoon(resolve);
       },
 
       QueryInterface: XPCOMUtils.generateQI([
