@@ -5575,6 +5575,28 @@ JS_GetLocaleCallbacks(JSRuntime* rt);
 
 /*
  * Error reporting.
+ *
+ * There are four encoding variants for the error reporting API:
+ *   UTF-8
+ *     JSAPI's default encoding for error handling.  Use this when the encoding
+ *     of the error message, format string, and arguments is UTF-8.
+ *   ASCII
+ *     Equivalent to UTF-8, but also asserts that the error message, format
+ *     string, and arguments are all ASCII.  Because ASCII is a subset of UTF-8,
+ *     any use of this encoding variant *could* be replaced with use of the
+ *     UTF-8 variant.  This variant exists solely to double-check the
+ *     developer's assumption that all these strings truly are ASCII, given that
+ *     UTF-8 and ASCII strings regrettably have the same C++ type.
+ *   UC = UTF-16
+ *     Use this when arguments are UTF-16.  The format string must be UTF-8.
+ *   Latin1 (planned to be removed)
+ *     In this variant, all strings are interpreted byte-for-byte as the
+ *     corresponding Unicode codepoint.  This encoding may *safely* be used on
+ *     any null-terminated string, regardless of its encoding.  (You shouldn't
+ *     *actually* be uncertain, but in the real world, a string's encoding -- if
+ *     promised at all -- may be more...aspirational...than reality.)  This
+ *     encoding variant will eventually be removed -- work to convert your uses
+ *     to UTF-8 as you're able.
  */
 
 namespace JS {
