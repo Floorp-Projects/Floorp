@@ -92,11 +92,11 @@ using namespace mozilla;
 
 #ifdef DEBUG
 
-#define ENSURE_MAIN_PROCESS(func, pref)                                        \
+#define ENSURE_PARENT_PROCESS(func, pref)                                      \
   do {                                                                         \
     if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                \
       nsPrintfCString msg(                                                     \
-        "ENSURE_MAIN_PROCESS: called %s on %s in a non-main process",          \
+        "ENSURE_PARENT_PROCESS: called %s on %s in a non-parent process",      \
         func,                                                                  \
         pref);                                                                 \
       NS_ERROR(msg.get());                                                     \
@@ -106,7 +106,7 @@ using namespace mozilla;
 
 #else // DEBUG
 
-#define ENSURE_MAIN_PROCESS(func, pref)                                        \
+#define ENSURE_PARENT_PROCESS(func, pref)                                      \
   if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                  \
     return NS_ERROR_NOT_AVAILABLE;                                             \
   }
@@ -2287,7 +2287,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
   }
 
   if (aType.Equals(NS_GET_IID(nsIFile))) {
-    ENSURE_MAIN_PROCESS("GetComplexValue(nsIFile)", aPrefName);
+    ENSURE_PARENT_PROCESS("GetComplexValue(nsIFile)", aPrefName);
 
     nsCOMPtr<nsIFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
 
@@ -2302,7 +2302,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
   }
 
   if (aType.Equals(NS_GET_IID(nsIRelativeFilePref))) {
-    ENSURE_MAIN_PROCESS("GetComplexValue(nsIRelativeFilePref)", aPrefName);
+    ENSURE_PARENT_PROCESS("GetComplexValue(nsIRelativeFilePref)", aPrefName);
 
     nsACString::const_iterator keyBegin, strEnd;
     utf8String.BeginReading(keyBegin);
@@ -2424,7 +2424,7 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
                               const nsIID& aType,
                               nsISupports* aValue)
 {
-  ENSURE_MAIN_PROCESS("SetComplexValue", aPrefName);
+  ENSURE_PARENT_PROCESS("SetComplexValue", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   nsresult rv = NS_NOINTERFACE;
@@ -2512,7 +2512,7 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
 NS_IMETHODIMP
 nsPrefBranch::ClearUserPref(const char* aPrefName)
 {
-  ENSURE_MAIN_PROCESS("ClearUserPref", aPrefName);
+  ENSURE_PARENT_PROCESS("ClearUserPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
@@ -2533,7 +2533,7 @@ nsPrefBranch::PrefHasUserValue(const char* aPrefName, bool* aRetVal)
 NS_IMETHODIMP
 nsPrefBranch::LockPref(const char* aPrefName)
 {
-  ENSURE_MAIN_PROCESS("LockPref", aPrefName);
+  ENSURE_PARENT_PROCESS("LockPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
@@ -2543,7 +2543,7 @@ nsPrefBranch::LockPref(const char* aPrefName)
 NS_IMETHODIMP
 nsPrefBranch::PrefIsLocked(const char* aPrefName, bool* aRetVal)
 {
-  ENSURE_MAIN_PROCESS("PrefIsLocked", aPrefName);
+  ENSURE_PARENT_PROCESS("PrefIsLocked", aPrefName);
   NS_ENSURE_ARG_POINTER(aRetVal);
   NS_ENSURE_ARG(aPrefName);
 
@@ -2555,7 +2555,7 @@ nsPrefBranch::PrefIsLocked(const char* aPrefName, bool* aRetVal)
 NS_IMETHODIMP
 nsPrefBranch::UnlockPref(const char* aPrefName)
 {
-  ENSURE_MAIN_PROCESS("UnlockPref", aPrefName);
+  ENSURE_PARENT_PROCESS("UnlockPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
@@ -2571,7 +2571,7 @@ nsPrefBranch::ResetBranch(const char* aStartingAt)
 NS_IMETHODIMP
 nsPrefBranch::DeleteBranch(const char* aStartingAt)
 {
-  ENSURE_MAIN_PROCESS("DeleteBranch", aStartingAt);
+  ENSURE_PARENT_PROCESS("DeleteBranch", aStartingAt);
   NS_ENSURE_ARG(aStartingAt);
 
   MOZ_ASSERT(NS_IsMainThread());
@@ -3714,7 +3714,7 @@ Preferences::Observe(nsISupports* aSubject,
 NS_IMETHODIMP
 Preferences::ReadUserPrefsFromFile(nsIFile* aFile)
 {
-  ENSURE_MAIN_PROCESS("Preferences::ReadUserPrefsFromFile", "all prefs");
+  ENSURE_PARENT_PROCESS("Preferences::ReadUserPrefsFromFile", "all prefs");
 
   if (!aFile) {
     NS_ERROR("ReadUserPrefsFromFile requires a parameter");
@@ -3727,7 +3727,7 @@ Preferences::ReadUserPrefsFromFile(nsIFile* aFile)
 NS_IMETHODIMP
 Preferences::ResetPrefs()
 {
-  ENSURE_MAIN_PROCESS("Preferences::ResetPrefs", "all prefs");
+  ENSURE_PARENT_PROCESS("Preferences::ResetPrefs", "all prefs");
 
   NotifyServiceObservers(NS_PREFSERVICE_RESET_TOPIC_ID);
 
@@ -3740,7 +3740,7 @@ Preferences::ResetPrefs()
 NS_IMETHODIMP
 Preferences::ResetUserPrefs()
 {
-  ENSURE_MAIN_PROCESS("Preferences::ResetUserPrefs", "all prefs");
+  ENSURE_PARENT_PROCESS("Preferences::ResetUserPrefs", "all prefs");
 
   PREF_ClearAllUserPrefs();
   return NS_OK;
@@ -4019,7 +4019,7 @@ Preferences::MakeBackupPrefFile(nsIFile* aFile)
 nsresult
 Preferences::SavePrefFileInternal(nsIFile* aFile, SaveMethod aSaveMethod)
 {
-  ENSURE_MAIN_PROCESS("Preferences::SavePrefFileInternal", "all prefs");
+  ENSURE_PARENT_PROCESS("Preferences::SavePrefFileInternal", "all prefs");
 
   // We allow different behavior here when aFile argument is not null, but it
   // happens to be the same as the current file.  It is not clear that we
@@ -4640,7 +4640,7 @@ Preferences::SetCString(const char* aPrefName,
                         const nsACString& aValue,
                         PrefValueKind aKind)
 {
-  ENSURE_MAIN_PROCESS("SetCString", aPrefName);
+  ENSURE_PARENT_PROCESS("SetCString", aPrefName);
   return SetCStringInAnyProcess(aPrefName, aValue, aKind);
 }
 
@@ -4662,7 +4662,7 @@ Preferences::SetBoolInAnyProcess(const char* aPrefName,
 /* static */ nsresult
 Preferences::SetBool(const char* aPrefName, bool aValue, PrefValueKind aKind)
 {
-  ENSURE_MAIN_PROCESS("SetBool", aPrefName);
+  ENSURE_PARENT_PROCESS("SetBool", aPrefName);
   return SetBoolInAnyProcess(aPrefName, aValue, aKind);
 }
 
@@ -4684,7 +4684,7 @@ Preferences::SetIntInAnyProcess(const char* aPrefName,
 /* static */ nsresult
 Preferences::SetInt(const char* aPrefName, int32_t aValue, PrefValueKind aKind)
 {
-  ENSURE_MAIN_PROCESS("SetInt", aPrefName);
+  ENSURE_PARENT_PROCESS("SetInt", aPrefName);
   return SetIntInAnyProcess(aPrefName, aValue, aKind);
 }
 
@@ -4701,7 +4701,7 @@ Preferences::SetComplex(const char* aPrefName,
 /* static */ nsresult
 Preferences::ClearUser(const char* aPref)
 {
-  ENSURE_MAIN_PROCESS("ClearUser", aPref);
+  ENSURE_PARENT_PROCESS("ClearUser", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_ClearUserPref(aPref);
 }
@@ -5082,7 +5082,7 @@ Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
 
 } // namespace mozilla
 
-#undef ENSURE_MAIN_PROCESS
+#undef ENSURE_PARENT_PROCESS
 
 //===========================================================================
 // Module and factory stuff
