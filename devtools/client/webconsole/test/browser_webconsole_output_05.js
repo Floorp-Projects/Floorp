@@ -133,14 +133,14 @@ var inputTests = [
 
   // 13
   {
-    input: "new Object({1: 'this\\nis\\nsupposed\\nto\\nbe\\na\\nvery" +
+    input: "new Object({0: 'this\\nis\\nsupposed\\nto\\nbe\\na\\nvery" +
            "\\nlong\\nstring\\n,shown\\non\\na\\nsingle\\nline', " +
-           "2: 'a shorter string', 3: 100})",
-    output: '[ <1 empty slot>, "this is supposed to be a very long ' + ELLIPSIS +
+           "1: 'a shorter string', 2: 100})",
+    output: '[ "this is supposed to be a very long ' + ELLIPSIS +
             '", "a shorter string", 100 ]',
     printOutput: "[object Object]",
     inspectable: true,
-    variablesViewLabel: "Object[4]"
+    variablesViewLabel: "Object[3]"
   },
 
   // 14
