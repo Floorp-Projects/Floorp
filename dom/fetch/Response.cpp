@@ -87,7 +87,7 @@ Response::~Response()
 Response::Error(const GlobalObject& aGlobal)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<InternalResponse> error = InternalResponse::NetworkError();
+  RefPtr<InternalResponse> error = InternalResponse::NetworkError(NS_ERROR_FAILURE);
   RefPtr<Response> r = new Response(global, error, nullptr);
   return r.forget();
 }

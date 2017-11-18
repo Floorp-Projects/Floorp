@@ -81,11 +81,6 @@ public:
 public:
   nsresult ClearRuleCascades();
 
-  static void InitSystemMetrics();
-  static void Shutdown();
-  static void FreeSystemMetrics();
-  static bool HasSystemMetric(nsAtom* aMetric);
-
   /*
    * Returns true if the given aElement matches one of the
    * selectors in aSelectorList.  Note that this method will assume
@@ -137,39 +132,6 @@ public:
   static bool RestrictedSelectorMatches(mozilla::dom::Element* aElement,
                                         nsCSSSelector* aSelector,
                                         TreeMatchContext& aTreeMatchContext);
-  /**
-   * Checks if a function-like ident-containing pseudo (:pseudo(ident))
-   * matches a given element.
-   *
-   * Returns true if it parses and matches, Some(false) if it
-   * parses but does not match. Asserts if it fails to parse; only
-   * call this when you're sure it's a string-like pseudo.
-   *
-   * In Servo mode, please ensure that UpdatePossiblyStaleDocumentState()
-   * has been called first.
-   *
-   * @param aElement The element we are trying to match
-   * @param aPseudo The name of the pseudoselector
-   * @param aString The identifier inside the pseudoselector (cannot be null)
-   * @param aDocument The document
-   * @param aStateMask Mask containing states which we should exclude.
-   *                   Ignored if aDependence is null
-   * @param aDependence Pointer to be set to true if we ignored a state due to
-   *                    aStateMask. Can be null.
-   */
-  static bool StringPseudoMatches(const mozilla::dom::Element* aElement,
-                                  mozilla::CSSPseudoClassType aPseudo,
-                                  const char16_t* aString,
-                                  const nsIDocument* aDocument,
-                                  mozilla::EventStates aStateMask,
-                                  bool* const aDependence = nullptr);
-
-  static bool LangPseudoMatches(const mozilla::dom::Element* aElement,
-                                const nsAtom* aOverrideLang,
-                                bool aHasOverrideLang,
-                                const char16_t* aString,
-                                const nsIDocument* aDocument);
-
   // nsIStyleRuleProcessor
   virtual void RulesMatching(ElementRuleProcessorData* aData) override;
 
@@ -245,14 +207,6 @@ public:
   bool IsInRuleProcessorCache() const { return mInRuleProcessorCache; }
   bool IsUsedByMultipleStyleSets() const { return mStyleSetRefCnt > 1; }
 
-#ifdef XP_WIN
-  // Cached theme identifier for the moz-windows-theme media query.
-  static uint8_t GetWindowsThemeIdentifier();
-  static void SetWindowsThemeIdentifier(uint8_t aId) {
-    sWinThemeId = aId;
-  }
-#endif
-
   struct StateSelector {
     StateSelector(mozilla::EventStates aStates, nsCSSSelector* aSelector)
       : mStates(aStates),
@@ -319,10 +273,6 @@ private:
 
 #ifdef DEBUG
   bool mDocumentRulesAndCacheKeyValid;
-#endif
-
-#ifdef XP_WIN
-  static uint8_t sWinThemeId;
 #endif
 };
 

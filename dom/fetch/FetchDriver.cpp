@@ -131,8 +131,9 @@ FetchDriver::Fetch(AbortSignal* aSignal, FetchDriverObserver* aObserver)
     Follow(aSignal);
   }
 
-  if (NS_FAILED(HttpFetch())) {
-    FailWithNetworkError();
+  rv = HttpFetch();
+  if (NS_FAILED(rv)) {
+    FailWithNetworkError(rv);
   }
 
   // Any failure is handled by FailWithNetworkError notifying the aObserver.
@@ -465,10 +466,10 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse,
 }
 
 void
-FetchDriver::FailWithNetworkError()
+FetchDriver::FailWithNetworkError(nsresult rv)
 {
   workers::AssertIsOnMainThread();
-  RefPtr<InternalResponse> error = InternalResponse::NetworkError();
+  RefPtr<InternalResponse> error = InternalResponse::NetworkError(rv);
   if (mObserver) {
     mObserver->OnResponseAvailable(error);
 #ifdef DEBUG
@@ -494,7 +495,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   nsresult rv;
   aRequest->GetStatus(&rv);
   if (NS_FAILED(rv)) {
-    FailWithNetworkError();
+    FailWithNetworkError(rv);
     return rv;
   }
 
@@ -524,7 +525,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
 
     if (mozilla::net::nsHttpChannel::IsRedirectStatus(responseStatus)) {
       if (mRequest->GetRedirectMode() == RequestRedirect::Error) {
-        FailWithNetworkError();
+        FailWithNetworkError(NS_BINDING_ABORTED);
         return NS_BINDING_FAILED;
       }
       if (mRequest->GetRedirectMode() == RequestRedirect::Manual) {
@@ -593,7 +594,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
                   true /* non-blocking input, otherwise you deadlock */,
                   false /* blocking output, since the pipe is 'in'finite */ );
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailWithNetworkError();
+    FailWithNetworkError(rv);
     // Cancel request.
     return rv;
   }
@@ -604,7 +605,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   nsCOMPtr<nsIURI> channelURI;
   rv = channel->GetURI(getter_AddRefs(channelURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailWithNetworkError();
+    FailWithNetworkError(rv);
     // Cancel request.
     return rv;
   }
@@ -612,7 +613,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   nsCOMPtr<nsILoadInfo> loadInfo;
   rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailWithNetworkError();
+    FailWithNetworkError(rv);
     return rv;
   }
 
@@ -630,7 +631,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   if (NS_WARN_IF(!mResponse)) {
     // Fail to generate a paddingInfo for opaque response.
     MOZ_DIAGNOSTIC_ASSERT(mResponse->Type() == ResponseType::Opaque);
-    FailWithNetworkError();
+    FailWithNetworkError(NS_ERROR_UNEXPECTED);
     return rv;
   }
 
@@ -658,7 +659,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
 
   nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailWithNetworkError();
+    FailWithNetworkError(rv);
     // Cancel request.
     return rv;
   }
@@ -834,7 +835,7 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
       nsresult rv = mSRIDataVerifier->Verify(mSRIMetadata, channel, sourceUri,
                                              reporter);
       if (NS_FAILED(rv)) {
-        FailWithNetworkError();
+        FailWithNetworkError(rv);
         // Cancel request.
         return rv;
       }

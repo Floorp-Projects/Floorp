@@ -10,42 +10,34 @@
 
 #include "nsString.h"
 
-#include "nsIRemoteService.h"
-#include "nsIObserver.h"
 #include <X11/Xlib.h>
 #include <X11/X.h>
 
 class nsIDOMWindow;
 class nsIWeakReference;
 
+#ifdef IS_BIG_ENDIAN
+#define TO_LITTLE_ENDIAN32(x) \
+    ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >> 8) | \
+    (((x) & 0x0000ff00) << 8) | (((x) & 0x000000ff) << 24))
+#else
+#define TO_LITTLE_ENDIAN32(x) (x)
+#endif
+
 /**
   Base class for GTK/Qt remote service
 */
-class nsXRemoteService : public nsIRemoteService,
-                         public nsIObserver
+class nsXRemoteService
 {
-public:
-    NS_DECL_NSIOBSERVER
-
-
 protected:
     nsXRemoteService();
-
     static bool HandleNewProperty(Window aWindowId,Display* aDisplay,
-                                    Time aEventTime, Atom aChangedAtom,
-                                    nsIWeakReference* aDomWindow);
-
+                                  Time aEventTime, Atom aChangedAtom,
+                                  nsIWeakReference* aDomWindow);
     void XRemoteBaseStartup(const char *aAppName, const char *aProfileName);
-
     void HandleCommandsFor(Window aWindowId);
-    static nsXRemoteService *sRemoteImplementation;
 private:
     void EnsureAtoms();
-    static const char* HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
-                                         uint32_t aTimestamp);
-
-    virtual void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
-                                                uint32_t aTimestamp) = 0;
 
     nsCString mAppName;
     nsCString mProfileName;

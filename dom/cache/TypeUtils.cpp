@@ -258,7 +258,8 @@ already_AddRefed<Response>
 TypeUtils::ToResponse(const CacheResponse& aIn)
 {
   if (aIn.type() == ResponseType::Error) {
-    RefPtr<InternalResponse> error = InternalResponse::NetworkError();
+    // We don't bother tracking the internal error code for cached responses...
+    RefPtr<InternalResponse> error = InternalResponse::NetworkError(NS_ERROR_FAILURE);
     RefPtr<Response> r = new Response(GetGlobalObject(), error, nullptr);
     return r.forget();
   }

@@ -27,6 +27,13 @@
 
 using namespace mozilla;
 
+static nsTArray<RefPtr<nsAtom>>* sSystemMetrics = nullptr;
+
+#ifdef XP_WIN
+// Cached theme identifier for the moz-windows-theme media query.
+static uint8_t sWinThemeId = LookAndFeel::eWindowsTheme_Generic;
+#endif
+
 static const nsCSSProps::KTableEntry kOrientationKeywords[] = {
   { eCSSKeyword_portrait,                 NS_STYLE_ORIENTATION_PORTRAIT },
   { eCSSKeyword_landscape,                NS_STYLE_ORIENTATION_LANDSCAPE },
@@ -385,6 +392,22 @@ GetTransform3d(nsPresContext* aPresContext, const nsMediaFeature*,
   aResult.SetIntValue(1, eCSSUnit_Integer);
 }
 
+static bool
+HasSystemMetric(nsAtom* aMetric)
+{
+  nsMediaFeatures::InitSystemMetrics();
+  return sSystemMetrics->IndexOf(aMetric) != sSystemMetrics->NoIndex;
+}
+
+#ifdef XP_WIN
+static uint8_t
+GetWindowsThemeIdentifier()
+{
+  nsMediaFeatures::InitSystemMetrics();
+  return sWinThemeId;
+}
+#endif
+
 static void
 GetSystemMetric(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
                 nsCSSValue& aResult)
@@ -409,7 +432,7 @@ GetSystemMetric(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
              "unexpected type");
 
   nsAtom* metricAtom = *aFeature->mData.mMetric;
-  bool hasMetric = nsCSSRuleProcessor::HasSystemMetric(metricAtom);
+  bool hasMetric = HasSystemMetric(metricAtom);
   aResult.SetIntValue(hasMetric ? 1 : 0, eCSSUnit_Integer);
 }
 
@@ -425,8 +448,7 @@ GetWindowsTheme(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
   }
 
 #ifdef XP_WIN
-  uint8_t windowsThemeId =
-    nsCSSRuleProcessor::GetWindowsThemeIdentifier();
+  uint8_t windowsThemeId = GetWindowsThemeIdentifier();
 
   // Classic mode should fail to match.
   if (windowsThemeId == LookAndFeel::eWindowsTheme_Classic)
@@ -476,6 +498,172 @@ GetIsGlyph(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
 {
   MOZ_ASSERT(aFeature->mReqFlags & nsMediaFeature::eUserAgentAndChromeOnly);
   aResult.SetIntValue(aPresContext->IsGlyph() ? 1 : 0, eCSSUnit_Integer);
+}
+
+/* static */ void
+nsMediaFeatures::InitSystemMetrics()
+{
+  if (sSystemMetrics)
+    return;
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  sSystemMetrics = new nsTArray<RefPtr<nsAtom>>;
+
+  /***************************************************************************
+   * ANY METRICS ADDED HERE SHOULD ALSO BE ADDED AS MEDIA QUERIES BELOW      *
+   ***************************************************************************/
+
+  int32_t metricResult =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollArrowStyle);
+  if (metricResult & LookAndFeel::eScrollArrow_StartBackward) {
+    sSystemMetrics->AppendElement(nsGkAtoms::scrollbar_start_backward);
+  }
+  if (metricResult & LookAndFeel::eScrollArrow_StartForward) {
+    sSystemMetrics->AppendElement(nsGkAtoms::scrollbar_start_forward);
+  }
+  if (metricResult & LookAndFeel::eScrollArrow_EndBackward) {
+    sSystemMetrics->AppendElement(nsGkAtoms::scrollbar_end_backward);
+  }
+  if (metricResult & LookAndFeel::eScrollArrow_EndForward) {
+    sSystemMetrics->AppendElement(nsGkAtoms::scrollbar_end_forward);
+  }
+
+  metricResult =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollSliderStyle);
+  if (metricResult != LookAndFeel::eScrollThumbStyle_Normal) {
+    sSystemMetrics->AppendElement(nsGkAtoms::scrollbar_thumb_proportional);
+  }
+
+  metricResult =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars);
+  if (metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::overlay_scrollbars);
+  }
+
+  metricResult =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_MenuBarDrag);
+  if (metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::menubar_drag);
+  }
+
+  nsresult rv =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsDefaultTheme, &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::windows_default_theme);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MacGraphiteTheme, &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::mac_graphite_theme);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MacYosemiteTheme, &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::mac_yosemite_theme);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsAccentColorInTitlebar, &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::windows_accent_color_in_titlebar);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_DWMCompositor, &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::windows_compositor);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsGlass, &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::windows_glass);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsClassic, &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::windows_classic);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_TouchEnabled, &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::touch_enabled);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_SwipeAnimationEnabled,
+                           &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::swipe_animation_enabled);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDAvailable,
+                           &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::gtk_csd_available);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDMinimizeButton,
+                           &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::gtk_csd_minimize_button);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDMaximizeButton,
+                           &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::gtk_csd_maximize_button);
+  }
+
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDCloseButton,
+                           &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::gtk_csd_close_button);
+  }
+
+#ifdef XP_WIN
+  if (NS_SUCCEEDED(
+        LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsThemeIdentifier,
+                            &metricResult))) {
+    sWinThemeId = metricResult;
+    switch (metricResult) {
+      case LookAndFeel::eWindowsTheme_Aero:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_aero);
+        break;
+      case LookAndFeel::eWindowsTheme_AeroLite:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_aero_lite);
+        break;
+      case LookAndFeel::eWindowsTheme_LunaBlue:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_blue);
+        break;
+      case LookAndFeel::eWindowsTheme_LunaOlive:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_olive);
+        break;
+      case LookAndFeel::eWindowsTheme_LunaSilver:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_silver);
+        break;
+      case LookAndFeel::eWindowsTheme_Royale:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_royale);
+        break;
+      case LookAndFeel::eWindowsTheme_Zune:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_zune);
+        break;
+      case LookAndFeel::eWindowsTheme_Generic:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_generic);
+        break;
+    }
+  }
+#endif
+}
+
+/* static */ void
+nsMediaFeatures::FreeSystemMetrics()
+{
+  delete sSystemMetrics;
+  sSystemMetrics = nullptr;
+}
+
+/* static */ void
+nsMediaFeatures::Shutdown()
+{
+  FreeSystemMetrics();
 }
 
 /*

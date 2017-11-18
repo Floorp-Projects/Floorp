@@ -14,6 +14,7 @@ add_task(async function testCAandTitle() {
   let cert = await readCertificate("ca.pem", "CTu,CTu,CTu");
   let win = await displayCertificate(cert);
   checkUsages(win, ["SSL Certificate Authority"]);
+  checkDetailsPane(win, ["ca"]);
 
   // There's no real need to test the title for every cert, so we just test it
   // once here.
@@ -26,6 +27,7 @@ add_task(async function testSSLEndEntity() {
   let cert = await readCertificate("ssl-ee.pem", ",,");
   let win = await displayCertificate(cert);
   checkUsages(win, ["SSL Server Certificate", "SSL Client Certificate"]);
+  checkDetailsPane(win, ["ca", "ssl-ee"]);
   await BrowserTestUtils.closeWindow(win);
 });
 
@@ -33,6 +35,7 @@ add_task(async function testEmailEndEntity() {
   let cert = await readCertificate("email-ee.pem", ",,");
   let win = await displayCertificate(cert);
   checkUsages(win, ["Email Recipient Certificate", "Email Signer Certificate"]);
+  checkDetailsPane(win, ["ca", "email-ee"]);
   await BrowserTestUtils.closeWindow(win);
 });
 
@@ -40,6 +43,7 @@ add_task(async function testCodeSignEndEntity() {
   let cert = await readCertificate("code-ee.pem", ",,");
   let win = await displayCertificate(cert);
   checkError(win, "Could not verify this certificate for unknown reasons.");
+  checkDetailsPane(win, ["code-ee"]);
   await BrowserTestUtils.closeWindow(win);
 });
 
@@ -47,6 +51,7 @@ add_task(async function testExpired() {
   let cert = await readCertificate("expired-ca.pem", ",,");
   let win = await displayCertificate(cert);
   checkError(win, "Could not verify this certificate because it has expired.");
+  checkDetailsPane(win, ["expired-ca"]);
   await BrowserTestUtils.closeWindow(win);
 
   // These tasks may run in any order, so we run this additional testcase in the
@@ -56,6 +61,7 @@ add_task(async function testExpired() {
   checkError(eeWin,
              "Could not verify this certificate because the CA certificate " +
              "is invalid.");
+  checkDetailsPane(eeWin, ["ee-from-expired-ca"]);
   await BrowserTestUtils.closeWindow(eeWin);
 });
 
@@ -65,6 +71,7 @@ add_task(async function testUnknownIssuer() {
   checkError(win,
              "Could not verify this certificate because the issuer is " +
              "unknown.");
+  checkDetailsPane(win, ["unknown-issuer"]);
   await BrowserTestUtils.closeWindow(win);
 });
 
@@ -75,6 +82,7 @@ add_task(async function testInsecureAlgo() {
              "Could not verify this certificate because it was signed using " +
              "a signature algorithm that was disabled because that algorithm " +
              "is not secure.");
+  checkDetailsPane(win, ["md5-ee"]);
   await BrowserTestUtils.closeWindow(win);
 });
 
@@ -83,6 +91,7 @@ add_task(async function testUntrusted() {
   let win = await displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because it is not trusted.");
+  checkDetailsPane(win, ["untrusted-ca"]);
   await BrowserTestUtils.closeWindow(win);
 
   // These tasks may run in any order, so we run this additional testcase in the
@@ -92,6 +101,7 @@ add_task(async function testUntrusted() {
   checkError(eeWin,
              "Could not verify this certificate because the issuer is not " +
              "trusted.");
+  checkDetailsPane(eeWin, ["ee-from-untrusted-ca"]);
   await BrowserTestUtils.closeWindow(eeWin);
 });
 
@@ -111,6 +121,7 @@ add_task(async function testRevoked() {
   // usage except TLS web server.
   checkUsages(win, ["Email Recipient Certificate", "Email Signer Certificate",
                     "SSL Client Certificate"]);
+  checkDetailsPane(win, ["ca", "revoked"]);
   await BrowserTestUtils.closeWindow(win);
 });
 
@@ -122,6 +133,7 @@ add_task(async function testInvalid() {
   let cert = await readCertificate("invalid.pem", ",,");
   let win = await displayCertificate(cert);
   checkError(win, "Could not verify this certificate for unknown reasons.");
+  checkDetailsPane(win, ["invalid"]);
   await BrowserTestUtils.closeWindow(win);
 });
 
@@ -130,6 +142,7 @@ add_task(async function testLongOID() {
   // very long OID. This tests that we don't crash when looking at it.
   let cert = await readCertificate("longOID.pem", ",,");
   let win = await displayCertificate(cert);
+  checkDetailsPane(win, ["Long OID"]);
   await BrowserTestUtils.closeWindow(win);
 });
 
@@ -229,4 +242,25 @@ function checkError(win, error) {
                "should not have any successful usages in error case");
   Assert.equal(getError(win), error,
                "determined error should be the same as expected error");
+}
+
+/**
+ * Given a certificate viewer window and an expected list of certificate names,
+ * verifies that the certificate details pane of the viewer shows the expected
+ * certificates in the expected order.
+ *
+ * @param {window} win
+ *        The certificate viewer window.
+ * @param {String[]} names
+ *        An array of expected certificate names.
+ */
+function checkDetailsPane(win, names) {
+  let tree = win.document.getElementById("treesetDump");
+  let nodes = tree.querySelectorAll("treecell");
+  Assert.equal(nodes.length, names.length,
+               "details pane: should have the expected number of cert names");
+  for (let i = 0; i < names.length; i++) {
+    Assert.equal(nodes[i].getAttribute("label"), names[i],
+                 "details pain: should have expected cert name");
+  }
 }

@@ -163,7 +163,7 @@ private:
                               bool aFoundOpaqueRedirect);
   // Utility since not all cases need to do any post processing of the filtered
   // response.
-  void FailWithNetworkError();
+  void FailWithNetworkError(nsresult rv);
 
   void SetRequestHeaders(nsIHttpChannel* aChannel) const;
 };

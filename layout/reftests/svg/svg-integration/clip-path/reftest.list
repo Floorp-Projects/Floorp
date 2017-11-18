@@ -57,3 +57,5 @@ fuzzy(64,146) fails-if(webrender) == clip-path-inset-002c.html clip-path-inset-0
 fuzzy(64,340) fails-if(webrender) == clip-path-inset-003.html clip-path-inset-003-ref.html
 
 == clip-path-stroke-001.html clip-path-stroke-001-ref.html
+
+== clip-path-transform-001.html clip-path-transform-001-ref.html

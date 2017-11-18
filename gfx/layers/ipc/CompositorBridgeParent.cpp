@@ -356,7 +356,7 @@ CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
   mWidget = aWidget;
   mRootLayerTreeID = aLayerTreeId;
   if (mOptions.UseAPZ()) {
-    mApzcTreeManager = new APZCTreeManager();
+    mApzcTreeManager = new APZCTreeManager(mRootLayerTreeID);
   }
 
   Initialize();
@@ -1127,7 +1127,7 @@ CompositorBridgeParent::AllocPAPZCTreeManagerParent(const uint64_t& aLayersId)
 
   // This message doubles as initialization
   MOZ_ASSERT(!mApzcTreeManager);
-  mApzcTreeManager = new APZCTreeManager();
+  mApzcTreeManager = new APZCTreeManager(mRootLayerTreeID);
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[mRootLayerTreeID];
@@ -1659,7 +1659,8 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
       ScheduleComposition();
     }
     if (mWrBridge && sIndirectLayerTrees[child].mWrBridge) {
-      RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI()->Clone();
+      RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
+      api = api->Clone();
       sIndirectLayerTrees[child].mWrBridge->UpdateWebRender(mWrBridge->CompositorScheduler(),
                                                             api,
                                                             mWrBridge->AsyncImageManager(),

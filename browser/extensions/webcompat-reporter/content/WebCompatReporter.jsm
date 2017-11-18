@@ -32,7 +32,7 @@ let WebCompatReporter = {
       iconURL: "chrome://webcompat-reporter/skin/lightbulb.svg",
       labelForHistogram: "webcompat",
       onCommand: (e) => this.reportIssue(e.target.ownerGlobal),
-      onShowingInPanel: (buttonNode) => this.onShowingInPanel(buttonNode)
+      onLocationChange: (window) => this.onLocationChange(window)
     }));
   },
 
@@ -41,14 +41,11 @@ let WebCompatReporter = {
     action.remove();
   },
 
-  onShowingInPanel(buttonNode) {
-    let browser = buttonNode.ownerGlobal.gBrowser;
-    let scheme = browser.currentURI.scheme;
-    if (["http", "https"].includes(scheme)) {
-      buttonNode.removeAttribute("disabled");
-    } else {
-      buttonNode.setAttribute("disabled", "true");
-    }
+  onLocationChange(window) {
+    let action = PageActions.actionForID("webcompat-reporter-button");
+    let scheme = window.gBrowser.currentURI.scheme;
+    let isReportable = ["http", "https"].includes(scheme);
+    action.setDisabled(!isReportable, window);
   },
 
   // This method injects a framescript that should send back a screenshot blob

@@ -16,16 +16,10 @@ from .. import GECKO
 from taskgraph.util.docker import (
     docker_image,
     generate_context_hash,
-    INDEX_PREFIX,
 )
+from taskgraph.util.cached_tasks import add_optimization
 
 transforms = TransformSequence()
-
-ROUTE_TEMPLATES = [
-    'index.{index_prefix}.level-{level}.{image_name}.latest',
-    'index.{index_prefix}.level-{level}.{image_name}.pushdate.{year}.{month}-{day}-{pushtime}',
-    'index.{index_prefix}.level-{level}.{image_name}.hash.{context_hash}',
-]
 
 
 @transforms.add
@@ -39,31 +33,6 @@ def fill_template(config, tasks):
 
         description = 'Build the docker image {} for use by dependent tasks'.format(
             image_name)
-
-        routes = []
-        for tpl in ROUTE_TEMPLATES:
-            routes.append(tpl.format(
-                index_prefix=INDEX_PREFIX,
-                level=config.params['level'],
-                image_name=image_name,
-                project=config.params['project'],
-                head_rev=config.params['head_rev'],
-                pushlog_id=config.params.get('pushlog_id', 0),
-                pushtime=config.params['moz_build_date'][8:],
-                year=config.params['moz_build_date'][0:4],
-                month=config.params['moz_build_date'][4:6],
-                day=config.params['moz_build_date'][6:8],
-                context_hash=context_hash,
-            ))
-
-        # As an optimization, if the context hash exists for a high level, that image
-        # task ID will be used.  The reasoning behind this is that eventually everything ends
-        # up on level 3 at some point if most tasks use this as a common image
-        # for a given context hash, a worker within Taskcluster does not need to contain
-        # the same image per branch.
-        optimization = {'index-search': ['{}.level-{}.{}.hash.{}'.format(
-            INDEX_PREFIX, level, image_name, context_hash)
-            for level in reversed(range(int(config.params['level']), 4))]}
 
         # Adjust the zstandard compression level based on the execution level.
         # We use faster compression for level 1 because we care more about
@@ -79,8 +48,6 @@ def fill_template(config, tasks):
             'description': description,
             'attributes': {'image_name': image_name},
             'expires-after': '1 year',
-            'routes': routes,
-            'optimization': optimization,
             'scopes': ['secrets:get:project/taskcluster/gecko/hgfingerprint'],
             'treeherder': {
                 'symbol': job_symbol,
@@ -129,5 +96,12 @@ def fill_template(config, tasks):
                 'max-run-time': 7200,
             },
         }
+
+        add_optimization(
+            config, taskdesc,
+            cache_type="docker-images.v1",
+            cache_name=image_name,
+            digest=context_hash,
+        )
 
         yield taskdesc

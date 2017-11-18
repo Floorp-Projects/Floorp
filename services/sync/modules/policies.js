@@ -67,6 +67,10 @@ SyncScheduler.prototype = {
     // A user is non-idle on startup by default.
     this.idle = false;
 
+    // That flag will be flipped if we resume from sleep and the network link
+    // is down.
+    this.shouldSyncWhenLinkComesUp = false;
+
     this.hasIncomingItems = false;
     // This is the last number of clients we saw when previously updating the
     // client mode. If this != currentNumClients (obtained from prefs written
@@ -187,8 +191,15 @@ SyncScheduler.prototype = {
                            "_scoreTimer");
         }
         break;
-      case "network:offline-status-changed":
       case "network:link-status-changed":
+        if (this.shouldSyncWhenLinkComesUp && !this.offline) {
+          this._log.debug("Network link is up for the first time since we woke-up. Syncing.");
+          this.shouldSyncWhenLinkComesUp = false;
+          this.scheduleNextSync(0);
+          break;
+        }
+        // Intended fallthrough
+      case "network:offline-status-changed":
       case "captive-portal-detected":
         // Whether online or offline, we'll reschedule syncs
         this._log.trace("Network offline status change: " + data);
@@ -358,15 +369,22 @@ SyncScheduler.prototype = {
       case "wake_notification":
         this._log.debug("Woke from sleep.");
         CommonUtils.nextTick(() => {
-          // Trigger a sync if we have multiple clients. We give it 5 seconds
-          // incase the network is still in the process of coming back up.
+          // Trigger a sync if we have multiple clients. We give it 2 seconds
+          // so the browser can recover from the wake and do more important
+          // operations first (timers etc).
           if (this.numClients > 1) {
-            this._log.debug("More than 1 client. Will sync in 5s.");
-            this.scheduleNextSync(5000);
+            if (!this.offline) {
+              this._log.debug("Online, will sync in 2s.");
+              this.scheduleNextSync(2000);
+            } else {
+              this._log.debug("Offline, will sync when link comes up.");
+              this.shouldSyncWhenLinkComesUp = true;
+            }
           }
         });
         break;
       case "captive-portal-login-success":
+        this.shouldSyncWhenLinkComesUp = false;
         this._log.debug("Captive portal login success. Scheduling a sync.");
         CommonUtils.nextTick(() => {
           this.scheduleNextSync(3000);

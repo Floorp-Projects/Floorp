@@ -53,13 +53,15 @@ public:
   already_AddRefed<InternalResponse> Clone(CloneType eCloneType);
 
   static already_AddRefed<InternalResponse>
-  NetworkError()
+  NetworkError(nsresult aRv)
   {
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(aRv));
     RefPtr<InternalResponse> response = new InternalResponse(0, EmptyCString());
     ErrorResult result;
     response->Headers()->SetGuard(HeadersGuardEnum::Immutable, result);
     MOZ_ASSERT(!result.Failed());
     response->mType = ResponseType::Error;
+    response->mErrorCode = aRv;
     return response.forget();
   }
 
@@ -281,6 +283,12 @@ public:
     return mURLList.Length() > 1;
   }
 
+  nsresult
+  GetErrorCode() const
+  {
+    return mErrorCode;
+  }
+
   // Takes ownership of the principal info.
   void
   SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo);
@@ -317,6 +325,7 @@ private:
   // generate the padding size for resposne, we don't need it anymore.
   Maybe<uint32_t> mPaddingInfo;
   int64_t mPaddingSize;
+  nsresult mErrorCode;
 public:
   static const int64_t UNKNOWN_BODY_SIZE = -1;
   static const int64_t UNKNOWN_PADDING_SIZE = -1;
