@@ -7,6 +7,7 @@
 #define nsNavBookmarks_h_
 
 #include "nsINavBookmarksService.h"
+#include "nsIAnnotationService.h"
 #include "nsITransaction.h"
 #include "nsNavHistory.h"
 #include "nsToolkitCompsCID.h"
@@ -27,18 +28,18 @@ namespace places {
   };
 
   struct BookmarkData {
-    int64_t id = -1;
+    int64_t id;
     nsCString url;
     nsCString title;
-    int32_t position = -1;
-    int64_t placeId = -1;
-    int64_t parentId = -1;
-    int64_t grandParentId = -1;
-    int32_t type = 0;
-    int32_t syncStatus = nsINavBookmarksService::SYNC_STATUS_UNKNOWN;
+    int32_t position;
+    int64_t placeId;
+    int64_t parentId;
+    int64_t grandParentId;
+    int32_t type;
+    int32_t syncStatus;
     nsCString serviceCID;
-    PRTime dateAdded = 0;
-    PRTime lastModified = 0;
+    PRTime dateAdded;
+    PRTime lastModified;
     nsCString guid;
     nsCString parentGuid;
   };
@@ -52,10 +53,8 @@ namespace places {
 
   struct ItemChangeData {
     BookmarkData bookmark;
-    bool isAnnotation = false;
-    bool updateLastModified = false;
-    uint16_t source = nsINavBookmarksService::SOURCE_DEFAULT;
     nsCString property;
+    bool isAnnotation;
     nsCString newValue;
     nsCString oldValue;
   };
@@ -78,6 +77,7 @@ namespace places {
 
 class nsNavBookmarks final : public nsINavBookmarksService
                            , public nsINavHistoryObserver
+                           , public nsIAnnotationObserver
                            , public nsIObserver
                            , public nsSupportsWeakReference
 {
@@ -85,6 +85,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVBOOKMARKSSERVICE
   NS_DECL_NSINAVHISTORYOBSERVER
+  NS_DECL_NSIANNOTATIONOBSERVER
   NS_DECL_NSIOBSERVER
 
   nsNavBookmarks();
