@@ -520,9 +520,11 @@ private:
                                      GuidComparator aComparator);
   AsyncPanZoomController* GetTargetApzcForNode(HitTestingTreeNode* aNode);
   AsyncPanZoomController* GetAPZCAtPoint(HitTestingTreeNode* aNode,
-                                         const ParentLayerPoint& aHitTestPoint,
+                                         const ScreenPoint& aHitTestPoint,
                                          HitTestResult* aOutHitResult,
                                          HitTestingTreeNode** aOutScrollbarNode);
+  already_AddRefed<AsyncPanZoomController> GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
+                                                            HitTestResult* aOutHitResult);
   AsyncPanZoomController* FindRootApzcForLayersId(uint64_t aLayersId) const;
   AsyncPanZoomController* FindRootContentApzcForLayersId(uint64_t aLayersId) const;
   AsyncPanZoomController* FindRootContentOrRootApzc() const;
