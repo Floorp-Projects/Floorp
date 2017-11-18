@@ -19539,7 +19539,10 @@ function test_bug397524() {
   try {
     $("canvas2").toDataURL("image/png");
     gotData = true;
-  } catch (ex if (ex.code == 18 && ex.name == "SecurityError")) {
+  } catch (ex) {
+    if (ex.code != 18 || ex.name != "SecurityError") {
+      throw ex;
+    }
   }
   is(gotData, false, "Shouldn't be able to read images cross-site!");
 
@@ -19548,7 +19551,10 @@ function test_bug397524() {
   try {
     $("canvas3").toDataURL("image/png");
     gotData = true;
-  } catch (ex if (ex.code == 18 && ex.name == "SecurityError")) {
+  } catch (ex) {
+    if (ex.code != 18 || ex.name != "SecurityError") {
+      throw ex;
+    }
   }
   is(gotData, false, "Shouldn't be able to read images redirected cross-site!");
 

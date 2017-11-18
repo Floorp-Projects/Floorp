@@ -66,7 +66,10 @@ function handleCmd(evt) {
       } else {
         win.childWin.document.write('<script>window.parent.opener.postMessage(window.parent.testNum + " - " + window.x, "http://mochi.test:8888/"); window.parent.close();<' + '/script>');
       }
-    } catch (e if (e.name == "SecurityError" && e.code == 18)) {
+    } catch (e) {
+      if (e.name != "SecurityError" || e.code != 18) {
+        throw e;
+      }
       // Security error on cross-site write() is fine
       if (win.childWin.opener == win) {
         win.childWin.close();
