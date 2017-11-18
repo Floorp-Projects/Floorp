@@ -236,8 +236,11 @@ nsIContent::GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const
     }
   }
 
-  if (nsContentUtils::HasDistributedChildren(parent) &&
-      nsContentUtils::IsInSameAnonymousTree(parent, this)) {
+  if (IsRootOfAnonymousSubtree()) {
+    return parent;
+  }
+
+  if (nsContentUtils::HasDistributedChildren(parent)) {
     // This node is distributed to insertion points, thus we
     // need to consult the destination insertion points list to
     // figure out where this node was inserted in the flattened tree.
@@ -245,20 +248,25 @@ nsIContent::GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const
     // but the child does not match any insertion points, thus
     // the flattened tree parent is nullptr.
     nsTArray<nsIContent*>* destInsertionPoints = GetExistingDestInsertionPoints();
-    parent = destInsertionPoints && !destInsertionPoints->IsEmpty() ?
-      destInsertionPoints->LastElement()->GetParent() : nullptr;
+    if (!destInsertionPoints || destInsertionPoints->IsEmpty()) {
+      return nullptr;
+    }
+    parent = destInsertionPoints->LastElement()->GetParent();
+    MOZ_ASSERT(parent);
   } else if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
     if (nsIContent* insertionPoint = GetXBLInsertionPoint()) {
       parent = insertionPoint->GetParent();
       MOZ_ASSERT(parent);
     }
+  } else if (parent->OwnerDoc()->BindingManager()->GetBindingWithContent(parent)) {
+    // This is fallback content not assigned to any insertion point.
+    return nullptr;
   }
 
   // Shadow roots never shows up in the flattened tree. Return the host
   // instead.
-  if (parent && parent->IsInShadowTree()) {
-    ShadowRoot* parentShadowRoot = ShadowRoot::FromNode(parent);
-    if (parentShadowRoot) {
+  if (parent->IsInShadowTree()) {
+    if (ShadowRoot* parentShadowRoot = ShadowRoot::FromNode(parent)) {
       return parentShadowRoot->GetHost();
     }
   }
