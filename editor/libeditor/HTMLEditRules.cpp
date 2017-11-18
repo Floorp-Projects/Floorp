@@ -2908,20 +2908,20 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
   // different lists, join the lists instead.
   bool mergeLists = false;
   nsAtom* existingList = nsGkAtoms::_empty;
-  EditorDOMPoint childInBlock;
+  EditorDOMPoint atChildInBlock;
   nsCOMPtr<Element> leftList, rightList;
   if (HTMLEditUtils::IsListItem(leftBlock) &&
       HTMLEditUtils::IsListItem(rightBlock)) {
     leftList = leftBlock->GetParentElement();
     rightList = rightBlock->GetParentElement();
     if (leftList && rightList && leftList != rightList &&
-        !EditorUtils::IsDescendantOf(*leftList, *rightBlock, &childInBlock) &&
-        !EditorUtils::IsDescendantOf(*rightList, *leftBlock, &childInBlock)) {
+        !EditorUtils::IsDescendantOf(*leftList, *rightBlock, &atChildInBlock) &&
+        !EditorUtils::IsDescendantOf(*rightList, *leftBlock, &atChildInBlock)) {
       // There are some special complications if the lists are descendants of
       // the other lists' items.  Note that it is okay for them to be
       // descendants of the other lists themselves, which is the usual case for
       // sublists in our implementation.
-      MOZ_DIAGNOSTIC_ASSERT(!childInBlock.IsSet());
+      MOZ_DIAGNOSTIC_ASSERT(!atChildInBlock.IsSet());
       leftBlock = leftList;
       rightBlock = rightList;
       mergeLists = true;
@@ -2933,11 +2933,15 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
 
   // offset below is where you find yourself in rightBlock when you traverse
   // upwards from leftBlock
-  EditorDOMPoint rightBlockChild;
-  if (EditorUtils::IsDescendantOf(*leftBlock, *rightBlock, &rightBlockChild)) {
+  EditorDOMPoint atRightBlockChild;
+  if (EditorUtils::IsDescendantOf(*leftBlock, *rightBlock,
+                                  &atRightBlockChild)) {
     // Tricky case.  Left block is inside right block.  Do ws adjustment.  This
     // just destroys non-visible ws at boundaries we will be joining.
-    rightBlockChild.AdvanceOffset();
+    DebugOnly<bool> advanced = atRightBlockChild.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced,
+      "Failed to advance offset to after child of rightBlock, "
+      "leftBlock is a descendant of the child");
     nsresult rv = WSRunObject::ScrubBlockBoundary(htmlEditor,
                                                   WSRunObject::kBlockEnd,
                                                   leftBlock);
@@ -2947,62 +2951,60 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
 
     {
       // We can't just track rightBlock because it's an Element.
-      AutoTrackDOMPoint tracker(htmlEditor->mRangeUpdater, &rightBlockChild);
+      AutoTrackDOMPoint tracker(htmlEditor->mRangeUpdater, &atRightBlockChild);
       rv = WSRunObject::ScrubBlockBoundary(htmlEditor,
                                            WSRunObject::kAfterBlock,
-                                           rightBlock,
-                                           rightBlockChild.Offset());
+                                           atRightBlockChild.Container(),
+                                           atRightBlockChild.Offset());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return EditActionIgnored(rv);
       }
 
       // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
       //     Do we really need to do update rightBlock here??
-      MOZ_ASSERT(rightBlock == rightBlockChild.Container());
-      if (rightBlockChild.Container()->IsElement()) {
-        rightBlock = rightBlockChild.Container()->AsElement();
+      MOZ_ASSERT(rightBlock == atRightBlockChild.Container());
+      if (atRightBlockChild.Container()->IsElement()) {
+        rightBlock = atRightBlockChild.Container()->AsElement();
       } else {
-        if (NS_WARN_IF(!rightBlockChild.Container()->GetParentElement())) {
+        if (NS_WARN_IF(!atRightBlockChild.Container()->GetParentElement())) {
           return EditActionIgnored(NS_ERROR_UNEXPECTED);
         }
-        rightBlock = rightBlockChild.Container()->GetParentElement();
+        rightBlock = atRightBlockChild.Container()->GetParentElement();
       }
     }
+
     // Do br adjustment.
     nsCOMPtr<Element> brNode =
       CheckForInvisibleBR(*leftBlock, BRLocation::blockEnd);
     EditActionResult ret(NS_OK);
-    if (mergeLists) {
-      // The idea here is to take all children in rightList that are past
-      // offset, and pull them into leftlist.
-      // XXX Looks like that when mergeLists is true, childInBlock has never
-      //     been set.  So, this block must be dead code.
-      MOZ_DIAGNOSTIC_ASSERT(childInBlock.IsSet());
-      uint32_t offset = rightBlockChild.Offset();
-      for (nsCOMPtr<nsIContent> child = childInBlock.GetChildAtOffset();
-           child; child = rightList->GetChildAt(offset)) {
-        rv = htmlEditor->MoveNode(child, leftList, -1);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return EditActionIgnored(rv);
-        }
-      }
-      // XXX Should this set to true only when above for loop moves the node?
+    if (NS_WARN_IF(mergeLists)) {
+      // Since 2002, here was the following comment:
+      // > The idea here is to take all children in rightList that are past
+      // > offset, and pull them into leftlist.
+      // However, this has never been performed because we are here only when
+      // neither left list nor right list is a descendant of the other but
+      // in such case, getting a list item in the right list node almost
+      // always failed since a variable for offset of rightList->GetChildAt()
+      // was not initialized.  So, it might be a bug, but we should keep this
+      // traditional behavior for now.  If you find when we get here, please
+      // remove this comment if we don't need to do it.  Otherwise, please
+      // move children of the right list node to the end of the left list node.
+      MOZ_DIAGNOSTIC_ASSERT(!atChildInBlock.IsSet());
+
+      // XXX Although, we don't do nothing here, but for keeping traditional
+      //     behavior, we should mark as handled.
       ret.MarkAsHandled();
-      // childInBlock and rightBlockChild were moved to leftList.  So, they
-      // are now invalid.
-      rightBlockChild.Clear();
-      childInBlock.Clear();
     } else {
       // XXX Why do we ignore the result of MoveBlock()?
       EditActionResult retMoveBlock =
         MoveBlock(*leftBlock, *rightBlock,
-                  -1, rightBlockChild.Offset());
+                  -1, atRightBlockChild.Offset());
       if (retMoveBlock.Handled()) {
         ret.MarkAsHandled();
       }
       // Now, all children of rightBlock were moved to leftBlock.  So,
-      // rightBlockChild is now invalid.
-      rightBlockChild.Clear();
+      // atRightBlockChild is now invalid.
+      atRightBlockChild.Clear();
     }
     if (brNode && NS_SUCCEEDED(htmlEditor->DeleteNode(brNode))) {
       ret.MarkAsHandled();
@@ -3010,7 +3012,7 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     return ret;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(!rightBlockChild.IsSet());
+  MOZ_DIAGNOSTIC_ASSERT(!atRightBlockChild.IsSet());
 
   // Offset below is where you find yourself in leftBlock when you traverse
   // upwards from rightBlock
@@ -3129,7 +3131,7 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     return ret;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(!rightBlockChild.IsSet());
+  MOZ_DIAGNOSTIC_ASSERT(!atRightBlockChild.IsSet());
   MOZ_DIAGNOSTIC_ASSERT(!leftBlockChild.IsSet());
 
   // Normal case.  Blocks are siblings, or at least close enough.  An example
