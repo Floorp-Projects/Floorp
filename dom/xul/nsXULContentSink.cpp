@@ -835,7 +835,6 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
                                const uint32_t aLineNumber)
 {
   bool isJavaScript = true;
-  uint32_t version = JSVERSION_DEFAULT;
   nsresult rv;
 
   // Look for SRC attribute and look for a LANGUAGE attribute
@@ -861,7 +860,6 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
 
           if (nsContentUtils::IsJavascriptMIMEType(mimeType)) {
               isJavaScript = true;
-              version = JSVERSION_DEFAULT;
 
               // Get the version string, and ensure that JavaScript supports it.
               nsAutoString versionName;
@@ -888,7 +886,6 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
           nsAutoString lang(aAttributes[1]);
           if (nsContentUtils::IsJavaScriptLanguage(lang)) {
               isJavaScript = true;
-              version = JSVERSION_DEFAULT;
           }
       }
       aAttributes += 2;
@@ -904,7 +901,7 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
   if (doc)
       globalObject = do_QueryInterface(doc->GetWindow());
   RefPtr<nsXULPrototypeScript> script =
-      new nsXULPrototypeScript(aLineNumber, version);
+      new nsXULPrototypeScript(aLineNumber);
 
   // If there is a SRC attribute...
   if (! src.IsEmpty()) {
