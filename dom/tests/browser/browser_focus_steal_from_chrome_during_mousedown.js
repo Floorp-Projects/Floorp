@@ -30,14 +30,27 @@ add_task(async function test() {
     isnot(fm.focusedElement, document.getElementById("urlbar").inputField,
        "Failed to move focus away from search bar: button=" + button);
 
-    await ContentTask.spawn(tab.linkedBrowser, button, function (button) {
+    await ContentTask.spawn(tab.linkedBrowser, button, async function (button) {
       let fm = Components.classes["@mozilla.org/focus-manager;1"].
-            getService(Components.interfaces.nsIFocusManager);
+          getService(Components.interfaces.nsIFocusManager);
 
-      Assert.equal(content.document.activeElement.id, "willBeFocused",
-                   "The input element isn't active element: button=" + button);
-      Assert.equal(fm.focusedElement, content.document.activeElement,
-                   "The active element isn't focused element in App level: button=" + button);
+      let attempts = 10;
+      await new Promise(resolve => {
+        function check() {
+          if (attempts > 0 && content.document.activeElement.id != "willBeFocused") {
+            attempts--;
+            content.window.setTimeout(check, 100);
+            return;
+          }
+
+          Assert.equal(content.document.activeElement.id, "willBeFocused",
+                       "The input element isn't active element: button=" + button);
+          Assert.equal(fm.focusedElement, content.document.activeElement,
+                       "The active element isn't focused element in App level: button=" + button);
+          resolve();
+        }
+        check();
+      });
     });
   }
 
