@@ -1855,8 +1855,6 @@ public:
   nsPrefBranch(const char* aPrefRoot, PrefValueKind aKind);
   nsPrefBranch() = delete;
 
-  int32_t GetRootLength() const { return mPrefRoot.Length(); }
-
   static void NotifyObserver(const char* aNewpref, void* aData);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
@@ -1910,6 +1908,8 @@ private:
   };
 
   virtual ~nsPrefBranch();
+
+  int32_t GetRootLength() const { return mPrefRoot.Length(); }
 
   nsresult GetDefaultFromPropertiesFile(const char* aPrefName,
                                         nsAString& aReturn);
