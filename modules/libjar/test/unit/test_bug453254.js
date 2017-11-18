@@ -5,8 +5,11 @@ function run_test() {
   try {
     zipCache.getZip(null);
     do_throw("Shouldn't get here!");
-  } catch (e if ((e instanceof Components.interfaces.nsIException) &&
-                 (e.result == Components.results.NS_ERROR_INVALID_POINTER))) {
+  } catch (e) {
+    if (!(e instanceof Components.interfaces.nsIException &&
+          e.result == Components.results.NS_ERROR_INVALID_POINTER)) {
+      throw e;
+    }
     // do nothing, this test passes
   }
 }
