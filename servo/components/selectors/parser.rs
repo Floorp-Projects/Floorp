@@ -1306,6 +1306,9 @@ fn parse_attribute_selector<'i, 't, P, E, Impl>(parser: &P, input: &mut CssParse
 {
     let namespace;
     let local_name;
+
+    input.skip_whitespace();
+
     match parse_qualified_name(parser, input, /* in_attr_selector = */ true)? {
         OptionalQName::None(t) =>
             return Err(ParseError::Custom(SelectorParseError::NoQualifiedNameInAttributeSelector(t))),
