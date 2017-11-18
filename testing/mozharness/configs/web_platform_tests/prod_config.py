@@ -39,5 +39,7 @@ config = {
     "download_minidump_stackwalk": True,
 
     "download_tooltool": True,
+
+    "verify_category": "web-platform",
 }
 

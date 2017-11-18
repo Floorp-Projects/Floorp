@@ -12,9 +12,9 @@ void
 CacheMapInvalidator::InvalidateCaches() const
 {
     while (mCacheEntries.size()) {
-        const auto& entry = *(mCacheEntries.begin());
-        entry->Invalidate();
-        MOZ_ASSERT(mCacheEntries.find(entry) == mCacheEntries.end());
+        const auto pEntry = *(mCacheEntries.begin());
+        pEntry->Invalidate();
+        MOZ_ASSERT(mCacheEntries.find(pEntry) == mCacheEntries.end());
     }
 }
 
