@@ -82,7 +82,10 @@ function testEnd()
       try {
         gTmpFile.remove(false);
       }
-      catch (ex if (ex.name == "NS_ERROR_FILE_IS_LOCKED")) {
+      catch (ex) {
+        if (ex.name != "NS_ERROR_FILE_IS_LOCKED") {
+          throw ex;
+        }
         // Sometimes remove() throws because the file is not unlocked soon
         // enough.
       }
