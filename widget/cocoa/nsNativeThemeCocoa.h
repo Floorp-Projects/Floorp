@@ -23,6 +23,9 @@ struct SegmentedControlRenderSettings;
 
 namespace mozilla {
 class EventStates;
+namespace gfx {
+class DrawTarget;
+} // namespace gfx
 } // namespace mozilla
 
 class nsNativeThemeCocoa : private nsNativeTheme,
@@ -522,6 +525,12 @@ protected:
   // Scrollbars
   nsIFrame* GetParentScrollbarFrame(nsIFrame *aFrame);
   bool IsParentScrollbarRolledOver(nsIFrame* aFrame);
+
+  void RenderWidget(const WidgetInfo& aWidgetInfo,
+                    mozilla::gfx::DrawTarget& aDrawTarget,
+                    const mozilla::gfx::Rect& aWidgetRect,
+                    const mozilla::gfx::Rect& aDirtyRect,
+                    float aScale);
 
 private:
   NSButtonCell* mDisclosureButtonCell;
