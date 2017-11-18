@@ -474,6 +474,14 @@ private:
   }
 
 public:
+  void ClearUserValue()
+  {
+    if (Type() == PrefType::String) {
+      free(const_cast<char*>(mUserValue.mStringVal));
+      mUserValue.mStringVal = nullptr;
+    }
+  }
+
   void SetValue(PrefType aType,
                 PrefValue aValue,
                 uint32_t aFlags,
@@ -503,7 +511,7 @@ public:
       if (HasDefaultValue() && !IsSticky() &&
           mDefaultValue.Equals(aType, aValue) && !(aFlags & kPrefForceSet)) {
         if (HasUserValue()) {
-          // XXX should we free a user-set string value if there is one?
+          ClearUserValue();
           SetHasUserValue(false);
           if (!IsLocked()) {
             *aDirty = true;
@@ -664,6 +672,7 @@ PREF_ClearUserPref(const char* aPrefName)
 
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
   if (pref && pref->HasUserValue()) {
+    pref->ClearUserValue();
     pref->SetHasUserValue(false);
 
     if (!pref->HasDefaultValue()) {
@@ -695,6 +704,7 @@ PREF_ClearAllUserPrefs()
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
+      pref->ClearUserValue();
       pref->SetHasUserValue(false);
       if (!pref->HasDefaultValue()) {
         iter.Remove();
