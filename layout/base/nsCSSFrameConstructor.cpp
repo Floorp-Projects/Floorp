@@ -7491,6 +7491,20 @@ nsCSSFrameConstructor::LazilyStyleNewChildRange(nsIContent* aStartChild,
   }
 }
 
+static bool
+IsFlattenedTreeChild(nsIContent* aParent, nsIContent* aChild)
+{
+  FlattenedChildIterator iter(aParent);
+  for (nsIContent* node = iter.GetNextChild();
+       node;
+       node = iter.GetNextChild()) {
+    if (node == aChild) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
                                           nsIContent* aEndChild)
@@ -7504,6 +7518,8 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
       // NB: Parent may be null if the content is appended to a shadow root, and
       // isn't assigned to any insertion point.
       if (MOZ_LIKELY(parent) && parent->HasServoData()) {
+        MOZ_ASSERT(IsFlattenedTreeChild(parent, child),
+                   "GetFlattenedTreeParent and ChildIterator don't agree, fix this!");
         styleSet->StyleNewSubtree(child->AsElement());
       }
     }
