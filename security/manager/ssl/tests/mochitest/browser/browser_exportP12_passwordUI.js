@@ -70,7 +70,7 @@ function openSetP12PasswordDialog() {
                               "", returnVals);
   return new Promise((resolve, reject) => {
     win.addEventListener("load", function() {
-      resolve([win, returnVals]);
+      executeSoon(() => resolve([win, returnVals]));
     }, {once: true});
   });
 }

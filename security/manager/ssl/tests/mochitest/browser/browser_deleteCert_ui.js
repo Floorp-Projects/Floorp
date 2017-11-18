@@ -66,7 +66,7 @@ function openDeleteCertConfirmDialog(tabID) {
                               tabID, gCertArray, retVals);
   return new Promise((resolve, reject) => {
     win.addEventListener("load", function() {
-      resolve([win, retVals]);
+      executeSoon(() => resolve([win, retVals]));
     }, {once: true});
   });
 }
