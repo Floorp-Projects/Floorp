@@ -21,8 +21,11 @@ function run_test()
       zipW.open(invalidFile, PR_RDWR);
       do_throw("Should have thrown NS_ERROR_FILE_CORRUPTED on " +
                invalidArchive + " !");
-    } catch (e if (e instanceof Ci.nsIException &&
-                   e.result == Components.results.NS_ERROR_FILE_CORRUPTED)) {
+    } catch (e) {
+      if (!(e instanceof Ci.nsIException &&
+            e.result == Components.results.NS_ERROR_FILE_CORRUPTED)) {
+        throw e;
+      }
       // do nothing
     }
   });

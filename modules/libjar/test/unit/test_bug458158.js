@@ -4,8 +4,11 @@ function run_test() {
   try {
     zReader.open(null);
     do_throw("Shouldn't get here!");
-  } catch (e if (e instanceof Components.interfaces.nsIException &&
-                 e.result == Components.results.NS_ERROR_NULL_POINTER)) {
+  } catch (e) {
+    if (!(e instanceof Components.interfaces.nsIException &&
+          e.result == Components.results.NS_ERROR_NULL_POINTER)) {
+      throw e;
+    }
     // do nothing, this test passes
   }
 }
