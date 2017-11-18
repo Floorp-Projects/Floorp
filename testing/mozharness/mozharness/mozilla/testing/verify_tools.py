@@ -32,38 +32,7 @@ class VerifyToolsMixin(object):
         self.verify_downloaded = False
         self.reftest_test_dir = None
 
-    @PostScriptAction('download-and-extract')
-    def find_tests_for_verification(self, action, success=None):
-        """
-           For each file modified on this push, determine if the modified file
-           is a test, by searching test manifests. Populate self.verify_suites
-           with test files, organized by suite.
-
-           This depends on test manifests, so can only run after test zips have
-           been downloaded and extracted.
-        """
-
-        if self.config.get('verify') != True:
-            return
-
-        repository = os.environ.get("GECKO_HEAD_REPOSITORY")
-        revision = os.environ.get("GECKO_HEAD_REV")
-        if not repository or not revision:
-            self.warning("unable to verify tests: no repo or revision!")
-            return []
-
-        def get_automationrelevance():
-            response = self.load_json_url(url)
-            return response
-
-        dirs = self.query_abs_dirs()
-        mozinfo.find_and_update_from_json(dirs['abs_test_install_dir'])
-        if self.config.get('e10s') == True:
-            mozinfo.update({"e10s": True})
-            # Additional mozinfo properties like "headless" and "coverage" are
-            # also normally updated dynamically in the harness, but neither of
-            # these apply to the test-verify task.
-
+    def _find_misc_tests(self, dirs, changed_files):
         manifests = [
             (os.path.join(dirs['abs_mochitest_dir'], 'tests', 'mochitest.ini'), 'plain'),
             (os.path.join(dirs['abs_mochitest_dir'], 'chrome', 'chrome.ini'), 'chrome'),
@@ -94,16 +63,6 @@ class VerifyToolsMixin(object):
                 tests_by_path.update({os.path.relpath(t,self.reftest_test_dir):(suite,None) for t in man.files})
                 self.info("Verification updated with manifest %s" % path)
 
-        # determine which files were changed on this push
-        url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'), revision)
-        contents = self.retry(get_automationrelevance, attempts=2, sleeptime=10)
-        changed_files = set()
-        for c in contents['changesets']:
-            self.info(" {cset} {desc}".format(
-                cset=c['node'][0:12],
-                desc=c['desc'].splitlines()[0].encode('ascii', 'ignore')))
-            changed_files |= set(c['files'])
-
         # for each changed file, determine if it is a test file, and what suite it is in
         for file in changed_files:
             # manifest paths use os.sep (like backslash on Windows) but
@@ -132,6 +91,79 @@ class VerifyToolsMixin(object):
                     suite_files = []
                 suite_files.append(file)
                 self.verify_suites[suite] = suite_files
+
+    def _find_wpt_tests(self, dirs, changed_files):
+        # Setup sys.path to include all the dependencies required to import
+        # the web-platform-tests manifest parser. web-platform-tests provides
+        # the localpaths.py to do the path manipulation, which we load,
+        # providing the __file__ variable so it can resolve the relative
+        # paths correctly.
+        paths_file = os.path.join(dirs['abs_wpttest_dir'],
+                                  "tests", "tools", "localpaths.py")
+        execfile(paths_file, {"__file__": paths_file})
+        import manifest as wptmanifest
+        tests_root = os.path.join(dirs['abs_wpttest_dir'], "tests")
+        man_path = os.path.join(dirs['abs_wpttest_dir'], "meta", "MANIFEST.json")
+        man = wptmanifest.manifest.load(tests_root, man_path)
+
+        repo_tests_path = os.path.join("testing", "web-platform", "tests")
+        tests_path = os.path.join("tests", "web-platform", "tests")
+        for (type, path, test) in man:
+            repo_path = os.path.join(repo_tests_path, path)
+            # manifest paths use os.sep (like backslash on Windows) but
+            # automation-relevance uses posixpath.sep
+            repo_path = repo_path.replace(os.sep, posixpath.sep)
+            if repo_path in changed_files:
+                self.info("found web-platform test file '%s', type %s" % (path, type))
+                suite_files = self.verify_suites.get(type)
+                if not suite_files:
+                    suite_files = []
+                path = os.path.join(tests_path, path)
+                suite_files.append(path)
+                self.verify_suites[type] = suite_files
+
+    @PostScriptAction('download-and-extract')
+    def find_tests_for_verification(self, action, success=None):
+        """
+           For each file modified on this push, determine if the modified file
+           is a test, by searching test manifests. Populate self.verify_suites
+           with test files, organized by suite.
+
+           This depends on test manifests, so can only run after test zips have
+           been downloaded and extracted.
+        """
+
+        if self.config.get('verify') != True:
+            return
+
+        repository = os.environ.get("GECKO_HEAD_REPOSITORY")
+        revision = os.environ.get("GECKO_HEAD_REV")
+        if not repository or not revision:
+            self.warning("unable to verify tests: no repo or revision!")
+            return []
+
+        def get_automationrelevance():
+            response = self.load_json_url(url)
+            return response
+
+        dirs = self.query_abs_dirs()
+        mozinfo.find_and_update_from_json(dirs['abs_test_install_dir'])
+
+        # determine which files were changed on this push
+        url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'), revision)
+        contents = self.retry(get_automationrelevance, attempts=2, sleeptime=10)
+        changed_files = set()
+        for c in contents['changesets']:
+            self.info(" {cset} {desc}".format(
+                cset=c['node'][0:12],
+                desc=c['desc'].splitlines()[0].encode('ascii', 'ignore')))
+            changed_files |= set(c['files'])
+
+        if self.config.get('verify_category') == "web-platform":
+            self._find_wpt_tests(dirs, changed_files)
+        else:
+            self._find_misc_tests(dirs, changed_files)
+
         self.verify_downloaded = True
 
     def query_verify_args(self, suite):
@@ -157,19 +189,22 @@ class VerifyToolsMixin(object):
             files = self.verify_suites.get(suite)
             references = re.compile(r"(-ref|-noref|-noref.)\.")
             for file in files:
-                if suite in ['reftest', 'crashtest']:
-                    file = os.path.join(self.reftest_test_dir, file)
-                if suite == 'reftest':
-                    # Special handling for modified reftest reference files:
-                    #  - if both test and reference modified, verify the test file
-                    #  - if only reference modified, verify the test file
-                    nonref = references.sub('.', file)
-                    if nonref != file:
-                        file = None
-                        if nonref not in files and os.path.exists(nonref):
-                            file = nonref
-                if file:
-                    args.append(['--verify-max-time=%d' % MAX_TIME_PER_TEST, '--verify', file])
+                if self.config.get('verify_category') == "web-platform":
+                    args.append(['--verify-log-full', '--verify', file])
+                else:
+                    if suite in ['reftest', 'crashtest']:
+                        file = os.path.join(self.reftest_test_dir, file)
+                    if suite == 'reftest':
+                        # Special handling for modified reftest reference files:
+                        #  - if both test and reference modified, verify the test file
+                        #  - if only reference modified, verify the test file
+                        nonref = references.sub('.', file)
+                        if nonref != file:
+                            file = None
+                            if nonref not in files and os.path.exists(nonref):
+                                file = nonref
+                    if file:
+                        args.append(['--verify-max-time=%d' % MAX_TIME_PER_TEST, '--verify', file])
             self.info("Verification file(s) for '%s': %s" % (suite, files))
         return args
 
@@ -180,7 +215,9 @@ class VerifyToolsMixin(object):
         """
         suites = None
         if self.config.get('verify') == True:
-            if all_suites and self.verify_downloaded:
+            if self.config.get('verify_category') == "web-platform":
+                suites = self.verify_suites.keys()
+            elif all_suites and self.verify_downloaded:
                 suites = dict((key, all_suites.get(key)) for key in
                     self.verify_suites if key in all_suites.keys())
             else:

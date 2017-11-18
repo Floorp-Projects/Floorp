@@ -127,3 +127,20 @@ web-platform-tests-wdspec-headless:
                 default:
                     - --test-type=wdspec
                     - --headless
+
+test-verify-wpt:
+    description: "Extra verification of web-platform tests modified on this push"
+    suite: test-verify-wpt
+    treeherder-symbol: tc(TVw)
+    run-on-projects:
+        by-test-platform:
+            # do not run on ccov; see also the enable_code_coverage transform
+            linux64-ccov/.*: []
+            default: built-projects
+    tier: 3
+    mozharness:
+        extra-options:
+            - --verify
+    when:
+        files-changed:
+            - 'testing/web-platform/tests/**'
