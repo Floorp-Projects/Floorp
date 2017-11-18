@@ -16,8 +16,6 @@
 #include "Database.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/Result.h"
 
 namespace mozilla {
 namespace places {
@@ -113,48 +111,42 @@ protected:
                               const nsACString& aName,
                               nsCOMPtr<mozIStorageStatement>& aStatement);
 
-  Result<Maybe<BookmarkData>, nsresult>
-  StartSetAnnotation(nsIURI* aURI,
-                     int64_t aItemId,
-                     const nsACString& aName,
-                     int32_t aFlags,
-                     uint16_t aExpiration,
-                     uint16_t aType,
-                     nsCOMPtr<mozIStorageStatement>& aStatement);
-
-  Result<Maybe<BookmarkData>, nsresult>
-  SetAnnotationStringInternal(nsIURI* aURI,
+  nsresult StartSetAnnotation(nsIURI* aURI,
                               int64_t aItemId,
                               const nsACString& aName,
-                              const nsAString& aValue,
                               int32_t aFlags,
-                              uint16_t aExpiration);
-  Result<Maybe<BookmarkData>, nsresult>
-  SetAnnotationInt32Internal(nsIURI* aURI,
-                             int64_t aItemId,
-                             const nsACString& aName,
-                             int32_t aValue,
-                             int32_t aFlags,
-                             uint16_t aExpiration);
-  Result<Maybe<BookmarkData>, nsresult>
-  SetAnnotationInt64Internal(nsIURI* aURI,
-                             int64_t aItemId,
-                             const nsACString& aName,
-                             int64_t aValue,
-                             int32_t aFlags,
-                             uint16_t aExpiration);
-  Result<Maybe<BookmarkData>, nsresult>
-  SetAnnotationDoubleInternal(nsIURI* aURI,
-                              int64_t aItemId,
-                              const nsACString& aName,
-                              double aValue,
-                              int32_t aFlags,
-                              uint16_t aExpiration);
+                              uint16_t aExpiration,
+                              uint16_t aType,
+                              nsCOMPtr<mozIStorageStatement>& aStatement);
 
-  Result<Maybe<BookmarkData>, nsresult>
-  RemoveAnnotationInternal(nsIURI* aURI,
-                           int64_t aItemId,
-                           const nsACString& aName);
+  nsresult SetAnnotationStringInternal(nsIURI* aURI,
+                                       int64_t aItemId,
+                                       const nsACString& aName,
+                                       const nsAString& aValue,
+                                       int32_t aFlags,
+                                       uint16_t aExpiration);
+  nsresult SetAnnotationInt32Internal(nsIURI* aURI,
+                                      int64_t aItemId,
+                                      const nsACString& aName,
+                                      int32_t aValue,
+                                      int32_t aFlags,
+                                      uint16_t aExpiration);
+  nsresult SetAnnotationInt64Internal(nsIURI* aURI,
+                                      int64_t aItemId,
+                                      const nsACString& aName,
+                                      int64_t aValue,
+                                      int32_t aFlags,
+                                      uint16_t aExpiration);
+  nsresult SetAnnotationDoubleInternal(nsIURI* aURI,
+                                       int64_t aItemId,
+                                       const nsACString& aName,
+                                       double aValue,
+                                       int32_t aFlags,
+                                       uint16_t aExpiration);
+
+  nsresult RemoveAnnotationInternal(nsIURI* aURI,
+                                    int64_t aItemId,
+                                    const nsACString& aName);
 
 public:
   nsresult GetPagesWithAnnotationCOMArray(const nsACString& aName,
@@ -164,7 +156,6 @@ public:
   nsresult GetAnnotationNamesTArray(nsIURI* aURI,
                                     int64_t aItemId,
                                     nsTArray<nsCString>* _result);
-  nsresult RemoveItemAnnotationsWithoutNotifying(int64_t aItemId);
 };
 
 #endif /* nsAnnotationService_h___ */
