@@ -122,7 +122,7 @@ function openLoadModuleDialog() {
   let win = window.openDialog("chrome://pippki/content/load_device.xul", "", "");
   return new Promise(resolve => {
     win.addEventListener("load", function() {
-      resolve(win);
+      executeSoon(() => resolve(win));
     }, {once: true});
   });
 }

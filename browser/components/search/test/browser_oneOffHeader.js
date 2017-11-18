@@ -38,14 +38,14 @@ function synthesizeNativeMouseMove(aElement) {
   let x = win.mozInnerScreenX + (rect.left + rect.right) / 2;
   let y = win.mozInnerScreenY + (rect.top + rect.bottom) / 2;
 
-  // Wait for the mouseup event to occur before continuing.
+  // Wait for the mousemove event to occur before continuing.
   return new Promise((resolve, reject) => {
     function eventOccurred(e) {
-      aElement.removeEventListener("mouseover", eventOccurred, true);
+      aElement.removeEventListener("mousemove", eventOccurred, true);
       resolve();
     }
 
-    aElement.addEventListener("mouseover", eventOccurred, true);
+    aElement.addEventListener("mousemove", eventOccurred, true);
 
     utils.sendNativeMouseEvent(x * scale, y * scale, msg, 0, null);
   });
