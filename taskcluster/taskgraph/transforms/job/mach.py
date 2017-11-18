@@ -16,6 +16,10 @@ mach_schema = Schema({
 
     # The mach command (omitting `./mach`) to run
     Required('mach'): basestring,
+
+    # if true, perform a checkout of a comm-central based branch inside the
+    # gecko checkout
+    Required('comm-checkout', default=False): bool,
 })
 
 
