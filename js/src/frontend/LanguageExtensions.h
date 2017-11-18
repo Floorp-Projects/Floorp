@@ -33,7 +33,7 @@ enum class DeprecatedLanguageExtension
     // NO LONGER USING 7
     // NO LONGER USING 8
     // NO LONGER USING 9
-    BlockScopeFunRedecl = 10,
+    // NO LONGER USING 10
 
     // Sentinel value.  MAY change as extension initializers are added (only to
     // the end) above.

@@ -35,7 +35,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/Pair.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -131,6 +130,7 @@ namespace mozilla {
 namespace layers {
 class ImageContainer;
 class Image;
+class LayersManager;
 } // namespace layers
 
 namespace image {
@@ -290,9 +290,9 @@ private:
    * @return a drawable surface, which may be empty if the requested surface
    *         could not be found.
    */
-  DrawableSurface LookupFrame(const gfx::IntSize& aSize,
-                              uint32_t aFlags,
-                              PlaybackType aPlaybackType);
+  LookupResult LookupFrame(const gfx::IntSize& aSize,
+                           uint32_t aFlags,
+                           PlaybackType aPlaybackType);
 
   /// Helper method for LookupFrame().
   LookupResult LookupFrameInternal(const gfx::IntSize& aSize,
@@ -307,20 +307,15 @@ private:
                           uint32_t aFlags,
                           float aOpacity);
 
-  Pair<DrawResult, RefPtr<gfx::SourceSurface>>
+  Tuple<DrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
     GetFrameInternal(const gfx::IntSize& aSize,
+                     const Maybe<SVGImageContext>& aSVGContext,
                      uint32_t aWhichFrame,
-                     uint32_t aFlags);
+                     uint32_t aFlags) override;
 
-  Pair<DrawResult, RefPtr<layers::Image>>
-    GetCurrentImage(layers::ImageContainer* aContainer, uint32_t aFlags);
-
-  void UpdateImageContainer();
-
-#ifdef DEBUG
-  // Records the image drawing for startup performance testing.
-  void NotifyDrawingObservers();
-#endif
+  gfx::IntSize GetImageContainerSize(layers::LayerManager* aManager,
+                                     const gfx::IntSize& aSize,
+                                     uint32_t aFlags) override;
 
   //////////////////////////////////////////////////////////////////////////////
   // Decoding.
@@ -404,17 +399,6 @@ private: // data
   // How many times we've decoded this image.
   // This is currently only used for statistics
   int32_t                        mDecodeCount;
-
-  // A weak pointer to our ImageContainer, which stays alive only as long as
-  // the layer system needs it.
-  WeakPtr<layers::ImageContainer> mImageContainer;
-
-  layers::ImageContainer::ProducerID mImageProducerID;
-  layers::ImageContainer::FrameID mLastFrameID;
-
-  // If mImageContainer is non-null, this contains the DrawResult we obtained
-  // the last time we updated it.
-  DrawResult mLastImageContainerDrawResult;
 
 #ifdef DEBUG
   uint32_t                       mFramesNotified;

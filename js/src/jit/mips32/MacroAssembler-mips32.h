@@ -30,7 +30,7 @@ struct ImmType : public ImmTag
     { }
 };
 
-static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
+static constexpr ValueOperand JSReturnOperand{JSReturnReg_Type, JSReturnReg_Data};
 static const ValueOperand softfpReturnOperand = ValueOperand(v1, v0);
 
 static const int defaultShift = 3;

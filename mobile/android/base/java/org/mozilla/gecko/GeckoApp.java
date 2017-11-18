@@ -914,11 +914,12 @@ public abstract class GeckoApp extends GeckoActivity
             enableStrictMode();
         }
 
-        // Mozglue should already be loaded by BrowserApp.onCreate() in Fennec, but in
-        // custom tabs it may not be.
-        GeckoLoader.loadMozGlue(getApplicationContext());
-
-        if (!HardwareUtils.isSupportedSystem() || !GeckoLoader.neonCompatible()) {
+        boolean supported = HardwareUtils.isSupportedSystem();
+        if (supported) {
+            GeckoLoader.loadMozGlue(getApplicationContext());
+            supported = GeckoLoader.neonCompatible();
+        }
+        if (!supported) {
             // This build does not support the Android version of the device: Show an error and finish the app.
             mIsAbortingAppLaunch = true;
             super.onCreate(savedInstanceState);

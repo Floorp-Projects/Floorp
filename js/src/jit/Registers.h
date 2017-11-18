@@ -65,10 +65,10 @@ struct Register {
     const char* name() const {
         return Registers::GetName(code());
     }
-    bool operator ==(Register other) const {
+    constexpr bool operator==(Register other) const {
         return reg_ == other.reg_;
     }
-    bool operator !=(Register other) const {
+    constexpr bool operator!=(Register other) const {
         return reg_ != other.reg_;
     }
     bool volatile_() const {

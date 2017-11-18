@@ -71,7 +71,6 @@ struct EvalCacheLookup
     explicit EvalCacheLookup(JSContext* cx) : str(cx), callerScript(cx) {}
     RootedLinearString str;
     RootedScript callerScript;
-    JSVersion version;
     jsbytecode* pc;
 };
 

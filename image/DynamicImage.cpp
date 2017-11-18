@@ -226,6 +226,23 @@ DynamicImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
   return nullptr;
 }
 
+NS_IMETHODIMP_(bool)
+DynamicImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
+                                              const IntSize& aSize,
+                                              uint32_t aFlags)
+{
+  return false;
+}
+
+NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
+DynamicImage::GetImageContainerAtSize(LayerManager* aManager,
+                                      const IntSize& aSize,
+                                      const Maybe<SVGImageContext>& aSVGContext,
+                                      uint32_t aFlags)
+{
+  return nullptr;
+}
+
 NS_IMETHODIMP_(DrawResult)
 DynamicImage::Draw(gfxContext* aContext,
                    const nsIntSize& aSize,

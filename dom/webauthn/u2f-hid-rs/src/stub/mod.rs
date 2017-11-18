@@ -7,7 +7,7 @@
 
 #![allow(dead_code)]
 
-use util::OnceCallback;
+use util::{io_err, OnceCallback};
 
 pub struct PlatformManager {}
 
@@ -24,7 +24,8 @@ impl PlatformManager {
         key_handles: Vec<Vec<u8>>,
         callback: OnceCallback<Vec<u8>>,
     ) {
-        // No-op on Android
+        // Not implemented.
+        callback.call(Err(io_err("not implemented")));
     }
 
     pub fn sign(
@@ -35,11 +36,11 @@ impl PlatformManager {
         key_handles: Vec<Vec<u8>>,
         callback: OnceCallback<(Vec<u8>, Vec<u8>)>,
     ) {
-        // No-op on Android
+        // Not implemented.
+        callback.call(Err(io_err("not implemented")));
     }
 
-    // This blocks.
     pub fn cancel(&mut self) {
-        // No-op on Android
+        // No-op.
     }
 }

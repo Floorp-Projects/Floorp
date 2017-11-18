@@ -80,7 +80,6 @@ class ReftestServer:
             env["PATH"] = env["PATH"] + ";" + self._xrePath
 
         args = ["-g", self._xrePath,
-                "-v", "170",
                 "-f", os.path.join(self._httpdPath, "httpd.js"),
                 "-e", "const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = "
                       "'%(port)s'; const _SERVER_ADDR ='%(server)s';" % {

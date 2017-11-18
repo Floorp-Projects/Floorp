@@ -397,8 +397,7 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
               r6); // Frame descriptor.
 
     // Load the address of the code that is getting called.
-    masm.Ldr(x3, MemOperand(x5, JSFunction::offsetOfNativeOrScript()));
-    masm.loadBaselineOrIonRaw(r3, r3, nullptr);
+    masm.loadJitCodeRaw(r5, r3, nullptr);
     argumentsRectifierReturnOffset_ = masm.callJitNoProfiler(r3);
 
     // Clean up!

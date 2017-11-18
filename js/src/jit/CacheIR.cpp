@@ -4264,7 +4264,7 @@ CallIRGenerator::tryAttachArrayJoin()
     // always return a string.  We will add String to the stack typeset when
     // attaching this stub.
 
-    // Set the stub kind to Regular 
+    // Set the stub kind to Regular
     cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
     trackAttached("ArrayJoin");

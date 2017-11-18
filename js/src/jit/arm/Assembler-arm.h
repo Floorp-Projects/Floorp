@@ -417,7 +417,7 @@ bool condsAreSafe(ALUOp op);
 // variant of it.
 ALUOp getDestVariant(ALUOp op);
 
-static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
+static constexpr ValueOperand JSReturnOperand{JSReturnReg_Type, JSReturnReg_Data};
 static const ValueOperand softfpReturnOperand = ValueOperand(r1, r0);
 
 // All of these classes exist solely to shuffle data into the various operands.

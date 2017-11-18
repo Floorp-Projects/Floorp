@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Test for overriding W3C Web Authentication request</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>Test for overriding W3C Web Authentication request</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1415675">Mozilla Bug 1415675</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    // Last request status.
+    let status = "";
+
+    add_task(() => {
+      // Enable USB tokens.
+      return SpecialPowers.pushPrefEnv({"set": [
+        ["security.webauth.webauthn", true],
+        ["security.webauth.webauthn_enable_softtoken", false],
+        ["security.webauth.webauthn_enable_usbtoken", true],
+      ]});
+    });
+
+    // Start a new MakeCredential() request.
+    async function requestMakeCredential(status_value) {
+      let publicKey = {
+        rp: {id: document.domain, name: "none", icon: "none"},
+        user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        timeout: 5000, // the minimum timeout is actually 15 seconds
+        pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+      };
+
+      // Start the request, handle failures only.
+      navigator.credentials.create({publicKey}).catch(() => {
+        status = status_value;
+      });
+
+      // Wait a tick to let the statemachine start.
+      await Promise.resolve();
+    }
+
+    // Start a new GetAssertion() request.
+    async function requestGetAssertion(status_value) {
+      let newCredential = {
+        type: "public-key",
+        id: crypto.getRandomValues(new Uint8Array(16)),
+        transports: ["usb"],
+      };
+
+      let publicKey = {
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        timeout: 5000, // the minimum timeout is actually 15 seconds
+        rpId: document.domain,
+        allowCredentials: [newCredential]
+      };
+
+      // Start the request, handle failures only.
+      navigator.credentials.get({publicKey}).catch(() => {
+        status = status_value;
+      });
+
+      // Wait a tick to let the statemachine start.
+      await Promise.resolve();
+    }
+
+    // Test that .create() and .get() requests override any pending requests.
+    add_task(async () => {
+      // Request a new credential.
+      await requestMakeCredential("aborted1");
+
+      // Request another credential, the first request will abort.
+      await requestMakeCredential("aborted2");
+      is(status, "aborted1", "first request aborted");
+
+      // Request an assertion, the second request will abort.
+      await requestGetAssertion("aborted3");
+      is(status, "aborted2", "second request aborted");
+
+      // Request another assertion, the third request will abort.
+      await requestGetAssertion("aborted4");
+      is(status, "aborted3", "third request aborted");
+
+      // Request another credential, the fourth request will abort.
+      await requestMakeCredential("aborted5");
+      is(status, "aborted4", "fourth request aborted");
+    });
+  </script>
+
+</body>
+</html>

@@ -8,9 +8,6 @@
 function run_test() {
   do_test_pending();
 
-  removeMetadata();
-  removeCacheFile();
-
   do_check_false(Services.search.isInitialized);
 
   let engineFile = gProfD.clone();
@@ -28,8 +25,6 @@ function run_test() {
     do_check_true(Components.isSuccessCode(aStatus));
     do_check_true(Services.search.isInitialized);
 
-    removeMetadata();
-    removeCacheFile();
     do_test_finished();
   });
 }
