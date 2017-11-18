@@ -20,6 +20,13 @@ namespace js {
 
 class LifoAlloc;
 
+enum XDRMode {
+    XDR_ENCODE,
+    XDR_DECODE
+};
+
+using XDRResult = mozilla::Result<mozilla::Ok, JS::TranscodeResult>;
+
 class XDRBufferBase
 {
   public:
@@ -460,7 +467,6 @@ class XDRState : public XDRCoderBase
 
     XDRResult codeFunction(JS::MutableHandleFunction objp, HandleScriptSource sourceObject = nullptr);
     XDRResult codeScript(MutableHandleScript scriptp);
-    XDRResult codeConstValue(MutableHandleValue vp);
 };
 
 using XDREncoder = XDRState<XDR_ENCODE>;
@@ -597,6 +603,10 @@ class XDRIncrementalEncoder : public XDREncoder
     // buffer given as argument.
     XDRResult linearize(JS::TranscodeBuffer& buffer);
 };
+
+template<XDRMode mode>
+XDRResult
+XDRAtom(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
 } /* namespace js */
 
