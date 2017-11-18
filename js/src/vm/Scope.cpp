@@ -224,7 +224,7 @@ XDRBindingName(XDRState<XDR_ENCODE>* xdr, BindingName* bindingName)
     uint8_t u8 = uint8_t(hasAtom << 1) | uint8_t(bindingName->closedOver());
     MOZ_TRY(xdr->codeUint8(&u8));
 
-    if (atom)
+    if (hasAtom)
         MOZ_TRY(XDRAtom(xdr, &atom));
 
     return Ok();
@@ -282,17 +282,17 @@ Scope::XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
         data->length = length;
     }
 
-    for (uint32_t i = 0; i < length; i++) {
-        auto guard = mozilla::MakeScopeExit([&] {
-            if (mode == XDR_DECODE) {
-                DeleteScopeData(data.get());
-                data.set(nullptr);
-            }
-        });
-        MOZ_TRY(XDRBindingName(xdr, &data->names[i]));
-        guard.release();
-    }
+    auto dataGuard = mozilla::MakeScopeExit([&] () {
+        if (mode == XDR_DECODE) {
+            DeleteScopeData(data.get());
+            data.set(nullptr);
+        }
+    });
 
+    for (uint32_t i = 0; i < length; i++)
+        MOZ_TRY(XDRBindingName(xdr, &data->names[i]));
+
+    dataGuard.release();
     return Ok();
 }
 
