@@ -14,6 +14,10 @@ this.EXPORTED_SYMBOLS = [ "PluralForm" ];
  *
  * See: http://developer.mozilla.org/en/docs/Localization_and_Plurals
  *
+ * NOTE: any change to these plural forms need to be reflected in
+ * compare-locales:
+ * https://hg.mozilla.org/l10n/compare-locales/file/default/compare_locales/plurals.py
+ *
  * List of methods:
  *
  * string pluralForm
@@ -43,7 +47,7 @@ var gFunctions = [
   // 2: French
   [2, (n) => n>1?1:0],
   // 3: Latvian
-  [3, (n) => n%10==1&&n%100!=11?1:n!=0?2:0],
+  [3, (n) => n%10==1&&n%100!=11?1:n%10==0?0:2],
   // 4: Scottish Gaelic
   [4, (n) => n==1||n==11?0:n==2||n==12?1:n>0&&n<20?2:3],
   // 5: Romanian
