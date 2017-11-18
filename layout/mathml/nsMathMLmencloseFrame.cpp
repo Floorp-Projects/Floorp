@@ -151,6 +151,7 @@ nsresult nsMathMLmencloseFrame::AddNotation(const nsAString& aNotation)
  */
 void nsMathMLmencloseFrame::InitNotations()
 {
+  MarkNeedsDisplayItemRebuild();
   mNotationsToDraw.clear();
   mLongDivCharIndex = mRadicalCharIndex = -1;
   mMathMLChar.Clear();

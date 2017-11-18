@@ -2506,6 +2506,19 @@ extends="chrome://global/content/bindings/popup.xml#popup">
   <binding id="autocomplete-treebody">
     <implementation>
       <field name="mLastMoveTime">Date.now()</field>
+      <property name="noSelectOnMouseMove">
+        <getter><![CDATA[
+          return this.getAttribute("noSelectOnMouseMove") == "true";
+        ]]></getter>
+        <setter><![CDATA[
+          if (val) {
+            this.setAttribute("noSelectOnMouseMove", "true");
+          } else {
+            this.removeAttribute("noSelectOnMouseMove");
+          }
+          return !!val;
+        ]]></setter>
+      </property>
     </implementation>
 
     <handlers>
@@ -2518,8 +2531,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[
-        if (event.defaultPrevented) {
-          // Allow bindings that extend this one to cancel the event so that
+        if (this.noSelectOnMouseMove) {
+          // Allow uses of this binding to cancel the event so that
           // nothing is selected.
           return;
         }
