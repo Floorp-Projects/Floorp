@@ -38,6 +38,7 @@ common-tests:
     - reftest-no-accel
     - telemetry-tests-client
     - test-verify
+    - test-verify-wpt
     - xpcshell
 
 web-platform-tests:
@@ -182,6 +183,7 @@ windows-tests:
     - reftest
     - reftest-no-accel
     - test-verify
+    - test-verify-wpt
     - web-platform-tests
     - web-platform-tests-reftests
     - xpcshell
@@ -242,6 +244,7 @@ macosx64-tests:
     - mochitest-webgl
     - reftest
     - test-verify
+    - test-verify-wpt
     - web-platform-tests
     - web-platform-tests-reftests
     - xpcshell
@@ -329,16 +332,14 @@ android-common-tests:
 android-debug-tests:
     # Marionette only available on Fennec debug builds as a security precaution
     - marionette
-    - geckoview
 
 android-opt-tests:
+    # Robocop tests often fail on Debug builds
     - robocop
-    - geckoview
 
 android-gradle-tests:
-    - mochitest-chrome
-    - robocop
-    - test-verify
+    # geckoview_example is only built in gradle builds
+    - geckoview
 
 android-x86-tests:
     - mochitest-chrome

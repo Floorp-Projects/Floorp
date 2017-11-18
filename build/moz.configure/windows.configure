@@ -260,7 +260,7 @@ def vc_path(c_compiler):
         result = next
         if p.lower() == 'bin':
             break
-    return result
+    return os.path.normpath(result)
 
 
 @depends(vc_path, c_compiler)

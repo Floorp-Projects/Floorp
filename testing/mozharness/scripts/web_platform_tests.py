@@ -8,6 +8,8 @@ import copy
 import os
 import sys
 
+from datetime import datetime, timedelta
+
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
@@ -165,7 +167,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
         self.register_virtualenv_module(requirements=[requirements],
                                         two_pass=True)
 
-    def _query_cmd(self):
+    def _query_cmd(self, test_types):
         if not self.binary_path:
             self.fatal("Binary path could not be determined")
             # And exit
@@ -199,7 +201,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
         if not sys.platform.startswith("linux"):
             cmd += ["--exclude=css"]
 
-        for test_type in c.get("test_type", []):
+        for test_type in test_types:
             cmd.append("--test-type=%s" % test_type)
 
         if not c["e10s"]:
@@ -215,7 +217,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             if val:
                 cmd.append("--%s=%s" % (opt.replace("_", "-"), val))
 
-        if "wdspec" in c.get("test_type", []):
+        if "wdspec" in test_types:
             geckodriver_path = os.path.join(dirs["abs_test_bin_dir"], "geckodriver")
             if not os.path.isfile(geckodriver_path):
                 self.fatal("Unable to find geckodriver binary "
@@ -237,7 +239,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             "reftest": "web-platform-tests-reftests",
             "wdspec": "web-platform-tests-wdspec",
         }
-        for test_type in c.get("test_type", []):
+        for test_type in test_types:
             try_options, try_tests = self.try_args(test_type_suite[test_type])
 
             cmd.extend(self.query_options(options,
@@ -277,7 +279,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
 
     def run_tests(self):
         dirs = self.query_abs_dirs()
-        cmd = self._query_cmd()
 
         self._install_fonts()
 
@@ -317,15 +318,51 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
 
         env = self.query_env(partial_env=env, log_level=INFO)
 
-        return_code = self.run_command(cmd,
-                                       cwd=dirs['abs_work_dir'],
-                                       output_timeout=1000,
-                                       output_parser=parser,
-                                       env=env)
+        start_time = datetime.now()
+        max_verify_time = timedelta(minutes=60)
+        max_verify_tests = 10
+        verified_tests = 0
 
-        tbpl_status, log_level = parser.evaluate_parser(return_code)
+        if self.config.get("verify") is True:
+            verify_suites = self.query_verify_category_suites(None, None)
+        else:
+            test_types = self.config.get("test_type", [])
+            verify_suites = [None]
+        for verify_suite in verify_suites:
+            if verify_suite:
+                test_types = [verify_suite]
+            for verify_args in self.query_verify_args(verify_suite):
+                if (datetime.now() - start_time) > max_verify_time:
+                    # Verification has run out of time. That is okay! Stop running
+                    # tests so that a task timeout is not triggered, and so that
+                    # (partial) results are made available in a timely manner.
+                    self.info("TinderboxPrint: Verification too long: Not all tests "
+                              "were verified.<br/>")
+                    return
+                if verified_tests >= max_verify_tests:
+                    # When changesets are merged between trees or many tests are
+                    # otherwise updated at once, there probably is not enough time
+                    # to verify all tests, and attempting to do so may cause other
+                    # problems, such as generating too much log output.
+                    self.info("TinderboxPrint: Too many modified tests: Not all tests "
+                              "were verified.<br/>")
+                    return
+                verified_tests = verified_tests + 1
 
-        self.buildbot_status(tbpl_status, level=log_level)
+                cmd = self._query_cmd(test_types)
+                cmd.extend(verify_args)
+
+                return_code = self.run_command(cmd,
+                                               cwd=dirs['abs_work_dir'],
+                                               output_timeout=1000,
+                                               output_parser=parser,
+                                               env=env)
+
+                tbpl_status, log_level = parser.evaluate_parser(return_code)
+                self.buildbot_status(tbpl_status, level=log_level)
+
+                if len(verify_args) > 0:
+                    self.log_verify_status(verify_args[-1], tbpl_status, log_level)
 
 
 # main {{{1
