@@ -368,7 +368,10 @@
       let failed = false;
       try {
         msg.objects.f();
-      } catch (e if /cross-process JS call failed/.test(String(e))) {
+      } catch (e) {
+        if (!/cross-process JS call failed/.test(String(e))) {
+          throw e;
+        }
         failed = true;
       }
       ok(failed, "CPOW should fail due to cancelation");
@@ -383,7 +386,10 @@
       let failed = false;
       try {
         msg.objects.f();
-      } catch (e if /cross-process JS call failed/.test(String(e))) {
+      } catch (e) {
+        if (!/cross-process JS call failed/.test(String(e))) {
+          throw e;
+        }
         failed = true;
       }
       ok(failed, "CPOW should fail due to cancelation");
@@ -397,7 +403,10 @@
       opener.wrappedJSObject.SpecialPowers.setBoolPref(PREF_UNSAFE_FORBIDDEN, true);
       try {
         msg.objects.f();
-      } catch (e if /unsafe CPOW usage forbidden/.test(String(e))) {
+      } catch (e) {
+        if (!/unsafe CPOW usage forbidden/.test(String(e))) {
+          throw e;
+        }
         failed = true;
       }
       opener.wrappedJSObject.SpecialPowers.clearUserPref(PREF_UNSAFE_FORBIDDEN);
@@ -410,7 +419,10 @@
       opener.wrappedJSObject.SpecialPowers.setBoolPref(PREF_UNSAFE_FORBIDDEN, true);
       try {
         msg.objects.f();
-      } catch (e if /unsafe CPOW usage forbidden/.test(String(e))) {
+      } catch (e) {
+        if (!/unsafe CPOW usage forbidden/.test(String(e))) {
+          throw e;
+        }
         ok(false, "cpow failed");
       }
       opener.wrappedJSObject.SpecialPowers.clearUserPref(PREF_UNSAFE_FORBIDDEN);
@@ -424,7 +436,10 @@
         try {
           msg.objects.thing.value;
           ok(false, "Should have been a dead CPOW");
-        } catch(e if /dead CPOW/.test(String(e))) {
+        } catch (e) {
+          if (!/dead CPOW/.test(String(e))) {
+            throw e;
+          }
           ok(true, "Got the expected dead CPOW");
           ok(e.stack, "The exception has a stack");
         }
