@@ -274,10 +274,7 @@ public:
   void SetIsLocked(bool aValue) { mIsLocked = aValue; }
 
   bool HasDefaultValue() const { return mHasDefaultValue; }
-  void SetHasDefaultValue(bool aValue) { mHasDefaultValue = aValue; }
-
   bool HasUserValue() const { return mHasUserValue; }
-  void SetHasUserValue(bool aValue) { mHasUserValue = aValue; }
 
   // Other operations.
 
@@ -318,9 +315,9 @@ public:
       return NS_ERROR_UNEXPECTED;
     }
 
-    if (aKind == PrefValueKind::Default || IsLocked() || !HasUserValue()) {
+    if (aKind == PrefValueKind::Default || IsLocked() || !mHasUserValue) {
       // Do we have a default?
-      if (!HasDefaultValue()) {
+      if (!mHasDefaultValue) {
         return NS_ERROR_UNEXPECTED;
       }
       *aResult = mDefaultValue.mBoolVal;
@@ -337,9 +334,9 @@ public:
       return NS_ERROR_UNEXPECTED;
     }
 
-    if (aKind == PrefValueKind::Default || IsLocked() || !HasUserValue()) {
+    if (aKind == PrefValueKind::Default || IsLocked() || !mHasUserValue) {
       // Do we have a default?
-      if (!HasDefaultValue()) {
+      if (!mHasDefaultValue) {
         return NS_ERROR_UNEXPECTED;
       }
       *aResult = mDefaultValue.mIntVal;
@@ -357,9 +354,9 @@ public:
     }
 
     const char* stringVal = nullptr;
-    if (aKind == PrefValueKind::Default || IsLocked() || !HasUserValue()) {
+    if (aKind == PrefValueKind::Default || IsLocked() || !mHasUserValue) {
       // Do we have a default?
-      if (!HasDefaultValue()) {
+      if (!mHasDefaultValue) {
         return NS_ERROR_UNEXPECTED;
       }
       stringVal = mDefaultValue.mStringVal;
@@ -403,7 +400,7 @@ public:
   {
     aSetting->name() = mName;
 
-    if (HasDefaultValue()) {
+    if (mHasDefaultValue) {
       aSetting->defaultValue() = dom::PrefValue();
       AssignPrefValueToDomPrefValue(
         Type(), &mDefaultValue, &aSetting->defaultValue().get_PrefValue());
@@ -411,7 +408,7 @@ public:
       aSetting->defaultValue() = null_t();
     }
 
-    if (HasUserValue()) {
+    if (mHasUserValue) {
       aSetting->userValue() = dom::PrefValue();
       AssignPrefValueToDomPrefValue(
         Type(), &mUserValue, &aSetting->userValue().get_PrefValue());
@@ -433,14 +430,14 @@ public:
     }
 
     const char* stringVal;
-    if (HasDefaultValue()) {
+    if (mHasDefaultValue) {
       stringVal = mDefaultValue.mStringVal;
       if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
         return false;
       }
     }
 
-    if (HasUserValue()) {
+    if (mHasUserValue) {
       stringVal = mUserValue.mStringVal;
       if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
         return false;
@@ -471,6 +468,12 @@ private:
     } else {
       *value = aNewValue;
     }
+
+    if (aKind == PrefValueKind::Default) {
+      mHasDefaultValue = true;
+    } else {
+      mHasUserValue = true;
+    }
   }
 
 public:
@@ -480,6 +483,8 @@ public:
       free(const_cast<char*>(mUserValue.mStringVal));
       mUserValue.mStringVal = nullptr;
     }
+
+    mHasUserValue = false;
   }
 
   void SetValue(PrefType aType,
@@ -491,13 +496,12 @@ public:
     if (aFlags & kPrefSetDefault) {
       if (!IsLocked()) {
         // ?? change of semantics?
-        if (!HasDefaultValue() || !mDefaultValue.Equals(aType, aValue)) {
+        if (!mHasDefaultValue || !mDefaultValue.Equals(aType, aValue)) {
           ReplaceValue(PrefValueKind::Default, aType, aValue);
-          SetHasDefaultValue(true);
           if (aFlags & kPrefSticky) {
             SetIsSticky(true);
           }
-          if (!HasUserValue()) {
+          if (!mHasUserValue) {
             *aValueChanged = true;
           }
         }
@@ -508,20 +512,18 @@ public:
       // If new value is same as the default value and it's not a "sticky"
       // pref, then un-set the user value. Otherwise, set the user value only
       // if it has changed.
-      if (HasDefaultValue() && !IsSticky() &&
+      if (mHasDefaultValue && !IsSticky() &&
           mDefaultValue.Equals(aType, aValue) && !(aFlags & kPrefForceSet)) {
-        if (HasUserValue()) {
+        if (mHasUserValue) {
           ClearUserValue();
-          SetHasUserValue(false);
           if (!IsLocked()) {
             *aDirty = true;
             *aValueChanged = true;
           }
         }
-      } else if (!HasUserValue() || !IsType(aType) ||
+      } else if (!mHasUserValue || !IsType(aType) ||
                  !mUserValue.Equals(aType, aValue)) {
         ReplaceValue(PrefValueKind::User, aType, aValue);
-        SetHasUserValue(true);
         if (!IsLocked()) {
           *aDirty = true;
           *aValueChanged = true;
@@ -533,8 +535,8 @@ public:
   // Returns false if this pref doesn't have a user value worth saving.
   bool UserValueToStringForSaving(nsCString& aStr)
   {
-    if (HasUserValue() && (!HasDefaultValue() || IsSticky() ||
-                           !mDefaultValue.Equals(Type(), mUserValue))) {
+    if (mHasUserValue && (!mHasDefaultValue || IsSticky() ||
+                          !mDefaultValue.Equals(Type(), mUserValue))) {
       if (IsTypeString()) {
         StrEscape(mUserValue.mStringVal, aStr);
 
@@ -556,10 +558,10 @@ public:
     // Note: mName is allocated in gPrefNameArena, measured elsewhere.
     size_t n = 0;
     if (IsTypeString()) {
-      if (HasDefaultValue()) {
+      if (mHasDefaultValue) {
         n += aMallocSizeOf(mDefaultValue.mStringVal);
       }
-      if (HasUserValue()) {
+      if (mHasUserValue) {
         n += aMallocSizeOf(mUserValue.mStringVal);
       }
     }
@@ -673,7 +675,6 @@ PREF_ClearUserPref(const char* aPrefName)
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
   if (pref && pref->HasUserValue()) {
     pref->ClearUserValue();
-    pref->SetHasUserValue(false);
 
     if (!pref->HasDefaultValue()) {
       gHashTable->RemoveEntry(pref);
@@ -705,7 +706,6 @@ PREF_ClearAllUserPrefs()
       }
 
       pref->ClearUserValue();
-      pref->SetHasUserValue(false);
       if (!pref->HasDefaultValue()) {
         iter.Remove();
       }
