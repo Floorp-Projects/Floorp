@@ -5738,6 +5738,9 @@ class nsDisplayTransform: public nsDisplayItem
         nsDisplayWrapList::UpdateBounds(aBuilder);
       }
     }
+    void ForceUpdateBounds(nsDisplayListBuilder* aBuilder) {
+      nsDisplayWrapList::UpdateBounds(aBuilder);
+    }
     virtual void DoUpdateBoundsPreserves3D(nsDisplayListBuilder* aBuilder) override {
       for (nsDisplayItem *i = mList.GetBottom(); i; i = i->GetAbove()) {
         i->DoUpdateBoundsPreserves3D(aBuilder);
@@ -5787,8 +5790,12 @@ public:
 
   virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override
   {
-    mStoredList.UpdateBounds(aBuilder);
     mHasBounds = false;
+    if (IsTransformSeparator()) {
+      mStoredList.ForceUpdateBounds(aBuilder);
+      return;
+    }
+    mStoredList.UpdateBounds(aBuilder);
     UpdateBoundsFor3D(aBuilder);
   }
 
@@ -6219,6 +6226,8 @@ public:
   }
 
   nsIFrame* TransformFrame() { return mTransformFrame; }
+
+  virtual nsIFrame* FrameForInvalidation() const override { return mTransformFrame; }
 
   virtual int32_t ZIndex() const override;
 

@@ -45,4 +45,6 @@ config = {
     "blob_uploader_auth_file" : os.path.join(os.getcwd(), "oauth.txt"),
 
     "download_minidump_stackwalk": True,
+
+    "verify_category": "web-platform",
 }
