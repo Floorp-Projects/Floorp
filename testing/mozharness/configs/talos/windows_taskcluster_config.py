@@ -1,5 +1,6 @@
 import os
 import socket
+import sys
 
 PYTHON = sys.executable
 PYTHON_DLL = 'c:/mozilla-build/python/python27.dll'

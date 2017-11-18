@@ -27,7 +27,7 @@ function openEditCertTrustDialog() {
                               gCert);
   return new Promise((resolve, reject) => {
     win.addEventListener("load", function() {
-      resolve(win);
+      executeSoon(() => resolve(win));
     }, {once: true});
   });
 }

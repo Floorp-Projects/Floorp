@@ -57,7 +57,10 @@
         var propBag = aEvent.detail.QueryInterface(Components.interfaces.nsIPropertyBag2);
         try {
           var startRow = propBag.getPropertyAsInt32("startrow");
-        } catch (e if e.name == 'NS_ERROR_NOT_AVAILABLE') {
+        } catch (e) {
+          if (e.name != 'NS_ERROR_NOT_AVAILABLE') {
+            throw e;
+          }
           startRow = null;
         }
         is(startRow, aStartRow,
@@ -65,7 +68,10 @@
 
         try {
           var endRow = propBag.getPropertyAsInt32("endrow");
-        } catch (e if e.name == 'NS_ERROR_NOT_AVAILABLE') {
+        } catch (e) {
+          if (e.name != 'NS_ERROR_NOT_AVAILABLE') {
+            throw e;
+          }
           endRow = null;
         }
         is(endRow, aEndRow,
@@ -73,7 +79,10 @@
 
         try {
           var startCol = propBag.getPropertyAsInt32("startcolumn");
-        } catch (e if e.name == 'NS_ERROR_NOT_AVAILABLE') {
+        } catch (e) {
+          if (e.name != 'NS_ERROR_NOT_AVAILABLE') {
+            throw e;
+          }
           startCol = null;
         }
         is(startCol, aStartCol,
@@ -81,7 +90,10 @@
 
         try {
           var endCol = propBag.getPropertyAsInt32("endcolumn");
-        } catch (e if e.name == 'NS_ERROR_NOT_AVAILABLE') {
+        } catch (e) {
+          if (e.name != 'NS_ERROR_NOT_AVAILABLE') {
+            throw e;
+          }
           endCol = null;
         }
         is(endCol, aEndCol,
