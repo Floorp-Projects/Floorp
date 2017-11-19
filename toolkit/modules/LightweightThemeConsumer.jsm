@@ -21,6 +21,7 @@ const kCSSVarsMap = new Map([
   ["--toolbar-color", "toolbar_text"],
   ["--url-and-searchbar-background-color", "toolbar_field"],
   ["--url-and-searchbar-color", "toolbar_field_text"],
+  ["--url-and-searchbar-border-color", "toolbar_field_border"],
   ["--tabs-border-color", "toolbar_top_separator"],
   ["--toolbox-border-bottom-color", "toolbar_bottom_separator"],
   ["--urlbar-separator-color", "toolbar_vertical_separator"],

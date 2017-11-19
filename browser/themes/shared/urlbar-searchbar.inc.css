@@ -45,6 +45,11 @@
   color: var(--url-and-searchbar-color, black);
 }
 
+#urlbar:not([focused="true"]):-moz-lwtheme,
+#navigator-toolbox .searchbar-textbox:not([focused="true"]):-moz-lwtheme {
+  border-color: var(--url-and-searchbar-border-color, hsla(240,5%,5%,.25));
+}
+
 #urlbar:-moz-lwtheme:hover,
 #urlbar:-moz-lwtheme[focused="true"],
 #navigator-toolbox .searchbar-textbox:-moz-lwtheme:hover,
