@@ -2251,7 +2251,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 break;
             case eType_Script: {
                 // language version/options obtained during deserialization.
-                RefPtr<nsXULPrototypeScript> script = new nsXULPrototypeScript(0, 0);
+                RefPtr<nsXULPrototypeScript> script = new nsXULPrototypeScript(0);
 
                 rv = aStream->ReadBoolean(&script->mOutOfLine);
                 if (NS_WARN_IF(NS_FAILED(rv))) return rv;
@@ -2392,13 +2392,12 @@ nsXULPrototypeElement::TraceAllScripts(JSTracer* aTrc)
 // nsXULPrototypeScript
 //
 
-nsXULPrototypeScript::nsXULPrototypeScript(uint32_t aLineNo, uint32_t aVersion)
+nsXULPrototypeScript::nsXULPrototypeScript(uint32_t aLineNo)
     : nsXULPrototypeNode(eType_Script),
       mLineNo(aLineNo),
       mSrcLoading(false),
       mOutOfLine(true),
       mSrcLoadWaiters(nullptr),
-      mLangVersion(aVersion),
       mScriptObject(nullptr)
 {
 }
@@ -2431,7 +2430,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
     nsresult rv;
     rv = aStream->Write32(mLineNo);
     if (NS_FAILED(rv)) return rv;
-    rv = aStream->Write32(mLangVersion);
+    rv = aStream->Write32(0); // See bug 1418294.
     if (NS_FAILED(rv)) return rv;
 
     JSContext* cx = jsapi.cx();
@@ -2501,7 +2500,8 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     // Read basic prototype data
     rv = aStream->Read32(&mLineNo);
     if (NS_FAILED(rv)) return rv;
-    rv = aStream->Read32(&mLangVersion);
+    uint32_t dummy;
+    rv = aStream->Read32(&dummy); // See bug 1418294.
     if (NS_FAILED(rv)) return rv;
 
     AutoJSAPI jsapi;
@@ -2696,7 +2696,6 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
     }
 
     // Ok, compile it to create a prototype script object!
-    NS_ENSURE_TRUE(JSVersion(mLangVersion) != JSVERSION_UNKNOWN, NS_OK);
     JS::CompileOptions options(cx);
     options.setIntroductionType("scriptElement")
            .setFileAndLine(urlspec.get(), aLineNo);

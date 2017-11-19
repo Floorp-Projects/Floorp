@@ -29,13 +29,13 @@ NS_IMPL_ADDREF_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
 NS_IMPL_RELEASE_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
 
 ModuleLoadRequest::ModuleLoadRequest(nsIScriptElement* aElement,
-                                     uint32_t aVersion,
+                                     ValidJSVersion aValidJSVersion,
                                      CORSMode aCORSMode,
                                      const SRIMetadata& aIntegrity,
                                      ScriptLoader* aLoader)
   : ScriptLoadRequest(ScriptKind::Module,
                       aElement,
-                      aVersion,
+                      aValidJSVersion,
                       aCORSMode,
                       aIntegrity),
     mIsTopLevel(true),

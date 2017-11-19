@@ -341,7 +341,7 @@ private:
 
   ScriptLoadRequest* CreateLoadRequest(ScriptKind aKind,
                                        nsIScriptElement* aElement,
-                                       uint32_t aVersion,
+                                       ValidJSVersion aValidJSVersion,
                                        mozilla::CORSMode aCORSMode,
                                        const mozilla::dom::SRIMetadata& aIntegrity);
 
