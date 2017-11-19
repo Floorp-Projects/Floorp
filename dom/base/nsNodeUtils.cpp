@@ -305,12 +305,6 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   }
   else {
     if (aNode->HasProperties()) {
-      if (aNode->IsElement()) {
-        Element* elem = aNode->AsElement();
-        elem->UnlinkIntersectionObservers();
-        elem->DeleteProperty(nsGkAtoms::intersectionobserverlist);
-      }
-
       // Strong reference to the document so that deleting properties can't
       // delete the document.
       nsCOMPtr<nsIDocument> document = aNode->OwnerDoc();
