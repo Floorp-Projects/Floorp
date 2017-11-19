@@ -85,6 +85,11 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
     if job['worker']['implementation'] in ('docker-worker', 'docker-engine'):
         name = 'level-%s-checkouts' % level
 
+        # comm-central checkouts need their own cache, because clobber won't
+        # remove the comm-central checkout
+        if job['run'].get('comm-checkout', False):
+            name += '-comm'
+
         # Sparse checkouts need their own cache because they can interfere
         # with clients that aren't sparse aware.
         if sparse:
