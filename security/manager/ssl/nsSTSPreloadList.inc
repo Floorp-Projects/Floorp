@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1522003891700000);
+const PRTime gPreloadListExpirationTime = INT64_C(1522006643897000);
 %%
 0-1.party, 1
 0.me.uk, 1
@@ -281,7 +281,6 @@ const PRTime gPreloadListExpirationTime = INT64_C(1522003891700000);
 38blog.com, 1
 393335.ml, 1
 398.info, 1
-3ags.de, 1
 3bakayottu.com, 1
 3bigking.com, 1
 3c-d.de, 1
@@ -628,7 +627,6 @@ academicexperts.us, 1
 academie-de-police.ch, 1
 academy4.net, 1
 academytv.com.au, 1
-acadianapatios.com, 1
 acampar.com.br, 1
 acaonegocios.com.br, 1
 acara-yoga.de, 1
@@ -1583,7 +1581,6 @@ andrewthelott.net, 1
 andrewvoce.com, 1
 andrewyg.net, 1
 andrezadnik.com, 1
-andro2id.com, 1
 andro4all.com, 1
 android.re, 1
 androide.com, 1
@@ -4892,7 +4889,6 @@ cashlink.io, 1
 cashlogic.ch, 1
 cashmaxtexas.com, 1
 cashplk.com, 1
-casinolegal.pt, 1
 casinolistings.com, 1
 casinoreal.com, 1
 casjay.cloud, 1
@@ -6542,6 +6538,7 @@ croydonapartments.com.au, 1
 croydonbouncycastles.co.uk, 1
 crrev.com, 1
 crstat.ru, 1
+crt.sh, 1
 crt2014-2024review.gov, 1
 crumbcontrol.com, 1
 crunchy.rocks, 1
@@ -7734,7 +7731,6 @@ digitallocker.com, 0
 digitalmarketingindallas.com, 1
 digitalrights.center, 1
 digitalrights.fund, 1
-digitalrxcloud.com, 1
 digitalsurge.io, 1
 digitaltechnologies.ltd.uk, 1
 digitalunite.de, 1
@@ -9277,6 +9273,7 @@ ericairwin.com, 1
 ericdiao.com, 1
 erichorstmanshof.nl, 1
 ericisaweso.me, 1
+ericjohnltd.com, 1
 erick.blog, 1
 ericleuthardt.com, 1
 erico.jp, 1
@@ -9385,7 +9382,7 @@ espanol.search.yahoo.com, 0
 espanova.com, 1
 espci.fr, 1
 especificosba.com.ar, 1
-espenandersen.no, 0
+espenandersen.no, 1
 espgg.org, 1
 esphigmenou.gr, 1
 espigol.org, 1
@@ -15755,7 +15752,7 @@ kiteschoolamsterdam.nl, 1
 kiteschooledam.nl, 1
 kiteschoolijmuiden.nl, 1
 kiteschoolkatwijk.nl, 1
-kiteschoolnoordwijk.nl, 1
+kiteschoolnoordwijk.nl, 0
 kiteschoolschellinkhout.nl, 1
 kiteschoolwijkaanzee.nl, 1
 kiteschoolzandvoort.nl, 1
@@ -17040,7 +17037,6 @@ lists.fedoraproject.org, 1
 lists.mayfirst.org, 0
 lists.stg.fedoraproject.org, 1
 litchidova.nl, 1
-litcomphonors.com, 1
 litebits.com, 1
 litemind.com, 1
 litevault.net, 1
@@ -17086,6 +17082,7 @@ livekort.dk, 1
 livekort.no, 1
 livekort.se, 1
 livekortti.com, 1
+livekortti.fi, 1
 livelexi.com, 1
 livepaperhelp.com, 1
 livepath.ch, 1
@@ -19703,6 +19700,7 @@ myrent.quebec, 1
 myrepublic.co.id, 1
 myresearchapp.com, 1
 myriadof.com, 1
+myrig.com, 1
 myrig.com.ua, 1
 myrig.io, 1
 myrig.ru, 1
@@ -24842,6 +24840,7 @@ saorviewconnect.ie, 1
 saorviewconnected.ie, 1
 saotn.org, 1
 sapac.es, 1
+sapereaude.com.pl, 1
 sapien-ci.com, 1
 sapience.com, 1
 sapk.fr, 1
@@ -26689,7 +26688,6 @@ speechmate.com, 1
 speechndraw.com, 1
 speeddate.it, 0
 speedracer.ca, 1
-speeds.vip, 1
 speedsportofhull.co.uk, 1
 speedtailors.com, 1
 speedtest-russia.com, 1
@@ -27172,7 +27170,6 @@ stonemanbrasil.com.br, 1
 stony.com, 1
 stonystratford.org, 1
 stopakwardhandshakes.org, 1
-stopbreakupnow.org, 1
 stopbullying.gov, 1
 stopfraud.gov, 1
 stopthethyroidmadness.com, 1
@@ -27671,7 +27668,6 @@ tab.watch, 1
 tabelfirme.ro, 1
 tabernadovinho.com.br, 1
 tabino.top, 1
-tabithawebb.co.uk, 1
 tabla-periodica.com, 1
 tablescraps.com, 1
 tablet.facebook.com, 0
@@ -27805,6 +27801,7 @@ tattvaayoga.com, 1
 tavolaquadrada.com.br, 1
 tavsys.net, 1
 taxaroo.com, 1
+taxi-24std.de, 1
 taxi-chamonix.fr, 1
 taxi-collectif.ch, 1
 taxicollectif.ch, 1
@@ -28261,7 +28258,6 @@ thedreamtravelgroup.co.uk, 1
 thedrinks.co, 1
 thedronechart.com, 1
 thedrunkencabbage.com, 1
-thedutchmarketers.com, 1
 theebookkeepers.co.za, 1
 theeducationchannel.info, 1
 theeducationdirectory.org, 1
@@ -28714,7 +28710,6 @@ tkn.tokyo, 1
 tkts.cl, 1
 tkusano.jp, 1
 tkw01536.de, 1
-tlach.cz, 1
 tlca.org, 1
 tlcnet.info, 1
 tlehseasyads.com, 1
@@ -29217,6 +29212,7 @@ treker.us, 1
 trekfriend.com, 1
 tremlor.com, 1
 tremolosoftware.com, 1
+tremoureux.fr, 1
 trendingpulse.com, 1
 trendisland.de, 1
 trendkraft.de, 1
@@ -29667,7 +29663,6 @@ undecidable.de, 1
 underbridgeleisure.co.uk, 1
 undercovercondoms.co.uk, 1
 undercovercondoms.com, 1
-underlined.fr, 1
 undernet.uy, 0
 underskatten.tk, 1
 undo.co.il, 1
@@ -32155,7 +32150,6 @@ yosbeda.com, 1
 yosemo.de, 1
 yosheenetwork.fr, 1
 yoshibaworks.com, 1
-yoshitsugu.net, 1
 yospos.org, 1
 yoticonnections.com, 1
 yotilab.com, 1
