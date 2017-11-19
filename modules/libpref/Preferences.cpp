@@ -1132,6 +1132,16 @@ private:
     eUntilEOL
   };
 
+  static const int kUTF16EscapeNumDigits = 4;
+  static const int kHexEscapeNumDigits = 2;
+  static const int KBitsPerHexDigit = 4;
+
+  static constexpr const char* kUserPref = "user_pref";
+  static constexpr const char* kPref = "pref";
+  static constexpr const char* kStickyPref = "sticky_pref";
+  static constexpr const char* kTrue = "true";
+  static constexpr const char* kFalse = "false";
+
   PrefReader mReader;           // called for each preference
   void* mClosure;               // closure data for mReader
   ParseErrorReporter mReporter; // called for warnings/errors
@@ -1152,16 +1162,6 @@ private:
   bool mIsDefault;              // true if (default) pref
   bool mIsSticky;               // true if (sticky) pref
 };
-
-#define UTF16_ESC_NUM_DIGITS 4
-#define HEX_ESC_NUM_DIGITS 2
-#define BITS_PER_HEX_DIGIT 4
-
-static const char kUserPref[] = "user_pref";
-static const char kPref[] = "pref";
-static const char kStickyPref[] = "sticky_pref";
-static const char kTrue[] = "true";
-static const char kFalse[] = "false";
 
 // This function will increase the size of the buffer owned by the given pref
 // parse state. We currently use a simple doubling algorithm, but the only hard
@@ -1477,7 +1477,8 @@ Parser::Parse(const char* aBuf, int aBufLen)
             mEscTmp[0] = c;
             mEscLen = 1;
             mUtf16[0] = mUtf16[1] = 0;
-            mStrIndex = (c == 'x') ? HEX_ESC_NUM_DIGITS : UTF16_ESC_NUM_DIGITS;
+            mStrIndex =
+              (c == 'x') ? kHexEscapeNumDigits : kUTF16EscapeNumDigits;
             state = State::eHexEscape;
             continue;
           default:
@@ -1526,7 +1527,7 @@ Parser::Parse(const char* aBuf, int aBufLen)
 
         // have a digit
         mEscTmp[mEscLen++] = c; // preserve it
-        mUtf16[1] <<= BITS_PER_HEX_DIGIT;
+        mUtf16[1] <<= KBitsPerHexDigit;
         mUtf16[1] |= udigit;
         mStrIndex--;
         if (mStrIndex == 0) {
@@ -1567,7 +1568,7 @@ Parser::Parse(const char* aBuf, int aBufLen)
           ++mStrIndex;
         } else if (mStrIndex == 1 && c == 'u') {
           // escape sequence is correct, now parse hex
-          mStrIndex = UTF16_ESC_NUM_DIGITS;
+          mStrIndex = kUTF16EscapeNumDigits;
           mEscTmp[0] = 'u';
           mEscLen = 1;
           state = State::eHexEscape;
