@@ -360,7 +360,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     private void updateSiteIdentity(@NonNull Tab tab) {
         final SiteIdentity siteIdentity = tab.getSiteIdentity();
         final SecurityModeUtil.IconType type = SecurityModeUtil.resolve(siteIdentity, tab.getURL());
-        final int imageLevel = SecurityModeUtil.getImageLevel(type);
+        final int imageLevel = type.getImageLevel();
 
         mSiteIdentityPopup.setSiteIdentity(siteIdentity);
         mTrackingProtectionEnabled = SecurityModeUtil.isTrackingProtectionEnabled(siteIdentity);
