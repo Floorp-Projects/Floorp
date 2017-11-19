@@ -101,7 +101,7 @@ AllowsVibrancyYes(id self, SEL _cmd)
 }
 
 static Class
-CreateEffectViewClass(BOOL aForegroundVibrancy, BOOL aIsContainer)
+CreateEffectViewClass(BOOL aForegroundVibrancy)
 {
   // Create a class called EffectView that inherits from NSVisualEffectView
   // and overrides the methods -[NSVisualEffectView drawRect:] and
@@ -112,10 +112,8 @@ CreateEffectViewClass(BOOL aForegroundVibrancy, BOOL aIsContainer)
   Class EffectViewClass = objc_allocateClassPair(NSVisualEffectViewClass, className, 0);
   class_addMethod(EffectViewClass, @selector(drawRect:), (IMP)DrawRectNothing,
                   "v@:{CGRect={CGPoint=dd}{CGSize=dd}}");
-  if (!aIsContainer) {
-    class_addMethod(EffectViewClass, @selector(hitTest:), (IMP)HitTestNil,
-                    "@@:{CGPoint=dd}");
-  }
+  class_addMethod(EffectViewClass, @selector(hitTest:), (IMP)HitTestNil,
+                  "@@:{CGPoint=dd}");
   if (aForegroundVibrancy) {
     // Also override the -[NSView allowsVibrancy] method to return YES.
     class_addMethod(EffectViewClass, @selector(allowsVibrancy), (IMP)AllowsVibrancyYes, "I@:");
@@ -203,15 +201,14 @@ enum {
 - (void)setEmphasized:(BOOL)emphasized;
 @end
 
-/* static */ NSView*
-VibrancyManager::CreateEffectView(VibrancyType aType, bool aIsContainer)
+NSView*
+VibrancyManager::CreateEffectView(VibrancyType aType)
 {
-  static Class EffectViewClasses[2][2] = {
-    { CreateEffectViewClass(NO, NO), CreateEffectViewClass(NO, YES) },
-    { CreateEffectViewClass(YES, NO), CreateEffectViewClass(YES, YES) }
-  };
+  static Class EffectViewClassWithoutForegroundVibrancy = CreateEffectViewClass(NO);
+  static Class EffectViewClassWithForegroundVibrancy = CreateEffectViewClass(YES);
 
-  Class EffectViewClass = EffectViewClasses[HasVibrantForeground(aType)][aIsContainer];
+  Class EffectViewClass = HasVibrantForeground(aType)
+    ? EffectViewClassWithForegroundVibrancy : EffectViewClassWithoutForegroundVibrancy;
   NSView* effectView = [[EffectViewClass alloc] initWithFrame:NSZeroRect];
   [effectView performSelector:@selector(setAppearance:)
                    withObject:AppearanceForVibrancyType(aType)];

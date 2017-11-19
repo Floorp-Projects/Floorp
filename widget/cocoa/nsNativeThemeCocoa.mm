@@ -443,8 +443,8 @@ static ChildView* ChildViewForFrame(nsIFrame* aFrame)
   if (!widget)
     return nil;
 
-  NSWindow* window = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
-  return [window isKindOfClass:[BaseWindow class]] ? [(BaseWindow*)window mainChildView]  : nil;
+  NSView* view = (NSView*)widget->GetNativeData(NS_NATIVE_WIDGET);
+  return [view isKindOfClass:[ChildView class]] ? (ChildView*)view : nil;
 }
 
 static NSWindow* NativeWindowForFrame(nsIFrame* aFrame,
