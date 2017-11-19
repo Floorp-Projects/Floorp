@@ -14,7 +14,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormDataBinding.h"
 #include "nsIDOMFormData.h"
-#include "nsIXMLHttpRequest.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
