@@ -812,6 +812,9 @@ class SharedScriptData
     size_t dataLength() const {
         return (natoms_ * sizeof(GCPtrAtom)) + codeLength_ + noteLength_;
     }
+    const uint8_t* data() const {
+        return reinterpret_cast<const uint8_t*>(data_);
+    }
     uint8_t* data() {
         return reinterpret_cast<uint8_t*>(data_);
     }
@@ -849,18 +852,19 @@ class SharedScriptData
 
 struct ScriptBytecodeHasher
 {
-    struct Lookup
-    {
-        const uint8_t* data;
-        uint32_t length;
+    typedef SharedScriptData Lookup;
 
-        explicit Lookup(SharedScriptData* ssd) : data(ssd->data()), length(ssd->dataLength()) {}
-    };
-    static HashNumber hash(const Lookup& l) { return mozilla::HashBytes(l.data, l.length); }
+    static HashNumber hash(const Lookup& l) {
+        return mozilla::HashBytes(l.data(), l.dataLength());
+    }
     static bool match(SharedScriptData* entry, const Lookup& lookup) {
-        if (entry->dataLength() != lookup.length)
+        if (entry->natoms() != lookup.natoms())
             return false;
-        return mozilla::PodEqual<uint8_t>(entry->data(), lookup.data, lookup.length);
+        if (entry->codeLength() != lookup.codeLength())
+            return false;
+        if (entry->numNotes() != lookup.numNotes())
+            return false;
+        return mozilla::PodEqual<uint8_t>(entry->data(), lookup.data(), lookup.dataLength());
     }
 };
 
