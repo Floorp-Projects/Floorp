@@ -35,7 +35,6 @@
 #include "nsIScreenManager.h"
 #include "nsIWidgetListener.h"
 #include "nsIPresShell.h"
-#include "VibrancyManager.h"
 
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
@@ -550,9 +549,7 @@ nsCocoaWindow::CreatePopupContentView(const LayoutDeviceIntRect &aRect,
   }
 
   ChildView* newContentView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
-  [newContentView setFrame:NSZeroRect];
-  [newContentView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
-  [[mWindow contentView] addSubview:newContentView];
+  [mWindow setContentView:newContentView];
 
   return NS_OK;
 
@@ -2983,6 +2980,12 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
  - (void)_addKnownSubview:(NSView*)aView positioned:(NSWindowOrderingMode)place relativeTo:(NSView*)otherView;
 @end
 
+// Available on 10.10
+@interface NSWindow(PrivateCornerMaskMethod)
+ - (id)_cornerMask;
+ - (void)_cornerMaskChanged;
+@end
+
 #if !defined(MAC_OS_X_VERSION_10_10) || \
     MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10
 
@@ -3003,10 +3006,6 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
 
 #endif
 
-@interface NSView(NSVisualEffectViewSetMaskImage)
-- (void)setMaskImage:(NSImage*)image;
-@end
-
 @interface BaseWindow(Private)
 - (void)removeTrackingArea;
 - (void)cursorUpdated:(NSEvent*)aEvent;
@@ -3015,6 +3014,25 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
 @end
 
 @implementation BaseWindow
+
+- (id)_cornerMask
+{
+  if (!mUseMenuStyle) {
+    return [super _cornerMask];
+  }
+
+  CGFloat radius = 4.0f;
+  NSEdgeInsets insets = { 5, 5, 5, 5 };
+  NSSize maskSize = { 12, 12 };
+  NSImage* maskImage = [NSImage imageWithSize:maskSize flipped:YES drawingHandler:^BOOL(NSRect dstRect) {
+    NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:dstRect xRadius:radius yRadius:radius];
+    [[NSColor colorWithDeviceWhite:1.0 alpha:1.0] set];
+    [path fill];
+    return YES;
+  }];
+  [maskImage setCapInsets:insets];
+  return maskImage;
+}
 
 // The frame of a window is implemented using undocumented NSView subclasses.
 // We offset the window buttons by overriding the methods _closeButtonOrigin
@@ -3100,54 +3118,14 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   return self;
 }
 
-// Returns an autoreleased NSImage.
-static NSImage*
-GetMenuMaskImage()
-{
-  CGFloat radius = 4.0f;
-  NSEdgeInsets insets = { 5, 5, 5, 5 };
-  NSSize maskSize = { 12, 12 };
-  NSImage* maskImage = [NSImage imageWithSize:maskSize flipped:YES drawingHandler:^BOOL(NSRect dstRect) {
-    NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:dstRect xRadius:radius yRadius:radius];
-    [[NSColor colorWithDeviceWhite:1.0 alpha:1.0] set];
-    [path fill];
-    return YES;
-  }];
-  [maskImage setCapInsets:insets];
-  return maskImage;
-}
-
-- (void)swapOutChildViewWrapper:(NSView*)aNewWrapper
-{
-  [aNewWrapper setFrame:[[self contentView] frame]];
-  NSView* childView = [[self mainChildView] retain];
-  [childView removeFromSuperview];
-  [aNewWrapper addSubview:childView];
-  [childView release];
-  [super setContentView:aNewWrapper];
-}
-
 - (void)setUseMenuStyle:(BOOL)aValue
 {
-  if (!VibrancyManager::SystemSupportsVibrancy()) {
-    return;
-  }
-
-  if (aValue && !mUseMenuStyle) {
-    // Turn on rounded corner masking.
-    NSView* effectView = VibrancyManager::CreateEffectView(VibrancyType::MENU, YES);
-    if ([effectView respondsToSelector:@selector(setMaskImage:)]) {
-      [effectView setMaskImage:GetMenuMaskImage()];
+  if (aValue != mUseMenuStyle) {
+    mUseMenuStyle = aValue;
+    if ([self respondsToSelector:@selector(_cornerMaskChanged)]) {
+      [self _cornerMaskChanged];
     }
-    [self swapOutChildViewWrapper:effectView];
-    [effectView release];
-  } else if (mUseMenuStyle && !aValue) {
-    // Turn off rounded corner masking.
-    NSView* wrapper = [[NSView alloc] initWithFrame:NSZeroRect];
-    [self swapOutChildViewWrapper:wrapper];
-    [wrapper release];
   }
-  mUseMenuStyle = aValue;
 }
 
 - (void)setBeingShown:(BOOL)aValue
@@ -3291,7 +3269,11 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 - (ChildView*)mainChildView
 {
-  NSView* contentView = [self contentView];
+  NSView *contentView = [self contentView];
+  // A PopupWindow's contentView is a ChildView object.
+  if ([contentView isKindOfClass:[ChildView class]]) {
+    return (ChildView*)contentView;
+  }
   NSView* lastView = [[contentView subviews] lastObject];
   if ([lastView isKindOfClass:[ChildView class]]) {
     return (ChildView*)lastView;
@@ -3907,7 +3889,7 @@ TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
   float patternWidth = [mWindow frame].size.width;
 
   CGPatternCallbacks callbacks = {0, &TitlebarDrawCallback, NULL};
-  CGPatternRef pattern = CGPatternCreate(mWindow, CGRectMake(0.0f, 0.0f, patternWidth, [mWindow frame].size.height),
+  CGPatternRef pattern = CGPatternCreate(mWindow, CGRectMake(0.0f, 0.0f, patternWidth, [mWindow frame].size.height), 
                                          CGAffineTransformIdentity, patternWidth, [mWindow frame].size.height,
                                          kCGPatternTilingConstantSpacing, true, &callbacks);
 
