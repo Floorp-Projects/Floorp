@@ -7540,10 +7540,10 @@ HTMLEditRules::MaybeSplitAncestorsForInsert(
   MOZ_DIAGNOSTIC_ASSERT(pointToInsert.IsSet());
 
   // If the point itself can contain the tag, we don't need to split any
-  // ancestor nodes.
+  // ancestor nodes.  In this case, we should return the given split point
+  // as is.
   if (pointToInsert.Container() == aStartOfDeepestRightNode.Container()) {
-    return SplitNodeResult(nullptr,
-                           aStartOfDeepestRightNode.GetChildAtOffset());
+    return SplitNodeResult(aStartOfDeepestRightNode);
   }
 
   SplitNodeResult splitNodeResult =
