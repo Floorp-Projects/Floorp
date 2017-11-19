@@ -299,16 +299,40 @@ function hasFocus(node) {
  * @param {Integer} caretIndexOffset : A number that will be added to value.length
  *                  when setting the caret. A negative number will place the caret
  *                  in (end - offset) position. Default to 0 (caret set at the end)
+ * @param {Integer} completionType : One of the following jsterm property
+ *                   - COMPLETE_FORWARD
+ *                   - COMPLETE_BACKWARD
+ *                   - COMPLETE_HINT_ONLY
+ *                   - COMPLETE_PAGEUP
+ *                   - COMPLETE_PAGEDOWN
+ *                  Will default to COMPLETE_HINT_ONLY.
  * @returns {Promise} resolves when the jsterm is completed.
  */
-function jstermSetValueAndComplete(jsterm, value, caretIndexOffset = 0) {
+function jstermSetValueAndComplete(jsterm, value, caretIndexOffset = 0, completionType) {
   const {inputNode} = jsterm;
   inputNode.value = value;
   let index = value.length + caretIndexOffset;
   inputNode.setSelectionRange(index, index);
 
+  return jstermComplete(jsterm, completionType);
+}
+
+/**
+ * Fires a completion request on the jsterm with the specified completionType
+ *
+ * @param {JsTerm} jsterm
+ * @param {Integer} completionType : One of the following jsterm property
+ *                   - COMPLETE_FORWARD
+ *                   - COMPLETE_BACKWARD
+ *                   - COMPLETE_HINT_ONLY
+ *                   - COMPLETE_PAGEUP
+ *                   - COMPLETE_PAGEDOWN
+ *                  Will default to COMPLETE_HINT_ONLY.
+ * @returns {Promise} resolves when the jsterm is completed.
+ */
+function jstermComplete(jsterm, completionType = jsterm.COMPLETE_HINT_ONLY) {
   const updated = jsterm.once("autocomplete-updated");
-  jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
+  jsterm.complete(completionType);
   return updated;
 }
 
