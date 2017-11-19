@@ -212,7 +212,7 @@ class XULDocument;
 class nsXULPrototypeScript : public nsXULPrototypeNode
 {
 public:
-    nsXULPrototypeScript(uint32_t aLineNo, uint32_t version);
+    explicit nsXULPrototypeScript(uint32_t aLineNo);
     virtual ~nsXULPrototypeScript();
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
@@ -269,7 +269,6 @@ public:
     bool                     mSrcLoading;
     bool                     mOutOfLine;
     mozilla::dom::XULDocument* mSrcLoadWaiters;   // [OWNER] but not COMPtr
-    uint32_t                 mLangVersion;
 private:
     JS::Heap<JSScript*>      mScriptObject;
 };

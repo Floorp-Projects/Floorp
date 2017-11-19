@@ -2633,12 +2633,6 @@ public:
    */
   static bool IsJavaScriptLanguage(const nsString& aName);
 
-  /**
-   * Returns the JSVersion for a string of the form '1.n', n = 0, ..., 8, and
-   * JSVERSION_UNKNOWN for other strings.
-   */
-  static JSVersion ParseJavascriptVersion(const nsAString& aVersionStr);
-
   static bool IsJavascriptMIMEType(const nsAString& aMIMEType);
 
   static void SplitMimeType(const nsAString& aValue, nsString& aType,

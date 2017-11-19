@@ -40,7 +40,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
                                      nsIScriptElement* aElement,
-                                     uint32_t aVersion,
+                                     ValidJSVersion aValidJSVersion,
                                      mozilla::CORSMode aCORSMode,
                                      const mozilla::dom::SRIMetadata& aIntegrity)
   : mKind(aKind)
@@ -63,7 +63,7 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
   , mScriptText()
   , mScriptBytecode()
   , mBytecodeOffset(0)
-  , mJSVersion(aVersion)
+  , mValidJSVersion(aValidJSVersion)
   , mLineNo(1)
   , mCORSMode(aCORSMode)
   , mIntegrity(aIntegrity)
