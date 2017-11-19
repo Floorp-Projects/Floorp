@@ -1,0 +1,30 @@
+if (!('oomTest' in this))
+    quit();
+
+if (helperThreadCount() == 0)
+    quit();
+
+
+let THREAD_TYPE_PARSE = 4;
+
+// Test main thread encode/decode OOM
+oomTest(function() {
+    let t = cacheEntry(`function f() { function g() { }; return 3; };`);
+
+    evaluate(t, { sourceIsLazy: true, saveIncrementalBytecode: true });
+    evaluate(t, { sourceIsLazy: true, readBytecode: true });
+});
+
+// Test helper thread decode OOM
+let t = cacheEntry(`function f() { function g() { }; return 3; };`);
+evaluate(t, { sourceIsLazy: true, saveIncrementalBytecode: true });
+for (var i = 1; i < 100; ++i) {
+    try {
+        oomAtAllocation(i, THREAD_TYPE_PARSE);
+        offThreadDecodeScript(t);
+        runOffThreadDecodedScript();
+    }
+    catch (e) {
+        assertEq(e, "out of memory");
+    }
+}
