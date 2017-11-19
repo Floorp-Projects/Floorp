@@ -221,7 +221,6 @@
 @RESPATH@/components/dom_webspeechrecognition.xpt
 #endif
 @RESPATH@/components/dom_workers.xpt
-@RESPATH@/components/dom_xhr.xpt
 @RESPATH@/components/dom_xul.xpt
 @RESPATH@/components/dom_presentation.xpt
 @RESPATH@/components/downloads.xpt
