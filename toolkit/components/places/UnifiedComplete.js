@@ -2384,6 +2384,8 @@ Search.prototype = {
   _notifyDelaysCount: 0,
   notifyResult(searchOngoing, skipDelay = false) {
     let notify = () => {
+      if (!this.pending)
+        return;
       this._notifyDelaysCount = 0;
       let resultCode = this._currentMatchCount ? "RESULT_SUCCESS" : "RESULT_NOMATCH";
       if (searchOngoing) {

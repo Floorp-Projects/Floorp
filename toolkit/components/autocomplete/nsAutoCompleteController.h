@@ -117,7 +117,7 @@ protected:
    */
   nsresult GetFinalDefaultCompleteValue(nsAString &_retval);
 
-  nsresult ClearResults();
+  nsresult ClearResults(bool aIsSearching = false);
 
   nsresult RowIndexToSearch(int32_t aRowIndex,
                             int32_t *aSearchIndex, int32_t *aItemIndex);
@@ -164,7 +164,7 @@ protected:
   uint32_t mRowCount;
   uint32_t mSearchesOngoing;
   uint32_t mSearchesFailed;
-  bool mFirstSearchResult;
+  int32_t mDelayedRowCountDelta;
   uint32_t mImmediateSearchesCount;
   // The index of the match on the popup that was selected using the keyboard,
   // if the completeselectedindex attribute is set.
