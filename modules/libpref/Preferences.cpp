@@ -583,7 +583,19 @@ private:
 
 struct CallbackNode
 {
-  const char* mDomain;
+  CallbackNode(const char* aDomain,
+               PrefChangedFunc aFunc,
+               void* aData,
+               Preferences::MatchKind aMatchKind)
+    : mDomain(moz_xstrdup(aDomain))
+    , mFunc(aFunc)
+    , mData(aData)
+    , mMatchKind(aMatchKind)
+    , mNext(nullptr)
+  {
+  }
+
+  UniqueFreePtr<const char> mDomain;
 
   // If someone attempts to remove the node from the callback list while
   // NotifyCallbacks() is running, |func| is set to nullptr. Such nodes will
@@ -895,11 +907,7 @@ PREF_RegisterCallback(const char* aPrefNode,
   NS_PRECONDITION(aPrefNode, "aPrefNode must not be nullptr");
   NS_PRECONDITION(aCallback, "aCallback must not be nullptr");
 
-  auto node = (CallbackNode*)moz_xmalloc(sizeof(CallbackNode));
-  node->mDomain = moz_xstrdup(aPrefNode);
-  node->mFunc = aCallback;
-  node->mData = aData;
-  node->mMatchKind = aMatchKind;
+  auto node = new CallbackNode(aPrefNode, aCallback, aData, aMatchKind);
 
   if (aIsPriority) {
     // Add to the start of the list.
@@ -940,8 +948,7 @@ pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
   if (gLastPriorityNode == aNode) {
     gLastPriorityNode = aPrevNode;
   }
-  free(const_cast<char*>(aNode->mDomain));
-  free(aNode);
+  delete aNode;
   return next_node;
 }
 
@@ -960,7 +967,7 @@ PREF_UnregisterCallback(const char* aPrefNode,
   while (node != nullptr) {
     if (node->mFunc == aCallback && node->mData == aData &&
         node->mMatchKind == aMatchKind &&
-        strcmp(node->mDomain, aPrefNode) == 0) {
+        strcmp(node->mDomain.get(), aPrefNode) == 0) {
       if (gCallbacksInProgress) {
         // postpone the node removal until after
         // callbacks enumeration is finished.
@@ -993,10 +1000,11 @@ NotifyCallbacks(const char* aPrefName)
 
   for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
     if (node->mFunc) {
-      bool matches =
-        node->mMatchKind == Preferences::ExactMatch
-          ? strcmp(node->mDomain, aPrefName) == 0
-          : strncmp(node->mDomain, aPrefName, strlen(node->mDomain)) == 0;
+      bool matches = node->mMatchKind == Preferences::ExactMatch
+                       ? strcmp(node->mDomain.get(), aPrefName) == 0
+                       : strncmp(node->mDomain.get(),
+                                 aPrefName,
+                                 strlen(node->mDomain.get())) == 0;
       if (matches) {
         (node->mFunc)(aPrefName, node->mData);
       }
@@ -3303,7 +3311,7 @@ PreferenceServiceReporter::CollectReports(
 
   for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
     sizes.mCallbacks += mallocSizeOf(node);
-    sizes.mCallbacks += mallocSizeOf(node->mDomain);
+    sizes.mCallbacks += mallocSizeOf(node->mDomain.get());
   }
 
   MOZ_COLLECT_REPORT("explicit/preferences/hash-table",
@@ -3599,8 +3607,7 @@ Preferences::~Preferences()
   CallbackNode* node = gFirstCallback;
   while (node) {
     CallbackNode* next_node = node->mNext;
-    free(const_cast<char*>(node->mDomain));
-    free(node);
+    delete node;
     node = next_node;
   }
   gLastPriorityNode = gFirstCallback = nullptr;
