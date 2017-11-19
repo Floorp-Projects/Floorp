@@ -2512,6 +2512,13 @@ js::CreatePromiseObjectForAsync(JSContext* cx, HandleValue generatorVal)
     return promise;
 }
 
+bool
+js::IsPromiseForAsync(JSObject* promise)
+{
+    return promise->is<PromiseObject>() &&
+           PromiseHasAnyFlag(promise->as<PromiseObject>(), PROMISE_FLAG_ASYNC);
+}
+
 // ES 2018 draft 25.5.5.2 steps 3.f, 3.g.
 MOZ_MUST_USE bool
 js::AsyncFunctionThrown(JSContext* cx, Handle<PromiseObject*> resultPromise)
