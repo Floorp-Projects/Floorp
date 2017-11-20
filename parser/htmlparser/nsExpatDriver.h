@@ -17,7 +17,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsIExpatSink;
-class nsIExtendedExpatSink;
 struct nsCatalogData;
 
 class nsExpatDriver : public nsIDTD,
@@ -54,18 +53,6 @@ public:
                                   const char16_t* aPubid,
                                   bool aHasInternalSubset);
   nsresult HandleEndDoctypeDecl();
-  nsresult HandleStartNamespaceDecl(const char16_t* aPrefix,
-                                    const char16_t* aUri);
-  nsresult HandleEndNamespaceDecl(const char16_t* aPrefix);
-  nsresult HandleNotationDecl(const char16_t* aNotationName,
-                              const char16_t* aBase,
-                              const char16_t* aSysid,
-                              const char16_t* aPubid);
-  nsresult HandleUnparsedEntityDecl(const char16_t* aEntityName,
-                                    const char16_t* aBase,
-                                    const char16_t* aSysid,
-                                    const char16_t* aPubid,
-                                    const char16_t* aNotationName);
 
 private:
   // Load up an external stream to get external entity information
@@ -130,7 +117,6 @@ private:
   // only to avoid QI-ing back to nsIContentSink*.
   nsCOMPtr<nsIContentSink> mOriginalSink;
   nsCOMPtr<nsIExpatSink> mSink;
-  nsCOMPtr<nsIExtendedExpatSink> mExtendedSink;
 
   const nsCatalogData* mCatalogData; // weak
   nsString         mURISpec;
