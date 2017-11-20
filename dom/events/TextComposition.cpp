@@ -65,6 +65,7 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
   , mIsRequestingCommit(false)
   , mIsRequestingCancel(false)
   , mRequestedToCommitOrCancel(false)
+  , mHasReceivedCommitEvent(false)
   , mWasNativeCompositionEndEventDiscarded(false)
   , mAllowControlCharacters(
       Preferences::GetBool("dom.compositionevent.allow_control_characters",
@@ -245,6 +246,10 @@ TextComposition::DispatchCompositionEvent(
                    bool aIsSynthesized)
 {
   mWasCompositionStringEmpty = mString.IsEmpty();
+
+  if (aCompositionEvent->IsFollowedByCompositionEnd()) {
+    mHasReceivedCommitEvent = true;
+  }
 
   // If this instance has requested to commit or cancel composition but
   // is not synthesizing commit event, that means that the IME commits or
@@ -563,10 +568,12 @@ nsresult
 TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
 {
   // If this composition is already requested to be committed or canceled,
-  // we don't need to request it again because even if the first request
-  // failed, new request won't success, probably.  And we shouldn't synthesize
-  // events for committing or canceling composition twice or more times.
-  if (mRequestedToCommitOrCancel) {
+  // or has already finished in IME, we don't need to request it again because
+  // request from this instance shouldn't cause committing nor canceling current
+  // composition in IME, and even if the first request failed, new request
+  // won't success, probably.  And we shouldn't synthesize events for
+  // committing or canceling composition twice or more times.
+  if (!CanRequsetIMEToCommitOrCancelComposition()) {
     return NS_OK;
   }
 
