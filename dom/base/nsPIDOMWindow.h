@@ -152,12 +152,6 @@ public:
   virtual nsPIDOMWindowOuter* GetScriptableParent() = 0;
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
 
-  bool IsRootOuterWindow()
-  {
-    MOZ_ASSERT(IsOuterWindow());
-    return mIsRootOuterWindow;
-  }
-
   /**
    * Behavies identically to GetScriptableParent extept that it returns null
    * if GetScriptableParent would return this window.
@@ -991,6 +985,12 @@ public:
     // GetDoc forces inner window creation if there isn't one already
     GetDoc();
     return GetCurrentInnerWindow();
+  }
+
+  bool IsRootOuterWindow()
+  {
+    MOZ_ASSERT(IsOuterWindow());
+    return mIsRootOuterWindow;
   }
 
   /**
