@@ -150,7 +150,9 @@ ConstantSourceNode::ConstantSourceNode(AudioContext* aContext)
                              ChannelCountMode::Max,
                              ChannelInterpretation::Speakers)
   , mOffset(new AudioParam(this, ConstantSourceNodeEngine::OFFSET,
-                           "offset", 1.0f))
+                           "offset", 1.0f,
+                           std::numeric_limits<float>::lowest(),
+                           std::numeric_limits<float>::max()))
   , mStartCalled(false)
 {
   ConstantSourceNodeEngine* engine = new ConstantSourceNodeEngine(this, aContext->Destination());
