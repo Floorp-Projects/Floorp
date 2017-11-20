@@ -36,19 +36,11 @@ def make_hg_url(hgHost, repoPath, protocol='https', revision=None,
         return '/'.join([p.strip('/') for p in [repo, 'raw-file', revision,
                          filename]])
 
-def readConfig(configfile, keys=[], required=[]):
+def readConfig(configfile, keys=[]):
     c = {}
     execfile(configfile, c)
     for k in keys:
         c = c[k]
-    items = c.keys()
-    err = False
-    for key in required:
-        if key not in items:
-            err = True
-            log.error("Required item `%s' missing from %s" % (key, c))
-    if err:
-        raise ConfigError("Missing at least one item in config, see above")
     return c
 
 def verify_mozconfigs(mozconfig_pair, nightly_mozconfig_pair, platform,
