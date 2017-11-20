@@ -873,8 +873,8 @@ __attribute__ ((visibility("default")))
 jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *env, jclass, jlong size);
 
-static jni::DependentRef<java::GeckoLayerClient>
-GetJavaLayerClient(mozIDOMWindowProxy* aWindow)
+static jni::DependentRef<java::LayerSession::Compositor>
+GetJavaCompositor(mozIDOMWindowProxy* aWindow)
 {
     MOZ_ASSERT(aWindow);
 
@@ -883,13 +883,13 @@ GetJavaLayerClient(mozIDOMWindowProxy* aWindow)
             widget::WidgetUtils::DOMWindowToWidget(domWindow);
     MOZ_ASSERT(widget);
 
-    return static_cast<nsWindow*>(widget.get())->GetLayerClient();
+    return static_cast<nsWindow*>(widget.get())->GetJavaCompositor();
 }
 
 void
 AndroidBridge::ContentDocumentChanged(mozIDOMWindowProxy* aWindow)
 {
-    auto layerClient = GetJavaLayerClient(aWindow);
+    auto layerClient = GetJavaCompositor(aWindow);
     if (!layerClient) {
         return;
     }
@@ -899,7 +899,7 @@ AndroidBridge::ContentDocumentChanged(mozIDOMWindowProxy* aWindow)
 bool
 AndroidBridge::IsContentDocumentDisplayed(mozIDOMWindowProxy* aWindow)
 {
-    auto layerClient = GetJavaLayerClient(aWindow);
+    auto layerClient = GetJavaCompositor(aWindow);
     if (!layerClient) {
         return false;
     }
