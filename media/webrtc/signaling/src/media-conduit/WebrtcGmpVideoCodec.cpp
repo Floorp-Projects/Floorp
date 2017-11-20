@@ -923,6 +923,8 @@ int32_t
 WebrtcGmpVideoDecoder::ReleaseGmp()
 {
   LOGD(("GMP Released:"));
+  RegisterDecodeCompleteCallback(nullptr);
+
   if (mGMPThread) {
     mGMPThread->Dispatch(
         WrapRunnableNM(&WebrtcGmpVideoDecoder::ReleaseGmp_g,
