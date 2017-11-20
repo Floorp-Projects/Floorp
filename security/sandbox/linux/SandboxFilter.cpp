@@ -732,13 +732,10 @@ public:
     CASES_FOR_statfs:
       return Trap(StatFsTrap, nullptr);
 
-      // Filesystem syscalls that need more work to determine who's
-      // using them, if they need to be, and what we intend to about it.
-    case __NR_getcwd:
-    CASES_FOR_fstatfs:
-    CASES_FOR_fchown:
-    case __NR_fchmod:
-    case __NR_flock:
+    CASES_FOR_fstatfs: // fontconfig, pulseaudio, GIO (see also statfs)
+    CASES_FOR_fchown: // pulseaudio
+    case __NR_fchmod: // pulseaudio
+    case __NR_flock: // graphics
       return Allow();
 
       // Bug 1354731: proprietary GL drivers try to mknod() their devices
