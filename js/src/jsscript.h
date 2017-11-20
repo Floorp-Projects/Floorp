@@ -787,9 +787,9 @@ class SharedScriptData
     // script data table.
     mozilla::Atomic<uint32_t> refCount_;
 
-    uint32_t dataLength_;
     uint32_t natoms_;
     uint32_t codeLength_;
+    uint32_t noteLength_;
     uintptr_t data_[1];
 
   public:
@@ -804,13 +804,13 @@ class SharedScriptData
     }
     void decRefCount() {
         MOZ_ASSERT(refCount_ != 0);
-        refCount_--;
-        if (refCount_ == 0)
+        uint32_t remain = refCount_--;
+        if (remain == 0)
             js_free(this);
     }
 
-    uint32_t dataLength() const {
-        return dataLength_;
+    size_t dataLength() const {
+        return (natoms_ * sizeof(GCPtrAtom)) + codeLength_ + noteLength_;
     }
     uint8_t* data() {
         return reinterpret_cast<uint8_t*>(data_);
@@ -830,6 +830,13 @@ class SharedScriptData
     }
     jsbytecode* code() {
         return reinterpret_cast<jsbytecode*>(data() + natoms_ * sizeof(GCPtrAtom));
+    }
+
+    uint32_t numNotes() const {
+        return noteLength_;
+    }
+    jssrcnote* notes() {
+        return reinterpret_cast<jssrcnote*>(data() + natoms_ * sizeof(GCPtrAtom) + codeLength_);
     }
 
     void traceChildren(JSTracer* trc);
@@ -1789,11 +1796,6 @@ class JSScript : public js::gc::TenuredCell
     size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const;
     size_t sizeOfTypeScript(mozilla::MallocSizeOf mallocSizeOf) const;
 
-    uint32_t numNotes();  /* Number of srcnote slots in the srcnotes section */
-
-    /* Script notes are allocated right after the code. */
-    jssrcnote* notes() { return (jssrcnote*)(code() + length()); }
-
     bool hasArray(ArrayKind kind) const {
         return hasArrayBits & (1 << kind);
     }
@@ -1854,6 +1856,15 @@ class JSScript : public js::gc::TenuredCell
     }
 
     bool hasLoops();
+
+    uint32_t numNotes() const {
+        MOZ_ASSERT(scriptData_);
+        return scriptData_->numNotes();
+    }
+    jssrcnote* notes() const {
+        MOZ_ASSERT(scriptData_);
+        return scriptData_->notes();
+    }
 
     size_t natoms() const {
         MOZ_ASSERT(scriptData_);
