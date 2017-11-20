@@ -39,7 +39,6 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   color: inherit;
 }
 
-menucaption > .menu-text,
 menucaption > .menu-iconic-text {
   font-weight: bold;
 }
