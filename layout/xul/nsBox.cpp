@@ -696,7 +696,7 @@ nsIFrame::AddXULMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
     if ((minWidth.GetUnit() == eStyleUnit_Coord &&
          minWidth.GetCoordValue() != 0) ||
         (minWidth.IsCalcUnit() && !minWidth.CalcHasPercent())) {
-        nscoord min = nsRuleNode::ComputeCoordPercentCalc(minWidth, 0);
+        nscoord min = minWidth.ComputeCoordPercentCalc(0);
         if (!aWidthSet || (min > aSize.width && canOverride)) {
            aSize.width = min;
            aWidthSet = true;
@@ -718,7 +718,7 @@ nsIFrame::AddXULMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
     if ((minHeight.GetUnit() == eStyleUnit_Coord &&
          minHeight.GetCoordValue() != 0) ||
         (minHeight.IsCalcUnit() && !minHeight.CalcHasPercent())) {
-        nscoord min = nsRuleNode::ComputeCoordPercentCalc(minHeight, 0);
+        nscoord min = minHeight.ComputeCoordPercentCalc(0);
         if (!aHeightSet || (min > aSize.height && canOverride)) {
            aSize.height = min;
            aHeightSet = true;
@@ -783,14 +783,14 @@ nsIFrame::AddXULMaxSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aH
     // (min-/max-/)(width/height) properties.)
     const nsStyleCoord maxWidth = position->mMaxWidth;
     if (maxWidth.ConvertsToLength()) {
-        aSize.width = nsRuleNode::ComputeCoordPercentCalc(maxWidth, 0);
+        aSize.width = maxWidth.ComputeCoordPercentCalc(0);
         aWidthSet = true;
     }
     // percentages and calc() with percentages are treated like 'none'
 
     const nsStyleCoord &maxHeight = position->mMaxHeight;
     if (maxHeight.ConvertsToLength()) {
-        aSize.height = nsRuleNode::ComputeCoordPercentCalc(maxHeight, 0);
+        aSize.height = maxHeight.ComputeCoordPercentCalc(0);
         aHeightSet = true;
     }
     // percentages and calc() with percentages are treated like 'none'

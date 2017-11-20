@@ -5756,7 +5756,7 @@ nsLayoutUtils::ComputeCBDependentValue(nscoord aPercentBasis,
     "large sizes, not attempts at intrinsic size calculation");
 
   if (aCoord.IsCoordPercentCalcUnit()) {
-    return nsRuleNode::ComputeCoordPercentCalc(aCoord, aPercentBasis);
+    return aCoord.ComputeCoordPercentCalc(aPercentBasis);
   }
   NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
                aCoord.GetUnit() == eStyleUnit_Auto,
@@ -5781,7 +5781,7 @@ nsLayoutUtils::ComputeBSizeDependentValue(
                   "unexpected containing block block-size");
 
   if (aCoord.IsCoordPercentCalcUnit()) {
-    return nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockBSize);
+    return aCoord.ComputeCoordPercentCalc(aContainingBlockBSize);
   }
 
   NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
@@ -7253,8 +7253,8 @@ static bool NonZeroStyleCoord(const nsStyleCoord& aCoord)
 {
   if (aCoord.IsCoordPercentCalcUnit()) {
     // Since negative results are clamped to 0, check > 0.
-    return nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) > 0 ||
-           nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) > 0;
+    return aCoord.ComputeCoordPercentCalc(nscoord_MAX) > 0 ||
+           aCoord.ComputeCoordPercentCalc(0) > 0;
   }
 
   return true;

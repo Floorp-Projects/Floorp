@@ -1044,14 +1044,6 @@ public:
                               nsPresContext* aPresContext,
                               mozilla::RuleNodeCacheConditions& aConditions);
 
-  // Compute the value of an nsStyleCoord that is either a coord, a
-  // percent, or a calc expression.
-  // @note the caller is expected to handle percentage of an indefinite size
-  // and NOT call this method with aPercentageBasis == NS_UNCONSTRAINEDSIZE.
-  // @note the return value may be negative, e.g. for "calc(a - b%)"
-  static nscoord ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
-                                         nscoord aPercentageBasis);
-
   // Return whether the rule tree for which this node is the root has
   // cached data such that we need to do dynamic change handling for
   // changes that change the results of media queries or require
