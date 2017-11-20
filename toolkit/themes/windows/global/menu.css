@@ -69,7 +69,6 @@ menuitem.spell-suggestion {
   padding-inline-end: 2px;
 }
 
-menucaption > .menu-text,
 menucaption > .menu-iconic-text {
   font-weight: bold;
   padding-inline-start: 0 !important;

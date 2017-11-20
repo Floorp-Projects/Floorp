@@ -21,12 +21,6 @@ body {
   max-width: 80%;
 }
 
-#aboutLogoContainer {
-  border: 1px solid ThreeDLightShadow;
-  width: 300px;
-  margin-bottom: 2em;
-}
-
 h1 {
   font-weight: lighter;
   font-size: 2.4em;
@@ -34,13 +28,6 @@ h1 {
 
 img {
   border: 0;
-}
-
-#version {
-  font-weight: bold;
-  color: #909090;
-  margin: -24px 0 9px 17px;
-  text-align: left; /* Override direction alignment on RTL to make sure that the version will fit well on the background. bug 1325232 */
 }
 
 ul {

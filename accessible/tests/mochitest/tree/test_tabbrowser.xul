@@ -34,7 +34,7 @@
 
       this.invoke = function testTabHierarchy_invoke()
       {
-        var docURIs = ["about:", "about:mozilla"];
+        var docURIs = ["about:license", "about:mozilla"];
         tabBrowser().loadTabs(docURIs, {
           inBackground: false,
           replace: true,
@@ -66,7 +66,7 @@
               children: []
             },
             {
-              // xul:tab ("about:")
+              // xul:tab ("about:license")
               role: ROLE_PAGETAB,
               children: []
             },
@@ -108,7 +108,7 @@
           //     probably due to size reduction in this test.
           tabsAccTree.children.splice(0, 0,
             {
-              // xul:tab ("about:")
+              // xul:tab ("about:license")
               role: ROLE_PAGETAB,
               children: [
                 {
@@ -168,7 +168,7 @@
                   role: ROLE_INTERNAL_FRAME,
                   children: [
                     {
-                      // #document ("about:")
+                      // #document ("about:license")
                       role: ROLE_DOCUMENT
                       // children: [ ... ] // Ignore document content.
                     }

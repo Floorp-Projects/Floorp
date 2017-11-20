@@ -4,8 +4,8 @@
 
 #include "Adts.h"
 #include "AnnexB.h"
-#include "mp4_demuxer/BufferReader.h"
-#include "mp4_demuxer/DecoderData.h"
+#include "BufferReader.h"
+#include "DecoderData.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EndianUtils.h"
 #include "VideoUtils.h"
@@ -16,7 +16,7 @@
 
 using mozilla::media::TimeUnit;
 
-namespace mp4_demuxer
+namespace mozilla
 {
 
 mozilla::Result<mozilla::Ok, nsresult>
