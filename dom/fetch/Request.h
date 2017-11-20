@@ -88,6 +88,12 @@ public:
     aIntegrity = mRequest->GetIntegrity();
   }
 
+  bool
+  MozErrors() const
+  {
+    return mRequest->MozErrors();
+  }
+
   RequestContext
   Context() const
   {
