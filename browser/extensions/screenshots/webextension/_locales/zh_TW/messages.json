@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "下載"
   },
+  "downloadOnlyNotice": {
+    "message": "您目前處於「僅可下載模式」。"
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots 會在下列狀況時，進入「僅可下載模式」:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "使用隱私瀏覽模式開啟時。"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "停用第三方 Cookie 時。"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "開啟「永不保留瀏覽紀錄」時。"
+  },
   "notificationLinkCopiedTitle": {
     "message": "已複製鏈結"
   },
   "notificationLinkCopiedDetails": {
     "message": "已將您拍攝的圖片鏈結複製到剪貼簿，按下 $META_KEY$+V 即可貼上。",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "複製"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "已複製擷圖"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "已將擷圖複製到剪貼簿，按下 $META_KEY$-V 即可貼上。",
     "placeholders": {
       "meta_key": {
         "content": "$1"

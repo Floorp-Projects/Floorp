@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Pobierz"
   },
+  "downloadOnlyNotice": {
+    "message": "Obecnie używany jest tryb umożliwiający tylko pobieranie."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots automatycznie przełącza na tryb umożliwiający tylko pobieranie w tych sytuacjach:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Okno jest prywatne."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Ciasteczka witryn zewnętrznych podmiotów są wyłączone."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Zachowywanie historii jest wyłączone."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Skopiowano odnośnik"
   },
   "notificationLinkCopiedDetails": {
     "message": "Odnośnik do zrzutu został skopiowany do schowka. Naciśnij $META_KEY$-V, aby go wkleić.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopiuj"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Skopiowano zrzut"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Zrzut został skopiowany do schowka. Naciśnij $META_KEY$-V, aby go wkleić.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

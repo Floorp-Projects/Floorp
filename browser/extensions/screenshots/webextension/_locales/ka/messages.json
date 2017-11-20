@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "ჩამოტვირთვა"
   },
+  "downloadOnlyNotice": {
+    "message": "თქვენ ახლა, „მხოლოდ ჩამოტვირთვის“ რეჟიმში იმყოფებით."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots თავისით შეცვლის „მხოლოდ ჩამოტვირთვის“ რეჟიმს, შემდეგ შემთხვევებში:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "პირადი ფანჯრით სარგებლობისას."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "მესამე მხარის ფუნთუშების შენახვა, შეზღუდულია."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“არასდროს დაიმახსოვროს ისტორია” ჩართულია."
+  },
   "notificationLinkCopiedTitle": {
     "message": "ბმული დაკოპირებულია"
   },
   "notificationLinkCopiedDetails": {
     "message": "თქვენი სურათის ბმული დაკოპირებულია. ჩასმისთვის დააწექით $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "კოპირება"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "სურათი დაკოპირებულია"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "თქვენი სურათი დაკოპირებულია. ჩასმისთვის დააწექით $META_KEY$-V.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

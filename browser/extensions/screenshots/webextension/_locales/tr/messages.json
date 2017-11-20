@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "İndir"
   },
+  "downloadOnlyNotice": {
+    "message": "Şu anda Yalnızca İndirme modundasınız."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots şu durumlarda kendiliğinden Yalnızca İndirme moduna geçer:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Gizli Gezinti penceresindeyken"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Üçüncü taraf çerezleri devre dışıyken"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Geçmişi asla hatırlama” devredeyken"
+  },
   "notificationLinkCopiedTitle": {
     "message": "Bağlantı kopyalandı"
   },
   "notificationLinkCopiedDetails": {
     "message": "Ekran görüntünüzün bağlantısı panoya kopyalandı. Yapıştırmak için $META_KEY$-V tuşlarına basabilirsiniz.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopyala"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Görüntü kopyalandı"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Ekran görüntünüz panoya kopyalandı. Yapıştırmak için $META_KEY$-V tuşlarına basabilirsiniz.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

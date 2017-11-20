@@ -73,6 +73,9 @@
   "tourBodyIntro": {
     "message": "Dumaan, i-save, at ibahagi ang mga screenshot nang hindi umaalis sa Firefox."
   },
+  "tourHeaderPageAction": {
+    "message": "Ang bagong paraan para mag-save"
+  },
   "tourHeaderClickAndDrag": {
     "message": "Kunan Kung Ano Ang Gusto Mo"
   },
@@ -103,13 +106,13 @@
   "tourDone": {
     "message": "Tapos"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Sa paggamit ng Firefox Screenshots, tinatanggap mo ang Firefox Cloud Services {termsAndPrivacyNoticeTermsLink} at {termsAndPrivacyNoticePrivacyLink}."
-  },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "Mga tuntunin"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Abiso sa Privacy"
+  },
+  "libraryLabel": {
+    "message": "Mga screenshot"
   }
 }

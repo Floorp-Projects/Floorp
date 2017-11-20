@@ -9,7 +9,7 @@
     "message": "Padaryti ekrano nuotrauką"
   },
   "myShotsLink": {
-    "message": "Mano kadrai"
+    "message": "Mano nuotraukos"
   },
   "screenshotInstructions": {
     "message": "Tempkite arba spustelėkite tinklalapyje norėdami pasirinkti regioną. Spustelėkite „ESC“ norėdami atsisakyti."
@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Atsisiųsti"
   },
+  "downloadOnlyNotice": {
+    "message": "Dabar esate tik atsiuntimo veiksenoje."
+  },
+  "downloadOnlyDetails": {
+    "message": "„Firefox“ ekrano nuotraukos automatiškai įjungia tik atsiuntimo veikseną tokiais atvejais:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "privačiojo naršymo lange"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "kai išjungti trečiųjų šalių slapukai"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "kai įjungta „niekada nevesti žurnalo“ nuostata"
+  },
   "notificationLinkCopiedTitle": {
     "message": "Saitas nukopijuotas"
   },
   "notificationLinkCopiedDetails": {
     "message": "Jūsų nuotraukos saitas buvo nukopijuotas į iškarpinę. Spustelėkite „$META_KEY$-V“ norėdami įdėti.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopijuoti"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Nuotrauka nukopijuota"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Jūsų nuotrauka nukopijuota į iškarpinę. Spustelėkite $META_KEY$-V, norėdami įdėti.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -112,7 +141,7 @@
     "message": "Kaip jums patogiau"
   },
   "tourBodyDownloadUpload": {
-    "message": "Įrašykite padarytas nuotraukas saityne patogesniam dalinimuisi, arba atsisiųskite jas į savo kompiuterį. Spustelėję mygtuką „Mano kadrai“, matysite visas savo padarytas nuotraukas."
+    "message": "Įrašykite padarytas nuotraukas saityne patogesniam dalinimuisi, arba atsisiųskite jas į savo kompiuterį. Spustelėję mygtuką „Mano nuotraukos“, matysite visas savo padarytas nuotraukas."
   },
   "tourSkip": {
     "message": "SKIP"
