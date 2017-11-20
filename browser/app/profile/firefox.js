@@ -1721,7 +1721,7 @@ pref("extensions.formautofill.heuristics.enabled", true);
 pref("extensions.formautofill.section.enabled", true);
 pref("extensions.formautofill.loglevel", "Warn");
 // Comma separated list of countries Form Autofill supports
-pref("extensions.formautofill.supportedCountries", "US");
+pref("extensions.formautofill.supportedCountries", "US,CA,DE");
 
 // Whether or not to restore a session with lazy-browser tabs.
 pref("browser.sessionstore.restore_tabs_lazily", true);
