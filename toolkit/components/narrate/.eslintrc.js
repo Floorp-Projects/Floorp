@@ -30,7 +30,6 @@ module.exports = {
     "no-unused-vars": "error",
     "padded-blocks": ["error", "never"],
     "quotes": ["error", "double", "avoid-escape"],
-    "semi": ["error", "always"],
     "semi-spacing": ["error", {"before": false, "after": true}],
     "space-in-parens": ["error", "never"],
     "strict": ["error", "global"],

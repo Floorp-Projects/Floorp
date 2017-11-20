@@ -17,7 +17,7 @@ add_task(async function setup() {
                              "https://example.com/signup");
   Services.prefs.setCharPref("identity.fxaccounts.remote.email.uri",
                              "https://example.com/?action=email");
-})
+});
 
 add_UITour_task(async function test_checkSyncSetup_disabled() {
   let result = await getConfigurationPromise("sync");

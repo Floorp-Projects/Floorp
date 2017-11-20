@@ -138,7 +138,7 @@ add_task(async function testExactHostMatch() {
 });
 
 add_task(function* testDefaultPrefs() {
-  let uri = Services.io.newURI("https://example.com")
+  let uri = Services.io.newURI("https://example.com");
 
   // Check that without a pref the default return value is UNKNOWN.
   Assert.deepEqual(SitePermissions.get(uri, "camera"), {

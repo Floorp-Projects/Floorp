@@ -262,7 +262,7 @@
           this.tabContainer._positionPinnedTabs();
           this.tabContainer._updateCloseButtons();
 
-          this.getBrowserForTab(aTab).messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: true })
+          this.getBrowserForTab(aTab).messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: true });
 
           if (aTab.selected)
             this._setCloseKeyState(false);
@@ -286,7 +286,7 @@
           this.tabContainer._positionPinnedTabs();
           this.tabContainer._updateCloseButtons();
 
-          this.getBrowserForTab(aTab).messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: false })
+          this.getBrowserForTab(aTab).messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: false });
 
           if (aTab.selected)
             this._setCloseKeyState(true);
@@ -694,7 +694,7 @@
               const nsIChannel = Components.interfaces.nsIChannel;
               let location, originalLocation;
               try {
-                aRequest.QueryInterface(nsIChannel)
+                aRequest.QueryInterface(nsIChannel);
                 location = aRequest.URI;
                 originalLocation = aRequest.originalURI;
               } catch (ex) {}
@@ -1088,7 +1088,7 @@
         <body>
           <![CDATA[
             if (aURL) {
-              let pageInfo = {url: aURL, description: aDescription, previewImageURL: aPreviewImage}
+              let pageInfo = {url: aURL, description: aDescription, previewImageURL: aPreviewImage};
               PlacesUtils.history.update(pageInfo).catch(Components.utils.reportError);
             }
           ]]>
@@ -1248,7 +1248,7 @@
                     this._tabSwitchID = null;
                   }
                   window.removeEventListener("MozAfterPaint", onMozAfterPaint);
-                }
+                };
                 window.addEventListener("MozAfterPaint", onMozAfterPaint);
               }
             }
@@ -1775,7 +1775,7 @@
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
               let params = arguments[1];
-              aTriggeringPrincipal      = params.triggeringPrincipal
+              aTriggeringPrincipal      = params.triggeringPrincipal;
               aReferrerURI              = params.referrerURI;
               aReferrerPolicy           = params.referrerPolicy;
               aCharset                  = params.charset;
@@ -2079,7 +2079,7 @@
               // crashed.
               tab.removeAttribute("crashed");
             } else {
-              aBrowser.messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: tab.pinned })
+              aBrowser.messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: tab.pinned });
 
               // Register the new outerWindowID.
               this._outerWindowIDBrowserMap.set(aBrowser.outerWindowID, aBrowser);
@@ -2439,7 +2439,7 @@
                   getter = () => {
                     if (AppConstants.NIGHTLY_BUILD) {
                       let message =
-                        `[bug 1345098] Lazy browser prematurely inserted via '${name}' property access:\n`
+                        `[bug 1345098] Lazy browser prematurely inserted via '${name}' property access:\n`;
                       console.log(message + new Error().stack);
                     }
                     this._insertBrowser(aTab);
@@ -2448,7 +2448,7 @@
                   setter = value => {
                     if (AppConstants.NIGHTLY_BUILD) {
                       let message =
-                        `[bug 1345098] Lazy browser prematurely inserted via '${name}' property access:\n`
+                        `[bug 1345098] Lazy browser prematurely inserted via '${name}' property access:\n`;
                       console.log(message + new Error().stack);
                     }
                     this._insertBrowser(aTab);
@@ -3061,7 +3061,7 @@
               let tab = tabs[i];
               if (tab != aTab && !tab.pinned) {
                 if (this._hasBeforeUnload(tab))
-                  tabsWithBeforeUnload.push(tab)
+                  tabsWithBeforeUnload.push(tab);
                 else
                   this.removeTab(tab, {animate: true});
               }
@@ -5670,7 +5670,7 @@
                 return undefined;
 
               this._outerWindowIDBrowserMap.set(browser.outerWindowID, browser);
-              browser.messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: tab.pinned })
+              browser.messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: tab.pinned });
               break;
             }
             case "Browser:WindowCreated": {
@@ -6225,7 +6225,7 @@
       </handler>
       <handler event="DOMAudioPlaybackStarted">
         <![CDATA[
-          var tab = this.getTabFromAudioEvent(event)
+          var tab = this.getTabFromAudioEvent(event);
           if (!tab) {
             return;
           }
@@ -6255,7 +6255,7 @@
       </handler>
       <handler event="DOMAudioPlaybackStopped">
         <![CDATA[
-          var tab = this.getTabFromAudioEvent(event)
+          var tab = this.getTabFromAudioEvent(event);
           if (!tab) {
             return;
           }
@@ -6277,7 +6277,7 @@
       </handler>
       <handler event="DOMAudioPlaybackBlockStarted">
         <![CDATA[
-          var tab = this.getTabFromAudioEvent(event)
+          var tab = this.getTabFromAudioEvent(event);
           if (!tab) {
             return;
           }
@@ -6291,7 +6291,7 @@
       </handler>
       <handler event="DOMAudioPlaybackBlockStopped">
         <![CDATA[
-          var tab = this.getTabFromAudioEvent(event)
+          var tab = this.getTabFromAudioEvent(event);
           if (!tab) {
             return;
           }
@@ -6528,7 +6528,7 @@
               }
 
               const newTab = document.getElementById("new-tab-button");
-              const newTab2 = document.getAnonymousElementByAttribute(this, "anonid", "tabs-newtab-button")
+              const newTab2 = document.getAnonymousElementByAttribute(this, "anonid", "tabs-newtab-button");
 
               for (let parent of [newTab, newTab2]) {
                 if (!parent)
@@ -7420,7 +7420,7 @@
           if (platform == "win" || platform == "macosx") {
             captureListener = function() {
               dt.updateDragImage(canvas, dragImageOffset, dragImageOffset);
-            }
+            };
           } else {
             // Create a panel to use it in setDragImage
             // which will tell xul to render a panel that follows
@@ -7615,7 +7615,7 @@
                 this.tabbrowser.moveTabTo(draggedTab, dropIndex);
 
               this.tabbrowser.syncThrobberAnimations(draggedTab);
-            }
+            };
             draggedTab.addEventListener("transitionend", onTransitionEnd);
           } else {
             this._finishAnimateTabMove();

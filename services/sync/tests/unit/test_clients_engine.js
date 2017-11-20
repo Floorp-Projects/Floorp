@@ -1862,7 +1862,7 @@ add_task(async function test_create_record_command_limit() {
     // Much higher than the maximum number of commands we could actually fit.
     for (let i = 0; i < 500; ++i) {
       await engine.sendURIToClientForDisplay(
-        `https://www.example.com/2/${i}`, remoteId, `Page 2.${i}`)
+        `https://www.example.com/2/${i}`, remoteId, `Page 2.${i}`);
     }
 
     await syncClientsEngine(server);
@@ -1871,11 +1871,11 @@ add_task(async function test_create_record_command_limit() {
     let payload = user.collection("clients").payload(remoteId);
     less(payload.length, fakeLimit);
 
-    _("And that the data we uploaded is both sane json and containing some commands.")
+    _("And that the data we uploaded is both sane json and containing some commands.");
     let remoteCommands = JSON.parse(JSON.parse(payload).ciphertext).commands;
     greater(remoteCommands.length, 2);
     let firstCommand = remoteCommands[0];
-    _("The first command should still be present, since it had a high priority")
+    _("The first command should still be present, since it had a high priority");
     equal(firstCommand.command, "wipeEngine");
     _("And the last command in the list should be the last command we sent.");
     let lastCommand = remoteCommands[remoteCommands.length - 1];

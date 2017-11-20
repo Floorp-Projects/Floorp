@@ -181,7 +181,7 @@ Bookmarks.prototype = {
         await MigrationUtils.insertManyBookmarksWrapper(toolbarBMs, parentGuid);
       }
     })().then(() => aCallback(true),
-                        e => { Cu.reportError(e); aCallback(false) });
+                        e => { Cu.reportError(e); aCallback(false); });
   }
 };
 

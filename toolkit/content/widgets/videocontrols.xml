@@ -2141,7 +2141,7 @@
       }
     };
 
-    this.TouchUtils.init(this)
+    this.TouchUtils.init(this);
     this.dispatchEvent(new CustomEvent("VideoBindingAttached"));
     ]]>
   </constructor>

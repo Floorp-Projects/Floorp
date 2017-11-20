@@ -43,7 +43,7 @@ addEventListener("DOMContentLoaded", function() {
                                       }
                                   }
                                   event.preventDefault();
-                              })
+                              });
     });
 
     find_all(".screenshot a").forEach(function(elem) {
@@ -51,7 +51,7 @@ addEventListener("DOMContentLoaded", function() {
                               function(event) {
                                   window.open(find("img", elem).getAttribute("src"));
                                   event.preventDefault();
-                              })
+                              });
     });
 
     find_all(".sortable").forEach(function(elem) {
@@ -61,7 +61,7 @@ addEventListener("DOMContentLoaded", function() {
                                   var colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
                                   var key = elem.classList.contains("numeric") ? key_num : key_alpha;
                                   sort_table(elem, key(colIndex));
-                              })
+                              });
     });
 
 });
@@ -142,7 +142,7 @@ function toggle_sort_states(elem) {
 
 function split_debug_onto_two_rows() {
     find_all("tr.results-table-row").forEach(function(elem) {
-        var new_row = document.createElement("tr")
+        var new_row = document.createElement("tr");
         new_row.className = "debug";
         elem.parentNode.insertBefore(new_row, elem.nextSibling);
         find_all(".debug", elem).forEach(function(td_elem) {
@@ -162,7 +162,7 @@ function one_row_for_data() {
             toArray(elem.nextSibling.childNodes).forEach(
                 function(td_elem) {
                     elem.appendChild(td_elem);
-                })
+                });
         } else {
             var new_td = document.createElement("td");
             new_td.className = "debug";

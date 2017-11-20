@@ -81,7 +81,7 @@ gTests.push({
       return {
         title: "Title",
         url,
-      }
+      };
     });
 
     this._bookmarks = await PlacesUtils.bookmarks.insertTree({
@@ -121,7 +121,7 @@ gTests.push({
       return {
         title: "Title",
         url,
-      }
+      };
     });
 
     this._bookmarks = await PlacesUtils.bookmarks.insertTree({

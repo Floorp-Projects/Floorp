@@ -22,4 +22,4 @@
       id: uniqueMessageId
     });
   }, false);
-})()
+})();

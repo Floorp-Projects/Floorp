@@ -18201,12 +18201,3 @@ nsCSSParser::IsValueValidForProperty(const nsCSSPropertyID aPropID,
   return static_cast<CSSParserImpl*>(mImpl)->
     IsValueValidForProperty(aPropID, aPropValue);
 }
-
-/* static */
-uint8_t
-nsCSSParser::ControlCharVisibilityDefault()
-{
-  return StylePrefs::sControlCharVisibility
-    ? NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE
-    : NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN;
-}

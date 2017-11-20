@@ -45,9 +45,9 @@ job-template:
    docker-image:
       by-build-platform:
          default:
-           in-tree: desktop-build
+            in-tree: desktop-build
          android-api-16-nightly:
-           in-tree: android-build
+            in-tree: android-build
          win.*: null
    secrets:
       by-build-platform:
@@ -141,7 +141,7 @@ job-template:
                - taskcluster_nightly.py
                - single_locale/{project}_android-api-16.py
                - single_locale/tc_android-api-16.py
-            # no default, so we fail on new entries
+      # no default, so we fail on new entries
       options:
          by-build-platform:
             linux-nightly:
@@ -170,7 +170,7 @@ job-template:
                - config=single_locale/tc_win64.py
                - config=taskcluster_nightly.py
                - revision=$GECKO_HEAD_REV
-            default: [ ]
+            default: []
       actions:
          by-build-platform:
             default: ['clone-locales', 'list-locales', 'setup', 'repack',

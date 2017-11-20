@@ -261,13 +261,13 @@ function run_test() {
   try {
     assert.equal(1, 2);
   } catch (e) {
-    assert.equal(e.toString().split("\n")[0], "AssertionError: 1 == 2")
+    assert.equal(e.toString().split("\n")[0], "AssertionError: 1 == 2");
   }
 
   try {
     assert.equal(1, 2, "oh no");
   } catch (e) {
-    assert.equal(e.toString().split("\n")[0], "AssertionError: oh no - 1 == 2")
+    assert.equal(e.toString().split("\n")[0], "AssertionError: oh no - 1 == 2");
   }
 
   // Test XPCShell-test integration:

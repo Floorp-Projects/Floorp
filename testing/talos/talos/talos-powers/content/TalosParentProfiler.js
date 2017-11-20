@@ -114,7 +114,7 @@ var TalosParentProfiler;
         TalosPowers.profilerBegin({ entries, interval, threadsArray });
       } else {
         let msg = "You should not call beginTest without having first " +
-                  "initted the Profiler"
+                  "initted the Profiler";
         console.error(msg);
       }
     },

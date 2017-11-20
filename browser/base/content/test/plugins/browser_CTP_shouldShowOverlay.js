@@ -58,5 +58,5 @@ add_task(async function() {
       Assert.ok((overlay.getAttribute("sizing") != "blank") == expectedVisibility,
                 `The expected visibility is correct in ${testcase.id}`);
     }
-  })
+  });
 });

@@ -139,13 +139,13 @@ function RadixSort(array, len, buffer, nbytes, signed, floating, comparefn) {
             if (view[i] & signMask) {
                 view[i] ^= 0xFFFFFFFF;
             } else {
-                view[i] ^= signMask
+                view[i] ^= signMask;
             }
         }
     } else if (signed) {
         // Flip sign bit
         for (let i = 0; i < len; i++) {
-            view[i] ^= signMask
+            view[i] ^= signMask;
         }
     }
 
@@ -180,7 +180,7 @@ function RadixSort(array, len, buffer, nbytes, signed, floating, comparefn) {
         }
     } else if (signed) {
         for (let i = 0; i < len; i++) {
-            view[i] ^= signMask
+            view[i] ^= signMask;
         }
     }
     return array;

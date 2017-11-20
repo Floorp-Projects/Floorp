@@ -17,4 +17,4 @@
       locationSearch: e.detail.locationSearch
     });
   }, false);
-})()
+})();

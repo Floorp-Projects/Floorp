@@ -177,7 +177,7 @@ const ReflectLoader = new class {
 
 setModuleResolveHook((module, requestName) => {
     let path = ReflectLoader.resolve(requestName, module);
-    return ReflectLoader.loadAndParse(path)
+    return ReflectLoader.loadAndParse(path);
 });
 
 Reflect.Loader = ReflectLoader;

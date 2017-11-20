@@ -9,11 +9,11 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-  - beetmover-checksums
-  - release-bouncer-sub
+   - beetmover-checksums
+   - release-bouncer-sub
 
 job-defaults:
-    shipping-phase: promote
+   shipping-phase: promote
 
 jobs:
    fennec:
@@ -40,7 +40,7 @@ jobs:
                   maple:
                      - "release-drivers-staging"
                   try:
-                     #- "{task[tags][createdForUser]}"
+                  #  - "{task[tags][createdForUser]}"
                   default:
                      - "release-drivers"
       routes:

@@ -281,8 +281,8 @@ macosx64/opt:
         - awsy
 
 macosx64-nightly/opt:
-      build-platform: macosx64-nightly/opt
-      test-sets:
+    build-platform: macosx64-nightly/opt
+    test-sets:
         - macosx64-tests
         - awsy
 

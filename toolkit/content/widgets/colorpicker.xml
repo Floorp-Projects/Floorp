@@ -214,7 +214,7 @@
           // used to capture keydown at the document level
           this.mPickerKeyDown = function(aEvent) {
             document._focusedPicker.pickerKeyDown(aEvent);
-          }
+          };
 
         ]]></body>
       </method>
@@ -467,10 +467,10 @@
             encodeURIComponent(this.color) +
             "' xmlns='http://www.w3.org/2000/svg' />");
 
-          var popup = document.getAnonymousElementByAttribute(this, "anonid", "colorpopup")
+          var popup = document.getAnonymousElementByAttribute(this, "anonid", "colorpopup");
           popup._colorPicker = this;
 
-          this.mPicker = document.getAnonymousElementByAttribute(this, "anonid", "colorpicker")
+          this.mPicker = document.getAnonymousElementByAttribute(this, "anonid", "colorpicker");
         ]]></body>
       </method>
 
@@ -532,7 +532,7 @@
       <method name="pickerChange">
         <body><![CDATA[
           this.color = this.mPicker.color;
-          setTimeout(function(aPopup) { aPopup.hidePopup() }, 1, this.mPicker.parentNode);
+          setTimeout(function(aPopup) { aPopup.hidePopup(); }, 1, this.mPicker.parentNode);
 
           this._fireEvent(this, "change");
         ]]></body>

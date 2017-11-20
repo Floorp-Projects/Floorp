@@ -18,7 +18,7 @@ function waitForNewWindow() {
       },
       onCloseWindow: aXULWindow => {},
       onWindowTitleChange: (aXULWindow, aNewTitle) => {}
-    }
+    };
 
     Services.wm.addListener(listener);
   });

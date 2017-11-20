@@ -267,12 +267,16 @@ public:
   // Notifies the cache that the current bytes should be written to disk.
   // Called on the main thread.
   void FlushPartialBlock();
-  // Notifies the cache that the channel has closed with the given status.
-  void NotifyDataEnded(nsresult aStatus);
 
-  // Notifies the stream that the channel is reopened. The stream should
-  // reset variables such as |mDidNotifyDataEnded|.
-  void NotifyChannelRecreated();
+  // Set the load ID so the following NotifyDataEnded() call can work properly.
+  // Used in some rare cases where NotifyDataEnded() is called without the
+  // preceding NotifyDataStarted().
+  void NotifyLoadID(uint32_t aLoadID);
+
+  // Notifies the cache that the channel has closed with the given status.
+  void NotifyDataEnded(uint32_t aLoadID,
+                       nsresult aStatus,
+                       bool aReopenOnError = false);
 
   // Notifies the stream that the suspend status of the client has changed.
   // Main thread only.
@@ -444,6 +448,10 @@ private:
   // If |aNotifyAll| is true, this function will wake up readers who may be
   // waiting on the media cache monitor. Called on the main thread only.
   void FlushPartialBlockInternal(bool aNotify, ReentrantMonitorAutoEnter& aReentrantMonitor);
+
+  void NotifyDataEndedInternal(uint32_t aLoadID,
+                               nsresult aStatus,
+                               bool aReopenOnError);
 
   // Instance of MediaCache to use with this MediaCacheStream.
   RefPtr<MediaCache> mMediaCache;

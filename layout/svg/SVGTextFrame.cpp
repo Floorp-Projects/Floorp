@@ -3423,9 +3423,8 @@ SVGTextFrame::HandleAttributeChangeInDescendant(Element* aElement,
 }
 
 void
-SVGTextFrame::FindCloserFrameForSelection(
-                                 nsPoint aPoint,
-                                 nsIFrame::FrameWithDistance* aCurrentBestFrame)
+SVGTextFrame::FindCloserFrameForSelection(const nsPoint& aPoint,
+                                          FrameWithDistance* aCurrentBestFrame)
 {
   if (GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
     return;

@@ -13,8 +13,8 @@
 #include "MediaPrefs.h"
 // Used for telemetry
 #include "mozilla/Telemetry.h"
-#include "mp4_demuxer/AnnexB.h"
-#include "mp4_demuxer/H264.h"
+#include "AnnexB.h"
+#include "H264.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/MP4Metadata.h"
 #include "mp4_demuxer/ResourceStream.h"

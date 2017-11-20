@@ -504,7 +504,7 @@ const AutoMigrate = {
   async saveUndoState() {
     let resolveSavingPromise;
     this._saveUndoStateTrackerForShutdown = "processing undo history";
-    this._savingPromise = new Promise(resolve => { resolveSavingPromise = resolve });
+    this._savingPromise = new Promise(resolve => { resolveSavingPromise = resolve; });
     let state = await MigrationUtils.stopAndRetrieveUndoData();
 
     if (!state || ![...state.values()].some(ary => ary.length > 0)) {

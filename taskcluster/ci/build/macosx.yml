@@ -85,7 +85,7 @@ macosx64-dmd/opt:
         custom-build-variant-cfg: dmd
         secrets: true
         tooltool-downloads: internal
-    run-on-projects: [ ]
+    run-on-projects: []
     toolchains:
         - linux64-cctools-port
         - linux64-clang
@@ -123,7 +123,7 @@ macosx64-devedition-nightly/opt:
         secrets: true
         tooltool-downloads: internal
         custom-build-variant-cfg: devedition
-    run-on-projects: ['mozilla-beta',]
+    run-on-projects: ['mozilla-beta']
     toolchains:
         - linux64-cctools-port
         - linux64-clang
@@ -159,7 +159,7 @@ macosx64-noopt/debug:
         custom-build-variant-cfg: cross-noopt-debug
         tooltool-downloads: internal
         keep-artifacts: false
-    run-on-projects: [ 'trunk', 'try' ]
+    run-on-projects: ['trunk', 'try']
     toolchains:
         - linux64-cctools-port
         - linux64-clang
@@ -183,17 +183,17 @@ macosx64-add-on-devel/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
-       using: mozharness
-       actions: [get-secrets build update]
-       config:
+        using: mozharness
+        actions: [get-secrets build update]
+        config:
             - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
             - balrog/production.py
-       script: "mozharness/scripts/fx_desktop_build.py"
-       secrets: true
-       custom-build-variant-cfg: add-on-devel
-       tooltool-downloads: internal
-    run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: add-on-devel
+        tooltool-downloads: internal
+    run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
     toolchains:
         - linux64-cctools-port
         - linux64-clang

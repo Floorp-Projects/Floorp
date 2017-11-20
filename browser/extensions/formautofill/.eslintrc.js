@@ -49,9 +49,6 @@ module.exports = {
     // No using variables before defined
     "no-use-before-define": "error",
 
-    // Always require semicolon at end of statement
-    "semi": ["error", "always"],
-
     // Disallow using variables outside the blocks they are defined (especially
     // since only let and const are used, see "no-var").
     "block-scoped-var": "error",

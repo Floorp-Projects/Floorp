@@ -40,9 +40,9 @@ gtest:
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['mozilla-central', 'try']
-            windows.*-pgo/.*: [] # permafails on pgo
-            windows.*-nightly/.*: [] # permafails on nightly too
-            .*-devedition/.*: [] # don't run on devedition
+            windows.*-pgo/.*: []  # permafails on pgo
+            windows.*-nightly/.*: []  # permafails on nightly too
+            .*-devedition/.*: []  # don't run on devedition
             default: built-projects
     tier:
         by-test-platform:
@@ -66,10 +66,10 @@ jittest:
             default: 6
     mozharness:
         chunked:
-          by-test-platform:
-            windows.*: false
-            macosx.*: false
-            default: true
+            by-test-platform:
+                windows.*: false
+                macosx.*: false
+                default: true
     when:
         files-changed:
             - js/src/**

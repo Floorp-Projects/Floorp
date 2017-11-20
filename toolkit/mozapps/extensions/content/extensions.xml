@@ -1478,7 +1478,7 @@
             var event = document.createEvent("Events");
             event.initEvent("RelNotesToggle", true, true);
             this.dispatchEvent(event);
-          }
+          };
 
           let showRelNotes = () => {
             if (!relNotesData || !transformData)
@@ -1498,7 +1498,7 @@
               container.style.height = container.scrollHeight + "px";
             }
             sendToggleEvent();
-          }
+          };
 
           let handleError = () => {
             dataReq.abort();
@@ -1507,7 +1507,7 @@
             this._relNotesError.hidden = false;
             this._relNotesLoaded = false; // allow loading to be re-tried
             sendToggleEvent();
-          }
+          };
 
           function handleResponse(aEvent) {
             var req = aEvent.target;

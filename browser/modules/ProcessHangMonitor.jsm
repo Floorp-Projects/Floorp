@@ -299,7 +299,7 @@ var ProcessHangMonitor = {
         return true;
       }
       return false;
-    }
+    };
 
     // If there are any script hangs for browsers that are in this window
     // that is closing, we can stop them now.

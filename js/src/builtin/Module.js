@@ -438,7 +438,7 @@ function ModuleDeclarationEnvironmentSetup(module)
                "Unexpected failure to resolve export in ModuleDeclarationEnvironmentSetup");
         if (!resolution.resolved) {
             return ResolutionError(resolution, "indirectExport", e.exportName,
-                                   e.lineNumber, e.columnNumber)
+                                   e.lineNumber, e.columnNumber);
         }
     }
 

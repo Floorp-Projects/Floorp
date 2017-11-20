@@ -19,7 +19,7 @@ AutoMigrateBackstage.MigrationUtils = new Proxy({}, {
       return gShimmedMigratorKeyPicker;
     }
     if (name == "getMigrator" && gShimmedMigrator) {
-      return function() { return gShimmedMigrator };
+      return function() { return gShimmedMigrator; };
     }
     return MigrationUtils[name];
   },

@@ -127,7 +127,7 @@ async function run_test_1() {
         fr.readAsText(file);
         fr.onloadend = () => {
           resolve(JSON.parse(fr.result));
-        }
+        };
       });
 
       delete addonObj.optionsType;
@@ -271,7 +271,7 @@ async function run_test_2() {
         fr.readAsText(file);
         fr.onloadend = () => {
           resolve(JSON.parse(fr.result));
-        }
+        };
       });
 
       delete addonObj.optionsType;

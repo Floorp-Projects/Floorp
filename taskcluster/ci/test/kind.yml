@@ -5,10 +5,10 @@ kind-dependencies:
     - build-signing
 
 transforms:
-   - taskgraph.transforms.tests:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.coalesce:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.tests:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.coalesce:transforms
+    - taskgraph.transforms.task:transforms
 
 # Each stanza in a file pointed to by 'jobs-from' describes a particular test
 # suite or sub-suite. These are processed through the transformations described
@@ -20,13 +20,13 @@ transforms:
 # https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy
 
 jobs-from:
-   - awsy.yml
-   - compiled.yml
-   - firefox-ui.yml
-   - marionette.yml
-   - misc.yml
-   - mochitest.yml
-   - reftest.yml
-   - talos.yml
-   - web-platform.yml
-   - xpcshell.yml
+    - awsy.yml
+    - compiled.yml
+    - firefox-ui.yml
+    - marionette.yml
+    - misc.yml
+    - mochitest.yml
+    - reftest.yml
+    - talos.yml
+    - web-platform.yml
+    - xpcshell.yml

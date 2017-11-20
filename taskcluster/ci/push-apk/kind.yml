@@ -5,12 +5,12 @@
 loader: taskgraph.loader.push_apk:loader
 
 transforms:
-   - taskgraph.transforms.push_apk:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.push_apk:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-  - build-signing
-  - push-apk-breakpoint
+    - build-signing
+    - push-apk-breakpoint
 
 jobs:
     push-apk/opt:
@@ -22,11 +22,11 @@ jobs:
         shipping-product: fennec
         worker-type: scriptworker-prov-v1/pushapk-v1
         worker:
-            upstream-artifacts: # see transforms
-            google-play-track: # see transforms
+            upstream-artifacts:  # see transforms
+            google-play-track:  # see transforms
             implementation: push-apk
-            dry-run: # see transforms
-        scopes: # see transforms
+            dry-run:  # see transforms
+        scopes:  # see transforms
         treeherder:
             symbol: pub(gp)
             platform: Android/opt

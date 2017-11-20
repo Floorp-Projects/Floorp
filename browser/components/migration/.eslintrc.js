@@ -17,7 +17,6 @@ module.exports = {
     "no-throw-literal": "error",
     "no-unused-vars": ["error", { "varsIgnorePattern": "^C[ciur]$" }],
     "padded-blocks": ["error", "never"],
-    "semi": ["error", "always", {"omitLastInOneLineBlock": true }],
     "semi-spacing": ["error", {"before": false, "after": true}],
     "space-in-parens": ["error", "never"],
     "strict": ["error", "global"],

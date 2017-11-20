@@ -32,8 +32,8 @@ ProtocolHandler.prototype =
     }
     return uri;
   },
-  newChannel2() { throw Cr.NS_ERROR_NOT_IMPLEMENTED },
-  newChannel() { throw Cr.NS_ERROR_NOT_IMPLEMENTED },
+  newChannel2() { throw Cr.NS_ERROR_NOT_IMPLEMENTED; },
+  newChannel() { throw Cr.NS_ERROR_NOT_IMPLEMENTED; },
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIProtocolHandler
   ])
@@ -125,12 +125,12 @@ function run_test() {
     // register it if it is not. Otherwise, store the previous one
     // to be restored later and register the new one.
     if (registrar.isContractIDRegistered(XULAppInfoFactory.contractID)) {
-      dump(XULAppInfoFactory.scheme + " is already registered. Storing currently registered object for restoration later.")
+      dump(XULAppInfoFactory.scheme + " is already registered. Storing currently registered object for restoration later.");
       old_factory.CID = registrar.contractIDToCID(XULAppInfoFactory.contractID);
       old_factory.factory = Components.manager.getClassObject(Cc[XULAppInfoFactory.contractID], Ci.nsIFactory);
       registrar.unregisterFactory(old_factory.CID, old_factory.factory);
     } else {
-      dump(XULAppInfoFactory.scheme + " has never been registered. Registering...")
+      dump(XULAppInfoFactory.scheme + " has never been registered. Registering...");
     }
 
     registrar.registerFactory(XULAppInfoFactory.CID, "test-" + XULAppInfoFactory.scheme, XULAppInfoFactory.contractID, XULAppInfoFactory);

@@ -53,7 +53,7 @@ linux64-dmd/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: [ ]
+    run-on-projects: []
     toolchains:
         - linux64-clang
         - linux64-gcc
@@ -151,7 +151,7 @@ linux64-devedition-nightly/opt:
         tooltool-downloads: public
         need-xvfb: true
         custom-build-variant-cfg: devedition
-    run-on-projects: [ 'mozilla-beta', ]
+    run-on-projects: ['mozilla-beta']
     toolchains:
         - linux64-clang
         - linux64-gcc
@@ -340,7 +340,7 @@ linux-rusttests/opt:
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
-    run-on-projects: [ 'trunk', 'try' ]
+    run-on-projects: ['trunk', 'try']
     toolchains:
         - linux64-clang
         - linux64-gcc
@@ -374,7 +374,7 @@ linux-rusttests/debug:
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
-    run-on-projects: [ 'trunk', 'try' ]
+    run-on-projects: ['trunk', 'try']
     toolchains:
         - linux64-clang
         - linux64-gcc
@@ -410,7 +410,7 @@ linux-devedition-nightly/opt:
         tooltool-downloads: public
         need-xvfb: true
         custom-build-variant-cfg: devedition
-    run-on-projects: [ 'mozilla-beta', ]
+    run-on-projects: ['mozilla-beta']
     toolchains:
         - linux64-clang
         - linux64-gcc
@@ -642,7 +642,7 @@ linux64-noopt/debug:
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
-    run-on-projects: [ 'trunk', 'try' ]
+    run-on-projects: ['trunk', 'try']
     toolchains:
         - linux64-clang
         - linux64-gcc
@@ -676,7 +676,7 @@ linux64-rusttests/opt:
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
-    run-on-projects: [ 'trunk', 'try' ]
+    run-on-projects: ['trunk', 'try']
     toolchains:
         - linux64-clang
         - linux64-gcc
@@ -710,7 +710,7 @@ linux64-rusttests/debug:
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
-    run-on-projects: [ 'trunk', 'try' ]
+    run-on-projects: ['trunk', 'try']
     toolchains:
         - linux64-clang
         - linux64-gcc
@@ -726,7 +726,7 @@ linux64-jsdcov/opt:
         platform: linux64-jsdcov/opt
         symbol: tc(B)
         tier: 2
-    run-on-projects: [ ]
+    run-on-projects: []
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -758,7 +758,7 @@ linux64-ccov/opt:
         platform: linux64-ccov/opt
         symbol: tc(B)
         tier: 2
-    run-on-projects: [ ]
+    run-on-projects: []
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -807,7 +807,7 @@ linux64-add-on-devel/opt:
         custom-build-variant-cfg: add-on-devel
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
+    run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
     toolchains:
         - linux64-clang
         - linux64-gcc

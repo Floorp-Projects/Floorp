@@ -25,12 +25,12 @@ add_task(async function testTemporaryPermissionTabURLs() {
 
   let same = [ newURI("https://example.com"),
                newURI("https://example.com/sub/path"),
-               newURI("https://example.com:443") ]
+               newURI("https://example.com:443") ];
   let different = [ newURI("https://example.com"),
                     newURI("https://name:password@example.com"),
                     newURI("https://test1.example.com"),
                     newURI("http://example.com"),
-                    newURI("http://example.org") ]
+                    newURI("http://example.org") ];
 
   let id = "microphone";
 
