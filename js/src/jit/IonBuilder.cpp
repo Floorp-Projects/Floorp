@@ -6122,8 +6122,12 @@ IonBuilder::jsop_newarray_copyonwrite()
     MOZ_ASSERT_IF(info().analysisMode() != Analysis_ArgumentsUsage,
                   templateObject->group()->hasAnyFlags(OBJECT_FLAG_COPY_ON_WRITE));
 
+
+    MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
+    current->add(templateConst);
+
     MNewArrayCopyOnWrite* ins =
-        MNewArrayCopyOnWrite::New(alloc(), constraints(), templateObject,
+        MNewArrayCopyOnWrite::New(alloc(), constraints(), templateConst,
                                   templateObject->group()->initialHeap(constraints()));
 
     current->add(ins);

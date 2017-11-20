@@ -844,6 +844,44 @@ class TestRecursiveMakeBackend(BackendTester):
         found = [str for str in lines if 'DIST_FILES' in str]
         self.assertEqual(found, expected)
 
+    def test_localized_files(self):
+        """Test that LOCALIZED_FILES is written to backend.mk correctly."""
+        env = self._consume('localized-files', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'LOCALIZED_FILES_0_FILES += $(wildcard $(LOCALE_SRCDIR)/abc/*.abc)',
+            'LOCALIZED_FILES_0_FILES += $(call MERGE_FILE,bar.ini)',
+            'LOCALIZED_FILES_0_FILES += $(call MERGE_FILE,foo.js)',
+            'LOCALIZED_FILES_0_DEST = $(FINAL_TARGET)/',
+            'LOCALIZED_FILES_0_TARGET := libs',
+            'INSTALL_TARGETS += LOCALIZED_FILES_0',
+        ]
+
+        found = [str for str in lines if 'LOCALIZED_FILES' in str]
+        self.assertEqual(found, expected)
+
+    def test_localized_pp_files(self):
+        """Test that LOCALIZED_PP_FILES is written to backend.mk correctly."""
+        env = self._consume('localized-pp-files', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'LOCALIZED_PP_FILES_0 += $(call MERGE_FILE,bar.ini)',
+            'LOCALIZED_PP_FILES_0 += $(call MERGE_FILE,foo.js)',
+            'LOCALIZED_PP_FILES_0_PATH = $(FINAL_TARGET)/',
+            'LOCALIZED_PP_FILES_0_TARGET := libs',
+            'LOCALIZED_PP_FILES_0_FLAGS := --silence-missing-directive-warnings',
+            'PP_TARGETS += LOCALIZED_PP_FILES_0',
+        ]
+
+        found = [str for str in lines if 'LOCALIZED_PP_FILES' in str]
+        self.assertEqual(found, expected)
+
     def test_config(self):
         """Test that CONFIGURE_SUBST_FILES are properly handled."""
         env = self._consume('test_config', RecursiveMakeBackend)

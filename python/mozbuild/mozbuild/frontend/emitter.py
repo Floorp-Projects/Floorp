@@ -57,6 +57,8 @@ from .data import (
     Library,
     Linkable,
     LocalInclude,
+    LocalizedFiles,
+    LocalizedPreprocessedFiles,
     ObjdirFiles,
     ObjdirPreprocessedFiles,
     PerSourceFlag,
@@ -1079,6 +1081,8 @@ class TreeMetadataEmitter(LoggingMixin):
             ('EXPORTS', Exports),
             ('FINAL_TARGET_FILES', FinalTargetFiles),
             ('FINAL_TARGET_PP_FILES', FinalTargetPreprocessedFiles),
+            ('LOCALIZED_FILES', LocalizedFiles),
+            ('LOCALIZED_PP_FILES', LocalizedPreprocessedFiles),
             ('OBJDIR_FILES', ObjdirFiles),
             ('OBJDIR_PP_FILES', ObjdirPreprocessedFiles),
             ('TEST_HARNESS_FILES', TestHarnessFiles),
@@ -1103,12 +1107,18 @@ class TreeMetadataEmitter(LoggingMixin):
                 if mozpath.split(base)[0] == 'res':
                     has_resources = True
                 for f in files:
-                    if ((var == 'FINAL_TARGET_PP_FILES' or
-                         var == 'OBJDIR_PP_FILES') and
+                    if (var in ('FINAL_TARGET_PP_FILES',
+                                'OBJDIR_PP_FILES',
+                                'LOCALIZED_FILES',
+                                'LOCALIZED_PP_FILES') and
                         not isinstance(f, SourcePath)):
                         raise SandboxValidationError(
                                 ('Only source directory paths allowed in ' +
                                  '%s: %s')
+                                % (var, f,), context)
+                    if var.startswith('LOCALIZED_') and not f.startswith('en-US/'):
+                        raise SandboxValidationError(
+                                '%s paths must start with `en-US/`: %s'
                                 % (var, f,), context)
                     if not isinstance(f, ObjDirPath):
                         path = f.full_path

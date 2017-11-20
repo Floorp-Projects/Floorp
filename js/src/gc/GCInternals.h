@@ -15,8 +15,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
 
-#include "jscntxt.h"
-
 #include "gc/RelocationOverlay.h"
 #include "gc/Zone.h"
 #include "vm/HelperThreads.h"

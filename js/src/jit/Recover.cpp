@@ -1402,6 +1402,35 @@ RNewArray::recover(JSContext* cx, SnapshotIterator& iter) const
 }
 
 bool
+MNewArrayCopyOnWrite::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_NewArrayCopyOnWrite));
+    writer.writeByte(initialHeap());
+    return true;
+}
+
+RNewArrayCopyOnWrite::RNewArrayCopyOnWrite(CompactBufferReader& reader)
+{
+    initialHeap_ = gc::InitialHeap(reader.readByte());
+}
+
+bool
+RNewArrayCopyOnWrite::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    RootedArrayObject templateObject(cx, &iter.read().toObject().as<ArrayObject>());
+    RootedValue result(cx);
+
+    ArrayObject* resultObject = NewDenseCopyOnWriteArray(cx, templateObject, initialHeap_);
+    if (!resultObject)
+        return false;
+
+    result.setObject(*resultObject);
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MNewIterator::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
@@ -1732,16 +1761,26 @@ RArrayState::recover(JSContext* cx, SnapshotIterator& iter) const
     ArrayObject* object = &iter.read().toObject().as<ArrayObject>();
     uint32_t initLength = iter.read().toInt32();
 
-    object->setDenseInitializedLength(initLength);
-    for (size_t index = 0; index < numElements(); index++) {
-        Value val = iter.read();
+    if (!object->denseElementsAreCopyOnWrite()) {
+        object->setDenseInitializedLength(initLength);
+        for (size_t index = 0; index < numElements(); index++) {
+            Value val = iter.read();
 
-        if (index >= initLength) {
-            MOZ_ASSERT(val.isUndefined());
-            continue;
+            if (index >= initLength) {
+                MOZ_ASSERT(val.isUndefined());
+                continue;
+            }
+
+            object->initDenseElement(index, val);
         }
+    } else {
+        MOZ_ASSERT(object->getDenseInitializedLength() == numElements());
+        MOZ_ASSERT(initLength == numElements());
 
-        object->initDenseElement(index, val);
+        for (size_t index = 0; index < numElements(); index++) {
+            Value val = iter.read();
+            MOZ_RELEASE_ASSERT(object->getDenseElement(index) == val);
+        }
     }
 
     result.setObject(*object);

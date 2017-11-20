@@ -26,7 +26,6 @@
 #include "builtin/TypedObject.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
-#include "js/GCAPI.h"
 #include "js/Value.h"
 
 #include "jsobjinlines.h"

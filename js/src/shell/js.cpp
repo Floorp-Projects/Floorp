@@ -75,7 +75,6 @@
 #include "jit/JitcodeMap.h"
 #include "jit/OptimizationTracking.h"
 #include "js/Debug.h"
-#include "js/GCAPI.h"
 #include "js/GCVector.h"
 #include "js/Initialization.h"
 #include "js/StructuredClone.h"
