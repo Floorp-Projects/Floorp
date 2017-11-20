@@ -456,7 +456,8 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
     styleElement.emplace(aContent->AsElement());
   }
 
-  if (nsXBLBinding* binding = aContent->GetXBLBinding()) {
+  nsXBLBinding* binding = aContent->GetXBLBinding();
+  if (binding) {
     if (binding->MarkedForDeath()) {
       FlushStyleBindings(aContent);
       binding = nullptr;
