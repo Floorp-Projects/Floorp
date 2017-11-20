@@ -1832,6 +1832,7 @@ CSSParserImpl::ParseTransformProperty(const nsAString& aPropValue,
   // We should now be at EOF
   if (parsedOK && GetToken(true)) {
     parsedOK = false;
+    mTempData.ClearProperty(eCSSProperty_transform);
   }
 
   bool changed = false;
@@ -1850,6 +1851,7 @@ CSSParserImpl::ParseTransformProperty(const nsAString& aPropValue,
     aValue.Reset();
   }
 
+  mTempData.AssertInitialState();
   ReleaseScanner();
 
   return parsedOK;
