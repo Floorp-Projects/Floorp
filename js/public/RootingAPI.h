@@ -19,7 +19,6 @@
 #include "jspubtd.h"
 
 #include "js/GCAnnotations.h"
-#include "js/GCAPI.h"
 #include "js/GCPolicyAPI.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
@@ -771,6 +770,124 @@ class alignas(8) DispatchWrapper
 
 namespace JS {
 
+class JS_PUBLIC_API(AutoGCRooter);
+
+// Our instantiations of Rooted<void*> and PersistentRooted<void*> require an
+// instantiation of MapTypeToRootKind.
+template <>
+struct MapTypeToRootKind<void*> {
+    static const RootKind kind = RootKind::Traceable;
+};
+
+using RootedListHeads = mozilla::EnumeratedArray<RootKind, RootKind::Limit,
+                                                 Rooted<void*>*>;
+
+// Superclass of JSContext which can be used for rooting data in use by the
+// current thread but that does not provide all the functions of a JSContext.
+class RootingContext
+{
+    // Stack GC roots for Rooted GC heap pointers.
+    RootedListHeads stackRoots_;
+    template <typename T> friend class JS::Rooted;
+
+    // Stack GC roots for AutoFooRooter classes.
+    JS::AutoGCRooter* autoGCRooters_;
+    friend class JS::AutoGCRooter;
+
+  public:
+    RootingContext();
+
+    void traceStackRoots(JSTracer* trc);
+    void checkNoGCRooters();
+
+  protected:
+    // The remaining members in this class should only be accessed through
+    // JSContext pointers. They are unrelated to rooting and are in place so
+    // that inlined API functions can directly access the data.
+
+    /* The current compartment. */
+    JSCompartment*      compartment_;
+
+    /* The current zone. */
+    JS::Zone*           zone_;
+
+  public:
+    /* Limit pointer for checking native stack consumption. */
+    uintptr_t nativeStackLimit[StackKindCount];
+
+    static const RootingContext* get(const JSContext* cx) {
+        return reinterpret_cast<const RootingContext*>(cx);
+    }
+
+    static RootingContext* get(JSContext* cx) {
+        return reinterpret_cast<RootingContext*>(cx);
+    }
+
+    friend JSCompartment* js::GetContextCompartment(const JSContext* cx);
+    friend JS::Zone* js::GetContextZone(const JSContext* cx);
+};
+
+class JS_PUBLIC_API(AutoGCRooter)
+{
+  public:
+    AutoGCRooter(JSContext* cx, ptrdiff_t tag)
+      : AutoGCRooter(JS::RootingContext::get(cx), tag)
+    {}
+    AutoGCRooter(JS::RootingContext* cx, ptrdiff_t tag)
+      : down(cx->autoGCRooters_),
+        tag_(tag),
+        stackTop(&cx->autoGCRooters_)
+    {
+        MOZ_ASSERT(this != *stackTop);
+        *stackTop = this;
+    }
+
+    ~AutoGCRooter() {
+        MOZ_ASSERT(this == *stackTop);
+        *stackTop = down;
+    }
+
+    /* Implemented in gc/RootMarking.cpp. */
+    inline void trace(JSTracer* trc);
+    static void traceAll(const js::CooperatingContext& target, JSTracer* trc);
+    static void traceAllWrappers(const js::CooperatingContext& target, JSTracer* trc);
+
+  protected:
+    AutoGCRooter * const down;
+
+    /*
+     * Discriminates actual subclass of this being used.  If non-negative, the
+     * subclass roots an array of values of the length stored in this field.
+     * If negative, meaning is indicated by the corresponding value in the enum
+     * below.  Any other negative value indicates some deeper problem such as
+     * memory corruption.
+     */
+    ptrdiff_t tag_;
+
+    enum {
+        VALARRAY =     -2, /* js::AutoValueArray */
+        PARSER =       -3, /* js::frontend::Parser */
+        VALVECTOR =   -10, /* js::AutoValueVector */
+        IDVECTOR =    -11, /* js::AutoIdVector */
+        OBJVECTOR =   -14, /* js::AutoObjectVector */
+        IONMASM =     -19, /* js::jit::MacroAssembler */
+        WRAPVECTOR =  -20, /* js::AutoWrapperVector */
+        WRAPPER =     -21, /* js::AutoWrapperRooter */
+        CUSTOM =      -26  /* js::CustomAutoRooter */
+    };
+
+    static ptrdiff_t GetTag(const Value& value) { return VALVECTOR; }
+    static ptrdiff_t GetTag(const jsid& id) { return IDVECTOR; }
+    static ptrdiff_t GetTag(JSObject* obj) { return OBJVECTOR; }
+
+  private:
+    AutoGCRooter ** const stackTop;
+
+    /* No copy or assignment semantics. */
+    AutoGCRooter(AutoGCRooter& ida) = delete;
+    void operator=(AutoGCRooter& ida) = delete;
+};
+
 namespace detail {
 
 /*
@@ -873,6 +990,28 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>>
 } /* namespace JS */
 
 namespace js {
+
+/*
+ * Inlinable accessors for JSContext.
+ *
+ * - These must not be available on the more restricted superclasses of
+ *   JSContext, so we can't simply define them on RootingContext.
+ *
+ * - They're perfectly ordinary JSContext functionality, so ought to be
+ *   usable without resorting to jsfriendapi.h, and when JSContext is an
+ *   incomplete type.
+ */
+inline JSCompartment*
+GetContextCompartment(const JSContext* cx)
+{
+    return JS::RootingContext::get(cx)->compartment_;
+}
+
+inline JS::Zone*
+GetContextZone(const JSContext* cx)
+{
+    return JS::RootingContext::get(cx)->zone_;
+}
 
 /**
  * Augment the generic Rooted<T> interface when T = JSObject* with

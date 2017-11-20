@@ -253,7 +253,10 @@ class Nursery
     }
 
     // The number of bytes from the start position to the end of the nursery.
-    size_t spaceToEnd() const;
+    // pass maxChunkCount(), allocatedChunkCount() or chunkCountLimit()
+    // to calculate the nursery size, current lazy-allocated size or nursery
+    // limit respectively.
+    size_t spaceToEnd(unsigned chunkCount) const;
 
     // Free space remaining, not counting chunk trailers.
     MOZ_ALWAYS_INLINE size_t freeSpace() const {
@@ -377,6 +380,7 @@ class Nursery
     struct {
         JS::gcreason::Reason reason;
         size_t nurseryCapacity;
+        size_t nurseryLazyCapacity;
         size_t nurseryUsedBytes;
         size_t tenuredBytes;
     } previousGC;

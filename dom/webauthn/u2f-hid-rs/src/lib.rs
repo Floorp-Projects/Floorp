@@ -27,7 +27,7 @@ pub mod platform;
 #[path = "stub/mod.rs"]
 pub mod platform;
 
-#[cfg(not(any(target_os = "macos")))]
+#[cfg(target_os = "windows")]
 mod khmatcher;
 
 #[macro_use]

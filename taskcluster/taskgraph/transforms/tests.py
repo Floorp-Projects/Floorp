@@ -572,6 +572,12 @@ def set_tier(config, tests):
                 test['tier'] = 1
             else:
                 test['tier'] = 2
+
+        # Temporarily set windows10-64-ccov/debug tests as tier 3, until we get the tests
+        # consistently green.
+        if test['test-platform'] == 'windows10-64-ccov/debug':
+            test['tier'] = 3
+
         yield test
 
 

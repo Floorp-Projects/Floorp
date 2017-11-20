@@ -23,7 +23,8 @@ dictionary AddEventListenerOptions : EventListenerOptions {
   boolean once = false;
 };
 
-[Exposed=(Window,Worker,WorkerDebugger,System)]
+[Constructor,
+ Exposed=(Window,Worker,WorkerDebugger,System)]
 interface EventTarget {
   /* Passing null for wantsUntrusted means "default behavior", which
      differs in content and chrome.  In content that default boolean

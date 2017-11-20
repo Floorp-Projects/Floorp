@@ -105,33 +105,6 @@ linux64-stylo-disabled/opt:
         - awsy-stylo-disabled
         - stylo-disabled-tests
         - devtools-tests
-macosx64-stylo-disabled/debug:
-    build-platform: macosx64/debug
-    test-sets:
-        - stylo-disabled-tests
-macosx64-stylo-disabled/opt:
-    build-platform: macosx64/opt
-    test-sets:
-        - awsy-stylo-disabled
-        - stylo-disabled-tests
-windows7-32-stylo-disabled/debug:
-    build-platform: win32/debug
-    test-sets:
-        - stylo-disabled-tests
-windows7-32-stylo-disabled/opt:
-    build-platform: win32/opt
-    test-sets:
-        - awsy-stylo-disabled
-        - stylo-disabled-tests
-windows10-64-stylo-disabled/debug:
-    build-platform: win64/debug
-    test-sets:
-        - stylo-disabled-tests
-windows10-64-stylo-disabled/opt:
-    build-platform: win64/opt
-    test-sets:
-        - awsy-stylo-disabled
-        - stylo-disabled-tests
 
 # Stylo sequential runs check memory and performance when using a single thread.
 linux64-stylo-sequential/opt:
@@ -181,7 +154,6 @@ windows7-32/opt:
         - desktop-screenshot-capture
         - windows-reftest-gpu
         - windows-talos
-        - windows-talos-stylo-disabled
         - windows-tests
 
 windows7-32-pgo/opt:
@@ -191,7 +163,6 @@ windows7-32-pgo/opt:
         - desktop-screenshot-capture
         - windows-reftest-gpu
         - windows-talos
-        - windows-talos-stylo-disabled
         - windows-tests
 
 windows7-32-nightly/opt:
@@ -231,7 +202,6 @@ windows10-64/opt:
         - awsy
         - desktop-screenshot-capture
         - windows-talos
-        - windows-talos-stylo-disabled
         - windows-tests
         - mochitest-headless
 
@@ -241,7 +211,6 @@ windows10-64-pgo/opt:
         - awsy
         - desktop-screenshot-capture
         - windows-talos
-        - windows-talos-stylo-disabled
         - windows-tests
 
 windows10-64-nightly/opt:
@@ -275,7 +244,6 @@ macosx64/opt:
     build-platform: macosx64/opt
     test-sets:
         - macosx64-talos
-        - macosx64-talos-stylo-disabled
         - macosx64-tests
         - desktop-screenshot-capture
         - awsy

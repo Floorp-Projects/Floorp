@@ -20,7 +20,6 @@
 
 #include "gc/Barrier.h"
 #include "js/Conversions.h"
-#include "js/GCAPI.h"
 #include "js/GCVector.h"
 #include "js/HeapAPI.h"
 #include "vm/Printer.h"

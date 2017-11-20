@@ -21,7 +21,6 @@
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
 #include "js/Conversions.h"
-#include "js/GCAPI.h"
 #include "vm/TraceLogging.h"
 
 #include "jsobjinlines.h"

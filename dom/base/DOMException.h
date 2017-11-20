@@ -15,7 +15,6 @@
 
 #include <stdint.h>
 #include "jspubtd.h"
-#include "js/GCAPI.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"

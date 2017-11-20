@@ -980,6 +980,19 @@ class FinalTargetPreprocessedFiles(ContextDerived):
         ContextDerived.__init__(self, sandbox)
         self.files = files
 
+class LocalizedFiles(FinalTargetFiles):
+    """Sandbox container object for LOCALIZED_FILES, which is a
+    HierarchicalStringList.
+    """
+    pass
+
+
+class LocalizedPreprocessedFiles(FinalTargetPreprocessedFiles):
+    """Sandbox container object for LOCALIZED_PP_FILES, which is a
+    HierarchicalStringList.
+    """
+    pass
+
 
 class ObjdirFiles(FinalTargetFiles):
     """Sandbox container object for OBJDIR_FILES, which is a

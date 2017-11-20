@@ -160,62 +160,74 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
   OpenMode lockMode = asyncPaint ? OpenMode::OPEN_READ_ASYNC_WRITE
                                  : OpenMode::OPEN_READ_WRITE;
 
+  if (asyncPaint) {
+    result.mBufferState = new CapturedBufferState();
+  }
+
+  if (mBuffer) {
+    if (mBuffer->Lock(lockMode)) {
+      // Do not modify result.mRegionToDraw or result.mContentType after this call.
+      Maybe<CapturedBufferState::Copy> bufferFinalize =
+        FinalizeFrame(result.mRegionToDraw);
+
+      if (asyncPaint) {
+        result.mBufferState->mBufferFinalize = Move(bufferFinalize);
+      } else if (bufferFinalize) {
+        bufferFinalize->CopyBuffer();
+      }
+    } else {
+      result.mRegionToDraw = dest.mNeededRegion;
+      dest.mCanReuseBuffer = false;
+      Clear();
+    }
+  }
+
   if (dest.mCanReuseBuffer) {
     MOZ_ASSERT(mBuffer);
 
     bool canReuseBuffer = false;
 
-    if (mBuffer->Lock(lockMode)) {
-      RefPtr<CapturedBufferState> bufferState = new CapturedBufferState();
+    auto newParameters = mBuffer->AdjustedParameters(dest.mBufferRect);
+    Maybe<CapturedBufferState::Unrotate> bufferUnrotate = Nothing();
 
-      // Do not modify result.mRegionToDraw or result.mContentType after this call.
-      FinalizeFrame(result.mRegionToDraw, bufferState);
+    if ((!canHaveRotation && newParameters.IsRotated()) ||
+        (!canDrawRotated && newParameters.RectWrapsBuffer(drawBounds))) {
+      bufferUnrotate = Some(CapturedBufferState::Unrotate {
+        newParameters,
+        mBuffer->ShallowCopy(),
+      });
+    }
 
-      auto newParameters = mBuffer->AdjustedParameters(dest.mBufferRect);
+    // If we're async painting then return the buffer state to
+    // be dispatched to the paint thread, otherwise do it now
+    if (asyncPaint) {
+      // We cannot do a buffer unrotate if the buffer is already rotated
+      // and we're async painting as that may fail
+      if (!bufferUnrotate ||
+          mBuffer->BufferRotation() == IntPoint(0,0)) {
+        result.mBufferState->mBufferUnrotate = Move(bufferUnrotate);
 
-      if ((!canHaveRotation && newParameters.IsRotated()) ||
-          (!canDrawRotated && newParameters.RectWrapsBuffer(drawBounds))) {
-        bufferState->mBufferUnrotate = Some(CapturedBufferState::Unrotate {
-          newParameters,
-          mBuffer->ShallowCopy(),
-        });
+        // We can then assume that preparing the buffer will always
+        // succeed and update our parameters unconditionally
+        if (result.mBufferState->mBufferUnrotate) {
+          newParameters.SetUnrotated();
+        }
+        mBuffer->SetParameters(newParameters);
+        canReuseBuffer = true;
       }
-
-      // If we're async painting then return the buffer state to
-      // be dispatched to the paint thread, otherwise do it now
-      if (asyncPaint) {
-        // We cannot do a buffer unrotate if the buffer is already rotated
-        // and we're async painting as that may fail
-        if (!bufferState->mBufferUnrotate ||
-            mBuffer->BufferRotation() == IntPoint(0,0)) {
-          result.mBufferState = bufferState;
-
-          // We can then assume that preparing the buffer will always
-          // succeed and update our parameters unconditionally
-          if (bufferState->mBufferUnrotate) {
-            newParameters.SetUnrotated();
-          }
-          mBuffer->SetParameters(newParameters);
-          canReuseBuffer = true;
+    } else {
+      if (!bufferUnrotate || bufferUnrotate->UnrotateBuffer()) {
+        if (bufferUnrotate) {
+          newParameters.SetUnrotated();
         }
-      } else {
-        if (bufferState->PrepareBuffer()) {
-          if (bufferState->mBufferUnrotate) {
-            newParameters.SetUnrotated();
-          }
-          mBuffer->SetParameters(newParameters);
-          canReuseBuffer = true;
-        }
+        mBuffer->SetParameters(newParameters);
+        canReuseBuffer = true;
       }
     }
 
     if (!canReuseBuffer) {
-      if (mBuffer->IsLocked()) {
-        mBuffer->Unlock();
-      }
       dest.mBufferRect = ComputeBufferRect(dest.mNeededRegion.GetBounds());
       dest.mCanReuseBuffer = false;
-      dest.mMustRemoveFrontBuffer = true;
     }
   }
 
@@ -243,46 +255,46 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
                         << dest.mBufferRect.Width() << ", "
                         << dest.mBufferRect.Height();
       }
+      Clear();
       return result;
     }
 
     if (!newBuffer->Lock(lockMode)) {
       gfxCriticalNote << "Failed to lock new back buffer.";
+      Clear();
       return result;
     }
 
     // If we have an existing front buffer, copy it into the new back buffer
-    if (RefPtr<RotatedBuffer> frontBuffer = GetFrontBuffer()) {
+    if (mBuffer) {
+      if (mBuffer->IsLocked()) {
+        mBuffer->Unlock();
+      }
+
       nsIntRegion updateRegion = newBuffer->BufferRect();
       updateRegion.Sub(updateRegion, result.mRegionToDraw);
 
       if (!updateRegion.IsEmpty()) {
-        RefPtr<CapturedBufferState> bufferState = new CapturedBufferState();
-
-        bufferState->mBufferCopy = Some(CapturedBufferState::Copy {
-          frontBuffer->ShallowCopy(),
+        auto bufferInitialize = CapturedBufferState::Copy {
+          mBuffer->ShallowCopy(),
           newBuffer->ShallowCopy(),
           updateRegion.GetBounds(),
-        });
+        };
 
         // If we're async painting then return the buffer state to
         // be dispatched to the paint thread, otherwise do it now
         if (asyncPaint) {
-          MOZ_ASSERT(!result.mBufferState);
-          result.mBufferState = bufferState;
+          result.mBufferState->mBufferInitialize = Some(Move(bufferInitialize));
         } else {
-          if (!bufferState->PrepareBuffer()) {
+          if (!bufferInitialize.CopyBuffer()) {
             gfxCriticalNote << "Failed to copy front buffer to back buffer.";
             return result;
           }
         }
       }
-
-      if (dest.mMustRemoveFrontBuffer) {
-        Clear();
-      }
     }
 
+    Clear();
     mBuffer = newBuffer;
   }
 
@@ -419,8 +431,6 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
     aLayer->CanUseOpaqueSurface() ? gfxContentType::COLOR :
                                     gfxContentType::COLOR_ALPHA;
 
-  RefPtr<RotatedBuffer> frontBuffer = GetFrontBuffer();
-
   SurfaceMode mode;
   gfxContentType contentType;
   IntRect destBufferRect;
@@ -429,7 +439,6 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
 
   bool canReuseBuffer = !!mBuffer;
   bool canKeepBufferContents = true;
-  bool mustRemoveFrontBuffer = false;
 
   while (true) {
     mode = aLayer->GetSurfaceMode();
@@ -451,22 +460,7 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
         destBufferRect = neededRegion.GetBounds();
       }
     } else {
-      // We won't be reusing the buffer. Compute a new rect.
-      if (frontBuffer) {
-        // We must create a buffer that is the same size as the front buffer,
-        // or else we need to remove the front buffer
-        if (ValidBufferSize(mBufferSizePolicy,
-                            frontBuffer->BufferRect().Size(),
-                            neededRegion.GetBounds().Size())) {
-          destBufferRect = frontBuffer->BufferRect();
-          destBufferRect.MoveTo(neededRegion.GetBounds().TopLeft());
-        } else {
-          destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
-          mustRemoveFrontBuffer = true;
-        }
-      } else {
-        destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
-      }
+      destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
     }
 
     if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
@@ -506,23 +500,12 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
                                     (contentType != mBuffer->GetContentType() ||
                                      needsComponentAlpha != mBuffer->HaveBufferOnWhite());
     if (canKeepBufferContents && backBufferChangedSurface) {
-      // We cannot reuse the back buffer if the surface type or content type
-      // changed. We may have to also invalidate, but only if the front buffer
-      // also changed.
-      canReuseBuffer = false;
-    }
-    bool frontBufferChangedSurface = frontBuffer &&
-                                     (contentType != frontBuffer->GetContentType() ||
-                                      needsComponentAlpha != frontBuffer->HaveBufferOnWhite());
-    if (canKeepBufferContents && frontBufferChangedSurface) {
       // Restart the decision process; we won't re-enter since we guard on
       // being able to keep the buffer contents.
       canReuseBuffer = false;
       canKeepBufferContents = false;
       validRegion.SetEmpty();
-      continue;
     }
-
     break;
   }
 
@@ -537,7 +520,6 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
   dest.mBufferContentType = contentType;
   dest.mCanReuseBuffer = canReuseBuffer;
   dest.mCanKeepBufferContents = canKeepBufferContents;
-  dest.mMustRemoveFrontBuffer = mustRemoveFrontBuffer;
   return dest;
 }
 
@@ -549,12 +531,6 @@ ContentClient::ValidBufferSize(BufferSizePolicy aPolicy,
   return (aVisibleBoundsSize == aBufferSize ||
           (SizedToVisibleBounds != aPolicy &&
            aVisibleBoundsSize < aBufferSize));
-}
-
-RefPtr<RotatedBuffer>
-ContentClient::GetFrontBuffer() const
-{
-  return mBuffer;
 }
 
 void
@@ -919,37 +895,50 @@ ContentClient::PaintState
 ContentClientDoubleBuffered::BeginPaint(PaintedLayer* aLayer,
                                         uint32_t aFlags)
 {
+  EnsureBackBufferIfFrontBuffer();
+
   mIsNewBuffer = false;
+
   if (!mFrontBuffer || !mBuffer) {
     mFrontAndBackBufferDiffer = false;
   }
 
-  return ContentClient::BeginPaint(aLayer, aFlags);
-}
+  if (mFrontAndBackBufferDiffer) {
+    if (mFrontBuffer->DidSelfCopy()) {
+      // We can't easily draw our front buffer into us, since we're going to be
+      // copying stuff around anyway it's easiest if we just move our situation
+      // to non-rotated while we're at it. If this situation occurs we'll have
+      // hit a self-copy path in PaintThebes before as well anyway.
+      gfx::IntRect backBufferRect = mBuffer->BufferRect();
+      backBufferRect.MoveTo(mFrontBuffer->BufferRect().TopLeft());
 
-RefPtr<RotatedBuffer>
-ContentClientDoubleBuffered::GetFrontBuffer() const
-{
-  return mFrontBuffer;
+      mBuffer->SetBufferRect(backBufferRect);
+      mBuffer->SetBufferRotation(IntPoint(0,0));
+    } else {
+      mBuffer->SetBufferRect(mFrontBuffer->BufferRect());
+      mBuffer->SetBufferRotation(mFrontBuffer->BufferRotation());
+    }
+  }
+
+  return ContentClient::BeginPaint(aLayer, aFlags);
 }
 
 // Sync front/back buffers content
 // After executing, the new back buffer has the same (interesting) pixels as
 // the new front buffer, and mValidRegion et al. are correct wrt the new
 // back buffer (i.e. as they were for the old back buffer)
-void
-ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw,
-                                           CapturedBufferState* aPrepareState)
+Maybe<CapturedBufferState::Copy>
+ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 {
   if (!mFrontAndBackBufferDiffer) {
     MOZ_ASSERT(!mFrontBuffer || !mFrontBuffer->DidSelfCopy(),
                "If the front buffer did a self copy then our front and back buffer must be different.");
-    return;
+    return Nothing();
   }
 
   MOZ_ASSERT(mFrontBuffer && mBuffer);
   if (!mFrontBuffer || !mBuffer) {
-    return;
+    return Nothing();
   }
 
   MOZ_LAYERS_LOG(("BasicShadowableThebes(%p): reading back <x=%d,y=%d,w=%d,h=%d>",
@@ -961,20 +950,8 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw,
 
   mFrontAndBackBufferDiffer = false;
 
-  // Move the back buffer rect and rotation to the front buffer rect and rotation
-  // so that we can update the pixels that changed between frames
-  gfx::IntRect backBufferRect = mBuffer->BufferRect();
-  backBufferRect.MoveTo(mFrontBuffer->BufferRect().TopLeft());
-  mBuffer->SetBufferRect(backBufferRect);
-  mBuffer->SetBufferRotation(mFrontBuffer->BufferRotation());
-
-  // Calculate the region to update
   nsIntRegion updateRegion = mFrontUpdatedRegion;
   if (mFrontBuffer->DidSelfCopy()) {
-    // If we did an unrotate operation on the front buffer we might as well
-    // unrotate as well because we will be reading back the whole front buffer
-    mBuffer->SetBufferRotation(IntPoint(0,0));
-
     mFrontBuffer->ClearDidSelfCopy();
     updateRegion = mBuffer->BufferRect();
   }
@@ -983,15 +960,25 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw,
   // nothing to sync at all, there is nothing to do and we can go home early.
   updateRegion.Sub(updateRegion, aRegionToDraw);
   if (updateRegion.IsEmpty()) {
-    return;
+    return Nothing();
   }
 
-  MOZ_ASSERT(!aPrepareState->mBufferCopy);
-  aPrepareState->mBufferCopy = Some(CapturedBufferState::Copy {
+  return Some(CapturedBufferState::Copy {
     mFrontBuffer->ShallowCopy(),
     mBuffer->ShallowCopy(),
     updateRegion.GetBounds(),
   });
+}
+
+void
+ContentClientDoubleBuffered::EnsureBackBufferIfFrontBuffer()
+{
+  if (!mBuffer && mFrontBuffer) {
+    mBuffer = CreateBufferInternal(mFrontBuffer->BufferRect(),
+                                   mFrontBuffer->GetFormat(),
+                                   mTextureFlags);
+    MOZ_ASSERT(mBuffer);
+  }
 }
 
 } // namespace layers

@@ -50,7 +50,7 @@ impl PlatformManager {
                 return;
             }
 
-            // Iterate the exlude list and see if there are any matches.
+            // Iterate the exclude list and see if there are any matches.
             // Abort the state machine if we found a valid key handle.
             if key_handles.iter().any(|key_handle| {
                 u2f_is_keyhandle_valid(dev, &challenge, &application, key_handle)
@@ -107,7 +107,7 @@ impl PlatformManager {
                     u2f_is_keyhandle_valid(dev, &challenge, &application, key_handle)
                         .unwrap_or(false) /* no match on failure */
                 })
-                .collect::<Vec<&Vec<u8>>>();
+                .collect::<Vec<_>>();
 
             while alive() {
                 // If the device matches none of the given key handles

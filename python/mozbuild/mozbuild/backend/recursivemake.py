@@ -59,6 +59,8 @@ from ..frontend.data import (
     Library,
     Linkable,
     LocalInclude,
+    LocalizedFiles,
+    LocalizedPreprocessedFiles,
     ObjdirFiles,
     ObjdirPreprocessedFiles,
     PerSourceFlag,
@@ -644,6 +646,12 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, ObjdirPreprocessedFiles):
             self._process_final_target_pp_files(obj, obj.files, backend_file, 'OBJDIR_PP_FILES')
+
+        elif isinstance(obj, LocalizedFiles):
+            self._process_localized_files(obj, obj.files, backend_file)
+
+        elif isinstance(obj, LocalizedPreprocessedFiles):
+            self._process_localized_pp_files(obj, obj.files, backend_file)
 
         elif isinstance(obj, FinalTargetFiles):
             self._process_final_target_files(obj, obj.files, backend_file)
@@ -1452,6 +1460,54 @@ class RecursiveMakeBackend(CommonBackend):
                                % (var, mozpath.join(obj.install_target, path)))
             backend_file.write('%s_TARGET := misc\n' % var)
             backend_file.write('PP_TARGETS += %s\n' % var)
+
+    def _write_localized_files_files(self, files, name, backend_file):
+        for f in files:
+            # The emitter asserts that all files start with `en-US/`
+            e, f = f.split('en-US/')
+            assert(not e)
+            if '*' in f:
+                # We can't use MERGE_FILE for wildcards because it takes
+                # only the first match internally. This is only used
+                # in one place in the tree currently so we'll hardcode
+                # that specific behavior for now.
+                backend_file.write('%s += $(wildcard $(LOCALE_SRCDIR)/%s)\n' % (name, f))
+            else:
+                backend_file.write('%s += $(call MERGE_FILE,%s)\n' % (name, f))
+
+    def _process_localized_files(self, obj, files, backend_file):
+        target = obj.install_target
+        path = mozpath.basedir(target, ('dist/bin', ))
+        if not path:
+            raise Exception('Cannot install localized files to ' + target)
+        for i, (path, files) in enumerate(files.walk()):
+            name = 'LOCALIZED_FILES_%d' % i
+            self._no_skip['libs'].add(backend_file.relobjdir)
+            self._write_localized_files_files(files, name + '_FILES', backend_file)
+            # Use FINAL_TARGET here because some l10n repack rules set
+            # XPI_NAME to generate langpacks.
+            backend_file.write('%s_DEST = $(FINAL_TARGET)/%s\n' % (name, path))
+            backend_file.write('%s_TARGET := libs\n' % name)
+            backend_file.write('INSTALL_TARGETS += %s\n' % name)
+
+    def _process_localized_pp_files(self, obj, files, backend_file):
+        target = obj.install_target
+        path = mozpath.basedir(target, ('dist/bin', ))
+        if not path:
+            raise Exception('Cannot install localized files to ' + target)
+        for i, (path, files) in enumerate(files.walk()):
+            name = 'LOCALIZED_PP_FILES_%d' % i
+            self._no_skip['libs'].add(backend_file.relobjdir)
+            self._write_localized_files_files(files, name, backend_file)
+            # Use FINAL_TARGET here because some l10n repack rules set
+            # XPI_NAME to generate langpacks.
+            backend_file.write('%s_PATH = $(FINAL_TARGET)/%s\n' % (name, path))
+            backend_file.write('%s_TARGET := libs\n' % name)
+            # Localized files will have different content in different
+            # localizations, and some preprocessed files may not have
+            # any preprocessor directives.
+            backend_file.write('%s_FLAGS := --silence-missing-directive-warnings\n' % name)
+            backend_file.write('PP_TARGETS += %s\n' % name)
 
     def _process_objdir_files(self, obj, files, backend_file):
         # We can't use an install manifest for the root of the objdir, since it

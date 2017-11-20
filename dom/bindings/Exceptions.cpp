@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/Exceptions.h"
 
-#include "js/GCAPI.h"
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "jsapi.h"
 #include "jsprf.h"

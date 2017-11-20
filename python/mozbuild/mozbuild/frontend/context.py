@@ -1415,6 +1415,53 @@ VARIABLES = {
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """),
 
+    'LOCALIZED_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
+        """List of locale-dependent files to be installed into the application
+        directory.
+
+        This functions similarly to ``FINAL_TARGET_FILES``, but the files are
+        sourced from the locale directory and will vary per localization.
+        For an en-US build, this is functionally equivalent to
+        ``FINAL_TARGET_FILES``. For a build with ``--enable-ui-locale``,
+        the file will be taken from ``$LOCALE_SRCDIR``, with the leading
+        ``en-US`` removed. For a l10n repack of an en-US build, the file
+        will be taken from the first location where it exists from:
+        * the merged locale directory if it exists
+        * ``$LOCALE_SRCDIR`` with the leading ``en-US`` removed
+        * the in-tree en-US location
+
+        Paths specified here must be relative to the source directory and must
+        include a leading ``en-US``. Wildcards are allowed, and will be
+        expanded at the time of locale packaging to match files in the
+        locale directory.
+
+        Files that are missing from a locale will typically have the en-US
+        version used, but for wildcard expansions only files from the
+        locale directory will be used, even if that means no files will
+        be copied.
+
+        Example::
+
+           LOCALIZED_FILES.foo += [
+             'en-US/foo.js',
+             'en-US/things/*.ini',
+           ]
+
+        If this was placed in ``toolkit/locales/moz.build``, it would copy
+        ``toolkit/locales/en-US/foo.js`` and
+        ``toolkit/locales/en-US/things/*.ini`` to ``$(DIST)/bin/foo`` in an
+        en-US build, and in a build of a different locale (or a repack),
+        it would copy ``$(LOCALE_SRCDIR)/toolkit/foo.js`` and
+        ``$(LOCALE_SRCDIR)/toolkit/things/*.ini``.
+        """),
+
+    'LOCALIZED_PP_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
+        """Like ``LOCALIZED_FILES``, with preprocessing.
+
+        Note that the ``AB_CD`` define is available and expands to the current
+        locale being packaged, as with preprocessed entries in jar manifests.
+        """),
+
     'OBJDIR_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed anywhere in the objdir. Use sparingly.
 

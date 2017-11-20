@@ -41,7 +41,7 @@ function check(entries) {
 
       foundGCs++;
 
-      ok(Object.keys(gc).length <= 30, "number of keys in GC is not too large");
+      ok(Object.keys(gc).length <= 24, "number of keys in GC is not too large");
 
       // Sanity check the GC data.
       ok("status" in gc, "status field present");
@@ -68,7 +68,7 @@ function check(entries) {
       let phases = new Set();
 
       for (let slice of gc.slices_list) {
-        ok(Object.keys(slice).length <= 15, "slice is not too large");
+        ok(Object.keys(slice).length <= 12, "slice is not too large");
 
         ok("pause" in slice, "pause field present in slice");
         ok("reason" in slice, "reason field present in slice");

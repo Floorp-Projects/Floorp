@@ -28,11 +28,6 @@ ifdef NIGHTLY_BUILD
 export EN_US_BINARY_URL ?= https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central
 endif
 
-L10N_PREF_JS_EXPORTS = $(call MERGE_FILE,firefox-l10n.js)
-L10N_PREF_JS_EXPORTS_PATH = $(FINAL_TARGET)/$(PREF_DIR)
-L10N_PREF_JS_EXPORTS_FLAGS = $(PREF_PPFLAGS) --silence-missing-directive-warnings
-PP_TARGETS += L10N_PREF_JS_EXPORTS
-
 ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
 MOZ_PKG_MAC_DSSTORE=$(ABS_DIST)/branding/dsstore
 MOZ_PKG_MAC_BACKGROUND=$(ABS_DIST)/branding/background.png
@@ -182,13 +177,6 @@ else
 	  sed -e 's/^InfoText=/Info=/' -e 's/^TitleText=/Title=/' | \
 	  sed -e 's/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/' > \
 	  $(FINAL_TARGET)/../updater.ini
-endif
-endif
-
-ifndef IS_LANGPACK
-ifdef MOZ_CRASHREPORTER
-libs:: $(call MERGE_FILE,crashreporter/crashreporter-override.ini)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
 endif
 
