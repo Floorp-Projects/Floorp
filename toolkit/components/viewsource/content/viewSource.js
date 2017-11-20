@@ -627,8 +627,6 @@ ViewSourceChrome.prototype = {
    */
   onGoToLineSuccess(lineNumber) {
     ViewSourceBrowser.prototype.onGoToLineSuccess.call(this, lineNumber);
-    document.getElementById("statusbar-line-col").label =
-      gViewSourceBundle.getFormattedString("statusBarLineCol", [lineNumber, 1]);
   },
 
   /**
