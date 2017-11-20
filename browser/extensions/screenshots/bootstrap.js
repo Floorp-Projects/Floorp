@@ -5,6 +5,7 @@ const ADDON_ID = "screenshots@mozilla.org";
 const TELEMETRY_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
 const PREF_BRANCH = "extensions.screenshots.";
 const USER_DISABLE_PREF = "extensions.screenshots.disabled";
+const HISTORY_ENABLED_PREF = "places.history.enabled";
 
 const { interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -48,6 +49,7 @@ const prefObserver = {
     }
   }
 };
+
 
 const appStartupObserver = {
   register() {
@@ -223,6 +225,18 @@ function handleMessage(msg, sender, sendReply) {
       sendReply({type: "success", value: !!addon});
     });
     return true;
+  } else if (msg.funcName === "getHistoryPref") {
+    let historyEnabled = getBoolPref(HISTORY_ENABLED_PREF);
+    sendReply({type: "success", value: historyEnabled});
+  } else if (msg.funcName === "incrementDownloadCount") {
+    Services.telemetry.scalarAdd('screenshots.download', 1);
+    sendReply({type: "success", value: true});
+  } else if (msg.funcName === "incrementUploadCount") {
+    Services.telemetry.scalarAdd('screenshots.upload', 1);
+    sendReply({type: "success", value: true});
+  } else if (msg.funcName === "incrementCopyCount") {
+    Services.telemetry.scalarAdd('screenshots.copy', 1);
+    sendReply({type: "success", value: true});
   }
 }
 
@@ -266,10 +280,10 @@ function initPhotonPageAction(api, webExtension) {
       switch (message.type) {
       case "setProperties":
         if (message.title) {
-          photonPageAction.title = message.title;
+          photonPageAction.setTitle(message.title);
         }
         if (message.iconPath) {
-          photonPageAction.iconURL = webExtension.extension.getURL(message.iconPath);
+          photonPageAction.setIconURL(webExtension.extension.getURL(message.iconPath));
         }
         break;
       default:

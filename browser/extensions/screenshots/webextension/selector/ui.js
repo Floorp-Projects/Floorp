@@ -91,6 +91,35 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
     return result;
   }
 
+  let isDownloadOnly = exports.isDownloadOnly = function() {
+    return window.downloadOnly;
+  }
+
+  // the download notice is rendered in iframes that match the document height
+  // or the window height. If parent iframe matches window height, pass in true
+  function renderDownloadNotice(initAtBottom = false) {
+    let notice = makeEl("table", "notice");
+    notice.innerHTML = `
+      <div class="notice-tooltip">
+        <p data-l10n-id="downloadOnlyDetails"></p>
+        <ul>
+          <li data-l10n-id="downloadOnlyDetailsPrivate"></li>
+          <li data-l10n-id="downloadOnlyDetailsNeverRemember"></li>
+        </ul>
+      </div>
+      <tbody>
+        <tr class="notice-wrapper">
+          <td class="notice-content" data-l10n-id="downloadOnlyNotice"></td>
+          <td class="notice-help"></td>
+        </tr>
+      <tbody>`;
+    localizeText(notice);
+    if (initAtBottom) {
+      notice.style.bottom = '10px';
+    }
+    return notice;
+  }
+
   function initializeIframe() {
     let el = document.createElement("iframe");
     el.src = browser.extension.getURL("blank.html");
@@ -155,6 +184,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
     unhide() {
       this.updateElementSize();
       this.element.style.display = "";
+      catcher.watchPromise(callBackground("sendEvent", "internal", "unhide-selection-frame"));
       if (highContrastCheck(this.element.contentWindow)) {
         this.element.contentDocument.body.classList.add("hcm");
       }
@@ -174,21 +204,30 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
         document.documentElement.clientHeight,
         document.body.clientHeight,
         document.documentElement.scrollHeight,
-        document.body.scrollHeight,
-        window.innerHeight);
+        document.body.scrollHeight);
       if (height !== this.sizeTracking.lastHeight) {
         this.sizeTracking.lastHeight = height;
         this.element.style.height = height + "px";
       }
+      // Do not use window.innerWidth since that includes the width of the
+      // scroll bar.
       let width = Math.max(
         document.documentElement.clientWidth,
         document.body.clientWidth,
         document.documentElement.scrollWidth,
-        document.body.scrollWidth,
-        window.innerWidth);
+        document.body.scrollWidth);
       if (width !== this.sizeTracking.lastWidth) {
         this.sizeTracking.lastWidth = width;
         this.element.style.width = width + "px";
+        // Since this frame has an absolute position relative to the parent
+        // document, if the parent document has a max-width that is narrower
+        // than the viewport, then the x of the parent document is not at 0 of
+        // the viewport. That makes the frame shifted to the right. This left
+        // margin negates that.
+        let boundingRect = document.body.getBoundingClientRect();
+        if (boundingRect.x) {
+          this.element.style.marginLeft = `-${boundingRect.x}px`;
+        }
       }
       if (force && visible) {
         this.element.style.display = "";
@@ -264,8 +303,10 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
                      </div>
                      <div class="preview-instructions" data-l10n-id="screenshotInstructions"></div>
                      <div class="myshots-all-buttons-container">
-                       <button class="myshots-button myshots-link" tabindex="1" data-l10n-id="myShotsLink"></button>
-                       <div class="spacer"></div>
+                       ${isDownloadOnly() ? '' : `
+                         <button class="myshots-button myshots-link" tabindex="1" data-l10n-id="myShotsLink"></button>
+                         <div class="spacer"></div>
+                       `}
                        <button class="myshots-button visible" tabindex="2" data-l10n-id="saveScreenshotVisibleArea"></button>
                        <button class="myshots-button full-page" tabindex="3" data-l10n-id="saveScreenshotFullPage"></button>
                      </div>
@@ -280,8 +321,10 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
             this.document.documentElement.lang = browser.i18n.getMessage("@@ui_locale");
             const overlay = this.document.querySelector(".preview-overlay");
             localizeText(this.document);
-            overlay.querySelector(".myshots-button").addEventListener(
-              "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onOpenMyShots)));
+            if (!(isDownloadOnly())) {
+              overlay.querySelector(".myshots-button").addEventListener(
+                "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onOpenMyShots)));
+            }
             overlay.querySelector(".visible").addEventListener(
               "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onClickVisible)));
             overlay.querySelector(".full-page").addEventListener(
@@ -289,7 +332,6 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
             resolve();
           }), {once: true});
           document.body.appendChild(this.element);
-          this.unhide();
         } else {
           resolve();
         }
@@ -308,6 +350,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       window.addEventListener("scroll", watchFunction(assertIsTrusted(this.onScroll)));
       window.addEventListener("resize", this.onResize, true);
       this.element.style.display = "";
+      catcher.watchPromise(callBackground("sendEvent", "internal", "unhide-preselection-frame"));
       if (highContrastCheck(this.element.contentWindow)) {
         this.element.contentDocument.body.classList.add("hcm");
       }
@@ -337,6 +380,11 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
     }
   };
 
+  function getAttributeText(l10nID) {
+    let text = browser.i18n.getMessage(l10nID);
+    return text && text.replace('"', "&quot;");
+  }
+
   let iframePreview = exports.iframePreview = {
     element: null,
     document: null,
@@ -361,9 +409,20 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
                 <div class="preview-overlay">
                   <div class="preview-image">
                     <div class="preview-buttons">
-                      <button class="highlight-button-cancel"></button>
-                      <button class="highlight-button-download"></button>
-                      <button class="preview-button-save" data-l10n-id="saveScreenshotSelectedArea"></button>
+                      <button class="highlight-button-cancel"
+                        title="${getAttributeText("cancelScreenshot")}"></button>
+                      <button class="highlight-button-copy"
+                        title="${getAttributeText("copyScreenshot")}"></button>
+                      ${isDownloadOnly() ?
+                        `<button class="highlight-button-download download-only-button"
+                                 title="${getAttributeText("downloadScreenshot")}"
+                                 data-l10n-id="downloadScreenshot"></button>` :
+                        `<button class="highlight-button-download"
+                                 title="${getAttributeText("downloadScreenshot")}"></button>
+                         <button class="preview-button-save"
+                                 title="${getAttributeText("saveScreenshotSelectedArea")}"
+                                 data-l10n-id="saveScreenshotSelectedArea"></button>`
+                      }
                     </div>
                   </div>
                 </div>
@@ -373,10 +432,16 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
             this.document.documentElement.lang = browser.i18n.getMessage("@@ui_locale");
             localizeText(this.document);
             const overlay = this.document.querySelector(".preview-overlay");
+            if (isDownloadOnly()) {
+              overlay.appendChild(renderDownloadNotice(true));
+            } else {
+              overlay.querySelector(".preview-button-save").addEventListener(
+                "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onSavePreview)));
+            }
+            overlay.querySelector(".highlight-button-copy").addEventListener(
+              "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onCopyPreview)));
             overlay.querySelector(".highlight-button-download").addEventListener(
               "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onDownloadPreview)));
-            overlay.querySelector(".preview-button-save").addEventListener(
-              "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onSavePreview)));
             overlay.querySelector(".highlight-button-cancel").addEventListener(
               "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.cancel)));
             resolve();
@@ -396,6 +461,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
 
     unhide() {
       this.element.style.display = "";
+      catcher.watchPromise(callBackground("sendEvent", "internal", "unhide-preview-frame"));
       this.element.focus();
     },
 
@@ -479,7 +545,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       } else {
         this.cancel.style.display = "none";
       }
-      if (callbacks !== undefined && callbacks.save) {
+      if (callbacks !== undefined && callbacks.save && this.save) {
         // We use onclick here because we don't want addEventListener
         // to add multiple event handlers to the same button
         this.save.removeAttribute("disabled");
@@ -488,7 +554,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
           callbacks.save(e);
         }));
         this.save.style.display = "";
-      } else {
+      } else if (this.save) {
         this.save.style.display = "none";
       }
       if (callbacks !== undefined && callbacks.download) {
@@ -504,9 +570,19 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       } else {
         this.download.style.display = "none";
       }
+      if (callbacks !== undefined && callbacks.copy) {
+        this.copy.removeAttribute("disabled");
+        this.copy.onclick = watchFunction(assertIsTrusted((e) => {
+          this.copy.setAttribute("disabled", true);
+          callbacks.copy(e);
+          e.preventDefault();
+          e.stopPropagation();
+        }));
+        this.copy.style.display = "";
+      } else {
+        this.copy.style.display = "none";
+      }
       let bodyRect = getBodyRect();
-      // Note, document.documentElement.scrollHeight is zero on some strange pages (such as the page created when you load an image):
-      let docHeight = Math.max(document.documentElement.scrollHeight || 0, document.body.scrollHeight);
 
       let winBottom = window.innerHeight;
       let pageYOffset = window.pageYOffset;
@@ -539,7 +615,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       this.bgTop.style.left = "0px";
       this.bgTop.style.width = "100%";
       this.bgBottom.style.top = (pos.bottom - bodyRect.top) + "px";
-      this.bgBottom.style.height = docHeight - (pos.bottom - bodyRect.top) + "px";
+      this.bgBottom.style.height = "100vh";
       this.bgBottom.style.left = "0px";
       this.bgBottom.style.width = "100%";
       this.bgLeft.style.top = (pos.top - bodyRect.top) + "px";
@@ -550,22 +626,65 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       this.bgRight.style.height = pos.bottom - pos.top + "px";
       this.bgRight.style.left = (pos.right - bodyRect.left) + "px";
       this.bgRight.style.width = "100%";
+      // the download notice is injected into an iframe that matches the document size
+      // in order to reposition it on scroll we need to bind an updated positioning
+      // function to some window events.
+      this.repositionDownloadNotice = () => {
+        if (this.downloadNotice) {
+          const currentYOffset = window.pageYOffset;
+          const currentWinBottom = window.innerHeight;
+          this.downloadNotice.style.top = (currentYOffset + currentWinBottom - 60) + "px";
+        }
+      };
+
+      if (this.downloadNotice) {
+        this.downloadNotice.style.top = (pageYOffset + winBottom - 60) + "px";
+        // event callbacks are delayed 100ms each to keep from overloading things
+        this.windowChangeStop = this.delayExecution(100, this.repositionDownloadNotice);
+        window.addEventListener('scroll', watchFunction(assertIsTrusted(this.windowChangeStop)));
+        window.addEventListener('resize', watchFunction(assertIsTrusted(this.windowChangeStop)));
+      }
 
       if (!(this.isElementInViewport(this.buttons))) {
-        this.cancel.style.position = this.download.style.position = this.save.style.position = "fixed";
+        this.cancel.style.position = this.download.style.position = "fixed";
         this.cancel.style.left = (pos.left - bodyRect.left - 50) + "px";
         this.download.style.left = ((pos.left - bodyRect.left - 100)) + "px";
-        this.save.style.left = ((pos.left - bodyRect.left) - 190) + "px";
-        this.cancel.style.top = this.download.style.top = this.save.style.top = (pos.top - bodyRect.top) + "px";
+        this.cancel.style.top = this.download.style.top = (pos.top - bodyRect.top) + "px";
+        if (this.save) {
+          this.save.style.position = "fixed";
+          this.save.style.left = ((pos.left - bodyRect.left) - 190) + "px";
+          this.save.style.top = (pos.top - bodyRect.top) + "px";
+        }
       } else {
-        this.cancel.style.position = this.download.style.position = this.save.style.position = "initial";
-        this.cancel.style.top = this.download.style.top = this.save.style.top = 0;
-        this.cancel.style.left = this.download.style.left = this.save.style.left = 0;
+        this.cancel.style.position = this.download.style.position = "initial";
+        this.cancel.style.top = this.download.style.top = 0;
+        this.cancel.style.left = this.download.style.left = 0;
+        if (this.save) {
+          this.save.style.position = "initial";
+          this.save.style.top = 0;
+          this.save.style.left = 0;
+        }
+      }
+    },
+
+    // used to eventually move the download-only warning
+    // when a user ends scrolling or ends resizing a window
+    delayExecution(delay, cb) {
+      let timer;
+      return function() {
+        if (typeof timer !== 'undefined') {
+          clearTimeout(timer);
+        }
+        timer = setTimeout(cb, delay);
       }
     },
 
     remove() {
-      for (let name of ["el", "bgTop", "bgLeft", "bgRight", "bgBottom"]) {
+      if (this.downloadNotice) {
+        window.removeEventListener('scroll', this.windowChangeStop, true);
+        window.removeEventListener('resize', this.windowChangeStop, true);
+      }
+      for (let name of ["el", "bgTop", "bgLeft", "bgRight", "bgBottom", "downloadNotice"]) {
         if (name in this) {
           util.removeNode(this[name]);
           this[name] = null;
@@ -583,16 +702,32 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       let cancel = makeEl("button", "highlight-button-cancel");
       cancel.title = browser.i18n.getMessage("cancelScreenshot");
       buttons.appendChild(cancel);
-      let download = makeEl("button", "highlight-button-download");
-      download.title = browser.i18n.getMessage("downloadScreenshot");
+
+      let copy = makeEl("button", "highlight-button-copy");
+      copy.title = browser.i18n.getMessage("copyScreenshot");
+      buttons.appendChild(copy);
+
+      let download, save;
+
+      if (isDownloadOnly()) {
+        download = makeEl("button", "highlight-button-download download-only-button");
+        download.title = browser.i18n.getMessage("downloadScreenshot");
+        download.textContent = browser.i18n.getMessage("downloadScreenshot");
+      } else {
+        download = makeEl("button", "highlight-button-download");
+        download.title = browser.i18n.getMessage("downloadScreenshot");
+        save = makeEl("button", "highlight-button-save");
+        save.textContent = browser.i18n.getMessage("saveScreenshotSelectedArea");
+        save.title = browser.i18n.getMessage("saveScreenshotSelectedArea");
+      }
       buttons.appendChild(download);
-      let save = makeEl("button", "highlight-button-save");
-      save.textContent = browser.i18n.getMessage("saveScreenshotSelectedArea");
-      save.title = browser.i18n.getMessage("saveScreenshotSelectedArea");
-      buttons.appendChild(save);
+      if (save) {
+        buttons.appendChild(save);
+      }
       this.buttons = buttons;
       this.cancel = cancel;
       this.download = download;
+      this.copy = copy;
       this.save = save;
       boxEl.appendChild(buttons);
       for (let name of movements) {
@@ -610,6 +745,10 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       this.bgBottom = makeEl("div", "bghighlight");
       iframe.document().body.appendChild(this.bgBottom);
       iframe.document().body.appendChild(boxEl);
+      if (isDownloadOnly()) {
+        this.downloadNotice = renderDownloadNotice();
+        iframe.document().body.appendChild(this.downloadNotice);
+      }
       this.el = boxEl;
     },
 
@@ -695,6 +834,9 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       if (this.el) {
         this.el.style.display = "none";
       }
+      if (this.downloadNotice) {
+        this.downloadNotice.display = "none";
+      }
     },
 
     remove() {
@@ -732,10 +874,16 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       let img = makeEl("IMG");
       img.src = dataUrl;
       iframe.document().querySelector(".preview-image").appendChild(img);
-      if (showCropWarning) {
-        let imageCroppedEl = makeEl("DIV");
-        imageCroppedEl.id = "imageCroppedWarning";
-        imageCroppedEl.textContent = browser.i18n.getMessage("imageCroppedWarning", buildSettings.maxImageHeight);
+      if (showCropWarning && !(isDownloadOnly())) {
+        let imageCroppedEl = makeEl("table", "notice");
+        imageCroppedEl.style.bottom = "10px";
+        imageCroppedEl.innerHTML = `<tbody>
+          <tr class="notice-wrapper">
+            <td class="notice-content"></td>
+          </tr>
+        </tbody>`;
+        let contentCell = imageCroppedEl.getElementsByTagName("td");
+        contentCell[0].textContent = browser.i18n.getMessage("imageCroppedWarning", buildSettings.maxImageHeight);
         iframe.document().querySelector(".preview-overlay").appendChild(imageCroppedEl);
       }
     }

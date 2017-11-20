@@ -134,6 +134,9 @@ this.uicontrol = (function() {
     }, download: () => {
       sendEvent("download-shot", "overlay-download-button");
       shooter.downloadShot(selectedPos);
+    }, copy: () => {
+      sendEvent("copy-shot", "overlay-copy-button");
+      shooter.copyShot(selectedPos);
     }
   };
 
@@ -155,7 +158,7 @@ this.uicontrol = (function() {
       selectedPos = new Selection(
         window.scrollX, window.scrollY,
         window.scrollX + window.innerWidth, window.scrollY + window.innerHeight);
-      captureType = 'visible';
+      captureType = "visible";
       setState("previewing");
     },
     onClickFullPage: () => {
@@ -192,6 +195,10 @@ this.uicontrol = (function() {
       }
 
       shooter.downloadShot(selectedPos);
+    },
+    onCopyPreview: () => {
+      sendEvent(`copy-${captureType.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`, "copy-preview-button");
+      shooter.copyShot(selectedPos);
     }
   };
 
@@ -886,6 +893,7 @@ this.uicontrol = (function() {
 
   exports.deactivate = function() {
     try {
+      sendEvent("internal", "deactivate");
       setState("cancel");
       callBackground('closeSelector');
       selectorLoader.unloadModules();
@@ -958,16 +966,30 @@ this.uicontrol = (function() {
   }
 
   function keyupHandler(event) {
-    if (event.ctrlKey || event.shiftKey || event.altKey || event.metaKey) {
-      // Modified
+    if (event.shiftKey || event.altKey) {
+      // unused modifier keys
       return;
+    }
+    if (event.code === "KeyC" && (event.ctrlKey || event.metaKey)) {
+      callBackground("getPlatformOs").then(os => {
+        if ((event.ctrlKey && os !== "mac") ||
+            (event.metaKey && os === "mac")) {
+          sendEvent("copy-shot", "keyboard-copy");
+          shooter.copyShot(selectedPos);
+        }
+      }).catch(() => {
+        // handled by catcher.watchPromise
+      });
     }
     if ((event.key || event.code) === "Escape") {
       sendEvent("cancel-shot", "keyboard-escape");
       exports.deactivate();
     }
-    if ((event.key || event.code) === "Enter") {
-      if (getState.state === "selected") {
+    if ((event.key || event.code) === "Enter" && getState.state === "selected") {
+      if (ui.isDownloadOnly()) {
+        sendEvent("download-shot", "keyboard-enter");
+        shooter.downloadShot(selectedPos);
+      } else {
         sendEvent("save-shot", "keyboard-enter");
         shooter.takeShot("selection", selectedPos);
       }
