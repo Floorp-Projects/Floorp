@@ -9,26 +9,16 @@ all_platforms = ['win64', 'win32', 'linux32', 'linux64', 'macosx64']
 
 for platform in all_platforms:
     whitelist['nightly'][platform] = [
-        'ac_add_options --enable-update-channel=nightly',
         'ac_add_options --with-branding=browser/branding/nightly',
         'ac_add_options --enable-profiling',
     ]
 
 whitelist['nightly']['linux32'] += [
-    'CXX=$REAL_CXX',
-    'CXX="ccache $REAL_CXX"',
-    'CC="ccache $REAL_CC"',
-    'ac_add_options --with-ccache=/usr/bin/ccache',
-    'export MOZILLA_OFFICIAL=1',
-    'export MOZ_TELEMETRY_REPORTING=1',
     'STRIP_FLAGS="--strip-debug"',
 ]
 
 whitelist['nightly']['linux64'] += [
-    'export MOZILLA_OFFICIAL=1',
-    'export MOZ_TELEMETRY_REPORTING=1',
     'STRIP_FLAGS="--strip-debug"',
-    'ac_add_options --with-ccache=/usr/bin/ccache',
 ]
 
 whitelist['nightly']['macosx64'] += [
@@ -36,19 +26,12 @@ whitelist['nightly']['macosx64'] += [
     'if test "${MOZ_UPDATE_CHANNEL}" = "nightly-try"; then',
     'ac_add_options --with-macbundlename-prefix=Firefox',
     'fi',
-    'ac_add_options --with-ccache',
     'ac_add_options --disable-install-strip',
     'ac_add_options --enable-instruments',
     'ac_add_options --enable-dtrace',
     'if test `uname -s` != Linux; then',
 ]
 
-whitelist['nightly']['win32'] += [
-    '. $topsrcdir/configs/mozilla2/win32/include/choose-make-flags',
-    'if test "$IS_NIGHTLY" != ""; then',
-    'ac_add_options --disable-auto-deps',
-    'fi',
-]
 whitelist['nightly']['win64'] += [
     '. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"',
 ]
