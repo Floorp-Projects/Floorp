@@ -36,8 +36,7 @@ def verify_mozconfigs(mozconfig_pair, nightly_mozconfig_pair, platform,
     mozconfig_name, mozconfig_lines = mozconfig_pair
     nightly_mozconfig_name, nightly_mozconfig_lines = nightly_mozconfig_pair
 
-    missing_args = mozconfig_lines == [] or nightly_mozconfig_lines == []
-    if missing_args:
+    if not mozconfig_lines or not nightly_mozconfig_lines:
         log.info("Missing mozconfigs to compare for %s" % platform)
         return False
 
