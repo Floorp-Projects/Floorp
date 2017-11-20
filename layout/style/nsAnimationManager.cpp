@@ -1068,10 +1068,17 @@ nsAnimationManager::UpdateAnimations(
              "Should not update animations that are not attached to the "
              "document tree");
 
-  if (!aStyleContext) {
+  const nsStyleDisplay* disp = aStyleContext
+    ? aStyleContext->ComputedData()->GetStyleDisplay()
+    : nullptr;
+
+  if (!disp || disp->mDisplay == StyleDisplay::None) {
     // If we are in a display:none subtree we will have no computed values.
-    // Since CSS animations should not run in display:none subtrees we should
-    // stop (actually, destroy) any animations on this element here.
+    // However, if we are on the root of display:none subtree, the computed
+    // values might not have been cleared yet.
+    // In either case, since CSS animations should not run in display:none
+    // subtrees we should stop (actually, destroy) any animations on this
+    // element here.
     StopAnimationsForElement(aElement, aPseudoType);
     return;
   }
@@ -1079,8 +1086,6 @@ nsAnimationManager::UpdateAnimations(
   NonOwningAnimationTarget target(aElement, aPseudoType);
   ServoCSSAnimationBuilder builder(aStyleContext);
 
-  const nsStyleDisplay *disp =
-      aStyleContext->ComputedData()->GetStyleDisplay();
   DoUpdateAnimations(target, *disp, builder);
 }
 
