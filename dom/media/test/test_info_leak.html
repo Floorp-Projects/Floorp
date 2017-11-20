@@ -35,19 +35,21 @@ function createTestArray() {
   var tests = [];
   var tmpVid = document.createElement("video");
 
-  for (var testNum=0; testNum<gInfoLeakTests.length; testNum++) {
-    var test = gInfoLeakTests[testNum];
-    if (!tmpVid.canPlayType(test.type)) {
-      continue;
+  return makeInfoLeakTests().then(infoLeakTests => {
+    for (var testNum=0; testNum < infoLeakTests.length; testNum++) {
+      var test = infoLeakTests[testNum];
+      if (!tmpVid.canPlayType(test.type)) {
+        continue;
+      }
+
+      var t = new Object;
+      t.name = test.src;
+      t.type = test.type;
+
+      tests.push(t);
     }
-
-    var t = new Object;
-    t.name = test.src;
-    t.type = test.type;
-
-    tests.push(t);
-  }
-  return tests;
+    return tests;
+  })
 }
 
 function log(msg) {
@@ -160,7 +162,9 @@ function startTest(test, token) {
   createMedia(test.type, test.name, token);  
 }
 
-manager.runTests(createTestArray(), startTest);
+createTestArray().then(testArray => {
+  manager.runTests(testArray, startTest);
+});
 
 </script>
 </pre>
