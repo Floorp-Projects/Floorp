@@ -94,6 +94,8 @@ struct NrIceCandidate {
   Type type;
   TcpType tcp_type;
   std::string codeword;
+  std::string label;
+  bool trickled;
 };
 
 struct NrIceCandidatePair {
