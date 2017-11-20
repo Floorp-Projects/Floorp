@@ -57,10 +57,17 @@ public:
    */
   static void Init();
 
+  /**
+   * return true if a known, non-UIA a11y consumer is present
+   */
+  static bool HasKnownNonUiaConsumer();
+
 private:
   Compatibility();
   Compatibility(const Compatibility&);
   Compatibility& operator = (const Compatibility&);
+
+  static void InitConsumers();
 
   /**
    * List of detected consumers of a11y (used for statistics/telemetry and compat)
