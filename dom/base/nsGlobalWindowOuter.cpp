@@ -1239,14 +1239,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-#ifdef DEBUG
-void
-nsGlobalWindowOuter::RiskyUnlink()
-{
-  NS_CYCLE_COLLECTION_INNERNAME.Unlink(this);
-}
-#endif
-
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGlobalWindowOuter)
   if (tmp->mCachedXBLPrototypeHandlers) {
     for (auto iter = tmp->mCachedXBLPrototypeHandlers->Iter();
