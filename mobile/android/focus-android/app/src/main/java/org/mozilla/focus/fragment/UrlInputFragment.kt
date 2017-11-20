@@ -118,7 +118,9 @@ class UrlInputFragment : LocaleAwareFragment(), View.OnClickListener, InlineAuto
             session = SessionManager.getInstance().getSessionByUUID(it)
         }
 
-        context?.let { urlAutoCompleteFilter.loadDomainsInBackground(it.applicationContext) }
+        context?.let {
+            urlAutoCompleteFilter.initialize(it.applicationContext)
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =

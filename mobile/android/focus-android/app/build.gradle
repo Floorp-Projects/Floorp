@@ -135,6 +135,10 @@ android {
     }
 }
 
+kotlin {
+    experimental { coroutines 'enable' }
+}
+
 jacocoAndroidUnitTestReport {
     csv.enabled false
     html.enabled true
@@ -166,6 +170,7 @@ dependencies {
     compile 'org.mozilla.telemetry:telemetry:1.1.1'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.19.3"
 
     focusCompile 'com.adjust.sdk:adjust-android:4.11.4'
     focusCompile 'com.google.android.gms:play-services-analytics:10.2.6' // Required by Adjust
