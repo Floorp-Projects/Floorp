@@ -9,6 +9,7 @@
 
         <activity android:name="org.mozilla.geckoview_example.GeckoViewActivity"
                   android:label="GeckoViewActivity"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
