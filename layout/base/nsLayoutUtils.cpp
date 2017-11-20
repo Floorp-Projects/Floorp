@@ -130,6 +130,7 @@
 #include "TextDrawTarget.h"
 #include "nsDeckFrame.h"
 #include "nsIEffectiveTLDService.h" // for IsInStyloBlocklist
+#include "mozilla/StylePrefs.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -6179,7 +6180,7 @@ nsLayoutUtils::DrawString(const nsIFrame*     aFrame,
 void
 nsLayoutUtils::DrawUniDirString(const char16_t* aString,
                                 uint32_t aLength,
-                                nsPoint aPoint,
+                                const nsPoint& aPoint,
                                 nsFontMetrics& aFontMetrics,
                                 gfxContext& aContext)
 {
@@ -10054,4 +10055,12 @@ nsLayoutUtils::ComputeOffsetToUserSpace(nsDisplayListBuilder* aBuilder,
             nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.y)));
 
   return (offsetToBoundingBox - toUserSpace);
+}
+
+/* static */ uint8_t
+nsLayoutUtils::ControlCharVisibilityDefault()
+{
+  return StylePrefs::sControlCharVisibility
+    ? NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE
+    : NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN;
 }

@@ -19,10 +19,10 @@ web-platform-tests:
     suite: web-platform-tests
     treeherder-symbol: tc-W(wpt)
     chunks:
-      by-test-platform:
-        macosx64/opt: 5
-        macosx64/debug: 10
-        default: 12
+        by-test-platform:
+            macosx64/opt: 5
+            macosx64/debug: 10
+            default: 12
     max-run-time: 7200
     e10s:
         by-test-platform:
@@ -38,16 +38,16 @@ web-platform-tests-headless:
     suite: web-platform-tests
     treeherder-symbol: tc-W(wptH)
     chunks:
-      by-test-platform:
-        macosx64/opt: 5
-        macosx64/debug: 10
-        default: 12
+        by-test-platform:
+            macosx64/opt: 5
+            macosx64/debug: 10
+            default: 12
     e10s:
         by-test-platform:
             macosx.*: true
             default: true
     max-run-time: 7200
-    run-on-projects: [] # disabled pending releng approval
+    run-on-projects: []  # disabled pending releng approval
     mozharness:
         chunked: true
         extra-options:
@@ -66,10 +66,10 @@ web-platform-tests-reftests:
     suite: web-platform-tests-reftests
     treeherder-symbol: tc-W(Wr)
     chunks:
-      by-test-platform:
-        macosx.*: 1
-        windows.*: 1
-        default: 6
+        by-test-platform:
+            macosx.*: 1
+            windows.*: 1
+            default: 6
     e10s:
         by-test-platform:
             windows7-32/debug: both
@@ -83,15 +83,15 @@ web-platform-tests-reftests-headless:
     suite: web-platform-tests-reftests
     treeherder-symbol: tc-W(WrH)
     chunks:
-      by-test-platform:
-        macosx.*: 1
-        windows.*: 1
-        default: 6
+        by-test-platform:
+            macosx.*: 1
+            windows.*: 1
+            default: 6
     e10s:
         by-test-platform:
             windows7-32/debug: both
             default: true
-    run-on-projects: [] # disabled pending releng approval
+    run-on-projects: []  # disabled pending releng approval
     mozharness:
         extra-options:
             by-test-platform:
@@ -115,7 +115,7 @@ web-platform-tests-wdspec-headless:
     description: "Web platform webdriver-spec headless run"
     suite: web-platform-tests-wdspec
     treeherder-symbol: tc-W(WdH)
-    run-on-projects: [] # disabled pending releng approval
+    run-on-projects: []  # disabled pending releng approval
     mozharness:
         extra-options:
             by-test-platform:

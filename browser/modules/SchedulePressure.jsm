@@ -46,7 +46,7 @@ this.SchedulePressure = {
         });
         this._telemetryCallbackWeakMap.set(window, telemetryCallbackId);
       }
-    }
+    };
   },
 
   /**

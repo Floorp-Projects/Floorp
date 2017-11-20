@@ -1236,7 +1236,7 @@ function TypedArraySort(comparefn) {
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1121937#c36
         // Step d.
         return v;
-    }
+    };
 
     return QuickSort(obj, len, wrappedCompareFn);
 }
@@ -1539,7 +1539,7 @@ function TypedArrayStaticOf(/*...items*/) {
 
     // Steps 6-7.
     for (var k = 0; k < len; k++)
-        newObj[k] = items[k]
+        newObj[k] = items[k];
 
     // Step 8.
     return newObj;

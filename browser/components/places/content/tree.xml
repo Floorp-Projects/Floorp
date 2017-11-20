@@ -640,7 +640,7 @@
           let result = this.result;
           let didSuppressNotifications = result.suppressNotifications;
           if (!didSuppressNotifications)
-            result.suppressNotifications = true
+            result.suppressNotifications = true;
           try {
             findNodes(this.result.root);
           } finally {

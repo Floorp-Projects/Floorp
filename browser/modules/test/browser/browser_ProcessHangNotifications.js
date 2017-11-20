@@ -65,7 +65,7 @@ let TestHangReport = function(hangType = SLOW_SCRIPT,
   }
 
   this._browser = browser;
-}
+};
 
 TestHangReport.prototype = {
   SLOW_SCRIPT,

@@ -5,4 +5,4 @@ then:
         $merge:
             - $eval: attributes
             - task_duplicates:
-                $eval: input
+                  $eval: input

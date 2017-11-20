@@ -1646,7 +1646,7 @@ public:
    */
   static void DrawUniDirString(const char16_t* aString,
                                uint32_t aLength,
-                               nsPoint aPoint,
+                               const nsPoint& aPoint,
                                nsFontMetrics& aFontMetrics,
                                gfxContext& aContext);
 
@@ -3050,6 +3050,10 @@ public:
 
   static nsPoint ComputeOffsetToUserSpace(nsDisplayListBuilder* aBuilder,
                                           nsIFrame* aFrame);
+
+  // Return the default value to be used for -moz-control-character-visibility,
+  // from preferences.
+  static uint8_t ControlCharVisibilityDefault();
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;

@@ -509,7 +509,7 @@ function IsASCIIAlphaString(s) {
     for (var i = 0; i < s.length; i++) {
         var c = callFunction(std_String_charCodeAt, s, i);
         if (!((0x41 <= c && c <= 0x5A) || (0x61 <= c && c <= 0x7A)))
-            return false
+            return false;
     }
     return true;
 }
@@ -1502,13 +1502,13 @@ function getInternals(obj) {
     // Otherwise it's time to fully create them.
     var type = internals.type;
     if (type === "Collator")
-        internalProps = resolveCollatorInternals(internals.lazyData)
+        internalProps = resolveCollatorInternals(internals.lazyData);
     else if (type === "DateTimeFormat")
-        internalProps = resolveDateTimeFormatInternals(internals.lazyData)
+        internalProps = resolveDateTimeFormatInternals(internals.lazyData);
     else if (type === "NumberFormat")
         internalProps = resolveNumberFormatInternals(internals.lazyData);
     else
-        internalProps = resolvePluralRulesInternals(internals.lazyData)
+        internalProps = resolvePluralRulesInternals(internals.lazyData);
     setInternalProperties(internals, internalProps);
     return internalProps;
 }
@@ -3698,7 +3698,7 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
     const style = GetOption(options, "style", "string", ["long", "short", "narrow"], "long");
     lazyRelativeTimeFormatData.style = style;
 
-    initializeIntlObject(relativeTimeFormat, "RelativeTimeFormat", lazyRelativeTimeFormatData)
+    initializeIntlObject(relativeTimeFormat, "RelativeTimeFormat", lazyRelativeTimeFormatData);
 }
 
 /**
@@ -4001,4 +4001,3 @@ function Intl_getLocaleInfo(locales) {
 
   return intl_GetLocaleInfo(r.locale);
 }
-

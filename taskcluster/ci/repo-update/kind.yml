@@ -14,7 +14,7 @@ jobs:
       name: periodic_file_update
       description: HSTS, HPKP, and Blocklist update
       worker-type: buildbot-bridge/buildbot-bridge
-      run-on-projects: [] # Only run via cron
+      run-on-projects: []  # Only run via cron
       run:
          using: buildbot
          product: firefox

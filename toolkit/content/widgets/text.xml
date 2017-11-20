@@ -214,7 +214,7 @@
         <body>
           <![CDATA[
             if (element.previousSibling instanceof Text) {
-              element.previousSibling.appendData(element.textContent)
+              element.previousSibling.appendData(element.textContent);
             } else {
               element.parentNode.insertBefore(element.firstChild, element);
             }
@@ -336,7 +336,7 @@
             // should be deferred to the system's external protocol handler
             if (!protocolSvc.isExposedProtocol(uri.scheme)) {
               protocolSvc.loadURI(uri);
-              aEvent.preventDefault()
+              aEvent.preventDefault();
               return;
             }
 

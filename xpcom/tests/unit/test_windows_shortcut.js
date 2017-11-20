@@ -111,7 +111,7 @@ function test_create_normal(tempDir) {
                   "Ordinary shortcut");
 
   let shortcutTarget = LocalFile(shortcutFile.target);
-  do_check_true(shortcutTarget.equals(targetFile))
+  do_check_true(shortcutTarget.equals(targetFile));
 }
 
 function test_create_unicode(tempDir) {
@@ -131,7 +131,7 @@ function test_create_unicode(tempDir) {
                   "ῧṋіḉѻₑ");
 
   let shortcutTarget = LocalFile(shortcutFile.target);
-  do_check_true(shortcutTarget.equals(targetFile))
+  do_check_true(shortcutTarget.equals(targetFile));
 }
 
 function test_update_noargs(tempDir) {
@@ -153,7 +153,7 @@ function test_update_noargs(tempDir) {
   win.setShortcut();
 
   let shortcutTarget = LocalFile(shortcutFile.target);
-  do_check_true(shortcutTarget.equals(targetFile))
+  do_check_true(shortcutTarget.equals(targetFile));
 }
 
 function test_update_notarget(tempDir) {
@@ -178,7 +178,7 @@ function test_update_notarget(tempDir) {
                   "An UPDATED shortcut");
 
   let shortcutTarget = LocalFile(shortcutFile.target);
-  do_check_true(shortcutTarget.equals(targetFile))
+  do_check_true(shortcutTarget.equals(targetFile));
 }
 
 function test_update_targetonly(tempDir) {
@@ -204,7 +204,7 @@ function test_update_targetonly(tempDir) {
   win.setShortcut(newTargetFile);
 
   let shortcutTarget = LocalFile(shortcutFile.target);
-  do_check_true(shortcutTarget.equals(newTargetFile))
+  do_check_true(shortcutTarget.equals(newTargetFile));
 }
 
 function test_update_normal(tempDir) {
@@ -233,7 +233,7 @@ function test_update_normal(tempDir) {
                   "An UPDATED shortcut");
 
   let shortcutTarget = LocalFile(shortcutFile.target);
-  do_check_true(shortcutTarget.equals(newTargetFile))
+  do_check_true(shortcutTarget.equals(newTargetFile));
 }
 
 function test_update_unicode(tempDir) {
@@ -262,5 +262,5 @@ function test_update_unicode(tempDir) {
                   "A ῧṋіḉѻₑ shortcut");
 
   let shortcutTarget = LocalFile(shortcutFile.target);
-  do_check_true(shortcutTarget.equals(newTargetFile))
+  do_check_true(shortcutTarget.equals(newTargetFile));
 }

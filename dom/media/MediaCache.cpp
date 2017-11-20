@@ -1447,7 +1447,7 @@ MediaCache::Update()
       for (uint32_t j = 0; j < i; ++j) {
         MediaCacheStream* other = mStreams[j];
         if (other->mResourceID == stream->mResourceID && !other->mClosed &&
-            !other->mClientSuspended &&
+            !other->mClientSuspended && !other->mChannelEnded &&
             OffsetToBlockIndexUnchecked(other->mSeekTarget != -1
                                           ? other->mSeekTarget
                                           : other->mChannelOffset) ==
@@ -1944,6 +1944,14 @@ MediaCacheStream::NotifyDataLength(int64_t aLength)
 }
 
 void
+MediaCacheStream::NotifyLoadID(uint32_t aLoadID)
+{
+  MOZ_ASSERT(aLoadID > 0);
+  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+  mLoadID = aLoadID;
+}
+
+void
 MediaCacheStream::NotifyDataStarted(uint32_t aLoadID,
                                     int64_t aOffset,
                                     bool aSeekable)
@@ -1974,6 +1982,10 @@ MediaCacheStream::NotifyDataStarted(uint32_t aLoadID,
   // Reset mSeekTarget since the seek is completed so MediaCache::Update() will
   // make decisions based on mChannelOffset instead of mSeekTarget.
   mSeekTarget = -1;
+
+  // Reset these flags since a new load has begun.
+  mChannelEnded = false;
+  mDidNotifyDataEnded = false;
 }
 
 void
@@ -2072,8 +2084,6 @@ void
 MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
                                             ReentrantMonitorAutoEnter& aReentrantMonitor)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
   int32_t blockIndex = OffsetToBlockIndexUnchecked(mChannelOffset);
   int32_t blockOffset = OffsetInBlock(mChannelOffset);
   if (blockOffset > 0) {
@@ -2119,31 +2129,64 @@ MediaCacheStream::FlushPartialBlock()
 }
 
 void
-MediaCacheStream::NotifyDataEnded(nsresult aStatus)
+MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
+                                          nsresult aStatus,
+                                          bool aReopenOnError)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
 
-  if (NS_FAILED(aStatus)) {
-    // Disconnect from other streams sharing our resource, since they
-    // should continue trying to load. Our load might have been deliberately
-    // canceled and that shouldn't affect other streams.
-    mResourceID = mMediaCache->AllocateResourceID();
+  if (mClosed || aLoadID != mLoadID) {
+    // Nothing to do if the stream is closed or a new load has begun.
+    return;
+  }
+
+  // Note that aStatus might have succeeded --- this might be a normal close
+  // --- even in situations where the server cut us off because we were
+  // suspended. So we need to "reopen on error" in that case too. The only
+  // cases where we don't need to reopen are when *we* closed the stream.
+  // But don't reopen if we need to seek and we don't think we can... that would
+  // cause us to just re-read the stream, which would be really bad.
+  if (aReopenOnError && aStatus != NS_ERROR_PARSED_DATA_CACHED &&
+      aStatus != NS_BINDING_ABORTED &&
+      (mChannelOffset == 0 ||
+       (mStreamLength > 0 && mChannelOffset != mStreamLength &&
+        mIsTransportSeekable))) {
+    // If the stream did close normally, restart the channel if we're either
+    // at the start of the resource, or if the server is seekable and we're
+    // not at the end of stream. We don't restart the stream if we're at the
+    // end because not all web servers handle this case consistently; see:
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1373618#c36
+    mClient->CacheClientSeek(mChannelOffset, false);
+    return;
+    // Note CacheClientSeek() will call Seek() asynchronously which might fail
+    // and close the stream. This is OK for it is not an error we can recover
+    // from and we have a consistent behavior with that where CacheClientSeek()
+    // is called from MediaCache::Update().
   }
 
   // It is prudent to update channel/cache status before calling
   // CacheClientNotifyDataEnded() which will read |mChannelEnded|.
-  FlushPartialBlockInternal(true, mon);
   mChannelEnded = true;
   mMediaCache->QueueUpdate();
 
+  if (NS_FAILED(aStatus)) {
+    // Notify the client about this network error.
+    mDidNotifyDataEnded = true;
+    mNotifyDataEndedStatus = aStatus;
+    mClient->CacheClientNotifyDataEnded(aStatus);
+    // Wake up the readers so they can fail gracefully.
+    mon.NotifyAll();
+    return;
+  }
+
+  // Note we don't flush the partial block when download ends abnormally for
+  // the padding zeros will give wrong data to other streams.
+  FlushPartialBlockInternal(true, mon);
+
   MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
   while (MediaCacheStream* stream = iter.Next()) {
-    if (NS_SUCCEEDED(aStatus)) {
-      // We read the whole stream, so remember the true length
-      stream->mStreamLength = mChannelOffset;
-    }
+    // We read the whole stream, so remember the true length
+    stream->mStreamLength = mChannelOffset;
     if (!stream->mDidNotifyDataEnded) {
       stream->mDidNotifyDataEnded = true;
       stream->mNotifyDataEndedStatus = aStatus;
@@ -2153,12 +2196,20 @@ MediaCacheStream::NotifyDataEnded(nsresult aStatus)
 }
 
 void
-MediaCacheStream::NotifyChannelRecreated()
+MediaCacheStream::NotifyDataEnded(uint32_t aLoadID,
+                                  nsresult aStatus,
+                                  bool aReopenOnError)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  mChannelEnded = false;
-  mDidNotifyDataEnded = false;
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aLoadID > 0);
+
+  RefPtr<ChannelMediaResource> client = mClient;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaCacheStream::NotifyDataEnded",
+    [client, this, aLoadID, aStatus, aReopenOnError]() {
+      NotifyDataEndedInternal(aLoadID, aStatus, aReopenOnError);
+    });
+  OwnerThread()->Dispatch(r.forget());
 }
 
 void
@@ -2528,6 +2579,11 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   while (!buffer.IsEmpty()) {
     if (mClosed) {
       return NS_ERROR_ABORT;
+    }
+
+    if (mDidNotifyDataEnded && NS_FAILED(mNotifyDataEndedStatus)) {
+      // Abort reading since download ends abnormally.
+      return NS_ERROR_FAILURE;
     }
 
     if (!IsOffsetAllowed(streamOffset)) {

@@ -49,7 +49,7 @@ Bookmarks.prototype = {
         this.READING_LIST_COLLECTION : this.ROOT_COLLECTION;
       await this._migrateCollection(children, collection);
     })().then(() => aCallback(true),
-                        e => { Cu.reportError(e); aCallback(false) });
+                        e => { Cu.reportError(e); aCallback(false); });
   },
 
   // Bookmarks collections in Safari.  Constants for migrateCollection.

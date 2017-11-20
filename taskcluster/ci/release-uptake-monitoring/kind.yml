@@ -50,7 +50,7 @@ jobs:
                maple:
                   - "release-drivers-staging"
                try:
-                  #- "{task[tags][createdForUser]}"
+               #  - "{task[tags][createdForUser]}"
                default:
                   - "release-drivers"
          failed:
@@ -58,7 +58,7 @@ jobs:
                maple:
                   - "release-drivers-staging"
                try:
-                  #- "{task[tags][createdForUser]}"
+               #  - "{task[tags][createdForUser]}"
                default:
                   - "release-drivers"
          exception:
@@ -66,6 +66,6 @@ jobs:
                maple:
                   - "release-drivers-staging"
                try:
-                  #- "{task[tags][createdForUser]}"
+               #  - "{task[tags][createdForUser]}"
                default:
                   - "release-drivers"

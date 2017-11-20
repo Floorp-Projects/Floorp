@@ -79,7 +79,7 @@ function testManifest(manifestPath, baseURI) {
   test_mapping("chrome://test2/locale", baseURI + "test/test2.dtd");
 
   // Test Adding Override
-  test_mapping("chrome://testOverride/content", "file:///test1/override")
+  test_mapping("chrome://testOverride/content", "file:///test1/override");
 
   // Test Not-Adding Overlays
   test_no_overlays("chrome://test1/content/overlay.xul",

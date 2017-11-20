@@ -237,7 +237,7 @@ public:
    *  @param aPoint is relative to aFrame
    */
   /*unsafe*/
-  void HandleDrag(nsIFrame *aFrame, nsPoint aPoint);
+  void HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint);
 
   /** HandleTableSelection will set selection to a table, cell, etc
    *   depending on information contained in aFlags
@@ -320,8 +320,8 @@ public:
    *  @param aDelay is the timer's interval.
    */
   /*unsafe*/
-  nsresult StartAutoScrollTimer(nsIFrame *aFrame,
-                                nsPoint aPoint,
+  nsresult StartAutoScrollTimer(nsIFrame* aFrame,
+                                const nsPoint& aPoint,
                                 uint32_t aDelay);
 
   /** StopAutoScrollTimer stops any active auto scroll timer.
@@ -608,9 +608,9 @@ public:
    */
   nsresult MaintainSelection(nsSelectionAmount aAmount = eSelectNoAmount);
 
-  nsresult ConstrainFrameAndPointToAnchorSubtree(nsIFrame *aFrame,
-                                                 nsPoint& aPoint,
-                                                 nsIFrame **aRetFrame,
+  nsresult ConstrainFrameAndPointToAnchorSubtree(nsIFrame* aFrame,
+                                                 const nsPoint& aPoint,
+                                                 nsIFrame** aRetFrame,
                                                  nsPoint& aRetPoint);
 
   nsFrameSelection();

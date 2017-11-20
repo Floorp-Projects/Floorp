@@ -176,7 +176,7 @@ public:
   nsFrameState GetDebugStateBits() const override;
 #endif
 
-  ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint) override;
+  ContentOffsets CalcContentOffsetsFromFramePoint(const nsPoint& aPoint) override;
   ContentOffsets GetCharacterOffsetAtFramePoint(const nsPoint& aPoint);
 
   /**
@@ -871,7 +871,7 @@ protected:
     SelectionType aSelectionType);
 
   ContentOffsets GetCharacterOffsetAtFramePointInternal(
-    nsPoint aPoint,
+    const nsPoint& aPoint,
     bool aForInsertionPoint);
 
   void ClearFrameOffsetCache();

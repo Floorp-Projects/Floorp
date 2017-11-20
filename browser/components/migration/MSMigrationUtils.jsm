@@ -372,7 +372,7 @@ Bookmarks.prototype = {
       }
       await this._migrateFolder(this._favoritesFolder, folderGuid);
     })().then(() => aCallback(true),
-                       e => { Cu.reportError(e); aCallback(false) });
+                       e => { Cu.reportError(e); aCallback(false); });
   },
 
   async _migrateFolder(aSourceFolder, aDestFolderGuid) {

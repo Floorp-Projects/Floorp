@@ -79,7 +79,7 @@ MozFileLogger.init = function(path) {
   MozFileLogger._foStream = Cc[FOSTREAM_CID].createInstance(Ci.nsIFileOutputStream);
   MozFileLogger._foStream.init(this._file, PR_WRITE_ONLY | PR_CREATE_FILE | PR_APPEND,
                                    0o664, 0);
-}
+};
 
 MozFileLogger.getLogCallback = function() {
   return function(msg) {
@@ -92,8 +92,8 @@ MozFileLogger.getLogCallback = function() {
     if (data.indexOf("SimpleTest FINISH") >= 0) {
       MozFileLogger.close();
     }
-  }
-}
+  };
+};
 
 // This is only used from chrome space by the reftest harness
 MozFileLogger.log = function(msg) {
@@ -103,7 +103,7 @@ MozFileLogger.log = function(msg) {
     if (MozFileLogger._foStream)
       MozFileLogger._foStream.write(msg, msg.length);
   } catch (ex) {}
-}
+};
 
 MozFileLogger.close = function() {
   if (ipcMode) {
@@ -118,7 +118,7 @@ MozFileLogger.close = function() {
 
   MozFileLogger._foStream = null;
   MozFileLogger._file = null;
-}
+};
 
 try {
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
@@ -126,4 +126,3 @@ try {
   var filename = prefs.getCharPref("talos.logfile");
   MozFileLogger.init(filename);
 } catch (ex) {} // pref does not exist, return empty string
-

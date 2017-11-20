@@ -12,8 +12,8 @@
 #include "MediaPrefs.h"
 #include "PDMFactory.h"
 #include "mozilla/TaskQueue.h"
-#include "mp4_demuxer/AnnexB.h"
-#include "mp4_demuxer/H264.h"
+#include "AnnexB.h"
+#include "H264.h"
 
 namespace mozilla
 {

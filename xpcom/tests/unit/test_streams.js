@@ -29,7 +29,7 @@ function test_binary_streams() {
   const LargeNum = Math.pow(2, 18) + Math.pow(2, 12) + 1;
   const HugeNum = Math.pow(2, 62);
   const HelloStr = "Hello World";
-  const HelloArray = Array.map(HelloStr, function(c) { return c.charCodeAt(0) });
+  const HelloArray = Array.map(HelloStr, function(c) { return c.charCodeAt(0); });
   var countObj = {};
   var msg = {};
   var buffer = new ArrayBuffer(HelloArray.length);
@@ -69,7 +69,7 @@ function test_binary_streams() {
   countObj.value = -1;
   os.writeByteArray(HelloArray, HelloArray.length);
   do_check_eq(is.available(), HelloStr.length);
-  msg = is.readByteArray(HelloStr.length)
+  msg = is.readByteArray(HelloStr.length);
   do_check_eq(typeof msg, typeof HelloArray);
   do_check_eq(msg.toSource(), HelloArray.toSource());
   do_check_eq(is.available(), 0);
@@ -118,7 +118,7 @@ function test_binary_streams() {
   msg = null;
   countObj.value = -1;
   do_check_eq(is.available(), HelloStr.length);
-  msg = is.readByteArray(HelloStr.length)
+  msg = is.readByteArray(HelloStr.length);
   do_check_eq(typeof msg, typeof HelloArray);
   do_check_eq(msg.toSource(), HelloArray.toSource());
   do_check_eq(is.available(), 0);

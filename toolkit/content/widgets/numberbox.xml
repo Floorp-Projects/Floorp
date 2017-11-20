@@ -62,7 +62,7 @@
       <property name="wrapAround">
         <getter>
         <![CDATA[
-          return (this.getAttribute("wraparound") == "true")
+          return (this.getAttribute("wraparound") == "true");
         ]]>
         </getter>
         <setter>

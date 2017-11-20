@@ -360,7 +360,7 @@ module.exports = {
     "rest-spread-spacing": "error",
 
     // Always require semicolon at end of statement
-    // "semi": ["error", "always"],
+    "semi": ["error", "always"],
 
     // Require space before blocks
     "space-before-blocks": "error",

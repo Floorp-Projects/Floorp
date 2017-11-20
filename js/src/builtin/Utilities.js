@@ -308,5 +308,5 @@ function CopyDataPropertiesUnfiltered(target, source) {
 function outer() {
     return function inner() {
         return "foo";
-    }
+    };
 }

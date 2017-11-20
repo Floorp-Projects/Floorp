@@ -304,7 +304,7 @@
             let draghandle = new tmp.WindowDraggingElement(this);
             draghandle.mouseDownCheck = function() {
               return this._dragBindingAlive;
-            }
+            };
           } catch (e) {}
         }
       ]]>

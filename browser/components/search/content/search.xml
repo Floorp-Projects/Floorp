@@ -491,7 +491,7 @@
           // Select the installed engine if the installation succeeds
           var installCallback = {
             onSuccess: engine => this.currentEngine = engine
-          }
+          };
           Services.search.addEngine(target.getAttribute("uri"), null,
                                     target.getAttribute("src"), false,
                                     installCallback);
@@ -658,7 +658,7 @@
           if (AppConstants.platform == "macosx") {
             this.addEventListener("keypress", aEvent => {
               if (aEvent.keyCode == KeyEvent.DOM_VK_F4)
-                this.openSearch()
+                this.openSearch();
             }, true);
           }
 
@@ -2364,7 +2364,7 @@
               prompt.setPropertyAsBool("allowTabModal", true);
               prompt.alert(title, text);
             }
-          }
+          };
           Services.search.addEngine(target.getAttribute("uri"), null,
                                     target.getAttribute("image"), false,
                                     installCallback);

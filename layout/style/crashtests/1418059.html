@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+@keyframes anim {
+  to { transform: rotate(360deg); }
+}
+.document-ready .animation::after {
+  display: none;
+}
+.animation::after {
+  content: "";
+  animation: anim 1s infinite;
+}
+</style>
+<div class="animation"></div>
+<script>
+window.addEventListener('load', () => {
+  document.documentElement.classList.add('document-ready');
+  requestAnimationFrame(() => {
+    document.documentElement.classList.remove('reftest-wait');
+  });
+});
+</script>
+</html>
