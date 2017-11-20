@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 
 import logging
 import sys
-import urllib2
 import difflib
 
 FAILURE_CODE = 1
@@ -19,22 +18,6 @@ log = logging.getLogger(__name__)
 
 class ConfigError(Exception):
     pass
-
-def make_hg_url(hgHost, repoPath, protocol='https', revision=None,
-                filename=None):
-    """construct a valid hg url from a base hg url (hg.mozilla.org),
-    repoPath, revision and possible filename"""
-    base = '%s://%s' % (protocol, hgHost)
-    repo = '/'.join(p.strip('/') for p in [base, repoPath])
-    if not filename:
-        if not revision:
-            return repo
-        else:
-            return '/'.join([p.strip('/') for p in [repo, 'rev', revision]])
-    else:
-        assert revision
-        return '/'.join([p.strip('/') for p in [repo, 'raw-file', revision,
-                         filename]])
 
 def readConfig(configfile):
     c = {}
@@ -104,44 +87,27 @@ def verify_mozconfigs(mozconfig_pair, nightly_mozconfig_pair, platform,
             success = False
     return success
 
-def get_mozconfig(path, options):
-    """Consumes a path and returns a list of lines from
-    the mozconfig file. If download is required, the path
-    specified should be relative to the root of the hg
-    repository e.g browser/config/mozconfigs/linux32/nightly"""
-    if options.no_download:
-        return open(path, 'r').readlines()
-    else:
-        url = make_hg_url(options.hghost, options.branch, 'http',
-                    options.revision, path)
-        return urllib2.urlopen(url).readlines()
+def get_mozconfig(path):
+    """Consumes a path and returns a list of lines from the mozconfig file."""
+    with open(path, 'rb') as fh:
+        return fh.readlines()
 
 if __name__ == '__main__':
     from optparse import OptionParser
     parser = OptionParser()
 
-    parser.add_option('--branch', dest='branch')
-    parser.add_option('--revision', dest='revision')
-    parser.add_option('--hghost', dest='hghost', default='hg.mozilla.org')
     parser.add_option('--whitelist', dest='whitelist')
-    parser.add_option('--no-download', action='store_true', dest='no_download',
-                      default=False)
     options, args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
-
-    missing_args = options.branch is None or options.revision is None
-    if not options.no_download and missing_args:
-        logging.error('Not enough arguments to download mozconfigs')
-        sys.exit(FAILURE_CODE)
 
     mozconfig_whitelist = readConfig(options.whitelist)
 
     for arg in args:
         platform, mozconfig_path, nightly_mozconfig_path = arg.split(',')
 
-        mozconfig_lines = get_mozconfig(mozconfig_path, options)
-        nightly_mozconfig_lines = get_mozconfig(nightly_mozconfig_path, options)
+        mozconfig_lines = get_mozconfig(mozconfig_path)
+        nightly_mozconfig_lines = get_mozconfig(nightly_mozconfig_path)
 
         mozconfig_pair = (mozconfig_path, mozconfig_lines)
         nightly_mozconfig_pair = (nightly_mozconfig_path,
