@@ -12,7 +12,6 @@ BROWSER_CHROME_MANIFESTS += ['tests/mochitest/browser.ini']
 
 XPIDL_SOURCES += [
     'nsIExpatSink.idl',
-    'nsIExtendedExpatSink.idl',
 ]
 
 XPIDL_MODULE = 'htmlparser'
