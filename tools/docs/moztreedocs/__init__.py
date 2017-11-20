@@ -45,8 +45,11 @@ class SphinxManager(object):
 
             if name == 'SPHINX_TREES':
                 assert key
-                self.add_tree(os.path.join(reldir, value),
-                    os.path.join(reldir, key))
+                if key.startswith('/'):
+                    key = key[1:]
+                else:
+                    key = os.path.join(reldir, key)
+                self.add_tree(os.path.join(reldir, value), key)
 
             if name == 'SPHINX_PYTHON_PACKAGE_DIRS':
                 self.add_python_package_dir(os.path.join(reldir, value))
