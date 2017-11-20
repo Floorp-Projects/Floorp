@@ -273,6 +273,44 @@ const ADDRESS_NORMALIZE_TESTCASES = [
       "street-address": "street address\nstreet address line 2",
     },
   },
+  {
+    description: "Has only \"address-line1~2\"",
+    address: {
+      "address-line1": "line1",
+      "address-line2": "line2",
+    },
+    expectedResult: {
+      "street-address": "line1\nline2",
+    },
+  },
+  {
+    description: "Has only \"address-line1\"",
+    address: {
+      "address-line1": "line1",
+    },
+    expectedResult: {
+      "street-address": "line1",
+    },
+  },
+  {
+    description: "Has only \"address-line2~3\"",
+    address: {
+      "address-line2": "line2",
+      "address-line3": "line3",
+    },
+    expectedResult: {
+      "street-address": "\nline2\nline3",
+    },
+  },
+  {
+    description: "Has only \"address-line2\"",
+    address: {
+      "address-line2": "line2",
+    },
+    expectedResult: {
+      "street-address": "\nline2",
+    },
+  },
 
   // Country
   {
