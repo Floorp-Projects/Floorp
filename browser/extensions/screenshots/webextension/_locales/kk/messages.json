@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Жүктеп алу"
   },
+  "downloadOnlyNotice": {
+    "message": "Сіз тек жүктеп алу режиміндесіз."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox скриншоттары тек жүктеп алу режиміне келесі жағдайларда ауысады:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Жекелік шолу терезесінде."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Үшінші жақты cookies сөндірілген."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "\"Тарихты ешқашан сақтамау\" іске қосылған."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Сілтеме көшірілді"
   },
   "notificationLinkCopiedDetails": {
     "message": "Сіздің скриншотыңызға сілтеме алмасу буферіне көшірілді. Кірістіру үшін $META_KEY$-V басыңыз.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Көшіріп алу"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Скриншот көшірілді"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Сіздің скриншотыңыз алмасу буферіне көшірілді. Кірістіру үшін $META_KEY$-V басыңыз.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

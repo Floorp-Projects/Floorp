@@ -29,6 +29,21 @@
   "downloadScreenshot": {
     "message": "Изтегляне"
   },
+  "downloadOnlyNotice": {
+    "message": "В момента сте в режим на изтегляне."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots автоматично преминава в режим на изтегляне в следните ситуации"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "в поверителен прозорец"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Бисквитките от трети страни са забранени"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "настройката „Не помни история“ е включена"
+  },
   "notificationLinkCopiedTitle": {
     "message": "Препратката е копирана"
   },
@@ -76,7 +91,7 @@
     "message": "Избраната област е твърде малка"
   },
   "privateWindowErrorTitle": {
-    "message": "Правене на снимки е изключено в поверителен режим"
+    "message": "Снимането е изключено в поверителен режим"
   },
   "privateWindowErrorDetails": {
     "message": "Съжаляваме за неудобството. Очаквайте тази възможност в бъдещите версии."
