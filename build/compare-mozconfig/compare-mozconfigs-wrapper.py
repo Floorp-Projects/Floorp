@@ -36,21 +36,18 @@ class TestCompareMozconfigs(unittest.TestCase):
             # construct paths and args for compare-mozconfig
             browser_dir = path.join(topsrcdir, 'browser')
             script_path = path.join(topsrcdir, 'build/compare-mozconfig/compare-mozconfigs.py')
-            whitelist_path = path.join(browser_dir, 'config/mozconfigs/whitelist')
             beta_mozconfig_path = path.join(browser_dir, 'config/mozconfigs', platform, 'beta')
             release_mozconfig_path = path.join(browser_dir, 'config/mozconfigs', platform, 'release')
             nightly_mozconfig_path = path.join(browser_dir, 'config/mozconfigs', platform, 'nightly')
 
             log.info("Comparing beta against nightly mozconfigs")
-            ret_code = subprocess.call([python_exe, script_path, '--whitelist',
-                                        whitelist_path,
+            ret_code = subprocess.call([python_exe, script_path, topsrcdir,
                                         platform + ',' + beta_mozconfig_path +
                                         ',' + nightly_mozconfig_path])
             self.assertEqual(0, ret_code)
 
             log.info("Comparing release against nightly mozconfigs")
-            ret_code = subprocess.call([python_exe, script_path, '--whitelist',
-                                        whitelist_path,
+            ret_code = subprocess.call([python_exe, script_path, topsrcdir,
                                         platform + ',' + release_mozconfig_path +
                                         ',' + nightly_mozconfig_path])
             self.assertEqual(0, ret_code)

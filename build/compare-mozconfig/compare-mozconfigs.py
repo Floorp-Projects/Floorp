@@ -8,6 +8,7 @@
 from __future__ import unicode_literals
 
 import logging
+import os
 import sys
 import difflib
 
@@ -92,17 +93,22 @@ def get_mozconfig(path):
         return fh.readlines()
 
 if __name__ == '__main__':
-    from optparse import OptionParser
-    parser = OptionParser()
+    import argparse
 
-    parser.add_option('--whitelist', dest='whitelist')
-    options, args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('topsrcdir', help='Path to root of source checkout')
+    parser.add_argument('args', nargs='*')
+
+    args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
 
-    mozconfig_whitelist = readConfig(options.whitelist)
+    whitelist = os.path.join(args.topsrcdir, 'browser', 'config', 'mozconfigs',
+                             'whitelist')
 
-    for arg in args:
+    mozconfig_whitelist = readConfig(whitelist)
+
+    for arg in args.args:
         platform, mozconfig_path, nightly_mozconfig_path = arg.split(',')
 
         mozconfig_lines = get_mozconfig(mozconfig_path)
