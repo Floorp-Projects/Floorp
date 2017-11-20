@@ -4,7 +4,7 @@
             "android", 
             "android-api-16"
         ], 
-        "revision": "3fcd04e165b3"
+        "revision": "616d93f88845"
     }, 
     "an": {
         "platforms": [
@@ -36,7 +36,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "d4f87a91c23b"
+        "revision": "287160aec92b"
     }, 
     "az": {
         "platforms": [
@@ -323,7 +323,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "f4aaa6c61612"
+        "revision": "f7e78cf04971"
     }, 
     "hr": {
         "platforms": [
@@ -371,7 +371,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "44737bac3ef8"
+        "revision": "12fe64c99579"
     }, 
     "it": {
         "platforms": [
@@ -387,7 +387,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "5fcaa2d6f6f6"
+        "revision": "f851560f5fd0"
     }, 
     "ka": {
         "platforms": [
@@ -395,7 +395,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "6e9ad993b472"
+        "revision": "d87a2a03242d"
     }, 
     "kab": {
         "platforms": [
@@ -537,7 +537,7 @@
             "android", 
             "android-api-16"
         ], 
-        "revision": "f4d2df1c8070"
+        "revision": "0f368d11198c"
     }, 
     "or": {
         "platforms": [
@@ -577,7 +577,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "51d1f3eaf2b0"
+        "revision": "61bb20e3a6b7"
     }, 
     "rm": {
         "platforms": [
@@ -593,7 +593,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "610ab1b4728a"
+        "revision": "16d1329e688e"
     }, 
     "ru": {
         "platforms": [
@@ -688,7 +688,7 @@
             "android", 
             "android-api-16"
         ], 
-        "revision": "ff2a79ce21af"
+        "revision": "81a902e3237b"
     }, 
     "uk": {
         "platforms": [
