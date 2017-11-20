@@ -61,5 +61,5 @@
 
     <color name="preference_row_selected">#414146</color>
 
-    <color name="scrollbarThumb">#aaaaaaaa</color>
+    <color name="scrollbarThumb">#b2b2b2b2</color>
 </resources>
