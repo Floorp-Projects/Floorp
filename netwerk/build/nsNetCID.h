@@ -81,6 +81,16 @@
      {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+#define NS_SIMPLEURIMUTATOR_CONTRACTID \
+    "@mozilla.org/network/simple-uri-mutator;1"
+#define NS_SIMPLEURIMUTATOR_CID                       \
+{ /* 2be14592-28d4-4a83-8fe9-08e778849f6e */          \
+     0x2be14592,                                      \
+     0x28d4,                                          \
+     0x4a83,                                          \
+     {0x8f, 0xe9, 0x08, 0xe7, 0x78, 0x84, 0x9f, 0x6e} \
+}
+
 // component inheriting from the simple URI component and also
 // implementing nsINestedURI.
 #define NS_SIMPLENESTEDURI_CID                           \
@@ -111,6 +121,16 @@
     0x8034,                                          \
     0x11d3,                                          \
     {0x93, 0x99, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+}
+
+#define NS_STANDARDURLMUTATOR_CONTRACTID \
+    "@mozilla.org/network/standard-url-mutator;1"
+#define NS_STANDARDURLMUTATOR_CID                    \
+{ /* ce7d7da0-fb28-44a3-8c7b-000c165918f4 */         \
+    0xce7d7da0,                                      \
+    0xfb28,                                          \
+    0x44a3,                                          \
+    {0x8c, 0x7b, 0x00, 0x0c, 0x16, 0x59, 0x18, 0xf4} \
 }
 
 // service implementing nsIURLParser that assumes the URL will NOT contain an

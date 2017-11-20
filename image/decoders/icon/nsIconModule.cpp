@@ -20,13 +20,17 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMozIconURI)
+typedef nsMozIconURI::Mutator nsMozIconURIMutator;
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMozIconURIMutator)
 
 NS_DEFINE_NAMED_CID(NS_ICONPROTOCOL_CID);
 NS_DEFINE_NAMED_CID(NS_MOZICONURI_CID);
+NS_DEFINE_NAMED_CID(NS_MOZICONURIMUTATOR_CID);
 
 static const mozilla::Module::CIDEntry kIconCIDs[] = {
   { &kNS_ICONPROTOCOL_CID, false, nullptr, nsIconProtocolHandlerConstructor },
   { &kNS_MOZICONURI_CID, false, nullptr, nsMozIconURIConstructor },
+  { &kNS_MOZICONURIMUTATOR_CID, false, nullptr, nsMozIconURIMutatorConstructor },
   { nullptr }
 };
 
