@@ -162,17 +162,20 @@ nsDBusRemoteService::Startup(const char* aAppName, const char* aProfileName)
   mAppName = aAppName;
   ToLowerCase(mAppName);
 
+  DBusError err;
+  dbus_error_init(&err);
   mConnection = already_AddRefed<DBusConnection>(
-    dbus_bus_get(DBUS_BUS_SESSION, nullptr));
-  if (!mConnection)
+    dbus_bus_get(DBUS_BUS_SESSION, &err));
+  if (dbus_error_is_set(&err)) {
+    dbus_error_free(&err);
     return NS_ERROR_FAILURE;
+  }
 
   dbus_connection_set_exit_on_disconnect(mConnection, false);
 
   nsAutoCString interfaceName;
   interfaceName = nsPrintfCString("org.mozilla.%s.%s", aAppName, aProfileName);
 
-  DBusError err;
   dbus_error_init(&err);
   dbus_bus_request_name(mConnection, interfaceName.get(),
                        DBUS_NAME_FLAG_DO_NOT_QUEUE, &err);
