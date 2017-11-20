@@ -300,9 +300,6 @@ VRServiceTest::VRServiceTest(nsPIDOMWindowInner* aWindow)
   vm->SendCreateVRTestSystem();
 }
 
-VRServiceTest::~VRServiceTest()
-{}
-
 void
 VRServiceTest::Shutdown()
 {
