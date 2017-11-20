@@ -3371,28 +3371,32 @@ class MNewArray
     }
 };
 
-class MNewArrayCopyOnWrite : public MNullaryInstruction
+class MNewArrayCopyOnWrite
+  : public MUnaryInstruction,
+    public NoTypePolicy::Data
 {
-    CompilerGCPointer<ArrayObject*> templateObject_;
     gc::InitialHeap initialHeap_;
 
     MNewArrayCopyOnWrite(TempAllocator& alloc, CompilerConstraintList* constraints,
-                         ArrayObject* templateObject, gc::InitialHeap initialHeap)
-      : MNullaryInstruction(classOpcode),
-        templateObject_(templateObject),
+                         MConstant* templateConst, gc::InitialHeap initialHeap)
+      : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap)
     {
-        MOZ_ASSERT(!templateObject->isSingleton());
+        MOZ_ASSERT(!templateObject()->isSingleton());
         setResultType(MIRType::Object);
-        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
+        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject()));
     }
 
   public:
     INSTRUCTION_HEADER(NewArrayCopyOnWrite)
     TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
+    uint32_t length() const {
+      return templateObject()->length();
+    }
+
     ArrayObject* templateObject() const {
-        return templateObject_;
+        return &getOperand(0)->toConstant()->toObject().as<ArrayObject>();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -3403,8 +3407,9 @@ class MNewArrayCopyOnWrite : public MNullaryInstruction
         return AliasSet::None();
     }
 
-    bool appendRoots(MRootList& roots) const override {
-        return roots.append(templateObject_);
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
+    bool canRecoverOnBailout() const override {
+        return true;
     }
 };
 
@@ -4002,10 +4007,12 @@ class MArrayState
                             MDefinition* initLength);
     static MArrayState* Copy(TempAllocator& alloc, MArrayState* state);
 
+    // Initialize values from CopyOnWrite arrays.
+    MOZ_MUST_USE bool initFromTemplateObject(TempAllocator& alloc, MDefinition* undefinedVal);
+
     void setInitializedLength(MDefinition* def) {
         replaceOperand(1, def);
     }
-
 
     size_t numElements() const {
         return numElements_;
