@@ -313,7 +313,7 @@ class AutofillRecords {
   add(record, {sourceSync = false} = {}) {
     this.log.debug("add:", record);
 
-    let recordToSave = this._cloneAndCleanUp(record);
+    let recordToSave = this._clone(record);
 
     if (sourceSync) {
       // Remove tombstones for incoming items that were changed on another
@@ -1323,41 +1323,36 @@ class Addresses extends AutofillRecords {
   }
 
   _normalizeName(address) {
-    if (!address.name) {
-      return;
-    }
-
-    let nameParts = FormAutofillNameUtils.splitName(address.name);
-    if (!address["given-name"] && nameParts.given) {
-      address["given-name"] = nameParts.given;
-    }
-    if (!address["additional-name"] && nameParts.middle) {
-      address["additional-name"] = nameParts.middle;
-    }
-    if (!address["family-name"] && nameParts.family) {
-      address["family-name"] = nameParts.family;
+    if (address.name) {
+      let nameParts = FormAutofillNameUtils.splitName(address.name);
+      if (!address["given-name"] && nameParts.given) {
+        address["given-name"] = nameParts.given;
+      }
+      if (!address["additional-name"] && nameParts.middle) {
+        address["additional-name"] = nameParts.middle;
+      }
+      if (!address["family-name"] && nameParts.family) {
+        address["family-name"] = nameParts.family;
+      }
     }
     delete address.name;
   }
 
   _normalizeAddress(address) {
-    if (STREET_ADDRESS_COMPONENTS.every(c => !address[c])) {
-      return;
-    }
+    if (STREET_ADDRESS_COMPONENTS.some(c => !!address[c])) {
+      // Treat "street-address" as "address-line1" if it contains only one line
+      // and "address-line1" is omitted.
+      if (!address["address-line1"] && address["street-address"] &&
+          !address["street-address"].includes("\n")) {
+        address["address-line1"] = address["street-address"];
+        delete address["street-address"];
+      }
 
-    // Treat "street-address" as "address-line1" if it contains only one line
-    // and "address-line1" is omitted.
-    if (!address["address-line1"] && address["street-address"] &&
-        !address["street-address"].includes("\n")) {
-      address["address-line1"] = address["street-address"];
-      delete address["street-address"];
+      // Concatenate "address-line*" if "street-address" is omitted.
+      if (!address["street-address"]) {
+        address["street-address"] = STREET_ADDRESS_COMPONENTS.map(c => address[c]).join("\n").replace(/\n+$/, "");
+      }
     }
-
-    // Concatenate "address-line*" if "street-address" is omitted.
-    if (!address["street-address"]) {
-      address["street-address"] = STREET_ADDRESS_COMPONENTS.map(c => address[c]).join("\n");
-    }
-
     STREET_ADDRESS_COMPONENTS.forEach(c => delete address[c]);
   }
 
@@ -1381,20 +1376,17 @@ class Addresses extends AutofillRecords {
   }
 
   _normalizeTel(address) {
-    if (!address.tel && TEL_COMPONENTS.every(c => !address[c])) {
-      return;
+    if (address.tel || TEL_COMPONENTS.some(c => !!address[c])) {
+      FormAutofillUtils.compressTel(address);
+
+      let possibleRegion = address.country || FormAutofillUtils.DEFAULT_COUNTRY_CODE;
+      let tel = PhoneNumber.Parse(address.tel, possibleRegion);
+
+      if (tel && tel.internationalNumber) {
+        // Force to save numbers in E.164 format if parse success.
+        address.tel = tel.internationalNumber;
+      }
     }
-
-    FormAutofillUtils.compressTel(address);
-
-    let possibleRegion = address.country || FormAutofillUtils.DEFAULT_COUNTRY_CODE;
-    let tel = PhoneNumber.Parse(address.tel, possibleRegion);
-
-    if (tel && tel.internationalNumber) {
-      // Force to save numbers in E.164 format if parse success.
-      address.tel = tel.internationalNumber;
-    }
-
     TEL_COMPONENTS.forEach(c => delete address[c]);
   }
 
@@ -1557,11 +1549,10 @@ class CreditCards extends AutofillRecords {
           family: creditCard["cc-family-name"],
         });
       }
-
-      delete creditCard["cc-given-name"];
-      delete creditCard["cc-additional-name"];
-      delete creditCard["cc-family-name"];
     }
+    delete creditCard["cc-given-name"];
+    delete creditCard["cc-additional-name"];
+    delete creditCard["cc-family-name"];
   }
 
   _normalizeCCNumber(creditCard) {
