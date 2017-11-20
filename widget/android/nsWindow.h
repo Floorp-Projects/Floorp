@@ -300,7 +300,7 @@ public:
 
     mozilla::layers::CompositorBridgeChild* GetCompositorBridgeChild() const;
 
-    mozilla::jni::DependentRef<mozilla::java::GeckoLayerClient> GetLayerClient();
+    mozilla::jni::DependentRef<mozilla::java::LayerSession::Compositor> GetJavaCompositor();
 
     // Call this function when the users activity is the direct cause of an
     // event (like a keypress or mouse click).
