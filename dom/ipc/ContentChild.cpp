@@ -757,6 +757,60 @@ GetWindowParamsFromParent(mozIDOMWindowProxy* aParent,
   return NS_OK;
 }
 
+namespace {
+
+// This is a hacky workaround to bug 1416728.
+class SynchronousEventTarget : public nsISerialEventTarget
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIEVENTTARGET
+
+private:
+  virtual ~SynchronousEventTarget() {}
+};
+
+NS_IMPL_ISUPPORTS(SynchronousEventTarget, nsISerialEventTarget);
+
+NS_IMETHODIMP_(bool)
+SynchronousEventTarget::IsOnCurrentThreadInfallible()
+{
+  return NS_IsMainThread();
+}
+
+NS_IMETHODIMP
+SynchronousEventTarget::IsOnCurrentThread(bool* aRetVal)
+{
+  *aRetVal = NS_IsMainThread();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SynchronousEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIRunnable> runnable = aEvent;
+  runnable->Run();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SynchronousEventTarget::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIRunnable> runnable = aEvent;
+  runnable->Run();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SynchronousEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+} // anonymous namespace
+
 nsresult
 ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                                   mozIDOMWindowProxy* aParent,
@@ -962,7 +1016,8 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   // processing any events which were sent after the reply to CreateWindow was
   // sent.
   bool ready = false;
-  windowCreated->Then(nsContentUtils::GetStableStateEventTarget(), __func__,
+  RefPtr<nsISerialEventTarget> et = new SynchronousEventTarget();
+  windowCreated->Then(et, __func__,
                       [&] (const CreatedWindowInfo& info) {
                         MOZ_RELEASE_ASSERT(NS_IsMainThread(),
                                            "windowCreated->Then must run on the main thread");
@@ -976,6 +1031,73 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                         maxTouchPoints = info.maxTouchPoints();
                         dimensionInfo = info.dimensions();
                         ready = true;
+
+                        // Handle the error which we got back from the parent process, if we got
+                        // one.
+                        if (NS_FAILED(rv)) {
+                          return;
+                        }
+
+                        if (!*aWindowIsNew) {
+                          rv = NS_ERROR_ABORT;
+                          return;
+                        }
+
+                        // If the TabChild has been torn down, we don't need to do this anymore.
+                        if (NS_WARN_IF(!newChild->IPCOpen() || newChild->IsDestroyed())) {
+                          rv = NS_ERROR_ABORT;
+                          return;
+                        }
+
+                        if (layersId == 0) { // if renderFrame is invalid.
+                          renderFrame = nullptr;
+                        }
+
+                        ShowInfo showInfo(EmptyString(), false, false, true, false, 0, 0, 0);
+                        auto* opener = nsPIDOMWindowOuter::From(aParent);
+                        nsIDocShell* openerShell;
+                        if (opener && (openerShell = opener->GetDocShell())) {
+                          nsCOMPtr<nsILoadContext> context = do_QueryInterface(openerShell);
+                          showInfo = ShowInfo(EmptyString(), false,
+                                              context->UsePrivateBrowsing(), true, false,
+                                              aTabOpener->WebWidget()->GetDPI(),
+                                              aTabOpener->WebWidget()->RoundsWidgetCoordinatesTo(),
+                                              aTabOpener->WebWidget()->GetDefaultScale().scale);
+                        }
+
+                        newChild->SetMaxTouchPoints(maxTouchPoints);
+
+                        // Set the opener window for this window before we start loading the document
+                        // inside of it. We have to do this before loading the remote scripts, because
+                        // they can poke at the document and cause the nsDocument to be created before
+                        // the openerwindow
+                        nsCOMPtr<mozIDOMWindowProxy> windowProxy = do_GetInterface(newChild->WebNavigation());
+                        if (!aForceNoOpener && windowProxy && aParent) {
+                          nsPIDOMWindowOuter* outer = nsPIDOMWindowOuter::From(windowProxy);
+                          nsPIDOMWindowOuter* parent = nsPIDOMWindowOuter::From(aParent);
+                          outer->SetOpenerWindow(parent, *aWindowIsNew);
+                        }
+
+                        // Unfortunately we don't get a window unless we've shown the frame.  That's
+                        // pretty bogus; see bug 763602.
+                        newChild->DoFakeShow(textureFactoryIdentifier, layersId, compositorOptions,
+                                             renderFrame, showInfo);
+
+                        newChild->RecvUpdateDimensions(dimensionInfo);
+
+                        for (size_t i = 0; i < frameScripts.Length(); i++) {
+                          FrameScriptInfo& info = frameScripts[i];
+                          if (!newChild->RecvLoadRemoteScript(info.url(), info.runInGlobalScope())) {
+                            MOZ_CRASH();
+                          }
+                        }
+
+                        if (!urlToLoad.IsEmpty()) {
+                          newChild->RecvLoadURL(urlToLoad, showInfo);
+                        }
+
+                        nsCOMPtr<mozIDOMWindowProxy> win = do_GetInterface(newChild->WebNavigation());
+                        win.forget(aReturn);
                       },
                       [&] (const CreateWindowPromise::RejectValueType aReason) {
                         MOZ_RELEASE_ASSERT(NS_IsMainThread(),
@@ -1029,71 +1151,8 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   // End Nested Event Loop
   // =====================
 
-  // Handle the error which we got back from the parent process, if we got
-  // one.
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (!*aWindowIsNew) {
-    return NS_ERROR_ABORT;
-  }
-
-  // If the TabChild has been torn down, we don't need to do this anymore.
-  if (NS_WARN_IF(!newChild->IPCOpen() || newChild->IsDestroyed())) {
-    return NS_ERROR_ABORT;
-  }
-
-  if (layersId == 0) { // if renderFrame is invalid.
-    renderFrame = nullptr;
-  }
-
-  ShowInfo showInfo(EmptyString(), false, false, true, false, 0, 0, 0);
-  auto* opener = nsPIDOMWindowOuter::From(aParent);
-  nsIDocShell* openerShell;
-  if (opener && (openerShell = opener->GetDocShell())) {
-    nsCOMPtr<nsILoadContext> context = do_QueryInterface(openerShell);
-    showInfo = ShowInfo(EmptyString(), false,
-                        context->UsePrivateBrowsing(), true, false,
-                        aTabOpener->WebWidget()->GetDPI(),
-                        aTabOpener->WebWidget()->RoundsWidgetCoordinatesTo(),
-                        aTabOpener->WebWidget()->GetDefaultScale().scale);
-  }
-
-  newChild->SetMaxTouchPoints(maxTouchPoints);
-
-  // Set the opener window for this window before we start loading the document
-  // inside of it. We have to do this before loading the remote scripts, because
-  // they can poke at the document and cause the nsDocument to be created before
-  // the openerwindow
-  nsCOMPtr<mozIDOMWindowProxy> windowProxy = do_GetInterface(newChild->WebNavigation());
-  if (!aForceNoOpener && windowProxy && aParent) {
-    nsPIDOMWindowOuter* outer = nsPIDOMWindowOuter::From(windowProxy);
-    nsPIDOMWindowOuter* parent = nsPIDOMWindowOuter::From(aParent);
-    outer->SetOpenerWindow(parent, *aWindowIsNew);
-  }
-
-  // Unfortunately we don't get a window unless we've shown the frame.  That's
-  // pretty bogus; see bug 763602.
-  newChild->DoFakeShow(textureFactoryIdentifier, layersId, compositorOptions,
-                       renderFrame, showInfo);
-
-  newChild->RecvUpdateDimensions(dimensionInfo);
-
-  for (size_t i = 0; i < frameScripts.Length(); i++) {
-    FrameScriptInfo& info = frameScripts[i];
-    if (!newChild->RecvLoadRemoteScript(info.url(), info.runInGlobalScope())) {
-      MOZ_CRASH();
-    }
-  }
-
-  if (!urlToLoad.IsEmpty()) {
-    newChild->RecvLoadURL(urlToLoad, showInfo);
-  }
-
-  nsCOMPtr<mozIDOMWindowProxy> win = do_GetInterface(newChild->WebNavigation());
-  win.forget(aReturn);
-  return NS_OK;
+  MOZ_ASSERT_IF(NS_SUCCEEDED(rv), aReturn);
+  return rv;
 }
 
 void
