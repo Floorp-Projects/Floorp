@@ -1055,12 +1055,6 @@ notification[value="translation"] {
   -moz-binding: url("chrome://browser/content/translation-infobar.xml#translationbar");
 }
 
-/** See bug 872317 for why the following rule is necessary. */
-
-#downloads-button {
-  -moz-binding: url("chrome://browser/content/downloads/download.xml#download-toolbarbutton");
-}
-
 /*** Visibility of downloads indicator controls ***/
 
 /* Bug 924050: If we've loaded the indicator, for now we hide it in the menu panel,
