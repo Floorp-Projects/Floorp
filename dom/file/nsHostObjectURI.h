@@ -67,6 +67,8 @@ public:
     return url;
   }
 
+  NS_IMETHOD Mutate(nsIURIMutator * *_retval) override;
+
   void ForgetBlobImpl();
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -74,6 +76,22 @@ public:
 
 protected:
   virtual ~nsHostObjectURI() {}
+
+public:
+  class Mutator
+    : public nsIURIMutator
+    , public BaseURIMutator<nsHostObjectURI>
+  {
+    NS_DECL_ISUPPORTS
+    NS_FORWARD_SAFE_NSIURISETTERS(mURI)
+    NS_DEFINE_NSIMUTATOR_COMMON
+
+    explicit Mutator() { }
+  private:
+    virtual ~Mutator() { }
+
+    friend class nsHostObjectURI;
+  };
 };
 
 #define NS_HOSTOBJECTURI_CID \

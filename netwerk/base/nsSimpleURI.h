@@ -14,6 +14,7 @@
 #include "nsIMutable.h"
 #include "nsISizeOf.h"
 #include "nsIIPCSerializableURI.h"
+#include "nsIURIMutator.h"
 
 namespace mozilla {
 namespace net {
@@ -109,6 +110,23 @@ protected:
     bool mMutable;
     bool mIsRefValid; // To distinguish between empty-ref and no-ref.
     bool mIsQueryValid; // To distinguish between empty-query and no-query.
+
+
+public:
+    class Mutator
+        : public nsIURIMutator
+        , public BaseURIMutator<nsSimpleURI>
+    {
+        NS_DECL_ISUPPORTS
+        NS_FORWARD_SAFE_NSIURISETTERS(mURI)
+        NS_DEFINE_NSIMUTATOR_COMMON
+
+        explicit Mutator() { }
+    private:
+        virtual ~Mutator() { }
+
+        friend class nsSimpleURI;
+    };
 };
 
 } // namespace net
