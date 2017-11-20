@@ -328,7 +328,7 @@ this.tabs = class extends ExtensionAPI {
           return new Promise((resolve, reject) => {
             let window = createProperties.windowId !== null ?
               windowTracker.getWindow(createProperties.windowId, context) :
-              windowTracker.topWindow;
+              windowTracker.topNormalWindow;
 
             if (!window.gBrowser) {
               let obs = (finishedWindow, topic, data) => {
