@@ -4859,7 +4859,7 @@ static bool GetAbsoluteCoord(const nsStyleCoord& aStyle, nscoord& aResult)
       return false;
     }
     // If it has no percents, we can pass 0 for the percentage basis.
-    aResult = nsRuleNode::ComputeComputedCalc(aStyle, 0);
+    aResult = aStyle.ComputeComputedCalc(0);
     if (aResult < 0)
       aResult = 0;
     return true;
@@ -4972,7 +4972,7 @@ GetPercentBSize(const nsStyleCoord& aStyle,
   h = std::max(0, h - bSizeTakenByBoxSizing);
 
   if (aStyle.IsCalcUnit()) {
-    aResult = std::max(nsRuleNode::ComputeComputedCalc(aStyle, h), 0);
+    aResult = std::max(aStyle.ComputeComputedCalc(h), 0);
     return true;
   }
 

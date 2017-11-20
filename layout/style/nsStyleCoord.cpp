@@ -198,6 +198,14 @@ nsStyleCoord::GetAngleValueInRadians() const
   }
 }
 
+nscoord
+nsStyleCoord::ComputeComputedCalc(nscoord aPercentageBasis) const
+{
+  Calc* calc = GetCalcValue();
+  return calc->mLength +
+         NSToCoordFloorClamped(aPercentageBasis * calc->mPercent);
+}
+
 nsStyleSides::nsStyleSides()
 {
   NS_FOR_CSS_SIDES(i) {

@@ -848,17 +848,6 @@ nsRuleNode::SpecifiedCalcToComputedCalc(const nsCSSValue& aValue,
   return result;
 }
 
-// This is our public API for handling calc() expressions that involve
-// percentages.
-/* static */ nscoord
-nsRuleNode::ComputeComputedCalc(const nsStyleCoord& aValue,
-                                nscoord aPercentageBasis)
-{
-  nsStyleCoord::Calc* calc = aValue.GetCalcValue();
-  return calc->mLength +
-         NSToCoordFloorClamped(aPercentageBasis * calc->mPercent);
-}
-
 /* static */ nscoord
 nsRuleNode::ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
                                     nscoord aPercentageBasis)
@@ -869,7 +858,7 @@ nsRuleNode::ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
     case eStyleUnit_Percent:
       return NSToCoordFloorClamped(aPercentageBasis * aCoord.GetPercentValue());
     case eStyleUnit_Calc:
-      return ComputeComputedCalc(aCoord, aPercentageBasis);
+      return aCoord.ComputeComputedCalc(aPercentageBasis);
     default:
       MOZ_ASSERT(false, "unexpected unit");
       return 0;
