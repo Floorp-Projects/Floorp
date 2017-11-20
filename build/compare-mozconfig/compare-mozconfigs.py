@@ -42,7 +42,7 @@ def readConfig(configfile):
     return c['whitelist']
 
 def verify_mozconfigs(mozconfig_pair, nightly_mozconfig_pair, platform,
-                      mozconfigWhitelist={}):
+                      mozconfigWhitelist):
     """Compares mozconfig to nightly_mozconfig and compare to an optional
     whitelist of known differences. mozconfig_pair and nightly_mozconfig_pair
     are pairs containing the mozconfig's identifier and the list of lines in
