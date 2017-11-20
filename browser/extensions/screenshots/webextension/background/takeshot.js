@@ -57,6 +57,7 @@ this.takeshot = (function() {
       return browser.tabs.create({url: shot.creatingUrl})
     }).then((tab) => {
       openedTab = tab;
+      sendEvent('internal', 'open-shot-tab');
       return uploadShot(shot, imageBlob);
     }).then(() => {
       return browser.tabs.update(openedTab.id, {url: shot.viewUrl}).then(
@@ -72,6 +73,7 @@ this.takeshot = (function() {
         }
       );
     }).then(() => {
+      catcher.watchPromise(communication.sendToBootstrap('incrementUploadCount'));
       return shot.viewUrl;
     }).catch((error) => {
       browser.tabs.remove(openedTab.id);
