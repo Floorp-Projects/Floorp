@@ -215,6 +215,12 @@ public:
     return static_cast<Calc*>(aValue.mPointer);
   }
 
+  // Compute the value that IsCalcUnit().
+  // @note the caller is expected to handle percentage of an indefinite size
+  // and NOT call this method with aPercentageBasis == NS_UNCONSTRAINEDSIZE.
+  // @note the return value may be negative, e.g. for "calc(a - b%)"
+  nscoord ComputeComputedCalc(nscoord aPercentageBasis) const;
+
   nscoord     GetCoordValue() const;
   int32_t     GetIntValue() const;
   float       GetPercentValue() const;
