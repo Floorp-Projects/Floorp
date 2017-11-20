@@ -436,6 +436,11 @@ public:
                 mozilla::Move(npzc)), nsIThread::DISPATCH_NORMAL);
     }
 
+    const NativePanZoomController::Ref& GetJavaNPZC() const
+    {
+        return mNPZC;
+    }
+
 public:
     void SetIsLongpressEnabled(bool aIsLongpressEnabled)
     {
@@ -784,7 +789,6 @@ class nsWindow::LayerViewSupport final
 
     WindowPtr<LayerViewSupport> mWindow;
     LayerSession::Compositor::GlobalRef mCompositor;
-    GeckoLayerClient::GlobalRef mLayerClient;
     Atomic<bool, ReleaseAcquire> mCompositorPaused;
     jni::Object::GlobalRef mSurface;
 
@@ -870,9 +874,9 @@ public:
         }
     }
 
-    const GeckoLayerClient::Ref& GetLayerClient() const
+    const LayerSession::Compositor::Ref& GetJavaCompositor() const
     {
-        return mLayerClient;
+        return mCompositor;
     }
 
     bool CompositorPaused() const
@@ -899,14 +903,12 @@ private:
      * Compositor methods
      */
 public:
-    void AttachToJava(jni::Object::Param aClient, jni::Object::Param aNPZC)
+    void AttachToJava(jni::Object::Param aNPZC)
     {
         MOZ_ASSERT(NS_IsMainThread());
         if (!mWindow) {
             return; // Already shut down.
         }
-
-        mLayerClient = GeckoLayerClient::Ref::From(aClient);
 
         MOZ_ASSERT(aNPZC);
         auto npzc = NativePanZoomController::LocalRef(
@@ -2215,11 +2217,10 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
         return NS_ERROR_UNEXPECTED;
     }
 
-    MOZ_ASSERT(mLayerViewSupport);
-    GeckoLayerClient::LocalRef client = mLayerViewSupport->GetLayerClient();
-    client->SynthesizeNativeTouchPoint(aPointerId, eventType,
-        aPoint.x, aPoint.y, aPointerPressure, aPointerOrientation);
-
+    MOZ_ASSERT(mNPZCSupport);
+    const auto& npzc = mNPZCSupport->GetJavaNPZC();
+    npzc->SynthesizeNativeTouchPoint(aPointerId, eventType, aPoint.x, aPoint.y,
+                                     aPointerPressure, aPointerOrientation);
     return NS_OK;
 }
 
@@ -2231,10 +2232,9 @@ nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
 {
     mozilla::widget::AutoObserverNotifier notifier(aObserver, "mouseevent");
 
-    MOZ_ASSERT(mLayerViewSupport);
-    GeckoLayerClient::LocalRef client = mLayerViewSupport->GetLayerClient();
-    client->SynthesizeNativeMouseEvent(aNativeMessage, aPoint.x, aPoint.y);
-
+    MOZ_ASSERT(mNPZCSupport);
+    const auto& npzc = mNPZCSupport->GetJavaNPZC();
+    npzc->SynthesizeNativeMouseEvent(aNativeMessage, aPoint.x, aPoint.y);
     return NS_OK;
 }
 
@@ -2244,10 +2244,10 @@ nsWindow::SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
 {
     mozilla::widget::AutoObserverNotifier notifier(aObserver, "mouseevent");
 
-    MOZ_ASSERT(mLayerViewSupport);
-    GeckoLayerClient::LocalRef client = mLayerViewSupport->GetLayerClient();
-    client->SynthesizeNativeMouseEvent(sdk::MotionEvent::ACTION_HOVER_MOVE, aPoint.x, aPoint.y);
-
+    MOZ_ASSERT(mNPZCSupport);
+    const auto& npzc = mNPZCSupport->GetJavaNPZC();
+    npzc->SynthesizeNativeMouseEvent(sdk::MotionEvent::ACTION_HOVER_MOVE,
+                                     aPoint.x, aPoint.y);
     return NS_OK;
 }
 
@@ -2323,11 +2323,11 @@ nsWindow::GetWidgetScreen()
     return screenMgrAndroid->ScreenForId(mScreenId);
 }
 
-jni::DependentRef<java::GeckoLayerClient>
-nsWindow::GetLayerClient()
+jni::DependentRef<java::LayerSession::Compositor>
+nsWindow::GetJavaCompositor()
 {
     if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
-        return lvs->GetLayerClient().Get();
+        return lvs->GetJavaCompositor().Get();
     }
     return nullptr;
 }
@@ -2345,8 +2345,8 @@ nsWindow::UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset, const CSSToSc
 {
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
   if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
-    GeckoLayerClient::LocalRef client = lvs->GetLayerClient();
-    client->UpdateRootFrameMetrics(aScrollOffset.x, aScrollOffset.y, aZoom.scale);
+    const auto& compositor = lvs->GetJavaCompositor();
+    compositor->UpdateRootFrameMetrics(aScrollOffset.x, aScrollOffset.y, aZoom.scale);
   }
 }
 
