@@ -212,7 +212,7 @@ struct BufferIterator {
         return mIter.Done();
     }
 
-    bool readBytes(char* outData, size_t size) {
+    MOZ_MUST_USE bool readBytes(char* outData, size_t size) {
         return mBuffer.ReadBytes(mIter, outData, size);
     }
 
@@ -305,18 +305,18 @@ struct SCOutput {
 
     JSContext* context() const { return cx; }
 
-    bool write(uint64_t u);
-    bool writePair(uint32_t tag, uint32_t data);
-    bool writeDouble(double d);
-    bool writeBytes(const void* p, size_t nbytes);
-    bool writeChars(const Latin1Char* p, size_t nchars);
-    bool writeChars(const char16_t* p, size_t nchars);
-    bool writePtr(const void*);
+    MOZ_MUST_USE bool write(uint64_t u);
+    MOZ_MUST_USE bool writePair(uint32_t tag, uint32_t data);
+    MOZ_MUST_USE bool writeDouble(double d);
+    MOZ_MUST_USE bool writeBytes(const void* p, size_t nbytes);
+    MOZ_MUST_USE bool writeChars(const Latin1Char* p, size_t nchars);
+    MOZ_MUST_USE bool writeChars(const char16_t* p, size_t nchars);
+    MOZ_MUST_USE bool writePtr(const void*);
 
     template <class T>
-    bool writeArray(const T* p, size_t nbytes);
+    MOZ_MUST_USE bool writeArray(const T* p, size_t nbytes);
 
-    bool extractBuffer(JSStructuredCloneData* data);
+    MOZ_MUST_USE bool extractBuffer(JSStructuredCloneData* data);
     void discardTransferables(const JSStructuredCloneCallbacks* cb, void* cbClosure);
 
     uint64_t tell() const { return buf.Size(); }
@@ -345,30 +345,30 @@ class SCInput {
     static void getPtr(uint64_t data, void** ptr);
     static void getPair(uint64_t data, uint32_t* tagp, uint32_t* datap);
 
-    bool read(uint64_t* p);
-    bool readNativeEndian(uint64_t* p);
-    bool readPair(uint32_t* tagp, uint32_t* datap);
-    bool readDouble(double* p);
-    bool readBytes(void* p, size_t nbytes);
-    bool readChars(Latin1Char* p, size_t nchars);
-    bool readChars(char16_t* p, size_t nchars);
-    bool readPtr(void**);
+    MOZ_MUST_USE bool read(uint64_t* p);
+    MOZ_MUST_USE bool readNativeEndian(uint64_t* p);
+    MOZ_MUST_USE bool readPair(uint32_t* tagp, uint32_t* datap);
+    MOZ_MUST_USE bool readDouble(double* p);
+    MOZ_MUST_USE bool readBytes(void* p, size_t nbytes);
+    MOZ_MUST_USE bool readChars(Latin1Char* p, size_t nchars);
+    MOZ_MUST_USE bool readChars(char16_t* p, size_t nchars);
+    MOZ_MUST_USE bool readPtr(void**);
 
-    bool get(uint64_t* p);
-    bool getPair(uint32_t* tagp, uint32_t* datap);
+    MOZ_MUST_USE bool get(uint64_t* p);
+    MOZ_MUST_USE bool getPair(uint32_t* tagp, uint32_t* datap);
 
     const BufferIterator& tell() const { return point; }
     void seekTo(const BufferIterator& pos) { point = pos; }
     void seekBy(size_t pos) { point += pos; }
 
     template <class T>
-    bool readArray(T* p, size_t nelems);
+    MOZ_MUST_USE bool readArray(T* p, size_t nelems);
 
     bool reportTruncated() {
          JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
                                    "truncated");
          return false;
-     }
+    }
 
   private:
     void staticAssertions() {
@@ -404,14 +404,14 @@ struct JSStructuredCloneReader {
     JSString* readString(uint32_t data);
 
     bool checkDouble(double d);
-    bool readTypedArray(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp,
-                        bool v1Read = false);
-    bool readDataView(uint32_t byteLength, MutableHandleValue vp);
-    bool readArrayBuffer(uint32_t nbytes, MutableHandleValue vp);
-    bool readSharedArrayBuffer(uint32_t nbytes, MutableHandleValue vp);
-    bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp);
+    MOZ_MUST_USE bool readTypedArray(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp,
+                                     bool v1Read = false);
+    MOZ_MUST_USE bool readDataView(uint32_t byteLength, MutableHandleValue vp);
+    MOZ_MUST_USE bool readArrayBuffer(uint32_t nbytes, MutableHandleValue vp);
+    MOZ_MUST_USE bool readSharedArrayBuffer(uint32_t nbytes, MutableHandleValue vp);
+    MOZ_MUST_USE bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp);
     JSObject* readSavedFrame(uint32_t principalsTag);
-    bool startRead(MutableHandleValue vp);
+    MOZ_MUST_USE bool startRead(MutableHandleValue vp);
 
     SCInput& in;
 
@@ -714,7 +714,7 @@ StructuredCloneHasTransferObjects(const JSStructuredCloneData& data)
         return false;
 
     uint64_t u;
-    data.ReadBytes(iter, reinterpret_cast<char*>(&u), sizeof(u));
+    MOZ_ALWAYS_TRUE(data.ReadBytes(iter, reinterpret_cast<char*>(&u), sizeof(u)));
     uint32_t tag = uint32_t(u >> 32);
     return (tag == SCTAG_TRANSFER_MAP_HEADER);
 }
@@ -1964,7 +1964,8 @@ bool
 JSStructuredCloneReader::readSharedArrayBuffer(uint32_t nbytes, MutableHandleValue vp)
 {
     intptr_t p;
-    in.readBytes(&p, sizeof(p));
+    if (!in.readBytes(&p, sizeof(p)))
+        return in.reportTruncated();
 
     SharedArrayRawBuffer* rawbuf = reinterpret_cast<SharedArrayRawBuffer*>(p);
 

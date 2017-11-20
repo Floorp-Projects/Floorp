@@ -21,7 +21,7 @@ class TestLogger(object):
         return record
 
     def _log_obj(self, obj):
-        print(json.dumps(obj))
+        print(json.dumps(obj, sort_keys=True))
 
     def _log(self, **kwargs):
         self._log_obj(self._record(**kwargs))
