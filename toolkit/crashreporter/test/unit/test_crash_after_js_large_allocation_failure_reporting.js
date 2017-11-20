@@ -13,9 +13,7 @@ function run_test() {
         CrashTestUtils.crash(crashType);
       }
 
-      var observerService = Components.classes["@mozilla.org/observer-service;1"]
-        .getService(Components.interfaces.nsIObserverService);
-      observerService.addObserver(crashWhileReporting, "memory-pressure");
+      Services.obs.addObserver(crashWhileReporting, "memory-pressure");
       Components.utils.getJSTestingFunctions().reportLargeAllocationFailure();
     },
     function(mdump, extra) {

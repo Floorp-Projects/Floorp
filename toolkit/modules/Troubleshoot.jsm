@@ -170,13 +170,9 @@ this.Troubleshoot = {
 var dataProviders = {
 
   application: function application(done) {
-
-    let sysInfo = Cc["@mozilla.org/system-info;1"].
-                  getService(Ci.nsIPropertyBag2);
-
     let data = {
       name: Services.appinfo.name,
-      osVersion: sysInfo.getProperty("name") + " " + sysInfo.getProperty("version"),
+      osVersion: Services.sysinfo.getProperty("name") + " " + Services.sysinfo.getProperty("version"),
       version: AppConstants.MOZ_APP_VERSION_DISPLAY,
       buildID: Services.appinfo.appBuildID,
       userAgent: Cc["@mozilla.org/network/protocol;1?name=http"].
@@ -192,10 +188,8 @@ var dataProviders = {
     try {
       data.vendor = Services.prefs.getCharPref("app.support.vendor");
     } catch (e) {}
-    let urlFormatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-                       getService(Ci.nsIURLFormatter);
     try {
-      data.supportURL = urlFormatter.formatURLPref("app.support.baseURL");
+      data.supportURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     } catch (e) {}
 
     data.numTotalWindows = 0;
@@ -692,11 +686,9 @@ if (AppConstants.MOZ_SANDBOX) {
                     "hasPrivilegedUserNamespaces", "hasUserNamespaces",
                     "canSandboxContent", "canSandboxMedia"];
 
-      let sysInfo = Cc["@mozilla.org/system-info;1"].
-                    getService(Ci.nsIPropertyBag2);
       for (let key of keys) {
-        if (sysInfo.hasKey(key)) {
-          data[key] = sysInfo.getPropertyAsBool(key);
+        if (Services.sysinfo.hasKey(key)) {
+          data[key] = Services.sysinfo.getPropertyAsBool(key);
         }
       }
 

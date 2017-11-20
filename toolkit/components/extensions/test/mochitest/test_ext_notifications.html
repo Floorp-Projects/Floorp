@@ -224,6 +224,57 @@ add_task(async function test_buttons_unsupported() {
   await extension.unload();
 });
 
+add_task(async function test_notifications_different_contexts() {
+  async function background() {
+    let opts = {
+      type: "basic",
+      title: "Testing Notification",
+      message: "Carry on",
+    };
+
+    let id = await browser.notifications.create(opts);
+
+    browser.runtime.onMessage.addListener(async (message, sender) => {
+      await browser.tabs.remove(sender.tab.id);
+
+      // We should be able to clear the notification after creating and
+      // destroying the tab.html page.
+      let wasCleared = await browser.notifications.clear(id);
+      browser.test.assertTrue(wasCleared, "The notification was cleared.");
+      browser.test.notifyPass("notifications");
+    });
+
+    browser.tabs.create({url: browser.runtime.getURL("/tab.html")});
+  }
+
+  async function tabScript() {
+    // We should be able to see the notification created in the background page
+    // in this page.
+    let notifications = await browser.notifications.getAll();
+    browser.test.assertEq(1, Object.keys(notifications).length,
+                          "One notification found.");
+    browser.runtime.sendMessage("continue-test");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["notifications"],
+    },
+    background,
+    files: {
+      "tab.js": tabScript,
+      "tab.html": `<!DOCTYPE html><html><head>
+        <meta charset="utf-8">
+        <script src="tab.js"><\/script>
+      </head></html>`,
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("notifications");
+  await extension.unload();
+});
+
 </script>
 
 </body>

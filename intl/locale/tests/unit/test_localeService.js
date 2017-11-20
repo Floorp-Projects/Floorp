@@ -24,7 +24,13 @@ function run_test()
 
 add_test(function test_defaultLocale() {
   const defaultLocale = localeService.defaultLocale;
-  do_check_true(defaultLocale === "en-US", "Default locale is en-US");
+  do_check_true(defaultLocale.length !== 0, "Default locale is not empty");
+  run_next_test();
+});
+
+add_test(function test_lastFallbackLocale() {
+  const lastFallbackLocale = localeService.lastFallbackLocale;
+  do_check_true(lastFallbackLocale === "en-US", "Last fallback locale is en-US");
   run_next_test();
 });
 

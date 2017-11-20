@@ -187,12 +187,6 @@
     </content>
   </binding>
 
-  <binding id="menucaption" extends="chrome://global/content/bindings/menu.xml#menu-base">
-    <content>
-      <xul:label class="menu-text" xbl:inherits="value=label,crop" crop="right"/>
-    </content>
-  </binding>
-
   <binding id="menu-menubar"
            extends="chrome://global/content/bindings/menu.xml#menu-base">
     <content>
@@ -236,7 +230,7 @@
     </content>
   </binding>
 
-  <binding id="menucaption-inmenulist" extends="chrome://global/content/bindings/menu.xml#menucaption">
+  <binding id="menucaption" extends="chrome://global/content/bindings/menu.xml#menu-base">
     <content>
       <xul:hbox class="menu-iconic-left" align="center" pack="center"
                 xbl:inherits="selected,disabled,checked">
