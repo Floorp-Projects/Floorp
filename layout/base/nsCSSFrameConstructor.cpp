@@ -7495,7 +7495,7 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
 
   for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
-    if (child->IsElement()) {
+    if (child->IsElement() && !child->AsElement()->HasServoData()) {
       Element* parent = child->AsElement()->GetFlattenedTreeParentElement();
       // NB: Parent may be null if the content is appended to a shadow root, and
       // isn't assigned to any insertion point.
