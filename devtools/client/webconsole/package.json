@@ -18,6 +18,7 @@
     "devtools-config": "0.0.12",
     "devtools-launchpad": "0.0.96",
     "devtools-modules": "0.0.31",
+    "devtools-source-editor": "=0.0.3",
     "enzyme": "^2.4.1",
     "expect": "^1.16.0",
     "file-loader": "^0.10.1",
@@ -33,6 +34,7 @@
     "react-redux": "=5.0.3",
     "redux": "^3.6.0",
     "require-hacker": "^2.1.4",
+    "reselect": "^3.0.1",
     "sinon": "^1.17.5"
   }
 }
