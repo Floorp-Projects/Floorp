@@ -143,6 +143,8 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
         _apiLock.AcquireLockExclusive();
         if (-1 == CreateCapabilityMap(deviceUniqueIdUTF8))
         {
+            _apiLock.ReleaseLockExclusive();
+            _apiLock.AcquireLockShared();
             return -1;
         }
         _apiLock.ReleaseLockExclusive();
