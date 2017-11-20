@@ -236,7 +236,9 @@ var gMenuBuilder = {
         item.checked = true;
       }
 
-      item.tabManager.addActiveTabPermission();
+      if (!contextData.onBookmark) {
+        item.tabManager.addActiveTabPermission();
+      }
 
       let tab = contextData.tab && item.tabManager.convert(contextData.tab);
       let info = item.getClickInfo(contextData, wasChecked);
@@ -317,6 +319,7 @@ const contextsMap = {
   isTextSelected: "selection",
   onVideo: "video",
 
+  onBookmark: "bookmark",
   onBrowserAction: "browser_action",
   onPageAction: "page_action",
   onTab: "tab",
@@ -337,7 +340,7 @@ const getMenuContexts = contextData => {
   }
 
   // New non-content contexts supported in Firefox are not part of "all".
-  if (!contextData.onTab && !contextData.inToolsMenu) {
+  if (!contextData.onBookmark && !contextData.onTab && !contextData.inToolsMenu) {
     contexts.add("all");
   }
 
@@ -523,6 +526,7 @@ MenuItem.prototype = {
     setIfDefined("frameUrl", contextData.frameUrl);
     setIfDefined("frameId", contextData.frameId);
     setIfDefined("selectionText", contextData.selectionText);
+    setIfDefined("bookmarkId", contextData.bookmarkId);
 
     if ((this.type === "checkbox") || (this.type === "radio")) {
       info.checked = this.checked;
@@ -536,6 +540,10 @@ MenuItem.prototype = {
     let contexts = getMenuContexts(contextData);
     if (!this.contexts.some(n => contexts.has(n))) {
       return false;
+    }
+
+    if (contextData.onBookmark) {
+      return this.extension.hasPermission("bookmarks");
     }
 
     let docPattern = this.documentUrlMatchPattern;
@@ -566,7 +574,7 @@ MenuItem.prototype = {
 // While any extensions are active, this Tracker registers to observe/listen
 // for menu events from both Tools and context menus, both content and chrome.
 const menuTracker = {
-  menuIds: ["menu_ToolsPopup", "tabContextMenu"],
+  menuIds: ["placesContext", "menu_ToolsPopup", "tabContextMenu"],
 
   register() {
     Services.obs.addObserver(this, "on-build-contextmenu");
@@ -601,6 +609,18 @@ const menuTracker = {
 
   handleEvent(event) {
     const menu = event.target;
+    if (menu.id === "placesContext") {
+      const trigger = menu.triggerNode;
+      if (!trigger._placesNode) {
+        return;
+      }
+
+      gMenuBuilder.build({
+        menu,
+        bookmarkId: trigger._placesNode.bookmarkGuid,
+        onBookmark: true,
+      });
+    }
     if (menu.id === "menu_ToolsPopup") {
       const tab = tabTracker.activeTab;
       const pageUrl = tab.linkedBrowser.currentURI.spec;
