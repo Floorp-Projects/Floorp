@@ -1431,7 +1431,7 @@ public:
         , mBuffer(aBuffer)
         , mCount(aCount)
         , mWrittenData(0)
-        , mBufferType(mBuffer ? eExternal : eInternal)
+        , mBufferType(aBuffer ? eExternal : eInternal)
         , mAsyncResult(NS_OK)
         , mBufferSize(0)
     {
@@ -1477,8 +1477,12 @@ public:
     {
         MOZ_ASSERT(mBufferType == eInternal);
 
+        MonitorAutoLock lock(mMonitor);
+
         void* buffer = mBuffer;
+
         mBuffer = nullptr;
+        mBufferSize = 0;
 
         return buffer;
     }
@@ -1552,7 +1556,8 @@ private:
                                            AbstractThread::DontAssertDispatchSuccess);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        lock.Wait();
+        rv = lock.Wait();
+        NS_ENSURE_SUCCESS(rv, rv);
 
         return mAsyncResult;
     }
@@ -1566,13 +1571,15 @@ private:
         MOZ_ASSERT(mAsyncInputStream);
         MOZ_ASSERT(!mInputStream);
 
+        MonitorAutoLock lock(mMonitor);
+
         if (mCount == 0) {
-            OperationCompleted(NS_OK);
+            OperationCompleted(lock, NS_OK);
             return NS_OK;
         }
 
         if (mCount == -1 && !MaybeExpandBufferSize()) {
-            OperationCompleted(NS_ERROR_OUT_OF_MEMORY);
+            OperationCompleted(lock, NS_ERROR_OUT_OF_MEMORY);
             return NS_OK;
         }
 
@@ -1587,7 +1594,7 @@ private:
 
         // Operation completed.
         if (NS_SUCCEEDED(rv) && writtenData == 0) {
-            OperationCompleted(NS_OK);
+            OperationCompleted(lock, NS_OK);
             return NS_OK;
         }
 
@@ -1603,7 +1610,7 @@ private:
             rv = mTaskQueue->Dispatch(runnable.forget(),
                                       AbstractThread::DontAssertDispatchSuccess);
             if (NS_WARN_IF(NS_FAILED(rv))) {
-                OperationCompleted(rv);
+                OperationCompleted(lock, rv);
             }
         
             return NS_OK;
@@ -1613,13 +1620,13 @@ private:
         if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
             rv = mAsyncInputStream->AsyncWait(this, 0, length, mTaskQueue);
             if (NS_WARN_IF(NS_FAILED(rv))) {
-                OperationCompleted(rv);
+                OperationCompleted(lock, rv);
             }
             return NS_OK;
         }
 
         // Error.
-        OperationCompleted(rv);
+        OperationCompleted(lock, rv);
         return NS_OK;
     }
 
@@ -1634,14 +1641,12 @@ private:
     // This function is called from the I/O thread and it will unblock the
     // owning thread.
     void
-    OperationCompleted(nsresult aRv)
+    OperationCompleted(MonitorAutoLock& aLock, nsresult aRv)
     {
-        MonitorAutoLock lock(mMonitor);
-
         mAsyncResult = aRv;
 
         // This will unlock the owning thread.
-        lock.Notify();
+        aLock.Notify();
     }
 
     bool
