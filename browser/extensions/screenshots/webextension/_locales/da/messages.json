@@ -29,6 +29,9 @@
   "downloadScreenshot": {
     "message": "Hent"
   },
+  "downloadOnlyDetailsPrivate": {
+    "message": "I et privat browsing-vindue."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Link kopieret"
   },
