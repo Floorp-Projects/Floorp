@@ -62,6 +62,7 @@ jittest:
     chunks:
         by-test-platform:
             windows.*: 1
+            windows10-64-ccov/debug: 6
             macosx.*: 1
             default: 6
     mozharness:
