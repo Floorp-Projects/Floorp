@@ -1348,8 +1348,12 @@ ContentCacheInParent::RequestIMEToCommitComposition(nsIWidget* aWidget,
 
   mCommitStringByRequest = &aCommittedString;
 
-  aWidget->NotifyIME(IMENotification(aCancel ? REQUEST_TO_CANCEL_COMPOSITION :
-                                               REQUEST_TO_COMMIT_COMPOSITION));
+  // Request commit or cancel composition with TextComposition because we may
+  // have already requested to commit or cancel the composition or we may
+  // have already received eCompositionCommit(AsIs) event.  Those status are
+  // managed by composition.  So, if we don't request commit composition,
+  // we should do nothing with native IME here.
+  composition->RequestToCommit(aWidget, aCancel);
 
   mCommitStringByRequest = nullptr;
 
