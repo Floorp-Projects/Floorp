@@ -23,11 +23,11 @@ testInitialEnvironment("class x { constructor() {} }", []);
 testInitialEnvironment('export var x = 1;', ['x']);
 testInitialEnvironment('export let x = 1;', ['x']);
 testInitialEnvironment('export default function x() {};', ['x']);
-testInitialEnvironment('export default 1;', ['*default*']);
-testInitialEnvironment('export default function() {};', ['*default*']);
+testInitialEnvironment('export default 1;', ['default']);
+testInitialEnvironment('export default function() {};', ['default']);
 testInitialEnvironment("export class x { constructor() {} }", ['x']);
 testInitialEnvironment('export default class x { constructor() {} };', ['x']);
-testInitialEnvironment('export default class { constructor() {} };', ['*default*']);
+testInitialEnvironment('export default class { constructor() {} };', ['default']);
 
 // Imports: namespace imports are present.
 testInitialEnvironment('import { x } from "m";', []);
