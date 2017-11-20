@@ -171,9 +171,9 @@ TabParent::TabParent(nsIContentParent* aManager,
 #ifdef DEBUG
   , mActiveSupressDisplayportCount(0)
 #endif
-  , mLayerTreeEpoch(0)
+  , mLayerTreeEpoch(1)
   , mPreserveLayers(false)
-  , mRenderLayers(false)
+  , mRenderLayers(true)
   , mHasLayers(false)
   , mHasPresented(false)
   , mHasBeforeUnload(false)
