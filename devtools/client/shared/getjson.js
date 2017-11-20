@@ -4,12 +4,9 @@
 
 "use strict";
 
-const {CC} = require("chrome");
 const Services = require("Services");
 
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
-
-const XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
 
 /**
  * Downloads and caches a JSON file from an URL given by a pref.

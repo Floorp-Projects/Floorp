@@ -3,12 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var {Ci, Cu, CC} = require("chrome");
+var {Ci, Cu} = require("chrome");
 
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const Services = require("Services");
 const {Task} = require("devtools/shared/task");
-var XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
 var strings = Services.strings.createBundle("chrome://devtools/locale/app-manager.properties");
 
 function AppValidator({ type, location }) {
