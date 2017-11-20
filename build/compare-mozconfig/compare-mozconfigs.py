@@ -108,6 +108,10 @@ def compare(topsrcdir):
 
     success = True
 
+    def normalize_lines(lines):
+        return {l.strip() for l in lines}
+
+
     for platform in PLATFORMS:
         log.info('Comparing platform %s' % platform)
 
@@ -120,6 +124,16 @@ def compare(topsrcdir):
         nightly_lines = get_mozconfig(nightly_path)
         beta_lines = get_mozconfig(beta_path)
         release_lines = get_mozconfig(release_path)
+
+        # Validate that entries in whitelist['nightly'][platform] are actually
+        # present.
+        whitelist_normalized = normalize_lines(
+            whitelist['nightly'].get(platform, []))
+        nightly_normalized = normalize_lines(nightly_lines)
+
+        for line in sorted(whitelist_normalized - nightly_normalized):
+            log.error('extra line in nightly whitelist: %s' % line)
+            success = False
 
         log.info('Comparing beta and nightly mozconfigs')
         passed = verify_mozconfigs((beta_path, beta_lines),
