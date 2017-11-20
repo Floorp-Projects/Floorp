@@ -427,6 +427,20 @@ nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
     return url;
 }
 
+NS_IMPL_ISUPPORTS(nsNestedAboutURI::Mutator, nsIURISetters, nsIURIMutator)
+
+NS_IMETHODIMP
+nsNestedAboutURI::Mutate(nsIURIMutator** aMutator)
+{
+    RefPtr<nsNestedAboutURI::Mutator> mutator = new nsNestedAboutURI::Mutator();
+    nsresult rv = mutator->InitFromURI(this);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    mutator.forget(aMutator);
+    return NS_OK;
+}
+
 // nsIClassInfo
 NS_IMETHODIMP
 nsNestedAboutURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)

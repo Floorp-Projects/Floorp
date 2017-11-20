@@ -230,6 +230,20 @@ nsHostObjectURI::EqualsInternal(nsIURI* aOther,
   return NS_OK;
 }
 
+NS_IMPL_ISUPPORTS(nsHostObjectURI::Mutator, nsIURISetters, nsIURIMutator)
+
+NS_IMETHODIMP
+nsHostObjectURI::Mutate(nsIURIMutator** aMutator)
+{
+    RefPtr<nsHostObjectURI::Mutator> mutator = new nsHostObjectURI::Mutator();
+    nsresult rv = mutator->InitFromURI(this);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    mutator.forget(aMutator);
+    return NS_OK;
+}
+
 // nsIClassInfo methods:
 NS_IMETHODIMP
 nsHostObjectURI::GetInterfaces(uint32_t *count, nsIID * **array)

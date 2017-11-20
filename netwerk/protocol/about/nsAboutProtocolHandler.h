@@ -10,6 +10,7 @@
 #include "nsSimpleNestedURI.h"
 #include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
+#include "nsIURIMutator.h"
 
 class nsIURI;
 
@@ -65,16 +66,18 @@ public:
     virtual ~nsNestedAboutURI() {}
 
     // Override QI so we can QI to our CID as needed
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
     // Override StartClone(), the nsISerializable methods, and
     // GetClassIDNoAlloc; this last is needed to make our nsISerializable impl
     // work right.
     virtual nsSimpleURI* StartClone(RefHandlingEnum aRefHandlingMode,
-                                    const nsACString& newRef);
-    NS_IMETHOD Read(nsIObjectInputStream* aStream);
-    NS_IMETHOD Write(nsIObjectOutputStream* aStream);
-    NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc);
+                                    const nsACString& newRef) override;
+    NS_IMETHOD Mutate(nsIURIMutator * *_retval) override;
+
+    NS_IMETHOD Read(nsIObjectInputStream* aStream) override;
+    NS_IMETHOD Write(nsIObjectOutputStream* aStream) override;
+    NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc) override;
 
     nsIURI* GetBaseURI() const {
         return mBaseURI;
@@ -82,6 +85,22 @@ public:
 
 protected:
     nsCOMPtr<nsIURI> mBaseURI;
+
+public:
+    class Mutator
+        : public nsIURIMutator
+        , public BaseURIMutator<nsNestedAboutURI>
+    {
+        NS_DECL_ISUPPORTS
+        NS_FORWARD_SAFE_NSIURISETTERS(mURI)
+        NS_DEFINE_NSIMUTATOR_COMMON
+
+        explicit Mutator() { }
+    private:
+        virtual ~Mutator() { }
+
+        friend class nsNestedAboutURI;
+    };
 };
 
 } // namespace net

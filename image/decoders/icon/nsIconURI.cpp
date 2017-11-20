@@ -148,6 +148,20 @@ nsMozIconURI::GetHasRef(bool* result)
   return NS_OK;
 }
 
+NS_IMPL_ISUPPORTS(nsMozIconURI::Mutator, nsIURISetters, nsIURIMutator)
+
+NS_IMETHODIMP
+nsMozIconURI::Mutate(nsIURIMutator** aMutator)
+{
+    RefPtr<nsMozIconURI::Mutator> mutator = new nsMozIconURI::Mutator();
+    nsresult rv = mutator->InitFromURI(this);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    mutator.forget(aMutator);
+    return NS_OK;
+}
+
 // takes a string like ?size=32&contentType=text/html and returns a new string
 // containing just the attribute value. i.e you could pass in this string with
 // an attribute name of 'size=', this will return 32
