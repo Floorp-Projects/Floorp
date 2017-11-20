@@ -196,6 +196,14 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
     }));
   };
 
+  exports.copyShot = function(selectedPos) {
+    let dataUrl = screenshotPage(selectedPos);
+    let blob = blobConverters.dataUrlToBlob(dataUrl);
+    catcher.watchPromise(callBackground("copyShotToClipboard", blob).then(() => {
+      uicontrol.deactivate();
+    }));
+  };
+
   exports.sendEvent = function(...args) {
     callBackground("sendEvent", ...args);
   };
