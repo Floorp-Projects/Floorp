@@ -92,7 +92,6 @@ public:
 
   wr::ImageKey UpdateKey(WebRenderLayerManager* aManager,
                          wr::IpcResourceUpdateQueue& aResources,
-                         bool aForceUpdate,
                          uint32_t aGenerationId)
   {
     MOZ_ASSERT(aManager);
@@ -114,7 +113,7 @@ public:
         mKeys.RemoveElementAt(i);
       } else if (entry.mManager == aManager) {
         found = true;
-        if (aForceUpdate || entry.mGenerationId != aGenerationId) {
+        if (entry.mGenerationId != aGenerationId) {
           aManager->AddImageKeyForDiscard(entry.mImageKey);
           entry.mGenerationId = aGenerationId;
           entry.mImageKey = aManager->WrBridge()->GetNextImageKey();
@@ -151,7 +150,6 @@ SharedSurfacesChild::DestroySharedUserData(void* aClosure)
 SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
                            WebRenderLayerManager* aManager,
                            wr::IpcResourceUpdateQueue& aResources,
-                           bool aForceUpdate,
                            uint32_t aGenerationId,
                            wr::ImageKey& aKey)
 {
@@ -176,7 +174,7 @@ SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
     data->SetId(manager->GetNextExternalImageId());
   } else if (data->IsShared()) {
     // It has already been shared with the GPU process, reuse the id.
-    aKey = data->UpdateKey(aManager, aResources, aForceUpdate, aGenerationId);
+    aKey = data->UpdateKey(aManager, aResources, aGenerationId);
     return NS_OK;
   }
 
@@ -194,7 +192,7 @@ SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
   if (pid == base::GetCurrentProcId()) {
     SharedSurfacesParent::AddSameProcess(data->Id(), aSurface);
     data->MarkShared();
-    aKey = data->UpdateKey(aManager, aResources, aForceUpdate, aGenerationId);
+    aKey = data->UpdateKey(aManager, aResources, aGenerationId);
     return NS_OK;
   }
 
@@ -229,7 +227,7 @@ SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
                                 SurfaceDescriptorShared(aSurface->GetSize(),
                                                         aSurface->Stride(),
                                                         format, handle));
-  aKey = data->UpdateKey(aManager, aResources, aForceUpdate, aGenerationId);
+  aKey = data->UpdateKey(aManager, aResources, aGenerationId);
   return NS_OK;
 }
 
@@ -237,7 +235,6 @@ SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
 SharedSurfacesChild::Share(ImageContainer* aContainer,
                            WebRenderLayerManager* aManager,
                            wr::IpcResourceUpdateQueue& aResources,
-                           bool aForceUpdate,
                            wr::ImageKey& aKey)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -266,7 +263,7 @@ SharedSurfacesChild::Share(ImageContainer* aContainer,
 
   auto sharedSurface = static_cast<SourceSurfaceSharedData*>(surface.get());
   return Share(sharedSurface, aManager, aResources,
-               aForceUpdate, generation, aKey);
+               generation, aKey);
 }
 
 /* static */ void
