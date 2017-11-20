@@ -181,6 +181,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/hy_AM/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ia"] += [
+  'webextension/_locales/ia/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["id"] += [
   'webextension/_locales/id/messages.json'
 ]

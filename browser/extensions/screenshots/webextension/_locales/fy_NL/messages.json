@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Downloade"
   },
+  "downloadOnlyNotice": {
+    "message": "Jo binne op dit stuit yn Allinnich-downloademodus."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots wikselet yn de folgjende situaasjes automatysk nei Allinnich-downloademodus:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Yn in priveenavigaasjefinster."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Cookies fan tredden útskeakele binne."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "‘Nea skiednis ûnthâlde’ ynskeakele is."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Keppeling kopiearre"
   },
   "notificationLinkCopiedDetails": {
     "message": "De keppeling nei jo skermôfdruk is nei it klamboerd kopiearre. Brûk $META_KEY$-V om te plakken.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopiearje"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Ofbylding kopiearre"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Jo ôfbylding is nei it klamboerd kopiearre. Druk op $META_KEY$-V om te plakken.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Download"
   },
+  "downloadOnlyNotice": {
+    "message": "You are currently in Download-Only mode."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots automatically changes to Download-Only mode in these situations:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "In a Private Browsing window."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Third-party cookies are disabled."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Never remember history” is enabled."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Link Copied"
   },
   "notificationLinkCopiedDetails": {
     "message": "The link to your shot has been copied to the clipboard. Press $META_KEY$-V to paste.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Copy"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Shot Copied"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Your shot has been copied to the clipboard. Press $META_KEY$-V to paste.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
