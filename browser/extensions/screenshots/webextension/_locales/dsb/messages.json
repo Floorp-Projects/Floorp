@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Ześěgnuś"
   },
+  "downloadOnlyNotice": {
+    "message": "Tuchylu sćo w modusu „Jano ześěgnuś“."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots w slědujucych situacijach awtomatiski do modusa „Jano ześěgnuś“ pśešaltujo:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "W priwatnem woknje."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Cookieje tśeśich póbitowarjow su znjemóžnjone."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "„Se historiju nigda njespomnjeś“ jo zmóžnjone."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Wótkaz kopěrowany"
   },
   "notificationLinkCopiedDetails": {
     "message": "Wótkaz k wašomu fotoju wobrazowki jo se do mjazywótkłada kopěrował. Tłocćo $META_KEY$-V, aby jen zasajźił.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopěrowaś"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Foto kopěrowane"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Wašo foto jo se do mjezywótkłada kopěrowało. Tłocćo $META_KEY$-V, aby jo zasajźił.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

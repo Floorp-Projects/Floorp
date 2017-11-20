@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Downloaden"
   },
+  "downloadOnlyNotice": {
+    "message": "U bevindt zich momenteel in Alleen-downloadenmodus."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots wisselt in de volgende situaties automatisch naar Alleen-downloadenmodus:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "In een privénavigatievenster."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Cookies van derden zijn uitgeschakeld."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "‘Nooit geschiedenis onthouden’ is ingeschakeld."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Koppeling gekopieerd"
   },
   "notificationLinkCopiedDetails": {
     "message": "De koppeling naar uw afbeelding is naar het klembord gekopieerd. Druk op $META_KEY$-V om te plakken.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopiëren"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Afbeelding gekopieerd"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Uw afbeelding is naar het klembord gekopieerd. Druk op $META_KEY$-V om te plakken.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

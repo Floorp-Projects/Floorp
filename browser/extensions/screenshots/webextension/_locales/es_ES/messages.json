@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Descargar"
   },
+  "downloadOnlyNotice": {
+    "message": "Estás en modo Solo descargas."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots se cambia automáticamente al modo Solo descargas en los siguientes casos:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Durante la navegación privada."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Cuando las cookies de terceros están deshabilitadas."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Cuando está activada la opción “No recordar nunca el historial”."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Enlace copiado"
   },
   "notificationLinkCopiedDetails": {
     "message": "Se ha copiado el enlace a la captura en el portapapeles. Pulsa $META_KEY$-V para pegar.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Copiar"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Captura copiada"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Tu captura ha ido copiada al portapapeles. Presiona $META_KEY$-V para pegar.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

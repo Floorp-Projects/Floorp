@@ -29,6 +29,21 @@
   "downloadScreenshot": {
     "message": "ડાઉનલોડ"
   },
+  "downloadOnlyNotice": {
+    "message": "તમે હાલમા ફક્ત ડાઉનલોડ-કરો પ્રકારમાં છો."
+  },
+  "downloadOnlyDetails": {
+    "message": "આ પરિસ્થિતિઓ માં Firefox સ્ક્રિનશોટસ આપમેળે જ ફક્ત-ડાઉનલોડ પ્રકારમાં જતું રહેશે:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "ખાનગી બ્રાઉઝિંગ વિન્ડો માં."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "અન્ય સ્થાનેથી કુકીઓનું વહન અક્ષમ કરેલું છે."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“ઇતિહાસ ક્યારેય ન સંભારવો” સક્ષમ કરેલુ છે."
+  },
   "notificationLinkCopiedTitle": {
     "message": "લિંક કૉપિ"
   },
