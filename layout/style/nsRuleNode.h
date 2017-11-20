@@ -1069,14 +1069,6 @@ public:
                                    nsPresContext* aPresContext,
                                    nsFontSizeType aFontSizeType = eFontSize_HTML);
 
-  static nscoord FindNextSmallerFontSize(nscoord aFontSize, int32_t aBasePointSize,
-                                         nsPresContext* aPresContext,
-                                         nsFontSizeType aFontSizeType = eFontSize_HTML);
-
-  static nscoord FindNextLargerFontSize(nscoord aFontSize, int32_t aBasePointSize,
-                                        nsPresContext* aPresContext,
-                                        nsFontSizeType aFontSizeType = eFontSize_HTML);
-
   static uint32_t ParseFontLanguageOverride(const nsAString& aLangTag);
 
   /**
