@@ -29,7 +29,7 @@ this.TabsInTitlebar = {
     },
 
     tabsOutsideTitlebar: {
-      selectors: ["#navigator-toolbox"].concat(Services.appinfo.OS == "Linux" ? [] : ["#titlebar"]),
+      selectors: ["#navigator-toolbox", "#titlebar"],
       async applyConfig() {
         Services.prefs.setBoolPref(PREF_TABS_IN_TITLEBAR, false);
       },
