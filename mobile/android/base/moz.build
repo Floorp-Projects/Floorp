@@ -398,7 +398,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/FloatSize.java',
     'gfx/FullScreenState.java',
     'gfx/GeckoDisplay.java',
-    'gfx/GeckoLayerClient.java',
     'gfx/GeckoSurface.java',
     'gfx/GeckoSurfaceTexture.java',
     'gfx/ImmutableViewportMetrics.java',
