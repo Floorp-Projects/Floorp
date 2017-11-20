@@ -68,18 +68,6 @@ public:
   IsOffscreenThrottlingEnabled();
 
   /**
-   * Returns true if the preference to enable the core Web Animations API is
-   * true.
-   */
-  static bool IsCoreAPIEnabled();
-
-  /**
-   * Returns true if the preference to enable the core Web Animations API is
-   * true or the caller is chrome.
-   */
-  static bool IsCoreAPIEnabledForCaller(dom::CallerType aCallerType);
-
-  /**
    * Returns true if the given EffectSet contains a current effect that animates
    * scale. |aFrame| is used for calculation of scale values.
    */
