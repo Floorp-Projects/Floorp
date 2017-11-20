@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gfxUtils.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/Range.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/InlineTranslator.h"
@@ -51,11 +52,13 @@ struct FontTemplate {
   RefPtr<UnscaledFont> mUnscaledFont;
 };
 
+StaticMutex sFontDataTableLock;
 std::unordered_map<FontKey, FontTemplate> sFontDataTable;
 
 extern "C" {
 void
 AddFontData(WrFontKey aKey, const uint8_t *aData, size_t aSize, uint32_t aIndex, const ArcVecU8 *aVec) {
+  StaticMutexAutoLock lock(sFontDataTableLock);
   auto i = sFontDataTable.find(aKey);
   if (i == sFontDataTable.end()) {
     FontTemplate font;
@@ -69,6 +72,7 @@ AddFontData(WrFontKey aKey, const uint8_t *aData, size_t aSize, uint32_t aIndex,
 
 void
 AddNativeFontHandle(WrFontKey aKey, void* aHandle, uint32_t aIndex) {
+  StaticMutexAutoLock lock(sFontDataTableLock);
   auto i = sFontDataTable.find(aKey);
   if (i == sFontDataTable.end()) {
     FontTemplate font;
@@ -91,6 +95,7 @@ AddNativeFontHandle(WrFontKey aKey, void* aHandle, uint32_t aIndex) {
 
 void
 DeleteFontData(WrFontKey aKey) {
+  StaticMutexAutoLock lock(sFontDataTableLock);
   auto i = sFontDataTable.find(aKey);
   if (i != sFontDataTable.end()) {
     if (i->second.mVec) {
@@ -103,8 +108,13 @@ DeleteFontData(WrFontKey aKey) {
 
 RefPtr<UnscaledFont>
 GetUnscaledFont(Translator *aTranslator, wr::FontKey key) {
-  MOZ_ASSERT(sFontDataTable.find(key) != sFontDataTable.end());
-  auto &data = sFontDataTable[key];
+  StaticMutexAutoLock lock(sFontDataTableLock);
+  auto i = sFontDataTable.find(key);
+  if (i == sFontDataTable.end()) {
+    gfxDevCrash(LogReason::UnscaledFontNotFound) << "Failed to get UnscaledFont entry for FontKey " << key.mHandle;
+    return nullptr;
+  }
+  auto &data = i->second;
   if (data.mUnscaledFont) {
     return data.mUnscaledFont;
   }

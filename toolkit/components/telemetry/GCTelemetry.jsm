@@ -9,12 +9,12 @@
  * This module records detailed timing information about selected
  * GCs. The data is sent back in the telemetry session ping. To avoid
  * bloating the ping, only a few GCs are included. There are two
- * selection strategies. We always save the five GCs with the worst
- * max_pause time. Additionally, five collections are selected at
+ * selection strategies. We always save the two GCs with the worst
+ * max_pause time. Additionally, two collections are selected at
  * random. If a GC runs for C milliseconds and the total time for all
  * GCs since the session began is T milliseconds, then the GC has a
- * 5*C/T probablility of being selected (the factor of 5 is because we
- * save 5 of them).
+ * 2*C/T probablility of being selected (the factor of 2 is because we
+ * save two of them).
  *
  * GCs from both the main process and all content processes are
  * recorded. The data is cleared for each new subsession.
@@ -82,7 +82,7 @@ class GCData {
       }
     }
 
-    // Save the 5 worst GCs based on max_pause. A GC may appear in
+    // Save the 2 worst GCs based on max_pause. A GC may appear in
     // both worst and randomlySelected.
     for (let i = 0; i < this.worst.length; i++) {
       if (!this.worst[i]) {
@@ -110,9 +110,9 @@ class GCData {
 // make sure to update the JSON schema at:
 // https://github.com/mozilla-services/mozilla-pipeline-schemas/blob/master/telemetry/main.schema.json
 // You should also adjust browser_TelemetryGC.js.
-const MAX_GC_KEYS = 30;
+const MAX_GC_KEYS = 24;
 const MAX_SLICES = 4;
-const MAX_SLICE_KEYS = 15;
+const MAX_SLICE_KEYS = 12;
 const MAX_PHASES = 65;
 
 function limitProperties(obj, count) {
