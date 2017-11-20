@@ -300,64 +300,62 @@ class UrlInputFragment : LocaleAwareFragment(), View.OnClickListener, InlineAuto
 
         isAnimating = true
 
-        run {
-            val xyOffset = (if (isOverlay)
-                (urlInputContainerView.layoutParams as FrameLayout.LayoutParams).bottomMargin
-            else
-                0).toFloat()
+        val xyOffset = (if (isOverlay)
+            (urlInputContainerView.layoutParams as FrameLayout.LayoutParams).bottomMargin
+        else
+            0).toFloat()
 
-            val width = urlInputBackgroundView.width.toFloat()
-            val height = urlInputBackgroundView.height.toFloat()
+        val width = urlInputBackgroundView.width.toFloat()
+        val height = urlInputBackgroundView.height.toFloat()
 
-            val widthScale = if (isOverlay)
-                (width + 2 * xyOffset) / width
-            else
-                1f
+        val widthScale = if (isOverlay)
+            (width + 2 * xyOffset) / width
+        else
+            1f
 
-            val heightScale = if (isOverlay)
-                (height + 2 * xyOffset) / height
-            else
-                1f
+        val heightScale = if (isOverlay)
+            (height + 2 * xyOffset) / height
+        else
+            1f
 
-            if (!reverse) {
-                urlInputBackgroundView.pivotX = 0f
-                urlInputBackgroundView.pivotY = 0f
-                urlInputBackgroundView.scaleX = widthScale
-                urlInputBackgroundView.scaleY = heightScale
-                urlInputBackgroundView.translationX = -xyOffset
-                urlInputBackgroundView.translationY = -xyOffset
+        if (!reverse) {
+            urlInputBackgroundView.pivotX = 0f
+            urlInputBackgroundView.pivotY = 0f
+            urlInputBackgroundView.scaleX = widthScale
+            urlInputBackgroundView.scaleY = heightScale
+            urlInputBackgroundView.translationX = -xyOffset
+            urlInputBackgroundView.translationY = -xyOffset
 
-                clearView.alpha = 0f
-            }
-
-            // Let the URL input use the full width/height and then shrink to the actual size
-            urlInputBackgroundView.animate()
-                    .setDuration(ANIMATION_DURATION.toLong())
-                    .scaleX(if (reverse) widthScale else 1f)
-                    .scaleY(if (reverse) heightScale else 1f)
-                    .alpha((if (reverse && isOverlay) 0 else 1).toFloat())
-                    .translationX(if (reverse) -xyOffset else 0f)
-                    .translationY(if (reverse) -xyOffset else 0f)
-                    .setListener(object : AnimatorListenerAdapter() {
-                        override fun onAnimationStart(animation: Animator) {
-                            if (reverse) {
-                                clearView.alpha = 0f
-                            }
-                        }
-
-                        override fun onAnimationEnd(animation: Animator) {
-                            if (reverse) {
-                                if (isOverlay) {
-                                    dismiss()
-                                }
-                            } else {
-                                clearView.alpha = 1f
-                            }
-
-                            isAnimating = false
-                        }
-                    })
+            clearView.alpha = 0f
         }
+
+        // Let the URL input use the full width/height and then shrink to the actual size
+        urlInputBackgroundView.animate()
+                .setDuration(ANIMATION_DURATION.toLong())
+                .scaleX(if (reverse) widthScale else 1f)
+                .scaleY(if (reverse) heightScale else 1f)
+                .alpha((if (reverse && isOverlay) 0 else 1).toFloat())
+                .translationX(if (reverse) -xyOffset else 0f)
+                .translationY(if (reverse) -xyOffset else 0f)
+                .setListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationStart(animation: Animator) {
+                        if (reverse) {
+                            clearView.alpha = 0f
+                        }
+                    }
+
+                    override fun onAnimationEnd(animation: Animator) {
+                        if (reverse) {
+                            if (isOverlay) {
+                                dismiss()
+                            }
+                        } else {
+                            clearView?.alpha = 1f
+                        }
+
+                        isAnimating = false
+                    }
+                })
 
         // We only need to animate the toolbar if we are an overlay.
         if (isOverlay) {

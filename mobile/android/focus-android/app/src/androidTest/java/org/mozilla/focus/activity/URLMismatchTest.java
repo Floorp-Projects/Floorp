@@ -67,13 +67,13 @@ public class URLMismatchTest {
     @Test
     public void MismatchTest() throws InterruptedException, UiObjectNotFoundException {
         // Type "mozilla" into the URL bar.
-        onView(withId(R.id.url_edit))
+        onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()))
                 .perform(click(), replaceText("mozilla"));
 
         // Verify that the search hint is displayed and click it.
-        onView(withId(R.id.search_hint))
+        onView(withId(R.id.searchView))
                 .check(matches(isDisplayed()))
                 .check(matches(withText("Search for mozilla")))
                 .check(matches(isClickable()))
@@ -90,7 +90,7 @@ public class URLMismatchTest {
                 .perform(click());
 
         // Type "moz" - Verify that it auto-completes to "mozilla.org" and then load the website
-        onView(withId(R.id.url_edit))
+        onView(withId(R.id.urlView))
                 .perform(click(), replaceText("mozilla"))
                 .check(matches(withText("mozilla.org")))
                 .perform(pressImeActionButton());

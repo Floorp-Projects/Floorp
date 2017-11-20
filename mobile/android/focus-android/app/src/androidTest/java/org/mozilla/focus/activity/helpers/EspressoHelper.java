@@ -41,13 +41,13 @@ public class EspressoHelper {
     }
 
     public static void openMenu() {
-        onView(withId(R.id.menu))
+        onView(withId(R.id.menuView))
                 .check(matches(isDisplayed()))
                 .perform(click());
     }
 
     public static void navigateToWebsite(@NonNull String input) {
-        onView(withId(R.id.url_edit))
+        onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()))
                 .perform(replaceText(input), pressImeActionButton());

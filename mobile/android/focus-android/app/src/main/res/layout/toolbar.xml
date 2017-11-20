@@ -74,7 +74,7 @@
         android:layout_marginEnd="4dp">
 
         <ImageButton
-            android:id="@+id/menu"
+            android:id="@+id/menuView"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="center_vertical"

@@ -293,7 +293,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
         });
 
-        menuView = (ImageButton) view.findViewById(R.id.menu);
+        menuView = (ImageButton) view.findViewById(R.id.menuView);
         menuView.setOnClickListener(this);
 
         if (session.isCustomTab()) {
@@ -747,7 +747,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.menu:
+            case R.id.menuView:
                 BrowserMenu menu = new BrowserMenu(getActivity(), this, session.getCustomTabConfig());
                 menu.show(menuView);
 

@@ -80,7 +80,7 @@ public class CustomTabTest {
                     .check(matches(isDisplayed()));
 
             // Open menu
-            onView(withId(R.id.menu))
+            onView(withId(R.id.menuView))
                     .perform(click());
 
             // Verify share action is visible

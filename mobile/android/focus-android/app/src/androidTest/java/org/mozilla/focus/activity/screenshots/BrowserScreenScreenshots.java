@@ -94,7 +94,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
         Screengrab.screenshot("LocationBarEmptyState");
 
         /* Autocomplete View */
-        onView(withId(R.id.url_edit))
+        onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()))
                 .perform(click(), replaceText("mozilla"));
@@ -103,7 +103,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
 
         Screengrab.screenshot("SearchFor");
 
-        onView(withId(R.id.url_edit))
+        onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()))
                 .perform(click(), replaceText(webServer.url("/").toString()), pressImeActionButton());

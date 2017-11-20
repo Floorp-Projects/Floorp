@@ -73,7 +73,7 @@ public class ToggleBlockTest {
     @Test
     public void SimpleToggleTest() throws UiObjectNotFoundException {
         // Load mozilla.org
-        onView(withId(R.id.url_edit))
+        onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()))
                 .perform(typeText("mozilla"), pressImeActionButton());
@@ -83,7 +83,7 @@ public class ToggleBlockTest {
                 .check(matches(not(isDisplayed())));
 
         // Open the menu
-        onView(withId(R.id.menu))
+        onView(withId(R.id.menuView))
                 .perform(click());
 
         // Check that the tracker count is 1.
@@ -100,7 +100,7 @@ public class ToggleBlockTest {
                 .check(matches(isDisplayed()));
 
         // Open the menu again. Now the switch is disabled and the tracker count should be disabled.
-        onView(withId(R.id.menu))
+        onView(withId(R.id.menuView))
                 .perform(click());
         onView(withId(R.id.blocking_switch))
                 .check(matches(not(isChecked())));

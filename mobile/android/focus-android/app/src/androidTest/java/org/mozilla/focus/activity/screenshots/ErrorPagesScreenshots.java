@@ -65,7 +65,7 @@ public class ErrorPagesScreenshots extends ScreenshotTest {
     @Test
     public void takeScreenshotsOfErrorPages() throws Exception {
         for (ErrorTypes error: ErrorTypes.values()) {
-            onView(withId(R.id.url_edit))
+            onView(withId(R.id.urlView))
                     .check(matches(isDisplayed()))
                     .check(matches(hasFocus()))
                     .perform(click(), replaceText("error:" + error.value), pressImeActionButton());
