@@ -1026,11 +1026,11 @@ class MessageDecl(ipdl.ast.MessageDecl):
             else:
                 resolvetype = returns[0].bareType(side)
 
-            return Decl(Type("mozilla::ipc::ResolveCallback", T=resolvetype),
+            return Decl(Type("mozilla::ipc::ResolveCallback", T=resolvetype, ref=2),
                         'aResolve')
 
         def makeCallbackRejectDecl(returns):
-            return Decl(Type("mozilla::ipc::RejectCallback"), 'aReject')
+            return Decl(Type("mozilla::ipc::RejectCallback", ref=2), 'aReject')
 
         cxxparams = [ ]
         if paramsems is not None:
