@@ -428,7 +428,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mDidLoadURLInit(false)
   , mAwaitingLA(false)
   , mSkipKeyPress(false)
-  , mLayerObserverEpoch(0)
+  , mLayerObserverEpoch(1)
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   , mNativeWindowHandle(0)
 #endif
@@ -2937,6 +2937,9 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
       gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
       InitAPZState();
+      RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
+      MOZ_ASSERT(lm);
+      lm->SetLayerObserverEpoch(mLayerObserverEpoch);
     } else {
       NS_WARNING("Fallback to BasicLayerManager");
       mLayersConnected = Some(false);
@@ -3050,7 +3053,14 @@ TabChild::MakeHidden()
     return;
   }
 
-  ClearCachedResources();
+  // Due to the nested event loop in ContentChild::ProvideWindowCommon,
+  // it's possible to be told to become hidden before we're finished
+  // setting up a layer manager. We should skip clearing cached layers
+  // in that case, since doing so might accidentally put is into
+  // BasicLayers mode.
+  if (mPuppetWidget && mPuppetWidget->HasLayerManager()) {
+    ClearCachedResources();
+  }
 
   // Hide all plugins in this tab.
   if (nsCOMPtr<nsIPresShell> shell = GetPresShell()) {
@@ -3555,7 +3565,7 @@ TabChild::GetOuterRect()
 void
 TabChild::ForcePaint(uint64_t aLayerObserverEpoch)
 {
-  if (!IPCOpen()) {
+  if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasLayerManager()) {
     // Don't bother doing anything now. Better to wait until we receive the
     // message on the PContent channel.
     return;
