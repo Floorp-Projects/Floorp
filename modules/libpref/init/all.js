@@ -4914,7 +4914,6 @@ pref("gfx.apitrace.enabled",false);
 pref("gfx.xrender.enabled",false);
 pref("widget.chrome.allow-gtk-dark-theme", false);
 pref("widget.content.allow-gtk-dark-theme", false);
-pref("widget.allow-client-side-decoration", false);
 #endif
 #endif
 
