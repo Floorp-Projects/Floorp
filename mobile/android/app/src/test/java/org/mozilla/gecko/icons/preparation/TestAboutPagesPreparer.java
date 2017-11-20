@@ -20,8 +20,7 @@ public class TestAboutPagesPreparer {
             AboutPages.DOWNLOADS,
             AboutPages.FIREFOX,
             AboutPages.HEALTHREPORT,
-            AboutPages.HOME,
-            AboutPages.UPDATER
+            AboutPages.HOME
     };
 
     @Test

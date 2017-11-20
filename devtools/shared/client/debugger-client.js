@@ -5,6 +5,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
+const Services = require("Services");
 const promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {}).Promise;
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -19,6 +20,8 @@ const {
 loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth");
 loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socket", true);
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(this, "getDeviceFront", "devtools/shared/fronts/device", true);
+
 loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/shared/webconsole/client", true);
 loader.lazyRequireGetter(this, "AddonClient", "devtools/shared/client/addon-client");
 loader.lazyRequireGetter(this, "RootClient", "devtools/shared/client/root-client");
@@ -28,6 +31,12 @@ loader.lazyRequireGetter(this, "TraceClient", "devtools/shared/client/trace-clie
 loader.lazyRequireGetter(this, "WorkerClient", "devtools/shared/client/worker-client");
 
 const noop = () => {};
+
+// Define the minimum officially supported version of Firefox when connecting to a remote
+// runtime. (Use ".0a1" to support the very first nightly version)
+// This is usually the current ESR version.
+const MIN_SUPPORTED_PLATFORM_VERSION = "52.0a1";
+const MS_PER_DAY = 86400000;
 
 /**
  * Creates a client for the remote debugging protocol server. This client
@@ -181,6 +190,66 @@ DebuggerClient.prototype = {
 
     this._transport.ready();
     return deferred.promise;
+  },
+
+  /**
+   * Tells if the remote device is using a supported version of Firefox.
+   *
+   * @return Object with the following attributes:
+   *   * String incompatible
+   *            null if the runtime is compatible,
+   *            "too-recent" if the runtime uses a too recent version,
+   *            "too-old" if the runtime uses a too old version.
+   *   * String minVersion
+   *            The minimum supported version.
+   *   * String runtimeVersion
+   *            The remote runtime version.
+   *   * String localID
+   *            Build ID of local runtime. A date with like this: YYYYMMDD.
+   *   * String deviceID
+   *            Build ID of remote runtime. A date with like this: YYYYMMDD.
+   */
+  async checkRuntimeVersion(listTabsForm) {
+    let incompatible = null;
+
+    // Instead of requiring to pass `listTabsForm` here,
+    // we can call getRoot() instead, but only once Firefox ESR59 is released
+    let deviceFront = await getDeviceFront(this, listTabsForm);
+    let desc = await deviceFront.getDescription();
+
+    // 1) Check for Firefox too recent on device.
+    // Compare device and firefox build IDs
+    // and only compare by day (strip hours/minutes) to prevent
+    // warning against builds of the same day.
+    let runtimeID = desc.appbuildid.substr(0, 8);
+    let localID = Services.appinfo.appBuildID.substr(0, 8);
+    function buildIDToDate(buildID) {
+      let fields = buildID.match(/(\d{4})(\d{2})(\d{2})/);
+      // Date expects 0 - 11 for months
+      return new Date(fields[1], Number.parseInt(fields[2], 10) - 1, fields[3]);
+    }
+    let runtimeDate = buildIDToDate(runtimeID);
+    let localDate = buildIDToDate(localID);
+    // Allow device to be newer by up to a week.  This accommodates those with
+    // local device builds, since their devices will almost always be newer
+    // than the client.
+    if (runtimeDate - localDate > 7 * MS_PER_DAY) {
+      incompatible = "too-recent";
+    }
+
+    // 2) Check for too old Firefox on device
+    let platformversion = desc.platformversion;
+    if (Services.vc.compare(platformversion, MIN_SUPPORTED_PLATFORM_VERSION) < 0) {
+      incompatible = "too-old";
+    }
+
+    return {
+      incompatible,
+      minVersion: MIN_SUPPORTED_PLATFORM_VERSION,
+      runtimeVersion: platformversion,
+      localID,
+      runtimeID,
+    };
   },
 
   /**

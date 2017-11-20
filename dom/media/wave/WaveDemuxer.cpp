@@ -11,7 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
-#include "mp4_demuxer/BufferReader.h"
+#include "BufferReader.h"
 #include "nsAutoPtr.h"
 #include "VideoUtils.h"
 #include "TimeUnits.h"

@@ -7,7 +7,7 @@
  * Tests middle-clicking items in the Library.
  */
 
-const URIs = ["about:license", "about:"];
+const URIs = ["about:license", "about:mozilla"];
 
 var gLibrary = null;
 

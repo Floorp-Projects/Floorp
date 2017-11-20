@@ -7,8 +7,8 @@
 
 add_task(async function test() {
   let win = (await BrowserTestUtils.openNewBrowserWindow({ private: true }));
-  let tabAbout = (await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:"));
-  let tabMozilla = (await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:"));
+  let tabAbout = (await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:mozilla"));
+  let tabMozilla = (await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:mozilla"));
 
   let mozillaZoom = win.ZoomManager.zoom;
 

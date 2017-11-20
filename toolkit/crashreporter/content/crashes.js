@@ -49,12 +49,8 @@ function submitPendingReport(event) {
 }
 
 function populateReportList() {
-
-  var prefService = Cc["@mozilla.org/preferences-service;1"].
-                    getService(Ci.nsIPrefBranch);
-
   try {
-    reportURL = prefService.getCharPref("breakpad.reportURL");
+    reportURL = Services.prefs.getCharPref("breakpad.reportURL");
     // Ignore any non http/https urls
     if (!/^https?:/i.test(reportURL))
       reportURL = null;
@@ -93,11 +89,9 @@ function populateReportList() {
       }
     };
   }
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  var reportURI = ios.newURI(reportURL);
+  var reportURI = Services.io.newURI(reportURL);
   // resolving this URI relative to /report/index
-  var aboutThrottling = ios.newURI("../../about/throttling", null, reportURI);
+  var aboutThrottling = Services.io.newURI("../../about/throttling", null, reportURI);
 
   for (var i = 0; i < reports.length; i++) {
     var row = document.createElement("tr");

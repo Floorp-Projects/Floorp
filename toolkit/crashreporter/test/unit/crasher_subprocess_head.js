@@ -1,7 +1,7 @@
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 // enable crash reporting first
-var cwd = Components.classes["@mozilla.org/file/directory_service;1"]
-      .getService(Components.interfaces.nsIProperties)
-      .get("CurWorkD", Components.interfaces.nsIFile);
+var cwd = Services.dirsvc.get("CurWorkD", Components.interfaces.nsIFile);
 
 // get the temp dir
 var env = Components.classes["@mozilla.org/process/environment;1"].getService(Components.interfaces.nsIEnvironment);
@@ -16,17 +16,14 @@ var crashReporter =
 crashReporter.UpdateCrashEventsDir();
 
 // Setting the minidump path is not allowed in content processes
-var processType = Components.classes["@mozilla.org/xre/runtime;1"].
-      getService(Components.interfaces.nsIXULRuntime).processType;
+var processType = Services.appinfo.processType;
 if (processType == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
   crashReporter.minidumpPath = _tmpd;
 }
 
-var ios = Components.classes["@mozilla.org/network/io-service;1"]
-            .getService(Components.interfaces.nsIIOService);
-var protocolHandler = ios.getProtocolHandler("resource")
-                        .QueryInterface(Components.interfaces.nsIResProtocolHandler);
-var curDirURI = ios.newFileURI(cwd);
+var protocolHandler = Services.io.getProtocolHandler("resource")
+  .QueryInterface(Components.interfaces.nsIResProtocolHandler);
+var curDirURI = Services.io.newFileURI(cwd);
 protocolHandler.setSubstitution("test", curDirURI);
 Components.utils.import("resource://test/CrashTestUtils.jsm");
 var crashType = CrashTestUtils.CRASH_INVALID_POINTER_DEREF;

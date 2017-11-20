@@ -5,24 +5,20 @@
 
 "use strict";
 
-// See Bug 613013.
+// Check that Console API works with iframes. See Bug 613013.
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-bug-613013-console-api-iframe.html";
+                 "new-console-output/test/mochitest/test-console-api-iframe.html";
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
-
-  let hud = yield openConsole();
-
+add_task(async function () {
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const loggedString = "iframe added";
+  // Wait for the initial message to be displayed.
+  await waitFor(() => findMessage(hud, loggedString));
+  ok(true, "The initial message is displayed in the console");
+  // Create a promise for the message logged after the reload.
+  const onMessage = waitForMessage(hud, loggedString)
   BrowserReload();
-
-  yield waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "foobarBug613013",
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-    }],
-  });
+  await onMessage;
+  ok(true, "The message is also displayed after a page reload");
 });

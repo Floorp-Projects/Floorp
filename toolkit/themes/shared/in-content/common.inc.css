@@ -264,6 +264,7 @@ xul|colorpicker[type="button"] {
   width: 50px;
 }
 
+html|button,
 xul|button > xul|*.button-box,
 xul|menulist > xul|*.menulist-label-box {
   padding-right: 10px !important;

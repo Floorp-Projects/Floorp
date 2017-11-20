@@ -88,7 +88,8 @@ class PuppeteerMixin(object):
         with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
             # Bug 1312674 - Navigating to about:blank twice can cause a hang in
             # Marionette. So try to always have a known default page loaded.
-            self.marionette.navigate('about:')
+            # Bug 1418979 - Update this to a test-framework-specific file.
+            self.marionette.navigate('about:about')
 
     def tearDown(self, *args, **kwargs):
         self.marionette.set_context('chrome')

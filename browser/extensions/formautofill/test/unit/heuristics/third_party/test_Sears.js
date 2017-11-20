@@ -83,8 +83,6 @@ runHeuristicsTest([
         // it's for Driver's license or state identification.
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"},
 
-        // FIXME: bug 1392947 - this is for birthday actually.
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-month"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-day"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-year"},

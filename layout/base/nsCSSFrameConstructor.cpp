@@ -2001,25 +2001,17 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   }
 
   uint32_t contentCount = pseudoStyleContext->StyleContent()->ContentCount();
-  bool createdChildElement = false;
   for (uint32_t contentIndex = 0; contentIndex < contentCount; contentIndex++) {
     nsCOMPtr<nsIContent> content =
       CreateGeneratedContent(aState, aParentContent, pseudoStyleContext,
                              contentIndex);
     if (content) {
       container->AppendChildTo(content, false);
-      if (content->IsElement()) {
-        createdChildElement = true;
+      if (content->IsElement() && servoStyle) {
+        // If we created any children elements, Servo needs to traverse them, but
+        // the root is already set up.
+        mPresShell->StyleSet()->AsServo()->StyleNewSubtree(content->AsElement());
       }
-    }
-  }
-
-  // We may need to do a synchronous servo traversal in various uncommon cases.
-  if (servoStyle) {
-    if (createdChildElement) {
-      // If we created any children elements, Servo needs to traverse them, but
-      // the root is already set up.
-      mPresShell->StyleSet()->AsServo()->StyleNewChildren(container);
     }
   }
 
@@ -2610,24 +2602,19 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
       mDocument->BindingManager()->AddToAttachedQueue(binding);
     }
 
-    if (resolveStyle) {
-      if (styleContext->IsServo()) {
-        styleContext = mPresShell->StyleSet()->AsServo()->
-          ReresolveStyleForBindings(aDocElement);
-      } else {
-        // FIXME: Should this use ResolveStyleContext?  (The calls in
-        // this function are the only case in nsCSSFrameConstructor
-        // where we don't do so for the construction of a style context
-        // for an element.)
-        styleContext = mPresShell->StyleSet()->ResolveStyleFor(
-            aDocElement, nullptr, LazyComputeBehavior::Assert);
-      }
+    if (resolveStyle || styleContext->IsServo()) {
+      // FIXME: Should this use ResolveStyleContext?  (The calls in this
+      // function are the only case in nsCSSFrameConstructor where we don't do
+      // so for the construction of a style context for an element.)
+      //
+      // NOTE(emilio): In the case of Servo, even though resolveStyle returns
+      // false, we re-get the style context to avoid tripping otherwise-useful
+      // assertions when resolving pseudo-elements. Note that this operation in
+      // Servo is cheap.
+      styleContext = mPresShell->StyleSet()->ResolveStyleFor(
+          aDocElement, nullptr, LazyComputeBehavior::Assert);
       display = styleContext->StyleDisplay();
     }
-  } else if (display->mBinding.ForceGet() && aDocElement->IsStyledByServo()) {
-    // See the comment in AddFrameConstructionItemsInternal for why this is
-    // needed.
-    mPresShell->StyleSet()->AsServo()->StyleNewChildren(aDocElement);
   }
 
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------
@@ -5924,31 +5911,21 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
         aState.AddPendingBinding(newPendingBinding.forget());
       }
 
-      if (resolveStyle) {
-        if (styleContext->IsServo()) {
-          styleContext = mPresShell->StyleSet()->AsServo()->
-            ReresolveStyleForBindings(aContent->AsElement());
-        } else {
-          styleContext =
-            ResolveStyleContext(styleContext->AsGecko()->GetParent(),
-                                aContent, &aState);
-        }
-
-        display = styleContext->StyleDisplay();
-        aStyleContext = styleContext;
+      // See the comment in the similar-looking block in
+      // ConstructDocElementFrame to see why we always re-fetch the style
+      // context in Servo.
+      if (styleContext->IsServo()) {
+        styleContext =
+          mPresShell->StyleSet()->AsServo()->ResolveServoStyle(aContent->AsElement());
+      } else if (resolveStyle) {
+        styleContext =
+          ResolveStyleContext(styleContext->AsGecko()->GetParent(),
+                              aContent, &aState);
       }
 
+      display = styleContext->StyleDisplay();
+      aStyleContext = styleContext;
       aTag = mDocument->BindingManager()->ResolveTag(aContent, &aNameSpaceID);
-    } else if (display->mBinding.ForceGet()) {
-      if (aContent->IsStyledByServo()) {
-        // Servo's should_traverse_children skips styling descendants of
-        // elements with a -moz-binding value.  For -moz-binding URLs that can
-        // be resolved, we will load the binding above, which will style the
-        // children after they have been rearranged in the flattened tree.
-        // If the URL couldn't be resolved, we still need to style the children,
-        // so we do that here.
-        mPresShell->StyleSet()->AsServo()->StyleNewChildren(aContent->AsElement());
-      }
     }
   }
 
@@ -7514,6 +7491,22 @@ nsCSSFrameConstructor::LazilyStyleNewChildRange(nsIContent* aStartChild,
   }
 }
 
+#ifdef DEBUG
+static bool
+IsFlattenedTreeChild(nsIContent* aParent, nsIContent* aChild)
+{
+  FlattenedChildIterator iter(aParent);
+  for (nsIContent* node = iter.GetNextChild();
+       node;
+       node = iter.GetNextChild()) {
+    if (node == aChild) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
+
 void
 nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
                                           nsIContent* aEndChild)
@@ -7522,21 +7515,14 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
 
   for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
-    // Calling StyleNewChildren on one child will end up styling another child,
-    // if they share the same flattened tree parent.  So we check HasServoData()
-    // to avoid a wasteful call to GetFlattenedTreeParent (on the child) and
-    // StyleNewChildren (on the flattened tree parent) when we detect we've
-    // already handled that parent.  In the common case of inserting elements
-    // into a container that does not have an XBL binding or shadow tree with
-    // distributed children, this boils down to a single call to
-    // GetFlattenedTreeParent/StyleNewChildren, and traversing the list of
-    // children checking HasServoData (which is fast).
     if (child->IsElement() && !child->AsElement()->HasServoData()) {
       Element* parent = child->AsElement()->GetFlattenedTreeParentElement();
       // NB: Parent may be null if the content is appended to a shadow root, and
       // isn't assigned to any insertion point.
       if (MOZ_LIKELY(parent) && parent->HasServoData()) {
-        styleSet->StyleNewChildren(parent);
+        MOZ_ASSERT(IsFlattenedTreeChild(parent, child),
+                   "GetFlattenedTreeParent and ChildIterator don't agree, fix this!");
+        styleSet->StyleNewSubtree(child->AsElement());
       }
     }
   }

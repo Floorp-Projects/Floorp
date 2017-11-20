@@ -33,11 +33,14 @@ TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags_firstMatchesChromeReg) {
 }
 
 TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags_lastIsEnUS) {
+  nsAutoCString lastFallbackLocale;
+  LocaleService::GetInstance()->GetLastFallbackLocale(lastFallbackLocale);
+
   nsTArray<nsCString> appLocales;
   LocaleService::GetInstance()->GetAppLocalesAsLangTags(appLocales);
 
   int32_t len = appLocales.Length();
-  ASSERT_TRUE(appLocales[len - 1].EqualsLiteral("en-US"));
+  ASSERT_TRUE(appLocales[len - 1].Equals(lastFallbackLocale));
 }
 
 TEST(Intl_Locale_LocaleService, GetRequestedLocales) {
