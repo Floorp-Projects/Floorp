@@ -808,40 +808,11 @@ public:
                                  bool aConvertListItem = false);
   static void EnsureInlineDisplay(mozilla::StyleDisplay& display);
 
-  enum class FlushUserFontSet {
-    Yes,
-    No,
-  };
-
-  static already_AddRefed<nsFontMetrics> GetMetricsFor(nsPresContext* aPresContext,
-                                                       bool aIsVertical,
-                                                       const nsStyleFont* aStyleFont,
-                                                       nscoord aFontSize,
-                                                       bool aUseUserFontSet,
-                                                       FlushUserFontSet aFlushUserFontSet);
-
   static already_AddRefed<nsFontMetrics> GetMetricsFor(nsPresContext* aPresContext,
                                                        nsStyleContext* aStyleContext,
                                                        const nsStyleFont* aStyleFont,
                                                        nscoord aFontSize,
                                                        bool aUseUserFontSet);
-
-  /**
-   * Appropriately add the correct font if we are using DocumentFonts or
-   * overriding for XUL
-   */
-  static void FixupNoneGeneric(nsFont* aFont,
-                               const nsPresContext* aPresContext,
-                               uint8_t aGenericFontID,
-                               const nsFont* aDefaultVariableFont);
-
-  /**
-   * For an nsStyleFont with mSize set, apply minimum font size constraints
-   * from preferences, as well as -moz-min-font-size-ratio.
-   */
-  static void ApplyMinFontSize(nsStyleFont* aFont,
-                               const nsPresContext* aPresContext,
-                               nscoord aMinFontSize);
 
   // Transition never returns null; on out of memory it'll just return |this|.
   nsRuleNode* Transition(nsIStyleRule* aRule, mozilla::SheetType aLevel,
@@ -1059,17 +1030,9 @@ public:
     return !!mStyleData.GetStyleData(aSID);
   }
 
-  static void ComputeFontFeatures(const nsCSSValuePairList* aFeaturesList,
-                                  nsTArray<gfxFontFeature>& aFeatureSettings);
-
-  static void ComputeFontVariations(const nsCSSValuePairList* aVariationsList,
-                                    nsTArray<gfxFontVariation>& aVariationSettings);
-
   static nscoord CalcFontPointSize(int32_t aHTMLSize, int32_t aBasePointSize,
                                    nsPresContext* aPresContext,
                                    nsFontSizeType aFontSizeType = eFontSize_HTML);
-
-  static uint32_t ParseFontLanguageOverride(const nsAString& aLangTag);
 
   /**
    * @param aValue The color value, returned from nsCSSParser::ParseColorString
@@ -1101,11 +1064,6 @@ public:
 
   static void FillAllMaskLists(nsStyleImageLayers& aLayers,
                                uint32_t aMaxItemCount);
-
-  static void ComputeSystemFont(nsFont* aSystemFont,
-                                mozilla::LookAndFeel::FontID aFontID,
-                                const nsPresContext* aPresContext,
-                                const nsFont* aDefaultVariableFont);
 
 private:
 #ifdef DEBUG
