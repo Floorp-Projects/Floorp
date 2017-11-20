@@ -20,7 +20,7 @@ this.SpecialPowersError = function(aMsg) {
   // let {stack} = new Error();
   this.message = aMsg;
   this.name = "SpecialPowersError";
-}
+};
 SpecialPowersError.prototype = Object.create(Error.prototype);
 
 SpecialPowersError.prototype.toString = function() {
@@ -32,7 +32,7 @@ this.SpecialPowersObserverAPI = function SpecialPowersObserverAPI() {
   this._processCrashObserversRegistered = false;
   this._chromeScriptListeners = [];
   this._extensions = new Map();
-}
+};
 
 function parseKeyValuePairs(text) {
   var lines = text.split("\n");
@@ -446,7 +446,7 @@ SpecialPowersObserverAPI.prototype = {
         let topic = aMessage.json.observerTopic;
         switch (aMessage.json.op) {
           case "notify":
-            let data = aMessage.json.observerData
+            let data = aMessage.json.observerData;
             Services.obs.notifyObservers(null, topic, data);
             break;
           case "add":
@@ -481,7 +481,7 @@ SpecialPowersObserverAPI.prototype = {
         let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
         let sandboxOptions = aMessage.json.sandboxOptions;
         if (!sandboxOptions) {
-          sandboxOptions = {}
+          sandboxOptions = {};
         }
         let sb = Components.utils.Sandbox(systemPrincipal, sandboxOptions);
         let mm = aMessage.target.frameLoader

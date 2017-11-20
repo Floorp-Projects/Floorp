@@ -71,9 +71,6 @@ module.exports = {
     // Disallow blank line padding within blocks.
     "padded-blocks": ["error", "never"],
 
-    // Always require semicolon at end of statement
-    "semi": ["error", "always"],
-
     // Enforce spacing after semicolons.
     "semi-spacing": ["error", { "before": false, "after": true }],
 

@@ -11,17 +11,17 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-  - repackage
-  - repackage-l10n
+   - repackage
+   - repackage-l10n
 
 only-for-build-platforms:
-  - linux-nightly/opt
-  - linux-devedition-nightly/opt
-  - linux64-nightly/opt
-  - linux64-devedition-nightly/opt
-  - macosx64-nightly/opt
-  - macosx64-devedition-nightly/opt
-  - win32-nightly/opt
-  - win32-devedition-nightly/opt
-  - win64-nightly/opt
-  - win64-devedition-nightly/opt
+   - linux-nightly/opt
+   - linux-devedition-nightly/opt
+   - linux64-nightly/opt
+   - linux64-devedition-nightly/opt
+   - macosx64-nightly/opt
+   - macosx64-devedition-nightly/opt
+   - win32-nightly/opt
+   - win32-devedition-nightly/opt
+   - win64-nightly/opt
+   - win64-devedition-nightly/opt

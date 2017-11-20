@@ -17,7 +17,7 @@ add_task(async function autoMigrationUndoNotificationShows() {
 
   scope.AutoMigrate.canUndo = () => true;
   let undoCalled;
-  scope.AutoMigrate.undo = () => { undoCalled = true };
+  scope.AutoMigrate.undo = () => { undoCalled = true; };
 
   for (let url of ["about:newtab", "about:home"]) {
     undoCalled = false;

@@ -67,7 +67,7 @@ add_task(async function test1b() {
   popupNotification.reshow();
 
   await promiseShown;
-  is(gPrivateWindow.PopupNotifications.panel.firstChild.checkbox.hidden, true, "'Remember' checkbox should be hidden in private windows")
+  is(gPrivateWindow.PopupNotifications.panel.firstChild.checkbox.hidden, true, "'Remember' checkbox should be hidden in private windows");
 
   gPrivateWindow.close();
   BrowserTestUtils.loadURI(gTestBrowser, gHttpTestRoot + "plugin_test.html");

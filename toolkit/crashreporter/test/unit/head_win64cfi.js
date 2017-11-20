@@ -44,7 +44,7 @@ function findNearestTestCrasherSymbol(addr) {
   if (closestSym === null) {
     return null;
   }
-  return { symbol: closestSym, offset: closestDistance }
+  return { symbol: closestSym, offset: closestDistance };
 }
 
 // Populate known symbols for testcrasher.dll.

@@ -43,7 +43,7 @@
 #include "MP4Decoder.h"
 #include "mozilla/dom/RemoteVideoDecoder.h"
 
-#include "mp4_demuxer/H264.h"
+#include "H264.h"
 
 #include <functional>
 

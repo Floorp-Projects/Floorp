@@ -36,7 +36,7 @@ add_task(async function history() {
   gURLBar.focus();
   EventUtils.synthesizeKey("VK_DOWN", {});
   await promisePopupShown(gURLBar.popup);
-  await waitForAutocompleteResultAt(gMaxResults - 1)
+  await waitForAutocompleteResultAt(gMaxResults - 1);
 
   assertState(-1, -1, "");
 

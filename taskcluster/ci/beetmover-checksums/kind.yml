@@ -10,7 +10,7 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-  - checksums-signing
+   - checksums-signing
 
 only-for-attributes:
-  - nightly
+   - nightly

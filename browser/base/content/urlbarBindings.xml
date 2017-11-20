@@ -1878,7 +1878,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let elementRect =
             this.DOMWindowUtils.getBoundsWithoutFlushing(aElement);
           if (popupDirection == "rtl") {
-            let offset = elementRect.right - documentRect.right
+            let offset = elementRect.right - documentRect.right;
             this.style.marginRight = offset + "px";
           } else {
             let offset = documentRect.left - elementRect.left;

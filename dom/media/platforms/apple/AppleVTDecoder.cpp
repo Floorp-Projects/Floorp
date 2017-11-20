@@ -13,7 +13,7 @@
 #include "AppleVTLinker.h"
 #include "MediaData.h"
 #include "mozilla/ArrayUtils.h"
-#include "mp4_demuxer/H264.h"
+#include "H264.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"

@@ -15,12 +15,12 @@ android-test/opt:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-test
         artifacts:
-          - name: public/android/unittest
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests
-            type: directory
-          - name: public/build
-            path: /builds/worker/artifacts/
-            type: directory
+            - name: public/android/unittest
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests
+              type: directory
+            - name: public/build
+              path: /builds/worker/artifacts/
+              type: directory
         max-run-time: 36000
     run:
         using: mozharness
@@ -39,10 +39,10 @@ android-test/opt:
         - proguard-jar
     optimization:
         skip-unless-changed:
-          - "mobile/android/base/**"
-          - "mobile/android/config/**"
-          - "mobile/android/tests/background/junit4/**"
-          - "**/*.gradle"
+            - "mobile/android/base/**"
+            - "mobile/android/config/**"
+            - "mobile/android/tests/background/junit4/**"
+            - "**/*.gradle"
 
 android-lint/opt:
     description: "Android lint"
@@ -61,18 +61,18 @@ android-lint/opt:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-lint
         artifacts:
-          - name: public/android/lint/lint-results-officialPhotonDebug.html
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialPhotonDebug.html
-            type: file
-          - name: public/android/lint/lint-results-officialPhotonDebug.xml
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialPhotonDebug.xml
-            type: file
-          - name: public/android/lint/lint-results-officialPhotonDebug_files
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialPhotonDebug_files
-            type: directory
-          - name: public/build
-            path: /builds/worker/artifacts/
-            type: directory
+            - name: public/android/lint/lint-results-officialPhotonDebug.html
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialPhotonDebug.html
+              type: file
+            - name: public/android/lint/lint-results-officialPhotonDebug.xml
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialPhotonDebug.xml
+              type: file
+            - name: public/android/lint/lint-results-officialPhotonDebug_files
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialPhotonDebug_files
+              type: directory
+            - name: public/build
+              path: /builds/worker/artifacts/
+              type: directory
         max-run-time: 36000
     run:
         using: mozharness
@@ -91,16 +91,16 @@ android-lint/opt:
         - proguard-jar
     optimization:
         skip-unless-changed:
-          - "mobile/android/**/*.java"
-          - "mobile/android/**/*.jpeg"
-          - "mobile/android/**/*.jpg"
-          - "mobile/android/**/*.png"
-          - "mobile/android/**/*.svg"
-          - "mobile/android/**/*.xml" # Manifest & android resources
-          - "mobile/android/**/Makefile.in"
-          - "mobile/android/config/**"
-          - "mobile/android/**/moz.build"
-          - "**/*.gradle"
+            - "mobile/android/**/*.java"
+            - "mobile/android/**/*.jpeg"
+            - "mobile/android/**/*.jpg"
+            - "mobile/android/**/*.png"
+            - "mobile/android/**/*.svg"
+            - "mobile/android/**/*.xml"  # Manifest & android resources
+            - "mobile/android/**/Makefile.in"
+            - "mobile/android/config/**"
+            - "mobile/android/**/moz.build"
+            - "**/*.gradle"
 
 android-checkstyle/opt:
     description: "Android checkstyle"
@@ -119,15 +119,15 @@ android-checkstyle/opt:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-checkstyle
         artifacts:
-          - name: public/android/checkstyle/checkstyle.html
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.html
-            type: file
-          - name: public/android/checkstyle/checkstyle.xml
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
-            type: file
-          - name: public/build
-            path: /builds/worker/artifacts/
-            type: directory
+            - name: public/android/checkstyle/checkstyle.html
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.html
+              type: file
+            - name: public/android/checkstyle/checkstyle.xml
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
+              type: file
+            - name: public/build
+              path: /builds/worker/artifacts/
+              type: directory
         max-run-time: 36000
     run:
         using: mozharness
@@ -146,12 +146,12 @@ android-checkstyle/opt:
         - proguard-jar
     optimization:
         skip-unless-changed:
-          - "mobile/android/**/checkstyle.xml"
-          - "mobile/android/**/*.java"
-          - "mobile/android/**/Makefile.in"
-          - "mobile/android/config/**"
-          - "mobile/android/**/moz.build"
-          - "**/*.gradle"
+            - "mobile/android/**/checkstyle.xml"
+            - "mobile/android/**/*.java"
+            - "mobile/android/**/Makefile.in"
+            - "mobile/android/config/**"
+            - "mobile/android/**/moz.build"
+            - "**/*.gradle"
 
 android-findbugs/opt:
     description: "Android findbugs"
@@ -170,15 +170,15 @@ android-findbugs/opt:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-findbugs
         artifacts:
-          - name: public/android/findbugs/findbugs-officialPhotonDebug-output.html
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialPhotonDebug-output.html
-            type: file
-          - name: public/android/findbugs/findbugs-officialPhotonDebug-output.xml
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialPhotonDebug-output.xml
-            type: file
-          - name: public/build
-            path: /builds/worker/artifacts/
-            type: directory
+            - name: public/android/findbugs/findbugs-officialPhotonDebug-output.html
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialPhotonDebug-output.html
+              type: file
+            - name: public/android/findbugs/findbugs-officialPhotonDebug-output.xml
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialPhotonDebug-output.xml
+              type: file
+            - name: public/build
+              path: /builds/worker/artifacts/
+              type: directory
         max-run-time: 36000
     run:
         using: mozharness
@@ -197,8 +197,8 @@ android-findbugs/opt:
         - proguard-jar
     optimization:
         skip-unless-changed:
-          - "mobile/android/**/*.java"
-          - "mobile/android/**/Makefile.in"
-          - "mobile/android/config/**"
-          - "mobile/android/**/moz.build"
-          - "**/*.gradle"
+            - "mobile/android/**/*.java"
+            - "mobile/android/**/Makefile.in"
+            - "mobile/android/config/**"
+            - "mobile/android/**/moz.build"
+            - "**/*.gradle"

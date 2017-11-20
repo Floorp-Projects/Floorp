@@ -5,14 +5,14 @@
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
-   - toolchain
+    - toolchain
 
 transforms:
-   - taskgraph.transforms.spidermonkey:transforms
-   - taskgraph.transforms.build_attrs:transforms
-   - taskgraph.transforms.use_toolchains:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.spidermonkey:transforms
+    - taskgraph.transforms.build_attrs:transforms
+    - taskgraph.transforms.use_toolchains:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
 
 job-defaults:
     treeherder:
@@ -76,7 +76,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             using: spidermonkey-package
             spidermonkey-variant: plain
@@ -92,7 +92,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             using: spidermonkey-mozjs-crate
             spidermonkey-variant: plain
@@ -109,7 +109,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             using: spidermonkey-rust-bindings
             spidermonkey-variant: plain
@@ -126,7 +126,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             spidermonkey-variant: plaindebug
 
@@ -141,7 +141,7 @@ jobs:
         worker:
             max-run-time: 36000
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
         run:
             spidermonkey-variant: plaindebug
 
@@ -155,7 +155,7 @@ jobs:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             spidermonkey-variant: plain
 
@@ -170,7 +170,7 @@ jobs:
         worker:
             max-run-time: 36000
             env:
-              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
         run:
             spidermonkey-variant: plain
 

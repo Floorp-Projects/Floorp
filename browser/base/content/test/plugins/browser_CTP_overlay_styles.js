@@ -44,7 +44,7 @@ const gTestcases = {
     sizing: null,
     notext: null,
   },
-}
+};
 
 
 add_task(async function() {

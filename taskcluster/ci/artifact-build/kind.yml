@@ -5,13 +5,13 @@
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
-   - toolchain
+    - toolchain
 
 transforms:
-   - taskgraph.transforms.build_attrs:transforms
-   - taskgraph.transforms.use_toolchains:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.build_attrs:transforms
+    - taskgraph.transforms.use_toolchains:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
 
 jobs:
     linux64-artifact/opt:
@@ -24,7 +24,7 @@ jobs:
             kind: build
             symbol: AB
             tier: 2
-        run-on-projects: [ 'trunk', 'try' ]
+        run-on-projects: ['trunk', 'try']
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
             docker-image: {in-tree: desktop-build}

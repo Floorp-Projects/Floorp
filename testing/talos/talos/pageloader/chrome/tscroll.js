@@ -80,7 +80,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
         report = function(duration, start, name) {
           var msg = { time: duration, startTime: start, testName: name };
           sendAsyncMessage("PageLoader:RecordTime", msg);
-        }
+        };
         resolve();
         return;
       }

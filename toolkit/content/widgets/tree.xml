@@ -381,7 +381,7 @@
             var selectText = function selectText() {
               input.select();
               input.inputField.focus();
-            }
+            };
             setTimeout(selectText, 0);
 
             this._editingRow = row;

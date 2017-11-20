@@ -212,8 +212,10 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
       // "Requested Range Not Satisfiable".
       if (responseStatus == HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE) {
         // OnStopRequest will not be fired, so we need to do some of its
-        // work here.
-        mCacheStream.NotifyDataEnded(status);
+        // work here. Note we need to pass the load ID first so the following
+        // NotifyDataEnded() can pass the ID check.
+        mCacheStream.NotifyLoadID(mLoadID);
+        mCacheStream.NotifyDataEnded(mLoadID, status);
       } else {
         mCallback->NotifyNetworkError(
           MediaResult(NS_ERROR_FAILURE, "HTTP error"));
@@ -380,31 +382,6 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest,
 
   mChannelStatistics.Stop();
 
-  // Note that aStatus might have succeeded --- this might be a normal close
-  // --- even in situations where the server cut us off because we were
-  // suspended. So we need to "reopen on error" in that case too. The only
-  // cases where we don't need to reopen are when *we* closed the stream.
-  // But don't reopen if we need to seek and we don't think we can... that would
-  // cause us to just re-read the stream, which would be really bad.
-  if (aReopenOnError && aStatus != NS_ERROR_PARSED_DATA_CACHED &&
-      aStatus != NS_BINDING_ABORTED &&
-      (GetOffset() == 0 || (GetLength() > 0 && GetOffset() != GetLength() &&
-                            mIsTransportSeekable))) {
-    // If the stream did close normally, restart the channel if we're either
-    // at the start of the resource, or if the server is seekable and we're
-    // not at the end of stream. We don't restart the stream if we're at the
-    // end because not all web servers handle this case consistently; see:
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1373618#c36
-    nsresult rv = Seek(GetOffset(), false);
-    if (NS_SUCCEEDED(rv)) {
-      return rv;
-    }
-    // If the reopen/reseek fails, just fall through and treat this
-    // error as fatal.
-  }
-
-  mCacheStream.NotifyDataEnded(aStatus);
-
   // Move this request back into the foreground.  This is necessary for
   // requests owned by video documents to ensure the load group fires
   // OnStopRequest when restoring from session history.
@@ -416,6 +393,7 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest,
     ModifyLoadFlags(loadFlags & ~nsIRequest::LOAD_BACKGROUND);
   }
 
+  mCacheStream.NotifyDataEnded(mLoadID, aStatus, aReopenOnError);
   return NS_OK;
 }
 
@@ -817,9 +795,6 @@ ChannelMediaResource::RecreateChannel()
     // play even when we switch the tab to background.
     cos->AddClassFlags(nsIClassOfService::DontThrottle);
   }
-
-  // Tell the cache to reset the download status when the channel is reopened.
-  mCacheStream.NotifyChannelRecreated();
 
   return rv;
 }

@@ -157,7 +157,7 @@ function EdgeReadingListMigrator(dbOverride) {
 EdgeReadingListMigrator.prototype = {
   type: MigrationUtils.resourceTypes.BOOKMARKS,
 
-  get db() { return this.dbOverride || gEdgeDatabase },
+  get db() { return this.dbOverride || gEdgeDatabase; },
 
   get exists() {
     return !!this.db;
@@ -233,9 +233,9 @@ function EdgeBookmarksMigrator(dbOverride) {
 EdgeBookmarksMigrator.prototype = {
   type: MigrationUtils.resourceTypes.BOOKMARKS,
 
-  get db() { return this.dbOverride || gEdgeDatabase },
+  get db() { return this.dbOverride || gEdgeDatabase; },
 
-  get TABLE_NAME() { return "Favorites" },
+  get TABLE_NAME() { return "Favorites"; },
 
   get exists() {
     if (!("_exists" in this)) {

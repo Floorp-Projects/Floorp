@@ -246,7 +246,7 @@
         <body><![CDATA[
           return document.getAnonymousElementByAttribute(this,
                                                          "anonid",
-                                                         aAnonymousID)
+                                                         aAnonymousID);
         ]]></body>
       </method>
 

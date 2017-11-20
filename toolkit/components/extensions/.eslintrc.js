@@ -85,9 +85,6 @@ module.exports = {
     // No using variables before defined
     "no-use-before-define": "error",
 
-    // Always require semicolon at end of statement
-    "semi": ["error", "always"],
-
     // Never use spaces before function parentheses
     "space-before-function-paren": ["error", {"anonymous": "never", "named": "never"}],
 

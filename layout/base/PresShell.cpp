@@ -4217,6 +4217,12 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
       // The FlushResampleRequests() above flushed style changes.
       if (!mIsDestroying) {
         nsAutoScriptBlocker scriptBlocker;
+#ifdef MOZ_GECKO_PROFILER
+        AutoProfilerTracing tracingStyleFlush("Paint", "Styles",
+                                              Move(mStyleCause));
+        mStyleCause = nullptr;
+#endif
+
         mPresContext->RestyleManager()->ProcessPendingRestyles();
       }
     }

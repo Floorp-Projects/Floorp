@@ -255,7 +255,7 @@ function GetBookmarksResource(aProfileFolder) {
     migrate(aCallback) {
       return (async function() {
         let gotErrors = false;
-        let errorGatherer = function() { gotErrors = true };
+        let errorGatherer = function() { gotErrors = true; };
         // Parse Chrome bookmark file that is JSON format
         let bookmarkJSON = await OS.File.read(bookmarksFile.path, {encoding: "UTF-8"});
         let roots = JSON.parse(bookmarkJSON).roots;
@@ -357,7 +357,7 @@ function GetHistoryResource(aProfileFolder) {
             });
           });
         }
-      })().then(() => { aCallback(true) },
+      })().then(() => { aCallback(true); },
               ex => {
                 Cu.reportError(ex);
                 aCallback(false);

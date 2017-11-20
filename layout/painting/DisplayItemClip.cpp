@@ -429,7 +429,7 @@ DisplayItemClip::ComputeRegionInClips(DisplayItemClip* aOldClip,
 }
 
 void
-DisplayItemClip::MoveBy(nsPoint aPoint)
+DisplayItemClip::MoveBy(const nsPoint& aPoint)
 {
   if (!mHaveClipRect)
     return;

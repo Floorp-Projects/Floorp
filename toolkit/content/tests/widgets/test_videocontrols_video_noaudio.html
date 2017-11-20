@@ -27,7 +27,7 @@
     await new Promise(resolve => {
       video.src = "video.ogg";
       video.addEventListener("loadedmetadata", () => SimpleTest.executeSoon(resolve));
-    })
+    });
   });
 
   add_task(async function mute_button_icon() {

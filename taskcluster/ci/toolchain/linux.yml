@@ -257,9 +257,9 @@ linux64-android-sdk-linux-repack:
         docker-image: {in-tree: android-build}
         max-run-time: 36000
         artifacts:
-          - name: project/gecko/android-sdk
-            path: /builds/worker/project/gecko/android-sdk/
-            type: directory
+            - name: project/gecko/android-sdk
+              path: /builds/worker/project/gecko/android-sdk/
+              type: directory
     run:
         using: toolchain-script
         script: repack-android-sdk-linux.sh
@@ -310,7 +310,7 @@ linux64-rust-1.21:
         docker-image: {in-tree: desktop-build}
         max-run-time: 7200
         env:
-          UPLOAD_DIR: artifacts
+            UPLOAD_DIR: artifacts
     run:
         using: toolchain-script
         script: repack_rust.py
@@ -335,7 +335,7 @@ linux64-rust-1.19:
         docker-image: {in-tree: desktop-build}
         max-run-time: 7200
         env:
-          UPLOAD_DIR: artifacts
+            UPLOAD_DIR: artifacts
     run:
         using: toolchain-script
         script: repack_rust.py
@@ -359,15 +359,15 @@ linux64-rust-macos-1.21:
         docker-image: {in-tree: desktop-build}
         max-run-time: 7200
         env:
-          UPLOAD_DIR: artifacts
+            UPLOAD_DIR: artifacts
     run:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-           '--channel', '1.21.0',
-           '--host', 'x86_64-unknown-linux-gnu',
-           '--target', 'x86_64-unknown-linux-gnu',
-           '--target', 'x86_64-apple-darwin',
+            '--channel', '1.21.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
         ]
         toolchain-alias: linux64-rust-macos
         toolchain-artifact: public/build/rustc.tar.xz
@@ -384,17 +384,17 @@ linux64-rust-android-1.21:
         docker-image: {in-tree: desktop-build}
         max-run-time: 7200
         env:
-          UPLOAD_DIR: artifacts
+            UPLOAD_DIR: artifacts
     run:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-           '--channel', '1.21.0',
-           '--host', 'x86_64-unknown-linux-gnu',
-           '--target', 'x86_64-unknown-linux-gnu',
-           '--target', 'armv7-linux-androideabi',
-           '--target', 'aarch64-linux-android',
-           '--target', 'i686-linux-android',
+            '--channel', '1.21.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'armv7-linux-androideabi',
+            '--target', 'aarch64-linux-android',
+            '--target', 'i686-linux-android',
         ]
         toolchain-alias: linux64-rust-android
         toolchain-artifact: public/build/rustc.tar.xz

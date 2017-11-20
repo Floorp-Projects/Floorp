@@ -424,10 +424,10 @@ nsFrameSelection::SetDesiredPos(nsPoint aPos)
 }
 
 nsresult
-nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
-                                                        nsPoint&   aPoint,
-                                                        nsIFrame **aRetFrame,
-                                                        nsPoint&   aRetPoint)
+nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame* aFrame,
+                                                        const nsPoint& aPoint,
+                                                        nsIFrame** aRetFrame,
+                                                        nsPoint& aRetPoint)
 {
   //
   // The whole point of this method is to return a frame and point that
@@ -1242,7 +1242,7 @@ nsFrameSelection::HandleClick(nsIContent*        aNewFocus,
 }
 
 void
-nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
+nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint)
 {
   if (!aFrame || !mShell)
     return;
@@ -1311,8 +1311,8 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
 }
 
 nsresult
-nsFrameSelection::StartAutoScrollTimer(nsIFrame *aFrame,
-                                       nsPoint   aPoint,
+nsFrameSelection::StartAutoScrollTimer(nsIFrame* aFrame,
+                                       const nsPoint& aPoint,
                                        uint32_t  aDelay)
 {
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
