@@ -620,14 +620,14 @@ ShouldLoadCachedImage(imgRequest* aImgRequest,
    * Cached images are keyed off of the first uri in a redirect chain.
    * Hence content policies don't get a chance to test the intermediate hops
    * or the final desitnation.  Here we test the final destination using
-   * mFinalURI off of the imgRequest and passing it into content policies.
+   * mCurrentURI off of the imgRequest and passing it into content policies.
    * For Mixed Content Blocker, we do an additional check to determine if any
    * of the intermediary hops went through an insecure redirect with the
    * mHadInsecureRedirect flag
    */
   bool insecureRedirect = aImgRequest->HadInsecureRedirect();
   nsCOMPtr<nsIURI> contentLocation;
-  aImgRequest->GetFinalURI(getter_AddRefs(contentLocation));
+  aImgRequest->GetCurrentURI(getter_AddRefs(contentLocation));
   nsresult rv;
 
   int16_t decision = nsIContentPolicy::REJECT_REQUEST;
@@ -2985,12 +2985,12 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
     nsCOMPtr<nsIURI> channelURI;
     channel->GetURI(getter_AddRefs(channelURI));
 
-    nsCOMPtr<nsIURI> finalURI;
-    mRequest->GetFinalURI(getter_AddRefs(finalURI));
+    nsCOMPtr<nsIURI> currentURI;
+    mRequest->GetCurrentURI(getter_AddRefs(currentURI));
 
     bool sameURI = false;
-    if (channelURI && finalURI) {
-      channelURI->Equals(finalURI, &sameURI);
+    if (channelURI && currentURI) {
+      channelURI->Equals(currentURI, &sameURI);
     }
 
     if (isFromCache && sameURI) {

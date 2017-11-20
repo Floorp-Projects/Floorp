@@ -848,6 +848,10 @@ var BrowserApp = {
       selector: NativeWindow.contextmenus._disableRestricted("SHARE", NativeWindow.contextmenus.imageShareableContext),
       order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER - 1, // Show above HTML5 menu items
       showAsActions: function(aTarget) {
+        let doc = aTarget.ownerDocument;
+        let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                                                         .getImgCacheForDocument(doc);
+        let props = imageCache.findEntryProperties(aTarget.currentURI, doc);
         let src = aTarget.src;
         return {
           title: src,
@@ -877,7 +881,7 @@ var BrowserApp = {
                 return;
             }
 
-            ContentAreaUtils.saveImageURL(aTarget.currentRequestFinalURI.spec, null, "SaveImageTitle",
+            ContentAreaUtils.saveImageURL(aTarget.currentURI.spec, null, "SaveImageTitle",
                                           false, true, aTarget.ownerDocument.documentURIObject,
                                           aTarget.ownerDocument);
         });
