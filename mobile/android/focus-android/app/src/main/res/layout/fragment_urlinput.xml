@@ -5,6 +5,7 @@
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -92,7 +93,9 @@
                     android:textColorHighlight="@color/colorAccent"
                     android:textColorHint="@color/colorTextInactive"
                     android:textSize="15sp"
-                    android:textCursorDrawable="@drawable/cursor" />
+                    android:textCursorDrawable="@drawable/cursor"
+                    android:importantForAutofill="no"
+                    tools:targetApi="o" /><!-- importantForAutofill is only supported on Android O+ -->
 
                 <ImageButton
                     android:id="@+id/clear"
