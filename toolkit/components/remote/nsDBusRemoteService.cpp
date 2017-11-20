@@ -172,13 +172,16 @@ nsDBusRemoteService::Startup(const char* aAppName, const char* aProfileName)
   nsAutoCString interfaceName;
   interfaceName = nsPrintfCString("org.mozilla.%s.%s", aAppName, aProfileName);
 
-  int ret = dbus_bus_request_name(mConnection, interfaceName.get(),
-                                 DBUS_NAME_FLAG_DO_NOT_QUEUE, nullptr);
+  DBusError err;
+  dbus_error_init(&err);
+  dbus_bus_request_name(mConnection, interfaceName.get(),
+                       DBUS_NAME_FLAG_DO_NOT_QUEUE, &err);
   // The interface is already owned - there is another application/profile
   // instance already running.
-  if (ret == -1) {
-   mConnection = nullptr;
-   return NS_ERROR_FAILURE;
+  if (dbus_error_is_set(&err)) {
+    dbus_error_free(&err);
+    mConnection = nullptr;
+    return NS_ERROR_FAILURE;
   }
 
   nsAutoCString objectName;
