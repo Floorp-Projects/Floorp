@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "نزّل"
   },
+  "downloadOnlyNotice": {
+    "message": "أنت حاليًا في وضع ”التنزيل فقط“."
+  },
+  "downloadOnlyDetails": {
+    "message": "تنتقل لقطات فَيرفُكس تلقائيا إلى وضع ”التنزيل فقط“ في الحالات التالية:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "في نافذة تصفح خاص."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "الكعكات من أطراف خارجية غير مفعلة."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "”لا تتذكر التأريخ أبدًا“ مفعّل."
+  },
   "notificationLinkCopiedTitle": {
     "message": "نُسخ الرابط"
   },
   "notificationLinkCopiedDetails": {
     "message": "نُسِخَ رابط اللقطة إلى الحافظة. اضغط $META_KEY$-V للصقها.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "انسخ"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "نُسخت اللقطة"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "نُسخت اللقطة إلى الحافظة. اضغط $META_KEY$-V للصقها.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Ladda ner"
   },
+  "downloadOnlyNotice": {
+    "message": "Du är för närvarande i nedladdningsbart läge."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots ändrar automatiskt till nedladdningsbart läge i följande situationer:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "I ett privat surffönster."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Kakor från tredje part är inaktiverade."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "\"Inte spara någon historik\" är aktiverad."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Länk kopierad"
   },
   "notificationLinkCopiedDetails": {
     "message": "Länken till din skärmbild har kopierats till urklipp. Tryck på $META_KEY$-V för att klistra in.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopiera"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Bild kopierad"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Din bild har kopierats till urklipp. Tryck på $META_KEY$-V för att klistra in.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

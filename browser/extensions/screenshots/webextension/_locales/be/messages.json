@@ -29,6 +29,21 @@
   "downloadScreenshot": {
     "message": "Сцягнуць"
   },
+  "downloadOnlyNotice": {
+    "message": "Вы цяпер у рэжыме толькі сцягвання."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots аўтаматычна пераходзіць у рэжым толькі сцягвання ў наступных выпадках:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "У акне прыватнага аглядання."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Кукі ад трэцяга боку адключаны."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Уключана “не будзе запамінаць гісторыю”."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Спасылка скапіявана"
   },

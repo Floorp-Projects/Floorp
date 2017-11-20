@@ -46,8 +46,17 @@
   "unshootablePageErrorTitle": {
     "message": "Nu putem realiza o captură de ecran a acestei pagini."
   },
+  "selfScreenshotErrorTitle": {
+    "message": "Nu poți realiza o captură a paginii Firefox Screenshots!"
+  },
   "emptySelectionErrorTitle": {
     "message": "Selecția este prea mică"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Capturile de ecran sunt dezactivate în modul de navigare privată"
+  },
+  "tourHeaderPageAction": {
+    "message": "O nouă modalitate de salvare"
   },
   "tourHeaderClickAndDrag": {
     "message": "Capturează întocmai ceea ce dorești"

@@ -29,6 +29,21 @@
   "downloadScreenshot": {
     "message": "Tiqasäx"
   },
+  "downloadOnlyNotice": {
+    "message": "Wakami k'o pa rub'eyal Xa Xe Qasanïk."
+  },
+  "downloadOnlyDetails": {
+    "message": "Ri Firefox Chapoj Wachaj pa ruyonil nuk'ëx pa rub'anikil Xa Xe Qasanïk pa ri taq k'ulwachitajinem re':"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Pa jun rutzuwäch Ichin Okem pa K'amaya'l."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "E chupül ri taq kikaxlanwey aj rox winäq."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Majub'ey tinatäx natab'äl” tzijon."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Ximonel Wachib'en"
   },

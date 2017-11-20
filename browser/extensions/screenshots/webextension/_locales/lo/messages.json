@@ -76,6 +76,9 @@
   "tourBodyIntro": {
     "message": "ຖ່າຍ, ບັນທຶກ ແລະ ແບ່ງປັນພາບຫນ້າຈໍໂດຍບໍ່ຕ້ອງອອກຈາກ Firefox."
   },
+  "tourHeaderPageAction": {
+    "message": "ບັນທຶກໃນຮູບແບບໃໝ່"
+  },
   "tourHeaderClickAndDrag": {
     "message": "ຖ່າຍພາບຕາມທີ່ທ່ານຕ້ອງການ"
   },
@@ -122,5 +125,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "ຄຳເຕືອນກ່ຽວກັບຄວາມເປັນສ່ວນຕົວ"
+  },
+  "libraryLabel": {
+    "message": "ຖ່າຍພາບໜ້າຈໍ"
   }
 }

@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "다운로드"
   },
+  "downloadOnlyNotice": {
+    "message": "현재 다운로드 전용 모드에 있습니다."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots은 다음과 같은 경우에만 다운로드 전용 모드로 전환됩니다:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "개인정보 모호 창에 있을 때"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "제 3자 쿠키가 비활성화되어 있을 때"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“히스토리 기억 안함”이 활성화되어 있을 때"
+  },
   "notificationLinkCopiedTitle": {
     "message": "링크 복사됨"
   },
   "notificationLinkCopiedDetails": {
     "message": "방금 찍은 스냅샷의 링크가 클립보드에 저장됐습니다. 붙여넣으려면 $META_KEY$-V를 누르세요.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "복사"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "스크린샷 복사됨"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "스크린샷이 클립보드에 복사되었습니다. 붙여넣으려면 $META_KEY$-V를 누르세요.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -76,13 +105,13 @@
     "message": "선택영역이 너무 작음"
   },
   "privateWindowErrorTitle": {
-    "message": "개인정보 보호 모드에서는 Screenshots이 비활성화 됨"
+    "message": "개인정보 보호 모드에서는 스크린샷이 비활성화 됨"
   },
   "privateWindowErrorDetails": {
     "message": "불편을 끼쳐 드려서 죄송합니다. 다음 출시에 넣을 수 있도록 기능을 개선중입니다."
   },
   "genericErrorTitle": {
-    "message": "와우! Firefox Screenshots이 망가졌네요."
+    "message": "이런! Firefox Screenshots이 망가졌네요."
   },
   "genericErrorDetails": {
     "message": "무슨 일이 있었는지 모르겠네요. 다시 시도하시거나 다른 페이지 스크린샷을 찍어 보시겠어요?"
@@ -144,6 +173,6 @@
     "message": "개인 정보 취급 방침"
   },
   "libraryLabel": {
-    "message": "Screenshots"
+    "message": "스크린샷"
   }
 }

@@ -29,6 +29,21 @@
   "downloadScreenshot": {
     "message": "Laadi alla"
   },
+  "downloadOnlyNotice": {
+    "message": "Oled hetkel režiimis, kus saab vaid alla laadida."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots lülitub sellesse režiimi automaatselt, kui:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "oled privaatse veebilehitsemise aknas"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "kolmanda osapoole küpsised on keelatud"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“ei säilita ajalugu” on lubatud"
+  },
   "notificationLinkCopiedTitle": {
     "message": "Link kopeeriti"
   },
@@ -39,6 +54,9 @@
         "content": "$1"
       }
     }
+  },
+  "copyScreenshot": {
+    "message": "Kopeeri"
   },
   "imageCroppedWarning": {
     "message": "See pilt on vähendatud $PIXELS$-le pikslile.",

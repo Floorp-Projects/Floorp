@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "下载"
   },
+  "downloadOnlyNotice": {
+    "message": "您目前处在仅下载模式。"
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots 在如下情况将自动变更为仅下载模式："
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "处于隐私浏览窗口。"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "第三方 Cookie 已禁用。"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "已启用“不记录历史记录”。"
+  },
   "notificationLinkCopiedTitle": {
     "message": "链接已复制"
   },
   "notificationLinkCopiedDetails": {
     "message": "您的截图的链接已复制到剪贴板。按 $META_KEY$-V 可粘贴。",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "复制"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "截图已复制"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "您的截图已复制到剪贴板。按 $META_KEY$+-V 粘贴。",
     "placeholders": {
       "meta_key": {
         "content": "$1"
