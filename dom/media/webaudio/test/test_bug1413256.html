@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test offset.minValue and offset.maxValue are correct</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+c = new AudioContext();
+n = new ConstantSourceNode(c);
+var min =-3.4028234663852886e+38;
+var max = 3.4028234663852886e+38;
+is(n.offset.minValue, min,"Sould be the most-negative single-float value");
+is(n.offset.maxValue, max,"Should be the most-positive single-float value");
+
+
+</script>
+</pre>
+</body>
+</html>
