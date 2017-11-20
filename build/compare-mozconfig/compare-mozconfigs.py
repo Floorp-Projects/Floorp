@@ -15,6 +15,14 @@ import difflib
 FAILURE_CODE = 1
 SUCCESS_CODE = 0
 
+PLATFORMS = (
+    'linux32',
+    'linux64',
+    'macosx64',
+    'win32',
+    'win64',
+)
+
 log = logging.getLogger(__name__)
 
 class ConfigError(Exception):
@@ -92,38 +100,56 @@ def get_mozconfig(path):
     with open(path, 'rb') as fh:
         return fh.readlines()
 
+
+def compare(topsrcdir):
+    app = os.path.join(topsrcdir, 'browser')
+    whitelist = readConfig(os.path.join(app, 'config', 'mozconfigs',
+                                        'whitelist'))
+
+    success = True
+
+    for platform in PLATFORMS:
+        log.info('Comparing platform %s' % platform)
+
+        mozconfigs_path = os.path.join(app, 'config', 'mozconfigs', platform)
+
+        nightly_path = os.path.join(mozconfigs_path, 'nightly')
+        beta_path = os.path.join(mozconfigs_path, 'beta')
+        release_path = os.path.join(mozconfigs_path, 'release')
+
+        nightly_lines = get_mozconfig(nightly_path)
+        beta_lines = get_mozconfig(beta_path)
+        release_lines = get_mozconfig(release_path)
+
+        log.info('Comparing beta and nightly mozconfigs')
+        passed = verify_mozconfigs((beta_path, beta_lines),
+                                   (nightly_path, nightly_lines),
+                                   platform,
+                                   whitelist)
+
+        if not passed:
+            success = False
+
+        log.info('Comparing release and nightly mozconfigs')
+        passed = verify_mozconfigs((release_path, release_lines),
+                                   (nightly_path, nightly_lines),
+                                   platform,
+                                   whitelist)
+        if not passed:
+            success = False
+
+    return success
+
+
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
     parser.add_argument('topsrcdir', help='Path to root of source checkout')
-    parser.add_argument('args', nargs='*')
 
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
 
-    whitelist = os.path.join(args.topsrcdir, 'browser', 'config', 'mozconfigs',
-                             'whitelist')
-
-    mozconfig_whitelist = readConfig(whitelist)
-
-    for arg in args.args:
-        platform, mozconfig_path, nightly_mozconfig_path = arg.split(',')
-
-        mozconfig_lines = get_mozconfig(mozconfig_path)
-        nightly_mozconfig_lines = get_mozconfig(nightly_mozconfig_path)
-
-        mozconfig_pair = (mozconfig_path, mozconfig_lines)
-        nightly_mozconfig_pair = (nightly_mozconfig_path,
-                                  nightly_mozconfig_lines)
-
-        passed = verify_mozconfigs(mozconfig_pair, nightly_mozconfig_pair,
-                                   platform, mozconfig_whitelist)
-
-        if passed:
-            logging.info('Mozconfig check passed!')
-        else:
-            logging.error('Mozconfig check failed!')
-            sys.exit(FAILURE_CODE)
-    sys.exit(SUCCESS_CODE)
+    if not compare(args.topsrcdir):
+        sys.exit(1)
