@@ -10,9 +10,9 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "VideoUtils.h"
-#include "mp4_demuxer/MoofParser.h"
-#include "mp4_demuxer/MP4Metadata.h"
-#include "mp4_demuxer/Stream.h"
+#include "MoofParser.h"
+#include "MP4Metadata.h"
+#include "ByteStream.h"
 #include "MediaPrefs.h"
 #include "mp4parse.h"
 
@@ -22,9 +22,7 @@
 
 using mozilla::media::TimeUnit;
 
-namespace mp4_demuxer
-{
-
+namespace mozilla {
 LazyLogModule gMP4MetadataLog("MP4Metadata");
 
 // the owner of mIndice is rust mp4 paser, so lifetime of this class
@@ -117,7 +115,7 @@ read_source(uint8_t* buffer, uintptr_t size, void* userdata)
   return bytes_read;
 }
 
-MP4Metadata::MP4Metadata(Stream* aSource)
+MP4Metadata::MP4Metadata(ByteStream* aSource)
   : mSource(aSource)
   , mSourceAdaptor(aSource)
 {
@@ -394,7 +392,7 @@ MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
 }
 
 /*static*/ MP4Metadata::ResultAndByteBuffer
-MP4Metadata::Metadata(Stream* aSource)
+MP4Metadata::Metadata(ByteStream* aSource)
 {
   auto parser = mozilla::MakeUnique<MoofParser>(aSource, 0, false);
   RefPtr<mozilla::MediaByteBuffer> buffer = parser->Metadata();
@@ -406,4 +404,4 @@ MP4Metadata::Metadata(Stream* aSource)
   return {NS_OK, Move(buffer)};
 }
 
-} // namespace mp4_demuxer
+} // namespace mozilla

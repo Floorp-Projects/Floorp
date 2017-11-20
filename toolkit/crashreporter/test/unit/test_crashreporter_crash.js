@@ -61,12 +61,10 @@ function run_test() {
   do_crash(function() {
     // Enable the FHR, official policy bypass (since we're in a test) and
     // specify a telemetry server & client ID.
-    let prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch);
-    prefs.setBoolPref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
-    prefs.setBoolPref("datareporting.healthreport.uploadEnabled", true);
-    prefs.setCharPref("toolkit.telemetry.server", "http://a.telemetry.server");
-    prefs.setCharPref("toolkit.telemetry.cachedClientID",
+    Services.prefs.setBoolPref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
+    Services.prefs.setBoolPref("datareporting.healthreport.uploadEnabled", true);
+    Services.prefs.setCharPref("toolkit.telemetry.server", "http://a.telemetry.server");
+    Services.prefs.setCharPref("toolkit.telemetry.cachedClientID",
                       "f3582dee-22b9-4d73-96d1-79ef5bf2fc24");
 
     // TelemetrySession setup will trigger the session annotation
@@ -89,10 +87,8 @@ function run_test() {
 
   do_crash(function() {
     // Disable the FHR upload, no telemetry annotations should be present.
-    let prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch);
-    prefs.setBoolPref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
-    prefs.setBoolPref("datareporting.healthreport.uploadEnabled", false);
+    Services.prefs.setBoolPref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
+    Services.prefs.setBoolPref("datareporting.healthreport.uploadEnabled", false);
 
     // TelemetrySession setup will trigger the session annotation
     let scope = {};
@@ -110,10 +106,8 @@ function run_test() {
   do_crash(function() {
     // No telemetry annotations should be present if the user has not been
     // notified yet
-    let prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch);
-    prefs.setBoolPref("datareporting.policy.dataSubmissionPolicyBypassNotification", false);
-    prefs.setBoolPref("datareporting.healthreport.uploadEnabled", true);
+    Services.prefs.setBoolPref("datareporting.policy.dataSubmissionPolicyBypassNotification", false);
+    Services.prefs.setBoolPref("datareporting.healthreport.uploadEnabled", true);
 
     // TelemetrySession setup will trigger the session annotation
     let scope = {};

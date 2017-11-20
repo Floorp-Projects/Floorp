@@ -7,14 +7,12 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
 #include "AnnexB.h"
-#include "mp4_demuxer/BufferReader.h"
-#include "mp4_demuxer/ByteWriter.h"
+#include "BufferReader.h"
+#include "ByteWriter.h"
 #include "MediaData.h"
 #include "nsAutoPtr.h"
 
-using namespace mozilla;
-
-namespace mp4_demuxer
+namespace mozilla
 {
 
 static const uint8_t kAnnexBDelimiter[] = { 0, 0, 0, 1 };
@@ -332,4 +330,4 @@ AnnexB::IsAnnexB(const mozilla::MediaRawData* aSample)
   return header == 0x00000001 || (header >> 8) == 0x000001;
 }
 
-} // namespace mp4_demuxer
+} // namespace mozilla

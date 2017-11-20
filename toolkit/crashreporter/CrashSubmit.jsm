@@ -44,9 +44,7 @@ function parseINIStrings(path) {
 // Since we're basically re-implementing (with async) part of the crashreporter
 // client here, we'll just steal the strings we need from crashreporter.ini
 async function getL10nStrings() {
-  let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-               getService(Ci.nsIProperties);
-  let path = OS.Path.join(dirSvc.get("GreD", Ci.nsIFile).path,
+  let path = OS.Path.join(Services.dirsvc.get("GreD", Ci.nsIFile).path,
                           "crashreporter.ini");
   let pathExists = await OS.File.exists(path);
 
@@ -75,7 +73,7 @@ async function getL10nStrings() {
     "reporturl": crstrings.CrashDetailsURL
   };
 
-  path = OS.Path.join(dirSvc.get("XCurProcD", Ci.nsIFile).path,
+  path = OS.Path.join(Services.dirsvc.get("XCurProcD", Ci.nsIFile).path,
                       "crashreporter-override.ini");
   pathExists = await OS.File.exists(path);
 
@@ -95,9 +93,7 @@ async function getL10nStrings() {
 }
 
 function getDir(name) {
-  let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-               getService(Ci.nsIProperties);
-  let uAppDataPath = dirSvc.get("UAppData", Ci.nsIFile).path;
+  let uAppDataPath = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
   return OS.Path.join(uAppDataPath, "Crash Reports", name);
 }
 

@@ -4,11 +4,9 @@
 
 // Derived from Stagefright's ABitReader.
 
-#include "mp4_demuxer/BitReader.h"
+#include "BitReader.h"
 
-using namespace mozilla;
-
-namespace mp4_demuxer
+namespace mozilla
 {
 
 BitReader::BitReader(const mozilla::MediaByteBuffer* aBuffer)
@@ -159,4 +157,4 @@ BitReader::FillReservoir()
   mReservoir <<= 32 - mNumBitsLeft;
 }
 
-} // namespace mp4_demuxer
+} // namespace mozilla

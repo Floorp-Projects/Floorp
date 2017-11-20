@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioSampleFormat.h"
+#include "BufferReader.h"
 #include "WAVDecoder.h"
 #include "mozilla/SyncRunnable.h"
 #include "VideoUtils.h"
-#include "mp4_demuxer/BufferReader.h"
 
 namespace mozilla {
 
@@ -77,7 +77,7 @@ RefPtr<MediaDataDecoder::DecodePromise>
 WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
   size_t aLength = aSample->Size();
-  mp4_demuxer::BufferReader aReader(aSample->Data(), aLength);
+  BufferReader aReader(aSample->Data(), aLength);
   int64_t aOffset = aSample->mOffset;
 
   int32_t frames = aLength * 8 / mInfo.mBitDepth / mInfo.mChannels;
