@@ -365,13 +365,11 @@ class GeckoInputConnection
             return;
         }
 
-        Matrix matrix = view.getMatrixForLayerRectToViewRect();
-        if (matrix == null) {
-            if (DEBUG) {
-                Log.d(LOGTAG, "Cannot get Matrix to convert from Gecko coords to layer view coords");
-            }
-            return;
-        }
+        // First aRects element is the widget bounds in device units.
+        final float zoom = view.getZoomFactor();
+        final Matrix matrix = new Matrix();
+        matrix.postScale(zoom, zoom);
+        matrix.postTranslate(aRects[0].left, aRects[0].top);
         mCursorAnchorInfoBuilder.setMatrix(matrix);
 
         final Editable content = getEditable();
@@ -387,8 +385,9 @@ class GeckoInputConnection
             return;
         }
 
-        for (int i = 0; i < aRects.length; i++) {
-            mCursorAnchorInfoBuilder.addCharacterBounds(i,
+        // Subsequent aRects elements are character bounds in CSS units.
+        for (int i = 1; i < aRects.length; i++) {
+            mCursorAnchorInfoBuilder.addCharacterBounds(i - 1,
                                                         aRects[i].left,
                                                         aRects[i].top,
                                                         aRects[i].right,

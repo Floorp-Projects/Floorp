@@ -283,10 +283,6 @@ public class LayerView extends FrameLayout {
         return mLayerClient.getViewportMetrics();
     }
 
-    public Matrix getMatrixForLayerRectToViewRect() {
-        return mLayerClient.getMatrixForLayerRectToViewRect();
-    }
-
     public void setSurfaceBackgroundColor(int newColor) {
     }
 

@@ -387,19 +387,4 @@ class GeckoLayerClient implements LayerView.Listener
     ImmutableViewportMetrics getViewportMetrics() {
         return mViewportMetrics;
     }
-
-    Matrix getMatrixForLayerRectToViewRect() {
-        ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
-        PointF origin = viewportMetrics.getOrigin();
-        float zoom = viewportMetrics.zoomFactor;
-        ImmutableViewportMetrics geckoViewport = mViewportMetrics;
-        PointF geckoOrigin = geckoViewport.getOrigin();
-        float geckoZoom = geckoViewport.zoomFactor;
-
-        Matrix matrix = new Matrix();
-        matrix.postTranslate(geckoOrigin.x / geckoZoom, geckoOrigin.y / geckoZoom);
-        matrix.postScale(zoom, zoom);
-        matrix.postTranslate(-origin.x, -origin.y);
-        return matrix;
-    }
 }
