@@ -5107,7 +5107,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
            conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INHERIT,
            parentText->mControlCharacterVisibility,
-           nsCSSParser::ControlCharVisibilityDefault());
+           nsLayoutUtils::ControlCharVisibilityDefault());
 
   COMPUTE_END_INHERITED(Text, text)
 }
