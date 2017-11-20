@@ -15,6 +15,7 @@ const { configureStore } = require("devtools/client/webconsole/new-console-outpu
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const ConsoleOutput = createFactory(require("devtools/client/webconsole/new-console-output/components/ConsoleOutput"));
 const FilterBar = createFactory(require("devtools/client/webconsole/new-console-output/components/FilterBar"));
+const SideBar = createFactory(require("devtools/client/webconsole/new-console-output/components/SideBar"));
 
 let store = null;
 
@@ -178,7 +179,7 @@ NewConsoleOutputWrapper.prototype = {
         });
       }
 
-      let childComponent = ConsoleOutput({
+      let consoleOutput = ConsoleOutput({
         serviceContainer,
         onFirstMeaningfulPaint: resolve
       });
@@ -189,13 +190,18 @@ NewConsoleOutputWrapper.prototype = {
         }
       });
 
+      let sideBar = SideBar({
+        serviceContainer
+      });
+
       let provider = createElement(
         Provider,
         { store },
         dom.div(
           {className: "webconsole-output-wrapper"},
           filterBar,
-          childComponent
+          consoleOutput,
+          sideBar
       ));
       this.body = ReactDOM.render(provider, this.parentNode);
 

@@ -15,6 +15,7 @@ const {
   PERSIST_TOGGLE,
   PREFS,
   SELECT_NETWORK_MESSAGE_TAB,
+  SIDEBAR_TOGGLE,
   TIMESTAMPS_TOGGLE,
 } = require("devtools/client/webconsole/new-console-output/constants");
 
@@ -58,10 +59,17 @@ function initialize() {
   };
 }
 
+function sidebarToggle(show) {
+  return {
+    type: SIDEBAR_TOGGLE,
+  };
+}
+
 module.exports = {
   filterBarToggle,
   initialize,
   persistToggle,
   selectNetworkMessageTab,
+  sidebarToggle,
   timestampsToggle,
 };
