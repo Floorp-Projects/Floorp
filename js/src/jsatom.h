@@ -71,33 +71,8 @@ class AtomStateEntry
 
 struct AtomHasher
 {
-    struct Lookup
-    {
-        union {
-            const JS::Latin1Char* latin1Chars;
-            const char16_t* twoByteChars;
-        };
-        bool isLatin1;
-        size_t length;
-        const JSAtom* atom; /* Optional. */
-        JS::AutoCheckCannotGC nogc;
-
-        HashNumber hash;
-
-        MOZ_ALWAYS_INLINE Lookup(const char16_t* chars, size_t length)
-          : twoByteChars(chars), isLatin1(false), length(length), atom(nullptr)
-        {
-            hash = mozilla::HashString(chars, length);
-        }
-        MOZ_ALWAYS_INLINE Lookup(const JS::Latin1Char* chars, size_t length)
-          : latin1Chars(chars), isLatin1(true), length(length), atom(nullptr)
-        {
-            hash = mozilla::HashString(chars, length);
-        }
-        inline explicit Lookup(const JSAtom* atom);
-    };
-
-    static HashNumber hash(const Lookup& l) { return l.hash; }
+    struct Lookup;
+    static inline HashNumber hash(const Lookup& l);
     static MOZ_ALWAYS_INLINE bool match(const AtomStateEntry& entry, const Lookup& lookup);
     static void rekey(AtomStateEntry& k, const AtomStateEntry& newKey) { k = newKey; }
 };

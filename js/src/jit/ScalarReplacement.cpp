@@ -875,7 +875,7 @@ IndexOf(MDefinition* ins, int32_t* res)
 // Returns False if the elements is not escaped and if it is optimizable by
 // ScalarReplacementOfArray.
 static bool
-IsElementEscaped(MElements* def, uint32_t arraySize)
+IsElementEscaped(MElements* def, uint32_t arraySize, bool copyOnWrite)
 {
     JitSpewDef(JitSpew_Escape, "Check elements\n", def);
     JitSpewIndent spewIndent(JitSpew_Escape);
@@ -919,6 +919,11 @@ IsElementEscaped(MElements* def, uint32_t arraySize)
           case MDefinition::Opcode::StoreElement: {
             MOZ_ASSERT(access->toStoreElement()->elements() == def);
 
+            if (copyOnWrite) {
+                JitSpewDef(JitSpew_Escape, "write to COW\n", access);
+                return true;
+            }
+
             // If we need hole checks, then the array cannot be escaped
             // as the array might refer to the prototype chain to look
             // for properties, thus it might do additional side-effects
@@ -951,6 +956,11 @@ IsElementEscaped(MElements* def, uint32_t arraySize)
           }
 
           case MDefinition::Opcode::SetInitializedLength:
+            if (copyOnWrite) {
+                JitSpewDef(JitSpew_Escape, "write to COW\n", access);
+                return true;
+            }
+
             MOZ_ASSERT(access->toSetInitializedLength()->elements() == def);
             break;
 
@@ -971,6 +981,12 @@ IsElementEscaped(MElements* def, uint32_t arraySize)
     return false;
 }
 
+static inline bool
+IsOptimizableArrayInstruction(MInstruction* ins)
+{
+    return ins->isNewArray() || ins->isNewArrayCopyOnWrite();
+}
+
 // Returns False if the array is not escaped and if it is optimizable by
 // ScalarReplacementOfArray.
 //
@@ -980,16 +996,21 @@ static bool
 IsArrayEscaped(MInstruction* ins)
 {
     MOZ_ASSERT(ins->type() == MIRType::Object);
-    MOZ_ASSERT(ins->isNewArray());
-    uint32_t length = ins->toNewArray()->length();
+    MOZ_ASSERT(IsOptimizableArrayInstruction(ins));
 
     JitSpewDef(JitSpew_Escape, "Check array\n", ins);
     JitSpewIndent spewIndent(JitSpew_Escape);
 
-    JSObject* obj = ins->toNewArray()->templateObject();
-    if (!obj) {
-        JitSpew(JitSpew_Escape, "No template object defined.");
-        return true;
+    uint32_t length;
+    if (ins->isNewArray()) {
+        if (!ins->toNewArray()->templateObject()) {
+            JitSpew(JitSpew_Escape, "No template object defined.");
+            return true;
+        }
+
+        length = ins->toNewArray()->length();
+    } else {
+        length = ins->toNewArrayCopyOnWrite()->templateObject()->length();
     }
 
     if (length >= 16) {
@@ -1016,7 +1037,7 @@ IsArrayEscaped(MInstruction* ins)
           case MDefinition::Opcode::Elements: {
             MElements *elem = def->toElements();
             MOZ_ASSERT(elem->object() == ins);
-            if (IsElementEscaped(elem, length)) {
+            if (IsElementEscaped(elem, length, ins->isNewArrayCopyOnWrite())) {
                 JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", elem);
                 return true;
             }
@@ -1126,7 +1147,9 @@ ArrayMemoryView::initStartingState(BlockState** pState)
 {
     // Uninitialized elements have an "undefined" value.
     undefinedVal_ = MConstant::New(alloc_, UndefinedValue());
-    MConstant* initLength = MConstant::New(alloc_, Int32Value(0));
+    MConstant* initLength = MConstant::New(alloc_, Int32Value(arr_->isNewArrayCopyOnWrite()
+                                                              ? arr_->toNewArrayCopyOnWrite()->length()
+                                                              : 0));
     arr_->block()->insertBefore(arr_, undefinedVal_);
     arr_->block()->insertBefore(arr_, initLength);
 
@@ -1136,6 +1159,10 @@ ArrayMemoryView::initStartingState(BlockState** pState)
         return false;
 
     startBlock_->insertAfter(arr_, state);
+
+    // Initialize the elements of the array state.
+    if (!state->initFromTemplateObject(alloc_, undefinedVal_))
+        return false;
 
     // Hold out of resume point until it is visited.
     state->setInWorklist();
@@ -1401,7 +1428,7 @@ ScalarReplacement(MIRGenerator* mir, MIRGraph& graph)
                 continue;
             }
 
-            if (ins->isNewArray() && !IsArrayEscaped(*ins)) {
+            if (IsOptimizableArrayInstruction(*ins) && !IsArrayEscaped(*ins)) {
                 ArrayMemoryView view(graph.alloc(), *ins);
                 if (!replaceArray.run(view))
                     return false;

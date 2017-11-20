@@ -7,10 +7,25 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/EventTargetBinding.h"
+#include "mozilla/dom/ConstructibleEventTarget.h"
+#include "nsIGlobalObject.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {
+
+/* static */
+already_AddRefed<EventTarget>
+EventTarget::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+  RefPtr<EventTarget> target = new ConstructibleEventTarget(global);
+  return target.forget();
+}
 
 void
 EventTarget::RemoveEventListener(const nsAString& aType,

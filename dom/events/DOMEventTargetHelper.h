@@ -143,10 +143,7 @@ public:
   void BindToOwner(nsPIDOMWindowInner* aOwner);
   void BindToOwner(DOMEventTargetHelper* aOther);
   virtual void DisconnectFromOwner();
-  nsIGlobalObject* GetParentObject() const
-  {
-    return GetOwnerGlobal();
-  }
+  using EventTarget::GetParentObject;
   virtual nsIGlobalObject* GetOwnerGlobal() const override
   {
     nsCOMPtr<nsIGlobalObject> parentObject = do_QueryReferent(mParentObject);
