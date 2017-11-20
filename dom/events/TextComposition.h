@@ -101,6 +101,15 @@ public:
   nsresult RequestToCommit(nsIWidget* aWidget, bool aDiscard);
 
   /**
+   * IsRequestingCommitOrCancelComposition() returns true if the instance is
+   * requesting widget to commit or cancel composition.
+   */
+  bool IsRequestingCommitOrCancelComposition() const
+  {
+    return mIsRequestingCancel || mIsRequestingCommit;
+  }
+
+  /**
    * Send a notification to IME.  It depends on the IME or platform spec what
    * will occur (or not occur).
    */
@@ -247,9 +256,13 @@ private:
   // mRequestedToCommitOrCancel is true *after* we requested IME to commit or
   // cancel the composition.  In other words, we already requested of IME that
   // it commits or cancels current composition.
-  // NOTE: Before this is set true, both mIsRequestingCommit and
-  //       mIsRequestingCancel are set false.
+  // NOTE: Before this is set to true, both mIsRequestingCommit and
+  //       mIsRequestingCancel are set to false.
   bool mRequestedToCommitOrCancel;
+
+  // Before this dispatches commit event into the tree, this is set to true.
+  // So, this means if native IME already commits the composition.
+  bool mHasReceivedCommitEvent;
 
   // mWasNativeCompositionEndEventDiscarded is true if this composition was
   // requested commit or cancel itself but native compositionend event is
@@ -279,11 +292,26 @@ private:
     , mIsRequestingCommit(false)
     , mIsRequestingCancel(false)
     , mRequestedToCommitOrCancel(false)
+    , mHasReceivedCommitEvent(false)
     , mWasNativeCompositionEndEventDiscarded(false)
     , mAllowControlCharacters(false)
     , mWasCompositionStringEmpty(true)
   {}
   TextComposition(const TextComposition& aOther);
+
+  /**
+   * If we're requesting IME to commit or cancel composition, or we've already
+   * requested it, or we've already known this composition has been ended in
+   * IME, we don't need to request commit nor cancel composition anymore and
+   * shouldn't do so if we're in content process for not committing/canceling
+   * "current" composition in native IME.  So, when this returns true,
+   * RequestIMEToCommit() does nothing.
+   */
+  bool CanRequsetIMEToCommitOrCancelComposition() const
+  {
+    return !mIsRequestingCommit && !mIsRequestingCancel &&
+           !mRequestedToCommitOrCancel && !mHasReceivedCommitEvent;
+  }
 
   /**
    * GetEditorBase() returns EditorBase pointer of mEditorBaseWeak.
