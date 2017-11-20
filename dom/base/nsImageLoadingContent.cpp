@@ -757,17 +757,6 @@ nsImageLoadingContent::GetCurrentURI(nsIURI** aURI)
   return result.StealNSResult();
 }
 
-already_AddRefed<nsIURI>
-nsImageLoadingContent::GetCurrentRequestFinalURI()
-{
-  nsCOMPtr<nsIURI> uri;
-  if (mCurrentRequest) {
-    mCurrentRequest->GetFinalURI(getter_AddRefs(uri));
-  }
-
-  return uri.forget();
-}
-
 NS_IMETHODIMP
 nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
                                             nsIStreamListener** aListener)

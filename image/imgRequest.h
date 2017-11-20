@@ -66,7 +66,7 @@ public:
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
   MOZ_MUST_USE nsresult Init(nsIURI* aURI,
-                             nsIURI* aFinalURI,
+                             nsIURI* aCurrentURI,
                              bool aHadInsecureRedirect,
                              nsIRequest* aRequest,
                              nsIChannel* aChannel,
@@ -116,7 +116,7 @@ public:
   bool GetMultipart() const;
 
   // Returns whether we went through an insecure (non-HTTPS) redirect at some
-  // point during loading. This does not consider the final URI.
+  // point during loading. This does not consider the current URI.
   bool HadInsecureRedirect() const;
 
   // The CORS mode for which we loaded this image.
@@ -152,7 +152,7 @@ public:
 
   // OK to use on any thread.
   nsresult GetURI(ImageURL** aURI);
-  nsresult GetFinalURI(nsIURI** aURI);
+  nsresult GetCurrentURI(nsIURI** aURI);
   bool IsScheme(const char* aScheme) const;
   bool IsChrome() const;
   bool IsData() const;
@@ -237,7 +237,7 @@ private:
   // refcounting issues with nsStandardURL.
   RefPtr<ImageURL> mURI;
   // The URI of the resource we ended up loading after all redirects, etc.
-  nsCOMPtr<nsIURI> mFinalURI;
+  nsCOMPtr<nsIURI> mCurrentURI;
   // The principal which triggered the load of this image. Generally either
   // the principal of the document the image is being loaded into, or of the
   // stylesheet which specified the image to load. Used when validating for CORS.

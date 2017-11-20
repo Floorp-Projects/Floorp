@@ -89,7 +89,7 @@ imgRequest::~imgRequest()
 
 nsresult
 imgRequest::Init(nsIURI *aURI,
-                 nsIURI *aFinalURI,
+                 nsIURI *aCurrentURI,
                  bool aHadInsecureRedirect,
                  nsIRequest *aRequest,
                  nsIChannel *aChannel,
@@ -105,7 +105,7 @@ imgRequest::Init(nsIURI *aURI,
 
   MOZ_ASSERT(!mImage, "Multiple calls to init");
   MOZ_ASSERT(aURI, "No uri");
-  MOZ_ASSERT(aFinalURI, "No final uri");
+  MOZ_ASSERT(aCurrentURI, "No current uri");
   MOZ_ASSERT(aRequest, "No request");
   MOZ_ASSERT(aChannel, "No channel");
 
@@ -116,7 +116,7 @@ imgRequest::Init(nsIURI *aURI,
   mURI = new ImageURL(aURI, rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mFinalURI = aFinalURI;
+  mCurrentURI = aCurrentURI;
   mRequest = aRequest;
   mChannel = aChannel;
   mTimedChannel = do_QueryInterface(mChannel);
@@ -125,11 +125,11 @@ imgRequest::Init(nsIURI *aURI,
   mCORSMode = aCORSMode;
   mReferrerPolicy = aReferrerPolicy;
 
-  // If the original URI and the final URI are different, check whether the
-  // original URI is secure. We deliberately don't take the final URI into
+  // If the original URI and the current URI are different, check whether the
+  // original URI is secure. We deliberately don't take the current URI into
   // account, as it needs to be handled using more complicated rules than
   // earlier elements of the redirect chain.
-  if (aURI != aFinalURI) {
+  if (aURI != aCurrentURI) {
     bool isHttps = false;
     bool isChrome = false;
     bool schemeLocal = false;
@@ -437,14 +437,14 @@ nsresult imgRequest::GetURI(ImageURL** aURI)
 }
 
 nsresult
-imgRequest::GetFinalURI(nsIURI** aURI)
+imgRequest::GetCurrentURI(nsIURI** aURI)
 {
   MOZ_ASSERT(aURI);
 
-  LOG_FUNC(gImgLog, "imgRequest::GetFinalURI");
+  LOG_FUNC(gImgLog, "imgRequest::GetCurrentURI");
 
-  if (mFinalURI) {
-    *aURI = mFinalURI;
+  if (mCurrentURI) {
+    *aURI = mCurrentURI;
     NS_ADDREF(*aURI);
     return NS_OK;
   }
@@ -1322,8 +1322,8 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   if (LOG_TEST(LogLevel::Debug)) {
     LOG_MSG_WITH_PARAM(gImgLog,
                        "imgRequest::OnChannelRedirect", "old",
-                       mFinalURI ? mFinalURI->GetSpecOrDefault().get()
-                                 : "");
+                       mCurrentURI ? mCurrentURI->GetSpecOrDefault().get()
+                                   : "");
   }
 
   // If the previous URI is a non-HTTPS URI, record that fact for later use by
@@ -1332,9 +1332,9 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   bool isHttps = false;
   bool isChrome = false;
   bool schemeLocal = false;
-  if (NS_FAILED(mFinalURI->SchemeIs("https", &isHttps)) ||
-      NS_FAILED(mFinalURI->SchemeIs("chrome", &isChrome)) ||
-      NS_FAILED(NS_URIChainHasFlags(mFinalURI,
+  if (NS_FAILED(mCurrentURI->SchemeIs("https", &isHttps)) ||
+      NS_FAILED(mCurrentURI->SchemeIs("chrome", &isChrome)) ||
+      NS_FAILED(NS_URIChainHasFlags(mCurrentURI,
                                     nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
                                     &schemeLocal))  ||
       (!isHttps && !isChrome && !schemeLocal)) {
@@ -1352,20 +1352,20 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
     }
   }
 
-  // Update the final URI.
-  mChannel->GetURI(getter_AddRefs(mFinalURI));
+  // Update the current URI.
+  mChannel->GetURI(getter_AddRefs(mCurrentURI));
 
   if (LOG_TEST(LogLevel::Debug)) {
     LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "new",
-                       mFinalURI ? mFinalURI->GetSpecOrDefault().get()
-                                 : "");
+                       mCurrentURI ? mCurrentURI->GetSpecOrDefault().get()
+                                   : "");
   }
 
   // Make sure we have a protocol that returns data rather than opens an
   // external application, e.g. 'mailto:'.
   bool doesNotReturnData = false;
   nsresult rv =
-    NS_URIChainHasFlags(mFinalURI,
+    NS_URIChainHasFlags(mCurrentURI,
                         nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
                         &doesNotReturnData);
 

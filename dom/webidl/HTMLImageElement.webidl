@@ -102,10 +102,6 @@ interface MozImageLoadingContent {
   long getRequestType(imgIRequest aRequest);
   [ChromeOnly,Throws]
   readonly attribute URI? currentURI;
-  // Gets the final URI of the current request, if available.
-  // Otherwise, returns null.
-  [ChromeOnly]
-  readonly attribute URI? currentRequestFinalURI;
   [ChromeOnly,Throws]
   void forceReload(optional boolean aNotify);
   [ChromeOnly]
