@@ -6,7 +6,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsGTKRemoteService.h"
+#ifdef MOZ_ENABLE_DBUS
 #include "nsDBusRemoteService.h"
+#endif
 #include "nsRemoteService.h"
 
 #include <gtk/gtk.h>
