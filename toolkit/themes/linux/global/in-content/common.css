@@ -108,3 +108,8 @@ xul|treechildren::-moz-tree-row(selected) {
 *|*.category-name {
   font-size: 1.19rem;
 }
+
+html|button {
+  /* XUL button min-width */
+  min-width: 6.3em;
+}

@@ -123,3 +123,8 @@ xul|textbox[type="search"]:not([searchbutton]) > .textbox-input-box > .textbox-s
 *|*.category-name {
   font-size: 1.45rem;
 }
+
+html|button {
+  /* XUL button min-width */
+  min-width: 79px;
+}

@@ -37,12 +37,6 @@ textarea {
   resize: none;
 }
 
-button {
-  padding: 3px 2em;
-  margin-inline-start: 10px;
-  margin-inline-end: 0;
-}
-
 input,
 select {
   box-sizing: border-box;

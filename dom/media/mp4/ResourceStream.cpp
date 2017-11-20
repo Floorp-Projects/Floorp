@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mp4_demuxer/ResourceStream.h"
+#include "ResourceStream.h"
 
-namespace mp4_demuxer {
+namespace mozilla {
 
 ResourceStream::ResourceStream(mozilla::MediaResource* aResource)
   : mResource(aResource)
@@ -64,4 +64,4 @@ ResourceStream::Length(int64_t* aSize)
   return true;
 }
 
-} // namespace mp4_demuxer
+} // namespace mozilla

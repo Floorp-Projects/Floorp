@@ -99,7 +99,10 @@ EXPORTS += [
     'AudioSegment.h',
     'AudioStream.h',
     'Benchmark.h',
+    'BitReader.h',
     'BufferMediaResource.h',
+    'BufferReader.h',
+    'ByteWriter.h',
     'ChannelMediaDecoder.h',
     'CubebUtils.h',
     'DecoderTraits.h',
@@ -156,12 +159,6 @@ EXPORTS += [
     'VideoUtils.h',
     'VorbisUtils.h',
     'XiphExtradata.h',
-]
-
-EXPORTS.mp4_demuxer += [
-    'BitReader.h',
-    'BufferReader.h',
-    'ByteWriter.h',
 ]
 
 EXPORTS.mozilla += [

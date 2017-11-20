@@ -31,8 +31,6 @@ const HELP_URL = "https://developer.mozilla.org/docs/Tools/WebIDE/Troubleshootin
 const MAX_ZOOM = 1.4;
 const MIN_ZOOM = 0.6;
 
-const MS_PER_DAY = 86400000;
-
 [["AppManager", AppManager],
  ["AppProjects", AppProjects],
  ["Connection", Connection]].forEach(([key, value]) => {
@@ -752,27 +750,17 @@ var UI = {
     deck.selectedPanel = null;
   },
 
-  buildIDToDate(buildID) {
-    let fields = buildID.match(/(\d{4})(\d{2})(\d{2})/);
-    // Date expects 0 - 11 for months
-    return new Date(fields[1], Number.parseInt(fields[2]) - 1, fields[3]);
-  },
-
   checkRuntimeVersion: Task.async(function* () {
-    if (AppManager.connected && AppManager.deviceFront) {
-      let desc = yield AppManager.deviceFront.getDescription();
-      // Compare device and firefox build IDs
-      // and only compare by day (strip hours/minutes) to prevent
-      // warning against builds of the same day.
-      let deviceID = desc.appbuildid.substr(0, 8);
-      let localID = Services.appinfo.appBuildID.substr(0, 8);
-      let deviceDate = this.buildIDToDate(deviceID);
-      let localDate = this.buildIDToDate(localID);
-      // Allow device to be newer by up to a week.  This accommodates those with
-      // local device builds, since their devices will almost always be newer
-      // than the client.
-      if (deviceDate - localDate > 7 * MS_PER_DAY) {
-        this.reportError("error_runtimeVersionTooRecent", deviceID, localID);
+    if (AppManager.connected) {
+      let { client } = AppManager.connection;
+      let report = yield client.checkRuntimeVersion(AppManager.listTabsForm);
+      if (report.incompatible == "too-recent") {
+        this.reportError("error_runtimeVersionTooRecent", report.runtimeID,
+          report.localID);
+      }
+      if (report.incompatible == "too-old") {
+        this.reportError("error_runtimeVersionTooOld", report.runtimeVersion,
+          report.minVersion);
       }
     }
   }),

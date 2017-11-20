@@ -5,9 +5,9 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ResultExtensions.h"
-#include "mp4_demuxer/BitReader.h"
-#include "mp4_demuxer/BufferReader.h"
-#include "mp4_demuxer/ByteWriter.h"
+#include "BitReader.h"
+#include "BufferReader.h"
+#include "ByteWriter.h"
 #include "AnnexB.h"
 #include "H264.h"
 #include <limits>
@@ -31,9 +31,7 @@
     aDest.var = uval;                                                          \
   }
 
-using namespace mozilla;
-
-namespace mp4_demuxer {
+namespace mozilla {
 
 // Default scaling lists (per spec).
 // ITU H264:
@@ -1070,4 +1068,4 @@ H264::DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
 #undef READUE
 #undef READSE
 
-} // namespace mp4_demuxer
+} // namespace mozilla

@@ -956,10 +956,6 @@ menulist > menupopup > menuitem {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic-noaccel");
 }
 
-menulist > menupopup > menucaption {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menucaption-inmenulist");
-}
-
 dropmarker {
   -moz-binding: url("chrome://global/content/bindings/general.xml#dropmarker");
 }
