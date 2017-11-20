@@ -78,7 +78,7 @@ public:
 
 private:
   explicit VRServiceTest(nsPIDOMWindowInner* aWindow);
-  ~VRServiceTest();
+  ~VRServiceTest() = default;
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   bool mShuttingDown;

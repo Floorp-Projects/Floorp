@@ -36,10 +36,6 @@ VRDisplayEvent::VRDisplayEvent(mozilla::dom::EventTarget* aOwner)
 {
 }
 
-VRDisplayEvent::~VRDisplayEvent()
-{
-}
-
 VRDisplay*
 VRDisplayEvent::Display()
 {
@@ -84,10 +80,9 @@ VRDisplayEvent::GetReason() const
 {
   if (mReason.isSome()) {
     return mReason.value();
-  } else {
-    return nullptr;
   }
 
+  return nullptr;
 }
 
 

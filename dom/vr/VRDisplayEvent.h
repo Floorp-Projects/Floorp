@@ -34,7 +34,7 @@ public:
   Nullable<VRDisplayEventReason> GetReason() const;
 
 protected:
-  virtual ~VRDisplayEvent();
+  virtual ~VRDisplayEvent() = default;
   explicit VRDisplayEvent(mozilla::dom::EventTarget* aOwner);
   VRDisplayEvent(EventTarget* aOwner,
                  nsPresContext* aPresContext,

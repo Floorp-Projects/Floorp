@@ -413,9 +413,9 @@ VRManagerParent::SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
   if (mHaveControllerListener &&
       (mIsContentChild || IsSameProcess())) {
     return PVRManagerParent::SendGamepadUpdate(aGamepadEvent);
-  } else {
-    return true;
   }
+
+  return true;
 }
 
 bool
@@ -426,9 +426,9 @@ VRManagerParent::SendReplyGamepadVibrateHaptic(const uint32_t& aPromiseID)
   if (mHaveControllerListener &&
       (mIsContentChild || IsSameProcess())) {
     return PVRManagerParent::SendReplyGamepadVibrateHaptic(aPromiseID);
-  } else {
-    return true;
   }
+
+  return true;
 }
 
 } // namespace gfx
