@@ -7491,6 +7491,7 @@ nsCSSFrameConstructor::LazilyStyleNewChildRange(nsIContent* aStartChild,
   }
 }
 
+#ifdef DEBUG
 static bool
 IsFlattenedTreeChild(nsIContent* aParent, nsIContent* aChild)
 {
@@ -7504,6 +7505,7 @@ IsFlattenedTreeChild(nsIContent* aParent, nsIContent* aChild)
   }
   return false;
 }
+#endif
 
 void
 nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
