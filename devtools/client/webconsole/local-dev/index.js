@@ -45,6 +45,7 @@ pref("devtools.webconsole.inputHistoryCount", 50);
 pref("devtools.webconsole.persistlog", false);
 pref("devtools.webconsole.timestampMessages", false);
 pref("devtools.webconsole.autoMultiline", true);
+pref("devtools.webconsole.sidebarToggle", true);
 
 const NewConsoleOutputWrapper = require("../new-console-output/new-console-output-wrapper");
 const NewWebConsoleFrame = require("../new-webconsole").NewWebConsoleFrame;
