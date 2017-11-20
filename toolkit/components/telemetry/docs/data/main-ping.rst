@@ -481,6 +481,7 @@ Structure:
           "total_zones": 9,
           "total_compartments": 309,
           "minor_gcs": 44,
+          // Present if non-zero.
           "store_buffer_overflows": 19,
           "mmu_20ms": 0,
           "mmu_50ms": 0,
@@ -488,11 +489,14 @@ Structure:
           // "AbortRequested", "KeepAtomsSet", "IncrementalDisabled",
           // "ModeChange", "MallocBytesTrigger", "GCBytesTrigger",
           // "ZoneChange", "CompartmentRevived".
-          "nonincremental_reason": "None",
-          "allocated": 37, // In megabytes.
+          // Present for non-incremental GCs only.
+          "nonincremental_reason": "GCBytesTrigger",
           "allocated_bytes": 38853696 // in bytes
+
+          // Present if non-zero.
           "added_chunks": 54,
           "removed_chunks": 12,
+
           // Total number of slices (some of which may not appear
           // in the "slices" array).
           "slices": 15,
@@ -501,8 +505,7 @@ Structure:
           "slices_list": [
             {
               "slice": 218,  // The global index of this slice.
-              "pause": 23.221,  // How long the slice took.
-              "when": 0,  // Milliseconds since the start of the GC.
+              "pause": 23.221,  // How long the slice took (milliseconds).
               "reason": "SET_NEW_DOCUMENT",
               // GC state when the slice started
               "initial_state": "NotActive",
@@ -512,9 +515,11 @@ Structure:
               // "unlimited".
               "budget": "10ms",
               // Number of page faults during the slice.
-              "page_faults": 0,
+              // optional field, missing means 0.
+              "page_faults": 1,
+              // The start time of this slice in seconds.  The end time is
+              // given by the start_timestamp + pause.
               "start_timestamp": 294875,
-              "end_timestamp": 294879,
               // Time taken by each phase. There are at most 65 possible
               // phases, but usually only a few phases run in a given slice.
               "times": {

@@ -108,7 +108,19 @@ MOZ_ALWAYS_INLINE bool IsInsideNursery(const js::gc::Cell* cell);
 } /* namespace js */
 
 namespace JS {
-struct Zone;
+
+/*
+ * This list enumerates the different types of conceptual stacks we have in
+ * SpiderMonkey. In reality, they all share the C stack, but we allow different
+ * stack limits depending on the type of code running.
+ */
+enum StackKind
+{
+    StackForSystemCode,      // C++, such as the GC, running on behalf of the VM.
+    StackForTrustedScript,   // Script running with trusted principals.
+    StackForUntrustedScript, // Script running with untrusted principals.
+    StackKindCount
+};
 
 /*
  * Default size for the generational nursery in bytes.
@@ -467,7 +479,38 @@ GCThingIsMarkedGray(GCCellPtr thing)
 extern JS_PUBLIC_API(JS::TraceKind)
 GCThingTraceKind(void* thing);
 
-} /* namespace JS */
+/*
+ * Returns true when writes to GC thing pointers (and reads from weak pointers)
+ * must call an incremental barrier. This is generally only true when running
+ * mutator code in-between GC slices. At other times, the barrier may be elided
+ * for performance.
+ */
+extern JS_PUBLIC_API(bool)
+IsIncrementalBarrierNeeded(JSContext* cx);
+
+/*
+ * Notify the GC that a reference to a JSObject is about to be overwritten.
+ * This method must be called if IsIncrementalBarrierNeeded.
+ */
+extern JS_PUBLIC_API(void)
+IncrementalPreWriteBarrier(JSObject* obj);
+
+/*
+ * Notify the GC that a weak reference to a GC thing has been read.
+ * This method must be called if IsIncrementalBarrierNeeded.
+ */
+extern JS_PUBLIC_API(void)
+IncrementalReadBarrier(GCCellPtr thing);
+
+/**
+ * Unsets the gray bit for anything reachable from |thing|. |kind| should not be
+ * JS::TraceKind::Shape. |thing| should be non-null. The return value indicates
+ * if anything was unmarked.
+ */
+extern JS_FRIEND_API(bool)
+UnmarkGrayGCThingRecursively(GCCellPtr thing);
+
+} // namespace JS
 
 namespace js {
 namespace gc {
@@ -487,15 +530,75 @@ IsIncrementalBarrierNeededOnTenuredGCThing(const JS::GCCellPtr thing)
     return JS::shadow::Zone::asShadowZone(zone)->needsIncrementalBarrier();
 }
 
-/**
- * Create an object providing access to the garbage collector's internal notion
- * of the current state of memory (both GC heap memory and GCthing-controlled
- * malloc memory.
- */
-extern JS_PUBLIC_API(JSObject*)
-NewMemoryInfoObject(JSContext* cx);
+static MOZ_ALWAYS_INLINE void
+ExposeGCThingToActiveJS(JS::GCCellPtr thing)
+{
+    // GC things residing in the nursery cannot be gray: they have no mark bits.
+    // All live objects in the nursery are moved to tenured at the beginning of
+    // each GC slice, so the gray marker never sees nursery things.
+    if (IsInsideNursery(thing.asCell()))
+        return;
 
-} /* namespace gc */
-} /* namespace js */
+    // There's nothing to do for permanent GC things that might be owned by
+    // another runtime.
+    if (thing.mayBeOwnedByOtherRuntime())
+        return;
+
+    if (IsIncrementalBarrierNeededOnTenuredGCThing(thing))
+        JS::IncrementalReadBarrier(thing);
+    else if (js::gc::detail::TenuredCellIsMarkedGray(thing.asCell()))
+        JS::UnmarkGrayGCThingRecursively(thing);
+
+    MOZ_ASSERT(!js::gc::detail::TenuredCellIsMarkedGray(thing.asCell()));
+}
+
+template <typename T>
+extern JS_PUBLIC_API(bool)
+EdgeNeedsSweepUnbarrieredSlow(T* thingp);
+
+static MOZ_ALWAYS_INLINE bool
+EdgeNeedsSweepUnbarriered(JSObject** objp)
+{
+    // This function does not handle updating nursery pointers. Raw JSObject
+    // pointers should be updated separately or replaced with
+    // JS::Heap<JSObject*> which handles this automatically.
+    MOZ_ASSERT(!JS::CurrentThreadIsHeapMinorCollecting());
+    if (IsInsideNursery(reinterpret_cast<Cell*>(*objp)))
+        return false;
+
+    auto zone = JS::shadow::Zone::asShadowZone(detail::GetGCThingZone(uintptr_t(*objp)));
+    if (!zone->isGCSweepingOrCompacting())
+        return false;
+
+    return EdgeNeedsSweepUnbarrieredSlow(objp);
+}
+
+} // namespace gc
+} // namesapce js
+
+namespace JS {
+
+/*
+ * This should be called when an object that is marked gray is exposed to the JS
+ * engine (by handing it to running JS code or writing it into live JS
+ * data). During incremental GC, since the gray bits haven't been computed yet,
+ * we conservatively mark the object black.
+ */
+static MOZ_ALWAYS_INLINE void
+ExposeObjectToActiveJS(JSObject* obj)
+{
+    MOZ_ASSERT(obj);
+    MOZ_ASSERT(!js::gc::EdgeNeedsSweepUnbarrieredSlow(&obj));
+    js::gc::ExposeGCThingToActiveJS(GCCellPtr(obj));
+}
+
+static MOZ_ALWAYS_INLINE void
+ExposeScriptToActiveJS(JSScript* script)
+{
+    MOZ_ASSERT(!js::gc::EdgeNeedsSweepUnbarrieredSlow(&script));
+    js::gc::ExposeGCThingToActiveJS(GCCellPtr(script));
+}
+
+} /* namespace JS */
 
 #endif /* js_HeapAPI_h */

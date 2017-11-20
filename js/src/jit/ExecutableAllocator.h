@@ -46,7 +46,6 @@
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/mips64/Simulator-mips64.h"
 #include "jit/ProcessExecutableMemory.h"
-#include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
 
@@ -75,6 +74,8 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
 #if defined(JS_CODEGEN_ARM) && defined(XP_IOS)
 #include <libkern/OSCacheControl.h>
 #endif
+
+struct JSRuntime;
 
 namespace JS {
     struct CodeSizes;

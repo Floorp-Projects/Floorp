@@ -1931,7 +1931,8 @@ var BrowserApp = {
 
       case "Tab:OpenUri":
         window.browserDOMWindow.openURI(Services.io.newURI(data.uri),
-                                        /* opener */ null, data.flags,
+                                        /* opener */ null,
+                                        Ci.nsIBrowserDOMWindow[data.flags],
                                         Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL,
                                         /* triggeringPrincipal */ null);
         break;
