@@ -40,7 +40,7 @@ add_task(async function test_private_popup_window_opens_private_tabs() {
 
   // Next, click on the link in the testing page, and ensure
   // that a private popup window is opened.
-  let openedPromise = BrowserTestUtils.waitForNewWindow(true, POPUP_LINK);
+  let openedPromise = BrowserTestUtils.waitForNewWindow(POPUP_LINK);
 
   await BrowserTestUtils.synthesizeMouseAtCenter("#first", {}, privBrowser);
   let popupWin = await openedPromise;
