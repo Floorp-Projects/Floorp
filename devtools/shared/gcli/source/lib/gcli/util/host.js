@@ -16,8 +16,9 @@
 
 'use strict';
 
-var Cc = require('chrome').Cc;
-var Ci = require('chrome').Ci;
+const { Cc, Ci, Cu } = require("chrome");
+
+Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 var { Task } = require("devtools/shared/task");
 
@@ -110,8 +111,7 @@ exports.staticRequire = function(requistingModule, name) {
       filename = filename.replace(/\/\.\//g, '/');
       filename = 'resource://devtools/shared/gcli/source/lib/' + filename;
 
-      var xhr = Cc['@mozilla.org/xmlextras/xmlhttprequest;1']
-                  .createInstance(Ci.nsIXMLHttpRequest);
+      var xhr = new XMLHttpRequest();
 
       xhr.onload = () => {
         resolve(xhr.responseText);
