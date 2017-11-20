@@ -40,8 +40,23 @@ const TEST_ADDRESS_4 = {
 };
 
 const TEST_ADDRESS_WITH_EMPTY_FIELD = {
-  "name": "Tim Berners",
+  name: "Tim Berners",
   "street-address": "",
+};
+
+const TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD = {
+  name: "",
+  "address-line1": "",
+  "address-line2": "",
+  "address-line3": "",
+  "country-name": "",
+  "tel-country-code": "",
+  "tel-national": "",
+  "tel-area-code": "",
+  "tel-local": "",
+  "tel-local-prefix": "",
+  "tel-local-suffix": "",
+  email: "timbl@w3.org",
 };
 
 const TEST_ADDRESS_WITH_INVALID_FIELD = {
@@ -337,6 +352,11 @@ add_task(async function test_add() {
   do_check_eq(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
   do_check_eq(address["street-address"], undefined);
 
+  // Empty computed fields shouldn't cause any problem.
+  profileStorage.addresses.add(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD);
+  address = profileStorage.addresses._data[3];
+  do_check_eq(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
+
   Assert.throws(() => profileStorage.addresses.add(TEST_ADDRESS_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./);
 
@@ -397,6 +417,14 @@ add_task(async function test_update() {
   address = profileStorage.addresses._data[0];
   do_check_eq(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
   do_check_eq(address["street-address"], undefined);
+
+  // Empty computed fields shouldn't cause any problem.
+  profileStorage.addresses.update(profileStorage.addresses._data[0].guid, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, false);
+  address = profileStorage.addresses._data[0];
+  do_check_eq(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
+  profileStorage.addresses.update(profileStorage.addresses._data[1].guid, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, true);
+  address = profileStorage.addresses._data[1];
+  do_check_eq(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
 
   Assert.throws(
     () => profileStorage.addresses.update("INVALID_GUID", TEST_ADDRESS_3),
@@ -576,6 +604,9 @@ add_task(async function test_mergeToStorage() {
   do_check_eq(profileStorage.addresses.mergeToStorage(anotherAddress).length, 2);
   do_check_eq(profileStorage.addresses.getAll()[1].email, anotherAddress.email);
   do_check_eq(profileStorage.addresses.getAll()[2].email, anotherAddress.email);
+
+  // Empty computed fields shouldn't cause any problem.
+  do_check_eq(profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD).length, 3);
 });
 
 add_task(async function test_mergeToStorage_strict() {
@@ -586,4 +617,7 @@ add_task(async function test_mergeToStorage_strict() {
   anotherAddress.email = "";
   do_check_eq(profileStorage.addresses.mergeToStorage(anotherAddress, true).length, 0);
   do_check_eq(profileStorage.addresses.getAll()[0].email, TEST_ADDRESS_1.email);
+
+  // Empty computed fields shouldn't cause any problem.
+  do_check_eq(profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, true).length, 1);
 });
