@@ -53,9 +53,6 @@ this.main = (function() {
 
   function setIconActive(active, tabId) {
     let path = active ? "icons/icon-highlight-32-v2.svg" : "icons/icon-32-v2.svg";
-    if ((!hasSeenOnboarding) && !active) {
-      path = "icons/icon-starred-32-v2.svg";
-    }
     startBackground.photonPageActionPort.postMessage({
       type: "setProperties",
       iconPath: path
@@ -96,12 +93,6 @@ this.main = (function() {
 
   // This is called by startBackground.js, directly in response to clicks on the Photon page action
   exports.onClicked = catcher.watchFunction((tab) => {
-    if (tab.incognito) {
-      senderror.showError({
-        popupMessage: "PRIVATE_WINDOW"
-      });
-      return;
-    }
     if (shouldOpenMyShots(tab.url)) {
       if (!hasSeenOnboarding) {
         catcher.watchPromise(analytics.refreshTelemetryPref().then(() => {
@@ -139,12 +130,6 @@ this.main = (function() {
   exports.onClickedContextMenu = catcher.watchFunction((info, tab) => {
     if (!tab) {
       // Not in a page/tab context, ignore
-      return;
-    }
-    if (tab.incognito) {
-      senderror.showError({
-        popupMessage: "PRIVATE_WINDOW"
-      });
       return;
     }
     if (!urlEnabled(tab.url)) {
@@ -220,6 +205,21 @@ this.main = (function() {
     }
   });
 
+  communication.register("copyShotToClipboard", (sender, blob) => {
+    return blobConverters.blobToArray(blob).then(buffer => {
+      return browser.clipboard.setImageData(
+        buffer, blob.type.split("/", 2)[1]).then(() => {
+          catcher.watchPromise(communication.sendToBootstrap('incrementCopyCount'));
+          return browser.notifications.create({
+            type: "basic",
+            iconUrl: "../icons/copy.png",
+            title: browser.i18n.getMessage("notificationImageCopiedTitle"),
+            message: browser.i18n.getMessage("notificationImageCopiedDetails", pasteSymbol)
+          });
+        });
+    })
+  });
+
   communication.register("downloadShot", (sender, info) => {
     // 'data:' urls don't work directly, let's use a Blob
     // see http://stackoverflow.com/questions/40269862/save-data-uri-as-file-using-downloads-download-api
@@ -236,11 +236,17 @@ this.main = (function() {
       }
     });
     browser.downloads.onChanged.addListener(onChangedCallback)
-    return browser.downloads.download({
-      url,
-      filename: info.filename
-    }).then((id) => {
-      downloadId = id;
+    catcher.watchPromise(communication.sendToBootstrap("incrementDownloadCount"));
+    return browser.windows.getLastFocused().then(windowInfo => {
+      return windowInfo.incognito;
+    }).then((incognito) => {
+      return browser.downloads.download({
+        url,
+        incognito,
+        filename: info.filename
+      }).then((id) => {
+        downloadId = id;
+      });
     });
   });
 
@@ -307,6 +313,18 @@ this.main = (function() {
   // A Screenshots page wants us to start/force onboarding
   communication.register("requestOnboarding", (sender) => {
     return startSelectionWithOnboarding(sender.tab);
+  });
+
+  communication.register("isHistoryEnabled", () => {
+    return catcher.watchPromise(communication.sendToBootstrap("getHistoryPref").then(historyEnabled => {
+      return historyEnabled;
+    }));
+  });
+
+  communication.register("getPlatformOs", () => {
+    return catcher.watchPromise(browser.runtime.getPlatformInfo().then(platformInfo => {
+      return platformInfo.os;
+    }));
   });
 
   return exports;
