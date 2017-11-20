@@ -2602,11 +2602,15 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
       mDocument->BindingManager()->AddToAttachedQueue(binding);
     }
 
-    if (resolveStyle) {
-      // FIXME: Should this use ResolveStyleContext?  (The calls in
-      // this function are the only case in nsCSSFrameConstructor
-      // where we don't do so for the construction of a style context
-      // for an element.)
+    if (resolveStyle || styleContext->IsServo()) {
+      // FIXME: Should this use ResolveStyleContext?  (The calls in this
+      // function are the only case in nsCSSFrameConstructor where we don't do
+      // so for the construction of a style context for an element.)
+      //
+      // NOTE(emilio): In the case of Servo, even though resolveStyle returns
+      // false, we re-get the style context to avoid tripping otherwise-useful
+      // assertions when resolving pseudo-elements. Note that this operation in
+      // Servo is cheap.
       styleContext = mPresShell->StyleSet()->ResolveStyleFor(
           aDocElement, nullptr, LazyComputeBehavior::Assert);
       display = styleContext->StyleDisplay();
@@ -5907,20 +5911,20 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
         aState.AddPendingBinding(newPendingBinding.forget());
       }
 
-      if (resolveStyle) {
-        if (styleContext->IsServo()) {
-          styleContext =
-            mPresShell->StyleSet()->AsServo()->ResolveServoStyle(aContent->AsElement());
-        } else {
-          styleContext =
-            ResolveStyleContext(styleContext->AsGecko()->GetParent(),
-                                aContent, &aState);
-        }
-
-        display = styleContext->StyleDisplay();
-        aStyleContext = styleContext;
+      // See the comment in the similar-looking block in
+      // ConstructDocElementFrame to see why we always re-fetch the style
+      // context in Servo.
+      if (styleContext->IsServo()) {
+        styleContext =
+          mPresShell->StyleSet()->AsServo()->ResolveServoStyle(aContent->AsElement());
+      } else if (resolveStyle) {
+        styleContext =
+          ResolveStyleContext(styleContext->AsGecko()->GetParent(),
+                              aContent, &aState);
       }
 
+      display = styleContext->StyleDisplay();
+      aStyleContext = styleContext;
       aTag = mDocument->BindingManager()->ResolveTag(aContent, &aNameSpaceID);
     }
   }
