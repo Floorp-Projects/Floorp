@@ -78,7 +78,7 @@ const uint32_t kCommonMaxViewportDims = 4096;
 const float kCommonAliasedPointSizeRangeMin =  1;
 const float kCommonAliasedPointSizeRangeMax = 63;
 const float kCommonAliasedLineWidthRangeMin =  1;
-const float kCommonAliasedLineWidthRangeMax =  5;
+const float kCommonAliasedLineWidthRangeMax =  1;
 
 template<class T>
 static bool
