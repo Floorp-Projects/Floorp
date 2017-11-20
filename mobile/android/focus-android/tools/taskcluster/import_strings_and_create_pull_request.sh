@@ -25,7 +25,7 @@ git add app/src/main/res/
 git commit -m \
 	"Import translations from L10N repository ($TIMESTAMP)" \
 	--author="MickeyMoz <sebastian@mozilla.com>" \
-	|| (echo "No new translations available" && exit 0)
+	|| { echo "No new translations available"; exit 0; }
 
 # Create a pull request for the current state of the repo
 python tools/taskcluster/create-pull-request.py $TIMESTAMP
