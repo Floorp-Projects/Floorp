@@ -1324,6 +1324,11 @@ ContentCacheInParent::RequestIMEToCommitComposition(nsIWidget* aWidget,
                       eReceivedAfterTabParentBlur);
 #endif // #ifdef MOZ_CRASHREPORTER
     aCommittedString = mCompositionString;
+    // After we return true from here, i.e., without actually requesting IME
+    // to commit composition, we will receive eCompositionCommitRequestHandled
+    // pseudo event message from the remote process.  So, we need to increment
+    // mPendingEventsNeedingAck here.
+    mPendingEventsNeedingAck++;
     return true;
   }
 
