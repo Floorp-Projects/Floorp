@@ -509,16 +509,6 @@ public:
   LocalFileToBlobCompleted(Blob* aBlob);
 
 protected:
-  // XHR states are meant to mirror the XHR2 spec:
-  //   https://xhr.spec.whatwg.org/#states
-  enum class State : uint8_t {
-    unsent,           // object has been constructed.
-    opened,           // open() has been successfully invoked.
-    headers_received, // redirects followed and response headers received.
-    loading,          // response body is being received.
-    done,             // data transfer concluded, whether success or error.
-  };
-
   nsresult DetectCharset();
   nsresult AppendToResponseText(const char * aBuffer, uint32_t aBufferLen);
   static nsresult StreamReaderFunc(nsIInputStream* in,
@@ -530,7 +520,7 @@ protected:
   nsresult CreateResponseParsedJSON(JSContext* aCx);
   // Change the state of the object with this. The broadcast argument
   // determines if the onreadystatechange listener should be called.
-  nsresult ChangeState(State aState, bool aBroadcast = true);
+  nsresult ChangeState(uint16_t aState, bool aBroadcast = true);
   already_AddRefed<nsILoadGroup> GetLoadGroup() const;
   nsIURI *GetBaseURI();
 
@@ -696,7 +686,7 @@ protected:
   Maybe<ClientInfo> mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
 
-  State mState;
+  uint16_t mState;
 
   StyleBackendType mStyleBackend;
 
