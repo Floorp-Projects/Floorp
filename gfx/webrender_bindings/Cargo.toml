@@ -24,4 +24,5 @@ dwrote = "0.4"
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.4"
 core-graphics = "0.12.2"
+foreign-types = "0.3.0"
 
