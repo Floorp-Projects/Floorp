@@ -508,24 +508,24 @@ struct BaselineScript
         MOZ_ASSERT(hasPendingIonBuilder());
         return pendingBuilder_;
     }
-    void setPendingIonBuilder(JSRuntime* maybeRuntime, JSScript* script, js::jit::IonBuilder* builder) {
+    void setPendingIonBuilder(JSRuntime* rt, JSScript* script, js::jit::IonBuilder* builder) {
         MOZ_ASSERT(script->baselineScript() == this);
         MOZ_ASSERT(!builder || !hasPendingIonBuilder());
 
         if (script->isIonCompilingOffThread())
-            script->setIonScript(maybeRuntime, ION_PENDING_SCRIPT);
+            script->setIonScript(rt, ION_PENDING_SCRIPT);
 
         pendingBuilder_ = builder;
 
         // lazy linking cannot happen during asmjs to ion.
         clearDependentWasmImports();
 
-        script->updateBaselineOrIonRaw(maybeRuntime);
+        script->updateJitCodeRaw(rt);
     }
-    void removePendingIonBuilder(JSScript* script) {
-        setPendingIonBuilder(nullptr, script, nullptr);
+    void removePendingIonBuilder(JSRuntime* rt, JSScript* script) {
+        setPendingIonBuilder(rt, script, nullptr);
         if (script->maybeIonScript() == ION_PENDING_SCRIPT)
-            script->setIonScript(nullptr, nullptr);
+            script->setIonScript(rt, nullptr);
     }
 
     const ControlFlowGraph* controlFlowGraph() const {
