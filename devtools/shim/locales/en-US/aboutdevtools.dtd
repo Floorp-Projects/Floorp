@@ -36,12 +36,12 @@
 <!-- LOCALIZATION NOTE (aboutDevtools.enable.keyShortcutMessage): Message displayed when
   -  users pressed a DevTools key shortcut. -->
 <!ENTITY  aboutDevtools.enable.keyShortcutMessage
-          "You activated a Developer Tools shortcut. If that was a mistake, you can close this tab.">
+          "You activated a Developer Tools shortcut. If that was a mistake, you can close this Tab.">
 
-<!-- LOCALIZATION NOTE (aboutDevtools.enable.menuMessage): Message displayed when users
+<!-- LOCALIZATION NOTE (aboutDevtools.enable.menuMessage2): Message displayed when users
   -  clicked on a "Enable Developer Tools" menu item. -->
-<!ENTITY  aboutDevtools.enable.menuMessage
-          "Examine, edit and debug HTML, CSS, and JavaScript with tools like Inspector and Debugger.">
+<!ENTITY  aboutDevtools.enable.menuMessage2
+          "Perfect your website’s HTML, CSS, and JavaScript with tools like Inspector and Debugger.">
 
 <!-- LOCALIZATION NOTE (aboutDevtools.enable.commonMessage): Generic message displayed for
   -  all possible entry points (keyshortcut, menu item etc…). -->
@@ -54,7 +54,7 @@
 <!ENTITY  aboutDevtools.enable.learnMoreLink "Learn more about Developer Tools">
 
 <!ENTITY  aboutDevtools.enable.enableButton "Enable Developer Tools">
-<!ENTITY  aboutDevtools.enable.closeButton "Close this page">
+<!ENTITY  aboutDevtools.enable.closeButton2 "Close this Tab">
 
 <!ENTITY  aboutDevtools.welcome.title "Welcome to Firefox Developer Tools!">
 
