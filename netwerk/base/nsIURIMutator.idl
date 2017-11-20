@@ -1,0 +1,45 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+interface nsIURI;
+
+%{C++
+#include "nsStringGlue.h"
+
+#undef GetPort  // XXX Windows!
+#undef SetPort  // XXX Windows!
+
+namespace mozilla {
+class Encoding;
+}
+%}
+
+[ptr] native Encoding(const mozilla::Encoding);
+
+[scriptable, builtinclass, uuid(5403a6ec-99d7-405e-8b45-9f805bbdfcef)]
+interface nsIURISetters : nsISupports
+{
+  void setSpec(in AUTF8String aSpec);
+  void setScheme(in AUTF8String aScheme);
+  void setUserPass(in AUTF8String aUserPass);
+  void setUsername(in AUTF8String aUsername);
+  void setPassword(in AUTF8String aPassword);
+  void setHostPort(in AUTF8String aHostPort);
+  void setHostAndPort(in AUTF8String aHostAndPort);
+  void setHost(in AUTF8String aHost);
+  void setPort(in long aPort);
+  void setPathQueryRef(in AUTF8String aPathQueryRef);
+  void setRef(in AUTF8String aRef);
+  void setFilePath(in AUTF8String aFilePath);
+  void setQuery(in AUTF8String aQuery);
+  [noscript] void setQueryWithEncoding(in AUTF8String query, in Encoding encoding);
+};
+
+[scriptable, builtinclass, uuid(4d1f3103-1c44-4dcd-b717-5d22a697a7d9)]
+interface nsIURIMutator : nsIURISetters
+{
+  nsIURI finalize();
+};
