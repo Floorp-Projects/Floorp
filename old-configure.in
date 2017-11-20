@@ -518,9 +518,9 @@ if test -n "$MOZ_OPTIMIZE"; then
             dnl See Bug 1415595
             ;;
          *)
-            CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
-            CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=2"
-            CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"
+            CFLAGS="$CFLAGS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2"
+            CPPFLAGS="$CPPFLAGS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2"
+            CXXFLAGS="$CXXFLAGS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2"
             ;;
       esac
    fi
