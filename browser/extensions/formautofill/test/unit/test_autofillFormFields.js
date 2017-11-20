@@ -504,7 +504,7 @@ function do_test(testcases, testFn) {
         let handler = new FormAutofillHandler(formLike);
         let promises = [];
         // Replace the interal decrypt method with MasterPassword API
-        handler._decrypt = async (cipherText, reauth) => {
+        let decryptHelper = async (cipherText, reauth) => {
           let string;
           try {
             string = await MasterPassword.decrypt(cipherText, reauth);
@@ -518,7 +518,14 @@ function do_test(testcases, testFn) {
         };
 
         handler.collectFormFields();
-        let handlerInfo = handler[testcase.expectedFillingForm];
+        for (let section of handler.sections) {
+          section._decrypt = decryptHelper;
+        }
+
+        // TODO [Bug 1415077] We can assume all test cases with only one section
+        // should be filled. Eventually, the test needs to verify the filling
+        // feature in a multiple section case.
+        let handlerInfo = handler.sections[0][testcase.expectedFillingForm];
         handlerInfo.fieldDetails.forEach(field => {
           let element = field.elementWeakRef.get();
           if (!testcase.profileData[field.fieldName]) {
@@ -529,9 +536,9 @@ function do_test(testcases, testFn) {
           promises.push(...testFn(testcase, element));
         });
 
-        let [adaptedProfile] = handler.getAdaptedProfiles([testcase.profileData]);
-        let focuedInput = doc.getElementById(testcase.focusedInputId);
-        await handler.autofillFormFields(adaptedProfile, focuedInput);
+        let focusedInput = doc.getElementById(testcase.focusedInputId);
+        let [adaptedProfile] = handler.getAdaptedProfiles([testcase.profileData], focusedInput);
+        await handler.autofillFormFields(adaptedProfile, focusedInput);
         Assert.equal(handlerInfo.filledRecordGUID, testcase.profileData.guid,
                      "Check if filledRecordGUID is set correctly");
         await Promise.all(promises);
