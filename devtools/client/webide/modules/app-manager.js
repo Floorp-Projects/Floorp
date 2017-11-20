@@ -539,6 +539,10 @@ var AppManager = exports.AppManager = {
             this._listTabsResponse.consoleActor);
   },
 
+  get listTabsForm() {
+    return this._listTabsResponse;
+  },
+
   get deviceFront() {
     if (!this._listTabsResponse) {
       return null;

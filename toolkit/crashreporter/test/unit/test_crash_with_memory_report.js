@@ -23,8 +23,6 @@ function run_test() {
                    .createInstance(Ci.nsIFile);
       file.initWithPath(profd);
 
-      let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
-                     .getService(Ci.nsIProperties);
       let provider = {
         getFile(prop, persistent) {
           persistent.value = true;
@@ -42,8 +40,8 @@ function run_test() {
           throw Components.results.NS_ERROR_NO_INTERFACE;
         }
       };
-      dirSvc.QueryInterface(Ci.nsIDirectoryService)
-            .registerProvider(provider);
+      Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
+                     .registerProvider(provider);
 
       crashReporter.saveMemoryReport();
     },

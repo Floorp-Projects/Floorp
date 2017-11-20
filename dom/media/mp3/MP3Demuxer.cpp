@@ -24,7 +24,7 @@ extern mozilla::LazyLogModule gMediaDemuxerLog;
 using mozilla::media::TimeUnit;
 using mozilla::media::TimeInterval;
 using mozilla::media::TimeIntervals;
-using mp4_demuxer::BufferReader;
+using mozilla::BufferReader;
 
 namespace mozilla {
 

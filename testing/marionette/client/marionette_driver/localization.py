@@ -17,7 +17,7 @@ class L10n(object):
         from marionette_driver.localization import L10n
         l10n = L10n(marionette)
 
-        l10n.localize_entity(["chrome://global/locale/about.dtd"], "about.version")
+        l10n.localize_entity(["chrome://branding/locale/brand.dtd"], "brandShortName")
         l10n.localize_property(["chrome://global/locale/findbar.properties"], "FastFind"))
 
     .. _localization: https://mzl.la/2eUMjyF

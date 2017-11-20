@@ -25,8 +25,6 @@
  * ]
  */
 
-/* exported FormAutofillParent */
-
 "use strict";
 
 this.EXPORTED_SYMBOLS = ["FormAutofillParent"];

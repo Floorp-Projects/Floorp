@@ -440,8 +440,11 @@ for (let tc of TESTCASES) {
       let handler = new FormAutofillHandler(formLike);
       let validFieldDetails = handler.collectFormFields(testcase.allowDuplicates);
 
-      verifyDetails(handler.address.fieldDetails, testcase.addressFieldDetails);
-      verifyDetails(handler.creditCard.fieldDetails, testcase.creditCardFieldDetails);
+      // TODO [Bug 1415077] We can assume all test cases with only one section
+      // should be filled. Eventually, the test needs to verify the filling
+      // feature in a multiple section case.
+      verifyDetails(handler.sections[0].address.fieldDetails, testcase.addressFieldDetails);
+      verifyDetails(handler.sections[0].creditCard.fieldDetails, testcase.creditCardFieldDetails);
       verifyDetails(validFieldDetails, testcase.validFieldDetails);
     });
   })();

@@ -48,12 +48,12 @@ async function runTests(browser, accDoc) {
   await onLoadEvents;
 
   onLoadEvents = waitForEvents([
-      [EVENT_DOCUMENT_LOAD_COMPLETE, urlChecker("about:")],
+      [EVENT_DOCUMENT_LOAD_COMPLETE, urlChecker("about:about")],
       [EVENT_STATE_CHANGE, busyChecker(false)],
       [EVENT_REORDER, getAccessible(browser)]
   ]);
 
-  browser.loadURI("about:");
+  browser.loadURI("about:about");
 
   await onLoadEvents;
 
