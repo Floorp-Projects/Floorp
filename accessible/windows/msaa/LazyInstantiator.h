@@ -83,6 +83,7 @@ private:
   explicit LazyInstantiator(HWND aHwnd);
   ~LazyInstantiator();
 
+  bool IsBlockedInjection();
   bool ShouldInstantiate(const DWORD aClientTid);
 
   bool GetClientExecutableName(const DWORD aClientTid, nsIFile** aOutClientExe);
