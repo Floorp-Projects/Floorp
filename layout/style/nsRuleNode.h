@@ -1057,11 +1057,6 @@ public:
   static void ComputeTimingFunction(const nsCSSValue& aValue,
                                     nsTimingFunction& aResult);
 
-  // Fill unspecified layers by cycling through their values
-  // till they all are of length aMaxItemCount
-  static void FillAllImageLayers(nsStyleImageLayers& aLayers,
-                                 uint32_t aMaxItemCount);
-
 private:
 #ifdef DEBUG
   // non-inline helper function to allow assertions without incomplete

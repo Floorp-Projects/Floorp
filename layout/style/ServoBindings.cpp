@@ -852,7 +852,7 @@ Gecko_StyleTransition_SetUnsupportedProperty(StyleTransition* aTransition,
 void
 Gecko_FillAllImageLayers(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
 {
-  nsRuleNode::FillAllImageLayers(*aLayers, aMaxLen);
+  aLayers->FillAllLayers(aMaxLen);
 }
 
 bool

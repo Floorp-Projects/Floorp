@@ -7097,84 +7097,6 @@ SetImageLayerPairList(GeckoStyleContext* aStyleContext,
     aMaxItemCount = aItemCount;
 }
 
-template <class ComputedValueItem>
-static void
-FillImageLayerList(
-    nsStyleAutoArray<nsStyleImageLayers::Layer>& aLayers,
-    ComputedValueItem nsStyleImageLayers::Layer::* aResultLocation,
-    uint32_t aItemCount, uint32_t aFillCount)
-{
-  NS_PRECONDITION(aFillCount <= aLayers.Length(), "unexpected array length");
-  for (uint32_t sourceLayer = 0, destLayer = aItemCount;
-       destLayer < aFillCount;
-       ++sourceLayer, ++destLayer) {
-    aLayers[destLayer].*aResultLocation =
-      aLayers[sourceLayer].*aResultLocation;
-  }
-}
-
-// The same as FillImageLayerList, but for values stored in
-// layer.mPosition.*aResultLocation instead of layer.*aResultLocation.
-static void
-FillImageLayerPositionCoordList(
-    nsStyleAutoArray<nsStyleImageLayers::Layer>& aLayers,
-    Position::Coord
-        Position::* aResultLocation,
-    uint32_t aItemCount, uint32_t aFillCount)
-{
-  NS_PRECONDITION(aFillCount <= aLayers.Length(), "unexpected array length");
-  for (uint32_t sourceLayer = 0, destLayer = aItemCount;
-       destLayer < aFillCount;
-       ++sourceLayer, ++destLayer) {
-    aLayers[destLayer].mPosition.*aResultLocation =
-      aLayers[sourceLayer].mPosition.*aResultLocation;
-  }
-}
-
-/* static */ void
-nsRuleNode::FillAllImageLayers(nsStyleImageLayers& aImage,
-                               uint32_t aMaxItemCount)
-{
-  // Delete any extra items.  We need to keep layers in which any
-  // property was specified.
-  aImage.mLayers.TruncateLengthNonZero(aMaxItemCount);
-
-  uint32_t fillCount = aImage.mImageCount;
-  FillImageLayerList(aImage.mLayers,
-                     &nsStyleImageLayers::Layer::mImage,
-                     aImage.mImageCount, fillCount);
-  FillImageLayerList(aImage.mLayers,
-                     &nsStyleImageLayers::Layer::mRepeat,
-                     aImage.mRepeatCount, fillCount);
-  FillImageLayerList(aImage.mLayers,
-                     &nsStyleImageLayers::Layer::mAttachment,
-                     aImage.mAttachmentCount, fillCount);
-  FillImageLayerList(aImage.mLayers,
-                     &nsStyleImageLayers::Layer::mClip,
-                     aImage.mClipCount, fillCount);
-  FillImageLayerList(aImage.mLayers,
-                     &nsStyleImageLayers::Layer::mBlendMode,
-                     aImage.mBlendModeCount, fillCount);
-  FillImageLayerList(aImage.mLayers,
-                     &nsStyleImageLayers::Layer::mOrigin,
-                     aImage.mOriginCount, fillCount);
-  FillImageLayerPositionCoordList(aImage.mLayers,
-                                  &Position::mXPosition,
-                                  aImage.mPositionXCount, fillCount);
-  FillImageLayerPositionCoordList(aImage.mLayers,
-                                  &Position::mYPosition,
-                                  aImage.mPositionYCount, fillCount);
-  FillImageLayerList(aImage.mLayers,
-                     &nsStyleImageLayers::Layer::mSize,
-                     aImage.mSizeCount, fillCount);
-  FillImageLayerList(aImage.mLayers,
-                     &nsStyleImageLayers::Layer::mMaskMode,
-                     aImage.mMaskModeCount, fillCount);
-  FillImageLayerList(aImage.mLayers,
-                     &nsStyleImageLayers::Layer::mComposite,
-                     aImage.mCompositeCount, fillCount);
-}
-
 const void*
 nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                                   const nsRuleData* aRuleData,
@@ -7290,7 +7212,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                         conditions);
 
   if (rebuild) {
-    FillAllImageLayers(bg->mImage, maxItemCount);
+    bg->mImage.FillAllLayers(maxItemCount);
   }
 
   COMPUTE_END_RESET(Background, bg)
@@ -9947,7 +9869,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                     svgReset->mMask.mCompositeCount, maxItemCount, rebuild, conditions);
 
   if (rebuild) {
-    FillAllImageLayers(svgReset->mMask, maxItemCount);
+    svgReset->mMask.FillAllLayers(maxItemCount);
   }
 
   COMPUTE_END_RESET(SVGReset, svgReset)
