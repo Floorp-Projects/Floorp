@@ -4634,8 +4634,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if md.returns:
             stmts.append(StmtExpr(ExprCall(send, args=[ msgexpr,
                                                         ExprVar('this'),
-                                                        resolvefn,
-                                                        rejectfn ])))
+                                                        ExprMove(resolvefn),
+                                                        ExprMove(rejectfn) ])))
             retvar = None
         else:
             stmts.append(StmtDecl(Decl(Type.BOOL, sendok.name),

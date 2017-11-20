@@ -1018,7 +1018,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     newChild->SendBrowserFrameOpenWindow(aTabOpener, renderFrame,
                                          NS_ConvertUTF8toUTF16(url),
                                          name, NS_ConvertUTF8toUTF16(features),
-                                         resolve, reject);
+                                         Move(resolve), Move(reject));
   } else {
     nsAutoCString baseURIString;
     float fullZoom;
@@ -1040,7 +1040,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                      aChromeFlags, aCalledFromJS, aPositionSpecified,
                      aSizeSpecified, uriToLoad, features, baseURIString,
                      fullZoom, Principal(triggeringPrincipal),
-                     resolve, reject);
+                     Move(resolve), Move(reject));
   }
 
   // =======================
