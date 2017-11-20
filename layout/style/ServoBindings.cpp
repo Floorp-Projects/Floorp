@@ -850,15 +850,9 @@ Gecko_StyleTransition_SetUnsupportedProperty(StyleTransition* aTransition,
 }
 
 void
-Gecko_FillAllBackgroundLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
+Gecko_FillAllImageLayers(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
 {
-  nsRuleNode::FillAllBackgroundLists(*aLayers, aMaxLen);
-}
-
-void
-Gecko_FillAllMaskLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
-{
-  nsRuleNode::FillAllMaskLists(*aLayers, aMaxLen);
+  nsRuleNode::FillAllImageLayers(*aLayers, aMaxLen);
 }
 
 bool
