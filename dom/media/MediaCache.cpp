@@ -2134,22 +2134,6 @@ MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
 }
 
 void
-MediaCacheStream::FlushPartialBlock()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-
-  // Write the current partial block to memory.
-  // Note: This writes a full block, so if data is not at the end of the
-  // stream, the decoder must subsequently choose correct start and end offsets
-  // for reading/seeking.
-  FlushPartialBlockInternal(false, mon);
-
-  mMediaCache->QueueUpdate();
-}
-
-void
 MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
                                           nsresult aStatus,
                                           bool aReopenOnError)

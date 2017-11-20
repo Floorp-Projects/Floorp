@@ -269,9 +269,6 @@ public:
   void NotifyDataReceived(uint32_t aLoadID,
                           uint32_t aCount,
                           const uint8_t* aData);
-  // Notifies the cache that the current bytes should be written to disk.
-  // Called on the main thread.
-  void FlushPartialBlock();
 
   // Set the load ID so the following NotifyDataEnded() call can work properly.
   // Used in some rare cases where NotifyDataEnded() is called without the
@@ -448,8 +445,7 @@ private:
   // This method assumes that the cache monitor is held and can be called on
   // any thread.
   int64_t GetNextCachedDataInternal(int64_t aOffset);
-  // Writes |mPartialBlock| to disk.
-  // Used by |NotifyDataEnded| and |FlushPartialBlock|.
+  // Used by |NotifyDataEnded| to write |mPartialBlock| to disk.
   // If |aNotifyAll| is true, this function will wake up readers who may be
   // waiting on the media cache monitor. Called on the main thread only.
   void FlushPartialBlockInternal(bool aNotify, ReentrantMonitorAutoEnter& aReentrantMonitor);
