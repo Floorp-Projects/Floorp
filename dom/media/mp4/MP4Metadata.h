@@ -17,15 +17,19 @@
 
 namespace mozilla {
 
-class IndiceWrapper {
+// The memory owner in mIndice.indices is rust mp4 parser, so lifetime of this
+// class SHOULD NOT longer than rust parser.
+class IndiceWrapper
+{
 public:
-  virtual size_t Length() const = 0;
+  size_t Length() const;
 
-  // TODO: Index::Indice is from stagefright, we should use another struct once
-  //       stagefrigth is removed.
-  virtual bool GetIndice(size_t aIndex, Index::Indice& aIndice) const = 0;
+  bool GetIndice(size_t aIndex, Index::Indice& aIndice) const;
 
-  virtual ~IndiceWrapper() {}
+  explicit IndiceWrapper(mp4parse_byte_data& aRustIndice);
+
+protected:
+  mp4parse_byte_data mIndice;
 };
 
 struct FreeMP4Parser { void operator()(mp4parse_parser* aPtr) { mp4parse_free(aPtr); } };
