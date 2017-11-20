@@ -541,13 +541,13 @@ class ContextMenu {
     let contentDisposition = null;
     if (aEvent.target.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
         aEvent.target instanceof Ci.nsIImageLoadingContent &&
-        aEvent.target.currentRequestFinalURI) {
+        aEvent.target.currentURI) {
       disableSetDesktopBg = this._disableSetDesktopBackground(aEvent.target);
 
       try {
         let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                                                          .getImgCacheForDocument(doc);
-        let props = imageCache.findEntryProperties(aEvent.target.currentRequestFinalURI, doc);
+        let props = imageCache.findEntryProperties(aEvent.target.currentURI, doc);
 
         try {
           contentType = props.get("type", Ci.nsISupportsCString).data;
@@ -810,7 +810,7 @@ class ContextMenu {
     // nsDocumentViewer::GetInImage. Make sure to update both if this is
     // changed.
     if (context.target instanceof Ci.nsIImageLoadingContent &&
-        context.target.currentRequestFinalURI) {
+        context.target.currentURI) {
       context.onImage = true;
 
       context.imageInfo = {
@@ -832,7 +832,7 @@ class ContextMenu {
         context.onCompletedImage = true;
       }
 
-      context.mediaURL = context.target.currentRequestFinalURI.spec;
+      context.mediaURL = context.target.currentURI.spec;
 
       const descURL = context.target.getAttribute("longdesc");
 
