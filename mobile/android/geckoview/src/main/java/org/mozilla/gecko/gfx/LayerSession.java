@@ -31,6 +31,8 @@ public class LayerSession {
     protected class Compositor extends JNIObject {
         public LayerView layerView;
 
+        private volatile boolean mContentDocumentIsDisplayed;
+
         public boolean isReady() {
             return LayerSession.this.isCompositorReady();
         }
@@ -55,8 +57,7 @@ public class LayerSession {
         @Override protected native void disposeNative();
 
         @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")
-        public native void attachToJava(GeckoLayerClient layerClient,
-                                        NativePanZoomController npzc);
+        public native void attachToJava(NativePanZoomController npzc);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
         public native void onBoundsChanged(int left, int top, int width, int height);
@@ -127,6 +128,28 @@ public class LayerSession {
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
         public native void sendToolbarPixelsToCompositor(final int width, final int height,
                                                          final int[] pixels);
+
+        @WrapForJNI(calledFrom = "gecko")
+        private void contentDocumentChanged() {
+            mContentDocumentIsDisplayed = false;
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+        private boolean isContentDocumentDisplayed() {
+            return mContentDocumentIsDisplayed;
+        }
+
+        // The compositor invokes this function just before compositing a frame where the
+        // document is different from the document composited on the last frame. In these
+        // cases, the viewport information we have in Java is no longer valid and needs to
+        // be replaced with the new viewport information provided.
+        @WrapForJNI(calledFrom = "ui")
+        public void updateRootFrameMetrics(float scrollX, float scrollY, float zoom) {
+            mContentDocumentIsDisplayed = true;
+            if (layerView != null) {
+                layerView.onMetricsChanged(scrollX, scrollY, zoom);
+            }
+        }
     }
 
     protected final Compositor mCompositor = new Compositor();

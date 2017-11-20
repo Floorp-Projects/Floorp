@@ -13,13 +13,18 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.json.JSONObject;
 
 import android.graphics.PointF;
+import android.os.SystemClock;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.InputDevice;
 
+import java.util.ArrayList;
+
 class NativePanZoomController extends JNIObject implements PanZoomController {
+    private static final String LOGTAG = "GeckoNPZC";
     private final float MAX_SCROLL;
 
     private final LayerView mView;
@@ -28,6 +33,8 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     private Overscroll mOverscroll;
     private float mPointerScrollFactor;
     private long mLastDownTime;
+
+    private SynthesizedEventState mPointerState;
 
     @WrapForJNI(calledFrom = "ui")
     private native boolean handleMotionEvent(
@@ -255,5 +262,232 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     @WrapForJNI(calledFrom = "gecko")
     private void onSelectionDragState(boolean state) {
         mView.getDynamicToolbarAnimator().setPinned(state, PinReason.CARET_DRAG);
+    }
+
+    private static class PointerInfo {
+        // We reserve one pointer ID for the mouse, so that tests don't have
+        // to worry about tracking pointer IDs if they just want to test mouse
+        // event synthesization. If somebody tries to use this ID for a
+        // synthesized touch event we'll throw an exception.
+        public static final int RESERVED_MOUSE_POINTER_ID = 100000;
+
+        public int pointerId;
+        public int source;
+        public int screenX;
+        public int screenY;
+        public double pressure;
+        public int orientation;
+
+        public MotionEvent.PointerCoords getCoords() {
+            MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
+            coords.orientation = orientation;
+            coords.pressure = (float)pressure;
+            coords.x = screenX;
+            coords.y = screenY;
+            return coords;
+        }
+    }
+
+    private static class SynthesizedEventState {
+        public final ArrayList<PointerInfo> pointers;
+        public long downTime;
+
+        SynthesizedEventState() {
+            pointers = new ArrayList<PointerInfo>();
+        }
+
+        int getPointerIndex(int pointerId) {
+            for (int i = 0; i < pointers.size(); i++) {
+                if (pointers.get(i).pointerId == pointerId) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        int addPointer(int pointerId, int source) {
+            PointerInfo info = new PointerInfo();
+            info.pointerId = pointerId;
+            info.source = source;
+            pointers.add(info);
+            return pointers.size() - 1;
+        }
+
+        int getPointerCount(int source) {
+            int count = 0;
+            for (int i = 0; i < pointers.size(); i++) {
+                if (pointers.get(i).source == source) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        MotionEvent.PointerProperties[] getPointerProperties(int source) {
+            MotionEvent.PointerProperties[] props =
+                    new MotionEvent.PointerProperties[getPointerCount(source)];
+            int index = 0;
+            for (int i = 0; i < pointers.size(); i++) {
+                if (pointers.get(i).source == source) {
+                    MotionEvent.PointerProperties p = new MotionEvent.PointerProperties();
+                    p.id = pointers.get(i).pointerId;
+                    switch (source) {
+                        case InputDevice.SOURCE_TOUCHSCREEN:
+                            p.toolType = MotionEvent.TOOL_TYPE_FINGER;
+                            break;
+                        case InputDevice.SOURCE_MOUSE:
+                            p.toolType = MotionEvent.TOOL_TYPE_MOUSE;
+                            break;
+                    }
+                    props[index++] = p;
+                }
+            }
+            return props;
+        }
+
+        MotionEvent.PointerCoords[] getPointerCoords(int source) {
+            MotionEvent.PointerCoords[] coords =
+                    new MotionEvent.PointerCoords[getPointerCount(source)];
+            int index = 0;
+            for (int i = 0; i < pointers.size(); i++) {
+                if (pointers.get(i).source == source) {
+                    coords[index++] = pointers.get(i).getCoords();
+                }
+            }
+            return coords;
+        }
+    }
+
+    private void synthesizeNativePointer(int source, int pointerId, int eventType,
+                                         int screenX, int screenY, double pressure,
+                                         int orientation)
+    {
+        final View view = mView;
+        final int[] origin = new int[2];
+        view.getLocationOnScreen(origin);
+        screenX -= origin[0];
+        screenY -= origin[1];
+
+        if (mPointerState == null) {
+            mPointerState = new SynthesizedEventState();
+        }
+
+        // Find the pointer if it already exists
+        int pointerIndex = mPointerState.getPointerIndex(pointerId);
+
+        // Event-specific handling
+        switch (eventType) {
+            case MotionEvent.ACTION_POINTER_UP:
+                if (pointerIndex < 0) {
+                    Log.w(LOGTAG, "Pointer-up for invalid pointer");
+                    return;
+                }
+                if (mPointerState.pointers.size() == 1) {
+                    // Last pointer is going up
+                    eventType = MotionEvent.ACTION_UP;
+                }
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                if (pointerIndex < 0) {
+                    Log.w(LOGTAG, "Pointer-cancel for invalid pointer");
+                    return;
+                }
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                if (pointerIndex < 0) {
+                    // Adding a new pointer
+                    pointerIndex = mPointerState.addPointer(pointerId, source);
+                    if (pointerIndex == 0) {
+                        // first pointer
+                        eventType = MotionEvent.ACTION_DOWN;
+                        mPointerState.downTime = SystemClock.uptimeMillis();
+                    }
+                } else {
+                    // We're moving an existing pointer
+                    eventType = MotionEvent.ACTION_MOVE;
+                }
+                break;
+            case MotionEvent.ACTION_HOVER_MOVE:
+                if (pointerIndex < 0) {
+                    // Mouse-move a pointer without it going "down". However
+                    // in order to send the right MotionEvent without a lot of
+                    // duplicated code, we add the pointer to mPointerState,
+                    // and then remove it at the bottom of this function.
+                    pointerIndex = mPointerState.addPointer(pointerId, source);
+                } else {
+                    // We're moving an existing mouse pointer that went down.
+                    eventType = MotionEvent.ACTION_MOVE;
+                }
+                break;
+        }
+
+        // Update the pointer with the new info
+        PointerInfo info = mPointerState.pointers.get(pointerIndex);
+        info.screenX = screenX;
+        info.screenY = screenY;
+        info.pressure = pressure;
+        info.orientation = orientation;
+
+        // Dispatch the event
+        int action = 0;
+        if (eventType == MotionEvent.ACTION_POINTER_DOWN ||
+            eventType == MotionEvent.ACTION_POINTER_UP) {
+            // for pointer-down and pointer-up events we need to add the
+            // index of the relevant pointer.
+            action = (pointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
+            action &= MotionEvent.ACTION_POINTER_INDEX_MASK;
+        }
+        action |= (eventType & MotionEvent.ACTION_MASK);
+        boolean isButtonDown = (source == InputDevice.SOURCE_MOUSE) &&
+                               (eventType == MotionEvent.ACTION_DOWN ||
+                                eventType == MotionEvent.ACTION_MOVE);
+        final MotionEvent event = MotionEvent.obtain(
+            /*downTime*/ mPointerState.downTime,
+            /*eventTime*/ SystemClock.uptimeMillis(),
+            /*action*/ action,
+            /*pointerCount*/ mPointerState.getPointerCount(source),
+            /*pointerProperties*/ mPointerState.getPointerProperties(source),
+            /*pointerCoords*/ mPointerState.getPointerCoords(source),
+            /*metaState*/ 0,
+            /*buttonState*/ (isButtonDown ? MotionEvent.BUTTON_PRIMARY : 0),
+            /*xPrecision*/ 0,
+            /*yPrecision*/ 0,
+            /*deviceId*/ 0,
+            /*edgeFlags*/ 0,
+            /*source*/ source,
+            /*flags*/ 0);
+        view.post(new Runnable() {
+            @Override
+            public void run() {
+                view.dispatchTouchEvent(event);
+            }
+        });
+
+        // Forget about removed pointers
+        if (eventType == MotionEvent.ACTION_POINTER_UP ||
+            eventType == MotionEvent.ACTION_UP ||
+            eventType == MotionEvent.ACTION_CANCEL ||
+            eventType == MotionEvent.ACTION_HOVER_MOVE)
+        {
+            mPointerState.pointers.remove(pointerIndex);
+        }
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    private void synthesizeNativeTouchPoint(int pointerId, int eventType, int screenX,
+            int screenY, double pressure, int orientation)
+    {
+        if (pointerId == PointerInfo.RESERVED_MOUSE_POINTER_ID) {
+            throw new IllegalArgumentException("Pointer ID reserved for mouse");
+        }
+        synthesizeNativePointer(InputDevice.SOURCE_TOUCHSCREEN, pointerId,
+                                eventType, screenX, screenY, pressure, orientation);
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    private void synthesizeNativeMouseEvent(int eventType, int screenX, int screenY) {
+        synthesizeNativePointer(InputDevice.SOURCE_MOUSE,
+                                PointerInfo.RESERVED_MOUSE_POINTER_ID,
+                                eventType, screenX, screenY, 0, 0);
     }
 }
