@@ -120,8 +120,7 @@ ResolveToDefiniteSize(const nsStyleCoord& aCoord, nscoord aPercentBasis)
   if (::IsPercentOfIndefiniteSize(aCoord, aPercentBasis)) {
     return nscoord(0);
   }
-  return std::max(nscoord(0),
-                  nsRuleNode::ComputeCoordPercentCalc(aCoord, aPercentBasis));
+  return std::max(nscoord(0), aCoord.ComputeCoordPercentCalc(aPercentBasis));
 }
 
 static bool
@@ -150,8 +149,7 @@ ResolvePercentSizeParts(const nsStyleCoord& aCoord, nscoord aPercentBasis,
   MOZ_ASSERT(aCoord.IsCoordPercentCalcUnit());
   if (aPercentBasis != NS_UNCONSTRAINEDSIZE) {
     *aLength = std::max(nscoord(0),
-                        nsRuleNode::ComputeCoordPercentCalc(aCoord,
-                                                            aPercentBasis));
+                        aCoord.ComputeCoordPercentCalc(aPercentBasis));
     *aPercent = 0.0f;
     return;
   }
@@ -3782,8 +3780,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   if (needed && TrackSize::IsDefiniteMaxSizing(sz.mState)) {
     if (sz.mState & TrackSize::eIntrinsicMinSizing) {
       auto maxCoord = aFunctions.MaxSizingFor(aRange.mStart);
-      cache.mMinSizeClamp =
-        nsRuleNode::ComputeCoordPercentCalc(maxCoord, aPercentageBasis);
+      cache.mMinSizeClamp = maxCoord.ComputeCoordPercentCalc(aPercentageBasis);
     }
     aGridItem.mState[mAxis] |= ItemState::eClampMarginBoxMinSize;
   }
@@ -3827,7 +3824,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
       // Clamp mLimit to the fit-content() size, for §12.5.1.
       auto maxCoord = aFunctions.MaxSizingFor(aRange.mStart);
       nscoord fitContentClamp =
-        nsRuleNode::ComputeCoordPercentCalc(maxCoord, aPercentageBasis);
+        maxCoord.ComputeCoordPercentCalc(aPercentageBasis);
       sz.mLimit = std::min(sz.mLimit, fitContentClamp);
     }
   }
@@ -4221,8 +4218,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
           nscoord minSizeClamp = 0;
           for (auto i = lineRange.mStart, end = lineRange.mEnd; i < end; ++i) {
             auto maxCoord = aFunctions.MaxSizingFor(i);
-            minSizeClamp +=
-              nsRuleNode::ComputeCoordPercentCalc(maxCoord, aPercentageBasis);
+            minSizeClamp += maxCoord.ComputeCoordPercentCalc(aPercentageBasis);
           }
           minSizeClamp += mGridGap * (span - 1);
           cache.mMinSizeClamp = minSizeClamp;

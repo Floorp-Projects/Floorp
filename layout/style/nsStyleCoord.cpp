@@ -206,6 +206,22 @@ nsStyleCoord::ComputeComputedCalc(nscoord aPercentageBasis) const
          NSToCoordFloorClamped(aPercentageBasis * calc->mPercent);
 }
 
+nscoord
+nsStyleCoord::ComputeCoordPercentCalc(nscoord aPercentageBasis) const
+{
+  switch (GetUnit()) {
+    case eStyleUnit_Coord:
+      return GetCoordValue();
+    case eStyleUnit_Percent:
+      return NSToCoordFloorClamped(aPercentageBasis * GetPercentValue());
+    case eStyleUnit_Calc:
+      return ComputeComputedCalc(aPercentageBasis);
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected unit!");
+      return 0;
+  }
+}
+
 nsStyleSides::nsStyleSides()
 {
   NS_FOR_CSS_SIDES(i) {
