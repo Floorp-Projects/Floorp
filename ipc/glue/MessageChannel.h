@@ -109,7 +109,7 @@ public:
     struct UntypedCallbackHolder
     {
         UntypedCallbackHolder(ActorIdType aActorId,
-                              RejectCallback aReject)
+                              RejectCallback&& aReject)
             : mActorId(aActorId)
             , mReject(Move(aReject))
         {}
@@ -128,8 +128,8 @@ public:
     struct CallbackHolder : public UntypedCallbackHolder
     {
         CallbackHolder(ActorIdType aActorId,
-                       ResolveCallback<Value> aResolve,
-                       RejectCallback aReject)
+                       ResolveCallback<Value>&& aResolve,
+                       RejectCallback&& aReject)
             : UntypedCallbackHolder(aActorId, Move(aReject))
             , mResolve(Move(aResolve))
         {}
@@ -222,8 +222,8 @@ private:
     template<typename Value>
     void Send(Message* aMsg,
               ActorIdType aActorId,
-              ResolveCallback<Value> aResolve,
-              RejectCallback aReject) {
+              ResolveCallback<Value>&& aResolve,
+              RejectCallback&& aReject) {
         int32_t seqno = NextSeqno();
         aMsg->set_seqno(seqno);
         if (!Send(aMsg)) {
