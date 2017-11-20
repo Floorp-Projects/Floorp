@@ -3177,6 +3177,83 @@ nsStyleImageLayers::Layer::operator==(const Layer& aOther) const
          mComposite == aOther.mComposite;
 }
 
+template <class ComputedValueItem>
+static void
+FillImageLayerList(
+    nsStyleAutoArray<nsStyleImageLayers::Layer>& aLayers,
+    ComputedValueItem nsStyleImageLayers::Layer::* aResultLocation,
+    uint32_t aItemCount, uint32_t aFillCount)
+{
+  NS_PRECONDITION(aFillCount <= aLayers.Length(), "unexpected array length");
+  for (uint32_t sourceLayer = 0, destLayer = aItemCount;
+       destLayer < aFillCount;
+       ++sourceLayer, ++destLayer) {
+    aLayers[destLayer].*aResultLocation =
+      aLayers[sourceLayer].*aResultLocation;
+  }
+}
+
+// The same as FillImageLayerList, but for values stored in
+// layer.mPosition.*aResultLocation instead of layer.*aResultLocation.
+static void
+FillImageLayerPositionCoordList(
+    nsStyleAutoArray<nsStyleImageLayers::Layer>& aLayers,
+    Position::Coord
+        Position::* aResultLocation,
+    uint32_t aItemCount, uint32_t aFillCount)
+{
+  NS_PRECONDITION(aFillCount <= aLayers.Length(), "unexpected array length");
+  for (uint32_t sourceLayer = 0, destLayer = aItemCount;
+       destLayer < aFillCount;
+       ++sourceLayer, ++destLayer) {
+    aLayers[destLayer].mPosition.*aResultLocation =
+      aLayers[sourceLayer].mPosition.*aResultLocation;
+  }
+}
+
+void
+nsStyleImageLayers::FillAllLayers(uint32_t aMaxItemCount)
+{
+  // Delete any extra items.  We need to keep layers in which any
+  // property was specified.
+  mLayers.TruncateLengthNonZero(aMaxItemCount);
+
+  uint32_t fillCount = mImageCount;
+  FillImageLayerList(mLayers,
+                     &nsStyleImageLayers::Layer::mImage,
+                     mImageCount, fillCount);
+  FillImageLayerList(mLayers,
+                     &nsStyleImageLayers::Layer::mRepeat,
+                     mRepeatCount, fillCount);
+  FillImageLayerList(mLayers,
+                     &nsStyleImageLayers::Layer::mAttachment,
+                     mAttachmentCount, fillCount);
+  FillImageLayerList(mLayers,
+                     &nsStyleImageLayers::Layer::mClip,
+                     mClipCount, fillCount);
+  FillImageLayerList(mLayers,
+                     &nsStyleImageLayers::Layer::mBlendMode,
+                     mBlendModeCount, fillCount);
+  FillImageLayerList(mLayers,
+                     &nsStyleImageLayers::Layer::mOrigin,
+                     mOriginCount, fillCount);
+  FillImageLayerPositionCoordList(mLayers,
+                                  &Position::mXPosition,
+                                  mPositionXCount, fillCount);
+  FillImageLayerPositionCoordList(mLayers,
+                                  &Position::mYPosition,
+                                  mPositionYCount, fillCount);
+  FillImageLayerList(mLayers,
+                     &nsStyleImageLayers::Layer::mSize,
+                     mSizeCount, fillCount);
+  FillImageLayerList(mLayers,
+                     &nsStyleImageLayers::Layer::mMaskMode,
+                     mMaskModeCount, fillCount);
+  FillImageLayerList(mLayers,
+                     &nsStyleImageLayers::Layer::mComposite,
+                     mCompositeCount, fillCount);
+}
+
 nsChangeHint
 nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewLayer) const
 {
