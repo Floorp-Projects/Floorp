@@ -36,12 +36,10 @@ def make_hg_url(hgHost, repoPath, protocol='https', revision=None,
         return '/'.join([p.strip('/') for p in [repo, 'raw-file', revision,
                          filename]])
 
-def readConfig(configfile, keys=[]):
+def readConfig(configfile):
     c = {}
     execfile(configfile, c)
-    for k in keys:
-        c = c[k]
-    return c
+    return c['whitelist']
 
 def verify_mozconfigs(mozconfig_pair, nightly_mozconfig_pair, platform,
                       mozconfigWhitelist={}):
@@ -137,7 +135,7 @@ if __name__ == '__main__':
         logging.error('Not enough arguments to download mozconfigs')
         sys.exit(FAILURE_CODE)
 
-    mozconfig_whitelist = readConfig(options.whitelist, ['whitelist'])
+    mozconfig_whitelist = readConfig(options.whitelist)
 
     for arg in args:
         platform, mozconfig_path, nightly_mozconfig_path = arg.split(',')
