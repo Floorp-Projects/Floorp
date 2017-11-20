@@ -44,6 +44,7 @@ xpcshell:
             android-4.2-x86/opt: 6
             macosx.*: 1
             windows.*: 1
+            windows10-64-ccov/debug: 8
             default: 8
     instance-size:
         by-test-platform:

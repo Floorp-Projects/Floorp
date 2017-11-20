@@ -148,6 +148,9 @@
 
       testName("testArticle", "Test article");
 
+      testName("h1", "heading");
+      testName("aria_heading", "aria_heading");
+
       // ////////////////////////////////////////////////////////////////////////
       // title attribute
 
@@ -487,6 +490,9 @@
   <div id="testArticle" role="article" title="Test article">
     <p>This is a paragraph inside the article.</p>
   </div>
+
+  <h1 id="h1" title="oops">heading</h1>
+  <div role="heading" id="aria_heading">aria_heading</div>
 
   <!-- name from title attribute -->
   <span id="btn_title" role="group" title="title">15</span>

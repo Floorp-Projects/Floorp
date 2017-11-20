@@ -593,19 +593,28 @@ Statistics::renderJsonMessage(uint64_t timestamp, bool includeSlices) const
 void
 Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
 {
+    // If you change JSON properties here, please update:
+    // Telemetry ping code: toolkit/components/telemetry/GCTelemetry.jsm
+    // Telemetry documentation: toolkit/components/telemetry/docs/data/main-ping.rst
+    // Telemetry tests: toolkit/components/telemetry/tests/browser/browser_TelemetryGC.js
+    // Perf.html: https://github.com/devtools-html/perf.html
+
     json.property("timestamp", timestamp);
 
     TimeDuration total, longest;
     gcDuration(&total, &longest);
     json.property("max_pause", longest, JSONPrinter::MILLISECONDS);
     json.property("total_time", total, JSONPrinter::MILLISECONDS);
-
+    // We might be able to omit reason if perf.html was able to retrive it
+    // from the first slice.  But it doesn't do this yet.
     json.property("reason", ExplainReason(slices_[0].reason));
     json.property("zones_collected", zoneStats.collectedZoneCount);
     json.property("total_zones", zoneStats.zoneCount);
     json.property("total_compartments", zoneStats.compartmentCount);
-    json.property("minor_gcs", counts[STAT_MINOR_GC]);
-    json.property("store_buffer_overflows", counts[STAT_STOREBUFFER_OVERFLOW]);
+    json.property("minor_gcs", getCount(STAT_MINOR_GC));
+    uint32_t storebufferOverflows = getCount(STAT_STOREBUFFER_OVERFLOW);
+    if (storebufferOverflows)
+        json.property("store_buffer_overflows", storebufferOverflows);
     json.property("slices", slices_.length());
 
     const double mmu20 = computeMMU(TimeDuration::FromMilliseconds(20));
@@ -618,11 +627,15 @@ Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
     json.property("scc_sweep_total", sccTotal, JSONPrinter::MILLISECONDS);
     json.property("scc_sweep_max_pause", sccLongest, JSONPrinter::MILLISECONDS);
 
-    json.property("nonincremental_reason", ExplainAbortReason(nonincrementalReason_));
-    json.property("allocated", uint64_t(preBytes)/1024/1024);
+    if (nonincrementalReason_ != AbortReason::None)
+        json.property("nonincremental_reason", ExplainAbortReason(nonincrementalReason_));
     json.property("allocated_bytes", preBytes);
-    json.property("added_chunks", getCount(STAT_NEW_CHUNK));
-    json.property("removed_chunks", getCount(STAT_DESTROY_CHUNK));
+    uint32_t addedChunks = getCount(STAT_NEW_CHUNK);
+    if (addedChunks)
+        json.property("added_chunks", addedChunks);
+    uint32_t removedChunks = getCount(STAT_DESTROY_CHUNK);
+    if (removedChunks)
+        json.property("removed_chunks", removedChunks);
     json.property("major_gc_number", startingMajorGCNumber);
     json.property("minor_gc_number", startingMinorGCNumber);
     json.property("slice_number", startingSliceNumber);
@@ -631,14 +644,17 @@ Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
 void
 Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice, JSONPrinter& json) const
 {
-    TimeDuration when = slice.start - slices_[0].start;
+    // If you change JSON properties here, please update:
+    // Telemetry ping code: toolkit/components/telemetry/GCTelemetry.jsm
+    // Telemetry documentation: toolkit/components/telemetry/docs/data/main-ping.rst
+    // Telemetry tests: toolkit/components/telemetry/tests/browser/browser_TelemetryGC.js
+    // Perf.html: https://github.com/devtools-html/perf.html
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
     TimeStamp originTime = TimeStamp::ProcessCreation();
 
     json.property("slice", i);
     json.property("pause", slice.duration(), JSONPrinter::MILLISECONDS);
-    json.property("when", when, JSONPrinter::MILLISECONDS);
     json.property("reason", ExplainReason(slice.reason));
     json.property("initial_state", gc::StateName(slice.initialState));
     json.property("final_state", gc::StateName(slice.finalState));
@@ -648,9 +664,10 @@ Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice, JSONP
         json.floatProperty("trigger_amount", triggerAmount, 0);
         json.floatProperty("trigger_threshold", triggerThreshold, 0);
     }
-    json.property("page_faults", int64_t(slice.endFaults - slice.startFaults));
+    int64_t numFaults = slice.endFaults - slice.startFaults;
+    if (numFaults != 0)
+        json.property("page_faults", numFaults);
     json.property("start_timestamp", slice.start - originTime, JSONPrinter::SECONDS);
-    json.property("end_timestamp", slice.end - originTime, JSONPrinter::SECONDS);
 }
 
 void

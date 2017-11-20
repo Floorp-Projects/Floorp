@@ -275,8 +275,7 @@ function arrayAlloc3(i) {
         assertEq(a[3], 3);
         return a.length;
     }
-    // TODO: Does not support NewArrayCopyOnWrite yet.
-    assertRecoveredOnBailout(a, false);
+    assertRecoveredOnBailout(a, true);
     return 0;
 };
 

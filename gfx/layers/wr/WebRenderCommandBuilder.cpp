@@ -485,8 +485,11 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
 
   // Blob images will only draw the visible area of the blob so we don't need to clip
   // them here and can just rely on the webrender clipping.
+  // TODO We also don't clip native themed widget to avoid over-invalidation during scrolling.
+  // it would be better to support a sort of straming/tiling scheme for large ones but the hope
+  // is that we should not have large native themed items.
   nsRect paintBounds = itemBounds;
-  if (useBlobImage) {
+  if (useBlobImage || aItem->MustPaintOnContentSide()) {
     paintBounds = itemBounds;
   } else {
     paintBounds = aItem->GetClippedBounds(aDisplayListBuilder);

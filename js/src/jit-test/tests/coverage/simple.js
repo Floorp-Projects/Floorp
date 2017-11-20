@@ -101,9 +101,24 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //LH:2
 });
 
+checkLcov(function () { ','.split(','); //FN:$,top-level //FNDA:1,% //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:1
+  //LH:1
+});
+
+checkLcov(function () { function f() { ','.split(','); } //FN:$,top-level //FNDA:1,% //FN:$,f //FNDA:1,f //DA:$,1
+  f(); //DA:$,1
+  //FNF:2
+  //FNH:2
+  //LF:2
+  //LH:2
+});
+
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  if (l.length == 3)      //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,-
+  if (l.length == 3)      //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,0
     l.push('');           //DA:$,0
   l.pop();                //DA:$,1
   //FNF:1
@@ -116,7 +131,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  if (l.length == 2)      //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
+  if (l.length == 2)      //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,1
     l.push('');           //DA:$,1
   l.pop();                //DA:$,1
   //FNF:1
@@ -129,7 +144,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  if (l.length == 3)      //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,-
+  if (l.length == 3)      //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,0
     l.push('');           //DA:$,0
   else
     l.pop();              //DA:$,1
@@ -143,7 +158,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  if (l.length == 2)      //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
+  if (l.length == 2)      //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,1
     l.push('');           //DA:$,1
   else
     l.pop();              //DA:$,0
@@ -157,7 +172,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  if (l.length == 2)      //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
+  if (l.length == 2)      //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,1
     l.push('');           //DA:$,1
   else {
     if (l.length == 1)    //DA:$,0 //BRDA:$,1,0,- //BRDA:$,1,1,-
@@ -193,7 +208,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   try {                     //DA:$,1
     var l = ",".split(','); //DA:$,1
-    if (l.length == 2) {    //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
+    if (l.length == 2) {    //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,1
       l.push('');           //DA:$,1
       throw l;              //DA:$,1
     }
@@ -213,7 +228,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(',');   //DA:$,1
   try {                     //DA:$,1
     try {                   //DA:$,1
-      if (l.length == 2) {  //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
+      if (l.length == 2) {  //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,1
         l.push('');         //DA:$,1
         throw l;            //DA:$,1
       }
@@ -253,7 +268,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 // Test TableSwitch opcode
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,- //BRDA:$,0,4,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1 //BRDA:$,0,3,0 //BRDA:$,0,4,0
     case 0:
       l.push('0');        //DA:$,0
       break;
@@ -278,7 +293,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,- //BRDA:$,0,4,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1 //BRDA:$,0,3,0 //BRDA:$,0,4,0
     case 0:
       l.push('0');        //DA:$,0
     case 1:
@@ -300,7 +315,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
                           // Branches are ordered, and starting at 0
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,- //BRDA:$,0,2,- //BRDA:$,0,3,- //BRDA:$,0,4,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,0 //BRDA:$,0,2,0 //BRDA:$,0,3,0 //BRDA:$,0,4,0
     case 5:
       l.push('5');        //DA:$,0
     case 4:
@@ -321,7 +336,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,- //BRDA:$,0,2,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,0 //BRDA:$,0,2,0
     case 2:
       l.push('2');        //DA:$,1
     case 5:
@@ -338,7 +353,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1
     case 3:
       l.push('1');        //DA:$,0
     case 5:
@@ -361,9 +376,9 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   }
   var l = ",".split(','); //DA:$,1
   switch (l.length) {     //DA:$,1
-    case f(-42):          //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
+    case f(-42):          //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,1
       l.push('1');        //DA:$,0
-    case f(51):           //DA:$,1 //BRDA:$,1,0,- //BRDA:$,1,1,1
+    case f(51):           //DA:$,1 //BRDA:$,1,0,0 //BRDA:$,1,1,1
       l.push('5');        //DA:$,0
   }
   l.pop();                //DA:$,1
@@ -377,7 +392,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1 //BRDA:$,0,2,- //BRDA:$,0,3,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,1 //BRDA:$,0,2,0 //BRDA:$,0,3,0
     case 0:
     case 1:
       l.push('0');        //DA:$,0
@@ -398,7 +413,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1 //BRDA:$,0,3,0
     case 0:
       l.push('0');        //DA:$,0
     case 1:
@@ -419,7 +434,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1 //BRDA:$,0,3,0
     case 0:
       l.push('0');        //DA:$,0
     case 1:
@@ -441,7 +456,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1 //BRDA:$,0,3,0
     case 0:
       l.push('0');        //DA:$,0
     case 1:
@@ -463,7 +478,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,- //BRDA:$,0,4,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1 //BRDA:$,0,3,0 //BRDA:$,0,4,0
     case 0:
       l.push('0');        //DA:$,0
     case 1:
@@ -486,7 +501,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,- //BRDA:$,0,3,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,0 //BRDA:$,0,3,1
     case 0:
       l.push('0');        //DA:$,0
     case 1:
@@ -501,6 +516,25 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //FNH:1
   //LF:7
   //LH:5
+  //BRF:4
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ','.split(','); //DA:$,1
+  if (l.length === 45) {  //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,0
+    switch (l[0]) {       //DA:$,0 //BRDA:$,1,0,- //BRDA:$,1,1,-
+      case ',':
+        l.push('0');      //DA:$,0
+      default:
+        l.push('1');      //DA:$,0
+    }
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:6
+  //LH:3
   //BRF:4
   //BRH:1
 });

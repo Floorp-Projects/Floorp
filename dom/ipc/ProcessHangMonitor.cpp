@@ -8,7 +8,6 @@
 #include "mozilla/ProcessHangMonitorIPC.h"
 
 #include "jsapi.h"
-#include "js/GCAPI.h"
 
 #include "mozilla/Atomics.h"
 #include "mozilla/BackgroundHangMonitor.h"

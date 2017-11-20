@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+ * High-level interface to the JS garbage collector.
+ */
+
 #ifndef js_GCAPI_h
 #define js_GCAPI_h
 
@@ -11,9 +15,26 @@
 #include "mozilla/Vector.h"
 
 #include "js/GCAnnotations.h"
-#include "js/HeapAPI.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
+
+struct JSCompartment;
+struct JSContext;
+struct JSFreeOp;
+class JSObject;
+struct JSRuntime;
+class JSString;
+
+#ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattributes"
+#endif // JS_BROKEN_GCC_ATTRIBUTE_WARNING
+
+class JS_PUBLIC_API(JSTracer);
+
+#ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
+#pragma GCC diagnostic pop
+#endif // JS_BROKEN_GCC_ATTRIBUTE_WARNING
 
 namespace js {
 namespace gc {
@@ -49,7 +70,271 @@ typedef enum JSGCInvocationKind {
     GC_SHRINK = 1
 } JSGCInvocationKind;
 
+typedef enum JSGCParamKey {
+    /**
+     * Maximum nominal heap before last ditch GC.
+     *
+     * Soft limit on the number of bytes we are allowed to allocate in the GC
+     * heap. Attempts to allocate gcthings over this limit will return null and
+     * subsequently invoke the standard OOM machinery, independent of available
+     * physical memory.
+     *
+     * Pref: javascript.options.mem.max
+     * Default: 0xffffffff
+     */
+    JSGC_MAX_BYTES          = 0,
+
+    /**
+     * Initial value for the malloc bytes threshold.
+     *
+     * Pref: javascript.options.mem.high_water_mark
+     * Default: TuningDefaults::MaxMallocBytes
+     */
+    JSGC_MAX_MALLOC_BYTES   = 1,
+
+    /**
+     * Maximum size of the generational GC nurseries.
+     *
+     * Pref: javascript.options.mem.nursery.max_kb
+     * Default: JS::DefaultNurseryBytes
+     */
+    JSGC_MAX_NURSERY_BYTES  = 2,
+
+    /** Amount of bytes allocated by the GC. */
+    JSGC_BYTES = 3,
+
+    /** Number of times GC has been invoked. Includes both major and minor GC. */
+    JSGC_NUMBER = 4,
+
+    /**
+     * Select GC mode.
+     *
+     * See: JSGCMode in GCAPI.h
+     * prefs: javascript.options.mem.gc_per_zone and
+     *   javascript.options.mem.gc_incremental.
+     * Default: JSGC_MODE_INCREMENTAL
+     */
+    JSGC_MODE = 6,
+
+    /** Number of cached empty GC chunks. */
+    JSGC_UNUSED_CHUNKS = 7,
+
+    /** Total number of allocated GC chunks. */
+    JSGC_TOTAL_CHUNKS = 8,
+
+    /**
+     * Max milliseconds to spend in an incremental GC slice.
+     *
+     * Pref: javascript.options.mem.gc_incremental_slice_ms
+     * Default: DefaultTimeBudget.
+     */
+    JSGC_SLICE_TIME_BUDGET = 9,
+
+    /**
+     * Maximum size the GC mark stack can grow to.
+     *
+     * Pref: none
+     * Default: MarkStack::DefaultCapacity
+     */
+    JSGC_MARK_STACK_LIMIT = 10,
+
+    /**
+     * GCs less than this far apart in time will be considered 'high-frequency
+     * GCs'.
+     *
+     * See setGCLastBytes in jsgc.cpp.
+     *
+     * Pref: javascript.options.mem.gc_high_frequency_time_limit_ms
+     * Default: HighFrequencyThresholdUsec
+     */
+    JSGC_HIGH_FREQUENCY_TIME_LIMIT = 11,
+
+    /**
+     * Start of dynamic heap growth.
+     *
+     * Pref: javascript.options.mem.gc_high_frequency_low_limit_mb
+     * Default: HighFrequencyLowLimitBytes
+     */
+    JSGC_HIGH_FREQUENCY_LOW_LIMIT = 12,
+
+    /**
+     * End of dynamic heap growth.
+     *
+     * Pref: javascript.options.mem.gc_high_frequency_high_limit_mb
+     * Default: HighFrequencyHighLimitBytes
+     */
+    JSGC_HIGH_FREQUENCY_HIGH_LIMIT = 13,
+
+    /**
+     * Upper bound of heap growth.
+     *
+     * Pref: javascript.options.mem.gc_high_frequency_heap_growth_max
+     * Default: HighFrequencyHeapGrowthMax
+     */
+    JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX = 14,
+
+    /**
+     * Lower bound of heap growth.
+     *
+     * Pref: javascript.options.mem.gc_high_frequency_heap_growth_min
+     * Default: HighFrequencyHeapGrowthMin
+     */
+    JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN = 15,
+
+    /**
+     * Heap growth for low frequency GCs.
+     *
+     * Pref: javascript.options.mem.gc_low_frequency_heap_growth
+     * Default: LowFrequencyHeapGrowth
+     */
+    JSGC_LOW_FREQUENCY_HEAP_GROWTH = 16,
+
+    /**
+     * If false, the heap growth factor is fixed at 3. If true, it is determined
+     * based on whether GCs are high- or low- frequency.
+     *
+     * Pref: javascript.options.mem.gc_dynamic_heap_growth
+     * Default: DynamicHeapGrowthEnabled
+     */
+    JSGC_DYNAMIC_HEAP_GROWTH = 17,
+
+    /**
+     * If true, high-frequency GCs will use a longer mark slice.
+     *
+     * Pref: javascript.options.mem.gc_dynamic_mark_slice
+     * Default: DynamicMarkSliceEnabled
+     */
+    JSGC_DYNAMIC_MARK_SLICE = 18,
+
+    /**
+     * Lower limit after which we limit the heap growth.
+     *
+     * The base value used to compute zone->threshold.gcTriggerBytes(). When
+     * usage.gcBytes() surpasses threshold.gcTriggerBytes() for a zone, the
+     * zone may be scheduled for a GC, depending on the exact circumstances.
+     *
+     * Pref: javascript.options.mem.gc_allocation_threshold_mb
+     * Default GCZoneAllocThresholdBase
+     */
+    JSGC_ALLOCATION_THRESHOLD = 19,
+
+    /**
+     * We try to keep at least this many unused chunks in the free chunk pool at
+     * all times, even after a shrinking GC.
+     *
+     * Pref: javascript.options.mem.gc_min_empty_chunk_count
+     * Default: MinEmptyChunkCount
+     */
+    JSGC_MIN_EMPTY_CHUNK_COUNT = 21,
+
+    /**
+     * We never keep more than this many unused chunks in the free chunk
+     * pool.
+     *
+     * Pref: javascript.options.mem.gc_min_empty_chunk_count
+     * Default: MinEmptyChunkCount
+     */
+    JSGC_MAX_EMPTY_CHUNK_COUNT = 22,
+
+    /**
+     * Whether compacting GC is enabled.
+     *
+     * Pref: javascript.options.mem.gc_compacting
+     * Default: CompactingEnabled
+     */
+    JSGC_COMPACTING_ENABLED = 23,
+
+    /**
+     * If true, painting can trigger IGC slices.
+     *
+     * Pref: javascript.options.mem.gc_refresh_frame_slices_enabled
+     * Default: RefreshFrameSlicesEnabled
+     */
+    JSGC_REFRESH_FRAME_SLICES_ENABLED = 24,
+
+    /**
+     * Factor for triggering a GC based on JSGC_ALLOCATION_THRESHOLD
+     *
+     * Default: ZoneAllocThresholdFactorDefault
+     * Pref: None
+     */
+    JSGC_ALLOCATION_THRESHOLD_FACTOR = 25,
+
+    /**
+     * Factor for triggering a GC based on JSGC_ALLOCATION_THRESHOLD.
+     * Used if another GC (in different zones) is already running.
+     *
+     * Default: ZoneAllocThresholdFactorAvoidInterruptDefault
+     * Pref: None
+     */
+    JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT = 26,
+} JSGCParamKey;
+
+/*
+ * Generic trace operation that calls JS::TraceEdge on each traceable thing's
+ * location reachable from data.
+ */
+typedef void
+(* JSTraceDataOp)(JSTracer* trc, void* data);
+
+typedef enum JSGCStatus {
+    JSGC_BEGIN,
+    JSGC_END
+} JSGCStatus;
+
+typedef void
+(* JSGCCallback)(JSContext* cx, JSGCStatus status, void* data);
+
+typedef void
+(* JSObjectsTenuredCallback)(JSContext* cx, void* data);
+
+typedef enum JSFinalizeStatus {
+    /**
+     * Called when preparing to sweep a group of zones, before anything has been
+     * swept.  The collector will not yield to the mutator before calling the
+     * callback with JSFINALIZE_GROUP_START status.
+     */
+    JSFINALIZE_GROUP_PREPARE,
+
+    /**
+     * Called after preparing to sweep a group of zones. Weak references to
+     * unmarked things have been removed at this point, but no GC things have
+     * been swept. The collector may yield to the mutator after this point.
+     */
+    JSFINALIZE_GROUP_START,
+
+    /**
+     * Called after sweeping a group of zones. All dead GC things have been
+     * swept at this point.
+     */
+    JSFINALIZE_GROUP_END,
+
+    /**
+     * Called at the end of collection when everything has been swept.
+     */
+    JSFINALIZE_COLLECTION_END
+} JSFinalizeStatus;
+
+typedef void
+(* JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status, void* data);
+
+typedef void
+(* JSWeakPointerZonesCallback)(JSContext* cx, void* data);
+
+typedef void
+(* JSWeakPointerCompartmentCallback)(JSContext* cx, JSCompartment* comp, void* data);
+
+/**
+ * Finalizes external strings created by JS_NewExternalString. The finalizer
+ * can be called off the main thread.
+ */
+struct JSStringFinalizer {
+    void (*finalize)(const JSStringFinalizer* fin, char16_t* chars);
+};
+
 namespace JS {
+
+struct Zone;
 
 #define GCREASONS(D)                            \
     /* Reasons internal to the JS engine */     \
@@ -442,29 +727,6 @@ IsIncrementalGCInProgress(JSContext* cx);
 extern JS_PUBLIC_API(bool)
 IsIncrementalGCInProgress(JSRuntime* rt);
 
-/*
- * Returns true when writes to GC thing pointers (and reads from weak pointers)
- * must call an incremental barrier. This is generally only true when running
- * mutator code in-between GC slices. At other times, the barrier may be elided
- * for performance.
- */
-extern JS_PUBLIC_API(bool)
-IsIncrementalBarrierNeeded(JSContext* cx);
-
-/*
- * Notify the GC that a reference to a JSObject is about to be overwritten.
- * This method must be called if IsIncrementalBarrierNeeded.
- */
-extern JS_PUBLIC_API(void)
-IncrementalPreWriteBarrier(JSObject* obj);
-
-/*
- * Notify the GC that a weak reference to a GC thing has been read.
- * This method must be called if IsIncrementalBarrierNeeded.
- */
-extern JS_PUBLIC_API(void)
-IncrementalReadBarrier(GCCellPtr thing);
-
 /**
  * Returns true if the most recent GC ran incrementally.
  */
@@ -613,88 +875,6 @@ class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoRequireNoGC
 } JS_HAZ_GC_INVALIDATED;
 #endif
 
-/**
- * Unsets the gray bit for anything reachable from |thing|. |kind| should not be
- * JS::TraceKind::Shape. |thing| should be non-null. The return value indicates
- * if anything was unmarked.
- */
-extern JS_FRIEND_API(bool)
-UnmarkGrayGCThingRecursively(GCCellPtr thing);
-
-} /* namespace JS */
-
-namespace js {
-namespace gc {
-
-static MOZ_ALWAYS_INLINE void
-ExposeGCThingToActiveJS(JS::GCCellPtr thing)
-{
-    // GC things residing in the nursery cannot be gray: they have no mark bits.
-    // All live objects in the nursery are moved to tenured at the beginning of
-    // each GC slice, so the gray marker never sees nursery things.
-    if (IsInsideNursery(thing.asCell()))
-        return;
-
-    // There's nothing to do for permanent GC things that might be owned by
-    // another runtime.
-    if (thing.mayBeOwnedByOtherRuntime())
-        return;
-
-    if (IsIncrementalBarrierNeededOnTenuredGCThing(thing))
-        JS::IncrementalReadBarrier(thing);
-    else if (js::gc::detail::TenuredCellIsMarkedGray(thing.asCell()))
-        JS::UnmarkGrayGCThingRecursively(thing);
-
-    MOZ_ASSERT(!js::gc::detail::TenuredCellIsMarkedGray(thing.asCell()));
-}
-
-template <typename T>
-extern JS_PUBLIC_API(bool)
-EdgeNeedsSweepUnbarrieredSlow(T* thingp);
-
-static MOZ_ALWAYS_INLINE bool
-EdgeNeedsSweepUnbarriered(JSObject** objp)
-{
-    // This function does not handle updating nursery pointers. Raw JSObject
-    // pointers should be updated separately or replaced with
-    // JS::Heap<JSObject*> which handles this automatically.
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapMinorCollecting());
-    if (IsInsideNursery(reinterpret_cast<Cell*>(*objp)))
-        return false;
-
-    auto zone = JS::shadow::Zone::asShadowZone(detail::GetGCThingZone(uintptr_t(*objp)));
-    if (!zone->isGCSweepingOrCompacting())
-        return false;
-
-    return EdgeNeedsSweepUnbarrieredSlow(objp);
-}
-
-} /* namespace gc */
-} /* namespace js */
-
-namespace JS {
-
-/*
- * This should be called when an object that is marked gray is exposed to the JS
- * engine (by handing it to running JS code or writing it into live JS
- * data). During incremental GC, since the gray bits haven't been computed yet,
- * we conservatively mark the object black.
- */
-static MOZ_ALWAYS_INLINE void
-ExposeObjectToActiveJS(JSObject* obj)
-{
-    MOZ_ASSERT(obj);
-    MOZ_ASSERT(!js::gc::EdgeNeedsSweepUnbarrieredSlow(&obj));
-    js::gc::ExposeGCThingToActiveJS(GCCellPtr(obj));
-}
-
-static MOZ_ALWAYS_INLINE void
-ExposeScriptToActiveJS(JSScript* script)
-{
-    MOZ_ASSERT(!js::gc::EdgeNeedsSweepUnbarrieredSlow(&script));
-    js::gc::ExposeGCThingToActiveJS(GCCellPtr(script));
-}
-
 /*
  * Internal to Firefox.
  */
@@ -708,5 +888,163 @@ extern JS_FRIEND_API(void)
 NotifyDidPaint(JSContext* cx);
 
 } /* namespace JS */
+
+/**
+ * Register externally maintained GC roots.
+ *
+ * traceOp: the trace operation. For each root the implementation should call
+ *          JS::TraceEdge whenever the root contains a traceable thing.
+ * data:    the data argument to pass to each invocation of traceOp.
+ */
+extern JS_PUBLIC_API(bool)
+JS_AddExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data);
+
+/** Undo a call to JS_AddExtraGCRootsTracer. */
+extern JS_PUBLIC_API(void)
+JS_RemoveExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data);
+
+extern JS_PUBLIC_API(void)
+JS_GC(JSContext* cx);
+
+extern JS_PUBLIC_API(void)
+JS_MaybeGC(JSContext* cx);
+
+extern JS_PUBLIC_API(void)
+JS_SetGCCallback(JSContext* cx, JSGCCallback cb, void* data);
+
+extern JS_PUBLIC_API(void)
+JS_SetObjectsTenuredCallback(JSContext* cx, JSObjectsTenuredCallback cb,
+                             void* data);
+
+extern JS_PUBLIC_API(bool)
+JS_AddFinalizeCallback(JSContext* cx, JSFinalizeCallback cb, void* data);
+
+extern JS_PUBLIC_API(void)
+JS_RemoveFinalizeCallback(JSContext* cx, JSFinalizeCallback cb);
+
+/*
+ * Weak pointers and garbage collection
+ *
+ * Weak pointers are by their nature not marked as part of garbage collection,
+ * but they may need to be updated in two cases after a GC:
+ *
+ *  1) Their referent was found not to be live and is about to be finalized
+ *  2) Their referent has been moved by a compacting GC
+ *
+ * To handle this, any part of the system that maintain weak pointers to
+ * JavaScript GC things must register a callback with
+ * JS_(Add,Remove)WeakPointer{ZoneGroup,Compartment}Callback(). This callback
+ * must then call JS_UpdateWeakPointerAfterGC() on all weak pointers it knows
+ * about.
+ *
+ * Since sweeping is incremental, we have several callbacks to avoid repeatedly
+ * having to visit all embedder structures. The WeakPointerZonesCallback is
+ * called once for each strongly connected group of zones, whereas the
+ * WeakPointerCompartmentCallback is called once for each compartment that is
+ * visited while sweeping. Structures that cannot contain references in more
+ * than one compartment should sweep the relevant per-compartment structures
+ * using the latter callback to minimizer per-slice overhead.
+ *
+ * The argument to JS_UpdateWeakPointerAfterGC() is an in-out param. If the
+ * referent is about to be finalized the pointer will be set to null. If the
+ * referent has been moved then the pointer will be updated to point to the new
+ * location.
+ *
+ * Callers of this method are responsible for updating any state that is
+ * dependent on the object's address. For example, if the object's address is
+ * used as a key in a hashtable, then the object must be removed and
+ * re-inserted with the correct hash.
+ */
+
+extern JS_PUBLIC_API(bool)
+JS_AddWeakPointerZonesCallback(JSContext* cx, JSWeakPointerZonesCallback cb, void* data);
+
+extern JS_PUBLIC_API(void)
+JS_RemoveWeakPointerZonesCallback(JSContext* cx, JSWeakPointerZonesCallback cb);
+
+extern JS_PUBLIC_API(bool)
+JS_AddWeakPointerCompartmentCallback(JSContext* cx, JSWeakPointerCompartmentCallback cb,
+                                     void* data);
+
+extern JS_PUBLIC_API(void)
+JS_RemoveWeakPointerCompartmentCallback(JSContext* cx, JSWeakPointerCompartmentCallback cb);
+
+namespace JS {
+template <typename T> class Heap;
+}
+
+extern JS_PUBLIC_API(void)
+JS_UpdateWeakPointerAfterGC(JS::Heap<JSObject*>* objp);
+
+extern JS_PUBLIC_API(void)
+JS_UpdateWeakPointerAfterGCUnbarriered(JSObject** objp);
+
+extern JS_PUBLIC_API(void)
+JS_SetGCParameter(JSContext* cx, JSGCParamKey key, uint32_t value);
+
+extern JS_PUBLIC_API(void)
+JS_ResetGCParameter(JSContext* cx, JSGCParamKey key);
+
+extern JS_PUBLIC_API(uint32_t)
+JS_GetGCParameter(JSContext* cx, JSGCParamKey key);
+
+extern JS_PUBLIC_API(void)
+JS_SetGCParametersBasedOnAvailableMemory(JSContext* cx, uint32_t availMem);
+
+/**
+ * Create a new JSString whose chars member refers to external memory, i.e.,
+ * memory requiring application-specific finalization.
+ */
+extern JS_PUBLIC_API(JSString*)
+JS_NewExternalString(JSContext* cx, const char16_t* chars, size_t length,
+                     const JSStringFinalizer* fin);
+
+/**
+ * Create a new JSString whose chars member may refer to external memory.
+ * If a new external string is allocated, |*allocatedExternal| is set to true.
+ * Otherwise the returned string is either not an external string or an
+ * external string allocated by a previous call and |*allocatedExternal| is set
+ * to false. If |*allocatedExternal| is false, |fin| won't be called.
+ */
+extern JS_PUBLIC_API(JSString*)
+JS_NewMaybeExternalString(JSContext* cx, const char16_t* chars, size_t length,
+                          const JSStringFinalizer* fin, bool* allocatedExternal);
+
+/**
+ * Return whether 'str' was created with JS_NewExternalString or
+ * JS_NewExternalStringWithClosure.
+ */
+extern JS_PUBLIC_API(bool)
+JS_IsExternalString(JSString* str);
+
+/**
+ * Return the 'fin' arg passed to JS_NewExternalString.
+ */
+extern JS_PUBLIC_API(const JSStringFinalizer*)
+JS_GetExternalStringFinalizer(JSString* str);
+
+namespace JS {
+
+extern JS_PUBLIC_API(bool)
+IsIdleGCTaskNeeded(JSRuntime* rt);
+
+extern JS_PUBLIC_API(void)
+RunIdleTimeGCTask(JSRuntime* rt);
+
+} // namespace JS
+
+namespace js {
+namespace gc {
+
+/**
+ * Create an object providing access to the garbage collector's internal notion
+ * of the current state of memory (both GC heap memory and GCthing-controlled
+ * malloc memory.
+ */
+extern JS_PUBLIC_API(JSObject*)
+NewMemoryInfoObject(JSContext* cx);
+
+} /* namespace gc */
+} /* namespace js */
 
 #endif /* js_GCAPI_h */

@@ -39,6 +39,7 @@ mochitest:
             linux.*/debug: 16
             linux64-asan/opt: 10
             linux64-.*cov/opt: 10
+            windows10-64-ccov/debug: 10
             default: 5
     e10s:
         by-test-platform:
@@ -104,6 +105,7 @@ mochitest-browser-chrome:
     max-run-time:
         by-test-platform:
             linux64-*cov/opt: 7200
+            windows10-64-ccov/debug: 7200
             linux.*/debug: 5400
             default: 3600
     mozharness:
