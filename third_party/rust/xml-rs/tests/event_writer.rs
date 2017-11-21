@@ -166,3 +166,57 @@ fn issue_112_overriding_namepace_prefix() {
         r#"<iq xmlns="jabber:client" xmlns:a="urn:A"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind" /><whatever xmlns:a="urn:X" /></iq>"#
     )
 }
+
+#[test]
+fn attribute_escaping() {
+    use xml::writer::XmlEvent;
+
+    let mut b = Vec::new();
+
+    {
+        let mut w = EmitterConfig::new()
+            .write_document_declaration(false)
+            .perform_indent(true)
+            .create_writer(&mut b);
+
+        unwrap_all! {
+            w.write(
+                XmlEvent::start_element("hello")
+                    .attr("testLt", "<")
+                    .attr("testGt", ">")
+            );
+            w.write(XmlEvent::end_element());
+            w.write(
+                XmlEvent::start_element("hello")
+                    .attr("testQuot", "\"")
+                    .attr("testApos", "\'")
+            );
+            w.write(XmlEvent::end_element());
+            w.write(
+                XmlEvent::start_element("hello")
+                    .attr("testAmp", "&")
+            );
+            w.write(XmlEvent::end_element());
+            w.write(
+                XmlEvent::start_element("hello")
+                    .attr("testNl", "\n")
+                    .attr("testCr", "\r")
+            );
+            w.write(XmlEvent::end_element());
+            w.write(
+                XmlEvent::start_element("hello")
+                    .attr("testNl", "\\n")
+                    .attr("testCr", "\\r")
+            );
+            w.write(XmlEvent::end_element())
+        }
+    }
+    assert_eq!(
+        str::from_utf8(&b).unwrap(),
+        "<hello testLt=\"&lt;\" testGt=\"&gt;\" />
+<hello testQuot=\"&quot;\" testApos=\"&apos;\" />
+<hello testAmp=\"&amp;\" />
+<hello testNl=\"&#xA;\" testCr=\"&#xD;\" />
+<hello testNl=\"\\n\" testCr=\"\\r\" />"
+    );
+}

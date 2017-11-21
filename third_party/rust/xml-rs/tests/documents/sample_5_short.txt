@@ -1,0 +1,7 @@
+StartDocument(1.0, utf-8)
+StartElement(p)
+StartElement(a)
+Characters("test ©≂̸")
+EndElement(a)
+EndElement(p)
+EndDocument

@@ -133,10 +133,10 @@ macro_rules! if_present(
 );
 
 bitflags!(
-    flags IndentFlags: u8 {
-        const WROTE_NOTHING = 0,
-        const WROTE_MARKUP  = 1,
-        const WROTE_TEXT    = 2
+    struct IndentFlags: u8 {
+        const WROTE_NOTHING = 0;
+        const WROTE_MARKUP  = 1;
+        const WROTE_TEXT    = 2;
     }
 );
 
@@ -149,27 +149,27 @@ impl Emitter {
 
     #[inline]
     fn wrote_text(&self) -> bool {
-        self.indent_stack.last().unwrap().contains(WROTE_TEXT)
+        self.indent_stack.last().unwrap().contains(IndentFlags::WROTE_TEXT)
     }
 
     #[inline]
     fn wrote_markup(&self) -> bool {
-        self.indent_stack.last().unwrap().contains(WROTE_MARKUP)
+        self.indent_stack.last().unwrap().contains(IndentFlags::WROTE_MARKUP)
     }
 
     #[inline]
     fn set_wrote_text(&mut self) {
-        *self.indent_stack.last_mut().unwrap() = WROTE_TEXT;
+        *self.indent_stack.last_mut().unwrap() = IndentFlags::WROTE_TEXT;
     }
 
     #[inline]
     fn set_wrote_markup(&mut self) {
-        *self.indent_stack.last_mut().unwrap() = WROTE_MARKUP;
+        *self.indent_stack.last_mut().unwrap() = IndentFlags::WROTE_MARKUP;
     }
 
     #[inline]
     fn reset_state(&mut self) {
-        *self.indent_stack.last_mut().unwrap() = WROTE_NOTHING;
+        *self.indent_stack.last_mut().unwrap() = IndentFlags::WROTE_NOTHING;
     }
 
     fn write_newline<W: Write>(&mut self, target: &mut W, level: usize) -> Result<()> {
@@ -198,7 +198,7 @@ impl Emitter {
 
     fn before_start_element<W: Write>(&mut self, target: &mut W) -> Result<()> {
         try!(self.before_markup(target));
-        self.indent_stack.push(WROTE_NOTHING);
+        self.indent_stack.push(IndentFlags::WROTE_NOTHING);
         Ok(())
     }
 
