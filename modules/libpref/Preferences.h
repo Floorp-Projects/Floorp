@@ -438,7 +438,8 @@ private:
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const char* aPref,
                                    void* aClosure,
-                                   MatchKind aMatchKind);
+                                   MatchKind aMatchKind,
+                                   bool aIsPriority = false);
   static nsresult UnregisterCallback(PrefChangedFunc aCallback,
                                      const char* aPref,
                                      void* aClosure,
