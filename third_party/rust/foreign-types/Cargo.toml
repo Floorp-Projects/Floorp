@@ -11,22 +11,12 @@
 # will likely look very different (and much more reasonable)
 
 [package]
-name = "xml-rs"
-version = "0.7.0"
-authors = ["Vladimir Matveev <vladimir.matweev@gmail.com>"]
-description = "An XML library in pure Rust"
-documentation = "http://netvl.github.io/xml-rs/"
-readme = "Readme.md"
-keywords = ["xml", "parsing", "parser"]
-license = "MIT"
-repository = "https://github.com/netvl/xml-rs"
+name = "foreign-types"
+version = "0.3.0"
+authors = ["Steven Fackler <sfackler@gmail.com>"]
+description = "A framework for Rust wrappers over C APIs"
+readme = "README.md"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/sfackler/foreign-types"
 
-[lib]
-name = "xml"
-path = "src/lib.rs"
-
-[[bin]]
-name = "xml-analyze"
-path = "src/analyze.rs"
-[dependencies.bitflags]
-version = "1.0"
+[dependencies]

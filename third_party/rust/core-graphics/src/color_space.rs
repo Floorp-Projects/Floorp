@@ -7,81 +7,53 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use core_foundation::base::{CFRelease, CFRetain, CFTypeID, CFTypeRef, TCFType};
-use std::mem;
+use core_foundation::base::{CFRelease, CFRetain, CFTypeID};
+use core_foundation::string::CFStringRef;
+use foreign_types::ForeignType;
 
-// This is an enum due to zero-sized types warnings.
-// For more details see https://github.com/rust-lang/rust/issues/27303
-pub enum __CGColorSpace {}
-
-pub type CGColorSpaceRef = *const __CGColorSpace;
-
-pub struct CGColorSpace {
-    obj: CGColorSpaceRef,
+foreign_type! {
+    #[doc(hidden)]
+    type CType = ::sys::CGColorSpace;
+    fn drop = |p| CFRelease(p as *mut _);
+    fn clone = |p| CFRetain(p as *const _) as *mut _;
+    pub struct CGColorSpace;
+    pub struct CGColorSpaceRef;
 }
 
-impl Drop for CGColorSpace {
-    fn drop(&mut self) {
-        unsafe {
-            CFRelease(self.as_CFTypeRef())
-        }
-    }
-}
-
-impl Clone for CGColorSpace {
-    fn clone(&self) -> CGColorSpace {
-        unsafe {
-            TCFType::wrap_under_get_rule(self.as_concrete_TypeRef())
-        }
-    }
-}
-
-impl TCFType<CGColorSpaceRef> for CGColorSpace {
-    #[inline]
-    fn as_concrete_TypeRef(&self) -> CGColorSpaceRef {
-        self.obj
-    }
-
-    #[inline]
-    unsafe fn wrap_under_get_rule(reference: CGColorSpaceRef) -> CGColorSpace {
-        let reference: CGColorSpaceRef = mem::transmute(CFRetain(mem::transmute(reference)));
-        TCFType::wrap_under_create_rule(reference)
-    }
-
-    #[inline]
-    fn as_CFTypeRef(&self) -> CFTypeRef {
-        unsafe {
-            mem::transmute(self.as_concrete_TypeRef())
-        }
-    }
-
-    #[inline]
-    unsafe fn wrap_under_create_rule(obj: CGColorSpaceRef) -> CGColorSpace {
-        CGColorSpace {
-            obj: obj,
-        }
-    }
-
-    #[inline]
-    fn type_id() -> CFTypeID {
+impl CGColorSpace {
+    pub fn type_id() -> CFTypeID {
         unsafe {
             CGColorSpaceGetTypeID()
         }
     }
-}
 
-impl CGColorSpace {
+    pub fn create_with_name(name: CFStringRef) -> Option<CGColorSpace> {
+        unsafe {
+            let p = CGColorSpaceCreateWithName(name);
+            if !p.is_null() {Some(CGColorSpace::from_ptr(p))} else {None}
+        }
+    }
+
     pub fn create_device_rgb() -> CGColorSpace {
         unsafe {
             let result = CGColorSpaceCreateDeviceRGB();
-            TCFType::wrap_under_create_rule(result)
+            CGColorSpace::from_ptr(result)
         }
     }
 }
 
-#[link(name = "ApplicationServices", kind = "framework")]
+#[link(name = "CoreGraphics", kind = "framework")]
 extern {
-    fn CGColorSpaceCreateDeviceRGB() -> CGColorSpaceRef;
+    pub static kCGColorSpaceSRGB: CFStringRef;
+    pub static kCGColorSpaceAdobeRGB1998: CFStringRef;
+    pub static kCGColorSpaceGenericGray: CFStringRef;
+    pub static kCGColorSpaceGenericRGB: CFStringRef;
+    pub static kCGColorSpaceGenericCMYK: CFStringRef;
+    pub static kCGColorSpaceGenericRGBLinear: CFStringRef;
+    pub static kCGColorSpaceGenericGrayGamma2_2: CFStringRef;
+
+    fn CGColorSpaceCreateDeviceRGB() -> ::sys::CGColorSpaceRef;
+    fn CGColorSpaceCreateWithName(name: CFStringRef) -> ::sys::CGColorSpaceRef;
     fn CGColorSpaceGetTypeID() -> CFTypeID;
 }
 
