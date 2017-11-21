@@ -24,7 +24,7 @@ const BinaryInput = CC("@mozilla.org/binaryinputstream;1",
                        "nsIBinaryInputStream", "setInputStream");
 const BufferStream = CC("@mozilla.org/io/arraybuffer-input-stream;1",
                        "nsIArrayBufferInputStream", "setData");
-const encodingLength = 2;
+const encodingLength = 0;
 const encoder = new TextEncoder();
 
 // Localization
@@ -151,22 +151,9 @@ Converter.prototype = {
 
   // Determines the encoding of the response.
   determineEncoding: function (request, context, flush = false) {
-    // Determine the encoding using the bytes in encodingArray, defaulting to UTF-8.
-    // An initial byte order mark character (U+FEFF) does the trick.
-    // If there is no BOM, since the first character of valid JSON will be ASCII,
-    // the pattern of nulls in the first two bytes can be used instead.
-    //  - UTF-16BE:  00 xx  or  FE FF
-    //  - UTF-16LE:  xx 00  or  FF FE
-    //  - UTF-8:  anything else.
+    // Always use UTF-8
     let encoding = "UTF-8";
     let bytes = this.encodingArray;
-    if (bytes.length >= 2) {
-      if (!bytes[0] && bytes[1] || bytes[0] == 0xFE && bytes[1] == 0xFF) {
-        encoding = "UTF-16BE";
-      } else if (bytes[0] && !bytes[1] || bytes[0] == 0xFF && bytes[1] == 0xFE) {
-        encoding = "UTF-16LE";
-      }
-    }
 
     // Create a decoder unless the data is already in UTF-8.
     if (encoding !== "UTF-8") {
