@@ -4,7 +4,7 @@
 
 "use strict";
 
-// Check the output of getAllGrids for the LayoutActor
+// Check the output of getGrids for the LayoutActor
 
 const GRID_FRAGMENT_DATA = {
   areas: [
@@ -109,7 +109,7 @@ const GRID_FRAGMENT_DATA = {
 
 add_task(function* () {
   let { client, walker, layout } = yield initLayoutFrontForUrl(MAIN_DOMAIN + "grid.html");
-  let grids = yield layout.getAllGrids(walker.rootNode);
+  let grids = yield layout.getGrids(walker.rootNode);
   let grid = grids[0];
   let { gridFragments } = grid;
 
