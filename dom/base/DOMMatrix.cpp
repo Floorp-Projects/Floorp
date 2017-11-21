@@ -185,7 +185,7 @@ DOMMatrixReadOnly::Is2D() const
 }
 
 bool
-DOMMatrixReadOnly::Identity() const
+DOMMatrixReadOnly::IsIdentity() const
 {
   if (mMatrix3D) {
     return mMatrix3D->IsIdentity();
@@ -435,7 +435,7 @@ void DOMMatrix::Ensure3DMatrix()
 DOMMatrix*
 DOMMatrix::MultiplySelf(const DOMMatrix& aOther)
 {
-  if (aOther.Identity()) {
+  if (aOther.IsIdentity()) {
     return this;
   }
 
@@ -456,7 +456,7 @@ DOMMatrix::MultiplySelf(const DOMMatrix& aOther)
 DOMMatrix*
 DOMMatrix::PreMultiplySelf(const DOMMatrix& aOther)
 {
-  if (aOther.Identity()) {
+  if (aOther.IsIdentity()) {
     return this;
   }
 
