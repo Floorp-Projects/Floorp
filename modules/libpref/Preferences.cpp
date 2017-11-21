@@ -841,41 +841,6 @@ pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
   return next_node;
 }
 
-// Deletes a node from the callback list or marks it for deletion. Succeeds if
-// a callback was found that matched all the parameters.
-static nsresult
-PREF_UnregisterCallback(const char* aPrefNode,
-                        PrefChangedFunc aCallback,
-                        void* aData,
-                        Preferences::MatchKind aMatchKind)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  CallbackNode* node = gFirstCallback;
-  CallbackNode* prev_node = nullptr;
-
-  while (node != nullptr) {
-    if (node->mFunc == aCallback && node->mData == aData &&
-        node->mMatchKind == aMatchKind &&
-        strcmp(node->mDomain.get(), aPrefNode) == 0) {
-      if (gCallbacksInProgress) {
-        // postpone the node removal until after
-        // callbacks enumeration is finished.
-        node->mFunc = nullptr;
-        gShouldCleanupDeadNodes = true;
-        prev_node = node;
-        node = node->mNext;
-      } else {
-        node = pref_RemoveCallbackNode(node, prev_node);
-      }
-      rv = NS_OK;
-    } else {
-      prev_node = node;
-      node = node->mNext;
-    }
-  }
-  return rv;
-}
-
 static void
 NotifyCallbacks(const char* aPrefName)
 {
@@ -2571,8 +2536,8 @@ nsPrefBranch::RemoveObserver(const char* aDomain, nsIObserver* aObserver)
   if (pCallback) {
     // aDomain == nullptr is the only possible failure, trapped above.
     const PrefName& pref = GetPrefName(aDomain);
-    rv = PREF_UnregisterCallback(
-      pref.get(), NotifyObserver, pCallback, Preferences::PrefixMatch);
+    rv = Preferences::UnregisterCallback(
+      NotifyObserver, pref.get(), pCallback, Preferences::PrefixMatch);
   }
 
   return rv;
@@ -2641,10 +2606,10 @@ nsPrefBranch::FreeObserverList()
     nsAutoPtr<PrefCallback>& callback = iter.Data();
     nsPrefBranch* prefBranch = callback->GetPrefBranch();
     const PrefName& pref = prefBranch->GetPrefName(callback->GetDomain().get());
-    PREF_UnregisterCallback(pref.get(),
-                            nsPrefBranch::NotifyObserver,
-                            callback,
-                            Preferences::PrefixMatch);
+    Preferences::UnregisterCallback(nsPrefBranch::NotifyObserver,
+                                    pref.get(),
+                                    callback,
+                                    Preferences::PrefixMatch);
     iter.Remove();
   }
   mFreeingObserverList = false;
@@ -4750,8 +4715,8 @@ Preferences::RegisterCallbackAndCall(PrefChangedFunc aCallback,
 
 /* static */ nsresult
 Preferences::UnregisterCallback(PrefChangedFunc aCallback,
-                                const char* aPref,
-                                void* aClosure,
+                                const char* aPrefNode,
+                                void* aData,
                                 MatchKind aMatchKind)
 {
   MOZ_ASSERT(aCallback);
@@ -4761,7 +4726,31 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
   }
   NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
 
-  return PREF_UnregisterCallback(aPref, aCallback, aClosure, aMatchKind);
+  nsresult rv = NS_ERROR_FAILURE;
+  CallbackNode* node = gFirstCallback;
+  CallbackNode* prev_node = nullptr;
+
+  while (node) {
+    if (node->mFunc == aCallback && node->mData == aData &&
+        node->mMatchKind == aMatchKind &&
+        strcmp(node->mDomain.get(), aPrefNode) == 0) {
+      if (gCallbacksInProgress) {
+        // postpone the node removal until after
+        // callbacks enumeration is finished.
+        node->mFunc = nullptr;
+        gShouldCleanupDeadNodes = true;
+        prev_node = node;
+        node = node->mNext;
+      } else {
+        node = pref_RemoveCallbackNode(node, prev_node);
+      }
+      rv = NS_OK;
+    } else {
+      prev_node = node;
+      node = node->mNext;
+    }
+  }
+  return rv;
 }
 
 static void
