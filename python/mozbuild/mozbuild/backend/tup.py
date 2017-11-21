@@ -129,8 +129,8 @@ class BackendTupfile(object):
                 # AS can be set to $(CC), so we need to call expand_variables on
                 # the compiler to get the real value.
                 cmd = [expand_variables(self.environment.substs[compiler], self.environment.substs)]
-                cmd.extend(self.local_flags[flags])
-                cmd.extend(self.per_source_flags[src])
+                cmd.extend(shell_quote(f) for f in self.local_flags[flags])
+                cmd.extend(shell_quote(f) for f in self.per_source_flags[src])
                 cmd.extend(['-c', '%f', '-o', '%o'])
                 self.rule(
                     cmd=cmd,
