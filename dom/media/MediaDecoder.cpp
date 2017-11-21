@@ -15,6 +15,7 @@
 #include "VideoFrameContainer.h"
 #include "VideoUtils.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
@@ -202,30 +203,32 @@ class MediaDecoder::BackgroundVideoDecodingPermissionObserver final :
 
     void EnableEvent() const
     {
-      nsCOMPtr<nsPIDOMWindowOuter> win = GetOwnerWindow();
-      if (!win) {
+      nsIDocument* doc = GetOwnerDoc();
+      if (!doc) {
         return;
       }
-      nsContentUtils::DispatchEventOnlyToChrome(
-        GetOwnerDoc(), ToSupports(win),
-        NS_LITERAL_STRING("UnselectedTabHover:Enable"),
-        /* Bubbles */ true,
-        /* Cancelable */ false,
-        /* DefaultAction */ nullptr);
+
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(doc,
+                                 NS_LITERAL_STRING("UnselectedTabHover:Enable"),
+                                 /* Bubbles */ true,
+                                 /* OnlyChromeDispatch */ true);
+      asyncDispatcher->PostDOMEvent();
     }
 
     void DisableEvent() const
     {
-      nsCOMPtr<nsPIDOMWindowOuter> win = GetOwnerWindow();
-      if (!win) {
+      nsIDocument* doc = GetOwnerDoc();
+      if (!doc) {
         return;
       }
-      nsContentUtils::DispatchEventOnlyToChrome(
-        GetOwnerDoc(), ToSupports(win),
-        NS_LITERAL_STRING("UnselectedTabHover:Disable"),
-        /* Bubbles */ true,
-        /* Cancelable */ false,
-        /* DefaultAction */ nullptr);
+
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(doc,
+                                 NS_LITERAL_STRING("UnselectedTabHover:Disable"),
+                                 /* Bubbles */ true,
+                                 /* OnlyChromeDispatch */ true);
+      asyncDispatcher->PostDOMEvent();
     }
 
     already_AddRefed<nsPIDOMWindowOuter> GetOwnerWindow() const
