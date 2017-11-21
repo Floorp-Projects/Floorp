@@ -6,7 +6,6 @@
 % resource formautofill %res/
   res/ (*.jsm)
   res/phonenumberutils/ (phonenumberutils/*.jsm)
-  res/addressmetadata/ (addressmetadata/*)
 
 % content formautofill %content/
   content/ (content/*)
