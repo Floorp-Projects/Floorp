@@ -441,34 +441,6 @@ ConvertImageRendererToDrawFlags(uint32_t aImageRendererFlags)
   return drawFlags;
 }
 
-/*
- *  SVG11: A luminanceToAlpha operation is equivalent to the following matrix operation:                                                   |
- *  | R' |     |      0        0        0  0  0 |   | R |
- *  | G' |     |      0        0        0  0  0 |   | G |
- *  | B' |  =  |      0        0        0  0  0 | * | B |
- *  | A' |     | 0.2125   0.7154   0.0721  0  0 |   | A |
- *  | 1  |     |      0        0        0  0  1 |   | 1 |
- */
-static void
-RGBALuminanceOperation(uint8_t *aData,
-                       int32_t aStride,
-                       const IntSize &aSize)
-{
-  int32_t redFactor = 55;    // 256 * 0.2125
-  int32_t greenFactor = 183; // 256 * 0.7154
-  int32_t blueFactor = 18;   // 256 * 0.0721
-
-  for (int32_t y = 0; y < aSize.height; y++) {
-    uint32_t *pixel = (uint32_t*)(aData + aStride * y);
-    for (int32_t x = 0; x < aSize.width; x++) {
-      *pixel = (((((*pixel & 0x00FF0000) >> 16) * redFactor) +
-                 (((*pixel & 0x0000FF00) >>  8) * greenFactor) +
-                  ((*pixel & 0x000000FF)        * blueFactor)) >> 8) << 24;
-      pixel++;
-    }
-  }
-}
-
 DrawResult
 nsImageRenderer::Draw(nsPresContext*       aPresContext,
                       gfxContext&          aRenderingContext,
@@ -563,26 +535,21 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
   }
 
   if (!tmpDTRect.IsEmpty()) {
-    RefPtr<SourceSurface> surf = ctx->GetDrawTarget()->Snapshot();
-    if (mMaskOp == NS_STYLE_MASK_MODE_LUMINANCE) {
-      RefPtr<DataSourceSurface> maskData = surf->GetDataSurface();
-      DataSourceSurface::MappedSurface map;
-      if (!maskData->Map(DataSourceSurface::MapType::READ_WRITE, &map)) {
-        return result;
-      }
-
-      RGBALuminanceOperation(map.mData, map.mStride, maskData->GetSize());
-      maskData->Unmap();
-      surf = maskData;
-    }
-
     DrawTarget* dt = aRenderingContext.GetDrawTarget();
     Matrix oldTransform = dt->GetTransform();
     dt->SetTransform(Matrix());
-    dt->DrawSurface(surf, Rect(tmpDTRect.x, tmpDTRect.y, tmpDTRect.width, tmpDTRect.height),
-                    Rect(0, 0, tmpDTRect.width, tmpDTRect.height),
-                    DrawSurfaceOptions(SamplingFilter::POINT),
-                    DrawOptions(1.0f, aRenderingContext.CurrentOp()));
+    if (mMaskOp == NS_STYLE_MASK_MODE_LUMINANCE) {
+      RefPtr<SourceSurface> surf = ctx->GetDrawTarget()->IntoLuminanceSource(LuminanceType::LUMINANCE, 1.0f);
+      dt->MaskSurface(ColorPattern(Color(0, 0, 0, 1.0f)), surf, tmpDTRect.TopLeft(),
+                      DrawOptions(1.0f, aRenderingContext.CurrentOp()));
+    } else {
+      RefPtr<SourceSurface> surf = ctx->GetDrawTarget()->Snapshot();
+      dt->DrawSurface(surf, Rect(tmpDTRect.x, tmpDTRect.y, tmpDTRect.width, tmpDTRect.height),
+                      Rect(0, 0, tmpDTRect.width, tmpDTRect.height),
+                      DrawSurfaceOptions(SamplingFilter::POINT),
+                      DrawOptions(1.0f, aRenderingContext.CurrentOp()));
+    }
+
     dt->SetTransform(oldTransform);
   }
 
