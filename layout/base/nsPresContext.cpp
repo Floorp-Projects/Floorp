@@ -406,6 +406,9 @@ nsPresContext::Destroy()
   Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
                                   kUseStandinsForNativeColors,
                                   this);
+  Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
+                                  "intl.accept_languages",
+                                  this);
 
   mRefreshDriver = nullptr;
 }
@@ -773,7 +776,8 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       mMissingFonts = nullptr;
     }
   }
-  if (StringBeginsWith(prefName, NS_LITERAL_CSTRING("font."))) {
+  if (StringBeginsWith(prefName, NS_LITERAL_CSTRING("font.")) ||
+      prefName.EqualsLiteral("intl.accept_languages")) {
     // Changes to font family preferences don't change anything in the
     // computed style data, so the style system won't generate a reflow
     // hint for us.  We need to do that manually.
@@ -975,6 +979,9 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
                                 this);
   Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
                                 kUseStandinsForNativeColors,
+                                this);
+  Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
+                                "intl.accept_languages",
                                 this);
 
   nsresult rv = mEventManager->Init();
