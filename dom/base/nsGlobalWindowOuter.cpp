@@ -2114,7 +2114,7 @@ nsGlobalWindowOuter::PreloadLocalStorage()
 {
   MOZ_ASSERT(IsOuterWindow());
 
-  if (!Preferences::GetBool(kStorageEnabled)) {
+  if (!Storage::StoragePrefIsEnabled()) {
     return;
   }
 
