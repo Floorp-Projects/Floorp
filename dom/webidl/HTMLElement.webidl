@@ -46,7 +46,7 @@ interface HTMLElement : Element {
   [CEReactions, SetterThrows, Pure]
            attribute boolean draggable;
   //[PutForwards=value] readonly attribute DOMTokenList dropzone;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString contentEditable;
   [Pure]
   readonly attribute boolean isContentEditable;
