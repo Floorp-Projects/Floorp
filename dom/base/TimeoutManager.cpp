@@ -410,8 +410,6 @@ TimeoutManager::TimeoutManager(nsGlobalWindowInner& aWindow)
     mThrottleTrackingTimeouts(false),
     mBudgetThrottleTimeouts(false)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aWindow.IsInnerWindow());
-
   MOZ_LOG(gLog, LogLevel::Debug,
           ("TimeoutManager %p created, tracking bucketing %s\n",
            this, gAnnotateTrackingChannels ? "enabled" : "disabled"));
@@ -1197,7 +1195,6 @@ public:
   explicit ThrottleTimeoutsCallback(nsGlobalWindowInner* aWindow)
     : mWindow(aWindow)
   {
-    MOZ_DIAGNOSTIC_ASSERT(aWindow->IsInnerWindow());
   }
 
   NS_DECL_ISUPPORTS

@@ -5064,14 +5064,6 @@ nsIDocument::GetContainer() const
 void
 nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 {
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(aScriptGlobalObject));
-
-    NS_ASSERTION(!win || win->IsInnerWindow(),
-                 "Script global object must be an inner window!");
-  }
-#endif
   MOZ_ASSERT(aScriptGlobalObject || !mAnimationController ||
              mAnimationController->IsPausedByType(
                nsSMILTimeContainer::PAUSE_PAGEHIDE |
@@ -10890,7 +10882,6 @@ nsIDocument::CreateTouch(nsGlobalWindowInner* aView,
                          float aRotationAngle,
                          float aForce)
 {
-  MOZ_ASSERT_IF(aView, aView->IsInnerWindow());
   RefPtr<Touch> touch = new Touch(aTarget,
                                   aIdentifier,
                                   aPageX, aPageY,
@@ -14381,7 +14372,6 @@ nsIDocument::GetSelection(ErrorResult& aRv)
     return nullptr;
   }
 
-  NS_ASSERTION(window->IsInnerWindow(), "Should have inner window here!");
   if (!window->IsCurrentInnerWindow()) {
     return nullptr;
   }

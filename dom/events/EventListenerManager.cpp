@@ -810,12 +810,6 @@ EventListenerManager::SetEventHandler(nsAtom* aName,
     return NS_OK;
   }
 
-#ifdef DEBUG
-  if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global)) {
-    MOZ_ASSERT(win->IsInnerWindow(), "We should not have an outer window here!");
-  }
-#endif
-
   nsresult rv = NS_OK;
   // return early preventing the event listener from being added
   // 'doc' is fetched above

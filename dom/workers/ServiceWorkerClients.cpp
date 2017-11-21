@@ -382,7 +382,6 @@ public:
     MOZ_ASSERT(aPromiseProxy);
     MOZ_ASSERT(aServiceWorkerPrivate);
     MOZ_ASSERT(aWindow);
-    MOZ_ASSERT(aWindow->IsOuterWindow());
     MOZ_ASSERT(aBaseURI);
     AssertIsOnMainThread();
 

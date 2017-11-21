@@ -1248,7 +1248,6 @@ MediaRecorder::MediaRecorder(DOMMediaStream& aSourceMediaStream,
   , mState(RecordingState::Inactive)
 {
   MOZ_ASSERT(aOwnerWindow);
-  MOZ_ASSERT(aOwnerWindow->IsInnerWindow());
   mDOMStream = &aSourceMediaStream;
 
   RegisterActivityObserver();
@@ -1262,7 +1261,6 @@ MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode,
   , mState(RecordingState::Inactive)
 {
   MOZ_ASSERT(aOwnerWindow);
-  MOZ_ASSERT(aOwnerWindow->IsInnerWindow());
 
   mAudioNode = &aSrcAudioNode;
 
