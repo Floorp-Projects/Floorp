@@ -228,7 +228,7 @@ ExtensionStreamGetter::GetAsync(nsIStreamListener* aListener,
       [self] (const FileDescriptor& fd) {
         self->OnFD(fd);
       },
-      [self] (const mozilla::ipc::PromiseRejectReason) {
+      [self] (const mozilla::ipc::ResponseRejectReason) {
         self->OnFD(FileDescriptor());
       }
     );
@@ -246,7 +246,7 @@ ExtensionStreamGetter::GetAsync(nsIStreamListener* aListener,
       }
       self->OnStream(inputStream);
     },
-    [self] (const mozilla::ipc::PromiseRejectReason) {
+    [self] (const mozilla::ipc::ResponseRejectReason) {
       self->OnStream(nullptr);
     }
   );

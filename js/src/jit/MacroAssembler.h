@@ -1917,8 +1917,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     Vector<CodeOffset, 0, SystemAllocPolicy> profilerCallSites_;
 
   public:
-    void loadJitCodeRaw(Register callee, Register dest, Label* failure);
-    void loadJitCodeNoArgCheck(Register callee, Register dest, Label* failure);
+    void loadJitCodeRaw(Register callee, Register dest);
+    void loadJitCodeNoArgCheck(Register callee, Register dest);
 
     void loadBaselineFramePtr(Register framePtr, Register dest);
 

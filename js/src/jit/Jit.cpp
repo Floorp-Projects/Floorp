@@ -127,11 +127,12 @@ js::jit::MaybeEnterJit(JSContext* cx, RunState& state)
 {
     JSScript* script = state.script();
 
-    uint8_t* code = script->baselineOrIonRawPointer();
+    uint8_t* code = script->jitCodeRaw();
     do {
-        // If we have JIT-code, we can just use it. Note that Baseline code
-        // contains warm-up checks in the prologue to Ion-compile if needed.
-        if (code)
+        // Make sure we have a BaselineScript: we don't want to call the
+        // interpreter stub here. Note that Baseline code contains warm-up
+        // checks in the prologue to Ion-compile if needed.
+        if (script->hasBaselineScript())
             break;
 
         // Try to Ion-compile.
@@ -140,7 +141,7 @@ js::jit::MaybeEnterJit(JSContext* cx, RunState& state)
             if (status == jit::Method_Error)
                 return EnterJitStatus::Error;
             if (status == jit::Method_Compiled) {
-                code = script->baselineOrIonRawPointer();
+                code = script->jitCodeRaw();
                 break;
             }
         }
@@ -151,7 +152,7 @@ js::jit::MaybeEnterJit(JSContext* cx, RunState& state)
             if (status == jit::Method_Error)
                 return EnterJitStatus::Error;
             if (status == jit::Method_Compiled) {
-                code = script->baselineOrIonRawPointer();
+                code = script->jitCodeRaw();
                 break;
             }
         }

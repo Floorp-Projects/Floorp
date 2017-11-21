@@ -377,7 +377,7 @@ IsCacheableGetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape,
     if (getter.isNative())
         return false;
 
-    if (!getter.hasJITCode()) {
+    if (!getter.hasScript()) {
         if (isTemporarilyUnoptimizable)
             *isTemporarilyUnoptimizable = true;
         return false;
@@ -693,7 +693,7 @@ EmitCallGetterResultNoGuards(CacheIRWriter& writer, JSObject* obj, JSObject* hol
     MOZ_ASSERT(IsCacheableGetPropCallScripted(obj, holder, shape));
 
     JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-    MOZ_ASSERT(target->hasJITCode());
+    MOZ_ASSERT(target->hasScript());
     writer.callScriptedGetterResult(receiverId, target);
     writer.typeMonitorResult();
 }
@@ -3166,7 +3166,7 @@ IsCacheableSetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape,
     if (setter.isNative())
         return false;
 
-    if (!setter.hasJITCode()) {
+    if (!setter.hasScript()) {
         if (isTemporarilyUnoptimizable)
             *isTemporarilyUnoptimizable = true;
         return false;
@@ -3218,7 +3218,7 @@ EmitCallSetterNoGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
     MOZ_ASSERT(IsCacheableSetPropCallScripted(obj, holder, shape));
 
     JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
-    MOZ_ASSERT(target->hasJITCode());
+    MOZ_ASSERT(target->hasScript());
     writer.callScriptedSetter(objId, target, rhsId);
     writer.returnFromIC();
 }

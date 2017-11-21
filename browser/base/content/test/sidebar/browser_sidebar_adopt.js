@@ -45,7 +45,7 @@ add_task(async function testEventsReceivedInMainWindow() {
 add_task(async function testEventReceivedInNewWindow() {
   info("Opening a new window and expecting the SidebarFocused event to not fire");
 
-  let promiseNewWindow = BrowserTestUtils.waitForNewWindow(false);
+  let promiseNewWindow = BrowserTestUtils.waitForNewWindow();
   BrowserTestUtils.openNewBrowserWindow({opener: window});
   let win = await promiseNewWindow;
 
