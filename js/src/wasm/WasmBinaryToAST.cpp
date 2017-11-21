@@ -23,6 +23,7 @@
 #include "mozilla/Sprintf.h"
 
 #include "jscntxt.h"
+#include "jscompartment.h"
 
 #include "wasm/WasmBinaryIterator.h"
 #include "wasm/WasmValidate.h"
@@ -104,6 +105,10 @@ class AstDecodeContext
        lifo(lifo),
        d(d),
        generateNames(generateNames),
+       env_(CompileMode::Once, Tier::Ion, DebugEnabled::False,
+            cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()
+            ? Shareable::True
+            : Shareable::False),
        module_(module),
        iter_(nullptr),
        exprs_(lifo),

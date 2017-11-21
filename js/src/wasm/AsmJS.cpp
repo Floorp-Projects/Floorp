@@ -1763,7 +1763,11 @@ class MOZ_STACK_CLASS ModuleValidator
         arrayViews_(cx),
         atomicsPresent_(false),
         simdPresent_(false),
-        env_(CompileMode::Once, Tier::Ion, DebugEnabled::False, ModuleKind::AsmJS),
+        env_(CompileMode::Once, Tier::Ion, DebugEnabled::False,
+             cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()
+               ? Shareable::True
+               : Shareable::False,
+             ModuleKind::AsmJS),
         errorString_(nullptr),
         errorOffset_(UINT32_MAX),
         errorOverRecursed_(false)

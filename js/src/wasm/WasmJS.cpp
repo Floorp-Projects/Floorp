@@ -381,10 +381,18 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
 
             limits->shared = ToBoolean(sharedVal) ? Shareable::True : Shareable::False;
 
-            if (limits->shared == Shareable::True && !foundMaximum) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_MISSING_MAXIMUM,
-                                          kind);
-                return false;
+            if (limits->shared == Shareable::True) {
+                if (!foundMaximum) {
+                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_MISSING_MAXIMUM,
+                                              kind);
+                    return false;
+                }
+
+                if (!cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
+                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                              JSMSG_WASM_NO_SHMEM_LINK);
+                    return false;
+                }
             }
         }
     }
@@ -2105,7 +2113,7 @@ WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     UniqueChars error;
-    bool validated = Validate(*bytecode, &error);
+    bool validated = Validate(cx, *bytecode, &error);
 
     // If the reason for validation failure was OOM (signalled by null error
     // message), report out-of-memory so that validate's return is always

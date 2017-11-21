@@ -587,9 +587,22 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, PRFileDesc* maybeCompiledFile,
     scriptedCaller.line = line;
     scriptedCaller.column = column;
 
-    SharedCompileArgs args = js_new<CompileArgs>(Assumptions(Move(buildId)), Move(scriptedCaller));
+    MutableCompileArgs args = js_new<CompileArgs>(Assumptions(Move(buildId)), Move(scriptedCaller));
     if (!args)
         return nullptr;
+
+    // The true answer to whether shared memory is enabled is provided by
+    // cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()
+    // where cx is the context that originated the call that caused this
+    // deserialization attempt to happen.  We don't have that context here, so
+    // we assume that shared memory is enabled; we will catch a wrong assumption
+    // later, during instantiation.
+    //
+    // (We would prefer to store this value with the Assumptions when
+    // serializing, and for the caller of the deserialization machinery to
+    // provide the value from the originating context.)
+
+    args->sharedMemoryEnabled = true;
 
     UniqueChars error;
     return CompileBuffer(*args, *bytecode, &error);
@@ -869,6 +882,11 @@ CheckLimits(JSContext* cx, uint32_t declaredMin, const Maybe<uint32_t>& declared
 static bool
 CheckSharing(JSContext* cx, bool declaredShared, bool isShared)
 {
+    if (isShared && !cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_NO_SHMEM_LINK);
+        return false;
+    }
+
     if (declaredShared && !isShared) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_IMP_SHARED_REQD);
         return false;

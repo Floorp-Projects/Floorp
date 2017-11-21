@@ -59,6 +59,7 @@ struct ModuleEnvironment
     const DebugEnabled        debug;
     const ModuleKind          kind;
     const CompileMode         mode;
+    const Shareable           sharedMemoryEnabled;
     const Tier                tier;
 
     // Module fields decoded from the module environment (or initialized while
@@ -86,10 +87,12 @@ struct ModuleEnvironment
     explicit ModuleEnvironment(CompileMode mode = CompileMode::Once,
                                Tier tier = Tier::Ion,
                                DebugEnabled debug = DebugEnabled::False,
+                               Shareable sharedMemoryEnabled = Shareable::False,
                                ModuleKind kind = ModuleKind::Wasm)
       : debug(debug),
         kind(kind),
         mode(mode),
+        sharedMemoryEnabled(sharedMemoryEnabled),
         tier(tier),
         memoryUsage(MemoryUsage::None),
         minMemoryLength(0)
@@ -715,7 +718,7 @@ DecodeModuleTail(Decoder& d, ModuleEnvironment* env);
 //  - otherwise, there was a legitimate error described by *error
 
 MOZ_MUST_USE bool
-Validate(const ShareableBytes& bytecode, UniqueChars* error);
+Validate(JSContext* cx, const ShareableBytes& bytecode, UniqueChars* error);
 
 }  // namespace wasm
 }  // namespace js

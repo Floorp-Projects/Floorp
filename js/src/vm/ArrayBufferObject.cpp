@@ -878,6 +878,10 @@ js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
 #endif
 
     if (memory.shared == wasm::Shareable::True) {
+        if (!cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_NO_SHMEM_LINK);
+            return false;
+        }
         return CreateBuffer<SharedArrayBufferObject, SharedArrayRawBuffer>(cx, memory.initial,
                                                                            maxSize, buffer);
     }
