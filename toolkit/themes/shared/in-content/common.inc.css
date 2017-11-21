@@ -239,8 +239,13 @@ html|button:disabled,
 html|select:disabled,
 xul|button[disabled="true"],
 xul|colorpicker[type="button"][disabled="true"],
-xul|menulist[disabled="true"] {
+xul|menulist[disabled="true"],
+xul|listbox[disabled="true"] {
   opacity: 0.5;
+}
+
+xul|listbox[disabled="true"] xul|listitem:hover {
+  background-color: transparent;
 }
 
 *|button.primary {
