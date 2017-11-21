@@ -45,6 +45,7 @@ var FormAutofillFrameScript = {
   init() {
     addEventListener("focusin", this);
     addMessageListener("FormAutofill:PreviewProfile", this);
+    addMessageListener("FormAutofill:ClearForm", this);
     addMessageListener("FormAutoComplete:PopupClosed", this);
     addMessageListener("FormAutoComplete:PopupOpened", this);
   },
@@ -88,6 +89,10 @@ var FormAutofillFrameScript = {
         FormAutofillContent.previewProfile(doc);
         break;
       }
+      case "FormAutofill:ClearForm": {
+        FormAutofillContent.clearForm();
+        break;
+      }
       case "FormAutoComplete:PopupClosed": {
         FormAutofillContent.onPopupClosed();
         chromeEventHandler.removeEventListener("keydown", FormAutofillContent._onKeyDown,
@@ -97,6 +102,7 @@ var FormAutofillFrameScript = {
       case "FormAutoComplete:PopupOpened": {
         chromeEventHandler.addEventListener("keydown", FormAutofillContent._onKeyDown,
                                             {capturing: true});
+        break;
       }
     }
   },

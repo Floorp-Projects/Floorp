@@ -49,6 +49,8 @@ template<class T> class StaticAutoPtr;
 
 class MediaPrefs final
 {
+  typedef Atomic<bool, Relaxed> AtomicBool;
+  typedef Atomic<int32_t, Relaxed> AtomicInt32;
   typedef Atomic<uint32_t, Relaxed> AtomicUint32;
 
   template <typename T>
@@ -215,6 +217,8 @@ private:
   static void PrefAddVarCache(int32_t*, const char*, int32_t);
   static void PrefAddVarCache(uint32_t*, const char*, uint32_t);
   static void PrefAddVarCache(float*, const char*, float);
+  static void PrefAddVarCache(AtomicBool*, const char*, bool);
+  static void PrefAddVarCache(AtomicInt32*, const char*, int32_t);
   static void PrefAddVarCache(AtomicUint32*, const char*, uint32_t);
 
   static void AssertMainThread();

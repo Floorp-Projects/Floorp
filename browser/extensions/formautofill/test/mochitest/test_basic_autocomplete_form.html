@@ -33,52 +33,6 @@ let MOCK_STORAGE = [{
   "address-level1": "CA",
 }];
 
-function checkElementFilled(element, expectedvalue) {
-  return [
-    new Promise(resolve => {
-      element.addEventListener("input", function onInput() {
-        ok(true, "Checking " + element.name + " field fires input event");
-        resolve();
-      }, {once: true});
-    }),
-    new Promise(resolve => {
-      element.addEventListener("change", function onChange() {
-        ok(true, "Checking " + element.name + " field fires change event");
-        is(element.value, expectedvalue, "Checking " + element.name + " field");
-        resolve();
-      }, {once: true});
-    }),
-  ];
-}
-
-function checkAutoCompleteInputFilled(element, expectedvalue) {
-  return new Promise(resolve => {
-    element.addEventListener("DOMAutoComplete", function onChange() {
-      is(element.value, expectedvalue, "Checking " + element.name + " field");
-      resolve();
-    }, {once: true});
-  });
-}
-
-function checkFormFilled(address) {
-  info("expecting form filled");
-  let promises = [];
-  for (let prop in address) {
-    let element = document.getElementById(prop);
-    if (document.activeElement == element) {
-      promises.push(checkAutoCompleteInputFilled(element, address[prop]));
-    } else {
-      let converted = address[prop];
-      if (prop == "street-address") {
-        converted = FormAutofillUtils.toOneLineAddress(converted);
-      }
-      promises.push(...checkElementFilled(element, converted));
-    }
-  }
-  doKey("return");
-  return Promise.all(promises);
-}
-
 async function setupAddressStorage() {
   await addAddress(MOCK_STORAGE[0]);
   await addAddress(MOCK_STORAGE[1]);
@@ -198,12 +152,12 @@ add_task(async function check_fields_after_form_autofill() {
     })
   ).slice(1));
   doKey("down");
-  await checkFormFilled(MOCK_STORAGE[1]);
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE[1]);
 });
 
 // Fallback to history search after autofill address.
 add_task(async function check_fallback_after_form_autofill() {
-  await setInput("#tel", "");
+  await setInput("#tel", "", true);
   doKey("down");
   await expectPopup();
   checkMenuEntries(["+1234567890"], false);

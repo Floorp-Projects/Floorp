@@ -990,6 +990,7 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   nsIDOMClientRect getBoundsWithoutFlushing(in nsIDOMElement aElement);
 
+  const long FLUSH_NONE = -1;
   const long FLUSH_STYLE = 0;
   const long FLUSH_LAYOUT = 1;
   const long FLUSH_DISPLAY = 2;
@@ -1581,10 +1582,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aElement - A target element
    * @param aPseudoElement - A pseudo type (e.g. '::before' or null)
    * @param aProperty - A longhand CSS property (e.g. 'background-color')
+   * @param aFlushType - FLUSH_NONE if any pending styles should not happen,
+   *                     FLUSH_STYLE to flush pending styles.
    */
   AString getUnanimatedComputedStyle(in nsIDOMElement aElement,
                                      in AString aPseudoElement,
-                                     in AString aProperty);
+                                     in AString aProperty,
+                                     in long aFlushType);
 
   /**
    * Get the type of the currently focused html input, if any.

@@ -264,6 +264,20 @@ nsJARURI::SetSpec(const nsACString& aSpec)
     return SetSpecWithBase(aSpec, nullptr);
 }
 
+NS_IMPL_ISUPPORTS(nsJARURI::Mutator, nsIURISetters, nsIURIMutator)
+
+NS_IMETHODIMP
+nsJARURI::Mutate(nsIURIMutator** aMutator)
+{
+    RefPtr<nsJARURI::Mutator> mutator = new nsJARURI::Mutator();
+    nsresult rv = mutator->InitFromURI(this);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    mutator.forget(aMutator);
+    return NS_OK;
+}
+
 nsresult
 nsJARURI::SetSpecWithBase(const nsACString &aSpec, nsIURI* aBaseURL)
 {

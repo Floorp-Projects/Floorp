@@ -841,6 +841,10 @@ struct nsStyleImageLayers {
     }
   }
 
+  // Fill unspecified layers by cycling through their values
+  // till they all are of length aMaxItemCount
+  void FillAllLayers(uint32_t aMaxItemCount);
+
   nsChangeHint CalcDifference(const nsStyleImageLayers& aNewLayers,
                               nsStyleImageLayers::LayerType aType) const;
 

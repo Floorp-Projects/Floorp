@@ -230,8 +230,24 @@ public:
 
   // These callbacks are called on the main thread by the client
   // when data has been received via the channel.
-  // Tells the cache what the server said the data length is going to be.
-  // The actual data length may be greater (we receive more data than
+
+  // Notifies the cache that a load has begun. We pass the offset
+  // because in some cases the offset might not be what the cache
+  // requested. In particular we might unexpectedly start providing
+  // data at offset 0. This need not be called if the offset is the
+  // offset that the cache requested in
+  // ChannelMediaResource::CacheClientSeek. This can be called at any
+  // time by the client, not just after a CacheClientSeek.
+  //
+  // aSeekable tells us whether the stream is seekable or not. Non-seekable
+  // streams will always pass 0 for aOffset to CacheClientSeek. This should only
+  // be called while the stream is at channel offset 0. Seekability can
+  // change during the lifetime of the MediaCacheStream --- every time
+  // we do an HTTP load the seekability may be different (and sometimes
+  // is, in practice, due to the effects of caching proxies).
+  //
+  // aLength tells the cache what the server said the data length is going to
+  // be. The actual data length may be greater (we receive more data than
   // specified) or smaller (the stream ends before we reach the given
   // length), because servers can lie. The server's reported data length
   // *and* the actual data length can even vary over time because a
@@ -241,21 +257,10 @@ public:
   // data available based on an incorrect reported length. Seeks relative
   // EOF also depend on the reported length if we haven't managed to
   // read the whole stream yet.
-  void NotifyDataLength(int64_t aLength);
-  // Notifies the cache that a load has begun. We pass the offset
-  // because in some cases the offset might not be what the cache
-  // requested. In particular we might unexpectedly start providing
-  // data at offset 0. This need not be called if the offset is the
-  // offset that the cache requested in
-  // ChannelMediaResource::CacheClientSeek. This can be called at any
-  // time by the client, not just after a CacheClientSeek.
-  // aSeekable tells us whether the stream is seekable or not. Non-seekable
-  // streams will always pass 0 for aOffset to CacheClientSeek. This should only
-  // be called while the stream is at channel offset 0. Seekability can
-  // change during the lifetime of the MediaCacheStream --- every time
-  // we do an HTTP load the seekability may be different (and sometimes
-  // is, in practice, due to the effects of caching proxies).
-  void NotifyDataStarted(uint32_t aLoadID, int64_t aOffset, bool aSeekable);
+  void NotifyDataStarted(uint32_t aLoadID,
+                         int64_t aOffset,
+                         bool aSeekable,
+                         int64_t aLength);
   // Notifies the cache that data has been received. The stream already
   // knows the offset because data is received in sequence and
   // the starting offset is known via NotifyDataStarted or because
@@ -287,7 +292,7 @@ public:
   // while the stream is pinned.
   void Pin();
   void Unpin();
-  // See comments above for NotifyDataLength about how the length
+  // See comments above for NotifyDataStarted about how the length
   // can vary over time. Returns -1 if no length is known. Returns the
   // reported length if we haven't got any better information. If
   // the stream ended normally we return the length we actually got.

@@ -16,6 +16,7 @@ NetMonitorPanel.prototype = {
     }
     await this.panelWin.Netmonitor.bootstrap({
       toolbox: this.toolbox,
+      panel: this,
     });
     this.emit("ready");
     this.isReady = true;

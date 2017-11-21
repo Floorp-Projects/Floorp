@@ -15,6 +15,7 @@ class FirefoxConnector {
     this.connect = this.connect.bind(this);
     this.disconnect = this.disconnect.bind(this);
     this.willNavigate = this.willNavigate.bind(this);
+    this.navigate = this.navigate.bind(this);
     this.displayCachedEvents = this.displayCachedEvents.bind(this);
     this.onDocLoadingMarker = this.onDocLoadingMarker.bind(this);
     this.sendHTTPRequest = this.sendHTTPRequest.bind(this);
@@ -34,6 +35,7 @@ class FirefoxConnector {
     this.getState = getState;
     this.tabTarget = connection.tabConnection.tabTarget;
     this.toolbox = connection.toolbox;
+    this.panel = connection.panel;
 
     this.webConsoleClient = this.tabTarget.activeConsole;
 
@@ -50,6 +52,7 @@ class FirefoxConnector {
     // Paused network panel should be automatically resumed when page
     // reload, so `will-navigate` listener needs to be there all the time.
     this.tabTarget.on("will-navigate", this.willNavigate);
+    this.tabTarget.on("navigate", this.navigate);
 
     // Don't start up waiting for timeline markers if the server isn't
     // recent enough to emit the markers we're interested in.
@@ -118,6 +121,25 @@ class FirefoxConnector {
     if (!state.requests.recording) {
       this.actions.toggleRecording();
     }
+  }
+
+  navigate() {
+    if (this.dataProvider.isPayloadQueueEmpty()) {
+      this.onReloaded();
+      return;
+    }
+    let listener = () => {
+      if (!this.dataProvider.isPayloadQueueEmpty()) {
+        return;
+      }
+      window.off(EVENTS.PAYLOAD_READY, listener);
+      this.onReloaded();
+    };
+    window.on(EVENTS.PAYLOAD_READY, listener);
+  }
+
+  onReloaded() {
+    this.panel.emit("reloaded");
   }
 
   /**

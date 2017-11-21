@@ -19,6 +19,7 @@
 #include "nsCOMPtr.h"
 #include "nsSimpleURI.h"
 #include "nsINestedURI.h"
+#include "nsIURIMutator.h"
 
 #include "nsIIPCSerializableURI.h"
 
@@ -53,6 +54,7 @@ public:
                                     bool* result) override;
     virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode,
                                     const nsACString& newRef) override;
+    NS_IMETHOD Mutate(nsIURIMutator * *_retval) override;
 
     // nsISerializable overrides
     NS_IMETHOD Read(nsIObjectInputStream* aStream) override;
@@ -67,6 +69,23 @@ public:
 
 protected:
     nsCOMPtr<nsIURI> mInnerURI;
+
+
+public:
+    class Mutator
+        : public nsIURIMutator
+        , public BaseURIMutator<nsSimpleNestedURI>
+    {
+        NS_DECL_ISUPPORTS
+        NS_FORWARD_SAFE_NSIURISETTERS(mURI)
+        NS_DEFINE_NSIMUTATOR_COMMON
+
+        explicit Mutator() { }
+    private:
+        virtual ~Mutator() { }
+
+        friend class nsSimpleNestedURI;
+    };
 };
 
 } // namespace net

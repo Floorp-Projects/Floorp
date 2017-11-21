@@ -69,6 +69,20 @@ void MediaPrefs::PrefAddVarCache(float* aVariable,
   Preferences::AddFloatVarCache(aVariable, aPref, aDefault);
 }
 
+void MediaPrefs::PrefAddVarCache(AtomicBool* aVariable,
+                                 const char* aPref,
+                                 bool aDefault)
+{
+  Preferences::AddAtomicBoolVarCache(aVariable, aPref, aDefault);
+}
+
+void MediaPrefs::PrefAddVarCache(AtomicInt32* aVariable,
+                                 const char* aPref,
+                                 int32_t aDefault)
+{
+  Preferences::AddAtomicIntVarCache(aVariable, aPref, aDefault);
+}
+
 void MediaPrefs::PrefAddVarCache(AtomicUint32* aVariable,
                                  const char* aPref,
                                  uint32_t aDefault)

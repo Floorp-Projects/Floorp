@@ -22,6 +22,7 @@ DevToolsModules(
     'SidebarToggle.js',
     'StackTrace.js',
     'Tree.js',
+    'VisibilityHandler.js',
 )
 
 MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']

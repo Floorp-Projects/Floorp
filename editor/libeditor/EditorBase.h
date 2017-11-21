@@ -122,6 +122,7 @@ class InsertTextTransaction;
 class JoinNodeTransaction;
 class PlaceholderTransaction;
 class RemoveStyleSheetTransaction;
+class SplitNodeResult;
 class SplitNodeTransaction;
 class TextComposition;
 class TextEditor;
@@ -208,6 +209,22 @@ private:
 
 #define kMOZEditorBogusNodeAttrAtom nsGkAtoms::mozeditorbogusnode
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
+
+/**
+ * SplitAtEdges is for EditorBase::SplitNodeDeep(),
+ * HTMLEditor::InsertNodeAtPoint()
+ */
+enum class SplitAtEdges
+{
+  // EditorBase::SplitNodeDeep() won't split container element nodes at
+  // their edges.  I.e., when split point is start or end of container,
+  // it won't be split.
+  eDoNotCreateEmptyContainer,
+  // EditorBase::SplitNodeDeep() always splits containers even if the split
+  // point is at edge of a container.  E.g., if split point is start of an
+  // inline element, empty inline element is created as a new left node.
+  eAllowToCreateEmptyContainer
+};
 
 /**
  * Implementation of an editor object.  it will be the controller/focal point
@@ -345,8 +362,23 @@ public:
                                                  nsAtom* aAttribute = nullptr,
                                                  const nsAString* aValue =
                                                  nullptr);
-  nsIContent* SplitNode(nsIContent& aNode, int32_t aOffset,
-                        ErrorResult& aResult);
+
+  /**
+   * SplitNode() creates a transaction to create a new node (left node)
+   * identical to an existing node (right node), and split the contents
+   * between the same point in both nodes, then, execute the transaction.
+   *
+   * @param aStartOfRightNode   The point to split.  Its container will be
+   *                            the right node, i.e., become the new node's
+   *                            next sibling.  And the point will be start
+   *                            of the right node.
+   * @param aError              If succeed, returns no error.  Otherwise, an
+   *                            error.
+   */
+  already_AddRefed<nsIContent>
+  SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
+            ErrorResult& aResult);
+
   nsresult JoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
   nsresult MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset);
 
@@ -447,7 +479,7 @@ protected:
    * @return                The created new element node.
    */
   already_AddRefed<Element> CreateNode(nsAtom* aTag,
-                                       EditorRawDOMPoint& aPointToInsert);
+                                       const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * Create a transaction for inserting aNode as a child of aParent.
@@ -538,8 +570,20 @@ protected:
     CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData, uint32_t aOffset,
                                 EDirection aDirection);
 
+  /**
+   * CreateTxnForSplitNode() creates a transaction to create a new node
+   * (left node) identical to an existing node (right node), and split the
+   * contents between the same point in both nodes.
+   *
+   * @param aStartOfRightNode   The point to split.  Its container will be
+   *                            the right node, i.e., become the new node's
+   *                            next sibling.  And the point will be start
+   *                            of the right node.
+   * @return                    The new transaction to split the container of
+   *                            aStartOfRightNode.
+   */
   already_AddRefed<SplitNodeTransaction>
-    CreateTxnForSplitNode(nsIContent& aNode, uint32_t aOffset);
+    CreateTxnForSplitNode(const EditorRawDOMPoint& aStartOfRightNode);
 
   already_AddRefed<JoinNodeTransaction>
     CreateTxnForJoinNode(nsINode& aLeftNode, nsINode& aRightNode);
@@ -731,18 +775,27 @@ public:
   void StopPreservingSelection();
 
   /**
-   * SplitNode() creates a new node identical to an existing node, and split
-   * the contents between the two nodes
-   * @param aExistingRightNode  The node to split.  It will become the new
-   *                            node's next sibling.
-   * @param aOffset             The offset of aExistingRightNode's
-   *                            content|children to do the split at
-   * @param aNewLeftNode        The new node resulting from the split, becomes
-   *                            aExistingRightNode's previous sibling.
+   * SplitNodeImpl() creates a new node (left node) identical to an existing
+   * node (right node), and split the contents between the same point in both
+   * nodes.
+   *
+   * @param aStartOfRightNode   The point to split.  Its container will be
+   *                            the right node, i.e., become the new node's
+   *                            next sibling.  And the point will be start
+   *                            of the right node.
+   * @param aNewLeftNode        The new node called as left node, so, this
+   *                            becomes the container of aPointToSplit's
+   *                            previous sibling.
+   * @param aError              Must have not already failed.
+   *                            If succeed to insert aLeftNode before the
+   *                            right node and remove unnecessary contents
+   *                            (and collapse selection at end of the left
+   *                            node if necessary), returns no error.
+   *                            Otherwise, an error.
    */
-  nsresult SplitNodeImpl(nsIContent& aExistingRightNode,
-                         int32_t aOffset,
-                         nsIContent& aNewLeftNode);
+  void SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
+                     nsIContent& aNewLeftNode,
+                     ErrorResult& aError);
 
   /**
    * JoinNodes() takes 2 nodes and merge their content|children.
@@ -1094,15 +1147,28 @@ public:
 
   nsresult IsPreformatted(nsIDOMNode* aNode, bool* aResult);
 
-  enum class EmptyContainers { no, yes };
-  int32_t SplitNodeDeep(nsIContent& aNode, nsIContent& aSplitPointParent,
-                        int32_t aSplitPointOffset,
-                        EmptyContainers aEmptyContainers =
-                          EmptyContainers::yes,
-                        nsIContent** outLeftNode = nullptr,
-                        nsIContent** outRightNode = nullptr,
-                        nsCOMPtr<nsIContent>* ioChildAtSplitPointOffset =
-                          nullptr);
+  /**
+   * SplitNodeDeep() splits aMostAncestorToSplit deeply.
+   *
+   * @param aMostAncestorToSplit        The most ancestor node which should be
+   *                                    split.
+   * @param aStartOfDeepestRightNode    The start point of deepest right node.
+   *                                    This point must be descendant of
+   *                                    aMostAncestorToSplit.
+   * @param aSplitAtEdges               Whether the caller allows this to
+   *                                    create empty container element when
+   *                                    split point is start or end of an
+   *                                    element.
+   * @return                            SplitPoint() returns split point in
+   *                                    aMostAncestorToSplit.  The point must
+   *                                    be good to insert something if the
+   *                                    caller want to do it.
+   */
+  SplitNodeResult
+  SplitNodeDeep(nsIContent& aMostAncestorToSplit,
+                const EditorRawDOMPoint& aDeepestStartOfRightNode,
+                SplitAtEdges aSplitAtEdges);
+
   EditorDOMPoint JoinNodeDeep(nsIContent& aLeftNode,
                               nsIContent& aRightNode);
 

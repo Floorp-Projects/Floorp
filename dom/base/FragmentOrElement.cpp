@@ -1214,15 +1214,12 @@ FragmentOrElement::GetBindingParent() const
 }
 
 nsXBLBinding*
-FragmentOrElement::GetXBLBinding() const
+FragmentOrElement::DoGetXBLBinding() const
 {
-  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-    if (slots) {
-      return slots->mXBLBinding;
-    }
+  MOZ_ASSERT(HasFlag(NODE_MAY_BE_IN_BINDING_MNGR));
+  if (nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
+    return slots->mXBLBinding;
   }
-
   return nullptr;
 }
 

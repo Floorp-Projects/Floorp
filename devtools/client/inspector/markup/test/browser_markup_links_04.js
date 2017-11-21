@@ -93,12 +93,6 @@ add_task(function* () {
     let linkFollow = allMenuItems.find(i => i.id === "node-menu-link-follow");
     let linkCopy = allMenuItems.find(i => i.id === "node-menu-link-copy");
 
-    // The contextual menu setup is async, because it needs to know if the
-    // inspector has the resolveRelativeURL method first. So call actorHasMethod
-    // here too to make sure the first call resolves first and the menu is
-    // properly setup.
-    yield inspector.target.actorHasMethod("inspector", "resolveRelativeURL");
-
     is(linkFollow.visible, test.isLinkFollowItemVisible,
       "The follow-link item display is correct");
     is(linkCopy.visible, test.isLinkCopyItemVisible,
