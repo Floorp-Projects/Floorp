@@ -128,7 +128,7 @@ public:
   already_AddRefed<DOMMatrix> Inverse() const;
 
   bool                        Is2D() const;
-  bool                        Identity() const;
+  bool                        IsIdentity() const;
   already_AddRefed<DOMPoint>  TransformPoint(const DOMPointInit& aPoint) const;
   void                        ToFloat32Array(JSContext* aCx,
                                              JS::MutableHandle<JSObject*> aResult,
