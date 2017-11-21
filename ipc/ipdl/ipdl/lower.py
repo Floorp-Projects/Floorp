@@ -1113,9 +1113,6 @@ class MessageDecl(ipdl.ast.MessageDecl):
         return messageDecl
 
 ##--------------------------------------------------
-def _semsToChannelParts(sems):
-    return [ 'mozilla', 'ipc', 'MessageChannel' ]
-
 def _usesShmem(p):
     for md in p.messageDecls:
         for param in md.inParams:
@@ -1141,21 +1138,12 @@ class Protocol(ipdl.ast.Protocol):
     def cxxTypedefs(self):
         return self.decl.cxxtypedefs
 
-    def sendSems(self):
-        return self.decl.type.toplevel().sendSemantics
-
-    def channelName(self):
-        return '::'.join(_semsToChannelParts(self.sendSems()))
-
     def channelSel(self):
         if self.decl.type.isToplevel():  return '.'
         return '->'
 
     def channelType(self):
         return Type('Channel', ptr=not self.decl.type.isToplevel())
-
-    def channelHeaderFile(self):
-        return '/'.join(_semsToChannelParts(self.sendSems())) +'.h'
 
     def managerInterfaceType(self, ptr=0):
         return Type('mozilla::ipc::IProtocol', ptr=ptr)
@@ -2485,7 +2473,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return [
             Typedef(Type('mozilla::ipc::IProtocol'), 'ProtocolBase'),
             Typedef(Type('IPC::Message'), 'Message'),
-            Typedef(Type(self.protocol.channelName()), 'Channel'),
+            Typedef(Type('mozilla::ipc::MessageChannel'), 'Channel'),
             Typedef(Type('mozilla::ipc::IProtocol'), 'ChannelListener'),
             Typedef(Type('base::ProcessHandle'), 'ProcessHandle'),
             Typedef(Type('mozilla::ipc::MessageChannel'), 'MessageChannel'),
@@ -2661,7 +2649,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.hdrfile.addthing(CppDirective('include', '"base/id_map.h"'))
 
         self.hdrfile.addthings([
-            CppDirective('include', '"'+ p.channelHeaderFile() +'"'),
+            CppDirective('include', '"mozilla/ipc/MessageChannel.h"'),
             Whitespace.NL ])
 
         hasAsyncReturns = False
