@@ -7865,7 +7865,7 @@ class CGPerSignatureCall(CGThing):
                 if (CustomElementRegistry::IsCustomElementEnabled()) {
                   CustomElementReactionsStack* reactionsStack = GetCustomElementReactionsStack(${obj});
                   if (reactionsStack) {
-                    ceReaction.emplace(reactionsStack);
+                    ceReaction.emplace(reactionsStack, cx);
                   }
                 }
                 """, obj=objectName)))

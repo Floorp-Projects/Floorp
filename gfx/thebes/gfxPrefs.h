@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <string>
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/gfx/LoggingConstants.h"
 #include "nsTArray.h"
 
@@ -111,6 +112,10 @@ class gfxPrefs;
 class gfxPrefs final
 {
   typedef mozilla::gfx::GfxPrefValue GfxPrefValue;
+
+  typedef mozilla::Atomic<bool, mozilla::Relaxed> AtomicBool;
+  typedef mozilla::Atomic<int32_t, mozilla::Relaxed> AtomicInt32;
+  typedef mozilla::Atomic<uint32_t, mozilla::Relaxed> AtomicUint32;
 
 private:
   // Enums for the update policy.
@@ -789,6 +794,9 @@ private:
   static void PrefAddVarCache(uint32_t*, const char*, uint32_t);
   static void PrefAddVarCache(float*, const char*, float);
   static void PrefAddVarCache(std::string*, const char*, std::string);
+  static void PrefAddVarCache(AtomicBool*, const char*, bool);
+  static void PrefAddVarCache(AtomicInt32*, const char*, int32_t);
+  static void PrefAddVarCache(AtomicUint32*, const char*, uint32_t);
   static bool PrefGet(const char*, bool);
   static int32_t PrefGet(const char*, int32_t);
   static uint32_t PrefGet(const char*, uint32_t);

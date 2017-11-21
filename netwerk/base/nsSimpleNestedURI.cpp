@@ -186,5 +186,19 @@ nsSimpleNestedURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
     return NS_OK;
 }
 
+NS_IMPL_ISUPPORTS(nsSimpleNestedURI::Mutator, nsIURISetters, nsIURIMutator)
+
+NS_IMETHODIMP
+nsSimpleNestedURI::Mutate(nsIURIMutator** aMutator)
+{
+    RefPtr<nsSimpleNestedURI::Mutator> mutator = new nsSimpleNestedURI::Mutator();
+    nsresult rv = mutator->InitFromURI(this);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    mutator.forget(aMutator);
+    return NS_OK;
+}
+
 } // namespace net
 } // namespace mozilla

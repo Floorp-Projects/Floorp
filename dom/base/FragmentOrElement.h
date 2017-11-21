@@ -147,8 +147,8 @@ public:
   virtual void AppendTextTo(nsAString& aResult) override;
   MOZ_MUST_USE
   virtual bool AppendTextTo(nsAString& aResult, const mozilla::fallible_t&) override;
-  virtual nsIContent *GetBindingParent() const override;
-  virtual nsXBLBinding *GetXBLBinding() const override;
+  virtual nsIContent* GetBindingParent() const override;
+  virtual nsXBLBinding* DoGetXBLBinding() const override;
   virtual void SetXBLBinding(nsXBLBinding* aBinding,
                              nsBindingManager* aOldBindingManager = nullptr) override;
   virtual ShadowRoot *GetContainingShadow() const override;

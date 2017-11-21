@@ -81,4 +81,12 @@ interface nsIMozIconURI : nsIURI
     { 0x99, 0x7, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b }   \
 }
 
+#define NS_MOZICONURIMUTATOR_CID                     \
+{                                                    \
+    0x1460df3b,                                      \
+    0x774c,                                          \
+    0x4205,                                          \
+    {0x83, 0x49, 0x83, 0x8e, 0x50, 0x7c, 0x3e, 0xf9} \
+}
+
 %}

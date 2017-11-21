@@ -52,7 +52,11 @@ public:
    * @param aIid Interface requested, similar to IUnknown::QueryInterface
    * @param aOutInterface Outparam for the resulting interface to return to the
    *                      client.
-   * @return The usual HRESULT codes similarly to IUnknown::QueryInterface
+   * @return The usual HRESULT codes similarly to IUnknown::QueryInterface.
+   *         If E_NOINTERFACE is returned, the proxy will be queried.
+   *         If the handler is certain that this interface is not available,
+   *         it can return S_FALSE to avoid querying the proxy. This will be
+   *         translated to E_NOINTERFACE before it is returned to the client.
    */
   virtual HRESULT QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
                                         void** aOutInterface) = 0;

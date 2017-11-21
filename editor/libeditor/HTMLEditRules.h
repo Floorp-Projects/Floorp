@@ -32,6 +32,7 @@ namespace mozilla {
 class EditActionResult;
 class HTMLEditor;
 class RulesInfo;
+class SplitNodeResult;
 class TextEditor;
 namespace dom {
 class Element;
@@ -118,8 +119,8 @@ public:
   NS_IMETHOD DidDeleteNode(nsIDOMNode* aChild, nsresult aResult) override;
   NS_IMETHOD WillSplitNode(nsIDOMNode* aExistingRightNode,
                            int32_t aOffset) override;
-  NS_IMETHOD DidSplitNode(nsIDOMNode* aExistingRightNode, int32_t aOffset,
-                          nsIDOMNode* aNewLeftNode, nsresult aResult) override;
+  NS_IMETHOD DidSplitNode(nsIDOMNode* aExistingRightNode,
+                          nsIDOMNode* aNewLeftNode) override;
   NS_IMETHOD WillJoinNodes(nsIDOMNode* aLeftNode, nsIDOMNode* aRightNode,
                            nsIDOMNode* aParent) override;
   NS_IMETHOD DidJoinNodes(nsIDOMNode* aLeftNode, nsIDOMNode* aRightNode,
@@ -314,18 +315,20 @@ protected:
   /**
    * SplitParagraph() splits the parent block, aPara, at aSelNode - aOffset.
    *
-   * @param aSelection  The selection.
-   * @param aPara       The parent block to be split.
-   * @param aBRNode     Next <br> node if there is.  Otherwise, nullptr.
-   *                    If this is not nullptr, the <br> node may be removed.
-   * @param aSelNode    Set the selection container to split aPara at.
-   * @param aOffset     Set the offset in the container.
+   * @param aSelection          The selection.
+   * @param aParentDivOrP       The parent block to be split.  This must be <p>
+   *                            or <div> element.
+   * @param aStartOfRightNode   The point to be start of right node after
+   *                            split.  This must be descendant of
+   *                            aParentDivOrP.
+   * @param aNextBRNode         Next <br> node if there is.  Otherwise, nullptr.
+   *                            If this is not nullptr, the <br> node may be
+   *                            removed.
    */
   nsresult SplitParagraph(Selection& aSelection,
-                          Element& aPara,
-                          nsIContent* aBRNode,
-                          nsINode& aSelNode,
-                          int32_t aOffset);
+                          Element& aParentDivOrP,
+                          const EditorRawDOMPoint& aStartOfRightNode,
+                          nsIContent* aBRNode);
 
   nsresult ReturnInListItem(Selection& aSelection, Element& aHeader,
                             nsINode& aNode, int32_t aOffset);
@@ -413,12 +416,28 @@ protected:
   nsresult ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
                            nsAtom& aBlockTag);
   nsresult MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
-  nsresult SplitAsNeeded(nsAtom& aTag, OwningNonNull<nsINode>& inOutParent,
-                         int32_t& inOutOffset,
-                         nsCOMPtr<nsIContent>* inOutChildAtOffset = nullptr);
-  nsresult SplitAsNeeded(nsAtom& aTag, nsCOMPtr<nsINode>& inOutParent,
-                         int32_t& inOutOffset,
-                         nsCOMPtr<nsIContent>* inOutChildAtOffset = nullptr);
+
+  /**
+   * MaybeSplitAncestorsForInsert() does nothing if container of
+   * aStartOfDeepestRightNode can have an element whose tag name is aTag.
+   * Otherwise, looks for an ancestor node which is or is in active editing
+   * host and can have an element whose name is aTag.  If there is such
+   * ancestor, its descendants are split.
+   *
+   * Note that this may create empty elements while splitting ancestors.
+   *
+   * @param aTag                        The name of element to be inserted
+   *                                    after calling this method.
+   * @param aStartOfDeepestRightNode    The start point of deepest right node.
+   *                                    This point must be descendant of
+   *                                    active editing host.
+   * @return                            When succeeded, SplitPoint() returns
+   *                                    the point to insert the element.
+   */
+  SplitNodeResult MaybeSplitAncestorsForInsert(
+                    nsAtom& aTag,
+                    const EditorRawDOMPoint& aStartOfDeepestRightNode);
+
   nsresult AddTerminatingBR(nsIDOMNode *aBlock);
   EditorDOMPoint JoinNodesSmart(nsIContent& aNodeLeft,
                                 nsIContent& aNodeRight);

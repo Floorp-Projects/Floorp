@@ -8,6 +8,7 @@
 #define mozilla_dom_CSSMozDocumentRule_h
 
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/css/URLMatchingFunction.h"
 #include "nsIDOMCSSMozDocumentRule.h"
 
 namespace mozilla {
@@ -25,6 +26,12 @@ public:
 
   int32_t GetType() const final override { return css::Rule::DOCUMENT_RULE; }
   using Rule::GetType;
+
+  static bool Match(nsIDocument* aDoc,
+                    nsIURI* aDocURI,
+                    const nsACString& aDocURISpec,
+                    const nsACString& aPattern,
+                    css::URLMatchingFunction aUrlMatchingFunction);
 
   // nsIDOMCSSGroupingRule interface
   NS_DECL_NSIDOMCSSGROUPINGRULE
