@@ -12,6 +12,14 @@
 
 using namespace mozilla::intl;
 
+OSPreferences::OSPreferences()
+{
+}
+
+OSPreferences::~OSPreferences()
+{
+}
+
 bool
 OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
 {

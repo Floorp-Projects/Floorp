@@ -57,6 +57,12 @@ public:
   };
 
   /**
+   * Constructor, to do any necessary initialization such as registering for
+   * notifications from the system when prefs are modified.
+   */
+  OSPreferences();
+
+  /**
    * Create (if necessary) and return a raw pointer to the singleton instance.
    * Use this accessor in C++ code that just wants to call a method on the
    * instance, but does not need to hold a reference, as in
@@ -144,7 +150,7 @@ protected:
   nsTArray<nsCString> mRegionalPrefsLocales;
 
 private:
-  virtual ~OSPreferences() {};
+  virtual ~OSPreferences();
 
   static StaticRefPtr<OSPreferences> sInstance;
 
