@@ -3273,6 +3273,13 @@ public:
 
   static PopupControlState GetPopupControlState() { return sPopupControlState; }
 
+  // Get a serial number for a newly created inner or outer window.
+  static uint32_t InnerOrOuterWindowCreated();
+  // Record that an inner or outer window has been destroyed.
+  static void InnerOrOuterWindowDestroyed();
+  // Get the current number of inner or outer windows.
+  static int32_t GetCurrentInnerOrOuterWindowCount() { return sInnerOrOuterWindowCount; }
+
 private:
   static bool InitializeEventTable();
 
@@ -3463,6 +3470,9 @@ private:
   static mozilla::LazyLogModule sDOMDumpLog;
 
   static PopupControlState sPopupControlState;
+
+  static int32_t sInnerOrOuterWindowCount;
+  static uint32_t sInnerOrOuterWindowSerialCounter;
 };
 
 /* static */ inline
