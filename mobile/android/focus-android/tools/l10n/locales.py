@@ -94,7 +94,8 @@ RELEASE_LOCALES = [
 # verify their work in progress.
 ADDITIONAL_SCREENSHOT_LOCALES = [
 	"lt",
-	"meh",	
+	"meh",
+	"bs"
 ]
 
 # Those are locales that we take automated screenshots of.
