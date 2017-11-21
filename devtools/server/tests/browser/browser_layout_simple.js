@@ -30,7 +30,7 @@ add_task(function* () {
   ok(didThrow, "An exception was thrown for a missing NodeActor in getAllGrids");
 
   let invalidNode = yield walker.querySelector(walker.rootNode, "title");
-  let grids = yield layout.getAllGrids(invalidNode, true);
+  let grids = yield layout.getAllGrids(invalidNode);
   ok(Array.isArray(grids), "An array of grids was returned");
   is(grids.length, 0, "0 grids have been returned for the invalid node");
 

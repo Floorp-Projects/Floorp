@@ -228,29 +228,19 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
 
   /**
    * Returns an array of GridActor objects for all existing grid containers found by
-   * iterating below the given rootNode and optionally including nested frames.
+   * iterating below the given rootNode and including nested frames.
    *
    * @param  {NodeActor} rootNode
-   * @param  {Boolean} traverseFrames
-   *         Whether or not we should iterate through nested frames.
    * @return {Array} An array of GridActor objects.
    */
-  getAllGrids(rootNode, traverseFrames) {
+  getAllGrids(rootNode) {
     let grids = [];
 
     if (!rootNode) {
       return grids;
     }
 
-    if (!traverseFrames) {
-      return this.getGrids(rootNode.rawNode);
-    }
-
-    for (let {document} of this.tabActor.windows) {
-      grids = [...grids, ...this.getGrids(document.documentElement)];
-    }
-
-    return grids;
+    return this.getGrids(rootNode.rawNode);
   },
 });
 

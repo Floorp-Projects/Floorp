@@ -109,7 +109,7 @@ const GRID_FRAGMENT_DATA = {
 
 add_task(function* () {
   let { client, walker, layout } = yield initLayoutFrontForUrl(MAIN_DOMAIN + "grid.html");
-  let grids = yield layout.getAllGrids(walker.rootNode, true);
+  let grids = yield layout.getAllGrids(walker.rootNode);
   let grid = grids[0];
   let { gridFragments } = grid;
 
