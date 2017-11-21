@@ -624,7 +624,7 @@ nsHtml5Parser::ParseUntilBlocked()
 {
   nsresult rv = mExecutor->IsBroken();
   NS_ENSURE_SUCCESS(rv, rv);
-  if (mBlocked || mExecutor->IsComplete()) {
+  if (mBlocked || mInsertionPointPermanentlyUndefined || mExecutor->IsComplete()) {
     return NS_OK;
   }
   NS_ASSERTION(mExecutor->HasStarted(), "Bad life cycle.");
