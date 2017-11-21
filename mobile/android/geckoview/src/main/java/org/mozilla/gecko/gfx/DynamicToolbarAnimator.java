@@ -48,13 +48,13 @@ public class DynamicToolbarAnimator {
 
     private final Set<PinReason> mPinFlags = Collections.synchronizedSet(EnumSet.noneOf(PinReason.class));
 
-    private final GeckoLayerClient mTarget;
+    private final LayerView mTarget;
     private LayerSession.Compositor mCompositor;
     private final List<MetricsListener> mListeners;
     private ToolbarChromeProxy mToolbarChromeProxy;
     private int mMaxToolbarHeight;
 
-    public DynamicToolbarAnimator(GeckoLayerClient aTarget) {
+    public DynamicToolbarAnimator(final LayerView aTarget) {
         mTarget = aTarget;
         mListeners = new ArrayList<MetricsListener>();
     }
@@ -154,8 +154,8 @@ public class DynamicToolbarAnimator {
     /* package-private */ IntSize getViewportSize() {
         ThreadUtils.assertOnUiThread();
 
-        int viewWidth = mTarget.getView().getWidth();
-        int viewHeight = mTarget.getView().getHeight();
+        int viewWidth = mTarget.getWidth();
+        int viewHeight = mTarget.getHeight();
         if ((mToolbarChromeProxy != null) && mToolbarChromeProxy.isToolbarChromeVisible()) {
           viewHeight -= mMaxToolbarHeight;
         }
@@ -163,8 +163,7 @@ public class DynamicToolbarAnimator {
     }
 
     public PointF getVisibleEndOfLayerView() {
-        return new PointF(mTarget.getView().getWidth(),
-            mTarget.getView().getHeight());
+        return new PointF(mTarget.getWidth(), mTarget.getHeight());
     }
 
     /* package-private */ void updateCompositor() {

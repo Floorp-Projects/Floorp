@@ -364,6 +364,7 @@ var BrowserApp = {
     Services.androidBridge.browserApp = this;
 
     WindowEventDispatcher.registerListener(this, [
+      "GeckoView:ZoomToInput",
       "Session:Restore",
       "Tab:Load",
       "Tab:Selected",
@@ -383,7 +384,6 @@ var BrowserApp = {
       "Passwords:Init",
       "Sanitize:ClearData",
       "SaveAs:PDF",
-      "ScrollTo:FocusedInput",
       "Session:Back",
       "Session:Forward",
       "Session:GetHistory",
@@ -1610,49 +1610,49 @@ var BrowserApp = {
     return null;
   },
 
-  scrollToFocusedInput: function(aBrowser, aAllowZoom = true) {
+  scrollToFocusedInput: function(aBrowser) {
     let formHelperMode = Services.prefs.getIntPref("formhelper.mode");
-    if (formHelperMode == kFormHelperModeDisabled)
+    if (formHelperMode == kFormHelperModeDisabled) {
       return;
+    }
 
-    let dwu = aBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let dwu = aBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIDOMWindowUtils);
     if (!dwu) {
       return;
     }
 
-    let apzFlushDone = function() {
-      Services.obs.removeObserver(apzFlushDone, "apz-repaints-flushed");
-      dwu.zoomToFocusedInput();
-    };
-
-    let paintDone = function() {
-      window.removeEventListener("MozAfterPaint", paintDone);
-      if (dwu.flushApzRepaints()) {
-        Services.obs.addObserver(apzFlushDone, "apz-repaints-flushed");
-      } else {
-        apzFlushDone();
-      }
-    };
-
-    let gotResizeWindow = false;
-    let resizeWindow = function(e) {
-      gotResizeWindow = true;
-      aBrowser.contentWindow.removeEventListener("resize", resizeWindow);
-      if (dwu.isMozAfterPaintPending) {
-        window.addEventListener("MozAfterPaint", paintDone);
-      } else {
-        paintDone();
-      }
-    }
-
-    aBrowser.contentWindow.addEventListener("resize", resizeWindow);
-
-    // The "resize" event sometimes fails to fire, so set a timer to catch that case
-    // and unregister the event listener. See Bug 1253469
-    setTimeout(function(e) {
-    if (!gotResizeWindow) {
-        aBrowser.contentWindow.removeEventListener("resize", resizeWindow);
+    let zoomToFocusedInput = function() {
+      if (!dwu.flushApzRepaints()) {
         dwu.zoomToFocusedInput();
+        return;
+      }
+      Services.obs.addObserver(function apzFlushDone() {
+        Services.obs.removeObserver(apzFlushDone, "apz-repaints-flushed");
+        dwu.zoomToFocusedInput();
+      }, "apz-repaints-flushed");
+    };
+
+    let gotResize = false;
+    let onResize = function() {
+      gotResize = true;
+      if (dwu.isMozAfterPaintPending) {
+        addEventListener("MozAfterPaint", zoomToFocusedInput, {once: true});
+      } else {
+        zoomToFocusedInput();
+      }
+    };
+
+    aBrowser.contentWindow.addEventListener("resize", onResize);
+
+    // When the keyboard is displayed, we can get one resize event, multiple
+    // resize events, or none at all. Try to handle all these cases by allowing
+    // resizing within a set interval, and still zoom to input if there is no
+    // resize event at the end of the interval.
+    setTimeout(function(e) {
+      aBrowser.contentWindow.removeEventListener("resize", onResize);
+      if (!gotResize) {
+        onResize();
       }
     }, 500);
   },
@@ -1769,10 +1769,10 @@ var BrowserApp = {
         this.saveAsPDF(browser);
         break;
 
-      case "ScrollTo:FocusedInput": {
+      case "GeckoView:ZoomToInput": {
         // these messages come from a change in the viewable area and not user interaction
         // we allow scrolling to the selected input, but not zooming the page
-        this.scrollToFocusedInput(browser, false);
+        this.scrollToFocusedInput(browser);
         break;
       }
 

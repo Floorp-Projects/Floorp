@@ -95,7 +95,7 @@ enum class VRDisplayCapabilityFlags : uint16_t {
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(VRDisplayCapabilityFlags)
 
 struct VRFieldOfView {
-  VRFieldOfView() {}
+  VRFieldOfView() = default;
   VRFieldOfView(double up, double right, double down, double left)
     : upDegrees(up), rightDegrees(right), downDegrees(down), leftDegrees(left)
   {}
@@ -366,7 +366,7 @@ public:
 
 protected:
   VRSystemManager() : mControllerCount(0) { }
-  virtual ~VRSystemManager() { }
+  virtual ~VRSystemManager() = default;
 
   uint32_t mControllerCount;
 };

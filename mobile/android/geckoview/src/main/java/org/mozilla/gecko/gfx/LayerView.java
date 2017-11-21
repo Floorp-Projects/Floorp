@@ -49,12 +49,12 @@ public class LayerView extends FrameLayout {
 
     private static AccessibilityManager sAccessibilityManager;
 
-    private GeckoLayerClient mLayerClient;
     private PanZoomController mPanZoomController;
     private DynamicToolbarAnimator mToolbarAnimator;
     private FullScreenState mFullScreenState;
 
-    private Listener mListener;
+    // Accessed on UI thread.
+    private ImmutableViewportMetrics mViewportMetrics;
 
     /* This should only be modified on the Java UI thread. */
     private final Overscroll mOverscroll;
@@ -117,13 +117,13 @@ public class LayerView extends FrameLayout {
             case STATIC_TOOLBAR_READY:
                 // Hide toolbar and send TOOLBAR_HIDDEN message to compositor
                 mToolbarAnimator.onToggleChrome(false);
-                mListener.surfaceChanged();
+                adjustViewportSize();
                 postCompositorMessage(TOOLBAR_HIDDEN);
                 break;
             case TOOLBAR_SHOW:
                 // Show toolbar.
                 mToolbarAnimator.onToggleChrome(true);
-                mListener.surfaceChanged();
+                adjustViewportSize();
                 postCompositorMessage(TOOLBAR_VISIBLE);
                 break;
             case FIRST_PAINT:
@@ -166,13 +166,14 @@ public class LayerView extends FrameLayout {
     }
 
     public void initializeView() {
-        mLayerClient = new GeckoLayerClient(this);
+        mToolbarAnimator = new DynamicToolbarAnimator(this);
+        mPanZoomController = PanZoomController.Factory.create(this);
         if (mOverscroll != null) {
-            mLayerClient.setOverscrollHandler(mOverscroll);
+            mPanZoomController.setOverscrollHandler(mOverscroll);
         }
 
-        mPanZoomController = mLayerClient.getPanZoomController();
-        mToolbarAnimator = mLayerClient.getDynamicToolbarAnimator();
+        mViewportMetrics = new ImmutableViewportMetrics()
+                .setViewportSize(getWidth(), getHeight());
     }
 
     /**
@@ -195,9 +196,9 @@ public class LayerView extends FrameLayout {
                          (int)event.getToolMinor() / 2);
     }
 
-    public void destroy() {
-        if (mLayerClient != null) {
-            mLayerClient.destroy();
+    protected void destroy() {
+        if (mPanZoomController != null) {
+            mPanZoomController.destroy();
         }
     }
 
@@ -206,7 +207,7 @@ public class LayerView extends FrameLayout {
         super.dispatchDraw(canvas);
 
         // We must have a layer client to get valid viewport metrics
-        if (mLayerClient != null && mOverscroll != null) {
+        if (mOverscroll != null) {
             mOverscroll.draw(canvas, getViewportMetrics());
         }
     }
@@ -273,18 +274,11 @@ public class LayerView extends FrameLayout {
         return false;
     }
 
-    // Don't expose GeckoLayerClient to things outside this package; only expose it as an Object
-    GeckoLayerClient getLayerClient() { return mLayerClient; }
-
     public PanZoomController getPanZoomController() { return mPanZoomController; }
     public DynamicToolbarAnimator getDynamicToolbarAnimator() { return mToolbarAnimator; }
 
     public ImmutableViewportMetrics getViewportMetrics() {
-        return mLayerClient.getViewportMetrics();
-    }
-
-    public Matrix getMatrixForLayerRectToViewRect() {
-        return mLayerClient.getMatrixForLayerRectToViewRect();
+        return mViewportMetrics;
     }
 
     public void setSurfaceBackgroundColor(int newColor) {
@@ -321,28 +315,23 @@ public class LayerView extends FrameLayout {
         }
     }
 
-    public void setListener(Listener listener) {
-        mListener = listener;
-    }
-
-    Listener getListener() {
-        return mListener;
-    }
-
     protected void attachCompositor(final LayerSession session) {
         mCompositor = session.mCompositor;
         mCompositor.layerView = this;
+
+        // Reset the content-document-is-displayed flag.
+        mCompositor.updateRootFrameMetrics(/* scroolX */ 0, /* scrollY */ 0,
+                                           /* zoom */ 1.0f);
 
         mToolbarAnimator.notifyCompositorCreated(mCompositor);
 
         final NativePanZoomController npzc = (NativePanZoomController) mPanZoomController;
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            mCompositor.attachToJava(mLayerClient, npzc);
+            mCompositor.attachToJava(npzc);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
                     mCompositor, "attachToJava",
-                    GeckoLayerClient.class, mLayerClient,
                     NativePanZoomController.class, npzc);
         }
     }
@@ -352,18 +341,31 @@ public class LayerView extends FrameLayout {
         return isCompositorReady() ? mCompositor : null;
     }
 
-    /* package */ void onSizeChanged(int width, int height) {
-        if (mListener != null) {
-            mListener.surfaceChanged();
+    private void adjustViewportSize() {
+        final IntSize viewportSize = mToolbarAnimator.getViewportSize();
+
+        if (mViewportMetrics.viewportRectWidth == viewportSize.width &&
+            mViewportMetrics.viewportRectHeight == viewportSize.height) {
+            return;
         }
+
+        mViewportMetrics = mViewportMetrics.setViewportSize(viewportSize.width,
+                                                            viewportSize.height);
+    }
+
+    /* package */ void onSizeChanged(int width, int height) {
+        adjustViewportSize();
 
         if (mOverscroll != null) {
             mOverscroll.setSize(width, height);
         }
     }
 
-    public interface Listener {
-        void surfaceChanged();
+    /* package */ void onMetricsChanged(final float scrollX, final float scrollY,
+                                        final float zoom) {
+        mViewportMetrics = mViewportMetrics.setViewportOrigin(scrollX, scrollY)
+                                           .setZoomFactor(zoom);
+        mToolbarAnimator.onMetricsChanged(mViewportMetrics);
     }
 
     @RobocopTarget
@@ -414,7 +416,7 @@ public class LayerView extends FrameLayout {
     }
 
     public float getZoomFactor() {
-        return getLayerClient().getViewportMetrics().zoomFactor;
+        return getViewportMetrics().zoomFactor;
     }
 
     public void setFullScreenState(FullScreenState state) {

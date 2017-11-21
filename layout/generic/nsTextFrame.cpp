@@ -1820,7 +1820,7 @@ WordSpacing(nsIFrame* aFrame, const gfxTextRun* aTextRun,
   const nsStyleCoord& coord = aStyleText->mWordSpacing;
   if (coord.IsCoordPercentCalcUnit()) {
     nscoord pctBasis = coord.HasPercent() ? GetSpaceWidthAppUnits(aTextRun) : 0;
-    return nsRuleNode::ComputeCoordPercentCalc(coord, pctBasis);
+    return coord.ComputeCoordPercentCalc(pctBasis);
   }
   return 0;
 }

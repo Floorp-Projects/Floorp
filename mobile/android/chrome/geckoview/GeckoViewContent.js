@@ -8,6 +8,10 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/GeckoViewContentModule.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+});
+
 XPCOMUtils.defineLazyGetter(this, "dump", () =>
     Cu.import("resource://gre/modules/AndroidLog.jsm",
               {}).AndroidLog.d.bind(null, "ViewContent"));
@@ -25,11 +29,13 @@ class GeckoViewContent extends GeckoViewContentModule {
     addEventListener("MozDOMFullscreen:Exit", this, false);
     addEventListener("MozDOMFullscreen:Exited", this, false);
     addEventListener("MozDOMFullscreen:Request", this, false);
-    addEventListener("contextmenu", this, { capture: true, passive: false });
+    addEventListener("contextmenu", this, { capture: true });
 
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenEntered",
                                            this);
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenExited",
+                                           this);
+    this.messageManager.addMessageListener("GeckoView:ZoomToInput",
                                            this);
   }
 
@@ -41,11 +47,13 @@ class GeckoViewContent extends GeckoViewContentModule {
     removeEventListener("MozDOMFullscreen:Exit", this);
     removeEventListener("MozDOMFullscreen:Exited", this);
     removeEventListener("MozDOMFullscreen:Request", this);
-    removeEventListener("contextmenu", this);
+    removeEventListener("contextmenu", this, { capture: true });
 
     this.messageManager.removeMessageListener("GeckoView:DOMFullscreenEntered",
                                               this);
     this.messageManager.removeMessageListener("GeckoView:DOMFullscreenExited",
+                                              this);
+    this.messageManager.removeMessageListener("GeckoView:ZoomToInput",
                                               this);
   }
 
@@ -60,6 +68,7 @@ class GeckoViewContent extends GeckoViewContentModule {
                  .handleFullscreenRequests();
         }
         break;
+
       case "GeckoView:DOMFullscreenExited":
         if (content) {
           content.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -67,6 +76,49 @@ class GeckoViewContent extends GeckoViewContentModule {
                  .exitFullscreen();
         }
         break;
+
+      case "GeckoView:ZoomToInput": {
+        let dwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+
+        let zoomToFocusedInput = function() {
+          if (!dwu.flushApzRepaints()) {
+            dwu.zoomToFocusedInput();
+            return;
+          }
+          Services.obs.addObserver(function apzFlushDone() {
+            Services.obs.removeObserver(apzFlushDone, "apz-repaints-flushed");
+            dwu.zoomToFocusedInput();
+          }, "apz-repaints-flushed");
+        };
+
+        let gotResize = false;
+        let onResize = function() {
+          gotResize = true;
+          if (dwu.isMozAfterPaintPending) {
+            addEventListener("MozAfterPaint", function paintDone() {
+              removeEventListener("MozAfterPaint", paintDone, {capture: true});
+              zoomToFocusedInput();
+            }, {capture: true});
+          } else {
+            zoomToFocusedInput();
+          }
+        };
+
+        addEventListener("resize", onResize, { capture: true });
+
+        // When the keyboard is displayed, we can get one resize event,
+        // multiple resize events, or none at all. Try to handle all these
+        // cases by allowing resizing within a set interval, and still zoom to
+        // input if there is no resize event at the end of the interval.
+        content.setTimeout(() => {
+          removeEventListener("resize", onResize, { capture: true });
+          if (!gotResize) {
+            onResize();
+          }
+        }, 500);
+      }
+      break;
     }
   }
 

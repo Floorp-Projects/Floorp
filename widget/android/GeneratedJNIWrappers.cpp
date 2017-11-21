@@ -1104,49 +1104,6 @@ constexpr char SurfaceTextureListener::DisposeNative_t::signature[];
 constexpr char SurfaceTextureListener::OnFrameAvailable_t::name[];
 constexpr char SurfaceTextureListener::OnFrameAvailable_t::signature[];
 
-const char GeckoLayerClient::name[] =
-        "org/mozilla/gecko/gfx/GeckoLayerClient";
-
-constexpr char GeckoLayerClient::ContentDocumentChanged_t::name[];
-constexpr char GeckoLayerClient::ContentDocumentChanged_t::signature[];
-
-auto GeckoLayerClient::ContentDocumentChanged() const -> void
-{
-    return mozilla::jni::Method<ContentDocumentChanged_t>::Call(GeckoLayerClient::mCtx, nullptr);
-}
-
-constexpr char GeckoLayerClient::IsContentDocumentDisplayed_t::name[];
-constexpr char GeckoLayerClient::IsContentDocumentDisplayed_t::signature[];
-
-auto GeckoLayerClient::IsContentDocumentDisplayed() const -> bool
-{
-    return mozilla::jni::Method<IsContentDocumentDisplayed_t>::Call(GeckoLayerClient::mCtx, nullptr);
-}
-
-constexpr char GeckoLayerClient::SynthesizeNativeMouseEvent_t::name[];
-constexpr char GeckoLayerClient::SynthesizeNativeMouseEvent_t::signature[];
-
-auto GeckoLayerClient::SynthesizeNativeMouseEvent(int32_t a0, int32_t a1, int32_t a2) const -> void
-{
-    return mozilla::jni::Method<SynthesizeNativeMouseEvent_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2);
-}
-
-constexpr char GeckoLayerClient::SynthesizeNativeTouchPoint_t::name[];
-constexpr char GeckoLayerClient::SynthesizeNativeTouchPoint_t::signature[];
-
-auto GeckoLayerClient::SynthesizeNativeTouchPoint(int32_t a0, int32_t a1, int32_t a2, int32_t a3, double a4, int32_t a5) const -> void
-{
-    return mozilla::jni::Method<SynthesizeNativeTouchPoint_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5);
-}
-
-constexpr char GeckoLayerClient::UpdateRootFrameMetrics_t::name[];
-constexpr char GeckoLayerClient::UpdateRootFrameMetrics_t::signature[];
-
-auto GeckoLayerClient::UpdateRootFrameMetrics(float a0, float a1, float a2) const -> void
-{
-    return mozilla::jni::Method<UpdateRootFrameMetrics_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2);
-}
-
 const char GeckoSurface::name[] =
         "org/mozilla/gecko/gfx/GeckoSurface";
 
@@ -1297,6 +1254,14 @@ const char LayerSession::Compositor::name[] =
 constexpr char LayerSession::Compositor::AttachToJava_t::name[];
 constexpr char LayerSession::Compositor::AttachToJava_t::signature[];
 
+constexpr char LayerSession::Compositor::ContentDocumentChanged_t::name[];
+constexpr char LayerSession::Compositor::ContentDocumentChanged_t::signature[];
+
+auto LayerSession::Compositor::ContentDocumentChanged() const -> void
+{
+    return mozilla::jni::Method<ContentDocumentChanged_t>::Call(Compositor::mCtx, nullptr);
+}
+
 constexpr char LayerSession::Compositor::CreateCompositor_t::name[];
 constexpr char LayerSession::Compositor::CreateCompositor_t::signature[];
 
@@ -1305,6 +1270,14 @@ constexpr char LayerSession::Compositor::DisposeNative_t::signature[];
 
 constexpr char LayerSession::Compositor::EnableLayerUpdateNotifications_t::name[];
 constexpr char LayerSession::Compositor::EnableLayerUpdateNotifications_t::signature[];
+
+constexpr char LayerSession::Compositor::IsContentDocumentDisplayed_t::name[];
+constexpr char LayerSession::Compositor::IsContentDocumentDisplayed_t::signature[];
+
+auto LayerSession::Compositor::IsContentDocumentDisplayed() const -> bool
+{
+    return mozilla::jni::Method<IsContentDocumentDisplayed_t>::Call(Compositor::mCtx, nullptr);
+}
 
 constexpr char LayerSession::Compositor::OnBoundsChanged_t::name[];
 constexpr char LayerSession::Compositor::OnBoundsChanged_t::signature[];
@@ -1365,6 +1338,14 @@ constexpr char LayerSession::Compositor::SyncPauseCompositor_t::signature[];
 constexpr char LayerSession::Compositor::SyncResumeResizeCompositor_t::name[];
 constexpr char LayerSession::Compositor::SyncResumeResizeCompositor_t::signature[];
 
+constexpr char LayerSession::Compositor::UpdateRootFrameMetrics_t::name[];
+constexpr char LayerSession::Compositor::UpdateRootFrameMetrics_t::signature[];
+
+auto LayerSession::Compositor::UpdateRootFrameMetrics(float a0, float a1, float a2) const -> void
+{
+    return mozilla::jni::Method<UpdateRootFrameMetrics_t>::Call(Compositor::mCtx, nullptr, a0, a1, a2);
+}
+
 const char LayerView::name[] =
         "org/mozilla/gecko/gfx/LayerView";
 
@@ -1408,6 +1389,22 @@ constexpr char NativePanZoomController::OnSelectionDragState_t::signature[];
 auto NativePanZoomController::OnSelectionDragState(bool a0) const -> void
 {
     return mozilla::jni::Method<OnSelectionDragState_t>::Call(NativePanZoomController::mCtx, nullptr, a0);
+}
+
+constexpr char NativePanZoomController::SynthesizeNativeMouseEvent_t::name[];
+constexpr char NativePanZoomController::SynthesizeNativeMouseEvent_t::signature[];
+
+auto NativePanZoomController::SynthesizeNativeMouseEvent(int32_t a0, int32_t a1, int32_t a2) const -> void
+{
+    return mozilla::jni::Method<SynthesizeNativeMouseEvent_t>::Call(NativePanZoomController::mCtx, nullptr, a0, a1, a2);
+}
+
+constexpr char NativePanZoomController::SynthesizeNativeTouchPoint_t::name[];
+constexpr char NativePanZoomController::SynthesizeNativeTouchPoint_t::signature[];
+
+auto NativePanZoomController::SynthesizeNativeTouchPoint(int32_t a0, int32_t a1, int32_t a2, int32_t a3, double a4, int32_t a5) const -> void
+{
+    return mozilla::jni::Method<SynthesizeNativeTouchPoint_t>::Call(NativePanZoomController::mCtx, nullptr, a0, a1, a2, a3, a4, a5);
 }
 
 constexpr char NativePanZoomController::UpdateOverscrollOffset_t::name[];

@@ -364,13 +364,7 @@ this.MigratorPrototype = {
             resourceDone(false);
           }
 
-          // Certain resources must be ran sequentially or they could fail,
-          // for example bookmarks and history (See bug 1272652).
-          if (migrationType == MigrationUtils.resourceTypes.BOOKMARKS ||
-              migrationType == MigrationUtils.resourceTypes.HISTORY) {
-            await completeDeferred.promise;
-          }
-
+          await completeDeferred.promise;
           await unblockMainThread();
         }
       }

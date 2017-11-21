@@ -67,7 +67,7 @@ interface WebExtensionPolicy {
   /**
    * The set of content scripts active for this extension.
    */
-  [Cached, Constant, Frozen]
+  [Cached, Frozen, Pure]
   readonly attribute sequence<WebExtensionContentScript> contentScripts;
 
   /**
@@ -122,6 +122,17 @@ interface WebExtensionPolicy {
   [Throws]
   DOMString getURL(optional DOMString path = "");
 
+  /**
+   * Register a new content script programmatically.
+   */
+  [Throws]
+  void registerContentScript(WebExtensionContentScript script);
+
+  /**
+   * Unregister a content script.
+   */
+  [Throws]
+  void unregisterContentScript(WebExtensionContentScript script);
 
   /**
    * Returns the list of currently active extension policies.
