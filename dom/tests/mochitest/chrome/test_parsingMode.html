@@ -17,7 +17,7 @@
     const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils);
 
-    const userUrl = encodeURI("data:text/css,body { color: seagreen; }");
+    const userUrl = encodeURI("data:text/css,body { color: seagreen; -moz-window-transform: none }");
     utils.loadSheetUsingURIString(userUrl, sss.USER_SHEET);
 
     const agentUrl = encodeURI("data:text/css,body { color: tomato; }");
@@ -28,15 +28,15 @@
     let results = [];
     for (let sheet of domutils.getAllStyleSheets(document)) {
       if (sheet.href === agentUrl) {
-	is(sheet.parsingMode, "agent", "agent sheet has expected mode");
-	results[sss.AGENT_SHEET] = 1;
+        is(sheet.parsingMode, "agent", "agent sheet has expected mode");
+        results[sss.AGENT_SHEET] = 1;
       } else if (sheet.href === userUrl) {
-	is(sheet.parsingMode, "user", "user sheet has expected mode");
-	results[sss.USER_SHEET] = 1;
+        is(sheet.parsingMode, "user", "user sheet has expected mode");
+        is(sheet.cssRules[0].style.length, 2, "Chrome-only properties are parsed in user sheet")
+        results[sss.USER_SHEET] = 1;
       } else if (sheet.href === authorUrl) {
-	is(sheet.parsingMode, "author",
-	  "author sheet has expected mode");
-	results[sss.AUTHOR_SHEET] = 1;
+        is(sheet.parsingMode, "author", "author sheet has expected mode");
+        results[sss.AUTHOR_SHEET] = 1;
       } else if (sheet.href === "about:PreferenceStyleSheet") {
         is(sheet.parsingMode, "agent",
            "about:PreferenceStyleSheet has agent mode");
