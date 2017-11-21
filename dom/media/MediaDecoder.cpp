@@ -526,6 +526,10 @@ MediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
     case MediaEventType::SeekStarted:
       SeekingStarted();
       break;
+    case MediaEventType::Loop:
+      GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("seeking"));
+      GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("seeked"));
+      break;
     case MediaEventType::Invalidate:
       Invalidate();
       break;
