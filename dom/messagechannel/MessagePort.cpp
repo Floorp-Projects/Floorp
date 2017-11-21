@@ -337,7 +337,6 @@ MessagePort::Initialize(const nsID& aUUID,
     mWorkerHolder = Move(workerHolder);
   } else if (GetOwner()) {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(GetOwner()->IsInnerWindow());
     mInnerID = GetOwner()->WindowID();
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();

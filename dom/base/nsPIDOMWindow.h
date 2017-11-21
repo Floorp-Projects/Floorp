@@ -392,16 +392,6 @@ public:
   // the window was frozen.
   virtual nsresult FireDelayedDOMEvents() = 0;
 
-  bool IsInnerWindow() const
-  {
-    return true;
-  }
-
-  bool IsOuterWindow() const
-  {
-    return false;
-  }
-
   /**
    * Get the docshell in this window.
    */
@@ -760,7 +750,6 @@ public:
 
   nsPIDOMWindowInner* EnsureInnerWindow()
   {
-    MOZ_ASSERT(IsOuterWindow());
     // GetDoc forces inner window creation if there isn't one already
     GetDoc();
     return GetCurrentInnerWindow();
@@ -768,7 +757,6 @@ public:
 
   bool IsRootOuterWindow()
   {
-    MOZ_ASSERT(IsOuterWindow());
     return mIsRootOuterWindow;
   }
 
@@ -922,16 +910,6 @@ public:
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
   virtual nsresult FireDelayedDOMEvents() = 0;
-
-  bool IsInnerWindow() const
-  {
-    return false;
-  }
-
-  bool IsOuterWindow() const
-  {
-    return true;
-  }
 
   /**
    * Get the docshell in this window.

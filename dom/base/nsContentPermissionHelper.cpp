@@ -364,7 +364,6 @@ nsContentPermissionUtils::CreateContentPermissionRequestParent(const nsTArray<Pe
 nsContentPermissionUtils::AskPermission(nsIContentPermissionRequest* aRequest,
                                         nsPIDOMWindowInner* aWindow)
 {
-  MOZ_ASSERT(!aWindow || aWindow->IsInnerWindow());
   NS_ENSURE_STATE(aWindow && aWindow->IsCurrentInnerWindow());
 
   // for content process

@@ -206,8 +206,6 @@ public:
     }
 
     nsGlobalWindowOuter* outerWindow = sOuterWindowsById->Get(aWindowID);
-    MOZ_ASSERT(!outerWindow || outerWindow->IsOuterWindow(),
-                "Inner window in sOuterWindowsById?");
     return outerWindow;
   }
 
@@ -477,7 +475,6 @@ public:
   bool
   HadOriginalOpener() const
   {
-    MOZ_ASSERT(IsOuterWindow());
     return mHadOriginalOpener;
   }
 
@@ -701,7 +698,6 @@ public:
                        mozilla::ErrorResult& aError);
   already_AddRefed<nsPIDOMWindowOuter> GetContent()
   {
-    MOZ_ASSERT(IsOuterWindow());
     mozilla::IgnoredErrorResult ignored;
     nsCOMPtr<nsPIDOMWindowOuter> win =
       GetContentInternal(ignored, mozilla::dom::CallerType::System);
@@ -1222,7 +1218,6 @@ nsGlobalWindowOuter::GetOuterWindowInternal()
 inline nsGlobalWindowInner*
 nsGlobalWindowOuter::GetCurrentInnerWindowInternal() const
 {
-  MOZ_ASSERT(IsOuterWindow());
   return nsGlobalWindowInner::Cast(mInnerWindow);
 }
 
@@ -1235,7 +1230,6 @@ nsGlobalWindowOuter::EnsureInnerWindowInternal()
 inline bool
 nsGlobalWindowOuter::IsTopLevelWindow()
 {
-  MOZ_ASSERT(IsOuterWindow());
   nsPIDOMWindowOuter* parentWindow = GetScriptableTop();
   return parentWindow == this->AsOuter();
 }

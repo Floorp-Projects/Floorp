@@ -285,7 +285,6 @@ using mozilla::TimeStamp;
 
 #define FORWARD_TO_INNER(method, args, err_rval)                        \
   PR_BEGIN_MACRO                                                        \
-  MOZ_RELEASE_ASSERT(IsOuterWindow());                                  \
   if (!mInnerWindow) {                                                  \
     NS_WARNING("No inner window available!");                           \
     return err_rval;                                                    \
@@ -295,7 +294,6 @@ using mozilla::TimeStamp;
 
 #define FORWARD_TO_INNER_VOID(method, args)                             \
   PR_BEGIN_MACRO                                                        \
-  MOZ_RELEASE_ASSERT(IsOuterWindow());                                  \
   if (!mInnerWindow) {                                                  \
     NS_WARNING("No inner window available!");                           \
     return;                                                             \
@@ -308,7 +306,6 @@ using mozilla::TimeStamp;
 // inner doesn't already exists.
 #define FORWARD_TO_INNER_CREATE(method, args, err_rval)                 \
   PR_BEGIN_MACRO                                                        \
-  MOZ_RELEASE_ASSERT(IsOuterWindow());                                  \
   if (!mInnerWindow) {                                                  \
     if (mIsClosed) {                                                    \
       return err_rval;                                                  \
@@ -433,7 +430,6 @@ protected:
   {
     nsGlobalWindowOuter* outerWindow = nsGlobalWindowOuter::FromSupports(
       static_cast<nsISupports*>(js::GetProxyReservedSlot(proxy, 0).toPrivate()));
-    MOZ_ASSERT_IF(outerWindow, outerWindow->IsOuterWindow());
     return outerWindow;
   }
 
@@ -752,7 +748,6 @@ nsOuterWindowProxy::GetSubframeWindow(JSContext *cx,
   }
 
   nsGlobalWindowOuter* win = GetOuterWindow(proxy);
-  MOZ_ASSERT(win->IsOuterWindow());
   return win->IndexedGetterOuter(index);
 }
 
@@ -1027,8 +1022,6 @@ nsGlobalWindowOuter::MaybeForgiveSpamCount()
 void
 nsGlobalWindowOuter::SetIsPopupSpamWindow(bool aIsPopupSpam)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   mIsPopupSpam = aIsPopupSpam;
   if (aIsPopupSpam) {
     ++gOpenPopupSpamCount;
@@ -1042,7 +1035,6 @@ nsGlobalWindowOuter::SetIsPopupSpamWindow(bool aIsPopupSpam)
 void
 nsGlobalWindowOuter::DropOuterWindowDocs()
 {
-  MOZ_ASSERT(IsOuterWindow());
   MOZ_ASSERT_IF(mDoc, !mDoc->EventHandlingSuppressed());
   mDoc = nullptr;
   mSuspendedDoc = nullptr;
@@ -1121,7 +1113,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindowOuter)
   if (aIID.Equals(NS_GET_IID(nsPIDOMWindowOuter))) {
     foundInterface = static_cast<nsPIDOMWindowOuter*>(this);
   } else
-  if (aIID.Equals(NS_GET_IID(mozIDOMWindowProxy)) && IsOuterWindow()) {
+  if (aIID.Equals(NS_GET_IID(mozIDOMWindowProxy))) {
     foundInterface = static_cast<mozIDOMWindowProxy*>(this);
   } else
   if (aIID.Equals(NS_GET_IID(nsIDOMChromeWindow)) && IsChromeWindow()) {
@@ -1165,8 +1157,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
     if (tmp->mDoc && tmp->mDoc->GetDocumentURI()) {
       uri = tmp->mDoc->GetDocumentURI()->GetSpecOrDefault();
     }
-    SprintfLiteral(name, "nsGlobalWindowOuter # %" PRIu64 " %s %s", tmp->mWindowID,
-                   tmp->IsInnerWindow() ? "inner" : "outer", uri.get());
+    SprintfLiteral(name, "nsGlobalWindowOuter # %" PRIu64 " outer %s", tmp->mWindowID,
+                   uri.get());
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   } else {
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsGlobalWindowOuter, tmp->mRefCnt.get())
@@ -1299,8 +1291,6 @@ nsGlobalWindowOuter::TraceGlobalJSObject(JSTracer* aTrc)
 bool
 nsGlobalWindowOuter::WouldReuseInnerWindow(nsIDocument* aNewDocument)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   // We reuse the inner window when:
   // a. We are currently at our original document.
   // b. At least one of the following conditions are true:
@@ -1345,8 +1335,6 @@ nsGlobalWindowOuter::WouldReuseInnerWindow(nsIDocument* aNewDocument)
 void
 nsGlobalWindowOuter::SetInitialPrincipalToSubject()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   // First, grab the subject principal.
   nsCOMPtr<nsIPrincipal> newWindowPrincipal = nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
 
@@ -1449,7 +1437,6 @@ WindowStateHolder::WindowStateHolder(nsGlobalWindowInner* aWindow)
     mInnerWindowReflector(RootingCx(), aWindow->GetWrapper())
 {
   NS_PRECONDITION(aWindow, "null window");
-  NS_PRECONDITION(aWindow->IsInnerWindow(), "Saving an outer window");
 
   aWindow->Suspend();
 
@@ -1474,8 +1461,6 @@ NS_IMPL_ISUPPORTS(WindowStateHolder, WindowStateHolder)
 bool
 nsGlobalWindowOuter::ComputeIsSecureContext(nsIDocument* aDocument, SecureContextFlags aFlags)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsIPrincipal> principal = aDocument->NodePrincipal();
   if (nsContentUtils::IsSystemPrincipal(principal)) {
     return true;
@@ -1656,7 +1641,6 @@ CreateNativeGlobalForInner(JSContext* aCx,
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aNewInner);
-  MOZ_ASSERT(aNewInner->IsInnerWindow());
   MOZ_ASSERT(aPrincipal);
 
   // DOMWindow with nsEP is not supported, we have to make sure
@@ -1712,8 +1696,6 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
   NS_PRECONDITION(mDocumentPrincipal == nullptr,
                   "mDocumentPrincipal prematurely set!");
   MOZ_ASSERT(aDocument);
-
-  NS_PRECONDITION(IsOuterWindow(), "Must only be called on outer windows");
 
   // Bail out early if we're in process of closing down the window.
   NS_ENSURE_STATE(!mCleanedUp);
@@ -2112,8 +2094,6 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
 void
 nsGlobalWindowOuter::PreloadLocalStorage()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   if (!Storage::StoragePrefIsEnabled()) {
     return;
   }
@@ -2149,8 +2129,6 @@ nsGlobalWindowOuter::PreloadLocalStorage()
 void
 nsGlobalWindowOuter::DispatchDOMWindowCreated()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   if (!mDoc) {
     return;
   }
@@ -2188,7 +2166,6 @@ nsGlobalWindowOuter::ClearStatus()
 void
 nsGlobalWindowOuter::SetDocShell(nsIDocShell* aDocShell)
 {
-  NS_ASSERTION(IsOuterWindow(), "Uh, SetDocShell() called on inner window!");
   MOZ_ASSERT(aDocShell);
 
   if (aDocShell == mDocShell) {
@@ -2238,8 +2215,6 @@ nsGlobalWindowOuter::SetDocShell(nsIDocShell* aDocShell)
 void
 nsGlobalWindowOuter::DetachFromDocShell()
 {
-  NS_ASSERTION(IsOuterWindow(), "Uh, DetachFromDocShell() called on inner window!");
-
   // DetachFromDocShell means the window is being torn down. Drop our
   // reference to the script context, allowing it to be deleted
   // later. Meanwhile, keep our weak reference to the script object
@@ -2254,7 +2229,6 @@ nsGlobalWindowOuter::DetachFromDocShell()
        node = PR_NEXT_LINK(inner)) {
     // This cast is safe because `node != this`. Non-this nodes are inner windows.
     inner = static_cast<nsGlobalWindowInner*>(node);
-    MOZ_ASSERT(inner->IsInnerWindow());
     MOZ_ASSERT(!inner->mOuterWindow || inner->mOuterWindow == this);
     inner->FreeInnerObjects();
   }
@@ -2407,8 +2381,6 @@ nsGlobalWindowOuter::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 bool
 nsGlobalWindowOuter::ShouldPromptToBlockDialogs()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   nsGlobalWindowOuter *topWindowOuter = GetScriptableTopInternal();
   if (!topWindowOuter) {
     NS_ASSERTION(!mDocShell, "ShouldPromptToBlockDialogs() called without a top window?");
@@ -2426,8 +2398,6 @@ nsGlobalWindowOuter::ShouldPromptToBlockDialogs()
 bool
 nsGlobalWindowOuter::AreDialogsEnabled()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   nsGlobalWindowOuter *topWindowOuter = GetScriptableTopInternal();
   if (!topWindowOuter) {
     NS_ERROR("AreDialogsEnabled() called without a top window?");
@@ -2468,8 +2438,6 @@ nsGlobalWindowOuter::AreDialogsEnabled()
 bool
 nsGlobalWindowOuter::ConfirmDialogIfNeeded()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   NS_ENSURE_TRUE(mDocShell, false);
   nsCOMPtr<nsIPromptService> promptSvc =
     do_GetService("@mozilla.org/embedcomp/prompt-service;1");
@@ -2539,7 +2507,6 @@ nsGlobalWindowOuter::PostHandleEvent(EventChainPostVisitor& aVisitor)
 void
 nsGlobalWindowOuter::PoisonOuterWindowProxy(JSObject *aObject)
 {
-  MOZ_ASSERT(IsOuterWindow());
   if (aObject == GetWrapperMaybeDead()) {
     PoisonWrapper();
   }
@@ -2548,7 +2515,6 @@ nsGlobalWindowOuter::PoisonOuterWindowProxy(JSObject *aObject)
 nsresult
 nsGlobalWindowOuter::SetArguments(nsIArray *aArguments)
 {
-  MOZ_ASSERT(IsOuterWindow());
   nsresult rv;
 
   // Historically, we've used the same machinery to handle openDialog arguments
@@ -2612,7 +2578,6 @@ void
 nsPIDOMWindowOuter::SetInitialKeyboardIndicators(
   UIStateChangeType aShowAccelerators, UIStateChangeType aShowFocusRings)
 {
-  MOZ_ASSERT(IsOuterWindow());
   MOZ_ASSERT(!GetCurrentInnerWindow());
 
   nsPIDOMWindowOuter* piWin = GetPrivateRoot();
@@ -2643,14 +2608,12 @@ nsPIDOMWindowOuter::SetInitialKeyboardIndicators(
 Element*
 nsPIDOMWindowOuter::GetFrameElementInternal() const
 {
-  MOZ_ASSERT(IsOuterWindow());
   return mFrameElement;
 }
 
 void
 nsPIDOMWindowOuter::SetFrameElementInternal(Element* aFrameElement)
 {
-  MOZ_ASSERT(IsOuterWindow());
   mFrameElement = aFrameElement;
 }
 
@@ -2801,8 +2764,6 @@ nsPIDOMWindowOuter::GetServiceWorkersTestingEnabled()
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowOuter::GetParentOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     return nullptr;
   }
@@ -2849,8 +2810,6 @@ nsGlobalWindowOuter::GetScriptableParentOrNull()
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowOuter::GetParent()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     return nullptr;
   }
@@ -2920,7 +2879,6 @@ nsGlobalWindowOuter::GetScriptableTop()
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowOuter::GetTop()
 {
-  MOZ_ASSERT(IsOuterWindow());
   nsCOMPtr<nsPIDOMWindowOuter> window;
   GetTopImpl(this, getter_AddRefs(window), /* aScriptable = */ false);
   return window.forget();
@@ -2932,8 +2890,6 @@ nsGlobalWindowOuter::GetContentOuter(JSContext* aCx,
                                      CallerType aCallerType,
                                      ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsPIDOMWindowOuter> content =
     GetContentInternal(aError, aCallerType);
   if (aError.Failed()) {
@@ -2957,8 +2913,6 @@ nsGlobalWindowOuter::GetContentOuter(JSContext* aCx,
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowOuter::GetContentInternal(ErrorResult& aError, CallerType aCallerType)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   // First check for a named frame named "content"
   nsCOMPtr<nsPIDOMWindowOuter> domWindow =
     GetChildWindow(NS_LITERAL_STRING("content"));
@@ -3027,8 +2981,6 @@ nsGlobalWindowOuter::GetPrompter(nsIPrompt** aPrompt)
 bool
 nsGlobalWindowOuter::GetClosedOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   // If someone called close(), or if we don't have a docshell, we're closed.
   return mIsClosed || !mDocShell;
 }
@@ -3036,16 +2988,12 @@ nsGlobalWindowOuter::GetClosedOuter()
 bool
 nsGlobalWindowOuter::Closed()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   return GetClosedOuter();
 }
 
 nsDOMWindowList*
 nsGlobalWindowOuter::GetWindowList()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   if (!mFrames && mDocShell) {
     mFrames = new nsDOMWindowList(mDocShell);
   }
@@ -3063,8 +3011,6 @@ nsGlobalWindowOuter::GetFrames()
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowOuter::IndexedGetterOuter(uint32_t aIndex)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   nsDOMWindowList* windows = GetWindowList();
   NS_ENSURE_TRUE(windows, nullptr);
 
@@ -3074,8 +3020,6 @@ nsGlobalWindowOuter::IndexedGetterOuter(uint32_t aIndex)
 nsIControllers*
 nsGlobalWindowOuter::GetControllersOuter(ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mControllers) {
     nsresult rv;
     mControllers = do_CreateInstance(kXULControllersCID, &rv);
@@ -3149,8 +3093,6 @@ nsGlobalWindowOuter::GetSanitizedOpener(nsPIDOMWindowOuter* aOpener)
 nsPIDOMWindowOuter*
 nsGlobalWindowOuter::GetOpenerWindowOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsPIDOMWindowOuter> opener = do_QueryReferent(mOpener);
 
   if (!opener) {
@@ -3180,16 +3122,12 @@ nsGlobalWindowOuter::GetOpener()
 void
 nsGlobalWindowOuter::GetStatusOuter(nsAString& aStatus)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   aStatus = mStatus;
 }
 
 void
 nsGlobalWindowOuter::SetStatusOuter(const nsAString& aStatus)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   mStatus = aStatus;
 
   /*
@@ -3211,8 +3149,6 @@ nsGlobalWindowOuter::SetStatusOuter(const nsAString& aStatus)
 void
 nsGlobalWindowOuter::GetNameOuter(nsAString& aName)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (mDocShell) {
     mDocShell->GetName(aName);
   }
@@ -3221,8 +3157,6 @@ nsGlobalWindowOuter::GetNameOuter(nsAString& aName)
 void
 nsGlobalWindowOuter::SetNameOuter(const nsAString& aName, mozilla::ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (mDocShell) {
     aError = mDocShell->SetName(aName);
   }
@@ -3292,8 +3226,6 @@ nsGlobalWindowOuter::CSSToDevIntPixels(nsIntSize px)
 nsresult
 nsGlobalWindowOuter::GetInnerSize(CSSIntSize& aSize)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   EnsureSizeAndPositionUpToDate();
 
   NS_ENSURE_STATE(mDocShell);
@@ -3331,8 +3263,6 @@ nsGlobalWindowOuter::GetInnerSize(CSSIntSize& aSize)
 int32_t
 nsGlobalWindowOuter::GetInnerWidthOuter(ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   CSSIntSize size;
   aError = GetInnerSize(size);
   return size.width;
@@ -3349,8 +3279,6 @@ nsGlobalWindowOuter::SetInnerWidthOuter(int32_t aInnerWidth,
                                         CallerType aCallerType,
                                         ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     aError.Throw(NS_ERROR_UNEXPECTED);
     return;
@@ -3385,8 +3313,6 @@ nsGlobalWindowOuter::SetInnerWidthOuter(int32_t aInnerWidth,
 int32_t
 nsGlobalWindowOuter::GetInnerHeightOuter(ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   CSSIntSize size;
   aError = GetInnerSize(size);
   return size.height;
@@ -3403,8 +3329,6 @@ nsGlobalWindowOuter::SetInnerHeightOuter(int32_t aInnerHeight,
                                          CallerType aCallerType,
                                          ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     aError.Throw(NS_ERROR_UNEXPECTED);
     return;
@@ -3438,8 +3362,6 @@ nsGlobalWindowOuter::SetInnerHeightOuter(int32_t aInnerHeight,
 nsIntSize
 nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType, ErrorResult& aError)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     CSSIntSize size;
     aError = GetInnerSize(size);
@@ -3464,14 +3386,12 @@ nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType, ErrorResult& aError)
 int32_t
 nsGlobalWindowOuter::GetOuterWidthOuter(CallerType aCallerType, ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   return GetOuterSize(aCallerType, aError).width;
 }
 
 int32_t
 nsGlobalWindowOuter::GetOuterHeightOuter(CallerType aCallerType, ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   return GetOuterSize(aCallerType, aError).height;
 }
 
@@ -3479,8 +3399,6 @@ void
 nsGlobalWindowOuter::SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth,
                                   CallerType aCallerType, ErrorResult& aError)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
   if (!treeOwnerAsWin) {
     aError.Throw(NS_ERROR_FAILURE);
@@ -3513,8 +3431,6 @@ nsGlobalWindowOuter::SetOuterWidthOuter(int32_t aOuterWidth,
                                         CallerType aCallerType,
                                         ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   SetOuterSize(aOuterWidth, true, aCallerType, aError);
 }
 
@@ -3523,16 +3439,12 @@ nsGlobalWindowOuter::SetOuterHeightOuter(int32_t aOuterHeight,
                                          CallerType aCallerType,
                                          ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   SetOuterSize(aOuterHeight, false, aCallerType, aError);
 }
 
 CSSIntPoint
 nsGlobalWindowOuter::GetScreenXY(CallerType aCallerType, ErrorResult& aError)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   // When resisting fingerprinting, always return (0,0)
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return CSSIntPoint(0, 0);
@@ -3579,16 +3491,12 @@ nsGlobalWindowOuter::GetScreenXY(CallerType aCallerType, ErrorResult& aError)
 int32_t
 nsGlobalWindowOuter::GetScreenXOuter(CallerType aCallerType, ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   return GetScreenXY(aCallerType, aError).x;
 }
 
 nsRect
 nsGlobalWindowOuter::GetInnerScreenRect()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     return nsRect();
   }
@@ -3614,8 +3522,6 @@ nsGlobalWindowOuter::GetInnerScreenRect()
 float
 nsGlobalWindowOuter::GetMozInnerScreenXOuter(CallerType aCallerType)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   // When resisting fingerprinting, always return 0.
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return 0.0;
@@ -3628,8 +3534,6 @@ nsGlobalWindowOuter::GetMozInnerScreenXOuter(CallerType aCallerType)
 float
 nsGlobalWindowOuter::GetMozInnerScreenYOuter(CallerType aCallerType)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   // Return 0 to prevent fingerprinting.
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return 0.0;
@@ -3642,8 +3546,6 @@ nsGlobalWindowOuter::GetMozInnerScreenYOuter(CallerType aCallerType)
 double
 nsGlobalWindowOuter::GetDevicePixelRatioOuter(CallerType aCallerType)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     return 1.0;
   }
@@ -3677,8 +3579,6 @@ nsPIDOMWindowOuter::GetDevicePixelRatio(CallerType aCallerType)
 uint64_t
 nsGlobalWindowOuter::GetMozPaintCountOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     return 0;
   }
@@ -3691,8 +3591,6 @@ already_AddRefed<MediaQueryList>
 nsGlobalWindowOuter::MatchMediaOuter(const nsAString& aMediaQueryList,
                                      CallerType aCallerType)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDoc) {
     return nullptr;
   }
@@ -3705,8 +3603,6 @@ nsGlobalWindowOuter::SetScreenXOuter(int32_t aScreenX,
                                      CallerType aCallerType,
                                      ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
   if (!treeOwnerAsWin) {
     aError.Throw(NS_ERROR_FAILURE);
@@ -3730,8 +3626,6 @@ nsGlobalWindowOuter::SetScreenXOuter(int32_t aScreenX,
 int32_t
 nsGlobalWindowOuter::GetScreenYOuter(CallerType aCallerType, ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   return GetScreenXY(aCallerType, aError).y;
 }
 
@@ -3741,8 +3635,6 @@ nsGlobalWindowOuter::SetScreenYOuter(int32_t aScreenY,
                                      CallerType aCallerType,
                                      ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
   if (!treeOwnerAsWin) {
     aError.Throw(NS_ERROR_FAILURE);
@@ -3769,8 +3661,6 @@ void
 nsGlobalWindowOuter::CheckSecurityWidthAndHeight(int32_t* aWidth, int32_t* aHeight,
                                                  CallerType aCallerType)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
 #ifdef MOZ_XUL
   if (aCallerType != CallerType::System) {
     // if attempting to resize the window, hide any open popups
@@ -3798,8 +3688,6 @@ nsGlobalWindowOuter::CheckSecurityWidthAndHeight(int32_t* aWidth, int32_t* aHeig
 nsresult
 nsGlobalWindowOuter::SetDocShellWidthAndHeight(int32_t aInnerWidth, int32_t aInnerHeight)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
@@ -3816,8 +3704,6 @@ nsGlobalWindowOuter::SetDocShellWidthAndHeight(int32_t aInnerWidth, int32_t aInn
 void
 nsGlobalWindowOuter::SetCSSViewportWidthAndHeight(nscoord aInnerWidth, nscoord aInnerHeight)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   RefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
 
@@ -3834,8 +3720,6 @@ void
 nsGlobalWindowOuter::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop,
                                              CallerType aCallerType)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   // This one is harder. We have to get the screen size and window dimensions.
 
   // Check security state for use in determing window dimensions
@@ -3910,8 +3794,6 @@ nsGlobalWindowOuter::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop,
 int32_t
 nsGlobalWindowOuter::GetScrollBoundaryOuter(Side aSide)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   FlushPendingNotifications(FlushType::Layout);
   if (nsIScrollableFrame *sf = GetScrollFrame()) {
     return nsPresContext::
@@ -3923,8 +3805,6 @@ nsGlobalWindowOuter::GetScrollBoundaryOuter(Side aSide)
 CSSPoint
 nsGlobalWindowOuter::GetScrollXY(bool aDoFlush)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   if (aDoFlush) {
     FlushPendingNotifications(FlushType::Layout);
   } else {
@@ -3950,14 +3830,12 @@ nsGlobalWindowOuter::GetScrollXY(bool aDoFlush)
 double
 nsGlobalWindowOuter::GetScrollXOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   return GetScrollXY(false).x;
 }
 
 double
 nsGlobalWindowOuter::GetScrollYOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   return GetScrollXY(false).y;
 }
 
@@ -3972,8 +3850,6 @@ nsGlobalWindowOuter::Length()
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowOuter::GetTopOuter()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsPIDOMWindowOuter> top = GetScriptableTop();
   return top.forget();
 }
@@ -3994,8 +3870,6 @@ nsGlobalWindowOuter::GetChildWindow(const nsAString& aName)
 bool
 nsGlobalWindowOuter::DispatchCustomEvent(const nsAString& aEventName)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   bool defaultActionEnabled = true;
   nsContentUtils::DispatchTrustedEvent(mDoc, ToSupports(this), aEventName,
                                        true, true, &defaultActionEnabled);
@@ -4006,8 +3880,6 @@ nsGlobalWindowOuter::DispatchCustomEvent(const nsAString& aEventName)
 bool
 nsGlobalWindowOuter::DispatchResizeEvent(const CSSIntSize& aSize)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   ErrorResult res;
   RefPtr<Event> domEvent =
     mDoc->CreateEvent(NS_LITERAL_STRING("CustomEvent"), CallerType::System,
@@ -4068,7 +3940,6 @@ nsGlobalWindowOuter::WindowExists(const nsAString& aName,
                                   bool aForceNoOpener,
                                   bool aLookForCallerOnJSStack)
 {
-  NS_PRECONDITION(IsOuterWindow(), "Must be outer window");
   NS_PRECONDITION(mDocShell, "Must have docshell");
 
   if (aForceNoOpener) {
@@ -4122,8 +3993,6 @@ nsGlobalWindowOuter::GetNearestWidget() const
 void
 nsGlobalWindowOuter::SetFullScreenOuter(bool aFullScreen, mozilla::ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   aError = SetFullscreenInternal(FullscreenReason::ForFullscreenMode, aFullScreen);
 }
 
@@ -4413,7 +4282,6 @@ nsresult
 nsGlobalWindowOuter::SetFullscreenInternal(FullscreenReason aReason,
                                            bool aFullScreen)
 {
-  MOZ_ASSERT(IsOuterWindow());
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
              "Requires safe to run script as it "
              "may call FinishDOMFullscreenChange");
@@ -4507,7 +4375,6 @@ bool
 nsGlobalWindowOuter::SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen,
                                          nsIWidget* aWidget, nsIScreen* aScreen)
 {
-  MOZ_ASSERT(IsOuterWindow());
   MOZ_ASSERT(this == GetTopInternal(), "Only topmost window should call this");
   MOZ_ASSERT(!GetFrameElementInternal(), "Content window should not call this");
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
@@ -4545,8 +4412,6 @@ nsGlobalWindowOuter::FullscreenWillChange(bool aIsFullscreen)
 /* virtual */ void
 nsGlobalWindowOuter::FinishFullscreenChange(bool aIsFullscreen)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   if (aIsFullscreen != mFullScreen) {
     NS_WARNING("Failed to toggle fullscreen state of the widget");
     // We failed to make the widget enter fullscreen.
@@ -4608,8 +4473,6 @@ nsGlobalWindowOuter::FinishFullscreenChange(bool aIsFullscreen)
 bool
 nsGlobalWindowOuter::FullScreen() const
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   NS_ENSURE_TRUE(mDocShell, mFullScreen);
 
   // Get the fullscreen value of the root window, to always have the value
@@ -4638,7 +4501,6 @@ nsGlobalWindowOuter::FullScreen() const
 bool
 nsGlobalWindowOuter::GetFullScreenOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   return FullScreen();
 }
 
@@ -4651,7 +4513,6 @@ nsGlobalWindowOuter::GetFullScreen()
 void
 nsGlobalWindowOuter::EnsureReflowFlushAndPaint()
 {
-  MOZ_ASSERT(IsOuterWindow());
   NS_ASSERTION(mDocShell, "EnsureReflowFlushAndPaint() called with no "
                "docshell!");
 
@@ -4736,8 +4597,6 @@ nsGlobalWindowOuter::MakeScriptDialogTitle(nsAString& aOutTitle,
 bool
 nsGlobalWindowOuter::CanMoveResizeWindows(CallerType aCallerType)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   // When called from chrome, we can avoid the following checks.
   if (aCallerType != CallerType::System) {
     // Don't allow scripts to move or resize windows that were not opened by a
@@ -4797,8 +4656,6 @@ nsGlobalWindowOuter::AlertOrConfirm(bool aAlert,
 {
   // XXX This method is very similar to nsGlobalWindowOuter::Prompt, make
   // sure any modifications here don't need to happen over there!
-  MOZ_ASSERT(IsOuterWindow());
-
   if (!AreDialogsEnabled()) {
     // Just silently return.  In the case of alert(), the return value is
     // ignored.  In the case of confirm(), returning false is the same thing as
@@ -4873,7 +4730,6 @@ nsGlobalWindowOuter::AlertOuter(const nsAString& aMessage,
                                 nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   AlertOrConfirm(/* aAlert = */ true, aMessage, aSubjectPrincipal, aError);
 }
 
@@ -4882,8 +4738,6 @@ nsGlobalWindowOuter::ConfirmOuter(const nsAString& aMessage,
                                   nsIPrincipal& aSubjectPrincipal,
                                   ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   return AlertOrConfirm(/* aAlert = */ false, aMessage, aSubjectPrincipal,
                         aError);
 }
@@ -4897,8 +4751,6 @@ nsGlobalWindowOuter::PromptOuter(const nsAString& aMessage,
 {
   // XXX This method is very similar to nsGlobalWindowOuter::AlertOrConfirm, make
   // sure any modifications here don't need to happen over there!
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   SetDOMStringToNull(aReturn);
 
   if (!AreDialogsEnabled()) {
@@ -4980,8 +4832,6 @@ nsGlobalWindowOuter::PromptOuter(const nsAString& aMessage,
 void
 nsGlobalWindowOuter::FocusOuter(ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return;
@@ -5094,8 +4944,6 @@ nsGlobalWindowOuter::Focus()
 void
 nsGlobalWindowOuter::BlurOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   // If dom.disable_window_flip == true, then content should not be allowed
   // to call this function (this would allow popunders, bug 369306)
   if (!CanSetProperty("dom.disable_window_flip")) {
@@ -5127,8 +4975,6 @@ nsGlobalWindowOuter::BlurOuter()
 void
 nsGlobalWindowOuter::BackOuter(ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
   if (!webNav) {
     aError.Throw(NS_ERROR_FAILURE);
@@ -5141,8 +4987,6 @@ nsGlobalWindowOuter::BackOuter(ErrorResult& aError)
 void
 nsGlobalWindowOuter::ForwardOuter(ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
   if (!webNav) {
     aError.Throw(NS_ERROR_FAILURE);
@@ -5155,8 +4999,6 @@ nsGlobalWindowOuter::ForwardOuter(ErrorResult& aError)
 void
 nsGlobalWindowOuter::HomeOuter(nsIPrincipal& aSubjectPrincipal, ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     return;
   }
@@ -5208,8 +5050,6 @@ nsGlobalWindowOuter::HomeOuter(nsIPrincipal& aSubjectPrincipal, ErrorResult& aEr
 void
 nsGlobalWindowOuter::StopOuter(ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
   if (webNav) {
     aError = webNav->Stop(nsIWebNavigation::STOP_ALL);
@@ -5219,8 +5059,6 @@ nsGlobalWindowOuter::StopOuter(ErrorResult& aError)
 void
 nsGlobalWindowOuter::PrintOuter(ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
 #ifdef NS_PRINTING
   if (!AreDialogsEnabled()) {
     // We probably want to keep throwing here; silently doing nothing is a bit
@@ -5307,7 +5145,6 @@ void
 nsGlobalWindowOuter::MoveToOuter(int32_t aXPos, int32_t aYPos,
                                  CallerType aCallerType, ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   /*
    * If caller is not chrome and the user has not explicitly exempted the site,
    * prevent window.moveTo() by exiting early
@@ -5366,8 +5203,6 @@ void
 nsGlobalWindowOuter::MoveByOuter(int32_t aXDif, int32_t aYDif,
                                  CallerType aCallerType, ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   /*
    * If caller is not chrome and the user has not explicitly exempted the site,
    * prevent window.moveBy() by exiting early
@@ -5422,8 +5257,6 @@ nsGlobalWindowOuter::ResizeToOuter(int32_t aWidth, int32_t aHeight,
                                    CallerType aCallerType,
                                    ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   /*
    * If caller is a browser-element then dispatch a resize event to
    * the embedder.
@@ -5466,8 +5299,6 @@ void
 nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
                                    CallerType aCallerType, ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   /*
    * If caller is a browser-element then dispatch a resize event to
    * parent.
@@ -5530,8 +5361,6 @@ nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
 void
 nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType, ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     return;
   }
@@ -5614,7 +5443,6 @@ nsGlobalWindowOuter::FirePopupBlockedEvent(nsIDocument* aDoc,
                                            const nsAString& aPopupWindowName,
                                            const nsAString& aPopupWindowFeatures)
 {
-  MOZ_ASSERT(IsOuterWindow(), "All callers seem to assume we're an outer window?");
   MOZ_ASSERT(aDoc);
 
   // Fire a "DOMPopupBlocked" event so that the UI can hear about
@@ -5678,8 +5506,6 @@ nsGlobalWindowOuter::PopupWhitelisted()
 PopupControlState
 nsGlobalWindowOuter::RevisePopupAbuseLevel(PopupControlState aControl)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   NS_ASSERTION(mDocShell, "Must have docshell");
 
   if (mDocShell->ItemType() != nsIDocShellTreeItem::typeContent) {
@@ -5722,7 +5548,6 @@ nsGlobalWindowOuter::FireAbuseEvents(const nsAString &aPopupURL,
                                      const nsAString &aPopupWindowName,
                                      const nsAString &aPopupWindowFeatures)
 {
-  MOZ_ASSERT(IsOuterWindow());
   // fetch the URI of the window requesting the opened window
 
   nsCOMPtr<nsPIDOMWindowOuter> window = GetTop();
@@ -5759,7 +5584,6 @@ already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowOuter::OpenOuter(const nsAString& aUrl, const nsAString& aName,
                                const nsAString& aOptions, ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   nsCOMPtr<nsPIDOMWindowOuter> window;
   aError = OpenJS(aUrl, aName, aOptions, getter_AddRefs(window));
   return window.forget();
@@ -5786,7 +5610,6 @@ nsresult
 nsGlobalWindowOuter::OpenJS(const nsAString& aUrl, const nsAString& aName,
                             const nsAString& aOptions, nsPIDOMWindowOuter **_retval)
 {
-  MOZ_ASSERT(IsOuterWindow());
   return OpenInternal(aUrl, aName, aOptions,
                       false,          // aDialog
                       false,          // aContentModal
@@ -5807,7 +5630,6 @@ nsGlobalWindowOuter::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                                 nsISupports* aExtraArgument,
                                 nsPIDOMWindowOuter** _retval)
 {
-  MOZ_ASSERT(IsOuterWindow());
   return OpenInternal(aUrl, aName, aOptions,
                       true,                    // aDialog
                       false,                   // aContentModal
@@ -5827,7 +5649,6 @@ nsGlobalWindowOuter::OpenNoNavigate(const nsAString& aUrl,
                                     const nsAString& aOptions,
                                     nsPIDOMWindowOuter **_retval)
 {
-  MOZ_ASSERT(IsOuterWindow());
   return OpenInternal(aUrl, aName, aOptions,
                       false,          // aDialog
                       false,          // aContentModal
@@ -5847,8 +5668,6 @@ nsGlobalWindowOuter::OpenDialogOuter(JSContext* aCx, const nsAString& aUrl,
                                      const Sequence<JS::Value>& aExtraArgument,
                                      ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsIJSArgArray> argvArray;
   aError = NS_CreateJSArgv(aCx, aExtraArgument.Length(),
                            aExtraArgument.Elements(),
@@ -5921,8 +5740,6 @@ nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> a
                                          nsIPrincipal& aSubjectPrincipal,
                                          ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   //
   // Window.postMessage is an intentional subversion of the same-origin policy.
   // As such, this code must be particularly careful in the information it
@@ -5935,9 +5752,6 @@ nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> a
   RefPtr<nsGlobalWindowInner> callerInnerWin = CallerInnerWindow();
   nsIPrincipal* callerPrin;
   if (callerInnerWin) {
-    MOZ_ASSERT(callerInnerWin->IsInnerWindow(),
-               "should have gotten an inner window here");
-
     // Compute the caller's origin either from its principal or, in the case the
     // principal doesn't carry a URI (e.g. the system principal), the caller's
     // document.  We must get this now instead of when the event is created and
@@ -6104,8 +5918,6 @@ public:
 bool
 nsGlobalWindowOuter::CanClose()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   if (mIsChrome) {
     nsCOMPtr<nsIBrowserDOMWindow> bwin;
     GetBrowserDOMWindow(getter_AddRefs(bwin));
@@ -6144,8 +5956,6 @@ nsGlobalWindowOuter::CanClose()
 void
 nsGlobalWindowOuter::CloseOuter(bool aTrustedCaller)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell || IsInModalState() ||
       (IsFrame() && !mDocShell->GetIsMozBrowser())) {
     // window.close() is called on a frame in a frameset, on a window
@@ -6226,7 +6036,6 @@ nsGlobalWindowOuter::Close()
 void
 nsGlobalWindowOuter::ForceClose()
 {
-  MOZ_ASSERT(IsOuterWindow());
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
   if (IsFrame() || !mDocShell) {
@@ -6251,8 +6060,6 @@ nsGlobalWindowOuter::ForceClose()
 void
 nsGlobalWindowOuter::FinalClose()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   // Flag that we were closed.
   mIsClosed = true;
 
@@ -6340,8 +6147,6 @@ nsGlobalWindowOuter::ReallyCloseWindow()
 void
 nsGlobalWindowOuter::EnterModalState()
 {
-  MOZ_ASSERT(IsOuterWindow(), "Modal state is maintained on outer windows");
-
   // GetScriptableTop, not GetTop, so that EnterModalState works properly with
   // <iframe mozbrowser>.
   nsGlobalWindowOuter* topWin = GetScriptableTopInternal();
@@ -6408,8 +6213,6 @@ nsGlobalWindowOuter::EnterModalState()
 void
 nsGlobalWindowOuter::LeaveModalState()
 {
-  MOZ_ASSERT(IsOuterWindow(), "Modal state is maintained on outer windows");
-
   nsGlobalWindowOuter* topWin = GetScriptableTopInternal();
 
   if (!topWin) {
@@ -6476,8 +6279,6 @@ nsGlobalWindowOuter::NotifyWindowIDDestroyed(const char* aTopic)
 Element*
 nsGlobalWindowOuter::GetFrameElementOuter(nsIPrincipal& aSubjectPrincipal)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell || mDocShell->GetIsMozBrowser()) {
     return nullptr;
   }
@@ -6498,8 +6299,6 @@ nsGlobalWindowOuter::GetFrameElementOuter(nsIPrincipal& aSubjectPrincipal)
 Element*
 nsGlobalWindowOuter::GetRealFrameElementOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     return nullptr;
   }
@@ -6620,8 +6419,6 @@ nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction,
 Selection*
 nsGlobalWindowOuter::GetSelectionOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     return nullptr;
   }
@@ -6648,8 +6445,6 @@ nsGlobalWindowOuter::FindOuter(const nsAString& aString, bool aCaseSensitive,
                                bool aSearchInFrames, bool aShowDialog,
                                ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   Unused << aShowDialog;
 
   if (Preferences::GetBool("dom.disable_window_find", false)) {
@@ -6806,8 +6601,6 @@ nsGlobalWindowOuter::GetContextForEventHandlers(nsresult* aRv)
 nsPIDOMWindowOuter*
 nsGlobalWindowOuter::GetPrivateParent()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsPIDOMWindowOuter> parent = GetParent();
 
   if (this == parent) {
@@ -6854,8 +6647,6 @@ nsGlobalWindowOuter::GetLocation()
 void
 nsGlobalWindowOuter::ActivateOrDeactivate(bool aActivate)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   if (!mDoc) {
     return;
   }
@@ -6910,7 +6701,6 @@ NotifyDocumentTree(nsIDocument* aDocument, void* aData)
 void
 nsGlobalWindowOuter::SetActive(bool aActive)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   nsPIDOMWindowOuter::SetActive(aActive);
   if (mDoc) {
     NotifyDocumentTree(mDoc, nullptr);
@@ -6938,8 +6728,6 @@ nsGlobalWindowOuter::IsTopLevelWindowActive()
 void
 nsGlobalWindowOuter::SetIsBackground(bool aIsBackground)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   bool changed = aIsBackground != IsBackground();
   SetIsBackgroundInternal(aIsBackground);
 
@@ -6989,8 +6777,6 @@ nsGlobalWindowOuter::MaybeUpdateTouchState()
 void
 nsGlobalWindowOuter::SetChromeEventHandler(EventTarget* aChromeEventHandler)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   SetChromeEventHandlerInternal(aChromeEventHandler);
   // update the chrome event handler on all our inner windows
   RefPtr<nsGlobalWindowInner> inner;
@@ -7030,8 +6816,6 @@ void
 nsGlobalWindowOuter::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
                                            UIStateChangeType aShowFocusRings)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   nsPIDOMWindowOuter* piWin = GetPrivateRoot();
   if (!piWin) {
     return;
@@ -7095,8 +6879,6 @@ nsGlobalWindowOuter::GetComputedStyleHelperOuter(Element& aElt,
                                                  const nsAString& aPseudoElt,
                                                  bool aDefaultStylesOnly)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   if (!mDocShell) {
     return nullptr;
   }
@@ -7258,7 +7040,6 @@ nsGlobalWindowOuter::GetParentInternal()
 void
 nsGlobalWindowOuter::UnblockScriptedClosing()
 {
-  MOZ_ASSERT(IsOuterWindow());
   mBlockScriptedClosingFlag = false;
 }
 
@@ -7271,7 +7052,6 @@ public:
     : mWin(aWin)
   {
     MOZ_ASSERT(mWin);
-    MOZ_ASSERT(mWin->IsOuterWindow());
   }
   ~AutoUnblockScriptClosing()
   {
@@ -7293,8 +7073,6 @@ nsGlobalWindowOuter::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                                   bool aForceNoOpener,
                                   nsPIDOMWindowOuter **aReturn)
 {
-  MOZ_ASSERT(IsOuterWindow());
-
 #ifdef DEBUG
   uint32_t argc = 0;
   if (argv)
@@ -7509,8 +7287,6 @@ nsGlobalWindowOuter::GetTreeOwner()
 already_AddRefed<nsIBaseWindow>
 nsGlobalWindowOuter::GetTreeOwnerWindow()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
 
   // If there's no mDocShell, this window must have been closed,
@@ -7602,8 +7378,6 @@ nsGlobalWindowOuter::FlushPendingNotifications(FlushType aType)
 void
 nsGlobalWindowOuter::EnsureSizeAndPositionUpToDate()
 {
-  MOZ_ASSERT(IsOuterWindow());
-
   // If we're a subframe, make sure our size is up to date.  It's OK that this
   // crosses the content/chrome boundary, since chrome can have pending reflows
   // too.
@@ -7616,8 +7390,6 @@ nsGlobalWindowOuter::EnsureSizeAndPositionUpToDate()
 already_AddRefed<nsISupports>
 nsGlobalWindowOuter::SaveWindowState()
 {
-  NS_PRECONDITION(IsOuterWindow(), "Can't save the inner window's state");
-
   if (!mContext || !GetWrapperPreserveColor()) {
     // The window may be getting torn down; don't bother saving state.
     return nullptr;
@@ -7645,8 +7417,6 @@ nsGlobalWindowOuter::SaveWindowState()
 nsresult
 nsGlobalWindowOuter::RestoreWindowState(nsISupports *aState)
 {
-  NS_ASSERTION(IsOuterWindow(), "Cannot restore an inner window");
-
   if (!mContext || !GetWrapperPreserveColor()) {
     // The window may be getting torn down; don't bother restoring state.
     return NS_OK;
@@ -7707,7 +7477,6 @@ nsGlobalWindowOuter::UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>&
 uint32_t
 nsGlobalWindowOuter::GetAutoActivateVRDisplayID()
 {
-  MOZ_ASSERT(IsOuterWindow());
   uint32_t retVal = mAutoActivateVRDisplayID;
   mAutoActivateVRDisplayID = 0;
   return retVal;
@@ -7716,14 +7485,12 @@ nsGlobalWindowOuter::GetAutoActivateVRDisplayID()
 void
 nsGlobalWindowOuter::SetAutoActivateVRDisplayID(uint32_t aAutoActivateVRDisplayID)
 {
-  MOZ_ASSERT(IsOuterWindow());
   mAutoActivateVRDisplayID = aAutoActivateVRDisplayID;
 }
 
 already_AddRefed<nsWindowRoot>
 nsGlobalWindowOuter::GetWindowRootOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   nsCOMPtr<nsPIWindowRoot> root = GetTopWindowRoot();
   return root.forget().downcast<nsWindowRoot>();
 }
@@ -7733,8 +7500,6 @@ nsGlobalWindowOuter::GetWindowRootOuter()
 void
 nsGlobalWindowOuter::SetCursorOuter(const nsAString& aCursor, ErrorResult& aError)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   int32_t cursor;
 
   if (aCursor.EqualsLiteral("auto"))
@@ -7794,7 +7559,6 @@ nsGlobalWindowOuter::GetBrowserDOMWindow(nsIBrowserDOMWindow **aBrowserWindow)
 nsIBrowserDOMWindow*
 nsGlobalWindowOuter::GetBrowserDOMWindowOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   MOZ_ASSERT(IsChromeWindow());
   return mChromeFields.mBrowserDOMWindow;
 }
@@ -7802,7 +7566,6 @@ nsGlobalWindowOuter::GetBrowserDOMWindowOuter()
 void
 nsGlobalWindowOuter::SetBrowserDOMWindowOuter(nsIBrowserDOMWindow* aBrowserWindow)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   MOZ_ASSERT(IsChromeWindow());
   mChromeFields.mBrowserDOMWindow = aBrowserWindow;
 }
@@ -7880,8 +7643,6 @@ nsPIDOMWindowOuter::HadOriginalOpener() const
 void
 nsGlobalWindowOuter::ReportLargeAllocStatus()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   uint32_t errorFlags = nsIScriptError::warningFlag;
   const char* message = nullptr;
 
@@ -7940,8 +7701,6 @@ nsGlobalWindowOuter::CheckForDPIChange()
 mozilla::dom::TabGroup*
 nsGlobalWindowOuter::TabGroupOuter()
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
   // Outer windows lazily join TabGroups when requested. This is usually done
   // because a document is getting its NodePrincipal, and asking for the
   // TabGroup to determine its DocGroup.

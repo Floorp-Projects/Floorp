@@ -230,7 +230,6 @@ nsInProcessTabChildGlobal::DisconnectEventListeners()
 {
   if (mDocShell) {
     if (nsCOMPtr<nsPIDOMWindowOuter> win = mDocShell->GetWindow()) {
-      MOZ_ASSERT(win->IsOuterWindow());
       win->SetChromeEventHandler(win->GetChromeEventHandler());
     }
   }

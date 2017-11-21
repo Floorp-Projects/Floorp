@@ -72,7 +72,6 @@ SpeechSynthesisUtterance::Constructor(GlobalObject& aGlobal,
     return nullptr;
   }
 
-  MOZ_ASSERT(win->IsInnerWindow());
   RefPtr<SpeechSynthesisUtterance> object =
     new SpeechSynthesisUtterance(win, aText);
   return object.forget();

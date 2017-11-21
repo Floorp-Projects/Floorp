@@ -363,7 +363,6 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
 
   if (!workerPrivate) {
     MOZ_ASSERT(window);
-    MOZ_ASSERT(window->IsInnerWindow());
     bc->mInnerID = window->WindowID();
 
     // Register as observer for inner-window-destroyed.
