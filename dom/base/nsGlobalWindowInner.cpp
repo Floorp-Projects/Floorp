@@ -958,7 +958,7 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
   // to create the entropy collector, so we should
   // try to get one until we succeed.
 
-  gRefCnt++;
+  mSerial = nsContentUtils::InnerOrOuterWindowCreated();
 
   static bool sFirstTime = true;
   if (sFirstTime) {
@@ -980,15 +980,13 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
     }
   }
 
-  mSerial = ++gSerialCounter;
-
 #ifdef DEBUG
   if (!PR_GetEnv("MOZ_QUIET")) {
     printf_stderr("++DOMWINDOW == %d (%p) [pid = %d] [serial = %d] [outer = %p]\n",
-                  gRefCnt,
+                  nsContentUtils::GetCurrentInnerOrOuterWindowCount(),
                   static_cast<void*>(ToCanonicalSupports(this)),
                   getpid(),
-                  gSerialCounter,
+                  mSerial,
                   static_cast<void*>(ToCanonicalSupports(aOuterWindow)));
   }
 #endif
@@ -1054,7 +1052,7 @@ nsGlobalWindowInner::~nsGlobalWindowInner()
     sInnerWindowsById->Remove(mWindowID);
   }
 
-  --gRefCnt;
+  nsContentUtils::InnerOrOuterWindowDestroyed();
 
 #ifdef DEBUG
   if (!PR_GetEnv("MOZ_QUIET")) {
@@ -1071,7 +1069,7 @@ nsGlobalWindowInner::~nsGlobalWindowInner()
 
     nsGlobalWindowOuter* outer = nsGlobalWindowOuter::Cast(mOuterWindow);
     printf_stderr("--DOMWINDOW == %d (%p) [pid = %d] [serial = %d] [outer = %p] [url = %s]\n",
-                  gRefCnt,
+                  nsContentUtils::GetCurrentInnerOrOuterWindowCount(),
                   static_cast<void*>(ToCanonicalSupports(this)),
                   getpid(),
                   mSerial,
