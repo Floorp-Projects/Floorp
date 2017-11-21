@@ -18,6 +18,11 @@
   --toolbarbutton-icon-fill-opacity: .7;
 
   --tab-line-color: #0a84ff;
+
+  --urlbar-popup-background: var(--url-and-searchbar-background-color);
+  --urlbar-popup-color: var(--chrome-color);
+  --urlbar-popup-highlight-background: var(--chrome-selection-background-color);
+  --urlbar-popup-highlight-color: var(--chrome-selection-color);
 }
 
 :root:-moz-lwtheme-brighttext {
