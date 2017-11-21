@@ -760,7 +760,7 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
     masm.branch32(Assembler::Above, scratch, Imm32(fi.sig().args().length()), &rectify);
 
     // 7. If we haven't rectified arguments, load callee executable entry point
-    masm.loadJitCodeNoArgCheck(callee, callee, nullptr);
+    masm.loadJitCodeNoArgCheck(callee, callee);
 
     Label rejoinBeforeCall;
     masm.bind(&rejoinBeforeCall);

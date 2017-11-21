@@ -626,7 +626,7 @@ nsProfiler::StartGathering(double aSinceTime)
       [self](const nsCString& aResult) {
         self->GatheredOOPProfile(aResult);
       },
-      [self](ipc::PromiseRejectReason aReason) {
+      [self](ipc::ResponseRejectReason aReason) {
         self->GatheredOOPProfile(NS_LITERAL_CSTRING(""));
       });
   }

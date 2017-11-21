@@ -342,7 +342,7 @@ def _makePromise(returns, side, resolver=False):
     needmove = not all(d.isCopyable() for d in returns)
 
     return _promise(resolvetype,
-                    _PromiseRejectReason.Type(),
+                    _ResponseRejectReason.Type(),
                     ExprLiteral.TRUE if needmove else ExprLiteral.FALSE,
                     resolver=resolver)
 
@@ -517,15 +517,15 @@ class _DestroyReason:
     AbnormalShutdown = ExprVar('AbnormalShutdown')
     FailedConstructor = ExprVar('FailedConstructor')
 
-class _PromiseRejectReason:
+class _ResponseRejectReason:
     @staticmethod
     def Type():
-        return Type('PromiseRejectReason')
+        return Type('ResponseRejectReason')
 
-    SendError = ExprVar('PromiseRejectReason::SendError')
-    ChannelClosed = ExprVar('PromiseRejectReason::ChannelClosed')
-    HandlerRejected = ExprVar('PromiseRejectReason::HandlerRejected')
-    ActorDestroyed = ExprVar('PromiseRejectReason::ActorDestroyed')
+    SendError = ExprVar('ResponseRejectReason::SendError')
+    ChannelClosed = ExprVar('ResponseRejectReason::ChannelClosed')
+    HandlerRejected = ExprVar('ResponseRejectReason::HandlerRejected')
+    ActorDestroyed = ExprVar('ResponseRejectReason::ActorDestroyed')
 
 
 ##-----------------------------------------------------------------------------
@@ -1020,12 +1020,27 @@ class MessageDecl(ipdl.ast.MessageDecl):
         def makeResolverDecl(returns):
             return Decl(Type(self.resolverName(), ref=2), 'aResolve')
 
+        def makeCallbackResolveDecl(returns):
+            if len(returns) > 1:
+                resolvetype = _tuple([d.bareType(side) for d in returns])
+            else:
+                resolvetype = returns[0].bareType(side)
+
+            return Decl(Type("mozilla::ipc::ResolveCallback", T=resolvetype, ref=2),
+                        'aResolve')
+
+        def makeCallbackRejectDecl(returns):
+            return Decl(Type("mozilla::ipc::RejectCallback", ref=2), 'aReject')
+
         cxxparams = [ ]
         if paramsems is not None:
             cxxparams.extend([ makeDecl(d, paramsems) for d in self.params ])
 
         if returnsems is 'promise' and self.returns:
             pass
+        elif returnsems is 'callback' and self.returns:
+            cxxparams.extend([ makeCallbackResolveDecl(self.returns),
+                               makeCallbackRejectDecl(self.returns) ])
         elif returnsems is 'resolver' and self.returns:
             cxxparams.extend([ makeResolverDecl(self.returns) ])
         elif returnsems is not None:
@@ -1324,8 +1339,8 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
                                         'Endpoint', ['FooSide']),
                                 Typedef(Type('mozilla::ipc::TransportDescriptor'),
                                         'TransportDescriptor'),
-                                Typedef(Type('mozilla::ipc::PromiseRejectReason'),
-                                        'PromiseRejectReason') ])
+                                Typedef(Type('mozilla::ipc::ResponseRejectReason'),
+                                        'ResponseRejectReason') ])
         self.protocolName = None
 
     def visitTranslationUnit(self, tu):
@@ -3146,13 +3161,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if len(ptype.manages):
             destroysubtree.addstmt(Whitespace.NL)
 
-        # Reject pending promises for actor before calling ActorDestroy().
-        rejectPendingPromiseMethod = ExprSelect(self.protocol.callGetChannel(),
-                                                '->',
-                                                'RejectPendingPromisesForActor')
-        destroysubtree.addstmts([ Whitespace('// Reject owning pending promises.\n',
+        # Reject pending responses for actor before calling ActorDestroy().
+        rejectPendingResponsesMethod = ExprSelect(self.protocol.callGetChannel(),
+                                                  '->',
+                                                  'RejectPendingResponsesForActor')
+        destroysubtree.addstmts([ Whitespace('// Reject owning pending responses.\n',
                                              indent=1),
-                                  StmtExpr(ExprCall(rejectPendingPromiseMethod,
+                                  StmtExpr(ExprCall(rejectPendingResponsesMethod,
                                                     args=[ ExprVar('this') ])),
                                   Whitespace.NL
                                  ])
@@ -3863,6 +3878,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         isdtor = md.decl.type.isDtor()
         decltype = md.decl.type
         sendmethod = None
+        promisesendmethod = None
         helpermethod = None
         recvlbl, recvcase = None, None
 
@@ -3890,7 +3906,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             elif isdtor:
                 sendmethod = self.genBlockingDtorMethod(md)
             elif isasync:
-                sendmethod, (recvlbl, recvcase) = self.genAsyncSendMethod(md)
+                sendmethod, promisesendmethod, (recvlbl, recvcase) = \
+                    self.genAsyncSendMethod(md)
             else:
                 sendmethod = self.genBlockingSendMethod(md)
 
@@ -3900,6 +3917,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         if sendmethod is not None:
             self.cls.addstmts([ sendmethod, Whitespace.NL ])
+        if promisesendmethod is not None:
+            self.cls.addstmts([ promisesendmethod, Whitespace.NL ])
         if recvcase is not None:
             addRecvCase(recvlbl, recvcase)
             recvlbl, recvcase = None, None
@@ -4117,36 +4136,48 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         case = StmtBlock()
         resolve, reason, prologue, desrej, desstmts = self.deserializeAsyncReply(
             md, self.side, errfnRecv, errfnSentinel(_Result.ValuError))
-        ifnotpromise = StmtIf(ExprNot(ExprVar('promise')))
-        ifnotpromise.addifstmts(errfnRecv("Error unknown promise",
+        ifnocallback = StmtIf(ExprNot(ExprVar('callback')))
+        ifnocallback.addifstmts(errfnRecv("Error unknown callback",
                                           _Result.ProcessingError))
-        promise = _makePromise(md.returns, self.side, resolver=True)
-        promiseptr = _makePromise(md.returns, self.side, resolver=True)
-        promiseptr.ptr = 1
-        getpromise = [ Whitespace.NL,
-                       StmtDecl(Decl(_refptr(promise), 'promise'),
-                                init=ExprCall(ExprSelect(ExprCall(ExprSelect(self.protocol.callGetChannel(), '->', 'PopPromise'),
-                                                                  args=[ self.msgvar ]),
-                                                         '.', Type('downcast', T=promise)))),
-                       ifnotpromise ]
+
         if len(md.returns) > 1:
+            resolvetype = _tuple([d.bareType(self.side) for d in md.returns])
             resolvearg = ExprCall(ExprVar('MakeTuple'),
                                   args=[ExprMove(p.var()) for p in md.returns])
         else:
+            resolvetype = md.returns[0].bareType(self.side)
             resolvearg = ExprMove(md.returns[0].var())
 
-        resolvepromise = [ StmtExpr(ExprCall(ExprSelect(ExprVar('promise'), '->', 'Resolve'),
-                                             args=[ resolvearg,
-                                                    ExprVar('__func__')])) ]
-        rejectpromise = [ StmtExpr(ExprCall(ExprSelect(ExprVar('promise'), '->', 'Reject'),
-                                            args=[ reason, ExprVar('__func__') ])) ]
+        untypedcallback = Type("MessageChannel::UntypedCallbackHolder")
+        callbackptr = Type("MessageChannel::CallbackHolder", T=resolvetype)
+        callbackptr.ptr = 1
+        callback = ExprVar('callback')
+
+        getcallback = [ Whitespace.NL,
+                        # Get the untyped callback object by calling PopCallback()
+                        StmtDecl(Decl(_uniqueptr(untypedcallback), 'untypedCallback'),
+                                 init=ExprCall(ExprSelect(self.protocol.callGetChannel(),
+                                                          '->', 'PopCallback'),
+                                               args=[ self.msgvar ])),
+                        # Cast the untyped callback pointer to the correct poiner type
+                        StmtDecl(Decl(callbackptr, callback.name),
+                                 init=ExprCast(ExprCall(ExprSelect(ExprVar('untypedCallback'),
+                                                                   '.', 'get')),
+                                               callbackptr,
+                                               static=1)),
+                        ifnocallback ]
+
+        resolvecallback = [ StmtExpr(ExprCall(ExprSelect(callback, '->', 'Resolve'),
+                                              args=[ resolvearg ])) ]
+        rejectcallback = [ StmtExpr(ExprCall(ExprSelect(callback, '->', 'Reject'),
+                                             args=[ reason ])) ]
         ifresolve = StmtIf(resolve)
         ifresolve.addifstmts(desstmts)
-        ifresolve.addifstmts(resolvepromise)
+        ifresolve.addifstmts(resolvecallback)
         ifresolve.addelsestmts(desrej)
-        ifresolve.addelsestmts(rejectpromise)
+        ifresolve.addelsestmts(rejectcallback)
         case.addstmts(prologue)
-        case.addstmts(getpromise)
+        case.addstmts(getcallback)
         case.addstmt(ifresolve)
         case.addstmt(StmtReturn(_Result.Processed))
         return (lbl, case)
@@ -4163,9 +4194,17 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         + sendstmts
                         +[ StmtReturn(retvar) ])
 
-        (lbl, case) = self.genRecvAsyncReplyCase(md) if md.returns else (None, None)
-        return method, (lbl, case)
+        # Add the promise overload if we need one.
+        if md.returns:
+            promisemethod = MethodDefn(self.makeSendMethodDecl(md, promise=True))
+            stmts = self.sendAsyncWithPromise(md)
+            promisemethod.addstmts(stmts)
 
+            (lbl, case) = self.genRecvAsyncReplyCase(md)
+        else:
+            (promisemethod, lbl, case) = (None, None, None)
+
+        return method, promisemethod, (lbl, case)
 
     def genBlockingSendMethod(self, md, fromActor=None):
         method = MethodDefn(self.makeSendMethodDecl(md))
@@ -4344,11 +4383,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             destructexpr = md.returns[0].var()
         selfvar = ExprVar('self__')
         ifactorisdead = StmtIf(ExprNot(selfvar))
-        ifactorisdead.addifstmts([_printWarningMessage("Not resolving promise because actor is dead."),
+        ifactorisdead.addifstmts([_printWarningMessage("Not resolving response because actor is dead."),
                                   StmtReturn()])
         ifactorisdestroyed = StmtIf(ExprBinary(self.protocol.stateVar(), '==',
                                                self.protocol.deadState()))
-        ifactorisdestroyed.addifstmts([_printWarningMessage("Not resolving promise because actor is destroyed."),
+        ifactorisdestroyed.addifstmts([_printWarningMessage("Not resolving response because actor is destroyed."),
                                   StmtReturn()])
         returnifactorisdead = [ ifactorisdead,
                                 ifactorisdestroyed ]
@@ -4370,15 +4409,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                  for r in md.returns ])
         resolverfn.addstmts(sendmsg)
 
-        makepromise = [ Whitespace.NL,
-                        StmtDecl(Decl(Type.INT32, seqno.name),
-                                 init=ExprCall(ExprSelect(self.msgvar, '.', 'seqno'))),
-                        StmtDecl(Decl(Type('WeakPtr', T=ExprVar(self.clsname)),
-                                      selfvar.name),
-                                 init=ExprVar.THIS),
-                        StmtDecl(Decl(resolvertype, 'resolver'),
-                                 init=resolverfn) ]
-        return makepromise
+        makeresolver = [ Whitespace.NL,
+                         StmtDecl(Decl(Type.INT32, seqno.name),
+                                  init=ExprCall(ExprSelect(self.msgvar, '.', 'seqno'))),
+                         StmtDecl(Decl(Type('WeakPtr', T=ExprVar(self.clsname)),
+                                       selfvar.name),
+                                  init=ExprVar.THIS),
+                         StmtDecl(Decl(resolvertype, 'resolver'),
+                                  init=resolverfn) ]
+        return makeresolver
 
     def makeReply(self, md, errfn, routingId):
         if routingId is None:
@@ -4505,7 +4544,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                         ExprAddrOf(itervar),
                                         errfn, "'%s'" % resolve.name,
                                         sentinelKey=resolve.name, errfnSentinel=errfnSent) ]
-        desrej = [ StmtDecl(Decl(_PromiseRejectReason.Type(), reason.name)),
+        desrej = [ StmtDecl(Decl(_ResponseRejectReason.Type(), reason.name)),
                    self.checkedRead(None, ExprAddrOf(reason), msgexpr,
                                     ExprAddrOf(itervar),
                                     errfn, "'%s'" % reason.name,
@@ -4581,37 +4620,27 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def sendAsync(self, md, msgexpr, actor=None):
         sendok = ExprVar('sendok__')
-        retvar = sendok
-        if md.returns:
-            retpromise = ExprVar('promise__')
-            promise = _makePromise(md.returns, self.side, resolver=True)
-            promisedecl = [ Whitespace.NL,
-                            StmtDecl(Decl(_refptr(promise), retpromise.name),
-                                     init=ExprNew(promise, args=[ExprVar('__func__')])) ]
-            rejectifsendok = StmtIf(ExprNot(sendok))
-            rejectifsendok.addifstmts(
-                [ StmtExpr(ExprCall(ExprSelect(retpromise, '->', 'Reject'),
-                                    args=[ _PromiseRejectReason.SendError,
-                                           ExprVar('__func__') ])) ])
+        resolvefn = ExprVar('aResolve')
+        rejectfn = ExprVar('aReject')
+
         sendargs = [ msgexpr ]
         stmts = [ Whitespace.NL,
                   self.logMessage(md, msgexpr, 'Sending ', actor),
                   self.profilerLabel(md) ] + self.transition(md, actor)
+        stmts.append(Whitespace.NL)
 
+        # Generate the actual call expression.
+        send = ExprSelect(self.protocol.callGetChannel(actor), '->', 'Send')
         if md.returns:
-            sendargs.append(ExprCall(ExprSelect(retpromise, '.', 'get')))
-            sendargs.append(ExprVar('this'))
-            stmts.extend(promisedecl)
-            retvar = retpromise
-
-        stmts.extend([ Whitespace.NL,
-                       StmtDecl(Decl(Type.BOOL, sendok.name),
-                                init=ExprCall(
-                                    ExprSelect(self.protocol.callGetChannel(actor),
-                                               '->', 'Send'),
-                                    args=sendargs)) ])
-        if md.returns:
-            stmts.append(rejectifsendok)
+            stmts.append(StmtExpr(ExprCall(send, args=[ msgexpr,
+                                                        ExprVar('this'),
+                                                        ExprMove(resolvefn),
+                                                        ExprMove(rejectfn) ])))
+            retvar = None
+        else:
+            stmts.append(StmtDecl(Decl(Type.BOOL, sendok.name),
+                                  init=ExprCall(send, args=[ msgexpr ])))
+            retvar = sendok
 
         return (retvar, stmts)
 
@@ -4637,6 +4666,42 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ])
             ])
         )
+
+    def sendAsyncWithPromise(self, md):
+        # Create a new promise, and forward to the callback send overload.
+        retpromise = ExprVar('promise__')
+        promise = _makePromise(md.returns, self.side, resolver=True)
+        stmts = [ Whitespace.NL,
+                  StmtDecl(Decl(_refptr(promise), retpromise.name),
+                           init=ExprNew(promise, args=[ExprVar('__func__')])) ]
+
+        if len(md.returns) > 1:
+            resolvetype = _tuple([d.bareType(self.side) for d in md.returns])
+        else:
+            resolvetype = md.returns[0].bareType(self.side)
+        resolvetype.ref = 2
+
+        resolvefn = ExprLambda([ retpromise ],
+                               [ Decl(resolvetype, "aValue") ])
+        resolvefn.addstmts([
+            StmtExpr(ExprCall(ExprSelect(retpromise, '->', 'Resolve'),
+                              args=[ ExprMove(ExprVar('aValue')),
+                                     ExprVar('__func__') ])),
+        ])
+
+        rejectfn = ExprLambda([ retpromise ],
+                              [ Decl(_ResponseRejectReason.Type(), "aReason") ])
+        rejectfn.addstmts([
+            StmtExpr(ExprCall(ExprSelect(retpromise, '->', 'Reject'),
+                              args=[ ExprVar('aReason'),
+                                     ExprVar('__func__') ])),
+        ])
+
+        args = [ p.var() for p in md.params ] + [ resolvefn, rejectfn ]
+        stmts += [ Whitespace.NL,
+                   StmtExpr(ExprCall(ExprVar(md.sendMethod().name), args=args)),
+                   StmtReturn(retpromise) ]
+        return stmts
 
     def callAllocActor(self, md, retsems, side):
         return ExprCall(
@@ -4686,19 +4751,24 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         decl.static = 1
         return decl
 
-    def makeSendMethodDecl(self, md):
+    def makeSendMethodDecl(self, md, promise=False):
         implicit = md.decl.type.hasImplicitActorParam()
         if md.decl.type.isAsync() and md.returns:
-            returnsems = 'promise'
-            rettype = _refptr(Type(md.promiseName()))
+            if promise:
+                returnsems = 'promise'
+                rettype = _refptr(Type(md.promiseName()))
+            else:
+                returnsems = 'callback'
+                rettype = Type.VOID
         else:
+            assert not promise
             returnsems = 'out'
             rettype = Type.BOOL
         decl = MethodDecl(
             md.sendMethod().name,
             params=md.makeCxxParams(paramsems='in', returnsems=returnsems,
                                     side=self.side, implicit=implicit),
-            warn_unused=(self.side == 'parent'),
+            warn_unused=(self.side == 'parent' and returnsems != 'callback'),
             ret=rettype)
         if md.decl.type.isCtor():
             decl.ret = md.actorDecl().bareType(self.side)

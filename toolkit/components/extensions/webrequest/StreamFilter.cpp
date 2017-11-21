@@ -95,7 +95,7 @@ StreamFilter::Connect()
       [=] (mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
         self->FinishConnect(Move(aEndpoint));
       },
-      [=] (mozilla::ipc::PromiseRejectReason aReason) {
+      [=] (mozilla::ipc::ResponseRejectReason aReason) {
         self->mActor->RecvInitialized(false);
       });
   } else {
