@@ -1190,13 +1190,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOpenerForInitialContentBrowser)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
 
   tmp->TraverseHostObjectURIs(cb);
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mBrowserDOMWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mOpenerForInitialContentBrowser)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
@@ -1217,6 +1217,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOpenerForInitialContentBrowser)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
 
@@ -1224,7 +1225,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
 
   if (tmp->IsChromeWindow()) {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mBrowserDOMWindow)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mOpenerForInitialContentBrowser)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -7821,24 +7821,19 @@ nsGlobalWindowOuter::GetGroupMessageManager(const nsAString& aGroup,
   FORWARD_TO_INNER(GetGroupMessageManager, (aGroup, aManager), NS_ERROR_UNEXPECTED);
 }
 
-nsresult
-nsGlobalWindowOuter::SetOpenerForInitialContentBrowser(mozIDOMWindowProxy* aOpenerWindow)
+void
+nsPIDOMWindowOuter::SetOpenerForInitialContentBrowser(nsPIDOMWindowOuter* aOpenerWindow)
 {
-  MOZ_RELEASE_ASSERT(IsChromeWindow());
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-  MOZ_ASSERT(!mChromeFields.mOpenerForInitialContentBrowser);
-  mChromeFields.mOpenerForInitialContentBrowser = aOpenerWindow;
-  return NS_OK;
+  MOZ_ASSERT(!mOpenerForInitialContentBrowser,
+             "Don't set OpenerForInitialContentBrowser twice!");
+  mOpenerForInitialContentBrowser = aOpenerWindow;
 }
 
-nsresult
-nsGlobalWindowOuter::TakeOpenerForInitialContentBrowser(mozIDOMWindowProxy** aOpenerWindow)
+already_AddRefed<nsPIDOMWindowOuter>
+nsPIDOMWindowOuter::TakeOpenerForInitialContentBrowser()
 {
-  MOZ_RELEASE_ASSERT(IsChromeWindow());
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
   // Intentionally forget our own member
-  mChromeFields.mOpenerForInitialContentBrowser.forget(aOpenerWindow);
-  return NS_OK;
+  return mOpenerForInitialContentBrowser.forget();
 }
 
 void

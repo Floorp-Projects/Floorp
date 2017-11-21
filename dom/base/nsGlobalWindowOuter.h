@@ -1158,7 +1158,6 @@ protected:
     // The pointer being set indicates we've set the IsInFullscreenChange
     // flag on this pres shell.
     nsWeakPtr mFullscreenPresShell;
-    nsCOMPtr<mozIDOMWindowProxy> mOpenerForInitialContentBrowser;
   } mChromeFields;
 
   friend class nsDOMScriptableHelper;
