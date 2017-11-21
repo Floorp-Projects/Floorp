@@ -1436,6 +1436,11 @@ protected:
     nsInterfaceHashtable<nsStringHashKey, nsIMessageBroadcaster> mGroupMessageManagers;
   } mChromeFields;
 
+  // These fields are used by the inner and outer windows to prevent
+  // programatically moving the window while the mouse is down.
+  static bool sMouseDown;
+  static bool sDragServiceDisabled;
+
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
   friend class mozilla::dom::PostMessageEvent;
