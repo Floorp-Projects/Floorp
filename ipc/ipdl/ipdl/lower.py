@@ -738,7 +738,6 @@ class StructDecl(ipdl.ast.StructDecl, HasFQName):
     def upgrade(structDecl):
         assert isinstance(structDecl, ipdl.ast.StructDecl)
         structDecl.__class__ = StructDecl
-        return structDecl
 
 class _StructField(_CompoundTypeComponent):
     def __init__(self, ipdltype, name, sd, side=None):
@@ -815,7 +814,6 @@ class UnionDecl(ipdl.ast.UnionDecl, HasFQName):
     def upgrade(unionDecl):
         assert isinstance(unionDecl, ipdl.ast.UnionDecl)
         unionDecl.__class__ = UnionDecl
-        return unionDecl
 
 
 class _UnionMember(_CompoundTypeComponent):
@@ -1110,7 +1108,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
                         messageDecl.decl.type.constructedType()),
                     'actor'))
         messageDecl.__class__ = MessageDecl
-        return messageDecl
+
 
 ##--------------------------------------------------
 def _usesShmem(p):
@@ -1300,7 +1298,6 @@ class Protocol(ipdl.ast.Protocol):
     def upgrade(protocol):
         assert isinstance(protocol, ipdl.ast.Protocol)
         protocol.__class__ = Protocol
-        return protocol
 
 
 class TranslationUnit(ipdl.ast.TranslationUnit):
@@ -1308,7 +1305,7 @@ class TranslationUnit(ipdl.ast.TranslationUnit):
     def upgrade(tu):
         assert isinstance(tu, ipdl.ast.TranslationUnit)
         tu.__class__ = TranslationUnit
-        return tu
+
 
 ##-----------------------------------------------------------------------------
 
