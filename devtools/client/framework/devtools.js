@@ -24,7 +24,6 @@ loader.lazyRequireGetter(this, "WebExtensionInspectedWindowFront",
 const {defaultTools: DefaultTools, defaultThemes: DefaultThemes} =
   require("devtools/client/definitions");
 const EventEmitter = require("devtools/shared/old-event-emitter");
-const AboutDevTools = require("devtools/client/framework/about-devtools-toolbox");
 const {Task} = require("devtools/shared/task");
 const {getTheme, setTheme, addThemeObserver, removeThemeObserver} =
   require("devtools/client/shared/theme");
@@ -42,8 +41,6 @@ function DevTools() {
   this._toolboxes = new Map(); // Map<target, toolbox>
   // List of toolboxes that are still in process of creation
   this._creatingToolboxes = new Map(); // Map<target, toolbox Promise>
-
-  AboutDevTools.register();
 
   EventEmitter.decorate(this);
 
@@ -668,7 +665,6 @@ DevTools.prototype = {
       for (let [, toolbox] of this._toolboxes) {
         toolbox.destroy();
       }
-      AboutDevTools.unregister();
     }
 
     for (let [key, ] of this.getToolDefinitionMap()) {
