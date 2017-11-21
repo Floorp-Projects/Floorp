@@ -40,7 +40,7 @@ class StatisticsPanel extends Component {
       connector: PropTypes.object.isRequired,
       closeStatistics: PropTypes.func.isRequired,
       enableRequestFilterTypeOnly: PropTypes.func.isRequired,
-      requests: PropTypes.array,
+      requests: PropTypes.object,
     };
   }
 
@@ -67,7 +67,7 @@ class StatisticsPanel extends Component {
     MediaQueryList.addListener(this.onLayoutChange);
 
     const { requests } = this.props;
-    let ready = requests && requests.length && requests.every((req) =>
+    let ready = requests && !requests.isEmpty() && requests.every((req) =>
       req.contentSize !== undefined && req.mimeType && req.responseHeaders &&
       req.status !== undefined && req.totalTime !== undefined
     );

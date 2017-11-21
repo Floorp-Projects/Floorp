@@ -37,7 +37,7 @@ class RequestListContent extends Component {
       connector: PropTypes.object.isRequired,
       columns: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
-      displayedRequests: PropTypes.array.isRequired,
+      displayedRequests: PropTypes.object.isRequired,
       firstRequestStartedMillis: PropTypes.number.isRequired,
       fromCache: PropTypes.bool,
       onCauseBadgeMouseDown: PropTypes.func.isRequired,
