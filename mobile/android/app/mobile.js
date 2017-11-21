@@ -848,9 +848,11 @@ pref("consoleservice.logcat", false);
 pref("consoleservice.logcat", true);
 #endif
 
-#ifndef RELEASE_OR_BETA
-// Enable VR on mobile, making it enable by default.
+#ifdef MOZ_ANDROID_GOOGLE_VR
+// Enable VR if we're building with Google VR support.
 pref("dom.vr.enabled", true);
+#else
+pref("dom.vr.enabled", false);
 #endif
 
 pref("browser.tabs.showAudioPlayingIcon", true);
