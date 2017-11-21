@@ -1690,7 +1690,7 @@ nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime)
       nsPIDOMWindowInner* innerWindow =
         docCallbacks.mDocument->GetInnerWindow();
       DOMHighResTimeStamp timeStamp = 0;
-      if (innerWindow && innerWindow->IsInnerWindow()) {
+      if (innerWindow) {
         mozilla::dom::Performance* perf = innerWindow->GetPerformance();
         if (perf) {
           timeStamp = perf->GetDOMTiming()->TimeStampToDOMHighRes(aNowTime);

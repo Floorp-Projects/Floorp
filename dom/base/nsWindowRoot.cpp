@@ -36,7 +36,6 @@ using namespace mozilla::dom;
 nsWindowRoot::nsWindowRoot(nsPIDOMWindowOuter* aWindow)
 {
   mWindow = aWindow;
-  MOZ_ASSERT(mWindow->IsOuterWindow());
 
   // Keyboard indicators are not shown on Mac by default.
 #if defined(XP_MACOSX)

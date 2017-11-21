@@ -9022,8 +9022,6 @@ nsContentUtils::IsNonSubresourceRequest(nsIChannel* aChannel)
 nsContentUtils::StorageAccess
 nsContentUtils::StorageAllowedForWindow(nsPIDOMWindowInner* aWindow)
 {
-  MOZ_ASSERT(aWindow->IsInnerWindow());
-
   if (nsIDocument* document = aWindow->GetExtantDoc()) {
     nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
     return InternalStorageAllowedForPrincipal(principal, aWindow);
@@ -9112,7 +9110,6 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
                                                    nsPIDOMWindowInner* aWindow)
 {
   MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(!aWindow || aWindow->IsInnerWindow());
 
   StorageAccess access = StorageAccess::eAllow;
 

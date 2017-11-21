@@ -252,8 +252,6 @@ public:
 
     nsGlobalWindowInner* innerWindow =
       sInnerWindowsById->Get(aInnerWindowID);
-    MOZ_ASSERT(!innerWindow || innerWindow->IsInnerWindow(),
-                "Outer window in sInnerWindowsById?");
     return innerWindow;
   }
 
@@ -1498,7 +1496,7 @@ nsGlobalWindowInner::GetOuterWindowInternal() const
 inline bool
 nsGlobalWindowInner::IsPopupSpamWindow()
 {
-  if (IsInnerWindow() && !mOuterWindow) {
+  if (!mOuterWindow) {
     return false;
   }
 

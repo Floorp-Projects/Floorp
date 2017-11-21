@@ -1965,8 +1965,7 @@ EventSource::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
   nsCOMPtr<nsPIDOMWindowInner> ownerWindow =
     do_QueryInterface(aGlobal.GetAsSupports());
 
-  MOZ_ASSERT(!NS_IsMainThread() ||
-             (ownerWindow && ownerWindow->IsInnerWindow()));
+  MOZ_ASSERT(!NS_IsMainThread() || ownerWindow);
 
   RefPtr<EventSource> eventSource =
     new EventSource(ownerWindow, aEventSourceInitDict.mWithCredentials);

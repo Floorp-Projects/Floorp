@@ -1458,15 +1458,6 @@ nsWindowWatcher::AddWindow(mozIDOMWindowProxy* aWindow, nsIWebBrowserChrome* aCh
     return NS_ERROR_INVALID_ARG;
   }
 
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsPIDOMWindowOuter> win(do_QueryInterface(aWindow));
-
-    NS_ASSERTION(win->IsOuterWindow(),
-                 "Uh, the active window must be an outer window!");
-  }
-#endif
-
   {
     nsWatcherWindowEntry* info;
     MutexAutoLock lock(mListLock);
