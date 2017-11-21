@@ -1297,18 +1297,64 @@ wine = check_prog('WINE', ['wine'], when=depends(target, host)
 # Security Hardening
 # ==============================================================
 
+js_option('--enable-address-sanitizer', help='Enable Address Sanitizer')
+
+
+@depends_if('--enable-address-sanitizer')
+def asan(value):
+    return True
+
+
+add_old_configure_assignment('MOZ_ASAN', asan)
+
+
 option('--enable-hardening', env='MOZ_SECURITY_HARDENING',
        help='Enables security hardening compiler options')
 
 
-@depends('--enable-hardening', c_compiler)
-def security_hardening_cflags(value, c_compiler):
-    if value and c_compiler.type in ['gcc', 'clang']:
-        return '-fstack-protector-strong'
+@depends('--enable-hardening', '--enable-address-sanitizer',
+         '--enable-optimize', c_compiler, target)
+def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target):
+    compiler_is_gccish = c_compiler.type in ('gcc', 'clang')
+
+    flags = []
+    js_flags = []
+
+    # FORTIFY_SOURCE ------------------------------------
+    # If hardening is explicitly enabled, or not explicitly disabled
+    if hardening_flag.origin == "default" or hardening_flag:
+        # Require optimization for FORTIFY_SOURCE. See Bug 1417452
+        # Also, undefine it before defining it just in case a distro adds it, see Bug 1418398
+        if compiler_is_gccish and optimize and not asan:
+            # Don't enable FORTIFY_SOURCE on Android on the top-level, but do enable in js/
+            if target.os != 'Android':
+                flags.append("-U_FORTIFY_SOURCE")
+                flags.append("-D_FORTIFY_SOURCE=2")
+            js_flags.append("-U_FORTIFY_SOURCE")
+            js_flags.append("-D_FORTIFY_SOURCE=2")
+
+    # If ASAN _is_ on, undefine FOTIFY_SOURCE just to be safe
+    if asan:
+        flags.append("-U_FORTIFY_SOURCE")
+        js_flags.append("-U_FORTIFY_SOURCE")
+
+    # fstack-protector ------------------------------------
+    # Enable only if --enable-hardening is passed and ASAN is
+    # not on as ASAN will catch the crashes for us
+    if hardening_flag and compiler_is_gccish and not asan:
+        flags.append("-fstack-protector-strong")
+
+    return namespace(
+        flags=flags,
+        js_flags=js_flags,
+    )
 
 
-add_old_configure_assignment('HARDENING_CFLAGS', security_hardening_cflags)
+add_old_configure_assignment('MOZ_HARDENING_CFLAGS', security_hardening_cflags.flags)
+add_old_configure_assignment('MOZ_HARDENING_CFLAGS_JS', security_hardening_cflags.js_flags)
 imply_option('--enable-pie', depends_if('--enable-hardening')(lambda v: v))
+
+# ==============================================================
 
 option(env='RUSTFLAGS',
        nargs=1,
