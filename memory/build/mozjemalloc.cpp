@@ -645,10 +645,11 @@ struct ExtentTreeSzTrait
     return aThis->mLinkBySize;
   }
 
-  static inline int Compare(extent_node_t* aNode, extent_node_t* aOther)
+  static inline Order Compare(extent_node_t* aNode, extent_node_t* aOther)
   {
-    int ret = (aNode->mSize > aOther->mSize) - (aNode->mSize < aOther->mSize);
-    return ret ? ret : CompareAddr(aNode->mAddr, aOther->mAddr);
+    Order ret = CompareInt(aNode->mSize, aOther->mSize);
+    return (ret != Order::eEqual) ? ret
+                                  : CompareAddr(aNode->mAddr, aOther->mAddr);
   }
 };
 
@@ -659,7 +660,7 @@ struct ExtentTreeTrait
     return aThis->mLinkByAddr;
   }
 
-  static inline int Compare(extent_node_t* aNode, extent_node_t* aOther)
+  static inline Order Compare(extent_node_t* aNode, extent_node_t* aOther)
   {
     return CompareAddr(aNode->mAddr, aOther->mAddr);
   }
@@ -667,7 +668,7 @@ struct ExtentTreeTrait
 
 struct ExtentTreeBoundsTrait : public ExtentTreeTrait
 {
-  static inline int Compare(extent_node_t* aKey, extent_node_t* aNode)
+  static inline Order Compare(extent_node_t* aKey, extent_node_t* aNode)
   {
     uintptr_t key_addr = reinterpret_cast<uintptr_t>(aKey->mAddr);
     uintptr_t node_addr = reinterpret_cast<uintptr_t>(aNode->mAddr);
@@ -675,10 +676,10 @@ struct ExtentTreeBoundsTrait : public ExtentTreeTrait
 
     // Is aKey within aNode?
     if (node_addr <= key_addr && key_addr < node_addr + node_size) {
-      return 0;
+      return Order::eEqual;
     }
 
-    return (key_addr > node_addr) - (key_addr < node_addr);
+    return CompareAddr(aKey->mAddr, aNode->mAddr);
   }
 };
 
@@ -793,7 +794,8 @@ struct ArenaChunkMapLink
 
 struct ArenaRunTreeTrait : public ArenaChunkMapLink
 {
-  static inline int Compare(arena_chunk_map_t* aNode, arena_chunk_map_t* aOther)
+  static inline Order Compare(arena_chunk_map_t* aNode,
+                              arena_chunk_map_t* aOther)
   {
     MOZ_ASSERT(aNode);
     MOZ_ASSERT(aOther);
@@ -803,14 +805,16 @@ struct ArenaRunTreeTrait : public ArenaChunkMapLink
 
 struct ArenaAvailTreeTrait : public ArenaChunkMapLink
 {
-  static inline int Compare(arena_chunk_map_t* aNode, arena_chunk_map_t* aOther)
+  static inline Order Compare(arena_chunk_map_t* aNode,
+                              arena_chunk_map_t* aOther)
   {
     size_t size1 = aNode->bits & ~gPageSizeMask;
     size_t size2 = aOther->bits & ~gPageSizeMask;
-    int ret = (size1 > size2) - (size1 < size2);
-    return ret ? ret
-               : CompareAddr((aNode->bits & CHUNK_MAP_KEY) ? nullptr : aNode,
-                             aOther);
+    Order ret = CompareInt(size1, size2);
+    return (ret != Order::eEqual)
+             ? ret
+             : CompareAddr((aNode->bits & CHUNK_MAP_KEY) ? nullptr : aNode,
+                           aOther);
   }
 };
 
@@ -821,7 +825,7 @@ struct ArenaDirtyChunkTrait
     return aThis->link_dirty;
   }
 
-  static inline int Compare(arena_chunk_t* aNode, arena_chunk_t* aOther)
+  static inline Order Compare(arena_chunk_t* aNode, arena_chunk_t* aOther)
   {
     MOZ_ASSERT(aNode);
     MOZ_ASSERT(aOther);
@@ -1097,11 +1101,11 @@ struct ArenaTreeTrait
     return aThis->mLink;
   }
 
-  static inline int Compare(arena_t* aNode, arena_t* aOther)
+  static inline Order Compare(arena_t* aNode, arena_t* aOther)
   {
     MOZ_ASSERT(aNode);
     MOZ_ASSERT(aOther);
-    return (aNode->mId > aOther->mId) - (aNode->mId < aOther->mId);
+    return CompareInt(aNode->mId, aOther->mId);
   }
 };
 
