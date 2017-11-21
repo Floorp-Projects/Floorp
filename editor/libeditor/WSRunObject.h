@@ -211,13 +211,29 @@ public:
                                              nsCOMPtr<nsINode>* aSplitNode,
                                              int32_t* aSplitOffset);
 
-  // InsertBreak inserts a br node at {aInOutParent,aInOutOffset}
-  // and makes any needed adjustments to ws around that point.
-  // example of fixup: normalws after {aInOutParent,aInOutOffset}
-  //                   needs to begin with nbsp.
-  already_AddRefed<dom::Element> InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
-                                             int32_t* aInOutOffset,
-                                             nsIEditor::EDirection aSelect);
+  /**
+   * InsertBreak() inserts a <br> node at (before) aPointToInsert and delete
+   * unnecessary whitespaces around there and/or replaces whitespaces with
+   * non-breaking spaces.  Note that if the point is in a text node, the
+   * text node will be split and insert new <br> node between the left node
+   * and the right node.
+   *
+   * @param aSelection      The selection for the editor.
+   * @param aPointToInsert  The point to insert new <br> element.  Note that
+   *                        it'll be inserted before this point.  I.e., the
+   *                        point will be the point of new <br>.
+   * @param aSelect         If eNone, this won't change selection.
+   *                        If eNext, selection will be collapsed after the
+   *                        <br> element.
+   *                        If ePrevious, selection will be collapsed at the
+   *                        <br> element.
+   * @return                The new <br> node.  If failed to create new <br>
+   *                        node, returns nullptr.
+   */
+  already_AddRefed<dom::Element>
+  InsertBreak(Selection& aSelection,
+              const EditorRawDOMPoint& aPointToInsert,
+              nsIEditor::EDirection aSelect);
 
   /**
    * InsertTextImpl() inserts aStringToInsert to aPointToInsert and makes any

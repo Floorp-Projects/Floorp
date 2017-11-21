@@ -168,24 +168,29 @@ WSRunObject::PrepareToSplitAcrossBlocks(HTMLEditor* aHTMLEditor,
 }
 
 already_AddRefed<Element>
-WSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
-                         int32_t* aInOutOffset,
+WSRunObject::InsertBreak(Selection& aSelection,
+                         const EditorRawDOMPoint& aPointToInsert,
                          nsIEditor::EDirection aSelect)
 {
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return nullptr;
+  }
+
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
   // meanwhile, the pre case is handled in WillInsertText in
   // HTMLEditRules.cpp
-  NS_ENSURE_TRUE(aInOutParent && aInOutOffset, nullptr);
 
   WSFragment *beforeRun, *afterRun;
-  FindRun(*aInOutParent, *aInOutOffset, &beforeRun, false);
-  FindRun(*aInOutParent, *aInOutOffset, &afterRun, true);
+  FindRun(aPointToInsert.Container(), aPointToInsert.Offset(),
+          &beforeRun, false);
+  FindRun(aPointToInsert.Container(), aPointToInsert.Offset(),
+          &afterRun, true);
 
+  EditorDOMPoint pointToInsert(aPointToInsert);
   {
     // Some scoping for AutoTrackDOMPoint.  This will track our insertion
     // point while we tweak any surrounding whitespace
-    AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent,
-                              aInOutOffset);
+    AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, &pointToInsert);
 
     // Handle any changes needed to ws run after inserted br
     if (!afterRun || (afterRun->mType & WSType::trailingWS)) {
@@ -194,13 +199,15 @@ WSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
       // Delete the leading ws that is after insertion point.  We don't
       // have to (it would still not be significant after br), but it's
       // just more aesthetically pleasing to.
-      nsresult rv = DeleteChars(*aInOutParent, *aInOutOffset,
-                                afterRun->mEndNode, afterRun->mEndOffset);
+      nsresult rv =
+        DeleteChars(pointToInsert.Container(), pointToInsert.Offset(),
+                    afterRun->mEndNode, afterRun->mEndOffset);
       NS_ENSURE_SUCCESS(rv, nullptr);
     } else if (afterRun->mType == WSType::normalWS) {
       // Need to determine if break at front of non-nbsp run.  If so, convert
       // run to nbsp.
-      WSPoint thePoint = GetCharAfter(*aInOutParent, *aInOutOffset);
+      WSPoint thePoint =
+        GetCharAfter(pointToInsert.Container(), pointToInsert.Offset());
       if (thePoint.mTextNode && nsCRT::IsAsciiSpace(thePoint.mChar)) {
         WSPoint prevPoint = GetCharBefore(thePoint);
         if (!prevPoint.mTextNode ||
@@ -218,33 +225,24 @@ WSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
     } else if (beforeRun->mType & WSType::trailingWS) {
       // Need to delete the trailing ws that is before insertion point, because it
       // would become significant after break inserted.
-      nsresult rv = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset,
-                                *aInOutParent, *aInOutOffset);
+      nsresult rv =
+        DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset,
+                    pointToInsert.Container(), pointToInsert.Offset());
       NS_ENSURE_SUCCESS(rv, nullptr);
     } else if (beforeRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, just to prevent nbsp proliferation
-      nsresult rv = CheckTrailingNBSP(beforeRun, *aInOutParent, *aInOutOffset);
+      nsresult rv =
+        CheckTrailingNBSP(beforeRun, pointToInsert.Container(),
+                          pointToInsert.Offset());
       NS_ENSURE_SUCCESS(rv, nullptr);
     }
   }
 
-  RefPtr<Selection> selection = mHTMLEditor->GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return nullptr;
-  }
   RefPtr<Element> newBRElement =
-    mHTMLEditor->CreateBRImpl(*selection,
-                              EditorRawDOMPoint(*aInOutParent, *aInOutOffset),
-                              aSelect);
+    mHTMLEditor->CreateBRImpl(aSelection, pointToInsert.AsRaw(), aSelect);
   if (NS_WARN_IF(!newBRElement)) {
     return nullptr;
   }
-  EditorRawDOMPoint atNewBRElement(newBRElement);
-  DebugOnly<bool> advanced = atNewBRElement.AdvanceOffset();
-  NS_WARNING_ASSERTION(advanced,
-    "Failed to advance offset to after the new <br> element");
-  *aInOutParent = atNewBRElement.Container();
-  *aInOutOffset = atNewBRElement.Offset();
   return newBRElement.forget();
 }
 
