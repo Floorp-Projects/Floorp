@@ -346,9 +346,8 @@ private:
 };
 
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(ScrollDirection, uint32_t, (
-  NONE,
-  VERTICAL,
-  HORIZONTAL
+  eVertical,
+  eHorizontal
 ));
 
 } // namespace layers

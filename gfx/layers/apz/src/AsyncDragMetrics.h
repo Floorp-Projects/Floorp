@@ -9,6 +9,7 @@
 
 #include "FrameMetrics.h"
 #include "LayersTypes.h"
+#include "mozilla/Maybe.h"
 
 namespace IPC {
 template <typename T> struct ParamTraits;
@@ -28,7 +29,6 @@ public:
     , mPresShellId(0)
     , mDragStartSequenceNumber(0)
     , mScrollbarDragOffset(0)
-    , mDirection(ScrollDirection::NONE)
   {}
 
   AsyncDragMetrics(const FrameMetrics::ViewID& aViewId,
@@ -40,14 +40,14 @@ public:
     , mPresShellId(aPresShellId)
     , mDragStartSequenceNumber(aDragStartSequenceNumber)
     , mScrollbarDragOffset(aScrollbarDragOffset)
-    , mDirection(aDirection)
+    , mDirection(Some(aDirection))
   {}
 
   FrameMetrics::ViewID mViewId;
   uint32_t mPresShellId;
   uint64_t mDragStartSequenceNumber;
   CSSCoord mScrollbarDragOffset;  // relative to the thumb's start offset
-  ScrollDirection mDirection;
+  Maybe<ScrollDirection> mDirection;
 };
 
 }

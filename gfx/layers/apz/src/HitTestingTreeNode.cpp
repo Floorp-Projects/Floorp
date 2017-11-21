@@ -116,7 +116,7 @@ HitTestingTreeNode::MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetric
 bool
 HitTestingTreeNode::IsScrollThumbNode() const
 {
-  return mScrollThumbData.mDirection != ScrollDirection::NONE;
+  return mScrollThumbData.mDirection.isSome();
 }
 
 bool
