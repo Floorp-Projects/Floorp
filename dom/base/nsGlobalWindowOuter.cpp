@@ -4778,11 +4778,11 @@ nsGlobalWindowOuter::CanMoveResizeWindows(CallerType aCallerType)
       return false;
   }
 
-  if (gMouseDown && !gDragServiceDisabled) {
+  if (nsGlobalWindowInner::sMouseDown && !nsGlobalWindowInner::sDragServiceDisabled) {
     nsCOMPtr<nsIDragService> ds =
       do_GetService("@mozilla.org/widget/dragservice;1");
     if (ds) {
-      gDragServiceDisabled = true;
+      nsGlobalWindowInner::sDragServiceDisabled = true;
       ds->Suppress();
     }
   }

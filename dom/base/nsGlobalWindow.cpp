@@ -6,9 +6,6 @@
 
 #include <stdint.h>
 
-static bool                 gMouseDown                        = false;
-static bool                 gDragServiceDisabled              = false;
-
 // Include the implementations for the inner and outer windows respectively.
 #include "nsGlobalWindowOuter.cpp"
 #include "nsGlobalWindowInner.cpp"
