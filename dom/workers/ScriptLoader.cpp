@@ -50,6 +50,8 @@
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/ChannelInfo.h"
+#include "mozilla/dom/ClientChannelHelper.h"
+#include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/nsCSPService.h"
@@ -259,6 +261,7 @@ struct ScriptLoadInfo
   nsCOMPtr<nsIInputStream> mCacheReadStream;
 
   nsCOMPtr<nsIChannel> mChannel;
+  Maybe<ClientInfo> mReservedClientInfo;
   char16_t* mScriptTextBuf;
   size_t mScriptTextLength;
 
@@ -987,6 +990,17 @@ private:
     rv = NS_NewStreamLoader(getter_AddRefs(loader), listener);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    if (IsMainWorkerScript()) {
+      MOZ_DIAGNOSTIC_ASSERT(loadInfo.mReservedClientInfo.isSome());
+      rv = AddClientChannelHelper(channel,
+                                  Move(loadInfo.mReservedClientInfo),
+                                  Maybe<ClientInfo>(),
+                                  mWorkerPrivate->HybridEventTarget());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
     if (loadInfo.mCacheStatus != ScriptLoadInfo::ToBeCached) {
@@ -1967,6 +1981,12 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
       return true;
     }
 
+    // If this is a top level script that succeeded, then mark the
+    // Client execution ready.
+    if (mIsWorkerScript) {
+      aWorkerPrivate->ExecutionReady();
+    }
+
     NS_ConvertUTF16toUTF8 filename(loadInfo.mURL);
 
     JS::CompileOptions options(aCx);
@@ -2260,6 +2280,10 @@ LoadMainScript(WorkerPrivate* aWorkerPrivate,
   ScriptLoadInfo* info = loadInfos.AppendElement();
   info->mURL = aScriptURL;
   info->mLoadFlags = aWorkerPrivate->GetLoadFlags();
+
+  // We are loading the main script, so the worker's Client must be
+  // reserved.
+  info->mReservedClientInfo.emplace(aWorkerPrivate->GetClientInfo());
 
   LoadAllScripts(aWorkerPrivate, loadInfos, true, aWorkerScriptType, aRv);
 }
