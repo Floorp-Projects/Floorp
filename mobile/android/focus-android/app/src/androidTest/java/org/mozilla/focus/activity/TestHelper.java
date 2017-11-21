@@ -66,7 +66,7 @@ public final class TestHelper {
             .resourceId("org.mozilla.focus.debug:id/finish")
             .enabled(true));
     static UiObject initialView = mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/brand_background")
+            .resourceId("org.mozilla.focus.debug:id/backgroundView")
             .enabled(true));
 
     /********* Main View Locators ***********/
@@ -84,7 +84,7 @@ public final class TestHelper {
             .focused(true)
             .enabled(true));
     static UiObject cleartextField = mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/clear")
+            .resourceId("org.mozilla.focus.debug:id/clearView")
             .enabled(true));
     public static UiObject hint = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/searchView")
