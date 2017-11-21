@@ -804,7 +804,7 @@ class SharedScriptData
     }
     void decRefCount() {
         MOZ_ASSERT(refCount_ != 0);
-        uint32_t remain = refCount_--;
+        uint32_t remain = --refCount_;
         if (remain == 0)
             js_free(this);
     }
