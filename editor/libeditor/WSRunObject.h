@@ -371,8 +371,19 @@ protected:
                             nsINode* aBlockParent);
   nsresult PrepareToDeleteRangePriv(WSRunObject* aEndObject);
   nsresult PrepareToSplitAcrossBlocksPriv();
-  nsresult DeleteChars(nsINode* aStartNode, int32_t aStartOffset,
-                       nsINode* aEndNode, int32_t aEndOffset);
+
+  /**
+   * DeleteRange() removes the range between aStartPoint and aEndPoint.
+   * When aStartPoint and aEndPoint are same point, does nothing.
+   * When aStartPoint and aEndPoint are in same text node, removes characters
+   * between them.
+   * When aStartPoint is in a text node, removes the text data after the point.
+   * When aEndPoint is in a text node, removes the text data before the point.
+   * Removes any nodes between them.
+   */
+  nsresult DeleteRange(const EditorRawDOMPoint& aStartPoint,
+                       const EditorRawDOMPoint& aEndPoint);
+
   WSPoint GetCharAfter(nsINode* aNode, int32_t aOffset);
   WSPoint GetCharBefore(nsINode* aNode, int32_t aOffset);
   WSPoint GetCharAfter(const WSPoint& aPoint);
