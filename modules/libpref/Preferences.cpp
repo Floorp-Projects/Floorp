@@ -4881,6 +4881,35 @@ Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
   return NS_OK;
 }
 
+template<MemoryOrdering Order>
+static void
+AtomicBoolVarChanged(const char* aPref, void* aClosure)
+{
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<Atomic<bool, Order>*>(cache->mCacheLocation) =
+    Preferences::GetBool(aPref, cache->mDefaultValueBool);
+}
+
+template<MemoryOrdering Order>
+/* static */ nsresult
+Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache, const char* aPref, bool aDefault)
+{
+  NS_ASSERTION(aCache, "aCache must not be NULL");
+#ifdef DEBUG
+  AssertNotAlreadyCached("bool", aPref, aCache);
+#endif
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = Preferences::GetBool(aPref, aDefault);
+  }
+  CacheData* data = new CacheData();
+  data->mCacheLocation = aCache;
+  data->mDefaultValueBool = aDefault;
+  CacheDataAppendElement(data);
+  RegisterVarCacheCallback(AtomicBoolVarChanged<Order>, aPref, data);
+  return NS_OK;
+}
+
 static void
 IntVarChanged(const char* aPref, void* aClosure)
 {
@@ -4907,6 +4936,37 @@ Preferences::AddIntVarCache(int32_t* aCache,
   data->mDefaultValueInt = aDefault;
   CacheDataAppendElement(data);
   RegisterVarCacheCallback(IntVarChanged, aPref, data);
+  return NS_OK;
+}
+
+template<MemoryOrdering Order>
+static void
+AtomicIntVarChanged(const char* aPref, void* aClosure)
+{
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<Atomic<int32_t, Order>*>(cache->mCacheLocation) =
+    Preferences::GetInt(aPref, cache->mDefaultValueUint);
+}
+
+template<MemoryOrdering Order>
+/* static */ nsresult
+Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
+                                  const char* aPref,
+                                  int32_t aDefault)
+{
+  NS_ASSERTION(aCache, "aCache must not be NULL");
+#ifdef DEBUG
+  AssertNotAlreadyCached("int", aPref, aCache);
+#endif
+  {
+    AUTO_INSTALLING_CALLBACK();
+    *aCache = Preferences::GetInt(aPref, aDefault);
+  }
+  CacheData* data = new CacheData();
+  data->mCacheLocation = aCache;
+  data->mDefaultValueUint = aDefault;
+  CacheDataAppendElement(data);
+  RegisterVarCacheCallback(AtomicIntVarChanged<Order>, aPref, data);
   return NS_OK;
 }
 
@@ -4970,9 +5030,19 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
   return NS_OK;
 }
 
-// Since the definition of this template function is not in a header file, we
+// Since the definition of template functions is not in a header file, we
 // need to explicitly specify the instantiations that are required. Currently
 // only the order=Relaxed variant is needed.
+template nsresult
+Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*,
+                                   const char*,
+                                   bool);
+
+template nsresult
+Preferences::AddAtomicIntVarCache(Atomic<int32_t, Relaxed>*,
+                                  const char*,
+                                  int32_t);
+
 template nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Relaxed>*,
                                    const char*,

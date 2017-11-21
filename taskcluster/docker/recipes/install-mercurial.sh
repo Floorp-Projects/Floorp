@@ -30,11 +30,14 @@ if [ -f /etc/lsb-release ]; then
 elif [ -f /etc/os-release ]; then
     . /etc/os-release
 
-    if [ "${ID}" = "debian" -a "${VERSION_ID}" = "9" ]; then
+    if [ "${ID}" = "debian" ]; then
         if [ -f /usr/bin/pip2 ]; then
             PIP_PATH=/usr/bin/pip2
+        elif [ -f /usr/bin/pip ]; then
+            # Versions of debian that don't have pip2 have pip pointing to the python2 version.
+            PIP_PATH=/usr/bin/pip
         else
-            echo "We currently require Python 2.7 and /usr/bin/pip2 to run Mercurial"
+            echo "We currently require Python 2.7 and pip to run Mercurial"
             exit 1
         fi
     else

@@ -85,7 +85,7 @@ public:
 
   Maybe<wr::ImageKey> UpdateImageKey(ImageContainer* aContainer,
                                      wr::IpcResourceUpdateQueue& aResources,
-                                     bool aForceUpdate = false);
+                                     bool aFallback = false);
 
   void CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                          ImageContainer* aContainer,

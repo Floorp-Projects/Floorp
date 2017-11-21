@@ -98,8 +98,8 @@ add_task(function* () {
     // since copyPostData API needs to read these state.
     yield waitUntil(() => {
       let { requests } = store.getState().requests;
-      let actIDs = Object.keys(requests.toJS());
-      let { formDataSections, requestPostData } = requests.get(actIDs[index]).toJS();
+      let actIDs = [...requests.keys()];
+      let { formDataSections, requestPostData } = requests.get(actIDs[index]);
       return formDataSections && requestPostData;
     });
     EventUtils.sendMouseEvent({ type: "mousedown" },
