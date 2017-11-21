@@ -1224,11 +1224,6 @@ protected:
   // And these are the references between inner and outer windows.
   nsPIDOMWindowInner* MOZ_NON_OWNING_REF mInnerWindow;
 
-  // the element within the document that is currently focused when this
-  // window is active
-  // XXX -- FIXME: This is never set on the outer window, but we check it
-  nsCOMPtr<nsIContent> mFocusedNode;
-
   RefPtr<mozilla::dom::TabGroup> mTabGroup;
 
   // A unique (as long as our 64-bit counter doesn't roll over) id for
