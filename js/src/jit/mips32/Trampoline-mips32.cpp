@@ -693,8 +693,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
         regs.take(argsBase);
         masm.ma_addu(argsBase, StackPointer, Imm32(ExitFrameLayout::SizeWithFooter()));
     }
-
+    uint32_t framePushedBeforeAlignStack = masm.framePushed();
     masm.alignStackPointer();
+    masm.setFramePushed(0);
 
     // Reserve space for the outparameter. Reserve sizeof(Value) for every
     // case so that stack stays aligned.
@@ -853,6 +854,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
     }
 
     masm.restoreStackPointer();
+    masm.setFramePushed(framePushedBeforeAlignStack);
 
     masm.leaveExitFrame();
     masm.retn(Imm32(sizeof(ExitFrameLayout) +
