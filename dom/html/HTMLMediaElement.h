@@ -740,11 +740,6 @@ public:
 
   void NotifyCueDisplayStatesChanged();
 
-  bool GetHasUserInteraction()
-  {
-    return mHasUserInteraction;
-  }
-
   // A method to check whether we are currently playing.
   bool IsCurrentlyPlaying() const;
 
