@@ -280,6 +280,7 @@ private:
   // The latest snapshot of this surface. This needs to be told when this
   // target is modified. We keep it alive as a cache.
   RefPtr<SourceSurfaceD2D1> mSnapshot;
+  std::shared_ptr<Mutex> mSnapshotLock;
   // A list of targets we need to flush when we're modified.
   TargetSet mDependentTargets;
   // A list of targets which have this object in their mDependentTargets set
