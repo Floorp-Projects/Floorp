@@ -10,6 +10,7 @@ const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants")
 const { getStringifiableFragments } =
   require("devtools/server/actors/utils/css-grid-utils");
 
+loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
 loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
 
 /**
@@ -197,33 +198,32 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
   },
 
   /**
-   * Returns an array of GridActor objects for all the grid containers found by iterating
-   * below the given rootNode.
+   * Returns an array of GridActor objects for all the grid elements contained in the
+   * given root node.
    *
-   * @param  {Node|NodeActor} rootNode
-   *         The root node to start iterating at.
+   * @param  {Node} node
+   *         The root node for grid elements
    * @return {Array} An array of GridActor objects.
    */
-  getGrids(rootNode) {
-    let grids = [];
-
-    if (!rootNode) {
-      return grids;
+  getGrids(node) {
+    if (!node) {
+      return [];
     }
 
-    let treeWalker = this.walker.getDocumentWalker(rootNode,
-      nodeFilterConstants.SHOW_ELEMENT);
-
-    while (treeWalker.nextNode()) {
-      let currentNode = treeWalker.currentNode;
-
-      if (currentNode.getGridFragments && currentNode.getGridFragments().length > 0) {
-        let gridActor = new GridActor(this, currentNode);
-        grids.push(gridActor);
-      }
+    // Root node can be a #document object, which does not support getElementsWithGrid.
+    if (node.nodeType === nodeConstants.DOCUMENT_NODE) {
+      node = node.documentElement;
     }
 
-    return grids;
+    let gridElements = node.getElementsWithGrid();
+    let gridActors = gridElements.map(n => new GridActor(this, n));
+
+    let frames = node.querySelectorAll("iframe, frame");
+    for (let frame of frames) {
+      gridActors = gridActors.concat(this.getGrids(frame.contentDocument));
+    }
+
+    return gridActors;
   },
 
   /**
