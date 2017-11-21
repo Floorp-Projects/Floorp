@@ -102,19 +102,44 @@ function test_getUnanimatedComputedStyle() {
   document.body.appendChild(div);
 
   SimpleTest.doesThrow(
-    () => utils.getUnanimatedComputedStyle(div, null, "background"),
+    () => utils.getUnanimatedComputedStyle(div, null, "background", utils.FLUSH_NONE),
     "NS_ERROR_INVALID_ARG",
     "Shorthand property should throw");
 
   SimpleTest.doesThrow(
-    () => utils.getUnanimatedComputedStyle(div, null, "invalid"),
+    () => utils.getUnanimatedComputedStyle(div, null, "invalid", utils.FLUSH_NONE),
     "NS_ERROR_INVALID_ARG",
     "Invalid property should throw");
 
   SimpleTest.doesThrow(
-    () => utils.getUnanimatedComputedStyle(null, null, "opacity"),
+    () => utils.getUnanimatedComputedStyle(null, null, "opacity", utils.FLUSH_NONE),
     "NS_ERROR_INVALID_ARG",
     "Null element should throw");
+
+  SimpleTest.doesThrow(
+    () => utils.getUnanimatedComputedStyle(div, null, "opacity", utils.FLUSH_LAYOUT),
+    "NS_ERROR_INVALID_ARG",
+    "FLUSH_LAYOUT option should throw");
+
+  SimpleTest.doesThrow(
+    () => utils.getUnanimatedComputedStyle(div, null, "opacity", utils.FLUSH_DISPLAY),
+    "NS_ERROR_INVALID_ARG",
+    "FLUSH_DISPLAY option should throw");
+
+  if (utils.isStyledByServo) {
+    // Flush styles since getUnanimatedComputedStyle flushes pending styles even
+    // with FLUSH_NONE option if the element hasn't yet styled.
+    getComputedStyle(div).opacity;
+
+    div.style.opacity = "0";
+    is(utils.getUnanimatedComputedStyle(div, null, "opacity", utils.FLUSH_NONE),
+       "1",
+       "getUnanimatedComputedStyle with FLUSH_NONE should not flush pending styles");
+
+    is(utils.getUnanimatedComputedStyle(div, null, "opacity", utils.FLUSH_STYLE),
+       "0",
+       "getUnanimatedComputedStyle with FLUSH_STYLE should flush pending styles");
+  }
 
   div.remove();
 
@@ -136,7 +161,7 @@ function checkUnanimatedComputedStyle(property, initialStyle, pseudoType,
     div.classList.add("pseudo");
   }
 
-  is(utils.getUnanimatedComputedStyle(div, pseudoType, property),
+  is(utils.getUnanimatedComputedStyle(div, pseudoType, property, utils.FLUSH_STYLE),
      expectedBeforeAnimation,
      `'${ property }' property with '${ initialStyle }' style `
      + `should be '${ expectedBeforeAnimation }' `
@@ -144,7 +169,7 @@ function checkUnanimatedComputedStyle(property, initialStyle, pseudoType,
 
   const animation = animate(div);
   animation.currentTime = 500;
-  is(utils.getUnanimatedComputedStyle(div, pseudoType, property),
+  is(utils.getUnanimatedComputedStyle(div, pseudoType, property, utils.FLUSH_STYLE),
      expectedDuringAnimation,
      `'${ property }' property with '${ initialStyle }' style `
      + `should be '${ expectedDuringAnimation }' `
