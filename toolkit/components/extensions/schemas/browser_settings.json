@@ -27,6 +27,12 @@
         "type": "string",
         "enum": ["normal", "none", "once"],
         "description": "How images should be animated in the browser."
+      },
+      {
+        "id": "ContextMenuMouseEvent",
+        "type": "string",
+        "enum": ["mouseup", "mousedown"],
+        "description": "After which mouse event context menus should popup."
       }
     ],
     "properties": {
@@ -49,6 +55,10 @@
       "newTabPageOverride": {
         "$ref": "types.Setting",
         "description": "Returns the value of the overridden new tab page. Read-only."
+      },
+      "contextMenuShowEvent": {
+        "$ref": "types.Setting",
+        "description": "Controls after which mouse event context menus popup. This setting's value is of type ContextMenuMouseEvent, which has possible values of <code>mouseup</code> and <code>mousedown</code>."
       },
       "webNotificationsDisabled": {
         "$ref": "types.Setting",
