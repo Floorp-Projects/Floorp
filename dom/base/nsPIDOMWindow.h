@@ -126,455 +126,6 @@ enum class LargeAllocStatus : uint8_t
 template<class T>
 class nsPIDOMWindow : public T
 {
-public:
-  virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
-  virtual mozilla::dom::CustomElementRegistry* CustomElements() = 0;
-  // Outer windows only.
-  virtual void ActivateOrDeactivate(bool aActivate) = 0;
-
-  // this is called GetTopWindowRoot to avoid conflicts with nsIDOMWindow::GetWindowRoot
-  /**
-   * |top| gets the root of the window hierarchy.
-   *
-   * This function does not cross chrome-content boundaries, so if this
-   * window's parent is of a different type, |top| will return this window.
-   *
-   * When script reads the top property, we run GetScriptableTop, which
-   * will not cross an <iframe mozbrowser> boundary.
-   *
-   * In contrast, C++ calls to GetTop are forwarded to GetRealTop, which
-   * ignores <iframe mozbrowser> boundaries.
-   */
-
-  virtual already_AddRefed<nsPIDOMWindowOuter> GetTop() = 0; // Outer only
-  virtual already_AddRefed<nsPIDOMWindowOuter> GetParent() = 0;
-  virtual nsPIDOMWindowOuter* GetScriptableTop() = 0;
-  virtual nsPIDOMWindowOuter* GetScriptableParent() = 0;
-  virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
-
-  /**
-   * Behavies identically to GetScriptableParent extept that it returns null
-   * if GetScriptableParent would return this window.
-   */
-  virtual nsPIDOMWindowOuter* GetScriptableParentOrNull() = 0;
-
-  // Inner windows only.
-  virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
-  virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
-
-  virtual bool IsTopLevelWindowActive() = 0;
-
-  // Outer windows only.
-  virtual void SetActive(bool aActive)
-  {
-    MOZ_ASSERT(IsOuterWindow());
-    mIsActive = aActive;
-  }
-
-  virtual void SetIsBackground(bool aIsBackground) = 0;
-
-  mozilla::dom::EventTarget* GetChromeEventHandler() const
-  {
-    return mChromeEventHandler;
-  }
-
-  // Outer windows only.
-  virtual void SetChromeEventHandler(mozilla::dom::EventTarget* aChromeEventHandler) = 0;
-
-  mozilla::dom::EventTarget* GetParentTarget()
-  {
-    if (!mParentTarget) {
-      UpdateParentTarget();
-    }
-    return mParentTarget;
-  }
-
-  virtual void MaybeUpdateTouchState() {}
-
-  nsIDocument* GetExtantDoc() const
-  {
-    return mDoc;
-  }
-  nsIURI* GetDocumentURI() const;
-  nsIURI* GetDocBaseURI() const;
-
-  nsIDocument* GetDoc()
-  {
-    if (!mDoc) {
-      MaybeCreateDoc();
-    }
-    return mDoc;
-  }
-
-protected:
-  // Lazily instantiate an about:blank document if necessary, and if
-  // we have what it takes to do so.
-  void MaybeCreateDoc();
-
-public:
-  // Set the window up with an about:blank document with the current subject
-  // principal.
-  // Outer windows only.
-  virtual void SetInitialPrincipalToSubject() = 0;
-
-  virtual PopupControlState PushPopupControlState(PopupControlState aState,
-                                                  bool aForce) const = 0;
-  virtual void PopPopupControlState(PopupControlState state) const = 0;
-  virtual PopupControlState GetPopupControlState() const = 0;
-
-  // Returns an object containing the window's state.  This also suspends
-  // all running timeouts in the window.
-  virtual already_AddRefed<nsISupports> SaveWindowState() = 0;
-
-  // Restore the window state from aState.
-  virtual nsresult RestoreWindowState(nsISupports *aState) = 0;
-
-  // Determine if the window is suspended or frozen.  Outer windows
-  // will forward this call to the inner window for convenience.  If
-  // there is no inner window then the outer window is considered
-  // suspended and frozen by default.
-  virtual bool IsSuspended() const = 0;
-  virtual bool IsFrozen() const = 0;
-
-  // Fire any DOM notification events related to things that happened while
-  // the window was frozen.
-  virtual nsresult FireDelayedDOMEvents() = 0;
-
-  bool IsInnerWindow() const
-  {
-    return mIsInnerWindow;
-  }
-
-  bool IsOuterWindow() const
-  {
-    return !IsInnerWindow();
-  }
-
-  /**
-   * Get the docshell in this window.
-   */
-  nsIDocShell *GetDocShell() const;
-
-  /**
-   * Set a new document in the window. Calling this method will in
-   * most cases create a new inner window. If this method is called on
-   * an inner window the call will be forewarded to the outer window,
-   * if the inner window is not the current inner window an
-   * NS_ERROR_NOT_AVAILABLE error code will be returned. This may be
-   * called with a pointer to the current document, in that case the
-   * document remains unchanged, but a new inner window will be
-   * created.
-   *
-   * aDocument must not be null.
-   */
-  virtual nsresult SetNewDocument(nsIDocument *aDocument,
-                                  nsISupports *aState,
-                                  bool aForceReuseInnerWindow) = 0;
-
-  /**
-   * Set the opener window.  aOriginalOpener is true if and only if this is the
-   * original opener for the window.  That is, it can only be true at most once
-   * during the life cycle of a window, and then only the first time
-   * SetOpenerWindow is called.  It might never be true, of course, if the
-   * window does not have an opener when it's created.
-   */
-  virtual void SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
-                               bool aOriginalOpener) = 0;
-
-  /**
-   * Ensure the size and position of this window are up-to-date by doing
-   * a layout flush in the parent (which will in turn, do a layout flush
-   * in its parent, etc.).
-   */
-  virtual void EnsureSizeAndPositionUpToDate() = 0;
-
-  /**
-   * Callback for notifying a window about a modal dialog being
-   * opened/closed with the window as a parent.
-   */
-  virtual void EnterModalState() = 0;
-  virtual void LeaveModalState() = 0;
-
-  // Outer windows only.
-  virtual bool CanClose() = 0;
-  virtual void ForceClose() = 0;
-
-  /**
-   * Call this to indicate that some node (this window, its document,
-   * or content in that document) has a paint event listener.
-   */
-  void SetHasPaintEventListeners()
-  {
-    mMayHavePaintEventListener = true;
-  }
-
-  /**
-   * Call this to check whether some node (this window, its document,
-   * or content in that document) has a paint event listener.
-   */
-  bool HasPaintEventListeners()
-  {
-    return mMayHavePaintEventListener;
-  }
-
-  /**
-   * Call this to indicate that some node (this window, its document,
-   * or content in that document) has a touch event listener.
-   */
-  void SetHasTouchEventListeners()
-  {
-    if (!mMayHaveTouchEventListener) {
-      mMayHaveTouchEventListener = true;
-      MaybeUpdateTouchState();
-    }
-  }
-
-  /**
-   * Call this to indicate that some node (this window, its document,
-   * or content in that document) has a selectionchange event listener.
-   */
-  void SetHasSelectionChangeEventListeners()
-  {
-    mMayHaveSelectionChangeEventListener = true;
-  }
-
-  /**
-   * Call this to check whether some node (this window, its document,
-   * or content in that document) has a selectionchange event listener.
-   */
-  bool HasSelectionChangeEventListeners()
-  {
-    return mMayHaveSelectionChangeEventListener;
-  }
-
-  /**
-   * Moves the top-level window into fullscreen mode if aIsFullScreen is true,
-   * otherwise exits fullscreen.
-   *
-   * Outer windows only.
-   */
-  virtual nsresult SetFullscreenInternal(
-    FullscreenReason aReason, bool aIsFullscreen) = 0;
-
-  virtual void FullscreenWillChange(bool aIsFullscreen) = 0;
-  /**
-   * This function should be called when the fullscreen state is flipped.
-   * If no widget is involved the fullscreen change, this method is called
-   * by SetFullscreenInternal, otherwise, it is called when the widget
-   * finishes its change to or from fullscreen.
-   *
-   * @param aIsFullscreen indicates whether the widget is in fullscreen.
-   *
-   * Outer windows only.
-   */
-  virtual void FinishFullscreenChange(bool aIsFullscreen) = 0;
-
-  virtual JSObject* GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) = 0;
-  virtual void CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                                        JS::Handle<JSObject*> aHandler) = 0;
-
-  /*
-   * Get and set the currently focused element within the document. If
-   * aNeedsFocus is true, then set mNeedsFocus to true to indicate that a
-   * document focus event is needed.
-   *
-   * DO NOT CALL EITHER OF THESE METHODS DIRECTLY. USE THE FOCUS MANAGER
-   * INSTEAD.
-   */
-  nsIContent* GetFocusedNode() const;
-  virtual void SetFocusedNode(nsIContent* aNode,
-                              uint32_t aFocusMethod = 0,
-                              bool aNeedsFocus = false) = 0;
-
-  /**
-   * Retrieves the method that was used to focus the current node.
-   */
-  virtual uint32_t GetFocusMethod() = 0;
-
-  /*
-   * Tells the window that it now has focus or has lost focus, based on the
-   * state of aFocus. If this method returns true, then the document loaded
-   * in the window has never received a focus event and expects to receive
-   * one. If false is returned, the document has received a focus event before
-   * and should only receive one if the window is being focused.
-   *
-   * aFocusMethod may be set to one of the focus method constants in
-   * nsIFocusManager to indicate how focus was set.
-   */
-  virtual bool TakeFocus(bool aFocus, uint32_t aFocusMethod) = 0;
-
-  /**
-   * Indicates that the window may now accept a document focus event. This
-   * should be called once a document has been loaded into the window.
-   */
-  virtual void SetReadyForFocus() = 0;
-
-  /**
-   * Whether the focused content within the window should show a focus ring.
-   */
-  virtual bool ShouldShowFocusRing() = 0;
-
-  /**
-   * Set the keyboard indicator state for accelerators and focus rings.
-   */
-  virtual void SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
-                                     UIStateChangeType aShowFocusRings) = 0;
-
-  /**
-   * Indicates that the page in the window has been hidden. This is used to
-   * reset the focus state.
-   */
-  virtual void PageHidden() = 0;
-
-  /**
-   * Instructs this window to asynchronously dispatch a hashchange event.  This
-   * method must be called on an inner window.
-   */
-  virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI,
-                                           nsIURI *aNewURI) = 0;
-
-  /**
-   * Instructs this window to synchronously dispatch a popState event.
-   */
-  virtual nsresult DispatchSyncPopState() = 0;
-
-  /**
-   * Tell this window that it should listen for sensor changes of the given
-   * type.
-   *
-   * Inner windows only.
-   */
-  virtual void EnableDeviceSensor(uint32_t aType) = 0;
-
-  /**
-   * Tell this window that it should remove itself from sensor change
-   * notifications.
-   *
-   * Inner windows only.
-   */
-  virtual void DisableDeviceSensor(uint32_t aType) = 0;
-
-#if defined(MOZ_WIDGET_ANDROID)
-  virtual void EnableOrientationChangeListener() = 0;
-  virtual void DisableOrientationChangeListener() = 0;
-#endif
-
-  virtual void EnableTimeChangeNotifications() = 0;
-  virtual void DisableTimeChangeNotifications() = 0;
-
-  /**
-   * Tell this window that there is an observer for gamepad input
-   *
-   * Inner windows only.
-   */
-  virtual void SetHasGamepadEventListener(bool aHasGamepad = true) = 0;
-
-  /**
-   * Set a arguments for this window. This will be set on the window
-   * right away (if there's an existing document) and it will also be
-   * installed on the window when the next document is loaded.
-   *
-   * This function serves double-duty for passing both |arguments| and
-   * |dialogArguments| back from nsWindowWatcher to nsGlobalWindow. For the
-   * latter, the array is an array of length 0 whose only element is a
-   * DialogArgumentsHolder representing the JS value passed to showModalDialog.
-   *
-   * Outer windows only.
-   */
-  virtual nsresult SetArguments(nsIArray *aArguments) = 0;
-
-  /**
-   * NOTE! This function *will* be called on multiple threads so the
-   * implementation must not do any AddRef/Release or other actions that will
-   * mutate internal state.
-   */
-  virtual uint32_t GetSerial() = 0;
-
-  /**
-   * Return the window id of this window
-   */
-  uint64_t WindowID() const { return mWindowID; }
-
-  /**
-   * Dispatch a custom event with name aEventName targeted at this window.
-   * Returns whether the default action should be performed.
-   *
-   * Outer windows only.
-   */
-  virtual bool DispatchCustomEvent(const nsAString& aEventName) = 0;
-
-  /**
-   * Like nsIDOMWindow::Open, except that we don't navigate to the given URL.
-   *
-   * Outer windows only.
-   */
-  virtual nsresult
-  OpenNoNavigate(const nsAString& aUrl, const nsAString& aName,
-                 const nsAString& aOptions, nsPIDOMWindowOuter **_retval) = 0;
-
-  /**
-   * Fire a popup blocked event on the document.
-   */
-  virtual void
-  FirePopupBlockedEvent(nsIDocument* aDoc,
-                        nsIURI* aPopupURI,
-                        const nsAString& aPopupWindowName,
-                        const nsAString& aPopupWindowFeatures) = 0;
-
-  // WebIDL-ish APIs
-  void MarkUncollectableForCCGeneration(uint32_t aGeneration)
-  {
-    mMarkedCCGeneration = aGeneration;
-  }
-
-  uint32_t GetMarkedCCGeneration()
-  {
-    return mMarkedCCGeneration;
-  }
-
-  virtual nsIDOMScreen* GetScreen() = 0;
-  virtual nsIDOMNavigator* GetNavigator() = 0;
-  virtual mozilla::dom::Location* GetLocation() = 0;
-  virtual nsresult GetPrompter(nsIPrompt** aPrompt) = 0;
-  virtual nsresult GetControllers(nsIControllers** aControllers) = 0;
-  virtual already_AddRefed<nsISelection> GetSelection() = 0;
-  virtual already_AddRefed<nsPIDOMWindowOuter> GetOpener() = 0;
-  virtual already_AddRefed<nsIDOMWindowCollection> GetFrames() = 0;
-  // aLoadInfo will be passed on through to the windowwatcher.
-  // aForceNoOpener will act just like a "noopener" feature in aOptions except
-  //                will not affect any other window features.
-  virtual nsresult Open(const nsAString& aUrl, const nsAString& aName,
-                        const nsAString& aOptions,
-                        nsIDocShellLoadInfo* aLoadInfo,
-                        bool aForceNoOpener,
-                        nsPIDOMWindowOuter **_retval) = 0;
-  virtual nsresult OpenDialog(const nsAString& aUrl, const nsAString& aName,
-                              const nsAString& aOptions,
-                              nsISupports* aExtraArgument,
-                              nsPIDOMWindowOuter** _retval) = 0;
-
-  virtual nsresult GetInnerWidth(int32_t* aWidth) = 0;
-  virtual nsresult GetInnerHeight(int32_t* aHeight) = 0;
-  virtual already_AddRefed<nsICSSDeclaration>
-    GetComputedStyle(mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
-                     mozilla::ErrorResult& aError) = 0;
-  virtual already_AddRefed<nsIDOMElement> GetFrameElement() = 0;
-  virtual already_AddRefed<nsIDOMOfflineResourceList> GetApplicationCache() = 0;
-  virtual bool Closed() = 0;
-  virtual bool GetFullScreen() = 0;
-  virtual nsresult SetFullScreen(bool aFullScreen) = 0;
-
-  virtual nsresult Focus() = 0;
-  virtual nsresult Close() = 0;
-
-  virtual nsresult MoveBy(int32_t aXDif, int32_t aYDif) = 0;
-  virtual nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) = 0;
-
-  mozilla::dom::DocGroup* GetDocGroup() const;
-
-  virtual nsISerialEventTarget*
-  EventTargetFor(mozilla::TaskCategory aCategory) const = 0;
-
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer
@@ -583,14 +134,6 @@ protected:
   explicit nsPIDOMWindow<T>(nsPIDOMWindowOuter *aOuterWindow);
 
   ~nsPIDOMWindow<T>();
-
-  void SetChromeEventHandlerInternal(mozilla::dom::EventTarget* aChromeEventHandler) {
-    mChromeEventHandler = aChromeEventHandler;
-    // mParentTarget will be set when the next event is dispatched.
-    mParentTarget = nullptr;
-  }
-
-  virtual void UpdateParentTarget() = 0;
 
   // These two variables are special in that they're set to the same
   // value on both the outer window and the current inner window. Make
@@ -731,12 +274,15 @@ protected:
 // and memory layout!
 class nsPIDOMWindowInner : public nsPIDOMWindow<mozIDOMWindow>
 {
+protected:
   friend nsGlobalWindowInner;
   friend nsGlobalWindowOuter;
 
   explicit nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow)
     : nsPIDOMWindow<mozIDOMWindow>(aOuterWindow)
   {}
+
+  ~nsPIDOMWindowInner();
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWINNER_IID)
@@ -928,8 +474,314 @@ public:
   mozilla::Maybe<mozilla::dom::ClientInfo> GetClientInfo() const;
 
   mozilla::dom::TabGroup* TabGroup();
+
+  virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
+
+  virtual mozilla::dom::CustomElementRegistry* CustomElements() = 0;
+
+  // XXX: This is called on inner windows
+  virtual nsPIDOMWindowOuter* GetScriptableTop() = 0;
+  virtual nsPIDOMWindowOuter* GetScriptableParent() = 0;
+  virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
+
+  /**
+   * Behavies identically to GetScriptableParent extept that it returns null
+   * if GetScriptableParent would return this window.
+   */
+  virtual nsPIDOMWindowOuter* GetScriptableParentOrNull() = 0;
+
+  mozilla::dom::EventTarget* GetChromeEventHandler() const
+  {
+    return mChromeEventHandler;
+  }
+
+  virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
+  virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
+
+  virtual bool IsTopLevelWindowActive() = 0;
+
+  mozilla::dom::EventTarget* GetParentTarget()
+  {
+    if (!mParentTarget) {
+      UpdateParentTarget();
+    }
+    return mParentTarget;
+  }
+
+  virtual void MaybeUpdateTouchState() {}
+
+  nsIDocument* GetExtantDoc() const
+  {
+    return mDoc;
+  }
+  nsIURI* GetDocumentURI() const;
+  nsIURI* GetDocBaseURI() const;
+
+  nsIDocument* GetDoc()
+  {
+    if (!mDoc) {
+      MaybeCreateDoc();
+    }
+    return mDoc;
+  }
+
+  virtual PopupControlState GetPopupControlState() const = 0;
+
+  // Determine if the window is suspended or frozen.  Outer windows
+  // will forward this call to the inner window for convenience.  If
+  // there is no inner window then the outer window is considered
+  // suspended and frozen by default.
+  virtual bool IsSuspended() const = 0;
+  virtual bool IsFrozen() const = 0;
+
+  // Fire any DOM notification events related to things that happened while
+  // the window was frozen.
+  virtual nsresult FireDelayedDOMEvents() = 0;
+
+  bool IsInnerWindow() const
+  {
+    return true;
+  }
+
+  bool IsOuterWindow() const
+  {
+    return false;
+  }
+
+  /**
+   * Get the docshell in this window.
+   */
+  inline nsIDocShell *GetDocShell() const;
+
+  /**
+   * Set a new document in the window. Calling this method will in most cases
+   * create a new inner window. The call will be forewarded to the outer window,
+   * if the inner window is not the current inner window an
+   * NS_ERROR_NOT_AVAILABLE error code will be returned. This may be called with
+   * a pointer to the current document, in that case the document remains
+   * unchanged, but a new inner window will be created.
+   *
+   * aDocument must not be null.
+   */
+  virtual nsresult SetNewDocument(nsIDocument *aDocument,
+                                  nsISupports *aState,
+                                  bool aForceReuseInnerWindow) = 0;
+
+  /**
+   * Set the opener window.  aOriginalOpener is true if and only if this is the
+   * original opener for the window.  That is, it can only be true at most once
+   * during the life cycle of a window, and then only the first time
+   * SetOpenerWindow is called.  It might never be true, of course, if the
+   * window does not have an opener when it's created.
+   */
+  virtual void SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
+                               bool aOriginalOpener) = 0;
+
+  /**
+   * Call this to indicate that some node (this window, its document,
+   * or content in that document) has a paint event listener.
+   */
+  void SetHasPaintEventListeners()
+  {
+    mMayHavePaintEventListener = true;
+  }
+
+  /**
+   * Call this to check whether some node (this window, its document,
+   * or content in that document) has a paint event listener.
+   */
+  bool HasPaintEventListeners()
+  {
+    return mMayHavePaintEventListener;
+  }
+
+  /**
+   * Call this to indicate that some node (this window, its document,
+   * or content in that document) has a touch event listener.
+   */
+  void SetHasTouchEventListeners()
+  {
+    if (!mMayHaveTouchEventListener) {
+      mMayHaveTouchEventListener = true;
+      MaybeUpdateTouchState();
+    }
+  }
+
+  /**
+   * Call this to indicate that some node (this window, its document,
+   * or content in that document) has a selectionchange event listener.
+   */
+  void SetHasSelectionChangeEventListeners()
+  {
+    mMayHaveSelectionChangeEventListener = true;
+  }
+
+  /**
+   * Call this to check whether some node (this window, its document,
+   * or content in that document) has a selectionchange event listener.
+   */
+  bool HasSelectionChangeEventListeners()
+  {
+    return mMayHaveSelectionChangeEventListener;
+  }
+
+  virtual JSObject* GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) = 0;
+  virtual void CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
+                                        JS::Handle<JSObject*> aHandler) = 0;
+
+  /*
+   * Get and set the currently focused element within the document. If
+   * aNeedsFocus is true, then set mNeedsFocus to true to indicate that a
+   * document focus event is needed.
+   *
+   * DO NOT CALL EITHER OF THESE METHODS DIRECTLY. USE THE FOCUS MANAGER
+   * INSTEAD.
+   */
+  inline nsIContent* GetFocusedNode() const;
+  virtual void SetFocusedNode(nsIContent* aNode,
+                              uint32_t aFocusMethod = 0,
+                              bool aNeedsFocus = false) = 0;
+
+  /**
+   * Retrieves the method that was used to focus the current node.
+   */
+  virtual uint32_t GetFocusMethod() = 0;
+
+  /*
+   * Tells the window that it now has focus or has lost focus, based on the
+   * state of aFocus. If this method returns true, then the document loaded
+   * in the window has never received a focus event and expects to receive
+   * one. If false is returned, the document has received a focus event before
+   * and should only receive one if the window is being focused.
+   *
+   * aFocusMethod may be set to one of the focus method constants in
+   * nsIFocusManager to indicate how focus was set.
+   */
+  virtual bool TakeFocus(bool aFocus, uint32_t aFocusMethod) = 0;
+
+  /**
+   * Indicates that the window may now accept a document focus event. This
+   * should be called once a document has been loaded into the window.
+   */
+  virtual void SetReadyForFocus() = 0;
+
+  /**
+   * Whether the focused content within the window should show a focus ring.
+   */
+  virtual bool ShouldShowFocusRing() = 0;
+
+  /**
+   * Indicates that the page in the window has been hidden. This is used to
+   * reset the focus state.
+   */
+  virtual void PageHidden() = 0;
+
+  /**
+   * Instructs this window to asynchronously dispatch a hashchange event.  This
+   * method must be called on an inner window.
+   */
+  virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI,
+                                           nsIURI *aNewURI) = 0;
+
+  /**
+   * Instructs this window to synchronously dispatch a popState event.
+   */
+  virtual nsresult DispatchSyncPopState() = 0;
+
+  /**
+   * Tell this window that it should listen for sensor changes of the given
+   * type.
+   */
+  virtual void EnableDeviceSensor(uint32_t aType) = 0;
+
+  /**
+   * Tell this window that it should remove itself from sensor change
+   * notifications.
+   */
+  virtual void DisableDeviceSensor(uint32_t aType) = 0;
+
+#if defined(MOZ_WIDGET_ANDROID)
+  virtual void EnableOrientationChangeListener() = 0;
+  virtual void DisableOrientationChangeListener() = 0;
+#endif
+
+  virtual void EnableTimeChangeNotifications() = 0;
+  virtual void DisableTimeChangeNotifications() = 0;
+
+  /**
+   * Tell this window that there is an observer for gamepad input
+   *
+   * Inner windows only.
+   */
+  virtual void SetHasGamepadEventListener(bool aHasGamepad = true) = 0;
+
+  /**
+   * NOTE! This function *will* be called on multiple threads so the
+   * implementation must not do any AddRef/Release or other actions that will
+   * mutate internal state.
+   */
+  virtual uint32_t GetSerial() = 0;
+
+  /**
+   * Return the window id of this window
+   */
+  uint64_t WindowID() const { return mWindowID; }
+
+  // WebIDL-ish APIs
+  void MarkUncollectableForCCGeneration(uint32_t aGeneration)
+  {
+    mMarkedCCGeneration = aGeneration;
+  }
+
+  uint32_t GetMarkedCCGeneration()
+  {
+    return mMarkedCCGeneration;
+  }
+
+  virtual nsIDOMScreen* GetScreen() = 0;
+  virtual nsIDOMNavigator* GetNavigator() = 0;
+  virtual mozilla::dom::Location* GetLocation() = 0;
+
+  virtual nsresult GetControllers(nsIControllers** aControllers) = 0;
+
+  virtual already_AddRefed<nsIDOMWindowCollection> GetFrames() = 0;
+
+  virtual nsresult GetInnerWidth(int32_t* aWidth) = 0;
+  virtual nsresult GetInnerHeight(int32_t* aHeight) = 0;
+
+  virtual already_AddRefed<nsICSSDeclaration>
+  GetComputedStyle(mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
+                   mozilla::ErrorResult& aError) = 0;
+
+  virtual already_AddRefed<nsIDOMElement> GetFrameElement() = 0;
+
+  virtual already_AddRefed<nsIDOMOfflineResourceList> GetApplicationCache() = 0;
+
+  virtual bool GetFullScreen() = 0;
+
+  virtual nsresult Focus() = 0;
+  virtual nsresult Close() = 0;
+
+  virtual nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) = 0;
+
+  mozilla::dom::DocGroup* GetDocGroup() const;
+  virtual nsISerialEventTarget*
+  EventTargetFor(mozilla::TaskCategory aCategory) const = 0;
+
 protected:
   void CreatePerformanceObjectIfNeeded();
+
+  // Lazily instantiate an about:blank document if necessary, and if
+  // we have what it takes to do so.
+  void MaybeCreateDoc();
+
+  void SetChromeEventHandlerInternal(mozilla::dom::EventTarget* aChromeEventHandler) {
+    mChromeEventHandler = aChromeEventHandler;
+    // mParentTarget will be set when the next event is dispatched.
+    mParentTarget = nullptr;
+  }
+
+  virtual void UpdateParentTarget() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
@@ -942,6 +794,8 @@ protected:
   explicit nsPIDOMWindowOuter()
     : nsPIDOMWindow<mozIDOMWindowProxy>(nullptr)
   {}
+
+  ~nsPIDOMWindowOuter();
 
   void RefreshMediaElementsVolume();
   void RefreshMediaElementsSuspend(SuspendTypes aSuspend);
@@ -1046,6 +900,350 @@ public:
   bool HadOriginalOpener() const;
 
   mozilla::dom::TabGroup* TabGroup();
+
+  virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
+
+  virtual void ActivateOrDeactivate(bool aActivate) = 0;
+
+  /**
+   * |top| gets the root of the window hierarchy.
+   *
+   * This function does not cross chrome-content boundaries, so if this
+   * window's parent is of a different type, |top| will return this window.
+   *
+   * When script reads the top property, we run GetScriptableTop, which
+   * will not cross an <iframe mozbrowser> boundary.
+   *
+   * In contrast, C++ calls to GetTop are forwarded to GetRealTop, which
+   * ignores <iframe mozbrowser> boundaries.
+   */
+
+  virtual already_AddRefed<nsPIDOMWindowOuter> GetTop() = 0; // Outer only
+  virtual already_AddRefed<nsPIDOMWindowOuter> GetParent() = 0;
+  virtual nsPIDOMWindowOuter* GetScriptableTop() = 0;
+  virtual nsPIDOMWindowOuter* GetScriptableParent() = 0;
+  virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
+
+  /**
+   * Behavies identically to GetScriptableParent extept that it returns null
+   * if GetScriptableParent would return this window.
+   */
+  virtual nsPIDOMWindowOuter* GetScriptableParentOrNull() = 0;
+
+  virtual bool IsTopLevelWindowActive() = 0;
+
+  virtual void SetActive(bool aActive)
+  {
+    mIsActive = aActive;
+  }
+
+  virtual void SetIsBackground(bool aIsBackground) = 0;
+
+  mozilla::dom::EventTarget* GetChromeEventHandler() const
+  {
+    return mChromeEventHandler;
+  }
+
+  virtual void SetChromeEventHandler(mozilla::dom::EventTarget* aChromeEventHandler) = 0;
+
+  mozilla::dom::EventTarget* GetParentTarget()
+  {
+    if (!mParentTarget) {
+      UpdateParentTarget();
+    }
+    return mParentTarget;
+  }
+
+  virtual void MaybeUpdateTouchState() {}
+
+  nsIDocument* GetExtantDoc() const
+  {
+    return mDoc;
+  }
+  nsIURI* GetDocumentURI() const;
+  nsIURI* GetDocBaseURI() const;
+
+  nsIDocument* GetDoc()
+  {
+    if (!mDoc) {
+      MaybeCreateDoc();
+    }
+    return mDoc;
+  }
+
+  // Set the window up with an about:blank document with the current subject
+  // principal.
+  virtual void SetInitialPrincipalToSubject() = 0;
+
+  virtual PopupControlState PushPopupControlState(PopupControlState aState,
+                                                  bool aForce) const = 0;
+  virtual void PopPopupControlState(PopupControlState state) const = 0;
+  virtual PopupControlState GetPopupControlState() const = 0;
+
+  // Returns an object containing the window's state.  This also suspends
+  // all running timeouts in the window.
+  virtual already_AddRefed<nsISupports> SaveWindowState() = 0;
+
+  // Restore the window state from aState.
+  virtual nsresult RestoreWindowState(nsISupports *aState) = 0;
+
+  // Determine if the window is suspended or frozen.  Outer windows
+  // will forward this call to the inner window for convenience.  If
+  // there is no inner window then the outer window is considered
+  // suspended and frozen by default.
+  virtual bool IsSuspended() const = 0;
+  virtual bool IsFrozen() const = 0;
+
+  // Fire any DOM notification events related to things that happened while
+  // the window was frozen.
+  virtual nsresult FireDelayedDOMEvents() = 0;
+
+  bool IsInnerWindow() const
+  {
+    return false;
+  }
+
+  bool IsOuterWindow() const
+  {
+    return true;
+  }
+
+  /**
+   * Get the docshell in this window.
+   */
+  inline nsIDocShell *GetDocShell() const;
+
+  /**
+   * Set a new document in the window. Calling this method will in most cases
+   * create a new inner window. This may be called with a pointer to the current
+   * document, in that case the document remains unchanged, but a new inner
+   * window will be created.
+   *
+   * aDocument must not be null.
+   */
+  virtual nsresult SetNewDocument(nsIDocument *aDocument,
+                                  nsISupports *aState,
+                                  bool aForceReuseInnerWindow) = 0;
+
+  /**
+   * Set the opener window.  aOriginalOpener is true if and only if this is the
+   * original opener for the window.  That is, it can only be true at most once
+   * during the life cycle of a window, and then only the first time
+   * SetOpenerWindow is called.  It might never be true, of course, if the
+   * window does not have an opener when it's created.
+   */
+  virtual void SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
+                               bool aOriginalOpener) = 0;
+
+  /**
+   * Ensure the size and position of this window are up-to-date by doing
+   * a layout flush in the parent (which will in turn, do a layout flush
+   * in its parent, etc.).
+   */
+  virtual void EnsureSizeAndPositionUpToDate() = 0;
+
+  /**
+   * Callback for notifying a window about a modal dialog being
+   * opened/closed with the window as a parent.
+   */
+  virtual void EnterModalState() = 0;
+  virtual void LeaveModalState() = 0;
+
+  virtual bool CanClose() = 0;
+  virtual void ForceClose() = 0;
+
+  /**
+   * Moves the top-level window into fullscreen mode if aIsFullScreen is true,
+   * otherwise exits fullscreen.
+   */
+  virtual nsresult SetFullscreenInternal(
+    FullscreenReason aReason, bool aIsFullscreen) = 0;
+  virtual void FullscreenWillChange(bool aIsFullscreen) = 0;
+  /**
+   * This function should be called when the fullscreen state is flipped.
+   * If no widget is involved the fullscreen change, this method is called
+   * by SetFullscreenInternal, otherwise, it is called when the widget
+   * finishes its change to or from fullscreen.
+   *
+   * @param aIsFullscreen indicates whether the widget is in fullscreen.
+   */
+  virtual void FinishFullscreenChange(bool aIsFullscreen) = 0;
+
+  // XXX: These focus methods all forward to the inner, could we change
+  // consumers to call these on the inner directly?
+
+  /*
+   * Get and set the currently focused element within the document. If
+   * aNeedsFocus is true, then set mNeedsFocus to true to indicate that a
+   * document focus event is needed.
+   *
+   * DO NOT CALL EITHER OF THESE METHODS DIRECTLY. USE THE FOCUS MANAGER
+   * INSTEAD.
+   */
+  inline nsIContent* GetFocusedNode() const;
+  virtual void SetFocusedNode(nsIContent* aNode,
+                              uint32_t aFocusMethod = 0,
+                              bool aNeedsFocus = false) = 0;
+
+  /**
+   * Retrieves the method that was used to focus the current node.
+   */
+  virtual uint32_t GetFocusMethod() = 0;
+
+  /*
+   * Tells the window that it now has focus or has lost focus, based on the
+   * state of aFocus. If this method returns true, then the document loaded
+   * in the window has never received a focus event and expects to receive
+   * one. If false is returned, the document has received a focus event before
+   * and should only receive one if the window is being focused.
+   *
+   * aFocusMethod may be set to one of the focus method constants in
+   * nsIFocusManager to indicate how focus was set.
+   */
+  virtual bool TakeFocus(bool aFocus, uint32_t aFocusMethod) = 0;
+
+  /**
+   * Indicates that the window may now accept a document focus event. This
+   * should be called once a document has been loaded into the window.
+   */
+  virtual void SetReadyForFocus() = 0;
+
+  /**
+   * Whether the focused content within the window should show a focus ring.
+   */
+  virtual bool ShouldShowFocusRing() = 0;
+
+  /**
+   * Set the keyboard indicator state for accelerators and focus rings.
+   */
+  virtual void SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
+                                     UIStateChangeType aShowFocusRings) = 0;
+
+  /**
+   * Indicates that the page in the window has been hidden. This is used to
+   * reset the focus state.
+   */
+  virtual void PageHidden() = 0;
+
+  /**
+   * Set a arguments for this window. This will be set on the window
+   * right away (if there's an existing document) and it will also be
+   * installed on the window when the next document is loaded.
+   *
+   * This function serves double-duty for passing both |arguments| and
+   * |dialogArguments| back from nsWindowWatcher to nsGlobalWindow. For the
+   * latter, the array is an array of length 0 whose only element is a
+   * DialogArgumentsHolder representing the JS value passed to showModalDialog.
+   */
+  virtual nsresult SetArguments(nsIArray *aArguments) = 0;
+
+  /**
+   * NOTE! This function *will* be called on multiple threads so the
+   * implementation must not do any AddRef/Release or other actions that will
+   * mutate internal state.
+   */
+  virtual uint32_t GetSerial() = 0;
+
+  /**
+   * Return the window id of this window
+   */
+  uint64_t WindowID() const { return mWindowID; }
+
+  /**
+   * Dispatch a custom event with name aEventName targeted at this window.
+   * Returns whether the default action should be performed.
+   *
+   * Outer windows only.
+   */
+  virtual bool DispatchCustomEvent(const nsAString& aEventName) = 0;
+
+  /**
+   * Like nsIDOMWindow::Open, except that we don't navigate to the given URL.
+   *
+   * Outer windows only.
+   */
+  virtual nsresult
+  OpenNoNavigate(const nsAString& aUrl, const nsAString& aName,
+                 const nsAString& aOptions, nsPIDOMWindowOuter **_retval) = 0;
+
+  /**
+   * Fire a popup blocked event on the document.
+   */
+  virtual void
+  FirePopupBlockedEvent(nsIDocument* aDoc,
+                        nsIURI* aPopupURI,
+                        const nsAString& aPopupWindowName,
+                        const nsAString& aPopupWindowFeatures) = 0;
+
+  // WebIDL-ish APIs
+  void MarkUncollectableForCCGeneration(uint32_t aGeneration)
+  {
+    mMarkedCCGeneration = aGeneration;
+  }
+
+  uint32_t GetMarkedCCGeneration()
+  {
+    return mMarkedCCGeneration;
+  }
+
+  // XXX(nika): These feel like they should be inner window only, but they're
+  // called on the outer window.
+  virtual nsIDOMScreen* GetScreen() = 0;
+  virtual nsIDOMNavigator* GetNavigator() = 0;
+  virtual mozilla::dom::Location* GetLocation() = 0;
+
+  virtual nsresult GetPrompter(nsIPrompt** aPrompt) = 0;
+  virtual nsresult GetControllers(nsIControllers** aControllers) = 0;
+  virtual already_AddRefed<nsISelection> GetSelection() = 0;
+  virtual already_AddRefed<nsPIDOMWindowOuter> GetOpener() = 0;
+
+  virtual already_AddRefed<nsIDOMWindowCollection> GetFrames() = 0;
+
+  // aLoadInfo will be passed on through to the windowwatcher.
+  // aForceNoOpener will act just like a "noopener" feature in aOptions except
+  //                will not affect any other window features.
+  virtual nsresult Open(const nsAString& aUrl, const nsAString& aName,
+                        const nsAString& aOptions,
+                        nsIDocShellLoadInfo* aLoadInfo,
+                        bool aForceNoOpener,
+                        nsPIDOMWindowOuter **_retval) = 0;
+  virtual nsresult OpenDialog(const nsAString& aUrl, const nsAString& aName,
+                              const nsAString& aOptions,
+                              nsISupports* aExtraArgument,
+                              nsPIDOMWindowOuter** _retval) = 0;
+
+  virtual nsresult GetInnerWidth(int32_t* aWidth) = 0;
+  virtual nsresult GetInnerHeight(int32_t* aHeight) = 0;
+
+  virtual already_AddRefed<nsIDOMElement> GetFrameElement() = 0;
+
+  virtual bool Closed() = 0;
+  virtual bool GetFullScreen() = 0;
+  virtual nsresult SetFullScreen(bool aFullScreen) = 0;
+
+  virtual nsresult Focus() = 0;
+  virtual nsresult Close() = 0;
+
+  virtual nsresult MoveBy(int32_t aXDif, int32_t aYDif) = 0;
+
+  virtual nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) = 0;
+
+  mozilla::dom::DocGroup* GetDocGroup() const;
+  virtual nsISerialEventTarget*
+  EventTargetFor(mozilla::TaskCategory aCategory) const = 0;
+
+protected:
+  // Lazily instantiate an about:blank document if necessary, and if
+  // we have what it takes to do so.
+  void MaybeCreateDoc();
+
+  void SetChromeEventHandlerInternal(mozilla::dom::EventTarget* aChromeEventHandler) {
+    mChromeEventHandler = aChromeEventHandler;
+    // mParentTarget will be set when the next event is dispatched.
+    mParentTarget = nullptr;
+  }
+
+  virtual void UpdateParentTarget() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)

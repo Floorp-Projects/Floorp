@@ -348,21 +348,9 @@ public:
   virtual nsPIDOMWindowOuter* GetPrivateRoot() override;
 
   // Outer windows only.
-  virtual void ActivateOrDeactivate(bool aActivate) override;
-  virtual void SetActive(bool aActive) override;
   virtual bool IsTopLevelWindowActive() override;
-  virtual void SetIsBackground(bool aIsBackground) override;
-  virtual void SetChromeEventHandler(mozilla::dom::EventTarget* aChromeEventHandler) override;
 
-  // Outer windows only.
-  virtual void SetInitialPrincipalToSubject() override;
-
-  virtual PopupControlState PushPopupControlState(PopupControlState state, bool aForce) const override;
-  virtual void PopPopupControlState(PopupControlState state) const override;
   virtual PopupControlState GetPopupControlState() const override;
-
-  virtual already_AddRefed<nsISupports> SaveWindowState() override;
-  virtual nsresult RestoreWindowState(nsISupports *aState) override;
 
   void Suspend();
   void Resume();
@@ -383,32 +371,13 @@ public:
   virtual void SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
                                bool aOriginalOpener) override;
 
-  // Outer windows only.
-  virtual void EnsureSizeAndPositionUpToDate() override;
-
-  virtual void EnterModalState() override;
-  virtual void LeaveModalState() override;
-
-  // Outer windows only.
-  virtual bool CanClose() override;
-  virtual void ForceClose() override;
-
   virtual void MaybeUpdateTouchState() override;
-
-  // Outer windows only.
-  virtual bool DispatchCustomEvent(const nsAString& aEventName) override;
 
   // Inner windows only.
   void RefreshCompartmentPrincipal();
 
   // For accessing protected field mFullScreen
   friend class FullscreenTransitionTask;
-
-  // Outer windows only.
-  virtual nsresult SetFullscreenInternal(
-    FullscreenReason aReason, bool aIsFullscreen) override final;
-  virtual void FullscreenWillChange(bool aIsFullscreen) override final;
-  virtual void FinishFullscreenChange(bool aIsFullscreen) override final;
 
   // Inner windows only.
   virtual void SetHasGamepadEventListener(bool aHasGamepad = true) override;
@@ -444,7 +413,6 @@ public:
   void GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aNames,
                            bool aEnumerableOnly, mozilla::ErrorResult& aRv);
 
-  already_AddRefed<nsPIDOMWindowOuter> GetTop() override;
   nsPIDOMWindowOuter* GetScriptableTop() override;
   inline nsGlobalWindowOuter *GetTopInternal();
 
@@ -538,8 +506,6 @@ public:
   virtual void EnableTimeChangeNotifications() override;
   virtual void DisableTimeChangeNotifications() override;
 
-  virtual nsresult SetArguments(nsIArray* aArguments) override;
-
   bool IsClosedOrClosing() {
     return (mIsClosed ||
             mInClose ||
@@ -552,12 +518,6 @@ public:
   {
     return mCleanedUp;
   }
-
-  virtual void
-  FirePopupBlockedEvent(nsIDocument* aDoc,
-                        nsIURI* aPopupURI,
-                        const nsAString& aPopupWindowName,
-                        const nsAString& aPopupWindowFeatures) override;
 
   virtual uint32_t GetSerial() override {
     return mSerial;
@@ -707,7 +667,6 @@ public:
   void Close(mozilla::ErrorResult& aError);
   nsresult Close() override;
   bool GetClosed(mozilla::ErrorResult& aError);
-  bool Closed() override;
   void Stop(mozilla::ErrorResult& aError);
   void Focus(mozilla::ErrorResult& aError);
   nsresult Focus() override;
@@ -716,8 +675,6 @@ public:
   already_AddRefed<nsPIDOMWindowOuter> GetFrames(mozilla::ErrorResult& aError);
   uint32_t Length();
   already_AddRefed<nsPIDOMWindowOuter> GetTop(mozilla::ErrorResult& aError);
-
-  nsresult GetPrompter(nsIPrompt** aPrompt) override;
 protected:
   explicit nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow);
   // Initializes the mWasOffline member variable
@@ -726,11 +683,9 @@ public:
   nsPIDOMWindowOuter* GetOpenerWindow(mozilla::ErrorResult& aError);
   void GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
                  mozilla::ErrorResult& aError);
-  already_AddRefed<nsPIDOMWindowOuter> GetOpener() override;
   void SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
                  mozilla::ErrorResult& aError);
   already_AddRefed<nsPIDOMWindowOuter> GetParent(mozilla::ErrorResult& aError);
-  already_AddRefed<nsPIDOMWindowOuter> GetParent() override;
   nsPIDOMWindowOuter* GetScriptableParent() override;
   nsPIDOMWindowOuter* GetScriptableParentOrNull() override;
   mozilla::dom::Element*
@@ -742,11 +697,6 @@ public:
        const nsAString& aName,
        const nsAString& aOptions,
        mozilla::ErrorResult& aError);
-  nsresult Open(const nsAString& aUrl, const nsAString& aName,
-                const nsAString& aOptions,
-                nsIDocShellLoadInfo* aLoadInfo,
-                bool aForceNoOpener,
-                nsPIDOMWindowOuter **_retval) override;
   mozilla::dom::Navigator* Navigator();
   nsIDOMNavigator* GetNavigator() override;
   nsIDOMOfflineResourceList* GetApplicationCache(mozilla::ErrorResult& aError);
@@ -836,7 +786,6 @@ public:
   mozilla::dom::Storage*
   GetLocalStorage(mozilla::ErrorResult& aError);
   mozilla::dom::Selection* GetSelection(mozilla::ErrorResult& aError);
-  already_AddRefed<nsISelection> GetSelection() override;
   mozilla::dom::IDBFactory* GetIndexedDB(mozilla::ErrorResult& aError);
   already_AddRefed<nsICSSDeclaration>
     GetComputedStyle(mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
@@ -853,7 +802,6 @@ public:
   void MoveBy(int32_t aXDif, int32_t aYDif,
               mozilla::dom::CallerType aCallerType,
               mozilla::ErrorResult& aError);
-  nsresult MoveBy(int32_t aXDif, int32_t aYDif) override;
   void ResizeTo(int32_t aWidth, int32_t aHeight,
                 mozilla::dom::CallerType aCallerType,
                 mozilla::ErrorResult& aError);
@@ -956,7 +904,6 @@ public:
   bool GetFullScreen(mozilla::ErrorResult& aError);
   bool GetFullScreen() override;
   void SetFullScreen(bool aFullScreen, mozilla::ErrorResult& aError);
-  nsresult SetFullScreen(bool aFullScreen) override;
   void Back(mozilla::ErrorResult& aError);
   void Forward(mozilla::ErrorResult& aError);
   void Home(nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& aError);
@@ -976,10 +923,6 @@ public:
              const nsAString& aOptions,
              const mozilla::dom::Sequence<JS::Value>& aExtraArgument,
              mozilla::ErrorResult& aError);
-  nsresult OpenDialog(const nsAString& aUrl, const nsAString& aName,
-                      const nsAString& aOptions,
-                      nsISupports* aExtraArgument,
-                      nsPIDOMWindowOuter** _retval) override;
   nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) override;
 
   void GetContent(JSContext* aCx,
@@ -1181,16 +1124,6 @@ public:
   // popup tracking
   bool IsPopupSpamWindow();
 
-protected:
-  // Window Control Functions
-
-  // Outer windows only.
-  virtual nsresult
-  OpenNoNavigate(const nsAString& aUrl,
-                 const nsAString& aName,
-                 const nsAString& aOptions,
-                 nsPIDOMWindowOuter** _retval) override;
-
 private:
   template<typename Method>
   void CallOnChildren(Method aMethod);
@@ -1255,9 +1188,6 @@ public:
   virtual uint32_t GetFocusMethod() override;
 
   virtual bool ShouldShowFocusRing() override;
-
-  virtual void SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
-                                     UIStateChangeType aShowFocusRings) override;
 
   // Inner windows only.
   void UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent);

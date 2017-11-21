@@ -406,9 +406,6 @@ public:
                            nsIWidget* aWidget, nsIScreen* aScreen);
   bool FullScreen() const;
 
-  // Inner windows only.
-  virtual void SetHasGamepadEventListener(bool aHasGamepad = true) override;
-
   using EventTarget::EventListenerAdded;
   virtual void EventListenerAdded(nsAtom* aType) override;
   using EventTarget::EventListenerRemoved;
@@ -505,30 +502,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsGlobalWindowOuter,
                                                                    nsIDOMEventTarget)
 
-  virtual JSObject*
-    GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) override;
-
-  virtual void
-    CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                             JS::Handle<JSObject*> aHandler) override;
-
   virtual bool TakeFocus(bool aFocus, uint32_t aFocusMethod) override;
   virtual void SetReadyForFocus() override;
   virtual void PageHidden() override;
-  virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI) override;
-  virtual nsresult DispatchSyncPopState() override;
-
-  // Inner windows only.
-  virtual void EnableDeviceSensor(uint32_t aType) override;
-  virtual void DisableDeviceSensor(uint32_t aType) override;
-
-#if defined(MOZ_WIDGET_ANDROID)
-  virtual void EnableOrientationChangeListener() override;
-  virtual void DisableOrientationChangeListener() override;
-#endif
-
-  virtual void EnableTimeChangeNotifications() override;
-  virtual void DisableTimeChangeNotifications() override;
 
   virtual nsresult SetArguments(nsIArray* aArguments) override;
 
@@ -641,7 +617,6 @@ public:
   void GetNameOuter(nsAString& aName);
   void SetNameOuter(const nsAString& aName, mozilla::ErrorResult& aError);
   mozilla::dom::Location* GetLocation() override;
-  mozilla::dom::CustomElementRegistry* CustomElements() override;
   void GetStatusOuter(nsAString& aStatus);
   void SetStatusOuter(const nsAString& aStatus);
   void CloseOuter(bool aTrustedCaller);
@@ -686,7 +661,6 @@ public:
                 bool aForceNoOpener,
                 nsPIDOMWindowOuter **_retval) override;
   nsIDOMNavigator* GetNavigator() override;
-  already_AddRefed<nsIDOMOfflineResourceList> GetApplicationCache() override;
 
 #if defined(MOZ_WIDGET_ANDROID)
   int16_t Orientation(mozilla::dom::CallerType aCallerType) const;
@@ -711,9 +685,6 @@ public:
   void PrintOuter(mozilla::ErrorResult& aError);
   mozilla::dom::Selection* GetSelectionOuter();
   already_AddRefed<nsISelection> GetSelection() override;
-  already_AddRefed<nsICSSDeclaration>
-    GetComputedStyle(mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
-                     mozilla::ErrorResult& aError) override;
   already_AddRefed<mozilla::dom::MediaQueryList> MatchMediaOuter(
     const nsAString& aQuery,
     mozilla::dom::CallerType aCallerType);
@@ -996,9 +967,6 @@ private:
   void ReportLargeAllocStatus();
 
 public:
-  virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserverPtr) override;
-  virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserverPtr) override;
-
   void FlushPendingNotifications(mozilla::FlushType aType);
 
   // Outer windows only.
