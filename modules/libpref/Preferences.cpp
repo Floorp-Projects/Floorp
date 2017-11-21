@@ -124,21 +124,43 @@ static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
 // Actually, 4kb should be enough for everyone.
 static const uint32_t MAX_ADVISABLE_PREF_LENGTH = 4 * 1024;
 
-union PrefValue {
-  const char* mStringVal;
-  int32_t mIntVal;
-  bool mBoolVal;
-};
-
-// Preference flags, including the native type of the preference. Changing any
-// of these values will require modifying the code inside of PrefTypeFlags
-// class.
 enum class PrefType
 {
   Invalid = 0,
   String = 1,
   Int = 2,
   Bool = 3,
+};
+
+union PrefValue {
+  const char* mStringVal;
+  int32_t mIntVal;
+  bool mBoolVal;
+
+  bool Equals(PrefType aType, PrefValue aValue)
+  {
+    switch (aType) {
+      case PrefType::String: {
+        if (mStringVal && aValue.mStringVal) {
+          return strcmp(mStringVal, aValue.mStringVal) == 0;
+        }
+        if (!mStringVal && !aValue.mStringVal) {
+          return true;
+        }
+        return false;
+      }
+
+      case PrefType::Int:
+        return mIntVal == aValue.mIntVal;
+
+      case PrefType::Bool:
+        return mBoolVal == aValue.mBoolVal;
+
+      case PrefType::Invalid:
+      default:
+        MOZ_CRASH("Unhandled enum value");
+    }
+  }
 };
 
 #ifdef DEBUG
@@ -159,6 +181,64 @@ PrefTypeToString(PrefType aType)
   }
 }
 #endif
+
+// Assign to aResult a quoted, escaped copy of aOriginal.
+static void
+StrEscape(const char* aOriginal, nsCString& aResult)
+{
+  if (aOriginal == nullptr) {
+    aResult.AssignLiteral("\"\"");
+    return;
+  }
+
+  // JavaScript does not allow quotes, slashes, or line terminators inside
+  // strings so we must escape them. ECMAScript defines four line terminators,
+  // but we're only worrying about \r and \n here.  We currently feed our pref
+  // script to the JS interpreter as Latin-1 so  we won't encounter \u2028
+  // (line separator) or \u2029 (paragraph separator).
+  //
+  // WARNING: There are hints that we may be moving to storing prefs as utf8.
+  // If we ever feed them to the JS compiler as UTF8 then we'll have to worry
+  // about the multibyte sequences that would be interpreted as \u2028 and
+  // \u2029.
+  const char* p;
+
+  aResult.Assign('"');
+
+  // Paranoid worst case all slashes will free quickly.
+  for (p = aOriginal; *p; ++p) {
+    switch (*p) {
+      case '\n':
+        aResult.AppendLiteral("\\n");
+        break;
+
+      case '\r':
+        aResult.AppendLiteral("\\r");
+        break;
+
+      case '\\':
+        aResult.AppendLiteral("\\\\");
+        break;
+
+      case '\"':
+        aResult.AppendLiteral("\\\"");
+        break;
+
+      default:
+        aResult.Append(*p);
+        break;
+    }
+  }
+
+  aResult.Append('"');
+}
+
+enum
+{
+  kPrefSetDefault = 1,
+  kPrefForceSet = 2,
+  kPrefSticky = 4,
+};
 
 static ArenaAllocator<8192, 1> gPrefNameArena;
 
@@ -230,6 +310,69 @@ public:
     // gPrefNameArena.
     pref->mName = nullptr;
     memset(aEntry, 0, aTable->EntrySize());
+  }
+
+  nsresult GetBoolValue(PrefValueKind aKind, bool* aResult)
+  {
+    if (!IsTypeBool()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (aKind == PrefValueKind::Default || IsLocked() || !HasUserValue()) {
+      // Do we have a default?
+      if (!HasDefaultValue()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      *aResult = mDefaultValue.mBoolVal;
+    } else {
+      *aResult = mUserValue.mBoolVal;
+    }
+
+    return NS_OK;
+  }
+
+  nsresult GetIntValue(PrefValueKind aKind, int32_t* aResult)
+  {
+    if (!IsTypeInt()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (aKind == PrefValueKind::Default || IsLocked() || !HasUserValue()) {
+      // Do we have a default?
+      if (!HasDefaultValue()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      *aResult = mDefaultValue.mIntVal;
+    } else {
+      *aResult = mUserValue.mIntVal;
+    }
+
+    return NS_OK;
+  }
+
+  nsresult GetCStringValue(PrefValueKind aKind, nsACString& aResult)
+  {
+    if (!IsTypeString()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    const char* stringVal = nullptr;
+    if (aKind == PrefValueKind::Default || IsLocked() || !HasUserValue()) {
+      // Do we have a default?
+      if (!HasDefaultValue()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      stringVal = mDefaultValue.mStringVal;
+    } else {
+      stringVal = mUserValue.mStringVal;
+    }
+
+    if (!stringVal) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    aResult = stringVal;
+    return NS_OK;
   }
 
 private:
@@ -307,6 +450,7 @@ public:
     return true;
   }
 
+private:
   // Overwrite the type and value of an existing preference. Caller must ensure
   // that they are not changing the type of a preference that has a default
   // value.
@@ -327,6 +471,76 @@ public:
     } else {
       *value = aNewValue;
     }
+  }
+
+public:
+  void SetValue(PrefType aType,
+                PrefValue aValue,
+                uint32_t aFlags,
+                bool* aValueChanged,
+                bool* aDirty)
+  {
+    if (aFlags & kPrefSetDefault) {
+      if (!IsLocked()) {
+        // ?? change of semantics?
+        if (!HasDefaultValue() || !mDefaultValue.Equals(aType, aValue)) {
+          ReplaceValue(PrefValueKind::Default, aType, aValue);
+          SetHasDefaultValue(true);
+          if (aFlags & kPrefSticky) {
+            SetIsSticky(true);
+          }
+          if (!HasUserValue()) {
+            *aValueChanged = true;
+          }
+        }
+        // What if we change the default to be the same as the user value?
+        // Should we clear the user value?
+      }
+    } else {
+      // If new value is same as the default value and it's not a "sticky"
+      // pref, then un-set the user value. Otherwise, set the user value only
+      // if it has changed.
+      if (HasDefaultValue() && !IsSticky() &&
+          mDefaultValue.Equals(aType, aValue) && !(aFlags & kPrefForceSet)) {
+        if (HasUserValue()) {
+          // XXX should we free a user-set string value if there is one?
+          SetHasUserValue(false);
+          if (!IsLocked()) {
+            *aDirty = true;
+            *aValueChanged = true;
+          }
+        }
+      } else if (!HasUserValue() || !IsType(aType) ||
+                 !mUserValue.Equals(aType, aValue)) {
+        ReplaceValue(PrefValueKind::User, aType, aValue);
+        SetHasUserValue(true);
+        if (!IsLocked()) {
+          *aDirty = true;
+          *aValueChanged = true;
+        }
+      }
+    }
+  }
+
+  // Returns false if this pref doesn't have a user value worth saving.
+  bool UserValueToStringForSaving(nsCString& aStr)
+  {
+    if (HasUserValue() && (!HasDefaultValue() || IsSticky() ||
+                           !mDefaultValue.Equals(Type(), mUserValue))) {
+      if (IsTypeString()) {
+        StrEscape(mUserValue.mStringVal, aStr);
+
+      } else if (IsTypeInt()) {
+        aStr.AppendInt(mUserValue.mIntVal);
+
+      } else if (IsTypeBool()) {
+        aStr = mUserValue.mBoolVal ? "true" : "false";
+      }
+      return true;
+    }
+
+    // Do not save default prefs that haven't changed.
+    return false;
   }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
@@ -356,7 +570,6 @@ private:
 
   const char* mName;
 
-public:
   PrefValue mDefaultValue;
   PrefValue mUserValue;
 };
@@ -400,71 +613,10 @@ static PLDHashTableOps pref_HashTableOps = {
 static PrefHashEntry*
 pref_HashTableLookup(const char* aPrefName);
 
-static bool
-pref_ValueChanged(PrefValue aOldValue, PrefValue aNewValue, PrefType aType);
-
 static nsresult
 pref_DoCallback(const char* aChangedPref);
 
-enum
-{
-  kPrefSetDefault = 1,
-  kPrefForceSet = 2,
-  kPrefSticky = 4,
-};
-
 #define PREF_HASHTABLE_INITIAL_LENGTH 1024
-
-// Assign to aResult a quoted, escaped copy of aOriginal.
-static void
-StrEscape(const char* aOriginal, nsCString& aResult)
-{
-  if (aOriginal == nullptr) {
-    aResult.AssignLiteral("\"\"");
-    return;
-  }
-
-  // JavaScript does not allow quotes, slashes, or line terminators inside
-  // strings so we must escape them. ECMAScript defines four line terminators,
-  // but we're only worrying about \r and \n here.  We currently feed our pref
-  // script to the JS interpreter as Latin-1 so  we won't encounter \u2028
-  // (line separator) or \u2029 (paragraph separator).
-  //
-  // WARNING: There are hints that we may be moving to storing prefs as utf8.
-  // If we ever feed them to the JS compiler as UTF8 then we'll have to worry
-  // about the multibyte sequences that would be interpreted as \u2028 and
-  // \u2029.
-  const char* p;
-
-  aResult.Assign('"');
-
-  // Paranoid worst case all slashes will free quickly.
-  for (p = aOriginal; *p; ++p) {
-    switch (*p) {
-      case '\n':
-        aResult.AppendLiteral("\\n");
-        break;
-
-      case '\r':
-        aResult.AppendLiteral("\\r");
-        break;
-
-      case '\\':
-        aResult.AppendLiteral("\\\\");
-        break;
-
-      case '\"':
-        aResult.AppendLiteral("\\\"");
-        break;
-
-      default:
-        aResult.Append(*p);
-        break;
-    }
-  }
-
-  aResult.Append('"');
-}
 
 static PrefSaveData
 pref_savePrefs()
@@ -474,34 +626,17 @@ pref_savePrefs()
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
-    // where we're getting our pref from
-    PrefValue* sourceValue;
-
-    if (pref->HasUserValue() &&
-        (pref_ValueChanged(
-           pref->mDefaultValue, pref->mUserValue, pref->Type()) ||
-         !pref->HasDefaultValue() || pref->IsSticky())) {
-      sourceValue = &pref->mUserValue;
-    } else {
-      // do not save default prefs that haven't changed
+    nsAutoCString prefValueStr;
+    if (!pref->UserValueToStringForSaving(prefValueStr)) {
       continue;
     }
 
-    nsAutoCString prefName;
-    StrEscape(pref->Name(), prefName);
+    nsAutoCString prefNameStr;
+    StrEscape(pref->Name(), prefNameStr);
 
-    nsAutoCString prefValue;
-    if (pref->IsTypeString()) {
-      StrEscape(sourceValue->mStringVal, prefValue);
+    nsPrintfCString str(
+      "user_pref(%s, %s);", prefNameStr.get(), prefValueStr.get());
 
-    } else if (pref->IsTypeInt()) {
-      prefValue.AppendInt(sourceValue->mIntVal);
-
-    } else if (pref->IsTypeBool()) {
-      prefValue = sourceValue->mBoolVal ? "true" : "false";
-    }
-
-    nsPrintfCString str("user_pref(%s, %s);", prefName.get(), prefValue.get());
     savedPrefs.AppendElement(str);
   }
 
@@ -603,37 +738,9 @@ PREF_LockPref(const char* aPrefName, bool aLockIt)
   return NS_OK;
 }
 
-//
-// Hash table functions
-//
-
-static bool
-pref_ValueChanged(PrefValue aOldValue, PrefValue aNewValue, PrefType aType)
-{
-  bool changed = true;
-  switch (aType) {
-    case PrefType::String:
-      if (aOldValue.mStringVal && aNewValue.mStringVal) {
-        changed = (strcmp(aOldValue.mStringVal, aNewValue.mStringVal) != 0);
-      }
-      break;
-
-    case PrefType::Int:
-      changed = aOldValue.mIntVal != aNewValue.mIntVal;
-      break;
-
-    case PrefType::Bool:
-      changed = aOldValue.mBoolVal != aNewValue.mBoolVal;
-      break;
-
-    case PrefType::Invalid:
-    default:
-      changed = false;
-      break;
-  }
-
-  return changed;
-}
+  //
+  // Hash table functions
+  //
 
 #ifdef DEBUG
 
@@ -740,50 +847,12 @@ pref_SetPref(const char* aPrefName,
     return NS_ERROR_UNEXPECTED;
   }
 
-  bool valueChanged = false;
-  if (aFlags & kPrefSetDefault) {
-    if (!pref->IsLocked()) {
-      // ?? change of semantics?
-      if (pref_ValueChanged(pref->mDefaultValue, aValue, aType) ||
-          !pref->HasDefaultValue()) {
-        pref->ReplaceValue(PrefValueKind::Default, aType, aValue);
-        pref->SetHasDefaultValue(true);
-        if (aFlags & kPrefSticky) {
-          pref->SetIsSticky(true);
-        }
-        if (!pref->HasUserValue()) {
-          valueChanged = true;
-        }
-      }
-      // What if we change the default to be the same as the user value?
-      // Should we clear the user value?
-    }
-  } else {
-    // If new value is same as the default value and it's not a "sticky" pref,
-    // then un-set the user value. Otherwise, set the user value only if it has
-    // changed.
-    if (pref->HasDefaultValue() && !pref->IsSticky() &&
-        !pref_ValueChanged(pref->mDefaultValue, aValue, aType) &&
-        !(aFlags & kPrefForceSet)) {
-      if (pref->HasUserValue()) {
-        // XXX should we free a user-set string value if there is one?
-        pref->SetHasUserValue(false);
-        if (!pref->IsLocked()) {
-          Preferences::HandleDirty();
-          valueChanged = true;
-        }
-      }
-    } else if (!pref->HasUserValue() || !pref->IsType(aType) ||
-               pref_ValueChanged(pref->mUserValue, aValue, aType)) {
-      pref->ReplaceValue(PrefValueKind::User, aType, aValue);
-      pref->SetHasUserValue(true);
-      if (!pref->IsLocked()) {
-        Preferences::HandleDirty();
-        valueChanged = true;
-      }
-    }
-  }
+  bool valueChanged = false, handleDirty = false;
+  pref->SetValue(aType, aValue, aFlags, &valueChanged, &handleDirty);
 
+  if (handleDirty) {
+    Preferences::HandleDirty();
+  }
   if (valueChanged) {
     return pref_DoCallback(aPrefName);
   }
@@ -4442,23 +4511,7 @@ Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->IsTypeBool()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aKind == PrefValueKind::Default || pref->IsLocked() ||
-      !pref->HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->HasDefaultValue()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    *aResult = pref->mDefaultValue.mBoolVal;
-  } else {
-    *aResult = pref->mUserValue.mBoolVal;
-  }
-
-  return NS_OK;
+  return pref ? pref->GetBoolValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult
@@ -4470,23 +4523,7 @@ Preferences::GetInt(const char* aPrefName,
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->IsTypeInt()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aKind == PrefValueKind::Default || pref->IsLocked() ||
-      !pref->HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->HasDefaultValue()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    *aResult = pref->mDefaultValue.mIntVal;
-  } else {
-    *aResult = pref->mUserValue.mIntVal;
-  }
-
-  return NS_OK;
+  return pref ? pref->GetIntValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult
@@ -4514,29 +4551,7 @@ Preferences::GetCString(const char* aPrefName,
   aResult.SetIsVoid(true);
 
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref || !pref->IsTypeString()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  const char* stringVal = nullptr;
-  if (aKind == PrefValueKind::Default || pref->IsLocked() ||
-      !pref->HasUserValue()) {
-
-    // Do we have a default?
-    if (!pref->HasDefaultValue()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    stringVal = pref->mDefaultValue.mStringVal;
-  } else {
-    stringVal = pref->mUserValue.mStringVal;
-  }
-
-  if (!stringVal) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  aResult = stringVal;
-  return NS_OK;
+  return pref ? pref->GetCStringValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult

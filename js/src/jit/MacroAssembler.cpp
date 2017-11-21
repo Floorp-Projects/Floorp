@@ -1671,21 +1671,17 @@ MacroAssembler::assertRectifierFrameParentType(Register frameType)
 }
 
 void
-MacroAssembler::loadJitCodeRaw(Register func, Register dest, Label* failure)
+MacroAssembler::loadJitCodeRaw(Register func, Register dest)
 {
     loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
-    loadPtr(Address(dest, JSScript::offsetOfBaselineOrIonRaw()), dest);
-    if (failure)
-        branchTestPtr(Assembler::Zero, dest, dest, failure);
+    loadPtr(Address(dest, JSScript::offsetOfJitCodeRaw()), dest);
 }
 
 void
-MacroAssembler::loadJitCodeNoArgCheck(Register func, Register dest, Label* failure)
+MacroAssembler::loadJitCodeNoArgCheck(Register func, Register dest)
 {
     loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
-    loadPtr(Address(dest, JSScript::offsetOfBaselineOrIonSkipArgCheck()), dest);
-    if (failure)
-        branchTestPtr(Assembler::Zero, dest, dest, failure);
+    loadPtr(Address(dest, JSScript::offsetOfJitCodeSkipArgCheck()), dest);
 }
 
 void

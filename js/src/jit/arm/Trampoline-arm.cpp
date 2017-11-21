@@ -527,9 +527,8 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
     masm.ma_push(r6); // frame descriptor.
 
     // Call the target function.
-    // Note that this code assumes the function is JITted.
     masm.andPtr(Imm32(CalleeTokenMask), r1);
-    masm.loadJitCodeRaw(r1, r3, nullptr);
+    masm.loadJitCodeRaw(r1, r3);
     argumentsRectifierReturnOffset_ = masm.callJitNoProfiler(r3);
 
     // arg1
