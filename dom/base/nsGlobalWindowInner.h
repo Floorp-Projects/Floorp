@@ -192,27 +192,17 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
   CycleCollectionNoteChild(aCallback, aField.mIdleObserver.get(), aName, aFlags);
 }
 
-// NOTE: Currently this file, despite being named mozilla/dom/Window.h, exports
-// the class nsGlobalWindowInner. It will be renamed in the future to
-// mozilla::dom::Window.
-
 //*****************************************************************************
-// nsGlobalWindow: Global Object for Scripting
+// nsGlobalWindowInner: Global Object for Scripting
 //*****************************************************************************
-// Beware that all scriptable interfaces implemented by
-// nsGlobalWindow will be reachable from JS, if you make this class
-// implement new interfaces you better know what you're
-// doing. Security wise this is very sensitive code. --
-// jst@netscape.com
 
-// nsGlobalWindow inherits PRCList for maintaining a list of all inner
-// windows still in memory for any given outer window. This list is
-// needed to ensure that mOuterWindow doesn't end up dangling. The
-// nature of PRCList means that the window itself is always in the
-// list, and an outer window's list will also contain all inner window
-// objects that are still in memory (and in reality all inner window
-// object's lists also contain its outer and all other inner windows
-// belonging to the same outer window, but that's an unimportant
+// nsGlobalWindowInner inherits PRCList for maintaining a list of all inner
+// windows still in memory for any given outer window. This list is needed to
+// ensure that mOuterWindow doesn't end up dangling. The nature of PRCList means
+// that the window itself is always in the list, and an outer window's list will
+// also contain all inner window objects that are still in memory (and in
+// reality all inner window object's lists also contain its outer and all other
+// inner windows belonging to the same outer window, but that's an unimportant
 // side effect of inheriting PRCList).
 
 class nsGlobalWindowInner : public mozilla::dom::EventTarget,
