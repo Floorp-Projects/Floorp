@@ -353,6 +353,9 @@ static FILE                *gDumpFile                         = nullptr;
 
 nsGlobalWindowInner::InnerWindowByIdTable *nsGlobalWindowInner::sInnerWindowsById = nullptr;
 
+bool nsGlobalWindowInner::sDragServiceDisabled = false;
+bool nsGlobalWindowInner::sMouseDown = false;
+
 /**
  * An indirect observer object that means we don't have to implement nsIObserver
  * on nsGlobalWindow, where any script could see it.
@@ -1901,15 +1904,15 @@ nsGlobalWindowInner::GetEventTargetParent(EventChainPreVisitor& aVisitor)
       mIsHandlingResizeEvent = true;
     }
   } else if (msg == eMouseDown && aVisitor.mEvent->IsTrusted()) {
-    gMouseDown = true;
+    sMouseDown = true;
   } else if ((msg == eMouseUp || msg == eDragEnd) &&
              aVisitor.mEvent->IsTrusted()) {
-    gMouseDown = false;
-    if (gDragServiceDisabled) {
+    sMouseDown = false;
+    if (sDragServiceDisabled) {
       nsCOMPtr<nsIDragService> ds =
         do_GetService("@mozilla.org/widget/dragservice;1");
       if (ds) {
-        gDragServiceDisabled = false;
+        sDragServiceDisabled = false;
         ds->Unsuppress();
       }
     }
