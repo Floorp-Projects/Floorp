@@ -3220,22 +3220,22 @@ nsStyleImageLayers::FillAllLayers(uint32_t aMaxItemCount)
 
   uint32_t fillCount = mImageCount;
   FillImageLayerList(mLayers,
-                     &nsStyleImageLayers::Layer::mImage,
+                     &Layer::mImage,
                      mImageCount, fillCount);
   FillImageLayerList(mLayers,
-                     &nsStyleImageLayers::Layer::mRepeat,
+                     &Layer::mRepeat,
                      mRepeatCount, fillCount);
   FillImageLayerList(mLayers,
-                     &nsStyleImageLayers::Layer::mAttachment,
+                     &Layer::mAttachment,
                      mAttachmentCount, fillCount);
   FillImageLayerList(mLayers,
-                     &nsStyleImageLayers::Layer::mClip,
+                     &Layer::mClip,
                      mClipCount, fillCount);
   FillImageLayerList(mLayers,
-                     &nsStyleImageLayers::Layer::mBlendMode,
+                     &Layer::mBlendMode,
                      mBlendModeCount, fillCount);
   FillImageLayerList(mLayers,
-                     &nsStyleImageLayers::Layer::mOrigin,
+                     &Layer::mOrigin,
                      mOriginCount, fillCount);
   FillImageLayerPositionCoordList(mLayers,
                                   &Position::mXPosition,
@@ -3244,13 +3244,13 @@ nsStyleImageLayers::FillAllLayers(uint32_t aMaxItemCount)
                                   &Position::mYPosition,
                                   mPositionYCount, fillCount);
   FillImageLayerList(mLayers,
-                     &nsStyleImageLayers::Layer::mSize,
+                     &Layer::mSize,
                      mSizeCount, fillCount);
   FillImageLayerList(mLayers,
-                     &nsStyleImageLayers::Layer::mMaskMode,
+                     &Layer::mMaskMode,
                      mMaskModeCount, fillCount);
   FillImageLayerList(mLayers,
-                     &nsStyleImageLayers::Layer::mComposite,
+                     &Layer::mComposite,
                      mCompositeCount, fillCount);
 }
 
