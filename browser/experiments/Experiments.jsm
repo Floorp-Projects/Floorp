@@ -157,7 +157,7 @@ function addonInstallForURL(url, hash) {
 // Returns a promise that is resolved with an Array<Addon> of the installed
 // experiment addons.
 function installedExperimentAddons() {
-  return AddonManager.getActiveAddons(["experiment"]).then(addons => {
+  return AddonManager.getActiveAddons(["experiment"]).then(({addons}) => {
     return addons.filter(a => !a.appDisabled);
   });
 }

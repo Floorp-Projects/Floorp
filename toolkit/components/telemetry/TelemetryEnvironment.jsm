@@ -513,7 +513,7 @@ EnvironmentAddonBuilder.prototype = {
         // Gather initial addons details
         await this._updateAddons();
 
-        if (!AddonManagerPrivate.isDBLoaded()) {
+        if (!this._environment._addonsAreFull) {
           // The addon database has not been loaded, so listen for the event
           // triggered by the AddonManager when it is loaded so we can
           // immediately gather full data at that time.
@@ -654,9 +654,9 @@ EnvironmentAddonBuilder.prototype = {
    */
   async _getActiveAddons() {
     // Request addons, asynchronously.
-    let allAddons = await AddonManager.getActiveAddons(["extension", "service"]);
+    let {addons: allAddons, fullData} = await AddonManager.getActiveAddons(["extension", "service"]);
 
-    let isDBLoaded = AddonManagerPrivate.isDBLoaded();
+    this._environment._addonsAreFull = fullData;
     let activeAddons = {};
     for (let addon of allAddons) {
       // Weird addon data in the wild can lead to exceptions while collecting
@@ -677,7 +677,7 @@ EnvironmentAddonBuilder.prototype = {
 
         // getActiveAddons() gives limited data during startup and full
         // data after the addons database is loaded.
-        if (isDBLoaded) {
+        if (fullData) {
           let installDate = new Date(Math.max(0, addon.installDate));
           Object.assign(activeAddons[addon.id], {
             blocklisted: (addon.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
@@ -706,7 +706,7 @@ EnvironmentAddonBuilder.prototype = {
    */
   async _getActiveTheme() {
     // Request themes, asynchronously.
-    let themes = await AddonManager.getActiveAddons(["theme"]);
+    let {addons: themes} = await AddonManager.getActiveAddons(["theme"]);
 
     let activeTheme = {};
     // We only store information about the active theme.
@@ -893,6 +893,10 @@ function EnvironmentCache() {
         this._log.error("EnvironmentCache - error while initializing", err);
         return setup();
       });
+
+  // Addons may contain partial or full data depending on whether the Addons DB
+  // has had a chance to load. Do we have full data yet?
+  this._addonsAreFull = false;
 }
 EnvironmentCache.prototype = {
   /**
