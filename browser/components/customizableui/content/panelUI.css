@@ -7,6 +7,7 @@
 }
 
 .panel-viewstack {
+  overflow: visible;
   transition: height var(--panelui-subview-transition-duration);
 }
 
@@ -17,13 +18,7 @@
   will-change: height;
 }
 
-/* START photon adjustments */
-
-photonpanelmultiview > .panel-viewcontainer > .panel-viewstack {
-  overflow: visible;
-}
-
-photonpanelmultiview[transitioning] {
+panelmultiview[transitioning] {
   pointer-events: none;
 }
 
@@ -38,5 +33,3 @@ photonpanelmultiview[transitioning] {
   margin: 0;
   padding: 0;
 }
-
-/* END photon adjustments */

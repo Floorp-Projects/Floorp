@@ -109,8 +109,8 @@
                   label="&cmd.clearDownloads.label;"/>
       </menupopup>
 
-      <photonpanelmultiview id="downloadsPanel-multiView"
-                            mainViewId="downloadsPanel-mainView">
+      <panelmultiview id="downloadsPanel-multiView"
+                      mainViewId="downloadsPanel-mainView">
 
         <panelview id="downloadsPanel-mainView">
           <vbox class="panel-view-body-unscrollable">
@@ -207,7 +207,7 @@
                          oncommand="BrowserDownloadsUI(); CustomizableUI.hidePanelForNode(this);"/>
         </panelview>
 
-      </photonpanelmultiview>
+      </panelmultiview>
 
     </panel>
   </popupset>

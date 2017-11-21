@@ -16,8 +16,8 @@
     <broadcaster id="identity-popup-insecure-login-forms-learn-more" class="text-link plain" value="&identity.learnMore;"/>
   </broadcasterset>
 
-  <photonpanelmultiview id="identity-popup-multiView"
-                        mainViewId="identity-popup-mainView">
+  <panelmultiview id="identity-popup-multiView"
+                  mainViewId="identity-popup-mainView">
     <panelview id="identity-popup-mainView"
                descriptionheightworkaround="true">
       <!-- Security Section -->
@@ -184,5 +184,5 @@
       </vbox>
 
     </panelview>
-  </photonpanelmultiview>
+  </panelmultiview>
 </panel>
