@@ -440,8 +440,18 @@ protected:
 
   char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset);
   nsresult CheckTrailingNBSPOfRun(WSFragment *aRun);
-  nsresult CheckTrailingNBSP(WSFragment* aRun, nsINode* aNode,
-                             int32_t aOffset);
+
+  /**
+   * ReplacePreviousNBSPIfUnncessary() replaces previous character of aPoint
+   * if it's a NBSP and it's unnecessary.
+   *
+   * @param aRun        Current text run.  aPoint must be in this run.
+   * @param aPoint      Current insertion point.  Its previous character is
+   *                    unnecessary NBSP will be checked.
+   */
+  nsresult ReplacePreviousNBSPIfUnncessary(WSFragment* aRun,
+                                           const EditorRawDOMPoint& aPoint);
+
   nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
                             int32_t aOffset);
 
