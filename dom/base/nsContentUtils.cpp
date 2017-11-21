@@ -345,6 +345,9 @@ mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
 
 PopupControlState nsContentUtils::sPopupControlState = openAbused;
 
+int32_t nsContentUtils::sInnerOrOuterWindowCount = 0;
+uint32_t nsContentUtils::sInnerOrOuterWindowSerialCounter = 0;
+
 // Subset of http://www.whatwg.org/specs/web-apps/current-work/#autofill-field-name
 enum AutocompleteUnsupportedFieldName : uint8_t
 {
@@ -11017,4 +11020,20 @@ nsContentUtils::TryGetTabChildGlobalAsEventTarget(nsISupports* aFrom)
 
   nsCOMPtr<EventTarget> target = frameLoader->GetTabChildGlobalAsEventTarget();
   return target.forget();
+}
+
+/* static */ uint32_t
+nsContentUtils::InnerOrOuterWindowCreated()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ++sInnerOrOuterWindowCount;
+  return ++sInnerOrOuterWindowSerialCounter;
+}
+
+/* static */ void
+nsContentUtils::InnerOrOuterWindowDestroyed()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(sInnerOrOuterWindowCount > 0);
+  --sInnerOrOuterWindowCount;
 }
