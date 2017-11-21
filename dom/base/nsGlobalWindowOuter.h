@@ -1094,10 +1094,7 @@ private:
                               SecureContextFlags aFlags =
                                 SecureContextFlags::eDefault);
 
-  // nsPIDOMWindow<T> should be able to see these helper methods.
-  friend class nsPIDOMWindow<mozIDOMWindowProxy>;
-  friend class nsPIDOMWindow<mozIDOMWindow>;
-  friend class nsPIDOMWindow<nsISupports>;
+  // nsPIDOMWindow{Inner,Outer} should be able to see these helper methods.
   friend class nsPIDOMWindowInner;
   friend class nsPIDOMWindowOuter;
 
