@@ -469,7 +469,9 @@ nsSimpleURI::SetPathQueryRefEscaped(const nsACString &aPath, bool aNeedsEscape)
           return rv;
         }
     } else {
-        path.Assign(aPath);
+        if (!path.Assign(aPath, fallible)) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
     }
 
     int32_t queryPos = path.FindChar('?');
