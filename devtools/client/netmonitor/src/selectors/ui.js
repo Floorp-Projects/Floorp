@@ -8,7 +8,7 @@ const { REQUESTS_WATERFALL } = require("../constants");
 const { getDisplayedRequests } = require("./requests");
 
 function isNetworkDetailsToggleButtonDisabled(state) {
-  return getDisplayedRequests(state).isEmpty();
+  return getDisplayedRequests(state).length == 0;
 }
 
 const EPSILON = 0.001;

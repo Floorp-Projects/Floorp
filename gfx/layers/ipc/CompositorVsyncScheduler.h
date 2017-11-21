@@ -83,6 +83,7 @@ private:
   void DispatchTouchEvents(TimeStamp aVsyncTimestamp);
   void DispatchVREvents(TimeStamp aVsyncTimestamp);
   void CancelCurrentSetNeedsCompositeTask();
+  void CancelCurrentVRTask();
 
   class Observer final : public VsyncObserver
   {

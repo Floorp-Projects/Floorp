@@ -121,12 +121,6 @@ public:
 
   bool UseForPresentation(nsPresContext* aPresContext);
 
-  static bool UseForPresentation(nsIDocument* aDoc,
-                                 nsIURI* aDocURI,
-                                 const nsACString& aDocURISpec,
-                                 const nsACString& aPattern,
-                                 URLMatchingFunction aUrlMatchingFunction);
-
   struct URL {
     URLMatchingFunction func;
     nsCString url;

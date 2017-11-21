@@ -19,7 +19,6 @@ Form autofill test: preview and highlight
 
 "use strict";
 
-let defaultTextColor;
 const MOCK_STORAGE = [{
   organization: "Sesame Street",
   "street-address": "123 Sesame Street.",
@@ -32,66 +31,21 @@ const MOCK_STORAGE = [{
   tel: "+12223334444",
 }];
 
-// We could not get ManuallyManagedState of element now, so directly check if
-// filter and text color style are applied.
-function checkFieldPreview(elem, expectedText) {
-  const computedStyle = window.getComputedStyle(elem);
-  const isStyleApplied = computedStyle.getPropertyValue("filter") !== "none" &&
-                         computedStyle.getPropertyValue("color") !== defaultTextColor;
+function checkFormFieldsStyle(profile, isPreviewing = true) {
+  const elems = document.querySelectorAll("input, select");
 
-  is(SpecialPowers.wrap(elem).previewValue, expectedText, `Checking #${elem.id} previewValue`);
-  is(isStyleApplied, !!expectedText, `Checking #${elem.id} preview style`);
-}
+  for (const elem of elems) {
+    const fillableValue = profile && profile[elem.id];
+    const previewValue = isPreviewing && fillableValue || "";
 
-function checkFilledFieldHighlight(elem, expectedValue) {
-  const computedStyle = window.getComputedStyle(elem);
-  const isStyleApplied = computedStyle.getPropertyValue("filter") !== "none" &&
-                         computedStyle.getPropertyValue("color") === defaultTextColor;
-
-  is(SpecialPowers.wrap(elem).previewValue, "", `Checking #${elem.id} filled previewValue`);
-  is(isStyleApplied, expectedValue, `Checking #${elem.id} filled style`);
-}
-
-function checkFormPreviewFields(previewingAddress) {
-  const inputs = document.querySelectorAll("input");
-
-  for (const input of inputs) {
-    const previewValue = previewingAddress && previewingAddress[input.id] || "";
-
-    checkFieldPreview(input, previewValue);
+    checkFieldHighlighted(elem, !!fillableValue);
+    checkFieldPreview(elem, previewValue);
   }
-}
-
-function checkFormFilledFields(address) {
-  const inputs = document.querySelectorAll("input");
-
-  for (const input of inputs) {
-    const isFilledByAutofill = !!address[input.id];
-
-    checkFilledFieldHighlight(input, isFilledByAutofill);
-  }
-}
-
-function confirmAllFieldsFilled(address) {
-  info("expecting form filled");
-  const pendingPromises = [];
-
-  for (const prop in address) {
-    const element = document.getElementById(prop);
-
-    pendingPromises.push(new Promise(resolve => {
-      element.addEventListener("change", resolve, {once: true});
-    }));
-  }
-
-  return Promise.all(pendingPromises);
 }
 
 initPopupListener();
 
 add_task(async function setup_storage() {
-  defaultTextColor = window.getComputedStyle(document.querySelector("input")).getPropertyValue("color");
-
   await addAddress(MOCK_STORAGE[0]);
   await addAddress(MOCK_STORAGE[1]);
   await addAddress(MOCK_STORAGE[2]);
@@ -102,42 +56,31 @@ add_task(async function check_preview() {
 
   doKey("down");
   await expectPopup();
-  checkFormPreviewFields();
+  checkFormFieldsStyle(null);
 
   for (let i = 0; i < MOCK_STORAGE.length; i++) {
     doKey("down");
     await notifySelectedIndex(i);
-    checkFormPreviewFields(MOCK_STORAGE[i]);
+    checkFormFieldsStyle(MOCK_STORAGE[i]);
   }
 
   // Navigate to the footer
   doKey("down");
   await notifySelectedIndex(MOCK_STORAGE.length);
-  checkFormPreviewFields();
+  checkFormFieldsStyle(null);
 
   doKey("down");
   await notifySelectedIndex(-1);
-  checkFormPreviewFields();
+  checkFormFieldsStyle(null);
 
   focusedInput.blur();
 });
 
 add_task(async function check_filled_highlight() {
-  const focusedInput = await setInput("#organization", "");
-
-  doKey("down");
-  await expectPopup();
-
-  doKey("down");
-  await notifySelectedIndex(0);
-  const waitForFilled = confirmAllFieldsFilled(MOCK_STORAGE[0]);
-
+  await triggerPopupAndHoverItem("#organization", 0);
   // filled 1st address
-  doKey("return");
-  // blur to fire off change event from focusedInput
-  focusedInput.blur();
-  await waitForFilled;
-  checkFormFilledFields(MOCK_STORAGE[0]);
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+  checkFormFieldsStyle(MOCK_STORAGE[0], false);
 });
 
 </script>

@@ -143,6 +143,7 @@ class Theme {
         case "tab_text":
         case "toolbar_field":
         case "toolbar_field_text":
+        case "toolbar_field_border":
         case "toolbar_top_separator":
         case "toolbar_bottom_separator":
         case "toolbar_vertical_separator":

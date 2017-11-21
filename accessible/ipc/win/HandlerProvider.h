@@ -54,16 +54,23 @@ public:
 
   // IGeckoBackChannel
   STDMETHODIMP put_HandlerControl(long aPid, IHandlerControl* aCtrl) override;
-  STDMETHODIMP Refresh(IA2Data* aOutData) override;
+  STDMETHODIMP Refresh(DynamicIA2Data* aOutData) override;
 
 private:
   ~HandlerProvider() = default;
 
   void SetHandlerControlOnMainThread(DWORD aPid,
                                      mscom::ProxyUniquePtr<IHandlerControl> aCtrl);
-  void GetAndSerializePayload(const MutexAutoLock&);
-  void BuildIA2Data(IA2Data* aOutIA2Data);
-  static void ClearIA2Data(IA2Data& aData);
+  void GetAndSerializePayload(const MutexAutoLock&,
+                              NotNull<mscom::IInterceptor*> aInterceptor);
+  void BuildStaticIA2Data(NotNull<mscom::IInterceptor*> aInterceptor,
+                          StaticIA2Data* aOutData);
+  void BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data);
+  void BuildInitialIA2Data(NotNull<mscom::IInterceptor*> aInterceptor,
+                           StaticIA2Data* aOutStaticData,
+                           DynamicIA2Data* aOutDynamicData);
+  static void CleanupStaticIA2Data(StaticIA2Data& aData);
+  static void CleanupDynamicIA2Data(DynamicIA2Data& aData);
   bool IsTargetInterfaceCacheable();
 
   Atomic<uint32_t>                  mRefCnt;

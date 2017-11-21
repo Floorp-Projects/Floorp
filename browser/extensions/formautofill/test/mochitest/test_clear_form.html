@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form autofill - clear form button</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: clear form button
+
+<script>
+/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+/* import-globals-from formautofill_common.js */
+
+"use strict";
+
+const MOCK_STORAGE = [{
+  organization: "Sesame Street",
+  "street-address": "123 Sesame Street.",
+  tel: "+13453453456",
+}, {
+  organization: "Mozilla",
+  "street-address": "331 E. Evelyn Avenue",
+}, {
+  organization: "Tel org",
+  tel: "+12223334444",
+}];
+
+initPopupListener();
+
+add_task(async function setup_storage() {
+  await addAddress(MOCK_STORAGE[0]);
+  await addAddress(MOCK_STORAGE[1]);
+  await addAddress(MOCK_STORAGE[2]);
+});
+
+function checkIsFormCleared(patch = {}) {
+  const form = document.getElementById("form1");
+
+  for (const elem of form.elements) {
+    const expectedValue = patch[elem.id] || "";
+    is(elem.value, expectedValue, "checking value");
+    checkFieldHighlighted(elem, false);
+    checkFieldPreview(elem, "");
+  }
+}
+
+add_task(async function simple_clear() {
+  await triggerPopupAndHoverItem("#organization", 0);
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+
+  await triggerPopupAndHoverItem("#tel", 0);
+  doKey("return");
+  checkIsFormCleared();
+});
+
+add_task(async function clear_modified_form() {
+  await triggerPopupAndHoverItem("#organization", 0);
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+
+  await setInput("#tel", "+1111111111", true);
+
+  await triggerPopupAndHoverItem("#street-address", 0);
+  doKey("return");
+  checkIsFormCleared({tel: "+1111111111"});
+});
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+
+  <form id="form1">
+    <p>This is a basic form.</p>
+    <p><label>organization: <input id="organization" autocomplete="organization"></label></p>
+    <p><label>streetAddress: <input id="street-address" autocomplete="street-address"></label></p>
+    <p><label>tel: <input id="tel" autocomplete="tel"></label></p>
+    <p><label>country: <input id="country" autocomplete="country"></label></p>
+  </form>
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>

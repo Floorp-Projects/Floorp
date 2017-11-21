@@ -74,6 +74,11 @@ Handler::InternalQueryInterface(REFIID riid, void** ppv)
 
   // Try the handler implementation
   HRESULT hr = QueryHandlerInterface(mInnerUnk, riid, ppv);
+  if (hr == S_FALSE) {
+    // The handler knows this interface is not available, so don't bother
+    // asking the proxy.
+    return E_NOINTERFACE;
+  }
   if (hr != E_NOINTERFACE) {
     return hr;
   }
