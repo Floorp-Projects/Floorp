@@ -417,119 +417,112 @@ TextEditor::TypedText(const nsAString& aString, ETypingAction aAction)
 }
 
 already_AddRefed<Element>
-TextEditor::CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent,
-                         int32_t* aInOutOffset,
-                         EDirection aSelect)
-{
-  nsCOMPtr<nsIDOMNode> parent(GetAsDOMNode(*aInOutParent));
-  nsCOMPtr<nsIDOMNode> br;
-  // We ignore the retval, and assume it's fine if the br is non-null
-  CreateBRImpl(address_of(parent), aInOutOffset, address_of(br), aSelect);
-  *aInOutParent = do_QueryInterface(parent);
-  nsCOMPtr<Element> ret(do_QueryInterface(br));
-  return ret.forget();
-}
-
-nsresult
-TextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
-                         int32_t* aInOutOffset,
-                         nsCOMPtr<nsIDOMNode>* outBRNode,
-                         EDirection aSelect)
-{
-  NS_ENSURE_TRUE(aInOutParent && *aInOutParent && aInOutOffset && outBRNode, NS_ERROR_NULL_POINTER);
-  *outBRNode = nullptr;
-
-  // we need to insert a br.  unfortunately, we may have to split a text node to do it.
-  nsCOMPtr<nsINode> node = do_QueryInterface(*aInOutParent);
-  int32_t theOffset = *aInOutOffset;
-  RefPtr<Element> brNode;
-  if (IsTextNode(node)) {
-    EditorRawDOMPoint pointToInsertBrNode(node);
-    if (NS_WARN_IF(!pointToInsertBrNode.IsSetAndValid())) {
-      return NS_ERROR_FAILURE;
-    }
-    if (!theOffset) {
-      // we are already set to go
-    } else if (theOffset == static_cast<int32_t>(node->Length())) {
-      // update offset to point AFTER the text node
-      pointToInsertBrNode.AdvanceOffset();
-    } else {
-      MOZ_DIAGNOSTIC_ASSERT(theOffset < static_cast<int32_t>(node->Length()));
-      // split the text node
-      EditorRawDOMPoint atStartOfNewLine(node, theOffset);
-      ErrorResult error;
-      nsCOMPtr<nsIContent> newLeftNode = SplitNode(atStartOfNewLine, error);
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
-      }
-      // The right node offset in the parent is now changed.  Recompute it.
-      pointToInsertBrNode.Set(node);
-      Unused << newLeftNode;
-    }
-    // Lock the offset of pointToInsertBrNode because it'll be referred after
-    // inserting a new <br> node before it.
-    Unused << pointToInsertBrNode.Offset();
-    // create br
-    brNode = CreateNode(nsGkAtoms::br, pointToInsertBrNode);
-    if (NS_WARN_IF(!brNode)) {
-      return NS_ERROR_FAILURE;
-    }
-    *aInOutParent = GetAsDOMNode(pointToInsertBrNode.Container());
-    *aInOutOffset = pointToInsertBrNode.Offset() + 1;
-  } else {
-    EditorRawDOMPoint pointToInsertBrNode(node, theOffset);
-    brNode = CreateNode(nsGkAtoms::br, pointToInsertBrNode);
-    if (NS_WARN_IF(!brNode)) {
-      return NS_ERROR_FAILURE;
-    }
-    (*aInOutOffset)++;
-  }
-
-  *outBRNode = GetAsDOMNode(brNode);
-  if (*outBRNode && (aSelect != eNone)) {
-    RefPtr<Selection> selection = GetSelection();
-    NS_ENSURE_STATE(selection);
-    if (aSelect == eNext) {
-      selection->SetInterlinePosition(true);
-      // position selection after br
-      EditorRawDOMPoint afterBrNode(brNode);
-      if (NS_WARN_IF(!afterBrNode.AdvanceOffset())) {
-        return NS_OK;
-      }
-      selection->Collapse(afterBrNode);
-    } else if (aSelect == ePrevious) {
-      selection->SetInterlinePosition(true);
-      // position selection before br
-      EditorRawDOMPoint atBrNode(brNode);
-      if (NS_WARN_IF(!atBrNode.IsSetAndValid())) {
-        return NS_OK;
-      }
-      selection->Collapse(atBrNode);
-    }
-  }
-  return NS_OK;
-}
-
-
-already_AddRefed<Element>
 TextEditor::CreateBR(nsINode* aNode,
                      int32_t aOffset,
-                     EDirection aSelect)
+                     EDirection aSelect /* = eNone */)
 {
-  nsCOMPtr<nsINode> parent = aNode;
-  int32_t offset = aOffset;
-  return CreateBRImpl(address_of(parent), &offset, aSelect);
+  RefPtr<Selection> selection = GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return nullptr;
+  }
+  // We assume everything is fine if newBRElement is not null.
+  return CreateBRImpl(*selection, EditorRawDOMPoint(aNode, aOffset), aSelect);
 }
 
-nsresult
-TextEditor::CreateBR(nsIDOMNode* aNode,
-                     int32_t aOffset,
-                     nsCOMPtr<nsIDOMNode>* outBRNode,
-                     EDirection aSelect)
+already_AddRefed<Element>
+TextEditor::CreateBRImpl(Selection& aSelection,
+                         const EditorRawDOMPoint& aPointToInsert,
+                         EDirection aSelect)
 {
-  nsCOMPtr<nsIDOMNode> parent = aNode;
-  int32_t offset = aOffset;
-  return CreateBRImpl(address_of(parent), &offset, outBRNode, aSelect);
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return nullptr;
+  }
+
+  // We need to insert a <br> node.
+  RefPtr<Element> newBRElement;
+  if (IsTextNode(aPointToInsert.Container())) {
+    EditorDOMPoint pointInContainer;
+    if (aPointToInsert.IsStartOfContainer()) {
+      // Insert before the text node.
+      pointInContainer.Set(aPointToInsert.Container());
+      if (NS_WARN_IF(!pointInContainer.IsSet())) {
+        return nullptr;
+      }
+    } else if (aPointToInsert.IsEndOfContainer()) {
+      // Insert after the text node.
+      pointInContainer.Set(aPointToInsert.Container());
+      if (NS_WARN_IF(!pointInContainer.IsSet())) {
+        return nullptr;
+      }
+      DebugOnly<bool> advanced = pointInContainer.AdvanceOffset();
+      NS_WARNING_ASSERTION(advanced,
+        "Failed to advance offset to after the text node");
+    } else {
+      MOZ_DIAGNOSTIC_ASSERT(aPointToInsert.IsSetAndValid());
+      // Unfortunately, we need to split the text node at the offset.
+      ErrorResult error;
+      nsCOMPtr<nsIContent> newLeftNode = SplitNode(aPointToInsert, error);
+      if (NS_WARN_IF(error.Failed())) {
+        error.SuppressException();
+        return nullptr;
+      }
+      Unused << newLeftNode;
+      // Insert new <br> before the right node.
+      pointInContainer.Set(aPointToInsert.Container());
+    }
+    // Create a <br> node.
+    newBRElement = CreateNode(nsGkAtoms::br, pointInContainer.AsRaw());
+    if (NS_WARN_IF(!newBRElement)) {
+      return nullptr;
+    }
+  } else {
+    newBRElement = CreateNode(nsGkAtoms::br, aPointToInsert);
+    if (NS_WARN_IF(!newBRElement)) {
+      return nullptr;
+    }
+  }
+
+  switch (aSelect) {
+    case eNone:
+      break;
+    case eNext: {
+      aSelection.SetInterlinePosition(true);
+      // Collapse selection after the <br> node.
+      EditorRawDOMPoint afterBRElement(newBRElement);
+      if (afterBRElement.IsSet()) {
+        DebugOnly<bool> advanced = afterBRElement.AdvanceOffset();
+        NS_WARNING_ASSERTION(advanced,
+          "Failed to advance offset after the <br> element");
+        ErrorResult error;
+        aSelection.Collapse(afterBRElement, error);
+        NS_WARNING_ASSERTION(!error.Failed(),
+          "Failed to collapse selection after the <br> element");
+      } else {
+        NS_WARNING("The <br> node is not in the DOM tree?");
+      }
+      break;
+    }
+    case ePrevious: {
+      aSelection.SetInterlinePosition(true);
+      // Collapse selection at the <br> node.
+      EditorRawDOMPoint atBRElement(newBRElement);
+      if (atBRElement.IsSet()) {
+        ErrorResult error;
+        aSelection.Collapse(atBRElement, error);
+        NS_WARNING_ASSERTION(!error.Failed(),
+          "Failed to collapse selection at the <br> element");
+      } else {
+        NS_WARNING("The <br> node is not in the DOM tree?");
+      }
+      break;
+    }
+    default:
+      NS_WARNING("aSelect has invalid value, the caller need to set selection "
+                 "by itself");
+      break;
+  }
+
+  return newBRElement.forget();
 }
 
 nsresult

@@ -534,9 +534,15 @@ HTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
 
     nsINode* parentNode = element->GetParentNode();
     if (parentNode->GetChildCount() == 1) {
-      nsCOMPtr<nsIDOMNode> brNode;
-      nsresult rv = CreateBR(parentNode->AsDOMNode(), 0, address_of(brNode));
-      NS_ENSURE_SUCCESS(rv, rv);
+      RefPtr<Selection> selection = GetSelection();
+      if (NS_WARN_IF(!selection)) {
+        return NS_ERROR_FAILURE;
+      }
+      RefPtr<Element> newBRElement =
+        CreateBRImpl(*selection, EditorRawDOMPoint(parentNode, 0), eNone);
+      if (NS_WARN_IF(!newBRElement)) {
+        return NS_ERROR_FAILURE;
+      }
     }
   }
   else {
