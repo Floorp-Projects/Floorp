@@ -820,12 +820,6 @@ class Onboarding {
         // Some tours should complete instantly upon showing.
         if (tab.getAttribute("data-instant-complete")) {
           this.setToursCompleted([tourId]);
-          // Also track auto-completed tour so we can filter data with the same event.
-          telemetry({
-            event: "overlay-cta-click",
-            tour_id: tourId,
-            session_key: this._session_key,
-          });
         }
       } else {
         tab.classList.remove("onboarding-active");
