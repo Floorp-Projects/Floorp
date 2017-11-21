@@ -1,0 +1,161 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Otkaži</string>
+  <string name="action_ok">U redu</string>
+  <string name="urlbar_hint">Tražite ili upišite adresu</string>
+  <string name="teaser">Automatsko privatno pretraživanje.\nPretražujte. Izbrišite. Ponovite.</string>
+  <string name="feedback_erase">Vaša historija pretraživanja je izbrisana.</string>
+  <string name="search_hint">Traži %1$s</string>
+  <string name="menu_share">Dijeli…</string>
+  <string name="menu_open_with_default_browser">Otvori sa %1$s</string>
+  <string name="menu_open_with_a_browser">Otvori sa…</string>
+  <string name="menu_add_to_home_screen">Dodaj na početni ekran</string>
+  <string name="menu_whats_new">Šta je novo</string>
+  <string name="menu_settings">Postavke</string>
+  <string name="menu_about">O aplikaciji</string>
+  <string name="menu_help">Pomoć</string>
+  <string name="menu_rights">Vaša prava</string>
+  <string name="menu_trackers_blocked_title">Blokirani pratioci</string>
+  <string name="share_dialog_title">Dijeli putem</string>
+  <string name="notification_erase_text">Izbrišite historiju pretraživanja</string>
+  <string name="notification_action_open">Otvori</string>
+  <string name="notification_action_erase_and_open">Izbriši i otvori</string>
+  <string name="shortcut_erase_short_label">Izbriši</string>
+  <string name="shortcut_erase_long_label">Izbriši historiju pretraživanja</string>
+  <string name="text_selection_search_action">Tražite privatno</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vam daje kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Koristite ga kao privatni pretra&#382;iva&#269;:\n  "<ul>"\n    "<li>Tra&#382;ite i pretra&#382;ujte direktno u aplikaciji</li>"\n    "<li>Blokirajte pratioce (ili ih omogu&#263;ite u postavkama)</li>"\n    "<li>Izbri&#353;ite sve kola&#269;i&#263;e kao i historiju pretra&#382;ivanja i pretrage</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s je stvorila Mozilla. Na&#353;a misija je njegovanje zdravog i otvorenog interneta.<br/>\n<a href="%2$s">Saznajte vi&#353;e</a></p>]]></string>
+  <string name="preference_category_search">Traži</string>
+  <string name="preference_search_engine_default">Izvorno</string>
+  <string name="preference_language">Jezik</string>
+  <string name="preference_language_systemdefault">Izvorni sistemski</string>
+  <string name="preference_dialog_title_search_engine">Primarni pretraživač</string>
+  <string name="preference_category_privacy">Privatnost</string>
+  <string name="preference_privacy_block_ads">Blokiraj reklame</string>
+  <string name="preference_privacy_block_ads_summary">Neke reklame prate posjete stranica, čak i kad ne klinete na reklame</string>
+  <string name="preference_privacy_block_analytics">Blokiraj analitičke pratioce</string>
+  <string name="preference_privacy_block_analytics_summary">Koristi se za sakupljanje, analiziranje i mjerenje aktivnosti kao što su tipkanje i skrolovanje</string>
+  <string name="preference_privacy_block_social">Blokiraj društvene pratioce</string>
+  <string name="preference_privacy_block_social_summary">Ugrađene u stranice kako bi pratile vaše posjete i da prikažu funkcije kao što su dugmići za dijeljenje</string>
+  <string name="preference_privacy_block_content">Blokiraj pratioce ostalog sadržaja</string>
+  <string name="preference_privacy_block_content_summary2">Omogućavanje može uticati loše na neke stranice</string>
+  <string name="preference_privacy_secure_mode">Tajni način</string>
+  <string name="preference_privacy_stealth_summary">Sakrij web stranice prilikom prebacivanja između aplikacija</string>
+  <string name="preference_category_performance">Performanse</string>
+  <string name="preference_performance_block_webfonts">Blokiraj web fontove</string>
+  <string name="preference_performance_block_webfonts_summary">Može prouzrokovati nestajanje ikona ili slika</string>
+  <string name="preference_performance_block_images">Blokiraj slike</string>
+  <string name="preference_default_browser2">Učini %1$s glavnim pretraživačem</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Šalji podatke o korištenju</string>
+  <string name="preference_mozilla_telemetry_summary">Saznajte više</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozila nastoji prikupljati samo ono što trebamo da osiguramo i poboljšamo %1$s za sve.</string>
+  <string name="preference_privacy_notice">Napomena o privatnosti</string>
+  <string name="preference_about">O %1$s</string>
+  <string name="preference_search_installed_search_engines">Instalirani pretraživači</string>
+  <string name="preference_search_restore">Vrati izvorne pretraživače</string>
+  <string name="preference_search_add2">+ Dodaj novi pretraživač</string>
+  <string name="preference_search_remove_title">Ukloni pretraživače</string>
+  <string name="preference_search_remove">Ukloni</string>
+  <string name="tutorial_search_manually_add">Dodajte ručno</string>
+  <string name="tutorial_search_title">Dodajte pretraživač</string>
+  <string name="tutorial_search_step1">1. Idite na početnu stranicu pretraživača.</string>
+  <string name="tutorial_search_step2">2. Dodirnite u polje za pretragu.</string>
+  <string name="tutorial_search_step2_alternative">2. Držite prst u polju za pretragu.</string>
+  <string name="tutorial_search_step3">3. Da biste dodali pretraživač, dodirnite ikonu lupe iznad tastature.</string>
+  <string name="action_option_add_search_engine">Dodajte pretraživač</string>
+  <string name="tutorial_search_step3_alternative">3. Dodirnite %1$s</string>
+  <string name="tutorial_search_step4">4. Ako ne vidite lupu, probajte ručno dodavanje pretraživača.</string>
+  <string name="tutorial_search_step4_alternative">4. Ako ne vidite %1$s, probajte ručno dodavanje pretraživača.</string>
+  <string name="tutorial_search_finish">ZAPOČNITE</string>
+  <string name="search_add_hint">Dodirnite ikonu lupe iznad tastature da dodate ovaj pretraživač.</string>
+  <string name="search_add_manually_name">Ime za prikaz</string>
+  <string name="search_add_manually_name_hint">Ime pretraživača</string>
+  <string name="search_add_manually_string">Pretraži tekst za korištenje</string>
+  <string name="search_add_manually_save">Sačuvaj</string>
+  <string name="search_add_manually_string_hint">Zalijepite ili unesite tekst pretrage. Ako je neophodno, zamijenite ga sa: %s.</string>
+  <string name="search_add_manually_example">Primjer: example.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">Dodajte pretraživač</string>
+  <string name="search_add_confirmation">Novi pretraživač dodan.</string>
+  <string name="search_add_error">Provjerite tekst pretrage i pokušajte ponovo</string>
+  <string name="content_description_clear_input">Očisti unos</string>
+  <string name="content_description_dismiss_input">Odbaci</string>
+  <string name="content_description_erase">Izbriši historiju pretraživanja</string>
+  <string name="content_description_fab_expand">Proširi</string>
+  <string name="content_description_tab_counter">Otvorenih tabova: %1$s</string>
+  <string name="content_description_open_tab">Otvori tab</string>
+  <string name="content_description_close_tab">Zatvori tab</string>
+  <string name="content_description_lock">Sigurna veza</string>
+  <string name="accessibility_announcement_loading">Učitavanje</string>
+  <string name="accessibility_announcement_loading_finished">Web stranica učitana</string>
+  <string name="content_description_menu">Više opcija</string>
+  <string name="content_description_forward">Idite naprijed</string>
+  <string name="content_description_reload">Ponovo učitaj web stranicu</string>
+  <string name="content_description_back">Idite nazad</string>
+  <string name="content_description_stop">Zaustavi učitavanje web stranice</string>
+  <string name="content_description_customtab_exit">Povratak na raniju aplikaciju</string>
+  <string name="content_description_blocking_switch">Blokiraj pratioce</string>
+  <string name="context_menu_paste_go">Zalijepi i idi</string>
+  <string name="your_rights">Vaša prava</string>
+  <string name="external_app_prompt_title">Otvori vezu u drugoj aplikaciji</string>
+  <string name="external_app_prompt">Možete napustiti %1$s da otvorite ovu vezu u %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Pronađite aplikaciju koja može otvoriti vezu</string>
+  <string name="external_app_prompt_no_app">Nijedna od aplikacija na vašem uređaju nije u mogućnosti otvoriti vezu. Možete napustiti %1$s da pretražite %2$s za aplikaciju koja može.</string>
+  <string name="external_multiple_apps_matched_exit">Izaći iz privatnog pretraživanja?</string>
+  <string name="download_snackbar_finished">%1$s završeno</string>
+  <string name="download_snackbar_open">Otvori</string>
+  <string name="download_dialog_warning"><![CDATA["Preuzete datoteke "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne&#263;e biti izbrisane</b>" kada izbrišete %1$s historiju."]]></string>
+  <string name="download_dialog_title">Preuzmi datoteku</string>
+  <string name="download_dialog_action_cancel">Otkaži</string>
+  <string name="download_dialog_action_download">Preuzmi</string>
+  <string name="errorpage_title">Problem učitavanja stranice</string>
+  <string name="errorpage_refresh">Pokušaj ponovo</string>
+  <string name="error_connectionfailure_title">Povezivanje nije moguće</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Stranica je mo&#382;da trenutno nedostupna ili prezauzeta. Poku&#353;ajte ponovo za par minuta.</li>"\n        "<li>Ako ne mo&#382;ete u&#269;itati nijednu stranicu, provjerite internet na va&#353;em telefonu ili Wi-Fi konekciju.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Veza je istekla</string>
+  <string name="error_hostLookup_title">Server nije pronađen</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Provjerite adresu radi gre&#353;aka u kucanju kao &#353;to su\n          "<strong>ww</strong>".example.com umjesto\n          "<strong>www</strong>.example.com</li>"\n        "<li>Ako ne mo&#382;ete u&#269;itati nijednu stranicu, provjerite internet na va&#353;em telefonu ili Wi-Fi konekciju.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Adresa je nevažeća</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Web adrese se obi&#269;no pi&#353;u kao "<strong>http://www.example.com/</strong></li>"\n  "<li>"Uvjerite se da koristite kose crte (tj. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Stranica ne preusmjerava pravilno</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ovaj problem ponekad mo&#382;e biti izazvan onemogu&#263;avanjem ili odbijanjem prihvatanja kola&#269;i&#263;a.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Adresa nije razumljiva</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Mo&#382;da &#263;ete morati instalirati drugi softver da otvorite ovu adresu.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Sigurna veza nije uspjela</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ovo bi mogao biti problem sa pode&#353;avanjima servera ili se neko mo&#382;da poku&#353;ava predstaviti kao server.</li>"\n  "<li>Ako ste se i ranije uspje&#353;no povezivali na ovaj server, gre&#353;ka mo&#382;e biti privremena i mo&#382;ete ponovo poku&#353;ati kasnije.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Ups</string>
+  <string name="error_generic_message">Iz nekog razloga ne možemo učitati ovu stranicu.</string>
+  <string name="contextmenu_link_share">Podijeli vezu</string>
+  <string name="contextmenu_link_copy">Kopiraj adresu veze</string>
+  <string name="contextmenu_image_share">Podijeli sliku</string>
+  <string name="contextmenu_image_copy">Kopiraj adresu slike</string>
+  <string name="contextmenu_image_save">Sačuvaj sliku</string>
+  <string name="contextmenu_open_in_new_tab">Otvori vezu u novom tabu</string>
+  <string name="contextmenu_image_warning"><![CDATA["Sačuvane i podijeljene slike "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne&#263;e biti izbrisane</b>" kada izbrišete %1$s historiju."]]></string>
+  <string name="firstrun_defaultbrowser_title">Osnažite vašu privatnost</string>
+  <string name="firstrun_defaultbrowser_text2">Unaprijedite privatno pretraživanje. Blokirajte reklame i drugi sadržaj koji vas mogu pratiti putem stranica i ubrzajte učitavanje stranica.</string>
+  <string name="firstrun_search_title">Tražite, na svoj način</string>
+  <string name="firstrun_search_text">Tražite nešto drugačije? Izaberite drugi zadani pretraživač u postavkama.</string>
+  <string name="firstrun_shortcut_title">Dodajte prečice na vaš početni zaslon</string>
+  <string name="firstrun_shortcut_text">Vratite se brzo na vaše omiljene stranice u %1$s. Samo izaberite \"Dodaj na početni zaslon\" iz %1$s menija.</string>
+  <string name="firstrun_privacy_title">Učinite privatnost navikom</string>
+  <string name="firstrun_privacy_text">Postavite %1$s kao vaš glavni pretraživač i dobijte koristi od privatnog pretraživanja kada otvarate web stranice iz drugih aplikacija.</string>
+  <string name="firstrun_close_button">U redu, razumijem!</string>
+  <string name="firstrun_skip_button">Preskoči</string>
+  <string name="firstrun_next_button">Sljedeće</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Dodaj na početni ekran</string>
+  <string name="dialog_addtohomescreen_action_add">Dodaj</string>
+  <string name="dialog_addtohomescreen_action_cancel">Otkaži</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Prečica će se otvoriti uz onemogućenu zaštitu od praćenja</string>
+  <string name="dialog_opentab_title">Otvori vezu u izabranom tabu</string>
+  <string name="dialog_opentab_action_open">Otvori</string>
+  <string name="notification_browsing_session_channel_name">Sesija za privatno pretraživanje</string>
+  <string name="notification_browsing_session_channel_description">Obaviještenja vam omogućavaju da izbrišete vašu %1$s sesiju jednim dodirom. Ne morate da otvorite aplikaciju ili da provjerite šta se izvršava u vašem pretraživaču.</string>
+  <string name="tabs_tray_action_erase">Izbriši historiju pretraživanja</string>
+  <string name="download_firefox">Preuzmite Firefox</string>
+  <string name="your_rights_content1">%1$s je besplatan softver i otvorenog koda napravljen od strane Mozille i drugih doprinosilaca.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s vam je omogućen pod uslovima "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" i drugih licenci otvorenog koda."]]></string>
+  <string name="your_rights_content3"><![CDATA["Nemate nikakva prava niti licencu na zaštitne znakove Mozilla Foundation niti bilo šta slično, uključujući i Mozilla, Firefox ili %1$s imena ili logotipe. Dodatne informacije možete pronaći "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">ovdje</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Dodatni izvorni kod za %1$s je dostupan pod različitim besplatnim i "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencama</a>" otvorenog koda."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s takođe koristi blok liste pružane od strane Disconnect Inc. kao odvojeni i nezavisni radovi pod "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" i dostupnim "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">ovdje</a>.]]></string>
+</resources>
