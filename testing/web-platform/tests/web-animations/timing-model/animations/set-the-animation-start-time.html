@@ -123,8 +123,8 @@ promise_test(t => {
   animation.play();
 
   // Sanity check
-  assert_equals(animation.playState, 'pending',
-                'Animation is in play-pending state');
+  assert_true(animation.pending && animation.playState === 'running',
+              'Animation is in play-pending state');
 
   // Setting the start time should resolve the 'ready' promise, i.e.
   // it should schedule a microtask to run the promise callbacks.
@@ -153,8 +153,8 @@ promise_test(t => {
   animation.pause();
 
   // Sanity check
-  assert_equals(animation.playState, 'pending',
-                'Animation is in pause-pending state');
+  assert_true(animation.pending && animation.playState === 'paused',
+              'Animation is in pause-pending state');
 
   // Setting the start time should resolve the 'ready' promise although
   // the resolution callbacks when be run in a separate microtask.

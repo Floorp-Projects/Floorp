@@ -39,12 +39,12 @@ promise_test(t => {
 
   assert_equals(animation.currentTime, 0, 'currentTime is set to 0');
   assert_equals(animation.startTime, null, 'startTime is not set');
-  assert_equals(animation.playState, 'pending', 'initially pause-pending');
+  assert_equals(animation.playState, 'paused', 'in paused play state');
+  assert_true(animation.pending, 'initially pause-pending');
 
   // Check it still resolves as expected
   return animation.ready.then(() => {
-    assert_equals(animation.playState, 'paused',
-                  'resolves to paused state asynchronously');
+    assert_false(animation.pending, 'no longer pending');
     assert_equals(animation.currentTime, 0,
                   'keeps the initially set currentTime');
   });
