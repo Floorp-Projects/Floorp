@@ -70,6 +70,10 @@ l10n_description_schema = Schema({
 
         # Action commands to provide to mozharness script
         Required('actions'): _by_platform([basestring]),
+
+        # if true, perform a checkout of a comm-central based branch inside the
+        # gecko checkout
+        Required('comm-checkout', default=False): bool,
     },
     # Items for the taskcluster index
     Optional('index'): {
@@ -393,19 +397,16 @@ def validate_again(config, jobs):
 @transforms.add
 def make_job_description(config, jobs):
     for job in jobs:
+        job['mozharness'].update({
+            'using': 'mozharness',
+            'job-script': 'taskcluster/scripts/builder/build-l10n.sh',
+            'secrets': job['secrets'],
+        })
         job_description = {
             'name': job['name'],
             'worker-type': job['worker-type'],
             'description': job['description'],
-            'run': {
-                'using': 'mozharness',
-                'job-script': 'taskcluster/scripts/builder/build-l10n.sh',
-                'config': job['mozharness']['config'],
-                'script': job['mozharness']['script'],
-                'actions': job['mozharness']['actions'],
-                'options': job['mozharness']['options'],
-                'secrets': job['secrets'],
-            },
+            'run': job['mozharness'],
             'attributes': job['attributes'],
             'treeherder': {
                 'kind': 'build',
