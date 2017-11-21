@@ -46,7 +46,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/TimeStamp.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIIdleObserver.h"
 #include "nsIDocument.h"
@@ -151,27 +150,17 @@ NS_CreateJSTimeoutHandler(JSContext* aCx, nsGlobalWindowInner *aWindow,
 
 extern const js::Class OuterWindowProxyClass;
 
-// NOTE: Currently this file, despite being named mozilla/dom/WindowProxy.h,
-// exports the class nsGlobalWindowOuter. It will be renamed in the future to
-// mozilla::dom::WindowProxy.
-
 //*****************************************************************************
-// nsGlobalWindow: Global Object for Scripting
+// nsGlobalWindowOuter
 //*****************************************************************************
-// Beware that all scriptable interfaces implemented by
-// nsGlobalWindow will be reachable from JS, if you make this class
-// implement new interfaces you better know what you're
-// doing. Security wise this is very sensitive code. --
-// jst@netscape.com
 
-// nsGlobalWindow inherits PRCList for maintaining a list of all inner
-// windows still in memory for any given outer window. This list is
-// needed to ensure that mOuterWindow doesn't end up dangling. The
-// nature of PRCList means that the window itself is always in the
-// list, and an outer window's list will also contain all inner window
-// objects that are still in memory (and in reality all inner window
-// object's lists also contain its outer and all other inner windows
-// belonging to the same outer window, but that's an unimportant
+// nsGlobalWindowOuter inherits PRCList for maintaining a list of all inner
+// windows still in memory for any given outer window. This list is needed to
+// ensure that mOuterWindow doesn't end up dangling. The nature of PRCList means
+// that the window itself is always in the list, and an outer window's list will
+// also contain all inner window objects that are still in memory (and in
+// reality all inner window object's lists also contain its outer and all other
+// inner windows belonging to the same outer window, but that's an unimportant
 // side effect of inheriting PRCList).
 
 class nsGlobalWindowOuter : public mozilla::dom::EventTarget,
@@ -187,9 +176,6 @@ class nsGlobalWindowOuter : public mozilla::dom::EventTarget,
                             public PRCListStr
 {
 public:
-  typedef mozilla::TimeStamp TimeStamp;
-  typedef mozilla::TimeDuration TimeDuration;
-
   typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindowOuter*> OuterWindowByIdTable;
 
   static void
