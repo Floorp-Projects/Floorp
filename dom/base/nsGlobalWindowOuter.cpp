@@ -50,6 +50,9 @@ using mozilla::TimeStamp;
   return GetCurrentInnerWindowInternal()->method args;                  \
   PR_END_MACRO
 
+#define DEFAULT_HOME_PAGE "www.mozilla.org"
+#define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
+
 static LazyLogModule gDOMLeakPRLogOuter("DOMLeakOuter");
 
 static int32_t              gOpenPopupSpamCount               = 0;
