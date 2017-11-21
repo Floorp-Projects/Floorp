@@ -151,38 +151,6 @@ NS_CreateJSTimeoutHandler(JSContext* aCx, nsGlobalWindowInner *aWindow,
 
 extern const js::Class OuterWindowProxyClass;
 
-// Helper class to manage modal dialog arguments and all their quirks.
-//
-// Given our clunky embedding APIs, modal dialog arguments need to be passed
-// as an nsISupports parameter to WindowWatcher, get stuck inside an array of
-// length 1, and then passed back to the newly-created dialog.
-//
-// However, we need to track both the caller-passed value as well as the
-// caller's, so that we can do an origin check (even for primitives) when the
-// value is accessed. This class encapsulates that magic.
-//
-// We also use the same machinery for |returnValue|, which needs similar origin
-// checks.
-class DialogValueHolder final : public nsISupports
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(DialogValueHolder)
-
-  DialogValueHolder(nsIPrincipal* aSubject, nsIVariant* aValue)
-    : mOrigin(aSubject)
-    , mValue(aValue) {}
-  nsresult Get(nsIPrincipal* aSubject, nsIVariant** aResult);
-  void Get(JSContext* aCx, JS::Handle<JSObject*> aScope, nsIPrincipal* aSubject,
-           JS::MutableHandle<JS::Value> aResult, mozilla::ErrorResult& aError);
-private:
-  virtual ~DialogValueHolder() {}
-
-  nsCOMPtr<nsIPrincipal> mOrigin;
-  nsCOMPtr<nsIVariant> mValue;
-};
-
-
 // NOTE: Currently this file, despite being named mozilla/dom/WindowProxy.h,
 // exports the class nsGlobalWindowOuter. It will be renamed in the future to
 // mozilla::dom::WindowProxy.
@@ -1153,8 +1121,6 @@ protected:
 
   // For |window.arguments|, via |openDialog|.
   nsCOMPtr<nsIArray>            mArguments;
-
-  RefPtr<DialogValueHolder> mReturnValue;
 
   RefPtr<nsDOMWindowList>     mFrames;
   RefPtr<nsDOMWindowUtils>      mWindowUtils;
