@@ -509,7 +509,10 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
             target = target.parentElement;
           }
           const value =
-            DOMWindowUtils.getUnanimatedComputedStyle(target, pseudo, property.name);
+            DOMWindowUtils.getUnanimatedComputedStyle(target,
+                                                      pseudo,
+                                                      property.name,
+                                                      DOMWindowUtils.FLUSH_NONE);
           const animationType = DOMWindowUtils.getAnimationTypeForLonghand(property.name);
           underlyingValue = animationType === "float" ? parseFloat(value, 10) : value;
         }
