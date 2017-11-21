@@ -17,6 +17,10 @@ Setting Up the Repo
 
 Clone or otherwise get https://github.com/w3c/web-platform-tests.
 
+Note: because of the frequent creation and deletion of branches in this
+repo, it is recommended to "prune" stale branches when fetching updates,
+i.e. use `git pull --prune` (or `git fetch -p && git merge`).
+
 Running the Tests
 =================
 
@@ -107,6 +111,15 @@ And on macOS with homebrew using:
 ```
 brew install nss
 ```
+
+On other platforms, download the firefox archive and common.tests.zip
+archive for your platform from
+[https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/](Mozilla CI)
+
+Then extract `certutil[.exe]` from the tests.zip package and
+`libnss3[.so|.dll|.dynlib]` and put the former on your path and the latter on
+your library path.
+
 
 Command Line Tools
 ==================

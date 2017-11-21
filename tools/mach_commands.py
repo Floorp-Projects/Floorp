@@ -191,6 +191,7 @@ class FormatProvider(MachCommandBase):
                       ". Supported platforms are Windows/*, Linux/x86_64 and Darwin/x86_64")
                 return 1
 
+        path = self.conv_to_abspath(path)
         os.chdir(self.topsrcdir)
         self.prompt = True
 
@@ -210,6 +211,13 @@ class FormatProvider(MachCommandBase):
             return self.run_clang_format_diff(clang_format_diff, show)
         else:
             return self.run_clang_format_path(clang_format, show, path)
+
+    def conv_to_abspath(self, paths):
+        # Converts all the paths to absolute pathnames
+        tmp_path = []
+        for f in paths:
+            tmp_path.append(os.path.abspath(f))
+        return tmp_path
 
     def locate_or_fetch(self, root, python_script=False):
         # Download the clang-format binary & python clang-format-diff if doesn't
@@ -297,6 +305,12 @@ class FormatProvider(MachCommandBase):
         cf_process = Popen(args, stdin=diff_process.stdout)
         return cf_process.communicate()[0]
 
+    def is_ignored_path(self, ignored_dir_re, f):
+        # Remove upto topsrcdir in pathname and match
+        match_f = f.split(self.topsrcdir + '/', 1)
+        match_f = match_f[1] if len(match_f) == 2 else match_f[0]
+        return re.match(ignored_dir_re, match_f)
+
     def generate_path_list(self, paths):
         pathToThirdparty = os.path.join(self.topsrcdir, self._format_ignore_file)
         ignored_dir = []
@@ -313,7 +327,7 @@ class FormatProvider(MachCommandBase):
 
         path_list = []
         for f in paths:
-            if re.match(ignored_dir_re, f):
+            if self.is_ignored_path(ignored_dir_re, f):
                 # Early exit if we have provided an ignored directory
                 print("clang-format: Ignored third party code '{0}'".format(f))
                 continue
@@ -325,7 +339,7 @@ class FormatProvider(MachCommandBase):
                     for filename in sorted(files):
                         f_in_dir = os.path.join(folder, filename)
                         if (f_in_dir.endswith(extensions)
-                            and not re.match(ignored_dir_re, f_in_dir)):
+                            and not self.is_ignored_path(ignored_dir_re, f_in_dir)):
                             # Supported extension and accepted path
                             path_list.append(f_in_dir)
             else:

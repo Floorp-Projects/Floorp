@@ -214,14 +214,14 @@ class RoutesBuilder(object):
                           ("*", "{spec}/tools/*", handlers.ErrorHandler(404)),
                           ("*", "/serve.py", handlers.ErrorHandler(404))]
 
-        self.static = []
+        self.extra = []
 
         self.mountpoint_routes = OrderedDict()
 
         self.add_mount_point("/", None)
 
     def get_routes(self):
-        routes = self.forbidden_override + self.forbidden + self.static
+        routes = self.forbidden_override + self.forbidden + self.extra
         # Using reversed here means that mount points that are added later
         # get higher priority. This makes sense since / is typically added
         # first.
@@ -229,9 +229,12 @@ class RoutesBuilder(object):
             routes.extend(item)
         return routes
 
+    def add_handler(self, method, route, handler):
+        self.extra.append((str(method), str(route), handler))
+
     def add_static(self, path, format_args, content_type, route):
         handler = handlers.StaticHandler(path, format_args, content_type)
-        self.static.append((b"GET", str(route), handler))
+        self.add_handler(b"GET", str(route), handler)
 
     def add_mount_point(self, url_base, path):
         url_base = "/%s/" % url_base.strip("/") if url_base != "/" else "/"
@@ -279,7 +282,7 @@ def setup_logger(level):
     import logging
     global logger
     logger = logging.getLogger("web-platform-tests")
-    logging.basicConfig(level=getattr(logging, level.upper()))
+    logger.setLevel(getattr(logging, level.upper()))
     set_logger(logger)
 
 
@@ -397,7 +400,7 @@ class ServerProc(object):
         except socket.error:
             print("Socket error on port %s" % port, file=sys.stderr)
             raise
-        except:
+        except Exception:
             print(traceback.format_exc(), file=sys.stderr)
             raise
 
@@ -408,7 +411,7 @@ class ServerProc(object):
                     self.stop.wait()
                 except KeyboardInterrupt:
                     pass
-            except:
+            except Exception:
                 print(traceback.format_exc(), file=sys.stderr)
                 raise
 
@@ -443,7 +446,8 @@ def check_subdomains(host, paths, bind_hostname, ssl_config, aliases):
             time.sleep(1)
 
     if not connected:
-        logger.critical("Failed to connect to test server on http://%s:%s You may need to edit /etc/hosts or similar" % (host, port))
+        logger.critical("Failed to connect to test server on http://%s:%s. "
+                        "You may need to edit /etc/hosts or similar, see README.md." % (host, port))
         sys.exit(1)
 
     for subdomain, (punycode, host) in subdomains.iteritems():
@@ -451,7 +455,8 @@ def check_subdomains(host, paths, bind_hostname, ssl_config, aliases):
         try:
             urllib2.urlopen("http://%s:%d/" % (domain, port))
         except Exception as e:
-            logger.critical("Failed probing domain %s. You may need to edit /etc/hosts or similar." % domain)
+            logger.critical("Failed probing domain %s. "
+                            "You may need to edit /etc/hosts or similar, see README.md." % domain)
             sys.exit(1)
 
     wrapper.wait()
