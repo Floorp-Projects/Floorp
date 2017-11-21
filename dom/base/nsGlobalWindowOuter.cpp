@@ -2687,12 +2687,6 @@ nsGlobalWindowOuter::GetScreen()
   FORWARD_TO_INNER(GetScreen, (), nullptr);
 }
 
-CustomElementRegistry*
-nsGlobalWindowOuter::CustomElements()
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
 void
 nsPIDOMWindowOuter::MaybeActiveMediaComponents()
 {
@@ -3096,12 +3090,6 @@ nsGlobalWindowOuter::IndexedGetterOuter(uint32_t aIndex)
   NS_ENSURE_TRUE(windows, nullptr);
 
   return windows->IndexedGetter(aIndex);
-}
-
-already_AddRefed<nsIDOMOfflineResourceList>
-nsGlobalWindowOuter::GetApplicationCache()
-{
-  FORWARD_TO_INNER(GetApplicationCache, (), nullptr);
 }
 
 nsIControllers*
@@ -6509,19 +6497,6 @@ nsGlobalWindowOuter::NotifyWindowIDDestroyed(const char* aTopic)
   }
 }
 
-JSObject*
-nsGlobalWindowOuter::GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey)
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
-void
-nsGlobalWindowOuter::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                                              JS::Handle<JSObject*> aHandler)
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
 Element*
 nsGlobalWindowOuter::GetFrameElementOuter(nsIPrincipal& aSubjectPrincipal)
 {
@@ -6960,7 +6935,7 @@ void
 nsGlobalWindowOuter::SetActive(bool aActive)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
-  nsPIDOMWindow::SetActive(aActive);
+  nsPIDOMWindowOuter::SetActive(aActive);
   if (mDoc) {
     NotifyDocumentTree(mDoc, nullptr);
   }
@@ -7138,25 +7113,6 @@ nsGlobalWindowOuter::PageHidden()
   FORWARD_TO_INNER_VOID(PageHidden, ());
 }
 
-nsresult
-nsGlobalWindowOuter::DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI)
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
-nsresult
-nsGlobalWindowOuter::DispatchSyncPopState()
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
-already_AddRefed<nsICSSDeclaration>
-nsGlobalWindowOuter::GetComputedStyle(Element& aElt, const nsAString& aPseudoElt,
-                                      ErrorResult& aError)
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
 already_AddRefed<nsICSSDeclaration>
 nsGlobalWindowOuter::GetComputedStyleHelperOuter(Element& aElt,
                                                  const nsAString& aPseudoElt,
@@ -7276,18 +7232,6 @@ nsGlobalWindowOuter::GetInterface(const nsIID & aIID, void **aSink)
     return QueryInterface(aIID, aSink);
   }
   return rv;
-}
-
-nsresult
-nsGlobalWindowOuter::RegisterIdleObserver(nsIIdleObserver* aIdleObserver)
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
-nsresult
-nsGlobalWindowOuter::UnregisterIdleObserver(nsIIdleObserver* aIdleObserver)
-{
-  MOZ_CRASH("Virtual inner window only function");
 }
 
 bool
@@ -7760,38 +7704,6 @@ nsGlobalWindowOuter::RestoreWindowState(nsISupports *aState)
   return NS_OK;
 }
 
-void
-nsGlobalWindowOuter::EnableDeviceSensor(uint32_t aType)
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
-void
-nsGlobalWindowOuter::DisableDeviceSensor(uint32_t aType)
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
-#if defined(MOZ_WIDGET_ANDROID)
-void
-nsGlobalWindowOuter::EnableOrientationChangeListener()
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
-void
-nsGlobalWindowOuter::DisableOrientationChangeListener()
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-#endif
-
-void
-nsGlobalWindowOuter::SetHasGamepadEventListener(bool aHasGamepad/* = true*/)
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
 // XXX(nika): Can we remove these?
 void
 nsGlobalWindowOuter::EventListenerAdded(nsAtom* aType)
@@ -7801,18 +7713,6 @@ nsGlobalWindowOuter::EventListenerAdded(nsAtom* aType)
 void
 nsGlobalWindowOuter::EventListenerRemoved(nsAtom* aType)
 {
-}
-
-void
-nsGlobalWindowOuter::EnableTimeChangeNotifications()
-{
-  MOZ_CRASH("Virtual inner window only function");
-}
-
-void
-nsGlobalWindowOuter::DisableTimeChangeNotifications()
-{
-  MOZ_CRASH("Virtual inner window only function");
 }
 
 void
@@ -8228,6 +8128,44 @@ nsGlobalWindowOuter::Create(bool aIsChrome)
   window->InitWasOffline();
   return window.forget();
 }
+
+nsIURI*
+nsPIDOMWindowOuter::GetDocumentURI() const
+{
+  return mDoc ? mDoc->GetDocumentURI() : mDocumentURI.get();
+}
+
+
+nsIURI*
+nsPIDOMWindowOuter::GetDocBaseURI() const
+{
+  return mDoc ? mDoc->GetDocBaseURI() : mDocBaseURI.get();
+}
+
+void
+nsPIDOMWindowOuter::MaybeCreateDoc()
+{
+  MOZ_ASSERT(!mDoc);
+  if (nsIDocShell* docShell = GetDocShell()) {
+    // Note that |document| here is the same thing as our mDoc, but we
+    // don't have to explicitly set the member variable because the docshell
+    // has already called SetNewDocument().
+    nsCOMPtr<nsIDocument> document = docShell->GetDocument();
+    Unused << document;
+  }
+}
+
+mozilla::dom::DocGroup*
+nsPIDOMWindowOuter::GetDocGroup() const
+{
+  nsIDocument* doc = GetExtantDoc();
+  if (doc) {
+    return doc->GetDocGroup();
+  }
+  return nullptr;
+}
+
+nsPIDOMWindowOuter::~nsPIDOMWindowOuter() {}
 
 nsAutoPopupStatePusherInternal::nsAutoPopupStatePusherInternal(PopupControlState aState, bool aForce)
   : mOldState(nsContentUtils::PushPopupControlState(aState, aForce))
