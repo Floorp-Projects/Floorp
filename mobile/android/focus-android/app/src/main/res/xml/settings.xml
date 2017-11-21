@@ -17,6 +17,11 @@
             android:key="@string/pref_key_search_engine"
             android:summary="@string/preference_search_engine_default" />
 
+        <org.mozilla.focus.autocomplete.AutocompletePreference
+            android:layout="@layout/focus_preference"
+            android:key="@string/pref_key_screen_autocomplete"
+            android:title="@string/preference_subitem_autocomplete" />
+
     </PreferenceCategory>
 
     <PreferenceCategory

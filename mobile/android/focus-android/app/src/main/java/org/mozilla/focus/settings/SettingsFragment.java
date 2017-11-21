@@ -23,6 +23,7 @@ import android.view.MenuItem;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.activity.SettingsActivity;
+import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.search.MultiselectSearchEngineListPreference;
@@ -166,6 +167,11 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             showSettingsFragment(SettingsScreen.SEARCH_ENGINES);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_manual_add_search_engine))) {
             showSettingsFragment(SettingsScreen.ADD_SEARCH);
+        } else if (preference.getKey().equals(resources.getString(R.string.pref_key_screen_autocomplete))) {
+            getFragmentManager().beginTransaction()
+                    .replace(R.id.container, new AutocompleteSettingsFragment())
+                    .addToBackStack(null)
+                    .commit();
         }
 
         return super.onPreferenceTreeClick(preferenceScreen, preference);

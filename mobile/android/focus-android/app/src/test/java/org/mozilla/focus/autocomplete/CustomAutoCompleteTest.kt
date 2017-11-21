@@ -34,16 +34,14 @@ class CustomAutoCompleteTest {
     }
 
     @Test
-    fun testSavingAndLoadingDomains() {
+    fun testSavingAndLoadingDomains() = runBlocking {
         CustomAutoComplete.saveDomains(RuntimeEnvironment.application, setOf(
                 "mozilla.org",
                 "example.org",
                 "example.com"
         ))
 
-        val domains = runBlocking {
-            CustomAutoComplete.loadCustomAutoCompleteDomains(RuntimeEnvironment.application)
-        }
+        val domains = CustomAutoComplete.loadCustomAutoCompleteDomains(RuntimeEnvironment.application)
 
         assertEquals(3, domains.size)
         assertEquals("mozilla.org", domains.elementAt(0))

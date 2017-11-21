@@ -25,4 +25,8 @@
     <string name="pref_key_privacy_notice" translatable="false"><xliff:g id="preference_key">pref_privacy_notice</xliff:g></string>
 
     <string name="pref_key_locale" translatable="false"><xliff:g id="preference_key">pref_locale</xliff:g></string>
+
+    <string name="pref_key_screen_autocomplete" translatable="false"><xliff:g id="preference_key">pref_screen_autocomplete</xliff:g></string>
+    <string name="pref_key_autocomplete_preinstalled" translatable="false"><xliff:g id="preference_key">pref_autocomplete_preinstalled</xliff:g></string>
+    <string name="pref_key_autocomplete_custom" translatable="false"><xliff:g id="preference_key">pref_autocomplete_custom</xliff:g></string>
 </resources>

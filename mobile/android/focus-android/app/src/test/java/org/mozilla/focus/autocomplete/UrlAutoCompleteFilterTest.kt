@@ -5,23 +5,37 @@
 
 package org.mozilla.focus.autocomplete
 
+import android.content.SharedPreferences
+import android.preference.PreferenceManager
+import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.*
+import org.mozilla.focus.BuildConfig
+import org.mozilla.focus.R
 import org.mozilla.focus.widget.InlineAutocompleteEditText
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
 import java.util.Collections
 import java.util.HashSet
 
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
-
 @RunWith(RobolectricTestRunner::class)
+@Config(constants = BuildConfig::class, packageName = "org.mozilla.focus")
 class UrlAutoCompleteFilterTest {
+    @After
+    fun tearDown() {
+        PreferenceManager.getDefaultSharedPreferences(RuntimeEnvironment.application)
+                .edit()
+                .clear()
+                .apply()
+    }
+
     @Test
     fun testAutocompletion() {
         val filter = UrlAutoCompleteFilter()
+        filter.initialize(RuntimeEnvironment.application, false)
 
         val domains = setOf("mozilla.org", "google.com", "facebook.com")
         filter.onDomainsLoaded(domains, HashSet())
@@ -41,10 +55,16 @@ class UrlAutoCompleteFilterTest {
 
     @Test
     fun testAutocompletionWithCustomDomains() {
+        PreferenceManager.getDefaultSharedPreferences(RuntimeEnvironment.application)
+                .edit()
+                .putBoolean(RuntimeEnvironment.application.getString(R.string.pref_key_autocomplete_custom), true)
+                .apply()
+
         val domains = setOf("facebook.com", "google.com", "mozilla.org")
         val customDomains = setOf("gap.com", "fanfiction.com", "mobile.de")
 
         val filter = UrlAutoCompleteFilter()
+        filter.initialize(RuntimeEnvironment.application, false)
         filter.onDomainsLoaded(domains, customDomains)
 
         assertAutocompletion(filter, "f", "fanfiction.com")

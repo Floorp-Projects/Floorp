@@ -11,6 +11,7 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import org.mozilla.focus.locale.Locales
+import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.widget.InlineAutocompleteEditText
 import java.io.IOException
 import java.util.*
@@ -20,7 +21,10 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
         private val LOG_TAG = "UrlAutoCompleteFilter"
     }
 
-    private val domains = LinkedHashSet<String>()
+    private var settings : Settings? = null
+
+    private val customDomains = LinkedHashSet<String>()
+    private val preInstalledDomains = LinkedHashSet<String>()
 
     override fun onFilter(rawSearchText: String, view: InlineAutocompleteEditText?) {
         if (view == null) {
@@ -30,31 +34,55 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
         // Search terms are all lowercase already, we just need to lowercase the search text
         val searchText = rawSearchText.toLowerCase(Locale.US)
 
-        domains.forEach {
-            val wwwDomain = "www." + it
-            if (wwwDomain.startsWith(searchText)) {
-                view.onAutocomplete(prepareAutocompleteResult(rawSearchText, wwwDomain))
-                return
+        settings?.let {
+            if (it.shouldAutocompleteFromCustomDomainList()) {
+                val autocomplete = tryToAutocomplete(searchText, customDomains)
+                if (autocomplete != null) {
+                    view.onAutocomplete(prepareAutocompleteResult(rawSearchText, autocomplete))
+                    return
+                }
             }
 
-            if (it.startsWith(searchText)) {
-                view.onAutocomplete(prepareAutocompleteResult(rawSearchText, it))
-                return
+            if (it.shouldAutocompleteFromShippedDomainList()) {
+                val autocomplete = tryToAutocomplete(searchText, preInstalledDomains)
+                if (autocomplete != null) {
+                    view.onAutocomplete(prepareAutocompleteResult(rawSearchText, autocomplete))
+                    return
+                }
             }
         }
     }
 
-    internal fun onDomainsLoaded(domains: Set<String>, customDomains: Set<String>) {
-        this.domains.addAll(customDomains)
-        this.domains.addAll(domains)
+    private fun tryToAutocomplete(searchText: String, domains: Set<String>): String? {
+        domains.forEach {
+            val wwwDomain = "www." + it
+            if (wwwDomain.startsWith(searchText)) {
+                return wwwDomain
+            }
+
+            if (it.startsWith(searchText)) {
+                return it
+            }
+        }
+
+        return null
     }
 
-    fun initialize(context: Context) {
-        launch(UI) {
-            val domains = async(CommonPool) { loadDomains(context) }
-            val customDomains = async(CommonPool) { CustomAutoComplete.loadCustomAutoCompleteDomains(context) }
+    internal fun onDomainsLoaded(domains: Set<String>, customDomains: Set<String>) {
+        this.preInstalledDomains.addAll(domains)
+        this.customDomains.addAll(customDomains)
+    }
 
-            onDomainsLoaded(domains.await(), customDomains.await())
+    fun initialize(context: Context, loadDomainsFromDisk: Boolean = true) {
+        settings = Settings.getInstance(context)
+
+        if (loadDomainsFromDisk) {
+            launch(UI) {
+                val domains = async(CommonPool) { loadDomains(context) }
+                val customDomains = async(CommonPool) { CustomAutoComplete.loadCustomAutoCompleteDomains(context) }
+
+                onDomainsLoaded(domains.await(), customDomains.await())
+            }
         }
     }
 
