@@ -10,6 +10,7 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/MediaEncryptedEvent.h"
@@ -17,6 +18,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Sprintf.h"
 
+#include "AutoplayPolicy.h"
 #include "base/basictypes.h"
 #include "nsIDOMHTMLMediaElement.h"
 #include "TimeRanges.h"
@@ -7031,11 +7033,7 @@ HTMLMediaElement::UpdateAudioChannelPlayingState(bool aForcePlaying)
 bool
 HTMLMediaElement::IsAllowedToPlay()
 {
-  // Prevent media element from being auto-started by a script when
-  // media.autoplay.enabled=false
-  if (!mHasUserInteraction &&
-      !IsAutoplayEnabled() &&
-      !EventStateManager::IsHandlingUserInput()) {
+  if (!AutoplayPolicy::IsMediaElementAllowedToPlay(WrapNotNull(this))) {
 #if defined(MOZ_WIDGET_ANDROID)
     nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                          static_cast<nsIContent*>(this),
