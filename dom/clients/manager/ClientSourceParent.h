@@ -21,6 +21,7 @@ class ClientSourceParent final : public PClientSourceParent
   RefPtr<ClientManagerService> mService;
   nsTArray<ClientHandleParent*> mHandleList;
   bool mExecutionReady;
+  bool mFrozen;
 
   void
   KillInvalidChild();
@@ -31,6 +32,12 @@ class ClientSourceParent final : public PClientSourceParent
 
   mozilla::ipc::IPCResult
   RecvExecutionReady(const ClientSourceExecutionReadyArgs& aArgs) override;
+
+  mozilla::ipc::IPCResult
+  RecvFreeze() override;
+
+  mozilla::ipc::IPCResult
+  RecvThaw() override;
 
   void
   ActorDestroy(ActorDestroyReason aReason) override;
@@ -50,6 +57,9 @@ public:
 
   const ClientInfo&
   Info() const;
+
+  bool
+  IsFrozen() const;
 
   void
   AttachHandle(ClientHandleParent* aClientSource);
