@@ -1815,12 +1815,13 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (IsScrollbarContainer()) {
     aStream << " [scrollbar]";
   }
-  ScrollDirection thumbDirection = GetScrollThumbData().mDirection;
-  if (thumbDirection == ScrollDirection::VERTICAL) {
-    aStream << nsPrintfCString(" [vscrollbar=%" PRIu64 "]", GetScrollbarTargetContainerId()).get();
-  }
-  if (thumbDirection == ScrollDirection::HORIZONTAL) {
-    aStream << nsPrintfCString(" [hscrollbar=%" PRIu64 "]", GetScrollbarTargetContainerId()).get();
+  if (Maybe<ScrollDirection> thumbDirection = GetScrollThumbData().mDirection) {
+    if (*thumbDirection == ScrollDirection::eVertical) {
+      aStream << nsPrintfCString(" [vscrollbar=%" PRIu64 "]", GetScrollbarTargetContainerId()).get();
+    }
+    if (*thumbDirection == ScrollDirection::eHorizontal) {
+      aStream << nsPrintfCString(" [hscrollbar=%" PRIu64 "]", GetScrollbarTargetContainerId()).get();
+    }
   }
   if (GetIsFixedPosition()) {
     LayerPoint anchor = GetFixedPositionAnchor();
@@ -1965,9 +1966,8 @@ Layer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
   // Component alpha
   layer->set_calpha(static_cast<bool>(GetContentFlags() & CONTENT_COMPONENT_ALPHA));
   // Vertical or horizontal bar
-  ScrollDirection thumbDirection = GetScrollThumbData().mDirection;
-  if (thumbDirection != ScrollDirection::NONE) {
-    layer->set_direct(thumbDirection == ScrollDirection::VERTICAL ?
+  if (Maybe<ScrollDirection> thumbDirection = GetScrollThumbData().mDirection) {
+    layer->set_direct(*thumbDirection == ScrollDirection::eVertical ?
                       LayersPacket::Layer::VERTICAL :
                       LayersPacket::Layer::HORIZONTAL);
     layer->set_barid(GetScrollbarTargetContainerId());

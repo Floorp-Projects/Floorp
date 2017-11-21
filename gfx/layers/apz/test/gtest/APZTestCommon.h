@@ -265,16 +265,18 @@ public:
     EXPECT_EQ(FLING, mState);
   }
 
+  void AssertNotAxisLocked() const {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    EXPECT_EQ(PANNING, mState);
+  }
+
   void AssertAxisLocked(ScrollDirection aDirection) const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     switch (aDirection) {
-    case ScrollDirection::NONE:
-      EXPECT_EQ(PANNING, mState);
-      break;
-    case ScrollDirection::HORIZONTAL:
+    case ScrollDirection::eHorizontal:
       EXPECT_EQ(PANNING_LOCKED_X, mState);
       break;
-    case ScrollDirection::VERTICAL:
+    case ScrollDirection::eVertical:
       EXPECT_EQ(PANNING_LOCKED_Y, mState);
       break;
     }

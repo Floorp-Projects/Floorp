@@ -6859,7 +6859,7 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            aContainerParameters, nullptr,
                            FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR);
-  if (mThumbData.mDirection != ScrollDirection::NONE) {
+  if (mThumbData.mDirection.isSome()) {
     layer->SetScrollThumbData(mScrollTarget, mThumbData);
   }
   if (mFlags & SCROLLBAR_CONTAINER) {
@@ -6879,8 +6879,7 @@ nsDisplayOwnLayer::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
                                            WebRenderLayerManager* aManager,
                                            nsDisplayListBuilder* aDisplayListBuilder)
 {
-  if (!aManager->AsyncPanZoomEnabled() ||
-      mThumbData.mDirection == ScrollDirection::NONE) {
+  if (!aManager->AsyncPanZoomEnabled() || mThumbData.mDirection.isNothing()) {
     return nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, aSc,
                                                       aManager, aDisplayListBuilder);
   }

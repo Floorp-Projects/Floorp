@@ -6,6 +6,7 @@
 #ifndef mozilla_gfx_layers_LayerAttributes_h
 #define mozilla_gfx_layers_LayerAttributes_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/LayersTypes.h"
 
@@ -19,8 +20,7 @@ namespace layers {
 // Data stored for scroll thumb container layers.
 struct ScrollThumbData {
   ScrollThumbData()
-    : mDirection(ScrollDirection::NONE)
-    , mThumbRatio(0.0f)
+    : mThumbRatio(0.0f)
     , mIsAsyncDraggable(false)
   {}
   ScrollThumbData(ScrollDirection aDirection,
@@ -30,7 +30,7 @@ struct ScrollThumbData {
                   bool aIsAsyncDraggable,
                   CSSCoord aScrollTrackStart,
                   CSSCoord aScrollTrackLength)
-    : mDirection(aDirection)
+    : mDirection(Some(aDirection))
     , mThumbRatio(aThumbRatio)
     , mThumbStart(aThumbStart)
     , mThumbLength(aThumbLength)
@@ -39,7 +39,7 @@ struct ScrollThumbData {
     , mScrollTrackLength(aScrollTrackLength)
   {}
 
-  ScrollDirection mDirection;
+  Maybe<ScrollDirection> mDirection;
   // The scrollbar thumb ratio is the ratio of the thumb position (in the CSS
   // pixels of the scrollframe's parent's space) to the scroll position (in the
   // CSS pixels of the scrollframe's space).

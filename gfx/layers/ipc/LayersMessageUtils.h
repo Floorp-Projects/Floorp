@@ -66,7 +66,7 @@ template <>
 struct ParamTraits<mozilla::layers::ScrollDirection>
   : public ContiguousEnumSerializerInclusive<
             mozilla::layers::ScrollDirection,
-            mozilla::layers::ScrollDirection::NONE,
+            mozilla::layers::ScrollDirection::eVertical,
             mozilla::layers::kHighestScrollDirection>
 {};
 

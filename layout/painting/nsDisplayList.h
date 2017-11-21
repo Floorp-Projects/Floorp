@@ -5158,7 +5158,7 @@ protected:
   ViewID mScrollTarget;
   // If this nsDisplayOwnLayer represents a scroll thumb layer, mThumbData
   // stores information about the scroll thumb. Otherwise, mThumbData will be
-  // default-constructed (in particular with mDirection == ScrollDirection::NONE)
+  // default-constructed (in particular with mDirection == Nothing())
   // and can be ignored.
   ScrollThumbData mThumbData;
   bool mForceActive;

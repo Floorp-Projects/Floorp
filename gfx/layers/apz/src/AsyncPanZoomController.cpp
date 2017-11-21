@@ -922,6 +922,8 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   }
 
   const ScrollThumbData& thumbData = node->GetScrollThumbData();
+  MOZ_ASSERT(thumbData.mDirection.isSome());
+  ScrollDirection direction = *thumbData.mDirection;
 
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
       (uint32_t) ScrollInputMethod::ApzScrollbarDrag);
@@ -934,7 +936,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
     ParentLayerRect thumbRect =
         (node->GetTransform() * AsyncTransformMatrix()).TransformBounds(
               LayerRect(node->GetVisibleRegion().GetBounds()));
-    ScrollDirection otherDirection = GetPerpendicularDirection(aDragMetrics.mDirection);
+    ScrollDirection otherDirection = GetPerpendicularDirection(direction);
     ParentLayerCoord distance = GetAxisStart(otherDirection,
         thumbRect.DistanceTo(aEvent.mLocalOrigin));
     ParentLayerCoord thumbWidth = GetAxisLength(otherDirection, thumbRect);
@@ -960,17 +962,17 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   float scrollPercent = thumbPosition / maxThumbPos;
 
   CSSCoord minScrollPosition =
-    GetAxisStart(aDragMetrics.mDirection, mFrameMetrics.GetScrollableRect().TopLeft());
+    GetAxisStart(direction, mFrameMetrics.GetScrollableRect().TopLeft());
   CSSCoord maxScrollPosition =
-    GetAxisStart(aDragMetrics.mDirection, mFrameMetrics.GetScrollableRect().BottomRight()) -
-    GetAxisLength(aDragMetrics.mDirection, mFrameMetrics.CalculateCompositedRectInCssPixels());
+    GetAxisStart(direction, mFrameMetrics.GetScrollableRect().BottomRight()) -
+    GetAxisLength(direction, mFrameMetrics.CalculateCompositedRectInCssPixels());
   CSSCoord scrollPosition = minScrollPosition + (scrollPercent * (maxScrollPosition - minScrollPosition));
 
   scrollPosition = std::max(scrollPosition, minScrollPosition);
   scrollPosition = std::min(scrollPosition, maxScrollPosition);
 
   CSSPoint scrollOffset = mFrameMetrics.GetScrollOffset();
-  if (aDragMetrics.mDirection == ScrollDirection::HORIZONTAL) {
+  if (direction == ScrollDirection::eHorizontal) {
     scrollOffset.x = scrollPosition;
   } else {
     scrollOffset.y = scrollPosition;
@@ -1634,8 +1636,8 @@ AsyncPanZoomController::ConvertScrollbarPoint(const ParentLayerPoint& aScrollbar
 
   // Now, get it to be relative to the beginning of the scroll track.
   CSSRect cssCompositionBound = mFrameMetrics.CalculateCompositedRectInCssPixels();
-  return GetAxisStart(aThumbData.mDirection, scrollbarPoint)
-      - GetAxisStart(aThumbData.mDirection, cssCompositionBound)
+  return GetAxisStart(*aThumbData.mDirection, scrollbarPoint)
+      - GetAxisStart(*aThumbData.mDirection, cssCompositionBound)
       - aThumbData.mScrollTrackStart;
 }
 
@@ -1948,13 +1950,10 @@ AsyncPanZoomController::CanScroll(ScrollDirection aDirection) const
 {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   switch (aDirection) {
-  case ScrollDirection::HORIZONTAL: return mX.CanScroll();
-  case ScrollDirection::VERTICAL:   return mY.CanScroll();
-
-  case ScrollDirection::NONE:
-    MOZ_ASSERT_UNREACHABLE("Invalid value");
-    break;
+  case ScrollDirection::eHorizontal: return mX.CanScroll();
+  case ScrollDirection::eVertical:   return mY.CanScroll();
   }
+  MOZ_ASSERT_UNREACHABLE("Invalid value");
   return false;
 }
 
@@ -2266,10 +2265,10 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
   MOZ_ASSERT(GetCurrentPanGestureBlock());
   RefPtr<const OverscrollHandoffChain> overscrollHandoffChain =
     GetCurrentPanGestureBlock()->GetOverscrollHandoffChain();
-  if (!overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::HORIZONTAL)) {
+  if (!overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::eHorizontal)) {
     mX.SetVelocity(0);
   }
-  if (!overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::VERTICAL)) {
+  if (!overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::eVertical)) {
     mY.SetVelocity(0);
   }
 
@@ -2511,9 +2510,9 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
   RefPtr<const OverscrollHandoffChain> overscrollHandoffChain =
     GetCurrentInputBlock()->GetOverscrollHandoffChain();
   bool canScrollHorizontal = !mX.IsAxisLocked() &&
-    overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::HORIZONTAL);
+    overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::eHorizontal);
   bool canScrollVertical = !mY.IsAxisLocked() &&
-    overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::VERTICAL);
+    overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::eVertical);
   if (GetCurrentTouchBlock()->TouchActionAllowsPanningXY()) {
     if (canScrollHorizontal && canScrollVertical) {
       if (IsCloseToHorizontal(aAngle, gfxPrefs::APZAxisLockAngle())) {
@@ -2568,9 +2567,9 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
   RefPtr<const OverscrollHandoffChain> overscrollHandoffChain =
     GetCurrentInputBlock()->GetOverscrollHandoffChain();
   bool canScrollHorizontal = !mX.IsAxisLocked() &&
-    overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::HORIZONTAL);
+    overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::eHorizontal);
   bool canScrollVertical = !mY.IsAxisLocked() &&
-    overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::VERTICAL);
+    overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::eVertical);
 
   if (!canScrollHorizontal || !canScrollVertical) {
     SetState(PANNING);
