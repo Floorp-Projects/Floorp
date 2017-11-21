@@ -359,15 +359,10 @@ var gMainPane = {
 
     let distroId = Services.prefs.getCharPref("distribution.id", "");
     if (distroId) {
-      let distroString = distroId;
-
-      let distroVersion = Services.prefs.getCharPref("distribution.version", "");
-      if (distroVersion) {
-        distroString += " - " + distroVersion;
-      }
+      let distroVersion = Services.prefs.getCharPref("distribution.version");
 
       let distroIdField = document.getElementById("distributionId");
-      distroIdField.value = distroString;
+      distroIdField.value = distroId + " - " + distroVersion;
       distroIdField.hidden = false;
 
       let distroAbout = Services.prefs.getStringPref("distribution.about", "");
