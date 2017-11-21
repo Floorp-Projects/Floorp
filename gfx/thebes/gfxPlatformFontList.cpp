@@ -1200,25 +1200,42 @@ gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], uint32_t &aL
           }
         }
 
-        // Then test OS locale
-        OSPreferences::GetInstance()->GetSystemLocale(localeStr);
+        // Then add the known CJK prefs in order of system preferred locales
+        AutoTArray<nsCString,5> prefLocales;
+        prefLocales.AppendElement(NS_LITERAL_CSTRING("ja"));
+        prefLocales.AppendElement(NS_LITERAL_CSTRING("zh-CN"));
+        prefLocales.AppendElement(NS_LITERAL_CSTRING("zh-TW"));
+        prefLocales.AppendElement(NS_LITERAL_CSTRING("zh-HK"));
+        prefLocales.AppendElement(NS_LITERAL_CSTRING("ko"));
 
-        {
-          const nsACString& lang = Substring(localeStr, 0, 2);
-          if (lang.EqualsLiteral("ja")) {
-              AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Japanese);
-          } else if (lang.EqualsLiteral("zh")) {
-              const nsACString& region = Substring(localeStr, 3, 2);
-              if (region.EqualsLiteral("CN")) {
-                  AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseCN);
-              } else if (region.EqualsLiteral("TW")) {
-                  AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseTW);
-              } else if (region.EqualsLiteral("HK")) {
-                  AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseHK);
-              }
-          } else if (lang.EqualsLiteral("ko")) {
-              AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Korean);
-          }
+        AutoTArray<nsCString,16> sysLocales;
+        AutoTArray<nsCString,16> negLocales;
+        if (OSPreferences::GetInstance()->GetSystemLocales(sysLocales) &&
+            LocaleService::GetInstance()->NegotiateLanguages(
+                sysLocales, prefLocales, NS_LITERAL_CSTRING(""),
+                LocaleService::LangNegStrategy::Filtering, negLocales)) {
+            for (const auto& localeStr : negLocales) {
+                const nsACString& lang = Substring(localeStr, 0, 2);
+                if (lang.EqualsLiteral("ja")) {
+                    AppendPrefLang(tempPrefLangs, tempLen,
+                                   eFontPrefLang_Japanese);
+                } else if (lang.EqualsLiteral("zh")) {
+                    const nsACString& region = Substring(localeStr, 3, 2);
+                    if (region.EqualsLiteral("CN")) {
+                        AppendPrefLang(tempPrefLangs, tempLen,
+                                       eFontPrefLang_ChineseCN);
+                    } else if (region.EqualsLiteral("TW")) {
+                        AppendPrefLang(tempPrefLangs, tempLen,
+                                       eFontPrefLang_ChineseTW);
+                    } else if (region.EqualsLiteral("HK")) {
+                        AppendPrefLang(tempPrefLangs, tempLen,
+                                       eFontPrefLang_ChineseHK);
+                    }
+                } else if (lang.EqualsLiteral("ko")) {
+                    AppendPrefLang(tempPrefLangs, tempLen,
+                                   eFontPrefLang_Korean);
+                }
+            }
         }
 
         // last resort... (the order is same as old gfx.)
