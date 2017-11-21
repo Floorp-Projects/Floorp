@@ -469,6 +469,14 @@ private:
     }
   }
 
+  bool ValueMatches(PrefValueKind aKind, PrefType aType, PrefValue aValue)
+  {
+    return IsType(aType) &&
+           (aKind == PrefValueKind::Default
+              ? mHasDefaultValue && mDefaultValue.Equals(aType, aValue)
+              : mHasUserValue && mUserValue.Equals(aType, aValue));
+  }
+
 public:
   void ClearUserValue()
   {
@@ -492,19 +500,18 @@ public:
         return NS_ERROR_UNEXPECTED;
       }
 
-      if (!IsLocked()) {
-        // ?? change of semantics?
-        if (!mHasDefaultValue || !mDefaultValue.Equals(aType, aValue)) {
-          ReplaceValue(PrefValueKind::Default, aType, aValue);
-          if (aFlags & kPrefSticky) {
-            mIsSticky = true;
-          }
-          if (!mHasUserValue) {
-            *aValueChanged = true;
-          }
+      // Should we set the default value? Only if the pref is not locked, and
+      // doing so would change the default value.
+      if (!IsLocked() && !ValueMatches(PrefValueKind::Default, aType, aValue)) {
+        ReplaceValue(PrefValueKind::Default, aType, aValue);
+        if (aFlags & kPrefSticky) {
+          mIsSticky = true;
+        }
+        if (!mHasUserValue) {
+          *aValueChanged = true;
         }
         // What if we change the default to be the same as the user value?
-        // Should we clear the user value?
+        // Should we clear the user value? Currently we don't.
       }
     } else {
       // If we have a default value, types must match when setting the user
@@ -513,11 +520,11 @@ public:
         return NS_ERROR_UNEXPECTED;
       }
 
-      // If new value is same as the default value and it's not a "sticky"
-      // pref, then un-set the user value. Otherwise, set the user value only
-      // if it has changed.
-      if (mHasDefaultValue && !mIsSticky &&
-          mDefaultValue.Equals(aType, aValue) && !(aFlags & kPrefForceSet)) {
+      // Should we clear the user value, if present? Only if the new user value
+      // matches the default value, and the pref isn't sticky, and we aren't
+      // force-setting it.
+      if (ValueMatches(PrefValueKind::Default, aType, aValue) && !mIsSticky &&
+          !(aFlags & kPrefForceSet)) {
         if (mHasUserValue) {
           ClearUserValue();
           if (!IsLocked()) {
@@ -525,8 +532,10 @@ public:
             *aValueChanged = true;
           }
         }
-      } else if (!mHasUserValue || !IsType(aType) ||
-                 !mUserValue.Equals(aType, aValue)) {
+
+        // Otherwise, should we set the user value? Only if doing so would
+        // change the user value.
+      } else if (!ValueMatches(PrefValueKind::User, aType, aValue)) {
         ReplaceValue(PrefValueKind::User, aType, aValue);
         if (!IsLocked()) {
           *aDirty = true;
@@ -540,8 +549,11 @@ public:
   // Returns false if this pref doesn't have a user value worth saving.
   bool UserValueToStringForSaving(nsCString& aStr)
   {
-    if (mHasUserValue && (!mHasDefaultValue || mIsSticky ||
-                          !mDefaultValue.Equals(Type(), mUserValue))) {
+    // Should we save the user value, if present? Only if it does not match the
+    // default value, or it is sticky.
+    if (mHasUserValue &&
+        (!ValueMatches(PrefValueKind::Default, Type(), mUserValue) ||
+         mIsSticky)) {
       if (IsTypeString()) {
         StrEscape(mUserValue.mStringVal, aStr);
 
