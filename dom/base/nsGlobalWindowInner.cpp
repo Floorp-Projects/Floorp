@@ -4882,7 +4882,7 @@ nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError)
   nsIPrincipal *principal = GetPrincipal();
   nsIDocShell* docShell = GetDocShell();
 
-  if (!principal || !docShell || !Preferences::GetBool(kStorageEnabled)) {
+  if (!principal || !docShell || !Storage::StoragePrefIsEnabled()) {
     return nullptr;
   }
 
@@ -4958,7 +4958,7 @@ nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
-  if (!Preferences::GetBool(kStorageEnabled)) {
+  if (!Storage::StoragePrefIsEnabled()) {
     return nullptr;
   }
 

@@ -6,8 +6,6 @@
 
 #include <stdint.h>
 
-static const char kStorageEnabled[] = "dom.storage.enabled";
-
 static bool                 gMouseDown                        = false;
 static bool                 gDragServiceDisabled              = false;
 
