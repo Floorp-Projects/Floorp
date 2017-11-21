@@ -317,6 +317,15 @@ protected:
       , mLeft(nullptr)
       , mRight(nullptr)
     {}
+
+    EditorRawDOMPoint StartPoint() const
+    {
+      return EditorRawDOMPoint(mStartNode, mStartOffset);
+    }
+    EditorRawDOMPoint EndPoint() const
+    {
+      return EditorRawDOMPoint(mEndNode, mEndOffset);
+    }
   };
 
   // A WSPoint struct represents a unique location within the ws run.  It is
@@ -372,8 +381,30 @@ protected:
   void GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
                         dom::Text** outStartNode, int32_t* outStartOffset,
                         dom::Text** outEndNode, int32_t* outEndOffset);
-  void FindRun(nsINode* aNode, int32_t aOffset, WSFragment** outRun,
-               bool after);
+
+  /**
+   * FindNearestRun() looks for a WSFragment which is closest to specified
+   * direction from aPoint.
+   *
+   * @param aPoint      The point to start to look for.
+   * @param aForward    true if caller needs to look for a WSFragment after the
+   *                    point in the DOM tree.  Otherwise, i.e., before the
+   *                    point, false.
+   * @return            Found WSFragment instance.
+   *                    If aForward is true and:
+   *                      if aPoint is end of a run, returns next run.
+   *                      if aPoint is start of a run, returns the run.
+   *                      if aPoint is before the first run, returns the first
+   *                      run.
+   *                      If aPoint is after the last run, returns nullptr.
+   *                    If aForward is false and:
+   *                      if aPoint is end of a run, returns the run.
+   *                      if aPoint is start of a run, returns its next run.
+   *                      if aPoint is before the first run, returns nullptr.
+   *                      if aPoint is after the last run, returns the last run.
+   */
+  WSFragment* FindNearestRun(const EditorRawDOMPoint& aPoint, bool aForward);
+
   char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset);
   WSPoint GetWSPointAfter(nsINode* aNode, int32_t aOffset);
   WSPoint GetWSPointBefore(nsINode* aNode, int32_t aOffset);
@@ -385,6 +416,19 @@ protected:
 
   nsresult Scrub();
   bool IsBlockNode(nsINode* aNode);
+
+  EditorRawDOMPoint Point() const
+  {
+    return EditorRawDOMPoint(mNode, mOffset);
+  }
+  EditorRawDOMPoint StartPoint() const
+  {
+    return EditorRawDOMPoint(mStartNode, mStartOffset);
+  }
+  EditorRawDOMPoint EndPoint() const
+  {
+    return EditorRawDOMPoint(mEndNode, mEndOffset);
+  }
 
   // The node passed to our constructor.
   nsCOMPtr<nsINode> mNode;

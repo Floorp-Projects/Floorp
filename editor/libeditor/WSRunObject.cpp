@@ -180,11 +180,8 @@ WSRunObject::InsertBreak(Selection& aSelection,
   // meanwhile, the pre case is handled in WillInsertText in
   // HTMLEditRules.cpp
 
-  WSFragment *beforeRun, *afterRun;
-  FindRun(aPointToInsert.Container(), aPointToInsert.Offset(),
-          &beforeRun, false);
-  FindRun(aPointToInsert.Container(), aPointToInsert.Offset(),
-          &afterRun, true);
+  WSFragment* beforeRun = FindNearestRun(aPointToInsert, false);
+  WSFragment* afterRun = FindNearestRun(aPointToInsert, true);
 
   EditorDOMPoint pointToInsert(aPointToInsert);
   {
@@ -273,15 +270,11 @@ WSRunObject::InsertText(nsIDocument& aDocument,
     return NS_OK;
   }
 
+  WSFragment* beforeRun = FindNearestRun(aPointToInsert, false);
+  WSFragment* afterRun = FindNearestRun(aPointToInsert, true);
+
   EditorDOMPoint pointToInsert(aPointToInsert);
   nsAutoString theString(aStringToInsert);
-
-  WSFragment *beforeRun, *afterRun;
-  FindRun(pointToInsert.Container(), pointToInsert.Offset(),
-          &beforeRun, false);
-  FindRun(pointToInsert.Container(), pointToInsert.Offset(),
-          &afterRun, true);
-
   {
     // Some scoping for AutoTrackDOMPoint.  This will track our insertion
     // point while we tweak any surrounding whitespace
@@ -510,8 +503,7 @@ WSRunObject::PriorVisibleNode(nsINode* aNode,
   // anything return start of ws.
   MOZ_ASSERT(aNode && outVisNode && outVisOffset && outType);
 
-  WSFragment* run;
-  FindRun(aNode, aOffset, &run, false);
+  WSFragment* run = FindNearestRun(EditorRawDOMPoint(aNode, aOffset), false);
 
   // Is there a visible run there or earlier?
   for (; run; run = run->mLeft) {
@@ -552,8 +544,7 @@ WSRunObject::NextVisibleNode(nsINode* aNode,
   // anything return end of ws.
   MOZ_ASSERT(aNode && outVisNode && outVisOffset && outType);
 
-  WSFragment* run;
-  FindRun(aNode, aOffset, &run, true);
+  WSFragment* run = FindNearestRun(EditorRawDOMPoint(aNode, aOffset), true);
 
   // Is there a visible run there or later?
   for (; run; run = run->mRight) {
@@ -1193,9 +1184,8 @@ WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject)
   NS_ENSURE_TRUE(aEndObject, NS_ERROR_NULL_POINTER);
 
   // get the runs before and after selection
-  WSFragment *beforeRun, *afterRun;
-  FindRun(mNode, mOffset, &beforeRun, false);
-  aEndObject->FindRun(aEndObject->mNode, aEndObject->mOffset, &afterRun, true);
+  WSFragment* beforeRun = FindNearestRun(Point(), false);
+  WSFragment* afterRun = aEndObject->FindNearestRun(aEndObject->Point(), true);
 
   // trim after run of any leading ws
   if (afterRun && (afterRun->mType & WSType::leadingWS)) {
@@ -1253,9 +1243,8 @@ WSRunObject::PrepareToSplitAcrossBlocksPriv()
   // leading or trailing ws after the split.
 
   // get the runs before and after selection
-  WSFragment *beforeRun, *afterRun;
-  FindRun(mNode, mOffset, &beforeRun, false);
-  FindRun(mNode, mOffset, &afterRun, true);
+  WSFragment* beforeRun = FindNearestRun(Point(), false);
+  WSFragment* afterRun = FindNearestRun(Point(), true);
 
   // adjust normal ws in afterRun if needed
   if (afterRun && afterRun->mType == WSType::normalWS) {
@@ -1552,55 +1541,43 @@ WSRunObject::GetAsciiWSBounds(int16_t aDir,
   *outEndOffset = endOffset;
 }
 
-/**
- * Given a dompoint, find the ws run that is before or after it, as caller
- * needs
- */
-void
-WSRunObject::FindRun(nsINode* aNode,
-                     int32_t aOffset,
-                     WSFragment** outRun,
-                     bool after)
+WSRunObject::WSFragment*
+WSRunObject::FindNearestRun(const EditorRawDOMPoint& aPoint,
+                            bool aForward)
 {
-  MOZ_ASSERT(aNode && outRun);
-  *outRun = nullptr;
+  MOZ_ASSERT(aPoint.IsSetAndValid());
 
   for (WSFragment* run = mStartRun; run; run = run->mRight) {
-    int32_t comp = run->mStartNode ? nsContentUtils::ComparePoints(aNode,
-        aOffset, run->mStartNode, run->mStartOffset) : -1;
+    int32_t comp = run->mStartNode ?
+      nsContentUtils::ComparePoints(aPoint, run->StartPoint()) : -1;
     if (comp <= 0) {
-      if (after) {
-        *outRun = run;
-      } else {
-        // before
-        *outRun = nullptr;
-      }
-      return;
+      // aPoint equals or before start of the run.  Return the run if we're
+      // scanning forward, otherwise, nullptr.
+      return aForward ? run : nullptr;
     }
-    comp = run->mEndNode ? nsContentUtils::ComparePoints(aNode, aOffset,
-        run->mEndNode, run->mEndOffset) : -1;
+
+    comp = run->mEndNode ?
+      nsContentUtils::ComparePoints(aPoint, run->EndPoint()) : -1;
     if (comp < 0) {
-      *outRun = run;
-      return;
-    } else if (!comp) {
-      if (after) {
-        *outRun = run->mRight;
-      } else {
-        // before
-        *outRun = run;
-      }
-      return;
+      // If aPoint is in the run, return the run.
+      return run;
     }
+
+    if (!comp) {
+      // If aPoint is at end of the run, return next run if we're scanning
+      // forward, otherwise, return the run.
+      return aForward ? run->mRight : run;
+    }
+
     if (!run->mRight) {
-      if (after) {
-        *outRun = nullptr;
-      } else {
-        // before
-        *outRun = run;
-      }
-      return;
+      // If the run is the last run and aPoint is after end of the last run,
+      // return nullptr if we're scanning forward, otherwise, return this
+      // last run.
+      return aForward ? nullptr : run;
     }
   }
+
+  return nullptr;
 }
 
 char16_t
