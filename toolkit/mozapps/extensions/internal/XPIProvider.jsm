@@ -3717,8 +3717,10 @@ this.XPIProvider = {
           // The thing with experiments is an ugly hack but we want
           // Experiments.jsm to use this interface instead of getAddonsByTypes.
           // They'll go away at some point and we can forget this ever happened.
-          resolve(addons.filter(addon => addon.isActive ||
-                                       (addon.type == "experiment" && !addon.appDisabled)));
+          resolve({addons: addons.filter(addon => addon.isActive ||
+                                       (addon.type == "experiment" && !addon.appDisabled)),
+                   fullData: true
+          });
         });
       });
     }
@@ -3751,7 +3753,7 @@ this.XPIProvider = {
       });
     }
 
-    return Promise.resolve(result);
+    return Promise.resolve({addons: result, fullData: false});
   },
 
 
