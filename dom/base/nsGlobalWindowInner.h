@@ -1102,8 +1102,6 @@ protected:
   void CleanUp();
   void ClearControllers();
 
-  inline void MaybeClearInnerWindow(nsGlobalWindowInner* aExpectedInner);
-
   void FreeInnerObjects();
   nsGlobalWindowInner *CallerInnerWindow();
 
@@ -1602,14 +1600,6 @@ inline bool
 nsGlobalWindowInner::IsFrame()
 {
   return GetParentInternal() != nullptr;
-}
-
-inline void
-nsGlobalWindowInner::MaybeClearInnerWindow(nsGlobalWindowInner* aExpectedInner)
-{
-  if(mInnerWindow == aExpectedInner->AsInner()) {
-    mInnerWindow = nullptr;
-  }
 }
 
 #endif /* nsGlobalWindowInner_h___ */
