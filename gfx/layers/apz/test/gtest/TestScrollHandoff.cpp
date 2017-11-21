@@ -153,7 +153,7 @@ protected:
     Pan(childApzc, ScreenIntPoint(10, 60), ScreenIntPoint(15, 90),
         PanOptions::KeepFingerDown | PanOptions::ExactCoordinates);
 
-    childApzc->AssertAxisLocked(ScrollDirection::VERTICAL);
+    childApzc->AssertAxisLocked(ScrollDirection::eVertical);
   }
 };
 
