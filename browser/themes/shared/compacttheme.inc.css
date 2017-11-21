@@ -36,7 +36,7 @@
   --chrome-nav-buttons-hover-background: hsla(240, 5%, 5%, .15);
   --chrome-nav-bar-controls-border-color: hsla(240, 5%, 5%, .3);
   --chrome-selection-color: #fff;
-  --chrome-selection-background-color: #5675B9;
+  --chrome-selection-background-color: #0060df;
 
   /* Url and search bars */
   --url-and-searchbar-background-color: rgb(71, 71, 73);
@@ -52,11 +52,11 @@
   --chrome-secondary-background-color: #f5f6f7;
   --toolbox-border-bottom-color: #cccccc;
   --chrome-nav-bar-separator-color: #B6B6B8;
-  --chrome-nav-buttons-background: #ffffff; /* --theme-body-background */
+  --chrome-nav-buttons-background: #ffffff;
   --chrome-nav-buttons-hover-background: #DADBDB;
   --chrome-nav-bar-controls-border-color: #ccc;
   --chrome-selection-color: #f5f7fa;
-  --chrome-selection-background-color: #4c9ed9;
+  --chrome-selection-background-color: #0060df;
 }
 
 .toolbarbutton-animatable-box[brighttext],
@@ -118,3 +118,8 @@ toolbar[brighttext] .toolbarbutton-1 {
   filter: none !important; /* removes drop-shadow filter */
 }
 
+/* Improve contrast of URL bar notification "Change Settings" link */
+
+#search-suggestions-change-settings {
+  color: #0a84ff;
+}
