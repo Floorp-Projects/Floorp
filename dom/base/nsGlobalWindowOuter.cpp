@@ -2401,7 +2401,7 @@ nsGlobalWindowOuter::WillHandleEvent(EventChainPostVisitor& aVisitor)
 nsresult
 nsGlobalWindowOuter::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
-  MOZ_CRASH("Virtual inner window only function");
+  MOZ_CRASH("The outer window should not be part of an event path");
 }
 
 bool
@@ -2533,7 +2533,7 @@ nsGlobalWindowOuter::EnableDialogs()
 nsresult
 nsGlobalWindowOuter::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
-  MOZ_CRASH("Virtual inner window only function");
+  MOZ_CRASH("The outer window should not be part of an event path");
 }
 
 void
