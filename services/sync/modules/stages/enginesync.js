@@ -31,8 +31,7 @@ this.EngineSynchronizer = function EngineSynchronizer(service) {
 };
 
 EngineSynchronizer.prototype = {
-  async sync(engineNamesToSync, why) {
-    let fastSync = why && why == "sleep";
+  async sync(engineNamesToSync) {
     let startTime = Date.now();
 
     this.service.status.resetSync();
@@ -76,19 +75,17 @@ EngineSynchronizer.prototype = {
       engine.lastModified = info.obj[engine.name] || 0;
     }
 
-    if (!(await this.service._remoteSetup(info, !fastSync))) {
+    if (!(await this.service._remoteSetup(info))) {
       throw new Error("Aborting sync, remote setup failed");
     }
 
-    if (!fastSync) {
-      // Make sure we have an up-to-date list of clients before sending commands
-      this._log.debug("Refreshing client list.");
-      if (!(await this._syncEngine(this.service.clientsEngine))) {
-        // Clients is an engine like any other; it can fail with a 401,
-        // and we can elect to abort the sync.
-        this._log.warn("Client engine sync failed. Aborting.");
-        return;
-      }
+    // Make sure we have an up-to-date list of clients before sending commands
+    this._log.debug("Refreshing client list.");
+    if (!(await this._syncEngine(this.service.clientsEngine))) {
+      // Clients is an engine like any other; it can fail with a 401,
+      // and we can elect to abort the sync.
+      this._log.warn("Client engine sync failed. Aborting.");
+      return;
     }
 
     // We only honor the "hint" of what engines to Sync if this isn't
@@ -110,7 +107,7 @@ EngineSynchronizer.prototype = {
         break;
     }
 
-    if (!fastSync && this.service.clientsEngine.localCommands) {
+    if (this.service.clientsEngine.localCommands) {
       try {
         if (!(await this.service.clientsEngine.processIncomingCommands())) {
           this.service.status.sync = ABORT_SYNC_COMMAND;
@@ -182,9 +179,7 @@ EngineSynchronizer.prototype = {
         }
       }
 
-      if (!fastSync) {
-        await Doctor.consult(enginesToValidate);
-      }
+      await Doctor.consult(enginesToValidate);
 
       // If there were no sync engine failures
       if (this.service.status.service != SYNC_FAILED_PARTIAL) {
