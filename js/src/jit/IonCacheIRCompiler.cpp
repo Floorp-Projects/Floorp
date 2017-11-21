@@ -1041,11 +1041,10 @@ IonCacheIRCompiler::emitCallScriptedGetterResult()
     // Check stack alignment. Add sizeof(uintptr_t) for the return address.
     MOZ_ASSERT(((masm.framePushed() + sizeof(uintptr_t)) % JitStackAlignment) == 0);
 
-    // The getter has JIT code now and we will only discard the getter's JIT
-    // code when discarding all JIT code in the Zone, so we can assume it'll
-    // still have JIT code.
-    MOZ_ASSERT(target->hasJITCode());
-    masm.loadJitCodeRaw(scratch, scratch, nullptr);
+    // The getter currently has a non-lazy script. We will only relazify when
+    // we do a shrinking GC and when that happens we will also purge IC stubs.
+    MOZ_ASSERT(target->hasScript());
+    masm.loadJitCodeRaw(scratch, scratch);
     masm.callJit(scratch);
     masm.storeCallResultValue(output);
 
@@ -2068,11 +2067,10 @@ IonCacheIRCompiler::emitCallScriptedSetter()
     // Check stack alignment. Add sizeof(uintptr_t) for the return address.
     MOZ_ASSERT(((masm.framePushed() + sizeof(uintptr_t)) % JitStackAlignment) == 0);
 
-    // The setter has JIT code now and we will only discard the setter's JIT
-    // code when discarding all JIT code in the Zone, so we can assume it'll
-    // still have JIT code.
-    MOZ_ASSERT(target->hasJITCode());
-    masm.loadJitCodeRaw(scratch, scratch, nullptr);
+    // The setter currently has a non-lazy script. We will only relazify when
+    // we do a shrinking GC and when that happens we will also purge IC stubs.
+    MOZ_ASSERT(target->hasScript());
+    masm.loadJitCodeRaw(scratch, scratch);
     masm.callJit(scratch);
 
     masm.freeStack(masm.framePushed() - framePushedBefore);

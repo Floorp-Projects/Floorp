@@ -1128,7 +1128,7 @@ jit::FinishDiscardBaselineScript(FreeOp* fop, JSScript* script)
     }
 
     BaselineScript* baseline = script->baselineScript();
-    script->setBaselineScript(nullptr, nullptr);
+    script->setBaselineScript(fop->runtime(), nullptr);
     BaselineScript::Destroy(fop, baseline);
 }
 

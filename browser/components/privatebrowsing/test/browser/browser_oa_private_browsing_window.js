@@ -6,7 +6,7 @@ const DUMMY_PAGE = PATH + "empty_file.html";
 
 add_task(async function test_principal_right_click_open_link_in_new_private_win() {
   await BrowserTestUtils.withNewTab(TEST_PAGE, async function(browser) {
-    let promiseNewWindow = BrowserTestUtils.waitForNewWindow(true, DUMMY_PAGE);
+    let promiseNewWindow = BrowserTestUtils.waitForNewWindow(DUMMY_PAGE);
 
     // simulate right-click open link in new private window
     BrowserTestUtils.waitForEvent(document, "popupshown", false, event => {

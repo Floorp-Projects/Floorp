@@ -887,15 +887,8 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     tabId, TabId(0), *ipcContext, aChromeFlags,
     GetID(), IsForBrowser());
 
-  nsTArray<FrameScriptInfo> frameScripts;
-  nsCString urlToLoad;
 
   PRenderFrameChild* renderFrame = newChild->SendPRenderFrameConstructor();
-  TextureFactoryIdentifier textureFactoryIdentifier;
-  uint64_t layersId = 0;
-  CompositorOptions compositorOptions;
-  uint32_t maxTouchPoints = 0;
-  DimensionInfo dimensionInfo;
 
   nsCOMPtr<nsPIDOMWindowInner> parentTopInnerWindow;
   if (aParent) {
@@ -906,8 +899,108 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     }
   }
 
+  // Set to true when we're ready to return from this function.
+  bool ready = false;
+
+  // NOTE: Capturing by reference here is safe, as this function won't return
+  // until one of these callbacks is called.
+  auto resolve = [&] (const CreatedWindowInfo& info) {
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    rv = info.rv();
+    *aWindowIsNew = info.windowOpened();
+    nsTArray<FrameScriptInfo> frameScripts(info.frameScripts());
+    nsCString urlToLoad = info.urlToLoad();
+    TextureFactoryIdentifier textureFactoryIdentifier = info.textureFactoryIdentifier();
+    uint64_t layersId = info.layersId();
+    CompositorOptions compositorOptions = info.compositorOptions();
+    uint32_t maxTouchPoints = info.maxTouchPoints();
+    DimensionInfo dimensionInfo = info.dimensions();
+
+    // Once this function exits, we should try to exit the nested event loop.
+    ready = true;
+
+    // NOTE: We have to handle this immediately in the resolve callback in order
+    // to make sure that we don't process any more IPC messages before returning
+    // from ProvideWindowCommon.
+
+    // Handle the error which we got back from the parent process, if we got
+    // one.
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    if (!*aWindowIsNew) {
+      rv = NS_ERROR_ABORT;
+      return;
+    }
+
+    // If the TabChild has been torn down, we don't need to do this anymore.
+    if (NS_WARN_IF(!newChild->IPCOpen() || newChild->IsDestroyed())) {
+      rv = NS_ERROR_ABORT;
+      return;
+    }
+
+    if (layersId == 0) { // if renderFrame is invalid.
+      renderFrame = nullptr;
+    }
+
+    ShowInfo showInfo(EmptyString(), false, false, true, false, 0, 0, 0);
+    auto* opener = nsPIDOMWindowOuter::From(aParent);
+    nsIDocShell* openerShell;
+    if (opener && (openerShell = opener->GetDocShell())) {
+      nsCOMPtr<nsILoadContext> context = do_QueryInterface(openerShell);
+      showInfo = ShowInfo(EmptyString(), false,
+                          context->UsePrivateBrowsing(), true, false,
+                          aTabOpener->WebWidget()->GetDPI(),
+                          aTabOpener->WebWidget()->RoundsWidgetCoordinatesTo(),
+                          aTabOpener->WebWidget()->GetDefaultScale().scale);
+    }
+
+    newChild->SetMaxTouchPoints(maxTouchPoints);
+
+    // Set the opener window for this window before we start loading the document
+    // inside of it. We have to do this before loading the remote scripts, because
+    // they can poke at the document and cause the nsDocument to be created before
+    // the openerwindow
+    nsCOMPtr<mozIDOMWindowProxy> windowProxy = do_GetInterface(newChild->WebNavigation());
+    if (!aForceNoOpener && windowProxy && aParent) {
+      nsPIDOMWindowOuter* outer = nsPIDOMWindowOuter::From(windowProxy);
+      nsPIDOMWindowOuter* parent = nsPIDOMWindowOuter::From(aParent);
+      outer->SetOpenerWindow(parent, *aWindowIsNew);
+    }
+
+    // Unfortunately we don't get a window unless we've shown the frame.  That's
+    // pretty bogus; see bug 763602.
+    newChild->DoFakeShow(textureFactoryIdentifier, layersId, compositorOptions,
+                        renderFrame, showInfo);
+
+    newChild->RecvUpdateDimensions(dimensionInfo);
+
+    for (size_t i = 0; i < frameScripts.Length(); i++) {
+      FrameScriptInfo& info = frameScripts[i];
+      if (!newChild->RecvLoadRemoteScript(info.url(), info.runInGlobalScope())) {
+        MOZ_CRASH();
+      }
+    }
+
+    if (!urlToLoad.IsEmpty()) {
+      newChild->RecvLoadURL(urlToLoad, showInfo);
+    }
+
+    nsCOMPtr<mozIDOMWindowProxy> win = do_GetInterface(newChild->WebNavigation());
+    win.forget(aReturn);
+  };
+
+  // NOTE: Capturing by reference here is safe, as this function won't return
+  // until one of these callbacks is called.
+  auto reject = [&] (ResponseRejectReason) {
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    NS_WARNING("windowCreated promise rejected");
+    rv = NS_ERROR_NOT_AVAILABLE;
+    ready = true;
+  };
+
   // Send down the request to open the window.
-  RefPtr<CreateWindowPromise> windowCreated;
   if (aIframeMoz) {
     MOZ_ASSERT(aTabOpener);
     nsAutoCString url;
@@ -922,9 +1015,10 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
 
     // NOTE: BrowserFrameOpenWindowPromise is the same type as
     // CreateWindowPromise, and this code depends on that fact.
-    windowCreated =
-      newChild->SendBrowserFrameOpenWindow(aTabOpener, renderFrame, NS_ConvertUTF8toUTF16(url),
-                                           name, NS_ConvertUTF8toUTF16(features));
+    newChild->SendBrowserFrameOpenWindow(aTabOpener, renderFrame,
+                                         NS_ConvertUTF8toUTF16(url),
+                                         name, NS_ConvertUTF8toUTF16(features),
+                                         Move(resolve), Move(reject));
   } else {
     nsAutoCString baseURIString;
     float fullZoom;
@@ -942,48 +1036,12 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
       uriToLoad = mozilla::void_t();
     }
 
-    windowCreated =
-      SendCreateWindow(aTabOpener, newChild, renderFrame,
-                       aChromeFlags, aCalledFromJS, aPositionSpecified,
-                       aSizeSpecified,
-                       uriToLoad,
-                       features,
-                       baseURIString,
-                       fullZoom,
-                       Principal(triggeringPrincipal));
+    SendCreateWindow(aTabOpener, newChild, renderFrame,
+                     aChromeFlags, aCalledFromJS, aPositionSpecified,
+                     aSizeSpecified, uriToLoad, features, baseURIString,
+                     fullZoom, Principal(triggeringPrincipal),
+                     Move(resolve), Move(reject));
   }
-
-  // Await the promise being resolved. When the promise is resolved, we'll set
-  // the `ready` local variable, which will cause us to exit our nested event
-  // loop.
-  //
-  // NOTE: We need to run this callback on the StableStateEventTarget because we
-  // need to resolve our runnable and exit from the nested event loop before
-  // processing any events which were sent after the reply to CreateWindow was
-  // sent.
-  bool ready = false;
-  windowCreated->Then(nsContentUtils::GetStableStateEventTarget(), __func__,
-                      [&] (const CreatedWindowInfo& info) {
-                        MOZ_RELEASE_ASSERT(NS_IsMainThread(),
-                                           "windowCreated->Then must run on the main thread");
-                        rv = info.rv();
-                        *aWindowIsNew = info.windowOpened();
-                        frameScripts = info.frameScripts();
-                        urlToLoad = info.urlToLoad();
-                        textureFactoryIdentifier = info.textureFactoryIdentifier();
-                        layersId = info.layersId();
-                        compositorOptions = info.compositorOptions();
-                        maxTouchPoints = info.maxTouchPoints();
-                        dimensionInfo = info.dimensions();
-                        ready = true;
-                      },
-                      [&] (const CreateWindowPromise::RejectValueType aReason) {
-                        MOZ_RELEASE_ASSERT(NS_IsMainThread(),
-                                           "windowCreated->Then must run on the main thread");
-                        NS_WARNING("windowCreated promise rejected");
-                        rv = NS_ERROR_NOT_AVAILABLE;
-                        ready = true;
-                      });
 
   // =======================
   // Begin Nested Event Loop
@@ -1029,71 +1087,9 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   // End Nested Event Loop
   // =====================
 
-  // Handle the error which we got back from the parent process, if we got
-  // one.
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (!*aWindowIsNew) {
-    return NS_ERROR_ABORT;
-  }
-
-  // If the TabChild has been torn down, we don't need to do this anymore.
-  if (NS_WARN_IF(!newChild->IPCOpen() || newChild->IsDestroyed())) {
-    return NS_ERROR_ABORT;
-  }
-
-  if (layersId == 0) { // if renderFrame is invalid.
-    renderFrame = nullptr;
-  }
-
-  ShowInfo showInfo(EmptyString(), false, false, true, false, 0, 0, 0);
-  auto* opener = nsPIDOMWindowOuter::From(aParent);
-  nsIDocShell* openerShell;
-  if (opener && (openerShell = opener->GetDocShell())) {
-    nsCOMPtr<nsILoadContext> context = do_QueryInterface(openerShell);
-    showInfo = ShowInfo(EmptyString(), false,
-                        context->UsePrivateBrowsing(), true, false,
-                        aTabOpener->WebWidget()->GetDPI(),
-                        aTabOpener->WebWidget()->RoundsWidgetCoordinatesTo(),
-                        aTabOpener->WebWidget()->GetDefaultScale().scale);
-  }
-
-  newChild->SetMaxTouchPoints(maxTouchPoints);
-
-  // Set the opener window for this window before we start loading the document
-  // inside of it. We have to do this before loading the remote scripts, because
-  // they can poke at the document and cause the nsDocument to be created before
-  // the openerwindow
-  nsCOMPtr<mozIDOMWindowProxy> windowProxy = do_GetInterface(newChild->WebNavigation());
-  if (!aForceNoOpener && windowProxy && aParent) {
-    nsPIDOMWindowOuter* outer = nsPIDOMWindowOuter::From(windowProxy);
-    nsPIDOMWindowOuter* parent = nsPIDOMWindowOuter::From(aParent);
-    outer->SetOpenerWindow(parent, *aWindowIsNew);
-  }
-
-  // Unfortunately we don't get a window unless we've shown the frame.  That's
-  // pretty bogus; see bug 763602.
-  newChild->DoFakeShow(textureFactoryIdentifier, layersId, compositorOptions,
-                       renderFrame, showInfo);
-
-  newChild->RecvUpdateDimensions(dimensionInfo);
-
-  for (size_t i = 0; i < frameScripts.Length(); i++) {
-    FrameScriptInfo& info = frameScripts[i];
-    if (!newChild->RecvLoadRemoteScript(info.url(), info.runInGlobalScope())) {
-      MOZ_CRASH();
-    }
-  }
-
-  if (!urlToLoad.IsEmpty()) {
-    newChild->RecvLoadURL(urlToLoad, showInfo);
-  }
-
-  nsCOMPtr<mozIDOMWindowProxy> win = do_GetInterface(newChild->WebNavigation());
-  win.forget(aReturn);
-  return NS_OK;
+  // We should have the results already set by the callbacks.
+  MOZ_ASSERT_IF(NS_SUCCEEDED(rv), *aReturn);
+  return rv;
 }
 
 void
