@@ -120,6 +120,7 @@ enum class MediaEventType : int8_t
   PlaybackStopped,
   PlaybackEnded,
   SeekStarted,
+  Loop,
   Invalidate,
   EnterVideoSuspend,
   ExitVideoSuspend,
