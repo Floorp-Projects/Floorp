@@ -405,7 +405,14 @@ VRManagerChild::RecvReplyCreateVRServiceTestController(const nsCString& aID,
     MOZ_CRASH("We should always have a promise.");
   }
 
-  p->MaybeResolve(new VRMockController(aID, aDeviceID));
+  if (aDeviceID == 0) {
+    // A value of 0 indicates that the controller could not
+    // be created.  Most likely due to having no VR display
+    // to associate it with.
+    p->MaybeRejectWithUndefined();
+  } else {
+    p->MaybeResolve(new VRMockController(aID, aDeviceID));
+  }
   mPromiseList.Remove(aPromiseID);
   return IPC_OK();
 }
