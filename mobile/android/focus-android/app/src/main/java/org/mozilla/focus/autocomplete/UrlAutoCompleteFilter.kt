@@ -1,5 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -64,6 +63,7 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
 
         // First load the country specific lists following the default locale order
         Locales.getCountriesInDefaultLocaleList()
+                .asSequence()
                 .filter { availableLists.contains(it) }
                 .forEach { loadDomainsForLanguage(context, domains, it) }
 
