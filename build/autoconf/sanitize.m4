@@ -7,10 +7,6 @@ AC_DEFUN([MOZ_CONFIG_SANITIZE], [
 dnl ========================================================
 dnl = Use Address Sanitizer
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(address-sanitizer,
-[  --enable-address-sanitizer       Enable Address Sanitizer (default=no)],
-    MOZ_ASAN=1,
-    MOZ_ASAN= )
 if test -n "$MOZ_ASAN"; then
     MOZ_LLVM_HACKS=1
     if test -n "$CLANG_CL"; then
