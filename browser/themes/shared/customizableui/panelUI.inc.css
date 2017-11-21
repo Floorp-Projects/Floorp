@@ -123,14 +123,6 @@
   margin-inline-start: var(--panel-ui-exit-subview-gutter-width);
 }
 
-.panel-viewstack[viewtype="main"] > .panel-subviews {
-  transform: translateX(@menuPanelWidth@);
-}
-
-.panel-viewstack[viewtype="main"] > .panel-subviews:-moz-locale-dir(rtl) {
-  transform: translateX(-@menuPanelWidth@);
-}
-
 panelview {
   -moz-box-orient: vertical;
   -moz-box-flex: 1;
