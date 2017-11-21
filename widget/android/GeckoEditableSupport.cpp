@@ -1372,7 +1372,7 @@ GeckoEditableSupport::SetInputContext(const InputContext& aContext,
     mIMEUpdatingContext = true;
 
     RefPtr<GeckoEditableSupport> self(this);
-    bool isUserAction = aAction.IsHandlingUserInput();
+    bool isUserAction = aAction.IsHandlingUserInput() || aContext.mHasHandledUserInput;
     nsAppShell::PostEvent([this, self, isUserAction] {
         nsCOMPtr<nsIWidget> widget = GetWidget();
 
