@@ -228,10 +228,12 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
                               'Please install it.')
 
     version, sdk = sdks[valid_sdks[0]]
-    minimum_ucrt_version = Version('10.0.10586.0')
+    minimum_ucrt_version = Version('10.0.14393.0')
     if version < minimum_ucrt_version:
         raise FatalCheckError('Latest Universal CRT SDK version found %s'
-                              ' and minimum required is %s.'
+                              ' and minimum required is %s. This or a later'
+                              ' version can be installed using the Visual'
+                              ' Studio installer.'
                               % (version, minimum_ucrt_version))
 
     return namespace(
