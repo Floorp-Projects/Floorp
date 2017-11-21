@@ -8,8 +8,6 @@
 
 // For sorting values with limited range; uint8 and int8.
 function CountingSort(array, len, signed, comparefn) {
-    assert(IsPossiblyWrappedTypedArray(array), "CountingSort works only with typed arrays.");
-
     // Determined by performance testing.
     if (len < 128) {
         QuickSort(array, len, comparefn);
@@ -111,8 +109,6 @@ function SortByColumn(array, len, aux, col, counts) {
 // Sorts integers and float32. |signed| is true for int16 and int32, |floating|
 // is true for float32.
 function RadixSort(array, len, buffer, nbytes, signed, floating, comparefn) {
-    assert(IsPossiblyWrappedTypedArray(array), "RadixSort works only with typed arrays.");
-
     // Determined by performance testing.
     if (len < 512) {
         QuickSort(array, len, comparefn);
@@ -135,13 +131,7 @@ function RadixSort(array, len, buffer, nbytes, signed, floating, comparefn) {
             assert(buffer !== null, "Attached data buffer should be reified");
         }
 
-        // |array| is a possibly cross-compartment wrapped typed array.
-        let offset = IsTypedArray(array)
-                     ? TypedArrayByteOffset(array)
-                     : callFunction(CallTypedArrayMethodIfWrapped, array, array,
-                                    "TypedArrayByteOffset");
-
-        view = new Int32Array(buffer, offset, len);
+        view = new Int32Array(buffer);
 
         // Flip sign bit for positive numbers; flip all bits for negative
         // numbers
