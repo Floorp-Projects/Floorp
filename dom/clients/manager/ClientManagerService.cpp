@@ -126,7 +126,8 @@ ClientManagerService::FindSource(const nsID& aID, const PrincipalInfo& aPrincipa
   }
 
   ClientSourceParent* source = entry.Data();
-  if (!MatchPrincipalInfo(source->Info().PrincipalInfo(), aPrincipalInfo)) {
+  if (source->IsFrozen() ||
+      !MatchPrincipalInfo(source->Info().PrincipalInfo(), aPrincipalInfo)) {
     return nullptr;
   }
 

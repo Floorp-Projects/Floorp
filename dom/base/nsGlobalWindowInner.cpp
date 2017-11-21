@@ -1532,6 +1532,8 @@ nsGlobalWindowInner::EnsureClientSource()
 {
   MOZ_DIAGNOSTIC_ASSERT(mDoc);
 
+  bool newClientSource = false;
+
   nsCOMPtr<nsIChannel> channel = mDoc->GetChannel();
   nsCOMPtr<nsILoadInfo> loadInfo = channel ? channel->GetLoadInfo() : nullptr;
 
@@ -1544,6 +1546,7 @@ nsGlobalWindowInner::EnsureClientSource()
     if (reservedClient) {
       mClientSource.reset();
       mClientSource = Move(reservedClient);
+      newClientSource = true;
     }
   }
 
@@ -1557,6 +1560,9 @@ nsGlobalWindowInner::EnsureClientSource()
     nsIDocShell* docshell = GetDocShell();
     if (docshell) {
       mClientSource = docshell->TakeInitialClientSource();
+      if (mClientSource) {
+        newClientSource = true;
+      }
     }
   }
 
@@ -1572,6 +1578,13 @@ nsGlobalWindowInner::EnsureClientSource()
     if (NS_WARN_IF(!mClientSource)) {
       return NS_ERROR_FAILURE;
     }
+    newClientSource = true;
+  }
+
+  // Its possible that we got a client just after being frozen in
+  // the bfcache.  In that case freeze the client immediately.
+  if (newClientSource && IsFrozen()) {
+    mClientSource->Freeze();
   }
 
   return NS_OK;
@@ -6063,6 +6076,9 @@ nsGlobalWindowInner::FreezeInternal()
   mozilla::dom::workers::FreezeWorkersForWindow(this);
 
   mTimeoutManager->Freeze();
+  if (mClientSource) {
+    mClientSource->Freeze();
+  }
 
   if (IsInnerWindow()) {
     NotifyDOMWindowFrozen(this);
@@ -6094,6 +6110,9 @@ nsGlobalWindowInner::ThawInternal()
     return;
   }
 
+  if (mClientSource) {
+    mClientSource->Thaw();
+  }
   mTimeoutManager->Thaw();
 
   mozilla::dom::workers::ThawWorkersForWindow(this);
