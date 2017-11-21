@@ -77,24 +77,26 @@ nsPIDOMWindowInner::IsTopInnerWindow() const
   return mTopInnerWindow == this;
 }
 
-template <class T>
 nsIDocShell*
-nsPIDOMWindow<T>::GetDocShell() const
+nsPIDOMWindowOuter::GetDocShell() const
 {
-  if (mOuterWindow) {
-    return mOuterWindow->GetDocShell();
-  }
-
   return mDocShell;
 }
 
-template <class T>
-nsIContent*
-nsPIDOMWindow<T>::GetFocusedNode() const
+nsIDocShell*
+nsPIDOMWindowInner::GetDocShell() const
 {
-  if (IsOuterWindow()) {
-    return mInnerWindow ? mInnerWindow->GetFocusedNode() : nullptr;
-  }
+  return mOuterWindow ? mOuterWindow->GetDocShell() : nullptr;
+}
 
+nsIContent*
+nsPIDOMWindowOuter::GetFocusedNode() const
+{
+  return mInnerWindow ? mInnerWindow->GetFocusedNode() : nullptr;
+}
+
+nsIContent*
+nsPIDOMWindowInner::GetFocusedNode() const
+{
   return mFocusedNode;
 }

@@ -1474,25 +1474,6 @@ nsGlobalWindowInner::TraceGlobalJSObject(JSTracer* aTrc)
   TraceWrapper(aTrc, "active window global");
 }
 
-void
-nsGlobalWindowInner::SetInitialPrincipalToSubject()
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-PopupControlState
-nsGlobalWindowInner::PushPopupControlState(PopupControlState aState,
-                                           bool aForce) const
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-void
-nsGlobalWindowInner::PopPopupControlState(PopupControlState aState) const
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
 PopupControlState
 nsGlobalWindowInner::GetPopupControlState() const
 {
@@ -1870,12 +1851,6 @@ nsGlobalWindowInner::PostHandleEvent(EventChainPostVisitor& aVisitor)
   }
 
   return NS_OK;
-}
-
-nsresult
-nsGlobalWindowInner::SetArguments(nsIArray *aArguments)
-{
-  MOZ_CRASH("Virtual outer window only function");
 }
 
 nsresult
@@ -2375,16 +2350,6 @@ nsGlobalWindowInner::GetScriptableParentOrNull()
 }
 
 /**
- * nsPIDOMWindow::GetParent (when called from C++) is just a wrapper around
- * GetRealParent.
- */
-already_AddRefed<nsPIDOMWindowOuter>
-nsGlobalWindowInner::GetParent()
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-/**
  * GetScriptableTop is called when script reads window.top.
  *
  * In contrast to GetRealTop, GetScriptableTop respects <iframe mozbrowser>
@@ -2395,12 +2360,6 @@ nsPIDOMWindowOuter*
 nsGlobalWindowInner::GetScriptableTop()
 {
   FORWARD_TO_OUTER(GetScriptableTop, (), nullptr);
-}
-
-already_AddRefed<nsPIDOMWindowOuter>
-nsGlobalWindowInner::GetTop()
-{
-  MOZ_CRASH("Virtual outer window only function");
 }
 
 void
@@ -2428,17 +2387,6 @@ nsGlobalWindowInner::GetMozSelfSupport(ErrorResult& aError)
   GlobalObject global(cx, FastGetGlobalJSObject());
   mMozSelfSupport = MozSelfSupport::Constructor(global, cx, aError);
   return mMozSelfSupport;
-}
-
-nsresult
-nsGlobalWindowInner::GetPrompter(nsIPrompt** aPrompt)
-{
-  nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-  if (!outer) {
-    NS_WARNING("No outer window available!");
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return outer->GetPrompter(aPrompt);
 }
 
 BarProp*
@@ -2514,12 +2462,6 @@ bool
 nsGlobalWindowInner::GetClosed(ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(GetClosedOuter, (), aError, false);
-}
-
-bool
-nsGlobalWindowInner::Closed()
-{
-  MOZ_CRASH("Virtual outer window only function");
 }
 
 already_AddRefed<nsIDOMWindowCollection>
@@ -2787,12 +2729,6 @@ nsGlobalWindowInner::GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aRet
   }
 
   aError = nsContentUtils::WrapNative(aCx, opener, aRetval);
-}
-
-already_AddRefed<nsPIDOMWindowOuter>
-nsGlobalWindowInner::GetOpener()
-{
-  FORWARD_TO_OUTER(GetOpener, (), nullptr);
 }
 
 void
@@ -3229,12 +3165,6 @@ nsGlobalWindowInner::GetChildWindow(const nsAString& aName)
   return nullptr;
 }
 
-bool
-nsGlobalWindowInner::DispatchCustomEvent(const nsAString& aEventName)
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
 void
 nsGlobalWindowInner::RefreshCompartmentPrincipal()
 {
@@ -3263,31 +3193,6 @@ void
 nsGlobalWindowInner::SetFullScreen(bool aFullScreen, mozilla::ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(SetFullScreenOuter, (aFullScreen, aError), aError, /* void */);
-}
-
-nsresult
-nsGlobalWindowInner::SetFullScreen(bool aFullScreen)
-{
-  FORWARD_TO_OUTER(SetFullScreen, (aFullScreen), NS_ERROR_NOT_INITIALIZED);
-}
-
-nsresult
-nsGlobalWindowInner::SetFullscreenInternal(FullscreenReason aReason,
-                                           bool aFullScreen)
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-/* virtual */ void
-nsGlobalWindowInner::FullscreenWillChange(bool aIsFullscreen)
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-/* virtual */ void
-nsGlobalWindowInner::FinishFullscreenChange(bool aIsFullscreen)
-{
-  MOZ_CRASH("Virtual outer window only function");
 }
 
 bool
@@ -3465,12 +3370,6 @@ nsGlobalWindowInner::MoveBy(int32_t aXDif, int32_t aYDif,
                             (aXDif, aYDif, aCallerType, aError), aError, );
 }
 
-nsresult
-nsGlobalWindowInner::MoveBy(int32_t aXDif, int32_t aYDif)
-{
-  FORWARD_TO_OUTER(MoveBy, (aXDif, aYDif), NS_ERROR_UNEXPECTED);
-}
-
 void
 nsGlobalWindowInner::ResizeTo(int32_t aWidth, int32_t aHeight,
                               CallerType aCallerType, ErrorResult& aError)
@@ -3498,13 +3397,11 @@ nsGlobalWindowInner::SizeToContent(CallerType aCallerType, ErrorResult& aError)
 already_AddRefed<nsPIWindowRoot>
 nsGlobalWindowInner::GetTopWindowRoot()
 {
-  nsPIDOMWindowOuter* piWin = GetPrivateRoot();
-  if (!piWin) {
+  nsGlobalWindowOuter* outer = GetOuterWindowInternal();
+  if (!outer) {
     return nullptr;
   }
-
-  nsCOMPtr<nsPIWindowRoot> window = do_QueryInterface(piWin->GetChromeEventHandler());
-  return window.forget();
+  return outer->GetTopWindowRoot();
 }
 
 void
@@ -3731,52 +3628,12 @@ nsGlobalWindowInner::ReleaseEvents()
   }
 }
 
-void
-nsGlobalWindowInner::FirePopupBlockedEvent(nsIDocument* aDoc,
-                                           nsIURI* aPopupURI,
-                                           const nsAString& aPopupWindowName,
-                                           const nsAString& aPopupWindowFeatures)
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowInner::Open(const nsAString& aUrl, const nsAString& aName,
                           const nsAString& aOptions, ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(OpenOuter, (aUrl, aName, aOptions, aError), aError,
                             nullptr);
-}
-
-nsresult
-nsGlobalWindowInner::Open(const nsAString& aUrl, const nsAString& aName,
-                          const nsAString& aOptions, nsIDocShellLoadInfo* aLoadInfo,
-                          bool aForceNoOpener, nsPIDOMWindowOuter **_retval)
-{
-  FORWARD_TO_OUTER(Open, (aUrl, aName, aOptions, aLoadInfo, aForceNoOpener,
-                          _retval),
-                   NS_ERROR_NOT_INITIALIZED);
-}
-
-// like Open, but attaches to the new window any extra parameters past
-// [features] as a JS property named "arguments"
-nsresult
-nsGlobalWindowInner::OpenDialog(const nsAString& aUrl, const nsAString& aName,
-                                const nsAString& aOptions,
-                                nsISupports* aExtraArgument,
-                                nsPIDOMWindowOuter** _retval)
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-// Like Open, but passes aNavigate=false.
-/* virtual */ nsresult
-nsGlobalWindowInner::OpenNoNavigate(const nsAString& aUrl,
-                                    const nsAString& aName,
-                                    const nsAString& aOptions,
-                                    nsPIDOMWindowOuter **_retval)
-{
-  MOZ_CRASH("Virtual outer window only function");
 }
 
 already_AddRefed<nsPIDOMWindowOuter>
@@ -3863,12 +3720,6 @@ nsGlobalWindowInner::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessa
                  aSubjectPrincipal, aRv);
 }
 
-bool
-nsGlobalWindowInner::CanClose()
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
 void
 nsGlobalWindowInner::Close(ErrorResult& aError)
 {
@@ -3882,27 +3733,9 @@ nsGlobalWindowInner::Close()
 }
 
 void
-nsGlobalWindowInner::ForceClose()
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-void
 nsGlobalWindowInner::ReallyCloseWindow()
 {
   FORWARD_TO_OUTER_VOID(ReallyCloseWindow, ());
-}
-
-void
-nsGlobalWindowInner::EnterModalState()
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-void
-nsGlobalWindowInner::LeaveModalState()
-{
-  MOZ_CRASH("Virtual outer window only function");
 }
 
 bool
@@ -4157,12 +3990,6 @@ nsGlobalWindowInner::GetSelection(ErrorResult& aError)
   FORWARD_TO_OUTER_OR_THROW(GetSelectionOuter, (), aError, nullptr);
 }
 
-already_AddRefed<nsISelection>
-nsGlobalWindowInner::GetSelection()
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
 bool
 nsGlobalWindowInner::Find(const nsAString& aString, bool aCaseSensitive,
                           bool aBackwards, bool aWrapAround, bool aWholeWord,
@@ -4367,18 +4194,6 @@ nsGlobalWindowInner::GetLocation()
   return mLocation;
 }
 
-void
-nsGlobalWindowInner::ActivateOrDeactivate(bool aActivate)
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-void
-nsGlobalWindowInner::SetActive(bool aActive)
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
 bool
 nsGlobalWindowInner::IsTopLevelWindowActive()
 {
@@ -4386,12 +4201,6 @@ nsGlobalWindowInner::IsTopLevelWindowActive()
     return GetOuterWindowInternal()->IsTopLevelWindowActive();
   }
   return false;
-}
-
-void
-nsGlobalWindowInner::SetIsBackground(bool aIsBackground)
-{
-  MOZ_CRASH("Virtual outer window only function");
 }
 
 void
@@ -4463,12 +4272,6 @@ nsGlobalWindowInner::ResetVRTelemetry(bool aUpdate)
   }
 }
 
-void
-nsGlobalWindowInner::SetChromeEventHandler(EventTarget* aChromeEventHandler)
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
 static bool ShouldShowFocusRingIfFocusedByMouse(nsIContent* aNode)
 {
   if (!aNode) {
@@ -4538,13 +4341,6 @@ nsGlobalWindowInner::ShouldShowFocusRing()
 
   nsCOMPtr<nsPIWindowRoot> root = GetTopWindowRoot();
   return root ? root->ShowFocusRings() : false;
-}
-
-void
-nsGlobalWindowInner::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
-                                           UIStateChangeType aShowFocusRings)
-{
-  MOZ_CRASH("Virtual outer window only function");
 }
 
 bool
@@ -6608,24 +6404,6 @@ nsGlobalWindowInner::FlushPendingNotifications(FlushType aType)
 }
 
 void
-nsGlobalWindowInner::EnsureSizeAndPositionUpToDate()
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-already_AddRefed<nsISupports>
-nsGlobalWindowInner::SaveWindowState()
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-nsresult
-nsGlobalWindowInner::RestoreWindowState(nsISupports *aState)
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-void
 nsGlobalWindowInner::EnableDeviceSensor(uint32_t aType)
 {
   MOZ_ASSERT(IsInnerWindow());
@@ -7901,6 +7679,44 @@ nsGlobalWindowInner::Create(nsGlobalWindowOuter *aOuterWindow, bool aIsChrome)
   window->InitWasOffline();
   return window.forget();
 }
+
+nsIURI*
+nsPIDOMWindowInner::GetDocumentURI() const
+{
+  return mDoc ? mDoc->GetDocumentURI() : mDocumentURI.get();
+}
+
+nsIURI*
+nsPIDOMWindowInner::GetDocBaseURI() const
+{
+  return mDoc ? mDoc->GetDocBaseURI() : mDocBaseURI.get();
+}
+
+void
+nsPIDOMWindowInner::MaybeCreateDoc()
+{
+  // XXX: Forward to outer?
+  MOZ_ASSERT(!mDoc);
+  if (nsIDocShell* docShell = GetDocShell()) {
+    // Note that |document| here is the same thing as our mDoc, but we
+    // don't have to explicitly set the member variable because the docshell
+    // has already called SetNewDocument().
+    nsCOMPtr<nsIDocument> document = docShell->GetDocument();
+    Unused << document;
+  }
+}
+
+mozilla::dom::DocGroup*
+nsPIDOMWindowInner::GetDocGroup() const
+{
+  nsIDocument* doc = GetExtantDoc();
+  if (doc) {
+    return doc->GetDocGroup();
+  }
+  return nullptr;
+}
+
+nsPIDOMWindowInner::~nsPIDOMWindowInner() {}
 
 #undef FORWARD_TO_OUTER
 #undef FORWARD_TO_OUTER_OR_THROW
