@@ -44,16 +44,17 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
         }
     }
 
-    internal fun onDomainsLoaded(domains: Set<String>) {
+    internal fun onDomainsLoaded(domains: Set<String>, customDomains: Set<String>) {
+        this.domains.addAll(customDomains)
         this.domains.addAll(domains)
     }
 
     fun initialize(context: Context) {
         launch(UI) {
-            val job = async(CommonPool) {
-                loadDomains(context)
-            }
-            onDomainsLoaded(job.await())
+            val domains = async(CommonPool) { loadDomains(context) }
+            val customDomains = async(CommonPool) { CustomAutoComplete.loadCustomAutoCompleteDomains(context) }
+
+            onDomainsLoaded(domains.await(), customDomains.await())
         }
     }
 

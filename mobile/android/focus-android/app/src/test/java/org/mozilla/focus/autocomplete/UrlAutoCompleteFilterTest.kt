@@ -23,9 +23,8 @@ class UrlAutoCompleteFilterTest {
     fun testAutocompletion() {
         val filter = UrlAutoCompleteFilter()
 
-        val domains = HashSet<String>()
-        Collections.addAll(domains, "mozilla.org", "google.com", "facebook.com")
-        filter.onDomainsLoaded(domains)
+        val domains = setOf("mozilla.org", "google.com", "facebook.com")
+        filter.onDomainsLoaded(domains, HashSet())
 
         assertAutocompletion(filter, "m", "mozilla.org")
         assertAutocompletion(filter, "www", "www.mozilla.org")
@@ -38,6 +37,28 @@ class UrlAutoCompleteFilterTest {
 
         assertNoAutocompletion(filter, "wwww")
         assertNoAutocompletion(filter, "yahoo")
+    }
+
+    @Test
+    fun testAutocompletionWithCustomDomains() {
+        val domains = setOf("facebook.com", "google.com", "mozilla.org")
+        val customDomains = setOf("gap.com", "fanfiction.com", "mobile.de")
+
+        val filter = UrlAutoCompleteFilter()
+        filter.onDomainsLoaded(domains, customDomains)
+
+        assertAutocompletion(filter, "f", "fanfiction.com")
+        assertAutocompletion(filter, "fa", "fanfiction.com")
+        assertAutocompletion(filter, "fac", "facebook.com")
+
+        assertAutocompletion(filter, "g", "gap.com")
+        assertAutocompletion(filter, "go", "google.com")
+        assertAutocompletion(filter, "ga", "gap.com")
+
+        assertAutocompletion(filter, "m", "mobile.de")
+        assertAutocompletion(filter, "mo", "mobile.de")
+        assertAutocompletion(filter, "mob", "mobile.de")
+        assertAutocompletion(filter, "moz", "mozilla.org")
     }
 
     @Test
