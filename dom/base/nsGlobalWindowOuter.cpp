@@ -94,12 +94,6 @@ DialogValueHolder::Get(JSContext* aCx, JS::Handle<JSObject*> aScope,
   }
 }
 
-bool
-nsGlobalWindowOuter::IsBackgroundInternal() const
-{
-  return !mOuterWindow || mOuterWindow->IsBackground();
-}
-
 /* static */
 nsPIDOMWindowOuter*
 nsPIDOMWindowOuter::GetFromCurrentInner(nsPIDOMWindowInner* aInner)
@@ -771,13 +765,12 @@ nsGlobalWindowOuter::~nsGlobalWindowOuter()
       }
     }
 
-    nsGlobalWindowOuter* outer = nsGlobalWindowOuter::Cast(mOuterWindow);
     printf_stderr("--DOMWINDOW == %d (%p) [pid = %d] [serial = %d] [outer = %p] [url = %s]\n",
                   gRefCnt,
                   static_cast<void*>(ToCanonicalSupports(this)),
                   getpid(),
                   mSerial,
-                  static_cast<void*>(ToCanonicalSupports(outer)),
+                  nullptr,
                   url.get());
   }
 #endif
@@ -912,8 +905,6 @@ nsGlobalWindowOuter::CleanUp()
 
   mMozSelfSupport = nullptr;
 
-  mPerformance = nullptr;
-
 #ifdef MOZ_WEBSPEECH
   mSpeechSynthesis = nullptr;
 #endif
@@ -952,17 +943,10 @@ nsGlobalWindowOuter::CleanUp()
 
   CleanupCachedXBLHandlers();
 
-  for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-    mAudioContexts[i]->Shutdown();
-  }
-  mAudioContexts.Clear();
-
   if (mIdleTimer) {
     mIdleTimer->Cancel();
     mIdleTimer = nullptr;
   }
-
-  mServiceWorkerRegistrationTable.Clear();
 
   mIntlUtils = nullptr;
 }
@@ -1035,9 +1019,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGlobalWindowOuter)
     if (EventListenerManager* elm = tmp->GetExistingListenerManager()) {
       elm->MarkForCC();
     }
-    if (tmp->mTimeoutManager) {
-      tmp->mTimeoutManager->UnmarkGrayTimers();
-    }
     return true;
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
@@ -1073,25 +1054,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReturnValue)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNavigator)
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPerformance)
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerRegistrationTable)
-
 #ifdef MOZ_WEBSPEECH
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSpeechSynthesis)
 #endif
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOuterWindow)
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTopInnerWindow)
-
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListenerManager)
-
-  if (tmp->mTimeoutManager) {
-    tmp->mTimeoutManager->ForEachUnorderedTimeout([&cb](Timeout* timeout) {
-      cb.NoteNativeChild(timeout, NS_CYCLE_COLLECTION_PARTICIPANT(Timeout));
-    });
-  }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHistory)
@@ -1160,10 +1127,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReturnValue)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNavigator)
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPerformance)
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mServiceWorkerRegistrationTable)
-
 #ifdef MOZ_WEBSPEECH
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSpeechSynthesis)
 #endif
@@ -1172,8 +1135,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
     tmp->mListenerManager->Disconnect();
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mListenerManager)
   }
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTopInnerWindow)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHistory)
@@ -2294,7 +2255,6 @@ nsGlobalWindowOuter::DetachFromDocShell()
 
     // Release our document reference
     DropOuterWindowDocs();
-    mFocusedNode = nullptr;
   }
 
   ClearControllers();
@@ -8175,28 +8135,17 @@ NextWindowID();
 
 nsPIDOMWindowOuter::nsPIDOMWindowOuter()
 : mFrameElement(nullptr), mDocShell(nullptr), mModalStateDepth(0),
-  mMutationBits(0), mActivePeerConnections(0), mIsDocumentLoaded(false),
-  mIsHandlingResizeEvent(false), mIsInnerWindow(false),
-  mMayHavePaintEventListener(false), mMayHaveTouchEventListener(false),
-  mMayHaveSelectionChangeEventListener(false),
-  mMayHaveMouseEnterLeaveEventListener(false),
-  mMayHavePointerEnterLeaveEventListener(false),
-  mInnerObjectsFreed(false),
   mIsActive(false), mIsBackground(false),
   mMediaSuspend(
     Preferences::GetBool("media.block-autoplay-until-in-foreground", true) &&
     Preferences::GetBool("media.autoplay.enabled", true) ?
     nsISuspendedTypes::SUSPENDED_BLOCK : nsISuspendedTypes::NONE_SUSPENDED),
-  mAudioMuted(false), mAudioVolume(1.0), mAudioCaptured(false),
+  mAudioMuted(false), mAudioVolume(1.0),
   mDesktopModeViewport(false), mIsRootOuterWindow(false), mInnerWindow(nullptr),
-  mOuterWindow(nullptr),
   // Make sure no actual window ends up with mWindowID == 0
-  mWindowID(NextWindowID()), mHasNotifiedGlobalCreated(false),
+  mWindowID(NextWindowID()),
   mMarkedCCGeneration(0), mServiceWorkersTestingEnabled(false),
-  mLargeAllocStatus(LargeAllocStatus::NONE),
-  mHasTriedToCacheTopInnerWindow(false),
-  mNumOfIndexedDBDatabases(0),
-  mNumOfOpenWebSockets(0)
+  mLargeAllocStatus(LargeAllocStatus::NONE)
 {
 }
 
