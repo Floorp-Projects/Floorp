@@ -228,8 +228,24 @@ WSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
     }
   }
 
-  // ready, aim, fire!
-  return mHTMLEditor->CreateBRImpl(aInOutParent, aInOutOffset, aSelect);
+  RefPtr<Selection> selection = mHTMLEditor->GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return nullptr;
+  }
+  RefPtr<Element> newBRElement =
+    mHTMLEditor->CreateBRImpl(*selection,
+                              EditorRawDOMPoint(*aInOutParent, *aInOutOffset),
+                              aSelect);
+  if (NS_WARN_IF(!newBRElement)) {
+    return nullptr;
+  }
+  EditorRawDOMPoint atNewBRElement(newBRElement);
+  DebugOnly<bool> advanced = atNewBRElement.AdvanceOffset();
+  NS_WARNING_ASSERTION(advanced,
+    "Failed to advance offset to after the new <br> element");
+  *aInOutParent = atNewBRElement.Container();
+  *aInOutOffset = atNewBRElement.Offset();
+  return newBRElement.forget();
 }
 
 nsresult
