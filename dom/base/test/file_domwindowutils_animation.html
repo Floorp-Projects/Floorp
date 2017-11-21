@@ -97,6 +97,9 @@ function test_getUnanimatedComputedStyle() {
     });
   });
 
+  const div = document.createElement("div");
+  document.body.appendChild(div);
+
   SimpleTest.doesThrow(
     () => utils.getUnanimatedComputedStyle(div, null, "background"),
     "NS_ERROR_INVALID_ARG",
@@ -111,6 +114,8 @@ function test_getUnanimatedComputedStyle() {
     () => utils.getUnanimatedComputedStyle(null, null, "opacity"),
     "NS_ERROR_INVALID_ARG",
     "Null element should throw");
+
+  div.remove();
 
   next();
   window.close();
