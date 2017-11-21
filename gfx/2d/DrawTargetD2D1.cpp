@@ -57,6 +57,7 @@ DrawTargetD2D1::~DrawTargetD2D1()
   PopAllClips();
 
   if (mSnapshot) {
+    MutexAutoLock lock(*mSnapshotLock);
     // We may hold the only reference. MarkIndependent will clear mSnapshot;
     // keep the snapshot object alive so it doesn't get destroyed while
     // MarkIndependent is running.
@@ -90,6 +91,9 @@ DrawTargetD2D1::~DrawTargetD2D1()
 already_AddRefed<SourceSurface>
 DrawTargetD2D1::Snapshot()
 {
+  if (!mSnapshotLock) {
+    mSnapshotLock = make_shared<Mutex>("DrawTargetD2D1::mSnapshotLock");
+  }
   if (mSnapshot) {
     RefPtr<SourceSurface> snapshot(mSnapshot);
     return snapshot.forget();
@@ -1274,6 +1278,7 @@ void
 DrawTargetD2D1::MarkChanged()
 {
   if (mSnapshot) {
+    MutexAutoLock lock(*mSnapshotLock);
     if (mSnapshot->hasOneRef()) {
       // Just destroy it, since no-one else knows about it.
       mSnapshot = nullptr;
