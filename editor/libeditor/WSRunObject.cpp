@@ -228,9 +228,10 @@ WSRunObject::InsertBreak(Selection& aSelection,
     } else if (beforeRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, just to prevent nbsp proliferation
       nsresult rv =
-        CheckTrailingNBSP(beforeRun, pointToInsert.Container(),
-                          pointToInsert.Offset());
-      NS_ENSURE_SUCCESS(rv, nullptr);
+        ReplacePreviousNBSPIfUnncessary(beforeRun, pointToInsert.AsRaw());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return nullptr;
+      }
     }
   }
 
@@ -310,9 +311,11 @@ WSRunObject::InsertText(nsIDocument& aDocument,
     } else if (beforeRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, if possible, just to prevent nbsp
       // proliferation
-      nsresult rv = CheckTrailingNBSP(beforeRun, pointToInsert.Container(),
-                                      pointToInsert.Offset());
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv =
+        ReplacePreviousNBSPIfUnncessary(beforeRun, pointToInsert.AsRaw());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
     // After this block, pointToInsert is modified by AutoTrackDOMPoint.
@@ -1859,46 +1862,61 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
 }
 
 nsresult
-WSRunObject::CheckTrailingNBSP(WSFragment* aRun,
-                               nsINode* aNode,
-                               int32_t aOffset)
+WSRunObject::ReplacePreviousNBSPIfUnncessary(WSFragment* aRun,
+                                             const EditorRawDOMPoint& aPoint)
 {
-  // Try to change an nbsp to a space, if possible, just to prevent nbsp
+  if (NS_WARN_IF(!aRun) ||
+      NS_WARN_IF(!aPoint.IsSet())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  MOZ_ASSERT(aPoint.IsSetAndValid());
+
+  // Try to change an NBSP to a space, if possible, just to prevent NBSP
   // proliferation.  This routine is called when we are about to make this
   // point in the ws abut an inserted break or text, so we don't have to worry
   // about what is after it.  What is after it now will end up after the
   // inserted object.
-  NS_ENSURE_TRUE(aRun && aNode, NS_ERROR_NULL_POINTER);
   bool canConvert = false;
-  WSPoint thePoint = GetPreviousCharPoint(EditorRawDOMPoint(aNode, aOffset));
+  WSPoint thePoint = GetPreviousCharPoint(aPoint);
   if (thePoint.mTextNode && thePoint.mChar == nbsp) {
     WSPoint prevPoint = GetPreviousCharPoint(thePoint);
     if (prevPoint.mTextNode) {
       if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) {
+        // If previous character is a NBSP and its previous character isn't
+        // ASCII space, we can replace the NBSP with ASCII space.
         canConvert = true;
       }
     } else if (aRun->mLeftType == WSType::text ||
                aRun->mLeftType == WSType::special) {
+      // If previous character is a NBSP and it's the first character of the
+      // text node, additionally, if its previous node is a text node including
+      // non-whitespace characters or <img> node or something inline
+      // non-container element node, we can replace the NBSP with ASCII space.
       canConvert = true;
     }
   }
-  if (canConvert) {
-    // First, insert a space
-    AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
-    nsAutoString spaceStr(char16_t(32));
-    nsresult rv =
-      mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, *thePoint.mTextNode,
-                                              thePoint.mOffset, true);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    // Finally, delete that nbsp
-    rv = DeleteRange(EditorRawDOMPoint(thePoint.mTextNode,
-                                       thePoint.mOffset + 1),
-                     EditorRawDOMPoint(thePoint.mTextNode,
-                                       thePoint.mOffset + 2));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  if (!canConvert) {
+    return NS_OK;
+  }
+
+  // First, insert a space before the previous NBSP.
+  AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
+  nsAutoString spaceStr(char16_t(32));
+  nsresult rv =
+    mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, *thePoint.mTextNode,
+                                            thePoint.mOffset, true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Finally, delete the previous NBSP.
+  rv = DeleteRange(EditorRawDOMPoint(thePoint.mTextNode,
+                                     thePoint.mOffset + 1),
+                   EditorRawDOMPoint(thePoint.mTextNode,
+                                     thePoint.mOffset + 2));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
   return NS_OK;
 }
