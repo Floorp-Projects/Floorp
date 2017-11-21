@@ -53,3 +53,7 @@ SPHINX_TREES['try'] = 'tryselect/docs'
 CRAMTEST_MANIFESTS += [
     'tryselect/test/cram.ini',
 ]
+
+PYTHON_UNITTEST_MANIFESTS += [
+    'tryselect/test/python.ini',
+]
