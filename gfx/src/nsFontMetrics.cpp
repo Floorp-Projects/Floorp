@@ -307,7 +307,7 @@ int32_t
 nsFontMetrics::GetMaxStringLength()
 {
     const gfxFont::Metrics& m = GetMetrics();
-    const double x = 32767.0 / m.maxAdvance;
+    const double x = 32767.0 / std::max(1.0, m.maxAdvance);
     int32_t len = (int32_t)floor(x);
     return std::max(1, len);
 }
