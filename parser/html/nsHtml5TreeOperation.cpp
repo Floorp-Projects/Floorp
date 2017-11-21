@@ -428,7 +428,8 @@ nsHtml5TreeOperation::CreateHTMLElement(
       nsAutoMicroTask mt;
     }
     dom::AutoCEReaction
-      autoCEReaction(document->GetDocGroup()->CustomElementReactionsStack());
+      autoCEReaction(document->GetDocGroup()->CustomElementReactionsStack(),
+                     nullptr);
 
     nsCOMPtr<dom::Element> newElement;
     NS_NewHTMLElement(getter_AddRefs(newElement), nodeInfo.forget(),

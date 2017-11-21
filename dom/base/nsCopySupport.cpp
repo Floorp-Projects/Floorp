@@ -618,7 +618,7 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
   NS_ENSURE_TRUE(mimeService, NS_OK);
 
   nsCOMPtr<nsIURI> imgUri;
-  rv = aImgRequest->GetCurrentURI(getter_AddRefs(imgUri));
+  rv = aImgRequest->GetFinalURI(getter_AddRefs(imgUri));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURL> imgUrl = do_QueryInterface(imgUri);

@@ -755,7 +755,7 @@ nsGenericDOMDataNode::SetAssignedSlot(HTMLSlotElement* aSlot)
 }
 
 nsXBLBinding *
-nsGenericDOMDataNode::GetXBLBinding() const
+nsGenericDOMDataNode::DoGetXBLBinding() const
 {
   return nullptr;
 }

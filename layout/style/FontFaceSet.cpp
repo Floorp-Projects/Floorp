@@ -43,6 +43,7 @@
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
 #include "nsIInputStream.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
 #include "nsStyleSet.h"
@@ -1067,7 +1068,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   if (unit == eCSSUnit_Normal) {
     // empty list of features
   } else if (unit == eCSSUnit_PairList || unit == eCSSUnit_PairListDep) {
-    nsRuleNode::ComputeFontFeatures(val.GetPairListValue(), featureSettings);
+    nsLayoutUtils::ComputeFontFeatures(val.GetPairListValue(), featureSettings);
   } else {
     NS_ASSERTION(unit == eCSSUnit_Null,
                  "@font-face font-feature-settings has unexpected unit");
@@ -1081,7 +1082,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   } else if (unit == eCSSUnit_String) {
     nsString stringValue;
     val.GetStringValue(stringValue);
-    languageOverride = nsRuleNode::ParseFontLanguageOverride(stringValue);
+    languageOverride = nsLayoutUtils::ParseFontLanguageOverride(stringValue);
   } else {
     NS_ASSERTION(unit == eCSSUnit_Null,
                  "@font-face font-language-override has unexpected unit");

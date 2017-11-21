@@ -22,16 +22,21 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsJARProtocolHandler,
                                          nsJARProtocolHandler::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJARURI)
 
+typedef nsJARURI::Mutator nsJARURIMutator;
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJARURIMutator)
+
 NS_DEFINE_NAMED_CID(NS_ZIPREADER_CID);
 NS_DEFINE_NAMED_CID(NS_ZIPREADERCACHE_CID);
 NS_DEFINE_NAMED_CID(NS_JARPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_JARURI_CID);
+NS_DEFINE_NAMED_CID(NS_JARURIMUTATOR_CID);
 
 static const mozilla::Module::CIDEntry kJARCIDs[] = {
     { &kNS_ZIPREADER_CID, false, nullptr, nsJARConstructor },
     { &kNS_ZIPREADERCACHE_CID, false, nullptr, nsZipReaderCacheConstructor },
     { &kNS_JARPROTOCOLHANDLER_CID, false, nullptr, nsJARProtocolHandlerConstructor },
     { &kNS_JARURI_CID, false, nullptr, nsJARURIConstructor },
+    { &kNS_JARURIMUTATOR_CID, false, nullptr, nsJARURIMutatorConstructor },
     { nullptr }
 };
 

@@ -103,6 +103,7 @@ nsStyleContext::nsStyleContext(nsAtom* aPseudoTag,
 #endif
 }
 
+// TODO(stylo-everywhere): Remove aSamePointerStructs.
 nsChangeHint
 nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
                                     uint32_t* aEqualStructs,
@@ -302,8 +303,13 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
   if (!thisVis != !otherVis) {
     // One style context has a style-if-visited and the other doesn't.
     // Presume a difference.
+#define STYLE_STRUCT(name_, fields_)                                \
+    *aSamePointerStructs &= ~NS_STYLE_INHERIT_BIT(name_);           \
+    *aEqualStructs &= ~NS_STYLE_INHERIT_BIT(name_);
+#include "nsCSSVisitedDependentPropList.h"
+#undef STYLE_STRUCT
     hint |= nsChangeHint_RepaintFrame;
-  } else if (thisVis && !NS_IsHintSubset(nsChangeHint_RepaintFrame, hint)) {
+  } else if (thisVis) {
     // Both style contexts have a style-if-visited.
     bool change = false;
 
@@ -314,12 +320,14 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
     // not having a style-if-visited), but not the other way around.
 #define STYLE_FIELD(name_) thisVisStruct->name_ != otherVisStruct->name_
 #define STYLE_STRUCT(name_, fields_)                                    \
-    if (!change && (PEEK(name_) != nullptr)) {                          \
+    if (PEEK(name_)) {                                                  \
       const nsStyle##name_* thisVisStruct =                             \
         thisVis->ThreadsafeStyle##name_();                              \
       const nsStyle##name_* otherVisStruct =                            \
         otherVis->ThreadsafeStyle##name_();                             \
       if (MOZ_FOR_EACH_SEPARATED(STYLE_FIELD, (||), (), fields_)) {     \
+        *aSamePointerStructs &= ~NS_STYLE_INHERIT_BIT(name_);           \
+        *aEqualStructs &= ~NS_STYLE_INHERIT_BIT(name_);                 \
         change = true;                                                  \
       }                                                                 \
     }

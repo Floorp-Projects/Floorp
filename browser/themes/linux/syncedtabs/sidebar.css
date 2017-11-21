@@ -35,15 +35,15 @@ html {
   height: 16px;
 }
 
-.search-box > .textbox-input-box > .textbox-input {
+.search-box > .textbox-input-box {
   background-image: url(chrome://global/skin/icons/search-textbox.svg);
   background-repeat: no-repeat;
   background-size: 12px 12px;
   background-position: left center;
-  text-indent: 14px;
+  padding-inline-start: 14px;
 }
 
-.search-box > .textbox-input-box > .textbox-input:-moz-locale-dir(rtl) {
+.search-box > .textbox-input-box:-moz-locale-dir(rtl) {
   background-position: right center;
 }
 

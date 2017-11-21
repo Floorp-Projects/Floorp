@@ -29,7 +29,11 @@
 #include "Accessible2_i.c"
 #include "Accessible2_2_i.c"
 #include "Accessible2_3_i.c"
+#include "AccessibleAction_i.c"
 #include "AccessibleHyperlink_i.c"
+#include "AccessibleTable_i.c"
+#include "AccessibleTable2_i.c"
+#include "AccessibleTableCell_i.c"
 
 namespace mozilla {
 namespace a11y {
@@ -63,6 +67,7 @@ AccessibleHandler::AccessibleHandler(IUnknown* aOuter, HRESULT* aResult)
   , mIA2PassThru(nullptr)
   , mServProvPassThru(nullptr)
   , mIAHyperlinkPassThru(nullptr)
+  , mIATableCellPassThru(nullptr)
   , mCachedData()
   , mCacheGen(0)
 {
@@ -131,6 +136,29 @@ AccessibleHandler::ResolveIAHyperlink()
 }
 
 HRESULT
+AccessibleHandler::ResolveIATableCell()
+{
+  if (mIATableCellPassThru) {
+    return S_OK;
+  }
+
+  RefPtr<IUnknown> proxy(GetProxy());
+  if (!proxy) {
+    return E_UNEXPECTED;
+  }
+
+  HRESULT hr = proxy->QueryInterface(IID_IAccessibleTableCell,
+    reinterpret_cast<void**>(&mIATableCellPassThru));
+  if (SUCCEEDED(hr)) {
+    // mIATableCellPassThru is a weak reference
+    // (see comments in AccesssibleHandler.h)
+    mIATableCellPassThru->Release();
+  }
+
+  return hr;
+}
+
+HRESULT
 AccessibleHandler::MaybeUpdateCachedData()
 {
   RefPtr<AccessibleHandlerControl> ctl(gControlFactory.GetOrCreateSingleton());
@@ -147,7 +175,7 @@ AccessibleHandler::MaybeUpdateCachedData()
     return E_POINTER;
   }
 
-  return mCachedData.mGeckoBackChannel->Refresh(&mCachedData.mData);
+  return mCachedData.mGeckoBackChannel->Refresh(&mCachedData.mDynamicData);
 }
 
 HRESULT
@@ -210,6 +238,46 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
     return S_OK;
   }
 
+  if (HasPayload()) {
+    // The proxy manager caches interfaces marshaled in the payload
+    // and returns them on QI without a cross-process call.
+    // However, it doesn't know about interfaces which don't exist.
+    // We can determine this from the payload.
+    if ((aIid == IID_IEnumVARIANT &&
+         !mCachedData.mStaticData.mIEnumVARIANT) ||
+        ((aIid == IID_IAccessibleText || aIid == IID_IAccessibleHypertext ||
+          aIid == IID_IAccessibleHypertext2) &&
+         !mCachedData.mStaticData.mIAHypertext) ||
+        ((aIid == IID_IAccessibleAction || aIid == IID_IAccessibleHyperlink) &&
+         !mCachedData.mStaticData.mIAHyperlink) ||
+        (aIid == IID_IAccessibleTable &&
+         !mCachedData.mStaticData.mIATable) ||
+        (aIid == IID_IAccessibleTable2 &&
+         !mCachedData.mStaticData.mIATable2) ||
+        (aIid == IID_IAccessibleTableCell &&
+         !mCachedData.mStaticData.mIATableCell)) {
+      // We already know this interface is not available, so don't query
+      // the proxy, thus avoiding a pointless cross-process call.
+      // If we return E_NOINTERFACE here, mscom::Handler will try the COM
+      // proxy. S_FALSE signals that the proxy should not be tried.
+      return S_FALSE;
+    }
+  }
+
+  if (aIid == IID_IAccessibleAction || aIid == IID_IAccessibleHyperlink) {
+    RefPtr<IAccessibleHyperlink> iaLink(
+      static_cast<IAccessibleHyperlink*>(this));
+    iaLink.forget(aOutInterface);
+    return S_OK;
+  }
+
+  if (aIid == IID_IAccessibleTableCell) {
+    RefPtr<IAccessibleTableCell> iaCell(
+      static_cast<IAccessibleTableCell*>(this));
+    iaCell.forget(aOutInterface);
+    return S_OK;
+  }
+
   if (aIid == IID_IAccessibleText || aIid == IID_IAccessibleHypertext ||
       aIid == IID_IAccessibleHypertext2) {
     RefPtr<IAccessibleHypertext2> textTearoff(new AccessibleTextTearoff(this));
@@ -241,8 +309,47 @@ AccessibleHandler::ReadHandlerPayload(IStream* aStream, REFIID aIid)
     return S_FALSE;
   }
 
-  if (!deserializer.Read(&mCachedData, &IA2Payload_Decode)) {
+  // QueryHandlerInterface might get called while we deserialize the payload,
+  // but that checks the interface pointers in the payload to determine what
+  // interfaces are available. Therefore, deserialize into a temporary struct
+  // and update mCachedData only after deserialization completes.
+  // The decoding functions can misbehave if their target memory is not zeroed
+  // beforehand, so ensure we do that.
+  IA2Payload newData{};
+  if (!deserializer.Read(&newData, &IA2Payload_Decode)) {
     return E_FAIL;
+  }
+  mCachedData = newData;
+
+  // These interfaces have been aggregated into the proxy manager.
+  // The proxy manager will resolve these interfaces now on QI,
+  // so we can release these pointers.
+  // However, we don't null them out because we use their presence
+  // to determine whether the interface is available
+  // so as to avoid pointless cross-proc QI calls returning E_NOINTERFACE.
+  // Note that if pointers to other objects (in contrast to
+  // interfaces of *this* object) are added in future, we should not release
+  // those pointers.
+  if (mCachedData.mStaticData.mIA2) {
+    mCachedData.mStaticData.mIA2->Release();
+  }
+  if (mCachedData.mStaticData.mIEnumVARIANT) {
+    mCachedData.mStaticData.mIEnumVARIANT->Release();
+  }
+  if (mCachedData.mStaticData.mIAHypertext) {
+    mCachedData.mStaticData.mIAHypertext->Release();
+  }
+  if (mCachedData.mStaticData.mIAHyperlink) {
+    mCachedData.mStaticData.mIAHyperlink->Release();
+  }
+  if (mCachedData.mStaticData.mIATable) {
+    mCachedData.mStaticData.mIATable->Release();
+  }
+  if (mCachedData.mStaticData.mIATable2) {
+    mCachedData.mStaticData.mIATable2->Release();
+  }
+  if (mCachedData.mStaticData.mIATableCell) {
+    mCachedData.mStaticData.mIATableCell->Release();
   }
 
   if (!mCachedData.mGeckoBackChannel) {
@@ -411,12 +518,12 @@ CopyBSTR(BSTR aSrc)
 
 #define GET_FIELD(member, assignTo) \
   { \
-    assignTo = mCachedData.mData.member; \
+    assignTo = mCachedData.mDynamicData.member; \
   }
 
 #define GET_BSTR(member, assignTo) \
   { \
-    assignTo = CopyBSTR(mCachedData.mData.member); \
+    assignTo = CopyBSTR(mCachedData.mDynamicData.member); \
   }
 
 /*** IAccessible ***/
@@ -547,7 +654,7 @@ AccessibleHandler::get_accRole(VARIANT varChild, VARIANT *pvarRole)
   }
 
   BEGIN_CACHE_ACCESS;
-  return ::VariantCopy(pvarRole, &mCachedData.mData.mRole);
+  return ::VariantCopy(pvarRole, &mCachedData.mDynamicData.mRole);
 }
 
 
@@ -919,7 +1026,7 @@ AccessibleHandler::get_uniqueID(long* uniqueID)
     }
     return mIA2PassThru->get_uniqueID(uniqueID);
   }
-  *uniqueID = mCachedData.mData.mUniqueId;
+  *uniqueID = mCachedData.mDynamicData.mUniqueId;
   return S_OK;
 }
 
@@ -1119,11 +1226,21 @@ AccessibleHandler::GetClassInfo(ITypeInfo** aOutTypeInfo)
 HRESULT
 AccessibleHandler::nActions(long* nActions)
 {
-  HRESULT hr = ResolveIAHyperlink();
-  if (FAILED(hr)) {
-    return hr;
+  if (!nActions) {
+    return E_INVALIDARG;
   }
-  return mIAHyperlinkPassThru->nActions(nActions);
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIAHyperlink();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIAHyperlinkPassThru->nActions(nActions);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mNActions, *nActions);
+  return S_OK;
 }
 
 HRESULT
@@ -1163,6 +1280,24 @@ AccessibleHandler::get_keyBinding(long actionIndex,
 HRESULT
 AccessibleHandler::get_name(long actionIndex, BSTR* name)
 {
+  if (!name) {
+    return E_INVALIDARG;
+  }
+
+  if (HasPayload()) {
+    if (actionIndex >= mCachedData.mDynamicData.mNActions) {
+      // Action does not exist.
+      return E_INVALIDARG;
+    }
+
+    if (actionIndex == 0) {
+      // same as accDefaultAction.
+      GET_BSTR(mDefaultAction, *name);
+      return S_OK;
+    }
+  }
+
+  // At this point, there's either no payload or actionIndex is > 0.
   HRESULT hr = ResolveIAHyperlink();
   if (FAILED(hr)) {
     return hr;
@@ -1230,6 +1365,172 @@ AccessibleHandler::get_valid(boolean* valid)
     return hr;
   }
   return mIAHyperlinkPassThru->get_valid(valid);
+}
+
+/*** IAccessibleTableCell ***/
+
+HRESULT
+AccessibleHandler::get_columnExtent(long* nColumnsSpanned)
+{
+  if (!nColumnsSpanned) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_columnExtent(nColumnsSpanned);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mColumnExtent, *nColumnsSpanned);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_columnHeaderCells(IUnknown*** cellAccessibles,
+                                     long* nColumnHeaderCells)
+{
+  HRESULT hr = ResolveIATableCell();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIATableCellPassThru->get_columnHeaderCells(cellAccessibles,
+             nColumnHeaderCells);
+}
+
+HRESULT
+AccessibleHandler::get_columnIndex(long* columnIndex)
+{
+  if (!columnIndex) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_columnIndex(columnIndex);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mColumnIndex, *columnIndex);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_rowExtent(long* nRowsSpanned)
+{
+  if (!nRowsSpanned) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_rowExtent(nRowsSpanned);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mRowExtent, *nRowsSpanned);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_rowHeaderCells(IUnknown*** cellAccessibles,
+                                  long* nRowHeaderCells)
+{
+  HRESULT hr = ResolveIATableCell();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIATableCellPassThru->get_rowHeaderCells(cellAccessibles,
+             nRowHeaderCells);
+}
+
+HRESULT
+AccessibleHandler::get_rowIndex(long* rowIndex)
+{
+  if (!rowIndex) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_rowIndex(rowIndex);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mRowIndex, *rowIndex);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_isSelected(boolean* isSelected)
+{
+  if (!isSelected) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_isSelected(isSelected);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mCellIsSelected, *isSelected);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_rowColumnExtents(long* row, long* column,
+                                     long* rowExtents, long* columnExtents,
+                                     boolean* isSelected)
+{
+  if (!row || !column || !rowExtents || !columnExtents || !isSelected) {
+    return E_INVALIDARG;
+  }
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIATableCell();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIATableCellPassThru->get_rowColumnExtents(row, column, rowExtents,
+               columnExtents, isSelected);
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mRowIndex, *row);
+  GET_FIELD(mColumnIndex, *column);
+  GET_FIELD(mRowExtent, *rowExtents);
+  GET_FIELD(mColumnExtent, *columnExtents);
+  GET_FIELD(mCellIsSelected, *isSelected);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandler::get_table(IUnknown** table)
+{
+  HRESULT hr = ResolveIATableCell();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIATableCellPassThru->get_table(table);
 }
 
 } // namespace a11y

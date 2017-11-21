@@ -232,6 +232,15 @@ class FirefoxDataProvider {
   }
 
   /**
+   * Public API used by the Toolbox: Tells if there is still any pending request.
+   *
+   * @return {boolean} returns true if the payload queue is empty
+   */
+  isPayloadQueueEmpty() {
+    return this.payloadQueue.length === 0;
+  }
+
+  /**
    * Return true if payload is ready (all data fetched from the backend)
    *
    * @param {string} id request id

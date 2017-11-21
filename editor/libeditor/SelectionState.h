@@ -112,8 +112,7 @@ public:
   nsresult SelAdjCreateNode(nsINode* aParent, int32_t aPosition);
   nsresult SelAdjInsertNode(nsINode* aParent, int32_t aPosition);
   void SelAdjDeleteNode(nsINode* aNode);
-  nsresult SelAdjSplitNode(nsIContent& aOldRightNode, int32_t aOffset,
-                           nsIContent* aNewLeftNode);
+  nsresult SelAdjSplitNode(nsIContent& aRightNode, nsIContent* aNewLeftNode);
   nsresult SelAdjJoinNodes(nsINode& aLeftNode,
                            nsINode& aRightNode,
                            nsINode& aParent,
