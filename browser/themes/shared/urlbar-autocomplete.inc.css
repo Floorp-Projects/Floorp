@@ -4,12 +4,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+:root {
+  --urlbar-popup-background: -moz-field;
+  --urlbar-popup-color: -moz-fieldtext;
+  --urlbar-popup-highlight-background: Highlight;
+  --urlbar-popup-highlight-color: HighlightText;
+}
+
 #treecolAutoCompleteImage {
   max-width: 36px;
 }
 
+#PopupAutoCompleteRichResult {
+  background: var(--urlbar-popup-background);
+  color: var(--urlbar-popup-color);
+}
+
 #PopupAutoCompleteRichResult .autocomplete-richlistbox {
   padding: 4px 3px;
+  background: transparent;
+  color: inherit;
 }
 
 #PopupAutoCompleteRichResult .autocomplete-richlistitem {
@@ -24,6 +38,15 @@
   border-inline-end: var(--item-padding-end) solid transparent;
 }
 
+#PopupAutoCompleteRichResult .autocomplete-richlistitem[selected] {
+  background: var(--urlbar-popup-highlight-background);
+  color: var(--urlbar-popup-highlight-color);
+}
+
 :root[uidensity=touch] #PopupAutoCompleteRichResult .autocomplete-richlistitem {
   min-height: 40px;
+}
+
+#PopupAutoCompleteRichResult .search-panel-input-value {
+  color: var(--urlbar-popup-color);
 }
