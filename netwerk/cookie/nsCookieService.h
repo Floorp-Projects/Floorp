@@ -365,7 +365,7 @@ class nsCookieService final : public nsICookieService
     mozilla::Monitor              mMonitor;
     mozilla::Atomic<bool>         mInitializedDBStates;
     mozilla::Atomic<bool>         mInitializedDBConn;
-    bool                          mAccumulatedWaitTelemetry;
+    mozilla::TimeStamp            mEndInitDBConn;
     nsTArray<CookieDomainTuple>   mReadArray;
 
     // friends!
