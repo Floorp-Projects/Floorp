@@ -23,6 +23,7 @@ namespace gfx {
 class VRLayerParent;
 class VRManagerParent;
 class VRDisplayHost;
+class VRSystemManagerPuppet;
 
 class VRManager
 {
@@ -47,6 +48,8 @@ public:
   RefPtr<gfx::VRControllerHost> GetController(const uint32_t& aControllerID);
   void GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo);
   void CreateVRTestSystem();
+  VRSystemManagerPuppet* GetPuppetManager();
+
   void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
                      double aIntensity, double aDuration, const VRManagerPromise& aPromise);
   void StopVibrateHaptic(uint32_t aControllerIdx);
@@ -85,7 +88,7 @@ private:
   TimeStamp mLastControllerEnumerationTime;
   TimeStamp mLastDisplayEnumerationTime;
   TimeStamp mLastActiveTime;
-  bool mVRTestSystemCreated;
+  RefPtr<VRSystemManagerPuppet> mPuppetManager;
   bool mVRDisplaysRequested;
   bool mVRControllersRequested;
 };

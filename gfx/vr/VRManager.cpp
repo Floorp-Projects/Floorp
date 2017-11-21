@@ -55,7 +55,6 @@ VRManager::ManagerInit()
 
 VRManager::VRManager()
   : mInitialized(false)
-  , mVRTestSystemCreated(false)
   , mVRDisplaysRequested(false)
   , mVRControllersRequested(false)
 {
@@ -498,15 +497,20 @@ VRManager::RemoveControllers()
 void
 VRManager::CreateVRTestSystem()
 {
-  if (mVRTestSystemCreated) {
+  if (mPuppetManager) {
+    mPuppetManager->ClearTestDisplays();
     return;
   }
 
-  RefPtr<VRSystemManager> mgr = VRSystemManagerPuppet::Create();
-  if (mgr) {
-    mManagers.AppendElement(mgr);
-    mVRTestSystemCreated = true;
-  }
+  mPuppetManager = VRSystemManagerPuppet::Create();
+  mManagers.AppendElement(mPuppetManager);
+}
+
+VRSystemManagerPuppet*
+VRManager::GetPuppetManager()
+{
+  MOZ_ASSERT(mPuppetManager);
+  return mPuppetManager;
 }
 
 template<class T>

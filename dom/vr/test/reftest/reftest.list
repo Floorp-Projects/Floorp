@@ -1,6 +1,6 @@
 # WebVR Reftests
 # Please confirm there is no other VR display connected. Otherwise, VRPuppetDisplay can't be attached.
-default-preferences pref(dom.vr.puppet.enabled,true) pref(dom.vr.test.enabled,true) pref(dom.vr.require-gesture,false) pref(dom.vr.puppet.submitframe,1) pref(dom.vr.display.rafMaxDuration,200)
+default-preferences pref(dom.vr.puppet.enabled,true) pref(dom.vr.test.enabled,true) pref(dom.vr.require-gesture,false) pref(dom.vr.puppet.submitframe,1) pref(dom.vr.display.rafMaxDuration,200) pref(dom.vr.display.enumerate.interval,0) pref(dom.vr.controller.enumerate.interval,0)
 
 # VR SubmitFrame is only implemented for D3D11.1 and MacOSX now.
 # Our Windows 7 test machines don't support D3D11.1, so we run these tests on Windows 8+ only.
