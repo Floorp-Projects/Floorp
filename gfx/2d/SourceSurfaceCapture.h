@@ -22,6 +22,9 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCapture, override)
 
   explicit SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner);
+  explicit SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner,
+                                LuminanceType aLuminanceType,
+                                float aOpacity);
   ~SourceSurfaceCapture();
 
   SurfaceType GetType() const override { return SurfaceType::CAPTURE; }
@@ -49,6 +52,10 @@ private:
   DrawTargetCaptureImpl* mOwner;
   CaptureCommandList mCommands;
   bool mHasCommandList;
+
+  bool mShouldResolveToLuminance;
+  LuminanceType mLuminanceType;
+  float mOpacity;
 
   // Note that we have to keep a reference around. Internal methods like
   // GetSkImageForSurface expect their callers to hold a reference, which

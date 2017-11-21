@@ -231,23 +231,21 @@
     ],
     "subresource": {
       "blockable": [
-        "iframe-tag",
         "script-tag",
         "link-css-tag",
-        "form-tag",
         "xhr-request",
         "worker-request",
         "fetch-request",
         "a-tag",
         "object-tag",
         "picture-tag",
-        "websocket-request"
+        "websocket-request",
+        "link-prefetch-tag"
       ],
       "optionally-blockable": [
         "img-tag",
         "audio-tag",
-        "video-tag",
-        "link-prefetch-tag"
+        "video-tag"
       ]
     },
     "expectation": [

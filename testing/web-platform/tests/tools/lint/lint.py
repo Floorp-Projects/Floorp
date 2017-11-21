@@ -361,6 +361,13 @@ class LayoutTestsRegexp(Regexp):
     file_extensions = [".html", ".htm", ".js", ".xht", ".xhtml", ".svg"]
     description = "eventSender/testRunner/window.internals used; these are LayoutTests-specific APIs (WebKit/Blink)"
 
+class SpecialPowersRegexp(Regexp):
+    pattern = b"SpecialPowers"
+    error = "SPECIALPOWERS API"
+    file_extensions = [".html", ".htm", ".js", ".xht", ".xhtml", ".svg"]
+    description = "SpecialPowers used; this is gecko-specific and not supported in wpt"
+
+
 regexps = [item() for item in
            [TrailingWhitespaceRegexp,
             TabsRegexp,
@@ -371,7 +378,8 @@ regexps = [item() for item in
             ConsoleRegexp,
             GenerateTestsRegexp,
             PrintRegexp,
-            LayoutTestsRegexp]]
+            LayoutTestsRegexp,
+            SpecialPowersRegexp]]
 
 def check_regexp_line(repo_root, path, f, css_mode):
     errors = []
@@ -507,13 +515,25 @@ def check_parsed(repo_root, path, f, css_mode):
             if all(seen_elements[name] for name in required_elements):
                 break
 
+    if source_file.testdriver_nodes:
+        if len(source_file.testdriver_nodes) > 1:
+            errors.append(("MULTIPLE-TESTDRIVER",
+                           "More than one <script src='/resources/testdriver.js'>", path, None))
+
+        testdriver_vendor_nodes = source_file.root.findall(".//{http://www.w3.org/1999/xhtml}script[@src='/resources/testdriver-vendor.js']")
+        if not testdriver_vendor_nodes:
+            errors.append(("MISSING-TESTDRIVER-VENDOR",
+                           "Missing <script src='/resources/testdriver-vendor.js'>", path, None))
+        else:
+            if len(testdriver_vendor_nodes) > 1:
+                errors.append(("MULTIPLE-TESTDRIVER-VENDOR",
+                               "More than one <script src='/resources/testdriver-vendor.js'>", path, None))
 
     for element in source_file.root.findall(".//{http://www.w3.org/1999/xhtml}script[@src]"):
         src = element.attrib["src"]
-        for name in ["testharness", "testharnessreport"]:
+        for name in ["testharness", "testharnessreport", "testdriver", "testdriver-vendor"]:
             if "%s.js" % name == src or ("/%s.js" % name in src and src != "/resources/%s.js" % name):
                 errors.append(("%s-PATH" % name.upper(), "%s.js script seen with incorrect path" % name, path, None))
-
 
     return errors
 
