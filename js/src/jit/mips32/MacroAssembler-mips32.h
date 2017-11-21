@@ -310,14 +310,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         ma_b(target);
     }
 
-    void jump(TrampolinePtr code)
-    {
-        auto target = ImmPtr(code.value);
-        BufferOffset bo = m_buffer.nextOffset();
-        addPendingJump(bo, target, Relocation::HARDCODED);
-        ma_jump(target);
-    }
-
     void negl(Register reg) {
         ma_negu(reg, reg);
     }
