@@ -4153,29 +4153,17 @@ pref("font.name-list.monospace.x-western", "Courier, Courier New");
 pref("font.name-list.cursive.x-western", "Apple Chancery");
 pref("font.name-list.fantasy.x-western", "Papyrus");
 
-#ifdef EARLY_BETA_OR_EARLIER
 pref("font.name-list.serif.zh-CN", "Times, Songti SC, STSong, Heiti SC");
-#else
-pref("font.name-list.serif.zh-CN", "Times, STSong, Heiti SC");
-#endif
 pref("font.name-list.sans-serif.zh-CN", "Helvetica, PingFang SC, STHeiti, Heiti SC");
 pref("font.name-list.monospace.zh-CN", "Courier, PingFang SC, STHeiti, Heiti SC");
 pref("font.name-list.cursive.zh-CN", "Kaiti SC");
 
-#ifdef EARLY_BETA_OR_EARLIER
 pref("font.name-list.serif.zh-TW", "Times, Songti TC, LiSong Pro, Heiti TC");
-#else
-pref("font.name-list.serif.zh-TW", "Times, LiSong Pro, Heiti TC");
-#endif
 pref("font.name-list.sans-serif.zh-TW", "Helvetica, PingFang TC, Heiti TC, LiHei Pro");
 pref("font.name-list.monospace.zh-TW", "Courier, PingFang TC, Heiti TC, LiHei Pro");
 pref("font.name-list.cursive.zh-TW", "Kaiti TC");
 
-#ifdef EARLY_BETA_OR_EARLIER
 pref("font.name-list.serif.zh-HK", "Times, Songti TC, LiSong Pro, Heiti TC");
-#else
-pref("font.name-list.serif.zh-HK", "Times, LiSong Pro, Heiti TC");
-#endif
 pref("font.name-list.sans-serif.zh-HK", "Helvetica, PingFang TC, Heiti TC, LiHei Pro");
 pref("font.name-list.monospace.zh-HK", "Courier, PingFang TC, Heiti TC, LiHei Pro");
 pref("font.name-list.cursive.zh-HK", "Kaiti TC");
