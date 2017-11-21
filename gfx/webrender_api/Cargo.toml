@@ -1,6 +1,6 @@
 [package]
 name = "webrender_api"
-version = "0.53.2"
+version = "0.54.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -21,7 +21,7 @@ time = "0.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.4"
-core-graphics = "0.9"
+core-graphics = "0.12.2"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.4"

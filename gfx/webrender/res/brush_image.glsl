@@ -31,20 +31,20 @@ void brush_vs(
     //           we can expand this to support items from
     //           the normal texture cache and unify this
     //           with the normal image shader.
-    BlurTask task = fetch_blur_task(user_data.x);
-    vUv.z = task.render_target_layer_index;
+    BlurTask blur_task = fetch_blur_task(user_data.x);
+    vUv.z = blur_task.common_data.texture_layer_index;
     vImageKind = user_data.y;
 
 #if defined WR_FEATURE_COLOR_TARGET
     vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
 #else
     vec2 texture_size = vec2(textureSize(sColor1, 0).xy);
-    vColor = task.color;
+    vColor = blur_task.color;
 #endif
 
-    vec2 uv0 = task.target_rect.p0;
-    vec2 src_size = task.target_rect.size * task.scale_factor;
-    vec2 uv1 = uv0 + task.target_rect.size;
+    vec2 uv0 = blur_task.common_data.task_rect.p0;
+    vec2 src_size = blur_task.common_data.task_rect.size * blur_task.scale_factor;
+    vec2 uv1 = uv0 + blur_task.common_data.task_rect.size;
 
     // TODO(gw): In the future we'll probably draw these as segments
     //           with the brush shader. When that occurs, we can
