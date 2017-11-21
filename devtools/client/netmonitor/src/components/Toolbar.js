@@ -71,7 +71,7 @@ class Toolbar extends Component {
       toggleBrowserCache: PropTypes.func.isRequired,
       browserCacheDisabled: PropTypes.bool.isRequired,
       toggleRequestFilterType: PropTypes.func.isRequired,
-      filteredRequests: PropTypes.array.isRequired,
+      filteredRequests: PropTypes.object.isRequired,
     };
   }
 

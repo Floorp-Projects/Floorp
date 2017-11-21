@@ -56,9 +56,9 @@ const getTypeFilterFn = createSelector(
 );
 
 const getSortFn = createSelector(
-  state => state.requests,
+  state => state.requests.requests,
   state => state.sort,
-  ({ requests }, sort) => {
+  (requests, sort) => {
     const sorter = Sorters[sort.type || "waterfall"];
     const ascending = sort.ascending ? +1 : -1;
     return (a, b) => ascending * sortWithClones(requests, sorter, a, b);
@@ -66,34 +66,23 @@ const getSortFn = createSelector(
 );
 
 const getSortedRequests = createSelector(
-  state => state.requests,
+  state => state.requests.requests,
   getSortFn,
-  ({ requests }, sortFn) => {
-    let arr = requests.valueSeq().sort(sortFn);
-    arr.get = index => arr[index];
-    arr.isEmpty = () => this.length == 0;
-    arr.size = arr.length;
-    return arr;
-  }
+  (requests, sortFn) => requests.valueSeq().sort(sortFn).toList()
 );
 
 const getDisplayedRequests = createSelector(
-  state => state.requests,
+  state => state.requests.requests,
   getFilterFn,
   getSortFn,
-  ({ requests }, filterFn, sortFn) => {
-    let arr = requests.valueSeq().filter(filterFn).sort(sortFn);
-    arr.get = index => arr[index];
-    arr.isEmpty = () => this.length == 0;
-    arr.size = arr.length;
-    return arr;
-  }
+  (requests, filterFn, sortFn) => requests.valueSeq()
+    .filter(filterFn).sort(sortFn).toList()
 );
 
 const getTypeFilteredRequests = createSelector(
-  state => state.requests,
+  state => state.requests.requests,
   getTypeFilterFn,
-  ({ requests }, filterFn) => requests.valueSeq().filter(filterFn)
+  (requests, filterFn) => requests.valueSeq().filter(filterFn).toList()
 );
 
 const getDisplayedRequestsSummary = createSelector(
