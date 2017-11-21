@@ -13,6 +13,11 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Casting.h"
+#include "mozilla/dom/ClientChannelHelper.h"
+#include "mozilla/dom/ClientHandle.h"
+#include "mozilla/dom/ClientInfo.h"
+#include "mozilla/dom/ClientManager.h"
+#include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
@@ -3390,6 +3395,80 @@ nsDocShell::GetParentDocshell()
 }
 
 void
+nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal)
+{
+  // If there is an existing document then there is no need to create
+  // a client for a future initial about:blank document.
+  if (mScriptGlobal && mScriptGlobal->GetExtantDoc()) {
+    MOZ_DIAGNOSTIC_ASSERT(
+      mScriptGlobal->GetCurrentInnerWindowInternal()->GetClientInfo().isSome());
+    MOZ_DIAGNOSTIC_ASSERT(!mInitialClientSource);
+    return;
+  }
+
+  // Don't recreate the initial client source.  We call this multiple times
+  // when DoChannelLoad() is called before CreateAboutBlankContentViewer.
+  if (mInitialClientSource) {
+    return;
+  }
+
+  // Don't pre-allocate the client when we are sandboxed.  The inherited
+  // principal does not take sandboxing into account.
+  // TODO: Refactor sandboxing principal code out so we can use it here.
+  if (!aPrincipal && (mSandboxFlags & SANDBOXED_ORIGIN)) {
+    return;
+  }
+
+  nsIPrincipal* principal = aPrincipal ? aPrincipal
+                                       : GetInheritedPrincipal(false);
+
+  // Sometimes there is no principal available when we are called from
+  // CreateAboutBlankContentViewer.  For example, sometimes the principal
+  // is only extracted from the load context after the document is created
+  // in nsDocument::ResetToURI().  Ideally we would do something similar
+  // here, but for now lets just avoid the issue by not preallocating the
+  // client.
+  if (!principal) {
+    return;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
+  if (!win) {
+    return;
+  }
+
+  mInitialClientSource =
+    ClientManager::CreateSource(ClientType::Window,
+                                win->EventTargetFor(TaskCategory::Other),
+                                principal);
+
+  // Mark the initial client as execution ready, but owned by the docshell.
+  // If the client is actually used this will cause ClientSource to force
+  // the creation of the initial about:blank by calling nsDocShell::GetDocument().
+  mInitialClientSource->DocShellExecutionReady(this);
+}
+
+Maybe<ClientInfo>
+nsDocShell::GetInitialClientInfo() const
+{
+  if (mInitialClientSource) {
+    Maybe<ClientInfo> result;
+    result.emplace(mInitialClientSource->Info());
+    return Move(result);
+  }
+
+  nsGlobalWindowInner* innerWindow =
+    mScriptGlobal ? mScriptGlobal->GetCurrentInnerWindowInternal() : nullptr;
+  nsIDocument* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
+
+  if (!doc || !doc->IsInitialDocument()) {
+    return Maybe<ClientInfo>();
+  }
+
+  return innerWindow->GetClientInfo();
+}
+
+void
 nsDocShell::RecomputeCanExecuteScripts()
 {
   bool old = mCanExecuteScripts;
@@ -5921,6 +6000,9 @@ nsDocShell::Destroy()
 
   mIsBeingDestroyed = true;
 
+  // Brak the cycle with the initial client, if present.
+  mInitialClientSource.reset();
+
   // Make sure we don't record profile timeline markers anymore
   SetRecordProfileTimelineMarkers(false);
 
@@ -7756,6 +7838,10 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   // Timing is picked up by the window, we don't need it anymore
   mTiming = nullptr;
 
+  // Make sure to discard the initial client if we never created the initial
+  // about:blank document.
+  mInitialClientSource.reset();
+
   // clean up reload state for meta charset
   if (eCharsetReloadRequested == mCharsetReloadState) {
     mCharsetReloadState = eCharsetReloadStopOrigional;
@@ -8252,6 +8338,9 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
     } else {
       principal = aPrincipal;
     }
+
+    MaybeCreateInitialClientSource(principal);
+
     // generate (about:blank) document to load
     blankDoc = nsContentDLF::CreateBlankDocument(mLoadGroup, principal, this);
     if (blankDoc) {
@@ -11747,6 +11836,24 @@ nsDocShell::DoChannelLoad(nsIChannel* aChannel,
   if (!mAllowContentRetargeting) {
     openFlags |= nsIURILoader::DONT_RETARGET;
   }
+
+  nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
+  NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
+
+  MaybeCreateInitialClientSource();
+
+  // Since we are loading a document we need to make sure the proper reserved
+  // and initial client data is stored on the nsILoadInfo.  The
+  // ClientChannelHelper does this and ensures that it is propagated properly
+  // on redirects.  We pass no reserved client here so that the helper will
+  // create the reserved ClientSource if necessary.
+  Maybe<ClientInfo> noReservedClient;
+  rv = AddClientChannelHelper(aChannel,
+                              Move(noReservedClient),
+                              GetInitialClientInfo(),
+                              win->EventTargetFor(TaskCategory::Other));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = aURILoader->OpenURI(aChannel, openFlags, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -15147,6 +15254,12 @@ nsDocShell::InFrameSwap()
     shell = shell->GetParentDocshell();
   } while (shell);
   return false;
+}
+
+UniquePtr<ClientSource>
+nsDocShell::TakeInitialClientSource()
+{
+  return Move(mInitialClientSource);
 }
 
 NS_IMETHODIMP
