@@ -4,7 +4,7 @@
 
 "use strict";
 
-const DUMMY = "browser/browser/base/content/test/general/dummy_page.html";
+const DUMMY = "browser/browser/base/content/test/siteIdentity/dummy_page.html";
 const INSECURE_ICON_PREF = "security.insecure_connection_icon.enabled";
 const INSECURE_PBMODE_ICON_PREF = "security.insecure_connection_icon.pbmode.enabled";
 
@@ -231,6 +231,34 @@ async function noCertErrorTest(secureCheck) {
 add_task(async function test_about_net_error_uri() {
   await noCertErrorTest(true);
   await noCertErrorTest(false);
+});
+
+async function noCertErrorFromNavigationTest(secureCheck) {
+  await SpecialPowers.pushPrefEnv({set: [[INSECURE_ICON_PREF, secureCheck]]});
+  let newTab = await loadNewTab("http://example.com/" + DUMMY);
+
+  let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    content.document.getElementById("no-cert").click();
+  });
+  await promise;
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    is(content.window.location.href, "https://nocert.example.com/", "Should be the cert error URL");
+  });
+
+
+  is(newTab.linkedBrowser.documentURI.spec.startsWith("about:certerror?"), true, "Should be an about:certerror");
+  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+  is(getConnectionState(), "not-secure", "Connection should be file");
+
+  gBrowser.removeTab(newTab);
+
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async function test_about_net_error_uri_from_navigation_tab() {
+  await noCertErrorFromNavigationTest(true);
+  await noCertErrorFromNavigationTest(false);
 });
 
 async function aboutUriTest(secureCheck) {
