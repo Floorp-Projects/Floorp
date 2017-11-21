@@ -1143,7 +1143,7 @@ class Protocol(ipdl.ast.Protocol):
         return '->'
 
     def channelType(self):
-        return Type('Channel', ptr=not self.decl.type.isToplevel())
+        return Type('MessageChannel', ptr=not self.decl.type.isToplevel())
 
     def managerInterfaceType(self, ptr=0):
         return Type('mozilla::ipc::IProtocol', ptr=ptr)
@@ -2471,10 +2471,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def standardTypedefs(self):
         return [
-            Typedef(Type('mozilla::ipc::IProtocol'), 'ProtocolBase'),
+            Typedef(Type('mozilla::ipc::IProtocol'), 'IProtocol'),
             Typedef(Type('IPC::Message'), 'Message'),
-            Typedef(Type('mozilla::ipc::MessageChannel'), 'Channel'),
-            Typedef(Type('mozilla::ipc::IProtocol'), 'ChannelListener'),
             Typedef(Type('base::ProcessHandle'), 'ProcessHandle'),
             Typedef(Type('mozilla::ipc::MessageChannel'), 'MessageChannel'),
             Typedef(Type('mozilla::ipc::SharedMemory'), 'SharedMemory'),
@@ -2972,7 +2970,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     ExprVar('MSG_ROUTING_CONTROL'), '!=', routevar))
                 routedvar = ExprVar('routed__')
                 routeif.ifb.addstmt(
-                    StmtDecl(Decl(Type('ChannelListener', ptr=1),
+                    StmtDecl(Decl(Type('IProtocol', ptr=1),
                                   routedvar.name),
                              _lookupListener(routevar)))
                 failif = StmtIf(ExprPrefixUnop(routedvar, '!'))
@@ -3235,7 +3233,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sizevar = ExprVar('aSize')
         typevar = ExprVar('aType')
         unsafevar = ExprVar('aUnsafe')
-        protocolbase = Type('ProtocolBase', ptr=1)
+        protocolbase = Type('IProtocol', ptr=1)
         sourcevar = ExprVar('aSource')
         ivar = ExprVar('i')
         kidsvar = ExprVar('kids')
