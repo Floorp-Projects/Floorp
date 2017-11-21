@@ -92,6 +92,7 @@ fn api_from_str(src: &str) -> Result<Api, ()> {
         "glcore" => Ok(Api::GlCore),
         "gles1" => Ok(Api::Gles1),
         "gles2" => Ok(Api::Gles2),
+        "glsc2" => Ok(Api::Glsc2),
         _ => Err(()),
     }
 }
@@ -130,7 +131,7 @@ fn trim_str<'a>(s: &'a str, trim: &str) -> &'a str {
 
 fn trim_enum_prefix(ident: &str, api: Api) -> String {
     let ident = match api {
-        Api::Gl | Api::GlCore | Api::Gles1 | Api::Gles2 => trim_str(ident, "GL_"),
+        Api::Gl | Api::GlCore | Api::Gles1 | Api::Gles2 | Api::Glsc2 => trim_str(ident, "GL_"),
         Api::Glx => trim_str(ident, "GLX_"),
         Api::Wgl => trim_str(ident, "WGL_"),
         Api::Egl => trim_str(ident, "EGL_"),
@@ -147,6 +148,18 @@ fn make_enum(ident: String, ty: Option<String>, value: String, alias: Option<Str
             // just brute forcing some paren matching... (ﾉ ◕ ◡ ◕)ﾉ *:･ﾟ✧
             let working = &value[2..value.len() - 1];
             if let Some((i, _)) = working.match_indices(")").next() {
+                let ty = working[..i].to_string();
+                let value = working[i + 1..].to_string();
+
+                (Cow::Owned(ty), value, true)
+            } else {
+                panic!("Unexpected value format: {}", value)
+            }
+        } else if value.starts_with("EGL_CAST(") && value.ends_with(")") {
+            // Handling "SpecialNumbers" in the egl.xml file
+            // The values for these enums has the form `'EGL_CAST(' type ',' expr ')'`.
+            let working = &value[9..value.len() - 1];
+            if let Some((i, _)) = working.match_indices(",").next() {
                 let ty = working[..i].to_string();
                 let value = working[i + 1..].to_string();
 
@@ -178,7 +191,7 @@ fn make_enum(ident: String, ty: Option<String>, value: String, alias: Option<Str
 
 fn trim_cmd_prefix(ident: &str, api: Api) -> &str {
     match api {
-        Api::Gl | Api::GlCore | Api::Gles1 | Api::Gles2 => trim_str(ident, "gl"),
+        Api::Gl | Api::GlCore | Api::Gles1 | Api::Gles2 | Api::Glsc2 => trim_str(ident, "gl"),
         Api::Glx => trim_str(ident, "glX"),
         Api::Wgl => trim_str(ident, "wgl"),
         Api::Egl => trim_str(ident, "egl"),
@@ -698,7 +711,7 @@ impl FromXml for String {
 
 /// Converts a C style type definition to the Rust equivalent
 pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
-    let ty = match ty.as_ref() {
+    let ty = match ty.as_ref().trim() {
         // gl.xml types
         "GLDEBUGPROC" => "types::GLDEBUGPROC",
         "GLDEBUGPROCAMD" => "types::GLDEBUGPROCAMD",
@@ -733,7 +746,7 @@ pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
         "GLuint64EXT" => "types::GLuint64EXT",
         "GLushort" => "types::GLushort",
         "GLvdpauSurfaceNV" => "types::GLvdpauSurfaceNV",
-        "void " => "()",
+        "void" => "()",
         "GLboolean *" => "*mut types::GLboolean",
         "GLchar *" => "*mut types::GLchar",
         "GLcharARB *" => "*mut types::GLcharARB",
@@ -824,11 +837,11 @@ pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
         "Window" => "types::Window",
         "__GLXextFuncPtr" => "types::__GLXextFuncPtr",
         "const GLXContext" => "const types::GLXContext",
-        "float " => "__gl_imports::raw::c_float",
-        "int " => "__gl_imports::raw::c_int",
+        "float" => "__gl_imports::raw::c_float",
+        "int" => "__gl_imports::raw::c_int",
         "int64_t" => "i64",
-        "unsigned int " => "__gl_imports::raw::c_uint",
-        "unsigned long " => "__gl_imports::raw::c_ulong",
+        "unsigned int" => "__gl_imports::raw::c_uint",
+        "unsigned long" => "__gl_imports::raw::c_ulong",
         // "void "                     => "()",
         "DMparams *" => "*mut types::DMparams",
         "Display *" => "*mut types::Display",
@@ -975,6 +988,15 @@ pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
         "EGLOutputPortEXT *" => "*mut types::EGLOutputPortEXT",
         "EGLuint64KHR *" => "*mut types::EGLuint64KHR",
 
+        "GLeglClientBufferEXT" => "types::GLeglClientBufferEXT",
+        "GLVULKANPROCNV" => "type::GLVULKANPROCNV",
+        "EGLDEBUGPROCKHR" => "type::EGLDEBUGPROCKHR",
+        "EGLObjectKHR" => "type::EGLObjectKHR",
+        "EGLLabelKHR" => "type::EGLLabelKHR",
+        "EGLnsecsANDROID" => "type::EGLnsecsANDROID",
+        "EGLnsecsANDROID *" => "*mut type::EGLnsecsANDROID",
+        "EGLBoolean *" => "*mut type::EGLBoolean",
+
         // failure
         _ => panic!("Type conversion not implemented for `{}`", ty.as_ref()),
     };
@@ -1039,6 +1061,17 @@ mod tests {
                                      Some("BAR".to_string()));
             assert_eq!(e.ident, "FOO");
             assert_eq!((&*e.ty, &*e.value), ("EGLint", "(-1)"));
+            assert_eq!(e.alias, Some("BAR".to_string()));
+        }
+
+        #[test]
+        fn test_cast_egl() {
+            let e = parse::make_enum("FOO".to_string(),
+                                     None,
+                                     "EGL_CAST(EGLint,-1)".to_string(),
+                                     Some("BAR".to_string()));
+            assert_eq!(e.ident, "FOO");
+            assert_eq!((&*e.ty, &*e.value), ("EGLint", "-1"));
             assert_eq!(e.alias, Some("BAR".to_string()));
         }
 

@@ -1,36 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <registry>
-    <!--
-    Copyright (c) 2013-2014 The Khronos Group Inc.
+    <comment>
+Copyright (c) 2013-2017 The Khronos Group Inc.
 
-    Permission is hereby granted, free of charge, to any person obtaining a
-    copy of this software and/or associated documentation files (the
-    "Materials"), to deal in the Materials without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish,
-    distribute, sublicense, and/or sell copies of the Materials, and to
-    permit persons to whom the Materials are furnished to do so, subject to
-    the following conditions:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    The above copyright notice and this permission notice shall be included
-    in all copies or substantial portions of the Materials.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-    THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
-    -->
-    <!--
-    This file, glx.xml, is the GLX API Registry. The older ".spec" file
-    format has been retired and will no longer be updated with new
-    extensions and API versions. The canonical version of the registry,
-    together with documentation, schema, and Python generator scripts used
-    to generate C header files for GLX, can always be found in the Khronos
-    Registry at
-        http://www.opengl.org/registry/
-    -->
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+------------------------------------------------------------------------
+
+This file, glx.xml, is the GLX API Registry. The canonical version of the
+registry, together with documentation, schema, and Python generator scripts
+used to generate C header files for GLX, can always be found in the Khronos
+Registry at
+        https://github.com/KhronosGroup/OpenGL-Registry
+    </comment>
 
     <!-- SECTION: GLX type definitions. Does not include X or GL types. -->
     <types>
@@ -453,7 +445,9 @@ typedef unsigned __int64 uint64_t;
         <enum value="0x20F3"        name="GLX_LATE_SWAPS_TEAR_EXT"/>
         <enum value="0x20F4"        name="GLX_BACK_BUFFER_AGE_EXT"/>
         <enum value="0x20F5"        name="GLX_STEREO_TREE_EXT"/>
-            <unused start="0x20F6" end="0x219F"/>
+        <enum value="0x20F6"        name="GLX_VENDOR_NAMES_EXT"/>
+        <enum value="0x20F7"        name="GLX_GENERATE_RESET_ON_VIDEO_MEMORY_PURGE_NV"/>
+            <unused start="0x20F8" end="0x219F"/>
     </enums>
 
     <enums namespace="GLX" start="0x21A0" end="0x21AF" vendor="AMD" comment="Shared with WGL; synchronize create_context enums">
@@ -466,6 +460,10 @@ typedef unsigned __int64 uint64_t;
         <enum value="0x21A7"        name="GLX_GPU_NUM_RB_AMD"/>
         <enum value="0x21A8"        name="GLX_GPU_NUM_SPI_AMD"/>
             <unused start="0x21A9" end="0x21AF"/>
+    </enums>
+
+    <enums namespace="GLX" start="0x31B3" end="0x31B3" vendor="ARB" comment="Shared with WGL.">
+        <enum value="0x31B3" name="GLX_CONTEXT_OPENGL_NO_ERROR_ARB"/>
     </enums>
 
     <enums namespace="GLX" start="0x8000" end="0x804F" vendor="ARB">
@@ -1074,6 +1072,9 @@ typedef unsigned __int64 uint64_t;
             <param>unsigned long *<name>mask</name></param>
         </command>
         <command>
+            <proto>int <name>glXGetSwapIntervalMESA</name></proto>
+        </command>
+        <command>
             <proto><ptype>Bool</ptype> <name>glXGetSyncValuesOML</name></proto>
             <param><ptype>Display</ptype> *<name>dpy</name></param>
             <param><ptype>GLXDrawable</ptype> <name>drawable</name></param>
@@ -1410,6 +1411,10 @@ typedef unsigned __int64 uint64_t;
             <param><ptype>int64_t</ptype> <name>remainder</name></param>
         </command>
         <command>
+            <proto>void <name>glXSwapIntervalMESA</name></proto>
+            <param>unsigned int <name>interval</name></param>
+        </command>
+        <command>
             <proto>void <name>glXSwapIntervalEXT</name></proto>
             <param><ptype>Display</ptype> *<name>dpy</name></param>
             <param><ptype>GLXDrawable</ptype> <name>drawable</name></param>
@@ -1668,6 +1673,11 @@ typedef unsigned __int64 uint64_t;
                 <command name="glXCreateContextAttribsARB"/>
             </require>
         </extension>
+        <extension name="GLX_ARB_create_context_no_error" supported="glx">
+            <require>
+                <enum name="GLX_CONTEXT_OPENGL_NO_ERROR_ARB"/>
+            </require>
+        </extension>
         <extension name="GLX_ARB_create_context_profile" supported="glx">
             <require>
                 <enum name="GLX_CONTEXT_CORE_PROFILE_BIT_ARB"/>
@@ -1756,6 +1766,11 @@ typedef unsigned __int64 uint64_t;
                 <command name="glXGetContextIDEXT"/>
                 <command name="glXImportContextEXT"/>
                 <command name="glXFreeContextEXT"/>
+            </require>
+        </extension>
+        <extension name="GLX_EXT_libglvnd" supported="glx">
+            <require>
+                <enum name="GLX_VENDOR_NAMES_EXT"/>
             </require>
         </extension>
         <extension name="GLX_EXT_stereo_tree" supported="glx">
@@ -1932,6 +1947,11 @@ typedef unsigned __int64 uint64_t;
                 <enum name="GLX_NUM_VIDEO_SLOTS_NV"/>
                 <command name="glXEnumerateVideoDevicesNV"/>
                 <command name="glXBindVideoDeviceNV"/>
+            </require>
+        </extension>
+        <extension name="GLX_NV_robustness_video_memory_purge" supported="glx">
+            <require>
+                <enum name="GLX_GENERATE_RESET_ON_VIDEO_MEMORY_PURGE_NV"/>
             </require>
         </extension>
         <extension name="GLX_NV_swap_group" supported="glx">
@@ -2155,6 +2175,12 @@ typedef unsigned __int64 uint64_t;
         <extension name="GLX_SUN_get_transparent_index" supported="glx">
             <require>
                 <command name="glXGetTransparentIndexSUN"/>
+            </require>
+        </extension>
+        <extension name="GLX_MESA_swap_control" supported="glx">
+            <require>
+                <command name="glXGetSwapIntervalMESA"/>
+                <command name="glXSwapIntervalMESA"/>
             </require>
         </extension>
     </extensions>
