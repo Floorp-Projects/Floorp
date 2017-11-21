@@ -495,8 +495,6 @@ public:
   static void ShutDown();
   static bool IsCallerChrome();
 
-  void CleanupCachedXBLHandlers();
-
   friend class WindowStateHolder;
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsGlobalWindowOuter,
@@ -1102,19 +1100,6 @@ private:
 
   void SetIsBackgroundInternal(bool aIsBackground);
 
-  // NOTE: Chrome Only
-  void DisconnectAndClearGroupMessageManagers()
-  {
-    MOZ_RELEASE_ASSERT(IsChromeWindow());
-    for (auto iter = mChromeFields.mGroupMessageManagers.Iter(); !iter.Done(); iter.Next()) {
-      nsIMessageBroadcaster* mm = iter.UserData();
-      if (mm) {
-        static_cast<nsFrameMessageManager*>(mm)->Disconnect();
-      }
-    }
-    mChromeFields.mGroupMessageManagers.Clear();
-  }
-
   nsresult GetInterfaceInternal(const nsIID& aIID, void** aSink);
 
 public:
@@ -1128,13 +1113,9 @@ public:
   virtual mozilla::AbstractThread*
   AbstractMainThreadFor(mozilla::TaskCategory aCategory) override;
 
-  uint32_t LastIdleRequestHandle() const { return mIdleRequestCallbackCounter - 1; }
-
   typedef mozilla::LinkedList<mozilla::dom::IdleRequest> IdleRequests;
 
 protected:
-  // These members are only used on outer window objects. Make sure
-  // you never set any of these on an inner object!
   bool                          mFullScreen : 1;
   bool                          mFullscreenMode : 1;
   bool                          mIsClosed : 1;
@@ -1145,7 +1126,6 @@ protected:
   bool                          mHavePendingClose : 1;
   bool                          mHadOriginalOpener : 1;
   bool                          mOriginalOpenerWasSecureContext : 1;
-  bool                          mIsSecureContextIfOpenerIgnored : 1;
   bool                          mIsPopupSpam : 1;
 
   // Indicates whether scripts are allowed to close this window.
@@ -1154,15 +1134,6 @@ protected:
   // Window offline status. Checked to see if we need to fire offline event
   bool                          mWasOffline : 1;
 
-  // Represents whether the inner window's page has had a slow script notice.
-  // Only used by inner windows; will always be false for outer windows.
-  // This is used to implement Telemetry measures such as SLOW_SCRIPT_PAGE_COUNT.
-  bool                          mHasHadSlowScript : 1;
-
-  // Track what sorts of events we need to fire when thawed
-  bool                          mNotifyIdleObserversIdleOnThaw : 1;
-  bool                          mNotifyIdleObserversActiveOnThaw : 1;
-
   // Indicates whether we're in the middle of creating an initializing
   // a new inner window object.
   bool                          mCreatingInnerWindow : 1;
@@ -1170,41 +1141,6 @@ protected:
   // Fast way to tell if this is a chrome window (without having to QI).
   bool                          mIsChrome : 1;
 
-  // Hack to indicate whether a chrome window needs its message manager
-  // to be disconnected, since clean up code is shared in the global
-  // window superclass.
-  bool                          mCleanMessageManager : 1;
-
-  // Indicates that the current document has never received a document focus
-  // event.
-  bool                   mNeedsFocus : 1;
-  bool                   mHasFocus : 1;
-
-  // when true, show focus rings for the current focused content only.
-  // This will be reset when another element is focused
-  bool                   mShowFocusRingForContent : 1;
-
-  // true if tab navigation has occurred for this window. Focus rings
-  // should be displayed.
-  bool                   mFocusByKeyOccurred : 1;
-
-  // Inner windows only.
-  // Indicates whether this window wants gamepad input events
-  bool                   mHasGamepad : 1;
-
-  // Inner windows only.
-  // Indicates whether this window wants VR events
-  bool                   mHasVREvents : 1;
-
-  // Inner windows only.
-  // Indicates whether this window wants VRDisplayActivate events
-  bool                   mHasVRDisplayActivateEvents : 1;
-  nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
-  nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
-  bool mHasSeenGamepadInput;
-
-  // whether we've sent the destroy notification for our window id
-  bool                   mNotifiedIDDestroyed : 1;
   // whether scripts may close the window,
   // even if "dom.allow_scripts_to_close_windows" is false.
   bool                   mAllowScriptsToClose : 1;
@@ -1218,63 +1154,19 @@ protected:
   // For |window.arguments|, via |openDialog|.
   nsCOMPtr<nsIArray>            mArguments;
 
-  // Only used in the outer.
   RefPtr<DialogValueHolder> mReturnValue;
 
-  RefPtr<mozilla::dom::Navigator> mNavigator;
-  RefPtr<nsScreen>            mScreen;
   RefPtr<nsDOMWindowList>     mFrames;
-  // All BarProps are inner window only.
-  RefPtr<mozilla::dom::BarProp> mMenubar;
-  RefPtr<mozilla::dom::BarProp> mToolbar;
-  RefPtr<mozilla::dom::BarProp> mLocationbar;
-  RefPtr<mozilla::dom::BarProp> mPersonalbar;
-  RefPtr<mozilla::dom::BarProp> mStatusbar;
-  RefPtr<mozilla::dom::BarProp> mScrollbars;
   RefPtr<nsDOMWindowUtils>      mWindowUtils;
   nsString                      mStatus;
-  nsString                      mDefaultStatus;
-  RefPtr<nsGlobalWindowObserver> mObserver; // Inner windows only.
-  RefPtr<mozilla::dom::Crypto>  mCrypto;
-  RefPtr<mozilla::dom::U2F> mU2F;
-  RefPtr<mozilla::dom::cache::CacheStorage> mCacheStorage;
-  RefPtr<mozilla::dom::Console> mConsole;
-  RefPtr<mozilla::dom::Worklet> mAudioWorklet;
-  RefPtr<mozilla::dom::Worklet> mPaintWorklet;
-  // We need to store an nsISupports pointer to this object because the
-  // mozilla::dom::External class doesn't exist on b2g and using the type
-  // forward declared here means that ~nsGlobalWindow wouldn't compile because
-  // it wouldn't see the ~External function's declaration.
-  nsCOMPtr<nsISupports>         mExternal;
-
-  RefPtr<mozilla::dom::MozSelfSupport> mMozSelfSupport;
 
   RefPtr<mozilla::dom::Storage> mLocalStorage;
-  RefPtr<mozilla::dom::Storage> mSessionStorage;
 
-  // These member variable are used only on inner windows.
-  RefPtr<mozilla::EventListenerManager> mListenerManager;
-  RefPtr<mozilla::dom::Location> mLocation;
-  RefPtr<nsHistory>           mHistory;
-  RefPtr<mozilla::dom::CustomElementRegistry> mCustomElements;
-
-  // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   // mTabChild is only ever populated in the content process.
   nsCOMPtr<nsITabChild>  mTabChild;
 
-  uint32_t mSuspendDepth;
-  uint32_t mFreezeDepth;
-
-  // the method that was used to focus mFocusedNode
-  uint32_t mFocusMethod;
-
   uint32_t mSerial;
-
-  // The current idle request callback handle
-  uint32_t mIdleRequestCallbackCounter;
-  IdleRequests mIdleRequestCallbacks;
-  RefPtr<IdleRequestExecutor> mIdleRequestExecutor;
 
 #ifdef DEBUG
   bool mSetOpenerWindowCalled;
@@ -1283,49 +1175,12 @@ protected:
 
   bool mCleanedUp;
 
-  nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
-
-  using XBLPrototypeHandlerTable = nsJSThingHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*>;
-  mozilla::UniquePtr<XBLPrototypeHandlerTable> mCachedXBLPrototypeHandlers;
-
-  // mSuspendedDoc is only set on outer windows. It's useful when we get matched
-  // EnterModalState/LeaveModalState calls, in which case the outer window is
-  // responsible for unsuspending events on the document. If we don't (for
-  // example, if the outer window is closed before the LeaveModalState call),
-  // then the inner window whose mDoc is our mSuspendedDoc is responsible for
-  // unsuspending it.
+  // It's useful when we get matched EnterModalState/LeaveModalState calls, in
+  // which case the outer window is responsible for unsuspending events on the
+  // document. If we don't (for example, if the outer window is closed before
+  // the LeaveModalState call), then the inner window whose mDoc is our
+  // mSuspendedDoc is responsible for unsuspending it.
   nsCOMPtr<nsIDocument> mSuspendedDoc;
-
-  RefPtr<mozilla::dom::IDBFactory> mIndexedDB;
-
-  // This counts the number of windows that have been opened in rapid succession
-  // (i.e. within dom.successive_dialog_time_limit of each other). It is reset
-  // to 0 once a dialog is opened after dom.successive_dialog_time_limit seconds
-  // have elapsed without any other dialogs.
-  uint32_t                      mDialogAbuseCount;
-
-  // This holds the time when the last modal dialog was shown. If more than
-  // MAX_DIALOG_LIMIT dialogs are shown within the time span defined by
-  // dom.successive_dialog_time_limit, we show a checkbox or confirmation prompt
-  // to allow disabling of further dialogs from this window.
-  TimeStamp                     mLastDialogQuitTime;
-
-  // This flag keeps track of whether dialogs are
-  // currently enabled on this window.
-  bool                          mAreDialogsEnabled;
-
-  nsTHashtable<nsPtrHashKey<mozilla::DOMEventTargetHelper> > mEventTargetObjects;
-
-  nsTArray<uint32_t> mEnabledSensors;
-
-#if defined(MOZ_WIDGET_ANDROID)
-  mozilla::UniquePtr<mozilla::dom::WindowOrientationObserver> mOrientationChangeObserver;
-#endif
-
-#ifdef MOZ_WEBSPEECH
-  // mSpeechSynthesis is only used on inner windows.
-  RefPtr<mozilla::dom::SpeechSynthesis> mSpeechSynthesis;
-#endif
 
 #ifdef DEBUG
   // This member is used in the debug only assertions in TabGroup()
@@ -1336,31 +1191,17 @@ protected:
   // This is the CC generation the last time we called CanSkip.
   uint32_t mCanSkipCCGeneration;
 
-  // The VR Displays for this window
-  nsTArray<RefPtr<mozilla::dom::VRDisplay>> mVRDisplays;
-
-  RefPtr<mozilla::dom::VREventObserver> mVREventObserver;
-
   // When non-zero, the document should receive a vrdisplayactivate event
   // after loading.  The value is the ID of the VRDisplay that content should
   // begin presentation on.
-  uint32_t mAutoActivateVRDisplayID; // Outer windows only
-  int64_t mBeforeUnloadListenerCount; // Inner windows only
-
-  RefPtr<mozilla::dom::IntlUtils> mIntlUtils;
+  uint32_t mAutoActivateVRDisplayID;
 
   static OuterWindowByIdTable* sOuterWindowsById;
 
   // Members in the mChromeFields member should only be used in chrome windows.
   // All accesses to this field should be guarded by a check of mIsChrome.
   struct ChromeFields {
-    ChromeFields()
-      : mGroupMessageManagers(1)
-    {}
-
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
-    nsCOMPtr<nsIMessageBroadcaster> mMessageManager;
-    nsInterfaceHashtable<nsStringHashKey, nsIMessageBroadcaster> mGroupMessageManagers;
     // A weak pointer to the nsPresShell that we are doing fullscreen for.
     // The pointer being set indicates we've set the IsInFullscreenChange
     // flag on this pres shell.

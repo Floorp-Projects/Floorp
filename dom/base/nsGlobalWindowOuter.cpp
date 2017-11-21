@@ -616,41 +616,20 @@ nsGlobalWindowOuter::nsGlobalWindowOuter()
     mIsPopupSpam(false),
     mBlockScriptedClosingFlag(false),
     mWasOffline(false),
-    mHasHadSlowScript(false),
-    mNotifyIdleObserversIdleOnThaw(false),
-    mNotifyIdleObserversActiveOnThaw(false),
     mCreatingInnerWindow(false),
     mIsChrome(false),
-    mCleanMessageManager(false),
-    mNeedsFocus(true),
-    mHasFocus(false),
-    mShowFocusRingForContent(false),
-    mFocusByKeyOccurred(false),
-    mHasGamepad(false),
-    mHasVREvents(false),
-    mHasVRDisplayActivateEvents(false),
-    mHasSeenGamepadInput(false),
-    mNotifiedIDDestroyed(false),
     mAllowScriptsToClose(false),
     mTopLevelOuterContentWindow(false),
-    mSuspendDepth(0),
-    mFreezeDepth(0),
-    mFocusMethod(0),
     mSerial(0),
-    mIdleRequestCallbackCounter(1),
-    mIdleRequestExecutor(nullptr),
 #ifdef DEBUG
     mSetOpenerWindowCalled(false),
 #endif
     mCleanedUp(false),
-    mDialogAbuseCount(0),
-    mAreDialogsEnabled(true),
 #ifdef DEBUG
     mIsValidatingTabGroup(false),
 #endif
     mCanSkipCCGeneration(0),
-    mAutoActivateVRDisplayID(0),
-    mBeforeUnloadListenerCount(0)
+    mAutoActivateVRDisplayID(0)
 {
   AssertIsOnMainThread();
 
@@ -729,20 +708,6 @@ nsGlobalWindowOuter::Init()
 nsGlobalWindowOuter::~nsGlobalWindowOuter()
 {
   AssertIsOnMainThread();
-
-  if (IsChromeWindow()) {
-    MOZ_ASSERT(mCleanMessageManager,
-              "chrome windows may always disconnect the msg manager");
-
-    DisconnectAndClearGroupMessageManagers();
-
-    if (mChromeFields.mMessageManager) {
-      static_cast<nsFrameMessageManager *>(
-        mChromeFields.mMessageManager.get())->Disconnect();
-    }
-
-    mCleanMessageManager = false;
-  }
 
   if (sOuterWindowsById) {
     MOZ_ASSERT(sOuterWindowsById->Get(mWindowID),
@@ -823,16 +788,6 @@ nsGlobalWindowOuter::ShutDown()
   sOuterWindowsById = nullptr;
 }
 
-// static
-void
-nsGlobalWindowOuter::CleanupCachedXBLHandlers()
-{
-  if (mCachedXBLPrototypeHandlers &&
-      mCachedXBLPrototypeHandlers->Count() > 0) {
-    mCachedXBLPrototypeHandlers->Clear();
-  }
-}
-
 void
 nsGlobalWindowOuter::MaybeForgiveSpamCount()
 {
@@ -875,43 +830,8 @@ nsGlobalWindowOuter::CleanUp()
 
   StartDying();
 
-  MOZ_RELEASE_ASSERT(!mObserver, "mObserver should only be set on the inner window");
-
-  if (mNavigator) {
-    mNavigator->Invalidate();
-    mNavigator = nullptr;
-  }
-
-  mScreen = nullptr;
-  mMenubar = nullptr;
-  mToolbar = nullptr;
-  mLocationbar = nullptr;
-  mPersonalbar = nullptr;
-  mStatusbar = nullptr;
-  mScrollbars = nullptr;
-  mHistory = nullptr;
-  mCustomElements = nullptr;
   mFrames = nullptr;
   mWindowUtils = nullptr;
-  mApplicationCache = nullptr;
-  mIndexedDB = nullptr;
-
-  mConsole = nullptr;
-
-  mAudioWorklet = nullptr;
-  mPaintWorklet = nullptr;
-
-  mExternal = nullptr;
-
-  mMozSelfSupport = nullptr;
-
-#ifdef MOZ_WEBSPEECH
-  mSpeechSynthesis = nullptr;
-#endif
-
-#if defined(MOZ_WIDGET_ANDROID)
-  mOrientationChangeObserver = nullptr;
-#endif
 
   ClearControllers();
 
@@ -927,28 +847,12 @@ nsGlobalWindowOuter::CleanUp()
     inner->CleanUp();
   }
 
-  MOZ_ASSERT(!mHasGamepad);
-  MOZ_ASSERT(!mHasVREvents);
-  MOZ_ASSERT(!mHasVRDisplayActivateEvents);
-
-  if (mCleanMessageManager) {
-    MOZ_ASSERT(mIsChrome, "only chrome should have msg manager cleaned");
-    if (mChromeFields.mMessageManager) {
-      static_cast<nsFrameMessageManager*>(
-        mChromeFields.mMessageManager.get())->Disconnect();
-    }
-  }
-
   mArguments = nullptr;
-
-  CleanupCachedXBLHandlers();
 
   if (mIdleTimer) {
     mIdleTimer->Cancel();
     mIdleTimer = nullptr;
   }
-
-  mIntlUtils = nullptr;
 }
 
 void
@@ -1009,13 +913,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGlobalWindowOuter)
       return true;
     }
     tmp->mCanSkipCCGeneration = nsCCUncollectableMarker::sGeneration;
-    if (tmp->mCachedXBLPrototypeHandlers) {
-      for (auto iter = tmp->mCachedXBLPrototypeHandlers->Iter();
-           !iter.Done();
-           iter.Next()) {
-        iter.Data().exposeToActiveJS();
-      }
-    }
     if (EventListenerManager* elm = tmp->GetExistingListenerManager()) {
       elm->MarkForCC();
     }
@@ -1052,146 +949,55 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControllers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArguments)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReturnValue)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNavigator)
-
-#ifdef MOZ_WEBSPEECH
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSpeechSynthesis)
-#endif
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListenerManager)
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocation)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHistory)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCustomElements)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStorage)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSessionStorage)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSuspendedDoc)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleService)
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleRequestExecutor)
-  for (IdleRequest* request : tmp->mIdleRequestCallbacks) {
-    cb.NoteNativeChild(request, NS_CYCLE_COLLECTION_PARTICIPANT(IdleRequest));
-  }
-
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleObservers)
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGamepads)
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCacheStorage)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRDisplays)
 
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameElement)
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMenubar)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mToolbar)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocationbar)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPersonalbar)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStatusbar)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScrollbars)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCrypto)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mU2F)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioWorklet)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPaintWorklet)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMozSelfSupport)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIntlUtils)
-
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
 
   tmp->TraverseHostObjectURIs(cb);
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mBrowserDOMWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mMessageManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mGroupMessageManagers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mOpenerForInitialContentBrowser)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
-  tmp->CleanupCachedXBLHandlers();
-
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mControllers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mArguments)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReturnValue)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mNavigator)
 
-#ifdef MOZ_WEBSPEECH
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSpeechSynthesis)
-#endif
-
-  if (tmp->mListenerManager) {
-    tmp->mListenerManager->Disconnect();
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mListenerManager)
-  }
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocation)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mHistory)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCustomElements)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalStorage)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSessionStorage)
-  if (tmp->mApplicationCache) {
-    static_cast<nsDOMOfflineResourceList*>(tmp->mApplicationCache.get())->Disconnect();
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplicationCache)
-  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuspendedDoc)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleService)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleObservers)
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGamepads)
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCacheStorage)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mVRDisplays)
-
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameElement)
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMenubar)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mToolbar)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocationbar)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPersonalbar)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStatusbar)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mScrollbars)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCrypto)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mU2F)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioWorklet)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPaintWorklet)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExternal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMozSelfSupport)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIntlUtils)
-
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
 
   tmp->UnlinkHostObjectURIs();
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleRequestExecutor)
-
   if (tmp->IsChromeWindow()) {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mBrowserDOMWindow)
-    if (tmp->mChromeFields.mMessageManager) {
-      static_cast<nsFrameMessageManager*>(
-        tmp->mChromeFields.mMessageManager.get())->Disconnect();
-      NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mMessageManager)
-    }
-    tmp->DisconnectAndClearGroupMessageManagers();
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mGroupMessageManagers)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mOpenerForInitialContentBrowser)
   }
 
@@ -1199,13 +1005,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGlobalWindowOuter)
-  if (tmp->mCachedXBLPrototypeHandlers) {
-    for (auto iter = tmp->mCachedXBLPrototypeHandlers->Iter();
-         !iter.Done();
-         iter.Next()) {
-      aCallbacks.Trace(&iter.Data(), "Cached XBL prototype handler", aClosure);
-    }
-  }
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -2179,8 +1978,6 @@ nsGlobalWindowOuter::SetDocShell(nsIDocShell* aDocShell)
   mTopLevelOuterContentWindow =
     !mIsChrome && GetScriptableTopInternal() == this;
 
-  NS_ASSERTION(!mNavigator, "Non-null mNavigator in outer window!");
-
   if (mFrames) {
     mFrames->SetDocShell(aDocShell);
   }
@@ -2270,8 +2067,6 @@ nsGlobalWindowOuter::DetachFromDocShell()
   }
 
   mDocShell = nullptr; // Weak Reference
-
-  NS_ASSERTION(!mNavigator, "Non-null mNavigator in outer window!");
 
   if (mFrames) {
     mFrames->SetDocShell(nullptr);
@@ -6449,10 +6244,7 @@ nsGlobalWindowOuter::NotifyWindowIDDestroyed(const char* aTopic)
 {
   nsCOMPtr<nsIRunnable> runnable =
     new WindowDestroyedEvent(this, mWindowID, aTopic);
-  nsresult rv = Dispatch(TaskCategory::Other, runnable.forget());
-  if (NS_SUCCEEDED(rv)) {
-    mNotifiedIDDestroyed = true;
-  }
+  Dispatch(TaskCategory::Other, runnable.forget());
 }
 
 Element*
@@ -7678,28 +7470,6 @@ void
 nsGlobalWindowOuter::AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const
 {
   aWindowSizes.mDOMOtherSize += aWindowSizes.mState.mMallocSizeOf(this);
-
-  if (mNavigator) {
-    aWindowSizes.mDOMOtherSize +=
-      mNavigator->SizeOfIncludingThis(aWindowSizes.mState.mMallocSizeOf);
-  }
-
-  aWindowSizes.mDOMEventTargetsSize +=
-    mEventTargetObjects.ShallowSizeOfExcludingThis(
-      aWindowSizes.mState.mMallocSizeOf);
-
-  for (auto iter = mEventTargetObjects.ConstIter(); !iter.Done(); iter.Next()) {
-    DOMEventTargetHelper* et = iter.Get()->GetKey();
-    if (nsCOMPtr<nsISizeOfEventTarget> iSizeOf = do_QueryObject(et)) {
-      aWindowSizes.mDOMEventTargetsSize +=
-        iSizeOf->SizeOfEventTargetIncludingThis(
-          aWindowSizes.mState.mMallocSizeOf);
-    }
-    if (EventListenerManager* elm = et->GetExistingListenerManager()) {
-      aWindowSizes.mDOMEventListenersCount += elm->ListenerCount();
-    }
-    ++aWindowSizes.mDOMEventTargetsCount;
-  }
 }
 
 bool
@@ -8081,7 +7851,6 @@ nsGlobalWindowOuter::Create(bool aIsChrome)
   RefPtr<nsGlobalWindowOuter> window = new nsGlobalWindowOuter();
   if (aIsChrome) {
     window->mIsChrome = true;
-    window->mCleanMessageManager = true;
   }
 
   window->InitWasOffline();
