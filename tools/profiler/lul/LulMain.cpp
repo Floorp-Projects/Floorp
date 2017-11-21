@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>   // write(), only for testing LUL
 
 #include <algorithm>  // std::sort
 #include <string>
@@ -21,6 +22,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 
 #include "LulCommonExt.h"
 #include "LulElfExt.h"
@@ -40,6 +42,7 @@ using std::pair;
 using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 using mozilla::MallocSizeOf;
+using mozilla::Unused;
 
 
 // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
@@ -1446,7 +1449,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
 // LUL Unit Testing                                           //
 ////////////////////////////////////////////////////////////////
 
-static const int LUL_UNIT_TEST_STACK_SIZE = 16384;
+static const int LUL_UNIT_TEST_STACK_SIZE = 32768;
 
 #if defined(GP_ARCH_mips64)
 static __attribute__((noinline))
@@ -1682,8 +1685,16 @@ bool GetAndCheckStackTrace(LUL* aLUL, const char* dstring)
 
 #define GEN_TEST_FN(NAME, FRAMESIZE) \
   bool NAME(LUL* aLUL, const char* strPorig, const char* strP) { \
-    volatile char space[FRAMESIZE]; \
-    memset((char*)&space[0], 0, sizeof(space)); \
+    /* Create a frame of size (at least) FRAMESIZE, so that the */ \
+    /* 8 functions created by this macro offer some variation in frame */  \
+    /* sizes.  This isn't as simple as it might seem, since a clever */    \
+    /* optimizing compiler (eg, clang-5) detects that the array is unused */ \
+    /* and removes it.  We try to defeat this by passing it to a function */ \
+    /* in a different compilation unit, and hoping that clang does not */ \
+    /* notice that the call is a no-op. */ \
+    char space[FRAMESIZE]; \
+    Unused << write(1, space, 0); /* write zero bytes of |space| to stdout */ \
+    \
     if (*strP == '\0') { \
       /* We've come to the end of the director string. */ \
       /* Take a stack snapshot. */ \
@@ -1712,8 +1723,12 @@ bool GetAndCheckStackTrace(LUL* aLUL, const char* dstring)
         case '8': nextFn = TestFn8; break; \
         default:  nextFn = TestFn8; break; \
       } \
+      /* "use" |space| immediately after the recursive call, */ \
+      /* so as to dissuade clang from deallocating the space while */ \
+      /* the call is active, or otherwise messing with the stack frame. */ \
       __asm__ __volatile__("":::"cc","memory"); \
       bool passed = nextFn(aLUL, strPorig, strP+1); \
+      Unused << write(1, space, 0); \
       __asm__ __volatile__("":::"cc","memory"); \
       return passed; \
     } \
