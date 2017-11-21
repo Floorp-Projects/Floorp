@@ -28,7 +28,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
     // from MediaDrmProxy -> MediaDrmCDMProxy -> RemoteDataDecoder => IPC => Codec.
     private String mStubId = "";
 
-    public static ArrayList<RemoteMediaDrmBridgeStub> mBridgeStubs =
+    public static final ArrayList<RemoteMediaDrmBridgeStub> mBridgeStubs =
         new ArrayList<RemoteMediaDrmBridgeStub>();
 
     private String getId() {

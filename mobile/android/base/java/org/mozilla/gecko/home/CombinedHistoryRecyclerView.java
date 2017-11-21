@@ -25,7 +25,7 @@ import static org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeList
 
 public class CombinedHistoryRecyclerView extends RecyclerView
         implements RecyclerViewClickSupport.OnItemClickListener, RecyclerViewClickSupport.OnItemLongClickListener {
-    public static String LOGTAG = "CombinedHistoryRecycView";
+    public static final String LOGTAG = "CombinedHistoryRecycView";
 
     protected interface AdapterContextMenuBuilder {
         HomeContextMenuInfo makeContextMenuInfoFromPosition(View view, int position);
