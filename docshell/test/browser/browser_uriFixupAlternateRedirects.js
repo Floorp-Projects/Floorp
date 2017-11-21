@@ -16,7 +16,12 @@ add_task(async function() {
     ];
   });
   info("Page that loaded: " + contentURL);
-  ok(contentURL.startsWith("about:neterror?"), "Should be on an error page");
+  const errorURI = "about:neterror?";
+  ok(contentURL.startsWith(errorURI), "Should be on an error page");
+
+  const contentPrincipal = tab.linkedBrowser.contentPrincipal;
+  ok(contentPrincipal.URI.spec.startsWith(errorURI), "Principal should be for the error page");
+
   originalURL = new URL(originalURL);
   is(originalURL.host, "example", "Should be an error for http://example, not http://www.example.com/");
 
