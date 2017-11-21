@@ -215,35 +215,38 @@ with Files("tests/credential-management/**"):
 with Files("tests/css/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
-with Files("tests/css-backgrounds/**"):
+with Files("tests/css/css-backgrounds/**"):
     BUG_COMPONENT = ("Core", "Layout: Text")
 
-with Files("tests/css-cascade/**"):
+with Files("tests/css/css-cascade/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
-with Files("tests/css-font-loading/**"):
+with Files("tests/css/css-font-loading/**"):
     BUG_COMPONENT = ("Core", "Layout: Text")
 
-with Files("tests/css-fonts/**"):
+with Files("tests/css/css-fonts/**"):
     BUG_COMPONENT = ("Core", "Layout: Text")
 
-with Files("tests/css-paint-api/**"):
+with Files("tests/css/css-paint-api/**"):
     BUG_COMPONENT = ("Core", "Layout: Web Painting")
 
-with Files("tests/css-scoping/**"):
+with Files("tests/css/css-scoping/**"):
     BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
-with Files("tests/css-timing/**"):
+with Files("tests/css/css-timing/**"):
     BUG_COMPONENT = ("Core", "Layout")
 
-with Files("tests/css-typed-om/**"):
+with Files("tests/css/css-typed-om/**"):
     BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
-with Files("tests/cssom/**"):
+with Files("tests/css/cssom/**"):
     BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
-with Files("tests/cssom-view/**"):
+with Files("tests/css/cssom-view/**"):
     BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
+
+with Files("tests/css/selectors/**"):
+    BUG_COMPONENT = ("Core", "DOM")
 
 with Files("tests/custom-elements/**"):
     BUG_COMPONENT = ("Core", "DOM")
@@ -422,9 +425,6 @@ with Files("tests/old-tests/submission/Microsoft/selection/**"):
 with Files("tests/old-tests/submission/migration.txt"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
-with Files("tests/old-tests/webdriver/**"):
-    BUG_COMPONENT = ("Testing", "geckodriver")
-
 with Files("tests/orientation-event/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
@@ -495,17 +495,11 @@ with Files("tests/resources/**"):
 with Files("tests/screen-orientation/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
-with Files("tests/scroll-anchoring/**"):
-    BUG_COMPONENT = ("Core", "Layout")
-
 with Files("tests/secure-contexts/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 with Files("tests/selection/**"):
     BUG_COMPONENT = ("Core", "Selection")
-
-with Files("tests/selectors/**"):
-    BUG_COMPONENT = ("Core", "DOM")
 
 with Files("tests/server-timing/**"):
     BUG_COMPONENT = ("Core", "DOM")
@@ -561,7 +555,7 @@ with Files("tests/user-timing/**"):
 with Files("tests/vibration/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
-with Files("tests/viewport/**"):
+with Files("tests/visual-viewport/**"):
     BUG_COMPONENT = ("Core", "Layout")
 
 with Files("tests/wai-aria/**"):

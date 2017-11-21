@@ -64,6 +64,7 @@ def args_general(kwargs):
     kwargs.set_if_none("tests_root", wpt_root)
     kwargs.set_if_none("metadata_root", wpt_root)
     kwargs.set_if_none("manifest_update", True)
+    kwargs.set_if_none("manifest_download", True)
 
     if kwargs["ssl_type"] in (None, "pregenerated"):
         cert_root = os.path.join(wpt_root, "tools", "certs")
@@ -109,8 +110,8 @@ def check_environ(product):
             for line in f:
                 line = line.split("#", 1)[0].strip()
                 parts = line.split()
-                if len(parts) == 2:
-                    host = parts[1]
+                hosts = parts[1:]
+                for host in hosts:
                     missing_hosts.discard(host)
             if missing_hosts:
                 raise WptrunError("""Missing hosts file configuration. Expected entries like:
@@ -169,32 +170,12 @@ Install Firefox or use --binary to set the binary path""")
 
             if certutil is None:
                 # Can't download this for now because it's missing the libnss3 library
-                raise WptrunError("""Can't find certutil.
-
-This must be installed using your OS package manager or directly e.g.
-
-Debian/Ubuntu:
-    sudo apt install libnss3-tools
-
-macOS/Homebrew:
-    brew install nss
-
-Others:
-    Download the firefox archive and common.tests.zip archive for your platform
-    from https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/
-
-   Then extract certutil[.exe] from the tests.zip package and
-   libnss3[.so|.dll|.dynlib] and but the former on your path and the latter on
-   your library path.
-""")
+                logger.info("""Can't find certutil, certificates will not be checked.
+Consider installing certutil via your OS package manager or directly.""")
             else:
                 print("Using certutil %s" % certutil)
 
-            if certutil is not None:
-                kwargs["certutil_binary"] = certutil
-            else:
-                print("Unable to find or install certutil, setting ssl-type to none")
-                kwargs["ssl_type"] = "none"
+            kwargs["certutil_binary"] = certutil
 
         if kwargs["webdriver_binary"] is None and "wdspec" in kwargs["test_types"]:
             webdriver_binary = self.browser.find_webdriver()
@@ -241,6 +222,29 @@ class Chrome(BrowserSetup):
                 kwargs["webdriver_binary"] = webdriver_binary
             else:
                 raise WptrunError("Unable to locate or install chromedriver binary")
+
+
+class Opera(BrowserSetup):
+    name = "opera"
+    browser_cls = browser.Opera
+
+    def setup_kwargs(self, kwargs):
+        if kwargs["webdriver_binary"] is None:
+            webdriver_binary = self.browser.find_webdriver()
+
+            if webdriver_binary is None:
+                install = self.prompt_install("operadriver")
+
+                if install:
+                    print("Downloading operadriver")
+                    webdriver_binary = self.browser.install_webdriver(dest=self.venv.bin_path)
+            else:
+                print("Using webdriver binary %s" % webdriver_binary)
+
+            if webdriver_binary:
+                kwargs["webdriver_binary"] = webdriver_binary
+            else:
+                raise WptrunError("Unable to locate or install operadriver binary")
 
 
 class Edge(BrowserSetup):
@@ -321,6 +325,7 @@ product_setup = {
     "ie": InternetExplorer,
     "servo": Servo,
     "sauce": Sauce,
+    "opera": Opera,
 }
 
 
@@ -415,5 +420,5 @@ if __name__ == "__main__":
     from tools import localpaths
     try:
         main()
-    except:
+    except Exception:
         pdb.post_mortem()

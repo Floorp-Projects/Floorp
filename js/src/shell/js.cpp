@@ -19,7 +19,7 @@
 #include "mozilla/TimeStamp.h"
 
 #include <chrono>
-#ifdef __linux__
+#if defined(__linux__) || defined(XP_MACOSX)
 # include <dlfcn.h>
 #endif
 #ifdef XP_WIN
@@ -65,7 +65,7 @@
 # include "jswin.h"
 #endif
 #include "jswrapper.h"
-#ifndef __linux__
+#if !defined(__linux__) && !defined(XP_MACOSX)
 # include "prerror.h"
 # include "prlink.h"
 #endif
@@ -135,8 +135,8 @@ using mozilla::PodEqual;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
-// Avoid an unnecessary NSPR dependency on Linux just for the shell.
-#ifdef __linux__
+// Avoid an unnecessary NSPR dependency on Linux and OS X just for the shell.
+#if defined(__linux__) || defined(XP_MACOSX)
 typedef void PRLibrary;
 
 static PRLibrary*
@@ -8645,7 +8645,7 @@ class AutoLibraryLoader {
     PRLibrary* load(const char* path) {
         PRLibrary* dll = PR_LoadLibrary(path);
         if (!dll) {
-#ifdef __linux__
+#if defined(__linux__) || defined(XP_MACOSX)
             fprintf(stderr, "LoadLibrary '%s' failed: %s\n", path, dlerror());
 #else
             fprintf(stderr, "LoadLibrary '%s' failed with code %d\n", path, PR_GetError());

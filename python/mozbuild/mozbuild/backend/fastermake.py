@@ -75,11 +75,16 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
                                     yield p + '/'
                         prefix = ''.join(_prefix(f.full_path))
 
+                        if '*' in f.target_basename:
+                            target = path
+                        else:
+                            target = mozpath.join(path, f.target_basename)
+                        mozpath.join(path, f.target_basename)
                         self._install_manifests[obj.install_target] \
                             .add_pattern_link(
                                 prefix,
                                 f.full_path[len(prefix):],
-                                mozpath.join(path, f.target_basename))
+                                target)
                     else:
                         self._install_manifests[obj.install_target].add_link(
                             f.full_path,

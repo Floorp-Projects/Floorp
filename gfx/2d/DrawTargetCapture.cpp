@@ -87,6 +87,14 @@ DrawTargetCaptureImpl::Snapshot()
 }
 
 already_AddRefed<SourceSurface>
+DrawTargetCaptureImpl::IntoLuminanceSource(LuminanceType aLuminanceType,
+                                           float aOpacity)
+{
+  RefPtr<SourceSurface> surface = new SourceSurfaceCapture(this, aLuminanceType, aOpacity);
+  return surface.forget();
+}
+
+already_AddRefed<SourceSurface>
 DrawTargetCaptureImpl::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
   // If the surface is a recording, make sure it gets resolved on the paint thread.

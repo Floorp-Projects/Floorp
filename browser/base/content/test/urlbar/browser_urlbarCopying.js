@@ -165,9 +165,29 @@ var tests = [
     copyExpected: "http://example.com/?\xf7"
   },
   {
+    loadURL: "http://example.com/a%20test",
+    expectedURL: "example.com/a test",
+    copyExpected: "http://example.com/a%20test"
+  },
+  {
+    loadURL: "http://example.com/a%E3%80%80test",
+    expectedURL: toUnicode("example.com/a　test"),
+    copyExpected: "http://example.com/a%E3%80%80test"
+  },
+  {
+    loadURL: "http://example.com/a%20%C2%A0test",
+    expectedURL: "example.com/a%20%C2%A0test",
+    copyExpected: "http://example.com/a%20%C2%A0test"
+  },
+  {
     loadURL: "http://example.com/%20%20%20",
-    expectedURL: "example.com/   ",
+    expectedURL: "example.com/%20%20%20",
     copyExpected: "http://example.com/%20%20%20"
+  },
+  {
+    loadURL: "http://example.com/%E3%80%80%E3%80%80",
+    expectedURL: "example.com/%E3%80%80%E3%80%80",
+    copyExpected: "http://example.com/%E3%80%80%E3%80%80"
   },
 
   // data: and javsacript: URIs shouldn't be encoded
