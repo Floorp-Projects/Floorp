@@ -2827,10 +2827,9 @@ public:
   bool IsEmpty() const { return mTop == &mSentinel; }
 
   /**
-   * This is *linear time*!
    * @return the number of items in the list
    */
-  uint32_t Count() const;
+  uint32_t Count() const { return mLength; }
   /**
    * Stable sort the list by the z-order of GetUnderlyingFrame() on
    * each item. 'auto' is counted as zero.

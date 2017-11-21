@@ -69,6 +69,8 @@ interface Element : Node {
   HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   [Pure]
   HTMLCollection getElementsByClassName(DOMString classNames);
+  [ChromeOnly, Pure]
+  sequence<Element> getElementsWithGrid();
 
   [CEReactions, Throws, Pure]
   Element? insertAdjacentElement(DOMString where, Element element); // historical

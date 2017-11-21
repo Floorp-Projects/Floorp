@@ -19,8 +19,6 @@ add_task(async function() {
 
 var checkViewSource = async function(aWindow) {
   is(aWindow.gBrowser.contentDocument.body.textContent, content, "Correct content loaded");
-  let statusPanel = aWindow.document.getElementById("statusbar-line-col");
-  is(statusPanel.getAttribute("label"), "", "Correct status bar text");
 
   for (let i = 1; i <= 3; i++) {
     aWindow.viewSourceChrome.goToLine(i);
@@ -28,9 +26,5 @@ var checkViewSource = async function(aWindow) {
       let selection = content.getSelection();
       Assert.equal(selection.toString(), "line " + i, "Correct text selected");
     });
-
-    await ContentTaskUtils.waitForCondition(() => {
-      return (statusPanel.getAttribute("label") == "Line " + i + ", Col 1");
-    }, "Correct status bar text");
   }
 };

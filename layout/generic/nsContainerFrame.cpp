@@ -723,7 +723,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
 static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)
 {
   if (aCoord.ConvertsToLength()) {
-    return nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
+    return aCoord.ComputeCoordPercentCalc(0);
   }
   return aIfNotCoord;
 }

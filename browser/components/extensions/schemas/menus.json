@@ -27,7 +27,7 @@
       {
         "id": "ContextType",
         "type": "string",
-        "enum": ["all", "page", "frame", "selection", "link", "editable", "password", "image", "video", "audio", "launcher", "browser_action", "page_action", "tab"],
+        "enum": ["all", "page", "frame", "selection", "link", "editable", "password", "image", "video", "audio", "launcher", "bookmark", "browser_action", "page_action", "tab"],
         "description": "The different contexts a menu can appear in. Specifying 'all' is equivalent to the combination of all other contexts except for 'tab' and 'tools_menu'."
       }
     ]
@@ -46,7 +46,7 @@
       {
         "id": "ContextType",
         "type": "string",
-        "enum": ["all", "page", "frame", "selection", "link", "editable", "password", "image", "video", "audio", "launcher", "browser_action", "page_action", "tab", "tools_menu"],
+        "enum": ["all", "page", "frame", "selection", "link", "editable", "password", "image", "video", "audio", "launcher", "bookmark", "browser_action", "page_action", "tab", "tools_menu"],
         "description": "The different contexts a menu can appear in. Specifying 'all' is equivalent to the combination of all other contexts except for 'tab' and 'tools_menu'."
       },
       {
@@ -123,6 +123,10 @@
             "type": "boolean",
             "optional": true,
             "description": "A flag indicating the state of a checkbox or radio item after it is clicked."
+          },
+          "bookmarkId": {
+            "type": "string",
+            "description": "The id of the bookmark where the context menu was clicked, if it was on a bookmark."
           },
           "modifiers": {
             "type": "array",

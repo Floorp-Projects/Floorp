@@ -1657,7 +1657,7 @@ nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
       HalfCornerIsX(i) ? aFrameSize.width : aFrameSize.height;
 
     if (c.IsCoordPercentCalcUnit()) {
-      aRadii[i] = nsRuleNode::ComputeCoordPercentCalc(c, axis);
+      aRadii[i] = c.ComputeCoordPercentCalc(axis);
       if (aRadii[i] < 0) {
         // clamp calc()
         aRadii[i] = 0;
@@ -6303,8 +6303,7 @@ nsIFrame::ComputeISizeValue(gfxContext*         aRenderingContext,
 
   nscoord result;
   if (aCoord.IsCoordPercentCalcUnit()) {
-    result = nsRuleNode::ComputeCoordPercentCalc(aCoord,
-                                                 aContainingBlockISize);
+    result = aCoord.ComputeCoordPercentCalc(aContainingBlockISize);
     // The result of a calc() expression might be less than 0; we
     // should clamp at runtime (below).  (Percentages and coords that
     // are less than 0 have already been dropped by the parser.)

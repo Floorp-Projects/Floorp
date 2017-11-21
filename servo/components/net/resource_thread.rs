@@ -9,9 +9,10 @@ use cookie_rs;
 use cookie_storage::CookieStorage;
 use devtools_traits::DevtoolsControlMsg;
 use fetch::cors_cache::CorsCache;
-use fetch::methods::{FetchContext, fetch};
+use fetch::methods::{CancellationListener, FetchContext, fetch};
 use filemanager_thread::{FileManager, TFDProvider};
 use hsts::HstsList;
+use http_cache::HttpCache;
 use http_loader::{HttpState, http_redirect_fetch};
 use hyper_serde::Serde;
 use ipc_channel::ipc::{self, IpcReceiver, IpcReceiverSet, IpcSender};
@@ -35,7 +36,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use std::sync::mpsc::Sender;
 use std::thread;
 use storage_thread::StorageThreadFactory;
@@ -91,6 +92,7 @@ struct ResourceChannelManager {
 fn create_http_states(config_dir: Option<&Path>) -> (Arc<HttpState>, Arc<HttpState>) {
     let mut hsts_list = HstsList::from_servo_preload();
     let mut auth_cache = AuthCache::new();
+    let http_cache = HttpCache::new();
     let mut cookie_jar = CookieStorage::new(150);
     if let Some(config_dir) = config_dir {
         read_json_from_file(&mut auth_cache, config_dir, "auth_cache.json");
@@ -109,6 +111,7 @@ fn create_http_states(config_dir: Option<&Path>) -> (Arc<HttpState>, Arc<HttpSta
     let http_state = HttpState {
         cookie_jar: RwLock::new(cookie_jar),
         auth_cache: RwLock::new(auth_cache),
+        http_cache: RwLock::new(http_cache),
         hsts_list: RwLock::new(hsts_list),
         ssl_client: ssl_client.clone(),
         connector: create_http_connector(ssl_client),
@@ -157,14 +160,14 @@ impl ResourceChannelManager {
         match msg {
             CoreResourceMsg::Fetch(req_init, channels) => {
                 match channels {
-                    FetchChannels::ResponseMsg(sender) =>
-                        self.resource_manager.fetch(req_init, None, sender, http_state),
+                    FetchChannels::ResponseMsg(sender, cancel_chan) =>
+                        self.resource_manager.fetch(req_init, None, sender, http_state, cancel_chan),
                     FetchChannels::WebSocket { event_sender, action_receiver } =>
                         self.resource_manager.websocket_connect(req_init, event_sender, action_receiver, http_state),
                 }
             }
-            CoreResourceMsg::FetchRedirect(req_init, res_init, sender) =>
-                self.resource_manager.fetch(req_init, Some(res_init), sender, http_state),
+            CoreResourceMsg::FetchRedirect(req_init, res_init, sender, cancel_chan) =>
+                self.resource_manager.fetch(req_init, Some(res_init), sender, http_state, cancel_chan),
             CoreResourceMsg::SetCookieForUrl(request, cookie, source) =>
                 self.resource_manager.set_cookie_for_url(&request, cookie.into_inner(), source, http_state),
             CoreResourceMsg::SetCookiesForUrl(request, cookies, source) => {
@@ -329,7 +332,8 @@ impl CoreResourceManager {
              req_init: RequestInit,
              res_init_: Option<ResponseInit>,
              mut sender: IpcSender<FetchResponseMsg>,
-             http_state: &Arc<HttpState>) {
+             http_state: &Arc<HttpState>,
+             cancel_chan: Option<IpcReceiver<()>>) {
         let http_state = http_state.clone();
         let ua = self.user_agent.clone();
         let dc = self.devtools_chan.clone();
@@ -346,6 +350,7 @@ impl CoreResourceManager {
                 user_agent: ua,
                 devtools_chan: dc,
                 filemanager: filemanager,
+                cancellation_listener: Arc::new(Mutex::new(CancellationListener::new(cancel_chan))),
             };
 
             match res_init_ {

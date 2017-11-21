@@ -402,6 +402,19 @@ public:
     MOZ_ASSERT(mIntegrity.IsEmpty());
     mIntegrity.Assign(aIntegrity);
   }
+
+  bool
+  MozErrors() const
+  {
+    return mMozErrors;
+  }
+
+  void
+  SetMozErrors()
+  {
+    mMozErrors = true;
+  }
+
   const nsCString&
   GetFragment() const
   {
@@ -581,6 +594,7 @@ private:
   RequestCache mCacheMode;
   RequestRedirect mRedirectMode;
   nsString mIntegrity;
+  bool mMozErrors;
   nsCString mFragment;
   MOZ_INIT_OUTSIDE_CTOR bool mAuthenticationFlag;
   MOZ_INIT_OUTSIDE_CTOR bool mForceOriginHeader;

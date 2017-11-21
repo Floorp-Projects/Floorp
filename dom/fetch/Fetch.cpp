@@ -445,9 +445,8 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
 
     Telemetry::Accumulate(Telemetry::FETCH_IS_MAINTHREAD, 1);
 
-    bool mozErrors = aInit.mMozErrors.WasPassed() ? aInit.mMozErrors.Value() : false;
     RefPtr<MainThreadFetchResolver> resolver =
-      new MainThreadFetchResolver(p, observer, signal, mozErrors);
+      new MainThreadFetchResolver(p, observer, signal, request->MozErrors());
     RefPtr<FetchDriver> fetch =
       new FetchDriver(r, principal, loadGroup,
                       aGlobal->EventTargetFor(TaskCategory::Other), isTrackingFetch);

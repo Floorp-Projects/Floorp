@@ -102,6 +102,17 @@ AppendToString(std::stringstream& aStream, const wr::LayoutSize& s,
 }
 
 void
+AppendToString(std::stringstream& aStream, const nsSize& sz,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx;
+  aStream << nsPrintfCString(
+    "(w=%d, h=%d)",
+    sz.width, sz.height).get();
+  aStream << sfx;
+}
+
+void
 AppendToString(std::stringstream& aStream, const wr::StickyOffsetBounds& s,
                const char* pfx, const char* sfx)
 {

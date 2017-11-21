@@ -380,7 +380,7 @@ function runTestWhenReady(testFunc) {
 
 /**
  * Checks that the media stream tracks have the expected amount of tracks
- * with the correct kind and id based on the type and constraints given.
+ * with the correct attributes based on the type and constraints given.
  *
  * @param {Object} constraints specifies whether the stream should have
  *                             audio, video, or both
@@ -395,6 +395,7 @@ function checkMediaStreamTracksByType(constraints, type, mediaStreamTracks) {
     if (mediaStreamTracks.length) {
       is(mediaStreamTracks[0].kind, type, 'Track kind should be ' + type);
       ok(mediaStreamTracks[0].id, 'Track id should be defined');
+      ok(!mediaStreamTracks[0].muted, 'Track should not be muted');
     }
   } else {
     is(mediaStreamTracks.length, 0, 'No ' + type + ' tracks shall be present');
@@ -462,6 +463,8 @@ function checkMediaStreamTrackCloneAgainstOriginal(clone, original) {
      "Track clone's kind should be same as the original's");
   is(clone.readyState, original.readyState,
      "Track clone's readyState should be same as the original's");
+  is(clone.muted, original.muted,
+     "Track clone's muted state should be same as the original's");
 }
 
 /*** Utility methods */

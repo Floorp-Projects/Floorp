@@ -42,6 +42,13 @@ extensions.registerModules({
       ["runtime", "getBackgroundPage"],
     ],
   },
+  contentScripts: {
+    url: "chrome://extensions/content/ext-c-contentScripts.js",
+    scopes: ["addon_child"],
+    paths: [
+      ["contentScripts"],
+    ],
+  },
   extension: {
     url: "chrome://extensions/content/ext-c-extension.js",
     scopes: ["addon_child", "content_child", "devtools_child", "proxy_script"],

@@ -1493,8 +1493,7 @@ public:
                "caller must deal with %% of unconstrained block-size");
     MOZ_ASSERT(aCoord.IsCoordPercentCalcUnit());
 
-    nscoord result =
-      nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockBSize);
+    nscoord result = aCoord.ComputeCoordPercentCalc(aContainingBlockBSize);
     // Clamp calc(), and the subtraction for box-sizing.
     return std::max(0, result - aContentEdgeToBoxSizingBoxEdge);
   }
@@ -1531,8 +1530,8 @@ public:
             aCoord.GetPercentValue() == 0.0f) ||
            (aCoord.IsCalcUnit() &&
             // clamp negative calc() to 0
-            nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) <= 0 &&
-            nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) <= 0);
+            aCoord.ComputeCoordPercentCalc(nscoord_MAX) <= 0 &&
+            aCoord.ComputeCoordPercentCalc(0) <= 0);
   }
 
   static bool IsMarginZero(const nsStyleCoord &aCoord)
@@ -1542,8 +1541,8 @@ public:
            (aCoord.GetUnit() == eStyleUnit_Percent &&
             aCoord.GetPercentValue() == 0.0f) ||
            (aCoord.IsCalcUnit() &&
-            nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) == 0 &&
-            nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) == 0);
+            aCoord.ComputeCoordPercentCalc(nscoord_MAX) == 0 &&
+            aCoord.ComputeCoordPercentCalc(0) == 0);
   }
 
   static void MarkDescendantsDirty(nsIFrame *aSubtreeRoot);

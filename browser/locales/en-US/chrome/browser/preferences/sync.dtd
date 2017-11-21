@@ -6,19 +6,31 @@
 
 <!ENTITY engine.bookmarks.label     "Bookmarks">
 <!ENTITY engine.bookmarks.accesskey "m">
-<!ENTITY engine.tabs.label2         "Open Tabs">
+<!ENTITY engine.tabs.label2         "Open tabs">
+<!ENTITY engine.tabs.title          "A list of what’s open on all synced devices">
 <!ENTITY engine.tabs.accesskey      "T">
 <!ENTITY engine.history.label       "History">
 <!ENTITY engine.history.accesskey   "r">
 <!ENTITY engine.logins.label        "Logins">
+<!ENTITY engine.logins.title        "Usernames and passwords you’ve saved">
 <!ENTITY engine.logins.accesskey    "L">
+<!-- On Windows we use the term "Options" to describe settings, but
+     on Linux and Mac OS X we use "Preferences" - carry that distinction
+     over into this string, used as the checkbox which indicates if prefs are synced
+-->
+<!ENTITY engine.prefsWin.label      "Options">
+<!ENTITY engine.prefsWin.accesskey  "S">
 <!ENTITY engine.prefs.label         "Preferences">
 <!ENTITY engine.prefs.accesskey     "S">
+<!ENTITY engine.prefs.title         "General, Privacy, and Security settings you’ve changed">
 <!ENTITY engine.addons.label        "Add-ons">
+<!ENTITY engine.addons.title        "Extensions and themes for Firefox desktop">
 <!ENTITY engine.addons.accesskey    "A">
 <!ENTITY engine.addresses.label     "Addresses">
+<!ENTITY engine.addresses.title     "Postal addresses you’ve saved (desktop only)">
 <!ENTITY engine.addresses.accesskey "e">
 <!ENTITY engine.creditcards.label   "Credit cards">
+<!ENTITY engine.creditcards.title   "Names, numbers and expiry dates (desktop only)">
 <!ENTITY engine.creditcards.accesskey "C">
 
 <!-- Device Settings -->

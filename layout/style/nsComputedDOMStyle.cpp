@@ -5755,7 +5755,7 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
     case eStyleUnit_Calc:
       nscoord percentageBase;
       if (!aCoord.CalcHasPercent()) {
-        nscoord val = nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
+        nscoord val = aCoord.ComputeCoordPercentCalc(0);
         if (aClampNegativeCalc && val < 0) {
           MOZ_ASSERT(aCoord.IsCalcUnit(),
                      "parser should have rejected value");
@@ -5764,8 +5764,7 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
         aValue->SetAppUnits(std::max(aMinAppUnits, std::min(val, aMaxAppUnits)));
       } else if (aPercentageBaseGetter &&
                  (this->*aPercentageBaseGetter)(percentageBase)) {
-        nscoord val =
-          nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
+        nscoord val = aCoord.ComputeCoordPercentCalc(percentageBase);
         if (aClampNegativeCalc && val < 0) {
           MOZ_ASSERT(aCoord.IsCalcUnit(),
                      "parser should have rejected value");
@@ -5821,8 +5820,7 @@ nsComputedDOMStyle::StyleCoordToNSCoord(const nsStyleCoord& aCoord,
   if (aCoord.GetUnit() == eStyleUnit_Percent || aCoord.IsCalcUnit()) {
     nscoord percentageBase;
     if ((this->*aPercentageBaseGetter)(percentageBase)) {
-      nscoord result =
-        nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
+      nscoord result = aCoord.ComputeCoordPercentCalc(percentageBase);
       if (aClampNegativeCalc && result < 0) {
         // It's expected that we can get a negative value here with calc().
         // We can also get a negative value with a percentage value if

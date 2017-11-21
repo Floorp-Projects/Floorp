@@ -1399,7 +1399,10 @@ class PackageFrontend(MachCommandBase):
                 if task_id in (True, False) or not artifact_name:
                     self.log(logging.ERROR, 'artifact', {'build': user_value},
                              'Could not find artifacts for a toolchain build '
-                             'named `{build}`')
+                             'named `{build}`. Local commits and other changes '
+                             'in your checkout may cause this error. Try '
+                             'updating to a fresh checkout of mozilla-central '
+                             'to use artifact builds.')
                     return 1
 
                 record = ArtifactRecord(task_id, artifact_name)

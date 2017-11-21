@@ -3158,6 +3158,8 @@ public:
     MOZ_ASSERT(mCapturedTrackSource);
     MOZ_ASSERT(mOwningStream);
     MOZ_ASSERT(IsTrackIDExplicit(mDestinationTrackID));
+
+    mCapturedTrackSource->RegisterSink(this);
   }
 
   void Destroy() override
@@ -3196,6 +3198,15 @@ public:
     Destroy();
   }
 
+  /**
+   * Do not keep the track source alive. The source lifetime is controlled by
+   * its associated tracks.
+   */
+  bool KeepsSourceAlive() const override
+  {
+    return false;
+  }
+
   void PrincipalChanged() override
   {
     if (!mCapturedTrackSource) {
@@ -3205,6 +3216,16 @@ public:
 
     mPrincipal = mCapturedTrackSource->GetPrincipal();
     MediaStreamTrackSource::PrincipalChanged();
+  }
+
+  void MutedChanged(bool aNewState) override
+  {
+    if (!mCapturedTrackSource) {
+      // This could happen during shutdown.
+      return;
+    }
+
+    MediaStreamTrackSource::MutedChanged(aNewState);
   }
 
 private:

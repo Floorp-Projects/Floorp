@@ -9,6 +9,7 @@ toolkit.jar:
     content/extensions/ext-backgroundPage.js
     content/extensions/ext-browser-content.js
     content/extensions/ext-browserSettings.js
+    content/extensions/ext-contentScripts.js
     content/extensions/ext-contextualIdentities.js
     content/extensions/ext-clipboard.js
     content/extensions/ext-cookies.js
@@ -37,6 +38,7 @@ toolkit.jar:
     # Below is a separate group using the naming convention ext-c-*.js that run
     # in the child process.
     content/extensions/ext-c-backgroundPage.js
+    content/extensions/ext-c-contentScripts.js
     content/extensions/ext-c-extension.js
 #ifndef ANDROID
     content/extensions/ext-c-identity.js

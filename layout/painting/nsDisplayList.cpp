@@ -2633,10 +2633,6 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   return layerManager.forget();
 }
 
-uint32_t nsDisplayList::Count() const {
-  return mLength;
-}
-
 nsDisplayItem* nsDisplayList::RemoveBottom() {
   nsDisplayItem* item = mSentinel.mAbove;
   if (!item)
