@@ -71,28 +71,17 @@ panelmultiview {
   -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelmultiview");
 }
 
-photonpanelmultiview {
-  -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#photonpanelmultiview");
-}
-
 panelview {
   -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelview");
   -moz-box-orient: vertical;
 }
 
 panel[hidden] panelmultiview,
-panel[hidden] photonpanelmultiview,
 panel[hidden] panelview {
   -moz-binding: none;
 }
 
-panelview:not([mainview]):not([current]):not([in-transition]) {
-  transition: visibility 0s linear var(--panelui-subview-transition-duration);
-  visibility: collapse;
-}
-
-photonpanelmultiview panelview:not([current]):not([in-transition]) {
-  transition: none;
+panelview:not([current]):not([in-transition]) {
   visibility: collapse;
 }
 
