@@ -260,8 +260,7 @@ NativeObject::moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t c
                 dst->set(this, HeapSlot::Element, dst - elements_ + numShifted, *src);
         }
     } else {
-        memmove(reinterpret_cast<Value*>(elements_ + dstStart), elements_ + srcStart,
-                count * sizeof(Value));
+        memmove(elements_ + dstStart, elements_ + srcStart, count * sizeof(HeapSlot));
         elementsRangeWriteBarrierPost(dstStart, count);
     }
 }
@@ -276,8 +275,7 @@ NativeObject::moveDenseElementsNoPreBarrier(uint32_t dstStart, uint32_t srcStart
     MOZ_ASSERT(!denseElementsAreCopyOnWrite());
     MOZ_ASSERT(!denseElementsAreFrozen());
 
-    memmove(reinterpret_cast<Value*>(elements_ + dstStart), elements_ + srcStart,
-            count * sizeof(Value));
+    memmove(elements_ + dstStart, elements_ + srcStart, count * sizeof(HeapSlot));
     elementsRangeWriteBarrierPost(dstStart, count);
 }
 
