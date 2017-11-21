@@ -1185,52 +1185,20 @@ protected:
 
   nsCOMPtr<mozilla::dom::EventTarget> mParentTarget; // strong
 
-  // These members are only used on outer windows.
   nsCOMPtr<mozilla::dom::Element> mFrameElement;
 
   // This reference is used by nsGlobalWindow.
   nsCOMPtr<nsIDocShell> mDocShell;
 
-  // mPerformance is only used on inner windows.
-  RefPtr<mozilla::dom::Performance> mPerformance;
-  // mTimeoutManager is only useed on inner windows.
-  mozilla::UniquePtr<mozilla::dom::TimeoutManager> mTimeoutManager;
-
-  typedef nsRefPtrHashtable<nsStringHashKey,
-                            mozilla::dom::ServiceWorkerRegistration>
-          ServiceWorkerRegistrationTable;
-  ServiceWorkerRegistrationTable mServiceWorkerRegistrationTable;
-
-  uint32_t               mModalStateDepth;
-
-  // These variables are only used on inner windows.
-  uint32_t               mMutationBits;
-
-  uint32_t               mActivePeerConnections;
-
-  bool                   mIsDocumentLoaded;
-  bool                   mIsHandlingResizeEvent;
-  bool                   mIsInnerWindow;
-  bool                   mMayHavePaintEventListener;
-  bool                   mMayHaveTouchEventListener;
-  bool                   mMayHaveSelectionChangeEventListener;
-  bool                   mMayHaveMouseEnterLeaveEventListener;
-  bool                   mMayHavePointerEnterLeaveEventListener;
-
-  // Used to detect whether we have called FreeInnerObjects() (e.g. to ensure
-  // that a call to ResumeTimeouts() after FreeInnerObjects() does nothing).
-  // This member is only used by inner windows.
-  bool                   mInnerObjectsFreed;
-
+  uint32_t mModalStateDepth;
 
   // Tracks activation state that's used for :-moz-window-inactive.
-  // Only used on outer windows.
-  bool                   mIsActive;
+  bool mIsActive;
 
   // Tracks whether our docshell is active.  If it is, mIsBackground
   // is false.  Too bad we have so many different concepts of
-  // "active".  Only used on outer windows.
-  bool                   mIsBackground;
+  // "active".
+  bool mIsBackground;
 
   /**
    * The suspended types can be "disposable" or "permanent". This varable only
@@ -1243,39 +1211,29 @@ protected:
    * To pause all media in that window, and also affect the media which starts
    * after that.
    */
-  SuspendTypes       mMediaSuspend;
+  SuspendTypes mMediaSuspend;
 
-  bool                   mAudioMuted;
-  float                  mAudioVolume;
-
-  bool                   mAudioCaptured;
+  bool mAudioMuted;
+  float mAudioVolume;
 
   // current desktop mode flag.
-  bool                   mDesktopModeViewport;
+  bool mDesktopModeViewport;
 
-  bool                   mIsRootOuterWindow;
+  bool mIsRootOuterWindow;
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindowInner* MOZ_NON_OWNING_REF mInnerWindow;
-  nsCOMPtr<nsPIDOMWindowOuter> mOuterWindow;
 
   // the element within the document that is currently focused when this
   // window is active
+  // XXX -- FIXME: This is never set on the outer window, but we check it
   nsCOMPtr<nsIContent> mFocusedNode;
 
-  // The AudioContexts created for the current document, if any.
-  nsTArray<mozilla::dom::AudioContext*> mAudioContexts; // Weak
-
-  // This is present both on outer and inner windows.
   RefPtr<mozilla::dom::TabGroup> mTabGroup;
 
   // A unique (as long as our 64-bit counter doesn't roll over) id for
   // this window.
   uint64_t mWindowID;
-
-  // This is only used by the inner window. Set to true once we've sent
-  // the (chrome|content)-document-global-created notification.
-  bool mHasNotifiedGlobalCreated;
 
   uint32_t mMarkedCCGeneration;
 
@@ -1283,22 +1241,7 @@ protected:
   // testing.
   bool mServiceWorkersTestingEnabled;
 
-  mozilla::dom::LargeAllocStatus mLargeAllocStatus; // Outer window only
-
-  // mTopInnerWindow is only used on inner windows for tab-wise check by timeout
-  // throttling. It could be null.
-  nsCOMPtr<nsPIDOMWindowInner> mTopInnerWindow;
-
-  // The evidence that we have tried to cache mTopInnerWindow only once from
-  // SetNewDocument(). Note: We need this extra flag because mTopInnerWindow
-  // could be null and we don't want it to be set multiple times.
-  bool mHasTriedToCacheTopInnerWindow;
-
-  // The number of active IndexedDB databases. Inner window only.
-  uint32_t mNumOfIndexedDBDatabases;
-
-  // The number of open WebSockets. Inner window only.
-  uint32_t mNumOfOpenWebSockets;
+  mozilla::dom::LargeAllocStatus mLargeAllocStatus;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)
