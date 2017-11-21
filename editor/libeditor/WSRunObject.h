@@ -384,10 +384,32 @@ protected:
   nsresult DeleteRange(const EditorRawDOMPoint& aStartPoint,
                        const EditorRawDOMPoint& aEndPoint);
 
-  WSPoint GetCharAfter(nsINode* aNode, int32_t aOffset);
-  WSPoint GetCharBefore(nsINode* aNode, int32_t aOffset);
-  WSPoint GetCharAfter(const WSPoint& aPoint);
-  WSPoint GetCharBefore(const WSPoint& aPoint);
+  /**
+   * GetNextCharPoint() returns next character's point of aPoint.  If there is
+   * no character after aPoint, mTextNode is set to nullptr.
+   */
+  WSPoint GetNextCharPoint(const EditorRawDOMPoint& aPoint);
+  WSPoint GetNextCharPoint(const WSPoint& aPoint);
+
+  /**
+   * GetPreviousCharPoint() returns previous character's point of of aPoint.
+   * If there is no character before aPoint, mTextNode is set to nullptr.
+   */
+  WSPoint GetPreviousCharPoint(const EditorRawDOMPoint& aPoint);
+  WSPoint GetPreviousCharPoint(const WSPoint& aPoint);
+
+  /**
+   * GetNextCharPointInternal() and GetPreviousCharPointInternal() are
+   * helper methods of GetNextCharPoint(const EditorRawDOMPoint&) and
+   * GetPreviousCharPoint(const EditorRawDOMPoint&).  When the container
+   * isn't in mNodeArray, they call one of these methods.  Then, these
+   * methods look for nearest text node in mNodeArray from aPoint.
+   * Then, will call GetNextCharPoint(const WSPoint&) or
+   * GetPreviousCharPoint(const WSPoint&) and returns its result.
+   */
+  WSPoint GetNextCharPointInternal(const EditorRawDOMPoint& aPoint);
+  WSPoint GetPreviousCharPointInternal(const EditorRawDOMPoint& aPoint);
+
   nsresult ConvertToNBSP(WSPoint aPoint);
   void GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
                         dom::Text** outStartNode, int32_t* outStartOffset,
@@ -417,8 +439,6 @@ protected:
   WSFragment* FindNearestRun(const EditorRawDOMPoint& aPoint, bool aForward);
 
   char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset);
-  WSPoint GetWSPointAfter(nsINode* aNode, int32_t aOffset);
-  WSPoint GetWSPointBefore(nsINode* aNode, int32_t aOffset);
   nsresult CheckTrailingNBSPOfRun(WSFragment *aRun);
   nsresult CheckTrailingNBSP(WSFragment* aRun, nsINode* aNode,
                              int32_t aOffset);
