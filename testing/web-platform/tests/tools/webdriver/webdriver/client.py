@@ -370,8 +370,8 @@ class Session(object):
         self.actions = Actions(self)
 
     def __eq__(self, other):
-        return (self.session_id is not None and isinstance(other, Session)
-                and self.session_Id == other.session_id)
+        return (self.session_id is not None and isinstance(other, Session) and
+                self.session_id == other.session_id)
 
     def __enter__(self):
         self.start()
@@ -438,6 +438,15 @@ class Session(object):
 
         if "value" in response.body:
             value = response.body["value"]
+            """
+            Edge does not yet return the w3c session ID.
+            We want the tests to run in Edge anyway to help with REC.
+            In order to run the tests in Edge, we need to hack around
+            bug:
+            https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/14641972
+            """
+            if url == "session" and method == "POST" and "sessionId" in response.body and "sessionId" not in value:
+                value["sessionId"] = response.body["sessionId"]
         else:
             raise ValueError("Expected 'value' key in response body:\n"
                 "%s" % response)
@@ -617,8 +626,8 @@ class Element(object):
         self.session._element_cache[self.id] = self
 
     def __eq__(self, other):
-        return isinstance(other, Element) and self.id == other.id \
-                and self.session == other.session
+        return (isinstance(other, Element) and self.id == other.id and
+                self.session == other.session)
 
     @classmethod
     def from_json(cls, json, session):

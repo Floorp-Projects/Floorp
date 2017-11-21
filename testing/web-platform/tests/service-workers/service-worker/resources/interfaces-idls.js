@@ -76,6 +76,12 @@ enum ServiceWorkerState {
   "redundant"
 };
 
+enum ServiceWorkerUpdateViaCache {
+    "imports",
+    "all",
+    "none"
+};
+
 [SecureContext, Exposed=(Window,Worker)]
 interface ServiceWorkerRegistration : EventTarget {
   readonly attribute ServiceWorker? installing;
