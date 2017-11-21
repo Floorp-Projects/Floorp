@@ -277,12 +277,17 @@ DocumentManager = {
 };
 
 ExtensionManager = {
+  // WeakMap<WebExtensionPolicy, Map<string, WebExtensionContentScript>>
+  registeredContentScripts: new DefaultWeakMap((extension) => new Map()),
+
   init() {
     MessageChannel.setupMessageManagers([Services.cpmm]);
 
     Services.cpmm.addMessageListener("Extension:Startup", this);
     Services.cpmm.addMessageListener("Extension:Shutdown", this);
     Services.cpmm.addMessageListener("Extension:FlushJarCache", this);
+    Services.cpmm.addMessageListener("Extension:RegisterContentScript", this);
+    Services.cpmm.addMessageListener("Extension:UnregisterContentScripts", this);
 
     let procData = Services.cpmm.initialProcessData || {};
 
@@ -336,6 +341,20 @@ ExtensionManager = {
 
         contentScripts: extension.contentScripts.map(parseScriptOptions),
       });
+
+      // Register any existent dinamically registered content script for the extension
+      // when a content process is started for the first time (which also cover
+      // a content process that crashed and it has been recreated).
+      const registeredContentScripts = this.registeredContentScripts.get(policy);
+
+      if (extension.registeredContentScripts) {
+        for (let [scriptId, options] of extension.registeredContentScripts) {
+          const parsedOptions = parseScriptOptions(options);
+          const script = new WebExtensionContentScript(policy, parsedOptions);
+          policy.registerContentScript(script);
+          registeredContentScripts.set(scriptId, script);
+        }
+      }
 
       policy.active = true;
       policy.initData = extension;
@@ -394,6 +413,54 @@ ExtensionManager = {
         for (let [url, schema] of data) {
           this.schemaJSON.set(url, schema);
         }
+        break;
+      }
+
+      case "Extension:RegisterContentScript": {
+        let policy = WebExtensionPolicy.getByID(data.id);
+
+        if (policy) {
+          const registeredContentScripts = this.registeredContentScripts.get(policy);
+
+          if (registeredContentScripts.has(data.scriptId)) {
+            Cu.reportError(new Error(
+              `Registering content script ${data.scriptId} on ${data.id} more than once`));
+          } else {
+            try {
+              const parsedOptions = parseScriptOptions(data.options);
+              const script = new WebExtensionContentScript(policy, parsedOptions);
+              policy.registerContentScript(script);
+              registeredContentScripts.set(data.scriptId, script);
+            } catch (e) {
+              Cu.reportError(e);
+            }
+          }
+        }
+
+        Services.cpmm.sendAsyncMessage("Extension:RegisterContentScriptComplete");
+        break;
+      }
+
+      case "Extension:UnregisterContentScripts": {
+        let policy = WebExtensionPolicy.getByID(data.id);
+
+        if (policy) {
+          const registeredContentScripts = this.registeredContentScripts.get(policy);
+
+          for (const scriptId of data.scriptIds) {
+            const script = registeredContentScripts.get(scriptId);
+            if (script) {
+              try {
+                policy.unregisterContentScript(script);
+                registeredContentScripts.delete(scriptId);
+              } catch (e) {
+                Cu.reportError(e);
+              }
+            }
+          }
+        }
+
+        Services.cpmm.sendAsyncMessage("Extension:UnregisterContentScriptsComplete");
         break;
       }
     }

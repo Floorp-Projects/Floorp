@@ -483,7 +483,12 @@ defineLazyGetter(ProxyContextParent.prototype, "apiObj", function() {
 });
 
 defineLazyGetter(ProxyContextParent.prototype, "sandbox", function() {
-  return Cu.Sandbox(this.principal, {sandboxName: this.uri.spec});
+  // NOTE: the required Blob and URL globals are used in the ext-registerContentScript.js
+  // API module to convert JS and CSS data into blob URLs.
+  return Cu.Sandbox(this.principal, {
+    sandboxName: this.uri.spec,
+    wantGlobalProperties: ["Blob", "URL"],
+  });
 });
 
 /**

@@ -10,7 +10,6 @@
 
 #include "nsCSSRendering.h"
 #include "nsMargin.h"
-#include "nsRuleNode.h"
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
 #include "SVGContentUtils.h"
@@ -79,8 +78,7 @@ ShapeUtils::ComputeCircleRadius(const UniquePtr<StyleBasicShape>& aBasicShape,
     double referenceLength =
       SVGContentUtils::ComputeNormalizedHypotenuse(aRefBox.width,
                                                    aRefBox.height);
-    r = nsRuleNode::ComputeCoordPercentCalc(coords[0],
-                                            NSToCoordRound(referenceLength));
+    r = coords[0].ComputeCoordPercentCalc(NSToCoordRound(referenceLength));
   }
   return r;
 }
@@ -102,7 +100,7 @@ ShapeUtils::ComputeEllipseRadii(const UniquePtr<StyleBasicShape>& aBasicShape,
     radii.width = ComputeShapeRadius(radiusX, aCenter.x, aRefBox.x,
                                      aRefBox.XMost());
   } else {
-    radii.width = nsRuleNode::ComputeCoordPercentCalc(coords[0], aRefBox.width);
+    radii.width = coords[0].ComputeCoordPercentCalc(aRefBox.width);
   }
 
   if (coords[1].GetUnit() == eStyleUnit_Enumerated) {
@@ -110,7 +108,7 @@ ShapeUtils::ComputeEllipseRadii(const UniquePtr<StyleBasicShape>& aBasicShape,
     radii.height = ComputeShapeRadius(radiusY, aCenter.y, aRefBox.y,
                                       aRefBox.YMost());
   } else {
-    radii.height = nsRuleNode::ComputeCoordPercentCalc(coords[1], aRefBox.height);
+    radii.height = coords[1].ComputeCoordPercentCalc(aRefBox.height);
   }
 
   return radii;
@@ -126,10 +124,10 @@ ShapeUtils::ComputeInsetRect(const UniquePtr<StyleBasicShape>& aBasicShape,
   const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
   MOZ_ASSERT(coords.Length() == 4, "wrong number of arguments");
 
-  nsMargin inset(nsRuleNode::ComputeCoordPercentCalc(coords[0], aRefBox.height),
-                 nsRuleNode::ComputeCoordPercentCalc(coords[1], aRefBox.width),
-                 nsRuleNode::ComputeCoordPercentCalc(coords[2], aRefBox.height),
-                 nsRuleNode::ComputeCoordPercentCalc(coords[3], aRefBox.width));
+  nsMargin inset(coords[0].ComputeCoordPercentCalc(aRefBox.height),
+                 coords[1].ComputeCoordPercentCalc(aRefBox.width),
+                 coords[2].ComputeCoordPercentCalc(aRefBox.height),
+                 coords[3].ComputeCoordPercentCalc(aRefBox.width));
 
   nsRect insetRect(aRefBox);
   insetRect.Deflate(inset);
@@ -163,8 +161,8 @@ ShapeUtils::ComputePolygonVertices(const UniquePtr<StyleBasicShape>& aBasicShape
   nsTArray<nsPoint> vertices(coords.Length() / 2);
   for (size_t i = 0; i + 1 < coords.Length(); i += 2) {
     vertices.AppendElement(
-      nsPoint(nsRuleNode::ComputeCoordPercentCalc(coords[i], aRefBox.width),
-              nsRuleNode::ComputeCoordPercentCalc(coords[i + 1], aRefBox.height))
+      nsPoint(coords[i].ComputeCoordPercentCalc(aRefBox.width),
+              coords[i + 1].ComputeCoordPercentCalc(aRefBox.height))
       + aRefBox.TopLeft());
   }
   return vertices;

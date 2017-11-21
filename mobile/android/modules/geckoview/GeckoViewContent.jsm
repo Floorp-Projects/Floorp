@@ -39,7 +39,11 @@ class GeckoViewContent extends GeckoViewModule {
     this.window.addEventListener("MozDOMFullScreen:Exited", this,
                                  /* capture */ true, /* untrusted */ false);
 
-    this.eventDispatcher.registerListener(this, "GeckoViewContent:ExitFullScreen");
+    this.eventDispatcher.registerListener(this, [
+        "GeckoViewContent:ExitFullScreen",
+        "GeckoView:ZoomToInput",
+    ]);
+
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenExit", this);
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenRequest", this);
   }
@@ -49,7 +53,8 @@ class GeckoViewContent extends GeckoViewModule {
     debug("onEvent: " + aEvent);
     switch (aEvent) {
       case "GeckoViewContent:ExitFullScreen":
-        this.messageManager.sendAsyncMessage("GeckoView:DOMFullscreenExited");
+      case "GeckoView:ZoomToInput":
+        this.messageManager.sendAsyncMessage(aEvent);
         break;
       case "GeckoView:SetActive":
         this.browser.docShellIsActive = aData.active;
@@ -62,7 +67,12 @@ class GeckoViewContent extends GeckoViewModule {
                                     /* capture */ true);
     this.window.removeEventListener("MozDOMFullScreen:Exited", this,
                                     /* capture */ true);
-    this.eventDispatcher.unregisterListener(this, "GeckoViewContent:ExitFullScreen");
+
+    this.eventDispatcher.unregisterListener(this, [
+        "GeckoViewContent:ExitFullScreen",
+        "GeckoView:ZoomToInput",
+    ]);
+
     this.messageManager.removeMessageListener("GeckoView:DOMFullscreenExit", this);
     this.messageManager.removeMessageListener("GeckoView:DOMFullscreenRequest", this);
   }

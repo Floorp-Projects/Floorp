@@ -124,7 +124,7 @@ MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
     mInputTrackID(aInputTrackID), mSource(aSource),
     mPrincipal(aSource->GetPrincipal()),
     mReadyState(MediaStreamTrackState::Live),
-    mEnabled(true), mConstraints(aConstraints)
+    mEnabled(true), mMuted(false), mConstraints(aConstraints)
 {
   GetSource().RegisterSink(this);
 
@@ -371,6 +371,25 @@ MediaStreamTrack::NotifyPrincipalHandleChanged(const PrincipalHandle& aNewPrinci
     SetPrincipal(mPendingPrincipal);
     mPendingPrincipal = nullptr;
   }
+}
+
+void
+MediaStreamTrack::MutedChanged(bool aNewState)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mMuted == aNewState) {
+    MOZ_ASSERT_UNREACHABLE("Muted state didn't actually change");
+    return;
+  }
+
+  LOG(LogLevel::Info, ("MediaStreamTrack %p became %s",
+                       this, aNewState ? "muted" : "unmuted"));
+
+  mMuted = aNewState;
+  nsString eventName =
+    aNewState ? NS_LITERAL_STRING("mute") : NS_LITERAL_STRING("unmute");
+  DispatchTrustedEvent(eventName);
 }
 
 void

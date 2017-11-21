@@ -502,6 +502,10 @@ Request::Constructor(const GlobalObject& aGlobal,
     request->SetIntegrity(aInit.mIntegrity.Value());
   }
 
+  if (aInit.mMozErrors.WasPassed() && aInit.mMozErrors.Value()) {
+    request->SetMozErrors();
+  }
+
   // Request constructor step 14.
   if (aInit.mMethod.WasPassed()) {
     nsAutoCString method(aInit.mMethod.Value());

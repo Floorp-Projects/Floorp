@@ -6267,12 +6267,12 @@ ComputeScrollSnapInfo(const ScrollFrameHelper& aScrollFrame)
   }
 
   if (styles.mScrollSnapPointsX.GetUnit() != eStyleUnit_None) {
-    result.mScrollSnapIntervalX = Some(nsRuleNode::ComputeCoordPercentCalc(
-        styles.mScrollSnapPointsX, scrollPortSize.width));
+    result.mScrollSnapIntervalX = Some(
+      styles.mScrollSnapPointsX.ComputeCoordPercentCalc(scrollPortSize.width));
   }
   if (styles.mScrollSnapPointsY.GetUnit() != eStyleUnit_None) {
-    result.mScrollSnapIntervalY = Some(nsRuleNode::ComputeCoordPercentCalc(
-        styles.mScrollSnapPointsY, scrollPortSize.height));
+    result.mScrollSnapIntervalY = Some(
+      styles.mScrollSnapPointsY.ComputeCoordPercentCalc(scrollPortSize.height));
   }
 
   CollectScrollSnapCoordinates(aScrollFrame.GetScrolledFrame(),

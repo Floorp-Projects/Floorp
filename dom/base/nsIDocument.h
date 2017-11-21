@@ -1133,6 +1133,11 @@ protected:
     mPageUnloadingEventTimeStamp = mozilla::TimeStamp();
   }
 
+  /**
+   * Clears any Servo element data stored on Elements in the document.
+   */
+  void ClearStaleServoData();
+
 private:
   class SelectorCacheKey
   {
@@ -1861,18 +1866,6 @@ public:
   {
     mIsContentDocument = aIsContentDocument;
   }
-
-  /**
-   * Checks if this document has no pres shell, and if so, clears any Servo
-   * element data stored on Elements in the document.
-   */
-  void ClearStaleServoDataFromDocument();
-
-  /**
-   * Returns true if there may be Servo element data on Elements in the document
-   * that were created for a pres shell that no longer exists.
-   */
-  bool MightHaveStaleServoData() const { return mMightHaveStaleServoData; }
 
   /**
    * Create an element with the specified name, prefix and namespace ID.
@@ -3588,10 +3581,6 @@ protected:
   bool mIsTopLevelContentDocument : 1;
 
   bool mIsContentDocument : 1;
-
-  // True if there may be Servo element data on Elements in the document that
-  // were created for a pres shell that no longer exists.
-  bool mMightHaveStaleServoData : 1;
 
   // True if we have called BeginLoad and are expecting a paired EndLoad call.
   bool mDidCallBeginLoad : 1;

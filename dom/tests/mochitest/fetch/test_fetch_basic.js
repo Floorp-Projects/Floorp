@@ -103,6 +103,16 @@ function testMozErrors() {
   });
 }
 
+function testRequestMozErrors() {
+  // mozErrors shouldn't be available to content and be ignored.
+  const r = new Request("http://localhost:4/should/fail", { mozErrors: true });
+  return fetch(r).then(res => {
+    ok(false, "Request should not succeed");
+  }).catch(err => {
+    ok(err instanceof TypeError);
+  });
+}
+
 function runTest() {
   return Promise.resolve()
     .then(testAboutURL)

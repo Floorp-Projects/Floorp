@@ -166,32 +166,45 @@
           <description>&signedIn.settings.description;</description>
           <hbox id="fxaSyncEngines">
             <vbox flex="1">
-              <checkbox label="&engine.tabs.label2;"
-                        accesskey="&engine.tabs.accesskey;"
-                        preference="engine.tabs"/>
+              <!-- by design, no tooltip for bookmarks or history -->
               <checkbox label="&engine.bookmarks.label;"
                         accesskey="&engine.bookmarks.accesskey;"
                         preference="engine.bookmarks"/>
-              <checkbox label="&engine.logins.label;"
-                        accesskey="&engine.logins.accesskey;"
-                        preference="engine.passwords"/>
               <checkbox label="&engine.history.label;"
                         accesskey="&engine.history.accesskey;"
                         preference="engine.history"/>
+              <checkbox label="&engine.tabs.label2;"
+                        tooltiptext="&engine.tabs.title;"
+                        accesskey="&engine.tabs.accesskey;"
+                        preference="engine.tabs"/>
+              <checkbox label="&engine.logins.label;"
+                        tooltiptext="&engine.logins.title;"
+                        accesskey="&engine.logins.accesskey;"
+                        preference="engine.passwords"/>
             </vbox>
             <vbox flex="1">
-              <checkbox label="&engine.addons.label;"
-                        accesskey="&engine.addons.accesskey;"
-                        preference="engine.addons"/>
-              <checkbox label="&engine.prefs.label;"
-                        accesskey="&engine.prefs.accesskey;"
-                        preference="engine.prefs"/>
               <checkbox label="&engine.addresses.label;"
                         accesskey="&engine.addresses.accesskey;"
+                        tooltiptext="&engine.addresses.title;"
                         preference="engine.addresses"/>
               <checkbox label="&engine.creditcards.label;"
+                        tooltiptext="&engine.creditcards.title;"
                         accesskey="&engine.creditcards.accesskey;"
                         preference="engine.creditcards"/>
+              <checkbox label="&engine.addons.label;"
+                        tooltiptext="&engine.addons.title;"
+                        accesskey="&engine.addons.accesskey;"
+                        preference="engine.addons"/>
+              <checkbox
+#ifdef XP_WIN
+                        label="&engine.prefsWin.label;"
+                        accesskey="&engine.prefsWin.accesskey;"
+#else
+                        label="&engine.prefs.label;"
+                        accesskey="&engine.prefs.accesskey;"
+#endif
+                        tooltiptext="&engine.prefs.title;"
+                        preference="engine.prefs"/>
             </vbox>
             <spacer/>
           </hbox>

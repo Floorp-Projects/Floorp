@@ -848,34 +848,6 @@ nsRuleNode::SpecifiedCalcToComputedCalc(const nsCSSValue& aValue,
   return result;
 }
 
-// This is our public API for handling calc() expressions that involve
-// percentages.
-/* static */ nscoord
-nsRuleNode::ComputeComputedCalc(const nsStyleCoord& aValue,
-                                nscoord aPercentageBasis)
-{
-  nsStyleCoord::Calc* calc = aValue.GetCalcValue();
-  return calc->mLength +
-         NSToCoordFloorClamped(aPercentageBasis * calc->mPercent);
-}
-
-/* static */ nscoord
-nsRuleNode::ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
-                                    nscoord aPercentageBasis)
-{
-  switch (aCoord.GetUnit()) {
-    case eStyleUnit_Coord:
-      return aCoord.GetCoordValue();
-    case eStyleUnit_Percent:
-      return NSToCoordFloorClamped(aPercentageBasis * aCoord.GetPercentValue());
-    case eStyleUnit_Calc:
-      return ComputeComputedCalc(aCoord, aPercentageBasis);
-    default:
-      MOZ_ASSERT(false, "unexpected unit");
-      return 0;
-  }
-}
-
 /* Given an enumerated value that represents a box position, converts it to
  * a float representing the percentage of the box it corresponds to.  For
  * example, "center" becomes 0.5f.

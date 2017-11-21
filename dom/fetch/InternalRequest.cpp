@@ -41,6 +41,7 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
   copy->mReferrerPolicy = mReferrerPolicy;
   copy->mEnvironmentReferrerPolicy = mEnvironmentReferrerPolicy;
   copy->mIntegrity = mIntegrity;
+  copy->mMozErrors = mMozErrors;
 
   copy->mContentPolicyType = mContentPolicyTypeOverridden ?
                              mContentPolicyType :
@@ -90,6 +91,7 @@ InternalRequest::InternalRequest(const nsACString& aURL,
   , mResponseTainting(LoadTainting::Basic)
   , mCacheMode(RequestCache::Default)
   , mRedirectMode(RequestRedirect::Follow)
+  , mMozErrors(false)
   , mAuthenticationFlag(false)
   , mForceOriginHeader(false)
   , mPreserveContentCodings(false)
@@ -130,6 +132,7 @@ InternalRequest::InternalRequest(const nsACString& aURL,
   , mCacheMode(aCacheMode)
   , mRedirectMode(aRequestRedirect)
   , mIntegrity(aIntegrity)
+  , mMozErrors(false)
   , mAuthenticationFlag(false)
   , mForceOriginHeader(false)
   , mPreserveContentCodings(false)
@@ -158,6 +161,7 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
   , mCacheMode(aOther.mCacheMode)
   , mRedirectMode(aOther.mRedirectMode)
   , mIntegrity(aOther.mIntegrity)
+  , mMozErrors(aOther.mMozErrors)
   , mFragment(aOther.mFragment)
   , mAuthenticationFlag(aOther.mAuthenticationFlag)
   , mForceOriginHeader(aOther.mForceOriginHeader)

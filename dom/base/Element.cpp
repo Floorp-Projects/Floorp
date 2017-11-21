@@ -1603,6 +1603,39 @@ Element::GetElementsByClassName(const nsAString& aClassNames)
   return nsContentUtils::GetElementsByClassName(this, aClassNames);
 }
 
+void
+Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements)
+{
+  // This helper function is passed to GetElementsByMatching()
+  // to identify elements with styling which will cause them to
+  // generate a nsGridContainerFrame during layout.
+  auto IsDisplayGrid = [](Element* aElement) -> bool
+  {
+    RefPtr<nsStyleContext> styleContext =
+      nsComputedDOMStyle::GetStyleContext(aElement, nullptr, nullptr);
+    if (styleContext) {
+      const nsStyleDisplay* display = styleContext->StyleDisplay();
+      return (display->mDisplay == StyleDisplay::Grid ||
+              display->mDisplay == StyleDisplay::InlineGrid);
+    }
+    return false;
+  };
+
+  GetElementsByMatching(IsDisplayGrid, aElements);
+}
+
+void
+Element::GetElementsByMatching(nsElementMatchFunc aFunc,
+                               nsTArray<RefPtr<Element>>& aElements)
+{
+  for (nsINode* cur = this; cur; cur = cur->GetNextNode(this)) {
+    if (cur->IsElement() && aFunc(cur->AsElement())) {
+      aElements.AppendElement(cur->AsElement());
+    }
+  }
+}
+
+
 /**
  * Returns the count of descendants (inclusive of aContent) in
  * the uncomposed document that are explicitly set as editable.
