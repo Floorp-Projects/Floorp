@@ -566,22 +566,16 @@ simple_keyfile('Pocket API')
 option('--enable-stylo', nargs='?', choices=('build',),
        help='Include Stylo in the build and/or enable it at runtime')
 
-@depends('--enable-stylo', '--help', target, milestone)
-def stylo_config(value, _, target, milestone):
+@depends('--enable-stylo', '--help')
+def stylo_config(value, _):
     build_stylo = None
     enable_stylo = None
 
     # If nothing is specified, default to building and enabling Stylo where it
     # is known to work.
     if value.origin == 'default':
-        # Build stylo on Android Nighly, but this is still turned off yet.
-        if target.os == 'Android':
-            if milestone.is_nightly:
-                build_stylo = True
-                enable_stylo = None
-        else:
-            build_stylo = True
-            enable_stylo = True
+        build_stylo = True
+        enable_stylo = True
     elif len(value) and value[0] == 'build':
         # Build but disable by request.
         build_stylo = True
