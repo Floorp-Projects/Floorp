@@ -7,7 +7,9 @@
   </head>
   <body>
     <script type="text/javascript">
-var sw = new SharedWorker('data:application/javascript,console.log("foo-bar-shared-worker");');
+      new SharedWorker(`data:application/javascript,
+        console.log("foo-bar-shared-worker", {foo: "bar"});
+      `);
     </script>
   </body>
 </html>
