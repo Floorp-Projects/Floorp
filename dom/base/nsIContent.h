@@ -681,14 +681,23 @@ public:
    *
    * @return the binding parent
    */
-  virtual nsIContent *GetBindingParent() const = 0;
+  virtual nsIContent* GetBindingParent() const = 0;
 
   /**
    * Gets the current XBL binding that is bound to this element.
    *
    * @return the current binding.
    */
-  virtual nsXBLBinding *GetXBLBinding() const = 0;
+  nsXBLBinding* GetXBLBinding() const
+  {
+    if (!HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+      return nullptr;
+    }
+
+    return DoGetXBLBinding();
+  }
+
+  virtual nsXBLBinding* DoGetXBLBinding() const = 0;
 
   /**
    * Sets or unsets an XBL binding for this element. Setting a
