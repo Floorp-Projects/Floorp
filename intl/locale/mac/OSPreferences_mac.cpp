@@ -10,34 +10,67 @@
 
 using namespace mozilla::intl;
 
+static void
+LocaleChangedNotificationCallback(CFNotificationCenterRef center,
+                                  void *observer,
+                                  CFStringRef name,
+                                  const void *object,
+                                  CFDictionaryRef userInfo)
+{
+  if (!::CFEqual(name, kCFLocaleCurrentLocaleDidChangeNotification)) {
+    return;
+  }
+  static_cast<OSPreferences*>(observer)->Refresh();
+}
+
+OSPreferences::OSPreferences()
+{
+  ::CFNotificationCenterAddObserver(
+    ::CFNotificationCenterGetLocalCenter(),
+    this,
+    LocaleChangedNotificationCallback,
+    kCFLocaleCurrentLocaleDidChangeNotification,
+    0,
+    CFNotificationSuspensionBehaviorDeliverImmediately);
+}
+
+OSPreferences::~OSPreferences()
+{
+  ::CFNotificationCenterRemoveObserver(
+    ::CFNotificationCenterGetLocalCenter(),
+    this,
+    kCTFontManagerRegisteredFontsChangedNotification,
+    0);
+}
+
 bool
 OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
 {
   MOZ_ASSERT(aLocaleList.IsEmpty());
 
-  // Get string representation of user's current locale
-  CFLocaleRef userLocaleRef = ::CFLocaleCopyCurrent();
-  CFStringRef userLocaleStr = ::CFLocaleGetIdentifier(userLocaleRef);
+  CFArrayRef langs = ::CFLocaleCopyPreferredLanguages();
+  for (CFIndex i = 0; i < ::CFArrayGetCount(langs); i++) {
+    CFStringRef lang = (CFStringRef)::CFArrayGetValueAtIndex(langs, i);
 
-  AutoTArray<UniChar, 32> buffer;
-  int size = ::CFStringGetLength(userLocaleStr);
-  buffer.SetLength(size);
+    AutoTArray<UniChar, 32> buffer;
+    int size = ::CFStringGetLength(lang);
+    buffer.SetLength(size);
 
-  CFRange range = ::CFRangeMake(0, size);
-  ::CFStringGetCharacters(userLocaleStr, range, buffer.Elements());
+    CFRange range = ::CFRangeMake(0, size);
+    ::CFStringGetCharacters(lang, range, buffer.Elements());
 
-  // Convert the locale string to the format that Mozilla expects
-  NS_LossyConvertUTF16toASCII locale(
-      reinterpret_cast<const char16_t*>(buffer.Elements()), buffer.Length());
+    // Convert the locale string to the format that Mozilla expects
+    NS_LossyConvertUTF16toASCII locale(
+        reinterpret_cast<const char16_t*>(buffer.Elements()), buffer.Length());
 
-  CFRelease(userLocaleRef);
-
-  if (CanonicalizeLanguageTag(locale)) {
-    aLocaleList.AppendElement(locale);
-    return true;
+    if (CanonicalizeLanguageTag(locale)) {
+      aLocaleList.AppendElement(locale);
+    }
   }
 
-  return false;
+  ::CFRelease(langs);
+
+  return !aLocaleList.IsEmpty();
 }
 
 bool

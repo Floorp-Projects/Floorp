@@ -20,6 +20,9 @@ public:
 
   static void
   CycleCollect(const GlobalObject&);
+
+  static void
+  EnableAccessibility(const GlobalObject&, ErrorResult& aRv);
 };
 
 } // namespace dom
