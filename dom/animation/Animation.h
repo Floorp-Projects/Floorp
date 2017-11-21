@@ -110,6 +110,7 @@ public:
   double PlaybackRate() const { return mPlaybackRate; }
   void SetPlaybackRate(double aPlaybackRate);
   AnimationPlayState PlayState() const;
+  bool Pending() const { return mPendingState != PendingState::NotPending; }
   virtual Promise* GetReady(ErrorResult& aRv);
   virtual Promise* GetFinished(ErrorResult& aRv);
   void Cancel();
@@ -133,6 +134,7 @@ public:
   void SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
                               ErrorResult& aRv);
   virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
+  virtual bool PendingFromJS() const { return Pending(); }
   virtual void PlayFromJS(ErrorResult& aRv)
   {
     Play(aRv, LimitBehavior::AutoRewind);
@@ -153,9 +155,7 @@ public:
   virtual void Tick();
   bool NeedsTicks() const
   {
-    AnimationPlayState playState = PlayState();
-    return playState == AnimationPlayState::Running ||
-           playState == AnimationPlayState::Pending;
+    return Pending() || PlayState() == AnimationPlayState::Running;
   }
 
   /**
@@ -263,6 +263,12 @@ public:
 
   bool IsPausedOrPausing() const
   {
+    // FIXME: Once we drop the dom.animations-api.pending-member.enabled pref we
+    // can simplify the following check to just:
+    //
+    //   return PlayState() == AnimationPlayState::Paused;
+    //
+    // And at that point we might not need this method at all.
     return PlayState() == AnimationPlayState::Paused ||
            mPendingState == PendingState::PausePending;
   }
@@ -278,6 +284,10 @@ public:
 
   bool IsPlaying() const
   {
+    // FIXME: Once we drop the dom.animations-api.pending-member.enabled pref we
+    // can simplify the last two conditions to just:
+    //
+    //   PlayState() == AnimationPlayState::Running
     return mPlaybackRate != 0.0 &&
            mTimeline &&
            !mTimeline->GetCurrentTime().IsNull() &&

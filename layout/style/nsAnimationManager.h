@@ -122,8 +122,9 @@ public:
   // specifies that reading playState does *not* flush style (and we drop the
   // following override), then we should update tabbrowser.xml to check
   // the playState instead.
-  virtual AnimationPlayState PlayStateFromJS() const override;
-  virtual void PlayFromJS(ErrorResult& aRv) override;
+  AnimationPlayState PlayStateFromJS() const override;
+  bool PendingFromJS() const override;
+  void PlayFromJS(ErrorResult& aRv) override;
 
   void PlayFromStyle();
   void PauseFromStyle();
