@@ -284,21 +284,39 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
 // ============================================================================
 // Common functions
 
+// '[EnforceRange] unsigned long' types are coerced with
+//    ConvertToInt(v, 32, 'unsigned')
+// defined in Web IDL Section 3.2.4.9.
 static bool
-ToNonWrappingUint32(JSContext* cx, HandleValue v, uint32_t max, const char* kind, const char* noun,
-                    uint32_t* u32)
+EnforceRangeU32(JSContext* cx, HandleValue v, uint32_t max, const char* kind, const char* noun,
+                uint32_t* u32)
 {
-    double dbl;
-    if (!ToInteger(cx, v, &dbl))
+    // Step 4.
+    double x;
+    if (!ToNumber(cx, v, &x))
         return false;
 
-    if (dbl < 0 || dbl > max) {
+    // Step 5.
+    if (mozilla::IsNegativeZero(x))
+        x = 0.0;
+
+    // Step 6.1.
+    if (!mozilla::IsFinite(x)) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, kind, noun);
         return false;
     }
 
-    *u32 = uint32_t(dbl);
-    MOZ_ASSERT(double(*u32) == dbl);
+    // Step 6.2.
+    x = JS::ToInteger(x);
+
+    // Step 6.3, allowing caller to supply a more restrictive uint32_t max.
+    if (x < 0 || x > double(max)) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, kind, noun);
+        return false;
+    }
+
+    *u32 = uint32_t(x);
+    MOZ_ASSERT(double(*u32) == x);
     return true;
 }
 
@@ -315,7 +333,7 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
     if (!GetProperty(cx, obj, obj, initialId, &initialVal))
         return false;
 
-    if (!ToNonWrappingUint32(cx, initialVal, maxInitial, kind, "initial size", &limits->initial))
+    if (!EnforceRangeU32(cx, initialVal, maxInitial, kind, "initial size", &limits->initial))
         return false;
 
     JSAtom* maximumAtom = Atomize(cx, "maximum", strlen("maximum"));
@@ -333,7 +351,7 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
             return false;
 
         limits->maximum.emplace();
-        if (!ToNonWrappingUint32(cx, maxVal, maxMaximum, kind, "maximum size", limits->maximum.ptr()))
+        if (!EnforceRangeU32(cx, maxVal, maxMaximum, kind, "maximum size", limits->maximum.ptr()))
             return false;
 
         if (limits->initial > *limits->maximum) {
@@ -1285,7 +1303,7 @@ WasmMemoryObject::growImpl(JSContext* cx, const CallArgs& args)
     RootedWasmMemoryObject memory(cx, &args.thisv().toObject().as<WasmMemoryObject>());
 
     uint32_t delta;
-    if (!ToNonWrappingUint32(cx, args.get(0), UINT32_MAX, "Memory", "grow delta", &delta))
+    if (!EnforceRangeU32(cx, args.get(0), UINT32_MAX, "Memory", "grow delta", &delta))
         return false;
 
     uint32_t ret = grow(memory, delta, cx);
@@ -1586,7 +1604,7 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
     const Table& table = tableObj->table();
 
     uint32_t index;
-    if (!ToNonWrappingUint32(cx, args.get(0), table.length() - 1, "Table", "get index", &index))
+    if (!EnforceRangeU32(cx, args.get(0), table.length() - 1, "Table", "get index", &index))
         return false;
 
     ExternalTableElem& elem = table.externalArray()[index];
@@ -1625,7 +1643,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
         return false;
 
     uint32_t index;
-    if (!ToNonWrappingUint32(cx, args.get(0), table.length() - 1, "Table", "set index", &index))
+    if (!EnforceRangeU32(cx, args.get(0), table.length() - 1, "Table", "set index", &index))
         return false;
 
     RootedFunction value(cx);
@@ -1671,7 +1689,7 @@ WasmTableObject::growImpl(JSContext* cx, const CallArgs& args)
     RootedWasmTableObject table(cx, &args.thisv().toObject().as<WasmTableObject>());
 
     uint32_t delta;
-    if (!ToNonWrappingUint32(cx, args.get(0), UINT32_MAX, "Table", "grow delta", &delta))
+    if (!EnforceRangeU32(cx, args.get(0), UINT32_MAX, "Table", "grow delta", &delta))
         return false;
 
     uint32_t ret = table->table().grow(delta, cx);
