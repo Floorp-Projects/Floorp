@@ -89,6 +89,7 @@ CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
 {
     baselineEnabled = cx->options().wasmBaseline();
     ionEnabled = cx->options().wasmIon();
+    sharedMemoryEnabled = cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled();
     testTiering = cx->options().testWasmAwaitTier2();
 
     // Debug information such as source view or debug traps will require
@@ -422,7 +423,8 @@ wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, Uni
     DebugEnabled debug;
     InitialCompileFlags(args, d, &mode, &tier, &debug);
 
-    ModuleEnvironment env(mode, tier, debug);
+    ModuleEnvironment env(mode, tier, debug,
+                          args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
     if (!DecodeModuleEnvironment(d, &env))
         return nullptr;
 
@@ -447,7 +449,8 @@ wasm::CompileTier2(const CompileArgs& args, Module& module, Atomic<bool>* cancel
     UniqueChars error;
     Decoder d(module.bytecode().bytes, 0, &error);
 
-    ModuleEnvironment env(CompileMode::Tier2, Tier::Ion, DebugEnabled::False);
+    ModuleEnvironment env(CompileMode::Tier2, Tier::Ion, DebugEnabled::False,
+                          args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
     if (!DecodeModuleEnvironment(d, &env))
         return false;
 
@@ -568,7 +571,8 @@ wasm::CompileStreaming(const CompileArgs& args,
         DebugEnabled debug;
         InitialCompileFlags(args, d, &mode, &tier, &debug);
 
-        env.emplace(mode, tier, debug);
+        env.emplace(mode, tier, debug,
+                    args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
         if (!DecodeModuleEnvironment(d, env.ptr()))
             return nullptr;
 

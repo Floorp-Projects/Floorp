@@ -42,6 +42,7 @@ struct CompileArgs : ShareableBase<CompileArgs>
     bool baselineEnabled;
     bool debugEnabled;
     bool ionEnabled;
+    bool sharedMemoryEnabled;
     bool testTiering;
 
     CompileArgs(Assumptions&& assumptions, ScriptedCaller&& scriptedCaller)
@@ -50,6 +51,7 @@ struct CompileArgs : ShareableBase<CompileArgs>
         baselineEnabled(false),
         debugEnabled(false),
         ionEnabled(false),
+        sharedMemoryEnabled(false),
         testTiering(false)
     {}
 

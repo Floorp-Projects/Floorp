@@ -20,6 +20,8 @@
 
 #include "mozilla/CheckedInt.h"
 
+#include "jscntxt.h"
+#include "jscompartment.h"
 #include "jsprf.h"
 
 #include "jit/JitOptions.h"
@@ -1004,6 +1006,9 @@ DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env)
         memory.maximum = Some(maximumBytes.isValid() ? maximumBytes.value() : UINT32_MAX);
     }
 
+    if (memory.shared == Shareable::True && env->sharedMemoryEnabled == Shareable::False)
+        return d.fail("shared memory is disabled");
+
     env->memoryUsage = memory.shared == Shareable::True
                      ? MemoryUsage::Shared
                      : MemoryUsage::Unshared;
@@ -1768,11 +1773,14 @@ wasm::DecodeModuleTail(Decoder& d, ModuleEnvironment* env)
 // Validate algorithm.
 
 bool
-wasm::Validate(const ShareableBytes& bytecode, UniqueChars* error)
+wasm::Validate(JSContext* cx, const ShareableBytes& bytecode, UniqueChars* error)
 {
     Decoder d(bytecode.bytes, 0, error);
 
-    ModuleEnvironment env;
+    ModuleEnvironment env(CompileMode::Once, Tier::Ion, DebugEnabled::False,
+                          cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()
+                          ? Shareable::True
+                          : Shareable::False);
     if (!DecodeModuleEnvironment(d, &env))
         return false;
 
