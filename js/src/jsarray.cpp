@@ -1070,10 +1070,12 @@ IsArraySpecies(JSContext* cx, HandleObject origArray)
 {
     if (MOZ_UNLIKELY(origArray->is<ProxyObject>())) {
         if (origArray->getClass()->isDOMClass()) {
+#ifdef DEBUG
             // We assume DOM proxies never return true for IsArray.
-            DebugOnly<IsArrayAnswer> answer;
+            IsArrayAnswer answer;
             MOZ_ASSERT(Proxy::isArray(cx, origArray, &answer));
             MOZ_ASSERT(answer == IsArrayAnswer::NotArray);
+#endif
             return true;
         }
     } else {
