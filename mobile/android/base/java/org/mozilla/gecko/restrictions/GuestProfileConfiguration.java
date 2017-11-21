@@ -14,7 +14,7 @@ import java.util.List;
  * RestrictionConfiguration implementation for guest profiles.
  */
 public class GuestProfileConfiguration implements RestrictionConfiguration {
-    static List<Restrictable> DISABLED_FEATURES = Arrays.asList(
+    static final List<Restrictable> DISABLED_FEATURES = Arrays.asList(
             Restrictable.DOWNLOAD,
             Restrictable.INSTALL_EXTENSION,
             Restrictable.INSTALL_APPS,
