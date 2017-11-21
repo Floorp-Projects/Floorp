@@ -59,41 +59,6 @@ nsGlobalWindowOuter::OuterWindowByIdTable *nsGlobalWindowOuter::sOuterWindowsByI
 // CIDs
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 
-static already_AddRefed<nsIVariant>
-CreateVoidVariant()
-{
-  RefPtr<nsVariantCC> writable = new nsVariantCC();
-  writable->SetAsVoid();
-  return writable.forget();
-}
-
-nsresult
-DialogValueHolder::Get(nsIPrincipal* aSubject, nsIVariant** aResult)
-{
-  nsCOMPtr<nsIVariant> result;
-  if (aSubject->SubsumesConsideringDomain(mOrigin)) {
-    result = mValue;
-  } else {
-    result = CreateVoidVariant();
-  }
-  result.forget(aResult);
-  return NS_OK;
-}
-
-void
-DialogValueHolder::Get(JSContext* aCx, JS::Handle<JSObject*> aScope,
-                       nsIPrincipal* aSubject,
-                       JS::MutableHandle<JS::Value> aResult,
-                       mozilla::ErrorResult& aError)
-{
-  if (aSubject->Subsumes(mOrigin)) {
-    aError = nsContentUtils::XPConnect()->VariantToJS(aCx, aScope,
-                                                      mValue, aResult);
-  } else {
-    aResult.setUndefined();
-  }
-}
-
 /* static */
 nsPIDOMWindowOuter*
 nsPIDOMWindowOuter::GetFromCurrentInner(nsPIDOMWindowInner* aInner)
@@ -109,16 +74,6 @@ nsPIDOMWindowOuter::GetFromCurrentInner(nsPIDOMWindowInner* aInner)
 
   return outer;
 }
-
-// DialogValueHolder CC goop.
-NS_IMPL_CYCLE_COLLECTION(DialogValueHolder, mValue)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DialogValueHolder)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DialogValueHolder)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DialogValueHolder)
 
 //*****************************************************************************
 // nsOuterWindowProxy: Outer Window Proxy
@@ -948,7 +903,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControllers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArguments)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReturnValue)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSuspendedDoc)
@@ -977,7 +931,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mControllers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mArguments)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReturnValue)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuspendedDoc)
