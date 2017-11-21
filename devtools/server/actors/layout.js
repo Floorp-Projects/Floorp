@@ -201,13 +201,18 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
    * Returns an array of GridActor objects for all the grid elements contained in the
    * given root node.
    *
-   * @param  {Node} node
+   * @param  {Node|NodeActor} node
    *         The root node for grid elements
    * @return {Array} An array of GridActor objects.
    */
   getGrids(node) {
     if (!node) {
       return [];
+    }
+
+    // Root node can either be a Node or a NodeActor.
+    if (node.rawNode) {
+      node = node.rawNode;
     }
 
     // Root node can be a #document object, which does not support getElementsWithGrid.
@@ -224,23 +229,6 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
     }
 
     return gridActors;
-  },
-
-  /**
-   * Returns an array of GridActor objects for all existing grid containers found by
-   * iterating below the given rootNode and including nested frames.
-   *
-   * @param  {NodeActor} rootNode
-   * @return {Array} An array of GridActor objects.
-   */
-  getAllGrids(rootNode) {
-    let grids = [];
-
-    if (!rootNode) {
-      return grids;
-    }
-
-    return this.getGrids(rootNode.rawNode);
   },
 });
 
