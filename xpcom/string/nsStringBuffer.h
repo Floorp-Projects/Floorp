@@ -12,6 +12,22 @@
 
 template<class T> struct already_AddRefed;
 
+/*
+ * Add a canary field to protect against double-frees of nsStringBuffer and
+ * other potential heap corruptions.  We intend to back this out before 58 hits
+ * beta.
+ */
+#if (defined(DEBUG) || defined(NIGHTLY_BUILD)) && !defined(MOZ_ASAN)
+# define STRING_BUFFER_CANARY 1
+#endif
+
+#ifdef STRING_BUFFER_CANARY
+enum nsStringBufferCanary : uint32_t {
+  CANARY_OK = 0xaf57c8fa,
+  CANARY_POISON = 0x534dc0f5
+};
+#endif
+
 /**
  * This structure precedes the string buffers "we" allocate.  It may be the
  * case that nsTAString::mData does not point to one of these special
@@ -28,6 +44,10 @@ private:
 
   std::atomic<uint32_t> mRefCount;
   uint32_t mStorageSize;
+
+#ifdef STRING_BUFFER_CANARY
+  uint32_t mCanary;
+#endif
 
 public:
 
@@ -78,7 +98,12 @@ public:
    */
   static nsStringBuffer* FromData(void* aData)
   {
-    return reinterpret_cast<nsStringBuffer*>(aData) - 1;
+    nsStringBuffer* sb = reinterpret_cast<nsStringBuffer*>(aData) - 1;
+#ifdef STRING_BUFFER_CANARY
+    if (MOZ_UNLIKELY(sb->mCanary != CANARY_OK))
+      sb->FromDataCanaryCheckFailed();
+#endif
+    return sb;
   }
 
   /**
@@ -175,6 +200,15 @@ public:
    * double-counting.
    */
   size_t SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+#ifdef STRING_BUFFER_CANARY
+  /*
+   * Called by FromData if the canary check failed.  This is out-of-line in
+   * nsSubstring.cpp so that MOZ_CRASH_UNSAFE_PRINTF is available via #includes.
+   * It is not available in FromData due to #include-order.
+   */
+  void FromDataCanaryCheckFailed() const;
+#endif
 };
 
 #endif /* !defined(nsStringBuffer_h__ */

@@ -31,10 +31,10 @@ TestAsyncReturnsParent::Main()
                        [](bool unused) {
                          fail("resolve handler should not be called");
                        },
-                       [](PromiseRejectReason aReason) {
+                       [](ResponseRejectReason aReason) {
                          // MozPromise asserts in debug build if the
                          // handler is not called
-                         if (aReason != PromiseRejectReason::ChannelClosed) {
+                         if (aReason != ResponseRejectReason::ChannelClosed) {
                            fail("reject with wrong reason");
                          }
                          passed("reject handler called on channel close");
@@ -46,9 +46,22 @@ TestAsyncReturnsParent::Main()
                      } else {
                        fail("get one argument but has wrong value");
                      }
-                     Close();
+
+                     // Also try with the callback-based API.
+                     SendPing(
+                       [this](bool one) {
+                         if (one) {
+                           passed("take one argument");
+                         } else {
+                           fail("get one argument but has wrong value");
+                         }
+                         Close();
+                       },
+                       [](ResponseRejectReason aReason) {
+                         fail("sending Ping");
+                       });
                    },
-                   [](PromiseRejectReason aReason) {
+                   [](ResponseRejectReason aReason) {
                      fail("sending Ping");
                    });
 }
@@ -94,7 +107,7 @@ TestAsyncReturnsChild::RecvPing(PingResolver&& aResolve)
                      }
                      aResolve(true);
                    },
-                   [](PromiseRejectReason aReason) {
+                   [](ResponseRejectReason aReason) {
                      fail("sending Pong");
                    });
   return IPC_OK();

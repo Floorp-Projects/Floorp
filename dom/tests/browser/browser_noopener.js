@@ -44,7 +44,7 @@ async function doTests(private, container) {
 
     let waitFor;
     if (test.newWindow || alwaysNewWindow) {
-      waitFor = BrowserTestUtils.waitForNewWindow(window.gBrowser, TARGET_URL, true);
+      waitFor = BrowserTestUtils.waitForNewWindow(TARGET_URL);
       // Confirm that this window has private browsing set if we're doing a private browsing test
     } else {
       waitFor = BrowserTestUtils.waitForNewTab(window.gBrowser, TARGET_URL, true);

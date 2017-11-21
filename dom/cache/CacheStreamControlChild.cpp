@@ -128,7 +128,7 @@ CacheStreamControlChild::OpenStream(const nsID& aId, InputStreamResolver&& aReso
   [aResolver, holder](const OptionalIPCStream& aOptionalStream) {
     nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aOptionalStream);
     aResolver(Move(stream));
-  }, [aResolver, holder](PromiseRejectReason aReason) {
+  }, [aResolver, holder](ResponseRejectReason aReason) {
     aResolver(nullptr);
   });
 }

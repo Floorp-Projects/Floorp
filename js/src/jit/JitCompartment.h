@@ -136,6 +136,9 @@ class JitRuntime
     ExclusiveAccessLockWriteOnceData<uint32_t> lazyLinkStubOffset_;
     ExclusiveAccessLockWriteOnceData<uint32_t> lazyLinkStubEndOffset_;
 
+    // Thunk to enter the interpreter from JIT code.
+    ExclusiveAccessLockWriteOnceData<uint32_t> interpreterStubOffset_;
+
     // Thunk used by the debugger for breakpoint and step mode.
     ExclusiveAccessLockWriteOnceData<JitCode*> debugTrapHandler_;
 
@@ -160,6 +163,7 @@ class JitRuntime
 
   private:
     void generateLazyLinkStub(MacroAssembler& masm);
+    void generateInterpreterStub(MacroAssembler& masm);
     void generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profilerExitTail);
     void generateExceptionTailStub(MacroAssembler& masm, void* handler, Label* profilerExitTail);
     void generateBailoutTailStub(MacroAssembler& masm, Label* bailoutTail);
@@ -313,6 +317,9 @@ class JitRuntime
     }
     TrampolinePtr lazyLinkStubEnd() const {
         return trampolineCode(lazyLinkStubEndOffset_);
+    }
+    TrampolinePtr interpreterStub() const {
+        return trampolineCode(interpreterStubOffset_);
     }
 
     bool hasJitcodeGlobalTable() const {

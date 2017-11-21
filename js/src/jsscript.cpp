@@ -1249,14 +1249,14 @@ ScriptCounts::getThrowCounts(size_t offset) {
 }
 
 void
-JSScript::setIonScript(JSRuntime* maybeRuntime, js::jit::IonScript* ionScript)
+JSScript::setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript)
 {
     MOZ_ASSERT_IF(ionScript != ION_DISABLED_SCRIPT, !baselineScript()->hasPendingIonBuilder());
     if (hasIonScript())
         js::jit::IonScript::writeBarrierPre(zone(), ion);
     ion = ionScript;
     MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
-    updateBaselineOrIonRaw(maybeRuntime);
+    updateJitCodeRaw(rt);
 }
 
 js::PCCounts*
@@ -2699,6 +2699,12 @@ JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
     PodZero(script.get());
 
     script->initCompartment(cx);
+
+#ifndef JS_CODEGEN_NONE
+    uint8_t* stubEntry = cx->runtime()->jitRuntime()->interpreterStub().value;
+    script->jitCodeRaw_ = stubEntry;
+    script->jitCodeSkipArgCheck_ = stubEntry;
+#endif
 
     script->selfHosted_ = options.selfHostingMode;
     script->noScriptRval_ = options.noScriptRval;
@@ -4473,23 +4479,25 @@ LazyScript::hasUncompiledEnclosingScript() const
 }
 
 void
-JSScript::updateBaselineOrIonRaw(JSRuntime* maybeRuntime)
+JSScript::updateJitCodeRaw(JSRuntime* rt)
 {
+    MOZ_ASSERT(rt);
     if (hasBaselineScript() && baseline->hasPendingIonBuilder()) {
-        MOZ_ASSERT(maybeRuntime);
         MOZ_ASSERT(!isIonCompilingOffThread());
-        baselineOrIonRaw = maybeRuntime->jitRuntime()->lazyLinkStub().value;
-        baselineOrIonSkipArgCheck = maybeRuntime->jitRuntime()->lazyLinkStub().value;
+        jitCodeRaw_ = rt->jitRuntime()->lazyLinkStub().value;
+        jitCodeSkipArgCheck_ = jitCodeRaw_;
     } else if (hasIonScript()) {
-        baselineOrIonRaw = ion->method()->raw();
-        baselineOrIonSkipArgCheck = ion->method()->raw() + ion->getSkipArgCheckEntryOffset();
+        jitCodeRaw_ = ion->method()->raw();
+        jitCodeSkipArgCheck_ = jitCodeRaw_ + ion->getSkipArgCheckEntryOffset();
     } else if (hasBaselineScript()) {
-        baselineOrIonRaw = baseline->method()->raw();
-        baselineOrIonSkipArgCheck = baseline->method()->raw();
+        jitCodeRaw_ = baseline->method()->raw();
+        jitCodeSkipArgCheck_ = jitCodeRaw_;
     } else {
-        baselineOrIonRaw = nullptr;
-        baselineOrIonSkipArgCheck = nullptr;
+        jitCodeRaw_ = rt->jitRuntime()->interpreterStub().value;
+        jitCodeSkipArgCheck_ = jitCodeRaw_;
     }
+    MOZ_ASSERT(jitCodeRaw_);
+    MOZ_ASSERT(jitCodeSkipArgCheck_);
 }
 
 bool
