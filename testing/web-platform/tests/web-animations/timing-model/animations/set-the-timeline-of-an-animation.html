@@ -81,47 +81,26 @@ test(t => {
 }, 'After setting timeline on an idle animation with a sufficiently ancient'
    + ' start time it is finished');
 
-test(t => {
-  const animation =
-    new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
-                  null);
-  animation.play();
-  assert_equals(animation.playState, 'pending');
-
-  animation.timeline = document.timeline;
-
-  assert_equals(animation.playState, 'pending');
-}, 'After setting timeline on a play-pending animation it is still pending');
-
 promise_test(t => {
   const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
   animation.play();
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending && animation.playState === 'running',
+              'Animation is initially play-pending');
 
   animation.timeline = document.timeline;
 
+  assert_true(animation.pending && animation.playState === 'running',
+              'Animation is still play-pending after setting timeline');
+
   return animation.ready.then(() => {
-    assert_equals(animation.playState, 'running');
+    assert_true(!animation.pending && animation.playState === 'running',
+                'Animation plays after it finishes pending');
   });
 }, 'After setting timeline on a play-pending animation it begins playing'
    + ' after pending');
 
-test(t => {
-  const animation =
-    new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
-                  null);
-  animation.startTime = document.timeline.currentTime;
-  animation.pause();
-  animation.timeline = null;
-  assert_equals(animation.playState, 'pending');
-
-  animation.timeline = document.timeline;
-
-  assert_equals(animation.playState, 'pending');
-}, 'After setting timeline on a pause-pending animation it is still pending');
-
 promise_test(t => {
   const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
@@ -129,12 +108,17 @@ promise_test(t => {
   animation.startTime = document.timeline.currentTime;
   animation.pause();
   animation.timeline = null;
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending && animation.playState === 'paused',
+              'Animation is initially pause-pending');
 
   animation.timeline = document.timeline;
 
+  assert_true(animation.pending && animation.playState === 'paused',
+              'Animation is still pause-pending after setting timeline');
+
   return animation.ready.then(() => {
-    assert_equals(animation.playState, 'paused');
+    assert_true(!animation.pending && animation.playState === 'paused',
+                'Animation pauses after it finishes pending');
   });
 }, 'After setting timeline on a pause-pending animation it becomes paused'
    + ' after pending');
@@ -150,10 +134,12 @@ test(t => {
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
   animation.currentTime = 50 * MS_PER_SEC;
+  assert_false(animation.pending);
   assert_equals(animation.playState, 'paused');
 
   animation.timeline = null;
 
+  assert_false(animation.pending);
   assert_equals(animation.playState, 'paused');
   assert_times_equal(animation.currentTime, 50 * MS_PER_SEC);
 }, 'After clearing timeline on paused animation it is still paused');
@@ -200,23 +186,23 @@ test(t => {
 
 test(t => {
   const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending && animation.playState === 'running');
 
   animation.timeline = null;
 
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending && animation.playState === 'running');
 }, 'After clearing timeline on play-pending animation it is still pending');
 
 promise_test(t => {
   const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending && animation.playState === 'running');
 
   animation.timeline = null;
   animation.timeline = document.timeline;
 
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending && animation.playState === 'running');
   return animation.ready.then(() => {
-    assert_equals(animation.playState, 'running');
+    assert_true(!animation.pending && animation.playState === 'running');
   });
 }, 'After clearing and re-setting timeline on play-pending animation it'
    + ' begins to play');
@@ -227,11 +213,11 @@ test(t => {
                   document.timeline);
   animation.startTime = document.timeline.currentTime;
   animation.pause();
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending && animation.playState === 'paused');
 
   animation.timeline = null;
 
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending && animation.playState === 'paused');
 }, 'After clearing timeline on a pause-pending animation it is still pending');
 
 promise_test(t => {
@@ -240,17 +226,17 @@ promise_test(t => {
                   document.timeline);
   animation.startTime = document.timeline.currentTime;
   animation.pause();
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending && animation.playState === 'paused');
 
   animation.timeline = null;
   animation.timeline = document.timeline;
 
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending && animation.playState === 'paused');
   return animation.ready.then(() => {
-    assert_equals(animation.playState, 'paused');
+    assert_true(!animation.pending && animation.playState === 'paused');
   });
 }, 'After clearing and re-setting timeline on a pause-pending animation it'
-   + ' becomes paused');
+   + ' completes pausing');
 
 promise_test(t => {
   const animation =
@@ -263,10 +249,8 @@ promise_test(t => {
 
   animation.timeline = null;
   animation.timeline = document.timeline;
-  assert_equals(animation.playState, 'pending');
 
   return animation.ready.then(() => {
-    assert_equals(animation.playState, 'running');
     assert_times_equal(animation.startTime, initialStartTime);
   });
 }, 'After clearing and re-setting timeline on an animation in the middle of'
