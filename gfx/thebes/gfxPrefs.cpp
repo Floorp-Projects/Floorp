@@ -169,6 +169,30 @@ void gfxPrefs::PrefAddVarCache(std::string* aVariable,
   Preferences::SetCString(aPref, aVariable->c_str());
 }
 
+void gfxPrefs::PrefAddVarCache(AtomicBool* aVariable,
+                               const char* aPref,
+                               bool aDefault)
+{
+  MOZ_ASSERT(IsPrefsServiceAvailable());
+  Preferences::AddAtomicBoolVarCache(aVariable, aPref, aDefault);
+}
+
+void gfxPrefs::PrefAddVarCache(AtomicInt32* aVariable,
+                               const char* aPref,
+                               int32_t aDefault)
+{
+  MOZ_ASSERT(IsPrefsServiceAvailable());
+  Preferences::AddAtomicIntVarCache(aVariable, aPref, aDefault);
+}
+
+void gfxPrefs::PrefAddVarCache(AtomicUint32* aVariable,
+                               const char* aPref,
+                               uint32_t aDefault)
+{
+  MOZ_ASSERT(IsPrefsServiceAvailable());
+  Preferences::AddAtomicUintVarCache(aVariable, aPref, aDefault);
+}
+
 bool gfxPrefs::PrefGet(const char* aPref, bool aDefault)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());

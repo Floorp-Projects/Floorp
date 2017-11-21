@@ -10,7 +10,6 @@
 #include "nsIContent.h"
 #include "nsCSSProps.h"
 #include "nsContentUtils.h"
-#include "nsRuleNode.h"
 #include "nsROCSSPrimitiveValue.h"
 #include "nsStyleStruct.h"
 #include "nsIContentPolicy.h"
@@ -407,7 +406,7 @@ nsStyleUtil::AppendFontFeatureSettings(const nsCSSValue& aSrc,
                   "improper value unit for font-feature-settings:");
 
   nsTArray<gfxFontFeature> featureSettings;
-  nsRuleNode::ComputeFontFeatures(aSrc.GetPairListValue(), featureSettings);
+  nsLayoutUtils::ComputeFontFeatures(aSrc.GetPairListValue(), featureSettings);
   AppendFontFeatureSettings(featureSettings, aResult);
 }
 
@@ -446,7 +445,8 @@ nsStyleUtil::AppendFontVariationSettings(const nsCSSValue& aSrc,
                   "improper value unit for font-variation-settings:");
 
   nsTArray<gfxFontVariation> variationSettings;
-  nsRuleNode::ComputeFontVariations(aSrc.GetPairListValue(), variationSettings);
+  nsLayoutUtils::ComputeFontVariations(aSrc.GetPairListValue(),
+                                       variationSettings);
   AppendFontVariationSettings(variationSettings, aResult);
 }
 

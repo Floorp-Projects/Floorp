@@ -35,6 +35,9 @@ add_task(async function() {
   await togglePref(optionsPanel, observer);
   observer.destroy();
 
+  // Switch back to the console as it won't update when it is in background
+  await toolbox.selectTool("webconsole");
+
   await testChangedPref(hud);
 
   Services.prefs.clearUserPref(PREF_MESSAGE_TIMESTAMP);

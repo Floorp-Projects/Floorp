@@ -5,6 +5,7 @@
 "use strict";
 
 let formFillChromeScript;
+let defaultTextColor;
 let expectingPopup = null;
 
 const {FormAutofillUtils} = SpecialPowers.Cu.import("resource://formautofill/FormAutofillUtils.jsm");
@@ -64,6 +65,62 @@ function clickOnElement(selector) {
   }
 
   SimpleTest.executeSoon(() => element.click());
+}
+
+// The equivalent helper function to getAdaptedProfiles in FormAutofillHandler.jsm that
+// transforms the given profile to expected filled profile.
+function _getAdaptedProfile(profile) {
+  const adaptedProfile = Object.assign({}, profile);
+
+  if (profile["street-address"]) {
+    adaptedProfile["street-address"] = FormAutofillUtils.toOneLineAddress(profile["street-address"]);
+  }
+
+  return adaptedProfile;
+}
+
+// We could not get ManuallyManagedState of element now, so directly check if
+// filter and text color style are applied.
+function checkFieldHighlighted(elem, expectedValue) {
+  const computedStyle = window.getComputedStyle(elem);
+  const isHighlighteApplied = computedStyle.getPropertyValue("filter") !== "none";
+
+  is(isHighlighteApplied, expectedValue, `Checking #${elem.id} highlight style`);
+}
+
+function checkFieldPreview(elem, expectedValue) {
+  const computedStyle = window.getComputedStyle(elem);
+  const isTextColorApplied = computedStyle.getPropertyValue("color") !== defaultTextColor;
+
+  is(SpecialPowers.wrap(elem).previewValue, expectedValue, `Checking #${elem.id} previewValue`);
+  is(isTextColorApplied, !!expectedValue, `Checking #${elem.id} preview style`);
+}
+
+function checkFieldValue(elem, expectedValue) {
+  if (typeof elem === "string") {
+    elem = document.querySelector(elem);
+  }
+  is(elem.value, String(expectedValue), "Checking " + elem.id + " field");
+}
+
+function triggerAutofillAndCheckProfile(profile) {
+  const adaptedProfile = _getAdaptedProfile(profile);
+  const promises = [];
+
+  for (const [fieldName, value] of Object.entries(adaptedProfile)) {
+    const element = document.getElementById(fieldName);
+    const expectingEvent = document.activeElement == element ? "DOMAutoComplete" : "change";
+    const checkFieldAutofilled = Promise.all([
+      new Promise(resolve => element.addEventListener("input", resolve, {once: true})),
+      new Promise(resolve => element.addEventListener(expectingEvent, resolve, {once: true})),
+    ]).then(() => checkFieldValue(element, value));
+
+    promises.push(checkFieldAutofilled);
+  }
+  // Press return key and trigger form autofill.
+  doKey("return");
+
+  return Promise.all(promises);
 }
 
 async function onStorageChanged(type) {
@@ -183,6 +240,16 @@ function initPopupListener() {
   registerPopupShownListener(popupShownListener);
 }
 
+async function triggerPopupAndHoverItem(fieldSelector, selectIndex) {
+  await focusAndWaitForFieldsIdentified(fieldSelector);
+  doKey("down");
+  await expectPopup();
+  for (let i = 0; i <= selectIndex; i++) {
+    doKey("down");
+  }
+  await notifySelectedIndex(selectIndex);
+}
+
 function formAutoFillCommonSetup() {
   let chromeURL = SimpleTest.getTestFileURL("formautofill_parent_utils.js");
   formFillChromeScript = SpecialPowers.loadChromeScript(chromeURL);
@@ -201,6 +268,11 @@ function formAutoFillCommonSetup() {
     formFillChromeScript.destroy();
     expectingPopup = null;
   });
+
+  document.addEventListener("DOMContentLoaded", function() {
+    defaultTextColor = window.getComputedStyle(document.querySelector("input"))
+      .getPropertyValue("color");
+  }, {once: true});
 }
 
 formAutoFillCommonSetup();

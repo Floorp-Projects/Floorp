@@ -3054,6 +3054,48 @@ public:
   // from preferences.
   static uint8_t ControlCharVisibilityDefault();
 
+  enum class FlushUserFontSet {
+    Yes,
+    No,
+  };
+
+  static already_AddRefed<nsFontMetrics> GetMetricsFor(nsPresContext* aPresContext,
+                                                       bool aIsVertical,
+                                                       const nsStyleFont* aStyleFont,
+                                                       nscoord aFontSize,
+                                                       bool aUseUserFontSet,
+                                                       FlushUserFontSet aFlushUserFontSet);
+
+  /**
+   * Appropriately add the correct font if we are using DocumentFonts or
+   * overriding for XUL
+   */
+  static void FixupNoneGeneric(nsFont* aFont,
+                               const nsPresContext* aPresContext,
+                               uint8_t aGenericFontID,
+                               const nsFont* aDefaultVariableFont);
+
+  /**
+   * For an nsStyleFont with mSize set, apply minimum font size constraints
+   * from preferences, as well as -moz-min-font-size-ratio.
+   */
+  static void ApplyMinFontSize(nsStyleFont* aFont,
+                               const nsPresContext* aPresContext,
+                               nscoord aMinFontSize);
+
+  static void ComputeSystemFont(nsFont* aSystemFont,
+                                mozilla::LookAndFeel::FontID aFontID,
+                                const nsPresContext* aPresContext,
+                                const nsFont* aDefaultVariableFont);
+
+  static void ComputeFontFeatures(const nsCSSValuePairList* aFeaturesList,
+                                  nsTArray<gfxFontFeature>& aFeatureSettings);
+
+  static void ComputeFontVariations(const nsCSSValuePairList* aVariationsList,
+                                    nsTArray<gfxFontVariation>& aVariationSettings);
+
+  static uint32_t ParseFontLanguageOverride(const nsAString& aLangTag);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;

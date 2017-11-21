@@ -209,7 +209,8 @@ NewConsoleOutputWrapper.prototype = {
     // be removed once it's not needed anymore.
     // Can only wait for response if the action contains a valid message.
     let promise;
-    if (waitForResponse) {
+    // Also, do not expect any update while the panel is in background.
+    if (waitForResponse && document.visibilityState === "visible") {
       promise = new Promise(resolve => {
         let jsterm = this.jsterm;
         jsterm.hud.on("new-messages", function onThisMessage(e, messages) {

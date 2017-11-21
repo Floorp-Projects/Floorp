@@ -19,6 +19,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "NullPrincipal.h"
 #include "nsID.h"
+#include "nsIURIMutator.h"
 
 // {51fcd543-3b52-41f7-b91b-6b54102236e6}
 #define NS_NULLPRINCIPALURI_IMPLEMENTATION_CID \
@@ -38,14 +39,11 @@ public:
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
-  // NB: This constructor exists only for deserialization.  Everyone
-  // else should call Create.
-  NullPrincipalURI();
-
   // Returns null on failure.
   static already_AddRefed<NullPrincipalURI> Create();
 
 private:
+  NullPrincipalURI();
   NullPrincipalURI(const NullPrincipalURI& aOther);
 
   ~NullPrincipalURI() {}
@@ -53,6 +51,44 @@ private:
   nsresult Init();
 
   nsAutoCStringN<NSID_LENGTH> mPath;
+
+public:
+  class Mutator
+      : public nsIURIMutator
+      , public BaseURIMutator<NullPrincipalURI>
+  {
+    NS_DECL_ISUPPORTS
+    NS_FORWARD_SAFE_NSIURISETTERS(mURI)
+
+    NS_IMETHOD Deserialize(const mozilla::ipc::URIParams& aParams) override
+    {
+      return InitFromIPCParams(aParams);
+    }
+
+    NS_IMETHOD Read(nsIObjectInputStream* aStream) override
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD Finalize(nsIURI** aURI) override
+    {
+      mURI.forget(aURI);
+      return NS_OK;
+    }
+
+    NS_IMETHOD SetSpec(const nsACString & aSpec) override
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    explicit Mutator() { }
+  private:
+    virtual ~Mutator() { }
+
+    friend class NullPrincipalURI;
+  };
+
+  friend class BaseURIMutator<NullPrincipalURI>;
 };
 
 #endif // __NullPrincipalURI_h__

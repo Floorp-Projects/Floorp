@@ -45,7 +45,7 @@
       window.connector = connector;
 
       window.Netmonitor = {
-        bootstrap({ toolbox }) {
+        bootstrap({ toolbox, panel }) {
           this.mount = document.querySelector("#mount");
 
           const connection = {
@@ -53,6 +53,7 @@
               tabTarget: toolbox.target,
             },
             toolbox,
+            panel,
           };
 
           const openLink = (link) => {

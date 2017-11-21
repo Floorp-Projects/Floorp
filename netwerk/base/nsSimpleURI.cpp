@@ -21,6 +21,7 @@
 #include "nsIIPCSerializableURI.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "nsIURIMutator.h"
 
 using namespace mozilla::ipc;
 
@@ -881,6 +882,21 @@ nsSimpleURI::SetQueryWithEncoding(const nsACString& aQuery,
                                   const Encoding* aEncoding)
 {
     return SetQuery(aQuery);
+}
+
+NS_IMPL_ISUPPORTS(nsSimpleURI::Mutator, nsIURISetters, nsIURIMutator)
+
+
+NS_IMETHODIMP
+nsSimpleURI::Mutate(nsIURIMutator** aMutator)
+{
+    RefPtr<nsSimpleURI::Mutator> mutator = new nsSimpleURI::Mutator();
+    nsresult rv = mutator->InitFromURI(this);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    mutator.forget(aMutator);
+    return NS_OK;
 }
 
 } // namespace net

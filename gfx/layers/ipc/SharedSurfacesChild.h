@@ -33,14 +33,12 @@ public:
   static nsresult Share(gfx::SourceSurfaceSharedData* aSurface,
                         WebRenderLayerManager* aManager,
                         wr::IpcResourceUpdateQueue& aResources,
-                        bool aForceUpdate,
                         uint32_t aGenerationId,
                         wr::ImageKey& aKey);
 
   static nsresult Share(ImageContainer* aContainer,
                         WebRenderLayerManager* aManager,
                         wr::IpcResourceUpdateQueue& aResources,
-                        bool aForceUpdate,
                         wr::ImageKey& aKey);
 
 private:

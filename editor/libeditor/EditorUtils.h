@@ -142,6 +142,158 @@ EditActionCanceled(nsresult aRv = NS_OK)
 }
 
 /***************************************************************************
+ * SplitNodeResult is a simple class for EditorBase::SplitNodeDeep().
+ * This makes the callers' code easier to read.
+ */
+class MOZ_STACK_CLASS SplitNodeResult final
+{
+public:
+  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
+  bool Failed() const { return NS_FAILED(mRv); }
+  nsresult Rv() const { return mRv; }
+
+  /**
+   * DidSplit() returns true if a node was actually split.
+   */
+  bool DidSplit() const
+  {
+    return mPreviousNode && mNextNode;
+  }
+
+  /**
+   * GetLeftNode() simply returns the left node which was created at splitting.
+   * This returns nullptr if the node wasn't split.
+   */
+  nsIContent* GetLeftNode() const
+  {
+    return mPreviousNode && mNextNode ? mPreviousNode.get() : nullptr;
+  }
+
+  /**
+   * GetRightNode() simply returns the right node which was split.
+   * This won't return nullptr unless failed to split due to invalid arguments.
+   */
+  nsIContent* GetRightNode() const
+  {
+    if (mGivenSplitPoint.IsSet()) {
+      return mGivenSplitPoint.GetChildAtOffset();
+    }
+    return mPreviousNode && !mNextNode ? mPreviousNode : mNextNode;
+  }
+
+  /**
+   * GetPreviousNode() returns previous node at the split point.
+   */
+  nsIContent* GetPreviousNode() const
+  {
+    if (mGivenSplitPoint.IsSet()) {
+      return mGivenSplitPoint.IsEndOfContainer() ?
+               mGivenSplitPoint.GetChildAtOffset() : nullptr;
+    }
+    return mPreviousNode;
+  }
+
+  /**
+   * GetNextNode() returns next node at the split point.
+   */
+  nsIContent* GetNextNode() const
+  {
+    if (mGivenSplitPoint.IsSet()) {
+      return !mGivenSplitPoint.IsEndOfContainer() ?
+                mGivenSplitPoint.GetChildAtOffset() : nullptr;
+    }
+    return mNextNode;
+  }
+
+  /**
+   * SplitPoint() returns the split point in the container.
+   * This is useful when callers insert an element at split point with
+   * EditorBase::CreateNode() or something similar methods.
+   *
+   * Note that the result is EditorRawDOMPoint but the nodes are grabbed
+   * by this instance.  Therefore, the life time of both container node
+   * and child node are guaranteed while using the result temporarily.
+   */
+  EditorRawDOMPoint SplitPoint() const
+  {
+    if (Failed()) {
+      return EditorRawDOMPoint();
+    }
+    if (mGivenSplitPoint.IsSet()) {
+      return mGivenSplitPoint.AsRaw();
+    }
+    if (!mPreviousNode) {
+      return EditorRawDOMPoint(mNextNode);
+    }
+    EditorRawDOMPoint point(mPreviousNode);
+    DebugOnly<bool> advanced = point.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced,
+      "Failed to advance offset to after previous node");
+    return point;
+  }
+
+  /**
+   * This constructor shouldn't be used by anybody except methods which
+   * use this as result when it succeeds.
+   *
+   * @param aPreviousNodeOfSplitPoint   Previous node immediately before
+   *                                    split point.
+   * @param aNextNodeOfSplitPoint       Next node immediately after split
+   *                                    point.
+   */
+  SplitNodeResult(nsIContent* aPreviousNodeOfSplitPoint,
+                  nsIContent* aNextNodeOfSplitPoint)
+    : mPreviousNode(aPreviousNodeOfSplitPoint)
+    , mNextNode(aNextNodeOfSplitPoint)
+    , mRv(NS_OK)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mPreviousNode || mNextNode);
+  }
+
+  /**
+   * This constructor should be used when the method didn't split any nodes
+   * but want to return given split point as right point.
+   */
+  explicit SplitNodeResult(const EditorRawDOMPoint& aGivenSplitPoint)
+    : mGivenSplitPoint(aGivenSplitPoint)
+    , mRv(NS_OK)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mGivenSplitPoint.IsSet());
+  }
+
+  /**
+   * This constructor shouldn't be used by anybody except methods which
+   * use this as error result when it fails.
+   */
+  explicit SplitNodeResult(nsresult aRv)
+    : mRv(aRv)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
+  }
+
+private:
+  // When methods which return this class split some nodes actually, they
+  // need to set a set of left node and right node to this class.  However,
+  // one or both of them may be moved or removed by mutation observer.
+  // In such case, we cannot represent the point with EditorDOMPoint since
+  // it requires current container node.  Therefore, we need to use
+  // nsCOMPtr<nsIContent> here instead.
+  nsCOMPtr<nsIContent> mPreviousNode;
+  nsCOMPtr<nsIContent> mNextNode;
+
+  // Methods which return this class may not split any nodes actually.  Then,
+  // they may want to return given split point as is since such behavior makes
+  // their callers simpler.  In this case, the point may be in a text node
+  // which cannot be represented as a node.  Therefore, we need EditorDOMPoint
+  // for representing the point.
+  EditorDOMPoint mGivenSplitPoint;
+
+  nsresult mRv;
+
+  SplitNodeResult() = delete;
+};
+
+/***************************************************************************
  * stack based helper class for batching a collection of transactions inside a
  * placeholder transaction.
  */

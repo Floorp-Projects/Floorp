@@ -1620,15 +1620,9 @@ nsTextServicesDocument::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::DidSplitNode(nsIDOMNode *aExistingRightNode,
-                                     int32_t     aOffset,
-                                     nsIDOMNode *aNewLeftNode,
-                                     nsresult    aResult)
+nsTextServicesDocument::DidSplitNode(nsIDOMNode* aExistingRightNode,
+                                     nsIDOMNode* aNewLeftNode)
 {
-  //**** KDEBUG ****
-  // printf("** SplitNode: 0x%.8x  %d  0x%.8x\n", aExistingRightNode, aOffset, aNewLeftNode);
-  // fflush(stdout);
-  //**** KDEBUG ****
   return NS_OK;
 }
 

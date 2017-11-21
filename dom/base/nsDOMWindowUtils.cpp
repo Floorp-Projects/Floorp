@@ -2970,6 +2970,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
                                              const nsAString& aPseudoElement,
                                              const nsAString& aProperty,
+                                             int32_t aFlushType,
                                              nsAString& aResult)
 {
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
@@ -2982,6 +2983,20 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
   if (propertyID == eCSSProperty_UNKNOWN ||
       nsCSSProps::IsShorthand(propertyID)) {
     return NS_ERROR_INVALID_ARG;
+  }
+
+  switch (aFlushType) {
+    case FLUSH_NONE:
+      break;
+    case FLUSH_STYLE: {
+      nsIDocument* doc = element->GetComposedDoc();
+      if (doc) {
+        doc->FlushPendingNotifications(FlushType::Style);
+      }
+      break;
+    }
+    default:
+      return NS_ERROR_INVALID_ARG;
   }
 
   nsIPresShell* shell = GetPresShell();

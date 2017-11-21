@@ -93,7 +93,7 @@ WebRenderImageData::ClearCachedResources()
 Maybe<wr::ImageKey>
 WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
                                    wr::IpcResourceUpdateQueue& aResources,
-                                   bool aForceUpdate)
+                                   bool aFallback)
 {
   MOZ_ASSERT(aContainer);
 
@@ -102,21 +102,22 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
   }
 
   wr::WrImageKey key;
-  nsresult rv = SharedSurfacesChild::Share(aContainer, mWRManager, aResources,
-                                           aForceUpdate, key);
-  if (NS_SUCCEEDED(rv)) {
-    // Ensure that any previously owned keys are released before replacing. We
-    // don't own this key, the surface itself owns it, so that it can be shared
-    // across multiple elements.
-    ClearImageKey();
-    mKey = Some(key);
-    return mKey;
-  }
+  if (!aFallback) {
+    nsresult rv = SharedSurfacesChild::Share(aContainer, mWRManager, aResources, key);
+    if (NS_SUCCEEDED(rv)) {
+      // Ensure that any previously owned keys are released before replacing. We
+      // don't own this key, the surface itself owns it, so that it can be shared
+      // across multiple elements.
+      ClearImageKey();
+      mKey = Some(key);
+      return mKey;
+    }
 
-  if (rv != NS_ERROR_NOT_IMPLEMENTED) {
-    // We should be using the shared surface but somehow sharing it failed.
-    ClearImageKey();
-    return Nothing();
+    if (rv != NS_ERROR_NOT_IMPLEMENTED) {
+      // We should be using the shared surface but somehow sharing it failed.
+      ClearImageKey();
+      return Nothing();
+    }
   }
 
   CreateImageClientIfNeeded();
@@ -139,7 +140,7 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
   }
 
   // Reuse old key if generation is not updated.
-  if (!aForceUpdate && oldCounter == imageClient->GetLastUpdateGenerationCounter() && mKey) {
+  if (!aFallback && oldCounter == imageClient->GetLastUpdateGenerationCounter() && mKey) {
     return mKey;
   }
 

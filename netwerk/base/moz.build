@@ -125,6 +125,7 @@ XPIDL_SOURCES += [
     'nsIUploadChannel2.idl',
     'nsIURI.idl',
     'nsIURIClassifier.idl',
+    'nsIURIMutator.idl',
     'nsIURIWithBlobImpl.idl',
     'nsIURIWithPrincipal.idl',
     'nsIURL.idl',
