@@ -10,6 +10,39 @@
 
 using namespace mozilla::intl;
 
+static void
+LocaleChangedNotificationCallback(CFNotificationCenterRef center,
+                                  void *observer,
+                                  CFStringRef name,
+                                  const void *object,
+                                  CFDictionaryRef userInfo)
+{
+  if (!::CFEqual(name, kCFLocaleCurrentLocaleDidChangeNotification)) {
+    return;
+  }
+  static_cast<OSPreferences*>(observer)->Refresh();
+}
+
+OSPreferences::OSPreferences()
+{
+  ::CFNotificationCenterAddObserver(
+    ::CFNotificationCenterGetLocalCenter(),
+    this,
+    LocaleChangedNotificationCallback,
+    kCFLocaleCurrentLocaleDidChangeNotification,
+    0,
+    CFNotificationSuspensionBehaviorDeliverImmediately);
+}
+
+OSPreferences::~OSPreferences()
+{
+  ::CFNotificationCenterRemoveObserver(
+    ::CFNotificationCenterGetLocalCenter(),
+    this,
+    kCTFontManagerRegisteredFontsChangedNotification,
+    0);
+}
+
 bool
 OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
 {
