@@ -178,7 +178,7 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
     @WrapForJNI
     public static void destroyUnused(long context) {
         LinkedList<GeckoSurfaceTexture> list;
-        synchronized(sUnusedTextures) {
+        synchronized (sUnusedTextures) {
             list = sUnusedTextures.remove(context);
         }
 
