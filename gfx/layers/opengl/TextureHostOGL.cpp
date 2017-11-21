@@ -405,7 +405,7 @@ SurfaceTextureSource::GetTextureTransform()
   // case for AndroidNativeWindowTextureData.
   if (!mIgnoreTransform) {
     const auto& surf = java::sdk::SurfaceTexture::LocalRef(java::sdk::SurfaceTexture::Ref::From(mSurfTex));
-    AndroidSurfaceTexture::GetTransformMatrix(surf, &ret);
+    AndroidSurfaceTexture::GetTransformMatrix(surf, ret);
   }
 
   return ret;
@@ -482,14 +482,6 @@ SurfaceTextureHost::EnsureAttached()
 
   if (!mSurfTex) {
     return false;
-  }
-
-  if (!mSurfTex->IsAttachedToGLContext((int64_t)gl)) {
-    GLuint texName;
-    gl->fGenTextures(1, &texName);
-    if (NS_FAILED(mSurfTex->AttachToGLContext((int64_t)gl, texName))) {
-      return false;
-    }
   }
 
   return true;
