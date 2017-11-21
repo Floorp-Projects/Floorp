@@ -32,7 +32,7 @@ const layoutSpec = generateActorSpec({
       }
     },
 
-    getAllGrids: {
+    getGrids: {
       request: {
         rootNode: Arg(0, "domnode")
       },
