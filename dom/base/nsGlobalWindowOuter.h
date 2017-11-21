@@ -1100,8 +1100,6 @@ private:
 
   mozilla::dom::TabGroup* TabGroupOuter();
 
-  bool IsBackgroundInternal() const;
-
   void SetIsBackgroundInternal(bool aIsBackground);
 
   // NOTE: Chrome Only
@@ -1420,10 +1418,6 @@ nsGlobalWindowOuter::GetScriptableTopInternal()
 inline nsIScriptContext*
 nsGlobalWindowOuter::GetContextInternal()
 {
-  if (mOuterWindow) {
-    return GetOuterWindowInternal()->mContext;
-  }
-
   return mContext;
 }
 
