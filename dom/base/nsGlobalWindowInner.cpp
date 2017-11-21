@@ -60,6 +60,20 @@ using mozilla::dom::cache::CacheStorage;
 #define DOM_TOUCH_LISTENER_ADDED "dom-touch-listener-added"
 #define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
 
+// Amount of time allowed between alert/prompt/confirm before enabling
+// the stop dialog checkbox.
+#define DEFAULT_SUCCESSIVE_DIALOG_TIME_LIMIT 3 // 3 sec
+
+// Maximum number of successive dialogs before we prompt users to disable
+// dialogs for this window.
+#define MAX_SUCCESSIVE_DIALOG_COUNT 5
+
+// Idle fuzz time upper limit
+#define MAX_IDLE_FUZZ_TIME_MS 90000
+
+// Min idle notification time in seconds.
+#define MIN_IDLE_NOTIFICATION_TIME_S 1
+
 static LazyLogModule gDOMLeakPRLogInner("DOMLeakInner");
 
 static bool                 gIdleObserversAPIFuzzTimeDisabled = false;
