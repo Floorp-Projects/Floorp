@@ -1571,6 +1571,11 @@ public:
                                                    bool* aRetVal);
 
   /**
+   * Returns whether or not the document has ever handled user input
+   */
+  virtual bool HasHandledUserInput() const = 0;
+
+  /**
    * Refresh observer management.
    */
 protected:
