@@ -443,11 +443,6 @@ public:
 
   nsGlobalWindowOuter *GetOuterWindowInternal() const;
 
-  bool IsCreatingInnerWindow() const
-  {
-    return mCreatingInnerWindow;
-  }
-
   bool IsChromeWindow() const
   {
     return mIsChrome;
@@ -507,10 +502,7 @@ public:
   virtual void DisableTimeChangeNotifications() override;
 
   bool IsClosedOrClosing() {
-    return (mIsClosed ||
-            mInClose ||
-            mHavePendingClose ||
-            mCleanedUp);
+    return mCleanedUp;
   }
 
   bool
@@ -534,11 +526,6 @@ public:
   nsresult HandleIdleActiveEvent();
   bool ContainsIdleObserver(nsIIdleObserver* aIdleObserver, uint32_t timeInS);
   void HandleIdleObserverCallback();
-
-  void AllowScriptsToClose()
-  {
-    mAllowScriptsToClose = true;
-  }
 
   enum SlowScriptResponse {
     ContinueSlowScript = 0,
@@ -1100,7 +1087,6 @@ protected:
   // Object Management
   virtual ~nsGlobalWindowInner();
   void CleanUp();
-  void ClearControllers();
 
   void FreeInnerObjects();
   nsGlobalWindowInner *CallerInnerWindow();
@@ -1285,23 +1271,7 @@ public:
   void RemoveIdleCallback(mozilla::dom::IdleRequest* aRequest);
 
 protected:
-  // These members are only used on outer window objects. Make sure
-  // you never set any of these on an inner object!
-  bool                          mFullScreen : 1;
-  bool                          mFullscreenMode : 1;
-  bool                          mIsClosed : 1;
-  bool                          mInClose : 1;
-  // mHavePendingClose means we've got a termination function set to
-  // close us when the JS stops executing or that we have a close
-  // event posted.  If this is set, just ignore window.close() calls.
-  bool                          mHavePendingClose : 1;
-  bool                          mHadOriginalOpener : 1;
-  bool                          mOriginalOpenerWasSecureContext : 1;
   bool                          mIsSecureContextIfOpenerIgnored : 1;
-  bool                          mIsPopupSpam : 1;
-
-  // Indicates whether scripts are allowed to close this window.
-  bool                          mBlockScriptedClosingFlag : 1;
 
   // Window offline status. Checked to see if we need to fire offline event
   bool                          mWasOffline : 1;
@@ -1314,10 +1284,6 @@ protected:
   // Track what sorts of events we need to fire when thawed
   bool                          mNotifyIdleObserversIdleOnThaw : 1;
   bool                          mNotifyIdleObserversActiveOnThaw : 1;
-
-  // Indicates whether we're in the middle of creating an initializing
-  // a new inner window object.
-  bool                          mCreatingInnerWindow : 1;
 
   // Fast way to tell if this is a chrome window (without having to QI).
   bool                          mIsChrome : 1;
@@ -1340,53 +1306,29 @@ protected:
   // should be displayed.
   bool                   mFocusByKeyOccurred : 1;
 
-  // Inner windows only.
   // Indicates whether this window wants gamepad input events
   bool                   mHasGamepad : 1;
 
-  // Inner windows only.
   // Indicates whether this window wants VR events
   bool                   mHasVREvents : 1;
 
-  // Inner windows only.
   // Indicates whether this window wants VRDisplayActivate events
   bool                   mHasVRDisplayActivateEvents : 1;
   nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
   nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
   bool mHasSeenGamepadInput;
 
-  // whether we've sent the destroy notification for our window id
-  bool                   mNotifiedIDDestroyed : 1;
-  // whether scripts may close the window,
-  // even if "dom.allow_scripts_to_close_windows" is false.
-  bool                   mAllowScriptsToClose : 1;
-
-  bool mTopLevelOuterContentWindow : 1;
-
-  nsCOMPtr<nsIScriptContext>    mContext;
-  nsWeakPtr                     mOpener;
-  nsCOMPtr<nsIControllers>      mControllers;
-
-  // For |window.arguments|, via |openDialog|.
-  nsCOMPtr<nsIArray>            mArguments;
-
-  // Only used in the outer.
-  RefPtr<DialogValueHolder> mReturnValue;
-
   RefPtr<mozilla::dom::Navigator> mNavigator;
   RefPtr<nsScreen>            mScreen;
-  RefPtr<nsDOMWindowList>     mFrames;
-  // All BarProps are inner window only.
+
   RefPtr<mozilla::dom::BarProp> mMenubar;
   RefPtr<mozilla::dom::BarProp> mToolbar;
   RefPtr<mozilla::dom::BarProp> mLocationbar;
   RefPtr<mozilla::dom::BarProp> mPersonalbar;
   RefPtr<mozilla::dom::BarProp> mStatusbar;
   RefPtr<mozilla::dom::BarProp> mScrollbars;
-  RefPtr<nsDOMWindowUtils>      mWindowUtils;
-  nsString                      mStatus;
-  nsString                      mDefaultStatus;
-  RefPtr<nsGlobalWindowObserver> mObserver; // Inner windows only.
+
+  RefPtr<nsGlobalWindowObserver> mObserver;
   RefPtr<mozilla::dom::Crypto>  mCrypto;
   RefPtr<mozilla::dom::U2F> mU2F;
   RefPtr<mozilla::dom::cache::CacheStorage> mCacheStorage;
@@ -1404,13 +1346,11 @@ protected:
   RefPtr<mozilla::dom::Storage> mLocalStorage;
   RefPtr<mozilla::dom::Storage> mSessionStorage;
 
-  // These member variable are used only on inner windows.
   RefPtr<mozilla::EventListenerManager> mListenerManager;
   RefPtr<mozilla::dom::Location> mLocation;
   RefPtr<nsHistory>           mHistory;
   RefPtr<mozilla::dom::CustomElementRegistry> mCustomElements;
 
-  // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   // mTabChild is only ever populated in the content process.
   nsCOMPtr<nsITabChild>  mTabChild;
@@ -1429,7 +1369,6 @@ protected:
   RefPtr<IdleRequestExecutor> mIdleRequestExecutor;
 
 #ifdef DEBUG
-  bool mSetOpenerWindowCalled;
   nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
 
@@ -1439,14 +1378,6 @@ protected:
 
   using XBLPrototypeHandlerTable = nsJSThingHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*>;
   mozilla::UniquePtr<XBLPrototypeHandlerTable> mCachedXBLPrototypeHandlers;
-
-  // mSuspendedDoc is only set on outer windows. It's useful when we get matched
-  // EnterModalState/LeaveModalState calls, in which case the outer window is
-  // responsible for unsuspending events on the document. If we don't (for
-  // example, if the outer window is closed before the LeaveModalState call),
-  // then the inner window whose mDoc is our mSuspendedDoc is responsible for
-  // unsuspending it.
-  nsCOMPtr<nsIDocument> mSuspendedDoc;
 
   RefPtr<mozilla::dom::IDBFactory> mIndexedDB;
 
@@ -1475,14 +1406,7 @@ protected:
 #endif
 
 #ifdef MOZ_WEBSPEECH
-  // mSpeechSynthesis is only used on inner windows.
   RefPtr<mozilla::dom::SpeechSynthesis> mSpeechSynthesis;
-#endif
-
-#ifdef DEBUG
-  // This member is used in the debug only assertions in TabGroup()
-  // to catch cyclic parent/opener trees and not overflow the stack.
-  bool mIsValidatingTabGroup;
 #endif
 
   // This is the CC generation the last time we called CanSkip.
@@ -1493,11 +1417,7 @@ protected:
 
   RefPtr<mozilla::dom::VREventObserver> mVREventObserver;
 
-  // When non-zero, the document should receive a vrdisplayactivate event
-  // after loading.  The value is the ID of the VRDisplay that content should
-  // begin presentation on.
-  uint32_t mAutoActivateVRDisplayID; // Outer windows only
-  int64_t mBeforeUnloadListenerCount; // Inner windows only
+  int64_t mBeforeUnloadListenerCount;
 
   RefPtr<mozilla::dom::IntlUtils> mIntlUtils;
 
@@ -1512,14 +1432,8 @@ protected:
       : mGroupMessageManagers(1)
     {}
 
-    nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
     nsCOMPtr<nsIMessageBroadcaster> mMessageManager;
     nsInterfaceHashtable<nsStringHashKey, nsIMessageBroadcaster> mGroupMessageManagers;
-    // A weak pointer to the nsPresShell that we are doing fullscreen for.
-    // The pointer being set indicates we've set the IsInFullscreenChange
-    // flag on this pres shell.
-    nsWeakPtr mFullscreenPresShell;
-    nsCOMPtr<mozIDOMWindowProxy> mOpenerForInitialContentBrowser;
   } mChromeFields;
 
   friend class nsDOMScriptableHelper;
@@ -1577,7 +1491,7 @@ nsGlobalWindowInner::GetContextInternal()
     return GetOuterWindowInternal()->mContext;
   }
 
-  return mContext;
+  return nullptr;
 }
 
 inline nsGlobalWindowOuter*
