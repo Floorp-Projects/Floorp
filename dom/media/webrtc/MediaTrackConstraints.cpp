@@ -603,7 +603,7 @@ MediaConstraintsHelper::FindBadConstraint(
   return FindBadConstraint(aConstraints, devices);
 }
 
-void
+/* static */ void
 MediaConstraintsHelper::ConvertOldWithWarning(
     const dom::OwningBooleanOrConstrainBooleanParameters& old,
     dom::OwningBooleanOrConstrainBooleanParameters& to,
