@@ -7402,18 +7402,6 @@ nsGlobalWindowInner::GetGroupMessageManager(const nsAString& aGroup,
   return messageManager;
 }
 
-nsresult
-nsGlobalWindowInner::SetOpenerForInitialContentBrowser(mozIDOMWindowProxy* aOpenerWindow)
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
-nsresult
-nsGlobalWindowInner::TakeOpenerForInitialContentBrowser(mozIDOMWindowProxy** aOpenerWindow)
-{
-  MOZ_CRASH("Virtual outer window only function");
-}
-
 void
 nsGlobalWindowInner::InitWasOffline()
 {

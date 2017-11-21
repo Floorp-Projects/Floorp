@@ -1157,6 +1157,19 @@ public:
   virtual nsISerialEventTarget*
   EventTargetFor(mozilla::TaskCategory aCategory) const = 0;
 
+  /**
+   * These methods provide a way to specify the opener value for the content in
+   * the window before the content itself is created. This is important in order
+   * to set the DocGroup of a document, as the opener must be set before the
+   * document is created.
+   *
+   * SetOpenerForInitialContentBrowser is used to set which opener will be used,
+   * and TakeOpenerForInitialContentBrowser is used by nsXULElement in order to
+   * take the value set earlier, and null out the value in the window.
+   */
+  void SetOpenerForInitialContentBrowser(nsPIDOMWindowOuter* aOpener);
+  already_AddRefed<nsPIDOMWindowOuter> TakeOpenerForInitialContentBrowser();
+
 protected:
   // Lazily instantiate an about:blank document if necessary, and if
   // we have what it takes to do so.
@@ -1233,6 +1246,8 @@ protected:
   bool mServiceWorkersTestingEnabled;
 
   mozilla::dom::LargeAllocStatus mLargeAllocStatus;
+
+  nsCOMPtr<nsPIDOMWindowOuter> mOpenerForInitialContentBrowser;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)
