@@ -1438,20 +1438,27 @@ HTMLEditRules::WillInsertText(EditAction aAction,
         // is it a return?
         if (subStr.Equals(newlineStr)) {
           NS_ENSURE_STATE(mHTMLEditor);
-          nsCOMPtr<nsINode> curNode = currentPoint.Container();
-          int32_t curOffset = currentPoint.Offset();
           nsCOMPtr<Element> br =
-            mHTMLEditor->CreateBRImpl(address_of(curNode), &curOffset,
+            mHTMLEditor->CreateBRImpl(*aSelection, currentPoint.AsRaw(),
                                       nsIEditor::eNone);
           NS_ENSURE_STATE(br);
           pos++;
           if (br->GetNextSibling()) {
             pointToInsert.Set(br->GetNextSibling());
           } else {
-            pointToInsert.Set(curNode, curNode->Length());
+            pointToInsert.Set(currentPoint.Container(),
+                              currentPoint.Container()->Length());
           }
-          currentPoint.Set(curNode, curOffset);
-          MOZ_ASSERT(currentPoint == pointToInsert);
+          // XXX In most cases, pointToInsert and currentPoint are same here.
+          //     But if the <br> element has been moved to different point by
+          //     mutation observer, those points become different.
+          currentPoint.Set(br);
+          DebugOnly<bool> advanced = currentPoint.AdvanceOffset();
+          NS_WARNING_ASSERTION(advanced,
+            "Failed to advance offset after the new <br> element");
+          NS_WARNING_ASSERTION(currentPoint == pointToInsert,
+            "Perhaps, <br> element position has been moved to different point "
+            "by mutation observer");
         } else {
           NS_ENSURE_STATE(mHTMLEditor);
           EditorRawDOMPoint pointAfterInsertedString;
