@@ -287,9 +287,19 @@ nsNavHistory::nsNavHistory()
   , mLastCachedEndOfDay(0)
   , mCanNotify(true)
   , mCacheObservers("history-observers")
+#ifdef XP_WIN
+  , mCryptoProviderInitialized(false)
+#endif
 {
   NS_ASSERTION(!gHistoryService,
                "Attempting to create two instances of the service!");
+#ifdef XP_WIN
+  BOOL cryptoAcquired = CryptAcquireContext(&mCryptoProvider, 0, 0, PROV_RSA_FULL,
+                                            CRYPT_VERIFYCONTEXT | CRYPT_SILENT);
+  if (cryptoAcquired) {
+    mCryptoProviderInitialized = true;
+  }
+#endif
   gHistoryService = this;
 }
 
@@ -300,8 +310,15 @@ nsNavHistory::~nsNavHistory()
   // in case somebody creates an extra instance of the service.
   NS_ASSERTION(gHistoryService == this,
                "Deleting a non-singleton instance of the service");
+
   if (gHistoryService == this)
     gHistoryService = nullptr;
+
+#ifdef XP_WIN
+  if (mCryptoProviderInitialized) {
+    Unused << CryptReleaseContext(mCryptoProvider, 0);
+  }
+#endif
 }
 
 
