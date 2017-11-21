@@ -8,11 +8,11 @@
   max-width: 36px;
 }
 
-.autocomplete-richlistbox {
+#PopupAutoCompleteRichResult .autocomplete-richlistbox {
   padding: 4px 3px;
 }
 
-.autocomplete-richlistitem {
+#PopupAutoCompleteRichResult .autocomplete-richlistitem {
   min-height: 30px;
   font: message-box;
   border-radius: 2px;
@@ -24,18 +24,6 @@
   border-inline-end: var(--item-padding-end) solid transparent;
 }
 
-:root[uidensity=touch] .autocomplete-richlistitem {
+:root[uidensity=touch] #PopupAutoCompleteRichResult .autocomplete-richlistitem {
   min-height: 40px;
 }
-
-.autocomplete-richlistitem:hover,
-treechildren.searchbar-treebody::-moz-tree-row(hover) {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-.autocomplete-richlistitem[selected],
-treechildren.searchbar-treebody::-moz-tree-row(selected) {
-  background-color: Highlight;
-  color: HighlightText;
-}
-
