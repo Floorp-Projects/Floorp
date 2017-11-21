@@ -176,6 +176,19 @@ CSSTransition::PlayStateFromJS() const
   return Animation::PlayStateFromJS();
 }
 
+bool
+CSSTransition::PendingFromJS() const
+{
+  // Transitions don't become pending again after they start running but, if
+  // while the transition is still pending, style is updated in such a way
+  // that the transition will be canceled, we need to report false here.
+  // Hence we need to flush, but only when we're pending.
+  if (Pending()) {
+    FlushStyle();
+  }
+  return Animation::PendingFromJS();
+}
+
 void
 CSSTransition::PlayFromJS(ErrorResult& aRv)
 {
