@@ -466,9 +466,6 @@ this.BrowserTestUtils = {
   /**
    * Waits for the next browser window to open and be fully loaded.
    *
-   * @param {bool} delayedStartup (optional)
-   *        Whether or not to wait for the browser-delayed-startup-finished
-   *        observer notification before resolving. Defaults to true.
    * @param {string} initialBrowserLoaded (optional)
    *        If set, we will wait until the initial browser in the new
    *        window has loaded a particular page. If unset, the initial
@@ -478,8 +475,7 @@ this.BrowserTestUtils = {
    *         A Promise which resolves the next time that a DOM window
    *         opens and the delayed startup observer notification fires.
    */
-  async waitForNewWindow(delayedStartup=true,
-                                          initialBrowserLoaded=null) {
+  async waitForNewWindow(initialBrowserLoaded=null) {
     let win = await this.domWindowOpened();
 
     let promises = [

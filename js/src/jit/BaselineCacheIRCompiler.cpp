@@ -615,7 +615,7 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
     AutoScratchRegister callee(allocator, masm);
     AutoScratchRegister scratch(allocator, masm);
 
-    // First, ensure our getter is non-lazy and has JIT code.
+    // First, ensure our getter is non-lazy.
     {
         FailurePath* failure;
         if (!addFailurePath(&failure))
@@ -623,7 +623,7 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
 
         masm.loadPtr(getterAddr, callee);
         masm.branchIfFunctionHasNoScript(callee, failure->label());
-        masm.loadJitCodeRaw(callee, code, failure->label());
+        masm.loadJitCodeRaw(callee, code);
     }
 
     allocator.discardStack(masm);
@@ -1713,8 +1713,8 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
     Address setterAddr(stubAddress(reader.stubOffset()));
     ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
 
-    // First, ensure our setter is non-lazy and has JIT code. This also loads
-    // the callee in scratch1.
+    // First, ensure our setter is non-lazy. This also loads the callee in
+    // scratch1.
     {
         FailurePath* failure;
         if (!addFailurePath(&failure))
@@ -1722,7 +1722,6 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
 
         masm.loadPtr(setterAddr, scratch1);
         masm.branchIfFunctionHasNoScript(scratch1, failure->label());
-        masm.loadJitCodeRaw(scratch1, scratch2, failure->label());
     }
 
     allocator.discardStack(masm);
@@ -1753,7 +1752,7 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
     // Load callee->nargs in scratch2 and the JIT code in scratch.
     Label noUnderflow;
     masm.load16ZeroExtend(Address(scratch1, JSFunction::offsetOfNargs()), scratch2);
-    masm.loadJitCodeRaw(scratch1, scratch1, nullptr);
+    masm.loadJitCodeRaw(scratch1, scratch1);
 
     // Handle arguments underflow.
     masm.branch32(Assembler::BelowOrEqual, scratch2, Imm32(1), &noUnderflow);

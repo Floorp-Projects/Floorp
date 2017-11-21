@@ -1595,7 +1595,7 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 
     if (!excInfo)
         iter.ionScript()->incNumBailouts();
-    iter.script()->updateBaselineOrIonRaw(cx->runtime());
+    iter.script()->updateJitCodeRaw(cx->runtime());
 
     // Allocate buffer to hold stack replacement data.
     BaselineStackBuilder builder(iter, 1024);

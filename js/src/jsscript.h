@@ -915,11 +915,11 @@ class JSScript : public js::gc::TenuredCell
     js::LazyScript* lazyScript;
 
     /*
-     * Pointer to either baseline->method()->raw() or ion->method()->raw(), or
-     * nullptr if there's no Baseline or Ion script.
+     * Pointer to baseline->method()->raw(), ion->method()->raw(), the JIT's
+     * EnterInterpreter stub, or the lazy link stub. Must be non-null.
      */
-    uint8_t* baselineOrIonRaw;
-    uint8_t* baselineOrIonSkipArgCheck;
+    uint8_t* jitCodeRaw_;
+    uint8_t* jitCodeSkipArgCheck_;
 
     // 32-bit fields.
 
@@ -1547,7 +1547,7 @@ class JSScript : public js::gc::TenuredCell
     js::jit::IonScript* const* addressOfIonScript() const {
         return &ion;
     }
-    void setIonScript(JSRuntime* maybeRuntime, js::jit::IonScript* ionScript);
+    void setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript);
 
     bool hasBaselineScript() const {
         bool res = baseline && baseline != BASELINE_DISABLED_SCRIPT;
@@ -1561,9 +1561,9 @@ class JSScript : public js::gc::TenuredCell
         MOZ_ASSERT(hasBaselineScript());
         return baseline;
     }
-    inline void setBaselineScript(JSRuntime* maybeRuntime, js::jit::BaselineScript* baselineScript);
+    inline void setBaselineScript(JSRuntime* rt, js::jit::BaselineScript* baselineScript);
 
-    void updateBaselineOrIonRaw(JSRuntime* maybeRuntime);
+    void updateJitCodeRaw(JSRuntime* rt);
 
     static size_t offsetOfBaselineScript() {
         return offsetof(JSScript, baseline);
@@ -1571,14 +1571,14 @@ class JSScript : public js::gc::TenuredCell
     static size_t offsetOfIonScript() {
         return offsetof(JSScript, ion);
     }
-    static size_t offsetOfBaselineOrIonRaw() {
-        return offsetof(JSScript, baselineOrIonRaw);
+    static size_t offsetOfJitCodeRaw() {
+        return offsetof(JSScript, jitCodeRaw_);
     }
-    uint8_t* baselineOrIonRawPointer() const {
-        return baselineOrIonRaw;
+    static size_t offsetOfJitCodeSkipArgCheck() {
+        return offsetof(JSScript, jitCodeSkipArgCheck_);
     }
-    static size_t offsetOfBaselineOrIonSkipArgCheck() {
-        return offsetof(JSScript, baselineOrIonSkipArgCheck);
+    uint8_t* jitCodeRaw() const {
+        return jitCodeRaw_;
     }
 
     bool isRelazifiable() const {

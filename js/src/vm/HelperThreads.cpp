@@ -312,7 +312,7 @@ CancelOffThreadIonCompileLocked(const CompilationSelector& selector, bool discar
         jit::IonBuilder* builder = finished[i];
         if (IonBuilderMatches(selector, builder)) {
             builder->script()->zoneFromAnyThread()->group()->numFinishedBuilders--;
-            jit::FinishOffThreadBuilder(nullptr, builder, lock);
+            jit::FinishOffThreadBuilder(builder->script()->runtimeFromAnyThread(), builder, lock);
             HelperThreadState().remove(finished, &i);
         }
     }

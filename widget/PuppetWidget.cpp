@@ -803,7 +803,7 @@ PuppetWidget::NotifyIMEOfFocusChange(const IMENotification& aIMENotification)
     [self] (IMENotificationRequests aRequests) {
       self->mIMENotificationRequestsOfParent = aRequests;
     },
-    [self] (mozilla::ipc::PromiseRejectReason aReason) {
+    [self] (mozilla::ipc::ResponseRejectReason aReason) {
       NS_WARNING("SendNotifyIMEFocus got rejected.");
     });
 

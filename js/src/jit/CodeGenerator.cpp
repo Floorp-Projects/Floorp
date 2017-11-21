@@ -4269,7 +4269,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
     }
 
     // Knowing that calleereg is a non-native function, load the jit code.
-    masm.loadJitCodeRaw(calleereg, objreg, &invoke);
+    masm.loadJitCodeRaw(calleereg, objreg);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -4379,9 +4379,9 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
 
     // Load non-native jitcode from the script.
     if (call->mir()->needsArgCheck())
-        masm.loadJitCodeRaw(calleereg, objreg, &uncompiled);
+        masm.loadJitCodeRaw(calleereg, objreg);
     else
-        masm.loadJitCodeNoArgCheck(calleereg, objreg, &uncompiled);
+        masm.loadJitCodeNoArgCheck(calleereg, objreg);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -4681,7 +4681,7 @@ CodeGenerator::emitApplyGeneric(T* apply)
                             calleereg, objreg, &invoke);
 
     // Knowing that calleereg is a non-native function, load script's jitcode.
-    masm.loadJitCodeRaw(calleereg, objreg, &invoke);
+    masm.loadJitCodeRaw(calleereg, objreg);
 
     // Call with an Ion frame or a rectifier frame.
     {
@@ -8027,6 +8027,40 @@ JitRuntime::generateLazyLinkStub(MacroAssembler& masm)
     masm.jump(ReturnReg);
 
     lazyLinkStubEndOffset_ = masm.currentOffset();
+}
+
+void
+JitRuntime::generateInterpreterStub(MacroAssembler& masm)
+{
+    interpreterStubOffset_ = startTrampolineCode(masm);
+
+#ifdef JS_USE_LINK_REGISTER
+    masm.pushReturnAddress();
+#endif
+
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
+    Register temp0 = regs.takeAny();
+    Register temp1 = regs.takeAny();
+    Register temp2 = regs.takeAny();
+
+    masm.loadJSContext(temp0);
+    masm.enterFakeExitFrame(temp0, temp2, ExitFrameType::InterpreterStub);
+    masm.moveStackPtrTo(temp1);
+
+    masm.setupUnalignedABICall(temp2);
+    masm.passABIArg(temp0);
+    masm.passABIArg(temp1);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, InvokeFromInterpreterStub), MoveOp::GENERAL,
+                     CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+
+    masm.branchIfFalseBool(ReturnReg, masm.failureLabel());
+    masm.leaveExitFrame();
+
+    // InvokeFromInterpreterStub stores the return value in argv[0], where the
+    // caller stored |this|.
+    masm.loadValue(Address(masm.getStackPointer(), JitFrameLayout::offsetOfThis()),
+                   JSReturnOperand);
+    masm.ret();
 }
 
 bool

@@ -4,7 +4,7 @@
  * Check that opening customize mode in a popup opens it in the main window.
  */
 add_task(async function open_customize_mode_from_popup() {
-  let promiseWindow = BrowserTestUtils.waitForNewWindow(true);
+  let promiseWindow = BrowserTestUtils.waitForNewWindow();
   ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.window.open("about:blank", "_blank", "height=300,toolbar=no");
   });

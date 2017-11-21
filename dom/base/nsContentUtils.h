@@ -1977,16 +1977,6 @@ public:
    */
   static bool IsInStableOrMetaStableState();
 
-  /**
-   * Returns a nsISerialEventTarget which will run any event dispatched to it
-   * once the event loop has reached a "stable state". Runnables dispatched to
-   * this event target must not cause any queued events to be processed (i.e.
-   * must not spin the event loop).
-   *
-   * See RunInStableState for more information about stable states
-   */
-  static nsISerialEventTarget* GetStableStateEventTarget();
-
   /* Process viewport META data. This gives us information for the scale
    * and zoom of a page on mobile devices. We stick the information in
    * the document header and use it later on after rendering.
@@ -3429,8 +3419,6 @@ private:
    * True if there's a fragment parser activation on the stack.
    */
   static bool sFragmentParsingActive;
-
-  static nsISerialEventTarget* sStableStateEventTarget;
 
   static nsString* sShiftText;
   static nsString* sControlText;
