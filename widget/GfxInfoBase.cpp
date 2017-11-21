@@ -162,6 +162,12 @@ GetPrefNameForFeature(int32_t aFeature)
     case nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION:
       name = BLACKLIST_PREF_BRANCH "canvas2d.acceleration";
       break;
+    case nsIGfxInfo::FEATURE_DX_INTEROP2:
+      name = BLACKLIST_PREF_BRANCH "dx.interop2";
+      break;
+    case nsIGfxInfo::FEATURE_GPU_PROCESS:
+      name = BLACKLIST_PREF_BRANCH "gpu.process";
+      break;
     case nsIGfxInfo::FEATURE_WEBGL2:
       name = BLACKLIST_PREF_BRANCH "webgl2";
       break;
@@ -173,9 +179,8 @@ GetPrefNameForFeature(int32_t aFeature)
       break;
     case nsIGfxInfo::FEATURE_VP8_HW_DECODE:
     case nsIGfxInfo::FEATURE_VP9_HW_DECODE:
-    case nsIGfxInfo::FEATURE_DX_INTEROP2:
-    case nsIGfxInfo::FEATURE_GPU_PROCESS:
-      // We don't provide prefs for these features.
+      // We don't provide prefs for these features as these are
+      // not handling downloadable blocklist.
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
@@ -352,12 +357,18 @@ BlacklistFeatureToGfxFeature(const nsAString& aFeature)
     return nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION;
   else if (aFeature.EqualsLiteral("CANVAS2D_ACCELERATION"))
       return nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION;
+  else if (aFeature.EqualsLiteral("DX_INTEROP2"))
+    return nsIGfxInfo::FEATURE_DX_INTEROP2;
+  else if (aFeature.EqualsLiteral("GPU_PROCESS"))
+    return nsIGfxInfo::FEATURE_GPU_PROCESS;
   else if (aFeature.EqualsLiteral("WEBGL2"))
     return nsIGfxInfo::FEATURE_WEBGL2;
   else if (aFeature.EqualsLiteral("ADVANCED_LAYERS"))
     return nsIGfxInfo::FEATURE_ADVANCED_LAYERS;
   else if (aFeature.EqualsLiteral("D3D11_KEYED_MUTEX"))
     return nsIGfxInfo::FEATURE_D3D11_KEYED_MUTEX;
+  // We do not support FEATURE_VP8_HW_DECODE and FEATURE_VP9_HW_DECODE
+  // in downloadable blocklist.
 
   // If we don't recognize the feature, it may be new, and something
   // this version doesn't understand.  So, nothing to do.  This is
@@ -990,6 +1001,10 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
     nsIGfxInfo::FEATURE_STAGEFRIGHT,
     nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION,
     nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION,
+    nsIGfxInfo::FEATURE_VP8_HW_DECODE,
+    nsIGfxInfo::FEATURE_VP9_HW_DECODE,
+    nsIGfxInfo::FEATURE_DX_INTEROP2,
+    nsIGfxInfo::FEATURE_GPU_PROCESS,
     nsIGfxInfo::FEATURE_WEBGL2,
     nsIGfxInfo::FEATURE_ADVANCED_LAYERS,
     nsIGfxInfo::FEATURE_D3D11_KEYED_MUTEX,
