@@ -37,6 +37,15 @@ pub enum PictureCompositeMode {
     Blit,
 }
 
+/// Configure whether the primitives on this picture
+/// should be rasterized in screen space or local space.
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub enum RasterizationSpace {
+    Local = 0,
+    Screen = 1,
+}
+
 #[derive(Debug)]
 pub enum PictureKind {
     TextShadow {
@@ -95,9 +104,9 @@ pub struct PicturePrimitive {
     // unconditionally draw them.
     pub cull_children: bool,
 
-    // TODO(gw): Add a mode that specifies if this
-    //           picture should be rasterized in
-    //           screen-space or local-space.
+    /// Configure whether the primitives on this picture
+    /// should be rasterized in screen space or local space.
+    pub rasterization_kind: RasterizationSpace,
 }
 
 impl PicturePrimitive {
@@ -113,6 +122,7 @@ impl PicturePrimitive {
             },
             pipeline_id,
             cull_children: false,
+            rasterization_kind: RasterizationSpace::Local,
         }
     }
 
@@ -158,6 +168,7 @@ impl PicturePrimitive {
             },
             pipeline_id,
             cull_children: false,
+            rasterization_kind: RasterizationSpace::Local,
         }
     }
 
@@ -181,6 +192,9 @@ impl PicturePrimitive {
             },
             pipeline_id,
             cull_children: true,
+            // TODO(gw): Make this configurable based on an
+            //           exposed API parameter in StackingContext.
+            rasterization_kind: RasterizationSpace::Screen,
         }
     }
 
@@ -281,7 +295,7 @@ impl PicturePrimitive {
         prim_index: PrimitiveIndex,
         prim_context: &PrimitiveContext,
         render_tasks: &mut RenderTaskTree,
-        screen_rect: &DeviceIntRect,
+        prim_screen_rect: &DeviceIntRect,
         child_tasks: Vec<RenderTaskId>,
         parent_tasks: &mut Vec<RenderTaskId>,
     ) {
@@ -289,15 +303,19 @@ impl PicturePrimitive {
             PictureKind::Image {
                 ref mut readback_render_task_id,
                 composite_mode,
-                frame_output_pipeline_id,
                 ..
             } => {
                 match composite_mode {
                     Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
-                        let picture_task = RenderTask::new_dynamic_alpha_batch(
-                            screen_rect,
+                        let picture_task = RenderTask::new_picture(
+                            Some(prim_screen_rect.size),
                             prim_index,
-                            None,
+                            RenderTargetKind::Color,
+                            prim_screen_rect.origin.x as f32,
+                            prim_screen_rect.origin.y as f32,
+                            PremultipliedColorF::TRANSPARENT,
+                            ClearMode::Transparent,
+                            self.rasterization_kind,
                             child_tasks,
                         );
 
@@ -319,14 +337,19 @@ impl PicturePrimitive {
                         self.render_task_id = Some(blur_render_task_id);
                     }
                     Some(PictureCompositeMode::MixBlend(..)) => {
-                        let picture_task = RenderTask::new_dynamic_alpha_batch(
-                            screen_rect,
+                        let picture_task = RenderTask::new_picture(
+                            Some(prim_screen_rect.size),
                             prim_index,
-                            None,
+                            RenderTargetKind::Color,
+                            prim_screen_rect.origin.x as f32,
+                            prim_screen_rect.origin.y as f32,
+                            PremultipliedColorF::TRANSPARENT,
+                            ClearMode::Transparent,
+                            self.rasterization_kind,
                             child_tasks,
                         );
 
-                        let readback_task_id = render_tasks.add(RenderTask::new_readback(*screen_rect));
+                        let readback_task_id = render_tasks.add(RenderTask::new_readback(*prim_screen_rect));
 
                         *readback_render_task_id = Some(readback_task_id);
                         parent_tasks.push(readback_task_id);
@@ -334,10 +357,15 @@ impl PicturePrimitive {
                         self.render_task_id = Some(render_tasks.add(picture_task));
                     }
                     Some(PictureCompositeMode::Filter(..)) | Some(PictureCompositeMode::Blit) => {
-                        let picture_task = RenderTask::new_dynamic_alpha_batch(
-                            screen_rect,
+                        let picture_task = RenderTask::new_picture(
+                            Some(prim_screen_rect.size),
                             prim_index,
-                            frame_output_pipeline_id,
+                            RenderTargetKind::Color,
+                            prim_screen_rect.origin.x as f32,
+                            prim_screen_rect.origin.y as f32,
+                            PremultipliedColorF::TRANSPARENT,
+                            ClearMode::Transparent,
+                            self.rasterization_kind,
                             child_tasks,
                         );
 
@@ -374,12 +402,15 @@ impl PicturePrimitive {
                 let blur_std_deviation = blur_radius.0 as f32 * 0.5;
 
                 let picture_task = RenderTask::new_picture(
-                    cache_size,
+                    Some(cache_size),
                     prim_index,
                     RenderTargetKind::Color,
-                    content_rect.origin,
+                    content_rect.origin.x,
+                    content_rect.origin.y,
                     color.premultiplied(),
                     ClearMode::Transparent,
+                    self.rasterization_kind,
+                    Vec::new(),
                 );
 
                 let picture_task_id = render_tasks.add(picture_task);
@@ -425,12 +456,15 @@ impl PicturePrimitive {
                 };
 
                 let picture_task = RenderTask::new_picture(
-                    cache_size,
+                    Some(cache_size),
                     prim_index,
                     RenderTargetKind::Alpha,
-                    content_rect.origin,
+                    content_rect.origin.x,
+                    content_rect.origin.y,
                     color.premultiplied(),
                     ClearMode::Zero,
+                    self.rasterization_kind,
+                    Vec::new(),
                 );
 
                 let picture_task_id = render_tasks.add(picture_task);
