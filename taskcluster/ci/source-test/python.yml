@@ -157,3 +157,13 @@ reftest-harness:
             - 'testing/mozharness/mozharness/base/log.py'
             - 'testing/mozharness/mozharness/mozilla/structuredlog.py'
             - 'testing/mozharness/mozharness/mozilla/testing/errors.py'
+
+tryselect:
+    description: tools/tryselect unit tests
+    treeherder:
+        symbol: py(try)
+    run:
+        mach: python-test --subsuite try
+    when:
+        files-changed:
+            - 'tools/tryselect/**'
