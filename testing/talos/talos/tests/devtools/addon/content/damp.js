@@ -338,7 +338,7 @@ async _consoleOpenWithCachedMessagesTest() {
 },
 
   /**
-   * Measure the time necesssary to perform successive childList mutations in the content
+   * Measure the time necessary to perform successive childList mutations in the content
    * page and update the markup-view accordingly.
    */
   async _inspectorMutationsTest() {
@@ -391,6 +391,54 @@ async _consoleOpenWithCachedMessagesTest() {
     });
 
     await this.closeToolbox(null);
+    await this.testTeardown();
+  },
+
+  /**
+   * Measure the time to open toolbox on the inspector with the layout tab selected.
+   */
+  async _inspectorLayoutTest() {
+    let tab = await this.testSetup(SIMPLE_URL);
+    let messageManager = tab.linkedBrowser.messageManager;
+
+    // Backup current sidebar tab preference
+    let sidebarTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
+
+    // Set layoutview as the current inspector sidebar tab.
+    Services.prefs.setCharPref("devtools.inspector.activeSidebar", "layoutview");
+
+    // Setup test page. It is a simple page containing 5000 regular nodes and 10 grid
+    // containers.
+    await new Promise(resolve => {
+      messageManager.addMessageListener("setup-test-done", resolve);
+
+      const NODES = 5000;
+      const GRID_NODES = 10;
+      messageManager.loadFrameScript("data:,(" + encodeURIComponent(
+        `function () {
+          let div = content.document.createElement("div");
+          div.innerHTML =
+            new Array(${NODES}).join("<div></div>") +
+            new Array(${GRID_NODES}).join("<div style='display:grid'></div>");
+          content.document.body.appendChild(div);
+          sendSyncMessage("setup-test-done");
+        }`
+      ) + ")()", false);
+    });
+
+    // Open the toolbox and record the time.
+    let start = performance.now();
+    await this.openToolbox("inspector");
+    this._results.push({
+      name: "inspector.layout.open",
+      value: performance.now() - start
+    });
+
+    await this.closeToolbox(null);
+
+    // Restore sidebar tab preference.
+    Services.prefs.setCharPref("devtools.inspector.activeSidebar", sidebarTab);
+
     await this.testTeardown();
   },
 
@@ -796,6 +844,7 @@ async _consoleOpenWithCachedMessagesTest() {
     tests["console.objectexpand"] = this._consoleObjectExpansionTest;
     tests["console.openwithcache"] = this._consoleOpenWithCachedMessagesTest;
     tests["inspector.mutations"] = this._inspectorMutationsTest;
+    tests["inspector.layout"] = this._inspectorLayoutTest;
 
     // Filter tests via `./mach --subtests filter` command line argument
     let filter = Services.prefs.getCharPref("talos.subtests", "");
