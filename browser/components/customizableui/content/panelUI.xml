@@ -18,9 +18,9 @@
       <stylesheet src="chrome://browser/content/customizableui/panelUI.css"/>
     </resources>
     <content>
-      <xul:vbox anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,viewtype,transitioning">
-        <xul:stack anonid="viewStack" xbl:inherits="viewtype,transitioning" class="panel-viewstack">
-          <xul:vbox anonid="mainViewContainer" class="panel-mainview" xbl:inherits="viewtype"/>
+      <xul:vbox anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,transitioning">
+        <xul:stack anonid="viewStack" xbl:inherits="transitioning" class="panel-viewstack">
+          <xul:vbox anonid="mainViewContainer" class="panel-mainview"/>
 
           <!-- Used to capture click events over the PanelUI-mainView if we're in
                subview mode. That way, any click on the PanelUI-mainView causes us
