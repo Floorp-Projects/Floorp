@@ -2,6 +2,8 @@ from tests.support.asserts import assert_error, assert_dialog_handled, assert_sa
 from tests.support.fixtures import create_dialog
 from tests.support.inline import inline
 
+def read_global(session, name):
+    return session.execute_script("return %s;" % name)
 
 def get_active_element(session):
     return session.transport.send("GET", "session/%s/element/active" % session.session_id)
@@ -49,8 +51,8 @@ def test_closed_context(session, create_window):
 #    [...]
 #
 # 3. Return success.
-def test_handle_prompt_dismiss(new_session):
-    _, session = new_session({"alwaysMatch": {"unhandledPromptBehavior": "dismiss"}})
+def test_handle_prompt_dismiss(new_session, add_browser_capabilites):
+    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "dismiss"})}})
     session.url = inline("<body><p>Hello, World!</p></body>")
 
     create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
@@ -88,8 +90,8 @@ def test_handle_prompt_dismiss(new_session):
 #    [...]
 #
 # 3. Return success.
-def test_handle_prompt_accept(new_session):
-    _, session = new_session({"alwaysMatch": {"unhandledPromptBehavior": "accept"}})
+def test_handle_prompt_accept(new_session, add_browser_capabilites):
+    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "accept"})}})
     session.url = inline("<body><p>Hello, World!</p></body>")
     create_dialog(session)("alert", text="accept #1", result_var="accept1")
 
@@ -110,7 +112,7 @@ def test_handle_prompt_accept(new_session):
     response = get_active_element(session)
     assert_is_active_element(session, response)
     assert_dialog_handled(session, "accept #3")
-    assert read_global(session, "accept3") == ""
+    assert read_global(session, "accept3") == "" or read_global(session, "accept3") == "undefined"
 
 
 # [...]
@@ -133,7 +135,7 @@ def test_handle_prompt_missing_value(session, create_dialog):
     response = get_active_element(session)
     assert_error(response, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #1")
-    assert session.execute_script("return accept1") is None
+    assert session.execute_script("return dismiss1") is None
 
     create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
 
@@ -212,8 +214,14 @@ def test_success_explicit_focus(session):
     response = get_active_element(session)
     assert_is_active_element(session, response)
 
-    session.execute_script("document.body.getElementsByTagName('iframe')[0].focus()")
-    session.execute_script("document.body.getElementsByTagName('iframe')[0].remove()")
+    session.execute_script("document.body.getElementsByTagName('iframe')[0].focus();")
+    session.execute_script("""
+        var iframe = document.body.getElementsByTagName('iframe')[0];
+        if (iframe.remove) {
+          iframe.remove();
+        } else {
+          iframe.removeNode(true);
+        }""")
     response = get_active_element(session)
     assert_is_active_element(session, response)
 
@@ -238,7 +246,12 @@ def test_success_iframe_content(session):
 
 def test_sucess_without_body(session):
     session.url = inline("<body></body>")
-    session.execute_script("document.body.remove()")
+    session.execute_script("""
+        if (document.body.remove) {
+          document.body.remove();
+        } else {
+          document.body.removeNode(true);
+        }""")
 
     response = get_active_element(session)
     assert_is_active_element(session, response)

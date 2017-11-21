@@ -15,6 +15,9 @@ namespace gfx {
 SourceSurfaceCapture::SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner)
  : mOwner(aOwner),
    mHasCommandList(false),
+   mShouldResolveToLuminance{false},
+   mLuminanceType{LuminanceType::LUMINANCE},
+   mOpacity{1.0f},
    mLock("SourceSurfaceCapture.mLock")
 {
   mSize = mOwner->GetSize();
@@ -22,6 +25,26 @@ SourceSurfaceCapture::SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner)
   mRefDT = mOwner->mRefDT;
   mStride = mOwner->mStride;
   mSurfaceAllocationSize = mOwner->mSurfaceAllocationSize;
+}
+
+SourceSurfaceCapture::SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner,
+                                           LuminanceType aLuminanceType /* = LuminanceType::LINEARRGB */,
+                                           Float aOpacity /* = 1.0f */)
+  : mOwner{aOwner}
+  , mHasCommandList{false}
+  , mShouldResolveToLuminance{true}
+  , mLuminanceType{aLuminanceType}
+  , mOpacity{aOpacity}
+  , mLock{"SourceSurfaceCapture.mLock"}
+{
+  mSize = mOwner->GetSize();
+  mFormat = mOwner->GetFormat();
+  mRefDT = mOwner->mRefDT;
+  mStride = mOwner->mStride;
+  mSurfaceAllocationSize = mOwner->mSurfaceAllocationSize;
+
+  // In this case our DrawTarget will not track us, so copy its drawing commands.
+  DrawTargetWillChange();
 }
 
 SourceSurfaceCapture::~SourceSurfaceCapture()
@@ -105,7 +128,11 @@ SourceSurfaceCapture::ResolveImpl(BackendType aBackendType)
     DrawingCommand* cmd = iter.Get();
     cmd->ExecuteOnDT(dt, nullptr);
   }
-  return dt->Snapshot();
+  if (!mShouldResolveToLuminance) {
+    return dt->Snapshot();
+  } else {
+    return dt->IntoLuminanceSource(mLuminanceType, mOpacity);
+  }
 }
 
 already_AddRefed<DataSourceSurface>
