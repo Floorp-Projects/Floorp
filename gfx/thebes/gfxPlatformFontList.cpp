@@ -129,16 +129,22 @@ static gfxFontListPrefObserver* gFontListPrefObserver = nullptr;
 
 NS_IMPL_ISUPPORTS(gfxFontListPrefObserver, nsIObserver)
 
+#define LOCALES_CHANGED_TOPIC "intl:system-locales-changed"
+
 NS_IMETHODIMP
 gfxFontListPrefObserver::Observe(nsISupports     *aSubject,
                                  const char      *aTopic,
                                  const char16_t *aData)
 {
-    NS_ASSERTION(!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID), "invalid topic");
+    NS_ASSERTION(!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) ||
+                 !strcmp(aTopic, LOCALES_CHANGED_TOPIC), "invalid topic");
     // XXX this could be made to only clear out the cache for the prefs that were changed
     // but it probably isn't that big a deal.
     gfxPlatformFontList::PlatformFontList()->ClearLangGroupPrefFonts();
     gfxFontCache::GetCache()->AgeAllGenerations();
+    if (XRE_IsParentProcess() && !strcmp(aTopic, LOCALES_CHANGED_TOPIC)) {
+        gfxPlatform::ForceGlobalReflow();
+    }
     return NS_OK;
 }
 
@@ -202,6 +208,11 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
     NS_ADDREF(gFontListPrefObserver);
     Preferences::AddStrongObservers(gFontListPrefObserver, kObservedPrefs);
 
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (obs) {
+        obs->AddObserver(gFontListPrefObserver, LOCALES_CHANGED_TOPIC, false);
+    }
+
     // Only the parent process listens for whitelist changes; it will then
     // notify its children to rebuild their font lists.
     if (XRE_IsParentProcess()) {
@@ -218,6 +229,12 @@ gfxPlatformFontList::~gfxPlatformFontList()
     ClearLangGroupPrefFonts();
     NS_ASSERTION(gFontListPrefObserver, "There is no font list pref observer");
     Preferences::RemoveObservers(gFontListPrefObserver, kObservedPrefs);
+
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (obs) {
+        obs->RemoveObserver(gFontListPrefObserver, LOCALES_CHANGED_TOPIC);
+    }
+
     if (XRE_IsParentProcess()) {
         Preferences::UnregisterCallback(FontWhitelistPrefChanged,
                                         kFontSystemWhitelistPref);
@@ -1655,6 +1672,7 @@ gfxPlatformFontList::ClearLangGroupPrefFonts()
             prefFontsLangGroup[j] = nullptr;
         }
     }
+    mCJKPrefLangs.Clear();
 }
 
 // Support for memory reporting
