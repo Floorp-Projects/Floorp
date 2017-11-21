@@ -31,6 +31,8 @@ enum ClientType {
   "window",
   "worker",
   "sharedworker",
+  // https://github.com/w3c/ServiceWorker/issues/1036
+  "serviceworker",
   "all"
 };
 
