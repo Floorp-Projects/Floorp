@@ -4,16 +4,17 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FormAutofillUtils", "AddressDataLoader"];
+this.EXPORTED_SYMBOLS = ["FormAutofillUtils"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-const ADDRESS_METADATA_PATH = "resource://formautofill/addressmetadata/";
-const ADDRESS_REFERENCES = "addressReferences.js";
-const ADDRESS_REFERENCES_EXT = "addressReferencesExt.js";
+const ADDRESS_REFERENCES = "chrome://formautofill/content/addressReferences.js";
 
-// TODO: This list should become a pref in Bug 1413494
-const SUPPORTED_COUNTRY_LIST = ["US"];
+// TODO: We only support US in MVP. We are going to support more countries in
+//       bug 1370193.
+const ALTERNATIVE_COUNTRY_NAMES = {
+  "US": ["US", "United States of America", "United States", "America", "U.S.", "USA", "U.S.A.", "U.S.A"],
+};
 
 const ADDRESSES_COLLECTION_NAME = "addresses";
 const CREDITCARDS_COLLECTION_NAME = "creditCards";
@@ -41,77 +42,6 @@ const MAX_FIELD_VALUE_LENGTH = 200;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-
-let AddressDataLoader = {
-  // Status of address data loading. We'll load all the countries with basic level 1
-  // information while requesting conutry information, and set country to true.
-  // Level 1 Set is for recording which country's level 1/level 2 data is loaded,
-  // since we only load this when getCountryAddressData called with level 1 parameter.
-  _dataLoaded: {
-    country: false,
-    level1: new Set(),
-  },
-  /**
-   * Load address data and extension script into a sandbox from different paths.
-   * @param   {string} path
-   *          The path for address data and extension script. It could be root of the address
-   *          metadata folder(addressmetadata/) or under specific country(addressmetadata/TW/).
-   * @returns {object}
-   *          A sandbox that contains address data object with properties from extension.
-   */
-  _loadScripts(path) {
-    let sandbox = {};
-    let extSandbox = {};
-
-    try {
-      sandbox = FormAutofillUtils.loadDataFromScript(path + ADDRESS_REFERENCES);
-      extSandbox = FormAutofillUtils.loadDataFromScript(path + ADDRESS_REFERENCES_EXT);
-    } catch (e) {
-      // Will return only address references if extension loading failed or empty sandbox if
-      // address references loading failed.
-      return sandbox;
-    }
-
-    if (extSandbox.addressDataExt) {
-      for (let key in extSandbox.addressDataExt) {
-        Object.assign(sandbox.addressData[key], extSandbox.addressDataExt[key]);
-      }
-    }
-    return sandbox;
-  },
-  /**
-   * We'll cache addressData in the loader once the data loaded from scripts.
-   * It'll become the example below after loading addressReferences with extension:
-   * addressData: {
-                   "data/US": {"lang": "en", ...// Data defined in libaddressinput metadata
-   *                           "alternative_names": ... // Data defined in extension }
-   *               "data/CA": {} // Other supported country metadata
-   *               "data/TW": {} // Other supported country metadata
-   *               "data/TW/台北市": {} // Other supported country level 1 metadata
-   *              }
-   * @param   {string} country
-   * @param   {string} level1
-   * @returns {object}
-   */
-  getData(country, level1 = null) {
-    // Load the addressData if needed
-    if (!this._dataLoaded.country) {
-      this._addressData = this._loadScripts(ADDRESS_METADATA_PATH).addressData;
-      this._dataLoaded.country = true;
-    }
-    if (!level1) {
-      return this._addressData[`data/${country}`];
-    }
-    // If level1 is set, load addressReferences under country folder with specific
-    // country/level 1 for level 2 information.
-    if (!this._dataLoaded.level1.has(country)) {
-      Object.assign(this._addressData,
-                    this._loadScripts(`${ADDRESS_METADATA_PATH}${country}/`).addressData);
-      this._dataLoaded.level1.add(country);
-    }
-    return this._addressData[`data/${country}/${level1}`];
-  },
-};
 
 this.FormAutofillUtils = {
   get AUTOFILL_FIELDS_THRESHOLD() { return 3; },
@@ -164,7 +94,7 @@ this.FormAutofillUtils = {
     "cc-exp-year": "creditCard",
     "cc-exp": "creditCard",
   },
-
+  _addressDataLoaded: false,
   _collators: {},
   _reAlternativeCountryNames: {},
 
@@ -291,15 +221,18 @@ this.FormAutofillUtils = {
     return sandbox;
   },
 
-  // Get country address data and fallback to US if not found.
-  // See AddressDataLoader.getData for more details of addressData structure.
-  getCountryAddressData(country, level1 = null) {
-    let metadata = AddressDataLoader.getData(country, level1);
-    if (!metadata) {
-      metadata = level1 ? null : AddressDataLoader.getData("US");
+  /**
+   * Get country address data. Fallback to US if not found.
+   * @param   {string} country
+   * @returns {object}
+   */
+  getCountryAddressData(country) {
+    // Load the addressData if needed
+    if (!this._addressDataLoaded) {
+      Object.assign(this, this.loadDataFromScript(ADDRESS_REFERENCES));
+      this._addressDataLoaded = true;
     }
-
-    return metadata;
+    return this.addressData[`data/${country}`] || this.addressData["data/US"];
   },
 
   /**
@@ -378,13 +311,12 @@ this.FormAutofillUtils = {
    * @returns {string} The matching country code.
    */
   identifyCountryCode(countryName, countrySpecified) {
-    let countries = countrySpecified ? [countrySpecified] : SUPPORTED_COUNTRY_LIST;
+    let countries = countrySpecified ? [countrySpecified] : Object.keys(ALTERNATIVE_COUNTRY_NAMES);
 
     for (let country of countries) {
       let collators = this.getCollators(country);
 
-      let metadata = this.getCountryAddressData(country);
-      let alternativeCountryNames = metadata.alternative_names || [metadata.name];
+      let alternativeCountryNames = ALTERNATIVE_COUNTRY_NAMES[country];
       let reAlternativeCountryNames = this._reAlternativeCountryNames[country];
       if (!reAlternativeCountryNames) {
         reAlternativeCountryNames = this._reAlternativeCountryNames[country] = [];
@@ -513,7 +445,7 @@ this.FormAutofillUtils = {
         break;
       }
       case "country": {
-        if (this.getCountryAddressData(value).alternative_names) {
+        if (ALTERNATIVE_COUNTRY_NAMES[value]) {
           for (let option of selectEl.options) {
             if (this.identifyCountryCode(option.text, value) || this.identifyCountryCode(option.value, value)) {
               return option;
