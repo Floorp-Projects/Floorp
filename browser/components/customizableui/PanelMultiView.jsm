@@ -166,7 +166,7 @@ this.PanelMultiView = class {
   }
 
   get showingSubView() {
-    return this.node.getAttribute("viewtype") == "subview";
+    return this._showingSubView;
   }
   get _mainViewId() {
     return this.node.getAttribute("mainViewId");
@@ -270,7 +270,7 @@ this.PanelMultiView = class {
 
     this._currentSubView = this._anchorElement = this._subViewObserver = null;
     this._mainViewHeight = 0;
-    this.__transitioning = this._ignoreMutations = false;
+    this.__transitioning = this._ignoreMutations = this._showingSubView = false;
 
     const {document, window} = this;
 
@@ -311,7 +311,7 @@ this.PanelMultiView = class {
       }
     }
 
-    this.node.setAttribute("viewtype", "main");
+    this._showingSubView = false;
 
     // Proxy these public properties and methods, as used elsewhere by various
     // parts of the browser, to this instance.
@@ -453,7 +453,7 @@ this.PanelMultiView = class {
       this._transitionHeight(() => {
         viewNode.removeAttribute("current");
         this._currentSubView = null;
-        this.node.setAttribute("viewtype", "main");
+        this._showingSubView = false;
       });
     }
 
@@ -489,7 +489,7 @@ this.PanelMultiView = class {
       this.descriptionHeightWorkaround(theOne);
       this._dispatchViewEvent(theOne, "ViewShown");
     }
-    this.node.setAttribute("viewtype", (theOne.id == this._mainViewId) ? "main" : "subview");
+    this._showingSubView = theOne.id != this._mainViewId;
   }
 
   showSubView(aViewId, aAnchor, aPreviousView) {
@@ -596,11 +596,7 @@ this.PanelMultiView = class {
         this._currentSubView = viewNode;
         this._transitionHeight(() => {
           viewNode.setAttribute("current", true);
-          if (viewNode.id == this._mainViewId) {
-            this.node.setAttribute("viewtype", "main");
-          } else {
-            this.node.setAttribute("viewtype", "subview");
-          }
+          this._showingSubView = viewNode.id != this._mainViewId;
           // Now that the subview is visible, we can check the height of the
           // description elements it contains.
           this.descriptionHeightWorkaround(viewNode);

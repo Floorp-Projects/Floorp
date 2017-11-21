@@ -68,15 +68,6 @@
   max-width: 30em;
 }
 
-#identity-popup-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="main"] > .panel-subviews {
-  transform: translateX(100%);
-  box-shadow: none;
-}
-
-#identity-popup-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="main"] > .panel-subviews:-moz-locale-dir(rtl) {
-  transform: translateX(-100%);
-}
-
 #identity-popup-multiView > .panel-viewcontainer > .panel-viewstack > .panel-subviews {
   background: var(--arrowpanel-background);
   padding: 0;
