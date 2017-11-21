@@ -1279,6 +1279,9 @@ IMEStateManager::SetIMEState(const IMEState& aState,
   context.mMayBeIMEUnaware = context.mIMEState.IsEditable() &&
     sCheckForIMEUnawareWebApps && MayBeIMEUnawareWebApp(aContent);
 
+  context.mHasHandledUserInput =
+    aPresContext && aPresContext->PresShell()->HasHandledUserInput();
+
   context.mInPrivateBrowsing =
     aPresContext &&
     nsContentUtils::IsInPrivateBrowsing(aPresContext->Document());

@@ -325,6 +325,11 @@ struct InputContext final
    * compatibility with webapps relying on key listeners. */
   bool mMayBeIMEUnaware;
 
+  /**
+   * True if the document has ever received user input
+   */
+  bool mHasHandledUserInput;
+
   /* Whether the owning document of the input element has been loaded
    * in private browsing mode. */
   bool mInPrivateBrowsing;
