@@ -480,13 +480,18 @@ public:
     mHasUserValue = false;
   }
 
-  void SetValue(PrefType aType,
-                PrefValue aValue,
-                uint32_t aFlags,
-                bool* aValueChanged,
-                bool* aDirty)
+  nsresult SetValue(PrefType aType,
+                    PrefValue aValue,
+                    uint32_t aFlags,
+                    bool* aValueChanged,
+                    bool* aDirty)
   {
     if (aFlags & kPrefSetDefault) {
+      // Types must always match when setting the default value.
+      if (!IsType(aType)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
       if (!IsLocked()) {
         // ?? change of semantics?
         if (!mHasDefaultValue || !mDefaultValue.Equals(aType, aValue)) {
@@ -502,6 +507,12 @@ public:
         // Should we clear the user value?
       }
     } else {
+      // If we have a default value, types must match when setting the user
+      // value.
+      if (mHasDefaultValue && !IsType(aType)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
       // If new value is same as the default value and it's not a "sticky"
       // pref, then un-set the user value. Otherwise, set the user value only
       // if it has changed.
@@ -523,6 +534,7 @@ public:
         }
       }
     }
+    return NS_OK;
   }
 
   // Returns false if this pref doesn't have a user value worth saving.
@@ -753,22 +765,23 @@ pref_SetPref(const char* aPrefName,
   if (!pref->Name()) {
     // New (zeroed) entry. Initialize it.
     new (pref) PrefHashEntry(aPrefName, aType);
+  }
 
-  } else if (pref->HasDefaultValue() && !pref->IsType(aType)) {
+  bool valueChanged = false, handleDirty = false;
+  nsresult rv =
+    pref->SetValue(aType, aValue, aFlags, &valueChanged, &handleDirty);
+  if (NS_FAILED(rv)) {
     NS_WARNING(
       nsPrintfCString(
-        "Ignoring attempt to overwrite value of default pref %s (type %s) with "
-        "the wrong type (%s)!",
+        "Rejected attempt to change type of pref %s's %s value from %s to %s",
         aPrefName,
+        (aFlags & kPrefSetDefault) ? "default" : "user",
         PrefTypeToString(pref->Type()),
         PrefTypeToString(aType))
         .get());
 
-    return NS_ERROR_UNEXPECTED;
+    return rv;
   }
-
-  bool valueChanged = false, handleDirty = false;
-  pref->SetValue(aType, aValue, aFlags, &valueChanged, &handleDirty);
 
   if (handleDirty) {
     Preferences::HandleDirty();
