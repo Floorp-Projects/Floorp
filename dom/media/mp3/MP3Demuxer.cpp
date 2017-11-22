@@ -541,7 +541,7 @@ MP3TrackDemuxer::FindNextFrame()
     BufferReader reader(buffer, read);
     uint32_t bytesToSkip = 0;
     auto res = mParser.Parse(&reader, &bytesToSkip);
-    foundFrame = res.isOk() ? res.unwrap() : false;
+    foundFrame = res.unwrapOr(false);
     frameHeaderOffset =
       mOffset + reader.Offset() - FrameParser::FrameHeader::SIZE;
 
