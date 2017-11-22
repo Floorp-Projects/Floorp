@@ -8,10 +8,14 @@ project_flag('MOZ_ANDROID_EXCLUDE_FONTS',
              help='Whether to exclude font files from the build',
              default=True)
 
-project_flag('MOZ_ANDROID_GCM',
-             help='Enable GCM (Google Cloud Messaging) registration',
-             default=True,
-             set_for_old_configure=True)
+option(env='MOZ_ANDROID_GCM',
+       help='Enable GCM (Google Cloud Messaging) registration',
+       default=True)
+
+set_config('MOZ_ANDROID_GCM',
+           depends_if('MOZ_ANDROID_GCM')(lambda _: True))
+add_old_configure_assignment('MOZ_ANDROID_GCM',
+                             depends_if('MOZ_ANDROID_GCM')(lambda _: True))
 
 option(env='MOZ_NATIVE_DEVICES',
        help='Enable second screen support using native Android libraries.',
@@ -158,3 +162,12 @@ def check_android_pocket(android_pocket, pocket_api_keyfile):
     if android_pocket and not pocket_api_keyfile:
         die('You must specify --with-pocket-api-keyfile=/path/to/keyfile when'
             ' building with MOZ_ANDROID_POCKET=1')
+
+# Must come after the ../../toolkit/moz.configure.
+@depends('MOZ_ANDROID_GCM', 'MOZ_NATIVE_DEVICES')
+def check_android_gcm(android_gcm,
+                      native_devices):
+    if android_gcm:
+        if not native_devices:
+            die('You must specify MOZ_NATIVE_DEVICES=1 when'
+                ' building with MOZ_ANDROID_GCM=1')
