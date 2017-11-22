@@ -7,10 +7,12 @@
 
 #include "TouchManager.h"
 
+#include "gfxPrefs.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/PresShell.h"
 #include "nsIFrame.h"
 #include "nsView.h"
+#include "PositionedEventTargeting.h"
 
 using namespace mozilla::dom;
 
@@ -108,6 +110,100 @@ TouchManager::EvictTouches()
   for (uint32_t i = 0; i < touches.Length(); ++i) {
     EvictTouchPoint(touches[i], mDocument);
   }
+}
+
+/* static */ nsIFrame*
+TouchManager::SetupTarget(WidgetTouchEvent* aEvent, nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aEvent);
+
+  if (!aEvent || aEvent->mMessage != eTouchStart) {
+    // All touch events except for touchstart use a captured target.
+    return aFrame;
+  }
+
+  uint32_t flags = 0;
+  // Setting this flag will skip the scrollbars on the root frame from
+  // participating in hit-testing, and we only want that to happen on
+  // zoomable platforms (for now).
+  if (gfxPrefs::APZAllowZooming()) {
+    flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
+  }
+  // if this is a continuing session, ensure that all these events are
+  // in the same document by taking the target of the events already in
+  // the capture list
+  nsCOMPtr<nsIContent> anyTarget;
+  if (aEvent->mTouches.Length() > 1) {
+    anyTarget = TouchManager::GetAnyCapturedTouchTarget();
+  }
+
+  nsPoint eventPoint;
+  nsIFrame* frame = aFrame;
+  for (int32_t i = aEvent->mTouches.Length(); i; ) {
+    --i;
+    dom::Touch* touch = aEvent->mTouches[i];
+
+    int32_t id = touch->Identifier();
+    if (!TouchManager::HasCapturedTouch(id)) {
+      // find the target for this touch
+      eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
+                                                        touch->mRefPoint,
+                                                        aFrame);
+      nsIFrame* target = FindFrameTargetedByInputEvent(aEvent,
+                                                       aFrame,
+                                                       eventPoint,
+                                                       flags);
+      if (target && !anyTarget) {
+        target->GetContentForEvent(aEvent, getter_AddRefs(anyTarget));
+        while (anyTarget && !anyTarget->IsElement()) {
+          anyTarget = anyTarget->GetParent();
+        }
+        touch->SetTarget(anyTarget);
+      } else {
+        nsIFrame* newTargetFrame = nullptr;
+        for (nsIFrame* f = target; f;
+             f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
+          if (f->PresContext()->Document() == anyTarget->OwnerDoc()) {
+            newTargetFrame = f;
+            break;
+          }
+          // We must be in a subdocument so jump directly to the root frame.
+          // GetParentOrPlaceholderForCrossDoc gets called immediately to
+          // jump up to the containing document.
+          f = f->PresShell()->GetRootFrame();
+        }
+
+        // if we couldn't find a target frame in the same document as
+        // anyTarget, remove the touch from the capture touch list, as
+        // well as the event->mTouches array. touchmove events that aren't
+        // in the captured touch list will be discarded
+        if (!newTargetFrame) {
+          aEvent->mTouches.RemoveElementAt(i);
+        } else {
+          target = newTargetFrame;
+          nsCOMPtr<nsIContent> targetContent;
+          target->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
+          while (targetContent && !targetContent->IsElement()) {
+            targetContent = targetContent->GetParent();
+          }
+          touch->SetTarget(targetContent);
+        }
+      }
+      if (target) {
+        frame = target;
+      }
+    } else {
+      // This touch is an old touch, we need to ensure that is not
+      // marked as changed and set its target correctly
+      touch->mChanged = false;
+
+      RefPtr<dom::Touch> oldTouch = TouchManager::GetCapturedTouch(id);
+      if (oldTouch) {
+        touch->SetTarget(oldTouch->mTarget);
+      }
+    }
+  }
+  return FindFrameTargetedByInputEvent(aEvent, frame, eventPoint, flags);
 }
 
 bool

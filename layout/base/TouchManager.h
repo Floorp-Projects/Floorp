@@ -31,6 +31,10 @@ public:
   void Init(PresShell* aPresShell, nsIDocument* aDocument);
   void Destroy();
 
+  // Perform hit test and setup the event targets for touchstart. Other touch
+  // events are dispatched to the same target as touchstart.
+  static nsIFrame* SetupTarget(WidgetTouchEvent* aEvent, nsIFrame* aFrame);
+
   bool PreHandleEvent(mozilla::WidgetEvent* aEvent,
                       nsEventStatus* aStatus,
                       bool& aTouchIsNew,
