@@ -38,8 +38,6 @@ public:
     eThemeGeometryTypeHighlightedMenuItem,
     eThemeGeometryTypeVibrancyLight,
     eThemeGeometryTypeVibrancyDark,
-    eThemeGeometryTypeVibrantTitlebarLight,
-    eThemeGeometryTypeVibrantTitlebarDark,
     eThemeGeometryTypeTooltip,
     eThemeGeometryTypeSheet,
     eThemeGeometryTypeSourceList,
