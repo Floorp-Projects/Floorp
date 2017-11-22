@@ -203,7 +203,6 @@ JitRuntime::JitRuntime(JSRuntime* rt)
     argumentsRectifierReturnOffset_(0),
     invalidatorOffset_(0),
     lazyLinkStubOffset_(0),
-    lazyLinkStubEndOffset_(0),
     interpreterStubOffset_(0),
     debugTrapHandler_(nullptr),
     baselineDebugModeOSRHandler_(nullptr),
@@ -2799,17 +2798,8 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
         if (!frame.isIonScripted())
             continue;
 
-        JitRuntime* jrt = fop->runtime()->jitRuntime();
-
-        bool calledFromLinkStub = false;
-        if (frame.returnAddressToFp() >= jrt->lazyLinkStub().value &&
-            frame.returnAddressToFp() < jrt->lazyLinkStubEnd().value)
-        {
-            calledFromLinkStub = true;
-        }
-
         // See if the frame has already been invalidated.
-        if (!calledFromLinkStub && frame.checkInvalidation())
+        if (frame.checkInvalidation())
             continue;
 
         JSScript* script = frame.script();
@@ -2866,9 +2856,8 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
         }
         ionCode->setInvalidated();
 
-        // Don't adjust OSI points in the linkStub (which don't exist), or in a
-        // bailout path.
-        if (calledFromLinkStub || frame.isBailoutJS())
+        // Don't adjust OSI points in a bailout path.
+        if (frame.isBailoutJS())
             continue;
 
         // Write the delta (from the return address offset to the
