@@ -533,7 +533,6 @@ KeyframeEffectReadOnly::EnsureBaseStyles(
   RefPtr<ServoStyleContext> baseStyleContext;
   for (const AnimationProperty& property : aProperties) {
     EnsureBaseStyle(property,
-                    mTarget->mPseudoType,
                     presContext,
                     aComputedValues,
                     baseStyleContext);
@@ -543,7 +542,6 @@ KeyframeEffectReadOnly::EnsureBaseStyles(
 void
 KeyframeEffectReadOnly::EnsureBaseStyle(
   const AnimationProperty& aProperty,
-  CSSPseudoElementType aPseudoType,
   nsPresContext* aPresContext,
   const ServoStyleContext* aComputedStyle,
  RefPtr<ServoStyleContext>& aBaseStyleContext)
@@ -566,7 +564,7 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
       aPresContext->StyleSet()->AsServo()->GetBaseContextForElement(
           mTarget->mElement,
           aPresContext,
-          aPseudoType,
+          mTarget->mPseudoType,
           aComputedStyle);
   }
   RefPtr<RawServoAnimationValue> baseValue =
