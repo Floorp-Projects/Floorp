@@ -1050,11 +1050,11 @@ public abstract class GeckoApp extends GeckoActivity
         GeckoAccessibility.setDelegate(mLayerView);
 
         getAppEventDispatcher().registerGeckoThreadListener(this,
-            "Accessibility:Event",
             "Locale:Set",
             null);
 
         getAppEventDispatcher().registerUiThreadListener(this,
+            "Accessibility:Event",
             "Contact:Add",
             "DevToolsAuth:Scan",
             "DOMFullScreen:Start",
@@ -2049,11 +2049,11 @@ public abstract class GeckoApp extends GeckoActivity
             null);
 
         getAppEventDispatcher().unregisterGeckoThreadListener(this,
-            "Accessibility:Event",
             "Locale:Set",
             null);
 
         getAppEventDispatcher().unregisterUiThreadListener(this,
+            "Accessibility:Event",
             "Contact:Add",
             "DevToolsAuth:Scan",
             "DOMFullScreen:Start",
