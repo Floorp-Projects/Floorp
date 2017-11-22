@@ -100,7 +100,7 @@ Note that when you need to record for a small set of known keys, using separate 
 Declaring a Histogram
 =====================
 
-Histograms should be declared in the `Histograms.json <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Histograms.json>`_ file. These declarations are checked for correctness at `compile time <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/gen-histogram-data.py>`_ and used to generate C++ code.
+Histograms should be declared in the `Histograms.json <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Histograms.json>`_ file. These declarations are checked for correctness at `compile time <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/gen_histogram_data.py>`_ and used to generate C++ code.
 
 The following is a sample histogram declaration from ``Histograms.json`` for a histogram named ``MEMORY_RESIDENT`` which tracks the amount of resident memory used by a process:
 

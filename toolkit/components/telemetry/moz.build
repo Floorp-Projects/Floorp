@@ -125,11 +125,11 @@ histogram_files = [
 ]
 
 data = GENERATED_FILES['TelemetryHistogramData.inc']
-data.script = 'gen-histogram-data.py'
+data.script = 'gen_histogram_data.py'
 data.inputs = histogram_files
 
 enums = GENERATED_FILES['TelemetryHistogramEnums.h']
-enums.script = 'gen-histogram-enum.py'
+enums.script = 'gen_histogram_enum.py'
 enums.inputs = histogram_files
 
 # Generate scalar files.
@@ -138,11 +138,11 @@ scalar_files = [
 ]
 
 scalar_data = GENERATED_FILES['TelemetryScalarData.h']
-scalar_data.script = 'gen-scalar-data.py'
+scalar_data.script = 'gen_scalar_data.py'
 scalar_data.inputs = scalar_files
 
 scalar_enums = GENERATED_FILES['TelemetryScalarEnums.h']
-scalar_enums.script = 'gen-scalar-enum.py'
+scalar_enums.script = 'gen_scalar_enum.py'
 scalar_enums.inputs = scalar_files
 
 # Generate event files.
@@ -151,11 +151,11 @@ event_files = [
 ]
 
 event_data = GENERATED_FILES['TelemetryEventData.h']
-event_data.script = 'gen-event-data.py'
+event_data.script = 'gen_event_data.py'
 event_data.inputs = event_files
 
 event_enums = GENERATED_FILES['TelemetryEventEnums.h']
-event_enums.script = 'gen-event-enum.py'
+event_enums.script = 'gen_event_enum.py'
 event_enums.inputs = event_files
 
 # Generate data from Processes.yaml
@@ -164,11 +164,11 @@ processes_files = [
 ]
 
 processes_enum = GENERATED_FILES['TelemetryProcessEnums.h']
-processes_enum.script = 'gen-process-enum.py'
+processes_enum.script = 'gen_process_enum.py'
 processes_enum.inputs = processes_files
 
 processes_data = GENERATED_FILES['TelemetryProcessData.h']
-processes_data.script = 'gen-process-data.py'
+processes_data.script = 'gen_process_data.py'
 processes_data.inputs = processes_files
 
 with Files('**'):

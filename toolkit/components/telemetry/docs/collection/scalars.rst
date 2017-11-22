@@ -189,14 +189,14 @@ The scalar definition file is processed and checked for correctness at compile t
 conforms to the specification, the processor scripts generate two C++ headers files, included
 by the Telemetry C++ core.
 
-gen-scalar-data.py
+gen_scalar_data.py
 ------------------
 This script is called by the build system to generate the ``TelemetryScalarData.h`` C++ header
 file out of the scalar definitions.
 This header file contains an array holding the scalar names and version strings, in addition
 to an array of ``ScalarInfo`` structures representing all the scalars.
 
-gen-scalar-enum.py
+gen_scalar_enum.py
 ------------------
 This script is called by the build system to generate the ``TelemetryScalarEnums.h`` C++ header
 file out of the scalar definitions.
