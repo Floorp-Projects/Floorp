@@ -3255,6 +3255,8 @@ Preferences::GetInstanceForService()
     nsresult rv = Preferences::GetCString(
       "general.config.filename", lockFileName, PrefValueKind::User);
     if (NS_SUCCEEDED(rv)) {
+      Telemetry::ScalarSet(Telemetry::ScalarID::GENERAL_AUTOCONFIG_HAS_FILENAME,
+                           true);
       NS_CreateServicesFromCategory(
         "pref-config-startup",
         static_cast<nsISupports*>(static_cast<void*>(sPreferences)),
