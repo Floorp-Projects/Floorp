@@ -3644,7 +3644,7 @@ Preferences::GetPreference(dom::Pref* aDomPref)
 void
 Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
 {
-  aDomPrefs->SetCapacity(gHashTable->Capacity());
+  aDomPrefs->SetCapacity(gHashTable->EntryCount());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
