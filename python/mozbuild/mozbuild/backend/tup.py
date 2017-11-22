@@ -49,9 +49,8 @@ class BackendTupfile(object):
     """Represents a generated Tupfile.
     """
 
-    def __init__(self, srcdir, objdir, environment, topsrcdir, topobjdir):
+    def __init__(self, objdir, environment, topsrcdir, topobjdir):
         self.topsrcdir = topsrcdir
-        self.srcdir = srcdir
         self.objdir = objdir
         self.relobjdir = mozpath.relpath(objdir, topobjdir)
         self.environment = environment
@@ -198,10 +197,9 @@ class TupOnly(CommonBackend, PartialBackend):
 
     def _get_backend_file(self, relativedir):
         objdir = mozpath.join(self.environment.topobjdir, relativedir)
-        srcdir = mozpath.join(self.environment.topsrcdir, relativedir)
         if objdir not in self._backend_files:
             self._backend_files[objdir] = \
-                    BackendTupfile(srcdir, objdir, self.environment,
+                    BackendTupfile(objdir, self.environment,
                                    self.environment.topsrcdir, self.environment.topobjdir)
         return self._backend_files[objdir]
 
@@ -527,12 +525,13 @@ class TupOnly(CommonBackend, PartialBackend):
 
         backend_file = self._get_backend_file('ipc/ipdl')
         outheaderdir = '_ipdlheaders'
+        srcdir = mozpath.join(self.environment.topsrcdir, 'ipc/ipdl')
         cmd = [
             '$(PYTHON_PATH)',
             '$(PLY_INCLUDE)',
-            '%s/ipdl.py' % backend_file.srcdir,
-            '--sync-msg-list=%s/sync-messages.ini' % backend_file.srcdir,
-            '--msg-metadata=%s/message-metadata.ini' % backend_file.srcdir,
+            '%s/ipdl.py' % srcdir,
+            '--sync-msg-list=%s/sync-messages.ini' % srcdir,
+            '--msg-metadata=%s/message-metadata.ini' % srcdir,
             '--outheaders-dir=%s' % outheaderdir,
             '--outcpp-dir=.',
         ]
