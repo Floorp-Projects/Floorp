@@ -1486,10 +1486,11 @@ gfxFcPlatformFontList::InitFontListForPlatform()
     UniquePtr<SandboxPolicy> policy;
 
 #ifdef MOZ_CONTENT_SANDBOX
-    // Create a temporary SandboxPolicy to check font paths; use a fake PID
-    // to avoid picking up any PID-specific rules by accident.
+    // If read sandboxing is enabled, create a temporary SandboxPolicy to
+    // check font paths; use a fake PID to avoid picking up any PID-specific
+    // rules by accident.
     SandboxBrokerPolicyFactory policyFactory;
-    if (GetEffectiveContentSandboxLevel() > 0 &&
+    if (GetEffectiveContentSandboxLevel() > 2 &&
         !PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX")) {
         policy = policyFactory.GetContentPolicy(-1, false);
     }
