@@ -694,8 +694,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_GetBaseComputedValuesForElement,
                    RawServoStyleSetBorrowed set,
                    RawGeckoElementBorrowed element,
                    ServoStyleContextBorrowed existing_style,
-                   const mozilla::ServoElementSnapshotTable* snapshots,
-                   mozilla::CSSPseudoElementType pseudo_type)
+                   const mozilla::ServoElementSnapshotTable* snapshots)
 // Returns computed values for the given element by adding an animation value.
 SERVO_BINDING_FUNC(Servo_StyleSet_GetComputedValuesByAddingAnimation,
                    ServoStyleContextStrong,
