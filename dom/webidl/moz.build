@@ -103,9 +103,6 @@ with Files("DesktopNotification.webidl"):
 with Files("FakePluginTagInit.webidl"):
     BUG_COMPONENT = ("Core", "Plug-ins")
 
-with Files("FlyWeb*"):
-    BUG_COMPONENT = ("Core", "DOM: Flyweb")
-
 with Files("FocusEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
@@ -530,10 +527,6 @@ WEBIDL_FILES = [
     'FileSystemDirectoryReader.webidl',
     'FileSystemEntry.webidl',
     'FileSystemFileEntry.webidl',
-    'FlyWebDiscoveryManager.webidl',
-    'FlyWebFetchEvent.webidl',
-    'FlyWebPublish.webidl',
-    'FlyWebWebSocketEvent.webidl',
     'FocusEvent.webidl',
     'FontFace.webidl',
     'FontFaceSet.webidl',
