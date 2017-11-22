@@ -79,6 +79,10 @@ html {
   text-align: left;
 }
 
+.trickled {
+  background-color: #bdf;
+}
+
 .info-label {
   font-weight: bold;
 }
