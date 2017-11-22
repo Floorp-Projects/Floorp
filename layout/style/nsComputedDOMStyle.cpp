@@ -743,6 +743,11 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
                      aElement, result->AsGecko(),
                      eRestyle_AllHintsWithAnimations);
           } else {
+            Element* elementOrPseudoElement =
+              EffectCompositor::GetElementToRestyle(aElement, pseudoType);
+            if (!elementOrPseudoElement) {
+              return nullptr;
+            }
             return presContext->StyleSet()->AsServo()->
               GetBaseContextForElement(aElement, presContext,
                                        pseudoType, result->AsServo());
@@ -777,6 +782,11 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
       return result.forget();
     }
 
+    Element* elementOrPseudoElement =
+      EffectCompositor::GetElementToRestyle(aElement, pseudoType);
+    if (!elementOrPseudoElement) {
+      return nullptr;
+    }
     return servoSet->GetBaseContextForElement(aElement, presContext,
                                               pseudoType, result);
   }

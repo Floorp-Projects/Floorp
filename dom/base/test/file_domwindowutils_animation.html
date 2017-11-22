@@ -127,6 +127,11 @@ function test_getUnanimatedComputedStyle() {
     "FLUSH_DISPLAY option should throw");
 
   if (utils.isStyledByServo) {
+    SimpleTest.doesThrow(
+      () => utils.getUnanimatedComputedStyle(div, "::before", "opacity", utils.FLUSH_NONE),
+      "NS_ERROR_FAILURE",
+      "Non-existent pseudo should throw");
+
     // Flush styles since getUnanimatedComputedStyle flushes pending styles even
     // with FLUSH_NONE option if the element hasn't yet styled.
     getComputedStyle(div).opacity;
