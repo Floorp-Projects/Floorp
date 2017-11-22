@@ -71,10 +71,9 @@ NS_IMPL_ISUPPORTS(MemoryBlockCacheTelemetry,
 /* static */ size_t
 MemoryBlockCacheTelemetry::NotifyCombinedSizeGrown(size_t aNewSize)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
   // Ensure gMemoryBlockCacheTelemetry exists.
   if (!gMemoryBlockCacheTelemetry) {
+    MOZ_ASSERT(NS_IsMainThread());
     gMemoryBlockCacheTelemetry = new MemoryBlockCacheTelemetry();
 
     nsCOMPtr<nsIObserverService> observerService =
