@@ -2815,7 +2815,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // need the container even though the merged result will.
   if (aBuilder->IsRetainingDisplayList() && BuiltBlendContainer()) {
     dirtyRect = visibleRect;
-    aBuilder->MarkCurrentFrameModifiedDuringBuilding();
+    aBuilder->MarkFrameModifiedDuringBuilding(this);
   }
 
   bool usingFilter = StyleEffects()->HasFilters();
