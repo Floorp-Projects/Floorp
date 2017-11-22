@@ -566,6 +566,7 @@ class TupOnly(CommonBackend, PartialBackend):
             extra_outputs=[self._installed_files],
             check_unchanged=True,
         )
+        backend_file.sources['.cpp'].extend(u[0] for u in unified_ipdl_cppsrcs_mapping)
 
     def _handle_webidl_build(self, bindings_dir, unified_source_mapping,
                              webidls, expected_build_output_files,
@@ -598,6 +599,11 @@ class TupOnly(CommonBackend, PartialBackend):
             extra_outputs=[self._installed_files],
             check_unchanged=True,
         )
+        backend_file.sources['.cpp'].extend(u[0] for u in unified_source_mapping)
+        backend_file.sources['.cpp'].extend(sorted(global_define_files))
+
+        test_backend_file = self._get_backend_file('dom/bindings/test')
+        test_backend_file.sources['.cpp'].extend(sorted('../%sBinding.cpp' % s for s in webidls.all_test_stems()))
 
 
 class TupBackend(HybridBackend(TupOnly, RecursiveMakeBackend)):
