@@ -492,7 +492,7 @@ inDOMUtils::IsInheritedProperty(const nsAString &aPropertyName, bool *_retval)
   }
 
   nsStyleStructID sid = nsCSSProps::kSIDTable[prop];
-  *_retval = !nsCachedStyleData::IsReset(sid);
+  *_retval = !nsStyleContext::IsReset(sid);
   return NS_OK;
 }
 
