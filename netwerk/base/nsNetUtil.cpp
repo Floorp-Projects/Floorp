@@ -739,31 +739,6 @@ NS_NewInputStreamPump(nsIInputStreamPump** aResult,
 }
 
 nsresult
-NS_NewAsyncStreamCopier(nsIAsyncStreamCopier **result,
-                        nsIInputStream        *source,
-                        nsIOutputStream       *sink,
-                        nsIEventTarget        *target,
-                        bool                   sourceBuffered /* = true */,
-                        bool                   sinkBuffered /* = true */,
-                        uint32_t               chunkSize /* = 0 */,
-                        bool                   closeSource /* = true */,
-                        bool                   closeSink /* = true */)
-{
-    nsresult rv;
-    nsCOMPtr<nsIAsyncStreamCopier> copier =
-        do_CreateInstance(NS_ASYNCSTREAMCOPIER_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = copier->Init(source, sink, target, sourceBuffered, sinkBuffered,
-                          chunkSize, closeSource, closeSink);
-        if (NS_SUCCEEDED(rv)) {
-            *result = nullptr;
-            copier.swap(*result);
-        }
-    }
-    return rv;
-}
-
-nsresult
 NS_NewLoadGroup(nsILoadGroup      **result,
                 nsIRequestObserver *obs)
 {
