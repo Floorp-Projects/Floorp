@@ -4,10 +4,8 @@
 
 "use strict";
 
-const {
-  DOM: dom,
-  PureComponent,
-} = require("devtools/client/shared/vendor/react");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 class ChangesApp extends PureComponent {
