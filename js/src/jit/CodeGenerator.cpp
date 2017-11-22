@@ -8008,12 +8008,16 @@ JitRuntime::generateLazyLinkStub(MacroAssembler& masm)
 
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
     Register temp0 = regs.takeAny();
+    Register temp1 = regs.takeAny();
+    Register temp2 = regs.takeAny();
 
     masm.loadJSContext(temp0);
-    masm.enterFakeExitFrame(temp0, temp0, ExitFrameType::LazyLink);
+    masm.enterFakeExitFrame(temp0, temp2, ExitFrameType::LazyLink);
+    masm.moveStackPtrTo(temp1);
 
-    masm.setupUnalignedABICall(temp0);
+    masm.setupUnalignedABICall(temp2);
     masm.passABIArg(temp0);
+    masm.passABIArg(temp1);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, LazyLinkTopActivation), MoveOp::GENERAL,
                      CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
