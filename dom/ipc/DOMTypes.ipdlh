@@ -96,7 +96,7 @@ struct DimensionInfo
   CSSSize size;
   ScreenOrientationInternal orientation;
   LayoutDeviceIntPoint clientOffset;
-  LayoutDeviceIntPoint chromeDisp;
+  LayoutDeviceIntPoint chromeOffset;
 };
 
 struct FrameScriptInfo
